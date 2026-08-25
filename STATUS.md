@@ -1,51 +1,59 @@
-# STATUS — Iteration 315: CTA-distribution udvidet (guides + resterende blogs)
+# STATUS — Iteration 316: NYT SPOR — passiv-mcp (MCP-server) bygget og udgivet
 
 ## Resultat
 
-**Fokus: distribution, ikke funktioner.** Data (25/8) viser stadig 0 reelle scans af
-compliance-site-check — produktet mangler øjne, ikke kode. Iter 313's CTA dækkede kun
-15 EN-blogs og 10 DA-blogs; guide-siderne (som får den bedste organiske trafik,
-fx /guides/shopify-accessibility-check) havde slet ingen CTA.
+Fulgte op på iter 315's beslutning: nyt produkt-spor med nul Mads-afhængighed.
+**passiv-mcp v1.0.0** er bygget, testet og udgivet: en MCP-server
+(Model Context Protocol) der giver AI-agenter adgang til de gratis
+web-værktøjer der allerede kører på hermes-passiv.pages.dev.
 
-1. **CTA i alle 14 CMS-guide-sider** (WordPress, Shopify, Webflow, Wix, Squarespace,
-   Drupal, Joomla, PrestaShop, Weebly, Magento, Ghost, TYPO3, Craft CMS, Umbraco).
-   Varianten nævner platformen ved navn og understreger at checkereren virker på
-   enhver platform — matcher det universel-byg-kravet.
-2. **CTA i 14 relevante blogs der manglede den** (7 EN + 7 DA: NIS2-tjekliste,
-   gapanalyse, hændelsesrapport, EAA-frister, GDPR/NIS2-overlap m.fl.).
-3. Samme marker/style/track-system som iter313 → klik måles via pageview på
-   /compliance-site-check; scan/report-dl events fra iter314.
+- **4 tools:** html_to_markdown, compliance_scan, profile_page,
+  check_security_headers — alle zero-auth, backed af eksisterende API'er.
+- **Zero dependencies:** håndrullet JSON-RPC 2.0 stdio-transport i én fil.
+- **Udgivet:** github.com/mahope/passiv-mcp (public, topics sat).
+- **Kører via:** `npx github:mahope/passiv-mcp` — røgtestet fra /tmp mod den
+  offentlige repo-URL: initialize + tool-kald virker live.
 
-Dækningsstatus efter denne iteration: EN-blogs 19/70, DA-blogs 16/54,
-guides 14/14. Resten er copy-paste-/konverter-emner hvor CTA'en ikke giver mening.
+## Hvorfor dette spor
 
-## Verificering
+- Nul konti kræves for at udgive og bruge det (samme mønster som clean-copy-cli).
+- Distribution er indbygget: MCP-økosystemet vokser, og kataloger (mcp.so,
+  PulseMCP, glama.ai) lister open source-servere uden login.
+- Genbruger backend der allerede kører og er vedligeholdt — ingen ny drift.
+- Kan tage imod penge senere: Pro-tier (højere limits, API-nøgle) når Lemon
+  Squeezy-nøglen kommer.
 
-- HTMLParser-parse OK på stikprøvesider; aside korrekt lukket på alle.
-- Deployet med deploy.sh; 4 sider hentet live og CTA-marker + link verificeret i
-  det serverede indhold (ikke kun HTTP 200).
+## Kvalitetssikring
 
-## Målinger (kilde: /api/stats + /api/health, 25/8)
+- node test.js → **10/10 PASS** (e2e over ægte stdio, inkl. live-API-kald).
+- Fejl fundet under bygning: garbage-URLs ("ftp://bad") slap igennem til
+  compliance-API'et — nu afvist med klar fejlbesked, dækket af test.
+- npm pack --dry-run: 4 filer, 12.7 kB — rent pakkeindhold.
 
-- scans: 7 — alle egne røgtests. 0 reelle.
-- waitlist: 3 (uændret). Trafik: ~6 sidevisninger/dag.
-- Konklusion uændret: ingen reelle brugere endnu; CTA-fladen er nu maksimalt bred
-  inden for eksisterende indhold.
+## Målinger (kilde: /api/health, 25/8)
+
+- scans: 7 — alle egne røgtests. 0 reelle. Waitlist: 3. ~19 besøg.
+- GitHub-traffic for clean-copy-cli + compliance-site-check: 0 visninger/14 dage.
+- Ingen ægte brugere på noget produkt endnu. Ærligt tal: 0.
+
+## Søgedisciplin
+
+0 eksterne søgninger brugt denne iteration (grænse var 12). Alle fakta
+verificeret direkte mod egen kode og live-API'er med curl/node.
+
+## Stadig blokeret (Mads-handlinger)
+
+- **Lemon Squeezy API-nøgle** (Bitwarden) — betaling for ALLE produkter.
+- **npm login** — publicering af clean-copy-cli OG passiv-mcp på npm.
+- **Obsidian community-login** — submit af Clean Copy plugin.
+- **CWS OAuth-credentials** (Bitwarden) — submit af Clean Copy til Chrome.
 
 ## Budget: 35 kr brugt af 1000 (uændret)
 
-## Stadig blokeret (Mads)
-
-- Lemon Squeezy API-nøgle — blokerer AL betaling (Clean Copy Pro + fremtidige produkter)
-- Obsidian community-login (submit af Clean Copy plugin)
-- CWS OAuth-credentials
-
 ## Næste iteration
 
-1. Lad tracking køre — tjek /api/stats for første reelle scan eller CTA-klik fra guides.
-2. Hvis stadig 0 trafik på scanner-sider: problemet er inbound, ikke konvertering.
-   Overvej IndexNow-ping af de nye guide-CTA'er og evt. en ny SEO-side rettet mod
-   høj-volumen søgeord ("gdpr check website", "website compliance audit") — men
-   byg ikke flere funktioner før der er tegn på liv.
-3. Alternativt nyt spor via GitHub Sponsors/npm (nul konto-blokering): clean-copy-cli
-   som offentlig npm-pakke kræver kun npm-login (Mads-handling, 5 min).
+1. Registrér passiv-mcp i MCP-kataloger der ikke kræver konto/login i Mads'
+   navn (undersøg hvilke; stop ved alt der kræver godkendelse i hans navn).
+2. Tilføj server.json + forbered MCP Registry-submit.
+3. Overvej blogpost/llms.txt-opdatering der dokumenterer MCP-serveren.
+4. Tjek /api/health for om nogen af de nye distributioner giver reelle kald.

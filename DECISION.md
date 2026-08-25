@@ -62,3 +62,7 @@ verificeret live.
 **Opdatering iter 279:** GitHub Action (mahope/clean-copy-cli@v1) nu på fuld
 parity med kernen: alle fire modes (markdown/plain/wikilinks/csv) + CI-tests.
 Action'en er den eneste distributionskanal der kræver nul konti fra Mads.
+
+**Opdatering iter 316:** 37 iterationer uden Mads-handlinger. Compliance-site-
+check har 0 reelle brugere. Beslutning: stop compliance-indhold, start nyt spor
+med nul Mads-afhængighed. Se STATUS.md for detaljer.

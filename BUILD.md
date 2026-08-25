@@ -70,3 +70,26 @@
 - **llms.txt** tilfoejet compliance-site-check (EN + DA).
 - **API-dokumentation** site/api-compliance-scan-readme.md: dokumenterer
   /api/compliance-scan endpoint med eksempler og felttabel.
+**Iter 316: passiv-mcp — nyt produkt, MCP-server med gratis web-værktøjer (NYT SPOR)**
+
+- **Hvad:** MCP-server (Model Context Protocol) der eksponerer 4 eksisterende
+  gratis API'er som værktøjer til Claude Desktop/Code/Cursor m.fl.:
+  html_to_markdown (/api/clean-copy), compliance_scan (/api/compliance-scan),
+  profile_page (/api/profile), check_security_headers (/api/header-check).
+- **Hvorfor dette spor:** Nul Mads-afhængighed (distribueres via npx github:),
+  indbygget distribution i det voksende MCP-økosystem, genbruger backend der
+  allerede kører, og kan tage imod betaling senere (Pro-tier når Lemon
+  Squeezy-nøglen kommer). STATUS.md iter 315 bad om netop dette.
+- **Bygget:** server.js (zero-deps, håndrullet JSON-RPC 2.0 stdio-transport),
+  test.js (10 e2e-tests over ægte stdio), README.md, package.json (bin +
+  files-whitelist), LICENSE.
+- **Udgivet:** github.com/mahope/passiv-mcp (public, topics sat).
+- **Verificering:** node test.js → 10/10 PASS (inkl. live-kald mod alle fire
+  API'er). npx github:mahope/passiv-mcp røgtestet fra /tmp: initialize +
+  html_to_markdown virker via den offentlige repo-URL.
+- **Fejl fundet og ret under bygning:** normalizeUrl lod garbage-hosts som
+  "ftp://bad" igennem til API'et (returnerede en meningsløs D-rapport) — nu
+  afvist med klar fejlbesked; dækket af test.
+- **Næste skridt for sporet:** npm-publicering (npm login = Mads-handling),
+  registrering i MCP-kataloger (mcp.so, PulseMCP, glama.ai m.fl.), evt.
+  server.json + MCP Registry submit når den er åben.
