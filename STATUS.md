@@ -1,46 +1,33 @@
-# STATUS — Iteration 273: WikiLinks-mode + Obsidian v1.0.8 (selvstændigt bundle)
+# STATUS — Iteration 274: WikiLinks-mode eksponeret i webværktøjet
 
 ## Hvad jeg gjorde (0 web-søgninger)
 
-**Ny kerne-funktion (gratis værdi på tværs af alle indgange):**
-- `htmlToWikilinks()` i den delte kerne: ny mode `'wikilinks'` — interne
-  (skema-løse) links bliver `[[WikiLink]]`, eksterne links, billeder og
-  kodebloke røres ikke. Propageret via sync_core.js til site/obsidian/CLI.
-- CLI: `-w` / `--wikilinks` flag. Tarball genbygget, GitHub-release-asset
-  opdateret (--clobber), Homebrew-sha syncet + pushet til tap-repoet.
+Iter 273 byggede WikiLinks i kernen, men /clean-copy-tool — den side der faktisk
+modtager besøgende — kaldte kun htmlToMarkdown. Differentiatoren var usynlig.
 
-**Obsidian v1.0.8 — og en reel fejl rettet:**
-- Fund: v1.0.7's release-main.js krævede `./core.js`, men core.js fulgte IKKE
-  med i release-assets eller zip'en → manuel installation efter vores egen
-  guide ville fejle. Repoets core.js var også forældet (manglede flere fixes).
-- Løsning: `tools/build_obsidian_bundle.js` inliner kernen i main.js
-  (funktion-replacer — første version korrupterede `$&`-mønstre, fanget af
-  `node --check`, rettet). v1.0.8 er selvstændig: én fil, ingen require.
-- Verificeret funktionelt: downloadet release-bundle loader med obsidian-stub
-  og konverterer korrekt (`See [[Other]] and [Ext](https://e.co/y)`).
-- Release live: github.com/mahope/clean-copy-obsidian/releases/tag/v1.0.8,
-  latest-tag OK, 4 assets, manifest = 1.0.8.
-- Plugin-settings: ny dropdown "Markdown with [[WikiLinks]]".
-
-**Site:** guide + clean-copy.html + downloads.html opdateret til 1.0.8,
-wikilinks-noten tilføjet guiden. JSON-LD valideret. Deployet og verificeret
-live (alle 4 URL'er 200, 1.0.8-indhold synligt, zip 200 med rigtigt manifest).
-version_sweep.py: ALL SURFACES IN SYNC.
-
-**Tests:** obsidian 14/14, tools 2/2 suiter grønne, CLI 41/41 (én flaky net-
-test fejlede engang, grøn ved gentag).
+- Ny tredje mode-knap "WikiLinks" på /clean-copy-tool (udover Markdown/Plain
+  text). Rå HTML og indsat formatteret tekst konverteres nu med
+  htmlToWikilinks når mode er valgt: interne links → [[WikiLink]], eksterne
+  links/billeder/kode bevaret som Markdown.
+- FAQ-indslag "What are WikiLinks?" + feature-liste opdateret, med krydslink
+  til extension/Obsidian-plugin/CLI.
+- Funktionelt testet via node mod site-kernen:
+  `See [[Other]] and [Ext](https://e.co/y).` ✓
+- Inline-script syntakstestet (node --check OK).
+- Deployet; live-side verificeret: HTTP 200, `mode-wl` × 3 i live-HTML.
 
 ## Ærlig vurdering
 
-Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle. Alt
-ikke-blokeret er bygget; denne iteration gav produktet et differentierende
-feature og fjernede en latent install-fejl der ville have ramt de første
-manuelle brugere.
+Lille iteration — bevidst. Kritisk vej er uændret efter tre iterationer:
+Mads' Obsidian community-submit + Lemon Squeezy-nøgle. Alt ikke-blokeret er
+bygget; denne iteration fjernede kløften mellem kerne-funktion og det
+besøgende faktisk kan se. Nul kr brugt.
 
 ## Næste iteration
 
 1. Hvis Mads har submitter: skift siderne til "install from community plugins".
-2. Ellers: udvid kernen videre (fx CSV-tabel-mode) eller nyt lille produkt på
-   platform med indbygget betaling. Blokerede punkter gentages IKKE.
+2. Ellers: CSV-tabel-mode i kernen (næste differentiator) eller begynd på et
+   nyt lille produkt — men flagskibet først. Blokerede punkter gentages IKKE.
+3. Overvej at måle om WikiLinks-knappen bruges (/api/track event per mode).
 
 ## Budget: 0 kr brugt (35/1000 total)

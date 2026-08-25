@@ -136,6 +136,7 @@
     <div class="toolbar" role="group" aria-label="Output options">
       <div class="seg-group" role="group" aria-label="Output format">
         <button type="button" id="mode-md" aria-pressed="true">Markdown</button>
+        <button type="button" id="mode-wl" aria-pressed="false">WikiLinks</button>
         <button type="button" id="mode-txt" aria-pressed="false">Plain text</button>
       </div>
       <label style="display:inline-flex;align-items:center;gap:.45rem;font-weight:400;font-size:.9rem;">
@@ -172,6 +173,9 @@
       <li><strong>Markdown mode</strong> keeps the structure that matters — headings, bold/italic,
       links, lists (including nested ones), code blocks, and tables (converted to
       pipe-separated Markdown tables).</li>
+      <li><strong>WikiLinks mode</strong> converts internal links to
+      Obsidian-style <code>[[WikiLinks]]</code> — perfect for pasting research
+      into your vault. External links, images and code blocks stay as Markdown.</li>
       <li><strong>Plain text mode</strong> removes everything but readable characters.</li>
       <li><strong>Smart-quote cleanup</strong> converts “ ” ‘ ’ — – into safe ASCII equivalents
       and removes zero-width and non-breaking spaces.</li>
@@ -197,6 +201,15 @@
       <p>Headings h1–h6 (#…######), bold/strong (**), italic/em (*), links [text](url), images
       ![alt](src), ordered and unordered lists including nesting, code blocks (```), inline code (`),
       paragraphs, line breaks and horizontal rules. Everything else is stripped to plain text.</p>
+    </details>
+    <details class="faq">
+      <summary>What are WikiLinks?</summary>
+      <p>WikiLinks are the double-bracket links Obsidian, Roam and similar
+      note apps use: <code>[[Page name]]</code>. In WikiLinks mode, links that
+      point inside the same site become <code>[[Page name]]</code> so they
+      connect to your notes, while external links stay as normal Markdown.
+      The <a href="/clean-copy">browser extension</a>, <a href="/blog/install-obsidian-plugin-clean-copy">Obsidian plugin</a>
+      and CLI all support the same mode.</p>
     </details>
     <details class="faq">
       <summary>Can I paste raw HTML?</summary>
@@ -297,7 +310,7 @@
         if (looksLikeHtml) {
           // Raw HTML pasted as text: unescape entities first so the converter sees real markup.
           var doc = new DOMParser().parseFromString(raw, 'text/html');
-          result = CleanCopyCore.htmlToMarkdown(doc.body.innerHTML);
+          result = CleanCopyCore.htmlToWikilinks(doc.body.innerHTML);
         } else if (mode === 'markdown') {
           // Plain-ish text: only apply character cleanup, no tag stripping needed.
           result = smart.checked ? CleanCopyCore.cleanText(raw) : raw.replace(/\u00A0/g,' ').trim();
@@ -324,11 +337,13 @@
     function setMode(m) {
       mode = m;
       document.getElementById('mode-md').setAttribute('aria-pressed', m === 'markdown');
+      document.getElementById('mode-wl').setAttribute('aria-pressed', m === 'wikilinks');
       document.getElementById('mode-txt').setAttribute('aria-pressed', m === 'plain');
       convert();
     }
 
     document.getElementById('mode-md').addEventListener('click', function () { setMode('markdown'); });
+    document.getElementById('mode-wl').addEventListener('click', function () { setMode('wikilinks'); });
     document.getElementById('mode-txt').addEventListener('click', function () { setMode('plain'); });
     smart.addEventListener('change', convert);
     input.addEventListener('input', convert);

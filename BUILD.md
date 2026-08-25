@@ -33,6 +33,13 @@
 
 **Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
+**Bygget i iter 274:**
+- WikiLinks-mode eksponeret i webværktøjet (/clean-copy-tool): ny tredje mode-knap,
+  FAQ "What are WikiLinks?", feature-liste opdateret. Kernen understøttede det
+  allerede — værktøjet kaldte bare kun htmlToMarkdown. Funktionelt testet via node
+  (intern → [[Other]], ekstern bevaret). Script-syntaks checket. Deployet og
+  verificeret live (mode-wl × 3 på live-siden, HTTP 200).
+
 **Bygget i iter 273:**
 - WikiLinks-mode i den delte kerne (interne links → [[WikiLink]]); syncet til site/obsidian/CLI
 - CLI -w/--wikilinks flag; tarball + GitHub asset + Homebrew sha alle syncet og verificeret
