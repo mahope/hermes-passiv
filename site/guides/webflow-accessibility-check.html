@@ -42,7 +42,13 @@
 
 <section class="problem">
   <div class="container">
-    <h2>Why Webflow accessibility is different</h2>
+    <!-- iter313 cta-scan -->
+<aside class="cta-scan" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px 22px;margin:28px 0;">
+  <strong>Free compliance scan for Webflow sites</strong>
+  <p style="margin:8px 0 12px;font-size:14px;color:#374151;">Beyond accessibility, our free Website Compliance Checker also checks privacy policy, cookie consent, imprint, security headers and hreflang — 9 checks on any public URL, no signup. Works on Webflow and any other platform.</p>
+  <a href="/compliance-site-check" style="color:#1d4ed8;font-weight:600;text-decoration:none;">Run a free compliance scan →</a>
+</aside>
+<h2>Why Webflow accessibility is different</h2>
     <p>Webflow is a visual-first platform: you build by dragging, dropping, and styling in a canvas rather than writing markup by hand. That visual approach has huge advantages — clean semantic HTML output, responsive design baked in, and a component model via Symbols and CMS Collections — but it also creates unique accessibility blind spots that hand-coded sites don't share.</p>
     <p><strong>Designer vs. Editor.</strong> Most accessibility work happens in the Webflow Designer (the full build interface). Content editors working in the Webflow Editor have a much narrower set of controls — they can edit rich text and CMS fields, but they cannot adjust alt text on images, reorder heading tags, or tweak colour contrast. If you rely on editors to produce accessible content, you need CMS field templates with pre-set alt text fields and heading-level defaults baked into Collection templates.</p>
     <p><strong>Interactions and animations.</strong> Webflow's interaction engine — scroll triggers, parallax, mouse-follow effects, auto-playing sliders — is one of its most powerful features. It is also the most common source of keyboard traps and motion violations. A carousel built with Webflow interactions that auto-advances every 4 seconds fails WCAG 2.1 Success Criterion 2.2.2 (Pause, Stop, Hide). A parallax section that scrolls content behind a fixed overlay can make text unreachable by keyboard. These are not issues you encounter on a static HTML site, and they require manual testing that no automated scanner can fully replace.</p>
