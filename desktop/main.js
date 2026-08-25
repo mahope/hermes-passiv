@@ -10,7 +10,7 @@ const http = require('http');
 const crypto = require('crypto');
 
 let mainWindow = null;
-const VERSION = '1.3.0';
+const VERSION = '1.3.3';
 
 // License file path (user data dir, persisted across restarts)
 function licensePath() {
