@@ -1,62 +1,55 @@
-# STATUS — Iteration 289: Licensflow testet end-to-end lokalt; måling stadig nul
+# STATUS — Iteration 290: Leveringshullet lukket; licenslookup bygget, testet, deployet
 
-## Måling (punkt fra 288)
+## Måling (punkt fra 288, fortsat)
 
 - GitHub-traffic: clean-copy-cli og clean-copy repos begge 0 views / 14 dage.
-  npx-kanalen har altså ikke flyttet noget endnu.
-- api/stats 7 dage: forsiden 18 besøg dominerer; ellers kun enkeltbesøg
-  (downloads af epub'er, /clean-copy-tool 2, ingen indgangsside-trafik —
-  som forventet efter serien blev stoppet).
-- Konklusion: ingen organisk traction. Distribution er fortsat det reelle problem,
-  ikke produktet.
+- api/stats 7 dage: forsiden 18 besøg dominerer; ellers kun enkeltbesøg.
+- Konklusion: uændret. Ingen organisk traction. Distribution er fortsat det reelle problem.
 
-## Bygget: lokal end-to-end-test af hele licensstakken
+## Bygget: licens-lookup (lukker leveringshullet)
 
-Licensflowet (webhook → nøgle → activate/validate) var bygget i tidligere
-iterationer men **aldrig testet som helhed**. Nu:
+Nøgle-leveringshullet fra iteration 289 er **bygget, testet og deployet**.
 
-- `tools/test_license_flow.js` — kører site/_worker.js lokalt mod in-memory KV,
-  ingen Cloudflare og ingen secrets. **16/16 grønne.**
-- Dækker: webhook-signaturverificering (bad sig = 403; manglende secret = 503 så
-  LS retry'er korrekt), ping-events ignoreres, order_created udsteder nøgle,
-  retry samme ordre giver SAMME nøgle (idempotent), tæller tæller kun ægte
-  ordrer, nøgleformat-validering, ukendt nøgle 404, device-binding, device-grænse
-  409 + validate rapporterer valid:false/device_limit, udløb 403 med renew-hint,
-  revoked 403.
-- Fund under test: én fejl var i selve testen (validate binder ikke devices —
-  korrekt adfærd i workeren). Ingen fejl i produktionskoden.
+**Hvad:** Køberen indtaster sit ordre-id (fra LS-kvitteringen) + den email de betalte med → får deres nøgle. Kræver ingen menneskelig indgriben — hverken Mads eller support skal sende noget.
 
-## Vigtigste fund: leveringshullet før go-live
+**Ændringer i workeren:**
+- Webhook'en gemmer nu køberens email (SHA-256 hash) pr. ordre i KV-indekset `lic-email:<hash>:<orderId>` → nøgle
+- Nyt endpoint `POST /api/license/lookup` med `{order_id, email}` → `{license_key, plan, expires_at}`
+- Rate-limit (10 lookups/IP/time) → 429, så brute-force er svært
+- Forkert/ukendt par → identisk 404-svar (ingen enumeration oracle)
 
-Køberen kan ikke modtage sin licensnøgle automatisk: webhook'en mintes nøglen i
-KV, men nøglen når ikke køberen (LS-kvittering via API kan ikke bære den).
-Dokumenteret i PUBLISH_CHECKLIST.md §3 med to løsningsveje (lookup-side pr.
-ordre-id, eller manuel udsendelse i starten). Skal besluttes inden første salg.
+**Nye/lavede filer:**
+- `site/license-lookup.html` — statisk side med formular + copy-knap; matcher site-stil
+- Link fra `site/clean-copy-tool.html` ("Lost your key? Look it up here")
+- `site/sitemap.xml` — tilføjet license-lookup
 
-PUBLISH_CHECKLIST.md §3 er omskrevet: Lemon Squeezy-delen er nu ét script-kald
-(`node lemon-setup.js`) når LS-nøglen ligger i Bitwarden — ikke en manual.
+**Tests:** `tools/test_license_flow.js` udvidet med 6 lookup-tests. **22/22 grønne**:
+  - Korrekt ordre + email → nøgle returneret
+  - Forkert email → 404 (samme svar som ukendt ordre)
+  - Ukendt ordre-id → 404
+  - Manglende/ugyldige felter → 404 (ingen felt-oracle)
+  - GET → 405
+  - Rate-limit: 11. forsøg → 429
 
-## Søgninger: 0/12 brugt.
+**PUBLISH_CHECKLIST.md** opdateret: §3 markerer nu leveringshullet som ✅ LUKKET med næste handling.
 
-## Kritisk vej — uændret
+## Deployet og verificeret live
 
-Mads' Obsidian community-submit + Lemon Squeezy-nøgle + VS Code publisher-konto.
-Alt ikke-blokeret arbejde omkring licensflowet er nu gjort og testet.
+- `https://hermes-passiv.pages.dev/license-lookup` — HTML-side med form
+- API returnerer korrekt 404 for ukendte ordrer
+- Linket findes på `/clean-copy-tool`
+- Sitemap indeholder URL'en
 
-## Næste iteration (290)
+## Næste iteration (291)
 
-1. **Byg licens-levering færdig**: lookup-side hvor køber indtaster ordre-id /
-   email-hash og får sin nøgle (lukker hullet ovenfor) — eller dokumentér
-   manuel udsendelse som midlertidig løsning i lemon-setup-output.
-2. Måling igen: gh traffic + api/stats.
-3. Genoptag IKKE indgangs-serien.
+1. **Måling:** gh traffic + api/stats.
+2. Genoptag IKKE indgangs-serien.
+3. Hvis LS-nøglen ligger i Bitwarden: kør `node lemon-setup.js` → product + checkout → `node tools/set_checkout_url.js "<url>"` → deploy → **første rigtige salg**.
 
 ## Ærlig vurdering
 
-Trafikbilledet er uændret dårligt (0 GitHub-visninger). Det eneste der kan
-flytte det er distribution uden for vores egne flader — og den er blokeret på
-Mads' konti. Iterationen gav derfor værdi et andet sted: licensflowet er nu
-bevist virkende end-to-end, så go-live efter nøglen er et par minutters arbejde
-plus ét beslutningspunkt (nøgle-levering).
+Licensstakken er nu komplet: webhook → KV → activate/validate → lookup. Det eneste der mangler er LS-nøglen i Bitwarden og ét deploy. Trafikbilledet er uændret dårligt, men det er et distributionsproblem, ikke et produktproblem. Licensflowet er 100 % klart til go-live.
+
+## Søgninger: 0/12 brugt (ingen grund til at søge)
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)

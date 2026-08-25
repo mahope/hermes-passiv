@@ -57,12 +57,15 @@ function signedBody(payload) {
   return { raw, headers: { 'content-type': 'application/json', 'x-signature': sig } };
 }
 
-function orderPayload(orderId) {
+function orderPayload(orderId, email) {
   return {
     meta: { event_name: 'order_created', custom_data: { order_id: orderId } },
     data: {
       id: orderId,
-      attributes: { first_order_item: { variant_name: 'Clean Copy Pro — Yearly' } },
+      attributes: {
+        user_email: email || undefined,
+        first_order_item: { variant_name: 'Clean Copy Pro — Yearly' },
+      },
     },
   };
 }
@@ -104,7 +107,7 @@ async function main() {
 
   let key1 = '';
   await okAsync('valid order_created -> license key issued', async () => {
-    const { raw, headers } = signedBody(orderPayload('order-A'));
+    const { raw, headers } = signedBody(orderPayload('order-A', 'buyer@example.com'));
     const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
     const j = await r.json();
     assert.ok(j.ok, 'ok flag');
@@ -114,7 +117,7 @@ async function main() {
   });
 
   await okAsync('webhook retry same order -> same key (idempotent)', async () => {
-    const { raw, headers } = signedBody(orderPayload('order-A'));
+    const { raw, headers } = signedBody(orderPayload('order-A', 'buyer@example.com'));
     const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
     const j = await r.json();
     assert.ok(j.duplicate === true && j.license_key === key1);
@@ -228,6 +231,72 @@ async function main() {
       body: JSON.stringify({ license_key: rk, device_id: 'd1' }),
     });
     assert.strictEqual(r.status, 403);
+  });
+
+
+  // ─── license lookup (delivery gap) ───
+  console.log('\n[license lookup]');
+
+  await okAsync('lookup with correct order id + email -> key returned', async () => {
+    const r = await call(env, '/api/license/lookup', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ order_id: 'order-A', email: 'Buyer@Example.com' }),
+    });
+    const j = await r.json();
+    assert.strictEqual(r.status, 200);
+    assert.ok(j.ok && j.license_key === key1);
+  });
+
+  await okAsync('lookup wrong email -> 404 uniform answer', async () => {
+    const r = await call(env, '/api/license/lookup', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ order_id: 'order-A', email: 'wrong@example.com' }),
+    });
+    assert.strictEqual(r.status, 404);
+  });
+
+  await okAsync('lookup unknown order id -> same 404 as wrong email', async () => {
+    const r1 = await call(env, '/api/license/lookup', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ order_id: 'no-such-order', email: 'buyer@example.com' }),
+    });
+    assert.strictEqual(r1.status, 404);
+    const j1 = await r1.json();
+    const r2 = await call(env, '/api/license/lookup', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ order_id: 'order-A', email: 'wrong@example.com' }),
+    });
+    const j2 = await r2.json();
+    assert.strictEqual(j1.error, j2.error, 'uniform error message');
+  });
+
+  await okAsync('lookup missing/invalid fields -> 404 (no field oracle)', async () => {
+    for (const body of [{}, { order_id: '' }, { order_id: 'x', email: 'notanemail' }, { email: 'a@b.co' }]) {
+      const r = await call(env, '/api/license/lookup', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      assert.strictEqual(r.status, 404, JSON.stringify(body));
+    }
+  });
+
+  await okAsync('lookup GET -> 405', async () => {
+    const r = await call(env, '/api/license/lookup', { method: 'GET' });
+    assert.strictEqual(r.status, 405);
+  });
+
+  await okAsync('lookup rate limit: 11th attempt in hour -> 429', async () => {
+    const rlEnv = { VISITS: makeKV(), LS_WEBHOOK_SECRET: SECRET };
+    const { raw, headers } = signedBody(orderPayload('order-RL', 'rl@example.com'));
+    await call(rlEnv, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
+    let last;
+    for (let i = 0; i < 11; i++) {
+      last = await call(rlEnv, '/api/license/lookup', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ order_id: 'order-RL', email: 'rl@example.com' }),
+      });
+    }
+    assert.strictEqual(last.status, 429);
   });
 
   console.log(`\n${passed} checks passed${process.exitCode ? ' (with failures)' : ''}`);

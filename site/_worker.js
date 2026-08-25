@@ -37,6 +37,7 @@ export default {
 
     // === Routes: Clean Copy Pro licensing ===
     if (path === '/api/license/activate') return handleLicenseActivate(request, env);
+    if (path === '/api/license/lookup') return handleLicenseLookup(request, env);
     if (path === '/api/license/validate') return handleLicenseValidate(request, env);
 
     // === Route: Clean Copy API (HTML → Markdown) ===
@@ -843,6 +844,11 @@ async function handleLemonWebhook(request, env) {
   const eventName = meta.event_name || '';
   const orderId = String((meta.custom_data && meta.custom_data.order_id)
     || payload.data?.id || '');
+  // Buyer email — LS puts it in data.attributes.user_email. Stored hashed so
+  // the lookup page (order id + email) can hand back the key without KV
+  // holding plaintext addresses.
+  const buyerEmail = String(payload.data?.attributes?.user_email || '')
+    .trim().toLowerCase();
 
   // LS sends test pings and other event types — acknowledge politely.
   if (eventName !== 'order_created') {
@@ -880,7 +886,17 @@ async function handleLemonWebhook(request, env) {
     devices: [],
   };
   await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
-  if (orderId) await env.VISITS.put(`lic-order:${orderId}`, key);
+  if (orderId) {
+    await env.VISITS.put(`lic-order:${orderId}`, key);
+    // Lookup index: lic-email:<sha256(email)>:<orderId> -> key, so the buyer
+    // can retrieve their key with order id + email (both are secrets-ish:
+    // order ids are unguessable, email is verified as second factor).
+    if (buyerEmail) {
+      const eDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:' + buyerEmail));
+      const eHash = [...new Uint8Array(eDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+      await env.VISITS.put(`lic-email:${eHash}:${orderId}`, key);
+    }
+  }
 
   // Server-side counter of real paid licenses (never self-testable).
   try {
@@ -892,6 +908,67 @@ async function handleLemonWebhook(request, env) {
     ok: true,
     license_key: key,
     expires_at: expiresAt,
+    activate_url: 'https://hermes-passiv.pages.dev/clean-copy-tool',
+    lookup_url: 'https://hermes-passiv.pages.dev/license-lookup',
+  });
+}
+
+/**
+ * License key lookup — POST { order_id, email } -> { license_key }.
+ *
+ * Closes the delivery gap: LS receipts can't carry the key, so buyers
+ * retrieve it themselves with their order id + the email they bought with.
+ * Both values are required; a wrong pair answers exactly like an unknown
+ * order (no enumeration oracle). Rate-limited by simple KV counter per IP
+ * hash per hour to blunt brute-forcing.
+ */
+async function handleLicenseLookup(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
+  }
+  if (request.method !== 'POST') {
+    return jsonResp({ ok: false, error: 'POST only' }, 405);
+  }
+  if (!env.VISITS) {
+    return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
+  }
+
+  // Simple throttle: max 10 lookups per IP per hour.
+  try {
+    const vh = await visitorHash(request);
+    const rlKey = `rl:lookup:${vh}:${Math.floor(Date.now() / 3600000)}`;
+    const hits = parseInt((await env.VISITS.get(rlKey)) || '0', 10);
+    if (hits >= 10) {
+      return jsonResp({ ok: false, error: 'Too many attempts. Try again later.' }, 429);
+    }
+    await env.VISITS.put(rlKey, String(hits + 1), { expirationTtl: 7200 });
+  } catch {}
+
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResp({ ok: false, error: 'Bad request.' }, 400);
+  }
+  const orderId = String(body.order_id || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!orderId || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    // Uniform answer — don't reveal which field failed.
+    return jsonResp({ ok: false, error: 'No license found for that order id and email.' }, 404);
+  }
+
+  const eDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:' + email));
+  const eHash = [...new Uint8Array(eDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const key = await env.VISITS.get(`lic-email:${eHash}:${orderId}`);
+  if (!key) {
+    return jsonResp({ ok: false, error: 'No license found for that order id and email.' }, 404);
+  }
+  const recRaw = await env.VISITS.get(`lic:${key}`);
+  let rec = {};
+  try { rec = JSON.parse(recRaw); } catch {}
+  return jsonResp({
+    ok: true,
+    license_key: key,
+    plan: rec.plan || 'pro-yearly',
+    expires_at: rec.expires_at || null,
     activate_url: 'https://hermes-passiv.pages.dev/clean-copy-tool',
   });
 }

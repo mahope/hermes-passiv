@@ -48,6 +48,15 @@ kvittering kan ikke indeholde den via API. Løsning skal bygges (fx lookup-side)
 eller nøglen sendes manuelt i starten. Ikke blokerende for at tænde betalingen,
 men skal besluttes inden første rigtige salg.
 
+**✅ Levering lukket (iteration 290):** lookup-siden er bygget. Webhook'en gemmer
+nu køberens email (hash'et) pr. ordre, og `POST /api/license/lookup` med
+ordrenummer + email returnerer nøglen. Siden ligger på
+`https://hermes-passiv.pages.dev/license-lookup` og er linket fra aktiveringen i
+`/clean-copy-tool`. Testet lokalt (22/22 i `tools/test_license_flow.js`):
+forkert/ukendt par → identisk 404, rate-limit 429. Under go-live: webhook-secret
+sættes som Pages secret, checkout-link injectes med `set_checkout_url.js`.
+Buyer's ordre-id står i LS-kvitteringen.
+
 Efter go-live: testkøb med LS testkort → verificér at /api/license/activate
 udsteder en nøgle → indsæt den i Clean Copy extension → Pro aktiveret.
 
