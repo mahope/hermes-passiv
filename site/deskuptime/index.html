@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deskuptime — Desktop Website Monitor. No Monthly Fees.</title>
+<meta name="description" content="Monitor uptime, SSL certificates, and content changes from your desktop or terminal. One-time $19 purchase. No SaaS subscription. Works on any website.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/deskuptime/">
+<meta property="og:title" content="Deskuptime — Desktop Website Monitor">
+<meta property="og:description" content="Monitor uptime, SSL, and content changes. $19 one-time. Runs on your machine — no cloud, no monthly fee.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/deskuptime/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deskuptime — Desktop Website Monitor">
+<meta name="twitter:description" content="Monitor uptime, SSL, and content changes. $19 one-time. Runs on your machine — no cloud, no monthly fee.">
+<style>
+  :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
+        --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
+        --code:#1e293b;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+  header{border-bottom:1px solid var(--line);padding:14px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+  .logo span{color:var(--accent)}
+  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
+  nav a.cta{background:var(--accent);color:#fff;padding:7px 14px;border-radius:6px;font-weight:600;font-size:13px}
+  nav a.cta:hover{background:var(--accent-dark)}
+
+  .hero{text-align:center;padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .hero h1{font-size:42px;line-height:1.15;letter-spacing:-.03em;max-width:680px;margin:0 auto 14px}
+  .hero h1 span{color:var(--accent)}
+  .hero .sub{font-size:17px;color:var(--muted);max-width:600px;margin:0 auto 28px}
+  .hero .price-big{font-size:44px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+  .hero .price-label{font-size:14px;color:var(--muted);margin-top:2px}
+  .hero .btn-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:8px;font-size:15px;transition:background .15s}
+  .btn:hover{background:var(--accent-dark)}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--accent);background:var(--soft)}
+  .btn.code{font-family:monospace;font-size:14px;background:var(--code);color:#e2e8f0}
+  .btn.code:hover{background:#334155}
+  .hero .note{font-size:13px;color:var(--muted);margin-top:12px}
+
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-size:30px;letter-spacing:-.025em;margin-bottom:8px;text-align:center}
+  .lede{color:var(--muted);max-width:600px;margin:0 auto 32px;text-align:center;font-size:16px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:24px}
+  .card h3{font-size:16px;margin-bottom:4px}
+  .card p{font-size:14px;color:var(--muted)}
+  .card .icon{font-size:28px;margin-bottom:8px;display:block}
+
+  .demo-wrap{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:20px 24px;font-family:monospace;font-size:13px;line-height:1.7;max-width:580px;margin:0 auto;overflow-x:auto}
+  .demo-wrap .ok{color:var(--ok)}
+  .demo-wrap .accent{color:var(--accent)}
+  .demo-wrap .muted{color:var(--muted)}
+  .demo-wrap .warn{color:var(--warn)}
+
+  table{width:100%;border-collapse:collapse;margin-top:16px}
+  td,th{border:1px solid var(--line);padding:12px 16px;text-align:left;font-size:14px}
+  th{background:var(--soft);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  td:first-child{font-weight:600}
+  td.inc{background:#f0f9f4;color:var(--ok);font-weight:600;text-align:center}
+  td.missing{text-align:center;color:var(--muted)}
+
+  .cta-section{text-align:center;padding:56px 0}
+  .cta-section h2{margin-bottom:10px}
+  .cta-section .sub{margin-bottom:24px;color:var(--muted)}
+  .email-form{display:flex;gap:10px;max-width:440px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+  .email-form input{flex:1;min-width:200px;padding:13px 16px;border:1px solid var(--line);border-radius:8px;font-size:15px;outline:none}
+  .email-form input:focus{border-color:var(--accent)}
+  .email-form button{padding:13px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+  .email-form button:hover{background:var(--accent-dark)}
+  .email-form .note{font-size:12px;color:var(--muted);margin-top:6px;flex-basis:100%}
+
+  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted)}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  @media(max-width:640px){
+    .hero h1{font-size:30px}
+    .hero .price-big{font-size:34px}
+    .grid2,.grid3{grid-template-columns:1fr}
+    nav a{margin-left:12px;font-size:12px}
+    .btn-wrap{flex-direction:column;align-items:center}
+    .btn{width:100%;justify-content:center}
+    td,th{padding:8px 10px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+  <a href="/" class="logo">Passiv</a>
+  <nav>
+    <a href="/tools/">Free Tools</a>
+    <a href="/deskuptime/" style="color:var(--accent);font-weight:600">Deskuptime</a>
+    <a href="/books/">Books</a>
+    <a href="/blog/" class="cta" style="background:transparent;color:var(--muted);padding:0;font-weight:400">Blog</a>
+  </nav>
+</div>
+</header>
+
+<div class="hero">
+<div class="wrap">
+  <h1>Desktop website monitoring.<br><span>No monthly fees.</span></h1>
+  <p class="sub">Monitor uptime, SSL certificates, and content changes from your desktop or terminal. One purchase. Runs on your machine.</p>
+  <div>
+    <div class="price-big">$19</div>
+    <div class="price-label">one-time &middot; 3 activations &middot; lifetime updates</div>
+  </div>
+  <div class="btn-wrap">
+    <a href="#pro" class="btn">Get Pro License &rarr;</a>
+    <a href="#try" class="btn ghost">Try CLI Free</a>
+    <a href="https://github.com/mahope/deskuptime" class="btn ghost">GitHub</a>
+  </div>
+  <p class="note">Or just run <code style="background:var(--soft);padding:2px 6px;border-radius:4px;font-size:13px">npx github:mahope/deskuptime check https://your-site.com</code></p>
+</div>
+</div>
+
+<section>
+<div class="wrap">
+  <h2>Try it right now</h2>
+  <p class="lede">No install. No account. Just run this in your terminal:</p>
+  <div class="demo-wrap">
+$ <span class="accent">npx github:mahope/deskuptime check</span> https://example.com https://cloudflare.com<br>
+🔍 Checking 2 URL(s)...<br>
+<br>
+<span class="ok">&#10003;</span> <span class="accent">https://example.com</span><br>
+&nbsp;&nbsp; Status:   <span class="ok">200 OK</span><br>
+&nbsp;&nbsp; Response: 85ms<br>
+&nbsp;&nbsp; <span class="ok">&#x1f512;</span> SSL:     63 days &#10003;<br>
+&nbsp;&nbsp; &mdash; Content: 559 bytes<br>
+<br>
+<span class="ok">&#10003;</span> <span class="accent">https://cloudflare.com</span><br>
+&nbsp;&nbsp; Status:   <span class="ok">200 OK</span><br>
+&nbsp;&nbsp; Response: 312ms<br>
+&nbsp;&nbsp; <span class="ok">&#x1f512;</span> SSL:     42 days &#10003;<br>
+&nbsp;&nbsp; &mdash; Content: 1,316,377 bytes
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>What you can monitor</h2>
+  <div class="grid3">
+    <div class="card">
+      <span class="icon">&#x1f7e2;</span>
+      <h3>Uptime &amp; Response</h3>
+      <p>HTTP status codes, redirect chains, and response time measurement. Know when your site is down — and how fast it loads.</p>
+    </div>
+    <div class="card">
+      <span class="icon">&#x1f512;</span>
+      <h3>SSL Certificate</h3>
+      <p>Certificate expiry countdown, issuer details, cipher info, and protocol version. Get alerted before your cert expires.</p>
+    </div>
+    <div class="card">
+      <span class="icon">&#x1f504;</span>
+      <h3>Content Changes</h3>
+      <p>SHA-256 content hash comparison between checks. Detect unauthorized changes, injected scripts, or broken layouts.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="try">
+<div class="wrap">
+  <h2>Free vs Pro</h2>
+  <table>
+    <tr>
+      <th>Feature</th>
+      <th style="text-align:center">Free (CLI)</th>
+      <th style="text-align:center">Pro ($19)</th>
+    </tr>
+    <tr>
+      <td>URL checking</td>
+      <td class="inc">&#10003;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>SSL expiry check</td>
+      <td class="inc">&#10003;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>Content hash comparison</td>
+      <td class="inc">&#10003;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>Use from terminal</td>
+      <td class="inc">&#10003;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>System tray desktop app</td>
+      <td class="missing">&mdash;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>Background monitoring (watch mode, up to 3 URLs)</td>
+      <td class="inc">&#10003;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>More than 3 monitored URLs</td>
+      <td class="missing">&mdash;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>Email / webhook alerts</td>
+      <td class="missing">&mdash;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+    <tr>
+      <td>Unlimited URLs</td>
+      <td class="missing">&mdash;</td>
+      <td class="inc">&#10003;</td>
+    </tr>
+  </table>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Why a desktop app?</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>&#x1f50c; No monthly bill</h3>
+      <p>Pingdom costs $12/mo. UptimeRobot Pro is $7/mo. That's $84&ndash;144/year. DeskUptime is <strong>$19 once</strong>. Three months and you've saved money.</p>
+    </div>
+    <div class="card">
+      <h3>&#x1f3e0; Runs on your machine</h3>
+      <p>No cloud account. No third-party server seeing your URLs. Your data stays on your computer. Privacy by default.</p>
+    </div>
+    <div class="card">
+      <h3>&#x1f6e0;&#xfe0f; CLI + Desktop</h3>
+      <p>Use the terminal for quick checks, the desktop app for continuous monitoring. Same engine, two interfaces.</p>
+    </div>
+    <div class="card">
+      <h3>&#x1f50d; Universal</h3>
+      <p>Works on any website — WordPress, Shopify, Netlify, Cloudflare Pages, your grandma's hand-coded HTML. No integration needed.</p>
+    </div>
+    <div class="card">
+      <h3>&#x1f510; License key</h3>
+      <p>Pro features unlock via Lemon Squeezy license key. 3 machines per purchase. No DRM, no phone-home — just a key.</p>
+    </div>
+    <div class="card">
+      <h3>&#x1f4c8; Lifetime updates</h3>
+      <p>One purchase covers all future v1.x releases. Major version upgrades at a discount. No subscription treadmill.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="pro" class="cta-section">
+<div class="wrap">
+  <h2>Get DeskUptime Pro</h2>
+  <p class="sub">$19 one-time. License key unlocks the desktop app, system notifications and unlimited URLs. Watch mode is free in the CLI.</p>
+
+  <div style="max-width:400px;margin:0 auto;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center">
+    <div style="font-size:48px;font-weight:800;color:var(--accent);letter-spacing:-.03em">$19</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">one-time &middot; 3 activations</div>
+    <ul style="list-style:none;font-size:14px;text-align:left;display:inline-block;margin:0 auto">
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Desktop app (Tauri, Mac + Windows)</li>
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Background monitoring</li>
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; System notifications</li>
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Email &amp; webhook alerts</li>
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Unlimited URLs</li>
+      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Lifetime updates (v1.x)</li>
+    </ul>
+    <div id="pro-status" style="margin-top:20px;padding:12px 20px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;font-size:13px;text-align:center">
+      &#x23f3; License sales starting soon via Lemon Squeezy.<br>
+      Leave your email and we'll notify you.
+    </div>
+    <form id="pro-waitlist-form" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <input type="email" id="pro-email" placeholder="your@email.com" required
+             style="padding:11px 14px;border:1px solid var(--line);border-radius:6px;font-size:14px">
+      <button type="submit" id="pro-notify-btn"
+              style="background:var(--accent);color:#fff;border:0;border-radius:6px;padding:11px;font-size:14px;font-weight:600;cursor:pointer">Notify Me</button>
+      <p class="note" id="pro-msg" role="status" aria-live="polite">No spam. Only one email when licenses go live.</p>
+    </form>
+  </div>
+</div>
+</section>
+
+<script>
+(function() {
+  // Waitlist signup via main site API (unified, test-domains rejected server-side)
+  var WAITLIST = '/api/waitlist';
+
+  // Waitlist count
+  fetch(WAITLIST, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: '__probe__', source: 'count-check' }) })
+    .then(function(r){ return r.json(); }).then(function(d){
+      // Don't increment — count endpoint is read-only via stats; show count from /api/stats
+  }).catch(function(){});
+
+  document.getElementById('pro-waitlist-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var email = document.getElementById('pro-email').value.trim();
+    var msg = document.getElementById('pro-msg');
+    var btn = document.getElementById('pro-notify-btn');
+    if (!email) { msg.textContent = 'Please enter your email.'; return; }
+    btn.disabled = true;
+    try {
+      var r = await fetch(WAITLIST, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, source: 'deskuptime-pro' })
+      });
+      var d = await r.json();
+      if (r.ok) {
+        msg.textContent = d.message || "You're on the list!";
+        btn.textContent = '\u2713 Joined';
+      } else {
+        msg.textContent = d.error || 'Try again.';
+        btn.disabled = false;
+      }
+    } catch (err) {
+      msg.textContent = 'Network error — please try again.';
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+
+<footer>
+<div class="wrap">
+  Built by <a href="https://github.com/mahope">Mahope</a> &middot; Engine open source on <a href="https://github.com/mahope/deskuptime">GitHub</a> &middot; 
+  <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a>
+</div>
+</footer>
+
+</body>
+</html>

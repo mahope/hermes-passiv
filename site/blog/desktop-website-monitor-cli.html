@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill</title>
+<meta name="description" content="Pingdom, UptimeRobot, Better Uptime — they all cost $7-12/month for the same thing. DeskUptime is $19 once. No cloud, no monthly fee. CLI included.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill">
+<meta property="og:description" content="A one-time $19 purchase replaces $144/year SaaS subscriptions. Runs on your machine. CLI included. Open source engine.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill", "description": "A one-time $19 desktop app replaces $144/year SaaS subscriptions. Monitor uptime, SSL and content changes from your own machine.", "url": "https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Passiv"}, "publisher": {"@type": "Organization", "name": "Passiv"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. Pro ($19) unlocks the desktop app, notifications, and unlimited URLs."}},
+  {"@type": "Question", "name": "What does DeskUptime check?","acceptedAnswer": {"@type": "Answer","text": "HTTP status + response time, SSL certificate validity + expiry countdown, and SHA-256 content hash comparison for change detection. It works on any URL regardless of CMS or hosting provider."}},
+  {"@type": "Question", "name": "How is DeskUptime different from UptimeRobot or Pingdom?","acceptedAnswer": {"@type": "Answer","text": "DeskUptime runs on your machine, not a cloud server. This means no monthly subscription ($19 one-time vs $7-12/month), your data never leaves your computer, and you can check internal/staging URLs without exposing them. The trade-off is that monitoring stops when your computer is off, though the CLI watch mode can run on any always-on machine (Raspberry Pi, server, etc.)"}},
+  {"@type": "Question", "name": "Can I use DeskUptime in CI/CD?","acceptedAnswer": {"@type": "Answer","text": "Yes. The CLI is a standard Node.js script — it works in GitHub Actions, GitLab CI, or any Unix terminal. Exit codes are 0 for success, 1 for errors. Use it for pre-deploy URL checks, scheduled monitoring, or integration tests."}}
+]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">ARTICLE</div>
+    <h1>Desktop Website Monitor:<br>Kill Your $144/year SaaS Uptime Bill</h1>
+    <p class="subtitle">Pingdom, UptimeRobot, Better Uptime — they all charge $7&ndash;12 per month for monitoring HTTP status, SSL expiry, and response time. DeskUptime is <strong>$19 once</strong>, runs on your own machine, and includes a free CLI.</p>
+    <div class="hero-cta">
+      <a href="/deskuptime/" class="btn-primary">See DeskUptime &rarr;</a>
+      <a href="/" class="btn-secondary">Back to Home</a>
+    </div>
+  </div>
+</header>
+
+<main class="container" style="max-width:720px;padding:40px 20px;line-height:1.8">
+
+<h2>Three monitoring services, same pain</h2>
+
+<p>If you run a small web agency, you probably have accounts on two or three uptime monitoring services:</p>
+
+<p>UptimeRobot Pro ($7/month). Pingdom Standard ($12/month). Better Stack ($10/month). Maybe a dedicated SSL monitor and a separate content-change watcher on top.</p>
+
+<p>That's $84&ndash;$144 per year. For what? A green dot in a dashboard and an email when your site is down. You're paying for the cloud hosting, the billing system, the user management — features you don't need when you're the only person monitoring your sites.</p>
+
+<h2>What DeskUptime does</h2>
+
+<p>DeskUptime is a desktop website monitor that checks three things:</p>
+
+<ol>
+<li><strong>Uptime</strong> &mdash; HTTP status code + response time + redirect tracking</li>
+<li><strong>SSL</strong> &mdash; certificate expiry countdown, issuer, cipher, protocol</li>
+<li><strong>Content changes</strong> &mdash; SHA-256 hash comparison between checks</li>
+</ol>
+
+<p>It's universal. Works on WordPress, Shopify, Netlify, hand-coded HTML. It doesn't care what CMS you use, because it checks from the outside &mdash; exactly like a real visitor would.</p>
+
+<h2>Free CLI</h2>
+
+<p>The terminal version is free and requires no account:</p>
+
+<pre style="background:#f5f7fa;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.7">$ npx github:mahope/deskuptime check https://example.com
+
+✅ https://example.com
+   Status:   200 OK
+   Response: 85ms
+   🔒 SSL:     63 days ✅
+   &mdash; Content: 559 bytes</pre>
+
+<p>Watch mode runs in the background, stores state in <code>~/.deskuptime/state.json</code>, and prints alerts on status changes &mdash; site goes down, SSL expires within 14 days, or content changes from the last check.</p>
+
+<pre style="background:#f5f7fa;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.7">$ deskuptime watch https://mystore.com --interval 300
+
+👀 Monitoring 1 URL(s), every 300s.
+
+[10:15 AM] ✓ all monitored sites OK
+[10:20 AM] 🚨 https://mystore.com is DOWN
+[10:25 AM] ✅ https://mystore.com is UP (200)</pre>
+
+<p>The free tier monitors up to 3 URLs and uses a minimum 60-second interval. State persists across restarts &mdash; stop and resume anything.</p>
+
+<h2>What Pro ($19) adds</h2>
+
+<table style="width:100%;border-collapse:collapse;margin:16px 0">
+<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:left">Feature</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Free</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:center">Pro ($19)</th></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">URL checking</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">SSL expiry</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Content change detection</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">CLI check + watch</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003; (3 URLs max)</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003; (unlimited)</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Desktop app (system tray)</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&mdash;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Email &amp; webhook alerts</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&mdash;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Lifetime updates</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&mdash;</td><td style="padding:10px;border:1px solid #ddd;text-align:center">&#10003;</td></tr>
+</table>
+
+<p>Pro unlocks via a Lemon Squeezy license key &mdash; pay once, get a key, activate on up to 3 machines. No phoning home, no DRM, no subscription.</p>
+
+<h2>Why buy vs rent</h2>
+
+<p>The case is simple math:</p>
+
+<table style="width:100%;border-collapse:collapse;margin:16px 0">
+<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd">Service</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">1 year</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">3 years</th></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Pro</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$84</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$252</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Pingdom Standard</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$144</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$432</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Better Uptime</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$120</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$360</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd;font-weight:600">DeskUptime Pro</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td></tr>
+</table>
+
+<p>A single DeskUptime license pays for itself in two months. After that, every month is savings.</p>
+
+<h2>Licensing &amp; privacy</h2>
+
+<p>Pro license keys are processed through <a href="https://lemonsqueezy.com" rel="nofollow">Lemon Squeezy</a> &mdash; Stripe-backed payment processing with built-in EU VAT handling and US sales tax. Your purchase generates a license key instantly. Validate it locally &mdash; the app only phones home to verify the key once during activation.</p>
+
+<p>The open-source engine is MIT licensed. <a href="https://github.com/mahope/deskuptime">Review it on GitHub</a>.</p>
+
+<h2>What we're still building</h2>
+
+<p>The desktop app with system tray, native notifications, and email/webhook alerts is under development. The CLI and watch mode are ready and tested today.</p>
+
+<p style="margin-top:32px"><a href="/deskuptime/" class="btn-primary">See DeskUptime &rarr;</a></p>
+
+</main>
+
+<footer style="border-top:1px solid #d0d8e0;padding:24px 0;text-align:center;font-size:13px;color:#4a5a6a;max-width:720px;margin:40px auto 0">
+  Built by <a href="https://github.com/mahope">Mahope</a> &middot; Open source at <a href="https://github.com/mahope/deskuptime">GitHub</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a>
+</footer>
+
+</body>
+</html>
