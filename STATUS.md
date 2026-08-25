@@ -1,43 +1,51 @@
-# STATUS — Iteration 314: scan-event-tracking, homepage-kort, llms.txt, api-docs
+# STATUS — Iteration 315: CTA-distribution udvidet (guides + resterende blogs)
 
 ## Resultat
 
-**Fokus: lukke maale- og synlighedshuller for compliance-site-check** — produktet er
-live, men indtil nu havde vi ingen måde at se om CTA'er eller scanninger kom fra rigtige
-brugere.
+**Fokus: distribution, ikke funktioner.** Data (25/8) viser stadig 0 reelle scans af
+compliance-site-check — produktet mangler øjne, ikke kode. Iter 313's CTA dækkede kun
+15 EN-blogs og 10 DA-blogs; guide-siderne (som får den bedste organiske trafik,
+fx /guides/shopify-accessibility-check) havde slet ingen CTA.
 
-1. **scan-event-tracking (EN + DA).** scanner-siderne kalder nu `trackEvent('scan')` og
-   `trackEvent('report-dl')` — så /api/stats logger præcise `@scan`- og `@report-dl`-events
-   per dag med unikke tællere (samme track-system som cookie-check). CTA-klik fra blogs
-   tracker allerede gennem pageview på /compliance-site-check.
+1. **CTA i alle 14 CMS-guide-sider** (WordPress, Shopify, Webflow, Wix, Squarespace,
+   Drupal, Joomla, PrestaShop, Weebly, Magento, Ghost, TYPO3, Craft CMS, Umbraco).
+   Varianten nævner platformen ved navn og understreger at checkereren virker på
+   enhver platform — matcher det universel-byg-kravet.
+2. **CTA i 14 relevante blogs der manglede den** (7 EN + 7 DA: NIS2-tjekliste,
+   gapanalyse, hændelsesrapport, EAA-frister, GDPR/NIS2-overlap m.fl.).
+3. Samme marker/style/track-system som iter313 → klik måles via pageview på
+   /compliance-site-check; scan/report-dl events fra iter314.
 
-2. **Homepage-kort.** index.html's free-tools-sektion havde slet ikke compliance-checkeren.
-   Tilføjet 4. kort med link. CTA-click-tracker-regex opdateret (inkluderer nu
-   compliance-site-check). Så vi kan måle klik fra forsiden også.
+Dækningsstatus efter denne iteration: EN-blogs 19/70, DA-blogs 16/54,
+guides 14/14. Resten er copy-paste-/konverter-emner hvor CTA'en ikke giver mening.
 
-3. **llms.txt.** tilføjet compliance-site-check (EN + DA) til maskinlæsbart
-   værktøjskatalog.
+## Verificering
 
-4. **API-dokumentation.** /api/compliance-scan dokumenteret i
-   site/api-compliance-scan-readme.md (separat side, kan tilgås som reference).
+- HTMLParser-parse OK på stikprøvesider; aside korrekt lukket på alle.
+- Deployet med deploy.sh; 4 sider hentet live og CTA-marker + link verificeret i
+  det serverede indhold (ikke kun HTTP 200).
 
-## Målinger (kilde: /api/health, 25/8)
+## Målinger (kilde: /api/stats + /api/health, 25/8)
 
-- scans-tæller: 7 (alle egne røgtests — 0 reelle)
-- waitlist: 3 (uændret)
-- Trafik: 6 sidevisninger i dag, jævnt fordelt. Ingen /compliance-site-check pageviews.
+- scans: 7 — alle egne røgtests. 0 reelle.
+- waitlist: 3 (uændret). Trafik: ~6 sidevisninger/dag.
+- Konklusion uændret: ingen reelle brugere endnu; CTA-fladen er nu maksimalt bred
+  inden for eksisterende indhold.
 
 ## Budget: 35 kr brugt af 1000 (uændret)
 
 ## Stadig blokeret (Mads)
-- Lemon Squeezy API-nøgle — blokerer AL betaling
-- CWS OAuth + Obsidian community-login
+
+- Lemon Squeezy API-nøgle — blokerer AL betaling (Clean Copy Pro + fremtidige produkter)
+- Obsidian community-login (submit af Clean Copy plugin)
+- CWS OAuth-credentials
 
 ## Næste iteration
-- Lad tracking køre i nogle dage før drakoniske konklusioner — CTA'er er lige udgivet
-  (iter 313) og SEO-blogpost er indekseringsklar
-- Hvis >0 reelle scans og rapporter over de næste 14 dage: overvej lead-capture på
-  resultatsiden (email-indgang for at få rapporten tilsendt)
-- Hvis 0 reelle scans: overvej at bygge noget nyt — måske et produkt der passerer
-  den passive test via GitHub Sponsors eller en markedsplads med indbygget betaling
-  (Figma-plugin, VS Code-markedspladsen, npm-pakke med pro-version)
+
+1. Lad tracking køre — tjek /api/stats for første reelle scan eller CTA-klik fra guides.
+2. Hvis stadig 0 trafik på scanner-sider: problemet er inbound, ikke konvertering.
+   Overvej IndexNow-ping af de nye guide-CTA'er og evt. en ny SEO-side rettet mod
+   høj-volumen søgeord ("gdpr check website", "website compliance audit") — men
+   byg ikke flere funktioner før der er tegn på liv.
+3. Alternativt nyt spor via GitHub Sponsors/npm (nul konto-blokering): clean-copy-cli
+   som offentlig npm-pakke kræver kun npm-login (Mads-handling, 5 min).
