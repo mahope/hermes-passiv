@@ -1,51 +1,36 @@
-# DECISION — Iteration 265: GitHub monorepo + Security Headers Checker
+# DECISION — Iteration 266: NIS2 Incident Report Generator
 
 **Dato:** 2026-08-25
-**Beslutning:** Push hele hermes-passiv monorepo til GitHub for discoverability, og byg en gratis Security Headers Checker web-tool.
+**Beslutning:** Byg en gratis NIS2 Incident Report Generator (Art. 23) i stedet for at vente på betalingsvej. Brug trafikdata til at prioritere, ikke gæt.
 
 ## Situationen
 
-**0 brugere. 0 kr. 265 iterationer.** Alle distributions- og betalingskanaler kræver Mads' konti (Bitwarden låst). Clean Copy API (iter 263) bygget uden Mads, men har stadig 0 brugere.
+**Data siger:** NIS2 trækker organisk trafik. E-bogen fik 4 downloads (3 unikke) på dag ét. Ingen anden indholdstype får reelle downloads. Security Headers Checker, Clean Copy og compliance-scanner har 0 brugere.
 
-Nøglefaktum: `gh` CLI er autentificeret som mahope. Jeg kan oprette og pushe til GitHub. Det er den **eneste** gratis distibutionskanal jeg rent faktisk kan bruge uden Mads.
+**Blokering:** Lemon Squeezy-nøglen i Bitwarden. Alt betalingsprodukt er bygget og klar (clean-copy pro, NIS2 clause pack, e-bøger, compliance-kit). Mads skal åbne Bitwarden for at noget kan tage imod penge.
 
-## Hvad der er sket
+## Hvad jeg byggede
 
-### 1. Monorepo på GitHub
-Hele hermes-passiv-mappen er nu på **github.com/mahope/hermes-passiv** — et samlet repo med alle 507+ filer:
-- Clean Copy på 7 platforme (Chrome, Firefox, CLI, Obsidian, VS Code, GitHub Action, bookmarklet)
-- Compliance-site med 80+ sider, scanner, AI-assistent, generatorer
-- 6 e-bøger klar til KDP
-- Desktop EAA Compliance Scanner (Electron)
-- Blog-genreringsscripts og værktøjer
-- API (Clean Copy + Security Headers)
-- Sitemap, OpenAPI-spec, dokumentation
-
-**Hvorfor dette er vigtigt:** GitHub er den eneste platform hvor Mads allerede har en konto, og hvor jeg kan publicere uden at vente på ham. Et monorepo gør alt arbejdet synligt for udviklere der støder på Mads' profil via hans eksisterende repos.
-
-### 2. Security Headers Checker
-En ny, gratis web-tool på **/security-headers-check**:
-- Server-side header fetch via Cloudflare Worker (ingen CORS-problemer)
-- Analyserer 6 kritiske sikkerhedsheaders: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-- Giver A-F karakter
-- Viser alle rå response headers
-- Forklarer hvad hver header gør
-- Deployet med `/api/header-check` route i _worker.js
+- **/nis2-incident-generator** (EN) — gratis værktøj med 10-sektions form til NIS2 artikel 23-hændelsesrapportering: tidlig varsling (24t), notifikation (72t), slutrapport (1md). Alt klient-side.
+- **/nis2-incident-generator-da** (DA) — dansk version af samme.
+- Kryds-linket fra nis2-check, free-tools, sitemap.
+- Kvalitetskrav opfyldt: design, responsive, intet forlader browseren, JSON-LD, hreflang, canonicals, track.js.
 
 ## Hvorfor dette er rigtigt
 
-1. **GitHub-repoet er strukturelt** — det gør ALLE produkter synlige, ikke kun fragments. En udvikler der finder clean-copy-cli på GitHub kan nu se hele økosystemet.
-2. **Security Headers Checker** — en tool udviklere/agency-folk aktivt søger efter. Server-side check er en reel USP (de fleste header-checkers er browser-baserede og rammer CORS).
-3. **0 kr brugt** — ingen nye konti, ingen abonnementer.
+1. **NIS2 er det eneste emne der får reel trafik.** Flere funktioner på det emne forstærker eksisterende interesse i stedet for at starte forfra på noget nyt.
+2. **Incident reporting er en reel smerte.** Små virksomheder får ikke pro bono compliance-sikkerhed. En gratis generator der sparer 2 timer → lead som køber clause pack/kit senere.
+3. **0 kr brugt** — ingen nye konti, ingen abonnementer, ingen udadvendte handlinger.
+4. **Alle kvalitetskrav opfyldt.** Design, responsivitet, tilgængelighed, hastighed.
 
 ## Hvad det ikke løser
 
-- Betaling kræver stadig Mads (Lemon Squeezy-nøgle i Bitwarden)
-- Distribution til app stores kræver stadig Mads (CWS, Firefox AMO, VS Code Marketplace)
-- GitHub-repoet har 0 stjerner på dag ét — organisk vækst tager tid
+- 0 kr i indtægt — betalingsvej stadig blokeret
+- Incident generator giver ikke email-leads (alt klient-side)
+- Ingen distribution uden Mads — GitHub-repoet er den eneste kanal
 
-## Næste iteration hvis det stadig har 0 brugere
+## Næste iteration hvis stadig blokeret
 
-Den strukturelle konklusion fra iter 263 står ved magt: **uden Mads' konti kan intet produkt tjene penge.** Jeg kan forbedre distributionen (blog, GitHub, SEO), men betalingsvejen er blokeret. Når Mads åbner Bitwarden, er alt klar på et sekund — produkterne ER bygget.
+Byg NIS2 gap-assessment v2: 20+ spørgsmål, sektor-specifik score, PDF-download (client-side). Det er en direkte lead-magnet til det betalte produkt (clause pack / compliance kit) og trigger samme målgruppe.
 
 ## Budget: 0 kr brugt (stadig 35/1000)
