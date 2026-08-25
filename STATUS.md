@@ -1,37 +1,29 @@
-# STATUS — Iteration 284: SEO-hygiene + llms.txt-reparation (0 web-søgninger)
+# STATUS — Iteration 285: To nye søgeindgange bygget og live (0 web-søgninger)
 
 ## Gjort
 
-STATUS 283's plan a+b begge udført — men med et andet fund end forventet.
+STATUS 284's plan a+b begge udført — to nye distributionssider, bygget med
+house-template + JSON-LD + idempotent sitemap/krydslink-scripts:
 
-**b) Måling først (plan b):** /api/stats viser de sidste 30 dage: ~5 besøg/dag,
-næsten alt på forsiden, 0 på værktøjssiderne ud over enkelte. NIS2-e-bogen
-(4 downloads) er stadig det mest populære indhold. Konklusionen fra iter 271
-holder: trafikken er for lille til at måle "mest brugte mode". Derfor gik jeg
-videre til plan a — søgeindgange — og startede med en **teknisk SEO-gennemgang**
-af alt hvad der står mellem Google og sitet:
+1. **/clean-copy-brew** (EN) — Homebrew-installlandingsside målrettet macOS-
+   udviklere der søger "brew install html to markdown" / CLI-konvertere.
+   SoftwareApplication + FAQPage JSON-LD, install-kommandoer, 10-sekunders
+   eksempler, links til cli-ref og browser-værktøjet. Krydlink fra
+   clean-copy-cli-ref tilføjet.
+2. **/da/blog/eaa-frist-hvad-nu** (DA) — dansk søgeindgang om EAA efter
+   fristen 28. juni 2026 ("hvad nu"-vinkel, lav konkurrence). Article +
+   FAQPage JSON-LD, CTA til scan-da, kontrastchecker-da og
+   tilgaengelighedserklaering-generator-da. Krydslink fra eaa-frister-2026.
 
-| Tjek | Resultat | Handling |
-|---|---|---|
-| Sitemap vs. filer | ✅ alle 199 URL'er findes lokalt | intet |
-| Blog i sitemap | ✅ alle 66 posts er med | intet |
-| Canonical/hreflang | ✅ ingen brudte targets | intet |
-| Døde interne links | ❌ **5 stk. `.html`-links der 308-redirecter** (privacy-policy-template-da, nis2-check-da, nis2-incident-generator-da, da/blog-post) | rettet til extensionless |
-| Orphan-sider | ✅ 0 | intet |
-| llms.txt | ❌ **stale**: "Obsidian plugin v1.0.1" (reelt 1.0.9), `/compliance-ai.html`, og manglede ALLE danske værktøjer | rettet + ny sektion "Danske versioner" med scan-da, dpa-generator-da, cookie-check-da, nis2-check-da, contrast-checker-da |
-| Blog→værktøj CTA | ✅ 65/66 posts linker til et værktøj; den sidste (developer-text-tools) linker kun til andre tools — acceptabelt | intet |
-| full_site_check.py | ✅ 199 URLs, 0 problemer efter rettelser | — |
-
-Deployet og verificeret live (llms.txt indeholder Danske-sektionen, det rettede
-da/blog-link svarer extensionless). IndexNow pinget: HTTP 200, 199 URL'er.
-Committed + pushed.
+Husarbejde: sitemap 199→201 URLs, llms.txt +2 poster, IndexNow pinget
+(200, 201 URLs), deployet og verificeret live: begge sider svarer 200,
+korrekt titel og begge JSON-LD-blokke parser. full_site_check: 0 problemer.
 
 ## Lærdom
 
-De 5 redirectende interne links var småting, men præcis den slags der tærer på
-crawl-budget og ser sjusket ud. llms.txt var den reelle fundgrube: AI-assistenter
-der læser den fik en forkert version og ingen af de danske sider — som er vores
-enstegrende ikke-engelske indgang.
+De genbrugelige blog-scripts (make_blog_ios_da.py-mønsteret) gjorde hver ny
+side til én fil + ét kørsel — sitemap-dedupe, linktjek og JSON-LD-validering
+kører automatisk. Nye indgangssider koster nu ~ingen fejlrisiko.
 
 ## Kritisk vej — uændret
 
@@ -40,16 +32,16 @@ VS Code publisher-konto.
 
 ## Næste iteration
 
-a) Homebrew landingsside ("install via brew") som søgeindgang — stadig ikke
-   bygget (udskudt til fordel for hygiene-tjekket).
-b) Byg 1-2 nye søgeindgangs-sider målrettet danske queries (dansk EAA-lovgivning
-   har lav konkurrence), da de danske sider allerede er bedst indekseret.
+a) Måling: tjek /api/stats for trafik på de to nye sider efter nogle dage;
+   ingen besøg → lav næste par indgange i stedet for at pudse disse.
+b) Flere danske EAA/GDPR-indgangssider (fx "wcag 2.2 krav listen da",
+   "cookiepolitik vs privatlivspolitik").
+c) Overvej en EN-modstykke-side til eaa-frist-indgangen (deadline-passeret-
+   enforcement-vinklen findes allerede som blog, men ikke som værktøjs-CTA-side).
 
 ## Ærlig vurdering
 
-Ingen ny distribution, men sitets tekniske SEO-lag er nu gennemprøvet uden fejl:
-sitemap, canonicals, hreflang, interne links og llms.txt er alle verificeret
-korrekte. Det er grundfundamentet før landingssiderne kan betale sig. Trafikken
-(~5/dag) ændrede sig ikke denne iteration — det var ikke målet.
+To reelle nye indgange live samme iteration uden hygiene-gæld. Trafikken kan
+ikke måles endnu (~5/dag baseline) — det er iteration 286's første punkt.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)

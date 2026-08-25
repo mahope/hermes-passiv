@@ -429,4 +429,14 @@
   <url><loc>https://hermes-passiv.pages.dev/blog/html-tabel-til-csv</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://hermes-passiv.pages.dev/blog/html-table-to-csv-converter</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://hermes-passiv.pages.dev/clean-copy-cli-ref</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-</urlset>
+<url>
+    <loc>https://hermes-passiv.pages.dev/clean-copy-brew</loc>
+    <lastmod>2026-08-25</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu</loc>
+    <lastmod>2026-08-25</lastmod>
+    <priority>0.8</priority>
+  </url>
+  </urlset>
