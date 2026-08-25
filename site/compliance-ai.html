@@ -216,6 +216,63 @@
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-6px); opacity: 1; }
 }
+/* Lead capture bar (shown after first answer) */
+.lead-cta {
+  align-self: stretch;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 8px;
+  text-align: center;
+}
+.lead-cta .lead-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.lead-cta .lead-sub {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+.lead-cta .lead-form {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.lead-cta input[type="email"] {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.lead-cta .btn-primary {
+  padding: 10px 18px;
+  white-space: nowrap;
+}
+.lead-cta .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.lead-status {
+  font-size: 0.8rem;
+  margin-top: 8px;
+  min-height: 18px;
+}
+.lead-status.error {
+  color: var(--color-red);
+}
+@media (max-width: 640px) {
+  .lead-cta .lead-form {
+    flex-direction: column;
+  }
+}
 .beta-badge {
   display: inline-block;
   background: rgba(251, 191, 36, 0.15);
@@ -374,6 +431,7 @@
       if (data.ok) {
         addMessage(data.answer, 'assistant');
         statusEl.textContent = '';
+        showLeadCta();
       } else {
         statusEl.textContent = data.error || 'Something went wrong. Please try again.';
         statusEl.className = 'chat-status error';
@@ -454,6 +512,62 @@
   function removeTyping() {
     var typing = document.getElementById('typingIndicator');
     if (typing) typing.remove();
+  }
+
+  // Lead capture: shown once, after the visitor's first successful answer.
+  // Reuses the existing /api/waitlist endpoint (same KV list, honest copy).
+  var leadShown = false;
+  function showLeadCta() {
+    if (leadShown) return;
+    leadShown = true;
+    try { if (window.trackEvent) window.trackEvent('ai-lead-view'); } catch (e) {}
+    var bar = document.createElement('div');
+    bar.className = 'lead-cta';
+    bar.id = 'leadCta';
+    bar.innerHTML =
+      '<p class="lead-title">Want the full compliance toolkit?</p>' +
+      '<p class="lead-sub">Get notified when we launch new compliance templates and checklists. No spam, one email at launch.</p>' +
+      '<div class="lead-form">' +
+      '<input type="email" id="leadEmail" placeholder="you@agency.com" aria-label="Your email address" />' +
+      '<button type="button" class="btn-primary" id="leadBtn">Notify me</button>' +
+      '</div>' +
+      '<p class="lead-status" id="leadStatus" role="status"></p>';
+    chatBox.appendChild(bar);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById('leadBtn').addEventListener('click', submitLead);
+    document.getElementById('leadEmail').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') submitLead();
+    });
+  }
+
+  function submitLead() {
+    var email = document.getElementById('leadEmail').value.trim();
+    var st = document.getElementById('leadStatus');
+    if (!/^[^\s@]{1,64}[^\s@]*@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      st.textContent = 'Please enter a valid email address.';
+      st.className = 'lead-status error';
+      return;
+    }
+    var btn = document.getElementById('leadBtn');
+    btn.disabled = true;
+    fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      try { if (window.trackEvent) window.trackEvent('ai-lead'); } catch (e) {}
+      st.textContent = data.ok
+        ? 'Thanks — you are on the list. We will email you once at launch.'
+        : (data.error || 'Something went wrong. Please try again.');
+      st.className = 'lead-status' + (data.ok ? '' : ' error');
+    })
+    .catch(function() {
+      btn.disabled = false;
+      st.textContent = 'Network error. Please try again.';
+      st.className = 'lead-status error';
+    });
   }
 })();
 </script>

@@ -578,6 +578,40 @@ async function handleComplianceAI(request, env) {
     );
   }
 
+  // === Rate limit: max 20 questions per visitor per day (UTC) ===
+  // Keeps OpenRouter spend bounded so the assistant can run unattended.
+  if (env.VISITS) {
+    try {
+      const vh = await visitorHash(request);
+      const rlKey = `airl:${dailySalt()}:${vh}`;
+      const used = parseInt((await env.VISITS.get(rlKey)) || '0', 10);
+      if (used >= 20) {
+        try {
+          const hk = `airl-hit:${dailySalt()}`;
+          const hp = parseInt((await env.VISITS.get(hk)) || '0', 10);
+          await env.VISITS.put(hk, String(hp + 1), { expirationTtl: 2 * 86400 });
+        } catch { /* best-effort */ }
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: 'Daily question limit reached (20). Please come back tomorrow — the limit resets at midnight UTC.',
+            limitReached: true,
+          }),
+          { status: 429, headers }
+        );
+      }
+      await env.VISITS.put(rlKey, String(used + 1), { expirationTtl: 2 * 86400 });
+    } catch { /* rate-limit must never block a working answer */ }
+
+    // Anonymous usage counter (no content stored) for /api/stats visibility.
+    try {
+      const cKey = 'ai-ask-count';
+      const prev = parseInt((await env.VISITS.get(cKey)) || '0', 10);
+      await env.VISITS.put(cKey, String(prev + 1), { expirationTtl: 365 * 86400 });
+    } catch { /* counting is best-effort */ }
+  }
+
+
   const systemPrompt = `You are a practical EU digital compliance expert for small web agencies (1-50 employees). You answer questions about:
 
 1. **EAA (European Accessibility Act)** — WCAG 2.1/2.2 AA requirements, accessibility statements, enforcement since June 2025, exemptions for micro-enterprises
@@ -1091,7 +1125,13 @@ async function handleStats(url, env) {
   let licenses_issued = null;
   try { licenses_issued = parseInt((await env.VISITS.get('t:all:licenses-issued')) || '0', 10); } catch {}
 
-  return jsonResp({ ok: true, days, stats: filtered, waitlist, licenses_issued });
+  // AI assistant usage (anonymous counters, no question content stored)
+  let ai_asks = null;
+  try { ai_asks = parseInt((await env.VISITS.get('ai-ask-count')) || '0', 10); } catch {}
+  let ai_limited_today = null;
+  try { ai_limited_today = parseInt((await env.VISITS.get(`airl-hit:${dailySalt()}`)) || '0', 10); } catch {}
+
+  return jsonResp({ ok: true, days, stats: filtered, waitlist, licenses_issued, ai_asks, ai_limited_today });
 }
 
 /**

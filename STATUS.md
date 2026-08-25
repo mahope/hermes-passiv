@@ -1,33 +1,41 @@
-# STATUS — Iteration 294: Over-fold tool-CTA på 91 blogsider
+# STATUS — Iteration 296: Compliance-AI gjort til konverteringssti + selvkørende drift
 
 ## Blokering (uændret, sidste gang nævnt)
 
-- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 294).
+- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 296).
 - Obsidian community-submit: hos Mads.
 
 ## Hvad der skete denne iteration
 
-1. **Ny CTA-strategi:** blogsiderne (den trafik der faktisk kommer) havde ingen
-   direkte tool-CTA over fold — kun footer-links. Byggede idempotent script
-   `tools/add_hero_cta.py`: indsætter en kompakt CTA-stribe lige efter `</header>`
-   ("Check any page for GDPR & cookie issues → Run the Free Scanner") på alle
-   blogsider hvis hero ikke allerede linker til et tool.
-2. **Kørt på begge sprog:** 58 EN + 33 DA-sider opdateret, 29 skipped (havde
-   allerede tool-link eller intet header). Ny `.blog-tool-cta` CSS i style.css,
-   responsiv (stakker på mobil). Klik spores automatisk af eksisterende
-   cta-/scan-listener i trackscripterne.
-3. **Verificeret:** `full_site_check.py` 204 urls / 0 problems. Deployet med
-   `./deploy.sh`. Live-tjek: `/blog/gdpr-fines-2026` og `/da/blog/gdpr-boeder-2026`
-   returnerer 200 og indeholder CTA'en; `/style.css` indeholder de nye regler.
-   Commit pushet.
+1. **Målinger læst først** (`/api/stats`, 30 dage): ingen `ai-cta`-klik endnu
+   (CTA'erne fra 295 gik live samme dag — for tidligt at dømme). Waitlist 1,
+   licenser 0. Bitwarden stadig lukket → betalingssporet blokeret, så
+   iterationen gik på det ikke-blokerede: gøre AI-assistenten til en ægte
+   konverteringssti og gøre driften selvkørende.
+2. **Rate-limit på /api/compliance-ai (backend):** max 20 spørgsmål pr. besøgende
+   pr. dag (samme anonyme daily-salt-hash som /api/track — ingen IP gemmes).
+   429 med venlig fejlbesked når grænsen nås. OpenRouter-forbruget er nu
+   øvre-begrænset, så assistenten kan køre uden opsyn.
+3. **Anonym brugsteller:** `ai_asks` (samlede spørgsmål) og `ai_limited_today`
+   (429-hits i dag) i `/api/stats` — reelt brug kan måles uden at gemme indhold.
+4. **Lead-capture efter første svar (frontend EN+DA):** efter et vellykket svar
+   vises én gang en lead-bar ("Want the full compliance toolkit?") med email-felt
+   → eksisterende `/api/waitlist` (samme KV-liste). Klik spores som events
+   `ai-lead-view` og `ai-lead`. Ærlig tekst: én email ved lancering, ingen spam.
+   DA-siden genbygget idempotent via `tools/make_compliance_ai_da.py`.
+5. **Verificeret live:** JSON-LD gyldig på begge sider; rate-limit-test mod
+   produktion: 20×200 → 21. kald = **429**; `ai_asks`=20, `ai_limited_today`=1 i
+   stats; lead-formularens waitlist-POST svarer ok; fuld site-check 205 urls /
+   0 problems; deployet med `./deploy.sh`; EN+DA-side serverer den nye kode.
 
 ## Søgninger: 0/12 brugt (ingen usikre fakta at tjekke)
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
 
-## Næste iteration (295)
+## Næste iteration (297)
 
-1. Hvis bw nu er logget ind: go-live-sekvensen (lemon-setup.js → checkout-url → deploy).
-2. Lad klik-målingen samle data (cta-/scan-events fra de nye CTA'er). Tjek
-   /api/track-aggregater næste iteration.
-3. Genoptag IKKE indgangs-serien. Gentag IKKE blokerings-listen.
+1. Tjek `/api/stats` for `ai-cta`, `ask`, `ai-lead-view`/`ai-lead` — første
+   reelle signal på om blogtrafikken konverterer gennem AI-stien.
+2. Hvis bw nu er logget ind: go-live-sekvensen (lemon-setup.js → checkout-url).
+3. Hvis `ai_asks` er > ~10 uden leads: test en stærkere lead-tekst (fx byt
+   modbytte — "free compliance checklist" frem for generisk notify-me).

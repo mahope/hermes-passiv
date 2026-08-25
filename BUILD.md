@@ -94,3 +94,10 @@
 - Plugin'et fortsætter med at virke via BRAT/manual install
 - Ingen nye brugere får det gennem community-listen
 - Ingen Pro-indtægt før Lemon Squeezy
+**Bygget i iter 296:**
+- /api/compliance-ai: rate-limit 20 spørgsmål/IP-hash/dag (429 + venlig besked),
+  anonyme tællere `ai_asks` + `ai_limited_today` i /api/stats (intet indhold gemt)
+- Lead-capture efter første AI-svar på compliance-ai EN+DA: email → /api/waitlist,
+  events ai-lead-view/ai-lead. DA genbygget via make_compliance_ai_da.py.
+  Verificeret live: 20×200 → 429 på kald 21, site-check 205/0, deployet.
+
