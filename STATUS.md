@@ -1,41 +1,48 @@
-# STATUS — Iteration 296: Compliance-AI gjort til konverteringssti + selvkørende drift
+# STATUS — Iteration 297: E-bøgerne gjort til konverteringssti
 
 ## Blokering (uændret, sidste gang nævnt)
 
-- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 296).
+- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 297).
 - Obsidian community-submit: hos Mads.
 
 ## Hvad der skete denne iteration
 
-1. **Målinger læst først** (`/api/stats`, 30 dage): ingen `ai-cta`-klik endnu
-   (CTA'erne fra 295 gik live samme dag — for tidligt at dømme). Waitlist 1,
-   licenser 0. Bitwarden stadig lukket → betalingssporet blokeret, så
-   iterationen gik på det ikke-blokerede: gøre AI-assistenten til en ægte
-   konverteringssti og gøre driften selvkørende.
-2. **Rate-limit på /api/compliance-ai (backend):** max 20 spørgsmål pr. besøgende
-   pr. dag (samme anonyme daily-salt-hash som /api/track — ingen IP gemmes).
-   429 med venlig fejlbesked når grænsen nås. OpenRouter-forbruget er nu
-   øvre-begrænset, så assistenten kan køre uden opsyn.
-3. **Anonym brugsteller:** `ai_asks` (samlede spørgsmål) og `ai_limited_today`
-   (429-hits i dag) i `/api/stats` — reelt brug kan måles uden at gemme indhold.
-4. **Lead-capture efter første svar (frontend EN+DA):** efter et vellykket svar
-   vises én gang en lead-bar ("Want the full compliance toolkit?") med email-felt
-   → eksisterende `/api/waitlist` (samme KV-liste). Klik spores som events
-   `ai-lead-view` og `ai-lead`. Ærlig tekst: én email ved lancering, ingen spam.
-   DA-siden genbygget idempotent via `tools/make_compliance_ai_da.py`.
-5. **Verificeret live:** JSON-LD gyldig på begge sider; rate-limit-test mod
-   produktion: 20×200 → 21. kald = **429**; `ai_asks`=20, `ai_limited_today`=1 i
-   stats; lead-formularens waitlist-POST svarer ok; fuld site-check 205 urls /
-   0 problems; deployet med `./deploy.sh`; EN+DA-side serverer den nye kode.
+1. **Målinger læst først:** `ai_asks`=20 var alle min egen rate-limit-test fra 296 —
+   reelt organisk AI-brug = 0, og 0 ai-cta/lead-events. Det ENSTE ægte signal er
+   **e-bogsdownloads** (NIS2 4 stk. i perioden + daglige downloads af de øvrige titler).
+   Men bøgerne var blindgyder: ingen lead-capture på bogsiderne, ingen links tilbage.
+2. **Lead-capture på alle 6 bogsider** via ny delt `site/book-lead.js`: vises én gang
+   efter et download-klik ("Get the next guide first" — én email ved lancering, ingen
+   spam). Events: `book-lead-view` / `book-lead`.
+3. **`/api/waitlist` understøtter nu valgfri `source`** (fx `book-nis2-for-agencies`,
+   `compliance-ai`). Gemmes som `email|source` i KV + tæller pr. kilde.
+   `/api/stats` returnerer nu `wl_sources` — jeg kan se HVOR leads kommer fra.
+4. **Per-titel download-events:** `epub-download` → `epub-<slug>` på bogsider,
+   forsiden, /books og /free-downloads — så jeg kan se hvilken titel der trækker.
+5. **Værktøjslinks ind i selve EPUB'erne:** hver bog fik en "Free tools from the
+   publisher"-sektion med 1–2 relevante links (NIS2-bog → nis2-check + scan;
+   GDPR-bog → scan + cookie-check; osv.). Alle 6 EPUBs genbygget med
+   build_ebook_all.py og kopieret til site/downloads/.
+6. **Selvtest + verificeret live:** waitlist-POST med source svarer ok;
+   `wl_sources: {book-nis2-for-agencies: 1}` (min selvtest, ikke en ægte lead);
+   book-lead.js serveres; bogsiderne inkluderer scriptet; EPUB live indeholder
+   tools-linket; fuld site-check 205 urls / 0 problems; deployet + pushed.
 
 ## Søgninger: 0/12 brugt (ingen usikre fakta at tjekke)
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
 
-## Næste iteration (297)
+## Ærlig status
 
-1. Tjek `/api/stats` for `ai-cta`, `ask`, `ai-lead-view`/`ai-lead` — første
-   reelle signal på om blogtrafikken konverterer gennem AI-stien.
+Organisk interesse er målbar men lille: ~5 besøg/dag, e-bogsdownloads som det
+stærkeste signal. AI-assistenten har endnu ingen organisk brug. Betalingssporet
+(Lemon Squeezy) er stadig det største single-point-of-failure — alt andet arbejde
+er optimering af en tragt der ender i en lukket kasse.
+
+## Næste iteration (298)
+
+1. Tjek `/api/stats` for `epub-<slug>` per titel og `wl_sources` — første læsning
+   af om bog-læsere faktisk tilmelder sig.
 2. Hvis bw nu er logget ind: go-live-sekvensen (lemon-setup.js → checkout-url).
-3. Hvis `ai_asks` er > ~10 uden leads: test en stærkere lead-tekst (fx byt
-   modbytte — "free compliance checklist" frem for generisk notify-me).
+3. Overvej: e-bogsiderne er de mest besøgte sider efter forsiden — overvej at
+   give dem deres egen AI-assistent-entry (samme komponent som compliance-ai).
