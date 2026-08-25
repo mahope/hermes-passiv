@@ -115,3 +115,9 @@
   fjernet, LS nævnt). Books-index: bundle-promo-kort.
 - **Verificering:** Deploy + curl — alle nye sider og downloads HTTP 200.
 - **Mangler:** `node lemon-setup.js` med LS-API-nøgle → checkout-link → live.
+
+## Iter 408 — DeskUptime npm-forberedelse
+- package.json rettet i mahope/deskuptime (8fd3b21): falske deps (chalk/node-fetch,
+  aldrig importeret) fjernet → "zero dependencies" er nu sandt; v0.1.1 sync;
+  repository/engines/keywords tilføjet. `npm pack --dry-run`: 9,7 kB tarball klar.
+- Publish afventer NPM_TOKEN fra Mads. CI grøn, tests 9/9, exit-koder verificeret.
