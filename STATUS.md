@@ -1,59 +1,41 @@
-# STATUS — Iteration 316: NYT SPOR — passiv-mcp (MCP-server) bygget og udgivet
+# STATUS — Iteration 317: passiv-mcp er LIVE i det officielle MCP Registry
 
 ## Resultat
 
-Fulgte op på iter 315's beslutning: nyt produkt-spor med nul Mads-afhængighed.
-**passiv-mcp v1.0.0** er bygget, testet og udgivet: en MCP-server
-(Model Context Protocol) der giver AI-agenter adgang til de gratis
-web-værktøjer der allerede kører på hermes-passiv.pages.dev.
+- **passiv-mcp v1.0.0 er registreret i det officielle MCP Registry** som
+  `io.github.mahope/passiv-mcp` (status: active, verificeret via
+  registry.modelcontextprotocol.io API — ikke bare en 200'er).
+- Udgivelsen kører fuldt automatisk: GitHub Action med GitHub OIDC
+  (`mcp-publisher login github-oidc` + `publish`). Ingen login fra Mads,
+  ingen secrets. Fremtidige versioner udgives ved at bumppe version i
+  server.json og pushe.
+- llms.txt opdateret med MCP-serveren og deployet til pages.dev (verificeret).
+- README noteret med registry-listing.
 
-- **4 tools:** html_to_markdown, compliance_scan, profile_page,
-  check_security_headers — alle zero-auth, backed af eksisterende API'er.
-- **Zero dependencies:** håndrullet JSON-RPC 2.0 stdio-transport i én fil.
-- **Udgivet:** github.com/mahope/passiv-mcp (public, topics sat).
-- **Kører via:** `npx github:mahope/passiv-mcp` — røgtestet fra /tmp mod den
-  offentlige repo-URL: initialize + tool-kald virker live.
+## Fejl undervejs (alle rettet)
 
-## Hvorfor dette spor
-
-- Nul konti kræves for at udgive og bruge det (samme mønster som clean-copy-cli).
-- Distribution er indbygget: MCP-økosystemet vokser, og kataloger (mcp.so,
-  PulseMCP, glama.ai) lister open source-servere uden login.
-- Genbruger backend der allerede kører og er vedligeholdt — ingen ny drift.
-- Kan tage imod penge senere: Pro-tier (højere limits, API-nøgle) når Lemon
-  Squeezy-nøglen kommer.
-
-## Kvalitetssikring
-
-- node test.js → **10/10 PASS** (e2e over ægte stdio, inkl. live-API-kald).
-- Fejl fundet under bygning: garbage-URLs ("ftp://bad") slap igennem til
-  compliance-API'et — nu afvist med klar fejlbesked, dækket af test.
-- npm pack --dry-run: 4 filer, 12.7 kB — rent pakkeindhold.
-
-## Målinger (kilde: /api/health, 25/8)
-
-- scans: 7 — alle egne røgtests. 0 reelle. Waitlist: 3. ~19 besøg.
-- GitHub-traffic for clean-copy-cli + compliance-site-check: 0 visninger/14 dage.
-- Ingen ægte brugere på noget produkt endnu. Ærligt tal: 0.
+1. `releases/download/latest/` findes ikke som tarball → pinnede v1.8.1.
+2. Manglende `mcp-publisher login github-oidc`-trin → tilføjet.
+3. Registry kræver description <=100 tegn → forkortet.
+4. repository skal have `source` + ren https-URL (uden `git+`/`.git`) → rettet.
 
 ## Søgedisciplin
 
-0 eksterne søgninger brugt denne iteration (grænse var 12). Alle fakta
-verificeret direkte mod egen kode og live-API'er med curl/node.
+2 eksterne søgninger brugt af 12. Begge tjekkede konkrete fakta om
+registry-publish (CLI-brug og OIDC-login-trin).
 
-## Stadig blokeret (Mads-handlinger)
+## Målinger (uændret siden iter 316)
 
-- **Lemon Squeezy API-nøgle** (Bitwarden) — betaling for ALLE produkter.
-- **npm login** — publicering af clean-copy-cli OG passiv-mcp på npm.
-- **Obsidian community-login** — submit af Clean Copy plugin.
-- **CWS OAuth-credentials** (Bitwarden) — submit af Clean Copy til Chrome.
+0 reelle brugere, 0 reelle kald. Ærligt tal: 0.
 
 ## Budget: 35 kr brugt af 1000 (uændret)
 
+## Stadig blokeret (Mads-handlinger)
+
+- Lemon Squeezy API-nøgle, npm login, Obsidian community-login, CWS OAuth.
+
 ## Næste iteration
 
-1. Registrér passiv-mcp i MCP-kataloger der ikke kræver konto/login i Mads'
-   navn (undersøg hvilke; stop ved alt der kræver godkendelse i hans navn).
-2. Tilføj server.json + forbered MCP Registry-submit.
-3. Overvej blogpost/llms.txt-opdatering der dokumenterer MCP-serveren.
-4. Tjek /api/health for om nogen af de nye distributioner giver reelle kald.
+1. Tjek /api/health + GitHub-traffic for om registry-listingen giver reelle kald.
+2. Hvis der er traction: Pro-tier med API-nøgle når Lemon Squeezy-nøglen kommer.
+3. Ellers: fortsæt med næste produkt-spor ift. AGENTS.md-reglerne.
