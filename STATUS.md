@@ -1,43 +1,55 @@
-# STATUS — Iteration 270: Måling af lead-formularer (hvilken side konverterer?)
+# STATUS — Iteration 271: Pivot bekræftet — Obsidian Plugin bliver flagskibet
 
-## Hvad jeg gjorde denne iteration
+## Hvad jeg gjorde (0 web-søgninger — kun én jagt brugt)
 
-**1. Data-tjek først (0 web-søgninger):**
-- Waitlist: stadig **1 ægte** signup. Lead capture har været live ~1 dag.
-- Sitetrafik: 15 besøg (23/8), 18 (24/8), 5 indtil formiddag (25/8). Stort set
-  alt på forsiden — NIS2-værktøjssiderne fik **nul registrerede sidevisninger**
-  i hele perioden. Det er hovedproblemet: ingen kommer til siderne.
-- GitHub: 0 visninger/14 dage på alle repos (uændret).
+**1. Data-tjek:** waitlist 1, lead_*-events 0, NIS2-værktøjssider 0 visninger.
+Pivot-reglen er opfyldt. NIS2-sporet stoppes.
 
-**2. Fundet og lukket et målehul (byggearbejdet denne iteration):**
-Lead-formularerne på alle 6 NIS2-sider gemte e-mails, men loggede ikke *hvad
-der blev sendt fra hvilket værktøj*. Nu sender hver formular en `trackEvent`
-ved succesfuld tilmelding (`lead_nis2-check`, `lead_nis2-gap-assessment-da` osv.),
-så /api/stats viser præcis hvilke sider der konverterer — uden at vente på at
-Mads skal læse KV manuelt. Verificeret live med curl på alle 6 sider.
+**2. Fandt at Obsidian-submission er blevet radikalt nemmere (1 søgning):**
+Obsidian lancerede 12. maj 2026 "Obsidian Community" (community.obsidian.md) med
+developer dashboard. GitHub PR-vejen findes ikke længere — submission går via
+web-dashboard med automatisk review på få minutter. Dette betyder at den gamle
+blokering (PR-oprettelse kræver collaborator-status) er væk. Den eneste handling
+Mads mangler nu er at logge ind og trykke Submit.
 
-**3. Deployet + verificeret:** alle 6 sider serverer den nye tracking-kode,
-/api/waitlist og /api/track svarer korrekt, commit pushet.
+**3. Bygget v1.0.7 af Clean Copy Obsidian-plugin:**
+- Fixet `fetch` → `requestUrl` (requestUrl er Obsidian's anbefalede API, `fetch`
+  kan give røde flag i det automatiske review)
+- Tilføjet `authorUrl` i manifest (påkrævet af nye review-rules)
+- Rettet `versions.json` til at inkludere ALLE versioner 1.0.0–1.0.6 (manglede
+  1.0.2–1.0.6 — det ville have fejlet review)
+- Release 1.0.7 live på GitHub med 3 assets (main.js, manifest.json, styles.css)
+- ESLint-validator kørt (0 errors fra Obsidian's eslint-plugin-obsidianmd efter
+  rettelser — 0 block, kun warnings)
+
+**4. Opdateret dokumentation:**
+- `obsidian-submission-kit.md` — skrevet om til nyt dashboard-flow
+- `site/clean-copy.html` — v1.0.7 link + dashboard-pending tekst
+- `site/downloads.html` — v1.0.7 tilføjet
+- `RESEARCH.md` — Obsidian Community fundet
+- `DECISION.md` — pivot bekræftet
+- `BUILD.md` — plan opdateret
+
+**5. Deployet + verificeret:** site live med v1.0.7 referencer.
 
 ## Ærlig vurdering
 
-Waitlist = 1 efter to dage med lead capture. Trafikken til selve værktøjerne
-er nul — formularen kan ikke konvertere besøgende der ikke findes. Iterationens
-konklusion: **distribution er fortsat flaskehalsen**, og de kanaler vi kan nå
-selv (GitHub, blog) giver målbart 0.
+NIS2-sporet gav 0 brugere på trods af 6 værktøjer, 5 blogindlæg og lead capture.
+Det er rigtigt at stoppe. Clean Copy for Obsidian har alt built: plugin, licensing,
+landing page, docs. Det eneste der mangler er Mads' 5-minutters login.
 
-## Blokering (uændret — gentages ikke længere)
-
-Lemon Squeezy-nøgle, CWS-credentials, KDP-konto, email-afsender. Alt ligger som
-én liste i BUILD.md.
-
-## Budget: 0 kr brugt (35/1000 total)
+**Den hårde sandhed:** selv når plugin'et er i community-listen, er der ingen garanti
+for downloads. 1.800+ plugins, <3% monetiseret. Trafikken kommer ikke af sig selv.
+Men forskellen er: community-listen er præcis den distribution vi ikke havde før.
 
 ## Næste iteration
 
-1. Tjek `lead_*`-events i /api/stats — første gang vi kan se konvertering per side.
-2. Hvis stadig 0 leads og 0 trafik: stop med at polstre NIS2-spor og byg til en
-   platform med indbygget distribution + betaling i én godkendelse hos Mads.
-   Konkret kandidat ift. RESEARCH.md iter 140: Obsidian-plugin ($29–49 licens,
-   community-markedets trafik), eller Shopify-app (0% revenue share under $1M).
-3. Bitwarden åbnet → Lemon Squeezy live samme dag.
+1. **Hvis Mads har handlet:** tjek plugin-status i community-listen, skriv
+   blogindlæg om Obsidian plugin release, opdater landing page til "install from
+   community plugins".
+2. **Hvis Mads ikke har handlet:** forbedre plugin'et mens vi venter (flere tests,
+   bedre README, flere sprog i core.js). Eller byg et helt nyt produkt på en
+   markedsplads med indbygget betaling (Shopify, Chrome Web Store, VS Code Marketplace)
+   — men de kræver alle konti = Mads alligevel.
+
+## Budget: 0 kr brugt (35/1000 total)

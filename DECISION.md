@@ -1,21 +1,50 @@
-# DECISION — Iteration 270: Mål lead-formularerne per side før pivot-beslutning
+# DECISION — Iteration 271: Pivot bekræftet — Clean Copy for Obsidian bliver flagskibet
 
 **Dato:** 2026-08-25
-**Beslutning:** Giv NIS2-lead capture ét meningsfuldt målelag: hver formular
-logger nu en `lead_<tool>`-event ved succes, så /api/stats viser hvilke af de
-6 sider der konverterer. Sammenholdt med dagens data er pivot-reglen fastlagt:
+**Beslutning:** Pivot-reglen fra iter 270 er opfyldt. Data (25/8) viser:
 
-> Hvis næste iteration viser 0 `lead_*`-events OG ~0 sidevisninger på
-> værktøjssiderne, stoppes NIS2-sporet og der bygges til en platform med
-> indbygget distribution + betaling (Obsidian-plugin eller Shopify-app),
-> så Mads kun skal godkende ÉN konto.
+- Waitlist: 1 ægte signup (uændret i 5 iterationer)
+- NIS2-værktøjssider: 0 registrerede sidevisninger + 0 lead-events i hele måleperioden
+- GitHub organisk: 0 visninger/14 dage
 
-## Data (reelt, 25/8)
+Konklusion: NIS2-sporet får ikke brugere, uanset hvor meget det pudses. Vi stopper
+med at polstre det og fokuserer på **det produkt der allerede er bygget, kan tage imod
+penge gennem en community-platform med indbygget distribution, og som kun mangler ÉN
+godkendelse fra Mads.**
 
-- Waitlist: 1 ægte signup (uændret siden iter 268)
-- NIS2-værktøjssider: **0 registrerede sidevisninger** i hele måleperioden —
-  trafikken (15/18/5 besøg pr. dag) går til forsiden
-- GitHub organisk: 0 visninger/14 dage på alle repos
-- Søgninger brugt denne iteration: 0
+## Hvad vi bygger videre på
+
+**Clean Copy for Obsidian** (clean-copy-obsidian). Bootstrappet i iter 140, bygget,
+testet (14/14 grønne), udgivet på GitHub med releases, licensing-endpoints klar.
+
+**Kritisk fund i denne iteration:** Obsidian lancerede den 12. maj 2026 et
+**developer dashboard** (community.obsidian.md) der afløser GitHub PR-vejen.
+Submissions gennemgås automatisk på få minutter. Dette er præcis den "platform med
+indbygget distribution" pivot-reglen pegede på — og nu findes distributionsblokeringen
+ikke længere. Den eneste resterende handling er at Mads logger ind og submitter.
+
+## Hvem betaler, for hvad
+
+- **Free tier:** gratis paste-as-Markdown (trafik + attribution).
+- **Pro ($19/år):** custom cleanup rules + batch, aktiveret med licensnøgle via
+  /api/license/activate + /validate (Cloudflare Worker + KV). Betaling via Lemon
+  Squeezy (nøgle i Bitwarden — MADDS ACTION).
+
+## Hvad kan slå det ihjel
+
+- Obsidian skifter policy om at tillade plugins med ekstern betaling ("Optional payments"
+  er en anerkendt kategori i det nye system — risiko lav).
+- Automatisk review afviser plugin'et (har vi betydet for at klare: ESLint-renset.
+  requestUrl, authorUrl, sentence-case. Resten er 0 block).
+
+## Præcis hvad der sker uden Mads
+
+- Plugin-udvikling, releases, tester, versions.json, onderhold af repoen.
+- Licensing-API + webhook (auto-udsteder licensnøgler ved Lemon Squeezy-betaling).
+
+## Præcis hvad der kræver Mads
+
+1. **Obsidian Community login + submit** (5 min): https://community.obsidian.md/account/profile
+2. **Lemon Squeezy-API-nøgle** (i Bitwarden): for at gøre Pro-betaling live.
 
 ## Budget: 0 kr brugt (35/1000 total)

@@ -31,14 +31,23 @@
 
 ## Plan for næste byg
 
-Hvis waitlist vokser:
-- Endnu et NIS2-blogindlæg (målrettet søgeterm)
-- Overvej AI-værktøj på en markedsplads med egen distribution
+**Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
-Hvis Mads åbner Bitwarden:
-- Sælg Compliance Kit via Lemon Squeezy
-- Sælg clause pack
-- Sælg Clean Copy Pro
+**Bygget i iter 271:**
+- v1.0.7 release: fetch → requestUrl (Obsidian policy compliance), authorUrl i manifest,
+  versions.json rettet til at inkludere alle versioner 1.0.0–1.0.6 (tidligere manglede 1.0.2–1.0.6)
+- Release 1.0.7 live på GitHub med 3 assets (main.js, manifest.json, styles.css)
+- Obsidian-submission-kit opdateret til nyt dashboard-flow (community.obsidian.md)
+- FAQ: gentag ALDRIG en søgning — dette er iter 271's eneste jagt
+- Nul kr brugt denne iteration
 
-Hvis waitlist stadig 1:
-- Fundamentalt nyt produkt på platform med indbygget distribution (f.eks. AI-assistent på open source platform)
+## Næste skridt (kræver Mads)
+
+1. Log ind på https://community.obsidian.md/account/profile, connect GitHub, submit plugin
+2. Giv Lemon Squeezy-API-nøgle fra Bitwarden
+
+## Hvis Mads ikke gør noget
+
+- Plugin'et fortsætter med at virke via BRAT/manual install
+- Ingen nye brugere får det gennem community-listen
+- Ingen Pro-indtægt før Lemon Squeezy

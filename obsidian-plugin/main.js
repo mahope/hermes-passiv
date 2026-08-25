@@ -1,6 +1,6 @@
 /* Clean Copy for Obsidian — main plugin.
  * Commands:
- *   - "Paste as clean Markdown" (Ctrl/Cmd+Shift+V): clipboard HTML → Markdown.
+ *   - "Paste as clean Markdown": clipboard HTML → Markdown.
  *   - "Clean selection": clean the selected text in the current note.
  * Pro: custom cleanup rules + license activation against the same
  * /api/license/* endpoints Clean Copy Pro uses (Cloudflare Worker + KV).
@@ -18,7 +18,6 @@ var DEFAULT_SETTINGS = {
 };
 
 var LICENSE_API = 'https://hermes-passiv.pages.dev/api/license';
-var DEVICE_ID_KEY = 'clean-copy-device-id';
 
 function randomDeviceId() {
   var buf = new Uint8Array(16);
@@ -26,24 +25,36 @@ function randomDeviceId() {
   return Array.from(buf, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
-function hashDeviceId(id) {
-  // Match what the extension sends: a stable opaque device token. The API
-  // stores it verbatim; hashing here keeps it non-reversible in settings.json.
-  return id;
+async function licenseRequest(endpoint, payload) {
+  // Uses Obsidian's requestUrl (not fetch) per developer guidelines.
+  var res = await obsidian.requestUrl({
+    url: LICENSE_API + '/' + endpoint,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    throw: false,
+  });
+  var data = null;
+  try { data = res.json; } catch (e) { data = null; }
+  return { status: res.status, ok: res.status >= 200 && res.status < 300, data: data };
 }
 
-var CleanCopySettingTab = (function () {
-  function Tab(app, plugin) { obsidian.PluginSettingTab.call(this, app, plugin); this.plugin = plugin; }
+var CleanCopySettingTab = /** @class */ (function () {
+  function Tab(app, plugin) {
+    var _this = this;
+    obsidian.PluginSettingTab.call(_this, app, plugin);
+    _this.plugin = plugin;
+  }
   Tab.prototype = Object.create(obsidian.PluginSettingTab.prototype);
   Tab.prototype.constructor = Tab;
   Tab.prototype.display = function () {
+    var _this = this;
     var containerEl = this.containerEl;
     containerEl.empty();
-    var _this = this;
 
     new obsidian.Setting(containerEl)
       .setName('Default paste mode')
-      .setDesc('How "Paste as clean text/Markdown" converts clipboard content.')
+      .setDesc('How paste as clean text or Markdown converts clipboard content.')
       .addDropdown(function (dd) {
         dd.addOption('markdown', 'Markdown');
         dd.addOption('plain', 'Plain text');
@@ -131,14 +142,13 @@ module.exports = (function () {
       (async function () {
         _this.settings = Object.assign({}, DEFAULT_SETTINGS, await _this.loadData());
         if (!_this.settings.deviceId) {
-          _this.settings.deviceId = hashDeviceId(randomDeviceId());
+          _this.settings.deviceId = randomDeviceId();
           await _this.saveData(_this.settings);
         }
 
         _this.addCommand({
           id: 'paste-clean',
           name: 'Paste as clean ' + (_this.settings.defaultMode === 'markdown' ? 'Markdown' : 'text'),
-          hotkeys: [{ modifiers: ['Mod', 'Shift'], key: 'v' }],
           editorCallback: function (editor) { _this.pasteClean(editor); },
         });
 
@@ -188,7 +198,7 @@ module.exports = (function () {
         // Clipboard read can be denied on some platforms; fall back to
         // letting Obsidian's normal paste run, cleaned post-hoc is not
         // possible without DOM parsing, so tell the user honestly.
-        new obsidian.Notice('Could not read clipboard (' + e.message + '). Use Paste, then Clean selection.');
+        new obsidian.Notice('Could not read clipboard. Use Paste, then Clean selection.');
       }
     };
 
@@ -205,15 +215,13 @@ module.exports = (function () {
       var key = this.settings.licenseKey.toLowerCase().trim();
       if (!/^[a-f0-9]{32}$/.test(key)) return false;
       try {
-        var res = await fetch(LICENSE_API + '/activate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ license_key: key, device_id: this.settings.deviceId }),
-        });
-        var data = await res.json();
-        if (!res.ok || !data.ok) { new obsidian.Notice(data.error || 'Activation failed.'); return false; }
+        var res = await licenseRequest('activate', { license_key: key, device_id: this.settings.deviceId });
+        if (!res.ok || !res.data || !res.data.ok) {
+          new obsidian.Notice((res.data && res.data.error) || 'Activation failed.');
+          return false;
+        }
         this.settings.proActive = true;
-        this.settings.expiresAt = data.expires_at || null;
+        this.settings.expiresAt = res.data.expires_at || null;
         await this.saveSettings();
         return true;
       } catch (e) {
@@ -228,18 +236,13 @@ module.exports = (function () {
       var key = this.settings.licenseKey.toLowerCase().trim();
       if (!/^[a-f0-9]{32}$/.test(key)) { this.settings.proActive = false; return; }
       try {
-        var res = await fetch(LICENSE_API + '/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ license_key: key, device_id: this.settings.deviceId }),
-        });
-        var data = await res.json();
-        if (res.status === 403 || (data && data.valid === false)) {
+        var res = await licenseRequest('validate', { license_key: key, device_id: this.settings.deviceId });
+        if (res.status === 403 || (res.data && res.data.valid === false)) {
           this.settings.proActive = false;
           await this.saveSettings();
           new obsidian.Notice('Clean Copy Pro license is no longer valid.');
-        } else if (res.ok && data.ok) {
-          this.settings.expiresAt = data.expires_at || this.settings.expiresAt;
+        } else if (res.ok && res.data && res.data.ok) {
+          this.settings.expiresAt = res.data.expires_at || this.settings.expiresAt;
           await this.saveSettings();
         }
         // Network failure → stay pro-active offline (fail-open per session,

@@ -664,3 +664,16 @@ Chrome Web Store er den bedste distributionskanal uden Mads ($5 fee). Clean Copy
    Kilde: developers.raycast.com, manual.raycast.com.
 4. Konklusion: næste produkt ved pivot = Obsidian-plugin med free tier + $29–49 licens
    gennem Lemon Squeezy. Alt undtagen distribution-PR kan bygges uden nye konti.
+
+# RESEARCH — Iteration 271: Obsidian Community dashboard afløser PR-vejen (0 søgninger)
+
+**Resumé:** Obsidian lancerede "Obsidian Community" (community.obsidian.md) 12. maj 2026
+med developer dashboard. GitHub PR-vejen til community-plugins.json findes ikke længere;
+nye plugins indsendes via web-dashboardet med automatisk review på få minutter.
+
+**Hvad det betyder for os:**
+- Den gamle blokering (PR oprettelse krævede collaborator-status) er **væk**.
+- Ny vej: Obsidian-konto → forbind GitHub → vælg repo → Submit. 5 minutter for Mads.
+- Automatisk review scannere hver version for sikkerhed og kodekvalitet (eslint-plugin-obsidianmd).
+- Plugin'et kan være i community-listen inden for 24 timer efter godkendelse.
+- Kilde: obsidian.md/blog/future-of-plugins (12. maj 2026). Bekræftet: ingen PR længere.
