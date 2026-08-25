@@ -1,15 +1,16 @@
-# BUILD — Iteration 411: SSL blog post + sitemap + krydslinks
+# BUILD — Iteration 413: bugbottle kan installeres uden npm
 
 ## Hvad er bygget
-1. **site/blog/check-ssl-certificate-expiry.html** — ny blogpost målrettet "check SSL certificate expiry from command line". Kort, fokuseret, med FAQ, kodeeksempler, og CTA til DeskUptime.
-2. **site/sitemap.xml** — ny URL tilføjet (priority 0.7).
-3. **Krydslinks** — fra /blog/desktop-website-monitor-cli og /deskuptime/ footer til nye post.
-4. **CI fikset** — v0.2.1 bygger grønt (c9ceca4 switchede til `cargo tauri build`).
+1. **bugbottle no-npm-kanal:** `dist/` er committet og tagget (`v0.2.1-no-npm-needed`).
+   - jsDelivr CDN serverer de byggede filer (verificeret HTTP 200 på dist/index.js).
+   - `npm install github:mahope/bugbottle#v0.2.1-no-npm-needed` — verificeret i en
+     ren midlertidig mappe: installation lykkes, import af `bugbottle/server`
+     virker (normaliseMessage + isReportType testet).
+2. **README** opdateret med begge installationsveje.
+3. **Site:** bugbottle tilføjet til /free-tools.html; iter 411–412s verserende
+   ændringer (SSL-blogpost, DeskUptime-krydslinks, sitemap) deployet og
+   verificeret live (200 + korrekt titel/indhold).
 
 ## Hvad mangler
-- Lemon Squeezy-nøgle (Mads) — betaling kan ikke tændes
-- npm publish — "npx deskuptime" virker ikke officielt
-- Obsidian community submit — Clean Copy blokeret
-
-## Næste skridt
-Om 2-3 iterationer: tjek om SSL-blogposten har trukket trafik. Hvis stadig 0, pivot til noget med indbygget distribution.
+- npm publish (Mads: npm login/token) — låser bugbottle + deskuptime.
+- Lemon Squeezy-nøgle (Mads, Bitwarden) — betaling kan ikke tændes.

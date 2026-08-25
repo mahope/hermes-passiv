@@ -1,49 +1,40 @@
-# STATUS — Iteration 412: bugbottle v0.2.0 — submit-timeout, eksempel, publish-klar
+# STATUS — Iteration 413: bugbottle kan nu installeres uden npm
 
 ## Søgedisciplin
-2 websøgninger (npm-navnet "bugbottle" ledigt — bekræftet både via søgning og
-`npm view bugbottle` → 404).
+0 websøgninger. Intet nyt skulle tjekkes — alt blev verificeret med rigtige
+kald (jsDelivr, npm-install, curl på live-sitet).
 
 ## Hvad der blev gjort
 
-**Udgangspunkt:** DeskUptime-trafikken var stadig 0 (GitHub traffic API: 0 views,
-0 uniques på alle 3 repos). Blogposten fra iter 411 er for ny til at dømme, men
-i stedet for endnu en blogpost valgte jeg at færdiggøre et andet produkt:
-**bugbottle** — npm-bibliotek til in-app fejlrapporter med konsolfejl, kontekst
-og screenshot vedhæftet. Koden lå færdig i `mahope/bugbottle` (17 tests grønne)
-men manglede det sidste før publish.
+**Udgangspunkt:** npm er stadig låst (`npm whoami` → ENEEDAUTH). I stedet for at
+vente fjernede jeg afhængigheden: bugbottle behøver ikke npm for at blive installeret.
 
-1. **Robusthedsrettelse:** `useBugReport().submit()` kunne hænge evigt hvis
-   endpointet ikke svarede — formularen blev stående på "sending". Fetch
-   aborteres nu efter 15 s med AbortController, og reporteren får fejlbeskeden.
-2. **Kørbart eksempel:** `examples/vanilla-js` — Node-server der modtager og
-   validerer en rapport med `bugbottle/server`, plus en ren HTML-formular.
-   **Verifieret end-to-end**: gyldig rapport → `{id}` retur; forkert type → 400;
-   serveren printer den normaliserede rapport.
-3. **v0.2.0 udgivet på GitHub:** PR #9, CI grøn (typecheck + 17 tests + build),
-   merged til main. Version bumpet i package.json.
-
-## Verificering (rigtige kald, ikke egne tests af mig selv)
-- `curl -X POST localhost:8787/api/feedback` med gyldig/ugyldig payload — begge
-  svar som forventet fra en server jeg ikke selv styrede i samme proces.
-- `gh pr checks` → test: pass; main-CI efter merge: success.
+1. **dist/ committet og tagget** (`v0.2.1-no-npm-needed`). Bygget friskt, 17/17 tests.
+2. **jsDelivr-kanalen virker:** `cdn.jsdelivr.net/gh/mahope/bugbottle@v0.2.1-no-npm-needed/dist/index.js`
+   svarer 200 med den byggede kode. Før var den 404, fordi dist ikke lå i git.
+3. **GitHub-installationen verificeret i praksis:** `npm install github:mahope/bugbottle#v0.2.1-no-npm-needed`
+   kørt i en ren midlertidig mappe uden login — lykkedes på 4 s, og import af
+   `bugbottle/server` gav korrekte resultater (normaliseMessage('hej') → 'hej').
+4. **README** opdateret med begge no-npm-veje; pushet til main.
+5. **Site:** iter 411–412s verserende ændringer endelig deployet og verificeret
+   (SSL-blogpost live med rigtig titel, DeskUptime-krydslinks, sitemap). bugbottle
+   tilføjet til /free-tools.html og deployet igen.
 
 ## Ærligt billede
-bugbottle kan ikke publishes endnu: npm kræver login, og jeg har ingen
-credentials. Alt andet er klar — navnet ledigt, pakken bygger, eksemplet virker.
-Samme mønster som DeskUptime: produktet er færdigt, distributionen venter på én
-kommando fra Mads.
+bugbottle er nu reelt brugbar af enhver med Node — ingen konto kræves nogen steder.
+Det ændrer ikke ved at trafikken er 0; det næste problem er opdagelse, ikke adgang.
+npm-publish giver stadig registry-opdagelse og er én kommando når nøglen kommer.
 
 ## Stadig blokeret (Mads)
-- **npm publish** (`npm adduser` / granular token) — låser bugbottle OG deskuptime.
-- Lemon Squeezy-API-nøgle (Bitwarden) — Pro-salg kan ikke tændes uden.
-- Obsidian community submit — Clean Copy for Obsidian, hvis sporet genstartes.
+- **npm publish** — låser bugbottle + deskuptime (registry-listing).
+- Lemon Squeezy-API-nøgle (Bitwarden).
+- Obsidian community submit (Clean Copy), hvis sporet genstartes.
 
 ## Næste iteration
-1. Hvis npm-nøglen ligger klar: publish bugbottle@0.2.0 + deskuptime, verificer
-   `npx`/install, skriv STORE_LISTING-agtig tekst til README/npm-siden.
-2. Ellers: tjek om SSL-blogposten (iter 411) har trukket trafik; overvej en
-   GitHub Action-indpakning af bugbottle-server-validering som tredje kanal.
+1. Tjek om SSL-blogposten har givet de første rigtige besøg (ikke mine egne).
+2. Overvej en GitHub Action (`uses: mahope/bugbottle-action`) som tredje kanal —
+   validerer indkomne rapporter i CI-arbejdsgange, ingen npm nødvendig.
+3. Hvis npm-nøglen ligger klar: publish bugbottle + deskuptime, verificér `npx`.
 
 ## Budget
 35 kr brugt af 1000 (uændret).
