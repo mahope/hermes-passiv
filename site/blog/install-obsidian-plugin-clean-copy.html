@@ -14,7 +14,7 @@
 <link rel="canonical" href="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Clean Copy for Obsidian", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Obsidian 1.4+", "description": "Three ways to install the free Clean Copy paste-as-Markdown plugin in Obsidian: via BRAT in one line, manually from a GitHub release, or as a zip bundle. Works on desktop and mobile.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "softwareVersion": "1.0.8", "url": "https://hermes-passiv.pages.dev/clean-copy", "author": {"@type": "Organization", "name": "Mahope"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Clean Copy for Obsidian", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Obsidian 1.4+", "description": "Three ways to install the free Clean Copy paste-as-Markdown plugin in Obsidian: via BRAT in one line, manually from a GitHub release, or as a zip bundle. Works on desktop and mobile.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "softwareVersion": "1.0.9", "url": "https://hermes-passiv.pages.dev/clean-copy", "author": {"@type": "Organization", "name": "Mahope"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it safe to install plugins from GitHub?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, when the release is built from a public repository you can inspect. Clean Copy's source is public at github.com/mahope/clean-copy-obsidian, each release ships exactly three files (main.js, manifest.json, styles.css), and the plugin makes no network requests — conversion runs locally."}}, {"@type": "Question", "name": "Does this work on Obsidian mobile?", "acceptedAnswer": {"@type": "Answer", "text": "The manual and zip methods do: copy the three files into your vault's .obsidian/plugins folder from any file manager, then reload the plugin list. BRAT is desktop-only, so mobile users should use the manual method."}}, {"@type": "Question", "name": "Why isn't it in the community plugin directory yet?", "acceptedAnswer": {"@type": "Answer", "text": "Submission through Obsidian's developer dashboard is pending. The build is identical either way — installing via BRAT or manually gives you the same version today, and you can switch to the directory listing once approved."}}, {"@type": "Question", "name": "Is Pro required for basic use?", "acceptedAnswer": {"@type": "Answer", "text": "No. Paste as clean Markdown, plain-text paste and clean-selection are free forever. Pro ($19/yr) only adds custom find/replace cleanup rules."}}]}</script>
 <script defer src="/track.js"></script>
 </head>
@@ -24,12 +24,12 @@
     <div class="badge">GUIDE &middot; OBSIDIAN PLUGIN</div>
     <h1>Install Clean Copy<br>for Obsidian</h1>
     <p class="subtitle">The free plugin that pastes clipboard HTML as proper Markdown — headings, links, lists, tables and code intact. Three ways to install it, all under a minute.</p>
-    <p>New in v1.0.8: a <strong>Markdown with [[WikiLinks]]</strong> paste mode — internal (relative) links become Obsidian WikiLinks, while external links, images and code blocks stay as they are. Pick it in Settings → Clean Copy → Default paste mode.</p>
+    <p>New in v1.0.9: a <strong>CSV table paste mode</strong> alongside the <strong>Markdown with [[WikiLinks]]</strong> mode from v1.0.8 — internal (relative) links become Obsidian WikiLinks, while external links, images and code blocks stay as they are. Pick a default in Settings → Clean Copy.</p>
     <div class="hero-cta">
       <a href="#brat" class="btn-primary">Fastest way (BRAT)</a>
       <a href="/blog/paste-into-obsidian-clean-markdown" class="btn-secondary">Why clean pasting matters &rarr;</a>
     </div>
-    <p class="hero-note">Updated August 2026 &middot; covers v1.0.8</p>
+    <p class="hero-note">Updated August 2026 &middot; covers v1.0.9</p>
   </div>
 </header>
 
@@ -63,7 +63,7 @@
   <div class="container">
     <h2>Way 3 — One-click zip bundle</h2>
     <p>The same three files are bundled as a single download:</p>
-    <p style="text-align:center;"><a href="/downloads/clean-copy-obsidian-v1.0.8.zip" class="btn-primary">Download v1.0.8 zip</a></p>
+    <p style="text-align:center;"><a href="/downloads/clean-copy-obsidian-v1.0.9.zip" class="btn-primary">Download v1.0.9 zip</a></p>
     <p>Unzip it into <code>&lt;vault&gt;/.obsidian/plugins/</code> so you end up with a <code>clean-copy-obsidian</code> folder containing the three files, then enable the plugin as above.</p>
   </div>
 </section>

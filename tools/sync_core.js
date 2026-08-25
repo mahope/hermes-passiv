@@ -29,6 +29,8 @@ fs.writeFileSync(CORE, umd);
 fs.writeFileSync(path.join(ROOT, 'obsidian-plugin/core.js'), umd);
 // CLI keeps its own verbatim copy of the full core.
 fs.copyFileSync(FULL, path.join(ROOT, 'clean-copy-cli/clean_copy_core.js'));
+// Legacy root core.js (used by root test.js / main.js) must not go stale.
+fs.writeFileSync(path.join(ROOT, 'core.js'), umd);
 // Note: extension background.js files (Chrome, Firefox, repo) are NOT synced
 // here because Firefox has a process-pasted handler Chrome lacks. Sync them
 // manually when conversion functions change — tools/test_clean_copy.js will

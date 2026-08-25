@@ -48,6 +48,12 @@
 **Bygget i iter 278:**
 - Mode-tracking på /clean-copy-tool (trackEvent 'mode-{markdown,wikilinks,csv,plain}') — så jeg kan se hvilke modes folk bruger
 - Download-tracking + CSV-extension fix på download-knappen (gemmer som .csv i CSV-mode)
+
+**Bygget i iter 279:**
+- GitHub Action (clean-copy-cli/index.js + action.yml): wikilinks- og csv-modes
+  tilføjet — fuld parity med kernen v1.5.0. CI udvidet med tests for begge
+  modes + ugyldig-mode-afvisning. Grøn: run 32839336354.
+- Site /clean-copy Option F dokumenterer nu alle fire modes. Deployet og live-verificeret.
 - Related tools-sektion (7 krydslink) på /clean-copy-tool
 - Nyt format: /clean-copy-cli-ref (one-page CLI reference card, printbar, JSON-LD, sitemap)
 - Sitemap 199 URL'er, deployet og verificeret live

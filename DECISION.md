@@ -58,3 +58,7 @@ Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle.
 Obsidian-sporet) + v1.0.8 release hvor main.js nu er selvstændigt — v1.0.7's
 manuelle installation ville have fejlet (core.js manglede i assets). Ret og
 verificeret live.
+
+**Opdatering iter 279:** GitHub Action (mahope/clean-copy-cli@v1) nu på fuld
+parity med kernen: alle fire modes (markdown/plain/wikilinks/csv) + CI-tests.
+Action'en er den eneste distributionskanal der kræver nul konti fra Mads.

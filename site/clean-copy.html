@@ -301,7 +301,7 @@
         <ol>
           <li><strong>Convert a URL:</strong> <code>uses: mahope/clean-copy-cli@v1</code> with <code>url: 'https://...'</code> — the action fetches the page, extracts the main content, and returns clean Markdown.</li>
           <li><strong>Convert a local file:</strong> pass <code>file: 'path/to/file.html'</code> to convert a repo-local HTML file. <code>Html</code> input also accepts raw HTML strings directly.</li>
-          <li><strong>Write to a file:</strong> use <code>output_file: 'path/to/result.md'</code> to save the result for later workflow steps. <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">View on GitHub →</a></li>
+          <li><strong>Write to a file:</strong> use <code>output_file: 'path/to/result.md'</code> to save the result for later workflow steps. Four output modes: <code>mode: markdown</code> (default), <code>plain</code>, <code>wikilinks</code> (Obsidian-style <code>[[links]]</code>) and <code>csv</code> (tables become CSV rows). <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">View on GitHub →</a></li>
         </ol>
         <h3 style="margin:1.5rem 0 1rem;">Option G — VS Code extension (paste as Markdown inside your editor)</h3>
         <ol>

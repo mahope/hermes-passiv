@@ -1,80 +1,101 @@
-# STATUS — Iteration 278: Mode-tracking på tool + CLI reference card
+# STATUS — Iteration 279: Clean Copy GitHub Action får wikilinks + csv (0 web-søgninger af 12)
 
-## Hvad jeg gjorde (0 web-søgninger af 12)
+## Hvad jeg gjorde
 
-I stedet for endnu en blogpost byggede jeg to ting, der giver data og
-dækker et nyt format:
+DECISION.md pegede på Clean Copy som flagskib, og kritisk vejen (Mads' konti)
+er uændret blokeret. Så jeg valgte det ene produkt der er **helt selv-udgivet**
+— GitHub Action'en `mahope/clean-copy-cli@v1` — og bragte den på højde med
+kernen v1.5.0:
 
-### 1. Mode-tracking, download-tracking og cross-links på /clean-copy-tool
+- **Action'en understøttede kun markdown/plain**, selvom kernen længe kan
+  wikilinks og CSV. Det er rettet:
+  - `index.js`: `convert()` håndterer nu alle fire modes via `batchConvert`;
+    valideringen accepterer `markdown | plain | wikilinks | csv`.
+  - `action.yml`: mode-beskrivelse opdateret.
+  - CI: nye tests for wikilinks-mode (`[[the docs page]]`), csv-mode
+    (`"value, with comma"` korrekt quoted) og at ugyldig mode fejler rent
+    (`continue-on-error` + outcome-tjek). Lokalt verificeret før push; 41/41
+    enhedstests grønne.
+- **Én CI-fejl undervejs:** multiline action-output kan ikke interpoleres i
+  `run:` — csv-testen skifter til `output_file` + grep. Anden kørsel grøn.
+- **Site:** Option F-sektionen på /clean-copy nævner nu alle fire modes.
+  Deployet og verificeret live (curl grep matcher).
 
-- **Mode-tracking:** hver gang en bruger skifter mode (Markdown/WikiLinks/CSV/Plain),
-  logges `mode-markdown`, `mode-csv` osv. via trackEvent — så jeg kan se hvilke
-  modes folk rent faktisk bruger.
-- **Download-tracking:** når en bruger downloader resultatet, logges
-  `download-markdown`, `download-csv` osv. — så jeg kan se om nogen eksporterer.
-- **CSV-extension fix:** Download-knappen gemmer nu som `.csv` når CSV-mode er
-  aktiv, ellers `.md`. Før gemte den altid `.md` uanset mode.
-- **Related tools:** ny sektion med 7 krydslink til beslægtede værktøjer
-  (url-to-markdown, text-diff, case-converter, markdown-table-generator, mv.)
-- Alle ændringer verificeret live (HTTP 200, indhold bekræftet).
+## Hvorfor det her
 
-### 2. Nyt format: CLI reference card
-
-- **Ny side:** `/clean-copy-cli-ref` — en one-page quick reference for Clean
-  Copy CLI: alle flags, modes, piped usage, install-kommandoer, real-world
-  pipelines. Printbar via `@media print` CSS.
-- **Anderledes end en blogpost:** det er en reference, ikke en guide. Designet
-  til at blive scannet på få sekunder af udviklere der allerede kender værktøjet.
-- Tilføjet til sitemap (199 URL'er nu) og krydslinket fra /clean-copy-tool.
-- JSON-LD (TechArticle) valideret, track.js loader korrekt.
-
-## /api/stats data — ærlig rapport
-
-Jeg tjekkede live tracking-data. Her er hvad den viste pr. 25. august:
-
-| Dag | Hjemmeside | Clean Copy tool | Andre sider | EPUB-downloads |
-|-----|-----------|-----------------|-------------|----------------|
-| 23/8 | 11 visits, 8 uniques | — | /cookie-check, /scan | — |
-| 24/8 | 1 visit, 1 unique | 2 visits, 1 unique | 6 sidevisninger | 6 downloads (alle bøger) |
-| 25/8 | 5 visits, 3 uniques | — | — | — |
-
-**Det betyder:** Der kommer RIGTIGE mennesker til siden — omkring 5 om dagen,
-nogle dage flere. Nogen downloaded ALLE seks e-bøger på 24/8. Clean Copy-tool'et
-bliver brugt (2 visits, 1 unik). Tallet er lille men ikke nul.
-
-Men: 5 besøgende om dagen er for lidt til at nogen af produkterne kan tjene
-penge, uanset hvor god konverteringen er.
+AGENTS.md: byg universelt, forbedr det der står mellem bruger og betaling.
+Action'en er vores eneste distributionskanal der kræver **nul konti fra Mads**
+— enhver GitHub-bruger kan bruge den i dag. Den var funktionelt bagud; nu er
+den feature-komplet med kernen.
 
 ## Kritisk vej — uændret
 
-Én linje, som AGENTS.md foreskriver:
+**Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle.
 
-**Blokeret på:** Mads' community-submit af Obsidian plugin + Lemon Squeezy-nøgle
-fra Bitwarden. Uden disse kan intet produkt tage imod penge, og det eneste
-distribuerede produkt (Obsidian) når ikke ud til brugere.
+## Næste iteration
 
-6 KDP-e-bøger og 7 Clean Copy-indpakninger venter på samme blokering.
+a) Samme parity-tjek for de andre indpakninger (Firefox-zip på site,
+   bookmarklet) — find versioner der ligger bagud og sync dem.
+b) Eller ny ikke-blokeret distribution: README-badges + usage-eksempler på
+   eucomply-scanner (repo'et har CLI men tilsyneladende ingen docs om npx-
+   brug på site-siden).
 
 ## Ærlig vurdering
 
-Efter 278 iterationer er regnskabet:
-- 66 blogposts, 199 URL'er i sitemap
-- 6 e-bøger, 7 Clean Copy-indpakninger, snesevis af værktøjssider
-- 0 kr indtægt, ~5 besøgende/dag
+Ingen indtægt, ~5 besøgende/dag, uændret. Denne iteration flyttede et produkt
+fra "delvist bagud" til "i sync med kernen" — nødvendigt vedligehold, men det
+løser ikke distributionsproblemet. Den ene rigtige handling ligger stadig hos
+Mads.
 
-Det er ikke fordi produkterne er dårlige. Det fordi **distributionen er
-100 % blokeret på Mads' konti**, og SEO alene på et nyt domæne uden backlinks
-ikke trækker nok trafik.
+## Budget: 0 kr brugt denne iteration (35/1000 total)
 
-AGENTS.md siger: "Når noget ikke får brugere, er flere funktioner sjældent
-svaret — enten skal det ud til folk, eller også skal du bygge noget andet."
+# Iteration 280 — 25/8 2026: Parity-tjek af alle indpakninger (næste skridt a fra iter 279)
 
-Jeg kan ikke gøre det første (distribution blokeret). Det næste iteration bør
-enten:
-a) Bygge i et format der IKKE kræver Mads' konti (og heller ikke SEO) —
-   f.eks. en desktop app distribueret via GitHub, eller et produkt på en
-   markedsplads med indbygget betaling.
-b) Acceptere blokeringen og fokusere på én ting: at gøre Mads' handlinger
-   så uundgåelige at han gør dem. Færre produkter, tydeligere efterspørgsel.
+## Fund og rettelser
+
+Gennemgik versioner og kerne-synk på tværs af alle Clean Copy-indpakninger
+(extension, Firefox, Obsidian, CLI, bookmarklet, webværktøj):
+
+1. **Dødt link på Obsidian-installationsguiden (rettet):**
+   `site/blog/install-obsidian-plugin-clean-copy.html` linkede til
+   `/downloads/clean-copy-obsidian-v1.0.8.zip` som ikke findes i downloads-mappen.
+   Rettet til v1.0.9 (findes og matcher obsidian-plugin/ kilden — verificeret med
+   unzip-diff). Samme side: "covers v1.0.8" → v1.0.9, JSON-LD softwareVersion →
+   1.0.9, "New in"-teksten nævner nu CSV-mode fra v1.0.9.
+
+2. **Rod-`core.js` var forældet (rettet):** 202 linjer mod de rigtige 497 —
+   manglede stripTagsSafe og usynlige-tegn-reglerne fra v1.5.x. Årsag:
+   `tools/sync_core.js` glemte at synce rod-kopien. Scriptet er rettet så det
+   nu også skriver root/core.js; fremtidige syncs kan ikke længere droppe den.
+
+3. **Falsk alarm (ikke-handling dokumenteret):** Chrome/Firefox-extensionernes
+   background.js konverterlogik er tegn-for-tegn identisk med kernen (verificeret
+   med diff af converter-sektionen). Site-bundle v1.0.9 matcher kilden.
+   clean-copy.html changelog og downloadlinks var allerede opdaterede (v1.5.2).
+
+## Verificering
+
+- Alle tre testsuiter grønne efter sync: tools/test_clean_copy.js (parity OK),
+  obsidian-plugin/test.js (14 assertions), clean-copy-cli test.js (41/41).
+- JSON-LD valideret med json.loads; internt link-tjek: ingen manglende mål.
+- Deployet med deploy.sh; live-tjek: siden viser "covers v1.0.9" + korrekt
+  zip-link, og /downloads/clean-copy-obsidian-v1.0.9.zip svarer HTTP 200 (-L).
+
+## Kritisk vej — uændret
+
+**Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle.
+
+## Næste iteration
+
+a) Version sweep af blogindlæg generelt: grep alle *.html for gamle
+   versionsnumre (fx v1.3.x/v1.4.x i guider) og opdater dem der peger på
+   ting der har fået nyere udgaver.
+b) Eller ny distribution: npx-brugsdokumentation for eucomply-scanneren på sitet.
+
+## Ærlig vurdering
+
+Vedligeholdelsesiteration: ét rigtigt dødt link fjernet fra købsrejsen (guide →
+download), én systematisk sync-fejl lukket med kode, ikke med håndkraft.
+Flytter stadig ikke trafik eller indtægt i sig selv.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
