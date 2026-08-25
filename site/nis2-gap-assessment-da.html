@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis NIS2 gap-analyse — 20 tjek mod artikel 21</title>
+<meta name="description" content="Vurdér din virksomhed mod de ti minimumsområder for cybersikkerhed i NIS2 artikel 21. 20 spørgsmål, øjeblikkelig beredskabsscore med prioriteret handleliste og printbar rapport. Gratis, ingen tilmelding, kører helt i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis NIS2 gap-analyse (artikel 21)">
+<meta property="og:description" content="20 tjek mod NIS2 artikel 21's minimumsforanstaltninger. Øjeblikkelig score, prioriterede forbedringer, printbar rapport. Gratis, ingen tilmelding.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-gap-assessment-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/nis2-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-gap-assessment-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-gap-assessment-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad tjekker gap-analysen?","acceptedAnswer":{"@type":"Answer","text":"Den gennemgår de ti minimumsområder for risikostyring, som artikel 21 i Direktiv (EU) 2022/2555 kræver: risikoanalyse og informationssikkerhedspolitik, hændelseshåndtering, forretningskontinuitet og backup, leverandørsikkerhed, sikkerhed i anskaffelse og udvikling af systemer samt effektivitetstest. Hvert område dækkes af to konkrete tjek."}},{"@type":"Question","name":"Hvordan beregnes beredskabsscoren?","acceptedAnswer":{"@type":"Answer","text":"Hvert af de 20 tjek giver 0 point hvis foranstaltningen mangler, 1 point hvis den er delvis eller uformel, og 2 points hvis den er dokumenteret. Resultatet vises som en procentdel fra 0 til 100 med karakter fra A til D samt en prioriteret liste over hvad der skal rettes først."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Det er et struktureret selv-tjek baseret på direktivets tekst. Nationale implementeringslove tilføjer detaljer som registreringspligt og sektorspecifikke regler. Behandl resultatet som et udgangspunkt for jeres compliance-arbejde, ikke som en juridisk vurdering."}},{"@type":"Question","name":"Bliver det jeg indtaster sendt noget sted hen?","acceptedAnswer":{"@type":"Answer","text":"Nej. Analysen kører helt klient-side i din browser. Intet sendes til nogen server, intet gemmes. Du printer eller gemmer selv rapporten."}},{"@type":"Question","name":"Hvem er det til?","acceptedAnswer":{"@type":"Answer","text":"Små og mellemstore virksomheder der er omfattet af NIS2 som væsentlige eller vigtige enheder — og deres IT-leverandører. Er du i tvivl om I overhovedet er omfattet, så tag først det gratis scope-tjek."}}]}
+</script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gap { max-width: 720px; margin: 0 auto; }
+  .q { display:none; padding:18px; border-radius:12px; background:var(--color-surface-2);
+       border:1px solid var(--color-border); margin-bottom:14px; }
+  .q.active { display:block; }
+  .q h3 { margin-top:0; }
+  .area { display:inline-block; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+          color:#0b6e8f; font-weight:700; margin-bottom:6px; }
+  .q label { display:block; padding:9px 12px; margin:6px 0; border-radius:8px;
+             border:1px solid var(--color-border); cursor:pointer; font-size:15px; }
+  .q label:hover { background: rgba(11,110,143,.08); }
+  .q input { margin-right:8px; }
+  .navbtns { display:flex; justify-content:space-between; margin-top:12px; }
+  button.nav { background:#0b6e8f; color:#fff; border:0; padding:10px 22px;
+               border-radius:8px; cursor:pointer; font-size:15px; }
+  button.nav:hover { background:#095a77; }
+  button.nav[disabled] { opacity:.45; cursor:default; }
+  #progress { max-width:720px; margin:0 auto 14px; height:6px; border-radius:3px;
+              background:var(--color-border); overflow:hidden; }
+  #bar { height:100%; width:0; background:#0b6e8f; transition:width .25s; }
+  #result { max-width:780px; margin:28px auto; font-size:15px; line-height:1.55; text-align:left; }
+  .scorecard { text-align:center; padding:20px; border-radius:12px;
+               background:var(--color-surface-2); border:1px solid var(--color-border); }
+  .scorecard .score { font-size:44px; font-weight:700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom:12px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10;font-weight:600}
+  .sev-ok{color:#157a3c;font-weight:600}
+  .tagchip{display:inline-block;padding:2px 10px;margin:2px;border-radius:999px;
+           background:var(--color-surface-2);border:1px solid var(--color-border);font-size:13px}
+  @media print {
+    header.hero, .gap, .navbtns, #progress, footer.site-footer, .no-print { display:none !important }
+    #result { margin:0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Gratis NIS2 gap-analyse</h1>
+    <p class="tagline">20 tjek mod <strong>artikel 21</strong>-minimumsforanstaltningerne.
+    Øjeblikkelig score, prioriterede forbedringer, printbar rapport. Ingen tilmelding.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="quiz-heading">
+  <h2 id="quiz-heading">Lav analysen</h2>
+  <div id="progress" aria-hidden="true"><div id="bar"></div></div>
+  <form id="quizForm" class="gap">
+    <div id="questions"></div>
+    <div class="navbtns">
+      <button type="button" class="nav" id="prevBtn" disabled>← Tilbage</button>
+      <button type="button" class="nav" id="nextBtn" disabled>Næste →</button>
+    </div>
+  </form>
+  <noscript><p>Værktøjet kører i JavaScript i din browser. Aktivér JavaScript for at bruge det.</p></noscript>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="what-heading">
+  <h2 id="what-heading">De ti foranstaltningsområder i artikel 21, stk. 2</h2>
+  <ul class="findings">
+    <li><strong>Risikoanalyse og politikker for informationssystemers sikkerhed</strong></li>
+    <li><strong>Hændelseshåndtering</strong> — opdage, reagere og rapportere efter art. 23</li>
+    <li><strong>Forretningskontinuitet</strong> — backup og genopretning</li>
+    <li><strong>Leverandørsikkerhed</strong> — herunder direkte leverandører og tjenesteudbydere</li>
+    <li><strong>Sikkerhed ved anskaffelse, udvikling og vedligeholdelse</strong> — herunder håndtering af sårbarheder</li>
+    <li><strong>Politikker og procedurer til at vurdere effektiviteten</strong> af cybersikkerhedsforanstaltningerne</li>
+    <li><strong>Grundlæggende cyberhygiejne og cybersikkerhedsuddannelse</strong></li>
+    <li><strong>Politikker for brug af kryptografi og kryptering</strong></li>
+    <li><strong>HR-sikkerhed, adgangskontrol og aktivstyring</strong></li>
+    <li><strong>Multifaktorgodkendelse, sikret kommunikation</strong> og nødkommunikation</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> dette er et struktureret selv-tjek baseret på
+  direktivets tekst. Nationale love tilføjer registreringspligt og sektorspecifikke
+  regler. Tjek altid din nationale lovgivning — dette er ikke juridisk rådgivning.</p>
+</section>
+
+<section aria-labelledby="fix-heading">
+  <h2 id="fix-heading">Før du går i gang</h2>
+  <p>I tvivl om jeres virksomhed overhovedet er omfattet af NIS2?
+  Tag det gratis <a href="/nis2-check-da">scope-tjek</a> først (12 spørgsmål).</p>
+  <p>Andre gratis værktøjer: <a href="/nis2-incident-generator-da">NIS2 hændelsesrapport-generator</a> ·
+  <a href="/security-headers-check">Security Headers Checker</a> ·
+  <a href="/cookie-check-da">Cookie-samtykke-tjek</a></p>
+  <p>Den betalte version med skabeloner og tjekliste kommer snart — se
+  <a href="/#products">produkterne</a>.</p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Tilbage til Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Selv-tjek baseret på Direktiv (EU) 2022/2555, artikel 21.
+  Alt kører lokalt i din browser — ingenting du indtaster forlader siden.
+  Ikke juridisk rådgivning.</p>
+</div></footer>
+
+<script>
+const QUESTIONS = [
+  { area:'Risikoanalyse & politikker', q:'Har I en dokumenteret informationssikkerhedspolitik godkendt af ledelsen?',
+    opts:[['yes','Ja, dokumenteret og godkendt'],['partial','Findes, men uformel / forældet'],['no','Nej']] },
+  { area:'Risikoanalyse & politikker', q:'Laver I periodiske IT-risikoanalyser med kritiske aktiver og trusler?',
+    opts:[['yes','Ja, regelmæssigt'],['partial','Én gang / ad hoc'],['no','Aldrig']] },
+  { area:'Hændelseshåndtering', q:'Har I en hændelsesplan med roller og trin?',
+    opts:[['yes','Ja, dokumenteret'],['partial','Delvist'],['no','Nej']] },
+  { area:'Hændelseshåndtering', q:'Ved nogen hvordan man sender en NIS2-notifikation inden for 24/72 timer?',
+    opts:[['yes','Ja, proces defineret'],['partial','Vi klarer det løbende'],['no','Nej']] },
+  { area:'Kontinuitet & backup', q:'Tages backup automatisk og testes der ved at gendanne?',
+    opts:[['yes','Ja, gendannelse testet'],['partial','Backup ja, aldrig testet'],['no','Nej / kun manuelt']] },
+  { area:'Kontinuitet & backup', q:'Har I en kontinuitetsplan for at miste et kritisk system?',
+    opts:[['yes','Ja, dokumenteret'],['partial','Uformelt'],['no','Nej']] },
+  { area:'Leverandørsikkerhed', q:'Fører I en leverandørliste med sikkerhedskrav pr. leverandør?',
+    opts:[['yes','Ja, formel oversigt'],['partial','Liste findes, ingen krav'],['no','Nej']] },
+  { area:'Leverandørsikkerhed', q:'Indeholder IT-leverandørkontrakter sikkerhedskrav (brudvarsel, sikker håndtering)?',
+    opts:[['yes','Ja, standardklausul'],['partial','Nogle kontrakter'],['no','Nej / ved ikke']] },
+  { area:'Sikker udvikling', q:'Indgår sikkerhedskrav når I køber eller bygger systemer?',
+    opts:[['yes','Ja, altid'],['partial','Nogle gange'],['no','Nej']] },
+  { area:'Sikker udvikling', q:'Er der en proces for patching af kendte sårbarheder inden for definerede frister?',
+    opts:[['yes','Ja, definerede SLA’er'],['partial','Efter bedste evne'],['no','Ingen proces']] },
+  { area:'Effektivitetstest', q:'Er jeres sikkerhedsforanstaltninger testet (sårbarhedsscan, pentest, revision)?',
+    opts:[['yes','Ja, inden for det sidste år'],['partial','Længere siden / delvist'],['no','Aldrig']] },
+  { area:'Effektivitetstest', q:'Følges testresultater op med dokumenteret afhjælpning?',
+    opts:[['yes','Ja, spores til lukning'],['partial','Nogle gange'],['no','Ingen tests at følge op']] },
+  { area:'Cyberhygiejne & træning', q:'Har medarbejderne fået undervisning i cybersikkerhed?',
+    opts:[['yes','Ja, alle'],['partial','Kun IT / nogle'],['no','Aldrig']] },
+  { area:'Cyberhygiejne & træning', q:'Håndhæves basics: automatiske opdateringer, skærmlås, kanal til at melde phising?',
+    opts:[['yes','Ja, håndhævet'],['partial','Delvist'],['no','Nej']] },
+  { area:'Kryptografi', q:'Bruges kryptering af følsomme data både i hvile og under transport?',
+    opts:[['yes','Ja, begge dele'],['partial','Én af dem'],['no','Nej / ved ikke']] },
+  { area:'Kryptografi', q:'Er der en politik for nøgle-/adgangskodestyring (rotation, opbevaring, ingen delte kodeord)?',
+    opts:[['yes','Ja, dokumenteret'],['partial','Praksis varierer'],['no','Nej']] },
+  { area:'Adgangskontrol & aktiver', q:'Findes der et IT-aktivregister (enheder, systemer, cloudtjenester)?',
+    opts:[['yes','Ja, vedligeholdes'],['partial','Forældet / delvist'],['no','Ingen']] },
+  { area:'Adgangskontrol & aktiver', q:'Gives adgangsrettigheder efter behov og tilbagekaldes når folk slutter?',
+    opts:[['yes','Ja, offboarding-tjekliste'],['partial','Som regel'],['no','Ingen proces']] },
+  { area:'MFA & sikker kommunikation', q:'Er multifaktorgodkendelse slået til på mail, VPN og admin-konti?',
+    opts:[['yes','Ja, så langt muligt'],['partial','Nogle systemer'],['no','Nej / ved ikke']] },
+  { area:'MFA & sikker kommunikation', q:'Kan ledelsen kommunikere sikkert under en hændelse (sikret kanal, kontaktliste uden for systemet)?',
+    opts:[['yes','Ja, forberedt'],['partial','Sandsynligvis via private telefoner'],['no','Ikke planlagt']] }
+];
+
+const answers = {};
+let cur = 0;
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+function render() {
+  const box = document.getElementById('questions');
+  const item = QUESTIONS[cur];
+  box.innerHTML =
+    '<div class="q active">'
+    +'<span class="area">'+esc(item.area)+' · '+(cur+1)+'/'+QUESTIONS.length+'</span>'
+    +'<h3>'+esc(item.q)+'</h3>'
+    + item.opts.map(o=>'<label><input type="radio" name="q'+cur+'" value="'+o[0]+'">'+o[1]+'</label>').join('')
+    +'</div>';
+  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+    answers[cur]=inp.value;
+    updateNav();
+    setTimeout(()=>next(),180);
+  }));
+  updateNav();
+}
+
+function updateNav(){
+  document.getElementById('nextBtn').disabled = !(cur in answers) && cur<QUESTIONS.length-1;
+  document.getElementById('prevBtn').disabled = cur===0;
+  document.getElementById('nextBtn').textContent = cur===QUESTIONS.length-1?'Se resultat →':'Næste →';
+  document.getElementById('bar').style.width=(Object.keys(answers).length/QUESTIONS.length*100)+'%';
+}
+function next(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); }
+function prev(){ if(cur>0){cur--;render();} }
+
+const AREAS = [...new Set(QUESTIONS.map(q=>q.area))];
+
+function finish(){
+  if(window.trackEvent)window.trackEvent('finish');
+  try{ fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){});
+  }catch(e){}
+
+  let pts=0,max=0;
+  const perArea={};
+  QUESTIONS.forEach((item,i)=>{
+    const v=answers[i];
+    const p=v==='yes'?2:v==='partial'?1:0;
+    pts+=p; max+=2;
+    if(!perArea[item.area])perArea[item.area]={pts:0,gaps:[]};
+    perArea[item.area].pts+=p;
+    if(p<2)perArea[item.area].gaps.push({q:item.q,v});
+  });
+
+  const pct=Math.round(pts/max*100);
+  const g=pct>=90?'A':pct>=70?'B':pct>=50?'C':'D';
+  const VERDICTS={A:'Stærkt beredskab',B:'Nogenlunde beredskab — huller mangler',C:'Betydelige huller',D:'Kritiske huller'};
+  const vLabel=VERDICTS[g];
+
+  const ranked = AREAS.map(a=>({area:a,...perArea[a]})).sort((x,y)=>(x.pts-y.pts));
+
+  const fixHint={
+    'Risikoanalyse & politikker':'Skriv en én-side informationssikkerhedspolitik, få ledelsens sign-off, og lav en simpel aktiv-/trusselsliste.',
+    'Hændelseshåndtering':'Dokumentér hvem der opdager, beslutter og rapporterer — og øv art. 23-fristerne én gang. Den gratis hændelsesrapport-generator strukturerer notifikationen.',
+    'Kontinuitet & backup':'Automatisér backup af kritiske data og test faktisk en gendannelse. Skriv en ét-side nedbrudsplan.',
+    'Leverandørsikkerhed':'List jeres leverandører og tilføj grundlæggende sikkerhedsklausuler (brudvarsel, sikker håndtering) i nye kontrakter.',
+    'Sikker udvikling':'Definér patch-SLA’er (fx kritiske sårbarheder inden for 14 dage) og inddrag sikkerhed i købsbeslutninger.',
+    'Effektivitetstest':'Kør en sårbarhedsscan eller ekstern gennemgang, og spor fundene til lukning.',
+    'Cyberhygiejne & træning':'Afhold en bevidsthedsgennemgang for alle, slå automatiske opdateringer til, og gør det muligt at melde mistænkelige e-mails.',
+    'Kryptografi':'Sørg for HTTPS/TLS overalt og diskkryptering på bærbare; drop delte kodeord og tag en password manager i brug.',
+    'Adgangskontrol & aktiver':'Byg et simpelt aktivregister og en offboarding-tjekliste der inddrager adgang samme dag.',
+    'MFA & sikker kommunikation':'Slå MFA til på mail, VPN og admin-konti først — det er enkeltkontrollen med størst værdi.'
+  };
+
+  const findingsHtml = ranked.filter(r=>r.gaps.length).map(r=>
+    '<li><span class="sev-'+(r.pts===0?'error':'warning')+'">'+esc(r.area)+': '
+    +r.pts+'/4</span>'
+    +'<ul style="margin-top:4px">'+r.gaps.map(gp=>{
+      const label = gp.v==='no' ? 'Mangler' : gp.v==='partial' ? 'Delvist' : '';
+      return '<li style="font-weight:400;color:inherit"><small>'+label+' — '+esc(gp.q)
+        +(gp.v!=='yes'&&fixHint[r.area]?'<br>Løsning: '+esc(fixHint[r.area]):'')+'</small></li>';
+    }).join('')+'</ul></li>'
+  ).join('');
+
+  const okAreas = ranked.filter(r=>r.gaps.length===0);
+  const okHtml = okAreas.length
+    ? '<ul class="findings">'+okAreas.map(r=>'<li><span class="sev-ok">✓ '+esc(r.area)+'</span></li>').join('')+'</ul>' : '';
+
+  document.getElementById('result').innerHTML=
+    '<div class="scorecard"><div class="score grade-'+g+'">'+esc(vLabel)+'</div>'
+    +'<div style="margin-top:6px;font-size:14px;color:#667">Beredskabsscore: '+pts+'/'+max+' ('+pct+'%)</div>'
+    +'<div style="margin-top:8px"><span class="tagchip">Direktiv (EU) 2022/2555</span>'
+    +'<span class="tagchip">Art. 21, stk. 2</span><span class="tagchip">Karakter '+g+'</span></div>'
+    +'</div>'
+    +(findingsHtml?'<h3 style="margin-top:22px">Hvad der skal rettes først</h3><ul class="findings">'+findingsHtml+'</ul>':'')
+    +(okHtml?'<h3 style="margin-top:22px">Allerede på plads</h3>'+okHtml:'')
+    +'<p style="font-size:13px;color:#667;margin-top:18px">Struktureret selv-tjek — ikke juridisk rådgivning. '
+    +'Scope-tjek: <a href="/nis2-check-da">gratis NIS2 selvvurdering</a>. '
+    +'Hændelser: <a href="/nis2-incident-generator-da">hændelsesrapport-generator</a>.</p>'
+    +'<p style="text-align:center;margin-top:18px" class="no-print">'
+    +'<button onclick="window.print()" class="nav">Print / gem som PDF</button></p>';
+}
+
+document.getElementById('nextBtn').addEventListener('click',()=>{if(cur===QUESTIONS.length-1)finish();else next();});
+document.getElementById('prevBtn').addEventListener('click',prev);
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free NIS2 Incident Report Generator (Article 23)</title>
+<meta name="description" content="Fill in the details of a security incident and generate an NIS2 Article 23 incident notification: early warning (24h), incident notification (72h) and final report (1 month). Free, no signup, runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free NIS2 Incident Report Generator">
+<meta property="og:description" content="Generate an NIS2 Article 23 incident notification in minutes. Free, no signup, nothing leaves your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/nis2-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-incident-generator-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the NIS2 incident reporting deadlines?","acceptedAnswer":{"@type":"Answer","text":"Under Article 23 of Directive (EU) 2022/2555, essential and important entities must submit an early warning within 24 hours of becoming aware of a significant incident, an incident notification within 72 hours (updating the early warning), and a final report within one month."}},{"@type":"Question","name":"Who do I submit the notification to?","acceptedAnswer":{"@type":"Answer","text":"To the CSIRT or competent authority designated by your Member State — in Denmark, Center for Cybersikkerhed (CFCS). Most Member States run a dedicated reporting portal. The generator produces the document; you submit it through your national portal."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. The generator structures your information according to the Annex I requirements of Directive (EU) 2022/2555, but national implementing laws may require additional fields. Confirm with your national CSIRT's guidance."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished report yourself."}}]}
+</script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=datetime-local],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  button.btn { background: #0b6e8f; color: #fff; border: 0; padding: 11px 24px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.btn:hover { background: #095a77; }
+  button.btn.secondary { background: var(--color-surface-2); color: inherit;
+                         border: 1px solid var(--color-border); }
+  #reportWrap[hidden] { display: none; }
+  #report { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #report h2 { color: #12283a; font-size: 18px; }
+  #report h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  .deadline { background: #fff6e6; border-left: 4px solid #d99a06; padding: 10px 14px;
+              border-radius: 6px; margin: 12px 0; font-size: 13.5px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #report { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>NIS2 Incident Report Generator</h1>
+    <p class="tagline">Article 23 requires an <strong>early warning within 24 hours</strong>,
+    a notification within 72 hours and a final report within one month of a
+    significant incident. Fill in what you know — get a structured draft.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. The reporting entity</legend>
+    <label for="entityName">Company / organisation name</label>
+    <input type="text" id="entityName" required placeholder="Nordic Logistics ApS">
+    <label for="entityType">Entity type under NIS2</label>
+    <select id="entityType">
+      <option value="essential">Essential entity (Annex I sector)</option>
+      <option value="important">Important entity (Annex II sector)</option>
+      <option value="unsure">Not yet classified</option>
+    </select>
+    <label for="contactName">Contact person</label>
+    <input type="text" id="contactName" required placeholder="Jane Doe, CISO">
+    <label for="contactEmail">Contact e-mail</label>
+    <input type="email" id="contactEmail" required placeholder="security@example.com">
+    <label for="contactPhone">Contact phone</label>
+    <input type="text" id="contactPhone" placeholder="+45 12 34 56 78">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Timeline</legend>
+    <label for="awareAt">When did you become aware of the incident?</label>
+    <input type="datetime-local" id="awareAt" required>
+    <div class="deadline" id="deadlineBox">Deadlines are calculated when you fill in this field:
+      early warning due <strong>within 24 hours</strong>, notification <strong>within 72 hours</strong>,
+      final report <strong>within 1 month</strong> — all counted from the moment of awareness.</div>
+    <label for="status">Which stage are you filing now?</label>
+    <select id="status">
+      <option value="early">Early warning (within 24 hours)</option>
+      <option value="notification">Incident notification (within 72 hours)</option>
+      <option value="final">Final report (within 1 month)</option>
+    </select>
+    <label for="ongoing">Is the incident ongoing?</label>
+    <select id="ongoing">
+      <option value="yes">Yes — ongoing</option>
+      <option value="no">No — contained/resolved</option>
+    </select>
+    <label for="resolvedAt">If resolved: when was it resolved?</label>
+    <input type="datetime-local" id="resolvedAt">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. The incident</legend>
+    <label for="summary">Short summary of what happened</label>
+    <textarea id="summary" required placeholder="Example: Unauthorised access to the customer portal was detected. An attacker used credentials stolen in a phishing campaign to access approximately 400 customer accounts between 24–25 August."></textarea>
+    <label for="cause">Cause (as far as known)</label>
+    <textarea id="cause" placeholder="Example: Credential phishing leading to account takeover; MFA was not enforced on legacy accounts. Investigation continues."></textarea>
+    <label for="severity">Severity assessment</label>
+    <select id="severity">
+      <option value="severe">Severe — caused or capable of causing severe operational disruption or financial loss</option>
+      <option value="significant">Significant — affected service delivery / material loss potential</option>
+      <option value="unsure">Uncertain — assessing whether thresholds are met</option>
+    </select>
+    <label for="impact">Affected services and impact</label>
+    <textarea id="impact" placeholder="Example: Customer portal unavailable 3 hours; ~400 customer accounts exposed; no payment data affected."></textarea>
+    <label for="dataImpact">Personal data or other data compromised?</label>
+    <textarea id="dataImpact" placeholder="Example: Names and e-mail addresses of ~400 customers visible. No passwords, payment or health data accessed."></textarea>
+    <label for="measures">Measures taken / planned</label>
+    <textarea id="measures" placeholder="Example: Accounts locked, forced password reset, MFA enforced on all accounts, phishing infrastructure reported for takedown."></textarea>
+    <label for="crossBorder">Does the incident affect other Member States or third countries?</label>
+    <select id="crossBorder">
+      <option value="no" selected>No — only national impact</option>
+      <option value="yes">Yes — described below</option>
+      <option value="unknown">Unknown at this stage</option>
+    </select>
+    <label for="crossDesc">If yes, which countries/services are affected?</label>
+    <input type="text" id="crossDesc" placeholder="Example: Customers in Sweden and Germany use the same portal.">
+    <label for="abuseNote">Do you have reason to believe the incident may cause malicious exploitation?</label>
+    <select id="abuseNote">
+      <option value="unknown">Unknown / under assessment</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Receiving authority</legend>
+    <label for="authority">CSIRT / competent authority receiving this report</label>
+    <input type="text" id="authority" placeholder="Center for Cybersikkerhed (CFCS), Denmark">
+    <p class="hint">Submit through your national reporting portal. In Denmark: cfcs.dk.
+    The generator only produces the document — submission happens on the official portal.</p>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate report</button>
+    <button type="reset" class="btn secondary">Reset form</button>
+  </div>
+</form>
+
+<div id="reportWrap" hidden>
+  <div class="actions no-print">
+    <button type="button" class="btn secondary" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn secondary" id="printBtn">Download / print</button>
+  </div>
+  <article id="report" aria-live="polite"></article>
+</div>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">The three Article 23 deadlines</h2>
+  <ul>
+    <li><strong>Early warning — 24 hours.</strong> A short notice stating whether the
+    incident is suspected to be caused by unlawful or malicious acts, whether it could
+    have cross-border impact, and whether it may cause malicious exploitation.
+    You do not need all the facts yet.</li>
+    <li><strong>Incident notification — 72 hours.</strong> An update with an initial
+    assessment of severity and impact, including indicators of compromise where available.</li>
+    <li><strong>Final report — 1 month.</strong> A detailed description including the
+    likely cause, mitigation measures already applied and planned, and cross-border effects.
+    If the incident is still ongoing, a status report is submitted first.</li>
+  </ul>
+  <p><strong>Honest limitation:</strong> Member State implementations vary in portal,
+  format and extra fields. This generator follows the Annex I requirements of the
+  directive text; always check your national CSIRT's own guidance before submitting.</p>
+  <p><strong>Related:</strong> free <a href="/nis2-gap-assessment">NIS2 gap assessment</a> ·
+  <a href="/nis2-check">self-assessment</a> ·
+  <a href="/blog/nis2-readiness-guide">NIS2 readiness guide</a> ·
+  <a href="/blog/nis2-incident-report-checklist">incident report checklist</a></p>
+</section>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Based on Article 23 and Annex I of Directive (EU) 2022/2555 (NIS2).
+  Everything runs locally in your browser — nothing you type leaves this page. Not legal advice.</p>
+</div></footer>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function fmt(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt);
+    return isNaN(d) ? esc(dt) : d.toISOString().replace('T',' ').slice(0,16) + ' UTC';
+  }
+
+  $('awareAt').addEventListener('change', function () {
+    var box = $('deadlineBox');
+    if (!this.value) return;
+    var aware = new Date(this.value);
+    function at(h) { return new Date(aware.getTime() + h*3600*1000); }
+    function f(d) { return d.toISOString().slice(0,16).replace('T',' ') + ' UTC'; }
+    box.innerHTML = 'Awareness registered at ' + f(aware) +
+      '<br>Early warning due by <strong>' + f(at(24)) + '</strong>' +
+      '<br>Incident notification due by <strong>' + f(at(72)) + '</strong>' +
+      '<br>Final report due by <strong>' + fmt(new Date(aware.getTime() + 30*24*3600*1000)) + '</strong>';
+  });
+
+  function buildData() {
+    var d = {};
+    d.entity = v('entityName'); d.type = $('entityType').value;
+    d.contact = v('contactName'); d.email = v('contactEmail'); d.phone = v('contactPhone') || '—';
+    d.aware = v('awareAt'); d.stage = $('status').value; d.ongoing = $('ongoing').value;
+    d.resolved = v('resolvedAt');
+    d.summary = v('summary'); d.cause = v('cause') || 'Not yet determined — investigation ongoing.';
+    d.severity = $('severity').value; d.impact = v('impact') || '—';
+    d.data = v('dataImpact') || 'No personal data compromise identified at this stage.';
+    d.measures = v('measures') || 'Assessment in progress.';
+    d.cross = $('crossBorder').value; d.crossDesc = v('crossDesc');
+    d.abuse = $('abuseNote').value;
+    d.authority = v('authority') || '[national CSIRT]';
+    d.now = new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  var STAGE_LABEL = { early: 'EARLY WARNING', notification: 'INCIDENT NOTIFICATION', final: 'FINAL REPORT' };
+  var TYPE_LABEL = { essential: 'Essential entity (Annex I)', important: 'Important entity (Annex II)', unsure: 'Classification pending' };
+  var SEV_LABEL = {
+    severe: 'SEVERE — the incident has caused or is capable of causing severe operational disruption or financial loss',
+    significant: 'SIGNIFICANT — the incident has affected, or could significantly affect, the provision of services / caused material or non-material loss',
+    unsure: 'UNCERTAIN — the entity is currently assessing whether the significance thresholds are met'
+  };
+  var CROSS_LABEL = { no: 'No cross-border impact identified.', yes: 'Yes — ', unknown: 'Unknown at the time of this report.' };
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>NIS2 Article 23 — ' + STAGE_LABEL[d.stage] + '</h2>';
+    h += '<p><strong>Reporting entity:</strong> ' + esc(d.entity) + ' (' + TYPE_LABEL[d.type] + ')<br>' +
+         '<strong>Date of report:</strong> ' + esc(d.now) + '<br>' +
+         '<strong>Submitted to:</strong> ' + esc(d.authority) + '</p>';
+    h += '<h3>1. Reporting contact</h3><ul>' +
+         '<li>Name / role: ' + esc(d.contact) + '</li>' +
+         '<li>E-mail: ' + esc(d.email) + '</li>' +
+         '<li>Phone: ' + esc(d.phone) + '</li></ul>';
+    h += '<h3>2. Timeline</h3><ul>' +
+         '<li>Entity became aware of the incident: ' + fmt(d.aware) + '</li>' +
+         '<li>Status: ' + (d.ongoing === 'yes' ? 'Ongoing' : 'Contained / resolved') +
+         (d.resolved ? ' — resolved ' + fmt(d.resolved) : '') + '</li>' +
+         '<li>This submission is the <strong>' + STAGE_LABEL[d.stage].toLowerCase() +
+         '</strong> required by Article 23 of Directive (EU) 2022/2555.</li></ul>';
+    h += '<h3>3. Summary of the incident</h3><p>' + esc(d.summary) + '</p>';
+    h += '<h3>4. Cause</h3><p>' + esc(d.cause) + '</p>';
+    h += '<h3>5. Severity assessment</h3><p>' + SEV_LABEL[d.severity] + '</p>';
+    h += '<h3>6. Affected services and impact</h3><p>' + esc(d.impact) + '</p>';
+    h += '<h3>7. Data compromised</h3><p>' + esc(d.data) + '</p>';
+    h += '<h3>8. Measures taken and planned</h3><p>' + esc(d.measures) + '</p>';
+    var crossText = CROSS_LABEL[d.cross] + (d.cross === 'yes' && d.crossDesc ? esc(d.crossDesc) : '');
+    h += '<h3>9. Cross-border impact</h3><p>' + crossText + '</p>';
+    var abuseText = { yes:'Yes — the entity has reason to believe the incident may result in malicious exploitation.', no:'No indication of malicious exploitation at this time.', unknown:'Under assessment.' }[d.abuse];
+    h += '<h3>10. Potential for malicious exploitation</h3><p>' + abuseText + '</p>';
+    h += '<hr><p style="font-size:12px;color:#667">This report was created with the free Hermes Compliance NIS2 Incident Report Generator, following Article 23 and Annex I of Directive (EU) 2022/2555. It does not constitute legal advice. National implementing law may require additional fields or formats — confirm against your national CSIRT\'s guidance before submitting.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('nis2_incident_generate');
+    current = buildData();
+    $('report').innerHTML = renderHTML(current);
+    $('reportWrap').hidden = false;
+    $('reportWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed — use Download / print instead.');
+    });
+  });
+
+  $('printBtn').addEventListener('click', function () { window.print(); });
+})();
+</script>
+</body>
+</html>

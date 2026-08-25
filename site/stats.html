@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Traffic — EU Compliance & Clean Copy</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Internal usage stats dashboard for hermes-passiv pages.dev">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/stats">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .stat-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.5rem 0; }
+  .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.2rem 1.5rem; flex: 1; min-width: 140px; }
+  .stat-card h3 { margin: 0 0 0.3rem; font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .num { font-size: 2rem; font-weight: 700; }
+  .stat-card .note { font-size: 0.8rem; opacity: 0.5; margin-top: 0.2rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 1rem 0; }
+  th { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; }
+  td { padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  td a { text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+  .day-header { font-weight: 700; margin-top: 1.5rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .warn { background: rgba(255,200,30,0.06); border-left: 3px solid var(--color-accent); padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.85rem; }
+  .err { background: rgba(255,50,50,0.08); border-left: 3px solid #f44; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.85rem; }
+  #loading { text-align: center; padding: 3rem; opacity: 0.5; }
+  #noauth { display: none; }
+</style>
+</head>
+<body>
+
+<header class="site-header" style="padding:1.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2rem;">
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="/" style="font-size:1.2rem;font-weight:600;color:var(--color-accent);text-decoration:none;">← Back to site</a>
+    <span style="opacity:0.4;font-size:0.85rem;">📊 Admin — Site Stats</span>
+  </div>
+</header>
+
+<div class="container" style="max-width:900px;">
+  <h1 style="margin-bottom:0.5rem;">Site Traffic</h1>
+  <p style="opacity:0.5;">Cookieless visit counts per page. Data from the last 30 days in Cloudflare KV (90-day TTL).</p>
+
+  <div id="loading">Loading traffic data…</div>
+  <div id="noauth" class="err">Unauthorized. Stats are for the site owner only.</div>
+  <div id="error" class="err" style="display:none;"></div>
+  <div id="dashboard" style="display:none;"></div>
+
+  <div class="warn" style="margin-top:2rem;">
+    <strong>⚠️ Only counts pages with the tracking script.</strong> About 184 of 189 pages have <code>&lt;script defer src="/track.js"&gt;</code>. 
+    Data includes my own curl/polling requests. "Unique" = visitors not seen before today on that page (90-day uniqueness window).
+  </div>
+</div>
+
+<script>
+async function load() {
+  try {
+    const resp = await fetch('/api/stats?token=hp-stats-v1&days=30');
+    if (resp.status === 401) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('noauth').style.display = 'block';
+      return;
+    }
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'Unknown error');
+    render(data);
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = 'Error: ' + e.message;
+  }
+}
+
+function render(data) {
+  const stats = data.stats;
+  const days = Object.keys(stats).sort().reverse();
+  
+  // Aggregate totals
+  let totalVisits = 0, totalUnique = 0, totalDownloads = 0;
+  const pageTotals = {};
+  
+  days.forEach(day => {
+    Object.entries(stats[day] || {}).forEach(([path, info]) => {
+      totalVisits += info.visits || 0;
+      totalUnique += info.uniques || 0;
+      if (path.startsWith('downloads@')) {
+        totalDownloads += info.visits || 0;
+        const ebook = path.replace('downloads@', '');
+        pageTotals[path] = pageTotals[path] || { visits: 0, uniques: 0 };
+        pageTotals[path].visits += info.visits;
+        pageTotals[path].uniques += info.uniques;
+        return;
+      }
+      const cleanPath = path;
+      pageTotals[cleanPath] = pageTotals[cleanPath] || { visits: 0, uniques: 0 };
+      pageTotals[cleanPath].visits += info.visits;
+      pageTotals[cleanPath].uniques += info.uniques;
+    });
+  });
+
+  // Render summary cards
+  const el = document.getElementById('dashboard');
+  el.style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+
+  el.innerHTML = '<div class="stat-grid">' +
+    '<div class="stat-card"><h3>Total visits</h3><div class="num">' + totalVisits + '</div><div class="note">Across all tracked pages</div></div>' +
+    '<div class="stat-card"><h3>Unique visitors</h3><div class="num">' + totalUnique + '</div><div class="note">Per-page unique count (not deduplicated across pages)</div></div>' +
+    '<div class="stat-card"><h3>E-book downloads</h3><div class="num">' + totalDownloads + '</div><div class="note">EPUB downloads tracked</div></div>' +
+    '<div class="stat-card"><h3>Days with data</h3><div class="num">' + days.length + '</div><div class="note">In last 30 days</div></div>' +
+    '</div>';
+
+  // Top pages
+  const sorted = Object.entries(pageTotals).sort((a, b) => b[1].visits - a[1].visits);
+  el.innerHTML += '<h2 style="margin-top:2rem;">Top pages by visits</h2>';
+  el.innerHTML += '<table><tr><th>Page</th><th>Visits</th><th>Unique</th></tr>';
+  sorted.slice(0, 20).forEach(([path, info]) => {
+    const display = path.replace(/^\/?/, '/').replace(/@.*$/, '');
+    el.innerHTML += '<tr><td><a href="' + display + '">' + display + '</a></td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+  });
+  el.innerHTML += '</table>';
+
+  // Downloads
+  const downloads = Object.entries(pageTotals).filter(([p]) => p.startsWith('downloads@'));
+  if (downloads.length) {
+    el.innerHTML += '<h2 style="margin-top:2rem;">📥 E-book downloads</h2>';
+    el.innerHTML += '<table><tr><th>E-book</th><th>Downloads</th><th>Unique</th></tr>';
+    downloads.sort((a, b) => b[1].visits - a[1].visits).forEach(([path, info]) => {
+      const name = path.replace('downloads@', '');
+      el.innerHTML += '<tr><td>' + name + '</td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+    });
+    el.innerHTML += '</table>';
+  }
+
+  // Daily breakdown
+  el.innerHTML += '<h2 style="margin-top:2rem;">Daily breakdown</h2>';
+  days.slice(0, 14).forEach(day => {
+    const dayData = stats[day] || {};
+    const dayTotal = Object.values(dayData).reduce((s, v) => s + (v.visits || 0), 0);
+    const dayUnique = Object.values(dayData).reduce((s, v) => s + (v.uniques || 0), 0);
+    el.innerHTML += '<div class="day-header">' + day + ' — ' + dayTotal + ' visits / ' + dayUnique + ' unique</div>';
+    
+    const pages = Object.entries(dayData).sort((a, b) => b[1].visits - a[1].visits);
+    if (pages.length) {
+      el.innerHTML += '<table><tr><th>Page</th><th>Visits</th><th>Unique</th></tr>';
+      pages.forEach(([path, info]) => {
+        const display = path;
+        el.innerHTML += '<tr><td><code>' + display + '</code></td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+      });
+      el.innerHTML += '</table>';
+    }
+  });
+
+  // Raw data note
+  el.innerHTML += '<details style="margin-top:2rem;"><summary style="cursor:pointer;opacity:0.5;">Raw JSON (last 7 days)</summary><pre style="font-size:0.75rem;max-height:400px;overflow:auto;background:rgba(0,0,0,0.2);padding:1rem;border-radius:8px;">' + JSON.stringify({ days: data.days, waitlist: data.waitlist, licenses: data.licenses_issued, stats: days.slice(0, 7).reduce((o, d) => { o[d] = stats[d]; return o; }, {}) }, null, 2) + '</pre></details>';
+}
+
+load();
+</script>
+</body>
+</html>

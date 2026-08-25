@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis NIS2-hændelsesrapport-generator (artikel 23)</title>
+<meta name="description" content="Udfyld oplysningerne om en sikkerhedshændelse og få et udkast til NIS2 artikel 23-notifikation: tidlig varsling (24 timer), hændelsesnotifikation (72 timer) og slutrapport (1 måned). Gratis, ingen tilmelding — kører helt i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis NIS2-hændelsesrapport-generator">
+<meta property="og:description" content="Generer en NIS2 artikel 23-notifikation på minutter. Gratis, ingen tilmelding, intet forlader din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-incident-generator-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-incident-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-incident-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-incident-generator-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad er fristerne for NIS2-hændelsesrapportering?","acceptedAnswer":{"@type":"Answer","text":"Efter artikel 23 i direktiv (EU) 2022/2555 skal væsentlige og vigtige enheder indsende en tidlig varsling inden for 24 timer efter at have konstateret en væsentlig hændelse, en hændelsesnotifikation inden for 72 timer samt en slutrapport inden for én måned."}},{"@type":"Question","name":"Hvem indsender jeg notifikationen til?","acceptedAnswer":{"@type":"Answer","text":"Til den CSIRT eller myndighed, der er udpeget af din medlemsstat — i Danmark Center for Cybersikkerhed (CFCS). De fleste lande har en dedikeret indberetningsportal. Generatoren laver dokumentet; du indsender det via den officielle portal."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren strukturerer dine oplysninger efter bilag I-kravene i direktivet, men national gennemførelseslovgivning kan kræve flere felter. Tjek altid din nationale CSIRT's vejledning."}},{"@type":"Question","name":"Forlader noget, jeg indtaster, min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører udelukkende i browseren. Intet sendes til nogen server, intet gemmes, der er ingen cookies. Du kopierer eller downloader selv den færdige rapport."}}]}
+</script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=datetime-local],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  button.btn { background: #0b6e8f; color: #fff; border: 0; padding: 11px 24px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.btn:hover { background: #095a77; }
+  button.btn.secondary { background: var(--color-surface-2); color: inherit;
+                         border: 1px solid var(--color-border); }
+  #reportWrap[hidden] { display: none; }
+  #report { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #report h2 { color: #12283a; font-size: 18px; }
+  #report h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  .deadline { background: #fff6e6; border-left: 4px solid #d99a06; padding: 10px 14px;
+              border-radius: 6px; margin: 12px 0; font-size: 13.5px; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #report { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>NIS2-hændelsesrapport-generator</h1>
+    <p class="tagline">Artikel 23 kræver en <strong>tidlig varsling inden for 24 timer</strong>,
+    en notifikation inden for 72 timer og en slutrapport inden for én måned ved en
+    væsentlig hændelse. Udfyld hvad du ved — få et struktureret udkast.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Den rapporterende enhed</legend>
+    <label for="entityName">Virksomhedens / organisationens navn</label>
+    <input type="text" id="entityName" required placeholder="Nordisk Logistik ApS">
+    <label for="entityType">Enhedstype under NIS2</label>
+    <select id="entityType">
+      <option value="essential">Væsentlig enhed (bilag I-sektor)</option>
+      <option value="important">Vigtig enhed (bilag II-sektor)</option>
+      <option value="unsure">Endnu ikke klassificeret</option>
+    </select>
+    <label for="contactName">Kontaktperson</label>
+    <input type="text" id="contactName" required placeholder="Anne Jensen, CISO">
+    <label for="contactEmail">Kontakt-e-mail</label>
+    <input type="email" id="contactEmail" required placeholder="sikkerhed@example.com">
+    <label for="contactPhone">Telefon</label>
+    <input type="text" id="contactPhone" placeholder="+45 12 34 56 78">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Tidslinje</legend>
+    <label for="awareAt">Hvornår blev hændelsen konstateret?</label>
+    <input type="datetime-local" id="awareAt" required>
+    <div class="deadline" id="deadlineBox">Fristerne beregnes, når du udfylder dette felt:
+      tidlig varsling senest <strong>inden for 24 timer</strong>, notifikation <strong>inden for 72 timer</strong>,
+      slutrapport <strong>inden for 1 måned</strong> — alle regnet fra konstateringstidspunktet.</div>
+    <label for="status">Hvilket trin indsender du nu?</label>
+    <select id="status">
+      <option value="early">Tidlig varsling (inden for 24 timer)</option>
+      <option value="notification">Hændelsesnotifikation (inden for 72 timer)</option>
+      <option value="final">Slutrapport (inden for 1 måned)</option>
+    </select>
+    <label for="ongoing">Er hændelsen stadig i gang?</label>
+    <select id="ongoing">
+      <option value="yes">Ja — den pågår</option>
+      <option value="no">Nej — afværget/løst</option>
+    </select>
+    <label for="resolvedAt">Hvis løst: hvornår?</label>
+    <input type="datetime-local" id="resolvedAt">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Hændelsen</legend>
+    <label for="summary">Kort beskrivelse af, hvad der er sket</label>
+    <textarea id="summary" required placeholder="Eksempel: Uautoriseret adgang til kundeportalen blev opdaget. En angriber brugte legitimationsoplysninger stjålet via phishing til at tilgå ca. 400 kundekonti mellem 24.–25. august."></textarea>
+    <label for="cause">Årsag (så vidt kendt)</label>
+    <textarea id="cause" placeholder="Eksempel: Phishing med efterfølgende kontoovertagelse; MFA var ikke aktiveret på ældre konti. Undersøgelsen fortsætter."></textarea>
+    <label for="severity">Alvorlighedsbedømmelse</label>
+    <select id="severity">
+      <option value="severe">Alvorlig — har forårsaget eller kan forårsage alvorlig driftsforstyrrelse eller økonomisk tab</option>
+      <option value="significant">Væsentlig — har berørt servicen / potentiel for materielt tab</option>
+      <option value="unsure">Usikker — vurderer, om tærsklerne er nået</option>
+    </select>
+    <label for="impact">Berørte tjenester og konsekvenser</label>
+    <textarea id="impact" placeholder="Eksempel: Kundeportalen utilgængelig i 3 timer; ca. 400 kundekonti eksponeret; ingen betalingsdata berørt."></textarea>
+    <label for="dataImpact">Persondata eller andre data kompromitteret?</label>
+    <textarea id="dataImpact" placeholder="Eksempel: Navne og e-mailadresser på ca. 400 kunder synlige. Ingen adgangskoder, betalings- eller helbredsdata tilgået."></textarea>
+    <label for="measures">Foranstaltninger truffet / planlagt</label>
+    <textarea id="measures" placeholder="Eksempel: Konti låst, tvungen nulstilling af adgangskoder, MFA aktiveret på alle konti, phishing-infrastruktur meldt til aflivning."></textarea>
+    <label for="crossBorder">Berører hændelsen andre medlemsstater eller tredjelande?</label>
+    <select id="crossBorder">
+      <option value="no" selected>Nej — kun national påvirkning</option>
+      <option value="yes">Ja — beskrevet nedenfor</option>
+      <option value="unknown">Ukendt på nuværende tidspunkt</option>
+    </select>
+    <label for="crossDesc">Hvis ja: hvilke lande/tjenester er berørt?</label>
+    <input type="text" id="crossDesc" placeholder="Eksempel: Kunder i Sverige og Tyskland bruger samme portal.">
+    <label for="abuseNote">Har du grund til at tro, at hændelsen kan misbruges ondsindet?</label>
+    <select id="abuseNote">
+      <option value="unknown">Ukendt / under vurdering</option>
+      <option value="yes">Ja</option>
+      <option value="no">Nej</option>
+    </select>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Modtagende myndighed</legend>
+    <label for="authority">CSIRT / kompetent myndighed, der modtager rapporten</label>
+    <input type="text" id="authority" value="Center for Cybersikkerhed (CFCS)">
+    <p class="hint">Indsend via den officielle indberetningsportal (cfcs.dk i Danmark).
+    Generatoren laver kun dokumentet.</p>
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generér rapport</button>
+    <button type="reset" class="btn secondary">Nulstil formular</button>
+  </div>
+</form>
+
+<div id="reportWrap" hidden>
+  <div class="actions no-print">
+    <button type="button" class="btn secondary" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn secondary" id="printBtn">Download / udskriv</button>
+  </div>
+  <article id="report" aria-live="polite"></article>
+</div>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">De tre frister i artikel 23</h2>
+  <ul>
+    <li><strong>Tidlig varsling — 24 timer.</strong> En kort meddelelse om, hvorvidt hændelsen
+    formodes skyldtes ulovlige eller ondsindede handlinger, om den kan have grænseoverskridende
+    virkning, og om den kan misbruges. Du behøver ikke alle fakta endnu.</li>
+    <li><strong>Hændelsesnotifikation — 72 timer.</strong> En opdatering med en foreløbig
+    vurdering af alvor og konsekvenser, herunder indikatorer for kompromittering, hvis de findes.</li>
+    <li><strong>Slutrapport — 1 måned.</strong> En detaljeret beskrivelse med sandsynlig årsag,
+    afværgeforanstaltninger truffet og planlagte samt grænseoverskridende virkninger.
+    Hvis hændelsen pågår stadig, indsendes først en statusrapport.</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> Medlemsstaternes gennemførelser varierer i portal,
+  format og ekstra felter. Denne generator følger bilag I-kravene i direktivteksten;
+  tjek altid din nationale CSIRT's egen vejledning, før du indsender.</p>
+  <p><strong>Relaterede:</strong> gratis <a href="/nis2-gap-assessment-da">NIS2 gap-analyse</a> ·
+  <a href="/nis2-check-da">selvvurdering</a> ·
+  <a href="/da/blog/nis2-guide-da.html">NIS2-guide</a> ·
+  <a href="/da/blog/nis2-beredskabstjek-2026.html">Beredskabstjek 2026</a></p>
+</section>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/da">← Tilbage til Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Baseret på artikel 23 og bilag I i direktiv (EU) 2022/2555 (NIS2).
+  Alt kører lokalt i din browser — intet du indtaster, forlader siden. Ikke juridisk rådgivning.</p>
+</div></footer>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function fmt(dt) {
+    if (!dt) return '—';
+    var d = new Date(dt);
+    return isNaN(d) ? esc(dt) : d.toISOString().replace('T',' ').slice(0,16) + ' UTC';
+  }
+
+  $('awareAt').addEventListener('change', function () {
+    var box = $('deadlineBox');
+    if (!this.value) return;
+    var aware = new Date(this.value);
+    function at(h) { return new Date(aware.getTime() + h*3600*1000); }
+    function f(d) { return d.toISOString().slice(0,16).replace('T',' ') + ' UTC'; }
+    box.innerHTML = 'Konstateret kl. ' + f(aware) +
+      '<br>Tidlig varsling senest <strong>' + f(at(24)) + '</strong>' +
+      '<br>Hændelsesnotifikation senest <strong>' + f(at(72)) + '</strong>' +
+      '<br>Slutrapport senest <strong>' + fmt(new Date(aware.getTime() + 30*24*3600*1000)) + '</strong>';
+  });
+
+  function buildData() {
+    var d = {};
+    d.entity = v('entityName'); d.type = $('entityType').value;
+    d.contact = v('contactName'); d.email = v('contactEmail'); d.phone = v('contactPhone') || '—';
+    d.aware = v('awareAt'); d.stage = $('status').value; d.ongoing = $('ongoing').value;
+    d.resolved = v('resolvedAt');
+    d.summary = v('summary'); d.cause = v('cause') || 'Endnu ikke fastlagt — undersøgelsen pågår.';
+    d.severity = $('severity').value; d.impact = v('impact') || '—';
+    d.data = v('dataImpact') || 'Ingen kompromittering af persondata identificeret på nuværende tidspunkt.';
+    d.measures = v('measures') || 'Vurdering i gang.';
+    d.cross = $('crossBorder').value; d.crossDesc = v('crossDesc');
+    d.abuse = $('abuseNote').value;
+    d.authority = v('authority') || '[national CSIRT]';
+    d.now = new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  var STAGE_LABEL = { early: 'TIDLIG VARSLING', notification: 'HÆNDELSESNOTIFIKATION', final: 'SLUTRAPPORT' };
+  var TYPE_LABEL = { essential: 'Væsentlig enhed (bilag I)', important: 'Vigtig enhed (bilag II)', unsure: 'Klassificering afventer' };
+  var SEV_LABEL = {
+    severe: 'ALVORLIG — hændelsen har forårsaget eller kan forårsage alvorlig driftsforstyrrelse eller økonomisk tab',
+    significant: 'VÆSENTLIG — hændelsen har berørt eller kan væsentligt berøre leverancen af tjenester / forårsaget materielt eller immaterielt tab',
+    unsure: 'USIKKER — enheden vurderer i øjeblikket, om tærsklerne for væsentlighed er nået'
+  };
+  var CROSS_LABEL = { no: 'Ingen grænseoverskridende påvirkning identificeret.', yes: 'Ja — ', unknown: 'Ukendt på tidspunktet for denne rapport.' };
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>NIS2 artikel 23 — ' + STAGE_LABEL[d.stage] + '</h2>';
+    h += '<p><strong>Rapporterende enhed:</strong> ' + esc(d.entity) + ' (' + TYPE_LABEL[d.type] + ')<br>' +
+         '<strong>Dato for rapport:</strong> ' + esc(d.now) + '<br>' +
+         '<strong>Indsendes til:</strong> ' + esc(d.authority) + '</p>';
+    h += '<h3>1. Kontaktperson</h3><ul>' +
+         '<li>Navn / rolle: ' + esc(d.contact) + '</li>' +
+         '<li>E-mail: ' + esc(d.email) + '</li>' +
+         '<li>Telefon: ' + esc(d.phone) + '</li></ul>';
+    h += '<h3>2. Tidslinje</h3><ul>' +
+         '<li>Enheden konstaterede hændelsen: ' + fmt(d.aware) + '</li>' +
+         '<li>Status: ' + (d.ongoing === 'yes' ? 'Pågår' : 'Afværget / løst') +
+         (d.resolved ? ' — løst ' + fmt(d.resolved) : '') + '</li>' +
+         '<li>Denne indberetning er <strong>' + STAGE_LABEL[d.stage].toLowerCase() +
+         '</strong> jf. artikel 23 i direktiv (EU) 2022/2555.</li></ul>';
+    h += '<h3>3. Sammenfatning af hændelsen</h3><p>' + esc(d.summary) + '</p>';
+    h += '<h3>4. Årsag</h3><p>' + esc(d.cause) + '</p>';
+    h += '<h3>5. Alvorlighedsbedømmelse</h3><p>' + SEV_LABEL[d.severity] + '</p>';
+    h += '<h3>6. Berørte tjenester og konsekvenser</h3><p>' + esc(d.impact) + '</p>';
+    h += '<h3>7. Data kompromitteret</h3><p>' + esc(d.data) + '</p>';
+    h += '<h3>8. Foranstaltninger truffet og planlagt</h3><p>' + esc(d.measures) + '</p>';
+    var crossText = CROSS_LABEL[d.cross] + (d.cross === 'yes' && d.crossDesc ? esc(d.crossDesc) : '');
+    h += '<h3>9. Grænseoverskridende påvirkning</h3><p>' + crossText + '</p>';
+    var abuseText = { yes:'Ja — enheden har grund til at tro, at hændelsen kan føre til ondsindet udnyttelse.', no:'Ingen indicier på ondsindet udnyttelse på nuværende tidspunkt.', unknown:'Under vurdering.' }[d.abuse];
+    h += '<h3>10. Mulighed for ondsindet udnyttelse</h3><p>' + abuseText + '</p>';
+    h += '<hr><p style="font-size:12px;color:#667">Denne rapport er lavet med den gratis Hermes Compliance NIS2-hændelsesrapportgenerator og følger artikel 23 og bilag I i direktiv (EU) 2022/2555. Det er ikke juridisk rådgivning. National lovgivning kan kræve flere felter eller formater — tjek din nationale CSIRT\'s vejledning, før du indsender.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('nis2_incident_generate_da');
+    current = buildData();
+    $('report').innerHTML = renderHTML(current);
+    $('reportWrap').hidden = false;
+    $('reportWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes — brug Download / udskriv i stedet.');
+    });
+  });
+
+  $('printBtn').addEventListener('click', function () { window.print(); });
+})();
+</script>
+</body>
+</html>

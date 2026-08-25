@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free NIS2 Gap Assessment — 20 Checks Against Article 21</title>
+<meta name="description" content="Assess your company against the ten minimum cybersecurity risk-measure areas of NIS2 Article 21. 20 questions, instant readiness score with prioritised action list, printable report. Free, no signup, runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free NIS2 Gap Assessment (Article 21)">
+<meta property="og:description" content="20 checks against the NIS2 Article 21 minimum measures. Instant score, prioritised fixes, printable report. Free, no signup, nothing leaves your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/nis2-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-gap-assessment">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-gap-assessment-da">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the gap assessment check?","acceptedAnswer":{"@type":"Answer","text":"It walks through the ten minimum cybersecurity risk-management areas that Article 21 of Directive (EU) 2022/2555 requires: risk analysis and information-security policies, incident handling, business continuity and backup management, supply-chain security, security in network and information systems acquisition and development, and effectiveness testing. Each area is covered by two concrete checks."}},{"@type":"Question","name":"How is the readiness score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each of the 20 checks scores 0 points if the measure is missing, 1 point if it is partial or informal, and 2 points if it is documented. The total is shown as a percentage from 0 to 100 with a grade from A to D, plus a prioritised list of what to fix first."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. It is a structured self-check based on the text of Directive (EU) 2022/2555. National implementing laws add details such as registration duties and sector-specific rules. Treat the result as a starting point for your compliance work, not a legal opinion."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The assessment runs entirely client-side. Nothing is sent to any server and nothing is stored. You print or download the finished report yourself."}},{"@type":"Question","name":"Who is this for?","acceptedAnswer":{"@type":"Answer","text":"Small and medium companies that are in scope of NIS2 as essential or important entities, and their IT providers. If you are unsure whether you are in scope at all, take the free scope self-assessment first."}}]}
+</script>
+<script defer src="/track.js"></script>
+<link rel="stylesheet" href="/style.css">
+<style>
+  .gap { max-width: 720px; margin: 0 auto; }
+  .q { display:none; padding:18px; border-radius:12px; background:var(--color-surface-2);
+       border:1px solid var(--color-border); margin-bottom:14px; }
+  .q.active { display:block; }
+  .q h3 { margin-top:0; }
+  .area { display:inline-block; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+          color:#0b6e8f; font-weight:700; margin-bottom:6px; }
+  .q label { display:block; padding:9px 12px; margin:6px 0; border-radius:8px;
+             border:1px solid var(--color-border); cursor:pointer; font-size:15px; }
+  .q label:hover { background: rgba(11,110,143,.08); }
+  .q input { margin-right:8px; }
+  .navbtns { display:flex; justify-content:space-between; margin-top:12px; }
+  button.nav { background:#0b6e8f; color:#fff; border:0; padding:10px 22px;
+               border-radius:8px; cursor:pointer; font-size:15px; }
+  button.nav:hover { background:#095a77; }
+  button.nav[disabled] { opacity:.45; cursor:default; }
+  #progress { max-width:720px; margin:0 auto 14px; height:6px; border-radius:3px;
+              background:var(--color-border); overflow:hidden; }
+  #bar { height:100%; width:0; background:#0b6e8f; transition:width .25s; }
+  #result { max-width:780px; margin:28px auto; font-size:15px; line-height:1.55; text-align:left; }
+  .scorecard { text-align:center; padding:20px; border-radius:12px;
+               background:var(--color-surface-2); border:1px solid var(--color-border); }
+  .scorecard .score { font-size:44px; font-weight:700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom:12px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10;font-weight:600}
+  .sev-ok{color:#157a3c;font-weight:600}
+  .tagchip{display:inline-block;padding:2px 10px;margin:2px;border-radius:999px;
+           background:var(--color-surface-2);border:1px solid var(--color-border);font-size:13px}
+  @media print {
+    header.hero, .gap, .navbtns, #progress, footer.site-footer, .no-print { display:none !important }
+    #result { margin:0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Free NIS2 Gap Assessment</h1>
+    <p class="tagline">20 checks against the <strong>Article 21</strong> minimum
+    cybersecurity measures. Instant score, prioritised fixes, printable report.
+    No signup.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="quiz-heading">
+  <h2 id="quiz-heading">Run the assessment</h2>
+  <div id="progress" aria-hidden="true"><div id="bar"></div></div>
+  <form id="quizForm" class="gap">
+    <div id="questions"></div>
+    <div class="navbtns">
+      <button type="button" class="nav" id="prevBtn" disabled>← Back</button>
+      <button type="button" class="nav" id="nextBtn" disabled>Next →</button>
+    </div>
+  </form>
+  <noscript><p>This tool runs entirely in JavaScript in your browser. Enable JavaScript to use it.</p></noscript>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="what-heading">
+  <h2 id="what-heading">The ten measure areas of Article 21(2)</h2>
+  <ul class="findings">
+    <li><strong>Risk analysis and information system security policies</strong></li>
+    <li><strong>Incident handling</strong> — detect, respond, and report under Art. 23</li>
+    <li><strong>Business continuity</strong> — backup management and disaster recovery</li>
+    <li><strong>Supply chain security</strong> — including direct suppliers and service providers</li>
+    <li><strong>Security in network and information systems</strong> — acquisition, development, maintenance and vulnerabilities handling</li>
+    <li><strong>Policies and procedures to assess effectiveness</strong> of cybersecurity measures</li>
+    <li><strong>Basic cyber hygiene practices and cybersecurity training</strong></li>
+    <li><strong>Policies regarding the use of cryptography and encryption</strong> where appropriate</li>
+    <li><strong>Human resources security, access control policies and asset management</strong></li>
+    <li><strong>Use of multi-factor authentication or continuous authentication solutions, secured voice/video/text communications and secured emergency communication systems</strong></li>
+  </ul>
+  <p><strong>Honest limitation:</strong> this is a structured self-check based on the
+  directive text. National implementing laws add registration duties and sector
+  specifics. Confirm against your national law — this is not legal advice.</p>
+</section>
+
+<section aria-labelledby="fix-heading">
+  <h2 id="fix-heading">Before you start</h2>
+  <p>Not sure whether your company is in scope of NIS2 at all?
+  Take the free <a href="/nis2-check">scope self-assessment</a> first (12 questions).</p>
+  <p>Related free tools: <a href="/nis2-incident-generator">NIS2 Incident Report Generator</a> ·
+  <a href="/security-headers-check">Security Headers Checker</a> ·
+  <a href="/cookie-check">Cookie Consent Checker</a></p>
+  <p>The plain-language guide: <a href="/blog/nis2-readiness-guide">NIS2 for Small
+  Agencies: What Changes</a>. Full offline checklist with templates:
+  <a href="/#products">NIS2 Compliance Kit e-book ($9.99 on Amazon)</a>.</p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Self-check based on Directive (EU) 2022/2555, Article 21.
+  Everything runs locally in your browser — nothing you type leaves this page.
+  Not legal advice.</p>
+</div></footer>
+
+<script>
+const QUESTIONS = [
+  // 1. Risk analysis & policies
+  { area:'Risk analysis & policies', q:'Do you have a documented information-security policy approved by management?',
+    opts:[['yes','Yes, documented and approved'],['partial','Exists but informal / outdated'],['no','No']] },
+  { area:'Risk analysis & policies', q:'Do you perform periodic IT risk analyses identifying critical assets and threats?',
+    opts:[['yes','Yes, regularly'],['partial','Once / ad hoc'],['no','Never']] },
+  // 2. Incident handling
+  { area:'Incident handling', q:'Do you have an incident response plan defining roles and steps?',
+    opts:[['yes','Yes, documented'],['partial','Partly'],['no','No']] },
+  { area:'Incident handling', q:'Does someone know how to file an NIS2 notification within 24/72 hours?',
+    opts:[['yes','Yes, process defined'],['partial','We would figure it out'],['no','No']] },
+  // 3. Business continuity & backups
+  { area:'Business continuity', q:'Are backups taken automatically and tested by restoring them?',
+    opts:[['yes','Yes, tested restores'],['partial','Backups yes, never tested'],['no','No / manual only']] },
+  { area:'Business continuity', q:'Do you have a continuity plan for losing a critical system (e.g. outage playbook)?',
+    opts:[['yes','Yes, documented'],['partial','Informally'],['no','No']] },
+  // 4. Supply chain
+  { area:'Supply chain security', q:'Do you keep a list of suppliers and service providers with their security requirements?',
+    opts:[['yes','Yes, formal register'],['partial','List exists, no requirements'],['no','No']] },
+  { area:'Supply chain security', q:'Do contracts with IT suppliers include security obligations (breach notice, secure handling)?',
+    opts:[['yes','Yes, standard clause'],['partial','Some contracts'],['no','No / unknown']] },
+  // 5. Secure acquisition & development
+  { area:'Secure development', q:'Are security requirements included when buying or building systems?',
+    opts:[['yes','Yes, always considered'],['partial','Sometimes'],['no','No']] },
+  { area:'Secure development', q:'Is there a process for patching known vulnerabilities within defined timeframes?',
+    opts:[['yes','Yes, defined SLAs'],['partial','Best effort'],['no','No process']] },
+  // 6. Effectiveness testing
+  { area:'Effectiveness testing', q:'Have your security measures been tested (e.g. vulnerability scan, pen test, audit)?',
+    opts:[['yes','Yes, within last year'],['partial','Longer ago / partial'],['no','Never']] },
+  { area:'Effectiveness testing', q:'Are results from tests followed up with documented remediation?',
+    opts:[['yes','Yes, tracked to closure'],['partial','Sometimes'],['no','No tests to follow up']] },
+  // 7. Cyber hygiene & training
+  { area:'Cyber hygiene & training', q:'Have staff received cybersecurity awareness training?',
+    opts:[['yes','Yes, all staff'],['partial','Only IT / some staff'],['no','Never']] },
+  { area:'Cyber hygiene & training', q:'Are basics enforced: automatic updates, screen locks, phishing reporting channel?',
+    opts:[['yes','Yes, enforced'],['partial','Partly'],['no','No']] },
+  // 8. Cryptography
+  { area:'Cryptography', q:'Is encryption used for sensitive data at rest and in transit?',
+    opts:[['yes','Yes, both'],['partial','One of them'],['no','No / unknown']] },
+  { area:'Cryptography', q:'Is there a policy for key/password management (rotation, storage, no shared passwords)?',
+    opts:[['yes','Yes, documented'],['partial','Practice varies'],['no','No']] },
+  // 9. HR security, access control, asset management
+  { area:'Access control & assets', q:'Is there an inventory of IT assets (devices, systems, cloud services)?',
+    opts:[['yes','Yes, maintained'],['partial','Outdated / partial'],['no','None']] },
+  { area:'Access control & assets', q:'Are access rights granted on need-to-know and revoked when staff leave?',
+    opts:[['yes','Yes, offboarding checklist'],['partial','Usually'],['no','No process']] },
+  // 10. MFA & secured comms
+  { area:'MFA & secure comms', q:'Is multi-factor authentication enabled on email, VPN and admin accounts?',
+    opts:[['yes','Yes, everywhere possible'],['partial','Some systems'],['no','No / unknown']] },
+  { area:'MFA & secure comms', q:'Could management communicate securely during an incident (secured channel, out-of-band contact list)?',
+    opts:[['yes','Yes, prepared'],['partial','Probably via personal phones'],['no','Not planned']] }
+];
+
+const answers = {};
+let cur = 0;
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+function render() {
+  const box = document.getElementById('questions');
+  const item = QUESTIONS[cur];
+  box.innerHTML =
+    '<div class="q active">'
+    +'<span class="area">'+esc(item.area)+' · '+(cur+1)+'/'+QUESTIONS.length+'</span>'
+    +'<h3>'+esc(item.q)+'</h3>'
+    + item.opts.map(o=>'<label><input type="radio" name="q'+cur+'" value="'+o[0]+'">'+o[1]+'</label>').join('')
+    +'</div>';
+  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+    answers[cur]=inp.value;
+    updateNav();
+    setTimeout(()=>next(),180);
+  }));
+  updateNav();
+}
+
+function updateNav(){
+  document.getElementById('nextBtn').disabled = !(cur in answers) && cur<QUESTIONS.length-1;
+  document.getElementById('prevBtn').disabled = cur===0;
+  document.getElementById('nextBtn').textContent = cur===QUESTIONS.length-1?'See result →':'Next →';
+  document.getElementById('bar').style.width=(Object.keys(answers).length/QUESTIONS.length*100)+'%';
+}
+function next(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); }
+function prev(){ if(cur>0){cur--;render();} }
+
+const AREAS = [...new Set(QUESTIONS.map(q=>q.area))];
+
+function finish(){
+  if(window.trackEvent)window.trackEvent('finish');
+  try{ fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){});
+  }catch(e){}
+
+  let pts=0,max=0;
+  const perArea={};
+  QUESTIONS.forEach((item,i)=>{
+    const v=answers[i];
+    const p=v==='yes'?2:v==='partial'?1:0;
+    pts+=p; max+=2;
+    if(!perArea[item.area])perArea[item.area]={pts:0,gaps:[]};
+    perArea[item.area].pts+=p;
+    if(p<2)perArea[item.area].gaps.push({q:item.q,v});
+  });
+
+  const pct=Math.round(pts/max*100);
+  const g=pct>=90?'A':pct>=70?'B':pct>=50?'C':'D';
+  const verdict = g==='A'?'Strong readiness'
+                : g==='B'?'Reasonable readiness — gaps remain'
+                : g==='C'?'Significant gaps'
+                : 'Critical gaps';
+
+  // Prioritised findings: worst areas first
+  const ranked = AREAS
+    .map(a=>({area:a,...perArea[a]}))
+    .sort((x,y)=>(x.pts-y.pts));
+
+  const fixHint={
+    'Risk analysis & policies':'Write a one-page information-security policy, get management sign-off, and run a simple asset/threat list.',
+    'Incident handling':'Document who detects, decides and reports — then rehearse the Art. 23 deadlines once. The free Incident Report Generator structures the notification.',
+    'Business continuity':'Automate backups of critical data and actually test a restore. Write a one-page outage playbook.',
+    'Supply chain security':'List your suppliers, add basic security clauses (breach notification, secure handling) to new contracts.',
+    'Secure development':'Define patch SLAs (e.g. critical vulnerabilities within 14 days) and include security in purchase decisions.',
+    'Effectiveness testing':'Run a vulnerability scan or external review of your setup, and track findings to closure.',
+    'Cyber hygiene & training':'Run an awareness session for all staff, enable automatic updates, and set up a way to report suspicious emails.',
+    'Cryptography':'Ensure HTTPS/TLS everywhere and disk encryption on laptops; stop sharing passwords and adopt a password manager.',
+    'Access control & assets':'Build a simple asset inventory and an offboarding checklist that revokes access the same day.',
+    'MFA & secure comms':'Enable MFA on email, VPN and admin accounts first — it is the single highest-value control.'
+  };
+
+  const findingsHtml = ranked.filter(r=>r.gaps.length).map(r=>
+    '<li><span class="sev-'+(r.pts===0?'error':'warning')+'">'+esc(r.area)+': '
+    +r.pts+'/4</span>'
+    +'<ul style="margin-top:4px">'+r.gaps.map(gp=>{
+      const label = gp.v==='no' ? 'Missing' : gp.v==='partial' ? 'Partial' : '';
+      return '<li style="font-weight:400;color:inherit"><small>'+label+' — '+esc(gp.q)
+        +(gp.v!=='yes'&&fixHint[r.area]?'<br>Fix: '+esc(fixHint[r.area]):'')+'</small></li>';
+    }).join('')+'</ul></li>'
+  ).join('');
+
+  const okAreas = ranked.filter(r=>r.gaps.length===0);
+  const okHtml = okAreas.length
+    ? '<ul class="findings">'+okAreas.map(r=>'<li><span class="sev-ok">✓ '+esc(r.area)+'</span></li>').join('')+'</ul>' : '';
+
+  document.getElementById('result').innerHTML=
+    '<div class="scorecard"><div class="score grade-'+g+'">'+verdict+'</div>'
+    +'<div style="margin-top:6px;font-size:14px;color:#667">Readiness score: '+pts+'/'+max+' ('+pct+'%)</div>'
+    +'<div style="margin-top:8px"><span class="tagchip">Directive (EU) 2022/2555</span>'
+    +'<span class="tagchip">Art. 21(2)</span><span class="tagchip">Grade '+g+'</span></div>'
+    +'</div>'
+    +(findingsHtml?'<h3 style="margin-top:22px">What to fix first</h3><ul class="findings">'+findingsHtml+'</ul>':'')
+    +(okHtml?'<h3 style="margin-top:22px">Already in place</h3>'+okHtml:'')
+    +'<p style="font-size:13px;color:#667;margin-top:18px">Structured self-check — not legal advice. '
+    +'Scope check: <a href="/nis2-check">free NIS2 self-assessment</a>. '
+    +'Plain-language guide: <a href="/blog/nis2-readiness-guide">NIS2 for Small Agencies</a>. '
+    +'Full checklist + templates: <a href="/#products">NIS2 Compliance Kit e-book</a>.</p>'
+    +'<p style="text-align:center;margin-top:18px" class="no-print">'
+    +'<button onclick="window.print()" class="nav">Print / save as PDF</button></p>';
+}
+
+document.getElementById('nextBtn').addEventListener('click',()=>{if(cur===QUESTIONS.length-1)finish();else next();});
+document.getElementById('prevBtn').addEventListener('click',prev);
+
+render();
+</script>
+</body>
+</html>
