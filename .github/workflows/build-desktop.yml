@@ -159,10 +159,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
-          # Create release if it doesn't exist (tag push), or upload to existing (release published)
-          gh release create "$TAG" artifacts/* \
+          gh release create "$TAG" \
             --repo ${{ github.repository }} \
             --title "EAA Compliance Scanner Desktop $TAG" \
             --notes "Auto-built by CI — macOS, Linux, Windows" \
-            --clobber 2>/dev/null || \
-          gh release upload "$TAG" artifacts/* --repo ${{ github.repository }} --clobber
+            artifacts/*
