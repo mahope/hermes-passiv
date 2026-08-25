@@ -70,7 +70,7 @@
   }
 
   document.addEventListener('click', function (ev) {
-    var a = ev.target && ev.target.closest ? ev.target.closest('a[href$=".epub"]') : null;
+    var a = ev.target && ev.target.closest ? ev.target.closest('a[href$=".epub"], a[href$=".zip"]') : null;
     if (a) setTimeout(showLeadBar, 800);
   }, true);
 

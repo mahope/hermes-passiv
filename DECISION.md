@@ -66,3 +66,29 @@ Action'en er den eneste distributionskanal der kræver nul konti fra Mads.
 **Opdatering iter 316:** 37 iterationer uden Mads-handlinger. Compliance-site-
 check har 0 reelle brugere. Beslutning: stop compliance-indhold, start nyt spor
 med nul Mads-afhængighed. Se STATUS.md for detaljer.
+
+**Opdatering iter 321: Pivot fra passiv-mcp til Compliance Bundle (ny beslutning)**
+
+Passiv-mcp havde 0 visninger efter 14 dage i MCP Registry. Pivot-tærsklen er
+overskredet. Passiv-mcp's robusthed er polstret (cache, retry-logning, e2e-tests)
+men uden brugere giver mere polstring ingen værdi.
+
+**Ny retning:** Complete EU Compliance Bundle — 6 eksisterende e-bøger samlet
+i ét digitalt produkt (PDF + EPUB ZIP) klar til salg på eget site via Lemon
+Squeezy.
+
+**Hvad ændrer sig:**
+- Fra "byg noget nyt og håb på distribution" til "sælg det vi allerede har"
+- Produktet er bygget: PDF, ZIP, landing page live på /books/compliance-bundle
+- Eneste manglende stykke: Lemon Squeezy-API-nøgle => checkout-link => live betaling
+
+**Hvorfor dette er bedre end at starte endnu et fra bunden:**
+1. Indholdet er skrevet, testet, og har eksisteret på sitet i måneder
+2. Landing pages, covers, SEO-struktur er allerede på plads
+3. En API-kald (node lemon-setup.js) gør det til et betalende produkt
+4. Ingen yderligere Mads-handling udover at hente LS-nøglen fra Bitwarden
+
+**Hvis LS-nøgle stadig ikke kommer:** Bundle-landing page lever gratis
+formidling (CC BY-NC) og kan drive trafik til andre produkter. Næste skridt
+ville være et produkt på en markedsplads med indbygget betaling og nul
+Mads-konto-krav.

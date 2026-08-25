@@ -93,3 +93,19 @@
 - **Næste skridt for sporet:** npm-publicering (npm login = Mads-handling),
   registrering i MCP-kataloger (mcp.so, PulseMCP, glama.ai m.fl.), evt.
   server.json + MCP Registry submit når den er åben.
+
+**Iter 321: Complete EU Compliance Bundle — ready-to-sell digitalt produkt**
+
+- **Pivot:** passiv-mcp havde 0 visninger efter 14 dage i registry. Pivot-tærskel
+  overskredet. Nyt spor: samlet digitalt bundle af 6 eksisterende e-books, klar til
+  salg når Lemon Squeezy-nøgle ankommer.
+- **build_bundle_all.py** — PDF-kompilation af alle 6 e-books via reportlab.
+  Håndterer: titelside, indholdsfortegnelse, H1-H3, lister, tabeller, korte
+  kodeblokke, kolofon.
+- **Site/downloads/**: ZIP (6 EPUBs + combined PDF, 204 KB) + PDF alene (154 KB).
+- **Landing page** på `/books/compliance-bundle`: hero, $29 pris (placeholder),
+  gratis download, 4 benefits, alle 6 bøger vist, FAQ med LS-checkout-info.
+- **Opdateret homepage:** bundle-links i hero, quiz-sektion, FAQ (Gumroad/KDP
+  fjernet, LS nævnt). Books-index: bundle-promo-kort.
+- **Verificering:** Deploy + curl — alle nye sider og downloads HTTP 200.
+- **Mangler:** `node lemon-setup.js` med LS-API-nøgle → checkout-link → live.

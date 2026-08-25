@@ -87,9 +87,14 @@ footer a { color:#1a73e8; }
 <div class="price-area">
   <div class="price">$29</div>
   <div class="price-note">One-time payment · 6 complete e-books · PDF + EPUB</div>
-  <div class="btn-buy coming" onclick="return false;">&#9201; Checkout — payment setup in progress</div>
-  <p style="color:#888;font-size:13px;margin:8px 0 16px;">Payment handled via Lemon Squeezy (EU VAT & US sales tax included).</p>
-  <a href="/downloads/compliance-bundle-v1.0.zip" class="btn-free" onclick="trackEvent('bundle-zip-free')">⬇ Download free ZIP (all EPUBs + PDF)</a>
+  <a id="bundleBuy" class="btn-buy" href="#notify" onclick="trackEvent('bundle-buy-click')">🔒 Get the bundle — $29</a>
+  <p style="color:#666;font-size:13px;margin:8px 0 4px;">Checkout opens shortly (payment via Lemon Squeezy — EU VAT & US sales tax handled). Leave your email and be first in line; buyers get all future editions free.</p>
+  <form id="bundleNotify" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:420px;margin:0 auto;">
+    <input type="email" id="bundleEmail" required placeholder="you@agency.com" aria-label="Your email address" style="flex:1;min-width:200px;padding:11px 14px;border:1px solid #b9c8dd;border-radius:6px;font-size:15px;" />
+    <button type="submit" style="padding:11px 22px;border:none;border-radius:6px;background:#1a73e8;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Notify me at launch</button>
+  </form>
+  <p id="bundleMsg" role="status" style="font-size:13px;color:#2e7d32;min-height:18px;"></p>
+  <a href="/downloads/compliance-bundle-v1.0.zip" class="btn-free" onclick="trackEvent('bundle-zip-free')">⬇ Or download free ZIP (all EPUBs + PDF)</a>
   <p style="color:#888;font-size:11px;margin:6px 0 0;">204 KB · No signup · Creative Commons BY-NC 4.0</p>
 </div>
 
@@ -212,5 +217,39 @@ footer a { color:#1a73e8; }
   <p><a href="/books">All E-Books (Free EPUBs)</a> &middot; <a href="/">Home</a> &middot; <a href="/clean-copy">Clean Copy</a></p>
 </footer>
 <script defer src="/track.js"></script>
+<script>
+(function () {
+  var form = document.getElementById('bundleNotify');
+  if (!form) return;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('bundleEmail').value.trim();
+    var msg = document.getElementById('bundleMsg');
+    if (!/^[^\s@]{1,64}[^\s@]*@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      msg.textContent = 'Please enter a valid email address.';
+      msg.style.color = '#c0392b';
+      return;
+    }
+    fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'book-compliance-bundle' })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.ok) {
+        try { navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: location.pathname, event: 'bundle-notify' })], { type: 'application/json' })); } catch (err) {}
+        msg.textContent = "Thanks — you're on the list. We'll email you the moment checkout opens.";
+        form.querySelector('button').disabled = true;
+        form.querySelector('button').textContent = '✓ On the list';
+      } else {
+        msg.textContent = data.error || 'Something went wrong. Please try again.';
+        msg.style.color = '#c0392b';
+      }
+    }).catch(function () {
+      msg.textContent = 'Network error. Please try again.';
+      msg.style.color = '#c0392b';
+    });
+  });
+})();
+</script>
 </body>
 </html>
