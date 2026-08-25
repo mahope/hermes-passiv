@@ -15,3 +15,5 @@ desktop/node_modules/
 .DS_Store
 passiv-mcp/
 eu-compliance-guides/
+bugbottle/
+bugbottle-action-repo/
