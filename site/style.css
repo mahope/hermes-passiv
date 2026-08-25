@@ -528,3 +528,24 @@ footer a { color: var(--color-accent); }
   .ebook-cover { width: 160px; }
   .ebook-details, .ebook-price { justify-content: center; }
 }
+
+/* blog in-content tool CTA (added by tools/add_hero_cta.py) */
+.blog-tool-cta {
+  max-width: 720px;
+  margin: 20px auto 0;
+  padding: 14px 20px;
+  background: var(--color-surface-2, #f5f7fa);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+.blog-tool-cta .btc-label { font-size: 0.95rem; color: var(--color-text, #1a202c); }
+.blog-tool-cta .btn-primary { padding: 9px 22px; font-size: 0.92rem; }
+@media (max-width: 480px) {
+  .blog-tool-cta { flex-direction: column; gap: 8px; }
+}
