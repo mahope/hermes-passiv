@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gratis hjemmeside compliance-tjek — 9-punkts EU-scan</title>
+<meta name="description" content="Tjek enhver hjemmeside for 9 EU-compliance-punkter: privatlivspolitik, handelsbetingelser, cookie-samtykke, imprint/legal notice, tilgængelighedserklæring, databehandleraftale, sikkerhedsheadere, meta-tags og sprogdeklaration. Gratis, ingen tilmelding.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis hjemmeside compliance-tjek — 9-punkts scan">
+<meta property="og:description" content="Tjek enhver hjemmeside for 9 EU-compliance-punkter. Gratis, server-side, ingen tilmelding.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/compliance-site-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gratis hjemmeside compliance-tjek — 9-punkts scan">
+<meta name="twitter:description" content="Tjek enhver hjemmeside for 9 EU-compliance-punkter (privatliv, cookies, imprint, tilgængelighed, DPA, sikkerhedsheadere, meta-tags, hreflang). Gratis server-side scan.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/compliance-site-check">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/compliance-site-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/compliance-site-check">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/compliance-site-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Hjemmeside Compliance-tjek",
+  "description": "Gratis værktøj der tjekker enhver hjemmeside for 9 EU-compliance-punkter: privatlivspolitik, handelsbetingelser, cookie-samtykke, imprint, tilgængelighedserklæring, databehandleraftale, sikkerhedsheadere, meta-tags og sprogdeklaration.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "da",
+  "browserRequirements": "JavaScript påkrævet",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "DKK"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "Hvad scanner dette compliance-værktøj efter?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Ni ting: privatlivspolitik, handelsbetingelser, cookie-samtykke-banner, imprint/legal notice, tilgængelighedserklæring, databehandleraftale (DPA), sikkerhedsheadere (CSP, HSTS, XFO, XCTO, Referrer-Policy), SEO-meta-tags (title, description, viewport, canonical, robots, OG) og hreflang/sprogdeklaration."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Er værktøjet virkelig gratis?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Ja. Ingen tilmelding, ingen API-nøgle, intet betalingskort. Indsæt bare en URL og få rapporten."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Kan jeg automatisere dette tjek i CI/CD?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Ja. Samme maskine kører som en gratis GitHub Action (mahope/compliance-site-check@v2). Tilføj den til dit workflow for at tjekke efter hver deploy."
+    }
+  }]
+}
+</script>
+<style>
+  .tool-container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  .input-group { display: flex; gap: 8px; margin: 24px 0; }
+  .input-group input { flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; }
+  .input-group input:focus { border-color: #2563eb; }
+  .input-group button { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .input-group button:hover { background: #1d4ed8; }
+  .input-group button:disabled { background: #93c5fd; cursor: not-allowed; }
+  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; color: #dc2626; margin: 16px 0; }
+  .result-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin: 16px 0; }
+  .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .score-badge { font-size: 28px; font-weight: 800; padding: 8px 16px; border-radius: 8px; }
+  .score-badge.A { background: #d1fae5; color: #065f46; }
+  .score-badge.B { background: #dbeafe; color: #1e40af; }
+  .score-badge.C { background: #fef3c7; color: #92400e; }
+  .score-badge.D { background: #fee2e2; color: #991b1b; }
+  .score-detail { font-size: 14px; color: #6b7280; }
+  .check-item { padding: 12px 0; border-bottom: 1px solid #f3f4f6; display: flex; align-items: flex-start; gap: 12px; }
+  .check-item:last-child { border-bottom: none; }
+  .check-status { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 2px; }
+  .check-status.pass { background: #d1fae5; color: #065f46; }
+  .check-status.fail { background: #fee2e2; color: #dc2626; }
+  .check-status.warn { background: #fef3c7; color: #92400e; }
+  .check-label { font-weight: 600; font-size: 14px; }
+  .check-detail { font-size: 13px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+  .check-hint { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .loading { text-align: center; padding: 40px 0; }
+  .loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cta-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; text-align: center; }
+  .cta-box h3 { margin: 0 0 8px; color: #065f46; }
+  .cta-box p { font-size: 14px; color: #4b5563; margin: 0 0 12px; }
+  .cta-box a { display: inline-block; padding: 10px 20px; background: #059669; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  .cta-box a:hover { background: #047857; }
+  .sub-results { margin-top: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; }
+  .sub-results .sub-item { font-size: 12px; color: #6b7280; padding: 3px 0; }
+  .checks-legend { margin: 16px 0; display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #6b7280; }
+  .checks-legend span { display: flex; align-items: center; gap: 4px; }
+  .checks-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .dot.green { background: #10b981; }
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #f59e0b; }
+  .examples { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .examples a { color: #2563eb; text-decoration: none; }
+  .examples a:hover { text-decoration: underline; }
+  @media (max-width: 480px) {
+    .input-group { flex-direction: column; }
+    .input-group input { width: 100%; }
+    .input-group button { width: 100%; }
+  }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Hjemmeside Compliance-tjek</h1>
+    <p class="tagline">Tjek enhver hjemmeside for 9 EU-compliance-punkter — privatliv, handelsbetingelser, cookies, imprint, tilgængelighed, DPA, sikkerhedsheadere, meta-tags og sprogdeklaration. Gratis server-side scan, ingen tilmelding.</p>
+  </div>
+</header>
+
+<div class="tool-container">
+  <div class="checks-legend">
+    <span><span class="dot green"></span> OK</span>
+    <span><span class="dot yellow"></span> Advarsel</span>
+    <span><span class="dot red"></span> Mangler / Fejl</span>
+  </div>
+
+  <div class="input-group" id="scanForm">
+    <input type="url" id="urlInput" placeholder="https://example.dk" value="" autocomplete="url" spellcheck="false">
+    <button id="scanBtn" onclick="scan()">Tjek hjemmeside</button>
+  </div>
+
+  <div class="examples">
+    Prøv: <a href="javascript:scanExample()">hermes-passiv.pages.dev</a> &middot;
+    <a href="javascript:;" onclick="document.getElementById('urlInput').value='https://example.com';scan()">example.com</a>
+  </div>
+
+  <div id="errorBox" class="error-box" style="display:none"></div>
+  <div id="loading" class="loading" style="display:none">
+    <div class="spinner"></div>
+    <p style="font-size:14px;color:#6b7280;margin-top:12px">Scanner… tager 5-15 sekunder</p>
+  </div>
+  <div id="results"></div>
+
+  <div class="cta-box" id="ctaBox" style="display:none">
+    <h3>Automatiser tjekket i CI/CD</h3>
+    <p>Tilføj den gratis GitHub Action til dit workflow og fang compliance-huller efter hver deploy.</p>
+    <a href="https://github.com/mahope/compliance-site-check">Se på GitHub → mahope/compliance-site-check@v2</a>
+  </div>
+</div>
+
+<footer class="site-footer"><div class="container">
+  <p>En del af <a href="/da">Compliance Værktøjskassen</a> &middot; <a href="https://github.com/mahope/compliance-site-check">GitHub Action</a> &middot; <a href="/compliance-site-check">English version</a></p>
+</div></footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+
+<script>
+const urlInput = document.getElementById('urlInput');
+const scanBtn = document.getElementById('scanBtn');
+const resultsEl = document.getElementById('results');
+const errorBox = document.getElementById('errorBox');
+const loadingEl = document.getElementById('loading');
+const ctaBox = document.getElementById('ctaBox');
+
+function showLoading() { loadingEl.style.display = ''; resultsEl.innerHTML = ''; errorBox.style.display = 'none'; ctaBox.style.display = 'none'; scanBtn.disabled = true; }
+function hideLoading() { loadingEl.style.display = 'none'; scanBtn.disabled = false; }
+function showError(msg) { errorBox.textContent = msg; errorBox.style.display = ''; hideLoading(); }
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+function getStatusIcon(status) {
+  if (status === 'pass') return '<span class="check-status pass">&#10003;</span>';
+  if (status === 'warn' || status === 'info') return '<span class="check-status warn">&#9888;</span>';
+  return '<span class="check-status fail">&#10005;</span>';
+}
+
+function scan() {
+  var raw = urlInput.value.trim();
+  if (!raw) { showError('Indtast en URL først.'); return; }
+  if (!raw.startsWith('http://') && !raw.startsWith('https://')) raw = 'https://' + raw;
+  try { new URL(raw); } catch (e) { showError('Ugyldig URL. Sørg for at den starter med http:// eller https://'); return; }
+  showLoading();
+  fetch('/api/compliance-scan?url=' + encodeURIComponent(raw))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      hideLoading();
+      if (!data.ok) { showError(data.error || 'Scan fejlede'); return; }
+      ctaBox.style.display = '';
+      renderResults(data);
+    })
+    .catch(function(err) { showError('Netværksfejl: ' + (err.message || 'ukendt')); });
+}
+
+function renderResults(data) {
+  var html = '<div class="result-card">';
+  html += '<div class="score-row">';
+  html += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
+  html += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' tjek bestået &middot; ' + esc(data.url) + '</div>';
+  html += '</div>';
+
+  var order = [];
+  var statusOrder = { pass: 0, warn: 1, info: 1, fail: 2 };
+  for (var key in data.results) {
+    data.results[key].forEach(function(r) { order.push(r); });
+  }
+  order.sort(function(a, b) {
+    var sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 2;
+    var sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 2;
+    if (sa !== sb) return sa - sb;
+    return (a.label || a.key || '').localeCompare(b.label || b.key || '');
+  });
+
+  order.forEach(function(r) {
+    html += '<div class="check-item">';
+    html += getStatusIcon(r.status);
+    html += '<div><div class="check-label">' + esc(r.label || r.check || r.key) + '</div>';
+    html += '<div class="check-detail">' + esc(r.details) + '</div>';
+    if (r.importance) html += '<div class="check-hint">' + esc(r.importance) + '</div>';
+    if (r.subResults && r.subResults.length) {
+      html += '<div class="sub-results">';
+      r.subResults.forEach(function(s) {
+        html += '<div class="sub-item">' + getStatusIcon(s.status) + ' <strong>' + esc(s.check) + '</strong> — ' + esc(s.detail) + '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+
+  if (data.checks) {
+    html += '<div class="result-card"><h3 style="margin:0 0 12px;font-size:16px">Om hvert tjek</h3>';
+    for (var key in data.checks) {
+      var c = data.checks[key];
+      html += '<p style="font-size:13px;color:#4b5563;margin:2px 0"><strong>' + esc(c.label) + '</strong> — ' + esc(c.importance) + '</p>';
+    }
+    html += '</div>';
+  }
+
+  resultsEl.innerHTML = html;
+  window.scrollTo({ top: document.getElementById('results').offsetTop - 20, behavior: 'smooth' });
+}
+
+urlInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') scan(); });
+
+function scanExample() {
+  document.getElementById('urlInput').value = 'https://hermes-passiv.pages.dev';
+  scan();
+}
+
+urlInput.focus();
+</script>
+</body>
+</html>

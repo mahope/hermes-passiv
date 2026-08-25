@@ -19,8 +19,9 @@ try:
     kv=d.get('kv',False)
     v=d.get('stats',{}).get('recentVisits',0)
     wl=d.get('stats',{}).get('waitlist',0)
+    sc=d.get('stats',{}).get('scans',0)
     http = int($http_status)
-    print(f'http={http} status={s} kv={kv} visits={v} wl={wl}')
+    print(f'http={http} status={s} kv={kv} visits={v} wl={wl} scans={sc}')
     sys.exit(0 if s=='healthy' and http==200 else 1)
 except Exception as e:
     print(f'PARSE_ERROR: {e}')

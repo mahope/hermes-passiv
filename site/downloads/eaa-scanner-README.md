@@ -81,11 +81,19 @@ A full manual checklist is still required for EAA conformance.
 
 ## Desktop app (optional)
 
-A desktop version (Electron) is available as source:
-[`eaa-scanner-desktop-src-1.1.1.zip`](https://hermes-passiv.pages.dev/downloads/eaa-scanner-desktop-src-1.1.1.zip).
+A native macOS desktop app (DMG or ZIP) is available for Apple Silicon:
+
+- [Download DMG (121 MB)](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.2.0/EAA.Compliance.Scanner-1.2.0-arm64.dmg)
+- [Download ZIP (117 MB)](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.2.0/EAA.Compliance.Scanner-1.2.0-arm64-mac.zip)
+
+Or download the source and build it yourself:
+
+- [`eaa-scanner-desktop-src-1.2.0.zip`](https://hermes-passiv.pages.dev/downloads/eaa-scanner-desktop-src-1.2.0.zip)
+
+Then build and run:
 
 ```bash
-unzip eaa-scanner-desktop-src-1.1.1.zip && cd desktop
+unzip eaa-scanner-desktop-src-1.2.0.zip && cd desktop
 npm install
 npm start
 ```

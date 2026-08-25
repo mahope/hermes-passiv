@@ -128,7 +128,8 @@ async function main() {
   console.log('\n=== Færdig! ===');
   console.log(`Checkout URL: ${checkoutUrl || 'SE OUTPUT OVERFOR'}`);
   console.log('\nNæste skridt:');
-  console.log('1. Opdater /clean-copy.html med checkout-linket');
+  console.log('1. Gem checkout-URL i KV (så /clean-copy viser "Buy Pro"):');
+  console.log(`   npx wrangler kv key put cc-pro-checkout '${checkoutUrl || '<CHECKOUT_URL>'}' --binding VISITS`);
   console.log('2. Test et køb');
   console.log('3. Verificér at /api/license/activate udsteder en nøgle');
   console.log('4. Indsæt nøglen i Clean Copy extension → Pro aktiveret');

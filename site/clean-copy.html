@@ -256,7 +256,9 @@
             <li>✅ Multiple clipboard formats</li>
             <li>✅ Export to file</li>
           </ul>
-          <span class="btn-secondary" style="display:block;text-align:center;margin-top:1rem;opacity:0.6;cursor:default;">🔒 Via Lemon Squeezy</span>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:1rem;opacity:0.6;cursor:default;" id="checkout-btn-cs">🔒 Via Lemon Squeezy</span>
+          <a href="#" class="btn-primary" style="display:none;text-align:center;margin-top:1rem;" id="checkout-btn-live" target="_blank" rel="noopener">Buy Pro $19/year →</a>
+          <p style="font-size:0.8rem;color:var(--color-text-muted);text-align:center;margin-top:0.5rem;" id="checkout-note">One license covers all 7 surfaces.</p>
         </div>
       </div>
     </div>
@@ -423,7 +425,21 @@
     <p style="margin-top:8px;">Clean Copy is a product of Mahope. Free Chrome extension — no strings attached.</p>
   </footer>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+// Checkout button — dynamic Pro embed
+(async function(){
+  try {
+    var r = await fetch('/api/checkout');
+    var d = await r.json();
+    if (d.live && d.checkout_url) {
+      var cs = document.getElementById('checkout-btn-cs');
+      var lv = document.getElementById('checkout-btn-live');
+      var nt = document.getElementById('checkout-note');
+      if (cs) cs.style.display = 'none';
+      if (lv) { lv.href = d.checkout_url; lv.style.display = 'block'; }
+    }
+  } catch(e) { /* offline or KV not ready — keep coming-soon state */ }
+})();
 </script>
 <script src="/track.js"></script>
 <script>

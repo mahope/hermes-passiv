@@ -49,6 +49,9 @@ export default {
     // === Route: Security Headers Checker ===
     if (path === '/api/header-check') return handleHeaderCheck(request, url);
 
+    // === Route: Compliance Site Check (9 checks, server-side) ===
+    if (path === '/api/compliance-scan') return handleComplianceScan(request, url, env);
+
     // === Route: Lemon Squeezy webhook (auto-issues license keys) ===
     if (path === '/api/lemon-webhook') return handleLemonWebhook(request, env);
 
@@ -58,6 +61,9 @@ export default {
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       });
     }
+
+    // === Route: Clean Copy Pro checkout URL (dynamic embed) ===
+    if (path === '/api/checkout') return handleCheckout(url, env);
 
     // === Route: Danish posts moved from /blog to /da/blog (301) ===
     const DA_BLOG_REDIRECTS = {
@@ -1154,8 +1160,10 @@ async function handleStats(url, env) {
   try { ai_asks = parseInt((await env.VISITS.get('ai-ask-count')) || '0', 10); } catch {}
   let ai_limited_today = null;
   try { ai_limited_today = parseInt((await env.VISITS.get(`airl-hit:${dailySalt()}`)) || '0', 10); } catch {}
+  let scans = null;
+  try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
 
-  return jsonResp({ ok: true, days, stats: filtered, waitlist, wl_sources, licenses_issued, ai_asks, ai_limited_today });
+  return jsonResp({ ok: true, days, stats: filtered, waitlist, wl_sources, licenses_issued, ai_asks, ai_limited_today, scans });
 }
 
 /**
@@ -1190,13 +1198,15 @@ async function handleHealth(url, env) {
 
   let waitlist = 0;
   try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
+  let scans = 0;
+  try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
 
   return jsonResp({
     ok: true,
     status: kvOk ? 'healthy' : 'degraded',
     kv: kvOk,
     timestamp: new Date().toISOString(),
-    stats: { recentVisits, recentDownloads, waitlist },
+    stats: { recentVisits, recentDownloads, waitlist, scans },
     lastDeploy: lastDeploy,
     version: 1,
   });
@@ -1634,4 +1644,393 @@ function _ccHtmlToMarkdown(html) {
   md = md.replace(/([^\n \t])[ ]{2,}/g, '$1 ');
 
   return _ccCleanText(md);
+}
+
+/* ── Compliance Site Check API — GET /api/compliance-scan?url=... ─────
+ * Server-side port of mahope/compliance-site-check v2 (9 checks).
+ * Used by /compliance-site-check.html and available as a free API.
+ */
+
+const CSC_CHECKS = {
+  privacy: {
+    label: 'Privacy Policy',
+    type: 'page',
+    paths: ['/privacy', '/privacy-policy', '/privacy/', '/datenschutz', '/legal/privacy'],
+    hints: ['privacy', 'privatliv', 'datenschutz', 'data protection', 'personal data', 'personoplysninger', 'gdpr'],
+    importance: 'Required by GDPR Art. 13-14 if you process personal data.',
+  },
+  terms: {
+    label: 'Terms of Service',
+    type: 'page',
+    paths: ['/terms', '/terms-of-service', '/terms-and-conditions', '/tos', '/conditions', '/vilkar', '/agb'],
+    hints: ['terms', 'conditions', 'vilkar', 'agb', 'nutzungsbedingungen'],
+    importance: 'Required for any commercial website, especially SaaS and e-commerce.',
+  },
+  cookie: {
+    label: 'Cookie Consent Banner',
+    type: 'scan',
+    hints: ['cookie', 'cookieconsent', 'Cookiebot', 'cookie_notice', 'cookie-law', 'consent', 'OneTrust', 'cookielaw', 'cookiecontrol', 'osano', 'termly', 'complianz', 'cookiescript', 'CookieFirst', 'cookie_consent', 'cc-window', 'cookie-bar', 'cmp-banner', 'cmp-wrapper'],
+    importance: 'Required by ePrivacy Directive / GDPR — opt-in for non-essential cookies.',
+  },
+  imprint: {
+    label: 'Imprint / Impressum / Legal Notice',
+    type: 'page',
+    paths: ['/imprint', '/impressum', '/legal', '/legal-notice', '/legal/imprint', '/about/legal', '/site-notice', '/disclaimer'],
+    hints: ['imprint', 'impressum', 'legal notice', 'legal disclosure', 'site notice', 'ansvarlig', 'udgiver'],
+    importance: 'Required in Germany (§5 TMG, §18 MStV), Austria, Switzerland.',
+  },
+  accessibility: {
+    label: 'Accessibility Statement',
+    type: 'page',
+    paths: ['/accessibility', '/accessibility-statement', '/a11y', '/accessibility/', '/tilgaengelighed', '/tilgaengelighedserklaering', '/erklaering', '/wcag', '/accessibility-declaration'],
+    hints: ['accessibility', 'tilgaengelighed', 'wcag', 'a11y', 'barrierefreiheit'],
+    importance: 'Required by EAA / EN 301 549 for public sector and essential-service websites.',
+  },
+  dpa: {
+    label: 'Data Processing Agreement (DPA)',
+    type: 'page',
+    paths: ['/dpa', '/data-processing-agreement', '/databehandleraftale', '/dpa/', '/gdpr/dpa', '/gdpr-data-processing'],
+    hints: ['data processing', 'databehandler', 'dpa agreement', 'processor agreement'],
+    importance: 'Required when using third-party processors (hosting, analytics, SaaS).',
+  },
+  'security-headers': {
+    label: 'Security Headers',
+    type: 'headers',
+    hints: [],
+    importance: 'Protects against XSS, clickjacking, and downgrade attacks.',
+  },
+  'meta-tags': {
+    label: 'Meta Tags',
+    type: 'scan',
+    hints: [],
+    importance: 'Essential for SEO, social sharing, and mobile usability.',
+  },
+  hreflang: {
+    label: 'Hreflang / Language Declaration',
+    type: 'scan',
+    hints: [],
+    importance: 'Required for multilingual sites. Helps search engines serve the right language version.',
+  },
+};
+
+function cscScoreLabel(s) {
+  if (s >= 90) return 'A';
+  if (s >= 70) return 'B';
+  if (s >= 50) return 'C';
+  return 'D';
+}
+
+async function cscFetch(urlStr, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(urlStr, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'ComplianceSiteCheck/2.0 (+https://hermes-passiv.pages.dev)',
+        'Accept': 'text/html,application/xhtml+xml,*/*',
+      },
+      redirect: 'follow',
+    });
+    clearTimeout(timer);
+    const text = await resp.text();
+    // Cap HTML size to keep memory bounded on Workers
+    return { ok: true, html: text.slice(0, 500000), url: resp.url, status: resp.status, headers: resp.headers };
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') return { ok: false, error: 'Timeout' };
+    return { ok: false, error: err.message };
+  }
+}
+
+function cscDetectText(html, hints) {
+  const lower = html.toLowerCase();
+  return hints.some(h => lower.includes(h));
+}
+
+function cscHasHomepageLink(html, paths) {
+  const lower = html.toLowerCase();
+  return paths.some(p => lower.includes('href="' + p + '"') || lower.includes("href='" + p + "'"));
+}
+
+function cscCheckSecurityHeaders(headers) {
+  const results = [];
+  const get = (name) => headers.get(name) || '';
+  const push = (check, ok, passDetail, warnDetail) =>
+    results.push({ check, status: ok ? 'pass' : 'warn', detail: ok ? passDetail : warnDetail });
+
+  const csp = get('content-security-policy');
+  push('CSP', !!csp,
+    'Content-Security-Policy header set.',
+    'Content-Security-Policy header missing. CSP mitigates XSS and data injection.');
+
+  const hsts = get('strict-transport-security');
+  if (hsts) {
+    const m = hsts.match(/max-age=(\d+)/i);
+    const maxAge = m ? parseInt(m[1], 10) : 0;
+    results.push({ check: 'HSTS', status: maxAge >= 31536000 ? 'pass' : 'warn',
+      detail: maxAge >= 31536000 ? 'Strict-Transport-Security present with max-age >= 1 year.'
+        : 'Strict-Transport-Security present but max-age < 1 year (recommend >= 31536000).' });
+  } else {
+    results.push({ check: 'HSTS', status: 'warn',
+      detail: 'Strict-Transport-Security header missing. HSTS enforces HTTPS connections.' });
+  }
+
+  const xfo = get('x-frame-options');
+  push('X-Frame-Options', !!xfo,
+    'X-Frame-Options: ' + xfo + ' — prevents clickjacking.',
+    'X-Frame-Options header missing. Your site can be embedded in iframes (clickjacking risk).');
+
+  const xcto = get('x-content-type-options');
+  push('X-Content-Type-Options', xcto.toLowerCase() === 'nosniff',
+    'X-Content-Type-Options: nosniff — prevents MIME sniffing.',
+    'X-Content-Type-Options: nosniff missing — browsers may execute scripts with wrong MIME types.');
+
+  const rp = get('referrer-policy');
+  results.push({ check: 'Referrer-Policy', status: rp ? 'pass' : 'info',
+    detail: rp ? 'Referrer-Policy: ' + rp : 'Referrer-Policy header missing. Recommended for privacy control.' });
+
+  const warnings = results.filter(r => r.status === 'warn');
+  const passedCount = results.filter(r => r.status === 'pass').length;
+  return {
+    status: warnings.length === 0 ? 'pass' : 'warn',
+    details: passedCount + '/' + results.length + ' header checks pass.' +
+      (warnings.length ? ' Missing/weak: ' + warnings.map(w => w.check).join(', ') + '.' : ''),
+    subResults: results,
+  };
+}
+
+function cscCheckMetaTags(html) {
+  const results = [];
+  const lower = html.toLowerCase();
+
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch && titleMatch[1].trim().length > 0) {
+    const t = titleMatch[1].trim();
+    results.push({ check: 'Title', status: t.length >= 30 && t.length <= 120 ? 'pass' : 'warn',
+      detail: 'Title present (' + t.length + ' chars)' +
+        (t.length < 30 ? ' — too short for SEO (< 30 chars)' : t.length > 120 ? ' — too long (> 120 chars)' : '') });
+  } else {
+    results.push({ check: 'Title', status: 'fail', detail: 'Missing <title> tag. Critical for SEO and accessibility.' });
+  }
+
+  const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)
+    || html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i);
+  if (descMatch && descMatch[1].trim().length > 0) {
+    const d = descMatch[1].trim();
+    results.push({ check: 'Meta Description', status: d.length >= 50 && d.length <= 320 ? 'pass' : 'warn',
+      detail: 'Description found (' + d.length + ' chars)' +
+        (d.length < 50 ? ' — too short for SERP' : d.length > 320 ? ' — may be truncated in SERP' : '') });
+  } else {
+    results.push({ check: 'Meta Description', status: 'fail', detail: 'Missing meta description tag.' });
+  }
+
+  const vp = html.match(/<meta[^>]+name=["']viewport["'][^>]*>/i);
+  results.push({ check: 'Viewport', status: vp ? 'pass' : 'fail',
+    detail: vp ? 'Viewport meta tag present — mobile responsive.' : 'Missing viewport meta tag. Mobile rendering may break.' });
+
+  const canon = html.match(/<link[^>]+rel=["']canonical["'][^>]*>/i);
+  results.push({ check: 'Canonical', status: canon ? 'pass' : 'info',
+    detail: canon ? 'Canonical link tag present.' : 'No canonical link tag (recommended).' });
+
+  const robots = html.match(/<meta[^>]+name=["']robots["'][^>]*>/i);
+  results.push({ check: 'Robots', status: robots ? 'pass' : 'info',
+    detail: robots ? 'Robots meta tag present.' : 'No robots meta tag (default index/follow is fine).' });
+
+  const ogTitle = lower.includes('property="og:title') || lower.includes("property='og:title");
+  results.push({ check: 'OG Title', status: ogTitle ? 'pass' : 'info',
+    detail: ogTitle ? 'Open Graph title found.' : 'No og:title — social shares may look generic.' });
+
+  const ogDesc = lower.includes('property="og:description') || lower.includes("property='og:description");
+  results.push({ check: 'OG Description', status: ogDesc ? 'pass' : 'info',
+    detail: ogDesc ? 'Open Graph description found.' : 'No og:description tag.' });
+
+  const passedCount = results.filter(r => r.status === 'pass').length;
+  const warns = results.filter(r => r.status === 'warn');
+  const fails = results.filter(r => r.status === 'fail');
+  return {
+    status: fails.length === 0 ? (warns.length === 0 ? 'pass' : 'warn') : 'fail',
+    details: passedCount + '/' + results.length + ' checks pass.' +
+      (fails.length ? ' Missing: ' + fails.map(f => f.check).join(', ') + '.' : '') +
+      (warns.length ? ' Warnings: ' + warns.map(w => w.check).join(', ') + '.' : ''),
+    subResults: results,
+  };
+}
+
+function cscCheckHreflang(html) {
+  const results = [];
+  const langMatch = html.match(/<html[^>]+lang=["']([a-z]{2,3}(-[a-z]{2,4})?)["']/i);
+  results.push({ check: 'HTML lang attribute', status: langMatch ? 'pass' : 'fail',
+    detail: langMatch ? 'lang="' + langMatch[1] + '" present.' :
+      'Missing lang attribute on <html>. Required for accessibility (WCAG 3.1.1) and SEO.' });
+
+  const hreflangLinks = html.match(/<link[^>]+rel=["']alternate["'][^>]+hreflang=["']([^"']+)["'][^>]*>/gi);
+  results.push({ check: 'Hreflang tags', status: hreflangLinks ? 'pass' : 'info',
+    detail: hreflangLinks
+      ? hreflangLinks.length + ' hreflang tag(s) found: ' +
+        hreflangLinks.map(l => { const m = l.match(/hreflang=["']([^"']+)["']/i); return m ? m[1] : '?'; }).join(', ') + '.'
+      : 'No hreflang alternate links (only needed for multilingual sites).' });
+
+  const fails = results.filter(r => r.status === 'fail');
+  const passedCount = results.filter(r => r.status === 'pass').length;
+  return {
+    status: fails.length === 0 ? 'pass' : 'fail',
+    details: passedCount + '/' + results.length + ' checks pass.' +
+      (fails.length ? ' Missing: ' + fails.map(f => f.check).join(', ') + '.' : ''),
+    subResults: results,
+  };
+}
+
+async function handleComplianceScan(request, url, env) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
+
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+
+  const targetParam = url.searchParams.get('url');
+  if (!targetParam) {
+    return new Response(JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
+  }
+
+  let targetUrl;
+  try {
+    targetUrl = new URL(targetParam.startsWith('http') ? targetParam : 'https://' + targetParam);
+    if (!['http:', 'https:'].includes(targetUrl.protocol)) throw new Error('bad protocol');
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
+  }
+
+  // Basic rate limit: one origin per IP per 10 seconds via KV if available, else allow.
+  const TIMEOUT_MS = 10000;
+  const MAX_PAGES = 12; // safety cap on total fetches
+
+  try {
+    const home = await cscFetch(targetUrl.toString(), TIMEOUT_MS);
+    if (!home.ok) {
+      return new Response(JSON.stringify({ ok: false, error: 'Cannot reach ' + targetUrl.host + ': ' + home.error }),
+        { status: 502, headers: corsHeaders });
+    }
+
+    let fetchBudget = MAX_PAGES - 1;
+    const passed = [];
+    const failed = [];
+
+    for (const key of Object.keys(CSC_CHECKS)) {
+      const check = CSC_CHECKS[key];
+      const result = { key, label: check.label, status: 'unknown', details: '' };
+
+      if (key === 'cookie') {
+        const found = cscDetectText(home.html, check.hints);
+        result.status = found ? 'pass' : 'fail';
+        result.details = found ? 'Cookie consent banner detected on homepage.'
+          : 'No cookie consent banner detected. Some banners load via JS — verify manually.';
+        (found ? passed : failed).push(result);
+        continue;
+      }
+      if (key === 'meta-tags') {
+        const r = cscCheckMetaTags(home.html);
+        result.status = r.status === 'pass' ? 'pass' : 'fail';
+        result.details = r.details; result.subResults = r.subResults;
+        (result.status === 'pass' ? passed : failed).push(result);
+        continue;
+      }
+      if (key === 'hreflang') {
+        const r = cscCheckHreflang(home.html);
+        result.status = r.status === 'pass' ? 'pass' : 'fail';
+        result.details = r.details; result.subResults = r.subResults;
+        (result.status === 'pass' ? passed : failed).push(result);
+        continue;
+      }
+      if (key === 'security-headers') {
+        const r = cscCheckSecurityHeaders(home.headers);
+        result.status = r.status;
+        result.details = r.details; result.subResults = r.subResults;
+        (result.status === 'pass' ? passed : failed).push(result);
+        continue;
+      }
+
+      // type: page
+      let found = false, foundUrl = '';
+      for (const path of check.paths) {
+        if (fetchBudget <= 0) break;
+        fetchBudget--;
+        const pageUrl = new URL(path, targetUrl.toString()).toString();
+        const pr = await cscFetch(pageUrl, TIMEOUT_MS);
+        if (!pr.ok || pr.status >= 400) continue;
+        if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url; break; }
+        if (pr.status < 300) { found = true; foundUrl = pr.url; break; }
+      }
+      if (!found) found = cscHasHomepageLink(home.html, check.paths);
+
+      result.status = found ? 'pass' : 'fail';
+      result.details = found ? (foundUrl ? 'Found at ' + foundUrl : 'Link found on homepage')
+        : 'Not found. Add a ' + check.label + ' page and link it from your footer.';
+      (found ? passed : failed).push(result);
+    }
+
+    const total = Object.keys(CSC_CHECKS).length;
+    const score = Math.round((passed.length / total) * 100);
+    const grade = cscScoreLabel(score);
+
+    // Anonymous scan counter (no URL stored) for /api/stats visibility.
+    if (env && env.VISITS) {
+      try {
+        const cKey = 'csc-count';
+        const prev = parseInt((await env.VISITS.get(cKey)) || '0', 10);
+        await env.VISITS.put(cKey, String(prev + 1), { expirationTtl: 365 * 86400 });
+      } catch { /* best-effort */ }
+    }
+
+    return new Response(JSON.stringify({
+      ok: true,
+      url: 'https://' + targetUrl.host,
+      score,
+      grade,
+      passed: passed.length,
+      failed: failed.length,
+      total,
+      results: { passed, failed },
+      checks: CSC_CHECKS,
+      version: '2.0',
+    }), { status: 200, headers: corsHeaders });
+  } catch (err) {
+    return new Response(JSON.stringify({ ok: false, error: 'Scan failed: ' + (err.message || 'unknown') }),
+      { status: 500, headers: corsHeaders });
+  }
+}
+
+/* ── Clean Copy Pro Checkout — GET /api/checkout ────────────────
+ * Returns the Lemon Squeezy checkout URL and whether Pro is available.
+ * Until the LS product is created, checkout_url is null and the
+ * frontend renders a "coming soon" state.
+ * KV key: cc-pro-checkout — set via tools/set-checkout-url.sh
+ * after running lemon-setup.js.
+ */
+async function handleCheckout(url, env) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
+
+  let checkoutUrl = null;
+  let live = false;
+  try {
+    checkoutUrl = (await env.VISITS.get('cc-pro-checkout')) || null;
+    live = !!checkoutUrl;
+  } catch { /* KV not available */ }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    live,
+    checkout_url: checkoutUrl,
+    product: 'clean-copy-pro',
+    price: '$19/year',
+    note: 'One license covers all 7 surfaces: Chrome, Firefox, Edge, CLI, VS Code, Obsidian, GitHub Action.',
+  }), { status: 200, headers: corsHeaders });
 }
