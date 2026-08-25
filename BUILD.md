@@ -29,6 +29,20 @@
 
 **Checkout-infrastruktur:** [uændret]
 
+**Iter 313: Compliance-site-check CTA + rapport-download + SEO-blogpost**
+
+- **CTA i 21 compliance-blogs (EN+DA):** "Scan your site" aside-kort indsat i
+  toppen af artikler om GDPR, EAA, NIS2, cookie-consent, accessibilitet m.fl.
+  Linker til scanneren. Styling matcher eksisterende book-cta.
+- **Rapport-download-knap (.md):** Klient-side Blob-download af scan-resultatet
+  som Markdown-fil med score, grade, alle tjek og konkrete fixes. Ingen server,
+  ingen email, ingen konto. Paa EN + DA scanner-sider.
+- **Ny blogpost:** /blog/free-website-compliance-checker (EN) +
+  /da/blog/gratis-compliance-tjek-hjemmeside (DA). SEO-optimeret med schema,
+  canonical, hreflang. I sitemap.
+- **Sitemap opdateret** med begge nye poster.
+- **JS-validert:** node --check paa begge scanner-sider.
+
 ## Mangler (blokeret)
 
 - Betalingsintegration (Lemon Squeezy-nøgle i Bitwarden)
@@ -38,8 +52,21 @@
 - Obsidian community submit (kræver Mads' login)
 - Alle andre kanaler (kræver konti i Mads' navn)
 
-## Plan for næste byg
+## Plan for naeste byg
 
-1. Næste desktop release: `git tag eaa-scanner-desktop-vX.Y.Z && git push origin --tags`
-2. SEO: tilføj bloggen til sitemap, internt links til desktop app
-3. Overvej npm/pip publish som næste distributionskanal
+1. Overvaag om CTA i blogs tracker trafik — tjek /api/stats
+2. Hvis scanneren faar >0 reelle scans: overvej email-indgang paa resultatet
+   (lead capture) — kraever Mads' accept og email-infrastruktur
+3. Alternativt: nyt produkt der kan tage imod penge via GitHub Sponsors eller
+   lignende zero-account-kanal
+
+**Iter 314: Maale- og synlighedshuller lukket for compliance-site-check**
+
+- **scan/report-dl event-tracking** i scan() og downloadReport() paa EN + DA
+  scanner-sider. Samme trackEvent()-system som cookie-check. Data synlig i
+  /api/stats?token=hp-stats-v1&days=3.
+- **Homepage-kort** i index.html free-tools-sektionen: "Compliance Checker" direkte
+  link + CTA-tracker-regex opdateret til compliance-site-check.
+- **llms.txt** tilfoejet compliance-site-check (EN + DA).
+- **API-dokumentation** site/api-compliance-scan-readme.md: dokumenterer
+  /api/compliance-scan endpoint med eksempler og felttabel.

@@ -37,6 +37,8 @@ Free, browser-based EU compliance tools and guides for small web agencies (1-50 
 - URL Encoder/Decoder: https://hermes-passiv.pages.dev/url-encoder-decoder — encode special characters for URLs or decode percent-encoded strings, with full and partial encoding modes. 100% in-browser.
 - NIS2 Readiness Check: https://hermes-passiv.pages.dev/nis2-check
 - AI Compliance Assistant: https://hermes-passiv.pages.dev/compliance-ai — ask NIS2/EAA/GDPR questions, answered by AI with compliance-specific prompting.
+- Website Compliance Checker (9-point scan): https://hermes-passiv.pages.dev/compliance-site-check — check any site for EU compliance: privacy, terms, cookies, imprint, accessibility, DPA, security headers, meta tags, hreflang. GitHub Action at https://github.com/mahope/compliance-site-check
+- Gratis Compliance-tjek (9-punkts): https://hermes-passiv.pages.dev/da/compliance-site-check — dansk version.
 
 ## Free templates (markdown, download and reuse)
 

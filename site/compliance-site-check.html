@@ -199,6 +199,7 @@ function scan() {
       hideLoading();
       if (!data.ok) { showError(data.error || 'Scan failed'); return; }
       ctaBox.style.display = '';
+      if (window.trackEvent) window.trackEvent('scan');
       renderResults(data);
     })
     .catch(function(err) { showError('Network error: ' + (err.message || 'unknown')); });
@@ -225,6 +226,7 @@ function scan() {
     var blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
+    if (window.trackEvent) window.trackEvent('report-dl');
     a.download = 'compliance-report-' + (data.url || '').replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]/gi, '') + '.md';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
