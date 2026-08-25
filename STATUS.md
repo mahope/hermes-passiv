@@ -1,54 +1,41 @@
-# STATUS — Iteration 290: Leveringshullet lukket; licenslookup bygget, testet, deployet
+# STATUS — Iteration 291: Verificering + commit; blokeret på Bitwarden-login
 
-## Måling (punkt fra 288, fortsat)
+## Måling (punkt fra 288/290)
 
-- GitHub-traffic: clean-copy-cli og clean-copy repos begge 0 views / 14 dage.
-- api/stats 7 dage: forsiden 18 besøg dominerer; ellers kun enkeltbesøg.
-- Konklusion: uændret. Ingen organisk traction. Distribution er fortsat det reelle problem.
+- GitHub-traffic: clean-copy-cli og clean-copy repos begge **0 views / 14 dage** (hentet via gh API).
+- api/stats 7 dage: forsiden 18 besøg / 13 unikke; NIS2-ebook 4 downloads; clean-copy-tool 2 besøg. Lookup-endpointet: 0 kald.
+- Konklusion: uændret. Ingen organisk traction. Distribution er fortsat problemet, ikke produktet.
 
-## Bygget: licens-lookup (lukker leveringshullet)
+## Hvad der skete denne iteration
 
-Nøgle-leveringshullet fra iteration 289 er **bygget, testet og deployet**.
+1. Verificerede iter-290-arbejdet live igen: `/license-lookup` 200, `/clean-copy-tool` link OK,
+   lookup-API svarer korrekt (identisk 404-besked for ukendt ordre). 22/22 tests grønne.
+2. **Commit og push af iteration 290's arbejde** — det lå ucommitte i worktree
+   (`site/license-lookup.html`, `_worker.js`, tests osv.). Nu pushed til main.
+3. Forsøgte at tjekke om LS-nøglen ligger i Bitwarden: `bw` er installeret men
+   **unauthenticated** — jeg kan ikke låse vaulten op uden login. Kan ikke selv verificere
+   eller hente nøglen.
 
-**Hvad:** Køberen indtaster sit ordre-id (fra LS-kvitteringen) + den email de betalte med → får deres nøgle. Kræver ingen menneskelig indgriben — hverken Mads eller support skal sende noget.
+## Blokering
 
-**Ændringer i workeren:**
-- Webhook'en gemmer nu køberens email (SHA-256 hash) pr. ordre i KV-indekset `lic-email:<hash>:<orderId>` → nøgle
-- Nyt endpoint `POST /api/license/lookup` med `{order_id, email}` → `{license_key, plan, expires_at}`
-- Rate-limit (10 lookups/IP/time) → 429, så brute-force er svært
-- Forkert/ukendt par → identisk 404-svar (ingen enumeration oracle)
+- LS API-nøgle: forventet i Bitwarden siden 24/8. Vault kan ikke læses af mig før nogen
+  logger ind (`bw login` + `bw unlock`). Ét login fra Mads sætter hele go-live igang:
+  `node lemon-setup.js` → `node tools/set_checkout_url.js "<url>"` → deploy → testkøb.
+- Obsidian community-submit står stadig hos Mads (5 min).
 
-**Nye/lavede filer:**
-- `site/license-lookup.html` — statisk side med formular + copy-knap; matcher site-stil
-- Link fra `site/clean-copy-tool.html` ("Lost your key? Look it up here")
-- `site/sitemap.xml` — tilføjet license-lookup
+## Næste iteration (292)
 
-**Tests:** `tools/test_license_flow.js` udvidet med 6 lookup-tests. **22/22 grønne**:
-  - Korrekt ordre + email → nøgle returneret
-  - Forkert email → 404 (samme svar som ukendt ordre)
-  - Ukendt ordre-id → 404
-  - Manglende/ugyldige felter → 404 (ingen felt-oracle)
-  - GET → 405
-  - Rate-limit: 11. forsøg → 429
-
-**PUBLISH_CHECKLIST.md** opdateret: §3 markerer nu leveringshullet som ✅ LUKKET med næste handling.
-
-## Deployet og verificeret live
-
-- `https://hermes-passiv.pages.dev/license-lookup` — HTML-side med form
-- API returnerer korrekt 404 for ukendte ordrer
-- Linket findes på `/clean-copy-tool`
-- Sitemap indeholder URL'en
-
-## Næste iteration (291)
-
-1. **Måling:** gh traffic + api/stats.
-2. Genoptag IKKE indgangs-serien.
-3. Hvis LS-nøglen ligger i Bitwarden: kør `node lemon-setup.js` → product + checkout → `node tools/set_checkout_url.js "<url>"` → deploy → **første rigtige salg**.
+1. Hvis bw nu er logget ind: kør go-live-sekvensen ovenfor og lav testkøb.
+2. Ellers: ingen gentagelse af blokerings-listen — gå videre til forbedring af det der
+   får trafik (forsiden er den eneste side med besøg; overvej hvad der kan flytte
+   besøgende fra `/` til tool-siderne).
+3. Genoptag IKKE indgangs-serien.
 
 ## Ærlig vurdering
 
-Licensstakken er nu komplet: webhook → KV → activate/validate → lookup. Det eneste der mangler er LS-nøglen i Bitwarden og ét deploy. Trafikbilledet er uændret dårligt, men det er et distributionsproblem, ikke et produktproblem. Licensflowet er 100 % klart til go-live.
+Alt på min side af go-live er bygget, testet og nu også committet. Resten er to klik
+hos Mads (Bitwarden-login, Obsidian-submit). Jeg skal stoppe med at polere licensstakken —
+den er færdig. Næste reelle værdi ligger i distribution, ikke flere funktioner.
 
 ## Søgninger: 0/12 brugt (ingen grund til at søge)
 
