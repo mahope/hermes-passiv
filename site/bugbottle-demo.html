@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bugbottle — Live Demo &amp; Free Bug Report Library</title>
+<meta name="description" content="Try bugbottle live: send a report and watch it arrive with console errors, page context and an optional screenshot attached. Free open-source library for React, vanilla JS and Node servers.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="bugbottle — in-app bug reports with the evidence attached">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/bugbottle-demo">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/bugbottle-demo">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/bugbottle-demo">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "bugbottle",
+  "url": "https://hermes-passiv.pages.dev/bugbottle-demo",
+  "codeRepository": "https://github.com/mahope/bugbottle",
+  "license": "https://opensource.org/licenses/MIT",
+  "programmingLanguage": ["TypeScript", "JavaScript"],
+  "description": "In-app bug reports that arrive with the evidence attached: console errors, page context and an optional screenshot."
+}
+</script>
+<style>
+.bb-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.bb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+@media (max-width: 800px) { .bb-grid { grid-template-columns: 1fr; } }
+.bb-card { border: 1px solid var(--color-border); border-radius: 12px; padding: 1.1rem; background: var(--color-surface); }
+.bb-card h2 { margin-top: 0; font-size: 1.05rem; }
+.bb-card label { display: block; font-size: 0.85rem; font-weight: 600; margin: 0.7rem 0 0.25rem; }
+.bb-card textarea, .bb-card select {
+  width: 100%; box-sizing: border-box; padding: 0.6rem;
+  border: 1px solid var(--color-border); border-radius: 8px;
+  background: var(--color-bg, #fff); color: var(--color-text);
+  font: inherit; font-size: 0.9rem; resize: vertical;
+}
+.bb-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-top: 0.9rem; }
+.bb-status { font-size: 0.85rem; }
+.bb-ok { color: #2c8a5e; } .bb-err { color: #c0392b; }
+.bb-reports { list-style: none; padding: 0; margin: 0; }
+.bb-reports li { border-bottom: 1px solid var(--color-border); padding: 0.55rem 0; font-size: 0.85rem; }
+.bb-badge { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.bb-bug { background: rgba(220,80,80,.14); color: #b03030; }
+.bb-idea { background: rgba(91,141,239,.15); color: #3563c4; }
+.bb-other { background: rgba(120,120,120,.14); color: inherit; }
+.bb-meta { color: var(--color-text-muted); font-size: 0.75rem; margin-top: 2px; }
+pre.bb-code { background: #161a22; color: #dce2ee; padding: 0.9rem 1rem; border-radius: 10px; overflow-x: auto; font-size: 0.78rem; line-height: 1.5; margin: 0.6rem 0; }
+.bb-checklist { font-size: 0.88rem; line-height: 1.7; padding-left: 1.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+</style>
+<script defer src="/track.js"></script>
+<!-- html-to-image (optional peer) as a classic script + import map so the
+     library's bare `import("html-to-image")` resolves without a bundler -->
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js"></script>
+<script type="importmap">
+{ "imports": { "html-to-image": "/hti-shim.js" } }
+</script>
+<!-- Load the real library from the CDN — this demo runs on the shipped build -->
+<script type="module" src="/bugbottle-demo.js"></script>
+</head>
+<body>
+
+<main class="bb-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/free-tools">Free tools</a> <span>›</span>
+  bugbottle live demo
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">bugbottle</h1>
+  <p class="tagline" style="margin-top:0.4rem;">In-app bug reports that arrive with the evidence attached: console errors, page context and an optional screenshot.</p>
+  <p><a href="https://github.com/mahope/bugbottle">GitHub → mahope/bugbottle</a> · MIT · zero dependencies</p>
+</header>
+
+<div class="bb-grid">
+
+  <div class="bb-card">
+    <h2>Try it live</h2>
+    <p style="font-size:0.85rem;color:var(--color-text-muted);margin-top:0;">This form is powered by the real library, loaded from the CDN on this very page. What you send is what your users would send you.</p>
+    <form id="reportForm">
+      <label for="type">Report type</label>
+      <select id="type">
+        <option value="bug">Bug</option>
+        <option value="idea">Idea</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label for="message">Message</label>
+      <textarea id="message" rows="4" maxlength="4000" required placeholder="What happened?"></textarea>
+
+      <label style="font-weight:400;display:flex;gap:0.45rem;align-items:center;margin-top:0.8rem;">
+        <input type="checkbox" id="shot" checked>
+        Attach a screenshot of the part of this page I was looking at
+      </label>
+
+      <div class="bb-btns">
+        <button type="submit" id="sendBtn">Send report</button>
+        <span class="bb-status" id="status" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+  </div>
+
+  <div class="bb-card">
+    <h2>Reports received (this demo)</h2>
+    <ul class="bb-reports" id="reports"><li style="border:none;color:var(--color-text-muted)">Loading…</li></ul>
+  </div>
+
+</div>
+
+<h2 style="margin-top:2rem;">What just got sent behind the scenes</h2>
+<p style="font-size:0.9rem;">A single JSON POST containing everything a developer needs to reproduce the problem — no follow-up questions:</p>
+<div class="bb-grid">
+<pre class="bb-code">{
+  "type": "bug",
+  "message": "The save button did nothing",
+  "screenshotDataUrl": "data:image/png;base64,…",
+  "console": [
+    { "level": "error",
+      "text": "TypeError: Cannot read
+        properties of undefined…" },
+    …up to 100 entries…
+  ],
+  "context": {
+    "page": "/settings/billing",
+    "viewport": "1440x900",
+    "language": "en-GB"
+  }
+}</pre>
+<ul class="bb-checklist">
+  <li><strong>Console buffer</strong> — the last <code>error</code>s and <code>warn</code>s, captured before the user even opened the form.</li>
+  <li><strong>Screenshot</strong> — rendered from the DOM, capped at 2 MB, PNG-verified server-side.</li>
+  <li><strong>Context</strong> — page URL, viewport, language.</li>
+  <li><strong>Headless</strong> — you render the form; bugbottle owns state, capture and submit.</li>
+  <li><strong>Server validators included</strong> — <code>bugbottle/server</code> rejects fake screenshots and oversize payloads before they reach your storage.</li>
+</ul>
+</div>
+
+<h2>Add it to your app</h2>
+<p style="font-size:0.9rem;">No npm account needed — install straight from GitHub, or import from jsDelivr:</p>
+<pre class="bb-code"># from GitHub
+npm install github:mahope/bugbottle#v0.2.4
+
+# or from the CDN, no install at all
+import { initConsoleBuffer } from
+  "https://cdn.jsdelivr.net/gh/mahope/bugbottle@v0.2.4/dist/index.js";</pre>
+<pre class="bb-code">import { useBugReport } from "bugbottle/react";
+
+const report = useBugReport({ endpoint: "/api/feedback" });
+// render your own form bound to report.message / report.submit()…</pre>
+<p style="font-size:0.9rem;"><a href="https://github.com/mahope/bugbottle#readme">Full documentation on GitHub →</a></p>
+
+</main>
+</body>
+</html>
