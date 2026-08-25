@@ -33,6 +33,11 @@
 
 **Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
+**Bygget i iter 272:**
+- Installationsguide /blog/install-obsidian-plugin-clean-copy (BRAT/manuelt/zip,
+  FAQ, JSON-LD SoftwareApplication+FAQPage) — live og verificeret
+- Krydslink + v1.0.7-note i paste-guiden; sitemap 196 URL'er; deploy verificeret
+
 **Bygget i iter 271:**
 - v1.0.7 release: fetch → requestUrl (Obsidian policy compliance), authorUrl i manifest,
   versions.json rettet til at inkludere alle versioner 1.0.0–1.0.6 (tidligere manglede 1.0.2–1.0.6)

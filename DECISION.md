@@ -48,3 +48,8 @@ ikke længere. Den eneste resterende handling er at Mads logger ind og submitter
 2. **Lemon Squeezy-API-nøgle** (i Bitwarden): for at gøre Pro-betaling live.
 
 ## Budget: 0 kr brugt (35/1000 total)
+
+---
+**Opdatering iter 272:** Alle ikke-blokerede dele af flagskibet er bygget og live
+(plugin v1.0.7, releases, licensing-klar, landing page, 2 guider, sitemap).
+Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle.

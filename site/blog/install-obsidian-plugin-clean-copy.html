@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Install Clean Copy for Obsidian (BRAT, Manual & Zip)</title>
+<meta name="description" content="Three ways to install the free Clean Copy paste-as-Markdown plugin in Obsidian: via BRAT in one line, manually from a GitHub release, or as a zip bundle. Works on desktop and mobile.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Install Clean Copy for Obsidian (BRAT, Manual & Zip)">
+<meta property="og:description" content="Install the free paste-as-Markdown plugin in under a minute — BRAT, manual or zip.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Clean Copy for Obsidian", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Obsidian 1.4+", "description": "Three ways to install the free Clean Copy paste-as-Markdown plugin in Obsidian: via BRAT in one line, manually from a GitHub release, or as a zip bundle. Works on desktop and mobile.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "softwareVersion": "1.0.7", "url": "https://hermes-passiv.pages.dev/clean-copy", "author": {"@type": "Organization", "name": "Mahope"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it safe to install plugins from GitHub?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, when the release is built from a public repository you can inspect. Clean Copy's source is public at github.com/mahope/clean-copy-obsidian, each release ships exactly three files (main.js, manifest.json, styles.css), and the plugin makes no network requests — conversion runs locally."}}, {"@type": "Question", "name": "Does this work on Obsidian mobile?", "acceptedAnswer": {"@type": "Answer", "text": "The manual and zip methods do: copy the three files into your vault's .obsidian/plugins folder from any file manager, then reload the plugin list. BRAT is desktop-only, so mobile users should use the manual method."}}, {"@type": "Question", "name": "Why isn't it in the community plugin directory yet?", "acceptedAnswer": {"@type": "Answer", "text": "Submission through Obsidian's developer dashboard is pending. The build is identical either way — installing via BRAT or manually gives you the same version today, and you can switch to the directory listing once approved."}}, {"@type": "Question", "name": "Is Pro required for basic use?", "acceptedAnswer": {"@type": "Answer", "text": "No. Paste as clean Markdown, plain-text paste and clean-selection are free forever. Pro ($19/yr) only adds custom find/replace cleanup rules."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GUIDE &middot; OBSIDIAN PLUGIN</div>
+    <h1>Install Clean Copy<br>for Obsidian</h1>
+    <p class="subtitle">The free plugin that pastes clipboard HTML as proper Markdown — headings, links, lists, tables and code intact. Three ways to install it, all under a minute.</p>
+    <div class="hero-cta">
+      <a href="#brat" class="btn-primary">Fastest way (BRAT)</a>
+      <a href="/blog/paste-into-obsidian-clean-markdown" class="btn-secondary">Why clean pasting matters &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; covers v1.0.7</p>
+  </div>
+</header>
+
+<section class="products" id="brat">
+  <div class="container">
+    <h2>Way 1 — Install with BRAT (fastest, auto-updates)</h2>
+    <ol style="line-height:2;max-width:680px;">
+      <li>Install <a href="https://github.com/TfTHacker/obsidian42-brat" rel="noopener">BRAT</a> from Obsidian's community plugin browser (Settings → Community plugins → Browse → search "BRAT").</li>
+      <li>Open the command palette (Ctrl/Cmd+P) and run <strong>BRAT: Add a beta plugin for testing</strong>.</li>
+      <li>Enter <code>mahope/clean-copy-obsidian</code> and confirm.</li>
+      <li>Enable <strong>Clean Copy</strong> in Settings → Community plugins.</li>
+    </ol>
+    <p>BRAT watches the repository's releases, so every future version arrives automatically.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Way 2 — Manual install from the GitHub release</h2>
+    <ol style="line-height:2;max-width:680px;">
+      <li>Open the <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest" rel="noopener">latest release page</a>.</li>
+      <li>Download <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code>.</li>
+      <li>Create the folder <code>&lt;your-vault&gt;/.obsidian/plugins/clean-copy-obsidian/</code> and put all three files inside it.</li>
+      <li>Restart Obsidian or reload community plugins, then enable <strong>Clean Copy</strong>.</li>
+    </ol>
+    <p>This method also works on Obsidian mobile — use any file manager to reach the vault folder.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Way 3 — One-click zip bundle</h2>
+    <p>The same three files are bundled as a single download:</p>
+    <p style="text-align:center;"><a href="/downloads/clean-copy-obsidian-v1.0.7.zip" class="btn-primary">Download v1.0.7 zip</a></p>
+    <p>Unzip it into <code>&lt;vault&gt;/.obsidian/plugins/</code> so you end up with a <code>clean-copy-obsidian</code> folder containing the three files, then enable the plugin as above.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>First run</h2>
+    <p>Copy any formatted text from the web, then in Obsidian press <strong>Ctrl/Cmd+Shift+V</strong> (or run "Paste as clean Markdown" from the command palette). Headings arrive as <code>#</code>, links as <code>[text](url)</code>, tables as pipe tables, entities decoded. Two more commands live in the palette: <em>Paste as plain text</em> and <em>Clean selection</em> for tidying text already in a note.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy" class="btn-primary">About Clean Copy &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/clean-copy-tool" class="btn-secondary">Try it in the browser first &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Is it safe to install plugins from GitHub?</h3><p>Yes, when the release is built from a public repository you can inspect. Clean Copy's source is public at github.com/mahope/clean-copy-obsidian, each release ships exactly three files (main.js, manifest.json, styles.css), and the plugin makes no network requests — conversion runs locally.</p></div>
+      <div class="card"><h3>Does this work on Obsidian mobile?</h3><p>The manual and zip methods do: copy the three files into your vault's .obsidian/plugins folder from any file manager, then reload the plugin list. BRAT is desktop-only, so mobile users should use the manual method.</p></div>
+      <div class="card"><h3>Why isn't it in the community plugin directory yet?</h3><p>Submission through Obsidian's developer dashboard is pending. The build is identical either way — installing via BRAT or manually gives you the same version today, and you can switch to the directory listing once approved.</p></div>
+      <div class="card"><h3>Is Pro required for basic use?</h3><p>No. Paste as clean Markdown, plain-text paste and clean-selection are free forever. Pro ($19/yr) only adds custom find/replace cleanup rules.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/blog/paste-into-obsidian-clean-markdown" class="btn-secondary">&larr; Paste Into Obsidian Without the Formatting Mess</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);">HTML to Markdown converter</a> &middot; <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">HTML to Markdown from the terminal</a> &middot; <a href="/da/blog/indsæt-i-obsidian-ren-markdown" lang="da">Dansk guide</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script defer src="/track.js"></script>
+</body>
+</html>
