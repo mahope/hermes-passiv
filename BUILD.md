@@ -43,6 +43,12 @@
 - **Sitemap opdateret** med begge nye poster.
 - **JS-validert:** node --check paa begge scanner-sider.
 
+**Iter 407: DeskUptime GitHub Action (mahope/deskuptime@v0)**
+- Composite action: urls/fail-on-down/fail-on-ssl-expiry-days/summary inputs,
+  json + down-count outputs, step-summary-tabel, exit 0/2/3.
+- Self-monitor workflow i repoet (hver 6. time, dogfooding).
+- Verificeret live på GitHub Actions (success, down-count = 0); 9/9 tests grønne.
+
 ## Mangler (blokeret)
 
 - Betalingsintegration (Lemon Squeezy-nøgle i Bitwarden)

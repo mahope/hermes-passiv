@@ -1,64 +1,55 @@
-# STATUS — Iteration 406: DeskUptime hærdet — fejl rettet, --json, tests, CI grøn
+# STATUS — Iteration 407: DeskUptime GitHub Action — ny distributionskanal, testet live
 
 ## Søgedisciplin
-0 eksterne søgninger. Hele iterationen var lokal analyse, kodning og verifikation.
+0 eksterne søgninger. Hele iterationen var lokal bygning + verifikation via GitHub Actions.
 
 ## Hvad der blev gjort
 
-**Udgangspunkt:** DeskUptime CLI var bygget og live på GitHub, men aldrig
-kvalitetstestet. Gennemgang af hele kodebasen (727 linjer) fandt tre rigtige
-fejl + manglende distributionshygiejne.
+**Udgangspunkt:** Iter 406 konkluderede at distribution er problemet. Næste skridt
+var den kanal der kræver nul konti: **en GitHub Action-indpakning af deskuptime**
+(`mahope/deskuptime@v0`) — bruges direkte fra andres workflows med `uses:`.
 
-### Fejl fundet og rettet
+### Bygget
 
-1. **Help-teksten udskrev bogstavelig `$(pkg.bin?.deskuptime ...)`** — en
-   template-literal bug i cli.js. Enhver bruger der kørende `--help` så rå
-   kode i stedet for en feature-liste.
-2. **Watch gav falsk "UP"-alarm ved første gennemløb** — `entry.wasUp` var
-   null ved første pass, så `!entry.wasUp` var sandt og hver ny URL meldte
-   "is UP" som om det var en begivenhed. Første pass etablerer nu baseline
-   stille; alarmer kun på reelle overgange bagefter.
-3. **Exit-koden var altid 0** — selv når alle tjekkede sider var nede.
-   Nu: exit 2 hvis én eller flere URLs er nede (standard praksis for
-   monitor-værktøjer), så cron/CI kan alarmere.
+1. **action.yml (composite action):**
+   - Inputs: `urls` (påkrævet), `fail-on-down` (default true), `fail-on-ssl-expiry-days`
+     (default 0), `summary` (default true).
+   - Outputs: `json` (fulde resultater) og `down-count`.
+   - Skriver Markdown-statustabel til `$GITHUB_STEP_SUMMARY`.
+   - Exit-koder: 0 = alle op, 2 = én eller flere nede, 3 = SSL udløber/ugyldig.
+   - Parser resultater med node (ingen jq-afhængighed på runner).
 
-### Nyt: `--json` mode
+2. **Self-monitor workflow** i samme repo: kører actionen mod egne endpoints hver
+   6. time (dogfooding + synlig bevis for at actionen er i brug).
 
-`deskuptime check <url> --json` udskriver ren JSON (url, reachable,
-statusCode, responseTimeMs, sslDaysRemaining, contentHash...) uden menneskelig
-tekst — pipbart til jq, brugbar i CI og scripts. Dokumenteret i README.
+3. **README:** fuld "Use in GitHub Actions"-sektion med eksempel-workflow,
+   input-/output-tabel og exit-koder.
 
-### Test suite + CI
+### Verificering (ægte kørsler)
 
-- **9 tests** (node:test, zero deps): hash-detection, help/version,
-  fejlhåndtering, live check mod example.com, JSON-parsebarhed, watch-state
-  recovery. **9/9 grønne lokalt.**
-- **CI workflow** (.github/workflows/ci.yml): npm test på Node 20+22 +
-  jq smoke-test af JSON-mode. **Kørt og grøn på begge versioner**
-  (run 32897476309).
+- Lokalt: UP-scenario (exit 0, korrekt tabel) + DOWN-scenario mod en 503-URL
+  (exit 2 + `::error::1 URL(s) DOWN`).
+- Live på GitHub: workflow_dispatch af self-monitor → **completed/success,
+  "down-count = 0"**, actionen hentede sig selv og tjekkede begge URLs.
+- Eksisterende test-suite: 9/9 grønne efter ændringerne.
 
-### Repo-hygiene (mahope/deskuptime)
+### Pushet
 
-- LICENSE (MIT) tilføjet — manglede helt (404 fra GitHub API).
-- Topics sat: uptime, monitoring, ssl, website-monitor, cli, nodejs, devops,
-  status-page — det er SEO-indgangen til organisk GitHub-trafik.
-- Alt pushet: cec6269 + README-followup.
+- mahope/deskuptime main @ 49d7b82 + tag v0.1.1.
 
 ## Ærligt billede
-- Deskuptime repo: 0 stars, 0 downloads — distribution er stadig problemet.
-- Waitlist/licenser/betalinger: uændret 0 (ingen LS-nøgle).
+- Ingen eksterne brugere endnu; kanalen skal nu findes via GitHub Marketplace-søgning
+  og topics ("github-action", "uptime-monitor", "ssl-certificate").
 
 ## Stadig blokeret
 - Lemon Squeezy-API-nøgle (Bitwarden) — betaling kan ikke tændes
 - npm publish (`npm whoami` = 401)
-- Alle Mads-konto-afhængige kanaler
 
 ## Næste iteration
-1. Hvis LS-nøglen kommer: checkout-link → Buy-knap → gå live (én kommando).
-2. Hvis npm-credentials kommer: `npm publish` (CLI'en er nu testet + CI-dækket,
-   klar til publicering med det samme).
-3. Ellers: overvej GitHub Action-indpakning af deskuptime check (den kanal der
-   kræver nul konti, samme model som clean-copy-cli@v1) eller Tauri-desktop.
+1. Tjek self-monitor-kørsler + om actionen får nogle uses/trafik.
+2. Tilføj "github-action" topics til repoet hvis mangler, og overvej en
+   Marketplace-listing (kræver release-tag — v0.1.1 findes allerede).
+3. Ellers: fortsæt med næste zero-account-distributionskanal.
 
 ## Budget
 35 kr brugt af 1000 (uændret).
