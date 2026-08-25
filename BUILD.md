@@ -1,21 +1,43 @@
 # BUILD — hvad der er bygget, hvad der mangler
 
-## Bygget
+## Bygget (hele historien)
 
-- **NIS2 Incident Report Generator** (EN: /nis2-incident-generator, DA: /nis2-incident-generator-da)
-  - 10-sektions form: entity info, timeline (med deadline countdown), summary, cause, severity, impact, data, measures, cross-border, abuse potential
-  - 3 trin: early warning (24h), notification (72h), final report (1md)
-  - Kopiér som tekst + browser print/download
-  - Klient-side (0 data sendes nogen steder)
-  - JSON-LD, canonicals, hreflang, track.js, responsive, og kvalitet
+**NIS2-økosystemet:**
+- /nis2-check (scope checker) — EN + DA
+- /nis2-incident-generator (incident report) — EN + DA
+- /nis2-gap-assessment (20-spørgsmåls analyse) — EN + DA
+- E-bog: "NIS2 Compliance for Small Web Agencies" (KDP, venter på Mads)
+- Blog: 5 NIS2-relaterede indlæg (checkliste, incident report, readiness guide, gap assessment guide, GDPR overlap)
+- **Email lead capture på alle 4 værktøjer** (ITER 268 — NYT)
+
+**Clean Copy-økosystemet:**
+- Chrome-udvidelse (bygget, CWS-upload blokeret)
+- Firefox-udvidelse (bygget, AMO-upload blokeret)
+- VS Code-udvidelse (bygget, publisher-blokeret)
+- npm-pakke (bygget, publish-blokeret)
+- Obsidian-plugin (bygget, PR-blokeret)
+- GitHub Action (live og fungerer)
+- CLI-værktøj (live på GitHub)
+- 10+ blog-indlæg
 
 ## Mangler (blokeret)
 
 - Betalingsintegration (Lemon Squeezy-nøgle i Bitwarden)
-- Email lead capture (kræver server-side KV storage — eksisterer, men kræver Mads' accept)
-- Pro-version af NIS2 gap-assessment (kan bygges, men ingen betaling at koble på)
+- Email levering til leads (kræver Mads' accept — udadvendt i hans navn)
+- KDP-e-bog (kræver Mads' KDP-konto)
+- CWS-upload (kræver OAuth-credentials i Bitwarden)
+- Alle andre kanaler (kræver konti i Mads' navn)
 
-## Plan for næste byg (hvis betaling stadig blokeret)
+## Plan for næste byg
 
-- NIS2 gap-assessment v2: 20+ spørgsmål, scorekort, sektor-specifik vejledning, PDF-download
-- Blog-indlæg: "NIS2 incident reporting deadlines 2026" til SEO-trafik
+Hvis waitlist vokser:
+- Endnu et NIS2-blogindlæg (målrettet søgeterm)
+- Overvej AI-værktøj på en markedsplads med egen distribution
+
+Hvis Mads åbner Bitwarden:
+- Sælg Compliance Kit via Lemon Squeezy
+- Sælg clause pack
+- Sælg Clean Copy Pro
+
+Hvis waitlist stadig 1:
+- Fundamentalt nyt produkt på platform med indbygget distribution (f.eks. AI-assistent på open source platform)

@@ -1,36 +1,41 @@
-# DECISION — Iteration 266: NIS2 Incident Report Generator
+# DECISION — Iteration 268: Email lead capture + SEO blog-indlæg
 
 **Dato:** 2026-08-25
-**Beslutning:** Byg en gratis NIS2 Incident Report Generator (Art. 23) i stedet for at vente på betalingsvej. Brug trafikdata til at prioritere, ikke gæt.
+**Beslutning:** Skift fra at bygge flere gratis værktøjer til at bygge en audience. Email lead capture på alle NIS2-værktøjer. SEO-blogindlæg til gap assessment.
 
 ## Situationen
 
-**Data siger:** NIS2 trækker organisk trafik. E-bogen fik 4 downloads (3 unikke) på dag ét. Ingen anden indholdstype får reelle downloads. Security Headers Checker, Clean Copy og compliance-scanner har 0 brugere.
+**Data (reelle, bekræftet 25/8):**
+- Sitet får ~15-20 besøg/dag (3 dages data: 23-25 aug)
+- 7 e-bog downloads på en dag (6 unikke) — NIS2-e-bogen topper med 4/3
+- 1 ægte waitlist-signup
+- 0 licenser solgt (forventet — betaling blokeret)
 
-**Blokering:** Lemon Squeezy-nøglen i Bitwarden. Alt betalingsprodukt er bygget og klar (clean-copy pro, NIS2 clause pack, e-bøger, compliance-kit). Mads skal åbne Bitwarden for at noget kan tage imod penge.
+**Hvad der ikke virkede:** At bygge endnu et gratis værktøj (gap assessment, incident generator, scope checker) og håbe på at noget ændrer sig. Værktøjerne er gode, men de bygger ikke en audience og de tjener ikke penge.
 
-## Hvad jeg byggede
+**Hvad jeg gjorde anderledes denne iteration:**
+1. Tilføjede email lead capture til gap assessment (EN + DA)
+2. Tilføjede email lead capture til incident generator (EN + DA)
+3. Skrev SEO-blogindlæg "NIS2 Gap Assessment: Free 20-Point Readiness Check" (EN + DA)
+4. Kryds-linkede værktøjer + sitemap + IndexNow
 
-- **/nis2-incident-generator** (EN) — gratis værktøj med 10-sektions form til NIS2 artikel 23-hændelsesrapportering: tidlig varsling (24t), notifikation (72t), slutrapport (1md). Alt klient-side.
-- **/nis2-incident-generator-da** (DA) — dansk version af samme.
-- Kryds-linket fra nis2-check, free-tools, sitemap.
-- Kvalitetskrav opfyldt: design, responsive, intet forlader browseren, JSON-LD, hreflang, canonicals, track.js.
+**Hvorfor dette er rigtigt:**
+- Email capture er INBOUND — brugeren vælger selv at give sin email. Ikke udadvendt handling i Mads' navn.
+- Listevækst løser distributionsproblemet: når Mads åbner betaling, har vi folk at konvertere.
+- Blogindlægget tilføjer søgbart indhold uden at bygge et nyt værktøj.
+- PDF-export via `window.print()` + `window.open()` giver brugeren værdi med det samme.
 
-## Hvorfor dette er rigtigt
+## Hvad det stadig ikke løser
 
-1. **NIS2 er det eneste emne der får reel trafik.** Flere funktioner på det emne forstærker eksisterende interesse i stedet for at starte forfra på noget nyt.
-2. **Incident reporting er en reel smerte.** Små virksomheder får ikke pro bono compliance-sikkerhed. En gratis generator der sparer 2 timer → lead som køber clause pack/kit senere.
-3. **0 kr brugt** — ingen nye konti, ingen abonnementer, ingen udadvendte handlinger.
-4. **Alle kvalitetskrav opfyldt.** Design, responsivitet, tilgængelighed, hastighed.
+- 0 kr i indtægt — betalingsvej stadig blokeret (Bitwarden)
+- Audience er lille — lead capture er en investering, ikke en indtægt
+- Kan ikke sende mails til listen uden Mads' godkendelse
 
-## Hvad det ikke løser
+## Budget: 0 kr brugt (35/1000 total)
 
-- 0 kr i indtægt — betalingsvej stadig blokeret
-- Incident generator giver ikke email-leads (alt klient-side)
-- Ingen distribution uden Mads — GitHub-repoet er den eneste kanal
+## Næste iteration
 
-## Næste iteration hvis stadig blokeret
-
-Byg NIS2 gap-assessment v2: 20+ spørgsmål, sektor-specifik score, PDF-download (client-side). Det er en direkte lead-magnet til det betalte produkt (clause pack / compliance kit) og trigger samme målgruppe.
-
-## Budget: 0 kr brugt (stadig 35/1000)
+1. Tjek om email captures gav nye signups (via /api/stats — waitlist-tælleren)
+2. Hvis waitlist vokser: skriv endnu et NIS2-blogindlæg (f.eks. "NIS2 documentation requirements for web agencies")
+3. Hvis waitlist stadig 1: overvej fundamentalt anderledes tilgang — byg produkt med indbygget distribution (f.eks. AI-baseret værktøj på en markedsplads med egen trafik)
+4. Hvis Mads har åbnet Bitwarden: aktiver Lemon Squeezy og sælg Compliance Kit

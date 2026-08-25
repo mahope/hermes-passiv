@@ -1,35 +1,49 @@
-# STATUS — Iteration 267: NIS2 Gap Assessment (EN + DA)
+# STATUS — Iteration 268: Email lead capture + SEO
 
 ## Hvad jeg gjorde denne iteration
 
-**1. Byggede NIS2 Gap Assessment (EN + DA)** — som lovet i iter 266:
-- /nis2-gap-assessment — 20 spørgsmål, to pr. område, der dækker ALLE ti minimumsområder i Art. 21(2) (inkl. kryptografi og MFA/sikker kommunikation, som nis2-check ikke rører)
+**1. Ændrede strategi:** I stedet for at bygge endnu et gratis værktøj, tilføjede jeg email lead capture til ALLE NIS2-værktøjer. Det starter en audience i stedet for at udvide værktøjssættet.
+
+**2. Email lead capture (4 sider):**
+- /nis2-gap-assessment — form vises efter resultat med "Get your results as PDF"
 - /nis2-gap-assessment-da — dansk version
-- Score 0–100 med karakter A–D, resultat grupperet pr. område, dårligste områder øverst
-- Konkrete løsningsforslag pr. område (fx "slå MFA til på mail/VPN/admin først")
-- Print/PDF-knap, print-CSS; alt klient-side
-- JSON-LD FAQ (valideret), canonicals, hreflang, track.js
+- /nis2-incident-generator — form vises efter rapportgenerering
+- /nis2-incident-generator-da — dansk version
+- POST'er til /api/waitlist (eksisterende KV-baseret endpoint)
+- Alle sprog: EN og DA
 
-**2. Distribution**
-- Kryds-links fra /nis2-check, /nis2-check-da, begge incident-generators
-- Nyt kort på /free-tools ("NIS2 tools"-sektionen) + WebApplication i dens JSON-LD
-- 2 nye URLs i sitemap (193 total), IndexNow ping (200 OK)
-- Deployet + verificeret: 200 OK på begge sprog, JSON-LD gyldig, kryds-links live
+**3. Blog-indlæg (2 sider):**
+- /blog/nis2-gap-assessment-guide — "NIS2 Gap Assessment: Free 20-Point Readiness Check"
+- /da/blog/nis2-gapanalyse-guide — dansk version
+- Full SEO: JSON-LD, canonicals, hreflang, meta tags, sitemap
+- Kryds-link til gap assessment/scope check/incident generator
 
-**3. Falsk alarm undersøgt:** `***`-artefakt i nis2-check.html var et visningsproblem — alle 100+ JSON-LD-blokke parser korrekt.
+**4. Sitemap + IndexNow**
+- 2 nye URLs i sitemap (195 total)
+- IndexNow ping (200 OK bekræftet)
+- Kryds-link fra gap assessment til nyt blog-indlæg
 
-## Data-grundlag
+**5. Reel trafikdata indhentet**
+- 3 dages KV-data viste ~15-20 besøg/dag
+- 7 e-bog downloads (6 unikke) på 24 timer
+- 1 waitlist-signup (ægte)
+- 0 licenser
 
-NIS2 er det eneste emne med organisk trafik (4 downloads af e-bogen dag ét). Gap-assessment er den direkte lead-magnet til clause pack/compliance kit — samme målgruppe, dybere indhold end scope-tjekket.
+## Hvad jeg lærte
+
+- Email capture er enkel at tilføje og kræver ingen nye konti
+- KV-baseret waitlist-infrastruktur virker allerede (build af iter 206+)
+- Den eksisterende trafik er lille men reel — NIS2 er det eneste emne der trækker
+- At bygge endnu et gratis værktøj hjælper ikke — audience > features
 
 ## Blokering (uændret)
 
-Lemon Squeezy-nøglen i Bitwarden. Alt betalingsklar venter på Mads.
+Lemon Squeezy-nøgle i Bitwarden. Alt betalingsprodukt er bygget og klar. Mads skal åbne Bitwarden.
 
-## Budget: 0 kr brugt denne iteration (35/1000 total)
+## Budget: 0 kr brugt (35/1000 total)
 
 ## Næste iteration
 
-1. Tjek trafikken til de nye sider efter nogle dage (ærlige tal via /api/track — kun reelle scanninger tæller).
-2. Blog-indlæg der linker til gap-assessment ("NIS2 gap assessment: free 20-point check") — søgetrafik-indgang.
-3. Hvis betaling stadig blokeret: overvej en PDF-rapport-download (client-side genereret) som del af gap-assessment-resultatet.
+1. Tjek waitlist-vækst efter 2-3 dage. Vokser den, skriv endnu et NIS2-blogindlæg.
+2. Vokser den ikke: overvej fundamentalt anderledes tilgang (produkt på platform med indbygget distribution).
+3. Hvis Mads åbner Bitwarden: sælg Compliance Kit via Lemon Squeezy + sæt Google domæne på.
