@@ -1,55 +1,52 @@
-# STATUS — Iteration 287: WCAG 2.2-kravliste (DA) live + måling fra 286 (0 web-søgninger)
+# STATUS — Iteration 288: Serie stoppet efter måling; npx-distributionskanal for Clean Copy CLI
 
-## Måling først (punkt a fra 286)
+## Måling først (punkt a fra 287)
 
-/api/stats (14 dage): de tre nyeste indgange (/clean-copy-brew,
-/da/blog/eaa-frist-hvad-nu, /blog/eaa-deadline-passed) har **0 besøg**.
-Baseline uændret: kun forsiden + downloads (NIS2-e-bog stadig mest hentet).
-Waitlist: 1 ægte. Licenses: 0.
+Alle indgange fra søgeindgangs-serien har **0 registrerede besøg** (api/stats,
+token-beskyttet): eaa-frist-hvad-nu, eaa-deadline-passed, wcag-22-krav-liste,
+gdpr-fines-2026 — alle nul. Besøgene der ER, er forsiden (6+1+11 over 3 dage),
+downloads (NIS2 stadig mest) og selftests.
 
-Konsekvens ift. reglen i STATUS 286: indgangs-serien får én sidste chance med
-punkt b (WCAG-tjeklisten nedenfor), som var planlagt inden målingen. Hvis
-iteration 289's genmåling stadig viser ~0 på ALLE indgange fra serien,
-stopper vi serien og skifter spor (distribution kræver Mads' ja → nyt produkt).
+**Beslutning: søgeindgangs-serien er stoppet.** Som varslet i 287. Ingen
+indgang nr. 6 af samme skabelon. Strategien virker ikke for dette domæne.
 
-## Bygget
+## Bygget i stedet: distribution uden konti
 
-**/da/blog/wcag-22-krav-liste** — dansk komplet WCAG 2.2-tjekliste:
-50 kriterier (23 A + 27 AA) i tabeller med kort "hvad det betyder i praksis"
-pr. krav, nye-i-2.2-kriterier markeret grønt, 5 FAQ'er, CTA til /scan-da.
+Spor-skifte til det pivoterede flagskibs eneste kanal der kræver NUL konti fra
+Mads: direkte npm-installation fra GitHub (ingen npm-registrering nødvendig).
 
-- Article + FAQPage JSON-LD (valideret lokalt og live)
-- Idempotent sitemap-add (202→203 URLs), krydslink fra både
-  da/blog/wcag-22-aendringer og blog/wcag-22-what-changes, llms.txt +1
-- IndexNow pinget; sitemap verificeret live indeholder URL'en
-- full_site_check: 203 urls, 0 problemer
-- Deployet og live-verificeret (titel, JSON-LD, tabelrækker)
+1. **Verificeret at `npx github:mahope/clean-copy-cli` virker live** — kørt fra
+   ren mappe mod det pushede repo: konverterer fil og URL korrekt.
+2. **files-whitelist i package.json**: npm-pakken indeholder nu præcis 5 filer
+   (clean-copy.js, core, README, LICENSE, package.json) i stedet for 21 — gamle
+   release-tarballs fulgte ikke længere med i pakken.
+3. **README: ny installationssektion** "npx — run without installing (no account
+   needed)" med både npx og global install fra GitHub.
+4. Tests: node test.js 41/41 grønne; tarball genbygget deterministisk (sha uændret
+   fungerende); CI på GitHub grøn (alle jobs).
+5. Site Option H (/clean-copy.html) dokumenterede allerede npx-stien — verificeret
+   korrekt, ingen site-ændring nødvendig.
 
-Faktaselvcheck undervejs: første udkast skrev "87 kriterier" i meta-description
-men viste kun A/AA — rettet til "50 på niveau A og AA" inden deploy. Rækketælling
-i scriptet (A=23, AA=27, heraf 6 nye på A/AA) matcher teksten på siden.
+Ingen web-søgninger brugt i denne iteration (0/12).
 
 ## Kritisk vej — uændret
 
-**Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle +
-VS Code publisher-konto.
+Blokeret på: Mads' Obsidian community-submit + Lemon Squeezy-nøgle + VS Code
+publisher-konto. npx-kanalen kræver ingen af dem.
 
-## Næste iteration (288/289)
+## Næste iteration (289)
 
-a) Genmål ALLE seriens indgange. Hvis ~0: stop indgangs-byggeriet. Se
-   "Ærlig vurdering".
-b) Hvis der fortsat bygges indgange: cookiepolitik-vs-privatlivspolitik (da)
-   var næste kandidat — men kun hvis (a) ikke allerede har stoppet serien.
-c) Alternativ til serien hvis den dør: overvej nyt produktspor eller
-   distribution-forberedelse (udsendelser/lister klarlagt, venter på Mads' ja).
+- Måling: har npx/github-trafik ændret noget (gh traffic views + api/stats)?
+- Hvis nej: overvej konkret nyt produktspor ift. DECISION.md-pivoten — f.eks.
+  gør licensflow klar så det kun mangler Lemon Squeezy-nøglen at tænde, eller
+  et nyt lille værktøj med distributionskanal der kræver nul konti.
+- Genoptag IKKE indgangs-serien.
 
 ## Ærlig vurdering
 
-Siden er teknisk perfekt og trafikken kommer ikke. Fem indgange i serien har nu
-tilsammen fået nul registrerede besøg. Det er et stærkt signal om at
-søgeindgangs-strategien alene ikke virker for dette site — enten fordi
-domænet har for lidt autoritet, eller fordi efterspørgslen på netop disse
-queries er for lille. Næste iteration skal tage stilling til sporskifte, ikke
-bygge indgang nr. seks af samme skabelon uden begrundelse.
+Indgangs-strategien fik 5 iterationer og leverede nul besøg. Det var rigtigt at
+stoppe den. Den nye satsning (npx) er heller ikke en trafikmaskine i sig selv,
+men den sænker friktionen til nul for dem der finder repoet — og den kostede én
+iteration, ikke fem.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
