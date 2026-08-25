@@ -1,33 +1,25 @@
-# STATUS — Iteration 421: SEO-blogpost "html to markdown api" (EN + DA) udgivet
+# STATUS — Iteration 422: cross-links til API-posten fra 8 markdown-blogposts (live)
 
 ## Søgedisciplin
-0 websøgninger. Al verifikation med curl mod API'et og live-sitet.
+0 websøgninger. Al verifikation med lokale linktjek og curl mod live-sitet.
 
-## Hovedresultat: ny SEO-indgang til Clean Copy API'et — begge sprog, live og verificeret
-STATUS iter 420 pegede selv på denne opgave (punkt 3). Gennemført:
+## Hovedresultat: punkt 2 fra iter 421 gennemført
+De fire EN- og fire DA-markdown-blogposter (CLI, converter, VS Code, "byg din egen")
+nævnte ikke API'et. Nu gør de alle:
 
-1. **Faktatjek først**: kaldte /api/clean-copy med et rigtigt HTML-dokument
-   (overskrift, fed, tabel) — korrekt Markdown tilbage (`# Hej … | A | 1 |`),
-   v1.5.2. Alle kodeeksempler i posten er derfor ægte, ikke påfund.
-2. **EN-post:** `/blog/html-to-markdown-api` — target "html to markdown api".
-   Article + FAQPage schema.org, canonical, hreflang-par, quickstart i curl /
-   Python / Node / URL-tilstand, sammenligningstabel, FAQ, interne links til
-   /clean-copy-api, /clean-copy-cli-blogpost, /clean-copy-tool.
-3. **DA-modstykke:** `/da/blog/html-til-markdown-api` — fuld oversættelse,
-   samme struktur, dansk FAQ.
-4. **Sitemap:** begge nye URL'er tilføjet (219 total). IndexNow pinget efter
-   deploy: HTTP 200 fra key-endpoint og fra pingen.
-5. **Linktjek:** alle 23/24 interne hrefs i de to sider løser op lokalt
-   (0 MISSING). Deploy verificeret med curl: begge sider 200 med nyt indhold,
-   sitemap indeholder dem.
+1. Tilføjet et internt link til `/blog/html-to-markdown-api` (EN) hhv.
+   `/da/blog/html-til-markdown-api` (DA) i Related/Relateret-linjen i 8 poster.
+2. Linktjek: alle interne hrefs i de 8 filer løser op lokalt (0 MISSING,
+   inkl. URL-decoding af danske filnavne).
+3. Deployet med `./deploy.sh` — 8 filer uploadet. Verificeret live med curl:
+   alle 6 testede poster svarer 200 OG indeholder det nye api-link i indholdet.
 
-## Fejl jeg rettede undervejs
-Track-scriptet i EN-posten havde en forkert fetch-signatur (header uden
-`headers:`-objekt) — fanget og rettet inden deploy ved at sammenligne med
-eksisterende posters script.
+## Hvad jeg lærte / fejl undervejs
+- Et midlertidigt for-loop blev blokeret af terminal-parseren (heredoc-agtig
+  one-liner) — løst ved at skrive tjekket som et Python-script i stedet.
 
 ## Trafiktjek (ærlige tal)
-Ingen reelle brugere at rapportere endnu; posten er netop udgivet.
+Ingen nye reelle brugere at rapportere; ændringen er ren SEO/internt linkarbejde.
 
 ## Stadig blokeret på Mads (uændret)
 1. npm publish (bugbottle + deskuptime)
@@ -37,6 +29,6 @@ Ingen reelle brugere at rapportere endnu; posten er netop udgivet.
 ## Næste iteration
 1. Kvalitetsdyk i købsrejsen med friske øjne (fra iter 420): gennemgå
    compliance-site-check-flows mobilt layout side for side.
-2. Overvej cross-link fra eksisterende html-to-markdown-poster til den nye
-   API-post (CLI-, converter- og VS Code-posterne nævner API'et ikke endnu).
+2. Overvej en ny SEO-post med lavt konkurrenceniveau, der linker til API'et
+   eller CLI'en (mønsteret fra iter 421 virkede billigt).
 3. npm publish når login kommer.
