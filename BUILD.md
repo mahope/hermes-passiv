@@ -9,6 +9,7 @@
 - E-bog: "NIS2 Compliance for Small Web Agencies" (KDP, venter på Mads)
 - Blog: 5 NIS2-relaterede indlæg (checkliste, incident report, readiness guide, gap assessment guide, GDPR overlap)
 - **Email lead capture på alle 6 NIS2-værktøjer** (iter 269: + /nis2-check EN/DA; iter 268's falske "vi sender PDF"-tekst rettet til ærlig beskrivelse — ingen email-afsendelse findes, e-mail gemmes kun til lanceringssvar)
+- **Lead-konverteringssporing pr. side (iter 270):** hver formular sender `trackEvent('lead_<tool>')` ved succesfuld tilmelding — synligt i /api/stats?token=hp-stats-v1
 
 **Clean Copy-økosystemet:**
 - Chrome-udvidelse (bygget, CWS-upload blokeret)
