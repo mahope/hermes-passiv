@@ -116,6 +116,7 @@
   }
 </style>
 <script defer src="/track.js"></script>
+<!-- iter313 report-dl -->
 </head>
 <body>
 
@@ -203,12 +204,40 @@ function scan() {
     .catch(function(err) { showError('Network error: ' + (err.message || 'unknown')); });
 }
 
+
+  // iter313: download report as Markdown (client-side, no server)
+  var lastScan = null;
+  function downloadReport(data) {
+    var lines = [];
+    lines.push('# Compliance Report — ' + data.url);
+    lines.push('');
+    lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
+    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via hermes-passiv.pages.dev/compliance-site-check');
+    lines.push('');
+    var all = [];
+    if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
+    var icons = { pass: 'PASS', warn: 'WARN', info: 'INFO', fail: 'FAIL' };
+    all.forEach(function(r) {
+      lines.push('- [' + (icons[r.status] || r.status.toUpperCase()) + '] ' + (r.label || r.key) + ' — ' + (r.details || ''));
+    });
+    lines.push('');
+    lines.push('Fix each FAIL above, then re-scan. Free GitHub Action for CI: https://github.com/mahope/compliance-site-check');
+    var blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'compliance-report-' + (data.url || '').replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]/gi, '') + '.md';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
 function renderResults(data) {
   var html = '<div class="result-card">';
   html += '<div class="score-row">';
   html += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
+  lastScan = data;
   html += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(data.url) + '</div>';
   html += '</div>';
+  html += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport(lastScan)" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
 
   // Group results — passed first, then warnings, then failures
   var order = [];

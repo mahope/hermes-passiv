@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Website Compliance Checker: Scan Any Site for 9 EU Compliance Items</title>
+<meta name="description" content="Free website compliance checker: scan any URL for privacy policy, cookie consent, accessibility statement, security headers and more. 9 checks, no signup, results in seconds.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/free-website-compliance-checker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/free-website-compliance-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/gratis-compliance-tjek-hjemmeside">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Free Website Compliance Checker: Scan Any Site for 9 EU Compliance Items",
+  "description": "Scan any website for privacy policy, cookie consent, accessibility statement, DPA, security headers, meta tags and more. Free, no signup.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · GRATIS VÆRKTØJ</div>
+    <h1>Gratis compliance-tjek:<br>9 tjek paa enhver side pa sekunder</h1>
+    <p class="subtitle">GDPR-boeder starter med de manglende basale ting — en privatlivspolitik ingen kan finde, intet "Afvis"-kryds på cookie-banneret, ingen tilgaengelighedserklæring. Vores gratis scanner tjekker det hele server-side i én gennemkoersel.</p>
+  </div>
+</header>
+<main class="container" style="max-width:760px;margin:0 auto;padding:24px 16px">
+
+<h2>Hvad den scanner for</h2>
+<p>Indtast en URL i <a href="/da/compliance-site-check">Compliance Checkeren</a> — vaerktoejet henter din side server-side og koerer ni tjek:</p>
+<ul>
+<li><strong>Privatlivspolitik</strong> og <strong>Handelsbetingelser</strong> findes og er linket</li>
+<li><strong>Cookie-samtykke-banner</strong> fundet på forsiden</li>
+<li><strong>Impressum / juridiske oplysninger</strong> (kraevet i flere EU-lande)</li>
+<li><strong>Tilgaengelighedserklaering</strong> (kraevet efter Tilgaengelighedsloven)</li>
+<li><strong>Databehandleraftale</strong>-side</li>
+<li><strong>Security headers</strong>: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy</li>
+<li><strong>Meta-tags</strong>: title, description, viewport, canonical, robots, Open Graph</li>
+<li><strong>Hreflang / sprogdeklaration</strong></li>
+</ul>
+
+<h2>Saadan virker scoren</h2>
+<p>Du faar en score fra 0–100 med karakter og et konkret fix ved hvert fejlet tjek. Scanningen tager 5–15 sekunder, fordi der faktisk hentes kandidatsider (<code>/privatliv</code>, <code>/privacy-policy</code>, <code>/en/privacy</code> osv.) i stedet for at gaette.</p>
+
+<h2>Automatoiser det i CI/CD</h2>
+<p>Samme motor findes som gratis GitHub Action: <a href="https://github.com/mahope/compliance-site-check">mahope/compliance-site-check@v2</a>. Tilfoej eet trin til dit workflow, og hver deploy bliver tjekket automatisk:</p>
+<pre style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;overflow-x:auto"><code>- uses: mahope/compliance-site-check@v2
+  with:
+    url: https://example.com</code></pre>
+
+<h2>Hvem det er til</h2>
+<p>Smaa webbureauer der laver pre-launch-tjek, ejere der har modtaget en klage, og udviklere der vil have et hurtigt grundlag foer et kundemoede. Det erstatter ikke juridisk raadgivning eller en fuld manuel gjennomgang — men det fanger de manglende basale ting, som de fleste ukompatible sider deler.</p>
+
+<div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">
+  <h3>Proev det nu — gratis, ingen tilmelding</h3>
+  <p>Indtast din URL og faa en karakter med konkrete fixes.</p>
+  <a href="/compliance-site-check" class="btn-primary">Koer en gratis scanning →</a>
+</div>
+
+<p><a href="/da/blog/gratis-compliance-tjek-hjemmeside" lang="da">Dansk version</a></p>
+</main>
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Home</a> · <a href="/compliance-site-check">Compliance Checker</a> · <a href="/free-tools">More free tools</a> · <a href="/#blog">Blog</a></p>
+  <p>Mahope © 2026</p>
+</div></footer>
+</body>
+</html>

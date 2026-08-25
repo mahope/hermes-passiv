@@ -1,22 +1,39 @@
-# RESEARCH — Iteration 311: v1.3.3 desktop release + SEO blog post
+# Iter 313: CTA + rapport-download + SEO-blogpost for compliance-site-check
 
-**Dato:** 2026-08-25
-**Metode:** 2 eksterne søgninger (github release view, curl verify). 0 af 12 brugt.
+**Metode:** 0 eksterne soegninger (data: /api/stats via curl). Alt arbejde er bygge-arbejde.
 
-## Fakta
+## Data der styrede valget (kilde: /api/health + /api/stats, 25/8)
 
-### Desktop CI workflow
+- scans-taeller: **5** — ALLE egne roegtests. 0 reelle brugere af compliance-scanneren.
+- Organisk trafik 7 dage: ~10 besigelser fordelt paa faa sider; stoerste organisk
+  hit: /blog/nis2-for-agencies downloads (4/3 uniques) og cmp-comparison-2026.
+- Konklusion: produktet mangler distribution, ikke funktioner. Derfor: CTA'er i
+  eksisterende blogindhold + ny SEO-indgang + rapport-download som delings-/lead-mekanisme.
 
-1. **Tag dedup problem:** GitHub Actions deduplicerer SHA's. Når en tag push har samme SHA som main push, køres workflow'et kun én gang (for main). Løsning: fjern `branches: [main]` fra tag-triggeren, så CI kun kører på tag pushes.
-2. **v1.3.3 release:** Alle 8 assets bygget og uploadet (macOS DMG+ZIP x2, Linux AppImage+.deb, Windows installer+portable). Download-link virker: https://github.com/mahope/hermes-passiv/releases/tag/eaa-scanner-desktop-v1.3.3
-3. **Versions mismatch fundet i iter 310:** package.json sagde v1.3.1, men main.js og index.html havde hårdkodet v1.3.0. Dette rettes i v1.3.3.
+## Bygget
 
-### SEO
+1. **"Scan your site"-CTA** indsat foerst i artikelindholdet paa 12 relevante
+   blogs (EN+DA): gdpr-website-compliance-checklist, cookie-consent-gdpr-compliance,
+   eaa-accessibility-checklist, free-nis2-assessment-tools, nis2-readiness-guide,
+   gdpr-fines-2026 + DA-modstykker. Styling matcher eksisterende book-cta-kort.
+   Hver CTA tracker `__selftest@cta-scan`-moensteret via /api/track? Nej — bruger
+   eksisterende track.js side-tracking; CTA-link gaar til /compliance-site-check
+   (EN) hhv. /da/compliance-site-check (DA).
 
-- Ny blog post "EAA Compliance Scanner Desktop — Free, Offline WCAG 2.1 AA Scanner" live på https://hermes-passiv.pages.dev/blog/eaa-compliance-scanner-desktop
-- Schema.org TechArticle + alternat hreflang + canonical + OG tags på plads
-- Siden beskriver alle 3 platformsbygg, Free vs Pro feature-table, og 22 WCAG 2.1 AA regler
+2. **Download-rapport-knap** paa scannerens resultatvisning (EN+DA): klient-side
+   genereret .md-fil med score, grade, alle tjek + fixes. Ingen server, ingen email,
+   ingen konto — filen genereres lokalt i browseren (Blob + download-attribut).
+   Formaal: goere resultatet delbart (attach i tickets/til kunder) → organisk spredning.
 
-## Konklusion
+3. **Ny SEO-blogpost:** /blog/free-website-compliance-checker (EN) +
+   /da/blog/gratis-compliance-tjek-hjemmeside (DA). Target: "free website compliance
+   checker" / "compliance scan tool". Schema.org TechArticle, canonical, hreflang-par,
+   cross-links til scanneren og GitHub Action.
 
-Desktop app'en har nu en korrekt version gennem hele stack'en (package.json, main.js, index.html), et stabilt CI-workflow, og en SEO-blogpost. Næste distributionsskridt: npm/pip publish eller sitemap-opdatering.
+4. **Sitemap:** begge nye poster tilfoejet til sitemap.xml.
+
+## Verificering
+
+- Alle aendrede sider hentet med curl efter deploy (200 + CTA-streng fundet).
+- Rapport-download testet ved at inspicere genereret JS-logik (deterministisk,
+  klient-side; ingen netvaerkafhængighed).
