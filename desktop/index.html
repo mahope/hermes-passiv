@@ -10,23 +10,77 @@
 <div id="app">
   <header>
     <div class="logo">EAA Compliance Scanner</div>
-    <div class="badge">v1.1.1</div>
+    <div class="badge" id="versionBadge">v1.3.0</div>
   </header>
 
   <main>
-    <div class="scan-bar">
-      <input type="url" id="urlInput" placeholder="Enter a website URL to scan (e.g. https://example.com)" autofocus spellcheck="false">
-      <select id="modeSelect" aria-label="Scan mode">
-        <option value="page" selected>Single page</option>
-        <option value="site">Whole site</option>
-      </select>
-      <input type="number" id="maxPages" min="1" max="200" value="10" aria-label="Max pages to scan"
-             class="hidden" title="Maximum number of pages to scan (same-site links)">
-      <button id="scanBtn">Scan</button>
-    </div>
+    <!-- Tab navigation -->
+    <nav class="tabs" role="tablist" aria-label="Scan modes">
+      <button class="tab active" data-tab="scan" role="tab" aria-selected="true">Scan</button>
+      <button class="tab" data-tab="batch" role="tab" aria-selected="false" id="batchTabBtn">Batch Scan</button>
+    </nav>
 
+    <!-- Tab: Single page / site scan -->
+    <section class="tab-panel active" id="panel-scan" role="tabpanel">
+      <div class="scan-bar">
+        <input type="url" id="urlInput" placeholder="Enter a website URL to scan (e.g. https://example.com)" autofocus spellcheck="false">
+        <select id="modeSelect" aria-label="Scan mode">
+          <option value="page" selected>Single page</option>
+          <option value="site">Whole site</option>
+        </select>
+        <input type="number" id="maxPages" min="1" max="200" value="10" aria-label="Max pages to scan"
+               class="hidden" title="Maximum number of pages to scan (same-site links)">
+        <button id="scanBtn">Scan</button>
+      </div>
+    </section>
+
+    <!-- Tab: Batch scan (Pro) -->
+    <section class="tab-panel hidden" id="panel-batch" role="tabpanel">
+      <div class="pro-gate" id="batchProGate">
+        <div class="pro-upsell">
+          <span class="pro-badge">PRO</span>
+          <h3>Batch URL Scanning</h3>
+          <p>Scan up to 100 URLs at once. Get aggregated results, CSV/JSON export, and a single combined report.</p>
+          <p><strong>$19/year</strong> — covers all platforms: desktop, CLI, web, and CI.</p>
+          <button id="activateFromBatchBtn" class="btn-secondary">Activate Pro License</button>
+          <p class="pro-note">Already have a license? Click above to enter it.</p>
+        </div>
+      </div>
+      <div class="batch-ready hidden" id="batchReady">
+        <div class="scan-bar">
+          <textarea id="batchUrlList" rows="6" placeholder="Enter URLs, one per line&#10;https://example.com&#10;https://example.com/about&#10;https://example.com/contact" spellcheck="false"></textarea>
+          <div class="batch-actions">
+            <button id="batchScanBtn" class="btn-primary">Scan All</button>
+            <span class="batch-count" id="urlCount">0 URLs</span>
+          </div>
+        </div>
+        <div class="batch-export-toolbar hidden" id="batchExportBar">
+          <button id="exportJsonBtn" class="btn-secondary">📄 Export JSON</button>
+          <button id="exportCsvBtn" class="btn-secondary">📊 Export CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status bar -->
     <div id="status" class="status hidden"></div>
 
+    <!-- License activation dialog (modal) -->
+    <div class="modal-overlay hidden" id="licenseModal">
+      <div class="modal">
+        <h3>🔑 Activate Pro License</h3>
+        <p>Enter your license key to unlock batch scanning, CSV/JSON export, and unlimited crawl depth.</p>
+        <p class="pro-note">Purchase a license at <a href="#" id="buyLicenseLink">hermes-passiv.pages.dev/clean-copy</a></p>
+        <input type="text" id="licenseKeyInput" placeholder="Paste your 32-character license key" spellcheck="false" class="license-input">
+        <div class="modal-buttons">
+          <button id="activateBtn" class="btn-primary">Activate</button>
+          <button id="deactivateBtn" class="btn-danger hidden">Deactivate</button>
+          <button id="closeLicenseModal" class="btn-secondary">Cancel</button>
+        </div>
+        <div id="licenseStatus" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
     <div id="result" class="hidden">
       <div class="scorecard">
         <div class="score-label">SCORE</div>
@@ -40,14 +94,23 @@
         <div class="stat notice"><span class="stat-num" id="noteCount">0</span> notices</div>
       </div>
 
+      <div id="batchAggregate" class="hidden">
+        <hr>
+        <div class="batch-aggregate">
+          <p><strong id="batchTotal">0</strong> pages scanned · <strong id="batchAvgScore">—</strong> average score</p>
+          <p id="batchFailCount"></p>
+        </div>
+      </div>
+
       <div class="toolbar">
-        <button id="savePdfBtn" disabled>Save Report as PDF</button>
-        <span class="toolbar-note">Report contains all findings with fix recommendations</span>
+        <button id="savePdfBtn">Save Report as PDF</button>
+        <span class="toolbar-note">Free — includes all findings with fix recommendations</span>
       </div>
 
       <div id="findings" class="findings"></div>
     </div>
 
+    <!-- Welcome -->
     <div id="welcome" class="welcome">
       <h2>WCAG 2.1 AA Automated Scanner</h2>
       <p>Enter any public URL above to check for common accessibility issues — a single page, or your whole site by following same-site links. The scanner checks 22 rules including image alt text, form labels, colour contrast, heading structure, video captions, and more.</p>
@@ -56,12 +119,13 @@
         <div class="feature">✓ Offline-capable (HTML files)</div>
         <div class="feature">✓ Save reports as PDF</div>
         <div class="feature">✓ Whole-site crawl (up to 200 pages)</div>
+        <div class="feature" id="proFeatureBadge">⭐ Batch scan &amp; CSV/JSON export <span class="pro-badge-small">PRO</span></div>
       </div>
     </div>
   </main>
 
   <footer>
-    <p>Built by <a href="#" id="siteLink">Mahope</a> · Free for personal and commercial use</p>
+    <p>Built by <a href="#" id="siteLink">Mahope</a> · Free for personal and commercial use · <a href="#" id="licenseLink">Pro License</a> <span id="proStatus"></span></p>
   </footer>
 </div>
 
@@ -80,6 +144,40 @@ const warnCount = document.getElementById('warnCount');
 const noteCount = document.getElementById('noteCount');
 const findings = document.getElementById('findings');
 const savePdfBtn = document.getElementById('savePdfBtn');
+const versionBadge = document.getElementById('versionBadge');
+const licenseLink = document.getElementById('licenseLink');
+const proStatus = document.getElementById('proStatus');
+
+// License modal elements
+const licenseModal = document.getElementById('licenseModal');
+const licenseKeyInput = document.getElementById('licenseKeyInput');
+const activateBtn = document.getElementById('activateBtn');
+const deactivateBtn = document.getElementById('deactivateBtn');
+const closeLicenseModal = document.getElementById('closeLicenseModal');
+const licenseStatus = document.getElementById('licenseStatus');
+const buyLicenseLink = document.getElementById('buyLicenseLink');
+const activateFromBatchBtn = document.getElementById('activateFromBatchBtn');
+
+// Batch scan elements
+const batchUrlList = document.getElementById('batchUrlList');
+const batchScanBtn = document.getElementById('batchScanBtn');
+const urlCount = document.getElementById('urlCount');
+const batchProGate = document.getElementById('batchProGate');
+const batchReady = document.getElementById('batchReady');
+const batchExportBar = document.getElementById('batchExportBar');
+const exportJsonBtn = document.getElementById('exportJsonBtn');
+const exportCsvBtn = document.getElementById('exportCsvBtn');
+const batchAggregate = document.getElementById('batchAggregate');
+const batchTotal = document.getElementById('batchTotal');
+const batchAvgScore = document.getElementById('batchAvgScore');
+const batchFailCount = document.getElementById('batchFailCount');
+
+// Tab elements
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.tab-panel');
+
+let isPro = false;
+let lastBatchResults = null;
 
 const GRADES = {
   A: { label: 'Excellent', color: '#157a3c' },
@@ -88,6 +186,82 @@ const GRADES = {
   D: { label: 'Poor', color: '#a31515' },
 };
 
+// ── License system ───────────────────────────────────────────
+async function checkLicense() {
+  try {
+    const lic = await window.electronAPI.getLicense();
+    isPro = lic.activated;
+    if (isPro) {
+      proStatus.textContent = '✓ Pro';
+      proStatus.className = 'pro-active';
+      document.getElementById('proFeatureBadge').classList.add('unlocked');
+      deactivateBtn.classList.remove('hidden');
+      activateBtn.textContent = 'Update Key';
+      batchProGate.classList.add('hidden');
+      batchReady.classList.remove('hidden');
+    } else {
+      proStatus.textContent = '';
+      proStatus.className = '';
+      deactivateBtn.classList.add('hidden');
+      activateBtn.textContent = 'Activate';
+      batchProGate.classList.remove('hidden');
+      batchReady.classList.add('hidden');
+      batchExportBar.classList.add('hidden');
+    }
+  } catch { isPro = false; }
+}
+
+async function onActivate() {
+  const key = licenseKeyInput.value.trim();
+  if (!key) { showLicenseStatus('Enter a license key.', 'error'); return; }
+  activateBtn.disabled = true;
+  activateBtn.textContent = 'Activating…';
+  const r = await window.electronAPI.activateLicense(key);
+  activateBtn.disabled = false;
+  activateBtn.textContent = 'Activate';
+  if (r.ok) {
+    showLicenseStatus('✓ License activated! Pro features unlocked.', 'success');
+    await checkLicense();
+    setTimeout(() => { licenseModal.classList.add('hidden'); }, 1500);
+  } else {
+    showLicenseStatus('✗ ' + (r.error || 'Activation failed.'), 'error');
+  }
+}
+
+async function onDeactivate() {
+  await window.electronAPI.deactivateLicense();
+  licenseKeyInput.value = '';
+  showLicenseStatus('License deactivated on this device.', 'info');
+  await checkLicense();
+  setTimeout(() => { licenseModal.classList.add('hidden'); }, 1000);
+}
+
+function showLicenseModal() {
+  licenseKeyInput.value = '';
+  licenseStatus.classList.add('hidden');
+  licenseModal.classList.remove('hidden');
+  licenseKeyInput.focus();
+}
+
+function showLicenseStatus(msg, type) {
+  licenseStatus.textContent = msg;
+  licenseStatus.className = type || 'info';
+  licenseStatus.classList.remove('hidden');
+}
+
+// ── Tabs ─────────────────────────────────────────────────────
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+    panels.forEach(p => p.classList.add('hidden'));
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+    document.getElementById('panel-' + tab.dataset.tab).classList.remove('hidden');
+    welcome.classList.add('hidden');
+  });
+});
+
+// ── Status helpers ────────────────────────────────────────────
 function setStatus(msg, type) {
   status.textContent = msg;
   status.className = 'status ' + (type || 'info');
@@ -98,6 +272,13 @@ function hideStatus() {
   status.classList.add('hidden');
 }
 
+// ── URL counter for batch ────────────────────────────────────
+batchUrlList.addEventListener('input', () => {
+  const lines = batchUrlList.value.split('\n').filter(l => l.trim());
+  urlCount.textContent = lines.length + ' URL(s)';
+});
+
+// ── Scan main ────────────────────────────────────────────────
 async function doScan() {
   let url = urlInput.value.trim();
   if (!url) { setStatus('Please enter a URL', 'error'); return; }
@@ -118,6 +299,7 @@ async function doScan() {
   setStatus('Fetching and analysing ' + url + (mode === 'site' ? ' (whole site)' : '') + '…', 'info');
 
   try {
+    let rep;
     if (mode === 'site') {
       const maxPages = Math.max(1, Math.min(200, parseInt(maxPagesInput.value, 10) || 10));
       window.electronAPI.onCrawlProgress(p => {
@@ -144,6 +326,104 @@ async function doScan() {
     setStatus('Error: ' + e.message, 'error');
     welcome.classList.remove('hidden');
   }
+}
+
+// ── Batch scan ──────────────────────────────────────────────
+async function doBatchScan() {
+  const lines = batchUrlList.value.split('\n')
+    .map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) { setStatus('Enter at least one URL.', 'error'); return; }
+  if (lines.length > 100) { setStatus('Maximum 100 URLs per batch.', 'error'); return; }
+
+  batchScanBtn.disabled = true;
+  batchScanBtn.textContent = 'Scanning…';
+  batchExportBar.classList.add('hidden');
+  batchAggregate.classList.add('hidden');
+  setStatus(`Starting batch scan of ${lines.length} URLs…`, 'info');
+
+  try {
+    window.electronAPI.onBatchProgress(p => {
+      setStatus(`Scanned ${p.done} of ${p.total}: ${p.current}`, 'info');
+    });
+    const rep = await window.electronAPI.batchScan(lines);
+    if (!rep.ok) {
+      setStatus('Batch scan failed: ' + (rep.error || 'unknown error'), 'error');
+      batchScanBtn.disabled = false;
+      batchScanBtn.textContent = 'Scan All';
+      return;
+    }
+
+    lastBatchResults = rep;
+
+    // Display aggregate
+    const agg = rep.aggregate;
+    batchTotal.textContent = agg.total;
+    batchAvgScore.textContent = agg.averageScore !== null ? agg.averageScore + ' / 100' : '—';
+    batchFailCount.textContent = agg.failed > 0 ? (agg.failed + ' page(s) failed') : '';
+    batchAggregate.classList.remove('hidden');
+
+    // Display per-page results in the main findings area
+    displayBatchResults(rep);
+
+    // Show export buttons
+    batchExportBar.classList.remove('hidden');
+    hideStatus();
+
+    batchScanBtn.disabled = false;
+    batchScanBtn.textContent = 'Scan All';
+  } catch (e) {
+    batchScanBtn.disabled = false;
+    batchScanBtn.textContent = 'Scan All';
+    setStatus('Batch scan error: ' + e.message, 'error');
+  }
+}
+
+function displayBatchResults(rep) {
+  result.classList.remove('hidden');
+
+  const agg = rep.aggregate;
+  scoreDisplay.textContent = agg.averageScore ?? '—';
+  const grade = GRADES[agg.grade] || { label: 'Mixed', color: '#888' };
+  gradeDisplay.textContent = grade.label;
+  gradeDisplay.style.color = grade.color;
+  scoreDisplay.style.color = grade.color;
+
+  errCount.textContent = agg.totalErrors || 0;
+  warnCount.textContent = agg.totalWarnings || 0;
+  noteCount.textContent = agg.totalNotices || 0;
+
+  findings.innerHTML = '';
+
+  for (const p of (rep.results || [])) {
+    if (!p.ok) {
+      const div = document.createElement('div');
+      div.className = 'finding error';
+      div.innerHTML = `<div class="finding-header"><span class="sev-badge sev-error">FAILED</span>
+        <span class="rule-id">${escHtml(p.target || p.url || '')}</span></div>
+        <div class="finding-msg">${escHtml(p.error || 'Page could not be scanned')}</div>`;
+      findings.appendChild(div);
+      continue;
+    }
+    const h = document.createElement('div');
+    h.className = 'page-heading';
+    h.innerHTML = `<span class="page-url">${escHtml(p.target)}</span>
+      <span class="page-score score-${(p.grade || 'D').toLowerCase()}">${p.score} ${p.grade || ''}</span>`;
+    findings.appendChild(h);
+
+    const sorted = [...p.findings].sort((a, b) => {
+      const order = { error: 0, warning: 1, notice: 2 };
+      return (order[a.severity] || 0) - (order[b.severity] || 0);
+    });
+    for (const f of sorted) findings.appendChild(findingEl(f));
+    if (!sorted.length) {
+      const ok = document.createElement('div');
+      ok.className = 'empty';
+      ok.textContent = 'No issues found on this page.';
+      findings.appendChild(ok);
+    }
+  }
+
+  savePdfBtn.disabled = false;
 }
 
 function crawlSummary(agg) {
@@ -227,7 +507,7 @@ function displayResults(rep, mode) {
 
   findings.innerHTML = '';
   if (sorted.length === 0) {
-    findings.innerHTML = '<div class="empty">No issues found — this page passes all 16 automated checks.</div>';
+    findings.innerHTML = '<div class="empty">No issues found — this page passes all 22 automated checks.</div>';
   } else {
     for (const f of sorted) findings.appendChild(findingEl(f));
   }
@@ -284,6 +564,22 @@ function escHtml(s) {
   return d.innerHTML;
 }
 
+function findingsToCsv(rep) {
+  let csv = 'Rule,Severity,Message,Count\n';
+  for (const f of rep.findings || []) {
+    csv += `"${f.rule_id}","${f.severity}","${(f.message || '').replace(/"/g, '""')}","${f.count || 1}"\n`;
+  }
+  if (rep.aggregate && rep.aggregate.averageScore !== undefined) {
+    csv += `\nAGGREGATE,,,,,,\nAverage Score,${rep.aggregate.averageScore}\n`;
+    csv += `Total Pages,${rep.aggregate.total}\n`;
+    csv += `Total Errors,${rep.aggregate.totalErrors}\n`;
+    csv += `Total Warnings,${rep.aggregate.totalWarnings}\n`;
+    csv += `Total Notices,${rep.aggregate.totalNotices}\n`;
+  }
+  return csv;
+}
+
+// ── Event listeners ───────────────────────────────────────────
 scanBtn.addEventListener('click', doScan);
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') doScan(); });
 modeSelect.addEventListener('change', () => {
@@ -303,14 +599,67 @@ savePdfBtn.addEventListener('click', async () => {
   }
 });
 
-// Auto-focus the input
-urlInput.focus();
+// License modal
+licenseLink.addEventListener('click', (e) => { e.preventDefault(); showLicenseModal(); });
+activateFromBatchBtn.addEventListener('click', showLicenseModal);
+activateBtn.addEventListener('click', onActivate);
+deactivateBtn.addEventListener('click', onDeactivate);
+closeLicenseModal.addEventListener('click', () => licenseModal.classList.add('hidden'));
+licenseModal.addEventListener('click', (e) => { if (e.target === licenseModal) licenseModal.classList.add('hidden'); });
+licenseKeyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') onActivate(); });
+buyLicenseLink.addEventListener('click', (e) => { e.preventDefault(); window.electronAPI.openExternal('https://hermes-passiv.pages.dev/clean-copy'); });
+
+// Batch scan
+batchScanBtn.addEventListener('click', doBatchScan);
+
+// CSV/JSON export (Pro)
+exportJsonBtn.addEventListener('click', async () => {
+  if (!lastBatchResults) return;
+  const r = await window.electronAPI.saveJsonReport(lastBatchResults);
+  if (r.ok) {
+    setStatus('JSON report saved to ' + r.path, 'success');
+  } else if (r.error !== 'cancelled') {
+    setStatus('Failed to save JSON: ' + r.error, 'error');
+  }
+});
+
+exportCsvBtn.addEventListener('click', async () => {
+  if (!lastBatchResults) return;
+  const csv = findingsToCsv(lastBatchResults);
+  const r = await window.electronAPI.saveCsvReport(csv);
+  if (r.ok) {
+    setStatus('CSV report saved to ' + r.path, 'success');
+  } else if (r.error !== 'cancelled') {
+    setStatus('Failed to save CSV: ' + r.error, 'error');
+  }
+});
 
 // External link handler
 document.getElementById('siteLink').addEventListener('click', (e) => {
   e.preventDefault();
   window.electronAPI.openExternal('https://hermes-passiv.pages.dev');
 });
+
+// Keyboard shortcut: Cmd+K (or Ctrl+K) to focus URL input
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    urlInput.focus();
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────────
+versionBadge.textContent = 'v' + (window.electronAPI.getVersion ? '1.3.0' : '?');
+
+// Listen for menu "Activate Pro License…"
+if (window.electronAPI.onShowLicenseDialog) {
+  window.electronAPI.onShowLicenseDialog(() => showLicenseModal());
+}
+
+// Check license status on load
+checkLicense().catch(() => {});
+
+urlInput.focus();
 </script>
 </body>
 </html>

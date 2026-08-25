@@ -1,0 +1,151 @@
+name: Build EAA Desktop
+
+on:
+  push:
+    paths:
+      - desktop/**
+      - .github/workflows/build-desktop.yml
+    branches: [main]
+  pull_request:
+    paths:
+      - desktop/**
+    branches: [main]
+  release:
+    types: [published]
+
+env:
+  APP_NAME: EAA Compliance Scanner
+  PACKAGE_DIR: desktop
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PACKAGE_DIR }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.PACKAGE_DIR)) }}
+
+      - run: npm ci
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Build (${{ matrix.arch }})
+        run: npx electron-builder --mac --${{ matrix.arch }} --config
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: ${{ env.PACKAGE_DIR }}/dist/*.dmg
+          if-no-files-found: warn
+
+      - name: Upload ZIP artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-zip
+          path: ${{ env.PACKAGE_DIR }}/dist/*.zip
+          if-no-files-found: warn
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PACKAGE_DIR }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.PACKAGE_DIR)) }}
+
+      - run: npm ci
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Build (Linux)
+        run: npx electron-builder --linux --config
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: ${{ env.PACKAGE_DIR }}/dist/*.AppImage
+          if-no-files-found: warn
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-deb
+          path: ${{ env.PACKAGE_DIR }}/dist/*.deb
+          if-no-files-found: warn
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PACKAGE_DIR }}/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles(format('{0}/package-lock.json', env.PACKAGE_DIR)) }}
+
+      - run: npm ci
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Build (Windows)
+        run: npx electron-builder --win --config
+        working-directory: ${{ env.PACKAGE_DIR }}
+
+      - name: Upload NSIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-nsis
+          path: ${{ env.PACKAGE_DIR }}/dist/*.exe
+          if-no-files-found: warn
+
+      - name: Upload portable
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable
+          path: ${{ env.PACKAGE_DIR }}/dist/*.exe
+          if-no-files-found: warn
+
+  release:
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: Upload assets to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for f in artifacts/*; do
+            if [ -f "$f" ]; then
+              gh release upload "${{ github.event.release.tag_name }}" "$f" --clobber
+            fi
+          done

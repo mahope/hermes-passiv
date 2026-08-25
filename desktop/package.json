@@ -1,18 +1,21 @@
 {
   "name": "eaa-compliance-scanner",
-  "version": "1.2.0",
-  "description": "EAA Compliance Scanner Desktop \u2014 offline WCAG 2.1 AA scanner for web developers and QA",
+  "version": "1.3.0",
+  "description": "EAA Compliance Scanner Desktop — offline WCAG 2.1 AA scanner for web developers and QA",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --mac --linux --win --config",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
-    "build:win": "electron-builder --win"
+    "build:mac": "electron-builder --mac --config",
+    "build:mac:x64": "electron-builder --mac --x64 --config",
+    "build:mac:arm64": "electron-builder --mac --arm64 --config",
+    "build:linux": "electron-builder --linux --config",
+    "build:win": "electron-builder --win --config"
   },
   "build": {
     "appId": "com.mahope.eaa-scanner",
     "productName": "EAA Compliance Scanner",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist"
     },
@@ -22,27 +25,36 @@
       "index.html",
       "style.css",
       "scanner.js",
-      "icon.png"
+      "scanner-core.js",
+      "icon.png",
+      "LICENSE.txt"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
-        "dmg",
-        "zip"
-      ]
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "icon.png"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "category": "Development"
+      "category": "Development",
+      "icon": "icon.png"
     },
     "win": {
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "keywords": [
@@ -50,11 +62,13 @@
     "wcag",
     "accessibility",
     "compliance",
-    "scanner"
+    "scanner",
+    "electron",
+    "desktop"
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
-    "electron": "^35.0.0",
+    "electron": "^44.0.0",
     "electron-builder": "^25.0.0"
   }
 }
