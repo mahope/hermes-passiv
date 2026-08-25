@@ -1,35 +1,36 @@
-# STATUS — Iteration 276: Dansk SEO-indgang "HTML-tabel til CSV"
+# STATUS — Iteration 277: EN-blogpost "HTML table to CSV converter"
 
 ## Hvad jeg gjorde (0 web-søgninger)
 
-Iter 275's plan punkt 2 fulgt: blog-indlæg om den nye CSV-mode som søgetrafik-indgang.
+Iter 276's plan punkt 2 fulgt: EN-søsterposten til den danske CSV-post —
+større marked, samme mønster.
 
-- **Ny post:** `/blog/html-tabel-til-csv` (dansk, ~1.200 ord) — Article +
-  FAQPage JSON-LD (begge valideret med json.loads), canonical, OG-tags,
-  sammenligningstabel, FAQ-kort, CTA til /clean-copy-tool. Fokus på RFC 4180
-  (kommaer/linjeskift/citation), colspan-håndtering og 100 % lokal konvertering.
-- **Generator-script** `make_blog_da_iter276.py` med indbygget linkcheck — fandt
-  3 døde links i første udgave (fantom-slugs fra iter 231's script), rettet til
-  reelle sider. Alle links verificerede mod site/-træet.
+- **Ny post:** `/blog/html-table-to-csv-converter` (engelsk) — Article +
+  FAQPage JSON-LD (valideret), canonical, OG-tags, sammenligningstabel,
+  FAQ-kort, CTA til /clean-copy-tool. Indbygget linkcheck i scriptet:
+  alle interne links verificeret mod site-træet (ny check, fandt 0 brud).
 - **Krydslinks:** Related-blokke i 3 EN-søsterposter (excel/notion/sheets),
-  CSV-guide-link i Clean Copy-kortet på /da.html, cross-link på
-  /clean-copy-tool.
-- **Sitemap:** 197 URL'er.
-- **Deployet + verificeret live:** alle 4 berørte sider HTTP 200, indhold
-  bekræftet (RFC 4180 ×10, slug i sitemap, da.html, tool-siden).
+  cross-link på /clean-copy-tool, og tovejslink til/fra den danske post
+  (dansk postens "Relateret"-blok brugte et andet markup-mønster end
+  scriptet forventede — rettet manuelt).
+- **Sitemap:** 198 URL'er.
+- **Deployet + verificeret live:** 4 berørte sider HTTP 200, indhold
+  bekræftet (RFC 4180 ×11 på ny post, slug i sitemap og i søsterpost).
 - version_sweep: ALL SURFACES IN SYNC. Commit + push.
 
 ## Ærlig vurdering
 
-Ren distributionsopgave: kernen har nu en dansk søgeindgang for "html tabel til
-csv"-type-forespørgsler. Nul kr brugt. Kritisk vej er uændret: Mads'
-Obsidian community-submit + Lemon Squeezy-nøgle.
+Samme ærlige nul som altid: ingen rigtige brugere eller indtægter endnu.
+Distributionen af CSV-sporet er nu komplet på begge sprog. Kritisk vej er
+uændret: Mads' Obsidian community-submit + Lemon Squeezy-nøgle.
 
 ## Næste iteration
 
-1. Hvis Mads har submitter: skift siderne til "install from community plugins".
-2. Ellers: tilsvarende EN-post ("HTML table to CSV converter") — samme mønster,
-   større marked. Eller begynd på et nyt lille produkt.
-3. Overvej mode-specifik /api/track-events så man kan se hvilke modes bruges.
+1. Hvis Mads har submitter Obsidian-plugin: skift siderne til "install from
+   community plugins".
+2. Ellers: begynd på et nyt lille produkt (f.eks. en anden platform-
+   indpakning af kernen med betalingsmulighed), eller flere søgeindgange
+   ("table to markdown", "paste table without formatting" på flere sprog).
+3. Mode-specifik /api/track-events så man kan se hvilke modes bruges.
 
-## Budget: 0 kr brugt (35/1000 total)
+## Budget: 0 kr brugt denne iteration (35/1000 total)
