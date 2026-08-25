@@ -339,7 +339,8 @@
             body: JSON.stringify({ email: email }),
           }).then(function (r) { return r.json(); }).then(function (d) {
             if (d.ok) {
-              status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</span>';
+              if(window.trackEvent)window.trackEvent('lead_nis2-incident-generator');
+status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</span>';
               document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ You\'re on the list!</p>';
             } else {
               status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Error') + '</span>';

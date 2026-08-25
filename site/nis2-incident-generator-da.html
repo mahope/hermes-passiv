@@ -333,7 +333,8 @@
             body: JSON.stringify({ email: email }),
           }).then(function (r) { return r.json(); }).then(function (d) {
             if (d.ok) {
-              status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får besked når betalte NIS2-værktøjer lanceres.</span>';
+              if(window.trackEvent)window.trackEvent('lead_nis2-incident-generator-da');
+status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får besked når betalte NIS2-værktøjer lanceres.</span>';
               document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen!</p>';
             } else {
               status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Fejl') + '</span>';

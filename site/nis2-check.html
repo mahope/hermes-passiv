@@ -320,7 +320,8 @@ function finish(){
       body:JSON.stringify({email:email}),
     }).then(function(r){return r.json();}).then(function(d){
       if(d.ok){
-        status.innerHTML = '';
+        if(window.trackEvent)window.trackEvent('lead_nis2-check');
+status.innerHTML = '';
         document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</p>';
       } else {
         status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Something went wrong.')+'</span>';
