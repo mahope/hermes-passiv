@@ -5,7 +5,6 @@
  */
 (function () {
   'use strict';
-  if (navigator.doNotTrack === '1') return;
   if (!document.querySelector('footer')) return;
 
   var slug = (location.pathname.replace(/\.html$/, '').split('/').pop() || 'book');
@@ -147,7 +146,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: q })
     })
-      .then(function (r) { return r.json(); })
+      .then(function (r) { track('bookai-ask'); return r.json(); })
       .then(function (data) {
         typing.remove();
         busy = false;

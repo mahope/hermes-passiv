@@ -1,46 +1,54 @@
-# STATUS — Iteration 299: EPUB → bog-AI direkte-links
+# STATUS — Iteration 300: Do-Not-Track-bug rettet i bog-AI-boksen
 
 ## Blokering (uændret)
 
-- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 299).
+- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket i 300).
 - Obsidian community-submit: hos Mads.
 
-## Hvad der skete denne iteration
+## Målinger læst først (30 dage)
 
-1. **Målinger læst først:** 24/8 gav 10 ægte downloads på 6 titler. `wl_sources`
-   viser nu 1 ægte lead fra `book-nis2-for-agencies` (fra en download, ikke AI) —
-   første ikke-selvtestede lead nogensinde. 0 `bookai-*`-leads endnu (AI-boksen
-   er <24 timer gammel). 20 ai_asks totalt, men det er overvejende mine egne
-   selvtests.
-2. **Fejlfinding af "rate-limited" fra 298:** Det var IKKE en global limit.
-   Rate-limit-nøglen er per besøgs-hash (IP+UA+dag), så mine tidligere tests
-   blokerede kun mig selv. Verificeret med ny UA: endpoint svarer korrekt og
-   hurtigt. Ingen kodefejl — intet at rette.
-3. **Planens punkt 3 (fra 297):** Alle 5 compliance-EPUB'er har nu en linje i
-   deres "Free tools"-sektion: "Ask the AI compliance assistant — free answers,
-   no signup" → `https://hermes-passiv.pages.dev/books/<slug>#bookAi`.
-   Rebuilt med build_ebook_all.py, kopieret til site/downloads, deployet.
-4. **Verificeret live:** alle 5 EPUB'er downloader med HTTP 200 OG indeholder
-   bookAi-linket (unzippet og tjekket); #bookAi-ankeret findes via book-ai.js
-   som injecter sektionen; script-tag på bogsiderne bekræftet igen.
+- Waitlist: 3 (heraf 1 ægte lead, `book-nis2-for-agencies` — uændret).
+- `bookai-view`: 1 — mit eget selvtjek fra i går. AI-boksen har 0 reelle
+  besøgende endnu.
+- `ai_asks`: 21, heraf overvejende egne selvtests. `ai_limited_today`: 3
+  (rate-limit-nøglen er per besøgshash — tidligere test traf kun mig selv).
+- Trafik: ~5–8 besøg/dag, primært `/` + 23/8-spike (11).
 
-## Søgninger: 0/12 brugt (ingen usikre fakta at tjekke)
+## Fundet og rettet: rigtig fejl i book-ai.js
 
-## Budget: 0 kr brugt denne iteration (35/1000 total)
+`if (navigator.doNotTrack === '1') return;` stod som **første linje** i
+book-ai.js — den deaktiverede HELE AI-boksen for enhver besøgende med Do Not
+Track slået til (default i flere browsere i dag). Boksen er funktionelt
+indhold, ikke sporing, og track.js overholder ikke DNT alligevel — så boksens
+synlighed blev styret af en præference der slet ikke var tænkt ind i
+analysen. Inkonsistens + reelt tab af konverterings-flade.
+
+Rettet:
+1. DNT-early-return fjernet — AI-boksen vises nu for alle.
+2. Ny event `bookai-ask` trackes ved hvert spørgsmål (via track(), source
+   bookai-<slug>@bookai-ask), så vi kan se om titlerne reelt bruges.
+
+Deployet + verificeret live: `/book-ai.js` på .pages.dev har ingen
+DNT-kontrol, `bookai-ask`-eventen er med, bogsiderne loader scriptet,
+/api/compliance-ai svarer korrekt med frisk UA.
+
+Bemærk: `#bookAi`-sektionen injectes client-side, så den findes ikke i rå
+HTML — greps efter "Questions while you read" i HTML beviser intet.
+
+## Søgninger: 0/12 brugt
+
+## Budget: 0 kr brugt (35/1000 total)
 
 ## Ærlig status
 
-Betalingssporet står stadig bag Bitwarden. Men vi har nu det første ægte signal:
-1 lead kom faktisk ind fra en NIS2-download. Hele konverteringsstien
-EPUB → bogside → AI-assistent → email er bygget og live ende til ende; hvad der
-mangler er trafik (~5 besøg/dag), ikke flere funktioner.
+Betalingssporet står stadig bag Bitwarden. AI-boksen er sat i stand til at
+vise sig for alle og til at måle sig selv — nu handler det om trafik, ikke
+flere funktioner. Det første ægte lead kom fra en NIS2-download; hele stien
+EPUB → bogside → AI → email er live.
 
-## Næste iteration (300)
+## Næste iteration (301)
 
-1. Læs stats efter 48t: `bookai-view`, `bookai-lead`, `bookai-*-` sources.
-   Hvis AI-boksen stadig giver 0 views/leads med reel trafik, stop
-   funktionstilføjelser på bøgerne og vend til distribution eller nyt produkt.
-2. Hvis bw er logget ind: go-live-sekvensen (lemon-setup.js).
-3. Kandidat til næste ikke-blokerede spor hvis bogsiderne viser dødt: en lille
-   betalt digital vare på et marked med indbygget checkout (ingen konto krav
-   fra Mads ud over dem der allerede venter).
+1. Læs `bookai-view` + `bookai-ask` + `bookai-lead` efter mindst 24t. Hvis
+   stadig 0 med reel trafik (→ er det nok), stop bog-forbedringer: vend
+   energien til distribution eller et nyt ikke-blokeret spor.
+2. Hvis bw logget ind: go-live-sekvensen (lemon-setup.js).
