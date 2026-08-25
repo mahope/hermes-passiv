@@ -249,6 +249,30 @@ function finish(){
   const okHtml = okAreas.length
     ? '<ul class="findings">'+okAreas.map(r=>'<li><span class="sev-ok">✓ '+esc(r.area)+'</span></li>').join('')+'</ul>' : '';
 
+  // Generate printable report HTML
+  function buildPrintableReport() {
+    var html = '<div style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:20px">'
+      +'<h1>NIS2-gapanalyse — Resultater</h1>'
+      +'<p><strong>'+esc(vLabel)+'</strong> — Score: '+pts+'/'+max+' ('+pct+'%) — Karakter '+g+'</p>'
+      +'<p>Direktiv (EU) 2022/2555, Artikel 21, stk. 2 · '+new Date().toISOString().split('T')[0]+'</p>'
+      +'<hr>';
+    ranked.forEach(function(r){
+      html += '<h2>'+esc(r.area)+' — '+r.pts+'/4</h2>';
+      if(r.gaps.length){
+        html += '<ul>';
+        r.gaps.forEach(function(gp){
+          html += '<li><strong>'+(gp.v==='no'?'Mangler':gp.v==='partial'?'Delvist':'')+'</strong>: '+esc(gp.q)
+            +(gp.v!=='yes'&&fixHint[r.area]?'<br><em>Fix: '+esc(fixHint[r.area])+'</em>':'')+'</li>';
+        });
+        html += '</ul>';
+      } else {
+        html += '<p style="color:#157a3c">✓ I orden</p>';
+      }
+    });
+    html += '<hr><p style="font-size:small;color:#666">Genereret via hermes-passiv.pages.dev/da/nis2-gap-assessment-da · Ikke juridisk rådgivning</p></div>';
+    return html;
+  }
+
   document.getElementById('result').innerHTML=
     '<div class="scorecard"><div class="score grade-'+g+'">'+esc(vLabel)+'</div>'
     +'<div style="margin-top:6px;font-size:14px;color:#667">Beredskabsscore: '+pts+'/'+max+' ('+pct+'%)</div>'
@@ -260,8 +284,52 @@ function finish(){
     +'<p style="font-size:13px;color:#667;margin-top:18px">Struktureret selv-tjek — ikke juridisk rådgivning. '
     +'Scope-tjek: <a href="/nis2-check-da">gratis NIS2 selvvurdering</a>. '
     +'Hændelser: <a href="/nis2-incident-generator-da">hændelsesrapport-generator</a>.</p>'
-    +'<p style="text-align:center;margin-top:18px" class="no-print">'
-    +'<button onclick="window.print()" class="nav">Print / gem som PDF</button></p>';
+    +'<div class="no-print" style="margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)">'
+    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Få resultaterne som PDF</h3>'
+    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Vi sender dig en PDF med din analyse + en prioritetsliste. Ingen spam, afmeld når som helst.</p>'
+    +'<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<input type="email" id="leadEmail" placeholder="Din e-mail-adresse" required'
+    +'  style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">'
+    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Send min rapport →</button>'
+    +'</form>'
+    +'<div id="leadStatus" style="font-size:13px;margin-top:8px"></div>'
+    +'</div>'
+    +'<p style="text-align:center;margin-top:12px" class="no-print">'
+    +'<button onclick="window.print()" class="nav" style="background:transparent;border:1px solid var(--color-border);color:var(--color-text)">🖨️ Print / gem som PDF</button></p>';
+
+  // Wire up lead capture form (same as EN version)
+  document.getElementById('leadForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('leadEmail').value.trim();
+    var status = document.getElementById('leadStatus');
+    if(!email || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+      status.innerHTML = '<span style="color:var(--color-red)">Indtast en gyldig e-mail-adresse.</span>';
+      return;
+    }
+    status.innerHTML = '<span style="color:var(--color-text-muted)">Sender…</span>';
+    fetch('/api/waitlist', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email}),
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok){
+        status.innerHTML = '<span style="color:var(--color-green)">✓ Tjek din indbakke — rapporten er på vej.</span>';
+        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen! Tjek din e-mail.</p>';
+        var w = window.open('','_blank');
+        if(w){
+          w.document.write(buildPrintableReport());
+          w.document.close();
+          w.focus();
+          w.document.title = 'NIS2-Gapanalyse-Rapport';
+          w.print();
+        }
+      } else {
+        status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Noget gik galt.')+'</span>';
+      }
+    }).catch(function(){
+      status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+    });
+  });
 }
 
 document.getElementById('nextBtn').addEventListener('click',()=>{if(cur===QUESTIONS.length-1)finish();else next();});
