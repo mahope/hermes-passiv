@@ -67,6 +67,10 @@
     "desktop"
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mahope/hermes-passiv.git"
+  },
   "devDependencies": {
     "electron": "^44.0.0",
     "electron-builder": "^25.0.0"
