@@ -13,3 +13,4 @@ desktop/node_modules/
 .wrangler/
 *.egg-info/
 .DS_Store
+passiv-mcp/
