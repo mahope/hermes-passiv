@@ -26,7 +26,7 @@ CTA = (
 DA_CTA = (
     '<div class="blog-tool-cta">'
     '<span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> '
-    '<a href="/da/scan" class="btn-primary">Prøv den gratis scanner →</a>'
+    '<a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a>'
     "</div>"
 )
 

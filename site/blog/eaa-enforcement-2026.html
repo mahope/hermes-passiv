@@ -45,7 +45,8 @@
     <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
   </div>
 </header>
-<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="one-year-in">One Year in</h2>
     <p>The European Accessibility Act (EAA, Directive (EU) 2019/882) took effect on June 28, 2025, after all 27 Member States completed transposition into national law. One year in, enforcement is real — but it is not the storm some predicted. Three patterns have emerged: high-profile litigation in France, systematic market surveillance in Sweden and the Netherlands, and a complaint-driven approach elsewhere.</p>
     <p>The first EAA lawsuits anywhere in Europe were filed in France. On July 7, 2025, disability organisations sent formal legal notices to Auchan, Carrefour, E.Leclerc and Picard Surgelés. When responses were inadequate, emergency injunctions were filed in French Commercial Court on November 12, 2025 — marking the start of EAA litigation. In June 2026, the Carrefour case was heard: the Court ordered Carrefour France to make both its e-commerce site and mobile application fully accessible within six months, under penalty of a daily fine.</p>
@@ -150,5 +151,6 @@
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
 </body>
 </html>

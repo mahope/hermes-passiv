@@ -45,7 +45,8 @@
     <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
   </div>
 </header>
-<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="The Real Numbers">The Real Numbers</h2>
     <p>Headline figures first, with sources. The CMS Enforcement Tracker (the standard industry reference) recorded roughly €5.9 billion across about 3,200 published enforcement actions by mid-2026; DLA Piper's January 2026 survey, which also counts non-public totals, puts cumulative fines at around €7.1 billion since May 2018. Fines issued in the twelve months to January 2026 were approximately €1.2 billion — broadly flat versus 2024. Average breach notifications now run at 443 per day.</p>
     <p>But the distribution matters more than the total. Roughly four out of every five euro ever collected comes from just ten decisions against Big Tech platforms. The largest single fine remains Meta's €1.2 billion (Ireland, 2023, under appeal) for unlawful EU-US data transfers. TikTok's €530 million (Ireland, 2025) is the second-largest standing fine. Amazon's famous €746 million fine was annulled by Luxembourg's Administrative Court in March 2026 on procedural grounds — many older articles still cite it, but it no longer stands.</p>
@@ -148,5 +149,6 @@
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
 </body>
 </html>

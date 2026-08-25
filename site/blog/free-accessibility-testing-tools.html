@@ -45,7 +45,8 @@
     <p class="hero-note">Updated August 2026 · Reading time: 8 minutes</p>
   </div>
 </header>
-<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="why-more-than-one-tool">Why More Than One Tool</h2>
     <p>Automated tools detect roughly 30–40% of WCAG failures — the same 30–40%, mostly. Running three overlapping scanners gives you false confidence without new coverage. The strategy that works is layering tools with different blind spots: DOM-level analysers for code defects, visual tools for contrast and focus, a real screen reader for the experience, and manual keyboard testing for interaction. Below: what each free tool genuinely contributes.</p>
   </div>
@@ -133,5 +134,6 @@
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
 </body>
 </html>

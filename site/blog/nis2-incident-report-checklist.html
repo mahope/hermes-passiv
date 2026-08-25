@@ -45,7 +45,8 @@
     <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
   </div>
 </header>
-<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="why-incident-reporting">Why Incident Reporting</h2>
     <p>NIS2 Article 21(2)(c) requires in-scope entities to have incident response and reporting processes. Even if your small agency is below the direct NIS2 size threshold (50+ employees), your clients who ARE in scope will require you to demonstrate incident reporting capability. The standard is clear: incidents must be reported within 24 hours of awareness, with a detailed final report within 1 month. And that report must follow a structured format.</p>
     <div class="problem-cards">
@@ -205,5 +206,6 @@
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
 </body>
 </html>

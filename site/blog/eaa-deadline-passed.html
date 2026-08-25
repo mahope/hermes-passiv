@@ -38,6 +38,7 @@
     <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
   </div>
 </header>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
@@ -105,5 +106,6 @@
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
+<script>(function(){try{document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('.ai-cta-link'):null;if(!a)return;var p=location.pathname.replace(/\.html$/,'')||'/';try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'ai-cta'})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();</script>
 </body>
 </html>
