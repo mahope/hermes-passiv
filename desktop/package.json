@@ -54,11 +54,16 @@
         "nsis",
         "portable"
       ],
-      "icon": "icon.png"
+      "icon": "icon.png",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-${version}-win-x64-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-win-x64-portable.${ext}"
     }
   },
   "keywords": [

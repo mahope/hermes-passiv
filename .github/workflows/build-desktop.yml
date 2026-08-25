@@ -125,14 +125,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-nsis
-          path: ${{ env.PACKAGE_DIR }}/dist/*.exe
+          path: ${{ env.PACKAGE_DIR }}/dist/*-setup.exe
           if-no-files-found: warn
 
       - name: Upload portable
         uses: actions/upload-artifact@v4
         with:
           name: windows-portable
-          path: ${{ env.PACKAGE_DIR }}/dist/*.exe
+          path: ${{ env.PACKAGE_DIR }}/dist/*-portable.exe
           if-no-files-found: warn
 
   release:
