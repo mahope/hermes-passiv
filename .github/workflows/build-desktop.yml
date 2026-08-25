@@ -15,6 +15,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 env:
   APP_NAME: EAA Compliance Scanner
   PACKAGE_DIR: desktop
@@ -43,7 +46,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Build (${{ matrix.arch }})
-        run: npx electron-builder --mac --${{ matrix.arch }} --config
+        run: npx electron-builder --mac --${{ matrix.arch }} --config --publish never
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Upload artifacts
@@ -79,7 +82,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Build (Linux)
-        run: npx electron-builder --linux --config
+        run: npx electron-builder --linux --config --publish never
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Upload AppImage
@@ -115,7 +118,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Build (Windows)
-        run: npx electron-builder --win --config
+        run: npx electron-builder --win --config --publish never
         working-directory: ${{ env.PACKAGE_DIR }}
 
       - name: Upload NSIS installer
