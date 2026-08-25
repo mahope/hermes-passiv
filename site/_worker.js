@@ -32,6 +32,9 @@ export default {
     if (path === '/api/track') return handleTrack(request, env);
     if (path === '/api/stats') return handleStats(url, env);
 
+    // === Route: self-monitoring health check ===
+    if (path === '/api/health') return handleHealth(url, env);
+
     // === Route: download counting for /downloads/* files ===
     if (path.startsWith('/downloads/')) return handleDownload(request, url, env);
 
@@ -1153,6 +1156,50 @@ async function handleStats(url, env) {
   try { ai_limited_today = parseInt((await env.VISITS.get(`airl-hit:${dailySalt()}`)) || '0', 10); } catch {}
 
   return jsonResp({ ok: true, days, stats: filtered, waitlist, wl_sources, licenses_issued, ai_asks, ai_limited_today });
+}
+
+/**
+ * GET /api/health — lightweight self-monitoring endpoint.
+ * Returns KV reachability, site status, and basic metrics.
+ * Used by cron job to detect silent failures.
+ */
+async function handleHealth(url, env) {
+  const DAY = 86400 * 1000;
+  const now = Date.now();
+  const today = new Date(now).toISOString().slice(0, 10);
+  const yesterday = new Date(now - DAY).toISOString().slice(0, 10);
+
+  let kvOk = false, statsOk = false, recentVisits = 0, recentDownloads = 0, lastDeploy = null;
+  try {
+    // check KV is reachable by reading yesterday's homepage visits
+    const test = await env.VISITS.get(`t:${yesterday}:/`);
+    kvOk = true;
+    // count recent traffic (today + yesterday)
+    for (const day of [today, yesterday]) {
+      const page = await env.VISITS.list({ prefix: `t:${day}:` });
+      for (const k of page.keys) {
+        const v = parseInt((await env.VISITS.get(k.name)) || '0', 10);
+        if (k.name.includes('downloads@')) recentDownloads += v;
+        else recentVisits += v;
+      }
+    }
+    statsOk = true;
+  } catch (e) {
+    // KV may be unreachable or empty — not a fatal error
+  }
+
+  let waitlist = 0;
+  try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
+
+  return jsonResp({
+    ok: true,
+    status: kvOk ? 'healthy' : 'degraded',
+    kv: kvOk,
+    timestamp: new Date().toISOString(),
+    stats: { recentVisits, recentDownloads, waitlist },
+    lastDeploy: lastDeploy,
+    version: 1,
+  });
 }
 
 /**

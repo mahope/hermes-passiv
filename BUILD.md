@@ -33,6 +33,10 @@
 
 **Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
+**Bygget i iter 303:**
+- **Compliance Site Check GitHub Action** — tjekker enhver hjemmeside for 6 EU-compliance-basics (privacy, terms, cookie, imprint, accessibility, DPA). Zero dependencies, åben kilde på https://github.com/mahope/compliance-site-check
+- Blogpost /blog/compliance-check-github-action + sektion på /free-tools + sitemap
+
 **Bygget i iter 275:**
 - CSV-tabel-mode i den delte kerne (`htmlToCsv`, RFC 4180 quoting, prose-drop
   når tabel findes, fallback til ren tekst). Syncet til site/Obsidian/CLI.
@@ -100,4 +104,21 @@
 - Lead-capture efter første AI-svar på compliance-ai EN+DA: email → /api/waitlist,
   events ai-lead-view/ai-lead. DA genbygget via make_compliance_ai_da.py.
   Verificeret live: 20×200 → 429 på kald 21, site-check 205/0, deployet.
+
+**Bygget i iter 303:**
+- Compliance Site Check GitHub Action (mahope/compliance-site-check) bygget + udgivet
+  på GitHub Marketplace. 6 checks (privacy, terms, cookie, imprint, accessibility, DPA).
+  Zero npm deps, Node 20, markdown+JSON output. Blogpost + /free-tools opdateret.
+  Testet: 100/100 på eget site, 0/100 på example.com.
+
+**Bygget i iter 304:**
+- Compliance Site Check v2: 3 nye checks (9 total):
+  - **Security Headers:** CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+  - **Meta Tags:** title, description, viewport, canonical, robots, OG title, OG description
+  - **Hreflang / Language:** HTML lang attribute, hreflang alternate links
+- Arkitektur: CHECKS får `type`-felt (page/scan/headers), fetchUrl returnerer headers,
+  runChecks modtager homeHeaders — nye checks scannes mod homepage uden ekstra requests.
+- README + action.yml + blogpost + /free-tools opdateret til @v2
+- commit 97481fa pushed til mahope/compliance-site-check
+- Site deployet og verificeret live (title + description på blogpost, @v2 på free-tools)
 

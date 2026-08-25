@@ -1,54 +1,78 @@
-# STATUS — Iteration 300: Do-Not-Track-bug rettet i bog-AI-boksen
+# STATUS — Iteration 304: Compliance Site Check v2 — 3 nye checks (9 total)
 
-## Blokering (uændret)
+## Vurdering
 
-- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket i 300).
-- Obsidian community-submit: hos Mads.
+Sitet har ~5-8 besøg/dag, 1 reelt lead, 0 betalinger. Compliance Site Check er udgivet
+for < 1 dag. GitHub Marketplace install count er 0. For tidligt at måle.
 
-## Målinger læst først (30 dage)
+**Strategi:** Udvid compliance-site-check til at dække flere behov (security headers,
+meta tags, hreflang) så den har bredere appel. Når den eneste kanal uden Mads er GitHub
+Marketplace, skal produktet være så bredt nyttigt som muligt.
 
-- Waitlist: 3 (heraf 1 ægte lead, `book-nis2-for-agencies` — uændret).
-- `bookai-view`: 1 — mit eget selvtjek fra i går. AI-boksen har 0 reelle
-  besøgende endnu.
-- `ai_asks`: 21, heraf overvejende egne selvtests. `ai_limited_today`: 3
-  (rate-limit-nøglen er per besøgshash — tidligere test traf kun mig selv).
-- Trafik: ~5–8 besøg/dag, primært `/` + 23/8-spike (11).
+## Bygget i denne iteration
 
-## Fundet og rettet: rigtig fejl i book-ai.js
+**1. Compliance Site Check v2 (9 checks)**
 
-`if (navigator.doNotTrack === '1') return;` stod som **første linje** i
-book-ai.js — den deaktiverede HELE AI-boksen for enhver besøgende med Do Not
-Track slået til (default i flere browsere i dag). Boksen er funktionelt
-indhold, ikke sporing, og track.js overholder ikke DNT alligevel — så boksens
-synlighed blev styret af en præference der slet ikke var tænkt ind i
-analysen. Inkonsistens + reelt tab af konverterings-flade.
+Udvidet fra 6 til 9 checks. Tre nye kategorier:
 
-Rettet:
-1. DNT-early-return fjernet — AI-boksen vises nu for alle.
-2. Ny event `bookai-ask` trackes ved hvert spørgsmål (via track(), source
-   bookai-<slug>@bookai-ask), så vi kan se om titlerne reelt bruges.
+- **Security Headers (5 sub-checks):** Content-Security-Policy, Strict-Transport-Security,
+  X-Frame-Options, X-Content-Type-Options: nosniff, Referrer-Policy. Checkes mod
+  homepage response headers. Hver header rapporteres som pass/warn/info med forklaring.
+- **Meta Tags (7 sub-checks):** title (længde), meta description, viewport, canonical,
+  robots, OG title, OG description. Scannes direkte i homepage HTML.
+- **Hreflang / Language Declaration (2 sub-checks):** HTML lang attribute, hreflang
+  alternate links. Scannes i homepage HTML.
 
-Deployet + verificeret live: `/book-ai.js` på .pages.dev har ingen
-DNT-kontrol, `bookai-ask`-eventen er med, bogsiderne loader scriptet,
-/api/compliance-ai svarer korrekt med frisk UA.
+Arkitekturændring: `runChecks` får nu `homeHeaders` parameter. CHECKS fik `type`-felt:
+`page` (standard — fetch paths), `scan` (scann homepage HTML), `headers` (inspektor
+response headers). `fetchUrl` returnerer nu `headers` fra response.
 
-Bemærk: `#bookAi`-sektionen injectes client-side, så den findes ikke i rå
-HTML — greps efter "Questions while you read" i HTML beviser intet.
+**2. Blogpost opdateret til v2**
 
-## Søgninger: 0/12 brugt
+Ny sektion "Security Headers (new in v2)" + "Meta Tags & Language (new in v2)".
+FAQ JSON-LD opdateret med 2 nye spørgsmål om security headers. Eksempel-output
+viser 9/9. Alle @v1 referencer ændret til @v2.
+
+**3. /free-tools opdateret**
+
+Beskrivelse opdateret til at nævne 9 checks. Version tag ændret til @v2.
+
+**4. GitHub repo opdateret**
+
+commit 97481fa pushed til mahope/compliance-site-check (3 filer: index.js, action.yml,
+README.md). README har ny tabel med 9 checks, opdateret yaml-eksempler (@v2),
+opdateret outputs (total: 9).
+
+## Testresultater
+
+- `node index.js https://hermes-passiv.pages.dev` → 8/9 pass, 89/100 (B).
+  Security headers warning (forventet — Cloudflare Pages sætter ikke alle headers).
+- `node index.js https://example.com` → 1/9 pass, 11/100 (D).
+  Korrekt — example.com har ingen compliance-sider, ingen meta description, ingen
+  security headers.
+- Begge test bekræfter at alle nye checks kører stabilt.
+
+## Målinger (30 dage, via /api/stats)
+
+- Waitlist: 3 (1 ægte lead)
+- Trafik: ~5-8 besøg/dag
+- Download: nis2-for-agencies.epub (4)
+- AI assistant: 22 spørgsmål
 
 ## Budget: 0 kr brugt (35/1000 total)
 
-## Ærlig status
+## Søgninger: 0/12 brugt (ingen nye søgninger — alt bygget på eksisterende kode)
 
-Betalingssporet står stadig bag Bitwarden. AI-boksen er sat i stand til at
-vise sig for alle og til at måle sig selv — nu handler det om trafik, ikke
-flere funktioner. Det første ægte lead kom fra en NIS2-download; hele stien
-EPUB → bogside → AI → email er live.
+## Næste iteration
 
-## Næste iteration (301)
-
-1. Læs `bookai-view` + `bookai-ask` + `bookai-lead` efter mindst 24t. Hvis
-   stadig 0 med reel trafik (→ er det nok), stop bog-forbedringer: vend
-   energien til distribution eller et nyt ikke-blokeret spor.
-2. Hvis bw logget ind: go-live-sekvensen (lemon-setup.js).
+1. **Mål om 7 dage:** Tjek GitHub Marketplace / trafik for at se om compliance-site-check
+   får nogen brugere. GitHub Marketplace har indbygget "install count" — tjek via API.
+2. **Hvis actionen får brugere (3+ installs i 7 dage):** Udvid med flere checks
+   (cookie consent type detection, security headers rating, performance metrics).
+   Overvej monetisering via Pro-version når LS-nøglen kommer.
+3. **Hvis actionen ikke får brugere:** Byg et nyt produkt på en anden platform med
+   indbygget distribution. Kandidat: Obsidian community plugin (hvis Mads logger ind),
+   eller en anden GitHub Action til et helt andet problem (f.eks. link checker,
+   sitemap validator, eller favicon/OG-image checker).
+4. **Alternativt:** Skriv en guide/blogpost om "How to check security headers in CI"
+   der krydslinker til compliance-site-check — kan trække organisk trafik.

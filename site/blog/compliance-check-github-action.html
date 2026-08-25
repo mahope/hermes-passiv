@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automate Your EU Compliance Checks with a GitHub Action — 9 checks in v2</title>
+<meta name="description" content="Free GitHub Action that checks websites for 9 things: privacy, terms, cookie consent, imprint, accessibility, DPA, security headers, meta tags, and hreflang. Runs in CI after every deploy. Zero dependencies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Automate Your EU Compliance Checks with a GitHub Action — 9 checks in v2">
+<meta property="og:description" content="Free, zero-dependency GitHub Action that automatically checks websites for 9 compliance items: privacy policy, terms, cookie consent, imprint, accessibility, DPA, security headers, meta tags, and hreflang. Plug it into your CI pipeline in 2 minutes.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/compliance-check-github-action">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Automate EU Compliance Checks with a Free GitHub Action — 9 checks">
+<meta name="twitter:description" content="Check privacy, terms, cookies, imprint, accessibility, DPA, security headers, meta tags and hreflang automatically in CI. Zero dependencies, no API key.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/compliance-check-github-action">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Automate Your EU Compliance Checks with a GitHub Action — 9 checks in v2",
+  "description": "Free GitHub Action that checks websites for 9 compliance items: privacy policy, terms of service, cookie consent banner, imprint, accessibility statement, DPA, security headers, meta tags, and hreflang. Runs in CI after every deploy.",
+  "datePublished": "2026-08-25",
+  "dateModified": "2026-08-25",
+  "author": {
+    "@type": "Organization",
+    "name": "Mahope",
+    "url": "https://hermes-passiv.pages.dev"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "What does the Compliance Site Check Action check?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Nine things: privacy policy, terms of service, cookie consent banner, imprint/legal notice, accessibility statement, data processing agreement (DPA), security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy), SEO meta tags (title, description, viewport, canonical, robots, OG tags), and language declaration (hreflang). For page checks it tries common URL paths and validates the content. For headers and meta tags it scans the homepage response directly."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Can I make my CI pipeline fail if compliance pages are missing?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Yes. Pass fail-on-missing: 'privacy, imprint, accessibility, security-headers' to fail only on specific checks, or fail-on-missing: 'any' to fail on any missing item. By default the action only reports and never fails."
+    }
+  }, {
+    "@type": "Question",
+    "name": "What security headers does the action check?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "Five security headers: Content-Security-Policy (CSP) to prevent XSS, Strict-Transport-Security (HSTS) to enforce HTTPS, X-Frame-Options to prevent clickjacking, X-Content-Type-Options (nosniff) to prevent MIME sniffing, and Referrer-Policy for privacy control. Each is reported as pass, warning, or info."
+    }
+  }, {
+    "@type": "Question",
+    "name": "How much does it cost?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "It's free and open source (MIT). Zero npm dependencies, no API key needed. Runs on GitHub's standard runners."
+    }
+  }, {
+    "@type": "Question",
+    "name": "Does it check that the legal content is correct?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "No — it only verifies that the pages exist and contain relevant keywords. Legal accuracy requires manual review by a professional."
+    }
+  }]
+}
+</script>
+<style>
+  pre { background: #f4f6f8; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+  code { background: #f0f2f4; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+  .code-inline code { background: none; padding: 0; }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">TOOL OPEN SOURCE</div>
+    <h1>Automate Your EU compliance checks in CI</h1>
+    <p class="tagline">A free GitHub Action that checks websites for compliance basics, security headers, SEO meta tags, and language declarations — after every deploy, with zero setup cost.</p>
+  </div>
+</header>
+
+<main class="container" style="max-width: 720px">
+
+<p><strong>Published:</strong> 25 August 2026 &middot; <strong>Updated:</strong> v2 with 3 new checks <a href="https://github.com/mahope/compliance-site-check"><strong>View on GitHub</strong></a> <code>mahope/compliance-site-check@v2</code></p>
+
+<p>If you run a web agency or manage client sites in the EU, you've had the conversation: "Does the site have a privacy policy? Terms of service? Cookie consent?" The answer is usually "I think so" — and then someone opens the site and clicks through three pages to confirm.</p>
+
+<p>That manual check is exactly the kind of thing that should run in CI. After every deploy, before the client sees it, automatically.</p>
+
+<h2>What it checks — 9 items in v2</h2>
+
+<p>The action now covers three categories: EU compliance pages, security headers, and SEO/social basics. Each check either fetches the page server-side, inspects response headers, or scans the homepage HTML &mdash; all with zero npm dependencies.</p>
+
+<h3>EU Compliance (6 checks)</h3>
+
+<ul>
+  <li><strong>Privacy Policy</strong> — tries /privacy, /privacy-policy, /datenschutz and more</li>
+  <li><strong>Terms of Service</strong> — /terms, /tos, /conditions, /agb</li>
+  <li><strong>Cookie Consent Banner</strong> — scans HTML for consent platform markers (Cookiebot, OneTrust, Complianz, Osano, Termly and 15+ others)</li>
+  <li><strong>Imprint / Legal Notice</strong> — /imprint, /impressum, /legal (required in Germany, Austria)</li>
+  <li><strong>Accessibility Statement</strong> — /accessibility, /a11y, /wcag (required by EAA)</li>
+  <li><strong>Data Processing Agreement</strong> — /dpa, /data-processing-agreement (required by GDPR Art. 28)</li>
+</ul>
+
+<h3>Security Headers (new in v2)</h3>
+
+<ul>
+  <li><strong>Content-Security-Policy</strong> — mitigates XSS and data injection attacks</li>
+  <li><strong>Strict-Transport-Security</strong> — enforces HTTPS connections</li>
+  <li><strong>X-Frame-Options</strong> — prevents clickjacking via iframe embedding</li>
+  <li><strong>X-Content-Type-Options: nosniff</strong> — prevents MIME type sniffing</li>
+  <li><strong>Referrer-Policy</strong> — controls how much referrer info is sent</li>
+</ul>
+
+<h3>Meta Tags &amp; Language (new in v2)</h3>
+
+<ul>
+  <li><strong>Meta Tags</strong> — checks title length, description, viewport, canonical, robots, OG title and OG description</li>
+  <li><strong>Hreflang / Language Declaration</strong> — checks HTML lang attribute and hreflang alternate links for multilingual sites</li>
+</ul>
+
+<p>Each check reports pass, warning, or fail with specific details. The result is a Markdown report and structured JSON output you can use in downstream steps.</p>
+
+<h2>Come for compliance, stay for the broader check</h2>
+
+<p>The original six compliance checks covered the legal essentials. But when you're already fetching a site's homepage to audit it, security headers and meta tags cost nothing extra to check — and they're just as important for a professional launch.</p>
+
+<p>Missing security headers are a common finding in security audits, and missing meta tags directly affect SEO and social sharing. Adding them to the same CI check means you catch all three categories in one action, one report, zero extra configuration.</p>
+
+<h2>Two-minute setup</h2>
+
+<p>Add this to your repository under <code>.github/workflows/compliance-check.yml</code>:</p>
+
+<pre>name: Weekly Compliance Check
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # every Monday
+  workflow_dispatch:  # also run manually
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mahope/compliance-site-check@v2
+        with:
+          url: 'https://your-client-site.com'
+          fail-on-missing: 'privacy, imprint, accessibility, security-headers'</pre>
+
+<blockquote>
+<p><strong>Zero dependencies, no API key.</strong> The action uses Node 20's built-in fetch() with no npm packages. It just works out of the box.</p>
+</blockquote>
+
+<h2>Post the report to an issue or pull request</h2>
+
+<p>The action outputs structured JSON (<code>report-json</code>) and a score (<code>score</code> from 0–100). You can pass it to any downstream step:</p>
+
+<pre>jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mahope/compliance-site-check@v2
+        id: compliance
+        with:
+          url: 'https://example.com'
+
+      # Post result to a new issue
+      - name: Post report to issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Compliance Check Report ${{ steps.compliance.outputs.score }}',
+              body: `${{ steps.compliance.outputs.report-json }}`
+            })</pre>
+
+<p>Or add it to a deploy workflow and only flag it if something changed:</p>
+
+<pre># In your deploy workflow:
+      - name: Check compliance after deploy
+        uses: mahope/compliance-site-check@v2
+        continue-on-error: true
+        id: check
+        with:
+          url: 'https://your-site.com'
+
+      - name: Create issue if score dropped
+        if: ${{ steps.check.outputs.score < 100 }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({ ... })</pre>
+
+<h2>Example output</h2>
+
+<pre>## Compliance Check Report for example.com
+
+**Score:** 100/100 (Grade A)
+**Passed:** 9/9
+
+-  **Privacy Policy** — Found at https://example.com/privacy
+-  **Terms of Service** — Found at https://example.com/terms
+-  **Cookie Consent Banner** — Cookie consent banner detected on homepage.
+-  **Imprint / Impressum / Legal Notice** — Found at https://example.com/imprint
+-  **Accessibility Statement** — Found at https://example.com/accessibility
+-  **Data Processing Agreement (DPA)** — Found at https://example.com/dpa
+-  **Security Headers** — 5/5 header checks pass.
+-  **Meta Tags** — 7/7 checks pass.
+-  **Hreflang / Language Declaration** — 2/2 checks pass.</pre>
+
+<p>A failing site shows which checks are missing and what to add. For example, a site without security headers would show a warning with specific recommendations for each missing header.</p>
+
+<h2>Why this matters for web agencies</h2>
+
+<p>EU compliance enforcement is accelerating. Germany's <a href="https://hermes-passiv.pages.dev/blog/gdpr-fines-2026">GDPR fines passed 1.9 billion in 2025</a>, and the <a href="https://hermes-passiv.pages.dev/blog/eaa-deadline-2026">EAA enforcement started in June 2025</a>. Regulatory requirements aren't optional — but nor should they require a person to manually check the footer of every site you manage.</p>
+
+<p>This action gives you an objective, automated baseline: does the site have the basic compliance pages? Are security headers set? Are meta tags in place? It doesn't replace manual review, but it catches the most common gaps before they reach a client, an auditor, or a regulator.</p>
+
+<h2>Get started</h2>
+
+<ul>
+  <li><a href="https://github.com/mahope/compliance-site-check">Compliance Site Check on GitHub</a></li>
+  <li><code>mahope/compliance-site-check@v2</code> — add it to your workflow today</li>
+  <li>Need to generate those compliance documents? Try the <a href="/free-tools">free GDPR generators</a> (privacy notices, DPAs, RoPAs)</li>
+  <li>Want the full manual checklist? <a href="/#products">E-book: EAA Compliance Checklist</a></li>
+</ul>
+
+<hr>
+<p><em>Part of the <a href="/">Hermes Compliance toolkit</a> — practical guides and tools for small EU web agencies.</em></p>
+
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p>Category: <a href="/blog">Compliance and automation</a> <a href="/">Back to Compliance Guides</a></p>
+</div></footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>
