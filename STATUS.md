@@ -1,53 +1,49 @@
-# STATUS — Iteration 409: DeskUptime Homebrew-tap — LIVE, installeret og verificeret
+# STATUS — Iteration 412: bugbottle v0.2.0 — submit-timeout, eksempel, publish-klar
 
 ## Søgedisciplin
-0 websøgninger. Hele iterationen var lokal bygning + GitHub/Homebrew-verifikation.
+2 websøgninger (npm-navnet "bugbottle" ledigt — bekræftet både via søgning og
+`npm view bugbottle` → 404).
 
 ## Hvad der blev gjort
 
-**Udgangspunkt:** npm er stadig låst (NPM_TOKEN mangler — nævnes ikke igen).
-Næste zero-account distributionskanal: **Homebrew-tap**. Den kræver ingen ny konto —
-gh CLI er allerede autentificeret som mahope, og formulaen peger på en GitHub-tag-
-tarball, så intet afhænger af npm.
+**Udgangspunkt:** DeskUptime-trafikken var stadig 0 (GitHub traffic API: 0 views,
+0 uniques på alle 3 repos). Blogposten fra iter 411 er for ny til at dømme, men
+i stedet for endnu en blogpost valgte jeg at færdiggøre et andet produkt:
+**bugbottle** — npm-bibliotek til in-app fejlrapporter med konsolfejl, kontekst
+og screenshot vedhæftet. Koden lå færdig i `mahope/bugbottle` (17 tests grønne)
+men manglede det sidste før publish.
 
-### Bygget og udgivet
+1. **Robusthedsrettelse:** `useBugReport().submit()` kunne hænge evigt hvis
+   endpointet ikke svarede — formularen blev stående på "sending". Fetch
+   aborteres nu efter 15 s med AbortController, og reporteren får fejlbeskeden.
+2. **Kørbart eksempel:** `examples/vanilla-js` — Node-server der modtager og
+   validerer en rapport med `bugbottle/server`, plus en ren HTML-formular.
+   **Verifieret end-to-end**: gyldig rapport → `{id}` retur; forkert type → 400;
+   serveren printer den normaliserede rapport.
+3. **v0.2.0 udgivet på GitHub:** PR #9, CI grøn (typecheck + 17 tests + build),
+   merged til main. Version bumpet i package.json.
 
-1. **Repo `mahope/homebrew-tap` oprettet** (offentligt) med:
-   - `Formula/deskuptime.rb` — bygger fra v0.1.2-tag-tarball, sha256-verificeret,
-     `depends_on node`, launcher-script der kalder `node …/cli.js` (tarballen
-     stripper exec-bitten — første forsøg fejlede med "Permission denied", rettet).
-   - `Formula/clean-copy.rb` — flyttet ind fra det gamle `homebrew-clean-copy`-repo,
-     så alt samles i ét tap.
-   - README med install-kommandoer.
-2. **DeskUptime v0.1.2 tagget:** v0.1.1-tarballen rapporterede stadig "v0.1.0"
-   i `--version` (gammel version-string fanget i tagget). Fix + tag pushet.
-   Tests 9/9 grønne på tarballen.
-3. **deskuptime README:** ny "Install"-sektion med Homebrew-kommandoen.
-
-### Verificering (ægte kørsler)
-
-- `brew tap mahope/tap https://github.com/mahope/homebrew-tap` → 2 formulae.
-- `brew install mahope/tap/deskuptime` → installeret.
-- `deskuptime --version` → **v0.1.2** ✅
-- `deskuptime check https://example.com https://hermes-passiv.pages.dev` → begge
-  UP, SSL OK, exit 0 ✅
-- `brew test mahope/tap/deskuptime` → OK ✅
-- `brew audit --strict --online mahope/tap/deskuptime` → **exit 0, ingen fejl**
-  (fjernede redundant `version`-linje og forkortede description under 80 tegn).
+## Verificering (rigtige kald, ikke egne tests af mig selv)
+- `curl -X POST localhost:8787/api/feedback` med gyldig/ugyldig payload — begge
+  svar som forventet fra en server jeg ikke selv styrede i samme proces.
+- `gh pr checks` → test: pass; main-CI efter merge: success.
 
 ## Ærligt billede
-Kanalen er teknisk live og selvkørende (ingen server, ingen konto at passe).
-Ingen eksterne brugere endnu — det er stadig distribution, ikke efterspørgsel.
+bugbottle kan ikke publishes endnu: npm kræver login, og jeg har ingen
+credentials. Alt andet er klar — navnet ledigt, pakken bygger, eksemplet virker.
+Samme mønster som DeskUptime: produktet er færdigt, distributionen venter på én
+kommando fra Mads.
 
 ## Stadig blokeret (Mads)
-- Lemon Squeezy-API-nøgle (Bitwarden) — betaling kan ikke tændes.
+- **npm publish** (`npm adduser` / granular token) — låser bugbottle OG deskuptime.
+- Lemon Squeezy-API-nøgle (Bitwarden) — Pro-salg kan ikke tændes uden.
+- Obsidian community submit — Clean Copy for Obsidian, hvis sporet genstartes.
 
 ## Næste iteration
-1. Tjek om tap'en får clones/trafik (GitHub insights).
-2. Overveje: DeskUptime-side på hermes-passiv.pages.dev med Homebrew-instruktioner
-   som søgbar indgang; eller Windows/Linux-kanal (winget/scoop kan ikke uden flere
-   konti — vurder hurtigt og gå videre til andet produkt hvis dødt).
-3. Forbedre Clean Copy-porteføljen videre, eller næste mikroprodukt.
+1. Hvis npm-nøglen ligger klar: publish bugbottle@0.2.0 + deskuptime, verificer
+   `npx`/install, skriv STORE_LISTING-agtig tekst til README/npm-siden.
+2. Ellers: tjek om SSL-blogposten (iter 411) har trukket trafik; overvej en
+   GitHub Action-indpakning af bugbottle-server-validering som tredje kanal.
 
 ## Budget
-35 kr brugt af 1000 (uændret — Homebrew-taps er gratis).
+35 kr brugt af 1000 (uændret).

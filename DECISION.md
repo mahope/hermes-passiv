@@ -1,94 +1,36 @@
-# DECISION — Iteration 271: Pivot bekræftet — Clean Copy for Obsidian bliver flagskibet
+# DECISION — Iteration 412: bugbottle færdiggøres som næste produkt
 
 **Dato:** 2026-08-25
-**Beslutning:** Pivot-reglen fra iter 270 er opfyldt. Data (25/8) viser:
 
-- Waitlist: 1 ægte signup (uændret i 5 iterationer)
-- NIS2-værktøjssider: 0 registrerede sidevisninger + 0 lead-events i hele måleperioden
-- GitHub organisk: 0 visninger/14 dage
+## Situationen
+DeskUptime har 0 traffic på alle kanaler trods blogindhold (iter 409–411). Organisk
+søgning kan ikke bygges videre i denne mappe — det kræver tid eller kanaler jeg ikke
+styrer. I stedet færdiggøres **bugbottle** (`github.com/mahope/bugbottle`), et npm-
+bibliotek der allerede findes i udkast: in-app fejlrapporter med konsolfejl, kontekst
+og screenshot vedhæftet. Headless, ingen afhængigheder.
 
-Konklusion: NIS2-sporet får ikke brugere, uanset hvor meget det pudses. Vi stopper
-med at polstre det og fokuserer på **det produkt der allerede er bygget, kan tage imod
-penge gennem en community-platform med indbygget distribution, og som kun mangler ÉN
-godkendelse fra Mads.**
+## Hvorfor bugbottle nu
+- Koden var 80 % færdig: 588 linjer TypeScript, 17 tests grønne, CI grøn.
+- npm-navnet `bugbottle` er ledigt (verificeret).
+- npm-distribution har **indbygget opdagelse** (registry-søgning), i modsætning til
+  en selvstændig landing page der venter på Google.
+- Samme blokering som DeskUptime: publish kræver npm-login fra Mads.
 
-## Hvad vi bygger videre på
+## Hvad der blev gjort (iter 412)
+1. Repo hentet ind i arbejdsmappen, gennemgået kode + tests.
+2. **Fejlrettelse:** submit kunne hænge evigt ved en hængende endpoint — fetch
+   aborterer nu efter 15 s og viser fejlbesked i stedet for "sending" for altid.
+3. **Eksempel:** `examples/vanilla-js` — komplet runde (Node-server der validerer
+   en rapport med `bugbottle/server` + ren HTML-formular), verificeret end-to-end
+   med rigtige HTTP-kald.
+4. v0.2.0 merged via PR #9, CI grøn på main.
 
-**Clean Copy for Obsidian** (clean-copy-obsidian). Bootstrappet i iter 140, bygget,
-testet (14/14 grønne), udgivet på GitHub med releases, licensing-endpoints klar.
+## Betalingsmodel
+Free/open-source kerne (MIT). Betaling først hvis der kommer traction — fx en
+hosted endpoint-tjeneste via Lemon Squeezy. Indtil da: distribution og brugere.
 
-**Kritisk fund i denne iteration:** Obsidian lancerede den 12. maj 2026 et
-**developer dashboard** (community.obsidian.md) der afløser GitHub PR-vejen.
-Submissions gennemgås automatisk på få minutter. Dette er præcis den "platform med
-indbygget distribution" pivot-reglen pegede på — og nu findes distributionsblokeringen
-ikke længere. Den eneste resterende handling er at Mads logger ind og submitter.
+## Blokeret på Mads (uændret)
+1. npm publish (npm login) — låser både deskuptime og bugbottle.
+2. Lemon Squeezy-API-nøgle (Bitwarden).
 
-## Hvem betaler, for hvad
-
-- **Free tier:** gratis paste-as-Markdown (trafik + attribution).
-- **Pro ($19/år):** custom cleanup rules + batch, aktiveret med licensnøgle via
-  /api/license/activate + /validate (Cloudflare Worker + KV). Betaling via Lemon
-  Squeezy (nøgle i Bitwarden — MADDS ACTION).
-
-## Hvad kan slå det ihjel
-
-- Obsidian skifter policy om at tillade plugins med ekstern betaling ("Optional payments"
-  er en anerkendt kategori i det nye system — risiko lav).
-- Automatisk review afviser plugin'et (har vi betydet for at klare: ESLint-renset.
-  requestUrl, authorUrl, sentence-case. Resten er 0 block).
-
-## Præcis hvad der sker uden Mads
-
-- Plugin-udvikling, releases, tester, versions.json, onderhold af repoen.
-- Licensing-API + webhook (auto-udsteder licensnøgler ved Lemon Squeezy-betaling).
-
-## Præcis hvad der kræver Mads
-
-1. **Obsidian Community login + submit** (5 min): https://community.obsidian.md/account/profile
-2. **Lemon Squeezy-API-nøgle** (i Bitwarden): for at gøre Pro-betaling live.
-
-## Budget: 0 kr brugt (35/1000 total)
-
----
-**Opdatering iter 272:** Alle ikke-blokerede dele af flagskibet er bygget og live
-(plugin v1.0.7, releases, licensing-klar, landing page, 2 guider, sitemap).
-Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle.
-
-**Opdatering iter 273:** WikiLinks-mode bygget i kernen (differentiator for
-Obsidian-sporet) + v1.0.8 release hvor main.js nu er selvstændigt — v1.0.7's
-manuelle installation ville have fejlet (core.js manglede i assets). Ret og
-verificeret live.
-
-**Opdatering iter 279:** GitHub Action (mahope/clean-copy-cli@v1) nu på fuld
-parity med kernen: alle fire modes (markdown/plain/wikilinks/csv) + CI-tests.
-Action'en er den eneste distributionskanal der kræver nul konti fra Mads.
-
-**Opdatering iter 316:** 37 iterationer uden Mads-handlinger. Compliance-site-
-check har 0 reelle brugere. Beslutning: stop compliance-indhold, start nyt spor
-med nul Mads-afhængighed. Se STATUS.md for detaljer.
-
-**Opdatering iter 321: Pivot fra passiv-mcp til Compliance Bundle (ny beslutning)**
-
-Passiv-mcp havde 0 visninger efter 14 dage i MCP Registry. Pivot-tærsklen er
-overskredet. Passiv-mcp's robusthed er polstret (cache, retry-logning, e2e-tests)
-men uden brugere giver mere polstring ingen værdi.
-
-**Ny retning:** Complete EU Compliance Bundle — 6 eksisterende e-bøger samlet
-i ét digitalt produkt (PDF + EPUB ZIP) klar til salg på eget site via Lemon
-Squeezy.
-
-**Hvad ændrer sig:**
-- Fra "byg noget nyt og håb på distribution" til "sælg det vi allerede har"
-- Produktet er bygget: PDF, ZIP, landing page live på /books/compliance-bundle
-- Eneste manglende stykke: Lemon Squeezy-API-nøgle => checkout-link => live betaling
-
-**Hvorfor dette er bedre end at starte endnu et fra bunden:**
-1. Indholdet er skrevet, testet, og har eksisteret på sitet i måneder
-2. Landing pages, covers, SEO-struktur er allerede på plads
-3. En API-kald (node lemon-setup.js) gør det til et betalende produkt
-4. Ingen yderligere Mads-handling udover at hente LS-nøglen fra Bitwarden
-
-**Hvis LS-nøgle stadig ikke kommer:** Bundle-landing page lever gratis
-formidling (CC BY-NC) og kan drive trafik til andre produkter. Næste skridt
-ville være et produkt på en markedsplads med indbygget betaling og nul
-Mads-konto-krav.
+## Budget: 35/1000 DKK
