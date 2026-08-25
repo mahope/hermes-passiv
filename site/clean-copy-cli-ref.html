@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Copy CLI — Quick Reference Card (Markdown, CSV, Plain Text)</title>
+<meta name="description" content="One-page cheat sheet for the Clean Copy CLI: convert HTML to Markdown, CSV, or plain text from any input — syntax, modes, examples, piped and file mode.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Clean Copy CLI — Quick Reference Card">
+<meta property="og:description" content="Every flag, mode, and usage pattern for the Clean Copy CLI — one-page, scan-in-seconds reference for developers.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/clean-copy-cli-ref">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy-cli-ref">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Clean Copy CLI Reference Card","description":"One-page quick reference for the Clean Copy CLI: flags, modes, usage examples for HTML to Markdown/CSV/plain text conversion.","url":"https://hermes-passiv.pages.dev/clean-copy-cli-ref"}
+</script>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; line-height: 1.5; }
+  .ref-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+  h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--color-text-muted); margin-top: 0; font-size: 1rem; }
+  .install-box { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 1rem 1.2rem; margin: 1.5rem 0; }
+  .install-box code { font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width:640px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem 1.2rem; background: var(--color-surface); }
+  .card h3 { margin: 0 0 0.5rem 0; font-size: 0.95rem; }
+  .card code, .card pre { font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace; font-size: 0.82rem; }
+  .card pre { background: #0f172a; color: #e2e8f0; padding: 0.7rem; border-radius: 6px; overflow-x: auto; margin: 0.4rem 0; white-space: pre; }
+  .flag-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.5rem 0; }
+  .flag-table th, .flag-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .flag-table th { font-weight: 600; border-bottom-width: 2px; }
+  .flag-table code { font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace; font-size: 0.8rem; }
+  .flag-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-muted); border: 1px solid var(--color-border); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 1.5rem 0; }
+  .btn-wrap { display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0; }
+  @media print { .no-print { display: none; } body { font-size: 0.8rem; } .ref-wrap { max-width: 100%; padding: 0.5in; } .card pre { white-space: pre-wrap; } }
+</style>
+</head>
+<body>
+<main class="ref-wrap">
+
+<nav aria-label="Breadcrumb" style="font-size:0.82rem;margin-bottom:1rem;">
+  <a href="/">Passiv</a> · <a href="/clean-copy">Clean Copy</a> · <span aria-current="page">CLI ref</span>
+</nav>
+
+<h1>Clean Copy CLI — <span style="font-weight:400;">quick reference</span></h1>
+<p class="subtitle">One page. Every flag. Paste messy text, get clean output.</p>
+
+<div class="install-box">
+  <strong>Install</strong>
+  <div style="margin-top:0.5rem;display:flex;gap:0.8rem;flex-wrap:wrap;">
+    <code>npm install -g clean-copy-cli</code>
+    <code>brew install mahope/tap/clean-copy</code>
+    <code>npx clean-copy "text"</code>
+  </div>
+  <p style="margin:0.5rem 0 0;color:#94a3b8;font-size:0.82rem;">Or download binaries from <a href="https://github.com/mahope/clean-copy-cli/releases" style="color:#93c5fd;">GitHub releases</a>.</p>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>📋 Basic usage</h3>
+    <pre>echo "&lt;h1&gt;Title&lt;/h1&gt;" | clean-copy
+clean-copy -i input.html -o output.md
+cat article.html | clean-copy -m csv</pre>
+  </div>
+  <div class="card">
+    <h3>⚡ Pipe from anywhere</h3>
+    <pre># From a web page (curl + pipe)
+curl -s https://example.com | clean-copy
+# From clipboard (macOS)
+pbpaste | clean-copy | pbcopy
+# From clipboard (Linux)
+xclip -o | clean-copy | xclip -i</pre>
+  </div>
+</div>
+
+<h3 style="margin-top:1.8rem;">Flags</h3>
+<table class="flag-table">
+  <thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead>
+  <tbody>
+    <tr><td><code>-i, --input &lt;file&gt;</code></td><td>Read from file instead of stdin</td><td>—</td></tr>
+    <tr><td><code>-o, --output &lt;file&gt;</code></td><td>Write to file instead of stdout</td><td>—</td></tr>
+    <tr><td><code>-m, --mode &lt;mode&gt;</code></td><td>Output format: <code>markdown</code>, <code>wikilinks</code>, <code>csv</code>, or <code>text</code></td><td><code>markdown</code></td></tr>
+    <tr><td><code>-v, --csv</code></td><td>Shorthand for <code>--mode csv</code></td><td>—</td></tr>
+    <tr><td><code>-w, --wikilinks</code></td><td>Shorthand for <code>--mode wikilinks</code></td><td>—</td></tr>
+    <tr><td><code>-s, --smart</code></td><td>Replace smart quotes, em-dashes, non-breaking spaces</td><td>off</td></tr>
+    <tr><td><code>--version</code></td><td>Print version</td><td>—</td></tr>
+    <tr><td><code>-h, --help</code></td><td>Show full help</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3 style="margin-top:1.8rem;">Mode examples</h3>
+<div class="grid-2">
+  <div class="card">
+    <h3>Markdown (default)</h3>
+    <pre>echo '&lt;strong&gt;Done&lt;/strong&gt;' | clean-copy
+# → **Done**</pre>
+    <p style="font-size:0.82rem;color:var(--color-text-muted);">Headings, links, lists, images, code blocks, tables all preserved.</p>
+  </div>
+  <div class="card">
+    <h3>WikiLinks</h3>
+    <pre>echo '&lt;a href="/docs"&gt;Docs&lt;/a&gt;' | clean-copy -w
+# → [[Docs]]</pre>
+    <p style="font-size:0.82rem;color:var(--color-text-muted);">Internal links → <code>[[WikiLinks]]</code>. External links stay as Markdown.</p>
+  </div>
+  <div class="card">
+    <h3>CSV</h3>
+    <pre>echo '&lt;table&gt;&lt;tr&gt;&lt;td&gt;A,B&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;' | clean-copy -v
+# → "A,B"</pre>
+    <p style="font-size:0.82rem;color:var(--color-text-muted);">RFC 4180: commas and quotes inside cells are correctly escaped. colspan/rowspan handled.</p>
+  </div>
+  <div class="card">
+    <h3>Plain text</h3>
+    <pre>echo '&lt;h1&gt;Hello &lt;em&gt;world&lt;/em&gt;&lt;/h1&gt;' | clean-copy -m text
+# → Hello world</pre>
+    <p style="font-size:0.82rem;color:var(--color-text-muted);">All markup stripped. Just readable characters.</p>
+  </div>
+</div>
+
+<hr>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>🔧 Real-world pipeline</h3>
+    <pre># Grab the main content of a page, clean it, save
+curl -sL https://example.com/article \
+  | clean-copy -m text -s \
+  > article-clean.txt
+
+# Table from a page straight to Excel
+curl -sL https://example.com/prices \
+  | clean-copy -v \
+  > prices.csv</pre>
+  </div>
+  <div class="card">
+    <h3>📡 Also available</h3>
+    <p style="font-size:0.85rem;">
+      <a href="/clean-copy-tool"><strong>Web tool</strong></a> — same engine in your browser, no install needed.<br>
+      <a href="/clean-copy"><strong>Browser extension</strong></a> — right-click → clean copy on any page.<br>
+      <a href="/clean-copy-bookmarklet"><strong>Bookmarklet</strong></a> — no extension needed, works in any browser.<br>
+      <a href="https://github.com/mahope/clean-copy-cli"><strong>GitHub</strong></a> — source, issues, releases.<br>
+      <a href="https://www.npmjs.com/package/clean-copy-cli"><strong>npm</strong></a> — <code>npx clean-copy</code> one-liner.
+    </p>
+  </div>
+</div>
+
+<div class="btn-wrap no-print" style="margin-top:1.5rem;">
+  <a href="/clean-copy-tool" class="btn-primary" style="text-decoration:none;">Try the web tool →</a>
+  <a href="https://github.com/mahope/clean-copy-cli" class="btn-secondary" style="text-decoration:none;">GitHub repo</a>
+</div>
+
+<footer style="text-align:center;padding:2rem 0;color:var(--color-text-muted);font-size:0.82rem;">
+  <p><a href="/blog/building-html-to-markdown-converter">How it's built</a> · <a href="/blog/html-to-markdown-cli">CLI guide</a> · <a href="/blog/html-table-to-csv-converter">Table to CSV guide</a> · by Passiv</p>
+</footer>
+
+</main>
+<script defer src="/track.js"></script>
+</body>
+</html>

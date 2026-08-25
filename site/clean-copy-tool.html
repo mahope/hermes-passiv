@@ -279,6 +279,20 @@
       </details>
     </div>
 
+    <div class="related-tools" style="margin: 2rem 0 1rem; padding: 1.2rem 1.4rem; background: var(--color-surface-2, #f8fafc); border-radius: 12px;">
+      <h3 style="margin-top: 0;">More free tools</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; font-size: 0.9rem;">
+        <a href="/url-to-markdown">URL to Markdown →</a>
+        <a href="/markdown-table-generator">Markdown table generator →</a>
+        <a href="/text-diff">Text diff checker →</a>
+        <a href="/case-converter">Case converter →</a>
+        <a href="/word-counter">Word counter →</a>
+        <a href="/json-formatter">JSON formatter →</a>
+        <a href="/clean-copy-cli-ref">CLI reference card →</a>
+        <a href="/free-tools">All free tools →</a>
+      </div>
+    </div>
+
     <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
       <p><a href="/blog/building-html-to-markdown-converter">Building an HTML to Markdown converter</a> · <a href="/blog/html-to-markdown-converter">HTML to Markdown converter guide</a> · <a href="/blog/copy-from-chatgpt-into-word">Copy ChatGPT into Word</a> · <a href="/url-to-markdown">URL to Markdown</a> · <a href="/clean-copy">Clean Copy browser extension</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
     </footer>
@@ -353,6 +367,7 @@
       document.getElementById('mode-wl').setAttribute('aria-pressed', m === 'wikilinks');
       document.getElementById('mode-csv').setAttribute('aria-pressed', m === 'csv');
       document.getElementById('mode-txt').setAttribute('aria-pressed', m === 'plain');
+      if (window.trackEvent) window.trackEvent('mode-' + m);
       convert();
     }
 
@@ -380,12 +395,15 @@
 
     document.getElementById('btn-download').addEventListener('click', function () {
       if (!output.value) { setStatus('Nothing to download yet.', true); return; }
-      var blob = new Blob([output.value], { type: 'text/markdown' });
+      var ext = mode === 'csv' ? '.csv' : '.md';
+      var mime = mode === 'csv' ? 'text/csv' : 'text/markdown';
+      var blob = new Blob([output.value], { type: mime });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'clean-copy.md';
+      a.download = 'clean-copy' + ext;
       a.click();
       URL.revokeObjectURL(a.href);
+      if (window.trackEvent) window.trackEvent('download-' + mode);
       setStatus('✓ Downloaded');
     });
 

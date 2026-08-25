@@ -1,36 +1,80 @@
-# STATUS — Iteration 277: EN-blogpost "HTML table to CSV converter"
+# STATUS — Iteration 278: Mode-tracking på tool + CLI reference card
 
-## Hvad jeg gjorde (0 web-søgninger)
+## Hvad jeg gjorde (0 web-søgninger af 12)
 
-Iter 276's plan punkt 2 fulgt: EN-søsterposten til den danske CSV-post —
-større marked, samme mønster.
+I stedet for endnu en blogpost byggede jeg to ting, der giver data og
+dækker et nyt format:
 
-- **Ny post:** `/blog/html-table-to-csv-converter` (engelsk) — Article +
-  FAQPage JSON-LD (valideret), canonical, OG-tags, sammenligningstabel,
-  FAQ-kort, CTA til /clean-copy-tool. Indbygget linkcheck i scriptet:
-  alle interne links verificeret mod site-træet (ny check, fandt 0 brud).
-- **Krydslinks:** Related-blokke i 3 EN-søsterposter (excel/notion/sheets),
-  cross-link på /clean-copy-tool, og tovejslink til/fra den danske post
-  (dansk postens "Relateret"-blok brugte et andet markup-mønster end
-  scriptet forventede — rettet manuelt).
-- **Sitemap:** 198 URL'er.
-- **Deployet + verificeret live:** 4 berørte sider HTTP 200, indhold
-  bekræftet (RFC 4180 ×11 på ny post, slug i sitemap og i søsterpost).
-- version_sweep: ALL SURFACES IN SYNC. Commit + push.
+### 1. Mode-tracking, download-tracking og cross-links på /clean-copy-tool
+
+- **Mode-tracking:** hver gang en bruger skifter mode (Markdown/WikiLinks/CSV/Plain),
+  logges `mode-markdown`, `mode-csv` osv. via trackEvent — så jeg kan se hvilke
+  modes folk rent faktisk bruger.
+- **Download-tracking:** når en bruger downloader resultatet, logges
+  `download-markdown`, `download-csv` osv. — så jeg kan se om nogen eksporterer.
+- **CSV-extension fix:** Download-knappen gemmer nu som `.csv` når CSV-mode er
+  aktiv, ellers `.md`. Før gemte den altid `.md` uanset mode.
+- **Related tools:** ny sektion med 7 krydslink til beslægtede værktøjer
+  (url-to-markdown, text-diff, case-converter, markdown-table-generator, mv.)
+- Alle ændringer verificeret live (HTTP 200, indhold bekræftet).
+
+### 2. Nyt format: CLI reference card
+
+- **Ny side:** `/clean-copy-cli-ref` — en one-page quick reference for Clean
+  Copy CLI: alle flags, modes, piped usage, install-kommandoer, real-world
+  pipelines. Printbar via `@media print` CSS.
+- **Anderledes end en blogpost:** det er en reference, ikke en guide. Designet
+  til at blive scannet på få sekunder af udviklere der allerede kender værktøjet.
+- Tilføjet til sitemap (199 URL'er nu) og krydslinket fra /clean-copy-tool.
+- JSON-LD (TechArticle) valideret, track.js loader korrekt.
+
+## /api/stats data — ærlig rapport
+
+Jeg tjekkede live tracking-data. Her er hvad den viste pr. 25. august:
+
+| Dag | Hjemmeside | Clean Copy tool | Andre sider | EPUB-downloads |
+|-----|-----------|-----------------|-------------|----------------|
+| 23/8 | 11 visits, 8 uniques | — | /cookie-check, /scan | — |
+| 24/8 | 1 visit, 1 unique | 2 visits, 1 unique | 6 sidevisninger | 6 downloads (alle bøger) |
+| 25/8 | 5 visits, 3 uniques | — | — | — |
+
+**Det betyder:** Der kommer RIGTIGE mennesker til siden — omkring 5 om dagen,
+nogle dage flere. Nogen downloaded ALLE seks e-bøger på 24/8. Clean Copy-tool'et
+bliver brugt (2 visits, 1 unik). Tallet er lille men ikke nul.
+
+Men: 5 besøgende om dagen er for lidt til at nogen af produkterne kan tjene
+penge, uanset hvor god konverteringen er.
+
+## Kritisk vej — uændret
+
+Én linje, som AGENTS.md foreskriver:
+
+**Blokeret på:** Mads' community-submit af Obsidian plugin + Lemon Squeezy-nøgle
+fra Bitwarden. Uden disse kan intet produkt tage imod penge, og det eneste
+distribuerede produkt (Obsidian) når ikke ud til brugere.
+
+6 KDP-e-bøger og 7 Clean Copy-indpakninger venter på samme blokering.
 
 ## Ærlig vurdering
 
-Samme ærlige nul som altid: ingen rigtige brugere eller indtægter endnu.
-Distributionen af CSV-sporet er nu komplet på begge sprog. Kritisk vej er
-uændret: Mads' Obsidian community-submit + Lemon Squeezy-nøgle.
+Efter 278 iterationer er regnskabet:
+- 66 blogposts, 199 URL'er i sitemap
+- 6 e-bøger, 7 Clean Copy-indpakninger, snesevis af værktøjssider
+- 0 kr indtægt, ~5 besøgende/dag
 
-## Næste iteration
+Det er ikke fordi produkterne er dårlige. Det fordi **distributionen er
+100 % blokeret på Mads' konti**, og SEO alene på et nyt domæne uden backlinks
+ikke trækker nok trafik.
 
-1. Hvis Mads har submitter Obsidian-plugin: skift siderne til "install from
-   community plugins".
-2. Ellers: begynd på et nyt lille produkt (f.eks. en anden platform-
-   indpakning af kernen med betalingsmulighed), eller flere søgeindgange
-   ("table to markdown", "paste table without formatting" på flere sprog).
-3. Mode-specifik /api/track-events så man kan se hvilke modes bruges.
+AGENTS.md siger: "Når noget ikke får brugere, er flere funktioner sjældent
+svaret — enten skal det ud til folk, eller også skal du bygge noget andet."
+
+Jeg kan ikke gøre det første (distribution blokeret). Det næste iteration bør
+enten:
+a) Bygge i et format der IKKE kræver Mads' konti (og heller ikke SEO) —
+   f.eks. en desktop app distribueret via GitHub, eller et produkt på en
+   markedsplads med indbygget betaling.
+b) Acceptere blokeringen og fokusere på én ting: at gøre Mads' handlinger
+   så uundgåelige at han gør dem. Færre produkter, tydeligere efterspørgsel.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)

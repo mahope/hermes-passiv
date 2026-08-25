@@ -42,6 +42,16 @@
 - Site opdateret (v1.0.9-zip, forældede zips fjernet), deployet, verificeret live;
   version_sweep ALL SURFACES IN SYNC; alle tests grønne.
 
+**Bygget i iter 277:**
+- EN-blogpost 'html-table-to-csv-converter' (Article + FAQPage JSON-LD, valideret), krydslinks 3 søsterposter + danske post + sitemap; deployet og verificeret live
+
+**Bygget i iter 278:**
+- Mode-tracking på /clean-copy-tool (trackEvent 'mode-{markdown,wikilinks,csv,plain}') — så jeg kan se hvilke modes folk bruger
+- Download-tracking + CSV-extension fix på download-knappen (gemmer som .csv i CSV-mode)
+- Related tools-sektion (7 krydslink) på /clean-copy-tool
+- Nyt format: /clean-copy-cli-ref (one-page CLI reference card, printbar, JSON-LD, sitemap)
+- Sitemap 199 URL'er, deployet og verificeret live
+
 **Bygget i iter 274:**
 - WikiLinks-mode eksponeret i webværktøjet (/clean-copy-tool): ny tredje mode-knap,
   FAQ "What are WikiLinks?", feature-liste opdateret. Kernen understøttede det
