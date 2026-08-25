@@ -1118,3 +1118,7 @@ The techniques in this book are battle-tested in a production extension with tho
 ---
 
 *© 2026. This book is provided for educational purposes. Chrome is a trademark of Google LLC. All code examples are MIT-licensed and may be used freely.*
+
+## More from the publisher
+
+- **Clean Copy** — a free browser extension that copies any web page as clean Markdown. Built with the exact techniques this book teaches: https://hermes-passiv.pages.dev/clean-copy

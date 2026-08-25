@@ -386,6 +386,11 @@ This statement was last reviewed on [DATE] and will be updated annually.
 
 ---
 
+## Free tools from the publisher
+
+- **EAA / accessibility scanner** — run a free automated accessibility check on any WordPress site: https://hermes-passiv.pages.dev/scan
+- **Contrast and alt-text are covered in the checklist — test your live site here:** https://hermes-passiv.pages.dev/page-profile
+
 ## Final Words
 
 EAA compliance for WordPress sites is achievable without a massive budget. The 10-point checklist covers the vast majority of issues found on the average WordPress site. Most fixes take an hour or less.

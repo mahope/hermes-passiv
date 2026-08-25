@@ -1023,22 +1023,30 @@ async function handleWaitlist(request, env) {
     const body = await request.json();
     const email = String(body.email || '').trim().toLowerCase();
     // basic validation — no regex overreach
-    const valid = /^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    const valid = /^[^\s@]{1,64}[^\s@]*@[^\s@]+\.[^\s@]{2,}$/.test(email);
     if (!valid) {
       return jsonResp({ ok: false, error: 'Please enter a valid email address.' }, 400);
     }
+    // optional signup source (e.g. 'book-nis2-for-agencies', 'compliance-ai') — lets
+    // stats show WHERE leads come from without storing anything personal beyond email
+    let source = String(body.source || '').trim().toLowerCase().slice(0, 40);
+    if (!/^[a-z0-9-]+$/.test(source)) source = 'site';
 
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('wl:' + email));
     const key = 'wl:' + [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
 
     const isNew = !(await env.VISITS.get(key));
     if (isNew) {
-      // store the email so Mads can import the list later; KV value = email
-      await env.VISITS.put(key, email, { expirationTtl: 365 * 86400 });
+      // store "email|source" so Mads can import the list later (split on last |)
+      await env.VISITS.put(key, email + '|' + source, { expirationTtl: 365 * 86400 });
       // counter for quick reads
       const cKey = 'wl-count';
       const prev = parseInt((await env.VISITS.get(cKey)) || '0', 10);
       await env.VISITS.put(cKey, String(prev + 1), { expirationTtl: 365 * 86400 });
+      // per-source counter
+      const sKey = 'wlsrc:' + source;
+      const sprev = parseInt((await env.VISITS.get(sKey)) || '0', 10);
+      await env.VISITS.put(sKey, String(sprev + 1), { expirationTtl: 365 * 86400 });
     }
     // always answer ok — do not leak whether an address was already signed up
     return jsonResp({ ok: true });
@@ -1122,6 +1130,19 @@ async function handleStats(url, env) {
   // waitlist count (honest metric)
   let waitlist = null;
   try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
+  // per-source lead counts (wlsrc:<source>) — scan KV keys, aggregate top sources
+  const wl_sources = {};
+  try {
+    let scursor = null;
+    do {
+      const page = await env.VISITS.list({ prefix: 'wlsrc:', cursor: scursor });
+      for (const k of page.keys) {
+        const v = parseInt((await env.VISITS.get(k.name)) || '0', 10);
+        if (v > 0) wl_sources[k.name.slice(6)] = v;
+      }
+      scursor = page.list_complete ? null : page.cursor;
+    } while (scursor);
+  } catch {}
   let licenses_issued = null;
   try { licenses_issued = parseInt((await env.VISITS.get('t:all:licenses-issued')) || '0', 10); } catch {}
 
@@ -1131,7 +1152,7 @@ async function handleStats(url, env) {
   let ai_limited_today = null;
   try { ai_limited_today = parseInt((await env.VISITS.get(`airl-hit:${dailySalt()}`)) || '0', 10); } catch {}
 
-  return jsonResp({ ok: true, days, stats: filtered, waitlist, licenses_issued, ai_asks, ai_limited_today });
+  return jsonResp({ ok: true, days, stats: filtered, waitlist, wl_sources, licenses_issued, ai_asks, ai_limited_today });
 }
 
 /**

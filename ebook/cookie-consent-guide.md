@@ -427,3 +427,7 @@ If you update your tracking setup (adding the Facebook Pixel, adding Hotjar, add
 ### About the author
 
 This guide is published by Mahope, an EU-focused publishing imprint specialising in practical compliance resources for small web agencies and e-commerce businesses.
+
+## Free tools from the publisher
+
+- **Cookie banner checker** — see every cookie and tracker a site loads, before and after consent: https://hermes-passiv.pages.dev/cookie-check

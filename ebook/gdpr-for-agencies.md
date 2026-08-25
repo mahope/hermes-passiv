@@ -326,3 +326,8 @@ Adapt with counsel as needed; these reflect common market standards.
 ## Appendix C — Glossary
 
 **Controller** — decides purposes and means of processing. **Processor** — processes on behalf of a controller. **DPA (Data Processing Agreement)** — mandatory Article 28 contract between controller and processor. **RoPA** — Record of Processing Activities (Art. 30). **DSAR** — Data Subject Access Request. **Personal data breach** — any security failure exposing personal data, including loss of availability. **SCCs** — Standard Contractual Clauses for transfers outside the EEA. **Supervisory authority** — national regulator (in Denmark: Datatilsynet). **Pseudonymisation** — replacing identifying fields so data can't be attributed without additional information held separately.
+
+## Free tools from the publisher
+
+- **Website compliance scan** — free automated check of privacy policy, cookies and security headers: https://hermes-passiv.pages.dev/scan
+- **Cookie banner checker** — see what cookies a site sets before consent: https://hermes-passiv.pages.dev/cookie-check

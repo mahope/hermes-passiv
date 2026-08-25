@@ -514,6 +514,11 @@ Answer these 10 questions and compile into a PDF:
 
 ---
 
+## Free tools from the publisher
+
+- **NIS2 Scope Checker** — answer five questions and see whether NIS2 likely applies to your agency: https://hermes-passiv.pages.dev/nis2-check
+- **Website compliance scan** — free automated check of privacy policy, cookie banner and security headers on any site: https://hermes-passiv.pages.dev/scan
+
 ## Final Words
 
 NIS2 compliance for a small web agency is not about building a Fort Knox. It is about being **organized, documented, and transparent**. The agencies that will thrive under NIS2 are not the ones with the biggest security budgets — they are the ones that can show their clients: "Here is what we do, here is how we do it, here is proof it works."
