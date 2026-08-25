@@ -28,11 +28,28 @@ python3 -m twine upload scanner/packaging/dist/eaa_scanner-1.2.0*
 Kræver PyPI API-token i `~/.pypirc` (Mads opretter konto + token).
 Efter: `pip install eaa-scanner && eaa-scan <fil>` på en fransk maskine.
 
-## 3. Lemon Squeezy (betaling)
+## 3. Lemon Squeezy (betaling) — Clean Copy Pro
 
-- Opret produkt "EAA Scanner Pro" $29/år + ComplianceDocs-bundle $29.99
-- Sæt licens-API-nøgle ind i desktop-appens validerings-endpoint (kode klar i `desktop/`)
-- Testkøb med testkort før go-live
+**Automatiseret:** kør `node lemon-setup.js` med `LS_API_KEY` fra Bitwarden.
+Scriptet opretter produkt + variant ($19/år), genererer checkout-linket og
+printer de sidste manuelle trin (webhook-secret som Pages secret + webhook-URL
+`https://hermes-passiv.pages.dev/api/lemon-webhook`). Indsæt derefter
+checkout-linket med `node tools/set_checkout_url.js "<url>"` og deploy.
+
+**Hele licensflowet er testet end-to-end lokalt** (iteration 289,
+`node tools/test_license_flow.js`, 16/16 grønne): webhook-signaturverificering
+(bad sig = 403, manglende secret = 503 så LS retry'er), nøgleudstedelse ved
+`order_created`, idempotens pr. ordre (retries mintes ikke dobbelt),
+activate/validate med device-binding, device-grænse (409), udløb og revoked.
+
+**Kendt hul (kræver beslutning før go-live):** køberen modtager ikke selv sin
+licensnøgle — nøglen mintes kun i KV, og webhook-svaret når ikke køberen. LS'
+kvittering kan ikke indeholde den via API. Løsning skal bygges (fx lookup-side)
+eller nøglen sendes manuelt i starten. Ikke blokerende for at tænde betalingen,
+men skal besluttes inden første rigtige salg.
+
+Efter go-live: testkøb med LS testkort → verificér at /api/license/activate
+udsteder en nøgle → indsæt den i Clean Copy extension → Pro aktiveret.
 
 ## 4. Chrome Web Store
 

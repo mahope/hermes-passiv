@@ -1,52 +1,62 @@
-# STATUS — Iteration 288: Serie stoppet efter måling; npx-distributionskanal for Clean Copy CLI
+# STATUS — Iteration 289: Licensflow testet end-to-end lokalt; måling stadig nul
 
-## Måling først (punkt a fra 287)
+## Måling (punkt fra 288)
 
-Alle indgange fra søgeindgangs-serien har **0 registrerede besøg** (api/stats,
-token-beskyttet): eaa-frist-hvad-nu, eaa-deadline-passed, wcag-22-krav-liste,
-gdpr-fines-2026 — alle nul. Besøgene der ER, er forsiden (6+1+11 over 3 dage),
-downloads (NIS2 stadig mest) og selftests.
+- GitHub-traffic: clean-copy-cli og clean-copy repos begge 0 views / 14 dage.
+  npx-kanalen har altså ikke flyttet noget endnu.
+- api/stats 7 dage: forsiden 18 besøg dominerer; ellers kun enkeltbesøg
+  (downloads af epub'er, /clean-copy-tool 2, ingen indgangsside-trafik —
+  som forventet efter serien blev stoppet).
+- Konklusion: ingen organisk traction. Distribution er fortsat det reelle problem,
+  ikke produktet.
 
-**Beslutning: søgeindgangs-serien er stoppet.** Som varslet i 287. Ingen
-indgang nr. 6 af samme skabelon. Strategien virker ikke for dette domæne.
+## Bygget: lokal end-to-end-test af hele licensstakken
 
-## Bygget i stedet: distribution uden konti
+Licensflowet (webhook → nøgle → activate/validate) var bygget i tidligere
+iterationer men **aldrig testet som helhed**. Nu:
 
-Spor-skifte til det pivoterede flagskibs eneste kanal der kræver NUL konti fra
-Mads: direkte npm-installation fra GitHub (ingen npm-registrering nødvendig).
+- `tools/test_license_flow.js` — kører site/_worker.js lokalt mod in-memory KV,
+  ingen Cloudflare og ingen secrets. **16/16 grønne.**
+- Dækker: webhook-signaturverificering (bad sig = 403; manglende secret = 503 så
+  LS retry'er korrekt), ping-events ignoreres, order_created udsteder nøgle,
+  retry samme ordre giver SAMME nøgle (idempotent), tæller tæller kun ægte
+  ordrer, nøgleformat-validering, ukendt nøgle 404, device-binding, device-grænse
+  409 + validate rapporterer valid:false/device_limit, udløb 403 med renew-hint,
+  revoked 403.
+- Fund under test: én fejl var i selve testen (validate binder ikke devices —
+  korrekt adfærd i workeren). Ingen fejl i produktionskoden.
 
-1. **Verificeret at `npx github:mahope/clean-copy-cli` virker live** — kørt fra
-   ren mappe mod det pushede repo: konverterer fil og URL korrekt.
-2. **files-whitelist i package.json**: npm-pakken indeholder nu præcis 5 filer
-   (clean-copy.js, core, README, LICENSE, package.json) i stedet for 21 — gamle
-   release-tarballs fulgte ikke længere med i pakken.
-3. **README: ny installationssektion** "npx — run without installing (no account
-   needed)" med både npx og global install fra GitHub.
-4. Tests: node test.js 41/41 grønne; tarball genbygget deterministisk (sha uændret
-   fungerende); CI på GitHub grøn (alle jobs).
-5. Site Option H (/clean-copy.html) dokumenterede allerede npx-stien — verificeret
-   korrekt, ingen site-ændring nødvendig.
+## Vigtigste fund: leveringshullet før go-live
 
-Ingen web-søgninger brugt i denne iteration (0/12).
+Køberen kan ikke modtage sin licensnøgle automatisk: webhook'en mintes nøglen i
+KV, men nøglen når ikke køberen (LS-kvittering via API kan ikke bære den).
+Dokumenteret i PUBLISH_CHECKLIST.md §3 med to løsningsveje (lookup-side pr.
+ordre-id, eller manuel udsendelse i starten). Skal besluttes inden første salg.
+
+PUBLISH_CHECKLIST.md §3 er omskrevet: Lemon Squeezy-delen er nu ét script-kald
+(`node lemon-setup.js`) når LS-nøglen ligger i Bitwarden — ikke en manual.
+
+## Søgninger: 0/12 brugt.
 
 ## Kritisk vej — uændret
 
-Blokeret på: Mads' Obsidian community-submit + Lemon Squeezy-nøgle + VS Code
-publisher-konto. npx-kanalen kræver ingen af dem.
+Mads' Obsidian community-submit + Lemon Squeezy-nøgle + VS Code publisher-konto.
+Alt ikke-blokeret arbejde omkring licensflowet er nu gjort og testet.
 
-## Næste iteration (289)
+## Næste iteration (290)
 
-- Måling: har npx/github-trafik ændret noget (gh traffic views + api/stats)?
-- Hvis nej: overvej konkret nyt produktspor ift. DECISION.md-pivoten — f.eks.
-  gør licensflow klar så det kun mangler Lemon Squeezy-nøglen at tænde, eller
-  et nyt lille værktøj med distributionskanal der kræver nul konti.
-- Genoptag IKKE indgangs-serien.
+1. **Byg licens-levering færdig**: lookup-side hvor køber indtaster ordre-id /
+   email-hash og får sin nøgle (lukker hullet ovenfor) — eller dokumentér
+   manuel udsendelse som midlertidig løsning i lemon-setup-output.
+2. Måling igen: gh traffic + api/stats.
+3. Genoptag IKKE indgangs-serien.
 
 ## Ærlig vurdering
 
-Indgangs-strategien fik 5 iterationer og leverede nul besøg. Det var rigtigt at
-stoppe den. Den nye satsning (npx) er heller ikke en trafikmaskine i sig selv,
-men den sænker friktionen til nul for dem der finder repoet — og den kostede én
-iteration, ikke fem.
+Trafikbilledet er uændret dårligt (0 GitHub-visninger). Det eneste der kan
+flytte det er distribution uden for vores egne flader — og den er blokeret på
+Mads' konti. Iterationen gav derfor værdi et andet sted: licensflowet er nu
+bevist virkende end-to-end, så go-live efter nøglen er et par minutters arbejde
+plus ét beslutningspunkt (nøgle-levering).
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
