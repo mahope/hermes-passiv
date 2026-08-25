@@ -1,16 +1,41 @@
-# BUILD — Iteration 413: bugbottle kan installeres uden npm
+# BUILD — Iteration 416: bugbottle-action klar til GitHub Marketplace
 
 ## Hvad er bygget
-1. **bugbottle no-npm-kanal:** `dist/` er committet og tagget (`v0.2.1-no-npm-needed`).
-   - jsDelivr CDN serverer de byggede filer (verificeret HTTP 200 på dist/index.js).
-   - `npm install github:mahope/bugbottle#v0.2.1-no-npm-needed` — verificeret i en
-     ren midlertidig mappe: installation lykkes, import af `bugbottle/server`
-     virker (normaliseMessage + isReportType testet).
-2. **README** opdateret med begge installationsveje.
-3. **Site:** bugbottle tilføjet til /free-tools.html; iter 411–412s verserende
-   ændringer (SSL-blogpost, DeskUptime-krydslinks, sitemap) deployet og
-   verificeret live (200 + korrekt titel/indhold).
+1. **GitHub release på bugbottle:** v0.2.3-action-fix fik det første rigtige
+   release (tidligere kun tags). Verificeret live (HTTP 200).
+2. **Nyt repo `mahope/bugbottle-action`:** selvstændigt action-repo —
+   `action.yml` i roden, ingen workflow-filer, README, LICENSE, topics,
+   homepage-link. Det opfylder GitHubs krav for Marketplace (hoved-repoet kan
+   ikke udgives: action lå i undermappe + CI-workflow i samme repo).
+   Tagget v1.0.0 og v1.0.1 med releases.
+3. **Rigtig fejl fundet via dogfood:** action'en afviste gyldige rapporter hvor
+   et context-felt bare manglede (fx viewport) — strengere end
+   `bugbottle/server`'s normaliseContext, som tolererer fravær. Rettet i
+   begge kopier, v1.0.1 + v0.2.4 tagget, 24/24 tests stadig grønne.
+4. **End-to-end dogfood:** gyldig rapport → exit 0, valid-count 1; malformed →
+   ::error::-linjer, exit 1; blanding → korrekt optælling. jsDelivr serverer
+   v1.0.1 (200).
+5. **Site:** free-tools.html peger nu på bugbottle-action-repoet; deployet og
+   verificeret med curl (indhold + 200).
 
-## Hvad mangler
-- npm publish (Mads: npm login/token) — låser bugbottle + deskuptime.
-- Lemon Squeezy-nøgle (Mads, Bitwarden) — betaling kan ikke tændes.
+## Udgivelse til Marketplace — én handling for Mads
+API'et understøtter det IKKE (verificeret: UI-only, Stack Overflow + docs).
+Alt er forberedt så det er ét klik:
+1. Åbn https://github.com/mahope/bugbottle-action/releases/tag/v1.0.1 → Edit
+   (blyant) → sæt flueben i "Publish this Action to the GitHub Marketplace"
+   → vælg kategori (forslag: Software quality / Continuous integration) →
+   Update release.
+2. Krav: Marketplace Developer Agreement skal være accepteret på mahope-kontoen
+   (vises som link i samme dialog hvis mangler).
+
+## Hvad der er verificeret virkende uden Mads
+- Install: `uses: mahope/bugbottle-action@v1` virker fra tag (jsDelivr 200,
+  action.yml main peger på committet index.cjs).
+- Biblioteket installeres fortsat npm-frit via github:/jsDelivr.
+
+## Stadig blokeret på Mads
+- npm publish (bugbottle registry-listing + deskuptime).
+- Lemon Squeezy-nøgle.
+- Marketplace-udgivelse = ét klik (se ovenfor).
+
+## Budget: 35/1000 DKK (uændret)

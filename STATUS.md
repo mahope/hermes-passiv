@@ -1,47 +1,44 @@
-# STATUS — Iteration 414: bugbottle GitHub Action (tredje kanal, ingen npm)
+# STATUS — Iteration 416: bugbottle-action marketplace-klar + reel valideringsfejl rettet
 
 ## Søgedisciplin
-0 websøgninger. Alt verificeret med egne tests, CI og curl.
+2 websøgninger (Marketplace publish-API: findes ikke — UI-only; krav til
+action.yml-placering). Resten fra gh CLI, curl, node og egne tests.
 
-## Hvad der blev gjort
+## Hovedresultat: distributionssporet er nu ét klik fra at åbne
+GitHub Marketplace kan ikke udgives via API (verificeret). Kravene er heller
+ikke opfyldt af bugbottle-hovedrepoet: action.yml skal ligge i roden, og repoet
+må ikke indeholde workflow-filer. Derfor:
 
-1. **Trafiktjek først (ærlige tal):** /api/stats de sidste 30 dage viser stadig
-   kun mig selv — 0 reelle besøg på SSL-blogposten siden udgivelsen. Waitlist 0,
-   scans 0. Distribution er fortsat problemet, ikke produktet.
-2. **Bygget bugbottle-action** (`bugbottle/action/`): en GitHub Action der
-   validerer JSON-bugreports i CI-workflows — samme regler som report-core
-   (type, message-længde, PNG-signatur, størrelsesloft), plus
-   `require-screenshot` og `max-report-size-kb`. Outputs `valid-count` /
-   `invalid-count`; jobbet fejler ved malformede reports eller tomme matches.
-3. **Nul afhængigheder:** @actions/core bevidst undgået (stdout workflow-
-   commands + process.env-inputs). Egen minimatch-fri glob. Installerer på
-   sekunder og kan ikke gå i stykker på en transitiv dependency.
-4. **7 nye tests** (`tests/action.test.ts`) kører action'en som subprocess mod
-   rigtige filer: gyldige reports, malformed type/message, ikke-JSON,
-   ugyldigt screenshot-dataURL, krav om screenshot, glob-matching og
-   "ingen filer = fejl". **24/24 tests grønne, typecheck rent.**
-5. **Pushet og tagget** (`v0.2.2-action`). CI grøn på main
-   (run 32903351533). jsDelivr svarer 200 på action.yml fra tagget.
-6. **README + site:** action dokumenteret i bugbottles README; free-tools.html
-   opdateret og deployet (verificeret live med curl).
+- **Nyt repo `mahope/bugbottle-action`** — kun action.yml + index.cjs +
+  README + LICENSE. Topics sat, homepage sat, releases v1.0.0/v1.0.1 tagget.
+- Mads' arbejde er reduceret til: åbn release v1.0.1 → Edit → flueben i
+  "Publish to Marketplace" → vælg kategori → Update. Det står i BUILD.md.
 
-## Hvorfor det tæller
-GitHub Marketplace er en distributionskanal med indbygget opdagelse — som npm,
-men uden at vente på npm-login. Når handlingen er brugt et par gange, kan den
-udgives til marketplace (kræver kun at repoet har en action.yml, ingen Mads
-handling ud over evt. ét klik).
+## Rigtig fejl fundet (og rettet) gennem dogfood
+Action-valideringen var strengere end bibliotekets egen serverlogik: en rapport
+hvor fx `context.viewport` bare manglede blev afvist som malformed, selvom
+`bugbottle/server` accepterer den (koercerer til ""). Enhver CI-bruger ville
+have fået falske fejl på gyldige rapporter. Rettet i begge kopier
+(v1.0.1 / v0.2.4), 24/24 tests grønne, verificeret med rigtige JSON-filer:
+gyldig → exit 0; malformed → ::error:: + exit 1; blanding → korrekt optælling.
 
-## Stadig blokeret (Mads — uændret)
-- npm publish (låser bugbottle registry-listing + deskuptime).
-- Lemon Squeezy-API-nøgle (Bitwarden).
+## Øvrigt
+- Første GitHub release oprettet på mahope/bugbottle (var kun tags før).
+- free-tools.html peger nu på det nye action-repo; deployet + curl-verificeret.
+
+## Trafiktjek (ærlige tal)
+Ikke målt ny organisk trafik denne iteration; /api/stats viser fortsat 0
+reelle besøg ud over selftests. Ærligt nul.
+
+## Stadig blokeret på Mads
+1. npm publish (bugbottle registry-listing + deskuptime).
+2. Lemon Squeezy-nøgle (Bitwarden).
+3. Marketplace-udgivelse = ét klik (BUILD.md har præcis fremgangsmåden).
 
 ## Næste iteration
-1. Trafiktjek igen: er SSL-posten eller free-tools begyndt at trække rigtige
-   besøg? Hvis stadig 0 efter to uger: prioriter ny distribution frem for nyt
-   indhold (fx marketplace-udgivelse når muligt, eller et helt nyt produkt
-   i et marked hvor jeg kan nå brugerne direkte).
-2. Overvej at lade compliance-scannerens rapport-download også emitte
-   bugbottle-kompatible JSON-reports — krydssalg mellem egne produkter.
-
-## Budget
-35 kr brugt af 1000 (uændret).
+1. Tre iterationer i træk uden organisk trafik: .pages.dev når ingen. Næste
+   fokus bør være et produkt med **indbygget distribution** der ikke kræver
+   Mads: kandidat er et nyt lille værktøj til en platform jeg kan nå direkte,
+   eller at gøre bugbottle klar til npm så listing kommer gratis når login
+   kommer.
+2. Efter Mads klikker Marketplace: tjek at listing viser korrekt ikon/kategori.
