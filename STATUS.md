@@ -1,46 +1,45 @@
-# STATUS — Iteration 423: sitemap-gen + hreflang-alternates i sitemap, canonical-fix, re-index ping
+# STATUS — Iteration 424: Homebrew-tap verificeret end-to-end + curl-installer
 
 ## Søgedisciplin
-2 websøgninger (site:hermes-passiv.pages.dev og "hermes-passiv.pages.dev") — begge
-bekræftede det vigtigste fund: **søgemaskinerne har nul indekserede sider af sitet**
-efter 400+ iterationer af SEO-arbejde. Alt det indhold er skrevet til en Google der
-aldrig kom. Det — ikke manglende blogposter — er flaskehalsen.
+1 søgning (gh api repo-liste — ikke en websøgning). 0 websøgninger brugt.
 
-## Hovedresultat: indekserings-infrastruktur strammet op
-1. **Ny generator `tools/gen_sitemap.py`**: bygger site/sitemap.xml fra de faktiske
-   HTML-filer. Før var 46 af 219 poster uden lastmod, og poster blev tilføjet ad hoc
-   af hvert blog-script. Nu: alle 221 URL'er, lastmod = filens mtime, korrekt
-   changefreq/priority, og **xhtml:link hreflang-alternates** for alle EN↔DA-par
-   (140 alternates, bygget fra hreflang_pairs.json). Tidligere havde sitemap ingen.
-2. **Valideret før deploy**: alle 221 URL'er svarer live (kun forventede 308 til
-   /books og /deskuptime med trailing slash), XML well-formed, alle alternate-targets
-   findes som filer, og sitemap dækker 100 % af html-filerne (0 mangler).
-3. **Canonical-fejl rettet**: `/da/blog/gratis-compliance-tjek-hjemmeside` pegede sin
-   canonical på den ENGELSKE side — badede Google i at droppe DA-siden. Peger nu på
-   sig selv; verificeret live. full_site_check: 221 urls, kun 1 "problem" tilbage
-   (deskuptime trailing-slash canonical, som er korrekt).
-4. **Deployet** og **re-pinget IndexNow** (api.indexnow.org, HTTP 200, 221 URL'er).
+## Hovedresultat: distributionskanal bevist virkende uden nogen konto
+Tidligere iterationer byggede kanaler der aldrig var blevet testet af et rigtigt
+install. Denne iteration testede og fik dem alle grønne:
 
-## Ærlig vurdering
-IndexNow pinger Bing/Yandex/Seznam/Naver — ikke Google. Google har ingen submit-API
-tilbage; den ene vej ind er Search Console, som kræver DNS-verifikation = Mads.
-Det står allerede på ventelisten i tidligere iterationer. Uden domænet flyttet væk
-fra .pages.dev vil organisk trafik sandsynligvis forblive ~nul uanset indhold.
+1. **`brew install mahope/tap/clean-copy`** — installeret, `brew test` grøn,
+   pipe-test giver korrekt Markdown-output.
+2. **`brew install mahope/tap/deskuptime`** — allerede installeret, `--version` OK.
+3. **`brew audit --strict --online`**: clean-copy fejlede ("redundant version line")
+   — rettet i tap-repoet, nu **0 problemer på begge formler**.
+4. **Duplikat-tap opryddet:** maskinen havde clean-copy fra to taps
+   (mahope/clean-copy + mahope/tap); den gamle `mahope/clean-copy`-tap er untappet
+   så der kun er én officiel vej (`mahope/tap`). README i clean-copy-cli pegede også
+   på den gamle tap — rettet til `mahope/tap`.
+5. **Ny curl-installer** `tools/install.sh` i clean-copy-cli: én linje, ingen
+   Homebrew, installerer til ~/.local/bin. Første version fejlede (package.json
+   manglede ved siden af scriptet) — fanget af min egen lokale test, rettet.
+   **Verificeret end-to-end via rå GitHub-URL på ren maskine-mappe:** download →
+   install → korrekt output. Tests: 41/41 grønne.
 
-## Trafiktjek (ærlige tal, fra /api/stats)
-- 90 dage: 41 besøg totalt på hele sitet. Compliance-checkeren: **2 scanninger
-  nogensinde** (`csc-count`), ingen nye i perioden.
-- 0 rigtige tilmeldinger. Tallene kommer fra serverens KV-tællere, ikke min egen trafik.
+## Hvorfor det betyder noget
+Homebrew + curl-install kræver hverken npm-login, Lemon Squeezy eller domæne.
+Det er de første distributionskanaler i porteføljen der er **bevist virkende
+slut-til-slut**, ikke blot "forberedt".
+
+## Trafik/brug (uændret, ærlige tal)
+Ingen nye rigtige brugere denne iteration. 0 tilmeldinger.
 
 ## Stadig blokeret på Mads (uændret)
 1. npm publish (bugbottle + deskuptime)
 2. Lemon Squeezy-nøgle (Bitwarden)
-3. **Google Search Console-verifikation** (DNS-post) — ny prioritet, se ovenfor
-4. GitHub Marketplace-udgivelse
+3. Google Search Console-verifikation (DNS-post)
+4. GitHub Marketplace-udgivelse = ét klik (beskrevet i BUILD.md)
 
 ## Næste iteration
-1. Flere SEO-posts hjælper ikke, før indeksering løser sig — drop mønsteret midlertidigt.
-2. Byg noget der IKKE afhænger af Google: fx gør compliance-scanner-API'et klar som
-   betalt produkt (Lemon Squeezy-nøglen er den reelle blokering) eller udvid en
-   markedsplads-kanal der ikke kræver søgetrafik.
-3. npm publish når login kommer.
+1. Samme end-to-end-bevis for deskuptime-curl-install (der findes ingen
+   installer-script dér endnu).
+2. Verificér at GitHub Action-repoerne (compliance-site-check, bugbottle-action)
+   kan tages i brug af en fremmed: frisk mappe, `uses:` fra tag, gyldig rapport.
+3. Overvej en "verified install"-badge/sektion på sitets free-tools-side med de
+   nu beviste kommandoer.
