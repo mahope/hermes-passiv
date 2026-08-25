@@ -298,6 +298,53 @@
   });
 
   $('printBtn').addEventListener('click', function () { window.print(); });
+
+  // Lead capture: after report generated, show email form (DA version)
+  $('genForm').addEventListener('submit', function () {
+    setTimeout(function () {
+      var wrap = $('reportWrap');
+      var leadBox = document.getElementById('leadBox');
+      if (!leadBox) {
+        leadBox = document.createElement('div');
+        leadBox.id = 'leadBox';
+        leadBox.className = 'no-print';
+        leadBox.style.cssText = 'margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)';
+        leadBox.innerHTML =
+          '<h3 style="margin:0 0 6px;font-size:16px">📥 Få rapporten som PDF</h3>' +
+          '<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Vi sender dig en PDF + fremtidige NIS2-opdateringer. Ingen spam, afmeld når som helst.</p>' +
+          '<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<input type="email" id="leadEmail" placeholder="Din e-mail-adresse" required style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">' +
+          '<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Send min rapport →</button>' +
+          '</form><div id="leadStatus" style="font-size:13px;margin-top:8px"></div>';
+        wrap.parentNode.insertBefore(leadBox, wrap.nextSibling);
+
+        document.getElementById('leadForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var email = document.getElementById('leadEmail').value.trim();
+          var status = document.getElementById('leadStatus');
+          if (!email || !/^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+            status.innerHTML = '<span style="color:var(--color-red)">Indtast en gyldig e-mail-adresse.</span>';
+            return;
+          }
+          status.innerHTML = '<span style="color:var(--color-text-muted)">Sender…</span>';
+          fetch('/api/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d.ok) {
+              status.innerHTML = '<span style="color:var(--color-green)">✓ Tjek din indbakke — rapporten er på vej.</span>';
+              document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen!</p>';
+            } else {
+              status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Fejl') + '</span>';
+            }
+          }).catch(function () {
+            status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+          });
+        });
+      }
+    }, 100);
+  });
 })();
 </script>
 </body>
