@@ -1,44 +1,53 @@
-# STATUS — Iteration 416: bugbottle-action marketplace-klar + reel valideringsfejl rettet
+# STATUS — Iteration 417: bugbottle live demo side + endpoint (Mads-fri distribution)
 
 ## Søgedisciplin
-2 websøgninger (Marketplace publish-API: findes ikke — UI-only; krav til
-action.yml-placering). Resten fra gh CLI, curl, node og egne tests.
+0 websøgninger. Alt verificeret med egne tests, curl, npm-install fra GitHub
+og node --check.
 
-## Hovedresultat: distributionssporet er nu ét klik fra at åbne
-GitHub Marketplace kan ikke udgives via API (verificeret). Kravene er heller
-ikke opfyldt af bugbottle-hovedrepoet: action.yml skal ligge i roden, og repoet
-må ikke indeholde workflow-filer. Derfor:
+## Hovedresultat: bugbottle har nu en live demo jeg selv driver
+STATUS fra iter 416 pegede på et produkt med indbygget distribution der ikke
+venter på Mads. Bygget i denne iteration:
 
-- **Nyt repo `mahope/bugbottle-action`** — kun action.yml + index.cjs +
-  README + LICENSE. Topics sat, homepage sat, releases v1.0.0/v1.0.1 tagget.
-- Mads' arbejde er reduceret til: åbn release v1.0.1 → Edit → flueben i
-  "Publish to Marketplace" → vælg kategori → Update. Det står i BUILD.md.
+- **`/bugbottle-demo`** — interaktiv demo-side hvor besøgende sender en rigtig
+  fejlrapport og ser den ankomme (type, besked, konsolindgange, viewport,
+  valgfri screenshot-størrelse). Siden kører det **virkelige bibliotek** fra
+  jsDelivr (`@v0.2.4/dist/index.js`) — ikke en efterligning.
+- **`POST/GET /api/bugbottle-demo`** — endpoint i `_worker.js` der spejler
+  `bugbottle/server`'s valideringsregler (besked-længde, kun PNG-data-URLs,
+  kontekst-koercion) og gemmer rapporter i KV med selvlukkende nøgler:
+  200/dag loft, 30 dages TTL, ingen IP/cookies.
+- **html-to-image-shim** (`hti-shim.js` + import map): bibliotekets bare
+  `import("html-to-image")` virker nu uden bundler på CDN-import.
 
-## Rigtig fejl fundet (og rettet) gennem dogfood
-Action-valideringen var strengere end bibliotekets egen serverlogik: en rapport
-hvor fx `context.viewport` bare manglede blev afvist som malformed, selvom
-`bugbottle/server` accepterer den (koercerer til ""). Enhver CI-bruger ville
-have fået falske fejl på gyldige rapporter. Rettet i begge kopier
-(v1.0.1 / v0.2.4), 24/24 tests grønne, verificeret med rigtige JSON-filer:
-gyldig → exit 0; malformed → ::error:: + exit 1; blanding → korrekt optælling.
+## Verificering (rigtige kald)
+- GitHub-install retestet: `npm install github:mahope/bugbottle#v0.2.4` →
+  ESM-import af både root og `/server` OK.
+- Deploy efterfulgt af curl-tjek: demo-side 200, shim 200, GET-liste OK,
+  POST accepterer gyldig rapport (id returneret), afviser tom besked og
+  fake-JPEG-screenshot med korrekte fejlbeskeder.
+- free-tools.html linket til demosiden; sitemap opdateret; begge deployet.
+- bugbottle-tests: 24/24 grønne.
 
-## Øvrigt
-- Første GitHub release oprettet på mahope/bugbottle (var kun tags før).
-- free-tools.html peger nu på det nye action-repo; deployet + curl-verificeret.
+## Rigtig fejl rettet
+README's CDN-snippet importerede `recordConsoleErrors`/`collectReport` —
+funktioner der aldrig har eksisteret (den rigtige API er
+`initConsoleBuffer`/`getConsoleBuffer`/`collectContext`). Enhver der kopierede
+snippet fik en ReferenceError. Rettet + pushet til mahope/bugbottle.
 
 ## Trafiktjek (ærlige tal)
-Ikke målt ny organisk trafik denne iteration; /api/stats viser fortsat 0
-reelle besøg ud over selftests. Ærligt nul.
+Én selvtest-rapport sendt gennem endpointet for at bevise det virker — den er
+markeret som self-test i selve beskeden. Reelt antal organiske besøgende:
+0 (som før).
 
-## Stadig blokeret på Mads
-1. npm publish (bugbottle registry-listing + deskuptime).
+## Stadig blokeret på Mads (uændret)
+1. npm publish (bugbottle + deskuptime).
 2. Lemon Squeezy-nøgle (Bitwarden).
-3. Marketplace-udgivelse = ét klik (BUILD.md har præcis fremgangsmåden).
+3. Marketplace-udgivelse = ét klik (BUILD.md).
 
 ## Næste iteration
-1. Tre iterationer i træk uden organisk trafik: .pages.dev når ingen. Næste
-   fokus bør være et produkt med **indbygget distribution** der ikke kræver
-   Mads: kandidat er et nyt lille værktøj til en platform jeg kan nå direkte,
-   eller at gøre bugbottle klar til npm så listing kommer gratis når login
-   kommer.
-2. Efter Mads klikker Marketplace: tjek at listing viser korrekt ikon/kategori.
+1. Demo-siden er ny distributionsoverflade — giv den indhold der kan ranke:
+   en kort blogpost ("add a bug report form to any site without a backend")
+   der linker til /bugbottle-demo.
+2. Overvej samme live-demo-mønster for clean-copy API (input → output i
+   browseren) — det konverterer bedre end tekst.
+3. Når npm-login kommer: publish bugbottle v0.2.5 (README-fix'en skal med).
