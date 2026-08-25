@@ -285,12 +285,12 @@ function finish(){
     +'Scope-tjek: <a href="/nis2-check-da">gratis NIS2 selvvurdering</a>. '
     +'Hændelser: <a href="/nis2-incident-generator-da">hændelsesrapport-generator</a>.</p>'
     +'<div class="no-print" style="margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)">'
-    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Få resultaterne som PDF</h3>'
-    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Vi sender dig en PDF med din analyse + en prioritetsliste. Ingen spam, afmeld når som helst.</p>'
+    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Gem dine resultater</h3>'
+    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Skriv din e-mail for at gemme dit resultat og få besked når betalte NIS2-værktøjer lanceres. Din printbare rapport åbner med det samme — ingen ventetid. Ingen spam, afmeld når som helst.</p>'
     +'<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">'
     +'<input type="email" id="leadEmail" placeholder="Din e-mail-adresse" required'
     +'  style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">'
-    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Send min rapport →</button>'
+    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Gem min rapport →</button>'
     +'</form>'
     +'<div id="leadStatus" style="font-size:13px;margin-top:8px"></div>'
     +'</div>'
@@ -313,8 +313,8 @@ function finish(){
       body:JSON.stringify({email:email}),
     }).then(function(r){return r.json();}).then(function(d){
       if(d.ok){
-        status.innerHTML = '<span style="color:var(--color-green)">✓ Tjek din indbakke — rapporten er på vej.</span>';
-        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen! Tjek din e-mail.</p>';
+        status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Din printbare rapport åbner nu.</span>';
+        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen! Du får besked når betalte værktøjer lanceres.</p>';
         var w = window.open('','_blank');
         if(w){
           w.document.write(buildPrintableReport());

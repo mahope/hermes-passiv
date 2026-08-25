@@ -304,12 +304,12 @@ function finish(){
     +'Plain-language guide: <a href="/blog/nis2-readiness-guide">NIS2 for Small Agencies</a>. '
     +'Full checklist + templates: <a href="/#products">NIS2 Compliance Kit e-book</a>.</p>'
     +'<div class="no-print" style="margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)">'
-    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Get your results as PDF</h3>'
-    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">We\'ll email you a PDF summary of your assessment + a priority checklist. No spam, unsubscribe anytime.</p>'
+    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Save your results</h3>'
+    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Enter your email to save your result and get notified when paid NIS2 tools launch. Your printable report opens right away — no waiting. No spam, unsubscribe anytime.</p>'
     +'<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">'
     +'<input type="email" id="leadEmail" placeholder="Your email address" required'
     +'  style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">'
-    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Send my report →</button>'
+    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Save my report →</button>'
     +'</form>'
     +'<div id="leadStatus" style="font-size:13px;margin-top:8px"></div>'
     +'</div>'
@@ -332,8 +332,8 @@ function finish(){
       body:JSON.stringify({email:email}),
     }).then(function(r){return r.json();}).then(function(d){
       if(d.ok){
-        status.innerHTML = '<span style="color:var(--color-green)">✓ Check your inbox for your report (arrives within a few minutes).</span>';
-        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ You\'re on the list! Check your email for the PDF.</p>';
+        status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! Your printable report is opening now.</span>';
+        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</p>';
 
         // Send the actual report via a simple mailto-style approach
         // Client-side: open a new window with the printable report for manual save

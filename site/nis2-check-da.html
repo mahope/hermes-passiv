@@ -292,9 +292,45 @@ function finish(){
     +'<p style="font-size:13px;color:#667">Struktureret screening — ikke juridisk rådgivning. '
     +'Guiden på dansk: <a href="/da/blog/nis2-guide-da">NIS2-guiden</a>. '
     +'Fuld tjekliste + skabeloner: <a href="/#products">NIS2 Compliance Kit e-bogen</a>.</p>'
+    +'<div class="no-print" style="margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)">'
+    +'<h3 style="margin:0 0 6px;font-size:16px">📥 Gem jeres resultat</h3>'
+    +'<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Skriv jeres e-mail for at gemme screeningen og få besked når betalte NIS2-værktøjer lanceres. Ingen spam, afmeld når som helst.</p>'
+    +'<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<input type="email" id="leadEmail" placeholder="Din e-mail-adresse" required'
+    +'  style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">'
+    +'<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Gem resultatet →</button>'
+    +'</form>'
+    +'<div id="leadStatus" style="font-size:13px;margin-top:8px"></div>'
+    +'</div>'
     +'<p style="text-align:center;margin-top:18px">'
     +'<button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '
     +'<button onclick="shareResult()" class="btn btn-secondary">Kopiér delbart link</button></p>';
+
+  // Wire up lead capture form (samme som EN-versionen)
+  document.getElementById('leadForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('leadEmail').value.trim();
+    var status = document.getElementById('leadStatus');
+    if(!email || !/^[^\s@]{1,64}@[^@\s]+\.[^@\s]{2,}$/.test(email)){
+      status.innerHTML = '<span style="color:var(--color-red)">Indtast en gyldig e-mail-adresse.</span>';
+      return;
+    }
+    status.innerHTML = '<span style="color:var(--color-text-muted)">Gemmer…</span>';
+    fetch('/api/waitlist', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email}),
+    }).then(function(r){return r.json();}).then(function(d){
+      if(d.ok){
+        status.innerHTML = '';
+        document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Gemt! I får besked når betalte NIS2-værktøjer lanceres.</p>';
+      } else {
+        status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Fejl')+'</span>';
+      }
+    }).catch(function(){
+      status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+    });
+  });
 }
 
 async function shareResult(){

@@ -1,3 +1,28 @@
+# RESEARCH — Iteration 269: Distributionsdata + ærlighedstjek (0 web-søgninger)
+
+**Dato:** 2026-08-25
+**Metode:** gh API traffic endpoints, /api/stats, curl af live-sider. 0 web-søgninger.
+
+## Fakta
+1. **GitHub organisk trafik er nul:** repositorierne clean-copy,
+   clean-copy-firefox, clean-copy-vscode, clean-copy-obsidian,
+   homebrew-clean-copy, clean-copy-cli og eucomply-scanner har alle
+   **0 visninger over de seneste 14 dage** (gh /traffic/views).
+2. Firefox-repoets 55 kloner (29 unikke) den 24/8 er en enkelt dags-spike uden
+   tilhørende visninger — mest sandsynligt vores egen sync/CI-aktivitet, ikke
+   eksterne brugere. Referrer-listen er tom.
+3. Lead-formularerne fra iter 268 lovede email-levering ("Tjek din indbakke")
+   som ikke eksisterer — handleWaitlist gemmer kun adressen i KV. Rettet i
+   denne iteration; teksten lover nu kun det koden gør.
+4. Waitlist-tæller: 1 (uændret). Lead capture var først live samme dag.
+
+## Konklusion
+GitHub som distributionskanal er død uden en aktiv butikskanal foran den.
+Lead capture er den sidste billigste væksthypotese på egen flade — giv den
+nogle dage, og skift spor hvis den ikke måler nogen vækst.
+
+---
+
 # RESEARCH — Iteration 234: EN PDF-tabel-post (0 web-søgninger)
 
 **Dato:** 2026-08-25

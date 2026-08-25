@@ -1,41 +1,34 @@
-# DECISION — Iteration 268: Email lead capture + SEO blog-indlæg
+# DECISION — Iteration 269: Ærlighed før vækst — ret falske løfter, dæk alle 6 værktøjer
 
 **Dato:** 2026-08-25
-**Beslutning:** Skift fra at bygge flere gratis værktøjer til at bygge en audience. Email lead capture på alle NIS2-værktøjer. SEO-blogindlæg til gap assessment.
+**Beslutning:** Før ny vækst: ret iter 268's uærlige lead-formularer og gør lead
+capture komplet på alle 6 NIS2-værktøjssider.
 
-## Situationen
+## Hvorfor
 
-**Data (reelle, bekræftet 25/8):**
-- Sitet får ~15-20 besøg/dag (3 dages data: 23-25 aug)
-- 7 e-bog downloads på en dag (6 unikke) — NIS2-e-bogen topper med 4/3
-- 1 ægte waitlist-signup
-- 0 licenser solgt (forventet — betaling blokeret)
+Iter 268 lovede "Vi sender dig en PDF" uden at der findes email-afsendelse.
+Et leadsystem der lover noget det ikke gør, ødelægger tilliden fra de første
+besøgende — og det er præcis den fejlmåling AGENTS.md forbyder. Løftet er nu
+det koden faktisk gør: gem e-mailen, giv besked når betalte værktøjer lanceres,
+og åbn rapporten printbar med det samme.
 
-**Hvad der ikke virkede:** At bygge endnu et gratis værktøj (gap assessment, incident generator, scope checker) og håbe på at noget ændrer sig. Værktøjerne er gode, men de bygger ikke en audience og de tjener ikke penge.
+Sammenholdt med data (0 GitHub-visninger på 14 dage, waitlist stadig 1) er
+konklusionen den samme som i 268: distribution er flaskehalsen, ikke features.
+Lead capture skal have tid til at vise om den virker — men hvis waitlist ikke
+vokser inden længe, skiftes sporet til en platform med indbygget trafik OG
+betaling i én godkendelse hos Mads.
 
-**Hvad jeg gjorde anderledes denne iteration:**
-1. Tilføjede email lead capture til gap assessment (EN + DA)
-2. Tilføjede email lead capture til incident generator (EN + DA)
-3. Skrev SEO-blogindlæg "NIS2 Gap Assessment: Free 20-Point Readiness Check" (EN + DA)
-4. Kryds-linkede værktøjer + sitemap + IndexNow
+## Data (reelt, 25/8 kl. 10:30)
 
-**Hvorfor dette er rigtigt:**
-- Email capture er INBOUND — brugeren vælger selv at give sin email. Ikke udadvendt handling i Mads' navn.
-- Listevækst løser distributionsproblemet: når Mads åbner betaling, har vi folk at konvertere.
-- Blogindlægget tilføjer søgbart indhold uden at bygge et nyt værktøj.
-- PDF-export via `window.print()` + `window.open()` giver brugeren værdi med det samme.
-
-## Hvad det stadig ikke løser
-
-- 0 kr i indtægt — betalingsvej stadig blokeret (Bitwarden)
-- Audience er lille — lead capture er en investering, ikke en indtægt
-- Kan ikke sende mails til listen uden Mads' godkendelse
+- Waitlist: 1 ægte signup (lead capture live siden i dag)
+- GitHub organisk trafik: 0 visninger/14 dage på ALLE repos
+- Site forsiden: ~5 besøg/3 unikke indtil formiddag
+- Søgninger brugt denne iteration: 0
 
 ## Budget: 0 kr brugt (35/1000 total)
 
 ## Næste iteration
 
-1. Tjek om email captures gav nye signups (via /api/stats — waitlist-tælleren)
-2. Hvis waitlist vokser: skriv endnu et NIS2-blogindlæg (f.eks. "NIS2 documentation requirements for web agencies")
-3. Hvis waitlist stadig 1: overvej fundamentalt anderledes tilgang — byg produkt med indbygget distribution (f.eks. AI-baseret værktøj på en markedsplads med egen trafik)
-4. Hvis Mads har åbnet Bitwarden: aktiver Lemon Squeezy og sælg Compliance Kit
+1. Mål waitlist-vækst over flere dage før konklusion.
+2. Ingen vækst → nyt spor: markedsplads med checkout indbygget.
+3. Bitwarden åbnet → Lemon Squeezy live.

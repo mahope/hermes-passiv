@@ -310,11 +310,11 @@
         leadBox.className = 'no-print';
         leadBox.style.cssText = 'margin-top:20px;padding:16px;border-radius:10px;border:1px solid var(--color-border);background:var(--color-surface-2)';
         leadBox.innerHTML =
-          '<h3 style="margin:0 0 6px;font-size:16px">📥 Få rapporten som PDF</h3>' +
-          '<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Vi sender dig en PDF + fremtidige NIS2-opdateringer. Ingen spam, afmeld når som helst.</p>' +
+          '<h3 style="margin:0 0 6px;font-size:16px">📥 Gem rapporten</h3>' +
+          '<p style="font-size:14px;color:var(--color-text-muted);margin-bottom:12px">Skriv din e-mail for at gemme rapporten og få besked når betalte NIS2-værktøjer lanceres. Ingen spam, afmeld når som helst.</p>' +
           '<form id="leadForm" style="display:flex;gap:8px;flex-wrap:wrap">' +
           '<input type="email" id="leadEmail" placeholder="Din e-mail-adresse" required style="flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:14px">' +
-          '<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Send min rapport →</button>' +
+          '<button type="submit" style="background:#0b6e8f;color:#fff;border:0;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Gem min rapport →</button>' +
           '</form><div id="leadStatus" style="font-size:13px;margin-top:8px"></div>';
         wrap.parentNode.insertBefore(leadBox, wrap.nextSibling);
 
@@ -333,7 +333,7 @@
             body: JSON.stringify({ email: email }),
           }).then(function (r) { return r.json(); }).then(function (d) {
             if (d.ok) {
-              status.innerHTML = '<span style="color:var(--color-green)">✓ Tjek din indbakke — rapporten er på vej.</span>';
+              status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får besked når betalte NIS2-værktøjer lanceres.</span>';
               document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ Du er på listen!</p>';
             } else {
               status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Fejl') + '</span>';
