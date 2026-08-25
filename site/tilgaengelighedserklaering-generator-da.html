@@ -278,7 +278,7 @@
       + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
       + '<body style="max-width:760px;margin:40px auto;padding:0 20px;'
       +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733">\n'
-      + $('statement').innerHTML + '\n<\/script>\n</body>\n</html>\n';
+      + $('statement').innerHTML + '</body></html>';
     var blob = new Blob([doc], { type: 'text/html' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -287,6 +287,12 @@
     URL.revokeObjectURL(a.href);
   });
 })();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
 </body>
 </html>

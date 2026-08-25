@@ -28,7 +28,9 @@ for f in sorted(root.rglob('*.html')):
         skipped += 1; continue
     if '</body>' not in html:
         print('NO BODY TAG:', f); continue
-    html = html.replace('</body>', SNIPPET + '\n</body>', 1)
+    idx = html.rindex('</body>')
+    html = html[:idx] + SNIPPET + '\n</body>' + html[idx+len('</body>'):]
+
     f.write_text(html, encoding='utf-8')
     changed += 1
 print(f'injected: {changed}, already tracked: {skipped}')
