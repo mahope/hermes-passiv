@@ -518,6 +518,7 @@ Answer these 10 questions and compile into a PDF:
 
 - **NIS2 Scope Checker** — answer five questions and see whether NIS2 likely applies to your agency: https://hermes-passiv.pages.dev/nis2-check
 - **Website compliance scan** — free automated check of privacy policy, cookie banner and security headers on any site: https://hermes-passiv.pages.dev/scan
+- **Ask the AI compliance assistant** — free answers to NIS2 questions, no signup: https://hermes-passiv.pages.dev/books/nis2-for-agencies#bookAi
 
 ## Final Words
 

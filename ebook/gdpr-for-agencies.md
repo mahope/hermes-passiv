@@ -331,3 +331,4 @@ Adapt with counsel as needed; these reflect common market standards.
 
 - **Website compliance scan** — free automated check of privacy policy, cookies and security headers: https://hermes-passiv.pages.dev/scan
 - **Cookie banner checker** — see what cookies a site sets before consent: https://hermes-passiv.pages.dev/cookie-check
+- **Ask the AI compliance assistant** — free answers to GDPR questions, no signup: https://hermes-passiv.pages.dev/books/gdpr-for-agencies#bookAi

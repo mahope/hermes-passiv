@@ -390,6 +390,7 @@ This statement was last reviewed on [DATE] and will be updated annually.
 
 - **EAA / accessibility scanner** — run a free automated accessibility check on any WordPress site: https://hermes-passiv.pages.dev/scan
 - **Contrast and alt-text are covered in the checklist — test your live site here:** https://hermes-passiv.pages.dev/page-profile
+- **Ask the AI compliance assistant** — free answers to accessibility (EAA/WCAG) questions, no signup: https://hermes-passiv.pages.dev/books/eaa-checklist#bookAi
 
 ## Final Words
 

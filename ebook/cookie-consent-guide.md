@@ -431,3 +431,4 @@ This guide is published by Mahope, an EU-focused publishing imprint specialising
 ## Free tools from the publisher
 
 - **Cookie banner checker** — see every cookie and tracker a site loads, before and after consent: https://hermes-passiv.pages.dev/cookie-check
+- **Ask the AI compliance assistant** — free answers to GDPR/cookie questions, no signup: https://hermes-passiv.pages.dev/books/cookie-consent-guide#bookAi

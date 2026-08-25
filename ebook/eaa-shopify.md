@@ -447,6 +447,7 @@ These records serve as evidence of good faith if you are ever investigated.
 
 ### Free testing tools
 - **EAA/WCAG Scanner**: hermes-passiv.pages.dev/scan — 16 automated checks
+- **Ask the AI compliance assistant**: https://hermes-passiv.pages.dev/books/eaa-shopify#bookAi — free answers to EAA questions, no signup
 - **WAVE Browser Extension**: wave.webaim.org — visual overlay of issues
 - **WebAIM Contrast Checker**: webaim.org/resources/contrastchecker/
 - **aXe DevTools**: deque.com/axe/devtools/ — browser extension
