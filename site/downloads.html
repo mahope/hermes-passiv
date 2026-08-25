@@ -30,14 +30,18 @@
   "@type": "SoftwareApplication",
   "name": "EAA Compliance Scanner Desktop",
   "applicationCategory": "DeveloperApplication",
-  "operatingSystem": "macOS 12+ (Apple Silicon)",
-  "description": "Native desktop application for EAA / WCAG 2.1 AA compliance scanning. Offline-capable, save-as-PDF reports.",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  "operatingSystem": "macOS 12+, Linux, Windows 10+",
+  "description": "Native desktop application for EAA / WCAG 2.1 AA compliance scanning. Offline-capable, save-as-PDF reports, batch scanning, cross-platform.",
+  "offers": [
+    { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+    { "@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "USD", "description": "Batch scanning, CSV/JSON export, unlimited crawl" }
+  ]
 }
 </script>
 <style>
   .dl-card { background: var(--color-surface-2, #16202c); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
   .dl-card code { display: block; background: #0b1119; padding: .8rem 1rem; border-radius: 8px; margin-top: .6rem; overflow-x: auto; font-size: .95em; }
+  .pro-badge { display: inline-block; background: #38bdf8; color: #0b1119; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .5px; vertical-align: middle; margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -72,32 +76,43 @@
       <h2>🖥️ Desktop App (macOS, Apple Silicon)</h2>
       <p>Native macOS desktop application for the EAA Compliance Scanner. Same 22 WCAG 2.1 AA rules
       as the CLI and web versions, with a native interface and one-click save-as-PDF reports.</p>
-      <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-mac-arm64.dmg" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download DMG (macOS ARM64, ~120 MB)</a></p>
+      <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-arm64.dmg" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download DMG (macOS ARM64, ~120 MB)</a></p>
       <p style="font-size:13px;color:var(--text-dim)">Alternatively, download the
-      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-mac-x64.dmg">Intel DMG</a>,
-      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-mac-arm64.zip">ARM64 ZIP</a>, or
-      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-mac-x64.zip">Intel ZIP</a>
-      (117 MB). Build from source:</p>
-      <p><a href="/downloads/eaa-scanner-desktop-src-1.3.1.zip" style="font-size:13px">⬇ Download Source (48 KB)</a></p>
+      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-x64.dmg">Intel DMG</a>,
+      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-arm64.zip">ARM64 ZIP</a>, or
+      <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-x64.zip">Intel ZIP</a>
+      (~120 MB). Build from source:</p>
+      <p><a href="/downloads/eaa-scanner-desktop-src-1.3.3.zip" style="font-size:13px">⬇ Download Source (68 KB)</a></p>
       <code style="font-size:13px">cd eaa-scanner-desktop<br>npm install<br>npm start</code>
       <p style="font-size:13px;color:var(--text-dim);margin-top:8px">The app launches as a native macOS window. Enter a URL and scan instantly — or switch to <strong>Whole site</strong> to crawl up to 200 same-site pages with a live progress readout and per-page findings. <em>Not signed with an Apple Developer ID: on first launch, right-click the app and select Open to bypass the unidentified-developer warning.</em></p>
     </section>
 
     <section class="dl-card">
-          <h2>🖥️ Desktop App (Linux)</h2>
-          <p>Native Linux build — AppImage (universal) and .deb (Debian/Ubuntu). Same features as macOS.</p>
-          <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-linux-x86_64.AppImage" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download AppImage (Linux x64, ~110 MB)</a></p>
+          <h2>🖥️ Desktop App (Linux) <span class="pro-badge">Pro</span></h2>
+          <p>Native Linux build — AppImage (universal) and .deb (Debian/Ubuntu). Same features as macOS. Batch scanning and CSV/JSON export require a Pro license.</p>
+          <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-linux-x86_64.AppImage" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download AppImage (Linux x64, ~110 MB)</a></p>
           <p style="font-size:13px;color:var(--text-dim)">Or install the
-          <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-linux-amd64.deb">.deb package</a> (Debian/Ubuntu).</p>
+          <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-linux-amd64.deb">.deb package</a> (Debian/Ubuntu).</p>
           <code style="font-size:13px">chmod +x EAA*.AppImage<br>./EAA*.AppImage</code>
         </section>
 
         <section class="dl-card">
-          <h2>🖥️ Desktop App (Windows)</h2>
-          <p>Native Windows build — installer and portable executable. Same features as macOS and Linux.</p>
-          <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-win-x64-setup.exe" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download Installer (Windows x64, ~90 MB)</a></p>
-          <p style="font-size:13px;color:var(--text-dim)">Or download the <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.2/EAA.Compliance.Scanner-1.3.1-win-x64-portable.exe">portable .exe</a> (no installation needed).</p>
+          <h2>🖥️ Desktop App (Windows) <span class="pro-badge">Pro</span></h2>
+          <p>Native Windows build — installer and portable executable. Same features as macOS and Linux. Batch scanning and CSV/JSON export require a Pro license.</p>
+          <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-setup.exe" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download Installer (Windows x64, ~90 MB)</a></p>
+          <p style="font-size:13px;color:var(--text-dim)">Or download the <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-portable.exe">portable .exe</a> (no installation needed).</p>
         </section>
+
+  <section class="dl-card" style="border-left:3px solid #38bdf8;">
+    <h2>⭐ Pro license — batch scanning, CSV/JSON export, unlimited crawl</h2>
+    <p>The free tier covers single-page scans, whole-site crawls (up to 200 pages), and PDF reports. Upgrade to Pro for:</p>
+    <ul>
+      <li><strong>Batch scanning</strong> — scan multiple URLs in sequence with aggregate stats</li>
+      <li><strong>CSV &amp; JSON export</strong> — export results for dashboards, reporting, or CI</li>
+      <li><strong>Unlimited crawl depth</strong> — no page limit on whole-site audits</li>
+    </ul>
+    <p><strong>$19/year</strong> — one license covers all 3 platforms (macOS, Linux, Windows). <em>License purchase coming soon once payment integration is live.</em></p>
+  </section>
 
   <section class="dl-card">
     <h2>Run it in CI — ready-made GitHub Actions workflow</h2>
@@ -116,6 +131,7 @@
       <li><a href="/downloads/mahope-eaa-scanner-1.3.0.tgz">mahope-eaa-scanner-1.3.0.tgz</a> — Node.js package, install with <code>npm install -g &lt;url&gt;</code></li>
       <li><a href="/downloads/eaa-scanner-README.md">README with full usage guide</a></li>
       <li><a href="/downloads/eaa-scan-github-action.yml" download>GitHub Actions workflow template</a></li>
+      <li><a href="/downloads/eaa-scanner-desktop-src-1.3.3.zip">eaa-scanner-desktop-src-1.3.3.zip</a> — Desktop app source</li>
     </ul>
   </section>
 
@@ -189,10 +205,10 @@
 </footer>
 <script defer src="/track.js"></script>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
 </script>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
 </body>
 </html>

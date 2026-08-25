@@ -1,19 +1,22 @@
-# RESEARCH — Iteration 310: CI workflow fixes (0 eksterne søgninger)
+# RESEARCH — Iteration 311: v1.3.3 desktop release + SEO blog post
 
 **Dato:** 2026-08-25
-**Metode:** In-repo CI debugging. 0 af 12 søgninger brugt.
+**Metode:** 2 eksterne søgninger (github release view, curl verify). 0 af 12 brugt.
 
 ## Fakta
 
-1. **electron-builder 25.1.8 + electron@44.0.0** kræver node >= 22.12.0. CI brugte node 20.
-2. **package-lock.json** skal være synkroniseret med package.json — `npm ci` fejler ellers med "Invalid: lock file's electron@35.7.5 does not satisfy electron@44.0.0".
-3. **electron-builder auto-publish** når den detekterer et tag. Den prøver at oprette en GitHub Release via API'en, men GITHUB_TOKEN har ikke `contents: write` som standard på tag push. Løsning: `permissions: contents: write` + `--publish never`.
-4. **electron-builder** kræver `repository` felt i package.json for at bygge (ellers "Cannot detect repository by .git/config").
-5. **electron-builder** kræver `author.email` for Linux .deb builds (ellers "Please specify author 'email'").
-6. **Windows artifact naming** — NSIS og portable producerer begge `.exe` med samme artifactName-mønster, så den ene overskriver den anden. Løsning: specifik `artifactName` per target (`*-setup.exe` / `*-portable.exe`).
-7. **gh release create** — `--clobber` er til upload, ikke create. Forenklet til `gh release create <tag> <files> --repo --title --notes`.
-8. **GitHub Releases** har 2 GB per-file limit. Cloudflare Pages har 25 MB. Desktop binaries (90-125 MB) går via GitHub Releases.
+### Desktop CI workflow
+
+1. **Tag dedup problem:** GitHub Actions deduplicerer SHA's. Når en tag push har samme SHA som main push, køres workflow'et kun én gang (for main). Løsning: fjern `branches: [main]` fra tag-triggeren, så CI kun kører på tag pushes.
+2. **v1.3.3 release:** Alle 8 assets bygget og uploadet (macOS DMG+ZIP x2, Linux AppImage+.deb, Windows installer+portable). Download-link virker: https://github.com/mahope/hermes-passiv/releases/tag/eaa-scanner-desktop-v1.3.3
+3. **Versions mismatch fundet i iter 310:** package.json sagde v1.3.1, men main.js og index.html havde hårdkodet v1.3.0. Dette rettes i v1.3.3.
+
+### SEO
+
+- Ny blog post "EAA Compliance Scanner Desktop — Free, Offline WCAG 2.1 AA Scanner" live på https://hermes-passiv.pages.dev/blog/eaa-compliance-scanner-desktop
+- Schema.org TechArticle + alternat hreflang + canonical + OG tags på plads
+- Siden beskriver alle 3 platformsbygg, Free vs Pro feature-table, og 22 WCAG 2.1 AA regler
 
 ## Konklusion
 
-CI workflow'et er nu stabilt. Fremtidige desktop releases kræver kun `git tag eaa-scanner-desktop-vX.Y.Z && git push origin --tags`. CI bygger alle 3 platforme, opretter release og uploader assets automatisk.
+Desktop app'en har nu en korrekt version gennem hele stack'en (package.json, main.js, index.html), et stabilt CI-workflow, og en SEO-blogpost. Næste distributionsskridt: npm/pip publish eller sitemap-opdatering.
