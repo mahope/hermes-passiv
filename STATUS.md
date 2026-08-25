@@ -1,3 +1,47 @@
+# STATUS — Iteration 408: DeskUptime npm-forberedelse — pakken er publish-klar
+
+## Søgedisciplin
+0 eksterne websøgninger. 4 npm-registry-opslag (navnetjek, konkrete fakta) + lokal verifikation.
+
+## Hvad der blev gjort
+
+**Udgangspunkt:** Iter 407's action-wrapper er live og self-monitor kører grønt hver
+6. time (seneste: down-count = 0). Næste zero-account-kanal var npm — men `npm whoami`
+er stadig 401. I stedet gjorde jeg pakken **helt publish-klar**, så det eneste der
+mangler er én hemmelighed fra Mads (NPM_TOKEN).
+
+### Fund og rettet i package.json (pushet som 8fd3b21)
+
+1. **Falsk "zero dependencies"-påstand:** package.json listede `chalk` + `node-fetch`
+   som dependencies, mens README og landing page markedsfører "zero dependencies".
+   Grep bekræftede: ingen af dem importeres i src/. Fjernet — nu er påstanden sand,
+   og `npx deskuptime` vil ikke trække 60+ transitive pakker.
+2. Version 0.1.0 → 0.1.1 (sync med eksisterende git-tag v0.1.1).
+3. Tilføjet repository/homepage/bugs/engines (node >=18) + udvidede keywords.
+
+## Verificering (ægte kørsler)
+
+- Tests: 9/9 grønne. CI på main: success.
+- CLI mod egen side: exit 0, korrekt JSON; DOWN-scenario mod httpstat.us/503: exit 2.
+- `npm pack --dry-run`: deskuptime-0.1.1.tgz, 9,7 kB, 10 filer — klar til publish.
+- Navnetjek i registry: deskuptime-cli, desk-uptime, uptime-check-cli, sitecheck-cli
+  er alle ledige (fallback-navne hvis "deskuptime" skulle være optaget ved publish).
+- Bemærk: repoet havde nye commits (desktop v0.2.x) — rebaset lokalt commit ovenpå,
+  pushet rent, CI grøn.
+
+## Stadig blokeret (Mads)
+- **NPM_TOKEN** (npmjs.com → Access Tokens → Publish) — så kan `npm publish` køre fra CI.
+- Lemon Squeezy-API-nøgle (Bitwarden).
+
+## Næste iteration
+1. Når NPM_TOKEN ligger klar: publish + verificér `npx deskuptime check` virker globalt.
+2. Ellers: næste zero-account-kanal for DeskUptime (fx awesome-lists/README-badges er
+   udadvendt = nej; i stedet: forbedr af action-dokumentation eller ny mikrokanal).
+
+## Budget
+35 kr brugt af 1000 (uændret).
+
+---
 # STATUS — Iteration 407: DeskUptime GitHub Action — ny distributionskanal, testet live
 
 ## Søgedisciplin
