@@ -23,7 +23,7 @@ Free, browser-based EU compliance tools and guides for small web agencies (1-50 
 - Tekst-på-billede kontrasttjek (Danish): https://hermes-passiv.pages.dev/text-on-image-checker-da
 - Clean Copy Web: https://hermes-passiv.pages.dev/clean-copy-tool — paste messy formatted text or raw HTML, get clean Markdown or plain text. 100% in-browser.
 - Clean Copy Bookmarklet: https://hermes-passiv.pages.dev/clean-copy-bookmarklet — drag-to-bookmarks-bar button that copies selected text as clean Markdown on any browser, no extension.
-- Clean Copy for Obsidian: https://hermes-passiv.pages.dev/clean-copy — Obsidian plugin (v1.0.1) that pastes clipboard HTML as proper Markdown and cleans selections. Free; download from the Clean Copy page.
+- Clean Copy for Obsidian: https://hermes-passiv.pages.dev/clean-copy — Obsidian plugin (v1.0.9) that pastes clipboard HTML as proper Markdown and cleans selections. Free; download from the Clean Copy page.
 - site-icons: https://hermes-passiv.pages.dev/site-icons — CLI that generates every favicon size, favicon.ico and an HTML head snippet from a single SVG or PNG. Free tier, offline, no upload.
 - page-profile: https://hermes-passiv.pages.dev/page-profile — profile any web page (meta, OG, JSON-LD, headings, alt text, security headers) via web UI or zero-dependency Python CLI; public JSON API at /api/profile?url=.
 - Hash Generator: https://hermes-passiv.pages.dev/hash-generator — compute SHA-256, SHA-512, SHA-384 and SHA-1 hashes of any text via the Web Crypto API. 100% in-browser.
@@ -36,7 +36,7 @@ Free, browser-based EU compliance tools and guides for small web agencies (1-50 
 
 - URL Encoder/Decoder: https://hermes-passiv.pages.dev/url-encoder-decoder — encode special characters for URLs or decode percent-encoded strings, with full and partial encoding modes. 100% in-browser.
 - NIS2 Readiness Check: https://hermes-passiv.pages.dev/nis2-check
-- AI Compliance Assistant: https://hermes-passiv.pages.dev/compliance-ai.html — ask NIS2/EAA/GDPR questions, answered by AI with compliance-specific prompting.
+- AI Compliance Assistant: https://hermes-passiv.pages.dev/compliance-ai — ask NIS2/EAA/GDPR questions, answered by AI with compliance-specific prompting.
 
 ## Free templates (markdown, download and reuse)
 
@@ -71,3 +71,12 @@ Free, browser-based EU compliance tools and guides for small web agencies (1-50 
 https://hermes-passiv.pages.dev/guides/platforms.html — platform-specific accessibility checks for WordPress, Shopify, Wix, Squarespace, Webflow, Joomla, Drupal, TYPO3 and more.
 - Markdown Table Generator: https://hermes-passiv.pages.dev/markdown-table-generator — convert CSV/TSV data into formatted Markdown tables with alignment options and live preview. 100% in-browser.
 - [Preserving Table Column Alignment in HTML to Markdown](https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown): how converters carry text-align/align into :---/:---:/---: separator rows.
+
+## Danske versioner (Danish)
+
+- EAA/WCAG Scanner (dansk): https://hermes-passiv.pages.dev/scan-da
+- DPA-generator (dansk): https://hermes-passiv.pages.dev/dpa-generator-da
+- Privatlivspolitik-generator (dansk): https://hermes-passiv.pages.dev/privacy-notice-generator-da
+- Cookie-tjek (dansk): https://hermes-passiv.pages.dev/cookie-check-da
+- NIS2 Beredskabstjek (dansk): https://hermes-passiv.pages.dev/nis2-check-da
+- WCAG Kontrasttjekker (dansk): https://hermes-passiv.pages.dev/contrast-checker-da
