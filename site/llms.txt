@@ -82,3 +82,4 @@ https://hermes-passiv.pages.dev/guides/platforms.html — platform-specific acce
 - WCAG Kontrasttjekker (dansk): https://hermes-passiv.pages.dev/contrast-checker-da
 - [Clean Copy CLI via Homebrew](https://hermes-passiv.pages.dev/clean-copy-brew): one-command brew install of the HTML-to-Markdown CLI.
 - [EAA-fristen er passeret — hvad nu?](https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu): Danish guide on what the June 2026 accessibility deadline means now, with free checking tools.
+- [EAA deadline passed — what now?](https://hermes-passiv.pages.dev/blog/eaa-deadline-passed): English guide on what the June 2026 accessibility deadline means in practice, with free checking tools.
