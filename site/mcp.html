@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>passiv-mcp — Free Web Tools MCP Server for AI Agents</title>
+<meta name="description" content="Give Claude, Cursor or any MCP client free web tools: HTML to Markdown conversion, 9-point EU compliance scan, page profiling and security header checks. Zero auth, zero dependencies, listed in the official MCP Registry.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="passiv-mcp — Free Web Tools for AI Agents">
+<meta property="og:description" content="MCP server with HTML→Markdown, EU compliance scan, page profile and security header check. Run it with npx github:mahope/passiv-mcp.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/mcp">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/mcp">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "passiv-mcp",
+  "description": "Model Context Protocol server giving AI agents free web tools: HTML to Markdown, 9-point EU compliance scan, page profile and security header checks.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Node.js 18+)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "codeRepository": "https://github.com/mahope/passiv-mcp",
+  "license": "https://opensource.org/licenses/MIT"
+}
+</script>
+<style>
+  .mcp-wrap { max-width: 780px; margin: 0 auto; padding: 40px 16px; }
+  .mcp-badge { display:inline-block; background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe;
+    border-radius:999px; padding:4px 14px; font-size:14px; font-weight:600; margin-bottom:16px; }
+  .mcp-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin:28px 0; }
+  .mcp-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px; }
+  .mcp-card h3 { margin-top:0; }
+  .mcp-card p { color:#4b5563; font-size:15px; }
+  pre { background:#0f172a; color:#e2e8f0; padding:16px; border-radius:10px; overflow-x:auto; font-size:14px; line-height:1.6; }
+  code.inline { background:#f1f5f9; padding:2px 6px; border-radius:5px; font-size:14px; }
+  h2 { margin-top:40px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; }
+  th,td { text-align:left; padding:10px 12px; border-bottom:1px solid #e5e7eb; font-size:15px; }
+  th { background:#f8fafc; }
+  @media (prefers-reduced-motion: no-preference) { a { transition:color .15s; } }
+</style>
+</head>
+<body>
+<main class="mcp-wrap">
+  <span class="mcp-badge">Listed in the official MCP Registry ✓</span>
+  <h1>passiv-mcp — free web tools for your AI agent</h1>
+  <p>A Model Context Protocol server that gives Claude Desktop, Claude Code, Cursor,
+     Windsurf or any other MCP client four practical web tools. No API key, no signup,
+     zero npm dependencies — one file of plain Node.js.</p>
+
+  <pre><code>npx github:mahope/passiv-mcp</code></pre>
+
+  <h2>The four tools</h2>
+  <div class="mcp-grid">
+    <div class="mcp-card"><h3>📝 html_to_markdown</h3>
+      <p>Convert raw HTML to clean Markdown or plain text. Same engine as the
+      <a href="/clean-copy-tool">Clean Copy</a> browser extension. Max 50 KB per call.</p></div>
+    <div class="mcp-card"><h3>🛡 compliance_scan</h3>
+      <p>Nine-point EU compliance scan of any URL: privacy policy, terms, cookie consent,
+      imprint, accessibility statement, DPA, security headers, meta tags, hreflang.
+      Score out of 100 plus fix tips per failed check.</p></div>
+    <div class="mcp-card"><h3>🔎 profile_page</h3>
+      <p>Profile any page: meta description, Open Graph tags, JSON-LD structured data,
+      heading structure, image alt-text coverage — with a weighted score and letter grade.</p></div>
+    <div class="mcp-card"><h3>🔒 check_security_headers</h3>
+      <p>Check CSP, HSTS, X-Frame-Options, X-Content-Type-Options and Referrer-Policy on
+      any URL. Reports exactly what is present and what is missing.</p></div>
+  </div>
+
+  <h2>Install in 30 seconds</h2>
+  <p><strong>Claude Code:</strong></p>
+  <pre><code>claude mcp add passiv -- npx github:mahope/passiv-mcp</code></pre>
+  <p><strong>Claude Desktop</strong> — add to <code class="inline">claude_desktop_config.json</code>:</p>
+  <pre><code>{
+  "mcpServers": {
+    "passiv": {
+      "command": "npx",
+      "args": ["github:mahope/passiv-mcp"]
+    }
+  }
+}</code></pre>
+  <p><strong>Cursor / Windsurf / others:</strong> same command — any MCP client that speaks
+  stdio can run it. Requires Node.js 18+.</p>
+
+  <h2>Example prompts once connected</h2>
+  <table>
+    <tr><th>Say to your agent</th><th>Tool used</th></tr>
+    <tr><td>"Scan example.com for GDPR compliance basics"</td><td>compliance_scan</td></tr>
+    <tr><td>"Check the security headers on my site"</td><td>check_security_headers</td></tr>
+    <tr><td>"Convert this HTML snippet to Markdown"</td><td>html_to_markdown</td></tr>
+    <tr><td>"What meta tags is this page missing?"</td><td>profile_page</td></tr>
+  </table>
+
+  <h2>Privacy &amp; limits</h2>
+  <ul>
+    <li>URLs you scan are fetched server-side by the Passiv proxy and not stored.</li>
+    <li>No authentication, no rate-based billing — the service is free.</li>
+    <li>50 KB max input for <code class="inline">html_to_markdown</code>; 30 s timeout per tool call.</li>
+  </ul>
+
+  <h2>Links</h2>
+  <ul>
+    <li>Source code (MIT): <a href="https://github.com/mahope/passiv-mcp">github.com/mahope/passiv-mcp</a></li>
+    <li>Registry entry: <code class="inline">io.github.mahope/passiv-mcp</code> at
+        <a href="https://registry.modelcontextprotocol.io">registry.modelcontextprotocol.io</a></li>
+    <li>Same tools as a web UI: <a href="/compliance-site-check">Compliance Checker</a>,
+        <a href="/page-profile">Page Profile</a>, <a href="/clean-copy-tool">HTML→Markdown</a></li>
+  </ul>
+</main>
+</body>
+</html>
