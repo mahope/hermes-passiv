@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free EAA Compliance Scanner — Check Any Website</title>
+<!-- r19 -->
+<meta name="description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website — WordPress, Shopify, Webflow, Next.js, and hand-written HTML. No signup required.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free EAA Compliance Scanner — Check Any Website">
+<meta property="og:description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website. No signup required.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/scan">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Free EAA Compliance Scanner — Check Any Website">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free EAA Compliance Scanner — Check Any Website">
+<meta name="twitter:description" content="Paste a URL and get an instant automated EAA / WCAG 2.1 AA check. Works on any website. No signup required.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the scanner check?","acceptedAnswer":{"@type":"Answer","text":"16 automated WCAG 2.1 AA rules: image alt text, form labels, link and button text, page title, language attribute, viewport meta, heading structure, iframe titles, table headers, duplicate IDs, ARIA hidden elements still focusable, text colour contrast, and links opening in new windows without warning."}},{"@type":"Question","name":"Is the scanner free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No signup, no account, no email required. Paste any public URL and get an instant grade with detailed findings."}},{"@type":"Question","name":"How accurate is the automated check?","acceptedAnswer":{"@type":"Answer","text":"Automated checks catch roughly 30-40% of accessibility issues. The remaining 60-70% require human judgement: keyboard navigation testing, screen reader flow, and content review."}},{"@type":"Question","name":"Does the scanner store the pages I check?","acceptedAnswer":{"@type":"Answer","text":"No. The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies."}},{"@type":"Question","name":"Which platforms does it work on?","acceptedAnswer":{"@type":"Answer","text":"Any website \u2014 WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, Next.js, hand-written HTML."}},{"@type":"Question","name":"Can I scan a password-protected or local site?","acceptedAnswer":{"@type":"Answer","text":"No \u2014 the scanner fetches pages over the public internet. For staging or local sites, use the browser extension or WordPress plugin."}}]}
+</script>
+<style>
+  .scanbox { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
+  .scanbox input { flex: 1; padding: 12px 14px; border: 1px solid #b9cdd8;
+                   border-radius: 8px; font-size: 15px; }
+  .scanbox button { background: #0b6e8f; color: #fff; border: 0;
+                    padding: 12px 22px; border-radius: 8px; cursor: pointer;
+                    font-size: 15px; }
+  .scanbox button:hover { background: #095a77; }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px;
+            line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 44px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 8px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}.sev-notice{color:#889}
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+<link rel="canonical" href="https://hermes-passiv.pages.dev/scan"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/scan">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/scan-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/scan">
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Free EAA Compliance Scanner</h1>
+    <p class="tagline">Instant automated accessibility check — works on
+    <strong>any website</strong>, any platform, no signup.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="scan-heading">
+  <h2 id="scan-heading">Scan your page</h2>
+  <form id="scanForm" class="scanbox">
+    <label for="url" class="sr-only">Page URL</label>
+    <input id="url" name="url" type="url" required
+           placeholder="https://your-site.com" inputmode="url">
+    <button type="submit">Scan now</button>
+  </form>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="how-heading">
+  <h2 id="how-heading">What it checks</h2>
+  <ul class="findings">
+    <li>Images missing alt text · form fields without labels · links or buttons with no text</li>
+    <li>Missing page title, language attribute or viewport meta</li>
+    <li>Heading structure problems (no h1, skipped levels)</li>
+    <li>Untitled iframes · tables without headers · duplicate id values</li>
+    <li>aria-hidden elements that are still keyboard-focusable</li>
+    <li>Low text contrast (WCAG 1.4.3 — inline colour styles)</li>
+    <li>Links opening in a new window without warning the user</li>
+  </ul>
+  <p><strong>Honest limitation:</strong> automated checks catch roughly
+  30–40% of accessibility issues. The rest needs human judgement — the full
+  manual process is in our
+  <a href="/#products">EAA Compliance Checklist e-book</a>.</p>
+</section>
+
+<section aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Need a formal compliance report?</h2>
+  <p>Get a professional PDF audit report with executive summary, detailed
+  findings, prioritised recommendations, and methodology documentation.
+  Perfect for client handovers and internal compliance files.</p>
+  <p><a href="/compliance-report" class="btn">Generate Premium Report →</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">
+  Free during beta — $29/report when store launches</span></p>
+</section>
+
+<section aria-labelledby="ext-heading">
+  <h2 id="ext-heading">Also available as a browser extension</h2>
+  <p>Scan any page you're on with one click. The extension ships the same
+  rule set — download the zip and load it unpacked in Chrome/Edge:</p>
+  <p><a href="eaa-scanner-extension.zip" class="btn"
+        download>Download extension (Chrome/Edge)</a></p>
+</section>
+
+<section aria-labelledby="gen-heading" style="margin-top:36px">
+  <h2 id="gen-heading">Accessibility Statement Generator</h2>
+  <p>After you fix what the scanner finds, publish an
+  <a href="/accessibility-statement-generator">EAA / WCAG accessibility statement</a> —
+  answer 8 questions and get a ready-to-publish statement. Free, runs in your browser.</p>
+</section>
+
+<section aria-labelledby="cli-heading" style="margin-top:36px">
+  <h2 id="cli-heading">Run it from the command line</h2>
+  <p>Prefer your terminal or CI? <a href="/downloads">Download eaa-scanner</a> —
+  a free, zero-dependency Python CLI that runs this same scan on any number of
+  URLs and fails the build when errors are found.</p>
+</section>
+
+<section aria-labelledby="wp-heading">
+<h2 id="wp-heading">WordPress plugin</h2>
+  <p>Run the same 15-rule scan from your WordPress dashboard —
+  <strong>Tools → EAA Scanner</strong>. Works with any theme, scans any URL,
+  and everything runs on your own server: no data is sent to third parties.</p>
+  <p><a href="eaa-compliance-scanner.zip" class="btn"
+        download>Download WordPress plugin</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">Install via
+  Plugins → Add New → Upload Plugin. Free, MIT licensed.</span></p>
+  <p style="font-size:14px;color:#445">After the automated check, the manual
+  review steps are what make you actually compliant — they're all in our
+  <a href="/#products">EAA Compliance e-books</a>.</p>
+</section>
+<section aria-labelledby="guides-heading">
+  <h2 id="guides-heading">Platform-specific fix guides</h2>
+  <p>Scan flagged something on your site? These free guides show exactly where
+  to fix the most common issues in each platform's admin:</p>
+  <ul class="findings">
+    <li><a href="/guides/wordpress-accessibility-check">WordPress accessibility check</a> — or use the free <a href="/wordpress-plugin">scanner plugin</a></li>
+    <li><a href="/guides/shopify-accessibility-check">Shopify accessibility check</a></li>
+    <li><a href="/guides/webflow-accessibility-check">Webflow accessibility check</a></li>
+    <li><a href="/guides/wix-accessibility-check">Wix accessibility check</a></li>
+    <li><a href="/guides/squarespace-accessibility-check">Squarespace accessibility check</a></li>
+    <li><a href="/guides/drupal-accessibility-check">Drupal accessibility check</a></li>
+    <li><a href="/guides/joomla-accessibility-check">Joomla accessibility check</a></li>
+    <li><a href="/guides/prestashop-accessibility-check">PrestaShop accessibility check</a></li>
+    <li><a href="/guides/weebly-accessibility-check">Weebly accessibility check</a></li>
+    <li><a href="/guides/magento-accessibility-check">Magento / Adobe Commerce accessibility check</a></li>
+    <li><a href="/guides/ghost-accessibility-check">Ghost accessibility check</a></li>
+    <li><a href="/guides/typo3-accessibility-check">TYPO3 accessibility check (BITV / EN 301 549)</a></li>
+    <li><a href="/guides/craftcms-accessibility-check">Craft CMS accessibility check</a></li>
+    <li><a href="/guides/umbraco-accessibility-check">Umbraco accessibility check</a></li>
+  </ul>
+  <p><a href="/guides/comparison">Compare all platforms side by side →</a></p>
+  <p>Platform deep-dives: <a href="/blog/webflow-vs-squarespace-accessibility">Webflow vs Squarespace</a> · <a href="/blog/drupal-vs-typo3-accessibility">Drupal vs TYPO3</a> · <a href="/blog/prestashop-vs-shopify-accessibility">PrestaShop vs Shopify</a> · <a href="/blog/wordpress-vs-wix-accessibility">WordPress vs Wix</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Automated EAA/WCAG screening tool. No data leaves your
+  browser except fetching the page you scan.</p>
+</div></footer>
+
+<script>
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+async function shareResult(){
+  const url=location.origin+'/scan#url='+encodeURIComponent(document.getElementById('url').value.trim());
+  try{await navigator.clipboard.writeText(url);}catch(e){
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  alert('Link copied: '+url);
+}
+window.shareResult=shareResult;
+async function scan(url){
+    if (window.trackEvent) window.trackEvent('scan');
+  const out = document.getElementById('result');
+  const label = document.querySelector('.sr-only') || out;
+  out.innerHTML = '<p>Scanning <code>'+url.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</code> …</p>';
+  let html = '';
+  try {
+    const r = await fetch('/scan-proxy?url='+encodeURIComponent(url));
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Proxy returned error');
+    html = data.html;
+
+    try { fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
+  } catch(e) {
+    out.innerHTML = '<p><strong>Scan failed.</strong></p>'
+      +'<p style="color:#667;font-size:14px">'+e.message+'</p>'
+      +'<p style="font-size:13px;color:#667;margin-top:16px">'
+      +'Cannot scan this page. Possible reasons: the site blocks automated fetchers, '
+      +'the URL is invalid, or the page is too large. Try the '
+      +'<a href="eaa-scanner-extension.zip" download>browser extension</a> '
+      +'which runs directly on the live page.</p>';
+    return;
+  }
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const findings = [];
+  const add=(id,sev,msg,n)=>{if(n>0)findings.push({id,sev,msg:msg.replace('{n}',n),count:n})};
+  add('IMG_ALT','error','{n} image(s) missing alt text',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error','{n} form field(s) without a label',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error','{n} link(s) with no accessible text',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
+  add('BUTTON_TEXT','error','{n} button(s) with no accessible text',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
+  add('DUP_ID','error','{n} duplicate id value(s) (breaks label/aria references)',
+      (()=>{const seen=new Set(),dups=new Set();
+        doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
+        return dups.size;})());
+  add('TARGET_BLANK','warning','{n} link(s) opening in a new window without warning',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())findings.push({sev:'error',msg:'page has no <title>'});
+  if(!doc.documentElement.lang)findings.push({sev:'error',msg:'<html> lacks a lang attribute'});
+  if(!doc.querySelector('meta[name="viewport"]'))findings.push({sev:'warning',msg:'missing viewport meta tag'});
+  if(!doc.querySelector('h1'))findings.push({sev:'warning',msg:'no <h1> found'});
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning','{n} heading level skip(s)',skips);
+  add('IFRAME_TITLE','warning','{n} iframe(s) without a title',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning','{n} table(s) without header cells',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden element(s) still focusable',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',(()=>{
+    function parseCol(s){
+      s=(s||'').trim().toLowerCase();
+      if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+      let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+      m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+      m=s.match(/^rgba?\(([^)]+)\)/);
+      if(m){const p=m[1].split(',').map(x=>x.trim());
+        if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+        try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+      const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+      return named[s]||null;}
+    function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+    function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    const seen=new Set();let low=0;
+    const root=doc.body||doc.documentElement;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let n;
+    while((n=walker.nextNode())){
+      if(!n.textContent.trim())continue;
+      let el=n.parentElement,fg=null,bg=null,node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(st){
+          if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+          if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+            if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+        }
+        node=node.parentElement;}
+      if(fg===null||bg===null)continue;
+      let large=false;node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+        node=node.parentElement;}
+      const f=parseCol(fg),b=parseCol(bg);
+      if(!f||!b)continue;
+      const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+      const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+      if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+    }
+    return low;})());
+  const errors=findings.filter(f=>f.sev==='error').length,
+        warnings=findings.filter(f=>f.sev==='warning').length,
+        notices=findings.filter(f=>f.sev==='notice').length;
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2), g=gradeOf(score);
+  const FIX={
+    IMG_ALT:'Fix: add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
+    FORM_LABEL:'Fix: give every field a <label for="field-id">, or an aria-label attribute.',
+    LINK_TEXT:'Fix: add descriptive text inside the link, or aria-label if it is icon-only.',
+    BUTTON_TEXT:'Fix: add visible text or an aria-label to every button.',
+    DUP_ID:'Fix: make every id value unique on the page.',
+    TARGET_BLANK:'Fix: warn users the link opens in a new window (e.g. "(opens in new tab)") and add rel="noopener".',
+    DOC_TITLE:'Fix: add a descriptive <title> in the <head>.',
+    HTML_LANG:'Fix: add lang to <html>, e.g. <html lang="en">.',
+    VIEWPORT:'Fix: add <meta name="viewport" content="width=device-width, initial-scale=1">.',
+    HEADING_H1:'Fix: add one descriptive <h1> as the main page heading.',
+    HEADING_SKIP:'Fix: do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
+    IFRAME_TITLE:'Fix: add a title attribute describing the iframe content.',
+    TABLE_HEADER:'Fix: use <th> for header cells in data tables.',
+    ARIA_HIDDEN_FOCUS:'Fix: remove aria-hidden from focusable elements, or add tabindex="-1".',
+    CONTRAST:'Fix: darken the text colour or lighten the background until the contrast ratio is at least 4.5:1 (3:1 for large text). Check it at webaim.org/resources/contrastchecker.'};
+  const PLATFORM_GUIDES={
+    'WordPress':'/guides/wordpress-accessibility-check',
+    'Shopify':'/guides/shopify-accessibility-check',
+    'Webflow':'/guides/webflow-accessibility-check',
+    'Wix':'/guides/wix-accessibility-check',
+    'Squarespace':'/guides/squarespace-accessibility-check',
+    'Drupal':'/guides/drupal-accessibility-check',
+    'Joomla':'/guides/joomla-accessibility-check',
+    'PrestaShop':'/guides/prestashop-accessibility-check',
+    'Magento':'/guides/magento-accessibility-check',
+    'Ghost':'/guides/ghost-accessibility-check',
+    'TYPO3':'/guides/typo3-accessibility-check',
+    'Craft CMS':'/guides/craftcms-accessibility-check',
+    'Umbraco':'/guides/umbraco-accessibility-check'};
+  const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
+  let plat=null;
+  for(const p of Object.keys(PLATFORM_GUIDES)){
+    if(new RegExp(p,'i').test(gen)){plat=p;break;}}
+  const platHtml = plat
+    ? '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
+      +'<strong>Detected platform: '+plat+'</strong> — most fixes are done right in '
+      +plat+'\'s admin. Step-by-step: <a href="'+PLATFORM_GUIDES[plat]+'">the free '
+      +plat+' accessibility fix guide</a>.</div>'
+    : '';
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+score+'/100 — Grade '+g+'</div>'+
+    '<div>'+errors+' error(s), '+warnings+' warning(s)</div></div>'+platHtml+
+    (findings.length?'<ul class="findings">'+findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+f.msg+'</span><br><small>'+(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
+     :'<p>No issues found by automated checks.</p>')+
+    '<p style="text-align:center;margin-top:18px"><button onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
+    '<button onclick="shareResult()" class="btn btn-secondary">Copy shareable link</button></p>'+
+    '<p style="font-size:13px;color:#667">Note: automated checks catch 30–40% of accessibility issues. See our <a href="/#products">EAA Compliance e-book</a> for the full manual process.</p>';
+}
+document.getElementById('scanForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  scan(document.getElementById('url').value.trim());
+});
+(function(){
+  const m=location.hash.match(/#url=(.+)$/);
+  if(m){const u=decodeURIComponent(m[1]);
+    if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free AI Compliance Assistant — EAA, NIS2 &amp; GDPR Answers in Seconds</title>
+<meta name="description" content="Free AI-powered assistant for EU digital compliance questions. Ask about EAA/WCAG accessibility, NIS2 cybersecurity, GDPR data protection — get practical answers for small web agencies.">
+<meta name="keywords" content="AI compliance assistant, EU compliance chat, EAA questions, NIS2 help, GDPR assistant, web agency compliance, free compliance Q&A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AI Compliance Assistant — Free EU Digital Compliance Q&A">
+<meta property="og:description" content="Free AI-powered assistant for EU digital compliance. Ask about EAA, NIS2, GDPR — get practical answers for small web agencies.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/compliance-ai">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="AI Compliance Assistant — Free EU Digital Compliance Q&A">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Compliance Assistant — Free EU Digital Compliance Q&A">
+<meta name="twitter:description" content="Free AI-powered assistant for EU digital compliance. Ask about EAA, NIS2, GDPR.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/compliance-ai">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/compliance-ai">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "EU Compliance AI Assistant",
+  "description": "Free AI-powered Q&A assistant for EU digital compliance — EAA/WCAG, NIS2, GDPR for small web agencies.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+<style>
+.chat-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.chat-box {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  min-height: 400px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.chat-box:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-box:empty::after {
+  content: 'Ask a compliance question below to get started.';
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: 360px;
+  line-height: 1.6;
+}
+.message {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  animation: msgIn 0.2s ease-out;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.message.user {
+  background: var(--color-accent);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.message.assistant {
+  background: var(--color-surface);
+  color: var(--color-text);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+.message.assistant p {
+  margin: 0 0 8px;
+}
+.message.assistant p:last-child {
+  margin-bottom: 0;
+}
+.message.assistant strong {
+  color: var(--color-accent);
+}
+.message.assistant ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.message.assistant li {
+  margin-bottom: 4px;
+}
+.message.assistant em {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+.message.assistant .disclaimer {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  border-top: 1px solid var(--color-border);
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+}
+.chat-input-area textarea {
+  flex: 1;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 12px 16px;
+  resize: none;
+  min-height: 48px;
+  max-height: 120px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-input-area textarea:focus {
+  border-color: var(--color-accent);
+}
+.chat-input-area textarea::placeholder {
+  color: var(--color-text-muted);
+}
+.chat-input-area .btn-primary {
+  padding: 12px 24px;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+.chat-input-area .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.chat-status {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+  min-height: 24px;
+}
+.chat-status.error {
+  color: var(--color-red);
+}
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: center;
+}
+.suggestion-chip {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.suggestion-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(91,141,239,0.08);
+}
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  max-width: 100px;
+}
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: bounce 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+.beta-badge {
+  display: inline-block;
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--color-yellow);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+@media (max-width: 640px) {
+  .chat-box {
+    max-height: 400px;
+    min-height: 300px;
+  }
+  .message {
+    max-width: 92%;
+    font-size: 0.85rem;
+  }
+  .chat-input-area {
+    flex-direction: column;
+  }
+  .chat-input-area .btn-primary {
+    align-self: stretch;
+    text-align: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="badge">AI ASSISTANT <span class="beta-badge">Beta</span></div>
+    <h1>EU Compliance AI<br>Assistant</h1>
+    <p class="subtitle">Free AI-powered Q&A for small web agencies. Ask about EAA accessibility, NIS2 cybersecurity, GDPR data protection, or practical compliance steps — get concrete answers, not theory.</p>
+    <div class="hero-cta">
+      <a href="scan" class="btn-secondary">Free EAA Scanner</a>
+      <a href="accessibility-statement-generator" class="btn-secondary">Statement Generator</a>
+      <a href="/" class="btn-secondary">Home</a>
+    </div>
+  </div>
+</header>
+
+<section class="ai-chat">
+  <div class="chat-container">
+    <div class="chat-box" id="chatBox" role="log" aria-live="polite" aria-label="Compliance chat conversation"></div>
+    <div class="chat-input-area">
+      <textarea id="questionInput" rows="1" placeholder="Ask about EAA, NIS2, GDPR, or compliance..." aria-label="Your compliance question"></textarea>
+      <button id="sendBtn" class="btn-primary" onclick="sendQuestion()" aria-label="Send question">Ask</button>
+    </div>
+    <div class="chat-status" id="chatStatus"></div>
+    <div class="suggestions" id="suggestions">
+      <span class="suggestion-chip" onclick="ask('What does EAA mean for my web agency?')">What does EAA mean for my web agency?</span>
+      <span class="suggestion-chip" onclick="ask('Do I need a DPA for every client?')">Do I need a DPA for every client?</span>
+      <span class="suggestion-chip" onclick="ask('What are NIS2 incident reporting deadlines?')">NIS2 incident reporting deadlines?</span>
+      <span class="suggestion-chip" onclick="ask('How do I write an accessibility statement?')">How to write an accessibility statement?</span>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="container">
+    <h2>What the AI Assistant Can Help With</h2>
+    <div class="faq-grid">
+      <details class="faq-item">
+        <summary>What compliance topics does it cover?</summary>
+        <p>The assistant covers EAA (European Accessibility Act) / WCAG 2.2, NIS2 Directive cybersecurity requirements, GDPR data protection, and practical compliance implementation for small web agencies. It draws on the same knowledge base as our guides and e-books.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is this legal advice?</summary>
+        <p><strong>No.</strong> The AI assistant provides general guidance based on published regulations. It is not a substitute for qualified legal counsel. Always consult a lawyer for specific compliance decisions affecting your agency.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How accurate is the information?</summary>
+        <p>The assistant is powered by a large language model trained on publicly available information about EU regulations. While we configure it for accuracy, it can make mistakes. Verify critical information against official sources (EU Official Journal, national regulators).</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is my question stored or logged?</summary>
+        <p>Questions are sent to the AI provider (OpenRouter) for processing. We do not store questions or answers on our servers. No account or login is required. See our privacy practices in the footer.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What does the free EAA Scanner do?</summary>
+        <p>Our <a href="scan">free EAA Scanner</a> checks any public URL for 16 WCAG compliance rules — contrast, alt text, heading structure, form labels, and more. It runs entirely in your browser (client-side) with a privacy-preserving CORS proxy. No data is stored.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 Mahope · Part of the <a href="/">Hermes Passiv</a> project</p>
+    <p class="footer-small">Built for small web agencies. No legal advice — consult counsel for specific matters.</p>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var chatBox = document.getElementById('chatBox');
+  var input = document.getElementById('questionInput');
+  var sendBtn = document.getElementById('sendBtn');
+  var statusEl = document.getElementById('chatStatus');
+  var suggestions = document.getElementById('suggestions');
+
+  // Auto-resize textarea
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // Send on Enter (Shift+Enter for newline)
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendQuestion();
+    }
+  });
+
+  // Focus input
+  input.focus();
+
+  window.ask = function(text) {
+    input.value = text;
+    sendQuestion();
+  };
+
+  window.sendQuestion = function() {
+  try { if (window.trackEvent) window.trackEvent('ask'); } catch (e) {}
+    var question = input.value.trim();
+    if (!question) return;
+    if (sendBtn.disabled) return;
+
+    addMessage(question, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+    suggestions.style.display = 'none';
+    sendBtn.disabled = true;
+    statusEl.textContent = '';
+    statusEl.className = 'chat-status';
+
+    showTyping();
+
+    fetch('/api/compliance-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      removeTyping();
+      sendBtn.disabled = false;
+
+      if (data.ok) {
+        addMessage(data.answer, 'assistant');
+        statusEl.textContent = '';
+      } else {
+        statusEl.textContent = data.error || 'Something went wrong. Please try again.';
+        statusEl.className = 'chat-status error';
+      }
+    })
+    .catch(function() {
+      removeTyping();
+      sendBtn.disabled = false;
+      statusEl.textContent = 'Network error. Please check your connection and try again.';
+      statusEl.className = 'chat-status error';
+    });
+  };
+
+  function addMessage(text, role) {
+    var msg = document.createElement('div');
+    msg.className = 'message ' + role;
+
+    if (role === 'assistant') {
+      msg.innerHTML = formatAnswer(text);
+    } else {
+      msg.textContent = text;
+    }
+
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function formatAnswer(text) {
+    // Simple markdown-to-HTML conversion for the assistant's response
+    var html = text
+      // Bold
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Line breaks to paragraphs
+      .split(/\n\n+/)
+      .map(function(p) {
+        p = p.trim();
+        if (!p) return '';
+        // Unordered list
+        if (p.indexOf('- ') === 0 || p.indexOf('* ') === 0) {
+          var items = p.split(/\n/).map(function(li) {
+            li = li.trim().replace(/^[-*]\s+/, '');
+            return '<li>' + li + '</li>';
+          }).join('');
+          return '<ul>' + items + '</ul>';
+        }
+        // Numbered list
+        if (/^\d+\.\s/.test(p)) {
+          var items = p.split(/\n/).map(function(li) {
+            li = li.trim().replace(/^\d+\.\s+/, '');
+            return '<li>' + li + '</li>';
+          }).join('');
+          return '<ol>' + items + '</ol>';
+        }
+        return '<p>' + p + '</p>';
+      })
+      .join('');
+
+    // Add disclaimer if not already present
+    var hasDisclaimer = text.toLowerCase().includes('not legal advice') || text.toLowerCase().includes('disclaimer');
+    if (!hasDisclaimer) {
+      html += '<p class="disclaimer">This is general guidance, not legal advice. Consult a qualified lawyer for your specific situation.</p>';
+    }
+
+    return html;
+  }
+
+  function showTyping() {
+    var typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.id = 'typingIndicator';
+    typing.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function removeTyping() {
+    var typing = document.getElementById('typingIndicator');
+    if (typing) typing.remove();
+  }
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

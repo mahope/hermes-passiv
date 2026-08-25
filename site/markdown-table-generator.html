@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown Table Generator — Convert CSV / TSV to Markdown Tables</title>
+<meta name="description" content="Free online Markdown table generator. Paste CSV, TSV or delimited data and get a clean Markdown table instantly — with column alignment options and live preview. Runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Markdown Table Generator — CSV / TSV to Markdown">
+<meta property="og:description" content="Paste CSV or TSV data and get a clean Markdown table with alignment options and live preview. 100% in your browser, no signup.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/markdown-table-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Markdown Table Generator — CSV / TSV to Markdown">
+<meta name="twitter:description" content="Convert CSV or TSV to a Markdown table with alignment options and live preview. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/markdown-table-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/markdown-table-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/markdown-table-generator">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Markdown Table Generator",
+  "url": "https://hermes-passiv.pages.dev/markdown-table-generator",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online tool that converts CSV or TSV data into a formatted Markdown table with alignment options and a live preview."
+}
+</script>
+<style>
+.mtg-wrap { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+.mtg-card {
+  border: 1px solid var(--color-border); border-radius: 12px;
+  background: var(--color-surface); padding: 1.2rem; margin-top: 1rem;
+}
+.mtg-opts { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.8rem; }
+.mtg-opts label { font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.mtg-opts select {
+  padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 8px;
+  background: var(--color-bg, transparent); color: var(--color-text); font-size: 0.9rem;
+}
+.mtg-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.mtg-btns button { padding: 8px 16px; cursor: pointer; font-size: 0.88rem; }
+.mtg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 760px) { .mtg-grid { grid-template-columns: 1fr; } }
+.mtg-grid h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+.mtg-io { width: 100%; box-sizing: border-box; min-height: 260px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-bg, #fff); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.6; }
+.mtg-status { border-radius: 10px; padding: 0.7rem 1rem; margin: 0.7rem 0; font-size: 0.88rem; display: none; }
+.mtg-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.mtg-preview { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 10px; padding: 0.9rem; background: var(--color-bg, #fff); min-height: 60px; }
+.mtg-preview table { border-collapse: collapse; width: auto; max-width: 100%; font-size: 0.88rem; }
+.mtg-preview th, .mtg-preview td { border: 1px solid var(--color-border); padding: 6px 12px; text-align: left; }
+.mtg-preview th { background: rgba(127,127,127,0.08); }
+.mtg-meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.3rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="mtg-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/free-tools">Free tools</a> <span>›</span>
+  Markdown table generator
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Markdown Table Generator</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Paste CSV or TSV data and get a clean Markdown table — with alignment options and a live preview.</p>
+  <p style="font-size:0.85rem;color:var(--color-text-muted);padding:0.6rem 0 0.2rem;">🔒 Runs entirely in your browser. Your data is never uploaded anywhere.</p>
+</header>
+
+<div class="mtg-card">
+  <div class="mtg-opts">
+    <label for="delimSel">Delimiter:</label>
+    <select id="delimSel">
+      <option value="auto">Auto-detect</option>
+      <option value=",">Comma (CSV)</option>
+      <option value="\t">Tab (TSV)</option>
+      <option value="|">Pipe (|)</option>
+      <option value=";">Semicolon (;)</option>
+    </select>
+    <label><input id="headerChk" type="checkbox" checked> First row is a header</label>
+    <label for="alignSel">Alignment:</label>
+    <select id="alignSel">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+  </div>
+  <div class="mtg-btns">
+    <button id="genBtn">Generate</button>
+    <button id="copyBtn">Copy Markdown</button>
+    <button id="dlBtn">Download .md</button>
+    <button id="sampleBtn">Load sample</button>
+  </div>
+  <div class="mtg-grid">
+    <div>
+      <h3><label for="inputArea">Input (CSV / TSV)</label></h3>
+      <textarea id="inputArea" class="mtg-io" spellcheck="false" placeholder="Paste your data here, e.g.&#10;&#10;Name,Role,City&#10;Ada,Engineer,London&#10;Grace,Admiral,Arlington"></textarea>
+    </div>
+    <div>
+      <h3><label for="outputArea">Markdown output</label></h3>
+      <textarea id="outputArea" class="mtg-io" readonly spellcheck="false" placeholder="The generated Markdown table appears here..."></textarea>
+    </div>
+  </div>
+  <div id="statusBox" class="mtg-status" role="status" aria-live="polite"></div>
+  <p class="mtg-meta" id="metaLine"></p>
+  <h3 style="font-size:0.95rem;margin:1rem 0 0.4rem;">Preview</h3>
+  <div id="previewBox" class="mtg-preview" aria-label="Rendered table preview"></div>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free tool converts delimited data into a
+    <a href="https://www.markdownguide.org/extended-syntax/#tables" rel="noopener" target="_blank">Markdown pipe table</a> —
+    the format used by GitHub READMEs, GitLab wikis, Notion exports, Obsidian notes,
+    Jupyter notebooks and most static site generators.</p>
+    <p>Paste comma-separated, tab-separated, semicolon-separated or pipe-delimited data.
+    The delimiter can be detected automatically. Cells are escaped so pipes and newlines
+    inside your content cannot break the table, and you can choose left, center or right
+    column alignment.</p>
+    <p>All conversion happens locally in JavaScript on your device — nothing is uploaded,
+    so it is safe to use with confidential data.</p>
+    <p>Formatting JSON instead? Try the <a href="/json-formatter">JSON Formatter</a>, or compare
+    two versions of a file with the <a href="/text-diff">Text Diff Checker</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+    <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+    <a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var inA = document.getElementById('inputArea');
+  var out = document.getElementById('outputArea');
+  var statusBox = document.getElementById('statusBox');
+  var metaLine = document.getElementById('metaLine');
+  var preview = document.getElementById('previewBox');
+  if (!inA || !out) return;
+
+  function escCell(s) {
+    s = String(s == null ? '' : s);
+    // Escape pipes and collapse newlines so the table structure stays intact.
+    s = s.replace(/\|/g, '\\|').replace(/\r*\n/g, '<br>');
+    return s.trim();
+  }
+
+  function detectDelimiter(text) {
+    var firstLine = text.split(/\r?\n/)[0];
+    var candidates = ['\t', ';', '|', ','];
+    var best = ',', bestCount = 0;
+    candidates.forEach(function(c) {
+      var count = firstLine.split(c).length - 1;
+      if (count > bestCount) { best = c; bestCount = count; }
+    });
+    if (bestCount === 0) return ',';
+    return best;
+  }
+
+  function parseRows(text, delim) {
+    // Simple RFC-4180-aware splitter (handles quoted cells with embedded delimiters).
+    var rows = [], row = [], cell = '', inQ = false, i, ch;
+    for (i = 0; i < text.length; i++) {
+      ch = text[i];
+      if (inQ) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { cell += '"'; i++; }
+          else inQ = false;
+        } else cell += ch;
+      } else if (ch === '"' && cell === '') {
+        inQ = true;
+      } else if (ch === delim) {
+        row.push(cell); cell = '';
+      } else if (ch === '\n') {
+        row.push(cell); rows.push(row); row = []; cell = '';
+        if (text[i - 1] === '\r') row._skipCR = true;
+      } else if (ch !== '\r') {
+        cell += ch;
+      }
+    }
+    row.push(cell);
+    rows.push(row);
+    // Drop trailing empty rows/cells produced by trailing newline.
+    while (rows.length && rows[rows.length - 1].join('').trim() === '') rows.pop();
+    rows.forEach(function(r) {
+      while (r.length > 1 && r[r.length - 1].trim() === '') r.pop();
+    });
+    return rows.filter(function(r) { return r.some(function(c) { return c.trim() !== ''; }); });
+  }
+
+  function alignFor(align) {
+    if (align === 'center') return ':---:';
+    if (align === 'right') return '---:';
+    return ':---';
+  }
+
+  function generate() {
+    var text = inA.value.replace(/^\uFEFF/, '').trim();
+    if (!text) { showStatus('Paste some data first, or click “Load sample”.'); return; }
+
+    var delimVal = document.getElementById('delimSel').value;
+    var delim = delimVal === 'auto' ? detectDelimiter(text) :
+                delimVal === '\\t' ? '\t' : delimVal;
+    var hasHeader = document.getElementById('headerChk').checked;
+    var align = document.getElementById('alignSel').value;
+
+    var rows = parseRows(text, delim);
+    if (!rows.length) { showStatus('Could not parse any rows from the input.'); return; }
+
+    var cols = 0;
+    rows.forEach(function(r) { if (r.length > cols) cols = r.length; });
+    rows.forEach(function(r) { while (r.length < cols) r.push(''); });
+
+    var headCells = hasHeader ? rows.shift().map(escCell)
+                              : Array.apply(null, Array(cols)).map(function(_, i) { return 'Column ' + (i + 1); });
+
+    var lines = [];
+    lines.push('| ' + headCells.join(' | ') + ' |');
+    lines.push('| ' + Array.apply(null, Array(cols)).map(function() { return alignFor(align); }).join(' | ') + ' |');
+    rows.forEach(function(r) {
+      lines.push('| ' + r.map(escCell).join(' | ') + ' |');
+    });
+
+    var md = lines.join('\n');
+    out.value = md;
+    renderPreview(headCells, alignFor(align), rows);
+
+    var dName = delim === '\t' ? 'tab' : delim === 'auto' ? 'auto' : '"' + delim + '"';
+    metaLine.textContent = rows.length + ' data row' + (rows.length === 1 ? '' : 's') +
+      ' × ' + cols + ' columns · delimiter: ' + dName;
+    showStatus('✓ Generated a Markdown table with ' + rows.length +
+      (rows.length === 1 ? ' row.' : ' rows.'));
+
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '/markdown-table-generator', event: 'generate', rows: rows.length }),
+        keepalive: true
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  function renderPreview(headCells, sep, rows) {
+    var html = '<table>';
+    html += '<thead><tr>' + headCells.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>';
+    rows.forEach(function(r) {
+      html += '<tr>' + r.map(function(c) { return '<td>' + escCell(c) + '</td>'; }).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+    preview.innerHTML = html;
+  }
+
+  function showStatus(msg) {
+    statusBox.textContent = msg;
+    statusBox.className = 'mtg-status mtg-ok';
+  }
+
+  document.getElementById('genBtn').addEventListener('click', generate);
+
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    if (!out.value) generate();
+    if (!out.value) return;
+    var done = function() {
+      var b = document.getElementById('copyBtn');
+      var old = b.textContent;
+      b.textContent = 'Copied!';
+      setTimeout(function() { b.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(done).catch(function() {});
+    } else {
+      out.select();
+      document.execCommand('copy');
+      done();
+    }
+  });
+
+  document.getElementById('dlBtn').addEventListener('click', function() {
+    if (!out.value) generate();
+    if (!out.value) return;
+    var blob = new Blob([out.value], { type: 'text/markdown' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'table.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showStatus('✓ Downloaded table.md.');
+  });
+
+  document.getElementById('sampleBtn').addEventListener('click', function() {
+    inA.value = 'Name,Role,City\nAda Lovelace,Mathematician,London\nGrace Hopper,Rear Admiral,Arlington\nAlan Turing,"Computer scientist, cryptologist",Wilmslow';
+    generate();
+  });
+
+})();
+
+</script>
+</body>
+</html>

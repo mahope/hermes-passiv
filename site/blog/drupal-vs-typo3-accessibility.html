@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drupal vs TYPO3: Accessibility Compared</title>
+<meta name="description" content="Drupal vs TYPO3 accessibility compared for EU public-sector teams: core accessibility baselines, contrib/module risk, BITV and EN 301 549 duties, and which stack remediates faster.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Drupal vs TYPO3: Accessibility Compared">
+<meta property="og:description" content="Drupal vs TYPO3 accessibility compared for EU public-sector teams: core accessibility baselines, contrib/module risk, BITV and EN 301 549 duties, and which stack remediates faster.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Drupal vs TYPO3: Accessibility Compared">
+<meta name="twitter:description" content="Drupal vs TYPO3 accessibility compared for EU public-sector teams: core accessibility baselines, contrib/module risk, BITV and EN 301 549 duties, and which stack remediates faster.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Drupal vs TYPO3: Accessibility Compared",
+  "description": "Drupal vs TYPO3 accessibility compared for EU public-sector teams: core accessibility baselines, contrib/module risk, BITV and EN 301 549 duties, and which stack remediates faster.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · COMPARISON · BITV/EAA</div>
+    <h1>Drupal vs TYPO3:<br>Accessibility Compared</h1>
+    <p class="subtitle">Two open-source CMSs trusted by EU public sector. How their WCAG 2.1 AA baselines, extension ecosystems and remediation workflows compare.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#two-cms-public-sector" class="btn-secondary">TYPO3 Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="two-cms-public-sector">Two CMS Public Sector</h2>
+    <p>Drupal and TYPO3 are the two open-source CMSs most used by European public-sector organisations — exactly the organisations with the strictest deadlines. Public-sector bodies have been covered by EN 301 549 / WCAG 2.1 AA since 2019 under the Web Accessibility Directive, and since June 2025 also under the European Accessibility Act where they offer services. German federal and state bodies additionally answer to BITV 2.0 and, since the BFSG, face private-sector-style enforcement. Both CMSs are capable of full conformance; they differ in where their default strengths lie and how their extension ecosystems introduce risk.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏛️ Directive Veterans</h3><p>Both ecosystems have lived with the Web Accessibility Directive since 2019 — accessibility statements, monitoring and feedback mechanisms are familiar ground.</p></div>
+      <div class="card"><h3>⚙️ Strong Cores</h3><p>Drupal ships the Olivero front theme built to AA; TYPO3 provides accessible output conventions through Fluid Styled Content and its accessibility-focused extensions.</p></div>
+      <div class="card"><h3>🧩 Extension Risk</h3><p>Drupal contrib modules and TYPO3 extensions both inject forms, views and widgets of uneven quality — the dominant source of defects in practice.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-drupal-fails">Where Drupal Fails</h2>
+    <p>Typical Drupal defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧩 Contrib Modules</h3><p>Form builders, sliders and map modules overriding core's accessible defaults — placeholder-only fields, div-based controls, missing aria-expanded.</p></div>
+      <div class="card"><h3>🎨 Custom Themes</h3><p>Sub-themes that drop Olivero's focus styles, skip landmarks or hardcode non-semantic markup for layout convenience.</p></div>
+      <div class="card"><h3>📝 Editor Content</h3><p>Rich-text content bypasses structured fields: bold-text pseudo-headings, empty alt on uploaded images, "click here" links written directly in WYSIWYG.</p></div>
+      <div class="card"><h3>🔄 Update Regressions</h3><p>Module updates silently reintroduce fixed defects — accessibility belongs in every update round.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-typo3-fails">Where TYPO3 Fails</h2>
+    <p>Typical TYPO3 defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ Editor Alt Discipline</h3><p>Legacy content and quick uploads skip the alt metadata entirely; longdesc-era habits left images unlabelled.</p></div>
+      <div class="card"><h3>🧱 Old Templates</h3><p>Sites still on Protostar-era or heavily overridden Fluid templates carry structural issues no amount of content editing repairs.</p></div>
+      <div class="card"><h3>🔗 Read-More Links</h3><p>List views rendering identical "Read more" links without distinct accessible names across news and record loops.</p></div>
+      <div class="card"><h3>🧩 Extension Widgets</h3><p>Third-party news calendars, form extensions and search plugins with keyboard-inaccessible custom controls.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="remediation-compared">Remediation Compared</h2>
+    <p>Both stacks give you full control over rendered HTML — the difference is where each expects fixes to live.</p>
+    <p></p>
+    <p><strong>Drupal:</strong> fix in theme templates (Twig) and configuration first — form display settings, field labels, view configurations. Contrib module defects get patched, replaced with alternatives, or wrapped with preprocess hooks. Editor training addresses content-layer issues. Re-scan after every module and core update.</p>
+    <p></p>
+    <p><strong>TYPO3:</strong> fix in TypoScript/Fluid templates and site packages; editor discipline covers alt text and link naming; legacy template migrations dominate older estates. Extension defects follow the same patch-or-replace logic. Re-scan after every core, site package and extension update — vendor patches revert.</p>
+    <p></p>
+    <p>Net effect: comparable effort for equivalent estates. Drupal's newer themes give younger sites a head start; TYPO3 estates dominated by old templates pay a one-time migration cost first.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="documentation-and-enforcement">Documentation and Enforcement</h2>
+    <p>Public-sector enforcement differs from consumer-market enforcement in one important way: monitoring is systematic. EU member-state bodies actively audit .gov and .mil-adjacent sites against EN 301 549 sampling methods, and German states run recurring BITV self-assessments and external tests. For both stacks that makes documentation a deliverable, not an afterthought: a current accessibility statement listing partial conformance and known limitations, a working feedback mechanism, and evidence of scheduled testing. An automated scan across home, list, detail, form and search templates on either CMS feeds all three — findings become the remediation backlog, the statement's limitations section, and the baseline for the next test cycle.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📋 Statements Audited</h3><p>Accessibility statements are themselves checked by monitoring bodies — generic boilerplate with undocumented failures scores worse than honest partial conformance.</p></div>
+      <div class="card"><h3>🔁 Test Cycles</h3><p>German BITV tests recur; build scanning into the same cadence so regressions surface before the next assessment, not during it.</p></div>
+      <div class="card"><h3>✅ Either Stack Works</h3><p>Fully conformant portals exist on both CMSs today. Maintenance discipline, not platform choice, decides outcomes.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">The free scanner runs on any CMS — Drupal, TYPO3 or static HTML — and gives you a prioritised worklist in seconds.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/typo3-accessibility-check" class="btn-secondary">TYPO3 Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Do Drupal and TYPO3 sites face the same legal requirements?</h3><p>Yes. Both fall under the Web Accessibility Directive (public sector, since 2019) and the European Accessibility Act (since June 2025); German bodies additionally answer to BITV 2.0/BFSG. Both require WCAG 2.1 AA / EN 301 549 conformance.</p></div>
+      <div class="card"><h3>Which CMS has the better accessibility baseline?</h3><p>Modern Drupal (Olivero + Umami demo content) and modern TYPO3 sitepackages are comparable. The deciding factor is age: estates still running pre-2020 themes carry migration debt before either baseline matters.</p></div>
+      <div class="card"><h3>Are contrib modules and extensions the main risk?</h3><p>In practice yes. Core output from both projects is well-audited; the defects we see concentrate in third-party form builders, calendar/news extensions, sliders and maps. Audit each installed extension's rendered markup, not just core pages.</p></div>
+      <div class="card"><h3>We must document BITV conformance — which platform helps more?</h3><p>Neither automates it, and beware of tools that claim to. Both need the same artefacts: an accurate accessibility statement, a feedback channel, and periodic test evidence. Automated scans supply the test evidence cheaply on either stack.</p></div>
+      <div class="card"><h3>How long does remediation take?</h3><p>A typical 50-200 page public-sector site: days for mechanical fixes plus editor training on either CMS. Estates on legacy templates or heavy custom themes take weeks, dominated by template migration rather than platform-specific effort.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/typo3-accessibility-check" class="btn-secondary">TYPO3 Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TYPO3 · BITV</span><h3><a href="/blog/typo3-accessibility-bitv-check" style="color:var(--color-accent);text-decoration:none;">TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DRUPAL · WCAG</span><h3><a href="/blog/drupal-wcag-accessibility" style="color:var(--color-accent);text-decoration:none;">Drupal Accessibility: WCAG and EAA Compliance Guide</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">JOOMLA · BITV</span><h3><a href="/blog/joomla-bitv-accessibility" style="color:var(--color-accent);text-decoration:none;">Joomla Accessibility: Meeting BITV 2.0 and BFSG Requirements</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

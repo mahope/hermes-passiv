@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549</title>
+<meta name="description" content="How to make TYPO3 sites compliant with BITV 2.0, EN 301 549 and the EAA. Editor-level checks, common TypoScript/template pitfalls, testing tools, and a practical workflow for agencies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549">
+<meta property="og:description" content="How to make TYPO3 sites compliant with BITV 2.0, EN 301 549 and the EAA. Editor-level checks, common TypoScript/template pitfalls, testing tools, and a practical workflow for agencies.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549">
+<meta name="twitter:description" content="How to make TYPO3 sites compliant with BITV 2.0, EN 301 549 and the EAA. Editor-level checks, common TypoScript/template pitfalls, testing tools, and a practical workflow for agencies.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549",
+  "description": "How to make TYPO3 sites compliant with BITV 2.0, EN 301 549 and the EAA. Editor-level checks, common TypoScript/template pitfalls, testing tools, and a practical workflow for agencies.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · TYPO3 · BITV · EAA</div>
+    <h1>TYPO3 Accessibility:<br>Meeting BITV 2.0 and EN 301 549</h1>
+    <p class="subtitle">A practical compliance workflow for agencies running TYPO3 sites for German public-sector clients and EU businesses covered by the EAA.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-typo3-and-bitv" class="btn-secondary">EAA Checklist Blog →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-typo3-and-bitv">Why TYPO3 and BITV</h2>
+    <p>TYPO3 is heavily used in German-speaking public administration, and that changes what "accessible" means for you as an agency. German public-sector bodies must meet BITV 2.0, which is essentially EN 301 549 — the European ICT accessibility standard that incorporates WCAG 2.1 level AA. Since 28 June 2025, the European Accessibility Act extends similar obligations to private-sector e-commerce and banking services across the EU. A TYPO3 site built without a deliberate accessibility pass will typically fail several EN 301 549 requirements on every page — and public-sector clients increasingly demand a documented accessibility statement before they sign.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-typo3-sites-fail">Where TYPO3 Sites Fail</h2>
+    <p>Most accessibility defects on TYPO3 sites come from three places: editor-entered content, template markup, and extensions.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 Editor Content</h3><p>Missing alt text on uploaded images is the number one defect. TYPO3 does not enforce alt attributes on FAL file references, so editors routinely skip them. Second place: heading structure pasted from Word with visual formatting instead of real h2/h3 elements.</p></div>
+      <div class="card"><h3>🧩 Templates &amp; TypoScript</h3><p>Custom Fluid templates often hardcode link texts like "read more" repeated across a page, skip the lang attribute, or render icon-only buttons without aria-labels. Base templates shipped years ago predate current standards.</p></div>
+      <div class="card"><h3>🔌 Extensions</h3><p>Third-party plugins (forms, sliders, lightboxes) frequently inject non-semantic markup, keyboard traps, or missing focus states. Every extension on the site needs its own accessibility review.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="editor-level-fixes">Editor Level Fixes</h2>
+    <p>These fixes need no developer and cover most of your defect volume:</p>
+    <p></p>
+    <p><strong>1. Make alt text mandatory in practice.</strong> Configure the image content element workflow so editors must fill the alternative text field. For purely decorative images, an explicit empty alt="" is correct — train editors on the difference between decorative and informative images.</p>
+    <p></p>
+    <p><strong>2. Enforce semantic headings.</strong> Restrict the header layout options editors can pick, so they choose real h2/h3 rather than styled text. Check Fluid templates render section headers as actual heading elements, not divs.</p>
+    <p></p>
+    <p><strong>3. Write meaningful link texts.</strong> "More", "here", and repeated identical links pointing at different targets fail WCAG 2.4.4 and are hostile to screen-reader users navigating by link list. Editorial guideline: the link text should describe the destination even read out of context.</p>
+    <p></p>
+    <p><strong>4. Language attributes.</strong> Set the site language correctly per page tree (TypoScript config.language / htmlTag_langKey or site configuration), and mark foreign-language words inline where practical. This maps directly to EN 301 549 clause 9.3.1.</p>
+    <p></p>
+    <p><strong>5. Forms.</strong> Every input needs a programmatically associated label — not placeholder text. If you use a forms extension, verify its output markup, because many generate label-less fields by default.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="template-and-technical-fixes">Template and Technical Fixes</h2>
+    <p>Developer-side, work through this list once per project and reuse the checklist everywhere:</p>
+    <p></p>
+    <p><strong>Skip links:</strong> a visible "skip to content" link as the first focusable element.</p>
+    <p><strong>Focus visibility:</strong> never remove outline globally; style :focus-visible instead.</p>
+    <p><strong>Contrast:</strong> verify theme colours against 4.5:1 for body text and 3:1 for large text and UI components.</p>
+    <p><strong>Keyboard operability:</strong> tab through every interactive component including menus, accordions, sliders and lightboxes. Anything mouse-only is a failure.</p>
+    <p><strong>ARIA discipline:</strong> prefer native HTML elements over ARIA patches. A real button beats a div with role="button".</p>
+    <p><strong>PDF documents:</strong> downloadable PDFs count under EN 301 549 too — tagged, readable PDFs or accessible HTML alternatives.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="testing-workflow">Testing Workflow</h2>
+    <p>A realistic verification loop for a TYPO3 project takes one afternoon:</p>
+    <p></p>
+    <p><strong>Step 1 — automated scan.</strong> Run a static HTML scanner against your key page types (home, article, form, search results). It catches contrast failures, missing lang, broken heading order, empty buttons, duplicate IDs — roughly 30-50% of typical issues in minutes.</p>
+    <p></p>
+    <p><strong>Step 2 — keyboard walkthrough.</strong> Unplug the mouse. Navigate every flow a user would. Note anything unreachable, trapped, or with invisible focus.</p>
+    <p></p>
+    <p><strong>Step 3 — screen reader spot-check.</strong> Test one representative flow with NVDA or VoiceOver. You are listening for unlabelled controls and confusing structures, not doing a full audit.</p>
+    <p></p>
+    <p><strong>Step 4 — document.</strong> Publish an accessibility statement listing conformance status, known limitations, and a feedback channel. Public-sector clients in Germany expect this; under the EAA, private services in scope must provide one too.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner on your TYPO3 site first — it catches the mechanical WCAG issues (contrast, lang, headings, labels) in seconds so you can spend expert time on the judgement calls.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your TYPO3 Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA Checklist Blog →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does BITV 2.0 apply to my commercial client?</h3><p>BITV 2.0 binds German public-sector bodies. Private companies fall under the Barrierefreiheitsstärkungsgesetz (BFSG), which implements the EAA — but both reference EN 301 549 / WCAG-based requirements, so the same technical work satisfies both frameworks.</p></div>
+      <div class="card"><h3>Is TYPO3 itself accessible?</h3><p>The TYPO3 core backend has made significant accessibility improvements in recent versions, and the CMS provides the tools needed (semantic rendering, language handling, FAL metadata). Compliance depends almost entirely on the specific template, extension set, and editorial practice on each site.</p></div>
+      <div class="card"><h3>Which WCAG version do I target?</h3><p>EN 301 549 currently references WCAG 2.1 Level AA. Building toward WCAG 2.2 AA gives you headroom — its additions mostly concern focus appearance, dragging alternatives, and consistent help.</p></div>
+      <div class="card"><h3>Do I need a certified audit?</h3><p>Public-sector clients typically require a self-produced, documented assessment plus an accessibility statement; some procurement processes ask for independent audits. An automated scan plus manual keyboard/screen-reader testing is the accepted minimum internal standard.</p></div>
+      <div class="card"><h3>How long does remediation take?</h3><p>For a typical 20-50 page TYPO3 site with a maintained template: 2-5 working days for mechanical fixes plus editor retraining. Sites with old custom templates or heavy third-party extensions take longer — the template refactor usually dominates.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your TYPO3 Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA Checklist Blog →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA CHECKLIST</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist for Agency Websites</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost in 2026?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG 2.2</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: What Changes for Your Sites</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

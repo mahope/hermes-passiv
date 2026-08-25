@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free NIS2 Self-Assessment — Is Your Company in Scope?</title>
+<meta name="description" content="Answer 12 questions and instantly see whether your company falls under the EU NIS2 Directive, which obligations apply, and what to do next. Free, no signup, works for any EU company.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free NIS2 Self-Assessment">
+<meta property="og:description" content="Check in 2 minutes whether your company is in scope of the EU NIS2 Directive. Free, instant, no signup.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-check">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-check">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-check">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-check-da">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the NIS2 self-assessment check?","acceptedAnswer":{"@type":"Answer","text":"It walks through the NIS2 scope criteria: sector (Annex I essential or Annex II important), company size (headcount and turnover), entity type (public or private), and country implementation status. It then lists the obligations that apply to you: risk measures under Art. 21, incident reporting under Art. 23, and management liability under Art. 20."}},{"@type":"Question","name":"Is the assessment free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No signup, no account, no email required. Answer 12 questions in your browser and get an instant result. Nothing you type is sent anywhere."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. It is a structured screening tool based on the text of Directive (EU) 2022/2555. Final scope decisions depend on your national implementing law and sector regulators. Treat the result as a starting point, not a legal opinion."}},{"@type":"Question","name":"Does it work outside the EU?","acceptedAnswer":{"@type":"Answer","text":"NIS2 applies to entities established in the EU, and can also catch non-EU companies offering services within the Union. The tool asks where you are established and adjusts accordingly."}},{"@type":"Question","name":"What should I do if I am in scope?","acceptedAnswer":{"@type":"Answer","text":"Start with a gap assessment against the ten minimum risk-measure areas of Art. 21 (risk analysis, incident handling, business continuity, supply chain security, secure development, etc.), set up an incident reporting process with 24h/72h/1-month deadlines, and document board-level accountability."}}]}
+</script>
+<style>
+  .qbox { max-width: 680px; margin: 0 auto; }
+  .q { display: none; padding: 18px; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); margin-bottom: 14px; }
+  .q.active { display: block; }
+  .q h3 { margin-top: 0; }
+  .q label { display: block; padding: 9px 12px; margin: 6px 0; border-radius: 8px;
+             border: 1px solid var(--color-border); cursor: pointer; font-size: 15px; }
+  .q label:hover { background: rgba(11,110,143,.08); }
+  .q input { margin-right: 8px; }
+  .navbtns { display: flex; justify-content: space-between; margin-top: 12px; }
+  button.nav { background: #0b6e8f; color: #fff; border: 0; padding: 10px 22px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.nav:hover { background: #095a77; }
+  button.nav[disabled] { opacity: .45; cursor: default; }
+  #progress { max-width: 680px; margin: 0 auto 14px; height: 6px; border-radius: 3px;
+              background: var(--color-border); overflow: hidden; }
+  #bar { height: 100%; width: 0; background: #0b6e8f; transition: width .25s; }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px; line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 40px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 10px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}
+  .sev-ok{color:#157a3c;font-weight:600}
+  .tagchip{display:inline-block;padding:2px 10px;margin:2px;border-radius:999px;
+           background:var(--color-surface-2);border:1px solid var(--color-border);
+           font-size:13px}
+  @media print { .scanbox, .navbtns, #progress { display:none } }
+</style>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Free NIS2 Self-Assessment</h1>
+    <p class="tagline">Is your company in scope of the EU <strong>NIS2 Directive</strong>?
+    12 questions, instant answer, no signup.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="quiz-heading">
+  <h2 id="quiz-heading">Check your status</h2>
+  <div id="progress" aria-hidden="true"><div id="bar"></div></div>
+  <form id="quizForm" class="qbox">
+    <div id="questions"></div>
+    <div class="navbtns">
+      <button type="button" class="nav" id="prevBtn" disabled>← Back</button>
+      <button type="button" class="nav" id="nextBtn" disabled>Next →</button>
+    </div>
+  </form>
+  <noscript><p>This tool runs entirely in JavaScript in your browser. Enable JavaScript to use it.</p></noscript>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="what-heading">
+  <h2 id="what-heading">What it covers</h2>
+  <ul class="findings">
+    <li><strong>Scope:</strong> Annex I (essential — energy, transport, banking,
+        health, digital infrastructure, public administration) vs Annex II
+        (important — postal services, waste, chemicals, food, manufacturing,
+        digital providers) and the size thresholds (medium: 50+ employees or
+        €10M+ turnover)</li>
+    <li><strong>Obligations:</strong> risk-management measures (Art. 21),
+        24-hour early warning / 72-hour notification / one-month report
+        (Art. 23), and management-body accountability (Art. 20)</li>
+    <li><strong>Next steps:</strong> a concrete, prioritised list of what to do
+        first if you are in scope — and what to watch if you are not</li>
+  </ul>
+  <p><strong>Honest limitation:</strong> NIS2 is implemented nationally with
+  variations (registration duties, thresholds, deadlines). This screening uses
+  the directive text as adopted; confirm against your national law.</p>
+</section>
+
+<section aria-labelledby="fix-heading">
+  <h2 id="fix-heading">In scope and need to act?</h2>
+  <p>The free guide <a href="/blog/nis2-readiness-guide">NIS2 for Small
+  Agencies: What Changes</a> explains the obligations in plain language. For a full
+  offline checklist with templates, get the
+  <a href="/#products">NIS2 Compliance Kit e-book ($9.99 on Amazon)</a>.</p>
+  <p>Or read the free comparison: <a href="/blog/free-nis2-assessment-tools">Free
+  NIS2 assessment tools compared</a> · the <a href="/blog/nis2-readiness-guide">NIS2
+  readiness guide</a></p>
+  <p>Also try: the free <a href="/cookie-check">Cookie Consent Checker</a> ·
+  <a href="/scan">EAA accessibility scanner</a> ·
+  <a href="/accessibility-statement-generator">Accessibility statement generator</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Back to Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Screening tool based on Directive (EU) 2022/2555.
+  Everything runs locally in your browser — nothing you type leaves this page.
+  Not legal advice.</p>
+</div></footer>
+
+<script>
+const QUESTIONS = [
+  { id:'established', q:'Where is your company established?',
+    opts:[['eu','In an EU member state'],['noneu','Outside the EU'],
+          ['unsure','Not sure / multiple locations']] },
+  { id:'sector', q:'Which best describes your sector?',
+    opts:[['energy','Energy (electricity, gas, oil, heating)'],
+      ['transport','Transport (air, rail, water, road)'],
+      ['banking','Banking / financial market infrastructure'],
+      ['health','Healthcare (hospitals, pharma, labs, medical devices)'],
+      ['digitalinfra','Digital infrastructure (DNS, telecoms, cloud, data centres)'],
+      ['ictmgmt','ICT service management (B2B managed IT/MSP)'],
+      ['publicadmin','Public administration (central/regional government)'],
+      ['space','Space / critical entity under CER Directive']] },
+  { id:'sector2', q:'Any of these also apply? (pick the closest)',
+    opts:[['postal','Postal / courier services'],['waste','Waste management'],
+      ['chemicals','Chemicals (manufacture/distribution)'],
+      ['food','Food production, processing, distribution'],
+      ['manufacturing','Manufacturing (machinery, vehicles, electronics)'],
+      ['digitalsup','Digital providers (marketplaces, search engines, social networks)'],
+      ['research','Research / academic'],
+      ['none','None of these']] },
+  { id:'employees', q:'How many employees?',
+    opts:[['small','Fewer than 50'],['medium','50–249'],['large','250+'],
+          ['unsure','Not sure']] },
+  { id:'turnover', q:'Annual turnover / balance sheet?',
+    opts:[['under10m','Under €10 million'],['over10m','€10 million or more'],
+          ['unsure','Not sure']] },
+  { id:'essentialsize', q:'Is your organisation a public-sector body, or does it provide services a region critically depends on?',
+    opts:[['yes','Yes'],['no','No'],['unsure','Not sure']] },
+  { id:'substitute', q:'Do national rules single out specific providers regardless of size (e.g. sole DNS/telecom provider in a region)?',
+    opts:[['yes','Yes, we have been told so'],['no','No / not that we know'],
+          ['unsure','We have not checked']] },
+  { id:'riskmeasures', q:'Do you have documented cybersecurity risk-management measures (policy, incident handling, backups)?',
+    opts:[['yes','Yes, documented'],['partial','Partly / informal'],['no','No']] },
+  { id:'supplychain', q:'Do you assess the security of your suppliers and service providers?',
+    opts:[['yes','Yes, formally'],['partial','Informally'],['no','No']] },
+  { id:'incidentplan', q:'Do you have an incident response process with defined reporting steps?',
+    opts:[['yes','Yes'],['partial','Partly'],['no','No']] },
+  { id:'management', q:'Is cybersecurity explicitly assigned to your management/board with training?',
+    opts:[['yes','Yes'],['partial','Somewhat'],['no','No']] },
+  { id:'register', q:'Have you checked whether your country requires registration with the CSIRT/national authority?',
+    opts:[['done','Yes, done'],['notyet','Heard about it, not done'],
+          ['didntknow',"Didn't know that was required"]] }
+];
+
+const answers = {};
+let cur = 0;
+
+function render() {
+  const box = document.getElementById('questions');
+  box.innerHTML = QUESTIONS.map((item,i)=>
+    '<div class="q'+(i===cur?' active':'')+'" data-i="'+i+'">'
+    +'<h3>'+(i+1)+'. '+item.q+'</h3>'
+    + item.opts.map(o=>'<label><input type="radio" name="'+item.id+'" value="'+o[0]+'">'+o[1]+'</label>').join('')
+    +'</div>').join('');
+  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+    answers[inp.name]=inp.value;
+    updateNav();
+    setTimeout(()=>next(),180);
+  }));
+  updateNav();
+}
+
+function updateNav(){
+  const answered = QUESTIONS[cur].id in answers;
+  document.getElementById('nextBtn').disabled=!answered && cur<QUESTIONS.length-1;
+  document.getElementById('prevBtn').disabled=cur===0;
+  document.getElementById('nextBtn').textContent = cur===QUESTIONS.length-1?'See result →':'Next →';
+  document.getElementById('bar').style.width=(Object.keys(answers).length/QUESTIONS.length*100)+'%';
+}
+function next(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); }
+function prev(){ if(cur>0){cur--;render();} }
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+function finish(){
+  if(window.trackEvent)window.trackEvent('finish');
+  const findings=[];
+  let errors=0,warnings=0;
+
+  // ---- Scope determination ----
+  const annex1=['energy','transport','banking','health','digitalinfra','ictmgmt','publicadmin','space'];
+  const annex2=['postal','waste','chemicals','food','manufacturing','digitalsup','research'];
+  const s1=annex1.includes(answers.sector);
+  const s2=annex2.includes(answers.sector2);
+  const mediumPlus=['medium','large'].includes(answers.employees)||(answers.turnover==='over10m'&&answers.employees!=='small');
+  const sizeKnown=answers.employees!=='unsure';
+
+  let scope=null; // 'essential' | 'important' | 'out'
+  if(s1){
+    if(mediumPlus||answers.publicbody==='yes') scope='essential';
+    else if(sizeKnown) {
+      // Art. 2(2)(d): certain sectors caught regardless of size when criticality applies
+      if(answers.substitute==='yes'||answers.essentialsize==='yes') scope='essential';
+      else if(['digitalinfra','ictmgmt'].includes(answers.sector)) scope='essential'; // DNS/telecom/NIS-essentials size-independent
+      else scope='important';
+    }
+  } else if(s2){
+    if(mediumPlus) scope='important';
+    else if(answers.substitute==='yes') scope='important';
+  } else if(answers.sector==='unsure'){
+    warnings++; findings.push({sev:'warning',
+      msg:'Sector unclear — cannot determine Annex classification reliably.',
+      fix:'Look up your NACE activity code and match it against Annex I and II of Directive (EU) 2022/2555.'});
+  }
+
+  if(scope==='essential'){
+    findings.push({sev:'error',msg:'IN SCOPE — likely an "essential entity" (Annex I)',
+      fix:'Essential entities face proactive supervision, fines up to €10M or 2% of global turnover, and full obligations: Art. 21 risk measures, Art. 23 incident reporting, Art. 20 management accountability. Register with your national authority if required.'});
+    errors++;
+  } else if(scope==='important'){
+    findings.push({sev:'warning',msg:'IN SCOPE — likely an "important entity" (Annex II or smaller Annex I)',
+      fix:'Important entities face ex-post supervision and fines up to €7M or 1.4% of global turnover. Same core obligations apply: Art. 21 risk measures, Art. 23 incident reporting, Art. 20 management accountability.'});
+    warnings++;
+  } else if(scope===null && answers.sector!=='unsure'){
+    findings.push({sev:'ok',msg:'Likely OUT OF SCOPE based on your answers'});
+    findings.push({sev:'notice',msg:'Re-assess if you grow past 50 employees / €10M turnover, change sector, or your regulator publishes new guidance.',
+      fix:'Even out of scope, customers increasingly demand NIS2-style security in contracts — the measures are good practice regardless.'});
+  }
+
+  // Non-EU nuance
+  if(answers.established==='noneu'){
+    findings.push({sev:'notice',msg:'Established outside the EU — NIS2 can still apply',
+      fix:'Art. 26 catches entities offering services within the Union. Check whether you have an establishment or significant user base in any member state.'});
+  }
+
+  // ---- Readiness gaps (only meaningful if in scope) ----
+  if(scope){
+    const gaps=[
+      ['riskmeasures','Documented risk-management measures missing/incomplete',
+       'Art. 21 requires at minimum: risk analysis and information-security policies, incident handling, business continuity and backup management, supply-chain security, and effectivess-testing of measures.'],
+      ['supplychain','Supplier security not assessed formally',
+       'Art. 21(2)(d) makes supply-chain security a mandatory measure. Maintain a vendor list with security requirements in contracts.'],
+      ['incidentplan','No incident reporting process',
+       'Art. 23 sets hard deadlines: early warning within 24 hours, incident notification within 72 hours, final report within one month. Predefine who detects, decides and files.'],
+      ['management','Management not accountable for cybersecurity',
+       'Art. 20 holds the management body personally liable for approving measures and requires security training. Get board-level sign-off and a training record.'],
+      ['register','National registration not confirmed',
+       'Most member states require in-scope entities to register with their CSIRT or competent authority. Missing registration is the easiest violation to avoid.'] ];
+    for(const [key,msg,fix] of gaps){
+      if(answers[key]==='no'){errors++;findings.push({sev:'error',msg,fix});}
+      else if(answers[key]==='partial'||answers[key]==='notyet'||answers[key]==='didntknow'){warnings++;findings.push({sev:'warning',msg,fix});}
+    }
+  }
+
+  const score=Math.max(5,Math.min(100,100-errors*25-warnings*10));
+  const g=score>=90?'A':score>=70?'B':score>=50?'C':'D';
+  const verdict = scope==='essential' ? 'Essential entity — full NIS2 obligations apply'
+                : scope==='important' ? 'Important entity — NIS2 obligations apply'
+                : scope===null ? 'Likely out of scope (based on your answers)'
+                : 'Scope uncertain — verify manually';
+
+  try{ fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){});
+  }catch(e){}
+
+  document.getElementById('result').innerHTML=
+    '<div class="scorecard"><div class="score grade-'+g+'">'+verdict+'</div>'
+    +'<div style="margin-top:6px;font-size:14px;color:#667">Readiness signal: '+score+'/100</div>'
+    +'<div style="margin-top:8px"><span class="tagchip">Directive (EU) 2022/2555</span>'
+    +(scope?'<span class="tagchip">Art. 20 · 21 · 23</span>':'')
+    +'</div></div>'
+    +'<ul class="findings">'+findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(f.msg)+'</span>'
+      +(f.fix?'<br><small>'+esc(f.fix)+'</small>':'')+'</li>').join('')+'</ul>'
+    +'<p style="font-size:13px;color:#667">Structured screening — not legal advice. '
+    +'The plain-language guide: <a href="/blog/nis2-readiness-guide">NIS2 for Small Agencies</a>. '
+    +'Full checklist + templates: <a href="/#products">NIS2 Compliance Kit e-book</a>.</p>'
+    +'<p style="text-align:center;margin-top:18px">'
+    +'<button onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '
+    +'<button onclick="shareResult()" class="btn btn-secondary">Copy shareable link</button></p>';
+}
+
+async function shareResult(){
+  const url=location.origin+'/nis2-check#r=1';
+  try{await navigator.clipboard.writeText(url);}catch(e){
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  alert('Link copied: '+url);
+}
+window.shareResult=shareResult;
+
+document.getElementById('nextBtn').addEventListener('click',()=>{if(cur===QUESTIONS.length-1)finish();else next();});
+document.getElementById('prevBtn').addEventListener('click',prev);
+
+render();
+</script>
+</body>
+</html>

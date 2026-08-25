@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Magento (Adobe Commerce) Accessibility Check (WCAG/EAA) —</title>
+<meta name="description" content="Free Magento/Adobe Commerce WCAG 2.1 AA scan — 16 automated rules, instant grade, no signup. Check alt text, contrast, headings, forms and links on your Magento store.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Magento Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your Magento store against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/magento-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Magento Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your Magento store against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free Magento (Adobe Commerce) Accessibility Check (WCAG/EAA) — Scan Your Store">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/magento-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/magento-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to my Magento store?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Magento store sells products or services to consumers in the EU, the European Accessibility Act requires WCAG 2.1 AA compliance for e-commerce. This applies to product pages, category browsing, cart, checkout and customer account flows. Marketplaces and payment providers increasingly ask for documented conformance before onboarding merchants."}},{"@type":"Question","name":"What does the free scanner check on Magento stores?","acceptedAnswer":{"@type":"Answer","text":"16 automated rules covering alt text on images, form labels, link text, buttons, heading hierarchy, page language, viewport meta, iframe titles, table headers, contrast ratios, ARIA misuse, and more. Each finding includes the exact element location and a concrete fix tip relevant to Magento's admin panel."}},{"@type":"Question","name":"Where do I fix common issues in Magento?","acceptedAnswer":{"@type":"Answer","text":"Product image alt text lives in Catalog → Products → edit product → Images and Videos tab. Theme colours in Content → Design → Configuration. CMS content in Content → Pages. Store language in Stores → Configuration → General → Locale Options. The scanner tells you exactly which element to fix and where it sits in the admin."}},{"@type":"Question","name":"Does my Magento theme affect accessibility?","acceptedAnswer":{"@type":"Answer","text":"Strongly. The theme controls all rendered HTML — heading hierarchy, button markup, focus styles and colour contrast. Custom themes based on Luma or Blank often strip out accessible defaults. Always scan a full page of your live theme with real content rather than trusting a demo."}},{"@type":"Question","name":"Does Adobe Commerce (Enterprise) have better accessibility?","acceptedAnswer":{"@type":"Answer","text":"Adobe Commerce shares the same theming system as Magento Open Source. Enterprise-specific features (B2B portals, shared catalogues, advanced pricing) introduce their own accessibility surface area. The scanning rules apply equally to both editions."}}]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Magento Accessibility Check</h1>
+    <p class="subtitle">Scan any Magento (Adobe Commerce) store against 16 WCAG 2.1 AA rules in seconds — no module install, no signup. Built for EU e-commerce compliance.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Run a Free Scan on Your Magento Store</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Magento accessibility matters in the EU</h2>
+    <p>Magento Open Source and Adobe Commerce power hundreds of thousands of e-commerce stores worldwide, with a particularly strong footprint among European mid-market and enterprise merchants. The European Accessibility Act (EAA) explicitly covers e-commerce: if you sell to EU consumers, every step of the shopping journey — product browsing, cart, checkout, and customer accounts — must meet WCAG 2.1 AA standards.</p>
+    <p>Magento's architecture stacks layout XML, PHTML templates, UI components, and third-party extensions on top of each other. Each layer can silently undo the accessibility of the layer beneath it. The most common failures — missing alt text on imported product images, low-contrast promotional banners, search forms without visible labels, and checkout fields that rely on placeholders — are also the easiest to fix once you know where to look. Our scanner catches exactly these issues.</p>
+    <p>Beyond regulatory compliance, accessible stores convert better: clearer CTAs, form labels that screen reader users can actually interact with, and product images that convey meaning when they do not load. A store that passes WCAG basics also survives procurement review for B2B marketplace onboarding — increasingly a requirement for EU-based fulfilment and dropshipping integrations.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Magento store</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Magento URL</strong> — any published page: the store homepage, a product page, or a category listing.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> Most image-alt, heading, and form-label issues are fixed right inside Magento's admin panel (Catalog, Content, or Stores menus). Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or marketplace needs to see compliance evidence.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Magento Store Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Magento</h2>
+    <p>When your scan flags a failing rule, here is where to fix it in the Magento admin:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Magento</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text on product images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Catalog → Products → edit product → Images and Videos tab → set the Alt Text field per image. For imported products, verify your import CSV includes a column for alt text.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Content → Design → Configuration → edit your store view → Other Settings / HTML Head → add custom CSS. Adjust body text colour to at least #444 on white. Promotional banners often use light text on light backgrounds.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Product descriptions use the WYSIWYG editor — use Heading 2/3 styles from the toolbar instead of bold paragraphs. Category pages use Layout XML updates or widget settings for heading levels.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Search forms, newsletter signups, and checkout fields are rendered by Magento's UI components. Most have labels by default, but custom theme overrides in search/form.phtml can drop them. Check PHTML templates in your theme.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Product names used as links (category pages, related products) are usually fine. Issues arise in custom blocks and CMS content where links say "Read more" or "Learn more" — edit the content in Content → Pages or Content → Blocks.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Stores → Configuration → General → Locale Options → Locale sets the store's language. Verify in multi-store setups that each store view has the correct locale configured.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt on logo</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Content → Design → Configuration → edit your store view → Header → Logo Image Alt Text field. Also check the logo uploaded in Content → Configuration → General.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Magento-specific tools &amp; resources</h2>
+    <p>Magento ships with solid foundations, but the e-commerce ecosystem introduces unique challenges:</p>
+    <div style="display:grid;gap:16px;margin-top:24px;">
+      <div class="card"><h3>Built-in foundations</h3><p>The Luma theme renders semantic HTML with labelled forms, heading hierarchy and responsive viewport. Many merchants customise Luma or build on Blank — each customisation can drop accessible defaults that the parent theme provided.</p></div>
+      <div class="card"><h3>Custom theme audit</h3><p>Magento themes use PHTML templates, Layout XML, and UI components. Check app/design/frontend/Vendor/Theme/ for overrides that strip label elements from forms or remove heading levels. The quickest check: diff your theme against the original Luma/Blank templates.</p></div>
+      <div class="card"><h3>Extensions and third-party modules</h3><p>Third-party extensions (one-step checkout, product sliders, filter navigation) often use their own markup. Scan pages that heavily depend on extensions separately and check each extension's template files for alt text, labels, and heading compliance.</p></div>
+      <div class="card"><h3>Product data imports</h3><p>Bulk-imported products via CSV often ship with empty alt text fields. Product imports from ERP or PIM systems are the most common source of missing alt text across an entire catalogue. Add alt text mapping to your import pipeline.</p></div>
+      <div class="card"><h3>Checkout and customer account</h3><p>Magento's checkout is a multi-step, ajax-driven component. Test every step with keyboard-only navigation. Verify that error messages (invalid address, missing payment info) are programmatically associated with their form fields using aria-describedby or aria-invalid.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Magento</h2>
+    <p>Accessibility is not a one-time fix — Magento stores change constantly through product additions, extension updates, theme modifications, and seasonal promotions. Keep compliance sustainable:</p>
+    <ul style="list-style:none;display:grid;gap:12px;margin-top:24px;">
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>Extension updates.</strong> Magento and third-party extensions update frequently and can change rendered markup silently. Re-scan key pages (home, product, category, checkout) after every significant extension or security patch.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>Theme upgrades.</strong> Switching themes or applying theme version upgrades can change heading levels, form markup, and colour variable mappings. Always scan after a theme change.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>Product data quality.</strong> Make alt text part of your product onboarding checklist. Train catalogue managers to verify the Alt Text and Description fields on every new product. Empty alt text on product images is the single most common WCAG failure across Magento stores.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>Scan quarterly.</strong> Run the scanner on your homepage, a category page, a product page, and the checkout every quarter. Keep the shareable result links as procurement-ready compliance documentation.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/magento-eaa-accessibility" style="color:var(--color-accent);">Magento Accessibility: EAA Compliance for Your Store</a></li>
+        <li><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);">EAA Enforcement: What Happens After June 2025</a></li>
+        <li><a href="/blog/gdpr-dpa-web-agencies" style="color:var(--color-accent);">GDPR DPAs for Web Agencies</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. For the full picture, our e-book covers the complete EAA checklist plus a 14-day fix plan, and the free statement generator creates your EAA-required accessibility statement in 2 minutes.</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

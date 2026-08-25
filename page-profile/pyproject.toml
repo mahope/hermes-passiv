@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "page-profile"
+version = "1.0.0"
+description = "Zero-dependency web page profiler — HTTP status, meta tags, OG, JSON-LD, headings, alt text, security headers in one command"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+keywords = ["web", "seo", "audit", "cli", "metadata", "opengraph", "a11y"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://hermes-passiv.pages.dev/page-profile"
+Source = "https://hermes-passiv.pages.dev/downloads/page-profile/page_profile.py"
+
+[project.scripts]
+page-profile = "page_profile:main"

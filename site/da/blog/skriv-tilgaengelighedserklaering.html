@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sådan skriver du en tilgængelighedserklæring (EAA-skabelon 2026)</title>
+<meta name="description" content="Trin-for-trin guide til at skrive en EAA-compliant tilgængelighedserklæring for din hjemmeside: kravene i EU-regulation 2023/2419, de seks obligatoriske afsnit, typiske fejl og en udfyld-skabelon.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sådan skriver du en tilgængelighedserklæring (EAA-skabelon 2026)">
+<meta property="og:description" content="Hvad skal en tilgængelighedserklæring indeholde efter Europas tilgængelighedslov? De seks obligatoriske afsnit, typiske fejl og en gratis generator — på 10 minutter.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/skriv-tilgaengelighedserklaering">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/skriv-tilgaengelighedserklaering"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/how-to-write-accessibility-statement">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/skriv-tilgaengelighedserklaering">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/how-to-write-accessibility-statement">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Sådan skriver du en tilgængelighedserklæring (EAA-skabelon 2026)", "description": "Trin-for-trin guide til at skrive en EAA-compliant tilgængelighedserklæring for din hjemmeside: kravene i EU-regulation 2023/2419, de seks obligatoriske afsnit, typiske fejl og en udfyld-skabelon.", "url": "https://hermes-passiv.pages.dev/da/blog/skriv-tilgaengelighedserklaering", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Skal hver enkelt underside have sin egen erklæring?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Én tilgængelighedserklæring pr. domæne/tjeneste er nok, så længe den dækker hele sitet. Kører du flere selvstændige tjenester på separate domæner, skal hver have sin egen — med korrekt conformance-status for netop den tjeneste."}}, {"@type": "Question", "name": "Må jeg bruge samme erklæring til flere kundesider?", "acceptedAnswer": {"@type": "Answer", "text": "Nej — kopier ikke blindt. Organisation, feedback-e-mail, kendte begrænsninger og testmetode skal afspejle det enkelte site. Brug strukturen fra denne guide som skabelon, men udfyld alt indhold pr. side. Bureauer bør lave en tjekliste pr. leverance."}}, {"@type": "Question", "name": "Skal erklæringen være på dansk?", "acceptedAnswer": {"@type": "Answer", "text": "Den skal være på et sprog dine brugere forstår. Er sitet på dansk, skal erklæringen også være det — myndigheder og brugere forventer det. Har du et flersproget site, kan du have versioner pr. sprog, men indholdet skal være ens."}}, {"@type": "Question", "name": "Hvad sker der, hvis jeg ikke har en erklæring?", "acceptedAnswer": {"@type": "Answer", "text": "Uden offentlig tilgængelighedserklæring er sitet reelt non-compliant med Europas tilgængelighedslov — uanset hvor tilgængelig koden i øvrigt er. Tilsynsmyndigheden (i Danmark er der udpegede markedsføringstilsyn under loven) kan pålægge rettelse og i sidste instans bøder. Erklæringen er samtidig det nemmeste krav at opfylde."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">EAA &middot; GUIDE &amp; SKABELON</div>
+    <h1>Sådan Skriver Du en<br>Tilgængelighedserklæring</h1>
+    <p class="subtitle">Siden juni 2025 skal alle hjemmesider der tilbyder varer eller tjenester til EU-forbrugere have en offentlig tilgængelighedserklæring. Her er præcis hvad den skal indeholde — og hvordan du skriver den på under en time.</p>
+    <div class="hero-cta">
+      <a href="/accessibility-statement-generator" lang="en" class="btn-primary">Brug den gratis generator (engelsk) &rarr;</a>
+      <a href="#krav" class="btn-secondary">Se de seks krav</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvorfor">
+  <div class="container">
+    <h2>Hvorfor sitet har brug for en erklæring</h2>
+    <p>Europas tilgængelighedslov (EAA) trådte i kraft i juni 2025. Alle hjemmesider der
+    tilbyder varer eller tjenester til EU-forbrugere skal offentliggøre en
+    tilgængelighedserklæring. Det er ikke frivilligt — det er et lovkrav, og uden
+    erklæringen er sitet automatisk non-compliant, uanset hvor tilgængelig koden er.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Juridisk compliance</h3><p>Loven kræver eksplicit en offentlig erklæring om tilgængelighed. Mangler den, er sitet non-compliant — uanset hvor godt det i øvrigt lever op til WCAG.</p></div>
+      <div class="card"><h3>🤝 Transparens over for brugere</h3><p>Besøgende med handicap kan straks se sitets niveau, kendte problemer og hvordan de melder fejl. Det bygger tillid og reducerer henvendelser.</p></div>
+      <div class="card"><h3>📋 Krav i udbud og indkøb</h3><p>Virksomheder og offentlige kunder spørger i stigende grad efter tilgængelighedserklæringer i leverandøronboarding. Har du én, fjerner du en klassisk kontraktblokering.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="krav">
+  <div class="container">
+    <h2>De seks obligatoriske afsnit (EU-regulation 2023/2419)</h2>
+    <ol>
+      <li><strong>Forpligtelse til tilgængelighed</strong> — én til to sætninger om at sitet skal kunne bruges af alle. Hold det kort.</li>
+      <li><strong>Conformance-status</strong> — hvilken standard I sigter mod (WCAG 2.1 AA for EAA), og om sitet er fuldt, delvist eller ikke conformant. De fleste sider er "delvist conformant" — det er acceptabelt, hvis begrænsningerne er dokumenteret.</li>
+      <li><strong>Kendte begrænsninger</strong> — ærlig liste over kendte problemer og, hvor muligt, en alternativ måde at få indholdet på. Dokumenterede begrænsninger er compliant; at skjule dem er ikke.</li>
+      <li><strong>Feedback-mekanisme</strong> — en e-mail eller formular hvor brugere kan melde problemer, samt svartid. Jo flere kanaler, jo bedre.</li>
+      <li><strong>Testmetode</strong> — hvordan tilgængeligheden er vurderet: automatisk scanning, manuel test, brugertest eller ekstern revision. Vær ærlig — selvvurdering med automatiske værktøjer tæller med.</li>
+      <li><strong>Kontakt til tilsynsmyndighed</strong> — den nationale myndighed brugere kan henvende sig til, hvis de er utilfredse med jeres svar. Link til jeres lands myndighed.</li>
+    </ol>
+    <p>Til det: vis datoen for seneste gennemgang. En erklæring uden dato virker forældet —
+    og bliver det også.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan gør du — på under en time</h2>
+    <ol>
+      <li>Scan sitet med et gratis værktøj så du kender dine faktiske problemer
+      (<a href="/scan-da" style="color:var(--color-accent);">Accessibility Scanner</a>).</li>
+      <li>Udfyld de seks afsnit ovenfor — ærligt, især om begrænsninger.</li>
+      <li>Læg erklæringen på en offentlig side (fx /tilgaengelighed) og link til den fra
+      footeren på alle undersider.</li>
+      <li>Kalenderpåmindelse: gennemgå erklæringen kvartalsvis, og opdatér kendte
+      begrænsninger efter hver scanning.</li>
+    </ol>
+    <p>Vil du spare arbejdet? Den gratis
+    <a href="/accessibility-statement-generator" lang="en" style="color:var(--color-accent);">Statement Generator</a>
+    (på engelsk) genererer en komplet erklæring ud fra syv svar — klar til copy-paste.
+    Eller se vores oversigt over
+    <a href="/da/blog/gratis-eaa-saetninger" style="color:var(--color-accent);">gratis EAA-sætninger og generatorer</a>.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/accessibility-statement-generator" lang="en" class="btn-primary">Generér din erklæring nu &rarr;</a>
+      &nbsp;
+      <a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" class="btn-secondary">Gratis testværktøjer</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Typiske fejl du skal undgå</h2>
+    <ul>
+      <li><strong>At påstå fuld conformance uden bevis</strong> — overclaiming er en juridisk risiko. Skriv delvis conformance og dokumentér undtagelserne.</li>
+      <li><strong>Ingen feedback-mulighed</strong> — erklæringen uden kontaktvej opfylder ikke kravet.</li>
+      <li><strong>Forældet tilsynskontakt</strong> — tjek årligt at myndigheden og kontaktoplysningerne stadig passer.</li>
+      <li><strong>Erklæringen gemt væk</strong> — den skal ligge på en offentlig side og linkes fra footeren.</li>
+      <li><strong>Ingen dato for seneste gennemgang</strong> — uden dato fremstår dokumentet dødt.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Skal hver enkelt underside have sin egen erklæring?</h3><p>Nej. Én tilgængelighedserklæring pr. domæne/tjeneste er nok, så længe den dækker hele sitet. Kører du flere selvstændige tjenester på separate domæner, skal hver have sin egen — med korrekt conformance-status for netop den tjeneste.</p></div>
+      <div class="card"><h3>Må jeg bruge samme erklæring til flere kundesider?</h3><p>Nej — kopier ikke blindt. Organisation, feedback-e-mail, kendte begrænsninger og testmetode skal afspejle det enkelte site. Brug strukturen fra denne guide som skabelon, men udfyld alt indhold pr. side. Bureauer bør lave en tjekliste pr. leverance.</p></div>
+      <div class="card"><h3>Skal erklæringen være på dansk?</h3><p>Den skal være på et sprog dine brugere forstår. Er sitet på dansk, skal erklæringen også være det — myndigheder og brugere forventer det. Har du et flersproget site, kan du have versioner pr. sprog, men indholdet skal være ens.</p></div>
+      <div class="card"><h3>Hvad sker der, hvis jeg ikke har en erklæring?</h3><p>Uden offentlig tilgængelighedserklæring er sitet reelt non-compliant med Europas tilgængelighedslov — uanset hvor tilgængelig koden i øvrigt er. Tilsynsmyndigheden (i Danmark er der udpegede markedsføringstilsyn under loven) kan pålægge rettelse og i sidste instans bøder. Erklæringen er samtidig det nemmeste krav at opfylde.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/accessibility-statement-generator" lang="en" class="btn-primary">Generér din erklæring nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/gratis-eaa-saetninger" lang="da">Gratis EAA-sætninger</a> &middot; <a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" lang="da">Gratis tilgængelighedsværktøjer</a> &middot; <a href="/da/blog/eaa-frister-2026" lang="da">EAA-frister 2026</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

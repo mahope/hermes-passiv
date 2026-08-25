@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free PrestaShop Accessibility Check (WCAG/EAA) — Scan Your Store</title>
+<meta name="description" content="Free PrestaShop WCAG 2.1 AA scan — 16 automated rules, instant grade, no signup. Check alt text, contrast, headings, forms and links on your PrestaShop store.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PrestaShop Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your PrestaShop site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/prestashop-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PrestaShop Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your PrestaShop site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free PrestaShop Accessibility Check (WCAG/EAA) — Scan Your Store">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/prestashop-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/prestashop-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does the EAA apply to my PrestaShop store?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. If your PrestaShop store sells to consumers in the EU, the European Accessibility Act requires e-commerce services to be accessible under WCAG 2.1 AA. Merchants above the micro-enterprise threshold must comply, and payment providers and marketplaces increasingly ask for documented conformance."}}, {"@type": "Question", "name": "What does the free scanner check on PrestaShop sites?", "acceptedAnswer": {"@type": "Answer", "text": "16 automated rules covering alt text on images, form labels, link text, buttons, heading hierarchy, page language, viewport meta, iframe titles, table headers, contrast ratios, ARIA misuse, and more. Each finding includes the exact element location and a concrete fix tip relevant to PrestaShop's back office."}}, {"@type": "Question", "name": "Where do I fix common issues in PrestaShop?", "acceptedAnswer": {"@type": "Answer", "text": "Product image alt text lives in Catalog → Products → Photos (Legend field), colours and typography in Design → Theme & Logo, CMS page content in Design → Pages, and shop-wide language settings in International → Localization. The scanner tells you exactly which element to fix and where it sits."}}, {"@type": "Question", "name": "Does my PrestaShop theme affect accessibility?", "acceptedAnswer": {"@type": "Answer", "text": "Strongly. The theme controls nearly all rendered HTML — heading hierarchy, button markup, focus styles and contrast. Themes bought from marketplaces vary widely; always scan a full page of your live theme rather than trusting the demo."}}, {"@type": "Question", "name": "Is PrestaShop accessible out of the box?", "acceptedAnswer": {"@type": "Answer", "text": "The default Classic theme provides reasonable semantics and responsive markup, but most shops customise themes, add modules and translate content — each step can introduce regressions like missing labels, generic link text or low-contrast promotional banners."}}]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>PrestaShop Accessibility Check</h1>
+    <p class="subtitle">Scan any PrestaShop store against 16 WCAG 2.1 AA rules in seconds — no module install, no signup. Built for EU e-commerce compliance.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Run a Free Scan on Your PrestaShop Site</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why PrestaShop accessibility matters in the EU</h2>
+    <p>PrestaShop powers hundreds of thousands of online stores, with a strong footprint among European small and mid-sized merchants. Under the European Accessibility Act (EAA), e-commerce is explicitly in scope: if you sell to EU customers, your storefront must meet WCAG 2.1 AA — product pages, checkout flows and customer accounts alike.</p>
+    <p>The typical PrestaShop store stacks a purchased theme, a dozen modules and multiple languages on top of the core. Each layer can quietly introduce the exact issues our scanner finds everywhere: missing image legends from bulk imports, filter widgets without keyboard support, and promotional banners that fail contrast requirements.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your PrestaShop site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your PrestaShop URL</strong> — any published page: homepage, a product page, or a category listing.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> Most image-alt, heading, and form-label issues are fixed right inside PrestaShop's editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your PrestaShop Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in PrestaShop</h2>
+    <p>When your scan flags a failing rule, here is where to fix it:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in PrestaShop</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text on images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Product images: Catalog → Products → edit product → Photos tab — set the Legend field per language. Theme/logo images: Design → Image Settings or the theme configuration panel.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Design → Theme & Logo → edit the theme's CSS (Advanced → Custom CSS / theme editor). Adjust body text colour to at least #767676 on white, and check button states.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Product descriptions use the Rich Text Editor — apply Heading 2/3 styles instead of bold paragraphs. Theme templates (.tpl files) control page-level headings; keep one H1 per page.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Most core forms render labels by default. For custom forms built with the Contact Form module or third-party form builders, verify each field has an explicit label in its configuration.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text ("read more", "click here")</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Edit category and CMS page content in International → Translations or directly in the CMS pages (Design → Pages) — rewrite links so they describe their destination.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">International → Localization → configure default language per shop context. Multi-store setups should ensure each store URL serves the correct html lang attribute.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt on logo</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Design → Theme & Logo → configure — the logo alt text usually defaults to the shop name; verify it is not empty.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>PrestaShop-specific tools &amp; resources</h2>
+    <p>PrestaShop ships with useful foundations — these approaches take you further:</p>
+    <div style="display:grid;gap:16px;margin-top:24px;">
+      <div class="card"><h3>🛠️ Built-in foundations</h3><p>PrestaShop 8 renders semantic templates with the default Classic theme, including proper form markup and responsive viewport handling. Custom themes based on the starter theme inherit this structure.</p></div>
+      <div class="card"><h3>✅ Audit your theme's .tpl files</h3><p>PrestaShop themes are template-based — overrides in themes/YOURTHEME/templates/ can silently drop labels, alt attributes or heading levels that the parent template provided. Diff your overrides against the original.</p></div>
+      <div class="card"><h3>🔤 Multilingual alt text</h3><p>PrestaShop stores image legends per language. If you sell across EU markets, fill the Legend field for every language — a French customer's screen reader should get French alt text.</p></div>
+      <div class="card"><h3>🎨 Faceted search & modules</h3><p>Filter modules (faceted search) often render interactive controls as plain divs. Verify keyboard operability and ARIA state attributes on any filter UI before going live.</p></div>
+      <div class="card"><h3>🏗️ Checkout accessibility</h3><p>The checkout is where EU revenue lives — test every step with the keyboard only, confirm error messages are announced, and check contrast on price and shipping labels.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on PrestaShop</h2>
+    <p>Accessibility is not a one-time fix — sites change through content edits, theme updates and new pages. Keep compliance sustainable:</p>
+    <ul style="list-style:none;display:grid;gap:12px;margin-top:24px;">
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>🔁 Module updates.</strong> PrestaShop modules update frequently and can change rendered markup. Re-scan key pages after every significant update.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>🌐 Language reviews.</strong> New languages bring new translations — including alt-text fields. Audit untranslated or empty Legends when you add a market.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>📝 Content author guidelines.</strong> Train staff adding products to write descriptive names, fill the Legend field, and structure descriptions with real headings.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>📊 Scan quarterly.</strong> Run the scanner on your homepage, a category page, a product page and the checkout every quarter. Keep result links as documentation for compliance reviews.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/prestashop-eaa-accessibility" style="color:var(--color-accent);">PrestaShop Accessibility: EAA Compliance for Your Store</a></li>
+        <li><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);">EAA Enforcement: What Happens After June 2025</a></li>
+        <li><a href="/blog/cookie-consent-gdpr-compliance" style="color:var(--color-accent);">Cookie Consent and GDPR: What's Actually Required</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. For the complete picture, our e-book covers the full checklist plus a 14-day fix plan.</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

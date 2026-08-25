@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bevar kolonnejustering når HTML-tabeller bliver til markdown (2026)</title>
+<meta name="description" content="Markdown-tabeller kan udtrykke venstre-, højre- og centerjustering — men de fleste konvertere smider informationen væk. Sådan bærer du den med gennem konverteringen.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bevar kolonnejustering når HTML-tabeller bliver til markdown (2026)">
+<meta property="og:description" content="Kolonnestyring i HTML går tabt i de fleste markdown-konverteringer. Sådan bevarer du venstre/højre/center-justering korrekt.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tabeljustering-html-til-markdown">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tabeljustering-html-til-markdown">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tabeljustering-html-til-markdown">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Bevar kolonnejustering når HTML-tabeller bliver til markdown (2026)", "description": "Markdown-tabeller kan udtrykke venstre-, højre- og centerjustering — men de fleste konvertere smider informationen væk. Sådan bærer du den med gennem konverteringen.", "url": "https://hermes-passiv.pages.dev/da/blog/tabeljustering-html-til-markdown", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan justerer man kolonner i en markdown-tabel?", "acceptedAnswer": {"@type": "Answer", "text": "Med colons i separatorlinjen under overskrifterne: |:---| venstrejusterer, |---:| højrejusterer og |:---:| centrerer kolonnen. Uden colons bliver kolonnen venstrejusteret som standard."}}, {"@type": "Question", "name": "Hvorfor mister mine tal-kolonner deres justering?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi de fleste konverterere skriver separatorlinjen som |---|---| uden at læse HTML'ens align-attribut. Clean Copy aflæser alignment fra CSS og attributter og skriver colons korrekt."}}, {"@type": "Question", "name": "Understøtter GitHub colons i tabeller?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. GitHub Flavored Markdown, CommonMark-udvidelser, Notion og Obsidian respekterer alle justerings-colons. Ældre parseverktøjer ignorerer dem nogle gange, men tabellen vises stadig korrekt."}}, {"@type": "Question", "name": "Kan jeg se justeringen i selve markdown-filen?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — det står i kildekoden. En højrejusteret kolonne har |---:| i separatorlinjen, så justeringen er dokumenteret i filen og ikke kun i renderen."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">RENGØR TEKST &middot; MARKDOWN</div>
+    <h1>Kolonnejustering<br>i markdown-tabeller</h1>
+    <p class="subtitle">En HTML-tabel med align="right" på tal-kolonnerne ser forkert ud i markdown efter konvertering: alt bliver venstrejusteret. Markdown understøtter faktisk justering via kolonneoverskrifternes colons — men kun hvis konvertereren skriver dem rigtigt.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv konverteren &rarr;</a>
+      <a href="#syntaks" class="btn-secondary">Se syntaksen</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="syntaks">
+  <div class="container">
+    <h2>Syntaksen: colons i separatorlinjen</h2>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">| Vare     | Antal | Pris     |
+|:---------|------:|:--------:|
+| Tastatur |     2 | 399,00   |
+| Mus      |     1 | 249,50   |</pre>
+    <p><code>|:---|</code> = venstre &middot; <code>|---:|</code> = højre &middot;
+    <code>|:---:|</code> = centreret. Tal-kolonner læses bedst højrejusteret —
+    cifrene skal stå under hinanden.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-tool" class="btn-primary">Test med din egen tabel &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan bevarer Clean Copy justeringen</h2>
+    <ol>
+      <li>Aflæser <code>align</code>-attributten og CSS <code>text-align</code> på
+      hver celle i HTML-tabellen.</li>
+      <li>Oversætter til colons i separatorlinjen — højrejusterede celler giver
+      <code>---:</code>, centrerede giver <code>:--:</code>.</li>
+      <li>Resultatet renderes med samme justering som originalen i GitHub, Notion,
+      Obsidian og alle GFM-kompatible renderere.</li>
+    </ol>
+    <p>Læs videre:
+    <a href="/da/blog/html-til-markdown-konverter">den komplette HTML-til-markdown-guide</a>,
+    <a href="/da/blog/kopier-tabel-hjemmeside-til-notion">tabeller ind i Notion</a> og
+    <a href="/da/blog/kopier-tabel-hjemmeside-til-airtable">tabeller ind i Airtable</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan justerer man kolonner i en markdown-tabel?</h3><p>Med colons i separatorlinjen under overskrifterne: |:---| venstrejusterer, |---:| højrejusterer og |:---:| centrerer kolonnen. Uden colons bliver kolonnen venstrejusteret som standard.</p></div>
+      <div class="card"><h3>Hvorfor mister mine tal-kolonner deres justering?</h3><p>Fordi de fleste konverterere skriver separatorlinjen som |---|---| uden at læse HTML'ens align-attribut. Clean Copy aflæser alignment fra CSS og attributter og skriver colons korrekt.</p></div>
+      <div class="card"><h3>Understøtter GitHub colons i tabeller?</h3><p>Ja. GitHub Flavored Markdown, CommonMark-udvidelser, Notion og Obsidian respekterer alle justerings-colons. Ældre parseverktøjer ignorerer dem nogle gange, men tabellen vises stadig korrekt.</p></div>
+      <div class="card"><h3>Kan jeg se justeringen i selve markdown-filen?</h3><p>Ja — det står i kildekoden. En højrejusteret kolonne har |---:| i separatorlinjen, så justeringen er dokumenteret i filen og ikke kun i renderen.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Konvertér en tabel nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/html-til-markdown-konverter" lang="da">HTML til markdown</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-notion" lang="da">Tabeller til Notion</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-airtable" lang="da">Tabeller til Airtable</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Simple shield icon for testing -->
+  <rect x="0" y="0" width="512" height="512" rx="64" fill="#2563eb"/>
+  <path d="M256 96 L128 160 v96 c0 96 64 160 128 192 c64-32 128-96 128-192 v-96 L256 96z"
+        fill="#ffffff" opacity="0.9"/>
+  <path d="M200 240 l40 40 l80-80"
+        fill="none" stroke="#2563eb" stroke-width="24" stroke-linecap="round"/>
+</svg>

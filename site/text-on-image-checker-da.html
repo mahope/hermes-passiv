@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tekst-på-billede kontrasttjek — er din tekst læsbar?</title>
+<meta name="description" content="Upload et billede, placér teksten og få den reelle WCAG-kontrast målt mod de faktiske baggrundspixels bag teksten. Gratis, i browseren, intet uploades til nogen server.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis tekst-på-billede kontrasttjek">
+<meta property="og:description" content="Mål WCAG-kontrasten mellem din overlay-tekst og de rigtige pixels bag den — direkte i browseren.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/text-on-image-checker-da"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Tekst-på-billede kontrasttjek","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/text-on-image-checker-da","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Gratis browserværktøj der måler WCAG-kontrasten mellem tekst på et billede og de faktiske pixels bag teksten."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .ti-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .ti-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .ti-field { display:flex; flex-direction:column; gap:6px; }
+  .ti-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .ti-canvas-wrap { margin-top:18px; border:1px dashed var(--color-border); border-radius:12px; overflow:hidden; background:
+    repeating-conic-gradient(rgba(128,128,128,.15) 0% 25%, transparent 0% 50%) 50%/16px 16px; }
+  .ti-canvas-wrap canvas { display:block; width:100%; height:auto; cursor:text; }
+  .ti-result { margin-top:16px; padding:14px 16px; border-radius:10px; font-size:.95rem; line-height:1.5; }
+  .ti-pass { background:rgba(22,163,74,.12); border:1px solid rgba(22,163,74,.45); }
+  .ti-fail { background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.45); }
+  .ti-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; color:#fff; }
+  .ti-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  input[type=color].ti-color { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .ti-input { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); }
+  select.ti-input { max-width:200px; }
+  .ti-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Tekst-på-billede kontrasttjek</h1>
+    <p class="tagline">Tekst ovenpå fotos er en af de mest almindelige
+    tilgængelighedsfejl — og den sværeste at bedømme med øjnene. Upload et billede,
+    placér din tekst dér hvor den skal stå, og værktøjet måler den <strong>reelle
+    WCAG-kontrast</strong> mod de præcise pixels bag hvert bogstav. Alt kører i din
+    browser; billedet bliver aldrig sendt noget hen.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="ti-card" aria-labelledby="tool-heading">
+  <h2 id="tool-heading">Tjek din tekstplacering</h2>
+
+  <div class="ti-row" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="file">1. Vælg et billede</label>
+      <input type="file" id="file" accept="image/*" class="ti-input">
+    </div>
+    <div class="ti-field">
+      <label for="text">2. Tekst på billedet</label>
+      <input type="text" id="text" class="ti-input" value="Din overskrift her" style="width:220px">
+    </div>
+    <div class="ti-field">
+      <label for="fg">3. Tekstfarve</label>
+      <input type="color" class="ti-color" id="fg" value="#ffffff">
+    </div>
+    <div class="ti-field">
+      <label for="fontsize">Skriftstørrelse</label>
+      <select id="fontsize" class="ti-input">
+        <option value="small">&lt; 24 px (normal)</option>
+        <option value="large" selected>&ge; 24 px (stor)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ti-canvas-wrap">
+    <canvas id="cv" aria-label="Billedforhåndsvisning med flytbar tekst. Klik på billedet for at flytte teksten." role="img"></canvas>
+  </div>
+  <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Klik hvor som helst på billedet ( eller træk) for at placere teksten.</p>
+  <p class="ti-error" id="err" role="alert"></p>
+
+  <div id="result" class="ti-result ti-fail" hidden></div>
+
+  <p class="ti-note">Sådan virker det: hvert bogstav samples på sine faktiske pixels —
+  vi aflæser billedfarverne direkte under bogstaverne (tekstens egne pixels udeladt)
+  og bruger det dårligste par vi finder. Det værst-tænkelige forhold er dét en
+  svagtseende læser oplever, og dét er derfor også hvad WCAG måler.
+  Til rene farvepar: brug <a href="/contrast-checker-da">kontrasttjekkeren</a>;
+  se hvordan hele paletten læses af farveblinde med
+  <a href="/color-blindness-simulator-da">farveblindhedssimulatoren</a>. Tjek en hel
+  live-side med den gratis <a href="/scan-da">tilgængelighedsscanner</a>.</p>
+</section>
+
+<section class="ti-card">
+  <h2>Reglerne kort</h2>
+  <ul style="margin-top:10px;line-height:1.7">
+    <li><strong>WCAG SC&nbsp;1.4.3</strong> kræver 4,5:1 for normal tekst og 3:1 for stor tekst (&ge;&nbsp;24&nbsp;px normal eller &ge;&nbsp;18,66&nbsp;px fed).</li>
+    <li><strong>SC&nbsp;1.4.11</strong> kræver desuden 3:1 for meningsbærende UI-dele og grafik.</li>
+    <li>En gradient eller et travlt foto kan bestå under halvdelen af bogstaverne og fejle under resten — mål altid det værste tilfælde, ikke gennemsnittet.</li>
+    <li>Får du ikke bestået: læg en semi-transparent skærm bag teksten, mørkned/lysnet billedet lokalt, eller brug en fast billedtekst-bjælke.</li>
+  </ul>
+</section>
+
+<p style="margin-top:10px"><a href="/da/blog/tekst-paa-billede-kontrasttjek">Guide: sådan tester du tekst på billeder trin for trin</a></p>
+<p style="margin-top:26px"><a href="/free-tools">&larr; Alle gratis værktøjer</a> ·
+<a href="/contrast-checker-da">Kontrasttjekker</a> ·
+<a href="/palette-generator-da">Paletgenerator</a> ·
+<a href="/text-on-image-checker">English version</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøjer der kører i din browser
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('cv'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  var img = null, tx = 0, ty = 0, dragging = false;
+
+  function hexToRgb(h) {
+    h = h.replace('#', '');
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+  function lum(rgb) {
+    var c = rgb.map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = lum(a), l2 = lum(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+
+  function fontSizePx() {
+    return Math.max(18, Math.round(cv.width * 0.06));
+  }
+  function draw() {
+    if (!img) return;
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
+    ctx.fillStyle = $('fg').value;
+    ctx.textBaseline = 'top';
+    ctx.fillText($('text').value || ' ', tx, ty);
+  }
+
+  function sampleContrast() {
+    if (!img) return null;
+    draw();
+    var fgRgb = hexToRgb($('fg').value);
+    var fs = fontSizePx();
+    var text = $('text').value || '';
+    var metrics = ctx.measureText(text);
+    var w = Math.max(2, Math.ceil(metrics.width));
+    var x0 = Math.round(tx), y0 = Math.round(ty);
+    x0 = Math.max(0, Math.min(cv.width - w - 1, x0));
+    y0 = Math.max(0, Math.min(cv.height - fs - 1, y0));
+    var data = ctx.getImageData(x0, y0, w, fs).data;
+
+    var worst = Infinity;
+    var bgCandidates = [];
+    for (var i = 0; i < data.length; i += 4) {
+      var r = data[i], g = data[i+1], b = data[i+2];
+      var dr = Math.abs(r - fgRgb[0]), dg = Math.abs(g - fgRgb[1]), db = Math.abs(b - fgRgb[2]);
+      if (dr + dg + db < 120) continue;
+      bgCandidates.push([r, g, b]);
+    }
+    var minL = 1, maxL = 0, minC = null, maxC = null;
+    bgCandidates.forEach(function (c) {
+      var L = lum(c);
+      if (L < minL) { minL = L; minC = c; }
+      if (L > maxL) { maxL = L; maxC = c; }
+    });
+    [minC, maxC].forEach(function (c) {
+      if (!c) return;
+      var r = ratio(fgRgb, c);
+      if (r < worst) worst = r;
+    });
+    return { ratio: worst === Infinity ? null : worst };
+  }
+
+  function updateResult() {
+    var res = $('result'), errEl = $('err');
+    errEl.textContent = '';
+    var s = sampleContrast();
+    if (!s || s.ratio === null) { res.hidden = true; return; }
+    var large = $('fontsize').value === 'large';
+    var need = large ? 3 : 4.5;
+    var r = s.ratio;
+    var passAA = r >= need;
+    var passAAA = r >= (large ? 4.5 : 7);
+    res.hidden = false;
+    res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
+    res.innerHTML =
+      '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
+      (passAA ? 'BESTÅET' : 'IKKE BESTÅET') + '</span>&nbsp; <strong>' + r.toFixed(2).replace('.', ',') + ':1</strong> ' +
+      '(værste tilfælde bag din tekst) — kræver ' + String(need).replace('.', ',') + ':1 for WCAG AA ' +
+      (large ? '(stor tekst)' : '(normal tekst)') +
+      (passAA && !passAAA ? '<br>Består AA men ikke AAA (' + (large ? '4,5' : '7') + ':1).' :
+       passAAA ? '<br>Består også AAA.' :
+       '<br>Prøv en mørkere/lysere tekstfarve, eller læg en translucent skærm bag teksten.') +
+      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.</span>';
+  }
+
+  function loadFile(file) {
+    var errEl = $('err');
+    errEl.textContent = '';
+    if (!file || !/^image\//.test(file.type)) { errEl.textContent = 'Vælg venligst en billedfil.'; return; }
+    var url = URL.createObjectURL(file);
+    var im = new Image();
+    im.onload = function () {
+      img = im;
+      var maxW = 900;
+      var scale = Math.min(1, maxW / im.naturalWidth);
+      cv.width = Math.round(im.naturalWidth * scale);
+      cv.height = Math.round(im.naturalHeight * scale);
+      tx = Math.round(cv.width * 0.06);
+      ty = Math.round(cv.height * 0.70);
+      URL.revokeObjectURL(url);
+      updateAll();
+    };
+    im.onerror = function () { errEl.textContent = 'Kunne ikke læse den billedfil.'; };
+    im.src = url;
+  }
+
+  function pos(e) {
+    var rect = cv.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    tx = cx * cv.width / rect.width - fontSizePx() / 2;
+    ty = cy * cv.height / rect.height - fontSizePx() / 2;
+  }
+  function onMove(e) {
+    if (!img) return;
+    e.preventDefault();
+    pos(e);
+    updateAll();
+  }
+  function updateAll() { draw(); updateResult(); }
+
+  $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
+  $('text').addEventListener('input', updateAll);
+  $('fg').addEventListener('input', updateAll);
+  $('fontsize').addEventListener('change', updateResult);
+  cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
+  window.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
+  window.addEventListener('mouseup', function () { dragging = false; });
+  cv.addEventListener('touchstart', onMove, { passive: false });
+
+  var demo = document.createElement('canvas');
+  demo.width = 900; demo.height = 420;
+  var dctx = demo.getContext('2d');
+  var grad = dctx.createLinearGradient(0, 0, 900, 420);
+  grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
+  dctx.fillStyle = grad; dctx.fillRect(0, 0, 900, 420);
+  dctx.fillStyle = 'rgba(255,255,255,0.35)';
+  dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
+  img = demo;
+  cv.width = demo.width; cv.height = demo.height;
+  tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.62);
+  updateAll();
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

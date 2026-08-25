@@ -1,0 +1,24 @@
+[tool]
+name = "site-icons"
+version = "1.0.0"
+description = "Generate favicons, OG images, PWA icons, and web app manifest from a single SVG/PNG source"
+requires-python = ">=3.9"
+dependencies = [
+    "Pillow>=10.0",
+]
+license = "MIT"
+keywords = ["favicon", "og-image", "pwa", "icon", "web", "cli"]
+
+[project.urls]
+Homepage = "https://hermes-passiv.pages.dev/site-icons"
+Repository = "https://github.com/mahope/site-icons"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+site-icons = "site_icons:main"
+
+[tool.setuptools.packages.find]
+include = ["site_icons*"]

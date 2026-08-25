@@ -1,0 +1,37 @@
+{
+  "name": "@mahope/eaa-scanner",
+  "version": "1.2.0",
+  "description": "Universal EAA / WCAG 2.1 AA compliance scanner. Works on any CMS or hand-written HTML. Zero dependencies.",
+  "license": "MIT",
+  "bin": {
+    "eaa-scan": "./cli.js"
+  },
+  "main": "./index.js",
+  "files": [
+    "index.js",
+    "cli.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "wcag",
+    "eaa",
+    "compliance",
+    "scanner",
+    "audit",
+    "lighthouse",
+    "ci"
+  ],
+  "repository": {
+    "url": "https://hermes-passiv.pages.dev/downloads"
+  },
+  "homepage": "https://hermes-passiv.pages.dev/scan",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test.js"
+  }
+}

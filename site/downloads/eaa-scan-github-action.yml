@@ -1,0 +1,67 @@
+# eaa-scanner — automated EAA / WCAG 2.1 AA check in CI
+#
+# Copy this file into your repository as .github/workflows/eaa-scan.yml
+# No account, token or signup needed: the scanner is installed straight
+# from its published tarball and runs with --fail-on warning, so the job
+# fails when findings exist at that severity or above.
+#
+# Options:
+#   PAGES   space-separated list of URLs to scan (default below)
+#   FAIL_ON warning | error | never   (default: warning)
+
+name: eaa-scanner
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Mondays 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    env:
+      PAGES: "https://your-site.com https://your-site.com/pricing"
+      FAIL_ON: "warning"
+    steps:
+      - name: Install eaa-scanner (zero dependencies)
+        run: npm install --global https://hermes-passiv.pages.dev/downloads/mahope-eaa-scanner-1.2.0.tgz
+
+      - name: Scan pages
+        run: |
+          set -- $PAGES
+          for url in "$@"; do
+            echo "::group::Scanning $url"
+            npx eaa-scan --fail-on "$FAIL_ON" "$url" || FAILED=1
+            echo "::endgroup::"
+          done
+          exit ${FAILED:-0}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## eaa-scanner results"
+            echo ""
+            for url in $PAGES; do
+              echo "- \\`$url\\`"
+            done
+            echo ""
+            echo "Automated checks catch roughly 30-50% of accessibility issues."
+            echo "Pair this with manual testing — see <https://hermes-passiv.pages.dev/scan>."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Optional whole-site audit: crawls up to N same-origin pages and prints an
+  # average score plus the most frequent issue types. Informational only —
+  # it does not fail the build.
+  crawl-audit:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Install eaa-scanner (zero dependencies)
+        run: npm install --global https://hermes-passiv.pages.dev/downloads/mahope-eaa-scanner-1.2.0.tgz
+
+      - name: Crawl whole site
+        run: npx eaa-scan https://your-site.com --crawl 25

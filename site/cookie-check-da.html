@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis Cookie-Samtykke-Tjek — Indsamler dit site data før</title>
+<meta name="description" content="Indsæt en URL og se straks om din hjemmeside loader trackere FØR brugerens samtykke — et krav i ePrivacy Art. 5(3) og GDPR. Virker på enhver platform. Ingen tilmelding.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis Cookie-Samtykke-Tjek">
+<meta property="og:description" content="Tjek om dit site loader trackere før samtykke. Gratis, øjeblikkeligt, virker på enhver hjemmeside.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/cookie-check-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/cookie-check-da"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/cookie-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/cookie-check-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/cookie-check">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad tjekker værktøjet?","acceptedAnswer":{"@type":"Answer","text":"Det detekterer kendte tracking-scripts (Google Analytics, Google Ads, Meta Pixel, Hotjar, TikTok Pixel, LinkedIn Insight, Microsoft Clarity m.fl.), undersøger om en samtykkeplatform eller samtykke-gate er til stede, og markerer sider der ser ud til at loade trackere før samtykke er givet."}},{"@type":"Question","name":"Er tjekket gratis?","acceptedAnswer":{"@type":"Answer","text":"Ja. Ingen tilmelding, ingen konto, ingen e-mail. Indsæt en offentlig URL og få straks et resultat."}},{"@type":"Question","name":"Gemmer værktøjet de sider jeg tjekker?","acceptedAnswer":{"@type":"Answer","text":"Nej. Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks."}},{"@type":"Question","name":"Virker det på alle platforme?","acceptedAnswer":{"@type":"Answer","text":"Ja — WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, Next.js og håndskrevet HTML."}},{"@type":"Question","name":"Hvad er begrænsningerne?","acceptedAnswer":{"@type":"Answer","text":"Tjekket analyserer sidens HTML-kilde. Samtykke-gates der blokerer scripts ved runtime via JavaScript detekteres via deres kendte markører, men et statisk tjek kan ikke afvikle din side som en browser ville. Behandl resultatet som et stærkt signal — ikke juridisk rådgivning."}}]}
+</script>
+<style>
+  .scanbox { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
+  .scanbox input { flex: 1; padding: 12px 14px; border: 1px solid #b9cdd8;
+                   border-radius: 8px; font-size: 15px; }
+  .scanbox button { background: #0b6e8f; color: #fff; border: 0;
+                    padding: 12px 22px; border-radius: 8px; cursor: pointer;
+                    font-size: 15px; }
+  .scanbox button:hover { background: #095a77; }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px;
+            line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 44px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 10px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}.sev-ok{color:#157a3c;font-weight:600}
+  .tagchip{display:inline-block;padding:2px 10px;margin:2px;border-radius:999px;
+           background:var(--color-surface-2);border:1px solid var(--color-border);
+           font-size:13px}
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Gratis Cookie-Samtykke-Tjek</h1>
+    <p class="tagline">Loader dit site trackere <strong>før</strong> samtykke?
+    Øjeblikkeligt ePrivacy / GDPR-tjek — enhver hjemmeside, ingen tilmelding.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="scan-heading">
+  <h2 id="scan-heading">Tjek en side</h2>
+  <form id="scanForm" class="scanbox">
+    <label for="url" class="sr-only">Sidens URL</label>
+    <input id="url" name="url" type="url" required
+           placeholder="https://din-hjemmeside.dk" inputmode="url">
+    <button type="submit">Tjek nu</button>
+  </form>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="what-heading">
+  <h2 id="what-heading">Hvad den tjekker</h2>
+  <ul class="findings">
+    <li><strong>Trackere i sidens kilde:</strong> Google Analytics / Ads (gtag),
+        Google Tag Manager, Meta Pixel, Hotjar, TikTok Pixel, LinkedIn Insight,
+        Microsoft Clarity, Matomo, Segment, Mixpanel, HubSpot, Intercom, VWO, Crazy Egg</li>
+    <li><strong>Samtykke-gate:</strong> kendte samtykkeplatforme/CMP'er
+        (Cookiebot, OneTrust, CookieYes, Complianz, Borlabs, iubenda, Usercentrics,
+        Osano, tarteaucitron, Klaro, Termly), Google Consent Mode v2-signaler samt
+        script type="text/plain"-blokering</li>
+    <li><strong>Røde flag:</strong> tracking-scripts der loader ubetinget i den
+        oprindelige HTML uden nogen samtykkemekanisme på siden</li>
+    <li><strong>Basalen:</strong> et synligt privatlivspolitik-link, og om cookies
+        overhovedet nævnes</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> dette er et statisk kildetjek. En
+  samtykkeplatform kan også blokere scripts ved runtime med JavaScript, hvilket
+  efterlader færre spor i den rå HTML. Tjekket genkender de største CMP'er på
+  deres markører, men behandl resultatet som et stærkt teknisk signal — ikke
+  juridisk rådgivning.</p>
+</section>
+
+<section aria-labelledby="fix-heading">
+  <h2 id="fix-heading">Skal du rette det den finder?</h2>
+  <p>Den gratis guide <a href="/blog/cookie-consent-gdpr-compliance">Cookie Consent &amp;
+  GDPR Compliance for Small Websites</a> gennemgår præcis hvad EU-loven kræver,
+  hvordan man bygger en compliant banner, og hvordan man dokumenterer samtykke.
+  Foretrækker du at læse offline? Hent den fulde
+  <a href="/#products">Cookie Consent &amp; Privacy e-bog ($9.99 på Amazon)</a>.</p>
+  <p>Prøv også: den gratis <a href="/scan-da">EAA-tilgængelighedsscanner</a> ·
+  <a href="/accessibility-statement-generator">Generator til tilgængelighedserklæringer</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Tilbage til Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Statisk screeningsværktøj. Ingen data forlader din
+  browser undtagen hentningen af siden du tjekker. Ikke juridisk rådgivning.</p>
+</div></footer>
+
+<script>
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+async function shareResult(){
+  const url=location.origin+'/cookie-check-da#url='+encodeURIComponent(document.getElementById('url').value.trim());
+  try{await navigator.clipboard.writeText(url);}catch(e){
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  alert('Link kopieret: '+url);
+}
+window.shareResult=shareResult;
+
+const TRACKERS=[
+  ['Google Analytics / Ads','gtag\\(|googletagmanager\\.com\\/gtag|google-analytics\\.com|googleadservices|googlesyndication'],
+  ['Google Tag Manager','googletagmanager\\.com\\/gtm\\.js|GTM-[A-Z0-9]+'],
+  ['Meta (Facebook) Pixel','connect\\.facebook\\.net|fbq\\(|fbevents\\.js'],
+  ['Hotjar','hotjar\\.com|hjSetting'],
+  ['TikTok Pixel','analytics\\.tiktok\\.com|ttq\\.'],
+  ['LinkedIn Insight','snap\\.licdn\\.com|_linkedin_partner_id'],
+  ['Microsoft Clarity','clarity\\.ms'],
+  ['Matomo','matomo\\.js|piwik\\.js|piwik\\.php'],
+  ['Segment','cdn\\.segment\\.com'],
+  ['Mixpanel','cdn\\.mxpnl\\.com|mixpanel\\.'],
+  ['HubSpot','js\\.hs-scripts\\.com|hs-analytics'],
+  ['Intercom','widget\\.intercom\\.io'],
+  ['VWO','dev\\.visualwebsiteoptimizer\\.com'],
+  ['Crazy Egg','script\\.crazyegg\\.com'],
+  ['Quantcast Measure','quantserve\\.com'],
+  ['AdRoll','adroll\\.com']
+];
+const CMPS=[
+  ['Cookiebot','cookiebot\\.com|Cookiebot|cbid='],
+  ['OneTrust','onetrust\\.com|OptanonWrapper|ot-sdk'],
+  ['CookieYes','cookieyes\\.com|cky-'],
+  ['Complianz','complianz|cmplz-'],
+  ['Borlabs','borlabs-cookie|BorlabsCookie'],
+  ['iubenda','iubenda\\.com|_iub'],
+  ['Usercentrics','usercentrics\\.org|uc-banner'],
+  ['Osano','osano\\.com'],
+  ['tarteaucitron','tarteaucitron'],
+  ['Klaro','klaro'],
+  ['Termly','termly'],
+  ['Consent Mode v2 (custom)','gtag\\([\'"]consent[\'"]'],
+  ['Real Cookie Banner','real-cookie-banner|rcb-'],
+  ['Moove GDPR','moove_gdpr']
+];
+
+function countMatches(re, html){ const m = html.match(new RegExp(re,'gi')); return m ? m.length : 0; }
+
+async function scan(url){
+    if (window.trackEvent) window.trackEvent('scan');
+  const out = document.getElementById('result');
+  out.innerHTML = '<p>Tjekker <code>'+url.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</code> …</p>';
+  let html='';
+  try{
+    const r = await fetch('/scan-proxy?url='+encodeURIComponent(url));
+    const data = await r.json();
+    if(!data.ok) throw new Error(data.error || 'Proxy returnerede en fejl');
+    html = data.html;
+
+    try { fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
+  }catch(e){
+    out.innerHTML='<p><strong>Tjekket fejlede.</strong></p>'
+      +'<p style="color:#667;font-size:14px">'+e.message+'</p>';
+    return;
+  }
+
+  const findings=[];
+  const foundTrackers=[], foundCMPs=[];
+
+  for(const [name,re] of TRACKERS){
+    const n=countMatches(re,html);
+    if(n>0) foundTrackers.push({name,n});
+  }
+  for(const [name,re] of CMPS){
+    if(new RegExp(re).test(html)) foundCMPs.push(name);
+  }
+
+  // runtime blocking pattern: scripts parked as text/plain or data-blocked
+  const parkedScripts = countMatches('type=["\']text/plain["\']', html);
+
+  const hasTracker = foundTrackers.length>0;
+  const hasGate = foundCMPs.length>0 || parkedScripts>0;
+
+  if(hasTracker && !hasGate){
+    findings.push({sev:'error',msg:'Tracking fundet UDEN samtykke-gate i sidens kilde',
+      fix:'Trackerne ser ud til at loade ubetinget. Ifølge ePrivacy Art. 5(3) og GDPR skal der være samtykke FØR ikke-nødvendige cookies fyres af. Tilføj en samtykkeplatform og lad marketing-/analyse-scripts vente på samtykke.'});
+  }
+  if(hasTracker && hasGate){
+    findings.push({sev:'ok',msg:'Tracking fundet — en samtykkemekanisme er til stede'});
+  }
+  if(foundCMPs.length){
+    findings.push({sev:'ok',msg:'Samtykkeplatform-markør(er): '+foundCMPs.join(', ')});
+  }
+  if(!hasTracker){
+    findings.push({sev:'ok',msg:'Ingen kendte tredjeparts-trackere fundet i den oprindelige HTML'});
+    findings.push({sev:'warning',msg:'Trackere kan stadig injiceres ved runtime af JavaScript',
+      fix:'Dette er et statisk kildetjek — scripts der injiceres dynamisk af andet JS ses ikke her. Verificér i din browsers DevTools under Netværk → cookies.'});
+  } else {
+    findings.push({sev:'notice',msg:'Et statisk tjek kan ikke bekræfte HVORNÅR scripts afvikles',
+      fix:'Selv med en gate til stede: verificér i DevTools (Netværk-fanen) at ingen tracker-request fyres før du klikker "Acceptér".'});
+  }
+  // privacy policy link
+  const ppLink = /href=["\'][^"\']*(privacy|privatliv|datenschutz|confidentialite)[^"\']*["\']/i.test(html);
+  if(!ppLink){
+    findings.push({sev:'warning',msg:'Intet åbenlyst privatlivspolitik-link fundet',
+      fix:'GDPR Art. 13 kræver en privatlivspolitik tilgængelig fra hver side. Tilføj én i din footer.'});
+  } else {
+    findings.push({sev:'ok',msg:'Privatlivspolitik-link fundet'});
+  }
+  // prior consent best practice note when GTM loads directly in head
+  if(/googletagmanager\.com\/gtm\.js/i.test(html) && !hasGate){
+    findings.push({sev:'error',msg:'Google Tag Manager loader direkte i sidens kilde',
+      fix:'Uden en registreret samtykkeplatform fyres GTM-tags (og alt indeni) ved sideload. Rout GTM gennem en samtykkeplatform, eller tilføj Consent Mode v2-defaults sat til "denied".'});
+  }
+
+  const errors=findings.filter(f=>f.sev==='error').length;
+  const warnings=findings.filter(f=>f.sev==='warning').length;
+  const score=Math.max(0,100-errors*35-warnings*10);
+  const g=gradeOf(score);
+  const verdict = errors>0 ? 'Sandsynligvis non-compliant'
+                : warnings>0 ? 'Kræver verificering'
+                : 'Godt signal';
+
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+score+'/100 — Karakter '+g+'</div>'
+    +'<div><strong>'+verdict+'</strong></div>'
+    +(foundTrackers.length?'<div style="margin-top:8px">'+foundTrackers.map(t=>'<span class="tagchip">'+t.name+'</span>').join('')+'</div>':'')
+    +'</div>'
+    +'<ul class="findings">'+findings.map(f=>
+       '<li><span class="sev-'+f.sev+'">'+f.msg+'</span>'
+       +(f.fix?'<br><small>'+f.fix+'</small>':'')+'</li>').join('')+'</ul>'
+    +'<p style="font-size:13px;color:#667">Signal-tjek baseret på sidens oprindelige kilde — ikke juridisk rådgivning. '
+    +'De fulde krav og rettelser ligger i '
+    +'<a href="/blog/cookie-consent-gdpr-compliance">cookie-guiden</a> og '
+    +'<a href="/#products">Cookie Consent &amp; Privacy e-bogen</a>.</p>'
+    +'<p style="text-align:center;margin-top:18px">'
+    +'<button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '
+    +'<button onclick="shareResult()" class="btn btn-secondary">Kopiér delelink</button></p>';
+}
+
+document.getElementById('scanForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  scan(document.getElementById('url').value.trim());
+});
+(function(){
+  const m=location.hash.match(/#url=(.+)$/);
+  if(m){const u=decodeURIComponent(m[1]);
+    if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
+})();
+</script>
+</body>
+</html>

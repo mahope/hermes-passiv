@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Iteration 154: Danish guide to the Clean Copy web tool + cross-links.
+
+- New: site/da/blog/ren-tekst-fra-hjemmeside.html (DA guide -> /clean-copy-tool)
+- Cross-links: EN blog copy-clean-text-from-website <-> DA guide, /da frontpage card
+- JSON-LD validated with json.loads, sitemap dedupe check, internal link check
+"""
+import json, re, os
+from datetime import date
+
+SITE = 'site'
+TODAY = date.today().isoformat()
+BASE = 'https://hermes-passiv.pages.dev'
+
+SLUG = 'ren-tekst-fra-hjemmeside'
+
+
+def build_page():
+    desc = ('Sådan kopierer du ren tekst fra en hjemmeside — uden skjulte formater, '
+            'skrifttyper og farver der ødelægger dit dokument. Gratis værktøj, kører i din '
+            'browser, ingen tilmelding. Også Markdown og tabel-konvertering.')
+    ld_article = json.dumps({
+        '@context': 'https://schema.org', '@type': 'Article',
+        'headline': 'Ren tekst fra hjemmeside — sådan kopierer du uden rod (gratis)',
+        'description': desc,
+        'url': f'{BASE}/da/blog/{SLUG}',
+        'datePublished': TODAY, 'dateModified': TODAY,
+        'author': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+        'publisher': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+    }, ensure_ascii=False)
+    faq = [
+        ("Hvorfor kommer der mærkelige formater med når jeg kopierer fra nettet?",
+         "Når du kopierer med Ctrl/Cmd+C, følger HTML'en med: skrifttyper, farver, baggrundsfarver og skjulte styles indsættes i dit dokument. Et oprydningsværktøj stripper alt det og efterlader kun teksten og den grundlæggende struktur."),
+        ("Kan jeg få teksten som Markdown i stedet?",
+         "Ja. Clean Copy kan konvertere markeringen til ren Markdown med overskrifter, lister, links og tabeller — klar til Obsidian, Notion, GitHub eller et CMS."),
+        ("Er værktøjet gratis?",
+         "Ja. Web-værktøjet på /clean-copy-tool kører helt i din browser. Ingen konto, ingen grænser, og din tekst sendes ikke til en server."),
+        ("Virker det også på tabeller?",
+         "Ja. Marker tabellen på siden, vælg tabel-konvertering, og få en pæn pipe-separeret Markdown-tabel du kan sætte direkte ind i docs, README-filer eller Excel via Indsæt-special."),
+    ]
+    main_entity = [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                   for q, a in faq]
+    ld_faq = json.dumps({'@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': main_entity},
+                        ensure_ascii=False)
+
+    head_html = f'''<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ren tekst fra hjemmeside — sådan kopierer du uden formateringsrod</title>
+<meta name="description" content="{desc}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ren tekst fra hjemmeside — gratis oprydning i browseren">
+<meta property="og:description" content="Kopiér fra nettet uden skjulte formater: indsæt teksten, få den ren — eller som Markdown. Gratis, ingen tilmelding.">
+<meta property="og:image" content="{BASE}/cover.jpg">
+<meta property="og:url" content="{BASE}/da/blog/{SLUG}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{BASE}/da/blog/{SLUG}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{ld_article}</script>
+<script type="application/ld+json">{ld_faq}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; VÆRKTØJER</div>
+    <h1>Ren Tekst Fra Hjemmeside<br>Sådan Kopierer Du Uden Formateringsrod</h1>
+    <p class="subtitle">Du kender det: du kopierer et afsnit fra en hjemmeside, og pludselig er der en blå boks, en fremmed skrifttype og halvvejs gennemsigtig baggrund i dit dokument. Her ser du hvordan du får teksten ren — eller omvendt til Markdown — på sekunder.</p>
+    <div class="hero-cta">
+      <a href="#hvordan" class="btn-primary">Sådan virker det</a>
+      <a href="/clean-copy-tool" class="btn-secondary">Ryd teksten op nu &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvad-er-det">
+  <div class="container">
+    <h2>Hvorfor følger formaterne med?</h2>
+    <p>Når du kopierer fra en hjemmeside, tager browseren ikke bare teksten med — den tager hele HTML-repræsentationen: spans med inline-styles, skrifttypedefinitioner, farvekoder, tekstjustering og nogle gange endda usynlige elementer. Word, Outlook og Pages indsætter det hele trofast, og pludselig ligner dit dokument ikke dit eget længere.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧹 Tre udgange</h3><p>Rens tekst (behold afsnit og overskrifter), ren Markdown, eller konvertér tabeller. Ét værktøj dækker alle tre.</p></div>
+      <div class="card"><h3>⚡ Sekunder, ikke genveje-hint</h3><p>Ingen "indsæt som uformateret tekst"-detour i Word, ingen Notepad-mellemstation. Indsæt, klik, kopier resultatet ud igen.</p></div>
+      <div class="card"><h3>🔒 Din tekst forbliver lokal</h3><p>Oprydningen kører i JavaScript i din egen browser. Teksten sendes ikke til nogen server og gemmes ikke.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="hvordan">
+  <div class="container">
+    <h2>Sådan gør du (under 10 sekunder)</h2>
+    <ol>
+      <li>Kopiér teksten fra hjemmesiden som du plejer (Ctrl/Cmd+C), og åbn det <a href="/clean-copy-tool" style="color:var(--color-accent);">gratis oprydningsværktøj</a>.</li>
+      <li>Indsæt teksten i feltet (Ctrl/Cmd+V). Alt det grimme format følger gerne med — det er meningen.</li>
+      <li>Vælg tilstand: ren tekst, Markdown eller tabel-konvertering.</li>
+      <li>Kopiér resultatet ud og sæt det ind hvor det skal bruges — Word, mail, Obsidian, wherever.</li>
+    </ol>
+    <p>Værktøjet bevarer den struktur der betyder noget — afsnit, overskrifter, lister, links og tabeller — og fjerner alt det der ikke gør: farver, skrifttyper, baggrunde, justeringer og tomme spans.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🌐 Hel side? Brug URL-værktøjet</h3><p>Skal en hel artikel hentes, kan du springe kopieringen over: <a href="/da/url-til-markdown" style="color:var(--color-accent);">URL til Markdown-konverteren</a> henter siden for dig.</p></div>
+      <div class="card"><h3>📌 Bookmarklet</h3><p>Læg <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">bookmarklet'et</a> i bogmærkelinjen, og ryd op direkte på siden uden at skifte faneblad.</p></div>
+      <div class="card"><h3>🖥️ Engelsk version</h3><p>Værktøjet og guiden findes også <a href="/blog/copy-clean-text-from-website" style="color:var(--color-accent);">på engelsk</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tre måder at bruge Clean Copy på</h2>
+    <p><strong>1. Web-værktøjet (denne vej).</strong> Ingen installation. Bedst til engangsopgaver og til at prøve det af.</p>
+    <p><strong>2. Bookmarklet.</strong> Træk ét link op i bogmærkelinjen, klik det når du står på en side, og få markeringen kopieret som ren tekst eller Markdown. Virker i alle browsere — <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">hent bookmarklet'et her</a>.</p>
+    <p><strong>3. Browserudvidelsen.</strong> Til daglig brug i Chrome og Firefox: marker, tryk genvejen, og teksten lander ren i udklipsholderen. <a href="/clean-copy" style="color:var(--color-accent);">Se installationsmulighederne →</a></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+'''
+    for q, a in faq:
+        head_html += f'      <div class="card"><h3>{q}</h3><p>{a}</p></div>\n'
+    tail_html = '''    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv oprydningsværktøjet gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/url-til-markdown" class="btn-secondary">Eller konvertér en hel URL &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">MARKDOWN · DA</span><h3><a href="/da/blog/url-til-markdown-konverter" style="color:var(--color-accent);text-decoration:none;">URL til Markdown-konverter</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO · DA</span><h3><a href="/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);text-decoration:none;">Teknisk SEO-tjek af din hjemmeside</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">VÆRKTØJER</span><h3><a href="/free-tools" style="color:var(--color-accent);text-decoration:none;">Alle gratis værktøjer</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/clean-copy-tool">Oprydningsværktøjet</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>'''
+    return head_html + tail_html
+
+
+def update_sitemap():
+    p = f'{SITE}/sitemap.xml'
+    c = open(p).read()
+    url = f'{BASE}/da/blog/{SLUG}'
+    if f'<loc>{url}</loc>' in c:
+        print('sitemap: already present')
+        return
+    add = (f'  <url><loc>{url}</loc><lastmod>{TODAY}</lastmod>'
+           f'<changefreq>weekly</changefreq><priority>0.8</priority></url>\n')
+    c = c.replace('</urlset>', add + '</urlset>')
+    open(p, 'w').write(c)
+    print('sitemap updated')
+
+
+def patch(path, old, new, must=True):
+    c = open(path).read()
+    if new in c:
+        print(f'{path}: already patched')
+        return True
+    if old not in c:
+        if must:
+            raise SystemExit(f'anchor NOT found in {path}: {old[:70]!r}')
+        return False
+    open(path, 'w').write(c.replace(old, new))
+    print(f'{path}: patched')
+    return True
+
+
+def check_links(files):
+    broken = []
+    for path in files:
+        html = open(path).read()
+        for m in sorted(set(re.findall(r'href="(/[^"#]*?)"', html))):
+            url = m.split('?')[0]
+            t = ('site' + url).rstrip('/')
+            if not (os.path.exists(t) or os.path.exists(t + '.html') or url == '/'
+                    or os.path.exists(t + '/index.html')):
+                broken.append((path, m))
+    return broken
+
+
+def main():
+    # 1. New Danish blog page
+    page = build_page()
+    out = f'{SITE}/da/blog/{SLUG}.html'
+    with open(out, 'w') as f:
+        f.write(page)
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', page, re.DOTALL)
+    for b in blocks:
+        d = json.loads(b)
+        assert d['@context'] == 'https://schema.org'
+    print(f'{out} written, JSON-LD OK ({len(blocks)} blocks)')
+
+    # 2. Sitemap
+    update_sitemap()
+
+    # 3. Cross-link from the EN blog post to this DA guide
+    patch(f'{SITE}/blog/copy-clean-text-from-website.html',
+          '<a href="/clean-copy-tool"',
+          '<a href="/da/blog/ren-tekst-fra-hjemmeside" lang="da">Dansk version af denne guide</a>',
+          must=False)
+
+    # 4. Card on the DA frontpage pointing at the guide
+    patch(f'{SITE}/da.html',
+          '<a href="/clean-copy-tool" class="btn-secondary" style="margin-top:12px;">',
+          '<a href="/da/blog/ren-tekst-fra-hjemmeside" class="btn-secondary" style="margin-top:12px;">Læs guiden →</a>\n          <a href="/clean-copy-tool" class="btn-secondary" style="margin-top:12px;">',
+          must=False)
+
+    # 5. Internal link check on everything touched
+    files = [out, f'{SITE}/blog/copy-clean-text-from-website.html']
+    broken = check_links(files)
+    print('broken internal links:', broken if broken else 'none')
+
+    print(f'\nDone: /da/blog/{SLUG} created + sitemap + cross-links')
+
+
+if __name__ == '__main__':
+    main()

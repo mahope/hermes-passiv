@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drupal Accessibility Check — Free WCAG/EAA Site Scan</title>
+<meta name="description" content="Free WCAG 2.1 AA accessibility scan for Drupal sites. Covers Olivero/Claro themes, CKEditor Accessibility Checker, contributing modules, Twig templates, Announce API, and the EAA. 16 automated rules, instant results.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Drupal Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Check your Drupal site for WCAG 2.1 AA failures. Free instant scan with concrete fixes.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/drupal-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Drupal Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Check your Drupal site for WCAG 2.1 AA failures. Free instant scan with concrete fixes.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Drupal Accessibility Check — Free WCAG/EAA Site Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/drupal-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/drupal-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to my Drupal site?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Drupal site serves EU consumers or enterprises, WCAG 2.1 AA compliance is expected under the EAA. Drupal has strong accessibility foundations, but custom themes and contributed modules often introduce issues with contrast, alt text, and heading hierarchy."}},{"@type":"Question","name":"What does the scanner check on Drupal sites?","acceptedAnswer":{"@type":"Answer","text":"16 rules including alt text, form labels, link/button text, heading hierarchy, page language attribute, viewport meta, colour contrast, ARIA misuse, duplicate IDs, iframe titles, and more. Works on any published Drupal page."}},{"@type":"Question","name":"Where do I fix common issues in Drupal?","acceptedAnswer":{"@type":"Answer","text":"Alt text: Content → [content item] → Image field → Alt text. Contrast: Appearance → Settings → [theme] → Color scheme. Headings: use proper H2-H6 in the text editor. Form labels: Structure → Block layout → form block settings."}},{"@type":"Question","name":"Does Drupal have built-in accessibility features?","acceptedAnswer":{"@type":"Answer","text":"Yes — Drupal has strong accessibility foundations including semantic markup, heading hierarchy enforcement in CKEditor, and the CKEditor Accessibility Checker module. However, custom themes and contributed modules often override these defaults, so automated scanning is still essential."}},{"@type":"Question","name":"What Drupal modules help with accessibility?","acceptedAnswer":{"@type":"Answer","text":"Editoria11y for live content checks, Automatic Alternative Text with AI alt-text generation, High Contrast for previewing colour schemes, Block Aria Landmark Roles for proper region landmarks, and the CKEditor 5 Accessibility Checker for real-time editing feedback."}},{"@type":"Question","name":"How do I maintain EAA compliance on a Drupal site?","acceptedAnswer":{"@type":"Answer","text":"Review module updates quarterly for regressions, audit custom themes after every major release, establish content governance around alt text and heading structure, and run automated regression tests as part of your CI/CD pipeline."}}],"name":"Drupal Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/drupal-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Drupal Accessibility Check</h1>
+    <p class="subtitle">Drupal is an industry leader in web accessibility — but custom themes, contributed modules, and content-team overrides can quietly undo those foundations. Verify yours in seconds.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.drupal.org" class="btn-primary">Run a Free Scan on drupal.org</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Drupal accessibility matters in the EU</h2>
+    <p>The European Accessibility Act (EAA) applies to e-commerce and consumer-facing services across the EU. If your Drupal site serves EU customers, WCAG 2.1 AA compliance is expected — and enterprise partners increasingly require documented proof before signing contracts.</p>
+    <p>Drupal has led the CMS space on accessibility for years. The <strong>Olivero</strong> default front-end theme and the <strong>Claro</strong> administration theme both ship WCAG 2.1 AA-compliant out of the box. Drupal core includes a formal <strong>accessibility policy</strong>, the <strong>CKEditor Accessibility Checker</strong> module for real-time editor feedback, and an <strong>Announce API</strong> that lets themes and modules broadcast live-region updates to assistive technology. Twig templates carry semantic landmark elements by default, and Views rendering inherits core heading and list semantics — unless a custom display override strips them out.</p>
+    <p>Despite this strong foundation, the most common accessibility failures on Drupal sites come from a handful of repeating issues: missing alt text on media-library images, low-contrast colour choices in custom themes, generic link text like "Read more" generated by Views, empty form labels in contributed modules, missing page language attributes on multilingual sites, and heading structures that collapse because a content editor chose the wrong text-formatting option. Every one of these is detectable automatically — that is exactly what our scanner checks.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Drupal site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Drupal URL</strong> — any published page: home, a product page, or a content page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Drupal, most image-alt and contrast issues are fixed right in the content editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Drupal Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Drupal</h2>
+    <p>When your scan flags a failing rule, here is where to fix it in your Drupal admin:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Drupal</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Content → [content item] → edit → image field → Alt text. For media library images, set alt text in Media → [image] → Edit.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Appearance → Settings → [your theme] → Color scheme. Or edit the theme's CSS: check foreground/background colour pairs.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">In CKEditor, use the Format dropdown to apply H2, H3. Only one H1 per page (usually the page title). Enable the CKEditor Accessibility Checker module for real-time help.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Structure → Block layout → block → configure → ensure labels are visible. In custom forms, check the form element's title/placeholder settings.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Edit the content → select the link → edit link → update link text to be descriptive. Replace "Read more" with "Read our privacy policy".</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Configuration → Regional and language → Languages — set site default. For individual nodes, check the Language field in the node edit form.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Drupal-specific modules &amp; tools</h2>
+    <p>Beyond the built-in accessibility features, the Drupal ecosystem offers a range of contributed modules and tools that help you bridge the gap between automated scanning and full WCAG 2.1 AA compliance. These are especially useful for content teams who may not have dedicated accessibility training.</p>
+
+    <h3 style="margin-top:24px;">Editoria11y</h3>
+    <p><strong>Editoria11y</strong> (<em>Editorial Accessibility Ally</em>) is a contributed module that runs lightweight accessibility checks directly inside the Drupal editing interface. It flags issues like missing alt text, empty links, unclear heading order, and potential colour-contrast problems before content is published. Because it works inline rather than on a separate scan page, it catches problems during the editorial workflow — exactly when they are cheapest to fix.</p>
+
+    <h3 style="margin-top:24px;">Automatic Alternative Text</h3>
+    <p>The <strong>Automatic Alternative Text</strong> module leverages AI (via image-recognition APIs such as Google Cloud Vision or Azure Computer Vision) to auto-generate alt text for images uploaded through the media library. While machine-generated alt text should always be reviewed by a human, this module eliminates the most common accessibility failure — images with no alt text at all — and is a strong safety net for content teams editing at scale.</p>
+
+    <h3 style="margin-top:24px;">High Contrast</h3>
+    <p>The <strong>High Contrast</strong> module provides a user-facing toggle that applies a high-contrast stylesheet to the front end. It does not fix underlying colour-contrast violations, but it gives users with low vision a fallback when your theme's default palette does not meet WCAG 2.1 contrast ratios. Pair it with a proper audit of your theme's colour tokens for the best results.</p>
+
+    <h3 style="margin-top:24px;">Block Aria Landmark Roles</h3>
+    <p>The <strong>Block Aria Landmark Roles</strong> module allows site builders to assign explicit ARIA landmark roles (banner, navigation, main, complementary, contentinfo) to Drupal block regions. While Olivero and Claro already ship semantic landmarks, custom themes and layout-builder overrides often lose them. This module restores proper region semantics that screen readers depend on for efficient page navigation.</p>
+
+    <h3 style="margin-top:24px;">CKEditor 5 Accessibility Checker</h3>
+    <p>Built into CKEditor 5 for Drupal, the <strong>Accessibility Checker</strong> plugin scans content as the editor types. It flags missing heading structure, empty table headers, insufficient colour contrast inside the editor, and missing link text. For content teams, this is the single most effective tool for catching issues before they reach production.</p>
+
+    <h3 style="margin-top:24px;">Olivero as a compliance starting point</h3>
+    <p>The <strong>Olivero</strong> default front-end theme is not just a design refresh — it was built from the ground up to meet WCAG 2.1 AA standards, with proper focus styles, semantic landmarks, consistent contrast ratios, and keyboard-navigable navigation. If you are building a new Drupal site or re-skinning an existing one, starting from Olivero and customising responsibly (keeping contrast ratios intact, preserving focus indicators, maintaining semantic HTML in Twig overrides) gives you a running start toward compliance.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Drupal</h2>
+    <p>A single scan is a snapshot. Maintaining WCAG 2.1 AA compliance over the life of a Drupal site requires ongoing attention — especially as contributed modules, custom themes, and content all evolve independently. Here is a practical maintenance framework for Drupal teams.</p>
+
+    <h3 style="margin-top:24px;">Module update reviews</h3>
+    <p>Every contributed module update can change the HTML markup, ARIA attributes, or styling that the module's templates produce. Before applying a major release, diff the updated module's Twig templates and library CSS against the previous version — look for removed landmark roles, altered heading levels, or inline styles that override accessible defaults. The CKEditor Accessibility Checker module and Editoria11y are especially sensitive to version bumps that change their configuration schemas.</p>
+
+    <h3 style="margin-top:24px;">Custom theme audits</h3>
+    <p>Custom Drupal themes are the single biggest source of accessibility regressions. Schedule quarterly audits that check: focus indicator visibility (never set <code>outline: none</code> without a visible replacement), colour contrast ratios in every colour token, semantic landmark elements in the page.html.twig override, heading hierarchy in region templates, and ARIA labelling on navigation blocks. The High Contrast module is useful here for quickly testing extreme colour combinations during an audit.</p>
+
+    <h3 style="margin-top:24px;">Content team governance</h3>
+    <p>Most ongoing accessibility issues come from content, not code. Establish a simple content governance policy: every image uploaded must have alt text (use the Automatic Alternative Text module as a fallback), every link text must be descriptive (ban "click here" and "read more"), and every page must start with a single H1 and proceed through H2-H6 without skipping levels. Enable Editoria11y or the CKEditor 5 Accessibility Checker on all editorial roles so writers see violations before they save.</p>
+
+    <h3 style="margin-top:24px;">Accessibility regression testing</h3>
+    <p>Integrate automated accessibility checks into your CI/CD pipeline. Tools like <strong>axe-core</strong> (the engine behind this scan) can be run headlessly against your staging environment on every deployment. A simple GitHub Actions or GitLab CI step that runs <code>axe --exit --tags wcag2aa</code> against a set of representative pages catches regressions before they go live. Combine with periodic full-page scans using this tool before quarterly stakeholder reviews.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/drupal-wcag-accessibility" style="color:var(--color-accent);">Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+        <li><a href="/blog/nis2-readiness-guide" style="color:var(--color-accent);">NIS2 Readiness Guide for Web Agencies</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, our e-book covers the complete checklist plus a 14-day fix plan tailored for Drupal sites. For more platform-specific coverage, check out our compliance guides on <a href="/guides/shopify-accessibility-check" style="color:var(--color-accent);">Shopify</a>, <a href="/guides/magento-accessibility-check" style="color:var(--color-accent);">Magento</a>, and <a href="/guides/wordpress-accessibility-check" style="color:var(--color-accent);">WordPress</a>.</p>
+    <p>For the Drupal community specifically, the <strong>Drupal Accessibility Group</strong> maintains ongoing discussions on core improvements, contributed module audits, and best-practice patterns. The <strong>Drupal.org issue queue</strong> tagged "Accessibility" is a valuable resource for tracking known issues in contributed modules you may rely on. Pair community resources with automated scanning, and you have a solid, repeatable compliance workflow.</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/wordpress-plugin" class="btn-secondary" style="display:inline-block;">Free WordPress Plugin</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

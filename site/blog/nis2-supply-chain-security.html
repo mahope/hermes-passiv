@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIS2 Supply Chain Security for Web Agencies</title>
+<meta name="description" content="NIS2 Article 21 makes supply chain security a legal duty. What small EU web agencies must do about vendor risk, sub-processors, and client contracts in 2026 — a practical checklist.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NIS2 Supply Chain Security for Web Agencies">
+<meta property="og:description" content="NIS2 Article 21 makes supply chain security a legal duty. What small EU web agencies must do about vendor risk, sub-processors, and client contracts in 2026 — a practical checklist.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NIS2 Supply Chain Security for Web Agencies">
+<meta name="twitter:description" content="NIS2 Article 21 makes supply chain security a legal duty. What small EU web agencies must do about vendor risk, sub-processors, and client contracts in 2026 — a practical checklist.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/nis2-leverandoerkaede-sikkerhed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "NIS2 Supply Chain Security for Web Agencies",
+  "description": "NIS2 Article 21 makes supply chain security a legal duty. What small EU web agencies must do about vendor risk, sub-processors, and client contracts in 2026 — a practical checklist.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · NIS2 COMPLIANCE</div>
+    <h1>NIS2 Supply Chain Security<br>for Web Agencies</h1>
+    <p class="subtitle">Article 21 turns your hosting providers, plugins and freelancers into a compliance question. Here is what a small agency actually has to do — without an enterprise GRC platform.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-supply-chain" class="btn-secondary">NIS2 Readiness Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 8 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-supply-chain">Why Supply Chain</h2>
+    <p>Most small web agencies think of NIS2 as a rule about their own security: patch your servers, enable MFA, have an incident plan. That is half of it. The other half — and the part regulators are increasingly focusing on — is Article 21(2)(d), which makes <strong>supply chain security</strong> an explicit legal requirement for every essential and important entity.</p>
+    <p>For a web agency, the supply chain is not an abstract concept. It is your hosting provider, your CDN, your plugin vendors, the freelance developer who had admin access last spring, the email platform you configure for clients, and the backup service nobody has checked in two years. Under NIS2, the security of those vendors is your problem — and you must be able to demonstrate how you manage that risk.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📜 Article 21(2)(d)</h3><p>Entities must address security risks relating to "the relationships between each entity and its direct suppliers or service providers." It is a direct legal duty, not best practice.</p></div>
+      <div class="card"><h3>🔗 You Are in Two Chains</h3><p>As an agency you sit in the middle: your clients depend on you, and you depend on dozens of vendors. NIS2 obligations flow in both directions.</p></div>
+      <div class="card"><h3>🧾 Evidence Over Promises</h3><p>Supervisory authorities expect documented vendor assessments, contract clauses and exit plans — not a policy document that says "we choose reputable vendors."</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="does-this-apply-to-us">Does This Apply to Us</h2>
+    <p>NIS2 classifies covered organisations as "essential" or "important" based on sector and size. Many small agencies fall outside direct scope — a 5-person studio building marketing sites is usually not itself a covered entity.</p>
+    <p>But being out of scope does not mean the supply chain rules do not touch you. Three practical reasons why in-scope clients push NIS2 requirements down to their agencies:</p>
+    <p><strong>1. Procurement questionnaires.</strong> Any agency serving mid-size or enterprise clients, public sector bodies, or companies in energy, health, finance, transport or digital infrastructure is already seeing security questionnaires that reference NIS2. "Describe your vendor management process" is now a standard field.</p>
+    <p><strong>2. Contract clauses.</strong> In-scope clients must manage the security of their own suppliers — and their web agency is a supplier. Expect contractual security requirements, audit rights and incident notification duties to appear in new and renewed agreements.</p>
+    <p><strong>3. Chain liability in incidents.</strong> When a breach at an agency exposes a covered client, the client still carries its own NIS2 duties — 24-hour early warning, 72-hour notification. Agencies that cannot support that timeline lose those clients.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="your-actual-supply-chain">Your Actual Supply Chain</h2>
+    <p>Before you can manage vendor risk, you need to know what your supply chain actually is. Most agencies have never written it down. Map yours in one afternoon:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖥️ Infrastructure</h3><p>Hosting (shared, VPS, managed WP), DNS, CDN, email delivery. These touch every client site — one compromise propagates everywhere.</p></div>
+      <div class="card"><h3>🧩 Software</h3><p>CMS core, plugins, themes, libraries. Third-party code is the most common real-world breach vector for small sites — a single abandoned plugin can be the entry point.</p></div>
+      <div class="card"><h3>👥 People</h3><p>Freelancers, subcontractors, former employees with live accounts. Access without a contract and offboarding process is unmanaged risk.</p></div>
+      <div class="card"><h3>☁️ Services</h3><p>Analytics, form handlers, payment gateways, backup storage, CRM tools you set up for clients. Each one processes client data on your configuration.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="vendor-assessment">Vendor Assessment</h2>
+    <p>You do not need an enterprise GRC platform. A spreadsheet with one row per vendor and five columns covers Article 21 for a small agency:</p>
+    <p></p>
+    <p><strong>1. What data and access does this vendor have?</strong> Client personal data? Admin credentials? Production servers? Classify: critical, important, minor.</p>
+    <p></p>
+    <p><strong>2. What is their security posture?</strong> Do they publish a trust page, ISO 27001 or SOC 2 certification, a DPA, a breach history? For major providers (Cloudflare, AWS, Google) this is a ten-minute check. For a $29/year plugin vendor, the honest answer may be "unknown" — which is itself a risk rating.</p>
+    <p></p>
+    <p><strong>3. What does the contract say?</strong> Is there a DPA (GDPR Article 28), security obligations, breach notification terms, and a right to terminate? For critical vendors, no contract means no managed relationship.</p>
+    <p></p>
+    <p><strong>4. What happens if they fail?</strong> Do you have an exit path — exports, alternative providers, DNS you control? A vendor you cannot leave is a vendor you cannot manage.</p>
+    <p></p>
+    <p><strong>5. When was this last checked?</strong> Set an annual review date. A risk register that is never revisited is theatre.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="contract-clauses">Contract Clauses</h2>
+    <p>The assessment tells you where you stand; contracts are what make the risk manageable. Four clauses to standardise in your own client and vendor agreements:</p>
+    <p></p>
+    <p><strong>With your vendors (when you have negotiating power):</strong> breach notification within 24-48 hours, documented security measures, sub-processor transparency, and data deletion on exit. With hyperscalers you take their standard terms — which is fine, and itself worth documenting as an accepted risk.</p>
+    <p></p>
+    <p><strong>With your clients:</strong> define exactly which systems you are responsible for securing (and which remain the client's), a security-contact and incident cooperation clause so you can support their 24/72-hour NIS2 timelines, a change-management clause for credential handover, and a limitation of liability that is proportionate to a small agency — not unlimited.</p>
+    <p></p>
+    <p>If you serve in-scope clients, align your incident notification commitment with their regulatory clock. "We will tell you within 24 hours of confirming a breach" is a clause that wins enterprise work.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="reducing-the-attack-surface">Reducing the Attack Surface</h2>
+    <p>The cheapest supply chain risk treatment is having less supply chain. Four moves that cut real risk for a typical agency in under a week:</p>
+    <p></p>
+    <p><strong>1. Kill unused access.</strong> Audit admin accounts across hosting, DNS, client sites and code repositories. Remove every account belonging to people who no longer work with you. This is the single highest-yield hour in agency security.</p>
+    <p></p>
+    <p><strong>2. Standardise your stack.</strong> Every unique plugin, theme and service multiplies your assessment burden. A short allow-list — "these are the plugins and providers we use" — makes vendor management finite and client security reviews faster.</p>
+    <p></p>
+    <p><strong>3. Watch for abandoned software.</strong> Set a rule: any plugin or dependency without a release in 12+ months gets replaced or isolated. Abandoned components are the classic small-site breach vector.</p>
+    <p></p>
+    <p><strong>4. Separate the keys.</strong> Use a password manager with per-client vaults and MFA everywhere it is supported. One shared spreadsheet of client credentials is a supply chain incident waiting for a trigger.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="what-regulators-expect">What Regulators Expect</h2>
+    <p>If a supervisory authority ever asks — or an in-scope client audits you — the expectation is proportionate, documented practice, not perfection. Your evidence pack should contain:</p>
+    <p></p>
+    <p>• A current vendor register with criticality ratings and review dates</p>
+    <p>• Signed DPAs with every vendor that processes personal data</p>
+    <p>• Standard contract clauses (yours and accepted third-party terms)</p>
+    <p>• An access-control policy: who has admin access, how it is granted and revoked</p>
+    <p>• An incident response plan that includes vendor-originated incidents and supports client notification timelines</p>
+    <p></p>
+    <p>That is six documents, most of which a small agency should have anyway for GDPR. NIS2 supply chain compliance, done pragmatically, is largely the paperwork you already owed under the data protection rules — extended to security, and actually maintained.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Our NIS2 e-book includes vendor assessment templates, contract clauses, an incident reporting playbook and a 14-day action plan — everything a small agency needs.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/#products" class="btn-primary">Get the Complete NIS2 E-Book →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/nis2-readiness-guide" class="btn-secondary">NIS2 Readiness Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>My agency is too small to be in NIS2 scope. Why should I care?</h3><p>Three reasons: in-scope clients push NIS2-derived security requirements down to their suppliers through contracts and procurement questionnaires; incident response expectations (24/72-hour timelines) cascade through the chain; and the security practices themselves — vendor registers, access audits, contract clauses — protect you from the breaches that actually kill small agencies.</p></div>
+      <div class="card"><h3>What exactly does Article 21 require for supply chain security?</h3><p>Article 21(2)(d) requires covered entities to address security risks in relationships with direct suppliers and service providers. In practice regulators expect: identifying critical vendors, assessing their security, embedding security requirements in contracts, and having a documented process that is reviewed regularly. Proportionality applies — a 10-person company is not measured against a bank.</p></div>
+      <div class="card"><h3>Do I need to assess every plugin and SaaS tool we use?</h3><p>Assess by criticality, not exhaustively. Vendors with access to client data, production systems or admin credentials get a full review; a colour-picker plugin does not. A three-tier rating (critical / important / minor) keeps the register to a manageable size — typically 10-25 rows for a small agency.</p></div>
+      <div class="card"><h3>What is the biggest supply chain risk for a small web agency?</h3><p>Third-party code and lingering access. Abandoned plugins and dependencies are the most common real-world breach vector on small sites, and forgotten admin accounts belonging to former freelancers are the most common audit finding. Both are fixable in a day.</p></div>
+      <div class="card"><h3>Can I reuse our GDPR vendor register for NIS2?</h3><p>Largely yes. Your Article 30 records and DPA inventory already list most processors. Extend each entry with a security-criticality rating, contract security clauses, and an exit plan. The GDPR register covers data; the NIS2 register covers data and systems.</p></div>
+      <div class="card"><h3>How often should we review vendors?</h3><p>Annually for critical vendors, and immediately on any trigger event: a vendor breach announcement, a contract renewal, a change of ownership, or a major architecture change on your side. Put the review date in the register so it is visible, not in someone's memory.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/#products" class="btn-primary">Get the Complete NIS2 E-Book →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/nis2-readiness-guide" class="btn-secondary">NIS2 Readiness Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">NIS2 COMPLIANCE</span><h3><a href="/blog/nis2-readiness-guide" style="color:var(--color-accent);text-decoration:none;">Is Your Small Web Agency NIS2-Ready?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">NIS2 INCIDENTS</span><h3><a href="/blog/nis2-incident-report-checklist" style="color:var(--color-accent);text-decoration:none;">NIS2 Incident Report Checklist &amp; Template</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GDPR COMPLIANCE</span><h3><a href="/blog/gdpr-dpa-web-agencies" style="color:var(--color-accent);text-decoration:none;">GDPR Data Processing Agreement for Web Agencies</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

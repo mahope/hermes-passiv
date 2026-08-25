@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Copy Web — Paste messy text, get clean Markdown. Free, in your browser</title>
+  <meta name="description" content="Free online tool: paste HTML or messy formatted text and copy it back as clean Markdown or plain text. Runs entirely in your browser — nothing is uploaded.">
+  <meta property="og:title" content="Clean Copy Web — Messy paste to clean Markdown, instantly">
+  <meta property="og:description" content="Paste any formatted text and get clean Markdown or plain text back. 100% in your browser, no upload, free.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hermes-passiv.pages.dev/clean-copy-tool">
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Clean Copy Web — Paste messy text, get clean Markdown. Free, in your browser">
+  <meta name="twitter:description" content="Free online tool: paste HTML or messy formatted text and copy it back as clean Markdown or plain text. Runs entirely in your browser — nothing is uploaded.">
+  <meta name="twitter:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy-tool">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy-tool">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Clean Copy Web",
+    "url": "https://hermes-passiv.pages.dev/clean-copy-tool",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Paste messy formatted text and get clean Markdown or plain text back. Runs entirely client-side."
+  }
+  </script>
+  <style>
+    .tool-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    @media (max-width: 760px) { .tool-grid { grid-template-columns: 1fr; } }
+    .tool-pane textarea {
+      width: 100%;
+      min-height: 320px;
+      box-sizing: border-box;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      background: var(--color-surface);
+      color: var(--color-text);
+      padding: 0.9rem;
+      font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+    .tool-pane label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+    .tool-hint { color: var(--color-text-muted); font-size: 0.8rem; margin-top: 0.4rem; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin: 1rem 0 1.5rem;
+    }
+    .btn-primary {
+      background: var(--color-accent, #2563eb);
+      border: none;
+      color: #fff;
+      padding: 0.65rem 1.3rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: var(--color-surface-2, #f1f5f9);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .seg-group { display: inline-flex; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
+    .seg-group button {
+      border: none;
+      background: transparent;
+      color: var(--color-text);
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .seg-group button[aria-pressed="true"] { background: var(--color-accent, #2563eb); color: #fff; font-weight: 600; }
+    #copy-status { font-size: 0.85rem; color: var(--color-text-muted); }
+    #copy-status.ok { color: #16a34a; }
+    #copy-status.err { color: #dc2626; }
+    .privacy-note {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin: 1.5rem 0;
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+    }
+    details.faq { border-bottom: 1px solid var(--color-border); padding: 0.8rem 0; }
+    details.faq summary { cursor: pointer; font-weight: 600; }
+    details.faq p { color: var(--color-text-muted); font-size: 0.9rem; }
+    .pro-box {
+      background: var(--color-surface-2, #f8fafc);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="tool-wrap">
+    <nav aria-label="Breadcrumb" style="font-size:0.8rem;margin-bottom:1rem;">
+      <a href="/">Passiv</a> · <a href="/clean-copy">Clean Copy extension</a> · <a href="/clean-copy-bookmarklet">Bookmarklet</a> · <span aria-current="page">Web tool</span>
+    </nav>
+
+    <h1>Clean Copy Web</h1>
+    <p class="lead">Paste messy, over-formatted text — get clean Markdown or plain text back.
+    The same converter our browser extension uses, running entirely in your browser.</p>
+
+    <div class="privacy-note" role="note">
+      <span aria-hidden="true">🔒</span>
+      <span><strong>Nothing leaves your device.</strong> The conversion runs in JavaScript on this page.
+      No upload, no server, no cookies, no tracking of your text.</span>
+    </div>
+
+    <div class="toolbar" role="group" aria-label="Output options">
+      <div class="seg-group" role="group" aria-label="Output format">
+        <button type="button" id="mode-md" aria-pressed="true">Markdown</button>
+        <button type="button" id="mode-txt" aria-pressed="false">Plain text</button>
+      </div>
+      <label style="display:inline-flex;align-items:center;gap:.45rem;font-weight:400;font-size:.9rem;">
+        <input type="checkbox" id="opt-smart"> Replace smart quotes &amp; dashes
+      </label>
+      <button type="button" class="btn-secondary" id="btn-sample">Load sample</button>
+      <button type="button" class="btn-secondary" id="btn-clear">Clear</button>
+    </div>
+
+    <div class="tool-grid">
+      <div class="tool-pane">
+        <label for="input-box">Paste your text here</label>
+        <textarea id="input-box" placeholder="Paste richly formatted text (copied from a web page, Word, email…) or raw HTML…" aria-describedby="input-hint"></textarea>
+        <p class="tool-hint" id="input-hint">Tip: text copied from a web page keeps its formatting when pasted here.</p>
+      </div>
+      <div class="tool-pane">
+        <label for="output-box">Clean result</label>
+        <textarea id="output-box" readonly aria-live="polite"></textarea>
+        <p class="tool-hint" id="out-stats" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="btn-primary" id="btn-copy">Copy result</button>
+      <button type="button" class="btn-secondary" id="btn-download">Download as .md</button>
+      <span id="copy-status" role="status"></span>
+    </div>
+
+    <h2>Why clean copied text?</h2>
+    <p>Text you copy from the web arrives stuffed with invisible junk: smart quotes that break
+    code, non-breaking spaces that break search, nested spans and styles that break your CMS.
+    Clean Copy strips all of it and gives you predictable output:</p>
+    <ul>
+      <li><strong>Markdown mode</strong> keeps the structure that matters — headings, bold/italic,
+      links, lists (including nested ones), code blocks, and tables (converted to
+      pipe-separated Markdown tables).</li>
+      <li><strong>Plain text mode</strong> removes everything but readable characters.</li>
+      <li><strong>Smart-quote cleanup</strong> converts “ ” ‘ ’ — – into safe ASCII equivalents
+      and removes zero-width and non-breaking spaces.</li>
+    </ul>
+
+    <h2>Frequently asked questions</h2>
+    <details class="faq">
+      <summary>Is my text uploaded anywhere?</summary>
+      <p>No. The conversion is pure JavaScript running on this page. Your text never touches a server.</p>
+    </details>
+    <details class="faq">
+      <summary>What's the difference between this and the browser extension?</summary>
+      <p>The extension copies directly from any web page with a right-click — no paste needed.
+      This web tool handles text you already have: email content, documents, anything. Same engine,
+      same results. <a href="/clean-copy">Get the extension →</a></p>
+    </details>
+    <details class="faq">
+      <summary>Does it work offline?</summary>
+      <p>Yes — once the page has loaded, you can disconnect and keep converting.</p>
+    </details>
+    <details class="faq">
+      <summary>Which HTML elements are converted?</summary>
+      <p>Headings h1–h6 (#…######), bold/strong (**), italic/em (*), links [text](url), images
+      ![alt](src), ordered and unordered lists including nesting, code blocks (```), inline code (`),
+      paragraphs, line breaks and horizontal rules. Everything else is stripped to plain text.</p>
+    </details>
+    <details class="faq">
+      <summary>Can I paste raw HTML?</summary>
+      <p>Yes. If your clipboard contains actual HTML markup (e.g. copied from an editor's code view),
+      use the source of this trick: paste it into the field — the tool detects raw tags starting with
+      "&lt;" and converts them directly.</p>
+    </details>
+
+    <h2>Clean Copy Pro — $19/year</h2>
+    <div class="pro-box" id="pro-box">
+      <p><strong>Pro</strong> adds priority features to both the web tool and the browser
+      extension: <em>batch conversion</em> of many snippets at once, <em>custom cleanup
+      rules</em> you define once and reuse everywhere, and a year of major updates.
+      One license covers 5 devices.</p>
+
+      <!-- Batch conversion (Pro) -->
+      <details class="faq" id="batch-details" hidden>
+        <summary>Batch conversion — clean many snippets at once</summary>
+        <p style="font-size:.88rem;">Paste one snippet per line. Lines starting with
+        <code>&lt;</code> are treated as HTML and converted to Markdown; other lines are
+        cleaned as plain text. Results appear one per line, in the same order.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.8rem;" class="batch-grid">
+          <div>
+            <label for="batch-input" style="font-weight:600;font-size:.85rem;">Snippets (one per line)</label>
+            <textarea id="batch-input" rows="6" style="width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);padding:.7rem;font-family:'SF Mono','Monaco',monospace;font-size:.82rem;resize:vertical;"></textarea>
+          </div>
+          <div>
+            <label for="batch-output" style="font-weight:600;font-size:.85rem;">Results</label>
+            <textarea id="batch-output" rows="6" readonly aria-live="polite" style="width:100%;box-sizing:border-box;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);padding:.7rem;font-family:'SF Mono','Monaco',monospace;font-size:.82rem;resize:vertical;"></textarea>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-bottom:0;">
+          <button type="button" class="btn-primary" id="btn-batch">Convert all</button>
+          <button type="button" class="btn-secondary" id="btn-batch-copy">Copy results</button>
+          <span id="batch-status" role="status"></span>
+        </div>
+      </details>
+
+      <p id="pro-buy-row">
+        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="#" rel="nofollow noopener" hidden>Buy Clean Copy Pro — $19/year</a>
+        <span id="pro-soon" class="tool-hint">Checkout opens shortly — join the
+        <a href="/#waitlist">announcement list</a> to hear first.</span>
+      </p>
+      <details class="faq" id="pro-activate-details">
+        <summary>Already have a license key? Activate it here</summary>
+        <form id="pro-form" style="margin-top:.8rem;">
+          <label for="pro-key" style="font-weight:400;font-size:.9rem;">License key</label>
+          <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.35rem;">
+            <input type="text" id="pro-key" name="license_key" autocomplete="off"
+                   placeholder="32-character key" required aria-describedby="pro-status"
+                   style="flex:1;min-width:220px;padding:.55rem .7rem;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);font-family:'SF Mono','Monaco',monospace;font-size:.85rem;">
+            <button type="submit" class="btn-primary">Activate</button>
+          </div>
+          <p id="pro-status" role="status" aria-live="polite" style="font-size:.85rem;margin-top:.5rem;"></p>
+        </form>
+      </details>
+    </div>
+
+    <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
+      <p><a href="/blog/building-html-to-markdown-converter">Building an HTML to Markdown converter</a> · <a href="/blog/html-to-markdown-converter">HTML to Markdown converter guide</a> · <a href="/blog/copy-from-chatgpt-into-word">Copy ChatGPT into Word</a> · <a href="/url-to-markdown">URL to Markdown</a> · <a href="/clean-copy">Clean Copy browser extension</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
+    </footer>
+  </main>
+
+  <script src="/clean-copy-core.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var input = document.getElementById('input-box');
+    var output = document.getElementById('output-box');
+    // anonymous usage signal: one event when a real conversion produces output
+    function trackUse() {
+      try {
+        if (navigator.doNotTrack === '1') return;
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/clean-copy-tool', event: 'convert' }),
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    var statusEl = document.getElementById('copy-status');
+    var statsEl = document.getElementById('out-stats');
+    var mode = 'markdown';
+    var smart = document.getElementById('opt-smart');
+
+    function esc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function convert() {
+      var raw = input.value;
+      if (!raw.trim()) { output.value = ''; statsEl.textContent = ''; setStatus(''); return; }
+      var looksLikeHtml = /<\/?(?:p|div|span|h[1-6]|ul|ol|li|a|b|strong|i|em|br|code|pre|table)\b/i.test(raw)
+                          || /&(?:amp|lt|gt|quot|nbsp);/.test(raw);
+      try {
+        var result;
+        if (looksLikeHtml) {
+          // Raw HTML pasted as text: unescape entities first so the converter sees real markup.
+          var doc = new DOMParser().parseFromString(raw, 'text/html');
+          result = CleanCopyCore.htmlToMarkdown(doc.body.innerHTML);
+        } else if (mode === 'markdown') {
+          // Plain-ish text: only apply character cleanup, no tag stripping needed.
+          result = smart.checked ? CleanCopyCore.cleanText(raw) : raw.replace(/\u00A0/g,' ').trim();
+        } else {
+          var doc2 = new DOMParser().parseFromString(raw, 'text/html');
+          result = CleanCopyCore.cleanText(doc2.body.textContent || '');
+        }
+        output.value = result;
+        var words = result.split(/\s+/).filter(Boolean).length;
+        statsEl.textContent = result.length + ' chars · ' + words + ' words';
+        setStatus('');
+        if (!convert._tracked) { convert._tracked = true; trackUse(); }
+      } catch (err) {
+        output.value = '';
+        setStatus('Conversion failed: ' + err.message, true);
+      }
+    }
+
+    function setStatus(msg, isErr) {
+      statusEl.textContent = msg;
+      statusEl.className = msg ? (isErr ? 'err' : 'ok') : '';
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('mode-md').setAttribute('aria-pressed', m === 'markdown');
+      document.getElementById('mode-txt').setAttribute('aria-pressed', m === 'plain');
+      convert();
+    }
+
+    document.getElementById('mode-md').addEventListener('click', function () { setMode('markdown'); });
+    document.getElementById('mode-txt').addEventListener('click', function () { setMode('plain'); });
+    smart.addEventListener('change', convert);
+    input.addEventListener('input', convert);
+
+    document.getElementById('btn-copy').addEventListener('click', function () {
+      if (!output.value) { setStatus('Nothing to copy yet.', true); return; }
+      var done = function () { setStatus('✓ Copied to clipboard'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(output.value).then(done, function () { fallbackCopy(); done(); });
+      } else { fallbackCopy(); done(); }
+    });
+    function fallbackCopy() {
+      output.removeAttribute('readonly');
+      output.select();
+      document.execCommand('copy');
+      output.setAttribute('readonly', '');
+      window.getSelection().removeAllRanges();
+    }
+
+    document.getElementById('btn-download').addEventListener('click', function () {
+      if (!output.value) { setStatus('Nothing to download yet.', true); return; }
+      var blob = new Blob([output.value], { type: 'text/markdown' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'clean-copy.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setStatus('✓ Downloaded');
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      input.value = ''; output.value = ''; statsEl.textContent = ''; setStatus('');
+      input.focus();
+    });
+
+    document.getElementById('btn-sample').addEventListener('click', function () {
+      input.innerHTML = '';
+      input.value = '<h2>Quarterly Update</h2>\n<p>Revenue grew <strong>34%</strong> \u2014 driven by '
+        + 'the <em>EU launch</em>. Full report at <a href="https://example.com/report">example.com/report</a>.</p>'
+        + '<ul><li>Hired 6 engineers</li><li>Shipped v2<ul><li>New editor</li><li>Offline mode</li></ul></li></ul>'
+        + '<p>Contact: \u201Cteam\u201D <code>ops@example.com</code></p>';
+      convert();
+    });
+
+    // ── Clean Copy Pro: license activation ──────────────────────────
+    // Checkout link is injected at deploy time when the Lemon Squeezy
+    // checkout exists (see PRO_CHECKOUT_URL). Until then the buy button
+    // stays hidden — no dead purchase links.
+    var PRO_CHECKOUT_URL = ''; // filled by lemon-setup output → sed placeholder
+    if (PRO_CHECKOUT_URL) {
+      var buy = document.getElementById('pro-buy');
+      buy.href = PRO_CHECKOUT_URL;
+      buy.hidden = false;
+      document.getElementById('pro-soon').hidden = true;
+    }
+
+    function deviceId() {
+      // Non-identifying random device token, persisted locally only.
+      try {
+        var d = localStorage.getItem('cc_device_id');
+        if (!d) {
+          d = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now();
+          localStorage.setItem('cc_device_id', d);
+        }
+        return d;
+      } catch (e) { return 'anon-' + String(Math.random()).slice(2); }
+    }
+
+    var proForm = document.getElementById('pro-form');
+    var proStatus = document.getElementById('pro-status');
+    var proKeyInput = document.getElementById('pro-key');
+
+    function savePro(key, expiresAt) {
+      try { localStorage.setItem('cc_pro_license', key); } catch (e) {}
+      if (expiresAt) {
+        try { localStorage.setItem('cc_pro_expires', expiresAt); } catch (e) {}
+      }
+      showProActive(expiresAt);
+      enableBatch(true); // Pro feature gate
+    }
+    function showProActive(expiresAt) {
+      proStatus.textContent = '✓ Pro activated' + (expiresAt ? ' — valid until ' + expiresAt.slice(0, 10) : '') + '.';
+      proStatus.style.color = '#16a34a';
+      proKeyInput.value = '';
+    }
+    function clearPro() {
+      try { localStorage.removeItem('cc_pro_license'); localStorage.removeItem('cc_pro_expires'); } catch (e) {}
+      enableBatch(false);
+    }
+    try {
+      var saved = localStorage.getItem('cc_pro_license');
+      if (saved) showProActive(localStorage.getItem('cc_pro_expires'));
+      var expiresSaved = localStorage.getItem('cc_pro_expires');
+      var notExpired = !expiresSaved || expiresSaved > new Date().toISOString();
+      if (saved && !notExpired) {
+        clearPro();
+      } else if (saved) {
+        // Re-validate the saved license quietly; revoke it server-side if invalid.
+        enableBatch(true);
+        fetch('/api/license/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ license_key: saved, device_id: deviceId() })
+        }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
+          .then(function (res) {
+            if (!(res.s === 200 && res.j.ok && res.j.valid)) clearPro();
+          })
+          .catch(function () { /* offline: keep working */ });
+      } else {
+        enableBatch(false);
+      }
+    } catch (e) {}
+
+    // ── Batch conversion (Pro) ───────────────────────────────────
+    function enableBatch(on) {
+      document.getElementById('batch-details').hidden = !on;
+    }
+    var batchInput = document.getElementById('batch-input');
+    var batchOutput = document.getElementById('batch-output');
+    var batchStatus = document.getElementById('batch-status');
+
+    document.getElementById('btn-batch').addEventListener('click', function () {
+      var lines = batchInput.value.split('\n').filter(function (l) { return l.trim().length > 0; });
+      if (!lines.length) {
+        batchStatus.textContent = 'Paste at least one snippet.';
+        batchStatus.style.color = '#dc2626';
+        return;
+      }
+      var results = CleanCopyCore.batchConvert(lines.map(function (l) {
+        var looksLikeHtml = /<\/?(?:p|div|span|h[1-6]|ul|ol|li|a|b|strong|i|em|br|code|pre|table)\b/i.test(l)
+          || /&(?:amp|lt|gt|quot|nbsp);/.test(l);
+        if (!looksLikeHtml) return l;
+        var doc = new DOMParser().parseFromString(l, 'text/html');
+        return { html: doc.body.innerHTML };
+      }), 'markdown');
+      batchOutput.value = results.map(function (r) {
+        return r.ok ? r.content.replace(/\n+/g, ' ').trim() : '[error] ' + r.error;
+      }).join('\n');
+      var failed = results.filter(function (r) { return !r.ok; }).length;
+      batchStatus.textContent = failed
+        ? results.length + ' snippets — ' + failed + ' failed.'
+        : '✓ Converted ' + results.length + ' snippets.';
+      batchStatus.style.color = failed ? '#dc2626' : '#16a34a';
+    });
+
+    document.getElementById('btn-batch-copy').addEventListener('click', function () {
+      if (!batchOutput.value) {
+        batchStatus.textContent = 'Nothing to copy yet.';
+        batchStatus.style.color = '#dc2626';
+        return;
+      }
+      navigator.clipboard.writeText(batchOutput.value).then(function () {
+        batchStatus.textContent = '✓ Results copied.';
+        batchStatus.style.color = '#16a34a';
+      }, function () {
+        batchStatus.textContent = 'Could not access clipboard.';
+        batchStatus.style.color = '#dc2626';
+      });
+    });
+
+    proForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var key = proKeyInput.value.trim().toLowerCase();
+      if (!key) return;
+      proStatus.textContent = 'Checking license…';
+      proStatus.style.color = '';
+      fetch('/api/license/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ license_key: key, device_id: deviceId() })
+      }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
+        .then(function (res) {
+          if (res.s === 200 && res.j.ok && res.j.activated) {
+            savePro(key, res.j.expires_at);
+          } else {
+            proStatus.textContent = res.j && res.j.error ? res.j.error : 'Activation failed. Please try again.';
+            proStatus.style.color = '#dc2626';
+          }
+        })
+        .catch(function () {
+          proStatus.textContent = 'Network error — check your connection and try again.';
+          proStatus.style.color = '#dc2626';
+        });
+    });
+  })();
+  </script>
+
+  <script src="/track.js"></script>
+</body>
+</html>

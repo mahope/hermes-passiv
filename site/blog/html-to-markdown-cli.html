@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML to Markdown from the Terminal — Complete 2026 Guide</title>
+<meta name="description" content="Convert any web page or HTML file to clean Markdown straight from the terminal — curl pipes, CI workflows, and a zero-dependency CLI.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTML to Markdown from the Terminal">
+<meta property="og:description" content="curl pipes, CI workflows, and a zero-dependency CLI that turns any web page into clean Markdown.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/html-to-markdown-cli">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-cli">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-cli">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTML to Markdown from the Terminal: The Complete 2026 Guide", "description": "Convert any web page or HTML file to clean Markdown straight from the terminal — curl pipes, CI workflows, and a zero-dependency CLI.", "url": "https://hermes-passiv.pages.dev/blog/html-to-markdown-cli", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I convert HTML to Markdown from the command line?", "acceptedAnswer": {"@type": "Answer", "text": "Install Clean Copy (brew tap mahope/clean-copy && brew install clean-copy, or download the release tarball) and run: clean-copy article.html. For a live page: clean-copy -u https://example.com/blog."}}, {"@type": "Question", "name": "Can I pipe curl output through it?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The tool reads stdin by default: curl -sL https://example.com | clean-copy. On macOS you can chain it with pbcopy to put the result on your clipboard: pbpaste | clean-copy | pbcopy."}}, {"@type": "Question", "name": "Does it work in CI pipelines?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. There is an official GitHub Action (clean-copy HTML to Markdown) and the CLI itself has zero npm dependencies, so it runs anywhere Node 16+ runs without a heavy install step."}}, {"@type": "Question", "name": "Does the conversion keep links, headings and tables?", "acceptedAnswer": {"@type": "Answer", "text": "Headings map to # levels, links become [text](url), lists stay lists, bold and italic survive, code blocks become fenced blocks, and simple tables convert to pipe tables — including alignment. Add -t for plain text instead."}}, {"@type": "Question", "name": "Is anything uploaded to a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. The converter is a local Node.js program. Your HTML and URLs never leave your machine, which also makes it safe for internal docs and CI logs."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+  pre.cmd {
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+</style>
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-cli">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-cli">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">DEVELOPER &middot; CLI &middot; MARKDOWN</div>
+    <h1>HTML to Markdown<br>from the Terminal</h1>
+    <p class="subtitle">You are already in the shell — why open a browser tab to convert a page? Pipe curl output, dump documentation, feed CI reports: one zero-dependency CLI turns any HTML into clean Markdown without leaving the keyboard.</p>
+    <div class="hero-cta">
+      <a href="#how" class="btn-primary">See how it works &rarr;</a>
+      <a href="/clean-copy" class="btn-secondary">About Clean Copy</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why convert in the terminal at all?</h2>
+    <p>Web-based converters break the moment your input is not a public page: internal wikis, authenticated dashboards, files on disk, gigabyte logs. And copy-pasting through a browser tab does not belong in a script.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔧 Scriptable end to end</h3><p>A CLI composes with everything else you already use — <code>curl</code>, <code>pandoc</code>, git hooks, cron jobs, GitHub Actions. No browser automation needed.</p></div>
+      <div class="card"><h3>🔒 Nothing leaves your machine</h3><p>Paste an NDA draft or an internal runbook into an online converter and you have sent it somewhere else. A local CLI keeps every byte on disk.</p></div>
+      <div class="card"><h3>📦 Zero dependencies</h3><p><code>npm install -g</code> pulls hundreds of packages with most converters. A single-file, dependency-free tool installs in seconds and stays auditable.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="options">
+  <div class="container">
+    <h2>Your options today</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Option</th><th>What it does</th><th>Catch</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Online converters</td>
+          <td>Paste HTML in a form, copy Markdown back</td>
+          <td>Manual, uploads your text, no scripting</td>
+        </tr>
+        <tr>
+          <td>Pandoc</td>
+          <td>Universal document converter, excellent Markdown out</td>
+          <td>Large binary; treats pages as documents, not as web content</td>
+        </tr>
+        <tr>
+          <td>npm html-to-md packages</td>
+          <td>Library you call from Node</td>
+          <td>You have to write the script yourself each time</td>
+        </tr>
+        <tr>
+          <td><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy CLI</a></td>
+          <td>One command: file, URL or stdin → clean Markdown or plain text</td>
+          <td>Requires Node 16+ (no other dependencies)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>The fix: one command, three inputs</h2>
+    <p><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy CLI</a> is the same converter engine behind the Clean Copy browser extension and VS Code extension, packaged as a single-file Node program.</p>
+
+    <h3 style="margin-top:24px;">1. Install</h3>
+    <pre class="cmd"><code>brew tap mahope/clean-copy
+brew install clean-copy
+# or: download the tarball from GitHub releases and drop clean-copy.js on your PATH</code></pre>
+
+    <h3 style="margin-top:24px;">2. Convert</h3>
+    <pre class="cmd"><code># A file on disk
+clean-copy article.html
+
+# A live web page
+clean-copy -u https://example.com/blog
+
+# A pipe — this is where it shines
+curl -sL https://example.com/docs | clean-copy
+
+# macOS clipboard round-trip: dirty HTML in, clean Markdown out
+pbpaste | clean-copy | pbcopy</code></pre>
+
+    <h3 style="margin-top:24px;">3. Plain text when you need it</h3>
+    <pre class="cmd"><code>clean-copy -t email_dump.html   # strip all formatting, keep readable text</code></pre>
+
+    <div class="problem-cards">
+      <div class="card"><h3># Headings preserved</h3><p>H1–H6 map to the right number of <code>#</code>, so document structure survives.</p></div>
+      <div class="card"><h3>[Links](intact)</h3><p>Links become standard Markdown references with original URLs.</p></div>
+      <div class="card"><h3>Tables → pipe tables</h3><p>Simple HTML tables become Markdown pipe tables, alignment included.</p></div>
+      <div class="card"><h3>⚙️ GitHub Action</h3><p>There is an official action so CI workflows can convert pages as part of a build.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How do I convert HTML to Markdown from the command line?</h3><p>Install Clean Copy (brew tap mahope/clean-copy && brew install clean-copy, or download the release tarball) and run: clean-copy article.html. For a live page: clean-copy -u https://example.com/blog.</p></div>
+<div class="card"><h3>Can I pipe curl output through it?</h3><p>Yes. The tool reads stdin by default: curl -sL https://example.com | clean-copy. On macOS you can chain it with pbcopy to put the result on your clipboard: pbpaste | clean-copy | pbcopy.</p></div>
+<div class="card"><h3>Does it work in CI pipelines?</h3><p>Yes. There is an official GitHub Action (clean-copy HTML to Markdown) and the CLI itself has zero npm dependencies, so it runs anywhere Node 16+ runs without a heavy install step.</p></div>
+<div class="card"><h3>Does the conversion keep links, headings and tables?</h3><p>Headings map to # levels, links become [text](url), lists stay lists, bold and italic survive, code blocks become fenced blocks, and simple tables convert to pipe tables — including alignment. Add -t for plain text instead.</p></div>
+<div class="card"><h3>Is anything uploaded to a server?</h3><p>No. The converter is a local Node.js program. Your HTML and URLs never leave your machine, which also makes it safe for internal docs and CI logs.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Get the Clean Copy CLI free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/html-to-markdown-vscode" style="color:var(--color-accent);">Paste as Markdown in VS Code</a> &middot; <a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);">HTML to Markdown Converter (online)</a> &middot; <a href="/blog/url-to-markdown-converter" style="color:var(--color-accent);">URL to Markdown Converter</a> &middot; <a href="/blog/copy-as-markdown-chrome-extension" style="color:var(--color-accent);">Copy as Markdown in Chrome</a></p></div>
+<p><a href="/da/blog/html-til-markdown-cli" lang="da">Dansk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

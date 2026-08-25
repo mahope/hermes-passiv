@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL til Markdown — Konvertér enhver webside til ren Markdown, gratis</title>
+  <meta name="description" content="Gratis værktøj: indsæt en URL og få sidens hovedindhold tilbage som ren Markdown. Virker med artikler, blogindlæg og dokumentation. Intet gemmes, ingen tilmelding.">
+  <meta property="og:title" content="URL til Markdown-konverter">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:description" content="Indsæt en URL, få artiklen som ren Markdown på sekunder. Gratis, ingen tilmelding, intet gemmes.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hermes-passiv.pages.dev/da/url-til-markdown">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/da/url-til-markdown">
+  <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/url-to-markdown">
+  <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/url-til-markdown">
+  <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/url-to-markdown">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "URL til Markdown-konverter",
+    "url": "https://hermes-passiv.pages.dev/da/url-til-markdown",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "da",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "DKK" },
+    "description": "Konvertér enhver offentlig websides hovedindhold til ren Markdown ved at indtaste URL'en."
+  }
+  </script>
+  <style>
+    .tool-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+    #url-form { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1.4rem 0; }
+    #url-input {
+      flex: 1; min-width: 240px; padding: .75rem .9rem;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      background: var(--color-surface); color: var(--color-text);
+      font-size: .95rem;
+    }
+    #output-box {
+      width: 100%; min-height: 380px; box-sizing: border-box; margin-top: 1rem;
+      border: 1px solid var(--color-border); border-radius: 10px;
+      background: var(--color-surface); color: var(--color-text);
+      padding: .9rem; font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: .85rem; line-height: 1.5; resize: vertical;
+    }
+    label { font-weight: 600; display: block; margin-bottom: .3rem; }
+    .btn-primary {
+      background: var(--color-accent, #2563eb); border: none; color: #fff;
+      padding: .65rem 1.3rem; border-radius: 8px; font-size: .95rem;
+      font-weight: 600; cursor: pointer;
+    }
+    .btn-secondary {
+      background: var(--color-surface-2, #f1f5f9); border: 1px solid var(--color-border);
+      color: var(--color-text); padding: .55rem 1.1rem; border-radius: 8px;
+      font-size: .9rem; cursor: pointer;
+    }
+    #status { font-size: .88rem; color: var(--color-text-muted); margin: .6rem 0; min-height: 1.2em; }
+    #status.ok { color: #16a34a; }
+    #status.err { color: #dc2626; }
+    .privacy-note {
+      display: flex; gap: .6rem; align-items: flex-start;
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: 10px; padding: .9rem 1.1rem; margin: 1.5rem 0;
+      font-size: .88rem; color: var(--color-text-muted);
+    }
+    details.faq { border-bottom: 1px solid var(--color-border); padding: .8rem 0; }
+    details.faq summary { cursor: pointer; font-weight: 600; }
+    details.faq p { color: var(--color-text-muted); font-size: .9rem; }
+    @media (max-width: 640px) { #url-form button[type="submit"] { width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="tool-wrap">
+    <nav aria-label="Brødkrumme" style="font-size:0.8rem;margin-bottom:1rem;">
+      <a href="/">Passiv</a> · <a href="/clean-copy-tool">Web-værktøj</a> ·
+      <a href="/page-profile">page-profile</a> · <span aria-current="page">URL til Markdown</span>
+    </nav>
+
+    <h1>URL til Markdown</h1>
+    <p class="lead">Indtast en URL og få sidens hovedindhold tilbage som ren Markdown.
+    Artikler, dokumentation og blogindlæg — overskrifter, links, lister, tabeller og kodeblokke bevaret,
+    reklamer og boilerplate væk.</p>
+
+    <form id="url-form">
+      <label for="url-input" style="position:absolute;left:-9999px;">Sidens URL</label>
+      <input type="url" id="url-input" placeholder="https://eksempel.dk/artikel" required autocomplete="off">
+      <button type="submit" class="btn-primary" id="btn-go">Konvertér til Markdown</button>
+    </form>
+
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <label for="output-box">Markdown-resultat</label>
+    <textarea id="output-box" readonly aria-live="polite"></textarea>
+
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem;">
+      <button type="button" class="btn-primary" id="btn-copy">Kopiér resultat</button>
+      <button type="button" class="btn-secondary" id="btn-download">Download som .md</button>
+      <span id="copy-status" role="status" style="font-size:.85rem;color:var(--color-text-muted);"></span>
+    </div>
+
+    <div class="privacy-note" role="note">
+      <span aria-hidden="true">🔒</span>
+      <span><strong>Intet gemmes.</strong> Siden hentes én gang for at konvertere den for dig.
+      Vi gemmer hverken indholdet eller de URL'er du indtaster. Konverteringen kører i din browser.</span>
+    </div>
+
+    <h2>Hvorfor konvertere sider til Markdown?</h2>
+    <ul>
+      <li><strong>Fodr dine noter.</strong> Gem enhver artikel i Obsidian, Notion eller andre Markdown-værktøjer.</li>
+      <li><strong>Træn og prompt AI-modeller.</strong> LLM'er arbejder bedst med ren struktureret tekst, ikke rå HTML.</li>
+      <li><strong>Migrér indhold.</strong> Flyt blogindlæg mellem CMS'er uden at miste strukturen.</li>
+    </ul>
+
+    <h2>Ofte stillede spørgsmål</h2>
+    <details class="faq">
+      <summary>Virker det på alle hjemmesider?</summary>
+      <p>Det virker på de fleste offentlige sider, der kan nås uden login. Sider bag betalingsmur,
+      tunge JavaScript-apps eller sider der blokerer automatisk hentning kan give en fejl.</p>
+    </details>
+    <details class="faq">
+      <summary>Gemmes mine data?</summary>
+      <p>Nej. Sidens HTML hentes, konverteres og smides væk med det samme. Intet logges eller gemmes.</p>
+    </details>
+    <details class="faq">
+      <summary>Hvordan adskiller det sig fra Clean Copy web-værktøjet?</summary>
+      <p><a href="/clean-copy-tool">Web-værktøjet</a> rydder op i tekst, du allerede har. Denne side
+      henter URL'en for dig først, så du springer kopieringen helt over.</p>
+    </details>
+    <details class="faq">
+      <summary>Kan jeg gøre det fra kommandolinjen?</summary>
+      <p>Ja — den gratis CLI gør det samme:
+      <code>brew install mahope/clean-copy/clean-copy</code>, derefter
+      <code>clean-copy --url https://eksempel.dk</code>.
+      <a href="/clean-copy#install">Se alle installationsmuligheder →</a></p>
+    </details>
+    <details class="faq">
+      <summary>Hvilke elementer konverteres?</summary>
+      <p>Overskrifter h1–h6, fed/kursiv, links, billeder, ordnede og uordnede lister inklusive indlejring,
+      kodeblokke, inline-kode, tabeller (pipe-separeret), afsnit og vandrette linjer.
+      Navigation, sidefod, scripts og styles fjernes.</p>
+    </details>
+
+    <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
+      <p><a href="/da/blog/url-til-markdown-konverter">Guide: sådan virker det</a> · <a href="/blog/url-to-markdown-converter" lang="en">Engelsk guide</a> · <a href="/clean-copy-tool">Clean Copy Web (indsæt tekst)</a> · <a href="/free-tools">Gratis værktøjer</a> · af Passiv</p>
+    </footer>
+  </main>
+
+  <script src="/clean-copy-core.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var form = document.getElementById('url-form');
+    var input = document.getElementById('url-input');
+    var output = document.getElementById('output-box');
+    var statusEl = document.getElementById('status');
+    var copyStatus = document.getElementById('copy-status');
+    var goBtn = document.getElementById('btn-go');
+
+    function trackUse() {
+      try {
+        if (navigator.doNotTrack === '1') return;
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/da/url-til-markdown', event: 'convert' }),
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg;
+      statusEl.className = cls || '';
+    }
+
+    /* Samme readability-heuristik som clean-copy CLI'en: strip
+       script/style/nav/footer/aside/form/svg/iframe/kommentarer, behold
+       derefter den største article/main/div-blok med >200 synlige tegn. */
+    function extractReadable(html) {
+      var doc = html
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+        .replace(/<(script|style|noscript|link|meta)\b[^>]*\/?>/gi, '');
+      doc = doc.replace(/<(nav|footer|header|aside|form|svg|iframe)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+      var candidates = [];
+      var re = /<(article|main|div)\b[^>]*>/gi;
+      var m;
+      while ((m = re.exec(doc)) !== null) candidates.push(m.index);
+      var best = null, bestLen = 0;
+      for (var i = 0; i < candidates.length; i++) {
+        var start = candidates[i];
+        var openTagEnd = doc.indexOf('>', start);
+        var tag = doc.slice(start + 1, openTagEnd).split(/\s/)[0];
+        var closeIdx = doc.lastIndexOf('</' + tag + '>');
+        if (closeIdx <= openTagEnd) continue;
+        var inner = doc.slice(openTagEnd + 1, closeIdx);
+        var len = inner.replace(/<[^>]*>/g, '').length;
+        if (len > bestLen && len > 200) { best = inner; bestLen = len; }
+      }
+      return best || doc;
+    }
+
+    function slugFromUrl(u) {
+      try {
+        var p = new URL(u).pathname.split('/').filter(Boolean).pop() || 'side';
+        return p.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'side';
+      } catch (e) { return 'side'; }
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var target = input.value.trim();
+      if (!target) return;
+      setStatus('');
+      goBtn.disabled = true;
+      goBtn.textContent = 'Konverterer…';
+      fetch('/scan-proxy?url=' + encodeURIComponent(target))
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.j.ok) {
+            throw new Error(res.j && res.j.error ? res.j.error : 'Kunne ikke hente den side.');
+          }
+          var md = CleanCopyCore.htmlToMarkdown(extractReadable(res.j.html));
+          if (!md || md.length < 20) throw new Error('Fandt ikke læsbart indhold på den side.');
+          output.value = md.trim();
+          setStatus('Konverteret — ' + md.length.toLocaleString('da-DK') + ' tegn.', 'ok');
+          trackUse();
+        })
+        .catch(function (err) {
+          setStatus(err.message || 'Noget gik galt. Prøv en anden URL.', 'err');
+          output.value = '';
+        })
+        .finally(function () {
+          goBtn.disabled = false;
+          goBtn.textContent = 'Konvertér til Markdown';
+        });
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', function () {
+      if (!output.value) { copyStatus.textContent = 'Intet at kopiere endnu.'; return; }
+      navigator.clipboard.writeText(output.value).then(function () {
+        copyStatus.textContent = 'Kopieret til udklipsholder ✓';
+        setTimeout(function () { copyStatus.textContent = ''; }, 2500);
+      }, function () {
+        output.removeAttribute('readonly');
+        output.select(); document.execCommand('copy');
+        output.setAttribute('readonly', '');
+        copyStatus.textContent = 'Kopieret ✓';
+        setTimeout(function () { copyStatus.textContent = ''; }, 2500);
+      });
+    });
+
+    document.getElementById('btn-download').addEventListener('click', function () {
+      if (!output.value) return;
+      var blob = new Blob([output.value], { type: 'text/markdown' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = slugFromUrl(input.value) + '.md';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    });
+  })();
+  </script>
+</body>
+</html>

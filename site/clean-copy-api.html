@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clean Copy API — HTML to Markdown, free to use</title>
+<meta name="description" content="Free REST API for HTML-to-Markdown conversion. Same engine as the Clean Copy Chrome extension. No auth, no rate limits, max 50 KB input.">
+<meta property="og:title" content="Clean Copy API — HTML to Markdown, free to use">
+<meta property="og:description" content="Free REST API for HTML-to-Markdown conversion powered by the same engine as the Clean Copy browser extension. No sign-up, no token, just POST your HTML and get Markdown back.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/clean-copy-api">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy-api">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy-api">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebAPI",
+  "name": "Clean Copy API",
+  "url": "https://hermes-passiv.pages.dev/clean-copy-api",
+  "description": "Free REST API for HTML-to-Markdown conversion. POST HTML, get Markdown back.",
+  "applicationCategory": "DeveloperApplication",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+  pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  code { background: #1e293b; color: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+  .param-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+  .param-table th, .param-table td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--color-border); }
+  .param-table th { font-weight: 600; color: var(--color-text); }
+  .param-table td { color: var(--color-text-muted); }
+  .param-table code { font-size: 0.8rem; }
+  .try-it { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; }
+  .try-it textarea { width: 100%; min-height: 100px; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); padding: 0.7rem; font-family: 'SF Mono', monospace; font-size: 0.85rem; margin-bottom: 0.8rem; }
+</style>
+</head>
+<body>
+
+<header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
+  <div class="badge">FREE API</div>
+  <h1>Clean Copy API</h1>
+  <p class="tagline" style="max-width:540px;margin:0 auto;">
+    POST HTML, get clean Markdown back.<br>
+    Same engine as the Chrome extension, the CLI, and the web tool.
+  </p>
+  <p style="margin-top:1rem;">
+    <a href="#try-it" class="btn-primary">Try it &darr;</a>
+    <a href="/clean-copy" class="btn-secondary">About Clean Copy &rarr;</a>
+    <a href="/clean-copy-tool" class="btn-secondary">Web tool &rarr;</a>
+  </p>
+</header>
+
+<main class="container">
+
+<section>
+  <h2>Endpoint</h2>
+  <pre>POST https://hermes-passiv.pages.dev/api/clean-copy</pre>
+  <p>No API key required. No sign-up. No rate limits (be reasonable — max 10 req/s).</p>
+</section>
+
+<section>
+  <h2>Request</h2>
+  <p>Send a JSON object with the HTML you want to convert:</p>
+  <table class="param-table">
+    <thead>
+      <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>html</code></td>
+        <td>string</td>
+        <td><em>required</em></td>
+        <td>The HTML content to convert. Max 50 KB.</td>
+      </tr>
+      <tr>
+        <td><code>mode</code></td>
+        <td>string</td>
+        <td><code>"markdown"</code></td>
+        <td>Either <code>"markdown"</code> or <code>"plain"</code> (strips all formatting, returns clean plain text).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Response</h2>
+  <table class="param-table">
+    <thead>
+      <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ok</code></td><td>boolean</td><td><code>true</code> on success, <code>false</code> on error.</td></tr>
+      <tr><td><code>markdown</code></td><td>string | null</td><td>The converted output. <code>null</code> on error.</td></tr>
+      <tr><td><code>mode</code></td><td>string</td><td>Echoes the requested mode.</td></tr>
+      <tr><td><code>input_chars</code></td><td>number</td><td>Length of input HTML in characters.</td></tr>
+      <tr><td><code>output_chars</code></td><td>number</td><td>Length of output in characters.</td></tr>
+      <tr><td><code>version</code></td><td>string</td><td>Converter engine version (matches the Chrome extension).</td></tr>
+      <tr><td><code>error</code></td><td>string | null</td><td>Error message when <code>ok</code> is <code>false</code>.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Example</h2>
+  <h3>Request</h3>
+  <pre>curl -s https://hermes-passiv.pages.dev/api/clean-copy \
+  -H "Content-Type: application/json" \
+  -d '{"html": "&lt;h1&gt;Hello World&lt;/h1&gt;&lt;p&gt;This is &lt;strong&gt;bold&lt;/strong&gt; and &lt;em&gt;italic&lt;/em&gt;.&lt;/p&gt;"}'</pre>
+
+  <h3>Response</h3>
+  <pre>{
+  "ok": true,
+  "markdown": "# Hello World\n\nThis is **bold** and *italic*.",
+  "mode": "markdown",
+  "input_chars": 83,
+  "output_chars": 44,
+  "version": "1.5.2"
+}</pre>
+</section>
+
+<section>
+  <h2>Code examples</h2>
+  <h3>Python</h3>
+  <pre>import requests
+
+def clean_copy(html, mode="markdown"):
+    r = requests.post(
+        "https://hermes-passiv.pages.dev/api/clean-copy",
+        json={"html": html, "mode": mode},
+        timeout=30,
+    )
+    data = r.json()
+    if not data.get("ok"):
+        raise ValueError(data.get("error"))
+    return data["markdown"]</pre>
+
+  <h3>JavaScript / TypeScript</h3>
+  <pre>async function cleanCopy(html, mode = "markdown") {
+  const res = await fetch(
+    "https://hermes-passiv.pages.dev/api/clean-copy",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ html, mode }),
+    }
+  );
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error);
+  return data.markdown;
+}</pre>
+
+  <h3>Plain-text mode</h3>
+  <pre>curl -s https://hermes-passiv.pages.dev/api/clean-copy \
+  -H "Content-Type: application/json" \
+  -d '{"html": "&lt;p&gt;Some &lt;b&gt;bold&lt;/b&gt; text&lt;/p&gt;", "mode": "plain"}'
+# {"ok": true, "markdown": "Some bold text", "mode": "plain", ...}</pre>
+</section>
+
+<section id="try-it">
+  <h2>Try it live</h2>
+  <p>Paste some HTML below and click Convert:</p>
+  <div class="try-it">
+    <textarea id="input-html" placeholder="Paste HTML here, e.g. &lt;h1&gt;Title&lt;/h1&gt;&lt;p&gt;Hello&lt;/p&gt;"><h1>Clean Copy API</h1>
+<p>Paste <strong>any</strong> HTML here and click <em>Convert</em>.</p>
+<ul>
+  <li>Headings become <code>#</code>, <code>##</code>, etc.</li>
+  <li>Bold/italic become <code>**</code> and <code>*</code></li>
+  <li>Links become <code>[text](url)</code></li>
+</ul></textarea>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <button onclick="convert('markdown')" class="btn-primary">Convert to Markdown</button>
+      <button onclick="convert('plain')" class="btn-secondary">Convert to Plain Text</button>
+      <button onclick="clearOutput()" class="btn-secondary">Clear</button>
+    </div>
+    <textarea id="output-md" readonly placeholder="Output will appear here..." style="margin-top:0.8rem;min-height:120px;"></textarea>
+    <p id="status-msg" style="font-size:0.8rem;color:var(--color-text-muted);margin-top:0.4rem;"></p>
+  </div>
+</section>
+
+<section>
+  <h2>Usage guidelines</h2>
+  <ul style="color:var(--color-text-muted);">
+    <li><strong>Free for any use</strong> — personal, commercial, open-source. No attribution required.</li>
+    <li><strong>50 KB max input</strong> per request. Need more? Use the <a href="/clean-copy-tool">web tool</a> (runs entirely in your browser, no size limit).</li>
+    <li><strong>No SLA.</strong> This is a free side-project API. If you need reliability, run the <a href="https://github.com/mahope/clean-copy-cli">CLI locally</a> — same engine, zero dependencies.</li>
+    <li><strong>Future Pro tier</strong> (when Lemon Squeezy payment is set up): higher limits, custom cleanup rules, API key with usage tracking. No timeline yet.</li>
+    <li><strong>Privacy:</strong> The API does not log or store submitted HTML. Conversion happens server-side and the result is returned — no retention.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Install the real thing</h2>
+  <p>The API is powered by the same engine as Clean Copy. Install it locally for zero-latency, offline-capable conversion:</p>
+  <ul style="color:var(--color-text-muted);">
+    <li><a href="/clean-copy">Chrome extension</a> (or <a href="/clean-copy#install">load unpacked from source</a>) — right-click or <span class="shortcut">Ctrl+Shift+C</span></li>
+    <li><a href="https://github.com/mahope/clean-copy-cli">CLI</a> — <code>brew tap mahope/clean-copy &amp;&amp; brew install clean-copy</code> or <code>npx github:mahope/clean-copy-cli</code></li>
+    <li><a href="/clean-copy-bookmarklet">Bookmarklet</a> — works in any browser, no install</li>
+    <li><a href="/clean-copy-tool">Web tool</a> — paste HTML, get Markdown. Runs in your browser.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+async function convert(mode) {
+  const html = document.getElementById('input-html').value;
+  const output = document.getElementById('output-md');
+  const status = document.getElementById('status-msg');
+
+  if (!html.trim()) {
+    status.textContent = 'Paste some HTML first.';
+    return;
+  }
+
+  output.value = 'Converting...';
+  status.textContent = '';
+
+  try {
+    const res = await fetch('/api/clean-copy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html, mode }),
+    });
+    const data = await res.json();
+
+    if (!data.ok) {
+      output.value = '';
+      status.textContent = 'Error: ' + (data.error || 'Unknown error');
+      return;
+    }
+
+    output.value = data.markdown;
+    status.textContent = data.input_chars + ' chars in → ' + data.output_chars + ' chars out (mode: ' + data.mode + ')';
+  } catch (err) {
+    output.value = '';
+    status.textContent = 'Network error: ' + err.message;
+  }
+}
+
+function clearOutput() {
+  document.getElementById('output-md').value = '';
+  document.getElementById('status-msg').textContent = '';
+}
+</script>
+
+<footer class="site-footer">
+  <div class="container">
+    <p><a href="/clean-copy">Clean Copy</a> · <a href="/free-tools">Free Tools</a> · <a href="/">Passiv</a></p>
+    <p>MIT-licensed on <a href="https://github.com/mahope/clean-copy">GitHub</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

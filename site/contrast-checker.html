@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCAG Color Contrast Checker — Free, No Signup | Hermes Compliance</title>
+<meta name="description" content="Check color contrast against WCAG 2.1 AA and AAA thresholds instantly. Enter any two colors, see the ratio, pass/fail for normal and large text, and a live preview. Runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free WCAG Color Contrast Checker">
+<meta property="og:description" content="Instant WCAG 2.1 AA/AAA contrast ratios for any color pair. No signup — nothing leaves your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/contrast-checker">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/contrast-checker"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/contrast-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/contrast-checker-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/contrast-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"WCAG Color Contrast Checker","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/contrast-checker","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free browser-based WCAG 2.1 AA/AAA color contrast checker with live preview."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .cc-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .cc-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .cc-field { display:flex; flex-direction:column; gap:6px; }
+  .cc-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .cc-swatch-input { display:flex; gap:8px; align-items:center; }
+  .cc-swatch-input input[type=color] { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .cc-swatch-input input[type=text] { width:110px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-family:ui-monospace,monospace; font-size:.95rem; }
+  .cc-swap { padding:10px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface-2); color:var(--color-text); cursor:pointer; font-size:.9rem; }
+  .cc-swap:hover { border-color:var(--color-accent); }
+  .cc-ratio { font-size:2.4rem; font-weight:700; margin:22px 0 4px; font-variant-numeric:tabular-nums; }
+  .cc-verdict { font-weight:600; margin-bottom:16px; }
+  .pass { color:var(--color-green); } .fail { color:var(--color-red); }
+  table.cc-table { width:100%; border-collapse:collapse; margin-top:8px; }
+  table.cc-table th, table.cc-table td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--color-border); font-size:.95rem; }
+  table.cc-table th { color:var(--color-text-muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; }
+  .cc-preview { margin-top:22px; padding:28px 22px; border-radius:var(--radius); line-height:1.5; border:1px solid var(--color-border); }
+  .cc-preview .large { font-size:1.5rem; font-weight:700; }
+  .cc-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .cc-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  @media (max-width:520px){ .cc-ratio { font-size:1.9rem; } }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>WCAG Color Contrast Checker</h1>
+    <p class="tagline">Pick any two colors and get the exact WCAG&nbsp;2.1 contrast ratio
+    with instant pass/fail for <strong>AA</strong> and <strong>AAA</strong>. Everything
+    runs in your browser — nothing is uploaded.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="cc-card" aria-labelledby="checker-heading">
+  <h2 id="checker-heading">Check a color pair</h2>
+  <div class="cc-row" style="margin-top:14px">
+    <div class="cc-field">
+      <label for="fg-color">Text / foreground</label>
+      <div class="cc-swatch-input">
+        <input type="color" id="fg-color" value="#1a1e21" aria-describedby="fg-hex-label">
+        <input type="text" id="fg-text" value="#1a1e21" aria-label="Foreground color as hex code" spellcheck="false">
+      </div>
+    </div>
+    <button type="button" class="cc-swap" id="swap-btn" title="Swap foreground and background">&#8645; Swap</button>
+    <div class="cc-field">
+      <label for="bg-color">Background</label>
+      <div class="cc-swatch-input">
+        <input type="color" id="bg-color" value="#ffffff" aria-describedby="bg-hex-label">
+        <input type="text" id="bg-text" value="#ffffff" aria-label="Background color as hex code" spellcheck="false">
+      </div>
+    </div>
+  </div>
+  <p class="cc-error" id="cc-error" role="alert"></p>
+
+  <p class="cc-ratio" id="ratio-out">—</p>
+  <p class="cc-verdict" id="verdict-out" aria-live="polite"></p>
+
+  <table class="cc-table">
+    <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">WCAG contrast requirements by text size</caption>
+    <thead>
+      <tr><th scope="col">Content</th><th scope="col">Required ratio</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Normal text (&lt; 18pt / &lt; 14pt bold)</td><td>4.5 : 1</td><td id="aa-normal">—</td><td id="aaa-normal">—</td></tr>
+      <tr><td>Large text (&ge; 18pt or &ge; 14pt bold)</td><td>3 : 1</td><td id="aa-large">—</td><td id="aaa-large">—</td></tr>
+      <tr><td>UI components &amp; graphical objects</td><td>3 : 1</td><td id="aa-ui">—</td><td colspan="2" id="aaa-ui">n/a</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cc-preview" id="preview" role="presentation">
+    <p class="large" id="pv-large">Large heading preview</p>
+    <p>This is how normal body text looks in your chosen combination.
+       Readable at length? Your readers will decide in seconds.</p>
+  </div>
+
+  <p class="cc-note">Ratios follow WCAG 2.1 success criteria
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" rel="noopener">1.4.3 (Contrast Minimum)</a>,
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html" rel="noopener">1.4.6 (Contrast Enhanced)</a> and
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">1.4.11 (Non-text Contrast)</a>.
+  Fixing failures site-wide? The free <a href="/scan">Accessibility Scanner</a> finds low-contrast text on a whole page.</p>
+</section>
+
+<section class="cc-card">
+  <h2>How the ratio is calculated</h2>
+  <p style="margin-top:10px">Each color is converted to sRGB relative luminance
+  (L = 0.2126·R + 0.7152·G + 0.0722·B after gamma expansion). The contrast ratio is
+  (L1 + 0.05) / (L2 + 0.05), where L1 is the lighter color. A ratio of 1:1 means
+  identical colors; 21:1 is the maximum (black on white). This matches the formula
+  in the WCAG specification exactly.</p>
+</section>
+
+<p style="margin-top:26px"><a href="/free-tools">&larr; All free tools</a> · <a href="/text-on-image-checker">Text on image checker</a> ·
+<a href="/scan">Full-page accessibility scanner</a> · <a href="/palette-generator">Palette generator</a> · <a href="/contrast-checker-da">Dansk version</a> · <a href="/da/blog/wcag-kontrast-checker" lang="da">dansk guide</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Free browser-based GDPR &amp; accessibility tooling
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var fgColor = $('fg-color'), bgColor = $('bg-color');
+  var fgText = $('fg-text'), bgText = $('bg-text');
+
+  function parseHex(v) {
+    v = v.trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(v)) {
+      return [parseInt(v[0]+v[0],16), parseInt(v[1]+v[1],16), parseInt(v[2]+v[2],16)];
+    }
+    if (/^[0-9a-fA-F]{6}$/.test(v)) {
+      return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+    }
+    return null;
+  }
+  function toHex(rgb) {
+    return '#' + rgb.map(function (c) {
+      var h = Math.round(c).toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+  // WCAG 2.1 relative luminance
+  function luminance(rgb) {
+    var c = rgb.map(function (ch) {
+      ch = ch / 255;
+      return ch <= 0.03928 ? ch / 12.92 : Math.pow((ch + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+  function mark(id, pass, label) {
+    var el = $(id);
+    el.textContent = label;
+    el.className = pass ? 'pass' : 'fail';
+  }
+
+  function update() {
+    var errEl = $('cc-error');
+    errEl.textContent = '';
+    var fg = parseHex(fgText.value), bg = parseHex(bgText.value);
+    if (!fg || !bg) {
+      errEl.textContent = 'Enter valid hex colors, e.g. #1a1e21 or fff.';
+      return;
+    }
+    fgColor.value = toHex(fg);
+    bgColor.value = toHex(bg);
+
+    var r = ratio(fg, bg);
+    $('ratio-out').textContent = r.toFixed(2) + ' : 1';
+
+    var aaNormal = r >= 4.5, aaaNormal = r >= 7;
+    var aaLarge = r >= 3, aaaLarge = r >= 4.5;
+    var aaUi = r >= 3;
+
+    mark('aa-normal', aaNormal, aaNormal ? 'Pass' : 'Fail');
+    mark('aaa-normal', aaaNormal, aaaNormal ? 'Pass' : 'Fail');
+    mark('aa-large', aaLarge, aaLarge ? 'Pass' : 'Fail');
+    mark('aaa-large', aaaLarge, aaaLarge ? 'Pass' : 'Fail');
+    mark('aa-ui', aaUi, aaUi ? 'Pass' : 'Fail');
+
+    var v = $('verdict-out');
+    if (r >= 7)      { v.textContent = 'Excellent — passes AAA for all text.'; v.className = 'cc-verdict pass'; }
+    else if (r >= 4.5){ v.textContent = 'Good — passes AA for all text.'; v.className = 'cc-verdict pass'; }
+    else if (r >= 3) { v.textContent = 'Limited — passes only for large text and UI components.'; v.className = 'cc-verdict fail'; }
+    else             { v.textContent = 'Fails WCAG — not enough contrast even for large text.'; v.className = 'cc-verdict fail'; }
+
+    var pv = $('preview');
+    pv.style.background = toHex(bg);
+    pv.style.color = toHex(fg);
+    pv.style.borderColor = r >= 3 ? '' : '#f87171';
+    pv.querySelector('.large').style.color = toHex(fg);
+    pv.querySelector('p:last-child').style.color = toHex(fg);
+  }
+
+  function bind(picker, field) {
+    picker.addEventListener('input', function () { field.value = picker.value; update(); });
+    field.addEventListener('input', update);
+    field.addEventListener('change', update);
+  }
+  bind(fgColor, fgText);
+  bind(bgColor, bgText);
+  $('swap-btn').addEventListener('click', function () {
+    var t = fgText.value; fgText.value = bgText.value; bgText.value = t;
+    update();
+  });
+  update();
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

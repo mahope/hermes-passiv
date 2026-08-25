@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hash Generator — SHA-256, SHA-1, SHA-512 Online</title>
+<meta name="description" content="Free online hash generator. Compute SHA-256, SHA-1, SHA-384 and SHA-512 hashes of any text instantly using the Web Crypto API. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hash Generator — SHA-256, SHA-1, SHA-512 Online">
+<meta property="og:description" content="Generate SHA-256, SHA-1, SHA-384 or SHA-512 hashes of any text instantly. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/hash-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hash Generator — SHA-256, SHA-1, SHA-512 Online">
+<meta name="twitter:description" content="Generate SHA hashes of any text instantly. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/hash-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/hash-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/hash-generator">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Hash Generator",
+  "url": "https://hermes-passiv.pages.dev/hash-generator",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online hash generator for SHA-1, SHA-256, SHA-384 and SHA-512, powered by the browser's Web Crypto API."
+}
+</script>
+<style>
+.hash-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.hash-pane { display: flex; flex-direction: column; }
+.hash-pane h2 { font-size: 0.95rem; margin: 0 0 0.5rem; font-weight: 600; }
+.hash-io {
+  width: 100%; box-sizing: border-box; min-height: 160px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.55;
+}
+textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.hash-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.hash-btns button { padding: 10px 20px; cursor: pointer; }
+.hash-status { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; }
+.hash-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.hash-err { background: rgba(220,80,80,0.10); border: 1px solid rgba(220,80,80,0.45); color: var(--color-text); display: block; }
+.hash-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: stretch; }
+.hash-result {
+  flex: 1 1 320px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); padding: 0.7rem 0.9rem;
+}
+.hash-algo { font-weight: 600; font-size: 0.85rem; color: var(--color-text-muted); min-width: 64px; }
+.hash-digest {
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem;
+  word-break: break-all; line-height: 1.4; flex: 1; color: var(--color-text);
+}
+.hash-copy {
+  border: 1px solid var(--color-border); background: transparent; color: var(--color-accent);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.78rem; white-space: nowrap;
+}
+.hash-copy:hover { border-color: var(--color-accent); }
+.hash-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+@media (max-width: 600px) {
+  .hash-result { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="hash-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  Hash generator
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Hash Generator</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Compute SHA-256, SHA-512, SHA-384 or SHA-1 hashes of any text — instantly, with the browser's own Web Crypto API.</p>
+  <p class="hash-privacy">🔒 Nothing leaves your device. Hashing runs locally on this page.</p>
+</header>
+
+<div class="hash-pane">
+  <h2><label for="inputArea">Text to hash</label></h2>
+  <textarea id="inputArea" class="hash-io" placeholder="Paste any text here..." spellcheck="false"></textarea>
+</div>
+
+<div class="hash-btns">
+  <button id="hashBtn" class="btn-primary">Generate hashes</button>
+  <button id="clearBtn" class="btn-secondary">Clear</button>
+  <button id="exampleBtn" class="btn-secondary">Load example</button>
+</div>
+
+<div id="statusBox" class="hash-status" role="status" aria-live="polite"></div>
+
+<div id="results" class="hash-row" hidden>
+  <div class="hash-result"><span class="hash-algo">SHA-256</span><span class="hash-digest" id="d-sha-256"></span><button class="hash-copy" data-for="sha-256">Copy</button></div>
+  <div class="hash-result"><span class="hash-algo">SHA-512</span><span class="hash-digest" id="d-sha-512"></span><button class="hash-copy" data-for="sha-512">Copy</button></div>
+  <div class="hash-result"><span class="hash-algo">SHA-384</span><span class="hash-digest" id="d-sha-384"></span><button class="hash-copy" data-for="sha-384">Copy</button></div>
+  <div class="hash-result"><span class="hash-algo">SHA-1</span><span class="hash-digest" id="d-sha-1"></span><button class="hash-copy" data-for="sha-1">Copy</button></div>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free hash generator computes cryptographic hashes of any text using your
+    browser's built-in Web Crypto API — the same implementation the browser itself
+    uses for TLS. Supported algorithms: SHA-256, SHA-512, SHA-384 and SHA-1,
+    output as lowercase hexadecimal.</p>
+    <p>Common uses: verifying that a file or string matches a known checksum
+    (compare against a published SHA-256), generating cache-busting or
+    content-addressed identifiers, checking what a password would look like after
+    salting-plus-hashing, and integrity fields in configs.</p>
+    <p>Everything runs locally in your browser — nothing is uploaded, stored or sent
+    anywhere, which makes it safe for sensitive strings.</p>
+    <p>Note: plain hashing is not password storage. For passwords use a purpose-built
+    scheme such as bcrypt, scrypt or Argon2 — never a single fast SHA digest.
+    SHA-1 is included only for compatibility with older systems; it is considered
+    cryptographically broken for collision resistance.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+    <a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var input = document.getElementById('inputArea');
+  var statusBox = document.getElementById('statusBox');
+  var results = document.getElementById('results');
+  if (!input || !results) return;
+
+  var ALGOS = ['SHA-256', 'SHA-512', 'SHA-384', 'SHA-1'];
+  var tracked = false;
+
+  function bufToHex(buf) {
+    var arr = new Uint8Array(buf);
+    var hex = '';
+    for (var i = 0; i < arr.length; i++) {
+      hex += (arr[i] < 16 ? '0' : '') + arr[i].toString(16);
+    }
+    return hex;
+  }
+
+  function show(msg, cls) {
+    statusBox.textContent = msg;
+    statusBox.className = 'hash-status ' + cls;
+  }
+
+  function track() {
+    if (tracked) return;
+    tracked = true;
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '/hash-generator', event: 'convert' }),
+        keepalive: true
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  async function generate() {
+    var text = input.value;
+    statusBox.className = 'hash-status';
+    if (text.length === 0) {
+      results.hidden = true;
+      statusBox.style.display = 'none';
+      return;
+    }
+
+    if (!(window.crypto && crypto.subtle && crypto.subtle.digest)) {
+      show('✗ Web Crypto is not available. This tool requires a secure context (HTTPS) and a modern browser.', 'hash-err');
+      return;
+    }
+
+    try {
+      var data = new TextEncoder().encode(text);
+      for (var i = 0; i < ALGOS.length; i++) {
+        var algo = ALGOS[i];
+        var digest = bufToHex(await crypto.subtle.digest(algo, data));
+        document.getElementById('d-' + algo.toLowerCase()).textContent = digest;
+      }
+      results.hidden = false;
+      show('✓ Generated ' + ALGOS.length + ' hashes (' + new Blob([text]).size + ' bytes of input).', 'hash-ok');
+      track();
+    } catch (e) {
+      show('✗ Could not compute hashes: ' + e.message, 'hash-err');
+      results.hidden = true;
+    }
+  }
+
+  // Live update while typing, debounced.
+  var timer = null;
+  input.addEventListener('input', function() {
+    clearTimeout(timer);
+    timer = setTimeout(generate, 250);
+  });
+
+  document.getElementById('hashBtn').addEventListener('click', generate);
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    input.value = '';
+    results.hidden = true;
+    statusBox.style.display = 'none';
+    input.focus();
+  });
+
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    input.value = 'Hello world';
+    generate();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.hash-copy'), function(btn) {
+    btn.addEventListener('click', function() {
+      var val = document.getElementById('d-' + btn.getAttribute('data-for')).textContent;
+      if (!val) return;
+      var done = function() {
+        var old = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = old; }, 1200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(done).catch(function() {});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = val;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

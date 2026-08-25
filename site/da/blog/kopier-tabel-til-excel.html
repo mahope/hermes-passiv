@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopier tabel fra hjemmeside til Excel — sådan undgår du rodet</title>
+<meta name="description" content="Sådan kopierer du en tabel fra en hjemmeside ind i Excel — uden at kolonnerne smelter sammen. Tre metoder rangeret efter pålidelighed, inkl. gratis konvertering til Markdown med Clean Copy. Virker også til Google Sheets.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kopier en tabel fra nettet ind i Excel — uden rod">
+<meta property="og:description" content="Hvorfor tabeller sættes dårligt ind i Excel — og tre løsninger rangeret efter pålidelighed, inkl. konvertering til Markdown med gratis Clean Copy.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-excel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-excel"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-excel">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Kopier tabel fra hjemmeside til Excel — uden rod", "description": "Sådan kopierer du en tabel fra en hjemmeside ind i Excel — uden at kolonnerne smelter sammen. Tre metoder rangeret efter pålidelighed, inkl. gratis konvertering til Markdown med Clean Copy. Virker også til Google Sheets.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-excel", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan kopierer jeg en tabel fra en hjemmeside ind i Excel?", "acceptedAnswer": {"@type": "Answer", "text": "Markér tabellen på siden, kopiér den, og sæt den ind i Excel. Fungerer det ikke pænt, kan du først konvertere tabellen til Markdown med et gratis værktøj som Clean Copy, og derefter splitte rækkerne ved tegnet | via Data > Tekst til kolonner."}}, {"@type": "Question", "name": "Hvorfor ser min indsatte tabel forkert ud i Excel?", "acceptedAnswer": {"@type": "Answer", "text": "Mange hjemmesider bygger deres tabeller af indlejrede div'er, CSS-grid og colspan-tricks i stedet for ægte <table>-markup. Når Excel modtager udklipsholderens HTML, forsøger det at genskabe kolonnerne — og ender ofte med alt i én kolonne eller skjult styling med i købet."}}, {"@type": "Question", "name": "Virker det også i Google Sheets?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Google Sheets følger samme regler: direkte indsætning virker for velformede tabeller; ellers skal du splitte ved pipe-tegnet med Rediger > Find og erstat, eller bruge Filer > Importer på en renset CSV."}}, {"@type": "Question", "name": "Hvad med tabeller bag login eller JavaScript?", "acceptedAnswer": {"@type": "Answer", "text": "Excels Data > Fra web kan ikke se sider der kræver login, og nogle JavaScript-genererede tabeller dukker aldrig op. Et kopiværktøj som Clean Copy virker på alt hvad du kan markere i din browser — også loggede dashboards."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRODUKTIVITET &middot; REGNEARK</div>
+    <h1>Kopier Tabel Fra Hjemmeside Til Excel<br>Uden At Kolonnerne Smelter Sammen</h1>
+    <p class="subtitle">Du har fundet præcis den tabel du skal bruge. Du kopierer den. Du sætter den ind i Excel. Og så står alt i én kæmpe kolonne. Her er hvorfor det sker — og de tre løsninger der faktisk virker.</p>
+    <div class="hero-cta">
+      <a href="#loesninger" class="btn-primary">Se løsningerne</a>
+      <a href="/clean-copy-tool" class="btn-secondary">Konvertér din tabel nu &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvorfor">
+  <div class="container">
+    <h2>Hvorfor tabeller ryger under indsætningen</h2>
+    <p>Excel forventer et gitter: rækker og celler. Moderne hjemmesider giver det sjældent. Tabeller bygges af <strong>indlejrede &lt;div&gt;'er, CSS-grid, flexbox-rækker og colspan-tricks</strong>. Når Excel får udklipsholderens HTML, forsøger det at genskabe kolonnerne så godt det kan — og fejler på forudsigelige måder:</p>
+    <p>Alt lander i én kolonne. Skjulte sporingselementer bliver til ekstra tomme rækker. Cellebaggrunde og skrifttyper tages med. Links kommer som hele URL'er limet fast til teksten. Flettede overskriftsceller flytter hver række under dem.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎯 Tre udgange</h3><p>Direkte indsætning når tabellen er ægte, Markdown-konvertering når den ikke er, eller Power Query til store tabeller.</p></div>
+      <div class="card"><h3>⚡ Sekunder, ikke oprydning</h3><p>Konvertér tabellen til ren Markdown før den rammer regnearket — så splitter du kolonnerne på sekunder i stedet for at rette i minutter.</p></div>
+      <div class="card"><h3>🔒 Kører lokalt</h3><p>Clean Copy kører i din egen browser. Din tabel sendes ikke til en server og gemmes ingen steder.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="loesninger">
+  <div class="container">
+    <h2>Tre løsninger, rangeret efter pålidelighed</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Løsning 1 — Indsæt direkte, og tjek resultatet</h3><p>Bruger siden ægte <strong>&lt;table&gt;</strong>-markup (Wikipedia, de fleste dokumentationssider), virker almindelig kopiering direkte ind i Excel eller Google Sheets. Indsæt, og scan for flettede rækker og løse kolonner. Tager ti sekunder når det virker — to minutters oprydning når det ikke gør.</p></div>
+      <div class="card"><h3>Løsning 2 — Konvertér til Markdown først (Clean Copy)</h3><p><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> er en gratis browserudvidelse der konverterer markeret indhold — inklusive tabeller — til <strong>ren Markdown</strong> før noget rammer udklipsholderen. Markér tabellen, højreklik, vælg Clean Copy, og sæt resultatet ind hvor som helst. Markdown-tabeller er pipe-separeret tekst: alle konvertere, importeringsguides og AI-assistenter læser dem fejlfrit. Ingen sporing, kører lokalt — eller brug <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">bookmarklet'et</a>/<a href="/clean-copy-tool" style="color:var(--color-accent);">web-værktøjet</a> uden at installere noget.</p></div>
+      <div class="card"><h3>Løsning 3 — Power Query / Data &gt; Fra web</h3><p>Excels indbyggede <strong>Data &gt; Fra web</strong> (Power Query) henter siden og lister dens tabeller til import. Det er den mest grundige løsning til store tabeller, men virker kun på offentlige sider, rammer nogle gange ikke JavaScript-genererede tabeller, og er overkill til en hurtig fem-rækkers tabel.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv Clean Copy gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan deler du Markdown-tabellen op i kolonner i Excel</h2>
+    <ol>
+      <li>Konvertér tabellen til Markdown med <a href="/clean-copy-tool" style="color:var(--color-accent);">web-værktøjet</a> eller udvidelsen, og indsæt resultatet i et tomt ark (én celle pr. linje er fint — brug fx Notesblokken imellem).</li>
+      <li>Fjern separatorlinjen (den med bindestreger), og markér resten.</li>
+      <li>Vælg <strong>Data &gt; Tekst til kolonner &gt; Afgrænset</strong>, og angiv <strong>|</strong> (pipe) som adskillelsestegn.</li>
+      <li>Færdig: hver kolonne lander på sin plads, klar til formler og sortering.</li>
+    </ol>
+    <p>I Google Sheets: brug <strong>Rediger &gt; Find og erstat</strong> til at udskifte | med tabulator, og indsæt derefter — eller gem som CSV og brug <strong>Filer &gt; Importer</strong>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan kopierer jeg en tabel fra en hjemmeside ind i Excel?</h3><p>Markér tabellen på siden, kopiér den, og sæt den ind i Excel. Fungerer det ikke pænt, kan du først konvertere tabellen til Markdown med et gratis værktøj som Clean Copy, og derefter splitte rækkerne ved tegnet | via Data > Tekst til kolonner.</p></div>
+      <div class="card"><h3>Hvorfor ser min indsatte tabel forkert ud i Excel?</h3><p>Mange hjemmesider bygger deres tabeller af indlejrede div'er, CSS-grid og colspan-tricks i stedet for ægte <table>-markup. Når Excel modtager udklipsholderens HTML, forsøger det at genskabe kolonnerne — og ender ofte med alt i én kolonne eller skjult styling med i købet.</p></div>
+      <div class="card"><h3>Virker det også i Google Sheets?</h3><p>Ja. Google Sheets følger samme regler: direkte indsætning virker for velformede tabeller; ellers skal du splitte ved pipe-tegnet med Rediger > Find og erstat, eller bruge Filer > Importer på en renset CSV.</p></div>
+      <div class="card"><h3>Hvad med tabeller bag login eller JavaScript?</h3><p>Excels Data > Fra web kan ikke se sider der kræver login, og nogle JavaScript-genererede tabeller dukker aldrig op. Et kopiværktøj som Clean Copy virker på alt hvad du kan markere i din browser — også loggede dashboards.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Konvertér din tabel nu &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/blog/copy-table-from-website-to-excel" class="btn-secondary">English version of this guide &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/ren-tekst-fra-hjemmeside" style="color:var(--color-accent);">Ren tekst fra hjemmeside</a> &middot; <a href="/da/blog/url-til-markdown-konverter" style="color:var(--color-accent);">URL til Markdown-konverter</a> &middot; <a href="/blog/html-to-markdown-converter" lang="en" style="color:var(--color-accent);">HTML to Markdown converter</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/clean-copy-tool">Oprydningsværktøjet</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/kopier-tabel-iphone-ipad" style="color:var(--color-accent);">Kopier en tabel på iPhone &amp; iPad</a></p></div>
+</body>
+</html>

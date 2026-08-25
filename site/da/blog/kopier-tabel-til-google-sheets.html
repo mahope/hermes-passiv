@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopiér en tabel fra en hjemmeside til Google Sheets (2026-guide)</title>
+<meta name="description" content="Sådan kopierer du en tabel fra en hjemmeside direkte ind i Google Sheets — uden at rækker og kolonner smelter sammen. To klik med gratis værktøj.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kopiér en tabel fra en hjemmeside til Google Sheets (2026-guide)">
+<meta property="og:description" content="Prissider, statistik og tabeller direkte ind i Sheets med korrekt struktur. Den 2-klik-metode der bevarer alle rækker og kolonner.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-google-sheets">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-google-sheets">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-google-sheets">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra en hjemmeside til Google Sheets (2026-guide)", "description": "Sådan kopierer du en tabel fra en hjemmeside direkte ind i Google Sheets — uden at rækker og kolonner smelter sammen. To klik med gratis værktøj.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-google-sheets", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvorfor kollapser tabellen når jeg indsætter den?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi markering med musen ofte fanger omkringliggende afsnit, reklamer og billedtekster sammen med tabellen. Sheets modtager så en blanding af tekst der ikke kan parses som rækker og kolonner."}}, {"@type": "Question", "name": "Virker det også med PDF-tabeller?", "acceptedAnswer": {"@type": "Answer", "text": "Nej — PDF'er indeholder ikke rigtige HTML-tabeller. Til PDF bruger du en anden fremgangsmåde; se vores guide til at kopiere tabeller fra PDF til Excel."}}, {"@type": "Question", "name": "Kan jeg bruge det i Firefox?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Clean Copy findes som udvidelse til både Chrome og Firefox, og tabel-tilstanden fungerer ens i begge browsere."}}, {"@type": "Question", "name": "Er værktøjet gratis?", "acceptedAnswer": {"@type": "Answer", "text": "Kernen er gratis: ren tekst, markdown og tabelkopi. Pro-versionen tilføjer brugerdefinerede regler for de sider du bruger hver dag."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">RENGØR TEKST &middot; TABELLER</div>
+    <h1>Kopiér tabel<br>til Google Sheets</h1>
+    <p class="subtitle">Prissider, ligatabeller og offentlig statistik: at få dem ind i Google Sheets ender normalt i én kæmpe tekstblok eller timers genindtastning. Her er metoden der bevarer strukturen.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv tabel-værktøjet &rarr;</a>
+      <a href="#metode" class="btn-secondary">Se metoden</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor de sædvanlige metoder fejler</h2>
+    <ul>
+      <li><strong>Markér og kopiér</strong> — træk-markering fanger ofte afsnit, annoncer
+      og billedtekster. Indsat i Sheets smelter alt sammen til nogle få overbelastede celler.</li>
+      <li><strong>Skærmbillede + OCR</strong> — OCR introducerer fejl, og et tal med forkert
+      ciffer er værre end intet tal.</li>
+      <li><strong>Genindtastning</strong> — fint til tre rækker. Ubrugeligt til et datasæt
+      på 200 rækker.</li>
+    </ul>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-tool" class="btn-primary">Test tabel-tilstanden nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="metode">
+  <div class="container">
+    <h2>Løsningen: to klik</h2>
+    <ol>
+      <li>Installér den gratis Clean Copy-udvidelse til Chrome eller Firefox.</li>
+      <li>Højreklik på tabellen og vælg <em>Kopiér tabel</em> — udvidelsen finder det
+      rigtige &lt;table&gt;-element under markøren.</li>
+      <li>Indsæt i Google Sheets med Ctrl+V / Cmd+V. Hver række bliver en række,
+      hver kolonne en kolonne.</li>
+    </ol>
+    <p>Til bulk kan CLI'en tage en hel URL og outputte CSV direkte:
+    se vores guide til <a href="/da/blog/tilgaengelighedsscanner-cli"
+    style="color:var(--color-accent);">kommandolinjeværktøjerne</a>.</p>
+    <p>Læs også: <a href="/da/blog/kopier-tabel-til-excel">tabeller til Excel</a>,
+    <a href="/da/blog/kopier-tabel-hjemmeside-til-notion">tabeller til Notion</a> og
+    <a href="/da/blog/kopier-tabel-fra-pdf">tabeller fra PDF</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvorfor kollapser tabellen når jeg indsætter den?</h3><p>Fordi markering med musen ofte fanger omkringliggende afsnit, reklamer og billedtekster sammen med tabellen. Sheets modtager så en blanding af tekst der ikke kan parses som rækker og kolonner.</p></div>
+      <div class="card"><h3>Virker det også med PDF-tabeller?</h3><p>Nej — PDF'er indeholder ikke rigtige HTML-tabeller. Til PDF bruger du en anden fremgangsmåde; se vores guide til at kopiere tabeller fra PDF til Excel.</p></div>
+      <div class="card"><h3>Kan jeg bruge det i Firefox?</h3><p>Ja. Clean Copy findes som udvidelse til både Chrome og Firefox, og tabel-tilstanden fungerer ens i begge browsere.</p></div>
+      <div class="card"><h3>Er værktøjet gratis?</h3><p>Kernen er gratis: ren tekst, markdown og tabelkopi. Pro-versionen tilføjer brugerdefinerede regler for de sider du bruger hver dag.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv Clean Copy tabel-tilstand &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/kopier-tabel-til-excel" lang="da">Tabeller til Excel</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-notion" lang="da">Tabeller til Notion</a> &middot; <a href="/da/blog/kopier-tabel-fra-pdf" lang="da">Tabeller fra PDF</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

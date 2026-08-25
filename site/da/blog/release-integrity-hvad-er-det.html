@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release integrity: da vores udvidelse blev udgivet uden sine egne rettelser</title>
+<meta name="description" content="En ærlig case fra et rigtigt produkt: to udgivelser hvor download-zippen manglede kernerettelserne, som tests allerede havde godkendt. Hvad release-integrity er, hvordan fejlen opstår, og den ene test der fanger den.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Release integrity: da vores udvidelse blev udgivet uden sine egne rettelser">
+<meta property="og:description" content="To udgivelser. Alle tests bestod. Alligevel manglede den fil brugerne downloadede de vigtigste rettelser. Sådan opdagede vi det — og den ene test der forhindrer det i at ske igen.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/release-integrity-hvad-er-det">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/release-integrity-hvad-er-det"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/release-integrity-explained">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/release-integrity-hvad-er-det">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/release-integrity-explained">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Release integrity: da vores udvidelse blev udgivet uden sine egne rettelser", "description": "En ærlig case fra et rigtigt produkt: to udgivelser hvor download-zippen manglede kernerettelserne, som tests allerede havde godkendt. Hvad release-integrity er, hvordan fejlen opstår, og den ene test der fanger den.", "url": "https://hermes-passiv.pages.dev/da/blog/release-integrity-hvad-er-det", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Clean Copy"}, "publisher": {"@type": "Organization", "name": "Clean Copy"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad betyder release integrity?", "acceptedAnswer": {"@type": "Answer", "text": "At det du udgiver, er identisk med det du testede. Ikke \"bygget fra samme kodebase\" eller \"for det meste ens\" — men bit-for-bit de samme filer, samme versioner, ingen ældre artefakter blandet ind. Integrity fejler typisk ikke i koden, men i pakningen: hvilke filer der havner i artefaktet."}}, {"@type": "Question", "name": "Hvorfor fangede enhedstests ikke fejlen?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi de testede kildefilen. Kernen havde alle rettelserne, og testene mod kernen bestod. Fejlen lå et andet sted: i en kopi af koden, der blev pakket ind i zip-filen, og som ingen test læste. En test kan kun garantere det, den faktisk indlæser."}}, {"@type": "Question", "name": "Hvad er en parity-test?", "acceptedAnswer": {"@type": "Answer", "text": "En test der sammenligner to ting, der burde være ens: fx kildetool.js og den kopier af tool.js, der ligger i udgivelsespakken. Hvis de adskiller sig, fejler buildet — uanset om funktionstests ellers er grønne. Den fanger præcis den klasse af fejl, hvor noget bliver vedligeholdt to steder."}}, {"@type": "Question", "name": "Hvordan undgår jeg det i mit eget projekt?", "acceptedAnswer": {"@type": "Answer", "text": "Tre regler: (1) Generér kopier fra kilden i stedet for at vedligeholde dem manuelt — ét sandhedssted. (2) Lad bygge-scriptet splicse delt kode ind i artefaktet automatisk. (3) Tilføj én parity-test, der verificerer at artefaktets indhold matcher kilden, og lad den køre før hver udgivelse."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">QA &middot; RELEASE INTEGRITY &middot; CASE</div>
+    <h1>Release Integrity:<br>Da Udgivelsen Ikke Indhold Rettelserne</h1>
+    <p class="subtitle">Alle testene var grønne. Bygget var grønt. Alligevel manglede den zip-fil brugerne downloadede de vigtigste fejlrettelser fra de seneste to udgivelser. Her er hvad der gik galt — og den ene test der had fanget det før udgivelsen.</p>
+    <div class="hero-cta">
+      <a href="/da/blog/indsæt-uden-formatering-i-chrome" class="btn-primary">Se produktet Clean Copy &rarr;</a>
+      <a href="#laering" class="btn-secondary">Spring til læringerne</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="problem">
+  <div class="container">
+    <h2>Hvad der skete</h2>
+    <p>Dette er en sand historie fra udviklingen af browser-udvidelsen
+    <a href="/da/blog/indsæt-uden-formatering-i-chrome" style="color:var(--color-accent);">Clean Copy</a>.
+    Projektet har én kernefil med al logikken (<code>clean_copy_core.js</code>) og seks
+    overflader der bruger den: Chrome-udvidelse, Firefox-udvidelse, CLI-værktøj,
+    bookmarklet, Obsidian-plugin og desktop-app.</p>
+    <p>Ved en gennemgang opdagede vi noget ubehageligt: Chrome-udvidelsens baggrunds-script
+    indeholdt <strong>ikke</strong> rettelserne fra de seneste to udgivelser. De lå i
+    kernefilen — og i Firefox-versionen. Men den fil, der faktisk blev pakket i
+    Chrome-zippen, var en ældre kopi.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Tests: grønne</h3><p>Enheds- og integrationstestene kørte mod kernefilen. Den havde alle rettelser. Alt så perfekt ud.</p></div>
+      <div class="card"><h3>📦 Artefakt: forkert</h3><p>Zip-filen indeholdt en manuel kopi af kernen — to udgivelser gammel, uden de nye fixes.</p></div>
+      <div class="card"><h3>🚫 Brugere: ramt</h3><p>Alle der downloadede udvidelsen i den periode fik et produkt uden de rettelser, udgivelsesnoterne lovede.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvordan sker sådan noget?</h2>
+    <p>Klassisk årsag: <strong>samme logik vedligeholdt flere steder.</strong> Da projektet
+    var lille, blev kernen kopieret ind i hvert projekt med håndkraft. Kopien i
+    Chrome-mappen blev simpelthen glemt i to iterationer — mens kilden og Firefox-kopien
+    blev opdateret.</p>
+    <ul>
+      <li><strong>Manuelle kopier af kode er tidsbomber.</strong> De virker fint, indtil nogen glemmer én. Og der er ingen alarm, når det sker.</li>
+      <li><strong>Tests tester kun, hvad de indlæser.</strong> Vores tests importerede kernefilen direkte. De vidste intet om, hvad der lå i zippen.</li>
+      <li><strong>Udgivelsespresset forstærker det.</strong> Man bygger zips sidst, hurtigt, efter alt er godkendt. Netop dét trin får aldrig den opmærksomhed, det fortjener.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="products" id="fix">
+  <div class="container">
+    <h2>Fiksen: ét sandhedssted + én parity-test</h2>
+    <ol>
+      <li><strong>Ingen manuelle kopier.</strong> Kernelogikken findes nu kun i én fil.
+      Bygge-scriptet genererer alle kopier — udvidelsernes scripts får kernen
+      <em>splicet ind</em> under bygning, med markerede blokke.</li>
+      <li><strong>Parity-test før udgivelse.</strong> Én test læser den færdige zip,
+      udpakker den, og sammenligner kernesektionen byte-for-byte med kilden. Afviger de,
+      fejler buildet. Ingen udgivelse uden grøn parity-test.</li>
+      <li><strong>Versionsbump før zips bygges.</strong> Regel: indholdsændring ⇒ versionsnummer op, <em>altid</em>, inden artefaktet bygges. Så kan man aldrig forveksle en ny zip med en gammel.</li>
+      <li><strong>Efterudgivelses-verificering.</strong> Efter deploy hentes zip-filen live fra sitet og kontrolleres — samme parity-tjek, men mod det brugerne faktisk downloader.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="products" id="laering">
+  <div class="container">
+    <h2>Tre læringer du kan bruge i morgen</h2>
+    <ol>
+      <li><strong>Test artefaktet, ikke bare kilden.</strong> Det brugeren modtager er zip-filen, pakken, installeret. Din test-suite skal mindst én gang åbne præcis det.</li>
+      <li><strong>Sammensatte projekter skal generere, ikke kopiere.</strong> Hvis samme funktion findes i to filer, vil de på et tidspunkt være forskellige. Spørgsmålet er ikke <em>om</em>, men hvornår — og om en test opdager det.</li>
+      <li><strong>Parity-testen er billig og fanger en hel fejlklasse.</strong> Den kræver ingen framework: læs to filer, sammenlign, fejlstå hvis ulige. Ti linjer kode der reddede os fra at udgive forkert indhold en tredje gang.</li>
+    </ol>
+    <p>Fejlen kostede os to udgivelser og en del tillid hos os selv. Fiksen kostede en
+    eftermiddag. Det er den bedste investering projektet har lavet.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/da/blog/indsæt-uden-formatering-i-chrome" class="btn-primary">Prøv Clean Copy gratis &rarr;</a>
+      &nbsp;
+      <a href="/da/blog/kopier-som-markdown-udvidelse" class="btn-secondary">Flere guides</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad betyder release integrity?</h3><p>At det du udgiver, er identisk med det du testede. Ikke "bygget fra samme kodebase" eller "for det meste ens" — men bit-for-bit de samme filer, samme versioner, ingen ældre artefakter blandet ind. Integrity fejler typisk ikke i koden, men i pakningen: hvilke filer der havner i artefaktet.</p></div>
+      <div class="card"><h3>Hvorfor fangede enhedstests ikke fejlen?</h3><p>Fordi de testede kildefilen. Kernen havde alle rettelserne, og testene mod kernen bestod. Fejlen lå et andet sted: i en kopi af koden, der blev pakket ind i zip-filen, og som ingen test læste. En test kan kun garantere det, den faktisk indlæser.</p></div>
+      <div class="card"><h3>Hvad er en parity-test?</h3><p>En test der sammenligner to ting, der burde være ens: fx kildetool.js og den kopier af tool.js, der ligger i udgivelsespakken. Hvis de adskiller sig, fejler buildet — uanset om funktionstests ellers er grønne. Den fanger præcis den klasse af fejl, hvor noget bliver vedligeholdt to steder.</p></div>
+      <div class="card"><h3>Hvordan undgår jeg det i mit eget projekt?</h3><p>Tre regler: (1) Generér kopier fra kilden i stedet for at vedligeholde dem manuelt — ét sandhedssted. (2) Lad bygge-scriptet splicse delt kode ind i artefaktet automatisk. (3) Tilføj én parity-test, der verificerer at artefaktets indhold matcher kilden, og lad den køre før hver udgivelse.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/blog/indsæt-uden-formatering-i-chrome" class="btn-primary">Prøv Clean Copy gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/indsæt-uden-formatering-i-chrome" lang="da">Indsæt uden formatering i Chrome</a> &middot; <a href="/da/blog/kopier-som-markdown-udvidelse" lang="da">Kopier som Markdown</a> &middot; <a href="/da/blog/html-til-markdown-konverter" lang="da">HTML til Markdown</a></p></div>
+<p style="text-align:center;"><a href="/blog/release-integrity-explained" lang="en" hreflang="en">English version of this guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free DPA Generator (GDPR Article 28 Data Processing Agreement)</title>
+<meta name="description" content="Answer 10 quick questions and generate a ready-to-sign GDPR Article 28 data processing agreement (DPA) for your agency and your client. Free, no signup — everything stays in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free GDPR DPA Generator (Article 28)">
+<meta property="og:description" content="Generate a ready-to-sign GDPR Article 28 data processing agreement in 5 minutes. Free, no signup, runs entirely in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/dpa-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free GDPR DPA Generator (Article 28)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/dpa-generator"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/dpa-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/dpa-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/dpa-generator">
+<meta name="twitter:title" content="Free GDPR DPA Generator (Article 28)">
+<meta name="twitter:description" content="Generate a ready-to-sign GDPR Article 28 data processing agreement in 5 minutes. Free, no signup, runs entirely in your browser.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"When is a data processing agreement required?","acceptedAnswer":{"@type":"Answer","text":"GDPR Article 28(3) requires a written contract (a DPA) whenever a processor processes personal data on behalf of a controller. For a web agency this applies to almost every client engagement that touches personal data — hosting, maintenance, email campaigns, analytics setups or support desks."}},{"@type":"Question","name":"What must an Article 28 DPA contain?","acceptedAnswer":{"@type":"Answer","text":"Article 28(3) lists mandatory clauses: processing only on documented instructions, confidentiality commitments, appropriate security measures (Art. 32), rules for sub-processors, assistance with data-subject rights and breach notification, deletion or return of data at the end of the contract, and audit rights for the controller."}},{"@type":"Question","name":"Can I use a generated DPA as-is?","acceptedAnswer":{"@type":"Answer","text":"The generator produces a complete Article 28-compliant draft covering the mandatory clauses. It is a strong starting point used by many agencies, but it is not legal advice — have counsel review it if your processing involves sensitive categories, transfers outside the EU/EEA, or high risk."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished agreement yourself."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=url],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #agreement { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #agreement h2 { color: #12283a; font-size: 18px; }
+  #agreement h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  #agreement ol li, #agreement ul li { margin-bottom: 6px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #agreement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>GDPR Data Processing Agreement Generator</h1>
+    <p class="tagline">Answer 10 questions → get a ready-to-sign
+    <strong>Article 28 DPA</strong> between your agency (processor) and your
+    client (controller). No signup, nothing leaves your browser.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. The parties</legend>
+    <label for="agencyName">Agency name (the processor)</label>
+    <input type="text" id="agencyName" required placeholder="Acme Web Studio ApS">
+    <label for="agencyAddr">Agency address</label>
+    <input type="text" id="agencyAddr" required placeholder="Hovedgaden 1, 8000 Aarhus C, Denmark">
+    <label for="agencyEmail">Agency contact e-mail</label>
+    <input type="email" id="agencyEmail" required placeholder="dpo@acmeweb.example">
+    <label for="clientName">Client / company name (the controller)</label>
+    <input type="text" id="clientName" required placeholder="Nordic Retail AB">
+    <label for="clientAddr">Client address</label>
+    <input type="text" id="clientAddr" required placeholder="Sturegatan 4, 114 35 Stockholm, Sweden">
+    <label for="clientEmail">Client contact e-mail</label>
+    <input type="email" id="clientEmail" required placeholder="legal@nordicretail.example">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. The services</legend>
+    <label for="services">What services does the agency deliver?</label>
+    <textarea id="services" required placeholder="Example: design, development, hosting and maintenance of the client's webshop, including order confirmation e-mails sent on behalf of the client."></textarea>
+    <label for="dataSubjects">Whose personal data is processed?</label>
+    <select id="dataSubjects" multiple size="3">
+      <option value="customers" selected>The client's customers / end users</option>
+      <option value="employees">The client's employees</option>
+      <option value="website-visitors">Visitors to the client's website</option>
+    </select>
+    <p class="hint">Hold Ctrl/Cmd to select several.</p>
+    <label for="categories">Categories of personal data</label>
+    <textarea id="categories" required placeholder="Example: name, e-mail address, order history, IP addresses collected via analytics."></textarea>
+    <label for="specialNote">Are special categories (health, religion, etc.) processed?</label>
+    <select id="specialNote">
+      <option value="no" selected>No special categories are processed</option>
+      <option value="yes">Yes — described below (counsel review strongly recommended)</option>
+    </select>
+    <label for="specialDesc">If yes, describe them</label>
+    <textarea id="specialDesc" placeholder="Only fill in if you selected 'yes' above."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Sub-processors</legend>
+    <label for="subprocessors">List approved sub-processors (one per line: name — service — country)</label>
+    <textarea id="subprocessors" placeholder="Example:
+Hetzner Online GmbH — EU hosting — Germany
+Google Ireland Ltd — transactional e-mail — Ireland"></textarea>
+    <p class="hint">Leave empty if no sub-processors are used today.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Terms</legend>
+    <label for="duration">Contract duration / notice period</label>
+    <input type="text" id="duration" value="until terminated with three (3) months' written notice">
+    <label for="retention">How long is personal data kept after the contract ends?</label>
+    <select id="retention">
+      <option value="delete" selected>Deleted within 30 days of termination</option>
+      <option value="return">Returned to the client, then deleted</option>
+      <option value="custom">Other arrangement (described below)</option>
+    </select>
+    <label for="retentionCustom">Custom retention note (if selected above)</label>
+    <input type="text" id="retentionCustom" placeholder="Example: invoices retained 5 years per accounting law; all other data deleted.">
+    <label for="lawDate">Date of signing</label>
+    <input type="date" id="lawDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate agreement</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Generated agreement</h2>
+  <article id="agreement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML file</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / save as PDF</button>
+  </div>
+  <p class="no-print">Next steps: build your register with the <a href="/ropa-generator">free RoPA
+  generator</a>, publish a policy with the <a href="/privacy-notice-generator">free
+  privacy notice generator</a>, and check your public pages with the
+  <a href="/scan">free EAA scanner</a>. See <a href="/free-tools">all free tools</a>. This document
+  is a draft and does not constitute legal advice.</p>
+</section>
+
+<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Why every agency needs a DPA</h2>
+  <ul>
+    <li><strong>It is legally required.</strong> GDPR Article 28(3): no
+    processor may process personal data for a controller without a written
+    contract containing the mandatory clauses. Working without one exposes
+    both parties to fines up to €10 million or 2% of global turnover.</li>
+    <li><strong>Enterprise clients ask for it first.</strong> In vendor
+    assessments the DPA is the first document requested. Having a standard
+    one ready shortens sales cycles.</li>
+    <li><strong>It defines who does what when something goes wrong.</strong>
+    Breach notification duties, sub-processor approval and audit rights are
+    agreed before an incident — not during one.</li>
+  </ul>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Part of the <a href="/">Hermes Compliance toolkit</a> — free tools and
+    practical guides for small EU web agencies.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function multi(id) {
+    return Array.prototype.slice.call($(id).selectedOptions).map(function(o){return o.value;});
+  }
+
+  function buildData() {
+    var d = {};
+    d.agency = v('agencyName'); d.agencyAddr = v('agencyAddr'); d.agencyEmail = v('agencyEmail');
+    d.client = v('clientName'); d.clientAddr = v('clientAddr'); d.clientEmail = v('clientEmail');
+    d.services = v('services');
+    var subjects = multi('dataSubjects');
+    var subjectLabels = { customers: "the controller's customers and end users",
+                          employees: "the controller's employees",
+                          'website-visitors': "visitors to the controller's website" };
+    d.subjects = subjects.map(function(s){ return subjectLabels[s]; }).join('; ');
+    d.categories = v('categories');
+    var special = $('specialNote').value === 'yes' && v('specialDesc');
+    d.special = special ? v('specialDesc') : '';
+    d.subsRaw = v('subprocessors');
+    d.duration = v('duration') || "until terminated with three (3) months' written notice";
+    d.retentionMode = $('retention').value;
+    d.retentionCustom = v('retentionCustom');
+    d.date = v('lawDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function retentionText(d) {
+    if (d.retentionMode === 'delete') return 'All personal data shall be deleted by the Processor within thirty (30) days after the end of the provision of services, unless Union or Member State law requires storage.';
+    if (d.retentionMode === 'return') return 'All personal data shall be returned to the Controller and thereafter deleted by the Processor within thirty (30) days after the end of the provision of services, unless Union or Member State law requires storage.';
+    var extra = d.retentionCustom ? ' The following arrangement applies: ' + esc(d.retentionCustom) + '.' : '';
+    return 'The parties shall agree on the return or deletion of personal data at the end of the provision of services.' + extra;
+  }
+
+  function renderHTML(d) {
+    var subs = d.subsRaw.split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    var h = '';
+    h += '<h2>Data Processing Agreement</h2>';
+    h += '<p style="text-align:center">between</p><p><strong>' + esc(d.agency) + '</strong>, '
+      + esc(d.agencyAddr) + ' (&ldquo;Processor&rdquo;)</p><p style="text-align:center">and</p><p><strong>'
+      + esc(d.client) + '</strong>, ' + esc(d.clientAddr) + ' (&ldquo;Controller&rdquo;)</p>';
+    h += '<p>Date: ' + esc(d.date) + '</p>';
+
+    h += '<h3>1. Subject and scope</h3><ol><li>This Agreement governs the Processor&rsquo;s processing of personal data on behalf of the Controller in connection with the following services: '
+       + esc(d.services) + '.</li>';
+    h += '<li>Categories of data subjects: ' + esc(d.subjects) + '.<br>Categories of personal data: '
+       + esc(d.categories) + '.</li>';
+    if (d.special) {
+      h += '<li>Special categories of personal data are processed: ' + esc(d.special)
+         + '. Additional safeguards apply as required by Article 9 GDPR.</li>';
+    } else {
+      h += '<li>No special categories of personal data (as defined in Article 9 GDPR) are processed under this Agreement.</li>';
+    }
+    h += '</ol>';
+
+    h += '<h3>2. Processor obligations</h3><ol>'
+       + '<li>The Processor shall process personal data only on documented instructions from the Controller, including with regard to transfers outside the EU/EEA, unless required to do so by Union or Member State law. In such a case the Processor shall inform the Controller of that legal requirement before processing.</li>'
+       + '<li>The persons authorised to process personal data have committed themselves to confidentiality or are under an appropriate statutory obligation of confidentiality.</li>'
+       + '<li>The Processor shall take all measures required pursuant to Article 32 GDPR, including pseudonymisation and encryption of personal data where appropriate, ensuring ongoing confidentiality, integrity and availability of processing systems, and a process for regularly testing and assessing the effectiveness of those measures.</li>'
+       + '</ol>';
+
+    h += '<h3>3. Sub-processors</h3><ol>';
+    if (subs.length) {
+      h += '<li>The Controller grants general written authorisation for the following sub-processors:</li></ol><ul>';
+      subs.forEach(function(s){ h += '<li>' + esc(s.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul><ol start="2">'
+         + '<li>The Processor shall inform the Controller of any intended changes concerning the addition or replacement of sub-processors, thereby giving the Controller the opportunity to object to such changes.</li>'
+         + '<li>Where the Controller objects, the parties shall seek an amicable solution. Failing one, the Controller may terminate this Agreement.</li>'
+         + '<li>The Processor shall impose the same data protection obligations as set out in this Agreement on any sub-processor by way of a written contract, and remains fully liable to the Controller for the performance of the sub-processor&rsquo;s obligations.</li></ol>';
+    } else {
+      h += '<li>No sub-processors are engaged as of the date of this Agreement. The Processor shall obtain prior specific or general written authorisation from the Controller before engaging any sub-processor, and shall comply with the requirements of Article 28(2) and (4) GDPR.</li></ol>';
+    }
+
+    h += '<h3>4. Assistance to the Controller</h3><ol>'
+       + '<li>Taking into account the nature of the processing, the Processor shall assist the Controller by appropriate technical and organisational measures, insofar as possible, in fulfilling the Controller&rsquo;s obligation to respond to requests for exercising the data subject&rsquo;s rights laid down in Chapter III GDPR.</li>'
+       + '<li>The Processor shall notify the Controller without undue delay after becoming aware of a personal data breach, and assist the Controller in notifying the supervisory authority and data subjects pursuant to Articles 33 and 34 GDPR.</li>'
+       + '<li>The Processor shall make available to the Controller all information necessary to demonstrate compliance with the obligations laid down in Article 28 GDPR, and allow for and contribute to audits, including inspections, conducted by the Controller or another auditor mandated by the Controller.</li>'
+       + '</ol>';
+
+    h += '<h3>5. Deletion of data</h3><p>' + retentionText(d) + '</p>';
+
+    h += '<h3>6. Transfers outside the EU/EEA</h3><p>The Processor shall not transfer personal data to a third country or international organisation unless appropriate safeguards under Chapter V GDPR are in place, such as the European Commission&rsquo;s Standard Contractual Clauses, and the Controller has been informed.</p>';
+
+    h += '<h3>7. Duration and termination</h3><p>This Agreement applies for the duration of the services: '
+       + esc(d.duration) + '. It terminates automatically when the Processor ceases processing personal data on behalf of the Controller.</p>';
+
+    h += '<h3>8. Signatures</h3>'
+       + '<table style="width:100%;margin-top:20px"><tr>'
+       + '<td style="width:50%;vertical-align:top"><p>For the Processor,<br><br>' + esc(d.agency) + '<br><br>_________________________<br>Name / title / date<br>Contact: ' + esc(d.agencyEmail) + '</p></td>'
+       + '<td style="vertical-align:top"><p>For the Controller,<br><br>' + esc(d.client) + '<br><br>_________________________<br>Name / title / date<br>Contact: ' + esc(d.clientEmail) + '</p></td>'
+       + '</tr></table>';
+
+    h += '<hr><p style="font-size:12px;color:#667">This document was created with the free Hermes Compliance DPA Generator. It follows the structure of GDPR Article 28(3) but does not constitute legal advice. Have counsel review it if you process special categories of data, large-scale data, or transfer data outside the EU/EEA.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate');
+    current = buildData();
+    $('agreement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed — use Download HTML instead.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Data Processing Agreement — ' + esc(current.agency) + ' / ' + esc(current.client) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<body style="max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px">\n'
+      + $('agreement').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dpa-' + current.client.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

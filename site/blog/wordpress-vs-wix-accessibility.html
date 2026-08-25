@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordPress vs Wix: Accessibility Compared</title>
+<meta name="description" content="WordPress vs Wix accessibility compared for EU site owners: where each platform fails WCAG 2.1 AA under the EAA, plugin vs built-in tooling, and which is faster to remediate.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WordPress vs Wix: Accessibility Compared">
+<meta property="og:description" content="WordPress vs Wix accessibility compared for EU site owners: where each platform fails WCAG 2.1 AA under the EAA, plugin vs built-in tooling, and which is faster to remediate.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WordPress vs Wix: Accessibility Compared">
+<meta name="twitter:description" content="WordPress vs Wix accessibility compared for EU site owners: where each platform fails WCAG 2.1 AA under the EAA, plugin vs built-in tooling, and which is faster to remediate.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "WordPress vs Wix: Accessibility Compared",
+  "description": "WordPress vs Wix accessibility compared for EU site owners: where each platform fails WCAG 2.1 AA under the EAA, plugin vs built-in tooling, and which is faster to remediate.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · COMPARISON · EAA</div>
+    <h1>WordPress vs Wix:<br>Accessibility Compared</h1>
+    <p class="subtitle">Both platforms serve millions of EU sites now covered by the European Accessibility Act. Where each fails WCAG 2.1 AA, and what remediation looks like on each.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#one-law-two-architectures" class="btn-secondary">WordPress Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="one-law-two-architectures">One Law Two Architectures</h2>
+    <p>WordPress powers roughly four times more websites than Wix, and both audiences now fall under the European Accessibility Act where they offer services to EU consumers. Legally the two are identical: EN 301 549 / WCAG 2.1 AA conformance, enforced nationally since mid-2025. Architecturally they could hardly be more different. WordPress is open-source software you host yourself, themed and extended from an enormous plugin ecosystem. Wix is a hosted website builder where visual editing writes the markup for you. Those two models produce distinctly different accessibility failure patterns — and distinctly different fix workflows.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Same Obligation</h3><p>EAA-covered services on either platform must meet WCAG 2.1 Level AA. Enforcement authorities do not care which CMS renders your pages.</p></div>
+      <div class="card"><h3>🔓 Open vs Hosted</h3><p>WordPress gives full control over every byte of HTML — including the power to break it. Wix constrains what you can change, for better and worse.</p></div>
+      <div class="card"><h3>🧩 Extension Risk</h3><p>WordPress plugins and Wix apps both inject widgets of unknown quality. Forms, sliders and popups are the worst offenders on both.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-wordpress-fails">Where WordPress Fails</h2>
+    <p>Typical WordPress defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 Editor Content</h3><p>Missing alt text (the media uploader allows empty alt), headings pasted as bold text, and link text like "click here" written directly in the block editor.</p></div>
+      <div class="card"><h3>🧩 Plugin Widgets</h3><p>Form builders, page-builder blocks and slider plugins shipping placeholder-only fields, div-based "buttons" and keyboard traps.</p></div>
+      <div class="card"><h3>🎨 Theme Inheritance</h3><p>Custom themes and page-builder layouts skipping landmarks, removing focus outlines, or repeating identical "read more" links in archive loops.</p></div>
+      <div class="card"><h3>🔄 Update Regressions</h3><p>Plugin and theme updates silently reintroduce fixed defects — accessibility needs a place in the update routine.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-wix-fails">Where Wix Fails</h2>
+    <p>Typical Wix defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Visual-First Defaults</h3><p>Drag-positioned text boxes produce heading levels chosen for looks, not structure — multiple missing or out-of-order headings per page.</p></div>
+      <div class="card"><h3>🖼️ Alt Text Gaps</h3><p>Wix prompts for alt text but does not require it; galleries imported from photos routinely ship empty.</p></div>
+      <div class="card"><h3>📱 Mobile Layout Duplication</h3><p>The separate mobile editor lets fixes applied to desktop miss the mobile view entirely — a classic source of "fixed but still failing".</p></div>
+      <div class="card"><h3>🔌 Third-Party Apps</h3><p>Forms, chat widgets and booking apps inject iframes and custom controls with inconsistent keyboard support.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="fix-workflow-compared">Fix Workflow Compared</h2>
+    <p>Again the difference is control:</p>
+    <p></p>
+    <p><strong>WordPress:</strong> nearly everything is fixable — editor training covers content issues, theme or child-theme work covers structural ones, and broken plugins can be replaced from thousands of alternatives. The price is that nothing enforces itself: every new plugin, theme update and editor hire can undo progress, so scanning belongs in the maintenance routine.</p>
+    <p></p>
+    <p><strong>Wix:</strong> many fixes are configuration rather than code — alt text fields, semantic heading assignment in the SEO/accessibility settings, contrast adjustments in site styles, and enabling text-only mobile rendering. Structural limits (how a specific app renders its widget) cannot be fixed at all; you choose another app or document the limitation.</p>
+    <p></p>
+    <p>Net effect: WordPress rewards investment with full remediability but needs continuous vigilance; Wix reaches "reasonably compliant" faster for simple sites but hits a ceiling set by its builder and apps.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="which-should-you-choose">Which Should You Choose</h2>
+    <p>If a site already exists on either platform, stay put — migration costs more than remediation, and the EAA obligations are identical. For a new EU project choosing between them: pick WordPress when you have (or can hire) someone comfortable maintaining themes and plugins, since every accessibility defect is ultimately fixable. Pick Wix for simple brochure-style sites maintained by non-technical owners, accepting that some third-party widgets may be irremediable and must be documented. Either way the workflow is the same: automated scan across key templates, fix mechanical failures (contrast, alt text, labels, heading order), audit each extension individually, publish an accessibility statement, and re-scan on every meaningful change.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Both Can Comply</h3><p>Fully conformant sites exist on both platforms. Process quality beats platform choice.</p></div>
+      <div class="card"><h3>🚀 Start With a Scan</h3><p>An automated scan separates fixable-today issues from architectural ones in minutes — on any CMS.</p></div>
+      <div class="card"><h3>📄 Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and documented limitations.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">The free scanner runs on any platform — WordPress, Wix or hand-written HTML — and gives you a prioritised worklist in seconds.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/wordpress-accessibility-check" class="btn-secondary">WordPress Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA apply differently to WordPress and Wix sites?</h3><p>No. The law regulates the service offered to consumers, not the publishing platform. A WordPress site and a Wix site offering the same service face the same WCAG 2.1 AA requirements.</p></div>
+      <div class="card"><h3>Is WordPress more accessible than Wix out of the box?</h3><p>Neither is conformant by default once real content, themes and extensions enter the picture. WordPress core defaults are solid, but the plugin ecosystem is the wildcard; Wix constrains bad markup but its visual-first editing produces structural heading problems.</p></div>
+      <div class="card"><h3>Can I fix accessibility issues in Wix without a developer?</h3><p>Much of it, yes: alt text fields, heading assignment, colour contrast in site styles and link descriptions are owner-level settings. Issues inside third-party apps usually require swapping apps or documenting limitations.</p></div>
+      <div class="card"><h3>What is the single biggest WordPress accessibility risk?</h3><p>Unmanaged plugins. Every additional form, slider or page-builder increases defect surface, and updates can silently reintroduce fixed issues. Keep the plugin count low and scan after every update round.</p></div>
+      <div class="card"><h3>How long does remediation take on each platform?</h3><p>A typical 20-50 page site: days for mechanical fixes on either platform. WordPress sites heavy on page-builders and plugins can take weeks; Wix sites usually finish faster but may carry documented limitations for specific apps.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/wordpress-accessibility-check" class="btn-secondary">WordPress Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WIX · EAA</span><h3><a href="/blog/wix-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Wix Accessibility: Meeting EAA Requirements</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DRUPAL · WCAG</span><h3><a href="/blog/drupal-wcag-accessibility" style="color:var(--color-accent);text-decoration:none;">Drupal Accessibility: WCAG and EAA Compliance Guide</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA CHECKLIST</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist for Agency Websites</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

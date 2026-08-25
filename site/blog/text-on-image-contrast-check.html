@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Text-on-Image Contrast Check — How to Test Readability for Free</title>
+<meta name="description" content="How to check whether text placed over an image meets WCAG requirements: upload the image, mark the text area, and see the actual contrast between the text and the pixels behind it. Free, runs in your browser — nothing is uploaded to a server.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Text-on-Image Contrast Check — free WCAG check in your browser">
+<meta property="og:description" content="Upload an image, mark the text area, and see whether the contrast passes WCAG AA. Free, no sign-up.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/text-on-image-contrast-check">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/text-on-image-contrast-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/text-on-image-contrast-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tekst-paa-billede-kontrasttjek">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/text-on-image-contrast-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Text-on-Image Contrast Check — how to test readability for free", "description": "How to check whether text placed over an image meets WCAG requirements: upload the image, mark the text area, and see the actual contrast between the text and the pixels behind it.", "url": "https://hermes-passiv.pages.dev/blog/text-on-image-contrast-check", "datePublished": "2026-08-24", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why does text on images fail so often?", "acceptedAnswer": {"@type": "Answer", "text": "A photo rarely has uniform brightness under the whole text block. Contrast can be fine over the dark areas and completely gone over the light ones. WCAG measures contrast against the actual pixels behind each letter — so you must test the worst case, not the average."}}, {"@type": "Question", "name": "How much contrast is required?", "acceptedAnswer": {"@type": "Answer", "text": "WCAG SC 1.4.3: at least 4.5:1 for normal text and 3:1 for large text (roughly 24 px normal or 18.66 px bold). SC 1.4.11 additionally requires 3:1 for meaningful graphics."}}, {"@type": "Question", "name": "Is the tool free and safe to use?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The image is analyzed in JavaScript directly in your browser via the canvas API. Nothing is uploaded to any server, and there are no limits or sign-up."}}, {"@type": "Question", "name": "What do I do if it fails?", "acceptedAnswer": {"@type": "Answer", "text": "Add a semi-transparent dark or light overlay behind the text, darken/lighten only the area where the text sits, or move the text to a solid bar below the image. Re-test until every measurement passes."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; ACCESSIBILITY</div>
+    <h1>Text-on-Image Contrast Check<br>Test Readability for Free</h1>
+    <p class="subtitle">Hero images with text on top are one of the most common accessibility failures. Here is how to check the actual contrast between your text and the pixels behind it — and what to do if it doesn't pass.</p>
+    <div class="hero-cta">
+      <a href="#how" class="btn-primary">See how it works</a>
+      <a href="/text-on-image-checker" class="btn-secondary">Check your image now &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 4 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Why does text on images fail so often?</h2>
+    <p>A photo rarely has uniform brightness under the whole text block. White text can be perfectly readable over the sky and completely disappear over the snow two centimeters further down. WCAG measures the contrast against the actual pixels behind each letter — not against the image average.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ The requirements</h3><p>SC 1.4.3: 4.5:1 for normal text, 3:1 for large text (approx. 24 px normal / 18.66 px bold). SC 1.4.11 requires 3:1 for meaningful UI parts and graphics.</p></div>
+      <div class="card"><h3>🎯 The worst spot counts</h3><p>A gradient can pass under half the letters and fail under the rest. Always measure the worst case — that is exactly what a user with low vision hits.</p></div>
+      <div class="card"><h3>🔒 Your images stay local</h3><p>The image is read and analyzed in JavaScript in your own browser via the canvas API. Nothing is uploaded to any server.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>How to do it (under a minute)</h2>
+    <ol>
+      <li>Open the <a href="/text-on-image-checker" style="color:var(--color-accent);">free text-on-image contrast check</a>.</li>
+      <li>Drag in your image — or paste a screenshot of your design straight from the clipboard.</li>
+      <li>Mark the area where the text sits and enter the text color.</li>
+      <li>Read the result: worst-case and average contrast in the area, plus pass/fail for AA and AAA. Adjust the design until everything is green.</li>
+    </ol>
+    <p>The tool reads pixels via the canvas API and computes relative luminance per the WCAG specification — the same formula commercial tools use. You get the same number an auditor will measure.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>From one image to a whole page</h2>
+    <p>The contrast check tests one image at a time — perfect when designing a hero or banner. To check the contrasts across an entire site, use the free <a href="/scan" style="color:var(--color-accent);">Accessibility Scanner</a>: it goes through all text on an entire URL and finds low-contrast text along with heading, alt-text, form and keyboard errors.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">RELATED TOOLS</span><h3>More contrast help</h3><p>The <a href="/contrast-checker" style="color:var(--color-accent);">contrast checker</a> tests color pairs &middot; the <a href="/palette-generator" style="color:var(--color-accent);">palette generator</a> builds accessible palettes.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GUIDE</span><h3>Read the contrast guide</h3><p>A step-by-step guide to the WCAG requirements themselves: <a href="/blog/wcag-contrast-checker" style="color:var(--color-accent);">WCAG contrast checker, step by step</a>.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DANISH VERSION</span><h3>Working in Danish?</h3><p>The same tool is available in <a href="/da/blog/tekst-paa-billede-kontrasttjek" hreflang="da" style="color:var(--color-accent);">Danish here</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Why does text on images fail so often?</h3><p>A photo rarely has uniform brightness under the whole text block. Contrast can be fine over the dark areas and completely gone over the light ones. WCAG measures contrast against the actual pixels behind each letter — so you must test the worst case, not the average.</p></div>
+      <div class="card"><h3>How much contrast is required?</h3><p>WCAG SC 1.4.3: at least 4.5:1 for normal text and 3:1 for large text (roughly 24 px normal or 18.66 px bold). SC 1.4.11 additionally requires 3:1 for meaningful graphics.</p></div>
+      <div class="card"><h3>Is the tool free and safe to use?</h3><p>Yes. The image is analyzed in JavaScript directly in your browser via the canvas API. Nothing is uploaded to any server, and there are no limits or sign-up.</p></div>
+      <div class="card"><h3>What do I do if it fails?</h3><p>Add a semi-transparent dark or light overlay behind the text, darken/lighten only the area where the text sits, or move the text to a solid bar below the image. Re-test until every measurement passes.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/text-on-image-checker" class="btn-primary">Try the contrast check free &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/scan" class="btn-secondary">Or scan the whole page &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Related guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">CONTRAST</span><h3><a href="/blog/wcag-contrast-checker" style="color:var(--color-accent);text-decoration:none;">WCAG contrast checker: how to check color contrast</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-deadline-2026" style="color:var(--color-accent);text-decoration:none;">EAA deadlines: when does the law apply to you?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TOOLS</span><h3><a href="/free-tools" style="color:var(--color-accent);text-decoration:none;">All free tools</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/tekst-paa-billede-kontrasttjek" lang="da">Danish version of this guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/text-on-image-checker">Contrast check</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

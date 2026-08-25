@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hermes-passiv.pages.dev/sitemap.xml
+
+# Machine-readable tool catalog for AI assistants
+# https://hermes-passiv.pages.dev/llms.txt

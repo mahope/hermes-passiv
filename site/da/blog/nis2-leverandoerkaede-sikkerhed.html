@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIS2 leverandørkædesikkerhed for webbureauer — gratis guide</title>
+<meta name="description" content="NIS2 artikel 21 g&oslash;r leverand&oslash;rsikkerhed til en juridisk pligt. Hvad sm&aring; danske webbureauer skal g&oslash;re ved leverand&oslash;rrisici, underdatabehandlere og klientkontrakter i 2026.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NIS2: Leverandørkædesikkerhed for dit webbureau">
+<meta property="og:description" content="Artikel 21(2)(d) gør hosting, plugins og freelancere til et compliancespørgsmål. Praktisk vendor assessment, kontraktklausuler og 5-trins plan.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/nis2-leverandoerkaede-sikkerhed">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NIS2: Leverandørkædesikkerhed for dit webbureau">
+<meta name="twitter:description" content="Artikel 21(2)(d) gør hosting, plugins og freelancere til et compliancespørgsmål. Praktisk vendor assessment, kontraktklausuler og 5-trins plan.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/nis2-leverandoerkaede-sikkerhed"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/nis2-leverandoerkaede-sikkerhed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/nis2-supply-chain-security">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "NIS2 leverand\u00f8rk\u00e6desikkerhed: praktisk guide til sm\u00e5 webbureauer", "description": "NIS2 artikel 21 g&oslash;r leverand&oslash;rsikkerhed til en juridisk pligt. Hvad sm&aring; danske webbureauer skal g&oslash;re ved leverand&oslash;rrisici, underdatabehandlere og klientkontrakter i 2026.", "url": "https://hermes-passiv.pages.dev/da/blog/nis2-leverandoerkaede-sikkerhed", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · NIS2</div>
+    <h1>NIS2 Leverand&oslash;rk&aelig;desikkerhed<br>for Webbureauer</h1>
+    <p class="subtitle">Artikel 21 g&oslash;r dine hosting-udbydere, plugins og freelancere til et compliance-sp&oslash;rgsm&aring;l. Her er hvad et lille bureau faktisk skal g&oslash;re &mdash; uden et enterprise GRC-system.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">L&aelig;s guiden</a>
+      <a href="#hvorfor" class="btn-secondary">Hvorfor leverand&oslash;rk&aelig;den? &darr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 8 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="hvorfor">Hvorfor leverandørkæden er dit problem</h2>
+    <p>De fleste sm&aring; webbureauer t&aelig;nker p&aring; NIS2 som en regel om deres egen sikkerhed: patch dine servere, aktiv&eacute;r MFA, hav en incidentplan. Det er halvdelen. Den anden halvdel &mdash; og den del regulatorerne i stigende grad fokuserer p&aring; &mdash; er artikel 21(2)(d), som g&oslash;r <strong>leverand&oslash;rsikkerhed</strong> til et eksplicit juridisk krav for enhver omfattet enhed.</p>
+    <p>For et webbureau er leverand&oslash;rk&aelig;den ikke et abstrakt begreb. Det er din hosting-udbyder, dit CDN, dine plugin-leverand&oslash;rer, den freelance-udvikler der havde admin-adgang sidste for&aring;r, e-mail-platformen du konfigurerer for klienter, og backup-tjenesten ingen har tjekket i to &aring;r. Under NIS2 er sikkerheden hos disse leverand&oslash;rer dit problem &mdash; og du skal kunne dokumentere hvordan du styrer den risiko.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📜 Artikel 21(2)(d)</h3><p>Enheder skal h&aring;ndtere sikkerhedsrisici relateret til &quot;forholdet mellem enheden og dens direkte leverand&oslash;rer eller tjenesteudbydere.&quot; Det er en direkte juridisk pligt, ikke best practice.</p></div>
+      <div class="card"><h3>🔗 Du sidder i to kæder</h3><p>Som bureau sidder du i midten: dine klienter er afh&aelig;ngige af dig, og du er afh&aelig;ngig af snesevis af leverand&oslash;rer. NIS2-forpligtelser g&aelig;lder i begge retninger.</p></div>
+      <div class="card"><h3>🧾 Bevis tæller</h3><p>Tilsynsmyndigheder forventer dokumenterede leverand&oslash;rvurderinger, kontraktklausuler og exit-planer &mdash; ikke et politikdokument der siger &quot;vi v&aelig;lger anerkendte leverand&oslash;rer.&quot;</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="omfattet">Er dit bureau omfattet?</h2>
+    <p>NIS2 klassificerer omfattede organisationer som &quot;vigtige&quot; eller &quot;andre vigtige&quot; baseret p&aring; sektor og st&oslash;rrelse. Mange sm&aring; bureauer falder uden for direkte omfattelse &mdash; et 5-personers studie der bygger marketingsites er normalt ikke selv en omfattet enhed.</p>
+    <p>Men at v&aelig;re uden for omfattelse betyder ikke at leverand&oslash;rk&aelig;dens regler ikke r&oslash;rer dig. Tre praktiske grunde til at omfattede klienter alligevel skubber NIS2-krav ned til deres bureauer:</p>
+    <p><strong>1. Indk&oslash;bssp&oslash;rgeskemaer.</strong> Ethvert bureau der betjener mellemstore eller store klienter, offentlige myndigheder eller virksomheder i energi, sundhed, finans, transport eller digital infrastruktur ser allerede sikkerhedssp&oslash;rgeskemaer der refererer til NIS2. &quot;Beskriv jeres leverand&oslash;rstyringsproces&quot; er nu et standardfelt.</p>
+    <p><strong>2. Kontraktklausuler.</strong> Omfattede klienter skal styre sikkerheden hos deres egne leverand&oslash;rer &mdash; og deres webbureau er en leverand&oslash;r. Forvent kontraktlige sikkerhedskrav, revisionsrettigheder og incident-meldepligter i nye og fornyede aftaler.</p>
+    <p><strong>3. K&aelig;deansvar ved h&aelig;ndelser.</strong> N&aring;r et brud hos et bureau uds&aelig;tter en omfattet klient, b&aelig;rer klienten stadig sine egne NIS2-pligter &mdash; 24-timers tidlig advarsel, 72-timers notifikation. Bureauer der ikke kan underst&oslash;tte den tidslinje mister disse klienter.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="din-kæde">Din faktiske leverandørkæde</h2>
+    <p>F&oslash;r du kan styre leverand&oslash;rrisiko, skal du vide hvad din leverand&oslash;rk&aelig;de faktisk er. De fleste bureauer har aldrig skrevet den ned. Kortl&aelig;g den p&aring; &eacute;n eftermiddag:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖥️ Infrastruktur</h3><p>Hosting (shared, VPS, managed WP), DNS, CDN, e-mail-levering. Disse r&oslash;rer hvert klient-site &mdash; &eacute;t kompromis spreder sig overalt.</p></div>
+      <div class="card"><h3>🧩 Software</h3><p>CMS-kernel, plugins, temaer, biblioteker. Tredjepartskode er den mest almindelige brudvektor for sm&aring; sites &mdash; et enkelt forladt plugin kan v&aelig;re indgangen.</p></div>
+      <div class="card"><h3>👥 Personer</h3><p>Freelancere, underleverand&oslash;rer, tidligere medarbejdere med levende adgange. Adgang uden kontrakt og offboarding-proces er ustyret risiko.</p></div>
+      <div class="card"><h3>☁️ Tjenester</h3><p>Analyse, formularbehandlere, betalingsgateways, backup-lagring, CRM-v&aelig;rkt&oslash;jer du konfigurerer for klienter. Hver enkelt behandler klientdata p&aring; din konfiguration.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="vendor-vurdering">Vendor assessment</h2>
+    <p>Du beh&oslash;ver ikke et enterprise GRC-system. Et regneark med &eacute;n r&aelig;kke pr. leverand&oslash;r og fem kolonner d&aelig;kker artikel 21 for et lille bureau:</p>
+    <p><strong>1. Hvilke data og adgang har denne leverand&oslash;r?</strong> Klienters persondata? Admin-legitimationsoplysninger? Produktionsservere? Klassific&eacute;r: kritisk, vigtig, mindre.</p>
+    <p><strong>2. Hvad er deres sikkerhedsniveau?</strong> Har de en trust-page, ISO 27001- eller SOC 2-certificering, en DBA, en brudhistorik? For store udbydere (Cloudflare, AWS, Google) er det et tjek p&aring; ti minutter. For en plugin-leverand&oslash;r til 200 kr/&aring;r kan det &aelig;rlige svar v&aelig;re &quot;ukendt&quot; &mdash; hvilket i sig selv er en risikovurdering.</p>
+    <p><strong>3. Hvad siger kontrakten?</strong> Er der en databehandleraftale (GDPR art. 28), sikkerhedsforpligtelser, brudnotifikationsvilk&aring;r og en opsigelsesret? For kritiske leverand&oslash;rer er ingen kontrakt lig med intet styret forhold.</p>
+    <p><strong>4. Hvad sker der hvis de svigter?</strong> Har du en exit-vej &mdash; eksporter, alternative udbydere, DNS du kontrollerer? En leverand&oslash;r du ikke kan forlade, er en leverand&oslash;r du ikke kan styre.</p>
+    <p><strong>5. Hvorn&aring;r blev dette sidst tjekket?</strong> S&aelig;t en &aring;rlig gennemgangsdato. Et risikoregister der aldrig genbes&oslash;ges, er teater.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="kontraktklausuler">Kontraktklausuler</h2>
+    <p>Vurderingen siger dig hvor du st&aring;r; kontrakter er hvad der g&oslash;r risikoen styrbar. Fire klausuler at standardisere i dine egne klient- og leverand&oslash;raftaler:</p>
+    <p><strong>Med dine leverand&oslash;rer (n&aring;r du har forhandlingsstyrke):</strong> brudnotifikation inden for 24-48 timer, dokumenterede sikkerhedsforanstaltninger, underdatabehandler-transparens og sletning af data ved exit. Hos hyperscalere tager du deres standardvilk&aring;r &mdash; hvilket er fint, og i sig selv v&aelig;rd at dokumentere som en accepteret risiko.</p>
+    <p><strong>Med dine klienter:</strong> defin&eacute;r pr&aelig;cis hvilke systemer du er ansvarlig for at sikre (og hvilke der forbliver klientens), en sikkerhedskontakt- og incident-samarbejdsklausul s&aring; du kan underst&oslash;tte deres 24/72-timers NIS2-tidslinjer, en change management-klausul for overdragelse af legitimationsoplysninger, og en ansvarsbegr&aelig;nsning der er proportional med et lille bureau &mdash; ikke ubegr&aelig;nset.</p>
+    <p>Hvis du betjener omfattede klienter, afstem din incident-meldepligt med deres regulatoriske ur. &quot;Vi vil fort&aelig;lle dig inden for 24 timer efter bekr&aelig;ftet brud&quot; er en klausul der vinder enterprise-arbejde.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="angrebsflade">Reducer angrebsfladen</h2>
+    <p>Den billigste leverand&oslash;rrisikobehandling er at have mindre leverand&oslash;rk&aelig;de. Fire tr&aelig;k der kapper reel risiko for et typisk bureau p&aring; under en uge:</p>
+    <p><strong>1. Dr&aelig;b ubrugt adgang.</strong> Gennemg&aring; admin-konti p&aring; tv&aelig;rs af hosting, DNS, klient-sites og koderepositorier. Fjern enhver konto der tilh&oslash;rer personer der ikke l&aelig;ngere arbejder med dig. Dette er den enkelt h&oslash;jeste timel&oslash;nsinvestering i bureausikkerhed.</p>
+    <p><strong>2. Standardis&eacute;r din stak.</strong> Hvert unikt plugin, tema og tjeneste multiplicerer din vurderingsbyrde. En kort tilladelsesliste &mdash; &quot;disse er de plugins og udbydere vi bruger&quot; &mdash; g&oslash;r leverand&oslash;rstyring overskuelig og klient-sikkerhedsgennemgange hurtigere.</p>
+    <p><strong>3. Hold &oslash;je med forladt software.</strong> S&aelig;t en regel: ethvert plugin eller dependency uden en release i 12+ m&aring;neder udskiftes eller isoleres. Forladte komponenter er den klassiske sm&aring;-site-brudvektor.</p>
+    <p><strong>4. Adskil n&oslash;glerne.</strong> Brug en password manager med per-klient-vaults og MFA overalt det underst&oslash;ttes. &Eacute;t f&aelig;lles regneark med klient-legitimationsoplysninger er en leverand&oslash;rh&aelig;ndelse der venter p&aring; at ske.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="regulator-forventning">Hvad regulatorer forventer</h2>
+    <p>Hvis en tilsynsmyndighed nogensinde sp&oslash;rger &mdash; eller en omfattet klient reviderer dig &mdash; er forventningen proportional, dokumenteret praksis, ikke perfektion. Dit bevis-mappe b&oslash;r indeholde:</p>
+    <p>&bull; Et aktuelt leverand&oslash;rregister med kritikalitetsvurderinger og gennemgangsdatoer<br>
+&bull; Underskrevne DBA'er med enhver leverand&oslash;r der behandler persondata<br>
+&bull; Standardkontraktklausuler (dine og accepterede tredjepartsvilk&aring;r)<br>
+&bull; En adgangskontrolpolitik: hvem har admin-adgang, hvordan gives og tilbagekaldes det<br>
+&bull; En incident-responsplan der inkluderer leverand&oslash;r-originerede h&aelig;ndelser og underst&oslash;tter klienters notifikationstidslinjer</p>
+    <p>Det er seks dokumenter, hvoraf de fleste et lille bureau burde have alligevel for GDPR. NIS2 leverand&oslash;rk&aelig;de-compliance, gjort pragmatisk, er i vid udstr&aelig;kning det papirarbejde du allerede skyldte under databeskyttelsesreglerne &mdash; udvidet til sikkerhed, og faktisk vedligeholdt.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede sp&oslash;rgsm&aring;l</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Mit bureau er for lille til at v&aelig;re NIS2-omfattet. Hvorfor skal jeg bekymre mig?</h3><p>Tre grunde: omfattede klienter skubber NIS2-afledte sikkerhedskrav ned til deres leverand&oslash;rer gennem kontrakter og indk&oslash;bssp&oslash;rgeskemaer; incident-response-forventninger (24/72-timers tidslinjer) kaskaderer gennem k&aelig;den; og sikkerhedspraksissen i sig selv &mdash; leverand&oslash;rregistre, adgangsaudits, kontraktklausuler &mdash; beskytter dig mod de brud der faktisk dr&aelig;ber sm&aring; bureauer.</p></div>
+      <div class="card"><h3>Hvad kr&aelig;ver artikel 21 pr&aelig;cist for leverand&oslash;rk&aelig;den?</h3><p>Artikel 21(2)(d) kr&aelig;ver at omfattede enheder h&aring;ndterer sikkerhedsrisici i forhold til direkte leverand&oslash;rer og tjenesteudbydere. I praksis forventer regulatorer: identifikation af kritiske leverand&oslash;rer, vurdering af deres sikkerhed, indlejring af sikkerhedskrav i kontrakter og en dokumenteret proces der gennemg&aring;s regelm&aelig;ssigt. Proportionalitet g&aelig;lder &mdash; en 10-personers virksomhed m&aring;les ikke mod en bank.</p></div>
+      <div class="card"><h3>Skal jeg vurdere hvert eneste plugin og SaaS-v&aelig;rkt&oslash;j?</h3><p>Vurder efter kritikalitet, ikke udt&oslash;mmende. Leverand&oslash;rer med adgang til klientdata, produktionssystemer eller admin-rettigheder f&aring;r en fuld gennemgang; et farvev&aelig;lger-plugin g&oslash;r ikke. Et tretrins-rating (kritisk / vigtig / mindre) holder registeret p&aring; en h&aring;ndterbar st&oslash;rrelse &mdash; typisk 10-25 r&aelig;kker for et lille bureau.</p></div>
+      <div class="card"><h3>Hvad er den st&oslash;rste leverand&oslash;rrisiko for et lille webbureau?</h3><p>Tredjepartskode og dv&aelig;lende adgang. Forladte plugins og afh&aelig;ngigheder er den mest almindelige brudvektor p&aring; sm&aring; sites, og glemte admin-konti tilh&oslash;rende tidligere freelancere er det mest almindelige audit-fund. Begge dele kan rettes p&aring; en dag.</p></div>
+      <div class="card"><h3>Kan jeg genbruge mit GDPR-leverand&oslash;rregister til NIS2?</h3><p>Stort set ja. Dine art. 30-registreringer og DBA-inventar lister allerede de fleste databehandlere. Udvid hver entry med en sikkerhedskritikalitetsvurdering, kontraktlige sikkerhedsklausuler og en exit-plan. GDPR-registeret d&aelig;kker data; NIS2-registeret d&aelig;kker data og systemer.</p></div>
+      <div class="card"><h3>Hvor ofte b&oslash;r vi gennemg&aring; leverand&oslash;rer?</h3><p>&Aring;rligt for kritiske leverand&oslash;rer, og straks ved enhver trigger-h&aelig;ndelse: en leverand&oslash;rs brudmeddelelse, en kontraktfornyelse, et ejerskifte eller en st&oslash;rre arkitekturl&aelig;ndring p&aring; din side. S&aelig;t gennemgangsdatoen i registeret s&aring; den er synlig, ikke i nogens hukommelse.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/#products" class="btn-primary">Se NIS2-e-bogen &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/blog/nis2-guide-da" class="btn-secondary">NIS2-guiden (dansk) &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">NIS2</span><h3><a href="/da/blog/nis2-guide-da" style="color:var(--color-accent);text-decoration:none;">NIS2-guiden (dansk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">INCIDENT</span><h3><a href="/blog/nis2-incident-report-checklist" style="color:var(--color-accent);text-decoration:none;">NIS2 Incident Report Checklist & Template</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GDPR</span><h3><a href="/da/blog/gdpr-webbureau-da" style="color:var(--color-accent);text-decoration:none;">GDPR-guiden: webbureauets rolle (dansk)</a></h3></div>
+    </div>
+  </div>
+</section>
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Forside</a> · <a href="/scan-da">Gratis scanner</a> · <a href="/free-tools">Gratis værktøjer</a> · <a href="/#blog">Blog</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Mere i samme stil: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

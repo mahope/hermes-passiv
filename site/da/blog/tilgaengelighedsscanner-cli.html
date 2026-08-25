@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tilgængelighedsscanning fra kommandolinjen — gratis CLI-guide</title>
+<meta name="description" content="Gratis kommandolinje-scanner til WCAG 2.2 / EAA-problemer: 16+ regler, kontrastberegning, JSON-output og --fail-on til CI. Python og Node.js, nul afhængigheder — guide på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gratis CLI-scanner til WCAG 2.2 / EAA">
+<meta property="og:description" content="16+ regler, JSON-output, --fail-on til CI. Sådan scanner du klient-sites fra terminalen — Python og Node.js, nul afhængigheder.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gratis CLI-scanner til WCAG 2.2 / EAA">
+<meta name="twitter:description" content="16+ regler, JSON-output, --fail-on til CI. Sådan scanner du klient-sites fra terminalen — Python og Node.js, nul afhængigheder.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/accessibility-scanner-cli">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/accessibility-scanner-cli">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tilg\u00e6ngelighedsscanning fra kommandolinjen (dansk)", "description": "Gratis kommandolinje-scanner til WCAG 2.2 / EAA-problemer: 16+ regler, kontrastberegning, JSON-output og --fail-on til CI. Python og Node.js, nul afh\u00e6ngigheder \u2014 guide p\u00e5 dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; V&AElig;RKT&Oslash;J</div>
+    <h1>Tilg&aelig;ngelighedsscanning<br>fra Kommandolinjen</h1>
+    <p class="subtitle">En gratis CLI-scanner der tjekker 16+ WCAG 2.2 / EAA-regler p&aring; enhver URL &mdash; med JSON-output og CI-integration. S&aring;dan f&aring;r du automatiske tilg&aelig;ngelighedstjek ind i din arbejdsgang, uden abonnement.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">L&aelig;s guiden</a>
+      <a href="/scan-da" class="btn-secondary">Pr&oslash;v scanneren i browseren &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 8 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="hvorfor-cli">Hvorfor kommandolinjen?</h2>
+    <p>Browser-baserede scannere er gode til enkeltkontroller. Men hvis du vedligeholder ti, tyve eller hundrede klient-sites, har du brug for noget der kan k&oslash;res i batch, gemmes i git og fejle automatisk n&aring;r en release introducerer problemer. Det er CLI'ens rolle.</p>
+    <p>Vores scanner er skrevet til netop det: ingen installation ud over Python eller Node.js, ingen konto, ingen gr&aelig;nser. Du giver den en URL, den returnerer fundene struktureret &mdash; i terminalen eller som JSON til videre behandling.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🆓 Gratis og ubegrænset</h3><p>Ingen freemium-væg, ingen scan-grænser. Kør den på alle dine klient-sites hver nat hvis du vil.</p></div>
+      <div class="card"><h3>🔌 Platform-uafhængig</h3><p>WordPress, Shopify, Webflow, Umbraco eller håndskrevet HTML — scanneren ser bare DOM. Kravet om universalitet er designet ind, ikke boltret på.</p></div>
+      <div class="card"><h3>⚙️ CI-klar</h3><p>--fail-on flaget gør den til en gate i GitHub Actions: ny kode med kritiske fund stopper pipelinen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="regler">Hvad scanneren tjekker</h2>
+    <p>Automatiserede v&aelig;rkt&oslash;jer kan kun finde det maskintjekbare &mdash; men det er stadig flertallet af de fejl der ses i praksis. Scanneren d&aelig;kker blandt andet:</p>
+    <p>&bull; Manglende eller tomme alt-tekster p&aring; billeder<br>
+    &bull; Formularfelter uden label eller associeret tekst<br>
+    &bull; Kontrastforhold under WCAG-kravene (4.5:1 / 3:1 beregnet, ikke g&aelig;ttet)<br>
+    &bull; Duplikerede ID'er der bryder sk&aelig;rml&aelig;ser<br>
+    &bull; Overskriftshierarki (spring over niveauer, manglende h1)<br>
+    &bull; Manglende lang-attribut og viewport-meta<br>
+    &bull; Links uden genkendelig tekst ("l&aelig;s mere her"-m&oslash;nstre)<br>
+    &bull; HTML-lang mismatch og andre strukturelle fundamentfejl</p>
+    <p>Det automatiserbare dels&aelig;t svarer typisk til 30-50 % af de fund en fuld manuel audit laver &mdash; men 100 % af dem er fund du kan rette med det samme, uden konsulent.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="kom-i-gang">Kom i gang</h2>
+    <p><strong>Browser-versionen f&oslash;rst.</strong> Vil du se resultat-formatet f&oslash;r du installerer noget: inds&aelig;t en URL i <a href="/scan-da" style="color:var(--color-accent);">scanneren her p&aring; sitet</a>. Samme regels&aelig;t, samme score.</p>
+    <p><strong>CLI'en.</strong> Scannerens kerne er et lille script uden tredjepartsafh&aelig;ngigheder. Grundprincippet:</p>
+    <p>1. Hent siden (urllib / fetch).<br>
+    2. Parse DOM'en og k&oslash;r regels&aelig;ttet.<br>
+    3. Beregn kontraster fra de reelle farvev&aelig;rdier.<br>
+    4. Udskriv fundene sorteret efter alvor &mdash; eller emit JSON med --json.</p>
+    <p><strong>CI-eksempel.</strong> I GitHub Actions k&oslash;rer du scanneren mod staging-URL'en efter deploy og s&aelig;tter <code>--fail-on critical</code>: kritiske fund fejler buildet, advarsler logger blot. S&aring;dan holder du gulvet under det niveau der allerede er opn&aring;et &mdash; uden at blokere hverdagen.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🌙 Natlig portefølje-runde</h3><p>Et cron-job der scanner alle klient-sites én gang i døgnet og mailler diffen. Du ser regressioner dagen efter de lander — ikke ved næste audit.</p></div>
+      <div class="card"><h3>📊 Score som salgsargument</h3><p>Før/efter-scores er det letteste bevis over for klienter: "dit site gik fra 62 til 91 — dokumenteret."</p></div>
+      <div class="card"><h3>⚠️ Grænser</h3><p>Automatik fanger ikke tastaturfælder, skærmlæser-flow eller kognitive krav. Brug CLI'en som filter, og brug manual test på checkout/login-flows.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede sp&oslash;rgsm&aring;l</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Koster scanneren noget?</h3><p>Nej. Både browser-versionen og CLI-tilgangen er gratis og uden begrænsninger. Ingen konto, ingen scan-kvote.</p></div>
+      <div class="card"><h3>Kan den erstatte en manuel audit?</h3><p>Nej — og ingen scanner kan det. Automatiserede regler fanger en delmængde af WCAG. Men den delmængde er stor nok til at fjerne hovedparten af de fejl småsites fejler på, og den holder niveauet mellem audits.</p></div>
+      <div class="card"><h3>Hvilken WCAG-version tjekker den mod?</h3><p>Regelsættet følger det maskintjekbare i WCAG 2.2 AA — samme referenceramme EAA bygger på via EN 301 549.</p></div>
+      <div class="card"><h3>Virker den på sider bag login?</h3><p>Browser-versionen scanner offentlige URL'er. Bag-login-scenarier klares i CLI-tilgangen ved at hente siden autentificeret først og sende HTML'en gennem regelmotoren.</p></div>
+      <div class="card"><h3>Hvorfor ikke bare bruge Lighthouse?</h3><p>Lighthouse er fint og inkluderer axe-core. Fordelen ved en dedikeret scanner er kontrol: egne regler, stabil output-format til scripting, og mulighed for at køre den hvor du vil — uden Chrome-instans.</p></div>
+      <div class="card"><h3>Hvad gør jeg med resultaterne?</h3><p>Prioritér efter alvor og synlighed: kritiske fejl på checkout og kontaktformularer først. Ret i skabeloner/komponenter, ikke side for side — så forsvinder hundredvis af fund på én gang.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Scan din side gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/blog/pris-tilgaengelighedsgennemgang" class="btn-secondary">Hvad koster en fuld audit? &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG</span><h3><a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: hvad er ændret (dansk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">PRIS</span><h3><a href="/da/blog/pris-tilgaengelighedsgennemgang" style="color:var(--color-accent);text-decoration:none;">Prisen på en tilgængelighedsgennemgang (dansk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/da/blog/eaa-frister-2026" style="color:var(--color-accent);text-decoration:none;">EAA-frister og håndhævelse (dansk)</a></h3></div>
+    </div>
+  </div>
+</section>
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Forside</a> · <a href="/scan-da">Gratis scanner</a> · <a href="/free-tools">Gratis værktøjer</a> · <a href="/#blog">Blog</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Mere i samme stil: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

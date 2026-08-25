@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Accessibility: Making Publications EAA-Compliant</title>
+<meta name="description" content="How to make Ghost publication sites compliant with the European Accessibility Act and WCAG 2.2 AA. Theme-level fixes, Koenig editor content checks, membership flows, and a free scanning workflow.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ghost Accessibility: Making Publications EAA-Compliant">
+<meta property="og:description" content="How to make Ghost publication sites compliant with the European Accessibility Act and WCAG 2.2 AA. Theme-level fixes, Koenig editor content checks, membership flows, and a free scanning workflow.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ghost Accessibility: Making Publications EAA-Compliant">
+<meta name="twitter:description" content="How to make Ghost publication sites compliant with the European Accessibility Act and WCAG 2.2 AA. Theme-level fixes, Koenig editor content checks, membership flows, and a free scanning workflow.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Ghost Accessibility: Making Publications EAA-Compliant",
+  "description": "How to make Ghost publication sites compliant with the European Accessibility Act and WCAG 2.2 AA. Theme-level fixes, Koenig editor content checks, membership flows, and a free scanning workflow.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · GHOST · EAA</div>
+    <h1>Ghost Accessibility:<br>Making Publications EAA-Compliant</h1>
+    <p class="subtitle">Theme fixes, content habits, and membership-flow checks that bring a Ghost site up to WCAG 2.2 AA — without rebuilding it.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#ghost-and-the-eaa" class="btn-secondary">WCAG 2.2 Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="ghost-and-the-eaa">Ghost and the EAA</h2>
+    <p>Ghost runs newsletters, paid publications, and membership sites — exactly the kind of services the European Accessibility Act covers when they operate commercially in the EU. Since 28 June 2025, e-commerce-like services and consumer-facing digital services must be perceivable, operable, understandable and robust (the four WCAG principles). For a Ghost publisher that means the theme, the article content, and crucially the signup and checkout flows all need attention. The good news: a modern Ghost install has fewer moving parts than most platforms, so reaching WCAG 2.2 AA is genuinely achievable.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="theme-level-checks">Theme Level Checks</h2>
+    <p>Most Ghost accessibility problems live in the theme, not the core. Work through these:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Colour Contrast</h3><p>Many magazine-style themes use light-grey text on white or text over gradient hero images. Body text needs 4.5:1; large headings 3:1; form inputs and icons 3:1. Fix in the theme CSS or custom settings once, benefit everywhere.</p></div>
+      <div class="card"><h3>⌨️ Keyboard & Focus</h3><p>Test tabbing through header navigation, post cards, and the member portal. Dropdown menus and card overlays are the usual traps. Ensure :focus-visible styles exist and are clearly visible.</p></div>
+      <div class="card"><h3>🖼️ Images & Cards</h3><p>Post-card thumbnails rendered as background-image divs carry no alt text. Prefer img elements fed from the post feature image, with meaningful alt text inherited from the post.</p></div>
+      <div class="card"><h3>🔤 Typography & Zoom</h3><p>Verify the layout survives 200% browser zoom and 320px width without horizontal scrolling (WCAG 1.4.10). Fluid type systems in newer themes handle this well; older ones break.</p></div>
+      <div class="card"><h3>🧭 Structure</h3><p>One h1 per page (the post title), logical heading levels inside articles, a skip-to-content link, and a proper lang attribute set by the theme.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="koenig-content-habits">Koenig Content Habits</h2>
+    <p>Ghost's Koenig editor produces clean HTML by default — better than most rich-text editors — but authors can still create inaccessible content:</p>
+    <p></p>
+    <p><strong>Alt text:</strong> the image card prompts for alt text but nobody is forced to fill it. Make it an editorial rule: every informative image gets descriptive alt text; decorative images get explicitly marked as such.</p>
+    <p></p>
+    <p><strong>Embeds:</strong> YouTube, Twitter/X and other embed cards inject iframes you do not control. Give embed cards a preceding sentence that describes what the reader will see/hear, since iframe content is opaque to your own markup.</p>
+    <p></p>
+    <p><strong>Heading discipline:</strong> writers coming from Word use bold text instead of headings. Screen-reader users navigate by heading lists — an article with no real h2s is unnavigable.</p>
+    <p></p>
+    <p><strong>Link text:</strong> avoid bare "here" and "this article". Link text should survive being read out of context.</p>
+    <p></p>
+    <p><strong>Galleries and captions:</strong> ensure gallery images each have alt text, not just a collective caption.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="membership-flows">Membership Flows</h2>
+    <p>This is the part unique to Ghost and easy to miss. Signup, login, checkout and account-management pages are user journeys, and under the EAA a payment flow that cannot be completed by assistive technology users is a compliance failure — not just a WCAG nitpick. Check that: email input and error messages are properly labelled and announced (error text associated with the field via aria-describedby); the Stripe checkout Ghost hands off to is configured with accessible branding settings; magic-link emails have meaningful link text ("Open your login link", not just "Click here"); and the member portal renders usable with keyboard alone. Test the full journey yourself with a screen reader once — it takes twenty minutes and reveals more than any automated tool.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="verification-loop">Verification Loop</h2>
+    <p>A repeatable QA loop for a Ghost site:</p>
+    <p></p>
+    <p><strong>1. Automated scan</strong> of home, a tag page, a full post, /#/portal and signup pages. Static scanners catch the mechanical layer fast — expect them to find contrast, alt-text, and heading issues on the first run.</p>
+    <p></p>
+    <p><strong>2. Keyboard pass</strong> through nav, post list, article, comments (if enabled), and the complete signup-to-checkout journey.</p>
+    <p></p>
+    <p><strong>3. Screen-reader sample:</strong> one article start-to-finish with VoiceOver or NVDA, plus the signup flow.</p>
+    <p></p>
+    <p><strong>4. Statement:</strong> publish an accessibility statement with conformance status, known limitations, and a contact channel. Commercial publishers in scope of the EAA should have this visible from the footer.</p>
+    <p></p>
+    <p><strong>5. Regression habit:</strong> re-run the automated scan after every theme update or new release — themes change more often than people expect, and regressions are silent.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Start with a free automated scan of your Ghost site — it finds the mechanical WCAG failures (contrast, missing alt, heading order, unlabelled buttons) across all your key pages in one run.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Ghost Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/wcag-22-what-changes" class="btn-secondary">WCAG 2.2 Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA really apply to newsletters and blogs?</h3><p>If the service is consumer-facing and commercial — paid subscriptions, e-commerce of digital products — yes. Free personal blogs generally fall outside the EAA, but WCAG-compliant publishing costs little and protects reach; there is rarely a reason not to fix the basics.</p></div>
+      <div class="card"><h3>Is Ghost itself accessible out of the box?</h3><p>Ghost core is reasonably solid: clean HTML output, labelled portal components, decent defaults. The dominant sources of defects are third-party themes and author content habits, which is why theme review and editorial rules matter more than platform choice.</p></div>
+      <div class="card"><h3>My theme has no focus styles. Quick fix?</h3><p>Yes — add :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; } in Code Injection. It respects the theme palette and restores visible keyboard focus site-wide in one line.</p></div>
+      <div class="card"><h3>Can I automate Ghost accessibility checking?</h3><p>Partly. Automated tools catch roughly 30-50% of issues — contrast, missing alt, structure, labels. Keyboard operability, meaningful alt descriptions, and embed accessibility require human review. Combine both: scan automatically after each theme change, review manually per release.</p></div>
+      <div class="card"><h3>Does fixing accessibility help SEO?</h3><p>Several accessibility signals overlap with SEO: proper heading hierarchy, descriptive link text, alt text, fast semantic HTML, mobile-friendly layouts. Accessibility work tends to improve crawlability and rankings as a side effect, though it should be done for users first.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Ghost Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/wcag-22-what-changes" class="btn-secondary">WCAG 2.2 Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG 2.2</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: What Changes for Your Sites</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">OVERLAYS</span><h3><a href="/blog/accessibility-overlays-eaa" style="color:var(--color-accent);text-decoration:none;">Accessibility Overlays & the EAA: Why One Line of Code Is Not Compliance</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA ENFORCEMENT</span><h3><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);text-decoration:none;">European Accessibility Act Enforcement in 2026</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

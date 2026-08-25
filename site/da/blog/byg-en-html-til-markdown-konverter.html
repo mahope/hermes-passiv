@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Byg din egen HTML til markdown-konverter — feltguide (2026)</title>
+<meta name="description" content="Sådan bygger du en HTML til markdown-konverter der håndterer lister, tabeller med pipes og blokcitater — de tre steder hvor naive konvertere fejler. Med kodeeksempler.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Byg din egen HTML til markdown-konverter — feltguide (2026)">
+<meta property="og:description" content="Feltguide til at bygge en HTML-til-markdown-konverter: lister, tabeller med escapede pipes, blokcitater og kanttilfældene der ødelægger simple regex-løsninger.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/building-html-to-markdown-converter">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Byg din egen HTML til markdown-konverter — feltguide (2026)", "description": "Sådan bygger du en HTML til markdown-konverter der håndterer lister, tabeller med pipes og blokcitater — de tre steder hvor naive konvertere fejler. Med kodeeksempler.", "url": "https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Skal jeg skrive min egen konverter?", "acceptedAnswer": {"@type": "Answer", "text": "Hvis du bare skal konvertere indhold lejlighedsvis: nej, brug en færdig løsning (Clean Copy, turndown.js eller pandoc). Byg selv kun hvis du har specielle krav — fx en bestemt frontend i CI eller egne markdown-dialekter."}}, {"@type": "Question", "name": "Hvorfor fejler regex-baserede konvertere på tabeller?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi markdown-tabeller bruger | som kolonneafgrænser. En tabelcelle der indeholder teksten \"pris | moms\" ødelægger tabellen, medmindre pipen escapes som \\|. Naive konvertere glemmer det."}}, {"@type": "Question", "name": "Hvad med indlejrede lister?", "acceptedAnswer": {"@type": "Answer", "text": "HTML tillader vilkårlig dybde; markdown bruger indrykning. Hvert niveau skal indrykkes konsistent (typisk 2 eller 4 mellemrum), og blandede ordnede/uordnede lister kræver at man holder styr på nummereringen."}}, {"@type": "Question", "name": "Hvor svært er blokcitater?", "acceptedAnswer": {"@type": "Answer", "text": "Enkelte niveauer er lette (&gt; foran linjen). Flere niveauer kræver &gt;&gt;, og citater der indeholder lister eller overskrifter skal have præfikset på hver eneste linje — også tomme."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">UDVIKLER &middot; MARKDOWN</div>
+    <h1>Byg en HTML til<br>markdown-konverter</h1>
+    <p class="subtitle">At konvertere HTML til markdown lyder som et regexp-job — indtil du møder indlejrede lister, tabeller hvis indhold selv indeholder pipes, og blokcitater i flere niveauer. Her er reglerne din konverter skal følge, og faldgruberne den skal overleve.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-primary">Se en færdig konverter &rarr;</a>
+      <a href="#regler" class="btn-secondary">Spring til reglerne</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="regler">
+  <div class="container">
+    <h2>De tre regler din konverter skal følge</h2>
+    <ol>
+      <li><strong>Lister:</strong> gå rekursivt gennem &lt;ol&gt;/&lt;ul&gt;. Indryk hvert
+      niveau med to mellemrum pr. dybde, og bevar nummerering ved ordnede lister
+      (start-attributten tælles med).</li>
+      <li><strong>Tabeller med pipes:</strong> escape alle <code>|</code> i celletekst
+      som <code>\|</code>, før cellerne samles med nye pipes. Uden det ødelægger én
+      pipe i én celle hele tabellen.</li>
+      <li><strong>Blokcitater:</strong> præfiks hver linje i citatet med
+      <code>&gt; </code> — inklusive tomme linjer og indhold af under-elementer.
+      Niveauer adskilles med ekstra <code>&gt;</code>.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">&lt;td&gt;pris | moms&lt;/td&gt;
+→ | pris \| moms |     # rigtigt
+→ | pris | moms |     # forkert: tabellen knækker</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Faldgruber udover de tre</h2>
+    <ul>
+      <li><strong>Tomme elementer:</strong> &lt;p&gt;&lt;/p&gt; må ikke blive til en
+      løs stjerne eller hash.</li>
+      <li><strong>Inline-formattering:</strong> fed/kursiv/kode skal mappes hver for sig,
+      og indlejret kode må ikke parses videre (ingen fed inde i <code>kode</code>).</li>
+      <li><strong>Entiteter:</strong> &amp;amp;, &amp;lt;, &amp;nbsp; skal afkodes — men
+      kun ét niveau.</li>
+      <li><strong>Hvide mellemrum:</strong> HTML kollapser dem, markdown gør ikke.
+      Trim og normalisér inden output.</li>
+    </ul>
+    <p>Vil du se resultatet i praksis? Clean Copy bruger samme regler i sin
+    HTML-til-markdown-kerne — prøv den på din egen tekst:</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-tool" class="btn-primary">Test konverteren nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/html-til-markdown-konverter">den komplette HTML-til-markdown-guide</a>,
+    <a href="/da/blog/html-til-markdown-cli">CLI-versionen til terminalen</a> og
+    <a href="/da/blog/tabeljustering-html-til-markdown">kolonnejustering i tabeller</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Skal jeg skrive min egen konverter?</h3><p>Hvis du bare skal konvertere indhold lejlighedsvis: nej, brug en færdig løsning (Clean Copy, turndown.js eller pandoc). Byg selv kun hvis du har specielle krav — fx en bestemt frontend i CI eller egne markdown-dialekter.</p></div>
+      <div class="card"><h3>Hvorfor fejler regex-baserede konvertere på tabeller?</h3><p>Fordi markdown-tabeller bruger | som kolonneafgrænser. En tabelcelle der indeholder teksten "pris | moms" ødelægger tabellen, medmindre pipen escapes som \|. Naive konvertere glemmer det.</p></div>
+      <div class="card"><h3>Hvad med indlejrede lister?</h3><p>HTML tillader vilkårlig dybde; markdown bruger indrykning. Hvert niveau skal indrykkes konsistent (typisk 2 eller 4 mellemrum), og blandede ordnede/uordnede lister kræver at man holder styr på nummereringen.</p></div>
+      <div class="card"><h3>Hvor svært er blokcitater?</h3><p>Enkelte niveauer er lette (&gt; foran linjen). Flere niveauer kræver &gt;&gt;, og citater der indeholder lister eller overskrifter skal have præfikset på hver eneste linje — også tomme.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv konverteren uden at bygge selv &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/html-til-markdown-konverter" lang="da">HTML til markdown</a> &middot; <a href="/da/blog/html-til-markdown-cli" lang="da">HTML til markdown i CLI</a> &middot; <a href="/da/blog/tabeljustering-html-til-markdown" lang="da">Kolonnejustering</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

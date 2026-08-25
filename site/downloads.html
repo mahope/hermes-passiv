@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download eaa-scanner — EAA / WCAG Compliance Scanner</title>
+<meta name="description" content="Download eaa-scanner: a free, zero-dependency command-line scanner for EAA / WCAG 2.1 AA issues. Works on any CMS. Install with pip or download the wheel directly.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Download eaa-scanner — EAA / WCAG Compliance Scanner">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/downloads">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/downloads">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "eaa-scanner",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Python 3.8+)",
+  "description": "Universal EAA / WCAG 2.1 AA compliance scanner. Zero dependencies, pure Python.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "license": "https://opensource.org/licenses/MIT"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "EAA Compliance Scanner Desktop",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS 12+ (Apple Silicon)",
+  "description": "Native desktop application for EAA / WCAG 2.1 AA compliance scanning. Offline-capable, save-as-PDF reports.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+  .dl-card { background: var(--color-surface-2, #16202c); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
+  .dl-card code { display: block; background: #0b1119; padding: .8rem 1rem; border-radius: 8px; margin-top: .6rem; overflow-x: auto; font-size: .95em; }
+</style>
+</head>
+<body>
+<main class="container">
+  <nav style="margin-bottom:1.5rem"><a href="/">&larr; Back to home</a></nav>
+
+  <header class="hero">
+    <span class="badge">Free &amp; open source &middot; MIT license</span>
+    <h1>Download eaa-scanner</h1>
+    <p class="tagline">A zero-dependency command-line scanner for EAA / WCAG&nbsp;2.1&nbsp;AA issues.
+    Works on any website — WordPress, Shopify, Webflow, Next.js, Squarespace or hand-written HTML.
+    Pure Python standard library, Python&nbsp;3.8+.</p>
+  </header>
+
+  <section class="dl-card">
+    <h2>Install with pip</h2>
+    <p>Install straight from this page — no account needed:</p>
+    <code>pip install /downloads/eaa_scanner-1.2.0-py3-none-any.whl</code>
+    <p>Once the package is on a registry, a simple <code>pip install</code> will work — for now, use the URL above.</p>
+  </section>
+
+  <section class="dl-card">
+    <h2>Node.js / npm (new)</h2>
+    <p>Same 22 rules, same JSON report — now for Node&nbsp;18+. Zero dependencies:</p>
+    <code>npm install -g /downloads/mahope-eaa-scanner-1.2.0.tgz<br>npx eaa-scan https://your-site.com --crawl 15</code>
+    <p><strong>New: <code>--crawl N</code></strong> — whole-site audit in one command. Follows same-origin
+    links across up to N pages and reports average score, issues ranked by frequency, and the worst pages.</p>
+    <p>Or use it as a library: <code>const { crawlSite } = require('@mahope/eaa-scanner')</code>.</p>
+  </section>
+
+  <section class="dl-card">
+    <h2>🖥️ Desktop App (macOS, Apple Silicon)</h2>
+    <p>Native macOS desktop application for the EAA Compliance Scanner. Same 22 WCAG 2.1 AA rules
+    as the CLI and web versions, with a native interface and one-click save-as-PDF reports.</p>
+    <p><a href="/downloads/eaa-scanner-desktop-src-1.2.0.zip" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">⬇ Download Source (48 KB)</a></p>
+    <p style="font-size:13px;color:var(--text-dim)">Requires Node.js 18+ and npm. To build and run:</p>
+    <code style="font-size:13px">cd eaa-scanner-desktop<br>npm install<br>npm start</code>
+    <p style="font-size:13px;color:var(--text-dim);margin-top:8px">The app launches as a native macOS window. Enter a URL and scan instantly — or switch to <strong>Whole site</strong> to crawl up to 200 same-site pages with a live progress readout and per-page findings. Linux and Windows builds coming soon.</p>
+  </section>
+
+  <section class="dl-card">
+    <h2>Run it in CI — ready-made GitHub Actions workflow</h2>
+    <p>Add automated accessibility checks to every push and pull request.
+    Download the workflow template, drop it into
+    <code>.github/workflows/eaa-scan.yml</code>, and edit the page list:</p>
+    <code><a href="/downloads/eaa-scan-github-action.yml" download>eaa-scan-github-action.yml</a> &mdash; fails the build on errors or warnings (<code>--fail-on</code>)</code>
+    <p style="font-size:13px;color:var(--text-dim);margin-top:8px">Runs on every push, pull request and a weekly schedule. The template also ships an optional <strong>crawl-audit</strong> job that runs <code>eaa-scan --crawl 25</code> for a whole-site report (average score + most frequent issue types) without failing the build.</p>
+  </section>
+
+  <section class="dl-card">
+    <h2>Direct downloads</h2>
+    <ul>
+      <li><a href="/downloads/eaa_scanner-1.2.0-py3-none-any.whl">eaa_scanner-1.2.0-py3-none-any.whl</a></li>
+      <li><a href="/downloads/eaa_scanner-1.2.0.tar.gz">eaa_scanner-1.2.0.tar.gz</a> — source distribution</li>
+      <li><a href="/downloads/mahope-eaa-scanner-1.2.0.tgz">mahope-eaa-scanner-1.2.0.tgz</a> — Node.js package, install with <code>npm install -g &lt;url&gt;</code></li>
+      <li><a href="/downloads/eaa-scanner-README.md">README with full usage guide</a></li>
+      <li><a href="/downloads/eaa-scan-github-action.yml" download>GitHub Actions workflow template</a></li>
+    </ul>
+  </section>
+
+  <section class="dl-card">
+    <h2>Quick start</h2>
+    <code>eaa-scan https://your-site.com<br>eaa-scan --json https://your-site.com &gt; report.json<br>eaa-scan https://your-site.com --crawl 15&nbsp;&nbsp;# whole-site audit (average score + issue ranking)<br>eaa-scan --fail-on warning https://your-site.com&nbsp;&nbsp;# CI mode: non-zero exit on warnings</code>
+    <p>Exit code is <strong>0</strong> when clean and <strong>1</strong> when findings exist at
+    the chosen severity, so it drops straight into CI pipelines.</p>
+  </section>
+
+  <section>
+    <p>Automated checks catch roughly 30&ndash;40% of accessibility issues. For full EAA
+    conformance, pair eaa-scanner with manual testing — see our
+    <a href="/scan">free online scan tool</a> and
+    <a href="/">compliance guides and checklists</a>.</p>
+  </section>
+
+  <section class="dl-card" style="border-left:3px solid #38bdf8;">
+    <h2>🆕 site-icons — Generate favicons, OG images &amp; PWA icons</h2>
+    <p>Generate every standard favicon size, Apple touch icons, PWA icons, Windows tile icons,
+    a 1200×630 OG image, web app manifest, and browserconfig.xml — from a <strong>single SVG or PNG</strong>
+    source. CLI-first, zero network calls, works offline.</p>
+
+    <h3>Quick start</h3>
+    <code style="font-size:13px;">pip install Pillow<br>curl -O /downloads/site-icons/site_icons.py<br>python3 site_icons.py logo.svg -o my-icons        # free tier<br>python3 site_icons.py logo.svg -o my-icons --pro   # full set</code>
+
+    <h3 style="margin-top:1rem;">Downloads</h3>
+    <ul>
+      <li><a href="/downloads/site-icons/site_icons.py">site_icons.py</a> — single file, just run it</li>
+      <li><a href="/downloads/site-icons/site-icons-1.0.0.tar.gz">site-icons-1.0.0.tar.gz</a> — full package with README</li>
+    </ul>
+    <p><a href="/site-icons" class="btn btn-secondary" style="display:inline-block;padding:8px 20px;margin-top:8px;text-decoration:none;">🌐 Full product page →</a></p>
+  </section>
+
+  <section class="dl-card" style="border-left:3px solid #4ade80;">
+    <h2>🆕 page-profile — Web page profiler CLI</h2>
+    <p>Profile any web page from the terminal: HTTP status, meta tags, Open Graph, JSON-LD,
+    heading structure, image alt-text coverage, security headers, and more. <strong>Zero dependencies</strong>
+    — pure Python stdlib, single file, any machine with Python 3.8+.</p>
+
+    <h3>Quick start</h3>
+    <code style="font-size:13px;">curl -O /downloads/page-profile/page_profile.py<br>python3 page_profile.py https://your-site.com        # terminal report<br>python3 page_profile.py https://your-site.com --json  # JSON for CI</code>
+
+    <h3 style="margin-top:1rem;">Downloads</h3>
+    <ul>
+      <li><a href="/downloads/page-profile/page_profile.py">page_profile.py</a> — single file, just run it</li>
+      <li><a href="/downloads/page-profile/page-profile-1.0.0.tar.gz">page-profile-1.0.0.tar.gz</a> — full package with README</li>
+    </ul>
+    <p><a href="/page-profile" class="btn btn-secondary" style="display:inline-block;padding:8px 20px;margin-top:8px;text-decoration:none;">🌐 Full product page →</a></p>
+  </section>
+
+  <section class="dl-card" style="border-left:3px solid #f59e0b;">
+    <h2>🆕 Clean Copy — copy/paste as clean Markdown</h2>
+    <p>Browser extension (Chrome + Firefox), Obsidian plugin and a zero-dependency CLI.
+    Copy any selection from the web and paste it as clean Markdown or plain text —
+    no junk formatting, no tracking parameters.</p>
+    <h3>Downloads &amp; install</h3>
+    <ul>
+      <li><a href="/downloads/clean-copy-v1.5.2.zip">clean-copy-v1.5.2.zip</a> — Chrome extension (load unpacked)</li>
+      <li><a href="/downloads/clean-copy-firefox-v1.5.2.zip">clean-copy-firefox-v1.5.2.zip</a> — Firefox add-on</li>
+      <li><a href="/downloads/clean-copy-obsidian-v1.0.6.zip">clean-copy-obsidian-v1.0.6.zip</a> — Obsidian plugin bundle</li>
+      <li><strong>Homebrew:</strong> <code>brew tap mahope/clean-copy &amp;&amp; brew install clean-copy</code></li>
+      <li><a href="https://github.com/mahope/clean-copy-cli" rel="noopener">Source code on GitHub</a></li>
+    </ul>
+    <p><a href="/clean-copy" class="btn btn-secondary" style="display:inline-block;padding:8px 20px;margin-top:8px;text-decoration:none;">🌐 Full product page →</a></p>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container"><a href="/">&larr; hermes-passiv.pages.dev</a></div>
+</footer>
+<script defer src="/track.js"></script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

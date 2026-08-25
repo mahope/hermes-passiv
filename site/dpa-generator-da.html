@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis DPA-generator (GDPR art. 28 databehandleraftale)</title>
+<meta name="description" content="Svar på 10 hurtige spørgsmål og få en klar-til-underskrift databehandleraftale iht. GDPR artikel 28 mellem din virksomhed og din kunde. Gratis, ingen tilmelding — alt foregår i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis GDPR DPA-generator (artikel 28)">
+<meta property="og:description" content="Generér en klar-til-underskrift databehandleraftale (GDPR art. 28) på 5 minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/dpa-generator-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Gratis GDPR DPA-generator (artikel 28)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/dpa-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/dpa-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/dpa-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/dpa-generator">
+<meta name="twitter:title" content="Gratis GDPR DPA-generator (artikel 28)">
+<meta name="twitter:description" content="Generér en klar-til-underskrift databehandleraftale (GDPR art. 28) på 5 minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvornår kræves en databehandleraftale?","acceptedAnswer":{"@type":"Answer","text":"GDPR artikel 28(3) kræver en skriftlig aftale (en DBA/databehandleraftale), når en dataansvarlig lader en dataansvarlig forarbejder behandle persondata på sine vegne. For et webbureau gælder det stort set hver eneste kundeopgave, der berører persondata — hosting, vedligeholdelse, nyhedsbreve, analytics-opsætning eller support."}},{"@type":"Question","name":"Hvad skal en art. 28-aftale indeholde?","acceptedAnswer":{"@type":"Answer","text":"Artikel 28(3) lister de obligatoriske klausuler: behandling kun efter dokumenterede instrukser, fortrolighedsforpligtelser, passende sikkerhedsforanstaltninger (art. 32), regler om underbehandlere, bistand til registreredes rettigheder og underretning om brud, sletning eller tilbagelevering af data ved kontraktens ophør samt kontrolrettigheder for den dataansvarlige."}},{"@type":"Question","name":"Kan jeg bruge en genereret aftale som den er?","acceptedAnswer":{"@type":"Answer","text":"Generatoren producerer et komplet udkast, der dækker de obligatoriske klausuler i artikel 28. Det er et solidt udgangspunkt, men det er ikke juridisk rådgivning — få en jurist til at gennemse den, hvis I behandler særlige kategorier, overfører data uden for EU/EØS eller behandler data i stor skala."}},{"@type":"Question","name":"Forlader noget, jeg indtaster, min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører udelukkende klient-side. Intet sendes til nogen server, intet gemmes, ingen cookies. Du kopierer eller downloader selv den færdige aftale."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=url],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #agreement { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #agreement h2 { color: #12283a; font-size: 18px; }
+  #agreement h3 { color: #12283a; font-size: 15px; margin-top: 20px; }
+  #agreement ol li, #agreement ul li { margin-bottom: 6px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #agreement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>GDPR Databehandleraftale-generator</h1>
+    <p class="tagline">Svar på 10 spørgsmål → få en klar-til-underskrift
+    <strong>art. 28-databehandleraftale</strong> mellem din virksomhed
+    (dataansvarlig forarbejder) og din kunde (den dataansvarlige).
+    Ingen tilmelding, intet forlader browseren.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Parterne</legend>
+    <label for="agencyName">Virksomhedens navn (forarbejderen)</label>
+    <input type="text" id="agencyName" required placeholder="Acme Webstudio ApS">
+    <label for="agencyAddr">Virksomhedens adresse</label>
+    <input type="text" id="agencyAddr" required placeholder="Hovedgaden 1, 8000 Aarhus C">
+    <label for="agencyEmail">Virksomhedens kontaktpost</label>
+    <input type="email" id="agencyEmail" required placeholder="dpo@acmeweb.example">
+    <label for="clientName">Kundens navn (den dataansvarlige)</label>
+    <input type="text" id="clientName" required placeholder="Nordisk Handel AB">
+    <label for="clientAddr">Kundens adresse</label>
+    <input type="text" id="clientAddr" required placeholder="Sturegatan 4, 114 35 Stockholm, Sverige">
+    <label for="clientEmail">Kundens kontaktpost</label>
+    <input type="email" id="clientEmail" required placeholder="legal@nordiskhandel.example">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Ydelserne</legend>
+    <label for="services">Hvilke ydelser leverer virksomheden?</label>
+    <textarea id="services" required placeholder="Eksempel: design, udvikling, hosting og vedligehold af kundens webshop, herunder ordrebekræftelser sendt på kundens vegne."></textarea>
+    <label for="dataSubjects">Hvis persondata behandles?</label>
+    <select id="dataSubjects" multiple size="3">
+      <option value="customers" selected>Kundens kunder / slutbrugere</option>
+      <option value="employees">Kundens medarbejdere</option>
+      <option value="website-visitors">Besøgende på kundens hjemmeside</option>
+    </select>
+    <p class="hint">Hold Ctrl/Cmd nede for at vælge flere.</p>
+    <label for="categories">Kategorier af persondata</label>
+    <textarea id="categories" required placeholder="Eksempel: navn, e-mailadresse, ordrehistorik, IP-adresser indsamlet via analytics."></textarea>
+    <label for="specialNote">Behandles særlige kategorier (sundhed, religion m.m.)?</label>
+    <select id="specialNote">
+      <option value="no" selected>Ingen særlige kategorier behandles</option>
+      <option value="yes">Ja — beskrevet nedenfor (jurist anbefales på det kraftigste)</option>
+    </select>
+    <label for="specialDesc">Hvis ja, beskriv dem</label>
+    <textarea id="specialDesc" placeholder="Udfyld kun, hvis du valgte 'ja' ovenfor."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Underbehandlere</legend>
+    <label for="subprocessors">Oplist godkendte underbehandlere (én pr. linje: navn — ydelse — land)</label>
+    <textarea id="subprocessors" placeholder="Eksempel:
+Hetzner Online GmbH — EU-hosting — Tyskland
+Google Ireland Ltd — transaktionel e-mail — Irland"></textarea>
+    <p class="hint">Lad stå tomt, hvis der ikke bruges underbehandlere i dag.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Vilkår</legend>
+    <label for="duration">Aftalens varighed / opsigelsesvarsel</label>
+    <input type="text" id="duration" value="indtil opsigelse med tre (3) måneders skriftligt varsel">
+    <label for="retention">Hvor længe opbevares persondata efter aftalens ophør?</label>
+    <select id="retention">
+      <option value="delete" selected>Slettes inden 30 dage efter ophør</option>
+      <option value="return">Tilbageleveres til kunden og slettes derefter</option>
+      <option value="custom">Anden ordning (beskrives nedenfor)</option>
+    </select>
+    <label for="retentionCustom">Egen note om opbevaring (hvis valgt ovenfor)</label>
+    <input type="text" id="retentionCustom" placeholder="Eksempel: fakturaer opbevares 5 år iht. bogføringsloven; øvrige data slettes.">
+    <label for="lawDate">Underskrivelsesdato</label>
+    <input type="date" id="lawDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generér aftalen</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Genereret aftale</h2>
+  <article id="agreement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML-fil</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / gem som PDF</button>
+  </div>
+  <p class="no-print">Næste skridt: byg jeres register med <a href="/ropa-generator-da">RoPA-generatoren</a>,
+  udgiv en politik med <a href="/privacy-notice-generator-da">privatlivspolitik-generatoren</a>,
+  og tjek jeres offentlige sider med den <a href="/scan-da">gratis EAA-scanner</a>.
+  Se <a href="/free-tools">alle gratis værktøjer</a>. Dokumentet er et udkast
+  og udgør ikke juridisk rådgivning.</p>
+</section>
+
+<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Hvorfor enhver virksomhed har brug for en databehandleraftale</h2>
+  <ul>
+    <li><strong>Det er lovkrav.</strong> GDPR artikel 28(3): ingen forarbejder må
+    behandle persondata for en dataansvarlig uden en skriftlig aftale med de
+    obligatoriske klausuler. At arbejde uden en udsætter begge parter for bøder
+    på op til 10 mio. euro eller 2 % af den globale omsætning.</li>
+    <li><strong>Enterprise-kunder spørger efter den først.</strong> I
+    leverandørvurderinger er DPA'en det første dokument, der efterspørges. En
+    standardaftale klar i skuffen forkorter salgsprocessen.</li>
+    <li><strong>Den fastlægger, hvem der gør hvad når noget går galt.</strong>
+    Pligter om brudunderretning, godkendelse af underbehandlere og
+    kontrolrettigheder aftales før en hændelse — ikke midt i én.</li>
+  </ul>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>En del af <a href="/">Hermes Compliance-værktøjskassen</a> — gratis værktøjer
+    og praktiske guides til små europæiske webbureauer.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+  function multi(id) {
+    return Array.prototype.slice.call($(id).selectedOptions).map(function(o){return o.value;});
+  }
+
+  function buildData() {
+    var d = {};
+    d.agency = v('agencyName'); d.agencyAddr = v('agencyAddr'); d.agencyEmail = v('agencyEmail');
+    d.client = v('clientName'); d.clientAddr = v('clientAddr'); d.clientEmail = v('clientEmail');
+    d.services = v('services');
+    var subjects = multi('dataSubjects');
+    var subjectLabels = { customers: "den dataansvarliges kunder og slutbrugere",
+                          employees: "den dataansvarliges medarbejdere",
+                          'website-visitors': "besøgende på den dataansvarliges hjemmeside" };
+    d.subjects = subjects.map(function(s){ return subjectLabels[s]; }).join('; ');
+    d.categories = v('categories');
+    var special = $('specialNote').value === 'yes' && v('specialDesc');
+    d.special = special ? v('specialDesc') : '';
+    d.subsRaw = v('subprocessors');
+    d.duration = v('duration') || "indtil opsigelse med tre (3) måneders skriftligt varsel";
+    d.retentionMode = $('retention').value;
+    d.retentionCustom = v('retentionCustom');
+    d.date = v('lawDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function retentionText(d) {
+    if (d.retentionMode === 'delete') return 'Al persondata slettes af forarbejderen senest tredive (30) dage efter ydelseernes ophør, medmindre unionsret eller national lov kræver opbevaring.';
+    if (d.retentionMode === 'return') return 'Al persondata tilbageleveres til den dataansvarlige og slettes derefter af forarbejderen senest tredive (30) dage efter ydelseernes ophør, medmindre unionsret eller national lov kræver opbevaring.';
+    var extra = d.retentionCustom ? ' Følgende ordning gælder: ' + esc(d.retentionCustom) + '.' : '';
+    return 'Parterne skal aftale tilbagelevering eller sletning af persondata ved ydelseernes ophør.' + extra;
+  }
+
+  function renderHTML(d) {
+    var subs = d.subsRaw.split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    var h = '';
+    h += '<h2>Databehandleraftale</h2>';
+    h += '<p style="text-align:center">mellem</p><p><strong>' + esc(d.agency) + '</strong>, '
+      + esc(d.agencyAddr) + ' (&ldquo;Forarbejderen&rdquo;)</p><p style="text-align:center">og</p><p><strong>'
+      + esc(d.client) + '</strong>, ' + esc(d.clientAddr) + ' (&ldquo;Den Dataansvarlige&rdquo;)</p>';
+    h += '<p>Dato: ' + esc(d.date) + '</p>';
+
+    h += '<h3>1. Genstand og omfang</h3><ol><li>Aftalen regulerer forarbeederens behandling af persondata på vegne af den dataansvarlige i forbindelse med følgende ydelser: '
+       + esc(d.services) + '.</li>';
+    h += '<li>Kategorier af registrerede: ' + esc(d.subjects) + '.<br>Kategorier af persondata: '
+       + esc(d.categories) + '.</li>';
+    if (d.special) {
+      h += '<li>Særlige kategorier af persondata behandles: ' + esc(d.special)
+         + '. Yderligere sikkerhedsforanstaltninger gælder som krævet af artikel 9 i GDPR.</li>';
+    } else {
+      h += '<li>Ingen særlige kategorier af persondata (jf. artikel 9 i GDPR) behandles i henhold til denne aftale.</li>';
+    }
+    h += '</ol>';
+
+    h += '<h3>2. Forarbeederens forpligtelser</h3><ol>'
+       + '<li>Forarbejderen må kun behandle persondata efter dokumenterede instrukser fra den dataansvarlige, herunder hvad angår overførsler uden for EU/EØS, medmindre unionsret eller national lov kræver det. I så fald informerer forarbejderen den dataansvarlige om dette juridiske krav, før behandlingen.</li>'
+       + '<li>De personer, der er autoriseret til at behandle persondata, har forpligtet sig til fortrolighed eller er underlagt en passende lovbestemt fortrolighedspligt.</li>'
+       + '<li>Forarbejderen træffer alle foranstaltninger, der kræves iht. artikel 32 i GDPR, herunder pseudonymisering og kryptering af persondata hvor det er passende, og sikrer løbende fortrolighed, integritet og tilgængelighed af behandlingssystemerne samt en proces til regelmæssigt at teste og vurdere effektiviteten af disse foranstaltninger.</li>'
+       + '</ol>';
+
+    h += '<h3>3. Underbehandlere</h3><ol>';
+    if (subs.length) {
+      h += '<li>Den dataansvarlige giver generel skriftlig godkendelse af følgende underbehandlere:</li></ol><ul>';
+      subs.forEach(function(s){ h += '<li>' + esc(s.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul><ol start="2">'
+         + '<li>Forarbejderen underretter den dataansvarlige om enhvers planlagt ændring vedrørende tilføjelse eller udskiftning af underbehandlere og giver dermed den dataansvarlige mulighed for at gøre indsigelse.</li>'
+         + '<li>Gør den dataansvarlige indsigelse, søger parterne en løsning i mindelighed. Lykkes det ikke, kan den dataansvarlige opsige denne aftale.</li>'
+         + '<li>Forarbejderen pålægger enhver underbehandler samme databeskyttelsesforpligtelser som i denne aftale via en skriftlig kontrakt og hæfter fuldt ud over for den dataansvarlige for underbehandlerens opfyldelse af forpligtelserne.</li></ol>';
+    } else {
+      h += '<li>Ingen underbehandlere er engageret pr. datoen for denne aftale. Forarbejderen indhenter forudgående specifik eller generel skriftlig godkendelse fra den dataansvarlige, inden en underbehandler engageres, og overholder kravene i artikel 28, stk. 2 og 4, i GDPR.</li></ol>';
+    }
+
+    h += '<h3>4. Bistand til den dataansvarlige</h3><ol>'
+       + '<li>Under hensyn til behandlingens art bistår forarbejderen den dataansvarlige med passende tekniske og organisatoriske foranstaltninger, så vidt muligt, med at opfylde den dataansvarliges pligt til at besvare anmodninger om udøvelse af de registreredes rettigheder i kapitel III i GDPR.</li>'
+       + '<li>Forarbejderen underretter den dataansvarlige uden ugrundet ophold, efter at den er blevet klar over et brud på personsikkerheden, og bistår den dataansvarlige med at underrette tilsynsmyndigheden og de registrerede iht. artikel 33 og 34 i GDPR.</li>'
+       + '<li>Forarbejderen stiller al nødvendig information til rådighed for den dataansvarlige til at dokumentere overholdelse af forpligtelserne i artikel 28 i GDPR og tillader og bidrager til revisioner, herunder inspektioner, udført af den dataansvarlige eller en anden revisor udpeget af den dataansvarlige.</li>'
+       + '</ol>';
+
+    h += '<h3>5. Sletning af data</h3><p>' + retentionText(d) + '</p>';
+
+    h += '<h3>6. Overførsler uden for EU/EØS</h3><p>Forarbejderen overfører ikke persondata til et tredjeland eller en international organisation, medmindre passende garantier iht. kapitel V i GDPR er på plads, f.eks. Kommissionens standardkontraktbestemmelser, og den dataansvarlige er blevet informeret.</p>';
+
+    h += '<h3>7. Varighed og opsigelse</h3><p>Aftalen gælder i hele ydelseernes varighed: '
+       + esc(d.duration) + '. Den ophører automatisk, når forarbejderen holder op med at behandle persondata på vegne af den dataansvarlige.</p>';
+
+    h += '<h3>8. Underskrifter</h3>'
+       + '<table style="width:100%;margin-top:20px"><tr>'
+       + '<td style="width:50%;vertical-align:top"><p>For forarbejderen,<br><br>' + esc(d.agency) + '<br><br>_________________________<br>Navn / titel / dato<br>Kontakt: ' + esc(d.agencyEmail) + '</p></td>'
+       + '<td style="vertical-align:top"><p>For den dataansvarlige,<br><br>' + esc(d.client) + '<br><br>_________________________<br>Navn / titel / dato<br>Kontakt: ' + esc(d.clientEmail) + '</p></td>'
+       + '</tr></table>';
+
+    h += '<hr><p style="font-size:12px;color:#667">Dette dokument er lavet med den gratis Hermes Compliance DPA-generator. Det følger strukturen i GDPR artikel 28(3), men udgør ikke juridisk rådgivning. Få en jurist til at gennemgå det, hvis I behandler særlige kategorier af data, data i stor skala, eller overfører data uden for EU/EØS.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate-da');
+    current = buildData();
+    $('agreement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes — brug Download HTML i stedet.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="da">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Databehandleraftale — ' + esc(current.agency) + ' / ' + esc(current.client) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<body style="max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px">\n'
+      + $('agreement').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dba-' + current.client.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

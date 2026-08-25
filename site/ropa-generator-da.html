@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis RoPA-generator (GDPR art. 30 registrering af</title>
+<meta name="description" content="Svar på 12 hurtige spørgsmål pr. behandlingsaktivitet og få en GDPR art. 30-registrering af behandlingsaktiviteter (RoPA). Gratis, ingen tilmelding — alt foregår i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis GDPR RoPA-generator (art. 30)">
+<meta property="og:description" content="Lav en art. 30-registrering af behandlingsaktiviteter på få minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/ropa-generator-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Gratis GDPR RoPA-generator (art. 30)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/ropa-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/ropa-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/ropa-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/ropa-generator">
+<meta name="twitter:title" content="Gratis GDPR RoPA-generator (art. 30)">
+<meta name="twitter:description" content="Lav en art. 30-registrering af behandlingsaktiviteter på få minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad er en RoPA efter GDPR?","acceptedAnswer":{"@type":"Answer","text":"En registrering af behandlingsaktiviteter er det register, GDPR artikel 30 kræver. Dataansvarlige skal dokumentere hver behandlingsaktivitet: formål, kategorier af berørte personer og personoplysninger, modtagere, overførsler uden for EU/EØS, opbevaringstider og sikkerhedsforanstaltninger. Virksomheder under 250 ansatte er kun undtaget, hvis behandlingen er lejlighedsvist og ikke omfatter følsomme data — hvilket sjældent gælder virksomheder med kunder eller personale."}},{"@type":"Question","name":"Skal vi have en RoPA, selvom vi er færre end 250 ansatte?","acceptedAnswer":{"@type":"Answer","text":"Det skal du regne med. Undtagelsen i artikel 30, stk. 5 gælder kun, når behandlingen ikke er en kerneaktivitet og kun sker lejlighedsvist, ikke omfatter særlige kategorier af data og ikke udgør en risiko for de berørte. En webbureau der behandler kundedata, løndata eller webanalyse rammer mindst ét af kriterierne — så et register er det sikre valg."}},{"@type":"Question","name":"Hvor detaljeret skal hver post være?","acceptedAnswer":{"@type":"Answer","text":"Én post pr. tydelig formål — fx 'nyhedsbrev', 'lønadministration' eller 'webanalyse'. Hver post skal give en tilsynsmyndighed mulighed for at forstå hvad I gør, hvorfor, hvor længe og med hvilken beskyttelse. Denne generator laver netop den struktur; gentag den for hver aktivitet og saml dem i ét dokument."}},{"@type":"Question","name":"Forlader noget, jeg indtaster, min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører udelukkende i browseren. Intet sendes til nogen server, intet gemmes, og der er ingen cookies. Du kopierer eller downloader selv det færdige dokument."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen select,
+  .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 70px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #agreement { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #agreement h2 { color: #12283a; font-size: 18px; }
+  #agreement th, #agreement td { text-align: left; vertical-align: top;
+               padding: 8px 10px; border-bottom: 1px solid #dde5ea; font-size: 13.5px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #agreement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>GDPR-registrering af behandlingsaktiviteter</h1>
+    <p class="tagline">Udfyld én aktivitet → få en pæn
+    <strong>art. 30-post (RoPA)</strong> du kan lægge i jeres compliance-register.
+    Gentag for hver aktivitet. Ingen tilmelding, intet forlader din browser.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Virksomheden</legend>
+    <label for="orgName">Virksomhedens navn</label>
+    <input type="text" id="orgName" required placeholder="Acme Web Studio ApS">
+    <label for="orgRole">Jeres rolle</label>
+    <select id="orgRole">
+      <option value="controller" selected>Dataansvarlig (vi beslutter hvorfor og hvordan data behandles)</option>
+      <option value="processor">Databehandler (vi behandler på vegne af kunder)</option>
+      <option value="both">Begge roller (føres som adskilte poster)</option>
+    </select>
+    <label for="dpo">Kontaktperson for databeskyttelse / DPO (eller "ingen udpeget")</label>
+    <input type="text" id="dpo" value="Ingen udpeget" placeholder="Jane Doe, dpo@acmeweb.example">
+    <label for="orgRep">Repræsentant i EU/EØS (art. 27), hvis relevant</label>
+    <input type="text" id="orgRep" placeholder="Lad stå tomt, hvis virksomheden er etableret i EU/EØS">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Behandlingsaktiviteten</legend>
+    <label for="activityName">Navn på aktiviteten</label>
+    <input type="text" id="activityName" required placeholder="Eksempel: Kundenyhedsbrev">
+    <label for="purpose">Formål med behandlingen</label>
+    <textarea id="purpose" required placeholder="Eksempel: At sende månedligt produktstof og tilbud til tilmeldte, der har givet samtykke."></textarea>
+    <label for="lawfulBasis">Behandlingsgrundlag (artikel 6)</label>
+    <select id="lawfulBasis">
+      <option value="consent" selected>Samtykke (art. 6, stk. 1, litra a)</option>
+      <option value="contract">Opfyldelse af kontrakt (art. 6, stk. 1, litra b)</option>
+      <option value="legal">Retlig forpligtelse (art. 6, stk. 1, litra c)</option>
+      <option value="vital">Vitale interesser (art. 6, stk. 1, litra d)</option>
+      <option value="task">Offentlig opgave (art. 6, stk. 1, litra e)</option>
+      <option value="legitimate">Berettiget interesse (art. 6, stk. 1, litra f)</option>
+    </select>
+    <label for="categoriesSubjects">Kategorier af berørte personer</label>
+    <textarea id="categoriesSubjects" required placeholder="Eksempel: nyhedsbrevsmodtagere; potentielle kunder"></textarea>
+    <label for="categoriesData">Kategorier af personoplysninger</label>
+    <textarea id="categoriesData" required placeholder="Eksempel: navn, e-mailadresse, åbnings-/klikstatistik"></textarea>
+    <label for="specialCat">Særlige kategorier (art. 9) behandles?</label>
+    <select id="specialCat">
+      <option value="no" selected>Nej, der behandles ikke særlige kategorier</option>
+      <option value="yes">Ja — beskrives nedenfor</option>
+    </select>
+    <label for="specialDesc">Hvis ja, beskriv dem</label>
+    <textarea id="specialDesc" placeholder="Udfyld kun hvis du valgte 'ja' ovenfor."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Modtagere og overførsler</legend>
+    <label for="recipients">Modtagere / databehandlere (én pr. linje: navn — ydelse)</label>
+    <textarea id="recipients" placeholder="Eksempel:
+Google Ireland Ltd — e-mailafsendelse
+Hetzner Online GmbH — hosting"></textarea>
+    <p class="hint">Lad stå tomt, hvis ingen tredjeparter modtager dataene.</p>
+    <label for="transfer">Overførsler uden for EU/EØS?</label>
+    <select id="transfer">
+      <option value="none" selected>Ingen overførsler uden for EU/EØS</option>
+      <option value="sccs">Ja — dækket af EU-Kommissionens standardkontraktbestemmelser</option>
+      <option value="adequacy">Ja — land med afgørelse om tilstrækkelighedsniveau</option>
+      <option value="other">Ja — anden garanti (beskrives nedenfor)</option>
+    </select>
+    <label for="transferDesc">Beskriv garantien / landene</label>
+    <textarea id="transferDesc" placeholder="Udfyld kun hvis du valgte noget andet end 'Ingen overførsler'. Eksempel: Mailchimp (USA) — EU-US Data Privacy Framework / SCC'er."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Opbevaring og sikkerhed</legend>
+    <label for="retention">Opbevaringstid / sletningskriterier</label>
+    <textarea id="retention" required placeholder="Eksempel: abonnentdata slettes ved framelding eller efter 24 måneders inaktivitet."></textarea>
+    <label>Sikkerhedsforanstaltninger (sæt kryds)</label>
+    <div style="margin-top:6px;font-size:14px;line-height:2">
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Kryptering af data i hvile og under transport (TLS)" checked> Kryptering i hvile &amp; under transport (TLS)</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Adgang begrænset efter roller og least-privilege-princippet"> Rollebasert adgangskontrol</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="To-faktor-godkendelse på systemer med personoplysninger"> To-faktor-godkendelse</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Regelmæssige backupper testet for gendannelse"> Testede backupper</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Fortrolighedserklæringer og privacy-træning af personalet"> Fortrolighedserklæringer &amp; træning</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Logning og overvågning af adgang til personoplysninger"> Adgangslogning</label>
+    </div>
+    <label for="securityOther">Andre sikkerhedsforanstaltninger</label>
+    <input type="text" id="securityOther" placeholder="Andet der bør dokumenteres">
+    <label for="docDate">Postens dato</label>
+    <input type="date" id="docDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generér registrering</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Genereret registrering</h2>
+  <article id="agreement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML-fil</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / gem som PDF</button>
+  </div>
+  <p class="no-print">Brug også den <a href="/privacy-notice-generator-da">gratis
+  privatlivspolitik-generator</a>. Dæk kontrakterne med vores
+  <a href="/dpa-generator-da">gratis art. 28-databehandleraftale-generator</a>, tjek dine
+  offentlige sider med den <a href="/scan-da">gratis EAA-scanner</a>, eller se
+  <a href="/free-tools">alle gratis værktøjer</a> og
+  <a href="/#products">e-bogen og skabelonpakken</a>. Dokumentet er et udkast og
+  udgør ikke juridisk rådgivning.</p>
+</section>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">Hvorfor føre en registrering af behandlingsaktiviteter</h2>
+  <ul>
+    <li><strong>Det er et lovkrav.</strong> GDPR artikel 30 forpligter både
+    dataansvarlige og databehandlere til at føre skriftlige registre over alle
+    behandlingsaktiviteter. At ikke kunne fremvise et register ved inspektion er
+    i sig selv en overtrædelse med bøder op til 10 mio. euro eller 2 % af den
+    globale omsætning.</li>
+    <li><strong>Registeret driver resten.</strong> RoPA'en viser, hvor der skal
+    databehandleraftaler, hvad jeres privatlivspolitik skal indeholde, hvor
+    længe data må opbevares og hvem der skal varsles ved brud. Det er rygraden
+    i praktisk GDPR-arbejde.</li>
+    <li><strong>Det er det første revisorer beder om.</strong> Tilsynsmyndigheder,
+    enterprise-kunder der vurderer leverandører og certificeringsorganer starter
+    alle med "vis os jeres registre".</li>
+  </ul>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>En del af <a href="/">Hermes Compliance-værktøjskassen</a> — gratis værktøjer og
+    praktiske guides til små EU-webbureauer.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+
+  var BASIS_LABEL = {
+    consent: 'Samtykke — art. 6, stk. 1, litra a i GDPR',
+    contract: 'Opfyldelse af kontrakt — art. 6, stk. 1, litra b i GDPR',
+    legal: 'Retlig forpligtelse — art. 6, stk. 1, litra c i GDPR',
+    vital: 'Beskyttelse af vitale interesser — art. 6, stk. 1, litra d i GDPR',
+    task: 'Offentlig opgave — art. 6, stk. 1, litra e i GDPR',
+    legitimate: 'Berettiget interesse — art. 6, stk. 1, litra f i GDPR'
+  };
+  var ROLE_LABEL = {
+    controller: 'Dataansvarlig',
+    processor: 'Databehandler',
+    both: 'Dataansvarlig og databehandler (føres som adskilte poster)'
+  };
+  var TRANSFER_LABEL = {
+    none: 'Der sker ingen overførsler af personoplysninger uden for EU/EØS.',
+    sccs: 'Overførsler uden for EU/EØS finder sted og er dækket af EU-Kommissionens standardkontraktbestemmelser.',
+    adequacy: 'Overførsler uden for EU/EØS sker kun til lande omfattet af Kommissionens afgørelse om tilstrækkelighedsniveau.',
+    other: 'Overførsler uden for EU/EØS finder sted under de garantier, der er beskrevet nedenfor.'
+  };
+
+  function buildData() {
+    var d = {};
+    d.org = v('orgName');
+    d.role = ROLE_LABEL[$('orgRole').value];
+    d.dpo = v('dpo') || 'Ingen udpeget';
+    d.rep = v('orgRep');
+    d.activity = v('activityName');
+    d.purpose = v('purpose');
+    d.basis = BASIS_LABEL[$('lawfulBasis').value];
+    d.subjects = v('categoriesSubjects');
+    d.categories = v('categoriesData');
+    var special = $('specialCat').value === 'yes' && v('specialDesc');
+    d.special = special ? v('specialDesc') : '';
+    d.recipients = v('recipients').split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    d.transferMode = $('transfer').value;
+    d.transferDesc = v('transferDesc');
+    d.retention = v('retention');
+    d.security = Array.prototype.slice.call(document.querySelectorAll('#genForm input[type=checkbox]:checked')).map(function(c){ return c.value; });
+    if (v('securityOther')) d.security.push(v('securityOther'));
+    d.date = v('docDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>Registrering af behandlingsaktiviteter — ' + esc(d.activity) + '</h2>';
+    h += '<p>Udfærdiget i henhold til artikel 30 i GDPR · Dato: ' + esc(d.date) + '</p>';
+    h += '<table>';
+    h += '<tr><th style="width:32%">Virksomhed</th><td>' + esc(d.org) + '</td></tr>';
+    h += '<tr><th>Rolle</th><td>' + esc(d.role) + '</td></tr>';
+    h += '<tr><th>Kontakt for databeskyttelse / DPO</th><td>' + esc(d.dpo) + '</td></tr>';
+    if (d.rep) h += '<tr><th>Repræsentant i EU/EØS (art. 27)</th><td>' + esc(d.rep) + '</td></tr>';
+    h += '<tr><th>Behandlingsaktivitet</th><td>' + esc(d.activity) + '</td></tr>';
+    h += '<tr><th>Formål</th><td>' + esc(d.purpose) + '</td></tr>';
+    h += '<tr><th>Behandlingsgrundlag</th><td>' + esc(d.basis) + '</td></tr>';
+    h += '<tr><th>Berørte personer</th><td>' + esc(d.subjects) + '</td></tr>';
+    h += '<tr><th>Kategorier af personoplysninger</th><td>' + esc(d.categories) + '</td></tr>';
+    h += '<tr><th>Særlige kategorier (art. 9)</th><td>' +
+         (d.special ? esc(d.special) + '. Der gælder supplerende sikkerhedsforanstaltninger efter artikel 9.' :
+                      'Der behandles ikke særlige kategorier af personoplysninger.') + '</td></tr>';
+
+    h += '<tr><th>Modtagere / databehandlere</th><td>';
+    if (d.recipients.length) {
+      h += '<ul style="margin:4px 0;padding-left:18px">';
+      d.recipients.forEach(function(r){ h += '<li>' + esc(r.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul>';
+    } else {
+      h += 'Personoplysninger videregives ikke til tredjeparter.';
+    }
+    h += '</td></tr>';
+
+    var t = TRANSFER_LABEL[d.transferMode];
+    if (d.transferMode === 'other' && d.transferDesc) t += ' ' + esc(d.transferDesc);
+    else if ((d.transferMode === 'sccs' || d.transferMode === 'adequacy') && d.transferDesc) t += ' Lande/parter: ' + esc(d.transferDesc) + '.';
+    h += '<tr><th>Overførsler uden for EU/EØS</th><td>' + t + '</td></tr>';
+
+    h += '<tr><th>Opbevaringstid</th><td>' + esc(d.retention) + '</td></tr>';
+    h += '<tr><th>Sikkerhedsforanstaltninger</th><td>';
+    if (d.security.length) {
+      h += '<ul style="margin:4px 0;padding-left:18px">';
+      d.security.forEach(function(s){ h += '<li>' + esc(s) + '</li>'; });
+      h += '</ul>';
+    } else {
+      h += 'Dokumenteres.';
+    }
+    h += '</td></tr>';
+    h += '</table>';
+
+    h += '<hr><p style="font-size:12px;color:#667">Denne registrering er lavet med Hermes Compliance\u2019 gratis RoPA-generator. Den følger strukturen i GDPR artikel 30 men udgør ikke juridisk rådgivning. Opret én post pr. behandlingsaktivitet og gennemgå registeret, når behandlingen ændres.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate-da');
+    current = buildData();
+    $('agreement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes — brug Download HTML i stedet.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="da">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>RoPA — ' + esc(current.activity) + ' — ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<style>body{max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px}'
+      +   'table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;'
+      +   'padding:8px 10px;border-bottom:1px solid #dde5ea}h2{color:#12283a}</style>\n'
+      + '<body>\n' + $('agreement').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ropa-' + current.activity.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

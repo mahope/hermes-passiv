@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Graph-tjekker — Sådan ser dit link ud når det deles (gratis)</title>
+<meta name="description" content="Tjek enhver URLs Open Graph- og Twitter Card-tags gratis: og:title, og:description, og:image og twitter:card. Se hvordan dit link ser ud når det deles på LinkedIn, Facebook og X — uden tilmelding.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Open Graph-tjekker — gratis, én URL ind, preview ud">
+<meta property="og:description" content="Tjek og:title, og:description, og:image og twitter:card på enhver URL. Se dit LinkedIn/Facebook/X-preview inden du poster.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/open-graph-tjekker">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Open Graph-tjekker — gratis, én URL ind, preview ud">
+<meta name="twitter:description" content="Tjek Open Graph- og Twitter Card-tags på enhver URL.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/open-graph-tjekker"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/open-graph-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/open-graph-tjekker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/open-graph-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Open Graph-tjekker \u2014 se hvordan dine links ser ud n\u00e5r de deles (gratis)", "description": "Tjek enhver URLs Open Graph- og Twitter Card-tags gratis: og:title, og:description, og:image og twitter:card. Se hvordan dit link ser ud n\u00e5r det deles p\u00e5 LinkedIn, Facebook og X \u2014 uden tilmelding.", "url": "https://hermes-passiv.pages.dev/da/blog/open-graph-tjekker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; SOCIALE MEDIER</div>
+    <h1>Open Graph-tjekker<br>Se Dit Link Før Du Poster Det</h1>
+    <p class="subtitle">Hver gang nogen deler din side på LinkedIn, Facebook, X, Slack eller Teams, bygger platformen et kort ud fra dine Open Graph-tags — i stilhed. Tjek hvad platformen ser, før du trykker del.</p>
+    <div class="hero-cta">
+      <a href="#hvordan" class="btn-primary">Læs guiden</a>
+      <a href="/da/page-profile" class="btn-secondary">Tjek en URL nu &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvad-er-open-graph">
+  <div class="container">
+    <h2>Hvad Open Graph-tags egentlig gør</h2>
+    <p>Når en URL sættes ind i et socialt netværk eller en chat-app, henter platformens crawler din side og læser fire meta-tags fra <code>og:</code>-navnerummet: <strong>og:title</strong>, <strong>og:description</strong>, <strong>og:image</strong> og <strong>og:url</strong>. X (Twitter) bruger de parallelle <code>twitter:card</code>-tags og falder tilbage til Open Graph, hvis de mangler.</p>
+    <p>Mangler tagsne, gætter platformen — normalt dårligt: intet billede, en afkortet titel eller en beskrivelse skrabet fra tilfældig sidetekst. Er tagsne forkerte, vises det forkerte kort — og platformene cacher aggressivt: retter du tagsne i dag, retter det ikke kort der allerede er cachet.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ Billede-problemet</h3><p>Den hyppigste fejl: manglende og:image, relativt i stedet for absolut URL, mindre end 200&times;200 px, eller et billede bag login. Alt sammen giver intet billede i previewet.</p></div>
+      <div class="card"><h3>🗄️ Cache-problemet</h3><p>Facebook og LinkedIn cacher deledata i dage. Ret først tagsne, og tving derefter en ny scraping med platformens debugger — ellers tester du gamle data.</p></div>
+      <div class="card"><h3>✅ Ét tjek, alle tags</h3><p>En god tjekker validerer alle tags på én gang: tilstedeværelse, størrelser, absolutte URL'er, billedimensioner og twitter:card-fallbacks.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="hvordan">Sådan tjekker du dine Open Graph-tags</h2>
+    <p><strong>Mulighed A — automatisk (anbefalet).</strong> Indsæt din URL i den <a href="/da/page-profile" style="color:var(--color-accent);">gratis side-profiler</a>. Ud over den fulde tekniske SEO-rapport får du det komplette Open Graph- og Twitter Card-billede: hvilke tags findes, opfylder og:image størrelseskravene, og har twitter:card fornuftige fallbacks.</p>
+    <p><strong>Mulighed B — view-source.</strong> Åbn siden, vis kildekode, og søg efter <code>og:</code>. Der skal være mindst titel, beskrivelse, billede og url i &lt;head&gt;. Husk: tags renderet af JavaScript er usynlige for de fleste platform-crawlere — de skal stå i det rå HTML-svar.</p>
+    <p><strong>Mulighed C — platformenes debuggere.</strong> Efter rettelsen kører du Facebooks Sharing Debugger og LinkedIns Post Inspector for at tvinge deres cache opdateret og bekræfte det nye kort. Hver platform cacher uafhængigt.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📏 Tommelfingerregler for billeder</h3><p>1200&times;630 px, absolut URL, under ~8 MB, offentligt tilgængeligt, PNG eller JPEG. Det består alle store platformers krav med margen.</p></div>
+      <div class="card"><h3>✍️ Længder på titel og beskrivelse</h3><p>Kort afkortes omkring 55–65 tegns titel og ~110–160 tegns beskrivelse afhængigt af platform. Sæt de vigtige ord først.</p></div>
+      <div class="card"><h3>🧩 Tags pr. side</h3><p>Ét delt sæt OG-tags på hele sitet betyder at alle artikler viser forsides-kortet. Generér dem pr. skabelon — de fleste CMS'er kan det med ét plugin eller én meta-partiel.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Fem Open Graph-fejl der dræber klik</h2>
+    <p><strong>1. Manglende og:image helt.</strong> Opslag uden billeder får markant mindre engagement på alle platforme. Det er den værdifuldeste rettelse på listen.</p>
+    <p><strong>2. Relative billed-URL'er.</strong> <code>&lt;meta property="og:image" content="/img/cover.jpg"&gt;</code> virker i en browser men viser ingenting i et dele-preview. Altid absolut.</p>
+    <p><strong>3. JavaScript-injicerede tags.</strong> Platform-crawlere kører mest ikke JS. Sætter din SPA tags ved runtime, viser delinger ingenting. Render tags server-side.</p>
+    <p><strong>4. Identiske tags overalt.</strong> Skabelon-standarder der siver ud på artikler gør hver deling ens — og brugere holder op med at klikke.</p>
+    <p><strong>5. Glemte twitter:card.</strong> Uden <code>twitter:card</code> (normalt <code>summary_large_image</code>) falder X tilbage til en lille, nøgen summary. Én linje fikser det.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er tjekkeren gratis?</h3><p>Ja. <a href="/da/page-profile" style="color:var(--color-accent);">Side-profileren</a> kører i din browser, kræver ingen konto, og dækker Open Graph, Twitter Cards samt resten af sidens tekniske sundhed i samme rapport.</p></div>
+      <div class="card"><h3>Hvorfor vises min rettelse ikke endnu?</h3><p>Platform-cache. Brug Facebooks Sharing Debugger og LinkedIns Post Inspector til at tvinge en ny scraping efter deploy. Indtil ser du på gamle cachede data.</p></div>
+      <div class="card"><h3>Påvirker OG-tags SEO-placeringer?</h3><p>Ikke direkte — Google læser titel/meta-beskrivelse, ikke og:-tags, til placering. Men dele-previews driver klik og trafik, og et ødelagt preview dræber den kanal lydløst.</p></div>
+      <div class="card"><h3>Hvad med WhatsApp, Slack, iMessage?</h3><p>Alle læser Open Graph-tags. Samme regler gælder: absolutte billed-URL'er, server-renderede tags, fornuftige dimensioner.</p></div>
+      <div class="card"><h3>Engelsk version?</h3><p>Der er en <a href="/blog/open-graph-checker" style="color:var(--color-accent);">engelsk Open Graph-guide</a> og en engelsk profiler på /page-profile.</p></div>
+      <div class="card"><h3>Kan jeg automatisere det i CI?</h3><p>Ja — Python CLI'en udskriver JSON for enhver URL, så en pipeline kan fejle et build når og:image forsvinder. Se den <a href="/blog/technical-seo-check-website" style="color:var(--color-accent);">engelske tekniske SEO-guide</a>.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/page-profile" class="btn-primary">Tjek din URL gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/blog/teknisk-seo-tjek-hjemmeside" class="btn-secondary">Teknisk SEO-guide &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO · DA</span><h3><a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);text-decoration:none;">Teknisk SEO-tjek af din hjemmeside</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO</span><h3><a href="/blog/open-graph-checker" style="color:var(--color-accent);text-decoration:none;">Open Graph checker (engelsk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">A11Y</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA-accessibility checklist</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/"> &larr; Forside</a> &middot; <a href="/da/page-profile">Side-profiler</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

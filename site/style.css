@@ -1,0 +1,530 @@
+/* === EU Compliance for Small Web Agencies — Landing Page === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --color-bg: #0b0d0e;
+  --color-surface: #141719;
+  --color-surface-2: #1a1e21;
+  --color-border: #262a2e;
+  --color-text: #e8eaed;
+  --color-text-muted: #9aa0a6;
+  --color-accent: #5b8def;
+  --color-accent-hover: #7ba3f5;
+  --color-green: #34d399;
+  --color-red: #f87171;
+  --color-yellow: #fbbf24;
+  --color-orange: #fb923c;
+  --radius: 12px;
+  --max-width: 800px;
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; }
+
+/* Hero */
+.hero {
+  padding: 80px 0 64px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(91,141,239,0.08) 0%, transparent 60%);
+}
+.badge {
+  display: inline-block;
+  background: rgba(91,141,239,0.15);
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 24px;
+}
+h1 {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+.subtitle {
+  font-size: 1.15rem;
+  color: var(--color-text-muted);
+  max-width: 600px;
+  margin: 0 auto 32px;
+  line-height: 1.5;
+}
+.tagline { font-size: 1.15rem; color: var(--color-text-muted); max-width: 600px; margin: 0 auto 32px; line-height: 1.5; }
+.hero-cta { margin-bottom: 16px; }
+.hero-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 8px; }
+.hero-meta {
+  display: flex; gap: 24px; justify-content: center;
+  font-size: 0.875rem; color: var(--color-text-muted); margin-top: 24px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 12px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--color-accent-hover); }
+
+.btn-secondary {
+  display: inline-block;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 12px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.btn-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+.btn {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btn:hover { background: var(--color-accent-hover); }
+
+/* Sections */
+section { padding: 72px 0; }
+h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+/* Section intro */
+.section-intro { color: var(--color-text-muted); margin-bottom: 32px; max-width: 560px; font-size: 0.95rem; }
+
+/* E-books section */
+.ebooks { background: var(--color-surface); }
+.ebook-grid { display: flex; flex-direction: column; gap: 32px; }
+.ebook-card {
+  display: flex;
+  gap: 32px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 24px;
+  align-items: flex-start;
+}
+.ebook-cover {
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  width: 200px;
+  height: auto;
+}
+.ebook-info { flex: 1; min-width: 0; }
+.ebook-info h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+.ebook-subtitle { font-size: 0.85rem; color: var(--color-text-muted); font-style: italic; margin-bottom: 12px; }
+.ebook-details { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.ebook-meta { font-size: 0.75rem; color: var(--color-text-muted); }
+.ebook-price { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.status-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.02em;
+}
+.status-ready {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-green);
+}
+.ebook-note { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4; }
+.bundle-note { text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--color-text-muted); }
+.bundle-note strong { color: var(--color-text); }
+
+/* Product grid — e-books with cover images */
+.product-grid { display: grid; gap: 24px; }
+.product-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.product-card.feature {
+  border-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-surface-2) 0%, rgba(91,141,239,0.06) 100%);
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.product-badge {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-bottom: 12px;
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  z-index: 1;
+}
+.product-badge-secondary {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-green);
+}
+
+/* Cover images */
+.product-cover img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  display: block;
+}
+
+/* Product body */
+.product-body h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
+.product-desc { font-size: 0.875rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 12px; }
+.product-details { display: flex; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.product-meta { font-size: 0.75rem; color: var(--color-text-muted); }
+
+/* Chapter listings */
+.product-chapters {
+  margin-bottom: 16px;
+  font-size: 0.8rem;
+}
+.chapter-label {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.product-chapters ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.product-chapters li {
+  padding-left: 14px;
+  position: relative;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+.product-chapters li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* Price */
+.product-price { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.product-cta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+.coming-badge { font-size: 0.8rem; color: var(--color-accent); font-weight: 600; white-space: nowrap; }
+.product-cta .btn-secondary { font-size: 0.85rem; padding: 6px 16px; }
+.price-tag { font-size: 1.3rem; font-weight: 700; color: var(--color-accent); }
+
+/* Status indicators */
+.product-status {
+  font-size: 0.75rem;
+  color: var(--color-green);
+  font-weight: 600;
+  margin-top: 8px;
+}
+.product-status::before { content: '✓ '; }
+.product-status-gr {
+  font-size: 0.7rem;
+  color: var(--color-yellow);
+  font-style: italic;
+}
+
+.btn-small {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 6px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.btn-small:hover { background: var(--color-accent-hover); }
+
+/* Problem section */
+.problem { background: var(--color-surface); }
+.problem-cards { display: grid; gap: 16px; margin-top: 32px; }
+.card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+.card p { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.5; }
+
+/* Template library */
+.templates { background: var(--color-surface); }
+
+/* Quiz section */
+.quiz {
+  background: var(--color-surface);
+}
+.quiz-container {
+  max-width: 500px;
+  margin: 0 auto;
+  min-height: 280px;
+}
+.quiz-counter {
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.quiz-question {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quiz-btn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.quiz-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(91,141,239,0.08);
+}
+.quiz-btn:active {
+  background: rgba(91,141,239,0.15);
+}
+.quiz-result {
+  text-align: center;
+  padding: 32px 0;
+}
+.quiz-score-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin: 0 auto 20px;
+  position: relative;
+}
+.quiz-score-ring.low {
+  background: conic-gradient(var(--color-red) 0deg 120deg, var(--color-surface-2) 120deg 360deg);
+  border: 3px solid var(--color-red);
+}
+.quiz-score-ring.medium {
+  background: conic-gradient(var(--color-yellow) 0deg 240deg, var(--color-surface-2) 240deg 360deg);
+  border: 3px solid var(--color-yellow);
+}
+.quiz-score-ring.high {
+  background: conic-gradient(var(--color-green) 0deg 360deg);
+  border: 3px solid var(--color-green);
+}
+.quiz-score-number {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.quiz-score-ring.low .quiz-score-number { color: var(--color-red); }
+.quiz-score-ring.medium .quiz-score-number { color: var(--color-yellow); }
+.quiz-score-ring.high .quiz-score-number { color: var(--color-green); }
+.quiz-score-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.quiz-result h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.quiz-result-desc {
+  color: var(--color-text-muted);
+  max-width: 440px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+.quiz-cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Who section */
+.who ul { list-style: none; display: grid; gap: 12px; }
+.who li {
+  padding: 16px 20px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+}
+
+/* Author */
+.author p { color: var(--color-text-muted); line-height: 1.7; max-width: 600px; }
+
+/* FAQ */
+.faq { background: var(--color-surface); }
+.faq-grid { display: grid; gap: 12px; }
+.faq-item {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.faq-item summary {
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: '+';
+  font-size: 1.2rem;
+  color: var(--color-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+.faq-item[open] summary::after { content: '−'; }
+.faq-item[open] summary { border-bottom: 1px solid var(--color-border); }
+.faq-item p {
+  padding: 0 20px 16px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* Notify section */
+.notify { text-align: center; }
+.notify-intro { color: var(--color-text-muted); margin-bottom: 28px; max-width: 480px; margin-left: auto; margin-right: auto; }
+.notify-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 36px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.notify-card-text {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.notify-card strong { color: var(--color-text); }
+.notify-card .btn-primary { margin-bottom: 12px; }
+.notify-hint { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 12px; }
+
+/* Footer */
+footer {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+footer a { color: var(--color-accent); }
+.site-footer { padding: 32px 0; text-align: center; font-size: 0.8rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border); }
+.site-footer a { color: var(--color-accent); }
+.footer-small { font-size: 0.7rem; margin-top: 8px; opacity: 0.6; }
+
+/* Responsive */
+@media (min-width: 640px) {
+  .problem-cards { grid-template-columns: repeat(3, 1fr); }
+  .product-grid { grid-template-columns: 1fr; }
+  .product-card.feature { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 2rem; }
+  .hero { padding: 48px 0 40px; }
+  .hero-meta { flex-direction: column; gap: 8px; align-items: center; }
+  .product-card.feature {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .product-cover {
+    max-width: 160px;
+    margin: 0 auto;
+  }
+  .notify-card { padding: 24px 20px; }
+  section { padding: 48px 0; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.75rem; }
+  .product-badge {
+    position: static;
+    margin-bottom: 8px;
+  }
+}
+
+/* E-book card responsive */
+@media (max-width: 640px) {
+  .ebook-card { flex-direction: column; align-items: center; text-align: center; }
+  .ebook-cover { width: 160px; }
+  .ebook-details, .ebook-price { justify-content: center; }
+}

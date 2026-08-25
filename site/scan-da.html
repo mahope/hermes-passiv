@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis EAA-tilgængelighedsscanner — Tjek enhver hjemmeside</title>
+<!-- r19 -->
+<meta name="description" content="Indsæt en URL og få et øjeblikkeligt automatiseret EAA / WCAG 2.1 AA-tjek. Virker på enhver hjemmeside — WordPress, Shopify, Webflow, Next.js og håndskrevet HTML. Ingen tilmelding.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis EAA-tilgængelighedsscanner — Tjek enhver hjemmeside">
+<meta property="og:description" content="Indsæt en URL og få et øjeblikkeligt automatiseret EAA / WCAG 2.1 AA-tjek. Virker på enhver hjemmeside. Ingen tilmelding.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/scan-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Gratis EAA-tilgængelighedsscanner — Tjek enhver hjemmeside">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gratis EAA-tilgængelighedsscanner — Tjek enhver hjemmeside">
+<meta name="twitter:description" content="Indsæt en URL og få et øjeblikkeligt automatiseret EAA / WCAG 2.1 AA-tjek. Virker på enhver hjemmeside. Ingen tilmelding.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad tjekker scanneren?", "acceptedAnswer": {"@type": "Answer", "text": "16 automatiserede WCAG 2.1 AA-regler: billed-alt-tekst, formularmærkater, link- og knaptekst, sidetitel, sprogattribut, viewport-meta, overskriftsstruktur, iframe-titler, tabelhoveder, duplikerede id'er, aria-hidden-elementer der stadig kan fokuseres, tekstkontrast og links der åbner i nyt vindue uden advarsel."}}, {"@type": "Question", "name": "Er scanneren gratis?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Ingen tilmelding, ingen konto, ingen e-mail. Indsæt en offentlig URL og få straks en karakter med detaljerede fund."}}, {"@type": "Question", "name": "Hvor præcist er det automatiske tjek?", "acceptedAnswer": {"@type": "Answer", "text": "Automatiserede tjek fanger cirka 30-40 % af tilgængelighedsproblemerne. De resterende 60-70 % kræver menneskelig vurdering: tastaturnavigation, skærmlæsertest og indholdsreview."}}, {"@type": "Question", "name": "Gemmer scanneren de sider jeg tjekker?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks. Ingen logs, ingen lagring, ingen cookies."}}, {"@type": "Question", "name": "Virker den på alle platforme?", "acceptedAnswer": {"@type": "Answer", "text": "Ja \\u2014 WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, Next.js og håndskrevet HTML."}}, {"@type": "Question", "name": "Kan jeg scanne en side med adgangskode eller en lokal side?", "acceptedAnswer": {"@type": "Answer", "text": "Nej \\u2014 scanneren henter sider over det offentlige internet. Til staging eller lokale sider: brug browserudvidelsen eller WordPress-pluginet."}}]}
+</script>
+<style>
+  .scanbox { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
+  .scanbox input { flex: 1; padding: 12px 14px; border: 1px solid #b9cdd8;
+                   border-radius: 8px; font-size: 15px; }
+  .scanbox button { background: #0b6e8f; color: #fff; border: 0;
+                    padding: 12px 22px; border-radius: 8px; cursor: pointer;
+                    font-size: 15px; }
+  .scanbox button:hover { background: #095a77; }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px;
+            line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 44px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 8px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}.sev-notice{color:#889}
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+<link rel="canonical" href="https://hermes-passiv.pages.dev/scan-da"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/scan">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/scan-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/scan">
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Gratis EAA-tilgængelighedsscanner</h1>
+    <p class="tagline">Øjeblikkeligt automatiseret tilgængelighedstjek — virker på
+    <strong>enhver hjemmeside</strong>, alle platforme, ingen tilmelding.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="scan-heading">
+  <h2 id="scan-heading">Scan din side</h2>
+  <form id="scanForm" class="scanbox">
+    <label for="url" class="sr-only">Sidens URL</label>
+    <input id="url" name="url" type="url" required
+           placeholder="https://din-hjemmeside.dk" inputmode="url">
+    <button type="submit">Scan nu</button>
+  </form>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="how-heading">
+  <h2 id="how-heading">Hvad den tjekker</h2>
+  <ul class="findings">
+    <li>Billeder uden alt-tekst · formularfelter uden mærkater · links eller knapper uden tekst</li>
+    <li>Manglende sidetitel, sprogattribut eller viewport-meta</li>
+    <li>Overskriftsproblemer (ingen h1, sprunget niveauer)</li>
+    <li>Iframes uden titel · tabeller uden hoveder · duplikerede id-værdier</li>
+    <li>aria-hidden-elementer der stadig kan fokuseres med tastatur</li>
+    <li>Lav tekstkontrast (WCAG 1.4.3 — inline farvestile)</li>
+    <li>Links der åbner i nyt vindue uden at advare brugeren</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> automatiserede tjek fanger cirka
+  30–40 % af tilgængelighedsproblemerne. Resten kræver menneskelig vurdering —
+  hele den manuelle proces ligger i vores
+  <a href="/#products">EAA Compliance Checklist e-bog</a>.</p>
+</section>
+
+<section aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Bruger du en formel compliance-rapport?</h2>
+  <p>Få en professionel PDF-revisionsrapport med executive summary, detaljerede
+  fund, prioriterede anbefalinger og metodedokumentation. Velegnet til
+  kundeoverdragelser og interne compliance-filer.</p>
+  <p><a href="/#products" class="btn">Pro-revisionsrapport — $29</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">
+  (kommer når butikken åbner)</span></p>
+</section>
+
+<section aria-labelledby="ext-heading">
+  <h2 id="ext-heading">Fås også som browserudvidelse</h2>
+  <p>Scan enhver side du er på med ét klik. Udvidelsen har samme regelsæt —
+  hent zip-filen og load den upakket i Chrome/Edge:</p>
+  <p><a href="eaa-scanner-extension.zip" class="btn"
+        download>Hent udvidelse (Chrome/Edge)</a></p>
+</section>
+
+<section aria-labelledby="gen-heading" style="margin-top:36px">
+  <h2 id="gen-heading">Generator til tilgængelighedserklæringer</h2>
+  <p>Når du har rettet det scanneren finder, kan du udgive en
+  <a href="/accessibility-statement-generator">EAA / WCAG-tilgængelighedserklæring</a> —
+  svar på 8 spørgsmål og få en klar-til-udgivelse-erklæring. Gratis, kører i din browser.</p>
+</section>
+
+<section aria-labelledby="cli-heading" style="margin-top:36px">
+  <h2 id="cli-heading">Kør den fra kommandolinjen</h2>
+  <p>Foretrækker du terminalen eller CI? <a href="/downloads">Hent eaa-scanner</a> —
+  et gratis Python-CLI-værktøj uden afhængigheder, der kører samme scan på et vilkårligt
+  antal URL'er og fejler buildet når der findes fejl.</p>
+</section>
+
+<section aria-labelledby="wp-heading">
+<h2 id="wp-heading">WordPress-plugin</h2>
+  <p>Kør samme scan fra dit WordPress-dashboard —
+  <strong>Værktøjer → EAA Scanner</strong>. Virker med ethvert tema, scanner enhver URL,
+  og alt kører på din egen server: ingen data sendes til tredjeparter.</p>
+  <p><a href="eaa-compliance-scanner.zip" class="btn"
+        download>Hent WordPress-plugin</a>
+  <span style="font-size:13px;color:#667;margin-left:8px">Installér via
+  Plugins → Tilføj ny → Upload plugin. Gratis, MIT-licens.</span></p>
+  <p style="font-size:14px;color:#445">Efter det automatiske tjek er de manuelle
+  trin det, der gør dig reelt compliant — de ligger alle i vores
+  <a href="/#products">EAA Compliance e-bøger</a>.</p>
+</section>
+<section aria-labelledby="guides-heading">
+  <h2 id="guides-heading">Platformspecifikke fix-guides</h2>
+  <p>Fandt scanneren noget på din side? Disse gratis guides viser præcis hvor du
+  retter de mest almindelige problemer i hver platforms admin:</p>
+  <ul class="findings">
+    <li><a href="/guides/wordpress-accessibility-check">WordPress-tilgængelighedstjek</a> — or use the free <a href="/wordpress-plugin">scanner plugin</a></li>
+    <li><a href="/guides/shopify-accessibility-check">Shopify-tilgængelighedstjek</a></li>
+    <li><a href="/guides/webflow-accessibility-check">Webflow-tilgængelighedstjek</a></li>
+    <li><a href="/guides/wix-accessibility-check">Wix-tilgængelighedstjek</a></li>
+    <li><a href="/guides/squarespace-accessibility-check">Squarespace-tilgængelighedstjek</a></li>
+    <li><a href="/guides/drupal-accessibility-check">Drupal-tilgængelighedstjek</a></li>
+    <li><a href="/guides/joomla-accessibility-check">Joomla-tilgængelighedstjek</a></li>
+    <li><a href="/guides/prestashop-accessibility-check">PrestaShop-tilgængelighedstjek</a></li>
+    <li><a href="/guides/weebly-accessibility-check">Weebly-tilgængelighedstjek</a></li>
+    <li><a href="/guides/magento-accessibility-check">Magento / Adobe Commerce-tilgængelighedstjek</a></li>
+    <li><a href="/guides/ghost-accessibility-check">Ghost-tilgængelighedstjek</a></li>
+    <li><a href="/guides/typo3-accessibility-check">TYPO3-tilgængelighedstjek (BITV / EN 301 549)</a></li>
+    <li><a href="/guides/craftcms-accessibility-check">Craft CMS-tilgængelighedstjek</a></li>
+    <li><a href="/guides/umbraco-accessibility-check">Umbraco-tilgængelighedstjek</a></li>
+  </ul>
+  <p><a href="/guides/comparison">Sammenlign alle platforme side om side →</a></p>
+  <p>Platform-deep-dives: <a href="/blog/webflow-vs-squarespace-accessibility">Webflow vs Squarespace</a> · <a href="/blog/drupal-vs-typo3-accessibility">Drupal vs TYPO3</a> · <a href="/blog/prestashop-vs-shopify-accessibility">PrestaShop vs Shopify</a> · <a href="/blog/wordpress-vs-wix-accessibility">WordPress vs Wix</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/">← Tilbage til Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Automatiseret EAA/WCAG-screeningværktøj. Ingen data forlader din
+  browser undtagen hentningen af siden du scanner.</p>
+</div></footer>
+
+<script>
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+async function shareResult(){
+  const url=location.origin+'/scan-da#url='+encodeURIComponent(document.getElementById('url').value.trim());
+  try{await navigator.clipboard.writeText(url);}catch(e){
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  alert('Link kopieret: '+url);
+}
+window.shareResult=shareResult;
+async function scan(url){
+    if (window.trackEvent) window.trackEvent('scan');
+  const out = document.getElementById('result');
+  const label = document.querySelector('.sr-only') || out;
+  out.innerHTML = '<p>Scanner <code>'+url.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</code> …</p>';
+  let html = '';
+  try {
+    const r = await fetch('/scan-proxy?url='+encodeURIComponent(url));
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Proxy returnerede en fejl');
+    html = data.html;
+
+    try { fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
+  } catch(e) {
+    out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
+      +'<p style="color:#667;font-size:14px">'+e.message+'</p>'
+      +'<p style="font-size:13px;color:#667;margin-top:16px">'
+      +'Kan ikke scanne siden. Mulige årsager: sitet blokerer automatiske hentninger, '
+      +'URL\u2019en er ugyldig, eller siden er for stor. Prøv '
+      +'<a href="eaa-scanner-extension.zip" download>browserudvidelsen</a> '
+      +'som kører direkte på den live side.</p>';
+    return;
+  }
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  const findings = [];
+  const add=(id,sev,msg,n)=>{if(n>0)findings.push({id,sev,msg:msg.replace('{n}',n),count:n})};
+  add('IMG_ALT','error','{n} billede(r) mangler alt-tekst',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error','{n} formularfelt(er) uden mærkat',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error','{n} link(s) uden tilgængelig tekst',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
+  add('BUTTON_TEXT','error','{n} knap(p(er)) uden tilgængelig tekst',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
+  add('DUP_ID','error','{n} duplikeret(e) id-værdi(er) (bryder label/aria-referencer)',
+      (()=>{const seen=new Set(),dups=new Set();
+        doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
+        return dups.size;})());
+  add('TARGET_BLANK','warning','{n} link(s) der åbner i nyt vindue uden advarsel',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())findings.push({sev:'error',msg:'siden har ingen <title>'});
+  if(!doc.documentElement.lang)findings.push({sev:'error',msg:'<html> mangler en lang-attribut'});
+  if(!doc.querySelector('meta[name="viewport"]'))findings.push({sev:'warning',msg:'manglende viewport-meta-tag'});
+  if(!doc.querySelector('h1'))findings.push({sev:'warning',msg:'ingen <h1> fundet'});
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning','{n} sprunget(t) overskriftsniveau(er)',skips);
+  add('IFRAME_TITLE','warning','{n} iframe(s) uden titel',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning','{n} tabel(ler) uden hovedceller',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden-element(er) kan stadig fokuseres',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',(()=>{
+    function parseCol(s){
+      s=(s||'').trim().toLowerCase();
+      if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+      let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+      m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+      m=s.match(/^rgba?\(([^)]+)\)/);
+      if(m){const p=m[1].split(',').map(x=>x.trim());
+        if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+        try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+      const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+      return named[s]||null;}
+    function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+    function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    const seen=new Set();let low=0;
+    const root=doc.body||doc.documentElement;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let n;
+    while((n=walker.nextNode())){
+      if(!n.textContent.trim())continue;
+      let el=n.parentElement,fg=null,bg=null,node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(st){
+          if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+          if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+            if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+        }
+        node=node.parentElement;}
+      if(fg===null||bg===null)continue;
+      let large=false;node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+        node=node.parentElement;}
+      const f=parseCol(fg),b=parseCol(bg);
+      if(!f||!b)continue;
+      const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+      const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+      if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+    }
+    return low;})());
+  const errors=findings.filter(f=>f.sev==='error').length,
+        warnings=findings.filter(f=>f.sev==='warning').length,
+        notices=findings.filter(f=>f.sev==='notice').length;
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2), g=gradeOf(score);
+  const FIX={
+    IMG_ALT:'Fix: tilføj alt="beskrivelse" til alle meningsbærende billeder; brug alt="" til rent dekorative.',
+    FORM_LABEL:'Fix: giv hvert felt en <label for="felt-id">, eller en aria-label-attribut.',
+    LINK_TEXT:'Fix: tilføj beskrivende tekst i linket, eller aria-label hvis det kun er et ikon.',
+    BUTTON_TEXT:'Fix: tilføj synlig tekst eller aria-label til hver knap.',
+    DUP_ID:'Fix: gør hver id-værdi unik på siden.',
+    TARGET_BLANK:'Fix: advertér brugerne om at linket åbner i nyt vindue (fx "(åbner i nyt faneblad)") og tilføj rel="noopener".',
+    DOC_TITLE:'Fix: tilføj en beskrivende <title> i <head>.',
+    HTML_LANG:'Fix: tilføj lang til <html>, fx <html lang="da">.',
+    VIEWPORT:'Fix: tilføj <meta name="viewport" content="width=device-width, initial-scale=1">.',
+    HEADING_H1:'Fix: tilføj én beskrivende <h1> som sidens hovedoverskrift.',
+    HEADING_SKIP:'Fix: spring ikke overskriftsniveauer over — h2 under h1, h3 under h2 osv.',
+    IFRAME_TITLE:'Fix: tilføj en title-attribut der beskriver iframens indhold.',
+    TABLE_HEADER:'Fix: brug <th> til hovedceller i datatabeller.',
+    ARIA_HIDDEN_FOCUS:'Fix: fjern aria-hidden fra fokusbare elementer, eller tilføj tabindex="-1".',
+    CONTRAST:'Fix: gør teksten mørkere eller baggrunden lysere til kontrastforholdet er mindst 4,5:1 (3:1 for stor tekst). Tjek det på webaim.org/resources/contrastchecker.'};
+  const PLATFORM_GUIDES={
+    'WordPress':'/guides/wordpress-accessibility-check',
+    'Shopify':'/guides/shopify-accessibility-check',
+    'Webflow':'/guides/webflow-accessibility-check',
+    'Wix':'/guides/wix-accessibility-check',
+    'Squarespace':'/guides/squarespace-accessibility-check',
+    'Drupal':'/guides/drupal-accessibility-check',
+    'Joomla':'/guides/joomla-accessibility-check',
+    'PrestaShop':'/guides/prestashop-accessibility-check',
+    'Magento':'/guides/magento-accessibility-check',
+    'Ghost':'/guides/ghost-accessibility-check',
+    'TYPO3':'/guides/typo3-accessibility-check',
+    'Craft CMS':'/guides/craftcms-accessibility-check',
+    'Umbraco':'/guides/umbraco-accessibility-check'};
+  const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
+  let plat=null;
+  for(const p of Object.keys(PLATFORM_GUIDES)){
+    if(new RegExp(p,'i').test(gen)){plat=p;break;}}
+  const platHtml = plat
+    ? '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
+      +'<strong>Registreret platform: '+plat+'</strong> — de fleste rettelser foretages direkte i '
+      +plat+'\'s admin. Trin for trin: <a href="'+PLATFORM_GUIDES[plat]+'">den gratis '
+      +plat+'-tilgængelighedsguide</a>.</div>'
+    : '';
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+score+'/100 — Grade '+g+'</div>'+
+    '<div>'+errors+' fejl, '+warnings+' warning(s)</div></div>'+platHtml+
+    (findings.length?'<ul class="findings">'+findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+f.msg+'</span><br><small>'+(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
+     :'<p>Ingen problemer fundet af de automatiske tjek.</p>')+
+    '<p style="text-align:center;margin-top:18px"><button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '+
+    '<button onclick="shareResult()" class="btn btn-secondary">Kopiér delelink</button></p>'+
+    '<p style="font-size:13px;color:#667">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>';
+}
+document.getElementById('scanForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  scan(document.getElementById('url').value.trim());
+});
+(function(){
+  const m=location.hash.match(/#url=(.+)$/);
+  if(m){const u=decodeURIComponent(m[1]);
+    if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
+})();
+</script>
+</body>
+</html>

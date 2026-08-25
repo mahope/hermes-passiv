@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Clean Copy API
+  description: Free HTML-to-Markdown conversion API. Same engine as the Clean Copy browser extension.
+  version: "1.5.2"
+servers:
+  - url: https://hermes-passiv.pages.dev
+paths:
+  /api/clean-copy:
+    post:
+      summary: Convert HTML to clean Markdown or plain text
+      operationId: cleanCopy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [html]
+              properties:
+                html:
+                  type: string
+                  description: The HTML to convert (max 51200 bytes).
+                mode:
+                  type: string
+                  enum: [markdown, plain]
+                  default: markdown
+      responses:
+        "200":
+          description: Conversion result (check ok field for errors)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  markdown:
+                    type: string
+                  mode:
+                    type: string
+                  input_chars:
+                    type: integer
+                  output_chars:
+                    type: integer
+                  version:
+                    type: string
+                  error:
+                    type: string

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webflow vs Squarespace: Accessibility Compared</title>
+<meta name="description" content="Webflow vs Squarespace accessibility compared for EU site owners: where each builder fails WCAG 2.1 AA under the EAA, designer vs template tooling, and which is faster to remediate.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Webflow vs Squarespace: Accessibility Compared">
+<meta property="og:description" content="Webflow vs Squarespace accessibility compared for EU site owners: where each builder fails WCAG 2.1 AA under the EAA, designer vs template tooling, and which is faster to remediate.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Webflow vs Squarespace: Accessibility Compared">
+<meta name="twitter:description" content="Webflow vs Squarespace accessibility compared for EU site owners: where each builder fails WCAG 2.1 AA under the EAA, designer vs template tooling, and which is faster to remediate.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Webflow vs Squarespace: Accessibility Compared",
+  "description": "Webflow vs Squarespace accessibility compared for EU site owners: where each builder fails WCAG 2.1 AA under the EAA, designer vs template tooling, and which is faster to remediate.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · COMPARISON · EAA</div>
+    <h1>Webflow vs Squarespace:<br>Accessibility Compared</h1>
+    <p class="subtitle">Two visual builders, one legal obligation under the European Accessibility Act. Where each fails WCAG 2.1 AA, and what fixing looks like on each.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#same-law-two-builders" class="btn-secondary">Webflow Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="same-law-two-builders">Same Law Two Builders</h2>
+    <p>Webflow and Squarespace are both visual website builders, and sites on either that serve EU consumers fall under the European Accessibility Act: EN 301 549 / WCAG 2.1 AA conformance, enforced nationally since mid-2025. The law does not distinguish between them — but the building experience does. Webflow gives designers low-level control over every element's HTML tag, ARIA attributes and custom code. Squarespace abstracts the markup behind templates and section blocks, exposing only curated settings. That difference shapes both where defects come from and who can fix them.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Same Standard</h3><p>EAA-covered services on either builder must meet WCAG 2.1 Level AA. Regulators do not care which tool produced the page.</p></div>
+      <div class="card"><h3>🎛️ Control Spectrum</h3><p>Webflow exposes tags, ARIA and custom code per element; Squarespace exposes curated settings. More control means more ways to fix — and more ways to break.</p></div>
+      <div class="card"><h3>🔌 Widget Risk</h3><p>Webflow interactions/custom embeds and Squarespace third-party blocks both inject controls of varying keyboard quality.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-webflow-fails">Where Webflow Fails</h2>
+    <p>Typical Webflow defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧱 Div-Soup Structure</h3><p>Designer-built layouts frequently use div elements styled as headings and buttons — no real h1-h6 hierarchy, no native button semantics.</p></div>
+      <div class="card"><h3>🎬 Interaction Overload</h3><p>Hover-only reveals, scroll-triggered animations and click-triggered dropdowns that never appear for keyboard users.</p></div>
+      <div class="card"><h3>🎨 Custom Code Embeds</h3><p>Third-party embeds pasted into custom-code fields ship with their own contrast, label and focus problems outside Webflow's checks.</p></div>
+      <div class="card"><h3>⌨️ Focus Handling</h3><p>Custom nav components and modals without focus traps or visible focus styles — common in hand-built Designer projects.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-squarespace-fails">Where Squarespace Fails</h2>
+    <p>Typical Squarespace defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ Gallery Alt Gaps</h3><p>Image blocks and galleries accept empty alt text silently; image-heavy marketing pages routinely ship with none.</p></div>
+      <div class="card"><h3>🎨 Template Contrast</h3><p>Site-style overrides (grey text on tinted backgrounds) drop below 4.5:1 while looking intentional in the editor preview.</p></div>
+      <div class="card"><h3>🧭 Section Semantics</h3><p>Drag-reordered sections produce heading orders chosen visually; some blocks render clickable cards as divs with JS handlers.</p></div>
+      <div class="card"><h3>📱 Mobile Overrides</h3><p>Style changes applied only to mobile breakpoints leave desktop fixes incomplete — or vice versa.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="fix-workflow-compared">Fix Workflow Compared</h2>
+    <p>The remediation loop differs mainly in <strong>who touches the markup</strong>.</p>
+    <p></p>
+    <p><strong>Webflow:</strong> nearly everything is fixable by the designer — reassign real heading tags, convert div-buttons to native buttons, add ARIA attributes, rewrite interactions to be keyboard-triggered, adjust focus styles. Nothing enforces itself though: every new interaction or embed needs a manual check.</p>
+    <p></p>
+    <p><strong>Squarespace:</strong> fixes are configuration — alt text fields, heading assignment where the block allows it, colour tokens in site styles, removing decorative autoplay sections. Structural problems inside a specific block or third-party extension cannot be fixed at all; you swap the block or document the limitation in your accessibility statement.</p>
+    <p></p>
+    <p>Net effect: Webflow rewards skill with full remediability but demands discipline; Squarespace reaches "reasonably compliant" faster but hits a ceiling set by its blocks.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="which-should-you-pick">Which Should You Pick</h2>
+    <p>For an existing site, stay put — migration costs more than remediation and the EAA obligation is identical. For a new EU project: pick Webflow when a professional designer maintains the site and you can enforce an accessibility checklist in the design process, since every defect is ultimately fixable at the element level. Pick Squarespace for simple sites maintained by non-designers, accepting documented limitations where blocks cannot be fixed. Either way the workflow is identical: automated scan across key templates, fix mechanical failures (contrast, alt text, labels, heading order), audit each embed or block individually, publish an accessibility statement, and re-scan after meaningful changes.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Both Can Comply</h3><p>Conformant sites exist on both builders. Process quality beats tooling choice.</p></div>
+      <div class="card"><h3>🚀 Start With a Scan</h3><p>An automated scan separates fixable-today issues from structural ones in minutes — on any platform.</p></div>
+      <div class="card"><h3>📄 Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and known limitations.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">The free scanner runs on any platform — Webflow, Squarespace or hand-written HTML — and gives you a prioritised worklist in seconds.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/webflow-accessibility-check" class="btn-secondary">Webflow Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA apply differently to Webflow and Squarespace sites?</h3><p>No. The law regulates the service offered to consumers, not the builder that produced it. Sites on either platform face the same WCAG 2.1 AA / EN 301 549 requirements.</p></div>
+      <div class="card"><h3>Which builder is more accessible out of the box?</h3><p>Squarespace templates start more consistent because users cannot break the underlying markup; Webflow starts neutral — a disciplined designer produces excellent markup, a careless one produces div soup. Real-world conformance depends far more on process than on the default.</p></div>
+      <div class="card"><h3>Can I fix accessibility issues in Squarespace myself?</h3><p>Much of it: alt text, heading assignment in supported blocks, colour styles, link descriptions. Issues inside specific blocks or third-party extensions usually require swapping the block or documenting the limitation.</p></div>
+      <div class="card"><h3>Is Webflow accessibility work expensive?</h3><p>It is skilled work but bounded: converting div-based structure to semantic headings and buttons, taming interactions and adding focus management is typically days of effort for a marketing site, not weeks — provided it is done during design rather than after launch.</p></div>
+      <div class="card"><h3>How often should I re-scan my builder site?</h3><p>After every significant design change, content migration or section addition — and at least quarterly. Both builders let editors reintroduce failures (empty alt text, off-brand colours) without any code being touched.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/webflow-accessibility-check" class="btn-secondary">Webflow Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WEBFLOW · EAA</span><h3><a href="/blog/webflow-accessibility-audit" style="color:var(--color-accent);text-decoration:none;">Webflow Accessibility Audit: From Clean Canvas to Compliant</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SQUARESPACE · EAA</span><h3><a href="/blog/squarespace-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Squarespace Accessibility: Template Limits and Workarounds</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost in 2026?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

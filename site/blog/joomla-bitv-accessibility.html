@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joomla Accessibility: Meeting BITV 2.0 and EN 301 549</title>
+<meta name="description" content="How to make Joomla sites compliant with BITV 2.0, EN 301 549 and the EAA. Template overrides, editor content checks, extension audits, and a practical testing workflow.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Joomla Accessibility: Meeting BITV 2.0 and EN 301 549">
+<meta property="og:description" content="How to make Joomla sites compliant with BITV 2.0, EN 301 549 and the EAA. Template overrides, editor content checks, extension audits, and a practical testing workflow.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/joomla-bitv-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Joomla Accessibility: Meeting BITV 2.0 and EN 301 549">
+<meta name="twitter:description" content="How to make Joomla sites compliant with BITV 2.0, EN 301 549 and the EAA. Template overrides, editor content checks, extension audits, and a practical testing workflow.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/joomla-bitv-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/joomla-bitv-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Joomla Accessibility: Meeting BITV 2.0 and EN 301 549",
+  "description": "How to make Joomla sites compliant with BITV 2.0, EN 301 549 and the EAA. Template overrides, editor content checks, extension audits, and a practical testing workflow.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · JOOMLA · BITV · EAA</div>
+    <h1>Joomla Accessibility:<br>Meeting BITV 2.0 and EN 301 549</h1>
+    <p class="subtitle">Template overrides, editor habits and extension checks that bring a Joomla site up to WCAG 2.1 AA — for German public-sector clients and EAA-covered businesses.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-joomla-and-bitv" class="btn-secondary">Joomla Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-joomla-and-bitv">Why Joomla and BITV</h2>
+    <p>Joomla remains widely deployed in German public administration, education associations and Mittelstand websites — audiences governed by BITV 2.0 in Germany and, since June 2025, by the European Accessibility Act across the EU. BITV 2.0 is essentially EN 301 549, the European ICT accessibility standard incorporating WCAG 2.1 level AA. A Joomla site built without a deliberate accessibility pass will typically fail several EN 301 549 requirements on every page — and German public-sector clients increasingly require a documented accessibility statement before signing a contract.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏛️ Public-Sector Clients</h3><p>German public bodies must meet BITV 2.0. Agencies serving them need documented conformance, not good intentions.</p></div>
+      <div class="card"><h3>📜 BFSG for Private Sites</h3><p>Private-sector services fall under the BFSG (the German EAA implementation) — same technical standard, different legal route.</p></div>
+      <div class="card"><h3>🧱 Template Inheritance</h3><p>Most Joomla sites run heavily customised descendants of old Protostar-based templates — decade-old markup patterns replicate site-wide.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-joomla-sites-fail">Where Joomla Sites Fail</h2>
+    <p>Most accessibility defects on Joomla sites come from three places:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 Editor Content</h3><p>Missing alt text is the number one defect — Joomla does not enforce the alt field on media. Second: headings pasted from Word as visual formatting instead of real h2/h3 elements.</p></div>
+      <div class="card"><h3>🧩 Templates &amp; Overrides</h3><p>Old templates skip landmark elements, render icon-only buttons without aria-labels, and repeat identical "read more" link texts across every article teaser.</p></div>
+      <div class="card"><h3>🔌 Extensions</h3><p>Forms, galleries, sliders and forum extensions frequently inject non-semantic markup, keyboard traps or missing focus states. Every extension needs its own review.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="editor-and-config-fixes">Editor and Config Fixes</h2>
+    <p>These fixes need no developer and cover much of your defect volume:</p>
+    <p></p>
+    <p><strong>1. Alt text discipline.</strong> Train editors: informative images get descriptive alt text, decorative images get explicit empty alt="". Joomla's media manager allows both — it just does not require them.</p>
+    <p></p>
+    <p><strong>2. Semantic headings.</strong> Restrict the editor's allowed formats so articles use real Heading 2/3 styles, not bold paragraph text. Check the article view's template override renders titles as actual heading elements.</p>
+    <p></p>
+    <p><strong>3. Meaningful "Read more" links.</strong> Configure the global Read More text to include the article title ("Read more: {title}") — repeated identical links fail WCAG 2.4.4 and wreck screen-reader link lists.</p>
+    <p></p>
+    <p><strong>4. Language attributes.</strong> Set the content language correctly per site/multilingual association so <html lang> matches the page. This maps directly to EN 301 549 clause 9.3.1.</p>
+    <p></p>
+    <p><strong>5. Forms.</strong> Every field needs a programmatically associated label — verify whatever form extension you use outputs real label elements, not placeholder-only fields.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="template-and-extension-fixes">Template and Extension Fixes</h2>
+    <p>Developer-side work, once per project and reused everywhere:</p>
+    <p></p>
+    <p><strong>Modernise the base:</strong> if the template still descends from Protostar-era markup, migrate to a current bootstrap-based or custom template with proper landmarks (header, nav, main, footer).</p>
+    <p></p>
+    <p><strong>Skip links and focus:</strong> a visible "skip to content" link as the first focusable element; never remove outlines globally — style :focus-visible instead.</p>
+    <p></p>
+    <p><strong>Keyboard operability:</strong> tab through menus, accordions, sliders and lightboxes. Anything mouse-only is a failure under EN 301 549.</p>
+    <p></p>
+    <p><strong>Extension audit:</strong> test each third-party extension's widgets individually; replace or wrap the ones that fail rather than shipping known-broken components.</p>
+    <p></p>
+    <p><strong>Contrast and documents:</strong> verify theme colours against 4.5:1 body-text minimum, and treat downloadable PDFs as in scope — tagged, readable PDFs or accessible HTML alternatives.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="testing-and-documentation">Testing and Documentation</h2>
+    <p>A realistic verification loop for a Joomla project takes one afternoon:</p>
+    <p></p>
+    <p><strong>Step 1 — automated scan.</strong> Run a static scanner against key page types (home, article, contact form, category listing). It catches contrast failures, missing lang, broken heading order, empty buttons and duplicate IDs in minutes.</p>
+    <p></p>
+    <p><strong>Step 2 — keyboard walkthrough.</strong> Unplug the mouse and navigate every flow a user would. Note anything unreachable, trapped, or with invisible focus.</p>
+    <p></p>
+    <p><strong>Step 3 — screen reader spot-check.</strong> One representative flow with NVDA — listening for unlabelled controls and confusing structure, not doing a full audit.</p>
+    <p></p>
+    <p><strong>Step 4 — document.</strong> Publish an accessibility statement listing conformance status, known limitations and a feedback channel. BITV public-sector clients expect it; the BFSG requires it for private services in scope.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner on your Joomla site first — it catches the mechanical WCAG issues (contrast, lang, headings, labels) in seconds so you can spend expert time on the judgement calls.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Joomla Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/joomla-accessibility-check" class="btn-secondary">Joomla Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does BITV 2.0 apply to my commercial client?</h3><p>BITV 2.0 binds German public-sector bodies. Private companies fall under the Barrierefreiheitsstärkungsgesetz (BFSG), which implements the EAA — but both reference EN 301 549 / WCAG-based requirements, so the same technical work satisfies both frameworks.</p></div>
+      <div class="card"><h3>Is Joomla itself accessible?</h3><p>The Joomla core backend has improved significantly, and the CMS provides the tools (semantic rendering, multilingual associations, media metadata). Actual compliance depends almost entirely on the specific template, extension set and editorial practice on each site.</p></div>
+      <div class="card"><h3>Which WCAG version should we target?</h3><p>EN 301 549 currently references WCAG 2.1 Level AA. Building toward WCAG 2.2 AA gives headroom — its additions mostly concern focus appearance, dragging alternatives and consistent help.</p></div>
+      <div class="card"><h3>We use a popular forms extension — are we fine?</h3><p>Not automatically. Several widely-used form extensions output placeholder-only fields or custom select widgets without keyboard support. Audit your exact installed version's rendered markup on staging.</p></div>
+      <div class="card"><h3>How long does a Joomla remediation take?</h3><p>For a typical 20-50 page site on a maintained template: 2-5 working days for mechanical fixes plus editor training. Sites still on Protostar-era templates take longer — the template migration dominates.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Joomla Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/joomla-accessibility-check" class="btn-secondary">Joomla Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TYPO3 · BITV</span><h3><a href="/blog/typo3-accessibility-bitv-check" style="color:var(--color-accent);text-decoration:none;">TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DRUPAL · WCAG</span><h3><a href="/blog/drupal-wcag-accessibility" style="color:var(--color-accent);text-decoration:none;">Drupal Accessibility: WCAG and EAA Compliance Guide</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA CHECKLIST</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist for Agency Websites</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

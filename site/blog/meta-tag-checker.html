@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta Tag Checker — Inspect Any Page's Meta Tags (Free)</title>
+<meta name="description" content="Free meta tag checker for any URL: title, meta description, robots, canonical, viewport and social tags. See exactly what search engines and social platforms read from your page — no signup.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Meta Tag Checker — free, one URL in, full report out">
+<meta property="og:description" content="Check title, description, robots, canonical, viewport and social meta tags on any URL. Free, no signup.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/meta-tag-checker">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Meta Tag Checker — free, one URL in, full report out">
+<meta name="twitter:description" content="Check title, description, robots, canonical and social meta tags on any URL.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/meta-tag-checker"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/meta-tag-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/meta-tjekker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/meta-tag-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Meta Tag Checker \u2014 inspect any page\u2019s meta tags (free)", "description": "Free meta tag checker for any URL: title, meta description, robots, canonical, viewport and social tags. See exactly what search engines and social platforms read from your page \u2014 no signup.", "url": "https://hermes-passiv.pages.dev/blog/meta-tag-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; TECHNICAL SEO</div>
+    <h1>Meta Tag Checker<br>See What Crawlers See</h1>
+    <p class="subtitle">Your page's meta tags decide how it looks in Google results, social shares and browser tabs — and whether crawlers index it at all. Paste a URL and see every tag a crawler reads.</p>
+    <div class="hero-cta">
+      <a href="#what-to-check" class="btn-primary">Read the guide</a>
+      <a href="/page-profile" class="btn-secondary">Check a URL now &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="what-to-check">
+  <div class="container">
+    <h2>The meta tags that actually matter</h2>
+    <p>Most pages carry a dozen meta tags; only a handful affect traffic. A good checker reads the raw HTML response — the same thing a search engine crawler sees on first fetch — and reports each one's presence and validity.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 Title tag</h3><p>Not strictly a meta tag, but the single strongest on-page signal. Aim for unique, descriptive titles of roughly 50–60 characters per page.</p></div>
+      <div class="card"><h3>📝 Meta description</h3><p>Does not rank directly, but Google often shows it as the snippet. Missing or duplicated descriptions mean Google writes your ad copy for you.</p></div>
+      <div class="card"><h3>🤖 Robots meta</h3><p><code>noindex</code> or <code>nofollow</code> here silently removes pages from search. It is the most common accidental traffic killer we see.</p></div>
+      <div class="card"><h3>🔗 Canonical link</h3><p>Tells search engines which URL is the real one. Wrong canonicals merge your pages' value into someone else's URL — or into nothing.</p></div>
+      <div class="card"><h3>📱 Viewport</h3><p><code>&lt;meta name="viewport"&gt;</code> controls mobile rendering. Missing it means an unreadable zoomed-out page on phones.</p></div>
+      <div class="card"><h3>💬 Social tags</h3><p>Open Graph and twitter:card tags control share previews on LinkedIn, Facebook and X. They are invisible until someone shares your link.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="how-to-check">How to check meta tags on any page</h2>
+    <p><strong>Option A — automated (recommended).</strong> Paste the URL into the <a href="/page-profile" style="color:var(--color-accent);">free page profiler</a>. In seconds you get the complete meta tag picture — title length, description length, robots directives, canonical target, viewport and all Open Graph / Twitter Card tags — alongside a full technical SEO report.</p>
+    <p><strong>Option B — view source.</strong> Open the page, right-click, "View Page Source" and read the <code>&lt;head&gt;</code>. This shows what the server sent — which matters, because tags injected by JavaScript at runtime are invisible to most crawlers.</p>
+    <p><strong>Option C — curl for developers.</strong> <code>curl -s https://example.com | grep -i '&lt;meta'</code> gives you the raw list in the terminal, perfect for quick CI checks.</p>
+    <p><strong>Fixing icons too?</strong> Missing or broken favicons are a common finding in meta tag audits. The free <a href="/site-icons" style="color:var(--color-accent);">site-icons CLI</a> generates every favicon size plus favicon.ico from one SVG — run it once, ship the folder, done.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📏 Length limits that matter</h3><p>Title truncates around 55–65 characters, description around 150–160. Longer is not punished — it is simply cut off mid-sentence.</p></div>
+      <div class="card"><h3>🧩 One set per page</h3><p>Template-wide defaults mean every article shares one description. Most CMSs fix this with one SEO plugin or one template partial per content type.</p></div>
+      <div class="card"><h3>🔁 After fixing</h3><p>Crawlers re-fetch on their own schedule. Request re-indexing in Google Search Console after deploying fixes to see them reflected within days rather than weeks.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="mistakes">Five meta tag mistakes worth checking for</h2>
+    <p><strong>1. Staging robots tags left in production.</strong> A <code>noindex</code> carried over from staging quietly removes the whole site from Google. Check it first when traffic drops mysteriously.</p>
+    <p><strong>2. Duplicate titles across pages.</strong> When ten pages share one title, search engines pick which to show — and users cannot tell them apart in results.</p>
+    <p><strong>3. Canonical pointing at the homepage.</strong> A copy-pasted <code>&lt;link rel="canonical"&gt;</code> tells Google every page is a copy of the front page.</p>
+    <p><strong>4. Missing viewport tag.</strong> The page renders desktop-width on phones and fails mobile usability — a ranking factor on Google.</p>
+    <p><strong>5. JS-only meta tags.</strong> Single-page apps that set title and description client-side serve empty metadata to crawlers. Render tags server-side.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Is this checker free?</h3><p>Yes. The <a href="/page-profile" style="color:var(--color-accent);">page profiler</a> runs in your browser, needs no account, and returns the meta tags together with headings, links, images and performance hints.</p></div>
+      <div class="card"><h3>Do meta keywords still matter?</h3><p>No. Google has ignored the meta keywords tag since 2009. Its presence neither helps nor hurts — most modern sites omit it entirely.</p></div>
+      <div class="card"><h3>Why does my page show a different title in Google?</h3><p>Google may rewrite titles it considers unhelpful — too long, keyword-stuffed, or boilerplate. A concise, accurate title usually gets shown as written.</p></div>
+      <div class="card"><h3>Can I bulk-check a whole site?</h3><p>Yes — the companion Python CLI outputs JSON per URL, so you can loop it over a sitemap and fail a build on missing descriptions. See the <a href="/blog/technical-seo-check-website" style="color:var(--color-accent);">technical SEO check guide</a>.</p></div>
+      <div class="card"><h3>Danish version?</h3><p>There is a <a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);">Danish technical SEO guide</a> and a fully Danish profiler at /da/page-profile.</p></div>
+      <div class="card"><h3>What about social previews?</h3><p>Open Graph and Twitter Card tags are covered in detail in the <a href="/blog/open-graph-checker" style="color:var(--color-accent);">Open Graph checker guide</a>.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Check your meta tags free &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/blog/open-graph-checker" class="btn-secondary">Open Graph checker guide &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Related guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO</span><h3><a href="/blog/technical-seo-check-website" style="color:var(--color-accent);text-decoration:none;">Technical SEO check for your website</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO · SOCIAL</span><h3><a href="/blog/open-graph-checker" style="color:var(--color-accent);text-decoration:none;">Open Graph checker — test your share previews</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">A11Y</span><h3><a href="/blog/accessibility-scanner-cli" style="color:var(--color-accent);text-decoration:none;">Accessibility scanning from the command line</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<p><a href="/da/blog/meta-tjekker" lang="da">Dansk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/scan">Free scanner</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

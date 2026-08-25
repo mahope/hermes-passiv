@@ -1,0 +1,13 @@
+name = "hermes-passiv"
+main = "_worker.js"
+compatibility_date = "2024-09-01"
+
+[assets]
+directory = "."
+
+[[kv_namespaces]]
+binding = "VISITS"
+id = "215f8a921ac34dbcad9eb204e06baf2f"
+
+[vars]
+# OPENROUTER_API_KEY comes from a Pages secret in production; not needed for local license tests.

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Copy Bookmarklet — Copy clean Markdown on any browser, no install</title>
+  <meta name="description" content="Free bookmarklet: select any text on any web page and copy it as clean Markdown or plain text. Works in Chrome, Safari, Firefox and Edge — no extension, no install, nothing uploaded.">
+  <meta property="og:title" content="Clean Copy Bookmarklet — no install, any browser">
+  <meta property="og:description" content="Select text anywhere on the web, click the bookmark, paste clean Markdown. Free, no install, nothing leaves your device.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hermes-passiv.pages.dev/clean-copy-bookmarklet">
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Clean Copy Bookmarklet — Copy clean Markdown on any browser, no install">
+  <meta name="twitter:description" content="Free bookmarklet: select any text on any web page and copy it as clean Markdown or plain text. Works in Chrome, Safari, Firefox and Edge — no extension, no install, nothing uploaded.">
+  <meta name="twitter:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy-bookmarklet">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy-bookmarklet">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Clean Copy Bookmarklet",
+  "url": "https://hermes-passiv.pages.dev/clean-copy-bookmarklet",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": "Free bookmarklet: select text on any web page and copy it as clean Markdown or plain text. Works in every browser, no install."
+}
+  </script>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does it work on mobile?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, via manual bookmark editing. On iOS Safari use Share \u2192 Add Bookmark, then edit the bookmark's address to the copied bookmarklet link. On Android Chrome, bookmark any page, then edit it and replace the URL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why a bookmarklet instead of the extension?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No install, no store approval, and it works in browsers where you can't or won't install extensions \u2014 work laptops, locked-down profiles, Safari. The extension adds a keyboard shortcut and right-click menu; the bookmarklet is the same converter with zero setup."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my selected text uploaded anywhere?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Everything happens locally in your browser when you click the bookmark. There is no server component and no network request carries your text."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Some sites block clipboard access \u2014 what then?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A few sites restrict programmatic clipboard writes. When that happens the bookmarklet shows the converted text in a dialog so you can copy it manually. Nothing is lost."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What gets cleaned?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Smart quotes become straight quotes, em/en dashes become plain hyphens, non-breaking and invisible characters are removed. In Markdown mode, headings, bold/italic, links, images, code blocks and lists convert properly."
+      }
+    }
+  ]
+}
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    main { max-width: 860px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+    .lead { font-size: 1.15rem; color: var(--color-text-muted); max-width: 640px; }
+    h2 { margin-top: 2.5rem; }
+    a { color: var(--color-accent); }
+    .bm-box {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 1.6rem 1.5rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    .bm-link {
+      display: inline-block;
+      background: var(--color-accent);
+      color: #fff;
+      padding: 0.7rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      border: 2px dashed rgba(255,255,255,0.35);
+      text-decoration: none;
+    }
+    .bm-note { display: block; margin-top: 0.8rem; color: var(--color-text-muted); font-size: 0.85rem; }
+    ol.steps { padding-left: 1.4rem; }
+    ol.steps li { margin: 0.5rem 0; }
+    code.inline {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 0.1rem 0.4rem;
+      font-size: 0.85em;
+    }
+    .privacy-note {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin: 1.5rem 0;
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+    }
+    details.faq { border-bottom: 1px solid var(--color-border); padding: 0.8rem 0; }
+    details.faq summary { cursor: pointer; font-weight: 600; }
+    details.faq p { color: var(--color-text-muted); font-size: 0.9rem; }
+    .cta-row { margin-top: 1.2rem; display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: 0.95rem; }
+    footer { text-align: center; padding: 2rem 1rem; color: var(--color-text-muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Breadcrumb" style="font-size:0.8rem;margin-bottom:1rem;">
+      <a href="/">Passiv</a> · <a href="/clean-copy">Clean Copy</a> · <span aria-current="page">Bookmarklet</span>
+    </nav>
+
+    <h1>Clean Copy Bookmarklet</h1>
+    <p class="lead">Select any text on any web page, click the bookmark, and your clipboard holds
+    clean Markdown or plain text. No extension, no install, no account — works in every browser,
+    including ones where extensions aren't allowed.</p>
+
+    <div class="privacy-note" role="note">
+      <span aria-hidden="true">🔒</span>
+      <span><strong>Nothing leaves your device.</strong> The conversion runs in your browser the moment
+      you click the bookmark. No upload, no server, no tracking of your text.</span>
+    </div>
+
+    <h2>Install it (30 seconds)</h2>
+    <div class="bm-box">
+      <a class="bm-link" id="cc-bm" href="javascript:(function(){var%20event=window.event;(function%20(root,%20factory)%20{%20%20%20if%20(typeof%20module%20===%20'object'%20&&%20module.exports)%20module.exports%20=%20factory();%20%20%20else%20root.CleanCopyCore%20=%20factory();%20})(typeof%20self%20!==%20'undefined'%20?%20self%20:%20this,%20function%20()%20{%20const%20CLEAN_RULES%20=%20[%20%20%20{%20pattern:%20/[\u201C\u201D]/g,%20replacement:%20'%22'%20},%20%20%20{%20pattern:%20/[\u2018\u2019]/g,%20replacement:%20%22'%22%20},%20%20%20{%20pattern:%20/\u2014/g,%20replacement:%20'%20--%20'%20},%20%20%20{%20pattern:%20/\u2013/g,%20replacement:%20'%20-%20'%20},%20%20%20{%20pattern:%20/[\u200B\u200C\u200D\uFEFF]/g,%20replacement:%20''%20},%20%20%20{%20pattern:%20/\u00A0/g,%20replacement:%20'%20'%20},%20%20%20{%20pattern:%20/([^\n%20\t])[%20\t]{2,}/g,%20replacement:%20'$1%20'%20},%20%20%20{%20pattern:%20/\n{3,}/g,%20replacement:%20'\n\n'%20},%20];%20function%20cleanText(text)%20{%20%20%20let%20cleaned%20=%20text;%20%20%20for%20(const%20rule%20of%20CLEAN_RULES)%20{%20%20%20%20%20cleaned%20=%20cleaned.replace(rule.pattern,%20rule.replacement);%20%20%20}%20%20%20return%20cleaned.trim();%20}%20function%20htmlToMarkdown(html)%20{%20%20%20let%20md%20=%20html;%20%20%20md%20=%20md.replace(/<h1[^>]*>(.*?)<\/h1>/gi,%20'%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<h2[^>]*>(.*?)<\/h2>/gi,%20'%23%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<h3[^>]*>(.*?)<\/h3>/gi,%20'%23%23%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<h4[^>]*>(.*?)<\/h4>/gi,%20'%23%23%23%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<h5[^>]*>(.*?)<\/h5>/gi,%20'%23%23%23%23%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<h6[^>]*>(.*?)<\/h6>/gi,%20'%23%23%23%23%23%23%20$1\n\n');%20%20%20md%20=%20md.replace(/<(?:b|strong)[^>]*>(.*?)<\/(?:b|strong)>/gi,%20'**$1**');%20%20%20md%20=%20md.replace(/<(?:i|em)[^>]*>(.*?)<\/(?:i|em)>/gi,%20'*$1*');%20%20%20md%20=%20md.replace(/<a[^>]*href=%22([^%22]*)%22[^>]*>(.*?)<\/a>/gi,%20'[$2]($1)');%20%20%20md%20=%20md.replace(/<img[^>]*src=%22([^%22]*)%22[^>]*alt=%22([^%22]*)%22[^>]*>/gi,%20'![$2]($1)');%20%20%20md%20=%20md.replace(/<img[^>]*src=%22([^%22]*)%22[^>]*>/gi,%20'![]($1)');%20%20%20md%20=%20md.replace(/<pre[^>]*>(.*?)<\/pre>/gis,%20(_,%20code)%20=>%20{%20%20%20%20%20code%20=%20code.replace(/<code[^>]*>/gi,%20'').replace(/<\/code>/gi,%20'');%20%20%20%20%20code%20=%20code.replace(/<br\s*\/?>/gi,%20'\n');%20%20%20%20%20code%20=%20code.replace(/&amp;/g,%20'&').replace(/&lt;/g,%20'<').replace(/>/g,%20'>');%20%20%20%20%20return%20'```\n'%20+%20code.trim()%20+%20'\n```\n\n';%20%20%20});%20%20%20md%20=%20md.replace(/<code[^>]*>(.*?)<\/code>/gi,%20'`$1`');%20%20%20md%20=%20md.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi,%20(_,%20tableHtml)%20=>%20{%20%20%20%20%20const%20cellText%20=%20(cellHtml)%20=>%20{%20%20%20%20%20%20%20let%20t%20=%20htmlToMarkdown(cellHtml);%20%20%20%20%20%20%20return%20t.replace(/\s*\n+\s*/g,%20'%20').replace(/\|/g,%20'\\|').trim();%20%20%20%20%20};%20%20%20%20%20const%20rows%20=%20[];%20%20%20%20%20const%20trRe%20=%20/<tr[^>]*>([\s\S]*?)<\/tr>/gi;%20%20%20%20%20let%20trm;%20%20%20%20%20while%20((trm%20=%20trRe.exec(tableHtml))%20!==%20null)%20{%20%20%20%20%20%20%20const%20cells%20=%20[];%20%20%20%20%20%20%20const%20cellRe%20=%20/<(th|td)[^>]*(?:colspan\s*=\s*[\x22\x27]?(\d+)[\x22\x27]?)?[^>]*>([\s\S]*?)<\/\1>/gi;%20%20%20%20%20%20%20let%20cm;%20%20%20%20%20%20%20while%20((cm%20=%20cellRe.exec(trm[1]))%20!==%20null)%20{%20%20%20%20%20%20%20%20%20cells.push(cellText(cm[3]));%20%20%20%20%20%20%20%20%20const%20span%20=%20Math.max(1,%20parseInt(cm[2]%20||%20'1',%2010)%20||%201);%20%20%20%20%20%20%20%20%20for%20(let%20s%20=%201;%20s%20<%20span;%20s++)%20cells.push('');%20%20%20%20%20%20%20}%20%20%20%20%20%20%20rows.push(cells);%20%20%20%20%20}%20%20%20%20%20if%20(rows.length%20===%200)%20return%20'';%20%20%20%20%20const%20cols%20=%20Math.max(...rows.map(r%20=>%20r.length));%20%20%20%20%20rows.forEach(r%20=>%20{%20while%20(r.length%20<%20cols)%20r.push('');%20});%20%20%20%20%20const%20out%20=%20['|%20'%20+%20rows[0].join('%20|%20')%20+%20'%20|',%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20'|'%20+%20Array(cols).fill('%20---%20').join('|')%20+%20'|'];%20%20%20%20%20for%20(let%20i%20=%201;%20i%20<%20rows.length;%20i++)%20{%20%20%20%20%20%20%20out.push('|%20'%20+%20rows[i].join('%20|%20')%20+%20'%20|');%20%20%20%20%20}%20%20%20%20%20return%20'\n'%20+%20out.join('\n')%20+%20'\n\n';%20%20%20});%20%20%20const%20convertList%20=%20(_,%20openTag,%20body)%20=>%20{%20%20%20%20%20const%20ordered%20=%20/^<ol/i.test(openTag);%20%20%20%20%20let%20idx%20=%200;%20%20%20%20%20const%20items%20=%20[];%20%20%20%20%20const%20re%20=%20/<li[^>]*>([\s\S]*?)<\/li>/gi;%20%20%20%20%20let%20m;%20%20%20%20%20while%20((m%20=%20re.exec(body))%20!==%20null)%20{%20%20%20%20%20%20%20idx%20+=%201;%20%20%20%20%20%20%20const%20marker%20=%20ordered%20?%20`${idx}.%20`%20:%20'-%20';%20%20%20%20%20%20%20const%20inner%20=%20m[1].replace(/^\s+/,%20'').replace(/\s+$/,%20'')%20%20%20%20%20%20%20%20%20.replace(/\n([%20\t]*)-%20/g,%20(all,%20ws)%20=>%20'\n%20%20'%20+%20ws%20+%20'-%20')%20%20%20%20%20%20%20%20%20.replace(/\n([%20\t]*)(\d+)\.%20/g,%20(all,%20ws,%20n)%20=>%20'\n%20%20'%20+%20ws%20+%20n%20+%20'.%20');%20%20%20%20%20%20%20items.push(marker%20+%20inner);%20%20%20%20%20}%20%20%20%20%20return%20'\n'%20+%20items.join('\n')%20+%20'\n';%20%20%20};%20%20%20let%20prev;%20%20%20do%20{%20%20%20%20%20prev%20=%20md;%20%20%20%20%20md%20=%20md.replace(/(<(?:ul|ol)[^>]*>)((?:(?!<\/?(?:ul|ol)[^>]*>)[\s\S])*)<\/(?:ul|ol)>/gi,%20convertList);%20%20%20}%20while%20(md%20!==%20prev);%20%20%20md%20=%20md.replace(/<p[^>]*>(.*?)<\/p>/gi,%20'$1\n\n');%20%20%20md%20=%20md.replace(/<br\s*\/?>/gi,%20'\n');%20%20%20md%20=%20md.replace(/<hr\s*\/?>/gi,%20'---\n\n');%20%20%20md%20=%20md.replace(/<[^>]*>/g,%20'');%20%20%20md%20=%20md.replace(/&amp;/g,%20'&');%20%20%20md%20=%20md.replace(/&lt;/g,%20'<');%20%20%20md%20=%20md.replace(/&gt;/g,%20'>');%20%20%20md%20=%20md.replace(/&quot;/g,%20'%22');%20%20%20md%20=%20md.replace(/&%2339;/g,%20%22'%22);%20%20%20md%20=%20md.replace(/\n{4,}/g,%20'\n\n');%20%20%20md%20=%20md.replace(/([^\n%20\t])[%20]{2,}/g,%20'$1%20');%20%20%20return%20cleanText(md);%20}%20%20%20return%20{%20cleanText,%20htmlToMarkdown%20};%20});;var%20CC=self.CleanCopyCore;var%20sel=window.getSelection&&window.getSelection();%20if(!sel||sel.isCollapsed||!String(sel).trim()){alert('Clean%20Copy:%20select%20some%20text%20on%20the%20page%20first.');return;}%20var%20range=sel.rangeCount>0?sel.getRangeAt(0):null;%20var%20html='';%20var%20text=String(sel);%20if(range){var%20c=document.createElement('div');c.appendChild(range.cloneContents());html=c.innerHTML;}%20try{%20var%20out=(html&&/<[a-z][\s\S]*>/i.test(html))?CC.htmlToMarkdown(html):CC.cleanText(text);%20if(event&&event.altKey){out=CC.cleanText(String(sel).replace(/<[^>]*>/g,''));}%20navigator.clipboard.writeText(out).then(function(){},function(){window.prompt('Clean%20Copy%20-%20copy%20manually%20(Ctrl/Cmd+C):',out);});%20}catch(e){window.prompt('Clean%20Copy%20-%20copy%20manually%20(Ctrl/Cmd+C):',text);}})();" title="Drag me to your bookmarks bar"
+         onclick="event.preventDefault();document.getElementById('bm-help').hidden=false;">⬇️ Clean Copy</a>
+      <span class="bm-note"><strong>Drag this button to your bookmarks bar.</strong> That's the whole install.</span>
+      <span class="bm-note" id="bm-help" hidden>Can't drag? Right-click or long-press the button, choose “Copy link”, then add a new bookmark named “Clean Copy” and paste the link as its address.</span>
+    </div>
+
+    <ol class="steps">
+      <li>Show your bookmarks bar (<code class="inline">Ctrl+Shift+B</code> on Windows/Linux, <code class="inline">Cmd+Shift+B</code> on Mac).</li>
+      <li>Drag the blue button above onto the bar.</li>
+      <li>Select some text on any page.</li>
+      <li>Click the <strong>Clean Copy</strong> bookmark, then paste — it's clean Markdown.</li>
+    </ol>
+    <p>Prefer plain text? Hold <code class="inline">Alt</code> (Windows/Linux) or <code class="inline">Option</code> (Mac) while clicking the bookmark to strip all formatting instead.</p>
+
+    <h2>What gets cleaned</h2>
+    <ul>
+      <li>“Smart quotes” become straight quotes that don't break code or spreadsheets</li>
+      <li>Em dashes, en dashes and non-breaking spaces become plain equivalents</li>
+      <li>Invisible zero-width characters are removed entirely</li>
+      <li>In Markdown mode: headings, bold/italic, links, images, code blocks and lists convert properly</li>
+    </ul>
+    <p>The converter is the exact same engine used by the
+    <a href="/clean-copy-tool">Clean Copy web tool</a> and the
+    <a href="/clean-copy">browser extension</a>.</p>
+
+    <div class="cta-row">
+      <a href="/clean-copy">Get the browser extension →</a>
+      <a href="/clean-copy-tool">Or try the paste-anywhere web tool →</a>
+    </div>
+
+    <h2>FAQ</h2>
+    <details class="faq">
+      <summary>Does it work on mobile?</summary>
+      <p>Yes, via manual bookmark editing. On iOS Safari use Share → Add Bookmark, then edit the bookmark's address to the copied bookmarklet link. On Android Chrome, bookmark any page, then edit it and replace the URL.</p>
+    </details>
+    <details class="faq">
+      <summary>Why a bookmarklet instead of the extension?</summary>
+      <p>No install, no store approval, and it works in browsers where you can't or won't install extensions — work laptops, locked-down profiles, Safari. The extension adds a keyboard shortcut and right-click menu; the bookmarklet is the same converter with zero setup.</p>
+    </details>
+    <details class="faq">
+      <summary>Is my selected text uploaded anywhere?</summary>
+      <p>No. Everything happens locally in your browser when you click the bookmark. There is no server component and no network request carries your text.</p>
+    </details>
+    <details class="faq">
+      <summary>Some sites block clipboard access — what then?</summary>
+      <p>A few sites restrict programmatic clipboard writes. When that happens the bookmarklet shows the converted text in a dialog so you can copy it manually. Nothing is lost.</p>
+    </details>
+    <details class="faq">
+      <summary>What gets cleaned?</summary>
+      <p>Smart quotes become straight quotes, em/en dashes become plain hyphens, non-breaking and invisible characters are removed. In Markdown mode, headings, bold/italic, links, images, code blocks and lists convert properly.</p>
+    </details>
+
+    <footer>
+      <p><a href="/clean-copy">Clean Copy extension</a> · <a href="/clean-copy-tool">Web tool</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
+    </footer>
+  </main>
+
+  <script src="/track.js"></script>
+  <script>
+  // Anonymous engagement signal: a click on the placeholder (drag start isn't
+  // reliably detectable across browsers).
+  document.getElementById('cc-bm').addEventListener('click', function () {
+    try { trackEvent('bm-click'); } catch (e) {}
+  });
+  </script>
+</body>
+</html>

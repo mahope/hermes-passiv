@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building an HTML to Markdown Converter: A Field Guide — Clean Copy</title>
+<meta name="description" content="A deep technical look at building a real HTML-to-Markdown converter: how to handle nested lists, tables with pipes, CDATA, smart quotes, entity decoding, readability extraction, and 15+ edge cases that break naive implementations.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Building an HTML to Markdown Converter: A Field Guide">
+<meta property="og:description" content="How Clean Copy's HTML-to-Markdown converter handles nested lists, tables, entities, CDATA, and 15+ edge cases — with real code examples and lessons from production use.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/building-html-to-markdown-converter">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Building an HTML to Markdown Converter: A Field Guide">
+<meta name="twitter:description" content="How Clean Copy's HTML-to-Markdown converter handles nested lists, tables, entities, CDATA, and 15+ edge cases — with real code examples and lessons from production use.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/building-html-to-markdown-converter">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/building-html-to-markdown-converter">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Building an HTML to Markdown Converter: A Field Guide",
+  "description": "A deep technical look at building a real HTML-to-Markdown converter: nested lists, tables with pipes, CDATA, smart quotes, entity decoding, readability extraction, and 15+ edge cases that break naive implementations.",
+  "author": {
+    "@type": "Organization",
+    "name": "Clean Copy"
+  },
+  "publisher": { "@type": "Organization", "name": "Mahope" },
+  "datePublished": "2026-08-24",
+  "dateModified": "2026-08-24"
+}
+</script>
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/building-html-to-markdown-converter">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter">
+</head>
+<body>
+
+<header class="hero blog-hero">
+  <div class="container">
+    <div class="badge">TECHNICAL DEEP DIVE</div>
+    <h1>Building an HTML to Markdown Converter: A Field Guide</h1>
+    <p class="subtitle">What I learned building a production HTML-to-Markdown converter used across 5 platforms — and the 15+ edge cases that will break a naive implementation.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-secondary">🧰 Try the converter</a>
+      <a href="/clean-copy" class="btn-secondary">📦 Get Clean Copy</a>
+      <a href="/blog/developer-text-tools" class="btn-secondary">← More tools</a>
+    </div>
+  </div>
+</header>
+
+<main class="container blog-content">
+
+<p><em>This article is based on building the HTML-to-Markdown converter that powers <a href="/clean-copy">Clean Copy</a> — a cross-platform tool (browser extensions, CLI, GitHub Action, Homebrew, Obsidian plugin) that converts selected text or URLs to clean Markdown. The converter is a single JavaScript file, ~400 lines, zero dependencies, shared verbatim across all platforms.</em></p>
+
+<p><strong>Related:</strong> <a href="/blog/table-alignment-html-to-markdown">Preserving table column alignment in HTML to Markdown</a> — how v1.4.1 carries text-align into the separator row.</p>
+
+<h2>1. The naive approach: regex</h2>
+
+<p>Every HTML-to-Markdown converter starts the same way:</p>
+
+<pre><code>html.replace(/&lt;h1&gt;(.*?)&lt;\/h1&gt;/gi, '# $1')
+    .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/gi, '**$1**')
+    .replace(/&lt;img.*?src="(.*?)".*?&gt;/gi, '![]($1)')</code></pre>
+
+<p>This works for <em>controlled</em> input — a README template, a note-taking app's limited HTML subset. But throw a real web page at it — Wikipedia, MDN docs, a news article — and the cracks appear immediately.</p>
+
+<p>A production converter needs to handle:</p>
+
+<ul>
+  <li>Nested elements (a list inside a list inside a blockquote)</li>
+  <li>HTML attributes that contain <code>&gt;</code> (inline JSON, event handlers)</li>
+  <li>Self-closing tags, malformed tags, and unclosed tags</li>
+  <li>Tables with pipes in cell content, colspan, rowspan</li>
+  <li>CDATA sections, SVG/MathML subtrees, form controls</li>
+  <li>Smart quotes, em-dashes, zero-width characters, invisible Unicode</li>
+  <li>HTML entities that look like tags (<code>&amp;lt;b&amp;gt;</code> in code blocks)</li>
+</ul>
+
+<p>Let's walk through each challenge and how the Clean Copy converter addresses it.</p>
+
+<h2>2. Architectural approach: iterative refinement</h2>
+
+<p>The converter doesn't use a DOM parser or recursive descent. It uses <strong>iterative regex substitution</strong> — a series of passes that transform HTML into progressively cleaner Markdown. Each pass handles one category of element, and some passes loop until no more substitutions can be made (required for nested structures like lists and blockquotes).</p>
+
+<p>The processing pipeline:</p>
+
+<ol>
+  <li><strong>Pre-strip:</strong> Remove script, style, noscript, template, and head content entirely — before any other transformation runs</li>
+  <li><strong>Preserve CDATA:</strong> Extract CDATA content before tag stripping consumes it</li>
+  <li><strong>Strip SVG/MathML:</strong> Remove entire subtrees (preserving MathML alt text)</li>
+  <li><strong>Process form controls:</strong> Extract select option labels, input values, textarea content</li>
+  <li><strong>Complex block elements:</strong> details/summary, dl/dt/dd, figure/figcaption, iframe/object</li>
+  <li><strong>Nested elements:</strong> blockquotes → tables → lists (innermost first, iteratively)</li>
+  <li><strong>Inline elements:</strong> headings, bold, italic, links, images, code, pre</li>
+  <li><strong>Simple block elements:</strong> paragraphs, line breaks, horizontal rules</li>
+  <li><strong>Safe tag stripping:</strong> Remove any remaining HTML tags, respecting quotes</li>
+  <li><strong>Entity decode:</strong> Decode HTML entities after all tags are gone</li>
+  <li><strong>Text cleaning:</strong> Normalize smart quotes, dashes, whitespace, zero-width characters</li>
+</ol>
+
+<p>This ordering is critical. Run entity decoding <em>before</em> tag stripping, and <code>&amp;lt;b&amp;gt;</code> in a code block becomes a real <code>&lt;b&gt;</code> tag, which the tag stripper consumes — eating the rest of the block's content. That was a real bug.</p>
+
+<h2>3. The big challenge: nested structures</h2>
+
+<h3>Lists</h3>
+
+<p>A simple regex can flatten one level of list: <code>/&lt;li&gt;(.*?)&lt;\/li&gt;/g</code>. But real HTML has:</p>
+
+<pre><code>&lt;ul&gt;
+  &lt;li&gt;Item 1
+    &lt;ul&gt;
+      &lt;li&gt;Nested A&lt;/li&gt;
+      &lt;li&gt;Nested B&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Item 2&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+
+<p>The naive match <code>&lt;li&gt;(.*?)&lt;\/li&gt;</code> stops at the first <code>&lt;/li&gt;</code> it finds, which is the inner <code>&lt;/li&gt;</code> after "Nested A". The tagged content for "Item 1" becomes <code>Item 1\n    &lt;ul&gt;\n      &lt;li&gt;Nested A</code> — splitting the inner list across multiple captures and producing broken Markdown.</p>
+
+<p><strong>Solution:</strong> Convert lists innermost-first. Match <code>&lt;ul|ol&gt;...&lt;\/ul|ol&gt;</code> using a pattern that does <em>not</em> cross another <code>&lt;ul|ol&gt;</code> tag, then loop until no more conversions happen. Each pass converts only the deepest list level, producing correctly indented nested Markdown.</p>
+
+<pre><code>do {
+  prev = md;
+  md = md.replace(
+    /(&lt;(?:ul|ol)[^&gt;]*&gt;)((?:(?!&lt;\/?(?:ul|ol)[^&gt;]*&gt;)[\s\S])*)&lt;\/(?:ul|ol)&gt;/gi,
+    convertList
+  );
+} while (md !== prev);</code></pre>
+
+<p>The <code>(?:(?!...)...)*</code> pattern is a tempered greedy token — it matches any character that doesn't start <em>another</em> list tag. This guarantees we always operate on the innermost list first. After converting that level to Markdown, the outer list becomes convertible because its children are now text.</p>
+
+<p>This same approach is used for blockquotes and tables.</p>
+
+<h3>Tables with pipes</h3>
+
+<p>Markdown pipe tables use <code>|</code> as the cell separator. If a cell contains a literal pipe — from inline code, or just text like "conditions apply*" — the naive converter produces broken table alignment.</p>
+
+<p><strong>Solution:</strong> Escape pipes inside cell content: <code>.replace(/\|/g, '\\|')</code>. Also escape newlines in cells by replacing them with <code>&lt;br&gt;</code>. And handle colspan by padding with empty cells.</p>
+
+<h3>Blockquotes</h3>
+
+<p>Nested blockquotes need to prefix every line of inner content with <code>&gt; </code>, and nested blockquotes multiply the prefix (<code>&gt; &gt; text</code>). Same innermost-first approach: convert the deepest blockquote first, then the outer one sees already-prefixed lines.</p>
+
+<h2>4. The attribute parsing trap</h2>
+
+<p>Many converters use <code>/&lt;[^&gt;]*&gt;/g</code> to strip remaining tags. This stops at the <em>first</em> <code>&gt;</code> character — even if it sits inside a quoted attribute value.</p>
+
+<p>Consider Wikipedia's <code>data-mw</code> attribute, which contains JSON:</p>
+
+<pre><code>&lt;span data-mw="{&amp;quot;parts&amp;quot;:[{&amp;quot;template&amp;quot;:{&amp;quot;target&amp;quot;:{&amp;quot;wt&amp;quot;:&amp;quot;cite web&amp;quot;}}} ] }"&gt;text&lt;/span&gt;</code></pre>
+
+<p>A naive regex sees the <code>&gt;</code> in the JSON's <code>=&amp;gt;</code> entity (or unencoded <code>&gt;</code> in JavaScript inline handlers) and stops there — eating the rest of the attribute text and leaking raw JSON into the output.</p>
+
+<p><strong>Solution:</strong> A stateful scan that tracks whether we're inside a quoted string:</p>
+
+<pre><code>function stripTagsSafe(html) {
+  let out = '', i = 0;
+  while (i &lt; html.length) {
+    const lt = html.indexOf('&lt;', i);
+    if (lt === -1) { out += html.slice(i); break; }
+    out += html.slice(i, lt);
+    let j = lt + 1, quote = null;
+    while (j &lt; html.length) {
+      const ch = html[j];
+      if (quote) {
+        if (ch === quote) quote = null;
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === '&gt;') {
+        break;
+      }
+      j++;
+    }
+    if (j &gt;= html.length) { out += html.slice(lt); break; }
+    i = j + 1;
+  }
+  return out;
+}</code></pre>
+
+<p>This is slower than a regex — scanning character-by-character — but it's the difference between correct and broken output on real web pages.</p>
+
+<h2>5. Entity decoding: the ordering trap</h2>
+
+<p>HTML entities like <code>&amp;amp;</code>, <code>&amp;lt;</code>, <code>&amp;gt;</code> need to be decoded to their character equivalents. The obvious approach — decode early — is wrong.</p>
+
+<p>Consider a code block containing <code>&amp;lt;b&amp;gt;bold&amp;lt;\/b&amp;gt;</code>. If you decode entities <em>before</em> stripping tags, the <code>&amp;lt;b&amp;gt;</code> becomes a real <code>&lt;b&gt;</code> tag, which the tag stripper will consume — turning the example into plain "bold" instead of preserving it as code content.</p>
+
+<p><strong>Solution:</strong> Decode entities as the <em>last</em> processing step, after all tags have been stripped or converted. The only entity decoded earlier is <code>&amp;amp;</code> (so that <code>&amp;amp;amp;</code> doesn't double-decode to <code>&amp;</code>).</p>
+
+<h2>6. Unicode normalization: invisible characters</h2>
+
+<p>Real pages contain invisible Unicode that leaks into copied text:</p>
+
+<ul>
+  <li><strong>Zero-width space (U+200B)</strong> — used for line-break hints in long words</li>
+  <li><strong>Zero-width non-joiner (U+200C)</strong> — same purpose</li>
+  <li><strong>Word joiner (U+2060)</strong> — The Guardian embeds these mid-word</li>
+  <li><strong>Invisible times operator (U+2062)</strong> — same</li>
+  <li><strong>Byte order mark (U+FEFF)</strong> — BOM from copy-paste</li>
+  <li><strong>Non-breaking space (U+00A0)</strong> — should become a regular space</li>
+</ul>
+
+<p>These don't appear in test cases that use clean example HTML. They only surface when you run the converter against hundreds of real web pages and inspect the output. Most converter projects never discover them because nobody checks the output of "The Guardian, article #57".</p>
+
+<h2>7. Table handling: beyond the basics</h2>
+
+<p>Markdown tables are limited — no colspan, no rowspan, no block elements in cells. Real HTML tables have all of these. The converter flattens them:</p>
+
+<ul>
+  <li><strong>colspan</strong> → pad the row with empty cells so column alignment holds</li>
+  <li><strong>rowspan</strong> → ignore (Markdown has no equivalent; content appears in the first row only)</li>
+  <li><strong>Nested tables</strong> → innermost-first conversion (same pattern as lists)</li>
+  <li><strong>Cell content</strong> → recursively run through the full converter pipeline</li>
+</ul>
+
+<p>Cell content is run through <code>htmlToMarkdown()</code> recursively, so inline formatting, links, lists, and even nested tables inside cells are converted correctly. Whitespace in cells is collapsed to single spaces so multi-line cell HTML doesn't produce broken table rows.</p>
+
+<h2>8. Readability extraction: the URL mode</h2>
+
+<p>When the converter is given a URL (via <code>--url</code> flag or the browser extension's URL input), it needs to extract the page's main content before conversion. The approach:</p>
+
+<ol>
+  <li>Fetch the page, apply a max size limit (5 MB), follow redirects</li>
+  <li>Strip scripts, styles, nav, header, footer markup</li>
+  <li>Score each block-level element by text density and class/id heuristics</li>
+  <li>Return the highest-scoring block as the "main content"</li>
+  <li>Run that through the standard HTML→Markdown pipeline</li>
+</ol>
+
+<p>This is a simplified version of Mozilla's Readability algorithm — good enough for articles, blog posts, and documentation pages. It fails on single-page apps and pages that render content through JavaScript (which is why the browser extension mode works on selected text instead).</p>
+
+<h2>9. Testing strategy</h2>
+
+<p>The converter has 25 permanent tests covering:</p>
+
+<ul>
+  <li><strong>Basic formatting:</strong> headings, bold, italic, links, images</li>
+  <li><strong>Nested structures:</strong> 3-level nested lists, nested blockquotes, lists in blockquotes</li>
+  <li><strong>Tables:</strong> with pipes in cells, empty cells, colspan, nested tables</li>
+  <li><strong>Entities:</strong> &amp;lt; in code blocks, &amp;amp;amp; double-decode prevention</li>
+  <li><strong>Edge cases:</strong> CDATA, empty input, whitespace-only, very long words (5K chars), unclosed tags</li>
+  <li><strong>HTML5:</strong> details/summary, figure/figcaption, dl/dt/dd</li>
+  <li><strong>Unicode:</strong> smart quotes, em-dashes, zero-width characters, invisible operators</li>
+  <li><strong>Real-world regressions:</strong> Every bug found against a real page becomes a permanent test</li>
+</ul>
+
+<p>The "real-world regression" rule is the most important: when a converter processes 100 real pages and someone reports that page #101 produces garbage output, the fix gets a test. Over time, the test suite becomes a map of the web's actual HTML surface area.</p>
+
+<h2>10. Lessons for building your own</h2>
+
+<ol>
+  <li><strong>Don't parse the DOM.</strong> In a browser extension, you could use <code>DOMParser</code> — but that gives you a full browser-grade DOM with normalized tags, which hides the exact markup the user is seeing. Regex-based conversion preserves the raw HTML structure.</li>
+  <li><strong>Process innermost-first.</strong> Nested structures (lists, tables, blockquotes) must be converted from the inside out. A single-pass regex will break nesting.</li>
+  <li><strong>Decode entities last.</strong> Early entity decoding turns code examples into real tags and eats content.</li>
+  <li><strong>Respect quotes in attributes.</strong> A naive <code>&lt;[^&gt;]*&gt;</code> strip will break on attributes containing <code>&gt;</code>.</li>
+  <li><strong>Test against real pages.</strong> Clean example HTML hides every edge case. Run the converter against Wikipedia, MDN, the Guardian, and a dozen random blogs. Every broken output is a test you didn't know you needed.</li>
+  <li><strong>Zero dependencies is a goal, not a default.</strong> A ~400-line converter with no external dependencies is possible — but it requires deliberate attention to Unicode, entities, and recursive nesting.</li>
+</ol>
+
+<h2>Try the converter</h2>
+
+<p>Clean Copy is available as a <a href="/clean-copy">browser extension (Chrome + Firefox)</a>, <a href="https://github.com/mahope/clean-copy-cli">CLI (Homebrew)</a>, <a href="https://github.com/mahope/clean-copy-cli">GitHub Action</a>, and <a href="/clean-copy-tool">online web tool</a> — all running the same converter core. No analytics, no telemetry, no network requests (except when you explicitly fetch a URL).</p>
+
+<div class="hero-cta" style="margin-top: 2rem;">
+  <a href="/clean-copy-tool" class="btn-primary">Try the online converter →</a>
+  <a href="/clean-copy" class="btn-secondary">Get the extension</a>
+  <a href="https://github.com/mahope/clean-copy-cli" class="btn-secondary">CLI on GitHub</a>
+</div>
+
+<p style="margin-top:16px;"><strong>Related:</strong> <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">the complete terminal guide</a> — See it used end-to-end in the terminal guide for the Clean Copy CLI.</p>
+
+</main>
+
+<p><a href="/da/blog/byg-en-html-til-markdown-konverter" lang="da">Dansk version af denne guide</a></p>
+<footer>
+  <div class="container">
+    <nav>
+      <a href="/">Home</a>
+      <a href="/free-tools">Free Tools</a>
+      <a href="/clean-copy">Clean Copy</a>
+      <a href="/clean-copy-tool">Web Tool</a>
+      <a href="https://github.com/mahope/clean-copy-cli">GitHub</a>
+    </nav>
+    <p class="footer-note">Built with zero dependencies and zero tracking. Clean Copy — MIT license.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis tilgængelighedserklæring-generator (EAA / WCAG)</title>
+<meta name="description" content="Svar på 8 hurtige spørgsmål og få en klar-til-publicering tilgængelighedserklæring, der opfylder EAA og WCAG 2.1 AA's dokumentationskrav. Gratis, ingen tilmelding — alt foregår i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis tilgængelighedserklæring-generator (EAA / WCAG)">
+<meta property="og:description" content="Generér en klar-til-publicering tilgængelighedserklæring efter EU's model. Gratis, ingen tilmelding — intet forlader din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/tilgaengelighedserklaering-generator-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Gratis tilgængelighedserklæring-generator (EAA / WCAG)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/tilgaengelighedserklaering-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/tilgaengelighedserklaering-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<meta name="twitter:title" content="Gratis tilgængelighedserklæring-generator (EAA / WCAG)">
+<meta name="twitter:description" content="Generér en klar-til-publicering tilgængelighedserklæring efter EU's model. Gratis, ingen tilmelding.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Er en tilgængelighedserklæring lovpligtig?","acceptedAnswer":{"@type":"Answer","text":"Virksomheder omfattet af Europa-Parlamentets og Rådets direktiv om tilgængelighedskrav for produkter og tjenesteydelser (EAA) skal oplyse om tjenestens tilgængelighed. En publiceret tilgængelighedserklæring er den anerkendte måde at dokumentere overensstemmelse med EN 301 549 / WCAG 2.1 AA på, og den er obligatorisk for offentlige myndigheder under EU's webtilgængelighedsdirektiv."}},{"@type":"Question","name":"Hvad skal en tilgængelighedserklæring indeholde?","acceptedAnswer":{"@type":"Answer","text":"Efter EU's modelerklæring: en forpligtelse til tilgængelighed, overensstemmelsesstatus (hvilken standard og hvor godt den opfyldes), kendte begrænsninger med alternative løsninger, kontaktoplysninger for feedback, den anvendte vurderingsmetode og datoen for seneste gennemgang."}},{"@type":"Question","name":"Hvilket overensstemmelsesniveau må jeg angive?","acceptedAnswer":{"@type":"Answer","text":"Angiv kun det, du kan dokumentere: 'Fuldt overensstemmende' betyder, at alle succeskriterier i WCAG 2.1 AA er opfyldt; 'delvist overensstemmende' betyder, at noget indhold ikke lever op til standarden — list undtagelserne ærligt. At overdrive skaber juridisk risiko."}},{"@type":"Question","name":"Forlader noget, jeg indtaster, min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører udelukkende klient-side. Intet sendes til nogen server, intet gemmes, ingen cookies. Du kopierer eller downloader selv den færdige erklæring."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=url],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #statement { max-width: 760px; margin: 24px auto; padding: 28px 32px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 15px; line-height: 1.6; }
+  #statement h2, #statement h3 { color: #12283a; }
+  #statement dl dt { font-weight: 700; margin-top: 12px; }
+  #statement dl dd { margin-left: 0; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #statement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Tilgængelighedserklærings-generator</h1>
+    <p class="tagline">Svar på 8 spørgsmål → få en klar-til-publicering
+    <strong>tilgængelighedserklæring efter EAA / WCAG 2.1 AA</strong>. Ingen
+    tilmelding, intet forlader din browser.</p>
+  </div>
+</header>
+
+<main class="container">
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Din tjeneste</legend>
+    <label for="org">Organisation / websitets navn</label>
+    <input type="text" id="org" required placeholder="Eksempel Webshop ApS">
+    <label for="siteurl">Webadresse</label>
+    <input type="url" id="siteurl" required placeholder="https://eksempel.dk">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Overensstemmelsesstatus</legend>
+    <label for="status">Hvilket udsagn passer i dag?</label>
+    <select id="status">
+      <option value="full">Fuldt overensstemmende — vi opfylder alle succeskriterier i WCAG 2.1 AA</option>
+      <option value="partial" selected>Delvist overensstemmende — de fleste kriterier opfyldt, nogle undtagelser</option>
+      <option value="inprogress">Endnu ikke fuldt vurderet — vi arbejder hen imod AA</option>
+    </select>
+    <label for="exceptions">Kendte undtagelser / begrænsninger (hvis delvist overensstemmende)</label>
+    <textarea id="exceptions" placeholder="Eksempel: Nogle ældre PDF-downloads er ikke mærket til skærmlæsere. Kontakt os, så sender vi en tilgængelig version inden for 5 hverdage."></textarea>
+    <p class="hint">List hver undtagelse ærligt med en alternativ løsning, hvis der findes en.
+    Det at overdrive fuld overensstemmelse er en juridisk risiko.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Sådan har I testet</legend>
+    <label for="method">Vurderingsmetode</label>
+    <select id="method" multiple size="3">
+      <option value="self" selected>Selvvurdering (intern testning)</option>
+      <option value="auto">Automatiseret scanning (fx vores gratis EAA-scanner)</option>
+      <option value="external">Ekstern tilgængelighedsrevison</option>
+      <option value="manual">Manuel test inkl. tastatur &amp; skærmlæser</option>
+    </select>
+    <p class="hint">Hold Ctrl/Cmd nede for at vælge flere. Ærlig kombination:
+    automatiseret scan + manuelle stikprøver = "selvvurdering med automatiserede værktøjer".</p>
+    <label for="lastreview">Dato for seneste gennemgang</label>
+    <input type="date" id="lastreview">
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Feedbackkanal</legend>
+    <label for="email">E-mail for henvendelser om tilgængelighed</label>
+    <input type="email" id="email" required placeholder="tilgaengelighed@eksempel.dk">
+    <label for="response">Hvor hurtigt svarer I?</label>
+    <input type="text" id="response" value="inden for 5 hverdage">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generér erklæring</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Genereret erklæring</h2>
+  <article id="statement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML-fil</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Udskriv / gem som PDF</button>
+  </div>
+  <p class="no-print">Næste skridt: kør dine sider gennem
+  <a href="/contrast-checker-da">vores gratis kontrast-tjek</a> og
+  <a href="/color-blindness-simulator-da">farveblindhedssimulatoren</a>, så
+  påstandene ovenfor er bakket op af data. Den fulde tjekliste findes i vores
+  <a href="/#products">EAA Compliance Checklist e-bog</a>.</p>
+</section>
+
+<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Hvorfor publicere en tilgængelighedserklæring?</h2>
+  <ul>
+    <li><strong>EU forventer det.</strong> Tjenester omfattet af
+    Europa-Parlamentets tilgængelighedsakt (EAA) skal oplyse brugerne om
+    tjenestens tilgængelighed — en publiceret erklæring er den anerkendte
+    måde at gøre det på. Kravene træder i kraft for eksisterende tjenester
+    i juni 2030, men nye tjenester er allerede omfattet.</li>
+    <li><strong>Den dokumenterer god vilje.</strong> En dateret erklæring med
+    kendte problemer og alternativer viser myndigheder og kunder, at I tager
+    compliance alvorligt.</li>
+    <li><strong>Den aflaster supporten.</strong> Brugere der møder en barriere,
+    får en navngiven kontakt i stedet for at forsvinde i stilhed.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="legal-heading">
+  <h2 id="legal-heading">Ærlig ansvarsfraskrivelse</h2>
+  <p>Dette værktøj producerer en skabelon baseret på EU's model for
+  tilgængelighedserklæringer. Det er ikke juridisk rådgivning, og værktøjet kan
+  ikke verificere jeres påstande om overensstemmelse — kun test kan det. Brug
+  først <a href="/contrast-checker-da">kontrast-tjekket</a>, og angiv derefter
+  ærligt hvad I fandt.</p>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>En del af <a href="/">Hermes Compliance-værktøjskassen</a> — gratis værktøjer
+    og praktiske guides til små europæiske webbureauer.
+    <a href="/accessibility-statement-generator">English version →</a></p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  };
+  var STATUS_TEXT = {
+    full: '<strong>Fuldt overensstemmende</strong> med WCAG 2.1 niveau AA. Det betyder, at indholdet opfylder alle standardens succeskriterier.',
+    partial: '<strong>Delvist overensstemmende</strong> med WCAG 2.1 niveau AA. Delvist overensstemmende betyder, at nogle dele af indholdet ikke fuldt ud lever op til tilgængelighedsstandarden — se "Begrænsninger og alternativer" herunder.',
+    inprogress: 'Vi <strong>arbejder hen imod fuld overensstemmelse</strong> med WCAG 2.1 niveau AA. En opdateret overensstemmelseserklæring publiceres, når det igangværende arbejde er afsluttet.'
+  };
+
+  function buildData() {
+    var methods = Array.prototype.slice.call($('method').selectedOptions)
+      .map(function (o) { return o.text.toLowerCase(); });
+    return {
+      org: $('org').value.trim(),
+      url: $('siteurl').value.trim(),
+      status: $('status').value,
+      exceptions: $('exceptions').value.trim(),
+      methods: methods.length ? methods : ['selvvurdering'],
+      date: $('lastreview').value || new Date().toISOString().slice(0, 10),
+      email: $('email').value.trim(),
+      response: $('response').value.trim() || 'inden for 5 hverdage'
+    };
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2 style="margin-top:0">Tilgængelighedserklæring for ' + esc(d.org) + '</h2>';
+    h += '<dl>';
+    h += '<dt>Webadresse:</dt><dd>' + esc(d.url) + '</dd>';
+    h += '<dt>Seneste gennemgang:</dt><dd>' + esc(d.date) + '</dd>';
+    h += '<dt>Kontakt:</dt><dd>' + esc(d.email) +
+         ' (vi svarer ' + esc(d.response) + ')</dd>';
+    h += '</dl>';
+
+    h += '<h3>Forpligtelse til tilgængelighed</h3>';
+    h += '<p>' + esc(d.org) + ' arbejder for digital tilgængelighed';
+    h += ' for mennesker med handicap. Vi forbedrer løbende brugeroplevelsen';
+    h += ' ved at følge relevante tilgængelighedsstandarder.</p>';
+
+    h += '<h3>Overensstemmelsesstatus</h3>';
+    h += '<p>' + STATUS_TEXT[d.status] + '</p>';
+
+    if (d.status === 'partial' && d.exceptions) {
+      h += '<h3>Begrænsninger og alternativer</h3>';
+      h += '<p>På trods af vores bedste indsats kan følgende dele af sitet';
+      h += ' endnu ikke være fuldt tilgængelige:</p>';
+      d.exceptions.split('\n').filter(function (l) { return l.trim(); }).forEach(function (l) {
+        h += '<ul><li>' + esc(l.trim()) + '</li></ul>';
+      });
+    }
+
+    h += '<h3>Vurderingsmetode</h3>';
+    h += '<p>Denne erklæring er udarbejdet med: ';
+    h += d.methods.join(', ');
+    h += '. Automatiserede tjek blev suppleret med manuel verifikation, hvor det var muligt.';
+    h += ' Automatiserede værktøjer fanger groft sagt 30–40 % af tilgængelighedsproblemerne,';
+    h += ' så manuel vurdering forbliver afgørende.</p>';
+
+    h += '<h3>Feedback</h3>';
+    h += '<p>Vi modtager gerne feedback om websitets tilgængelighed.';
+    h += ' Støder du på en barriere, så kontakt os på <strong>' + esc(d.email);
+    h += '</strong>. Vi forsøger at svare ' + esc(d.response) + '.</p>';
+
+    h += '<p style="font-size:13px;color:#667;margin-top:24px">Denne erklæring er';
+    h += ' lavet med Hermes Compliance gratis tilgængelighedserklærings-generator.';
+    h += ' Den følger strukturen i EU\u2019s model for tilgængelighedserklæringer og';
+    h += ' udgør ikke juridisk rådgivning.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var t = '';
+    t += 'Tilgængelighedserklæring for ' + d.org + '\n\n';
+    t += 'Webadresse: ' + d.url + '\nSeneste gennemgang: ' + d.date + '\n';
+    t += 'Kontakt: ' + d.email + ' (vi svarer ' + d.response + ')\n\n';
+    t += 'FORPLIGTELSE TIL TILGÆNGELIGHED\n' + d.org + ' arbejder for digital tilgængelighed for mennesker med handicap. Vi forbedrer løbende brugeroplevelsen ved at følge relevante tilgængelighedsstandarder.\n\n';
+    t += 'OVERENSSTEMMELSESTATUS\n' + $('statement').textContent.match(/Overensstemmelsesstatus([\s\S]*?)Vurderingsmetode/)[1].trim() + '\n\n';
+    if (d.status === 'partial' && d.exceptions) {
+      t += 'BEGRÆNSNINGER OG ALTERNATIVER\n' + d.exceptions.trim() + '\n\n';
+    }
+    t += 'VURDERINGSMETODE\nDenne erklæring er udarbejdet med: ' + d.methods.join(', ') + '. Automatiserede tjek blev suppleret med manuel verifikation, hvor det var muligt. Automatiserede værktøjer fanger groft sagt 30–40 % af tilgængelighedsproblemerne, så manuel vurdering forbliver afgørende.\n\n';
+    t += 'FEEDBACK\nVi modtager gerne feedback om websitets tilgængelighed. Støder du på en barriere, så kontakt os på ' + d.email + '. Vi forsøger at svare ' + d.response + '.\n';
+    return t;
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    current = buildData();
+    $('statement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes — brug Download HTML i stedet.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="da">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Tilgængelighedserklæring — ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<body style="max-width:760px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733">\n'
+      + $('statement').innerHTML + '\n<\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tilgaengelighedserklaering.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

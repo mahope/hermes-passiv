@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrestaShop vs Shopify: Accessibility Compared</title>
+<meta name="description" content="PrestaShop vs Shopify accessibility compared for EU merchants: where each platform fails WCAG 2.1 AA, theme and module risk, and which is faster to make EAA-compliant.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PrestaShop vs Shopify: Accessibility Compared">
+<meta property="og:description" content="PrestaShop vs Shopify accessibility compared for EU merchants: where each platform fails WCAG 2.1 AA, theme and module risk, and which is faster to make EAA-compliant.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PrestaShop vs Shopify: Accessibility Compared">
+<meta name="twitter:description" content="PrestaShop vs Shopify accessibility compared for EU merchants: where each platform fails WCAG 2.1 AA, theme and module risk, and which is faster to make EAA-compliant.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PrestaShop vs Shopify: Accessibility Compared",
+  "description": "PrestaShop vs Shopify accessibility compared for EU merchants: where each platform fails WCAG 2.1 AA, theme and module risk, and which is faster to make EAA-compliant.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · COMPARISON · EAA</div>
+    <h1>PrestaShop vs Shopify:<br>Accessibility Compared</h1>
+    <p class="subtitle">Both platforms must meet the European Accessibility Act. Where each fails WCAG 2.1 AA, how their fix workflows differ, and what that means for your store.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#same-law-different-platforms" class="btn-secondary">EAA Checklist →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="same-law-different-platforms">Same Law Different Platforms</h2>
+    <p>Shopify and PrestaShop sit under exactly the same legal obligation: since June 2025 the European Accessibility Act requires e-commerce services to conform to EN 301 549 / WCAG 2.1 AA, with no micro-enterprise exemption for online shops. What differs is where the defects come from and who can fix them. Shopify concentrates control in a hosted theme layer with Liquid templates and an app ecosystem; PrestaShop gives you self-hosted core templates, a back office, and a marketplace of modules. The compliance work follows those architectures.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Same Standard</h3><p>EN 301 549 incorporating WCAG 2.1 Level AA applies to both. Payment providers and marketplaces increasingly ask merchants of either platform for documented conformance.</p></div>
+      <div class="card"><h3>🎨 Theme Dominance</h3><p>On both platforms the active theme controls nearly all rendered HTML — heading hierarchy, focus styles, contrast and form labels are theme decisions, not platform decisions.</p></div>
+      <div class="card"><h3>🔌 Third-Party Risk</h3><p>Shopify apps and PrestaShop modules both inject widgets (filters, reviews, popups) with wildly varying accessibility quality. Each needs its own review.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-shopify-fails">Where Shopify Fails</h2>
+    <p>Typical Shopify defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ App Widgets</h3><p>Review sliders, quick-view modals and upsell popups from apps frequently trap keyboard focus or render unlabelled buttons.</p></div>
+      <div class="card"><h3>🎨 Theme Contrast</h3><p>Dawn-derived custom themes ship grey-on-grey sale badges and footer text below 4.5:1.</p></div>
+      <div class="card"><h3>🧭 Ajax Sections</h3><p>Cart drawer and filtering updates that neither move focus nor announce changes via ARIA live regions.</p></div>
+      <div class="card"><h3>📱 Separate Mobile Decisions</h3><p>Theme settings let merchants restyle mobile independently — fixes applied to desktop silently miss the mobile breakpoint.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-prestashop-fails">Where Prestashop Fails</h2>
+    <p>Typical PrestaShop defect patterns:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ Empty Product Legends</h3><p>Bulk imports skip the Legend field, so category grids fill with images that have no alt text at all.</p></div>
+      <div class="card"><h3>🧭 Faceted Filter Modules</h3><p>Third-party filter facets rendered as clickable divs without keyboard support or aria-expanded.</p></div>
+      <div class="card"><h3>💳 Checkout Flow</h3><p>Ajax-swapped checkout steps without focus management, payment fields without associated labels.</p></div>
+      <div class="card"><h3>🧱 Patched Vendor Files</h3><p>Direct edits to core or module files get silently reverted on every upgrade, reintroducing old bugs.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="fix-workflow-compared">Fix Workflow Compared</h2>
+    <p>The remediation loops differ in one important way: <strong>who owns the code.</strong></p>
+    <p></p>
+    <p><strong>Shopify:</strong> fixes land in theme Liquid/CSS via the theme editor or a development copy of the theme. App-caused defects cannot be fixed at all — you replace the app or document it as a limitation in your accessibility statement. Upgrades are managed by Shopify and rarely regress your theme work.</p>
+    <p></p>
+    <p><strong>PrestaShop:</strong> back-office content fixes (alt text via Catalog → Products → Photos Legend, shop language settings) plus template overrides in a child theme. You own the hosting, so you also own upgrade discipline: re-scan after every core, theme and module update because patched vendor files revert.</p>
+    <p></p>
+    <p>Net effect: Shopify trades less control for fewer regression surprises; PrestaShop gives full control but demands a repeatable re-verification habit.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="which-is-easier-to-comply">Which is Easier to Comply</h2>
+    <p>For a typical small EU merchant already on either platform, switching platforms to gain accessibility is almost never worth it — the defect volume lives in the theme and third-party layers, which exist on both. The practical ranking of effort: mechanical fixes (contrast tokens, alt text, labels) take days on both platforms; widget-level app/module remediation takes weeks on both; the differentiator is process discipline. Run an automated scan across home, category, product, cart and checkout pages on either stack, fix in theme or child theme, audit each app/module individually, and publish an accessibility statement with documented limitations. Re-scan after every theme change and platform upgrade.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Either Can Comply</h3><p>Both platforms host fully WCAG-conformant stores today. Architecture determines the workflow, not feasibility.</p></div>
+      <div class="card"><h3>🔁 Regression Discipline</h3><p>PrestaShop upgrades revert vendor patches; Shopify theme edits survive but app updates can too. Both need scheduled re-scans.</p></div>
+      <div class="card"><h3>📄 Document Everything</h3><p>An accessibility statement listing conformance status and known limitations is expected by enforcement authorities on both platforms.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Whichever platform you run, the free scanner finds the mechanical WCAG failures first — then this checklist turns findings into a remediation plan.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA Checklist →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA treat Shopify and PrestaShop stores differently?</h3><p>No. The EAA regulates the e-commerce service, not the platform. A Shopify store and a PrestaShop store selling to EU consumers face the same WCAG 2.1 AA / EN 301 549 requirements, with no micro-enterprise exemption for online shops.</p></div>
+      <div class="card"><h3>Which platform has better built-in accessibility?</h3><p>Both default themes are reasonable starting points, but almost no real store runs a default theme. Customisation depth, installed apps/modules and editorial practice determine actual conformance far more than the platform choice.</p></div>
+      <div class="card"><h3>Can I fix everything myself on Shopify?</h3><p>Theme-level defects yes, via Liquid and CSS. Defects inside third-party apps no — you can only replace the app or document it as a limitation. On PrestaShop you can override any template, including module templates, if you accept the upgrade maintenance burden.</p></div>
+      <div class="card"><h3>Is one platform cheaper to make compliant?</h3><p>Costs are comparable for equivalent stores: days of work for mechanical fixes, weeks for widget-heavy remediation. PrestaShop adds ongoing re-verification cost after each upgrade; Shopify adds recurring app-replacement decisions when vendors will not fix their widgets.</p></div>
+      <div class="card"><h3>How do I start on either platform?</h3><p>Run an automated scan over your key page types first. It produces a concrete worklist of contrast, alt-text, label and heading issues in minutes, and tells you whether your problems live in the theme (fixable now) or in third-party widgets (replace, wrap, or document).</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA Checklist →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">PRESTASHOP · EAA</span><h3><a href="/blog/prestashop-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">PrestaShop Accessibility: EAA Compliance for Your Store</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SHOPIFY · EAA</span><h3><a href="/blog/shopify-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Shopify Accessibility: Getting Your Store EAA-Compliant</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost in 2026?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

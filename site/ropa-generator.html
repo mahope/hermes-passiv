@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free RoPA Generator (GDPR Article 30 Records of Processing</title>
+<meta name="description" content="Answer 12 quick questions per processing activity and generate a GDPR Article 30 record of processing activities (RoPA) entry. Free, no signup — everything stays in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free GDPR RoPA Generator (Article 30)">
+<meta property="og:description" content="Generate an Article 30 record of processing activities in minutes. Free, no signup, runs entirely in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/ropa-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free GDPR RoPA Generator (Article 30)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/ropa-generator"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/ropa-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/ropa-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/ropa-generator">
+<meta name="twitter:title" content="Free GDPR RoPA Generator (Article 30)">
+<meta name="twitter:description" content="Generate an Article 30 record of processing activities in minutes. Free, no signup, runs entirely in your browser.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a RoPA under GDPR?","acceptedAnswer":{"@type":"Answer","text":"A record of processing activities is the register required by GDPR Article 30. Controllers must document each processing activity: its purpose, categories of data subjects and personal data, recipients, transfers outside the EU/EEA, retention periods and security measures. Organisations with fewer than 250 employees are only exempt if their processing is occasional and does not involve sensitive data — which is rarely true for businesses handling customers or staff."}},{"@type":"Question","name":"Do I need a RoPA if we have fewer than 250 employees?","acceptedAnswer":{"@type":"Answer","text":"Most likely yes. The small-organisation exemption in Article 30(5) only applies when processing is not a core activity and is only occasional, involves no special categories of data, and poses no risk to data subjects. A web agency processing client customer data, payroll data or website analytics fails at least one of those tests, so keeping a RoPA is the safe default."}},{"@type":"Question","name":"How detailed should each record be?","acceptedAnswer":{"@type":"Answer","text":"One record per distinct purpose — for example 'client newsletter', 'payroll', 'website analytics'. Each record should let a supervisory authority understand what you do, why, for how long and with what protection. This generator produces exactly that structure; you can repeat it for every activity and keep them all in one document."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished record yourself."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen select,
+  .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 70px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #agreement { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #agreement h2 { color: #12283a; font-size: 18px; }
+  #agreement th, #agreement td { text-align: left; vertical-align: top;
+               padding: 8px 10px; border-bottom: 1px solid #dde5ea; font-size: 13.5px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #agreement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>GDPR Record of Processing Activities Generator</h1>
+    <p class="tagline">Fill in one activity → get a clean
+    <strong>Article 30 RoPA entry</strong> you can drop into your compliance
+    register. Repeat for each activity. No signup, nothing leaves your browser.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. The organisation</legend>
+    <label for="orgName">Organisation name</label>
+    <input type="text" id="orgName" required placeholder="Acme Web Studio ApS">
+    <label for="orgRole">Your role</label>
+    <select id="orgRole">
+      <option value="controller" selected>Controller (we decide why and how data is processed)</option>
+      <option value="processor">Processor (we process on behalf of clients)</option>
+      <option value="both">Both roles (kept as separate records)</option>
+    </select>
+    <label for="dpo">Data protection contact / DPO (or "none appointed")</label>
+    <input type="text" id="dpo" value="None appointed" placeholder="Jane Doe, dpo@acmeweb.example">
+    <label for="orgRep">EU/EEA representative (Art. 27), if applicable</label>
+    <input type="text" id="orgRep" placeholder="Leave empty if the organisation is established in the EU/EEA">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. The processing activity</legend>
+    <label for="activityName">Name of this activity</label>
+    <input type="text" id="activityName" required placeholder="Example: Client newsletter">
+    <label for="purpose">Purpose(s) of the processing</label>
+    <textarea id="purpose" required placeholder="Example: Sending monthly product news and offers to subscribers who have given consent."></textarea>
+    <label for="lawfulBasis">Lawful basis (Article 6)</label>
+    <select id="lawfulBasis">
+      <option value="consent" selected>Consent (Art. 6(1)(a))</option>
+      <option value="contract">Performance of a contract (Art. 6(1)(b))</option>
+      <option value="legal">Legal obligation (Art. 6(1)(c))</option>
+      <option value="vital">Vital interests (Art. 6(1)(d))</option>
+      <option value="task">Public task (Art. 6(1)(e))</option>
+      <option value="legitimate">Legitimate interests (Art. 6(1)(f))</option>
+    </select>
+    <label for="categoriesSubjects">Categories of data subjects</label>
+    <textarea id="categoriesSubjects" required placeholder="Example: newsletter subscribers; prospective clients"></textarea>
+    <label for="categoriesData">Categories of personal data</label>
+    <textarea id="categoriesData" required placeholder="Example: name, e-mail address, open/click statistics"></textarea>
+    <label for="specialCat">Special categories (Art. 9) processed?</label>
+    <select id="specialCat">
+      <option value="no" selected>No special categories are processed</option>
+      <option value="yes">Yes — described below</option>
+    </select>
+    <label for="specialDesc">If yes, describe them</label>
+    <textarea id="specialDesc" placeholder="Only fill in if you selected 'yes' above."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Recipients and transfers</legend>
+    <label for="recipients">Recipients / processors (one per line: name — service)</label>
+    <textarea id="recipients" placeholder="Example:
+Google Ireland Ltd — e-mail delivery
+Hetzner Online GmbH — hosting"></textarea>
+    <p class="hint">Leave empty if no third parties receive the data.</p>
+    <label for="transfer">Transfers outside the EU/EEA?</label>
+    <select id="transfer">
+      <option value="none" selected>No transfers outside the EU/EEA</option>
+      <option value="sccs">Yes — covered by Standard Contractual Clauses</option>
+      <option value="adequacy">Yes — adequacy decision country</option>
+      <option value="other">Yes — other safeguard (described below)</option>
+    </select>
+    <label for="transferDesc">Describe transfer safeguard / countries</label>
+    <textarea id="transferDesc" placeholder="Only fill in if you selected anything other than 'No transfers'. Example: Mailchimp (US) — EU-US Data Privacy Framework / SCCs."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Retention and security</legend>
+    <label for="retention">Retention period / deletion criteria</label>
+    <textarea id="retention" required placeholder="Example: subscriber data deleted upon unsubscription or after 24 months of inactivity."></textarea>
+    <label for="security">Security measures (tick all that apply)</label>
+    <div style="margin-top:6px;font-size:14px;line-height:2">
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Encryption of data at rest and in transit (TLS)" checked> Encryption at rest &amp; in transit (TLS)</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Access restricted by role and least-privilege principle"> Role-based access control</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Two-factor authentication on systems holding personal data"> Two-factor authentication</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Regular backups tested for restoration"> Tested backups</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Staff confidentiality agreements and privacy training"> Confidentiality agreements &amp; training</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="Logging and monitoring of access to personal data"> Access logging</label>
+    </div>
+    <label for="securityOther">Other security measures</label>
+    <input type="text" id="securityOther" placeholder="Anything else worth documenting">
+    <label for="docDate">Date of record</label>
+    <input type="date" id="docDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate record</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Generated record</h2>
+  <article id="agreement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML file</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / save as PDF</button>
+  </div>
+  <p class="no-print">Need a published policy too? Use the <a href="/privacy-notice-generator">free
+  privacy notice generator</a>. Cover your contracts with the
+  <a href="/dpa-generator">free Article 28 DPA generator</a>, check your public
+  pages with the <a href="/scan">free EAA scanner</a>, or see <a href="/free-tools">all free tools</a> — and browse the
+  <a href="/#products">GDPR e-book and template kit</a>. This document is a
+  draft and does not constitute legal advice.</p>
+</section>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">Why keep a record of processing activities</h2>
+  <ul>
+    <li><strong>It is legally required.</strong> GDPR Article 30 obliges
+    controllers and processors to maintain written records of every processing
+    activity. Failing to produce one during an inspection is itself a violation,
+    with fines up to €10 million or 2% of global turnover.</li>
+    <li><strong>It drives everything else.</strong> Your RoPA tells you where
+    DPAs are needed, what your privacy notices must say, how long data may be
+    kept and where breach notifications would have to go. It is the backbone
+    document of practical GDPR work.</li>
+    <li><strong>It is the first thing auditors ask for.</strong> Supervisory
+    authorities, enterprise clients doing vendor assessments and certification
+    bodies all start with "show us your records".</li>
+  </ul>
+</section>
+
+<p style="text-align:center;margin:24px 0">Prefer to work in your own document? <a href="/ropa-template">Download the free RoPA template</a>.</p>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Part of the <a href="/">Hermes Compliance toolkit</a> — free tools and
+    practical guides for small EU web agencies.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+
+  var BASIS_LABEL = {
+    consent: 'Consent — Art. 6(1)(a) GDPR',
+    contract: 'Performance of a contract — Art. 6(1)(b) GDPR',
+    legal: 'Compliance with a legal obligation — Art. 6(1)(c) GDPR',
+    vital: 'Protection of vital interests — Art. 6(1)(d) GDPR',
+    task: 'Performance of a task carried out in the public interest — Art. 6(1)(e) GDPR',
+    legitimate: 'Legitimate interests pursued by the controller — Art. 6(1)(f) GDPR'
+  };
+  var ROLE_LABEL = {
+    controller: 'Controller',
+    processor: 'Processor',
+    both: 'Controller and Processor (separate records maintained)'
+  };
+  var TRANSFER_LABEL = {
+    none: 'No transfers of personal data outside the EU/EEA take place.',
+    sccs: 'Transfers outside the EU/EEA take place and are covered by the European Commission\u2019s Standard Contractual Clauses.',
+    adequacy: 'Transfers outside the EU/EEA take place only to countries covered by an adequacy decision of the European Commission.',
+    other: 'Transfers outside the EU/EEA take place under the safeguards described below.'
+  };
+
+  function buildData() {
+    var d = {};
+    d.org = v('orgName');
+    d.role = ROLE_LABEL[$('orgRole').value];
+    d.dpo = v('dpo') || 'None appointed';
+    d.rep = v('orgRep');
+    d.activity = v('activityName');
+    d.purpose = v('purpose');
+    d.basis = BASIS_LABEL[$('lawfulBasis').value];
+    d.subjects = v('categoriesSubjects');
+    d.categories = v('categoriesData');
+    var special = $('specialCat').value === 'yes' && v('specialDesc');
+    d.special = special ? v('specialDesc') : '';
+    d.recipients = v('recipients').split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    d.transferMode = $('transfer').value;
+    d.transferDesc = v('transferDesc');
+    d.retention = v('retention');
+    d.security = Array.prototype.slice.call(document.querySelectorAll('#genForm input[type=checkbox]:checked')).map(function(c){ return c.value; });
+    if (v('securityOther')) d.security.push(v('securityOther'));
+    d.date = v('docDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>Record of Processing Activities — ' + esc(d.activity) + '</h2>';
+    h += '<p>Prepared pursuant to Article 30 GDPR · Date: ' + esc(d.date) + '</p>';
+    h += '<table>';
+    h += '<tr><th style="width:32%">Organisation</th><td>' + esc(d.org) + '</td></tr>';
+    h += '<tr><th>Role</th><td>' + esc(d.role) + '</td></tr>';
+    h += '<tr><th>Data protection contact / DPO</th><td>' + esc(d.dpo) + '</td></tr>';
+    if (d.rep) h += '<tr><th>EU/EEA representative (Art. 27)</th><td>' + esc(d.rep) + '</td></tr>';
+    h += '<tr><th>Processing activity</th><td>' + esc(d.activity) + '</td></tr>';
+    h += '<tr><th>Purpose(s)</th><td>' + esc(d.purpose) + '</td></tr>';
+    h += '<tr><th>Lawful basis</th><td>' + esc(d.basis) + '</td></tr>';
+    h += '<tr><th>Categories of data subjects</th><td>' + esc(d.subjects) + '</td></tr>';
+    h += '<tr><th>Categories of personal data</th><td>' + esc(d.categories) + '</td></tr>';
+    h += '<tr><th>Special categories (Art. 9)</th><td>' +
+         (d.special ? esc(d.special) + '. Additional safeguards apply as required by Article 9 GDPR.' :
+                      'No special categories of personal data are processed.') + '</td></tr>';
+
+    h += '<tr><th>Recipients / processors</th><td>';
+    if (d.recipients.length) {
+      h += '<ul style="margin:4px 0;padding-left:18px">';
+      d.recipients.forEach(function(r){ h += '<li>' + esc(r.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul>';
+    } else {
+      h += 'Personal data is not disclosed to third parties.';
+    }
+    h += '</td></tr>';
+
+    var t = TRANSFER_LABEL[d.transferMode];
+    if (d.transferMode === 'other' && d.transferDesc) t += ' ' + esc(d.transferDesc);
+    else if ((d.transferMode === 'sccs' || d.transferMode === 'adequacy') && d.transferDesc) t += ' Countries/parties involved: ' + esc(d.transferDesc) + '.';
+    h += '<tr><th>Transfers outside the EU/EEA</th><td>' + t + '</td></tr>';
+
+    h += '<tr><th>Retention period</th><td>' + esc(d.retention) + '</td></tr>';
+    h += '<tr><th>Security measures</th><td>';
+    if (d.security.length) {
+      h += '<ul style="margin:4px 0;padding-left:18px">';
+      d.security.forEach(function(s){ h += '<li>' + esc(s) + '</li>'; });
+      h += '</ul>';
+    } else {
+      h += 'To be documented.';
+    }
+    h += '</td></tr>';
+    h += '</table>';
+
+    h += '<hr><p style="font-size:12px;color:#667">This record was created with the free Hermes Compliance RoPA Generator. It follows the structure of GDPR Article 30 but does not constitute legal advice. Keep one record per processing activity and review the register whenever your processing changes.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate');
+    current = buildData();
+    $('agreement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed — use Download HTML instead.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>RoPA — ' + esc(current.activity) + ' — ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<style>body{max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px}'
+      +   'table{border-collapse:collapse;width:100%}th,td{text-align:left;vertical-align:top;'
+      +   'padding:8px 10px;border-bottom:1px solid #dde5ea}h2{color:#12283a}</style>\n'
+      + '<body>\n' + $('agreement').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ropa-' + current.activity.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

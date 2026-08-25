@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAA Accessibility Checklist for WordPress Sites — 10 Steps to</title>
+<meta name="description" content="Complete EAA compliance checklist for WordPress websites: 10 WCAG 2.1 AA checks you can run today. Free scanner tool included. Updated for 2026 enforcement.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EAA Accessibility Checklist for WordPress Sites — 10 Steps to WCAG Compliance">
+<meta property="og:description" content="10-point EAA/WCAG 2.1 AA checklist for WordPress sites. Each check takes 5 minutes. Free automated scanner included. Updated for 2026 enforcement.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/eaa-accessibility-checklist">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EAA Accessibility Checklist for WordPress Sites — 10 Steps to WCAG Compliance">
+<meta name="twitter:description" content="10-point EAA/WCAG 2.1 AA checklist for WordPress sites. Each check takes 5 minutes. Free automated scanner included. Updated for 2026 enforcement.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="EAA Accessibility Checklist for WordPress Sites — 10 Steps to WCAG Compliance (2026)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/eaa-accessibility-checklist">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/eaa-accessibility-checklist">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "EAA Accessibility Checklist for WordPress Sites — 10 Steps to WCAG Compliance",
+  "description": "10-point EAA/WCAG 2.1 AA checklist for WordPress sites. Each check takes 5 minutes. Free automated scanner included.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/eaa-accessibility-checklist">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/eaa-tjekliste-2026">
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · EAA ACCESSIBILITY</div>
+    <h1>EAA Accessibility Checklist:<br>10 Steps for WordPress Sites</h1>
+    <p class="subtitle">Make any WordPress site EAA-compliant with these 10 concrete checks. Each takes 5 minutes. Free scanner included.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Run a Free Scan Now</a>
+      <a href="#checklist" class="btn-secondary">Jump to Checklist</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why EAA Compliance Matters for WordPress</h2>
+    <p>The European Accessibility Act (EAA) was adopted in 2019 with a compliance deadline of June 28, 2025. Enforcement is now active across EU member states. The EAA requires that digital services — including websites, e-commerce stores, and booking systems — meet WCAG 2.1 AA accessibility standards.</p>
+    <p>WordPress powers over 43% of all websites globally. In the EU alone, hundreds of thousands of WooCommerce stores, membership sites, and service portals fall under EAA scope. If your agency manages any of these, compliance is not optional — and the good news is that most failures are fast and cheap to fix.</p>
+    <p>This checklist covers the 10 most common WCAG 2.1 AA failures found on WordPress sites. Run through all 10 and your site will meet the baseline requirements that EU regulators and enterprise procurement teams look for.</p>
+  </div>
+</section>
+
+<section class="products" id="checklist">
+  <div class="container">
+
+    <h2>The 10-Point EAA Checklist</h2>
+    <p class="section-intro">Pass all 10, and your site is demonstrably EAA-compliant. Each check includes what to look for, how to test it, and where to fix it in WordPress.</p>
+
+    <div class="product-grid">
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 1</div>
+        <div class="product-body">
+          <h3>🌓 Color Contrast</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Text must have a contrast ratio of at least 4.5:1 (normal text) or 3:1 (large text 18pt+).</p>
+          <p class="product-desc"><strong>How to check:</strong> Install the WebAIM Contrast Checker extension or the Accessibility Insights browser extension. Click on any text element to see its contrast ratio.</p>
+          <p class="product-desc"><strong>Most common WordPress violations:</strong> Light gray footer text on white backgrounds, blue link text on dark backgrounds, button text that blends into button color. Fix these in Appearance → Customize → Colors, or add custom CSS via Appearance → Customize → Additional CSS.</p>
+          <p class="product-meta">⏱ 5 minutes · WCAG 1.4.3</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 2</div>
+        <div class="product-body">
+          <h3>🖼️ Alt Text on All Images</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Every meaningful image needs descriptive alt text. Decorative images need <code>alt=""</code> (empty).</p>
+          <p class="product-desc"><strong>How to check:</strong> Run the WAVE browser extension — it lists every image with missing alt. Or use your scanner's IMG_ALT rule — it catches both missing and empty alt attributes.</p>
+          <p class="product-desc"><strong>Common WordPress violations:</strong> Product images in WooCommerce uploaded without alt text, logo in header without alt, social media icons, gallery images, and decorative spacer images. Fix in Media Library → select image → Alternative Text field. For bulk fixes, use Accessibility Checker plugin.</p>
+          <p class="product-meta">⏱ 10 minutes per 50 images · WCAG 1.1.1</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 3</div>
+        <div class="product-body">
+          <h3>📐 Heading Structure</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Headings must form a logical hierarchy (h1 → h2 → h3 → ...) with no skipped levels and only one h1 per page.</p>
+          <p class="product-desc"><strong>How to check:</strong> Install the HeadingsMap browser extension. It shows the full outline. Look for missing h1, skipped levels (h1 → h3), or multiple h1s.</p>
+          <p class="product-desc"><strong>Most common WordPress violations:</strong> Page title is h1 (good), but widget headings use h3 while section headings use h2 — producing a flat hierarchy. Some themes output multiple h1s. The Block Editor's heading dropdown lets you pick the correct level.</p>
+          <p class="product-meta">⏱ 10 minutes per page · WCAG 1.3.1</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 4</div>
+        <div class="product-body">
+          <h3>🔗 Link Text</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Every link must have visible, meaningful text. No generic "click here" or "read more." Links must also be distinguishable from surrounding text.</p>
+          <p class="product-desc"><strong>How to check:</strong> Your scanner checks LINK_TEXT — it flags links with empty text, generic text, or links where the text equals the URL. WAVE also lists link issues.</p>
+          <p class="product-desc"><strong>Common WordPress violations:</strong> "Read more" links on archive pages (fix by using Excerpts with meaningful text), "Continue reading" in theme templates, linked image without alt text on the image.</p>
+          <p class="product-meta">⏱ 5 minutes · WCAG 2.4.4 · 4.1.2</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 5</div>
+        <div class="product-body">
+          <h3>📝 Form Labels</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Every form input must have a programmatically associated label (the <code>&lt;label&gt;</code> tag with <code>for</code> attribute).</p>
+          <p class="product-desc"><strong>How to check:</strong> The scanner's FORM_LABEL rule. Also use WAVE — it highlights unlabeled form controls in purple.</p>
+          <p class="product-desc"><strong>Common WordPress violations:</strong> Contact Form 7 and Gravity Forms sometimes miss labels when using placeholder-only fields. Search forms in themes often lack labels (they use a magnifying glass icon instead). WooCommerce checkout fields are usually labeled correctly — check custom forms.</p>
+          <p class="product-meta">⏱ 10 minutes · WCAG 1.3.1 · 4.1.2</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 6</div>
+        <div class="product-body">
+          <h3>⌨️ Keyboard Navigation</h3>
+          <p class="product-desc"><strong>Requirement:</strong> All interactive elements must be reachable and operable via keyboard alone. No keyboard traps.</p>
+          <p class="product-desc"><strong>How to check:</strong> Tab through the entire page using the Tab key. Every link, button, and form field should receive focus in a logical order. You should be able to submit forms and close modals with Enter/Escape.</p>
+          <p class="product-desc"><strong>Common WordPress violations:</strong> Custom menu dropdowns that open on hover but not on focus, modal popups (OptinMonster, Popup Maker) that trap keyboard focus, slider navigation arrows not focusable.</p>
+          <p class="product-meta">⏱ 15 minutes per page · WCAP 2.1.1</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 7</div>
+        <div class="product-body">
+          <h3>🌐 Page Language</h3>
+          <p class="product-desc"><strong>Requirement:</strong> The page must declare a language in the <code>&lt;html&gt;</code> tag (<code>lang="en"</code> or equivalent).</p>
+          <p class="product-desc"><strong>How to check:</strong> The scanner's LANGUAGE rule. Look at <code>&lt;html lang="..."&gt;</code> in the page source. If absent or wrong, screen readers use the wrong pronunciation engine.</p>
+          <p class="product-desc"><strong>Most common WordPress violations:</strong> Missing lang attribute (rare in WordPress — it's set by default). More common: pages that mix languages (English content on a Danish-site template) without declaring language changes with <code>lang</code> attributes on specific elements.</p>
+          <p class="product-meta">⏱ 30 seconds · WCAG 3.1.1</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 8</div>
+        <div class="product-body">
+          <h3>📱 Viewport and Zoom</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Users must be able to zoom to 200% without loss of content or functionality. The viewport meta tag must not disable zooming.</p>
+          <p class="product-desc"><strong>How to check:</strong> The scanner's VIEWPORT rule catches <code>user-scalable=no</code> or <code>maximum-scale=1.0</code>. Then test: zoom the page to 200% in your browser and verify no text overflows, no buttons disappear, and all content still readable.</p>
+          <p class="product-desc"><strong>Common WordPress violations:</strong> Some themes copy-paste a <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"&gt;</code> — the <code>maximum-scale=1.0</code> disables zoom. Remove it in the theme's <code>header.php</code> or via a child theme filter.</p>
+          <p class="product-meta">⏱ 2 minutes · WCAG 1.4.4 · 1.4.10</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 9</div>
+        <div class="product-body">
+          <h3>🧩 ARIA and Roles</h3>
+          <p class="product-desc"><strong>Requirement:</strong> ARIA attributes must be used correctly. No focusable elements with <code>aria-hidden="true"</code>. No incorrect ARIA roles that override native semantics.</p>
+          <p class="product-desc"><strong>How to check:</strong> The scanner's ARIA_HIDDEN_FOCUSABLE rule catches focusable elements hidden from screen readers. Use Accessibility Insights to audit the full ARIA structure.</p>
+          <p class="product-desc"><strong>Most common WordPress violations:</strong> Themes adding <code>aria-hidden="true"</code> to icon fonts or SVG icons while leaving them focusable (keyboard users can tab to invisible elements). Modals and menus with incorrect roles.</p>
+          <p class="product-meta">⏱ 5 minutes · WCAG 4.1.2</p>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-badge product-badge-secondary">CHECK 10</div>
+        <div class="product-body">
+          <h3>📄 Accessibility Statement</h3>
+          <p class="product-desc"><strong>Requirement:</strong> Under the EAA, every public-facing site must have a published accessibility statement. This is a page on your site describing your accessibility level, any known issues, and how users can report problems.</p>
+          <p class="product-desc"><strong>How to check:</strong> Visit /accessibility or /accessibility-statement on the site. Your scanner does not check this (it's a content check, not a code check) — you need to verify manually.</p>
+          <p class="product-desc"><strong>What to include:</strong> Conformance level (WCAG 2.1 AA), any exempt content, testing methods used, known issues, feedback mechanism, and enforcement contact. Use our free <a href="/accessibility-statement-generator">Accessibility Statement Generator</a> to create one in 2 minutes.</p>
+          <p class="product-meta">⏱ 15 minutes · EAA requirement</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>From Checklist to Compliance in 14 Days</h2>
+    <p>The 10 checks above are the foundation. If your site passes all 10, you have the baseline EAA compliance that regulators look for. But there are deeper items — screen reader testing, PDF accessibility, video captions, and complex widgets — that may apply depending on your site.</p>
+    <p>For a complete step-by-step plan, the <strong>EAA Compliance Checklist for WordPress Sites</strong> e-book includes a 14-day fix plan, testing tool comparison, printable quick-reference card, and a sample accessibility statement template ready to fill in.</p>
+    <div class="hero-cta" style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Free EAA Scanner →</a>
+      &nbsp;&nbsp;
+      <a href="/#products" class="btn-secondary">Full EAA E-Book with 14-Day Plan →</a>
+      &nbsp;&nbsp;
+      <a href="/contrast-checker" class="btn-secondary">Free Color Contrast Checker →</a>
+      &nbsp;&nbsp;
+      <a href="/accessibility-statement-generator" class="btn-secondary">Statement Generator →</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Platform-Specific Guides</h2>
+    <p class="section-intro">Every CMS has different accessibility pitfalls. These guides address the most common issues for each platform:</p>
+    <div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/wordpress-accessibility-check">WordPress</a></h3><p>Gutenberg blocks, theme issues, plugin conflicts</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/shopify-accessibility-check">Shopify</a></h3><p>Liquid templates, Dawn theme, checkout flow</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/webflow-accessibility-check">Webflow</a></h3><p>Interactions, animations, custom code</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/wix-accessibility-check">Wix</a></h3><p>Wizard tools, Velo code, App Market risks</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/squarespace-accessibility-check">Squarespace</a></h3><p>Fluid Engine, Classic editor, CSS overrides</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/drupal-accessibility-check">Drupal</a></h3><p>Olivero/Claro themes, Editoria11y, Views</p></div></div>
+      <div class="product-card"><div class="product-body"><h3><a href="/guides/joomla-accessibility-check">Joomla</a></h3><p>JA Accessibility, TinyMCE, template system</p></div></div>
+    </div>
+  </div>
+
+<section class="problem">
+  <div class="container">
+    <h2>Check your site — on any platform</h2>
+    <p>We publish free, platform-specific checklists that show exactly where to fix each issue the scanner finds:</p>
+    <p style="line-height:2;margin-top:12px;"><a href="/guides/wordpress-accessibility-check" style="color:var(--color-accent);">WordPress</a> &middot; <a href="/guides/shopify-accessibility-check" style="color:var(--color-accent);">Shopify</a> &middot; <a href="/guides/webflow-accessibility-check" style="color:var(--color-accent);">Webflow</a> &middot; <a href="/guides/wix-accessibility-check" style="color:var(--color-accent);">Wix</a> &middot; <a href="/guides/squarespace-accessibility-check" style="color:var(--color-accent);">Squarespace</a> &middot; <a href="/guides/drupal-accessibility-check" style="color:var(--color-accent);">Drupal</a> &middot; <a href="/guides/joomla-accessibility-check" style="color:var(--color-accent);">Joomla</a> &middot; <a href="/guides/prestashop-accessibility-check" style="color:var(--color-accent);">PrestaShop</a> &middot; <a href="/guides/weebly-accessibility-check" style="color:var(--color-accent);">Weebly</a> &middot; <a href="/guides/magento-accessibility-check" style="color:var(--color-accent);">Magento</a></p>
+  </div>
+</section></section>
+
+<p><a href="/da/blog/eaa-tjekliste-2026" lang="da">Dansk version af denne guide</a></p>
+<footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/blog/nis2-readiness-guide">NIS2 Guide for Agencies</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

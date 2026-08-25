@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Accessibility Statement Generator (EAA / WCAG)</title>
+<meta name="description" content="Answer 8 quick questions and get a ready-to-publish accessibility statement that meets EAA and WCAG 2.1 AA documentation expectations. Free, no signup, works offline in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free Accessibility Statement Generator (EAA / WCAG)">
+<meta property="og:description" content="Answer 8 quick questions and get a ready-to-publish accessibility statement meeting EAA and WCAG 2.1 AA expectations. Free, no signup.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free Accessibility Statement Generator (EAA / WCAG)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/tilgaengelighedserklaering-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/accessibility-statement-generator">
+<meta name="twitter:title" content="Free Accessibility Statement Generator (EAA / WCAG)">
+<meta name="twitter:description" content="Answer 8 quick questions and get a ready-to-publish accessibility statement meeting EAA and WCAG 2.1 AA expectations. Free, no signup.">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is an accessibility statement legally required?","acceptedAnswer":{"@type":"Answer","text":"Under the European Accessibility Act, businesses covered by the act must provide information about the accessibility of their services. Publishing an accessibility statement is the standard way to document conformance with EN 301 549 / WCAG 2.1 AA, and it is required for public-sector bodies under the EU Web Accessibility Directive."}},{"@type":"Question","name":"What should an accessibility statement contain?","acceptedAnswer":{"@type":"Answer","text":"Per the EU model statement: a commitment to accessibility, the conformance status (which standard and how well you meet it), known limitations with workarounds, feedback contact details, the assessment method used, and the date of the last review."}},{"@type":"Question","name":"What conformance level can I claim?","acceptedAnswer":{"@type":"Answer","text":"Only claim what you can document: 'fully conformant' means all WCAG 2.1 AA success criteria are met; 'partially conformant' means some content does not meet the standard — list those exceptions honestly. Overclaiming creates legal risk."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished statement yourself."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen input[type=url],
+  .gen select, .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 80px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #statement { max-width: 760px; margin: 24px auto; padding: 28px 32px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 15px; line-height: 1.6; }
+  #statement h2, #statement h3 { color: #12283a; }
+  #statement dl dt { font-weight: 700; margin-top: 12px; }
+  #statement dl dd { margin-left: 0; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #statement { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Accessibility Statement Generator</h1>
+    <p class="tagline">Answer 8 questions → get a ready-to-publish
+    <strong>EAA / WCAG 2.1 AA accessibility statement</strong>. No signup,
+    nothing leaves your browser.</p>
+  </div>
+</header>
+
+<main class="container">
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Your service</legend>
+    <label for="org">Organisation / website name</label>
+    <input type="text" id="org" required placeholder="Acme Web Shop">
+    <label for="siteurl">Website URL</label>
+    <input type="url" id="siteurl" required placeholder="https://acme.example">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Conformance status</legend>
+    <label for="status">Which statement is true today?</label>
+    <select id="status">
+      <option value="full">Fully conformant — we meet all WCAG 2.1 AA success criteria</option>
+      <option value="partial" selected>Partially conformant — most criteria met, some exceptions</option>
+      <option value="inprogress">Not yet fully assessed — we are working toward AA</option>
+    </select>
+    <label for="exceptions">Known exceptions / limitations (if partially conformant)</label>
+    <textarea id="exceptions" placeholder="Example: Some older PDF downloads are not tagged for screen readers. Contact us and we will send an accessible version within 5 business days."></textarea>
+    <p class="hint">List each exception honestly with a workaround if one exists.
+    Overclaiming full conformance is a legal risk.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. How you tested</legend>
+    <label for="method">Assessment method</label>
+    <select id="method" multiple size="3">
+      <option value="self" selected>Self-evaluation (internal testing)</option>
+      <option value="auto">Automated scanning (e.g. our free EAA scanner)</option>
+      <option value="external">External accessibility audit</option>
+      <option value="manual">Manual testing incl. keyboard &amp; screen reader</option>
+    </select>
+    <p class="hint">Hold Ctrl/Cmd to select several. Honest combination:
+    automated scan + manual spot-checks = "self-evaluation with automated tools".</p>
+    <label for="lastreview">Date of last review</label>
+    <input type="date" id="lastreview">
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Feedback channel</legend>
+    <label for="email">Contact e-mail for accessibility issues</label>
+    <input type="email" id="email" required placeholder="accessibility@acme.example">
+    <label for="response">How fast do you respond?</label>
+    <input type="text" id="response" value="within 5 business days">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate statement</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Generated statement</h2>
+  <article id="statement" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML file</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / save as PDF</button>
+  </div>
+  <p class="no-print">Next step: run your pages through the
+  <a href="/scan">free EAA scanner</a> so the conformance claims above are
+  backed by data. The full manual checklist is in our
+  <a href="/#products">EAA Compliance Checklist e-book</a>.</p>
+</section>
+
+<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading">Why publish an accessibility statement?</h2>
+  <ul>
+    <li><strong>The EU expects it.</strong> Services covered by the European
+    Accessibility Act must inform users about the accessibility of their
+    offering — a published statement is the recognised way to do it.</li>
+    <li><strong>It documents good faith.</strong> A dated statement listing
+    known issues and workarounds shows regulators and customers you take
+    compliance seriously.</li>
+    <li><strong>It reduces support load.</strong> Users who find a barrier get
+    a named contact instead of abandoning silently.</li>
+  </ul>
+</section>
+
+<section aria-labelledby="legal-heading">
+  <h2 id="legal-heading">Honest disclaimer</h2>
+  <p>This tool produces a template based on the EU model accessibility
+  statement structure. It does not constitute legal advice and cannot verify
+  your conformance claims — only testing can do that. Use the
+  <a href="/scan">scanner</a> first, then state honestly what you found.</p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+<p>Hermes Compliance · <a href="/">Books &amp; templates</a> ·
+<a href="/scan">Scanner</a> · <a href="/tilgaengelighedserklaering-generator-da">Dansk version →</a></p>
+</div></footer>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  };
+  var STATUS_TEXT = {
+    full: '<strong>Fully conformant</strong> with WCAG 2.1 level AA. This means the content meets all success criteria of the standard.',
+    partial: '<strong>Partially conformant</strong> with WCAG 2.1 level AA. Partially conformant means that some parts of the content do not fully conform to the accessibility standard — see "Limitations and alternatives" below.',
+    inprogress: 'We are <strong>working toward full conformance</strong> with WCAG 2.1 level AA. An updated conformance statement will be published when the current remediation work is complete.'
+  };
+
+  function buildData() {
+    var methods = Array.prototype.slice.call($('method').selectedOptions)
+      .map(function (o) { return o.text.toLowerCase(); });
+    return {
+      org: $('org').value.trim(),
+      url: $('siteurl').value.trim(),
+      status: $('status').value,
+      exceptions: $('exceptions').value.trim(),
+      methods: methods.length ? methods : ['self-evaluation'],
+      date: $('lastreview').value || new Date().toISOString().slice(0, 10),
+      email: $('email').value.trim(),
+      response: $('response').value.trim() || 'within 5 business days'
+    };
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2 style="margin-top:0">Accessibility Statement for ' + esc(d.org) + '</h2>';
+    h += '<dl>';
+    h += '<dt>Web address:</dt><dd>' + esc(d.url) + '</dd>';
+    h += '<dt>Last reviewed:</dt><dd>' + esc(d.date) + '</dd>';
+    h += '<dt>Contact:</dt><dd>' + esc(d.email) +
+         ' (we respond ' + esc(d.response) + ')</dd>';
+    h += '</dl>';
+
+    h += '<h3>Commitment to accessibility</h3>';
+    h += '<p>' + esc(d.org) + ' is committed to ensuring digital accessibility';
+    h += ' for people with disabilities. We continually improve the user experience';
+    h += ' by applying the relevant accessibility standards.</p>';
+
+    h += '<h3>Conformance status</h3>';
+    h += '<p>' + STATUS_TEXT[d.status] + '</p>';
+
+    if (d.status === 'partial' && d.exceptions) {
+      h += '<h3>Limitations and alternatives</h3>';
+      h += '<p>Despite our best efforts, the following parts of the site may not be';
+      h += ' fully accessible yet:</p>';
+      d.exceptions.split('\n').filter(function (l) { return l.trim(); }).forEach(function (l) {
+        h += '<ul><li>' + esc(l.trim()) + '</li></ul>';
+      });
+    }
+
+    h += '<h3>Assessment approach</h3>';
+    h += '<p>This statement was produced using: ';
+    h += d.methods.join(', ');
+    h += '. Automated checks were complemented by manual verification where possible.';
+    h += ' Automated tools catch roughly 30–40% of accessibility issues, so manual';
+    h += ' judgement remains essential.</p>';
+
+    h += '<h3>Feedback</h3>';
+    h += '<p>We welcome your feedback on the accessibility of this website.';
+    h += ' If you encounter barriers, please contact us at <strong>' + esc(d.email);
+    h += '</strong>. We try to respond ' + esc(d.response) + '.</p>';
+
+    h += '<p style="font-size:13px;color:#667;margin-top:24px">This statement was';
+    h += ' created with the free Hermes Compliance Accessibility Statement Generator.';
+    h += ' It follows the structure of the EU model accessibility statement and does';
+    h += ' not constitute legal advice.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var t = '';
+    t += 'Accessibility Statement for ' + d.org + '\n\n';
+    t += 'Web address: ' + d.url + '\nLast reviewed: ' + d.date + '\n';
+    t += 'Contact: ' + d.email + ' (we respond ' + d.response + ')\n\n';
+    t += 'COMMITMENT TO ACCESSIBILITY\n' + d.org + ' is committed to ensuring digital accessibility for people with disabilities. We continually improve the user experience by applying the relevant accessibility standards.\n\n';
+    t += 'CONFORMANCE STATUS\n' + $('statement').textContent.match(/Conformance status([\s\S]*?)Assessment approach/)[1].trim() + '\n\n';
+    if (d.status === 'partial' && d.exceptions) {
+      t += 'LIMITATIONS AND ALTERNATIVES\n' + d.exceptions.trim() + '\n\n';
+    }
+    t += 'ASSESSMENT APPROACH\nThis statement was produced using: ' + d.methods.join(', ') + '. Automated checks were complemented by manual verification where possible. Automated tools catch roughly 30–40% of accessibility issues, so manual judgement remains essential.\n\n';
+    t += 'FEEDBACK\nWe welcome your feedback on the accessibility of this website. If you encounter barriers, please contact us at ' + d.email + '. We try to respond ' + d.response + '.\n';
+    return t;
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    current = buildData();
+    $('statement').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied ✓';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed — use Download HTML instead.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Accessibility Statement — ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<body style="max-width:760px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733">\n'
+      + $('statement').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'accessibility-statement.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UUID Generator — Free Online UUID v4 / GUID Generator</title>
+<meta name="description" content="Free online UUID generator. Generate random UUID v4 (GUID) identifiers instantly — one or in bulk. No upload, no signup — runs entirely in your browser using the Web Crypto API.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="UUID Generator — Free Online UUID v4 / GUID Generator">
+<meta property="og:description" content="Generate cryptographically secure UUID v4 identifiers, one or in bulk. 100% in your browser, no signup.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/uuid-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="UUID Generator — Free Online UUID v4 / GUID Generator">
+<meta name="twitter:description" content="Generate random UUID v4 (GUIDs) instantly. Bulk mode, uppercase option, copy all. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/uuid-generator">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/uuid-generator">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/uuid-generator">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "UUID Generator",
+  "url": "https://hermes-passiv.pages.dev/uuid-generator",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online generator for cryptographically secure UUID v4 (GUID) identifiers, single or in bulk."
+}
+</script>
+<style>
+.uu-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.uu-card {
+  border: 1px solid var(--color-border); border-radius: 12px;
+  background: var(--color-surface); padding: 1.2rem; margin-top: 1rem;
+}
+.uu-opts { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.8rem; }
+.uu-opts label { font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.uu-opts input[type="number"] {
+  width: 5.5rem; padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 8px;
+  background: var(--color-bg, transparent); color: var(--color-text); font-size: 0.9rem;
+}
+.uu-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.uu-btns button { padding: 8px 16px; cursor: pointer; font-size: 0.88rem; }
+.uu-list { width: 100%; box-sizing: border-box; min-height: 220px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-bg, #fff); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem; line-height: 1.7; }
+.uu-status { border-radius: 10px; padding: 0.7rem 1rem; margin: 0.7rem 0; font-size: 0.88rem; display: none; }
+.uu-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.uu-meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.3rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="uu-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/free-tools">Free tools</a> <span>›</span>
+  UUID generator
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">UUID Generator</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Generate random UUID v4 (GUID) identifiers — one or hundreds at a time.</p>
+  <p style="font-size:0.85rem;color:var(--color-text-muted);padding:0.6rem 0 0.2rem;">🔒 Uses the Web Crypto API on your device. Nothing is generated on a server or sent anywhere.</p>
+</header>
+
+<div class="uu-card">
+  <div class="uu-opts">
+    <label for="countInput">How many:</label>
+    <input id="countInput" type="number" min="1" max="500" value="1" aria-describedby="countHelp">
+    <span id="countHelp" style="font-size:0.8rem;color:var(--color-text-muted);">(1–500)</span>
+    <label><input id="upperChk" type="checkbox"> UPPERCASE</label>
+    <label><input id="bracesChk" type="checkbox"> Wrap in braces {…}</label>
+  </div>
+  <div class="uu-btns">
+    <button id="genBtn">Generate</button>
+    <button id="copyBtn">Copy all</button>
+    <button id="dlBtn">Download .txt</button>
+  </div>
+  <label for="outputArea" style="font-weight:600;font-size:0.95rem;">Generated UUIDs</label>
+  <textarea id="outputArea" class="uu-list" readonly spellcheck="false" placeholder="Click Generate to create UUIDs..."></textarea>
+  <div id="statusBox" class="uu-status" role="status" aria-live="polite"></div>
+  <p class="uu-meta" id="metaLine"></p>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free tool generates version 4 UUIDs (Universally Unique Identifiers, also called
+    GUIDs). A UUID v4 is a 128-bit identifier formatted as
+    <code>xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</code>, where 122 of the bits are random.
+    They are used as database keys, API request IDs, file names and session tokens.</p>
+    <p>Generation uses your browser's built-in <code>crypto.getRandomValues()</code> — a
+    cryptographically secure random source — so the UUIDs are suitable for anything from
+    test fixtures to production primary keys. Your device never contacts a server during
+    generation, so the values cannot leak.</p>
+    <p>Need hashes instead of unique IDs? Try the <a href="/hash-generator">Hash Generator</a>,
+    or format API payloads with the <a href="/json-formatter">JSON Formatter</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+    <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+    <a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var out = document.getElementById('outputArea');
+  var statusBox = document.getElementById('statusBox');
+  var metaLine = document.getElementById('metaLine');
+  if (!out || !window.crypto || !window.crypto.getRandomValues) return;
+
+  function uuidv4() {
+    var bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    // Set version (4) and variant (RFC 4122) bits.
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    var hex = [];
+    for (var i = 0; i < 16; i++) hex.push((bytes[i] + 0x100).toString(16).slice(1));
+    return hex.slice(0, 4).join('') + '-' + hex.slice(4, 6).join('') + '-' +
+           hex.slice(6, 8).join('') + '-' + hex.slice(8, 10).join('') + '-' +
+           hex.slice(10, 16).join('');
+  }
+
+  function generate() {
+    var count = parseInt(document.getElementById('countInput').value, 10);
+    if (isNaN(count)) count = 1;
+    if (count < 1) count = 1;
+    if (count > 500) count = 500;
+
+    var upper = document.getElementById('upperChk').checked;
+    var braces = document.getElementById('bracesChk').checked;
+
+    var ids = [];
+    for (var i = 0; i < count; i++) {
+      var u = uuidv4();
+      if (upper) u = u.toUpperCase();
+      if (braces) u = '{' + u + '}';
+      ids.push(u);
+    }
+
+    out.value = ids.join('\n');
+    metaLine.textContent = count + (count === 1 ? ' UUID' : ' UUIDs') + ' generated · v4 · 128-bit';
+    showStatus('✓ Generated ' + count + (count === 1 ? ' UUID.' : ' UUIDs.'));
+
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '/uuid-generator', event: 'generate', count: count }),
+        keepalive: true
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  function showStatus(msg) {
+    statusBox.textContent = msg;
+    statusBox.className = 'uu-status uu-ok';
+  }
+
+  document.getElementById('genBtn').addEventListener('click', generate);
+
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    if (!out.value) { generate(); }
+    var done = function() {
+      var b = document.getElementById('copyBtn');
+      var old = b.textContent;
+      b.textContent = 'Copied!';
+      setTimeout(function() { b.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(done).catch(function() {});
+    } else {
+      out.select();
+      document.execCommand('copy');
+      done();
+    }
+  });
+
+  document.getElementById('dlBtn').addEventListener('click', function() {
+    if (!out.value) generate();
+    var blob = new Blob([out.value], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'uuids.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showStatus('✓ Downloaded uuids.txt.');
+  });
+
+  generate();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Build Your First Chrome Extension — A Complete Practical Guide</title>
+<style>
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+  color: #1a1a1a;
+}
+h1 { font-size: 24px; text-align: center; margin-top: 60px; }
+h2 { font-size: 20px; margin-top: 40px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+h3 { font-size: 18px; margin-top: 28px; }
+h4 { font-size: 16px; margin-top: 20px; }
+p { margin: 12px 0; }
+pre {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+code { font-family: 'Courier New', monospace; background: #f0f0f0; padding: 1px 4px; border-radius: 2px; font-size: 14px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 3px solid #ccc; margin: 16px 0; padding: 8px 16px; color: #555; }
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 4px 0; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+th { background: #f0f0f0; }
+hr { border: none; border-top: 1px solid #ccc; margin: 40px 0; }
+.cover { text-align: center; margin-top: 80px; margin-bottom: 60px; }
+.cover h1 { font-size: 28px; margin-bottom: 8px; }
+.cover .subtitle { font-size: 16px; color: #555; }
+.cover .author { font-size: 14px; color: #888; margin-top: 30px; }
+.toc { margin: 40px 0; }
+.toc h2 { text-align: center; }
+.toc ul { list-style: none; padding: 0; }
+.toc li { margin: 6px 0; font-size: 14px; }
+.appendix { margin-top: 60px; }
+.checklist { list-style: none; padding: 0; }
+.checklist li::before { content: "☐ "; font-size: 16px; }
+.footer { text-align: center; margin-top: 60px; font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+<h1>Build Your First Chrome Extension</h1>
+<p class="subtitle">A Complete Practical Guide</p>
+<p class="author">By the Clean Copy team · Version 1.0</p>
+</div>
+
+<hr>
+
+<div class="toc">
+<h2>Contents</h2>
+<ul>
+<li>Preface: Why This Book Exists</li>
+<li>Chapter 1: Understanding Chrome Extension Architecture</li>
+<li>Chapter 2: Your First Extension — Hello World</li>
+<li>Chapter 3: The Popup — Your Extension's UI</li>
+<li>Chapter 4: Keyboard Shortcuts</li>
+<li>Chapter 5: Persisting User Settings</li>
+<li>Chapter 6: The Options Page</li>
+<li>Chapter 7: Icons and Branding</li>
+<li>Chapter 8: Publishing to the Chrome Web Store</li>
+<li>Chapter 9: Testing and Debugging</li>
+<li>Chapter 10: From Lite to Production — What's Next</li>
+<li>Appendix A: Complete manifest.json Reference</li>
+<li>Appendix B: Permissions Quick Reference</li>
+<li>Appendix C: Final Checklist</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Preface: Why This Book Exists</h2>
+
+<p>Every developer I know has had the same thought at some point: "I wish my browser could just do X." Maybe it's copying text without formatting, checking a page for accessibility issues, or automating a repetitive task. Chrome extensions are how you build that.</p>
+
+<p>I wrote this book because when I built my first extension (Clean Copy — an HTML-to-Markdown converter that runs in your browser), I had to piece together information from a dozen sources. The official Chrome docs are thorough but scattered. Stack Overflow answers assume you already know the architecture. Blog posts go out of date when Google updates the platform.</p>
+
+<p>This book is what I wish I'd had: a single, practical, step-by-step guide that takes you from "I've never built an extension" to "my extension is live in the Chrome Web Store."</p>
+
+<h3>Who This Book Is For</h3>
+<ul>
+<li>Web developers who know HTML, CSS, and basic JavaScript</li>
+<li>Anyone who has thought "I could build a browser extension for that"</li>
+<li>Developers who want to publish their first Chrome Web Store listing</li>
+</ul>
+
+<p>You don't need experience with service workers, the Chrome API, or browser extension architecture. You'll learn all of that here.</p>
+
+<h3>What You Will Build</h3>
+
+<p>By the end of this book, you'll have built and published a working Chrome extension. Along the way, you'll create:</p>
+<ul>
+<li>A popup that interacts with the current page</li>
+<li>A context menu that copies formatted text</li>
+<li>A background service worker that handles events</li>
+<li>An options page that persists user settings</li>
+<li>A keyboard shortcut for power users</li>
+</ul>
+
+<p>The final extension is Clean Copy Lite — a simplified version of the real Clean Copy extension. It converts selected HTML into clean Markdown, ready to paste into any document.</p>
+
+<h3>What You Need</h3>
+<ul>
+<li>A computer running Chrome or Edge (Chromium-based)</li>
+<li>A text editor (VS Code recommended)</li>
+<li>Basic familiarity with JavaScript, HTML, and CSS</li>
+<li>About 2-3 hours to build the complete extension</li>
+</ul>
+
+<hr>
+
+<h2>Chapter 1: Understanding Chrome Extension Architecture</h2>
+
+<h3>1.1 What Makes an Extension Different from a Website</h3>
+
+<p>A Chrome extension is a collection of files — HTML, CSS, JavaScript, images — packaged together and loaded by the browser. Unlike a website which runs on a remote server, an extension runs <strong>locally in the user's browser</strong>.</p>
+
+<p>This fundamental difference shapes everything: there's no backend server, no database (unless you use one), and the extension can only interact with the web through the Chrome API. But it also means your extension works offline, has near-zero latency, and costs nothing to host.</p>
+
+<h3>1.2 The Three Core Components</h3>
+
+<p>Every Chrome extension has at least these three files:</p>
+
+<p><strong>manifest.json</strong> — The heart of your extension. This JSON file tells Chrome what your extension is called, what permissions it needs, which files to load, and what version it is. It's the first file Chrome reads when installing your extension.</p>
+
+<p><strong>background.js</strong> — A service worker that runs in the background, listening for events. Think of it as the brain of your extension: it handles context menu clicks, keyboard shortcuts, messages from the popup, and any long-running logic. It does NOT have access to the DOM of web pages.</p>
+
+<p><strong>popup.html + popup.js</strong> — The UI that appears when the user clicks your extension's toolbar icon. This is a regular HTML page (with JavaScript) that can interact with the currently active tab through the Chrome API. The popup only exists while it's open — once the user clicks elsewhere, it's destroyed.</p>
+
+<p>There are other components too (options pages, content scripts, offscreen documents), but these three are where you start.</p>
+
+<h3>1.3 Manifest V3 (MV3)</h3>
+
+<p>As of 2023, Chrome requires all new extensions to use Manifest V3 (MV3). The key changes from the older MV2:</p>
+<ul>
+<li>Background pages are replaced by <strong>service workers</strong> (which can be killed and restarted by Chrome)</li>
+<li>Remote code execution is banned (all code must be in the extension package)</li>
+<li>Network request modification uses <code>declarativeNetRequest</code></li>
+<li>Service workers don't have DOM access (no <code>document</code>, no <code>window</code>)</li>
+</ul>
+
+<p>MV3 is more restrictive but also more secure. This book covers only MV3.</p>
+
+<h3>1.4 The Extension Lifecycle</h3>
+<ol>
+<li>User installs your extension from the Chrome Web Store</li>
+<li>Chrome reads <code>manifest.json</code> and registers all components</li>
+<li>The background service worker starts when needed</li>
+<li>The popup loads when the user clicks the toolbar icon</li>
+<li>The extension runs until Chrome decides to unload it (or the user uninstalls it)</li>
+</ol>
+
+<p>Extensions do NOT run continuously. The service worker starts on demand and stops after ~30 seconds of inactivity.</p>
+
+<h3>1.5 Permissions: Only What You Need</h3>
+
+<p>Every extension must declare its permissions in <code>manifest.json</code>. Chrome shows these to the user before installation.</p>
+
+<pre><code>{
+  "permissions": ["activeTab", "contextMenus", "storage", "clipboardWrite"]
+}</code></pre>
+
+<p><strong>The golden rule:</strong> ask for the minimum permissions you actually need. Users are wary of extensions that request access to "all websites." The <code>activeTab</code> permission is your best friend.</p>
+
+<hr>
+
+<h2>Chapter 2: Your First Extension — Hello World</h2>
+
+<p>Let's build something real. Open your text editor and create a new folder called <code>clean-copy-lite</code>.</p>
+
+<h3>2.1 Create manifest.json</h3>
+
+<pre><code>{
+  "manifest_version": 3,
+  "name": "Clean Copy Lite",
+  "version": "1.0.0",
+  "description": "Copy selected text as clean Markdown.",
+  "permissions": ["activeTab", "contextMenus", "clipboardWrite"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Clean Copy Lite"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
+}</code></pre>
+
+<h3>2.2 Create the Background Service Worker</h3>
+
+<p>Create <code>background.js</code>:</p>
+
+<pre><code>// Create the context menu on install
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "copy-as-markdown",
+    title: "Copy as Markdown",
+    contexts: ["selection"]
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "copy-as-markdown") {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      function: getSelectedHtml
+    }, (results) => {
+      if (chrome.runtime.lastError) return;
+      const html = results[0].result;
+      if (!html) return;
+      const markdown = htmlToMarkdown(html);
+      copyToClipboard(markdown, tab.id);
+    });
+  }
+});
+
+function getSelectedHtml() {
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return '';
+  const range = selection.getRangeAt(0);
+  const container = document.createElement('div');
+  container.appendChild(range.cloneContents());
+  return container.innerHTML;
+}</code></pre>
+
+<h3>2.3 Create the Offscreen Document</h3>
+
+<p>In MV3, service workers cannot call <code>navigator.clipboard</code>. Create <code>offscreen.html</code> to handle clipboard operations:</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;meta charset="utf-8"&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;script&gt;
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'copy-from-storage') {
+    chrome.storage.local.get('_clipboard', (data) => {
+      if (data._clipboard) {
+        navigator.clipboard.writeText(data._clipboard);
+      }
+    });
+  }
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>2.4 The HTML-to-Markdown Converter</h3>
+
+<p>Add this conversion function to <code>background.js</code>:</p>
+
+<pre><code>function htmlToMarkdown(html) {
+  let md = html;
+  
+  // Strip script/style content
+  md = md.replace(/&lt;(script|style)\b[^&gt;]*&gt;[\s\S]*?&lt;\/\1&gt;/gi, '');
+  
+  // Headings
+  md = md.replace(/&lt;h1[^&gt;]*&gt;(.*?)&lt;\/h1&gt;/gi, '# $1\n\n');
+  md = md.replace(/&lt;h2[^&gt;]*&gt;(.*?)&lt;\/h2&gt;/gi, '## $1\n\n');
+  md = md.replace(/&lt;h3[^&gt;]*&gt;(.*?)&lt;\/h3&gt;/gi, '### $1\n\n');
+  
+  // Bold and italic
+  md = md.replace(/&lt;(?:b|strong)[^&gt;]*&gt;(.*?)&lt;\/(?:b|strong)&gt;/gi, '**$1**');
+  md = md.replace(/&lt;(?:i|em)[^&gt;]*&gt;(.*?)&lt;\/(?:i|em)&gt;/gi, '*$1*');
+  
+  // Links with smart unwrapping
+  md = md.replace(/&lt;a[^&gt;]*href="([^"]*)"[^&gt;]*&gt;([\s\S]*?)&lt;\/a&gt;/gi, (m, href, inner) => {
+    const text = inner.replace(/&lt;img[^&gt;]*&gt;/gi, '').replace(/&lt;[^&gt;]*&gt;/g, '').trim();
+    if (!text || /^#/.test(href)) return inner;
+    return '[' + text + '](' + href + ')';
+  });
+  
+  // Strip remaining tags
+  md = stripTagsSafe(md);
+  
+  // Decode entities
+  md = md.replace(/&amp;amp;/g, '&amp;');
+  md = md.replace(/&amp;lt;/g, '&lt;');
+  md = md.replace(/&amp;gt;/g, '&gt;');
+  
+  return md.trim();
+}</code></pre>
+
+<h3>2.5 Load and Test</h3>
+
+<ol>
+<li>Open Chrome → <code>chrome://extensions</code></li>
+<li>Enable "Developer mode"</li>
+<li>Click "Load unpacked" and select your folder</li>
+<li>Select text on any page → right-click → "Copy as Markdown"</li>
+<li>Paste into a document</li>
+</ol>
+
+<hr>
+
+<h2>Chapter 3: The Popup — Your Extension's UI</h2>
+
+<p>Sometimes you want to paste messy text into the extension and get clean output. The popup handles this.</p>
+
+<h3>3.1 Create popup.html</h3>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;style&gt;
+    body { width: 400px; font-family: sans-serif; padding: 12px; }
+    textarea { width: 100%; height: 120px; font-family: monospace; padding: 8px; }
+    .output { margin-top: 8px; min-height: 60px; padding: 8px; background: #f5f5f5; }
+    button { margin-top: 8px; padding: 6px 16px; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;Clean Copy Lite&lt;/h2&gt;
+  &lt;textarea id="input"&gt;&lt;/textarea&gt;
+  &lt;button id="convert"&gt;Convert to Markdown&lt;/button&gt;
+  &lt;div class="output" id="output"&gt;&lt;/div&gt;
+  &lt;script src="popup.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>3.2 Create popup.js</h3>
+
+<pre><code>document.getElementById('convert').addEventListener('click', () => {
+  const input = document.getElementById('input').value;
+  if (!input.trim()) return;
+  
+  chrome.runtime.sendMessage(
+    { type: 'convert-to-markdown', html: input },
+    (response) => {
+      document.getElementById('output').textContent = response.markdown;
+    }
+  );
+});</code></pre>
+
+<h3>3.3 Add the Popup Message Handler</h3>
+
+<pre><code>chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'convert-to-markdown') {
+    sendResponse({ markdown: htmlToMarkdown(request.html) });
+    return true;
+  }
+});</code></pre>
+
+<hr>
+
+<h2>Chapter 4: Keyboard Shortcuts</h2>
+
+<h3>4.1 Add Commands to manifest.json</h3>
+
+<pre><code>"commands": {
+  "copy-selection": {
+    "suggested_key": {
+      "default": "Alt+C",
+      "mac": "MacCtrl+C"
+    },
+    "description": "Copy selected text as Markdown"
+  }
+}</code></pre>
+
+<h3>4.2 Handle the Command</h3>
+
+<pre><code>chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'copy-selection') {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+    
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      function: getSelectedHtml
+    }, async (results) => {
+      if (!results[0].result) return;
+      const markdown = htmlToMarkdown(results[0].result);
+      await chrome.storage.local.set({ _clipboard: markdown });
+      chrome.runtime.sendMessage({ type: 'copy-from-storage' });
+    });
+  }
+});</code></pre>
+
+<hr>
+
+<h2>Chapter 5: Persisting User Settings</h2>
+
+<h3>5.1 Custom Cleanup Rules</h3>
+
+<p>Let users define custom find-and-replace rules:</p>
+
+<pre><code>let customRules = [];
+
+async function loadCustomRules() {
+  const data = await chrome.storage.local.get('customRules');
+  customRules = (data.customRules || []).filter(r => r.pattern && r.replacement);
+}
+
+function applyCustomRules(text) {
+  for (const rule of customRules) {
+    try {
+      const regex = new RegExp(rule.pattern, 'g');
+      text = text.replace(regex, rule.replacement);
+    } catch (e) {
+      // Skip invalid regex — never break copying
+    }
+  }
+  return text;
+}
+
+// Load on startup
+loadCustomRules();
+
+// Reload on change
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.customRules) {
+    customRules = (changes.customRules.newValue || [])
+      .filter(r => r.pattern && r.replacement);
+  }
+});</code></pre>
+
+<p>Apply custom rules before any clipboard write:</p>
+
+<pre><code>// Replace: copyToClipboard(markdown)
+// With: copyToClipboard(applyCustomRules(markdown))</code></pre>
+
+<h3>5.2 Mode Preference</h3>
+
+<pre><code>// Save user's plain-text preference
+chrome.storage.local.set({ plainMode: true });
+
+// Read it back
+chrome.storage.local.get('plainMode', (data) => {
+  if (data.plainMode) { /* show plain text */ }
+});</code></pre>
+
+<hr>
+
+<h2>Chapter 6: The Options Page</h2>
+
+<p>An options page gives users a full-page configuration interface.</p>
+
+<h3>6.1 Create options.html</h3>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;style&gt;
+    body { max-width: 600px; margin: 40px auto; font-family: sans-serif; }
+    .rule { display: flex; gap: 8px; margin-bottom: 8px; }
+    .rule input { flex: 1; padding: 6px; font-family: monospace; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Settings&lt;/h1&gt;
+  &lt;div id="rules"&gt;&lt;/div&gt;
+  &lt;button id="add-rule"&gt;Add Rule&lt;/button&gt;
+  &lt;button id="save"&gt;Save&lt;/button&gt;
+  &lt;script src="options.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>6.2 Register in manifest.json</h3>
+
+<pre><code>"options_page": "options.html"</code></pre>
+
+<hr>
+
+<h2>Chapter 7: Icons and Branding</h2>
+
+<p>Your extension needs icons at 16×16, 48×48, and 128×128 pixels.</p>
+
+<ul>
+<li><strong>16px:</strong> Toolbar icon</li>
+<li><strong>48px:</strong> Extensions page listing</li>
+<li><strong>128px:</strong> Chrome Web Store listing</li>
+</ul>
+
+<p>Create a simple icon using an HTML canvas, or use a tool like Figma. The icon must be recognizable at 16px — avoid fine details that disappear at small sizes.</p>
+
+<p>Your extension name and description appear in the Chrome Web Store. Make them clear:</p>
+
+<pre><code>"name": "Clean Copy Lite — HTML to Markdown"
+"description": "Copy selected text as clean, formatted Markdown."</code></pre>
+
+<hr>
+
+<h2>Chapter 8: Publishing to the Chrome Web Store</h2>
+
+<h3>8.1 Prepare Your Package</h3>
+
+<p>Create a .zip containing only the necessary files:</p>
+
+<pre><code>zip -r extension.zip manifest.json background.js popup.html popup.js offscreen.html options.html options.js icon-16.png icon-48.png icon-128.png</code></pre>
+
+<h3>8.2 Developer Account</h3>
+
+<ol>
+<li>Visit <a href="https://chrome.google.com/webstore/devconsole">chrome.google.com/webstore/devconsole</a></li>
+<li>Sign in with your Google account</li>
+<li>Pay the $5 registration fee (one-time)</li>
+</ol>
+
+<h3>8.3 Submit Your Extension</h3>
+
+<ol>
+<li>Click "New item" in the Developer Console</li>
+<li>Upload your .zip</li>
+<li>Fill in description, screenshots, and category</li>
+<li>Justify each permission (explain why you need it)</li>
+<li>Submit for review</li>
+</ol>
+
+<h3>8.4 Permission Justification Example</h3>
+
+<blockquote>
+"activeTab — Only accesses the current tab's selected text when the user right-clicks or opens the popup. No background data collection. clipboardWrite — Required to write converted Markdown text to the system clipboard. scripting — Required to inject a selection-reader script into the active tab at the user's request."
+</blockquote>
+
+<h3>8.5 The Review Process</h3>
+
+<p>Reviews take 1-3 business days. Common rejection reasons:</p>
+<ul>
+<li>Insufficient permission justification</li>
+<li>Broken functionality</li>
+<li>Minimal functionality (no real value)</li>
+<li>Privacy concerns without disclosure</li>
+</ul>
+
+<h3>8.6 Handling Updates</h3>
+
+<ol>
+<li>Increment version in manifest.json</li>
+<li>Build new .zip</li>
+<li>Upload to Developer Console</li>
+<li>Submit for review (minor fixes: ~24 hours)</li>
+</ol>
+
+<hr>
+
+<h2>Chapter 9: Testing and Debugging</h2>
+
+<h3>9.1 Debugging Tools</h3>
+
+<ul>
+<li><strong>Service Worker:</strong> <code>chrome://extensions</code> → your extension → "Service Worker" → "Inspect"</li>
+<li><strong>Popup:</strong> Right-click icon → "Inspect popup"</li>
+<li><strong>Extension shortcuts:</strong> <code>chrome://extensions/shortcuts</code></li>
+</ul>
+
+<h3>9.2 Common Pitfalls</h3>
+
+<table>
+<tr><th>Problem</th><th>Solution</th></tr>
+<tr><td>Context menu missing</td><td>Add <code>contextMenus</code> permission</td></tr>
+<tr><td>Clipboard not working</td><td>Use offscreen document</td></tr>
+<tr><td>Extension stops after idle</td><td>Service worker terminated — use <code>chrome.storage</code></td></tr>
+<tr><td>executeScript fails</td><td>Add <code>scripting</code> permission</td></tr>
+<tr><td>Keyboard shortcut doesn't work</td><td>Check <code>chrome://extensions/shortcuts</code></td></tr>
+</table>
+
+<h3>9.3 Unit Tests</h3>
+
+<p>Test your core logic without Chrome:</p>
+
+<pre><code>const assert = require('assert');
+
+// Copy your htmlToMarkdown function here
+assert.strictEqual(
+  htmlToMarkdown('&lt;h1&gt;Title&lt;/h1&gt;').trim(),
+  '# Title'
+);
+
+console.log('All tests passed!');</code></pre>
+
+<hr>
+
+<h2>Chapter 10: From Lite to Production</h2>
+
+<h3>10.1 Firefox Port</h3>
+
+<p>Chrome extensions are mostly compatible with Firefox. Key differences:</p>
+<ul>
+<li>Firefox uses <code>browser.*</code> API (promise-based)</li>
+<li>Firefox allows clipboard from background pages directly</li>
+<li>Firefox MV3 uses event pages, not service workers</li>
+<li>Add <code>browser_specific_settings.gecko.id</code> to manifest</li>
+</ul>
+
+<h3>10.2 Premium Features</h3>
+
+<p>Monetization options for your extension:</p>
+<ul>
+<li><strong>Free + Pro:</strong> Basic features free, advanced features paid</li>
+<li><strong>License keys:</strong> Validate against a remote API</li>
+<li><strong>Web Store purchases:</strong> CWS supports one-time and subscriptions</li>
+</ul>
+
+<h3>10.3 Privacy-First Analytics</h3>
+
+<p>Know your users without tracking:</p>
+<pre><code>chrome.storage.local.get('copyCount', (data) => {
+  const count = (data.copyCount || 0) + 1;
+  chrome.storage.local.set({ copyCount: count });
+});</code></pre>
+
+<h3>10.4 GitHub Repository</h3>
+
+<p>Publish your code on GitHub to build trust and enable contributions. Include README, MIT license, and CI testing.</p>
+
+<hr>
+
+<div class="appendix">
+<h2>Appendix A: Complete manifest.json Reference</h2>
+
+<pre><code>{
+  "manifest_version": 3,
+  "name": "Your Extension",
+  "version": "1.0.0",
+  "description": "What it does.",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "storage", "contextMenus"],
+  "commands": {
+    "my-command": {
+      "suggested_key": { "default": "Alt+Shift+1" },
+      "description": "Run command"
+    }
+  }
+}</code></pre>
+
+<h2>Appendix B: Permissions Reference</h2>
+
+<table>
+<tr><th>Permission</th><th>What It Allows</th></tr>
+<tr><td>activeTab</td><td>Access current tab on user action</td></tr>
+<tr><td>storage</td><td>Read/write local storage</td></tr>
+<tr><td>contextMenus</td><td>Right-click menu items</td></tr>
+<tr><td>clipboardWrite</td><td>Write to system clipboard</td></tr>
+<tr><td>clipboardRead</td><td>Read from clipboard</td></tr>
+<tr><td>scripting</td><td>Inject scripts into pages</td></tr>
+<tr><td>offscreen</td><td>Create hidden documents</td></tr>
+</table>
+
+<h2>Appendix C: Pre-Publish Checklist</h2>
+
+<ul class="checklist">
+<li>Extension works without errors in chrome://extensions</li>
+<li>Context menu appears on text selection</li>
+<li>Popup opens and converts text</li>
+<li>Keyboard shortcut triggers copy</li>
+<li>Options page saves and loads</li>
+<li>Icons are crisp at all sizes</li>
+<li>All permissions are justified</li>
+<li>Version number is updated</li>
+<li>Zip contains only necessary files</li>
+<li>Privacy policy is mentioned</li>
+</ul>
+</div>
+
+<hr>
+
+<div class="footer">
+<p>© 2026. Chrome is a trademark of Google LLC. Code examples are MIT-licensed.</p>
+</div>
+
+</body>
+</html>

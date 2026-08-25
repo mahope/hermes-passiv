@@ -1,0 +1,42 @@
+{
+  "name": "clean-copy",
+  "displayName": "Clean Copy",
+  "version": "1.0.0",
+  "description": "Paste HTML as clean Markdown or plain text — the same converter used by the Clean Copy browser extensions",
+  "publisher": "mahope",
+  "license": "MIT",
+  "repository": "https://github.com/mahope/clean-copy-vscode",
+  "homepage": "https://hermes-passiv.pages.dev/clean-copy",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Formatters", "Other"],
+  "keywords": [
+    "markdown", "html-to-markdown", "clipboard", "paste",
+    "clean-text", "copy-paste", "formatting"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "clean-copy.pasteAsMarkdown",
+        "title": "Clean Copy: Paste HTML as Markdown"
+      },
+      {
+        "command": "clean-copy.pasteAsCleanText",
+        "title": "Clean Copy: Paste as Clean Text"
+      },
+      {
+        "command": "clean-copy.convertSelection",
+        "title": "Clean Copy: Convert Selection to Markdown"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "clean-copy.pasteAsMarkdown",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorTextFocus"
+      }
+    ]
+  }
+}

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Counter — Free Word Count &amp; Reading Time Calculator</title>
+<meta name="description" content="Free online word counter. Count words, characters, sentences, paragraphs, syllables. Estimate reading and speaking time. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Word Counter — Free Word Count &amp; Reading Time Calculator">
+<meta property="og:description" content="Count words, characters, sentences, paragraphs + reading &amp; speaking time. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/word-counter">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Word Counter — Free Word Count &amp; Reading Time">
+<meta name="twitter:description" content="Count words, characters, sentences, paragraphs &amp; reading time. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/word-counter">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/word-counter">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/word-counter">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Word Counter",
+  "url": "https://hermes-passiv.pages.dev/word-counter",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online word count and reading time calculator."
+}
+</script>
+<style>
+.wc-wrap { max-width: 860px; margin: 0 auto; padding: 1rem; }
+.wc-textarea {
+  width: 100%; box-sizing: border-box; min-height: 260px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: inherit; font-size: 0.95rem; line-height: 1.6;
+}
+.wc-textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.wc-stats {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1rem; margin: 1.5rem 0;
+}
+.wc-card {
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+  border-radius: 10px; padding: 1rem 1.2rem; text-align: center;
+}
+.wc-card .n { font-size: 1.8rem; font-weight: 700; color: var(--color-accent); line-height: 1.2; }
+.wc-card .lb { font-size: 0.78rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.2rem; }
+.wc-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+@media (max-width: 540px) { .wc-row2 { grid-template-columns: 1fr; } }
+.wc-tm { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem 1.2rem; text-align: center; }
+.wc-tm .n { font-size: 1.4rem; font-weight: 700; color: var(--color-accent); }
+.wc-tm .lb { font-size: 0.78rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.2rem; }
+.wc-dn { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem 1.2rem; font-size: 0.9rem; }
+.wc-dn .ba { height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden; margin: 0.4rem 0 0.8rem; }
+.wc-dn .bf { height: 100%; background: var(--color-accent); border-radius: 4px; transition: width 0.35s ease; }
+.wc-dn .ba-label { display: flex; justify-content: space-between; align-items: center; }
+.wc-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.wc-flesch { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem 1.2rem; margin: 1.5rem 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem; }
+.wc-flesch .score { font-size: 2rem; font-weight: 800; }
+.wc-flesch .desc { font-size: 0.92rem; color: var(--color-text-muted); }
+.wc-flesch .desc strong { color: var(--color-text); }
+.wc-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="wc-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  Word counter
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Word Counter</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Count words, characters, sentences, paragraphs &amp; syllables — instantly.</p>
+  <p class="wc-privacy">🔒 Nothing leaves your device. The counting runs in JavaScript on this page.</p>
+</header>
+
+<textarea id="textInput" class="wc-textarea" placeholder="Paste or type your text here..." spellcheck="true"></textarea>
+
+<div class="wc-btns">
+  <button id="clearBtn" class="btn-secondary" style="padding:10px 24px;">Clear</button>
+  <button id="exampleBtn" class="btn-secondary" style="padding:10px 24px;">Load example</button>
+</div>
+
+<div class="wc-stats" id="statsGrid">
+  <div class="wc-card"><div class="n" id="wordCount">0</div><div class="lb">Words</div></div>
+  <div class="wc-card"><div class="n" id="charCount">0</div><div class="lb">Characters</div></div>
+  <div class="wc-card"><div class="n" id="charNoSpace">0</div><div class="lb">Characters (no spaces)</div></div>
+  <div class="wc-card"><div class="n" id="sentCount">0</div><div class="lb">Sentences</div></div>
+  <div class="wc-card"><div class="n" id="paraCount">0</div><div class="lb">Paragraphs</div></div>
+  <div class="wc-card"><div class="n" id="syllCount">0</div><div class="lb">Syllables</div></div>
+</div>
+
+<div class="wc-row2">
+  <div class="wc-tm"><div class="n" id="readingTime">0 min</div><div class="lb">Reading time (238 wpm)</div></div>
+  <div class="wc-tm"><div class="n" id="speakingTime">0 min</div><div class="lb">Speaking time (150 wpm)</div></div>
+</div>
+
+<div class="wc-dn" id="densitySection">
+  <h3 style="font-size:0.95rem;margin:0 0 0.6rem;font-weight:600;">Text density</h3>
+  <div class="ba-label"><span>Avg. characters per word</span><span id="avgCharWord">0</span></div>
+  <div class="ba"><div class="bf" id="avgDensityBar" style="width:0%;"></div></div>
+  <div class="ba-label"><span>Long words (7+ characters)</span><span id="longWordPct">0%</span></div>
+  <div class="ba"><div class="bf" id="longWordBar" style="width:0%;"></div></div>
+</div>
+
+<div class="wc-flesch" id="fleschSection">
+  <div>
+    <div class="score" id="fleschScore">—</div>
+    <div class="lb" style="font-size:0.78rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.04em;">Flesch Reading Ease</div>
+  </div>
+  <div class="desc" id="fleschDesc">Start typing to see readability score.</div>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <p style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:640px;">
+    This word counter helps writers, students, and professionals measure the length and readability of their
+    text. All counting — words, characters, sentences, paragraphs, and syllables — runs entirely in your browser.
+    Nothing is uploaded or stored. Use it to check word counts for essays, articles, social media posts, or any
+    writing project. Reading time is estimated at 238 words per minute (average non-fiction reader) and speaking
+    time at 150 words per minute (comfortable speech pace). The Flesch Reading Ease score gives a rough measure
+    of readability on a 0–100 scale, where higher scores mean easier-to-read text.
+  </p>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:860px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+        <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+<a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var textarea = document.getElementById('textInput');
+  if (!textarea) return;
+
+  var tracked = false;
+
+  function count(text) {
+    // Trim and normalize
+    var t = text.trim();
+    var words = t.length === 0 ? [] : t.split(/[\s\u00A0]+/).filter(function(w) { return w.length > 0; });
+    var wordCount = words.length;
+
+    var charCount = t.length;
+    var charNoSpace = t.replace(/[\s\u00A0]/g, '').length;
+
+    // Sentences: split on . ! ? followed by space/end, handle common abbreviations poorly
+    var sents = t === '' ? [] : t.split(/[.!?]+(?:[\s\u00A0]|$)/).filter(function(s) {
+      return s.trim().length > 0;
+    });
+    var sentCount = sents.length;
+    // Fallback: at least 1 if there's text
+    if (wordCount > 0 && sentCount === 0) sentCount = 1;
+
+    // Paragraphs: split on double newline
+    var paras = t === '' ? [] : t.split(/\n\s*\n/).filter(function(p) { return p.trim().length > 0; });
+    var paraCount = paras.length;
+
+    // Syllable counting (approximate)
+    function countSyllables(w) {
+      if (w.length <= 2) return 1;
+      var s = w.toLowerCase().replace(/[^a-z]/g, '');
+      if (s.length === 0) return 0;
+      // Remove trailing silent e
+      s = s.replace(/(?:es|ed|e)$/, '');
+      var vowelGroups = s.match(/[aeiouy]+/g);
+      var syl = vowelGroups ? vowelGroups.length : 1;
+      // Ensure at least 1 per word
+      if (syl < 1) syl = 1;
+      return syl;
+    }
+
+    var totalSyllables = 0;
+    var longWordCount = 0;
+    var totalCharsInWords = 0;
+    for (var i = 0; i < words.length; i++) {
+      totalSyllables += countSyllables(words[i]);
+      totalCharsInWords += words[i].length;
+      if (words[i].length >= 7) longWordCount++;
+    }
+
+    var avgCharsPerWord = wordCount > 0 ? (totalCharsInWords / wordCount) : 0;
+    var densityPct = Math.min(avgCharsPerWord * 2.5, 100);
+    var longWordPct = wordCount > 0 ? (longWordCount / wordCount * 100) : 0;
+
+    // Reading time: 238 wpm
+    var readingMin = wordCount > 0 ? Math.max(1, Math.round(wordCount / 238)) : 0;
+    // Speaking time: 150 wpm
+    var speakingMin = wordCount > 0 ? Math.max(1, Math.round(wordCount / 150)) : 0;
+
+    // Flesch Reading Ease
+    var flesch = 0;
+    var fleschDesc = '';
+    if (wordCount > 0 && sentCount > 0) {
+      flesch = 206.835 - 1.015 * (wordCount / sentCount) - 84.6 * (totalSyllables / wordCount);
+      flesch = Math.min(100, Math.max(0, Math.round(flesch * 10) / 10));
+      if (flesch >= 90) fleschDesc = 'Very easy to read (4th–5th grade level)';
+      else if (flesch >= 80) fleschDesc = 'Easy to read (6th grade)';
+      else if (flesch >= 70) fleschDesc = 'Fairly easy to read (7th grade)';
+      else if (flesch >= 60) fleschDesc = 'Plain English (8th–9th grade)';
+      else if (flesch >= 50) fleschDesc = 'Fairly difficult (10th–12th grade)';
+      else if (flesch >= 30) fleschDesc = 'Difficult (college level)';
+      else fleschDesc = 'Very difficult (graduate level)';
+    }
+
+    // Update DOM
+    document.getElementById('wordCount').textContent = wordCount.toLocaleString();
+    document.getElementById('charCount').textContent = charCount.toLocaleString();
+    document.getElementById('charNoSpace').textContent = charNoSpace.toLocaleString();
+    document.getElementById('sentCount').textContent = sentCount.toLocaleString();
+    document.getElementById('paraCount').textContent = paraCount.toLocaleString();
+    document.getElementById('syllCount').textContent = totalSyllables.toLocaleString();
+
+    var readingLabel = readingMin + ' min';
+    var speakingLabel = speakingMin + ' min';
+    if (wordCount === 0) {
+      document.getElementById('readingTime').textContent = '0 min';
+      document.getElementById('speakingTime').textContent = '0 min';
+    } else {
+      document.getElementById('readingTime').textContent = readingLabel;
+      document.getElementById('speakingTime').textContent = speakingLabel;
+    }
+
+    document.getElementById('avgCharWord').textContent = avgCharsPerWord.toFixed(1);
+    document.getElementById('avgDensityBar').style.width = densityPct.toFixed(0) + '%';
+    document.getElementById('longWordPct').textContent = longWordPct.toFixed(1) + '%';
+    document.getElementById('longWordBar').style.width = Math.min(longWordPct, 100).toFixed(0) + '%';
+
+    var fleschEl = document.getElementById('fleschScore');
+    var fleschDescEl = document.getElementById('fleschDesc');
+    if (wordCount === 0) {
+      fleschEl.textContent = '\u2014';
+      fleschDescEl.innerHTML = 'Start typing to see readability score.';
+    } else {
+      fleschEl.textContent = flesch;
+      fleschDescEl.innerHTML = '<strong>' + flesch + '</strong> \u2014 ' + fleschDesc;
+    }
+
+    // Track once on first analysis
+    if (!tracked && wordCount > 0) {
+      tracked = true;
+      try {
+        var p = location.pathname.replace(/\.html$/, '') || '/';
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: p, event: 'analyze' }),
+          keepalive: true
+        }).catch(function() {});
+      } catch(e) {}
+    }
+  }
+
+  // Debounce 300ms
+  var timer = null;
+  function handleInput() {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function() {
+      count(textarea.value);
+    }, 300);
+  }
+
+  textarea.addEventListener('input', handleInput);
+
+  // Clear
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    textarea.value = '';
+    count('');
+    textarea.focus();
+  });
+
+  // Load example
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    textarea.value = 'The quick brown fox jumps over the lazy dog. It is a beautiful morning, and the sun shines brightly over the meadow. Birds are singing in the trees, their melodies filling the air with joy and tranquility.\n\nWriting is an art that requires patience, dedication, and a willingness to learn. Every great author started with a blank page and a single word. The journey of writing a novel, an article, or even a simple letter begins with the decision to put thoughts into words.\n\nReading regularly improves vocabulary, comprehension, and critical thinking skills. Studies show that people who read for at least thirty minutes a day have better focus and a broader understanding of the world around them. Whether you prefer fiction, non-fiction, or poetry, every page you turn adds to your knowledge and perspective.\n\nPractice makes perfect. The more you write, the better you become at expressing your ideas clearly and persuasively. So keep writing, keep reading, and never stop learning.';
+    count(textarea.value);
+  });
+
+  // Initial count
+  count(textarea.value);
+
+})();
+</script>
+</body>
+</html>

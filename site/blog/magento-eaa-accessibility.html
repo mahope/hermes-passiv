@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magento Accessibility: EAA Compliance for Your Store</title>
+<meta name="description" content="Accessibility guide for Magento and Adobe Commerce stores: Luma/theme fixes, checkout and account flows, extension audits — meeting WCAG 2.1 AA and the EAA.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Magento Accessibility: EAA Compliance for Your Store">
+<meta property="og:description" content="Accessibility guide for Magento and Adobe Commerce stores: Luma/theme fixes, checkout and account flows, extension audits — meeting WCAG 2.1 AA and the EAA.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Magento Accessibility: EAA Compliance for Your Store">
+<meta name="twitter:description" content="Accessibility guide for Magento and Adobe Commerce stores: Luma/theme fixes, checkout and account flows, extension audits — meeting WCAG 2.1 AA and the EAA.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Magento Accessibility: EAA Compliance for Your Store",
+  "description": "Accessibility guide for Magento and Adobe Commerce stores: Luma/theme fixes, checkout and account flows, extension audits — meeting WCAG 2.1 AA and the EAA.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · MAGENTO · EAA</div>
+    <h1>Magento Accessibility:<br>EAA Compliance for Your Store</h1>
+    <p class="subtitle">Where Magento and Adobe Commerce stores fail WCAG 2.1 AA — themes, extensions, checkout — and the remediation workflow that gets EU shops EAA-ready.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-magento-and-eaa" class="btn-secondary">Magento Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-magento-and-eaa">Why Magento and EAA</h2>
+    <p>Magento (now Adobe Commerce) runs a large share of Europe's mid-size and enterprise webshops — exactly the e-commerce category the European Accessibility Act regulates without a micro-enterprise exemption. Since June 2025 an inaccessible Magento store is a legal exposure in every EU market, and B2B buyers increasingly cascade EN 301 549 requirements into supplier contracts. The scale differs from WordPress or Wix: Magento stores have more custom theming, more extensions, and more complex transactional flows — which means more surface area for failures, but also more budget to fix them properly.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🛒 No Size Exemption</h3><p>Unlike service providers, e-commerce falls under the EAA regardless of company size. Even a two-person Magento shop must comply.</p></div>
+      <div class="card"><h3>🧱 Theme Inheritance Risk</h3><p>Most stores run heavily customised descendants of Luma — accessibility bugs baked into the parent theme replicate on every page.</p></div>
+      <div class="card"><h3>🔌 Extension Wild West</h3><p>Checkout upgrades, search, reviews and wishlists often come from third-party vendors with unknown accessibility quality. Each one needs an audit.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="common-magento-failures">Common Magento Failures</h2>
+    <p>Across Magento storefronts, these defects dominate:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧭 Layered Navigation</h3><p>Filter facets rendered as div-based toggles without aria-expanded or keyboard support. Screen-reader users cannot narrow a product grid at all.</p></div>
+      <div class="card"><h3>🔢 Quantity & Variant Inputs</h3><p>Custom steppers replacing native number inputs, swatches without labels or selected-state announcements — the classic cart-breaking bugs.</p></div>
+      <div class="card"><h3>💳 One-Page Checkout</h3><p>Ajax-swapping checkout sections that neither move focus nor announce errors. Payment fields without programmatically associated labels.</p></div>
+      <div class="card"><h3>🖼️ Product Media</h3><p>Image zoom galleries without keyboard operation or alt text; colour variants conveyed only by swatch visuals.</p></div>
+      <div class="card"><h3>🔔 Toasts & Mini-Cart</h3><p>"Added to cart" confirmations shown visually only — no ARIA live region, so non-sighted shoppers re-add items repeatedly.</p></div>
+      <div class="card"><h3>🔍 Search Autocomplete</h3><p>Type-ahead suggestions in inaccessible popups that ignore arrow keys and escape.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="theme-and-template-fixes">Theme and Template Fixes</h2>
+    <p>Remediation happens mostly in your custom theme:</p>
+    <p></p>
+    <p><strong>Start from semantics:</strong> restore real landmarks (header, nav, main, footer), one h1 per page, and product titles as real headings in list/grid templates.</p>
+    <p></p>
+    <p><strong>Native inputs first:</strong> replace custom quantity steppers and selects with native elements styled to match — they inherit keyboard and screen-reader behaviour for free.</p>
+    <p></p>
+    <p><strong>ARIA states:</strong> faceted navigation needs aria-expanded on toggles, aria-pressed on filter chips, and result-count updates announced via aria-live.</p>
+    <p></p>
+    <p><strong>Focus management:</strong> every Ajax section swap (cart updates, checkout steps) moves focus to its new content; error summaries receive focus and link to individual field errors.</p>
+    <p></p>
+    <p><strong>Form labels:</strong> audit every template that renders form fields for explicit label associations — Magento's knockout templates frequently omit them.</p>
+    <p></p>
+    <p><strong>Contrast tokens:</strong> fix grey-on-grey price/meta text once in theme variables, then re-verify across sale badges and buttons.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="extensions-and-upgrades">Extensions and Upgrades</h2>
+    <p>Treat every third-party extension as an accessibility unknown until proven otherwise. The practical method: on staging, walk the extension's complete flow with keyboard only, then with a screen reader — install, configure, use, undo. Vendors vary wildly; some major checkout and search modules have known public accessibility issues. When an extension fails and no vendor fix exists, decide deliberately: replace it, wrap it with a corrective layer, or document it as a limitation in your accessibility statement with a workaround path. Also note that upgrading between Magento versions silently reintroduces old bugs wherever you patched vendor files — re-run your scan after every upgrade as standard practice.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="audit-workflow">Audit Workflow</h2>
+    <p>A repeatable Magento audit process for agencies and shop owners:</p>
+    <p></p>
+    <p><strong>1. Automated crawl</strong> of home, category, product, cart, checkout and account templates — expect 20-50 distinct findings on a typical store.</p>
+    <p></p>
+    <p><strong>2. Transactional journeys:</strong> complete search → filter → product → cart → checkout end-to-end by keyboard, then by screen reader. These journeys carry the EAA risk.</p>
+    <p></p>
+    <p><strong>3. Extension pass:</strong> audit each installed module's widgets individually.</p>
+    <p></p>
+    <p><strong>4. Fix in theme</strong> (not vendor patches where avoidable), deploy to staging, re-scan until clean.</p>
+    <p></p>
+    <p><strong>5. Deliver:</strong> findings report, fixed-store verification, and an accessibility statement with conformance status and documented limitations. Re-audit after every Magento version upgrade and major extension change.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner across your storefront first — product grids, layered navigation and forms are where automated findings cluster.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Magento Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/magento-accessibility-check" class="btn-secondary">Magento Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA really apply to small Magento shops?</h3><p>Yes for e-commerce: unlike service providers, online shops have no micro-enterprise exemption under the EAA. A small Magento store selling to EU consumers is in scope regardless of headcount.</p></div>
+      <div class="card"><h3>Is Adobe Commerce more accessible than open-source Magento?</h3><p>Adobe has improved core accessibility, but nearly every store layers a custom theme and extensions on top, which determines actual conformance. Platform edition matters far less than theme and extension quality.</p></div>
+      <div class="card"><h3>We use a big commercial checkout extension — are we covered?</h3><p>Not automatically. Major checkout modules have shipped with serious keyboard and screen-reader issues. Audit your exact installed version on staging; do not rely on marketing claims.</p></div>
+      <div class="card"><h3>How long does a Magento accessibility remediation take?</h3><p>A typical mid-size store needs 2-6 weeks of focused theme and template work depending on customisation depth. Automated scanning cuts this substantially by giving developers a precise worklist.</p></div>
+      <div class="card"><h3>Do we need VPAT/EN 301 549 documentation?</h3><p>If you sell to public-sector or large B2B customers, yes — they will request an EN 301 549 conformity report. An audit plus your accessibility statement feeds directly into that document.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Magento Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/magento-accessibility-check" class="btn-secondary">Magento Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SHOPIFY · EAA</span><h3><a href="/blog/shopify-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Shopify Accessibility: Getting Your Store EAA-Compliant</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA ENFORCEMENT</span><h3><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);text-decoration:none;">EAA Enforcement in 2026: What Agencies Must Know</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">How Much Does an Accessibility Audit Cost?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessible Color Palette Generator — WCAG AA/AAA, Free</title>
+<meta name="description" content="Generate an accessible brand palette in seconds: pick a base color and get text, muted-text, border and background shades that pass WCAG 2.1 AA and AAA contrast. Live preview, copy-ready hex codes, runs entirely in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free Accessible Color Palette Generator">
+<meta property="og:description" content="Pick one base color, get a full WCAG AA/AAA-compliant palette with live preview. No signup — nothing leaves your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/palette-generator">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/palette-generator"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/palette-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/palette-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/palette-generator">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Accessible Color Palette Generator","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/palette-generator","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free browser-based generator that builds a WCAG AA/AAA-accessible color palette from any base color."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .pg-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .pg-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .pg-field { display:flex; flex-direction:column; gap:6px; }
+  .pg-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .pg-swatch-input { display:flex; gap:8px; align-items:center; }
+  .pg-swatch-input input[type=color] { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .pg-swatch-input input[type=text] { width:110px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-family:ui-monospace,monospace; font-size:.95rem; }
+  select.pg-select { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-size:.95rem; }
+  table.pg-table { width:100%; border-collapse:collapse; margin-top:16px; }
+  table.pg-table th, table.pg-table td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--color-border); font-size:.95rem; }
+  table.pg-table th { color:var(--color-text-muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; }
+  .pg-chip { display:inline-block; width:26px; height:26px; border-radius:6px; vertical-align:middle; margin-right:10px; border:1px solid rgba(0,0,0,.15); }
+  code.pg-hex { font-family:ui-monospace,monospace; cursor:pointer; padding:3px 7px; border-radius:6px; background:var(--color-surface-2); }
+  code.pg-hex:hover { outline:2px solid var(--color-accent); }
+  .pass { color:var(--color-green); font-weight:600; } .fail { color:var(--color-red); font-weight:600; }
+  .pg-preview { margin-top:22px; border-radius:var(--radius); border:1px solid var(--color-border); overflow:hidden; }
+  .pg-preview-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; }
+  .pg-preview-body { padding:24px 22px; line-height:1.55; }
+  .pg-preview-body .muted { font-size:.92rem; }
+  .pg-btn { padding:10px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:.95rem; }
+  .pg-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .pg-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  .pg-copied { font-size:.85rem; color:var(--color-green); margin-left:8px; }
+  .pg-export { margin-top:24px; border:1px solid var(--color-border); border-radius:var(--radius); padding:18px; background:var(--color-surface-2); }
+  .pg-export pre { margin:12px 0 0; padding:14px; background:#0f172a; color:#e2e8f0; border-radius:8px; overflow-x:auto; font-size:.85rem; line-height:1.5; max-height:340px; }
+  .pg-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .pg-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
+  .pg-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
+  .pg-dl { display:inline-block; margin-left:auto; }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Accessible Color Palette Generator</h1>
+    <p class="tagline">Pick one base color and get a full palette — text, muted text,
+    border and surface shades — where every combination passes
+    <strong>WCAG&nbsp;2.1 AA</strong>, with AAA marked where it does.
+    Everything runs in your browser; nothing is uploaded.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="pg-card" aria-labelledby="gen-heading">
+  <h2 id="gen-heading">Build your palette</h2>
+  <div class="pg-row" style="margin-top:14px">
+    <div class="pg-field">
+      <label for="base-color">Base / brand color</label>
+      <div class="pg-swatch-input">
+        <input type="color" id="base-color" value="#2563eb" aria-describedby="base-hex-label">
+        <input type="text" id="base-text" value="#2563eb" aria-label="Base color as hex code" spellcheck="false">
+      </div>
+    </div>
+    <div class="pg-field">
+      <label for="bg-select">Page background</label>
+      <select class="pg-select" id="bg-select" aria-describedby="bg-help">
+        <option value="#ffffff" selected>White #ffffff</option>
+        <option value="#f8fafc">Off-white #f8fafc</option>
+        <option value="#f5f0e8">Warm paper #f5f0e8</option>
+        <option value="#111827">Dark #111827</option>
+        <option value="#000000">Black #000000</option>
+      </select>
+      <span id="bg-help" style="font-size:.8rem;color:var(--color-text-muted)">Text colors are tuned to pass on this background</span>
+    </div>
+  </div>
+  <p class="pg-error" id="pg-error" role="alert"></p>
+
+  <div style="overflow-x:auto">
+  <table class="pg-table">
+    <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">Generated palette with contrast ratios against the chosen background</caption>
+    <thead>
+      <tr><th scope="col">Swatch</th><th scope="col">Role</th><th scope="col">Hex (click to copy)</th><th scope="col">Contrast vs bg</th><th scope="col">AA normal</th><th scope="col">AAA normal</th></tr>
+    </thead>
+    <tbody id="palette-rows"></tbody>
+  </table>
+  </div>
+  <p class="pg-copied" id="copied-msg" aria-live="polite"></p>
+
+  <h3 style="margin-top:28px">Export your palette</h3>
+  <div class="pg-export">
+    <div class="pg-tabs" role="tablist" aria-label="Export format">
+      <button type="button" class="pg-tab" id="tab-css" role="tab" aria-selected="true" aria-controls="export-out">CSS variables</button>
+      <button type="button" class="pg-tab" id="tab-json" role="tab" aria-selected="false" aria-controls="export-out">JSON</button>
+      <button type="button" class="pg-tab" id="tab-tailwind" role="tab" aria-selected="false" aria-controls="export-out">Tailwind config</button>
+    </div>
+    <pre id="export-out" tabindex="0" aria-label="Generated palette code, select all to copy"></pre>
+    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <button type="button" class="pg-btn" id="copy-export" style="background:var(--color-accent);color:#fff">Copy code</button>
+      <button type="button" class="pg-btn pg-dl" id="download-export" style="background:var(--color-surface);border:1px solid var(--color-border)">Download file</button>
+      <span class="pg-copied" id="export-msg" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px">Live preview</h3>
+  <div class="pg-preview" id="preview" role="presentation">
+    <div class="pg-preview-bar" id="pv-bar">
+      <strong id="pv-brand">YourBrand</strong>
+      <button type="button" class="pg-btn" id="pv-cta">Get started</button>
+    </div>
+    <div class="pg-preview-body" id="pv-body">
+      <p>This is body text in your generated readable color. It comfortably exceeds the WCAG AA minimum of 4.5&nbsp;:&nbsp;1 against your chosen background.</p>
+      <p class="muted" id="pv-muted">This is secondary or muted text — dimmer than body copy, but still above the AA line so it stays readable.</p>
+    </div>
+  </div>
+
+  <p class="pg-note">Ratios use the WCAG 2.1 relative-luminance formula — the same one our
+  <a href="/contrast-checker">single-pair contrast checker</a> uses. Roles follow common practice:
+  body text ≥&nbsp;4.5:1, large headings ≥&nbsp;3:1, UI borders ≥&nbsp;3:1 (<a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">SC 1.4.11</a>).
+  Want to scan a whole existing page instead? Try the free <a href="/scan">Accessibility Scanner</a>.</p>
+</section>
+
+<section class="pg-card">
+  <h2>How it works</h2>
+  <p style="margin-top:10px">Starting from your base color, each role is derived by adjusting lightness
+  until its contrast ratio against the selected background clears the required threshold:
+  body text targets ≥&nbsp;4.5:1 (AAA ≥&nbsp;7:1 when reachable without drifting far from the hue),
+  muted text ≥&nbsp;4.5:1 at reduced prominence, borders ≥&nbsp;3:1, and surfaces are tints of the base.
+  The math is identical to the WCAG specification — no approximations, no server round-trips.</p>
+</section>
+
+<p style="margin-top:26px"><a href="/free-tools">&larr; All free tools</a> ·
+<a href="/contrast-checker">Contrast checker</a> · <a href="/scan">Full-page scanner</a> ·
+<a href="/color-blindness-simulator">Color blindness simulator</a> ·
+<a href="/palette-generator-da">Dansk version</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Free GDPR &amp; accessibility tools that run in your browser
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  function parseHex(v) {
+    v = v.trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(v)) return [parseInt(v[0]+v[0],16), parseInt(v[1]+v[1],16), parseInt(v[2]+v[2],16)];
+    if (/^[0-9a-fA-F]{6}$/.test(v)) return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+    return null;
+  }
+  function toHex(rgb) {
+    return '#' + rgb.map(function (c) {
+      var h = Math.max(0, Math.min(255, Math.round(c))).toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+  function luminance(rgb) {
+    var c = rgb.map(function (ch) {
+      ch = ch / 255;
+      return ch <= 0.03928 ? ch / 12.92 : Math.pow((ch + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+  // RGB <-> HSL helpers (H,S,L in [0,1])
+  function rgbToHsl(rgb) {
+    var r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b), h=0, s=0, l=(max+min)/2;
+    if (max !== min) {
+      var d = max - min;
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      if (max === r) h = ((g-b)/d + (g < b ? 6 : 0));
+      else if (max === g) h = (b-r)/d + 2;
+      else h = (r-g)/d + 4;
+      h /= 6;
+    }
+    return [h, s, l];
+  }
+  function hslToRgb(hsl) {
+    var h=hsl[0], s=hsl[1], l=hsl[2], r,g,b;
+    if (s === 0) { r=g=b=l; }
+    else {
+      var q = l < 0.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+      var hue2rgb = function(p,q,t){
+        if (t<0) t+=1; if (t>1) t-=1;
+        if (t<1/6) return p+(q-p)*6*t;
+        if (t<1/2) return q;
+        if (t<2/3) return p+(q-p)*(2/3-t)*6;
+        return p;
+      };
+      r = hue2rgb(p,q,h+1/3); g = hue2rgb(p,q,h); b = hue2rgb(p,q,h-1/3);
+    }
+    return [r*255, g*255, b*255];
+  }
+
+  var darkBgThreshold = null;
+
+  // Find nearest L such that ratio(colorAt(L), bg) >= target, staying near startL.
+  function tuneToRatio(baseRgb, bgRgb, target, preferDirection) {
+    var hsl = rgbToHsl(baseRgb);
+    var bgLum = luminance(bgRgb);
+    var bgIsLight = bgLum > 0.35;
+    // try directions: away from bg lightness first
+    var dirs = [];
+    if (preferDirection === 'lighter') dirs = [+1, -1];
+    else if (preferDirection === 'darker') dirs = [-1, +1];
+    else dirs = bgIsLight ? [-1, +1] : [+1, -1];
+    for (var di = 0; di < dirs.length; di++) {
+      var dir = dirs[di], lo = 0, hi = 1, best = null;
+      // binary search along this direction from current lightness
+      var startL = hsl[2];
+      var loF = dir > 0 ? startL : 0, hiF = dir > 0 ? 1 : startL;
+      // feasibility check at extreme
+      var extRgb = hslToRgb([hsl[0], hsl[1], dir > 0 ? Math.min(1, startL + 0.45) : Math.max(0, startL - 0.45)]);
+      if (ratio(extRgb, bgRgb) < target && ratio(dir > 0 ? [255,255,255] : [0,0,0], bgRgb) < target) continue;
+      for (var i = 0; i < 30; i++) {
+        var mid = (loF + hiF) / 2;
+        var c = hslToRgb([hsl[0], hsl[1], mid]);
+        if (ratio(c, bgRgb) >= target) { best = mid; if (dir > 0) hiF = mid; else loF = mid; }
+        else { if (dir > 0) loF = mid; else hiF = mid; }
+      }
+      if (best !== null) return hslToRgb([hsl[0], hsl[1], best]);
+    }
+    return null;
+  }
+
+  function buildPalette(base, bg) {
+    var rows = [];
+    var isDark = luminance(bg) <= 0.35;
+    var roles = [
+      { key:'body',   label:'Body text',            target:4.5 },
+      { key:'heading',label:'Heading (large)',      target:3 },
+      { key:'muted',  label:'Muted text',           target:4.5, desat:true },
+      { key:'link',   label:'Link',                 target:4.5 },
+      { key:'border', label:'Border / UI',          target:3 },
+      { key:'surface',label:'Surface tint',         target:null }
+    ];
+    roles.forEach(function (r) {
+      if (r.target === null) {
+        // surface tint: mix base 12% into bg
+        var mixed = bg.map(function (ch, i) { return ch * 0.88 + base[i] * 0.12; });
+        rows.push({ role:r.label, hex:toHex(mixed), rgb:mixed, ratio:ratio(base, mixed), aa:null, aaa:null });
+      } else {
+        var tuned = tuneToRatio(base, bg, r.target);
+        if (!tuned) tuned = isDark ? [255,255,255] : [17,17,17];
+        if (r.desat) {
+          var h = rgbToHsl(tuned);
+          tuned = hslToRgb([h[0], h[1]*0.55, h[2]]);
+          // re-check after desaturation
+          if (ratio(tuned, bg) < r.target) {
+            var hh = rgbToHsl(tuned);
+            var again = tuneToRatio(tuned, bg, r.target);
+            if (again) tuned = again;
+          }
+        }
+        var rt = ratio(tuned, bg);
+        rows.push({ role:r.label, hex:toHex(tuned), rgb:tuned, ratio:rt,
+                    aa: rt >= 4.5, aaa: rt >= 7 });
+      }
+    });
+    // base row first
+    var rb = ratio(base, bg);
+    rows.unshift({ role:'Base (as-is)', hex:toHex(base), rgb:base, ratio:rb, aa: rb >= 4.5, aaa: rb >= 7 });
+    return rows;
+  }
+
+  function render(rows, bgHex) {
+    var tb = $('palette-rows');
+    tb.innerHTML = '';
+    rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      function td(html) { var d = document.createElement('td'); d.innerHTML = html; return d; }
+      tr.appendChild(td('<span class="pg-chip" style="background:' + row.hex + '"></span>'));
+      tr.appendChild(td(row.role));
+      var codeTd = td('<code class="pg-hex" tabindex="0" role="button" aria-label="Copy ' + row.hex + '">' + row.hex + '</code>');
+      codeTd.querySelector('code').addEventListener('click', function () { copyHex(row.hex); });
+      codeTd.querySelector('code').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyHex(row.hex); } });
+      tr.appendChild(codeTd);
+      tr.appendChild(td(row.ratio.toFixed(2) + ' : 1'));
+      tr.appendChild(td(row.aa === null ? '—' : (row.aa ? '<span class="pass">Pass</span>' : '<span class="fail">Fail</span>')));
+      tr.appendChild(td(row.aaa === null ? '—' : (row.aaa ? '<span class="pass">Pass</span>' : '<span class="fail">Fail</span>')));
+      tb.appendChild(tr);
+    });
+
+    // preview
+    var byRole = {};
+    rows.forEach(function (r) { byRole[r.role] = r.hex; });
+    var pvBar = $('pv-bar'), pvBody = $('pv-body');
+    pvBar.style.background = byRole['Base (as-is)'];
+    pvBar.style.color = luminance(parseHex(byRole['Base (as-is)'])) > 0.35 ? '#101010' : '#ffffff';
+    $('pv-cta').style.background = pvBar.style.color;
+    $('pv-cta').style.color = byRole['Base (as-is)'];
+    pvBody.style.background = byRole['Surface tint'];
+    pvBody.style.color = byRole['Body text'];
+    pvBody.style.borderColor = byRole['Border / UI'];
+    $('pv-brand').style.color = pvBar.style.color;
+    $('pv-muted').style.color = byRole['Muted text'];
+    Array.prototype.forEach.call(pvBody.querySelectorAll('p'), function (p) {
+      if (!p.id || p.id !== 'pv-muted') p.style.color = byRole['Body text'];
+    });
+    document.documentElement.style.setProperty('--pg-link-color', byRole['Link']);
+  }
+
+  function copyHex(hex) {
+    var done = function () {
+      var m = $('copied-msg');
+      m.textContent = 'Copied ' + hex + ' to clipboard';
+      clearTimeout(copyHex._t);
+      copyHex._t = setTimeout(function () { m.textContent = ''; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(hex).then(done, done);
+    } else { done(); }
+  }
+
+  var exportFmt = 'css';
+  var lastRows = null, lastBg = null;
+  function cssVarName(role) {
+    return '--' + role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  function buildExport() {
+    if (!lastRows) return '';
+    if (exportFmt === 'css') {
+      var out = ':root {\n';
+      lastRows.forEach(function (r) { out += '  ' + cssVarName(r.role) + ': ' + r.hex + '; /* ' + (r.aa === null ? '' : (r.ratio.toFixed(2) + ':1')) + ' */\n'; });
+      return out + '}\n';
+    }
+    if (exportFmt === 'json') {
+      var obj = { background: lastBg };
+      lastRows.forEach(function (r) {
+        obj[cssVarName(r.role).slice(2)] = { hex: r.hex,
+          contrast: r.aa === null ? null : Math.round(r.ratio * 100) / 100,
+          wcagAA: r.aa === null ? null : r.aa, wcagAAA: r.aaa === null ? null : r.aaa };
+      });
+      return JSON.stringify(obj, null, 2) + '\n';
+    }
+    // tailwind
+    var t = '// tailwind.config.js — add under theme.extend.colors\n  colors: {\n';
+    lastRows.forEach(function (r) {
+      var k = cssVarName(r.role).slice(2);
+      t += "    '" + k + "': '" + r.hex + "',\n";
+    });
+    return t + '  },\n';
+  }
+  function renderExport() {
+    $('export-out').textContent = buildExport();
+    ['tab-css','tab-json','tab-tailwind'].forEach(function (id) {
+      $(id).setAttribute('aria-selected', id === 'tab-' + exportFmt ? 'true' : 'false');
+    });
+  }
+  function flashExport(msg) {
+    $('export-msg').textContent = msg;
+    clearTimeout(flashExport._t);
+    flashExport._t = setTimeout(function () { $('export-msg').textContent = ''; }, 2200);
+  }
+  function copyExport() {
+    var text = buildExport();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flashExport('Copied!'); }, function () { flashExport('Copy failed — select the code manually.'); });
+    } else { flashExport('Copy failed — select the code manually.'); }
+  }
+  function downloadExport() {
+    try {
+      var exts = { css: 'css', json: 'json', tailwind: 'js' };
+      var blob = new Blob([buildExport()], { type: 'text/plain' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'accessible-palette.' + exts[exportFmt];
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      flashExport('Downloaded accessible-palette.' + exts[exportFmt]);
+    } catch (e) { flashExport('Download not supported in this browser.'); }
+  }
+
+  function update() {
+    var errEl = $('pg-error');
+    errEl.textContent = '';
+    var base = parseHex($('base-text').value);
+    var bgHex = $('bg-select').value;
+    var bg = parseHex(bgHex);
+    if (!base || !bg) {
+      errEl.textContent = 'Enter a valid hex color, e.g. #2563eb or 36f.';
+      return;
+    }
+    $('base-color').value = toHex(base);
+    lastRows = buildPalette(base, bg);
+    lastBg = bgHex;
+    render(lastRows, bgHex);
+    renderExport();
+  }
+
+  ['tab-css','tab-json','tab-tailwind'].forEach(function (id) {
+    $(id).addEventListener('click', function () { exportFmt = id.slice(4); renderExport(); });
+  });
+  $('copy-export').addEventListener('click', copyExport);
+  $('download-export').addEventListener('click', downloadExport);
+
+  $('base-color').addEventListener('input', function () { $('base-text').value = $('base-color').value; update(); });
+  $('base-text').addEventListener('input', update);
+  $('base-text').addEventListener('change', update);
+  $('bg-select').addEventListener('change', update);
+  update();
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

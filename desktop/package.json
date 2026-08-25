@@ -1,0 +1,60 @@
+{
+  "name": "eaa-compliance-scanner",
+  "version": "1.2.0",
+  "description": "EAA Compliance Scanner Desktop \u2014 offline WCAG 2.1 AA scanner for web developers and QA",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac --linux --win --config",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.mahope.eaa-scanner",
+    "productName": "EAA Compliance Scanner",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "style.css",
+      "scanner.js",
+      "icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "keywords": [
+    "eaa",
+    "wcag",
+    "accessibility",
+    "compliance",
+    "scanner"
+  ],
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

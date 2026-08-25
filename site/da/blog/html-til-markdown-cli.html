@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML til markdown fra terminalen — komplet guide 2026</title>
+<meta name="description" content="Konvertér HTML til markdown direkte fra kommandolinjen: fil, stdin eller URL med én kommando. Scriptbart, offline, nul afhængigheder — klar til CI.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTML til markdown fra terminalen — komplet guide 2026">
+<meta property="og:description" content="Én kommando, tre inputs: fil, pipe eller URL. Sådan konverterer du HTML til markdown i terminalen — scriptbar ende-til-ende, intet forlader din maskine.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-cli">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-cli">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-cli">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-cli">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "HTML til markdown fra terminalen — komplet guide 2026", "description": "Konvertér HTML til markdown direkte fra kommandolinjen: fil, stdin eller URL med én kommando. Scriptbart, offline, nul afhængigheder — klar til CI.", "url": "https://hermes-passiv.pages.dev/da/blog/html-til-markdown-cli", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan konverterer jeg HTML til markdown fra kommandolinjen?", "acceptedAnswer": {"@type": "Answer", "text": "Med Clean Copy CLI: clean-copy convert side.html -o side.md. Værktøjet læser også stdin og URL'er, så curl -s https://eksempel.dk | clean-copy convert - > side.md virker direkte."}}, {"@type": "Question", "name": "Kan jeg pipe curl-output gennem konverteren?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Konverteren læser stdin når input-filen er '-' eller udelades: curl -s <url> | clean-copy convert - . Det gør den velegnet til one-liners og shell-scripts."}}, {"@type": "Question", "name": "Virker det i CI-pipelines?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. CLI'en er en enkelt statisk fil uden runtime-afhængigheder, så den kan ligge i repoet og køres fra GitHub Actions eller ethvert andet CI-system uden installation."}}, {"@type": "Question", "name": "Bliver links, overskrifter og tabeller bevaret?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Overskrifter mappes til #-niveauer, links til [tekst](url)-formatet, tabeller til pipe-tabeller inklusive kolonnejustering, og lister med korrekt indrykning."}}, {"@type": "Question", "name": "Bliver noget uploaded til en server?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Konverteringen sker 100 % lokalt på din maskine. Det betyder også at værktøjet virker offline og bag strenge firewalls."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">UDVIKLER &middot; CLI</div>
+    <h1>HTML til markdown<br>i terminalen</h1>
+    <p class="subtitle">Web-værktøjer er fine til én fil. Men når du skal konvertere hundrede dokumenter i et pipeline-job, skal det kunne scriptes: fil ind, markdown ud, ingen browser, ingen upload. Sådan gør du det med én kommando.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy#cli" class="btn-primary">Hent CLI'en &rarr;</a>
+      <a href="#kommandoer" class="btn-secondary">Se kommandoerne</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="kommandoer">
+  <div class="container">
+    <h2>Én kommando, tre inputs</h2>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;"># Fra fil
+clean-copy convert dokument.html -o dokument.md
+
+# Fra stdin (pipe)
+curl -s https://eksempel.dk/artikel | clean-copy convert - &gt; artikel.md
+
+# Direkte fra URL
+clean-copy convert https://eksempel.dk/artikel -o artikel.md</pre>
+    <p>Samme konverteringskerne som browserudvidelsen: overskrifter, links, lister,
+    tabeller (inklusive justering) og kodeblokke kommer igennem intakt.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvorfor terminalen?</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Scriptbart ende-til-ende</h3><p>Batch-konvertér et helt katalog
+      med en for-loop. Kombinér med grep, jq og git i pipelines.</p></div>
+      <div class="card"><h3>Intet forlader maskinen</h3><p>Konverteringen kører lokalt —
+      fint til interne dokumenter og kundeunderlag under tavshedspligt.</p></div>
+      <div class="card"><h3>Nul afhængigheder</h3><p>Én statisk fil. Ingen npm install,
+      ingen virtuel environment, ingen Node eller Python på build-serveren.</p></div>
+      <div class="card"><h3>Klar til CI</h3><p>Læg filen i repoet og kald den fra GitHub
+      Actions — der findes en færdig action til netop det.</p></div>
+    </div>
+    <p>Læs videre:
+    <a href="/da/blog/html-til-markdown-konverter">web-guiden til HTML-til-markdown</a>,
+    <a href="/da/blog/byg-en-html-til-markdown-konverter">hvordan man bygger sin egen konverter</a> og
+    <a href="/da/blog/7-gratis-dev-tekstvaerktoejer">syv gratis tekstværktøjer til udviklere</a>.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy#cli" class="btn-primary">Hent CLI'en &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan konverterer jeg HTML til markdown fra kommandolinjen?</h3><p>Med Clean Copy CLI: clean-copy convert side.html -o side.md. Værktøjet læser også stdin og URL'er, så curl -s https://eksempel.dk | clean-copy convert - > side.md virker direkte.</p></div>
+      <div class="card"><h3>Kan jeg pipe curl-output gennem konverteren?</h3><p>Ja. Konverteren læser stdin når input-filen er '-' eller udelades: curl -s <url> | clean-copy convert - . Det gør den velegnet til one-liners og shell-scripts.</p></div>
+      <div class="card"><h3>Virker det i CI-pipelines?</h3><p>Ja. CLI'en er en enkelt statisk fil uden runtime-afhængigheder, så den kan ligge i repoet og køres fra GitHub Actions eller ethvert andet CI-system uden installation.</p></div>
+      <div class="card"><h3>Bliver links, overskrifter og tabeller bevaret?</h3><p>Ja. Overskrifter mappes til #-niveauer, links til [tekst](url)-formatet, tabeller til pipe-tabeller inklusive kolonnejustering, og lister med korrekt indrykning.</p></div>
+      <div class="card"><h3>Bliver noget uploaded til en server?</h3><p>Nej. Konverteringen sker 100 % lokalt på din maskine. Det betyder også at værktøjet virker offline og bag strenge firewalls.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy#cli" class="btn-primary">Installationsinstrukser og eksempler &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/html-til-markdown-konverter" lang="da">HTML til markdown</a> &middot; <a href="/da/blog/byg-en-html-til-markdown-konverter" lang="da">Byg din egen konverter</a> &middot; <a href="/da/blog/7-gratis-dev-tekstvaerktoejer" lang="da">Gratis dev-værktøjer</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

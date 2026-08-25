@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free TYPO3 Accessibility Check (WCAG/EAA/BITV) — Scan Your Site</title>
+<meta name="description" content="Free TYPO3 WCAG 2.1 AA scan — 16 automated rules, instant grade, no signup. Check alt text, contrast, headings, forms and links on your TYPO3 site.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TYPO3 Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your TYPO3 site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/typo3-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TYPO3 Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your TYPO3 site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free TYPO3 Accessibility Check (WCAG/EAA/BITV) — Scan Your Site">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/typo3-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/typo3-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does TYPO3 meet EN 301 549 out of the box?", "acceptedAnswer": {"@type": "Answer", "text": "The core aims to, but your site package, templates and extensions determine the final result. Only a test of the rendered pages tells you where you stand."}}, {"@type": "Question", "name": "We run a public-sector TYPO3 site. What applies to us?", "acceptedAnswer": {"@type": "Answer", "text": "In the EU, Directive (EU) 2016/2102 requires WCAG 2.1 AA conformity, a published accessibility statement and a feedback mechanism. In Germany this is implemented via BITV 2.0."}}, {"@type": "Question", "name": "How do I restrict editors to accessible heading levels?", "acceptedAnswer": {"@type": "Answer", "text": "Use page TSconfig to limit the header types available in content elements so editors can only pick H2–H4 below the automatic H1."}}, {"@type": "Question", "name": "Can I scan without installing anything on our server?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The scanner fetches your public pages like any visitor — no extension, no server access, no data stored beyond the scan result."}}, {"@type": "Question", "name": "What does the EAA change for private TYPO3 operators?", "acceptedAnswer": {"@type": "Answer", "text": "From 28 June 2025 e-commerce and consumer-facing digital services in the EU must be perceivable, operable, understandable and robust — in practice WCAG-aligned. Scanning is the fastest first check."}}]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>TYPO3 Accessibility Check</h1>
+    <p class="subtitle">Scan any TYPO3 site against 16 WCAG 2.1 AA rules in seconds — nothing to install, no signup. Built for EU compliance.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Run a Free Scan on Your TYPO3 Site</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why TYPO3 accessibility matters in the EU</h2>
+    TYPO3 powers a large share of German-speaking public-sector and enterprise websites, and BITV 2.0 / EN 301 549 obligations already bind many of its operators. TYPO3 has solid accessibility foundations (accessible backend, fluid-based templates), but real-world output depends on the integrator: content elements, custom Fluid templates and extensions frequently introduce missing labels, weak contrast and broken heading hierarchies. With the EAA extending duties to more private operators from June 2025, verification matters.
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your TYPO3 site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your TYPO3 URL</strong> — any published page: homepage, a product page, or a category listing.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> Most image-alt, heading, and form-label issues are fixed right inside TYPO3's editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your TYPO3 Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in TYPO3</h2>
+    <p>When your scan flags a failing rule, here is where to fix it:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in TYPO3</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text on images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Every FAL image reference has an alt-text field in the media adjustment — fill it per language. For content images set it in the image properties of the content element.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Fix in your site package's TypoScript constants / SCSS variables, then clear cache. Do not patch contrast inline per element — fix the variable once.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Header type is chosen per content element (Type dropdown). Audit pages where editors picked "Layout" headings instead of real H2/H3, and constrain choices in your pageTSconfig.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">EXT:form labels are configured in the form YAML definition — every field needs a label element, not just a placeholder.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text ("read more", "click here")</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Replace hardcoded "more" links in Fluid templates with aria-label or visually hidden text carrying the page/item title.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Language is derived from the site configuration (sites.yaml). Verify each language tree sets the correct hreflang/lang value.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Skip link / keyboard navigation</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Ensure your base Fluid layout includes a skip-to-content link and that extension output (news lists, menus) is reachable by keyboard in DOM order.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>TYPO3-specific tools &amp; resources</h2>
+    <p>TYPO3 ships with useful foundations — these approaches take you further:</p>
+    <div style="display:grid;gap:16px;margin-top:24px;">
+      <div class="card"><h3>T3C / agency audits</h3><p>Most TYPO3 agencies offer BITV tests based on EN 301 549 — useful for public-sector BIK compliance.</p></div>
+      <div class="card"><h3>Lighthouse + WAVE</h3><p>Free first-pass checks that cover roughly a third of WCAG issues on rendered TYPO3 pages.</p></div>
+      <div class="card"><h3>Editor training</h3><p>Most recurring TYPO3 issues come from editor choices (headings, alt text). A short style guide reduces them permanently.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on TYPO3</h2>
+    <p>Accessibility is not a one-time fix — sites change through content edits, theme updates and new pages. Keep compliance sustainable:</p>
+    <ul style="list-style:none;display:grid;gap:12px;margin-top:24px;">
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Re-test after major core or extension upgrades — output markup can change between LTS versions.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Add accessibility rules to your review process for new content elements and extensions.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Keep an up-to-date accessibility statement if you are under BITV/EN 301 549 — it is legally required.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/typo3-accessibility-bitv-check" style="color:var(--color-accent);">TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+        <li><a href="/blog/nis2-readiness-guide" style="color:var(--color-accent);">NIS2 Readiness Guide for Web Agencies</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. For the complete picture, our e-book covers the full checklist plus a 14-day fix plan.</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

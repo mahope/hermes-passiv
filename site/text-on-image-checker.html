@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text on Image Contrast Checker — Is Your Text Readable?</title>
+<meta name="description" content="Upload an image, place text on it and get the real WCAG contrast ratio measured against the actual pixels behind your text. Free, browser-based, nothing uploaded to any server.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free Text on Image Contrast Checker">
+<meta property="og:description" content="Measure WCAG contrast between your overlay text and the real pixels behind it — right in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/text-on-image-checker"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/text-on-image-checker-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/text-on-image-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Text on Image Contrast Checker","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/text-on-image-checker","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free browser-based tool that measures WCAG contrast between text placed on an image and the actual image pixels behind the text."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .ti-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .ti-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .ti-field { display:flex; flex-direction:column; gap:6px; }
+  .ti-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .ti-canvas-wrap { margin-top:18px; border:1px dashed var(--color-border); border-radius:12px; overflow:hidden; background:
+    repeating-conic-gradient(rgba(128,128,128,.15) 0% 25%, transparent 0% 50%) 50%/16px 16px; }
+  .ti-canvas-wrap canvas { display:block; width:100%; height:auto; cursor:text; }
+  .ti-result { margin-top:16px; padding:14px 16px; border-radius:10px; font-size:.95rem; line-height:1.5; }
+  .ti-pass { background:rgba(22,163,74,.12); border:1px solid rgba(22,163,74,.45); }
+  .ti-fail { background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.45); }
+  .ti-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; color:#fff; }
+  .ti-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  input[type=color].ti-color { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .ti-input { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); }
+  select.ti-input { max-width:180px; }
+  .ti-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Text on Image Contrast Checker</h1>
+    <p class="tagline">Text overlaid on photos is one of the most common accessibility
+    failures — and the hardest to eyeball. Upload an image, place your text where it
+    will actually sit, and this tool measures the <strong>real WCAG contrast ratio</strong>
+    against the exact pixels behind each letter. Everything runs in your browser;
+    your image is never uploaded.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="ti-card" aria-labelledby="tool-heading">
+  <h2 id="tool-heading">Check your text placement</h2>
+
+  <div class="ti-row" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="file">1. Choose an image</label>
+      <input type="file" id="file" accept="image/*" class="ti-input">
+    </div>
+    <div class="ti-field">
+      <label for="text">2. Overlay text</label>
+      <input type="text" id="text" class="ti-input" value="Your headline here" style="width:220px">
+    </div>
+    <div class="ti-field">
+      <label for="fg">3. Text color</label>
+      <input type="color" class="ti-color" id="fg" value="#ffffff">
+    </div>
+    <div class="ti-field">
+      <label for="fontsize">Font size</label>
+      <select id="fontsize" class="ti-input">
+        <option value="small">&lt; 24 px (normal)</option>
+        <option value="large" selected>&ge; 24 px (large)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ti-canvas-wrap">
+    <canvas id="cv" aria-label="Image preview with draggable text overlay. Click on the image to move the text." role="img"></canvas>
+  </div>
+  <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Click anywhere on the image (or drag) to position the text.</p>
+  <p class="ti-error" id="err" role="alert"></p>
+
+  <div id="result" class="ti-result ti-fail" hidden></div>
+
+  <p class="ti-note">How it works: every letter of your text is sampled at its actual
+  pixels — we read the image colors directly underneath the glyphs (text pixels
+  excluded) and use the worst-case pair found. That worst-case ratio is what a reader
+  with low vision actually experiences, so that is what WCAG measures.
+  For plain color pairs, use the <a href="/contrast-checker">contrast checker</a>;
+  to see how the whole palette reads for color-blind users, try the
+  <a href="/color-blindness-simulator">color blindness simulator</a>. To check an
+  entire live page, run the free <a href="/scan">Accessibility Scanner</a>.</p>
+</section>
+
+<section class="ti-card">
+  <h2>The rules in short</h2>
+  <ul style="margin-top:10px;line-height:1.7">
+    <li><strong>WCAG SC&nbsp;1.4.3</strong> requires 4.5:1 for normal text and 3:1 for large text (&ge;&nbsp;24&nbsp;px regular or &ge;&nbsp;18.66&nbsp;px bold).</li>
+    <li><strong>SC&nbsp;1.4.11</strong> additionally requires 3:1 for meaningful UI parts and graphics.</li>
+    <li>A gradient or busy photo can pass under half the letters and fail under the rest — always measure the worst case, not the average.</li>
+    <li>If you fail: add a semi-transparent scrim behind the text, darken/lighten the image locally, or add a solid caption bar.</li>
+  </ul>
+</section>
+
+<p style="margin-top:26px"><a href="/free-tools">&larr; All free tools</a> ·
+<a href="/contrast-checker">Contrast checker</a> ·
+<a href="/palette-generator">Palette generator</a> ·
+<a href="/text-on-image-checker-da">Danish version</a> · <a href="/da/blog/tekst-paa-billede-kontrasttjek" lang="da">dansk guide</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Free GDPR &amp; accessibility tools that run in your browser
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var cv = $('cv'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  var img = null, tx = 0, ty = 0, dragging = false;
+
+  // ---- color helpers -------------------------------------------------
+  function hexToRgb(h) {
+    h = h.replace('#', '');
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+  }
+  function lum(rgb) {
+    var c = rgb.map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = lum(a), l2 = lum(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+
+  // ---- drawing --------------------------------------------------------
+  function fontSizePx() {
+    return Math.max(18, Math.round(cv.width * 0.06));
+  }
+  function draw() {
+    if (!img) return;
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
+    ctx.fillStyle = $('fg').value;
+    ctx.textBaseline = 'top';
+    ctx.fillText($('text').value || ' ', tx, ty);
+  }
+
+  // ---- sampling -------------------------------------------------------
+  function sampleContrast() {
+    if (!img) return null;
+    draw();
+    var fgRgb = hexToRgb($('fg').value);
+    var fs = fontSizePx();
+    var text = $('text').value || '';
+    var metrics = ctx.measureText(text);
+    var w = Math.max(2, Math.ceil(metrics.width));
+    var x0 = Math.round(tx), y0 = Math.round(ty);
+    x0 = Math.max(0, Math.min(cv.width - w - 1, x0));
+    y0 = Math.max(0, Math.min(cv.height - fs - 1, y0));
+    var data = ctx.getImageData(x0, y0, w, fs).data;
+
+    var worst = Infinity;
+    // For each pixel column region, find darkest & lightest background samples
+    // excluding pixels that are close to the text color itself.
+    var bgCandidates = [];
+    for (var i = 0; i < data.length; i += 4) {
+      var r = data[i], g = data[i+1], b = data[i+2];
+      var dr = Math.abs(r - fgRgb[0]), dg = Math.abs(g - fgRgb[1]), db = Math.abs(b - fgRgb[2]);
+      if (dr + dg + db < 120) continue; // likely text glyph pixel
+      bgCandidates.push([r, g, b]);
+    }
+    // Worst case: compare fg against both extremes of the local background
+    var minL = 1, maxL = 0, minC = null, maxC = null;
+    bgCandidates.forEach(function (c) {
+      var L = lum(c);
+      if (L < minL) { minL = L; minC = c; }
+      if (L > maxL) { maxL = L; maxC = c; }
+    });
+    [minC, maxC].forEach(function (c) {
+      if (!c) return;
+      var r = ratio(fgRgb, c);
+      if (r < worst) worst = r;
+    });
+    return { ratio: worst === Infinity ? null : worst };
+  }
+
+  function updateResult() {
+    var res = $('result'), errEl = $('err');
+    errEl.textContent = '';
+    var s = sampleContrast();
+    if (!s || s.ratio === null) { res.hidden = true; return; }
+    var large = $('fontsize').value === 'large';
+    var need = large ? 3 : 4.5;
+    var r = s.ratio;
+    var passAA = r >= need;
+    var passAAA = r >= (large ? 4.5 : 7);
+    res.hidden = false;
+    res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
+    res.innerHTML =
+      '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
+      (passAA ? 'PASS' : 'FAIL') + '</span>&nbsp; <strong>' + r.toFixed(2) + ':1</strong> ' +
+      '(worst-case behind your text) — needs ' + need + ':1 for WCAG AA ' +
+      (large ? '(large text)' : '(normal text)') +
+      (passAA && !passAAA ? '<br>Passes AA but not AAA (' + (large ? '4.5' : '7') + ':1).' :
+       passAAA ? '<br>Also passes AAA.' :
+       '<br>Try a darker/lighter text color, or add a translucent scrim behind the text.') +
+      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>';
+  }
+
+  // ---- events ----------------------------------------------------------
+  function loadFile(file) {
+    var errEl = $('err');
+    errEl.textContent = '';
+    if (!file || !/^image\//.test(file.type)) { errEl.textContent = 'Please choose an image file.'; return; }
+    var url = URL.createObjectURL(file);
+    var im = new Image();
+    im.onload = function () {
+      img = im;
+      var maxW = 900;
+      var scale = Math.min(1, maxW / im.naturalWidth);
+      cv.width = Math.round(im.naturalWidth * scale);
+      cv.height = Math.round(im.naturalHeight * scale);
+      tx = Math.round(cv.width * 0.06);
+      ty = Math.round(cv.height * 0.70);
+      URL.revokeObjectURL(url);
+      updateAll();
+    };
+    im.onerror = function () { errEl.textContent = 'Could not read that image file.'; };
+    im.src = url;
+  }
+
+  function pos(e) {
+    var rect = cv.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    tx = cx * cv.width / rect.width - fontSizePx() / 2;
+    ty = cy * cv.height / rect.height - fontSizePx() / 2;
+  }
+  function onMove(e) {
+    if (!img) return;
+    e.preventDefault();
+    pos(e);
+    updateAll();
+  }
+  function updateAll() { draw(); updateResult(); }
+
+  $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
+  $('text').addEventListener('input', updateAll);
+  $('fg').addEventListener('input', updateAll);
+  $('fontsize').addEventListener('change', updateResult);
+  cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
+  window.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
+  window.addEventListener('mouseup', function () { dragging = false; });
+  cv.addEventListener('touchstart', onMove, { passive: false });
+
+  // Default demo background so the tool works before uploading anything.
+  var demo = document.createElement('canvas');
+  demo.width = 900; demo.height = 420;
+  var dctx = demo.getContext('2d');
+  var grad = dctx.createLinearGradient(0, 0, 900, 420);
+  grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
+  dctx.fillStyle = grad; dctx.fillRect(0, 0, 900, 420);
+  dctx.fillStyle = 'rgba(255,255,255,0.35)';
+  dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
+  loadDemo();
+  function loadDemo() {
+    img = demo;
+    cv.width = demo.width; cv.height = demo.height;
+    tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.62);
+    updateAll();
+  }
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

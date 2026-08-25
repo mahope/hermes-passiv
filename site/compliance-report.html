@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premium Compliance Report — EAA, NIS2 & GDPR Audit</title>
+<meta name="description" content="Professional automated compliance report for your website. Covers EAA/WCAG accessibility, GDPR cookie consent, NIS2 security headers. Download a PDF report for client handovers and compliance files.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Premium Compliance Report — Professional Website Audit">
+<meta property="og:description" content="Get a professional compliance report for any URL. EAA/WCAG accessibility, GDPR cookie consent, NIS2 security headers — with prioritized fix recommendations.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/compliance-report">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Premium Compliance Report">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Premium Compliance Report — Professional Website Audit">
+<meta name="twitter:description" content="Professional compliance report for any URL. EAA/WCAG, GDPR, NIS2 — with prioritized fix recommendations.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/compliance-report">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/compliance-report">
+<link rel="stylesheet" href="style.css">
+<script defer src="/track.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Premium Compliance Report",
+  "description": "Professional automated compliance report for websites covering EAA/WCAG accessibility, GDPR cookie consent, and NIS2 security.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "29",
+    "priceCurrency": "USD"
+  },
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<style>
+.report-badge { display: inline-block; background: #0b6e8f; color: #fff; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+.price-tag { font-size: 36px; font-weight: 800; color: var(--color-text); }
+.price-tag small { font-size: 16px; font-weight: 400; color: #94a3b8; }
+.pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 640px; margin: 0 auto; }
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+.tier-card { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 16px; padding: 28px; text-align: center; }
+.tier-card.pro { border-color: #0b6e8f; box-shadow: 0 0 0 1px #0b6e8f; position: relative; }
+.tier-card.pro::before { content: "Best value"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #0b6e8f; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 14px; border-radius: 20px; }
+.tier-card ul { text-align: left; list-style: none; padding: 0; margin: 20px 0; }
+.tier-card li { padding: 6px 0; font-size: 14px; }
+.tier-card li::before { content: "✓ "; color: #157a3c; font-weight: 700; }
+
+/* Report display */
+.report-container { max-width: 800px; margin: 0 auto; }
+.report-summary { text-align: center; padding: 32px; border-radius: 16px; background: var(--color-surface-2); border: 1px solid var(--color-border); margin-bottom: 24px; }
+.report-grade { font-size: 56px; font-weight: 800; }
+.report-grade.grade-A { color: #157a3c; } .report-grade.grade-B { color: #7a6415; }
+.report-grade.grade-C { color: #a35a10; } .report-grade.grade-D { color: #a31515; }
+.report-section { margin-bottom: 24px; }
+.report-section h3 { font-size: 18px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 8px; }
+.report-section h3 .section-icon { font-size: 22px; }
+.finding-item { padding: 12px 16px; margin-bottom: 8px; border-radius: 10px; border: 1px solid var(--color-border); background: var(--color-surface-2); }
+.finding-item .sev-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-right: 8px; }
+.sev-error { background: #fef2f2; color: #a31515; border: 1px solid #fecaca; }
+.sev-error .sev-tag { background: #a31515; color: #fff; }
+.sev-warning { background: #fffbeb; color: #a35a10; border: 1px solid #fde68a; }
+.sev-warning .sev-tag { background: #a35a10; color: #fff; }
+.sev-notice { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+.sev-notice .sev-tag { background: #0369a1; color: #fff; }
+.finding-fix { font-size: 13px; color: #667; margin-top: 4px; }
+.metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.metric-card { text-align: center; padding: 16px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-surface-2); }
+.metric-card .metric-value { font-size: 28px; font-weight: 700; }
+.metric-card .metric-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.license-area { text-align: center; padding: 24px; margin: 24px 0; border-radius: 12px; background: var(--color-surface-2); border: 1px dashed var(--color-border); }
+.license-area input { padding: 10px 14px; border: 1px solid #b9cdd8; border-radius: 8px; font-size: 14px; font-family: monospace; width: 280px; max-width: 100%; }
+.license-area .btn { margin-left: 8px; }
+.license-status { margin-top: 10px; font-size: 14px; }
+.license-status.ok { color: #157a3c; }
+.license-status.err { color: #a31515; }
+
+@media print {
+  header.hero, footer.site-footer, .pricing-grid, .license-area, .scanbox, .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+  .report-summary { border: 1px solid #ccc; }
+  .finding-item { break-inside: avoid; border: 1px solid #ddd; }
+  .report-section { break-inside: avoid; }
+  @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero" style="padding:48px 0 32px">
+  <div class="container">
+    <div class="badge">BETA — FREE DURING LAUNCH</div>
+    <h1>Premium Compliance Report</h1>
+    <p class="tagline">A professional, actionable compliance audit for <strong>any URL</strong> — EAA/WCAG accessibility, GDPR cookie consent, and NIS2 cybersecurity — with prioritized fix recommendations you can hand to your team or client.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- URL Input -->
+<section aria-labelledby="scan-heading" style="margin-bottom:32px">
+  <h2 id="scan-heading" style="text-align:center">Enter a URL to audit</h2>
+  <form id="reportForm" class="scanbox" style="max-width:600px;margin:16px auto 0">
+    <label for="url" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">Page URL</label>
+    <input id="url" name="url" type="url" required
+           placeholder="https://your-site.com" inputmode="url"
+           value="https://example.com">
+    <button type="submit">Generate report</button>
+  </form>
+  <p style="text-align:center;font-size:13px;color:#94a3b8;margin-top:8px">
+    Public URLs only. No data stored — the page is fetched server-side, analysed in your browser, and discarded.
+  </p>
+</section>
+
+<!-- Loading -->
+<div id="loading" style="display:none;text-align:center;padding:48px 0">
+  <p style="font-size:18px">Scanning and analysing…</p>
+  <p style="font-size:14px;color:#94a3b8">Fetching page → checking accessibility → analysing metadata → generating report</p>
+</div>
+
+<!-- Report Display -->
+<div id="reportOutput" style="display:none" class="report-container"></div>
+
+<!-- Pricing (shown before a report is generated) -->
+<section id="pricingSection" aria-labelledby="pricing-heading" style="margin-top:48px">
+  <h2 id="pricing-heading" style="text-align:center">Simple pricing</h2>
+  <p style="text-align:center;color:#94a3b8;margin-bottom:24px">Pay per report, or unlock unlimited scans for your team.</p>
+  <div class="pricing-grid">
+    <div class="tier-card">
+      <h3 style="margin:0">Single Report</h3>
+      <div class="price-tag">$29<small> / report</small></div>
+      <ul>
+        <li>Full EAA/WCAG scan (16+ checks)</li>
+        <li>GDPR cookie consent audit</li>
+        <li>NIS2 security header check</li>
+        <li>Page metadata &amp; SEO profile</li>
+        <li>Prioritized fix recommendations</li>
+        <li>Professional PDF download</li>
+      </ul>
+      <p style="font-size:13px;color:#94a3b8">🔒 Available when store launches</p>
+    </div>
+    <div class="tier-card pro">
+      <h3 style="margin:0">Unlimited</h3>
+      <div class="price-tag">$99<small> / year</small></div>
+      <ul>
+        <li>Everything in Single Report</li>
+        <li>Unlimited scans for your team</li>
+        <li>History tracking — compare over time</li>
+        <li>Priority support (email within 24h)</li>
+        <li>Client-ready branded PDF reports</li>
+        <li>License covers 5 devices</li>
+      </ul>
+      <p style="font-size:13px;color:#94a3b8">🔒 Available when store launches</p>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section aria-labelledby="how-heading" style="margin-top:48px">
+  <h2 id="how-heading">What the report covers</h2>
+  <div class="metric-row" style="grid-template-columns: repeat(3, 1fr)">
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px">♿</div>
+      <h3 style="margin:0;font-size:16px">EAA / WCAG</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">16 automated checks: alt text, form labels, headings, contrast, ARIA, frames, tables</p>
+    </div>
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px">🍪</div>
+      <h3 style="margin:0;font-size:16px">GDPR / Cookie</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">Cookie banners, tracking scripts, consent signals, privacy policy links, third-party embeds</p>
+    </div>
+    <div class="metric-card">
+      <div style="font-size:32px;margin-bottom:4px">🔒</div>
+      <h3 style="margin:0;font-size:16px">NIS2 / Security</h3>
+      <p style="font-size:13px;color:#94a3b8;margin-top:6px">Security headers (HSTS, CSP, XFO), HTTPS, mixed content, form submission security</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section aria-labelledby="faq-heading" style="margin-top:48px;margin-bottom:48px">
+  <h2 id="faq-heading" style="text-align:center">Frequently asked questions</h2>
+  <div style="max-width:640px;margin:0 auto">
+    <details><summary>How is this different from the free scanner?</summary>
+      <p>The free scanner gives you a quick grade with basic findings. The Premium Report combines accessibility, GDPR/cookie, and NIS2/security into one document, includes an executive summary, prioritized fix list, and is formatted as a professional PDF you can hand to clients or file for compliance documentation.</p>
+    </details>
+    <details><summary>Is this a legal compliance guarantee?</summary>
+      <p>No. An automated scan catches roughly 30–40% of accessibility issues and provides a useful baseline, but it cannot replace a full manual audit by a qualified accessibility specialist. This report is a due-diligence tool, not a certification.</p>
+    </details>
+    <details><summary>Which standards does it check?</summary>
+      <p>EAA / WCAG 2.1 AA (16 automated rules), GDPR cookie consent requirements, and basic NIS2 security posture (CSP, HSTS, HTTPS enforcement). Each finding links to the specific criterion.</p>
+    </details>
+    <details><summary>Can I use this for client handovers?</summary>
+      <p>Yes — the professional PDF report is designed to be handed to clients, stakeholders, or compliance officers. It includes an executive summary and prioritized action items.</p>
+    </details>
+    <details><summary>What happens to the pages I scan?</summary>
+      <p>Nothing. The page is fetched server-side through our proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies.</p>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/scan">← Free EAA Scanner</a> · <a href="/">Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Premium Compliance Report. Automated audit tool. Results are indicative — always verify with a manual audit.</p>
+</div></footer>
+
+<script>
+// ── EAA/WCAG scanner logic (same engine as /scan) ────────────────
+function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+
+function runScan(html, url) {
+  const findings = [];
+  const add = (id, sev, msg, n) => { if (n > 0) findings.push({ id, sev, msg: msg.replace('{n}', n), count: n }); };
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  add('IMG_ALT','error','{n} image(s) missing alt text',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error','{n} form field(s) without a label',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error','{n} link(s) with no accessible text',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt][alt!=""]'))).length);
+  add('BUTTON_TEXT','error','{n} button(s) with no accessible text',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt][alt!=""]'))).length);
+  add('DUP_ID','error','{n} duplicate id value(s) (breaks label/aria references)',
+      (()=>{const s=new Set(),d=new Set();doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(s.has(v))d.add(v);else s.add(v)});return d.size;})());
+  add('TARGET_BLANK','warning','{n} link(s) opening in a new window without warning',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())findings.push({id:'DOC_TITLE',sev:'error',msg:'Page has no <title>'});
+  if(!doc.documentElement.lang)findings.push({id:'HTML_LANG',sev:'error',msg:'<html> lacks a lang attribute'});
+  else if(doc.documentElement.lang.length<2)findings.push({id:'HTML_LANG_SHORT',sev:'warning',msg:'<html> lang is very short — should be a BCP 47 tag like "en" or "en-US"'});
+  if(!doc.querySelector('meta[name="viewport"]'))findings.push({id:'VIEWPORT',sev:'warning',msg:'Missing viewport meta tag'});
+  if(!doc.querySelector('h1'))findings.push({id:'HEADING_H1',sev:'warning',msg:'No <h1> found'});
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning','{n} heading level skip(s)',skips);
+  add('IFRAME_TITLE','warning','{n} iframe(s) without a title',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning','{n} table(s) without header cells',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden element(s) still focusable',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+
+  // Contrast check
+  function parseCol(s){
+    s=(s||'').trim().toLowerCase();
+    if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+    let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+    m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+    m=s.match(/^rgba?\\(([^)]+)\\)/);
+    if(m){const p=m[1].split(',').map(x=>x.trim());
+      if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+      try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+    const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+    return named[s]||null;
+  }
+  function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+  function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+  const seen=new Set();let low=0;
+  const root=doc.body||doc.documentElement;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let n;
+  while((n=walker.nextNode())){
+    if(!n.textContent.trim())continue;
+    let el=n.parentElement,fg=null,bg=null,node=el;
+    while(node&&node.nodeType===1){
+      const st=(node.getAttribute&&node.getAttribute('style'))||'';
+      if(st){
+        if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+        if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+          if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+      }
+      node=node.parentElement;}
+    if(fg===null||bg===null)continue;
+    let large=false;node=el;
+    while(node&&node.nodeType===1){
+      const st=(node.getAttribute&&node.getAttribute('style'))||'';
+      if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+      node=node.parentElement;}
+    const f=parseCol(fg),b=parseCol(bg);
+    if(!f||!b)continue;
+    const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+    const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+    if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+  }
+  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA (4.5:1 normal, 3:1 large)',low);
+
+  // Cookie/GDPR checks
+  const scripts = [...doc.querySelectorAll('script[src]')];
+  const hasCookieBanner = /cookie|consent|gdpr|cmp|trustarc|onetrust|usercentrics|cookiebot/i.test(html);
+  const cookieScripts = scripts.filter(s => /cookie|consent|gdpr|cmp/i.test(s.src));
+  const hasGtm = scripts.some(s => /googletagmanager\.com/.test(s.src));
+  const hasGA = scripts.some(s => /google-analytics\.com|googletagmanager\.com\/gtag/.test(s.src));
+  const hasFb = scripts.some(s => /connect\.facebook\.net/.test(s.src));
+  const privacyLink = doc.querySelector('a[href*="privacy"],a[href*="cookie"],a[href*="datenschutz"],footer a[href*="legal"],footer a[href*="imprint"]');
+
+  if (!hasCookieBanner) findings.push({id:'COOKIE_BANNER',sev:'error',msg:'No cookie consent banner found — required by GDPR/ePrivacy for EU visitors using tracking technologies'});
+  if (hasGA && !hasCookieBanner) findings.push({id:'GA_NO_CONSENT',sev:'error',msg:'Google Analytics detected but no consent banner — GA sets cookies and requires prior consent in the EU'});
+  if (hasFb && !hasCookieBanner) findings.push({id:'FB_NO_CONSENT',sev:'error',msg:'Facebook/Meta pixel detected but no consent banner — pixel sets cookies and requires prior consent'});
+  if (!privacyLink) findings.push({id:'PRIVACY_LINK',sev:'warning',msg:'No privacy policy or cookie link found in the footer — GDPR requires easy access to privacy information'});
+  if (cookieScripts.length > 0) findings.push({id:'COOKIE_SCRIPTS',sev:'notice',msg:'{n} cookie/consent management script(s) found on the page'.replace('{n}',cookieScripts.length)});
+
+  // NIS2 / Security checks
+  const metaCs = doc.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  const formCount = doc.querySelectorAll('form').length;
+  const hasFormsOverHttp = [...doc.querySelectorAll('form[action^="http:"]')].length > 0;
+
+  findings.push({id:'FORM_COUNT',sev:'notice',msg:'{n} form(s) found on the page — verify submissions use HTTPS and include CSRF protection'.replace('{n}',formCount)});
+  if (hasFormsOverHttp) findings.push({id:'FORM_HTTP',sev:'error',msg:'{n} form(s) submit over HTTP — all forms must submit over HTTPS for NIS2 compliance'.replace('{n}',[...doc.querySelectorAll('form[action^="http:"]')].length)});
+  if (metaCs) findings.push({id:'META_CSP',sev:'notice',msg:'Page has a meta-tag CSP — best practice is to set CSP via an HTTP header'});
+
+  // Page metadata checks
+  const ogTitle = doc.querySelector('meta[property="og:title"],meta[name="og:title"]');
+  const ogDesc = doc.querySelector('meta[property="og:description"],meta[name="og:description"]');
+  const ogImage = doc.querySelector('meta[property="og:image"],meta[name="og:image"]');
+  const twitterCard = doc.querySelector('meta[name="twitter:card"]');
+  const canonical = doc.querySelector('link[rel="canonical"]');
+  const charset = doc.querySelector('meta[charset]');
+  const jsonldCount = (html.match(/<script[^>]*type="application\/ld\+json"[^>]*>/gi)||[]).length;
+
+  if (!ogTitle) findings.push({id:'OG_TITLE',sev:'warning',msg:'Missing og:title meta tag — social shares will show a generic title'});
+  if (!ogDesc) findings.push({id:'OG_DESC',sev:'warning',msg:'Missing og:description — social shares will have no description'});
+  if (!ogImage) findings.push({id:'OG_IMAGE',sev:'warning',msg:'Missing og:image — shared links will not show a preview image'});
+  if (!twitterCard) findings.push({id:'TWITTER_CARD',sev:'notice',msg:'Missing twitter:card meta — Twitter/X shares may lack rich preview format'});
+  if (!canonical) findings.push({id:'CANONICAL',sev:'warning',msg:'No canonical link — duplicate content issues may affect SEO'});
+  if (!charset) findings.push({id:'CHARSET',sev:'warning',msg:'No charset declaration — page may render incorrectly in some browsers'});
+  if (jsonldCount===0) findings.push({id:'JSONLD',sev:'notice',msg:'No JSON-LD structured data found — helps search engines understand your content'});
+  if (!hasGtm && !hasGA) findings.push({id:'NO_ANALYTICS',sev:'notice',msg:'No analytics or tag manager detected — if the site has tracking, it may use a custom implementation'});
+
+  // Score
+  const errors=findings.filter(f=>f.sev==='error').length;
+  const warnings=findings.filter(f=>f.sev==='warning').length;
+  const notices=findings.filter(f=>f.sev==='notice').length;
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+  const grade=gradeOf(score);
+
+  return { findings, errors, warnings, notices, score, grade, title: doc.title, lang: doc.documentElement.lang };
+}
+
+// ── License validation ────────────────────────────────────────────
+function getDeviceId() {
+  let did = localStorage.getItem('cc_device_id');
+  if (!did) { did = 'cc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10); localStorage.setItem('cc_device_id', did); }
+  return did;
+}
+
+async function validateLicense(key) {
+  try {
+    const r = await fetch('/api/license/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_key: key, device_id: getDeviceId() })
+    });
+    return await r.json();
+  } catch { return { ok: false, error: 'Network error — check your connection.' }; }
+}
+
+// ── Report rendering ──────────────────────────────────────────────
+const FIXES = {
+  IMG_ALT:'Add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
+  FORM_LABEL:'Give every field a <label for="field-id">, or an aria-label attribute.',
+  LINK_TEXT:'Add descriptive text inside the link, or aria-label if it is icon-only.',
+  BUTTON_TEXT:'Add visible text or an aria-label to every button.',
+  DUP_ID:'Make every id value unique on the page.',
+  TARGET_BLANK:'Warn users the link opens in a new window, e.g. "(opens in new tab)", and add rel="noopener".',
+  DOC_TITLE:'Add a descriptive <title> in the <head>.',
+  HTML_LANG:'Add lang to <html>, e.g. <html lang="en">.',
+  HTML_LANG_SHORT:'Use a complete BCP 47 tag such as "en" or "en-US".',
+  VIEWPORT:'Add <meta name="viewport" content="width=device-width, initial-scale=1">.',
+  HEADING_H1:'Add one descriptive <h1> as the main page heading.',
+  HEADING_SKIP:'Do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
+  IFRAME_TITLE:'Add a title attribute describing the iframe content.',
+  TABLE_HEADER:'Use <th> for header cells in data tables.',
+  ARIA_HIDDEN_FOCUS:'Remove aria-hidden from focusable elements, or add tabindex="-1".',
+  CONTRAST:'Darken text or lighten background until contrast is at least 4.5:1 (3:1 for large text). Check at webaim.org/resources/contrastchecker.',
+  COOKIE_BANNER:'Install a GDPR/ePrivacy consent banner that blocks tracking until user consent is given before the page loads.',
+  GA_NO_CONSENT:'Implement a consent mechanism that prevents GA from loading before consent, or anonymize strictly. Use Google Consent Mode v2.',
+  FB_NO_CONSENT:'Prevent the Facebook pixel from loading before consent is given — use the consent platform to gate the pixel script.',
+  PRIVACY_LINK:'Add a link to your privacy policy and cookie policy in the footer, visible on every page.',
+  COOKIE_SCRIPTS:'Review all cookie scripts to ensure they respect consent signals and are documented in your cookie policy.',
+  FORM_COUNT:'Verify all forms submit over HTTPS and include CSRF tokens for NIS2 compliance.',
+  FORM_HTTP:'Change form action URLs to HTTPS — HTTP form submissions are insecure and violate NIS2.',
+  META_CSP:'Move CSP to an HTTP header for stronger protection against XSS and data injection.',
+  OG_TITLE:'Add <meta property="og:title" content="..."> for better social sharing previews.',
+  OG_DESC:'Add <meta property="og:description" content="..."> for social sharing descriptions.',
+  OG_IMAGE:'Add <meta property="og:image" content="..."> for a preview image when shared.',
+  TWITTER_CARD:'Add <meta name="twitter:card" content="summary_large_image"> for rich Twitter cards.',
+  CANONICAL:'Add <link rel="canonical" href="..."> to prevent duplicate content issues.',
+  CHARSET:'Add <meta charset="utf-8"> in the <head> for correct character rendering.',
+  JSONLD:'Add JSON-LD structured data (Organization, WebSite, Article, etc.) to help search engines.',
+  NO_ANALYTICS:'If the site uses tracking, consider an analytics tool with privacy-friendly configuration.'
+};
+
+const SEV_LABELS = { error: 'Error', warning: 'Warning', notice: 'Notice' };
+
+function renderReport(data, url) {
+  const findingsBySev = { error: [], warning: [], notice: [] };
+  data.findings.forEach(f => { if (findingsBySev[f.sev]) findingsBySev[f.sev].push(f); });
+
+  let h = '';
+
+  // Summary card
+  h += '<div class="report-summary">';
+  h += '<p style="font-size:13px;color:#94a3b8;margin-bottom:8px">Compliance Report — ' + new Date().toISOString().slice(0,10) + '</p>';
+  h += '<div class="report-grade grade-' + data.grade + '">' + data.score + '/100 <span style="font-size:24px">— Grade ' + data.grade + '</span></div>';
+  h += '<p style="margin-top:8px;font-size:14px;color:#667">' + data.errors + ' error(s), ' + data.warnings + ' warning(s), ' + data.notices + ' notice(s)</p>';
+  if (data.title) h += '<p style="font-size:14px;color:#667;margin-top:4px">Page: ' + data.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').slice(0,80) + '</p>';
+  h += '<p style="font-size:13px;color:#94a3b8;margin-top:4px;word-break:break-all">URL: ' + url.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</p>';
+  h += '</div>';
+
+  // Metrics row
+  h += '<div class="metric-row">';
+  h += '<div class="metric-card"><div class="metric-value grade-' + data.grade + '">' + data.grade + '</div><div class="metric-label">Overall Grade</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#a31515">' + data.errors + '</div><div class="metric-label">Errors</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#a35a10">' + data.warnings + '</div><div class="metric-label">Warnings</div></div>';
+  h += '<div class="metric-card"><div class="metric-value" style="color:#0369a1">' + data.notices + '</div><div class="metric-label">Notices</div></div>';
+  h += '</div>';
+
+  // Findings by severity
+  ['error', 'warning', 'notice'].forEach(sev => {
+    const items = findingsBySev[sev];
+    if (items.length === 0) return;
+    h += '<div class="report-section">';
+    h += '<h3><span class="section-icon">' + (sev==='error'?'🔴':sev==='warning'?'🟡':'🔵') + '</span> ' + (sev==='error'?'Errors':sev==='warning'?'Warnings':'Notices') + ' <span style="font-size:14px;font-weight:400;color:#94a3b8">(' + items.length + ')</span></h3>';
+    items.forEach(f => {
+      h += '<div class="finding-item sev-' + f.sev + '">';
+      h += '<strong><span class="sev-tag">' + SEV_LABELS[f.sev] + '</span> ' + (f.count ? '(' + f.count + ')' : '') + ' ' + f.msg + '</strong>';
+      if (FIXES[f.id]) h += '<div class="finding-fix">' + FIXES[f.id] + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+
+  // License gate for PDF download
+  h += '<div class="license-area no-print">';
+  h += '<h3 style="margin:0 0 8px">Download PDF Report</h3>';
+  h += '<p style="font-size:14px;color:#94a3b8;margin-bottom:16px">Enter your license key to unlock the professional PDF download.</p>';
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">';
+  h += '<input type="text" id="licenseInput" placeholder="License key (32 hex chars)" style="flex:1;min-width:200px;max-width:320px" spellcheck="false" autocomplete="off">';
+  h += '<button id="verifyBtn" class="btn" onclick="verifyAndDownload()">Unlock & Download</button>';
+  h += '</div>';
+  h += '<div id="licenseStatus" class="license-status"></div>';
+  h += '<p style="font-size:12px;color:#94a3b8;margin-top:12px">No license yet? <a href="#pricingSection">View pricing →</a></p>';
+  h += '</div>';
+
+  h += '<p style="text-align:center;font-size:13px;color:#94a3b8;margin-top:16px" class="no-print">Automated checks catch ~30-40% of issues. Always pair with a manual audit.</p>';
+
+  document.getElementById('reportOutput').innerHTML = h;
+  document.getElementById('reportOutput').style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('pricingSection').style.display = 'none';
+  document.getElementById('reportOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Store scan data for PDF download
+  window._lastScanData = data;
+  window._lastScanUrl = url;
+}
+
+let scanInProgress = false;
+
+async function generateReport(url) {
+  if (scanInProgress) return;
+  scanInProgress = true;
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('reportOutput').style.display = 'none';
+  document.getElementById('pricingSection').style.display = 'none';
+  if (window.trackEvent) window.trackEvent('compliance-report');
+
+  try {
+    // Fetch the page via scan proxy
+    const scanResp = await fetch('/scan-proxy?url=' + encodeURIComponent(url));
+    const scanData = await scanResp.json();
+
+    if (!scanData.ok) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('reportOutput').innerHTML =
+        '<div class="report-summary"><p style="color:#a31515;font-size:16px;font-weight:600">Could not scan this page</p>' +
+        '<p style="color:#667">' + (scanData.error || 'Unknown error') + '</p></div>';
+      document.getElementById('reportOutput').style.display = 'block';
+      scanInProgress = false;
+      return;
+    }
+
+    // Run scan + profile analysis
+    const scanResult = runScan(scanData.html, scanData.url);
+    renderReport(scanResult, scanData.url);
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('reportOutput').innerHTML =
+      '<div class="report-summary"><p style="color:#a31515;font-size:16px;font-weight:600">Something went wrong</p>' +
+      '<p style="color:#667">' + (err.message || 'An unexpected error occurred') + '</p></div>';
+    document.getElementById('reportOutput').style.display = 'block';
+  }
+  scanInProgress = false;
+}
+
+async function verifyAndDownload() {
+  const input = document.getElementById('licenseInput');
+  const status = document.getElementById('licenseStatus');
+  const key = input.value.trim();
+
+  if (!key) {
+    status.className = 'license-status err';
+    status.textContent = 'Please enter a license key.';
+    return;
+  }
+  if (!/^[a-f0-9]{32}$/i.test(key)) {
+    status.className = 'license-status err';
+    status.textContent = 'Invalid format — license key is 32 hexadecimal characters.';
+    return;
+  }
+
+  status.className = 'license-status';
+  status.textContent = 'Verifying license…';
+  document.getElementById('verifyBtn').disabled = true;
+
+  const result = await validateLicense(key);
+  if (result.ok && result.valid) {
+    status.className = 'license-status ok';
+    status.textContent = '✓ License valid — preparing your PDF report…';
+    // Trigger print (which uses @media print styles)
+    window.setTimeout(() => window.print(), 500);
+  } else {
+    status.className = 'license-status err';
+    status.textContent = result.error || 'License not valid. Check your key or visit the pricing page.';
+    document.getElementById('verifyBtn').disabled = false;
+  }
+}
+
+// ── Form handler ──────────────────────────────────────────────────
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const url = document.getElementById('url').value.trim();
+  if (!url) return;
+  generateReport(url);
+});
+
+// Hash param auto-scan
+(function() {
+  const m = location.hash.match(/#url=(.+)$/);
+  if (m) {
+    const u = decodeURIComponent(m[1]);
+    if (/^https?:\/\//i.test(u)) {
+      document.getElementById('url').value = u;
+      generateReport(u);
+    }
+  }
+})();
+</script>
+</body>
+</html>

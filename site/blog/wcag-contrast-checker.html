@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCAG Contrast Checker — How to Check Color Contrast for Free</title>
+<meta name="description" content="How to check color contrast against WCAG 2.1 AA and AAA for free: enter two colors, see the ratio instantly, and know exactly which requirements pass. Nothing leaves your browser — no sign-up.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WCAG Contrast Checker — free AA/AAA check in your browser">
+<meta property="og:description" content="Enter two colors, get the ratio and pass/fail for AA and AAA instantly. Free, no sign-up.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/wcag-contrast-checker">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/wcag-contrast-checker"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wcag-contrast-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/wcag-kontrast-checker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/wcag-contrast-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "WCAG Contrast Checker — how to check color contrast (free)", "description": "How to check color contrast against WCAG 2.1 AA and AAA for free: enter two colors, see the ratio instantly, and know exactly which requirements pass. Nothing leaves your browser — no sign-up.", "url": "https://hermes-passiv.pages.dev/blog/wcag-contrast-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What contrast ratio does WCAG AA require?", "acceptedAnswer": {"@type": "Answer", "text": "Normal text below 24 px needs at least 4.5:1. Large text (18 pt / 14 pt bold and up) requires 3:1. AAA requires 7:1 for normal text and 4.5:1 for large text."}}, {"@type": "Question", "name": "Do the contrast requirements apply to icons and buttons too?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — WCAG 2.1 success criterion 1.4.11 (Non-text Contrast) requires 3:1 for graphical objects such as icons, input borders and important UI elements."}}, {"@type": "Question", "name": "Is the tool free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The contrast checker at /contrast-checker runs entirely in your browser. No account, no limits, nothing is sent to a server."}}, {"@type": "Question", "name": "How do I find low contrast across a whole page?", "acceptedAnswer": {"@type": "Answer", "text": "Use the free Accessibility Scanner at /scan: it checks every text/background combination on an entire URL and lists each violation of criterion 1.4.3."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; ACCESSIBILITY</div>
+    <h1>WCAG Contrast Checker<br>Check Color Contrast for Free</h1>
+    <p class="subtitle">Low contrast is the most common accessibility failure on the web — and the easiest one to fix. Enter two colors, see the ratio instantly, and know exactly which WCAG requirements pass and which fail.</p>
+    <div class="hero-cta">
+      <a href="#how" class="btn-primary">See how it works</a>
+      <a href="/contrast-checker" class="btn-secondary">Check contrast now &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 4 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Why does contrast matter so much?</h2>
+    <p>Roughly one in twelve men has reduced color vision. Text with too little contrast becomes unreadable for them — and hard to read for everyone in sunlight, on aging screens or on a projector. That is why low-contrast text was the single most common failure in WebAIM's annual survey of the top million websites.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ The requirements</h3><p>AA: 4.5:1 for normal text, 3:1 for large text and graphics (1.4.11). AAA: 7:1 / 4.5:1. Under the EAA and for public-sector sites, AA is the minimum.</p></div>
+      <div class="card"><h3>⚡ Seconds, not hours</h3><p>You don't need to compute relative luminance by hand. Enter two colors — hex codes or pickers — and see the result live.</p></div>
+      <div class="card"><h3>🔒 Your data stays local</h3><p>The calculation runs in JavaScript in your own browser. No colors are sent anywhere.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>How to do it (under 5 seconds)</h2>
+    <ol>
+      <li>Open the <a href="/contrast-checker" style="color:var(--color-accent);">free WCAG contrast checker</a>.</li>
+      <li>Pick the text color and background color — with the color pickers or by typing hex codes directly.</li>
+      <li>Read the ratio and result: pass/fail for AA and AAA, for both normal and large text, plus a live preview.</li>
+      <li>Nudge either color until every requirement you need to meet turns green.</li>
+    </ol>
+    <p>The ratio is calculated with the formula from the WCAG specification itself: both colors are converted to sRGB relative luminance, and contrast is (L1 + 0.05) / (L2 + 0.05). The result therefore matches the specification exactly — the same number commercial tools show.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>From one pair to a whole page</h2>
+    <p>The contrast checker tests one color pair at a time — perfect when you are designing a new element. To check an entire site, use the free <a href="/scan" style="color:var(--color-accent);">Accessibility Scanner</a>: paste the URL and it finds all low-contrast text on the page along with heading, alt-text, form and keyboard errors.</p>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">RELATED TOOLS</span><h3>More contrast help</h3><p>The <a href="/palette-generator" style="color:var(--color-accent);">palette generator</a> builds accessible color palettes &middot; the <a href="/text-on-image-checker" style="color:var(--color-accent);">text-on-image checker</a> tests text placed over photos.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">DANISH VERSION</span><h3>Working in Danish?</h3><p>The same checker is available in <a href="/da/blog/wcag-kontrast-checker" hreflang="da" style="color:var(--color-accent);">Danish here</a>.</p></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3>What does the law say?</h3><p>Europe's accessibility law (EAA) imposes WCAG requirements on most e-commerce sites from June 2025. Read about the <a href="/blog/eaa-deadline-2026" style="color:var(--color-accent);">deadlines here</a>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What contrast ratio does WCAG AA require?</h3><p>Normal text below 24 px needs at least 4.5:1. Large text (18 pt / 14 pt bold and up) requires 3:1. AAA requires 7:1 for normal text and 4.5:1 for large text.</p></div>
+      <div class="card"><h3>Do the contrast requirements apply to icons and buttons too?</h3><p>Yes — WCAG 2.1 success criterion 1.4.11 (Non-text Contrast) requires 3:1 for graphical objects such as icons, input borders and important UI elements.</p></div>
+      <div class="card"><h3>Is the tool free?</h3><p>Yes. The contrast checker at /contrast-checker runs entirely in your browser. No account, no limits, nothing is sent to a server.</p></div>
+      <div class="card"><h3>How do I find low contrast across a whole page?</h3><p>Use the free Accessibility Scanner at /scan: it checks every text/background combination on an entire URL and lists each violation of criterion 1.4.3.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/contrast-checker" class="btn-primary">Try the contrast checker free &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/scan" class="btn-secondary">Or scan the whole page &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Related guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-deadline-2026" style="color:var(--color-accent);text-decoration:none;">EAA deadlines: when does the law apply to you?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TOOLS</span><h3><a href="/free-tools" style="color:var(--color-accent);text-decoration:none;">All free tools</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">MARKDOWN</span><h3><a href="/blog/url-to-markdown-converter" style="color:var(--color-accent);text-decoration:none;">URL to Markdown converter</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/wcag-kontrast-checker" lang="da">Danish version of this guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/contrast-checker">Contrast checker</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

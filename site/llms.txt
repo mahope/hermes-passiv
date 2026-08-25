@@ -1,0 +1,73 @@
+# Hermes Compliance Tools
+
+Free, browser-based EU compliance tools and guides for small web agencies (1-50 people), freelancers, and website owners. No signup, no tracking cookies. Run by Mahope (Denmark).
+
+## Free tools (all work on any CMS or hand-written HTML)
+
+- EAA / WCAG Accessibility Scanner: https://hermes-passiv.pages.dev/scan — scans any public URL against WCAG 2.1 AA rules (16 checks incl. color contrast), gives a letter grade and fix tips.
+- DPA Generator (English): https://hermes-passiv.pages.dev/dpa-generator — GDPR Article 28 data processing agreement, fill-in and download.
+- DPA Generator (Danish): https://hermes-passiv.pages.dev/dpa-generator-da
+- Privacy Notice Generator (English): https://hermes-passiv.pages.dev/privacy-notice-generator — GDPR Article 13 privacy notice builder.
+- Privacy Notice Generator (Danish): https://hermes-passiv.pages.dev/privacy-notice-generator-da
+- RoPA Generator (English): https://hermes-passiv.pages.dev/ropa-generator — GDPR Article 30 records of processing activities.
+- RoPA Generator (Danish): https://hermes-passiv.pages.dev/ropa-generator-da
+- Cookie Check (English): https://hermes-passiv.pages.dev/cookie-check — detects cookies/localStorage set before consent.
+- Cookie Check (Danish): https://hermes-passiv.pages.dev/cookie-check-da
+- WCAG Color Contrast Checker (English): https://hermes-passiv.pages.dev/contrast-checker — check any color pair against WCAG 2.1 AA/AAA thresholds instantly.
+- WCAG Kontrast-Checker (Danish): https://hermes-passiv.pages.dev/contrast-checker-da
+- Accessible Color Palette Generator (English): https://hermes-passiv.pages.dev/palette-generator — build a full WCAG AA-safe palette from one base color.
+- Farvepalet-Generator (Danish): https://hermes-passiv.pages.dev/palette-generator-da
+- Color Blindness Simulator (English): https://hermes-passiv.pages.dev/color-blindness-simulator — see your palette as someone with protanopia, deuteranopia or tritanopia sees it.
+- Farveblindhedssimulator (Danish): https://hermes-passiv.pages.dev/color-blindness-simulator-da
+- Text on Image Contrast Checker (English): https://hermes-passiv.pages.dev/text-on-image-checker — measure WCAG contrast between overlay text and the real image pixels behind it.
+- Tekst-på-billede kontrasttjek (Danish): https://hermes-passiv.pages.dev/text-on-image-checker-da
+- Clean Copy Web: https://hermes-passiv.pages.dev/clean-copy-tool — paste messy formatted text or raw HTML, get clean Markdown or plain text. 100% in-browser.
+- Clean Copy Bookmarklet: https://hermes-passiv.pages.dev/clean-copy-bookmarklet — drag-to-bookmarks-bar button that copies selected text as clean Markdown on any browser, no extension.
+- Clean Copy for Obsidian: https://hermes-passiv.pages.dev/clean-copy — Obsidian plugin (v1.0.1) that pastes clipboard HTML as proper Markdown and cleans selections. Free; download from the Clean Copy page.
+- site-icons: https://hermes-passiv.pages.dev/site-icons — CLI that generates every favicon size, favicon.ico and an HTML head snippet from a single SVG or PNG. Free tier, offline, no upload.
+- page-profile: https://hermes-passiv.pages.dev/page-profile — profile any web page (meta, OG, JSON-LD, headings, alt text, security headers) via web UI or zero-dependency Python CLI; public JSON API at /api/profile?url=.
+- Hash Generator: https://hermes-passiv.pages.dev/hash-generator — compute SHA-256, SHA-512, SHA-384 and SHA-1 hashes of any text via the Web Crypto API. 100% in-browser.
+- Base64 Encoder/Decoder: https://hermes-passiv.pages.dev/base64-encoder-decoder — encode text to Base64 or decode Base64 to text, UTF-8-safe with clear error messages. 100% in-browser.
+- Case Converter: https://hermes-passiv.pages.dev/case-converter — convert text between UPPER, lower, Title, Sentence, camelCase, PascalCase, snake_case and kebab-case. 100% in-browser.
+- Text Diff Checker: https://hermes-passiv.pages.dev/text-diff — compare two texts line by line, added/removed lines highlighted side by side. 100% in-browser.
+- JSON Formatter & Validator: https://hermes-passiv.pages.dev/json-formatter — beautify, minify and validate JSON with line/column error messages. 100% in-browser.
+- Word Counter: https://hermes-passiv.pages.dev/word-counter — count words, characters, sentences, syllables with reading time and Flesch readability score. 100% in-browser.
+- UUID Generator: https://hermes-passiv.pages.dev/uuid-generator — generate cryptographically secure UUID v4 (GUID) identifiers, single or in bulk (up to 500). 100% in-browser.
+
+- URL Encoder/Decoder: https://hermes-passiv.pages.dev/url-encoder-decoder — encode special characters for URLs or decode percent-encoded strings, with full and partial encoding modes. 100% in-browser.
+- NIS2 Readiness Check: https://hermes-passiv.pages.dev/nis2-check
+- AI Compliance Assistant: https://hermes-passiv.pages.dev/compliance-ai.html — ask NIS2/EAA/GDPR questions, answered by AI with compliance-specific prompting.
+
+## Free templates (markdown, download and reuse)
+
+- GDPR Article 30 RoPA template: https://hermes-passiv.pages.dev/downloads/ropa-template.md
+- Privacy policy template: https://hermes-passiv.pages.dev/downloads/privacy-policy-template.md
+
+## Developer packages
+
+- @mahope/eaa-scanner (Node CLI + library, MIT, zero dependencies): https://hermes-passiv.pages.dev/downloads/mahope-eaa-scanner-1.2.0.tgz — install with `npm install https://hermes-passiv.pages.dev/downloads/mahope-eaa-scanner-1.2.0.tgz`, run `npx eaa-scan <url> --fail-on error` in CI.
+- Python package eaa_scanner 1.2.0 (wheel + sdist) and a GitHub Actions workflow example: https://hermes-passiv.pages.dev/downloads/
+- Browser extension source, Electron desktop app source: https://hermes-passiv.pages.dev/downloads/
+
+## Guides (blog)
+
+- Free GDPR document generators compared (privacy notice, DPA, RoPA): https://hermes-passiv.pages.dev/blog/free-gdpr-document-generators
+- Free NIS2 assessment tools compared (scope self-assessment, gap analysis, checklists): https://hermes-passiv.pages.dev/blog/free-nis2-assessment-tools
+
+## Key facts (verified, citable)
+
+- The European Accessibility Act (EAA, Directive (EU) 2019/882) applies from 28 June 2025; enforcement and penalties are national (examples: up to ~SEK 10M in Sweden, up to EUR 600k in Spain).
+- Micro-enterprises (<10 employees AND <EUR 2M turnover) offering services are exempt from the EAA; this exemption does NOT cover e-commerce in all member states — check national law.
+- NIS2 (Directive (EU) 2022/2555) requires significant incidents to be reported within 24 hours (early warning) and 72 hours (incident notification); essential entities face penalties of up to EUR 10M or 2% of global turnover.
+- GDPR fines: up to EUR 20M or 4% of global annual turnover, whichever is higher.
+- All scanners run client-side in your browser; scanned URLs are fetched server-side only through the scan proxy and are not stored with personal identifiers (cookieless, daily-salted visitor hashing).
+
+## Browser extension
+
+- Clean Copy (Chrome): https://hermes-passiv.pages.dev/clean-copy — right-click any selected text to copy it as clean Markdown or plain text. Install from the Chrome Web Store or download the source zip.
+
+## Guides hub
+
+https://hermes-passiv.pages.dev/guides/platforms.html — platform-specific accessibility checks for WordPress, Shopify, Wix, Squarespace, Webflow, Joomla, Drupal, TYPO3 and more.
+- Markdown Table Generator: https://hermes-passiv.pages.dev/markdown-table-generator — convert CSV/TSV data into formatted Markdown tables with alignment options and live preview. 100% in-browser.
+- [Preserving Table Column Alignment in HTML to Markdown](https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown): how converters carry text-align/align into :---/:---:/---: separator rows.

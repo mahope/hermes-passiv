@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMS EAA Accessibility Comparison — 10 Platforms Compared (2026)</title>
+<meta name="description" content="Compare 10 CMS platforms for EAA/WCAG 2.1 AA compliance: WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, PrestaShop, Weebly, Magento. Market share, typical issues, fix complexity, and links to platform-specific guides.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CMS EAA Accessibility Comparison — 10 Platforms Compared (2026)">
+<meta property="og:description" content="Compare WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, PrestaShop, Weebly, and Magento for EAA/WCAG 2.1 AA readiness. Market share, typical issues, and platform-specific guides.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/comparison">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CMS EAA Accessibility Comparison — 10 Platforms Compared (2026)">
+<meta name="twitter:description" content="Which CMS is most EAA-ready? Compare 10 platforms side-by-side: typical issues, fix complexity, and free scan.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="CMS EAA Accessibility Comparison — 10 Platforms Compared (2026)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/comparison"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/comparison">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"CMS EAA Accessibility Comparison — 10 Platforms Compared","description":"Compare 10 CMS platforms for EAA/WCAG 2.1 AA compliance. Market share, typical issues, fix complexity, and platform-specific guides.","publisher":{"@type":"Organization","name":"Mahope"},"about":{"@type":"Thing","name":"European Accessibility Act CMS compliance"}}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .cmp-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 14px; }
+  .cmp-table th, .cmp-table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .cmp-table th { background: var(--color-surface-2); font-weight: 700; position: sticky; top: 0; }
+  .cmp-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .cmp-table .platform-icon { font-size: 20px; margin-right: 4px; }
+  .rating-good { color: #2ecc71; }
+  .rating-warn { color: #f39c12; }
+  .rating-bad { color: #e74c3c; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .tag-green { background: rgba(46,204,113,0.15); color: #2ecc71; }
+  .tag-yellow { background: rgba(243,156,18,0.15); color: #f39c12; }
+  .tag-red { background: rgba(231,76,60,0.15); color: #e74c3c; }
+  .tag-blue { background: rgba(52,152,219,0.15); color: #3498db; }
+  .cmp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+  .cmp-card { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; }
+  .cmp-card h3 { margin: 0 0 6px; font-size: 18px; }
+  .cmp-card .meta { font-size: 13px; color: var(--color-text-muted); margin-bottom: 10px; }
+  .cmp-card ul { margin: 0; padding-left: 18px; font-size: 14px; }
+  .cmp-card ul li { margin-bottom: 4px; }
+  @media (max-width: 640px) {
+    .cmp-table { font-size: 12px; }
+    .cmp-table th, .cmp-table td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">PLATFORM COMPARISON</div>
+    <h1>CMS EAA Accessibility Comparison<br>10 Platforms Compared (2026)</h1>
+    <p class="subtitle">Not all content management systems are equal under the European Accessibility Act. Some ship with solid semantic HTML out of the box; others require heavy theme customisation to reach WCAG 2.1 AA. This guide compares all 10 platforms we cover — so you know where your biggest risks are before you scan.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Scan Any Site Free →</a>
+      <a href="#comparison" class="btn-secondary">Jump to the Table</a>
+      <span class="hero-note">16 automated rules · No signup · Instant grade</span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+<section id="intro">
+  <h2>Why platform matters</h2>
+  <p>The EAA applies equally to every website serving EU consumers — but the effort required to reach compliance varies enormously by CMS. A site built on Drupal or Joomla starts with strong semantic foundations; a custom Shopify or Wix theme can hide accessibility-breaking code behind a drag-and-drop interface that designers never inspect.</p>
+  <p>Our free <a href="/scan">EAA scanner</a> works on any platform — no installation, no signup. The table below gives you a quick-read overview so you know which issues to expect before you scan your own site or a client's.</p>
+</section>
+
+<section id="comparison">
+  <h2>Comparison table</h2>
+  <div style="overflow-x:auto">
+  <table class="cmp-table">
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Market Share</th>
+        <th>Base Accessibility</th>
+        <th>Most Common Issue</th>
+        <th>Fix Complexity</th>
+        <th>Guide</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="platform-icon">🔴</span> <strong>WordPress</strong></td>
+        <td>43% of all sites</td>
+        <td><span class="tag tag-yellow">Variable</span></td>
+        <td>Low-contrast themes, missing alt text, generic link text</td>
+        <td><span class="tag tag-yellow">Low–Medium</span></td>
+        <td><a href="/guides/wordpress-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🛒</span> <strong>Shopify</strong></td>
+        <td>~10% of e‑commerce</td>
+        <td><span class="tag tag-yellow">Mixed</span></td>
+        <td>Product image alt text, button labels, colour contrast</td>
+        <td><span class="tag tag-yellow">Low</span></td>
+        <td><a href="/guides/shopify-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🌀</span> <strong>Webflow</strong></td>
+        <td>Growing (small base)</td>
+        <td><span class="tag tag-yellow">Designer‑dependent</span></td>
+        <td>Interactive animations failing WCAG timing/motion, heading order</td>
+        <td><span class="tag tag-yellow">Medium</span></td>
+        <td><a href="/guides/webflow-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🔵</span> <strong>Wix</strong></td>
+        <td>~3% of all sites</td>
+        <td><span class="tag tag-red">Weak</span></td>
+        <td>Auto-generated duplicate IDs, missing form labels, iframe titles</td>
+        <td><span class="tag tag-red">Medium–High</span></td>
+        <td><a href="/guides/wix-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">⬜</span> <strong>Squarespace</strong></td>
+        <td>~2% of all sites</td>
+        <td><span class="tag tag-yellow">Template‑dependent</span></td>
+        <td>Low-contrast template defaults, hidden text on image blocks</td>
+        <td><span class="tag tag-yellow">Low–Medium</span></td>
+        <td><a href="/guides/squarespace-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🌐</span> <strong>Drupal</strong></td>
+        <td>~1.5% of all sites</td>
+        <td><span class="tag tag-green">Strong</span></td>
+        <td>Contributed modules overriding semantic core output</td>
+        <td><span class="tag tag-green">Low</span></td>
+        <td><a href="/guides/drupal-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">📄</span> <strong>Joomla</strong></td>
+        <td>~1.5% of all sites</td>
+        <td><span class="tag tag-green">Strong</span></td>
+        <td>Third-party template overrides breaking heading structure</td>
+        <td><span class="tag tag-green">Low</span></td>
+        <td><a href="/guides/joomla-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🟣</span> <strong>PrestaShop</strong></td>
+        <td>~0.5% of all sites</td>
+        <td><span class="tag tag-yellow">Mixed</span></td>
+        <td>Product grid alt text, checkout form labels, translation‑level lang attributes</td>
+        <td><span class="tag tag-yellow">Low–Medium</span></td>
+        <td><a href="/guides/prestashop-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">🌿</span> <strong>Weebly</strong></td>
+        <td>~0.3% of all sites</td>
+        <td><span class="tag tag-red">Weak</span></td>
+        <td>Drag-and-drop editor creates empty divs, missing form labels, heading gaps</td>
+        <td><span class="tag tag-red">High</span></td>
+        <td><a href="/guides/weebly-accessibility-check">Guide →</a></td>
+      </tr>
+      <tr>
+        <td><span class="platform-icon">📦</span> <strong>Magento (Adobe Commerce)</strong></td>
+        <td>~0.5% of e‑commerce</td>
+        <td><span class="tag tag-yellow">Mixed</span></td>
+        <td>Custom module breakage, Luma theme contrast, checkout ARIA labels</td>
+        <td><span class="tag tag-yellow">Medium</span></td>
+        <td><a href="/guides/magento-accessibility-check">Guide →</a></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="hint" style="margin-top:8px; font-size:13px; color:var(--color-text-muted)"><strong>Market share:</strong> approximate as of 2026. Sources: W3Techs, BuiltWith, and A11y Project annual surveys. <strong>Base accessibility:</strong> how much WCAG 2.1 AA compliance the platform provides before customisation.</p>
+</section>
+
+<section id="cards" style="margin-top:48px">
+  <h2>Platform deep-dives</h2>
+  <p>Each platform has its own accessibility profile, common pitfalls, and fastest fix path. Click through to the full guide.</p>
+  <div class="cmp-list">
+    <div class="cmp-card">
+      <h3>🔴 WordPress</h3>
+      <div class="meta">43% of all sites · 810M+ websites</div>
+      <ul>
+        <li>Theme-dependent accessibility — some themes are excellent (GeneratePress, Astra with settings), others fail every contrast check</li>
+        <li>Gutenberg block editor makes heading hierarchy easy to get right, but plugins often inject low-contrast UI</li>
+        <li><strong>Fastest fix:</strong> run the scan, fix alt text in Media Library, adjust colours in Theme Customizer</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/wordpress-accessibility-check">Read the full WordPress guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🛒 Shopify</h3>
+      <div class="meta">~10% of e-commerce · Dawn theme is the default</div>
+      <ul>
+        <li>Dawn theme (OS 2.0) improved contrast and semantic structure — but custom Liquid templates undo it</li>
+        <li>Product image alt text is the single biggest failure point across Shopify stores</li>
+        <li><strong>Fastest fix:</strong> add alt text to all product images, check button labels in theme editor</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/shopify-accessibility-check">Read the full Shopify guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🌀 Webflow</h3>
+      <div class="meta">Designer-first · Growing fast in agency space</div>
+      <ul>
+        <li>Great semantic output when designers know accessibility — terrible when they focus only on visuals</li>
+        <li>Interactive animations (scroll-triggered, mouse-movement) often fail WCAG timing and motion criteria</li>
+        <li><strong>Fastest fix:</strong> reduce motion, add pause controls, run our scanner on every published page</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/webflow-accessibility-check">Read the full Webflow guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🔵 Wix</h3>
+      <div class="meta">~3% of all sites · Strong in SMB segment</div>
+      <ul>
+        <li>Wix's Auto-ARIA feature attempts to fix issues programmatically, but creates duplicate IDs in the process</li>
+        <li>Editor X / Velo code gives developers control — but most Wix sites use pure drag-and-drop, which skips form labels</li>
+        <li><strong>Fastest fix:</strong> Accessibility Wizard in Wix dashboard, then our scanner for remaining gaps</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/wix-accessibility-check">Read the full Wix guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>⬜ Squarespace</h3>
+      <div class="meta">~2% of all sites · Design-forward templates</div>
+      <ul>
+        <li>New Fluid Engine editor improved contrast defaults, but legacy Classic Editor templates still in wide use</li>
+        <li>Image blocks with hidden text are common — text overlay used for design, invisible to screen readers</li>
+        <li><strong>Fastest fix:</strong> switch to Fluid Engine templates, add alt text, use Custom CSS for contrast fixes</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/squarespace-accessibility-check">Read the full Squarespace guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🌐 Drupal</h3>
+      <div class="meta">~1.5% · Enterprise-favourite CMS</div>
+      <ul>
+        <li>Best core accessibility of any major CMS: Olivero admin theme, CKEditor 5 accessibility checker, semantic field output</li>
+        <li>Biggest risk is contributed modules that override core's accessible rendering</li>
+        <li><strong>Fastest fix:</strong> use Olivero, enable CKEditor accessibility checker, scan after every module update</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/drupal-accessibility-check">Read the full Drupal guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>📄 Joomla</h3>
+      <div class="meta">~1.5% · Strong in government/education EU segment</div>
+      <ul>
+        <li>Joomla 4+ core templates (Cassiopeia) ship with solid semantic HTML and acceptable default contrast</li>
+        <li>Third-party template overrides are the main risk — popular commercial templates often break heading hierarchy</li>
+        <li><strong>Fastest fix:</strong> use Cassiopeia, run JA Accessibility Checker, then our scanner for remaining gaps</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/joomla-accessibility-check">Read the full Joomla guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🟣 PrestaShop</h3>
+      <div class="meta">~0.5% · Popular in EU e-commerce</div>
+      <ul>
+        <li>Core templates produce acceptable semantics, but checkout flows often fail on form labels and focus management</li>
+        <li>Translation-level lang attributes are a unique failure point: multi-language stores sometimes omit lang correctly</li>
+        <li><strong>Fastest fix:</strong> verify lang attributes per translation, check checkout flow manually, scan product pages</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/prestashop-accessibility-check">Read the full PrestaShop guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>🌿 Weebly</h3>
+      <div class="meta">~0.3% · Square-owned, shrinking but still active</div>
+      <ul>
+        <li>Limited control over HTML output — the drag-and-drop editor produces flat, non-semantic div structures</li>
+        <li>No built-in accessibility checker or wizard. Most fixes require Custom CSS or rebuilding sections</li>
+        <li><strong>Fastest fix:</strong> replace empty divs with semantic elements via Custom CSS, run scanner repeatedly</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/weebly-accessibility-check">Read the full Weebly guide →</a></p>
+    </div>
+    <div class="cmp-card">
+      <h3>📦 Magento (Adobe Commerce)</h3>
+      <div class="meta">~0.5% of e-commerce · Enterprise segment</div>
+      <ul>
+        <li>Luma theme has documented contrast and ARIA issues — Hyvä theme improves dramatically but costs extra</li>
+        <li>Custom module ecosystem means every store has unique issues. Third-party checkout modules are the biggest risk</li>
+        <li><strong>Fastest fix:</strong> scan after every module install, fix ARIA labels in checkout, consider Hyvä for new builds</li>
+      </ul>
+      <p style="margin:10px 0 0"><a href="/guides/magento-accessibility-check">Read the full Magento guide →</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="scan-cta" style="margin:48px 0; text-align:center; background:var(--color-surface-2); border-radius:12px; padding:40px 20px">
+  <h2>Not sure where your site stands?</h2>
+  <p style="max-width:560px; margin:0 auto 20px">Paste any URL — WordPress, Shopify, custom-built, anything — and get an instant WCAG 2.1 AA grade with every issue listed by severity. Free, no signup, no data stored.</p>
+  <a href="/scan" class="btn-primary" style="font-size:18px; padding:14px 36px">Scan Your Site Now →</a>
+  <p style="font-size:13px; color:var(--color-text-muted); margin-top:12px">16 automated rules · Results in seconds · Client-ready report option available</p>
+</section>
+
+<nav class="breadcrumb" style="margin:24px 0; font-size:14px">
+  <a href="/">Home</a> &rsaquo; <a href="/guides/platforms">Platform Guides</a> &rsaquo; <span>10-Platform Comparison</span>
+</nav>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p><strong>EU Compliance for Small Web Agencies</strong> — practical guides, templates, and tools built for agencies with 1–50 employees. <a href="/">Home</a> · <a href="/scan">Free EAA Scanner</a> · <a href="/guides/platforms">All Platform Guides</a> · <a href="/accessibility-statement-generator">Statement Generator</a> · © Mahope 2026</p>
+  </div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

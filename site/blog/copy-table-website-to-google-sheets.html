@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copy a Table From a Website Into Google Sheets (2026 Guide)</title>
+<meta name="description" content="Copy any table from a website straight into Google Sheets with rows and columns intact — no screenshot OCR, no re-typing, no add-ons.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Copy a Table From a Website Into Google Sheets">
+<meta property="og:description" content="Paste any web table into Google Sheets with every cell in place — no OCR, no re-typing, no add-ons.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Copy a Table From a Website Into Google Sheets (Rows and Columns Intact)", "description": "Copy any table from a website straight into Google Sheets with rows and columns intact — no screenshot OCR, no re-typing, no add-ons.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I copy a table from a website into Google Sheets?", "acceptedAnswer": {"@type": "Answer", "text": "Install the free Clean Copy extension for Chrome or Firefox, select the table, copy as Markdown, then paste into your sheet with Ctrl+V (Cmd+V on Mac). The Markdown table converts back to real rows and columns."}}, {"@type": "Question", "name": "Why does pasting a table sometimes end up in one column?", "acceptedAnswer": {"@type": "Answer", "text": "If you select the text instead of the table element, the browser copies plain text and Sheets has no structure to work with. Copying the table itself (as Clean Copy does) preserves HTML table semantics, which Sheets understands."}}, {"@type": "Question", "name": "Does it also work in Excel?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the same clipboard content pastes cleanly into Excel, Numbers and LibreOffice Calc. We have a separate guide for Excel with more detail."}}, {"@type": "Question", "name": "What about tables that load when I scroll?", "acceptedAnswer": {"@type": "Answer", "text": "Scroll to the part of the table you need first so the rows exist in the page, then copy. Lazy-loaded rows that have never rendered cannot be copied because they are not in the document yet."}}, {"@type": "Question", "name": "Is anything uploaded to a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. Clean Copy works entirely inside your browser. The table never leaves your machine until you paste it where you want it."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+  pre.cmd {
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+</style>
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-website-to-google-sheets">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-google-sheets">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SPREADSHEETS &middot; GOOGLE SHEETS &middot; TABLES</div>
+    <h1>Copy a Table From a Website<br>Into Google Sheets</h1>
+    <p class="subtitle">Pricing pages, league tables, government statistics — getting them into Sheets usually means one giant text blob or hours of re-typing. Here is the two-click way that keeps every row and column exactly where it belongs.</p>
+    <div class="hero-cta">
+      <a href="#how" class="btn-primary">Show me the 2-click way &rarr;</a>
+      <a href="/clean-copy" class="btn-secondary">About Clean Copy</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 4 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why the usual methods fail</h2>
+    <p>Google Sheets is happy to receive a real HTML table — the problem is getting one onto your clipboard without mangling it.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📋 Select-and-copy grabs text</h3><p>Drag-select across a table and you often capture surrounding paragraphs, ads and captions. Pasted into Sheets, everything collapses into a few overloaded cells.</p></div>
+      <div class="card"><h3>📸 Screenshots need OCR</h3><p>Screenshotting the table means running it through OCR software and fixing the errors it introduces. Numbers with wrong digits are worse than no numbers.</p></div>
+      <div class="card"><h3>⌨️ Re-typing does not scale</h3><p>Fine for three rows. Not fine for the 200-row dataset behind that public dashboard.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="how">
+  <div class="container">
+    <h2>The fix: two clicks</h2>
+    <p>The free <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> extension for Chrome and Firefox converts tables properly. Select the table and copy as Markdown — it finds the real <code>&lt;table&gt;</code> element in your selection and puts structured table data on the clipboard.</p>
+
+    <h3 style="margin-top:24px;">1. Install</h3>
+    <pre class="cmd"><code>Install Clean Copy from the install guide (Chrome or Firefox):
+hermes-passiv.pages.dev/clean-copy#install</code></pre>
+
+    <h3 style="margin-top:24px;">2. Copy the table</h3>
+    <pre class="cmd"><code>Open the page, click anywhere inside the table,
+click the Clean Copy icon, copy as Markdown (or right-click → Clean Copy).</code></pre>
+
+    <h3 style="margin-top:24px;">3. Paste into Sheets</h3>
+    <pre class="cmd"><code>Click cell A1 in your sheet, press Ctrl+V (Cmd+V on Mac).
+Every value lands in its own cell — headers included.</code></pre>
+
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Cells stay cells</h3><p>Because the clipboard carries real table semantics, Sheets maps each <code>&lt;td&gt;</code> to its own cell automatically.</p></div>
+      <div class="card"><h3>🧹 No junk rows</h3><p>No ad fragments, cookie banners or captions — only the table you pointed at.</p></div>
+      <div class="card"><h3>🔁 Works beyond Sheets</h3><p>The same paste works in Excel, Numbers and LibreOffice Calc.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="options">
+  <div class="container">
+    <h2>Your options compared</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Method</th><th>Keeps structure?</th><th>Catch</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Select + copy text</td><td>Rarely</td><td>Grabs extra content, collapses columns</td></tr>
+        <tr><td>Screenshot + OCR</td><td>After cleanup</td><td>Digit errors are hard to spot</td></tr>
+        <tr><td>Sheets IMPORTHTML formula</td><td>Yes</td><td>Only public pages; breaks on JS-rendered tables</td></tr>
+        <tr>
+          <td><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy — Markdown table conversion</a></td>
+          <td>Yes</td>
+          <td>Free browser extension install required</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If your table lives behind a login or loads dynamically, the formula route fails and a local copy tool is the reliable option.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How do I copy a table from a website into Google Sheets?</h3><p>Install the free Clean Copy extension for Chrome or Firefox, select the table, copy as Markdown, then paste into your sheet with Ctrl+V (Cmd+V on Mac). The Markdown table converts back to real rows and columns.</p></div>
+<div class="card"><h3>Why does pasting a table sometimes end up in one column?</h3><p>If you select the text instead of the table element, the browser copies plain text and Sheets has no structure to work with. Copying the table itself (as Clean Copy does) preserves HTML table semantics, which Sheets understands.</p></div>
+<div class="card"><h3>Does it also work in Excel?</h3><p>Yes — the same clipboard content pastes cleanly into Excel, Numbers and LibreOffice Calc. We have a separate guide for Excel with more detail.</p></div>
+<div class="card"><h3>What about tables that load when I scroll?</h3><p>Scroll to the part of the table you need first so the rows exist in the page, then copy. Lazy-loaded rows that have never rendered cannot be copied because they are not in the document yet.</p></div>
+<div class="card"><h3>Is anything uploaded to a server?</h3><p>No. Clean Copy works entirely inside your browser. The table never leaves your machine until you paste it where you want it.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Get Clean Copy free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-from-website-to-excel" style="color:var(--color-accent);">Copy a Table From a Website Into Excel</a> &middot; <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">HTML to Markdown From the Terminal</a> &middot; <a href="/blog/paste-without-formatting-chrome" style="color:var(--color-accent);">Paste Without Formatting in Chrome</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-excel" style="color:var(--color-accent);">Kopiér en tabel ind i Excel (DA)</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-notion" style="color:var(--color-accent);">Kopiér en tabel ind i Notion (DA)</a></p></div>
+<p><a href="/da/blog/kopier-tabel-til-google-sheets" lang="da">Dansk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/da/blog/kopier-tabel-fra-pdf" style="color:var(--color-accent);">Copy a Table From a PDF Into Excel</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="{URL}" style="color:var(--color-accent);">{label}</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-from-pdf-to-excel" style="color:var(--color-accent);">Copy a Table From a PDF Into Sheets/Excel</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/copy-clean-guide" style="color:var(--color-accent);">The Copy &amp; Clean Guide Collection</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-to-notion" style="color:var(--color-accent);">Copy a Table From a Website Into Notion</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-iphone-ipad" style="color:var(--color-accent);">Copy a Table From a Website on iPhone & iPad</a></p></div>
+</body>
+</html>

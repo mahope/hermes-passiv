@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "EAA Compliance Scanner",
+  "version": "1.1.0",
+  "description": "Scan any page for European Accessibility Act / WCAG issues. Free automated check; works on any CMS or hand-written site.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_title": "EAA Compliance Scanner",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "128": "icon128.png"
+  }
+}

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paste Without Formatting in Chrome — Your Complete Guide</title>
+<meta name="description" content="Pasting from the web drags formatting. Here's every way to paste without formatting in Chrome: keyboard shortcuts, settings, extensions like Clean Copy, and the 'Paste as plain text' trick.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Paste Without Formatting in Chrome — Complete Guide">
+<meta property="og:description" content="Everything that works: Ctrl+Shift+V, paste-as-plain-text extensions, clipboard managers, and the Clean Copy browser extension that intercepts formatting before it reaches your clipboard.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/paste-without-formatting-chrome">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/paste-without-formatting-chrome"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/paste-without-formatting-chrome">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/indsæt-uden-formatering-i-chrome">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/paste-without-formatting-chrome">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Paste Without Formatting in Chrome", "description": "Every method to paste without formatting in Chrome — keyboard shortcuts, settings, extensions, and the Clean Copy tool that makes it automatic.", "url": "https://hermes-passiv.pages.dev/blog/paste-without-formatting-chrome", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  {"@type": "Question", "name": "How do I paste without formatting in Chrome?", "acceptedAnswer": {"@type": "Answer", "text": "Press Ctrl+Shift+V (Windows) or Cmd+Shift+V (Mac) to paste unformatted text in Chrome. For a permanent solution, install the Clean Copy extension which copies clean text automatically."}},
+  {"@type": "Question", "name": "Why does Chrome paste formatting I didn't want?", "acceptedAnswer": {"@type": "Answer", "text": "Chrome places the full HTML fragment of your selection on the clipboard — including fonts, colors and hidden styles. The paste target then renders that HTML. A copy extension strips it before the clipboard receives it."}},
+  {"@type": "Question", "name": "Is there a way to make Chrome always paste as plain text?", "acceptedAnswer": {"@type": "Answer", "text": "Chrome has no built-in setting to always paste as plain text. Use the Clean Copy extension to copy clean text from any website — then every paste, in any app, is clean by default."}}
+]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRODUCTIVITY &middot; CHROME TIPS</div>
+    <h1>Paste Without Formatting in Chrome</h1>
+    <p class="subtitle">Select, copy, paste — and the formatting follows you everywhere. Here is every method that works, ranked by how little effort they require.</p>
+    <div class="hero-cta">
+      <a href="#methods" class="btn-primary">See all methods</a>
+      <a href="/clean-copy" class="btn-secondary">Get the one-click fix &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 4 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Why Chrome pastes formatting you did not ask for</h2>
+    <p>Every time you copy in Chrome, the browser places <strong>two versions</strong> of your selection on the clipboard: the plain text and the full HTML fragment. Most paste targets read the HTML version first — so you get the page's fonts, colors, line heights, smart quotes and hidden tracking markup along with the text you wanted.</p>
+    <p>The fix is either to tell the paste target to ignore formatting (hitting a different shortcut every time) or to change what goes on the clipboard before the paste happens.</p>
+  </div>
+</section>
+
+<section class="products" id="methods">
+  <div class="container">
+    <h2>Six methods, ranked by convenience</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>1️⃣ Ctrl+Shift+V / Cmd+Shift+V</h3><p>Paste as plain text. Works in most apps — but you have to <strong>remember</strong> to use it every single time. Great as a fallback, poor as a habit (most people forget and paste the formatted version).</p><p>On Mac, Cmd+Shift+Option+V also works in some apps like Word and Gmail.</p></div>
+      <div class="card"><h3>2️⃣ Paste Special dialog</h3><p>Ctrl+Alt+V opens a dialog asking whether you want plain text, HTML, or rich text. Useful for document work, impractical for quick pastes 50 times a day.</p></div>
+      <div class="card"><h3>3️⃣ Browser extension: Clean Copy</h3><p><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> works <strong>at copy time</strong>, not paste time. Select text, invoke Clean Copy (right-click or Ctrl+Shift+C), and the clipboard gets clean text or Markdown. No special paste command needed in any app. Runs locally, no tracking, free and open source. Not on Chrome? The <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">bookmarklet</a> gives you the same one-click clean copy in any browser.</p></div>
+      <div class="card"><h3>4️⃣ PureText (Windows) / PlainPaste (Mac)</h3><p>System tray utilities that paste pre-stripped text. They assign a global hotkey (e.g. Win+V) that overwrites what is on the clipboard with just the plain text version, then pastes. One extra click per paste.</p></div>
+      <div class="card"><h3>5️⃣ Clipboard managers</h3><p>Ditto (Windows), Maccy (Mac), or Pastebot store clipboard history and can strip formatting. Press Ctrl+Shift+V to paste history, or click a hotkey. The formatting setting is per-app and per-use.</p></div>
+      <div class="card"><h3>6️⃣ AutoHotkey / Keyboard Maestro macros</h3><p>Power users can write a script that remaps Ctrl+V to "strip formatting, then paste". It works system-wide but requires setup, maintenance after OS updates, and a scripting tool (AutoHotkey on Windows, Keyboard Maestro on Mac).</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="clean-copy">The recommended approach: Clean Copy extension</h2>
+    <p>Shortcuts and clipboard managers require you to <strong>change your paste behavior</strong> — use a different shortcut, open a panel, think about formatting on every paste. Clean Copy changes your <strong>copy behavior</strong> instead: you select text, activate it once, and every paste afterwards — anywhere — is clean.</p>
+    <div style="background:var(--color-surface);border-radius:12px;padding:20px;margin:16px 0;">
+      <p><strong>How it works in practice:</strong></p>
+      <ol style="margin:8px 0;">
+        <li>You find an article on the web with text you want.</li>
+        <li>Select the text, right-click → <strong>Clean Copy</strong> → Markdown (or press Ctrl/Cmd+Shift+C).</li>
+        <li>Switch to your email, Notion doc, Obsidian note, or AI chat.</li>
+        <li>Press Ctrl+V (or Cmd+V). Normal paste. <strong>It arrives clean.</strong></li>
+      </ol>
+      <p>Zero shortcuts to remember, zero formatting to strip, zero apps to configure.</p>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy" class="btn-primary">Download Clean Copy free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How do I paste without formatting in Chrome on Windows?</h3><p>Press Ctrl+Shift+V to paste as plain text. To avoid needing to use a special shortcut, install <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> so copying always produces clean text.</p></div>
+      <div class="card"><h3>Can I set Chrome to always paste as plain text?</h3><p>Chrome has no built-in option for this. The closest workaround is to use a copy-time extension (like Clean Copy) that strips formatting before it reaches your clipboard, so every paste command delivers clean text.</p></div>
+      <div class="card"><h3>Does Clean Copy work in Edge and Brave?</h3><p>Yes — Clean Copy works in any Chromium browser. Load it unpacked from the same zip. Edge uses edge://extensions; Brave uses brave://extensions. Identical process.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Get Clean Copy &rarr;</a>
+      &nbsp;
+      <a href="/blog/copy-clean-text-from-website" class="btn-secondary">See also: how to copy clean text &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-from-chatgpt-into-word" style="color:var(--color-accent);">Copy ChatGPT into Word</a> &middot; <a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);">HTML to Markdown converter</a></p></div>
+<p><a href="/da/blog/indsæt-uden-formatering-i-chrome" lang="da">Dansk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<p style="margin-top:16px;"><strong>Related:</strong> <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">HTML to Markdown from the terminal</a> — Need the same clean Markdown in your editor? Convert pages from the terminal with the CLI.</p>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/copy-clean-guide" style="color:var(--color-accent);">The Copy &amp; Clean Guide Collection</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-iphone-ipad" style="color:var(--color-accent);">Copy Tables on iPhone & iPad</a></p></div>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EAA Compliance Scanner</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", sans-serif; width: 340px;
+         margin: 0; padding: 14px; color: #0f2233; background: #f7fafc; }
+  h1 { font-size: 15px; margin: 0 0 10px; color: #0b3a53; }
+  button { background: #0b6e8f; border: 0; color: #fff; padding: 9px 14px;
+           border-radius: 7px; cursor: pointer; width: 100%; font-size: 13px; }
+  button:hover { background: #095a77; }
+  #result { margin-top: 12px; font-size: 12.5px; line-height: 1.5; }
+  .score { font-size: 30px; font-weight: 700; text-align: center; margin: 4px 0; }
+  .grade-A { color: #157a3c; } .grade-B { color: #7a6415; }
+  .grade-C { color: #a35a10; } .grade-D { color: #a31515; }
+  ul { margin: 8px 0 0; padding-left: 18px; }
+  .sev-error { color: #a31515; font-weight: 600; }
+  .sev-warning { color: #a35a10; }
+  .sev-notice { color: #556; }
+  footer { margin-top: 12px; font-size: 11px; color: #667; text-align: center; }
+</style>
+</head>
+<body>
+<h1>EAA Compliance Scanner</h1>
+<button id="scan">Scan this page</button>
+<div id="result" role="status" aria-live="polite"></div>
+<footer>Automated checks catch ~30-40% of issues.<br>
+Full checklist: hermes-passiv.pages.dev</footer>
+<script src="scanner.js"></script>
+</body>
+</html>

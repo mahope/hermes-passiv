@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Diff Checker — Free Online Text Compare Tool</title>
+<meta name="description" content="Free online text diff checker. Compare two texts side by side and see added, removed and unchanged lines highlighted. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Text Diff Checker — Free Online Text Compare Tool">
+<meta property="og:description" content="Compare two texts and see every added and removed line highlighted. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/text-diff">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Text Diff Checker — Free Online Text Compare">
+<meta name="twitter:description" content="Compare two texts side by side with highlighted changes. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/text-diff">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/text-diff">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/text-diff">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Text Diff Checker",
+  "url": "https://hermes-passiv.pages.dev/text-diff",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online text comparison tool with side-by-side diff view."
+}
+</script>
+<style>
+.td-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.td-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 800px) { .td-grid { grid-template-columns: 1fr; } }
+.td-pane { display: flex; flex-direction: column; }
+.td-pane h2 { font-size: 0.95rem; margin: 0 0 0.5rem; font-weight: 600; }
+.td-io {
+  width: 100%; box-sizing: border-box; min-height: 260px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.55;
+}
+.td-io:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.td-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; align-items: center; }
+.td-btns button { padding: 10px 20px; cursor: pointer; }
+.td-options { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.88rem; color: var(--color-text-muted); margin-left: auto; }
+.td-options label { cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
+.td-summary { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; background: var(--color-surface-2); border: 1px solid var(--color-border); display: none; }
+.td-summary.show { display: block; }
+.td-add { color: #4ade80; font-weight: 700; }
+.td-del { color: #f87171; font-weight: 700; }
+.td-same { color: var(--color-text-muted); }
+.td-result { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; margin: 1rem 0; font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; }
+@media (max-width: 800px) { .td-result { grid-template-columns: 1fr; } .td-col-r { display: none !important; } }
+.td-col { overflow-x: auto; }
+.td-col-r { border-left: 1px solid var(--color-border); }
+.td-line { display: flex; white-space: pre-wrap; word-break: break-word; padding: 0.05rem 0.5rem; min-height: 1.35em; }
+.td-line.ins { background: rgba(74,222,128,0.14); }
+.td-line.del { background: rgba(248,113,113,0.14); text-decoration: line-through; text-decoration-color: rgba(248,113,113,0.5); }
+.td-line .gut { flex: 0 0 2em; opacity: 0.5; user-select: none; }
+.td-empty { padding: 1rem; color: var(--color-text-muted); font-family: inherit; font-size: 0.9rem; }
+.td-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="td-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  Text diff checker
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Text Diff Checker</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Compare two texts line by line — every addition and removal highlighted.</p>
+  <p class="td-privacy">🔒 Nothing leaves your device. The comparison runs in JavaScript on this page.</p>
+</header>
+
+<div class="td-grid">
+  <div class="td-pane">
+    <h2><label for="leftArea">Original text</label></h2>
+    <textarea id="leftArea" class="td-io" placeholder="Paste the original text here..." spellcheck="false"></textarea>
+  </div>
+  <div class="td-pane">
+    <h2><label for="rightArea">Changed text</label></h2>
+    <textarea id="rightArea" class="td-io" placeholder="Paste the changed text here..." spellcheck="false"></textarea>
+  </div>
+</div>
+
+<div class="td-btns">
+  <button id="diffBtn" class="btn-primary">Compare texts</button>
+  <button id="swapBtn" class="btn-secondary">Swap sides</button>
+  <button id="clearBtn" class="btn-secondary">Clear</button>
+  <button id="exampleBtn" class="btn-secondary">Load example</button>
+  <span class="td-options">
+    <label><input type="checkbox" id="ignoreCase"> Ignore case</label>
+    <label><input type="checkbox" id="ignoreWs"> Ignore whitespace changes</label>
+  </span>
+</div>
+
+<div id="summaryBox" class="td-summary" role="status" aria-live="polite"></div>
+
+<div id="resultBox" aria-label="Diff result"></div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free text compare tool shows exactly what changed between two versions of a text.
+    Paste the original on the left and the new version on the right, hit Compare, and every
+    removed line is marked in red while every added line is marked in green, aligned
+    side by side. It uses a longest-common-subsequence (LCS) algorithm — the same approach
+    behind <code>git diff</code> — so moves and rewrites are matched sensibly rather than
+    shown as wholesale deletion plus re-adding.</p>
+    <p>Common uses: comparing two versions of a contract or article before sending,
+    checking what a colleague changed in shared copy, verifying code snippets or config
+    files, and spotting accidental edits in translated text. Options let you ignore case
+    or whitespace-only differences when those don't matter. Everything runs entirely in
+    your browser — your text is never uploaded, stored or sent anywhere.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+        <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+<a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var left = document.getElementById('leftArea');
+  var right = document.getElementById('rightArea');
+  var summaryBox = document.getElementById('summaryBox');
+  var resultBox = document.getElementById('resultBox');
+  if (!left || !right) return;
+
+  var tracked = false;
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Normalized form used for comparison only (display always uses original lines).
+  function norm(line) {
+    var t = line;
+    if (document.getElementById('ignoreWs').checked) t = t.replace(/\s+/g, ' ').trim();
+    if (document.getElementById('ignoreCase').checked) t = t.toLowerCase();
+    return t;
+  }
+
+  // LCS table over normalized lines.
+  function lcsTable(a, b) {
+    var n = a.length, m = b.length;
+    var dp = new Array(n + 1);
+    for (var i = 0; i <= n; i++) dp[i] = new Uint16Array(m + 1);
+    for (i = n - 1; i >= 0; i--) {
+      for (var j = m - 1; j >= 0; j--) {
+        dp[i][j] = (norm(a[i]) === norm(b[j]))
+          ? dp[i + 1][j + 1] + 1
+          : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+    return dp;
+  }
+
+  function run() {
+    var a = left.value.split('\n');
+    var b = right.value.split('\n');
+    if (a.length === 1 && a[0] === '' && b.length === 1 && b[0] === '') {
+      summaryBox.className = 'td-summary';
+      summaryBox.textContent = '';
+      summaryBox.style.display = 'none';
+      resultBox.innerHTML = '<div class="td-empty">Paste text on both sides and press Compare.</div>';
+      return;
+    }
+
+    var dp = lcsTable(a, b);
+    var ops = []; // {type:'same'|'del'|'ins', li, ri}
+    var i = 0, j = 0;
+    while (i < a.length && j < b.length) {
+      if (norm(a[i]) === norm(b[j])) { ops.push({ type: 'same', li: i, ri: j }); i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ type: 'del', li: i }); i++; }
+      else { ops.push({ type: 'ins', ri: j }); j++; }
+    }
+    while (i < a.length) { ops.push({ type: 'del', li: i }); i++; }
+    while (j < b.length) { ops.push({ type: 'ins', ri: j }); j++; }
+
+    var dels = 0, ins = 0, sames = 0;
+    var leftHtml = [], rightHtml = [];
+    var rLine = 1, lLine = 1;
+    for (var k = 0; k < ops.length; k++) {
+      var op = ops[k];
+      if (op.type === 'del') {
+        dels++;
+        leftHtml.push('<div class="td-line del"><span class="gut">' + (lLine++) + '</span><span>' + esc(a[op.li]) + '</span></div>');
+        rightHtml.push('<div class="td-line del"><span class="gut"></span><span></span></div>');
+      } else if (op.type === 'ins') {
+        ins++;
+        leftHtml.push('<div class="td-line ins"><span class="gut"></span><span></span></div>');
+        rightHtml.push('<div class="td-line ins"><span class="gut">' + (rLine++) + '</span><span>' + esc(b[op.ri]) + '</span></div>');
+      } else {
+        sames++;
+        leftHtml.push('<div class="td-line"><span class="gut">' + (lLine++) + '</span><span>' + esc(a[op.li]) + '</span></div>');
+        rightHtml.push('<div class="td-line"><span class="gut">' + (rLine++) + '</span><span>' + esc(b[op.ri]) + '</span></div>');
+      }
+      // Cap very large diffs to keep the DOM responsive.
+      if (ops.length > 20000 && leftHtml.length > 6000) break;
+    }
+
+    summaryBox.style.display = 'block';
+    summaryBox.className = 'td-summary show';
+    if (dels === 0 && ins === 0) {
+      summaryBox.innerHTML = '<span class="td-same">✓ The two texts are identical' +
+        (document.getElementById('ignoreCase').checked || document.getElementById('ignoreWs').checked ? ' (with current options)' : '') +
+        '.</span>';
+    } else {
+      summaryBox.innerHTML = dels + ' line' + (dels === 1 ? '' : 's') +
+        ' <span class="td-del">removed</span>, ' + ins + ' line' + (ins === 1 ? '' : 's') +
+        ' <span class="td-add">added</span>, ' + sames + ' unchanged.';
+    }
+
+    resultBox.innerHTML =
+      '<div class="td-result">' +
+      '<div class="td-col td-col-l">' + (leftHtml.join('') || '<div class="td-empty">(empty)</div>') + '</div>' +
+      '<div class="td-col td-col-r">' + (rightHtml.join('') || '<div class="td-empty">(empty)</div>') + '</div>' +
+      '</div>';
+
+    if (!tracked) {
+      tracked = true;
+      try {
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/text-diff', event: 'diff' }),
+          keepalive: true
+        }).catch(function() {});
+      } catch (e) {}
+    }
+  }
+
+  document.getElementById('diffBtn').addEventListener('click', run);
+
+  document.getElementById('swapBtn').addEventListener('click', function() {
+    var t = left.value;
+    left.value = right.value;
+    right.value = t;
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    left.value = '';
+    right.value = '';
+    summaryBox.style.display = 'none';
+    resultBox.innerHTML = '';
+    left.focus();
+  });
+
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    left.value = 'Service Agreement\n\n1. Payment terms\nPayment is due within 30 days of invoice date.\nLate payments incur a 2% monthly fee.\n\n2. Termination\nEither party may terminate with 30 days written notice.\n\n3. Governing law\nThis agreement is governed by Danish law.';
+    right.value = 'Service Agreement\n\n1. Payment terms\nPayment is due within 14 days of invoice date.\n\n2. Termination\nEither party may terminate with 60 days written notice.\nA termination fee equal to one month applies in the first year.\n\n3. Governing law\nThis agreement is governed by Danish law.';
+    run();
+  });
+
+  resultBox.innerHTML = '<div class="td-empty">Paste text on both sides and press Compare.</div>';
+})();
+</script>
+</body>
+</html>

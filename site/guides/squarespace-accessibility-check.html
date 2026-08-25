@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squarespace Accessibility Check — Free WCAG/EAA Scan</title>
+<meta name="description" content="Check your Squarespace site against 16 WCAG 2.1 AA rules for free. Instant grade, concrete fixes, shareable results. Built for EAA compliance.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Squarespace Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Beautiful template ≠ accessible site. Scan your Squarespace site against WCAG 2.1 AA — free, instant.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/squarespace-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Squarespace Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Beautiful template ≠ accessible site. Scan your Squarespace site against WCAG 2.1 AA — free, instant.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Squarespace Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/squarespace-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/squarespace-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to Squarespace sites?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Squarespace site serves EU consumers, WCAG 2.1 AA compliance is expected under the EAA."}},{"@type":"Question","name":"What does the scanner check on Squarespace sites?","acceptedAnswer":{"@type":"Answer","text":"16 rules including alt text, form labels, link/button text, heading hierarchy, page language, colour contrast, and more."}},{"@type":"Question","name":"Where do I fix common issues in Squarespace?","acceptedAnswer":{"@type":"Answer","text":"Alt text: click image → Image Editor → Alt Text. Contrast: Site Styles → Colors. Headings: page editor → text block → heading dropdown."}},{"@type":"Question","name":"Are Squarespace templates accessible out of the box?","acceptedAnswer":{"@type":"Answer","text":"Squarespace templates are a starting point, not a guarantee. Every template needs manual review for alt text, contrast, and focus indicators."}},{"@type":"Question","name":"What is Fluid Engine and how does it affect accessibility?","acceptedAnswer":{"@type":"Answer","text":"Fluid Engine is Squarespace 7.1's drag-and-drop grid editor. It improves layout flexibility but still requires manual alt text, heading hierarchy, and focus order checks — the visual grid does not enforce accessibility."}},{"@type":"Question","name":"Can custom CSS fix accessibility issues on Squarespace?","acceptedAnswer":{"@type":"Answer","text":"Yes. The Custom CSS panel lets you override colours, add focus outlines, and fix contrast. Use Squarespace's block ID system to target specific elements without breaking the template."}},{"@type":"Question","name":"How does changing a Squarespace template affect compliance?","acceptedAnswer":{"@type":"Answer","text":"Every template change resets colours, fonts, spacing, and structure. Run a full re-scan after switching templates — your previous fixes may no longer apply."}}],"name":"Squarespace Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/squarespace-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Squarespace Accessibility Check</h1>
+    <p class="subtitle">Beautiful template ≠ accessible site. Run a free WCAG 2.1 AA scan on your Squarespace pages before a client or regulator asks.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.squarespace.com" class="btn-primary">Run a Free Scan on squarespace.com</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Squarespace accessibility matters in the EU</h2>
+    <p>The European Accessibility Act (EAA) applies to e-commerce and consumer-facing services in the EU. If your Squarespace store sells to EU customers, WCAG 2.1 AA compliance is expected — and enterprise partners increasingly ask for proof before they sign.</p>
+    <p>Most accessibility problems on Squarespace sites come from a handful of repeating issues: missing alt text on product images, generic link text like "read more", low-contrast text over theme colours, empty form labels, and missing page language. All of these are detectable automatically — that's what our scanner checks.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Squarespace's platform: how accessibility works inside the builder</h2>
+    <p>Unlike open CMS platforms where you control every line of HTML, Squarespace gives you a template-based system with guardrails — and limits. Understanding what's <em>under your control</em> is the first step to compliance.</p>
+
+    <h3>Templates: Brine/Family vs. 7.1 Fluid Engine</h3>
+    <p>Squarespace has two major template generations. The older Brine family (7.0) uses per-template style editors with their own colour and font palettes. The current 7.1 platform uses Fluid Engine — a drag-and-drop grid editor that replaces the classic content editor. Fluid Engine gives you pixel-level layout control without code, but it does <em>not</em> enforce accessible heading order, visible focus indicators, or sufficient colour contrast. The visual freedom means you must manually verify that your layout works for keyboard and screen reader users.</p>
+    <p>If you're still on a Brine-era template (7.0), you have a fixed set of colour/style options controlled per template. Switching to 7.1 unlocks Fluid Engine but also changes your entire style stack — worth planning as a separate migration project alongside your accessibility work.</p>
+
+    <h3>CSS access: limited, but powerful</h3>
+    <p>Squarespace does not expose the raw HTML of your pages. Instead, you work through the page builder and the Custom CSS panel (<em>Settings → Advanced → Custom CSS</em>). This panel lets you override colours, add focus outlines, fix contrast ratios, and adjust spacing — all without breaking the template system. The key limitation is that you cannot restructure the DOM. For example, you cannot add a missing <code>&lt;h1&gt;</code> element if the template never outputs one; you work with what Squarespace's markup gives you and enhance it.</p>
+
+    <h3>Built-in SEO settings</h3>
+    <p>Squarespace includes a solid SEO panel (<em>Settings → SEO → SEO Controls</em>) where you set the page title format, meta descriptions, social share images, and canonical URLs. These settings affect how search engines and assistive technology perceive your page structure. Ensure your SEO title format includes the page name before the site name, and verify that auto-generated meta descriptions are not empty — screen readers use page titles for navigation, and empty titles break that flow.</p>
+
+    <h3>Squarespace Forms</h3>
+    <p>Forms are one of the most frequently flagged areas in Squarespace accessibility scans. The form block (<em>Storage</em> section in the content panel) supports email, text, checkbox, dropdown, and file upload fields. Labels are shown by default, but hiding them for visual design reasons is common — and a WCAG failure. Always keep labels visible or use placeholder-as-label only as a supplementary hint (never the sole label). The built-in form block also lacks error announcement for screen readers by default; add descriptive inline error text above the field rather than relying on colour alone.</p>
+
+    <h3>Blog, Store, and Portfolio content handling</h3>
+    <p>Each content type has different accessibility pitfalls:</p>
+    <ul style="line-height:1.8;">
+      <li><strong>Blog posts:</strong> Image blocks inside blog posts often inherit no alt text from the post-level thumbnail. Add alt text to every image block inside a post individually. The blog list view's "Read More" links are generic by default — customize the link text in the blog post settings.</li>
+      <li><strong>Store products:</strong> Product images uploaded via the inventory panel accept alt text in the image variant editor. Variant images (colour swatches, alternate angles) each need their own descriptive alt text. The "Add to Cart" button label is set by Squarespace and is usually fine, but verify it isn't hidden behind a custom CSS override.</li>
+      <li><strong>Portfolio pages:</strong> Squarespace portfolio pages use a gallery-style layout where each item links to a detail page. The thumbnail alt text and the detail page's heading structure are separate — both must be set. Portfolio items also often use lightbox overlays that trap keyboard focus; test each overlay with Tab to ensure it doesn't lose the user.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Squarespace site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Squarespace URL</strong> — any published page: home, a product page, or a collection page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Squarespace, most image-alt and contrast issues are fixed right in the editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Squarespace Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Squarespace</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in the Squarespace editor:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Squarespace</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the image → Edit → click the image again → Image Editor → Alt Text field. Or in the page editor, click the image block settings.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Site Styles (paintbrush icon) → Colors → adjust text colour for each colour palette element. Squarespace themes often use light text — darken body text to at least #444.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click a heading block → Text panel → Heading level dropdown (Heading 1-4). Squarespace sets H1 by page title; use H2 for section headings, H3 for subsections.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the form block → Edit Form → Field Settings → ensure Label is displayed. Squarespace forms show labels by default — verify they aren't hidden.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the text → highlight the link → Link editor → update the visible link text. Replace "Learn more" with "Learn about our shipping policy".</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Squarespace sets the lang attribute automatically from your site language in Settings → Language and Region. Verify it's correct.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Squarespace-specific tools and fixes</h2>
+
+    <h3>Fluid Engine vs. Classic Editor accessibility</h3>
+    <p>If your site is on Squarespace 7.1, you edit every page in Fluid Engine — a drag-and-drop grid that layers content blocks on a freeform canvas. The Classic Editor (still available on 7.0 sites) stacks blocks vertically. From an accessibility standpoint, Fluid Engine introduces a risk: blocks placed in a non-linear visual order may not match the DOM order that screen readers follow. After rearranging blocks in Fluid Engine, test the page with a screen reader to confirm the reading order is logical. The Classic Editor's vertical stacking is simpler and usually matches the DOM order by default.</p>
+
+    <h3>Custom CSS for contrast and focus repairs</h3>
+    <p>When Site Styles doesn't give you enough contrast control, the Custom CSS panel (<em>Settings → Advanced → Custom CSS</em>) is your next tool. Common fixes include:</p>
+    <pre style="background:var(--color-surface-2);padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.6;">
+/* Darken body text for WCAG AA contrast */
+body { color: #222; }
+
+/* Add visible focus outlines for keyboard users */
+*:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+
+/* Fix contrast on light overlay backgrounds */
+.sqs-block-content p { color: #333; }</pre>
+    <p>Always test custom CSS against the responsive views (mobile, tablet) inside Squarespace's preview — some fixes that work on desktop break the mobile layout.</p>
+
+    <h3>Targeting with Squarespace block IDs</h3>
+    <p>Every block in Squarespace receives a unique <code>data-block-id</code> attribute. You can use these IDs in Custom CSS to target a single element without affecting others on the page. In the page editor, open the block's settings panel and look for the block ID in the URL; or inspect the page in your browser's dev tools and find <code>data-block-id="yui_3_17_2_1_..."</code>. Then write CSS like:</p>
+    <pre style="background:var(--color-surface-2);padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.6;">
+/* Target a specific image block's alt fallback */
+[data-block-id="yui_3_17_2_1_12345"] img { outline: 2px dashed red; }</pre>
+
+    <h3>Image block alt text workflows</h3>
+    <p>Alt text in Squarespace lives in two places depending on how you upload the image:</p>
+    <ul style="line-height:1.8;">
+      <li><strong>Image block (page editor):</strong> Click the image → Edit → click the image again → Image Editor → Alt Text field. Also accessible from the block's design panel under "Caption".</li>
+      <li><strong>Content library (Assets panel):</strong> Images uploaded to the shared content library store alt text at the asset level, but this does <em>not</em> auto-populate into every block that uses the image. Each insertion needs its own alt text.</li>
+      <li><strong>Product / gallery images:</strong> Alt text is set per-image in the inventory or gallery editor. Gallery blocks do not expose a bulk alt-text field — each image must be edited individually.</li>
+    </ul>
+    <p>For sites with hundreds of images (stores, portfolios), consider a manual audit schedule: flag one collection per week until all images are covered. Our scanner can help prioritise which pages need attention fastest.</p>
+
+    <h3>Squarespace Extensions (formerly Plugins)</h3>
+    <p>Squarespace's Extensions marketplace includes third-party tools that add functionality through iframes, JavaScript embeds, or Server Connectors. Each extension introduces its own accessibility surface — a chat widget, a booking calendar, or a reviews carousel — that may not follow WCAG requirements. Before installing any extension, check the provider's accessibility documentation. After installing, include the extension's UI in your regular scanning cycle; iframes are often invisible to automated tools, so manual keyboard testing is especially important.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Squarespace</h2>
+    <p>Accessibility is not a one-time fix. Squarespace's platform changes frequently, and every major update can reintroduce issues you already resolved.</p>
+
+    <h3>Template change impact</h3>
+    <p>Switching templates is the single highest-risk event for your accessibility compliance. When you change a template (from any 7.0 family to 7.1, or between 7.1 templates), Squarespace resets your colour palette, font stack, spacing, header layout, and content block arrangement. Custom CSS is preserved but may no longer work because the target class names change. After a template change:</p>
+    <ul style="line-height:1.8;">
+      <li>Run a full scan on every page type: home, product, blog post, and collection/index page.</li>
+      <li>Verify all Custom CSS still applies — inspect each override against the new template's generated class names.</li>
+      <li>Check that the page language attribute and SEO settings survived the migration.</li>
+      <li>Test keyboard navigation: tab through the header, main content, and footer. New templates often change the focus order.</li>
+    </ul>
+
+    <h3>Content contributor training</h3>
+    <p>If your team includes non-technical content editors (marketers, product managers, writers), accessibility knowledge needs to reach them too. Common contributor-caused regressions include:</p>
+    <ul style="line-height:1.8;">
+      <li>Uploading a new product image without alt text — the field is not required by Squarespace.</li>
+      <li>Pasting content from Word or Google Docs that strips heading levels or introduces unlabeled links.</li>
+      <li>Hiding form labels "to make the form look cleaner" in the block design panel.</li>
+      <li>Adding decorative images without marking them as decorative in the alt text field.</li>
+    </ul>
+    <p>A short internal guide (or a bookmark to this page) helps contributors self-check before publishing. Pair it with a monthly scan report from our tool to catch regressions early.</p>
+
+    <h3>Regular testing after platform updates</h3>
+    <p>Squarespace deploys platform-wide updates several times a year. These updates can change how your site renders, even without any action on your part. Build a recurring check into your calendar:</p>
+    <ul style="line-height:1.8;">
+      <li><strong>Monthly:</strong> Scan your three highest-traffic pages with our free checker.</li>
+      <li><strong>Per major release:</strong> After Squarespace announces a feature update (new template family, editor overhaul, form extension), scan all templates and page types.</li>
+      <li><strong>Quarterly:</strong> Conduct a manual keyboard-and-screen-reader pass on one complete user journey (e.g. browse → product page → cart → checkout).</li>
+    </ul>
+    <p>Set a reminder in your project management tool the day after Squarespace's release notes drop. Because automated tools catch roughly a third of issues, the manual quarterly pass closes the gap that scanners miss.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/squarespace-eaa-accessibility" style="color:var(--color-accent);">Squarespace Accessibility: EAA Guide for Your Site</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);">WCAG 2.2: What Changes and Why It Matters</a></li>
+        <li><a href="/blog/how-to-write-accessibility-statement" style="color:var(--color-accent);">How to Write an Accessibility Statement</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, here are the next steps:</p>
+    <ul style="line-height:1.8;">
+      <li><strong>Run a manual audit:</strong> Pair our automated scan with a keyboard-only test (Tab through every interactive element) and a screen reader test (VoiceOver on macOS or NVDA on Windows). The combination covers the largest gaps.</li>
+      <li><strong>Read the Squarespace accessibility docs:</strong> Squarespace publishes its own <a href="https://www.squarespace.com/accessibility" target="_blank" rel="noopener" style="color:var(--color-accent);">accessibility guide</a> covering built-in features and known limitations.</li>
+      <li><strong>Use the WAI's evaluation tools list:</strong> The W3C maintains a <a href="https://www.w3.org/WAI/test-evaluate/tools/list/" target="_blank" rel="noopener" style="color:var(--color-accent);">curated list of evaluation tools</a> for deeper testing.</li>
+      <li><strong>Build a compliance binder:</strong> Save each scan result link in a dated folder. Over time, this becomes documented evidence of your ongoing compliance effort — useful for procurement questionnaires and regulatory inquiries.</li>
+    </ul>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/wordpress-plugin" class="btn-secondary" style="display:inline-block;">Free WordPress Plugin</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

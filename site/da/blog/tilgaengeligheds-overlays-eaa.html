@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Overlays & EAA: Hvorfor "én linje kode" ikke er</title>
+<meta name="description" content="Accessibility overlays (accessiBe, UserWay m.fl.) lover WCAG-compliance med én linje kode. Hvad de faktisk gør, FTC-sagen mod accessiBe, søgsmålsdata, og hvorfor EAA kræver reelle rettelser.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Accessibility overlays: Hvorfor de ikke gør dit site EAA-kompatibelt">
+<meta property="og:description" content="FTC-sag, søgsmål, EAA-positionen — og hvad der faktisk virker for små webbureauer.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tilgaengeligheds-overlays-eaa">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Accessibility overlays: Hvorfor de ikke gør dit site EAA-kompatibelt">
+<meta name="twitter:description" content="FTC-sag, søgsmål, EAA-positionen — og hvad der faktisk virker for små webbureauer.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tilgaengeligheds-overlays-eaa"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tilgaengeligheds-overlays-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Accessibility Overlays & EAA: Hvorfor overlays ikke duer til compliance", "description": "Accessibility overlays (accessiBe, UserWay m.fl.) lover WCAG-compliance med \u00e9n linje kode. Hvad de faktisk g\u00f8r, FTC-sagen mod accessiBe, s\u00f8gsm\u00e5lsdata, og hvorfor EAA kr\u00e6ver reelle rettelser.", "url": "https://hermes-passiv.pages.dev/da/blog/tilgaengeligheds-overlays-eaa", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · EAA</div>
+    <h1>Accessibility Overlays &amp; EAA:<br>Hvorfor &quot;&eacute;n linje kode&quot; ikke er compliance</h1>
+    <p class="subtitle">Overlay-widgets som accessiBe, UserWay og AudioEye markedsf&oslash;rer &oslash;jeblikkelig tilg&aelig;ngelighed for 300-600 kr/m&aring;neden. Her er hvad FTC fandt, hvad s&oslash;gsm&aring;lsdata viser, hvad Europa-Kommissionen siger, og hvad der faktisk virker for klient-sites.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">L&aelig;s guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 8 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="hvad-lover-overlays">Hvad overlays lover</h2>
+    <p>Et accessibility overlay er en tredjeparts JavaScript-widget, du tilf&oslash;jer et website med et enkelt script-tag. Det lover at g&oslash;re siden tilg&aelig;ngelig automatisk: forst&oslash;rre tekst, generere alt-tekster med AI, tvinge tastaturfokus, justere kontrast. S&aelig;lgerne markedsf&oslash;rer det som &oslash;jeblikkelig WCAG-compliance &mdash; ofte med et &quot;accessibility shield&quot;-badge i footeren.</p>
+    <p>Argumentet rammer godt hos sm&aring; bureauer og deres klienter: ingen udviklingstid, intet redesign, 300-600 kr/m&aring;neden i stedet for en audit til femcifret bel&oslash;b. Problemet er ikke at overlays intet g&oslash;r. Det er, at hvad de g&oslash;r, ikke matcher hvad de p&aring;st&aring;r &mdash; og i 2026 har b&aring;de myndigheder og domstole sl&aring;et det fast.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🤖 AI-auto-fix</h3><p>Overlays p&aring;st&aring;r at opdage og rette tilg&aelig;ngelighedsproblemer ved sideindl&aelig;sning. Automatisk detektion fanger kun en brøkdel af WCAG-fejl, og mange &quot;rettelser&quot; (auto-genererede alt-tekster, DOM-omskrivninger) bryder sk&aelig;rml&aelig;seradf&aelig;rd.</p></div>
+      <div class="card"><h3>🛡️ Compliance-badges</h3><p>S&aelig;lgerne lader sites vise et certificerings-lignende badge, der antyder juridisk beskyttelse. Intet badge g&oslash;r et site kompatibelt &mdash; kun faktisk overensstemmelse med EN 301 549 / WCAG 2.1 AA g&oslash;r det.</p></div>
+      <div class="card"><h3>💸 Løbende omkostning</h3><p>Et typisk bureau betaler 300-900 kr/m&aring;neden pr. site. Over tre &aring;r er det mere end en engangs-professionel oprydning af de fleste sm&aring; virksomhedssites.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="ftc-sag">FTC-sagen mod accessiBe</h2>
+    <p>I januar 2025 anlagde den amerikanske forbundsmyndighed FTC sag mod accessiBe &mdash; den st&oslash;rste overlay-udbyder &mdash; for vildledende markedsf&oslash;ring. FTC h&aelig;vdede, at accessiBe fejlagtigt p&aring;stod, at deres widget kunne g&oslash;re websites WCAG-kompatible. I april 2025 p&aring;lagde en endelig kendelse accessiBe at betale 1 million dollars og forb&oslash;d dem at p&aring;st&aring;, at deres automatiserede produkter g&oslash;r noget site WCAG-kompatibelt uden dokumentation.</p>
+    <p>T&aelig;nk over hvad det betyder: virksomheden der s&aelig;lger &quot;garanteret compliance&quot; blev selv sanktioneret for vildledende reklame. Hvis dit pitch til klienter inkluderer et overlays compliance-p&aring;stande, gentager du markedsf&oslash;ringssprog en konkurrencemyndighed allerede har kendt vildledende.</p>
+    <p>Selvom FTC er amerikansk, har sagen global betydning: den er f&oslash;rste gang en tilsynsmyndighed juridisk fastsl&aring;r, at overlays ikke leverer det de lover. Danske og europ&aelig;iske klienter googler &quot;accessiBe FTC&quot; og stiller sp&oslash;rgsm&aring;l.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="sogsmaal-data">Søgsmålsdata</h2>
+    <p>USA er der hvor overlay-fejl er bedst dokumenteret, fordi ADA-websites&oslash;gsm&aring;l anl&aelig;gges i tusindvis hvert &aring;r. I 2025 blev der indgivet 3.948 ADA-s&oslash;gsm&aring;l om webtilg&aelig;ngelighed &mdash; en stigning p&aring; n&aelig;sten 24 % i forhold til 2024. Cirka 20-25 % af disse rettede sig mod websites, der havde et accessibility overlay installeret p&aring; tidspunktet.</p>
+    <p>Sags&oslash;gernes advokatfirmaer scanner aktivt efter overlays: widget'en signalerer at en virksomhed kendte til tilg&aelig;ngelighed og valgte en genvej. At installere et overlay reducerer ikke s&oslash;gsm&aring;lsrisikoen &mdash; brancherapporter tyder p&aring;, at det kan markere et site som et bedre m&aring;l.</p>
+    <p>Mere end 900 tilg&aelig;ngelighedsprofessionelle og handicappede brugere har skrevet under p&aring; Overlay Fact Sheet, der fastsl&aring;r at overlays ofte g&oslash;r sites sv&aelig;rere at bruge med hj&aelig;lpeteknologi &mdash; ikke lettere. De mennesker, der er afh&aelig;ngige af sk&aelig;rml&aelig;sere, betaler prisen for &oslashdelagte auto-fixes.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="eaa-position">EAA-positionen</h2>
+    <p>For bureauer i EU er den relevante lovgivning siden 28. juni 2025 European Accessibility Act (EAA). Den kr&aelig;ver at e-handel, bank, transport og andre omfattede tjenester overholder EN 301 549 &mdash; som inkorporerer WCAG 2.1 AA &mdash; og offentligg&oslash;r en tilg&aelig;ngelighedserkl&aelig;ring. Markedsoverv&aring;gningsmyndigheder kan kr&aelig;ve korrigerende handling; b&oslash;derammerne n&aring;r op til 3 millioner euro i nogle lande.</p>
+    <p>Europa-Kommissionen har udtalt, at overlays alene ikke opn&aring;r EAA-compliance, og forbrugerorganisationer inklusive European Disability Forum har udsendt erkl&aelig;ringer imod at markedsf&oslash;re dem som compliance-l&oslash;sninger. Et overlay kan ikke rette de strukturelle problemer, EAA rammer: manglende tastaturst&oslash;tte i checkout-flow, utilg&aelig;ngelige dokumenter, um&aelig;rkede formularfelter i bookingsystemer. Det kr&aelig;ver kode&aelig;ndringer.</p>
+    <p>Den praktiske position for et lille bureau er enkel: et overlay installeret oven p&aring; et ikke-konformt site efterlader sitet ikke-konformt. Pengene er brugt, erkl&aelig;ringen kan ikke afgives &aelig;rligt, og den underliggende risiko best&aring;r.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="hvad-virker">Hvad virker</h2>
+    <p>Intet af dette betyder at automatiserede v&aelig;rkt&oslash;j er ubrugelige. Det betyder at de h&oslash;rer til det rigtige sted: detektion, ikke remediering. K&oslash;r en scanner for at finde problemer, ret dem s&aring; i koden. Den arbejdsgang koster intet ekstra og producerer et site der faktisk er kompatibelt.</p>
+    <p>En realistisk plan for et lille bureaus portef&oslash;lje:</p>
+    <p>&bull; Scan hvert klient-site for almindelige automatisk-detekterbare fejl (manglende alt-tekster, um&aelig;rkede inputs, kontrast, overskriftsstruktur).<br>
+&bull; Ret dem i skabeloner og komponenter &eacute;n gang &mdash; hver side p&aring; temaet drager fordel.<br>
+&bull; Test tastaturnavigation og &eacute;n sk&aelig;rml&aelig;ser-gennemgang af kritiske flows (checkout, kontakt, tilmelding).<br>
+&bull; Offentligg&oslash;r en &aelig;rlig tilg&aelig;ngelighedserkl&aelig;ring pr. site.<br>
+&bull; Gen-scan efter indholdsopdateringer eller nye plugins.</p>
+    <p>Dette tager timer pr. site, ikke m&aring;neder &mdash; og i mods&aelig;tning til en widget-abonnement stopper det. N&aring;r du kan vise en ren scanning og en dokumenteret proces, kan du ogs&aring; priss&aelig;tte det som en serviceydelse i stedet for at betale for et badge.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 Scan f&oslash;rst</h3><p>Vores gratis scanner tjekker 16+ WCAG-regler p&aring; enhver URL &mdash; WordPress, Shopify, Webflow eller h&aring;ndskrevet HTML. Ingen installation, ingen konto.</p></div>
+      <div class="card"><h3>🧩 Ret p&aring; skabelonniveau</h3><p>De fleste fejl gentager sig p&aring; tv&aelig;rs af sider fordi de sidder i temaet. &Eacute;n komponentrettelse fjerner hundredvis af fund.</p></div>
+      <div class="card"><h3>📝 Dokument&eacute;r &aelig;rligt</h3><p>En tilg&aelig;ngelighedserkl&aelig;ring baseret p&aring; reelle scanningsresultater beskytter dig langt mere end et overlay-badge nogensinde gjorde.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede sp&oslash;rgsm&aring;l</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Virker accessibility overlays overhovedet?</h3><p>De &aelig;ndrer nogle overfladeegenskaber (tekstst&oslash;rrelse, kontrast, noget fokusadf&aelig;rd) men kan ikke p&aring;lideligt rette de problemer der betyder mest: semantisk HTML, tastaturf&aelig;lder, sk&aelig;rml&aelig;serkompatibilitet og tilg&aelig;ngelige arbejdsgange. Automatiserede v&aelig;rkt&oslash;jer opdager langt mindre end manuel test, og overlays bryder nogle gange hj&aelig;lpeteknologi yderligere. Konsensus blandt praktikere, handicappede brugere og nu FTC er at de ikke leverer compliance.</p></div>
+      <div class="card"><h3>Er det ulovligt at installere et overlay?</h3><p>Nej. At k&oslash;be og installere et overlay er lovligt. Problemet er at stole p&aring; det til compliance: under EAA skal selve sitet overholde EN 301 549 uanset hvilke scripts der k&oslash;rer, og s&aelig;lgerne m&aring; ikke l&aelig;ngere lovligt p&aring;st&aring; at deres produkt garanterer WCAG-compliance uden dokumentation.</p></div>
+      <div class="card"><h3>Hvad skete der med accessiBe og FTC?</h3><p>I januar 2025 anlagde FTC sag mod accessiBe for vildledende markedsf&oslash;ring. April 2025-kendelsen indebar en b&oslash;de p&aring; 1 million dollars og forb&oslash;d accessiBe at p&aring;st&aring;, at deres produkter g&oslash;r websites WCAG-kompatible uden dokumentation.</p></div>
+      <div class="card"><h3>B&oslash;r jeg fjerne et overlay en klient allerede har?</h3><p>Evalu&eacute;r det som enhver afh&aelig;ngighed: scan siden med og uden overlay aktiveret. Hvis overlayet introducerer fejl eller blokerer reelle rettelser, anbefal fjernelse og l&aelig;g budgettet i skabelon-niveau remediering &mdash; hvilket normalt er billigere over tre &aring;r alligevel. Fjern aldrig noget under aktiv h&aring;ndh&aelig;velseskorrespondance uden at dokumentere beslutningen.</p></div>
+      <div class="card"><h3>Forbyder EAA overlays?</h3><p>Nej, men Europa-Kommissionen har gjort klart at overlays alene ikke opfylder EAA-kravene, og forbruger- og handikaporganisationer har formelt modsat sig, at de markedsf&oslash;res som compliance-l&oslash;sninger. Overensstemmelse m&aring;les mod EN 301 549 / WCAG 2.1 AA, ikke mod om en widget er til stede.</p></div>
+      <div class="card"><h3>Hvad er den billigste vej til reel EAA-compliance for et lille site?</h3><p>Automatisk scanning (gratis), skabelon-niveau rettelser af de fejl den finder, en tastatur- og sk&aelig;rml&aelig;ser-test af kritiske flows, og en &aelig;rlig tilg&aelig;ngelighedserkl&aelig;ring. For de fleste sm&aring; virksomhedssites er det dages arbejde, ikke m&aring;neder &mdash; og det producerer noget et overlay aldrig kan: et site der rent faktisk virker med hj&aelig;lpeteknologi.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Scan din side gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA-tjeklisten &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA-tjekliste: 10 trin for WordPress</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG</span><h3><a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: Hvad er &aelig;ndret (dansk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/da/blog/eaa-haandhaevelse-2026" style="color:var(--color-accent);text-decoration:none;">EAA-h&aring;ndh&aelig;velse 2026 (dansk)</a></h3></div>
+    </div>
+  </div>
+</section>
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Forside</a> · <a href="/scan-da">Gratis scanner</a> · <a href="/free-tools">Gratis værktøjer</a> · <a href="/#blog">Blog</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Mere i samme stil: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

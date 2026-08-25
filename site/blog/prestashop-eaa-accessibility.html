@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrestaShop Accessibility: EAA Compliance for Your Store</title>
+<meta name="description" content="Accessibility guide for PrestaShop stores: theme fixes, product alt text, module audits, faceted navigation and checkout — meeting WCAG 2.1 AA and the European Accessibility Act.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PrestaShop Accessibility: EAA Compliance for Your Store">
+<meta property="og:description" content="Accessibility guide for PrestaShop stores: theme fixes, product alt text, module audits, faceted navigation and checkout — meeting WCAG 2.1 AA and the European Accessibility Act.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PrestaShop Accessibility: EAA Compliance for Your Store">
+<meta name="twitter:description" content="Accessibility guide for PrestaShop stores: theme fixes, product alt text, module audits, faceted navigation and checkout — meeting WCAG 2.1 AA and the European Accessibility Act.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PrestaShop Accessibility: EAA Compliance for Your Store",
+  "description": "Accessibility guide for PrestaShop stores: theme fixes, product alt text, module audits, faceted navigation and checkout — meeting WCAG 2.1 AA and the European Accessibility Act.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · PRESTASHOP · EAA</div>
+    <h1>PrestaShop Accessibility:<br>EAA Compliance for Your Store</h1>
+    <p class="subtitle">Where PrestaShop stores fail WCAG 2.1 AA — themes, modules, filters and checkout — and a practical remediation workflow for EU merchants.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-prestashop-and-eaa" class="btn-secondary">PrestaShop Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-prestashop-and-eaa">Why Prestashop and EAA</h2>
+    <p>PrestaShop powers hundreds of thousands of online stores with a strong footprint among European small and mid-sized merchants — exactly the e-commerce category the European Accessibility Act regulates. Since June 2025 an inaccessible storefront is legal exposure in every EU market, and payment providers and marketplaces increasingly ask merchants for documented conformance. The typical PrestaShop store stacks a purchased theme, a dozen modules and multiple languages on top of the core — and each layer can quietly introduce the exact defects that fail WCAG 2.1 AA.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🛒 E-Commerce Is In Scope</h3><p>Online shops have no micro-enterprise exemption under the EAA. If you sell to EU consumers, WCAG 2.1 AA applies to your product pages, checkout and account area.</p></div>
+      <div class="card"><h3>🎨 Marketplace Themes Vary</h3><p>The theme controls nearly all rendered HTML — heading hierarchy, button markup, focus styles and contrast. Quality varies wildly between marketplace themes.</p></div>
+      <div class="card"><h3>🧩 Module Risk</h3><p>Filter widgets, sliders, reviews and newsletter popups usually come from third-party module vendors with unknown accessibility quality. Each needs its own review.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="common-prestashop-failures">Common Prestashop Failures</h2>
+    <p>Across PrestaShop storefronts, these defects dominate:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖼️ Product Image Legends</h3><p>Bulk imports routinely skip the Legend field, leaving category grids full of images with no alt text at all.</p></div>
+      <div class="card"><h3>🧭 Faceted Filter Modules</h3><p>Filter facets rendered as clickable divs without keyboard support or aria-expanded — screen-reader users cannot narrow a product grid.</p></div>
+      <div class="card"><h3>🔢 Quantity & Variant Inputs</h3><p>Custom steppers replacing native number inputs, colour swatches without labels or selected-state announcements.</p></div>
+      <div class="card"><h3>💳 Checkout Steps</h3><p>Ajax-swapped checkout sections that neither move focus nor announce errors; payment fields without associated labels.</p></div>
+      <div class="card"><h3>🔔 Popups & Toasts</h3><p>Newsletter modals that trap keyboard focus, and "added to cart" confirmations shown visually only — no ARIA live region.</p></div>
+      <div class="card"><h3>🎨 Promotional Contrast</h3><p>Sale badges and banner text in brand colours below the 4.5:1 minimum — the single most common automated finding on EU shops.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="theme-and-backoffice-fixes">Theme and Backoffice Fixes</h2>
+    <p>Most fixes happen either in your theme templates or right in the back office:</p>
+    <p></p>
+    <p><strong>Back office first:</strong> product image alt text lives in Catalog → Products → Photos (the Legend field); shop-wide language in International → Localization; colours and typography in Design → Theme &amp; Logo. Fill these in properly before touching any code.</p>
+    <p></p>
+    <p><strong>Theme semantics:</strong> restore real landmarks (header, nav, main, footer), one h1 per page, and product titles as real headings in grid templates — many marketplace themes render them as styled divs.</p>
+    <p></p>
+    <p><strong>Native inputs:</strong> replace custom quantity steppers and selects with native elements styled to match — they inherit keyboard and screen-reader behaviour for free.</p>
+    <p></p>
+    <p><strong>Focus &amp; ARIA states:</strong> style :focus-visible instead of removing outlines; give filter toggles aria-expanded and result-count updates an aria-live region; every Ajax section swap moves focus to its new content.</p>
+    <p></p>
+    <p><strong>Contrast tokens:</strong> fix grey-on-grey price and sale-badge text once in the theme's colour variables, then re-verify across banners and buttons.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="module-audit">Module Audit</h2>
+    <p>Treat every third-party module as an accessibility unknown until proven otherwise. On staging, walk each module's complete flow by keyboard only, then with a screen reader: install, configure, use, undo. Faceted search, carousels, cookie banners and newsletter popups deserve special scrutiny — they are the categories with the worst track record. Where a module fails and the vendor offers no fix, decide deliberately: replace it, wrap it with a corrective layer, or document it as a limitation in your accessibility statement with a workaround path. Re-run your scan after every module install and every PrestaShop upgrade — updates silently reintroduce old bugs wherever vendor files were patched directly.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="audit-workflow">Audit Workflow</h2>
+    <p>A repeatable PrestaShop audit process for merchants and agencies:</p>
+    <p></p>
+    <p><strong>1. Automated crawl</strong> of home, category, product, CMS and checkout templates — expect 20-50 distinct findings on a typical store.</p>
+    <p></p>
+    <p><strong>2. Transactional journeys:</strong> complete search → filter → product → cart → checkout end-to-end by keyboard, then by screen reader. These journeys carry the EAA risk.</p>
+    <p></p>
+    <p><strong>3. Module pass:</strong> audit each installed module's widgets individually.</p>
+    <p></p>
+    <p><strong>4. Fix</strong> in back office where possible, otherwise in a child theme — never patch core or vendor files directly.</p>
+    <p></p>
+    <p><strong>5. Deliver:</strong> findings report, re-scan verification, and an accessibility statement with conformance status and documented limitations. Re-audit after every upgrade and major module change.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner across your storefront first — product grids, filter widgets and CMS pages are where automated findings cluster.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your PrestaShop Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/prestashop-accessibility-check" class="btn-secondary">PrestaShop Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA apply to my small PrestaShop store?</h3><p>Yes for e-commerce: online shops have no micro-enterprise exemption under the EAA. A small PrestaShop store selling to EU consumers is in scope regardless of headcount.</p></div>
+      <div class="card"><h3>Is PrestaShop accessible out of the box?</h3><p>The default Classic theme provides reasonable semantics and responsive markup, but most shops customise themes, add modules and translate content — each step can introduce regressions like missing labels, generic link text or low-contrast banners.</p></div>
+      <div class="card"><h3>Where do I fix image alt text in PrestaShop?</h3><p>Catalog → Products → open the product → Photos tab → the Legend field. Bulk-imported catalogues often leave this empty across hundreds of products; the scanner finds them all in one pass.</p></div>
+      <div class="card"><h3>Do purchased themes come accessible?</h3><p>Some do better than others, but marketing claims are unreliable. Always scan a full page of your live theme rather than trusting the demo — heading structure, focus styles and contrast are where themes most often fail.</p></div>
+      <div class="card"><h3>How long does remediation take?</h3><p>A typical mid-size store needs 1-4 weeks depending on theme customisation depth and module count. Back-office fixes (alt text, language, settings) can be done in days; theme template work takes longer.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your PrestaShop Store Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/prestashop-accessibility-check" class="btn-secondary">PrestaShop Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">MAGENTO · EAA</span><h3><a href="/blog/magento-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Magento Accessibility: EAA Compliance for Your Store</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA CHECKLIST</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist for Agency Websites</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost in 2026?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

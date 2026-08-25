@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIS2 Compliance for Small Web Agencies</title>
+<style>
+  /* Kindle-compatible styling */
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.8;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: #1a1a1a;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-top: 80px;
+    margin-bottom: 10px;
+  }
+  h1 + p {
+    text-align: center;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 60px;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 8px;
+  }
+  h3 { font-size: 1.2em; margin-top: 30px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; }
+  ul, ol { margin-bottom: 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  th, td { border: 1px solid #aaa; padding: 8px 12px; text-align: left; }
+  th { background: #f0f0f0; }
+  strong { font-weight: bold; }
+  em { font-style: italic; }
+  blockquote {
+    border-left: 3px solid #ccc;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background: #f9f9f9;
+    font-style: italic;
+  }
+  hr { border: none; border-top: 1px solid #ddd; margin: 40px 0; }
+</style>
+</head>
+<body>
+
+<!-- Title page -->
+<h1>NIS2 Compliance<br>for Small Web Agencies</h1>
+<p>A Practical Guide to Meeting EU Cybersecurity Requirements<br>Without a Compliance Team</p>
+
+<hr>
+
+<h2>Foreword</h2>
+<p>If you run a small web agency in the EU, this guide is for you.</p>
+<p>NIS2 (the EU's Network and Information Security Directive 2) became enforceable in 2025. Unlike the original NIS directive, NIS2 casts a much wider net — it covers more sectors, more company sizes, and imposes stricter requirements. Most significantly for you: digital service providers, managed service providers, and their subcontractors are explicitly in scope.</p>
+<p>This is not a legal document. It is a practical field guide written by someone who works with agencies like yours. Every recommendation has been tested with real agencies. You will not find abstract theory here — only what works.</p>
+<p>Let's get you compliant.</p>
+
+<hr>
+
+<h2>Chapter 1: Does NIS2 Apply to Your Agency?</h2>
+<p>This is the first question, and it's the one most agencies get wrong. Many assume they are too small to be in scope. Under NIS2, that assumption can be costly.</p>
+
+<h3>The Size Test</h3>
+<p>NIS2 applies to medium-sized and large enterprises in covered sectors. The size thresholds:</p>
+<ul>
+  <li><strong>Large enterprise:</strong> 250+ employees OR €50M+ annual turnover AND €43M+ balance sheet</li>
+  <li><strong>Medium enterprise:</strong> 50–249 employees OR €10M–€50M turnover</li>
+  <li><strong>Small enterprise:</strong> Below 50 employees AND below €10M turnover</li>
+</ul>
+<p><strong>Good news:</strong> If your agency has fewer than 50 employees and less than €10M annual turnover, you are a "small enterprise" and generally not directly in scope for NIS2.</p>
+<p><strong>Bad news:</strong> You still need to read this guide. Here's why.</p>
+
+<h3>Why Small Agencies Must Still Comply</h3>
+<ol>
+  <li><strong>Your clients are in scope.</strong> If you serve medium or large enterprises that are subject to NIS2, they must assess their supply chain — and that includes you.</li>
+  <li><strong>Contractual requirements.</strong> Enterprise clients are already adding NIS2 clauses to vendor contracts. Without demonstrated compliance, you lose the contract.</li>
+  <li><strong>Downstream liability.</strong> Under NIS2 Article 21 on supply chain security, your clients must assess the security practices of their suppliers. If you are the weak link, they bear the penalty — and will pass liability to you.</li>
+  <li><strong>Competitive disadvantage.</strong> Agencies that demonstrate NIS2 alignment win more pitches.</li>
+</ol>
+
+<h3>Quick Self-Assessment</h3>
+<ol>
+  <li>Do any clients have more than 50 employees? → If yes, they are likely in NIS2 scope.</li>
+  <li>Do you handle hosting, server management, DNS, email, SSL, backups, or security monitoring for clients? → If yes, you are a digital service provider in their supply chain.</li>
+  <li>Do you have access to client networks, data, or administrative systems? → If yes, you are a vector they must secure.</li>
+</ol>
+<p><strong>If you answered yes to any of the above, you need to be NIS2-ready.</strong></p>
+
+<h3>Important vs. Essential Entities</h3>
+<table>
+  <tr><th>Category</th><th>Threshold</th><th>Max Fine</th><th>Example</th></tr>
+  <tr><td>Essential</td><td>250+ emp OR €50M turnover</td><td>€10M or 2% of global turnover</td><td>Telecoms, energy, banking</td></tr>
+  <tr><td>Important</td><td>50+ emp OR €10M turnover</td><td>€7M or 1.4% of global turnover</td><td>Digital services, hosting</td></tr>
+</table>
+<p><strong>Verdict:</strong> Read this guide, implement the measures, document everything. You will not face direct NIS2 fines, but you will face client losses if unprepared.</p>
+
+<hr>
+
+<h2>Chapter 2: The 10 Essential Security Measures (Article 21)</h2>
+<p>Article 21 requires "appropriate and proportionate technical, operational, and organisational measures." Here is each category translated for small agencies.</p>
+
+<h3>2.1 Risk Analysis and Security Policies</h3>
+<p><strong>What to do:</strong> Write a one-page Information Security Policy covering acceptable use, password requirements, device security, and remote work rules. Review it annually. Store it where all employees can access it.</p>
+
+<h3>2.2 Incident Handling</h3>
+<p><strong>What to do:</strong> Designate a Security Contact. Create a 6-step Incident Response Plan: Detect → Triage → Contain → Eradicate → Recover → Review. Use a free monitoring tool (UptimeRobot, Better Stack). For WordPress agencies: install Wordfence or iThemes Security with real-time monitoring.</p>
+
+<h3>2.3 Business Continuity and Backup</h3>
+<p><strong>What to do:</strong> Implement the 3-2-1 backup rule: 3 copies, 2 different media, 1 offsite. Use UpdraftPlus or BlogVault for automated backups. Test restoration quarterly. Document your backup procedure.</p>
+
+<h3>2.4 Supply Chain Security</h3>
+<p><strong>What to do:</strong> List every third-party service. For each, document: what data they handle, their certifications (SOC 2, ISO 27001), and data processing location. Require subcontractors to meet equivalent standards.</p>
+
+<h3>2.5 System Acquisition and Maintenance</h3>
+<p><strong>What to do:</strong> Keep everything updated. Remove unused plugins and themes. Weekly security patches, monthly full reviews.</p>
+
+<h3>2.6 Vulnerability Handling</h3>
+<p><strong>What to do:</strong> Subscribe to security advisories for all software you use. Use WPScan for WordPress vulnerabilities. Create security@yourdomain.com for disclosures.</p>
+
+<h3>2.7 Testing and Auditing</h3>
+<p><strong>What to do:</strong> Run an automated security scan quarterly (HackerTarget, Detectify, WPScan). Review access logs monthly. Document all tests.</p>
+
+<h3>2.8 Cryptography and Encryption</h3>
+<p><strong>What to do:</strong> HTTPS everywhere (LetsEncrypt is free). Encrypt all backups. Use a password manager (Bitwarden, 1Password). Enable MFA on all admin accounts.</p>
+
+<h3>2.9 Human Resources Security</h3>
+<p><strong>What to do:</strong> New hire security briefing (30 min: passwords, phishing, data handling). Annual refresher. Confidentiality clauses in contracts.</p>
+
+<h3>2.10 Access Control</h3>
+<p><strong>What to do:</strong> Least privilege. Role-based access. Quarterly access review. Remove former employees' accounts immediately. Use a user role editor for WordPress.</p>
+
+<hr>
+
+<h2>Chapter 3: Incident Reporting</h2>
+<p>NIS2 imposes strict timelines: <strong>24 hours</strong> for early warning, <strong>72 hours</strong> for full notification.</p>
+
+<h3>What Qualifies as Reportable</h3>
+<ul>
+  <li>Intrusion into client hosting environment</li>
+  <li>Ransomware on your systems</li>
+  <li>Data breach involving client data</li>
+  <li>Extended outage from a security event</li>
+  <li>Compromise of client admin accounts</li>
+</ul>
+
+<h3>The Timeline</h3>
+<table>
+  <tr><th>Time</th><th>Action</th></tr>
+  <tr><td>Within 24h</td><td>Early warning to client security contact</td></tr>
+  <tr><td>Within 72h</td><td>Detailed notification (what, impact, risks)</td></tr>
+  <tr><td>Upon resolution</td><td>Final report (root cause, actions, prevention)</td></tr>
+</table>
+
+<h3>Early Warning Template (24h)</h3>
+<blockquote>
+<p>To: [Client Security Contact]<br>
+Subject: Security Incident Notification — [Brief Description]</p>
+<p>We are writing to inform you of a security incident affecting [systems/services].</p>
+<p>Status: Ongoing / Contained / Resolved<br>
+Initial impact: [Brief description]<br>
+Current actions: [What we are doing]<br>
+Next update: [Date/time]</p>
+<p>Contact: [Your name], [Your email/phone]</p>
+</blockquote>
+
+<h3>What Not to Do</h3>
+<ul>
+  <li>Do not assume you are "too small to report" — under-reporting carries penalties.</li>
+  <li>Do not wait for full clarity before the early warning.</li>
+  <li>Do not report without preserving evidence (logs, screenshots, timestamps).</li>
+</ul>
+
+<hr>
+
+<h2>Chapter 4: Supply Chain Security</h2>
+<p>This is the chapter that matters most. Under NIS2, your clients must assess <strong>you</strong>.</p>
+
+<h3>What Clients Will Ask</h3>
+<ol>
+  <li>Do you have a documented Information Security Policy?</li>
+  <li>What backup procedures do you follow?</li>
+  <li>Are you certified under ISO 27001, SOC 2, or equivalent?</li>
+  <li>Where is client data stored and processed?</li>
+  <li>What access controls do you have?</li>
+  <li>Do you conduct regular security testing?</li>
+  <li>How do you handle incidents?</li>
+  <li>Do you conduct background checks on employees?</li>
+  <li>Do you use subcontractors handling client data?</li>
+  <li>What is your password policy?</li>
+</ol>
+
+<h3>Build a Vendor Security Profile</h3>
+<p>Create a single PDF answering all 10 questions. Update annually. Share proactively in pitches — it signals professionalism.</p>
+
+<hr>
+
+<h2>Chapter 5: Contract Clauses for NIS2</h2>
+<p>Add these to your client contracts.</p>
+
+<h3>Security Obligations</h3>
+<blockquote>The Provider shall maintain appropriate technical and organisational security measures to protect the Client's data and systems, including but not limited to: access controls, encryption in transit and at rest, regular security updates, and backup procedures.</blockquote>
+
+<h3>Incident Notification</h3>
+<blockquote>The Provider shall notify the Client within 24 hours of becoming aware of any security incident affecting the Client's data or systems, and shall provide a full incident report within 72 hours, including root cause analysis and remediation steps.</blockquote>
+
+<h3>Subcontractor Security</h3>
+<blockquote>The Provider shall ensure that any subcontractor or third-party service provider with access to Client data or systems maintains security measures equivalent to those described in this agreement.</blockquote>
+
+<h3>Data Processing</h3>
+<blockquote>The Provider shall process Client data only in accordance with the Client's documented instructions. Data shall be stored and processed within the European Economic Area unless otherwise agreed.</blockquote>
+
+<h3>Compliance Verification</h3>
+<blockquote>Upon the Client's reasonable request (not more than once per 12-month period), the Provider shall complete a security questionnaire or provide documentary evidence of implemented security measures.</blockquote>
+
+<hr>
+
+<h2>Chapter 6: 30-Day Compliance Checklist</h2>
+
+<h3>Week 1: Foundation</h3>
+<table>
+  <tr><th>Day</th><th>Task</th></tr>
+  <tr><td>1</td><td>Write your Information Security Policy (one page)</td></tr>
+  <tr><td>2</td><td>Designate a Security Contact</td></tr>
+  <tr><td>3</td><td>Enable MFA on all admin accounts</td></tr>
+  <tr><td>4</td><td>Set up a password manager, audit shared passwords</td></tr>
+  <tr><td>5</td><td>Implement HTTPS on all client sites</td></tr>
+  <tr><td>6</td><td>Create asset inventory (servers, domains, SaaS)</td></tr>
+  <tr><td>7</td><td>Review and document Week 1</td></tr>
+</table>
+
+<h3>Week 2: Operations</h3>
+<table>
+  <tr><th>Day</th><th>Task</th></tr>
+  <tr><td>8</td><td>Set up automated backups (3-2-1 rule)</td></tr>
+  <tr><td>9</td><td>Test a backup restoration</td></tr>
+  <tr><td>10</td><td>Install security monitoring on all client sites</td></tr>
+  <tr><td>11</td><td>Subscribe to security advisories</td></tr>
+  <tr><td>12</td><td>Create Incident Response Plan (one-pager)</td></tr>
+  <tr><td>13</td><td>Remove unused plugins, themes, user accounts</td></tr>
+  <tr><td>14</td><td>Review and document Week 2</td></tr>
+</table>
+
+<h3>Week 3: Contracts &amp; Vendors</h3>
+<table>
+  <tr><th>Day</th><th>Task</th></tr>
+  <tr><td>15</td><td>Add NIS2 clauses to client contract</td></tr>
+  <tr><td>16</td><td>Audit vendors, request DPAs</td></tr>
+  <tr><td>17</td><td>Create Vendor Security Profile</td></tr>
+  <tr><td>18</td><td>Update contracts with confidentiality clauses</td></tr>
+  <tr><td>19</td><td>Set up role-based access controls</td></tr>
+  <tr><td>20</td><td>Remove unused third-party integrations</td></tr>
+  <tr><td>21</td><td>Review and document Week 3</td></tr>
+</table>
+
+<h3>Week 4: Testing</h3>
+<table>
+  <tr><th>Day</th><th>Task</th></tr>
+  <tr><td>22</td><td>Run full security scan (WPScan, HackerTarget)</td></tr>
+  <tr><td>23</td><td>Review access logs (last 30 days)</td></tr>
+  <tr><td>24</td><td>Team security briefing (30 min)</td></tr>
+  <tr><td>25</td><td>Create security@domain for disclosures</td></tr>
+  <tr><td>26</td><td>Set up uptime monitoring (UptimeRobot)</td></tr>
+  <tr><td>27</td><td>Document everything in a "Security Compliance" folder</td></tr>
+  <tr><td>28</td><td>Final review: does Week 1 need updating?</td></tr>
+  <tr><td>29</td><td>Send Vendor Security Profile to top 3 clients</td></tr>
+  <tr><td>30</td><td>Set calendar reminders: quarterly review, annual update</td></tr>
+</table>
+
+<h3>Ongoing Schedule</h3>
+<table>
+  <tr><th>Interval</th><th>Task</th></tr>
+  <tr><td>Weekly</td><td>Apply security updates</td></tr>
+  <tr><td>Monthly</td><td>Review logs, verify backups</td></tr>
+  <tr><td>Quarterly</td><td>Security scan, test restoration, review access</td></tr>
+  <tr><td>Annually</td><td>Update Information Security Policy, review vendors</td></tr>
+</table>
+
+<hr>
+
+<h2>Chapter 7: Free Security Tools</h2>
+<table>
+  <tr><th>Tool</th><th>Purpose</th><th>Cost</th></tr>
+  <tr><td>LetsEncrypt + Certbot</td><td>Free SSL/TLS certificates</td><td>Free</td></tr>
+  <tr><td>Wordfence</td><td>WordPress firewall, malware scan</td><td>Free tier</td></tr>
+  <tr><td>UpdraftPlus</td><td>WordPress backups</td><td>Free tier</td></tr>
+  <tr><td>Bitwarden</td><td>Password manager</td><td>Free for 2 users</td></tr>
+  <tr><td>UptimeRobot</td><td>Uptime monitoring</td><td>Free (50 monitors)</td></tr>
+  <tr><td>HackerTarget</td><td>Vulnerability scanning</td><td>Free tier</td></tr>
+  <tr><td>WPScan</td><td>WordPress vulnerability database</td><td>Free basic</td></tr>
+  <tr><td>Better Stack</td><td>Incident alerting</td><td>Free tier</td></tr>
+  <tr><td>Have I Been Pwned</td><td>Check leaked credentials</td><td>Free</td></tr>
+</table>
+
+<hr>
+
+<h2>Appendices</h2>
+
+<h3>Appendix A: Sample Information Security Policy</h3>
+<blockquote>
+<p><strong>[AGENCY NAME] — INFORMATION SECURITY POLICY</strong><br>
+Version: 1.0 | Date: [DATE]</p>
+<p><strong>1. Purpose:</strong> This policy defines security requirements for all employees, contractors, and systems.</p>
+<p><strong>2. Scope:</strong> All employees, contractors, systems, and data.</p>
+<p><strong>3. Policy:</strong><br>
+a) Access Control: Least-privilege basis. Quarterly reviews. Accounts terminated within 24h of departure.<br>
+b) Authentication: MFA required on all administrative systems. Passwords: 16+ characters, stored in Bitwarden.<br>
+c) Data Protection: Client data stored within EU. All data encrypted in transit (TLS 1.2+). Backups encrypted at rest.<br>
+d) Incident Response: Report to [CONTACT] within 1 hour. See Incident Response Plan.<br>
+e) Software Updates: Security patches within 7 days of release.<br>
+f) Third Parties: Vendors with system access must meet equivalent security standards.</p>
+<p><strong>4. Review:</strong> Annually by [ROLE/TITLE].</p>
+</blockquote>
+
+<h3>Appendix B: Incident Response Plan (One-Pager)</h3>
+<blockquote>
+<p><strong>[AGENCY NAME] — INCIDENT RESPONSE PLAN</strong></p>
+<p><strong>Step 1: Detect</strong> — Alerts, user reports, client reports.</p>
+<p><strong>Step 2: Triage</strong> (within 15 min) — Severity (Low/Med/High/Critical). Assign response lead.</p>
+<p><strong>Step 3: Contain</strong> — Isolate systems. Preserve evidence. Notify clients (within 24h).</p>
+<p><strong>Step 4: Eradicate</strong> — Remove cause. Apply patches. Reset credentials.</p>
+<p><strong>Step 5: Recover</strong> — Restore from backup. Verify integrity. Monitor 48h.</p>
+<p><strong>Step 6: Review</strong> (within 7 days) — Root cause analysis. Update procedures.</p>
+<p><strong>Contacts:</strong> Security Lead: [NAME], Backup: [NAME], IT Emergency: [NAME]</p>
+</blockquote>
+
+<h3>Appendix C: Vendor Security Profile Template</h3>
+<ol>
+  <li>Information Security Policy: documented and reviewed annually.</li>
+  <li>Backup: 3-2-1 rule, quarterly restoration testing.</li>
+  <li>Certification: [ISO 27001 / SOC 2 / self-assessed].</li>
+  <li>Data location: EU, at [hosting provider].</li>
+  <li>Access: least-privilege, quarterly reviews.</li>
+  <li>Testing: quarterly scans, 7-day patch window.</li>
+  <li>Incident response: 24h notification, 72h full report.</li>
+  <li>Personnel: confidentiality agreements for all employees.</li>
+  <li>Subcontractors: held to equivalent standards.</li>
+  <li>Passwords: 16+ characters, MFA on all systems.</li>
+</ol>
+
+<hr>
+
+<h2>Final Words</h2>
+<p>NIS2 compliance for a small web agency is not about building a Fort Knox. It is about being organized, documented, and transparent.</p>
+<p>The agencies that thrive under NIS2 are not the ones with the biggest security budgets. They are the ones that can show clients: "Here is what we do, here is how we do it, here is proof it works."</p>
+<p>Start today. Follow the 30-day checklist. You do not need a compliance team. You just need one afternoon and this guide.</p>
+
+<hr>
+
+<p style="text-align:center; color:#555; font-style:italic;">
+Version 1.0 — August 2026<br>
+Published by Mahope / Hermes Passiv<br>
+This guide does not constitute legal advice.
+</p>
+
+</body>
+</html>

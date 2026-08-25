@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA</title>
+<meta name="description" content="Drupal accessibility guide for EAA and WCAG 2.1 AA. Olivero theme, contributed module risks, Views and form fixes, admin vs front-end obligations, and a free scanning workflow.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA">
+<meta property="og:description" content="Drupal accessibility guide for EAA and WCAG 2.1 AA. Olivero theme, contributed module risks, Views and form fixes, admin vs front-end obligations, and a free scanning workflow.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA">
+<meta name="twitter:description" content="Drupal accessibility guide for EAA and WCAG 2.1 AA. Olivero theme, contributed module risks, Views and form fixes, admin vs front-end obligations, and a free scanning workflow.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Drupal Accessibility: Meeting WCAG 2.1 AA and the EAA",
+  "description": "Drupal accessibility guide for EAA and WCAG 2.1 AA. Olivero theme, contributed module risks, Views and form fixes, admin vs front-end obligations, and a free scanning workflow.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · DRUPAL · EAA</div>
+    <h1>Drupal Accessibility:<br>Meeting WCAG 2.1 AA and the EAA</h1>
+    <p class="subtitle">A practical guide for agencies building Drupal sites for EU clients — what core already does well, where contributed modules break compliance, and how to verify before the EAA bites.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#drupal-core-accessibility" class="btn-secondary">Drupal Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 7 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="drupal-core-accessibility">Drupal Core Accessibility</h2>
+    <p>Drupal has one of the strongest accessibility foundations of any CMS. Since Drupal 8, core conforms to WCAG 2.1 and ATAG 2.0 as a policy goal: the Olivero front-end theme ships accessible by default, form elements render labels programmatically tied to inputs, and core JavaScript uses the Drupal behaviours system to keep ARIA state consistent after AJAX updates. Claro, the admin theme, is built to the same standard. If your site is core-plus-Olivero with no heavy customisation, you start from a genuinely good baseline — most of your remaining risk comes from what gets layered on top.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏗️ Core Baseline</h3><p>Semantic markup, labelled forms, focus management and ARIA live regions are handled at the theme-system level, not left to each site builder.</p></div>
+      <div class="card"><h3>🎨 Olivero &amp; Claro</h3><p>The default front-end and admin themes both target WCAG 2.1 AA, including a mobile navigation with proper disclosure semantics and visible focus states.</p></div>
+      <div class="card"><h3>⚙️ ATAG 2.0</h3><p>Drupal aims beyond content output: the editing experience itself is accessible, which matters for public-sector procurement under EN 301 549.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-drupal-sites-fail">Where Drupal Sites Fail</h2>
+    <p>Real-world Drupal accessibility failures concentrate in four places — almost never in core:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧩 Contributed Modules</h3><p>Modules that render their own markup (sliders, calendars, menus, payment widgets) bypass the theme system. Quality varies enormously; some ship decade-old jQuery patterns with unlabelled controls.</p></div>
+      <div class="card"><h3>🖼️ Content Editor Habits</h3><p>Missing alt text on images uploaded through the media library, headings chosen for visual size, links that just say "read more". The editor toolbar is accessible; the habits often are not.</p></div>
+      <div class="card"><h3>🎛️ Views &amp; Custom Blocks</h3><p>Views-generated lists can produce empty headings or repeated identical link text across rows. Custom block types frequently skip heading levels.</p></div>
+      <div class="card"><h3>💻 Custom Themes</h3><p>Hand-rolled or heavily customised themes reintroduce every classic failure: placeholder-only inputs, divs-as-buttons, contrast set from a brand palette without checking ratios.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="contrib-module-audit">Contrib Module Audit</h2>
+    <p>Treat every contributed module that renders front-end UI as guilty until scanned:</p>
+    <p></p>
+    <p><strong>Inventory:</strong> list modules that output markup on public pages (sliders, maps, video players, booking widgets, newsletter forms). Anything only used in the admin can wait.</p>
+    <p></p>
+    <p><strong>Scan each widget:</strong> tab through it on a real page. Unlabelled icon buttons, keyboard traps and missing focus indicators are disqualifying — look for an alternative module or patch the issue queue upstream.</p>
+    <p></p>
+    <p><strong>Check updates:</strong> many accessibility patches already exist in newer releases. Running current stable versions of contrib is itself an accessibility measure.</p>
+    <p></p>
+    <p><strong>WYSIWYG settings:</strong> limit CKEditor 5 buttons so editors cannot inject inline colours or fonts that break contrast and structure. Fewer tools, more compliant content.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="views-forms-and-content">Views Forms and Content</h2>
+    <p>Three high-volume fixes that cover most findings on a typical build:</p>
+    <p></p>
+    <p><strong>Views:</strong> give every display a real, unique title instead of relying on auto-generated empty headings; use distinct link text per row ("Read the case study" not "Read more"); check pager markup announces current page.</p>
+    <p></p>
+    <p><strong>Forms:</strong> webform and contact forms label fields correctly out of the box — failures come from custom alterations. Verify required-field indication is not colour-only, and error messages are text, not red borders alone.</p>
+    <p></p>
+    <p><strong>Content:</strong> enforce alt text via the media library (it is required by default — do not weaken it), train editors on heading order, and add a "link text" guideline to your editorial checklist.</p>
+    <p></p>
+    <p><strong>Multilingual:</strong> lang attributes on translated pages must switch with the interface translation — Drupal handles this in core, but custom routes and embedded content frequently forget it.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="verification-workflow-drupal">Verification Workflow Drupal</h2>
+    <p>A realistic verification loop for a Drupal build takes half a day:</p>
+    <p></p>
+    <p><strong>Step 1 — automated scan</strong> of home, a listing page, a node page, a form page and search results. Expect 5-15 mechanical findings on the first run, mostly content and contrib.</p>
+    <p></p>
+    <p><strong>Step 2 — fix and re-scan</strong> until automated findings clear: theme CSS, Views titles, alt text backfill.</p>
+    <p></p>
+    <p><strong>Step 3 — keyboard walkthrough</strong> of search → listing → node → form submit. Anything mouse-only fails WCAG 2.1.2.</p>
+    <p></p>
+    <p><strong>Step 4 — screen reader spot-check</strong> of one full journey with NVDA or VoiceOver, listening for unlabelled controls and silent AJAX updates.</p>
+    <p></p>
+    <p><strong>Step 5 — re-run after every module update and new block type.</strong> Regressions arrive silently with contrib updates.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner on your front-end first — it catches contrast, alt-text, label and heading issues in seconds, so your expert time goes on judgement calls like keyboard flows and ARIA.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Drupal Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/drupal-accessibility-check" class="btn-secondary">Drupal Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Is Drupal more accessible than WordPress?</h3><p>Out of the box, yes — Drupal core targets WCAG 2.1 and ATAG 2.0 explicitly, while WordPress quality depends far more on the chosen theme and plugins. But a badly customised Drupal theme loses that advantage quickly; the platform baseline helps, it does not guarantee anything.</p></div>
+      <div class="card"><h3>Does the EAA apply to Drupal sites?</h3><p>To the services delivered through them, when consumer-facing in the EU — including e-commerce and membership sites. Public-sector Drupal builds have long been bound by EN 301 549 procurement rules regardless.</p></div>
+      <div class="card"><h3>Which contributed modules cause the most issues?</h3><p>Third-party UI widgets: sliders/carousels, maps, calendar/booking widgets and legacy menu modules. They ship their own markup outside the theme system, so core guarantees stop at their edge.</p></div>
+      <div class="card"><h3>Do I need Bartik or Olivero specifically?</h3><p>No theme is mandatory, but starting from a maintained core theme saves weeks. If you must customise, subclass and override templates rather than forking — you keep upstream accessibility fixes on update.</p></div>
+      <div class="card"><h3>How long does a Drupal accessibility pass take?</h3><p>A core-plus-contrib build on Olivero: 1-3 days including testing. Heavily customised legacy themes (Bootstrap-based forks are common offenders) need a bigger remediation project.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Drupal Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/drupal-accessibility-check" class="btn-secondary">Drupal Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG 2.2</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: What Changes for Your Sites</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TYPO3 · BITV</span><h3><a href="/blog/typo3-accessibility-bitv-check" style="color:var(--color-accent);text-decoration:none;">TYPO3 Accessibility: Meeting BITV 2.0 and EN 301 549</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost in 2026?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

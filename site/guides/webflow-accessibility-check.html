@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webflow Accessibility Check — Free WCAG/EAA Site Scan</title>
+<meta name="description" content="Run a free WCAG 2.1 AA accessibility check on your Webflow site. 16 automated rules, instant results, shareable report. No signup required.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Webflow Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Verify your Webflow site against 16 WCAG 2.1 AA rules. Free instant scan with concrete fixes.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/webflow-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Webflow Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Verify your Webflow site against 16 WCAG 2.1 AA rules. Free instant scan with concrete fixes.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Webflow Accessibility Check — Free WCAG/EAA Site Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/webflow-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/webflow-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to Webflow sites?","acceptedAnswer":{"@type":"Answer","text":"Yes \u2014 if your Webflow site serves EU consumers or enterprise clients, WCAG 2.1 AA compliance is expected under the EAA."}},{"@type":"Question","name":"What does the scanner check on Webflow sites?","acceptedAnswer":{"@type":"Answer","text":"16 rules: alt text on images, form labels, link/button text, heading hierarchy, language attribute, viewport meta, colour contrast, and more."}},{"@type":"Question","name":"Where do I fix common issues in Webflow?","acceptedAnswer":{"@type":"Answer","text":"Alt text: select image \u2192 Settings \u2192 Alt Text. Contrast: select text \u2192 Typography \u2192 Color. Headings: Style panel \u2192 HTML Tag."}},{"@type":"Question","name":"Does Webflow handle accessibility automatically?","acceptedAnswer":{"@type":"Answer","text":"Partially. Webflow generates clean HTML but alt text, contrast, form labels, focus states, and skip navigation are all your responsibility."}},{"@type":"Question","name":"Where is the Webflow accessibility checker?","acceptedAnswer":{"@type":"Answer","text":"Webflow has a built-in Accessibility Checker in the Designer under Settings &gt; Accessibility. It catches missing alt text, empty links, insufficient contrast, and heading-skip issues. Use it alongside our external scanner for full coverage."}},{"@type":"Question","name":"Can animations in Webflow cause accessibility issues?","acceptedAnswer":{"@type":"Answer","text":"Yes. Webflow interactions like parallax, scroll-triggered reveals, and auto-playing sliders can violate WCAG 2.1 (motion, timing, keyboard traps). Always test interactions with prefers-reduced-motion and keyboard-only navigation."}}],"name":"Webflow Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/webflow-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Webflow Accessibility Check</h1>
+    <p class="subtitle">Webflow gives you clean markup — but accessibility still depends on what you build in the Designer. From CMS collection pages to custom interactions, this guide covers the platform-specific pitfalls that automated scanners find.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.webflow.com" class="btn-primary">Run a Free Scan on webflow.com</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Webflow accessibility is different</h2>
+    <p>Webflow is a visual-first platform: you build by dragging, dropping, and styling in a canvas rather than writing markup by hand. That visual approach has huge advantages — clean semantic HTML output, responsive design baked in, and a component model via Symbols and CMS Collections — but it also creates unique accessibility blind spots that hand-coded sites don't share.</p>
+    <p><strong>Designer vs. Editor.</strong> Most accessibility work happens in the Webflow Designer (the full build interface). Content editors working in the Webflow Editor have a much narrower set of controls — they can edit rich text and CMS fields, but they cannot adjust alt text on images, reorder heading tags, or tweak colour contrast. If you rely on editors to produce accessible content, you need CMS field templates with pre-set alt text fields and heading-level defaults baked into Collection templates.</p>
+    <p><strong>Interactions and animations.</strong> Webflow's interaction engine — scroll triggers, parallax, mouse-follow effects, auto-playing sliders — is one of its most powerful features. It is also the most common source of keyboard traps and motion violations. A carousel built with Webflow interactions that auto-advances every 4 seconds fails WCAG 2.1 Success Criterion 2.2.2 (Pause, Stop, Hide). A parallax section that scrolls content behind a fixed overlay can make text unreachable by keyboard. These are not issues you encounter on a static HTML site, and they require manual testing that no automated scanner can fully replace.</p>
+    <p><strong>Custom code and embeds.</strong> Webflow lets you inject custom HTML, CSS, and JavaScript in Project Settings or per-page via an Embed element. Every line of custom code is a potential accessibility liability — third-party embeds (calendars, chatbots, maps) often arrive without ARIA labels, focus management, or keyboard support. And because Webflow's Designer doesn't lint custom code, these issues fly under the radar until an audit catches them.</p>
+    <p><strong>Clean HTML output is not a guarantee.</strong> Webflow generates valid, semantic HTML out of the box — but you control the heading levels. It is easy to accidentally give a CMS Collection List item an H1 tag because the default template reused the page heading style. A paragraph styled to look like a heading is still a paragraph in the accessibility tree. The visual-first workflow makes it tempting to style for appearance first and fix semantics later.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your Webflow URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Webflow site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Webflow URL</strong> — any published page: home, a product page, or a CMS collection page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Webflow, most image-alt and contrast issues are fixed right in the editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Webflow Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Webflow-specific tools &amp; fixes</h2>
+    <p>Beyond the general Webflow Designer fixes shown in the table below, Webflow offers platform-native tools and workarounds that can catch issues earlier and automate compliance.</p>
+
+    <h3 style="margin-top:32px;">Webflow's built-in Accessibility Checker</h3>
+    <p>In the Webflow Designer, go to <strong>Settings → Accessibility</strong>. The built-in checker scans the current page for missing alt text, empty links, insufficient colour contrast, and heading-skip issues. It's a great first pass — especially before publishing a redesigned page — because it runs inside the Designer so you can fix issues before the page ever goes live. However, it does not check form labels, ARIA misuse, or language attributes, nor does it produce a shareable report for procurement teams. Use it as a pre-publish gate, then run our external scanner for the full 16-rule audit.</p>
+
+    <h3>Editoria11y for CMS content governance</h3>
+    <p>If your site runs on the Webflow CMS with multiple editors creating content, consider adding <a href="https://editoria11y.com/" rel="nofollow" style="color:var(--color-accent);">Editoria11y</a> via Custom Code. Editoria11y is a lightweight, client-side checker that highlights accessibility issues inline — missing alt text, unclear link text, heading skips — directly on the published page. Editors see the warnings as they review content in the Webflow Editor, making it a safety net for CMS-driven sites where you cannot control every field in the Designer.</p>
+
+    <h3>Skip navigation with Custom Code</h3>
+    <p>Webflow does not include a skip-to-content link by default. Add one via <strong>Project Settings → Custom Code</strong> (before <code>&lt;/head&gt;</code>):</p>
+    <pre style="background:var(--color-surface-2);padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.5;">&lt;a href="#main-content" class="skip-link"&gt;Skip to content&lt;/a&gt;</pre>
+    <p>Then give your main content wrapper an <code>id="main-content"</code> attribute. Style the skip link with <code>position:absolute; top:-40px;</code> and reveal it on focus with <code>:focus { top:0; }</code>. This is a WCAG 2.1 Level A requirement (SC 2.4.1).</p>
+
+    <h3>Focus management in interactions</h3>
+    <p>When a Webflow interaction opens a modal, slides a panel in, or swaps content, keyboard focus must move to the new content. Webflow's native interactions do not handle focus management. Use a small Custom Code script to trap focus inside modals and return it when closed. For animated page transitions, set <code>focus</code> programmatically on the first heading of the new content via a page-level interaction callback or embedded JavaScript. Without this, keyboard users and screen-reader users are left in a dead zone after every dynamic content change.</p>
+
+    <h3>Form block label settings</h3>
+    <p>Webflow's Form Block automatically pairs an input with a Label element — but only if you keep the default structure. If you delete the label and rely on placeholder text alone, screen readers see an unlabeled input, which fails WCAG SC 3.3.2 (Labels or Instructions). Always keep the Label element visible or use an <code>aria-label</code> via Custom Code. For checkbox and radio groups, wrap options in a <code>&lt;fieldset&gt;</code> with a <code>&lt;legend&gt;</code> — you may need to add these via an Embed or custom form markup.</p>
+
+    <h3>Symbols and component reusability</h3>
+    <p>Webflow Symbols are a double-edged sword for accessibility. A well-built Symbol (a navigation bar with proper ARIA roles, a card component with semantic heading structure) propagates those accessible patterns everywhere it is used. A broken Symbol (missing alt text on an image inside a Symbol, a button Symbol without discernible text) spreads that failure across every instance. Audit each Symbol once, fix it once, and the fix propagates automatically. This makes Symbols your highest-leverage accessibility investment in Webflow.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Webflow</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in the Webflow Designer:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Webflow</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Select the image element → Style panel → Settings tab → Alt Text field. For CMS collection images, set it in the CMS field template.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Select the text element → Style panel → Typography → Color — use a contrast checker and ensure at least 4.5:1 ratio. Avoid pure white (#fff) on light grey (#eee).</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">In Designer, check that heading elements use proper HTML tags (H1-H6) in the Style panel → Typography → HTML Tag dropdown. Only one H1 per page.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Select the form block → ensure each input has a Label element. In Webflow, form fields need an explicit label — don't rely on placeholder text alone.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Project Settings → Custom Code → before <code>&lt;/head&gt;</code> paste: <code>&lt;meta http-equiv="Content-Language" content="en"&gt;</code>. Or set it per-page in Page Settings.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Focus indicators removed</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Add in Project Settings → Custom Code → before <code>&lt;/head&gt;</code>: <code>&lt;style&gt;*:focus-visible { outline: 3px solid #0066cc; }&lt;/style&gt;</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Webflow</h2>
+    <p>A single accessibility scan is a snapshot, not a certification. Because Webflow sites evolve quickly — new CMS content, redesigned pages, added interactions — compliance requires ongoing checks baked into your workflow.</p>
+
+    <h3 style="margin-top:32px;">Review after every redesign</h3>
+    <p>Every time you republish a page in the Designer, or roll out a new global style (fonts, colours, spacing), run an accessibility scan before publishing. Even a minor colour-palette change can push contrast ratios below 4.5:1. Make scanning part of your Webflow launch checklist alongside link checking and form testing.</p>
+
+    <h3>Interaction testing — keyboard traps</h3>
+    <p>Webflow interactions are the most common source of keyboard traps. Test every page with your keyboard alone: Tab through all interactive elements. Can you reach and activate every link, button, and form field? Do sliders or tabs respond to the arrow keys? Does a modal close with Escape? If an interaction prevents keyboard navigation at any point, it fails WCAG SC 2.1.1 (Keyboard) and 2.1.2 (No Keyboard Trap). Automated scanners cannot catch these reliably — only a manual keyboard test can.</p>
+
+    <h3>CMS content governance</h3>
+    <p>If your Webflow site relies on the CMS — blog posts, product listings, team pages — every new collection item is a potential accessibility regression. Set up CMS field templates with mandatory alt-text fields for images and predefined heading styles for rich-text fields. Train editors on what WCAG means in practice: descriptive link text ("Read the full case study on Acme Corp" not "Click here"), proper image descriptions, and why removing the default heading H2 from a rich-text block breaks the document outline.</p>
+
+    <h3>Export for external testing</h3>
+    <p>Webflow does not expose a staging environment with HTTP Basic Auth by default, which makes it hard to run external testing tools on unpublished work. Workaround: publish to a subdomain (e.g., <code>staging.yoursite.com</code>) and password-protect it with Webflow's built-in page-visibility settings. Then run our scanner — or any WCAG audit tool — against that staging URL before pushing changes to production. For deeper testing, export your site via <strong>Project Settings → Export</strong> and run axe-core or WAVE on the exported static files locally.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/webflow-accessibility-audit" style="color:var(--color-accent);">Webflow Accessibility: A Practical EAA Audit Guide</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);">WCAG 2.2: What Changes and Why It Matters</a></li>
+        <li><a href="/blog/how-to-write-accessibility-statement" style="color:var(--color-accent);">How to Write an Accessibility Statement</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, our e-book covers the complete checklist plus a 14-day fix plan:</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/wordpress-plugin" class="btn-secondary" style="display:inline-block;">Free WordPress Plugin</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+    <p style="margin-top:32px;"><strong>Additional reading:</strong></p>
+    <ul style="line-height:1.8;padding-left:20px;">
+      <li><a href="https://www.w3.org/WAI/WCAG22/Understanding/" rel="nofollow" style="color:var(--color-accent);">WCAG 2.2 Understanding Documents</a> — official guidance on every success criterion</li>
+      <li><a href="https://webflow.com/accessibility" rel="nofollow" style="color:var(--color-accent);">Webflow's Accessibility Page</a> — platform-level commitments and resources</li>
+      <li><a href="https://www.w3.org/WAI/standards-guidelines/act/rules/" rel="nofollow" style="color:var(--color-accent);">WAI ACT Rules</a> — the testable rules our scanner is built on</li>
+      <li><a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility" rel="nofollow" style="color:var(--color-accent);">MDN Accessibility Docs</a> — practical implementation guidance</li>
+      <li><a href="https://www.a11yproject.com/checklist/" rel="nofollow" style="color:var(--color-accent);">A11y Project Checklist</a> — auditor-friendly checklist for manual review</li>
+    </ul>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

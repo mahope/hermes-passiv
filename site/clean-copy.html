@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clean Copy — Copy web text as clean Markdown or plain text</title>
+  <meta name="description" content="Free Chrome extension. Copy any text from the web as clean, formatted Markdown or plain text. No more messy pastes — just right-click and copy.">
+  <meta property="og:title" content="Clean Copy — Copy web text as clean Markdown">
+  <meta property="og:description" content="Chrome extension that lets you copy selected text as clean Markdown or plain text. Right-click or Ctrl+Shift+C.">
+  <meta property="og:image" content="/clean-copy/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .feature-card {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .feature-card h3 { margin-top: 0; font-size: 1rem; }
+    .feature-card p { color: var(--color-text-muted); font-size: 0.875rem; line-height: 1.5; }
+    .shortcut {
+      display: inline-block;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #334155;
+    }
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .step-grid { grid-template-columns: 1fr; }
+    }
+    .step-card {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .step-number {
+      display: inline-flex;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      color: #fff;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .step-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .step-card p { color: var(--color-text-muted); font-size: 0.85rem; }
+    .screenshot-demo {
+      background: var(--color-surface);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    .screenshot-demo img { width: 100%; height: auto; display: block; }
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+    .tier-card {
+      background: var(--color-surface-2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--color-border);
+    }
+    .tier-card.pro {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+    }
+    .tier-card h3 { margin-top: 0; }
+    .tier-card .price { font-size: 2rem; font-weight: 700; color: var(--color-accent); }
+    .tier-card ul { padding-left: 1.2rem; }
+    .tier-card ul li { margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--color-text-muted); }
+    .tier-card .btn { display: block; text-align: center; margin-top: 1rem; }
+    .install-steps {
+      background: var(--color-surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--color-border);
+      margin: 2rem 0;
+    }
+    .install-steps ol { padding-left: 1.5rem; }
+    .install-steps ol li { margin-bottom: 1rem; color: var(--color-text-muted); }
+    .install-steps ol li strong { color: var(--color-text); }
+    .tech-badge {
+      display: inline-block;
+      background: rgba(91,141,239,0.15);
+      color: var(--color-accent);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 4px;
+    }
+  </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Clean Copy",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Chrome",
+  "description": "Chrome extension that copies selected web text as clean Markdown or plain text.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+</head>
+<body>
+  <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
+    <div class="badge">🆕 Free Chrome Extension</div>
+    <h1>Clean Copy</h1>
+    <p class="tagline" style="font-size:1.2rem;max-width:540px;margin:0 auto;">
+      Copy web text as clean Markdown or plain text.<br>
+      No more messy pastes — just right-click and copy.
+    </p>
+    <div class="hero-cta">
+          <a href="/clean-copy#install" class="btn-primary">Install free &rarr;</a>
+          <span class="btn-secondary"><a href="/clean-copy-tool" style="color:inherit;text-decoration:none;">🧹 Try the web tool instead</a></span>
+          <span class="hero-note">Free · No account needed · Works on any page</span>
+        </div>
+    <div class="hero-meta">
+      <span>⚡ Right-click context menu</span>
+      <span>⌨ Ctrl+Shift+C shortcut</span>
+      <span>📋 Automatic clipboard</span>
+      <span>🆓 Free tier</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="container">
+      <h2>How it works</h2>
+      <div class="step-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Select text</h3>
+          <p>Highlight any text on any web page — articles, docs, code snippets, anything.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Copy it</h3>
+          <p>Right-click → <strong>Copy as Clean Text</strong> or <strong>Copy as Markdown</strong>. Or use <span class="shortcut">Ctrl+Shift+C</span>.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Paste clean</h3>
+          <p>No smart quotes, no extra spaces, no hidden characters. Clean Markdown or plain text — ready to use.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--color-surface);">
+    <div class="container">
+      <h2>What it fixes</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>🧹 Smart quotes → straight</h3>
+          <p>"Curly quotes" and 'fancy apostrophes' become straight ASCII — no more paste-formatting headaches in code editors.</p>
+        </div>
+        <div class="feature-card">
+          <h3>📏 Em dashes → regular</h3>
+          <p>Em-dashes (—), en-dashes (–), and non-breaking spaces are normalised so your text looks right everywhere.</p>
+        </div>
+        <div class="feature-card">
+          <h3>👻 Zero-width characters gone</h3>
+          <p>Invisible Unicode characters that break searches and form validations are silently removed.</p>
+        </div>
+        <div class="feature-card">
+          <h3>📝 HTML → Markdown</h3>
+          <p>Headings, bold, italic, links, images, code blocks, lists — and tables — from the page are converted to proper Markdown syntax.</p>
+        </div>
+        <div class="feature-card">
+          <h3>📋 One-click clipboard</h3>
+          <p>Copied text lands directly on your clipboard — paste it anywhere with Ctrl/Cmd+V, no extra steps.</p>
+        </div>
+        <div class="feature-card">
+          <h3>🔒 No data sent anywhere</h3>
+          <p>Everything happens locally in your browser. No servers, no tracking, no accounts. Your selection never leaves your machine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2>Why Clean Copy?</h2>
+      <p class="section-intro">Every developer, writer, and researcher knows the problem: you copy text from a web page, paste it somewhere, and it comes out wrong. Smart quotes break your code. Extra spaces mess up your formatting. Invisible characters corrupt your data.</p>
+      <p class="section-intro">Clean Copy fixes this at the source — before the text hits your clipboard. One right-click and you have clean, consistent text ready to paste.</p>
+      <p class="section-intro">And if you need Markdown, it converts headings, links, code blocks, and lists from the page's HTML — so you don't have to reformat manually.</p>
+    </div>
+  </section>
+
+  <section style="background:var(--color-surface);">
+    <div class="container">
+      <h2>Pricing</h2>
+      <p class="section-intro">Free tier covers everything most people need. Pro adds features for power users.</p>
+      <div class="tier-grid">
+        <div class="tier-card">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>✅ Copy as clean plain text</li>
+            <li>✅ Copy as Markdown</li>
+            <li>✅ Right-click context menu</li>
+            <li>✅ Ctrl+Shift+C keyboard shortcut</li>
+            <li>✅ Smart quotes &amp; special chars cleaned</li>
+            <li>✅ Zero-width char removal</li>
+            <li>✅ No account required</li>
+          </ul>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:1rem;"><a href="/clean-copy#install" style="color:inherit;text-decoration:none;">⬇ Install the extension — 1 minute</a></span>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:0.6rem;"><a href="/clean-copy-tool" style="color:inherit;text-decoration:none;">🧹 Try the web tool — no install needed</a></span>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:0.6rem;"><a href="/clean-copy-bookmarklet" style="color:inherit;text-decoration:none;">🔖 Or grab the bookmarklet — works in any browser</a></span>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:1rem;"><a href="https://github.com/mahope/clean-copy" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">★ Source on GitHub</a></span>
+        </div>
+        <div class="tier-card pro">
+          <h3>Pro <span style="font-size:0.75rem;color:var(--color-text-muted);font-weight:400;">(coming soon)</span></h3>
+          <div class="price">$19<span style="font-size:0.9rem;color:var(--color-text-muted);font-weight:400;">/year</span></div>
+          <ul>
+            <li>✅ Everything in Free</li>
+            <li>✅ Custom cleaning rules</li>
+            <li>✅ Auto-detect mode (plain vs Markdown per site)</li>
+            <li>✅ Dark mode popup</li>
+            <li>✅ Multiple clipboard formats</li>
+            <li>✅ Export to file</li>
+          </ul>
+          <span class="btn-secondary" style="display:block;text-align:center;margin-top:1rem;opacity:0.6;cursor:default;">🔒 Via Lemon Squeezy</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2 id="install">Install</h2>
+      <p class="section-intro">Clean Copy is a Chrome extension — Manifest V3, works in Chrome, Edge, Brave, and any Chromium-based browser.</p>
+      <div class="install-steps">
+        <h3 style="margin-bottom:1rem;">Option A — Install from GitHub source (Chrome, Edge, Brave)</h3>
+        <ol>
+          <li><strong><a href="https://github.com/mahope/clean-copy">Download or clone the repo →</a></strong> — then follow the manual install steps below.</li>
+          <li><strong>Select text on any page</strong> — right-click and choose Clean Copy, or use your copy hotkey.</li>
+          <li><strong>Paste</strong> — clean text, rich text, or Markdown ready to use.</li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option B — Manual install (load unpacked)</h3>
+        <ol>
+          <li><strong>Download the zip</strong> — <a href="/downloads/clean-copy-v1.5.2.zip" rel="noopener">clean-copy-v1.5.2.zip</a> and unzip it.</li>
+          <li><strong>Open</strong> <code>chrome://extensions</code> and enable <strong>Developer mode</strong> (top right).</li>
+          <li><strong>Click "Load unpacked"</strong> and select the unzipped folder.</li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option C — Firefox (install from source)</h3>
+        <ol>
+          <li><strong>Download the Firefox zip</strong> — <a href="/downloads/clean-copy-firefox-v1.5.2.zip" rel="noopener">clean-copy-firefox-v1.5.2.zip</a> and unzip it. (The Firefox build is named <strong>Clean Copy MD</strong> — the name “Clean Copy” is taken on addons.mozilla.org.)</li>
+          <li><strong>Open</strong> <code>about:debugging#/runtime/this-firefox</code>, click <strong>"Load Temporary Add-on…"</strong>, and pick <code>manifest.json</code>. (Temporary add-ons are removed when Firefox closes.)</li>
+          <li><strong>A signed, permanent install is coming to addons.mozilla.org</strong> — listing texts are prepared; only account access is pending.</li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option D — Command line / Homebrew</h3>
+        <ol>
+          <li><strong>Install via Homebrew:</strong> <code>brew tap mahope/clean-copy &amp;&amp; brew install clean-copy</code> — or with npm: <code>npm install -g github:mahope/clean-copy-cli</code></li>
+          <li><strong>Convert anything:</strong> <code>clean-copy page.html &gt; clean.md</code>, or fetch a readable article with <code>clean-copy --url https://example.com/post</code>. Prefer a browser? Use the free <a href="/url-to-markdown">URL to Markdown converter</a> instead. Pipe from the clipboard: <code>pbpaste | clean-copy | pbcopy</code>.</li>
+          <li><strong>Same engine as the extension</strong> — zero dependencies, no network requests unless you pass <code>--url</code>. Details: <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">github.com/mahope/clean-copy-cli</a></li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option E — Obsidian (paste as clean Markdown inside your vault)</h3>
+        <ol>
+          <li><strong>Install the plugin</strong> — easiest via <a href="https://github.com/TfTHacker/obsidian42-brat" rel="noopener">BRAT</a>: add <code>mahope/clean-copy-obsidian</code>. Manual alternative: grab <code>main.js</code>, <code>manifest.json</code> and <code>styles.css</code> from the <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest" rel="noopener">latest release</a> (or download the <a href="/downloads/clean-copy-obsidian-v1.0.6.zip" rel="noopener">zip bundle</a>) and put them in <code>&lt;vault&gt;/.obsidian/plugins/clean-copy-obsidian/</code>.</li>
+          <li><strong>Reload Obsidian</strong> and enable "Clean Copy" under Community plugins. (A listing in Obsidian's official community-plugin store is pending.)</li>
+          <li><strong>Paste with Ctrl/Cmd+Shift+V</strong> — clipboard HTML becomes proper Markdown in your note.</li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option F — GitHub Action (convert URLs, files, or raw HTML in CI)</h3>
+        <ol>
+          <li><strong>Convert a URL:</strong> <code>uses: mahope/clean-copy-cli@v1</code> with <code>url: 'https://...'</code> — the action fetches the page, extracts the main content, and returns clean Markdown.</li>
+          <li><strong>Convert a local file:</strong> pass <code>file: 'path/to/file.html'</code> to convert a repo-local HTML file. <code>Html</code> input also accepts raw HTML strings directly.</li>
+          <li><strong>Write to a file:</strong> use <code>output_file: 'path/to/result.md'</code> to save the result for later workflow steps. <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">View on GitHub →</a></li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option G — VS Code extension (paste as Markdown inside your editor)</h3>
+        <ol>
+          <li><strong>Install</strong> — search for "Clean Copy" in VS Code's extension marketplace (<code>Ctrl+Shift+X</code>), or download the <code>.vsix</code> from <a href="https://github.com/mahope/clean-copy-vscode/releases" rel="noopener">GitHub releases</a> and choose <strong>Install from VSIX...</strong></li>
+          <li><strong>Copy from any web page</strong> — use <code>Ctrl+Shift+V</code> (or <code>Cmd+Shift+V</code> on Mac) to paste HTML as clean Markdown directly at your cursor. Also supports <strong>Paste as Clean Text</strong> and <strong>Convert Selection to Markdown</strong>.</li>
+          <li><strong>Zero config</strong> — the same converter engine as the browser extension. No API key, no account, no network calls. Source on <a href="https://github.com/mahope/clean-copy-vscode" rel="noopener">GitHub</a>.</li>
+        </ol>
+        <h3 style="margin:1.5rem 0 1rem;">Option H — npm (install globally, use anywhere)</h3>
+        <ol>
+          <li><strong>Install:</strong> <code>npm install -g github:mahope/clean-copy-cli</code> — or <code>npx github:mahope/clean-copy-cli</code> to run without installing. The package includes the same zero-dependency converter as the browser extension.</li>
+          <li><strong>Use it:</strong> <code>echo '&lt;h1&gt;Hello&lt;/h1&gt;' | clean-copy</code> or pipe from clipboard: <code>pbpaste | clean-copy | pbcopy</code>. Supports <code>--url</code>, <code>--text</code>, <code>--copy</code> and <code>--out</code> options.</li>
+          <li><strong>Distributed from GitHub</strong> — MIT license, zero runtime dependencies. <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">View on GitHub →</a></li>
+        </ol>
+      </div>
+      <p style="color:var(--color-text-muted);font-size:0.85rem;">Source code is MIT-licensed on GitHub. Free forever — no account, nothing leaves your browser.</p>
+    </div>
+  </section>
+
+  <section id="whats-new">
+    <div class="container">
+      <h2>What's new</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>v1.5.2 — current</h3>
+          <p>Link noise cleanup: image-only wrapper links and <code>#fragment</code>-only anchors no longer produce dead Markdown like <code>[](/link)</code> or <code>[View image](#img-1)</code>. Zero-width no-break spaces (U+FEFF) are stripped everywhere. Plus everything from v1.5.0–v1.5.1: paste-and-clean in the popup and invisible-character stripping.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>v1.4.1</h3>
+          <p>Table alignment is now preserved: <code>text-align</code> styles and <code>align</code> attributes on cells become Markdown column separators (<code>:--- </code>,<code>:---:</code>,<code>---:</code>). Fenced code blocks carry language tags (<code class="language-*"> → ```javascript). v1.3.10 fixed entity-encoded code blocks and URL container pairing.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>v1.3.6</h3>
+          <p>Release-integrity fix: the extension builds now ship every converter improvement from v1.3.4–v1.3.5 (ordered-list <code>start</code>, details/summary, svg/math, select options, input values, iframe/object fallback). A new automated parity test guarantees the extension's converter can never silently diverge from the shared core again.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>v1.3.5</h3>
+          <p>Form controls now convert cleanly: select options land on separate lines (optgroup labels kept), input values are preserved, and iframe/object fallback text becomes its own block instead of gluing onto the next paragraph. Builds on v1.3.4's fixes for <code>&lt;ol start&gt;</code>, details/summary and svg/math.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>v1.3.4</h3>
+          <p>Ordered lists respect <code>start</code>, details/summary sections keep their heading, and svg/math markup is stripped so it can't leak into your paste.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>v1.2.2</h3>
+          <p>Tables convert to proper Markdown tables, common entity decoding (&amp;amp; → &amp;), paste-and-clean improvements in the popup.</p>
+          <span class="tech-badge">Aug 2026</span>
+        </div>
+        <div class="feature-card">
+          <h3>More surfaces</h3>
+          <p>The same engine now ships as a Firefox extension, a zero-dependency CLI (<code>brew install mahope/clean-copy/clean-copy</code>), an Obsidian plugin, a <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">GitHub Action</a>, a <a href="https://github.com/mahope/clean-copy-vscode" rel="noopener">VS Code extension</a>, and a <a href="https://github.com/mahope/clean-copy-cli" rel="noopener">npm-installable CLI</a> — see all install options above.</p>
+          <span class="tech-badge">7 platforms</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2>Technical details</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Manifest V3</h3>
+          <p>Built on the latest Chrome extension platform. Uses service worker, offscreen clipboard API, and minimal permissions.</p>
+          <span class="tech-badge">MV3</span>
+        </div>
+        <div class="feature-card">
+          <h3>Service worker</h3>
+          <p>Handles context menus and keyboard shortcuts without a persistent background page. Zero memory when not in use.</p>
+          <span class="tech-badge">Service Worker</span>
+        </div>
+        <div class="feature-card">
+          <h3>Offscreen clipboard</h3>
+          <p>Uses the offscreen document API to write to the clipboard — compliant with Chrome's MV3 clipboard rules.</p>
+          <span class="tech-badge">Offscreen API</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--color-surface);" id="faq">
+    <div class="container">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-grid" style="display:flex;flex-direction:column;gap:8px;">
+        <details class="faq-item">
+          <summary>Is Clean Copy free?</summary>
+          <p>Yes, the core extension is completely free. A Pro tier with additional features is planned — priced at $19/year when launched.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does it work on any website?</summary>
+          <p>Yes. Clean Copy works on any page you can select text on — articles, documentation, code blogs, forums, social media, email. Everything happens in your browser.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What permissions does it need?</summary>
+          <p><code>activeTab</code> (access the current page's selection when you invoke Clean Copy), <code>clipboardWrite</code> (copy to clipboard), <code>scripting</code> + <code>offscreen</code> (internal plumbing), <code>contextMenus</code> (right-click menu), and <code>storage</code> (save your mode preference). Crucially: no <em>host permissions</em> — Clean Copy never gets standing access to read any website. No data collection, no network access to external servers.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does it send my data anywhere?</summary>
+          <p>No. Clean Copy processes everything locally in your browser. The text you select never leaves your machine. No analytics, no tracking, no servers.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can I use the keyboard shortcut?</summary>
+          <p>Yes. Press <strong>Ctrl+Shift+C</strong> (Windows/Linux) or <strong>Cmd+Shift+C</strong> (Mac) to copy selected text as Markdown. The shortcut is configurable in Chrome's extension shortcut settings.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does it work in Edge, Brave, or Opera?</summary>
+          <p>Yes. Any Chromium-based browser that supports Chrome extensions can install Clean Copy from the Chrome Web Store.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
+    <p><a href="/" style="color:var(--color-accent);">← Back to EU Compliance Guides</a> &middot; <a href="/blog/copy-as-markdown-chrome-extension" style="color:var(--color-accent);">Guide: Copy as Markdown — best Chrome extensions</a></p>
+    <p style="margin-top:8px;">Clean Copy is a product of Mahope. Free Chrome extension — no strings attached.</p>
+  </footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script src="/track.js"></script>
+</body>
+</html>

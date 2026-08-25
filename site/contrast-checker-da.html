@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WCAG Kontrast-Checker — Gratis, Ingen Tilmelding</title>
+<meta name="description" content="Tjek farvekontrast mod WCAG 2.1 AA og AAA med det samme. Indtast to farver, se ratio, bestået/dumpet for normal og stor tekst samt en live forhåndsvisning. Kører helt i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis WCAG Kontrast-Checker">
+<meta property="og:description" content="Øjeblikkelige WCAG 2.1 AA/AAA kontrast-ratios for ethvert farvepar. Ingen tilmelding — intet forlader din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/contrast-checker-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/contrast-checker-da"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/contrast-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/contrast-checker-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/contrast-checker">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"WCAG Kontrast-Checker (dansk)","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/contrast-checker-da","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Gratis WCAG 2.1 AA/AAA kontrast-checker i browseren med live forhåndsvisning."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .cc-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .cc-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .cc-field { display:flex; flex-direction:column; gap:6px; }
+  .cc-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .cc-swatch-input { display:flex; gap:8px; align-items:center; }
+  .cc-swatch-input input[type=color] { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .cc-swatch-input input[type=text] { width:110px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-family:ui-monospace,monospace; font-size:.95rem; }
+  .cc-swap { padding:10px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface-2); color:var(--color-text); cursor:pointer; font-size:.9rem; }
+  .cc-swap:hover { border-color:var(--color-accent); }
+  .cc-ratio { font-size:2.4rem; font-weight:700; margin:22px 0 4px; font-variant-numeric:tabular-nums; }
+  .cc-verdict { font-weight:600; margin-bottom:16px; }
+  .pass { color:var(--color-green); } .fail { color:var(--color-red); }
+  table.cc-table { width:100%; border-collapse:collapse; margin-top:8px; }
+  table.cc-table th, table.cc-table td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--color-border); font-size:.95rem; }
+  table.cc-table th { color:var(--color-text-muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; }
+  .cc-preview { margin-top:22px; padding:28px 22px; border-radius:var(--radius); line-height:1.5; border:1px solid var(--color-border); }
+  .cc-preview .large { font-size:1.5rem; font-weight:700; }
+  .cc-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .cc-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  @media (max-width:520px){ .cc-ratio { font-size:1.9rem; } }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>WCAG Kontrast-Checker</h1>
+    <p class="tagline">Vælg to farver og få den præcise WCAG&nbsp;2.1 kontrast-ratio
+    med straks svar på <strong>AA</strong> og <strong>AAA</strong>. Alt kører
+    i din browser — intet bliver uploadet.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="cc-card" aria-labelledby="checker-heading">
+  <h2 id="checker-heading">Tjek et farvepar</h2>
+  <div class="cc-row" style="margin-top:14px">
+    <div class="cc-field">
+      <label for="fg-color">Tekst / forgrund</label>
+      <div class="cc-swatch-input">
+        <input type="color" id="fg-color" value="#1a1e21" aria-describedby="fg-hex-label">
+        <input type="text" id="fg-text" value="#1a1e21" aria-label="Forgrundsfarve som hex-kode" spellcheck="false">
+      </div>
+    </div>
+    <button type="button" class="cc-swap" id="swap-btn" title="Byt om på forgrund og baggrund">&#8645; Swap</button>
+    <div class="cc-field">
+      <label for="bg-color">Baggrund</label>
+      <div class="cc-swatch-input">
+        <input type="color" id="bg-color" value="#ffffff" aria-describedby="bg-hex-label">
+        <input type="text" id="bg-text" value="#ffffff" aria-label="Baggrundsfarve as hex-kode" spellcheck="false">
+      </div>
+    </div>
+  </div>
+  <p class="cc-error" id="cc-error" role="alert"></p>
+
+  <p class="cc-ratio" id="ratio-out">—</p>
+  <p class="cc-verdict" id="verdict-out" aria-live="polite"></p>
+
+  <table class="cc-table">
+    <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">WCAG-krav til kontrast efter tekststørrelse</caption>
+    <thead>
+      <tr><th scope="col">Indhold</th><th scope="col">Krævet ratio</th><th scope="col">AA</th><th scope="col">AAA</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Normal tekst (&lt; 18pt / &lt; 14pt fed)</td><td>4.5 : 1</td><td id="aa-normal">—</td><td id="aaa-normal">—</td></tr>
+      <tr><td>Stor tekst (&ge; 18pt eller &ge; 14pt fed)</td><td>3 : 1</td><td id="aa-large">—</td><td id="aaa-large">—</td></tr>
+      <tr><td>UI-komponenter &amp; grafik</td><td>3 : 1</td><td id="aa-ui">—</td><td colspan="2" id="aaa-ui">n/a</td></tr>
+    </tbody>
+  </table>
+
+  <div class="cc-preview" id="preview" role="presentation">
+    <p class="large" id="pv-large">Eksempel på stor overskrift</p>
+    <p>Sådan ser almindelig brødtekst ud i din valgte kombination.
+       Læselig i længden? Dine læsere afgør det på få sekunder.</p>
+  </div>
+
+  <p class="cc-note">Ratioerne følger WCAG 2.1 success-kriterierne
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html" rel="noopener">1.4.3 (Contrast Minimum)</a>,
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html" rel="noopener">1.4.6 (Contrast Enhanced)</a> and
+  <a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">1.4.11 (Non-text Contrast)</a>.
+  Skal fejl rettes på hele sitet? Den gratis <a href="/scan-da">Accessibility Scanner</a> finder lavkontrast-tekst på en hel side.</p>
+</section>
+
+<section class="cc-card">
+  <h2>Sådan beregnes ratioen</h2>
+  <p style="margin-top:10px">Hver farve konverteres til sRGB relativ luminans
+  (L = 0.2126·R + 0.7152·G + 0.0722·B efter gamma-ekspansion). Kontrast-ratioen er
+  (L1 + 0,05) / (L2 + 0,05), hvor L1 er den lyseste farve. En ratio på 1:1 betyder
+  identiske farver; 21:1 er maksimum (sort på hvidt). Det matcher formlen i
+  WCAG-specifikationen nøjagtigt.</p>
+</section>
+
+<p style="margin-top:10px"><a href="/da/blog/wcag-kontrast-checker">Guide: sådan tjekker du kontrast trin for trin</a></p>
+<p style="margin-top:26px"><a href="/free-tools">&larr; Alle gratis værktøjer</a> · <a href="/text-on-image-checker-da">Tekst-på-billede-tjek</a> ·
+<a href="/scan">Hele-siden-scanner</a> · <a href="/palette-generator-da">Palette generator</a> · <a href="/contrast-checker">English version</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøj i browseren
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var fgColor = $('fg-color'), bgColor = $('bg-color');
+  var fgText = $('fg-text'), bgText = $('bg-text');
+
+  function parseHex(v) {
+    v = v.trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(v)) {
+      return [parseInt(v[0]+v[0],16), parseInt(v[1]+v[1],16), parseInt(v[2]+v[2],16)];
+    }
+    if (/^[0-9a-fA-F]{6}$/.test(v)) {
+      return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+    }
+    return null;
+  }
+  function toHex(rgb) {
+    return '#' + rgb.map(function (c) {
+      var h = Math.round(c).toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+  // WCAG 2.1 relative luminance
+  function luminance(rgb) {
+    var c = rgb.map(function (ch) {
+      ch = ch / 255;
+      return ch <= 0.03928 ? ch / 12.92 : Math.pow((ch + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+  function mark(id, pass, label) {
+    var el = $(id);
+    el.textContent = label;
+    el.className = pass ? 'pass' : 'fail';
+  }
+
+  function update() {
+    var errEl = $('cc-error');
+    errEl.textContent = '';
+    var fg = parseHex(fgText.value), bg = parseHex(bgText.value);
+    if (!fg || !bg) {
+      errEl.textContent = 'Indtast gyldige hex-farver, fx #1a1e21 eller fff.';
+      return;
+    }
+    fgColor.value = toHex(fg);
+    bgColor.value = toHex(bg);
+
+    var r = ratio(fg, bg);
+    $('ratio-out').textContent = r.toFixed(2) + ' : 1';
+
+    var aaNormal = r >= 4.5, aaaNormal = r >= 7;
+    var aaLarge = r >= 3, aaaLarge = r >= 4.5;
+    var aaUi = r >= 3;
+
+    mark('aa-normal', aaNormal, aaNormal ? 'Bestået' : 'Dumpet');
+    mark('aaa-normal', aaaNormal, aaaNormal ? 'Bestået' : 'Dumpet');
+    mark('aa-large', aaLarge, aaLarge ? 'Bestået' : 'Dumpet');
+    mark('aaa-large', aaaLarge, aaaLarge ? 'Bestået' : 'Dumpet');
+    mark('aa-ui', aaUi, aaUi ? 'Bestået' : 'Dumpet');
+
+    var v = $('verdict-out');
+    if (r >= 7)      { v.textContent = 'Fremragende — består AAA for al tekst.'; v.className = 'cc-verdict pass'; }
+    else if (r >= 4.5){ v.textContent = 'Godt — består AA for al tekst.'; v.className = 'cc-verdict pass'; }
+    else if (r >= 3) { v.textContent = 'Begrænset — består kun for stor tekst og UI-komponenter.'; v.className = 'cc-verdict fail'; }
+    else             { v.textContent = 'Dumpet i WCAG — ikke nok kontrast selv til stor tekst.'; v.className = 'cc-verdict fail'; }
+
+    var pv = $('preview');
+    pv.style.background = toHex(bg);
+    pv.style.color = toHex(fg);
+    pv.style.borderColor = r >= 3 ? '' : '#f87171';
+    pv.querySelector('.large').style.color = toHex(fg);
+    pv.querySelector('p:last-child').style.color = toHex(fg);
+  }
+
+  function bind(picker, field) {
+    picker.addEventListener('input', function () { field.value = picker.value; update(); });
+    field.addEventListener('input', update);
+    field.addEventListener('change', update);
+  }
+  bind(fgColor, fgText);
+  bind(bgColor, bgText);
+  $('swap-btn').addEventListener('click', function () {
+    var t = fgText.value; fgText.value = bgText.value; bgText.value = t;
+    update();
+  });
+  update();
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joomla Accessibility Check — Free WCAG/EAA Site Scan</title>
+<meta name="description" content="Free Joomla WCAG 2.1 AA scan — 16 automated rules, instant grade, no signup. Check alt text, contrast, headings, forms, and links on your Joomla site.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Joomla Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your Joomla site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/joomla-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Joomla Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your Joomla site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Joomla Accessibility Check — Free WCAG/EAA Site Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/joomla-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/joomla-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to my Joomla site?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Joomla site offers services or products to the public in the EU, the European Accessibility Act (EAA) requires WCAG 2.1 AA compliance. This includes Joomla-based e-commerce stores, membership portals, and government or educational sites that serve EU residents. Enterprises and public-sector clients increasingly ask for documented proof of compliance before signing contracts."}},{"@type":"Question","name":"What does the free scanner check on Joomla sites?","acceptedAnswer":{"@type":"Answer","text":"16 automated rules covering alt text on images, form labels, link text, buttons, heading hierarchy, page language, viewport meta, iframe titles, table headers, contrast ratios, ARIA misuse, and more. Each finding includes the exact element location and a concrete fix tip tailored to Joomla's admin structure."}},{"@type":"Question","name":"Where do I fix common issues in Joomla?","acceptedAnswer":{"@type":"Answer","text":"Most fixes are inside the Joomla administrator. Alt text is added in the Media Manager when uploading or editing images. Contrast issues require template CSS changes via Templates or User CSS. Headings are set in the article editor toolbar. Form labels are configured inside the component parameters. The scanner tells you exactly which element to fix and where to find it in the admin."}},{"@type":"Question","name":"Is Joomla accessible out of the box?","acceptedAnswer":{"@type":"Answer","text":"Joomla 4 and 5 have made significant improvements with built-in accessibility features, including automatic ARIA landmark roles, skip-to-content link, and compliant default frontend templates like Cassiopeia. However, third-party extensions and custom template overrides can introduce accessibility issues. The free scanner helps identify which parts of your site still need attention."}}],"name":"Joomla Accessibility Check — Free WCAG/EAA Site Scan","url":"https://hermes-passiv.pages.dev/guides/joomla-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Joomla Accessibility Check</h1>
+    <p class="subtitle">Scan any Joomla site against 16 WCAG 2.1 AA rules in seconds — no extension install, no signup. Built for EU compliance.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.joomla.org" class="btn-primary">Run a Free Scan on joomla.org</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Joomla accessibility matters in the EU</h2>
+    <p>Joomla powers roughly 2% of the web, with a disproportionately strong presence across EU government portals, educational institutions, and public-sector organisations. The European Accessibility Act (EAA) applies to any Joomla site offering services or products to EU residents — from municipal portals to membership-based community platforms.</p>
+    <p>Joomla 4 and 5 introduced meaningful accessibility improvements: built-in ARIA landmark roles, a skip-to-content navigation link, and the Cassiopeia frontend template with WCAG-friendly markup. Yet the template system and reliance on third-party extensions remain common entry points for accessibility regressions — custom overrides, outdated modules, and theme colourization often introduce the same issues our scanner finds on every CMS.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Joomla site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Joomla URL</strong> — any published page: homepage, an article, or a category listing.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Joomla, most image-alt, heading, and form-label issues are fixed right in the article editor or Media Manager. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Joomla Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Joomla</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in the Joomla administrator:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Joomla</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text on images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Content → Media → click image → edit the Alt Text field in the image details panel; or set it when inserting an image into an article</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">System → Site Templates → Cassiopeia Details and Files → edit user.css — adjust body text colour (e.g. #333 or darker) and background contrast</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Article editor → select heading text → use the Paragraph dropdown in the TinyMCE toolbar to choose Heading 2, 3, etc. Only use one H1 per page.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Extensions → Modules → search module → edit → ensure Show Input Label is enabled; for components like JForms or RSForm, check each field's Label configuration</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text ("read more", "click here")</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Article editor → select the link text and rewrite it to be descriptive; for "Read More" links, edit the article's intro text so the link makes sense out of context</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">System → Global Configuration → Site → Default Language — ensures the html lang attribute is set correctly. Also check Language Switcher module settings.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt on logo or template images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Extensions → Templates → Styles → Cassiopeia (or your template) → Edit → Logo tab — set the Alternative Text (Alt) field for the brand logo</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Joomla-specific tools &amp; extensions</h2>
+    <p>Joomla 4 and 5 ship with several built-in accessibility features, and the ecosystem offers specialised tools to go further:</p>
+    <div style="display:grid;gap:16px;margin-top:24px;">
+      <div class="card"><h3>🛠️ Joomla built-in accessibility features</h3><p>The Cassiopeia template includes automatic ARIA landmark roles, a skip-to-content link, and responsive viewport settings. TinyMCE in Joomla 4+ supports accessible heading and list markup out of the box. The login and search modules render with proper form labels by default.</p></div>
+      <div class="card"><h3>✅ JA Accessibility Checker extension</h3><p>A free Joomla extension that runs WAVE-based checks directly inside your admin. It scans articles, modules, and menu items for common WCAG failures. Available from the Joomla Extensions Directory for Joomla 4 and 5.</p></div>
+      <div class="card"><h3>🔤 Accessibility checker in TinyMCE (Joomla 4+)</h3><p>Joomla 4's TinyMCE editor includes a built-in accessibility checker (Tools → Accessibility Checker) that highlights contrast, heading-order, and link-text issues inline while you edit — catching problems before they go live.</p></div>
+      <div class="card"><h3>🎨 Custom template accessibility audits</h3><p>If you use a custom or third-party template, review the template's HTML structure for correct heading hierarchy, ARIA landmarks, colour contrast, and keyboard navigation. Override files in <code>layouts/</code> and <code>html/</code> often strip out accessibility features from the original Cassiopeia markup.</p></div>
+      <div class="card"><h3>🏗️ Third-party template considerations</h3><p>Premium Joomla templates often include complex colour schemes, slider modules, and mega menus that can introduce contrast errors, missing labels, or broken focus outlines. Always scan a page with your active template before going live. Many template providers now ship WCAG-compliant variants — check their documentation.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Joomla</h2>
+    <p>Accessibility is not a one-time fix — Joomla sites change constantly through extension updates, content additions, and template modifications. Keep compliance sustainable with these practices:</p>
+    <ul style="list-style:none;display:grid;gap:12px;margin-top:24px;">
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>🔁 Regular updates.</strong> Keep Joomla core, extensions, and templates updated. Each Joomla release (4.4, 5.x) includes accessibility fixes — staying current prevents known issues from lingering on your live site.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>🎨 Template change reviews.</strong> Every time you switch templates or modify template overrides, scan a representative set of pages. Template changes are the single biggest source of accessibility regressions on Joomla sites.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>📝 Content author guidelines.</strong> Train editors to use proper heading levels (one H1 per page, H2 for section titles, H3 for subsections), add alt text on every image, and avoid generic link labels like "Read more" or "Click here".</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;"><strong>📊 Scan quarterly.</strong> Run the scanner on your key pages every quarter and after every major update. Keep the shareable result links as documentation for procurement and compliance reviews.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/joomla-bitv-accessibility" style="color:var(--color-accent);">Joomla Accessibility: Meeting BITV 2.0 and EN 301 549</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+        <li><a href="/blog/nis2-readiness-guide" style="color:var(--color-accent);">NIS2 Readiness Guide for Web Agencies</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, our e-book covers the complete checklist plus a 14-day fix plan:</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

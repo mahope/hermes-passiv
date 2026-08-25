@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""Build site/blog/html-to-markdown-vscode.html — VS Code HTML→Markdown guide.
+
+Follows the house blog template: same head structure, hero, problem-cards,
+FAQ + JSON-LD (Article + FAQPage, both json.loads-validated), footer, tracker.
+"""
+import json
+import re
+
+URL = "https://hermes-passiv.pages.dev/blog/html-to-markdown-vscode"
+DATE = "2026-08-25"
+
+ARTICLE = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Paste as Markdown in VS Code: The Complete 2026 Guide",
+    "description": (
+        "How to paste HTML from the web into VS Code as clean Markdown or plain "
+        "text — built-in options, extensions, and keyboard shortcuts compared."
+    ),
+    "url": URL,
+    "datePublished": DATE,
+    "dateModified": DATE,
+    "author": {"@type": "Organization", "name": "Hermes Compliance"},
+    "publisher": {"@type": "Organization", "name": "Hermes Compliance"},
+}
+
+FAQS = [
+    (
+        "Can VS Code paste HTML as Markdown?",
+        "Not natively. Pasting rich text into a Markdown file inserts raw HTML tags. "
+        "You need an extension such as Clean Copy for VS Code, which converts the "
+        "clipboard HTML to Markdown (Ctrl/Cmd+Shift+V) before it lands in your editor.",
+    ),
+    (
+        "What is the shortcut to paste without formatting in VS Code?",
+        "By default there is none. With Clean Copy installed, Ctrl+Shift+V "
+        "(Cmd+Shift+V on Mac) pastes the clipboard as clean Markdown, and the "
+        "command palette offers a paste-as-plain-text command as well.",
+    ),
+    (
+        "Does the conversion keep links, headings and tables?",
+        "Yes. Headings map to # levels, links become [text](url), lists stay lists, "
+        "bold and italic survive, code blocks become fenced blocks, and simple "
+        "tables convert to pipe tables.",
+    ),
+    (
+        "Does anything get uploaded to a server?",
+        "No. Clean Copy runs entirely inside your editor. The clipboard content is "
+        "converted locally and never leaves your machine.",
+    ),
+]
+
+FAQPAGE = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": q,
+            "acceptedAnswer": {"@type": "Answer", "text": a},
+        }
+        for q, a in FAQS
+    ],
+}
+
+# Validate JSON-LD before embedding
+for block in (ARTICLE, FAQPAGE):
+    assert block["@context"] == "https://schema.org", block["@context"]
+    json.loads(json.dumps(block))
+
+faq_html = "\n".join(
+    f'<div class="card"><h3>{q}</h3><p>{a}</p></div>' for q, a in FAQS
+)
+
+html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paste as Markdown in VS Code: The Complete 2026 Guide</title>
+<meta name="description" content="How to paste HTML from the web into VS Code as clean Markdown or plain text — built-in options, extensions, and keyboard shortcuts compared.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Paste as Markdown in VS Code: The Complete 2026 Guide">
+<meta property="og:description" content="Built-in options, extensions, and shortcuts for pasting web content into VS Code as clean Markdown.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="{URL}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{URL}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{json.dumps(ARTICLE, ensure_ascii=False)}
+</script>
+<script type="application/ld+json">
+{json.dumps(FAQPAGE, ensure_ascii=False)}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare {{ width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }}
+  .compare th, .compare td {{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }}
+  .compare th {{ border-bottom:2px solid var(--color-border); }}
+  .kbd {{
+    background:#0f172a; color:#e2e8f0; font-family:'SF Mono','Monaco','Fira Code',monospace;
+    font-size:0.8rem; padding:2px 8px; border-radius:4px; border:1px solid #334155;
+    white-space:nowrap;
+  }}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">DEVELOPER &middot; VSCODE &middot; MARKDOWN</div>
+    <h1>Paste as Markdown<br>in VS Code</h1>
+    <p class="subtitle">Copy something from the web, paste it into your notes or README — and get a wall of <code>&lt;span&gt;</code> tags instead of clean Markdown. Here is why it happens, what VS Code can do about it on its own, and the fastest way to fix it properly.</p>
+    <div class="hero-cta">
+      <a href="#fix" class="btn-primary">Jump to the fix &rarr;</a>
+      <a href="/clean-copy" class="btn-secondary">About Clean Copy</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why pasting into VS Code makes a mess</h2>
+    <p>When you copy from a web page, the clipboard holds the page's full HTML fragment — inline styles, spans, smart quotes, tracking attributes. What happens on paste depends on where you land:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 Into a .md file</h3><p>VS Code inserts the raw HTML verbatim. Markdown renderers tolerate some inline HTML, so nothing errors — but your clean document fills up with <code>&lt;p style="..."&gt;</code> noise that is painful to edit later.</p></div>
+      <div class="card"><h3>💻 Into source code</h3><p>Smart quotes and non-breaking spaces are invisible in the editor but break string literals, YAML values and regexes at runtime. Classic source of "works on my machine".</p></div>
+      <div class="card"><h3>📋 Into commit messages or docs</h3><p>Hidden markup bloats diffs and makes documentation inconsistent with hand-written Markdown around it.</p></div>
+    </div>
+    <p>The fix is to convert the clipboard <em>between</em> copy and paste — ideally with one keyboard shortcut, without leaving the editor.</p>
+  </div>
+</section>
+
+<section class="products" id="options">
+  <div class="container">
+    <h2>Your options today</h2>
+    <table class="compare">
+      <thead>
+        <tr><th>Option</th><th>What it does</th><th>Catch</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Built-in paste</td>
+          <td>Inserts clipboard as-is (rich HTML kept when target accepts it)</td>
+          <td>No conversion at all — the whole problem</td>
+        </tr>
+        <tr>
+          <td>Paste as plain text</td>
+          <td>Strips all formatting via the command palette (<em>Paste as plain text</em>)</td>
+          <td>Loses everything — no headings, no links, no lists</td>
+        </tr>
+        <tr>
+          <td>Manual cleanup</td>
+          <td>Paste, then find-and-replace the worst offenders</td>
+          <td>Slow, error-prone, different every time</td>
+        </tr>
+        <tr>
+          <td><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy for VS Code</a></td>
+          <td>Converts clipboard HTML to proper Markdown or spotless plain text on paste</td>
+          <td>Free extension install — one time</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="fix">
+  <div class="container">
+    <h2>The fix: Clean Copy for VS Code</h2>
+    <p>Clean Copy brings the converter behind the <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy browser extension</a> into your editor. Same core, same output — so text you copy to research and text you paste into docs behave identically.</p>
+    <ol>
+      <li>Install the extension (see the <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy page</a> for the current install options).</li>
+      <li>Copy any content from the web.</li>
+      <li>In VS Code, press <span class="kbd">Ctrl+Shift+V</span> (<span class="kbd">Cmd+Shift+V</span> on Mac) — the clipboard lands as clean Markdown.</li>
+      <li>Want zero formatting instead? Run <strong>Clean Copy: Paste as Clean Text</strong> from the command palette.</li>
+      <li>Already typed something messy? Select it and run <strong>Clean Copy: Convert Selection to Markdown</strong>.</li>
+    </ol>
+    <div class="problem-cards">
+      <div class="card"><h3># Headings preserved</h3><p>H1–H6 map to the right number of <code>#</code> characters, so document structure survives the trip.</p></div>
+      <div class="card"><h3>[Links](intact)</h3><p>Links become standard Markdown references with the original URL — no relative-path surprises.</p></div>
+      <div class="card"><h3>Tables → pipe tables</h3><p>Simple HTML tables convert to Markdown pipe tables, including alignment.</p></div>
+      <div class="card"><h3>🔒 Local only</h3><p>Conversion happens inside the editor. Nothing is uploaded, nothing is tracked.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      {faq_html}
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Get Clean Copy free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-as-markdown-chrome-extension" style="color:var(--color-accent);">Copy as Markdown in Chrome</a> &middot; <a href="/blog/paste-without-formatting-chrome" style="color:var(--color-accent);">Paste Without Formatting</a> &middot; <a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);">HTML to Markdown Converter</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>
+"""
+
+out = "/Users/madsholstjensen/hermes-passiv/site/blog/html-to-markdown-vscode.html"
+with open(out, "w") as f:
+    f.write(html)
+
+# Post-write validation: parse every JSON-LD block back out of the written file
+content = open(out).read()
+blocks = re.findall(
+    r'<script type="application/ld\+json">(.*?)</script>', content, re.DOTALL
+)
+assert len(blocks) == 2, f"expected 2 JSON-LD blocks, got {len(blocks)}"
+for i, b in enumerate(blocks):
+    parsed = json.loads(b)
+    assert parsed["@context"] == "https://schema.org", parsed["@context"]
+    print(f"JSON-LD block {i+1}: OK (@type={parsed['@type']})")
+
+# sanity: referenced pages exist
+import os
+for ref in [
+    "/Users/madsholstjensen/hermes-passiv/site/clean-copy.html",
+    "/Users/madsholstjensen/hermes-passiv/site/blog/copy-as-markdown-chrome-extension.html",
+    "/Users/madsholstjensen/hermes-passiv/site/blog/paste-without-formatting-chrome.html",
+    "/Users/madsholstjensen/hermes-passiv/site/blog/html-to-markdown-converter.html",
+    "/Users/madsholstjensen/hermes-passiv/site/free-tools.html",
+]:
+    assert os.path.exists(ref), ref
+print("All internal link targets exist:", out)

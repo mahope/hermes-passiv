@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Guides for Every Platform — WordPress, Shopify</title>
+<meta name="description" content="Free EAA/WCAG accessibility guides and fixes for 15 platforms: WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla, PrestaShop, Weebly, Magento, Ghost, TYPO3, Craft CMS, Umbraco and more. Plus in-depth blog posts per platform.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Accessibility Guides for Every Platform">
+<meta property="og:description" content="Free EAA/WCAG accessibility checks and fixes for 15 website platforms. Find your platform, fix your site, scan free.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/platforms">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Accessibility Guides for Every Platform">
+<meta name="twitter:description" content="EAA/WCAG fixes for WordPress, Shopify, Wix, Webflow and 11 more platforms. Free scan included.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Accessibility Guides for Every Platform — WordPress, Shopify, Wix &amp; 12 More">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/platforms"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/platforms">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"Accessibility Guides for Every Platform","description":"Platform-specific EAA/WCAG accessibility guides for 15 CMS and site-builder platforms.","publisher":{"@type":"Organization","name":"Mahope"},"about":{"@type":"Thing","name":"European Accessibility Act platform compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"Platform accessibility guides","itemListElement":[
+{"@type":"ListItem","position":1,"name":"WordPress","url":"https://hermes-passiv.pages.dev/guides/wordpress-accessibility-check"},
+{"@type":"ListItem","position":2,"name":"Shopify","url":"https://hermes-passiv.pages.dev/guides/shopify-accessibility-check"},
+{"@type":"ListItem","position":3,"name":"Webflow","url":"https://hermes-passiv.pages.dev/guides/webflow-accessibility-check"},
+{"@type":"ListItem","position":4,"name":"Wix","url":"https://hermes-passiv.pages.dev/guides/wix-accessibility-check"},
+{"@type":"ListItem","position":5,"name":"Squarespace","url":"https://hermes-passiv.pages.dev/guides/squarespace-accessibility-check"},
+{"@type":"ListItem","position":6,"name":"Drupal","url":"https://hermes-passiv.pages.dev/guides/drupal-accessibility-check"},
+{"@type":"ListItem","position":7,"name":"Joomla","url":"https://hermes-passiv.pages.dev/guides/joomla-accessibility-check"},
+{"@type":"ListItem","position":8,"name":"PrestaShop","url":"https://hermes-passiv.pages.dev/guides/prestashop-accessibility-check"},
+{"@type":"ListItem","position":9,"name":"Weebly","url":"https://hermes-passiv.pages.dev/guides/weebly-accessibility-check"},
+{"@type":"ListItem","position":10,"name":"Magento","url":"https://hermes-passiv.pages.dev/guides/magento-accessibility-check"},
+{"@type":"ListItem","position":11,"name":"Ghost","url":"https://hermes-passiv.pages.dev/guides/ghost-accessibility-check"},
+{"@type":"ListItem","position":12,"name":"TYPO3","url":"https://hermes-passiv.pages.dev/guides/typo3-accessibility-check"},
+{"@type":"ListItem","position":13,"name":"Craft CMS","url":"https://hermes-passiv.pages.dev/guides/craftcms-accessibility-check"},
+{"@type":"ListItem","position":14,"name":"Umbraco","url":"https://hermes-passiv.pages.dev/guides/umbraco-accessibility-check"},
+{"@type":"ListItem","position":15,"name":"All platforms compared","url":"https://hermes-passiv.pages.dev/guides/comparison"}
+]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .plat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin: 28px 0; }
+  .plat-card { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 12px; padding: 22px; }
+  .plat-card h2 { margin: 0 0 6px; font-size: 19px; }
+  .plat-card .plat-icon { font-size: 24px; margin-right: 8px; }
+  .plat-card p { font-size: 14px; color: var(--color-text-muted); margin: 0 0 12px; }
+  .plat-links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .plat-links a { font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--color-border); color: var(--color-accent); text-decoration: none; }
+  .plat-links a:hover { background: rgba(255,255,255,0.05); }
+  .blog-links { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .blog-links a { display: block; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 10px; font-size: 14px; color: var(--color-accent); text-decoration: none; background: var(--color-surface-2); }
+  .blog-links a:hover { background: rgba(255,255,255,0.05); }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">PLATFORM GUIDES</div>
+    <h1>Accessibility Guides<br>for Every Platform</h1>
+    <p class="subtitle">The European Accessibility Act applies to your site no matter what it is built with. Pick your platform below for a free, platform-specific guide to the most common EAA/WCAG 2.1 AA issues — then verify the result with our free scanner.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Scan Any Site Free →</a>
+      <a href="#platforms" class="btn-secondary">Browse Platforms</a>
+      <span class="hero-note">15 platforms · No signup · Instant grade</span>
+    </div>
+  </div>
+</header>
+
+<main class="container" id="platforms">
+  <section>
+    <h2>Choose your platform</h2>
+    <p>Each guide covers what that platform's themes, templates and editors typically get wrong — and how to fix it before your next scan.</p>
+    <div class="plat-grid">
+
+      <div class="plat-card"><h2><span class="plat-icon">🔍</span>WordPress</h2><p>The world's most common CMS — and the most common source of theme-level accessibility issues. Check any site against 16 WCAG rules.</p>
+        <div class="plat-links"><a href="/guides/wordpress-accessibility-check">Guide →</a><a href="/wordpress-plugin">Free plugin →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🛍️</span>Shopify</h2><p>Stores selling into the EU must meet the EAA. Check themes, apps and checkout flows.</p>
+        <div class="plat-links"><a href="/guides/shopify-accessibility-check">Guide →</a><a href="/blog/shopify-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🎨</span>Webflow</h2><p>Clean visual markup is not automatically accessible markup. Verify your exported site.</p>
+        <div class="plat-links"><a href="/guides/webflow-accessibility-check">Guide →</a><a href="/blog/webflow-accessibility-audit">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🧩</span>Wix</h2><p>See how your Wix site scores in seconds — strips, contrast, hover menus and more.</p>
+        <div class="plat-links"><a href="/guides/wix-accessibility-check">Guide →</a><a href="/blog/wix-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">📐</span>Squarespace</h2><p>A beautiful template is not an accessible site. Verify your published pages.</p>
+        <div class="plat-links"><a href="/guides/squarespace-accessibility-check">Guide →</a><a href="/blog/squarespace-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🐘</span>Drupal</h2><p>Drupal has strong accessibility foundations — custom themes are what break them.</p>
+        <div class="plat-links"><a href="/guides/drupal-accessibility-check">Guide →</a><a href="/blog/drupal-wcag-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">📋</span>Joomla</h2><p>Joomla 4+ and 5 bring improvements — third-party extensions may not. Also covers BITV 2.0.</p>
+        <div class="plat-links"><a href="/guides/joomla-accessibility-check">Guide →</a><a href="/blog/joomla-bitv-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🛒</span>PrestaShop</h2><p>E-commerce has no micro-enterprise exemption under the EAA. Check themes, modules and checkout.</p>
+        <div class="plat-links"><a href="/guides/prestashop-accessibility-check">Guide →</a><a href="/blog/prestashop-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🖱️</span>Weebly</h2><p>Drag-and-drop does not mean accessible. Verify what your published pages actually emit.</p>
+        <div class="plat-links"><a href="/guides/weebly-accessibility-check">Guide →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🏬</span>Magento</h2><p>Adobe Commerce stores need PHTML, XML and extension checks — plus EN 301 549 documentation.</p>
+        <div class="plat-links"><a href="/guides/magento-accessibility-check">Guide →</a><a href="/blog/magento-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">📰</span>Ghost</h2><p>Newsletter or paid publication for EU readers? Verify your theme handles headings, alt text and focus.</p>
+        <div class="plat-links"><a href="/guides/ghost-accessibility-check">Guide →</a><a href="/blog/ghost-eaa-accessibility">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🏢</span>TYPO3</h2><p>Public-sector favourite — check BITV/EN 301 549 basics free, including editor output.</p>
+        <div class="plat-links"><a href="/guides/typo3-accessibility-check">Guide →</a><a href="/blog/typo3-accessibility-bitv-check">Blog post →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🛠️</span>Craft CMS</h2><p>Your Twig templates decide accessibility. See exactly what they emit to the browser.</p>
+        <div class="plat-links"><a href="/guides/craftcms-accessibility-check">Guide →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">🌐</span>Umbraco</h2><p>Razor views and editor content both matter — scan the rendered result.</p>
+        <div class="plat-links"><a href="/guides/umbraco-accessibility-check">Guide →</a></div></div>
+
+      <div class="plat-card"><h2><span class="plat-icon">📊</span>All Platforms Compared</h2><p>Market share, typical issues and fix complexity for 10 major platforms, side by side.</p>
+        <div class="plat-links"><a href="/guides/comparison">Comparison table →</a></div></div>
+
+    </div>
+  </section>
+
+  <section style="margin-top:40px">
+    <h2>In-depth platform blog posts</h2>
+    <p>Longer reads on making each platform EAA-compliant — real fixes, real code, platform by platform.</p>
+    <div class="blog-links">
+      <a href="/blog/shopify-eaa-accessibility">Shopify &amp; the EAA: store fixes that matter</a>
+      <a href="/blog/magento-eaa-accessibility">Magento/Adobe Commerce: Luma inheritance &amp; checkout focus</a>
+      <a href="/blog/wix-eaa-accessibility">Wix &amp; the EAA: Editor fixes for small businesses</a>
+      <a href="/blog/webflow-accessibility-audit">Webflow accessibility audit: from clean canvas to compliant</a>
+      <a href="/blog/squarespace-eaa-accessibility">Squarespace &amp; the EAA: template limits and workarounds</a>
+      <a href="/blog/prestashop-eaa-accessibility">PrestaShop &amp; the EAA: e-commerce without exemptions</a>
+      <a href="/blog/joomla-bitv-accessibility">Joomla &amp; BITV 2.0/BFSG: meeting German requirements</a>
+      <a href="/blog/drupal-wcag-accessibility">Drupal &amp; WCAG: strong core, fragile themes</a>
+      <a href="/blog/ghost-eaa-accessibility">Ghost &amp; the EAA: publications for EU readers</a>
+      <a href="/blog/typo3-accessibility-bitv-check">TYPO3 &amp; BITV: public-sector accessibility check</a>
+      <a href="/blog/webflow-vs-squarespace-accessibility">Webflow vs Squarespace: builder accessibility compared</a>
+      <a href="/blog/drupal-vs-typo3-accessibility">Drupal vs TYPO3: public-sector CMS compared</a>
+    </div>
+  </section>
+
+  <section class="cta-band" style="margin-top:44px">
+    <h2>Not sure where to start?</h2>
+    <p>Run a free scan first. It takes seconds, needs no signup, and tells you which of the 16 automated WCAG rules your pages fail — whatever your platform.</p>
+    <a href="/scan" class="btn-primary">Scan Your Site Free →</a>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <p>Hermes Compliance — free accessibility scanning for every platform. Built by Mahope.</p>
+    <nav aria-label="Footer">
+      <a href="/">Home</a> ·
+      <a href="/scan">Scan</a> ·
+      <a href="/#products">Products</a> ·
+      <a href="/downloads">Downloads</a> ·
+      <a href="/guides/comparison">Compare Platforms</a>
+    </nav>
+  </div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

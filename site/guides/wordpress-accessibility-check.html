@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free WordPress Accessibility Check (WCAG/EAA) — Scan Your Site</title>
+<meta name="description" content="Run a free automated WCAG 2.1 AA check on your WordPress site. 16 rules, instant grade, no signup. Covers alt text, contrast, links, forms and headings.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WordPress Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Check your WordPress site against 16 WCAG 2.1 AA rules. Free instant scan, concrete fix steps, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/wordpress-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WordPress Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Check your WordPress site against 16 WCAG 2.1 AA rules. Free instant scan, concrete fix steps, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Free WordPress Accessibility Check (WCAG/EAA) — Scan Your Site">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/wordpress-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/wordpress-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","name":"Free WordPress Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/wordpress-accessibility-check","mainEntity":[{"@type":"Question","name":"Does the EAA apply to my WordPress site?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your WordPress site offers services or products to the public in the EU, the European Accessibility Act (EAA) requires WCAG 2.1 AA compliance. This includes WooCommerce stores, membership sites, and service portals. Enterprise clients increasingly ask for proof of compliance."}},{"@type":"Question","name":"What does the free scanner check on WordPress sites?","acceptedAnswer":{"@type":"Answer","text":"16 automated rules covering alt text on images, form labels, link text, buttons, heading hierarchy, page language, viewport meta, iframe titles, table headers, contrast ratios, ARIA misuse, and more. Each finding includes its location and a concrete fix tip."}},{"@type":"Question","name":"Where do I fix common issues in WordPress?","acceptedAnswer":{"@type":"Answer","text":"Most fixes are in the post/page editor or theme customizer. Alt text goes in the Media Library. Contrast issues are fixed in the Theme Customizer under Colors. Headings use the Block Editor dropdown. The scanner tells you exactly which element to fix."}},{"@type":"Question","name":"Do I need to install a plugin to run the scan?","acceptedAnswer":{"@type":"Answer","text":"No. The scanner runs in your browser — paste any WordPress URL and get instant results. If you prefer a dashboard-based tool, we also offer a free WordPress plugin (Tools → EAA Scanner) that scans any URL from your admin."}},{"@type":"Question","name":"Which WordPress plugins actually help with accessibility?","acceptedAnswer":{"@type":"Answer","text":"The Accessibility Checker plugin (by Equalize Digital) runs real-time audits inside the Block Editor. WP Accessibility offers quick theme-layer fixes like adding skip-to-content links. Editoria11y provides a live preview checker for content editors. Avoid auto-fix plugins that globally alter your theme markup — they often break layout or introduce ARIA misuse."}},{"@type":"Question","name":"Does the Gutenberg block editor have accessibility issues?","acceptedAnswer":{"@type":"Answer","text":"Yes. Common Gutenberg issues include: heading levels not defaulting to a logical hierarchy, image blocks without a required alt field, button colour contrast problems inside Group blocks, and custom HTML blocks that bypass the editor's accessibility safeguards. Many of these don't surface until you run a full WCAG scan."}}]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Free WordPress Accessibility Check</h1>
+    <p class="subtitle">Scan any WordPress site against 16 WCAG 2.1 AA rules in seconds — no plugin install, no signup.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.wordpress.org" class="btn-primary">Run a Free Scan on wordpress.org</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why WordPress accessibility matters in the EU</h2>
+    <p>WordPress powers over 43% of all websites globally — more than 810 million sites — including the majority of small-business e-commerce stores, membership platforms, and service portals in the European Union. Despite that reach, independent audits consistently find that fewer than 1 in 5 WordPress themes pass basic WCAG 2.1 AA checks out of the box. Popular commercial themes from marketplaces like ThemeForest and TemplateMonkey routinely fail on contrast ratios, heading structure, and missing ARIA landmarks.</p>
+    <p>The European Accessibility Act (EAA) is the strongest regulatory driver yet. It applies to any website offering services or products to EU consumers — from a WooCommerce boutique in Berlin to a membership portal in Dublin. Non-compliance carries real legal exposure, and enterprise procurement teams increasingly require a signed VPAT or documented WCAG conformance before signing. The most frequent failures on WordPress sites — missing alt text on product images, generic "read more" links, low-contrast themes, empty form labels, and absent page language declarations — are also the cheapest and fastest to fix. That's exactly what our automated scanner catches.</p>
+    <p>Beyond regulation, the business case is clear: accessible sites rank higher in Google search (alt text is semantic content), convert better (clear CTAs and forms), and reduce bounce rates from users who rely on assistive technology — an estimated 15% of the EU population.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your WordPress site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your WordPress URL</strong> — any published page: home, a product page, or a collection page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In WordPress, most image-alt and contrast issues are fixed right in the editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your WordPress Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in WordPress</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in the WordPress admin:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in WordPress</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Media Library → click image → Alt Text field in the attachment details panel</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Appearance → Customize → Colors (or Additional CSS) — set body text to at least #444 or darker</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">When editing a page, use Heading block with the correct level (H2 for sections, H3 for subsections). Only one H1 per page.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Check contact form plugins (WPForms, Contact Form 7) — ensure each field has a visible label, not just placeholder text</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Settings → General → Site Language sets the lang attribute. Most themes pass this through correctly.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt on logo</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Appearance → Customize → Site Identity — set the Logo Alt Text field</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Non-descriptive link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Search for "click here", "read more", "learn more" in your content — replace with text that describes the destination</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>WordPress-specific tools &amp; modules</h2>
+    <p>WordPress has its own accessibility ecosystem — some plugins genuinely help, others introduce new problems. Here is what to use, what to avoid, and how each tool fits into a real workflow.</p>
+
+    <h3 style="margin-top:24px;">🛠️ Plugins that help</h3>
+    <ul style="line-height:2;margin-top:8px;">
+      <li><strong>Accessibility Checker (Equalize Digital)</strong> — Audits each post or page inside the Block Editor as you write. Flags missing alt text, broken heading hierarchy, empty links, and contrast issues before you publish. Runs the same underlying rules as our scanner but inline in the editor so you catch issues mid-draft. Free tier covers basic checks; Pro adds colour-contrast validation and team reporting.</li>
+      <li><strong>WP Accessibility (by Joe Dolson)</strong> — A lightweight toolkit that adds skip-to-content links, enforces lang attributes, highlights images missing alt text in the admin, and lets you set a minimum font size. Does not auto-fix your content — it surfaces what needs attention. Ideal as a baseline layer on any theme.</li>
+      <li><strong>Editoria11y (by Princeton University's CMS team)</strong> — A live preview checker that runs in the front-end admin bar. Editors see colour-coded flags (green / yellow / red) next to problematic elements as they review their pages. Non-technical content teams love it because it requires zero setup and gives instant inline feedback.</li>
+      <li><strong>WAVE Evaluation Tool (browser extension)</strong> — Not a plugin but an essential companion. Overlays WCAG violations directly on your rendered page. Works with any WordPress site and is widely referenced in EAA compliance documentation.</li>
+    </ul>
+
+    <h3 style="margin-top:24px;">⚠️ Plugins that can hurt</h3>
+    <ul style="line-height:2;margin-top:8px;">
+      <li><strong>"Auto accessibility" or "one-click fix" plugins</strong> — These globally inject JavaScript to re-write colour values, re-arrange DOM structure, or append ARIA attributes. They often break theme layout, introduce duplicate landmark roles, and degrade performance. More importantly, they hide underlying problems: the EAA cares about the authoring experience, not third-party JS patches.</li>
+      <li><strong>Complex page builders (Elementor, Divi Builder, WPBakery)</strong> — These generate deeply nested HTML with inline styles and non-semantic wrapper divs. Elements inside a builder container frequently fail heading-level checks, skip ARIA roles, and produce inconsistent focus order. If you use a page builder, test every template individually with the scanner.</li>
+    </ul>
+
+    <h3 style="margin-top:24px;">🎨 Theme-specific patterns</h3>
+    <ul style="line-height:2;margin-top:8px;">
+      <li><strong>Astra</strong> — Generally strong semantic HTML but the Customiser colour pickers let you set text colours that violate contrast ratios (especially on transparent headers). Fix: test every colour scheme against WCAG AA contrast before deploying.</li>
+      <li><strong>GeneratePress</strong> — Cleanest semantic output of the popular lightweight themes. Its dynamic blocks respect heading hierarchy. Still, verify that custom colour overrides in the Customiser meet the 4.5:1 contrast ratio for normal text.</li>
+      <li><strong>Divi</strong> — The heaviest accessibility burden of the big three. Divi modules output deeply nested divs with inline styles, often skip heading levels, and its Visual Builder bypasses the Gutenberg editor's accessibility hooks entirely. Plan for manual ARIA adjustments or use a child-theme override file.</li>
+    </ul>
+
+    <h3 style="margin-top:24px;">🧩 Gutenberg Block Editor considerations</h3>
+    <p>The Block Editor itself has known accessibility gaps. Heading blocks default to H2 with no prompt for the correct level — editors routinely create H2 → H2 → H2 chains instead of a proper H2 → H3 → H3 hierarchy. Image blocks do not enforce alt text before publishing, and the Columns block can produce a non-sequential tab order in some configurations. Custom HTML blocks let editors bypass every accessibility safeguard. Train your content team to be deliberate about heading levels and always fill alt text, and enforce the habit of running the scanner before publishing every new page.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining accessibility on WordPress</h2>
+    <p>Accessibility is not a one-time scan. WordPress sites evolve constantly — new plugins, theme updates, fresh content from multiple editors, and third-party integrations all introduce regressions. Building ongoing practices into your workflow prevents the compliance gap from widening between audits.</p>
+
+    <h3 style="margin-top:24px;">📅 Recommended review cycle</h3>
+    <ul style="line-height:2;margin-top:8px;">
+      <li><strong>Weekly.</strong> Content editors run the scanner on every new page or post before publishing. Train them to fix alt text, heading levels, and link text themselves — the scanner gives them everything they need.</li>
+      <li><strong>Monthly.</strong> Full scan of the homepage, main product or service pages, and the contact / checkout funnel. Check for regressions introduced by theme or plugin updates.</li>
+      <li><strong>Quarterly.</strong> Audit the entire site — include archived posts, author archives, category pages, search results, and 404 templates. These hidden pages often accumulate the worst violations because no one reviews them.</li>
+      <li><strong>Annually.</strong> Review against the latest WCAG version (2.2 is now the reference for many EU frameworks). Update your VPAT or compliance statement. Check that your tools and plugins still support the current standard.</li>
+    </ul>
+
+    <h3 style="margin-top:24px;">🧪 CI and automation</h3>
+    <p>If you manage WordPress through a staging workflow, integrate automated accessibility checks into your deployment pipeline. Tools like Pa11y CI or axe-core can be run against your staging environment on every deploy — they catch contrast and ARIA regressions before they reach production. For agencies: a pre-deploy accessibility check is a strong differentiator when a client asks about your QA process.</p>
+
+    <h3 style="margin-top:24px;">📝 Training content editors</h3>
+    <p>Your content team is your first line of defence. A 30-minute training session on the Block Editor covers the three most impactful habits:</p>
+    <ul style="line-height:2;margin-top:8px;">
+      <li>Always set alt text on every image — the scanner flags it, but teaching <em>why</em> (screen-reader users perceive the image through alt text) makes the habit stick.</li>
+      <li>Use heading blocks in strict descending order. No skipping from H2 to H4. Think of headings as an outline, not a style choice.</li>
+      <li>Write descriptive link text — never publish a "click here" or "read more". The link text alone should tell a user where they are going.</li>
+    </ul>
+    <p>Provide editors with a simple checklist taped to their monitor or pinned in your team chat. Make the scanner URL the first bookmark in every editor's browser.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Want the scan inside your dashboard?</h2>
+    <p>We also ship a free <a href="/wordpress-plugin" style="color:var(--color-accent);">WordPress accessibility scanner plugin</a> — the same rule set as this page, running from <strong>Tools → EAA Scanner</strong> in your own admin. Everything runs on your server; no data is sent to third parties.</p>
+    <div style="margin-top:24px;text-align:center;">
+      <a href="/eaa-compliance-scanner.zip" class="btn-secondary" download style="display:inline-block;">Download the Free Plugin</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/wordpress-vs-wix-accessibility" style="color:var(--color-accent);">WordPress vs Wix: Accessibility Compared</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/accessibility-overlays-eaa" style="color:var(--color-accent);">Why Accessibility Overlays Don't Comply With the EAA</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, these resources cover the complete compliance journey:</p>
+    <ul style="line-height:2;margin-top:16px;">
+      <li><strong>"Accessibility for Everyone" by Laura Kalbag</strong> — The most practical introduction to web accessibility thinking. Covers the principles without assuming a technical background. A good first read for content editors and project managers new to WCAG.</li>
+      <li><strong>"Inclusive Design Patterns" by Heydon Pickering</strong> — Code-focused patterns for accessible components: navigation menus, forms, tabs, modals, and data tables. Each pattern comes with a before-and-after example. Essential for WordPress theme developers.</li>
+      <li><strong>"Accessible WordPress: Building Websites with Universal Design" by Joe Dolson</strong> — The only WordPress-dedicated book on the market. Walks through theme auditing, plugin compatibility, Gutenberg block authoring, and content workflows with real WordPress examples.</li>
+      <li><strong>"A Web for Everyone" by Sarah Horton and Whitney Quesenbery</strong> — Strategic guide aimed at decision-makers. Explains how to build accessibility into a team's workflow rather than treating it as a one-off audit. Perfect for agency owners who need to sell accessibility to clients.</li>
+      <li><strong>Our e-book: The Full EAA Compliance Checklist + 14-Day Fix Plan</strong> — A complete walkthrough covering every WCAG 2.1 AA success criterion with WordPress-specific fix instructions, a week-by-week remediation schedule, and a ready-to-use VPAT template.</li>
+    </ul>
+    <div style="margin-top:32px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URL Encoder &amp; Decoder — Free Online Tool</title>
+<meta name="description" content="Free online URL encoder and decoder. Encode special characters for use in URLs, or decode percent-encoded strings back to readable text. Supports full encodeURIComponent and partial encodeURI modes. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="URL Encoder &amp; Decoder — Free Online Tool">
+<meta property="og:description" content="Encode or decode URL strings instantly. Full encodeURIComponent and partial encodeURI modes. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/url-encoder-decoder">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="URL Encoder &amp; Decoder — Free Online Tool">
+<meta name="twitter:description" content="Encode or decode URL strings instantly. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/url-encoder-decoder">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/url-encoder-decoder">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/url-encoder-decoder">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "URL Encoder & Decoder",
+  "url": "https://hermes-passiv.pages.dev/url-encoder-decoder",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online URL encoder and decoder. Encode or decode percent-encoded URL strings, with full (encodeURIComponent) and partial (encodeURI) modes."
+}
+</script>
+<style>
+.urld-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.urld-pane { display: flex; flex-direction: column; }
+.urld-pane h2 { font-size: 0.95rem; margin: 0 0 0.5rem; font-weight: 600; }
+.urld-io {
+  width: 100%; box-sizing: border-box; min-height: 140px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.55;
+}
+textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.urld-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.urld-btns button { padding: 10px 20px; cursor: pointer; }
+.urld-status { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; }
+.urld-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.urld-err { background: rgba(220,80,80,0.10); border: 1px solid rgba(220,80,80,0.45); color: var(--color-text); display: block; }
+.urld-output-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: stretch; }
+.urld-output {
+  flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); padding: 0.7rem 0.9rem;
+}
+.urld-label { font-weight: 600; font-size: 0.85rem; color: var(--color-text-muted); min-width: 80px; }
+.urld-result {
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.78rem;
+  word-break: break-all; line-height: 1.4; flex: 1; color: var(--color-text);
+}
+.urld-copy {
+  border: 1px solid var(--color-border); background: transparent; color: var(--color-accent);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.78rem; white-space: nowrap;
+}
+.urld-copy:hover { border-color: var(--color-accent); }
+.urld-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.urld-mode { display: flex; gap: 1rem; align-items: center; margin: 0.5rem 0 0.25rem; }
+.urld-mode label { font-size: 0.85rem; cursor: pointer; }
+.urld-mode input { margin-right: 0.3rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+@media (max-width: 600px) {
+  .urld-output { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="urld-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  URL encoder / decoder
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">URL Encoder &amp; Decoder</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Encode special characters for safe URL transmission, or decode percent-encoded strings back to readable text — instantly, in your browser.</p>
+  <p class="urld-privacy">🔒 Nothing leaves your device. All encoding and decoding happens locally on this page.</p>
+</header>
+
+<div class="urld-pane">
+  <h2><label for="inputArea">Text to encode or decode</label></h2>
+  <textarea id="inputArea" class="urld-io" placeholder="Paste text or URL-encoded string here..." spellcheck="false"></textarea>
+</div>
+
+<div class="urld-mode">
+  <label><input type="radio" name="mode" value="encode" checked> Encode</label>
+  <label><input type="radio" name="mode" value="decode"> Decode</label>
+</div>
+
+<div class="urld-mode" style="margin-top:0">
+  <label><input type="radio" name="scope" value="component" checked> Full (encodeURIComponent — encodes &amp;, +, /, =, etc.)</label>
+  <label><input type="radio" name="scope" value="uri"> Partial (encodeURI — preserves URL structure)</label>
+</div>
+
+<div class="urld-btns">
+  <button id="convertBtn" class="btn-primary">Convert</button>
+  <button id="clearBtn" class="btn-secondary">Clear</button>
+  <button id="swapBtn" class="btn-secondary">Swap input ↔ output</button>
+  <button id="exampleBtn" class="btn-secondary">Load example</button>
+</div>
+
+<div id="statusBox" class="urld-status" role="status" aria-live="polite"></div>
+
+<div class="urld-output-row">
+  <div class="urld-output">
+    <span class="urld-label">Output</span>
+    <span class="urld-result" id="outputArea">Waiting for input…</span>
+    <button class="urld-copy" id="copyBtn">Copy</button>
+  </div>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free URL encoder/decoder converts text to percent-encoded format for safe use in URLs, or decodes percent-encoded strings back to readable text. Everything runs locally in your browser — nothing is uploaded, stored or sent anywhere.</p>
+
+    <h3>Full mode vs. Partial mode</h3>
+    <p><strong>Full mode (encodeURIComponent):</strong> Encodes every character that has special meaning in a URL, including <code>&amp;</code>, <code>+</code>, <code>/</code>, <code>=</code>, <code>?</code>, and <code>#</code>. Use this for query parameter values and form data.</p>
+    <p><strong>Partial mode (encodeURI):</strong> Preserves the structural parts of a URL (<code>/</code>, <code>?</code>, <code>#</code>, <code>&amp;</code>, <code>=</code>) while encoding other special characters. Use this when encoding a full URL that should remain valid.</p>
+
+    <h3>Common uses</h3>
+    <ul>
+      <li><strong>Query parameters:</strong> Encode search terms, user input or special characters in <code>?q=...</code> parameters</li>
+      <li><strong>API calls:</strong> Safely embed strings in REST or GraphQL endpoint URLs</li>
+      <li><strong>Debugging:</strong> Decode percent-encoded URLs to inspect what the server actually receives</li>
+      <li><strong>Web scraping:</strong> Build properly encoded URLs for automated requests</li>
+      <li><strong>HTML forms:</strong> Verify what form data looks like after URL encoding</li>
+    </ul>
+
+    <h3>FAQ</h3>
+    <p><strong>What is URL encoding?</strong> URL encoding (percent-encoding) replaces unsafe ASCII characters with a <code>%</code> followed by two hexadecimal digits. For example, a space becomes <code>%20</code>.</p>
+    <p><strong>Why encode URLs?</strong> URLs can only contain a limited set of ASCII characters. Characters like spaces, <code>&amp;</code>, <code>?</code>, and non-ASCII characters must be encoded to be transmitted safely over the internet.</p>
+    <p><strong>What's the difference between encodeURI and encodeURIComponent?</strong> <code>encodeURI()</code> leaves URL structure characters (<code>/</code>, <code>?</code>, <code>#</code>) alone, while <code>encodeURIComponent()</code> encodes everything. For query parameter values, always use the "Full" (encodeURIComponent) mode.</p>
+    <p><strong>Does this work with non-ASCII characters like æøå or emoji?</strong> Yes. The browser's built-in <code>encodeURIComponent</code> and <code>decodeURIComponent</code> functions handle UTF-8 encoding natively, so characters like <code>æ</code>, <code>ø</code>, <code>å</code>, <code>日本語</code> and <code>😀</code> encode correctly.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+    <a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+    <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var input = document.getElementById('inputArea');
+  var statusBox = document.getElementById('statusBox');
+  var outputArea = document.getElementById('outputArea');
+  var copyBtn = document.getElementById('copyBtn');
+  if (!input || !outputArea) return;
+
+  var modeRadios = document.querySelectorAll('input[name="mode"]');
+  var scopeRadios = document.querySelectorAll('input[name="scope"]');
+  var tracked = false;
+
+  function getMode() {
+    for (var i = 0; i < modeRadios.length; i++) {
+      if (modeRadios[i].checked) return modeRadios[i].value;
+    }
+    return 'encode';
+  }
+
+  function getScope() {
+    for (var i = 0; i < scopeRadios.length; i++) {
+      if (scopeRadios[i].checked) return scopeRadios[i].value;
+    }
+    return 'component';
+  }
+
+  function show(msg, cls) {
+    statusBox.textContent = msg;
+    statusBox.className = 'urld-status ' + cls;
+  }
+
+  function track() {
+    if (tracked) return;
+    tracked = true;
+    try {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '/url-encoder-decoder', event: 'convert' }),
+        keepalive: true
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  function convert() {
+    var text = input.value;
+    statusBox.className = 'urld-status';
+    if (text.length === 0) {
+      outputArea.textContent = 'Waiting for input…';
+      statusBox.style.display = 'none';
+      return;
+    }
+
+    var mode = getMode();
+    var scope = getScope();
+    var result = '';
+    var label = '';
+
+    try {
+      if (mode === 'encode') {
+        if (scope === 'component') {
+          result = encodeURIComponent(text);
+          label = 'Full encode (encodeURIComponent)';
+        } else {
+          result = encodeURI(text);
+          label = 'Partial encode (encodeURI)';
+        }
+      } else {
+        result = decodeURIComponent(text);
+        label = 'Decode (decodeURIComponent)';
+      }
+      outputArea.textContent = result;
+      show('✓ ' + label + ' — ' + text.length + ' chars → ' + result.length + ' chars', 'urld-ok');
+      track();
+    } catch (e) {
+      show('✗ Could not ' + mode + ': ' + e.message, 'urld-err');
+      outputArea.textContent = 'Error: ' + e.message;
+    }
+  }
+
+  // Live update while typing, debounced.
+  var timer = null;
+  function onChange() {
+    clearTimeout(timer);
+    timer = setTimeout(convert, 250);
+  }
+  input.addEventListener('input', onChange);
+
+  for (var i = 0; i < modeRadios.length; i++) {
+    modeRadios[i].addEventListener('change', onChange);
+  }
+  for (var i = 0; i < scopeRadios.length; i++) {
+    scopeRadios[i].addEventListener('change', onChange);
+  }
+
+  document.getElementById('convertBtn').addEventListener('click', convert);
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    input.value = '';
+    outputArea.textContent = 'Waiting for input…';
+    statusBox.style.display = 'none';
+    input.focus();
+  });
+
+  document.getElementById('swapBtn').addEventListener('click', function() {
+    var current = outputArea.textContent;
+    if (current === 'Waiting for input…' || current.indexOf('Error:') === 0) return;
+    input.value = current;
+    convert();
+  });
+
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    input.value = 'https://example.com/search?q=hello world & category=web & security & lang=da';
+    // Set to encode mode, full scope
+    for (var i = 0; i < modeRadios.length; i++) {
+      modeRadios[i].checked = (modeRadios[i].value === 'encode');
+    }
+    for (var i = 0; i < scopeRadios.length; i++) {
+      scopeRadios[i].checked = (scopeRadios[i].value === 'component');
+    }
+    convert();
+  });
+
+  copyBtn.addEventListener('click', function() {
+    var val = outputArea.textContent;
+    if (!val || val === 'Waiting for input…') return;
+    var done = function() {
+      var old = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(function() { copyBtn.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(done).catch(function() {});
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = val;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

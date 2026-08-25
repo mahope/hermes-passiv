@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCAG 2.2: Hvad er ændret og hvad det betyder for dine klienter</title>
+<meta name="description" content="WCAG 2.2 i 2026: de 9 nye successkriterier for tilg&aelig;ngelighed, hvad der blev fjernet, og hvordan sm&aring; webbureauer opdaterer klient-sites til EAA-standard uden et compliance-team.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WCAG 2.2: De 9 nye kriterier & hvad du skal gøre">
+<meta property="og:description" content="Fokusstørrelse, målstørrelse, tilgængelig autentifikation — de 9 nye krav og en praktisk plan for at opdatere klient-sites.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WCAG 2.2: De 9 nye kriterier & hvad du skal gøre">
+<meta name="twitter:description" content="Fokusstørrelse, målstørrelse, tilgængelig autentifikation — de 9 nye krav og en praktisk plan for at opdatere klient-sites.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wcag-22-what-changes">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/wcag-22-what-changes">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "WCAG 2.2: Hvad er \u00e6ndret \u2014 guide til sm\u00e5 webbureauer", "description": "WCAG 2.2 i 2026: de 9 nye successkriterier for tilg&aelig;ngelighed, hvad der blev fjernet, og hvordan sm&aring; webbureauer opdaterer klient-sites til EAA-standard uden et compliance-team.", "url": "https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · EAA &amp; WCAG</div>
+    <h1>WCAG 2.2:<br>Hvad er &aelig;ndret &amp; hvad det betyder for dine klienter</h1>
+    <p class="subtitle">De 9 nye successkriterier, dem der blev fjernet, og en praktisk plan for at bringe klient-sites up to date &mdash; intet compliance-team kr&aelig;ves.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">L&aelig;s guiden</a>
+      <a href="#nye-kriterier" class="btn-secondary">Se de 9 nye kriterier &darr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 7 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="hvorfor-nu">Hvorfor WCAG 2.2 betyder noget nu</h2>
+    <p>WCAG 2.2 blev en W3C-anbefaling i oktober 2023 og er nu referencesstandarden for European Accessibility Act (EAA), der tr&aring;dte i kraft juni 2025. Hvis dine klienter s&aelig;lger produkter eller tjenester online i EU, forventes deres sites at overholde mindst WCAG 2.1 AA &mdash; og WCAG 2.2 er der hvor standarden er p&aring; vej hen.</p>
+    <p>WCAG 2.2 erstatter ikke 2.1 &mdash; det udvider den. Et site der overholder 2.2 AA overholder automatisk 2.1 AA. Det g&oslash;r opgradering til det sikreste langsigtede m&aring;l for ethvert bureau, der vedligeholder klient-sites i EU.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ EAA-h&aring;ndh&aelig;velse</h3><p>Siden juni 2025 skal e-handel, bank, transport og teleservices i EU v&aelig;re tilg&aelig;ngelige. Nationale markedsoverv&aring;gningsmyndigheder kan b&oslash;de- l&aelig;gge ikke-konforme virksomheder.</p></div>
+      <div class="card"><h3>🎯 9 nye kriterier</h3><p>WCAG 2.2 tilf&oslash;jer ni nye successkriterier med fokus p&aring; kognitiv tilg&aelig;ngelighed, mobilinteraktion og formularer &mdash; omr&aring;der hvor de fleste sites fejler i dag.</p></div>
+      <div class="card"><h3>🗑️ 4 fjernede</h3><p>Fire gamle kriterier blev fjernet fordi de overlappede med andre. Sites bygget til 2.0 kan opleve at nogle krav er forsvundet &mdash; men ingen er blevet sv&aelig;rere uden erstatning.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="nye-kriterier">De 9 nye successkriterier</h2>
+    <p>Her er hvert nyt kriterium p&aring; niveau A og AA, med hvad det betyder i praksis for de sites du bygger:</p>
+    <p><strong>2.4.11 Focus Not Obscured (Minimum) &mdash; AA.</strong> N&aring;r et element modtager tastaturfokus, m&aring; det ikke skjules af forfatterskabt indhold som sticky headers, cookie-bannere eller chat-widgets. Test: tabuler gennem siden og tjek at intet d&aelig;kker det fokuserede element.</p>
+    <p><strong>2.5.7 Dragging Movements &mdash; AA.</strong> Enhver handling der udf&oslash;res ved at tr&aelig;kke (sliders, drag-to-reorder, kort) skal ogs&aring; kunne udf&oslash;res med et enkelt klik eller tryk. S&oslash;rg for knapper som alternativ.</p>
+    <p><strong>2.5.8 Target Size (Minimum) &mdash; AA.</strong> Interaktive m&aring;l skal v&aelig;re mindst 24&times;24 CSS-pixels, eller have tilstr&aelig;kkelig afstand omkring sig. Dette dr&aelig;ber sm&aring; icon-only-knapper og trang mobilnavigation.</p>
+    <p><strong>3.2.6 Consistent Help &mdash; A.</strong> Hvis et site tilbyder hj&aelig;lp (supportlink, chat), skal det vises samme sted p&aring; alle sider. At flytte hj&aelig;lpelinks mellem sider fejler.</p>
+    <p><strong>3.3.7 Redundant Entry &mdash; A.</strong> Brugere m&aring; ikke skulle indtaste samme information to gange i &eacute;n proces. Autoudfyld tidligere indtastede data i flertrins-checkouts og formularer.</p>
+    <p><strong>3.3.8 Accessible Authentication (Minimum) &mdash; AA.</strong> Login m&aring; ikke kr&aelig;ve kognitive funktionstests &mdash; det er tilladt at huske adgangskoder, men puslespil, genindtastning af koder fra billeder eller transkriptionstests er ikke. Tillad inds&aelig;tning i adgangskodefelter og underst&oslash;t password managers.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⌨️ Fokussynlighed</h3><p>2.4.11 + 2.4.13 betyder tilsammen at sticky headers ikke m&aring; sluge tastaturfokus. Rettelsen er typisk scroll-padding-top i CSS &mdash; billigt at implementere, let at demonstrere for klienter.</p></div>
+      <div class="card"><h3>📱 Mobil m&aring;lst&oslash;rrelse</h3><p>2.5.8 fanger de tommelfinger-tr&aelig;thedsproblemer som rigtige brugere klager over. F&aring; tilg&aelig;ngelighedsopgraderinger til at ligne UX-forbedringer n&aring;r du taler med klienter.</p></div>
+      <div class="card"><h3>🔐 Login-flow</h3><p>3.3.8 p&aring;virker enhver klient med et login. CAPTCHA'er der kr&aelig;ver transkription er en direkte fejl &mdash; skift til usynlige risikobaserede checks.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="hvad-fjernet">Hvad blev fjernet</h2>
+    <p>Fire kriterier fra tidligere versioner blev fjernet i 2.2 fordi de duplikerede andre eller viste sig ikke-testbare:</p>
+    <p><strong>4.1.1 Parsing</strong> &mdash; fjernet; duplikerede ID'er og misdannet markup bryder stadig hj&aelig;lpeteknologi, men kravet er d&aelig;kket af andre kriterier og browsers parsing-adf&aelig;rd. Ret duplikerede ID'er alligevel (vores scanner tjekker for dem).</p>
+    <p>Andre krav blev reorganiseret: 2.4.10 Section Headings og dele af farvekontrast-vejledningen blev konsolideret frem for strammet.</p>
+    <p>Praktisk konsekvens: en audit mod 2.0 vil liste fejl der ikke l&aelig;ngere eksisterer, og overse fejl der g&oslash;r. Genbas&eacute;r dine audits mod 2.2.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="opdatering">Sådan opdaterer du klient-sites</h2>
+    <p>De fleste sites fejler de nye kriterier i de samme h&aring;ndfulde steder. Arbejd gennem denne prioritetsorden:</p>
+    <p><strong>1. Sticky headers og overlays.</strong> Tilf&oslash;j scroll-padding-top svarende til header-h&oslash;jde, og s&oslash;rg for at cookie-bannere lukker helt s&aring; de aldrig f&aelig;lder fokus.</p>
+    <p><strong>2. Touch-m&aring;l.</strong> Gennemg&aring; ikonknapper, sociale ikoner og paginering. &Oslash;g padding til minimum 24&times;24 px. P&aring; de fleste sites er dette ren CSS.</p>
+    <p><strong>3. Tr&aelig;k-alternativer.</strong> Enhver sorterbar liste eller slider har brug for synlige klik-/tryk-kontroller. Mange komponentbiblioteker leverer dette bag et flag &mdash; sl&aring; det til.</p>
+    <p><strong>4. Formularer og checkouts.</strong> Autoudfyld gentagne felter, tillad inds&aelig;tning overalt, fjern puzzle-CAPTCHA'er.</p>
+    <p><strong>5. Gen-audit.</strong> K&oslash;r en scanning (vores er gratis, ovenfor), ret hvad den finder, og spot-tjek de nye kriterier manuelt. Dokumenter overensstemmelsesp&aring;stande mod 2.2 AA fremadrettet.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🆓 Gratis scanner</h3><p>Vores scanner tjekker alt-tekster, labels, kontrast, target sizes, duplikerede ID'er og mere &mdash; inds&aelig;t en URL, f&aring; en score p&aring; sekunder. Ingen tilmelding.</p></div>
+      <div class="card"><h3>📚 Platform-guides</h3><p>Vi har trinvise fix-guides til WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla og flere &mdash; se guides-sektionen p&aring; forsiden.</p></div>
+      <div class="card"><h3>📄 Erkl&aelig;ringsgenerator</h3><p>Efter rettelse kan du generere en tilg&aelig;ngelighedserkl&aelig;ring til din klient p&aring; minutter med vores gratis v&aelig;rkt&oslash;j.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede sp&oslash;rgsm&aring;l</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er WCAG 2.2 lovpligtigt i EU?</h3><p>EAA refererer til harmoniserede standarder baseret p&aring; WCAG 2.1 AA i dag, men EN 301 549 opdateres mod 2.2. At overholde 2.2 AA nu betyder at du er foran kravet i stedet for at jagte det.</p></div>
+      <div class="card"><h3>G&aelig;lder WCAG 2.2 for mine klienter uden for EU?</h3><p>Tilsvarende tendenser findes globalt &mdash; Section 508 i USA, EN 301 549-procurement-regler og nationale love der refererer til WCAG. At bygge til 2.2 AA opfylder n&aelig;sten alle.</p></div>
+      <div class="card"><h3>Vi bestod lige en 2.1-audit. Er vi kompatible med 2.2?</h3><p>Ikke automatisk. Fokus-skjulning, m&aring;lst&oslash;rrelse og tilg&aelig;ngelig autentifikation er almindelige nye fejl p&aring; sites der best&aring;r 2.1. Budget&aelig;r en lille re-audit-runde.</p></div>
+      <div class="card"><h3>Hvilket nyt kriterium knuser flest sites?</h3><p>Target Size (2.5.8). Icon-only-knapper under 24px er overalt &mdash; sociale delingsr&aelig;kker, carousel-pile, mobilmenuer. Det er ogs&aring; den billigste klasse af rettelser.</p></div>
+      <div class="card"><h3>Tjekker jeres gratis scanner WCAG 2.2?</h3><p>Den automatiserer det maskintjekbare delm&aelig;ngde (alt-tekster, labels, kontrast, duplikerede ID'er, viewport, overskrifter og mere). Nogle 2.2-kriterier &mdash; tr&aelig;kbev&aelig;gelser, redundant indtastning &mdash; kr&aelig;ver manuel test, og vores guider f&oslash;rer dig gennem disse tjek.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Test ethvert site gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">EAA-tjeklisten &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA-tjekliste: 10 trin for WordPress</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">OVERLAYS</span><h3><a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);text-decoration:none;">Accessibility overlays & EAA (dansk)</a></h3></div>
+    </div>
+  </div>
+</section>
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Forside</a> · <a href="/scan-da">Gratis scanner</a> · <a href="/free-tools">Gratis værktøjer</a> · <a href="/#blog">Blog</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Mere i samme stil: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

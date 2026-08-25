@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Accessibility Testing Tools: What Each One Actually Catches</title>
+<meta name="description" content="Comparison of free accessibility testing tools in 2026: WAVE, axe DevTools, Lighthouse, Accessibility Insights, NVDA and automated scanners — what each catches, and what none of them catch.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Free Accessibility Testing Tools: What Each One Actually Catches">
+<meta property="og:description" content="Comparison of free accessibility testing tools in 2026: WAVE, axe DevTools, Lighthouse, Accessibility Insights, NVDA and automated scanners — what each catches, and what none of them catch.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free Accessibility Testing Tools: What Each One Actually Catches">
+<meta name="twitter:description" content="Comparison of free accessibility testing tools in 2026: WAVE, axe DevTools, Lighthouse, Accessibility Insights, NVDA and automated scanners — what each catches, and what none of them catch.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/gratis-tilgaengelighedsvaerktoejer">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Free Accessibility Testing Tools: What Each One Actually Catches",
+  "description": "Comparison of free accessibility testing tools in 2026: WAVE, axe DevTools, Lighthouse, Accessibility Insights, NVDA and automated scanners — what each catches, and what none of them catch.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · TOOLS COMPARISON</div>
+    <h1>Free Accessibility Testing Tools:<br>What Each One Actually Catches</h1>
+    <p class="subtitle">WAVE, axe DevTools, Lighthouse, Accessibility Insights and automated scanners compared — coverage, strengths, blind spots, and how to combine them into a workflow that holds up.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-more-than-one-tool" class="btn-secondary">EAA E-Book →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 8 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-more-than-one-tool">Why More Than One Tool</h2>
+    <p>Automated tools detect roughly 30–40% of WCAG failures — the same 30–40%, mostly. Running three overlapping scanners gives you false confidence without new coverage. The strategy that works is layering tools with different blind spots: DOM-level analysers for code defects, visual tools for contrast and focus, a real screen reader for the experience, and manual keyboard testing for interaction. Below: what each free tool genuinely contributes.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="the-tools">The Tools, Compared</h2>
+    <p></p>
+    <div class="problem-cards">
+      <div class="card"><h3>🌊 WAVE (WebAIM)</h3><p>Browser extension annotating the rendered page: errors, contrast, structural elements. Best for seeing problems IN CONTEXT on the page. Blind spots: no guided fixes, dynamic content needs re-triggering.</p></div>
+      <div class="card"><h3>🪓 axe DevTools (Deque)</h3><p>Rule engine used by most CI pipelines; precise selectors and WCAG references per violation. Best for developers fixing issues. Free tier covers core rules; advanced rules paid.</p></div>
+      <div class="card"><h3>💡 Lighthouse (built into Chrome)</h3><p>One-shot audit incl. accessibility score. Good baseline snapshot, but limited rule set and single-page only. Treat the score as a smoke test, never as conformance.</p></div>
+      <div class="card"><h3>🔍 Accessibility Insights for Web</h3><p>Microsoft's extension: FastPass (automated + tab stops) plus Assessment (guided manual evaluation). The best free structured manual-testing framework.</p></div>
+      <div class="card"><h3>🗣️ NVDA / VoiceOver</h3><p>Actual screen readers. Only way to experience what blind users get: heading navigation, form labels announced, focus order, alt-text quality. Automated tools cannot judge whether alt text MEANINGFUL, only whether present.</p></div>
+      <div class="card"><h3>⚡ Automated URL scanners</h3><p>Crawl multiple pages unattended and aggregate violations — right shape for site-wide baselines and regression checks. Ours scans 16 WCAG 2.1 AA rules per page and flags exactly where each failure lives.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="what-no-tool-catches">What No Tool Catches</h2>
+    <p>Four failure classes evade every automated scanner. Alt-text quality: a tool sees presence, not senselessness. Keyboard traps in custom widgets: only Tab-through reveals them. Focus visibility during interaction: static analysis misses CSS :focus styles removed at runtime. And comprehension: logical heading structure, meaningful link text, sensible error messages. Budget manual time for these — an hour of keyboard-and-screen-reader testing finds more real barriers than another three scanners.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⌨️ Keyboard pass</h3><p>Tab through every interactive element. Can you reach, see, and operate everything? Escape closes modals? Focus never lost?</p></div>
+      <div class="card"><h3>🗣️ Screen reader spot-check</h3><p>Navigate by headings, fill the contact form, submit it. Anything confusing to you is worse for daily screen-reader users.</p></div>
+      <div class="card"><h3>👀 Zoom test</h3><p>200% zoom and 400% reflow: nothing clipped, no horizontal scrolling required to read.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="a-workflow-that-holds-up">A Workflow That Holds Up</h2>
+    <p>A sustainable cadence for a small team: (1) automated URL scan across key templates monthly — home, product/detail, article, form, search; (2) axe DevTools during development on every new component; (3) keyboard pass before each release on changed flows; (4) full Accessibility Insights Assessment quarterly; (5) screen-reader session quarterly on checkout/signup. Document results each cycle — regulators and enterprise buyers increasingly ask for evidence of testing, and a dated log of scans and fixes is that evidence.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Our EAA e-book includes a full tool-by-tool testing protocol mapped to each WCAG criterion.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Try Our Free Scanner →</a>
+      &nbsp;&nbsp;
+      <a href="/contrast-checker" class="btn-secondary">Color Contrast Checker →</a>
+      &nbsp;&nbsp;
+      <a href="/text-on-image-checker" class="btn-secondary">Text on Image Checker →</a>
+      &nbsp;&nbsp;
+      <a href="/#products" class="btn-secondary">EAA E-Book →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is the best free accessibility checker?</h3><p>For a quick look: WAVE. For development work: axe DevTools. For structured manual evaluation: Accessibility Insights for Web. For whole-site coverage over time: an automated URL crawler. They answer different questions — most teams end up using two or three.</p></div>
+      <div class="card"><h3>Can Lighthouse scores prove EAA compliance?</h3><p>No. Lighthouse samples a subset of rules on one page load. Regulators look for EN 301 549/WCAG 2.1 AA conformance including manual criteria. A high score neither proves nor disproves it.</p></div>
+      <div class="card"><h3>Do I still need manual testing if all tools pass?</h3><p>Yes. Automated coverage tops out around 30–40% of WCAG success criteria. Alt-text quality, keyboard operability of custom widgets and comprehension require a human — see the section above on what no tool catches.</p></div>
+      <div class="card"><h3>How often should we scan?</h3><p>Monthly automated scans on core templates, plus a scan after every significant release. Quarterly manual passes. More frequent scanning costs little and catches regressions while the responsible code is still fresh.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Try Our Free Scanner →</a>
+      &nbsp;&nbsp;
+      <a href="/#products" class="btn-secondary">EAA E-Book →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SCANNER · CLI</span><h3><a href="/blog/accessibility-scanner-cli" style="color:var(--color-accent);text-decoration:none;">Accessibility Scanner CLI: Automate WCAG Checks</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">GDPR · TOOLS</span><h3><a href="/blog/free-gdpr-document-generators" style="color:var(--color-accent);text-decoration:none;">Free GDPR Document Generators Compared</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA · CHECKLIST</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist: 10 Steps</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT · COST</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">What Does an Accessibility Audit Cost?</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">STATEMENTS</span><h3><a href="/blog/how-to-write-accessibility-statement" style="color:var(--color-accent);text-decoration:none;">How to Write an Accessibility Statement</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><p><a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" lang="da">Dansk version af denne guide</a></p>
+<footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

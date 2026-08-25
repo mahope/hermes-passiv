@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Iteration 151: Danish blog post for the URL->Markdown converter + cross-links.
+
+- New: site/da/blog/url-til-markdown.html (Danish guide linking to /da/url-til-markdown tool)
+- Cross-link EN/DA blog <-> EN/DA tool pages (both directions)
+- JSON-LD validated with json.loads, sitemap dedupe check, internal link check
+"""
+import json, re, os
+from datetime import date
+
+SITE = 'site'
+TODAY = date.today().isoformat()
+BASE = 'https://hermes-passiv.pages.dev'
+
+SLUG = 'url-til-markdown-konverter'
+
+
+def build_page():
+    desc = ('Konvertér enhver webside til ren Markdown gratis: indsæt en URL, få artiklens '
+            'overskrifter, links, lister, tabeller og kodeblokke som Markdown. Intet gemmes, '
+            'ingen tilmelding — konverteringen kører i din browser.')
+    ld_article = json.dumps({
+        '@context': 'https://schema.org', '@type': 'Article',
+        'headline': 'URL til Markdown-konverter — sådan gør du (gratis)',
+        'description': desc,
+        'url': f'{BASE}/blog/{SLUG}',
+        'datePublished': TODAY, 'dateModified': TODAY,
+        'author': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+        'publisher': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+    }, ensure_ascii=False)
+    faq = [
+        ("Er konvertereren gratis?",
+         "Ja. Værktøjet på /da/url-til-markdown er helt gratis, uden konto og uden grænser. Siden hentes én gang og konverteres i din egen browser."),
+        ("Gemmes min URL eller indholdet?",
+         "Nej. HTML'en hentes af proxyen, konverteres i din browser og smides væk med det samme. Intet logges eller gemmes."),
+        ("Hvad med sider bag betalingsmur eller login?",
+         "De kan ikke hentes — værktøjet virker kun på offentligt tilgængelige sider. Tunge JavaScript-apps kan også fejle."),
+        ("Kan jeg bruge det fra kommandolinjen?",
+         "Ja. clean-copy CLI'en laver samme konvertering: brew install mahope/clean-copy/clean-copy, derefter clean-copy --url https://eksempel.dk."),
+    ]
+    main_entity = [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                   for q, a in faq]
+    ld_faq = json.dumps({'@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': main_entity},
+                        ensure_ascii=False)
+
+    head_html = f'''<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL til Markdown-konverter — konvertér enhver webside gratis</title>
+<meta name="description" content="{desc}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="URL til Markdown-konverter — gratis, én URL ind">
+<meta property="og:description" content="Indsæt en URL, få sidens hovedindhold som ren Markdown på sekunder. Gratis, ingen tilmelding, intet gemmes.">
+<meta property="og:image" content="{BASE}/cover.jpg">
+<meta property="og:url" content="{BASE}/blog/{SLUG}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{BASE}/blog/{SLUG}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{ld_article}</script>
+<script type="application/ld+json">{ld_faq}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; VÆRKTØJER</div>
+    <h1>URL til Markdown-konverter<br>Konvertér Enhver Webside Gratis</h1>
+    <p class="subtitle">Skal en artikel ind i Obsidian, en docs-side ind i et LLM-prompt eller et blogindlæg flyttes mellem CMS'er? Indsæt URL'en, og få hovedindholdet som ren Markdown — reklamer, menuer og boilerplate sorteret fra.</p>
+    <div class="hero-cta">
+      <a href="#hvordan" class="btn-primary">Sådan virker det</a>
+      <a href="/da/url-til-markdown" class="btn-secondary">Konvertér en URL nu &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvad-er-det">
+  <div class="container">
+    <h2>Hvorfor konvertere en hel side til Markdown?</h2>
+    <p>Rå HTML er fyldt med ting du ikke vil have med: navigation, footere, cookie-bannere, scripts og styles. En URL-til-Markdown-konverter henter siden for dig, finder hovedindholdet og udsender ren Markdown — klar til at gemme eller genbruge.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 Noter</h3><p>Gem enhver artikel direkte i Obsidian eller Notion som Markdown-fil med overskrifter, links og lister intakte.</p></div>
+      <div class="card"><h3>🤖 AI-prompt</h3><p>LLM'er arbejder bedst med ren struktureret tekst. Konvertér dokumentationen før du sætter den i kontekst — mindre støj, bedre svar.</p></div>
+      <div class="card"><h3>📦 Migrering</h3><p>Flyt blogindlæg mellem CMS'er uden at miste struktur. Markdown importeres af stort set alle moderne systemer.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="hvordan">
+  <div class="container">
+    <h2>Sådan gør du (under 10 sekunder)</h2>
+    <ol>
+      <li>Åbn den <a href="/da/url-til-markdown" style="color:var(--color-accent);">gratis URL til Markdown-konverter</a>.</li>
+      <li>Indsæt sidens URL, fx <code>https://eksempel.dk/artikel</code>.</li>
+      <li>Klik «Konvertér til Markdown». Sidens HTML hentes én gang, hovedindholdet findes automatisk, og konverteringen kører i din egen browser.</li>
+      <li>Kopiér resultatet eller download det som <code>.md</code>-fil.</li>
+    </ol>
+    <p>Hvilke elementer bevares? Overskrifter h1–h6, fed/kursiv, links, billeder, ordnede og uordnede lister (inklusive indlejring), kodeblokke, inline-kode, tabeller (pipe-separeret), afsnit og vandrette linjer. Navigation, sidefod, scripts og styles fjernes.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔒 Intet gemmes</h3><p>Siden hentes én gang for at konvertere den. Hverken indholdet eller de URL'er du indtaster gemmes eller logges.</p></div>
+      <div class="card"><h3>🧠 Samme kerne som CLI'en</h3><p>Konverteringen bruger præcis den samme HTML→Markdown-motor som clean-copy CLI'en og browserudvidelsen — output er identisk.</p></div>
+      <div class="card"><h3>🖥️ Engelsk version</h3><p>Værktøjet findes også på <a href="/url-to-markdown" style="color:var(--color-accent);">engelsk</a>, hvis du arbejder internationalt.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tre måder at bruge Clean Copy på</h2>
+    <p><strong>1. Web-værktøjet (denne vej).</strong> Ingen installation. Bedst til engangsopgaver og til at prøve det af.</p>
+    <p><strong>2. Bookmarklet.</strong> Træk ét link op i bogmærkelinjen, klik det når du står på en side, og få markeringen kopieret som Markdown. Virker i alle browsere — <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">hent bookmarklet'et her</a>.</p>
+    <p><strong>3. CLI'en.</strong> Til scripting og batch: <code>brew install mahope/clean-copy/clean-copy</code>, derefter <code>clean-copy --url https://eksempel.dk</code>. <a href="/clean-copy#install" style="color:var(--color-accent);">Alle installationsmuligheder →</a></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+'''
+    for q, a in faq:
+        head_html += f'      <div class="card"><h3>{q}</h3><p>{a}</p></div>\n'
+    tail_html = '''    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/url-til-markdown" class="btn-primary">Prøv konvertereren gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/page-profile" class="btn-secondary">Eller profilér hele siden &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">MARKDOWN</span><h3><a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);text-decoration:none;">HTML til Markdown-konverter (engelsk)</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SEO · DA</span><h3><a href="/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);text-decoration:none;">Teknisk SEO-tjek af din hjemmeside</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">OBSIDIAN</span><h3><a href="/blog/paste-into-obsidian-clean-markdown" style="color:var(--color-accent);text-decoration:none;">Sæt rent ind i Obsidian (engelsk)</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Forside</a> &middot; <a href="/da/url-til-markdown">URL til Markdown-værktøjet</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>'''
+    return head_html + tail_html
+
+
+def update_sitemap():
+    p = f'{SITE}/sitemap.xml'
+    c = open(p).read()
+    url = f'{BASE}/blog/{SLUG}'
+    assert f'<loc>{url}</loc>' not in c, 'already in sitemap'
+    add = (f'  <url><loc>{url}</loc><lastmod>{TODAY}</lastmod>'
+           f'<changefreq>weekly</changefreq><priority>0.8</priority></url>\n')
+    c = c.replace('</urlset>', add + '</urlset>')
+    open(p, 'w').write(c)
+    print('sitemap updated')
+
+
+def patch(path, old, new, must=True):
+    c = open(path).read()
+    if new in c:
+        print(f'{path}: already patched')
+        return True
+    if old not in c:
+        if must:
+            raise SystemExit(f'anchor NOT found in {path}: {old[:70]!r}')
+        return False
+    open(path, 'w').write(c.replace(old, new))
+    print(f'{path}: patched')
+    return True
+
+
+def check_links(files):
+    broken = []
+    for path in files:
+        html = open(path).read()
+        for m in sorted(set(re.findall(r'href="(/[^"#]*?)"', html))):
+            url = m.split('?')[0]
+            t = ('site' + url).rstrip('/')
+            if not (os.path.exists(t) or os.path.exists(t + '.html') or url == '/'
+                    or os.path.exists(t + '/index.html')):
+                broken.append((path, m))
+    return broken
+
+
+def main():
+    # 1. New Danish blog page
+    page = build_page()
+    out = f'{SITE}/da/blog/{SLUG}.html'
+    with open(out, 'w') as f:
+        f.write(page)
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', page, re.DOTALL)
+    for b in blocks:
+        d = json.loads(b)
+        assert d['@context'] == 'https://schema.org'
+    print(f'{out} written, JSON-LD OK ({len(blocks)} blocks)')
+
+    # 2. Sitemap
+    update_sitemap()
+
+    # 3. Frontpage card on /da
+    patch(f'{SITE}/da.html',
+          '<h3><a href="/da/url-til-markdown" style="color:inherit;text-decoration:none;">URL til Markdown-konverter</a></h3>',
+          '<h3><a href="/da/blog/url-til-markdown-konverter" style="color:inherit;text-decoration:none;">Guide: URL til Markdown-konverter</a></h3>\n'
+          '          <p>Indsæt en URL, få sidens hovedindhold som ren Markdown — gratis og direkte i browseren.</p>',
+          must=False)
+
+    # 4. Cross-link from the DA tool to the DA blog post
+    patch(f'{SITE}/da/url-til-markdown.html',
+          '<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">\n'
+          '      <p><a href="/clean-copy-tool">Clean Copy Web (indsæt tekst)</a>',
+          '<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">\n'
+          '      <p><a href="/da/blog/url-til-markdown-konverter">Guide: sådan virker det</a> · <a href="/clean-copy-tool">Clean Copy Web (indsæt tekst)</a>')
+
+    # 5. Cross-link from the EN blog post to both tools
+    patch(f'{SITE}/blog/html-to-markdown-converter.html',
+          '<p>The same engine powers the <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy browser extension</a>, so web page and extension produce identical output.</p>',
+          '<p>The same engine powers the <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy browser extension</a>, so web page and extension produce identical output. Have a full URL instead of raw HTML? Use the free <a href="/url-to-markdown" style="color:var(--color-accent);">URL to Markdown converter</a> (<a href="/da/url-til-markdown" style="color:var(--color-accent);" lang="da">dansk version</a>) — it fetches the page and extracts the main content for you.</p>')
+
+    # 6. Internal link check on everything touched
+    files = [out, f'{SITE}/da/url-til-markdown.html',
+             f'{SITE}/blog/html-to-markdown-converter.html']
+    broken = check_links(files)
+    print('broken internal links:', broken if broken else 'none')
+
+    print(f'\nDone: /blog/{SLUG} created + sitemap + cross-links')
+
+
+if __name__ == '__main__':
+    main()

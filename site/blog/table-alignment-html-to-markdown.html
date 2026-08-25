@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preserving Table Column Alignment in HTML to Markdown — Clean Copy</title>
+<meta name="description" content="Most HTML-to-Markdown converters silently destroy table column alignment. Here is how to read text-align styles and align attributes from th/td cells and emit :---, :---:, ---: separators that render correctly.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Preserving Table Column Alignment in HTML to Markdown">
+<meta property="og:description" content="How to carry text-align styles and legacy align attributes from HTML tables into Markdown separator rows (:---, :---:, ---:) — with edge cases: colspan, header-vs-body conflicts, nested tables.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Preserving Table Column Alignment in HTML to Markdown">
+<meta name="twitter:description" content="How to carry text-align styles from HTML tables into Markdown separator rows — colspan, header-vs-body, nested tables.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Preserving Table Column Alignment in HTML to Markdown",
+  "description": "How to carry text-align styles and legacy align attributes from HTML tables into Markdown separator rows, including colspan, header-vs-body and nested-table edge cases.",
+  "author": { "@type": "Organization", "name": "Clean Copy" },
+  "publisher": { "@type": "Organization", "name": "Mahope" },
+  "datePublished": "2026-08-24",
+  "dateModified": "2026-08-24"
+}
+</script>
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/table-alignment-html-to-markdown">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tabeljustering-html-til-markdown">
+</head>
+<body>
+
+<header class="hero blog-hero">
+  <div class="container">
+    <div class="badge">TECHNICAL DEEP DIVE</div>
+    <h1>Preserving Table Column Alignment in HTML to Markdown</h1>
+    <p class="subtitle">Markdown tables can express column alignment — but most converters throw it away. Here's how to carry <code>text-align</code> from HTML into the separator row, and the edge cases that trip up naive implementations.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-secondary">🧰 Try the converter</a>
+      <a href="/blog/building-html-to-markdown-converter" class="btn-secondary">← The field guide</a>
+    </div>
+  </div>
+</header>
+
+<main class="container blog-content">
+
+<p><em>This post is part of the series behind <a href="/clean-copy">Clean Copy</a>, an HTML-to-Markdown converter running as browser extensions (Chrome + Firefox), a CLI, a GitHub Action and an Obsidian plugin — one shared zero-dependency core. Table alignment support shipped in v1.4.1.</em></p>
+
+<h2>The problem nobody notices until they paste a spreadsheet</h2>
+
+<p>A Markdown table has two parts: the data rows you see, and a separator row you usually don't think about:</p>
+
+<pre><code>| Name | Qty | Price |
+|:-----|:---:|------:|
+| Bolt | 12  | 0.40  |
+| Nut  | 24  | 0.15  |</code></pre>
+
+<p>That second line isn't decoration. <code>:---</code> left-aligns the column, <code>:---:</code> centers it, <code>---:</code> right-aligns it. A plain <code>---</code> means "renderer's default" — which for GitHub-flavored Markdown is left.</p>
+
+<p>The HTML you copy almost always <em>has</em> this information. Financial pages right-align numbers. Comparison tables center ratings. But when the converter emits <code>| --- | --- | --- |</code> for every table, all of that is silently lost — and suddenly your pasted price list reads like a phone book.</p>
+
+<h2>Where the alignment actually lives</h2>
+
+<p>HTML expresses column alignment in two ways, sometimes both on the same cell:</p>
+
+<pre><code>&lt;th style="text-align: right"&gt;Price&lt;/th&gt;   &lt;!-- modern --&gt;
+&lt;td align="center"&gt;4.5&lt;/td&gt;                &lt;!-- legacy, still everywhere --&gt;</code></pre>
+
+<p>So step one is reading both, from the cell's <strong>opening tag</strong> only — the body may contain inline elements with their own unrelated styles:</p>
+
+<pre><code>const alignOf = (tag) =&gt; {
+  const style = (tag.match(/style\s*=\s*["']([^"']*)["']/i) || [])[1] || '';
+  const attr  = (tag.match(/\balign\s*=\s*["']([^"']*)["']/i) || [])[1] || '';
+  const hay = (style.replace(/;/g, ' ') + ' ' + attr).toLowerCase();
+  if (/text-align\s*:\s*(center|right|left)|\b(center|right|left)\b/.test(hay)) {
+    if (/\bleft\b/.test(hay))   return ':---';
+    if (/\bright\b/.test(hay))  return '---:';
+    if (/\bcenter\b/.test(hay)) return ':---:';
+  }
+  return null;
+};</code></pre>
+
+<p>Note what this deliberately does <em>not</em> do: it doesn't try to resolve CSS inheritance or compute defaults. If no explicit declaration exists, we return <code>null</code> and fall back to the plain separator. Explicit beats inferred, every time.</p>
+
+<h2>One alignment per column, not per cell</h2>
+
+<p>Markdown's separator row applies to a whole column, but HTML alignment is set per cell. Cells in the same column can disagree. You need a merge rule. Two rules that work well in practice:</p>
+
+<ol>
+<li><strong>The header wins.</strong> If any row declares an alignment for a column, prefer the header's (<code>&lt;th&gt;</code>) declaration — headers are where authors state intent.</li>
+<li><strong>First declaration wins otherwise.</strong> Scan body rows top-down and take the first non-null value. Don't average, don't vote — first-wins is predictable and matches how these tables are authored.</li>
+</ol>
+
+<pre><code>// aligns[r][c] holds alignOf() results per row/column
+const colAlign = Array(cols).fill(null);
+for (let c = 0; c &lt; cols; c++) {
+  for (const a of aligns) { if (a[c]) { colAlign[c] = a[c]; break; } }
+}
+const sepRow = Array.from({length: cols}, (_, i) =&gt; colAlign[i] || ' --- ');</code></pre>
+
+<h2>Colspan breaks your column index</h2>
+
+<p>This is the subtle one. A cell with <code>colspan="3"</code> occupies three columns but carries one alignment. Which column does it belong to?</p>
+
+<p>Rule: the alignment applies to the cell's <strong>first</strong> column only; the spanned columns stay null. That keeps the alignment array the same width as the real column count, so the separator row never shifts out of sync with the data rows:</p>
+
+<pre><code>const span = Math.max(1, parseInt(colspanMatch?.[1] ?? '1', 10));
+for (let s = 0; s &lt; span; s++) {
+  rowAligns.push(s === 0 ? alignOf(cellAttrs) : null);
+}</code></pre>
+
+<p>Without padding each row's arrays to the true column count afterward, a single wide footer cell would misalign every separator after it.</p>
+
+<h2>Nested tables, again</h2>
+
+<p>If your converter handles nested tables at all, alignment slots right into that machinery: convert innermost-first, and when the inner table becomes Markdown text inside a cell, its separator rows are just characters — the outer pass never touches them. What you must guard against is the lazy regex that matches an outer <code>&lt;table&gt;</code> up to the <em>first</em> <code>&lt;/table&gt;</code> it finds, shredding everything between. Convert repeatedly while the input still changes, innermost first:</p>
+
+<pre><code>do {
+  prev = md;
+  md = md.replace(/&lt;table[^&gt;]*&gt;((?:(?!&lt;table[\s&gt;]|&lt;\/table)[\s\S])*)&lt;\/table&gt;/gi, convertTable);
+} while (md !== prev);</code></pre>
+
+<h2>What good output looks like</h2>
+
+<p>Given:</p>
+
+<pre><code>&lt;table&gt;
+  &lt;tr&gt;&lt;th&gt;Item&lt;/th&gt;&lt;th style="text-align:center"&gt;Qty&lt;/th&gt;&lt;th style="text-align:right"&gt;Price&lt;/th&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;Bolt&lt;/td&gt;&lt;td align="center"&gt;12&lt;/td&gt;&lt;td align="right"&gt;0.40&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+
+<p>Correct output:</p>
+
+<pre><code>| Item | Qty | Price |
+|:-----|:---:|------:|
+| Bolt | 12 | 0.40 |</code></pre>
+
+<p>Renders exactly as the source page did: left, centered, right-aligned. Paste that into GitHub, Notion, Obsidian or any GFM renderer and the structure survives.</p>
+
+<h2>Testing checklist</h2>
+
+<p>If you're implementing this, these are the cases worth asserting:</p>
+
+<ul>
+<li>No alignment anywhere → plain <code> --- </code> separators, unchanged behavior</li>
+<li>Alignment only in body rows (no <code>&lt;th&gt;</code>) → still picked up</li>
+<li>Header says center, body says right → header wins</li>
+<li><code>align="RIGHT"</code> uppercase attribute → matched case-insensitively</li>
+<li><code>colspan="3"</code> with alignment → first column only</li>
+<li>Table nested inside a cell of another table → both keep their own separators</li>
+<li><code>style="text-align:right"</code> mixed with <code>align="left"</code> on the same tag → deterministic result, not garbage</li>
+</ul>
+
+<p>All of these are covered by Clean Copy's test suite across the shared core, the CLI and both extensions.</p>
+
+<h2>Try it</h2>
+
+<p>v1.4.1 ships table alignment everywhere the converter runs:</p>
+
+<ul>
+<li><a href="/clean-copy">Clean Copy for Chrome</a> and Firefox</li>
+<li><a href="/clean-copy-tool">The web converter</a> — paste HTML, get aligned Markdown instantly</li>
+<li><a href="https://github.com/mahope/clean-copy-cli">CLI</a>: <code>npx github:mahope/clean-copy-cli https://example.com/report</code></li>
+</ul>
+
+<p style="margin-top:16px;"><strong>Related:</strong> <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">CLI guide</a> — Table alignment works in the CLI too — see the terminal guide for examples.</p>
+
+</main>
+<p><a href="/da/blog/tabeljustering-html-til-markdown" lang="da">Dansk version af denne guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/copy-clean-guide" style="color:var(--color-accent);">The Copy &amp; Clean Guide Collection</a></p></div>
+</body>
+</html>

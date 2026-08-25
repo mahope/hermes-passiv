@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis NIS2-selvvurdering — Er din virksomhed omfattet?</title>
+<meta name="description" content="Svar på 12 spørgsmål og se med det samme, om din virksomhed er omfattet af EU's NIS2-direktiv, hvilke forpligtelser der gælder, og hvad du skal gøre først. Gratis, ingen tilmelding — alt foregår i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis NIS2-selvvurdering">
+<meta property="og:description" content="Tjek på 2 minutter, om din virksomhed er omfattet af NIS2. Gratis, instant, ingen tilmelding.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/nis2-check-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Gratis NIS2-selvvurdering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gratis NIS2-selvvurdering">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/nis2-check-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/nis2-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/nis2-check-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/nis2-check">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad tjekker NIS2-selvvurderingen?","acceptedAnswer":{"@type":"Answer","text":"Den gennemgår NIS2's afgrænsningskriterier: sektor (bilag I væsentlig eller bilag II vigtig), virksomhedsstørrelse (antal ansatte og omsætning), organisationstype (offentlig eller privat) og landets implementeringsstatus. Derefter listes de forpligtelser, der gælder for dig: risikostyring efter art. 21, hændelsesrapportering efter art. 23 og ledelsesansvar efter art. 20."}},{"@type":"Question","name":"Er selvvurderingen gratis?","acceptedAnswer":{"@type":"Answer","text":"Ja. Ingen tilmelding, ingen konto, ingen e-mail. Svar på 12 spørgsmål i din browser og få et instantly resultat. Alt du indtaster bliver ikke sendt nogen steder hen."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Det er et struktureret screeningværktøj baseret på Direktiv (EU) 2022/2555. Den endelige afgrænsning afhænger af den nationale implementeringslov og sektormyndighederne. Behandl resultatet som et udgangspunkt, ikke en juridisk vurdering."}},{"@type":"Question","name":"Gælder det uden for EU?","acceptedAnswer":{"@type":"Answer","text":"NIS2 gælder for organisationer etableret i EU og kan også ramme virksomheder uden for EU, der tilbyder tjenester i Unionen. Værktøjet spørger, hvor du er etableret, og tilpasser resultatet."}},{"@type":"Question","name":"Hvad gør jeg, hvis vi er omfattet?","acceptedAnswer":{"@type":"Answer","text":"Start med et gab-analyse mod de ti minimumsområder for risikostyring i art. 21 (risikoanalyse, hændelseshåndtering, forretningskontinuitet, leverandørkædesikkerhed, sikker udvikling m.m.), etablér en hændelsesproces med 24t/72t/1-måned-frister, og dokumentér ansvar på ledelsesniveau."}}]}
+</script>
+<style>
+  .qbox { max-width: 680px; margin: 0 auto; }
+  .q { display: none; padding: 18px; border-radius: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); margin-bottom: 14px; }
+  .q.active { display: block; }
+  .q h3 { margin-top: 0; }
+  .q label { display: block; padding: 9px 12px; margin: 6px 0; border-radius: 8px;
+             border: 1px solid var(--color-border); cursor: pointer; font-size: 15px; }
+  .q label:hover { background: rgba(11,110,143,.08); }
+  .q input { margin-right: 8px; }
+  .navbtns { display: flex; justify-content: space-between; margin-top: 12px; }
+  button.nav { background: #0b6e8f; color: #fff; border: 0; padding: 10px 22px;
+               border-radius: 8px; cursor: pointer; font-size: 15px; }
+  button.nav:hover { background: #095a77; }
+  button.nav[disabled] { opacity: .45; cursor: default; }
+  #progress { max-width: 680px; margin: 0 auto 14px; height: 6px; border-radius: 3px;
+              background: var(--color-border); overflow: hidden; }
+  #bar { height: 100%; width: 0; background: #0b6e8f; transition: width .25s; }
+  #result { max-width: 720px; margin: 28px auto; font-size: 15px; line-height: 1.55; text-align: left; }
+  .scorecard { text-align: center; padding: 18px; border-radius: 12px;
+               background: var(--color-surface-2); border: 1px solid var(--color-border); }
+  .scorecard .score { font-size: 40px; font-weight: 700; }
+  .grade-A{color:#157a3c}.grade-B{color:#7a6415}
+  .grade-C{color:#a35a10}.grade-D{color:#a31515}
+  .findings li { margin-bottom: 10px; }
+  .sev-error{color:#a31515;font-weight:600}
+  .sev-warning{color:#a35a10}
+  .sev-ok{color:#157a3c;font-weight:600}
+  .tagchip{display:inline-block;padding:2px 10px;margin:2px;border-radius:999px;
+           background:var(--color-surface-2);border:1px solid var(--color-border);
+           font-size:13px}
+  @media print { .scanbox, .navbtns, #progress { display:none } }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Gratis NIS2-selvvurdering</h1>
+    <p class="tagline">Er din virksomhed omfattet af EU's <strong>NIS2-direktiv</strong>?
+    12 spørgsmål, svar med det samme, ingen tilmelding.</p>
+  </div>
+</header>
+
+<main class="container">
+<section aria-labelledby="quiz-heading">
+  <h2 id="quiz-heading">Tjek din status</h2>
+  <div id="progress" aria-hidden="true"><div id="bar"></div></div>
+  <form id="quizForm" class="qbox">
+    <div id="questions"></div>
+    <div class="navbtns">
+      <button type="button" class="nav" id="prevBtn" disabled>← Tilbage</button>
+      <button type="button" class="nav" id="nextBtn" disabled>Næste →</button>
+    </div>
+  </form>
+  <noscript><p>Dette værktøj kører udelukkende i JavaScript i din browser. Aktivér JavaScript for at bruge det.</p></noscript>
+  <div id="result" role="status" aria-live="polite"></div>
+</section>
+
+<section aria-labelledby="what-heading">
+  <h2 id="what-heading">Det dækker værktøjet</h2>
+  <ul class="findings">
+    <li><strong>Afgrænsning:</strong> Bilag I (væsentlige — energi, transport,
+        bank, sundhed, digital infrastruktur, offentlig forvaltning) vs. bilag II
+        (vigtige — post, affald, kemikalier, fødevarer, produktion,
+        digitale tjenester) samt størrelsestærsklerne (mellem: 50+ ansatte eller
+        10 mio. €+ i omsætning)</li>
+    <li><strong>Forpligtelser:</strong> risikostyringsforanstaltninger (art. 21),
+        tidlig advarsel inden 24 timer / notifikation inden 72 timer / slutrapport inden én måned
+        (art. 23) og ledelsens ansvar (art. 20)</li>
+    <li><strong>Næste skridt:</strong> en konkret, prioriteret liste over hvad du skal
+        gøre først, hvis I er omfattet — og hvad I skal holde øje med, hvis I ikke er</li>
+  </ul>
+  <p><strong>Ærlig begrænsning:</strong> NIS2 implementeres nationalt med
+  variationer (registerpligter, tærskler, frister). Dette screeningværktøj bruger
+  direktivteksten som vedtaget; tjek altid imod den danske lov (implementering via
+  beredskabsloven og ny cybersikkerhedslovgivning, håndhævet af Center for
+  Cybersikkerhed og Cybersecurity Danmark).</p>
+</section>
+
+<section aria-labelledby="fix-heading">
+  <h2 id="fix-heading">Omfattet og skal I handle?</h2>
+  <p>Læs den gratis guide <a href="/da/blog/nis2-guide-da">NIS2-guide på dansk:
+  hvad ændrer sig</a>, eller sammenlign værktøjer i
+  <a href="/da/blog/gratis-nis2-vaerktoejer">gratis NIS2-værktøjer</a>. For en fuld
+  offline-tjekliste med skabeloner, hent
+  <a href="/#products">NIS2 Compliance Kit e-bogen ($9.99 på Amazon)</a>.</p>
+  <p>Prøv også: den gratis <a href="/cookie-check-da">Cookie Consent Checker</a> ·
+  <a href="/scan">EAA-tilgængelighedsscanner</a> ·
+  <a href="/dpa-generator-da">DPA-generator (GDPR art. 28)</a></p>
+</section>
+</main>
+
+<footer class="site-footer"><div class="container">
+  <p><a href="/da.html">← Tilbage til Compliance Guides</a> · © 2026 Mahope</p>
+  <p class="footer-small">Screeningværktøj baseret på Direktiv (EU) 2022/2555.
+  Alt kører lokalt i din browser — intastet data forlader aldrig siden.
+  Ikke juridisk rådgivning.</p>
+</div></footer>
+
+<script>
+const QUESTIONS = [
+  { id:'established', q:'Hvor er din virksomhed etableret?',
+    opts:[['eu','I en EU-medlemsstat'],['noneu','Uden for EU'],
+          ['unsure','Ikke sikkert / flere lokationer']] },
+  { id:'sector', q:'Hvilket beskriver bedst din sektor?',
+    opts:[['energy','Energi (elektricitet, gas, olie, varme)'],
+      ['transport','Transport (luft, jernbane, vand, vej)'],
+      ['banking','Bank / finansiel markedsinfrastruktur'],
+      ['health','Sundhed (sygehuse, pharma, laboratorier, medicinteknik)'],
+      ['digitalinfra','Digital infrastruktur (DNS, tele, cloud, datacentre)'],
+      ['ictmgmt','ICT-service management (B2B managed IT/MSP)'],
+      ['publicadmin','Offentlig forvaltning (stat/region/kommune)'],
+      ['space','Rumfart / kritisk enhed under CER-direktivet']] },
+  { id:'sector2', q:'Gælder noget af dette også? (vælg det nærmeste)',
+    opts:[['postal','Post-/kurer­tjenester'],['waste','Affaldshåndtering'],
+      ['chemicals','Kemikalier (fremstilling/distribution)'],
+      ['food','Fødevareproduktion, -forarbejdning, -distribution'],
+      ['manufacturing','Produktion (maskiner, køretøjer, elektronik)'],
+      ['digitalsup','Digitale tjenester (markedspladser, søgemaskiner, sociale netværk)'],
+      ['research','Forskning / akademisk'],
+      ['none','Ingen af disse']] },
+  { id:'employees', q:'Hvor mange ansatte har I?',
+    opts:[['small','Færre end 50'],['medium','50–249'],['large','250+'],
+          ['unsure','Ikke sikkert']] },
+  { id:'turnover', q:'Årlig omsætning / balance?',
+    opts:[['under10m','Under 10 mio. euro'],['over10m','10 mio. euro eller mere'],
+          ['unsure','Ikke sikkert']] },
+  { id:'essentialsize', q:'Er jeres organisation en offentlig myndighed, eller leverer I tjenester, som en region kritisk afhænger af?',
+    opts:[['yes','Ja'],['no','Nej'],['unsure','Ikke sikkert']] },
+  { id:'substitute', q:'Udpeger nationale regler specifikke udbydere uanset størrelse (fx eneste DNS-/teleudbyder i et område)?',
+    opts:[['yes','Ja, det er vi blevet orienteret om'],['no','Nej / ikke så vidt vi ved'],
+          ['unsure','Vi har ikke tjekket det']] },
+  { id:'riskmeasures', q:'Har I dokumenterede cybersikkerheds-foranstaltninger (politik, hændelseshåndtering, backup)?',
+    opts:[['yes','Ja, dokumenteret'],['partial','Delvist / uformelt'],['no','Nej']] },
+  { id:'supplychain', q:'Vurderer I sikkerheden hos jeres leverandører og serviceudbydere?',
+    opts:[['yes','Ja, formelt'],['partial','Uformelt'],['no','Nej']] },
+  { id:'incidentplan', q:'Har I en hændelsesproces med definerede rapporteringstrin?',
+    opts:[['yes','Ja'],['partial','Delvist'],['no','Nej']] },
+  { id:'management', q:'Er cybersikkerhed eksplicit tildelt ledelsen/bestyrelsen med træning?',
+    opts:[['yes','Ja'],['partial','Delvist'],['no','Nej']] },
+  { id:'register', q:'Har I tjekket, om Danmark kræver registrering hos CSIRT/myndigheden (Center for Cybersikkerhed)?',
+    opts:[['done','Ja, gjort'],['notyet','Kendt til det, ikke gjort'],
+          ['didntknow',"Vidste ikke, det var påkrævet"]] }
+];
+
+const answers = {};
+let cur = 0;
+
+function render() {
+  const box = document.getElementById('questions');
+  box.innerHTML = QUESTIONS.map((item,i)=>
+    '<div class="q'+(i===cur?' active':'')+'" data-i="'+i+'">'
+    +'<h3>'+(i+1)+'. '+item.q+'</h3>'
+    + item.opts.map(o=>'<label><input type="radio" name="'+item.id+'" value="'+o[0]+'">'+o[1]+'</label>').join('')
+    +'</div>').join('');
+  box.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{
+    answers[inp.name]=inp.value;
+    updateNav();
+    setTimeout(()=>next(),180);
+  }));
+  updateNav();
+}
+
+function updateNav(){
+  const answered = QUESTIONS[cur].id in answers;
+  document.getElementById('nextBtn').disabled=!answered && cur<QUESTIONS.length-1;
+  document.getElementById('prevBtn').disabled=cur===0;
+  document.getElementById('nextBtn').textContent = cur===QUESTIONS.length-1?'Se resultat →':'Næste →';
+  document.getElementById('bar').style.width=(Object.keys(answers).length/QUESTIONS.length*100)+'%';
+}
+function next(){ if(cur<QUESTIONS.length-1){cur++;render();} else finish(); }
+function prev(){ if(cur>0){cur--;render();} }
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+function finish(){
+  if(window.trackEvent)window.trackEvent('finish');
+  const findings=[];
+  let errors=0,warnings=0;
+
+  // ---- Afgrænsning ----
+  const annex1=['energy','transport','banking','health','digitalinfra','ictmgmt','publicadmin','space'];
+  const annex2=['postal','waste','chemicals','food','manufacturing','digitalsup','research'];
+  const s1=annex1.includes(answers.sector);
+  const s2=annex2.includes(answers.sector2);
+  const mediumPlus=['medium','large'].includes(answers.employees)||(answers.turnover==='over10m'&&answers.employees!=='small');
+  const sizeKnown=answers.employees!=='unsure';
+
+  let scope=null; // 'essential' | 'important' | 'out'
+  if(s1){
+    if(mediumPlus||answers.publicbody==='yes') scope='essential';
+    else if(sizeKnown) {
+      // Art. 2(2)(d): visse sektorer ramt uanset størrelse ved kritisk betydning
+      if(answers.substitute==='yes'||answers.essentialsize==='yes') scope='essential';
+      else if(['digitalinfra','ictmgmt'].includes(answers.sector)) scope='essential';
+      else scope='important';
+    }
+  } else if(s2){
+    if(mediumPlus) scope='important';
+    else if(answers.substitute==='yes') scope='important';
+  } else if(answers.sector==='unsure'){
+    warnings++; findings.push({sev:'warning',
+      msg:'Sektor usikker — kan ikke bestemme bilagsklassifikationen sikkert.',
+      fix:'Slå jeres NACE-aktivitetskode op, og match den mod bilag I og II i Direktiv (EU) 2022/2555.'});
+  }
+
+  if(scope==='essential'){
+    findings.push({sev:'error',msg:'OMFATTET — sandsynligvis en "væsentlig enhed" (bilag I)',
+      fix:'Væsentlige enheder møder proaktiv tilsyn, bøder op til 10 mio. € eller 2% af global omsætning, og fulde forpligtelser: art. 21 risikostyring, art. 23 hændelsesrapportering, art. 20 ledelsesansvar. Registrér jer hos den nationale myndighed, hvis det er påkrævet.'});
+    errors++;
+  } else if(scope==='important'){
+    findings.push({sev:'warning',msg:'OMFATTET — sandsynligvis en "vigtig enhed" (bilag II eller mindre bilag I)',
+      fix:'Vigtige enheder møder ex-post-tilsyn og bøder op til 7 mio. € eller 1,4% af global omsætning. De samme kerneforpligtelser gælder: art. 21 risikostyring, art. 23 hændelsesrapportering, art. 20 ledelsesansvar.'});
+    warnings++;
+  } else if(scope===null && answers.sector!=='unsure'){
+    findings.push({sev:'ok',msg:'Sandsynligvis IKKE omfattet baseret på jeres svar'});
+    findings.push({sev:'notice',msg:'Vurdér igen, hvis I vokser forbi 50 ansatte / 10 mio. € i omsætning, skifter sektor, eller hvis myndigheden udsender ny vejledning.',
+      fix:'Selv uden for omfang kræver kunder i stigende grad NIS2-agtig sikkerhed i kontrakter — foranstaltningerne er god praksis alligevel.'});
+  }
+
+  // Non-EU nuance
+  if(answers.established==='noneu'){
+    findings.push({sev:'notice',msg:'Etableret uden for EU — NIS2 kan stadig gælde',
+      fix:'Art. 26 fanger organisationer, der tilbyder tjenester i Unionen. Tjek, om I har etablering eller en betydelig brugerbase i en medlemsstat.'});
+  }
+
+  // ---- Klarhedsgab (kun relevant hvis omfattet) ----
+  if(scope){
+    const gaps=[
+      ['riskmeasures','Dokumenterede risikostyringsforanstaltninger mangler/ufuldstændige',
+       'Art. 21 kræver som minimum: risikoanalyse og informationssikkerhedspolitikker, hændelseshåndtering, forretningskontinuitet og backup-management, leverandørkædesikkerhed og effektivitetstest af foranstaltningerne.'],
+      ['supplychain','Leverandørsikkerhed ikke vurderet formelt',
+       'Art. 21, stk. 2, litra d, gør leverandørkædesikkerhed til en obligatorisk foranstaltning. Hold en leverandørliste med sikkerhedskrav i kontrakterne.'],
+      ['incidentplan','Ingen hændelsesrapporteringsproces',
+       'Art. 23 sætter hårde frister: tidlig advarsel inden 24 timer, notifikation inden 72 timer, slutrapport inden én måned. Definér på forhånd, hvem der opdager, beslutter og indberetter.'],
+      ['management','Ledelsen ikke ansvarlig for cybersikkerhed',
+       'Art. 20 gør ledelsen personligt ansvarlig for at godkende foranstaltninger og kræver sikkerhedstræning. Få sign-off på bestyrelsesniveau og en træningsregistrering.'],
+      ['register','National registrering ikke bekræftet',
+       'De fleste medlemsstater kræver, at omfattede enheder registrerer sig hos deres CSIRT eller kompetente myndighed. Manglende registrering er den letteste overtrædelse at undgå.'] ];
+    for(const [key,msg,fix] of gaps){
+      if(answers[key]==='no'){errors++;findings.push({sev:'error',msg,fix});}
+      else if(answers[key]==='partial'||answers[key]==='notyet'||answers[key]==='didntknow'){warnings++;findings.push({sev:'warning',msg,fix});}
+    }
+  }
+
+  const score=Math.max(5,Math.min(100,100-errors*25-warnings*10));
+  const g=score>=90?'A':score>=70?'B':score>=50?'C':'D';
+  const verdict = scope==='essential' ? 'Væsentlig enhed — fulde NIS2-forpligtelser gælder'
+                : scope==='important' ? 'Vigtig enhed — NIS2-forpligtelser gælder'
+                : scope===null ? 'Sandsynligvis ikke omfattet (baseret på jeres svar)'
+                : 'Afgrænsning usikker — verificér manuelt';
+
+  try{ fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){});
+  }catch(e){}
+
+  document.getElementById('result').innerHTML=
+    '<div class="scorecard"><div class="score grade-'+g+'">'+verdict+'</div>'
+    +'<div style="margin-top:6px;font-size:14px;color:#667">Klarhedssignal: '+score+'/100</div>'
+    +'<div style="margin-top:8px"><span class="tagchip">Direktiv (EU) 2022/2555</span>'
+    +(scope?'<span class="tagchip">Art. 20 · 21 · 23</span>':'')
+    +'</div></div>'
+    +'<ul class="findings">'+findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(f.msg)+'</span>'
+      +(f.fix?'<br><small>'+esc(f.fix)+'</small>':'')+'</li>').join('')+'</ul>'
+    +'<p style="font-size:13px;color:#667">Struktureret screening — ikke juridisk rådgivning. '
+    +'Guiden på dansk: <a href="/da/blog/nis2-guide-da">NIS2-guiden</a>. '
+    +'Fuld tjekliste + skabeloner: <a href="/#products">NIS2 Compliance Kit e-bogen</a>.</p>'
+    +'<p style="text-align:center;margin-top:18px">'
+    +'<button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '
+    +'<button onclick="shareResult()" class="btn btn-secondary">Kopiér delbart link</button></p>';
+}
+
+async function shareResult(){
+  const url=location.origin+'/nis2-check-da#r=1';
+  try{await navigator.clipboard.writeText(url);}catch(e){
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
+  alert('Link kopieret: '+url);
+}
+window.shareResult=shareResult;
+
+document.getElementById('nextBtn').addEventListener('click',()=>{if(cur===QUESTIONS.length-1)finish();else next();});
+document.getElementById('prevBtn').addEventListener('click',prev);
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify Accessibility Check — Free WCAG/EAA Store Scan</title>
+<meta name="description" content="Check your Shopify store for common WCAG 2.1 AA failures. Free instant scan: alt text, contrast, link text, form labels and more. EAA-ready in seconds.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shopify Accessibility Check — Free WCAG/EAA Store Scan">
+<meta property="og:description" content="Check your Shopify store for common WCAG 2.1 AA failures. Free instant scan. EAA-ready in seconds.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/shopify-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Shopify Accessibility Check — Free WCAG/EAA Store Scan">
+<meta name="twitter:description" content="Check your Shopify store for common WCAG 2.1 AA failures. Free instant scan. EAA-ready in seconds.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-shopify-cover.jpg">
+<meta property="og:image:alt" content="Shopify Accessibility Check — Free WCAG/EAA Store Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-shopify-cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/shopify-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/shopify-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to my Shopify store?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Shopify store sells to customers in the EU, the EAA requires WCAG 2.1 AA compliance for your storefront including product pages, checkout, and the accessibility statement."}},{"@type":"Question","name":"What does the free scanner check on Shopify?","acceptedAnswer":{"@type":"Answer","text":"16 automated rules covering product image alt text, button labels, link text, colour contrast, form labels, heading structure, page language, and more."}},{"@type":"Question","name":"Where do I fix common issues in Shopify?","acceptedAnswer":{"@type":"Answer","text":"Alt text: Products → [product] → Media section. Contrast: Theme Editor → Theme Settings → Colors. Headings: page/blog post editor. Form labels: theme editor form block settings."}},{"@type":"Question","name":"Can I use the scanner on a password-protected Shopify store?","acceptedAnswer":{"@type":"Answer","text":"No — the scanner fetches pages server-side and cannot bypass password or login walls. Use the browser extension instead."}}],"name":"Shopify Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/shopify-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Shopify Accessibility Check</h1>
+    <p class="subtitle">European Accessibility Act pressure is real for Shopify stores selling into the EU. Find your fixable issues in one free scan.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.shopify.com" class="btn-primary">Run a Free Scan on shopify.com</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Shopify accessibility matters in the EU</h2>
+    <p>Shopify powers over 10 % of global e-commerce and hosts hundreds of thousands of stores that serve European customers. If you run a Shopify store selling into the EU — whether your business is based in Berlin, Barcelona, or Boston — the European Accessibility Act (EAA) applies to your storefront, including all product pages, the cart, the checkout, and your accessibility statement. Enterprise partners and B2B buyers increasingly ask for documented conformance before they sign a deal, making WCAG 2.1 AA compliance a practical requirement, not just a legal one.</p>
+    <p>Most accessibility problems on Shopify stores trace back to the same handful of platform-specific causes. The default Dawn theme and OS 2.0 ("Online Store 2.0") themes ship with generally decent contrast ratios and semantic heading structure, but customisations — colour overrides, custom CSS injected through Theme Settings, or blocks rearranged in the Theme Editor — can silently break that baseline. Liquid templates control every page's HTML output, and a missing <code>alt</code> attribute in a Liquid <code>img_tag</code> filter or a <code>&lt;a&gt;</code> wrapping a product card without descriptive text generates a WCAG failure that repeats across your entire catalogue. Theme app extensions (blocks that third-party apps inject into your theme) often ship form inputs, buttons, and carousels without accessible labels or focus management. And checkout customisations — even a simple logo or colour change — can introduce contrast issues on pages your scanner can't reach without transaction data.</p>
+    <p>Because the EAA is enforced per-member-state and the first compliance deadline (June 28, 2025) has passed, enforcement actions and audit requests are already circulating. A documented, automated scan is the fastest way to show good-faith effort, and our 16-rule checker covers exactly the WCAG 2.1 AA basics that EU regulators, procurement teams, and accessibility auditors look at first.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Shopify site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Shopify URL</strong> — any published page: home, a product page, or a collection page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Shopify, most image-alt and contrast issues are fixed right in the editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Shopify Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Shopify</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in your Shopify admin:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Shopify</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Products → [product] → Media section → click image → Alt text field</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Theme Editor (Customize) → Theme Settings → Colors — increase text colour contrast. Or add Custom CSS: <code>body { color: #1a1a1a; }</code></td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">When editing a page/blog post, use the text editor's heading dropdown (H2, H3). One H1 per page (usually the product title).</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Check newsletter signup and contact form blocks in Theme Editor — ensure labels are enabled (not just placeholder)</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Edit the link in the page editor — replace "Shop now" with "Shop men's winter jackets", replace "Learn more" with "Read our sizing guide"</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing skip-to-content</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Theme Editor → theme.liquid → add <code>&lt;a href="#main-content" class="skip-link"&gt;Skip to content&lt;/a&gt;</code> right after the opening <code>&lt;body&gt;</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Shopify-specific tools &amp; apps for accessibility</h2>
+    <p>Beyond the manual fixes above, several Shopify-first tools can help you maintain accessibility at scale across hundreds or thousands of products:</p>
+    <h3>Accessibility apps in the Shopify App Store</h3>
+    <p>Apps like <strong>AccessiBe</strong>, <strong>UserWay</strong>, and <strong>EqualWeb</strong> offer overlay widgets that claim to improve accessibility on the fly. However, most overlay-based solutions have been criticised by accessibility advocates and the W3C for creating a false sense of compliance — they adjust colour and size via JavaScript but cannot fix missing alt text, poor heading structure, or empty form labels at the markup level. Use them as a secondary layer, not your primary compliance strategy. A better approach is native remediation: bulk-edit product alt text, clean up heading hierarchy in your Liquid templates, and test with a real screen reader.</p>
+    <h3>SEO HTML sitemap limitations on Shopify</h3>
+    <p>Shopify does not generate a native HTML sitemap for human visitors — it only produces <code>/sitemap.xml</code> for search engines. An HTML sitemap with descriptive link text (e.g., "Premium leather travel backpacks" instead of "/collections/leather-travel") is a recommended WCAG technique for navigation, but requires a Liquid template page or a third-party app to implement. Consider creating a dedicated sitemap page via Shopify Pages and linking it in your footer for keyboard and screen-reader users who rely on structured navigation.</p>
+    <h3>Product image alt text management at scale</h3>
+    <p>On a large catalogue, manually entering alt text on every product variant image is impractical. Shopify's bulk editor (Products → Export → edit CSV → re-import) lets you update alt text for hundreds of variants in one spreadsheet pass. You can also use Shopify Flow or a custom script to auto-generate descriptive alt text from product metafields — for example, "Navy merino wool crew-neck sweater, size M" rather than "IMG_4782.jpg."</p>
+    <h3>Theme editor accessibility settings</h3>
+    <p>Dawn and most OS 2.0 themes include accessibility-friendly settings under Theme Editor → Theme Settings: focus-ring colour, heading font size increments, and colour palette controls. Ensure your store uses semantic heading levels consistently: H1 for the page title (usually set automatically by the theme), H2 for section headings (like "Featured Products" or "Customer Reviews"), H3 for content sub-groups. Avoid skipping from H1 to H4 without H2 and H3 in between, which confuses both screen-reader users and the automated scanner.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Shopify</h2>
+    <p>Accessibility is not a one-time fix. EAA compliance requires ongoing maintenance. Here is a practical schedule for Shopify merchants:</p>
+    <h3>Monthly scanner review</h3>
+    <p>Run the free scanner on your homepage, your top-5 product pages, and your cart/checkout area at least once a month. Theme updates, app installations, and new collection pages can introduce regressions — a passing grade last month does not guarantee one this month. Bookmark the <a href="/scan" style="color:var(--color-accent);">scan tool</a> and make it part of your monthly maintenance rotation.</p>
+    <h3>Audit every new app before installation</h3>
+    <p>Before installing any new app from the Shopify App Store, check whether it adds visible elements to your storefront: pop-ups, slide-out carts, mega-menus, product badges, or review widgets. Each of these components can introduce keyboard traps, unlabelled buttons, or contrast failures. Test the app on a duplicate theme or staging store with the scanner before going live. If the app provides no accessibility documentation, treat that as a red flag.</p>
+    <h3>Customer accessibility requests</h3>
+    <p>Under the EAA, customers who encounter a barrier on your store have the right to request an accessible alternative or a remedy. Prepare a simple process: a dedicated email address (e.g., <code>accessibility@yourstore.com</code>), a response template that offers a workaround or product information in an accessible format, and a commitment to fix the underlying issue within a reasonable timeframe. Document every request and your response — this becomes evidence of good-faith compliance efforts if a regulator investigates.</p>
+    <h3>Place your accessibility statement</h3>
+    <p>The EAA requires a published accessibility statement on your store. Place it in an obvious location — typically the footer, linked alongside "Privacy Policy" and "Terms of Service." Your statement should name the standard you target (WCAG 2.1 AA), list known exceptions, explain how to request an accessible alternative, and include a date for when the statement was last reviewed. Update the date at least every twelve months even if nothing changes. Most Dawn-based themes accept a standard footer link added via Theme Editor → Footer → Add link block.</p>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/shopify-eaa-accessibility" style="color:var(--color-accent);">Shopify Accessibility: Getting Your Store EAA-Compliant</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);">EAA Enforcement: What Happens After June 2025</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, our resources cover the complete checklist plus a 14-day fix plan, platform-specific guidance for Shopify, and the legal requirements every EU-facing merchant should understand:</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/wordpress-plugin" class="btn-secondary" style="display:inline-block;">Free WordPress Plugin</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+    <div style="margin-top:32px;">
+      <h3>Recommended reading</h3>
+      <ul style="line-height:1.8;">
+        <li><em>Accessibility for Everyone</em> by Laura Kalbag — A practical introduction to inclusive design that covers the "why" behind every WCAG criterion. Essential reading before you write or edit any Liquid template.</li>
+        <li><em>Inclusive Design Patterns</em> by Heydon Pickering — Code-first patterns for accessible navigation, forms, and data tables that translate directly to Shopify theme customisation.</li>
+        <li><em>Shopify Theme Development (Shopify.dev)</em> — The official documentation on Liquid, schema, and theme app extensions. Pay special attention to the <code>render</code> and <code>section</code> tags, which control which blocks output ARIA attributes.</li>
+        <li><em>WCAG 2.2 Understanding Documents (W3C)</em> — The normative spec with conformance explanations and test procedures for every success criterion referenced in the EAA.</li>
+        <li><em>European Accessibility Act: Text and Summary (EU Commission)</em> — The official legal text that defines which services are covered, the compliance deadlines, and the enforcement framework for member states.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

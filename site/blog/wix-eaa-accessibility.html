@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wix Accessibility: An EAA Compliance Guide</title>
+<meta name="description" content="How to make a Wix site meet WCAG 2.1 AA and the European Accessibility Act. Editor settings, common Wix-specific failures, apps, and a free audit workflow for agencies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Wix Accessibility: An EAA Compliance Guide">
+<meta property="og:description" content="How to make a Wix site meet WCAG 2.1 AA and the European Accessibility Act. Editor settings, common Wix-specific failures, apps, and a free audit workflow for agencies.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wix Accessibility: An EAA Compliance Guide">
+<meta name="twitter:description" content="How to make a Wix site meet WCAG 2.1 AA and the European Accessibility Act. Editor settings, common Wix-specific failures, apps, and a free audit workflow for agencies.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Wix Accessibility: An EAA Compliance Guide",
+  "description": "How to make a Wix site meet WCAG 2.1 AA and the European Accessibility Act. Editor settings, common Wix-specific failures, apps, and a free audit workflow for agencies.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · WIX · EAA</div>
+    <h1>Wix Accessibility:<br>An EAA Compliance Guide</h1>
+    <p class="subtitle">What you can fix inside the Wix Editor, what the platform decides for you — and how agencies audit Wix builds against WCAG 2.1 AA before clients ask.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#why-wix-and-eaa" class="btn-secondary">Wix Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="why-wix-and-eaa">Why Wix and EAA</h2>
+    <p>Wix powers millions of small-business sites across the EU — restaurants, salons, local shops, sole traders. From June 2025 many of those businesses fall under the European Accessibility Act as providers of consumer services and e-commerce, and their agency or freelancer inherits the question: can this site pass a WCAG 2.1 AA check? Wix has invested heavily in accessibility tooling in recent years, but the output is still only as compliant as the person assembling the page makes it.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧩 Platform vs Builder</h3><p>Wix templates ship with reasonable semantics, but every dragged-in section, strip and text box can break them. Most audits fail on builder choices, not platform limits.</p></div>
+      <div class="card"><h3>⚙️ Real Settings Exist</h3><p>Wix exposes alt text on images, heading tags per text element, focus states on buttons, and an accessibility checklist in the Editor — use all of them.</p></div>
+      <div class="card"><h3>📜 Sellable Deliverable</h3><p>A findings report plus accessibility statement is a billable line item for the small businesses that must comply with the EAA.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="common-wix-failures">Common Wix Failures</h2>
+    <p>The defects that dominate Wix audits are consistent:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Text Over Strips & Images</h3><p>White text over photo strips fails contrast somewhere on every device. Add a colour overlay behind text or move text onto a solid background block.</p></div>
+      <div class="card"><h3>🧱 Decorative "Headings"</h3><p>Text boxes resized and bolded to look like headings but left with paragraph tags. Set the actual heading style in each text element's settings.</p></div>
+      <div class="card"><h3>🖼️ Missing Alt Text</h3><p>Gallery items, logos uploaded as plain images, decorative strips used as banners. Every content image needs alt; purely decorative ones need explicit empty alt.</p></div>
+      <div class="card"><h3>⌨️ Hover-Only Menus</h3><p>Multi-level menus that only expand on hover strand keyboard users. Enable click-to-open behaviour in menu settings.</p></div>
+      <div class="card"><h3>🔗 Button-Shaped Text</h3><p>Text styled like a button but not wired as one — no focus ring, no button role. Use real Button elements for every action.</p></div>
+      <div class="card"><h3>📄 Anchor Chaos</h3><p>Long one-page sites built entirely of anchors produce link texts like "click here" repeated ten times. Give anchors descriptive names.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="editor-fixes">Editor Fixes</h2>
+    <p>Work through these inside the Wix Editor — they clear most automated findings:</p>
+    <p></p>
+    <p><strong>Heading structure:</strong> select each text element → Settings → set real h1/h2/h3 tags. One h1 per page; nest the rest logically.</p>
+    <p></p>
+    <p><strong>Alt text:</strong> every image gets its alt field filled — descriptive for content images, empty for decoration. Do galleries item by item; it is tedious and non-negotiable.</p>
+    <p></p>
+    <p><strong>Contrast:</strong> darken body-text greys globally via Site Design → Colors. Check hero overlays and footer links specifically — they fail most often.</p>
+    <p></p>
+    <p><strong>Focus visibility:</strong> in button and link design settings, keep the default focus ring or define a visible custom one. Never remove outlines without replacement.</p>
+    <p></p>
+    <p><strong>Language:</strong> set the site language in Settings so html lang is correct — screen readers pick pronunciation from it.</p>
+    <p></p>
+    <p><strong>Forms:</strong> label every field clearly, enable error messages that describe what to fix, and confirm submission both visually and in text.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="apps-and-limits">Apps and Limits</h2>
+    <p>Third-party Wix Apps (booking widgets, chat popups, review sliders) are the biggest compliance risk you cannot fully control: many inject iframes with their own markup, tiny tap targets and keyboard traps. Audit every installed app by tabbing through its widget on a live page — if an app is inaccessible, either replace it or provide the same function through an accessible alternative (e.g. a plain booking form alongside an inaccessible widget). Also know the genuine platform limits: some legacy Wix features and certain dynamic pages offer less semantic control than modern editor sections. Document any residual gaps honestly in the site's accessibility statement rather than claiming full conformance you cannot evidence.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="audit-workflow">Audit Workflow</h2>
+    <p>A repeatable Wix audit process for agencies:</p>
+    <p></p>
+    <p><strong>1. Automated scan</strong> of home, one key service/product page and the contact page. Expect 10-25 findings on a typical small-business build.</p>
+    <p></p>
+    <p><strong>2. Fix in Editor,</strong> publish, re-scan until automated findings clear.</p>
+    <p></p>
+    <p><strong>3. Keyboard pass:</strong> unplug the mouse — menus, galleries, lightboxes, forms and the cookie banner must all be operable.</p>
+    <p></p>
+    <p><strong>4. Mobile check:</strong> Wix renders separate mobile layouts; re-check tap target sizes and text scaling there specifically.</p>
+    <p></p>
+    <p><strong>5. Deliver:</strong> findings report plus an accessibility statement listing conformance status and known limitations (e.g. third-party booking widget). Re-scan after major edits.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner on your Wix site first — it flags contrast, alt-text, heading and label issues instantly so your Editor session has a concrete worklist.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Wix Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/wix-accessibility-check" class="btn-secondary">Wix Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Is Wix accessible out of the box?</h3><p>Modern Wix templates score reasonably on automated checks, and Wix provides real accessibility settings. But builder choices — text over photos, missing alt, fake headings — create failures on almost every real site. Out of the box helps; it does not comply for you.</p></div>
+      <div class="card"><h3>Does the EAA apply to my client's small Wix shop?</h3><p>The EAA covers consumer e-commerce and services, with limited exemptions for micro-enterprises offering services (under 10 employees and €2M turnover). E-commerce generally has no size exemption — assume a webshop is in scope.</p></div>
+      <div class="card"><h3>Can I use an accessibility overlay on Wix?</h3><p>Overlays cannot create missing semantics, fix unusable apps or repair contrast inside your own images, and marketing them as automatic compliance has drawn regulatory criticism in the EU. Fix root causes in the Editor instead.</p></div>
+      <div class="card"><h3>How do I test Wix's separate mobile layout?</h3><p>Publish and open the live site on a phone or in your browser's mobile emulator. Wix maintains a distinct mobile view, so desktop fixes must be verified there too — especially text sizing and button spacing.</p></div>
+      <div class="card"><h3>Can agencies sell Wix accessibility audits?</h3><p>Yes. Millions of EU small businesses sit on Wix and now face EAA questions they cannot answer. A fixed-price scan-fix-report package is an easy sell and pairs well with the delivered accessibility statement.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Wix Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/wix-accessibility-check" class="btn-secondary">Wix Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA ENFORCEMENT</span><h3><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);text-decoration:none;">EAA Enforcement in 2026: What Agencies Must Know</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SQUARESPACE · EAA</span><h3><a href="/blog/squarespace-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Squarespace Accessibility: An EAA Compliance Guide</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">AUDIT PRICING</span><h3><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);text-decoration:none;">How Much Does an Accessibility Audit Cost?</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

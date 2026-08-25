@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tilgængelig Farvepalet-Generator — WCAG AA/AAA, Gratis</title>
+<meta name="description" content="Lav en tilgængelig brandpalet på sekunder: vælg en basisfarve og få tekst-, sekundærtekst-, kant- og overfladefarver, der består WCAG 2.1 AA og AAA kontrast. Live forhåndsvisning, klar-til-kopi hexkoder. Kører helt i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis Tilgængelig Farvepalet-Generator">
+<meta property="og:description" content="Vælg én basisfarve og få en komplet WCAG AA/AAA-venlig palet med live forhåndsvisning. Ingen tilmelding — intet forlader din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/palette-generator-da">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/palette-generator-da"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/palette-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/palette-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/palette-generator">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"Tilgængelig Farvepalet-Generator (dansk)","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/palette-generator-da","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Gratis paletgenerator i browseren: én basisfarve ind, WCAG AA/AAA-sikker palet ud."}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .pg-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
+  .pg-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
+  .pg-field { display:flex; flex-direction:column; gap:6px; }
+  .pg-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
+  .pg-swatch-input { display:flex; gap:8px; align-items:center; }
+  .pg-swatch-input input[type=color] { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
+  .pg-swatch-input input[type=text] { width:110px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-family:ui-monospace,monospace; font-size:.95rem; }
+  select.pg-select { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); font-size:.95rem; }
+  table.pg-table { width:100%; border-collapse:collapse; margin-top:16px; }
+  table.pg-table th, table.pg-table td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--color-border); font-size:.95rem; }
+  table.pg-table th { color:var(--color-text-muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; }
+  .pg-chip { display:inline-block; width:26px; height:26px; border-radius:6px; vertical-align:middle; margin-right:10px; border:1px solid rgba(0,0,0,.15); }
+  code.pg-hex { font-family:ui-monospace,monospace; cursor:pointer; padding:3px 7px; border-radius:6px; background:var(--color-surface-2); }
+  code.pg-hex:hover { outline:2px solid var(--color-accent); }
+  .pass { color:var(--color-green); font-weight:600; } .fail { color:var(--color-red); font-weight:600; }
+  .pg-preview { margin-top:22px; border-radius:var(--radius); border:1px solid var(--color-border); overflow:hidden; }
+  .pg-preview-bar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; }
+  .pg-preview-body { padding:24px 22px; line-height:1.55; }
+  .pg-preview-body .muted { font-size:.92rem; }
+  .pg-btn { padding:10px 16px; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:.95rem; }
+  .pg-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
+  .pg-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+  .pg-copied { font-size:.85rem; color:var(--color-green); margin-left:8px; min-height:1.2em; }
+  .pg-export { margin-top:24px; border:1px solid var(--color-border); border-radius:var(--radius); padding:18px; background:var(--color-surface-2); }
+  .pg-export pre { margin:12px 0 0; padding:14px; background:#0f172a; color:#e2e8f0; border-radius:8px; overflow-x:auto; font-size:.85rem; line-height:1.5; max-height:340px; }
+  .pg-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .pg-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
+  .pg-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
+  .pg-dl { display:inline-block; margin-left:auto; }
+</style>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Tilgængelig Farvepalet-Generator</h1>
+    <p class="tagline">Vælg én basisfarve og få en komplet palet — brødtekst, sekundærtekst,
+    kanter og overflader — hvor alle kombinationer består
+    <strong>WCAG&nbsp;2.1 AA</strong>, med AAA markeret hvor det opnås.
+    Alt kører i din browser; intet bliver uploadet.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="pg-card" aria-labelledby="gen-heading">
+  <h2 id="gen-heading">Byg din palet</h2>
+  <div class="pg-row" style="margin-top:14px">
+    <div class="pg-field">
+      <label for="base-color">Basis-/brandfarve</label>
+      <div class="pg-swatch-input">
+        <input type="color" id="base-color" value="#2563eb" aria-describedby="base-hex-label">
+        <input type="text" id="base-text" value="#2563eb" aria-label="Basisfarve som hexkode" spellcheck="false">
+      </div>
+    </div>
+    <div class="pg-field">
+      <label for="bg-select">Sidebaggrund</label>
+      <select class="pg-select" id="bg-select" aria-describedby="bg-help">
+        <option value="#ffffff" selected>Hvid #ffffff</option>
+        <option value="#f8fafc">Næsten hvid #f8fafc</option>
+        <option value="#f5f0e8">Varm papir #f5f0e8</option>
+        <option value="#111827">Mørk #111827</option>
+        <option value="#000000">Sort #000000</option>
+      </select>
+      <span id="bg-help" style="font-size:.8rem;color:var(--color-text-muted)">Tekstfarverne tunes til at bestå mod denne baggrund</span>
+    </div>
+  </div>
+  <p class="pg-error" id="pg-error" role="alert"></p>
+
+  <div style="overflow-x:auto">
+  <table class="pg-table">
+    <caption style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">Genereret palet med kontrast-ratios mod valgt baggrund</caption>
+    <thead>
+      <tr><th scope="col">Prøve</th><th scope="col">Rolle</th><th scope="col">Hex (klik for at kopiere)</th><th scope="col">Kontrast mod bg</th><th scope="col">AA normal</th><th scope="col">AAA normal</th></tr>
+    </thead>
+    <tbody id="palette-rows"></tbody>
+  </table>
+  </div>
+  <p class="pg-copied" id="copied-msg" aria-live="polite"></p>
+
+  <h3 style="margin-top:28px">Eksportér din palet</h3>
+  <div class="pg-export">
+    <div class="pg-tabs" role="tablist" aria-label="Eksportformat">
+      <button type="button" class="pg-tab" id="tab-css" role="tab" aria-selected="true" aria-controls="export-out">CSS-variabler</button>
+      <button type="button" class="pg-tab" id="tab-json" role="tab" aria-selected="false" aria-controls="export-out">JSON</button>
+      <button type="button" class="pg-tab" id="tab-tailwind" role="tab" aria-selected="false" aria-controls="export-out">Tailwind config</button>
+    </div>
+    <pre id="export-out" tabindex="0" aria-label="Genereret paletpkode — markér alt for at kopiere"></pre>
+    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <button type="button" class="pg-btn" id="copy-export" style="background:var(--color-accent);color:#fff">Kopiér kode</button>
+      <button type="button" class="pg-btn pg-dl" id="download-export" style="background:var(--color-surface);border:1px solid var(--color-border)">Download fil</button>
+      <span class="pg-copied" id="export-msg" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px">Live forhåndsvisning</h3>
+  <div class="pg-preview" id="preview" role="presentation">
+    <div class="pg-preview-bar" id="pv-bar">
+      <strong id="pv-brand">DitMærke</strong>
+      <button type="button" class="pg-btn" id="pv-cta">Kom i gang</button>
+    </div>
+    <div class="pg-preview-body" id="pv-body">
+      <p>Dette er brødtekst i din genererede læsbare farve. Den overstiger komfortabelt
+      WCAG AA-minimum på 4,5&nbsp;:&nbsp;1 mod din valgte baggrund.</p>
+      <p class="muted" id="pv-muted">Dette er sekundær tekst — svagere end brødteksten,
+      men stadig over AA-grænsen så den forbliver læselig.</p>
+    </div>
+  </div>
+
+  <p class="pg-note">Ratioerne bruger WCAG 2.1's relative luminans-formel — samme formel som vores
+  <a href="/contrast-checker-da">kontrast-checker</a>. Rollerne følger gængs praksis:
+  brødtekst ≥&nbsp;4,5:1, store overskrifter ≥&nbsp;3:1, UI-kanter ≥&nbsp;3:1 (<a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">SC 1.4.11</a>).
+  Vil du scanne en hel eksisterende side? Prøv den gratis <a href="/scan-da">Accessibility Scanner</a>.</p>
+</section>
+
+<section class="pg-card">
+  <h2>Sådan virker det</h2>
+  <p style="margin-top:10px">Udgangspunktet er din basisfarve. Hver rolle findes ved at justere
+  lyshedstallet indtil kontrast-ratioen mod baggrunden når det krævede niveau:
+  brødtekst sigter efter ≥&nbsp;4,5:1 (AAA ≥&nbsp;7:1 når det kan nås uden at farven fjerner sig fra nuancen),
+  sekundærtekst ≥&nbsp;4,5:1 med lavere mætning, kanter ≥&nbsp;3:1, og overflader er toninger af basen.
+  Regnearterne er identiske med WCAG-specifikationen — ingen tilnærmelser, ingen serverkald.</p>
+</section>
+
+<p style="margin-top:26px"><a href="/free-tools">&larr; Alle gratis værktøjer</a> ·
+<a href="/contrast-checker-da">Kontrast-checker</a> · <a href="/scan-da">Hele-siden-scanner</a> ·
+<a href="/color-blindness-simulator-da">Farveblindhedssimulator</a> ·
+<a href="/palette-generator">English version</a></p>
+</main>
+<footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
+  Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøj der kører i din browser
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+
+  function parseHex(v) {
+    v = v.trim().replace(/^#/, '');
+    if (/^[0-9a-fA-F]{3}$/.test(v)) return [parseInt(v[0]+v[0],16), parseInt(v[1]+v[1],16), parseInt(v[2]+v[2],16)];
+    if (/^[0-9a-fA-F]{6}$/.test(v)) return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+    return null;
+  }
+  function toHex(rgb) {
+    return '#' + rgb.map(function (c) {
+      var h = Math.max(0, Math.min(255, Math.round(c))).toString(16);
+      return h.length === 1 ? '0' + h : h;
+    }).join('');
+  }
+  function luminance(rgb) {
+    var c = rgb.map(function (ch) {
+      ch = ch / 255;
+      return ch <= 0.03928 ? ch / 12.92 : Math.pow((ch + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) {
+    var l1 = luminance(a), l2 = luminance(b);
+    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+  function rgbToHsl(rgb) {
+    var r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b), h=0, s=0, l=(max+min)/2;
+    if (max !== min) {
+      var d = max - min;
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      if (max === r) h = ((g-b)/d + (g < b ? 6 : 0));
+      else if (max === g) h = (b-r)/d + 2;
+      else h = (r-g)/d + 4;
+      h /= 6;
+    }
+    return [h, s, l];
+  }
+  function hslToRgb(hsl) {
+    var h=hsl[0], s=hsl[1], l=hsl[2], r,g,b;
+    if (s === 0) { r=g=b=l; }
+    else {
+      var q = l < 0.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+      var hue2rgb = function(p,q,t){
+        if (t<0) t+=1; if (t>1) t-=1;
+        if (t<1/6) return p+(q-p)*6*t;
+        if (t<1/2) return q;
+        if (t<2/3) return p+(q-p)*(2/3-t)*6;
+        return p;
+      };
+      r = hue2rgb(p,q,h+1/3); g = hue2rgb(p,q,h); b = hue2rgb(p,q,h-1/3);
+    }
+    return [r*255, g*255, b*255];
+  }
+
+  function tuneToRatio(baseRgb, bgRgb, target) {
+    var hsl = rgbToHsl(baseRgb);
+    var bgIsLight = luminance(bgRgb) > 0.35;
+    var dirs = bgIsLight ? [-1, +1] : [+1, -1];
+    for (var di = 0; di < dirs.length; di++) {
+      var dir = dirs[di];
+      var startL = hsl[2];
+      var loF = dir > 0 ? startL : 0, hiF = dir > 0 ? 1 : startL;
+      var best = null;
+      for (var i = 0; i < 30; i++) {
+        var mid = (loF + hiF) / 2;
+        var c = hslToRgb([hsl[0], hsl[1], mid]);
+        if (ratio(c, bgRgb) >= target) { best = mid; if (dir > 0) hiF = mid; else loF = mid; }
+        else { if (dir > 0) loF = mid; else hiF = mid; }
+      }
+      if (best !== null) return hslToRgb([hsl[0], hsl[1], best]);
+    }
+    return null;
+  }
+
+  function buildPalette(base, bg) {
+    var rows = [];
+    var roles = [
+      { key:'body',   label:'Brødtekst',            target:4.5 },
+      { key:'heading',label:'Overskrift (stor)',    target:3 },
+      { key:'muted',  label:'Sekundærtekst',        target:4.5, desat:true },
+      { key:'link',   label:'Link',                 target:4.5 },
+      { key:'border', label:'Kant / UI',            target:3 },
+      { key:'surface',label:'Overfladetoning',      target:null }
+    ];
+    roles.forEach(function (r) {
+      if (r.target === null) {
+        var mixed = bg.map(function (ch, i) { return ch * 0.88 + base[i] * 0.12; });
+        rows.push({ role:r.label, hex:toHex(mixed), ratio:ratio(base, mixed), aa:null, aaa:null });
+      } else {
+        var tuned = tuneToRatio(base, bg, r.target);
+        if (!tuned) tuned = luminance(bg) <= 0.35 ? [255,255,255] : [17,17,17];
+        if (r.desat) {
+          var h = rgbToHsl(tuned);
+          tuned = hslToRgb([h[0], h[1]*0.55, h[2]]);
+          if (ratio(tuned, bg) < r.target) {
+            var again = tuneToRatio(tuned, bg, r.target);
+            if (again) tuned = again;
+          }
+        }
+        var rt = ratio(tuned, bg);
+        rows.push({ role:r.label, hex:toHex(tuned), ratio:rt, aa: rt >= 4.5, aaa: rt >= 7 });
+      }
+    });
+    var rb = ratio(base, bg);
+    rows.unshift({ role:'Basis (uændret)', hex:toHex(base), ratio:rb, aa: rb >= 4.5, aaa: rb >= 7 });
+    return rows;
+  }
+
+  function render(rows) {
+    var tb = $('palette-rows');
+    tb.innerHTML = '';
+    rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      function td(html) { var d = document.createElement('td'); d.innerHTML = html; return d; }
+      tr.appendChild(td('<span class="pg-chip" style="background:' + row.hex + '"></span>'));
+      tr.appendChild(td(row.role));
+      var codeTd = td('<code class="pg-hex" tabindex="0" role="button" aria-label="Kopiér ' + row.hex + '">' + row.hex + '</code>');
+      codeTd.querySelector('code').addEventListener('click', function () { copyHex(row.hex); });
+      codeTd.querySelector('code').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copyHex(row.hex); } });
+      tr.appendChild(codeTd);
+      tr.appendChild(td(row.ratio.toFixed(2).replace('.', ',') + ' : 1'));
+      tr.appendChild(td(row.aa === null ? '—' : (row.aa ? '<span class="pass">Bestået</span>' : '<span class="fail">Dumpet</span>')));
+      tr.appendChild(td(row.aaa === null ? '—' : (row.aaa ? '<span class="pass">Bestået</span>' : '<span class="fail">Dumpet</span>')));
+      tb.appendChild(tr);
+    });
+
+    var byRole = {};
+    rows.forEach(function (r) { byRole[r.role] = r.hex; });
+    var pvBar = $('pv-bar'), pvBody = $('pv-body');
+    pvBar.style.background = byRole['Basis (uændret)'];
+    pvBar.style.color = luminance(parseHex(byRole['Basis (uændret)'])) > 0.35 ? '#101010' : '#ffffff';
+    $('pv-cta').style.background = pvBar.style.color;
+    $('pv-cta').style.color = byRole['Basis (uændret)'];
+    pvBody.style.background = byRole['Overfladetoning'];
+    pvBody.style.color = byRole['Brødtekst'];
+    pvBody.style.borderColor = byRole['Kant / UI'];
+    $('pv-brand').style.color = pvBar.style.color;
+    $('pv-muted').style.color = byRole['Sekundærtekst'];
+    Array.prototype.forEach.call(pvBody.querySelectorAll('p'), function (p) {
+      if (!p.id || p.id !== 'pv-muted') p.style.color = byRole['Brødtekst'];
+    });
+  }
+
+  function copyHex(hex) {
+    var done = function () {
+      var m = $('copied-msg');
+      m.textContent = 'Kopierede ' + hex + ' til udklipsholderen';
+      clearTimeout(copyHex._t);
+      copyHex._t = setTimeout(function () { m.textContent = ''; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(hex).then(done, done);
+    } else { done(); }
+  }
+
+  var exportFmt = 'css';
+  var lastRows = null, lastBg = null;
+  function cssVarName(role) {
+    return '--' + role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  function buildExport() {
+    if (!lastRows) return '';
+    if (exportFmt === 'css') {
+      var out = ':root {\n';
+      lastRows.forEach(function (r) { out += '  ' + cssVarName(r.role) + ': ' + r.hex + '; /* ' + (r.aa === null ? '' : (r.ratio.toFixed(2) + ':1')) + ' */\n'; });
+      return out + '}\n';
+    }
+    if (exportFmt === 'json') {
+      var obj = { background: lastBg };
+      lastRows.forEach(function (r) {
+        obj[cssVarName(r.role).slice(2)] = { hex: r.hex,
+          contrast: r.aa === null ? null : Math.round(r.ratio * 100) / 100,
+          wcagAA: r.aa === null ? null : r.aa, wcagAAA: r.aaa === null ? null : r.aaa };
+      });
+      return JSON.stringify(obj, null, 2) + '\n';
+    }
+    // tailwind
+    var t = '// tailwind.config.js — tilføj under theme.extend.colors\n  colors: {\n';
+    lastRows.forEach(function (r) {
+      var k = cssVarName(r.role).slice(2);
+      t += "    '" + k + "': '" + r.hex + "',\n";
+    });
+    return t + '  },\n';
+  }
+  function renderExport() {
+    $('export-out').textContent = buildExport();
+    ['tab-css','tab-json','tab-tailwind'].forEach(function (id) {
+      $(id).setAttribute('aria-selected', id === 'tab-' + exportFmt ? 'true' : 'false');
+    });
+  }
+  function flashExport(msg) {
+    $('export-msg').textContent = msg;
+    clearTimeout(flashExport._t);
+    flashExport._t = setTimeout(function () { $('export-msg').textContent = ''; }, 2200);
+  }
+  function copyExport() {
+    var text = buildExport();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flashExport('Kopieret!'); }, function () { flashExport('Kopiering fejlede — markér koden manuelt.'); });
+    } else { flashExport('Kopiering fejlede — markér koden manuelt.'); }
+  }
+  function downloadExport() {
+    try {
+      var exts = { css: 'css', json: 'json', tailwind: 'js' };
+      var blob = new Blob([buildExport()], { type: 'text/plain' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tilgaengelig-palet.' + exts[exportFmt];
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      flashExport('Downloadet tilgaengelig-palet.' + exts[exportFmt]);
+    } catch (e) { flashExport('Download understøttes ikke i denne browser.'); }
+  }
+
+  function update() {
+    var errEl = $('pg-error');
+    errEl.textContent = '';
+    var base = parseHex($('base-text').value);
+    var bg = parseHex($('bg-select').value);
+    if (!base || !bg) {
+      errEl.textContent = 'Indtast en gyldig hexfarve, fx #2563eb eller 36f.';
+      return;
+    }
+    $('base-color').value = toHex(base);
+    lastRows = buildPalette(base, bg);
+    lastBg = $('bg-select').value;
+    render(lastRows);
+    renderExport();
+  }
+
+  ['tab-css','tab-json','tab-tailwind'].forEach(function (id) {
+    $(id).addEventListener('click', function () { exportFmt = id.slice(4); renderExport(); });
+  });
+  $('copy-export').addEventListener('click', copyExport);
+  $('download-export').addEventListener('click', downloadExport);
+
+  $('base-color').addEventListener('input', function () { $('base-text').value = $('base-color').value; update(); });
+  $('base-text').addEventListener('input', update);
+  $('base-text').addEventListener('change', update);
+  $('bg-select').addEventListener('change', update);
+  update();
+})();
+</script>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAA Compliance Checklist for WordPress Sites</title>
+<style>
+  /* Kindle-compatible styling */
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.8;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: #1a1a1a;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-top: 80px;
+    margin-bottom: 10px;
+  }
+  h1 + p {
+    text-align: center;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 60px;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 8px;
+  }
+  h3 { font-size: 1.2em; margin-top: 30px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; }
+  ul, ol { margin-bottom: 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  th, td { border: 1px solid #aaa; padding: 8px 12px; text-align: left; }
+  th { background: #f0f0f0; }
+  strong { font-weight: bold; }
+  em { font-style: italic; }
+  blockquote {
+    border-left: 3px solid #ccc;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background: #f9f9f9;
+    font-style: italic;
+  }
+  hr { border: none; border-top: 1px solid #ddd; margin: 40px 0; }
+  code {
+    font-family: "Courier New", monospace;
+    font-size: 0.9em;
+    background: #f0f0f0;
+    padding: 1px 4px;
+  }
+  pre {
+    font-family: "Courier New", monospace;
+    font-size: 0.85em;
+    background: #f6f6f6;
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title page -->
+<h1>EAA Compliance Checklist<br>for WordPress Sites</h1>
+<p>A Practical Guide to Meeting EU Accessibility Requirements<br>Under the European Accessibility Act</p>
+
+<hr>
+
+<h2>Foreword</h2>
+
+<p>If you manage WordPress sites for EU clients, the European Accessibility Act (EAA) affects you directly.</p>
+
+<p>The EAA requires that digital services — including websites, mobile apps, and e-commerce platforms — meet specific accessibility standards. The deadline (June 28, 2025) has now passed. Enforcement is ramping up across EU member states.</p>
+
+<p>This is not about "nice to have" accessibility. This is about legal compliance.</p>
+
+<p>This guide gives you a practical, step-by-step checklist for making WordPress sites EAA-compliant. No theory, no abstract standards — just actionable tasks you can work through site by site.</p>
+
+<hr>
+
+<h2>Chapter 1: Is Your Site in Scope?</h2>
+
+<p>The EAA applies to <strong>digital services</strong> offered in the EU. If your agency builds, hosts, or maintains any of the following, you are in scope:</p>
+
+<table>
+<tr><th>Service type</th><th>Examples</th><th>In scope?</th></tr>
+<tr><td>E-commerce</td><td>WooCommerce stores, membership sites, booking systems</td><td>✅ Yes</td></tr>
+<tr><td>Public sector</td><td>Municipality sites, government services</td><td>✅ Yes</td></tr>
+<tr><td>Banking/Insurance</td><td>Financial service sites</td><td>✅ Yes</td></tr>
+<tr><td>Transport</td><td>Booking portals, schedule sites</td><td>✅ Yes</td></tr>
+<tr><td>Telecom</td><td>ISP portals, mobile operator sites</td><td>✅ Yes</td></tr>
+<tr><td>Private blogs</td><td>Personal sites, portfolio sites</td><td>❌ No (unless commercial)</td></tr>
+<tr><td>Brochure sites</td><td>Small business info sites</td><td>⚠️ Likely yes if selling</td></tr>
+</table>
+
+<h3>The Key Question</h3>
+<p>Ask this for every site you manage:</p>
+<blockquote>Does this site offer a service or product to the EU public?</blockquote>
+<p>If yes, it needs to be EAA-compliant. Content management systems (WordPress), e-commerce platforms (WooCommerce), and booking systems are explicitly included.</p>
+
+<hr>
+
+<h2>Chapter 2: The 10-Point EAA Compliance Checklist</h2>
+
+<p>This is the core of the guide. Each item is a concrete check that you can run on any WordPress site. Pass all 10, and the site is demonstrably EAA-compliant.</p>
+
+<h3>1. Color Contrast (WCAG 2.1 AA)</h3>
+
+<p><strong>Requirement:</strong> Text must have a contrast ratio of at least 4.5:1 (normal text) or 3:1 (large text 18pt+ / 14pt bold+).</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Use the <strong>WebAIM Contrast Checker</strong> (webaim.org/resources/contrastchecker/)</li>
+  <li>Testing tool: <strong>Accessibility Insights</strong> browser extension (free, Microsoft)</li>
+  <li>Testing tool: <strong>WAVE</strong> browser extension (free, WebAIM)</li>
+  <li>Quick check: Toggle "High Contrast" mode in browser dev tools</li>
+</ul>
+
+<p><strong>Common WordPress violations:</strong></p>
+<ul>
+  <li>Light gray text on white backgrounds (most common)</li>
+  <li>Blue link text on blue-ish backgrounds</li>
+  <li>Footer text on dark backgrounds</li>
+  <li>Button text against button colors</li>
+</ul>
+
+<p><strong>Fix:</strong> Adjust colors in the theme customizer, or add custom CSS. If the theme is locked, create a child theme.</p>
+
+<h3>2. Alt Text on All Images</h3>
+
+<p><strong>Requirement:</strong> Every meaningful image must have alt text. Decorative images must have <code>alt=""</code> (empty alt).</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Run the <strong>WAVE extension</strong> — it lists all missing alt attributes</li>
+  <li>Browser DevTools > Accessibility tab > inspect images</li>
+  <li>For WooCommerce: check product images, category images</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>Gallery images uploaded without alt text</li>
+  <li>Logo in header/footer without alt</li>
+  <li>Social media icons without alt</li>
+  <li>Decorative spacer images without <code>alt=""</code></li>
+</ul>
+
+<p><strong>Fix in WordPress:</strong></p>
+<ul>
+  <li>Edit Media > Alternative Text field</li>
+  <li>For existing sites with hundreds of images: use a plugin like Accessibility Checker to bulk-fill missing alt text</li>
+  <li>Add <code>alt=""</code> for decorative images via filter functions</li>
+</ul>
+
+<h3>3. Heading Structure (h1-h6 Hierarchy)</h3>
+
+<p><strong>Requirement:</strong> Headings must form a logical hierarchy. No skipped levels. No heading used purely for styling.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Install the <strong>HeadingsMap</strong> browser extension</li>
+  <li>It shows the full heading outline — look for:</li>
+  <ul>
+    <li>No h1 → fail</li>
+    <li>h1 → h3 (skipping h2) → fail</li>
+    <li>Multiple h1s → fail</li>
+    <li>Text styled as heading but not marked as heading → fail</li>
+  </ul>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>Theme logo is a div, not an h1</li>
+  <li>Widget headings jump from h2 to h4</li>
+  <li>Page builders create headings at arbitrary levels</li>
+  <li>Content editors use bold text instead of heading tags</li>
+</ul>
+
+<h3>4. Keyboard Navigation</h3>
+
+<p><strong>Requirement:</strong> Every interactive element must be reachable and operable via keyboard alone. No "keyboard trap" where focus gets stuck.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Navigate the entire site using only <strong>Tab</strong>, <strong>Shift+Tab</strong>, <strong>Enter</strong>, and <strong>Escape</strong></li>
+  <li>Can you reach every link, button, and form field?</li>
+  <li>Is there a visible <strong>focus indicator</strong> on every element? (blue outline or similar)</li>
+  <li>Can you open all menus, dropdowns, and modals?</li>
+  <li>Can you close them with Escape?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>Mega menus that don't work with keyboard</li>
+  <li>Modal popups that trap focus</li>
+  <li>Custom select/dropdown elements that aren't keyboard accessible</li>
+  <li>"Skip to content" link missing or broken</li>
+</ul>
+
+<h3>5. Screen Reader Compatibility</h3>
+
+<p><strong>Requirement:</strong> Content must be readable by screen readers. This means proper ARIA labels, semantic HTML, and logical reading order.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Turn on <strong>VoiceOver</strong> (macOS: Cmd+F5) or <strong>NVDA</strong> (Windows, free)</li>
+  <li>Navigate the page — does it make sense when read linearly?</li>
+  <li>Do images have alt text that describes the content?</li>
+  <li>Do form fields have proper labels?</li>
+  <li>Are dynamic content updates announced?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>"Read more" links without context</li>
+  <li>Form fields without <code>&lt;label&gt;</code> elements</li>
+  <li>Buttons with icon-only content and no aria-label</li>
+  <li>Auto-playing video/audio without pause controls</li>
+</ul>
+
+<h3>6. Forms and Input Validation</h3>
+
+<p><strong>Requirement:</strong> Forms must be accessible. Error messages must be clear and programmatically associated with the field.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Submit a form with invalid data — are errors communicated clearly?</li>
+  <li>Are error messages linked to the input field via <code>aria-describedby</code>?</li>
+  <li>Does the focus move to the first error?</li>
+  <li>Are required fields marked with <code>aria-required</code> or text?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>Inline validation messages that disappear too fast</li>
+  <li>Color-only error indicators (red border without text)</li>
+  <li>CAPTCHAs that are not accessible</li>
+  <li>Confirmation messages not detected by screen readers</li>
+</ul>
+
+<h3>7. Links and Navigation</h3>
+
+<p><strong>Requirement:</strong> Links must be distinguishable and meaningful. No "click here", no "read more" without context.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Scan all links on the page — does each link text describe its destination?</li>
+  <li>Are links visually distinguishable from surrounding text?</li>
+  <li>Do navigation menus have consistent structure across pages?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>"Click here" / "Learn more" / "Read more" as link text</li>
+  <li>Color-only distinction for links (no underline)</li>
+  <li>Same link text pointing to different URLs</li>
+  <li>Broken anchor links</li>
+</ul>
+
+<h3>8. Multimedia: Video and Audio</h3>
+
+<p><strong>Requirement:</strong> All pre-recorded video must have captions. Audio must have transcripts. Live video must have captions where feasible.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Does every embedded video (YouTube, Vimeo) have captions turned on?</li>
+  <li>Do audio players have visible play/pause/volume controls?</li>
+  <li>Are auto-playing videos controllable?</li>
+  <li>Is there a transcript for podcast/audio content?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>YouTube videos without auto-captions</li>
+  <li>Background video with no pause button</li>
+  <li>Audio content with no text alternative</li>
+  <li>Animated GIFs with no description</li>
+</ul>
+
+<h3>9. Resize and Zoom</h3>
+
+<p><strong>Requirement:</strong> Content must be readable when zoomed to 200%. No horizontal scrolling. No text clipping.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Open the site</li>
+  <li>Zoom to 200% (Cmd++ on macOS, Ctrl++ on Windows)</li>
+  <li>Does the layout reflow or require horizontal scrolling?</li>
+  <li>Is all text readable?</li>
+  <li>Do buttons and links still have enough padding to be clickable?</li>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>Fixed-width containers that don't scale</li>
+  <li>Text in images that pixelate at 200%</li>
+  <li>Off-canvas menus that overflow at zoom</li>
+  <li>Tables with many columns that break layout</li>
+</ul>
+
+<h3>10. Accessibility Statement</h3>
+
+<p><strong>Requirement:</strong> EAA requires a published accessibility statement on the site. This includes current compliance status, contact information, and a process for reporting issues.</p>
+
+<p><strong>How to check:</strong></p>
+<ul>
+  <li>Is there an accessibility statement page?</li>
+  <li>Does it include:</li>
+  <ul>
+    <li>Compliance status</li>
+    <li>Contact method for accessibility issues</li>
+    <li>Description of known limitations</li>
+    <li>Expected response time</li>
+  </ul>
+</ul>
+
+<p><strong>Common violations:</strong></p>
+<ul>
+  <li>No accessibility statement at all</li>
+  <li>Statement is generic boilerplate</li>
+  <li>No contact form or email for reporting issues</li>
+  <li>Statement claims "fully compliant" without evidence</li>
+</ul>
+
+<hr>
+
+<h2>Chapter 3: Testing Tools (All Free)</h2>
+
+<table>
+<tr><th>Tool</th><th>What it checks</th><th>Cost</th></tr>
+<tr><td>WAVE Browser Extension</td><td>All 10 points, visual overlay</td><td>Free</td></tr>
+<tr><td>Axe Browser Extension</td><td>Automated WCAG 2.1 AA checks</td><td>Free</td></tr>
+<tr><td>Lighthouse (Chrome DevTools)</td><td>Integrated audit with scores</td><td>Free</td></tr>
+<tr><td>WebAIM Contrast Checker</td><td>Color contrast ratios</td><td>Free</td></tr>
+<tr><td>NVDA Screen Reader</td><td>Full screen reader test</td><td>Free (Windows)</td></tr>
+<tr><td>VoiceOver</td><td>Full screen reader test</td><td>Free (macOS)</td></tr>
+<tr><td>Accessibility Insights</td><td>Guided manual testing</td><td>Free (Microsoft)</td></tr>
+<tr><td>HeadingsMap</td><td>Heading structure outline</td><td>Free</td></tr>
+</table>
+
+<p><strong>Recommended workflow:</strong></p>
+<ol>
+  <li>Run <strong>Lighthouse</strong> accessibility audit → fix automated findings</li>
+  <li>Run <strong>WAVE</strong> → fix reported errors and contrast issues</li>
+  <li>Run <strong>HeadingsMap</strong> → fix heading hierarchy</li>
+  <li>Manual <strong>keyboard navigation</strong> test</li>
+  <li>Test with <strong>NVDA or VoiceOver</strong> on 3 key pages</li>
+</ol>
+
+<hr>
+
+<h2>Chapter 4: 14-Day Fix Plan</h2>
+
+<table>
+<tr><th>Day</th><th>Task</th><th>Time</th></tr>
+<tr><td>1</td><td>Run Lighthouse + WAVE audit. Document all issues</td><td>1h</td></tr>
+<tr><td>2</td><td>Fix all color contrast issues (check 1)</td><td>1h</td></tr>
+<tr><td>3</td><td>Add alt text to all images (check 2)</td><td>1-3h</td></tr>
+<tr><td>4</td><td>Fix heading hierarchy (check 3)</td><td>1h</td></tr>
+<tr><td>5</td><td>Test and fix keyboard navigation (check 4)</td><td>2h</td></tr>
+<tr><td>6</td><td>Test screen reader flow (check 5)</td><td>1h</td></tr>
+<tr><td>7</td><td>Fix form accessibility (check 6)</td><td>1h</td></tr>
+<tr><td>8</td><td>Fix links and navigation (check 7)</td><td>1h</td></tr>
+<tr><td>9</td><td>Fix multimedia issues (check 8)</td><td>1h</td></tr>
+<tr><td>10</td><td>Test resize and zoom (check 9)</td><td>30min</td></tr>
+<tr><td>11</td><td>Create accessibility statement (check 10)</td><td>1h</td></tr>
+<tr><td>12</td><td>Final full audit</td><td>1h</td></tr>
+<tr><td>13</td><td>Client handover: document what was done</td><td>1h</td></tr>
+<tr><td>14</td><td>Set up monitoring: quarterly re-scans</td><td>30min</td></tr>
+</table>
+
+<hr>
+
+<h2>Chapter 5: Making EAA Compliance a Revenue Stream</h2>
+
+<table>
+<tr><th>Service</th><th>Description</th><th>Price range</th></tr>
+<tr><td>EAA Audit</td><td>Full automated + manual audit with report</td><td>€500-1,500</td></tr>
+<tr><td>EAA Remediation</td><td>Fix all 10 checklist items</td><td>€1,000-5,000</td></tr>
+<tr><td>EAA Maintenance</td><td>Quarterly re-scans + fixes</td><td>€200-500/mo</td></tr>
+<tr><td>Accessibility Statement setup</td><td>Create + publish</td><td>€150-300</td></tr>
+</table>
+
+<hr>
+
+<h2>Appendix A: Quick Reference Card</h2>
+
+<pre>
+EAA QUICK CHECK (WordPress)
+─────────────────────────────
+☐ Color contrast ≥ 4.5:1 → WebAIM tool
+☐ All images have alt text → WAVE tool
+☐ Heading hierarchy logical → HeadingsMap
+☐ Full keyboard navigation → Tab test
+☐ Screen reader compatible → VoiceOver/NVDA
+☐ Forms have error messages → Submit test
+☐ Links are descriptive → Visual scan
+☐ Videos have captions → Player check
+☐ 200% zoom no horizontal scroll → Zoom test
+☐ Accessibility statement published → Site check
+</pre>
+
+<hr>
+
+<h2>Appendix B: Sample Accessibility Statement</h2>
+
+<pre>
+ACCESSIBILITY STATEMENT
+Last updated: [DATE]
+
+[AGENCY/SITE NAME] is committed to ensuring digital accessibility for
+people with disabilities. We are continually improving the user experience
+for everyone and applying the relevant accessibility standards.
+
+Compliance Status
+We strive to conform to WCAG 2.1 Level AA, which is the standard required
+under the European Accessibility Act.
+
+Current Status: [Full compliance / Partial compliance]
+Known limitations: [List any known issues]
+
+Feedback
+We welcome your feedback on the accessibility of this site.
+Please contact us:
+Email: accessibility@[domain]
+Response time: Within 5 business days
+
+Technical specifications
+- Accessibility relies on the following technologies: HTML, WAI-ARIA,
+  CSS, JavaScript
+- These technologies are relied upon for conformance with accessibility
+  standards
+
+Assessment approach
+We assess accessibility using automated tools (Lighthouse, WAVE) and
+manual testing (keyboard navigation, screen reader testing).
+
+This statement was last reviewed on [DATE] and will be updated annually.
+</pre>
+
+<hr>
+
+<h2>Final Words</h2>
+
+<p>EAA compliance for WordPress sites is achievable without a massive budget. The 10-point checklist covers the vast majority of issues found on the average WordPress site. Most fixes take an hour or less.</p>
+
+<p>The agencies that treat accessibility as a feature — and learn to sell it — will win more clients, charge higher rates, and avoid the fines that are now being enforced across Europe.</p>
+
+<p>Start with one site. Run the checklist. Fix what's broken. Document what you did. That is compliance.</p>
+
+<hr>
+
+<p><strong>Version 1.0 — August 2026</strong><br>
+Published by Mahope / Hermes Passiv</p>
+
+<p><em>This guide provides practical guidance based on publicly available information about the European Accessibility Act. It does not constitute legal advice. For specific legal questions, consult a qualified attorney in your jurisdiction.</em></p>
+
+</body>
+</html>

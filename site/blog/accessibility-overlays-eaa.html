@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility Overlays & the EAA: Why "One Line of Code" Is Not</title>
+<meta name="description" content="Accessibility overlay widgets promise WCAG compliance with one line of code. What they actually do, the FTC action against accessiBe, lawsuit data, and why the EAA requires real remediation — a practical guide for small EU web agencies.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Accessibility Overlays &amp; the EAA: Why "One Line of Code" Is Not Compliance">
+<meta property="og:description" content="Accessibility overlay widgets promise WCAG compliance with one line of code. What they actually do, the FTC action against accessiBe, lawsuit data, and why the EAA requires real remediation — a practical guide for small EU web agencies.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Accessibility Overlays &amp; the EAA: Why "One Line of Code" Is Not Compliance">
+<meta name="twitter:description" content="Accessibility overlay widgets promise WCAG compliance with one line of code. What they actually do, the FTC action against accessiBe, lawsuit data, and why the EAA requires real remediation — a practical guide for small EU web agencies.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tilgaengeligheds-overlays-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/accessibility-overlays-eaa">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Accessibility Overlays &amp; the EAA: Why \"One Line of Code\" Is Not Compliance",
+  "description": "Accessibility overlay widgets promise WCAG compliance with one line of code. What they actually do, the FTC action against accessiBe, lawsuit data, and why the EAA requires real remediation — a practical guide for small EU web agencies.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · EAA</div>
+    <h1>Accessibility Overlays &amp; the EAA:<br>Why "One Line of Code" Is Not Compliance</h1>
+    <p class="subtitle">Overlay widgets like accessiBe, UserWay, and AudioEye market instant accessibility for $49/month. Here is what the FTC found, what the lawsuit data shows, what the European Commission says, and what actually works for client sites.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#what-overlays-promise" class="btn-secondary">Read the EAA Checklist →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 8 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="what-overlays-promise">What Overlays Promise</h2>
+    <p>An accessibility overlay is a third-party JavaScript widget you add to a website with a single script tag. It promises to make the site accessible automatically: enlarging text, adding alt text with AI, forcing keyboard focus, adjusting contrast. Vendors sell it as instant WCAG compliance — often with an "accessibility shield" badge to display in the footer.</p>
+    <p>The pitch lands well with small agencies and their clients: no developer time, no redesign, $49/month instead of a five-figure audit. The problem is not that overlays do nothing. It is that what they do does not match what they claim — and in 2026 both regulators and courts have said so.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🤖 AI-powered auto-fixes</h3><p>Overlays claim to detect and fix accessibility issues at page load. Automated detection catches only a fraction of WCAG failures, and many "fixes" (auto-generated alt text, DOM rewrites) break screen reader behaviour.</p></div>
+      <div class="card"><h3>🛡️ Compliance badges</h3><p>Vendors let sites display a certification-style badge implying legal protection. No badge confers compliance — only conformance with EN 301 549 / WCAG 2.1 AA does.</p></div>
+      <div class="card"><h3>💸 Recurring cost</h3><p>A typical agency pays $49–$149 per month per site. Over three years that is more than a one-off professional remediation of most small business sites.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="ftc-action">FTC Action</h2>
+    <p>In January 2025, the US Federal Trade Commission charged accessiBe — the largest overlay vendor — with misrepresenting that its widget could make websites compliant with accessibility standards. In April 2025 the FTC approved a final order requiring accessiBe to pay $1 million and barring it from claiming its automated products make any site WCAG-compliant unless it has evidence to support the claim.</p>
+    <p>Think about what this means: the company selling "guaranteed compliance" was itself sanctioned for deceptive advertising. If your pitch to clients includes an overlay's compliance claims, you are repeating marketing language a competition authority has already ruled misleading.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="lawsuit-data">Lawsuit Data</h2>
+    <p>The United States is where overlay failure is best documented, because ADA website lawsuits are filed there by the thousand. In 2025, 3,948 ADA web accessibility lawsuits were filed — up nearly 24% over 2024. Roughly 20-25% of these targeted websites that had an accessibility overlay installed at the time.</p>
+    <p>Plaintiffs' firms actively screen for overlays: the widget signals that a company knew about accessibility and chose a shortcut. Installing an overlay does not reduce litigation exposure — industry reporting suggests it can mark a site as a better target.</p>
+    <p>More than 900 accessibility practitioners and disabled users have signed the Overlay Fact Sheet stating that overlays frequently make sites harder to use with assistive technology, not easier. The people who rely on screen readers are the ones who pay for broken auto-fixes.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="eaa-position">EAA Position</h2>
+    <p>For agencies working in the EU, the relevant law since 28 June 2025 is the European Accessibility Act. It requires e-commerce, banking, transport, and other covered services to conform with EN 301 549 — which incorporates WCAG 2.1 AA — and to publish an accessibility statement. Market surveillance authorities can require corrective action; member state penalty frameworks include fines up to €3 million in some countries.</p>
+    <p>The European Commission has stated that overlays alone do not achieve EAA compliance, and consumer organisations including the European Disability Forum have issued statements against marketing them as such. An overlay cannot fix the structural issues the EAA targets: missing keyboard support in checkout flows, inaccessible documents, unlabeled form fields in booking systems. Those require code changes.</p>
+    <p>The practical position for a small agency is simple: an overlay installed on top of a non-conformant site leaves the site non-conformant. The money is spent, the statement cannot honestly be published, and the underlying risk remains.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="what-works">What Works</h2>
+    <p>None of this means automated tools are useless. It means they belong in the right place: detection, not remediation. Run a scanner to find issues, then fix them in the code. That workflow costs nothing extra and produces a site that actually conforms.</p>
+    <p>A realistic plan for a small agency portfolio:</p>
+    <p>• Scan every client site for the common automated-detectable failures (missing alt text, unlabeled inputs, contrast, heading structure).
+• Fix those in templates and components once — every page on the theme benefits.
+• Test keyboard navigation and one screen reader pass on critical flows (checkout, contact, signup).
+• Publish an honest accessibility statement per site.
+• Re-scan after content updates or new plugins.</p>
+    <p>This takes hours per site, not months — and unlike a widget subscription, it ends. When you can show a clean scan and a documented process, you can also price it as a service line instead of paying for a badge.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 Scan first</h3><p>Our free scanner checks 15+ WCAG rules on any URL — WordPress, Shopify, Webflow, or hand-written HTML. No install, no account.</p></div>
+      <div class="card"><h3>🧩 Fix at template level</h3><p>Most errors repeat across pages because they live in the theme. One component fix removes hundreds of findings.</p></div>
+      <div class="card"><h3>📝 Document honestly</h3><p>An accessibility statement based on real scan results protects you far more than an overlay badge ever did.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Real compliance comes from fixing your site, not from a widget. Our EAA checklist walks through 10 practical checks that take minutes each — start there.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Run the Free WCAG Scanner →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">Read the EAA Checklist →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Do accessibility overlays work at all?</h3><p>They change some surface-level properties (text size, contrast, some focus behaviour) but cannot reliably fix the issues that matter most: semantic HTML, keyboard traps, screen reader compatibility, and accessible workflows. Automated tools detect far less than manual testing finds, and overlays sometimes break assistive technology further. The consensus of practitioners, disabled users, and now the FTC is that they do not deliver compliance.</p></div>
+      <div class="card"><h3>Is installing an overlay illegal?</h3><p>No. Buying and installing an overlay is legal. What is problematic is relying on it for compliance: under the EAA the site itself must conform to EN 301 549 regardless of what scripts run, and vendors may no longer legally claim their product guarantees WCAG compliance without evidence.</p></div>
+      <div class="card"><h3>What happened with accessiBe and the FTC?</h3><p>In January 2025 the FTC charged accessiBe with misrepresenting its product's capabilities, including through fake reviews. The April 2025 final order imposed a $1 million payment and prohibits claims that its products make websites WCAG-compliant without reliable evidence.</p></div>
+      <div class="card"><h3>Should I remove an overlay a client already has installed?</h3><p>Evaluate it like any dependency: scan the site with and without it enabled. If the overlay introduces errors or blocks real fixes, recommend removal and put the budget toward template-level remediation — which is usually cheaper over three years anyway. Never remove anything during active enforcement correspondence without documenting the decision.</p></div>
+      <div class="card"><h3>Does the EAA ban overlays?</h3><p>No, but the European Commission has made clear overlays alone do not satisfy EAA requirements, and consumer and disability organisations have formally opposed them being marketed as compliance solutions. Conformance is measured against EN 301 549 / WCAG 2.1 AA, not against whether a widget is present.</p></div>
+      <div class="card"><h3>What is the cheapest path to real EAA compliance for a small site?</h3><p>Automated scanning (free), template-level fixes for the errors it finds, a keyboard and screen-reader check of critical flows, and an honest accessibility statement. For most small business sites this is days of work, not months — and it produces something an overlay never can: a site that genuinely works with assistive technology.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Run the Free WCAG Scanner →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">Read the EAA Checklist →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA Accessibility Checklist: 10 Steps for WordPress</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA &amp; WCAG</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: What Changed & What It Means for Your Clients</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">EAA</span><h3><a href="/blog/eaa-enforcement-2026" style="color:var(--color-accent);text-decoration:none;">EAA Enforcement in 2026: What Has Actually Happened</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

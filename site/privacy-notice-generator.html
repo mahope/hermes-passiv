@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Privacy Notice Generator (GDPR Art. 13/14)</title>
+<meta name="description" content="Generate a GDPR Article 13/14 privacy notice for your website or small business. Answer a few questions and get a clean, ready-to-publish policy page. Free, no signup — everything stays in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free Privacy Notice Generator (GDPR)">
+<meta property="og:description" content="Generate an Article 13/14 privacy notice in minutes. Free, no signup, runs entirely in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/privacy-notice-generator">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta property="og:image:alt" content="Free Privacy Notice Generator (GDPR)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/privacy-notice-generator"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/privacy-notice-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/privacy-notice-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/privacy-notice-generator">
+<meta name="twitter:title" content="Free Privacy Notice Generator (GDPR)">
+<meta name="twitter:description" content="Generate an Article 13/14 privacy notice in minutes. Free, no signup, runs entirely in your browser.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a privacy notice under GDPR?","acceptedAnswer":{"@type":"Answer","text":"A privacy notice is the document that tells people what personal data you collect, why you collect it, on what legal basis, who you share it with, how long you keep it and how they can exercise their rights. It is required by GDPR Articles 13 and 14 whenever you collect personal data directly from someone or obtain it from another source."}},{"@type":"Question","name":"Do I need one if I already have a cookie banner?","acceptedAnswer":{"@type":"Answer","text":"Yes. A cookie banner handles consent for cookies only. A privacy notice covers all personal data processing: contact forms, newsletters, customer records, analytics identities, invoices. Most websites need both."}},{"@type":"Question","name":"Can I publish the generated text as-is?","acceptedAnswer":{"@type":"Answer","text":"The generator produces a complete draft based on your answers. Review it so it matches what your organisation actually does — an accurate notice matters more than a long one. The output is a template, not legal advice."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished notice yourself."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen select,
+  .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 70px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #notice { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #notice h2 { color: #12283a; font-size: 18px; margin-top: 22px; }
+  #notice ul { padding-left: 20px; margin: 6px 0; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #notice { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">FREE TOOL</div>
+    <h1>Privacy Notice Generator</h1>
+    <p class="tagline">Answer the questions → get a clean
+    <strong>GDPR Article 13/14 privacy notice</strong> ready to publish on
+    your website. No signup, nothing leaves your browser.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Who you are</legend>
+    <label for="orgName">Organisation name</label>
+    <input type="text" id="orgName" required placeholder="Acme Web Studio ApS">
+    <label for="contact">Contact for privacy questions</label>
+    <input type="email" id="contact" required placeholder="privacy@acmeweb.example">
+    <label for="dpo">Data protection officer / representative (if any)</label>
+    <input type="text" id="dpo" placeholder="Leave empty if none appointed">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. What you do with data</legend>
+    <label>What do you use personal data for? (tick all that apply)</label>
+    <div style="margin-top:6px;font-size:14px;line-height:2">
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="responding to contact-form enquiries" checked> Contact form / enquiries</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="sending our newsletter"> Newsletter / e-mail marketing</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="delivering services to clients and invoicing them"> Client work &amp; invoicing</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="anonymous usage statistics for our own website"> Website analytics</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="recruitment when you apply for a job with us"> Recruitment</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="accounting as required by bookkeeping law"> Accounting records</label>
+    </div>
+    <label for="purposeOther">Other purposes</label>
+    <input type="text" id="purposeOther" placeholder="Anything else worth documenting">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Sharing, transfers and retention</legend>
+    <label for="recipients">Who receives the data? (one per line: name — service)</label>
+    <textarea id="recipients" placeholder="Example:
+Google Ireland Ltd — e-mail delivery
+Hetzner Online GmbH — hosting"></textarea>
+    <p class="hint">Leave empty if nobody outside your organisation receives it.</p>
+    <label for="transfer">Transfers outside the EU/EEA?</label>
+    <select id="transfer">
+      <option value="none" selected>No transfers outside the EU/EEA</option>
+      <option value="sccs">Yes — covered by Standard Contractual Clauses</option>
+      <option value="adequacy">Yes — adequacy decision country (e.g. via EU-US Data Privacy Framework)</option>
+    </select>
+    <label for="transferDesc">Countries / providers involved</label>
+    <input type="text" id="transferDesc" placeholder="Leave empty if 'No transfers'">
+    <label for="retention">How long do you keep data?</label>
+    <textarea id="retention" required placeholder="Example: enquiries are deleted after 12 months; newsletter data until you unsubscribe; invoices kept 5 years as required by accounting rules."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Your rights &amp; complaints</legend>
+    <label for="supervisory">Supervisory authority for complaints</label>
+    <select id="supervisory">
+      <option value="Datatilsynet (Denmark), dt@datatilsynet.dk" selected>Datatilsynet (Denmark)</option>
+      <option value="Integritetsskyddsmyndigheten (Sweden)">IMY (Sweden)</option>
+      <option value="Datatilsynet (Norway)">Datatilsynet (Norway)</option>
+      <option value="Datainspektionen (Finland)">Tietosuojavaltuutettu (Finland)</option>
+      <option value="the national data protection authority in your country of residence">Other / EU-wide</option>
+    </select>
+    <p class="hint">Visitors always have the right to complain to their local authority; this names the most likely one.</p>
+    <label for="docDate">Date of last update</label>
+    <input type="date" id="docDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generate privacy notice</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Generated privacy notice</h2>
+  <article id="notice" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Copy as text</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML file</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Print / save as PDF</button>
+  </div>
+  <p class="no-print">Document your contracts too with the
+  <a href="/dpa-generator">free DPA generator</a>, build your register with the
+  <a href="/ropa-generator">free RoPA generator</a>, check your public pages with the
+  <a href="/scan">free EAA scanner</a>, or see
+  <a href="/free-tools">all free tools</a>. This document is a draft and does not
+  constitute legal advice.</p>
+</section>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">Why you need a privacy notice</h2>
+  <ul>
+    <li><strong>It is legally required.</strong> GDPR Articles 13 and 14 oblige
+    every organisation that processes personal data to tell people about it,
+    at or before collection. Missing or misleading information is one of the
+    most common findings in supervisory-authority inspections.</li>
+    <li><strong>Clients ask for it.</strong> Enterprise customers doing vendor
+    assessments routinely request a link to your privacy policy before signing.
+    Having one ready removes friction from sales.</li>
+    <li><strong>It keeps you honest.</strong> Writing down what you actually do
+    with data — and checking it once a year — is half of practical GDPR
+    compliance.</li>
+  </ul>
+</section>
+
+<p style="text-align:center;margin:24px 0">Prefer to adapt a file yourself? <a href="/privacy-policy-template">Download the free privacy policy template</a> instead.</p>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Part of the <a href="/free-tools">Hermes Compliance toolkit</a> — free tools and
+    practical guides for small EU web agencies.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+
+  var TRANSFER_LABEL = {
+    none: 'We do not transfer personal data outside the EU/EEA.',
+    sccs: 'Some recipients are located outside the EU/EEA. Those transfers are protected by the European Commission\u2019s Standard Contractual Clauses.',
+    adequacy: 'Some recipients are located outside the EU/EEA, in countries covered by an adequacy decision of the European Commission (such as certified participants in the EU-US Data Privacy Framework).'
+  };
+  var PURPOSE_BASIS = {
+    default: 'legitimate interests (Art. 6(1)(f))',
+    'sending our newsletter': 'consent, which you can withdraw at any time (Art. 6(1)(a))',
+    'anonymous usage statistics for our own website': 'consent where required by ePrivacy rules'
+  };
+
+  function buildData() {
+    var d = {};
+    d.org = v('orgName');
+    d.contact = v('contact');
+    d.dpo = v('dpo');
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#genForm fieldset:nth-of-type(2) input[type=checkbox]:checked')).map(function(c){ return c.value; });
+    if (v('purposeOther')) boxes.push(v('purposeOther'));
+    d.purposes = boxes;
+    d.recipients = v('recipients').split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    d.transferMode = $('transfer').value;
+    d.transferDesc = v('transferDesc');
+    d.retention = v('retention');
+    d.supervisory = $('supervisory').value;
+    d.date = v('docDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>Privacy Policy</h2>';
+    h += '<p><em>Last updated: ' + esc(d.date) + '</em></p>';
+    h += '<p>' + esc(d.org) + (' ("we", "us") respects your privacy. This notice explains what personal data we collect, why we collect it, and the rights you have under the General Data Protection Regulation (GDPR).') + '</p>';
+
+    h += '<h3>1. Who we are</h3>';
+    h += '<p>Data controller: <strong>' + esc(d.org) + '</strong>.<br>';
+    h += 'Privacy questions: <a href="mailto:' + esc(d.contact) + '">' + esc(d.contact) + '</a>.</p>';
+    if (d.dpo) h += '<p>Data protection officer / representative: ' + esc(d.dpo) + '.</p>';
+
+    h += '<h3>2. What data we process and why</h3>';
+    h += '<p>We process personal data for the following purposes:</p><ul>';
+    d.purposes.forEach(function (p) {
+      h += '<li>' + esc(p.charAt(0).toUpperCase() + p.slice(1)) + '. Legal basis: ' + (PURPOSE_BASIS[p] || PURPOSE_BASIS.default) + '.</li>';
+    });
+    h += '</ul>';
+
+    h += '<h3>3. Who we share data with</h3>';
+    if (d.recipients.length) {
+      h += '<p>We share personal data with these processors and partners:</p><ul>';
+      d.recipients.forEach(function(r){ h += '<li>' + esc(r.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul>';
+      h += '<p>All processors have data processing agreements in place pursuant to Article 28 GDPR.</p>';
+    } else {
+      h += '<p>We do not share personal data with third parties, except where required by law.</p>';
+    }
+
+    var t = TRANSFER_LABEL[d.transferMode];
+    if (d.transferMode !== 'none' && d.transferDesc) t += ' Countries/parties involved: ' + esc(d.transferDesc) + '.';
+    h += '<h3>4. Transfers outside the EU/EEA</h3>';
+    h += '<p>' + t + '</p>';
+
+    h += '<h3>5. How long we keep data</h3>';
+    h += '<p>' + esc(d.retention) + '</p>';
+
+    h += '<h3>6. Your rights</h3>';
+    h += '<p>You have the right to:</p><ul>' +
+         '<li>access the personal data we hold about you;</li>' +
+         '<li>have incorrect data rectified or erased;</li>' +
+         '<li>restrict or object to our processing;</li>' +
+         '<li>data portability where technically possible;</li>' +
+         '<li>withdraw consent at any time, without affecting prior processing.</li></ul>';
+    h += '<p>To exercise any right, write to <a href="mailto:' + esc(d.contact) + '">' + esc(d.contact) + '</a>. We respond within one month.</p>';
+
+    h += '<h3>7. Complaints</h3>';
+    h += '<p>You may complain to <strong>' + esc(d.supervisory) + '</strong>, or to the supervisory authority in your country of residence.</p>';
+
+    h += '<hr><p style="font-size:12px;color:#667">This policy was created with the free Hermes Compliance Privacy Notice Generator and reflects GDPR Articles 13\u201314. Review it whenever your processing changes. It does not constitute legal advice.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate');
+    current = buildData();
+    $('notice').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Copied \u2713';
+      setTimeout(function () { $('copyBtn').textContent = 'Copy as text'; }, 2000);
+    }).catch(function () {
+      alert('Copying failed \u2014 use Download HTML instead.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Privacy Policy \u2014 ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<style>body{max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px}'
+      +   'h2,h3{color:#12283a}</style>\n'
+      + '<body>\n' + $('notice').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'privacy-policy-' + current.org.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

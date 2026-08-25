@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release Integrity: When Our Extension Shipped Without Its Own Fixes</title>
+<meta name="description" content="An honest case study from a real product: two releases where the download zip was missing the core fixes that tests had already approved. What release integrity means, how the failure happened, and the one test that catches it.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Release Integrity: When Our Extension Shipped Without Its Own Fixes">
+<meta property="og:description" content="Two releases. All tests green. Yet the zip users downloaded was missing the most important fixes. How we found out — and the one test that prevents it from happening again.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/release-integrity-explained">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/release-integrity-explained"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/release-integrity-explained">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/release-integrity-hvad-er-det">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/release-integrity-explained">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Release Integrity: when our extension shipped without its own fixes", "description": "An honest case study from a real product: two releases where the download zip was missing the core fixes that tests had already approved.", "url": "https://hermes-passiv.pages.dev/blog/release-integrity-explained", "datePublished": "2026-08-24", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Clean Copy"}, "publisher": {"@type": "Organization", "name": "Clean Copy"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What does release integrity mean?", "acceptedAnswer": {"@type": "Answer", "text": "That what you ship is identical to what you tested. Not \u201cbuilt from the same codebase\u201d or \u201cmostly the same\u201d — but bit-for-bit the same files, same versions, no older artifacts mixed in. Integrity typically fails not in the code but in packaging: which files end up in the artifact."}}, {"@type": "Question", "name": "Why didn't unit tests catch it?", "acceptedAnswer": {"@type": "Answer", "text": "Because they tested the source file. The core had all the fixes, and tests against the core passed. The failure lived elsewhere: in a copy of the code bundled into the zip, which no test ever read. A test can only guarantee what it actually loads."}}, {"@type": "Question", "name": "What is a parity test?", "acceptedAnswer": {"@type": "Answer", "text": "A test that compares two things that should be equal — for example source core.js and the copy of core.js inside the release package. If they differ, the build fails regardless of whether functional tests are otherwise green. It catches exactly the class of bugs where something is maintained in two places."}}, {"@type": "Question", "name": "How do I avoid this in my own project?", "acceptedAnswer": {"@type": "Answer", "text": "Three rules: (1) Generate copies from the source instead of maintaining them by hand — one source of truth. (2) Have the build script splice shared code into the artifact automatically. (3) Add one parity test verifying the artifact matches the source, and run it before every release."}}]}</script>
+<script defer src="/track.js"></script>
+<style>
+  pre.cmd { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0; }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">QA &middot; RELEASE INTEGRITY &middot; CASE STUDY</div>
+    <h1>Release Integrity:<br>When the Release Didn't Contain the Fixes</h1>
+    <p class="subtitle">Every test was green. The build was green. Yet the zip file users downloaded was missing the most important bug fixes from the last two releases. Here is what went wrong — and the single test that would have caught it before shipping.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy" class="btn-primary">See the product, Clean Copy &rarr;</a>
+      <a href="#lessons" class="btn-secondary">Skip to the lessons</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="problem">
+  <div class="container">
+    <h2>What happened</h2>
+    <p>This is a true story from developing the browser extension
+    <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a>.
+    The project has one core file with all the logic (<code>clean_copy_core.js</code>) and six
+    surfaces that use it: Chrome extension, Firefox extension, CLI tool,
+    bookmarklet, Obsidian plugin and desktop app.</p>
+    <p>During a review we discovered something uncomfortable: the Chrome extension's background script
+    did <strong>not</strong> contain the fixes from the last two releases. They were in
+    the core file — and in the Firefox version. But the file that actually got packaged into
+    the Chrome zip was an older copy.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Tests: green</h3><p>The unit and integration tests ran against the core file. It had all the fixes. Everything looked perfect.</p></div>
+      <div class="card"><h3>📦 Artifact: wrong</h3><p>The zip contained a manual copy of the core — two releases old, missing the new fixes.</p></div>
+      <div class="card"><h3>🚫 Users: affected</h3><p>Everyone who downloaded the extension during that period got a product without the fixes the release notes promised.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>How does something like this happen?</h2>
+    <p>Classic cause: <strong>the same logic maintained in several places.</strong> When the project
+    was small, the core was copied into each project by hand. The copy in the
+    Chrome folder simply got forgotten for two iterations — while the source and the Firefox copy
+    were updated.</p>
+    <ul>
+      <li><strong>Manual copies of code are time bombs.</strong> They work fine until someone forgets one. And there is no alarm when it happens.</li>
+      <li><strong>Tests only test what they load.</strong> Our tests imported the core file directly. They knew nothing about what sat in the zip.</li>
+      <li><strong>Release pressure amplifies it.</strong> Zips get built last, quickly, after everything is approved. That very step never gets the attention it deserves.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="products" id="fix">
+  <div class="container">
+    <h2>The fix: one source of truth + one parity test</h2>
+    <ol>
+      <li><strong>No manual copies.</strong> The kernel logic now exists in exactly one file.
+      The build script generates every copy — the extensions' scripts get the core
+      <em>spliced in</em> at build time, using marked blocks.</li>
+      <li><strong>Parity test before release.</strong> One test reads the finished zip,
+      unpacks it, and compares the core section byte-for-byte against the source. If they differ,
+      the build fails. No release without a green parity test.</li>
+      <li><strong>Version bump before zips are built.</strong> Rule: any content change ⇒ version number up, <em>always</em>, before the artifact is built. A new zip can then never be mistaken for an old one.</li>
+      <li><strong>Post-release verification.</strong> After deploying, the zip is downloaded live from the site and checked — the same parity check, but against what users actually download.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="products" id="lessons">
+  <div class="container">
+    <h2>Three lessons you can use tomorrow</h2>
+    <ol>
+      <li><strong>Test the artifact, not just the source.</strong> What users receive is the zip, the package, the installed thing. Your test suite should open exactly that at least once.</li>
+      <li><strong>Composite projects should generate, not copy.</strong> If the same function exists in two files, they will diverge at some point. The question is not <em>whether</em>, but when — and whether a test notices.</li>
+      <li><strong>The parity test is cheap and catches a whole class of bugs.</strong> It needs no framework: read two files, compare them, fail if they differ. Ten lines of code that saved us from shipping the wrong content a third time.</li>
+    </ol>
+    <p>The mistake cost us two releases and some self-confidence. The fix took one afternoon.
+    It is the best investment the project has made.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-bookmarklet" class="btn-primary">Try Clean Copy free &rarr;</a>
+      &nbsp;
+      <a href="/blog/copy-as-markdown-chrome-extension" class="btn-secondary">More guides</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What does release integrity mean?</h3><p>That what you ship is identical to what you tested. Not "built from the same codebase" or "mostly the same" — but bit-for-bit the same files, same versions, no older artifacts mixed in. Integrity typically fails not in the code but in packaging: which files end up in the artifact.</p></div>
+      <div class="card"><h3>Why didn't unit tests catch it?</h3><p>Because they tested the source file. The core had all the fixes, and tests against the core passed. The failure lived elsewhere: in a copy of the code bundled into the zip, which no test ever read. A test can only guarantee what it actually loads.</p></div>
+      <div class="card"><h3>What is a parity test?</h3><p>A test that compares two things that should be equal — for example source core.js and the copy of core.js inside the release package. If they differ, the build fails regardless of whether functional tests are otherwise green. It catches exactly the class of bugs where something is maintained in two places.</p></div>
+      <div class="card"><h3>How do I avoid this in my own project?</h3><p>Three rules: (1) Generate copies from the source instead of maintaining them by hand — one source of truth. (2) Have the build script splice shared code into the artifact automatically. (3) Add one parity test verifying the artifact matches the source, and run it before every release.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Try Clean Copy free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/paste-without-formatting-chrome" lang="en">Paste Without Formatting in Chrome</a> &middot; <a href="/blog/copy-as-markdown-chrome-extension" lang="en">Copy as Markdown</a> &middot; <a href="/blog/html-to-markdown-converter" lang="en">HTML to Markdown</a> &middot; <a href="/blog/test-your-zip-before-release" lang="en">Test your zip before release</a></p></div>
+<p style="text-align:center;"><a href="/da/blog/release-integrity-hvad-er-det" lang="da">Danish version of this article</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/scan">Scanner</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

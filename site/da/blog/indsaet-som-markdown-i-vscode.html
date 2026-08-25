@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indsæt som Markdown i VS Code — den komplette guide</title>
+<meta name="description" content="Sådan indsætter du HTML fra nettet i VS Code som ren Markdown eller ren tekst — indbyggede muligheder, udvidelser og genveje sammenlignet.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Indsæt som Markdown i VS Code — den komplette guide">
+<meta property="og:description" content="Indbyggede muligheder, udvidelser og genveje til at indsætte web-indhold som ren Markdown i VS Code.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/indsaet-som-markdown-i-vscode">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/indsaet-som-markdown-i-vscode"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-vscode">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/indsaet-som-markdown-i-vscode">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-vscode">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Indsæt som Markdown i VS Code — den komplette guide (2026)", "description": "Sådan indsætter du HTML fra nettet i VS Code som ren Markdown eller ren tekst — indbyggede muligheder, udvidelser og genveje sammenlignet.", "url": "https://hermes-passiv.pages.dev/da/blog/indsaet-som-markdown-i-vscode", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Kan VS Code indsætte HTML som Markdown?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke som standard. Indsætter du formateret tekst i en Markdown-fil, lander rå HTML-tags. Du skal bruge en udvidelse som Clean Copy til VS Code, som konverterer udklipsholderens HTML til Markdown (Ctrl/Cmd+Shift+V), før teksten lander i editoren."}}, {"@type": "Question", "name": "Hvad er genvejen til at indsætte uden formatering i VS Code?", "acceptedAnswer": {"@type": "Answer", "text": "Der er ingen som standard. Med Clean Copy installeret indsætter Ctrl+Shift+V (Cmd+Shift+V på Mac) udklipsholderen som ren Markdown, og kommandopaletten har også en indsæt-som-ren-tekst-kommando."}}, {"@type": "Question", "name": "Bevarer konverteringen links, overskrifter og tabeller?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Overskrifter bliver til #-niveauer, links til [tekst](url), lister forbliver lister, fed/kursiv overlever, kodeblokke bliver hegnede blokke, og simple tabeller bliver til pipe-tabeller."}}, {"@type": "Question", "name": "Bliver noget sendt til en server?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Clean Copy kører helt inde i din editor. Udklipsholderens indhold konverteres lokalt og forlader aldrig din maskine."}}]}</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+  .kbd { background:#0f172a; color:#e2e8f0; font-family:'SF Mono','Monaco','Fira Code',monospace;
+    font-size:0.8rem; padding:2px 8px; border-radius:4px; border:1px solid #334155; white-space:nowrap; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">UDVIKLER &middot; VSCODE &middot; MARKDOWN</div>
+    <h1>Indsæt som Markdown<br>i VS Code</h1>
+    <p class="subtitle">Du kopierer noget fra nettet og indsætter det i dine noter eller README — og får en væg af <code>&lt;span&gt;</code>-tags i stedet for ren Markdown. Her er hvorfor det sker, hvad VS Code selv kan gøre ved det, og den hurtigste måde at løse det ordentligt på.</p>
+    <div class="hero-cta">
+      <a href="#loesning" class="btn-primary">Hop til løsningen &rarr;</a>
+      <a href="/clean-copy" class="btn-secondary">Om Clean Copy</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning &middot; <a href="/blog/html-to-markdown-vscode" style="color:inherit">Read in English</a></p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor indsættelse i VS Code bliver et rod</h2>
+    <p>Når du kopierer fra en hjemmeside, indeholder udklipsholderen sidens fulde HTML-fragment — inline-styles, spans, smarte anførselstegn og sporingsattributter. Hvad der sker ved indsættelse afhænger af, hvor du lander:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>📝 I en .md-fil</h3><p>VS Code indsætter rå HTML ordret. Markdown-renderere tolererer noget inline-HTML, så intet fejler — men din fil bliver ulæselig, og renderere viser måske stylingen forkert.</p></div>
+      <div class="card"><h3>💻 I en kildefil</h3><p>Kodekommentarer fyldt med markup er støj for dig og for enhver, der læser koden bagefter.</p></div>
+      <div class="card"><h3>📄 I et dokument</h3><p>Uden en formatter ender du med inkonsistente anførselstegn, bløde bindestreger og sporingsparametre i URLs.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="solution" id="loesning">
+  <div class="container">
+    <h2>Dine muligheder sammenlignet</h2>
+    <table class="compare">
+      <tr><th>Mulighed</th><th>Hvad du får</th><th>Begrænsning</th></tr>
+      <tr><td>Almindelig indsættelse (<span class="kbd">Ctrl/Cmd+V</span>)</td><td>Rå HTML verbatim</td><td>Ingen konvertering</td></tr>
+      <tr><td>VS Code "Paste as plain text"-udvidelser</td><td>Ren tekst uden formatering</td><td>Tabeller, links og struktur går tabt</td></tr>
+      <tr><td>Markdown Paste-udvidelser</td><td>HTML konverteret til Markdown</td><td>Varyende kvalitet; de fleste kræver ekstra opsætning per sprog</td></tr>
+      <tr><td>Clean Copy til VS Code</td><td>Ren Markdown ELLER ren tekst, kun markering hvis du vil</td><td>Kræver installation (gratis)</td></tr>
+    </table>
+    <h2>Sådan gør du med Clean Copy</h2>
+    <ol>
+      <li><strong>Installer udvidelsen</strong> fra filen i Clean Copy-repoet (Marketplace-udgivelsen er undervejs) — se <a href="/clean-copy">clean-copy</a>-siden under Option G.</li>
+      <li><strong>Kopiér</strong hvad som helst fra en hjemmeside, docs-side eller AI-chat som normalt (<span class="kbd">Ctrl/Cmd+C</span>).</li>
+      <li><strong>Indsæt som Markdown</strong> med <span class="kbd">Ctrl+Shift+V</span> (<span class="kbd">Cmd+Shift+V</span> på Mac) — eller brug kommandopaletten: "Clean Copy: Paste HTML as Markdown".</li>
+      <li><strong>Skal det være ren tekst?</strong> Brug "Clean Copy: Paste as Clean Text". Har du allerede markeret kode, konverterer "Convert Selection to Markdown" det valgte.</li>
+    </ol>
+    <p>Konverteringen kører 100 % lokalt: overskrifter bliver til <code>#</code>, links til <code>[tekst](url)</code>, lister, fed/kursiv, kodeblokke og tabeller bevares — mens styles, scripts og sporingsattributter sorteres fra.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy" class="btn-primary">Hent Clean Copy til VS Code</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="card"><h3>Kan VS Code indsætte HTML som Markdown?</h3><p>Ikke som standard. Indsætter du formateret tekst i en Markdown-fil, lander rå HTML-tags. Du skal bruge en udvidelse som Clean Copy til VS Code, som konverterer udklipsholderens HTML til Markdown (Ctrl/Cmd+Shift+V), før teksten lander i editoren.</p></div>
+<div class="card"><h3>Hvad er genvejen til at indsætte uden formatering i VS Code?</h3><p>Der er ingen som standard. Med Clean Copy installeret indsætter Ctrl+Shift+V (Cmd+Shift+V på Mac) udklipsholderen som ren Markdown, og kommandopaletten har også en indsæt-som-ren-tekst-kommando.</p></div>
+<div class="card"><h3>Bevarer konverteringen links, overskrifter og tabeller?</h3><p>Ja. Overskrifter bliver til #-niveauer, links til [tekst](url), lister forbliver lister, fed/kursiv overlever, kodeblokke bliver hegnede blokke, og simple tabeller bliver til pipe-tabeller.</p></div>
+<div class="card"><h3>Bliver noget sendt til en server?</h3><p>Nej. Clean Copy kører helt inde i din editor. Udklipsholderens indhold konverteres lokalt og forlader aldrig din maskine.</p></div>
+    <p>Læs også den engelske udgave: <a href="/blog/html-to-markdown-vscode">Paste as Markdown in VS Code</a> — eller se guiden om <a href="/da/blog/kopier-som-markdown-udvidelse.html">Chrome-udvidelsen Kopiér som Markdown</a> og <a href="/blog/html-to-markdown-cli">HTML til Markdown i terminalen</a>.</p>
+  </div>
+</section>
+
+<footer style="padding:2rem 0; text-align:center; color:var(--color-text-muted); font-size:0.9rem;">
+  <p><a href="/">Forside</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/da/">Dansk oversigt</a> &middot; <a href="/sitemap.xml">Sitemap</a></p>
+</footer>
+</body>
+</html>

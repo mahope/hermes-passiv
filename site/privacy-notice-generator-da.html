@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratis privatlivspolitik-generator (GDPR art. 13/14)</title>
+<meta name="description" content="Lav en GDPR-artikel 13/14-privatlivspolitik til din hjemmeside eller dit firma. Svar på få spørgsmål og få en klar tekst klar til at udgive. Gratis, ingen tilmelding — alt sker i din browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Gratis privatlivspolitik-generator (GDPR)">
+<meta property="og:description" content="Lav en artikel 13/14-privatlivspolitik på minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/privacy-notice-generator-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta property="og:image:alt" content="Gratis privatlivspolitik-generator (GDPR)">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/gdpr-cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/privacy-notice-generator-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/privacy-notice-generator">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/privacy-notice-generator-da">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/privacy-notice-generator">
+<meta name="twitter:title" content="Gratis privatlivspolitik-generator (GDPR)">
+<meta name="twitter:description" content="Lav en artikel 13/14-privatlivspolitik på minutter. Gratis, ingen tilmelding, kører helt i din browser.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad er en privatlivspolitik efter GDPR?","acceptedAnswer":{"@type":"Answer","text":"En privatlivspolitik fortæller folk, hvilke persondata du indsamler, hvorfor, på vilket juridisk grundlag, hvem du deler dem med, hvor længe du opbevarer dem, og hvordan de kan bruge deres rettigheder. Den er påbudt af GDPR-artiklerne 13 og 14, hver gang du indsamler persondata direkte eller får dem fra andre."}},{"@type":"Question","name":"Har jeg brug for én, når jeg allerede har et cookiebanner?","acceptedAnswer":{"@type":"Answer","text":"Ja. Et cookiebanner håndterer kun samtykke til cookies. En privatlivspolitik dækker al behandling af persondata: kontaktformularer, nyhedsbreve, kundeoplysninger, fakturaer. De fleste hjemmesider har brug for begge dele."}},{"@type":"Question","name":"Kan jeg udgive teksten som den er?","acceptedAnswer":{"@type":"Answer","text":"Generatoren laver et komplet udkast ud fra dine svar. Gennemlæs det, så det matcher hvad din virksomhed faktisk gør — en præcis politik er vigtigere end en lang én. Outputtet er en skabelon, ikke juridisk rådgivning."}},{"@type":"Question","name":"Forlader noget jeg skriver min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører helt klient-side. Intet sendes til nogen server, intet gemmes, ingen cookies. Du kopierer eller downloader selv den færdige tekst."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .gen { max-width: 720px; margin: 0 auto; }
+  .gen fieldset { border: 1px solid var(--color-border); border-radius: 12px;
+                  padding: 18px 20px 14px; margin: 16px 0; background: var(--color-surface-2); }
+  .gen legend { font-weight: 700; padding: 0 8px; }
+  .gen label { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .gen input[type=text], .gen input[type=email], .gen select,
+  .gen textarea { width: 100%; padding: 10px 12px; margin-top: 4px;
+      border: 1px solid #b9cdd8; border-radius: 8px; font-size: 15px;
+      font-family: inherit; box-sizing: border-box; }
+  .gen textarea { min-height: 70px; resize: vertical; }
+  .hint { font-size: 13px; color: #667; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+  #notice { max-width: 780px; margin: 24px auto; padding: 30px 36px;
+               border: 1px solid var(--color-border); border-radius: 12px;
+               background: #fff; color: #1c2733; font-size: 14px; line-height: 1.6; }
+  #notice h2 { color: #12283a; font-size: 18px; margin-top: 22px; }
+  #notice ul { padding-left: 20px; margin: 6px 0; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
+             clip:rect(0 0 0 0); white-space:nowrap; }
+  @media print {
+    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    #notice { border: none; margin: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" style="padding:48px 0 40px">
+  <div class="container">
+    <div class="badge">GRATIS VÆRKTØJ</div>
+    <h1>Privatlivspolitik-generator</h1>
+    <p class="tagline">Svar på spørgsmålene → få en klar
+    <strong>GDPR-artikel 13/14-privatlivspolitik</strong>, du kan udgive på
+    din hjemmeside. Ingen tilmelding, intet forlader din browser.</p>
+  </div>
+</header>
+
+<main class="container">
+
+<form class="gen" id="genForm">
+  <fieldset>
+    <legend>1. Hvem er I?</legend>
+    <label for="orgName">Virksomhedens navn</label>
+    <input type="text" id="orgName" required placeholder="Eksempel: Acme Web Studio ApS">
+    <label for="contact">Kontakt ved spørgsmål om data</label>
+    <input type="email" id="contact" required placeholder="privacy@acmeweb.example">
+    <label for="dpo">Databeskyttelsesrådgiver / repræsentant (hvis nogen)</label>
+    <input type="text" id="dpo" placeholder="Efterlad tom hvis der ikke er udpeget en">
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Hvad bruger I dataene til?</legend>
+    <label>Hvad behandler I persondata til? (sæt kryds)</label>
+    <div style="margin-top:6px;font-size:14px;line-height:2">
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="besvare henvendelser via kontaktformularen" checked> Kontaktformular / henvendelser</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="sende vores nyhedsbrev"> Nyhedsbrev / e-mailmarketing</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="levere ydelser til kunder og fakturere dem"> Kundearbejde &amp; fakturering</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="anonyme statistikker om brugen af vores egen hjemmeside"> Hjemmesidestatistik</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="rekruttering, når du søger job hos os"> Rekruttering</label><br>
+      <label style="display:inline;font-weight:400"><input type="checkbox" value="regnskab, som bogføringsloven kræver"> Regnskabsmateriale</label>
+    </div>
+    <label for="purposeOther">Andre formål</label>
+    <input type="text" id="purposeOther" placeholder="Andet der er værd at nævne">
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Deling, overførsler og opbevaring</legend>
+    <label for="recipients">Hvem modtager dataene? (én pr. linje: navn — service)</label>
+    <textarea id="recipients" placeholder="Eksempel:
+Google Ireland Ltd — afsendelse af e-mail
+Hetzner Online GmbH — hosting"></textarea>
+    <p class="hint">Efterlad tom, hvis ingen uden for virksomheden modtager data.</p>
+    <label for="transfer">Overførsler uden for EU/EØS?</label>
+    <select id="transfer">
+      <option value="none" selected>Ingen overførsler uden for EU/EØS</option>
+      <option value="sccs">Ja — dækket af Standardkontraktbestemmelser</option>
+      <option value="adequacy">Ja — land med adequatbeslutning (fx via EU-US Data Privacy Framework)</option>
+    </select>
+    <label for="transferDesc">Land / leverandører involveret</label>
+    <input type="text" id="transferDesc" placeholder="Efterlad tom ved 'Ingen overførsler'">
+    <label for="retention">Hvor længe opbevarer I data?</label>
+    <textarea id="retention" required placeholder="Eksempel: henvendelser slettes efter 12 måneder; nyhedsbrevsdata indtil framelding; regnskabsmateriale opbevares 5 år efter bogføringsloven."></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Rettigheder &amp; klage</legend>
+    <label for="supervisory">Tilsynsmyndighed for klager</label>
+    <select id="supervisory">
+      <option value="Datatilsynet (Carl Jacobsens Vej 35, 2500 Valby, dt@datatilsynet.dk)" selected>Datatilsynet (Danmark)</option>
+      <option value="Integritetsskyddsmyndigheten (Sverige)">IMY (Sverige)</option>
+      <option value="Datatilsynet (Norge)">Datatilsynet (Norge)</option>
+      <option value="Dataombudsmannen (Finland)">Dataombudsmannen (Finland)</option>
+      <option value="den nationale datatilsynsmyndighed i dit bopælsland">Andet / EU generelt</option>
+    </select>
+    <p class="hint">Besøgende har altid ret til at klage til deres lokale myndighed; her nævnes den mest sandsynlige.</p>
+    <label for="docDate">Dato for seneste opdatering</label>
+    <input type="date" id="docDate">
+  </fieldset>
+
+  <div class="actions">
+    <button type="submit" class="btn">Generér privatlivspolitik</button>
+  </div>
+</form>
+
+<section id="outputWrap" aria-labelledby="out-heading" hidden>
+  <h2 id="out-heading" class="sr-only">Genereret privatlivspolitik</h2>
+  <article id="notice" aria-live="polite"></article>
+  <div class="actions no-print">
+    <button type="button" class="btn" id="copyBtn">Kopiér som tekst</button>
+    <button type="button" class="btn btn-secondary" id="downloadBtn">Download HTML-fil</button>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">Udskriv / gem som PDF</button>
+  </div>
+  <p class="no-print">Dokumentér også dine kontrakter med
+  <a href="/dpa-generator-da">databehandleraftale-generatoren</a>, byg jeres register med
+  <a href="/ropa-generator-da">RoPA-generatoren</a>, tjek jeres offentlige sider med
+  <a href="/scan-da">Tilgængelighedsscanneren</a>, eller se
+  <a href="/free-tools">alle gratis værktøjer</a>. Dokumentet er et udkast og udgør
+  ikke juridisk rådgivning.</p>
+</section>
+
+<section aria-labelledby="why-heading">
+  <h2 id="why-heading">Hvorfor I skal have en privatlivspolitik</h2>
+  <ul>
+    <li><strong>Det er lovkrav.</strong> GDPR-artiklerne 13 og 16 forpligter alle
+    virksomheder der behandler persondata til at informere om det, senest ved
+    indsamlingen. Manglende eller vildledende information er blandt de mest
+    almindelige fund i Datatilsynets tilsyn.</li>
+    <li><strong>Kunderne beder om den.</strong> Større kunder efterspørger rutinemæssigt
+    et link til jeres privatlivspolitik før kontrakt. At have den klar fjerner
+    friktion i salget.</li>
+    <li><strong>Den holder jer ærlige.</strong> At nedfælde hvad I reelt gør med data —
+    og tjekke det én gang om året — er halvdelen af praktisk GDPR-overholdelse.</li>
+  </ul>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Del af <a href="/free-tools">Hermes Compliance-værktøjskassen</a> — gratis værktøjer og
+    praktiske guider for små EU-webbureauer.</p>
+  </div>
+</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function v(id) { return $(id).value.trim(); }
+
+  var TRANSFER_LABEL = {
+    none: 'Vi overfører ikke persondata uden for EU/EØS.',
+    sccs: 'Nogle modtagere ligger uden for EU/EØS. Disse overførsler er sikret af Europa-Kommissionens Standardkontraktbestemmelser.',
+    adequacy: 'Nogle modtagere ligger uden for EU/EØS, i lande dækket af en adequatbeslutning fra Europa-Kommissionen (fx godkendte deltagere i EU-US Data Privacy Framework).'
+  };
+  var PURPOSE_BASIS = {
+    default: 'berettiget interesse (art. 6(1)(f))',
+    'sende vores nyhedsbrev': 'samtykke, som du når som helst kan trække tilbage (art. 6(1)(a))',
+    'anonyme statistikker om brugen af vores egen hjemmeside': 'samtykke, hvor ePrivacy-reglerne kræver det'
+  };
+
+  function buildData() {
+    var d = {};
+    d.org = v('orgName');
+    d.contact = v('contact');
+    d.dpo = v('dpo');
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('#genForm fieldset:nth-of-type(2) input[type=checkbox]:checked')).map(function(c){ return c.value; });
+    if (v('purposeOther')) boxes.push(v('purposeOther'));
+    d.purposes = boxes;
+    d.recipients = v('recipients').split(/\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    d.transferMode = $('transfer').value;
+    d.transferDesc = v('transferDesc');
+    d.retention = v('retention');
+    d.supervisory = $('supervisory').value;
+    d.date = v('docDate') || new Date().toISOString().slice(0,10);
+    return d;
+  }
+
+  function renderHTML(d) {
+    var h = '';
+    h += '<h2>Privatlivspolitik</h2>';
+    h += '<p><em>Senest opdateret: ' + esc(d.date) + '</em></p>';
+    h += '<p>' + esc(d.org) + ' respekterer dit privatliv. Denne politik forklarer, hvilke persondata vi indsamler, hvorfor, og hvilke rettigheder du har efter databeskyttelsesforordningen (GDPR).</p>';
+
+    h += '<h3>1. Hvem vi er</h3>';
+    h += '<p>Dataansvarlig: <strong>' + esc(d.org) + '</strong>.<br>';
+    h += 'Spørgsmål om data: <a href="mailto:' + esc(d.contact) + '">' + esc(d.contact) + '</a>.</p>';
+    if (d.dpo) h += '<p>Databeskyttelsesrådgiver / repræsentant: ' + esc(d.dpo) + '.</p>';
+
+    h += '<h3>2. Hvilke data vi behandler og hvorfor</h3>';
+    h += '<p>Vi behandler persondata til følgende formål:</p><ul>';
+    d.purposes.forEach(function (p) {
+      h += '<li>' + esc(p.charAt(0).toUpperCase() + p.slice(1)) + '. Behandlingsgrundlag: ' + (PURPOSE_BASIS[p] || PURPOSE_BASIS.default) + '.</li>';
+    });
+    h += '</ul>';
+
+    h += '<h3>3. Hvem vi deler data med</h3>';
+    if (d.recipients.length) {
+      h += '<p>Vi deler persondata med disse databehandlere og partnere:</p><ul>';
+      d.recipients.forEach(function(r){ h += '<li>' + esc(r.replace(/^[-\u2022]\s*/, '')) + '</li>'; });
+      h += '</ul>';
+      h += '<p>Alle databehandlere har databehandleraftaler i henhold til GDPR-artikel 28.</p>';
+    } else {
+      h += '<p>Vi deler ikke persondata med tredjeparter, bortset fra hvor loven kræver det.</p>';
+    }
+
+    var t = TRANSFER_LABEL[d.transferMode];
+    if (d.transferMode !== 'none' && d.transferDesc) t += ' Lande/parter involveret: ' + esc(d.transferDesc) + '.';
+    h += '<h3>4. Overførsler uden for EU/EØS</h3>';
+    h += '<p>' + t + '</p>';
+
+    h += '<h3>5. Hvor længe vi opbevarer data</h3>';
+    h += '<p>' + esc(d.retention) + '</p>';
+
+    h += '<h3>6. Dine rettigheder</h3>';
+    h += '<p>Du har ret til:</p><ul>' +
+         '<li>indsigt i de persondata vi behandler om dig;</li>' +
+         '<li>at få urigtige data rettet eller slettet;</li>' +
+         '<li>begrænsning af eller indsigelse mod behandlingen;</li>' +
+         '<li>dataportabilitet, hvor det teknisk er muligt;</li>' +
+         '<li>at trække samtykke tilbage når som helst, uden virkning for tidligere behandling.</li></ul>';
+    h += '<p>For at bruge en rettighed, skriv til <a href="mailto:' + esc(d.contact) + '">' + esc(d.contact) + '</a>. Vi svarer inden for en måned.</p>';
+
+    h += '<h3>7. Klage</h3>';
+    h += '<p>Du kan klage til <strong>' + esc(d.supervisory) + '</strong>, eller til tilsynsmyndigheden i dit bopælsland.</p>';
+
+    h += '<hr><p style="font-size:12px;color:#667">Denne politik er lavet med Hermes Compliance\u2019 gratis privatlivspolitik-generator og følger GDPR-artiklerne 13\u201314. Gennemgå den hver gang behandlingen ændres. Den udgør ikke juridisk rådgivning.</p>';
+    return h;
+  }
+
+  function renderText(d) {
+    var el = document.createElement('div');
+    el.innerHTML = renderHTML(d);
+    return el.textContent.replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  var current = null;
+
+  $('genForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (window.trackEvent) window.trackEvent('generate-da');
+    current = buildData();
+    $('notice').innerHTML = renderHTML(current);
+    $('outputWrap').hidden = false;
+    $('outputWrap').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('copyBtn').addEventListener('click', function () {
+    if (!current) return;
+    navigator.clipboard.writeText(renderText(current)).then(function () {
+      $('copyBtn').textContent = 'Kopieret \u2713';
+      setTimeout(function () { $('copyBtn').textContent = 'Kopiér som tekst'; }, 2000);
+    }).catch(function () {
+      alert('Kopiering mislykkedes \u2014 brug Download HTML i stedet.');
+    });
+  });
+
+  $('downloadBtn').addEventListener('click', function () {
+    if (!current) return;
+    var doc = '<!doctype html>\n<html lang="da">\n<head>\n<meta charset="utf-8">\n'
+      + '<title>Privatlivspolitik \u2014 ' + esc(current.org) + '</title>\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + '<style>body{max-width:800px;margin:40px auto;padding:0 20px;'
+      +   'font-family:system-ui,sans-serif;line-height:1.6;color:#1c2733;font-size:14px}'
+      +   'h2,h3{color:#12283a}</style>\n'
+      + '<body>\n' + $('notice').innerHTML + '\n<\\/script>\n</body>\n</html>\n';
+    var blob = new Blob([doc], { type: 'text/html' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'privatlivspolitik-' + current.org.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
+</body>
+</html>

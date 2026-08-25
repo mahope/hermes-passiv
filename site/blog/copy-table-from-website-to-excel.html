@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Copy a Table From a Website Into Excel (and Keep It Clean)</title>
+<meta name="description" content="Copying tables from websites into Excel usually breaks: merged rows, hidden styles, stray links. Here's what actually works — including the free Clean Copy extension that converts web tables to clean Markdown first.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Copy a Website Table Into Excel Without the Mess">
+<meta property="og:description" content="Why web tables paste badly into Excel, and three fixes ranked by reliability — including converting to Markdown with the free Clean Copy extension.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-til-excel">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "How to Copy a Table From a Website Into Excel", "description": "Three reliable ways to copy a table from any website into Excel or Google Sheets without broken formatting.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-from-website-to-excel", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+  {"@type": "Question", "name": "How do I copy a table from a website into Excel?", "acceptedAnswer": {"@type": "Answer", "text": "Select the table, copy, and paste into Excel. If formatting breaks, convert the table to Markdown first with a tool like the free Clean Copy extension, then paste the Markdown into Excel via Data > From Text or a Markdown-to-table converter."}},
+  {"@type": "Question", "name": "Why does my pasted table look wrong in Excel?", "acceptedAnswer": {"@type": "Answer", "text": "Websites build tables from nested divs, CSS grids and merged cells rather than real <table> markup. When you paste, Excel tries to reconstruct columns from that HTML and often merges everything into one column or drags in hidden styling."}},
+  {"@type": "Question", "name": "Can I copy a website table into Google Sheets?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — Google Sheets handles HTML table pastes similarly to Excel. For messy tables, the same fix applies: clean the table to structured text or Markdown before pasting."}}
+]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRODUCTIVITY &middot; SPREADSHEETS</div>
+    <h1>Copy a Website Table Into Excel — Without the Mess</h1>
+    <p class="subtitle">You found the exact table you need. You copy it. You paste it into Excel. And you get one giant column of merged text. Here is why it happens and the three fixes that actually work.</p>
+    <div class="hero-cta">
+      <a href="#fixes" class="btn-primary">See the fixes</a>
+      <a href="/clean-copy" class="btn-secondary">Get the free fix &rarr;</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem" id="why">
+  <div class="container">
+    <h2>Why pasted tables break</h2>
+    <p>Excel expects a grid: rows and cells. Modern websites rarely give it one. Tables are built from <strong>nested &lt;div&gt;s, CSS grids, flexbox rows and colspan tricks</strong>. When Excel receives the clipboard HTML, it reconstructs columns as best it can — and fails in predictable ways:</p>
+    <p>Everything lands in one column. Hidden tracking elements become extra blank rows. Cell backgrounds and fonts carry over. Links arrive as full URLs glued to the text. Merged header cells shift every row below them.</p>
+  </div>
+</section>
+
+<section class="products" id="fixes">
+  <div class="container">
+    <h2>Three fixes, ranked by reliability</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Fix 1 — Paste directly, then check</h3><p>If the site uses real <strong>&lt;table&gt;</strong> markup (Wikipedia, most documentation sites), plain copy-paste into Excel or Google Sheets works. Paste, then scan for merged rows and stray columns. Takes ten seconds when it works — and two minutes of cleanup when it doesn't.</p></div>
+      <div class="card"><h3>Fix 2 — Convert to Markdown first (Clean Copy)</h3><p><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> is a free browser extension that converts selected content — including tables — to <strong>clean Markdown</strong> before anything reaches your clipboard. Select the table, right-click, choose Clean Copy, and paste the result anywhere. Markdown tables are pipe-separated text: every converter, spreadsheet import wizard and AI assistant parses them perfectly. No tracking, runs locally, open source — or use the <a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">bookmarklet</a>/<a href="/clean-copy-tool" style="color:var(--color-accent);">web tool</a> without installing anything.</p></div>
+      <div class="card"><h3>Fix 3 — Power Query / Data &gt; From Web</h3><p>Excel's built-in <strong>Data &gt; From Web</strong> (Power Query) fetches the page and lists its tables for import. It is the most thorough option for large tables, but only works on public pages, sometimes misses JS-rendered tables, and is overkill for a quick five-row grab.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy" class="btn-primary">Try Clean Copy free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How do I copy a table from a website into Excel?</h3><p>Select the table and paste. If the layout breaks, convert the table to Markdown first with the free <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> extension, then paste the pipe-separated rows into Excel using Data &gt; Text to Columns with | as the delimiter.</p></div>
+      <div class="card"><h3>Does this work in Google Sheets too?</h3><p>Yes. Google Sheets follows the same rules: direct paste works for well-formed tables; otherwise split on the pipe character with Edit &gt; Find and replace, or use File &gt; Import on a cleaned CSV.</p></div>
+      <div class="card"><h3>What about tables behind logins or JavaScript?</h3><p>Power Query cannot see pages that require login, and some JavaScript-rendered tables never appear. A copy-time extension like Clean Copy works on whatever you can select in your browser — logged-in dashboards included.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy" class="btn-primary">Get Clean Copy &rarr;</a>
+      &nbsp;
+      <a href="/blog/paste-without-formatting-chrome" class="btn-secondary">See also: paste without formatting &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-from-chatgpt-into-word" style="color:var(--color-accent);">Copy ChatGPT into Word</a> &middot; <a href="/blog/html-to-markdown-converter" style="color:var(--color-accent);">HTML to Markdown converter</a> &middot; <a href="/blog/copy-table-website-to-notion" style="color:var(--color-accent);">Copy a Table From a Website Into Notion</a> &middot; <a href="/blog/copy-table-website-to-airtable" style="color:var(--color-accent);">Copy a Table From a Website Into Airtable</a></p></div>
+<p><a href="/da/blog/kopier-tabel-til-excel" lang="da">Dansk version af denne guide</a></p>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-to-google-sheets" style="color:var(--color-accent);">Copy a Table Into Google Sheets</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/da/blog/kopier-tabel-fra-pdf" style="color:var(--color-accent);">Kopier en tabel fra en PDF til Excel</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="{URL}" style="color:var(--color-accent);">{label}</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-from-pdf-to-excel" style="color:var(--color-accent);">Copy a Table From a PDF Into Excel</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/copy-clean-guide" style="color:var(--color-accent);">The Copy &amp; Clean Guide Collection</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-iphone-ipad" style="color:var(--color-accent);">Copy a Table From a Website on iPhone & iPad</a></p></div>
+</body>
+</html>

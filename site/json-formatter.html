@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON Formatter &amp; Validator — Free Online JSON Beautifier</title>
+<meta name="description" content="Free online JSON formatter and validator. Beautify, minify and validate JSON instantly with clear error messages. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="JSON Formatter &amp; Validator — Free Online JSON Beautifier">
+<meta property="og:description" content="Beautify, minify and validate JSON instantly. Clear error messages. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/json-formatter">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="JSON Formatter &amp; Validator — Free Online JSON Beautifier">
+<meta name="twitter:description" content="Format, validate and minify JSON. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/json-formatter">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/json-formatter">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/json-formatter">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "JSON Formatter &amp; Validator",
+  "url": "https://hermes-passiv.pages.dev/json-formatter",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online JSON formatter, validator and minifier."
+}
+</script>
+<style>
+.jf-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.jf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 800px) { .jf-grid { grid-template-columns: 1fr; } }
+.jf-pane { display: flex; flex-direction: column; }
+.jf-pane h2 { font-size: 0.95rem; margin: 0 0 0.5rem; font-weight: 600; }
+.jf-io {
+  width: 100%; box-sizing: border-box; min-height: 380px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.55; tab-size: 2;
+}
+.jf-io:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.jf-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.jf-btns button { padding: 10px 20px; cursor: pointer; }
+.jf-status { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; }
+.jf-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.jf-err { background: rgba(220,80,80,0.10); border: 1px solid rgba(220,80,80,0.45); color: var(--color-text); display: block; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, monospace; font-size: 0.82rem; }
+.jf-meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
+.jf-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="jf-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  JSON formatter
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">JSON Formatter &amp; Validator</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Beautify, minify and validate JSON — instantly, with precise error messages.</p>
+  <p class="jf-privacy">🔒 Nothing leaves your device. All parsing runs in JavaScript on this page.</p>
+</header>
+
+<div class="jf-grid">
+  <div class="jf-pane">
+    <h2><label for="inputArea">Input JSON</label></h2>
+    <textarea id="inputArea" class="jf-io" placeholder='Paste your JSON here, e.g. {"name":"Ada","skills":["math","code"]}' spellcheck="false"></textarea>
+  </div>
+  <div class="jf-pane">
+    <h2><label for="outputArea">Output</label></h2>
+    <textarea id="outputArea" class="jf-io" placeholder="Formatted JSON appears here..." spellcheck="false" readonly></textarea>
+  </div>
+</div>
+
+<div id="statusBox" class="jf-status" role="status" aria-live="polite"></div>
+
+<div class="jf-btns">
+  <button id="formatBtn" class="btn-primary">Format (beautify)</button>
+  <button id="minifyBtn" class="btn-secondary">Minify</button>
+  <button id="validateBtn" class="btn-secondary">Validate only</button>
+  <button id="copyBtn" class="btn-secondary">Copy output</button>
+  <button id="clearBtn" class="btn-secondary">Clear</button>
+  <button id="exampleBtn" class="btn-secondary">Load example</button>
+</div>
+
+<p class="jf-meta" id="sizeMeta"></p>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free JSON formatter beautifies messy JSON into readable, indented output, minifies it for
+    compact transport, and validates it with precise error messages that point to the exact line and
+    column where parsing failed. It works entirely in your browser — your data is never uploaded,
+    stored or sent anywhere, so it is safe for API responses containing private or production data.</p>
+    <p>Common uses: pretty-printing API responses, debugging configuration files
+    (<code>package.json</code>, <code>tsconfig.json</code>, webhook payloads), checking whether a JSON
+    document is valid before committing it, and reducing payload size before sending data over the wire.
+    The validator uses the same JSON parser as the browser itself, so if it passes here, it conforms to
+    the JSON standard as implemented in every modern runtime.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+        <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+<a href="/base64-encoder-decoder" style="color:var(--color-accent);">Base64 Encoder</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+    <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+    <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var input = document.getElementById('inputArea');
+  var output = document.getElementById('outputArea');
+  var statusBox = document.getElementById('statusBox');
+  var sizeMeta = document.getElementById('sizeMeta');
+  if (!input || !output) return;
+
+  var tracked = false;
+
+  function bytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  // Map a JS parse error position back to line/column in the original text.
+  function errPosition(text, jsMessage) {
+    var m = jsMessage.match(/position (\d+)/i);
+    if (!m) return null;
+    var pos = parseInt(m[1], 10);
+    if (isNaN(pos) || pos > text.length) return null;
+    var upto = text.slice(0, pos);
+    var line = upto.split('\n').length;
+    var col = pos - upto.lastIndexOf('\n');
+    return { line: line, col: col, snippet: text.slice(Math.max(0, pos - 20), pos + 20).replace(/\n/g, '\\n') };
+  }
+
+  function run(mode) {
+    var text = input.value.trim();
+    statusBox.className = 'jf-status';
+    sizeMeta.textContent = '';
+
+    if (text.length === 0) {
+      output.value = '';
+      statusBox.style.display = 'none';
+      return true;
+    }
+
+    var parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      var msg = '✗ Invalid JSON: ' + e.message;
+      var p = errPosition(text, e.message);
+      if (p) {
+        msg += '\n→ Line ' + p.line + ', column ' + p.col + '\n→ Near: …' + p.snippet + '…';
+      }
+      statusBox.textContent = msg;
+      statusBox.className = 'jf-status jf-err';
+      output.value = '';
+      return false;
+    }
+
+    if (mode === 'validate') {
+      statusBox.textContent = '✓ Valid JSON — parsed successfully.';
+      statusBox.className = 'jf-status jf-ok';
+      output.value = '';
+    } else if (mode === 'minify') {
+      var mini = JSON.stringify(parsed);
+      output.value = mini;
+      statusBox.textContent = '✓ Valid JSON — minified.';
+      statusBox.className = 'jf-status jf-ok';
+      sizeMeta.textContent = 'Input: ' + bytes(new Blob([text]).size) +
+        ' → Minified: ' + bytes(new Blob([mini]).size);
+    } else {
+      var pretty = JSON.stringify(parsed, null, 2);
+      output.value = pretty;
+      statusBox.textContent = '✓ Valid JSON — formatted with 2-space indent.';
+      statusBox.className = 'jf-status jf-ok';
+      sizeMeta.textContent = new Blob([pretty]).size >= 1024
+        ? 'Output size: ' + bytes(new Blob([pretty]).size)
+        : '';
+    }
+
+    if (!tracked) {
+      tracked = true;
+      try {
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/json-formatter', event: 'format', mode: mode }),
+          keepalive: true
+        }).catch(function() {});
+      } catch (e) {}
+    }
+    return true;
+  }
+
+  document.getElementById('formatBtn').addEventListener('click', function() { run('format'); });
+  document.getElementById('minifyBtn').addEventListener('click', function() { run('minify'); });
+  document.getElementById('validateBtn').addEventListener('click', function() { run('validate'); });
+
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    if (!output.value) return;
+    var done = function() {
+      var b = document.getElementById('copyBtn');
+      var old = b.textContent;
+      b.textContent = 'Copied!';
+      setTimeout(function() { b.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(output.value).then(done).catch(function() {});
+    } else {
+      output.select();
+      document.execCommand('copy');
+      done();
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    input.value = '';
+    output.value = '';
+    statusBox.style.display = 'none';
+    sizeMeta.textContent = '';
+    input.focus();
+  });
+
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    input.value = '{"app":"Passiv","version":3,"tools":["word counter","json formatter","clean copy"],"config":{"indent":2,"sortKeys":false},"limits":{"maxUploadMb":0,"privacy":"client-side"},"broken":{"trailing_comma":true,}}';
+    run('validate');
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squarespace Accessibility: An EAA Compliance Guide</title>
+<meta name="description" content="Squarespace accessibility guide for the European Accessibility Act and WCAG 2.1 AA. Template limits, Fluid Engine fixes, image alt text, editor habits, and a free scanning workflow.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Squarespace Accessibility: An EAA Compliance Guide">
+<meta property="og:description" content="Squarespace accessibility guide for the European Accessibility Act and WCAG 2.1 AA. Template limits, Fluid Engine fixes, image alt text, editor habits, and a free scanning workflow.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Squarespace Accessibility: An EAA Compliance Guide">
+<meta name="twitter:description" content="Squarespace accessibility guide for the European Accessibility Act and WCAG 2.1 AA. Template limits, Fluid Engine fixes, image alt text, editor habits, and a free scanning workflow.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Squarespace Accessibility: An EAA Compliance Guide",
+  "description": "Squarespace accessibility guide for the European Accessibility Act and WCAG 2.1 AA. Template limits, Fluid Engine fixes, image alt text, editor habits, and a free scanning workflow.",
+  "publisher": { "@type": "Organization", "name": "Mahope" }
+}
+</script>
+<script defer src="/track.js"></script>
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · SQUARESPACE · EAA</div>
+    <h1>Squarespace Accessibility:<br>An EAA Compliance Guide</h1>
+    <p class="subtitle">What you can and cannot fix inside Squarespace — and the practical workflow that brings a template-based site up to WCAG 2.1 AA before the EAA becomes a client problem.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Start Reading</a>
+      <a href="#squarespace-and-the-eaa" class="btn-secondary">Squarespace Guide →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header><section class="problem" id="content">
+  <div class="container">    <h2 id="squarespace-and-the-eaa">Squarespace and the EAA</h2>
+    <p>Every Squarespace site selling to or informing EU consumers is in scope of the European Accessibility Act where the service is consumer-facing — online shops above all. The technical benchmark is EN 301 549 / WCAG 2.1 level AA. Squarespace as a platform provides reasonably compliant templates and infrastructure, but the site owner is responsible for their configured template, content and third-party embeds. The practical challenge is different from open-source CMSs: you do not control the markup, so compliance work means working the settings, the content and a short list of code-injection points.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Legal Scope</h3><p>E-commerce and consumer services are named in the EAA; selling into the EU triggers it regardless of where the site owner is based.</p></div>
+      <div class="card"><h3>🧱 Template Reality</h3><p>You cannot edit underlying HTML in normal plans. Most mechanical fixes live in site styles, per-section settings and image fields.</p></div>
+      <div class="card"><h3>🛡️ Owner Responsibility</h3><p>The platform gives you tools; conformance is achieved (or lost) by how you configure and fill them.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="where-squarespace-sites-fail">Where Squarespace Sites Fail</h2>
+    <p>Most accessibility defects on Squarespace sites come from four sources:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Style Choices</h3><p>Light grey body text, low-contrast buttons over banner images, transparent headers over hero sections. Squarespace lets you pick any colour pair — it does not warn about contrast.</p></div>
+      <div class="card"><h3>🖼️ Missing Alt Text</h3><p>The single largest category. Gallery images, background images and inline images all need alt text filled per item; many owners never touch the field.</p></div>
+      <div class="card"><h3>📐 Heading Misuse</h3><p>In Fluid Engine, text blocks often pick "Heading 2" for size rather than structure, producing skipped levels and pages with no coherent outline.</p></div>
+      <div class="card"><h3>🔌 Embeds &amp; Code Blocks</h3><p>Third-party booking widgets, forms and video embeds inject their own markup — unlabelled controls and keyboard traps arrive with them.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="settings-you-can-fix-today">Settings You Can Fix Today</h2>
+    <p>No code required — these fixes cover most automated findings:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔤 Colour Pairs</h3><p>In site styles, darken body and button colours until every combination clears 4.5:1 (3:1 for large text). Check announcement bars, footers and form labels separately — they each carry their own pairs.</p></div>
+      <div class="card"><h3>🏷️ Alt Text Everywhere</h3><p>Fill alt text per image in pages, galleries and product items. Decorative backgrounds get empty alt handled by the theme; content images must describe themselves.</p></div>
+      <div class="card"><h3>🔠 Heading Structure</h3><p>One h1 per page (usually the page/banner title). Re-tag section titles so the outline descends without skips — use style overrides for appearance instead of picking bigger headings.</p></div>
+      <div class="card"><h3>🔗 Link Text</h3><p>Replace "learn more" repeats with descriptive text. Buttons that are images need alt text naming the action.</p></div>
+      <div class="card"><h3>⌨️ Motion &amp; Focus</h3><p>Disable autoplaying banners or keep them subtle; verify focus indicators remain visible after any custom CSS.</p></div>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="code-injection-points">Code Injection Points</h2>
+    <p>When settings run out, Squarespace gives three controlled escape hatches:</p>
+    <p></p>
+    <p><strong>Code blocks / embed blocks:</strong> use them sparingly, and only with widgets you have tab-tested. If a booking or form widget traps keyboard focus, replace it — no amount of styling fixes it.</p>
+    <p></p>
+    <p><strong>Code injection (footer):</strong> small CSS patches are legitimate here — restoring visible :focus-visible outlines a template removed is a one-line fix with real impact.</p>
+    <p></p>
+    <p><strong>Custom CSS panel:</strong> fix contrast by overriding specific classes rather than re-theming. Keep changes documented; template updates can shift class names.</p>
+    <p></p>
+    <p><strong>Avoid overlay scripts:</strong> "accessibility widget" injections do not make a Squarespace site conformant and have drawn regulatory criticism in the EU. Fix root causes instead.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2 id="verification-workflow-squarespace">Verification Workflow Squarespace</h2>
+    <p>A realistic verification loop takes two to four hours:</p>
+    <p></p>
+    <p><strong>Step 1 — automated scan</strong> of home, one index/collection page, a detail page and the contact page. Expect 5-15 findings on the first run, mostly alt text and contrast.</p>
+    <p></p>
+    <p><strong>Step 2 — fix and re-scan</strong> via site styles and image fields until mechanical findings clear.</p>
+    <p></p>
+    <p><strong>Step 3 — keyboard walkthrough</strong> of navigation → page → cart/contact submit. Anything mouse-only fails WCAG 2.1.2; embedded widgets are the usual offenders.</p>
+    <p></p>
+    <p><strong>Step 4 — mobile check</strong>: Squarespace renders a different navigation pattern on mobile — test the burger menu opens, closes and is reachable by keyboard.</p>
+    <p></p>
+    <p><strong>Step 5 — document</strong>: publish an accessibility statement covering conformance status and known limitations (e.g. a specific embed). Under the EAA this is expected, not optional.</p>
+    <p></p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Going Deeper</h2>
+    <p class="section-intro">Run the free scanner on your site first — it catches contrast, alt-text, label and heading issues in seconds, so your remaining effort goes on keyboard flows and content quality.</p>
+<div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Squarespace Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/squarespace-accessibility-check" class="btn-secondary">Squarespace Guide →</a>
+    </div>  </div>
+</section>
+
+<section class="products">
+  <div class="container">    <h2>Frequently Asked Questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does the EAA apply to my Squarespace site?</h3><p>If it offers consumer services or e-commerce into the EU, yes — including small businesses, since there is no general micro-enterprise exemption for online shops. Content-only hobby sites fall largely outside, but WCAG still matters for reach and quality.</p></div>
+      <div class="card"><h3>Is Squarespace itself accessible?</h3><p>Squarespace states its platform targets WCAG 2.1 AA and current templates are decent baselines. But the owner owns their configuration and content — the platform being compliant does not make every site built on it compliant.</p></div>
+      <div class="card"><h3>Can I edit HTML on Squarespace to fix issues?</h3><p>Not the underlying template markup on standard plans. You work through site styles, per-section settings, alt-text fields, the CSS panel and code injection points — which together cover nearly everything an audit will find.</p></div>
+      <div class="card"><h3>Do those accessibility widget scripts work on Squarespace?</h3><p>They can be injected, but they do not deliver conformance: overlays cannot fix contrast in images, broken embeds or missing alt text, and EU authorities have criticised marketing them as compliance.</p></div>
+      <div class="card"><h3>How long does a typical site take?</h3><p>A well-maintained template site: 2-4 hours for settings, alt text backfill and testing. Sites built on old legacy templates or heavy embed stacks need more — usually replacing the offending embeds first.</p></div>
+    </div><div style="text-align:center;margin-top:24px;">
+      <a href="/scan" class="btn-primary">Scan Your Squarespace Site Free →</a>
+      &nbsp;&nbsp;
+      <a href="/guides/squarespace-accessibility-check" class="btn-secondary">Squarespace Guide →</a>
+    </div>
+    <section class="products" style="border-top:1px solid var(--color-border);">
+      <div class="container">
+        <h2>Related Guides</h2>
+        <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">SHOPIFY · EAA</span><h3><a href="/blog/shopify-eaa-accessibility" style="color:var(--color-accent);text-decoration:none;">Shopify Accessibility: Getting Your Store EAA-Compliant</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG 2.2</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: What Changes for Your Sites</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">OVERLAYS</span><h3><a href="/blog/accessibility-overlays-eaa" style="color:var(--color-accent);text-decoration:none;">Accessibility Overlays &amp; the EAA: Why One Line of Code Is Not Compliance</a></h3></div>
+        </div>
+      </div>
+    </section>  </div>
+</section><footer class="site-footer">
+  <div class="container">
+    <p><a href="/">← Home</a> · <a href="/scan">Free Scanner</a> · <a href="/#products">E-Books</a> · <a href="/#blog">Blog</a></p>
+    <p>Mahope © 2026 · Practical EU compliance for small web agencies</p>
+  </div>
+<div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/compliance-guide" style="color:var(--color-accent);">The Compliance Guide Collection (GDPR, NIS2 &amp; EAA)</a></p></div>
+</footer>
+
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your First Chrome Extension — A Complete Practical Guide</title>
+<meta name="description" content="A practical, step-by-step guide to building and publishing your first Chrome extension. From blank folder to Chrome Web Store — in 3 hours.">
+<meta property="og:type" content="book">
+<meta property="og:title" content="Build Your First Chrome Extension — A Complete Practical Guide">
+<meta property="og:description" content="A practical, step-by-step guide to building and publishing your first Chrome extension. From blank folder to Chrome Web Store — in 3 hours.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/books/build-your-first-chrome-extension">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/books/build-your-first-chrome-extension"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/books/build-your-first-chrome-extension">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Book",
+  "name": "Build Your First Chrome Extension — A Complete Practical Guide",
+  "author": {
+    "@type": "Organization",
+    "name": "Clean Copy Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Mahope"
+  },
+  "description": "A practical, step-by-step guide to building and publishing your first Chrome extension. From blank folder to Chrome Web Store in 3 hours.",
+  "bookFormat": "EBook",
+  "numberOfPages": 22,
+  "inLanguage": "en",
+  "isbn": "",
+  "offers": {
+    "@type": "Offer",
+    "price": "9.99",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/PreOrder"
+  }
+}
+</script>
+<style>
+.book-header {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+.book-header h1 {
+  font-size: 36px;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.book-header .tagline {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 12px;
+}
+.book-header .price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a73e8;
+  margin: 24px 0;
+}
+.book-header .price span {
+  font-size: 14px;
+  font-weight: 400;
+  color: #888;
+}
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+.feature-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+}
+.feature-card h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.feature-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+}
+.chapter-list {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+.chapter-list h2 {
+  margin-bottom: 16px;
+}
+.chapter-list ol {
+  padding-left: 20px;
+}
+.chapter-list li {
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.status-box {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  text-align: center;
+}
+.status-box h3 {
+  margin: 0 0 8px;
+  color: #856404;
+}
+.status-box p {
+  margin: 0;
+  color: #856404;
+  font-size: 14px;
+}
+.btn-primary {
+  display: inline-block;
+  padding: 12px 32px;
+  background: #1a73e8;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  margin-top: 16px;
+}
+.btn-primary:hover {
+  background: #1557b0;
+}
+.faq {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+.faq h2 { margin-bottom: 16px; }
+.faq details {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+.faq summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.faq details p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #555;
+}
+.cta-section {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.cta-section h2 { margin-bottom: 8px; }
+.cta-section p { color: #555; margin-bottom: 16px; }
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<header class="book-header">
+  <div class="badge" style="margin-bottom:16px">E-BOOK · MANIFEST V3</div>
+  <h1>Build Your First Chrome Extension</h1>
+  <p class="tagline">A Complete Practical Guide — From Blank Folder to Chrome Web Store</p>
+  <p>A step-by-step, hands-on guide that takes you from "I've never built an extension" to "my extension is live in the Chrome Web Store." No filler, no theory — just code and shipping.</p>
+  <img src="/chrome-extension-cover.jpg" alt="Build Your First Chrome Extension — book cover" width="250" style="border-radius:8px; box-shadow:0 4px 24px rgba(0,0,0,.25); margin:24px auto; display:block">
+  <div class="price">$9.99 <span>Kindle e-book · ~22 pages</span></div>
+  <p style="color:#888; font-size:14px">📖 Companion GitHub repo with every code example</p>
+  <a href="/downloads/build-your-first-chrome-extension.epub" class="btn-primary" style="margin-top:8px" onclick="trackEvent('epub-download')">⬇ Download the full EPUB — free while in review</a>
+  <p style="color:#888; font-size:13px; margin-top:10px">The book is being published on Amazon Kindle. Until then, the complete e-book is free here — no signup, no email.</p>
+</header>
+
+<div class="features">
+  <div class="feature-card">
+    <h3>🔨 Hands-On</h3>
+    <p>Build a real extension from start to finish. Context menu, popup, keyboard shortcuts, options page — every feature is coded step by step.</p>
+  </div>
+  <div class="feature-card">
+    <h3>📦 Publication Ready</h3>
+    <p>Includes a chapter on the Chrome Web Store submission process with permission justification templates and the pre-publish checklist.</p>
+  </div>
+  <div class="feature-card">
+    <h3>🔁 Cross-Browser</h3>
+    <p>Covers Firefox porting, MV3 service workers vs event pages, and the offscreen document workaround for clipboard access.</p>
+  </div>
+  <div class="feature-card">
+    <h3>🔓 Open Source Code</h3>
+    <p>Every code example is available on GitHub under MIT license. Fork, modify, and ship without attribution.</p>
+  </div>
+</div>
+
+<div class="chapter-list">
+  <h2>What You'll Learn</h2>
+  <ol>
+    <li><strong>Understanding Chrome Extension Architecture</strong> — MV3, service workers, permissions, lifecycle</li>
+    <li><strong>Your First Extension — Hello World</strong> — manifest.json, background.js, offscreen document</li>
+    <li><strong>The Popup — Your Extension's UI</strong> — HTML popup with user interaction</li>
+    <li><strong>Keyboard Shortcuts</strong> — Commands for power users</li>
+    <li><strong>Persisting User Settings</strong> — chrome.storage, custom cleanup rules</li>
+    <li><strong>The Options Page</strong> — Full-page configuration interface</li>
+    <li><strong>Icons and Branding</strong> — Creating your extension's identity</li>
+    <li><strong>Publishing to the Chrome Web Store</strong> — Developer account, listing, review process</li>
+    <li><strong>Testing and Debugging</strong> — Service worker, popup, and unit tests</li>
+    <li><strong>From Lite to Production</strong> — Firefox port, premium features, analytics</li>
+  </ol>
+  <p style="color:#888; font-size:14px; margin-top:8px">Plus: Complete manifest.json reference, permissions guide, and pre-publish checklist.</p>
+</div>
+
+<div class="faq">
+  <h2>Frequently Asked Questions</h2>
+  
+  <details>
+    <summary>Do I need to know JavaScript?</summary>
+    <p>Yes, basic JavaScript is expected. You should be comfortable with functions, variables, and callbacks. Experience with HTML and CSS helps but isn't strictly required.</p>
+  </details>
+  
+  <details>
+    <summary>How long does it take to complete the guide?</summary>
+    <p>About 2-3 hours to build the complete extension. The Chrome Web Store submission adds 1-3 business days for review.</p>
+  </details>
+  
+  <details>
+    <summary>Is this book up to date with Manifest V3?</summary>
+    <p>Yes. Everything in this book uses Manifest V3, which is required for all new Chrome extensions since 2023.</p>
+  </details>
+  
+  <details>
+    <summary>Can I use this to build a paid extension?</summary>
+    <p>Absolutely. Chapter 10 covers premium features and monetization options including license keys and Chrome Web Store purchases.</p>
+  </details>
+  
+  <details>
+    <summary>What if I get stuck?</summary>
+    <p>The companion GitHub repo has the complete source code for every step. Each chapter's code is in a separate folder so you can jump ahead or backtrack.</p>
+  </details>
+</div>
+
+<div class="cta-section">
+  <h2>Ready to Build?</h2>
+  <p>Grab the complete e-book free while it's in Amazon's review pipeline.</p>
+  <a href="/downloads/build-your-first-chrome-extension.epub" class="btn-primary" onclick="trackEvent('epub-download')">⬇ Download the EPUB</a>
+  <p style="font-size:14px; color:#888">Coming to Amazon Kindle for $9.99 ·
+  <a href="https://github.com/mahope/build-first-chrome-extension">Companion code on GitHub</a></p>
+</div>
+
+<footer>
+  <p>© 2026 · A Clean Copy Publication · Chrome is a trademark of Google LLC</p>
+  <p><a href="/">Home</a> · <a href="/clean-copy">Clean Copy Extension</a></p>
+</footer>
+
+<script defer src="/track.js"></script>
+</body>
+</html>

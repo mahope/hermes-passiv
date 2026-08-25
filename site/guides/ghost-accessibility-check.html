@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Ghost Accessibility Check (WCAG/EAA) — Scan Your Blog</title>
+<meta name="description" content="Free Ghost WCAG 2.1 AA scan — 16 automated rules, instant grade, no signup. Check alt text, contrast, headings, forms and links on your Ghost publication.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ghost Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your Ghost site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/ghost-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ghost Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your Ghost site against 16 WCAG 2.1 AA rules. Free, instant, EAA-ready.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Free Ghost Accessibility Check (WCAG/EAA) — Scan Your Blog">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/ghost-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/ghost-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is my Ghost blog covered by the European Accessibility Act?", "acceptedAnswer": {"@type": "Answer", "text": "Purely personal blogs usually are not. Publications that sell services to EU consumers — paid memberships, sponsorships presented as a service, or commerce — generally fall under the EAA from 28 June 2025."}}, {"@type": "Question", "name": "Does Ghost itself have accessibility problems?", "acceptedAnswer": {"@type": "Answer", "text": "The core Ghost frontend renders semantic HTML, but most accessibility issues come from third-party themes and embedded content. Scan your live site to see your own score."}}, {"@type": "Question", "name": "How do I fix contrast issues without editing theme files?", "acceptedAnswer": {"@type": "Answer", "text": "Use Settings → Design to adjust brand colours where the theme supports it, or add an overriding CSS rule in Settings → Code injection."}}, {"@type": "Question", "name": "Can I scan a Ghost site without installing anything?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Our scanner only needs your public URL — nothing is installed on your Ghost site, and no account is required."}}, {"@type": "Question", "name": "How often should I check my publication?", "acceptedAnswer": {"@type": "Answer", "text": "After every theme change and at least once a quarter. New posts mostly affect alt text and link quality, which automated checks catch well."}}]}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Ghost Accessibility Check</h1>
+    <p class="subtitle">Scan any Ghost publication against 16 WCAG 2.1 AA rules in seconds — nothing to install, no signup. Built for EU compliance.</p>
+    <div class="hero-cta">
+      <a href="/scan" class="btn-primary">Run a Free Scan on Your Ghost Site</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Ghost accessibility matters in the EU</h2>
+    Ghost is a lean publishing platform used by newsletters, blogs and independent media across Europe. Because themes are Handlebars templates, accessibility depends heavily on which theme you pick — and many popular themes ship with contrast problems, missing alt-text prompts and generic link text. The European Accessibility Act applies to paid memberships and subscriptions sold into the EU, so a Ghost publication monetising EU readers is covered.
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Ghost site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Ghost URL</strong> — any published page: homepage, a product page, or a category listing.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> Most image-alt, heading, and form-label issues are fixed right inside Ghost's editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Ghost Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Ghost</h2>
+    <p>When your scan flags a failing rule, here is where to fix it:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Ghost</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text on images</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Ghost prompts for alt text when you insert an image in the editor — fill it in there. Theme and logo images are set in Settings → Design, where the logo alt defaults to the publication name; verify it is not empty.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Contrast lives in your theme. If it is an official Ghost theme, override colours in Settings → Design → Brand, or add custom CSS via Code Injection (Settings → Code injection → Site header).</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Use the editor's heading cards (H2/H3) rather than bold paragraphs. Post titles become the page H1 automatically — avoid extra H1s inside content.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">The built-in membership/signup forms ship labelled. Custom forms added via Code Injection or embedded services must include explicit <label> elements.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text ("read more", "click here")</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Rewrite links in the post editor so they describe their destination. Theme-level "Read more" excerpts can be changed in the theme template or via translations.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing page language</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Set Publication language in Settings → Publication info (e.g. "en", "de"). This drives the html lang attribute on every page.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Keyboard traps in embeds</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Third-party embeds (video players, podcast widgets) are the usual culprit. Test each embed with Tab/Shift+Tab and prefer providers with accessible players.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Ghost-specific tools &amp; resources</h2>
+    <p>Ghost ships with useful foundations — these approaches take you further:</p>
+    <div style="display:grid;gap:16px;margin-top:24px;">
+      <div class="card"><h3>Lighthouse (built into Chrome)</h3><p>Run an audit on any Ghost page — covers contrast, alt text and ARIA basics. Free.</p></div>
+      <div class="card"><h3>WAVE browser extension</h3><p>Visual overlay of errors directly on your rendered Ghost theme. Free.</p></div>
+      <div class="card"><h3>Code Injection</h3><p>Ghost ships a site-wide CSS/JS injection point — the cleanest way to patch small theme accessibility gaps without forking the theme.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Ghost</h2>
+    <p>Accessibility is not a one-time fix — sites change through content edits, theme updates and new pages. Keep compliance sustainable:</p>
+    <ul style="list-style:none;display:grid;gap:12px;margin-top:24px;">
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Re-scan after every theme change or theme update — updates can silently reintroduce issues.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Make alt text part of your editorial checklist for every image in every post.</li>
+      <li style="padding:16px 20px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.95rem;">Check membership/paywall flows quarterly: buttons, error messages and emails must stay accessible too.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/ghost-eaa-accessibility" style="color:var(--color-accent);">Ghost Accessibility: Making Publications EAA-Compliant</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/accessibility-audit-cost" style="color:var(--color-accent);">What an Accessibility Audit Costs in 2026</a></li>
+        <li><a href="/blog/nis2-readiness-guide" style="color:var(--color-accent);">NIS2 Readiness Guide for Web Agencies</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. For the complete picture, our e-book covers the full checklist plus a 14-day fix plan.</p>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

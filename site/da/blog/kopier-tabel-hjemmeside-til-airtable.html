@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopiér en tabel fra en hjemmeside ind i Airtable (2026-guide)</title>
+<meta name="description" content="Sådan får du en tabel fra en hjemmeside ind i Airtable som rigtige records — rækker forbliver records, kolonner forbliver felter. To klik.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kopiér en tabel fra en hjemmeside ind i Airtable (2026-guide)">
+<meta property="og:description" content="Markér-kopiér smelter cellerne sammen; CSV-rundture mister data. Kopiér tabellen som markdown og indsæt direkte i Airtable.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-hjemmeside-til-airtable">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-hjemmeside-til-airtable">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-website-to-airtable">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-hjemmeside-til-airtable">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra en hjemmeside ind i Airtable (2026-guide)", "description": "Sådan får du en tabel fra en hjemmeside ind i Airtable som rigtige records — rækker forbliver records, kolonner forbliver felter. To klik.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-hjemmeside-til-airtable", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan kopierer jeg en tabel ind i Airtable?", "acceptedAnswer": {"@type": "Answer", "text": "Kopiér tabellen som markdown med Clean Copy (højreklik → Kopiér som markdown over tabellen), og indsæt derefter direkte i et Airtable-grid. Hver række bliver en record, hver kolonne et felt."}}, {"@type": "Question", "name": "Hvorfor ender indsættelsen i én kolonne?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi Airtable modtog ren tekst uden struktur — tabs og linjeskift blev ikke genkendt som cellegrænser. Markdown-tabeller genkendes derimod korrekt."}}, {"@type": "Question", "name": "Kan jeg indsætte direkte i en eksisterende base?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Sørg for at kolonnerækkefølgen matcher felttypene, så tal lander som tal og datoer som datoer. Ellers opret Airtable nye felter automatisk."}}, {"@type": "Question", "name": "Virker det bag login?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — Clean Copy kører i browseren og læser siden som den ser ud for dig, også bag login. Intet sendes til nogen server."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">RENGØR TEKST &middot; AIRTABLE</div>
+    <h1>Kopiér tabel<br>ind i Airtable</h1>
+    <p class="subtitle">Airtable er bygget til strukturerede data — men at få strukturerede data IND i den er overraskende svært. Her er metoden der bevarer rækker, kolonner og overskrifter uden rengøring bagefter.</p>
+    <div class="hero-cta">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv tabel-værktøjet &rarr;</a>
+      <a href="#metode" class="btn-secondary">Se metoden</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor de sædvanlige metoder fejler</h2>
+    <ul>
+      <li><strong>Markér og kopiér tekst</strong> — fanger ekstra indhold, og cellerne
+      kollapser til ét felt pr. række.</li>
+      <li><strong>Skærmbillede + OCR</strong> — cifre med én forkert digit er værre end
+      manglende data.</li>
+      <li><strong>CSV-download + import</strong> — kun hvor sitet selv tilbyder eksport;
+      formatering går tabt.</li>
+      <li><strong>Browser-table-scrapere</strong> — opsætning pr. site, og de stritter imod
+      bag login.</li>
+    </ul>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy-tool" class="btn-primary">Test metoden nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="metode">
+  <div class="container">
+    <h2>Løsningen: to klik</h2>
+    <ol>
+      <li>Installér den gratis Clean Copy-udvidelse til Chrome eller Firefox.</li>
+      <li>Højreklik på tabellen og vælg <em>Kopiér som markdown</em> — du får en ren
+      markdown-tabel med alle rækker og kolonner.</li>
+      <li>Indsæt i Airtable: rækker bliver records, kolonner bliver felter, overskriften
+      bliver feltnavne.</li>
+    </ol>
+    <p>Ingen junk-rækker fra annoncer eller billedtekster, og det virker også på sider
+    bag login. Læs også:
+    <a href="/da/blog/kopier-tabel-til-excel">tabeller til Excel</a>,
+    <a href="/da/blog/kopier-tabel-til-google-sheets">tabeller til Google Sheets</a> og
+    <a href="/da/blog/kopier-tabel-hjemmeside-til-notion">tabeller til Notion</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan kopierer jeg en tabel ind i Airtable?</h3><p>Kopiér tabellen som markdown med Clean Copy (højreklik → Kopiér som markdown over tabellen), og indsæt derefter direkte i et Airtable-grid. Hver række bliver en record, hver kolonne et felt.</p></div>
+      <div class="card"><h3>Hvorfor ender indsættelsen i én kolonne?</h3><p>Fordi Airtable modtog ren tekst uden struktur — tabs og linjeskift blev ikke genkendt som cellegrænser. Markdown-tabeller genkendes derimod korrekt.</p></div>
+      <div class="card"><h3>Kan jeg indsætte direkte i en eksisterende base?</h3><p>Ja. Sørg for at kolonnerækkefølgen matcher felttypene, så tal lander som tal og datoer som datoer. Ellers opret Airtable nye felter automatisk.</p></div>
+      <div class="card"><h3>Virker det bag login?</h3><p>Ja — Clean Copy kører i browseren og læser siden som den ser ud for dig, også bag login. Intet sendes til nogen server.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv Clean Copy tabel-tilstand &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/kopier-tabel-til-excel" lang="da">Tabeller til Excel</a> &middot; <a href="/da/blog/kopier-tabel-til-google-sheets" lang="da">Tabeller til Sheets</a> &middot; <a href="/da/blog/kopier-tabel-hjemmeside-til-notion" lang="da">Tabeller til Notion</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

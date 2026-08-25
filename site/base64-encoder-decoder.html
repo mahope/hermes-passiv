@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Base64 Encoder &amp; Decoder — Free Online Tool</title>
+<meta name="description" content="Free online Base64 encoder and decoder. Encode text to Base64 or decode Base64 back to readable text, with full Unicode (UTF-8) support. No upload, no signup — runs in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Base64 Encoder &amp; Decoder — Free Online Tool">
+<meta property="og:description" content="Encode or decode Base64 instantly. Full Unicode support. Free, private, 100% in your browser.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/base64-encoder-decoder">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Base64 Encoder &amp; Decoder — Free Online Tool">
+<meta name="twitter:description" content="Encode or decode Base64 instantly. 100% in-browser.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/base64-encoder-decoder">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/base64-encoder-decoder">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/base64-encoder-decoder">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Base64 Encoder &amp; Decoder",
+  "url": "https://hermes-passiv.pages.dev/base64-encoder-decoder",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online Base64 encoder and decoder with full UTF-8 support."
+}
+</script>
+<style>
+.b64-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.b64-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 800px) { .b64-grid { grid-template-columns: 1fr; } }
+.b64-pane { display: flex; flex-direction: column; }
+.b64-pane h2 { font-size: 0.95rem; margin: 0 0 0.5rem; font-weight: 600; }
+.b64-io {
+  width: 100%; box-sizing: border-box; min-height: 320px; resize: vertical;
+  border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-text);
+  padding: 0.9rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem; line-height: 1.55;
+}
+textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.b64-btns { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.b64-btns button { padding: 10px 20px; cursor: pointer; }
+.b64-status { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; }
+.b64-ok { background: rgba(48,164,108,0.12); border: 1px solid rgba(48,164,108,0.5); color: var(--color-text); display: block; }
+.b64-err { background: rgba(220,80,80,0.10); border: 1px solid rgba(220,80,80,0.45); color: var(--color-text); display: block; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, monospace; font-size: 0.82rem; }
+.b64-meta { font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
+.b64-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; }
+.breadcrumb { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--color-accent); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { color: var(--color-text-muted); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="b64-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
+    <a href="/free-tools">Free tools</a> <span>›</span>
+  Base64 encoder / decoder
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Base64 Encoder &amp; Decoder</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Convert text to Base64 or Base64 back to text — with full Unicode (UTF-8) support.</p>
+  <p class="b64-privacy">🔒 Nothing leaves your device. All conversion runs in JavaScript on this page.</p>
+</header>
+
+<div class="b64-grid">
+  <div class="b64-pane">
+    <h2><label for="inputArea">Input</label></h2>
+    <textarea id="inputArea" class="b64-io" placeholder="Paste plain text or a Base64 string here..." spellcheck="false"></textarea>
+  </div>
+  <div class="b64-pane">
+    <h2><label for="outputArea">Output</label></h2>
+    <textarea id="outputArea" class="b64-io" placeholder="Result appears here..." spellcheck="false" readonly></textarea>
+  </div>
+</div>
+
+<div id="statusBox" class="b64-status" role="status" aria-live="polite"></div>
+
+<div class="b64-btns">
+  <button id="encodeBtn" class="btn-primary">Encode → Base64</button>
+  <button id="decodeBtn" class="btn-primary">Decode ← Base64</button>
+  <button id="swapBtn" class="btn-secondary">Swap input/output</button>
+  <button id="copyBtn" class="btn-secondary">Copy output</button>
+  <button id="clearBtn" class="btn-secondary">Clear</button>
+  <button id="exampleBtn" class="btn-secondary">Load example</button>
+</div>
+
+<p class="b64-meta" id="sizeMeta"></p>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free Base64 encoder converts any text into Base64 — the encoding used for
+    HTTP Basic authentication headers, data URIs, JWT payload segments and email
+    attachments. The decoder reverses the process, turning a Base64 string back into
+    readable text, and clearly reports invalid input instead of silently producing
+    garbage.</p>
+    <p>Both directions handle the full Unicode range correctly (UTF-8), so emoji,
+    Danish characters like æøå and non-Latin scripts encode and round-trip exactly.
+    Everything runs locally in your browser — your data is never uploaded, stored
+    or sent anywhere, which makes it safe for tokens, keys-in-configs you are
+    debugging, and other sensitive strings.</p>
+    <p>Note: Base64 is an encoding, not encryption. Use it for transport and storage
+    formats, never to protect secrets on its own.</p>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/word-counter" style="color:var(--color-accent);">Word Counter</a> &middot;
+    <a href="/json-formatter" style="color:var(--color-accent);">JSON Formatter</a> &middot;
+    <a href="/text-diff" style="color:var(--color-accent);">Text Diff Checker</a> &middot;
+    <a href="/case-converter" style="color:var(--color-accent);">Case Converter</a> &middot;
+    <a href="/hash-generator" style="color:var(--color-accent);">Hash Generator</a> &middot;
+    <a href="/url-encoder-decoder" style="color:var(--color-accent);">URL Encoder</a> &middot;
+        <a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy Web</a> &middot;
+        <a href="/markdown-table-generator" style="color:var(--color-accent);">Markdown Tables</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+      </p>
+      <p style="margin-top:8px;">Free web tool — no account needed.</p>
+    </footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var input = document.getElementById('inputArea');
+  var output = document.getElementById('outputArea');
+  var statusBox = document.getElementById('statusBox');
+  var sizeMeta = document.getElementById('sizeMeta');
+  if (!input || !output) return;
+
+  var tracked = false;
+
+  function bytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  // UTF-8-safe Base64 encode/decode via binary strings.
+  function utf8ToB64(str) {
+    var bytesArr = new TextEncoder().encode(str);
+    var bin = '';
+    for (var i = 0; i < bytesArr.length; i++) bin += String.fromCharCode(bytesArr[i]);
+    return btoa(bin);
+  }
+
+  function b64ToUtf8(b64) {
+    var bin = atob(b64);
+    var arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(arr);
+  }
+
+  function show(msg, cls) {
+    statusBox.textContent = msg;
+    statusBox.className = 'b64-status ' + cls;
+  }
+
+  // Strip whitespace/newlines that often sneak into pasted Base64.
+  function cleanB64(s) {
+    return s.replace(/\s+/g, '');
+  }
+
+  function run(mode) {
+    statusBox.className = 'b64-status';
+    sizeMeta.textContent = '';
+    var text = input.value;
+
+    if (text.length === 0) {
+      output.value = '';
+      statusBox.style.display = 'none';
+      return true;
+    }
+
+    try {
+      var result;
+      if (mode === 'encode') {
+        result = utf8ToB64(text);
+        show('✓ Encoded to Base64 (' + result.length + ' chars).', 'b64-ok');
+      } else {
+        var cleaned = cleanB64(text);
+        if (cleaned.length === 0) {
+          output.value = '';
+          statusBox.style.display = 'none';
+          return true;
+        }
+        if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleaned)) {
+          throw new Error('Input contains characters that are not valid Base64 (A–Z, a–z, 0–9, +, / and =).');
+        }
+        if (cleaned.length % 4 !== 0) {
+          throw new Error('Invalid Base64 length: ' + cleaned.length +
+            ' characters. A valid Base64 string is a multiple of 4 (padding included).');
+        }
+        result = b64ToUtf8(cleaned);
+        show('✓ Decoded successfully.', 'b64-ok');
+      }
+      output.value = result;
+      sizeMeta.textContent = mode === 'encode'
+        ? 'Input: ' + bytes(new Blob([text]).size) + ' → Base64: ' + bytes(new Blob([result]).size)
+        : '';
+    } catch (e) {
+      var msg = e.name === 'InvalidCharacterError'
+        ? '✗ Invalid Base64: unexpected character or broken padding.'
+        : '✗ ' + e.message;
+      show(msg, 'b64-err');
+      output.value = '';
+      return false;
+    }
+
+    if (!tracked) {
+      tracked = true;
+      try {
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/base64-encoder-decoder', event: 'convert', mode: mode }),
+          keepalive: true
+        }).catch(function() {});
+      } catch (e) {}
+    }
+    return true;
+  }
+
+  document.getElementById('encodeBtn').addEventListener('click', function() { run('encode'); });
+  document.getElementById('decodeBtn').addEventListener('click', function() { run('decode'); });
+
+  document.getElementById('swapBtn').addEventListener('click', function() {
+    var t = input.value;
+    input.value = output.value;
+    output.value = t;
+    statusBox.style.display = 'none';
+    sizeMeta.textContent = '';
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    if (!output.value) return;
+    var done = function() {
+      var b = document.getElementById('copyBtn');
+      var old = b.textContent;
+      b.textContent = 'Copied!';
+      setTimeout(function() { b.textContent = old; }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(output.value).then(done).catch(function() {});
+    } else {
+      output.select();
+      document.execCommand('copy');
+      done();
+    }
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function() {
+    input.value = '';
+    output.value = '';
+    statusBox.style.display = 'none';
+    sizeMeta.textContent = '';
+    input.focus();
+  });
+
+  document.getElementById('exampleBtn').addEventListener('click', function() {
+    input.value = 'Hello world — æøå and 👋 work too!';
+    run('encode');
+  });
+
+})();
+</script>
+</body>
+</html>

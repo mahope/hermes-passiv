@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copy as Markdown i Chrome — sådan gør du (2026)</title>
+<meta name="description" content="Markér tekst på enhver hjemmeside og kopiér den som ren Markdown med ét klik. Guide til de bedste metoder: browserudvidelsen Clean Copy, bookmarklet og CLI — plus hvad du skal tjekke før du vælger.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Copy as Markdown i Chrome — sådan gør du (2026)">
+<meta property="og:description" content="Sådan kopierer du markeret tekst som Markdown direkte i Chrome — med udvidelse, bookmarklet eller kommandolinje.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/kopier-som-markdown-udvidelse">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/kopier-som-markdown-udvidelse"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/copy-as-markdown-chrome-extension">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-som-markdown-udvidelse">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-as-markdown-chrome-extension">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Copy as Markdown i Chrome — sådan gør du (2026)", "description": "Markér tekst på enhver hjemmeside og kopiér den som ren Markdown med ét klik. Guide til de bedste metoder: browserudvidelsen Clean Copy, bookmarklet og CLI — plus hvad du skal tjekke før du vælger.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-som-markdown-udvidelse", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan kopierer jeg tekst som Markdown i Chrome?", "acceptedAnswer": {"@type": "Answer", "text": "Den hurtigste vej er en copy-tids-udvidelse som Clean Copy: markér teksten, højreklik → Clean Copy → Markdown (eller Ctrl/Cmd+Shift+C). Udklipsholderen modtager gyldig Markdown, som du kan indsætte hvor som helst."}}, {"@type": "Question", "name": "Er Copy-as-Markdown gratis?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Clean Copy er gratis og open source, kører lokalt i din browser uden tracking og kræver ingen konto. Der findes en valgfri Pro-udgave med licens­nøgler, men kernefunktionen — kopier som Markdown eller ren tekst — er gratis."}}, {"@type": "Question", "name": "Virker det også med tabeller og kodeblokke?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Tabeller bliver til GitHub-flavoured pipe-tabeller, kodeblokke til fenced blocks med korrekt indrykning, og indlejrede lister bevarer deres struktur. Samme konvertermotor bruges af web-værktøjet, udvidelsen og CLI'en."}}, {"@type": "Question", "name": "Kan jeg bruge det i Edge, Brave eller Firefox?", "acceptedAnswer": {"@type": "Answer", "text": "Clean Copy virker i alle Chromium-browsere (Edge, Brave, Opera). I Firefox kan bookmarklet'en give samme én-kliks rensning, og CLI'en dækker scripting på tværs af browsere."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRODUKTIVITET &middot; MARKDOWN</div>
+    <h1>Copy as Markdown<br>i Chrome</h1>
+    <p class="subtitle">Markér, klik, indsæt: overskrifter, lister, links og kodeblokke ankommer som gyldig Markdown — hvor som helst du indsætter.</p>
+    <div class="hero-cta">
+      <a href="#metoder" class="btn-primary">Se metoderne</a>
+      <a href="/clean-copy" class="btn-secondary">Hent Clean Copy gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvorfor">
+  <div class="container">
+    <h2>Problemet: Markdown går tabt undervejs</h2>
+    <p>Kopierer du tekst fra en hjemmeside, lægger Chrome hele HTML-fragmentet på
+    udklipsholderen — ikke Markdown. Når du indsætter i Obsidian, Notion, en AI-chat
+    eller en README-fil, skal du enten rydde op manuelt eller miste strukturen:
+    overskrifter bliver til almindelige linjer, lister til punkter uden hierarki,
+    tabeller til uigennemtrængelig tekst.</p>
+    <p>Løsningen er at konvertere <strong>ved kopiering</strong>, ikke ved indsætning.</p>
+  </div>
+</section>
+
+<section class="products" id="metoder">
+  <div class="container">
+    <h2>Tre metoder, rangeret efter bekvemmelighed</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>1️⃣ Browserudvidelsen: Clean Copy</h3>
+      <p><a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a> sidder i højreklik-menuen og på Ctrl/Cmd+Shift+C. Markér tekst → aktivér → udklipsholderen får ren Markdown (eller plain text, dit valg). Kører 100 % lokalt, ingen tracking, open source. Ét værktøj, alle sider.</p></div>
+      <div class="card"><h3>2️⃣ Bookmarklet</h3><p><a href="/clean-copy-bookmarklet" style="color:var(--color-accent);">Bookmarklet'en</a> trækkes til bogmærkelinjen og giver samme én-kliks konvertering i enhver browser — også Firefox og Safari. Kræver ingen installation, men et klik pr. gang.</p></div>
+      <div class="card"><h3>3️⃣ Kommandolinjen</h3><p>Til scripting og batch-arbejde: <code>brew install mahope/clean-copy/clean-copy</code>, derefter <code>clean-copy --url https://eksempel.dk/artikel</code>. Samme motor, identisk output — velegnet til pipelines og automatisering.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan fungerer det i praksis</h2>
+    <ol>
+      <li>Du finder en artikel eller docs-side med tekst du vil gemme.</li>
+      <li>Markér afsnittet, højreklik → <strong>Clean Copy</strong> → Markdown.</li>
+      <li>Skift til Obsidian, Notion, VS Code eller din AI-chat.</li>
+      <li>Tryk Ctrl/Cmd+V. Overskrifter, lister, links og kodeblokke ankommer som gyldig Markdown.</li>
+    </ol>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/clean-copy" class="btn-primary">Download Clean Copy gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan kopierer jeg tekst som Markdown i Chrome?</h3><p>Den hurtigste vej er en copy-tids-udvidelse som Clean Copy: markér teksten, højreklik → Clean Copy → Markdown (eller Ctrl/Cmd+Shift+C). Udklipsholderen modtager gyldig Markdown, som du kan indsætte hvor som helst.</p></div>
+      <div class="card"><h3>Er Copy-as-Markdown gratis?</h3><p>Ja. Clean Copy er gratis og open source, kører lokalt i din browser uden tracking og kræver ingen konto. Der findes en valgfri Pro-udgave med licens­nøgler, men kernefunktionen — kopier som Markdown eller ren tekst — er gratis.</p></div>
+      <div class="card"><h3>Virker det også med tabeller og kodeblokke?</h3><p>Ja. Tabeller bliver til GitHub-flavoured pipe-tabeller, kodeblokke til fenced blocks med korrekt indrykning, og indlejrede lister bevarer deres struktur. Samme konvertermotor bruges af web-værktøjet, udvidelsen og CLI'en.</p></div>
+      <div class="card"><h3>Kan jeg bruge det i Edge, Brave eller Firefox?</h3><p>Clean Copy virker i alle Chromium-browsere (Edge, Brave, Opera). I Firefox kan bookmarklet'en give samme én-kliks rensning, og CLI'en dækker scripting på tværs af browsere.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-tool" class="btn-primary">Prøv web-værktøjet gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/indsæt-i-obsidian-ren-markdown" lang="da">Indsæt i Obsidian uden rod</a> &middot; <a href="/da/blog/html-til-markdown-konverter" lang="da">HTML-til-Markdown-konverter</a> &middot; <a href="/da/blog/ren-tekst-fra-hjemmeside" lang="da">Ren tekst fra hjemmeside</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/clean-copy">Clean Copy</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

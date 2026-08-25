@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""Iteration 98: dansk pendant til /blog/eaa-enforcement-2026 ->
+/blog/eaa-haandhaevelse-2026 plus forsids-kort.
+Genbruger iter.97-mønsteret: JSON-LD valideres med json.loads,
+sitemap-tjek, internt link-tjek."""
+
+import json
+import re
+from datetime import date
+
+SITE = 'site'
+TODAY = date.today().isoformat()
+BASE = 'https://hermes-passiv.pages.dev'
+
+
+def head(slug, lang, title, meta_desc, og_title, og_desc, headline):
+    ld = json.dumps({
+        '@context': 'https://schema.org', '@type': 'Article', 'headline': headline,
+        'description': meta_desc, 'url': f'{BASE}/blog/{slug}',
+        'datePublished': TODAY, 'dateModified': TODAY,
+        'author': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+        'publisher': {'@type': 'Organization', 'name': 'Hermes Compliance'},
+    })
+    return f'''<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<meta name="description" content="{meta_desc}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{og_title}">
+<meta property="og:description" content="{og_desc}">
+<meta property="og:url" content="{BASE}/blog/{slug}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{og_title}">
+<meta name="twitter:description" content="{og_desc}">
+<link rel="canonical" href="{BASE}/blog/{slug}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{ld}
+</script>
+<script defer src="/track.js"></script>
+</head>'''
+
+
+def page():
+    slug = 'eaa-haandhaevelse-2026'
+    desc = ('Ét år efter Den Europæiske Accessibilitetslov trådte i kraft: de første '
+            'sømål, markedsovervågning, bøder pr. land og en 5-trins plan for webbureauer.')
+    h = head(slug, 'da',
+             'EAA-håndhævelse 2026: Sømål, bøder og hvad webbureauer skal gøre',
+             desc,
+             'EAA-håndhævelse 2026: Hvad er der faktisk sket?',
+             'De første sømål, markedsovervågning i Sverige og Holland, bøder pr. land — og 5-trins planen for bureauer.',
+             'EAA-håndhævelse 2026: Hvad er der faktisk sket?')
+    body = f'''
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">BLOG · EAA-HÅNDHÆVELSE</div>
+    <h1>EAA-håndhævelse 2026:<br>Hvad er der faktisk sket?</h1>
+    <p class="subtitle">Ét år efter Den Europæiske Accessibilitetslov tog effekt: de første retssager i Frankrig, systematisk markedsovervågning i Sverige og Holland, bøder defineret land for land — og den praktiske plan et lille webbureau skal følge.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan dit site gratis →</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 · Læsetid: 7 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="status">Ét år efter fristen</h2>
+    <p>Den Europæiske Accessibilitetslov (direktiv (EU) 2019/882) tog effekt 28. juni 2025, efter at alle 27 medlemslande havde transponeret den i national lov. Et år efter er håndhævelsen reel — men ikke den storm nogle forudså. Tre mønstre er tydelige: profilerede retssager i Frankrig, systematisk markedsovervågning i Sverige og Holland, og en klagedrevet tilgang andre steder.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🇫🇷 Frankrig: De første EAA-sømål</h3><p>Formelle juridiske påkrav til fire store detailkæder i juli 2025. Konkurs-retslige påbud i november 2025. Carrefour blev i juni 2026 pålagt af retten at gøre både webshop og app fuldt tilgængelig inden for 6 måneder — under trussel om dagbøder. Sagerne sætter EU-præcedens.</p></div>
+      <div class="card"><h3>🇸🇪 Sverige: Markedsovervågning</h3><p>Post- og teletilsynet (PTS) inspicerede bærbare, smartphones og tablets med JAWS-skærmlæser fra oktober 2025 og åbnede de første sager mod webshops. Midt i 2026 havde PTS modtaget <strong>124 offentlige klager</strong> — forbrugerne kender deres rettigheder og bruger dem.</p></div>
+      <div class="card"><h3>🇳🇱 Holland: Grænseoverskridende</h3><p>Forbruger- og Markedmyndigheden (ACM) sendte informationanmodninger til e-handelsaktører globalt — også virksomheder med hovedsæde uden for EU. Grænseoverskridende håndhævelse er en realitet.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Bøderne pr. land</h2>
+    <p>EAA er et direktiv, ikke en forordning — hvert land fastsætter sine egne sanktioner. Det betyder at strafferammen varierer kraftigt. Tallene herunder er <strong>pr. overtrædelse</strong>, og myndighederne kan oveni kræve produkter trukket tilbage, forbyde ikke-compliant tjenester på det nationale marked, kræve revision og offentliggøre navnene på virksomheder der ikke overholder loven. I flere jurisdiktioner kan konkurrenter desuden føre sag efter konkurrenceloven mod organisationer uden overensstemmelse.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🇦🇹 Østrig</h3><p>Op til €80.000 pr. overtrædelse.</p></div>
+      <div class="card"><h3>🇩🇪 Tyskland</h3><p>Op til €100.000 pr. overtrædelse.</p></div>
+      <div class="card"><h3>🇮🇹 Italien</h3><p>Op til €40.000 pr. overtrædelse plus op til 5 % af årsomsætningen efter Stanca-loven.</p></div>
+      <div class="card"><h3>🇮🇪 Irland</h3><p>Op til €60.000 pr. overtrædelse.</p></div>
+      <div class="card"><h3>🇸🇪 Sverige</h3><p>Op til SEK 10 mio. (ca. €900.000) samt adgang til markedsforbud.</p></div>
+      <div class="card"><h3>🕊️ Klagedrevet model</h3><p>Uden for Frankrig/Sverige/Holland starter håndhævelsen typisk først når en bruger, konkurrent eller interesseorganisation klager. Én klage kan udløse undersøgelse.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tekniske ændringer du skal kende i 2026</h2>
+    <p>To udviklinger rammer direkte ind i EAA-compliance:</p>
+    <p><strong>EN 301 549 v4.1.1 (WCAG 2.2-baseline).</strong> En ny version af den europæiske standard forventes i 2026 med WCAG 2.2 som baseline. De ni nye succeskriterier — minimumsklikflade, fokusudseende, tilgængelig autentificering m.fl. — bliver dermed en del af EAA-standarden. Sites der bestod WCAG 2.1 AA kan fejle under 2.2. Læs vores <a href="/blog/wcag-22-what-changes">WCAG 2.2-guide</a>.</p>
+    <p><strong>EU's AI-forordning (2. august 2026).</strong> AI Act (forordning 2024/1689) bliver fuldt håndhævelig 2. august 2026. Artikel 16(1)(l) kræver at udbydere af højrisiko-AI overholder eksisterende EU-lovgivning — herunder EAA. Bygger dit bureau AI-funktioner (chatbots, indholdsgenerering, automatisk moderering), gælder accessibilitetskravene nu også for dem. Artikel 5(1)(b) forbuder desuden AI-systemer der udnytter sårbarheder hos personer med handicap.</p>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <h2>5-trins plan for små webbureauer</h2>
+    <p class="section-intro">Planen kræver ikke et compliance-team:</p>
+    <p><strong>1. Kør en baselinescanning af alle klient-sites du vedligeholder.</strong> Vores gratis WCAG 2.1 AA-scanner dækker kontrast, alt-tekster, labels, overskrifter og mere på sekunder.<br>
+    <strong>2. Prioritér WCAG 2.2-kriterierne.</strong> Klikflade (2.5.8) og fokusudseende (2.4.13) er dem der oftest bryder 2.1-godkendte sites — og billigst at rette (CSS, ikke arkitektur).<br>
+    <strong>3. Opret eller opdatér tilgængelighedserklæringen.</strong> Enhver EAA-omfattet tjeneste skal udgive én med compliance-status, funktioner, uforholdsmæssig-byrde-vurderinger og en tilgængelig feedbackkanal. Brug vores gratis generator.<br>
+    <strong>4. Dokumentér forholdsmæssige tiltag.</strong> Er fuld compliance uforholdsmæssig (mikrovirksomhed), så dokumentér vurderingen. Det er tilladt, men skal begrundes — ikke en generel undtagelse.<br>
+    <strong>5. Gør klar til AI-Akt-skæringspunktet.</strong> Har du AI-funktioner på klient-sites, auditér deres tilgængelighed nu — forpligtelserne begynder 2. august 2026.</p>
+    <p>Vores EAA-e-bog gennemgår WCAG 2.1 AA kriterie for kriterie med platform-specifikke rettelser — skrevet til små bureauer, ikke jurister.</p>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Scan dit site gratis →</a>
+      &nbsp;&nbsp;
+      <a href="/#products" class="btn-secondary">Se EAA-e-bogen →</a>
+      &nbsp;&nbsp;
+      <a href="/blog/eaa-enforcement-2026" class="btn-secondary">English version →</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er nogen faktisk blevet bödet under EAA?</h3><p>Ikke endnu i form af en kontant bøde, men håndhævelsen er i gang. I Frankrig pålagde handelsretten Carrefour at gøre site og app tilgængelige inden for seks måneder — under dagbøder ved forsinkelse. I Sverige har PTS åbnet sager mod e-handelsaktører. Ingen publicerede bøder pr. august 2026, men de første forventes inden for 9–12 måneder efterhånden som sagerne afsluttes.</p></div>
+      <div class="card"><h3>Håndhæves EAA lige hårdt i alle EU-lande?</h3><p>Nej. Frankrig, Sverige og Holland er mest aktive. Mange andre lande kører en klagedrevet model: ingen klage, ingen sag — men en utilgængelig kundeside rettet mod EU-forbrugere bærer altid klagerisiko.</p></div>
+      <div class="card"><h3>Gør erklæringen mig fri, hvis mit site fejler?</h3><p>Nej. Tilgængelighedserklæringen viser god tro og kan reducere bøden, men ved en myndighedskontrol er du stadig ansvarlig for manglende overensstemmelse. En unøjagtig erklæring er i sig selv en overtrædelse af informationspligten.</p></div>
+      <div class="card"><h3>Gælder EAA kun nye sites?</h3><p>Sites lovligt i brug før 28. juni 2025 har overgangsperiode frem til 28. juni 2030. Nye sites og væsentligt redesignede sites efter fristen skal overholde loven med det samme — og alt nyt arbejde du leverer nu, skal være compliant fra dag ét.</p></div>
+      <div class="card"><h3>Kan et lille bureau fritages?</h3><p>EAA har en uforholdsmæssig-byrde-klausul: ville fuld compliance ændre tjenesten fundamentalt eller koste uforholdsmæssigt meget ift. størrelse og omsætning, kan undtagelse claim'es. Nøgleordet er dokumentation — vurderingen skal begrundes og gemmes, og delvis compliance forbliver kravet. Det er ikke en blankoundtagelse.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Relaterede guides</h2>
+    <div class="problem-cards">
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">FRISTER</span><h3><a href="/blog/eaa-frister-2026" style="color:var(--color-accent);text-decoration:none;">EAA-fristen er overskredet</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">WCAG 2.2</span><h3><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);text-decoration:none;">WCAG 2.2: Hvad ændrer sig</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">TJEKLISTE</span><h3><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);text-decoration:none;">EAA-tjekliste</a></h3></div>
+      <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">ERKLÆRINGEN</span><h3><a href="/blog/gratis-eaa-saetninger" style="color:var(--color-accent);text-decoration:none;">Gratis værktøjer til erklæringen</a></h3></div>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Forside</a> · <a href="/scan-da">Gratis scanner</a> · <a href="/free-tools">Gratis værktøjer</a> · <a href="/#blog">Blog</a></p>
+</footer>
+</body>
+</html>'''
+    return slug, h + body
+
+
+def update_sitemap(slugs):
+    p = f'{SITE}/sitemap.xml'
+    c = open(p).read()
+    add = ''.join(f'  <url><loc>{BASE}/blog/{s}</loc><lastmod>{TODAY}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
+                  for s in slugs)
+    assert all(f'/blog/{s}</loc>' not in c for s in slugs), 'slug already in sitemap'
+    c = c.replace('</urlset>', add + '</urlset>')
+    open(p, 'w').write(c)
+
+
+CARD = '''      <div style="border:1px solid var(--color-border);border-radius:12px;padding:24px;background:var(--color-surface);margin-top:20px;">
+        <h3><a href="/blog/eaa-haandhaevelse-2026" style="color:inherit;text-decoration:none;">EAA-håndhævelse 2026 (dansk)</a></h3>
+        <p>Sømål i Frankrig, markedsovervågning i Sverige og Holland, bøder fra €40.000 til €900.000 — og 5-trins planen for små webbureauer.</p>
+        <a href="/blog/eaa-haandhaevelse-2026" class="btn-secondary" style="margin-top:12px;">Læs guiden →</a>
+      </div>
+'''
+
+
+def add_frontpage_card():
+    p = f'{SITE}/index.html'
+    c = open(p).read()
+    if '/blog/eaa-haandhaevelse-2026' in c:
+        print('frontpage card already present')
+        return
+    anchor = '<div style="border:1px solid var(--color-border);border-radius:12px;padding:24px;background:var(--color-surface);margin-top:20px;">\n        <h3><a href="/blog/free-gdpr-document-generators"'
+    i = c.find(anchor)
+    assert i > 0, 'anchor not found in index.html'
+    c = c[:i] + CARD + c[i:]
+    open(p, 'w').write(c)
+    print('frontpage card added')
+
+
+def check_links(files):
+    import os
+    broken = []
+    for path in files:
+        html = open(path).read()
+        for m in set(re.findall(r'href="(/[^"#]*?)"', html)):
+            url = m.split('?')[0]
+            target = ('site' + url).rstrip('/')
+            if not (os.path.exists(target) or os.path.exists(target + '.html')
+                    or url == '/' or os.path.exists(target + '/index.html')):
+                broken.append((path, m))
+    return broken
+
+
+def main():
+    slug, html = page()
+    with open(f'{SITE}/blog/{slug}.html', 'w') as f:
+        f.write(html)
+    blocks = re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.DOTALL)
+    assert blocks, 'no JSON-LD'
+    for b in blocks:
+        d = json.loads(b)
+        assert d['@context'] == 'https://schema.org' and d['@type'] == 'Article', slug
+    print(f'{slug}.html written, JSON-LD OK')
+    update_sitemap([slug])
+    print('sitemap updated')
+    add_frontpage_card()
+    broken = check_links([f'{SITE}/blog/{slug}.html', f'{SITE}/index.html'])
+    print('broken internal links:', broken if broken else 'none')
+
+
+if __name__ == '__main__':
+    main()

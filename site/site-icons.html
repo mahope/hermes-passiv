@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>site-icons — Generate favicons, OG images & PWA icons from one</title>
+  <meta name="description" content="CLI tool to generate all favicon sizes, OG images, PWA icons, and web app manifests from a single SVG or PNG source. Free tier + Pro ($29) license.">
+  <meta property="og:title" content="site-icons — One SVG → All Icons">
+  <meta property="og:description" content="favicons, OG images, PWA icons, manifest — from a single command">
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/site-icons/demo-og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/site-icons">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/site-icons">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "site-icons",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Linux, Windows",
+    "description": "CLI tool that generates every favicon size, favicon.ico and an HTML head snippet from a single SVG or PNG source.",
+    "url": "https://hermes-passiv.pages.dev/site-icons",
+    "downloadUrl": "/downloads/site-icons/site_icons.py",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .cli-demo {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .cli-demo .prompt { color: #38bdf8; }
+    .cli-demo .output { color: #94a3b8; }
+    .cli-demo .highlight { color: #4ade80; }
+    .tier-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    @media (max-width: 640px) {
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+    .tier-card {
+      background: var(--color-surface-2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--color-border);
+    }
+    .tier-card.pro {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+    }
+    .tier-card h3 { margin-top: 0; }
+    .tier-card .price { font-size: 2rem; font-weight: 700; color: var(--color-accent); }
+    .tier-card ul { padding-left: 1.2rem; }
+    .tier-card ul li { margin-bottom: 0.4rem; }
+    .tier-card .btn { display: block; text-align: center; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
+    <div class="badge">🆕 New Tool</div>
+    <h1>site-icons</h1>
+    <p class="tagline" style="font-size:1.2rem;max-width:540px;margin:0 auto;">
+      One SVG → Every icon your site needs.<br>
+      Favicons, OG images, PWA icons, Apple touch icons, web app manifest — from a single command.
+    </p>
+    <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+      <a href="/downloads/site-icons/site-icons-1.0.0.tar.gz" class="btn btn-primary">📦 Download (tar.gz)</a>
+      <a href="#quickstart" class="btn btn-secondary">⚡ Quick start →</a>
+    </div>
+  </header>
+
+  <main style="max-width:800px;margin:0 auto;padding:0 1rem 3rem;">
+    <!-- CLI demo -->
+    <section>
+      <h2>How it works</h2>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> <span class="highlight">site-icons logo.svg -o my-icons</span></div>
+        <div><span class="output">site-icons v1.0.0 — Free tier</span></div>
+        <div><span class="output">Generated 4 files in my-icons/</span></div>
+        <div><span class="output">  favicon-16x16.png                         639 bytes</span></div>
+        <div><span class="output">  favicon-32x32.png                         719 bytes</span></div>
+        <div><span class="output">  favicon-48x48.png                         749 bytes</span></div>
+        <div><span class="output">  favicon.ico                             2,161 bytes</span></div>
+        <div><span class="output">  snippet.html                            1,097 bytes</span></div>
+        <br>
+        <div><span class="prompt">$</span> <span class="highlight">site-icons logo.svg -o my-icons --pro</span></div>
+        <div><span class="output">site-icons v1.0.0 — Pro tier</span></div>
+        <div><span class="output">Generated 17 files in my-icons/</span></div>
+        <div><span class="output">  (favicons + OG image + PWA + Apple + tile icons + manifest + XML + HTML)</span></div>
+      </div>
+    </section>
+
+    <!-- Quick start -->
+    <section id="quickstart">
+      <h2>Quick start</h2>
+      <p>You need <strong>Python 3.9+</strong> and <strong>Pillow</strong> installed. For SVG input, you also need <code>rsvg-convert</code> (install via <code>brew install librsvg</code> on macOS, or <code>apt install librsvg2-bin</code> on Linux).</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> pip install Pillow</div>
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/site-icons/site-icons-1.0.0.tar.gz</span></div>
+        <div><span class="prompt">$</span> tar xzf site-icons-1.0.0.tar.gz</div>
+        <div><span class="prompt">$</span> cd site-icons-1.0.0</div>
+        <div><span class="prompt">$</span> python3 site_icons.py your-logo.svg -o icons --pro</div>
+      </div>
+      <p style="margin-top:1rem;">Or just download the single file:</p>
+      <div class="cli-demo">
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/site-icons/site_icons.py</span></div>
+        <div><span class="prompt">$</span> python3 site_icons.py logo.svg -o icons</div>
+      </div>
+    </section>
+
+    <!-- Tiers -->
+    <section>
+      <h2>Tiers</h2>
+      <div class="tier-grid">
+        <div class="tier-card">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>3 favicon PNGs (16, 32, 48)</li>
+            <li>favicon.ico</li>
+            <li>HTML &lt;head&gt; snippet</li>
+            <li>SVG + PNG input</li>
+          </ul>
+          <a href="/downloads/site-icons/site_icons.py" class="btn btn-secondary" style="text-decoration:none;">Download free →</a>
+        </div>
+        <div class="tier-card pro">
+          <h3>Pro</h3>
+          <div class="price">$29</div>
+          <span style="font-size:0.8rem;color:#94a3b8;">one-time</span>
+          <ul>
+            <li>Everything in Free, plus:</li>
+            <li>Apple touch icons (152, 167, 180)</li>
+            <li>PWA icons (192, 512)</li>
+            <li>Windows tile icons + browserconfig.xml</li>
+            <li>OG image (1200×630) with text overlay</li>
+            <li>web app manifest.json</li>
+            <li><strong>Coming —</strong> available when Lemon Squeezy is set up</li>
+          </ul>
+          <span class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Available soon</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section>
+      <h2>Why use it?</h2>
+      <ul>
+        <li><strong>CLI-first</strong> — no web UI, no upload, no clicking. One command, all icons.</li>
+        <li><strong>Offline</strong> — zero network calls. Your logo never leaves your machine.</li>
+        <li><strong>Single source of truth</strong> — one SVG generates everything. Change the logo, re-run, done.</li>
+        <li><strong>CI-ready</strong> — integrate into your build pipeline. Re-generate icons on every deploy.</li>
+        <li><strong>Universal</strong> — Python 3.9+, works on macOS, Linux, Windows (with rsvg-convert).</li>
+      </ul>
+    </section>
+
+    <!-- Output -->
+    <section>
+      <h2>Output structure</h2>
+      <div class="cli-demo">
+        <div>icons/</div>
+        <div>├── favicon.ico                    <span style="color:#64748b;">(multi-res: 16, 32, 48)</span></div>
+        <div>├── favicon-16x16.png</div>
+        <div>├── favicon-32x32.png</div>
+        <div>├── favicon-48x48.png</div>
+        <div>├── apple-touch-icon-152x152.png  <span style="color:#64748b;">(Pro)</span></div>
+        <div>├── apple-touch-icon-167x167.png  <span style="color:#64748b;">(Pro)</span></div>
+        <div>├── apple-touch-icon-180x180.png  <span style="color:#64748b;">(Pro)</span></div>
+        <div>├── icon-192x192.png              <span style="color:#64748b;">(Pro, PWA)</span></div>
+        <div>├── icon-512x512.png              <span style="color:#64748b;">(Pro, PWA)</span></div>
+        <div>├── icon-70x70.png                <span style="color:#64748b;">(Pro, tile)</span></div>
+        <div>├── icon-150x150.png              <span style="color:#64748b;">(Pro, tile)</span></div>
+        <div>├── icon-310x310.png              <span style="color:#64748b;">(Pro, tile)</span></div>
+        <div>├── mstile-256x256.png            <span style="color:#64748b;">(Pro, tile)</span></div>
+        <div>├── og-image.png                  <span style="color:#64748b;">(Pro, 1200×630)</span></div>
+        <div>├── manifest.json                 <span style="color:#64748b;">(Pro)</span></div>
+        <div>├── browserconfig.xml             <span style="color:#64748b;">(Pro)</span></div>
+        <div>└── snippet.html                  <span style="color:#64748b;">(copy-paste into &lt;head&gt;)</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>site-icons by <a href="/">Passiv</a> · MIT license · Pro license for commercial use</p>
+  </footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+<script src="/track.js"></script>
+</body>
+</html>

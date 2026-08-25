@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gratis tilgængelighedsværktøjer 2026 — hvad fanger hver af dem?</title>
+<meta name="description" content="Sammenligning af de bedste gratis tilgængelighedsværktøjer: WAVE, axe DevTools, Lighthouse, Accessibility Insights, skærmlæsere og automatiske scannere — hvad hver enkelt fanger, og hvad ingen af dem fanger.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gratis tilgængelighedsværktøjer 2026 — hvad fanger hver af dem?">
+<meta property="og:description" content="WAVE, axe DevTools, Lighthouse og flere: hvad fanger hvert gratis tilgængelighedsværktøj reelt — og hvorfor automatisering kun dækker en tredjedel?">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/gratis-tilgaengelighedsvaerktoejer">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/gratis-tilgaengelighedsvaerktoejer"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/gratis-tilgaengelighedsvaerktoejer">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/free-accessibility-testing-tools">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Gratis tilgængelighedsværktøjer 2026 — hvad fanger hver af dem?", "description": "Sammenligning af de bedste gratis tilgængelighedsværktøjer: WAVE, axe DevTools, Lighthouse, Accessibility Insights, skærmlæsere og automatiske scannere — hvad hver enkelt fanger, og hvad ingen af dem fanger.", "url": "https://hermes-passiv.pages.dev/da/blog/gratis-tilgaengelighedsvaerktoejer", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er det bedste gratis tilgængelighedsværktøj?", "acceptedAnswer": {"@type": "Answer", "text": "Det afhænger af opgaven. WAVE er det hurtigste visuelle overblik over en enkelt side, axe DevTools er standarden i dev-værktøjer og CI-pipelines, og Lighthouse giver en samlet score direkte i Chrome. Brug to af dem — de fanger delvis overlappende fejl."}}, {"@type": "Question", "name": "Kan automatiske tests erstatte manuel test?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Automatiske scannere fanger typisk 25–35 % af WCAG-problemerne. Alt med kontekst kræver et menneske: om alt-teksten er fornuftig, om rækkefølgen giver mening med tastatur, om formular-fejlbeskeder er forståelige, og om sidens struktur fungerer med skærmlæser."}}, {"@type": "Question", "name": "Hvordan tester jeg med en skærmlæser uden at købe noget?", "acceptedAnswer": {"@type": "Answer", "text": "Windows: NVDA er gratis og open source (VoiceOver følger med macOS og iOS). Lær tre grundkommandoer: pil ned for at læse videre, Tab for at hoppe mellem interaktive elementer, og headings-navigation (H-tasten i NVDA). Navigerer du selv rundt i din side på under to minutter, passer strukturen nok."}}, {"@type": "Question", "name": "Hvad med EAA — er et automatisk tjek nok til loven?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Europas tilgængelighedslov stiller WCAG 2.1 AA-krav, og opfyldelse dokumenteres ikke alene med et scanner-resultat. Brug scannere til at finde de tekniske fejl hurtigt, og supér med manuel tastatur- og skærmlæsertest. Se også guiden om EAA-frister."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">TILGÆNGELIGHED &middot; VÆRKTØJSOVERSIGT</div>
+    <h1>Gratis Tilgængeligheds<br>Værktøjer — Oversigt 2026</h1>
+    <p class="subtitle">Automatiske værktøjer fanger omkring en tredjedel af WCAG-problemerne — men de rigtige tre fanger det meste af det der tæller. Her er hvad hver af dem faktisk kan, og hvad du stadig selv skal teste.</p>
+    <div class="hero-cta">
+      <a href="/scan-da" class="btn-primary">Scan din side nu &rarr;</a>
+      <a href="#oversigt" class="btn-secondary">Se oversigten</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="products" id="oversigt">
+  <div class="container">
+    <h2>Oversigten: seks gratis værktøjer</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>1️⃣ WAVE (browserudvidelse)</h3><p>Viser fejl <em>på selve siden</em> med ikoner: manglende alt-tekst, lav kontrast, brudte ARIA-attributter, tomme knapper. Bedst til at se problemet i sin kontekst. Gratis fra WebAIM.</p></div>
+      <div class="card"><h3>2️⃣ axe DevTools</h3><p>Udviklernes standard. Kører i browserens devtools, giver regelmæssige, falsk-positive-fattige resultater og har en gratis kerne. Kan bygges direkte ind i automatiserede tests (axe-core).</p></div>
+      <div class="card"><h3>3️⃣ Lighthouse</h3><p>Bygget ind i Chrome. Én tilgængeligheds-score plus konkrete fund: kontrast, ARIA, labels, navne på knapper. Godt første tjek — men kun ét snapshot af én side.</p></div>
+      <div class="card"><h3>4️⃣ Accessibility Insights for Web</h3><p>Microsofts gratis værktøj. FastPass gennemgår de mest kritiske automatiske tjek, og Assessment guer dig trin for trin igennem manuelle WCAG-kriterier.</p></div>
+      <div class="card"><h3>5️⃣ Skærmlæsere (NVDA/VoiceOver)</h3><p>Den eneste måde at opleve sitet som blinde brugere gør. NVDA er gratis på Windows; VoiceOver følger med macOS/iOS. Ikke et tjek — en øvelse der afslører strukturelle problemer scannere aldrig ser.</p></div>
+      <div class="card"><h3>6️⃣ Automatiske helhedsscannere</h3><p>Værktøjer som den gratis <a href="/scan-da" style="color:var(--color-accent);">Accessibility Scanner</a> tager en hel URL og lister alle kontrast-, overskrifts-, alt-tekst- og formulartjek i én rapport — praktisk til status før en leverance.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad ingen af dem fanger</h2>
+    <ul>
+      <li><strong>Kvalitet i alt-tekster</strong> — scanneren ser at alt-teksten findes, ikke om den giver mening.</li>
+      <li><strong>Tastatur-logik</strong> — om tab-rækkefølgen og fokus-indikatorerne følger sidens visuelle flow.</li>
+      <li><strong>Forståelige fejlbeskeder</strong> — om formularen fortæller brugeren hvad der skal rettes, og hvor.</li>
+      <li><strong>Mening</strong> — om overskrifterne afspejler indholdets hierarki, og om teksten er skrevet klart.</li>
+    </ul>
+    <p>Derfor: lad scannere finde de tekniske fejl (det klarer de bedre og hurtigere end
+    mennesker), og brug 15 minutter med tastatur og skærmlæser på de vigtigste sider.
+    Sammen dækker det det meste af WCAG AA.</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/scan-da" class="btn-primary">Start med et scan &rarr;</a>
+      &nbsp;
+      <a href="/blog/eaa-accessibility-checklist" class="btn-secondary">Eller tag EAA-checklisten</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er det bedste gratis tilgængelighedsværktøj?</h3><p>Det afhænger af opgaven. WAVE er det hurtigste visuelle overblik over en enkelt side, axe DevTools er standarden i dev-værktøjer og CI-pipelines, og Lighthouse giver en samlet score direkte i Chrome. Brug to af dem — de fanger delvis overlappende fejl.</p></div>
+      <div class="card"><h3>Kan automatiske tests erstatte manuel test?</h3><p>Nej. Automatiske scannere fanger typisk 25–35 % af WCAG-problemerne. Alt med kontekst kræver et menneske: om alt-teksten er fornuftig, om rækkefølgen giver mening med tastatur, om formular-fejlbeskeder er forståelige, og om sidens struktur fungerer med skærmlæser.</p></div>
+      <div class="card"><h3>Hvordan tester jeg med en skærmlæser uden at købe noget?</h3><p>Windows: NVDA er gratis og open source (VoiceOver følger med macOS og iOS). Lær tre grundkommandoer: pil ned for at læse videre, Tab for at hoppe mellem interaktive elementer, og headings-navigation (H-tasten i NVDA). Navigerer du selv rundt i din side på under to minutter, passer strukturen nok.</p></div>
+      <div class="card"><h3>Hvad med EAA — er et automatisk tjek nok til loven?</h3><p>Nej. Europas tilgængelighedslov stiller WCAG 2.1 AA-krav, og opfyldelse dokumenteres ikke alene med et scanner-resultat. Brug scannere til at finde de tekniske fejl hurtigt, og supér med manuel tastatur- og skærmlæsertest. Se også guiden om EAA-frister.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Scan din side gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/blog/accessibility-scanner-cli" lang="en">Scanner som CLI (engelsk)</a> &middot; <a href="/da/blog/wcag-kontrast-checker" lang="da">WCAG Kontrast-Checker</a> &middot; <a href="/da/blog/tekst-paa-billede-kontrasttjek" lang="da">Tekst-på-billede-tjek</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/scan-da">Scanner</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

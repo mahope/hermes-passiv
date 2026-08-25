@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run extension logic tests
+        run: node tools/test_clean_copy.js
+      - name: Manifest sanity (MV2 Firefox)
+        run: |
+          node -e "
+            const m = require('./manifest.json');
+            if (!m.version) throw new Error('no version');
+            if (![2,3].includes(m.manifest_version)) throw new Error('unexpected manifest_version: ' + m.manifest_version);
+            console.log('✅ manifest ok:', m.name, m.version);
+          "

@@ -1,0 +1,15 @@
+node_modules/
+dist/build/
+*.log
+!tools/*.log
+passiv-nohup.log
+__pycache__/
+clean-copy-repo/
+clean-copy-cli/
+homebrew-clean-copy/
+desktop/dist/
+desktop/node_modules/
+.venv/
+.wrangler/
+*.egg-info/
+.DS_Store

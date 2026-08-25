@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wix Accessibility Check — Free WCAG/EAA Site Scan</title>
+<meta name="description" content="Free automated accessibility scan for Wix websites. Check alt text, colour contrast, link text, headings and forms against WCAG 2.1 AA instantly.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Wix Accessibility Check — Free WCAG/EAA Scan">
+<meta property="og:description" content="Scan your Wix site for WCAG 2.1 AA failures. Free instant results, platform-specific fixes.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/guides/wix-accessibility-check">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wix Accessibility Check — Free WCAG/EAA Scan">
+<meta name="twitter:description" content="Scan your Wix site for WCAG 2.1 AA failures. Free instant results, platform-specific fixes.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Wix Accessibility Check — Free WCAG/EAA Site Scan">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/guides/wix-accessibility-check"
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/guides/wix-accessibility-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does the EAA apply to Wix websites?","acceptedAnswer":{"@type":"Answer","text":"Yes. If your Wix site offers services or products to the public in the EU, WCAG 2.1 AA compliance is expected under the EAA."}},{"@type":"Question","name":"What does the scanner check on Wix sites?","acceptedAnswer":{"@type":"Answer","text":"16 rules: image alt text, form labels, link/button text, heading hierarchy, language attribute, colour contrast, and more."}},{"@type":"Question","name":"Where do I fix common issues in Wix?","acceptedAnswer":{"@type":"Answer","text":"Alt text: click image → Settings → alt text field. Text contrast: Text Settings → Color. Headings: Editor → Text → Heading levels."}},{"@type":"Question","name":"Is Wix's built-in accessibility tool enough?","acceptedAnswer":{"@type":"Answer","text":"No. Wix's Accessibility Wizard helps but doesn't guarantee EAA compliance. A third-party scan catches what the built-in tool misses."}},{"@type":"Question","name":"What is Wix Accessibility Wizard and what does it check?","acceptedAnswer":{"@type":"Answer","text":"Wix's built-in Accessibility Wizard scans for alt text, heading hierarchy, and contrast on the page you are editing. It does NOT check link text quality, form label visibility, ARIA misuse, colour contrast at run time, or multi-page consistency — exactly the gaps a third-party scanner fills."}},{"@type":"Question","name":"How do I maintain EAA compliance after a Wix template or app update?","acceptedAnswer":{"@type":"Answer","text":"Re-scan after every template change, new app install, or theme update. Keep a log of scan results per page so you can prove ongoing compliance when an enterprise partner or enforcement body asks."}}],"name":"Wix Accessibility Check","url":"https://hermes-passiv.pages.dev/guides/wix-accessibility-check"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">FREE GUIDE</div>
+    <h1>Wix Accessibility Check</h1>
+    <p class="subtitle">Selling or serving customers in the EU? The EAA expects WCAG 2.1 AA. See how your Wix site scores right now.</p>
+    <div class="hero-cta">
+      <a href="/scan#url=https%3A%2F%2Fwww.wix.com" class="btn-primary">Run a Free Scan on wix.com</a>
+      <a href="#how" class="btn-secondary">How It Works</a>
+      <span class="hero-note">16 checks · No signup · Results in seconds</span>
+    </div>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why Wix accessibility matters in the EU</h2>
+    <p>The European Accessibility Act (EAA) applies to e-commerce and consumer-facing services in the EU. If your Wix store sells to EU customers, WCAG 2.1 AA compliance is expected — and enterprise partners increasingly ask for proof before they sign.</p>
+    <p>Most accessibility problems on Wix sites come from a handful of repeating issues: missing alt text on product images, generic link text like "read more", low-contrast text over theme colours, empty form labels, and missing page language. All of these are detectable automatically — that's what our scanner checks.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+    </div>
+
+    <h3 style="margin-top:36px;">Wix is not like WordPress or Shopify — and that changes how you fix things</h3>
+    <p>Wix is a closed, fully hosted platform. You cannot drop into the server, edit the HTML <code>&lt;head&gt;</code> directly, or install a single universal accessibility plugin the way you can on WordPress. Every fix happens inside Wix's own editor — the Wix Editor or Wix Studio — using the tools they provide. That means some standard accessibility fixes (skip links, ARIA labels on custom components, semantic landmark regions) require workarounds or custom code via <strong>Velo by Wix</strong> (formerly Corvid), Wix's development environment.</p>
+    <p>Wix also has a large third-party app ecosystem (apps from the Wix App Market). Each app brings its own HTML, styles, and scripts — and many are not built with accessibility in mind. A checkout form from one app and a reviews widget from another can introduce contrast failures, unlabelled buttons, or keyboard traps that Wix's own editor never touches. This makes regular automated scanning even more important.</p>
+
+    <h3 style="margin-top:28px;">Wix Editor vs Wix Studio</h3>
+    <p>If you built your site in the classic <strong>Wix Editor</strong>, accessibility settings live in the same familiar toolbar — click an element, open Settings, find the Accessibility or Design tab. <strong>Wix Studio</strong> (the newer, more powerful builder) gives you deeper control over responsive breakpoints, CSS variables, and custom code, but the core accessibility workflow is the same: images get alt text in their settings panel, text colours and heading levels are adjusted per element, and forms are configured through the form builder.</p>
+
+    <h3 style="margin-top:28px;">What Wix's Accessibility Wizard does — and doesn't — catch</h3>
+    <p>Wix provides a built-in <strong>Accessibility Wizard</strong> accessible from the Editor toolbar (Tools → Accessibility Wizard — or the accessibility icon in the top bar). The wizard checks for missing alt text, heading hierarchy, and basic contrast on the <em>current page</em>. It's a useful starting point, but it has significant gaps:</p>
+    <ul style="line-height:1.8;margin-top:12px;">
+      <li><strong>It checks one page at a time</strong> — not your whole site. A 50-page store needs 50 manual runs.</li>
+      <li><strong>It does not evaluate link text.</strong> "Click here" and "Read more" pass the wizard's check.</li>
+      <li><strong>It does not test form label visibility</strong> — labels that exist in the code but are visually hidden pass without warning.</li>
+      <li><strong>It does not detect ARIA misuse</strong> — improper roles or duplicated labels that confuse screen readers.</li>
+      <li><strong>It does not catch colour contrast issues</strong> that depend on runtime background images or layered elements.</li>
+      <li><strong>It ignores third-party app content.</strong> If an app injects unstyled HTML, the wizard won't flag it.</li>
+    </ul>
+    <p>The bottom line: the Accessibility Wizard helps you find the low-hanging fruit, but a <a href="/scan" style="color:var(--color-accent);">third-party automated scan</a> covers every page on your site in seconds and catches the gaps the wizard leaves open.</p>
+  </div>
+</section>
+
+<section class="problem" id="how">
+  <div class="container">
+    <h2>How to check your Wix site</h2>
+    <ol style="line-height:2;">
+      <li><strong>Open the <a href="/scan" style="color:var(--color-accent);">free EAA/WCAG scanner</a>.</strong></li>
+      <li><strong>Paste your Wix URL</strong> — any published page: home, a product page, or a collection page.</li>
+      <li><strong>Read your grade.</strong> Each finding shows the exact element and why it matters, so fixes are concrete, not vague advice.</li>
+      <li><strong>Fix and re-scan.</strong> In Wix, most image-alt and contrast issues are fixed right in the editor or theme settings. Re-run the scan to confirm.</li>
+      <li><strong>Copy the shareable link</strong> from the result page — useful when a client or colleague needs to see the findings.</li>
+    </ol>
+    <div style="margin-top:32px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Wix Site Now — Free</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Common fixes in Wix</h2>
+    <p>When your scan flags a failing rule, here's where to fix it in the Wix Editor:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <tr style="background:var(--color-surface-2);"><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Issue</th><th style="padding:10px;text-align:left;border-bottom:1px solid var(--color-border);">Where to fix in Wix</th></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing alt text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the image → Settings (gear icon) → Accessibility → Alt Text field. Images uploaded via Wix Media Manager also have alt text fields.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Low contrast text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the text element → Settings panel → Design → Text colour. Wix's default palettes can produce low contrast — test with a contrast checker.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing heading structure</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click a heading element → Settings → Design → Heading level (H1-H3). Wix limits heading levels in the editor; use the correct hierarchy (one H1, then H2, then H3).</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Empty form labels</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Wix forms use fields with built-in labels. Check each field in the form editor — ensure the label text is visible, not hidden.</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Generic link text</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Click the link/text → Link icon → edit the visible text. Replace "Click here" with descriptive text like "View our size guide".</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid var(--color-border);">Missing skip-to-content</td><td style="padding:10px;border-bottom:1px solid var(--color-border);">Wix doesn't include a skip link by default. Add it via a Site Element (HTML embed) with code: <code>&lt;a href="#main-content" class="skip-link"&gt;Skip to content&lt;/a&gt;</code>. Set CSS position absolute.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Wix-specific tools & fixes</h2>
+    <p>Beyond the common fixes table above, Wix has platform-specific features and settings that directly affect your WCAG score. Here is what to look for and where to find it.</p>
+
+    <h3 style="margin-top:28px;">Wix Accessibility Wizard</h3>
+    <p>Open the Wix Editor, click the accessibility icon (stick figure) in the top toolbar, or go to Tools → Accessibility Wizard. The wizard walks you through each page and flags missing alt text, broken heading order, and low-contrast text. Run it on every page as your first pass, then follow up with our scanner to catch what the wizard misses. Expect the wizard to take 5–10 minutes per page on a typical site. For a 20-page storefront, that is over two hours of manual work — a good reason to use an automated bulk scan for the follow-up pass.</p>
+
+    <h3 style="margin-top:28px;">Wix SEO settings for language</h3>
+    <p>WCAG 2.1 requires a <code>lang</code> attribute on every page. Wix sets this automatically based on your site's primary language (Settings → Language & Region). If you run a multi-language site via <strong>Wix Multilingual</strong>, verify that each language variant declares its own language code. The SEO dashboard (Marketing & SEO → SEO Tools) also lets you inspect the HTML <code>&lt;head&gt;</code> snippet for each page — a quick place to confirm the <code>lang</code> attribute is present. Missing or wrong <code>lang</code> attributes are an automatic WCAG failure.</p>
+
+    <h3 style="margin-top:28px;">Wix Forms accessibility</h3>
+    <p>Wix Forms (available as a built-in element in the Editor) generates form fields with HTML <code>&lt;label&gt;</code> elements automatically — but only if you fill in the field's label text in the form builder. If you use a Custom HTML form embed instead of the native Wix Forms element, you must add <code>&lt;label&gt;</code> tags yourself. For native Wix forms: click the form → Settings → Fields → verify each field has visible label text. Empty or hidden labels fail WCAG 4.1.2 (Name, Role, Value).</p>
+
+    <h3 style="margin-top:28px;">Wix Stores product image alt text</h3>
+    <p>E-commerce sites are the most common Wix use case under EAA scrutiny. For every product in <strong>Wix Stores</strong>, each image gets an alt text field when you upload it via Product Settings → Media. Make alt text descriptive: "Organic cotton T-shirt in forest green, front view" not just "TSHIRT1". Wix also uses product images in gallery layouts and lightbox views — the same alt text propagates across those contexts, so one good description covers multiple display modes. Alt text is always required for WCAG 1.1.1 (Non-text Content). Our scanner flags every image missing alt text on any page of your site, including product collection pages.</p>
+
+    <h3 style="margin-top:28px;">Wix Video & Media accessibility</h3>
+    <p>Videos embedded via <strong>Wix Video</strong> or the Wix Media Player need captions and transcripts to meet WCAG 1.2 (Time-based Media). Wix does not auto-generate captions — you must upload a VTT or SRT file in the video settings panel (click the video element → Settings → Captions). For audio-only content (podcasts, music samples), provide a transcript below the player as text. If you embed YouTube or Vimeo videos, use their built-in caption tools and confirm the player is keyboard-operable. Many third-party video apps on the Wix App Market lack accessibility features entirely — test them with our scanner after installing.</p>
+
+    <h3 style="margin-top:28px;">Colour contrast in Wix themes</h3>
+    <p>Wix themes and templates ship with preset colour palettes that look modern but can fail WCAG 2.1 AA contrast ratio standards (4.5:1 for normal text, 3:1 for large text). The <strong>Site Design</strong> panel (Editor → Site Design → Colours) lets you customise every palette colour. After changing a colour, re-scan the page — our scanner measures contrast on the rendered output, catching overlay and transparency combinations that a design tool alone would miss. Pay special attention to footer text, mobile menu text, and button text on gradient or image backgrounds.</p>
+
+    <h3 style="margin-top:28px;">Velo by Wix custom code accessibility</h3>
+    <p>If you use <strong>Velo by Wix</strong> (the development environment) to add custom interactions, API requests, or dynamic content, you are responsible for that code's accessibility. Velo lets you inject HTML, CSS, and JavaScript into Wix pages. Common Velo-induced issues include: dynamically generated images without alt text, custom buttons with no ARIA role or accessible name, modal popups that trap keyboard focus, and AJAX-loaded content that doesn't announce updates to screen readers. Review any Velo code with the <a href="/scan" style="color:var(--color-accent);">scanner</a> and test manually with a screen reader before publishing.</p>
+
+    <h3 style="margin-top:28px;">Third-party app ecosystem risks</h3>
+    <p>The <strong>Wix App Market</strong> offers hundreds of apps — booking widgets, reviews, chat, analytics, cookie consent — that inject their own markup. Each app can introduce accessibility failures that Wix's own tools cannot fix. Before installing any app:</p>
+    <ul style="line-height:1.8;margin-top:8px;">
+      <li><strong>Scan the app's demo page</strong> with our scanner to check for basic failures.</li>
+      <li><strong>Look for an accessibility section</strong> in the app's documentation or support page.</li>
+      <li><strong>Test keyboard navigation</strong> — can you tab through all the app's elements and activate them with Enter/Space?</li>
+      <li><strong>Re-scan after installation.</strong> Run the scanner on every page where the app appears. An app that is fine in isolation can break when layered on your theme.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Maintaining EAA compliance on Wix</h2>
+    <p>Wix sites change often — templates are swapped, new apps are added, blog posts are published, and seasonal promotions update the home page. Each change risks introducing new accessibility failures. EAA compliance is not a one-time audit; it is an ongoing process. Here is how to keep your Wix site compliant over time.</p>
+
+    <h3 style="margin-top:28px;">Re-scan after every template change</h3>
+    <p>Wix templates (theme changes, layout swaps, or even a palette update) can reset heading structures, change contrast ratios, or strip alt text from images. After any template or Site Design change, run a full scan on your home page, product pages, and the top three landing pages. Keep a screenshot or PDF of each scan result so you have a timestamped compliance record.</p>
+
+    <h3 style="margin-top:28px;">App review checklist</h3>
+    <p>Every time you install or update a Wix App Market add-on:</p>
+    <ul style="line-height:1.8;margin-top:8px;">
+      <li>Scan the page(s) where the app appears before and after installation.</li>
+      <li>Verify the app does not remove or override your existing accessible content (e.g., product alt text).</li>
+      <li>Test the app with keyboard-only navigation — especially forms, popups, and carousels.</li>
+      <li>If the app adds a cookie consent banner, confirm it is dismissible and keyboard-operable. A banner that traps keyboard focus is a WCAA failure under 2.1.1 (Keyboard).</li>
+      <li>Remove or replace any app that introduces failures you cannot patch through Wix's own settings.</li>
+    </ul>
+
+    <h3 style="margin-top:28px;">Blog & post content governance</h3>
+    <p>If your Wix site includes a blog (via <strong>Wix Blog</strong>), every new post is a compliance risk. Blog posts created by content editors often contain:</p>
+    <ul style="line-height:1.8;margin-top:8px;">
+      <li>Images uploaded without alt text.</li>
+      <li>Tables without proper headers or scope attributes.</li>
+      <li>External links with generic anchor text.</li>
+      <li>Embedded videos or social media widgets without captions.</li>
+      <li>Coloured text that inherits theme colours at the wrong contrast ratio.</li>
+    </ul>
+    <p>Create a simple editorial checklist for anyone who publishes blog posts: (1) every image needs descriptive alt text, (2) links must describe their destination, (3) headings must follow H1 → H2 → H3 order, (4) embedded media requires a transcript or caption. Schedule a monthly re-scan of your blog archive to catch regressions.</p>
+
+    <h3 style="margin-top:28px;">Document your compliance trail</h3>
+    <p>Enterprise partners and EU enforcement bodies may ask for evidence of ongoing compliance. Keep a simple log: the date, the URL scanned, the scanner grade, and what you fixed. Our scanner produces a shareable results page — bookmark or save those URLs. A documented history of monthly scans and fixes is the strongest defense if a complaint is filed.</p>
+
+    <h3 style="margin-top:28px;">Set a recurring scan schedule</h3>
+    <p>We recommend scanning your Wix site at least once a month and after every significant change. Key trigger events for a scan:</p>
+    <ul style="line-height:1.8;margin-top:8px;">
+      <li><strong>Template or theme update</strong> — colour and layout changes cascade across every page.</li>
+      <li><strong>New app installation</strong> — third-party code is the most common source of new failures.</li>
+      <li><strong>New blog post or page published</strong> — content editors often skip accessibility steps.</li>
+      <li><strong>Product catalogue update</strong> — new product images, descriptions, and categories need alt text and heading checks.</li>
+      <li><strong>Seasonal campaign launch</strong> — promotional pages, countdown timers, and popups all need review.</li>
+      <li><strong>Quarterly compliance review</strong> — even without changes, re-scan to catch anything that was missed or regressed.</li>
+    </ul>
+    <div style="margin-top:24px;text-align:center;">
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Scan Your Wix Site — It Takes 30 Seconds</a>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Related reading</h2>
+    <p>Dig deeper into the compliance work that comes after the scan:</p>
+    <ul style="line-height:2;margin-top:12px;">
+        <li><a href="/blog/wix-eaa-accessibility" style="color:var(--color-accent);">Wix Accessibility: An EAA Compliance Guide</a></li>
+        <li><a href="/blog/eaa-accessibility-checklist" style="color:var(--color-accent);">The EAA Accessibility Checklist</a></li>
+        <li><a href="/blog/wcag-22-what-changes" style="color:var(--color-accent);">WCAG 2.2: What Changes and Why It Matters</a></li>
+        <li><a href="/blog/how-to-write-accessibility-statement" style="color:var(--color-accent);">How to Write an Accessibility Statement</a></li>
+    </ul>
+  </div>
+</section>
+<section class="problem">
+  <div class="container">
+    <h2>Go deeper</h2>
+    <p>Automated scanning catches roughly a third of accessibility issues — but it catches the ones that are cheapest to fix first. When you want the full picture, our complete guide covers the full WCAG 2.1 AA checklist applied to Wix, manual testing workflows for Velo custom code and third-party apps, a 14-day fix plan tailored to Wix's editor constraints, and guidance on preparing an accessibility statement for EAA compliance. Bookmark this guide and re-visit it as Wix's platform evolves — new editor features sometimes change where settings live, and our scanner keeps pace with the latest WCAG expectations.</p>
+
+    <h3 style="margin-top:28px;">Related resources</h3>
+    <ul style="line-height:2;margin-top:8px;">
+      <li><a href="/" style="color:var(--color-accent);">All EAA Compliance Guides</a> — compare Wix against Shopify, Squarespace, and WordPress approaches.</li>
+      <li><a href="/wordpress-plugin" style="color:var(--color-accent);">Free WordPress Plugin</a> — automated scanning built into your WP admin dashboard.</li>
+      <li><a href="/scan" style="color:var(--color-accent);">Free WCAG/EAA Scanner</a> — 16 automated checks, no signup, results in seconds.</li>
+      <li><a href="https://support.wix.com/en/article/accessibility-using-the-accessibility-wizard" style="color:var(--color-accent);" rel="noopener noreferrer">Wix Accessibility Wizard Documentation</a> — official guide from Wix.</li>
+      <li><a href="https://www.w3.org/WAI/WCAG22/quickref/" style="color:var(--color-accent);" rel="noopener noreferrer">WCAG 2.2 Quick Reference</a> — the official success criteria from W3C.</li>
+    </ul>
+
+    <h3 style="margin-top:28px;">FAQ</h3>
+    <dl style="margin-top:12px;line-height:1.8;">
+      <dt style="font-weight:600;margin-top:16px;">Does Wix have built-in accessibility features?</dt>
+      <dd>Yes. Wix provides an Accessibility Wizard, editable alt text fields, heading level selection, and contrast settings in the Editor. However, none of these guarantee full WCAG 2.1 AA compliance — especially across third-party app content and multi-page sites.</dd>
+      <dt style="font-weight:600;margin-top:16px;">Can I make a Wix site fully WCAG 2.1 AA compliant?</dt>
+      <dd>Most Wix sites can reach compliance with careful editing, Velo custom code for structural fixes (skip links, landmarks, focus management), and careful app selection. The Wix Editor imposes some constraints (limited heading levels, no direct HTML access) that require workarounds on certain success criteria.</dd>
+      <dt style="font-weight:600;margin-top:16px;">Does Wix offer an accessibility statement template?</dt>
+      <dd>Wix does not include an accessibility statement generator. You will need to draft your own statement describing your compliance level, the tools you use (including our scanner), and a contact method for accessibility feedback. The EAA expects this statement on your site.</dd>
+      <dt style="font-weight:600;margin-top:16px;">How often should I scan my Wix site?</dt>
+      <dd>At least monthly, and after every template change, app installation, theme update, or content publication. Each change is a compliance risk point.</dd>
+    </dl>
+    <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <a href="/accessibility-statement-generator" class="btn-secondary" style="display:inline-block;">Free Statement Generator</a>
+      <a href="/" class="btn-secondary" style="display:inline-block;">All Compliance Guides</a>
+      <a href="/wordpress-plugin" class="btn-secondary" style="display:inline-block;">Free WordPress Plugin</a>
+      <a href="/scan" class="btn-primary" style="display:inline-block;">Free Scanner</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

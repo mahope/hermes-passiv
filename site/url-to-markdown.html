@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL to Markdown Converter — Turn any web page into clean Markdown, free</title>
+  <meta name="description" content="Free online tool: paste a URL and get the page's main content back as clean Markdown. Works with articles, blog posts and docs. Nothing stored, no signup.">
+  <meta property="og:title" content="URL to Markdown Converter">
+  <meta property="og:description" content="Paste a URL, get the article as clean Markdown in seconds. Free, no signup, nothing stored.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hermes-passiv.pages.dev/url-to-markdown">
+  <meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="URL to Markdown Converter — Turn any web page into clean Markdown, free">
+  <meta name="twitter:description" content="Free online tool: paste a URL and get the page's main content back as clean Markdown. Works with articles, blog posts and docs. Nothing stored, no signup.">
+  <meta name="twitter:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+  <link rel="canonical" href="https://hermes-passiv.pages.dev/url-to-markdown">
+  <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/url-to-markdown">
+  <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/url-til-markdown">
+  <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/url-to-markdown">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <link rel="stylesheet" href="/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "URL to Markdown Converter",
+    "url": "https://hermes-passiv.pages.dev/url-to-markdown",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "description": "Convert any public web page's main content into clean Markdown by entering its URL."
+  }
+  </script>
+  <style>
+    .tool-wrap { max-width: 900px; margin: 0 auto; padding: 1rem; }
+    #url-form { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1.4rem 0; }
+    #url-input {
+      flex: 1; min-width: 240px; padding: .75rem .9rem;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      background: var(--color-surface); color: var(--color-text);
+      font-size: .95rem;
+    }
+    #output-box {
+      width: 100%; min-height: 380px; box-sizing: border-box; margin-top: 1rem;
+      border: 1px solid var(--color-border); border-radius: 10px;
+      background: var(--color-surface); color: var(--color-text);
+      padding: .9rem; font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace;
+      font-size: .85rem; line-height: 1.5; resize: vertical;
+    }
+    label { font-weight: 600; display: block; margin-bottom: .3rem; }
+    .btn-primary {
+      background: var(--color-accent, #2563eb); border: none; color: #fff;
+      padding: .65rem 1.3rem; border-radius: 8px; font-size: .95rem;
+      font-weight: 600; cursor: pointer;
+    }
+    .btn-secondary {
+      background: var(--color-surface-2, #f1f5f9); border: 1px solid var(--color-border);
+      color: var(--color-text); padding: .55rem 1.1rem; border-radius: 8px;
+      font-size: .9rem; cursor: pointer;
+    }
+    #status { font-size: .88rem; color: var(--color-text-muted); margin: .6rem 0; min-height: 1.2em; }
+    #status.ok { color: #16a34a; }
+    #status.err { color: #dc2626; }
+    .privacy-note {
+      display: flex; gap: .6rem; align-items: flex-start;
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: 10px; padding: .9rem 1.1rem; margin: 1.5rem 0;
+      font-size: .88rem; color: var(--color-text-muted);
+    }
+    details.faq { border-bottom: 1px solid var(--color-border); padding: .8rem 0; }
+    details.faq summary { cursor: pointer; font-weight: 600; }
+    details.faq p { color: var(--color-text-muted); font-size: .9rem; }
+    @media (max-width: 640px) { #url-form button[type="submit"] { width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="tool-wrap">
+    <nav aria-label="Breadcrumb" style="font-size:0.8rem;margin-bottom:1rem;">
+      <a href="/">Passiv</a> · <a href="/clean-copy">Clean Copy extension</a> ·
+      <a href="/clean-copy-tool">Web tool</a> ·
+      <a href="/da/url-til-markdown" hreflang="da" lang="da">Dansk version</a> ·
+      <span aria-current="page">URL to Markdown</span>
+    </nav>
+
+    <h1>URL to Markdown</h1>
+    <p class="lead">Enter a URL and get the page's main content back as clean Markdown.
+    Articles, docs and blog posts — headings, links, lists, tables and code blocks preserved,
+    ads and boilerplate gone.</p>
+
+    <form id="url-form">
+      <label for="url-input" class="sr-only" style="position:absolute;left:-9999px;">Page URL</label>
+      <input type="url" id="url-input" placeholder="https://example.com/article" required autocomplete="off">
+      <button type="submit" class="btn-primary" id="btn-go">Convert to Markdown</button>
+    </form>
+
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <label for="output-box">Markdown result</label>
+    <textarea id="output-box" readonly aria-live="polite"></textarea>
+
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem;">
+      <button type="button" class="btn-primary" id="btn-copy">Copy result</button>
+      <button type="button" class="btn-secondary" id="btn-download">Download as .md</button>
+      <span id="copy-status" role="status" style="font-size:.85rem;color:var(--color-text-muted);"></span>
+    </div>
+
+    <div class="privacy-note" role="note">
+      <span aria-hidden="true">🔒</span>
+      <span><strong>Nothing is stored.</strong> The page is fetched once to convert it for you.
+      We keep no copy of the content and no record of the URLs you enter. The conversion itself
+      runs in your browser.</span>
+    </div>
+
+    <h2>Why convert pages to Markdown?</h2>
+    <ul>
+      <li><strong>Feed your notes.</strong> Save any article into Obsidian, Notion or any Markdown-based tool.</li>
+      <li><strong>Train and prompt AI models.</strong> LLMs work best with clean structured text, not raw HTML.</li>
+      <li><strong>Migrate content.</strong> Move blog posts between CMSs without losing structure.</li>
+    </ul>
+
+    <h2>Frequently asked questions</h2>
+    <details class="faq">
+      <summary>Does it work on every website?</summary>
+      <p>It works on most public pages that are reachable without a login. Sites behind paywalls,
+      heavy JavaScript apps, or pages that block automated fetching may return an error.</p>
+    </details>
+    <details class="faq">
+      <summary>Is my data stored?</summary>
+      <p>No. The page's HTML is fetched, converted, and discarded immediately. Nothing is logged
+      or saved.</p>
+    </details>
+    <details class="faq">
+      <summary>How does this differ from pasting into the Clean Copy web tool?</summary>
+      <p>The <a href="/clean-copy-tool">web tool</a> cleans text you already have. This page
+      fetches the URL for you first, so you skip the copy step entirely.</p>
+    </details>
+    <details class="faq">
+      <summary>Can I do this from the command line?</summary>
+      <p>Yes — the free <strong>clean-copy</strong> CLI does the same conversion:
+      <code>brew install mahope/clean-copy/clean-copy</code>, then
+      <code>clean-copy --url https://example.com</code>.
+      <a href="/clean-copy#install">Full install instructions →</a></p>
+    </details>
+    <details class="faq">
+      <summary>Which elements are converted?</summary>
+      <p>Headings h1–h6, bold/italic, links, images, ordered and unordered lists including nesting,
+      fenced code blocks, inline code, tables (pipe-separated), paragraphs and horizontal rules.
+      Navigation, footers, scripts and styles are stripped.</p>
+    </details>
+
+    <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">
+      <p><a href="/blog/url-to-markdown-converter">Guide: how it works</a> · <a href="/clean-copy-tool">Clean Copy Web (paste text)</a> · <a href="/clean-copy-bookmarklet">Bookmarklet</a> ·
+      <a href="/clean-copy">Browser extension &amp; CLI</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
+    </footer>
+  </main>
+
+  <script src="/clean-copy-core.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var form = document.getElementById('url-form');
+    var input = document.getElementById('url-input');
+    var output = document.getElementById('output-box');
+    var statusEl = document.getElementById('status');
+    var copyStatus = document.getElementById('copy-status');
+    var goBtn = document.getElementById('btn-go');
+
+    function trackUse() {
+      try {
+        if (navigator.doNotTrack === '1') return;
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: '/url-to-markdown', event: 'convert' }),
+          keepalive: true
+        }).catch(function () {});
+      } catch (e) {}
+    }
+
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg;
+      statusEl.className = cls || '';
+    }
+
+    /* Same readability heuristic as the clean-copy CLI: strip scripts/styles/
+       nav/footer/aside/form/svg/iframe/comments, then keep the largest
+       article/main/div block with >200 visible characters. */
+    function extractReadable(html) {
+      var doc = html
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+        .replace(/<(script|style|noscript|link|meta)\b[^>]*\/?>/gi, '');
+      doc = doc.replace(/<(nav|footer|header|aside|form|svg|iframe)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+      var candidates = [];
+      var re = /<(article|main|div)\b[^>]*>/gi;
+      var m;
+      while ((m = re.exec(doc)) !== null) candidates.push(m.index);
+      var best = null, bestLen = 0;
+      for (var i = 0; i < candidates.length; i++) {
+        var start = candidates[i];
+        var openTagEnd = doc.indexOf('>', start);
+        var tag = doc.slice(start + 1, openTagEnd).split(/\s/)[0];
+        var closeIdx = doc.lastIndexOf('</' + tag + '>');
+        if (closeIdx <= openTagEnd) continue;
+        var inner = doc.slice(openTagEnd + 1, closeIdx);
+        var len = inner.replace(/<[^>]*>/g, '').length;
+        if (len > bestLen && len > 200) { best = inner; bestLen = len; }
+      }
+      return best || doc;
+    }
+
+    function slugFromUrl(u) {
+      try {
+        var p = new URL(u).pathname.split('/').filter(Boolean).pop() || 'page';
+        return p.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'page';
+      } catch (e) { return 'page'; }
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var target = input.value.trim();
+      if (!target) return;
+      setStatus('');
+      goBtn.disabled = true;
+      goBtn.textContent = 'Converting…';
+      fetch('/scan-proxy?url=' + encodeURIComponent(target))
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok || !res.j.ok) {
+            throw new Error(res.j && res.j.error ? res.j.error : 'Could not fetch that page.');
+          }
+          var md = CleanCopyCore.htmlToMarkdown(extractReadable(res.j.html));
+          if (!md || md.length < 20) throw new Error('No readable content found on that page.');
+          output.value = md.trim();
+          setStatus('Converted ' + md.length.toLocaleString() + ' characters.', 'ok');
+          trackUse();
+        })
+        .catch(function (err) {
+          setStatus(err.message || 'Something went wrong. Try another URL.', 'err');
+          output.value = '';
+        })
+        .finally(function () {
+          goBtn.disabled = false;
+          goBtn.textContent = 'Convert to Markdown';
+        });
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', function () {
+      if (!output.value) { copyStatus.textContent = 'Nothing to copy yet.'; return; }
+      navigator.clipboard.writeText(output.value).then(function () {
+        copyStatus.textContent = 'Copied to clipboard ✓';
+        setTimeout(function () { copyStatus.textContent = ''; }, 2500);
+      }, function () {
+        output.removeAttribute('readonly');
+        output.select(); document.execCommand('copy');
+        output.setAttribute('readonly', '');
+        copyStatus.textContent = 'Copied ✓';
+        setTimeout(function () { copyStatus.textContent = ''; }, 2500);
+      });
+    });
+
+    document.getElementById('btn-download').addEventListener('click', function () {
+      if (!output.value) return;
+      var blob = new Blob([output.value], { type: 'text/markdown' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = slugFromUrl(input.value) + '.md';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+    });
+  })();
+  </script>
+</body>
+</html>
