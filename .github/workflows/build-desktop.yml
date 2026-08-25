@@ -6,6 +6,8 @@ on:
       - desktop/**
       - .github/workflows/build-desktop.yml
     branches: [main]
+    tags:
+      - 'eaa-scanner-desktop-v*'
   pull_request:
     paths:
       - desktop/**
@@ -29,7 +31,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -65,7 +67,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -101,7 +103,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -133,19 +135,31 @@ jobs:
   release:
     needs: [build-macos, build-linux, build-windows]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/eaa-scanner-desktop-v')
     steps:
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
           path: artifacts
 
-      - name: Upload assets to release
+      - name: Determine tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or update release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for f in artifacts/*; do
-            if [ -f "$f" ]; then
-              gh release upload "${{ github.event.release.tag_name }}" "$f" --clobber
-            fi
-          done
+          TAG="${{ steps.tag.outputs.tag }}"
+          # Create release if it doesn't exist (tag push), or upload to existing (release published)
+          gh release create "$TAG" artifacts/* \
+            --repo ${{ github.repository }} \
+            --title "EAA Compliance Scanner Desktop $TAG" \
+            --notes "Auto-built by CI — macOS, Linux, Windows" \
+            --clobber 2>/dev/null || \
+          gh release upload "$TAG" artifacts/* --repo ${{ github.repository }} --clobber
