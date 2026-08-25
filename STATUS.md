@@ -1,29 +1,21 @@
-# STATUS — Iteration 285: To nye søgeindgange bygget og live (0 web-søgninger)
+# STATUS — Iteration 286: EN-modstykke til EAA-frist-siden live (0 web-søgninger)
 
 ## Gjort
 
-STATUS 284's plan a+b begge udført — to nye distributionssider, bygget med
-house-template + JSON-LD + idempotent sitemap/krydslink-scripts:
+STATUS 285's punkt c udført: **/blog/eaa-deadline-passed** (EN) — engelsk
+modstykke til den danske "fristen er passeret"-side. Targets
+"eaa deadline passed" / "eaa enforcement what now"-vinklen, som kun fandtes som
+blogpost men ikke som værktøjs-CTA-side på EN.
 
-1. **/clean-copy-brew** (EN) — Homebrew-installlandingsside målrettet macOS-
-   udviklere der søger "brew install html to markdown" / CLI-konvertere.
-   SoftwareApplication + FAQPage JSON-LD, install-kommandoer, 10-sekunders
-   eksempler, links til cli-ref og browser-værktøjet. Krydlink fra
-   clean-copy-cli-ref tilføjet.
-2. **/da/blog/eaa-frist-hvad-nu** (DA) — dansk søgeindgang om EAA efter
-   fristen 28. juni 2026 ("hvad nu"-vinkel, lav konkurrence). Article +
-   FAQPage JSON-LD, CTA til scan-da, kontrastchecker-da og
-   tilgaengelighedserklaering-generator-da. Krydslink fra eaa-frister-2026.
+- Article + FAQPage JSON-LD (begge valideret: @context korrekt)
+- Idempotent sitemap-add (201→202 URLs), krydslink fra eaa-enforcement-2026,
+  llms.txt +1 post, IndexNow pinget (202)
+- full_site_check: 0 problemer
+- Deployet og live-verificeret: side svarer med korrekt titel, begge JSON-LD-
+  blokke parser live, sitemap indeholder URL'en
 
-Husarbejde: sitemap 199→201 URLs, llms.txt +2 poster, IndexNow pinget
-(200, 201 URLs), deployet og verificeret live: begge sider svarer 200,
-korrekt titel og begge JSON-LD-blokke parser. full_site_check: 0 problemer.
-
-## Lærdom
-
-De genbrugelige blog-scripts (make_blog_ios_da.py-mønsteret) gjorde hver ny
-side til én fil + ét kørsel — sitemap-dedupe, linktjek og JSON-LD-validering
-kører automatisk. Nye indgangssider koster nu ~ingen fejlrisiko.
+Måling fra /api/stats (punkt a): siderne er for nye til at måle endnu; baseline
+uændret (~1-6 besøg/dag, NIS2-e-bog mest downloadet). Genmåles iter 288.
 
 ## Kritisk vej — uændret
 
@@ -32,16 +24,19 @@ VS Code publisher-konto.
 
 ## Næste iteration
 
-a) Måling: tjek /api/stats for trafik på de to nye sider efter nogle dage;
-   ingen besøg → lav næste par indgange i stedet for at pudse disse.
-b) Flere danske EAA/GDPR-indgangssider (fx "wcag 2.2 krav listen da",
-   "cookiepolitik vs privatlivspolitik").
-c) Overvej en EN-modstykke-side til eaa-frist-indgangen (deadline-passeret-
-   enforcement-vinklen findes allerede som blog, men ikke som værktøjs-CTA-side).
+a) Genmål trafik på de tre nyeste indgange (/clean-copy-brew,
+   /da/blog/eaa-frist-hvad-nu, /blog/eaa-deadline-passed). Ingen besøg efter
+   ~3 dage → stop med flere indgange i samme serie og prøv en anden vinkel.
+b) Punkt b fra 285 er stadig åben: dansk WCAG 2.2-tjekliste-side
+   ("wcag 2.2 krav liste da") — der findes wcag-22-aendringer.html men ingen
+   tjekliste-form.
+c) Overvej cookiepolitik-vs-privatlivspolitik (da) som fjerde indgang.
 
 ## Ærlig vurdering
 
-To reelle nye indgange live samme iteration uden hygiene-gæld. Trafikken kan
-ikke måles endnu (~5/dag baseline) — det er iteration 286's første punkt.
+Én ny indgang live, nul hygiene-gæld, 0 søgninger brugt. Men trafikken bevæger
+sig ikke — hvis genmålingen i 287/288 stadig viser ~baseline, skal serien
+stoppes til fordel for distribution uden for egen flade (som kræver Mads' ja)
+eller et nyt produktspor.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
