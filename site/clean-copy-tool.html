@@ -137,6 +137,7 @@
       <div class="seg-group" role="group" aria-label="Output format">
         <button type="button" id="mode-md" aria-pressed="true">Markdown</button>
         <button type="button" id="mode-wl" aria-pressed="false">WikiLinks</button>
+        <button type="button" id="mode-csv" aria-pressed="false">CSV</button>
         <button type="button" id="mode-txt" aria-pressed="false">Plain text</button>
       </div>
       <label style="display:inline-flex;align-items:center;gap:.45rem;font-weight:400;font-size:.9rem;">
@@ -175,7 +176,10 @@
       pipe-separated Markdown tables).</li>
       <li><strong>WikiLinks mode</strong> converts internal links to
       Obsidian-style <code>[[WikiLinks]]</code> — perfect for pasting research
-      into your vault. External links, images and code blocks stay as Markdown.</li>
+      external links, images and code blocks stay as Markdown.</li>
+      <li><strong>CSV mode</strong> turns HTML tables into comma-separated rows you
+      can paste straight into Excel or Google Sheets, or save as a .csv file.
+      Commas and quotes inside cells are quoted automatically.</li>
       <li><strong>Plain text mode</strong> removes everything but readable characters.</li>
       <li><strong>Smart-quote cleanup</strong> converts “ ” ‘ ’ — – into safe ASCII equivalents
       and removes zero-width and non-breaking spaces.</li>
@@ -210,6 +214,13 @@
       connect to your notes, while external links stay as normal Markdown.
       The <a href="/clean-copy">browser extension</a>, <a href="/blog/install-obsidian-plugin-clean-copy">Obsidian plugin</a>
       and CLI all support the same mode.</p>
+    </details>
+    <details class="faq">
+      <summary>Can I get tables as CSV?</summary>
+      <p>Yes — pick <strong>CSV</strong> mode. Every HTML table in your text becomes
+      comma-separated rows (RFC 4180), ready to paste into Excel, Google Sheets or
+      Numbers. Cells containing commas or quotes are escaped automatically, and the
+      download button then saves a proper .csv file.</p>
     </details>
     <details class="faq">
       <summary>Can I paste raw HTML?</summary>
@@ -310,7 +321,9 @@
         if (looksLikeHtml) {
           // Raw HTML pasted as text: unescape entities first so the converter sees real markup.
           var doc = new DOMParser().parseFromString(raw, 'text/html');
-          result = CleanCopyCore.htmlToWikilinks(doc.body.innerHTML);
+          result = mode === 'wikilinks' ? CleanCopyCore.htmlToWikilinks(doc.body.innerHTML)
+            : mode === 'csv' ? CleanCopyCore.htmlToCsv(doc.body.innerHTML)
+            : CleanCopyCore.htmlToMarkdown(doc.body.innerHTML);
         } else if (mode === 'markdown') {
           // Plain-ish text: only apply character cleanup, no tag stripping needed.
           result = smart.checked ? CleanCopyCore.cleanText(raw) : raw.replace(/\u00A0/g,' ').trim();
@@ -338,12 +351,14 @@
       mode = m;
       document.getElementById('mode-md').setAttribute('aria-pressed', m === 'markdown');
       document.getElementById('mode-wl').setAttribute('aria-pressed', m === 'wikilinks');
+      document.getElementById('mode-csv').setAttribute('aria-pressed', m === 'csv');
       document.getElementById('mode-txt').setAttribute('aria-pressed', m === 'plain');
       convert();
     }
 
     document.getElementById('mode-md').addEventListener('click', function () { setMode('markdown'); });
     document.getElementById('mode-wl').addEventListener('click', function () { setMode('wikilinks'); });
+    document.getElementById('mode-csv').addEventListener('click', function () { setMode('csv'); });
     document.getElementById('mode-txt').addEventListener('click', function () { setMode('plain'); });
     smart.addEventListener('change', convert);
     input.addEventListener('input', convert);

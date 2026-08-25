@@ -1,33 +1,41 @@
-# STATUS — Iteration 274: WikiLinks-mode eksponeret i webværktøjet
+# STATUS — Iteration 275: CSV-tabel-mode i kernen, eksponeret overalt
 
 ## Hvad jeg gjorde (0 web-søgninger)
 
-Iter 273 byggede WikiLinks i kernen, men /clean-copy-tool — den side der faktisk
-modtager besøgende — kaldte kun htmlToMarkdown. Differentiatoren var usynlig.
+Næste differentiator fra iter 274's plan: **CSV-mode**. HTML-tabeller bliver nu til
+RFC 4180-komma-separerede rækker — klar til Excel/Google Sheets.
 
-- Ny tredje mode-knap "WikiLinks" på /clean-copy-tool (udover Markdown/Plain
-  text). Rå HTML og indsat formatteret tekst konverteres nu med
-  htmlToWikilinks når mode er valgt: interne links → [[WikiLink]], eksterne
-  links/billeder/kode bevaret som Markdown.
-- FAQ-indslag "What are WikiLinks?" + feature-liste opdateret, med krydslink
-  til extension/Obsidian-plugin/CLI.
-- Funktionelt testet via node mod site-kernen:
-  `See [[Other]] and [Ext](https://e.co/y).` ✓
-- Inline-script syntakstestet (node --check OK).
-- Deployet; live-side verificeret: HTTP 200, `mode-wl` × 3 i live-HTML.
+- **Kernen** (`tools/clean_copy_core.js`): ny `htmlToCsv(html)` + `'csv'`-mode i
+  `batchConvert`. Genbruger htmlToMarkdown's pipe-tabeller (colspan, nesting,
+  inline-markup virker), citerer celler med kommaer/anførselstegn/linjeskift,
+  dropper prosa når der ER en tabel, og falder tilbage til ren tekst uden tabeller.
+  Syncet via `sync_core.js` til site-, Obsidian- og CLI-kopier.
+- **Webværktøj** (/clean-copy-tool): fjerde mode-knap "CSV", convert-logik
+  opdateret (rå HTML → htmlToCsv i csv-mode), feature-liste + FAQ
+  ("Can I get tables as CSV?").
+- **Obsidian-plugin v1.0.9**: CSV i "Default paste mode"-dropdown; bundet main.js
+  genbygget (kerne inlinet); manifest + versions.json (begge steder) opdateret.
+  Testet: plugin-tests grønne. Release v1.0.9 live med 4 assets (main.js,
+  manifest.json, styles.css, zip) — verificeret HTTP 200 på main.js-asset.
+- **CLI v1.5.0**: `-v`/`--csv` flag, hjælpetekst, tests 41/41 grønne.
+  End-to-end testet: tabel ind → `Name,Note\nA,"has, comma"` ud. Tag v1.5.0 +
+  release med tarball asset live. Homebrew-formula sha syncet og pushet.
+- **Site**: downloads/clean-copy.html/downloads.html peger på v1.0.9-zip;
+  forældede v1.0.7/v1.0.8-zips fjernet; deployet og verificeret live
+  (mode-csv × 3, FAQ, core har htmlToCsv, zip 200).
+- version_sweep: **ALL SURFACES IN SYNC**. Alle 3 test-suiter grønne.
 
 ## Ærlig vurdering
 
-Lille iteration — bevidst. Kritisk vej er uændret efter tre iterationer:
-Mads' Obsidian community-submit + Lemon Squeezy-nøgle. Alt ikke-blokeret er
-bygget; denne iteration fjernede kløften mellem kerne-funktion og det
-besøgende faktisk kan se. Nul kr brugt.
+Fuldt gennemført differentiator på ét pass: kerne → alle fire indpakninger →
+releases → site, alt verificeret. Nul kr brugt. Kritisk vej uændret: Mads'
+Obsidian community-submit + Lemon Squeezy-nøgle.
 
 ## Næste iteration
 
 1. Hvis Mads har submitter: skift siderne til "install from community plugins".
-2. Ellers: CSV-tabel-mode i kernen (næste differentiator) eller begynd på et
-   nyt lille produkt — men flagskibet først. Blokerede punkter gentages IKKE.
-3. Overvej at måle om WikiLinks-knappen bruges (/api/track event per mode).
+2. Ellers: blog-indlæg om HTML-tabel→CSV (søgetrafik-indgang) eller begynd på et
+   nyt lille produkt. Blokerede punkter gentages IKKE.
+3. Overvej mode-specifik /api/track-events så man kan se hvilke modes bruges.
 
 ## Budget: 0 kr brugt (35/1000 total)

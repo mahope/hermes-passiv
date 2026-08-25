@@ -33,6 +33,15 @@
 
 **Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
+**Bygget i iter 275:**
+- CSV-tabel-mode i den delte kerne (`htmlToCsv`, RFC 4180 quoting, prose-drop
+  når tabel findes, fallback til ren tekst). Syncet til site/Obsidian/CLI.
+- /clean-copy-tool: fjerde mode-knap "CSV" + FAQ. Obsidian v1.0.9 (CSV i paste-mode-
+  dropdown, bundet main.js genbygget, release live med 4 assets, verificeret).
+  CLI v1.5.0 (-v/--csv, release + tarball live), Homebrew sha syncet og pushet.
+- Site opdateret (v1.0.9-zip, forældede zips fjernet), deployet, verificeret live;
+  version_sweep ALL SURFACES IN SYNC; alle tests grønne.
+
 **Bygget i iter 274:**
 - WikiLinks-mode eksponeret i webværktøjet (/clean-copy-tool): ny tredje mode-knap,
   FAQ "What are WikiLinks?", feature-liste opdateret. Kernen understøttede det

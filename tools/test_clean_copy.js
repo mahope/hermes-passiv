@@ -129,6 +129,26 @@ assert(ab.indexOf('WHO (World Health') === ab.lastIndexOf('WHO (World Health'), 
 
 console.log('iteration-180 fixes OK');
 
+// Iteration 275: CSV mode — HTML tables become RFC 4180 CSV rows
+const csv1 = sandbox.htmlToCsv(
+  '<table><thead><tr><th>Name</th><th>Price</th></tr></thead>' +
+  '<tbody><tr><td>A &amp; B</td><td>$9</td></tr></tbody></table>'
+);
+assert.strictEqual(csv1, 'Name,Price\nA & B,$9', 'csv basic: ' + JSON.stringify(csv1));
+
+const csv2 = sandbox.htmlToCsv('<p>intro kept out</p><table><tr><th>H</th></tr><tr><td>has, comma and "quotes"</td></tr></table>');
+assert(csv2.startsWith('H\n'), 'prose dropped when table exists: ' + JSON.stringify(csv2));
+assert(csv2.includes('"has, comma and ""quotes"""'), 'RFC 4180 quoting: ' + JSON.stringify(csv2));
+
+assert.strictEqual(sandbox.htmlToCsv('<p>no tables here</p>').trim(), 'no tables here', 'fallback to plain text');
+
+const csvB = sandbox.batchConvert(['<table><tr><th>A</th></tr><tr><td>1</td></tr></table>'], 'csv');
+assert(csvB[0].ok && csvB[0].content === 'A\n1', 'batchConvert csv mode');
+// wikilinks regression after core edit
+const wl = sandbox.htmlToWikilinks('<a href="Other">x</a>');
+assert(wl.includes('[[x]]'), 'wikilinks still work');
+console.log('iteration-275 CSV-mode fixes OK');
+
 // Iteration 179: parity check — extension background.js conversion must equal the shared core
 (function(){
   const bg = fs.readFileSync('extension-clean-copy/background.js', 'utf8');
