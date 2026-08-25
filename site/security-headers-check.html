@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security Headers Checker — Free Online Security Header Analyzer</title>
+<meta name="description" content="Free online security headers checker. Analyze HTTP security headers including Content-Security-Policy, HSTS, X-Frame-Options, Referrer-Policy and more. Get a security grade and fix recommendations.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Security Headers Checker — Free Online HTTP Security Header Analyzer">
+<meta property="og:description" content="Check your website's security headers — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy. Free, no signup, server-side check.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/security-headers-check">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Security Headers Checker — Free Online HTTP Security Header Analyzer">
+<meta name="twitter:description" content="Check your site's HTTP security headers. Free, no account needed.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/security-headers-check">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/security-headers-check">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/security-headers-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Security Headers Checker",
+  "url": "https://hermes-passiv.pages.dev/security-headers-check",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Free online security headers checker that analyzes Content-Security-Policy, HSTS, X-Frame-Options, and more."
+}
+</script>
+<style>
+.sh-wrap { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.sh-input-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1.5rem 0; align-items: center; }
+.sh-url-input { flex: 1; min-width: 260px; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font-size: 1rem; }
+.sh-url-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(91,141,239,0.25); }
+.sh-status { border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; display: none; }
+.sh-err { background: rgba(220,80,80,0.10); border: 1px solid rgba(220,80,80,0.45); display: block; }
+.sh-loading { background: rgba(91,141,239,0.10); border: 1px solid rgba(91,141,239,0.35); display: block; }
+.sh-grade-wrap { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+.sh-grade { font-size: 2.5rem; font-weight: 800; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #fff; }
+.sh-grade-A { background: linear-gradient(135deg,#30a46c,#2b8a5e); }
+.sh-grade-B { background: linear-gradient(135deg,#73a42e,#5d8824); }
+.sh-grade-C { background: linear-gradient(135deg,#d4922b,#b87921); }
+.sh-grade-D { background: linear-gradient(135deg,#d95c2b,#b8491f); }
+.sh-grade-F { background: linear-gradient(135deg,#d64a4a,#b33a3a); }
+.sh-score-text { font-size: 0.95rem; color: var(--color-text-muted); }
+.sh-results { margin: 1.5rem 0; }
+.sh-header-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1rem; border: 1px solid var(--color-border); border-radius: 10px; margin-bottom: 0.5rem; background: var(--color-surface); }
+.sh-header-name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-size: 0.85rem; min-width: 200px; color: var(--color-text); }
+.sh-header-value { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; word-break: break-all; color: var(--color-text-muted); flex: 1; }
+.sh-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; min-width: 48px; text-align: center; }
+.sh-badge-ok { background: rgba(48,164,108,0.15); color: #30a46c; border: 1px solid rgba(48,164,108,0.4); }
+.sh-badge-warn { background: rgba(212,146,43,0.15); color: #d4922b; border: 1px solid rgba(212,146,43,0.4); }
+.sh-badge-miss { background: rgba(220,80,80,0.10); color: #d64a4a; border: 1px solid rgba(220,80,80,0.35); }
+.sh-header-detail { padding: 0.5rem 0.5rem 0.5rem 0.5rem; }
+.sh-header-detail p { margin: 0.2rem 0; font-size: 0.82rem; color: var(--color-text-muted); line-height: 1.5; }
+.sh-section { margin: 2rem 0; }
+.sh-section h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.75rem; }
+.sh-raw { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+.sh-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; text-align: center; }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="sh-wrap">
+
+<p class="breadcrumb">
+  <a href="/">Passiv</a> <span>›</span>
+  <a href="/free-tools">Free tools</a> <span>›</span>
+  Security Headers Checker
+</p>
+
+<header style="text-align:center;padding:1rem 0 0.5rem;">
+  <h1 style="margin:0;">Security Headers Checker</h1>
+  <p class="tagline" style="margin-top:0.4rem;">Analyze your website's HTTP security headers — CSP, HSTS, X-Frame-Options, and more.</p>
+  <p class="sh-privacy">🔒 No cookies, no tracking except a page visit count. URLs are fetched server-side — never stored.</p>
+</header>
+
+<div class="sh-input-row">
+  <input type="url" id="urlInput" class="sh-url-input" placeholder="https://example.com" value="https://hermes-passiv.pages.dev" spellcheck="false">
+  <button id="checkBtn" class="btn-primary" style="padding:11px 28px;font-size:1rem;">Check headers</button>
+</div>
+
+<div id="statusBox" class="sh-status" role="status" aria-live="polite"></div>
+
+<div id="resultsArea" style="display:none;">
+  <div class="sh-grade-wrap" id="gradeWrap">
+    <div id="gradeBadge" class="sh-grade">A</div>
+    <div>
+      <div id="scoreText" class="sh-score-text"></div>
+      <div id="responseInfo" class="sh-score-text" style="font-size:0.82rem;margin-top:0.2rem;"></div>
+    </div>
+  </div>
+
+  <div class="sh-section">
+    <h2>Critical Security Headers</h2>
+    <div id="criticalHeaders"></div>
+  </div>
+
+  <div class="sh-section">
+    <h2>All Response Headers</h2>
+    <div id="allHeaders"></div>
+  </div>
+
+  <div class="sh-section">
+    <h2>Raw Headers</h2>
+    <div id="rawHeaders" class="sh-raw"></div>
+  </div>
+</div>
+
+<section style="margin:2.5rem 0;">
+  <h2>About this tool</h2>
+  <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
+    <p>This free security headers checker evaluates your website's HTTP response headers against industry best practices. It checks for critical security headers defined by OWASP, the Mozilla Observatory, and securityheader.com standards. Each header receives a pass/fail status, and you get a letter grade (A–F) for your overall security posture.</p>
+    <p>The test is performed server-side — we fetch your URL from Cloudflare's edge network and analyze the response headers. Your URL is not stored, logged, or shared. 100% free, no signup required.</p>
+    <h3>What each critical header does</h3>
+    <ul>
+      <li><strong>Content-Security-Policy (CSP)</strong> — Controls which resources (scripts, styles, images) the browser can load. Reduces XSS risk dramatically.</li>
+      <li><strong>Strict-Transport-Security (HSTS)</strong> — Forces HTTPS connections. Prevents downgrade attacks and cookie hijacking.</li>
+      <li><strong>X-Frame-Options</strong> — Prevents clickjacking by controlling whether your page can be embedded in frames.</li>
+      <li><strong>X-Content-Type-Options</strong> — Prevents MIME-type sniffing. Set to <code>nosniff</code> for protection.</li>
+      <li><strong>Referrer-Policy</strong> — Controls how much referrer information is sent with requests. Recommended: <code>strict-origin-when-cross-origin</code>.</li>
+      <li><strong>Permissions-Policy</strong> — Controls which browser features (camera, microphone, geolocation) your site can access.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;border-top:1px solid var(--color-border);max-width:1100px;margin:0 auto;">
+  <p>
+    <a href="/" style="color:var(--color-accent);">Home</a> &middot;
+    <a href="/scan" style="color:var(--color-accent);">EAA Scanner</a> &middot;
+    <a href="/nis2-check" style="color:var(--color-accent);">NIS2 Check</a> &middot;
+    <a href="/cookie-check" style="color:var(--color-accent);">Cookie Check</a> &middot;
+    <a href="/contrast-checker" style="color:var(--color-accent);">Contrast Checker</a> &middot;
+    <a href="/free-tools" style="color:var(--color-accent);">Free Tools</a>
+  </p>
+  <p style="margin-top:8px;">Free web tool — no account needed.</p>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  var urlInput = document.getElementById('urlInput');
+  var checkBtn = document.getElementById('checkBtn');
+  var statusBox = document.getElementById('statusBox');
+  var resultsArea = document.getElementById('resultsArea');
+
+  // Header evaluation rules
+  var CRITICAL_HEADERS = {
+    'strict-transport-security': {
+      name: 'Strict-Transport-Security (HSTS)',
+      description: 'Forces HTTPS connections. Should include a max-age of at least 1 year (31536000s) and the includeSubDomains directive.',
+      pass: function(val) {
+        if (!val) return false;
+        var m = val.match(/max-age=(\d+)/i);
+        if (!m) return false;
+        var seconds = parseInt(m[1], 10);
+        return seconds >= 31536000;
+      },
+      warn: function(val) {
+        if (!val) return false;
+        return val.includes('preload');
+      }
+    },
+    'content-security-policy': {
+      name: 'Content-Security-Policy (CSP)',
+      description: 'Controls resource loading. Even a basic CSP reduces XSS risk. Should restrict script-src and object-src.',
+      pass: function(val) { return !!val; },
+      warn: function(val) {
+        if (!val) return false;
+        return val.includes("'unsafe-inline'") || val === '';
+      }
+    },
+    'x-frame-options': {
+      name: 'X-Frame-Options',
+      description: 'Prevents clickjacking by blocking framing of your page. Recommended value: DENY or SAMEORIGIN.',
+      pass: function(val) { return val && (val.toUpperCase() === 'DENY' || val.toUpperCase() === 'SAMEORIGIN'); }
+    },
+    'x-content-type-options': {
+      name: 'X-Content-Type-Options',
+      description: 'Prevents MIME-type sniffing attacks. Should be set to "nosniff".',
+      pass: function(val) { return val && val.toLowerCase() === 'nosniff'; }
+    },
+    'referrer-policy': {
+      name: 'Referrer-Policy',
+      description: 'Controls referrer information sent with requests. Recommended: strict-origin-when-cross-origin or no-referrer.',
+      pass: function(val) {
+        if (!val) return false;
+        var v = val.toLowerCase();
+        return v === 'strict-origin-when-cross-origin' || v === 'no-referrer' ||
+               v === 'same-origin' || v === 'strict-origin';
+      }
+    },
+    'permissions-policy': {
+      name: 'Permissions-Policy',
+      description: 'Controls which browser features can be used. Replaces the older Feature-Policy header.',
+      pass: function(val) { return !!val; }
+    }
+  };
+
+  function showStatus(msg, type) {
+    statusBox.textContent = msg;
+    statusBox.className = 'sh-status';
+    if (type) statusBox.className += ' ' + type;
+  }
+
+  function hideStatus() {
+    statusBox.style.display = 'none';
+  }
+
+  function gradeLetter(score, max) {
+    if (!max) return '?';
+    var pct = score / max;
+    if (pct >= 0.9) return 'A';
+    if (pct >= 0.7) return 'B';
+    if (pct >= 0.5) return 'C';
+    if (pct >= 0.25) return 'D';
+    return 'F';
+  }
+
+  function check() {
+    var url = urlInput.value.trim();
+    if (!url) {
+      showStatus('Please enter a URL.', 'sh-err');
+      return;
+    }
+
+    // Auto-prepend https:// if no protocol
+    if (!url.match(/^https?:\/\//i)) {
+      url = 'https://' + url;
+      urlInput.value = url;
+    }
+
+    showStatus('Fetching headers for ' + url + ' ...', 'sh-loading');
+    resultsArea.style.display = 'none';
+    var tracked = false;
+
+    fetch('/api/header-check?url=' + encodeURIComponent(url))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        hideStatus();
+
+        if (!data.ok) {
+          showStatus(data.error || 'Failed to check headers.', 'sh-err');
+          return;
+        }
+
+        // Track once
+        if (!tracked) {
+          tracked = true;
+          try {
+            fetch('/api/track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: '/security-headers-check', event: 'check', url: url }),
+              keepalive: true
+            }).catch(function() {});
+          } catch (e) {}
+        }
+
+        renderResults(data);
+      })
+      .catch(function(err) {
+        showStatus('Network error: ' + err.message, 'sh-err');
+      });
+  }
+
+  function renderResults(data) {
+    resultsArea.style.display = 'block';
+    var gradeWrap = document.getElementById('gradeWrap');
+    var gradeBadge = document.getElementById('gradeBadge');
+    var scoreText = document.getElementById('scoreText');
+    var responseInfo = document.getElementById('responseInfo');
+
+    var resp = data;
+    var h = resp.headers || {};
+
+    // Score calculation
+    var passed = 0;
+    var total = Object.keys(CRITICAL_HEADERS).length;
+    var headerRows = [];
+
+    Object.keys(CRITICAL_HEADERS).forEach(function(key) {
+      var rule = CRITICAL_HEADERS[key];
+      var value = h[key] || '';
+      var isPass = rule.pass(value);
+      var isWarn = !isPass ? false : rule.warn ? rule.warn(value) : false;
+
+      var status = isPass ? (isWarn ? 'warn' : 'ok') : 'miss';
+      if (isPass) passed++;
+
+      headerRows.push({ key: key, rule: rule, value: value, status: status, isPass: isPass });
+    });
+
+    var grade = gradeLetter(passed, total);
+    gradeBadge.textContent = grade;
+    gradeBadge.className = 'sh-grade sh-grade-' + grade;
+
+    scoreText.textContent = passed + ' of ' + total + ' critical headers passed';
+    responseInfo.innerHTML = 'HTTP ' + resp.status + ' ' + resp.statusText +
+      ' &middot; ' + (resp.redirected ? 'Redirected to ' : '') +
+      '<a href="' + resp.finalUrl.replace(/&/g,'&amp;') + '" target="_blank" rel="noopener" style="color:var(--color-accent);">' + resp.finalUrl + '</a>';
+
+    // Critical headers
+    var criticalDiv = document.getElementById('criticalHeaders');
+    criticalDiv.innerHTML = '';
+    headerRows.forEach(function(r) {
+      var row = document.createElement('div');
+      row.className = 'sh-header-row';
+
+      var badge = document.createElement('span');
+      badge.className = 'sh-badge';
+      if (r.status === 'ok') {
+        badge.className += ' sh-badge-ok';
+        badge.textContent = 'Pass';
+      } else if (r.status === 'warn') {
+        badge.className += ' sh-badge-warn';
+        badge.textContent = 'Warn';
+      } else {
+        badge.className += ' sh-badge-miss';
+        badge.textContent = 'Miss';
+      }
+      row.appendChild(badge);
+
+      var name = document.createElement('span');
+      name.className = 'sh-header-name';
+      name.textContent = r.rule.name;
+      row.appendChild(name);
+
+      var val = document.createElement('span');
+      val.className = 'sh-header-value';
+      val.textContent = r.value || '(not set)';
+      row.appendChild(val);
+
+      criticalDiv.appendChild(row);
+
+      // Detail description
+      var detail = document.createElement('div');
+      detail.className = 'sh-header-detail';
+      var p = document.createElement('p');
+      p.textContent = r.rule.description;
+      detail.appendChild(p);
+      criticalDiv.appendChild(detail);
+    });
+
+    // All headers
+    var allDiv = document.getElementById('allHeaders');
+    allDiv.innerHTML = '';
+    var sortedKeys = Object.keys(h).sort();
+    sortedKeys.forEach(function(key) {
+      if (CRITICAL_HEADERS[key]) return; // already shown above
+      var row = document.createElement('div');
+      row.className = 'sh-header-row';
+      var name = document.createElement('span');
+      name.className = 'sh-header-name';
+      name.textContent = key;
+      var val = document.createElement('span');
+      val.className = 'sh-header-value';
+      val.textContent = h[key];
+      row.appendChild(name);
+      row.appendChild(val);
+      allDiv.appendChild(row);
+    });
+
+    // Raw
+    var rawDiv = document.getElementById('rawHeaders');
+    rawDiv.textContent = 'HTTP/' + (resp.status >= 400 ? '1.1 ' : '1.1 ') + resp.status + ' ' + resp.statusText + '\n' +
+      sortedKeys.map(function(k) { return k + ': ' + h[k]; }).join('\n');
+  }
+
+  checkBtn.addEventListener('click', check);
+  urlInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') check();
+  });
+
+  // Auto-run on page load if URL is pre-filled
+  // (but don't if the API server just came up and this is a test)
+  // Actually, let auto-run on load with default URL
+  setTimeout(check, 300);
+})();
+</script>
+</body>
+</html>

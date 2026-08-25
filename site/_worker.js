@@ -42,6 +42,9 @@ export default {
     // === Route: Clean Copy API (HTML → Markdown) ===
     if (path === '/api/clean-copy') return handleCleanCopyAPI(request);
 
+    // === Route: Security Headers Checker ===
+    if (path === '/api/header-check') return handleHeaderCheck(request, url);
+
     // === Route: Lemon Squeezy webhook (auto-issues license keys) ===
     if (path === '/api/lemon-webhook') return handleLemonWebhook(request, env);
 
@@ -1021,6 +1024,78 @@ async function handleStats(url, env) {
  * Free tier: no auth, up to 50 KB input, rate-limited client-side.
  * Pro tier (future): higher limits, custom cleanup rules.
  */
+
+/**
+ * Handle /api/header-check — fetches a URL server-side and returns all response headers.
+ * Used by the Security Headers Checker tool. No CORS issues since it's server-side.
+ */
+async function handleHeaderCheck(request, url) {
+  const targetUrlParam = url.searchParams.get('url');
+
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (!targetUrlParam) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }),
+      { status: 400, headers }
+    );
+  }
+
+  let targetUrl;
+  try {
+    targetUrl = new URL(targetUrlParam);
+    if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+      throw new Error('Invalid protocol');
+    }
+  } catch {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https://' }),
+      { status: 400, headers }
+    );
+  }
+
+  try {
+    const response = await fetch(targetUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'HermesPassiv-SecurityHeaders/1.0 (+https://hermes-passiv.pages.dev)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml,*/*',
+      },
+      redirect: 'follow',
+    });
+
+    // Collect all response headers
+    const responseHeaders = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    return new Response(JSON.stringify({
+      ok: true,
+      url: response.url,
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+      redirected: response.redirected,
+      finalUrl: response.url,
+    }), { status: 200, headers });
+  } catch (err) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: err.message || 'Failed to fetch URL',
+    }), { status: 502, headers });
+  }
+}
+
 async function handleCleanCopyAPI(request) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
