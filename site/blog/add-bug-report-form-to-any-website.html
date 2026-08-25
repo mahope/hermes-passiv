@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add a Bug Report Form to Any Website (No Backend Required) — Free</title>
+<meta name="description" content="How to add a user-submitted bug report form with console errors and screenshots to any static site — no server code, no npm install on the visitor's side. Free demo and open-source library.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Add a Bug Report Form to Any Website — No Backend Required">
+<meta property="og:description" content="Capture console errors, context and a screenshot from your users' browsers. Static-site friendly, open source.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Add a bug report form to any website (no backend required)", "description": "How to collect bug reports with console errors, context and screenshots from any static site using a free open-source library.", "url": "https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">BLOG &middot; DEVELOPER TOOLS</div>
+    <h1>Add a Bug Report Form<br>to Any Website — No Backend</h1>
+    <p class="subtitle">"Something is broken" tickets are useless without the details: what the console said, what browser they used, what the screen looked like. Here is how to collect all of it with one script tag — even on a site with no server at all.</p>
+    <div class="hero-cta">
+      <a href="/bugbottle-demo" class="btn-primary">Try the live demo &rarr;</a>
+      <a href="https://github.com/mahope/bugbottle" class="btn-secondary">View source on GitHub</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why users abandon bug reports</h2>
+    <p>A typical feedback form asks the user to describe the problem in words. Most don't. They can't see the console, they don't know their viewport size, and writing out steps takes effort. The result: you hear about maybe one in fifty real problems, each with just enough detail to be unusable.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖥️ Console errors</h3><p>The actual stack trace is already sitting in the user's browser. Capturing it removes the single hardest part of debugging remotely.</p></div>
+      <div class="card"><h3>📱 Context</h3><p>User agent, viewport, language, timestamp, page URL. Collected automatically instead of guessed over email.</p></div>
+      <div class="card"><h3>📸 Screenshot</h3><p>One picture replaces ten back-and-forth messages about "the thing that looks weird".</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="how">The three-second version</h2>
+    <p><a href="https://github.com/mahope/bugbottle" style="color:var(--color-accent);">Bugbottle</a> is an open-source (MIT) JavaScript library that does exactly this. Drop it on any page:</p>
+    <pre style="background:#111;color:#eee;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;"><code>&lt;script type="module"&gt;
+  import {
+    initConsoleBuffer, getConsoleBuffer,
+    collectContext, captureScreenshot
+  } from 'https://cdn.jsdelivr.net/npm/bugbottle/dist/index.js';
+
+  initConsoleBuffer();               // start capturing console errors now
+  document.getElementById('report-btn').addEventListener('click', async () =&gt; {
+    let screenshotDataUrl;
+    if (document.getElementById('include-shot').checked) {
+      screenshotDataUrl = await captureScreenshot();
+    }
+    const res = await fetch('/api/bug-reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'User clicked report',
+        screenshotDataUrl,
+        console: getConsoleBuffer(),
+        context: collectContext(),
+      })
+    });
+  });
+&lt;/script&gt;</code></pre>
+    <p>The library is dependency-free and ships as plain ESM, so it works straight from jsDelivr — no bundler, no npm install for your visitors, nothing to compile.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="backend">"But I don't have a backend"</h2>
+    <p>You have three realistic options, all of them free at hobby scale:</p>
+    <div class="problem-cards">
+      <div class="card"><h3>1. A Worker or Function</h3><p>Cloudflare Workers, Vercel functions or Netlify functions accept a POST and store the JSON anywhere — KV, R2, a database table. Bugbottle ships a matching server-side validator (<code>bugbottle/server</code>) so you reject malformed payloads in three lines.</p></div>
+      <div class="card"><h3>2. A form service</h3><p>Any endpoint that accepts JSON POSTs can receive a report — Formspree, Basin, or your own Google Apps Script web app. Validate before storing.</p></div>
+      <div class="card"><h3>3. GitHub Actions</h3><p>The <a href="https://github.com/mahope/bugbottle-action" style="color:var(--color-accent);">bugbottle-action</a> validates collected reports inside CI — useful when reports are exported as files in your repo.</p></div>
+    </div>
+    <p><strong>See it working end to end:</strong> the <a href="/bugbottle-demo" style="color:var(--color-accent);">live bugbottle demo</a> runs the real library from jsDelivr against a real endpoint. Submit a report, then watch it arrive with type, message, console entries and context attached.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2 id="privacy">Privacy: what not to collect</h2>
+    <p>Bug reports are personal data under GDPR the moment they can identify someone. Keep the footprint small:</p>
+    <p><strong>Collect</strong>: error messages, stack traces, page URL, viewport size, browser family, language.</p>
+    <p><strong>Skip by default</strong>: IP addresses, cookies, form contents, full DOM snapshots. If you screenshot, remember the visible screen may contain the user's own data — let them preview and delete before sending.</p>
+    <p>Mention the collection in your privacy policy under the same section as analytics. It is one sentence: "Users may submit voluntary error reports containing technical diagnostics."</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Does this work on WordPress / Shopify / Webflow sites?</h3><p>Yes — anything where you can add a custom HTML block or edit the footer template. The library is platform-agnostic plain ESM.</p></div>
+      <div class="card"><h3>How big is it?</h3><p>A few kilobytes minified, zero dependencies. It loads lazily when the report button is used, not on page load.</p></div>
+      <div class="card"><h3>Screenshots of every visit?</h3><p>No — only when the user actively submits a report, and you choose whether to request one. Nothing is captured passively.</p></div>
+      <div class="card"><h3>Can I self-host everything?</h3><p>Yes. MIT licensed, host the dist files yourself and point the import at your own CDN if you don't want third-party requests.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/bugbottle-demo" class="btn-primary">Try the live demo &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="https://github.com/mahope/bugbottle" class="btn-secondary">GitHub repo &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+
+</body>
+</html>
