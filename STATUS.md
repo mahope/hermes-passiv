@@ -1,42 +1,55 @@
-# STATUS — Iteration 286: EN-modstykke til EAA-frist-siden live (0 web-søgninger)
+# STATUS — Iteration 287: WCAG 2.2-kravliste (DA) live + måling fra 286 (0 web-søgninger)
 
-## Gjort
+## Måling først (punkt a fra 286)
 
-STATUS 285's punkt c udført: **/blog/eaa-deadline-passed** (EN) — engelsk
-modstykke til den danske "fristen er passeret"-side. Targets
-"eaa deadline passed" / "eaa enforcement what now"-vinklen, som kun fandtes som
-blogpost men ikke som værktøjs-CTA-side på EN.
+/api/stats (14 dage): de tre nyeste indgange (/clean-copy-brew,
+/da/blog/eaa-frist-hvad-nu, /blog/eaa-deadline-passed) har **0 besøg**.
+Baseline uændret: kun forsiden + downloads (NIS2-e-bog stadig mest hentet).
+Waitlist: 1 ægte. Licenses: 0.
 
-- Article + FAQPage JSON-LD (begge valideret: @context korrekt)
-- Idempotent sitemap-add (201→202 URLs), krydslink fra eaa-enforcement-2026,
-  llms.txt +1 post, IndexNow pinget (202)
-- full_site_check: 0 problemer
-- Deployet og live-verificeret: side svarer med korrekt titel, begge JSON-LD-
-  blokke parser live, sitemap indeholder URL'en
+Konsekvens ift. reglen i STATUS 286: indgangs-serien får én sidste chance med
+punkt b (WCAG-tjeklisten nedenfor), som var planlagt inden målingen. Hvis
+iteration 289's genmåling stadig viser ~0 på ALLE indgange fra serien,
+stopper vi serien og skifter spor (distribution kræver Mads' ja → nyt produkt).
 
-Måling fra /api/stats (punkt a): siderne er for nye til at måle endnu; baseline
-uændret (~1-6 besøg/dag, NIS2-e-bog mest downloadet). Genmåles iter 288.
+## Bygget
+
+**/da/blog/wcag-22-krav-liste** — dansk komplet WCAG 2.2-tjekliste:
+50 kriterier (23 A + 27 AA) i tabeller med kort "hvad det betyder i praksis"
+pr. krav, nye-i-2.2-kriterier markeret grønt, 5 FAQ'er, CTA til /scan-da.
+
+- Article + FAQPage JSON-LD (valideret lokalt og live)
+- Idempotent sitemap-add (202→203 URLs), krydslink fra både
+  da/blog/wcag-22-aendringer og blog/wcag-22-what-changes, llms.txt +1
+- IndexNow pinget; sitemap verificeret live indeholder URL'en
+- full_site_check: 203 urls, 0 problemer
+- Deployet og live-verificeret (titel, JSON-LD, tabelrækker)
+
+Faktaselvcheck undervejs: første udkast skrev "87 kriterier" i meta-description
+men viste kun A/AA — rettet til "50 på niveau A og AA" inden deploy. Rækketælling
+i scriptet (A=23, AA=27, heraf 6 nye på A/AA) matcher teksten på siden.
 
 ## Kritisk vej — uændret
 
 **Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle +
 VS Code publisher-konto.
 
-## Næste iteration
+## Næste iteration (288/289)
 
-a) Genmål trafik på de tre nyeste indgange (/clean-copy-brew,
-   /da/blog/eaa-frist-hvad-nu, /blog/eaa-deadline-passed). Ingen besøg efter
-   ~3 dage → stop med flere indgange i samme serie og prøv en anden vinkel.
-b) Punkt b fra 285 er stadig åben: dansk WCAG 2.2-tjekliste-side
-   ("wcag 2.2 krav liste da") — der findes wcag-22-aendringer.html men ingen
-   tjekliste-form.
-c) Overvej cookiepolitik-vs-privatlivspolitik (da) som fjerde indgang.
+a) Genmål ALLE seriens indgange. Hvis ~0: stop indgangs-byggeriet. Se
+   "Ærlig vurdering".
+b) Hvis der fortsat bygges indgange: cookiepolitik-vs-privatlivspolitik (da)
+   var næste kandidat — men kun hvis (a) ikke allerede har stoppet serien.
+c) Alternativ til serien hvis den dør: overvej nyt produktspor eller
+   distribution-forberedelse (udsendelser/lister klarlagt, venter på Mads' ja).
 
 ## Ærlig vurdering
 
-Én ny indgang live, nul hygiene-gæld, 0 søgninger brugt. Men trafikken bevæger
-sig ikke — hvis genmålingen i 287/288 stadig viser ~baseline, skal serien
-stoppes til fordel for distribution uden for egen flade (som kræver Mads' ja)
-eller et nyt produktspor.
+Siden er teknisk perfekt og trafikken kommer ikke. Fem indgange i serien har nu
+tilsammen fået nul registrerede besøg. Det er et stærkt signal om at
+søgeindgangs-strategien alene ikke virker for dette site — enten fordi
+domænet har for lidt autoritet, eller fordi efterspørgslen på netop disse
+queries er for lille. Næste iteration skal tage stilling til sporskifte, ikke
+bygge indgang nr. seks af samme skabelon uden begrundelse.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
