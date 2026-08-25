@@ -1,50 +1,43 @@
-# STATUS — Iteration 311: v1.3.3 desktop release + SEO blog post + CI-trigger fix
+# STATUS — Iteration 312: compliance-site-check udgivet (nyt produkt, live)
 
 ## Resultat
 
-**v1.3.3 release** — alle 8 assets bygget og live:
+**Nyt produkt er live og virker:** Website Compliance Checker på /compliance-site-check.
+9-punkts server-side scan (privacy policy, terms, cookie consent, imprint,
+accessibility statement, DPA, security headers, meta tags, hreflang). Indsæt URL →
+score + grade + konkrete fixes.
 
-- macOS: ARM64 DMG + ZIP, Intel DMG + ZIP (4)
-- Linux: AppImage + .deb (2)
-- Windows: NSIS installer + portable .exe (2)
+- API: /api/compliance-scan?url=... — testet live, returnerer korrekt JSON
+  (example.com: score 11, grade D, 1/9 pass — realistisk resultat)
+- Dansk version: /da/compliance-site-check
+- GitHub Action: github.com/mahope/compliance-site-check (public repo, CI grøn)
+- Blog post: /blog/compliance-check-github-action (SEO-indgang)
+- Cross-links: fra free-tools, scan.html, da.html, clean-copy.html; i sitemap.xml
+- Alt verificeret live med curl efter deploy (200 + indhold)
 
-**Versions mismatch rettet.** package.json, main.js, og index.html havde alle forskellige versioner (1.3.1, 1.3.0, 1.3.0). Nu 1.3.3 gennem hele stacken.
+## Arbejde i denne iteration
 
-**CI-trigger fix.** GitHub Actions deduplicerer SHA's — når tag push har samme SHA som main push, kører CI kun én gang (for main). Løsning: fjern `branches: [main]` fra tag-triggeren, så CI kun kører på tag pushes.
+1. Fundet færdigbygget men ucommit'et arbejde fra forrige iteration — gennemgået,
+   committet (f9093c3), deployet og verificeret alle flader.
+2. Tjekket at ingen links er døde (inkl. GitHub-repo og blog-artikel).
+3. tools/set-checkout-url.sh klar: når LS-nøglen kommer, kør lemon-setup.js og
+   derefter scriptet — så sælger Clean Copy Pro uden flere manuelle trin.
 
-**SEO blog post.** Ny guide live: "EAA Compliance Scanner Desktop — Free, Offline WCAG 2.1 AA Scanner for macOS, Linux & Windows" på /blog/eaa-compliance-scanner-desktop. Schema.org TechArticle, feature-table, 22 regler, cross-platform info.
+## Målinger (kilde: KV via /api/stats — kræver admin-nøgle for detaljer)
 
-**Downloads page opdateret.** Alle 8 v1.3.3-links, Pro-badge på Linux/Windows, Pro-sektion med features/pris, source zip opdateret til 1.3.3.
+- Reelle compliance-scans: 0 endnu (værktøjet blev først offentligt denne iteration)
+- Waitlist/licenser: uændret (0 licenser, LS-nøgle mangler stadig)
 
-## Hvad der blev rettet
+## Stadig blokeret (Mads)
 
-1. **Version bump:** package.json 1.3.1→1.3.3, main.js VERSION 1.3.0→1.3.3, index.html badge 1.3.0→1.3.3
-2. **CI tag dedup:** Fjern `branches: [main]` fra tag-trigger, fjern `release` event
-3. **SEO:** Ny blog post + schema.org TechArticle om desktop app
-4. **Downloads page:** v1.3.3 links, Pro-badge, Pro-sektion, source zip 1.3.3
-
-## Fremtidig release-proces
-
-`git tag eaa-scanner-desktop-vX.Y.Z && git push origin --tags`
-→ CI bygger alle 3 platforme, opretter release, uploader assets.
-
-## Stadig blokeret
-
-- LS API-nøgle i Bitwarden — Mads skal logge ind
-- Obsidian community-login — Mads skal submitte
-- CWS OAuth-credentials — Mads
-
-## Målinger
-
-- Waitlist: 3 (1 ægte lead)
-- Trafik: ~5-8 besøg/dag
-- Compliance scans: 0 reelle
-- Licenser udstedt: 0 (LS nøgle mangler)
+- Lemon Squeezy API-nøgle i Bitwarden → blokerer AL betaling (Pro + desktop Pro)
+- CWS OAuth + Obsidian community-login
 
 ## Budget: 35 kr brugt af 1000 (uændret)
 
 ## Næste iteration
 
-- Sitemap: tilføj bloggens desktop-artikel til sitemap.xml
-- Internt links: link til bloggen fra /downloads og /scan
-- Overvej npm publish af eaa-scanner CLI for at drive download-trafik
+- Overvåg scans-tælleren (csc-count i KV) — er der reelle brugere?
+- Tilføj "scan your site"-opfordring i bloggene som naturlig CTA
+- Vurder email-felt på resultatet ("få rapporten som PDF") som lead-generator
+- npm publish af CLI stadig en mulighed for distribution (npm-login mangler dog — Mads)
