@@ -14,3 +14,4 @@ desktop/node_modules/
 *.egg-info/
 .DS_Store
 passiv-mcp/
+eu-compliance-guides/
