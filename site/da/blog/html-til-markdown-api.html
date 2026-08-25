@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML til Markdown API — gratis REST-endpoint (2026)</title>
+<meta name="description" content="En gratis HTML-til-Markdown REST-API: send din HTML som JSON, få ren Markdown tilbage. Ingen nøgle, ingen tilmelding — virker fra curl, Python eller Node. Maks. 50 KB pr. forespørgsel.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gratis HTML til Markdown API — POST HTML, få Markdown">
+<meta property="og:description" content="Ingen nøgle, ingen tilmelding: et gratis REST-endpoint der konverterer HTML til ren Markdown. Virker fra curl, Python, Node eller enhver HTTP-klient.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/clean-copy/og-preview.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-api">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/html-to-markdown-api">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTML til Markdown API: Et gratis REST-endpoint du kan kalde i dag", "description": "En gratis HTML-til-Markdown REST-API: send din HTML som JSON, få ren Markdown tilbage. Ingen nøgle, ingen tilmelding.", "url": "https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Findes der en gratis HTML til Markdown API?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Clean Copy API'et på hermes-passiv.pages.dev/api/clean-copy konverterer HTML til Markdown over almindelig REST. Ingen API-nøgle, ingen konto, maks. 50 KB HTML pr. forespørgsel."}}, {"@type": "Question", "name": "Hvordan kalder jeg den fra curl?", "acceptedAnswer": {"@type": "Answer", "text": "Send JSON med et html-felt: curl -X POST https://hermes-passiv.pages.dev/api/clean-copy -H 'Content-Type: application/json' -d '{\"html\":\"<h1>Hej</h1>\"}'. Svaret indeholder et markdown-felt med den konverterede tekst."}}, {"@type": "Question", "name": "Skal der bruges en API-nøgle?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Endpointet er åbent. Hold bare forespørgslene nede (maks. 10 i sekundet) og input under 50 KB HTML."}}, {"@type": "Question", "name": "Hvad overlever konverteringen?", "acceptedAnswer": {"@type": "Answer", "text": "Overskrifter bliver til #-niveauer, links til [tekst](url), lister forbliver lister, fed og kursiv overlever, kodeblokke bliver hegnede blokke og simple tabeller bliver til pipe-tabeller. Scripts, styles og sporingsmarkup fjernes. mode=text giver ren tekst i stedet."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  pre.cmd { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0; }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">UDVIKLER &middot; API &middot; MARKDOWN</div>
+    <h1>HTML til Markdown API:<br>kald den gratis, lige nu</h1>
+    <p class="subtitle">De fleste konverterings-API'er vil have et kreditkort før de returnerer en eneste overskrift. Dette gør ikke: POST din HTML som JSON og få ren Markdown tilbage — ingen nøgle, ingen konto, intet at installere.</p>
+    <div class="hero-cta">
+      <a href="#quickstart" class="btn-primary">30-sekunders quickstart &rarr;</a>
+      <a href="/clean-copy-api" class="btn-secondary">Fuld API-reference</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor en REST-API til det?</h2>
+    <p>Du kan godt konvertere HTML til Markdown i hånden: indsæt det i et converter-faneblad, kopier resultatet tilbage. Det virker én gang. Det virker ikke, når konverteringen skal ligge inde i et script, et build-step, en LLM-pipeline eller et cron-job.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🤖 Fodring af LLM'er</h3><p>Modeller læser Markdown langt bedre end rå HTML. Strip tags og støj, før sider sendes ind i en prompt — færre tokens, bedre svar.</p></div>
+      <div class="card"><h3>📚 Indholdspipelines</h3><p>Hent dokumentation, changelogs eller artikler fra hvor som helst og land dem i dit CMS, din wiki eller dit statiske site som rene Markdown-filer.</p></div>
+      <div class="card"><h3>🔗 Lim-scripts</h3><p>Én <code>curl</code> fra bash, ét <code>requests.post()</code> fra Python, ét <code>fetch()</code> fra Node. Kan det tale HTTP, kan det bruge den.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="quickstart">
+  <div class="container">
+    <h2>Quickstart på 30 sekunder</h2>
+    <p>Endpointet er <code>POST /api/clean-copy</code>. Send et JSON-objekt med et <code>html</code>-felt; få JSON tilbage med et <code>markdown</code>-felt.</p>
+
+    <h3 style="margin-top:24px;">curl</h3>
+    <pre class="cmd"><code>curl -s -X POST https://hermes-passiv.pages.dev/api/clean-copy \
+  -H 'Content-Type: application/json' \
+  -d '{"html":"&lt;h1&gt;Hej&lt;/h1&gt;&lt;p&gt;Dette er &lt;b&gt;fedt&lt;/b&gt;.&lt;/p&gt;"}'</code></pre>
+    <pre class="cmd"><code>{"ok":true,"markdown":"# Hej\n\nDette er **fedt**.","mode":"markdown","input_chars":42,"output_chars":21}</code></pre>
+
+    <h3 style="margin-top:24px;">Python</h3>
+    <pre class="cmd"><code>import requests
+
+r = requests.post(
+    "https://hermes-passiv.pages.dev/api/clean-copy",
+    json={"html": open("side.html").read()},
+    timeout=15,
+)
+print(r.json()["markdown"])</code></pre>
+
+    <h3 style="margin-top:24px;">Node (uden afhængigheder)</h3>
+    <pre class="cmd"><code>const res = await fetch("https://hermes-passiv.pages.dev/api/clean-copy", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ html: "&lt;h2&gt;Dokumentation&lt;/h2&gt;&lt;p&gt;&lt;a href='/'&gt;forside&lt;/a&gt;&lt;/p&gt;" }),
+});
+const { markdown } = await res.json();</code></pre>
+
+    <h3 style="margin-top:24px;">Konvertér en hel URL i stedet for rå HTML</h3>
+    <pre class="cmd"><code>curl -s -X POST https://hermes-passiv.pages.dev/api/clean-copy \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com/artikel"}'</code></pre>
+    <p>API'et henter siden server-side, finder hovedindholdet og returnerer det som Markdown — praktisk når du ikke har HTML'en lokalt endnu.</p>
+
+    <h3 style="margin-top:24px;">Valgmulighederne</h3>
+    <table class="compare">
+      <thead><tr><th>Felt</th><th>Værdier</th><th>Betydning</th></tr></thead>
+      <tbody>
+        <tr><td><code>html</code></td><td>streng</td><td>Rå HTML-input (maks. 50 KB). Påkrævet medmindre du sender <code>url</code>.</td></tr>
+        <tr><td><code>url</code></td><td>streng</td><td>Henter siden server-side og konverterer den.</td></tr>
+        <tr><td><code>mode</code></td><td><code>markdown</code> | <code>text</code></td><td>Markdown-output, eller strippet ren tekst.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="problem-cards">
+      <div class="card"><h3># Overskrifter bevaret</h3><p>H1–H6 mappes til det rigtige antal <code>#</code>, så dokumentstrukturen overlever.</p></div>
+      <div class="card"><h3>[Links](intakte)</h3><p>Links bliver til standard Markdown-referencer med originale URL'er.</p></div>
+      <div class="card"><h3>Tabeller → pipe-tabeller</h3><p>Simple HTML-tabeller bliver Markdown-pipe-tabeller, inklusive justering.</p></div>
+      <div class="card"><h3>🗑️ Støj strippet</h3><p>Scripts, styles, sporingspixels og skjult junk fjernes automatisk.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er den virkelig gratis?</h3><p>Ja — ingen nøgle, ingen konto, ingen betalingskort. Grænserne er tekniske, ikke kommercielle: 50 KB HTML pr. forespørgsel og en blød grænse på 10 forespørgsler i sekundet.</p></div>
+      <div class="card"><h3>Hvad hvis min HTML er for stor?</h3><p>API'et svarer med en fejlbesked, der siger det. Split dokumentet og send delene — overskrifter og links virker på tværs af kald, da konverteringen er stateless.</p></div>
+      <div class="card"><h3>Gemmer I mit indhold?</h3><p>Nej. Konverteringen er stateless: din HTML behandles til svaret og opbevares ikke.</p></div>
+      <div class="card"><h3>Foretrækker du at køre det lokalt?</h3><p>Samme motor findes offline som <a href="/blog/html-to-markdown-cli" style="color:var(--color-accent);">Clean Copy CLI</a>, browserudvidelse og npm-bibliotek — se <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy</a>.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/clean-copy-api" class="btn-primary">Åbn den fulde API-reference &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/byg-en-html-til-markdown-konverter" style="color:var(--color-accent);">Byg en HTML-til-Markdown-konverter</a> &middot; <a href="/clean-copy-tool" style="color:var(--color-accent);">Prøv den i browseren</a></p></div>
+<p><a href="/blog/html-to-markdown-api" lang="en">English version of this guide</a></p>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">← Forside</a> &middot; <a href="/da/">Dansk</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

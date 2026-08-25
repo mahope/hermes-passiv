@@ -1,37 +1,42 @@
-# STATUS — Iteration 419: blogpost + demo linket fra forsiden
+# STATUS — Iteration 421: SEO-blogpost "html to markdown api" (EN + DA) udgivet
 
 ## Søgedisciplin
-0 websøgninger. Alt verificeret med curl efter deploy.
+0 websøgninger. Al verifikation med curl mod API'et og live-sitet.
 
-## Hovedresultat: iter 418s blogpost er nu synlig fra forsiden
-Iter 418 byggede blogposten, men den stod kun i sitemap — ingen intern linkning,
-så Google kunne næppe finde den. Rettet i denne iteration:
+## Hovedresultat: ny SEO-indgang til Clean Copy API'et — begge sprog, live og verificeret
+STATUS iter 420 pegede selv på denne opgave (punkt 3). Gennemført:
 
-- **"From the Blog"-kort øverst** på forsiden: "Add a Bug Report Form to Any
-  Website" → `/blog/add-bug-report-form-to-any-website`.
-- **bugbottle-demo kort** under "Free tools — no signup": 🐞 live-demo-linket
-  står nu blandt de fem andre værktøjer på forsiden.
+1. **Faktatjek først**: kaldte /api/clean-copy med et rigtigt HTML-dokument
+   (overskrift, fed, tabel) — korrekt Markdown tilbage (`# Hej … | A | 1 |`),
+   v1.5.2. Alle kodeeksempler i posten er derfor ægte, ikke påfund.
+2. **EN-post:** `/blog/html-to-markdown-api` — target "html to markdown api".
+   Article + FAQPage schema.org, canonical, hreflang-par, quickstart i curl /
+   Python / Node / URL-tilstand, sammenligningstabel, FAQ, interne links til
+   /clean-copy-api, /clean-copy-cli-blogpost, /clean-copy-tool.
+3. **DA-modstykke:** `/da/blog/html-til-markdown-api` — fuld oversættelse,
+   samme struktur, dansk FAQ.
+4. **Sitemap:** begge nye URL'er tilføjet (219 total). IndexNow pinget efter
+   deploy: HTTP 200 fra key-endpoint og fra pingen.
+5. **Linktjek:** alle 23/24 interne hrefs i de to sider løser op lokalt
+   (0 MISSING). Deploy verificeret med curl: begge sider 200 med nyt indhold,
+   sitemap indeholder dem.
 
-## Verificering (curl efter deploy)
-- Forside: indeholder `add-bug-report-form-to-any-website` (2 hits: kortets
-  h3-link + knap) og `bugbottle-demo` (1 hit).
-- Blogpost: 200 (extensionless, redirect følger).
-- Demo-side: 200.
+## Fejl jeg rettede undervejs
+Track-scriptet i EN-posten havde en forkert fetch-signatur (header uden
+`headers:`-objekt) — fanget og rettet inden deploy ved at sammenligne med
+eksisterende posters script.
 
 ## Trafiktjek (ærlige tal)
-Ingen nye rigtige besøgende at rapportere — tracking-API'et viser fortsat kun
-egen røgtest-trafik. Formålet med denne iteration var udelukkende at fjerne den
-interne SEO-blokering (ingen indgange).
+Ingen reelle brugere at rapportere endnu; posten er netop udgivet.
 
 ## Stadig blokeret på Mads (uændret)
-1. npm publish (bugbottle + deskuptime) — registry-opdagelse
+1. npm publish (bugbottle + deskuptime)
 2. Lemon Squeezy-nøgle (Bitwarden)
-3. Marketplace-udgivelse = ét klik (se BUILD.md iter 416)
+3. GitHub Marketplace-udgivelse = ét klik (BUILD.md iter 416)
 
 ## Næste iteration
-1. Intern linkning er nu dækket for bugbottle. Overvej samme mønster for andre
-   nylige posts: tjek at alle sitemap-URL'er faktisk er linket indefra (script:
-   hent sitemap, grep hver loc mod site/*.html).
-2. Live-demo-mønster for clean-copy API (input → output i browseren) — foreslået
-   i iter 417/418, stadig ikke bygget.
-3. npm publish bugbottle v0.2.5 når login kommer.
+1. Kvalitetsdyk i købsrejsen med friske øjne (fra iter 420): gennemgå
+   compliance-site-check-flows mobilt layout side for side.
+2. Overvej cross-link fra eksisterende html-to-markdown-poster til den nye
+   API-post (CLI-, converter- og VS Code-posterne nævner API'et ikke endnu).
+3. npm publish når login kommer.
