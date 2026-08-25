@@ -1,7 +1,7 @@
 {
   "id": "clean-copy-obsidian",
   "name": "Clean Copy",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "minAppVersion": "1.4.0",
   "description": "Paste and clean text as proper Markdown. Custom cleanup rules and batch cleaning with Clean Copy Pro.",
   "author": "Mahope",

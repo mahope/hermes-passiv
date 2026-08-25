@@ -24,6 +24,19 @@ assert.throws(() => Core.compileRules([{ find: '[', replace: 'x', regex: true }]
 const rr = [{ find: '\\d+', replace: '#', regex: true }];
 assert.strictEqual(Core.batchConvert(['<p>abc 123</p>'], 'markdown', rr)[0].content, 'abc #');
 
+// wikilinks mode: internal links -> [[WikiLink]], external stay Markdown,
+// images and fenced code are untouched
+const wl = Core.batchConvert(
+  ['<p>See <a href="/other">Other</a> and <a href="https://x.example/y">Ext</a> <img src="a.png" alt="im"></p><pre><code>[z](w)</code></pre>'],
+  'wikilinks', [])[0].content;
+assert.ok(wl.includes('[[Other]]'), wl);
+assert.ok(wl.includes('[Ext](https://x.example/y)'), wl);
+assert.ok(wl.includes('![im](a.png)'), wl);
+assert.ok(wl.includes('[z](w)'), wl);
+// scheme-less relative + root-relative both convert
+const wl2 = Core.batchConvert(['<a href="sub/page">Sub</a>'], 'wikilinks', [])[0].content;
+assert.strictEqual(wl2, '[[Sub]]');
+
 // batch never throws
 const batch = Core.batchConvert([null, '<p>ok</p>'], 'markdown', []);
 assert.deepStrictEqual(batch.map(b => b.ok), [true, true]);
