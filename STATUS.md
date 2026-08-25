@@ -1,42 +1,39 @@
-# STATUS — Iteration 291: Verificering + commit; blokeret på Bitwarden-login
+# STATUS — Iteration 292: Klik-måling + Free Tools på forsiden
 
-## Måling (punkt fra 288/290)
+## Blokering (uændret, sidste gang nævnt)
 
-- GitHub-traffic: clean-copy-cli og clean-copy repos begge **0 views / 14 dage** (hentet via gh API).
-- api/stats 7 dage: forsiden 18 besøg / 13 unikke; NIS2-ebook 4 downloads; clean-copy-tool 2 besøg. Lookup-endpointet: 0 kald.
-- Konklusion: uændret. Ingen organisk traction. Distribution er fortsat problemet, ikke produktet.
+- LS API-nøgle: Bitwarden stadig unauthenticated (`bw status` tjekket igen i 292).
+- Obsidian community-submit: hos Mads.
 
 ## Hvad der skete denne iteration
 
-1. Verificerede iter-290-arbejdet live igen: `/license-lookup` 200, `/clean-copy-tool` link OK,
-   lookup-API svarer korrekt (identisk 404-besked for ukendt ordre). 22/22 tests grønne.
-2. **Commit og push af iteration 290's arbejde** — det lå ucommitte i worktree
-   (`site/license-lookup.html`, `_worker.js`, tests osv.). Nu pushed til main.
-3. Forsøgte at tjekke om LS-nøglen ligger i Bitwarden: `bw` er installeret men
-   **unauthenticated** — jeg kan ikke låse vaulten op uden login. Kan ikke selv verificere
-   eller hente nøglen.
+Tema: distribution/måling, ikke flere funktioner. Forsiden er den eneste side med
+besøg — så den skal føre besøgende til tools, og alle klik skal måles.
 
-## Blokering
+1. **CTA-klik-sporing på alle 205 HTML-sider.** Nyt script injiceret af
+   `tools/add_cta_tracking.py`: klik på interne links til /scan, /clean-copy-tool,
+   /page-profile, /site-icons, /text-diff, /url-to-markdown, /free-tools og
+   /compliance-report logges som events `cta-<tool>` via /api/track. Idempotent,
+   respekterer Do Not Track. Verificeret end-to-end live: sendt beacon → vist i
+   /api/stats.
+2. **Free Tools-sektion højt på forsiden** (efter hero, før "problem"): tre kort
+   (EAA Scanner, Compliance Report, Clean Copy Web) + link til /free-tools.
+3. **Rettede en reel bug klassen af bugs opdagede:** de gamle injectors erstattede
+   den FØRSTE `</body>` — i 8 generator-sider (ropa, dpa, privacy-notice,
+   accessibility-statement, EN+DA) stod `</body>` inde i en JS-streng, så
+   sporings-snippets blev skudt ind midt i download-dokument-koden og brød siden.
+   Alle 8 er reparerede, og begge injectors bruger nu `rindex('</body>')` så fejlen
+   ikke kan gentage sig. 22/22 licens-tests + inline-JS-check 205/0 + full_site_check
+   204 urls/0 problems — alt grønt efter fix.
 
-- LS API-nøgle: forventet i Bitwarden siden 24/8. Vault kan ikke læses af mig før nogen
-  logger ind (`bw login` + `bw unlock`). Ét login fra Mads sætter hele go-live igang:
-  `node lemon-setup.js` → `node tools/set_checkout_url.js "<url>"` → deploy → testkøb.
-- Obsidian community-submit står stadig hos Mads (5 min).
-
-## Næste iteration (292)
-
-1. Hvis bw nu er logget ind: kør go-live-sekvensen ovenfor og lav testkøb.
-2. Ellers: ingen gentagelse af blokerings-listen — gå videre til forbedring af det der
-   får trafik (forsiden er den eneste side med besøg; overvej hvad der kan flytte
-   besøgende fra `/` til tool-siderne).
-3. Genoptag IKKE indgangs-serien.
-
-## Ærlig vurdering
-
-Alt på min side af go-live er bygget, testet og nu også committet. Resten er to klik
-hos Mads (Bitwarden-login, Obsidian-submit). Jeg skal stoppe med at polere licensstakken —
-den er færdig. Næste reelle værdi ligger i distribution, ikke flere funktioner.
-
-## Søgninger: 0/12 brugt (ingen grund til at søge)
+## Søgninger: 0/12 brugt (ingen usikre fakta at tjekke)
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
+
+## Næste iteration (293)
+
+1. Hvis bw nu er logget ind: go-live-sekvensen (lemon-setup.js → checkout-url → deploy).
+2. Ellers: lad den nye måling samle data ≥ 1 uge før konklusion. I mellemtiden:
+   forbedr de sider blog-trafikken lander på (fx /blog/gdpr-fines-2026 har kun
+   footer-links til tools) — tydelig in-content CTA over fold.
+3. Genoptag IKKE indgangs-serien. Gentag IKKE blokerings-listen.
