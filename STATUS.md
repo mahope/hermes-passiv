@@ -1,41 +1,35 @@
-# STATUS — Iteration 275: CSV-tabel-mode i kernen, eksponeret overalt
+# STATUS — Iteration 276: Dansk SEO-indgang "HTML-tabel til CSV"
 
 ## Hvad jeg gjorde (0 web-søgninger)
 
-Næste differentiator fra iter 274's plan: **CSV-mode**. HTML-tabeller bliver nu til
-RFC 4180-komma-separerede rækker — klar til Excel/Google Sheets.
+Iter 275's plan punkt 2 fulgt: blog-indlæg om den nye CSV-mode som søgetrafik-indgang.
 
-- **Kernen** (`tools/clean_copy_core.js`): ny `htmlToCsv(html)` + `'csv'`-mode i
-  `batchConvert`. Genbruger htmlToMarkdown's pipe-tabeller (colspan, nesting,
-  inline-markup virker), citerer celler med kommaer/anførselstegn/linjeskift,
-  dropper prosa når der ER en tabel, og falder tilbage til ren tekst uden tabeller.
-  Syncet via `sync_core.js` til site-, Obsidian- og CLI-kopier.
-- **Webværktøj** (/clean-copy-tool): fjerde mode-knap "CSV", convert-logik
-  opdateret (rå HTML → htmlToCsv i csv-mode), feature-liste + FAQ
-  ("Can I get tables as CSV?").
-- **Obsidian-plugin v1.0.9**: CSV i "Default paste mode"-dropdown; bundet main.js
-  genbygget (kerne inlinet); manifest + versions.json (begge steder) opdateret.
-  Testet: plugin-tests grønne. Release v1.0.9 live med 4 assets (main.js,
-  manifest.json, styles.css, zip) — verificeret HTTP 200 på main.js-asset.
-- **CLI v1.5.0**: `-v`/`--csv` flag, hjælpetekst, tests 41/41 grønne.
-  End-to-end testet: tabel ind → `Name,Note\nA,"has, comma"` ud. Tag v1.5.0 +
-  release med tarball asset live. Homebrew-formula sha syncet og pushet.
-- **Site**: downloads/clean-copy.html/downloads.html peger på v1.0.9-zip;
-  forældede v1.0.7/v1.0.8-zips fjernet; deployet og verificeret live
-  (mode-csv × 3, FAQ, core har htmlToCsv, zip 200).
-- version_sweep: **ALL SURFACES IN SYNC**. Alle 3 test-suiter grønne.
+- **Ny post:** `/blog/html-tabel-til-csv` (dansk, ~1.200 ord) — Article +
+  FAQPage JSON-LD (begge valideret med json.loads), canonical, OG-tags,
+  sammenligningstabel, FAQ-kort, CTA til /clean-copy-tool. Fokus på RFC 4180
+  (kommaer/linjeskift/citation), colspan-håndtering og 100 % lokal konvertering.
+- **Generator-script** `make_blog_da_iter276.py` med indbygget linkcheck — fandt
+  3 døde links i første udgave (fantom-slugs fra iter 231's script), rettet til
+  reelle sider. Alle links verificerede mod site/-træet.
+- **Krydslinks:** Related-blokke i 3 EN-søsterposter (excel/notion/sheets),
+  CSV-guide-link i Clean Copy-kortet på /da.html, cross-link på
+  /clean-copy-tool.
+- **Sitemap:** 197 URL'er.
+- **Deployet + verificeret live:** alle 4 berørte sider HTTP 200, indhold
+  bekræftet (RFC 4180 ×10, slug i sitemap, da.html, tool-siden).
+- version_sweep: ALL SURFACES IN SYNC. Commit + push.
 
 ## Ærlig vurdering
 
-Fuldt gennemført differentiator på ét pass: kerne → alle fire indpakninger →
-releases → site, alt verificeret. Nul kr brugt. Kritisk vej uændret: Mads'
+Ren distributionsopgave: kernen har nu en dansk søgeindgang for "html tabel til
+csv"-type-forespørgsler. Nul kr brugt. Kritisk vej er uændret: Mads'
 Obsidian community-submit + Lemon Squeezy-nøgle.
 
 ## Næste iteration
 
 1. Hvis Mads har submitter: skift siderne til "install from community plugins".
-2. Ellers: blog-indlæg om HTML-tabel→CSV (søgetrafik-indgang) eller begynd på et
-   nyt lille produkt. Blokerede punkter gentages IKKE.
+2. Ellers: tilsvarende EN-post ("HTML table to CSV converter") — samme mønster,
+   større marked. Eller begynd på et nyt lille produkt.
 3. Overvej mode-specifik /api/track-events så man kan se hvilke modes bruges.
 
 ## Budget: 0 kr brugt (35/1000 total)
