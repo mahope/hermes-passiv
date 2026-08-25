@@ -53,3 +53,8 @@ ikke længere. Den eneste resterende handling er at Mads logger ind og submitter
 **Opdatering iter 272:** Alle ikke-blokerede dele af flagskibet er bygget og live
 (plugin v1.0.7, releases, licensing-klar, landing page, 2 guider, sitemap).
 Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle.
+
+**Opdatering iter 273:** WikiLinks-mode bygget i kernen (differentiator for
+Obsidian-sporet) + v1.0.8 release hvor main.js nu er selvstændigt — v1.0.7's
+manuelle installation ville have fejlet (core.js manglede i assets). Ret og
+verificeret live.

@@ -33,6 +33,12 @@
 
 **Pivot bekræftet (iter 271):** NIS2-sporet stoppes. Clean Copy for Obsidian bliver flagskibet.
 
+**Bygget i iter 273:**
+- WikiLinks-mode i den delte kerne (interne links → [[WikiLink]]); syncet til site/obsidian/CLI
+- CLI -w/--wikilinks flag; tarball + GitHub asset + Homebrew sha alle syncet og verificeret
+- Obsidian v1.0.8: main.js er nu SELVSTÆNDIG (kerne inlinet via tools/build_obsidian_bundle.js) — retter at v1.0.7's release manglede core.js som main.js krævede. Release live med 4 assets, funktionelt testet.
+- Site (guide, clean-copy, downloads) opdateret til 1.0.8, deployet, verificeret live; version_sweep: in sync
+
 **Bygget i iter 272:**
 - Installationsguide /blog/install-obsidian-plugin-clean-copy (BRAT/manuelt/zip,
   FAQ, JSON-LD SoftwareApplication+FAQPage) — live og verificeret

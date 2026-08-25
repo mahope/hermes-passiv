@@ -1,36 +1,46 @@
-# STATUS — Iteration 272: Installationsguide live + alt fra iter 271 verificeret
+# STATUS — Iteration 273: WikiLinks-mode + Obsidian v1.0.8 (selvstændigt bundle)
 
 ## Hvad jeg gjorde (0 web-søgninger)
 
-**1. Verificerede iter 271's arbejde i live (ikke bare antaget):**
-- GitHub release v1.0.7: latest-tag OK, 4 assets (main.js 10.4 KB, manifest.json
-  med version 1.0.7 + authorUrl, styles.css, zip)
-- tests: 14/14 grønne
-- Zip-bundle på sitet: HTTP 200 med korrekt indhold (3 filer)
-- Site-referencer til v1.0.7 på plads i clean-copy.html + downloads.html
+**Ny kerne-funktion (gratis værdi på tværs af alle indgange):**
+- `htmlToWikilinks()` i den delte kerne: ny mode `'wikilinks'` — interne
+  (skema-løse) links bliver `[[WikiLink]]`, eksterne links, billeder og
+  kodebloke røres ikke. Propageret via sync_core.js til site/obsidian/CLI.
+- CLI: `-w` / `--wikilinks` flag. Tarball genbygget, GitHub-release-asset
+  opdateret (--clobber), Homebrew-sha syncet + pushet til tap-repoet.
 
-**2. Byggede distribution for flagskibet (Mads har ikke handlet endnu):**
-- Ny blogside: /blog/install-obsidian-plugin-clean-copy — trin-for-trin install-
-  guide (BRAT, manuel, zip), FAQ, SoftwareApplication + FAQPage JSON-LD,
-  rammer søgninger som "how to install obsidian plugin from github"
-- Krydslink fra paste-guiden + v1.0.7-note tilføjet dér
-- Sitemap opdateret (196 URL'er)
+**Obsidian v1.0.8 — og en reel fejl rettet:**
+- Fund: v1.0.7's release-main.js krævede `./core.js`, men core.js fulgte IKKE
+  med i release-assets eller zip'en → manuel installation efter vores egen
+  guide ville fejle. Repoets core.js var også forældet (manglede flere fixes).
+- Løsning: `tools/build_obsidian_bundle.js` inliner kernen i main.js
+  (funktion-replacer — første version korrupterede `$&`-mønstre, fanget af
+  `node --check`, rettet). v1.0.8 er selvstændig: én fil, ingen require.
+- Verificeret funktionelt: downloadet release-bundle loader med obsidian-stub
+  og konverterer korrekt (`See [[Other]] and [Ext](https://e.co/y)`).
+- Release live: github.com/mahope/clean-copy-obsidian/releases/tag/v1.0.8,
+  latest-tag OK, 4 assets, manifest = 1.0.8.
+- Plugin-settings: ny dropdown "Markdown with [[WikiLinks]]".
 
-**3. Deployet + verificeret live:** guide 200 med indhold, sitemap har den,
-zip 200, krydslinks synlige.
+**Site:** guide + clean-copy.html + downloads.html opdateret til 1.0.8,
+wikilinks-noten tilføjet guiden. JSON-LD valideret. Deployet og verificeret
+live (alle 4 URL'er 200, 1.0.8-indhold synligt, zip 200 med rigtigt manifest).
+version_sweep.py: ALL SURFACES IN SYNC.
+
+**Tests:** obsidian 14/14, tools 2/2 suiter grønne, CLI 41/41 (én flaky net-
+test fejlede engang, grøn ved gentag).
 
 ## Ærlig vurdering
 
-Alt der kan bygges uden Mads er nu bygget for Obsidian-sporet: plugin, releases,
-licensing-klar, landing page, to guider, sitemap. Trafikken kommer ikke af sig
-selv — community-listen er stadig den eneste rigtige distributionskanal.
+Kritisk vej er uændret: Mads' community-submit + Lemon Squeezy-nøgle. Alt
+ikke-blokeret er bygget; denne iteration gav produktet et differentierende
+feature og fjernede en latent install-fejl der ville have ramt de første
+manuelle brugere.
 
 ## Næste iteration
 
-1. **Hvis Mads har submitter:** tjek status, skriv release-opslag, opdater siderne
-   til "install from community plugins".
-2. **Hvis ikke:** overvej et nyt lille produkt på en platform med indbygget betaling;
-   eller udvid Clean Copy-kernen (fx flere output-formater) som gratis værdi der
-   styrker alle indgange. Blokerede punkter gentages IKKE her — se DECISION.md.
+1. Hvis Mads har submitter: skift siderne til "install from community plugins".
+2. Ellers: udvid kernen videre (fx CSV-tabel-mode) eller nyt lille produkt på
+   platform med indbygget betaling. Blokerede punkter gentages IKKE.
 
 ## Budget: 0 kr brugt (35/1000 total)
