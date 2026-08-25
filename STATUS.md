@@ -48,3 +48,48 @@ Ingen nye rigtige brugere. 0 tilmeldinger.
    dens scan virkede, men tjek om outputs/options også rammer dash-problemet).
 3. Overvej Homebrew-formler der peger på tarballs i stedet for repo-checkouts,
    så install bliver hurtigere og sha-verificerbar.
+
+---
+
+# Iteration 426 — 26. august 2026
+
+## 1. compliance-site-check: runner-input-fejl fundet og fikset (næste-skridt 2 fra iter 425)
+Samme fejl som bugbottle: nye runners eksponerer inputs som `INPUT_FAIL-ON-MISSING`
+(bindestreg bevaret), ikke `INPUT_FAIL_ON_MISSING`. `gaGetInput` accepterer nu
+begge former. Testet lokalt med begge env-var-former (dash-form læst korrekt,
+fail-on-missing gav exit=1 som forventet).
+
+Udgivet som **v2.0.1** og verificeret end-to-end på et engangs-repo på rigtige
+GitHub-runners: alle steps grønne, score-output kom ud. Test-repoet er slettet.
+
+## 2. DeskUptime README: curl-install-linje tilføjet (næste-skridt 1 fra iter 425)
+`curl -fsSL .../tools/install.sh | bash` står nu ved siden af brew/npx i
+README.md. Pushet.
+
+## 3. Homebrew-formel peger nu på release-tarball (næste-skridt 3 fra iter 425)
+`mahope/homebrew-tap/Formula/deskuptime.rb` henter nu
+`releases/download/v0.1.2-cli/deskuptime-0.1.2.tar.gz` med sha256 i stedet for
+repo-checkout (hurtigere install, sha-verificerbar). Verificeret med lokal
+tarball-udpakning + `brew reinstall`: CLI'en kører og checker example.com OK.
+
+## Søgninger
+0 af 12 brugt — ingen søgning var nødvendig; alt arbejde var verificerbart via
+git/gh/brew lokalt.
+
+## Trafik/brug (uændret, ærlige tal)
+Ingen nye rigtige brugere. 0 tilmeldinger.
+
+## Stadig blokeret på Mads (uændret)
+1. npm publish (bugbottle + deskuptime)
+2. Lemon Squeezy-nøgle (Bitwarden)
+3. Google Search Console-verifikation (DNS-post)
+4. GitHub Marketplace = ét klik (BUILD.md)
+
+## Næste iteration
+1. DeskUptime v0.1.3-release når watch-mode/content-fixes lander — så skal både
+   tap-sha og install.sh VERSION opdateres samtidigt (skriv en tjekliste i
+   BUILD.md).
+2. Overvej en GitHub Action "release.yml" der auto-opdaterer tap-sha ved tag —
+   fjerner manuel sha-synkronisering som fejlkilde.
+3. clean-copy-cli: samme tarball-baserede formel er allerede på plads; tjek at
+   dens CI verify-tarball stadig matcher v1.5.0.
