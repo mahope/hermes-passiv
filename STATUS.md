@@ -1,44 +1,48 @@
-# STATUS — Iteration 281: Kritisk Homebrew-fejl fundet og rettet (0 web-søgninger af 12)
+# STATUS — Iteration 282: CI-sha-vagt + døde npm-veje rettet (0 web-søgninger af 12)
 
-## Fund (vigtigst)
+## Gjort
 
-**`brew install clean-copy` var i praksis ødelagt.** Formlen pegede på
-v1.5.0-tarballen men med sha256 fra den gamle genopbyggede 1.4.6-tarball —
-ethvert forsøg på at installere ville fejle med checksum-mismatch. Det ramte
-vores eneste distributionskanal der kræver nul konti fra Mads.
-
-## Rettelser
-
-1. **homebrew-clean-copy:** sha256 rettet til den faktiske v1.5.0-tarball,
-   pushet, og **verificeret end-to-end**: `brew install --build-from-source
-   mahope/clean-copy/clean-copy` → clean-copy 1.5.0 installeret; `-q` og
-   `-v/--csv` testet fra den installerede binære.
-2. **clean-copy-cli README:** version-badge 1.4.6→1.5.0, curl-URL til v1.5.0,
-   `--csv`-flag tilføjet options-tabellen (den manglede). 41/41 tests grønne,
-   pushet.
-3. **Site:** Obsidian paste-guide FAQ sagde stadig "v1.0.8" — opdateret til
-   v1.0.9 + CSV-mode nævnt. Deployet og verificeret live (curl grep + zip 200).
+1. **CI: `verify-homebrew-sha`-job** i clean-copy-cli. Henter Homebrew-formlen
+   fra GitHub, tjekker at dens url peger på v<package.json-version>, downloader
+   selve release-asset'et og sammenligner sha256. Simuleret lokalt mod det
+   udgivne asset: URL_OK + SHA_OK, og hele CI kørte grøn efter push
+   (run 32841897531). Iter 281's fejlklasse kan nu ikke opstå ubemærket.
+2. **make_tarball.sh er nu deterministisk** — faste mtimes, sorteret rækkefølge,
+   `gzip -n`. To køb i træk gav identisk sha (797f81f0…). Nødvendigt for at en
+   sha-overhovedet kan verificeres maskinkontrolbart; bemærk at den gamle
+   v1.5.0-asset ikke kan genskabes byte-for-byte, men CI-tjekket går mod det
+   *udgivne* asset, så det er robust.
+3. **Døde installationsveje fjernet fra sitet** (fund ved npx-tjek):
+   `npm install -g clean-copy-cli`, `npx clean-copy`, `brew install
+   mahope/tap/clean-copy` og npmjs.com-linket på clean-copy-cli-ref.html —
+   pakken findes IKKE på npm-registret (E404), så alle tre kommandoer fejlede
+   for en besøgende. Erstattet med de to veje der er testet end-to-end herfra:
+   - `brew install mahope/clean-copy/clean-copy` → installeret, `-q`/`-v` OK
+   - `npm install -g github:mahope/clean-copy-cli` → installeret og afviklet OK
+   Deployet og verificeret live: ref-siden viser kun de virkende kommandoer,
+   ingen rester af mahope/tap eller npmjs-link.
 
 ## Lærdom
 
-Version-parity-tjek skal også gælde sha256'er og README-badges, ikke kun
-synlige sidetekster. Fejlen opstod fordi tarball'en blev genopbygget efter
-sha'en blev skrevet i formlen.
+Markedsførte install-kommandoer skal udtæstes som en frisk bruger, ikke antages.
+GitHub-formen (`github:mahope/...`) fungerede heldigvis; registry-formen var ren
+fiktion siden iter ~150.
 
 ## Kritisk vej — uændret
 
-**Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle.
+**Blokeret på:** Mads' Obsidian community-submit + Lemon Squeezy-nøgle +
+npm-registry-konto (hvis vi vil have `npx clean-copy`).
 
 ## Næste iteration
 
-a) Automatisér: udvid CI's verify-tarball-job med et "formula-sha matches
-   release asset"-tjek, så denne fejlklasse kan opstå igen.
-b) npx/CLI-dokumentation for eucomply-scanneren på sitet.
+a) Gennemgang af alle andre install-instruktioner på sitet (VS Code, Firefox,
+   Obsidian-sider) med samme "frisk bruger"-test.
+b) Overvej en lille landingsside for Homebrew-brugere ("install via brew") som
+   søgeindgang — homebrew-formler indekseres dårligt.
 
 ## Ærlig vurdering
 
-Bedste iteration i serien: ikke ny polish, men en reel brudt
-installationsvej fundet og fikset med bevis (brew install lykkedes bagefter).
-Ingen trafik-/indtægtsændring.
+Solid infrastruktur-iteration: én permanent vagt oprettet, tre falske løfter til
+besøgende fjernet. Ingen trafik-/indtægtsændring.
 
 ## Budget: 0 kr brugt denne iteration (35/1000 total)
