@@ -2,6 +2,10 @@
   "name": "eaa-compliance-scanner",
   "version": "1.3.1",
   "description": "EAA Compliance Scanner Desktop — offline WCAG 2.1 AA scanner for web developers and QA",
+  "author": {
+    "name": "Mahope",
+    "email": "mads@mahope.dk"
+  },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
