@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TYPO3 og tilgængelighed: mød BITV 2.0 og EN 301 549 (guide 2026)</title>
+<meta name="description" content="Gør TYPO3-sites compliant med BITV 2.0, EN 301 549 og EAA: redaktørvaner, TypoScript- og Fluid-retter, extension-audit og en praktisk test-workflow — trin for trin på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="TYPO3 og tilgængelighed: mød BITV 2.0 og EN 301 549">
+<meta property="og:description" content="Gør TYPO3-sites compliant med BITV 2.0, EN 301 549 og EAA: redaktørvaner, TypoScript- og Fluid-retter, extension-audit og en praktisk test-workflow — trin for trin på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/typo3-tilgaengelighed-bitv">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/typo3-tilgaengelighed-bitv">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/typo3-tilgaengelighed-bitv">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "TYPO3 og tilgængelighed: mød BITV 2.0 og EN 301 549", "description": "Gør TYPO3-sites compliant med BITV 2.0, EN 301 549 og EAA: redaktørvaner, TypoScript- og Fluid-retter, extension-audit og en praktisk test-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/typo3-tilgaengelighed-bitv", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder BITV 2.0 min kommercielle kunde?", "acceptedAnswer": {"@type": "Answer", "text": "BITV 2.0 binder tyske offentlige organer. Private virksomheder falder under Barrierefreiheitsstärkungsgesetz (BFSG), som implementerer EAA — men begge refererer EN 301 549 / WCAG-baserede krav, så det samme tekniske arbejde tilfredsstiller begge rammer."}}, {"@type": "Question", "name": "Er TYPO3 selv tilgængeligt?", "acceptedAnswer": {"@type": "Answer", "text": "TYPO3-kernens backend har fået markante tilgængelhedsforbedringer i nyere versioner, og CMS'et leverer værktøjerne (semantisk rendering, sproghåndtering, FAL-metadata). Reelt compliance afhænger næsten helt af templaten, extensionsættet og den redaktionelle praksis på det enkelte site."}}, {"@type": "Question", "name": "Hvilken WCAG-version bør vi sigte efter?", "acceptedAnswer": {"@type": "Answer", "text": "EN 301 549 refererer i øjeblikket WCAG 2.1 niveau AA. At bygge mod WCAG 2.2 AA giver luft — tilføjelserne handler mest om fokus-udseende, alternativer til træk og konsekvent hjælp."}}, {"@type": "Question", "name": "Skal vi have en certificeret audit?", "acceptedAnswer": {"@type": "Answer", "text": "Offentlige kunder kræver typisk en selvproduceret, dokumenteret vurdering plus tilgængelighedserklæring; nogle udbudsprocesser beder om uafhængige audits. En automatisk scanning plus manuel tastatur-/skærmlæsertest er accepteret minimum som intern standard."}}, {"@type": "Question", "name": "Hvor lang tid tager TYPO3-udbedring?", "acceptedAnswer": {"@type": "Answer", "text": "For et typisk 20-50 siders site på en vedligeholdt template: 2-5 arbejdsdage til mekaniske retter plus redaktøruddannelse. Sider på gamle custom-templates eller med tunge tredjepartsextensions tager længere — template-refaktoreringen dominerer som regel."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">TYPO3 &middot; TILGÆNGELIGHED &middot; BITV/EN 301 549</div>
+    <h1>TYPO3 og tilgængelighed:<br>mød BITV 2.0 og EN 301 549</h1>
+    <p class="subtitle">Redaktør-, template- og tekniske retter der bringer et TYPO3-site op på WCAG 2.1 AA — til tyske offentlige kunder og EAA-omfattede virksomheder.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>TYPO3 er tungt udbredt i tysktalende offentlig forvaltning, og det ændrer hvad "tilgængelig" betyder for dig som bureau. Tyske offentlige organer skal opfylde BITV 2.0, som reelt er EN 301 549 — den europæiske ICT-tilgængelighedsstandard der indarbejder WCAG 2.1 niveau AA. Siden 28. juni 2025 udvider European Accessibility Act lignende krav til privat e-handel og banktjenester i hele EU. Et TYPO3-site bygget uden en bevidst tilgængelighedsindsats fejler typisk flere EN 301 549-krav på hver eneste side — og offentlige kunder forlanger i stigende grad en dokumenteret tilgængelighedserklæring før kontrakten underskrives.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏛️ Offentlige kunder</h3><p>Tyske offentlige organer skal opfylde BITV 2.0. Bureauer der betjener dem skal kunne vise dokumenteret conformance — ikke gode intentioner.</p></div>
+      <div class="card"><h3>📜 BFSG for private</h3><p>Private tjenester falder under BFSG — den tyske implementering af EAA. Samme tekniske standard, bare en anden juridisk vej.</p></div>
+      <div class="card"><h3>🧩 Tre fejlkilder</h3><p>Størstedelen af defekterne kommer fra redaktørindhold, template-markup (Fluid/TypoScript) og extensions — hver skal håndteres for sig.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor TYPO3-sider fejler</h2>
+    <div class="problem-cards"><div class="card"><h3>📝 Redaktørindhold</h3><p>Manglende alt-tekst på uploadede billeder er den hyppigste defekt — TYPO3 gennemtvinger ikke alt-attributter på FAL-filreferencer, så redaktører springer dem rutinemæssigt over. Andenpladsen: overskriftsstruktur indsat fra Word som visuel formatering i stedet for rigtige h2/h3-elementer.</p></div><div class="card"><h3>🧩 Templates &amp; TypoScript</h3><p>Custom Fluid-templates hardcoder ofte linktekster som "læs mere" gentaget på tværs af siden, dropper lang-attributten eller renderer ikonknapper uden aria-labels. Basistemplates skippet for år siden er ældre end gældende standarder.</p></div><div class="card"><h3>🔌 Extensions</h3><p>Tredjeparts-plugins (formularer, sliders, lightboxes) injicerer ofte ikke-semantisk markup, keyboard-fælder eller manglende fokus-tilstande. Hver extension på sitet skal have sin egen tilgængelighedsgennemgang.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Redaktørniveau — retter uden udvikler</h2>
+    <p>Disse retter kræver ingen udvikler og dækker det meste af fejlvolumenet:</p>
+    <p><strong>1. Gør alt-tekst obligatorisk i praksis.</strong> Tilret workflowet omkring billedindholdselementet så redaktører skal udfylde alternativtekst-feltet. For rent dekorative billeder er eksplicit tom alt="" korrekt — træn forskellen på dekorative og informative billeder.</p>
+    <p><strong>2. Gennemtving semantiske overskrifter.</strong> Begræns de header-layout-valg redaktører kan vælge, så de bruger rigtige h2/h3 frem for stylet tekst. Tjek at Fluid-templates renderer sektionsoverskrifter som ægte heading-elementer, ikke divs.</p>
+    <p><strong>3. Skriv meningsfulde linktekster.</strong> "Mere", "her" og gentagne identiske links til forskellige mål fejler WCAG 2.4.4 og er fjendtlige overfor skærmlæserbrugere der navigerer via linkliste. Retningslinje: linkteksten skal beskrive målet, også læst uden kontekst.</p>
+    <p><strong>4. Sprogattributter.</strong> Sæt sitesproget korrekt pr. sidetræ (TypoScript config.language / htmlTag_langKey eller site-konfiguration), og marker fremmedsprogede ord inline hvor det er praktisk. Det mapper direkte til EN 301 549 klausul 9.3.1.</p>
+    <p><strong>5. Formularer.</strong> Hvert input behøver en programmatisk knyttet label — ikke placeholder-tekst. Bruger I en formularextension, så verificér dens output-markup; mange genererer felter uden labels som default.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Template- og tekniske retter</h2>
+    <p>Udviklersiden — arbejd listen igennem én gang pr. projekt og genbrug tjeklisten overalt:</p>
+    <p><strong>Skip-links:</strong> et synligt "spring til indhold"-link som det første fokuserbare element.</p>
+    <p><strong>Fokus-synlighed:</strong> fjern aldrig outline globalt; style :focus-visible i stedet.</p>
+    <p><strong>Kontrast:</strong> verificér temafarver mod 4,5:1 for brødtekst og 3:1 for stor tekst og UI-komponenter.</p>
+    <p><strong>Tastaturbetjening:</strong> tab igennem alle interaktive komponenter — menuer, accordions, sliders, lightboxes. Alt der kun kan betjenes med mus er en fejl.</p>
+    <p><strong>ARIA-disciplin:</strong> foretræk native HTML-elementer frem for ARIA-patches. En ægte knap slår en div med role="button".</p>
+    <p><strong>PDF-dokumenter:</strong> downloadbare PDF'er tæller også under EN 301 549 — taggede, læsbare PDF'er eller tilgængelige HTML-alternativer.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Test-workflow</h2>
+    <p>En realistisk verifikationsloop for et TYPO3-projekt tager en eftermiddag:</p>
+    <p><strong>Trin 1 — automatisk scanning</strong> af nøglesidetyper (forside, artikel, formular, søgeresultater) med en statisk HTML-scanner. Den fanger kontrastfejl, manglende lang, brudt overskriftsorden, tomme knapper og duplikerede IDs — groft regnet 30-50 % af de typiske problemer på minutter.</p>
+    <p><strong>Trin 2 — keyboard-gennemgang.</strong> Tag musen fra bordet og navigér alle flows en bruger ville. Notér alt der er utilgængeligt, fanget eller uden synligt fokus.</p>
+    <p><strong>Trin 3 — skærmlæser-spotcheck</strong> af ét repræsentativt flow med NVDA eller VoiceOver. Du lytter efter unlabellede kontroller og forvirrende struktur — lav ikke en fuld audit.</p>
+    <p><strong>Trin 4 — dokumentér.</strong> Publicér en tilgængelighedserklæring med conformance-status, kendte begrænsninger og feedbackkanal. Offentlige kunder i Tyskland forventer den; under EAA skal private tjenester i omfang også levere en.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder BITV 2.0 min kommercielle kunde?</h3><p>BITV 2.0 binder tyske offentlige organer. Private virksomheder falder under Barrierefreiheitsstärkungsgesetz (BFSG), som implementerer EAA — men begge refererer EN 301 549 / WCAG-baserede krav, så det samme tekniske arbejde tilfredsstiller begge rammer.</p></div>
+      <div class="card"><h3>Er TYPO3 selv tilgængeligt?</h3><p>TYPO3-kernens backend har fået markante tilgængelhedsforbedringer i nyere versioner, og CMS'et leverer værktøjerne (semantisk rendering, sproghåndtering, FAL-metadata). Reelt compliance afhænger næsten helt af templaten, extensionsættet og den redaktionelle praksis på det enkelte site.</p></div>
+      <div class="card"><h3>Hvilken WCAG-version bør vi sigte efter?</h3><p>EN 301 549 refererer i øjeblikket WCAG 2.1 niveau AA. At bygge mod WCAG 2.2 AA giver luft — tilføjelserne handler mest om fokus-udseende, alternativer til træk og konsekvent hjælp.</p></div>
+      <div class="card"><h3>Skal vi have en certificeret audit?</h3><p>Offentlige kunder kræver typisk en selvproduceret, dokumenteret vurdering plus tilgængelighedserklæring; nogle udbudsprocesser beder om uafhængige audits. En automatisk scanning plus manuel tastatur-/skærmlæsertest er accepteret minimum som intern standard.</p></div>
+      <div class="card"><h3>Hvor lang tid tager TYPO3-udbedring?</h3><p>For et typisk 20-50 siders site på en vedligeholdt template: 2-5 arbejdsdage til mekaniske retter plus redaktøruddannelse. Sider på gamle custom-templates eller med tunge tredjepartsextensions tager længere — template-refaktoreringen dominerer som regel.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/joomla-tilgaengelighed-bitv" style="color:var(--color-accent);">Joomla og tilgængelighed</a> &middot; <a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);">WCAG 2.2-ændringer</a> &middot; <a href="/da/blog/skriv-tilgaengelighedserklaering" style="color:var(--color-accent);">Skriv en tilgængelighedserklæring</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/typo3-accessibility-bitv-check">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

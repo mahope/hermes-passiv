@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordPress vs Wix og tilgængelighed: hvor hver platform fejler (2026)</title>
+<meta name="description" content="Begge platforme driver millioner af EU-sider under European Accessibility Act. Hvor WordPress og Wix fejler WCAG 2.1 AA — og hvordan udbedringen ser ud på hver — på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="WordPress vs Wix: tilgængelighed sammenlignet">
+<meta property="og:description" content="Begge platforme driver millioner af EU-sider under European Accessibility Act. Hvor WordPress og Wix fejler WCAG 2.1 AA — og hvordan udbedringen ser ud på hver — på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/wordpress-vs-wix-tilgaengelighed">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/wordpress-vs-wix-tilgaengelighed">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/wordpress-vs-wix-tilgaengelighed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "WordPress vs Wix: tilgængelighed sammenlignet", "description": "Begge platforme driver millioner af EU-sider under European Accessibility Act. Hvor WordPress og Wix fejler WCAG 2.1 AA — og hvordan udbedringen ser ud på hver — på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/wordpress-vs-wix-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA forskelligt for WordPress- og Wix-sider?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Loven regulerer tjenesten der tilbydes forbrugeren, ikke publiceringsplatformen. En WordPress-side og en Wix-side der tilbyder samme tjeneste står overfor de samme WCAG 2.1 AA-krav."}}, {"@type": "Question", "name": "Er WordPress mere tilgængeligt end Wix ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Ingen af dem er conformant som default når rigtigt indhold, temas og extensions kommer i bildet. WordPress-kernens defaults er solide, men plugin-økosystemet er jokeren; Wix begrænser dårlig markup men dens visuelle redigering skaber strukturelle overskriftsproblemer."}}, {"@type": "Question", "name": "Kan jeg rette tilgængelighedsproblemer i Wix uden udvikler?", "acceptedAnswer": {"@type": "Answer", "text": "Meget af det, ja: alt-tekst-felter, overskriftstildeling, farvekontrast i site styles og linkbeskrivelser er ejerniveau-indstillinger. Problemer inde i tredjeparts-apps kræver som regel app-udskiftning eller dokumenterede begrænsninger."}}, {"@type": "Question", "name": "Hvad er den største enkeltstående WordPress-tilgængelighedsrisiko?", "acceptedAnswer": {"@type": "Answer", "text": "Uadministrerede plugins. Hvert ekstra formular-, slider- eller page-builder-plugin øger defektfladen, og opdateringer kan lydløst genintroducere rettede fejl. Hold plugin-antallet lavt og scan efter hver opdateringsrunde."}}, {"@type": "Question", "name": "Hvor lang tid tager udbedring på hver platform?", "acceptedAnswer": {"@type": "Answer", "text": "Et typisk 20-50 siders site: dage til mekaniske retter på begge. WordPress-sider tunge på page-builders og plugins kan tage uger; Wix-sider bliver normalt hurtigere færdige men kan bære dokumenterede begrænsninger for specifikke apps."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SAMMENLIGNING &middot; WORDPRESS VS WIX &middot; EAA</div>
+    <h1>WordPress vs Wix:<br>tilgængelighed sammenlignet</h1>
+    <p class="subtitle">Samme juridiske krav, to helt forskellige arkitekturer: hvor WordPress- og Wix-sider fejler WCAG 2.1 AA, og hvilken remediation-workflow der passer til hver.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>WordPress driver cirka fire gange flere websites end Wix, og begge publikummer er nu underlagt European Accessibility Act, når de tilbyder tjenester til EU-forbrugere. Juridisk er de identiske: EN 301 549 / WCAG 2.1 AA-conformance, håndhævet nationalt siden midten af 2025. Arkitektonisk kunne de ikke være mere forskellige. WordPress er open source-software du hoster selv, temaet og udvidet fra et enormt plugin-økosystem. Wix er en hosted website builder hvor visuel redigering skriver markeringen for dig. De to modeller giver markant forskellige tilgængeligheds-fejlmønstre — og markant forskellige rette-workflows.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Samme pligt</h3><p>EAA-omfattede tjenester på begge platforme skal møde WCAG 2.1 niveau AA. Håndhævelsesmyndigheder er ligeglade med hvilket CMS renderer dine sider.</p></div>
+      <div class="card"><h3>🔓 Åben vs hosted</h3><p>WordPress giver fuld kontrol over hver byte HTML — inklusive magten til at ødelægge den. Wix begrænser hvad du kan ændre, til gavn og besvær.</p></div>
+      <div class="card"><h3>🧩 Extension-risiko</h3><p>WordPress-plugins og Wix-apps injicerer begge widgets af ukendt kvalitet. Formularer, sliders og popups er de værste syndere på begge.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor WordPress fejler</h2>
+    <div class="problem-cards"><div class="card"><h3>📝 Redaktørindhold</h3><p>Manglende alt-tekst (media-uploaderen tillader tomt alt), overskrifter indsat som fed tekst og linktekster som "klik her" skrevet direkte i block-editoren.</p></div><div class="card"><h3>🧩 Plugin-widgets</h3><p>Form-builders, page-builder-blokke og slider-plugins med placeholder-only felter, div-baserede "knapper" og keyboard-fælder.</p></div><div class="card"><h3>🎨 tema-arv</h3><p>Custom themes og page-builder-layouts der springer landmarks over, fjerner fokus-outlines eller gentager identiske "læs mere"-links i arkiv-loops.</p></div><div class="card"><h3>🔄 Opdaterings-regressioner</h3><p>Plugin- og temaopdateringer genintroducerer lydløst rettede fejl — tilgængelighed behøver en fast plads i opdateringsrutinen.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Wix fejler</h2>
+    <div class="problem-cards"><div class="card"><h3>🎨 Visuelle defaults</h3><p>Truk-positionerede tekstbokse giver overskriftsniveauer valgt efter udseende, ikke struktur — flere manglende eller forkert ordnede overskrifter pr. side.</p></div><div class="card"><h3>🖼️ Alt-tekst-huller</h3><p>Wix foreslår alt-tekst men kræver den ikke; gallerier importeret fra fotos skibes rutinemæssigt tomme.</p></div><div class="card"><h3>📱 Mobil-layout-duplikering</h3><p>Den separate mobileditor lader rettelser fra desktop overse mobil-viewet helt — en klassisk kilde til "rettet men fejler stadig".</p></div><div class="card"><h3>🔌 Tredjeparts-apps</h3><p>Formular-, chat- og booking-apps injicerer iframes og custom kontroller med inkonsistent tastaturstøtte.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ret-workflow sammenlignet</h2>
+    <p>Forskellen er igen kontrol:</p>
+    <p><strong>WordPress:</strong> næsten alt kan rettes — redaktøruddannelse dækker indholdsproblemer, tema-/child-theme-arbejde dækker strukturelle, og ødelagte plugins kan udskiftes fra tusindvis af alternativer. Prisen er at intet gennemtvinger sig selv: hvert nyt plugin, temaopdatering og ny redaktør kan rulle fremskridtet tilbage, så scanning hører hjemme i vedligeholdelsesrutinen.</p>
+    <p><strong>Wix:</strong> mange retter er konfiguration frem for kode — alt-tekst-felter, semantisk overskriftstildeling i SEO-/tilgængelighedsindstillingerne, kontrastjustering i site styles og aktivering af ren tekst-rendering på mobil. Strukturelle grænser (hvordan en given app renderer sin widget) kan slet ikke rettes; du vælger en anden app eller dokumenterer begrænsningen.</p>
+    <p>Nettoeffekt: WordPress belønner investering med fuld retbarhed men kræver løbende årvågenhed; Wix når "rimeligt compliant" hurtigere for simple sider men rammer et loft sat af builderen og appsene.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad skal du vælge</h2>
+    <p>Eksisterer siden allerede på en af platformene, bliv dér — migrationsomkostningerne overstiger udbedringen, og EAA-pligterne er identiske. Vælger du til et nyt EU-projekt:</p>
+    <p>Vælg <strong>WordPress</strong> når du har (eller kan hyre) en der er tryg ved at vedligeholde themes og plugins — hver tilgængelighedsdefekt er i sidste ende retbar. Vælg <strong>Wix</strong> til simple brochure-agtige sider vedligeholdt af ikke-tekniske ejere, og acceptér at enkelte tredjeparts-widgets kan være uretbare og skal dokumenteres.</p>
+    <p>Uanset hvad er workflowet det samme: automatisk scanning på tværs af nøgle-templates, ret mekaniske fejl (kontrast, alt-tekst, labels, overskriftsorden), auditér hver extension enkeltvis, publicér en tilgængelighedserklæring, og genscan ved hver meningsfuld ændring.</p>
+    <div class="problem-cards"><div class="card"><h3>✅ Begge kan comply'e</h3><p>Fuldt conformante sider findes på begge platforme. Proceskvalitet slår platformvalg.</p></div><div class="card"><h3>🚀 Start med en scanning</h3><p>En automatisk scanning skiller rette-i-dag-problemer fra arkitektoniske på minutter — på ethvert CMS.</p></div><div class="card"><h3>📄 Erklæring påkrævet</h3><p>EAA-omfattede virksomheder bør publicere en tilgængelighedserklæring med conformance-status og dokumenterede begrænsninger.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA forskelligt for WordPress- og Wix-sider?</h3><p>Nej. Loven regulerer tjenesten der tilbydes forbrugeren, ikke publiceringsplatformen. En WordPress-side og en Wix-side der tilbyder samme tjeneste står overfor de samme WCAG 2.1 AA-krav.</p></div>
+      <div class="card"><h3>Er WordPress mere tilgængeligt end Wix ud af boksen?</h3><p>Ingen af dem er conformant som default når rigtigt indhold, temas og extensions kommer i bildet. WordPress-kernens defaults er solide, men plugin-økosystemet er jokeren; Wix begrænser dårlig markup men dens visuelle redigering skaber strukturelle overskriftsproblemer.</p></div>
+      <div class="card"><h3>Kan jeg rette tilgængelighedsproblemer i Wix uden udvikler?</h3><p>Meget af det, ja: alt-tekst-felter, overskriftstildeling, farvekontrast i site styles og linkbeskrivelser er ejerniveau-indstillinger. Problemer inde i tredjeparts-apps kræver som regel app-udskiftning eller dokumenterede begrænsninger.</p></div>
+      <div class="card"><h3>Hvad er den største enkeltstående WordPress-tilgængelighedsrisiko?</h3><p>Uadministrerede plugins. Hvert ekstra formular-, slider- eller page-builder-plugin øger defektfladen, og opdateringer kan lydløst genintroducere rettede fejl. Hold plugin-antallet lavt og scan efter hver opdateringsrunde.</p></div>
+      <div class="card"><h3>Hvor lang tid tager udbedring på hver platform?</h3><p>Et typisk 20-50 siders site: dage til mekaniske retter på begge. WordPress-sider tunge på page-builders og plugins kan tage uger; Wix-sider bliver normalt hurtigere færdige men kan bære dokumenterede begrænsninger for specifikke apps.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/wix-tilgaengelighed-eaa" style="color:var(--color-accent);">Wix og tilgængelighed</a> &middot; <a href="/da/blog/drupal-tilgaengelighed-eaa" style="color:var(--color-accent);">Drupal og tilgængelighed</a> &middot; <a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);">WCAG 2.2-ændringer</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/wordpress-vs-wix-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

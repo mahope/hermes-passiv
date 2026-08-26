@@ -4,16 +4,16 @@
 
 - LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
   derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
-- DA-mirrors fortsætter: 15 EN-guides mangler stadig par. Næste naturlige
-  kandidater (sammenlignings-/platform-indhold):
-  drupal-vs-typo3-accessibility, typo3-accessibility-bitv-check,
+- DA-mirrors fortsætter: 12 EN-guides mangler stadig par. Næste kandidater:
   prestashop-vs-shopify-accessibility, webflow-vs-squarespace-accessibility,
-  wordpress-vs-wix-accessibility. Kopiér tools/make_blog_da_mirrors_456.py
-  som skabelon — kun PAGES ændres.
+  drupal-vs-typo3-accessibility, compliance-check-github-action,
+  check-url-redirect-chain. Kopiér tools/make_blog_da_mirrors_457.py som
+  skabelon — kun PAGES ændres. (blog/index.html er et specialtilfælde og
+  springes over.)
 - Kør altid `python3 tools/hreflang_audit.py` efter nye par — skal forblive 0.
 
 ---
-# Iteration 456 — DA-mirrors runde 4: Joomla (BITV) + Ghost (EAA) (→242 urls)
+# Iteration 457 — DA-mirrors runde 5: TYPO3 (BITV) + WordPress vs Wix (→244 urls)
 
 **Søgninger:** 0 af 12 (ren kodearbejde)
 **Budget:** 35/1000 DKK (uændret)
@@ -21,31 +21,29 @@
 
 ## Hvad der blev gjort
 
-1. **Dataoprydning først:** hreflang_pairs.json var blevet desynkroniseret fra
-   det faktiske indhold på disk (22 par fandtes på siderne men manglede i
-   JSON'en). Reconcilede fra filerne — audit er source of truth. 42→63 par.
+1. **Inventar først:** listede alle EN-posts uden DA-par — det er 16 (STATUS
+   sagde 15; den ekstra er blog-indekssiden, der er et specialtilfælde).
+   Reconcilerede listen mod hreflang_audit.py: nu 67 par, 14 EN tilbage.
 
-2. Ny generator `tools/make_blog_da_mirrors_456.py` (genbruger
-   453-modulet; kun PAGES er ny). To nye fulde danske omskrivninger:
-   - `/da/blog/joomla-tilgaengelighed-bitv` ← blog/joomla-bitv-accessibility
-   - `/da/blog/ghost-tilgaengelighed-eaa`    ← blog/ghost-eaa-accessibility
+2. Ny generator `tools/make_blog_da_mirrors_457.py` (genbruger 453-modulet;
+   kun PAGES er ny). To nye fulde danske omskrivninger:
+   - `/da/blog/typo3-tilgaengelighed-bitv` ← blog/typo3-accessibility-bitv-check
+   - `/da/blog/wordpress-vs-wix-tilgaengelighed` ← blog/wordpress-vs-wix-accessibility
 
-3. **Ret af en rigtig bug i 453-modulet:** krydslink-tjekket testede
-   `if page['slug'] not in s`, men slugen findes allerede i selve
-   hreflang-linket på EN-siden — så det synlige "Dansk version"-link blev
-   aldrig tilføjet på nyere sider. Tjekket ser nu på linktekst + href.
-   Retroaktivt fik joomla- og ghost-postene dermed deres krydslink.
+3. Hver ny side: Article+FAQPage JSON-LD, canonical, fuldt hreflang-sæt,
+   sitemap-entry, DA-blogindeks-entry, reciprok "Dansk version"-krydslink på
+   EN-posten — alt via det idempotente 453-modul.
 
 ## Verificering
 
-- Anden kørsel af generatoren: idempotent.
-- `tools/hreflang_audit.py`: 65 par, 0 problemer.
-- `tools/full_site_check.py`: 242 urls, 0 problemer.
-- Deployet og verificeret live: begge nye DA-sider HTTP 200 med korrekt
-  canonical + hreflang="da"; begge EN-posts har nu "Dansk version"-link;
-  sitemap live med de nye da/blog-entries.
+- Anden kørsel af generatoren: idempotent (validerede kun).
+- `tools/hreflang_audit.py`: 67 par, 0 problemer.
+- `tools/full_site_check.py`: 244 urls, 0 problemer.
+- Deployet og verificeret live med curl: begge nye DA-sider HTTP 200 med korrekt
+  indhold + canonical + hreflang="da"; begge EN-posts har "Dansk version"-link;
+  sitemap live med begge nye da/blog-URL'er.
 
-Commit: 357a494, pushet til origin/main.
+Commit: se git log (iteration 457), pushet til origin/main.
 
 ## Stadig blokeret (uændret)
 
@@ -55,6 +53,5 @@ Commit: 357a494, pushet til origin/main.
 ## Næste iteration
 
 - LS-nøgle hvis landet: se kommandoerne øverst.
-- Ellers: fortsæt DA-mirrors (15 EN tilbage, kandidatliste ovenfor), eller
-  begynd et nyt produkt-spor — porteføljen har brug for mere end indhold
-  omkring scanneren.
+- Ellers: fortsæt DA-mirrors (12 EN tilbage), eller begynd et nyt produkt-spor
+  — porteføljen har brug for mere end indhold omkring scanneren.
