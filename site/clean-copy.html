@@ -8,6 +8,7 @@
   <meta property="og:title" content="Clean Copy — Copy web text as clean Markdown">
   <meta property="og:description" content="Chrome extension that lets you copy selected text as clean Markdown or plain text. Right-click or Ctrl+Shift+C.">
   <meta property="og:image" content="/clean-copy/og-preview.png">
+  <meta property="twitter:image" content="/clean-copy/og-preview.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://hermes-passiv.pages.dev/clean-copy">
 <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/clean-copy">
@@ -125,16 +126,65 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Clean Copy",
-  "applicationCategory": "UtilitiesApplication",
-  "operatingSystem": "Chrome",
-  "description": "Chrome extension that copies selected web text as clean Markdown or plain text.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Clean Copy",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Chrome",
+      "description": "Chrome extension that copies selected web text as clean Markdown or plain text.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Clean Copy free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, the core extension is completely free. A Pro tier with additional features is planned — priced at $19/year when launched."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on any website?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Clean Copy works on any page you can select text on — articles, documentation, code blogs, forums, social media, email. Everything happens in your browser."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it send my data anywhere?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Clean Copy processes everything locally in your browser. The text you select never leaves your machine. No analytics, no tracking, no servers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use the keyboard shortcut?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Press Ctrl+Shift+C (Windows/Linux) or Cmd+Shift+C (Mac) to copy selected text as Markdown. The shortcut is configurable in Chrome's extension shortcut settings."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work in Edge, Brave, or Opera?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Any Chromium-based browser that supports Chrome extensions can install Clean Copy from the Chrome Web Store."
+          }
+        }
+      ]
+    }
+  ]
 }
 </script>
 </head>

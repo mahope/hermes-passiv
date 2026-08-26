@@ -23,7 +23,7 @@ export default {
     if (path === '/api/compliance-ai') return handleComplianceAI(request, env);
 
     // === Route: page profiler ===
-    if (path === '/api/profile') return handleProfile(request, url);
+    if (path === '/api/profile') return handleProfile(request, url, env);
 
     // === Route: waitlist signup ===
     if (path === '/api/waitlist') return handleWaitlist(request, env);
@@ -278,7 +278,7 @@ async function handleScanProxy(request, url) {
  * a structured profile (meta, OG, JSON-LD, headings, alt, security)
  * with a 21-point weighted score and letter grade. Mirrors the CLI.
  */
-async function handleProfile(request, url) {
+async function handleProfile(request, url, env) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -287,6 +287,27 @@ async function handleProfile(request, url) {
   };
 
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
+
+  // === Rate limit: max 30 profiles per visitor per day (UTC) ===
+  // Keeps server-side fetching bounded so the free API can run unattended.
+  if (env && env.VISITS) {
+    try {
+      const vh = await visitorHash(request);
+      const rlKey = `pprl:${dailySalt()}:${vh}`;
+      const used = parseInt((await env.VISITS.get(rlKey)) || '0', 10);
+      if (used >= 30) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: 'Daily profile limit reached (30). Please come back tomorrow — the limit resets at midnight UTC.',
+            limitReached: true,
+          }),
+          { status: 429, headers }
+        );
+      }
+      await env.VISITS.put(rlKey, String(used + 1), { expirationTtl: 2 * 86400 });
+    } catch { /* rate-limit must never block a working answer */ }
+  }
 
   const targetUrlParam = url.searchParams.get('url');
   if (!targetUrlParam) {

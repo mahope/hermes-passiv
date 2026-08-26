@@ -7,7 +7,8 @@
   <meta name="description" content="Check any web page's meta tags, Open Graph, JSON-LD, headings, alt text, security headers — from the terminal. Zero dependencies, single file.">
   <meta property="og:title" content="page-profile — Web Page Profiler CLI">
   <meta property="og:description" content="HTTP status, title, OG, JSON-LD, headings, alt text, security headers — one command, no install.">
-  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta property="og:image" content="/page-profile/og.png">
+  <meta property="twitter:image" content="/page-profile/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://hermes-passiv.pages.dev/page-profile">
   <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/page-profile">
@@ -62,16 +63,65 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "page-profile",
-  "applicationCategory": "DeveloperApplication",
-  "operatingSystem": "Any",
-  "description": "Free CLI web page profiler: HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "page-profile",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": "Free CLI web page profiler: HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need to install anything?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. page-profile is a single Python file using only the standard library. Download it, run it with Python 3.8+ — no pip install, no npm, no browser automation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does it check on a page?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "HTTP status and redirects, title and meta description lengths, canonical URL, language, Open Graph and Twitter Card tags, JSON-LD structured data, heading outline, image alt-text coverage, and security headers (HSTS, CSP, X-Frame-Options and more)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it work on any website?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. It works on any public URL regardless of platform — WordPress, Shopify, Webflow, Next.js, Squarespace or hand-written HTML. Nothing is installed on the target site."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use it in CI pipelines?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Run with --json to get machine-readable output including the score and grade, so you can gate deploys on a minimum quality threshold."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between Free and Pro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, history tracking, client-ready PDF reports and batch mode."
+          }
+        }
+      ]
+    }
+  ]
 }
 </script>
 </head>
@@ -238,11 +288,59 @@
         <div><span class="output">  Score:        16.5/21.0  Grade: B</span></div>
       </div>
     </section>
+
+    <!-- Free JSON API -->
+    <section id="api" style="margin-top:3rem;">
+      <h2>Free JSON API</h2>
+      <p>
+        Everything the web tool does is also a public REST endpoint — no key, no signup. Fetch any page and get
+        structured JSON back: status, meta, Open Graph, JSON-LD, headings, alt-text coverage, security headers,
+        plus a quality score and grade.
+      </p>
+      <div class="cli-demo">
+        <div><span class="output">$</span> curl "https://hermes-passiv.pages.dev/api/profile?url=https://example.com"</div>
+        <div><span class="pass">{ "ok": true, "status": 200, "title": "Example Domain",</span></div>
+        <div><span class="pass">  "score": 7, "max_score": 21, "grade": "F", ... }</span></div>
+      </div>
+      <p style="margin-top:1rem;">
+        Fair use: 30 requests per visitor per day. For unlimited local runs, use the
+        <a href="/downloads/page-profile/page_profile.py">single-file Python CLI</a> instead — same checks, no limits.
+        Full docs: <a href="/page-profile-api-readme.md" rel="noopener">API reference</a> ·
+        <a href="/openapi.yaml" rel="noopener">OpenAPI spec</a>.
+      </p>
+    </section>
   </main>
 
   <footer class="site-footer">
     <p>page-profile by <a href="/">Passiv</a> · MIT license · Pro license for commercial use · <a href="/da/page-profile">Dansk version</a> · <a href="/blog/technical-seo-check-website">Technical SEO guide</a> · <a href="/blog/open-graph-checker">Open Graph checker</a> · <a href="/blog/meta-tag-checker">Meta tag checker</a></p>
   </footer>
+  <section style="background:var(--color-surface);padding:2rem 1rem;" id="faq">
+    <div class="container" style="max-width:760px;margin:0 auto;">
+      <h2>Frequently Asked Questions</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Do I need to install anything?</summary>
+          <p>No. page-profile is a single Python file using only the standard library. Download it, run it with Python 3.8+ — no pip install, no npm, no browser automation.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What does it check on a page?</summary>
+          <p>HTTP status and redirects, title and meta description lengths, canonical URL, language, Open Graph and Twitter Card tags, JSON-LD structured data, heading outline, image alt-text coverage, and security headers (HSTS, CSP, X-Frame-Options and more).</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Does it work on any website?</summary>
+          <p>Yes. It works on any public URL regardless of platform — WordPress, Shopify, Webflow, Next.js, Squarespace or hand-written HTML. Nothing is installed on the target site.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Can I use it in CI pipelines?</summary>
+          <p>Yes. Run with <code>--json</code> to get machine-readable output including the score and grade, so you can gate deploys on a minimum quality threshold.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What is the difference between Free and Pro?</summary>
+          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, history tracking, client-ready PDF reports and batch mode.</p>
+        </details>
+      </div>
+    </div>
+  </section>
   <script>
   (function () {
     var form = document.getElementById('profile-form');

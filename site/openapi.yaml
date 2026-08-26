@@ -1,11 +1,90 @@
 openapi: 3.0.3
 info:
-  title: Clean Copy API
-  description: Free HTML-to-Markdown conversion API. Same engine as the Clean Copy browser extension.
+  title: Clean Copy API & page-profile API
+  description: |
+    Two free JSON APIs:
+    - POST /api/clean-copy: HTML-to-Markdown conversion (Clean Copy engine).
+    - GET /api/profile: structured page profile with SEO/quality score.
   version: "1.5.2"
 servers:
   - url: https://hermes-passiv.pages.dev
 paths:
+  /api/profile:
+    get:
+      summary: Profile a public web page
+      operationId: profileUrl
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: The public URL to fetch and analyze (http/https).
+      responses:
+        "200":
+          description: Page profile (check ok field; target-page HTTP errors are returned here too)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  url:
+                    type: string
+                  final_url:
+                    type: string
+                  status:
+                    type: integer
+                  title:
+                    type: string
+                    nullable: true
+                  meta_description:
+                    type: string
+                    nullable: true
+                  canonical:
+                    type: string
+                    nullable: true
+                  language:
+                    type: string
+                    nullable: true
+                  og:
+                    type: object
+                  twitter:
+                    type: object
+                  json_ld_count:
+                    type: integer
+                  json_ld_types:
+                    type: array
+                    items:
+                      type: string
+                  headings:
+                    type: object
+                  images:
+                    type: object
+                  security:
+                    type: object
+                  score:
+                    type: integer
+                  max_score:
+                    type: integer
+                  grade:
+                    type: string
+                  penalties:
+                    type: array
+                    items:
+                      type: string
+                  error:
+                    type: string
+        "400":
+          description: Missing or invalid url parameter
+        "413":
+          description: Target page exceeds 500 KB
+        "429":
+          description: Daily limit reached (30 profiles/day per visitor)
+        "502":
+          description: Could not fetch the target page
   /api/clean-copy:
     post:
       summary: Convert HTML to clean Markdown or plain text

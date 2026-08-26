@@ -7,7 +7,8 @@
   <meta name="description" content="Indtast en URL og få med det samme en rapport om meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers — med score og karakter. Gratis, ingen tilmelding.">
   <meta property="og:title" content="page-profile — Sundhedstjek af enhver webside">
   <meta property="og:description" content="Meta-tags, Open Graph, JSON-LD, headings, alt-tekster, security headers — én URL ind, rapport ud. Gratis og uden tilmelding.">
-  <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+  <meta property="og:image" content="/page-profile/og.png">
+  <meta property="twitter:image" content="/page-profile/og.png">
   <meta property="og:url" content="https://hermes-passiv.pages.dev/da/page-profile">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://hermes-passiv.pages.dev/da/page-profile">
@@ -194,8 +195,100 @@
     <p>page-profile af <a href="/da">Passiv</a> · MIT-licens · Pro-licens til kommerciel brug · <a href="/page-profile">English version</a></p>
     <p><a href="/da/blog/teknisk-seo-tjek-hjemmeside">Guide: teknisk SEO-tjek af din hjemmeside</a> · <a href="/scan-da">Gratis tilgængelighedsscanner</a></p>
   </footer>
+
+  <!-- FAQ -->
+  <section style="background:var(--color-surface);padding:2rem 1rem;" id="faq">
+    <div class="container" style="max-width:760px;margin:0 auto;">
+      <h2>Ofte stillede spørgsmål</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Skal jeg installere noget?</summary>
+          <p>Nej. page-profile er en enkelt Python-fil som kun bruger standardbiblioteket. Download den og kør med Python 3.8+ — ingen pip install, ingen npm, ingen browser-automation.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Hvad tjekker den på en side?</summary>
+          <p>HTTP-status og redirects, titel- og meta-beskrivelseslængde, canonical URL, sprog, Open Graph og Twitter Card tags, JSON-LD strukturerede data, overskrifts-hierarki, billeder med alt-tekst og sikkerheds-headers (HSTS, CSP, X-Frame-Options og flere).</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Virker den på alle hjemmesider?</summary>
+          <p>Ja. Den virker på alle offentlige URL'er uanset platform — WordPress, Shopify, Webflow, Next.js, Squarespace eller håndskrevet HTML. Intet installeres på målsiden.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Kan jeg bruge den i CI-pipelines?</summary>
+          <p>Ja. Kør med <code>--json</code> for maskinlæsbart output med score og karakter, så du kan gate dine deploys på en minimumskvalitetsgrænse.</p>
+        </details>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Hvad er forskellen på Free og Pro?</summary>
+          <p>Free-versionen dækker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro (119 DKK/år) tilføjer sammenligningstilstand mellem to URL'er, historik, kundeklar PDF-rapport og batch-tilstand.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"page-profile","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/da/page-profile","description":"Tjek meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers p\u00e5 enhver webside \u2014 med score og karakter.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "page-profile",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "url": "https://hermes-passiv.pages.dev/da/page-profile",
+        "description": "Tjek meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers p\u00e5 enhver webside \u2014 med score og karakter.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Skal jeg installere noget?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nej. page-profile er en enkelt Python-fil som kun bruger standardbiblioteket. Download den og k\u00f8r med Python 3.8+ \u2014 ingen pip install, ingen npm, ingen browser-automation."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Hvad tjekker den p\u00e5 en side?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "HTTP-status og redirects, titel- og meta-beskrivelsesl\u00e6ngde, canonical URL, sprog, Open Graph og Twitter Card tags, JSON-LD strukturerede data, overskrifts-hierarki, billeder med alt-tekst og sikkerheds-headers (HSTS, CSP, X-Frame-Options og flere)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Virker den p\u00e5 alle hjemmesider?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ja. Den virker p\u00e5 alle offentlige URL'er uanset platform \u2014 WordPress, Shopify, Webflow, Next.js, Squarespace eller h\u00e5ndskrevet HTML. Intet installeres p\u00e5 m\u00e5lsiden."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Kan jeg bruge den i CI-pipelines?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ja. K\u00f8r med --json for maskinl\u00e6sbart output med score og karakter, s\u00e5 du kan gate dine deploys p\u00e5 en minimumskvalitetsgr\u00e6nse."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Hvad er forskellen p\u00e5 Free og Pro?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Free-versionen d\u00e6kker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro (119 DKK/\u00e5r) tilf\u00f8jer sammenligningstilstand mellem to URL'er, historik, kundeklar PDF-rapport og batch-tilstand."
+            }
+          }
+        ]
+      }
+    ]
+  }
   </script>
   <script>
   (function () {
