@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tjek SSL-certifikatets udløb fra kommandolinjen (uden SaaS)</title>
+<meta name="description" content="Tjek SSL-certifikatets udløb fra terminalen med et gratis CLI-værktøj. Én kommando, ingen konto, intet abonnement. Virker på ethvert domæne.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Tjek SSL-certifikatets udløb fra kommandolinjen">
+<meta property="og:description" content="Tjek SSL-certifikatets udløb fra terminalen med et gratis CLI-værktøj. Én kommando, ingen konto, intet abonnement. Virker på ethvert domæne.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/check-ssl-certificate-expiry">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/check-ssl-certificate-expiry">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek SSL-certifikatets udløb fra kommandolinjen", "description": "Tjek SSL-certifikatets udløb fra terminalen med et gratis CLI-værktøj. Én kommando, ingen konto, intet abonnement. Virker på ethvert domæne.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan tjekker jeg SSL-udløb fra kommandolinjen?", "acceptedAnswer": {"@type": "Answer", "text": "Kør npx github:mahope/deskuptime check https://dit-site.dk. Du får HTTPS-status, SSL-issuer og dage til udløb. Ingen installation, ingen konto, kører helt lokalt."}}, {"@type": "Question", "name": "Hvad er openssl-kommandoen?", "acceptedAnswer": {"@type": "Answer", "text": "openssl s_client -connect example.com:443 -servername example.com &lt; /dev/null 2&gt;/dev/null | openssl x509 -noout -enddate. Den viser udløbsdatoen, men kræver bøvlet parsing — DeskUptime formaterer det som et rent antal dage tilbage."}}, {"@type": "Question", "name": "Kan jeg tjekke flere domæner på én gang?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. DeskUptime tager flere URLs: npx github:mahope/deskuptime check https://site1.dk https://site2.dk. Hver får sit eget SSL-tjek, og exit-koden er 3 hvis noget udløber inden for 14 dage."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SSL &middot; CLI &middot; DESKUPTIME</div>
+    <h1>Tjek SSL-certifikatets udløb<br>fra terminalen</h1>
+    <p class="subtitle">Dit certifikat udløber om N dage — og du har et dusin domæner at tjekke. En SaaS-monitor koster $10/måned. Her er et gratis CLI der tjekker SSL-udløb, HTTP-status og indholdsændringer i én kommando.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Alle certifikater udløber. Når dit gør det, viser browseren en advarsel, API-kaldene fejler, og kunderne forsvinder. De store monitorservices sælger dig et abonnement for at fortælle dig hvornår det er ved at ske — men selve tjekket er trivielt: åbn en forbindelse, læs certifikatet, beregn dage tilbage. Det behøver du ikke et SaaS-abonnement til.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>💻 Én kommando</h3><p>npx github:mahope/deskuptime check https://dit-site.dk — issuer, dage til udløb og HTTP-status med det samme.</p></div>
+      <div class="card"><h3>🆓 Gratis uden grænser</h3><p>CLI'ens SSL-tjek er gratis og uden begrænsninger. Pro ($19 engang) tilfører skrivebordsapp og e-mail-advarsler.</p></div>
+      <div class="card"><h3>🚨 Exit-kode 3</h3><p>Udløber et certifikat inden for 14 dage returnerer CLI'en exit-kode 3 — perfekt som gate i CI/CD.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>One-lineren</h2>
+    <pre>$ npx github:mahope/deskuptime check https://example.com\n\n✅ https://example.com\n   Status:   200 OK\n   Response: 85ms\n   🔒 SSL:     63 days ✅\n   — Content: 559 bytes</pre>
+    <p>🔒-linjen viser præcis hvor mange dage til udløb: grøn over 30 dage, gul 14–30, rød under 14.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sammenlignet med openssl</h2>
+    <p>Den traditionelle vej kræver mere arbejde:</p>
+    <pre>$ openssl s_client -connect example.com:443 \
+  -servername example.com &lt; /dev/null 2&gt;/dev/null \
+  | openssl x509 -noout -enddate
+
+notAfter=Oct 27 12:00:00 2026 GMT</pre>
+    <p>Derefter skal datan parseses, dage beregnes og et wrapper-script skrives. DeskUptime gør det hele og tilføjer HTTP-status og indholdsændringsdetektion i samme output.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Mange domæner og CI/CD</h2>
+    <p>Tjek en hel liste på én gang:</p>
+    <pre>$ npx github:mahope/deskuptime check \
+  https://example.com https://shop.example.com
+
+✅ https://example.com       SSL: 63 days ✅
+🚨 https://shop.example.com  SSL: 3 days 🔥</pre>
+    <p>I GitHub Actions kan samme engine bruges som step: mahope/deskuptime@v1 med urls-input. Exit-kode 3 (SSL-advarsel) fungerer som gate — lad pipelinen fejle, alarmér teamet, og forny certifikatet inden det er for sent.</p>
+    <p>Til løbende overvågning kører watch mode med jævne mellemrum og alarmerer ved ændringer — op til 3 URLs gratis.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan tjekker jeg SSL-udløb fra kommandolinjen?</h3><p>Kør npx github:mahope/deskuptime check https://dit-site.dk. Du får HTTPS-status, SSL-issuer og dage til udløb. Ingen installation, ingen konto, kører helt lokalt.</p></div>
+      <div class="card"><h3>Hvad er openssl-kommandoen?</h3><p>openssl s_client -connect example.com:443 -servername example.com &lt; /dev/null 2&gt;/dev/null | openssl x509 -noout -enddate. Den viser udløbsdatoen, men kræver bøvlet parsing — DeskUptime formaterer det som et rent antal dage tilbage.</p></div>
+      <div class="card"><h3>Kan jeg tjekke flere domæner på én gang?</h3><p>Ja. DeskUptime tager flere URLs: npx github:mahope/deskuptime check https://site1.dk https://site2.dk. Hver får sit eget SSL-tjek, og exit-koden er 3 hvis noget udløber inden for 14 dage.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/scan-da" style="color:var(--color-accent);">Scan din side gratis</a> &middot; <a href="/free-tools" style="color:var(--color-accent);">Gratis værktøjer</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/check-ssl-certificate-expiry">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

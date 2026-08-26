@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML-tabel til CSV — gratis, lokalt og RFC 4180-korrekt (2026)</title>
+<meta name="description" content="Konvertér enhver HTML-tabel til ren CSV direkte i browseren: RFC 4180-overholder, klar til Excel og Google Sheets, intet sendes til en server.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="HTML-tabel til CSV — gratis og RFC 4180-korrekt">
+<meta property="og:description" content="Konvertér enhver HTML-tabel til ren CSV direkte i browseren: RFC 4180-overholder, klar til Excel og Google Sheets, intet sendes til en server.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/html-tabel-til-csv-konverter">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/html-tabel-til-csv-konverter">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/html-table-to-csv-converter">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/html-tabel-til-csv-konverter">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/html-table-to-csv-converter">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTML-tabel til CSV — gratis og RFC 4180-korrekt", "description": "Konvertér enhver HTML-tabel til ren CSV direkte i browseren: RFC 4180-overholder, klar til Excel og Google Sheets, intet sendes til en server.", "url": "https://hermes-passiv.pages.dev/da/blog/html-tabel-til-csv-konverter", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan konverterer jeg en HTML-tabel til CSV?", "acceptedAnswer": {"@type": "Answer", "text": "Åbn det gratis webværktøj på /clean-copy-tool, kopiér tabellens HTML (højreklik → Undersøg → Copy outerHTML), indsæt den i inputfeltet og vælg CSV som outputformat. Du får straks RFC 4180-overholdende CSV."}}, {"@type": "Question", "name": "Bevares celler med kommaer eller linjeskift?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Celler der indeholder kommaer, anførselstegn eller linjeskift ombrydes automatisk i dobbelte anførselstegn, og indre tegn escapes — præcis som standarden kræver. Ingen værdier klippes af."}}, {"@type": "Question", "name": "Bliver mine data sendt til en server?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Konverteringen kører 100 % lokalt i din browser med JavaScript. Intet du indsætter forlader nogensinde din maskine."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">CSV &middot; TABELLER &middot; GRATIS VÆRKTØJ</div>
+    <h1>HTML-tabel til CSV<br>på to klik</h1>
+    <p class="subtitle">Skal tabellen fra en hjemmeside ind i Excel eller Google Sheets? Indsæt HTML'en og få RFC 4180-korrekt CSV — hver celle på sin plads, intet sendes nogen steder hen.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>En HTML-tabel er ikke bare tekst — og CSV tolererer ikke slurvet tekst. Tre ting går næsten altid galt ved manuel konvertering: kommaer i celler deler kolonnen, linjeskift i celler knækker række-strukturen, og colspan/nested markup giver ekstra kolonner eller tomme felter. Det gratis Clean Copy-webværktøj håndterer alle tre — 100 % lokalt i din browser.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ RFC 4180-korrekt</h3><p>Celler med komma, anførselstegn eller linjeskift omsluttes og escapes automatisk — filen åbner rent i ethvert regneark.</p></div>
+      <div class="card"><h3>🎯 Kun tabellen</h3><p>Prosa, menuer og reklamer uden for tabellen droppes, når der er en tabel i det du indsætter.</p></div>
+      <div class="card"><h3>🔒 100 % lokalt</h3><p>Konverteringen kører i din browser. Dine data forlader aldrig din maskine.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan gør du</h2>
+    <p><strong>1. Hent tabellens HTML:</strong> Højreklik på tabellen → Undersøg → højreklik på &lt;table&gt;-elementet → Copy → Copy outerHTML. (Alternativt Ctrl+U og find tabelblokken.)</p>
+    <p><strong>2. Indsæt og vælg CSV:</strong> Gå til /clean-copy-tool, indsæt HTML'en og vælg CSV som outputformat.</p>
+    <p><strong>3. Gem som .csv:</strong> Kopiér resultatet ind i en  teksteditor og gem som fx konkurrent-priser.csv — eller sæt det lige ind i Excel / Google Sheets via Data → Fra tekst/CSV.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Dine muligheder sammenlignet</h2>
+    <table class="compare" style="width:100%;border-collapse:collapse;"><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Metode</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">RFC 4180?</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Hage</th></tr><tr><td style="padding:8px;border-bottom:1px solid #ddd">Manuel kopiering</td><td style="padding:8px;border-bottom:1px solid #ddd">Nej</td><td style="padding:8px;border-bottom:1px solid #ddd">Kommaer og linjeskift ødelægger kolonnerne</td></tr><tr><td style="padding:8px;border-bottom:1px solid #ddd">Sitens egen eksportknap</td><td style="padding:8px;border-bottom:1px solid #ddd">Sommetiden</td><td style="padding:8px;border-bottom:1px solid #ddd">Findes sjældent; ofte bag en betalt plan</td></tr><tr><td style="padding:8px;border-bottom:1px solid #ddd">Python-script (BeautifulSoup)</td><td style="padding:8px;border-bottom:1px solid #ddd">Ja</td><td style="padding:8px;border-bottom:1px solid #ddd">Kræver kode og miljøopsætning</td></tr><tr><td style="padding:8px"><a href="/clean-copy-tool" style="color:var(--color-accent);">Clean Copy webværktøj — CSV-tilstand</a></td><td style="padding:8px">Ja</td><td style="padding:8px">Ingen — gratis, ingen installation, kører lokalt</td></tr></table>
+    <p>Bruger du det ofte? Samme CSV-motor driver også en <a href="/clean-copy" style="color:var(--color-accent);">browserudvidelse</a>, et CLI-værktøj og en Obsidian-plugin.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Colspan, nestede tabeller og Markdown</h2>
+    <p>Clean Copy håndterer colspan/rowspan ved at gentage værdien hen over de dækkede kolonner, flader nested markup ud til ren tekst og dropper prosa uden for tabellen — så du kun får rækker og kolonner.
+    </p>
+    <p>Skal du have Markdown i stedet? Samme værktøj udskriver også Markdown-tabeller (til Notion, Obsidian, GitHub) og WikiLinks-format — bare skift outputtilstand.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan konverterer jeg en HTML-tabel til CSV?</h3><p>Åbn det gratis webværktøj på /clean-copy-tool, kopiér tabellens HTML (højreklik → Undersøg → Copy outerHTML), indsæt den i inputfeltet og vælg CSV som outputformat. Du får straks RFC 4180-overholdende CSV.</p></div>
+      <div class="card"><h3>Bevares celler med kommaer eller linjeskift?</h3><p>Ja. Celler der indeholder kommaer, anførselstegn eller linjeskift ombrydes automatisk i dobbelte anførselstegn, og indre tegn escapes — præcis som standarden kræver. Ingen værdier klippes af.</p></div>
+      <div class="card"><h3>Bliver mine data sendt til en server?</h3><p>Nej. Konverteringen kører 100 % lokalt i din browser med JavaScript. Intet du indsætter forlader nogensinde din maskine.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/clean-copy" style="color:var(--color-accent);">Clean Copy-udvidelsen</a> &middot; <a href="/scan-da" style="color:var(--color-accent);">Scan din side gratis</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/html-table-to-csv-converter">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

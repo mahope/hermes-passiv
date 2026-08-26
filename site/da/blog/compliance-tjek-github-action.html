@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatisér dine EU-compliance-tjek med en GitHub Action (2026)</title>
+<meta name="description" content="Gratis GitHub Action der tjekker et website for 9 ting: privatliv, vilkår, cookie-samtykke, imprint, tilgængelighed, DPA, sikkerhedsheadere, meta-tags og hreflang. Kører i CI efter hver deploy. Nul afhængigheder.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Automatisér dine EU-compliance-tjek med en GitHub Action">
+<meta property="og:description" content="Gratis GitHub Action der tjekker et website for 9 ting: privatliv, vilkår, cookie-samtykke, imprint, tilgængelighed, DPA, sikkerhedsheadere, meta-tags og hreflang. Kører i CI efter hver deploy. Nul afhængigheder.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/compliance-tjek-github-action">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/compliance-tjek-github-action">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/compliance-check-github-action">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/compliance-tjek-github-action">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/compliance-check-github-action">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Automatisér dine EU-compliance-tjek med en GitHub Action", "description": "Gratis GitHub Action der tjekker et website for 9 ting: privatliv, vilkår, cookie-samtykke, imprint, tilgængelighed, DPA, sikkerhedsheadere, meta-tags og hreflang. Kører i CI efter hver deploy. Nul afhængigheder.", "url": "https://hermes-passiv.pages.dev/da/blog/compliance-tjek-github-action", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad tjekker action'en præcist?", "acceptedAnswer": {"@type": "Answer", "text": "Ni ting: privatlivspolitik, vilkår, cookie-samtykke-banner, imprint, tilgængelighedserklæring, DPA, fem sikkerhedsheadere, SEO-meta-tags og hreflang/sprogerklæring. Sidetjek prøver gængse URL-stier og validerer indholdet; headere og meta læses direkte fra forsidens respons."}}, {"@type": "Question", "name": "Kan pipelinen fejle hvis sider mangler?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Angiv fail-on-missing: 'privacy, imprint, accessibility, security-headers' for kun at fejle på bestemte tjek, eller 'any' for alle. Som standard rapporteres der kun."}}, {"@type": "Question", "name": "Hvad koster det?", "acceptedAnswer": {"@type": "Answer", "text": "Intet. Action'en er free and open source (MIT), har nul npm-afhængigheder, kræver ingen API-nøgle og kører på GitHubs standard-runners."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GITHUB ACTION &middot; AUTOMATISERING &middot; EU-COMPLIANCE</div>
+    <h1>Automatisér dine EU-compliance-tjek<br>i CI</h1>
+    <p class="subtitle">Til webbureauer og devops-team i EU: de samme ni tjek efter hver eneste deploy — uden at nogen åbner siden og klikker sig igennem tre sider for at konstatere at "det er vist der".</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Driver du kundersider i EU, har du haft samtalen: "Har sitet en privatlivspolitik? Vilkår? Cookie-samtykke?" Svaret er typisk "tror jeg" — og så klikker nogen sig igennem sitet for at bekræfte det. Netop det manuelle tjek bør ligge i CI: efter hver deploy, før kunden ser det, automatisk. Action'en mahope/compliance-site-check gør præcis det — gratis, open source og helt uden npm-afhængigheder.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Ni tjek i én action</h3><p>Seks EU-compliance-sider (privatliv, vilkår, cookie-banner, imprint, tilgængelighedserklæring, DPA), fem sikkerhedsheadere, meta-tags og hreflang — alt i én rapport.</p></div>
+      <div class="card"><h3>⏱ To minutters setup</h3><p>Én YAML-fil under .github/workflows/. Ingen API-nøgle, ingen konto, ingen installation — Node 20's indbyggede fetch klarer alt.</p></div>
+      <div class="card"><h3>🚦 Fail kun når du vil</h3><p>Som standard rapporterer den kun. Sæt fail-on-missing til fx "privacy, imprint, security-headers" hvis pipelinen skal fejle på konkrete mangler.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad den tjekker — ni punkter</h2>
+    <p>EU-compliance (6):</p>
+    <ul><li><strong>Privatlivspolitik</strong> — prøver /privacy, /privacy-policy, /datenschutz m.fl.</li><li><strong>Vilkår</strong> — /terms, /tos, /conditions, /agb</li><li><strong>Cookie-samtykke</strong> — genkender 15+ platforme (Cookiebot, OneTrust, Complianz, Osano, Termly m.fl.)</li><li><strong>Imprint</strong> — /impressum, /imprint, /legal (krav i Tyskland og Østrig)</li><li><strong>Tilgængelighedserklæring</strong> — krav under EAA</li><li><strong>DPA</strong> — /dpa, krav under GDPR art. 28</li></ul>
+    <p>Sikkerhedsheadere (5): CSP, HSTS, X-Frame-Options, X-Content-Type-Options og Referrer-Policy.</p>
+    <p>Meta og sprog: titellængde, description, viewport, canonical, robots, OG-tags samt lang-attribut og hreflang-alternatives.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Opsætningen på to minutter</h2>
+    <p>Læg denne fil i dit repository som .github/workflows/compliance-check.yml:</p>
+    <pre>name: Ugentligt compliance-tjek
+on:
+  schedule:
+    - cron: '0 8 * * 1'   # hver mandag
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mahope/compliance-site-check@v2
+        with:
+          url: 'https://kundesite.dk'
+          fail-on-missing: 'privacy, imprint, accessibility, security-headers'</pre>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvorfor det betyder noget for bureauer</h2>
+    <p>EU-håndhævelsen accelererer: GDPR-bøder passerede 1,9 mia. i 2025, og EAA-håndhævelsen startede juni 2025. Kravene er ikke valgfrie — men de skal heller ikke kræve at et menneske manuelt tjekker sidens footer på hvert kundewebsted.
+    </p>
+    <p>Action'en giver et objektivt, automatiseret fundament. Den erstatter ikke juridisk gennemlæsning — men den fanger de mest almindelige huller inden de når en kunde, en revisor eller en tilsynsmyndighed.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad tjekker action'en præcist?</h3><p>Ni ting: privatlivspolitik, vilkår, cookie-samtykke-banner, imprint, tilgængelighedserklæring, DPA, fem sikkerhedsheadere, SEO-meta-tags og hreflang/sprogerklæring. Sidetjek prøver gængse URL-stier og validerer indholdet; headere og meta læses direkte fra forsidens respons.</p></div>
+      <div class="card"><h3>Kan pipelinen fejle hvis sider mangler?</h3><p>Ja. Angiv fail-on-missing: 'privacy, imprint, accessibility, security-headers' for kun at fejle på bestemte tjek, eller 'any' for alle. Som standard rapporteres der kun.</p></div>
+      <div class="card"><h3>Hvad koster det?</h3><p>Intet. Action'en er free and open source (MIT), har nul npm-afhængigheder, kræver ingen API-nøgle og kører på GitHubs standard-runners.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/eaa-tjekliste-2026" style="color:var(--color-accent);">EAA-tjekliste</a> &middot; <a href="/da/blog/eaa-frist-hvad-nu" style="color:var(--color-accent);">EAA-fristen: hvad nu?</a> &middot; <a href="/da/blog/gratis-eaa-saetninger" style="color:var(--color-accent);">Gratis EAA-sætninger</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/compliance-check-github-action">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

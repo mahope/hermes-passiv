@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sådan tjekker du en URL's redirect-kæde (gratis værktøj, 2026)</title>
+<meta name="description" content="Spor den fulde redirect-kæde for enhver URL, inspicér sikkerhedsheadere og tjek SSL-certifikatet. Gratis browserværktøj, ingen tilmelding — plus hvorfor 301 vs 302 betyder noget for SEO.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Sådan tjekker du en URL's redirect-kæde">
+<meta property="og:description" content="Spor den fulde redirect-kæde for enhver URL, inspicér sikkerhedsheadere og tjek SSL-certifikatet. Gratis browserværktøj, ingen tilmelding — plus hvorfor 301 vs 302 betyder noget for SEO.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Sådan tjekker du en URL's redirect-kæde", "description": "Spor den fulde redirect-kæde for enhver URL, inspicér sikkerhedsheadere og tjek SSL-certifikatet. Gratis browserværktøj, ingen tilmelding — plus hvorfor 301 vs 302 betyder noget for SEO.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan ser jeg en URL's redirect-kæde?", "acceptedAnswer": {"@type": "Answer", "text": "Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du får hele kæden med statuskoder, alle response-headere, analyse af sikkerhedsheadere og SSL-rapport for destinationen — intet gemmes."}}, {"@type": "Question", "name": "Hvilken statuskode skal jeg bruge?", "acceptedAnswer": {"@type": "Answer", "text": "301 til permanente flytninger (domæneskift, HTTPS-opgradering) — den vidererører SEO-værdien. 302/307 kun til midlertidige ændringer. 308 når POST-data skal bevares gennem redirecten."}}, {"@type": "Question", "name": "Hvor mange hop er for mange?", "acceptedAnswer": {"@type": "Answer", "text": "Ét hop er ideelt, to er okay. Over tre hop bør du korte af ved at pege de tidlige redirects direkte på slut-URL'en — hvert ekstra hop koster latenstid og udvander signaler."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">URL &middot; REDIRECTS &middot; GRATIS VÆRKTØJ</div>
+    <h1>Sådan tjekker du en<br>URL's redirect-kæde</h1>
+    <p class="subtitle">Hver hop koster en rundtur og udvander link-signaler. Se hele kæden, alle statuskoder og certifikatet ved endestationen — på få sekunder.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Når du taster en URL, lander du ofte et helt andet sted. Serveren sender browseren gennem to, tre eller flere hop inden den rigtige side dukker op. Hvert hop er en HTTP-redirect — og når ét af dem er forkert, får du langsomme loads, tabt SEO-værdi eller en ødelagt side. Denne guide viser hvordan du sporer kæden på sekunder med det gratis URL Inspector-værktøj, og hvad du gør ved problemerne.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔗 Hele kæden</h3><p>Se hvert hop, hver statuskode og alle response-headere for den endelige destination — inklusive SSL-certifikatets udløb.</p></div>
+      <div class="card"><h3>📉 Hvert hop koster</h3><p>Google følger op til 10 hop, men unødvendige hop udvander link-signaler og tilføjer latenstid — især på mobil.</p></div>
+      <div class="card"><h3>🔒 Certifikatet til sidst</h3><p>En redirect kan skjule et SSL-problem: første hop virker, men slutværten har udløbet certifikat.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Statuskoderne der tæller</h2>
+    <p><strong>301:</strong> Permanent redirect — domænemigreringer, HTTPS-opgraderinger, omdøbte sider. Viderefører fuld SEO-værdi.</p>
+    <p><strong>302/307:</strong> Midlertidig — vedligeholdelse, A/B-tests. Søgemaskiner beholder den gamle URL indekseret.</p>
+    <p><strong>308:</strong> Permanent og metodebevarende — POST forbliver POST. Bruges bl.a. af Cloudflare Pages.</p>
+    <p>Den mest almindelige fejl er 302 hvor 301 var meningen: Google beholder den gamle URL — eller behandler redirecten som blød sletning.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Typiske problemer — og rettelser</h2>
+    <ul><li><strong>Kæder over 3 hop:</strong> peg den første redirect direkte på slut-URL'en.</li><li><strong>Redirect-loops</strong> — ERR_TOO_MANY_REDIRECTS, typisk to systemer der hver håndhæver www og HTTPS og ophæver hinanden.</li><li><strong>HTTP → mellemstation → slut:</strong> redirect HTTP direkte til den endelige HTTPS-URL i ét hop.</li><li><strong>Redirects på interne links:</strong> opdatér egne links til slut-URL'erne.</li><li><strong>Blød 404:</strong> en redirect der serverer forsiden i stedet for den ønskede side — kontrollér at slut-URL'en matcher.</li></ul>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>SSL og headere mens du alligevel er der</h2>
+    <p>Et certifikat kan være udløbet, have en utroværdig kæde eller kun understøtte TLS 1.0 — besøgende ser fejlen først efter alle hop. URL Inspector laver et live TLS-håndtryk mod slutværten og viser issuer, udløbsdato med dage tilbage, TLS-version og om kæden er troværdig. Under 30 dage markeres som advarsel; udløbet fejler.
+    </p>
+    <p>Samme visning viser sikkerhedsheaderne på svaret: HSTS, CSP, nosniff, frame-beskyttelse og Referrer-Policy — med pass/warn/fail-bedømmelse.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan ser jeg en URL's redirect-kæde?</h3><p>Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du får hele kæden med statuskoder, alle response-headere, analyse af sikkerhedsheadere og SSL-rapport for destinationen — intet gemmes.</p></div>
+      <div class="card"><h3>Hvilken statuskode skal jeg bruge?</h3><p>301 til permanente flytninger (domæneskift, HTTPS-opgradering) — den vidererører SEO-værdien. 302/307 kun til midlertidige ændringer. 308 når POST-data skal bevares gennem redirecten.</p></div>
+      <div class="card"><h3>Hvor mange hop er for mange?</h3><p>Ét hop er ideelt, to er okay. Over tre hop bør du korte af ved at pege de tidlige redirects direkte på slut-URL'en — hvert ekstra hop koster latenstid og udvander signaler.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/canonisk-url-guide" style="color:var(--color-accent);">Kanoniske URLs</a> &middot; <a href="/scan-da" style="color:var(--color-accent);">Scan din side gratis</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

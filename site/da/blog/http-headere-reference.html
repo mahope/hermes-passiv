@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTTP-headere reference: alle headerne der tæller for SEO og sikkerhed</title>
+<meta name="description" content="Komplet reference til HTTP-response-headere: caching, sikkerhedsheadere (CSP, HSTS), SEO-relevante headere — og hvad hver enkelt gør. Gratis værktøj til at tjekke enhver URL.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="HTTP-headere: referencen for SEO og sikkerhed">
+<meta property="og:description" content="Komplet reference til HTTP-response-headere: caching, sikkerhedsheadere (CSP, HSTS), SEO-relevante headere — og hvad hver enkelt gør. Gratis værktøj til at tjekke enhver URL.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/http-headere-reference">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/http-headere-reference">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/http-headers-reference">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/http-headere-reference">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/http-headers-reference">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTTP-headere: referencen for SEO og sikkerhed", "description": "Komplet reference til HTTP-response-headere: caching, sikkerhedsheadere (CSP, HSTS), SEO-relevante headere — og hvad hver enkelt gør. Gratis værktøj til at tjekke enhver URL.", "url": "https://hermes-passiv.pages.dev/da/blog/http-headere-reference", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilke HTTP-headere bør ethvert site have?", "acceptedAnswer": {"@type": "Answer", "text": "Minimum: Strict-Transport-Security (max-age mindst ét år, includeSubDomains), X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin og en Content-Security-Policy — selv en beskeden en med frame-ancestors er bedre end ingen."}}, {"@type": "Question", "name": "Hvad er forskellen på Expires og Cache-Control?", "acceptedAnswer": {"@type": "Answer", "text": "Cache-Control er den moderne header og vinder altid når begge er sat. Expires er en ældre forgænger du kun behøver for meget gamle klienter — sæt ikke Expires og tro at den tilsidesætter Cache-Control."}}, {"@type": "Question", "name": "Hvordan tjekker jeg en sides headere?", "acceptedAnswer": {"@type": "Answer", "text": "Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du ser alle response-headere, en pass/warn/fail-bedømmelse af sikkerhedsheaderne, hele redirect-kæden og SSL-certifikatet."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">HTTP &middot; HEADERE &middot; REFERENCE</div>
+    <h1>HTTP-headere:<br>alle der tæller</h1>
+    <p class="subtitle">Før HTML'en når frem, sender serveren en bunke response-headere der styrer caching, sikkerhed, redirects og hvordan søgemaskiner behandler siden. De fleste sider får flere af dem forkert.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Hver gang en browser loader en side, sender serveren et sæt HTTP-response-headere før noget HTML ankommer. De styrer caching, sikkerhed, redirects og hvordan søgemaskiner behandler din side — og alligevel får de fleste sider flere af dem forkert. Dette er en praktisk reference: hvad hver header gør, hvornår den tæller, og en typisk fejl du skal undgå. Til sidst kan du tjekke enhver URL med det gratis URL Inspector-værktøj.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔐 Sikkerhed</h3><p>CSP, HSTS, nosniff, frame-beskyttelse og Referrer-Policy er de fem headere enhver side bør have.</p></div>
+      <div class="card"><h3>⚡ Cache rigtigt</h3><p>Lang cache på hashede statiske filer, no-cache på HTML. Lang cache på HTML betyder at besøgende ser gamle sider efter din deploy.</p></div>
+      <div class="card"><h3>🔎 SEO-relevante</h3><p>Link: rel=canonical, X-Robots-Tag og Location (3xx) styrer hvordan søgemaskiner behandler dine URLs.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sikkerhedsheadere</h2>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0;"><tr><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Header</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Hvad den gør</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Typisk fejl</th></tr><tr><td style="padding:8px;vertical-align:top"><code>Strict-Transport-Security</code></td><td style="padding:8px;vertical-align:top">Browseren må kun nå sitet via HTTPS. max-age mindst 31536000 (ét år).</td><td style="padding:8px;vertical-align:top">Glemt includeSubDomains — subdomæner forbliver ubeskyttet.</td></tr><tr><td style="padding:8px;vertical-align:top"><code>Content-Security-Policy</code></td><td style="padding:8px;vertical-align:top">Hvidlister hvor scripts, styles og frames må loades fra. Den mest effektive XSS-forsvar.</td><td style="padding:8px;vertical-align:top">unsafe-inline overalt "for at det bare virker" — fjerner det meste af beskyttelsen.</td></tr><tr><td style="padding:8px;vertical-align:top"><code>X-Content-Type-Options</code></td><td style="padding:8px;vertical-align:top">nosniff: stopper browserens gætteri på filtyper.</td><td style="padding:8px;vertical-align:top">Kun sat på HTML — den tæller mest på uploads og API'er.</td></tr><tr><td style="padding:8px;vertical-align:top"><code>X-Frame-Options</code></td><td style="padding:8px;vertical-align:top">DENY/SAMEORIGIN stopper clickjacking via iframes.</td><td style="padding:8px;vertical-align:top">Alene om den: CSP's frame-ancestors er stærkere og erstatter den.</td></tr><tr><td style="padding:8px;vertical-align:top"><code>Referrer-Policy</code></td><td style="padding:8px;vertical-align:top">Styrer hvor meget referrer-data der lækker ved udgående klik. strict-origin-when-cross-origin er dagens fornuftige standard.</td><td style="padding:8px;vertical-align:top">Udeladt: fulde URLs (inkl. query-strenge med persondata) lækker til alle linkede sites.</td></tr></table>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Caching og SEO</h2>
+    <p><strong>Cache-Control:</strong> statiske filer: public, max-age=31536000, immutable. HTML: no-cache så opdateringer ses med det samme. <strong>ETag:</strong> fingeraftryk der giver en lille 304 i stedet for hele siden. <strong>Expires:</strong> ældre forgænger — ignoreres når Cache-Control findes. <strong>Vary:User-Agent</strong> er en klassisk fejl der fragmenterer cachen i hundredvis af næsten-tomme entries.</p>
+    <p><strong>Link: rel=canonical</strong> er kanon-tagget som HTTP-header — nyttigt når samme fil serveres på flere URLs. Pas på modstridende kanoniske: header siger A, meta-tag siger B — Google vælger selv. <strong>X-Robots-Tag: noindex</strong> holder fx en PDF ude af søgeresultater. Ved vedligeholdelse: 503 med Retry-After, ellers begynder Google at droppe siderne.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Et sundt minimum</h2>
+    <pre>Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'self'
+# HTML:
+Cache-Control: no-cache
+# hashede statiske filer:
+Cache-Control: public, max-age=31536000, immutable</pre>
+    <p>Tjek enhver URL på sekunder: det gratis URL Inspector henter siden, følger alle redirects, lister alle response-headere, bedømmer sikkerhedsheaderne pass/warn/fail og viser SSL-certifikatet — uden konto og uden at noget gemmes.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvilke HTTP-headere bør ethvert site have?</h3><p>Minimum: Strict-Transport-Security (max-age mindst ét år, includeSubDomains), X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin og en Content-Security-Policy — selv en beskeden en med frame-ancestors er bedre end ingen.</p></div>
+      <div class="card"><h3>Hvad er forskellen på Expires og Cache-Control?</h3><p>Cache-Control er den moderne header og vinder altid når begge er sat. Expires er en ældre forgænger du kun behøver for meget gamle klienter — sæt ikke Expires og tro at den tilsidesætter Cache-Control.</p></div>
+      <div class="card"><h3>Hvordan tjekker jeg en sides headere?</h3><p>Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du ser alle response-headere, en pass/warn/fail-bedømmelse af sikkerhedsheaderne, hele redirect-kæden og SSL-certifikatet.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/canonisk-url-guide" style="color:var(--color-accent);">Kanoniske URLs</a> &middot; <a href="/scan-da" style="color:var(--color-accent);">Scan din side gratis</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/http-headers-reference">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>
