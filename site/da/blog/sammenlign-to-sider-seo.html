@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sammenlign to websider trin for trin — find forskellene før din konkurrent gør</title>
+<meta name="description" content="Sådan sammenligner du to websiders metadata, struktureret data og tekniske SEO — før og efter et redesign, eller din side mod konkurrentens. Gratis værktøj.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sammenlign to websider trin for trin — find forskellene før din konkurrent gør">
+<meta property="og:description" content="Compare two web pages side by side: metadata, structured data and technical SEO differences — before/after redesign or you vs a competitor. Free tool.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/page-profile/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/sammenlign-to-sider-seo">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/sammenlign-to-sider-seo">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/compare-two-web-pages-seo">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/sammenlign-to-sider-seo">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Sammenlign to websider trin for trin — find forskellene før din konkurrent gør", "description": "Sådan sammenligner du to websiders metadata, struktureret data og tekniske SEO — før og efter et redesign, eller din side mod konkurrentens. Gratis værktøj.", "url": "https://hermes-passiv.pages.dev/da/blog/sammenlign-to-sider-seo", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvorfor sammenligne min side med en konkurrent?", "acceptedAnswer": {"@type": "Answer", "text": "Fordi rangering er relativt. Når en konkurrent rangerer højere, ligger forskellen ofte i synlige ting: titlens søgeord, descriptionens klik-opfordring, manglende FAQ-schema eller en renere canonical-struktur. En side-by-side profil viser forskellene uden gætteri."}}, {"@type": "Question", "name": "Hvad er den bedste måde at tjekke et redesign på?", "acceptedAnswer": {"@type": "Answer", "text": "Tag en profil af hver vigtig side FØR lanceringen og gem den som JSON. Efter lanceringen kører du den igen og sammenligner. Det fanger tabte meta-tags, ændrede canonicals og ødelagt struktureret data — de klassiske redesign-taber der ellers opdages måneder senere i Search Console."}}, {"@type": "Question", "name": "Kan jeg sammenligne flere sider end to?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Batch-tilstand tager en liste af URLs og profilerer dem alle i ét kørsel — fx hele dit top-20 af landingssider. Output som HTML-rapport gør resultatet klar til at sende til en kunde eller kollega."}}, {"@type": "Question", "name": "Kræver det installation?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Du kan indsætte to URLs direkte i browser-værktøjet på page-profile-siden. Vil du automatisere det i CI, findes også en CLI-version og et gratis JSON-API."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; SAMMENLIGNING</div>
+    <h1>Sammenlign to<br>sider side om side</h1>
+    <p class="subtitle">Før/efter-et redesign: hvad ændrede sig egentlig? Eller din landingsside mod konkurrentens: hvorfor rangerer de højere? Sammenligning af to URLer svarer på begge dele på under et minut.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Sammenlign to sider gratis &rarr;</a>
+      <a href="#hvornaar" class="btn-secondary">Hvornår giver det mening?</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="hvornaar">
+  <div class="container">
+    <h2>Tre situationer hvor sammenligning betaler sig</h2>
+    <ol>
+      <li><strong>Før/efter redesign:</strong> gem profiler af alle templates før
+      lanceringsdagen. Efter: sammenlign. Tabte metadata opdages samme dag — ikke tre
+      måneder senere via faldende trafik.</li>
+      <li><strong>Dig mod konkurrenten:</strong> profiler deres landingsside og din. Se
+      præcis hvad de har, som du mangler — schema, OG-billede, description-længde.</li>
+      <li><strong>Konsolidering af duplikatindhold:</strong> to sider om emnet? Sammenlign
+      canonicals og titles og beslut hvilken der skal være den kanoniske.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Sådan gør du med Page Profile</h2>
+    <ol>
+      <li>Åbn <a href="/page-profile">page-profile</a> og indsæt URL #1 — du får hele
+      metadata-profilen.</li>
+      <li>Indsæt URL #2 i sammenligningstilstand. Værktøjet viser forskellene felt for
+      felt: titler, descriptions, canonicals, Open Graph og struktureret data.</li>
+      <li>Eksportér som HTML-rapport, hvis resultatet skal deles med en kunde.</li>
+    </ol>
+    <p>I CLI fungerer det samme med <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    og JSON-API'et lader dig bygge sammenligningen ind i din egen CI:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.dk" | jq .score
+$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.dk" | jq .score</pre>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Start en sammenligning &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/seo-metadata-tjekliste-2026">den fulde metadata-tjekliste</a>,
+    <a href="/da/blog/tjek-url-redirect-kaede">tjek redirect-kæder</a> og
+    <a href="/da/blog/hreflang-guide-da">hreflang-guide på dansk</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvorfor sammenligne min side med en konkurrent?</h3><p>Fordi rangering er relativt. Når en konkurrent rangerer højere, ligger forskellen ofte i synlige ting: titlens søgeord, descriptionens klik-opfordring, manglende FAQ-schema eller en renere canonical-struktur. En side-by-side profil viser forskellene uden gætteri.</p></div>
+      <div class="card"><h3>Hvad er den bedste måde at tjekke et redesign på?</h3><p>Tag en profil af hver vigtig side FØR lanceringen og gem den som JSON. Efter lanceringen kører du den igen og sammenligner. Det fanger tabte meta-tags, ændrede canonicals og ødelagt struktureret data — de klassiske redesign-taber der ellers opdages måneder senere i Search Console.</p></div>
+      <div class="card"><h3>Kan jeg sammenligne flere sider end to?</h3><p>Ja. Batch-tilstand tager en liste af URLs og profilerer dem alle i ét kørsel — fx hele dit top-20 af landingssider. Output som HTML-rapport gør resultatet klar til at sende til en kunde eller kollega.</p></div>
+      <div class="card"><h3>Kræver det installation?</h3><p>Nej. Du kan indsætte to URLs direkte i browser-værktøjet på page-profile-siden. Vil du automatisere det i CI, findes også en CLI-version og et gratis JSON-API.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Kør en side-sammenligning nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/seo-metadata-tjekliste-2026" lang="da">Metadata-tjekliste</a> &middot; <a href="/da/blog/tjek-url-redirect-kaede" lang="da">Redirect-kæder</a> &middot; <a href="/da/blog/hreflang-guide-da" lang="da">Hreflang-guide</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/da/#guides">Guides</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

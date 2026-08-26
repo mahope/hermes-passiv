@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare Two Web Pages Side by Side — Spot the Differences First</title>
+<meta name="description" content="How to compare two web pages' metadata, structured data and technical SEO — before and after a redesign, or your page against a competitor. Free tool.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Compare Two Web Pages Side by Side — Spot the Differences First">
+<meta property="og:description" content="Compare two web pages side by side: metadata, structured data and technical SEO differences — before/after redesign or you vs a competitor. Free tool.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/page-profile/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/compare-two-web-pages-seo">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/compare-two-web-pages-seo">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/compare-two-web-pages-seo">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/sammenlign-to-sider-seo">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Compare Two Web Pages Side by Side — Spot the Differences First", "description": "How to compare two web pages' metadata, structured data and technical SEO — before and after a redesign, or your page against a competitor. Free tool.", "url": "https://hermes-passiv.pages.dev/blog/compare-two-web-pages-seo", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why compare my page against a competitor's?", "acceptedAnswer": {"@type": "Answer", "text": "Because ranking is relative. When a competitor outranks you, the difference is often visible: keywords in the title, a stronger call to action in the description, missing FAQ schema, or a cleaner canonical structure. A side-by-side profile shows the gaps without guesswork."}}, {"@type": "Question", "name": "What's the best way to verify a redesign didn't break anything?", "acceptedAnswer": {"@type": "Answer", "text": "Profile every important template BEFORE launch and save it as JSON. After launch, profile again and compare. This catches lost meta tags, changed canonicals and broken structured data — the classic redesign losses otherwise discovered months later via dropping traffic in Search Console."}}, {"@type": "Question", "name": "Can I compare more than two pages?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Batch mode takes a list of URLs and profiles all of them in one run — say, your top 20 landing pages. Export as an HTML report when the results need to go to a client or colleague."}}, {"@type": "Question", "name": "Do I need to install anything?", "acceptedAnswer": {"@type": "Answer", "text": "No. Paste two URLs directly into the browser tool on the page-profile page. For CI automation there's also a CLI version and a free JSON API."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; COMPARISON</div>
+    <h1>Compare two pages<br>side by side</h1>
+    <p class="subtitle">Before-and-after a redesign: what actually changed? Or your landing page versus a competitor's: why do they rank higher? Comparing two URLs answers both in under a minute.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Try Page Profile free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>Three situations where comparing pays off</h2>
+    <ol>
+      <li><strong>Before/after a redesign:</strong> profile every template before launch day
+      and save it. Afterwards: compare. Lost metadata gets caught the same day — not three
+      months later via falling traffic.</li>
+      <li><strong>You vs a competitor:</strong> profile their landing page and yours. See
+      exactly what they have that you lack — schema, an OG image, description length.</li>
+      <li><strong>Consolidating duplicate content:</strong> two pages on the topic? Compare
+      canonicals and titles and decide which should be the canonical one.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>How to do it with Page Profile</h2>
+    <ol>
+      <li>Open <a href="/page-profile">page-profile</a> and paste in URL #1 — you get the full
+      metadata profile.</li>
+      <li>Paste URL #2 into comparison mode. The tool shows the differences field by field:
+      titles, descriptions, canonicals, Open Graph and structured data.</li>
+      <li>Export as an HTML report if the result needs to be shared with a client.</li>
+    </ol>
+    <p>In the CLI it works the same way with <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    and the JSON API lets you build comparisons into your own CI:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.com" | jq .score
+$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.com" | jq .score</pre>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Run a comparison now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Read more</h2>
+    <p>Also:
+    <a href="/blog/website-metadata-audit-checklist">the full metadata checklist</a>,
+    <a href="/blog/check-url-redirect-chain">checking redirect chains</a> and
+    <a href="/blog/hreflang-guide">the hreflang guide</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Why compare my page against a competitor's?</h3><p>Because ranking is relative. When a competitor outranks you, the difference is often visible: keywords in the title, a stronger call to action in the description, missing FAQ schema, or a cleaner canonical structure. A side-by-side profile shows the gaps without guesswork.</p></div>
+      <div class="card"><h3>What's the best way to verify a redesign didn't break anything?</h3><p>Profile every important template BEFORE launch and save it as JSON. After launch, profile again and compare. This catches lost meta tags, changed canonicals and broken structured data — the classic redesign losses otherwise discovered months later via dropping traffic in Search Console.</p></div>
+      <div class="card"><h3>Can I compare more than two pages?</h3><p>Yes. Batch mode takes a list of URLs and profiles all of them in one run — say, your top 20 landing pages. Export as an HTML report when the results need to go to a client or colleague.</p></div>
+      <div class="card"><h3>Do I need to install anything?</h3><p>No. Paste two URLs directly into the browser tool on the page-profile page. For CI automation there's also a CLI version and a free JSON API.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Audit your metadata now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/sammenlign-to-sider-seo" lang="da">Danish version of this guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/website-metadata-audit-checklist">Metadata audit checklist</a> &middot; <a href="/blog/check-url-redirect-chain">Redirect chain checks</a> &middot; <a href="/blog/hreflang-guide">Hreflang guide</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

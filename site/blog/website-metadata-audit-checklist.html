@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Metadata Audit Checklist (2026): Audit Any Page Yourself</title>
+<meta name="description" content="A complete checklist for title tags, meta descriptions, canonicals, Open Graph and structured data — plus a free CLI tool that checks all of it in one command.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Website Metadata Audit Checklist (2026): Audit Any Page Yourself">
+<meta property="og:description" content="Website metadata audit checklist: title tags, meta descriptions, canonicals, Open Graph and JSON-LD — check them all with one free CLI command.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/page-profile/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/website-metadata-audit-checklist">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/website-metadata-audit-checklist">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-metadata-audit-checklist">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjekliste-2026">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Website Metadata Audit Checklist (2026): Audit Any Page Yourself", "description": "A complete checklist for title tags, meta descriptions, canonicals, Open Graph and structured data — plus a free CLI tool that checks all of it in one command.", "url": "https://hermes-passiv.pages.dev/blog/website-metadata-audit-checklist", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which metadata matters most for SEO in 2026?", "acceptedAnswer": {"@type": "Answer", "text": "Title tag (50–60 characters), meta description (120–158 characters), canonical URL, viewport and Open Graph tags. Title and description control how your page appears in search results; the canonical prevents duplicate-content issues; OG tags control link previews on LinkedIn and social platforms."}}, {"@type": "Question", "name": "How do I check metadata across many pages quickly?", "acceptedAnswer": {"@type": "Answer", "text": "A CLI tool like Page Profile takes a URL and returns the full profile: title length, description, robots, canonical, OG tags and structured data — as JSON or an HTML report. Run it per page, or use batch mode over a list of URLs."}}, {"@type": "Question", "name": "What happens if the meta description is missing?", "acceptedAnswer": {"@type": "Answer", "text": "Google generates its own snippet from the page content — usually worse than a written one, but the page still ranks. A missing title tag is more serious: Google rewrites the title from headings, which typically costs click-through rate."}}, {"@type": "Question", "name": "Should every page have unique metadata?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Identical titles on two pages force Google to choose which to show. An audit that compares pages against each other (like comparison mode in Page Profile) catches duplicates immediately."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; CHECKLIST</div>
+    <h1>The metadata audit<br>checklist for 2026</h1>
+    <p class="subtitle">The title is too long. The description is missing. The canonical points at itself twice. Metadata errors are the most common SEO mistakes on the web — here's the full list, and how to check it automatically.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Try Page Profile free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>The checklist: 12 points per page</h2>
+    <ol>
+      <li><strong>Title tag:</strong> present, unique, 30–60 characters, primary keyword first.</li>
+      <li><strong>Meta description:</strong> present, 120–158 characters, has a clear offer.</li>
+      <li><strong>Canonical:</strong> exactly one, absolute URL, self-referencing (or pointing
+      at the preferred version).</li>
+      <li><strong>Viewport:</strong> <code>width=device-width, initial-scale=1</code> — without
+      it mobile rendering breaks.</li>
+      <li><strong>Open Graph:</strong> og:title, og:description, og:image (1200×630) and
+      og:url.</li>
+      <li><strong>Twitter Card:</strong> summary_large_image with a valid image.</li>
+      <li><strong>Robots:</strong> no accidental <code>noindex</code> or <code>nofollow</code>.</li>
+      <li><strong>Language:</strong> correct <code>&lt;html lang&gt;</code> plus hreflang on
+      multilingual sites.</li>
+      <li><strong>Structured data:</strong> valid JSON-LD (Organization, Article, FAQPage per
+      content type).</li>
+      <li><strong>Heading hierarchy:</strong> one H1, logical H2/H3 structure.</li>
+      <li><strong>Images:</strong> alt text on every content image.</li>
+      <li><strong>Duplicates:</strong> no two pages sharing identical titles or descriptions.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Check all 12 points with one command</h2>
+    <p>A manual check takes 10–15 minutes per page and gets forgotten after the next
+    redesign. Page Profile reads the page and scores every point — as terminal output,
+    JSON, or an HTML report you can hand to a client:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ npx page-profile https://yoursite.com/page
+title       "Your page title here"    54 chars   OK
+description 148 chars                            OK
+canonical   https://yoursite.com/page            OK
+og:image    present (1200x630)                   OK
+score       11/12                                WARN</pre>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Try it free in the browser &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Read more</h2>
+    <p>Also:
+    <a href="/blog/technical-seo-check-website">technical SEO checks</a>,
+    <a href="/blog/meta-tag-checker">the meta tag checker</a> and
+    <a href="/blog/canonical-url-guide">canonical URLs explained</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Which metadata matters most for SEO in 2026?</h3><p>Title tag (50–60 characters), meta description (120–158 characters), canonical URL, viewport and Open Graph tags. Title and description control how your page appears in search results; the canonical prevents duplicate-content issues; OG tags control link previews on LinkedIn and social platforms.</p></div>
+      <div class="card"><h3>How do I check metadata across many pages quickly?</h3><p>A CLI tool like Page Profile takes a URL and returns the full profile: title length, description, robots, canonical, OG tags and structured data — as JSON or an HTML report. Run it per page, or use batch mode over a list of URLs.</p></div>
+      <div class="card"><h3>What happens if the meta description is missing?</h3><p>Google generates its own snippet from the page content — usually worse than a written one, but the page still ranks. A missing title tag is more serious: Google rewrites the title from headings, which typically costs click-through rate.</p></div>
+      <div class="card"><h3>Should every page have unique metadata?</h3><p>Yes. Identical titles on two pages force Google to choose which to show. An audit that compares pages against each other (like comparison mode in Page Profile) catches duplicates immediately.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Audit your metadata now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/seo-metadata-tjekliste-2026" lang="da">Danish version of this guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/technical-seo-check-website">Technical SEO check</a> &middot; <a href="/blog/meta-tag-checker">Meta tag checker</a> &middot; <a href="/blog/compare-two-web-pages-seo">Compare two pages</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

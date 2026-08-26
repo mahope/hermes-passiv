@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO-metadata-tjekliste 2026: sådan auditerer du en hel side selv</title>
+<meta name="description" content="Komplet tjekliste for titel, meta description, canonical, Open Graph og struktureret data — og et gratis CLI-værktøj der checker det hele på én kommando.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SEO-metadata-tjekliste 2026: sådan auditerer du en hel side selv">
+<meta property="og:description" content="Website metadata audit checklist: title tags, meta descriptions, canonicals, Open Graph and JSON-LD — check them all with one free CLI command.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/page-profile/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjekliste-2026">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjekliste-2026">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-metadata-audit-checklist">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjekliste-2026">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "SEO-metadata-tjekliste 2026: sådan auditerer du en hel side selv", "description": "Komplet tjekliste for titel, meta description, canonical, Open Graph og struktureret data — og et gratis CLI-værktøj der checker det hele på én kommando.", "url": "https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjekliste-2026", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilke metadata er vigtigst for SEO i 2026?", "acceptedAnswer": {"@type": "Answer", "text": "Title tag (50-60 tegn), meta description (120-158 tegn), kanonisk URL, viewport og Open Graph-tags. Title og description styrer visningen i søgeresultaterne; canonicalen forhindrer duplikeret indhold; OG-tags styrer delinger på LinkedIn og sociale medier."}}, {"@type": "Question", "name": "Hvordan tjekker jeg metadata på mange sider hurtigt?", "acceptedAnswer": {"@type": "Answer", "text": "Et CLI-værktøj som Page Profile tager en URL og returnerer hele profilen: titellængde, description, robots, canonical, OG-tags og struktureret data — som JSON eller HTML-rapport. Kør det pr. side eller i batch-tilstand over en URL-liste."}}, {"@type": "Question", "name": "Hvad sker der hvis meta description mangler?", "acceptedAnswer": {"@type": "Answer", "text": "Google genererer selv et uddrag fra sidens indhold — ofte dårligere end en skrevet description, men siden rangerer stadig. Manglende title tag er alvorligere: Google omskriver titlen fra overskrifter, hvilket typisk koster klikfrekvens."}}, {"@type": "Question", "name": "Skal hver side have unik metadata?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Identiske titles på to sider får Google til at vælge selv, hvilken der skal vises. En audit der sammenligner sider mod hinanden (fx sammenligningstilstand i Page Profile) fanger dubletter med det samme."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; TJEKLISTE</div>
+    <h1>Metadata-tjekliste<br>for 2026</h1>
+    <p class="subtitle">Titlen er for lang. Description mangler. Canonicalen peger på sig selv to gange. Metadata-fejl er de mest almindelige SEO-fejl — her er den fulde liste, og hvordan du tjekker den automatisk.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Prøv Page Profile gratis &rarr;</a>
+      <a href="#listen" class="btn-secondary">Spring til tjeklisten</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="listen">
+  <div class="container">
+    <h2>Tjeklisten: 12 punkter pr. side</h2>
+    <ol>
+      <li><strong>Title tag:</strong> findes, unik, 30-60 tegn, primært søgeord først.</li>
+      <li><strong>Meta description:</strong> findes, 120-158 tegn, har et klart tilbud.</li>
+      <li><strong>Canonical:</strong> én canonical, absolut URL, peger på sig selv (eller
+      den foretrukne version).</li>
+      <li><strong>Viewport:</strong> <code>width=device-width, initial-scale=1</code> — uden
+      den ser mobilvisningen forkert ud.</li>
+      <li><strong>Open Graph:</strong> og:title, og:description, og:image (1200×630) og
+      og:url.</li>
+      <li><strong>Twitter Card:</strong> summary_large_image med gyldigt billede.</li>
+      <li><strong>Robots:</strong> ingen utilsigtet <code>noindex</code> eller
+      <code>nofollow</code>.</li>
+      <li><strong>Sprog:</strong> korrekt <code>&lt;html lang&gt;</code> og hreflang ved
+      flersprogede sider.</li>
+      <li><strong>Struktureret data:</strong> gyldig JSON-LD (Organization, Article,
+      FAQPage efter indholdstype).</li>
+      <li><strong>Overskriftshierarki:</strong> én H1, logisk H2/H3-struktur.</li>
+      <li><strong>Billeder:</strong> alt-tekst på alle indholdsbilleder.</li>
+      <li><strong>Dubletter:</strong> ingen to sider med identisk title eller description.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Tjek alle 12 punkter med én kommando</h2>
+    <p>Manuelt tjek tager 10-15 minutter pr. side og bliver glemt efter første redesign.
+    Page Profile læser siden og scorer hvert punkt — som terminaloutput, JSON eller en
+    HTML-rapport du kan sende til en kunde:</p>
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ npx page-profile https://ditdomaene.dk/side
+title       "Side titel her"          54 chars   OK
+description 148 chars                            OK
+canonical   https://ditdomaene.dk/side           OK
+og:image    present (1200x630)                   OK
+score       11/12                                WARN</pre>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Prøv det gratis i browseren &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/teknisk-seo-tjek-hjemmeside">teknisk SEO-tjek af hjemmesiden</a>,
+    <a href="/da/blog/meta-tjekker">meta-tjekker guide</a> og
+    <a href="/da/blog/canonisk-url-guide">canoniske URLs forklaret</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvilke metadata er vigtigst for SEO i 2026?</h3><p>Title tag (50-60 tegn), meta description (120-158 tegn), kanonisk URL, viewport og Open Graph-tags. Title og description styrer visningen i søgeresultaterne; canonicalen forhindrer duplikeret indhold; OG-tags styrer delinger på LinkedIn og sociale medier.</p></div>
+      <div class="card"><h3>Hvordan tjekker jeg metadata på mange sider hurtigt?</h3><p>Et CLI-værktøj som Page Profile tager en URL og returnerer hele profilen: titellængde, description, robots, canonical, OG-tags og struktureret data — som JSON eller HTML-rapport. Kør det pr. side eller i batch-tilstand over en URL-liste.</p></div>
+      <div class="card"><h3>Hvad sker der hvis meta description mangler?</h3><p>Google genererer selv et uddrag fra sidens indhold — ofte dårligere end en skrevet description, men siden rangerer stadig. Manglende title tag er alvorligere: Google omskriver titlen fra overskrifter, hvilket typisk koster klikfrekvens.</p></div>
+      <div class="card"><h3>Skal hver side have unik metadata?</h3><p>Ja. Identiske titles på to sider får Google til at vælge selv, hvilken der skal vises. En audit der sammenligner sider mod hinanden (fx sammenligningstilstand i Page Profile) fanger dubletter med det samme.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Auditer dine metadata nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/teknisk-seo-tjek-hjemmeside" lang="da">Teknisk SEO-tjek</a> &middot; <a href="/da/blog/meta-tjekker" lang="da">Meta-tjekker</a> &middot; <a href="/da/blog/sammenlign-to-sider-seo" lang="da">Sammenlign to sider</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/da/#guides">Guides</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>
