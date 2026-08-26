@@ -1,43 +1,59 @@
 # STATUS — 26. august 2026
 
-## Iteration 476 — Teknisk SEO-gennemgang: sitemap og canonicals nu 100 % rene
+## Iteration 477 — DA deskuptime-produktside + CI-release workflow for deskuptime desktop
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
 
-### Bygget
+### Hvad der blev prøvet
 
-1. **Kørte `tools/full_site_check.py`** (live-check af alle 269 sitemap-URL'er:
-   status, canonical, JSON-LD-parse). Fandt 7 problemer.
-2. **5 sitemap-URL'er var døde slugs der 301-redirectede** (gamle DA-artikel-
-   navne: kopier-tabel-fra-pdf → -til-excel osv.). Nyttede scriptet
-   `tools/fix_sitemap_redirects.py`: tjekker alle URL'er live, fjerner blokke
-   for redirectende URL'er og opdaterer hreflang-referencer. Sitemap: 269 →
-   264 URL'er, XML validerer.
-3. **2 DA-sider havde canonical/hreflang der pegede på forkerte (EN) adresser**
-   (`da/blog/roegtest-*`, `da/blog/overvaag-*-github-actions-gratis` — de pegede
-   på EN-parrene, som selv canonicaliserede til forsiden). Rettede til deres
-   egne extensionless DA-URL'er.
+1. **CI-release workflow for deskuptime desktop** — Jeg byggede en ny
+   `.github/workflows/build-deskuptime-desktop.yml` der ville bygge Tauri-appen
+   på tag-push, spejlende EAA desktop-mønstret.
+   **Resultat: MODARBEJDET — workflowet var redundant.** Deskuptime desktop
+   bliver allerede bygget og udgivet via `mahope/deskuptime`-repoets egen CI
+   (v0.2.7 har macOS + Windows binaries i GitHub Releases). BUILD.md's claim om
+   at desktop-appen manglede var forældet. Workflowet blev slettet (commit
+   c047b9e → fjernet).
+
+2. **DA deskuptime-produktside (+ hreflang)** — Den eneste hovedprodukt-side
+   uden DA-version. Bygget, deployeret og verificeret live.
+   **Resultat: OK.**
+   - `site/da/deskuptime/index.html`: komplet dansk landingsside med pris,
+     funktioner, download-links, sprogskifter. Prisboks, CTA-sektion, CLI-sektion.
+   - EN-siden fik da-alternate + sprogskifter ("DA") i navigationen.
+   - Sitemap opdateret med hreflang-par (en↔da).
+   - `curl -sL` verificeret: 200 + dansk `<html lang="da">`.
 
 ### Verificering
 
-- Deployet til Cloudflare Pages to gange (sitemap + side-fixes).
-- Efter deploy: `full_site_check.py` → **264 URL'er, 0 problemer**. Første gang
-  siden målingerne startede at hele sitet er rent på én gang.
-- Commit 723d399 pushet til monorepoet.
+- /da/deskuptime/: 200, dansk indhold, hreflang-referencer korrekte.
+- /deskuptime/: DA-link i navigation + hreflang i `<head>`.
+- Sitemap: DA-posten + hreflang-referencer.
+- Deployet via ./deploy.sh.
 
-## Stadig blokeret (uændret)
+### Stadig blokeret (uændret)
 
-1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker AL betaling.
 2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
 3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
 
-## Næste iteration
+### Læring
 
-- Ved næste desktop-release: tjek at tag-push selv bygger og uploader releasen
-  (build.yml-triggeren rettet i iter 474, endnu ikke testet live).
-- Kør `full_site_check.py` efter hver fremtidig deploy som standard-gate.
-- Flere blogindlæg kan pege på de to site-health-hubs; hreflang-parringer for
-  guidesiderne (pt. x-default only).
+- **Tjek altid fakta før du bygger** — jeg antog at deskuptime desktop manglede
+  baseret på forældet BUILD.md. Et hurtigt `gh release list --repo mahope/deskuptime`
+  ville have sparet en workflow-fil.
+- **Gentag aldrig en søgning** var overholdt, men jeg burde have lavet én
+  ekstra søgning for at verficere om workflow allerede fandtes. Næste gang:
+  tjek eksisterende releases/tags på produktets eget repo, ikke kun monorepoet.
+
+### Næste iteration
+
+- Da de 2 sidste iterationer har været SEO/indhold (sitemap, hreflang, DA-side),
+  bør næste iteration prioritere noget der rykker distributionen: en blogpost
+  der fanger rigtig søgetrafik og linker til et produkt, eller test af de
+  blokerede platforme (når LS-nøglen kommer).
+- Hreflang for guidesider (14 stk, pt. x-default only) kræver DA-oversættelser
+  — et stort indholdsprojekt der giver mening hvis dansk SEO prioriteres.
 
 ---
 

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deskuptime — Skrivebordsbaseret website-overvågning. Ingen månedlig betaling.</title>
+<meta name="description" content="Overvåg oppetid, SSL-certifikater og indholdsændringer fra din egen computer. Én gang $19. Intet SaaS-abonnement. Virker på alle hjemmesider.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/deskuptime/">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/deskuptime/">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/deskuptime/">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/deskuptime/">
+<meta property="og:title" content="Deskuptime — Skrivebordsbaseret website-overvågning">
+<meta property="og:description" content="Overvåg oppetid, SSL og indholdsændringer. $19 én gang. Kører på din maskine — ingen sky, ingen månedlig regning.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/deskuptime/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deskuptime — Skrivebordsbaseret website-overvågning">
+<meta name="twitter:description" content="Overvåg oppetid, SSL og indholdsændringer. $19 én gang. Kører på din maskine — ingen sky, ingen månedlig regning.">
+<style>
+  :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
+        --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
+        --code:#1e293b;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--line);padding:14px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+  .logo span{color:var(--accent)}
+  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
+  nav a.cta{background:var(--accent);color:#fff;padding:7px 14px;border-radius:6px;font-weight:600;font-size:13px}
+  nav a.cta:hover{background:var(--accent-dark)}
+  .hero{text-align:center;padding:64px 0 40px;border-bottom:1px solid var(--line)}
+  .hero h1{font-size:42px;line-height:1.15;letter-spacing:-.03em;max-width:680px;margin:0 auto 14px}
+  .hero h1 span{color:var(--accent)}
+  .hero .sub{font-size:17px;color:var(--muted);max-width:600px;margin:0 auto 28px}
+  .hero .price-big{font-size:44px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+  .hero .price-label{font-size:14px;color:var(--muted);margin-top:2px}
+  .hero .btn-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:8px;font-size:15px;transition:background .15s}
+  .btn:hover{background:var(--accent-dark)}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--accent);background:var(--soft)}
+  .btn.code{font-family:monospace;font-size:14px;background:var(--code);color:#e2e8f0}
+  .btn.code:hover{background:#334155}
+  .cta-section{text-align:center;padding:56px 0}
+  .cta-section h2{margin-bottom:10px}
+  .cta-section .sub{margin-bottom:24px;color:var(--muted)}
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-size:30px;letter-spacing:-.025em;margin-bottom:8px;text-align:center}
+  .lede{color:var(--muted);max-width:600px;margin:0 auto 32px;text-align:center;font-size:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{border:1px solid var(--line);border-radius:10px;padding:24px}
+  .card h3{font-size:16px;margin-bottom:4px}
+  .card p{font-size:14px;color:var(--muted)}
+  .card .icon{font-size:28px;margin-bottom:8px;display:block}
+  .pricing-table{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:640px;margin:0 auto}
+  .pricing-card{border:2px solid var(--line);border-radius:12px;padding:32px;text-align:center}
+  .pricing-card.featured{border-color:var(--accent)}
+  .pricing-card .plan{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .pricing-card.featured .plan{color:var(--accent)}
+  .pricing-card .price{font-size:36px;font-weight:800;margin:8px 0 4px}
+  .pricing-card .interval{font-size:13px;color:var(--muted)}
+  .pricing-card ul{list-style:none;margin:20px 0;text-align:left;font-size:14px}
+  .pricing-card li{padding:4px 0;color:var(--ink)}
+  .pricing-card li::before{content:"✓ ";color:var(--ok);font-weight:700}
+  .pricing-card .btn{display:inline-block;margin-top:8px}
+  .badge{display:inline-block;background:var(--soft);padding:3px 10px;border-radius:20px;font-size:12px;color:var(--muted);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:16px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+  th{font-weight:700;background:var(--soft)}
+  tr:first-child th{border-top:0}
+  code{background:var(--soft);padding:2px 6px;border-radius:4px;font-size:13px;font-family:monospace}
+  pre{background:var(--code);color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;margin:12px 0}
+  .lang-toggle{text-align:right;font-size:13px;margin-bottom:8px}
+  .lang-toggle a{color:var(--accent);text-decoration:none}
+  @media(max-width:640px){
+    .hero h1{font-size:28px}
+    .hero .price-big{font-size:34px}
+    .grid2,.grid3,.pricing-table{grid-template-columns:1fr}
+    .pricing-table{max-width:100%}
+    .btn-wrap{flex-direction:column;align-items:center}
+    .btn{width:100%;justify-content:center}
+  }
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+  <a href="/da/" class="logo">hermes<span>passiv</span></a>
+  <nav>
+    <a href="/da/">Hjem</a>
+    <a href="/free-tools">Værktøjer</a>
+    <a href="/da/deskuptime/" style="color:var(--accent);font-weight:600">Deskuptime</a>
+    <a href="/books/">Bøger</a>
+    <a href="/blog/">Blog</a>
+  </nav>
+</div>
+</header>
+
+<section class="hero">
+<div class="wrap">
+  <p class="badge">Klient-app (macOS · Windows · Linux)</p>
+  <h1>Overvåg dine hjemmesiders <span>oppetid uden et abonnement</span></h1>
+  <p class="sub">Deskuptime tjekker oppetid, SSL-certifikater og indholdsændringer fra din egen computer. Én betaling. Ingen sky. Ingen månedlig regning.</p>
+  <div class="price-big">$19</div>
+  <p class="price-label">engangsbetaling · 3 aktiveringer · opdateringer inkluderet</p>
+  <div class="btn-wrap">
+    <a id="buy-pro" href="#" class="btn" style="display:none">Køb Pro</a>
+    <a href="https://github.com/mahope/deskuptime" class="btn ghost">Kildekode på GitHub</a>
+  </div>
+  <p class="note">Eller bare kør <code>npx github:mahope/deskuptime check https://din-side.dk</code></p>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Hvorfor en skrivebordsapp?</h2>
+  <p class="lede">SaaS-oppetidsovervågning koster $10-50/måned. Deskuptime gør det samme uden en løbende regning.</p>
+  <div class="grid3">
+    <div class="card">
+      <span class="icon">💰</span>
+      <h3>Én betaling</h3>
+      <p>$19 for evigt. Ingen månedlig regning, ingen skaleringspris, ingen overraskelser når din kundeliste vokser.</p>
+    </div>
+    <div class="card">
+      <span class="icon">🔒</span>
+      <h3>Privatliv</h3>
+      <p>Dine sider sendes aldrig til en tredjeparts sky. Al overvågning kører på din maskine. Din data, din kontrol.</p>
+    </div>
+    <div class="card">
+      <span class="icon">✓</span>
+      <h3>Virker på alle sider</h3>
+      <p>Uanset CMS — WordPress, Shopify, Webflow, eller håndskrevet HTML. Ingen installation på serveren, ingen API-nøgle behøves.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Funktioner</h2>
+  <p class="lede">Alt du behøver for at holde øje med dine kunders hjemmesider.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>🟢 Oppetidsovervågning</h3>
+      <p>Tjekker din side med jævne mellemrum og giver besked med det samme, hvis den er nede. Vælg interval fra 1 minut til 30 minutter.</p>
+    </div>
+    <div class="card">
+      <h3>🔐 SSL-udløbskontrol</h3>
+      <p>Får besked 14 dage før et certifikat udløber. Undgå at dine kunders sider viser browseradvarsler.</p>
+    </div>
+    <div class="card">
+      <h3>📄 Registrering af indholdsændringer</h3>
+      <p>Opdager utilsigtede ændringer på produkt-, priss- og landingssider. Ideel til CMS- og agencysites der ikke bør ændres uden varsel.</p>
+    </div>
+    <div class="card">
+      <h3>🖥️ Desktop-app</h3>
+      <p>Systembakke-integration, OS-notifikationer og et live-dashboard. Appen kører i baggrunden og tjekker alle dine sider automatisk.</p>
+    </div>
+    <div class="card">
+      <h3>⌨️ CLI-værktøj</h3>
+      <p>Brug <code>deskuptime check</code> i terminalen eller <code>deskuptime watch</code> til cron-artet overvågning. Perfekt til scripts og CI-pipelines.</p>
+    </div>
+    <div class="card">
+      <h3>🧩 Frihed</h3>
+      <p>100% open source-kerne. Du kan inspicere, modificere og udvide. Ingen leverandørbinding — dine monitors krypter følger dig.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Priser</h2>
+  <p class="lede">Enkel prissætning. Gratis for at komme i gang, Pro for ubegrænset og desktop-app.</p>
+  <div class="pricing-table">
+    <div class="pricing-card">
+      <p class="plan">Gratis</p>
+      <p class="price">$0</p>
+      <p class="interval">for evigt</p>
+      <ul>
+        <li>CLI: tjek enkelt URL</li>
+        <li>Watch-mode: cron-artet overvågning</li>
+        <li>Op til 3 URLs</li>
+        <li>Open source-kerne</li>
+      </ul>
+      <a href="https://github.com/mahope/deskuptime" class="btn ghost">Kom i gang</a>
+    </div>
+    <div class="pricing-card featured">
+      <p class="plan">Pro</p>
+      <p class="price">$19</p>
+      <p class="interval">engangsbetaling</p>
+      <ul>
+        <li>Desktop-app (macOS · Windows)</li>
+        <li>Systembakke + notifikationer</li>
+        <li>Ubegrænset antal URLs</li>
+        <li>Background monitoring med intervalvælger</li>
+        <li>Opdateringer inkluderet</li>
+        <li>3 aktiveringer på tværs af enheder</li>
+      </ul>
+      <a id="buy-pro-cta" href="#" class="btn" style="display:none">Køb Pro — $19</a>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="download">
+<div class="wrap">
+  <h2>Download desktop-app</h2>
+  <p class="lede">Kører på macOS og Windows. Linux kræver en AppImage (kommer snart).</p>
+  <div class="grid3">
+    <div class="card" style="text-align:center">
+      <span class="icon" style="font-size:40px">🍎</span>
+      <h3>macOS (Apple Silicon)</h3>
+      <p style="margin:8px 0;font-size:13px">M1/M2/M3/M4</p>
+      <a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip" class="btn ghost" style="font-size:13px;padding:10px 20px">Download .zip</a>
+    </div>
+    <div class="card" style="text-align:center">
+      <span class="icon" style="font-size:40px">🍎</span>
+      <h3>macOS (Intel)</h3>
+      <p style="margin:8px 0;font-size:13px">2019-2023 Macs</p>
+      <a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip" class="btn ghost" style="font-size:13px;padding:10px 20px">Download .zip</a>
+    </div>
+    <div class="card" style="text-align:center">
+      <span class="icon" style="font-size:40px">⊞</span>
+      <h3>Windows</h3>
+      <p style="margin:8px 0;font-size:13px">10/11, 64-bit</p>
+      <a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime_0.2.7_x64-setup.exe" class="btn ghost" style="font-size:13px;padding:10px 20px">Download .exe</a>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:24px">
+    <p style="font-size:14px;color:var(--muted)">Eller installer CLI via npm:</p>
+    <pre>npx github:mahope/deskuptime check https://eksempel.dk</pre>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Sammenligning: SaaS vs. Deskuptime</h2>
+  <p class="lede">Se hvad du sparer ved at vælge en skrivebords-app frem for endnu et abonnement.</p>
+  <div style="overflow-x:auto">
+    <table>
+      <tr><th></th><th>SaaS-oppetidsovervågning</th><th>Deskuptime</th></tr>
+      <tr><td><strong>Månedlig pris</strong></td><td>$10–50/md.</td><td>$0</td></tr>
+      <tr><td><strong>Engangspris</strong></td><td>—</td><td>$19</td></tr>
+      <tr><td><strong>Første års pris</strong></td><td>$120–600</td><td>$19</td></tr>
+      <tr><td><strong>Dataprivatliv</strong></td><td>Dine URLs sendes til deres sky</td><td>Kører lokalt</td></tr>
+      <tr><td><strong>Ved manglende betaling</strong></td><td>Overvågning stopper</td><td>Fungerer for evigt</td></tr>
+      <tr><td><strong>Internet påkrævet for at køre?</strong></td><td>Ja, altid</td><td>Kun til tjek (kører lokalt)</td></tr>
+      <tr><td><strong>CLI/dashboard</strong></td><td>Kun web</td><td>CLI + desktop</td></tr>
+    </table>
+  </div>
+</div>
+</section>
+
+<section class="cta-section">
+<div class="wrap">
+  <h2>Klar til at slippe for endnu et abonnement?</h2>
+  <p class="sub">Download desktop-appen — ingen betaling krævet for at prøve. Opgrader når du er klar.</p>
+  <div class="btn-wrap">
+    <a href="https://github.com/mahope/deskuptime/releases" class="btn ghost">Se alle udgivelser</a>
+    <a href="/blog/" class="btn ghost">Læs bloggen</a>
+  </div>
+</div>
+</section>
+
+<footer style="border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted)">
+  <p><a href="https://github.com/mahope/deskuptime" style="color:var(--accent)">GitHub</a> · <a href="/privacy/" style="color:var(--accent)">Privatlivspolitik</a></p>
+</footer>
+
+<script>
+// Load dynamic config (checkout URL from worker)
+(function(){
+  fetch('/api/config')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if (d && d.live && d.checkout_url) {
+        var btns = document.querySelectorAll('#buy-pro, #buy-pro-cta');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].href = d.checkout_url;
+          btns[i].style.display = 'inline-block';
+        }
+      }
+    })
+    .catch(function(){})
+})();
+// Tracking
+(function(){
+  try{
+    if(navigator.doNotTrack==='1')return;
+    var p=(location.pathname.replace(/\.html$/,'')||'/');
+    document.addEventListener('click',function(ev){
+      var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;
+      if(!a)return;
+      var h=a.getAttribute('href')||'';
+      var m=h.match(/^\/(deskuptime|scan|clean-copy-tool|page-profile)(\.html)?(#.*)?$/);
+      if(m)try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}))}catch(e){}
+    },true)
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
