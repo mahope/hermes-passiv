@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webflow og tilgængelighed: praktisk EAA-audit-guide (2026)</title>
+<meta name="description" content="Sådan laver du en tilgængelighedsaudit af et Webflow-site og når i mål med EAA og WCAG 2.1 AA: Designer-indstillinger, typiske Webflow-fejl, interactions og en gratis scannings-workflow.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Webflow og tilgængelighed: den praktiske audit-guide">
+<meta property="og:description" content="Sådan laver du en tilgængelighedsaudit af et Webflow-site og når i mål med EAA og WCAG 2.1 AA: Designer-indstillinger, typiske Webflow-fejl, interactions og en gratis scannings-workflow.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/webflow-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/webflow-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/webflow-accessibility-audit">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/webflow-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/webflow-accessibility-audit">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Webflow og tilgængelighed: den praktiske audit-guide", "description": "Sådan laver du en tilgængelighedsaudit af et Webflow-site og når i mål med EAA og WCAG 2.1 AA: Designer-indstillinger, typiske Webflow-fejl, interactions og en gratis scannings-workflow.", "url": "https://hermes-passiv.pages.dev/da/blog/webflow-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Er Webflow mere tilgængeligt end WordPress ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Ingen af dem vinder automatisk. Webflow giver mere ren kontrol med markeringen, men outputtet er kun så tilgængeligt som designeren gør det. WordPress-temaer varierer vildere. I begge tilfælde afgør byggeren."}}, {"@type": "Question", "name": "Gælder EAA B2B-sider lavet i Webflow?", "acceptedAnswer": {"@type": "Answer", "text": "EAA rammer forbrugervendte tjenester, så rene B2B-sider falder mest udenfor — men WCAG-baserede krav gælder stadig via EN 301 549-udbudskaeder, og offentlige kunder kræver conformance alligevel."}}, {"@type": "Question", "name": "Må jeg bruge et tilgængeligheds-overlay på Webflow?", "acceptedAnswer": {"@type": "Answer", "text": "Overlays kan ikke skabe manglende semantik, reparere ubrugelige interactions eller rette indholdsproblemer, og markedsføring af dem som compliance har mødt regulatorisk kritik i EU. Ret årsagerne i Designeren i stedet."}}, {"@type": "Question", "name": "Hvordan tjekker jeg kontrast over gradienter og billeder?", "acceptedAnswer": {"@type": "Answer", "text": "Prøvtag det lyseste og mørkeste punkt bag teksten og tjek begge mod tekstfarven i et kontrastværktøj. Læg et scrim-overlay på, hvis ét punkt fejler."}}, {"@type": "Question", "name": "Kan bureauer sælge Webflow-tilgængelighedsaudits?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — en automatiske scanning kombineret med manuel tastatur-/skærmlæsertestning og en leveret rapport er en standard, fakturerbar ydelse, og EAA-fristerne har gjort efterspørgslen voksende."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">WEBFLOW &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>Webflow og tilgængelighed:<br>den praktiske audit-guide</h1>
+    <p class="subtitle">Hvor Webflow-sider faktisk fejler WCAG-tjek — og hvordan bureauer retter det inde i Designeren, før EAA bliver kundens problem.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Webflow er foretrukne værktøj til EU-marketingssider, SaaS-landingpages og bureaukunder — præcis den e-handels- og forbrugertjeneste-zone, European Accessibility Act dækker siden juni 2025. Bureauer der leverer Webflow-projekter, leverer altså også tilgængelighedstilstanden selv: der er mindre plugin-støj end i WordPress, men også intet plugin der redder dig. Den gode nyhed er, at Webflow giver usædvanlig direkte kontrol med semantikken — de fleste fejl skyldes designbeslutninger, ikke platformens grænser.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎯 Du ejer semantikken</h3><p>Webflow lader dig sætte hvilket som helst element-tag (div → nav, section, h2...). De fleste tilgængelighedsfejl er simpelthen divs der udfører semantiske jobs.</p></div>
+      <div class="card"><h3>⚡ Hurtig udbedring</h3><p>Fordi alt er visuelt og centraliseret, tager det minutter at rette 20 kontrastfejl i style-panelet — når først de er fundet.</p></div>
+      <div class="card"><h3>📜 Salgbart deliverable</h3><p>En audit-rapport plus tilgængelighedserklæring er nu en fakturerbar linje — kunder i EAA-omfang skal have begge dele.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Typiske Webflow-fejl</h2>
+    <div class="problem-cards"><div class="card"><h3>🧱 Div-suppe i stedet for overskrifter</h3><p>Tekst stylet til at ligne overskrifter men efterladt som rene divs. Skærmlæsere ser ingen dokumentstruktur. Fix: markér elementet → Indstillinger → skift tag til h1/h2/h3.</p></div><div class="card"><h3>🎨 Kontrast på gradienter</h3><p>Hero-tekst oven på gradienter eller billeder fejler 4,5:1 et sted langs overgangen. Test det værste hjørne og læg et mørkt overlay (scrim) bag teksten.</p></div><div class="card"><h3>⌨️ Interaction-fælder</h3><p>Hover-drevne dropdowns, tabs og slidere bygget med Interactions ignorerer ofte tastaturet helt — ingen fokus, ingen escape, intet touch-alternativ.</p></div><div class="card"><h3>🖼️ Baggrundsbilleder som indhold</h3><p>Billeder uploadet som background-image har ingen alt-attribut. Indholdsbærende billeder skal være rigtige Image-elementer med alt-tekst.</p></div><div class="card"><h3>🔗 Link Blocks</h3><p>En "Link Block" der omslutter hele kort giver gentagne nøgne links; indre tekst-spans læses ikke pålideligt som linkkontekst.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Designer-retninger der dækker det meste</h2>
+    <p><strong>Tag-disciplin:</strong> gå sektion for sektion og sæt rigtige tags: nav omkring navigationen, header/footer-elementer, én h1 pr. side og logisk h2/h3-nesting under den.</p>
+    <p><strong>Alt-tekst:</strong> hvert Image-element får beskrivende alt i sine indstillinger; dekorative får tomt alt. Erstat background-image-divs med informative billeder som rigtige billedelementer.</p>
+    <p><strong>Fokus-synlighed:</strong> sæt aldrig outline: none uden en erstatning. Style Focus-tilstanden i selector-panelet — 2px solid currentColor med offset virker næsten altid.</p>
+    <p><strong>Formularer:</strong> hvert input får et rigtigt label-element (ikke kun placeholder). Opsæt success-/fejlbeskeder som live regions så skærmlæsere annoncerer dem.</p>
+    <p><strong>Farvetokens:</strong> ret kontrasten ét sted i dine globale variabler/swatches — mørkere brødtekst, mørkere gråtoner på badges — og tjek med et kontrastværktøj.</p>
+    <p><strong>Sprog og metadata:</strong> sæt html lang i Project Settings og unikke titler/meta pr. side.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Interactions og tastatur</h2>
+    <p>Interactions er Webflows største strukturelle risiko, fordi funktionen opfordrer til mus-først-tænkning. Audit-reglerne: hver hover-interaktion skal have en fokus-ækvivalent (dropdowns åbner ved focus-in og lukker ved focus-out); tabs og slidere skal kunne betjenes med piletaster og eksponere aria-selected/roller; alt der udløses ved klik skal være en rigtig knap eller et link — ikke en div med click-trigger; modal-interaktioner skal flytte fokus ind ved åbning og tilbage ved lukning; og autospillede hero-animationer skal respektere prefers-reduced-motion. Er det for dyrt at genbygge en interaktion tilgængeligt, så giv en statisk fallback til samme indhold — WCAG kræver ikke identisk oplevelse, kun ækvivalent adgang.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Audit-workflow i fem skridt</h2>
+    <p><strong>Trin 1 — automatisk scanning</strong> af forsiden, en nøgleside, en formularside og evt. collection-/skabelonsider. Det fanger kontrast, alt, overskriftsorden, labels og duplikerede IDs på minutter — forvent 10-30 fund på et typisk build.</p>
+    <p><strong>Trin 2 — ret i Designeren,</strong> publicér staging og genscan til de automatiske fund er væk.</p>
+    <p><strong>Trin 3 — keyboard-gennemgang:</strong> tag musen fra bordet og gå hver interaktive sti igennem — menuer, accordions, tabs, modals og formularer.</p>
+    <p><strong>Trin 4 — skærmlæser-spotcheck</strong> af én kernerejse med NVDA eller VoiceOver.</p>
+    <p><strong>Trin 5 — levér:</strong> fundrapport (før/efter) plus tilgængelighedserklæring med conformance-status og kendte begrænsninger. Genscan efter hver større site-ændring.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er Webflow mere tilgængeligt end WordPress ud af boksen?</h3><p>Ingen af dem vinder automatisk. Webflow giver mere ren kontrol med markeringen, men outputtet er kun så tilgængeligt som designeren gør det. WordPress-temaer varierer vildere. I begge tilfælde afgør byggeren.</p></div>
+      <div class="card"><h3>Gælder EAA B2B-sider lavet i Webflow?</h3><p>EAA rammer forbrugervendte tjenester, så rene B2B-sider falder mest udenfor — men WCAG-baserede krav gælder stadig via EN 301 549-udbudskaeder, og offentlige kunder kræver conformance alligevel.</p></div>
+      <div class="card"><h3>Må jeg bruge et tilgængeligheds-overlay på Webflow?</h3><p>Overlays kan ikke skabe manglende semantik, reparere ubrugelige interactions eller rette indholdsproblemer, og markedsføring af dem som compliance har mødt regulatorisk kritik i EU. Ret årsagerne i Designeren i stedet.</p></div>
+      <div class="card"><h3>Hvordan tjekker jeg kontrast over gradienter og billeder?</h3><p>Prøvtag det lyseste og mørkeste punkt bag teksten og tjek begge mod tekstfarven i et kontrastværktøj. Læg et scrim-overlay på, hvis ét punkt fejler.</p></div>
+      <div class="card"><h3>Kan bureauer sælge Webflow-tilgængelighedsaudits?</h3><p>Ja — en automatiske scanning kombineret med manuel tastatur-/skærmlæsertestning og en leveret rapport er en standard, fakturerbar ydelse, og EAA-fristerne har gjort efterspørgslen voksende.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/wix-tilgaengelighed-eaa" style="color:var(--color-accent);">Wix og EAA</a> &middot; <a href="/da/blog/squarespace-tilgaengelighed-eaa" style="color:var(--color-accent);">Squarespace og EAA</a> &middot; <a href="/da/blog/pris-tilgaengelighedsgennemgang" style="color:var(--color-accent);">Pris på tilgængelighedsgennemgang</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/webflow-accessibility-audit">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drupal og tilgængelighed: WCAG 2.1 AA og EAA (guide 2026)</title>
+<meta name="description" content="Drupal-tilgængelighedsguide til EAA og WCAG 2.1 AA: Olivero-temaet, contributed-module-risici, Views- og formularretter, admin vs. front-end-ansvar og en verificerings-workflow — på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Drupal og tilgængelighed: WCAG 2.1 AA og EAA">
+<meta property="og:description" content="Drupal-tilgængelighedsguide til EAA og WCAG 2.1 AA: Olivero-temaet, contributed-module-risici, Views- og formularretter, admin vs. front-end-ansvar og en verificerings-workflow — på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/drupal-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/drupal-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/drupal-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Drupal og tilgængelighed: WCAG 2.1 AA og EAA", "description": "Drupal-tilgængelighedsguide til EAA og WCAG 2.1 AA: Olivero-temaet, contributed-module-risici, Views- og formularretter, admin vs. front-end-ansvar og en verificerings-workflow — på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/drupal-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Er Drupal mere tilgængeligt end WordPress?", "acceptedAnswer": {"@type": "Answer", "text": "Ud af boksen, ja — Drupal core målretter eksplicit WCAG 2.1 og ATAG 2.0, mens WordPress-kvalitet afhænger langt mere af valgt tema og plugins. Men et dårligt tilpasset Drupal-tema taber fordelen hurtigt; platformsbaseline hjælper, garanterer ingenting."}}, {"@type": "Question", "name": "Gælder EAA Drupal-sider?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, for de tjenester der leveres gennem dem, når de er forbrugervendte i EU — inklusive e-handel og medlems sites. Offentlige Drupal-byggerier har længe været bundet af EN 301 549-udbudregler uanset."}}, {"@type": "Question", "name": "Hvilke contributed modules skaber flest problemer?", "acceptedAnswer": {"@type": "Answer", "text": "Tredjeparts-UI-widgets: sliders/carousels, maps, kalender-/booking-widgets og legacy-menu-moduler. De skiber egen markering uden for theme-systemet, så core-garantier stopper ved deres kant."}}, {"@type": "Question", "name": "Skal jeg bruge Bartik eller Olivero specifikt?", "acceptedAnswer": {"@type": "Answer", "text": "Intet tema er obligatorisk, men at starte fra et vedligeholdt core-tema sparer uger. Skal du tilpasse, så subclass og override templates i stedet for at forke — så beholder du upstreams tilgængelighedsfixes ved opdatering."}}, {"@type": "Question", "name": "Hvor lang tid tager et Drupal-tilgængeligheds-pass?", "acceptedAnswer": {"@type": "Answer", "text": "Et core-plus-contrib-build på Olivero: 1-3 dage inklusive test. Kraftigt tilpassede legacy-temaer (Bootstrap-forks er hyppige syndere) kræver et større udbedringsprojekt."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">DRUPAL &middot; TILGÆNGELIGHED &middot; WCAG/EAA</div>
+    <h1>Drupal og tilgængelighed:<br>WCAG 2.1 AA og EAA</h1>
+    <p class="subtitle">Praktisk guide til bureauer der bygger Drupal-sider til EU-kunder — hvad core allerede klarer, hvor contributed modules bryder compliance, og hvordan du verificerer før EAA bider.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Drupal har et af de stærkeste tilgængelighedsfundamenter blandt CMS'er. Siden Drupal 8 har core haft WCAG 2.1 og ATAG 2.0 som policy-mål: front-end-temaet Olivero skiber tilgængeligt som standard, formularelementer renderer labels programmatisk knyttet til inputs, og core-JavaScript bruger behaviours-systemet til at holde ARIA-tilstand konsistent efter AJAX-opdateringer. Admin-temaet Claro er bygget til samme standard. Kører dit site core-plus-Olivero uden tung tilpasning, starter du fra et solidt grundlag — arbejdet ligger i indhold, contributed modules og eventuelle custom-temaer.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏗️ Core-baseline</h3><p>Semantisk markering, labellede formularer, fokusstyring og ARIA live regions håndteres på theme-system-niveau — ikke overlades til hver enkel sitebuilder.</p></div>
+      <div class="card"><h3>🎨 Olivero &amp; Claro</h3><p>Både front-end- og admin-temaet målrettet WCAG 2.1 AA — inklusive mobil-navigation med rigtige disclosure-semantics og synlige fokus-tilstande.</p></div>
+      <div class="card"><h3>⚙️ ATAG 2.0</h3><p>Drupal sigter højere end indholdsoutput: selve redigeringsoplevelsen er tilgængelig — det tæller ved offentlige udbud under EN 301 549.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Drupal-sider fejler</h2>
+    <p>Reelle Drupal-tilgængelighedsfejl samler sig fire steder — næsten aldrig i core:</p>
+    <div class="problem-cards"><div class="card"><h3>🧩 Contributed modules</h3><p>Moduler der renderer egen markering (sliders, kalendere, menuer, betalingswidgets) bypasser theme-systemet. Kvaliteten svinger enormt; nogle skiber ti år gamle jQuery-mønstre med unlabellede kontroller.</p></div><div class="card"><h3>🖼️ Redaktørvaner</h3><p>Manglende alt-tekst på billeder uploadet via media library, overskrifter valgt efter visuel størrelse, links der bare siger "læs mere". Værktøjslinjen er tilgængelig; vanerne er ofte ikke.</p></div><div class="card"><h3>🎛️ Views &amp; custom blocks</h3><p>Views-genererede lister kan give tomme overskrifter eller gentaget identisk linktekst på tværs af rækker. Custom block-typer springer ofte overskriftsniveauer over.</p></div><div class="card"><h3>💻 Custom themes</h3><p>Håndbyggede eller kraftigt tilpassede temaer genintroducerer alle de klassiske fejl: placeholder-only inputs, divs som knapper, kontrast sat fra brandpaletten uden at tjekke forholdstal.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Contrib module-audit</h2>
+    <p><strong>Inventar:</strong> list de moduler der outputter markering på offentlige sider (sliders, maps, videoplayere, booking-widgets, newsletter-formularer). Alt der kun bruges i admin kan vente.</p>
+    <p><strong>Scan hver widget:</strong> tab dig igennem den på en rigtig side. Unlabellede ikonknapper, keyboard-fælder og manglende fokusindikatorer er disqualifying — find et alternativt modul eller patch sagen i upstream issue queue.</p>
+    <p><strong>Tjek opdateringer:</strong> mange tilgængelighedspatches ligger allerede i nyere udgaver. At køre aktuelle stabile contrib-versioner er i sig selv en tilgængelighedsforanstaltning.</p>
+    <p><strong>WYSIWYG-indstillinger:</strong> begræns CKEditor 5-knapperne så redaktører ikke kan indsætte inline-farver eller fonte der bryder kontrast og struktur. Færre værktøjer, mere compliant indhold.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Views, formularer og indhold</h2>
+    <p><strong>Views:</strong> giv hver display en rigtig, unik titel i stedet for auto-genererede tomme overskrifter; brug distinkt linktekst pr. række ("Læs casen" — ikke "Læs mere"); og tjek at pager-markeringen annoncerer aktuel side.</p>
+    <p><strong>Formularer:</strong> webform og kontaktformularer labeler felter korrekt ud af boksen — fejlene kommer fra custom alterations. Verificér at required-indikation ikke kun er farve, og at fejlbeskeder er tekst, ikke bare røde kanter.</p>
+    <p><strong>Indhold:</strong> håndhæv alt-tekst via media library (det er krævet som default — svæk det ikke), træn redaktører i overskriftsorden, og føj en "linktekst"-retningslinje til den redaktionelle tjekliste.</p>
+    <p><strong>Flersproget:</strong> lang-attributter på oversatte sider skal skifte med grænsefladeoversættelsen — Drupal klarer det i core, men custom routes og indlejret indhold glemmer det ofte.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Verificerings-workflow</h2>
+    <p><strong>Trin 1 — automatisk scanning</strong> af forside, en liste-side, en node-side, en formularside og søgeresultater. Forvent 5-15 mekaniske fund på første kørsel, mest indhold og contrib.</p>
+    <p><strong>Trin 2 — ret og genscan</strong> til de automatiske fund er væk: tema-CSS, Views-titler, alt-tekst-backfill.</p>
+    <p><strong>Trin 3 — keyboard-gennemgang</strong> af søg → liste → node → formularafsending. Alt kun-mus fejler WCAG 2.1.2.</p>
+    <p><strong>Trin 4 — skærmlæser-spotcheck</strong> af én hel rejse med NVDA eller VoiceOver — lyt efter unlabellede kontroller og lydløse AJAX-opdateringer.</p>
+    <p><strong>Trin 5 — kør igen efter hver modulopdatering og ny block-type.</strong> Regressioner ankommer lydløst med contrib-opdateringer.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er Drupal mere tilgængeligt end WordPress?</h3><p>Ud af boksen, ja — Drupal core målretter eksplicit WCAG 2.1 og ATAG 2.0, mens WordPress-kvalitet afhænger langt mere af valgt tema og plugins. Men et dårligt tilpasset Drupal-tema taber fordelen hurtigt; platformsbaseline hjælper, garanterer ingenting.</p></div>
+      <div class="card"><h3>Gælder EAA Drupal-sider?</h3><p>Ja, for de tjenester der leveres gennem dem, når de er forbrugervendte i EU — inklusive e-handel og medlems sites. Offentlige Drupal-byggerier har længe været bundet af EN 301 549-udbudregler uanset.</p></div>
+      <div class="card"><h3>Hvilke contributed modules skaber flest problemer?</h3><p>Tredjeparts-UI-widgets: sliders/carousels, maps, kalender-/booking-widgets og legacy-menu-moduler. De skiber egen markering uden for theme-systemet, så core-garantier stopper ved deres kant.</p></div>
+      <div class="card"><h3>Skal jeg bruge Bartik eller Olivero specifikt?</h3><p>Intet tema er obligatorisk, men at starte fra et vedligeholdt core-tema sparer uger. Skal du tilpasse, så subclass og override templates i stedet for at forke — så beholder du upstreams tilgængelighedsfixes ved opdatering.</p></div>
+      <div class="card"><h3>Hvor lang tid tager et Drupal-tilgængeligheds-pass?</h3><p>Et core-plus-contrib-build på Olivero: 1-3 dage inklusive test. Kraftigt tilpassede legacy-temaer (Bootstrap-forks er hyppige syndere) kræver et større udbedringsprojekt.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);">Overlays og EAA</a> &middot; <a href="/da/blog/skriv-tilgaengelighedserklaering" style="color:var(--color-accent);">Skriv en tilgængelighedserklæring</a> &middot; <a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" style="color:var(--color-accent);">Gratis tilgængelighedsværktøjer</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/drupal-wcag-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify og tilgængelighed: bliv EAA-compliant (guide 2026)</title>
+<meta name="description" content="Gør din Shopify-webshop compliant med European Accessibility Act og WCAG 2.1 AA: tema-indstillinger, Liquid-retter, app-risici, checkout og en gratis scannings-workflow — trin for trin på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Shopify og tilgængelighed: bliv EAA-compliant">
+<meta property="og:description" content="Gør din Shopify-webshop compliant med European Accessibility Act og WCAG 2.1 AA: tema-indstillinger, Liquid-retter, app-risici, checkout og en gratis scannings-workflow — trin for trin på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/shopify-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/shopify-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/shopify-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/shopify-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/shopify-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Shopify og tilgængelighed: gør din webshop EAA-compliant", "description": "Gør din Shopify-webshop compliant med European Accessibility Act og WCAG 2.1 AA: tema-indstillinger, Liquid-retter, app-risici, checkout og en gratis scannings-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/shopify-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA små Shopify-butikker?", "acceptedAnswer": {"@type": "Answer", "text": "Ja for e-handel med forbrugertjenester, også mikrovirksomheder — i modsætning til flere andre EAA-kategorier er der ingen generel small-business-befrielse for webshops. Byrden skalerer med størrelse, men pligterne findes."}}, {"@type": "Question", "name": "Er Shopify selv ansvarlig for tilgængeligheden?", "acceptedAnswer": {"@type": "Answer", "text": "Platformen leverer compliant infrastruktur og fornuftige standardtemaer, men det er butiksindehaveren, der ansvar for sit konfigurerede tema, sit indhold og sine apps. Juridisk ligger ansvaret hos den, der leverer tjenesten til forbrugeren."}}, {"@type": "Question", "name": "Gør tilgængeligheds-widgets min butik compliant?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Overlays ændrer DOM'en efter load og kan ikke rette kontrast i billeder, ødelagte flows eller indholdsproblemer. Flere europæiske forbrugermyndigheder har frarådet at markedsføre dem som compliance. Ret årsagerne i stedet."}}, {"@type": "Question", "name": "Hvad med mine review-popups og app-widgets?", "acceptedAnswer": {"@type": "Answer", "text": "De tælles med som en del af din tjeneste. Gennemgå hver apps kundevendte grænseflade ligesom dit tema, og udskift apps hvis leverandøren ikke vil rette tilgængelighedsfejl."}}, {"@type": "Question", "name": "Hvor lang tid tager det typisk?", "acceptedAnswer": {"@type": "Answer", "text": "En butik på et vedligeholdt OS 2.0-tema: 1-3 dage til indstillinger, alt-tekster, Liquid-retter og test. Butikker på gamle vintage-temaer skal som regel have et temaskift, og det er det større projekt."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SHOPIFY &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>Shopify og tilgængelighed:<br>bliv EAA-compliant</h1>
+    <p class="subtitle">Praktisk compliance-guide for Shopify-butikker og bureauer: hvad European Accessibility Act kræver, hvor Shopify-butikker typisk fejler, og hvilke retter du kan lave uden at røre kode.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din butik gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor Shopify og EAA hænger sammen</h2>
+    <p>Enhver Shopify-butik der sælger til EU-forbrugere er omfattet af European Accessibility Act, som har gældt siden 28. juni 2025 (fristen for nye tjenester: 28. juni 2026). Det gælder dropshipping, print-on-demand og D2C-mærker. Det tekniske benchmark er EN 301 549 / WCAG 2.1 niveau AA, og håndhævelsen er national: tilsynsmyndigheder kan kræve afhjælpning, suspendere ikke-compliante tjenester og udstede bøder. For butiksindehaveren er den praktiske risiko dog mere nærliggende: accessible butikker konverterer bedre, rangerer bedre og kræves i stigende grad af indkøbere og markedspladser.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Juridisk omfang</h3><p>E-handel med forbrugsvarer og -tjenester er eksplicit nævnt i EAA. Salg til EU udløser reglerne — der kræves intat EU-etablering.</p></div>
+      <div class="card"><h3>📈 Konvertering</h3><p>Tilgængelighedsretter overlapper tungt med konverteringsoptimering: læsbar tekst, synligt fokus, keyboard-venlige flows, tydelige fejlbeskeder.</p></div>
+      <div class="card"><h3>🛡️ Risiko</h3><p>Amerikanske ADA-kravbreve citerer i stigende grad WCAG uanset platform. En EAA-compliant butik er også meget sikrere dér.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Shopify-butikker typisk fejler</h2>
+    <p>De fleste tilgængelighedsfejl kommer fra fire kilder: temakvalitet, apps, butikkens eget indhold og den hostede checkout du ikke fuldt styrer.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Temaer</h3><p>Gamle eller tunge tilpassede temaer har kontrastfejl (lysegrå udsalgsbadges), ikonknapper uden labels og manglende fokus-stile. Gratis standardtemaer som Dawn er et markant bedre udgangspunkt end de fleste betalte temaer.</p></div>
+      <div class="card"><h3>🔌 Apps</h3><p>Hver app injicerer sine egne widgets — review-popups, upsell-slidere, chat-bobler. De skiber rutinemæssigt duplikerede ID'er, unlabelled kontroller og keyboard-fælder. Hver app skal tjekkes for sig.</p></div>
+      <div class="card"><h3>✍️ Indhold</h3><p>Produktbilleder uden alt-tekst, "køb nu"-linkspams, overskrifter brugt som styling i stedet for struktur. Største volumenkategori på de fleste butikker.</p></div>
+      <div class="card"><h3>🛒 Checkout</h3><p>Shopifys hostede checkout er stort set uden for din kontrol. Den lever rimeligt godt op til basisstandarderne; din pligt er læselig branding (ingen lavkontrast-farver) og accessible cart/drawer-flows i dit tema.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Retter i tema-indstillingerne — uden kode</h2>
+    <p>Moderne Online Store 2.0-temaer eksponerer de fleste mekaniske retter som indstillinger:</p>
+    <table class="compare">
+      <thead><tr><th>Område</th><th>Hvad du gør</th></tr></thead>
+      <tbody>
+        <tr><td>Tekst og farve</td><td>Forøg tekststørrelsen og mørk farven til kontrasten klarer 4,5:1 overalt — tjek announcement bar, udsalgsbadges og footer separat</td></tr>
+        <tr><td>Alt-tekster</td><td>Udfyld alt-tekst på produktbilleder i admin (varianter arver); dekorative billeder får tom <code>alt=""</code></td></tr>
+        <tr><td>Fokus og bevægelse</td><td>Behold fokus-outline via <code>:focus-visible</code>; slå autospillende carousels fra eller giv pause-knap</td></tr>
+        <tr><td>Navigation</td><td>Mobilmenu åbner ved tryk og lukkes med Escape; rigtige nav-elementer; skip-to-content i header.liquid</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Liquid-retter for udviklere</h2>
+    <p>Redigerer du Liquid-skabeloner, så gå denne tjekliste igennem én gang pr. tema:</p>
+    <p><strong>Formularlabels:</strong> nyhedsbrevsblokke og søgefelder renderes ofte som placeholder-only inputs. Tilføj rigtige <code>&lt;label&gt;</code>-elementer koblet via for/id — WCAG 3.3.2 og en af de mest almindelige scannerfund.</p>
+    <p><strong>Ikonknapper:</strong> cart-toggle, antal-trin, luk-ikoner skal have aria-label. En knap der kun render'er et SVG er usynlig for hjælpemiddelteknologi.</p>
+    <p><strong>Duplikerede ID'er:</strong> section rendering i loops gentager ofte <code>id="Section-..."</code>. Det bryder label-kobling og skærmlæsernavigation.</p>
+    <p><strong>Overskrifthierarki:</strong> én h1 pr. side. Sektionkomponenter må ikke hardkode h2, når de allerede ligger inde i en komponent der emitter én.</p>
+    <p><strong>Announcement bars og modals:</strong> dismissible, tilgængelige med tastatur, korrekt fokus-fældning mens de er åbne, og fokus returneres ved lukning.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>App-audit og checkout</h2>
+    <p>To Shopify-specifikke skridt de fleste guider springer over:</p>
+    <p><strong>App-audit:</strong> list alle installerede apps der renderer kundevendt UI. Fjern dem du ikke aktivt bruger (de loader stadig scripts). Tab gennem hver resterende apps widget på en live side: når du noget uden synligt fokus eller label, så omkonfigurér eller udskift appen. Undgå overlay-/tilgængeligheds-apps som compliance-strategi — de gør ikke butiken compliant, og flere europæiske forbrugerorganer har offentligt kritiseret dem.</p>
+    <p><strong>Checkout-konfiguration:</strong> vælg logo/farvekombinationer der passer kontrastkravene, skriv meningsfulde sidetitler, og test hele rejsen (kurv → checkout → kvittering) kun med tastatur.</p>
+    <p><strong>Dokumentér:</strong> publicér en tilgængelighedserklæring med conformansstatus, kendte begrænsninger (fx en specifik app) og en kontaktkanal. Under EAA er det forventet, ikke valgfrit.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Verificering i fem skridt</h2>
+    <p>En realistisk verificeringsloop for en Shopify-butik tager en halv dag:</p>
+    <p><strong>Trin 1 — automatisk scanning</strong> af forsiden, en kollektionsside, et produkt, søgeresultater og cart-drawer. Forvent 5-20 mekaniske fund første gang.</p>
+    <p><strong>Trin 2 — ret og genscan</strong> tema-indstillinger og Liquid-fejl til de automatiske fund er væk.</p>
+    <p><strong>Trin 3 — keyboard-gennemgang</strong> af browse → læg i kurv → checkout-start. Alt der kræver mus er en fejl under WCAG 2.1.2.</p>
+    <p><strong>Trin 4 — skærmlæser-spotcheck</strong> af ét produktflow med VoiceOver eller NVDA — lyt efter unlabelled kontroller.</p>
+    <p><strong>Trin 5 — kør igen efter hver temaoopdatering og ny app.</strong> Regressioner kommer lydløst med opdateringer.</p>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Scan din Shopify-butik gratis &rarr;</a>
+      &nbsp;&nbsp;
+      <a href="/da/blog/eaa-tjekliste-2026" class="btn-secondary">EAA-tjekliste &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA små Shopify-butikker?</h3><p>Ja for e-handel med forbrugertjenester, også mikrovirksomheder — i modsætning til flere andre EAA-kategorier er der ingen generel small-business-befrielse for webshops. Byrden skalerer med størrelse, men pligterne findes.</p></div>
+      <div class="card"><h3>Er Shopify selv ansvarlig for tilgængeligheden?</h3><p>Platformen leverer compliant infrastruktur og fornuftige standardtemaer, men det er butiksindehaveren, der ansvar for sit konfigurerede tema, sit indhold og sine apps. Juridisk ligger ansvaret hos den, der leverer tjenesten til forbrugeren.</p></div>
+      <div class="card"><h3>Gør tilgængeligheds-widgets min butik compliant?</h3><p>Nej. Overlays ændrer DOM'en efter load og kan ikke rette kontrast i billeder, ødelagte flows eller indholdsproblemer. Flere europæiske forbrugermyndigheder har frarådet at markedsføre dem som compliance. Ret årsagerne i stedet.</p></div>
+      <div class="card"><h3>Hvad med mine review-popups og app-widgets?</h3><p>De tælles med som en del af din tjeneste. Gennemgå hver apps kundevendte grænseflade ligesom dit tema, og udskift apps hvis leverandøren ikke vil rette tilgængelighedsfejl.</p></div>
+      <div class="card"><h3>Hvor lang tid tager det typisk?</h3><p>En butik på et vedligeholdt OS 2.0-tema: 1-3 dage til indstillinger, alt-tekster, Liquid-retter og test. Butikker på gamle vintage-temaer skal som regel have et temaskift, og det er det større projekt.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);">Overlays og EAA</a> &middot; <a href="/da/blog/pris-tilgaengelighedsgennemgang" style="color:var(--color-accent);">Pris på tilgængelighedsgennemgang</a> &middot; <a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);">WCAG 2.2-ændringer</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/shopify-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

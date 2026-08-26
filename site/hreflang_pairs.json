@@ -37,5 +37,8 @@
  "shopify-eaa-accessibility": "shopify-tilgaengelighed-eaa",
  "wix-eaa-accessibility": "wix-tilgaengelighed-eaa",
  "squarespace-eaa-accessibility": "squarespace-tilgaengelighed-eaa",
- "magento-eaa-accessibility": "magento-tilgaengelighed-eaa"
+ "magento-eaa-accessibility": "magento-tilgaengelighed-eaa",
+ "webflow-accessibility-audit": "webflow-tilgaengelighed-eaa",
+ "prestashop-eaa-accessibility": "prestashop-tilgaengelighed-eaa",
+ "drupal-wcag-accessibility": "drupal-tilgaengelighed-eaa"
 }

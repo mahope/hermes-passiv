@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrestaShop og tilgængelighed: bliv EAA-compliant (guide 2026)</title>
+<meta name="description" content="Tilgængelighedsguide til PrestaShop-butikker: tema-retter, produkt-alt-tekst, module-audit, facetteret navigation og checkout — WCAG 2.1 AA og European Accessibility Act på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="PrestaShop og tilgængelighed: bliv EAA-compliant">
+<meta property="og:description" content="Tilgængelighedsguide til PrestaShop-butikker: tema-retter, produkt-alt-tekst, module-audit, facetteret navigation og checkout — WCAG 2.1 AA og European Accessibility Act på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/prestashop-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/prestashop-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/prestashop-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "PrestaShop og tilgængelighed: bliv EAA-compliant", "description": "Tilgængelighedsguide til PrestaShop-butikker: tema-retter, produkt-alt-tekst, module-audit, facetteret navigation og checkout — WCAG 2.1 AA og European Accessibility Act på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/prestashop-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA min lille PrestaShop-butik?", "acceptedAnswer": {"@type": "Answer", "text": "Ja for e-handel: webshops har ingen mikrovirksomhedsbefrielse under EAA. En lille PrestaShop-butik der sælger til EU-forbrugere er i omfang uanset antal ansatte."}}, {"@type": "Question", "name": "Er PrestaShop tilgængeligt ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Standard Classic-temaet leverer fornuftig semantik og responsiv markering, men de fleste butikker tilpasser temaer, tilføjer moduler og oversætter indhold — hvert trin kan introducere regressioner som manglende labels, generiske linktekster eller lavkontrast-bannere."}}, {"@type": "Question", "name": "Hvor retter jeg alt-tekst på produktbilleder?", "acceptedAnswer": {"@type": "Answer", "text": "Katalog → Produkter → åbn produktet → Fotos-fanen → Legend-feltet. Bulk-importerede kataloger står ofte tomme på hundredvis af produkter; scanneren finder dem alle i ét træk."}}, {"@type": "Question", "name": "Er købte temaer tilgængelige?", "acceptedAnswer": {"@type": "Answer", "text": "Nogle er bedre end andre, men marketingpåstande er upålidelige. Scan en hel side af dit live tema frem for at stole på demoen — overskriftsstruktur, fokus-tilstande og kontrast er hvor temaer oftest fejler."}}, {"@type": "Question", "name": "Hvor lang tid tager udbedring?", "acceptedAnswer": {"@type": "Answer", "text": "En typisk mellemstor butik skal bruge 1-4 uger afhængigt af tematilpasningens dybde og modulantal. Backoffice-rettere (alt-tekst, sprog, indstillinger) kan klares på dage; temaskabelon-arbejde tager længere."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRESTASHOP &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>PrestaShop og tilgængelighed:<br>bliv EAA-compliant</h1>
+    <p class="subtitle">Hvor PrestaShop-butikker fejler WCAG 2.1 AA — temaer, moduler, filtre og checkout — og en praktisk udbedrings-workflow for EU-mercants.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>PrestaShop driver hundredtusindvis af webshops med stor fodaftryk blandt europæiske små og mellemstore mercants — præcis e-handelskategorien European Accessibility Act regulerer. Siden juni 2025 er en utilgængelig butik juridisk risiko i hele EU, og betalingsudbydere og markedspladser spørger i stigende grad mercants til dokumenteret conformance. En typisk PrestaShop-butik stabler et købt tema, et dusin moduler og flere sprog oven på kernen — og hvert led kan bryde tilgængeligheden.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🛒 E-handel er i omfang</h3><p>Webshops har ingen mikrovirksomheds-befrielse under EAA. Sælger du til EU-forbrugere, gælder WCAG 2.1 AA dine produktsider, checkout og kontoområde.</p></div>
+      <div class="card"><h3>🎨 Marketplace-temaer varierer</h3><p>Temaet styrer næsten al renderet HTML — overskriftshierarki, knap-markering, fokus-tilstande og kontrast. Kvaliteten svinger vildt mellem marketplace-temaer.</p></div>
+      <div class="card"><h3>🧩 Modul-risiko</h3><p>Filter-widgets, sliders, reviews og newsletter-popups kommer typisk fra tredjeparts-moduludviklere med ukendt tilgængelighedskvalitet. Hvert modul skal gennemgås for sig.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Typiske PrestaShop-fejl</h2>
+    <div class="problem-cards"><div class="card"><h3>🖼️ Produktbilleder uden Legend</h3><p>Bulk-import springer rutinemæssigt Legend-feltet over og efterlader kategorigitter fulde af billeder helt uden alt-tekst.</p></div><div class="card"><h3>🧭 Facetterede filtre</h3><p>Filtrer renderet som klikbare divs uden tastaturstøtte eller aria-expanded — skærmlæserebrugere kan ikke indsnævre et produktgitter.</p></div><div class="card"><h3>🔢 Antal- og variant-input</h3><p>Egne steppers i stedet for native number-inputs, farveprøver uden labels eller annoncering af valgt tilstand.</p></div><div class="card"><h3>💳 Checkout-trin</h3><p>Ajax-udskiftede checkout-sektioner der hverken flytter fokus eller annoncerer fejl; betalingsfelter uden tilknyttede labels.</p></div><div class="card"><h3>🔔 Popups &amp; toasts</h3><p>Newsletter-modals der fanger tastaturfokus, "lagt i kurven"-bekræftelser vist kun visuelt — ingen ARIA live region.</p></div><div class="card"><h3>🎨 Kampagnekontrast</h3><p>Udsalgsbadges og banner-tekst i brandfarver under 4,5:1-minimummet — den hyppigste automatiske fundkategori på EU-butikker.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Backoffice- og tema-retter</h2>
+    <p><strong>Backoffice først:</strong> produktbillede-alt bor i Katalog → Produkter → Fotos (Legend-feltet); butiks-sprog under International → Lokalisering; farver og typografi under Design → Theme &amp; Logo. Fyld det ordentligt ud, før du rører kode.</p>
+    <p><strong>Tema-semantik:</strong> genskab rigtige landmarks (header, nav, main, footer), én h1 pr. side og produkttitler som rigtige overskrifter i gitterskabelonerne — mange marketplace-temaer renderer dem som stylede divs.</p>
+    <p><strong>Native inputs:</strong> erstat egne antal-steppers og selects med native elementer stylet til at matche — de arver tastatur- og skærmlæseradfærd gratis.</p>
+    <p><strong>Fokus &amp; ARIA-tilstande:</strong> style :focus-visible i stedet for at fjerne outlines; giv filter-toggles aria-expanded og resultatantal en aria-live region; hver Ajax-sektionsskift flytter fokus til sit nye indhold.</p>
+    <p><strong>Kontrasttokens:</strong> ret grå-på-grå pris- og udsalgstekst ét sted i temaets farvevariabler, og verificér bagefter på tværs af bannere og knapper.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Module-audit</h2>
+    <p>Behandl hvert tredjepartsmodul som en tilgængeligheds-ubekendt indtil det modsatte er bevist. På staging: gå hvert mods komplette flow igennem kun med tastatur, derefter med en skærmlæser — installér, konfigurér, brug, fortryd. Facetteret søgning, carousels, cookie-bannere og newsletter-popups fortjener særlig opmærksomhed — det er kategorierne med de værste track records. Fejler et modul uden fix fra leverandøren, så beslut bevidst: erstat det, pak et korrigerende lag udenom, eller dokumentér det som begrænsning i din tilgængelighedserklæring med en workaround. Kør din scanning igen efter hver modul-installation og hver PrestaShop-opgradering — opdateringer genskaber lydløst gamle fejl, hvor leverandørfiler blev patchet direkte.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Audit-workflow i fem skridt</h2>
+    <p><strong>Trin 1 — automatisk crawl</strong> af forside, kategori-, produkt-, CMS- og checkout-skabeloner — forvent 20-50 distincte fund på en typisk butik.</p>
+    <p><strong>Trin 2 — transaktionsrejser:</strong> gennemfør søg → filtrér → produkt → kurv → checkout ende-til-ende med tastatur, derefter med skærmlæser. Dér ligger EAA-risikoen.</p>
+    <p><strong>Trin 3 — module-pass:</strong> auditér hvert installeret moduls widgets enkeltvis.</p>
+    <p><strong>Trin 4 — ret</strong> i backoffice hvor muligt, ellers i et child theme — patch aldrig core- eller vendor-filer direkte.</p>
+    <p><strong>Trin 5 — levér:</strong> fundrapport, re-scan-verifikation og en tilgængelighedserklæring med conformance-status og dokumenterede begrænsninger. Re-auditér efter hver opgradering og større modulændring.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA min lille PrestaShop-butik?</h3><p>Ja for e-handel: webshops har ingen mikrovirksomhedsbefrielse under EAA. En lille PrestaShop-butik der sælger til EU-forbrugere er i omfang uanset antal ansatte.</p></div>
+      <div class="card"><h3>Er PrestaShop tilgængeligt ud af boksen?</h3><p>Standard Classic-temaet leverer fornuftig semantik og responsiv markering, men de fleste butikker tilpasser temaer, tilføjer moduler og oversætter indhold — hvert trin kan introducere regressioner som manglende labels, generiske linktekster eller lavkontrast-bannere.</p></div>
+      <div class="card"><h3>Hvor retter jeg alt-tekst på produktbilleder?</h3><p>Katalog → Produkter → åbn produktet → Fotos-fanen → Legend-feltet. Bulk-importerede kataloger står ofte tomme på hundredvis af produkter; scanneren finder dem alle i ét træk.</p></div>
+      <div class="card"><h3>Er købte temaer tilgængelige?</h3><p>Nogle er bedre end andre, men marketingpåstande er upålidelige. Scan en hel side af dit live tema frem for at stole på demoen — overskriftsstruktur, fokus-tilstande og kontrast er hvor temaer oftest fejler.</p></div>
+      <div class="card"><h3>Hvor lang tid tager udbedring?</h3><p>En typisk mellemstor butik skal bruge 1-4 uger afhængigt af tematilpasningens dybde og modulantal. Backoffice-rettere (alt-tekst, sprog, indstillinger) kan klares på dage; temaskabelon-arbejde tager længere.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/magento-tilgaengelighed-eaa" style="color:var(--color-accent);">Magento og EAA</a> &middot; <a href="/da/blog/shopify-tilgaengelighed-eaa" style="color:var(--color-accent);">Shopify og EAA</a> &middot; <a href="/da/blog/wcag-kontrast-checker" style="color:var(--color-accent);">WCAG-kontrasttjek</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/prestashop-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>
