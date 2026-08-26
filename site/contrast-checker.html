@@ -43,6 +43,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What ratios do AA and AAA require?", "acceptedAnswer": {"@type": "Answer", "text": "WCAG 2.x AA requires 4.5:1 for normal text and 3:1 for large text (18 pt or 14 pt bold and up). AAA raises this to 7:1 and 4.5:1 respectively. Non-text UI components like input borders need 3:1 under AA."}}, {"@type": "Question", "name": "How is contrast ratio calculated?", "acceptedAnswer": {"@type": "Answer", "text": "Relative luminance of both colors is computed per the WCAG formula (sRGB values linearized, then weighted 0.2126 R + 0.7152 G + 0.0722 B), and the lighter value is divided by the darker plus 0.05. The result ranges from 1:1 to 21:1."}}, {"@type": "Question", "name": "Does it check more than foreground/background pairs?", "acceptedAnswer": {"@type": "Answer", "text": "You can test any pair of colors, including disabled states and placeholder text. Note that WCAG exempts logotypes and purely decorative elements from the thresholds."}}, {"@type": "Question", "name": "Why does white text on my brand color fail?", "acceptedAnswer": {"@type": "Answer", "text": "Many mid-tone brand colors (yellows, light blues, tans) have high luminance, so white on top yields ratios near 2:1. Switching to dark text often passes instantly — try both directions before redesigning the palette."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -117,6 +120,16 @@
 
 <p style="margin-top:26px"><a href="/free-tools">&larr; All free tools</a> · <a href="/text-on-image-checker">Text on image checker</a> ·
 <a href="/scan">Full-page accessibility scanner</a> · <a href="/palette-generator">Palette generator</a> · <a href="/contrast-checker-da">Dansk version</a> · <a href="/da/blog/wcag-kontrast-checker" lang="da">dansk guide</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What ratios do AA and AAA require?</h3><p>WCAG 2.x AA requires 4.5:1 for normal text and 3:1 for large text (18 pt or 14 pt bold and up). AAA raises this to 7:1 and 4.5:1 respectively. Non-text UI components like input borders need 3:1 under AA.</p></div>
+      <div class="card"><h3>How is contrast ratio calculated?</h3><p>Relative luminance of both colors is computed per the WCAG formula (sRGB values linearized, then weighted 0.2126 R + 0.7152 G + 0.0722 B), and the lighter value is divided by the darker plus 0.05. The result ranges from 1:1 to 21:1.</p></div>
+      <div class="card"><h3>Does it check more than foreground/background pairs?</h3><p>You can test any pair of colors, including disabled states and placeholder text. Note that WCAG exempts logotypes and purely decorative elements from the thresholds.</p></div>
+      <div class="card"><h3>Why does white text on my brand color fail?</h3><p>Many mid-tone brand colors (yellows, light blues, tans) have high luminance, so white on top yields ratios near 2:1. Switching to dark text often passes instantly — try both directions before redesigning the palette.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Free browser-based GDPR &amp; accessibility tooling

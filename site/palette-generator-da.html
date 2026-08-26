@@ -52,6 +52,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad betyder WCAG AA og AAA?", "acceptedAnswer": {"@type": "Answer", "text": "Det er kontrastniveauer fra Web Content Accessibility Guidelines. AA kræver en kontrast på mindst 4,5:1 for almindelig tekst (3:1 for stor tekst); AAA kræver 7:1. Hver genereret palet viser de præcise tal, så du kan vælge kombinationer der overholder reglerne."}}, {"@type": "Question", "name": "Må jeg bruge paletterne kommercielt?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Farvekombinationerne er dine at bruge i alle projekter — de beregnes ud fra din basisfarve og har ingen licensbegrænsninger."}}, {"@type": "Question", "name": "Virker det til dark mode?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Generér fra en mørk basisfarve og få lyse tekstparinger, og tjek tallene på samme måde. Dark mode kræver ofte højere kontrast end man tror — verificér i stedet for at gætte."}}, {"@type": "Question", "name": "Sendes mine farver nogetsted hen?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Paletter beregnes lokalt i din browser med JavaScript — intet forlader din enhed."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -150,6 +153,16 @@
 <a href="/contrast-checker-da">Kontrast-checker</a> · <a href="/scan-da">Hele-siden-scanner</a> ·
 <a href="/color-blindness-simulator-da">Farveblindhedssimulator</a> ·
 <a href="/palette-generator">English version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Hvad betyder WCAG AA og AAA?</h3><p>Det er kontrastniveauer fra Web Content Accessibility Guidelines. AA kræver en kontrast på mindst 4,5:1 for almindelig tekst (3:1 for stor tekst); AAA kræver 7:1. Hver genereret palet viser de præcise tal, så du kan vælge kombinationer der overholder reglerne.</p></div>
+      <div class="card"><h3>Må jeg bruge paletterne kommercielt?</h3><p>Ja. Farvekombinationerne er dine at bruge i alle projekter — de beregnes ud fra din basisfarve og har ingen licensbegrænsninger.</p></div>
+      <div class="card"><h3>Virker det til dark mode?</h3><p>Ja. Generér fra en mørk basisfarve og få lyse tekstparinger, og tjek tallene på samme måde. Dark mode kræver ofte højere kontrast end man tror — verificér i stedet for at gætte.</p></div>
+      <div class="card"><h3>Sendes mine farver nogetsted hen?</h3><p>Nej. Paletter beregnes lokalt i din browser med JavaScript — intet forlader din enhed.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøj der kører i din browser

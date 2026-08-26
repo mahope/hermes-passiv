@@ -66,6 +66,9 @@
     .tier-card ul li { margin-bottom: 0.4rem; }
     .tier-card .btn { display: block; text-align: center; margin-top: 1rem; }
   </style>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What icons does it find?", "acceptedAnswer": {"@type": "Answer", "text": "Favicons of every declared size and format (ICO, PNG, SVG), Apple touch icons, and the manifest-declared icons used by Android/Chrome when a user installs your site as an app."}}, {"@type": "Question", "name": "Why do I need icons beyond the favicon?", "acceptedAnswer": {"@type": "Answer", "text": "Each context picks its own icon: browser tab (16–32 px), iOS home screen (180 px), Android install/PWA splash (192 and 512 px), and social link previews. Missing sizes get scaled up and look blurry exactly where users notice most."}}, {"@type": "Question", "name": "Does it upload my files?", "acceptedAnswer": {"@type": "Answer", "text": "No. You enter a URL and the checks read what the site publicly serves. Nothing is stored on our side."}}, {"@type": "Question", "name": "My favicon works in the tab but not elsewhere — why?", "acceptedAnswer": {"@type": "Answer", "text": "Browsers fall back to /favicon.ico even with no HTML tag, but iOS home screens, PWA installs and many link previews only use explicitly linked icons. Add the full set of link tags and manifest entries this tool lists as missing."}}]}
+</script>
 </head>
 <body>
   <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
@@ -189,7 +192,17 @@
         <div>└── snippet.html                  <span style="color:#64748b;">(copy-paste into &lt;head&gt;)</span></div>
       </div>
     </section>
-  </main>
+  <section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What icons does it find?</h3><p>Favicons of every declared size and format (ICO, PNG, SVG), Apple touch icons, and the manifest-declared icons used by Android/Chrome when a user installs your site as an app.</p></div>
+      <div class="card"><h3>Why do I need icons beyond the favicon?</h3><p>Each context picks its own icon: browser tab (16–32 px), iOS home screen (180 px), Android install/PWA splash (192 and 512 px), and social link previews. Missing sizes get scaled up and look blurry exactly where users notice most.</p></div>
+      <div class="card"><h3>Does it upload my files?</h3><p>No. You enter a URL and the checks read what the site publicly serves. Nothing is stored on our side.</p></div>
+      <div class="card"><h3>My favicon works in the tab but not elsewhere — why?</h3><p>Browsers fall back to /favicon.ico even with no HTML tag, but iOS home screens, PWA installs and many link previews only use explicitly linked icons. Add the full set of link tags and manifest entries this tool lists as missing.</p></div>
+  </div>
+</section>
+
+</main>
 
   <footer class="site-footer">
     <p>site-icons by <a href="/">Passiv</a> · MIT license · Pro license for commercial use</p>

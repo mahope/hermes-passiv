@@ -39,6 +39,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How is readability measured?", "acceptedAnswer": {"@type": "Answer", "text": "The tool computes WCAG-style contrast between your text color and representative background regions of the image, then flags areas where the ratio falls below 4.5:1 (normal text) or 3:1 (large text). It is an approximation — judge busy photographic areas visually too."}}, {"@type": "Question", "name": "What is the fastest fix for unreadable text on an image?", "acceptedAnswer": {"@type": "Answer", "text": "Add a scrim: a semi-transparent dark overlay behind the text, or place text on a solid band. Both raise contrast dramatically without changing your image or brand colors."}}, {"@type": "Question", "name": "Are my images uploaded?", "acceptedAnswer": {"@type": "Answer", "text": "No. Everything runs locally in your browser using canvas — the image file never leaves your device."}}, {"@type": "Question", "name": "Does this matter for accessibility compliance?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. WCAG 2.x requires 4.5:1 contrast for normal text regardless of background type, and the EU Accessibility Act pushes public-facing sites toward conformance. Text baked into images cannot be zoomed, translated or selected either — prefer real HTML text where you can."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -112,6 +115,16 @@
 <a href="/contrast-checker">Contrast checker</a> ·
 <a href="/palette-generator">Palette generator</a> ·
 <a href="/text-on-image-checker-da">Danish version</a> · <a href="/da/blog/tekst-paa-billede-kontrasttjek" lang="da">dansk guide</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Ofte stillede spørgsmål</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>How is readability measured?</h3><p>The tool computes WCAG-style contrast between your text color and representative background regions of the image, then flags areas where the ratio falls below 4.5:1 (normal text) or 3:1 (large text). It is an approximation — judge busy photographic areas visually too.</p></div>
+      <div class="card"><h3>What is the fastest fix for unreadable text on an image?</h3><p>Add a scrim: a semi-transparent dark overlay behind the text, or place text on a solid band. Both raise contrast dramatically without changing your image or brand colors.</p></div>
+      <div class="card"><h3>Are my images uploaded?</h3><p>No. Everything runs locally in your browser using canvas — the image file never leaves your device.</p></div>
+      <div class="card"><h3>Does this matter for accessibility compliance?</h3><p>Yes. WCAG 2.x requires 4.5:1 contrast for normal text regardless of background type, and the EU Accessibility Act pushes public-facing sites toward conformance. Text baked into images cannot be zoomed, translated or selected either — prefer real HTML text where you can.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Free GDPR &amp; accessibility tools that run in your browser

@@ -49,6 +49,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How accurate is the simulation?", "acceptedAnswer": {"@type": "Answer", "text": "The tool uses the standard Machado et al. (2009) severity model for protanopia, deuteranopia and tritanopia — the same matrices used in professional design tools. It approximates how colors are perceived, but only a clinical test can diagnose color vision deficiency in a person."}}, {"@type": "Question", "name": "Are my colors uploaded anywhere?", "acceptedAnswer": {"@type": "Answer", "text": "No. The simulation runs entirely in JavaScript in your browser. Your palette never leaves your device."}}, {"@type": "Question", "name": "Which type should I check against?", "acceptedAnswer": {"@type": "Answer", "text": "Deuteranomaly (red-green) is by far the most common, so start there. If your design works for deuteranopia and tritanopia, it will almost always work for rarer types too. Check both text contrast and chart/status colors."}}, {"@type": "Question", "name": "Does this replace a WCAG contrast check?", "acceptedAnswer": {"@type": "Answer", "text": "No — they answer different questions. A contrast checker tells you whether text is readable; this simulator shows whether two hues remain distinguishable when color vision is impaired. Use both: contrast for legibility, simulation for color coding."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -155,6 +158,16 @@
 <a href="/palette-generator">Palette generator</a> ·
 <a href="/contrast-checker">Contrast checker</a> ·
 <a href="/color-blindness-simulator-da">Dansk version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>How accurate is the simulation?</h3><p>The tool uses the standard Machado et al. (2009) severity model for protanopia, deuteranopia and tritanopia — the same matrices used in professional design tools. It approximates how colors are perceived, but only a clinical test can diagnose color vision deficiency in a person.</p></div>
+      <div class="card"><h3>Are my colors uploaded anywhere?</h3><p>No. The simulation runs entirely in JavaScript in your browser. Your palette never leaves your device.</p></div>
+      <div class="card"><h3>Which type should I check against?</h3><p>Deuteranomaly (red-green) is by far the most common, so start there. If your design works for deuteranopia and tritanopia, it will almost always work for rarer types too. Check both text contrast and chart/status colors.</p></div>
+      <div class="card"><h3>Does this replace a WCAG contrast check?</h3><p>No — they answer different questions. A contrast checker tells you whether text is readable; this simulator shows whether two hues remain distinguishable when color vision is impaired. Use both: contrast for legibility, simulation for color coding.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Free GDPR &amp; accessibility tools that run in your browser

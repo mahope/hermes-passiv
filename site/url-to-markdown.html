@@ -73,7 +73,10 @@
     details.faq p { color: var(--color-text-muted); font-size: .9rem; }
     @media (max-width: 640px) { #url-form button[type="submit"] { width: 100%; } }
   </style>
-<script defer src="/track.js"></script></head>
+<script defer src="/track.js"></script><script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What gets converted?", "acceptedAnswer": {"@type": "Answer", "text": "The readable content of the page: headings, paragraphs, lists, links, images and code blocks become Markdown. Navigation bars, ads, cookie banners and other boilerplate are stripped where possible."}}, {"@type": "Question", "name": "Do internal links stay clickable?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Links are preserved as [text](url) with absolute URLs, so the output navigates the same way the original page did."}}, {"@type": "Question", "name": "Is anything sent to a server?", "acceptedAnswer": {"@type": "Answer", "text": "Fetching and conversion happen in your browser. Pages that block cross-origin requests may fail because of CORS rules enforced by your browser — those pages simply cannot be fetched client-side, through no fault of the tool."}}, {"@type": "Question", "name": "Can I convert pages I have to log in to?", "acceptedAnswer": {"@type": "Answer", "text": "Only if your browser already has access and CORS allows reading the response. For paywalled or private pages, copy the visible text instead and convert it manually — respect copyright and access terms either way."}}]}
+</script>
+</head>
 <body>
   <main class="tool-wrap">
     <nav aria-label="Breadcrumb" style="font-size:0.8rem;margin-bottom:1rem;">
@@ -153,7 +156,17 @@
       <p><a href="/blog/url-to-markdown-converter">Guide: how it works</a> · <a href="/clean-copy-tool">Clean Copy Web (paste text)</a> · <a href="/clean-copy-bookmarklet">Bookmarklet</a> ·
       <a href="/clean-copy">Browser extension &amp; CLI</a> · <a href="/free-tools">More free tools</a> · by Passiv</p>
     </footer>
-  </main>
+  <section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What gets converted?</h3><p>The readable content of the page: headings, paragraphs, lists, links, images and code blocks become Markdown. Navigation bars, ads, cookie banners and other boilerplate are stripped where possible.</p></div>
+      <div class="card"><h3>Do internal links stay clickable?</h3><p>Yes. Links are preserved as [text](url) with absolute URLs, so the output navigates the same way the original page did.</p></div>
+      <div class="card"><h3>Is anything sent to a server?</h3><p>Fetching and conversion happen in your browser. Pages that block cross-origin requests may fail because of CORS rules enforced by your browser — those pages simply cannot be fetched client-side, through no fault of the tool.</p></div>
+      <div class="card"><h3>Can I convert pages I have to log in to?</h3><p>Only if your browser already has access and CORS allows reading the response. For paywalled or private pages, copy the visible text instead and convert it manually — respect copyright and access terms either way.</p></div>
+  </div>
+</section>
+
+</main>
 
   <script src="/clean-copy-core.js"></script>
   <script>

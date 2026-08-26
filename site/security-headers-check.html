@@ -62,6 +62,9 @@
 .sh-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; text-align: center; }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What are security headers?", "acceptedAnswer": {"@type": "Answer", "text": "They are HTTP response headers a server sends to harden the browser: Content-Security-Policy limits what scripts can run, Strict-Transport-Security forces HTTPS, X-Content-Type-Options stops MIME sniffing, and others control framing and referrer leakage. They cost nothing to add and block whole attack classes."}}, {"@type": "Question", "name": "Is my URL logged or stored?", "acceptedAnswer": {"@type": "Answer", "text": "No. The lookup happens from your browser directly against the site you enter — this page has no backend that records what you scan."}}, {"@type": "Question", "name": "Why does my site score badly even though it works fine?", "acceptedAnswer": {"@type": "Answer", "text": "Headers do not affect how a page looks, only how browsers treat it. Most sites ship without CSP or HSTS because frameworks do not add them by default. The fix is usually a few lines in your web server or hosting configuration."}}, {"@type": "Question", "name": "Can I copy the recommended headers directly?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Each missing header comes with a suggested value you can paste into nginx, Apache, Netlify, Vercel or Cloudflare settings. Test after deploying — an overly strict CSP can break inline scripts until tuned."}}]}
+</script>
 </head>
 <body>
 
@@ -125,6 +128,16 @@
       <li><strong>Referrer-Policy</strong> — Controls how much referrer information is sent with requests. Recommended: <code>strict-origin-when-cross-origin</code>.</li>
       <li><strong>Permissions-Policy</strong> — Controls which browser features (camera, microphone, geolocation) your site can access.</li>
     </ul>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What are security headers?</h3><p>They are HTTP response headers a server sends to harden the browser: Content-Security-Policy limits what scripts can run, Strict-Transport-Security forces HTTPS, X-Content-Type-Options stops MIME sniffing, and others control framing and referrer leakage. They cost nothing to add and block whole attack classes.</p></div>
+      <div class="card"><h3>Is my URL logged or stored?</h3><p>No. The lookup happens from your browser directly against the site you enter — this page has no backend that records what you scan.</p></div>
+      <div class="card"><h3>Why does my site score badly even though it works fine?</h3><p>Headers do not affect how a page looks, only how browsers treat it. Most sites ship without CSP or HSTS because frameworks do not add them by default. The fix is usually a few lines in your web server or hosting configuration.</p></div>
+      <div class="card"><h3>Can I copy the recommended headers directly?</h3><p>Yes. Each missing header comes with a suggested value you can paste into nginx, Apache, Netlify, Vercel or Cloudflare settings. Test after deploying — an overly strict CSP can break inline scripts until tuned.</p></div>
   </div>
 </section>
 

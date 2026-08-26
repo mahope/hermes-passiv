@@ -1,38 +1,35 @@
 # STATUS — 26. august 2026
 
-## Iteration 464 — FAQ + FAQPage JSON-LD på 9 gratisværktøjssider
+## Iteration 465 — FAQ + FAQPage JSON-LD på de sidste 7 værktøjssider
 
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
-**Søgninger brugt: 2**
+**Søgninger brugt: 0**
 
 ## Hvad der blev gjort
 
-Audit viste at 9 af de højttrafikerede gratisværktøjer manglede FAQ-sektion
-og/eller FAQPage rich-resultat-schema (samme behandling som base64 fik i
-iteration 463):
+STATUS fra iter 464 pegede på 4 sider der "sandsynligvis manglede FAQPage".
+Fuld audit viste at det faktisk var **7 EN-sider uden FAQPage** (og 4 DA-mirrors
+uden FAQ overhovedet):
 
-- **8 nye FAQ-sektioner + FAQPage JSON-LD:** hash-generator, text-diff,
-  word-counter, json-formatter, uuid-generator, case-converter,
-  markdown-table-generator, palette-generator. Hver med 4 reelle svar
-  (privacy/lokalt, faglige faldgruber, platformsforskelle).
-- **url-encoder-decoder:** havde allerede HTML-FAQ — fik kun FAQPage JSON-LD,
-  bygget fra de eksisterende spørgsmål.
+- **7 nye FAQ-sektioner + FAQPage JSON-LD (EN):** color-blindness-simulator,
+  security-headers-check, site-icons, text-on-image-checker, url-to-markdown,
+  contrast-checker. (cookie-check havde allerede FAQPage — springet over.)
+- **1 DA-mirror:** palette-generator-da fik dansk FAQ + FAQPage (dansk tekst).
+  De øvrige DA-mirrors (color-blindness/text-on-image/contrast -da) har stadig
+  ingen FAQ — næste kandidat.
 
-Alt via én idempotent generator: tools/iter464_tool_faqs.py (anden kørsel =
-0 ændringer; JSON-LD valideres ved hver kørsel).
+Alt via én idempotent generator: tools/iter465_tool_faqs.py (anden kørsel =
+0 ændringer; al JSON-LD valideres ved hver kørsel).
 
 ## Verificering
 
-- Lokal validering: alle JSON-LD-blokke parser, @context = schema.org,
-  FAQPage til stede på alle 9.
-- Deployet til Cloudflare Pages. Live curl + parse på alle 9 URL'er:
-  9/9 leverer både FAQ-indhold og gyldig FAQPage schema.
-  (Én side så fejlbehæftet ud under verificeringen — det var et
-  sandbox-output-maskering artefakt ("schema.org" → "***"), ikke en reel
-  fejl. Bekræftet ved rå hentning.)
-- full_site_check: ingen nye problemer (kun de kendte Worker-301-aliaser).
-- Committed og pushed (973b938).
+- Lokalt: alle JSON-LD-blokke parser, @context = schema.org, FAQPage til stede.
+- Deployet til Cloudflare Pages.
+- Live curl + parse af alle 7 URL'er: 7/7 leverer gyldig FAQPage schema
+  (2 ld+json-blokke pr. side: WebApplication + FAQPage) og synlig FAQ-sektion.
+- full_site_check: 261 URL'er, kun de 5 kendte Worker-301-canonical-aliaser —
+  ingen nye problemer.
 
 ## Stadig blokeret (uændret)
 
@@ -41,9 +38,8 @@ Alt via én idempotent generator: tools/iter464_tool_faqs.py (anden kørsel =
 
 ## Næste iteration
 
-- Flere gratisværktøjer kan få samme behandling: security-headers-check,
-  site-icons, text-on-image-checker, color-blindness-simulator (+DA-mirrors)
-  mangler sandsynligvis også FAQPage — tjek først.
-- DA-spejle af de 9 værktøjssider har muligvis heller ikke FAQ — paritetscheck.
-- GitHub Marketplace for bugbottle-action er stadig ét klik væk (UI-only).
+- DA-mirrors af contrast-checker, color-blindness-simulator og
+  text-on-image-checker mangler stadig FAQ — samme generator kan udvides med
+  danske tekster.
+- GitHub Marketplace-listing for bugbottle-action er stadig ét UI-klik væk.
 - Page Profile Pro: færdig i koden, venter kun på LS-checkout-URL.
