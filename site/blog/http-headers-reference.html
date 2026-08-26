@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTTP Headers Reference: Every Header That Matters for SEO &amp; Security</title>
+<meta name="description" content="Complete reference of HTTP response headers: caching, security headers (CSP, HSTS), SEO-relevant headers, and what each one does. Free tool to check the headers of any URL.">
+<meta property="og:title" content="HTTP Headers Reference: Every Header That Matters for SEO &amp; Security">
+<meta property="og:description" content="Complete reference of HTTP response headers: caching, security headers (CSP, HSTS), SEO-relevant headers, and what each one does. Free tool to check the headers of any URL.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/http-headers-reference">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/http-headers-reference">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"HTTP Headers Reference: Every Header That Matters for SEO & Security","description":"Complete reference of HTTP response headers: caching, security headers (CSP, HSTS), SEO-relevant headers, and what each one does.","datePublished":"2026-08-26","author":{"@type":"Organization","name":"Mahope"}}
+</script>
+<style>
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--color-border); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  td:first-child { white-space: nowrap; }
+  code { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 4px; padding: 1px 6px; font-size: 0.85em; }
+  pre { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; line-height: 1.5; }
+  @media (max-width: 640px) { td:first-child { white-space: normal; } }
+</style>
+</head>
+<body>
+<main class="container" style="max-width:800px">
+  <nav style="margin-bottom:2rem"><a href="/">&larr; Home</a> · <a href="/free-tools.html">Free Tools</a></nav>
+  <article>
+    <h1>HTTP Headers Reference: Every Header That Matters</h1>
+    <p class="meta" style="color:var(--color-text-muted)">August 26, 2026 · 7 min read</p>
+
+    <p>Every time a browser loads a page, the server sends back a set of HTTP response headers before any HTML arrives. They control caching, security, redirects and how search engines treat your page — yet most sites get several of them wrong.</p>
+
+    <p>This is a practical reference: what each header does, when it matters, and a common mistake to avoid. At the end you can check any URL with our free <a href="/url-inspector/">URL Inspector</a>, which shows all response headers plus an analysis of the security ones.</p>
+
+    <div style="background:rgba(91,141,239,0.12);border:1px solid rgba(91,141,239,0.35);border-radius:10px;padding:16px 20px;margin:1.5rem 0">
+      <strong>Check your headers now:</strong> paste any URL into the free <a href="/url-inspector/">URL Inspector</a>. You'll see every response header, a pass/warn/fail analysis of the security headers, the full redirect chain, and the SSL certificate — no signup.
+    </div>
+
+    <h2>Security headers</h2>
+    <table>
+      <tr><th>Header</th><th>What it does</th><th>Common mistake</th></tr>
+      <tr><td><code>Strict-Transport-Security</code></td><td>Tells browsers to only ever reach the site over HTTPS, even if a user types http://. The <code>max-age</code> should be at least 31536000 (one year).</td><td>Sending it on an HTTP response (browsers ignore it there). Also forgetting <code>includeSubDomains</code>, leaving subdomains unprotected.</td></tr>
+      <tr><td><code>Content-Security-Policy</code></td><td>Whitelists where scripts, styles, frames and other resources may load from. The single most effective defence against XSS.</td><td>Using <code>unsafe-inline</code> everywhere "to make it work", which removes most of the protection.</td></tr>
+      <tr><td><code>X-Content-Type-Options</code></td><td>Set to <code>nosniff</code>: stops browsers from guessing file types, which can turn an uploaded file into executable script.</td><td>Setting it on HTML pages only — it matters most for user-uploaded files and APIs.</td></tr>
+      <tr><td><code>X-Frame-Options</code></td><td><code>DENY</code> or <code>SAMEORIGIN</code>: stops other sites from embedding your page in an iframe (clickjacking).</td><td>Relying on it alone — CSP's <code>frame-ancestors</code> directive is stronger and replaces it in modern browsers.</td></tr>
+      <tr><td><code>Referrer-Policy</code></td><td>Controls how much referrer data leaves your site when users click outbound links. <code>strict-origin-when-cross-origin</code> is today's sensible default.</td><td>Leaving it unset: full URLs (including query strings with personal data) leak to every linked site.</td></tr>
+      <tr><td><code>Permissions-Policy</code></td><td>Denies or allows browser features like camera, microphone and geolocation, including inside embedded iframes.</td><td>Omitting it entirely — then any third-party script can request powerful APIs.</td></tr>
+    </table>
+
+    <h2>Caching headers</h2>
+    <table>
+      <tr><th>Header</th><th>What it does</th><th>Common mistake</th></tr>
+      <tr><td><code>Cache-Control</code></td><td>The modern way to control caching. Static assets: <code>public, max-age=31536000, immutable</code>. HTML: <code>no-cache</code> so updates show up immediately.</td><td>Long cache on HTML — visitors see stale pages after you deploy.</td></tr>
+      <tr><td><code>ETag</code></td><td>A fingerprint of the response. On the next request the browser sends it back and gets a tiny 304 Not Modified instead of the whole page.</td><td>None usually — but weak ETags on cluster setups can cause needless re-downloads.</td></tr>
+      <tr><td><code>Expires</code></td><td>Legacy predecessor of Cache-Control. Ignored when both are present.</td><td>Setting Expires and believing it overrides Cache-Control — it doesn't.</td></tr>
+      <tr><td><code>Vary</code></td><td>Tells caches which request headers change the response, e.g. <code>Vary: Accept-Encoding</code>.</td><td><code>Vary: User-Agent</code> — it fragments the cache into hundreds of near-empty entries.</td></tr>
+    </table>
+
+    <h2>SEO-relevant headers</h2>
+    <table>
+      <tr><th>Header</th><th>What it does</th><th>Common mistake</th></tr>
+      <tr><td><code>Link: rel=canonical</code></td><td>HTTP-header version of the canonical tag — useful when the same file is served at multiple URLs and you can't change its HTML.</td><td>Conflicting canonicals: header says A, meta tag says B. Google picks one, not necessarily yours.</td></tr>
+      <tr><td><code>X-Robots-Tag</code></td><td>Robots directives for non-HTML files: <code>X-Robots-Tag: noindex</code> keeps a PDF out of search results.</td><td>Trying to noindex a URL that also returns 404/redirects — the signal never gets read reliably.</td></tr>
+      <tr><td>Location (3xx responses)</td><td>The destination of a redirect. The status code matters too: 301 passes SEO value, 302 mostly doesn't.</td><td>Chains of 3+ hops instead of pointing directly at the final URL. See our guide to <a href="/blog/check-url-redirect-chain">checking redirect chains</a>.</td></tr>
+      <tr><td><code>Retry-After</code></td><td>With 503: tells crawlers to come back later without treating pages as gone.</td><td>Returning 503 during maintenance without it, so Google starts dropping pages.</td></tr>
+    </table>
+
+    <h2>Other headers worth knowing</h2>
+    <ul>
+      <li><code>Server</code> / <code>X-Powered-By</code> — reveal technology details. Harmless individually, useful to attackers in aggregate. Many hosts let you remove them.</li>
+      <li><code>Set-Cookie</code> — always pair with <code>Secure</code>, <code>HttpOnly</code> and <code>SameSite=Lax</code> (or <code>Strict</code>).</li>
+      <li><code>Content-Encoding</code> — gzip or brotli. Missing compression can double or triple load time on text-heavy pages.</li>
+      <li><code>Alt-Svc</code> — advertises HTTP/3 support.</li>
+    </ul>
+
+    <h2>A minimal, sane set for most sites</h2>
+    <pre>Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'self'
+Cache-Control: no-cache          # HTML
+Cache-Control: public, max-age=31536000, immutable   # hashed static assets</pre>
+
+    <h2>Check any URL in seconds</h2>
+    <p>The free <a href="/url-inspector/">URL Inspector</a> fetches the URL, follows every redirect, lists all response headers of the final response, grades the security headers pass/warn/fail, and shows the SSL certificate — including issuer, expiry countdown and chain trust. Nothing is stored and there's no account.</p>
+
+    <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:10px;padding:16px 20px;margin:1.5rem 0">
+      <strong>Related:</strong> <a href="/blog/check-url-redirect-chain">How to check a URL redirect chain</a> · <a href="/security-headers-check.html">Security headers checker</a> · <a href="/free-tools.html">All free tools</a>
+    </div>
+  </article>
+</main>
+</body>
+</html>

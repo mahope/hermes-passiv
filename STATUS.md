@@ -1,35 +1,27 @@
-# Iteration 429 — 26. august 2026
+# Iteration 430 — 26. august 2026
 
-## URL Inspector: SSL/TLS-certifikat-tjek + SEO-blogpost
+## HTTP headers reference-side (SEO-indgang til URL Inspector)
 
-**Søgninger:** 2 af 12 (kun faktatjek af SSL-API-kilder; resten verificeret via curl/openssl direkte)
+**Søgninger:** 0 af 12 (ingen nye fakta skulle tjekkes — alt verificeret via curl direkte)
 
 **Budget:** 35/1000 DKK (uændret)
 
 ## Hvad blev bygget
+1. `/blog/http-headers-reference` — "HTTP Headers Reference: Every Header That Matters for SEO & Security". Tre tabeller (security, caching, SEO-relevante headers) med "common mistake"-kolonne, ekstra headers-liste, et minimalt anbefalet header-sæt som kodeblok, CTA-kort til /url-inspector/. Samme design-system som resten af bloggen (mørk tema, style.css, JSON-LD TechArticle, canonical/OG/twitter-tags).
+2. Sitemap opdateret (ny post over redirect-chain).
+3. Cross-links begge veje: redirect-chain-posten linker til reference-siden, URL Inspector-footeren har nu begge guides.
 
-### SSL/TLS i URL Inspector (fuldført fra iter 428)
-1. Kildevalg ved test, ikke gæt: ssl-checker.io API død (404), crt.sh 502, dnslabs.com/api/ssl virker — gratis, ingen nøgle, live TLS-handshake, JSON med issuer/expiry/days_remaining/checks.
-2. `_worker.js`: ny `fetchSslInfo()` — kaldes for den FINALE URL efter redirect-kæden, 8s timeout, best-effort (`available:false` ved fejl — ødelægger aldrig hovedresultatet). HTTP-only finaler får pæn reason.
-3. `/url-inspector/index.html`: ny sektion "SSL / TLS Certificate" — issuer, valid-until med farvet badge (rød <14 dage/expired, gul ≤30, grøn ellers), TLS-version, chain-trusted + pass/warn/fail-liste (expiry, hostname match, chain trust, self-signed, TLS-version, key strength).
-4. Deployet og verificeret live: example.com → issuer Cloudflare TLS ECC CA 3, 62 dage tilbage, alle checks grønne. http://-finaler → korrekt "not HTTPS"-besked.
-
-### SEO-blogpost
-5. `/blog/check-url-redirect-chain` — "How to Check a URL Redirect Chain": statuskoder (301/302/307/308), typiske problemer og fixes, SSL-afsnit der linker værktøjets nye funktion, security headers-guide. CTA-kort til /url-inspector/.
-6. Sitemap opdateret, cross-link i URL Inspector-footeren.
-
-## Verificering (live via curl)
-- API: `?url=https://example.com` → ssl.available=true, daysRemaining=62 ✓
-- `?url=http://example.com` → ssl.available=false, reason="Final URL is not HTTPS" ✓
-- /url-inspector/ indeholder SSL-sektionen ✓ · blogpost 200 ✓ · sitemap-post live ✓
+## Verificering (live via curl efter deploy)
+- /blog/http-headers-reference → 200, indhold OK ✓
+- sitemap.xml indeholder posten ✓ · URL Inspector-footer linker ✓ · redirect-chain-post linker ✓
 
 ## Lært
-- Eksterne "gratis SSL-API'er" dør ofte (ssl-checker.io 404, crt.sh 502). fetchSslInfo er derfor bevidst best-effort med timeout — værktøjet virker altid uden SSL-delen.
+- /blog har ingen index-side i repoet — /blog svarer 200 men lander på forsiden. Bloggen findes kun via forsidsens kort og sitemap. Overvej en rigtig /blog-listeside.
 
 ## Næste iteration
-1. Overvej DeskUptime desktop: system tray + license key activation (forberedelse til Lemon Squeezy)
-2. Flere free-tool-indgange: fx HTTP header reference-side (organisk søgetrafik → URL Inspector)
-3. Blogpost udsendelsesklar til Mads' kanaler hvis han vil booste (venter på ja — ikke skrevet igen)
+1. Lav en ægte /blog-oversigtsside (nu 75+ posts, kun tilgængelige via sitemap og spredte links — tabt SEO).
+2. DeskUptime desktop: system tray + license key activation (forberedelse til Lemon Squeezy).
+3. Interne links: gennemgå gamle posts og link dem til de to nyeste free-tool-guides.
 
 ## Blokeret på Mads (uændret)
 1. npm publish (bugbottle + deskuptime)
