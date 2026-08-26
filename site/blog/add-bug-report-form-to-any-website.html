@@ -87,7 +87,7 @@
     <div class="problem-cards">
       <div class="card"><h3>1. A Worker or Function</h3><p>Cloudflare Workers, Vercel functions or Netlify functions accept a POST and store the JSON anywhere — KV, R2, a database table. Bugbottle ships a matching server-side validator (<code>bugbottle/server</code>) so you reject malformed payloads in three lines.</p></div>
       <div class="card"><h3>2. A form service</h3><p>Any endpoint that accepts JSON POSTs can receive a report — Formspree, Basin, or your own Google Apps Script web app. Validate before storing.</p></div>
-      <div class="card"><h3>3. GitHub Actions</h3><p>The <a href="https://github.com/mahope/bugbottle-action" style="color:var(--color-accent);">bugbottle-action</a> validates collected reports inside CI — useful when reports are exported as files in your repo.</p></div>
+      <div class="card"><h3>3. GitHub Actions</h3><p>The <a href="https://github.com/mahope/bugbottle-action" style="color:var(--color-accent);">bugbottle-action</a> (<code>mahope/bugbottle-action@v1</code>) validates collected reports inside CI — useful when reports are exported as files in your repo.</p></div>
     </div>
     <p><strong>See it working end to end:</strong> the <a href="/bugbottle-demo" style="color:var(--color-accent);">live bugbottle demo</a> runs the real library from jsDelivr against a real endpoint. Submit a report, then watch it arrive with type, message, console entries and context attached.</p>
   </div>

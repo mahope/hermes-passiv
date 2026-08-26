@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run Bug Reports in Your CI Pipeline: Complete Setup with 3 GitHub Actions</title>
+<meta name="description" content="Three GitHub Actions that turn CI into more than a test runner: validate bug reports, monitor uptime, and catch EU-compliance regressions — free, no account required.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bug Reports in CI: 3 Free GitHub Actions">
+<meta property="og:description" content="Validate reports, monitor uptime and check compliance directly in your workflow — no account, no API key.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/bug-reports-in-ci-pipeline">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bug Reports in CI: 3 Free GitHub Actions">
+<meta name="twitter:description" content="Validate reports, monitor uptime and check compliance directly in your workflow — no account, no API key.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/bug-reports-in-ci-pipeline">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Bug Reports in CI: 3 Free GitHub Actions", "description": "Three GitHub Actions that turn CI into more than a test runner: validate bug reports, monitor uptime, and catch EU-compliance regressions \u2014 free, no account required.", "url": "https://hermes-passiv.pages.dev/blog/bug-reports-in-ci-pipeline", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<header class="hero">
+  <div class="container">
+    <div class="badge">GUIDE · GITHUB ACTIONS</div>
+    <h1>Run Bug Reports in Your CI Pipeline:<br>A Complete Setup</h1>
+    <p class="subtitle">Three GitHub Actions that turn CI into more than a test runner: collect bug reports from your live site, keep your site up, and catch EU-compliance regressions — all as versioned, pinned actions you can drop into any workflow today.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Read the guide</a>
+      <a href="/deskuptime/" class="btn-secondary">See Deskuptime →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="why">Why put reporting in CI?</h2>
+    <p>Your CI pipeline runs on every push whether anyone is watching or not. That makes it the cheapest place to answer questions that otherwise need a person: <em>did a new deploy break accessibility?</em> <em>Is the site even up?</em> <em>Are bug reports coming in valid?</em> A step that fails loudly in CI costs seconds; the same problem discovered by a user costs trust.</p>
+    <p>All three actions below are plain YAML steps with no account signup, no API key, and no SaaS subscription. Each one is pinned to a floating major tag (<code>@v1</code> / <code>@v2</code>) so you get fixes automatically without surprise breaking changes.</p>
+
+    <h2 id="actions">The three actions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>1. Validate bug reports: <code>bugbottle-action@v1</code></h3><p>If you collect bug reports as JSON files (from a feedback widget, a form export, or a script), this action validates them against the schema inside your workflow. A malformed report fails the build instead of silently rotting in a folder. It exits non-zero on invalid input, so it works as a gate before release.</p></div>
+      <div class="card"><h3>2. Keep the site up: <code>deskuptime@v1</code></h3><p>A dependency-free uptime check that runs wherever your CI runs. Point it at any URL and it fails the step if the page does not respond as expected. Useful as a post-deploy smoke test — especially for static sites where "the deploy succeeded" and "the site works" are different questions.</p></div>
+      <div class="card"><h3>3. Catch compliance regressions: <code>compliance-site-check@v2</code></h3><p>Runs a GDPR/EAA-oriented compliance scan against a URL and surfaces failures in the job log. Add it after each deploy so a removed privacy policy link or broken consent mechanism shows up in the same place your tests do.</p></div>
+    </div>
+
+    <h2 id="workflow">A complete example workflow</h2>
+    <p>This workflow runs after deployment: it checks the site is up, scans compliance, and validates any collected bug reports:</p>
+    <pre style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85em;"><code>name: Post-deploy checks
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Site is up
+        uses: mahope/deskuptime@v1
+        with:
+          url: https://example.com
+
+      - name: Compliance scan
+        uses: mahope/compliance-site-check@v2
+        with:
+          url: https://example.com
+
+      - name: Validate bug reports
+        uses: mahope/bugbottle-action@v1
+        with:
+          path: ./reports</code></pre>
+    <p>Every step either passes or fails visibly. No dashboard to log into, no email digest to ignore — red is red, in the same place your team already looks.</p>
+
+    <h2 id="setup">Setup, step by step</h2>
+    <ol>
+      <li><strong>Create the workflow file.</strong> Save it as <code>.github/workflows/post-deploy.yml</code> in your repository.</li>
+      <li><strong>Point the URLs at your own site.</strong> Replace <code>example.com</code> everywhere. For staging environments, duplicate the job with your staging URL.</li>
+      <li><strong>For bugbottle:</strong> point <code>path</code> at the directory where report files land. If you don't collect reports yet, remove that step — the other two stand alone.</li>
+      <li><strong>Commit and run once manually</strong> via <em>workflow_dispatch</em> to confirm everything is green before trusting the schedule.</li>
+    </ol>
+    <p>No secrets are required for any of the three actions, since none of them call external services. They read your inputs and act on them locally in the runner.</p>
+
+    <h2 id="costs">What this replaces</h2>
+    <p>A typical uptime-monitoring SaaS starts around $10–15/month per site. Compliance audits run $2,000–10,000 per engagement. Neither catches regressions between check-ins. A daily CI job does both continuously, for free, on infrastructure (GitHub-hosted runners) you already pay for — free for public repositories, and included minutes for private ones.</p>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Try it on your site first</h3>
+      <p>Before wiring CI, see what the compliance scanner finds on your live site — free, no signup, results in about a minute.</p>
+      <a href="/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan your site free →</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Home</a> · <a href="/compliance-site-check">Free scanner</a> · <a href="/free-tools">Free tools</a> · <a href="/#blog">Blog</a></p>
+</footer>
+</body>
+</html>
