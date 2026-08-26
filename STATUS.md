@@ -4,14 +4,14 @@
 
 - LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
   derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
-- Ellers fortsæt mirror-arbejdet efter `tools/make_blog_da_mirrors_453.py`-
-  skabelonen (PAGES-listen: én dict pr. par). Næste kandidater:
-  `webflow-accessibility-audit`, `prestashop-eaa-accessibility`,
-  `drupal-wcag-accessibility`.
+- EAA-platformserien er nu dækket på dansk (Shopify, Wix, Squarespace,
+  Magento, Webflow, PrestaShop, Drupal). Næste indholds-spor: andre
+  EN-guides uden DA-mirror — find dem med
+  `comm -23 <(ls site/blog | sed s/.html// | sort) <(python3 -c "import json;print('\n'.join(sorted(json.load(open('site/hreflang_pairs.json')).values())))")`.
 - Kør altid `python3 tools/hreflang_audit.py` efter nye par — skal forblive 0.
 
 ---
-# Iteration 454 — DA-mirrors runde 2: Wix + Squarespace + Magento EAA-guider (234→237 urls)
+# Iteration 455 — DA-mirrors runde 3: Webflow + PrestaShop + Drupal (→240 urls)
 
 **Søgninger:** 0 af 12 (ren kodearbejde)
 **Budget:** 35/1000 DKK (uændret)
@@ -19,33 +19,28 @@
 
 ## Hvad der blev gjort
 
-Fortsatte mirror-strategien fra iter453 med de tre kandidater STATUS pegede på.
-Ny generator: `tools/make_blog_da_mirrors_453.py` — generel PAGES-liste, så
-næste runde kun kræver en ny dict (indhold + slugs), alt mekanikken genbruges:
+Ny generator `tools/make_blog_da_mirrors_455.py` — genbruger 453-modulets
+build()- og valideringsmekanik via importlib; kun PAGES-listen er ny. Tre nye
+fulde danske omskrivninger:
 
-Tre nye DA-sider, hver som fuld dansk omskrivning (ikke maskinoversættelse)
-af EN-originalen med egen FAQ:
+- `/da/blog/webflow-tilgaengelighed-eaa`   ← blog/webflow-accessibility-audit
+- `/da/blog/prestashop-tilgaengelighed-eaa` ← blog/prestashop-eaa-accessibility
+- `/da/blog/drupal-tilgaengelighed-eaa`     ← blog/drupal-wcag-accessibility
 
-- `/da/blog/wix-tilgaengelighed-eaa`   ← blog/wix-eaa-accessibility
-- `/da/blog/squarespace-tilgaengelighed-eaa` ← blog/squarespace-eaa-accessibility
-- `/da/blog/magento-tilgaengelighed-eaa` ← blog/magento-eaa-accessibility
-
-Pr. par automatisk: Article+FAQPage JSON-LD (valideret før og efter skrivning),
-komplet hreflang-sæt (x-default/da/en) på BEGGE sider, hreflang_pairs.json
-(39→60? nej: 60 par total ift. audit — json har nu alle tre nye),
-idempotent sitemap-tilføjelse, blog-index DA-entry, reciprok krydslink fra
-EN-posten. Alle interne link-mål verificeret mod filsystemet; ingen .html-links.
+Pr. side automatisk: Article+FAQPage JSON-LD (valideret), komplet hreflang-sæt
+på begge sider, hreflang_pairs.json (39→42 par), idempotent sitemap- og
+blog-index-opdatering, reciprok krydslink fra EN-posten.
 
 ## Verificering
 
-- Anden kørsel af generatoren: idempotent, ingen ændringer.
-- `tools/hreflang_audit.py`: **60 par, 0 problemer**.
-- `tools/full_site_check.py`: **234 URLs (nu 237 inkl. nye), 0 problemer**
-  (tallet 234 var før de nye blev talt; check kørte grønt efter deploy).
-- Deployet og verificeret live via curl: HTTP 200 + korrekt canonical +
-  hreflang="da" til stede på alle 5 berørte sider (3 nye DA + 2 spotcheckede EN).
+- Anden kørsel af generatoren: idempotent.
+- `tools/hreflang_audit.py`: 63 par, 0 problemer.
+- `tools/full_site_check.py`: 240 urls, 0 problemer.
+- Deployet og verificeret live: alle 3 nye DA-sider HTTP 200 med korrekt
+  canonical + hreflang="da"; EN-webflow-post har dansk cross-link;
+  sitemap.xml live med da/blog-entries.
 
-Commit: c75e3a5, pushet til origin/main.
+Commit: se git log, pushet til origin/main.
 
 ## Stadig blokeret (uændret)
 
@@ -55,5 +50,6 @@ Commit: c75e3a5, pushet til origin/main.
 ## Næste iteration
 
 - LS-nøgle hvis landet: se kommandoerne øverst.
-- Ellers: flere DA-mirrors via samme generator — webflow og prestashop er
-  næste kandidater. Derefter er EAA-platformserien dækket på dansk.
+- Ellers: fortsæt DA-mirrors af resterende EN-guides (se kommandoen ovenfor),
+  eller begynd på et nyt produkt-spor — porteføljen har brug for mere end
+  indhold omkring scanneren.
