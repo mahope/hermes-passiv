@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webflow vs Squarespace: tilgængelighed sammenlignet (EAA-guide 2026)</title>
+<meta name="description" content="To visuelle byggere, én juridisk forpligtelse under European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, og hvordan et fix ser ud på henholdsvis Webflow og Squarespace — på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Webflow vs Squarespace: tilgængelighed sammenlignet">
+<meta property="og:description" content="To visuelle byggere, én juridisk forpligtelse under European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, og hvordan et fix ser ud på henholdsvis Webflow og Squarespace — på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/webflow-vs-squarespace-tilgaengelighed">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/webflow-vs-squarespace-tilgaengelighed">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/webflow-vs-squarespace-tilgaengelighed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Webflow vs Squarespace: tilgængelighed sammenlignet", "description": "To visuelle byggere, én juridisk forpligtelse under European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, og hvordan et fix ser ud på henholdsvis Webflow og Squarespace — på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/webflow-vs-squarespace-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA mit Webflow- eller Squarespace-site?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, hvis sitet tilbyder tjenester til EU-forbrugere — fx markedsføring, booking eller e-handel. Siden juni 2025 håndhæves EN 301 549 / WCAG 2.1 AA nationalt i hele EU."}}, {"@type": "Question", "name": "Hvilken builder er nemmest at gøre compliant?", "acceptedAnswer": {"@type": "Answer", "text": "Afhænger af teamet. Webflow giver fuld mulighed for at rette alt, men kræver designerkompetence og disciplin. Squarespace når basisniveau hurtigst via indstillinger, men strukturelle blok-fejl kan ikke rettes — kun dokumenteres."}}, {"@type": "Question", "name": "Kan jeg få en Squarespace-blok rettet, som platformen ikke tillader?", "acceptedAnswer": {"@type": "Answer", "text": "Nej, ikke inde i blokken. Dine muligheder er at bytte til en anden blok, løse problemet udenfor (fx en custom embed du selv kontrollerer) eller dokumentere det som kendt begrænsning i tilgængelighedserklæringen."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">WEBFLOW VS SQUARESPACE &middot; SAMMENLIGNING &middot; EAA</div>
+    <h1>Webflow vs Squarespace:<br>tilgængelighed sammenlignet</h1>
+    <p class="subtitle">Sammenligning for designere og bureauer: Webflow giver element-niveau kontrol, Squarespace abstraherer markup bag skabeloner. Se hvor defekterne kommer fra, hvem der kan rette dem, og hvad det koster i proces.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Webflow og Squarespace er begge visuelle website-byggere, og sider på begge der betjener EU-forbrugere falder under European Accessibility Act: EN 301 549 / WCAG 2.1 AA conformance, håndhævet nationalt siden midten af 2025. Loven skelner ikke mellem dem — men byggeoplevelsen gør. Webflow giver designere lavniveau-kontrol over hvert elements HTML-tag, ARIA-attributter og custom code. Squarespace abstraherer markuppen bag skabeloner og sektionsblokke og eksponerer kun kuraterede indstillinger. Den forskel former både hvor defekterne kommer fra, og hvem der kan rette dem.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Samme standard</h3><p>EAA-omfattede tjenester på begge byggere skal opfylde WCAG 2.1 niveau AA. Regulatorer spørger ikke, hvilket værktøj der lavede siden.</p></div>
+      <div class="card"><h3>🎛️ Kontinuum af kontrol</h3><p>Webflow eksponerer tags, ARIA og custom code pr. element; Squarespace eksponerer kuraterede indstillinger. Mere kontrol er flere måder at rette på — og flere måder at ødelægge på.</p></div>
+      <div class="card"><h3>🔌 Widget-risiko</h3><p>Webflow-interactions/custom embeds og Squarespace tredjepartsblokke injicerer begge kontroller af varierende tastaturkvalitet.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Webflow fejltypisk ses</h2>
+    <p>Typiske Webflow-defektmønstre:</p>
+    <p><strong>Div-suppe-struktur:</strong> designerbyggede layouts bruger ofte div-elementer stylet som overskrifter og knapper — ingen ægte h1-h6-hierarki, ingen native button-semantik.</p>
+    <p><strong>Interaction-overload:</strong> hover-only reveals, scroll-triggerede animationer og klik-triggerede dropdowns, der aldrig dukker op for tastaturbrugere.</p>
+    <p><strong>Custom code embeds:</strong> tredjepartsembeds sat ind i custom-code-felter har deres egne kontrast-, label- og focus-problemer uden for Webflows tjeks.</p>
+    <p><strong>Fokus-håndtering:</strong> custom nav-komponenter og modaler uden fokus-fælder eller synlige fokus-tilstande — typisk i håndbyggede Designer-projekter.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Squarespace fejltypisk ses</h2>
+    <p>Typiske Squarespace-defektmønstre:</p>
+    <p><strong>Galleri-alt-huller:</strong> billedblokke og gallerier accepterer tom alt-tekst i tavshed; billedtunge marketingsider sejler rutinemæssigt uden.</p>
+    <p><strong>Template-kontrast:</strong> site-style overrides (grå tekst på tonet baggrund) falder under 4.5:1 mens det ser bevidst ud i editor-preview.</p>
+    <p><strong>Sektion-semantik:</strong> drag-genbestilte sektioner giver overskriftsrækker valgt visuelt; nogle blokker renderer klikbare kort som divs med JS-handlers.</p>
+    <p><strong>Mobil-overrides:</strong> styleændringer kun på mobile breakpoints efterlader desktop-retter ufuldstændige — eller omvendt.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Fix-workflow sammenlignet</h2>
+    <p>Remedieringsloopet adskiller sig mest i hvem der rører markuppen.</p>
+    <p><strong>Webflow:</strong> næsten alt kan rettes af designeren — giv rigtige overskrift-tags, konvertér div-knapper til native buttons, tilføj ARIA-attributter, omskriv interactions til at være tastatur-triggerede, justér fokus-tilstande. Intet håndhæves dog automatisk: hver ny interaction eller embed kræver manuelt tjek.</p>
+    <p><strong>Squarespace:</strong> retterne er konfiguration — alt-tekstfelter, overskrift-tildeling hvor blokken tillader det, farve-tokens i site styles, fjernelse af dekorative autoplay-sektioner. Strukturelle problemer inde i en specifik blok eller tredjepartsudvidelse kan slet ikke rettes; du bytter blokken eller dokumenterer begrænsningen i din tilgængelighedserklæring.</p>
+    <p>Nettoeffekt: Webflow belønner kunnen med fuld remediability men kræver disciplin; Squarespace når "rimeligt compliant" hurtigere men rammer et loft sat af dens blokke.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad skal du vælge?</h2>
+    <p>Har du allerede et site: bliv where du er — migrering koster mere end remediation, og EAA-forpligtelsen er identisk.</p>
+    <p>Nyt EU-projekt: vælg Webflow når en professionel designer vedligeholder siden, og du kan håndhæve en tilgængelighedscheckliste i designprocessen — hver defekt er i sidste ende retbar på elementniveau. Vælg Squarespace til simple sider vedligeholdt af ikke-designere, og acceptér dokumenterede begrænsninger hvor blokkene ikke kan rettes.</p>
+    <p>Uanset hvad er workflowet det samme: automatisk scan hen over nøgle-templates, ret mekaniske fejl (kontrast, alt-tekst, labels, overskriftsorden), auditér hver embed eller blok individuelt, publicér en tilgængelighedserklæring, og scan igen efter meningsfulde ændringer.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA mit Webflow- eller Squarespace-site?</h3><p>Ja, hvis sitet tilbyder tjenester til EU-forbrugere — fx markedsføring, booking eller e-handel. Siden juni 2025 håndhæves EN 301 549 / WCAG 2.1 AA nationalt i hele EU.</p></div>
+      <div class="card"><h3>Hvilken builder er nemmest at gøre compliant?</h3><p>Afhænger af teamet. Webflow giver fuld mulighed for at rette alt, men kræver designerkompetence og disciplin. Squarespace når basisniveau hurtigst via indstillinger, men strukturelle blok-fejl kan ikke rettes — kun dokumenteres.</p></div>
+      <div class="card"><h3>Kan jeg få en Squarespace-blok rettet, som platformen ikke tillader?</h3><p>Nej, ikke inde i blokken. Dine muligheder er at bytte til en anden blok, løse problemet udenfor (fx en custom embed du selv kontrollerer) eller dokumentere det som kendt begrænsning i tilgængelighedserklæringen.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/webflow-tilgaengelighed-eaa" style="color:var(--color-accent);">Webflow og tilgængelighed</a> &middot; <a href="/da/blog/squarespace-tilgaengelighed-eaa" style="color:var(--color-accent);">Squarespace og tilgængelighed</a> &middot; <a href="/da/blog/wcag-kontrast-checker" style="color:var(--color-accent);">WCAG-kontrast-checker</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/webflow-vs-squarespace-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

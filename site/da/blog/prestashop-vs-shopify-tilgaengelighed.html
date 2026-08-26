@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrestaShop vs Shopify: tilgængelighed sammenlignet (EAA-guide 2026)</title>
+<meta name="description" content="Begge platforme skal opfylde European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, hvordan fix-workflowsne adskiller sig, og hvad det betyder for din webshop — på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="PrestaShop vs Shopify: tilgængelighed sammenlignet">
+<meta property="og:description" content="Begge platforme skal opfylde European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, hvordan fix-workflowsne adskiller sig, og hvad det betyder for din webshop — på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/prestashop-vs-shopify-tilgaengelighed">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/prestashop-vs-shopify-tilgaengelighed">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/prestashop-vs-shopify-tilgaengelighed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "PrestaShop vs Shopify: tilgængelighed sammenlignet", "description": "Begge platforme skal opfylde European Accessibility Act. Hvor hver af dem fejler WCAG 2.1 AA, hvordan fix-workflowsne adskiller sig, og hvad det betyder for din webshop — på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/prestashop-vs-shopify-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Skal min webshop overholde EAA?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Siden 28. juni 2025 omfatter European Accessibility Act e-handelstjenester i hele EU — også mikrovirksomheder der sælger online. Teknisk standard er EN 301 549 / WCAG 2.1 niveau AA."}}, {"@type": "Question", "name": "Kan jeg bare skifte platform for at blive compliant?", "acceptedAnswer": {"@type": "Answer", "text": "Næsten aldrig. Defekterne kommer fra theme, apps/moduler og redaktionelt indhold — lag der findes på begge platforme. En migrering koster mere end remediation og flytter ikke ansvaret."}}, {"@type": "Question", "name": "Hvad med apps og moduler fra tredjepart?", "acceptedAnswer": {"@type": "Answer", "text": "De skal auditers ét ad gangen: test tastaturnavigation, fokus-håndtering, labels og kontrast i hver widget. Er en app utilgængelig og uundværlig, så dokumentér den som kendt begrænsning i din tilgængelighedserklæring."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PRESTASHOP VS SHOPIFY &middot; SAMMENLIGNING &middot; EAA</div>
+    <h1>PrestaShop vs Shopify:<br>tilgængelighed sammenlignet</h1>
+    <p class="subtitle">Sammenligning for EU-handlere og bureauer: samme lov, to arkitekturer. Se hvor defekterne kommer fra på hver platform, hvem der kan rette dem, og hvilken proces der holder shoppens compliance i hævd efter hver opdatering.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Shopify og PrestaShop ligger under præcis samme juridiske forpligtelse: siden juni 2025 kræver European Accessibility Act, at e-handel opfylder EN 301 549 / WCAG 2.1 AA — uden undtagelse for mikrovirksomheder der sælger online. Det der adskiller dem, er hvor defekterne kommer fra, og hvem der kan rette dem. Shopify samler kontrollen i et hosted theme-lag med Liquid-skabeloner og et app-økosystem; PrestaShop giver dig selvhostede kernetemplates, et back office og et marked af moduler. Compliance-arbejdet følger arkitekturen — ikke loven.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Samme standard</h3><p>EN 301 549 med WCAG 2.1 niveau AA gælder begge. Betalingsudbydere og markedspladser forlanger i stigende grad dokumenteret conformance fra handlere på begge platforme.</p></div>
+      <div class="card"><h3>🎨 Theme dominerer</h3><p>På begge platforme styrer det aktive theme næsten al renderet HTML — overskriftshierarki, fokus-tilstande, kontrast og formularlabels er theme-beslutninger, ikke platformbeslutninger.</p></div>
+      <div class="card"><h3>🔌 Tredjepartsrisiko</h3><p>Shopify-apps og PrestaShop-moduler injicerer begge widgets (filtre, reviews, popups) med svingende tilgængelighedskvalitet. Hver skal auditers for sig.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Shopify fejltypisk ses</h2>
+    <p>Typiske Shopify-defektmønstre:</p>
+    <p><strong>App-widgets:</strong> review-sliders, quick-view-modals og upsell-popups fra apps fanger ofte tastaturfokus eller renderer knapper uden labels.</p>
+    <p><strong>Theme-kontrast:</strong> Dawn-baserede custom-themes sejler grå-på-grå udsalgsbadges og footer-tekst under 4.5:1.</p>
+    <p><strong>Ajax-sektioner:</strong> cart-drawer og filtrering som hverken flytter fokus eller annoncerer ændringer via ARIA live regions.</p>
+    <p><strong>Separate mobil-beslutninger:</strong> theme-indstillinger lader handleren style mobil uafhængigt — retter lavet til desktop når i tavshed aldrig mobil-breakpointet.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor PrestaShop fejltypisk ses</h2>
+    <p>Typiske PrestaShop-defektmønstre:</p>
+    <p><strong>Tomme produkt-legender:</strong> bulk-import springer Legend-feltet over, så kategorigitter fyldes med billeder helt uden alt-tekst.</p>
+    <p><strong>Facetterede filtermoduler:</strong> tredjepartsfilter facetter renderer som klikbare divs uden tastaturunderstøttelse eller aria-expanded.</p>
+    <p><strong>Checkout-flow:</strong> ajax-udskiftede checkout-trin uden focus management, betalingsfelter uten tilknyttede labels.</p>
+    <p><strong>Patchede vendor-filer:</strong> direkte rettelser i kerne- eller modulfiler bliver lydløst rullet tilbage ved hver opgradering og genindfører gamle fejl.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Fix-workflow sammenlignet</h2>
+    <p>Remedieringslooppene adskiller sig i én vigtig ting: hvem ejer koden.</p>
+    <p><strong>Shopify:</strong> retter lander i theme Liquid/CSS via theme-editoren eller en udviklingskopi af themet. App-forårsagede defekter kan slet ikke rettes — du erstatter appen eller dokumenterer den som en begrænsning i din tilgængelighedserklæring. Opgraderinger håndteres af Shopify og rammer sjældent dit theme-arbejde.</p>
+    <p><strong>PrestaShop:</strong> back office-content-retter (alt-tekst via Katalog &rarr; Produkter &rarr; Photos Legend, shoppens sprogindstillinger) plus template-overrides i et child theme. Du ejer selv hostingen, så du ejer også opgraderingsdisciplinen: scan igen efter hver kerne-, theme- og modulopdatering, for patchede vendorfiler ruller tilbage.</p>
+    <p>Nettoeffekt: Shopify bytter mindre kontrol til færre regressionsoverraskelser; PrestaShop giver fuld kontrol men kræver en gentagelig re-verifikationsvane.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad er nemmest at comply?</h2>
+    <p>For en typisk lille EU-handler allerede på én af platformene er det næsten aldrig værd at skifte platform for at opnå tilgængelighed — defektvolumenet ligger i theme- og tredjepartslagene, som findes på begge.</p>
+    <p>Den praktiske indsats-rækkefølge: mekaniske retter (kontrast-tokens, alt-tekst, labels) tager dage på begge; widget-niveau app/modul-remediation tager uger på begge; differentiatoren er processdisciplin.</p>
+    <p>Kør et automatisk scan hen over forside, kategori, produkt, kurv og checkout på begge stacks, ret i theme eller child theme, auditér hver app/modul individuelt, og publicér en tilgængelighedserklæring med dokumenterede begrænsninger. Scan igen efter hver theme-ændring og platformopgradering.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Skal min webshop overholde EAA?</h3><p>Ja. Siden 28. juni 2025 omfatter European Accessibility Act e-handelstjenester i hele EU — også mikrovirksomheder der sælger online. Teknisk standard er EN 301 549 / WCAG 2.1 niveau AA.</p></div>
+      <div class="card"><h3>Kan jeg bare skifte platform for at blive compliant?</h3><p>Næsten aldrig. Defekterne kommer fra theme, apps/moduler og redaktionelt indhold — lag der findes på begge platforme. En migrering koster mere end remediation og flytter ikke ansvaret.</p></div>
+      <div class="card"><h3>Hvad med apps og moduler fra tredjepart?</h3><p>De skal auditers ét ad gangen: test tastaturnavigation, fokus-håndtering, labels og kontrast i hver widget. Er en app utilgængelig og uundværlig, så dokumentér den som kendt begrænsning i din tilgængelighedserklæring.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/shopify-tilgaengelighed-eaa" style="color:var(--color-accent);">Shopify og tilgængelighed</a> &middot; <a href="/da/blog/prestashop-tilgaengelighed-eaa" style="color:var(--color-accent);">PrestaShop og tilgængelighed</a> &middot; <a href="/da/blog/skriv-tilgaengelighedserklaering" style="color:var(--color-accent);">Skriv en tilgængelighedserklæring</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/prestashop-vs-shopify-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

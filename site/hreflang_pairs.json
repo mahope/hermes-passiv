@@ -65,5 +65,7 @@
  "joomla-bitv-accessibility": "joomla-tilgaengelighed-bitv",
  "ghost-eaa-accessibility": "ghost-tilgaengelighed-eaa",
  "typo3-accessibility-bitv-check": "typo3-tilgaengelighed-bitv",
- "wordpress-vs-wix-accessibility": "wordpress-vs-wix-tilgaengelighed"
+ "wordpress-vs-wix-accessibility": "wordpress-vs-wix-tilgaengelighed",
+ "prestashop-vs-shopify-accessibility": "prestashop-vs-shopify-tilgaengelighed",
+ "webflow-vs-squarespace-accessibility": "webflow-vs-squarespace-tilgaengelighed"
 }
