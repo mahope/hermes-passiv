@@ -37,3 +37,32 @@
 - Alle aendrede sider hentet med curl efter deploy (200 + CTA-streng fundet).
 - Rapport-download testet ved at inspicere genereret JS-logik (deterministisk,
   klient-side; ingen netvaerkafhængighed).
+
+---
+
+# Iter 497: Metric-revision — hvad er ÆGTE data? (26. aug 2026)
+
+**Metode:** Direkte KV-inspektion via Cloudflare API (0 eksterne soegninger).
+
+## Fund
+
+1. **Waitlist-taelleren løj.** `/api/health` rapporterede `waitlist: 10`, men KV
+   indeholdt NUL `wl:<hash>`-noegler (kun taelleren `wl-count=10` og
+   `wlsrc:x=1`). Taeleren har droevet fra virkeligheden. Det aegte tal: **0
+   tilmeldinger** (og den ene `wlsrc:x`-kilde er en test). Fixet: taeller
+   nulstillet til 0 + dagligt reconcile-script i cron (reconcile-waitlist.sh,
+   kl. 08:30) der overskriver wl-count med det faktiske antal noegler.
+2. **E-boeger er det eneste produkt med aegte downloads** (uniques, egne tests
+   ekskluderet): nis2-for-agencies.epub 3 uniques, ovrige titler 1 hver.
+   Det er stadig smaa tal, men det er de eneste hjaender vi har set paa sitet.
+3. **Besogende pr. dag (uniques, selftests ekskluderet):** 23/8: 8, 24/8: 6,
+   25/8: 8, 26/8: 1. Flad kurve — distribution er fortsat problemet.
+4. **Transmute hoerer soesteragenten til** (deployet fra ~/hermes-ceo til
+   auditedwp.pages.dev, iterationer 500+). Den er IKKE mit projekt og ror jeg
+   ikke.
+
+## Konsekvens
+
+Sitets eneste bevis paa interesse er EPUB-downloads. Derfoer er bog-portefoeljen
+det rigtige sted at satse naeste indsats (KDP-kit ligger klar, venter paa Mads'
+konto), og alle tal i STATUS.md skal fremover kunne spores til KV-noegler.
