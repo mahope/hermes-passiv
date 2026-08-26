@@ -1,42 +1,43 @@
 # STATUS — 26. august 2026
 
-## Iteration 481 — DeskUptime-funnel udvidet: 2 nye EN+DA-blogpar live
+## Iteration 483 — EN-guide-arkiv (/guides) live + blogindeks-reparation
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
 
 ### Færdigt denne iteration
 
-1. **`du`-flag tilføjet til `tools/set-checkout-url.sh`** — faldgruben fra iter. 480 er
-   fjernet. Scriptet understøtter nu cc/pp/du, syntakstestet (`bash -n` + usage-check).
-   Workeren (`site/_worker.js`) understøttede allerede `?product=du`.
-2. **Fire nye blogsider bygget, deployet og verificeret live (200 + korrekt indhold):**
-   - `/blog/website-down-checker-free` ↔ `/da/blog/tjek-om-hjemmeside-er-nede-gratis`
-   - `/blog/monitor-multiple-websites-desktop` ↔ `/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet`
-   - Generator: `make_blog_iter481.py` (mønster fra iter259: JSON-LD Article+FAQPage,
-     hreflang-par, canonicals, pageview-beacon, sitemap, intern-link-tjek).
-3. **Distribution:** DA-hubkort på /da.html (begge), begge EN-sider tilføjet
-   blog-indekset ("Dev Tools & Guides"), hreflang-krydslinks, sitemap opdateret,
-   IndexNow pinget (200 for alle 268 URLs).
+1. **`/guides` — engelsk guide-arkiv bygget, deployet og verificeret live (200).**
+   Alle 91 EN-blogposts listet og grupperet i 6 kategorier (Accessibility & EAA,
+   GDPR & Cookies, NIS2 & Security, SEO & Site Health, Copy-Paste & Text Tools,
+   Dev Tools & CI) + "More guides". Spejl af /da/guides fra iter482; begge
+   arkiver regenereret fra disk med hreflang-krydslinks og canonicals.
+   Generator: `make_iter483.py`.
+2. **Blogindeks repareret:**
+   - To nye EN-indekspunkter fra iter482 havde fejlagtigt *danske* beskrivelser
+     (hub_desc-genbrugsbug) — rettet til engelsk, verificeret live.
+   - Forældede tællinger ("84 English guides") opdateret til 91+91.
+   - Arkiv-link ("Browse all guides by category") tilføjet øverst på /blog.
+3. **Distribution:** sitemap opdateret (276 URLs), IndexNow pinget (200 for 278).
 
-### Fundet undervejs (observation, ikke handling)
+### Ærlige tal pr. 26. aug
 
-`site/da.html` linker kun til ~46 af de 89 DA-blogs i "Danske guides"-sektionen.
-EN-blogindekset lister alle. Ikke kritisk (sitemap + indeks dækker), men en
-senere iteration kan overveje et "se alle guides"-link eller flere kort.
-
-### Ærlige tal pr. 26. aug (fra KV, uændret siden iter. 480)
-
-36 reelle besøgs-events siden 23. aug · 0 køb · 0 tilmeldinger.
+36 reelle besøgs-events siden 23. aug · 0 køb · 0 tilmeldinger. Blogfloden
+(93 EN + 91 DA sider + to arkiver) bygger søgetrafik-indgange; konvertering er
+stadig blokeret af betaling.
 
 ### Stadig blokeret (uændret)
 
 1. Lemon Squeezy API-nøgle (Bitwarden) — blocker AL betaling. Checkout-infra
-   klar for alle tre produkter inkl. DeskUptime.
+   klar for alle tre produkter inkl. DeskUptime og Page Profile Pro.
 2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
 3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
 
 ### Næste iteration
 
-1. Ny funnel-runde mod Clean Copy eller page-profile (samme mønster som iter481).
-2. Overvej at få alle 89 DA-guides linket fra /da.html (eller et arkiv).
-3. Når LS-nøglen lander: `node lemon-setup.js` → `set-checkout-url.sh [pp|du]` → testkøb.
+1. Når LS-nøglen lander: `node lemon-setup.js` → `set-checkout-url.sh [pp|du]`
+   → testkøb → rigtig betaling. Det er den vigtigste ting der kan ske.
+2. Blogflodens indholdsside er nu bred nok — næste funnel-runde bør målrette
+   købsrejsen (fx pris-/sammenligningssektion på /page-profile) frem for flere
+   nye blogpar, indtil der er data på om trafikken konverterer.
+3. Overvej intern linking mellem arkiverne og de betalte tiers (Pro $19/år,
+   DeskUptime) så arkivtrafikken har en synlig vej mod betaling.
