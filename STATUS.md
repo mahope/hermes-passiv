@@ -1,5 +1,48 @@
 # STATUS — 26. august 2026
 
+## Iteration 476 — Teknisk SEO-gennemgang: sitemap og canonicals nu 100 % rene
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Bygget
+
+1. **Kørte `tools/full_site_check.py`** (live-check af alle 269 sitemap-URL'er:
+   status, canonical, JSON-LD-parse). Fandt 7 problemer.
+2. **5 sitemap-URL'er var døde slugs der 301-redirectede** (gamle DA-artikel-
+   navne: kopier-tabel-fra-pdf → -til-excel osv.). Nyttede scriptet
+   `tools/fix_sitemap_redirects.py`: tjekker alle URL'er live, fjerner blokke
+   for redirectende URL'er og opdaterer hreflang-referencer. Sitemap: 269 →
+   264 URL'er, XML validerer.
+3. **2 DA-sider havde canonical/hreflang der pegede på forkerte (EN) adresser**
+   (`da/blog/roegtest-*`, `da/blog/overvaag-*-github-actions-gratis` — de pegede
+   på EN-parrene, som selv canonicaliserede til forsiden). Rettede til deres
+   egne extensionless DA-URL'er.
+
+### Verificering
+
+- Deployet til Cloudflare Pages to gange (sitemap + side-fixes).
+- Efter deploy: `full_site_check.py` → **264 URL'er, 0 problemer**. Første gang
+  siden målingerne startede at hele sitet er rent på én gang.
+- Commit 723d399 pushet til monorepoet.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+## Næste iteration
+
+- Ved næste desktop-release: tjek at tag-push selv bygger og uploader releasen
+  (build.yml-triggeren rettet i iter 474, endnu ikke testet live).
+- Kør `full_site_check.py` efter hver fremtidig deploy som standard-gate.
+- Flere blogindlæg kan pege på de to site-health-hubs; hreflang-parringer for
+  guidesiderne (pt. x-default only).
+
+---
+
+# STATUS — 26. august 2026
+
 ## Iteration 475 — EN site-health-hub bygget, 14 platform-guides linket indad
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
