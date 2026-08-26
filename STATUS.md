@@ -15,7 +15,7 @@ Per STATUS 477's næste-skridt (distribution frem for mere indholdspuds):
    canonical + hreflang-par (en↔da), idempotent sitemap-opdatering,
    interne link-tjek.
 2. `/blog/get-notified-when-website-goes-down` (EN) +
-   `/da/blog/faa-beskod-naar-hjemmeside-er-nede` (DA). Begge: 3
+   `/da/blog/faa-besked-naar-hjemmeside-er-nede` (DA). Begge: 3
    metode-kort, 2-trins opsætning, pris-sammenligningstabel (SaaS vs cron
    vs DeskUptime $19 én gang), 5 FAQ'er, direkte download-links til
    desktop-v0.2.7 assets og CTA til /deskuptime/ + /da/deskuptime/.
