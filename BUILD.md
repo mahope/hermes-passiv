@@ -1,19 +1,28 @@
-# BUILD — Iteration 495: top-CTA på alle blogindlæg
+# BUILD — Iteration 496: Clean Copy CLI v1.5.2 udgivet + Homebrew-tap opdateret
 
-## Bygget
-1. **Top-CTA på alle 191 blogindlæg (EN+DA).** Før iterationen manglede ~74
-   indlæg CTA over artiklen; nu har alle to CTA-blokke øverst:
-   - "Run the Free Scanner" → /scan (EN) / /scan-da (DA)
-   - "Ask the Compliance AI" → /compliance-ai (EN) / /da/compliance-ai (DA)
-2. Værktøj: `tools/add_top_cta_495.py` indsætter standard-parret efter
-   `</header>` i filer uden `blog-tool-cta`. 5 filer med afvigende layout
-   (macos-menu-bar-parret, redirect-chain, eaa-desktop, http-headers) fik
-   CTA indsat manuelt efter hero/meta.
+## Problem
+CLI'en hang på v1.5.0, mens Chrome/Firefox-udvidelsen var ved v1.5.2 (kernen
+fik invisible-char-fixes i 1.5.1–1.5.2). Homebrew-tappen pegede på 1.5.0.
+Alle distributionskanaler viste altså en ældre version end produktet.
 
-## Verificeret live
-- Deploy via deploy.sh (74 filer uploadet).
-- Spot-check live: canonical-url-guide, hreflang-guide-da og
-  macos-menu-bar-website-monitor returnerer 200 med begge CTA-blokke.
-- full_site_check.py: 286 URLs, 0 problemer.
+## Bygget / udgivet
+1. `node tools/sync_core.js` → CLI-kernen bekræftet identisk med shared core.
+   `node test.js`: **41 passed, 0 failed** (inkl. 13 live-platformstests).
+2. CLI-repo (`mahope/clean-copy-cli`): version 1.5.2 i package.json,
+   README-badge + curl-URL + tools/install.sh opdateret.
+3. Tarball bygget deterministisk (`tools/make_tarball.sh`, self-check OK):
+   sha256 `e988b5da…66574b`.
+4. Release **v1.5.2** publiceret via gh CLI; asset verificeret ved download +
+   sha-sammenligning.
+5. Homebrew-tap (`mahope/homebrew-clean-copy`) opdateret: url + sha256 til
+   1.5.2. Verificeret END-TO-END lokalt: `brew install
+   mahope/clean-copy/clean-copy` installerer 1.5.2 og `brew test` grøn.
+6. CI på CLI-repo: verify-homebrew-sha-jobbet fejlede først (race — jobbet
+   hentede tap-filen før push'en var propageret via CDN). Re-run efter 60 s:
+   **success**.
 
-## Budget: 35/1000 DKK (uændret)
+## Site
+Ingen ændringer nødvendige — clean-copy.html nævner kun versionshistorik,
+ingen hardkodet download-URL til 1.5.0.
+
+## Budget: 35/1000 DKK (uændret) · Søgninger: 0
