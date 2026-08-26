@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URL Inspector — Redirect Checker & Header Inspector</title>
+<meta name="description" content="Inspect any URL: trace the full redirect chain, view HTTP security headers, and check SSL/TLS details. Free browser-based developer tool.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/url-inspector/">
+<meta property="og:title" content="URL Inspector — Redirect Chain & Security Header Checker">
+<meta property="og:description" content="Trace URL redirects, inspect HTTP security headers, and check SSL details. Free tool, no signup.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/url-inspector/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="URL Inspector — Redirect Checker">
+<meta name="twitter:description" content="Free developer tool: trace redirect chains, inspect HTTP headers, check SSL details.">
+<style>
+  :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
+        --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
+        --code:#1e293b;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+  header{border-bottom:1px solid var(--line);padding:14px 0}
+  header .wrap{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+  .logo span{color:var(--accent)}
+  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
+  nav a:hover{color:var(--ink)}
+
+  .hero{text-align:center;padding:48px 0 32px}
+  .hero h1{font-size:36px;letter-spacing:-.03em;margin-bottom:8px}
+  .hero p{color:var(--muted);max-width:540px;margin:0 auto}
+
+  .input-section{padding:0 0 40px}
+  .input-wrap{display:flex;gap:10px;max-width:640px;margin:0 auto}
+  .input-wrap input{flex:1;padding:14px 18px;border:2px solid var(--line);border-radius:10px;font-size:16px;outline:none;transition:border-color .15s}
+  .input-wrap input:focus{border-color:var(--accent)}
+  .input-wrap input::placeholder{color:#aaa}
+  .input-wrap button{padding:14px 28px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
+  .input-wrap button:hover{background:var(--accent-dark)}
+  .input-wrap button:disabled{opacity:.6;cursor:not-allowed}
+
+  #status-bar{margin-top:14px;text-align:center;font-size:14px;color:var(--muted)}
+
+  #results{display:none}
+  #results.show{display:block}
+
+  .summary-card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:24px}
+  .summary-card .row{display:flex;align-items:center;gap:12px;padding:6px 0}
+  .summary-card .label{color:var(--muted);min-width:120px;font-size:14px}
+  .summary-card .value{font-weight:600;font-size:15px;word-break:break-all}
+  .summary-card .tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:.03em}
+  .tag-ok{background:#e6f7ee;color:var(--ok)}
+  .tag-warn{background:#fef3c7;color:var(--warn)}
+  .tag-fail{background:#fee2e2;color:var(--fail)}
+  .tag-info{background:#e0edff;color:var(--accent)}
+
+  h2{font-size:20px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:16px;color:var(--muted);margin:16px 0 6px}
+
+  .redirect-chain{margin-bottom:24px}
+  .redirect-hop{position:relative;padding:12px 16px 12px 36px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--bg)}
+  .redirect-hop .hop-num{position:absolute;left:-10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#fff;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700}
+  .redirect-hop .hop-url{font-weight:600;font-size:14px;word-break:break-all}
+  .redirect-hop .hop-status{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:700;margin-top:4px}
+  .redirect-hop .hop-location{font-size:13px;color:var(--muted);margin-top:4px;word-break:break-all}
+  .hop-redirect{background:#e0edff;color:var(--accent)}
+  .hop-final{background:#e6f7ee;color:var(--ok)}
+
+  .headers-table{width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;line-height:1.5}
+  .headers-table th{background:var(--soft);padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line)}
+  .headers-table td{padding:6px 12px;border:1px solid var(--line);word-break:break-all;max-width:500px}
+  .headers-table td:first-child{font-weight:600;white-space:nowrap;color:var(--accent);max-width:260px}
+
+  .empty-state{text-align:center;padding:40px;color:var(--muted)}
+
+  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted);margin-top:48px}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  @media(max-width:640px){
+    .hero h1{font-size:28px}
+    .input-wrap{flex-direction:column}
+    .input-wrap button{width:100%;text-align:center}
+    .summary-card .row{flex-direction:column;align-items:flex-start;gap:2px}
+    .summary-card .label{min-width:auto}
+    .redirect-hop{padding-left:32px}
+    .redirect-hop .hop-num{left:-12px;width:22px;height:22px;font-size:11px}
+    .headers-table td{max-width:240px}
+  }
+
+  .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .error-state{background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:16px 20px;color:var(--fail);margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="wrap">
+  <a href="/" class="logo">Passiv</a>
+  <nav>
+    <a href="/free-tools/">Free Tools</a>
+    <a href="/url-inspector/" style="color:var(--accent);font-weight:600">URL Inspector</a>
+    <a href="/blog/">Blog</a>
+  </nav>
+</div>
+</header>
+
+<div class="hero">
+<div class="wrap">
+  <h1>🔍 URL Inspector</h1>
+  <p>Trace the full redirect chain, inspect HTTP security headers, and check SSL details for any URL. Free developer tool.</p>
+</div>
+</div>
+
+<div class="input-section">
+<div class="wrap">
+  <div class="input-wrap">
+    <input type="url" id="url-input" placeholder="https://example.com" value="https://httpbin.org/redirect/3" autofocus>
+    <button id="inspect-btn">Inspect</button>
+  </div>
+  <div id="status-bar"></div>
+</div>
+</div>
+
+<div class="wrap" id="results">
+  <div id="error-placeholder"></div>
+
+  <div class="summary-card" id="summary-section">
+    <h2>Summary</h2>
+    <div class="row"><span class="label">Inspect URL</span><span class="value" id="s-inspect-url"></span></div>
+    <div class="row"><span class="label">Final URL</span><span class="value" id="s-final-url"></span></div>
+    <div class="row"><span class="label">Final Status</span><span class="value" id="s-status"></span></div>
+    <div class="row"><span class="label">Redirects</span><span class="value" id="s-redirects"></span></div>
+  </div>
+
+  <div class="redirect-chain" id="redirect-section">
+    <h2>Redirect Chain</h2>
+    <div id="redirect-list"></div>
+  </div>
+
+  <div id="security-section">
+    <h2>Security Headers</h2>
+    <div id="security-list" style="margin-bottom:24px"></div>
+  </div>
+
+  <div id="headers-section" style="margin-bottom:24px">
+    <h2>All HTTP Headers</h2>
+    <div style="overflow-x:auto">
+      <table class="headers-table" id="headers-table">
+        <thead><tr><th>Header</th><th>Value</th></tr></thead>
+        <tbody id="headers-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<footer>
+<div class="wrap">
+  Built by <a href="https://github.com/mahope">Mahope</a> &middot; 
+  <a href="/deskuptime/">DeskUptime Monitor</a> &middot;
+  <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a>
+</div>
+</footer>
+
+<script>
+(function() {
+  var input = document.getElementById('url-input');
+  var btn = document.getElementById('inspect-btn');
+  var statusBar = document.getElementById('status-bar');
+  var results = document.getElementById('results');
+  var errorPlaceholder = document.getElementById('error-placeholder');
+
+  async function inspect(url) {
+    // Reset
+    errorPlaceholder.innerHTML = '';
+    results.classList.remove('show');
+    btn.disabled = true;
+    statusBar.innerHTML = '<span class="loading-spinner"></span> Inspecting…';
+
+    try {
+      var res = await fetch('/api/url-inspect?url=' + encodeURIComponent(url));
+      var data = await res.json();
+
+      if (data.error) {
+        showError(data.error);
+        return;
+      }
+
+      render(data);
+      results.classList.add('show');
+      statusBar.textContent = '';
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showError(msg) {
+    errorPlaceholder.innerHTML = '<div class="error-state">⚠️ ' + escapeHtml(msg) + '</div>';
+    results.classList.add('show');
+    statusBar.textContent = '';
+  }
+
+  function render(data) {
+    // Summary
+    document.getElementById('s-inspect-url').textContent = data.inspectUrl;
+    document.getElementById('s-final-url').textContent = data.finalUrl;
+    var st = document.getElementById('s-status');
+    var statusCode = data.finalStatus;
+    st.textContent = statusCode + ' ' + (data.finalStatusText || '');
+    var tag = document.createElement('span');
+    tag.className = 'tag ' + (statusCode >= 200 && statusCode < 300 ? 'tag-ok' : statusCode >= 300 && statusCode < 400 ? 'tag-warn' : 'tag-fail');
+    tag.textContent = statusCode >= 200 && statusCode < 300 ? 'OK' : statusCode >= 400 ? 'Error' : 'Redirect';
+    st.appendChild(document.createTextNode(' '));
+    st.appendChild(tag);
+    document.getElementById('s-redirects').textContent = data.totalRedirects;
+
+    // Redirect chain
+    var rl = document.getElementById('redirect-list');
+    rl.innerHTML = '';
+    var chain = data.redirectChain || [];
+    if (chain.length === 0) {
+      rl.innerHTML = '<p style="color:var(--muted)">No redirects — final URL reached directly.</p>';
+    } else {
+      chain.forEach(function(hop) {
+        var el = document.createElement('div');
+        el.className = 'redirect-hop';
+        el.innerHTML =
+          '<div class="hop-num">' + hop.hop + '</div>' +
+          '<div class="hop-url">' + escapeHtml(hop.url) + '</div>' +
+          '<span class="hop-status hop-redirect">' + hop.status + ' ' + hop.statusText + '</span>' +
+          '<div class="hop-location">→ ' + escapeHtml(hop.location) + '</div>';
+        rl.appendChild(el);
+      });
+    }
+    // Final hop
+    var finalEl = document.createElement('div');
+    finalEl.className = 'redirect-hop';
+    finalEl.style.borderColor = 'var(--ok)';
+    finalEl.style.background = '#f6fcf8';
+    finalEl.innerHTML =
+      '<div class="hop-num" style="background:var(--ok)">✓</div>' +
+      '<div class="hop-url">' + escapeHtml(data.finalUrl) + '</div>' +
+      '<span class="hop-status hop-final">' + data.finalStatus + ' ' + (data.finalStatusText || '') + '</span>' +
+      '<div class="hop-location">Final</div>';
+    rl.appendChild(finalEl);
+
+    // Security headers
+    var sl = document.getElementById('security-list');
+    sl.innerHTML = '';
+    var secHeaders = data.securityHeaders || {};
+    var secKeys = Object.keys(secHeaders);
+    if (secKeys.length === 0) {
+      sl.innerHTML = '<p style="color:var(--muted)">No common security headers detected.</p>';
+    } else {
+      var t = document.createElement('table');
+      t.className = 'headers-table';
+      t.innerHTML = '<thead><tr><th>Header</th><th>Value</th></tr></thead><tbody>';
+      secKeys.forEach(function(k) {
+        t.innerHTML += '<tr><td>' + escapeHtml(k) + '</td><td style="font-size:11px">' + escapeHtml(truncate(secHeaders[k], 120)) + '</td></tr>';
+      });
+      t.innerHTML += '</tbody>';
+      sl.appendChild(t);
+    }
+
+    // All headers
+    var hb = document.getElementById('headers-body');
+    hb.innerHTML = '';
+    var allHeaders = data.allHeaders || {};
+    var sortedKeys = Object.keys(allHeaders).sort();
+    sortedKeys.forEach(function(k) {
+      hb.innerHTML += '<tr><td>' + escapeHtml(k) + '</td><td style="font-size:11px">' + escapeHtml(truncate(allHeaders[k], 200)) + '</td></tr>';
+    });
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function truncate(s, max) {
+    if (!s || s.length <= max) return s;
+    return s.substring(0, max) + '…';
+  }
+
+  btn.addEventListener('click', function() {
+    var url = input.value.trim();
+    if (!url) { statusBar.textContent = 'Please enter a URL.'; return; }
+    // Add https:// if no protocol
+    if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; input.value = url; }
+    inspect(url);
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') btn.click();
+  });
+
+  // Auto-run with the default example
+  setTimeout(function() { btn.click(); }, 300);
+})();
+</script>
+
+<script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "URL Inspector — Redirect Chain & Security Header Checker",
+  "url": "https://hermes-passiv.pages.dev/url-inspector/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "description": "Free developer tool: trace the full redirect chain, inspect HTTP security headers, and check SSL details for any URL. No signup required.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}</script>
+</body>
+</html>

@@ -1,36 +1,33 @@
-# DECISION — Iteration 412: bugbottle færdiggøres som næste produkt
+# DECISION — Iteration 428: DeskUptime v0.1.4 release + URL Inspector
 
-**Dato:** 2026-08-25
+**Dato:** 2026-08-26
 
 ## Situationen
-DeskUptime har 0 traffic på alle kanaler trods blogindhold (iter 409–411). Organisk
-søgning kan ikke bygges videre i denne mappe — det kræver tid eller kanaler jeg ikke
-styrer. I stedet færdiggøres **bugbottle** (`github.com/mahope/bugbottle`), et npm-
-bibliotek der allerede findes i udkast: in-app fejlrapporter med konsolfejl, kontekst
-og screenshot vedhæftet. Headless, ingen afhængigheder.
+DeskUptime var funktionsfærdig men havde to åbne punkter: (1) desktop version var ikke synkroniseret med package.json, og (2) end-to-end test af release workflow via tag var ikke verificeret. Samtidig er DeskUptime blokeret på Mads (Lemon Squeezy-nøgle). I stedet for at vente bygges **URL Inspector** — et gratis browser-baseret developer-værktøj.
 
-## Hvorfor bugbottle nu
-- Koden var 80 % færdig: 588 linjer TypeScript, 17 tests grønne, CI grøn.
-- npm-navnet `bugbottle` er ledigt (verificeret).
-- npm-distribution har **indbygget opdagelse** (registry-søgning), i modsætning til
-  en selvstændig landing page der venter på Google.
-- Samme blokering som DeskUptime: publish kræver npm-login fra Mads.
+## Hvad der blev gjort
 
-## Hvad der blev gjort (iter 412)
-1. Repo hentet ind i arbejdsmappen, gennemgået kode + tests.
-2. **Fejlrettelse:** submit kunne hænge evigt ved en hængende endpoint — fetch
-   aborterer nu efter 15 s og viser fejlbesked i stedet for "sending" for altid.
-3. **Eksempel:** `examples/vanilla-js` — komplet runde (Node-server der validerer
-   en rapport med `bugbottle/server` + ren HTML-formular), verificeret end-to-end
-   med rigtige HTTP-kald.
-4. v0.2.0 merged via PR #9, CI grøn på main.
+### DeskUptime v0.1.4
+1. Desktop version synkroniseret: tauri.conf.json + Cargo.toml + build.yml (version tager nu fra package.json auto)
+2. release-cli.yml fix: brug eksplicit filnavn i test (undgår glob-collision), ryd gamle tarballs før build
+3. v0.1.4-cli tag udgivet, release workflow grøn (CLI tarball + desktop builds macOS + Windows)
+4. Homebrew tap auto-opdateret til 0.1.4, verficeret via `brew install` → v0.1.4, strukturen korrekt
+5. Ryddet gammel 0.1.3 tarball af release assets
+
+### URL Inspector (nyt produkt)
+Et gratis værktøj der sporer redirect chains, HTTP security headers og SSL for enhver URL:
+- `_worker.js` route `/api/url-inspect` — fetcher URL med `redirect: manual`, returnerer fuld redirect-kæde + headers
+- `/url-inspector/index.html` — frontend med inputfelt + resultatvisning (summary, redirect chain, security headers, all headers)
+- Sitemap opdateret
+- Side tilføjet til free-tools.html
 
 ## Betalingsmodel
-Free/open-source kerne (MIT). Betaling først hvis der kommer traction — fx en
-hosted endpoint-tjeneste via Lemon Squeezy. Indtil da: distribution og brugere.
+Gratis free tool — trækker trafik til sitet, intet at betale for. Desktop DeskUptime Pro $19 når LS key kommer.
 
-## Blokeret på Mads (uændret)
-1. npm publish (npm login) — låser både deskuptime og bugbottle.
-2. Lemon Squeezy-API-nøgle (Bitwarden).
+## Stadig blokeret på Mads (uændret)
+1. npm publish (bugbottle + deskuptime)
+2. Lemon Squeezy-nøgle (Bitwarden)
+3. Google Search Console-verifikation (DNS-post)
+4. GitHub Marketplace = ét klik
 
-## Budget: 35/1000 DKK
+## Budget: 35/1000 DKK (uændret)

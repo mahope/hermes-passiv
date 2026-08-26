@@ -68,6 +68,9 @@ export default {
     // === Route: Clean Copy Pro checkout URL (dynamic embed) ===
     if (path === '/api/checkout') return handleCheckout(url, env);
 
+    // === Route: URL Inspector (redirect chain + security headers) ===
+    if (path === '/api/url-inspect') return handleUrlInspect(request, url);
+
     // === Route: Danish posts moved from /blog to /da/blog (301) ===
     const DA_BLOG_REDIRECTS = {
     'cookie-consent-gdpr-2026': true,
@@ -2156,4 +2159,110 @@ async function handleBugbottleDemo(request, url, env) {
   await env.VISITS.put(dayKey, String(dayCount + 1), { expirationTtl: 2 * 86400 });
 
   return bbJson({ ok: true, id }, 201);
+}
+
+/**
+ * URL Inspector — fetch URL, trace redirect chain, return headers
+ * GET /api/url-inspect?url=https://example.com
+ */
+async function handleUrlInspect(request, url) {
+  const corsHeaders = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, OPTIONS',
+    'access-control-allow-headers': 'Content-Type',
+    'content-type': 'application/json',
+  };
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+
+  const targetUrlParam = url.searchParams.get('url');
+  if (!targetUrlParam) {
+    return new Response(JSON.stringify({ error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
+  }
+  try { new URL(targetUrlParam); } catch (_) {
+    return new Response(JSON.stringify({ error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
+  }
+
+  const redirects = [];
+  let currentUrl = targetUrlParam;
+  let finalResponse = null;
+  const MAX_HOPS = 15;
+
+  for (let hop = 0; hop <= MAX_HOPS; hop++) {
+    const response = await fetch(currentUrl, {
+      method: 'GET',
+      redirect: 'manual',
+      headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker; https://hermes-passiv.pages.dev)' }
+    });
+
+    const statusCode = response.status;
+    const location = response.headers.get('location');
+    const hopHeaders = {};
+    response.headers.forEach((value, key) => {
+      if (Object.keys(hopHeaders).length < 80) {
+        hopHeaders[key] = value;
+      }
+    });
+
+    if (statusCode >= 300 && statusCode < 400 && statusCode !== 304 && location) {
+      redirects.push({
+        hop: hop + 1,
+        url: currentUrl,
+        status: statusCode,
+        statusText: response.statusText,
+        location: location,
+        headers: hopHeaders,
+      });
+      try {
+        currentUrl = new URL(location, currentUrl).href;
+      } catch (_) {
+        return new Response(JSON.stringify({ error: 'Invalid redirect location', redirects, finalUrl: currentUrl }), {
+          status: 200, headers: corsHeaders,
+        });
+      }
+    } else {
+      finalResponse = {
+        url: currentUrl,
+        status: statusCode,
+        statusText: response.statusText,
+        headers: hopHeaders,
+      };
+      break;
+    }
+  }
+
+  if (!finalResponse) {
+    finalResponse = {
+      url: currentUrl,
+      status: 0,
+      statusText: 'Too many redirects (> ' + MAX_HOPS + ' hops)',
+      headers: {},
+    };
+  }
+
+  // Extract key security headers for a quick overview
+  const secHeaders = [
+    'strict-transport-security', 'content-security-policy',
+    'x-content-type-options', 'x-frame-options', 'x-xss-protection',
+    'referrer-policy', 'permissions-policy', 'access-control-allow-origin',
+  ];
+  const presentSecurity = {};
+  for (const h of secHeaders) {
+    if (finalResponse.headers[h]) presentSecurity[h] = finalResponse.headers[h];
+  }
+
+  const result = {
+    inspectUrl: targetUrlParam,
+    finalUrl: finalResponse.url,
+    totalRedirects: redirects.length,
+    redirectChain: redirects,
+    finalStatus: finalResponse.status,
+    finalStatusText: finalResponse.statusText,
+    securityHeaders: presentSecurity,
+    allHeaders: finalResponse.headers,
+    message: redirects.length > 0
+      ? `→ ${redirects[redirects.length - 1].url} (${redirects.length} redirect${redirects.length > 1 ? 's' : ''})`
+      : 'No redirects',
+  };
+
+  return new Response(JSON.stringify(result, null, 2), { status: 200, headers: corsHeaders });
 }
