@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hvor stor er din hjemmeside? Tjek sidestørrelse og vægt (2026)</title>
+<meta name="description" content="Sådan tjekker du hvor mange KB en webside vejer, hvad der gør den tung, og hvordan du finder de billeder og scripts der trækker loadtiden — uden at installere noget.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hvor stor er din hjemmeside? Tjek sidestørrelse og vægt (2026)">
+<meta property="og:description" content="Page size checker: se hvor mange kilobyte en webside vejer, find de tungeste elementer og få siden til at loade hurtigere. Gratis guide.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tjek-hvor-stor-din-hjemmeside-er">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tjek-hvor-stor-din-hjemmeside-er">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-page-size-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-hvor-stor-din-hjemmeside-er">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Hvor stor er din hjemmeside? Tjek sidestørrelse og vægt (2026)", "description": "Sådan tjekker du hvor mange KB en webside vejer, hvad der gør den tung, og hvordan du finder de billeder og scripts der trækker loadtiden — uden at installere noget.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-hvor-stor-din-hjemmeside-er", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er en god sidestørrelse?", "acceptedAnswer": {"@type": "Answer", "text": "Under 500 KB er et godt mål for de fleste sider, og under 2 MB er acceptabelt for billedtunge sider. Gennemsnittet på nettet ligger omkring 2-3 MB, så kommer du derunder, er du allerede foran de fleste konkurrenter."}}, {"@type": "Question", "name": "Hvordan tjekker jeg en sides størrelse uden værktøj?", "acceptedAnswer": {"@type": "Answer", "text": "Åbn udviklerværktøjerne (F12), gå i Netværk-fanen og genindlæs siden. Nederst ser du total overført størrelse. Bemærk at gzip/komprimeret overførsel ofte er mindre end den ukomprimerede størrelse — begge tal er relevante."}}, {"@type": "Question", "name": "Gør sidestørrelsen min side langsommere?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, direkte: flere bytes betyder længere downloadtid, især på mobilforbindelser. Men render-blocking JavaScript, antal serverforespørgsler og serverens svartid påvirker ofte oplevelsen mindst lige så meget som rå størrelse."}}, {"@type": "Question", "name": "Hvad fylder typisk mest på en side?", "acceptedAnswer": {"@type": "Answer", "text": "Billeder og video (ofte 60-80 % af vægten), derefter JavaScript-bundter, fonte og tredjeparts-scripts som chat-widgets og analytics. Start med at komprimere billeder — det giver næsten altid den største gevinst."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PERFORMANCE &middot; GRATIS</div>
+    <h1>Hvor stor er<br>din hjemmeside?</h1>
+    <p class="subtitle">En tung side loader langsomt, rangerer dårligere og taber besøgende før de har set indholdet. Her er hvordan du måler vægten — og finder de elementer der fylder mest.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Analysér din side gratis &rarr;</a>
+      <a href="#vaegten" class="btn-secondary">Spring til guiden</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="vaegten">
+  <div class="container">
+    <h2>Sådan måler du vægten på 30 sekunder</h2>
+    <ol>
+      <li><strong>Netværksfanen:</strong> tryk F12, vælg Netværk, genindlæs siden og læs
+      totalen nederst. Det tallet er hele sidens vægt inkl. alle ressourcer.</li>
+      <li><strong>Sortér efter størrelse:</strong> klik på Size-kolonnen. De øverste tre
+      rækker er næsten altid dit problem.</li>
+      <li><strong>Kig efter billeder uden komprimering:</strong> store PNG'er hvor JPG/WebP
+      ville være 5-10x mindre.</li>
+      <li><strong>Tæl scripts:</strong> hver tredjeparts-widget (chat, analytics,
+      heatmaps) koster både vægt og forespørgsler.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s https://ditsite.dk | wc -c        # HTML alene
+$ curl -sI https:ditsite.dk/billede.jpg | grep -i content-length</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvad vægten egentlig koster</h2>
+    <p>Hver ekstra megabyte er længere tid før første indhold — og Google måler det direkte
+    via Core Web Vitals (LCP). En side der loader på 1 sekund konverterer typisk 2-3x bedre
+    end én der tager 5 sekunder. Vægten rammer også mobilbrugere med begrænsede dataplaner
+    hårdest, netop de besøgende der oftest handler lokalt.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Element</th><th>Typisk andel af vægten</th></tr>
+      <tr><td>Billeder og video</td><td>60-80 %</td></tr>
+      <tr><td>JavaScript</td><td>10-20 %</td></tr>
+      <tr><td>Fonte</td><td>2-8 %</td></tr>
+      <tr><td>CSS + HTML</td><td>2-5 %</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Få din sides tal &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/tjek-hastighed-uden-lighthouse">tjek hastighed uden Lighthouse</a>,
+    <a href="/da/blog/seo-metadata-tjek-hjemmeside">metadata-audit</a> og
+    <a href="/da/blog/find-alle-sider-paa-en-hjemmeside">find alle sider på et site</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er en god sidestørrelse?</h3><p>Under 500 KB er et godt mål for de fleste sider, og under 2 MB er acceptabelt for billedtunge sider. Gennemsnittet på nettet ligger omkring 2-3 MB, så kommer du derunder, er du allerede foran de fleste konkurrenter.</p></div>
+      <div class="card"><h3>Hvordan tjekker jeg en sides størrelse uden værktøj?</h3><p>Åbn udviklerværktøjerne (F12), gå i Netværk-fanen og genindlæs siden. Nederst ser du total overført størrelse. Bemærk at gzip/komprimeret overførsel ofte er mindre end den ukomprimerede størrelse — begge tal er relevante.</p></div>
+      <div class="card"><h3>Gør sidestørrelsen min side langsommere?</h3><p>Ja, direkte: flere bytes betyder længere downloadtid, især på mobilforbindelser. Men render-blocking JavaScript, antal serverforespørgsler og serverens svartid påvirker ofte oplevelsen mindst lige så meget som rå størrelse.</p></div>
+      <div class="card"><h3>Hvad fylder typisk mest på en side?</h3><p>Billeder og video (ofte 60-80 % af vægten), derefter JavaScript-bundter, fonte og tredjeparts-scripts som chat-widgets og analytics. Start med at komprimere billeder — det giver næsten altid den største gevinst.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Tjek din sidestørrelse nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tjek-hastighed-uden-lighthouse" lang="da">Hastighed uden Lighthouse</a> &middot; <a href="/da/blog/seo-metadata-tjek-hjemmeside" lang="da">Metadata-audit</a> &middot; <a href="/da/blog/find-alle-sider-paa-en-hjemmeside" lang="da">Find alle sider</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(page-profile|deskuptime)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

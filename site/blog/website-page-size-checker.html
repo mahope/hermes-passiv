@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Big Is My Web Page? Check Page Size and Weight (2026)</title>
+<meta name="description" content="Check how many KB a web page weighs, what makes it heavy, and how to find the images and scripts that slow down load time — nothing to install.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How Big Is My Web Page? Check Page Size and Weight (2026)">
+<meta property="og:description" content="Free page size checker: see how many kilobytes a page weighs, find the heaviest elements and make your site load faster.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/website-page-size-checker">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/website-page-size-checker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-page-size-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-hvor-stor-din-hjemmeside-er">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "How Big Is My Web Page? Check Page Size and Weight (2026)", "description": "Check how many KB a web page weighs, what makes it heavy, and how to find the images and scripts that slow down load time — nothing to install.", "url": "https://hermes-passiv.pages.dev/blog/website-page-size-checker", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a good page size?", "acceptedAnswer": {"@type": "Answer", "text": "Under 500 KB is a great target for most pages; up to 2 MB is acceptable for image-heavy ones. The web average sits around 2–3 MB, so coming in below that already puts you ahead of most competitors."}}, {"@type": "Question", "name": "How do I check a page's size without a tool?", "acceptedAnswer": {"@type": "Answer", "text": "Open developer tools (F12), switch to the Network tab and reload. The bottom row shows total transferred size. Note that compressed transfer is usually smaller than uncompressed size — both numbers matter."}}, {"@type": "Question", "name": "Does page size actually make my site slower?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, directly: more bytes mean longer download times, especially on mobile connections. But render-blocking JavaScript, request count and server response time often affect perceived speed just as much as raw size."}}, {"@type": "Question", "name": "What typically weighs the most on a page?", "acceptedAnswer": {"@type": "Answer", "text": "Images and video (often 60–80% of weight), then JavaScript bundles, fonts and third-party scripts like chat widgets and analytics. Start by compressing images — that's almost always the biggest win."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PERFORMANCE &middot; FREE</div>
+    <h1>How big is your<br>web page?</h1>
+    <p class="subtitle">A heavy page loads slowly, ranks worse and loses visitors before they see the content. Here's how to measure the weight — and find the elements that add most of it.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Analyse your page free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>Measure the weight in 30 seconds</h2>
+    <ol>
+      <li><strong>Network tab:</strong> press F12, select Network, reload, read the total
+      at the bottom. That number is the full page including every resource.</li>
+      <li><strong>Sort by size:</strong> click the Size column. Your top three rows are
+      almost always the problem.</li>
+      <li><strong>Look for uncompressed images:</strong> large PNGs where JPEG or WebP
+      would be 5–10× smaller.</li>
+      <li><strong>Count scripts:</strong> each third-party widget (chat, analytics,
+      heatmaps) costs both bytes and extra requests.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s https://yoursite.com | wc -c        # HTML alone
+$ curl -sI https://yoursite.com/img.jpg | grep -i content-length</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>What the weight really costs</h2>
+    <p>Every extra megabyte delays first content — and Google measures this directly through
+    Core Web Vitals (LCP). A page loading in one second typically converts two to three times
+    better than one taking five. Weight also hits mobile users on limited data plans hardest,
+    precisely the visitors who most often buy locally.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Element</th><th>Typical share of weight</th></tr>
+      <tr><td>Images and video</td><td>60–80%</td></tr>
+      <tr><td>JavaScript</td><td>10–20%</td></tr>
+      <tr><td>Fonts</td><td>2–8%</td></tr>
+      <tr><td>CSS + HTML</td><td>2–5%</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Get your page's numbers &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Keep reading</h2>
+    <p>Also see:
+    <a href="/blog/check-website-speed-without-lighthouse">speed checks without Lighthouse</a>,
+    <a href="/blog/website-seo-metadata-audit">metadata audits</a> and
+    <a href="/blog/find-all-pages-on-a-website">finding every page on a site</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is a good page size?</h3><p>Under 500 KB is a great target for most pages; up to 2 MB is acceptable for image-heavy ones. The web average sits around 2–3 MB, so coming in below that already puts you ahead of most competitors.</p></div>
+      <div class="card"><h3>How do I check a page's size without a tool?</h3><p>Open developer tools (F12), switch to the Network tab and reload. The bottom row shows total transferred size. Note that compressed transfer is usually smaller than uncompressed size — both numbers matter.</p></div>
+      <div class="card"><h3>Does page size actually make my site slower?</h3><p>Yes, directly: more bytes mean longer download times, especially on mobile connections. But render-blocking JavaScript, request count and server response time often affect perceived speed just as much as raw size.</p></div>
+      <div class="card"><h3>What typically weighs the most on a page?</h3><p>Images and video (often 60–80% of weight), then JavaScript bundles, fonts and third-party scripts like chat widgets and analytics. Start by compressing images — that's almost always the biggest win.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Try the page analysis now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/tjek-hvor-stor-din-hjemmeside-er" lang="da">Dansk version af denne guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/check-website-speed-without-lighthouse">Speed check without Lighthouse</a> &middot; <a href="/blog/technical-seo-check-website">Technical SEO audit</a> &middot; <a href="/blog/find-all-pages-on-a-website">Find all pages on a site</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(page-profile|deskuptime)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>

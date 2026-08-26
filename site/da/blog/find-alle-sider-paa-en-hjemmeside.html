@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find alle sider på en hjemmeside — 4 metoder der virker (2026)</title>
+<meta name="description" content="Sitemap.xml, crawling, søgemaskiner og CMS-eksport: fire måder at liste alle sider på et website — og hvilken metode der passer til hvad.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Find alle sider på en hjemmeside — 4 metoder der virker (2026)">
+<meta property="og:description" content="How to find every page on a website: sitemap.xml, crawling, search operators and CMS exports compared. Free tools included.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/find-alle-sider-paa-en-hjemmeside">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/find-alle-sider-paa-en-hjemmeside">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/find-all-pages-on-a-website">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/find-alle-sider-paa-en-hjemmeside">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Find alle sider på en hjemmeside — 4 metoder der virker (2026)", "description": "Sitemap.xml, crawling, søgemaskiner og CMS-eksport: fire måder at liste alle sider på et website — og hvilken metode der passer til hvad.", "url": "https://hermes-passiv.pages.dev/da/blog/find-alle-sider-paa-en-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Er sitemap.xml nok til at finde alle sider?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Et sitemap indeholder kun de sider CMS'et har registreret — typisk 80-95 %. Gamle sider, landing pages bygget uden for CMS og sider udelukket af plugins mangler. Brug sitemap som startpunkt, ikke som fuldstændig liste."}}, {"@type": "Question", "name": "Hvad er forskellen på crawling og et sitemap?", "acceptedAnswer": {"@type": "Answer", "text": "Et sitemap er en selvrapportering; en crawler følger links og finder faktisk tilgængelige sider. Crawling fanger sider sitemap'et mangler, men kan overse sider uden indgående links (orphan pages). Kombinér begge for fuldstændighed."}}, {"@type": "Question", "name": "Kan jeg bruge Google til at finde sider på et domæne?", "acceptedAnswer": {"@type": "Answer", "text": "Ja: søg site:ditsite.dk og bladr igennem, eller brug Search Console's sideindeks-rapport hvis du ejer sitet. Google viser kun det den har indekseret — nye eller noindex-sider dukker ikke op."}}, {"@type": "Question", "name": "Hvordan får jeg metadata for alle siderne på én gang?", "acceptedAnswer": {"@type": "Answer", "text": "Når du har URL-listen, kan du hente titel, beskrivelse og statuskode pr. side med et værktøj som Page Profile — batch-analyse giver dig en komplet tabel over manglende meta-tags og fejlsidekoder uden at åbne hver side manuelt."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; GRATIS</div>
+    <h1>Find alle siderne<br>på et website</h1>
+    <p class="subtitle">Du skal lave en SEO-audit, en migrering eller en redesign-plan — men hvor mange sider har sitet egentlig, og hvad hedder deres URLs? Fire metoder fra hurtigste til grundigste.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Analysér sider gratis &rarr;</a>
+      <a href="#metoder" class="btn-secondary">Se de fire metoder</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="metoder">
+  <div class="container">
+    <h2>De fire metoder</h2>
+    <ol>
+      <li><strong>Sitemap.xml:</strong> åbn ditsite.dk/sitemap.xml. Hurtigst og ofte 80-95 %
+      dækkende. Større sites splitter op i sitemap-indekser — følg linkene.</li>
+      <li><strong>Søgemaskine:</strong> søg site:ditsite.dk. Viser kun indekserede sider,
+      men kræver intet adgang. God som krydstjek.</li>
+      <li><strong>Crawler:</strong> lad et værktøj følge alle links internt. Finder sider
+      sitemap'et mangler, og opdager samtidig brudte links og redirects-kæder.</li>
+      <li><strong>CMS-eksport:</strong> WordPress, Shopify m.fl. kan eksportere en komplet
+      sideliste. Den mest autoritative kilde — hvis du har adgang til backend'en.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Når du har listen: kvalitetstjek</h2>
+    <p>En sideliste er kun begyndelsen. Det du typisk leder efter er problemerne:
+    dublerede titel-tags, manglende meta-beskrivelser, 404'er og redirect-kæder.
+    Det arbejdet kalder man en teknisk SEO-audit — og den kan automatiseres:</p>
+    <ul>
+      <li><strong>Statuskoder:</strong> alle sider skal svare 200. 301'er og 404'er på
+      lister betyder døde interne links.</li>
+      <li><strong>Titel + description:</strong> unikke, ikke-tomme, 30-60 / 70-160 tegn.</li>
+      <li><strong>Canonical:</strong> peger hver side på sig selv?</li>
+      <li><strong>Open Graph:</strong> deler siden ordentligt i sociale medier?</li>
+    </ul>
+    <p>Page Profile tager en URL og viser netop disse felter — Pro-versionen analyserer
+    flere sider ad gangen som batch:</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Analysér dine sider &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/tjek-hvor-stor-din-hjemmeside-er">sidestørrelse og vægt</a>,
+    <a href="/da/blog/canonisk-url-guide">canonical-tags forklaret</a> og
+    <a href="/da/blog/tjek-url-redirect-kaede">redirect-kæder</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er sitemap.xml nok til at finde alle sider?</h3><p>Nej. Et sitemap indeholder kun de sider CMS'et har registreret — typisk 80-95 %. Gamle sider, landing pages bygget uden for CMS og sider udelukket af plugins mangler. Brug sitemap som startpunkt, ikke som fuldstændig liste.</p></div>
+      <div class="card"><h3>Hvad er forskellen på crawling og et sitemap?</h3><p>Et sitemap er en selvrapportering; en crawler følger links og finder faktisk tilgængelige sider. Crawling fanger sider sitemap'et mangler, men kan overse sider uden indgående links (orphan pages). Kombinér begge for fuldstændighed.</p></div>
+      <div class="card"><h3>Kan jeg bruge Google til at finde sider på et domæne?</h3><p>Ja: søg site:ditsite.dk og bladr igennem, eller brug Search Console's sideindeks-rapport hvis du ejer sitet. Google viser kun det den har indekseret — nye eller noindex-sider dukker ikke op.</p></div>
+      <div class="card"><h3>Hvordan får jeg metadata for alle siderne på én gang?</h3><p>Når du har URL-listen, kan du hente titel, beskrivelse og statuskode pr. side med et værktøj som Page Profile — batch-analyse giver dig en komplet tabel over manglende meta-tags og fejlsidekoder uden at åbne hver side manuelt.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Prøv side-analysen nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tjek-hvor-stor-din-hjemmeside-er" lang="da">Sidestørrelse</a> &middot; <a href="/da/blog/canonisk-url-guide" lang="da">Canonical-guide</a> &middot; <a href="/da/blog/tjek-url-redirect-kaede" lang="da">Redirect-kæder</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(page-profile|deskuptime)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>
