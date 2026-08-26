@@ -606,7 +606,7 @@ def main():
         # reciprocal cross-link from EN post
         src = os.path.join(SITE, f'blog/{page["en_slug"]}.html')
         s = open(src).read()
-        if page['slug'] not in s:
+        if ('Dansk version: <a href="%s"' % (f'{BASE}/da/blog/{page["slug"]}')) not in s:
             add = ('<div style="text-align:center;margin-top:16px;"><p>Dansk version: '
                    '<a href="%s" style="color:var(--color-accent);">%s</a></p></div>\n'
                    % (f'{BASE}/da/blog/{page["slug"]}', page['da_link_text']))

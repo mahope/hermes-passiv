@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost og tilgængelighed: gør publikationer EAA-compliant (2026)</title>
+<meta name="description" content="Gør Ghost-publikationer compliant med European Accessibility Act og WCAG 2.2 AA: tema-retter, Koenig-indholdsvaner, medlemsflows og en gratis scannings-workflow — på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Ghost og tilgængelighed: gør publikationer EAA-compliant">
+<meta property="og:description" content="Gør Ghost-publikationer compliant med European Accessibility Act og WCAG 2.2 AA: tema-retter, Koenig-indholdsvaner, medlemsflows og en gratis scannings-workflow — på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/ghost-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/ghost-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/ghost-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Ghost og tilgængelighed: gør publikationer EAA-compliant", "description": "Gør Ghost-publikationer compliant med European Accessibility Act og WCAG 2.2 AA: tema-retter, Koenig-indholdsvaner, medlemsflows og en gratis scannings-workflow — på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/ghost-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA virkelig nyhedsbreve og blogs?", "acceptedAnswer": {"@type": "Answer", "text": "Hvis tjenesten er forbrugervendt og kommerciel — betalte abonnementer, e-handel med digitale produkter — ja. Gratis personlige blogs falder som regel uden for EAA, men WCAG-compliant publicering koster lidt og beskytter rækkevidde; der er sjældent en grund til ikke at rette basen."}}, {"@type": "Question", "name": "Er Ghost selv tilgængeligt ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Ghost-kernen er rimeligt solid: ren HTML-output, labelde portal-komponenter, fornuftige defaults. De dominerende defektkilder er tredjepartstemаer og forfatteres indholdsvaner — derfor betyder tema-gennemgang og redaktionelle regler mere end platformvalget."}}, {"@type": "Question", "name": "Mit tema har ingen fokus-styles. Quick fix?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — tilføj :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; } under Code Injection. Det respekterer temapaletten og genskaber synligt tastaturfokus hele sitet i én linje."}}, {"@type": "Question", "name": "Kan jeg automatisere Ghost-tilgængelighedstjek?", "acceptedAnswer": {"@type": "Answer", "text": "Delvist. Automatiske værktøjer fanger cirka 30-50 % af problemerne — kontrast, manglende alt, struktur, labels. Tastaturbetjening, meningsfulde alt-beskrivelser og embed-tilgængelighed kræver menneskelig gennemgang. Kombinér: scan automatisk efter hver temaændring, gennemgå manuelt pr. udgivelse."}}, {"@type": "Question", "name": "Hjælper tilgængelighed SEO?", "acceptedAnswer": {"@type": "Answer", "text": "Flere tilgængelighedssignaler overlapper SEO: rigtig overskriftshierarki, beskrivende linktekst, alt-tekst, hurtig semantisk HTML, mobilvenlige layouts. Tilgængelighedsarbejde forbedrer typisk crawlbarhed og placering som sideeffekt — men det bør gøres for brugerne først."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">GHOST &middot; TILGÆNGELIGHED &middot; EAA/WCAG 2.2</div>
+    <h1>Ghost og tilgængelighed:<br>gør publikationer EAA-compliant</h1>
+    <p class="subtitle">Tema-retter, indholdsvaner og tjek af medlemsflows der bringer et Ghost-site op på WCAG 2.2 AA — uden at bygge det forfra.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Ghost driver nyhedsbreve, betalte publikationer og medlemskabsbaserede sites — netop de kommersielle forbrugertjenester European Accessibility Act dækker. Siden 28 juni 2025 skal e-handelslignende tjenester og forbrugervendte digitale tjenester være opfattelige, betjenelige, forståelige og robuste — de fire WCAG-principper. For en Ghost-udgiver betyder det at temaet, artikelindholdet og især tilmeldings- og checkout-flowene alle har brug for opmærksomhed. Den gode nyhed: et moderne Ghost-setup har færre bevægelige dele end de fleste platforme, så WCAG 2.2 AA er reelt opnåeligt.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🎨 Temaet først</h3><p>De fleste Ghost-problemer bor i temaet, ikke kernen: kontrast, fokus-tilstande og baggrundsbilleder uden alt-tekst.</p></div>
+      <div class="card"><h3>✍️ Koenig er ren — men ikke sikker</h3><p>Editoren producerer pæn HTML som default, men den gennemtvinger ikke alt-tekst eller overskriftsdisciplin. Redaktionelle regler fylder hullet.</p></div>
+      <div class="card"><h3>💳 Medlemsflowene tæller</h3><p>Under EAA er en betalingsflow som assistive technology-brugere ikke kan gennemføre et compliance-svigt — ikke bare et WCAG-nitpick.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tema-niveau tjek</h2>
+    <div class="problem-cards"><div class="card"><h3>🎨 Farvekontrast</h3><p>Mange magasin-temaer bruger lysegrå tekst på hvid eller tekst oven på gradient-hero-billeder. Brødtekst kræver 4,5:1; store overskrifter 3:1; input og ikoner 3:1. Ret én gang i temaets CSS eller custom-indstillinger — gavn alle steder.</p></div><div class="card"><h3>⌨️ Tastatur &amp; fokus</h3><p>Tab dig igennem header-navigation, post-kort og member-portalen. Dropdowns og kort-overlays er de sædvanlige fælder. Sørg for synlige :focus-visible-styles.</p></div><div class="card"><h3>🖼️ Billeder &amp; kort</h3><p>Post-thumbnails renderet som background-image-divs bærer ingen alt-tekst. Foretræk img-elementer fødet fra postens feature-billede med meningsfuld alt-tekst arvet fra indlægget.</p></div><div class="card"><h3>🔤 Typografi &amp; zoom</h3><p>Verificér at layoutet overlever 200 % browser-zoom og 320 px bredde uden vandret scrolling (WCAG 1.4.10). Fluid type-systemer klarer det; gamle bryder sammen.</p></div><div class="card"><h3>🧭 Struktur</h3><p>Én h1 pr. side (post-titlen), rigtig overskriftsorden i artikler, landmarks i temaets default-layout.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Koenig-indholdsvaner</h2>
+    <p>Ghost's Koenig-editor producerer ren HTML som standard — bedre end de fleste rich-text-editorer — men forfattere kan stadig lave utilgængeligt indhold:</p>
+    <p><strong>Alt-tekst:</strong> billedkortet foreslår alt-tekst men ingen bliver tvunget til at udfylde det. Gør det til en redaktionel regel: ethvert informativt billede får beskrivende alt; dekorative markeres eksplicit som sådan.</p>
+    <p><strong>Embeds:</strong> YouTube-, Twitter/X- og andre embed-korte injicerer iframes du ikke styrer. Giv hvert embed en forudgående sætning der beskriver hvad læseren vil se/høre, da iframe-indhold er uigennemsigtigt for din egen markup.</p>
+    <p><strong>Overskriftsdisciplin:</strong> forfattere fra Word bruger fed tekst i stedet for overskrifter. Skærmlæserebrugere navigerer via overskriftslister — en artikel uden rigtige h2'er er unavigérbar.</p>
+    <p><strong>Linktekst:</strong> undgå nøgne "her" og "denne artikel". Linktekst skal holde til at blive læst uden kontekst.</p>
+    <p><strong>Gallerier:</strong> sørg for at hvert galleribillede har egen alt-tekst — ikke bare en samlet caption.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Medlemsflows</h2>
+    <p>Dette er delen der er unik for Ghost, og let at gå glip af. Tilmelding, login, checkout og kontostyring er brugerrejser, og under EAA er en betalingsrejse som assistive technology-brugere ikke kan gennemføre et compliance-svigt. Tjek at:</p>
+    <p>e-mail-input og fejlbeskeder er korrekt labelde og annonceret (fejltekst knyttet til feltet via aria-describedby); Stripe-checkout'en Ghost sender videre til er konfigureret med tilgængelige branding-indstillinger; magic-link-mails har meningsfuld linktekst ("Åbn dit login-link" — ikke "Klik her"); og member-portalen er brugbar med tastatur alene. Test hele rejsen selv med en skærmlæser én gang — det tager tyve minutter og afslører mere end noget automatisk værktøj.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Verifikationsloop</h2>
+    <p>En gentagelig QA-loop for et Ghost-site:</p>
+    <p><strong>1. Automatisk scanning</strong> af forside, en tag-side, en komplet artikel, /#/portal og tilmelingssiderne. Statiska scannere fanger det mekaniske lag hurtigt — forvent kontrast-, alt-tekst- og overskriftsfund ved første kørsel.</p>
+    <p><strong>2. Keyboard-pass</strong> gennem navigation, post-liste, artikel, kommentarer (hvis slået til) og hele tilmelding-til-checkout-rejsen.</p>
+    <p><strong>3. Skærmlæser-sample:</strong> én artikel start-til-slut med VoiceOver eller NVDA, plus tilmeldingsflowet.</p>
+    <p><strong>4. Erklæring:</strong> publicér en tilgængelighedserklæring med conformance-status, kendte begrænsninger og kontaktkanal. Kommercielle udgivere i EAA-omfang bør have den synlig fra footeren.</p>
+    <p><strong>5. Regressionsvane:</strong> kør den automatiske scanning igen efter hver tema-opdatering eller ny udgivelse — temaer ændres oftere end folk tror, og regressioner er lydløse.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA virkelig nyhedsbreve og blogs?</h3><p>Hvis tjenesten er forbrugervendt og kommerciel — betalte abonnementer, e-handel med digitale produkter — ja. Gratis personlige blogs falder som regel uden for EAA, men WCAG-compliant publicering koster lidt og beskytter rækkevidde; der er sjældent en grund til ikke at rette basen.</p></div>
+      <div class="card"><h3>Er Ghost selv tilgængeligt ud af boksen?</h3><p>Ghost-kernen er rimeligt solid: ren HTML-output, labelde portal-komponenter, fornuftige defaults. De dominerende defektkilder er tredjepartstemаer og forfatteres indholdsvaner — derfor betyder tema-gennemgang og redaktionelle regler mere end platformvalget.</p></div>
+      <div class="card"><h3>Mit tema har ingen fokus-styles. Quick fix?</h3><p>Ja — tilføj :focus-visible { outline: 2px solid currentColor; outline-offset: 3px; } under Code Injection. Det respekterer temapaletten og genskaber synligt tastaturfokus hele sitet i én linje.</p></div>
+      <div class="card"><h3>Kan jeg automatisere Ghost-tilgængelighedstjek?</h3><p>Delvist. Automatiske værktøjer fanger cirka 30-50 % af problemerne — kontrast, manglende alt, struktur, labels. Tastaturbetjening, meningsfulde alt-beskrivelser og embed-tilgængelighed kræver menneskelig gennemgang. Kombinér: scan automatisk efter hver temaændring, gennemgå manuelt pr. udgivelse.</p></div>
+      <div class="card"><h3>Hjælper tilgængelighed SEO?</h3><p>Flere tilgængelighedssignaler overlapper SEO: rigtig overskriftshierarki, beskrivende linktekst, alt-tekst, hurtig semantisk HTML, mobilvenlige layouts. Tilgængelighedsarbejde forbedrer typisk crawlbarhed og placering som sideeffekt — men det bør gøres for brugerne først.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/wcag-22-aendringer" style="color:var(--color-accent);">WCAG 2.2-ændringer</a> &middot; <a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);">Overlays og EAA</a> &middot; <a href="/da/blog/eaa-haandhaevelse-2026" style="color:var(--color-accent);">EAA-håndhævelse i 2026</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/ghost-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>
