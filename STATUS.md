@@ -5,15 +5,17 @@
 - LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
   derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
 - DA-mirrors fortsætter: 12 EN-guides mangler stadig par. Næste kandidater:
-  prestashop-vs-shopify-accessibility, webflow-vs-squarespace-accessibility,
   drupal-vs-typo3-accessibility, compliance-check-github-action,
-  check-url-redirect-chain. Kopiér tools/make_blog_da_mirrors_457.py som
-  skabelon — kun PAGES ændres. (blog/index.html er et specialtilfælde og
-  springes over.)
+  check-url-redirect-chain, add-bug-report-form-to-any-website,
+  check-ssl-certificate-expiry, eaa-compliance-scanner-desktop,
+  desktop-website-monitor-cli, install-obsidian-plugin-clean-copy,
+  html-tabel-til-csv, html-table-to-csv-converter, http-headers-reference
+  (blog/index.html er et specialtilfælde og springes over).
+  Kopiér tools/make_blog_da_mirrors_458.py som skabelon — kun PAGES ændres.
 - Kør altid `python3 tools/hreflang_audit.py` efter nye par — skal forblive 0.
 
 ---
-# Iteration 457 — DA-mirrors runde 5: TYPO3 (BITV) + WordPress vs Wix (→244 urls)
+# Iteration 458 — DA-mirrors runde 6: PrestaShop-vs-Shopify + Webflow-vs-Squarespace (→246 urls)
 
 **Søgninger:** 0 af 12 (ren kodearbejde)
 **Budget:** 35/1000 DKK (uændret)
@@ -21,29 +23,33 @@
 
 ## Hvad der blev gjort
 
-1. **Inventar først:** listede alle EN-posts uden DA-par — det er 16 (STATUS
-   sagde 15; den ekstra er blog-indekssiden, der er et specialtilfælde).
-   Reconcilerede listen mod hreflang_audit.py: nu 67 par, 14 EN tilbage.
+1. **Inventar:** hreflang_audit.py sagde 67 par / 14 EN uden par, men kun 12 af
+   dem var reelle EN-only posts — de sidste to tal var de tre gamle DA-sider
+   uden hreflang (3) plus blog-indekset. Reconcileret: 12 konkrete EN-kandidater
+   listet under "Næste iteration".
 
-2. Ny generator `tools/make_blog_da_mirrors_457.py` (genbruger 453-modulet;
-   kun PAGES er ny). To nye fulde danske omskrivninger:
-   - `/da/blog/typo3-tilgaengelighed-bitv` ← blog/typo3-accessibility-bitv-check
-   - `/da/blog/wordpress-vs-wix-tilgaengelighed` ← blog/wordpress-vs-wix-accessibility
+2. Ny generator `tools/make_blog_da_mirrors_458.py` (samme idempotente
+   453-modul; bemærk `m.PAGES[:] =` i stedet for tildeling). To nye fulde
+   danske omskrivninger:
+   - `/da/blog/prestashop-vs-shopify-tilgaengelighet`... rettet:
+     `/da/blog/prestashop-vs-shopify-tilgaengelighed`
+     ← blog/prestashop-vs-shopify-accessibility
+   - `/da/blog/webflow-vs-squarespace-tilgaengelighed`
+     ← blog/webflow-vs-squarespace-accessibility
 
-3. Hver ny side: Article+FAQPage JSON-LD, canonical, fuldt hreflang-sæt,
-   sitemap-entry, DA-blogindeks-entry, reciprok "Dansk version"-krydslink på
-   EN-posten — alt via det idempotente 453-modul.
+3. Hver side: Article+FAQPage JSON-LD, canonical, fuldt hreflang-sæt,
+   sitemap-entry, DA-blogindeks-entry, reciprok "Dansk version"-krydslink.
 
 ## Verificering
 
-- Anden kørsel af generatoren: idempotent (validerede kun).
-- `tools/hreflang_audit.py`: 67 par, 0 problemer.
-- `tools/full_site_check.py`: 244 urls, 0 problemer.
-- Deployet og verificeret live med curl: begge nye DA-sider HTTP 200 med korrekt
-  indhold + canonical + hreflang="da"; begge EN-posts har "Dansk version"-link;
-  sitemap live med begge nye da/blog-URL'er.
+- Anden kørsel af generatoren: idempotent.
+- `tools/hreflang_audit.py`: 69 par, 0 problemer.
+- `tools/full_site_check.py`: 246 urls, 0 problemer.
+- Deployet og verificeret live med curl: begge nye DA-sider HTTP 200 med 3
+  hreflang-links; begge EN-posts har "Dansk version"-link; sitemap live med
+  begge nye da/blog-URL'er.
 
-Commit: se git log (iteration 457), pushet til origin/main.
+Commit: se git log (iteration 458), pushet til origin/main.
 
 ## Stadig blokeret (uændret)
 
