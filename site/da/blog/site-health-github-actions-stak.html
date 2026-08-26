@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site health fra GitHub Actions: gratis overvågning, smoketests og fejlrapporter</title>
+<meta name="description" content="Samlet guide til at holde øje med din hjemmeside gratis: daglig oppetids- og compliance-overvågning, smoketests efter hver udgivelse og validering af fejlrapporter — alt i GitHub Actions, uden SaaS.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Site health fra GitHub Actions">
+<meta property="og:description" content="Overvågning, smoketests og fejlrapportering i ét gratis workflow-stack — tre guides, nul SaaS-abonnementer.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/site-health-github-actions-stak">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Site health fra GitHub Actions">
+<meta name="twitter:description" content="Overvågning, smoketests og fejlrapportering i ét gratis workflow-stack — tre guides, nul SaaS-abonnementer.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/site-health-github-actions-stak">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/monitor-website-github-actions-free">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/site-health-github-actions-stak">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Site health fra GitHub Actions", "description": "Samlet indgang til gratis site health: overvågning, smoketests og fejlrapporter i GitHub Actions.", "url": "https://hermes-passiv.pages.dev/da/blog/site-health-github-actions-stak"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">OVERSIGT · SITE HEALTH</div>
+    <h1>Hold &oslash;je med dit site fra GitHub Actions<br>&mdash; helt uden SaaS-abonnement</h1>
+    <p class="subtitle">Tre sm&aring; workflows d&aelig;kker det hele: daglig overv&aring;gning af oppetid og compliance, smoketests efter hver udgivelse og automatisk validering af fejlrapporter. Alle tre guider er gratis og kr&aelig;ver ingen tredjepartstjeneste.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+
+    <h2 id="tre-dele">De tre dele af stakken</h2>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/da/blog/overvaag-hjemmeside-github-actions-gratis" style="color:inherit;">1. Daglig overvågning: oppetid, SSL, headers og compliance →</a></h3>
+      <p>Et cron-job der kører hver morgen og tjekker at sitet svarer, SSL-certifikatet ikke udløber inden længe, sikkerhedsheaders er intakte, og GDPR-basics stadig er på plads. Erstatter overvågnings-SaaS til 70–100 kr./md.</p>
+    </div>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/da/blog/roegtest-efter-udgivelse-statiske-sites" style="color:inherit;">2. Smoketests efter hver udgivelse →</a></h3>
+      <p>"Deployet lykkedes" og "sitet virker" er to forskellige spørgsmål. To workflow-trin tjekker begge efter hver release — oppetid og compliance-scan — så en fjernet privatlivspolitik eller et i stykker redirect opdages straks.</p>
+    </div>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/da/blog/tilfoej-fejlrapport-formular-hjemmeside" style="color:inherit;">3. Fejlrapporter direkte fra besøgende →</a></h3>
+      <p>Lad besøgende melde fejl med et lille script på siden, og lad CI validere rapporterne, før de når videre. Fejl bliver til strukturerede data i dit repo i stedet for en indbakke du aldrig får læst.</p>
+    </div>
+
+    <h2 id="kom-i-gang">Kom i gang på ti minutter</h2>
+    <ol>
+      <li>Start med den <strong>daglige overvågning</strong> — den giver mest værdi for mindst arbejde.</li>
+      <li>Tilføj <strong>smoketests</strong>, når du deployer oftere end cirka én gang om ugen.</li>
+      <li>Tilføj <strong>fejlrapport-formularen</strong>, hvis du har rigtige besøgende der kan støde på problemer.</li>
+    </ol>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Prøv compliance-delen lige nu</h3>
+      <p>Ingen repository nødvendig for at se hvad scanneren finder på dit live-site — gratis, uden tilmelding, resultat på cirka ét minut.</p>
+      <a href="/da/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan dit site gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/da/">← Forside</a> &middot; <a href="/da/compliance-site-check">Gratis scanner</a></p>
+</footer>
+</body>
+</html>
