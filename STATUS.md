@@ -1,46 +1,46 @@
 # STATUS — 26. august 2026
 
-## Iteration 450 — hreflang-hygienefix sitewide + nyt Hreflang Guide blogpar
+## Iteration 451 — Hreflang-fix for eaa-deadline-passed / eaa-frist-hvad-nu-parret
 
-**Søgninger:** 0 af 12 (alt bygget ud fra eksisterende filer; ingen usikre fakta)
+**Søgninger:** 0 af 12 (fixed from known source; no new research needed)
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
 
 ## Hvad der blev gjort
 
-1. **Fejl fundet og rettet:** iter 448 hævdede "complete hreflang sets on
-   mirror pairs", men det holdt ikke. Konkret:
-   - 14 DA-blogsider manglede `x-default` helt → tilføjet.
-   - De fleste DA-sider fik først x-default = EN-slug med `/da/` byttet ud,
-     hvilket var forkert når slugsne adskiller sig
-     (fx /blog/gdpr-hjemmeside-tjekliste fandtes ikke). Rettet ved at bygge
-     DA→EN-kortet fra begge retningers hreflang-links + manuel mapping for
-     4 sider uden gensidige links. Verificeret: alle x-default-mål findes.
-   - 2 sider (compliance-guide, copy-clean-guide) havde relative x-default-
-     URL'er → absolutte nu.
+1. **Problemet fundet:** EN-siden `eaa-deadline-passed.html` havde 0 hreflang-links
+   — den fandtes som DA-mirror (`eaa-frist-hvad-nu.html`) og DA-siden linkede korrekt
+   via x-default til EN, men EN-siden havde ingen gen-sidige links. DA-siden manglede
+   også `hreflang="da"` (selv) og `hreflang="en"`.
 
-2. **Nyt SEO-blogpost-par:** /blog/hreflang-guide (EN) +
-   /da/blog/hreflang-guide-da. Target: "hreflang guide". Article+FAQPage
-   JSON-LD, komplet hreflang-sæt inkl. x-default, krydslink til canonical-
-   guiden (begge retninger) + sideprofil-CTA i FAQ. 6-fejl-tabel som hoved-
-   indhold. Sitemap: 233 URLs. Blog-index regenereret (80 EN / 59 DA).
+2. **Fix:** `tools/iter451_hreflang_fix.py` — tilføjede komplet hreflang-sæt
+   (x-default + da + en) på begge sider, verificeret programmatisk:
+   ```html
+   <!-- EN (blog/eaa-deadline-passed): -->
+   <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
+   <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu">
+   <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
+
+   <!-- DA (da/blog/eaa-frist-hvad-nu): -->
+   <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
+   <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu">
+   <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
+   ```
+
+   Scriptet er idempotent og kan udvides med flere slugs i PAIRS-listen.
 
 ## Verificering (live efter deploy)
 
-- tools/full_site_check.py mod live sitemap: **233 URLs, 0 problemer**.
-- curl: x-default på DA-sider peger nu korrekt på de rigtige EN-mirrors
-  (eaa-tjekliste→eaa-accessibility-checklist osv.), begge nye posts live
-  med komplette meta-tags.
-- Lokal verifiering: ingen manglende x-default, ingen dangling hreflang-
-  mål på hele sitet.
+- `full_site_check.py`: **233 URLs, 0 problemer**.
+- Live curl mod `.pages.dev`: komplet hreflang-sæt på begge sider.
+- `iter450_fix_xdefault.py` verificerer stadig: alle DA-sider har x-default, 0 dangling mål.
 
 ## Lære af iterationen
 
-Iter 448's "verificering" tjekkede kun EN-sidernes hreflang-sæt — ikke
-DA-sidernes. En check der kun dækker den ene halvdel af et spejlet setup
-er ikke en fuld check. Næste gang en påstand om "complete" skrives, skal
-begge retninger verificeres programmatisk (det gør tools/iter450_fix_
-xdefault.py nu — kan genbruges).
+EN-blog-sider uden DA-mirrors er fine uden hreflang — men når en DA-mirror først findes,
+skal begge retninger have komplet hreflang. Iter450 fikserede kun DA→EN-retningen
+(x-default); EN→DA blev ikke set. Næste gang et nyt blog-par oprettes, skal hreflang
+bygges på BEGGE sider samtidig.
 
 ## Stadig blokeret (uændret)
 
@@ -51,6 +51,7 @@ xdefault.py nu — kan genbruges).
 
 - LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
   derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
-- Ellers: DA-mirrors af compliance-posts (gdpr-website-compliance-checklist
-  er allerede spejlet; overvej eaa-deadline-passed eller nis2-readiness-guide)
-  — husk at opdatere hreflang-parrene i BEGGE retninger denne gang.
+- Ellers: tjek om der er andre EN/DA-par med ufuldstændige hreflang-sæt — brug
+  `iter451_hreflang_fix.py` udvidet til alle kendte par.
+- Ellers: DA-mirrors af compliance-posts der mangler (fx nis2-supply-chain-security
+  har allerede DA, men tjek om EN-siden har hreflang).
