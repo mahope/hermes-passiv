@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post-Deploy Smoke Tests for Static Sites: 5-Minute GitHub Actions Setup</title>
+<meta name="description" content="Your deploy succeeded — but does the site actually work? A two-step GitHub Actions smoke test checks uptime and EU-compliance after every release. Free, no secrets, no SaaS.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Post-Deploy Smoke Tests for Static Sites">
+<meta property="og:description" content="Two free GitHub Actions steps verify uptime and compliance after every deploy — no SaaS, no secrets.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/post-deploy-smoke-tests-static-sites">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Post-Deploy Smoke Tests for Static Sites">
+<meta name="twitter:description" content="Two free GitHub Actions steps verify uptime and compliance after every deploy — no SaaS, no secrets.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/post-deploy-smoke-tests-static-sites">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Post-Deploy Smoke Tests for Static Sites", "description": "Your deploy succeeded \u2014 but does the site actually work? A two-step GitHub Actions smoke test checks uptime and EU-compliance after every release. Free, no secrets, no SaaS.", "url": "https://hermes-passiv.pages.dev/blog/post-deploy-smoke-tests-static-sites", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<header class="hero">
+  <div class="container">
+    <div class="badge">GUIDE · DEPLOYMENT</div>
+    <h1>Post-Deploy Smoke Tests for Static Sites:<br>A 5-Minute CI Setup</h1>
+    <p class="subtitle">Your deploy succeeded. Is the site actually up? Does the privacy policy still exist? A two-step GitHub Actions job answers both after every release — free, no monitoring SaaS, no account.</p>
+    <div class="hero-cta">
+      <a href="#content" class="btn-primary">Read the setup</a>
+      <a href="/compliance-site-check" class="btn-secondary">Scan your site free →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 5 minutes</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="why">The gap between "deployed" and "works"</h2>
+    <p>Static-site pipelines report success when files land on the CDN — not when the site serves correctly. A misconfigured redirect rule, an expired certificate nobody noticed, or a build that silently dropped a page all pass the deploy step green. For static sites especially, "the upload finished" and "the site works" are different questions.</p>
+    <p>A post-deploy smoke test closes that gap: one job that hits your live URL right after every release and fails loudly if anything is wrong.</p>
+
+    <h2 id="setup">The workflow</h2>
+    <p>Two steps, no secrets, no third-party service. Save as <code>.github/workflows/post-deploy.yml</code>:</p>
+    <pre style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85em;"><code>name: Post-deploy smoke test
+on:
+  deployment_status:            # runs on real deploys (Vercel/Cloudflare/etc.)
+    states: [success]
+  workflow_dispatch:            # also runnable manually
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Site responds
+        uses: mahope/deskuptime@v1
+        with:
+          url: https://your-site.com
+
+      - name: Compliance intact
+        uses: mahope/compliance-site-check@v2
+        with:
+          url: https://your-site.com</code></pre>
+    <p>Replace <code>your-site.com</code> with your domain. Both steps are pinned to floating major tags so fixes arrive automatically without breaking changes.</p>
+
+    <h2 id="what">What each step checks</h2>
+    <div class="problem-cards">
+      <div class="card"><h3><code>deskuptime@v1</code></h3><p>A dependency-free uptime check: fetches the URL and fails the step if the page does not respond as expected. Zero npm installs, zero config files — the whole action is a single YAML step you can read in ten seconds.</p></div>
+      <div class="card"><h3><code>compliance-site-check@v2</code></h3><p>Runs nine GDPR/EAA-oriented checks against the live page: security headers, privacy-policy reachability, cookie-consent signals, and more. If a redesign quietly dropped the consent banner, this step turns red before your lawyer does.</p></div>
+    </div>
+
+    <h2 id="schedule">Add a daily schedule (optional)</h2>
+    <p>The same file doubles as a daily monitor — add a cron trigger:</p>
+    <pre style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85em;"><code>on:
+  deployment_status:
+    states: [success]
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+  workflow_dispatch:</code></pre>
+    <p>Now a certificate expiry or host outage surfaces in the same Actions tab your team already watches — instead of an email digest from yet another SaaS dashboard nobody logs into.</p>
+
+    <h2 id="costs">What it replaces</h2>
+    <p>Uptime-monitoring SaaS starts around $10–15/month per site, and compliance audits run $2,000–10,000 per engagement. Neither catches regressions between check-ins. This setup runs continuously on infrastructure you already have: free for public repositories, included minutes for private ones.</p>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Try the compliance half right now</h3>
+      <p>No repo needed to see what the scanner finds on your live site — free, no signup, results in about a minute.</p>
+      <a href="/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan your site free →</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Home</a> · <a href="/deskuptime/">Deskuptime</a> · <a href="/free-tools">Free tools</a> · <a href="/#blog">Blog</a></p>
+</footer>
+</body>
+</html>

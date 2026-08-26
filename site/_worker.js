@@ -1076,6 +1076,12 @@ async function handleWaitlist(request, env) {
     if (!valid) {
       return jsonResp({ ok: false, error: 'Please enter a valid email address.' }, 400);
     }
+    // Honest-metrics rule: never count our own smoke tests as real signups.
+    const domain = email.split('@')[1];
+    if (/^(example|test|invalid|localhost)\./.test(domain) || /\.local$/.test(domain)
+        || /^(foo|bar|baz|user|admin|test)@/.test(email) || domain === 'mahope.dk') {
+      return jsonResp({ ok: false, error: 'Test domains are not accepted.' }, 422);
+    }
     // optional signup source (e.g. 'book-nis2-for-agencies', 'compliance-ai') — lets
     // stats show WHERE leads come from without storing anything personal beyond email
     let source = String(body.source || '').trim().toLowerCase().slice(0, 40);
@@ -2048,8 +2054,9 @@ async function handleComplianceScan(request, url, env) {
  * Until the LS product is created, checkout_url is null and the
  * frontend renders a "coming soon" state.
  * KV keys: cc-pro-checkout (Clean Copy Pro), pp-pro-checkout (Page Profile
- * Pro) — set via tools/set-checkout-url.sh after running lemon-setup.js.
- * ?product=pp returns the Page Profile Pro entry; default is clean-copy-pro.
+ * Pro), du-pro-checkout (Deskuptime Pro) — set via tools/set-checkout-url.sh
+ * after running lemon-setup.js.
+ * ?product=pp / ?product=du select those entries; default is clean-copy-pro.
  */
 async function handleCheckout(url, env) {
   const corsHeaders = {
@@ -2059,13 +2066,20 @@ async function handleCheckout(url, env) {
     'Content-Type': 'application/json',
   };
 
-  const which = url.searchParams.get('product') === 'pp' ? 'pp' : 'cc';
-  const kvKey = which === 'pp' ? 'pp-pro-checkout' : 'cc-pro-checkout';
+  const which = url.searchParams.get('product') === 'pp' ? 'pp'
+    : url.searchParams.get('product') === 'du' ? 'du' : 'cc';
+  const kvKey = { pp: 'pp-pro-checkout', du: 'du-pro-checkout', cc: 'cc-pro-checkout' }[which];
   const meta = which === 'pp'
     ? {
         product: 'page-profile-pro',
         price: '$19/year',
         note: 'Pro adds comparison mode, batch mode and client-ready HTML reports to the page-profile CLI.',
+      }
+    : which === 'du'
+    ? {
+        product: 'deskuptime-pro',
+        price: '$19 one-time',
+        note: 'One-time license: desktop tray app, email & webhook alerts, unlimited URLs. Up to 3 machines, all v1.x updates.',
       }
     : {
         product: 'clean-copy-pro',

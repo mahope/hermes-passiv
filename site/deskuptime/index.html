@@ -404,6 +404,11 @@ $ <span class="accent">npx github:mahope/deskuptime check</span> https://example
       &#x23f3; License sales starting soon via Lemon Squeezy.<br>
       Leave your email and we'll notify you.
     </div>
+    <p style="margin-top:18px;display:none" id="pro-buy-wrap">
+      <a id="pro-buy-btn" class="btn" href="#"
+         style="background:var(--accent);color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px">Buy Pro — $19 one-time &rarr;</a>
+      <span style="display:block;font-size:12px;color:var(--muted);margin-top:8px">Instant license key by email · 30-day money-back guarantee</span>
+    </p>
     <form id="pro-waitlist-form" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
       <input type="email" id="pro-email" placeholder="your@email.com" required
              style="padding:11px 14px;border:1px solid var(--line);border-radius:6px;font-size:14px">
@@ -453,12 +458,18 @@ $ <span class="accent">npx github:mahope/deskuptime check</span> https://example
   // Waitlist signup via main site API (unified, test-domains rejected server-side)
   var WAITLIST = '/api/waitlist';
 
-  // Waitlist count
-  fetch(WAITLIST, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: '__probe__', source: 'count-check' }) })
-    .then(function(r){ return r.json(); }).then(function(d){
-      // Don't increment — count endpoint is read-only via stats; show count from /api/stats
-  }).catch(function(){});
+  // Live checkout: if a Deskuptime Pro checkout URL exists in KV,
+  // swap the waitlist block for the buy button automatically.
+  fetch('/api/checkout?product=du').then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.live && d.checkout_url) {
+      var btn = document.getElementById('pro-buy-btn');
+      if (btn) btn.href = d.checkout_url;
+      var wrap = document.getElementById('pro-buy-wrap');
+      if (wrap) wrap.style.display = 'block';
+      var status = document.getElementById('pro-status');
+      if (status) status.style.display = 'none';
+    }
+  }).catch(function(){ /* stay on waitlist state */ });
 
   document.getElementById('pro-waitlist-form').addEventListener('submit', async function(e){
     e.preventDefault();

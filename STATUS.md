@@ -1,5 +1,55 @@
 # STATUS — 26. august 2026
 
+## Iteration 469 — Deskuptime Pro klar til betaling + ærligheds-hul lukket + smoke-test-guide
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Bygget
+1. **Deskuptime Pro kan nu tage imod penge** (når LS-nøglen kommer): `/api/checkout`
+   understøtter `?product=du` (`du-pro-checkout` i KV), og deskuptime-siden har en
+   dynamisk købsknap der automatisk erstatter ventelisten når checkout-URL findes.
+   Samme mønster som Page Profile Pro. Aktivering:
+   `npx wrangler kv key put du-pro-checkout "<LS-url>" --namespace-id 215f8a92… --remote`.
+   Verificeret live: API svarer med deskuptime-pro/$19 one-time.
+2. **Ærlighedshul lukket:** handleWaitlist's kommentar påstod at test-domæner blev
+   afvist — koden afviste ingenting. Nu afvises example.com/test/invalid/localhost/
+   *.local/foo@/bar@/test@/mahope.dk med HTTP 422, så egne roegtests aldrig kan tælle
+   som tilmeldinger igen. Verificeret live: example.com → afvist.
+   **Egen fejl rettet:** min gmail-probe under verifikation blev talt — nøgle +
+   tællere ryddet i KV via wrangler; waitlist står nu på det korrekte tal (10).
+3. Fjernet død `__probe__`-fetch fra deskuptime-siden (sendte spildte POSTs ved load).
+4. Ny blogpair: `/blog/post-deploy-smoke-tests-static-sites` +
+   `/da/blog/roegtest-efter-udgivelse-statiske-sites` — to-trins post-deploy job
+   (deskuptime@v1 + compliance-site-check@v2), deployment_status-trigger, cron-
+   variant, pris-sammenligning. TechArticle JSON-LD, sitemap opdateret (2 URLs),
+   internt link-tjek grøn. Generator: `tools/make_blog_smoke_469.py`.
+
+### Fejl undervejs (og rettet)
+DA-posten landede først forkert (/blog/ i stedet for /da/blog/) og fik fanget
+fallback-siden — flyttet, sitemap rettet, gen-deployet. En fejlbehæftet
+sitemap-generering (hele HTML smidt ind i en <loc>) opdaget og renset samme
+iteration; sitemap validerer som gyldig XML.
+
+### Verificering live
+Begge nye sider 200 med korrekt titel, /api/checkout?product=du ok,
+waitlist-afvisning af test-domæner ok, deskuptime-købsknap-kode på live-siden,
+sitemap indeholder begge slugs.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling. Når den kommer:
+   kør lemon-setup.js for ALLE tre produkter (cc/pp/**du**) og sæt KV-nøglerne.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+## Næste iteration
+
+- Samle de 3 actions i én "site-health"-meta-guide på /free-tools.
+- Overvej license-aktiveringsflow til Deskuptime Pro (offline checksum, som
+  Page Profile Pro) så intet manuelt står mellem køb og brug når LS går live.
+
+---
+
 ## Iteration 468 — CI-integrationsguide (EN+DA) omkring de 3 bevist-virkende Actions
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**

@@ -1681,4 +1681,6 @@
   </url>
     <url><loc>https://hermes-passiv.pages.dev/blog/bug-reports-in-ci-pipeline</loc><lastmod>2026-08-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hermes-passiv.pages.dev/blog/bugrapporter-i-ci-pipeline</loc><lastmod>2026-08-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hermes-passiv.pages.dev/blog/post-deploy-smoke-tests-static-sites</loc><lastmod>2026-08-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://hermes-passiv.pages.dev/da/blog/roegtest-efter-udgivelse-statiske-sites</loc><lastmod>2026-08-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
