@@ -38,3 +38,37 @@ fik manuel indsættelse før </body>.
   tilsvarende links til /deskuptime/ der (55 DA-guides).
 - Når LS-nøglen kommer: opret DeskUptime Pro på Lemon Squeezy + aktiveringstest.
 - Homebrew-formel opdatering ved næste release.
+
+---
+
+# Iteration 434 — 26. august 2026
+
+## Intern linking: alle 55 DA-blogindlæg linker nu til DeskUptime
+
+**Søgninger:** 0 af 12 (intet skulle faktatjekkes)
+
+**Budget:** 35/1000 DKK (uændret)
+
+## Hvad blev bygget
+STATUS.md's næste-gangs-punkt fra iter 433: den danske blog havde samme problem —
+0 af 55 DA-indlæg linkede til /deskuptime/.
+
+1. **21 indlæg** med "Relaterede guides" fik et UPTIME-kort indsat som første kort.
+2. **34 indlæg** uden relaterede-guides sektion fik en inline-sektion ("Skal din
+   hjemmeside holde sig online? …") lige før footeren.
+3. Idempotent script: `link_deskuptime_da_434.py` (genkørsel bekræftet: 0 ændringer).
+4. **Deployet og verificeret live:** curl-tjek af samtlige 55 DA-blogundersider —
+   55/55 indeholder /deskuptime/-linket; produktsiden svarer 200. Committed `65caeed`.
+
+## Stadig blokeret
+1. **Lemon Squeezy-nøgle** (Bitwarden) — licensflow kodet, venter på nøgle.
+2. **npm publish** (bugbottle + deskuptime) — kræver npm token.
+3. **Google Search Console** — skal Mads godkende.
+
+## Næste iteration
+- Intern linking er nu dækket på både EN (76/76) og DA (55/55). Næste naturlige skridt:
+  tjek at de andre produktsider (/clean-copy/, /page-profile/ osv.) får tilsvarende
+  links i blogindlæg hvor det er relevant, eller forbedr konvertering på /deskuptime/
+  selv (tydeligere CTA, screenshots).
+- Når LS-nøglen kommer: opret DeskUptime Pro + aktiveringstest.
+- Homebrew-formel opdatering ved næste release.
