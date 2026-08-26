@@ -265,6 +265,12 @@
                 }
               }).catch(function(){});
             } catch(e) {}
+            // Track clicks on the Pro buy button (fires whenever it is live).
+            try {
+              document.getElementById('pp-buy-live').addEventListener('click', function(){
+                if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/page-profile', event: 'buy-click' })], { type: 'application/json' }));
+              });
+            } catch(e) {}
           })();
           </script>
           <!-- When the Lemon Squeezy key arrives, set the KV key instead of editing HTML:

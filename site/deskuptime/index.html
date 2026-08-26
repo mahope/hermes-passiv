@@ -475,6 +475,11 @@ $ <span class="accent">npx github:mahope/deskuptime check</span> https://example
     }
   }).catch(function(){ /* stay on waitlist state */ });
 
+  // Track clicks on the Pro buy button (fires whenever it is live).
+  document.getElementById('pro-buy-btn').addEventListener('click', function(){
+    try { if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/deskuptime', event: 'buy-click' })], { type: 'application/json' })); } catch(e){}
+  });
+
   document.getElementById('pro-waitlist-form').addEventListener('submit', async function(e){
     e.preventDefault();
     var email = document.getElementById('pro-email').value.trim();
