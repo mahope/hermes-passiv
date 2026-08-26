@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Health from GitHub Actions: Free Uptime Monitoring, Smoke Tests &amp; Bug Reports</title>
+<meta name="description" content="Keep watch over your website for free with three small GitHub Actions workflows: daily uptime/SSL/header/compliance monitoring, smoke tests after every deploy, and visitor bug-report validation. No SaaS subscription.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Site Health from GitHub Actions">
+<meta property="og:description" content="Monitoring, smoke tests and bug-report validation in one free workflow stack &mdash; zero SaaS subscriptions.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/site-health-github-actions">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/site-health-github-actions">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/site-health-github-actions">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/site-health-github-actions-stak">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Site health from GitHub Actions", "description": "Free site health stack: monitoring, smoke tests and bug-report validation in GitHub Actions.", "url": "https://hermes-passiv.pages.dev/blog/site-health-github-actions"}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">OVERVIEW &middot; SITE HEALTH</div>
+    <h1>Watch your site from GitHub Actions<br>&mdash; with no SaaS subscription</h1>
+    <p class="subtitle">Three small workflows cover the whole job: daily checks of uptime, SSL certificates, security headers and compliance basics; smoke tests after every deploy; and automatic validation of bug reports from visitors. All free, all running inside your own repository.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+
+    <h2 id="three-parts">The three parts of the stack</h2>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/blog/monitor-website-github-actions-free" style="color:inherit;">1. Daily monitoring: uptime, SSL, headers and compliance &rarr;</a></h3>
+      <p>A cron workflow that runs every morning and verifies the site responds, the SSL certificate isn't expiring soon, security headers are intact, and GDPR basics are still in place. Replaces monitoring SaaS at $10&ndash;15/month.</p>
+    </div>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/blog/post-deploy-smoke-tests-static-sites" style="color:inherit;">2. Smoke tests after every deploy &rarr;</a></h3>
+      <p>&ldquo;The deploy succeeded&rdquo; and &ldquo;the site works&rdquo; are two different questions. Two workflow steps check both after every release &mdash; uptime and a compliance scan &mdash; so a deleted privacy policy or broken redirect is caught immediately.</p>
+    </div>
+
+    <div class="card" style="margin:16px 0;">
+      <h3><a href="/blog/bug-reports-in-ci-pipeline" style="color:inherit;">3. Bug reports straight from visitors &rarr;</a></h3>
+      <p>Let visitors report bugs with a tiny on-page script, then let CI validate each report before it goes anywhere. Bugs become structured data in your repo instead of an inbox nobody reads.</p>
+    </div>
+
+    <h2 id="get-started">Get started in ten minutes</h2>
+    <ol>
+      <li>Start with <strong>daily monitoring</strong> &mdash; most value for the least work.</li>
+      <li>Add <strong>smoke tests</strong> once you deploy more often than about once a week.</li>
+      <li>Add the <strong>bug-report form</strong> if you have real visitors who might hit problems.</li>
+    </ol>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Try the compliance part right now</h3>
+      <p>No repository needed to see what the scanner finds on your live site &mdash; free, no signup, results in about a minute.</p>
+      <a href="/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan your site for free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Home</a> &middot; <a href="/blog/">Blog</a> &middot; <a href="/compliance-site-check">Free scanner</a></p>
+</footer>
+</body>
+</html>
