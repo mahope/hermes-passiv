@@ -1,27 +1,19 @@
-# BUILD — Iteration 479: link-reparation + /privacy + /terms + menu-bar blogpar
+# BUILD — Iteration 495: top-CTA på alle blogindlæg
 
 ## Bygget
-1. **Fuld intern link-audit** (nyt tjek, gaar alle *.html igennem):
-   360 doede interne links fundet. Rettet alle via `tools/fix_links_479.py`:
-   - 5 doede URL-mappings rettet i 26 filer (fx `/da/blog/pris-tilgaengelighedsgennemgang`
-     → `/da/blog/hvad-koster-tilgaengelighedsgennemgang`).
-   - `downloads.html`: 6 links pegede på filer der ikke findes (1.3.0-pakker,
-     page-profile-1.0.0) — nu til de eksisterende 1.2.0/1.1.0-artefakter.
-   - `/free-tools/` → `/free-tools`.
-2. **`/privacy/` og `/terms/` oprettet** (`tools/make_privacy_terms_479.py`) —
-   manglede helt, men blev linket fra footere på deskuptime, url-inspector og
-   to blogindlæg (og kræves af extension-stores). Dækker alle produkter,
-   Lemon Squeezy som merchant of record, 14 dages refundering.
-3. **Ny blogpar (funnel → deskuptime):**
-   - `/blog/macos-menu-bar-website-monitor` (EN) +
-     `/da/blog/overvaag-hjemmeside-mac-menu-bar` (DA). Article+FAQPage JSON-LD
-     valideret, hreflang-paret, sitemap 266→268.
-   - Krydslinks begge veje mellem 478-parret og dette par.
+1. **Top-CTA på alle 191 blogindlæg (EN+DA).** Før iterationen manglede ~74
+   indlæg CTA over artiklen; nu har alle to CTA-blokke øverst:
+   - "Run the Free Scanner" → /scan (EN) / /scan-da (DA)
+   - "Ask the Compliance AI" → /compliance-ai (EN) / /da/compliance-ai (DA)
+2. Værktøj: `tools/add_top_cta_495.py` indsætter standard-parret efter
+   `</header>` i filer uden `blog-tool-cta`. 5 filer med afvigende layout
+   (macos-menu-bar-parret, redirect-chain, eaa-desktop, http-headers) fik
+   CTA indsat manuelt efter hero/meta.
 
 ## Verificeret live
-- Alle 4 nye sider: HTTP 200 + korrekt titel.
-- JSON-LD: 2 blokke på EN-siden live.
-- Sitemap indeholder ny URL. Link-audit efter fix: **0 doede links**.
-- Commit 04ac461 pushet.
+- Deploy via deploy.sh (74 filer uploadet).
+- Spot-check live: canonical-url-guide, hreflang-guide-da og
+  macos-menu-bar-website-monitor returnerer 200 med begge CTA-blokke.
+- full_site_check.py: 286 URLs, 0 problemer.
 
 ## Budget: 35/1000 DKK (uændret)
