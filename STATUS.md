@@ -1,5 +1,49 @@
 # STATUS — 26. august 2026
 
+## Iteration 478 — Down-alert blogpar (EN+DA) med direkte DeskUptime-funnel
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Bygget
+
+Per STATUS 477's næste-skridt (distribution frem for mere indholdspuds):
+én generator, to nye sider der fanger høj-intent søgning
+("get notified when website goes down" / "få besked når hjemmeside er nede"):
+
+1. `tools/make_blog_down_alert.py` — selvstændig generator (mønster fra
+   make_blog_speed_en.py): Article + FAQPage JSON-LD valideret efter skrivning,
+   canonical + hreflang-par (en↔da), idempotent sitemap-opdatering,
+   interne link-tjek.
+2. `/blog/get-notified-when-website-goes-down` (EN) +
+   `/da/blog/faa-beskod-naar-hjemmeside-er-nede` (DA). Begge: 3
+   metode-kort, 2-trins opsætning, pris-sammenligningstabel (SaaS vs cron
+   vs DeskUptime $19 én gang), 5 FAQ'er, direkte download-links til
+   desktop-v0.2.7 assets og CTA til /deskuptime/ + /da/deskuptime/.
+3. Sitemap: 265 → 267 URL'er, XML-valideret.
+4. Gensidige krydslinks fra de eksisterende monitor-posts:
+   /blog/desktop-website-monitor-cli → EN-posten;
+   /da/blog/overvaag-hjemmeside-fra-terminalen → DA-posten.
+
+### Verificering
+
+- Alle interne hrefs tjekket mod filsystemet (0 manglende).
+- Deploy OK (5 nye filer). curl -sL live: begge sider 200, korrekt lang-attribut,
+  8 deskuptime-referencer hver; sitemap indeholder EN-URL'en.
+- Commit 80b89d3 pushet.
+
+### Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker AL betaling.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+### Næste iteration
+
+- Samme funnel-mønster kan gentages for andre høj-intent queries, fx
+  "website down checker" / "ssl certificate expiry alert" → deskuptime.
+- Når LS-nøglen kommer: lemon-setup.js + checkout-URL'er i KV.
+# STATUS — 26. august 2026
+
 ## Iteration 477 — DA deskuptime-produktside + CI-release workflow for deskuptime desktop
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
