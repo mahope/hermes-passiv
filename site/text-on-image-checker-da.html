@@ -39,6 +39,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan måles læsbarhed?", "acceptedAnswer": {"@type": "Answer", "text": "Værktøjet beregner WCAG-agtig kontrast mellem din tekstfarve og repræsentative baggrundsområder i billedet og markerer steder hvor forholdet er under 4,5:1 (almindelig tekst) eller 3:1 (stor tekst). Det er en tilnærmelse — vurdér også travle fotografiske områder visuelt."}}, {"@type": "Question", "name": "Hurtigste løsning på ulæselig tekst på et billede?", "acceptedAnswer": {"@type": "Answer", "text": "Tilføj en scrím: en halvgennemsigtig mørk overlay bag teksten, eller placér teksten på en ensfarvet bjælke. Begge dele hæver kontrasten markant uden at ændre billedet eller brandfarverne."}}, {"@type": "Question", "name": "Bliver mine billeder uploadet?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Alt kører lokalt i din browser via canvas — billedfilen forlader aldrig din enhed."}}, {"@type": "Question", "name": "Har det betydning for tilgængelighed?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. WCAG 2.x kræver 4,5:1 kontrast for almindelig tekst uanset baggrund, og EU's tilgængelighedslov presser offentlige sider mod overholdelse. Tekst bagt ind i billeder kan desuden ikke zoomes, oversættes eller markeres — foretræk ægte HTML-tekst hvor det er muligt."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -113,6 +116,16 @@
 <a href="/contrast-checker-da">Kontrasttjekker</a> ·
 <a href="/palette-generator-da">Paletgenerator</a> ·
 <a href="/text-on-image-checker">English version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Ofte stillede spørgsmål</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Hvordan måles læsbarhed?</h3><p>Værktøjet beregner WCAG-agtig kontrast mellem din tekstfarve og repræsentative baggrundsområder i billedet og markerer steder hvor forholdet er under 4,5:1 (almindelig tekst) eller 3:1 (stor tekst). Det er en tilnærmelse — vurdér også travle fotografiske områder visuelt.</p></div>
+      <div class="card"><h3>Hurtigste løsning på ulæselig tekst på et billede?</h3><p>Tilføj en scrím: en halvgennemsigtig mørk overlay bag teksten, eller placér teksten på en ensfarvet bjælke. Begge dele hæver kontrasten markant uden at ændre billedet eller brandfarverne.</p></div>
+      <div class="card"><h3>Bliver mine billeder uploadet?</h3><p>Nej. Alt kører lokalt i din browser via canvas — billedfilen forlader aldrig din enhed.</p></div>
+      <div class="card"><h3>Har det betydning for tilgængelighed?</h3><p>Ja. WCAG 2.x kræver 4,5:1 kontrast for almindelig tekst uanset baggrund, og EU's tilgængelighedslov presser offentlige sider mod overholdelse. Tekst bagt ind i billeder kan desuden ikke zoomes, oversættes eller markeres — foretræk ægte HTML-tekst hvor det er muligt.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøjer der kører i din browser

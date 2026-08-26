@@ -1,6 +1,6 @@
 # STATUS — 26. august 2026
 
-## Iteration 465 — FAQ + FAQPage JSON-LD på de sidste 7 værktøjssider
+## Iteration 466 — Dansk FAQ + FAQPage JSON-LD på de sidste 3 DA-mirrors
 
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
@@ -8,38 +8,33 @@
 
 ## Hvad der blev gjort
 
-STATUS fra iter 464 pegede på 4 sider der "sandsynligvis manglede FAQPage".
-Fuld audit viste at det faktisk var **7 EN-sider uden FAQPage** (og 4 DA-mirrors
-uden FAQ overhovedet):
+STATUS fra iter 465 pegede på 3 DA-mirrors uden FAQ. Bygget via én idempotent
+generator: tools/iter466_da_faqs.py (anden kørsel = 0 ændringer; al JSON-LD
+valideres ved hver kørsel):
 
-- **7 nye FAQ-sektioner + FAQPage JSON-LD (EN):** color-blindness-simulator,
-  security-headers-check, site-icons, text-on-image-checker, url-to-markdown,
-  contrast-checker. (cookie-check havde allerede FAQPage — springet over.)
-- **1 DA-mirror:** palette-generator-da fik dansk FAQ + FAQPage (dansk tekst).
-  De øvrige DA-mirrors (color-blindness/text-on-image/contrast -da) har stadig
-  ingen FAQ — næste kandidat.
+- color-blindness-simulator-da, contrast-checker-da, text-on-image-checker-da:
+  hver fik 4 danske spørgsmål med svar (oversat/tilpasset fra EN-versionerne,
+  ikke maskinoversat ordret) + FAQPage JSON-LD i head.
 
-Alt via én idempotent generator: tools/iter465_tool_faqs.py (anden kørsel =
-0 ændringer; al JSON-LD valideres ved hver kørsel).
+Dermed har ALLE værktøjssider (EN og DA) nu FAQ-sektion + FAQPage schema.
 
 ## Verificering
 
-- Lokalt: alle JSON-LD-blokke parser, @context = schema.org, FAQPage til stede.
+- Lokalt: JSON-LD parser, @context = schema.org, FAQPage til stede.
 - Deployet til Cloudflare Pages.
-- Live curl + parse af alle 7 URL'er: 7/7 leverer gyldig FAQPage schema
-  (2 ld+json-blokke pr. side: WebApplication + FAQPage) og synlig FAQ-sektion.
-- full_site_check: 261 URL'er, kun de 5 kendte Worker-301-canonical-aliaser —
-  ingen nye problemer.
+- Live curl af alle 3 URL'er: 3/3 leverer gyldig FAQPage (WebApplication +
+  FAQPage) og synlig "Ofte stillede spørgsmål"-sektion.
 
 ## Stadig blokeret (uændret)
 
 1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
 2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
 
 ## Næste iteration
 
-- DA-mirrors af contrast-checker, color-blindness-simulator og
-  text-on-image-checker mangler stadig FAQ — samme generator kan udvides med
-  danske tekster.
-- GitHub Marketplace-listing for bugbottle-action er stadig ét UI-klik væk.
+- SEO-arbejdet på værktøjssiderne er nu komplet. Næste naturlige skridt er
+  distribution, ikke flere funktioner: indhold der rangerer, indgange fra andre
+  flader (npm/brew/extension-stores når kontiene er klar).
 - Page Profile Pro: færdig i koden, venter kun på LS-checkout-URL.
+

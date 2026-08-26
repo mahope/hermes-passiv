@@ -49,6 +49,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvor præcis er simuleringen?", "acceptedAnswer": {"@type": "Answer", "text": "Værktøjet bruger den anerkendte Machado et al. (2009)-model for protanopi, deuteranopi og tritanopi — de samme matricer som professionelle designværktøjer. Den viser, hvordan farver omtrent opfattes, men kun en klinisk test kan diagnosticere farvesynshos et menneske."}}, {"@type": "Question", "name": "Bliver mine farver sendt nogetsted hen?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Simuleringen kører udelukkende i JavaScript i din browser. Din palet forlader aldrig din enhed."}}, {"@type": "Question", "name": "Hvilken type skal jeg tjekke imod?", "acceptedAnswer": {"@type": "Answer", "text": "Deuteranopi (rød-grøn) er klart den mest udbredte, så start der. Fungerer dit design for deuteranopi og tritanopi, virker det næsten altid også for sjældnere typer. Tjek både tekstkontrast og farvekoder i diagrammer og statusindikatorer."}}, {"@type": "Question", "name": "Erstatte det en WCAG-kontrasttjek?", "acceptedAnswer": {"@type": "Answer", "text": "Nej — de besvarer forskellige spørgsmål. En kontrastchecker fortæller, om teksten er læselig; denne simulator viser, om to farver stadig kan skelnes når farvesynet er nedsat. Brug begge: kontrast til læsbarhed, simulering til farvekodning."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -154,6 +157,16 @@
 <a href="/palette-generator-da">Palet-generator</a> ·
 <a href="/contrast-checker-da">Kontrasttjekker</a> ·
 <a href="/color-blindness-simulator">English version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Ofte stillede spørgsmål</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Hvor præcis er simuleringen?</h3><p>Værktøjet bruger den anerkendte Machado et al. (2009)-model for protanopi, deuteranopi og tritanopi — de samme matricer som professionelle designværktøjer. Den viser, hvordan farver omtrent opfattes, men kun en klinisk test kan diagnosticere farvesynshos et menneske.</p></div>
+      <div class="card"><h3>Bliver mine farver sendt nogetsted hen?</h3><p>Nej. Simuleringen kører udelukkende i JavaScript i din browser. Din palet forlader aldrig din enhed.</p></div>
+      <div class="card"><h3>Hvilken type skal jeg tjekke imod?</h3><p>Deuteranopi (rød-grøn) er klart den mest udbredte, så start der. Fungerer dit design for deuteranopi og tritanopi, virker det næsten altid også for sjældnere typer. Tjek både tekstkontrast og farvekoder i diagrammer og statusindikatorer.</p></div>
+      <div class="card"><h3>Erstatte det en WCAG-kontrasttjek?</h3><p>Nej — de besvarer forskellige spørgsmål. En kontrastchecker fortæller, om teksten er læselig; denne simulator viser, om to farver stadig kan skelnes når farvesynet er nedsat. Brug begge: kontrast til læsbarhed, simulering til farvekodning.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøjer der kører i din browser

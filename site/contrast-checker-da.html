@@ -43,6 +43,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad kræver AA og AAA af kontrast?", "acceptedAnswer": {"@type": "Answer", "text": "WCAG 2.x AA kræver 4,5:1 for almindelig tekst og 3:1 for stor tekst (18 pt eller 14 pt fed og op). AAA kræver 7:1 hhv. 4,5:1. Ikke-tekstlige elementer som kantfarver på formularfelter skal have mindst 3:1 under AA."}}, {"@type": "Question", "name": "Hvordan beregnes kontrastforholdet?", "acceptedAnswer": {"@type": "Answer", "text": "Relativ luminans for begge farver beregnes efter WCAG-formlen (sRGB-værdier lineariseres og vægtes 0,2126 R + 0,7152 G + 0,0722 B), og den lyseste værdi divideres med den mørkeste plus 0,05. Resultatet ligger mellem 1:1 og 21:1."}}, {"@type": "Question", "name": "Kan jeg teste mere end forgrund/baggrund?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, du kan teste vilkårlige farvepar — også disabled-tilstande og pladsholdertekst. Bemærk at WCAG fritager logoer og rent dekorative elementer fra kravene."}}, {"@type": "Question", "name": "Hvorfor fejler hvid tekst på min brandfarve?", "acceptedAnswer": {"@type": "Answer", "text": "Mange mellemtoner (gul, lyseblå, beige) har høj luminans, så hvid på toppen giver forhold omkring 2:1. Mørk tekst passerer ofte med det samme — prøv begge retninger, før du designer paletten om."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -118,6 +121,16 @@
 <p style="margin-top:10px"><a href="/da/blog/wcag-kontrast-checker">Guide: sådan tjekker du kontrast trin for trin</a></p>
 <p style="margin-top:26px"><a href="/free-tools">&larr; Alle gratis værktøjer</a> · <a href="/text-on-image-checker-da">Tekst-på-billede-tjek</a> ·
 <a href="/scan">Hele-siden-scanner</a> · <a href="/palette-generator-da">Palette generator</a> · <a href="/contrast-checker">English version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Ofte stillede spørgsmål</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Hvad kræver AA og AAA af kontrast?</h3><p>WCAG 2.x AA kræver 4,5:1 for almindelig tekst og 3:1 for stor tekst (18 pt eller 14 pt fed og op). AAA kræver 7:1 hhv. 4,5:1. Ikke-tekstlige elementer som kantfarver på formularfelter skal have mindst 3:1 under AA.</p></div>
+      <div class="card"><h3>Hvordan beregnes kontrastforholdet?</h3><p>Relativ luminans for begge farver beregnes efter WCAG-formlen (sRGB-værdier lineariseres og vægtes 0,2126 R + 0,7152 G + 0,0722 B), og den lyseste værdi divideres med den mørkeste plus 0,05. Resultatet ligger mellem 1:1 og 21:1.</p></div>
+      <div class="card"><h3>Kan jeg teste mere end forgrund/baggrund?</h3><p>Ja, du kan teste vilkårlige farvepar — også disabled-tilstande og pladsholdertekst. Bemærk at WCAG fritager logoer og rent dekorative elementer fra kravene.</p></div>
+      <div class="card"><h3>Hvorfor fejler hvid tekst på min brandfarve?</h3><p>Mange mellemtoner (gul, lyseblå, beige) har høj luminans, så hvid på toppen giver forhold omkring 2:1. Mørk tekst passerer ofte med det samme — prøv begge retninger, før du designer paletten om.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Gratis GDPR- &amp; tilgængelighedsværktøj i browseren
