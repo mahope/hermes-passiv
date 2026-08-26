@@ -16,8 +16,12 @@ for f in sorted(glob.glob(SITE+'/da/blog/*.html')):
     if not links or set(links)=={'x-default'} and links['x-default'].endswith(os.path.basename(f)[:-5]):
         singles_da+=1
         continue
+    # DA-only page: self-referential set {x-default:self, da:self} is valid
+    if links=={'x-default':self_url,'da':self_url}:
+        if canon!=self_url: bad.append((f,'canonical=%s expected %s'%(canon,self_url)))
+        singles_da+=1
+        continue
     if 'en' not in links:
-        # x-default pointing at the EN mirror without a full set: repair in place
         bad.append((f,'has hreflang but no en link: %s'%links)); continue
     en_url=links['en']; en_slug=en_url.replace(BASE+'/blog/','').strip('/')
     if links=={'x-default':en_url}:
@@ -48,6 +52,9 @@ for f in sorted(glob.glob(SITE+'/blog/*.html')):
     if url in paired_en: continue
     le=dict(re.findall(r'<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"',open(f).read()))
     if not le:
+        singles_en+=1
+    # EN-only page: self-referential set {x-default:self, en:self} is valid
+    elif le=={'x-default':url,'en':url}:
         singles_en+=1
     elif set(le)==FULL and le['en']==url and le['x-default']==url:
         pass  # self-referential full set on EN-only page is valid

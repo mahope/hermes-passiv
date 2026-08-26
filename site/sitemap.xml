@@ -52,7 +52,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://hermes-passiv.pages.dev/blog/bugrapporter-i-ci-pipeline</loc>
+    <loc>https://hermes-passiv.pages.dev/da/blog/bugrapporter-i-ci-pipeline</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -380,12 +380,6 @@
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/hreflang-guide"/>
     <xhtml:link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da"/>
-  </url>
-  <url>
-    <loc>https://hermes-passiv.pages.dev/blog/html-tabel-til-csv</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://hermes-passiv.pages.dev/blog/html-table-to-csv-converter</loc>
