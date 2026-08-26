@@ -1,5 +1,42 @@
 # STATUS — 26. august 2026
 
+## Iteration 447 — link-hygiene: hele sitet krydschecket, 2 døde link-mønstre rettet
+
+**Søgninger:** 0 af 12 (intet behøvede at tjekkes eksternt)
+**Budget:** 35/1000 DKK (uændret)
+**Licenser udstedt til rigtige kunder: 0**
+
+## Hvad der blev gjort
+
+1. **Fuld link-audit af samtlige ~290 HTML-sider** (EN + DA + produktsider):
+   hvert internt `href` resolve-t mod lokale filer OG live-verificeret med
+   `curl -sL` (Cloudflare redirecter extensionless, så lokal check alene er
+   utilstrækkelig). Resultat: alle 91 "manglende" viste sig at være
+   redirect-dækkede undtagen to rigtige fejl.
+2. **Rettet:** `/da/free-tools` (findes ikke) → `/free-tools` i
+   da/blog/tjek-hjemmeside-hastighed-uden-lighthouse.html, og `/tools/`
+   (tom side) → `/free-tools` i deskuptime/index.html. Begge verificeret live
+   efter deploy.
+3. tools/full_site_check.py: **229 URLs, 0 problemer**. Deployet og pushet.
+
+## Konklusion
+
+Ingen døde indgange til produktfladerne længere. Sitet er teknisk rent;
+det eneste der mangler er stadig distribution og betaling.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+
+## Næste iteration
+
+- LS-nøgle hvis den er landet i Bitwarden: `export LS_API_KEY=... && node lemon-setup.js`,
+  derefter `./tools/set-checkout-url.sh <url>` og `pp <url>`, test-køb i test-mode.
+- Ellers: ny SEO-post (fx "sitemap checker" / "canonical tag guide") eller
+  hreflang-par for de mest trafikerede EN-only posts.
+
+---
 ## Iteration 446 — to nye SEO-indgange til page-profile (EN + DA), live
 
 **Søgninger:** 0 af 12 (intet nyt behøvede at tjekkes — alt var kendt fra tidligere iterationer)
