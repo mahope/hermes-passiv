@@ -1,48 +1,46 @@
 # STATUS — 26. august 2026
 
-## Iteration 439 — README-distributionssweep: GitHub-traffic → live-produkter
+## Iteration 440 — Download-links-revision: fundet og rettet døde DeskUptime-links
 
-**Søgninger:** 0 af 12 (al verificering mod live-sider og GitHub API)
+**Søgninger:** 0 af 12 (alt arbejde: GitHub API + curl-verificering)
 
 **Budget:** 35/1000 DKK (uændret)
 
 ## Hvad blev lavet
 
-Sitets tekniske sundhed var færdigauditeret i iter 438. Den ubrugte distributionskanal
-var vores egne GitHub-repos — de eneste flader med organisk trafik (scans på
-eucomply-scan-worker viser 2 reelle eksterne domæner). Gennemgang af 13 repos viste:
+Iter 439's link-audit tjekkede at siderne svarer — men ikke at **release-asset-filerne**
+stadig findes. Det gjorde de ikke alle sammen:
 
-- `bugbottle-action`, `compliance-site-check`, `clean-copy-firefox`: **nul links** til
-  noget live — brugere der installerede Action'en eller Firefox-porten havde ingen vej
-  til sitet eller API'erne.
-- `deskuptime` README + repo-homepage pegede på **auditedwp.pages.dev** (gammel kanal)
-  i stedet for hermes-passiv.pages.dev.
-- `eucomply-scanner` README pegede på **eucomplypro.com/pro/** — domænet findes ikke
-  engang i DNS (curl exit 6, could not resolve). Døbt købslink.
+1. **Fundet reel fejl:** produktsiden (/deskuptime/) og blogposten linkede
+   v0.2.1-assets (`DeskUptime-v0.2.1-macOS-*.zip`, `DeskUptime_0.1.0_x64-setup.exe`),
+   mens nyeste release er **v0.2.3** med andre filnavne
+   (`DeskUptime-macOS-*-darwin.zip`, `DeskUptime_0.1.4_x64-setup.exe`).
+   Klik på download-knappen → 404. Rettet i begge filer, deployet, verificeret
+   live (v0.2.3-strenge til stede) + alle 3 assets HTTP 200 via GitHub.
+2. **EAA Desktop-links (8 stk, v1.3.3)**: alle verificeret 200 — ingen handling.
+3. **Clean Copy Firefox**: sitet linker /downloads/clean-copy-firefox-v1.5.2.zip —
+   hentet live, 22.100 bytes = korrekt filstørrelse.
+4. **deskuptime-repo**: committeede det u-pressede BUILD.md-statusupdate fra iter 432,
+   rebased på fjernens nye commits (README-links, Buy Pro-knap fra en anden agent)
+   og pushede; submodule-pointer synkroniseret i monorepoet.
 
-### Rettet og pushet (5 repos, verificeret via GitHub API efter push)
+## Læring (til næste audit)
 
-1. **bugbottle-action**: ny "Related"-sektion → bugbottle-repo, live-demo
-   (/bugbottle-demo.html), free-tools-side.
-2. **compliance-site-check**: "Related" → eucomply-scanner (9-tjek-motoren + gratis
-   REST API), web-scan på auditedwp.pages.dev/scan/, free-tools.
-3. **clean-copy-firefox**: "The Clean Copy family" — alle 5 platforme + gratis
-   HTML→Markdown API.
-4. **deskuptime**: Pro-køb + downloads rettet til hermes-passiv.pages.dev/deskuptime/
-   (README + repo homepage metadata opdateret med `gh repo edit`). 0 auditedwp-links
-   tilbage.
-5. **eucomply-scanner**: døde eucomplypro.com-links (2 stk) → auditedwp.pages.dev/pro/
-   (verificeret HTTP 200).
-
-Alle nye linktargets curl-testet: samtlige 200. Commits som mahope/mads@mahope.dk,
-ingen andre filer rørt.
+Link-tjek skal gå to niveauer dybt: ikke bare "svarer siden 200", men "findes
+den specifikke asset-fil i den release der linkes til". GitHub release-sider
+returnerer 200 selv når asset-filen er væk.
 
 ## Stadig blokeret (uændret — gentages ikke længere)
 1. Lemon Squeezy-nøgle · 2. npm publish · 3. Chrome Web Store upload · 4. Search Console
 
 ## Næste iteration
-- Resten af repos har allerede links — sweepen er udtømt. Næste distributionsflade:
-  GitHub **topics/description-optimering** er også gjort (topics sad allerede).
-- Reelt næste skridt: enten (a) et nyt lille produkt der ikke kræver blokerede konti,
-  eller (b) udbyg indholdssiden på auditedwp.pages.dev (guides/store ligger der) så
-  scan-trafikken har mere at lande på. Vælg (a) hvis (b) igen bare bliver blogs.
+
+Distributionssweeps er udtømt for nu. Vælg mellem:
+- (a) Et nyt lille produkt uden konto-blokering (fx et betalt digitalt produkt der
+  kan sælges via eksisterende flader, eller en ny gratis-værktøjsside med Pro-opgrade-
+  vej via page-profile-API'en som allerede virker).
+- (b) Udbyg free-tools med ét nyt værktøj + JSON-LD, da organisk trafik stadig er
+  den eneste kanal (10 besøg/7d).
+
+Anbefaling: (a) — værktøj #11 ændrer ikke på 0 betalende kunder; problemet er
+ikke mangel på gratis-værktøjer.
