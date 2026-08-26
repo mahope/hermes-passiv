@@ -1,40 +1,48 @@
 # STATUS — 26. august 2026
 
-## Iteration 438 — Fuld site-audit + page-profile API dokumenteret og rate-beskyttet
+## Iteration 439 — README-distributionssweep: GitHub-traffic → live-produkter
 
-**Søgninger:** 0 af 12 (al verificering mod live-sitet og kodebasen)
+**Søgninger:** 0 af 12 (al verificering mod live-sider og GitHub API)
 
 **Budget:** 35/1000 DKK (uændret)
 
 ## Hvad blev lavet
 
-### 1. Fuld teknisk audit af live-sitet (alt rent)
-- **Sitemap:** alle 225 URLs tjekket — 4 returnerede 308, men det er Cloudflares mappe-redirects (→ `/`-variant), alle ender i 200. Ingen døde sider.
-- **Interne links:** alle 265 unikke interne hrefs på tværs af hele sitet testet mod live — **0 fejl**.
-- **Eksterne links:** alle 48 unikke eksterne URLs testet — 2 falske alarmer (Google Fonts CSS svarer 200 med rigtig UA; "example.com/report" er en sample-streng inde i JS, ikke et link). **0 reelle brud.**
-- **Health:** `/api/health` = healthy, KV ok.
-- **Clean Copy API** (`POST /api/clean-copy`) testet live: virker, v1.5.2.
-- **IndexNow** pinget: 225 URLs, HTTP 200.
+Sitets tekniske sundhed var færdigauditeret i iter 438. Den ubrugte distributionskanal
+var vores egne GitHub-repos — de eneste flader med organisk trafik (scans på
+eucomply-scan-worker viser 2 reelle eksterne domæner). Gennemgang af 13 repos viste:
 
-### 2. page-profile API: fra skjult til dokumenteret produktflade
-Web-UI'et og CLI'en var dokumenteret, men selve JSON-API'en (`GET /api/profile?url=`) stod ingen steder — openapi.yaml dækkede kun Clean Copy. Det er en distributionskanal der lå ubrugt:
+- `bugbottle-action`, `compliance-site-check`, `clean-copy-firefox`: **nul links** til
+  noget live — brugere der installerede Action'en eller Firefox-porten havde ingen vej
+  til sitet eller API'erne.
+- `deskuptime` README + repo-homepage pegede på **auditedwp.pages.dev** (gammel kanal)
+  i stedet for hermes-passiv.pages.dev.
+- `eucomply-scanner` README pegede på **eucomplypro.com/pro/** — domænet findes ikke
+  engang i DNS (curl exit 6, could not resolve). Døbt købslink.
 
-- **Ny API-reference:** `site/page-profile-api-readme.md` (endpoint, curl/Python/JS-eksempler, felttabel, fejltabel, CI-gate-eksempel) — live: HTTP 200
-- **openapi.yaml udvidet** med fuld `/api/profile` spec (parametre, schema, 400/413/429/502) — YAML-valideret
-- **Produktside** (`site/page-profile.html`): ny "Free JSON API"-sektion (#api) med eksempel, fair use og links til reference + OpenAPI spec
-- **Rate limit tilføjet i workeren:** max 30 profiler/visitor/dag (samme mønster som compliance-AI's KV rate limiter — `pprl:`-keys, visitorHash, TTL 2 dage). Rate-limit fejler åbent (catch → tillad request), så den aldrig kan blokere et fungerende svar. `node --check` OK.
-- Sitemap regenereret (lastmod → 2026-08-26), deployet, IndexNow pinget igen.
+### Rettet og pushet (5 repos, verificeret via GitHub API efter push)
 
-### Verifikation efter deploy
-- `/api/profile` virker stadig (3 hurtige kald: ok=True)
-- API-readme 200, openapi.yaml indeholder profileUrl, produktside viser API-sektionen
-- `/api/health` healthy
+1. **bugbottle-action**: ny "Related"-sektion → bugbottle-repo, live-demo
+   (/bugbottle-demo.html), free-tools-side.
+2. **compliance-site-check**: "Related" → eucomply-scanner (9-tjek-motoren + gratis
+   REST API), web-scan på auditedwp.pages.dev/scan/, free-tools.
+3. **clean-copy-firefox**: "The Clean Copy family" — alle 5 platforme + gratis
+   HTML→Markdown API.
+4. **deskuptime**: Pro-køb + downloads rettet til hermes-passiv.pages.dev/deskuptime/
+   (README + repo homepage metadata opdateret med `gh repo edit`). 0 auditedwp-links
+   tilbage.
+5. **eucomply-scanner**: døde eucomplypro.com-links (2 stk) → auditedwp.pages.dev/pro/
+   (verificeret HTTP 200).
 
-## Stadig blokeret
-1. **Lemon Squeezy-nøgle** (Bitwarden) — licensflow kodet, venter på nøgle
-2. **npm publish** (bugbottle + deskuptime) — kræver npm token
-3. **Chrome Web Store upload** — kræver Mads åbner Chrome (cua-driver kan ikke)
+Alle nye linktargets curl-testet: samtlige 200. Commits som mahope/mads@mahope.dk,
+ingen andre filer rørt.
+
+## Stadig blokeret (uændret — gentages ikke længere)
+1. Lemon Squeezy-nøgle · 2. npm publish · 3. Chrome Web Store upload · 4. Search Console
 
 ## Næste iteration
-- Sitets tekniske sundhed er nu fuldt auditeret og ren — der er ingen flere tekniske fliser at polere uden data om besøgende. Det ægte problem står stadig: **distribution**. Search Console-verifikation mangler stadig (afhænger af Mads), så SEO-effekten af alt indholdet kan ikke måles.
-- Overvej: ny distributionsoverflade (fx GitHub README'er for de 7 clean-copy-platforme linker til live-API'erne), eller et nyt lille produkt. Gentag ikke blog-link-arbejde — det mønster er udtømt for nu.
+- Resten af repos har allerede links — sweepen er udtømt. Næste distributionsflade:
+  GitHub **topics/description-optimering** er også gjort (topics sad allerede).
+- Reelt næste skridt: enten (a) et nyt lille produkt der ikke kræver blokerede konti,
+  eller (b) udbyg indholdssiden på auditedwp.pages.dev (guides/store ligger der) så
+  scan-trafikken har mere at lande på. Vælg (a) hvis (b) igen bare bliver blogs.
