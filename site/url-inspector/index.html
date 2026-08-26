@@ -148,6 +148,11 @@
     <div id="security-list" style="margin-bottom:24px"></div>
   </div>
 
+  <div id="ssl-section" style="margin-bottom:24px">
+    <h2>SSL / TLS Certificate</h2>
+    <div id="ssl-content"></div>
+  </div>
+
   <div id="headers-section" style="margin-bottom:24px">
     <h2>All HTTP Headers</h2>
     <div style="overflow-x:auto">
@@ -161,8 +166,9 @@
 
 <footer>
 <div class="wrap">
-  Built by <a href="https://github.com/mahope">Mahope</a> &middot; 
-  <a href="/deskuptime/">DeskUptime Monitor</a> &middot;
+Built by <a href="https://github.com/mahope">Mahope</a> &middot;
+<a href="/blog/check-url-redirect-chain">How to check a redirect chain</a> &middot;
+<a href="/deskuptime/">DeskUptime Monitor</a> &middot;
   <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a>
 </div>
 </footer>
@@ -267,6 +273,55 @@
       });
       t.innerHTML += '</tbody>';
       sl.appendChild(t);
+    }
+
+    // SSL / TLS certificate
+    var sslEl = document.getElementById('ssl-content');
+    sslEl.innerHTML = '';
+    var ssl = data.ssl;
+    if (!ssl || !ssl.available) {
+      var reason = (ssl && ssl.reason) ? ssl.reason : 'SSL info not available for this URL.';
+      sslEl.innerHTML = '<p style="color:var(--muted)">🔒 ' + escapeHtml(reason) + '</p>';
+    } else {
+      // Summary row
+      var sum = document.createElement('div');
+      sum.className = 'summary-card';
+      sum.style.marginBottom = '12px';
+      var days = ssl.daysRemaining;
+      var daysHtml;
+      if (days == null) {
+        daysHtml = '<span class="tag tag-info">Unknown</span>';
+      } else if (days < 0) {
+        daysHtml = '<span class="tag tag-fail">EXPIRED</span> ' + Math.abs(days) + ' days ago';
+      } else if (days <= 14) {
+        daysHtml = '<span class="tag tag-fail">Expires in ' + days + ' days</span>';
+      } else if (days <= 30) {
+        daysHtml = '<span class="tag tag-warn">Expires in ' + days + ' days</span>';
+      } else {
+        daysHtml = '<span class="tag tag-ok">Valid · ' + days + ' days remaining</span>';
+      }
+      sum.innerHTML =
+        '<div class="row"><span class="label">Issuer</span><span class="value">' + escapeHtml(ssl.issuer || 'Unknown') + '</span></div>' +
+        '<div class="row"><span class="label">Valid until</span><span class="value">' + escapeHtml(ssl.validTo || 'Unknown') + ' ' + daysHtml + '</span></div>' +
+        '<div class="row"><span class="label">TLS version</span><span class="value">' + escapeHtml((ssl.tlsVersion || '').replace(/_/g, '.')) + '</span></div>' +
+        '<div class="row"><span class="label">Chain trusted</span><span class="value">' + (ssl.chainTrusted ? '<span class="tag tag-ok">Yes</span>' : '<span class="tag tag-fail">No</span>') + '</span></div>';
+      sslEl.appendChild(sum);
+      // Checks
+      if (ssl.checks && ssl.checks.length) {
+        var cl = document.createElement('div');
+        ssl.checks.forEach(function(c) {
+          var row = document.createElement('div');
+          row.className = 'redirect-hop';
+          var icon = c.status === 'pass' ? '✓' : c.status === 'warn' ? '⚠️' : '✕';
+          var color = c.status === 'pass' ? 'var(--ok)' : c.status === 'warn' ? 'var(--warn)' : 'var(--fail)';
+          row.innerHTML =
+            '<div class="hop-num" style="background:' + color + '">' + icon + '</div>' +
+            '<div class="hop-url">' + escapeHtml(c.label) + '</div>' +
+            '<div class="hop-location" style="color:var(--ink)">' + escapeHtml(c.detail || '') + '</div>';
+          cl.appendChild(row);
+        });
+        sslEl.appendChild(cl);
+      }
     }
 
     // All headers

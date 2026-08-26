@@ -2259,10 +2259,48 @@ async function handleUrlInspect(request, url) {
     finalStatusText: finalResponse.statusText,
     securityHeaders: presentSecurity,
     allHeaders: finalResponse.headers,
+    ssl: await fetchSslInfo(finalResponse.url),
     message: redirects.length > 0
       ? `→ ${redirects[redirects.length - 1].url} (${redirects.length} redirect${redirects.length > 1 ? 's' : ''})`
       : 'No redirects',
   };
 
   return new Response(JSON.stringify(result, null, 2), { status: 200, headers: corsHeaders });
+}
+
+/**
+ * Fetch live TLS certificate info for the final URL's host via dnslabs.com
+ * (free JSON API, no key, performs a real handshake). Best-effort: any failure
+ * returns { available: false } so the main inspect result is never broken.
+ */
+async function fetchSslInfo(finalUrl) {
+  try {
+    const host = new URL(finalUrl).hostname;
+    if (!finalUrl.startsWith('https://')) {
+      return { available: false, reason: 'Final URL is not HTTPS' };
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(`https://www.dnslabs.com/api/ssl?q=${encodeURIComponent(host)}`, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker)' },
+    });
+    clearTimeout(timer);
+    if (!res.ok) return { available: false, reason: 'SSL lookup unavailable (HTTP ' + res.status + ')' };
+    const data = await res.json();
+    const cert = data.cert || {};
+    return {
+      available: true,
+      host,
+      validTo: cert.not_after || null,
+      daysRemaining: typeof cert.days_remaining === 'number' ? cert.days_remaining : null,
+      issuer: cert.issuer_cn || (data.chain && data.chain[0] && data.chain[0].issuer_cn) || null,
+      tlsVersion: data.tls_version || null,
+      chainTrusted: !!data.chain_trusted,
+      checks: (data.checks || []).map(c => ({ id: c.id, label: c.label, status: c.status, detail: c.detail })),
+      source: 'dnslabs.com live TLS handshake',
+    };
+  } catch (_) {
+    return { available: false, reason: 'SSL lookup failed or timed out' };
+  }
 }
