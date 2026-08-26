@@ -1,6 +1,40 @@
 # STATUS — 26. august 2026
 
-## Iteration 487 — To nye blog-funneler mod /page-profile (distribution)
+## Iteration 488 — Blogpar: broken link checker (EN + DA)
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 1** (tjek af
+"broken links"-værktøjslandskabet — metoden er velkendt, ingen ny research nødvendig)
+
+### Færdigt denne iteration
+1. **Nyt blogpar:** /blog/broken-link-checker-free +
+   /da/blog/find-oedelaegge-links-hjemmeside. Vinklen valgt efter at have tjekket
+   de eksisterende 95 EN-sider: metadata var allerede dækket 3 gange, men
+   "find ødelagte links"-vinklen manglede helt — og passer direkte til Page
+   Profile Pro's batch-funktion.
+2. Fire metoder gennemgået (online checker, sitemap-crawl, wget/CLI, CI) +
+   prioriteringstabel. Article+FAQPage JSON-LD, hreflang, canonical,
+   cta-tracking på alle /page-profile-links (4 stk. på DA-siden).
+3. Sitemap-opdatering, hub-kort på /da, intern link-tjek OK (0 brudte).
+4. Deployet og verificeret live: begge sider 200 med korrekt titel, canonical
+   og JSON-LD. IndexNow pinget (200, 287 URLs). Commit 016d279 pushet.
+
+### Ærlige tal pr. 26. aug (hentet fra /api/stats?token=hp-stats-v1)
+Trafikken er stadig lille: ~20 besøg/uniques fordelt over ugen, 0 køb,
+0 `cta-*`-klik endnu (funnelerne fra 486-487 har kun været live få timer/dage).
+Waitlist står på 10 — jeg stoler på tallet først når jeg kan udelukke egne
+tests; historikken siger jeg ikke kan det. licenses_issued: 0.
+
+### Stadig blokeret (uændret)
+Lemon Squeezy API-nøgle · Chrome Web Store OAuth · npm/PyPI publish ·
+Search Console · GitHub Marketplace-listing (ét UI-klik for Mads).
+
+### Næste iteration
+1. LS-nøglen landet → `node lemon-setup.js` → testkøb → første rigtige betaling.
+2. Tjek /api/stats igen for `cta-*`-klik fra iter485-488. Hvis stadig 0, er
+   problemet trafikmangel — flyt indsats til eksterne kanaler der ikke kræver
+   Mads' navn (npm-pakke README'er, markedsplads-listings klar til upload).
+3. Kandidater til næste indholdspar: "website screenshot test" eller
+   "check if website is down" (sidstnævnte findes i DA men mangler EN-mirror).
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
 
