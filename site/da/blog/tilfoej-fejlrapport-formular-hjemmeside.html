@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tilføj en fejlrapport-formular til enhver hjemmeside — gratis</title>
+<meta name="description" content="Bugbottle er et open source (MIT) JavaScript-bibliotek der samler console errors, browser-kontekst og skærmbillede med ét script-tag. Virker på WordPress, Shopify, statisk HTML og alt derimellem.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Tilføj en fejlrapport-formular til enhver hjemmeside">
+<meta property="og:description" content="Bugbottle er et open source (MIT) JavaScript-bibliotek der samler console errors, browser-kontekst og skærmbillede med ét script-tag. Virker på WordPress, Shopify, statisk HTML og alt derimellem.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tilføj en fejlrapport-formular til enhver hjemmeside", "description": "Bugbottle er et open source (MIT) JavaScript-bibliotek der samler console errors, browser-kontekst og skærmbillede med ét script-tag. Virker på WordPress, Shopify, statisk HTML og alt derimellem.", "url": "https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Virker Bugbottle på alle hjemmesider?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Biblioteket er rent JavaScript uden afhængigheder og virker på WordPress, Shopify, Squarespace, Wix, statisk HTML, Next.js, Vue, React — alt der kan køre et script-tag. Selve formen skal du selv tilføje, men biblioteket giver dig console-data, kontekst og screenshot i én funktion."}}, {"@type": "Question", "name": "Hvad med GDPR?", "acceptedAnswer": {"@type": "Answer", "text": "Skærmbilleder indeholder potentielt personoplysninger — sørg for at din fortrolighedserklæring dækker det, og overvej at lade brugeren vælge fra i formularen. Biblioteket gemmer intet selv; det er kun din modtager-endpoint der gemmer data."}}, {"@type": "Question", "name": "Kan jeg bruge det uden en server?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Brug GitHub Issues + Action-måden: rapporten postes direkte til et repository uden at du selv hoster noget. Eller brug en form-tjeneste som Formspree der modtager JSON."}}, {"@type": "Question", "name": "Er det gratis?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, MIT-licenseret. Biblioteket, server-validatoren og GitHub Action er alle open source og koster ingenting."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">UDVIKLER-VÆRKTØJ &middot; OPEN SOURCE &middot; BUGS</div>
+    <h1>Tilføj en fejlrapport-formular<br>til enhver hjemmeside</h1>
+    <p class="subtitle">Ingen backend krævet. Drop ét script-tag, få detaljerede bugs med console-log, viewport, user-agent og screenshot — selv på en side uden server.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Et typisk feedback-formular beder brugeren beskrive problemet i ord. De fleste gør det ikke. De kan ikke se console'en, kender ikke deres viewport-størrelse, og det tager tid at skrive trin op. Resultatet: du hører om måske ét ud af halvtreds reelle problemer — hver med detaljer der er ubrugelige. Bugbottle løser præcis dét: det fanger console-fejlene automatisk, samler kontekst (user-agent, viewport, sprog, tidsstempel) og tager et skærmbillede — alt sammen med ét script-tag og ingen afhængigheder.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🖥️ Console-fejl automatisk</h3><p>Det faktiske stack trace sidder allerede i brugerens browser. Bugbottle fanger det — fjerner den sværeste del af remote debugging.</p></div>
+      <div class="card"><h3>📱 Kontekstsamling</h3><p>User agent, viewport, sprog, tidsstempel, side-URL — indsamlet automatisk i stedet for gættet over mail.</p></div>
+      <div class="card"><h3>📸 Skærmbillede med ét kald</h3><p>Ét billede erstatter ti frem-og-tilbage-beskeder om "dan der ser underligt ud".</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan virker det</h2>
+    <p>Biblioteket er dependency-frit og leveres som almindelig ESM — det virker direkte fra CDN uden bundler eller npm-installation. Du initialiserer <code>initConsoleBuffer()</code> før dine brugere overhovedet har tid til at lave en fejl, og når de klikker "Rapporter", samler du console-bufferen, konteksten og eventuelt et skærmbillede og sender det som JSON til et endpoint.</p>
+    <p>Det medfølgende server-modul (<code>bugbottle/server</code>) validerer payloads i tre linjer — så du kan afvise ugyldige indsendelser før de overhovedet når din storage. Biblioteket er MIT-licenseret og ligger på GitHub: <a href="https://github.com/mahope/bugbottle" style="color:var(--color-accent)">github.com/mahope/bugbottle</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>"Men jeg har ikke en backend"</h2>
+    <p>Du har tre realistiske muligheder, alle gratis i hobby-skala:</p><ol><li><strong>Cloudflare Worker / Vercel-funktion / Netlify-funktion</strong> — accepter POST, gem i KV / R2 / database.</li><li><strong>En form-tjeneste</strong> — Formspree, Web3Forms, FormKeep: ethvert endpoint der accepterer JSON POST kan modtage en rapport. Brugerens data sendes direkte til tjenesten — din server rører det aldrig.</li><li><strong>GitHub Issues via Action</strong> — <a href="/da/blog/compliance-tjek-github-action" style="color:var(--color-accent)">Bugbottle Action</a> poster rapporten direkte som et GitHub Issue. Nul infrastruktur — kun en repository secret.</li></ol>
+    <p>Prøv en live-demo: <a href="/bugbottle-demo" style="color:var(--color-accent)">åbn Bugbottle-testen</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Virker Bugbottle på alle hjemmesider?</h3><p>Ja. Biblioteket er rent JavaScript uden afhængigheder og virker på WordPress, Shopify, Squarespace, Wix, statisk HTML, Next.js, Vue, React — alt der kan køre et script-tag. Selve formen skal du selv tilføje, men biblioteket giver dig console-data, kontekst og screenshot i én funktion.</p></div>
+      <div class="card"><h3>Hvad med GDPR?</h3><p>Skærmbilleder indeholder potentielt personoplysninger — sørg for at din fortrolighedserklæring dækker det, og overvej at lade brugeren vælge fra i formularen. Biblioteket gemmer intet selv; det er kun din modtager-endpoint der gemmer data.</p></div>
+      <div class="card"><h3>Kan jeg bruge det uden en server?</h3><p>Ja. Brug GitHub Issues + Action-måden: rapporten postes direkte til et repository uden at du selv hoster noget. Eller brug en form-tjeneste som Formspree der modtager JSON.</p></div>
+      <div class="card"><h3>Er det gratis?</h3><p>Ja, MIT-licenseret. Biblioteket, server-validatoren og GitHub Action er alle open source og koster ingenting.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/compliance-tjek-github-action" style="color:var(--color-accent);">GitHub Action</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/add-bug-report-form-to-any-website">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

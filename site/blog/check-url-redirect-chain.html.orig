@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Check a URL Redirect Chain (Free Online Tool)</title>
+<meta name="description" content="Trace the full redirect chain of any URL, inspect security headers, and check the SSL certificate. Free browser tool, no signup. Plus how redirects affect SEO and why 301 vs 302 matters.">
+<meta property="og:title" content="How to Check a URL Redirect Chain (Free Online Tool)">
+<meta property="og:description" content="Trace the full redirect chain of any URL, inspect security headers, and check the SSL certificate. Free browser tool, no signup. Plus how redirects affect SEO and why 301 vs 302 matters.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Check a URL Redirect Chain (Free Online Tool)">
+<meta name="twitter:description" content="Trace the full redirect chain of any URL, inspect security headers, and check the SSL certificate. Free browser tool, no signup. Plus how redirects affect SEO and why 301 vs 302 matters.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/check-url-redirect-chain">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How to Check a URL Redirect Chain (Free Online Tool)","description":"Trace the full redirect chain of any URL, inspect security headers, and check the SSL certificate. Free browser tool, no signup. Plus how redirects affect SEO and why 301 vs 302 matters.","datePublished":"2026-08-26","author":{"@type":"Organization","name":"Mahope"}}
+</script>
+</head>
+<body>
+<main class="container" style="max-width:720px">
+  <nav style="margin-bottom:2rem"><a href="/">&larr; Home</a> · <a href="/blog">Blog</a></nav>
+  <article>
+    <h1>How to Check a URL Redirect Chain (Free Online Tool)</h1>
+    <p class="meta" style="color:var(--color-text-muted)">August 26, 2026 · 4 min read</p>
+
+    <p>When you type a URL into a browser, you often don't land on the address you typed. The server may send your browser through two, three, or more hops before it reaches the final page. Each hop is an HTTP redirect — and when one of them is wrong, you get slow loads, lost SEO value, or a broken page.</p>
+
+    <p>This guide shows how to trace a redirect chain in seconds with our free <a href="/url-inspector/">URL Inspector</a>, and what to do about the problems it finds.</p>
+
+    <div style="background:#e0edff;border-radius:10px;padding:16px 20px;margin:1.5rem 0">
+      <strong>Check a redirect chain now:</strong> paste any URL into the free <a href="/url-inspector/">URL Inspector</a>. You'll see every hop, every status code, all response headers, and the SSL certificate of the final destination — no signup.
+    </div>
+
+    <h2>What a redirect chain looks like</h2>
+    <p>A typical chain after migrating to HTTPS might be:</p>
+    <ol>
+      <li><code>http://example.com</code> → <strong>301</strong> → <code>https://example.com</code></li>
+      <li><code>https://example.com</code> → <strong>301</strong> → <code>https://www.example.com/</code></li>
+      <li><code>https://www.example.com/</code> → <strong>200 OK</strong></li>
+    </ol>
+    <p>Each hop costs an extra round trip. Google follows up to 10 hops, but every unnecessary hop dilutes link signals and adds latency — especially on mobile connections.</p>
+
+    <h2>The status codes that matter</h2>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+      <tr><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Code</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Meaning</th><th style="text-align:left;padding:8px;border-bottom:2px solid #ccc">Use for</th></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #ddd"><strong>301</strong></td><td style="padding:8px;border-bottom:1px solid #ddd">Permanent redirect</td><td style="padding:8px;border-bottom:1px solid #ddd">Domain migrations, HTTPS upgrades, renamed pages. Passes full SEO value.</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #ddd"><strong>302 / 307</strong></td><td style="padding:8px;border-bottom:1px solid #ddd">Temporary redirect</td><td style="padding:8px;border-bottom:1px solid #ddd">Short-term changes: maintenance pages, A/B tests. Search engines keep the old URL indexed.</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #ddd"><strong>308</strong></td><td style="padding:8px;border-bottom:1px solid #ddd">Permanent, method-preserving</td><td style="padding:8px;border-bottom:1px solid #ddd">Like 301 but guarantees POST stays POST. Used by CDNs like Cloudflare Pages.</td></tr>
+      <tr><td style="padding:8px"><strong>Meta refresh / JS</strong></td><td style="padding:8px">Client-side redirect</td><td style="padding:8px">Avoid. Slower and unreliable for search engines.</td></tr>
+    </table>
+
+    <p>The most common mistake is using <strong>302 where 301 was intended</strong>. If a page has moved permanently but you redirect with 302, Google may keep showing the old URL — or worse, treat the redirect as soft-deleted content.</p>
+
+    <h2>Common redirect problems (and fixes)</h2>
+    <ul>
+      <li><strong>Chains longer than 3 hops.</strong> Point the first redirect directly at the final URL instead of at another redirect.</li>
+      <li><strong>Redirect loops</strong> — the browser gives up with ERR_TOO_MANY_REDIRECTS. Usually caused by conflicting rules (e.g. www and HTTPS enforced by two systems that each undo the other).</li>
+      <li><strong>HTTP → intermediate → final.</strong> Redirect http directly to the final https URL in one hop.</li>
+      <li><strong>Redirects on internal links.</strong> Update links inside your own site to point at final URLs — crawlers shouldn't have to follow redirects between your own pages.</li>
+      <li><strong>Mixed 200-content behind a redirect</strong> that serves a homepage instead of the requested page (soft 404s). Check the final URL matches what you asked for.</li>
+    </ul>
+
+    <h2>Don't forget the SSL certificate at the end of the chain</h2>
+    <p>A redirect can mask an SSL problem: the first hop works, but the final host has an expired certificate, a chain that isn't trusted, or TLS 1.0 only. Visitors see the error at the last second — after waiting through every hop.</p>
+
+    <p>The URL Inspector checks this automatically: for every URL you inspect, it performs a live TLS handshake against the final host and reports the issuer, expiry date with days remaining, TLS version, whether the chain is trusted, and pass/fail checks for hostname match, key strength, and self-signed certificates. Certificates under 30 days are flagged as warnings; expired ones fail outright.</p>
+
+    <h2>Security headers worth checking while you're there</h2>
+    <p>The same inspection shows the HTTP security headers of the final response. The big ones:</p>
+    <ul>
+      <li><code>Strict-Transport-Security</code> (HSTS) — tells browsers to always use HTTPS.</li>
+      <li><code>Content-Security-Policy</code> — mitigates XSS and injected scripts.</li>
+      <li><code>X-Content-Type-Options: nosniff</code> — stops MIME-type sniffing.</li>
+      <li><code>X-Frame-Options</code> / <code>frame-ancestors</code> — prevents clickjacking via framing.</li>
+      <li><code>Referrer-Policy</code> — controls how much referrer data leaks to other sites.</li>
+    </ul>
+
+    <p>For a full walkthrough of every header, see the <a href="/blog/http-headers-reference">HTTP headers reference</a>.</p>
+
+    <h2>Try it</h2>
+    <p>Paste any URL into the <a href="/url-inspector/">free URL Inspector</a> — you'll get the complete redirect chain, all response headers, security header analysis, and a live SSL/TLS report in one view. Nothing is stored, no account needed.</p>
+
+    <p>If you also monitor uptime for your sites, take a look at <a href="/deskuptime/">DeskUptime</a> — a lightweight desktop uptime monitor for macOS, Linux, and Windows.</p>
+  </article>
+</main>
+<footer style="padding:32px 24px;text-align:center;font-size:13px;color:#4a5a6a;">
+  <a href="/">Home</a> · <a href="/free-tools.html">Free Tools</a>
+</footer>
+</body>
+</html>

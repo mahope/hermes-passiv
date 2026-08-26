@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drupal vs TYPO3: tilgængelighed sammenlignet (2026)</title>
+<meta name="description" content="To open-source CMS'er der bruges af den europæiske offentlige sektor. Hvordan deres WCAG 2.1 AA-baselines, extension-økosystemer og remedierings-workflows adskiller sig.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Drupal vs TYPO3: tilgængelighed sammenlignet">
+<meta property="og:description" content="To open-source CMS'er der bruges af den europæiske offentlige sektor. Hvordan deres WCAG 2.1 AA-baselines, extension-økosystemer og remedierings-workflows adskiller sig.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Drupal vs TYPO3: tilgængelighed sammenlignet", "description": "To open-source CMS'er der bruges af den europæiske offentlige sektor. Hvordan deres WCAG 2.1 AA-baselines, extension-økosystemer og remedierings-workflows adskiller sig.", "url": "https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilket CMS er mest tilgængeligt ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Drupal med Olivero-temaet har en stærkere baseline — core'en håndhæver semantisk markup og ARIA. TYPO3 kræver mere manuel opsætning af Fluid-templates for at opnå samme niveau. Men begge kan nå fuld AA-compliance — det afhænger af hvad du gør med dem."}}, {"@type": "Question", "name": "Er extensions/moduler et problem?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, det er den største kilde til defekter i praksis. Tredjeparts-moduler i begge CMS'er har ujævn tilgængelighedskvalitet — test hvert modul individuelt før deployment."}}, {"@type": "Question", "name": "Hvad med opdateringer?", "acceptedAnswer": {"@type": "Answer", "text": "Modul- og kernel-opdateringer kan genindføre tidligere fiksedee fejl. Tilgængelighedstest bør være en fast del af hver update-runde — ikke noget der gøres én gang om året."}}, {"@type": "Question", "name": "Bør jeg vælge Drupal eller TYPO3 for compliance?", "acceptedAnswer": {"@type": "Answer", "text": "Begge er brugbare. Drupal kræver mindre manuel opsætning for at nå en AA-baseline; TYPO3 giver mere fleksibilitet i output men kræver strengere editor-disciplin. Vælg efter hvad dit team kender — et velbygget site i ethvert CMS er bedre end et dårligt bygget site i det \"rigtige\" CMS."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">TILGÆNGELIGHED &middot; CMS &middot; SAMMENLIGNING</div>
+    <h1>Drupal vs TYPO3:<br>tilgængelighed sammenlignet</h1>
+    <p class="subtitle">Drupal og TYPO3 er de to open source-CMS'er der oftest bruges af europæiske offentlige myndigheder — præcis de organisationer med de strengeste tilgængelighedskrav.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Drupal og TYPO3 er de to open source-CMS'er der oftest bruges af europæiske offentlige myndigheder — præcis de organisationer med de strengeste tilgængelighedskrav. Offentlige myndigheder har været omfattet af EN 301 549 / WCAG 2.1 AA siden 2019 under Webtilgængelighedsdirektivet og siden juni 2025 også under European Accessibility Act. Begge CMS'er er i stand til fuld compliance; de adskiller sig i hvor deres standardstyrker ligger, og hvordan deres extension-økosystemer introducerer risiko.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🏛️ Directive Veterans</h3><p>Begge økosystemer har levet med Webtilgængelighedsdirektivet siden 2019 — tilgængelighedserklæringer, monitorering og feedback-mekanismer er velkendt territorium.</p></div>
+      <div class="card"><h3>⚙️ Stærke kerner</h3><p>Drupal leverer Olivero-fronter temaet bygget til AA; TYPO3 giver tilgængelig output via Fluid Styled Content og sine tilgængelighedsfokuserede extensions.</p></div>
+      <div class="card"><h3>🧩 Extension-risiko</h3><p>Drupal contrib-moduler og TYPO3-extensions injicerer formularer, views og widgets af ujævn kvalitet — den største kilde til defekter i praksis.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Drupal fejler</h2>
+    <p>Typiske Drupal-defektmønstre:</p><ul><li><strong>🧩 Contrib-moduler</strong> — formularbyggere, sliders og kortmoduler overskriver core's tilgængelige defaults: placeholder-only felter, div-baserede kontroller, manglende aria-expanded.</li><li><strong>🎨 Custom-temaer</strong> — sub-temaer dropper Oliveros fokus-styles, springer landmarks over eller hardcoder ikke-semantisk markup.</li><li><strong>📝 Editor-indhold</strong> — rich-text-indhold omgår strukturerede felter: fed-tekst pseudo-overskrifter, tom alt på uploadede billeder, "klik her"-links.</li><li><strong>🔄 Opdateringsregressioner</strong> — modulopdateringer genindfører stille og roligt fiksedee fejl.</li></ul>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor TYPO3 fejler</h2>
+    <p>Typiske TYPO3-defektmønstre:</p><ul><li><strong>🖼️ Alt-disciplin</strong> — legacy-indhold og quick-uploads springer alt-metadata over.</li><li><strong>🧱 Gamle templates</strong> — sider på Protostar-æra eller stærkt overridede Fluid-templates bærer strukturelle tilgængelighedsfejl.</li><li><strong>🔌 Extension-overlap</strong> — flere extensions der håndterer samme funktion (fx kalender, kort) giver inkonsistent keyboard-adfærd.</li><li><strong>📄 PDF-generering</strong> — TYPO3's indbyggede PDF-output mangler ofte tags og sprogmetadata.</li></ul>
+    <p>For en dybdegående guide til Drupal alene, se vores <a href="/da/blog/drupal-tilgaengelighed-eaa" style="color:var(--color-accent);">Drupal EAA-guide</a>. For TYPO3, se <a href="/da/blog/typo3-tilgaengelighed-bitv" style="color:var(--color-accent);">TYPO3 BITV-tjek</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvilket CMS er mest tilgængeligt ud af boksen?</h3><p>Drupal med Olivero-temaet har en stærkere baseline — core'en håndhæver semantisk markup og ARIA. TYPO3 kræver mere manuel opsætning af Fluid-templates for at opnå samme niveau. Men begge kan nå fuld AA-compliance — det afhænger af hvad du gør med dem.</p></div>
+      <div class="card"><h3>Er extensions/moduler et problem?</h3><p>Ja, det er den største kilde til defekter i praksis. Tredjeparts-moduler i begge CMS'er har ujævn tilgængelighedskvalitet — test hvert modul individuelt før deployment.</p></div>
+      <div class="card"><h3>Hvad med opdateringer?</h3><p>Modul- og kernel-opdateringer kan genindføre tidligere fiksedee fejl. Tilgængelighedstest bør være en fast del af hver update-runde — ikke noget der gøres én gang om året.</p></div>
+      <div class="card"><h3>Bør jeg vælge Drupal eller TYPO3 for compliance?</h3><p>Begge er brugbare. Drupal kræver mindre manuel opsætning for at nå en AA-baseline; TYPO3 giver mere fleksibilitet i output men kræver strengere editor-disciplin. Vælg efter hvad dit team kender — et velbygget site i ethvert CMS er bedre end et dårligt bygget site i det "rigtige" CMS.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/drupal-tilgaengelighed-eaa" style="color:var(--color-accent);">Drupal EAA-guide</a> &middot; <a href="/da/blog/typo3-tilgaengelighed-bitv" style="color:var(--color-accent);">TYPO3 BITV-tjek</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/drupal-vs-typo3-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

@@ -549,6 +549,7 @@ def main():
         missing = [r for r in set(refs)
                    if not r.startswith('/api')
                    and r not in ('/sitemap.xml', '/style.css', '/track.js', '/blog', '/free-tools')
+                   and not any(r.endswith(ext) for ext in ('.zip', '.pdf', '.epub', '.whl'))
                    and not os.path.exists(os.path.join(ROOT, 'site', r.lstrip('/') + '.html'))]
         assert not missing, missing
         assert not [r for r in refs if r.endswith('.html')], 'raw .html link found'

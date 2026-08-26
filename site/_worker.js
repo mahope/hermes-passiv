@@ -139,6 +139,19 @@ export default {
       return Response.redirect(new URL(`/blog/${enBackMatch[1]}`, request.url).toString(), 301);
     }
 
+    // === Redirect old DA slugs to new (iter 460: renamed 5 DA mirrors) ===
+    const DA_SLUG_REDIRECTS = {
+      'pris-tilgaengelighedsgennemgang': 'hvad-koster-tilgaengelighedsgennemgang',
+      'ren-tekst-fra-hjemmeside': 'kopier-ren-tekst-fra-hjemmeside',
+      'tjek-hjemmeside-hastighed-uden-lighthouse': 'tjek-hastighed-uden-lighthouse',
+      'kopier-tabel-fra-pdf': 'kopier-tabel-fra-pdf-til-excel',
+      'open-graph-tjekker': 'open-graph-tjekker-guide',
+    };
+    const daSlugMatch = path.match(/^\/da\/blog\/([a-z0-9-]+)\/?(?:#.*)?$/);
+    if (daSlugMatch && DA_SLUG_REDIRECTS[daSlugMatch[1]]) {
+      return Response.redirect(new URL(`/da/blog/${DA_SLUG_REDIRECTS[daSlugMatch[1]]}`, request.url).toString(), 301);
+    }
+
     // === Route: everything else — serve static assets ===
     try {
       const response = await env.ASSETS.fetch(request);

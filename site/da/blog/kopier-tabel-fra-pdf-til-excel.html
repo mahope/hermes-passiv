@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kopiér en tabel fra PDF til Excel (guide 2026)</title>
+<meta name="description" content="Årsrapporter, kvartalsregnskaber, offentlig statistik — tabellerne sidder fanget i PDF-filer. Markér-og-kopiér giver næsten altid én lang klump tekst. Sådan kommer du rundt om det, med hver kolonne der hvor den skal.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Kopiér en tabel fra PDF til Excel">
+<meta property="og:description" content="Årsrapporter, kvartalsregnskaber, offentlig statistik — tabellerne sidder fanget i PDF-filer. Markér-og-kopiér giver næsten altid én lang klump tekst. Sådan kommer du rundt om det, med hver kolonne der hvor den skal.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/copy-table-from-pdf-to-excel">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-table-from-pdf-to-excel">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra PDF til Excel", "description": "Årsrapporter, kvartalsregnskaber, offentlig statistik — tabellerne sidder fanget i PDF-filer. Markér-og-kopiér giver næsten altid én lang klump tekst. Sådan kommer du rundt om det, med hver kolonne der hvor den skal.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvorfor bliver direkte kopiering fra PDF til rod?", "acceptedAnswer": {"@type": "Answer", "text": "En PDF gemmer tekst som positionerede blokke uden reel tabelstruktur. Viewer-en renderer tekst i læserækkefølge — ikke tabelrækkefølge — så kolonner kollapser, og hver værdi lander typisk på sin egen linje. Udklipsholderen har simpelthen ingen struktur at give Excel."}}, {"@type": "Question", "name": "Er OCR en sikker vej?", "acceptedAnswer": {"@type": "Answer", "text": "Nej, til tal aldrig. OCR læser pixels, og cifre er den hyppigste kilde til fejl. Et forkert digit i et regnskab er svært at opdage og værre end ingen data. Brug kun OCR på rent prosatekst, og verificér altid tallene imod originalen."}}, {"@type": "Question", "name": "Kræver metoden betalt software?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Browser-vejen bruger Chromes eller Firefox' indbyggede PDF-viewer plus den gratis Clean Copy-udvidelse. Acrobat-eksport og Excels \"Hent data fra PDF\" fungerer godt men kræver betalte abonnementer (Acrobat / Microsoft 365)."}}, {"@type": "Question", "name": "Virker indsættelsen i Google Sheets også?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Samme princip: Markdown-tabellen indsættes som rigtige rækker og kolonner i Google Sheets, Numbers og LibreOffice Calc — ikke kun Excel."}}, {"@type": "Question", "name": "Hvad med scannede PDF'er uden rigtig tekst?", "acceptedAnswer": {"@type": "Answer", "text": "Hvis PDF'en er et billedscannet dokument, findes der ingen tekst at kopiere — browser-metoden kræver at teksten er rigtig tekst. Scannede dokumenter skal gennem OCR først, med de risici for talfejl det indebærer. Tjek om du kan markere tekst i viewer-en — kan du ikke, er det en scan."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PDF &middot; EXCEL &middot; TABELLER</div>
+    <h1>Fra PDF-tabel<br>til pæne Excel-celler</h1>
+    <p class="subtitle">Hvorfor PDF-vieweren ødelægger strukturen, hvad OCR koster af tal — og metoden hvor tabellen lander i rigtige celler via browseren og Markdown.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Problemet er ikke Excel — det er udklipsholderen. En PDF har ingen reel tabelstruktur at give videre. Direkte kopiering fra viewer-en giver typisk alle værdier stablet kolonnevis, én pr. linje. Skærmbillede plus OCR læser pixels — og cifre er præcis det OCR tager fejl af oftest. Ét forkert ciffer i et regnskab er værre end ingen data. Og manuel genindtasting skalerer ikke: fint til tre rækker, ej til en årsrapport på 40 sider.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Celler forbliver celler</h3><p>Udklipsholderen bærer reel tabelstruktur, så Excel mapper hver værdi til den rigtige celle — headers inkluderet.</p></div>
+      <div class="card"><h3>🧹 Intet rod med</h3><p>Ingen sidehoveder, fodnotenumre eller løbende tekst — kun tabellen du pegede på.</p></div>
+      <div class="card"><h3>🔁 Virker andre steder også</h3><p>Samme indsættelse virker i Google Sheets, Numbers og LibreOffice Calc.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Metoden: åbn PDF'en i browseren</h2>
+    <p>Når en PDF åbnes i Chrome eller Firefox, er teksten rigtig tekst på siden — og det er præcis hvad Clean Copy-udvidelsen arbejder med. Markér tabellen (eller klik inde i den) og kopiér som Markdown: konverteren gør tabellen til struktureret Markdown, som Excel, Sheets og Notion indsætter som rigtige rækker og kolonner.</p>
+    <p><strong>1. Installér</strong> Clean Copy til Chrome eller Firefox — se installationsguiden på /clean-copy#install.</p>
+    <p><strong>2. Åbn PDF'en i browseren.</strong> Træk PDF-filen ind i et Chrome- eller Firefox-vindue og scroll hen til tabellen.</p>
+    <p><strong>3. Kopiér tabellen.</strong> Markér tabellen, klik Clean Copy-ikonet og vælg kopiér som Markdown.</p>
+    <p><strong>4. Indsæt i Excel.</strong> Klik celle A1 og tryk Ctrl+V (Cmd+V på Mac). Hver værdi lander i sin egen celle.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Mulighederne side om side</h2>
+    <div class="compare"><table><tr><th>Metode</th><th>Bevarer struktur?</th><th>Hage</th></tr><tr><td>Markér + kopiér i PDF-vieweren</td><td>Sjældent</td><td>Tekst kommer i læserækkefølge, kollapser kolonner</td></tr><tr><td>Skærmbillede + OCR</td><td>Efter oprydning</td><td>Talfejl er svære at spotte</td></tr><tr><td>Acrobat "Eksportér til regneark"</td><td>Ja</td><td>Betales abonnement; langsom ved mange tabeller</td></tr><tr><td>Excel Data → Hent data fra PDF</td><td>Ja</td><td>Kræver Microsoft 365; halter ved komplekse layouts</td></tr><tr><td><strong>Clean Copy — Markdown-tabel</strong></td><td>Ja</td><td>Gratis browserudvidelse; PDF åbnet i browseren</td></tr></table></div>
+    <p>Har du allerede Microsoft 365 eller Acrobat, kan deres indbyggede eksporter sagtens bruges til enkelte store tabeller. Til hurtige kopier — og gratis — er browser-vejen den enkleste.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvorfor bliver direkte kopiering fra PDF til rod?</h3><p>En PDF gemmer tekst som positionerede blokke uden reel tabelstruktur. Viewer-en renderer tekst i læserækkefølge — ikke tabelrækkefølge — så kolonner kollapser, og hver værdi lander typisk på sin egen linje. Udklipsholderen har simpelthen ingen struktur at give Excel.</p></div>
+      <div class="card"><h3>Er OCR en sikker vej?</h3><p>Nej, til tal aldrig. OCR læser pixels, og cifre er den hyppigste kilde til fejl. Et forkert digit i et regnskab er svært at opdage og værre end ingen data. Brug kun OCR på rent prosatekst, og verificér altid tallene imod originalen.</p></div>
+      <div class="card"><h3>Kræver metoden betalt software?</h3><p>Nej. Browser-vejen bruger Chromes eller Firefox' indbyggede PDF-viewer plus den gratis Clean Copy-udvidelse. Acrobat-eksport og Excels "Hent data fra PDF" fungerer godt men kræver betalte abonnementer (Acrobat / Microsoft 365).</p></div>
+      <div class="card"><h3>Virker indsættelsen i Google Sheets også?</h3><p>Ja. Samme princip: Markdown-tabellen indsættes som rigtige rækker og kolonner i Google Sheets, Numbers og LibreOffice Calc — ikke kun Excel.</p></div>
+      <div class="card"><h3>Hvad med scannede PDF'er uden rigtig tekst?</h3><p>Hvis PDF'en er et billedscannet dokument, findes der ingen tekst at kopiere — browser-metoden kræver at teksten er rigtig tekst. Scannede dokumenter skal gennem OCR først, med de risici for talfejl det indebærer. Tjek om du kan markere tekst i viewer-en — kan du ikke, er det en scan.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/html-tabel-til-csv-konverter" style="color:var(--color-accent);">HTML-tabel til CSV</a> &middot; <a href="/da/blog/kopier-som-markdown-udvidelse" style="color:var(--color-accent);">Kopiér som Markdown</a> &middot; <a href="/da/blog/tabeljustering-html-til-markdown" style="color:var(--color-accent);">Tabeljustering</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/copy-table-from-pdf-to-excel">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

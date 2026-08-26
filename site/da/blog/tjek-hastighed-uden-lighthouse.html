@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tjek din hjemmesides hastighed uden Lighthouse (gratis CLI, 2026)</title>
+<meta name="description" content="Lighthouse er tungt: fuld browser-render, snart minutter pr. kørsel, besværligt i CI. Til hverdagsspørgsmålet "er denne side hurtig, gyldig og korrekt koblet sammen?" svarer en letvægts-terminalprofiler på sekunder.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Tjek hjemmesidehastighed uden Lighthouse">
+<meta property="og:description" content="Lighthouse er tungt: fuld browser-render, snart minutter pr. kørsel, besværligt i CI. Til hverdagsspørgsmålet "er denne side hurtig, gyldig og korrekt koblet sammen?" svarer en letvægts-terminalprofiler på sekunder.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/check-website-speed-without-lighthouse">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/check-website-speed-without-lighthouse">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek hjemmesidehastighed uden Lighthouse", "description": "Lighthouse er tungt: fuld browser-render, snart minutter pr. kørsel, besværligt i CI. Til hverdagsspørgsmålet \"er denne side hurtig, gyldig og korrekt koblet sammen?\" svarer en letvægts-terminalprofiler på sekunder.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Kan jeg teste hastighed uden at køre Lighthouse?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Den gratis page-profile CLI henter siden server-side og rapporterer svartid, HTTP-status, redirects og sidevægt-signaler på få sekunder — uden Chrome, uden npm-installation, uden Lighthouse-setup. Den supplerer Lighthouse: brug den til hurtige helbredstjek og CI-gates, Lighthouse til dybe render-audits."}}, {"@type": "Question", "name": "Er dette en alternativ til Google PageSpeed Insights?", "acceptedAnswer": {"@type": "Answer", "text": "Den måler noget andet. PageSpeed Insights giver feltdata og lab-scores fra en fuld render — nyttigt til Core Web Vitals-arbejde, men langsomt pr. kørsel. page-profile svarer på det tekniske helbred: status, svartid, meta-tags, struktureret data, headere. Hurtigt og gentageligt."}}, {"@type": "Question", "name": "Kræver det installation?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Enten kører du den direkte i browseren på /page-profile, eller også downloader du én enkelt Python-fil og kører den med python3. Ingen pip, ingen npm, ingen afhængigheder — standardbiblioteket klarer alt."}}, {"@type": "Question", "name": "Kan jeg bruge det i CI?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, det er et af hovedformålene. Outputtet findes som maskinlæsbar JSON (--json), scriptet afslutter med exit-koder, og fordi det er ren standardbiblioteks-Python kører det i enhver container med Python 3.8+ — inklusive GitHub Actions uden ekstra steps."}}, {"@type": "Question", "name": "Hvad koster Pro-versionen?", "acceptedAnswer": {"@type": "Answer", "text": "Pro ($19/år) tilføjer compare, batch-kørsler og eksportérbar HTML-rapport med offline licensnøgler. Historik-funktionen — scores gemt lokalt over tid — er gratis for alle."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">PERFORMANCE &middot; SEO &middot; CLI</div>
+    <h1>Tjek hastigheden —<br>uden Lighthouse</h1>
+    <p class="subtitle">page-profile henter siden server-side og scorer 21 signaler på under to sekunder — i browseren, som single-file CLI eller i batch. Gratis og open source.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Fuld-render-audits har deres plads. Men tre daglige opgaver behøver dem ikke: et hurtigt pre-deploy sanity check (kom canonical-tagget med? Er TTFB stadig fornuftig?), CI-pipelines (headless Chrome i CI bare for at gate en deploy på en score er langsomt og skrøbeligt) og mange URLs på én gang (Lighthouse kører én side pr. invocation). Til det bruger man en let profiler der henter én gang, parser og svare.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚡ Sekunder, ikke minutter</h3><p>Ingen headless browser. Tjekket henter én gang og parser — typisk køretid under to sekunder.</p></div>
+      <div class="card"><h3>🔁 Følg udviklingen</h3><p>--history gemmer tidligere scores lokalt, så du kan se om en release gjorde det bedre eller værre. Gratis for alle.</p></div>
+      <div class="card"><h3>🧰 Virker overalt</h3><p>Ren Python-standardbibliotek — enhver maskine med Python 3.8+, herunder CI-containere og Raspberry Pi.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Metoden: én kommando, ingen installation</h2>
+    <p><strong>Mulighed A — i browseren (intet at installere).</strong> Åbn /page-profile, indsæt URL'en, få rapporten med det samme.</p>
+    <pre>curl -O https://hermes-passiv.pages.dev/downloads/page-profile/page_profile.py
+python3 page_profile.py https://example.com
+
+# Maskinlæsbart output til scripts og CI:
+python3 page_profile.py --json https://example.com | jq .score</pre>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvordan det klarer sig mod de tunge værktøjer</h2>
+    <div class="compare"><table><tr><th>Værktøj</th><th>Opsætning</th><th>Køretid</th><th>Bedst til</th></tr><tr><td>Lighthouse</td><td>Chrome / Node</td><td>30-60 s</td><td>Dybe render-audits, Core Web Vitals</td></tr><tr><td>PageSpeed Insights</td><td>Ingen (web)</td><td>~30 s</td><td>Feltdata, lab-scores</td></tr><tr><td>curl + manuel inspektion</td><td>Ingen</td><td>Sekunder</td><td>Én header ad gangen, ekspertøjne</td></tr><tr><td><strong>page-profile</strong></td><td>Én Python-fil</td><td>&lt; 2 s</td><td>Daglige helbredstjek, CI-gates, batch</td></tr></table></div>
+    <p>De svarer på forskellige spørgsmål. Brug Lighthouse når du skal have renderede diagnostikker; brug page-profile når du skal have et hurtigt, gentageligt svar du kan lægge i en pipeline.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvad de 21 signaler dækker</h2>
+    <p>Svartid og redirects, titel- og description-længder, Open Graph-tags, canonical, hreflang, JSON-LD-struktureret data, overskriftsstruktur, alt-tekster og sikkerhedsheadere. Alt hvad der afgør om en side er teknisk sund — uden at rendere den.</p>
+    <p>I Pro-versionen kommer compare (to URLs side om side), batch (hele listefiler) og en HTML-rapport du kan vedhæfte en ticket — med offline licensnøgler så intet afhænger af en server.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Kan jeg teste hastighed uden at køre Lighthouse?</h3><p>Ja. Den gratis page-profile CLI henter siden server-side og rapporterer svartid, HTTP-status, redirects og sidevægt-signaler på få sekunder — uden Chrome, uden npm-installation, uden Lighthouse-setup. Den supplerer Lighthouse: brug den til hurtige helbredstjek og CI-gates, Lighthouse til dybe render-audits.</p></div>
+      <div class="card"><h3>Er dette en alternativ til Google PageSpeed Insights?</h3><p>Den måler noget andet. PageSpeed Insights giver feltdata og lab-scores fra en fuld render — nyttigt til Core Web Vitals-arbejde, men langsomt pr. kørsel. page-profile svarer på det tekniske helbred: status, svartid, meta-tags, struktureret data, headere. Hurtigt og gentageligt.</p></div>
+      <div class="card"><h3>Kræver det installation?</h3><p>Nej. Enten kører du den direkte i browseren på /page-profile, eller også downloader du én enkelt Python-fil og kører den med python3. Ingen pip, ingen npm, ingen afhængigheder — standardbiblioteket klarer alt.</p></div>
+      <div class="card"><h3>Kan jeg bruge det i CI?</h3><p>Ja, det er et af hovedformålene. Outputtet findes som maskinlæsbar JSON (--json), scriptet afslutter med exit-koder, og fordi det er ren standardbiblioteks-Python kører det i enhver container med Python 3.8+ — inklusive GitHub Actions uden ekstra steps.</p></div>
+      <div class="card"><h3>Hvad koster Pro-versionen?</h3><p>Pro ($19/år) tilføjer compare, batch-kørsler og eksportérbar HTML-rapport med offline licensnøgler. Historik-funktionen — scores gemt lokalt over tid — er gratis for alle.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);">Teknisk SEO-tjek</a> &middot; <a href="/da/blog/meta-tjekker" style="color:var(--color-accent);">Meta-tag-tjekker</a> &middot; <a href="/da/blog/canonisk-url-guide" style="color:var(--color-accent);">Canonical-guide</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/check-website-speed-without-lighthouse">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

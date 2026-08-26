@@ -1,5 +1,5 @@
 {
- "copy-table-from-pdf-to-excel": "kopier-tabel-fra-pdf",
+ "copy-table-from-pdf-to-excel": "kopier-tabel-fra-pdf-til-excel",
  "copy-table-website-to-notion": "kopier-tabel-hjemmeside-til-notion",
  "free-eaa-statement-generators": "gratis-eaa-saetninger",
  "eaa-enforcement-2026": "eaa-haandhaevelse-2026",
@@ -11,9 +11,9 @@
  "gdpr-fines-2026": "gdpr-boeder-2026",
  "technical-seo-check-website": "teknisk-seo-tjek-hjemmeside",
  "cookie-consent-gdpr-compliance": "cookie-consent-gdpr-2026",
- "accessibility-audit-cost": "pris-tilgaengelighedsgennemgang",
+ "accessibility-audit-cost": "hvad-koster-tilgaengelighedsgennemgang",
  "copy-as-markdown-chrome-extension": "kopier-som-markdown-udvidelse",
- "copy-clean-text-from-website": "ren-tekst-fra-hjemmeside",
+ "copy-clean-text-from-website": "kopier-ren-tekst-fra-hjemmeside",
  "copy-from-chatgpt-into-word": "kopier-chatgpt-til-word",
  "copy-table-from-website-to-excel": "kopier-tabel-til-excel",
  "eaa-deadline-2026": "eaa-frister-2026",
@@ -23,7 +23,7 @@
  "html-to-markdown-converter": "html-til-markdown-konverter",
  "html-to-markdown-vscode": "indsaet-som-markdown-i-vscode",
  "meta-tag-checker": "meta-tjekker",
- "open-graph-checker": "open-graph-tjekker",
+ "open-graph-checker": "open-graph-tjekker-guide",
  "paste-into-obsidian-clean-markdown": "indsæt-i-obsidian-ren-markdown",
  "paste-without-formatting-chrome": "indsæt-uden-formatering-i-chrome",
  "url-to-markdown-converter": "url-til-markdown-konverter",
@@ -61,7 +61,7 @@
  "nis2-checklist-pdf": "nis2-tjekliste-25-punkter",
  "website-seo-metadata-audit": "seo-metadata-tjek-hjemmeside",
  "table-alignment-html-to-markdown": "tabeljustering-html-til-markdown",
- "check-website-speed-without-lighthouse": "tjek-hjemmeside-hastighed-uden-lighthouse",
+ "check-website-speed-without-lighthouse": "tjek-hastighed-uden-lighthouse",
  "joomla-bitv-accessibility": "joomla-tilgaengelighed-bitv",
  "ghost-eaa-accessibility": "ghost-tilgaengelighed-eaa",
  "typo3-accessibility-bitv-check": "typo3-tilgaengelighed-bitv",
@@ -72,5 +72,10 @@
  "check-url-redirect-chain": "tjek-url-redirect-kaede",
  "html-table-to-csv-converter": "html-tabel-til-csv-konverter",
  "http-headers-reference": "http-headere-reference",
- "check-ssl-certificate-expiry": "tjek-ssl-certifikat-udloeb"
+ "check-ssl-certificate-expiry": "tjek-ssl-certifikat-udloeb",
+ "add-bug-report-form-to-any-website": "tilfoej-fejlrapport-formular-hjemmeside",
+ "desktop-website-monitor-cli": "overvaag-hjemmeside-fra-terminalen",
+ "drupal-vs-typo3-accessibility": "drupal-vs-typo3-tilgaengelighed",
+ "eaa-compliance-scanner-desktop": "eaa-compliance-scanner-desktop-download",
+ "install-obsidian-plugin-clean-copy": "installer-clean-copy-obsidian"
 }

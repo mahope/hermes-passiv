@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sådan installerer du Clean Copy til Obsidian (BRAT, manuelt & zip)</title>
+<meta name="description" content="Det gratis plugin der indsætter clipboard-HTML som korrekt Markdown — overskrifter, links, lister og tabeller. Tre måder at installere på, alle på under ét minut.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Installer Clean Copy til Obsidian">
+<meta property="og:description" content="Det gratis plugin der indsætter clipboard-HTML som korrekt Markdown — overskrifter, links, lister og tabeller. Tre måder at installere på, alle på under ét minut.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/installer-clean-copy-obsidian">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/installer-clean-copy-obsidian">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/installer-clean-copy-obsidian">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Installer Clean Copy til Obsidian", "description": "Det gratis plugin der indsætter clipboard-HTML som korrekt Markdown — overskrifter, links, lister og tabeller. Tre måder at installere på, alle på under ét minut.", "url": "https://hermes-passiv.pages.dev/da/blog/installer-clean-copy-obsidian", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Er det sikkert at installere plugins fra GitHub?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Clean Copy er open source (MIT) — koden er synlig på GitHub. BRAT-installationen verificerer at filerne kommer fra den officielle release. Pluginnet har ingen netværksadgang og arbejder kun med din clipboard."}}, {"@type": "Question", "name": "Virker det på Obsidian mobile?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Manuel installation virker fint — brug en filhåndtering til at placere de tre filer i vaultets plugin-mappe."}}, {"@type": "Question", "name": "Får jeg automatiske opdateringer?", "acceptedAnswer": {"@type": "Answer", "text": "Kun med BRAT-metoden. Manuel/zip-installation kræver at du gentager processen når en ny version udkommer."}}, {"@type": "Question", "name": "Hvad er forskellen på v1.0.8 og v1.0.9?", "acceptedAnswer": {"@type": "Answer", "text": "v1.0.9 tilføjer en CSV-tabeltilstand ved siden af WikiLinks-tilstanden — vælg din default i Settings."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">OBSIDIAN &middot; PLUGIN &middot; CLEAN COPY</div>
+    <h1>Installer Clean Copy til Obsidian</h1>
+    <p class="subtitle">Det gratis plugin der indsætter clipboard-HTML som korrekt Markdown — overskrifter, links, lister, tabeller og kode intakt. Tre måder at installere på, alle på under ét minut.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Clean Copy til Obsidian er det plugin du installerer én gang og glemmer — men mærker hver gang du kopierer fra nettet. I stedet for at indsætte forældet HTML der skal ryddes op i, får du ren Markdown med det samme: overskrifter som #, links som [tekst](url) og tabeller som pipe-tabeller. v1.0.9 tilføjer en CSV-tabel-tilføjelsestilstand ved siden af den eksisterende [[WikiLinks]]-tilstand.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚡ BRAT-metoden (hurtigst)</h3><p>Installer BRAT fra Obsidians community plugins, tilføj mahope/clean-copy-obsidian — auto-opdateringer fremover.</p></div>
+      <div class="card"><h3>📁 Manuel installation</h3><p>Download main.js, manifest.json og styles.css fra GitHub releases. Virker også på Obsidian mobile.</p></div>
+      <div class="card"><h3>📦 Zip-bundle</h3><p>Ét download med alle tre filer — pak ud i vaultets plugin-mappe og aktiver.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tre installationsmetoder</h2>
+    <p><strong>1) BRAT (hurtigst, auto-opdateringer)</strong></p><ol><li>Installer BRAT fra Obsidians community plugin-browser (Settings → Community plugins → Browse → søg "BRAT").</li><li>Åbn kommandopaletten (Cmd/Ctrl+P) og kør "BRAT: Add a beta plugin for testing".</li><li>Indtast <code>mahope/clean-copy-obsidian</code> og bekræft.</li><li>Aktiver Clean Copy i Settings → Community plugins.</li></ol><p>BRAT overvåger repository'ets releases — hver fremtidig version ankommer automatisk.</p>
+    <p><strong>2) Manuel installation</strong></p><ol><li>Åbn den seneste release-side på GitHub.</li><li>Download <code>main.js</code>, <code>manifest.json</code> og <code>styles.css</code>.</li><li>Opret mappen <code>&lt;dit-vault&gt;/.obsidian/plugins/clean-copy-obsidian/</code> og læg alle tre filer derind.</li><li>Genstart Obsidian og aktiver Clean Copy.</li></ol><p>Virker også på Obsidian mobile — brug en filhåndtering til at nå vault-mappen.</p>
+    <p><strong>3) Zip-bundle (ét klik)</strong></p><p><a href="/downloads/clean-copy-obsidian-v1.0.9.zip" style="color:var(--color-accent);">Download v1.0.9 zip</a>, pak ud i <code>&lt;vault&gt;/.obsidian/plugins/</code> og aktiver.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Første kørsel</h2>
+    <p>Kopiér formateret tekst fra nettet, tryk Ctrl/Cmd+Shift+V (eller kør "Paste as clean Markdown" fra kommandopaletten). Overskrifter ankommer som #, links som [tekst](url), tabeller som pipe-tabeller, entities afkodet.</p>
+    <p>To ekstra kommandoer bor i paletten: "Paste as plain text" og "Clean selection" til at rense tekst der allerede er i en note.</p>
+    <p>I Settings → Clean Copy vælger du din standard-tilstand: Markdown med [[WikiLinks]] (interne links) eller CSV-tabeltilstand. Se hvordan det virker i browseren: <a href="/clean-copy-tool" style="color:var(--color-accent);">prøv Clean Copy online</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er det sikkert at installere plugins fra GitHub?</h3><p>Ja. Clean Copy er open source (MIT) — koden er synlig på GitHub. BRAT-installationen verificerer at filerne kommer fra den officielle release. Pluginnet har ingen netværksadgang og arbejder kun med din clipboard.</p></div>
+      <div class="card"><h3>Virker det på Obsidian mobile?</h3><p>Ja. Manuel installation virker fint — brug en filhåndtering til at placere de tre filer i vaultets plugin-mappe.</p></div>
+      <div class="card"><h3>Får jeg automatiske opdateringer?</h3><p>Kun med BRAT-metoden. Manuel/zip-installation kræver at du gentager processen når en ny version udkommer.</p></div>
+      <div class="card"><h3>Hvad er forskellen på v1.0.8 og v1.0.9?</h3><p>v1.0.9 tilføjer en CSV-tabeltilstand ved siden af WikiLinks-tilstanden — vælg din default i Settings.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/indsæt-i-obsidian-ren-markdown" style="color:var(--color-accent);">Indsæt ren Markdown i Obsidian</a> &middot; <a href="/da/blog/kopier-som-markdown-udvidelse" style="color:var(--color-accent);">Kopiér som Markdown</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/install-obsidian-plugin-clean-copy">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

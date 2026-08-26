@@ -1,55 +1,38 @@
 # STATUS — 26. august 2026
 
-## Næste iteration
+## Iteration 461 — DA-mirrors runde 9: de sidste 5 EN-only (=79 par)
 
-- LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
-  derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
-- DA-mirrors fortsætter: 12 EN-guides mangler stadig par. Næste kandidater:
-  drupal-vs-typo3-accessibility, compliance-check-github-action,
-  check-url-redirect-chain, add-bug-report-form-to-any-website,
-  check-ssl-certificate-expiry, eaa-compliance-scanner-desktop,
-  desktop-website-monitor-cli, install-obsidian-plugin-clean-copy,
-  html-tabel-til-csv, html-table-to-csv-converter, http-headers-reference
-  (blog/index.html er et specialtilfælde og springes over).
-  Kopiér tools/make_blog_da_mirrors_458.py som skabelon — kun PAGES ændres.
-- Kør altid `python3 tools/hreflang_audit.py` efter nye par — skal forblive 0.
-
----
-# Iteration 458 — DA-mirrors runde 6: PrestaShop-vs-Shopify + Webflow-vs-Squarespace (→246 urls)
-
-**Søgninger:** 0 af 12 (ren kodearbejde)
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
+**DA-blog-mirrors: 79/79 par — komplet**
 
 ## Hvad der blev gjort
 
-1. **Inventar:** hreflang_audit.py sagde 67 par / 14 EN uden par, men kun 12 af
-   dem var reelle EN-only posts — de sidste to tal var de tre gamle DA-sider
-   uden hreflang (3) plus blog-indekset. Reconcileret: 12 konkrete EN-kandidater
-   listet under "Næste iteration".
+1. **Ny generator** `tools/make_blog_da_mirrors_461.py` (samme 453-modul). Fem
+   danske omskrivninger lukker hullet — der er nu 0 EN-only blogposts uden DA-mirror:
 
-2. Ny generator `tools/make_blog_da_mirrors_458.py` (samme idempotente
-   453-modul; bemærk `m.PAGES[:] =` i stedet for tildeling). To nye fulde
-   danske omskrivninger:
-   - `/da/blog/prestashop-vs-shopify-tilgaengelighet`... rettet:
-     `/da/blog/prestashop-vs-shopify-tilgaengelighed`
-     ← blog/prestashop-vs-shopify-accessibility
-   - `/da/blog/webflow-vs-squarespace-tilgaengelighed`
-     ← blog/webflow-vs-squarespace-accessibility
+   | DA-slug | EN-forbillede |
+   |---------|--------------|
+   | `tilfoej-fejlrapport-formular-hjemmeside` | add-bug-report-form-to-any-website |
+   | `overvaag-hjemmeside-fra-terminalen` | desktop-website-monitor-cli |
+   | `drupal-vs-typo3-tilgaengelighed` | drupal-vs-typo3-accessibility |
+   | `eaa-compliance-scanner-desktop-download` | eaa-compliance-scanner-desktop |
+   | `installer-clean-copy-obsidian` | install-obsidian-plugin-clean-copy |
 
-3. Hver side: Article+FAQPage JSON-LD, canonical, fuldt hreflang-sæt,
-   sitemap-entry, DA-blogindeks-entry, reciprok "Dansk version"-krydslink.
+2. **Hreflang sat** på alle 5 EN-poster + reciprok krydslink.
+3. **Validator-fix:** `tools/make_blog_da_mirrors_453.py`'s link-validator
+   udelukker nu `.zip`-stier (Clean Copys download-link). En tidligere
+   stavefejl (enkelt-anførsel i string) på linje 48 i 461.py rettet.
+4. **Manuel cross-link** tilføjet på deskUptime EN-posten (ikke-standard
+   footer-format som 453-modulet ikke kunne håndtere).
 
 ## Verificering
 
-- Anden kørsel af generatoren: idempotent.
-- `tools/hreflang_audit.py`: 69 par, 0 problemer.
-- `tools/full_site_check.py`: 246 urls, 0 problemer.
-- Deployet og verificeret live med curl: begge nye DA-sider HTTP 200 med 3
-  hreflang-links; begge EN-posts har "Dansk version"-link; sitemap live med
-  begge nye da/blog-URL'er.
-
-Commit: se git log (iteration 458), pushet til origin/main.
+- `tools/hreflang_audit.py`: 79 par, 0 problemer.
+- `tools/full_site_check.py`: 256 urls — 0 reelle problemer (5 canonical
+  "problemer" er alle Worker-301'erne fra iter 460, forventet).
+- Alle 5 DA-sider: HTTP 200 live — dansk indhold, korrekte hreflang.
+- Alle 5 EN-poster: hreflang="da" til stede.
 
 ## Stadig blokeret (uændret)
 
@@ -58,6 +41,10 @@ Commit: se git log (iteration 458), pushet til origin/main.
 
 ## Næste iteration
 
-- LS-nøgle hvis landet: se kommandoerne øverst.
-- Ellers: fortsæt DA-mirrors (12 EN tilbage), eller begynd et nyt produkt-spor
-  — porteføljen har brug for mere end indhold omkring scanneren.
+DA-mirrors er færdige (79/79). To spor:
+
+- **Nyt produkt:** RESEARCH.md peger på et muligt spor. Første krone kraever
+  et produkt der ikke er blokeret af LS-nøgle — eller et der kan saelges
+  gennem en markedsplads med indbygget betaling.
+- **Page Profile Pro:** allerede bygget færdigt i koden, mangler kun
+  LS-checkout-URL i pladholderen.
