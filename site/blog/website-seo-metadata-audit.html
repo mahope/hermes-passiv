@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website SEO Metadata Audit: the Complete Pre-Launch Checklist</title>
+<meta name="description" content="Run a full SEO metadata audit on any site: titles, descriptions, canonicals, Open Graph, headings, alt text and structured data — checked automatically, page by page.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Website SEO Metadata Audit: the Complete Pre-Launch Checklist">
+<meta property="og:description" content="Run a full SEO metadata audit on any site: titles, descriptions, canonicals, Open Graph, headings, alt text and structured data — checked automatically, page by page.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Website SEO Metadata Audit: the Complete Pre-Launch Checklist", "description": "Run a full SEO metadata audit on any site: titles, descriptions, canonicals, Open Graph, headings, alt text and structured data — checked automatically, page by page.", "url": "https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a website SEO metadata audit?", "acceptedAnswer": {"@type": "Answer", "text": "It is a structured check of everything search engines and social platforms read before a human does: title tags, meta descriptions, robots directives, canonical URLs, Open Graph and Twitter cards, heading structure, image alt text and structured data. A good audit catches problems before they cost rankings or clicks."}}, {"@type": "Question", "name": "How do I audit every page of my site without checking them by hand?", "acceptedAnswer": {"@type": "Answer", "text": "Use a crawler-style CLI tool that takes a list of URLs (or your sitemap) and reports each issue per page. The free page-profile command does exactly this: point it at a URL and it grades title length, description, canonical, viewport, Open Graph, headings and alt text in seconds."}}, {"@type": "Question", "name": "How long should a title tag and meta description be?", "acceptedAnswer": {"@type": "Answer", "text": "Aim for roughly 50–60 characters for titles and 140–160 characters for meta descriptions. Longer text is truncated in results pages, which lowers click-through even when the page still ranks."}}, {"@type": "Question", "name": "Is Open Graph really an SEO factor?", "acceptedAnswer": {"@type": "Answer", "text": "Not directly for ranking — but shares on Slack, LinkedIn, Facebook and X drive real traffic, and a missing og:image or og:title makes those shares look broken. Most audits treat social metadata as first-class because the traffic impact is measurable."}}, {"@type": "Question", "name": "What should I fix first if the audit shows many issues?", "acceptedAnswer": {"@type": "Answer", "text": "Prioritise in this order: missing or duplicated titles and descriptions, wrong or conflicting canonical URLs, robots noindex on pages that should rank, then social tags and structured data. The first group affects indexing directly; the rest affect clicks."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare {{ width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }}
+  .compare th, .compare td {{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }}
+  .compare th {{ border-bottom:2px solid var(--color-border); }}
+  pre.cmd {{
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }}
+  pre.cmd code {{ font-family:'SF Mono','Monaco','Fira Code',monospace; }}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; METADATA &middot; AUDIT</div>
+    <h1>Website SEO Metadata Audit:<br>The Pre-Launch Checklist</h1>
+    <p class="subtitle">Before a visitor ever sees your page, Google and every social platform have already read its metadata. Here is what to check on every single page — and how to automate the whole pass instead of eyeballing view-source.</p>
+    <div class="hero-cta">
+      <a href="#checklist" class="btn-primary">See the checklist &rarr;</a>
+      <a href="/page-profile" class="btn-secondary">Run it automatically with page-profile</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why metadata breaks quietly</h2>
+    <p>Metadata has no visual failure state. A missing canonical, a truncated title or a page with no <code>og:image</code> renders perfectly fine in a browser — and leaks clicks and rankings for months until someone checks.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 Nobody views source</h3><p>Title truncation, duplicate descriptions and missing viewport tags are invisible on the rendered page. They only show up in an audit.</p></div>
+      <div class="card"><h3>📉 Small errors compound</h3><p>One weak title costs little. Two hundred of them across a site is a systematic ceiling on click-through rate.</p></div>
+      <div class="card"><h3>🤝 Shares look broken</h3><p>A link pasted into Slack or LinkedIn with no og:title and og:image looks like spam — even from a trusted domain.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="checklist">
+  <div class="container">
+    <h2>The checklist — what to verify on every page</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Item</th><th>Pass condition</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Title tag</td><td>Present, unique, ~50–60 chars, primary keyword first</td></tr>
+        <tr><td>2</td><td>Meta description</td><td>Present, unique, ~140–160 chars, has a reason to click</td></tr>
+        <tr><td>3</td><td>Canonical URL</td><td>Self-referencing, absolute, no conflicts</td></tr>
+        <tr><td>4</td><td>Robots meta</td><td>No accidental <code>noindex</code>/<code>nofollow</code> on indexable pages</td></tr>
+        <tr><td>5</td><td>Viewport</td><td><code>width=device-width, initial-scale=1</code> present</td></tr>
+        <tr><td>6</td><td>Open Graph</td><td>og:title, og:description, og:image, og:url all set</td></tr>
+        <tr><td>7</td><td>Headings</td><td>One H1, logical H2/H3 hierarchy, no skipped levels</td></tr>
+        <tr><td>8</td><td>Images</td><td>Every meaningful image has alt text</td></tr>
+        <tr><td>9</td><td>Structured data</td><td>Valid JSON-LD where relevant (Article, Product, FAQ)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="automate">
+  <div class="container">
+    <h2>Automate the whole pass</h2>
+    <p>Checking nine items per page by hand stops being realistic after about ten pages. The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI runs the entire table above against any URL and returns a graded report:</p>
+    <pre class="cmd"><code>npx page-profile https://example.com        # single page report
+npx page-profile --urls-from-file urls.txt  # batch mode (Pro)
+npx page-profile --compare old.html new.html # diff two versions (Pro)</code></pre>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Graded, not just listed</h3><p>Each check gets a pass/warn/fail so you can triage instead of reading raw HTML dumps.</p></div>
+      <div class="card"><h3>📦 Batch &amp; compare</h3><p>Pro adds batch mode over a URL file, side-by-side compares and shareable HTML reports.</p></div>
+      <div class="card"><h3>🔒 Runs locally</h3><p>No account, no upload. Your client's staging URLs never leave your machine.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Get page-profile free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is a website SEO metadata audit?</h3><p>It is a structured check of everything search engines and social platforms read before a human does: title tags, meta descriptions, robots directives, canonical URLs, Open Graph and Twitter cards, heading structure, image alt text and structured data. A good audit catches problems before they cost rankings or clicks.</p></div>\n<div class="card"><h3>How do I audit every page of my site without checking them by hand?</h3><p>Use a crawler-style CLI tool that takes a list of URLs (or your sitemap) and reports each issue per page. The free page-profile command does exactly this: point it at a URL and it grades title length, description, canonical, viewport, Open Graph, headings and alt text in seconds.</p></div>\n<div class="card"><h3>How long should a title tag and meta description be?</h3><p>Aim for roughly 50–60 characters for titles and 140–160 characters for meta descriptions. Longer text is truncated in results pages, which lowers click-through even when the page still ranks.</p></div>\n<div class="card"><h3>Is Open Graph really an SEO factor?</h3><p>Not directly for ranking — but shares on Slack, LinkedIn, Facebook and X drive real traffic, and a missing og:image or og:title makes those shares look broken. Most audits treat social metadata as first-class because the traffic impact is measurable.</p></div>\n<div class="card"><h3>What should I fix first if the audit shows many issues?</h3><p>Prioritise in this order: missing or duplicated titles and descriptions, wrong or conflicting canonical URLs, robots noindex on pages that should rank, then social tags and structured data. The first group affects indexing directly; the rest affect clicks.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/technical-seo-check-website" style="color:var(--color-accent);">Technical SEO Check for Your Website</a> &middot; <a href="/blog/meta-tag-checker" style="color:var(--color-accent);">Meta Tag Checker</a> &middot; <a href="/blog/open-graph-checker" style="color:var(--color-accent);">Open Graph Checker</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/page-profile">page-profile</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>

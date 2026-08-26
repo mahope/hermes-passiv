@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO- og metadata-tjek af din hjemmeside (gratis tjekliste)</title>
+<meta name="description" content="Kør et fuldt SEO- og metadata-tjek af enhver side: titler, beskrivelser, canonicals, Open Graph, overskrifter, alt-tekster og strukturerede data.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SEO- og metadata-tjek af din hjemmeside (gratis tjekliste)">
+<meta property="og:description" content="Kør et fuldt SEO- og metadata-tjek af enhver side: titler, beskrivelser, canonicals, Open Graph, overskrifter, alt-tekster og strukturerede data.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "SEO- og metadata-tjek af din hjemmeside: den komplette tjekliste", "description": "Kør et fuldt SEO- og metadata-tjek af enhver side: titler, beskrivelser, canonicals, Open Graph, overskrifter, alt-tekster og strukturerede data.", "url": "https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er en SEO-metadata-audit?", "acceptedAnswer": {"@type": "Answer", "text": "Et struktureret tjek af alt hvad søgemaskiner og sociale platforme læser, før et menneske gør: titeltags, meta-beskrivelser, robots-direktiver, kanoniske URL’er, Open Graph og Twitter-kort, overskriftsstruktur, alt-tekster og strukturerede data."}}, {"@type": "Question", "name": "Hvordan tjekker jeg alle sider uden at gå dem manuelt igennem?", "acceptedAnswer": {"@type": "Answer", "text": "Brug et CLI-værktøj der tager en liste af URL’er eller dit sitemap og rapporterer hvert fund pr. side. Det gratis page-profile-værktøj giver hvert sekund en karakter for titel, beskrivelse, canonical, viewport, Open Graph, overskrifter og alt-tekster."}}, {"@type": "Question", "name": "Hvor lang skal en titel og meta-beskrivelse være?", "acceptedAnswer": {"@type": "Answer", "text": "Cirka 50–60 tegn til titler og 140–160 tegn til meta-beskrivelser. Længere tekst klippes af i søgeresultaterne, hvilket sænker klikraten selv når siden rangerer."}}, {"@type": "Question", "name": "Hvad skal jeg rette først?", "acceptedAnswer": {"@type": "Answer", "text": "I denne rækkefølge: manglende eller duplikerede titler og beskrivelser, forkerte canonical-URL’er, noindex på sider der skal rangere — derefter sociale tags og strukturerede data."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare {{ width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }}
+  .compare th, .compare td {{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }}
+  .compare th {{ border-bottom:2px solid var(--color-border); }}
+  pre.cmd {{
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }}
+  pre.cmd code {{ font-family:'SF Mono','Monaco','Fira Code',monospace; }}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; METADATA &middot; TJEK</div>
+    <h1>SEO- og metadata-tjek<br>af din hjemmeside</h1>
+    <p class="subtitle">Før en besøgende ser din side, har Google og alle sociale platforme allerede læst dens metadata. Her er hvad du skal tjekke på hver eneste side — og hvordan du automatiserer hele runden i stedet for at kigge i kildekoden.</p>
+    <div class="hero-cta">
+      <a href="#tjekliste" class="btn-primary">Se tjeklisten &rarr;</a>
+      <a href="/da/page-profile" class="btn-secondary">Kør det automatisk med page-profile</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor metadata går i stykker i smug</h2>
+    <p>Metadata har ingen synlig fejltilstand. En manglende canonical, en klippet titel eller en side uden <code>og:image</code> ser perfekt ud i browseren — og lækker klik og placeringer i måneder, indtil nogen tjekker.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔍 Ingen kigger i kilden</h3><p>Titler der bliver klippet, dubletbeskrivelser og manglende viewport-tags er usynlige på den renderede side. De dukker kun op i en audit.</p></div>
+      <div class="card"><h3>📉 Små fejl lægges sammen</h3><p>Én svag titel koster lidt. To hundrede på tværs af et site er en systematisk loft over klikraten.</p></div>
+      <div class="card"><h3>🤝 Delinger ser ødelagte ud</h3><p>Et link delt i Slack eller LinkedIn uden og:title og og:image ligner spam — også fra et troværdigt domæne.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="tjekliste">
+  <div class="container">
+    <h2>Tjeklisten — hvad du skal verificere på hver side</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Punkt</th><th>Krav for at bestå</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Titel-tag</td><td>Findes, unik, ca. 50–60 tegn, primært nøgleord først</td></tr>
+        <tr><td>2</td><td>Meta-beskrivelse</td><td>Findes, unik, ca. 140–160 tegn, giver en grund til at klikke</td></tr>
+        <tr><td>3</td><td>Canonical-URL</td><td>Selvrefererende, absolut, ingen konflikter</td></tr>
+        <tr><td>4</td><td>Robots-meta</td><td>Ingen utilsigtet <code>noindex</code>/<code>nofollow</code> på sider der skal indexeres</td></tr>
+        <tr><td>5</td><td>Viewport</td><td><code>width=device-width, initial-scale=1</code> findes</td></tr>
+        <tr><td>6</td><td>Open Graph</td><td>og:title, og:description, og:image og og:url alle sat</td></tr>
+        <tr><td>7</td><td>Overskrifter</td><td>Én H1, logisk H2/H3-hierarki, ingen sprunget niveauer</td></tr>
+        <tr><td>8</td><td>Billeder</td><td>Hvert meningsfyldt billede har alt-tekst</td></tr>
+        <tr><td>9</td><td>Strukturerede data</td><td>Gyldig JSON-LD hvor relevant (Article, Product, FAQ)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="automatiser">
+  <div class="container">
+    <h2>Automatisér hele runden</h2>
+    <p>At tjekke ni punkter pr. side i hånden holder op med at være realistisk efter cirka ti sider. Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> kører hele tabellen ovenfor mod enhver URL og returnerer en karaktergivende rapport:</p>
+    <pre class="cmd"><code>npx page-profile https://eksempel.dk          # rapport for én side
+npx page-profile --urls-from-file urls.txt   # batch (Pro)
+npx page-profile --compare gammel.html ny.html  # sammenlign to versioner (Pro)</code></pre>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Karakterer, ikke bare lister</h3><p>Hvert tjek får bestået/advar/dump, så du kan prioritere i stedet for at læse rå HTML-dumps.</p></div>
+      <div class="card"><h3>📦 Batch &amp; sammenlign</h3><p>Pro tilføjer batch over en URL-fil, side-om-side-sammenligning og delbare HTML-rapporter.</p></div>
+      <div class="card"><h3>🔒 Kører lokalt</h3><p>Ingen konto, intet uploades. Kundens staging-URL’er forlader aldrig din maskine.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/page-profile" class="btn-primary">Hent page-profile gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er en SEO-metadata-audit?</h3><p>Et struktureret tjek af alt hvad søgemaskiner og sociale platforme læser, før et menneske gør: titeltags, meta-beskrivelser, robots-direktiver, kanoniske URL’er, Open Graph og Twitter-kort, overskriftsstruktur, alt-tekster og strukturerede data.</p></div>\n<div class="card"><h3>Hvordan tjekker jeg alle sider uden at gå dem manuelt igennem?</h3><p>Brug et CLI-værktøj der tager en liste af URL’er eller dit sitemap og rapporterer hvert fund pr. side. Det gratis page-profile-værktøj giver hvert sekund en karakter for titel, beskrivelse, canonical, viewport, Open Graph, overskrifter og alt-tekster.</p></div>\n<div class="card"><h3>Hvor lang skal en titel og meta-beskrivelse være?</h3><p>Cirka 50–60 tegn til titler og 140–160 tegn til meta-beskrivelser. Længere tekst klippes af i søgeresultaterne, hvilket sænker klikraten selv når siden rangerer.</p></div>\n<div class="card"><h3>Hvad skal jeg rette først?</h3><p>I denne rækkefølge: manglende eller duplikerede titler og beskrivelser, forkerte canonical-URL’er, noindex på sider der skal rangere — derefter sociale tags og strukturerede data.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);">Teknisk SEO-tjek af hjemmesiden</a> &middot; <a href="/da/blog/meta-tjekker" style="color:var(--color-accent);">Meta-tjekker</a> &middot; <a href="/da/blog/open-graph-tjekker" style="color:var(--color-accent);">Open Graph-tjekker</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da/">&larr; Forside</a> &middot; <a href="/da/page-profile">page-profile</a> &middot; <a href="/">Blog</a></p></footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>

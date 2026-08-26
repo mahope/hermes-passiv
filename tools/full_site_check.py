@@ -12,7 +12,8 @@ def check(u):
         p = subprocess.run(['curl', '-sL', '-A', UA, u], capture_output=True, timeout=30)
         html = p.stdout.decode('utf-8', 'ignore')
         m = re.search(r'rel="canonical" href="([^"]+)"', html)
-        if not m or m.group(1) != u:
+        cu = u if u.endswith('/') else u + '/'
+        if not m or (m.group(1) != u and m.group(1) != cu):
             out.append((u, 'canonical:' + str(m and m.group(1))))
         for blk in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
             try:
