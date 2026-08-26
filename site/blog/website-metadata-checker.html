@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Metadata Checker — Check Any Page's Meta Tags Free (2026)</title>
+<meta name="description" content="How to check a webpage's meta tags: title, description, Open Graph, Twitter cards and structured data — free online checkers, view-source tricks and terminal commands, with the pros and cons of each method.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Website Metadata Checker — Check Any Page's Meta Tags Free (2026)">
+<meta property="og:description" content="Free website metadata checking methods compared: online tools, view-source and curl. Verify title, description, Open Graph and canonical before your visitors do.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/website-metadata-checker">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/website-metadata-checker">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-metadata-checker">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-din-hjemmesides-meta-tags">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Website Metadata Checker — Check Any Page's Meta Tags Free (2026)", "description": "How to check a webpage's meta tags: title, description, Open Graph, Twitter cards and structured data — free online checkers, view-source tricks and terminal commands, with the pros and cons of each method.", "url": "https://hermes-passiv.pages.dev/blog/website-metadata-checker", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which meta tags matter most for SEO?", "acceptedAnswer": {"@type": "Answer", "text": "The title tag and meta description are the big two: they form the text in the search result. Canonical, hreflang and robots meta control indexing, while Open Graph and Twitter tags mainly affect how the page looks when shared."}}, {"@type": "Question", "name": "Why does Facebook show the wrong image when I share my page?", "acceptedAnswer": {"@type": "Answer", "text": "Almost always missing or cached Open Graph data. Verify that og:image, og:title and og:description exist and that the image is at least 1200x630 px, then force a re-scrape in the sharing debugger after fixing."}}, {"@type": "Question", "name": "Can I check meta tags without a tool?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — right-click and choose View Page Source, or use curl. All meta tags live in the head section. It's fast for one page but impractical when auditing a whole site."}}, {"@type": "Question", "name": "How do I monitor meta tags automatically?", "acceptedAnswer": {"@type": "Answer", "text": "Run a script in CI that fetches each important page and validates that title, description and canonical exist with sensible lengths. That catches mistakes before release instead of after."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; FREE</div>
+    <h1>Check your page's<br>meta tags</h1>
+    <p class="subtitle">Meta tags are the first thing Google and social networks read on your page. Four ways to check them, from zero-install to fully automated in CI.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Analyse your site free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>Four methods — from fastest to most thorough</h2>
+    <ol>
+      <li><strong>Online checker:</strong> paste the URL into a free metadata checker.
+      Done in seconds and shows the social preview — but one page at a time.</li>
+      <li><strong>View source:</strong> right-click &rarr; View Page Source. Every tag lives
+      in the head section. Free, but manual.</li>
+      <li><strong>Terminal:</strong> fetch the HTML with curl and filter out the meta tags.
+      Scriptable and perfect for quick checks.</li>
+      <li><strong>CI automation:</strong> validate title, description and canonical on every
+      deploy so errors never reach visitors.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;"># See every meta tag on one page
+$ curl -s https://yoursite.com | grep -o '&lt;meta[^&gt;]*&gt;' | head -20
+
+# Just the title and description
+$ curl -s https://yoursite.com | grep -Eo '&lt;title&gt;.*&lt;/title&gt;|name="description" content="[^"]*"'</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>What a healthy set of meta tags looks like</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Tag</th><th>Rule of thumb</th></tr>
+      <tr><td>&lt;title&gt;</td><td>30–60 characters, unique per page, most important words first</td></tr>
+      <tr><td>meta description</td><td>120–158 characters, concrete message plus a reason to click</td></tr>
+      <tr><td>canonical</td><td>Exactly one per page, self-referencing (absolute URL)</td></tr>
+      <tr><td>og:title / og:description / og:image</td><td>Mirror title/description; image at least 1200x630</td></tr>
+      <tr><td>robots</td><td>Only present when you want to discourage indexing</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Get your metadata checked automatically &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Read next</h2>
+    <p>Also read:
+    <a href="/blog/broken-link-checker-free">broken link checkers</a>,
+    <a href="/blog/check-url-redirect-chain">check redirect chains</a> and
+    <a href="/blog/technical-seo-check-website">technical SEO checks</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Which meta tags matter most for SEO?</h3><p>The title tag and meta description are the big two: they form the text in the search result. Canonical, hreflang and robots meta control indexing, while Open Graph and Twitter tags mainly affect how the page looks when shared.</p></div>
+      <div class="card"><h3>Why does Facebook show the wrong image when I share my page?</h3><p>Almost always missing or cached Open Graph data. Verify that og:image, og:title and og:description exist and that the image is at least 1200x630 px, then force a re-scrape in the sharing debugger after fixing.</p></div>
+      <div class="card"><h3>Can I check meta tags without a tool?</h3><p>Yes — right-click and choose View Page Source, or use curl. All meta tags live in the head section. It's fast for one page but impractical when auditing a whole site.</p></div>
+      <div class="card"><h3>How do I monitor meta tags automatically?</h3><p>Run a script in CI that fetches each important page and validates that title, description and canonical exist with sensible lengths. That catches mistakes before release instead of after.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Try the site analysis now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/tjek-din-hjemmesides-meta-tags" lang="da">Danish version of this guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/broken-link-checker-free">Broken link checkers</a> &middot; <a href="/blog/check-url-redirect-chain">Redirect chains</a> &middot; <a href="/blog/technical-seo-check-website">Technical SEO checks</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(page-profile|deskuptime)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>
