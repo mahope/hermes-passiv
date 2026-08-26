@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overvåg hjemmeside fra GitHub Actions: gratis oppetid, SSL og compliance</title>
+<meta name="description" content="Et dagligt GitHub Actions cron-job tjekker oppetid, SSL-udløb, sikkerhedsheaders og GDPR-basics med fire gratis open-source actions. Uden SaaS, uden secrets.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Overvåg hjemmeside fra GitHub Actions">
+<meta property="og:description" content="Gratis oppetid-, SSL- og compliance-tjek i ét planlagt workflow — fire open-source actions, uden SaaS.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/overvaag-hjemmeside-github-actions-gratis">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Overvåg hjemmeside fra GitHub Actions">
+<meta name="twitter:description" content="Gratis oppetid-, SSL- og compliance-tjek i ét planlagt workflow — fire open-source actions, uden SaaS.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/overvaag-hjemmeside-github-actions-gratis">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Overv\u00e5g hjemmeside fra GitHub Actions: gratis oppetid, SSL og compliance", "description": "Et dagligt GitHub Actions cron-job tjekker oppetid, SSL-udl\u00f8b, sikkerhedsheaders og GDPR-basics med fire gratis open-source actions. Uden SaaS, uden secrets.", "url": "https://hermes-passiv.pages.dev/blog/overvaag-hjemmeside-github-actions-gratis", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">GUIDE · SITE HEALTH</div>
+    <h1>Overv&aring;g din hjemmeside fra GitHub Actions:<br>Gratis oppetid, SSL &amp; compliance i &eacute;t cron-job</h1>
+    <p class="subtitle">Drop overv&aring;gnings-SaaS til 70&ndash;100 kr./md. &Eacute;t planlagt workflow tjekker at dit site er oppe, SSL-certifikatet er gyldigt, sikkerhedsheaders er intakte og privatlivspolitikken stadig findes &mdash; med fire gratis open-source GitHub Actions.</p>
+    <div class="hero-cta">
+      <a href="#workflow" class="btn-primary">Kopier workflowet</a>
+      <a href="/da/compliance-site-check" class="btn-secondary">Scan dit site gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 6 minutter</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2 id="hvorfor">Hvorfor et cron-job sl&aring;r et overv&aring;gnings-dashboard</h2>
+    <p>De fleste oppetidsoverv&aring;gninger vil have et m&aring;nedsabonnement, en konto og endnu en indbakke af alarm-mails. Hvis du allerede udgiver dit site via GitHub, har du en skemal&aelig;gger, en runner og en notifikationskanal (fejlende workflow-k&oslash;rsler sender som udgangspunkt mail til repo-ejeren) st&aring;ende ubrugt.</p>
+    <p>Dette setup k&oslash;rer gratis p&aring; offentlige repositories, kr&aelig;ver ingen secrets, og hvert tjek er et almindeligt YAML-trin du kan l&aelig;se p&aring; sekunder. Det fanger de fejl der faktisk rammer sm&aring; sites: udl&oslash;bne certifikater, et redesign der droppede samtykke-banneret, en redirect-regel der br&oslash;d efter en udgivelse.</p>
+
+    <h2 id="workflow">Det komplette workflow</h2>
+    <p>Gem som <code>.github/workflows/site-health.yml</code>:</p>
+    <pre style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85em;"><code>name: Site health
+on:
+  schedule:
+    - cron: '0 6 * * *'   # dagligt kl. 06:00 UTC (08:00 dansk tid)
+  workflow_dispatch:      # kan ogsaa koeres manuelt fra Actions-fanen
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Oppetid + SSL-certifikatets udl&oslash;b
+        uses: mahope/deskuptime@v1
+        with:
+          url: https://dit-site.dk
+
+      - name: EU-compliance intakt (privatliv, headers, meta)
+        uses: mahope/compliance-site-check@v2
+        with:
+          url: https://dit-site.dk</code></pre>
+    <p>Erstat <code>dit-site.dk</code> med dit dom&aelig;ne. Begge actions bruger flydende hovedversions-tags, s&aring; fejlretninger kommer automatisk uden breaking changes.</p>
+
+    <h2 id="actions">Hvad hver action tjekker</h2>
+    <div class="problem-cards">
+      <div class="card"><h3><code>deskuptime@v1</code></h3><p>Henter URL'en og fejler, hvis siden ikke svarer korrekt, advarer n&aring;r SSL-certifikatet snart udl&oslash;ber, og kan opdage u&oslash;nskede indholds&aelig;ndringer. Nul afh&aelig;ngigheder &mdash; ingen npm-installering, ingen konfigurationsfiler.</p></div>
+      <div class="card"><h3><code>compliance-site-check@v2</code></h3><p>Ni GDPR/EAA-orienterede tjek mod den live side: om privatlivspolitikken kan n&aring;s, cookie-samtykke-signaler, sikkerhedsheaders (CSP, HSTS, XFO), SEO-metatags og sprogdeklaration. En lydl&oslash;s regression bliver r&oslash;d f&oslash;r dine brugere eller myndighederne opdager det.</p></div>
+    </div>
+
+    <h2 id="ekstra">To ekstra trin til teams der udgiver indhold</h2>
+    <ul>
+      <li><strong>Indholdsintegritet:</strong> <code>mahope/clean-copy-cli@v1</code> konverterer en live side til Markdown inde i workflowet og eksponerer resultatet som step outputs &mdash; praktisk til snapshots af dokumentation eller diffs af en changelog mellem k&oslash;rsler.</li>
+      <li><strong>Fejlrapport-kvalitet:</strong> samler du rapporter i appen med <a href="https://github.com/mahope/bugbottle">bugbottle</a>, validerer <code>mahope/bugbottle-action@v1</code> de indsamlede rapporter i CI, s&aring; d&aring;rlige rapporter aldrig n&aring;r dit issue tracker.</li>
+    </ul>
+
+    <h2 id="skema-tips">Tips til skemal&aelig;gning</h2>
+    <ul>
+      <li>Cron-tider i GitHub Actions er i UTC. <code>'0 6 * * *'</code> er kl. 08:00 dansk tid (CEST).</li>
+      <li>Planlagte workflows k&oslash;rer kun p&aring; default-branchen og kan blive forsinket et par minutter i travle perioder &mdash; fint til daglig overv&aring;gning, ikke til under-minut-alarming.</li>
+      <li>GitHub deaktiverer skemaer p&aring; repos uden aktivitet i 60 dage; enhver commit genaktiverer dem.</li>
+    </ul>
+
+    <h2 id="pris">Hvad det erstatter</h2>
+    <p>Oppetids-SaaS starter typisk omkring 70&ndash;100 kr./md. pr. site (840&ndash;1.200 kr./&aring;r pr. site), og en manuel compliance-gennemgang starter i tusindvis af kroner. Denne stak koster ingenting p&aring; offentlige repos og fylder &eacute;t fil du selv ejer. Til under-minut-alarming ved driftsstop har dedikeret overv&aring;gning stadig sin plads &mdash; men til &quot;har mit site g&aring;et i stykker uden at jeg opdagede det?&quot; fanger et dagligt cron-job det inden for 24 timer til nul pris.</p>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Pr&oslash;v compliance-delen lige nu</h3>
+      <p>Ingen repository n&oslash;dvendig for at se hvad scanneren finder p&aring; dit live-site &mdash; gratis, uden tilmelding, resultat p&aring; cirka &eacute;t minut.</p>
+      <a href="/da/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan dit site gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/da/">← Forside</a> &middot; <a href="/da/blog">Blog</a></p>
+</footer>
+</body>
+</html>

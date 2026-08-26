@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor Your Website from GitHub Actions: Free Uptime, SSL & Compliance Checks</title>
+<meta name="description" content="A daily GitHub Actions cron job checks uptime, SSL certificate expiry, security headers and GDPR basics with four free open-source actions. No SaaS, no secrets.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Monitor Your Website from GitHub Actions">
+<meta property="og:description" content="Free uptime, SSL and compliance checks in one scheduled workflow — four open-source actions, no SaaS.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/monitor-website-github-actions-free">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Monitor Your Website from GitHub Actions">
+<meta name="twitter:description" content="Free uptime, SSL and compliance checks in one scheduled workflow — four open-source actions, no SaaS.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/monitor-website-github-actions-free">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Monitor Your Website from GitHub Actions: Free Uptime, SSL & Compliance Checks", "description": "A daily GitHub Actions cron job checks uptime, SSL certificate expiry, security headers and GDPR basics with four free open-source actions. No SaaS, no secrets.", "url": "https://hermes-passiv.pages.dev/blog/monitor-website-github-actions-free", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script defer src="/track.js"></script>
+</head>
+
+<body><header class="hero">
+  <div class="container">
+    <div class="badge">GUIDE · SITE HEALTH</div>
+    <h1>Monitor Your Website from GitHub Actions:<br>Free Uptime, SSL &amp; Compliance in One Cron Job</h1>
+    <p class="subtitle">Skip the $10–15/month monitoring SaaS. One scheduled workflow checks that your site is up, the SSL certificate is valid, security headers are intact and your privacy policy still exists — using four free, open-source GitHub Actions.</p>
+    <div class="hero-cta">
+      <a href="#workflow" class="btn-primary">Copy the workflow</a>
+      <a href="/free-tools" class="btn-secondary">See all free tools →</a>
+    </div>
+    <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
+  </div>
+</header>
+
+<section class="problem" id="content">
+  <div class="container">
+    <h2 id="why">Why a cron job beats a monitoring dashboard</h2>
+    <p>Most uptime monitors want a monthly subscription, an account, and another inbox of alert emails. If you already ship your site through GitHub, you have a scheduler, a runner and a notification channel (failed workflow runs email the repo owner by default) sitting there unused.</p>
+    <p>This setup runs on public repositories for free, needs no secrets, and every check is a plain YAML step you can read in seconds. It catches the failures that actually happen to small sites: expired certificates, a redesign that dropped the cookie banner, a redirect rule that broke after a deploy.</p>
+
+    <h2 id="workflow">The complete workflow</h2>
+    <p>Save as <code>.github/workflows/site-health.yml</code>:</p>
+    <pre style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85em;"><code>name: Site health
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 06:00 UTC
+  workflow_dispatch:      # also runnable manually from the Actions tab
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uptime + SSL certificate expiry
+        uses: mahope/deskuptime@v1
+        with:
+          url: https://your-site.com
+
+      - name: EU compliance intact (privacy policy, headers, meta)
+        uses: mahope/compliance-site-check@v2
+        with:
+          url: https://your-site.com</code></pre>
+    <p>Replace <code>your-site.com</code> with your domain. Both actions pin floating major tags, so bug fixes arrive automatically without breaking changes.</p>
+
+    <h2 id="actions">What each action checks</h2>
+    <div class="problem-cards">
+      <div class="card"><h3><code>deskuptime@v1</code></h3><p>Fetches the URL and fails if the page does not respond correctly, warns when the SSL certificate is close to expiry, and can detect unwanted content changes. Zero dependencies — no npm install, no config files.</p></div>
+      <div class="card"><h3><code>compliance-site-check@v2</code></h3><p>Nine GDPR/EAA-oriented checks against the live page: privacy-policy reachability, cookie-consent signals, security headers (CSP, HSTS, XFO), SEO meta tags and language declaration. A silent regression turns red before your users or a regulator notice.</p></div>
+    </div>
+
+    <h2 id="extras">Two more steps for teams that publish content</h2>
+    <p>The same workflow can carry two optional jobs:</p>
+    <ul>
+      <li><strong>Content integrity:</strong> <code>mahope/clean-copy-cli@v1</code> converts a live page to Markdown inside the workflow and exposes it as step outputs — useful to snapshot documentation or diff a changelog between runs.</li>
+      <li><strong>Bug-report quality:</strong> if you collect in-app reports with <a href="https://github.com/mahope/bugbottle">bugbottle</a>, <code>mahope/bugbottle-action@v1</code> validates collected reports in CI so low-quality submissions never reach your issue tracker.</li>
+    </ul>
+
+    <h2 id="schedule-tips">Scheduling tips</h2>
+    <ul>
+      <li>Cron times on GitHub Actions are in UTC. <code>'0 6 * * *'</code> is 08:00 in Copenhagen (CEST).</li>
+      <li>Scheduled workflows only run on the default branch, and can be delayed a few minutes during peak hours — fine for daily monitoring, not for sub-minute alerting.</li>
+      <li>GitHub disables schedules on repos with no activity for 60 days; any commit re-enables them. Pinning a comment or bumping a date keeps an idle repo alive.</li>
+    </ul>
+
+    <h2 id="costs">What it replaces</h2>
+    <p>Uptime-monitoring SaaS typically starts around $10–15/month per site ($120–180/year per site), and a manual compliance review starts in the thousands. This stack costs nothing on public repos and fits in one file you own. For sub-minute paging during incidents, dedicated monitoring still has a place — but for "did my site silently break?", a daily cron job catches it within 24 hours at zero cost.</p>
+
+    <div class="card" style="margin-top:32px;">
+      <h3>Try the compliance half right now</h3>
+      <p>No repo needed to see what the scanner finds on your live site — free, no signup, results in about a minute.</p>
+      <a href="/compliance-site-check" class="btn-primary" style="margin-top:12px;">Scan your site free →</a>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+    <p><a href="/">← Home</a> · <a href="/deskuptime/">Deskuptime</a> · <a href="/free-tools">Free tools</a> · <a href="/blog/post-deploy-smoke-tests-static-sites">Post-deploy smoke tests</a></p>
+</footer>
+</body>
+</html>
