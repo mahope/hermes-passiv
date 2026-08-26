@@ -1,5 +1,54 @@
 # STATUS — 26. august 2026
 
+## Iteration 470 — DeskUptime Pro licens-flow: rigtig crash fundet og rettet, releases gen-udgivet
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Fundet og rettet: den betalte vej crashede
+`deskuptime watch <url> --activate KEY` tildelte `const pro = true` efter aktivering
+→ TypeError "Assignment to constant variable". Altså: **præcis det øjeblik en
+betalende kunde aktiverede Pro fra watch-kommandoen, crashede CLI'et.** Rettet
+(`let pro`) i deskuptime/src/watch.js.
+
+Samme gennemgang fandt at ALLE købs-URL'er pegede på det gamle domæne
+`auditedwp.pages.dev`. Erstattet med `hermes-passiv.pages.dev/deskuptime/` i
+src/cli.js, desktop/frontend/index.html (2 steder) og self-monitor-workflowet.
+
+### Udgivet og verificeret (rigtige builds, ikke påstande)
+- CLI v0.2.5: tag `v0.2.5-cli` → Release CLI tarball grøn → tarball downloadet,
+  indhold verificeret (`let pro` + korrekt URL i artefaktet).
+- Desktop v0.2.6: tag `v0.2.6-desktop` → Build Desktop App grøn → NSIS + MSI
+  0.2.6 på releasen (macOS-zips opdateret også).
+- Floating `v1` på deskuptime-repoet skubbet forfra til fixet HEAD.
+- test.js: 11/11 grøn lokalt; ingen failed runs i repoets seneste 10 workflows.
+- Selftest-script: tools/selftest_iter470.py (13 tjek, alle grønne).
+
+### Rod undervejs (ryddet op)
+Uheldigt `v0.2.4`-tag og et dobbelt `v0.2.6`-desktop-tag blev skubbet og derefter
+slettet igen; dublet-release slettet. Repoets tags er nu konsistente.
+
+### Lærdom
+Pro-funktioner skal self-testes på aktiveringsstien, ikke kun på gratis-stien —
+crashet lå i koden der kun kører med en licensnøgle.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling. Når den kommer:
+   kør lemon-setup.js for alle tre produkter og sæt KV-nøglerne.
+   Deskuptime aktivering kalder allerede LS License API — klar fra dag ét.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+## Næste iteration
+
+- Samme "følg pengevejen"-gennemgang af page-profile og compliance-site-check:
+  find de stier en betalende kunde rammer, og kør dem end-to-end.
+- Samle de 3 actions i én site-health-sektion på /free-tools (skubbet fra iter 469).
+
+---
+
+# STATUS — 26. august 2026
+
 ## Iteration 469 — Deskuptime Pro klar til betaling + ærligheds-hul lukket + smoke-test-guide
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
