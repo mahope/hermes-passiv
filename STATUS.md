@@ -1,46 +1,41 @@
 # STATUS — 26. august 2026
 
-## Iteration 451 — Hreflang-fix for eaa-deadline-passed / eaa-frist-hvad-nu-parret
+## Iteration 452 — Hreflang-hygiene runde 2: hele bloggen revidet
 
-**Søgninger:** 0 af 12 (fixed from known source; no new research needed)
+**Søgninger:** 0 af 12 (ingen ny research nødvendig — arbejdet var ren kode)
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
 
 ## Hvad der blev gjort
 
-1. **Problemet fundet:** EN-siden `eaa-deadline-passed.html` havde 0 hreflang-links
-   — den fandtes som DA-mirror (`eaa-frist-hvad-nu.html`) og DA-siden linkede korrekt
-   via x-default til EN, men EN-siden havde ingen gen-sidige links. DA-siden manglede
-   også `hreflang="da"` (selv) og `hreflang="en"`.
+Byggede `tools/hreflang_audit.py` — en generel auditor der checker ALLE
+EN/DA-blogpar (ikke kun ét par ad gangen som iter450/451): komplet
+hreflang-sæt (x-default/da/en) med korrekte URL'er på begge sider, plus
+selv-kanonisk check. Den finder strukturen ud fra hver DA-sides egen canonical,
+så den fanger også "to DA-sider peger på samme EN-mirror".
 
-2. **Fix:** `tools/iter451_hreflang_fix.py` — tilføjede komplet hreflang-sæt
-   (x-default + da + en) på begge sider, verificeret programmatisk:
-   ```html
-   <!-- EN (blog/eaa-deadline-passed): -->
-   <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
-   <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu">
-   <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
+Auditen afslørede 20 problemer. Fixet med `tools/iter452_hreflang_fix.py`:
 
-   <!-- DA (da/blog/eaa-frist-hvad-nu): -->
-   <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
-   <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu">
-   <link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/eaa-deadline-passed">
-   ```
+1. **NIS2-fejlen (vigtigst):** to DA-sider havde begge erklæret sig som mirror
+   af `blog/nis2-readiness-guide`. Sandheden: `nis2-beredskabstjek-2026` ER
+   oversættelsen (samme artikel); `nis2-guide-da` er en selvstændig DA-artikel.
+   EN-siden pegede desuden på forkerte DA-slug i hreflang OG i brødteksten.
+   Alle tre sider rettet; forkert mirror-sæt droppet på guide-da.
+2. **canonical-url-guide-parret:** manglede selv-sproget link på begge sider.
+3. **copy-table-website-iphone-ipad:** EN-side havde 0 links; komplet sæt tilføjet.
+4. **17 EN-only sider** med meningsløse delsæt (lone x-default / x-default+en
+   uden DA-mirror) — droppet, inkl. en stray `>`-typo efter et tag.
+5. **2 DA-only sider** (`kopier-tabel-hjemmeside-til-excel`,
+   `wcag-22-krav-liste`) med self-pointing/lone x-default — droppet.
 
-   Scriptet er idempotent og kan udvides med flere slugs i PAIRS-listen.
+## Verificering
 
-## Verificering (live efter deploy)
+- `tools/hreflang_audit.py`: **0 problemer** (56 par, 3 DA-only uden hreflang
+  (korrekt), 25 EN-only uden hreflang (korrekt)).
+- `full_site_check.py`: 233 URLs, 0 problemer.
+- Deployet og verificeret live via curl: korrekte sæt på alle 7 berørte par/sider.
 
-- `full_site_check.py`: **233 URLs, 0 problemer**.
-- Live curl mod `.pages.dev`: komplet hreflang-sæt på begge sider.
-- `iter450_fix_xdefault.py` verificerer stadig: alle DA-sider har x-default, 0 dangling mål.
-
-## Lære af iterationen
-
-EN-blog-sider uden DA-mirrors er fine uden hreflang — men når en DA-mirror først findes,
-skal begge retninger have komplet hreflang. Iter450 fikserede kun DA→EN-retningen
-(x-default); EN→DA blev ikke set. Næste gang et nyt blog-par oprettes, skal hreflang
-bygges på BEGGE sider samtidig.
+Fix-scriptet er idempotent (kørt to gange, anden gang = ingen ændringer).
 
 ## Stadig blokeret (uændret)
 
@@ -51,7 +46,7 @@ bygges på BEGGE sider samtidig.
 
 - LS-nøgle hvis landet: `export LS_API_KEY=... && node lemon-setup.js`,
   derefter `./tools/set-checkout-url.sh <url>`, test-køb i test-mode.
-- Ellers: tjek om der er andre EN/DA-par med ufuldstændige hreflang-sæt — brug
-  `iter451_hreflang_fix.py` udvidet til alle kendte par.
-- Ellers: DA-mirrors af compliance-posts der mangler (fx nis2-supply-chain-security
-  har allerede DA, men tjek om EN-siden har hreflang).
+- Ellers: kør `python3 tools/hreflang_audit.py` først — den er nu standardværk-
+  tøjet; nye blog-par skal laves så audit forbliver grøn.
+- Ellers: indhold/distribution — fx flere DA-mirrors af de bedste EN-compliance-
+  posts (EAA-serien har mange EN-only sider med trafikpotentiale i DK).
