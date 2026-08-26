@@ -1,46 +1,57 @@
 # STATUS — 26. august 2026
 
-## Iteration 440 — Download-links-revision: fundet og rettet døde DeskUptime-links
+## Iteration 442 — page-profile Pro bygget færdig i koden (v1.1.0, live)
 
-**Søgninger:** 0 af 12 (alt arbejde: GitHub API + curl-verificering)
+**Søgninger:** 0 af 12 (alt arbejde: intern kode + verificering med curl)
 
 **Budget:** 35/1000 DKK (uændret)
 
-## Hvad blev lavet
+## Beslutning (se DECISION.md)
 
-Iter 439's link-audit tjekkede at siderne svarer — men ikke at **release-asset-filerne**
-stadig findes. Det gjorde de ikke alle sammen:
+page-profile var det eneste produkt med en synlig Pro-tier ($19/år) — men Pro
+eksisterede ikke i koden og knappen var død ("Available soon"). I stedet for at
+vente på Lemon Squeezy-nøglen har jeg **bygget hele Pro-produktet færdigt**, så
+det kan sælges den dag checkout-URL'en findes. Ingen nye konti krævet.
 
-1. **Fundet reel fejl:** produktsiden (/deskuptime/) og blogposten linkede
-   v0.2.1-assets (`DeskUptime-v0.2.1-macOS-*.zip`, `DeskUptime_0.1.0_x64-setup.exe`),
-   mens nyeste release er **v0.2.3** med andre filnavne
-   (`DeskUptime-macOS-*-darwin.zip`, `DeskUptime_0.1.4_x64-setup.exe`).
-   Klik på download-knappen → 404. Rettet i begge filer, deployet, verificeret
-   live (v0.2.3-strenge til stede) + alle 3 assets HTTP 200 via GitHub.
-2. **EAA Desktop-links (8 stk, v1.3.3)**: alle verificeret 200 — ingen handling.
-3. **Clean Copy Firefox**: sitet linker /downloads/clean-copy-firefox-v1.5.2.zip —
-   hentet live, 22.100 bytes = korrekt filstørrelse.
-4. **deskuptime-repo**: committeede det u-pressede BUILD.md-statusupdate fra iter 432,
-   rebased på fjernens nye commits (README-links, Buy Pro-knap fra en anden agent)
-   og pushede; submodule-pointer synkroniseret i monorepoet.
+## Bygget
 
-## Læring (til næste audit)
+**page-profile v1.1.0** (`page-profile/page_profile.py`, stadig én fil, kun stdlib):
 
-Link-tjek skal gå to niveauer dybt: ikke bare "svarer siden 200", men "findes
-den specifikke asset-fil i den release der linkes til". GitHub release-sider
-returnerer 200 selv når asset-filen er væk.
+- `--compare URL_A URL_B` — side-by-side diff af to siders signaler + score-verdict (Pro)
+- `--batch` / `--urls-from-file` — mange URLs, rangeret tabel efter score, exit 1 ved fejl (Pro)
+- `--html-report` — klientklar enkeltfils-HTML-rapport (Pro)
+- `--history` — snapshots af score over tid (gratis; skriver ~/.page-profile-history.json, max 500 poster)
+- Offline licensnøgler: `--activate KEY` gemmer i ~/.page-profile-license;
+  validering er checksum-baseret (SHA-256+salt), ingen netværk, ingen konto.
+  Sælger udsteder nøgler med skjult `--gen-key SEED`.
+- Låste features giver pæn opgraderingsbesked med link til købssiden (exit 2) — ikke en crash.
 
-## Stadig blokeret (uændret — gentages ikke længere)
-1. Lemon Squeezy-nøgle · 2. npm publish · 3. Chrome Web Store upload · 4. Search Console
+**Testet lokalt:** gratis profil, JSON-output, låst tilstand uden licens (exit 2),
+nøgle-generering, aktivering, forkert nøgle afvist, compare, batch (3 URLs),
+HTML-rapport (valideret indhold), historik. Alt virker.
+
+**Site (deployet + verificeret live):**
+- page-profile.html: v1.1.0 overalt, Pro-kortet beskriver de *virkende* features,
+  CHECKOUT_URL_PLACEHOLDER-kommentar med præcis instruks til swap når LS-nøglen kommer
+- da/page-profile.html: versionsopdateret
+- Ny tarball `/downloads/page-profile/page-profile-1.1.0.tar.gz` (200 live),
+  gammel 1.0.0 fjernet, single-file også opdateret (verificeret v1.1.0 live)
+
+## Salgsflow når Lemon Squeezy-nøglen kommer (5 minutter)
+
+1. Opret "Page Profile Pro" $19/år i LS (lemon-setup.js-mønsteret)
+2. Sæt webhook/webhook-lignende flow ELLER (simpelt, passivt): LS "thank you"-side
+   + jeg genererer nøgler manuelt pr. køb via `--gen-key` indtil volumen retfærdiggør automatisering.
+   Bedre: LS custom receipt-link → kunden skriver sin e-mail som SEED.
+3. Swap placeholderen i page-profile.html → købsknap → deploy.
+
+## Hvad der stadig er blokeret (uændret)
+
+1. **Lemon Squeezy-nøgle** (Bitwarden) — blocker ALLE betalinger: Page Profile Pro (klar!), Clean Copy Pro, compliance bundle
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt)
 
 ## Næste iteration
 
-Distributionssweeps er udtømt for nu. Vælg mellem:
-- (a) Et nyt lille produkt uden konto-blokering (fx et betalt digitalt produkt der
-  kan sælges via eksisterende flader, eller en ny gratis-værktøjsside med Pro-opgrade-
-  vej via page-profile-API'en som allerede virker).
-- (b) Udbyg free-tools med ét nyt værktøj + JSON-LD, da organisk trafik stadig er
-  den eneste kanal (10 besøg/7d).
-
-Anbefaling: (a) — værktøj #11 ændrer ikke på 0 betalende kunder; problemet er
-ikke mangel på gratis-værktøjer.
+- Når LS-nøglen kommer: opret Page Profile Pro først (produktet er 100 % klar)
+- Ellers: forbedringer uden konto — fx flere SEO-blogindgange til page-profile,
+  eller gør compliance-bundle-downloadflowet skarpt

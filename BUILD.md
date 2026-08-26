@@ -39,3 +39,16 @@ Alt er forberedt så det er ét klik:
 - Marketplace-udgivelse = ét klik (se ovenfor).
 
 ## Budget: 35/1000 DKK (uændret)
+
+---
+
+# Iteration 442 — Page Profile Pro v1.1.0 (bygget, testet, live)
+
+- page-profile/page_profile.py: +compare, +batch (+urls-from-file), +html-report,
+  +history (gratis), offline licens (--activate / --gen-key / PAGE_PROFILE_LICENSE env).
+  Låste features: pæn besked + exit 2. Historik: ~/.page-profile-history.json (max 500).
+- site/downloads/page-profile/: ny tarball 1.1.0 + opdateret single-file; 1.0.0 fjernet.
+- site/page-profile.html + da/: v1.1.0, Pro-kortet matcher virkende features,
+  CHECKOUT_URL_PLACEHOLDER klar til LS-checkout.
+- Testet lokalt: 9 scenarier (se STATUS.md). Verificeret live med curl: alle 4
+  download-/side-URLs 200, indhold viser v1.1.0.

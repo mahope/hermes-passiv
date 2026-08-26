@@ -81,21 +81,25 @@ footer a { color:#1a73e8; }
 </header>
 
 <div class="free-note">
-  <strong>Need it free?</strong> Each e-book is also available as an individual free EPUB download. The bundle gives you a combined PDF + all EPUBs in one ZIP — and helps fund future editions.
+  <strong>Free right now, $29 at launch.</strong> Get the complete bundle (PDF + all 6 EPUBs) free today. When payment goes live, supporters get all future updates at no extra cost.
 </div>
 
 <div class="price-area">
   <div class="price">$29</div>
-  <div class="price-note">One-time payment · 6 complete e-books · PDF + EPUB</div>
-  <a id="bundleBuy" class="btn-buy" href="#notify" onclick="trackEvent('bundle-buy-click')">🔒 Get the bundle — $29</a>
-  <p style="color:#666;font-size:13px;margin:8px 0 4px;">Checkout opens shortly (payment via Lemon Squeezy — EU VAT & US sales tax handled). Leave your email and be first in line; buyers get all future editions free.</p>
-  <form id="bundleNotify" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:420px;margin:0 auto;">
-    <input type="email" id="bundleEmail" required placeholder="you@agency.com" aria-label="Your email address" style="flex:1;min-width:200px;padding:11px 14px;border:1px solid #b9c8dd;border-radius:6px;font-size:15px;" />
-    <button type="submit" style="padding:11px 22px;border:none;border-radius:6px;background:#1a73e8;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Notify me at launch</button>
-  </form>
-  <p id="bundleMsg" role="status" style="font-size:13px;color:#2e7d32;min-height:18px;"></p>
-  <a href="/downloads/compliance-bundle-v1.0.zip" class="btn-free" onclick="trackEvent('bundle-zip-free')">⬇ Or download free ZIP (all EPUBs + PDF)</a>
-  <p style="color:#888;font-size:11px;margin:6px 0 0;">204 KB · No signup · Creative Commons BY-NC 4.0</p>
+  <div class="price-note">Launch price · One-time payment · All future updates included</div>
+
+  <a href="/downloads/compliance-bundle-v1.0.zip" class="btn-free" onclick="trackEvent('bundle-zip-free')">⬇ Download free ZIP (PDF + 6 EPUBs)</a>
+  <p style="color:#888;font-size:11px;margin:6px 0 14px;">204 KB · No signup · Creative Commons BY-NC 4.0</p>
+
+  <div style="border-top:1px solid #e0e0e0;padding-top:20px;margin-top:8px;">
+    <p style="color:#555;font-size:14px;font-weight:600;margin:0 0 8px;">Want early-bird pricing when checkout opens?</p>
+    <form id="bundleNotify" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;max-width:420px;margin:0 auto;">
+      <input type="email" id="bundleEmail" required placeholder="you@agency.com" aria-label="Your email address" style="flex:1;min-width:200px;padding:11px 14px;border:1px solid #b9c8dd;border-radius:6px;font-size:15px;" />
+      <button type="submit" style="padding:11px 22px;border:none;border-radius:6px;background:#1a73e8;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Notify me — get $5 off</button>
+    </form>
+    <p id="bundleMsg" role="status" style="font-size:13px;color:#2e7d32;min-height:18px;"></p>
+    <p style="color:#888;font-size:12px;margin:6px 0 0;">First 50 buyers save $5 at launch.</p>
+  </div>
 </div>
 
 <div class="benefits">
@@ -237,7 +241,7 @@ footer a { color:#1a73e8; }
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data.ok) {
         try { navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: location.pathname, event: 'bundle-notify' })], { type: 'application/json' })); } catch (err) {}
-        msg.textContent = "Thanks — you're on the list. We'll email you the moment checkout opens.";
+        msg.textContent = "Thanks — you're on the list! You'll get $5 off at launch + we'll email you when checkout opens.";
         form.querySelector('button').disabled = true;
         form.querySelector('button').textContent = '✓ On the list';
       } else {

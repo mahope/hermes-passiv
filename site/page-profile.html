@@ -116,7 +116,7 @@
           "name": "What is the difference between Free and Pro?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, history tracking, client-ready PDF reports and batch mode."
+            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Keys work offline — no account needed."
           }
         }
       ]
@@ -134,7 +134,7 @@
       HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers — one command, no install.
     </p>
     <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-      <a href="/downloads/page-profile/page-profile-1.0.0.tar.gz" class="btn btn-primary">📦 Download (tar.gz)</a>
+      <a href="/downloads/page-profile/page-profile-1.1.0.tar.gz" class="btn btn-primary">📦 Download (tar.gz)</a>
       <a href="/downloads/page-profile/page_profile.py" class="btn btn-secondary">🐍 Single file</a>
       <a href="#quickstart" class="btn btn-secondary">⚡ Quick start →</a>
     </div>
@@ -146,7 +146,7 @@
       <h2>How it works</h2>
       <div class="cli-demo">
         <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://example.com</span></div>
-        <div><span class="output">page-profile v1.0.0  —  https://example.com</span></div>
+        <div><span class="output">page-profile v1.1.0  —  https://example.com</span></div>
         <div><span class="output">  status: ✅ HTTP 200</span></div>
         <div><span class="output">──────────────────────────────────────────────────────</span></div>
         <div><span class="output">  Title:        ⚠️ Example Domain (14 chars)</span></div>
@@ -200,9 +200,9 @@
       </div>
       <p style="margin-top:1rem;">Or download the full package:</p>
       <div class="cli-demo">
-        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page-profile-1.0.0.tar.gz</span></div>
-        <div><span class="prompt">$</span> tar xzf page-profile-1.0.0.tar.gz</div>
-        <div><span class="prompt">$</span> cd page-profile-1.0.0</div>
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page-profile-1.1.0.tar.gz</span></div>
+        <div><span class="prompt">$</span> tar xzf page-profile-1.1.0.tar.gz</div>
+        <div><span class="prompt">$</span> cd page-profile-1.1.0</div>
         <div><span class="prompt">$</span> python3 page_profile.py https://your-site.com</div>
       </div>
     </section>
@@ -245,13 +245,17 @@
           <span style="font-size:0.8rem;color:#94a3b8;">per year</span>
           <ul>
             <li>Everything in Free, plus:</li>
-            <li>Comparison mode — diff two URLs</li>
-            <li>History tracking — see how a page changes over time</li>
-            <li>Client-ready PDF report</li>
-            <li>Batch mode — profile multiple URLs</li>
-            <li><strong>Coming —</strong> available when Lemon Squeezy is set up</li>
+            <li>Comparison mode — diff two URLs side by side</li>
+            <li>Batch mode — profile multiple URLs, ranked by score</li>
+            <li>Client-ready HTML report</li>
+            <li>Offline license — no account, no phoning home</li>
+            <li>History tracking (free for everyone)</li>
           </ul>
-          <span class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Available soon</span>
+          <span id="pro-cta" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Available soon</span>
+          <!-- CHECKOUT_URL_PLACEHOLDER: replace the span above with
+               <a href="LEMON_SQUEEZY_CHECKOUT_URL" class="btn btn-primary">Buy Pro — $19/year</a>
+               when the Lemon Squeezy key arrives. Keys are issued with
+               page_profile.py --gen-key SEED (offline validation). -->
         </div>
       </div>
     </section>
@@ -274,7 +278,7 @@
       <p>Running against hermes-passiv.pages.dev:</p>
       <div class="cli-demo">
         <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://hermes-passiv.pages.dev/</span></div>
-        <div><span class="output">page-profile v1.0.0  —  https://hermes-passiv.pages.dev/</span></div>
+        <div><span class="output">page-profile v1.1.0  —  https://hermes-passiv.pages.dev/</span></div>
         <div><span class="output">  status: ✅ HTTP 200</span></div>
         <div><span class="output">──────────────────────────────────────────────────────</span></div>
         <div><span class="pass">  Title:        ✅ EU Compliance Guides for Small Web Agencies</span></div>
@@ -336,7 +340,7 @@
         </details>
         <details>
           <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What is the difference between Free and Pro?</summary>
-          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, history tracking, client-ready PDF reports and batch mode.</p>
+          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Keys work offline — no account needed.</p>
         </details>
       </div>
     </div>

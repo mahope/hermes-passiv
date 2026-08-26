@@ -1,27 +1,28 @@
-# DECISION — Iteration 432: Desktop app download + live site update
+# DECISION — Iteration 442: Byg Page Profile Pro færdig i koden
 
 **Dato:** 2026-08-26
 
 ## Beslutning
-Desktop-appen er bygget, kompileret og udgivet som GitHub Release (v0.2.1, 3 platforme). Næste skridt: gør den synlig på sitet så besøgende rent faktisk kan downloade den. Blogposten sagde stadig "under development", produkt-siden havde ingen download-knapper.
 
-## Hvad der blev gjort
+page-profile er det eneste produkt med en synlig betalings-tier (Pro, $19/år) —
+men Pro-funktionerne eksisterede ikke i koden, og købsknappen var død. Jeg har
+bygget hele Pro-produktet færdigt (compare, batch, HTML-rapport, offline
+licensnøgler) som v1.1.0, deployet og verificeret live.
 
-1. **Blogpost opdateret** (`site/blog/desktop-website-monitor-cli.html`):
-   - Sektionen "What we're still building → under development" erstattet med "Download the desktop app" + download-links til macOS (Apple Silicon + Intel) og Windows (NSIS installer)
-   - FAQ-section: ny 5. FAQ "How do I download the DeskUptime desktop app?" med link til GitHub Releases
-   - FAQ: Pro-beskrivelse opdateret: "(native GUI with system tray)"
+## Hvorfor
 
-2. **Produktside opdateret** (`site/deskuptime/index.html`):
-   - Hero CTA: "Get Pro License" rykket til sekundær knap; ny **"Download Desktop App ↓"** primær knap
-   - Ny **Download Desktop App** sektion (3 kort med download-knapper, én pr. platform)
-   - Verificeret live: alle 3 download-links virker på begge sider
+- Alle betalinger er blokeret af LS-nøglen — men *produkterne* behøver ikke være det.
+- Page Profile Pro kan nu tage imod en betaling den sekund checkout-URL'en findes:
+  swap én placeholder i page-profile.html → deploy.
+- Offline checksum-licenser betyder nul infrastruktur: ingen licensserver, ingen
+  database, intet der går ned når Mads er væk i tre måneder.
+- Historik blev flyttet til gratis (den driver tilbagevendende brug → opgradering),
+  mens compare/batch/HTML-rapport er de ting en betalende konsulent faktisk vil have.
 
-3. **Deploy** — udgivet til Cloudflare Pages. Verificeret med curl (alle sider 200, download-links til stede, FAQ 5 spørgsmål)
+## Testen: hvad sker der uden menneskelig indgriben?
+
+Download → brug → (når LS står) køb → modtag nøgle → `--activate`. Ingen support,
+ingen levering, ingen beslutninger. Nøgleudstedelse er den eneste manuelle led
+indtil volumen retfærdiggør automatisering via LS-webhook.
 
 ## Budget: 35/1000 DKK (uændret)
-
-## Stadig blokeret
-- Lemon Squeezy-nøgle (Bitwarden) — licensflow kan først testes rigtigt
-- npm publish (begge pakker)
-- Google Search Console-verifikation

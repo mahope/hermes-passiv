@@ -27,7 +27,58 @@ from urllib.error import URLError, HTTPError
 from urllib.parse import urlparse, urljoin
 from collections import OrderedDict
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
+
+# ---------------------------------------------------------------------------
+# License (Pro) — offline key validation, no network calls.
+# A Pro key is "PPRO-" followed by 32 base32 chars; the last 8 are a checksum
+# of the first 24 + salt, so random strings are rejected without phoning home.
+# ---------------------------------------------------------------------------
+_LICENSE_SALT = "page-profile-pro-v1"
+LICENSE_FILE = os.path.join(os.path.expanduser("~"), ".page-profile-license")
+
+
+def _b32_checksum(payload: str) -> str:
+    import hashlib
+    import base64
+    digest = hashlib.sha256((_LICENSE_SALT + payload).encode()).digest()
+    return base64.b32encode(digest).decode()[:8]
+
+
+def make_license_key(seed: str) -> str:
+    """Generate a valid Pro key from a customer seed (used by the seller)."""
+    payload = "".join(c for c in seed.upper() if c.isalnum())[:24].ljust(24, "X")
+    return "PPRO-" + payload + _b32_checksum(payload)
+
+
+def validate_license_key(key: str) -> bool:
+    if not key or not key.startswith("PPRO-") or len(key) != len("PPRO-") + 32:
+        return False
+    payload = key[5:29]
+    return _b32_checksum(payload) == key[29:]
+
+
+def load_license() -> str:
+    """Read stored license key from env var or ~/.page-profile-license."""
+    key = os.environ.get("PAGE_PROFILE_LICENSE", "")
+    if not key and os.path.exists(LICENSE_FILE):
+        try:
+            with open(LICENSE_FILE) as f:
+                key = f.read().strip()
+        except OSError:
+            pass
+    return key
+
+
+def require_pro(feature: str) -> str:
+    """Return a valid license key or exit with an upgrade message."""
+    key = load_license()
+    if key and validate_license_key(key):
+        return key
+    print(f"Error: '{feature}' is a page-profile Pro feature.", file=sys.stderr)
+    print("Get a Pro license at https://hermes-passiv.pages.dev/page-profile ($19/year).", file=sys.stderr)
+    print("Then run:  page-profile --activate YOUR-KEY   (or set PAGE_PROFILE_LICENSE)", file=sys.stderr)
+    sys.exit(2)
 
 
 # ---------------------------------------------------------------------------
@@ -612,37 +663,316 @@ def format_json(url, status, redirect_chain, result, score, max_score, grade, pe
 # ---------------------------------------------------------------------------
 # Main entrypoint
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Pro features
+# ---------------------------------------------------------------------------
+
+def _profile_url(url, timeout=15):
+    """Fetch + analyze + score one URL. Returns dict or raises RuntimeError."""
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    status_code, headers, html, redirect_chain = fetch_page(url, timeout=timeout)
+    if status_code == 0:
+        raise RuntimeError(f"Could not fetch {url}: {html}")
+    result = analyze(url, html, headers)
+    sc, max_sc, grade, penalties = score(result)
+    return {
+        "url": url, "status": status_code, "redirects": redirect_chain,
+        "result": result, "score": sc, "max_score": max_sc,
+        "grade": grade, "penalties": penalties,
+    }
+
+
+def run_compare(url_a, url_b, timeout=15):
+    """Pro: side-by-side diff of two URLs' key signals."""
+    a = _profile_url(url_a, timeout)
+    b = _profile_url(url_b, timeout)
+
+    def row(label, va, vb, ok_when_equal=True):
+        same = (va == vb)
+        icon = "✅" if (same == ok_when_equal or not ok_when_equal and same) else ("✅" if same else "⚠️ ")
+        return f"  {label:<22} {'=' if same else '≠'}  A: {_fmt_val(va)}   B: {_fmt_val(vb)}"
+
+    lines = []
+    sep = "─" * 78
+    lines.append("")
+    lines.append(f"  page-profile v{__version__} — COMPARE (Pro)")
+    lines.append(f"  A: {a['url']}  →  score {a['score']}/{a['max_score']} ({a['grade']})")
+    lines.append(f"  B: {b['url']}  →  score {b['score']}/{b['max_score']} ({b['grade']})")
+    lines.append(sep)
+    pairs = [
+        ("Title", a["result"].get("title"), b["result"].get("title")),
+        ("Description", a["result"].get("meta_description"), b["result"].get("meta_description")),
+        ("Canonical", a["result"].get("canonical"), b["result"].get("canonical")),
+        ("Language", a["result"].get("language"), b["result"].get("language")),
+        ("OG image", a["result"].get("og", {}).get("image"), b["result"].get("og", {}).get("image")),
+        ("Twitter card", a["result"].get("twitter", {}).get("card"), b["result"].get("twitter", {}).get("card")),
+        ("JSON-LD blocks", a["result"].get("json_ld_count", 0), b["result"].get("json_ld_count", 0)),
+        ("H1 count", len(a["result"].get("headings", {}).get("h1", [])), len(b["result"].get("headings", {}).get("h1", []))),
+        ("Images total", a["result"].get("images", {}).get("total", 0), b["result"].get("images", {}).get("total", 0)),
+        ("Images w/ alt", a["result"].get("images", {}).get("with_alt", 0), b["result"].get("images", {}).get("with_alt", 0)),
+        ("HSTS", a["result"].get("security", {}).get("hsts"), b["result"].get("security", {}).get("hsts")),
+        ("CSP", a["result"].get("security", {}).get("csp"), b["result"].get("security", {}).get("csp")),
+    ]
+    for label, va, vb in pairs:
+        sa = _fmt_val(va)
+        sb = _fmt_val(vb)
+        marker = "=" if va == vb else "≠"
+        flag = "" if va == vb else ("   ← differs" )
+        lines.append(f"  {marker} {label:<20} A: {str(sa)[:38]:<38} B: {str(sb)[:38]}{flag}")
+    lines.append(sep)
+    d = round(a["score"] - b["score"], 1)
+    verdict = f"A scores {abs(d)} higher" if d > 0 else (f"B scores {abs(d)} higher" if d < 0 else "Tie")
+    lines.append(f"  Verdict: {verdict}")
+    only_a = [p for p in a["penalties"] if p not in b["penalties"]]
+    only_b = [p for p in b["penalties"] if p not in a["penalties"]]
+    if only_a:
+        lines.append(f"  Only A has issues:")
+        for p in only_a[:8]:
+            lines.append(f"    ⚠️  {p}")
+    if only_b:
+        lines.append(f"  Only B has issues:")
+        for p in only_b[:8]:
+            lines.append(f"    ⚠️  {p}")
+    lines.append(sep)
+    lines.append("")
+    print("\n".join(lines))
+
+
+def run_batch(urls, timeout=15):
+    """Pro: profile many URLs, print a summary table sorted by score."""
+    rows = []
+    errors = []
+    for u in urls:
+        try:
+            p = _profile_url(u, timeout)
+            rows.append((u, p["status"], p["score"], p["max_score"], p["grade"], len(p["penalties"])))
+        except RuntimeError as e:
+            errors.append((u, str(e)))
+    rows.sort(key=lambda r: r[2], reverse=True)
+    lines = []
+    lines.append("")
+    lines.append(f"  page-profile v{__version__} — BATCH (Pro): {len(rows)} ok, {len(errors)} failed")
+    lines.append("  " + "─" * 76)
+    lines.append(f"  {'URL':<48} {'HTTP':>4}  {'Score':>7}  {'Grade':>5}  Issues")
+    for u, st, sc, mx, gr, n in rows:
+        lines.append(f"  {u[:47]:<48} {st:>4}  {sc:>4}/{mx:<2}  {gr:>5}  {n}")
+    for u, e in errors:
+        lines.append(f"  {u[:47]:<48} FAIL  {e[:50]}")
+    lines.append("  " + "─" * 76)
+    if rows:
+        avg = round(sum(r[2] for r in rows) / len(rows), 1)
+        lines.append(f"  Average score: {avg}/{rows[0][3] if rows else MAX_WEIGHT}")
+    lines.append("")
+    print("\n".join(lines))
+    if errors:
+        sys.exit(1)
+
+
+def _history_path():
+    return os.path.join(os.path.expanduser("~"), ".page-profile-history.json")
+
+
+def append_history(entry):
+    try:
+        hist = []
+        if os.path.exists(_history_path()):
+            with open(_history_path()) as f:
+                hist = json.load(f)
+        hist.append(entry)
+        # keep last 500 entries — bounded storage, never grows unattended
+        with open(_history_path(), "w") as f:
+            json.dump(hist[-500:], f, ensure_ascii=False, indent=1)
+    except (OSError, ValueError):
+        pass  # history must never break a profile
+
+
+def run_history(url=None):
+    """Show how tracked pages changed over time."""
+    try:
+        with open(_history_path()) as f:
+            hist = json.load(f)
+    except (OSError, ValueError):
+        print("No history yet. Profiles are recorded automatically when you run page-profile.")
+        return
+    if url:
+        hist = [h for h in hist if h.get("url") == url]
+    if not hist:
+        print("No matching history entries.")
+        return
+    from collections import defaultdict
+    by_url = defaultdict(list)
+    for h in hist:
+        by_url[h["url"]].append(h)
+    for u, entries in by_url.items():
+        print(f"\n{u}  ({len(entries)} snapshots)")
+        prev = None
+        for h in entries[-15:]:
+            line = f"  {h['when']}  HTTP {h['status']:>3}  {h['score']:>5}/{h['max_score']}  {h['grade']}"
+            delta = ""
+            if prev is not None:
+                d = round(h["score"] - prev, 1)
+                delta = f"  ({'+' if d > 0 else ''}{d})"
+            print(line + delta)
+            prev = h["score"]
+    print()
+
+
+def run_html_report(p, out_path=None):
+    """Client-ready single-file HTML report."""
+    esc = lambda s: (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    r = p["result"]
+    sec = r.get("security", {})
+    og = r.get("og", {})
+    checks = [
+        ("Title", bool(r.get("title")), esc(r.get("title"))),
+        ("Meta description", bool(r.get("meta_description")), esc(r.get("meta_description"))),
+        ("Canonical", bool(r.get("canonical")), esc(r.get("canonical"))),
+        ("Language", bool(r.get("language")), esc(r.get("language"))),
+        ("Charset", bool(r.get("charset")), esc(r.get("charset"))),
+        ("OG title", bool(og.get("title")), esc(og.get("title"))),
+        ("OG description", bool(og.get("description")), esc(og.get("description"))),
+        ("OG image", bool(og.get("image")), esc(og.get("image"))),
+        ("JSON-LD", r.get("json_ld_count", 0) > 0, ", ".join(r.get("json_ld_types", [])[:6])),
+        ("HSTS", sec.get("hsts"), ""),
+        ("CSP", sec.get("csp"), ""),
+        ("X-Frame-Options", sec.get("xfo"), ""),
+        ("X-Content-Type-Options", sec.get("xcto"), ""),
+        ("HTTPS", p["url"].startswith("https://"), ""),
+    ]
+    grade_colors = {"A": "#16a34a", "B": "#65a30d", "C": "#d97706", "D": "#ea580c", "F": "#dc2626"}
+    gc = grade_colors.get(p["grade"], "#334155")
+    rows = "".join(
+        f"<tr><td>{esc(label)}</td><td style=\"color:{'#16a34a' if ok else '#dc2626'}\">"
+        f"{'PASS' if ok else 'FAIL'}</td><td>{esc(detail)}</td></tr>"
+        for label, ok, detail in checks
+    )
+    pens = "".join(f"<li>{esc(x)}</li>" for x in p["penalties"]) or "<li>None</li>"
+    html_doc = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page Profile Report — {esc(p['url'])}</title>
+<style>
+body{{font-family:-apple-system,'Segoe UI',sans-serif;max-width:760px;margin:2rem auto;padding:0 1rem;color:#0f172a;line-height:1.55}}
+.badge{{display:inline-block;background:{gc};color:#fff;font-size:2.6rem;font-weight:700;border-radius:12px;padding:.4rem 1.1rem}}
+table{{width:100%;border-collapse:collapse;margin:1.2rem 0}}
+th,td{{text-align:left;padding:.5rem .7rem;border-bottom:1px solid #e2e8f0}}
+th{{background:#f1f5f9}} code{{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.85em}}
+footer{{color:#64748b;font-size:.85rem;margin-top:2rem;border-top:1px solid #e2e8f0;padding-top:1rem}}
+</style></head><body>
+<h1>Page Profile Report</h1>
+<p><span class="badge">{p['grade']}</span> &nbsp; Score <strong>{p['score']}/{p['max_score']}</strong></p>
+<p>URL: <code>{esc(p['url'])}</code><br>Status: HTTP {p['status']} · Generated {esc(__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'))}</p>
+<table><tr><th>Check</th><th>Result</th><th>Detail</th></tr>{rows}</table>
+<h2>Improvement points</h2><ul>{pens}</ul>
+<footer>Generated with page-profile v{__version__} Pro · <a href="https://hermes-passiv.pages.dev/page-profile">hermes-passiv.pages.dev/page-profile</a></footer>
+</body></html>"""
+    path = out_path or "page-profile-report.html"
+    with open(path, "w") as f:
+        f.write(html_doc)
+    print(f"HTML report written to {path}")
+
+
+def activate(key):
+    key = key.strip()
+    if not validate_license_key(key):
+        print("Error: that license key is not valid. Check it and try again.")
+        sys.exit(2)
+    try:
+        with open(LICENSE_FILE, "w") as f:
+            f.write(key)
+        os.chmod(LICENSE_FILE, 0o600)
+        print(f"Pro activated ✓  (stored in {LICENSE_FILE})")
+    except OSError as e:
+        print(f"Could not write license file: {e}")
+        sys.exit(2)
+
+
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(
         description="page-profile — Zero-dependency web page profiler",
     )
-    parser.add_argument("url", help="URL to profile (e.g., https://example.com)")
+    parser.add_argument("url", nargs="?", help="URL to profile (e.g., https://example.com)")
     parser.add_argument("--json", action="store_true", help="Output JSON instead of terminal report")
     parser.add_argument("--timeout", type=int, default=15, help="Request timeout in seconds (default: 15)")
     parser.add_argument("--version", action="version", version=f"page-profile v{__version__}")
+    # Pro features
+    parser.add_argument("--compare", metavar=("URL_A", "URL_B"), nargs=2,
+                        help="(Pro) Compare two URLs side by side")
+    parser.add_argument("--batch", nargs="+", metavar="URL",
+                        help="(Pro) Profile multiple URLs and show a ranked table")
+    parser.add_argument("--urls-from-file", metavar="FILE",
+                        help="(Pro) File with one URL per line, used with --batch")
+    parser.add_argument("--html-report", metavar="PATH", nargs="?", const="page-profile-report.html",
+                        help="(Pro) Write a client-ready HTML report")
+    parser.add_argument("--history", action="store_true",
+                        help="Show how pages scored over previous runs (free)")
+    parser.add_argument("--activate", metavar="KEY",
+                        help="Activate a page-profile Pro license key")
+    parser.add_argument("--gen-key", metavar="SEED",
+                        help=argparse.SUPPRESS)  # seller-only helper
 
     args = parser.parse_args()
 
-    # Validate URL
-    if not args.url.startswith(("http://", "https://")):
-        args.url = "https://" + args.url
+    if args.gen_key:
+        print(make_license_key(args.gen_key))
+        return
 
-    # Fetch
+    if args.activate:
+        activate(args.activate)
+        return
+
+    if args.history:
+        run_history()
+        return
+
+    if args.urls_from_file:
+        require_pro("batch mode from file")
+        try:
+            with open(args.urls_from_file) as f:
+                file_urls = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
+        except OSError as e:
+            print(f"Error reading {args.urls_from_file}: {e}", file=sys.stderr)
+            sys.exit(1)
+        args.batch = (args.batch or []) + file_urls
+
+    if args.compare:
+        require_pro("compare mode")
+        run_compare(args.compare[0], args.compare[1], timeout=args.timeout)
+        return
+
+    if args.batch:
+        require_pro("batch mode")
+        run_batch(args.batch, timeout=args.timeout)
+        return
+
+    if not args.url:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    # Free single-URL profile
     status_code, headers, html, redirect_chain = fetch_page(args.url, timeout=args.timeout)
-
     if status_code == 0:
         print(f"Error: {html}")
         sys.exit(1)
 
-    # Analyze
     result = analyze(args.url, html, headers)
-
-    # Score
     sc, max_sc, grade, penalties = score(result)
 
-    # Output
+    append_history({
+        "url": args.url, "when": __import__('datetime').datetime.utcnow().strftime("%Y-%m-%d"),
+        "status": status_code, "score": sc, "max_score": max_sc, "grade": grade,
+    })
+
+    if args.html_report:
+        require_pro("HTML report")
+        p = {"url": args.url, "status": status_code, "redirects": redirect_chain,
+             "result": result, "score": sc, "max_score": max_sc,
+             "grade": grade, "penalties": penalties}
+        run_html_report(p, args.html_report)
+
     if args.json:
         print(format_json(args.url, status_code, redirect_chain, result, sc, max_sc, grade, penalties))
     else:
