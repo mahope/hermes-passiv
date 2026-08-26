@@ -73,6 +73,9 @@ textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-s
 }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is it safe to hash passwords with SHA-256 here?", "acceptedAnswer": {"@type": "Answer", "text": "SHA-256 alone is not a password-hashing scheme — it is fast by design. For storing passwords use a dedicated slow algorithm such as bcrypt, scrypt or Argon2 in your own backend. This tool is for verifying file integrity, deduplicating content and building cache keys."}}, {"@type": "Question", "name": "Does my text get uploaded when I hash it?", "acceptedAnswer": {"@type": "Answer", "text": "No. Hashing runs entirely in JavaScript in your browser using the Web Crypto API. The text never leaves your device, so hashing sensitive strings is safe."}}, {"@type": "Question", "name": "Which algorithm should I choose?", "acceptedAnswer": {"@type": "Answer", "text": "SHA-256 is the modern default and what you should reach for first. SHA-1 is broken for security purposes but still appears in legacy systems like old Git objects. MD5 is shown for compatibility checks only — never use it for anything security-related."}}, {"@type": "Question", "name": "Why do two different texts sometimes give the same hash?", "acceptedAnswer": {"@type": "Answer", "text": "They should not, practically speaking. A collision on SHA-256 requires roughly 2^256/2 attempts — impossible with current technology. If you see a collision, the inputs are almost certainly identical after invisible characters like trailing spaces are accounted for."}}]}
+</script>
 </head>
 <body>
 
@@ -128,6 +131,16 @@ textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-s
     scheme such as bcrypt, scrypt or Argon2 — never a single fast SHA digest.
     SHA-1 is included only for compatibility with older systems; it is considered
     cryptographically broken for collision resistance.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Is it safe to hash passwords with SHA-256 here?</h3><p>SHA-256 alone is not a password-hashing scheme — it is fast by design. For storing passwords use a dedicated slow algorithm such as bcrypt, scrypt or Argon2 in your own backend. This tool is for verifying file integrity, deduplicating content and building cache keys.</p></div>
+      <div class="card"><h3>Does my text get uploaded when I hash it?</h3><p>No. Hashing runs entirely in JavaScript in your browser using the Web Crypto API. The text never leaves your device, so hashing sensitive strings is safe.</p></div>
+      <div class="card"><h3>Which algorithm should I choose?</h3><p>SHA-256 is the modern default and what you should reach for first. SHA-1 is broken for security purposes but still appears in legacy systems like old Git objects. MD5 is shown for compatibility checks only — never use it for anything security-related.</p></div>
+      <div class="card"><h3>Why do two different texts sometimes give the same hash?</h3><p>They should not, practically speaking. A collision on SHA-256 requires roughly 2^256/2 attempts — impossible with current technology. If you see a collision, the inputs are almost certainly identical after invisible characters like trailing spaces are accounted for.</p></div>
   </div>
 </section>
 

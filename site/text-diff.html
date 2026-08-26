@@ -69,6 +69,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is my text sent to a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. The comparison runs entirely in your browser with JavaScript — nothing you paste is transmitted or stored, so comparing confidential documents and source code is safe."}}, {"@type": "Question", "name": "What do the colors mean?", "acceptedAnswer": {"@type": "Answer", "text": "Red lines exist only in the left (original) text and were removed. Green lines exist only in the right (changed) text and were added. Lines that match exactly are shown unmarked."}}, {"@type": "Question", "name": "Can it compare code as well as prose?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The diff works line by line on any plain text, so source files, config files, JSON, and legal drafts all work. For very large files (tens of thousands of lines) the browser may slow down — split the input if that happens."}}, {"@type": "Question", "name": "Does whitespace matter?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, by default every space counts, because in code and contracts a changed indent can be meaningful. Normalize the texts first (trim trailing spaces) if you want to ignore those differences."}}]}
+</script>
 </head>
 <body>
 
@@ -127,6 +130,16 @@
     files, and spotting accidental edits in translated text. Options let you ignore case
     or whitespace-only differences when those don't matter. Everything runs entirely in
     your browser — your text is never uploaded, stored or sent anywhere.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Is my text sent to a server?</h3><p>No. The comparison runs entirely in your browser with JavaScript — nothing you paste is transmitted or stored, so comparing confidential documents and source code is safe.</p></div>
+      <div class="card"><h3>What do the colors mean?</h3><p>Red lines exist only in the left (original) text and were removed. Green lines exist only in the right (changed) text and were added. Lines that match exactly are shown unmarked.</p></div>
+      <div class="card"><h3>Can it compare code as well as prose?</h3><p>Yes. The diff works line by line on any plain text, so source files, config files, JSON, and legal drafts all work. For very large files (tens of thousands of lines) the browser may slow down — split the input if that happens.</p></div>
+      <div class="card"><h3>Does whitespace matter?</h3><p>Yes, by default every space counts, because in code and contracts a changed indent can be meaningful. Normalize the texts first (trim trailing spaces) if you want to ignore those differences.</p></div>
   </div>
 </section>
 

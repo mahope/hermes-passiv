@@ -58,6 +58,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Are these UUIDs really unique?", "acceptedAnswer": {"@type": "Answer", "text": "Version 4 UUIDs contain 122 random bits. The probability of a collision among trillions of generated UUIDs is astronomically small — small enough that v4 uniqueness is treated as guaranteed in practice. Randomness comes from your browser's cryptographic random number generator."}}, {"@type": "Question", "name": "Can someone guess a UUID I generated?", "acceptedAnswer": {"@type": "Answer", "text": "Practically no. With 122 random bits, brute-forcing a specific v4 UUID is infeasible. Still, UUIDs are identifiers, not secrets — do not use them as authentication tokens or passwords."}}, {"@type": "Question", "name": "What is the difference between v4 and other versions?", "acceptedAnswer": {"@type": "Answer", "text": "v1 uses timestamps and MAC addresses (leaks information), v3/v5 derive from a name via hashing (deterministic), and v7 encodes a timestamp (sortable). v4 is fully random and the right default unless you need a specific property of another version."}}, {"@type": "Question", "name": "Is there a limit on how many I can generate?", "acceptedAnswer": {"@type": "Answer", "text": "No. Generation runs locally in your browser with no server involved — generate as many as you need, in bulk if required."}}]}
+</script>
 </head>
 <body>
 
@@ -107,6 +110,16 @@
     generation, so the values cannot leak.</p>
     <p>Need hashes instead of unique IDs? Try the <a href="/hash-generator">Hash Generator</a>,
     or format API payloads with the <a href="/json-formatter">JSON Formatter</a>.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Are these UUIDs really unique?</h3><p>Version 4 UUIDs contain 122 random bits. The probability of a collision among trillions of generated UUIDs is astronomically small — small enough that v4 uniqueness is treated as guaranteed in practice. Randomness comes from your browser's cryptographic random number generator.</p></div>
+      <div class="card"><h3>Can someone guess a UUID I generated?</h3><p>Practically no. With 122 random bits, brute-forcing a specific v4 UUID is infeasible. Still, UUIDs are identifiers, not secrets — do not use them as authentication tokens or passwords.</p></div>
+      <div class="card"><h3>What is the difference between v4 and other versions?</h3><p>v1 uses timestamps and MAC addresses (leaks information), v3/v5 derive from a name via hashing (deterministic), and v7 encodes a timestamp (sortable). v4 is fully random and the right default unless you need a specific property of another version.</p></div>
+      <div class="card"><h3>Is there a limit on how many I can generate?</h3><p>No. Generation runs locally in your browser with no server involved — generate as many as you need, in bulk if required.</p></div>
   </div>
 </section>
 

@@ -52,6 +52,9 @@
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What do WCAG AA and AAA mean?", "acceptedAnswer": {"@type": "Answer", "text": "They are contrast levels from the Web Content Accessibility Guidelines. AA requires a contrast ratio of at least 4.5:1 for normal text (3:1 for large text); AAA raises this to 7:1. Every palette generated here shows the exact ratios so you can pick compliant pairs."}}, {"@type": "Question", "name": "Is contrast ratio about text only?", "acceptedAnswer": {"@type": "Answer", "text": "Text needs to meet the thresholds above. Non-text UI elements like buttons, form borders and icons need 3:1 under AA. The generator labels which pairs are safe for each use."}}, {"@type": "Question", "name": "Can I use the palette commercially?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The generated color combinations are yours to use in any project — palettes are derived from your base color mathematically and carry no license restrictions."}}, {"@type": "Question", "name": "Does it work for dark mode designs?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Generate from a dark base color to get light text pairings, and check the ratios the same way. Dark mode often needs higher contrast than you expect — verify rather than eyeball."}}]}
+</script>
 </head>
 <body>
 <header class="hero">
@@ -148,6 +151,16 @@
 <a href="/contrast-checker">Contrast checker</a> · <a href="/scan">Full-page scanner</a> ·
 <a href="/color-blindness-simulator">Color blindness simulator</a> ·
 <a href="/palette-generator-da">Dansk version</a></p>
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What do WCAG AA and AAA mean?</h3><p>They are contrast levels from the Web Content Accessibility Guidelines. AA requires a contrast ratio of at least 4.5:1 for normal text (3:1 for large text); AAA raises this to 7:1. Every palette generated here shows the exact ratios so you can pick compliant pairs.</p></div>
+      <div class="card"><h3>Is contrast ratio about text only?</h3><p>Text needs to meet the thresholds above. Non-text UI elements like buttons, form borders and icons need 3:1 under AA. The generator labels which pairs are safe for each use.</p></div>
+      <div class="card"><h3>Can I use the palette commercially?</h3><p>Yes. The generated color combinations are yours to use in any project — palettes are derived from your base color mathematically and carry no license restrictions.</p></div>
+      <div class="card"><h3>Does it work for dark mode designs?</h3><p>Yes. Generate from a dark base color to get light text pairings, and check the ratios the same way. Dark mode often needs higher contrast than you expect — verify rather than eyeball.</p></div>
+  </div>
+</section>
+
 </main>
 <footer class="container" style="padding:40px 24px;color:var(--color-text-muted);font-size:.85rem">
   Hermes Compliance · Free GDPR &amp; accessibility tools that run in your browser

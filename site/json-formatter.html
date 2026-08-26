@@ -58,6 +58,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is my JSON uploaded anywhere?", "acceptedAnswer": {"@type": "Answer", "text": "No. Parsing, formatting and validation all run locally in your browser. Nothing is sent to a server, so API responses containing real data or tokens are safe to paste."}}, {"@type": "Question", "name": "What does \"valid JSON\" actually check?", "acceptedAnswer": {"@type": "Answer", "text": "The validator follows RFC 8259: proper quoting, no trailing commas, no single quotes, no comments, and no unquoted keys. If validation fails, the error message points to the line and position of the first problem found."}}, {"@type": "Question", "name": "Will formatting change my data?", "acceptedAnswer": {"@type": "Answer", "text": "No. Formatting only changes whitespace and indentation — keys, values and ordering are preserved exactly. Numbers keep their value, though very large numbers may be displayed in scientific notation by JavaScript."}}, {"@type": "Question", "name": "Can it sort keys or minify?", "acceptedAnswer": {"@type": "Answer", "text": "Minify removes all unnecessary whitespace to produce the most compact valid output. Key sorting preserves object semantics because JSON objects are unordered by specification — only arrays have a guaranteed order."}}]}
+</script>
 </head>
 <body>
 
@@ -112,6 +115,16 @@
     document is valid before committing it, and reducing payload size before sending data over the wire.
     The validator uses the same JSON parser as the browser itself, so if it passes here, it conforms to
     the JSON standard as implemented in every modern runtime.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Is my JSON uploaded anywhere?</h3><p>No. Parsing, formatting and validation all run locally in your browser. Nothing is sent to a server, so API responses containing real data or tokens are safe to paste.</p></div>
+      <div class="card"><h3>What does "valid JSON" actually check?</h3><p>The validator follows RFC 8259: proper quoting, no trailing commas, no single quotes, no comments, and no unquoted keys. If validation fails, the error message points to the line and position of the first problem found.</p></div>
+      <div class="card"><h3>Will formatting change my data?</h3><p>No. Formatting only changes whitespace and indentation — keys, values and ordering are preserved exactly. Numbers keep their value, though very large numbers may be displayed in scientific notation by JavaScript.</p></div>
+      <div class="card"><h3>Can it sort keys or minify?</h3><p>Minify removes all unnecessary whitespace to produce the most compact valid output. Key sorting preserves object semantics because JSON objects are unordered by specification — only arrays have a guaranteed order.</p></div>
   </div>
 </section>
 

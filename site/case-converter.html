@@ -56,6 +56,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which cases are supported?", "acceptedAnswer": {"@type": "Answer", "text": "UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case and kebab-case. The programming cases (camel/snake/kebab) handle mixed input like \"HTTP Response Code\" or \"user_name\" sensibly."}}, {"@type": "Question", "name": "Does converting change my text otherwise?", "acceptedAnswer": {"@type": "Answer", "text": "No. Only letter casing and, for the programming formats, separators are touched. Accents like é and Æ, numbers and punctuation are preserved."}}, {"@type": "Question", "name": "Is my text uploaded?", "acceptedAnswer": {"@type": "Answer", "text": "No. Conversion runs entirely in your browser — nothing leaves your device."}}, {"@type": "Question", "name": "When should I use snake_case vs kebab-case?", "acceptedAnswer": {"@type": "Answer", "text": "snake_case is conventional for variable names in Python and database columns. kebab-case is standard for URLs, CSS class names, file names and HTML attributes, because hyphens are URL-safe while underscores are not."}}]}
+</script>
 </head>
 <body>
 
@@ -118,6 +121,16 @@
     limits at the same time. For comparing two versions of a document, try the
     <a href="/text-diff">Text Diff Checker</a>; for counting words only, use the
     <a href="/word-counter">Word Counter</a>.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Which cases are supported?</h3><p>UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case and kebab-case. The programming cases (camel/snake/kebab) handle mixed input like "HTTP Response Code" or "user_name" sensibly.</p></div>
+      <div class="card"><h3>Does converting change my text otherwise?</h3><p>No. Only letter casing and, for the programming formats, separators are touched. Accents like é and Æ, numbers and punctuation are preserved.</p></div>
+      <div class="card"><h3>Is my text uploaded?</h3><p>No. Conversion runs entirely in your browser — nothing leaves your device.</p></div>
+      <div class="card"><h3>When should I use snake_case vs kebab-case?</h3><p>snake_case is conventional for variable names in Python and database columns. kebab-case is standard for URLs, CSS class names, file names and HTML attributes, because hyphens are URL-safe while underscores are not.</p></div>
   </div>
 </section>
 

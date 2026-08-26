@@ -76,6 +76,9 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
 }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is URL encoding?", "acceptedAnswer": {"@type": "Answer", "text": "URL encoding (percent-encoding) replaces unsafe ASCII characters with a % followed by two hexadecimal digits. For example, a space becomes %20."}}, {"@type": "Question", "name": "Why encode URLs?", "acceptedAnswer": {"@type": "Answer", "text": "URLs can only contain a limited set of ASCII characters. Characters like spaces, &amp;, ?, and non-ASCII characters must be encoded to be transmitted safely over the internet."}}, {"@type": "Question", "name": "What's the difference between encodeURI and encodeURIComponent?", "acceptedAnswer": {"@type": "Answer", "text": "encodeURI() leaves URL structure characters (/, ?, #) alone, while encodeURIComponent() encodes everything. For query parameter values, always use the \"Full\" (encodeURIComponent) mode."}}, {"@type": "Question", "name": "Does this work with non-ASCII characters like æøå or emoji?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and 😀 encode correctly."}}]}
+</script>
 </head>
 <body>
 
@@ -149,6 +152,16 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
     <p><strong>Why encode URLs?</strong> URLs can only contain a limited set of ASCII characters. Characters like spaces, <code>&amp;</code>, <code>?</code>, and non-ASCII characters must be encoded to be transmitted safely over the internet.</p>
     <p><strong>What's the difference between encodeURI and encodeURIComponent?</strong> <code>encodeURI()</code> leaves URL structure characters (<code>/</code>, <code>?</code>, <code>#</code>) alone, while <code>encodeURIComponent()</code> encodes everything. For query parameter values, always use the "Full" (encodeURIComponent) mode.</p>
     <p><strong>Does this work with non-ASCII characters like æøå or emoji?</strong> Yes. The browser's built-in <code>encodeURIComponent</code> and <code>decodeURIComponent</code> functions handle UTF-8 encoding natively, so characters like <code>æ</code>, <code>ø</code>, <code>å</code>, <code>日本語</code> and <code>😀</code> encode correctly.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What is URL encoding?</h3><p>URL encoding (percent-encoding) replaces unsafe ASCII characters with a % followed by two hexadecimal digits. For example, a space becomes %20.</p></div>
+      <div class="card"><h3>Why encode URLs?</h3><p>URLs can only contain a limited set of ASCII characters. Characters like spaces, &amp;, ?, and non-ASCII characters must be encoded to be transmitted safely over the internet.</p></div>
+      <div class="card"><h3>What's the difference between encodeURI and encodeURIComponent?</h3><p>encodeURI() leaves URL structure characters (/, ?, #) alone, while encodeURIComponent() encodes everything. For query parameter values, always use the "Full" (encodeURIComponent) mode.</p></div>
+      <div class="card"><h3>Does this work with non-ASCII characters like æøå or emoji?</h3><p>Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and 😀 encode correctly.</p></div>
   </div>
 </section>
 

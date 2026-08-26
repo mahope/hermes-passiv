@@ -65,6 +65,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What input formats does it accept?", "acceptedAnswer": {"@type": "Answer", "text": "CSV (comma-separated) and TSV (tab-separated), including quoted fields with embedded commas. Paste directly from Excel or Google Sheets too — copied spreadsheet cells arrive as tab-separated values and are detected automatically."}}, {"@type": "Question", "name": "How are pipes inside cells handled?", "acceptedAnswer": {"@type": "Answer", "text": "Cells containing the pipe character | are escaped as \\| in the Markdown output, per the CommonMark table spec, so the table structure stays intact when rendered."}}, {"@type": "Question", "name": "Does it support alignment columns?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. You choose left, center or right alignment per column, and the generator writes the corresponding colon placement in the separator row (e.g. :---, :---:, ---:)."}}, {"@type": "Question", "name": "Will GitHub render the result correctly?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The output follows GitHub Flavored Markdown tables, which is also supported by GitLab, Obsidian, VS Code preview and most Markdown renderers."}}]}
+</script>
 </head>
 <body>
 
@@ -137,6 +140,16 @@
     so it is safe to use with confidential data.</p>
     <p>Formatting JSON instead? Try the <a href="/json-formatter">JSON Formatter</a>, or compare
     two versions of a file with the <a href="/text-diff">Text Diff Checker</a>.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>What input formats does it accept?</h3><p>CSV (comma-separated) and TSV (tab-separated), including quoted fields with embedded commas. Paste directly from Excel or Google Sheets too — copied spreadsheet cells arrive as tab-separated values and are detected automatically.</p></div>
+      <div class="card"><h3>How are pipes inside cells handled?</h3><p>Cells containing the pipe character | are escaped as \| in the Markdown output, per the CommonMark table spec, so the table structure stays intact when rendered.</p></div>
+      <div class="card"><h3>Does it support alignment columns?</h3><p>Yes. You choose left, center or right alignment per column, and the generator writes the corresponding colon placement in the separator row (e.g. :---, :---:, ---:).</p></div>
+      <div class="card"><h3>Will GitHub render the result correctly?</h3><p>Yes. The output follows GitHub Flavored Markdown tables, which is also supported by GitLab, Obsidian, VS Code preview and most Markdown renderers.</p></div>
   </div>
 </section>
 

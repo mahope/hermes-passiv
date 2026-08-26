@@ -70,6 +70,9 @@
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How is reading time calculated?", "acceptedAnswer": {"@type": "Answer", "text": "Reading time uses an average of 200 words per minute for silent reading, rounded up to the nearest minute. Treat it as an estimate — technical content and non-native readers are usually slower."}}, {"@type": "Question", "name": "Do Danish characters and emoji count correctly?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Words are counted by splitting on whitespace, so æøå, accented letters and emoji all count naturally, and multiple spaces or line breaks between words are not miscounted."}}, {"@type": "Question", "name": "Is there a character limit?", "acceptedAnswer": {"@type": "Answer", "text": "No hard limit — counting happens locally in your browser. Very large texts (hundreds of thousands of words) may take a moment but will complete."}}, {"@type": "Question", "name": "Why do platforms count characters differently?", "acceptedAnswer": {"@type": "Answer", "text": "Some platforms count every character including spaces (X/Twitter), others count only letters, and CJK languages count characters rather than words. Use the character count with spaces for social media limits."}}]}
+</script>
 </head>
 <body>
 
@@ -135,6 +138,16 @@
     time at 150 words per minute (comfortable speech pace). The Flesch Reading Ease score gives a rough measure
     of readability on a 0–100 scale, where higher scores mean easier-to-read text.
   </p>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>How is reading time calculated?</h3><p>Reading time uses an average of 200 words per minute for silent reading, rounded up to the nearest minute. Treat it as an estimate — technical content and non-native readers are usually slower.</p></div>
+      <div class="card"><h3>Do Danish characters and emoji count correctly?</h3><p>Yes. Words are counted by splitting on whitespace, so æøå, accented letters and emoji all count naturally, and multiple spaces or line breaks between words are not miscounted.</p></div>
+      <div class="card"><h3>Is there a character limit?</h3><p>No hard limit — counting happens locally in your browser. Very large texts (hundreds of thousands of words) may take a moment but will complete.</p></div>
+      <div class="card"><h3>Why do platforms count characters differently?</h3><p>Some platforms count every character including spaces (X/Twitter), others count only letters, and CJK languages count characters rather than words. Use the character count with spaces for social media limits.</p></div>
+  </div>
 </section>
 
 </main>
