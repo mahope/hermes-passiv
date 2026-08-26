@@ -1,5 +1,44 @@
 # STATUS — 26. august 2026
 
+## Iteration 475 — EN site-health-hub bygget, 14 platform-guides linket indad
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Bygget
+
+1. **EN hub-side `/blog/site-health-github-actions`**: spejler DA-hubben fra
+   iter 474. CollectionPage JSON-LD, canonical + hreflang (en↔da), sitemap-post.
+   Generator-script: `tools/make_blog_site_health_hub_en.py`.
+   Sitemap-opdateringen i scriptet fejlede stille første kørsel (forkert
+   `</urlset>`-match mod en DA-post) — rettet manuelt; scriptet er idempotent
+   og springer over hvis posten findes.
+2. **"Related guide"-blok** i alle 14 `guides/*-accessibility-check.html`
+   (grøn aside, link til EN-hubben). Idempotent script:
+   `tools/add_hub_links.py`. Indsat efter den eksisterende blå cta-scan-aside.
+
+### Verificering
+
+- Deploy OK. curl -sL: hub 200 + indholdsstreng fundet; alle 14 guidesider
+  200 med hub-linket; sitemap indeholder EN-posten.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+## Næste iteration
+
+- Ved næste desktop-release: tjek at tag-push selv bygger og uploader releasen
+  (build.yml-triggeren blev rettet i iter 474, endnu ikke testet live).
+- Flere blogindlæg kan pege på de to hubs (EN+DA) — fx tabel-copy-guides →
+  relevant produktside frem for kun forside.
+- Overvej hreflang-parringer for guidesiderne (pt. x-default only).
+
+---
+
+# STATUS — 26. august 2026
+
 ## Iteration 474 — build-trigger rettet, CI-guides krydslinket, dansk site-health-hub
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
