@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find ødelagte links på din hjemmeside — gratis metoder (2026)</title>
+<meta name="description" content="Sådan finder du 404-fejl og døde links på en hel hjemmeside: gratis online-tjek, browserudvidelser, terminalværktøjer og sitemap-crawl — med fordele og ulemper ved hver metode.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Find ødelagte links på din hjemmeside — gratis metoder (2026)">
+<meta property="og:description" content="Broken link checker: find 404 errors and dead links on your website with free methods — online checkers, browser extensions, CLI tools and sitemap crawls compared.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/find-oedelaegge-links-hjemmeside">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/find-oedelaegge-links-hjemmeside">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/broken-link-checker-free">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/find-oedelaegge-links-hjemmeside">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Find ødelagte links på din hjemmeside — gratis metoder (2026)", "description": "Sådan finder du 404-fejl og døde links på en hel hjemmeside: gratis online-tjek, browserudvidelser, terminalværktøjer og sitemap-crawl — med fordele og ulemper ved hver metode.", "url": "https://hermes-passiv.pages.dev/da/blog/find-oedelaegge-links-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvorfor er ødelagte links et problem?", "acceptedAnswer": {"@type": "Answer", "text": "De sender besøgende og søgemaskiner ind i 404-sider. Det koster tillid, spilder link-værdi (link equity) fra interne og eksterne links, og kan give dårligere placeringer over tid. Google Search Console rapporterer dem direkte under dækning."}}, {"@type": "Question", "name": "Hvad er den hurtigste måde at tjekke ét site på?", "acceptedAnswer": {"@type": "Answer", "text": "En online broken link checker eller et sitemap-crawl. Indsæt URL'en, vent et par minutter, og få en liste over alle links med deres HTTP-status. For større sites er et CLI-værktøj hurtigere og mere kontrollerbart."}}, {"@type": "Question", "name": "Hvordan finder jeg dem automatisk fremover?", "acceptedAnswer": {"@type": "Answer", "text": "Kør et link-tjek i din CI-pipeline ved hver udgivelse, eller planlæg et ugentligt crawl af sitemap.xml. GitHub Actions er gratis for offentlige reposer og kræver ingen server."}}, {"@type": "Question", "name": "Skal alle 404'er fikses?", "acceptedAnswer": {"@type": "Answer", "text": "Nej — nogle er bevidste (fjernede sider). Men de skal svare med en ordentlig 404-side, og vigtige gamle URLs bør have en 301-redirect til det relevante indhold. Prioritér links fra sider med mest trafik og flest indgående links."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; GRATIS</div>
+    <h1>Find de ødelagte<br>links på sitet</h1>
+    <p class="subtitle">Et enkelt dødt link koster tillid — og Google bemærker det også. Her er fire måder at tjekke hele sitet på, fra nul-installation til automatisering i CI.</p>
+    <div class="hero-cta">
+      <a href="/page-profile" class="btn-primary">Analysér din side gratis &rarr;</a>
+      <a href="#metoder" class="btn-secondary">Se de 4 metoder</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="metoder">
+  <div class="container">
+    <h2>Fire metoder — fra hurtigst til mest grundig</h2>
+    <ol>
+      <li><strong>Online checker:</strong> indsæt domænet i en gratis broken link
+      checker. Færdig på minutter, men begrænset dybde på store sites.</li>
+      <li><strong>Sitemap-crawl:</strong> hent sitemap.xml og test hver URL plus dens
+      links. Dækker præcis de sider du selv anser for officielle.</li>
+      <li><strong>Terminal:</strong> <code>wget --spider</code> eller et dedikeret
+      CLI-værktøj giver fuld kontrol og output du kan scripte videre på.</li>
+      <li><strong>CI-automatisering:</strong> kør tjekket ved hver deploy, så nye
+      brudte links fanges inden publikum ser dem.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;"># Test én URL's statuskode
+$ curl -s -o /dev/null -w "%{http_code}" https://ditside.dk/gammel-side
+
+# Crawl hele sitet med wget (kun status, intet downloades)
+$ wget --spider -r --no-parent https://ditside.dk 2&gt;&amp;1 | grep -B2 "404"</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Når du har fundet dem: sådan prioriterer du</h2>
+    <p>Sortér efter hvor linket står, ikke kun efter fejlen. Et dødt link på din
+    mest besøgte side koster mere end tyve på en arkivside. Tjek først:</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Placering</th><th>Hvorfor den tæller mest</th></tr>
+      <tr><td>Forside og topnavigation</td><td>Første indtryk — alle ser dem</td></tr>
+      <tr><td>Sider med mest organisk trafik</td><td>Direkte tab af besøgende</td></tr>
+      <tr><td>Sider med mange indgående links</td><td>Spilder værdi andre har givet dig</td></tr>
+      <tr><td>Konverteringsstien</td><td>Bryder købet midtvejs</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/page-profile" class="btn-primary">Få overblikket over dit site &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/find-alle-sider-paa-en-hjemmeside">find alle sider på et site</a>,
+    <a href="/da/blog/tjek-url-redirect-kaede">tjek redirect-kæder</a> og
+    <a href="/da/blog/teknisk-seo-tjek-hjemmeside">teknisk SEO-tjek</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvorfor er ødelagte links et problem?</h3><p>De sender besøgende og søgemaskiner ind i 404-sider. Det koster tillid, spilder link-værdi (link equity) fra interne og eksterne links, og kan give dårligere placeringer over tid. Google Search Console rapporterer dem direkte under dækning.</p></div>
+      <div class="card"><h3>Hvad er den hurtigste måde at tjekke ét site på?</h3><p>En online broken link checker eller et sitemap-crawl. Indsæt URL'en, vent et par minutter, og få en liste over alle links med deres HTTP-status. For større sites er et CLI-værktøj hurtigere og mere kontrollerbart.</p></div>
+      <div class="card"><h3>Hvordan finder jeg dem automatisk fremover?</h3><p>Kør et link-tjek i din CI-pipeline ved hver udgivelse, eller planlæg et ugentligt crawl af sitemap.xml. GitHub Actions er gratis for offentlige reposer og kræver ingen server.</p></div>
+      <div class="card"><h3>Skal alle 404'er fikses?</h3><p>Nej — nogle er bevidste (fjernede sider). Men de skal svare med en ordentlig 404-side, og vigtige gamle URLs bør have en 301-redirect til det relevante indhold. Prioritér links fra sider med mest trafik og flest indgående links.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Tjek dit site nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/find-alle-sider-paa-en-hjemmeside" lang="da">Find alle sider</a> &middot; <a href="/da/blog/tjek-url-redirect-kaede" lang="da">Redirect-kæder</a> &middot; <a href="/da/blog/teknisk-seo-tjek-hjemmeside" lang="da">Teknisk SEO-tjek</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/page-profile">Page Profile</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(page-profile|deskuptime)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+</script>
+</body>
+</html>
