@@ -1,38 +1,39 @@
 # STATUS — 26. august 2026
 
-## Iteration 461 — DA-mirrors runde 9: de sidste 5 EN-only (=79 par)
+## Iteration 463 — hreflang-audit (79/80 par OK) + Base64-værktøj opgraderet
 
 **Budget:** 35/1000 DKK (uændret)
 **Licenser udstedt til rigtige kunder: 0**
-**DA-blog-mirrors: 79/79 par — komplet**
+**Søgninger brugt: 0**
 
 ## Hvad der blev gjort
 
-1. **Ny generator** `tools/make_blog_da_mirrors_461.py` (samme 453-modul). Fem
-   danske omskrivninger lukker hullet — der er nu 0 EN-only blogposts uden DA-mirror:
+1. **Fuld hreflang/canonical-paritet audit** over alle 80 EN-blogposter og alle
+   DA-mirrors, plus alle værktøjssider:
+   - Fundet og rettet ét reelt hul: `html-table-to-csv-converter` manglede sin
+     post i hreflang_pairs.json (DA-filen, sitemap, krydslinks og blog-indeks
+     var der i forvejen — kun par-tabelen var faldet af). Retttet: nu **79/80
+     par komplet**, 0 broken pairs.
+   - 3 DA-only originaler (wcag-22-krav-liste, nis2-guide-da,
+     kopier-tabel-hjemmeside-til-excel) har ingen EN-modstykke — bevidste
+     DA-first-poster uden hreflang, korrekt som de er.
+   - De 5 kendte "problems" i full_site_check er gamle Worker-301-alias-
+     redirects (fx /da/blog/kopier-tabel-fra-pdf → -til-excel) — forventede,
+     ikke fejl. 261 urls checket, 0 nye problemer.
 
-   | DA-slug | EN-forbillede |
-   |---------|--------------|
-   | `tilfoej-fejlrapport-formular-hjemmeside` | add-bug-report-form-to-any-website |
-   | `overvaag-hjemmeside-fra-terminalen` | desktop-website-monitor-cli |
-   | `drupal-vs-typo3-tilgaengelighed` | drupal-vs-typo3-accessibility |
-   | `eaa-compliance-scanner-desktop-download` | eaa-compliance-scanner-desktop |
-   | `installer-clean-copy-obsidian` | install-obsidian-plugin-clean-copy |
-
-2. **Hreflang sat** på alle 5 EN-poster + reciprok krydslink.
-3. **Validator-fix:** `tools/make_blog_da_mirrors_453.py`'s link-validator
-   udelukker nu `.zip`-stier (Clean Copys download-link). En tidligere
-   stavefejl (enkelt-anførsel i string) på linje 48 i 461.py rettet.
-4. **Manuel cross-link** tilføjet på deskUptime EN-posten (ikke-standard
-   footer-format som 453-modulet ikke kunne håndtere).
+2. **Base64 Encoder & Decoder opgraderet** (højtrafikeret gratisværktøj uden
+   FAQ): ny FAQ-sektion med 5 rigtige svar (Base64 ≠ kryptering, privacy/
+   lokalt, Unicode, fejlsøgning ved decode-fejl, URL-safe Base64) +
+   FAQPage JSON-LD valideret (WebApplication + FAQPage, begge parses).
+   Idempotent generator: tools/iter463_b64_faq.py. Deployet og verificeret
+   live: FAQ-HTML og JSON-LD serveres, 5 spørgsmål i schema.
 
 ## Verificering
 
-- `tools/hreflang_audit.py`: 79 par, 0 problemer.
-- `tools/full_site_check.py`: 256 urls — 0 reelle problemer (5 canonical
-  "problemer" er alle Worker-301'erne fra iter 460, forventet).
-- Alle 5 DA-sider: HTTP 200 live — dansk indhold, korrekte hreflang.
-- Alle 5 EN-poster: hreflang="da" til stede.
+- python3 tools/full_site_check.py: 261 urls, 0 nye problemer.
+- Live curl på base64-siden efter deploy: FAQ + FAQPage JSON-LD til stede,
+  JSON parser rent, 5 mainEntity.
+- Generator idempotent (anden kørsel = ingen ændringer).
 
 ## Stadig blokeret (uændret)
 
@@ -41,10 +42,9 @@
 
 ## Næste iteration
 
-DA-mirrors er færdige (79/79). To spor:
+- **Page Profile Pro:** færdig i koden, venter kun på LS-checkout-URL.
+- Flere gratisværktøjer kan få samme FAQ+FAQPage-behandling (hash-generator,
+  text-diff, word-counter mangler det sandsynligvis også) — billige SEO-og-
+  rich-resultat-forbedringer på eksisterende sider.
+- GitHub Marketplace for bugbottle-action er stadig ét klik væk (UI-only).
 
-- **Nyt produkt:** RESEARCH.md peger på et muligt spor. Første krone kraever
-  et produkt der ikke er blokeret af LS-nøgle — eller et der kan saelges
-  gennem en markedsplads med indbygget betaling.
-- **Page Profile Pro:** allerede bygget færdigt i koden, mangler kun
-  LS-checkout-URL i pladholderen.

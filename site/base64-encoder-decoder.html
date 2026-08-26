@@ -57,6 +57,9 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
 .breadcrumb span { color: var(--color-text-muted); }
 </style>
 <script defer src="/track.js"></script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is Base64 encryption?", "acceptedAnswer": {"@type": "Answer", "text": "No. Base64 is an encoding, not encryption — it provides zero secrecy and anyone can decode it instantly. Use it for transport and storage formats (email attachments, data URIs, JWT segments), never to protect secrets on its own."}}, {"@type": "Question", "name": "Does this tool upload my data anywhere?", "acceptedAnswer": {"@type": "Answer", "text": "No. Encoding and decoding run entirely in JavaScript in your browser. The text you paste never leaves your device, which makes the tool safe for tokens and other sensitive strings you are debugging."}}, {"@type": "Question", "name": "Can it handle Unicode, emoji and Danish characters?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Both directions use UTF-8 via the TextEncoder/TextDecoder APIs, so æøå, emoji and non-Latin scripts encode and round-trip exactly."}}, {"@type": "Question", "name": "Why does my Base64 string fail to decode?", "acceptedAnswer": {"@type": "Answer", "text": "The three usual causes are: characters outside the Base64 alphabet (A–Z, a–z, 0–9, +, / and =), a length that is not a multiple of 4 (padding is missing or has been trimmed), or a URL-safe variant using - and _ instead of + and /. Whitespace and line breaks are stripped automatically before decoding."}}, {"@type": "Question", "name": "What is URL-safe Base64?", "acceptedAnswer": {"@type": "Answer", "text": "A variant used in JWTs and URLs where + is replaced by - and / by _, usually without padding. This tool decodes the standard alphabet; for URL-safe input, replace - with + and _ with / first, and append = until the length is a multiple of 4."}}]}
+</script>
 </head>
 <body>
 
@@ -114,6 +117,17 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
     debugging, and other sensitive strings.</p>
     <p>Note: Base64 is an encoding, not encryption. Use it for transport and storage
     formats, never to protect secrets on its own.</p>
+  </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>Frequently asked questions</h2>
+  <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+      <div class="card"><h3>Is Base64 encryption?</h3><p>No. Base64 is an encoding, not encryption — it provides zero secrecy and anyone can decode it instantly. Use it for transport and storage formats (email attachments, data URIs, JWT segments), never to protect secrets on its own.</p></div>
+      <div class="card"><h3>Does this tool upload my data anywhere?</h3><p>No. Encoding and decoding run entirely in JavaScript in your browser. The text you paste never leaves your device, which makes the tool safe for tokens and other sensitive strings you are debugging.</p></div>
+      <div class="card"><h3>Can it handle Unicode, emoji and Danish characters?</h3><p>Yes. Both directions use UTF-8 via the TextEncoder/TextDecoder APIs, so æøå, emoji and non-Latin scripts encode and round-trip exactly.</p></div>
+      <div class="card"><h3>Why does my Base64 string fail to decode?</h3><p>The three usual causes are: characters outside the Base64 alphabet (A–Z, a–z, 0–9, +, / and =), a length that is not a multiple of 4 (padding is missing or has been trimmed), or a URL-safe variant using - and _ instead of + and /. Whitespace and line breaks are stripped automatically before decoding.</p></div>
+      <div class="card"><h3>What is URL-safe Base64?</h3><p>A variant used in JWTs and URLs where + is replaced by - and / by _, usually without padding. This tool decodes the standard alphabet; for URL-safe input, replace - with + and _ with / first, and append = until the length is a multiple of 4.</p></div>
   </div>
 </section>
 
