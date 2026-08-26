@@ -14,6 +14,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Deskuptime — Desktop Website Monitor">
 <meta name="twitter:description" content="Monitor uptime, SSL, and content changes. $19 one-time. Runs on your machine — no cloud, no monthly fee.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
 <style>
   :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
         --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
@@ -94,6 +96,71 @@
     td,th{padding:8px 10px;font-size:13px}
   }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "DeskUptime",
+      "applicationCategory": "Utilities",
+      "operatingSystem": "macOS, Windows",
+      "description": "Desktop website monitor. Checks uptime, SSL expiry and content changes. $19 one-time purchase. Runs on your own machine.",
+      "offers": {
+        "@type": "Offer",
+        "price": "19.00",
+        "priceCurrency": "USD",
+        "priceValidUntil": "2027-12-31"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need an internet connection for the desktop app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The app checks your websites over the internet. It only works when your computer is online, but checks continue running silently in the background via the system tray."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I monitor multiple websites with the free CLI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The free CLI watch mode supports up to 3 URLs. The Pro license removes that limit entirely — you can monitor as many websites as you want."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the license key work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You buy once at $19 and receive a license key. The key activates the Pro features — unlimited URLs, the desktop system tray app, email and webhook alerts. It works on up to 3 machines and covers all v1.x updates."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if my computer is turned off?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Monitoring pauses while your computer is off. The CLI and desktop app only work on your own machine. This is a deliberate choice — it keeps your data private and eliminates monthly hosting costs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why would I pay $19 when there are free uptime services?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Free services either limit you to a single URL, require a cloud account, show your URLs to a third party, or serve ads. DeskUptime gives you unlimited private monitoring on your own machine for a one-time payment. After 3 months it's cheaper than UptimeRobot Pro ($7/mo)."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -344,6 +411,39 @@ $ <span class="accent">npx github:mahope/deskuptime check</span> https://example
               style="background:var(--accent);color:#fff;border:0;border-radius:6px;padding:11px;font-size:14px;font-weight:600;cursor:pointer">Notify Me</button>
       <p class="note" id="pro-msg" role="status" aria-live="polite">No spam. Only one email when licenses go live.</p>
     </form>
+  </div>
+</div>
+</section>
+
+<section id="faq">
+<div class="wrap">
+  <h2>Frequently Asked Questions</h2>
+  <p class="lede">Quick answers to common questions about DeskUptime.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Do I need internet for the desktop app?</h3>
+      <p>Yes. The app checks your websites over the internet. It only works when your computer is online, but checks continue running silently in the background via the system tray.</p>
+    </div>
+    <div class="card">
+      <h3>Can I monitor multiple sites with the free CLI?</h3>
+      <p>Yes. The free CLI watch mode supports up to 3 URLs. The Pro license removes that limit — monitor as many websites as you want.</p>
+    </div>
+    <div class="card">
+      <h3>How does the license key work?</h3>
+      <p>You buy once at $19 and receive a key. It activates unlimited URLs, the desktop system tray app, email and webhook alerts. Works on up to 3 machines and covers all v1.x updates.</p>
+    </div>
+    <div class="card">
+      <h3>What if my computer is off?</h3>
+      <p>Monitoring pauses while your computer is off. This is deliberate — it keeps your data private on your machine and eliminates monthly hosting costs.</p>
+    </div>
+    <div class="card">
+      <h3>Why pay $19 when free services exist?</h3>
+      <p>Free services limit you to 1 URL, require a cloud account, or serve ads. DeskUptime gives unlimited private monitoring on your machine for a one-time price. After 3 months it's cheaper than UptimeRobot Pro.</p>
+    </div>
+    <div class="card">
+      <h3>Is the CLI also free?</h3>
+      <p>Yes. The CLI is free for all features — checking, SSL verify, content hashing. The $19 Pro license is only needed to unlock the desktop system tray app, email/webhook alerts and unlimited URLs.</p>
+    </div>
   </div>
 </div>
 </section>
