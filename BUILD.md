@@ -29,8 +29,11 @@ Alt er forberedt så det er ét klik:
    (vises som link i samme dialog hvis mangler).
 
 ## Hvad der er verificeret virkende uden Mads
-- Install: `uses: mahope/bugbottle-action@v1` virker fra tag (jsDelivr 200,
-  action.yml main peger på committet index.cjs).
+- Install: `uses: mahope/bugbottle-action@v1` VERIFICERET i rigtig CI-run
+  (iter 467): flydende v1-tag manglede og er skubbet (peger på v1.0.2 =
+  15b0704). Selftest-repo: gyldig rapport → success, ugyldig → failure.
+  (jsDelivr 200 kræver alle dist/*.js-filer — ESM-importer; enkeltfil-load
+  fejler, men browser-script-tag virker.)
 - Biblioteket installeres fortsat npm-frit via github:/jsDelivr.
 
 ## Stadig blokeret på Mads
