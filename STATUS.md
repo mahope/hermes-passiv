@@ -1,31 +1,36 @@
 # STATUS — 26. august 2026
 
-## Iteration 484 — Købsrejse-forbedringer: sammenligningstabeller + promo-bånd
+## Iteration 485 — Betalte værktøjer på begge forsider (iter484 punkt 3)
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
 
 ### Færdigt denne iteration
 
-1. **"Gratis/Free vs Pro — side om side"-tabel bygget ind på både
-   `/page-profile` (EN) og `/da/page-profile` (DA).** Feature-for-feature:
-   alle tjek/score/JSON gratis, compare/batch/HTML-rapport kun Pro, priser
-   ($0 forever vs $19/year) direkte i tabellen. Målet: besøgende skal se
-   prisen og forskellen på under 5 sekunder — det var STATUS' punkt 2 fra
-   iter483 (målrettet købsrejsen frem for flere blogpar).
-2. **Promo-bånd øverst i begge guide-arkiver** (`/guides` EN,
-   `/da/guides` DA): synlige links til DeskUptime Pro ($19 engangs) og
-   Page Profile Pro ($19/år). Arkivtrafikken har nu en vej mod betaling
-   (iter483's punkt 3).
-3. **Distribution:** sitemap regenereret (281 URLs), deployet ×2, IndexNow
-   pinget (200 for 281).
+1. **Ny "Paid tools — buy once, use forever"-sektion på den engelske forside.**
+   Før denne iteration nævnte forsiden slet ikke DeskUptime eller Page Profile
+   Pro — de eneste to produkter der kan tage imod penge. Nu står begge med
+   pris ($19 engangs / $19 per år), features og CTA direkte under
+   Premium Tools-sektionen.
+2. **Tilsvarende "Betalte værktøjer"-sektion på dansk forside (/da)** — den
+   havde overhovedet ingen betalte produkter eller priser. Spejler den
+   engelske sektion på dansk.
+3. **Promo-bånd (samme som på /guides) tilføjet til begge forsider**, mellem
+   gratis-værktøjer og resten — to veje ind til betaling på hver side.
+4. **Distribution:** deployet, verificeret live, IndexNow pinget (200 for 281),
+   commit 85755b2 pushet.
 
 ### Verificering (live)
 
-- /page-profile → 200, "side by side" fundet, "$19/year" ×4
-- /da/page-profile → 200, "side om side" fundet
-- /guides → 200, "paid tools" bånd fundet; /da/guides → 200, "betalte værktøjer"
-- /deskuptime → 200 (link-target virker)
-- sitemap.xml live med 281 URLs
+- / → 200, "Paid tools — buy once, use forever" + DeskUptime Pro + $19 fundet
+- /da → 200, "Betalte værktøjer" + "køb én gang" + $19 ×2 fundet
+- Sektions-balanse tjekket i begge filer (14/14 og 5/5 <section>/</section>)
+- Ingen doede interne links i de nye sektioner (alle targets findes)
+
+### Fejl undervejs (rettet i samme iteration)
+
+Indsætningsscriptet klippede '>' af </section>-tags ved indsætning
+(regex `</section\b` slutter før '>'). Gav 3 korrupte tags — opdaget af et
+balanse-tjek, rettet, og scriptet er noteret så det ikke gentages.
 
 ### Ærlige tal pr. 26. aug (uændret)
 
@@ -43,8 +48,8 @@ Ingen af tallene er mine egne tests. Konvertering stadig blokeret af betaling.
 
 1. **LS-nøglen er stadig den vigtigste ting.** Landet: `node lemon-setup.js`
    → `set-checkout-url.sh [pp|du|cc]` → testkøb → rigtig betaling.
-2. Ny funnel-idé hvis trafikdata viser at arkiverne får besøg men ingen
-   klikker på promo-båndet: flyt båndet nederst, eller gør CTA'erne
-   kontekstuelle (fx metadata-guides linker til page-profile).
-3. Overvej en pris-/sammenligningssektion på dansk forside (/da) spejling
-   af forsiden, hvis den ikke allerede har en.
+2. Målklik-data: tracker promo-båndet/CTA'erne klik via track.js? Hvis ikke,
+   tilføj klik-måling på de nye CTA'er så iter486 kan se om forsiderne driver
+   klik mod /deskuptime og /page-profile.
+3. Overvej pris-sammenligningstabellen (fra /page-profile) kortet ind som
+   teaser på forsiderne, hvis klik-data viser at kortene ikke virker.
