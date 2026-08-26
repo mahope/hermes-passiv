@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide til kanoniske URL'er: Sådan sætter, tjekker og retter du dem</title>
+<meta name="description" content="Lær hvad kanoniske URL'er er, hvorfor de betyder noget for SEO, og hvordan du automatisk tjekker hver side på dit site for manglende, konfliktskabende eller ødelagte canonicals.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Guide til kanoniske URL'er: Sådan sætter, tjekker og retter du dem">
+<meta property="og:description" content="Lær hvad kanoniske URL'er er, hvorfor de betyder noget for SEO, og hvordan du automatisk tjekker hver side på dit site for manglende, konfliktskabende eller ødelagte canonicals.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/canonical-url-guide">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Guide til kanoniske URL'er: Sådan sætter, tjekker og retter du dem", "description": "Lær hvad kanoniske URL'er er, hvorfor de betyder noget for SEO, og hvordan du automatisk tjekker hver side på dit site for manglende, konfliktskabende eller ødelagte canonicals.", "url": "https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er en kanonisk URL?", "acceptedAnswer": {"@type": "Answer", "text": "En kanonisk URL er et <link rel=\"canonical\">-tag i sidens <head>, der fortæller søgemaskinerne, hvilken version af en side der er den autoritative. Når du har duplikat- eller næsten-duplikatsider (samme indhold på forskellige URL'er), forhindrer det kanoniske tag, at søgemaskinerne deler rangsignaler imellem dem."}}, {"@type": "Question", "name": "Hvordan påvirker kanoniske URL'er SEO?", "acceptedAnswer": {"@type": "Answer", "text": "De samler rangsignaler — links, indhold og autoritet — til én foretrukken URL. Uden dem kan Google vælge den \"forkerte\" URL som kanonisk, splitte PageRank på tværs af dubletter eller indeksere snesevis af næsten-identiske sider i stedet for én."}}, {"@type": "Question", "name": "Hvad er en selvrefererende kanonisk URL?", "acceptedAnswer": {"@type": "Answer", "text": "En kanonisk URL der peger på siden selv. Hver side der skal indekseres, bør have en selvrefererende canonical. Selv hvis intet er duplikeret, er det det stærkeste signal om, at denne side er den version du ønsker rangeret."}}, {"@type": "Question", "name": "Kanonisk URL vs. noindex — hvornår bruger jeg hvad?", "acceptedAnswer": {"@type": "Answer", "text": "Brug canonical når flere URL'er viser samme indhold og du vil have én af dem til at ranke. Brug noindex når du vil have en side helt ud af søgeresultaterne. Kombinerer du dem (canonical + noindex), behandler Google det som noindex — canonical ignoreres."}}, {"@type": "Question", "name": "Hvordan tjekker jeg om mine kanoniske URL'er er korrekte?", "acceptedAnswer": {"@type": "Answer", "text": "Den enkleste metode er at inspicere <head> på hver side og lede efter <code>&lt;link rel=\"canonical\" href=\"...\"&gt;</code>. Har du mere end en håndfuld sider, kan du bruge et CLI-værktøj som <a href=\"/da/page-profile\">page-profile</a>, der automatisk tjekker canonical-tags på tværs af en liste af URL'er."}}, {"@type": "Question", "name": "Kan en kanonisk URL pege på et andet domæne?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, Google understøtter tværdomæne-canonicals — ofte brugt ved syndikering af indhold eller når samme artikel optræder på to domæner du ejer. De fleste andre søgemaskiner ignorerer tværdomæne-canonicals, så brug det kun når det er strengt nødvendigt."}}, {"@type": "Question", "name": "Hvad sker der når to sider canonical til hinanden?", "acceptedAnswer": {"@type": "Answer", "text": "En canonical-konflikt (A canonical til B, B canonical til A) er en af de værste SEO-fejl. Søgemaskinerne ser en løkke og vælger måske ingen af dem, hvilket efterlader alle dubletversioner i indekset uden samlet rangering."}}, {"@type": "Question", "name": "Tjekker page-profile kanoniske URL'er?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. <a href=\"/da/page-profile\">page-profile</a> rapporterer om et canonical-tag findes, om det er selvrefererende, og markerer potentielle problemer. Gratis-versionen tjekker én URL ad gangen; Pro tilføjer batch-tilstand til scanning af hele dit sitemap."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare {{ width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }}
+  .compare th, .compare td {{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }}
+  .compare th {{ border-bottom:2px solid var(--color-border); }}
+  pre.cmd {{
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }}
+  pre.cmd code {{ font-family:'SF Mono','Monaco','Fira Code',monospace; }}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; KANONISK &middot; GUIDE</div>
+    <h1>Guide til kanoniske URL'er:<br>Sådan sætter, tjekker og retter du dem</h1>
+    <p class="subtitle">Kanoniske tags er et af de mest misforståede SEO-signaler — og et af de mest betydningsfulde at få rigtigt. Én ødelagt canonical kan splitte din trafik mellem dublet-URL'er i måneder. Her er hvordan du tjekker hver side på få minutter.</p>
+    <div class="hero-cta">
+      <a href="#tjekliste" class="btn-primary">Sådan tjekker du dine canonicals &rarr;</a>
+      <a href="/da/page-profile" class="btn-secondary">Tjek dem automatisk med page-profile</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvorfor kanoniske URL'er betyder noget</h2>
+    <p>En kanonisk URL (<code>&lt;link rel="canonical" href="..."&gt;</code>) fortæller søgemaskinerne, hvilken version af en side der er den endegyldige. Uden den må Google gætte — og ofte gætter den forkert, især på sider med URL-parametre, flere stier til samme indhold eller syndikerede artikler. Resultatet er fortyndede rangsignaler og lavere organisk performance.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔗 Samler link-ekuitet</h3><p>Alle backlinks, delinger og engagement på dublet-URL'er bør flyde til én kanonisk side. Uden en canonical konkurrerer dubletterne i stedet for at bidrage.</p></div>
+      <div class="card"><h3>📋 Forhindrer dubletindhold</h3><p>Google straffer intet for dubletindhold — men det splitter indekset på tværs af dubletter, så ingen rangerer så stærkt som én samlet side ville.</p></div>
+      <div class="card"><h3>🔍 Du bestemmer hvilken URL der rangerer</h3><p>Kanoniske tags lader dig vælge, om <code>/blog/post</code> eller <code>/blog/post?ref=share</code> vises i resultaterne. Uden én vælger Google for dig.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="tjekliste">
+  <div class="container">
+    <h2>Almindelige canonical-fejl (og hvordan du spotter dem)</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Problem</th><th>Hvad skal du tjekke</th><th>Løsning</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Manglende canonical-tag</td><td>Har siden overhovedet <code>&lt;link rel="canonical"&gt;</code>?</td><td>Tilføj en selvrefererende canonical i <code>&lt;head&gt;</code> på alle indekserbare sider.</td></tr>
+        <tr><td>2</td><td>Ikke-selvrefererende canonical</td><td>Peger canonical på <em>denne</em> side eller på en anden side?</td><td>Hvis dette er den kanoniske version, bør den referere til sig selv.</td></tr>
+        <tr><td>3</td><td>Relativ canonical-URL</td><td>Er href en absolut URL eller en relativ sti?</td><td>Brug altid absolutte URL'er — <code>https://eksempel.dk/side</code>, ikke <code>/side</code>.</td></tr>
+        <tr><td>4</td><td>Canonical-kædeløkke</td><td>A canonical til B, B canonical til A.</td><td>Bryd løkken. Følg kæden til én endelig destination.</td></tr>
+        <tr><td>5</td><td>Canonical + noindex sammen</td><td>Har siden både et canonical-tag og <code>noindex</code>?</td><td>Fjern det ene: Google behandler parret som noindex og ignorerer canonical.</td></tr>
+        <tr><td>6</td><td>Tværdomæne-canonical til forkert domæne</td><td>Peger canonical på et domæne du ikke kontrollerer?</td><td>Medmindre du bevidst syndikerer, hold canonicals på dit eget domæne.</td></tr>
+        <tr><td>7</td><td>HTTP→HTTPS-uoverensstemmelse</td><td>Canonical peger på <code>http://</code> på et HTTPS-site.</td><td>Opdater til HTTPS-versionen. Blanding af protokoller forvirrer signalet.</td></tr>
+        <tr><td>8</td><td>Trailing slash-uoverensstemmelse</td><td>Canonical har <code>/side/</code> men sidens URL er <code>/side</code> (eller omvendt).</td><td>Vær konsekvent. Vælg én konvention og hold den på hele sitet.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="automatiser">
+  <div class="container">
+    <h2>Tjek hver side automatisk</h2>
+    <p>At inspicere canonical-tagget på hver side i hånden er muligt for fem sider — men ikke for halvtreds eller fem hundrede. Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> tjekker canonical-tags, selvreferencer, absolutte URL-formater og mere på enhver URL:</p>
+    <pre class="cmd"><code>npx page-profile https://eksempel.dk             # rapport for én side
+npx page-profile --urls-from-file urls.txt      # batch (Pro)
+npx page-profile --compare prod.html staging.html  # sammenlign canonicals (Pro)</code></pre>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Karaktergivende tjek</h3><p>Canonical findes, absolut vs. relativ, selvrefererende — hver får bestået/advar/dump, så du kan prioritere i stedet for at læse rå HTML.</p></div>
+      <div class="card"><h3>📦 Batch-tilstand</h3><p>Giv den dit sitemaps URL'er eller en tekstfil, og tjek alle sider i ét gennemløb. Pro-funktion med HTML-rapport.</p></div>
+      <div class="card"><h3>🔒 Kører lokalt</h3><p>Dine kunders URL'er forlader aldrig din maskine. Ingen konto, intet uploades, ingen data gemmes på en server.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/page-profile" class="btn-primary">Hent page-profile gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Sådan virker canonical-tjek med page-profile</h2>
+    <p>Når du kører page-profile mod en URL, udtrækker den canonical-tagget fra sidens <code>&lt;head&gt;</code> og tjekker:</p>
+    <ul style="line-height:1.8;margin:16px 0;">
+      <li><strong>Findes:</strong> Har siden et <code>&lt;link rel="canonical"&gt;</code>-tag?</li>
+      <li><strong>Absolut:</strong> Er href en absolut URL (krævet for ensartet fortolkning)?</li>
+      <li><strong>Selvrefererende:</strong> Peger den tilbage til denne side eller til en anden URL?</li>
+    </ul>
+    <p>Hvert tjek scorer bestået, advar eller dump, så du ved hvad du skal rette og i hvilken rækkefølge. Gratis-versionen håndterer enkeltsider; Pro tilføjer batch-scanning af hele dit sitemap og laver en delbar HTML-rapport.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er en kanonisk URL?</h3><p>En kanonisk URL er et <link rel="canonical">-tag i sidens <head>, der fortæller søgemaskinerne, hvilken version af en side der er den autoritative. Når du har duplikat- eller næsten-duplikatsider (samme indhold på forskellige URL'er), forhindrer det kanoniske tag, at søgemaskinerne deler rangsignaler imellem dem.</p></div>\n<div class="card"><h3>Hvordan påvirker kanoniske URL'er SEO?</h3><p>De samler rangsignaler — links, indhold og autoritet — til én foretrukken URL. Uden dem kan Google vælge den "forkerte" URL som kanonisk, splitte PageRank på tværs af dubletter eller indeksere snesevis af næsten-identiske sider i stedet for én.</p></div>\n<div class="card"><h3>Hvad er en selvrefererende kanonisk URL?</h3><p>En kanonisk URL der peger på siden selv. Hver side der skal indekseres, bør have en selvrefererende canonical. Selv hvis intet er duplikeret, er det det stærkeste signal om, at denne side er den version du ønsker rangeret.</p></div>\n<div class="card"><h3>Kanonisk URL vs. noindex — hvornår bruger jeg hvad?</h3><p>Brug canonical når flere URL'er viser samme indhold og du vil have én af dem til at ranke. Brug noindex når du vil have en side helt ud af søgeresultaterne. Kombinerer du dem (canonical + noindex), behandler Google det som noindex — canonical ignoreres.</p></div>\n<div class="card"><h3>Hvordan tjekker jeg om mine kanoniske URL'er er korrekte?</h3><p>Den enkleste metode er at inspicere <head> på hver side og lede efter <code>&lt;link rel="canonical" href="..."&gt;</code>. Har du mere end en håndfuld sider, kan du bruge et CLI-værktøj som <a href="/da/page-profile">page-profile</a>, der automatisk tjekker canonical-tags på tværs af en liste af URL'er.</p></div>\n<div class="card"><h3>Kan en kanonisk URL pege på et andet domæne?</h3><p>Ja, Google understøtter tværdomæne-canonicals — ofte brugt ved syndikering af indhold eller når samme artikel optræder på to domæner du ejer. De fleste andre søgemaskiner ignorerer tværdomæne-canonicals, så brug det kun når det er strengt nødvendigt.</p></div>\n<div class="card"><h3>Hvad sker der når to sider canonical til hinanden?</h3><p>En canonical-konflikt (A canonical til B, B canonical til A) er en af de værste SEO-fejl. Søgemaskinerne ser en løkke og vælger måske ingen af dem, hvilket efterlader alle dubletversioner i indekset uden samlet rangering.</p></div>\n<div class="card"><h3>Tjekker page-profile kanoniske URL'er?</h3><p>Ja. <a href="/da/page-profile">page-profile</a> rapporterer om et canonical-tag findes, om det er selvrefererende, og markerer potentielle problemer. Gratis-versionen tjekker én URL ad gangen; Pro tilføjer batch-tilstand til scanning af hele dit sitemap.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/seo-metadata-tjek-hjemmeside" style="color:var(--color-accent);">SEO- og metadata-tjek</a> &middot; <a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);">Teknisk SEO-tjek</a> &middot; <a href="/da/blog/meta-tjekker" style="color:var(--color-accent);">Meta-tjekker</a> &middot; <a href="/da/blog/open-graph-tjekker" style="color:var(--color-accent);">Open Graph-tjekker</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da/">&larr; Forside</a> &middot; <a href="/da/page-profile">page-profile</a> &middot; <a href="/">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>

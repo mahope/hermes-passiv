@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canonical URL Guide: How to Set, Check, and Fix Them</title>
+<meta name="description" content="Learn what canonical URLs are, why they matter for SEO, and how to check every page of your site for missing, conflicting, or broken canonicals — automatically with a CLI tool.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Canonical URL Guide: How to Set, Check, and Fix Them">
+<meta property="og:description" content="Learn what canonical URLs are, why they matter for SEO, and how to check every page of your site for missing, conflicting, or broken canonicals — automatically with a CLI tool.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/canonical-url-guide">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/canonical-url-guide">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/canonical-url-guide">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Canonical URL Guide: How to Set, Check, and Fix Them", "description": "Learn what canonical URLs are, why they matter for SEO, and how to check every page of your site for missing, conflicting, or broken canonicals — automatically with a CLI tool.", "url": "https://hermes-passiv.pages.dev/blog/canonical-url-guide", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a canonical URL?", "acceptedAnswer": {"@type": "Answer", "text": "A canonical URL is a <link rel=\"canonical\"> tag in the <head> of a page that tells search engines which version of a page is the authoritative one. When you have duplicate or near-duplicate pages (same content at different URLs), the canonical tag prevents search engines from splitting ranking signals between them."}}, {"@type": "Question", "name": "How do canonical URLs affect SEO?", "acceptedAnswer": {"@type": "Answer", "text": "They consolidate ranking signals — links, content, and authority — to one preferred URL. Without them, Google may pick the \"wrong\" URL as canonical, split PageRank across duplicates, or index dozens of near-identical pages instead of one. A single misconfigured canonical is rarely fatal, but systematic errors across a site silently cap your organic performance."}}, {"@type": "Question", "name": "What is a self-referencing canonical?", "acceptedAnswer": {"@type": "Answer", "text": "A canonical URL that points to the page itself. Every indexable page should have a self-referencing canonical. Even if nothing is duplicated, it is the strongest signal that this page is the version you want ranked. Many CMS platforms (WordPress, Shopify, Webflow) set these automatically, but static generators, legacy sites and hand-coded pages often omit them."}}, {"@type": "Question", "name": "Canonical vs. noindex — which should I use?", "acceptedAnswer": {"@type": "Answer", "text": "Use canonical when you have multiple URLs showing the same content and you want one of them to rank. Use noindex when you want a page out of search results entirely. They solve different problems: canonical consolidates, noindex excludes. Combining them (canonical + noindex) is treated by Google as a noindex — the canonical is ignored."}}, {"@type": "Question", "name": "How do I check if my canonical URLs are correct?", "acceptedAnswer": {"@type": "Answer", "text": "The simplest way is to inspect the <head> of each page: look for <code>&lt;link rel=\"canonical\" href=\"...\"&gt;</code>. For more than a handful of pages, use a CLI tool like <a href=\"/page-profile\">page-profile</a> which checks canonical presence, validity and conflicts across a list of URLs automatically."}}, {"@type": "Question", "name": "Can a canonical URL point to a different domain?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, Google supports cross-domain canonicals — often used when syndicating content or when the same article appears on two domains you own. Most other search engines ignore cross-domain canonicals, so use this only when absolutely necessary."}}, {"@type": "Question", "name": "What happens when two pages canonical to each other?", "acceptedAnswer": {"@type": "Answer", "text": "A canonical conflict (A canonicals to B, B canonicals to A) is one of the worst SEO mistakes. Search engines see a loop and may pick neither, leaving all duplicate versions in the index without consolidated ranking. Always ensure canonical chains are acyclic and point to the definitive URL."}}, {"@type": "Question", "name": "Does page-profile check canonical URLs?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. <a href=\"/page-profile\">page-profile</a> reports whether a canonical tag is present, whether it is self-referencing, and flags potential issues. The free version checks one URL at a time; Pro adds batch mode for scanning your whole sitemap."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare {{ width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }}
+  .compare th, .compare td {{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }}
+  .compare th {{ border-bottom:2px solid var(--color-border); }}
+  pre.cmd {{
+    background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px;
+    overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0;
+  }}
+  pre.cmd code {{ font-family:'SF Mono','Monaco','Fira Code',monospace; }}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SEO &middot; CANONICAL &middot; GUIDE</div>
+    <h1>Canonical URL Guide:<br>How to Set, Check, and Fix Them</h1>
+    <p class="subtitle">Canonical tags are one of the most misunderstood SEO signals — and one of the most impactful to get right. A single broken canonical can split your traffic between duplicate URLs for months. Here is how to check every page in minutes.</p>
+    <div class="hero-cta">
+      <a href="#checklist" class="btn-primary">How to check your canonicals &rarr;</a>
+      <a href="/page-profile" class="btn-secondary">Check them automatically with page-profile</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Why canonical URLs matter</h2>
+    <p>A canonical URL (<code>&lt;link rel="canonical" href="..."&gt;</code>) tells search engines which version of a page is the definitive one. Without it, Google has to guess — and it often guesses wrong, especially on sites with URL parameters, multiple paths to the same content, or syndicated articles. The result is diluted ranking signals and lower organic performance.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🔗 Consolidates link equity</h3><p>All backlinks, shares and engagement on duplicate URLs should flow to one canonical page. Without a canonical, each duplicate competes rather than contributes.</p></div>
+      <div class="card"><h3>📋 Prevents duplicate content</h3><p>Google penalises nothing for duplicate content — but it does split the index across duplicates, so none ranks as strongly as a single consolidated page would.</p></div>
+      <div class="card"><h3>🔍 You control which URL ranks</h3><p>Canonical tags let you choose whether <code>/blog/post</code> or <code>/blog/post?ref=share</code> or <code>/2024/blog/post</code> appears in results. Without one, Google picks for you.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="checklist">
+  <div class="container">
+    <h2>Common canonical mistakes (and how to spot them)</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Issue</th><th>What to check</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Missing canonical tag</td><td>Does the page have <code>&lt;link rel="canonical"&gt;</code> at all?</td><td>Add a self-referencing canonical to the <code>&lt;head&gt;</code> of every indexable page.</td></tr>
+        <tr><td>2</td><td>Non-self-referencing canonical</td><td>Does the canonical point to <em>this</em> page or to a different page?</td><td>If this is the canonical version, it should reference itself.</td></tr>
+        <tr><td>3</td><td>Relative canonical URL</td><td>Is the href an absolute URL or relative path?</td><td>Always use absolute URLs — <code>https://example.com/page</code>, not <code>/page</code>.</td></tr>
+        <tr><td>4</td><td>Canonical chain loop</td><td>A canonicals to B, B canonicals to A.</td><td>Break the loop. Trace the chain to a single final destination.</td></tr>
+        <tr><td>5</td><td>Canonical + noindex together</td><td>Does the page have both a canonical tag and <code>noindex</code>?</td><td>Remove one: Google treats the pair as noindex and ignores the canonical.</td></tr>
+        <tr><td>6</td><td>Cross-domain canonical to wrong domain</td><td>Does the canonical point to a domain you don't control?</td><td>Unless you are deliberately syndicating, keep canonicals on your own domain.</td></tr>
+        <tr><td>7</td><td>HTTP→HTTPS mismatch</td><td>Canonical points to <code>http://</code> on an HTTPS site.</td><td>Update to the HTTPS version. Mixing protocols confuses the signal.</td></tr>
+        <tr><td>8</td><td>Trailing slash mismatch</td><td>Canonical includes <code>/page/</code> but the page URL is <code>/page</code> (or vice versa).</td><td>Be consistent. Pick one convention and stick to it site-wide.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products" id="automate">
+  <div class="container">
+    <h2>Check every page automatically</h2>
+    <p>Inspecting the canonical tag on each page by hand is feasible for five pages — not for fifty or five hundred. The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI checks canonical presence, self-reference status, absolute URL format and more against any URL:</p>
+    <pre class="cmd"><code>npx page-profile https://example.com          # single page report
+npx page-profile --urls-from-file urls.txt   # batch check all pages (Pro)
+npx page-profile --compare prod.html staging.html  # diff canonicals (Pro)</code></pre>
+    <div class="problem-cards">
+      <div class="card"><h3>✅ Graded checks</h3><p>Canonical presence, absolute vs relative, self-referencing — each gets a pass/warn/fail so you triage instead of reading raw HTML.</p></div>
+      <div class="card"><h3>📦 Batch mode</h3><p>Feed it your sitemap URLs or a text file and check every page in one pass. Pro feature with HTML report output.</p></div>
+      <div class="card"><h3>🔒 Runs locally</h3><p>Your client URLs never leave your machine. No account, no upload, no data stored on a server.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Get page-profile free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>How canonical URLs work with page-profile</h2>
+    <p>When you run page-profile against a URL, it extracts the canonical tag from the page <code>&lt;head&gt;</code> and checks:</p>
+    <ul style="line-height:1.8;margin:16px 0;">
+      <li><strong>Present:</strong> Does the page have a <code>&lt;link rel="canonical"&gt;</code> tag?</li>
+      <li><strong>Absolute:</strong> Is the href an absolute URL (required for consistent interpretation)?</li>
+      <li><strong>Self-referencing:</strong> Does it point back to this page or to a different URL?</li>
+    </ul>
+    <p>Each check scores pass, warn or fail so you know what to fix and in what order. The free version handles single pages; Pro adds batch scanning across your entire sitemap and produces a shareable HTML report.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is a canonical URL?</h3><p>A canonical URL is a <link rel="canonical"> tag in the <head> of a page that tells search engines which version of a page is the authoritative one. When you have duplicate or near-duplicate pages (same content at different URLs), the canonical tag prevents search engines from splitting ranking signals between them.</p></div>\n<div class="card"><h3>How do canonical URLs affect SEO?</h3><p>They consolidate ranking signals — links, content, and authority — to one preferred URL. Without them, Google may pick the "wrong" URL as canonical, split PageRank across duplicates, or index dozens of near-identical pages instead of one. A single misconfigured canonical is rarely fatal, but systematic errors across a site silently cap your organic performance.</p></div>\n<div class="card"><h3>What is a self-referencing canonical?</h3><p>A canonical URL that points to the page itself. Every indexable page should have a self-referencing canonical. Even if nothing is duplicated, it is the strongest signal that this page is the version you want ranked. Many CMS platforms (WordPress, Shopify, Webflow) set these automatically, but static generators, legacy sites and hand-coded pages often omit them.</p></div>\n<div class="card"><h3>Canonical vs. noindex — which should I use?</h3><p>Use canonical when you have multiple URLs showing the same content and you want one of them to rank. Use noindex when you want a page out of search results entirely. They solve different problems: canonical consolidates, noindex excludes. Combining them (canonical + noindex) is treated by Google as a noindex — the canonical is ignored.</p></div>\n<div class="card"><h3>How do I check if my canonical URLs are correct?</h3><p>The simplest way is to inspect the <head> of each page: look for <code>&lt;link rel="canonical" href="..."&gt;</code>. For more than a handful of pages, use a CLI tool like <a href="/page-profile">page-profile</a> which checks canonical presence, validity and conflicts across a list of URLs automatically.</p></div>\n<div class="card"><h3>Can a canonical URL point to a different domain?</h3><p>Yes, Google supports cross-domain canonicals — often used when syndicating content or when the same article appears on two domains you own. Most other search engines ignore cross-domain canonicals, so use this only when absolutely necessary.</p></div>\n<div class="card"><h3>What happens when two pages canonical to each other?</h3><p>A canonical conflict (A canonicals to B, B canonicals to A) is one of the worst SEO mistakes. Search engines see a loop and may pick neither, leaving all duplicate versions in the index without consolidated ranking. Always ensure canonical chains are acyclic and point to the definitive URL.</p></div>\n<div class="card"><h3>Does page-profile check canonical URLs?</h3><p>Yes. <a href="/page-profile">page-profile</a> reports whether a canonical tag is present, whether it is self-referencing, and flags potential issues. The free version checks one URL at a time; Pro adds batch mode for scanning your whole sitemap.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/website-seo-metadata-audit" style="color:var(--color-accent);">SEO Metadata Audit Checklist</a> &middot; <a href="/blog/technical-seo-check-website" style="color:var(--color-accent);">Technical SEO Check</a> &middot; <a href="/blog/open-graph-checker" style="color:var(--color-accent);">Open Graph Checker</a> &middot; <a href="/blog/meta-tag-checker" style="color:var(--color-accent);">Meta Tag Checker</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/page-profile">page-profile</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>

@@ -50,8 +50,14 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://hermes-passiv.pages.dev/blog/canonical-url-guide</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://hermes-passiv.pages.dev/blog/check-ssl-certificate-expiry</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -540,6 +546,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>monthly</changefreq>
@@ -721,6 +733,12 @@
   </url>
   <url>
     <loc>https://hermes-passiv.pages.dev/da/blog/byg-en-html-til-markdown-konverter</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://hermes-passiv.pages.dev/da/blog/canonisk-url-guide</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -1030,6 +1048,12 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/copy-clean-text-from-website"/>
   </url>
   <url>
+    <loc>https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://hermes-passiv.pages.dev/da/blog/skriv-tilgaengelighedserklaering</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -1150,7 +1174,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://hermes-passiv.pages.dev/deskuptime/</loc>
+    <loc>https://hermes-passiv.pages.dev/deskuptime</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -1474,7 +1498,7 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://hermes-passiv.pages.dev/url-inspector/</loc>
+    <loc>https://hermes-passiv.pages.dev/url-inspector</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -1503,4 +1527,4 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
-<url><loc>https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit</loc><lastmod>2026-08-26</lastmod></url><url><loc>https://hermes-passiv.pages.dev/da/blog/seo-metadata-tjek-hjemmeside</loc><lastmod>2026-08-26</lastmod></url></urlset>
+</urlset>
