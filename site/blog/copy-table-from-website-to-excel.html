@@ -110,7 +110,7 @@
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
 </script>
 <div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-website-to-google-sheets" style="color:var(--color-accent);">Copy a Table Into Google Sheets</a></p></div>
-<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/da/blog/kopier-tabel-fra-pdf" style="color:var(--color-accent);">Kopier en tabel fra en PDF til Excel</a></p></div>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/da/blog/kopier-tabel-fra-pdf-til-excel" style="color:var(--color-accent);">Kopier en tabel fra en PDF til Excel</a></p></div>
 <div style="text-align:center;margin-top:16px;"><p>Related: <a href="{URL}" style="color:var(--color-accent);">{label}</a></p></div>
 <div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/copy-table-from-pdf-to-excel" style="color:var(--color-accent);">Copy a Table From a PDF Into Excel</a></p></div>
 <div style="text-align:center;margin-top:16px;"><p>More like this: <a href="/copy-clean-guide" style="color:var(--color-accent);">The Copy &amp; Clean Guide Collection</a></p></div>
