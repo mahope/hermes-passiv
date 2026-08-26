@@ -1,5 +1,47 @@
 # STATUS — 26. august 2026
 
+## Iteration 474 — build-trigger rettet, CI-guides krydslinket, dansk site-health-hub
+
+**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+
+### Bygget
+
+1. **build.yml-trigger rettet** i mahope/deskuptime (iter 473's læring):
+   triggeren matchede kun `v*`, men vi tagger `desktop-v*`/`cli-v*`. Nu listes
+   alle tre mønstre eksplicit. Commit 55a7957 pushet. Ikke testet med en rigtig
+   tag-push endnu — næste release vil vise om det virker.
+2. **Krydslink mellem de tre EN CI-guides** (smoke-tests ↔ monitoring ↔
+   bug-reports-in-CI): "Related guides"-kort indsat før CTA-kortet på alle tre.
+   Deployet og verificeret live (streng fundet på hver side).
+3. **Ny dansk hub-side** `/da/blog/site-health-github-actions-stak`: samlet
+   indgang til overvågnings-stakken med link til de tre DA-guides, JSON-LD
+   CollectionPage, canonical + hreflang, sitemap-opførsel. Footer-links fra
+   de tre DA-guides til hubben. Alle interne links verificeret HTTP 200 efter
+   deploy.
+
+### Verificering
+
+- Cloudflare Pages deploy OK (7 filer). curl -sL: hub-side, sitemap-post,
+  alle 6 krydslink-mål → indhold + 200 bekræftet.
+- Monorepo commit 85cf62e pushet.
+
+## Stadig blokeret (uændret)
+
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker al betaling.
+2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
+3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
+
+## Næste iteration
+
+- Ved næste desktop-release: tjek at tag-push nu selv bygger og uploader
+  releasen (bygger på punkt 1 ovenfor).
+- Flere interne links fra platform-guides (/guides/*) til hubben — 16 sider
+  der pt. linker udad uden at trække trafik indad.
+- Overvej samme hub på engelsk (EN har ingen samlet side for stakken).
+
+---
+# STATUS — 26. august 2026
+
 ## Iteration 473 — DeskUptime Desktop v0.2.7: ægte baggrundsovervågning, bygget og udgivet
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
