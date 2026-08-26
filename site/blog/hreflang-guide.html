@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hreflang Guide: How to Implement and Check Language Targeting</title>
+<meta name="description" content="Learn how hreflang annotations work, the most common mistakes (missing return tags, no x-default), and how to check every page of a multilingual site automatically.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hreflang Guide: How to Implement and Check Language Targeting">
+<meta property="og:description" content="Learn how hreflang annotations work, the most common mistakes (missing return tags, no x-default), and how to check every page of a multilingual site automatically.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Hreflang Guide: How to Implement and Check Language Targeting">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hreflang Guide: How to Implement and Check Language Targeting">
+<meta name="twitter:description" content="Learn how hreflang annotations work, the most common mistakes (missing return tags, no x-default), and how to check every page of a multilingual site automatically.">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Hreflang Guide: How to Implement and Check Language Targeting", "description": "Learn how hreflang annotations work, the most common mistakes (missing return tags, no x-default), and how to check every page of a multilingual site automatically.", "url": "https://hermes-passiv.pages.dev/blog/hreflang-guide", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is hreflang?", "acceptedAnswer": {"@type": "Answer", "text": "Hreflang is an HTML attribute (<link rel=\"alternate\" hreflang=\"...\">) that tells search engines which language and region version of a page to show to which users. If your site exists in English and Danish, hreflang helps Google serve the Danish page to Danish searchers and the English page to everyone else."}}, {"@type": "Question", "name": "Does hreflang affect SEO rankings?", "acceptedAnswer": {"@type": "Answer", "text": "It does not boost rankings directly, but it routes the right users to the right version — which improves engagement and conversions in each market. It also prevents duplicate-content confusion between translated pages, so the correct version ranks in each locale instead of Google guessing."}}, {"@type": "Question", "name": "Is hreflang required to have x-default?", "acceptedAnswer": {"@type": "Answer", "text": "Not required, but recommended. The x-default value tells search engines which URL to show users whose language matches none of your versions — typically your global or English page. Every complete hreflang set should include it."}}, {"@type": "Question", "name": "Do hreflang tags need to be reciprocal?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. If page A lists page B as its alternate, page B must list page A back. Missing return tags are the single most common hreflang error and cause search engines to ignore the entire annotation set."}}, {"@type": "Question", "name": "Should hreflang be used together with canonical?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — they work together. Each language version should have a self-referencing canonical AND point to its alternate versions via hreflang. The canonical says \"this is the authoritative URL for this version\"; hreflang says \"these other URLs are equivalent versions for other languages\"."}}, {"@type": "Question", "name": "Where do I put hreflang tags?", "acceptedAnswer": {"@type": "Answer", "text": "Three places work: the <head> of each page (most common), an XML sitemap with xhtml:link entries, or HTTP headers (for non-HTML files like PDFs). Pick one method and use it consistently — mixing methods risks conflicts."}}, {"@type": "Question", "name": "How do I check my hreflang implementation?", "acceptedAnswer": {"@type": "Answer", "text": "Inspect the <head> of each page for <link rel=\"alternate\"> tags and verify every listed URL returns 200 and links back reciprocally. For more than a few pages, a CLI tool like <a href=\"/page-profile\">page-profile</a> automates the head-tag audit across your whole sitemap."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+  pre.cmd { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0; }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">INTERNATIONAL SEO &middot; HREFLANG &middot; GUIDE</div>
+    <h1>Hreflang Guide:<br>How to Implement and Check Language Targeting</h1>
+    <p class="subtitle">Hreflang tells Google which language version of your page to show in which country. Get it wrong and Danish users land on your English page (or worse, nothing ranks). Here is how the annotation works, which mistakes are most common, and how to check a whole site automatically.</p>
+    <div class="hero-cta">
+      <a href="#mistakes" class="btn-primary">The 6 common mistakes &rarr;</a>
+      <a href="/page-profile" class="btn-secondary">Audit your multilingual site with page-profile</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 5 minute read</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>What hreflang does</h2>
+    <p>A hreflang annotation is a line in the page <code>&lt;head&gt;</code>:</p>
+    <pre class="cmd"><code>&lt;link rel="alternate" hreflang="en" href="https://example.com/page"&gt;
+&lt;link rel="alternate" hreflang="da" href="https://example.com/da/page"&gt;
+&lt;link rel="alternate" hreflang="x-default" href="https://example.com/page"&gt;</code></pre>
+    <p>Together these three lines say: English speakers get the first URL, Danish speakers get the second, and everyone else gets the x-default. Each version should also carry a self-referencing <a href="/blog/canonical-url-guide">canonical URL</a>.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🌍 Right users, right version</h3><p>Danish searchers see the Danish page in results — better comprehension, higher conversion, fewer bounces.</p></div>
+      <div class="card"><h3>📑 Translations are not duplicates</h3><p>Without hreflang, Google may treat translated pages as duplicate content and pick one to rank everywhere.</p></div>
+      <div class="card"><h3>🎯 Region variants supported</h3><p><code>en-gb</code>, <code>de-at</code>, <code>pt-br</code> — hreflang handles language-region pairs when spelling, currency or legal text differs.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="mistakes">
+  <div class="container">
+    <h2>The 6 most common hreflang mistakes</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Mistake</th><th>Consequence</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Missing return tags (not reciprocal)</td><td>Search engines ignore the whole annotation set.</td><td>Every listed URL must link back to every other one, including itself.</td></tr>
+        <tr><td>2</td><td>No x-default</td><td>Users with unmatched languages get an arbitrary version.</td><td>Add x-default pointing to your global/English page.</td></tr>
+        <tr><td>3</td><td>Relative URLs in href</td><td>Annotations may be misinterpreted.</td><td>Always absolute URLs: <code>https://…</code>.</td></tr>
+        <tr><td>4</td><td>Wrong language/region codes</td><td>Google cannot match users; annotation ignored.</td><td>Use ISO 639-1 language + optional ISO 3166-1 Alpha 2 region (<code>da</code>, <code>en-gb</code>).</td></tr>
+        <tr><td>5</td><td>Listed URLs return errors or redirect chains</td><td>Broken targets invalidate the set.</td><td>Every hreflang target must return HTTP 200 directly.</td></tr>
+        <tr><td>6</td><td>Conflicting canonical</td><td>A version canonicalising elsewhere contradicts hreflang.</td><td>Each version gets a self-referencing canonical.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Check a multilingual site automatically</h2>
+    <p>The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI audits the <code>&lt;head&gt;</code> of any URL — canonical, hreflang alternates, meta robots, titles:</p>
+    <pre class="cmd"><code>npx page-profile https://example.com/da/page        # single page report
+npx page-profile --urls-from-file urls.txt          # batch all language versions (Pro)</code></pre>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/page-profile" class="btn-primary">Get page-profile free &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>What is hreflang?</h3><p>Hreflang is an HTML attribute (&lt;link rel=&quot;alternate&quot; hreflang=&quot;...&quot;&gt;) that tells search engines which language and region version of a page to show to which users. If your site exists in English and Danish, hreflang helps Google serve the Danish page to Danish searchers and the English page to everyone else.</p></div>
+<div class="card"><h3>Does hreflang affect SEO rankings?</h3><p>It does not boost rankings directly, but it routes the right users to the right version — which improves engagement and conversions in each market. It also prevents duplicate-content confusion between translated pages, so the correct version ranks in each locale instead of Google guessing.</p></div>
+<div class="card"><h3>Is hreflang required to have x-default?</h3><p>Not required, but recommended. The x-default value tells search engines which URL to show users whose language matches none of your versions — typically your global or English page. Every complete hreflang set should include it.</p></div>
+<div class="card"><h3>Do hreflang tags need to be reciprocal?</h3><p>Yes. If page A lists page B as its alternate, page B must list page A back. Missing return tags are the single most common hreflang error and cause search engines to ignore the entire annotation set.</p></div>
+<div class="card"><h3>Should hreflang be used together with canonical?</h3><p>Yes — they work together. Each language version should have a self-referencing canonical AND point to its alternate versions via hreflang. The canonical says "this is the authoritative URL for this version"; hreflang says "these other URLs are equivalent versions for other languages".</p></div>
+<div class="card"><h3>Where do I put hreflang tags?</h3><p>Three places work: the &lt;head&gt; of each page (most common), an XML sitemap with xhtml:link entries, or HTTP headers (for non-HTML files like PDFs). Pick one method and use it consistently — mixing methods risks conflicts.</p></div>
+<div class="card"><h3>How do I check my hreflang implementation?</h3><p>Inspect the &lt;head&gt; of each page for &lt;link rel=&quot;alternate&quot;&gt; tags and verify every listed URL returns 200 and links back reciprocally. For more than a few pages, a CLI tool like <a href="/page-profile">page-profile</a> automates the head-tag audit across your whole sitemap.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/canonical-url-guide" style="color:var(--color-accent);">Canonical URL Guide</a> &middot; <a href="/blog/website-seo-metadata-audit" style="color:var(--color-accent);">SEO Metadata Audit</a> &middot; <a href="/blog/technical-seo-check-website" style="color:var(--color-accent);">Technical SEO Check</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">&larr; Home</a> &middot; <a href="/page-profile">page-profile</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>

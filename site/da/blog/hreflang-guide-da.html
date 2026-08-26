@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide til hreflang: Sådan implementerer og tjekker du sprogstyring</title>
+<meta name="description" content="Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Guide til hreflang: Sådan implementerer og tjekker du sprogstyring">
+<meta property="og:description" content="Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta property="og:image:alt" content="Guide til hreflang: Sådan implementerer og tjekker du sprogstyring">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Guide til hreflang: Sådan implementerer og tjekker du sprogstyring">
+<meta name="twitter:description" content="Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/hreflang-guide">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Guide til hreflang: Sådan implementerer og tjekker du sprogstyring", "description": "Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.", "url": "https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er hreflang?", "acceptedAnswer": {"@type": "Answer", "text": "Hreflang er en HTML-attribut (<link rel=\"alternate\" hreflang=\"...\">), der fortæller søgemaskinerne, hvilken sprog- og regionsversion af en side der skal vises til hvilke brugere. Eksisterer dit site på dansk og engelsk, hjælper hreflang Google med at vise den danske side til danske søgende og den engelske til alle andre."}}, {"@type": "Question", "name": "Påvirker hreflang dine placeringer i søgninger?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke direkte — men den sender de rigtige brugere til den rigtige version, hvilket forbedrer engagement og konvertering i hvert marked. Den forhindrer også dubletindholds-forvirring mellem oversatte sider."}}, {"@type": "Question", "name": "Skal man have x-default med?", "acceptedAnswer": {"@type": "Answer", "text": "Det er ikke et krav, men det anbefales. x-default fortæller søgemaskinerne, hvilken URL der skal vises til brugere, hvis sprog ikke matcher nogen af dine versioner — typisk din globale eller engelske side. Enhver komplet hreflang-sæt bør have den."}}, {"@type": "Question", "name": "Skal hreflang-tags være gensidige?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Hvis side A lister side B som alternativ, skal side B liste side A tilbage. Manglende retur-tags er den mest almindelige hreflang-fejl og får søgemaskinerne til at ignorere hele annotationssættet."}}, {"@type": "Question", "name": "Hvor placerer jeg hreflang-tags?", "acceptedAnswer": {"@type": "Answer", "text": "Tre steder virker: i <head> på hver side (mest almindeligt), i en XML-sitemap med xhtml:link-entries, eller i HTTP-headers (til ikke-HTML-filer som PDF'er). Vælg én metode og hold den konsekvent."}}, {"@type": "Question", "name": "Hvordan tjekker jeg min hreflang-implementering?", "acceptedAnswer": {"@type": "Answer", "text": "Inspicér <head> på hver side for <link rel=\"alternate\">-tags og verificér at hver listet URL svarer 200 og linker gensidigt tilbage. Til mere end et par sider kan et CLI-værktøj som <a href=\"/da/page-profile\">page-profile</a> automatisere tjekket på tværs af hele dit sitemap."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+  pre.cmd { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:8px; overflow-x:auto; font-size:0.85rem; line-height:1.6; margin:0.8rem 0; }
+  pre.cmd code { font-family:'SF Mono','Monaco','Fira Code',monospace; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">INTERNATIONALT SEO &middot; HREFLANG &middot; GUIDE</div>
+    <h1>Guide til hreflang:<br>Sådan implementerer og tjekker du sprogstyring</h1>
+    <p class="subtitle">Hreflang fortæller Google, hvilken sprogversion af din side der skal vises i hvilket land. Kommer det galt, lander danske brugere på din engelske side — eller intet rangerer. Sådan virker annotationen, hvilke fejl der er mest almindelige, og hvordan du tjekker et helt site automatisk.</p>
+    <div class="hero-cta">
+      <a href="#fejl" class="btn-primary">De 6 almindelige fejl &rarr;</a>
+      <a href="/da/page-profile" class="btn-secondary">Revidér dit flersprogede site med page-profile</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 5 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvad hreflang gør</h2>
+    <p>En hreflang-annotation er en linje i sidens <code>&lt;head&gt;</code>:</p>
+    <pre class="cmd"><code>&lt;link rel="alternate" hreflang="en" href="https://eksempel.dk/page"&gt;
+&lt;link rel="alternate" hreflang="da" href="https://eksempel.dk/da/page"&gt;
+&lt;link rel="alternate" hreflang="x-default" href="https://eksempel.dk/page"&gt;</code></pre>
+    <p>Sammen siger de tre linjer: engelsktalende får den første URL, dansktalende den anden, og alle andre får x-default. Hver version bør også have en selvrefererende <a href="/da/blog/canonisk-url-guide">kanonisk URL</a>.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🌍 Rigtige brugere, rigtig version</h3><p>Danske sögende ser den danske side i resultaterne — bedre forståelse, højere konvertering, færre afbrydelser.</p></div>
+      <div class="card"><h3>📑 Oversættelser er ikke dubletter</h3><p>Uden hreflang kan Google behandle oversatte sider som dubletindhold og vælge én version til at rangere overalt.</p></div>
+      <div class="card"><h3>🎯 Regionsvarianter understøttet</h3><p><code>en-gb</code>, <code>de-at</code>, <code>pt-br</code> — hreflang håndterer sprog-region-par når stavning, valuta eller juridisk tekst adskiller sig.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products" id="fejl">
+  <div class="container">
+    <h2>De 6 mest almindelige hreflang-fejl</h2>
+    <table class="compare">
+      <thead><tr><th>#</th><th>Fejl</th><th>Konsekvens</th><th>Løsning</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Manglende retur-tags (ikke gensidig)</td><td>Søgemaskinerne ignorerer hele sættet.</td><td>Enhver listet URL skal linke tilbage til alle andre — inklusive sig selv.</td></tr>
+        <tr><td>2</td><td>Ingen x-default</td><td>Brugere uden matchende sprog får en vilkårlig version.</td><td>Tilføj x-default der peger på din globale/engelske side.</td></tr>
+        <tr><td>3</td><td>Relative URL'er i href</td><td>Annotationerne kan misfortolkes.</td><td>Brug altid absolutte URL'er: <code>https://…</code>.</td></tr>
+        <tr><td>4</td><td>Forkerte sprog-/regionkoder</td><td>Google kan ikke matche brugere; annotationen ignoreres.</td><td>Brug ISO 639-1 sprog + valgfri ISO 3166-1 Alpha 2 region (<code>da</code>, <code>en-gb</code>).</td></tr>
+        <tr><td>5</td><td>Listede URL'er giver fejl eller redirect-kæder</td><td>Ødelagte mål ugyldiggør sættet.</td><td>Hvert hreflang-mål skal svare HTTP 200 direkte.</td></tr>
+        <tr><td>6</td><td>Konfliktskabende canonical</td><td>En version der canonical et andet sted modsiger hreflang.</td><td>Hver version får en selvrefererende canonical.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tjek et flersproget site automatisk</h2>
+    <p>Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> reviderer <code>&lt;head&gt;</code> på enhver URL — canonical, hreflang-alternativer, meta robots, titler:</p>
+    <pre class="cmd"><code>npx page-profile https://eksempel.dk/da/side       # rapport for én side
+npx page-profile --urls-from-file urls.txt         # batch alle sprogversioner (Pro)</code></pre>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/da/page-profile" class="btn-primary">Hent page-profile gratis &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvad er hreflang?</h3><p>Hreflang er en HTML-attribut (&lt;link rel=&quot;alternate&quot; hreflang=&quot;...&quot;&gt;), der fortæller søgemaskinerne, hvilken sprog- og regionsversion af en side der skal vises til hvilke brugere. Eksisterer dit site på dansk og engelsk, hjælper hreflang Google med at vise den danske side til danske søgende og den engelske til alle andre.</p></div>
+<div class="card"><h3>Påvirker hreflang dine placeringer i søgninger?</h3><p>Ikke direkte — men den sender de rigtige brugere til den rigtige version, hvilket forbedrer engagement og konvertering i hvert marked. Den forhindrer også dubletindholds-forvirring mellem oversatte sider.</p></div>
+<div class="card"><h3>Skal man have x-default med?</h3><p>Det er ikke et krav, men det anbefales. x-default fortæller søgemaskinerne, hvilken URL der skal vises til brugere, hvis sprog ikke matcher nogen af dine versioner — typisk din globale eller engelske side. Enhver komplet hreflang-sæt bør have den.</p></div>
+<div class="card"><h3>Skal hreflang-tags være gensidige?</h3><p>Ja. Hvis side A lister side B som alternativ, skal side B liste side A tilbage. Manglende retur-tags er den mest almindelige hreflang-fejl og får søgemaskinerne til at ignorere hele annotationssættet.</p></div>
+<div class="card"><h3>Hvor placerer jeg hreflang-tags?</h3><p>Tre steder virker: i &lt;head&gt; på hver side (mest almindeligt), i en XML-sitemap med xhtml:link-entries, eller i HTTP-headers (til ikke-HTML-filer som PDF'er). Vælg én metode og hold den konsekvent.</p></div>
+<div class="card"><h3>Hvordan tjekker jeg min hreflang-implementering?</h3><p>Inspicér &lt;head&gt; på hver side for &lt;link rel=&quot;alternate&quot;&gt;-tags og verificér at hver listet URL svarer 200 og linker gensidigt tilbage. Til mere end et par sider kan et CLI-værktøj som <a href="/da/page-profile">page-profile</a> automatisere tjekket på tværs af hele dit sitemap.</p></div>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/canonisk-url-guide" style="color:var(--color-accent);">Guide til kanoniske URL'er</a> &middot; <a href="/da/blog/seo-metadata-tjek-hjemmeside" style="color:var(--color-accent);">SEO- og metadata-tjek</a> &middot; <a href="/da/blog/teknisk-seo-tjek-hjemmeside" style="color:var(--color-accent);">Teknisk SEO-tjek</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da/">&larr; Forside</a> &middot; <a href="/da/page-profile">page-profile</a> &middot; <a href="/">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}});
+</script>
+</body>
+</html>
