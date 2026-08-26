@@ -18,10 +18,11 @@
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
-  {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. Pro ($19) unlocks the desktop app, notifications, and unlimited URLs."}},
+  {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. Pro ($19) unlocks the desktop app (native GUI with system tray), notifications, and unlimited URLs."}},
   {"@type": "Question", "name": "What does DeskUptime check?","acceptedAnswer": {"@type": "Answer","text": "HTTP status + response time, SSL certificate validity + expiry countdown, and SHA-256 content hash comparison for change detection. It works on any URL regardless of CMS or hosting provider."}},
   {"@type": "Question", "name": "How is DeskUptime different from UptimeRobot or Pingdom?","acceptedAnswer": {"@type": "Answer","text": "DeskUptime runs on your machine, not a cloud server. This means no monthly subscription ($19 one-time vs $7-12/month), your data never leaves your computer, and you can check internal/staging URLs without exposing them. The trade-off is that monitoring stops when your computer is off, though the CLI watch mode can run on any always-on machine (Raspberry Pi, server, etc.)"}},
-  {"@type": "Question", "name": "Can I use DeskUptime in CI/CD?","acceptedAnswer": {"@type": "Answer","text": "Yes. The CLI is a standard Node.js script — it works in GitHub Actions, GitLab CI, or any Unix terminal. Exit codes are 0 for success, 1 for errors. Use it for pre-deploy URL checks, scheduled monitoring, or integration tests."}}
+  {"@type": "Question", "name": "Can I use DeskUptime in CI/CD?","acceptedAnswer": {"@type": "Answer","text": "Yes. The CLI is a standard Node.js script — it works in GitHub Actions, GitLab CI, or any Unix terminal. Exit codes are 0 for success, 1 for errors. Use it for pre-deploy URL checks, scheduled monitoring, or integration tests."}},
+  {"@type": "Question", "name": "How do I download the DeskUptime desktop app?","acceptedAnswer": {"@type": "Answer","text": "Download the desktop app from GitHub Releases: https://github.com/mahope/deskuptime/releases — choose macOS (Apple Silicon or Intel) or Windows. The desktop app requires a Pro license key ($19) to unlock beyond the free 3-URL limit and activate system tray background monitoring."}}
 ]}
 </script>
 <script defer src="/track.js"></script>
@@ -120,9 +121,22 @@
 
 <p>The open-source engine is MIT licensed. <a href="https://github.com/mahope/deskuptime">Review it on GitHub</a>.</p>
 
-<h2>What we're still building</h2>
+<h2>Download the desktop app</h2>
 
-<p>The desktop app with system tray, native notifications, and email/webhook alerts is under development. The CLI and watch mode are ready and tested today.</p>
+<p>The DeskUptime desktop app is built and ready. Download the latest release for your platform:</p>
+
+<div style="background:#f5f7fa;padding:16px;border-radius:8px;overflow-x:auto;font-size:14px;line-height:1.9">
+<p><strong>macOS (Apple Silicon):</strong><br>
+<a href="https://github.com/mahope/deskuptime/releases/download/v0.2.1/DeskUptime-v0.2.1-macOS-aarch64-apple-darwin.zip" style="color:var(--accent)">DeskUptime-v0.2.1-macOS-aarch64-apple-darwin.zip</a></p>
+<p><strong>macOS (Intel):</strong><br>
+<a href="https://github.com/mahope/deskuptime/releases/download/v0.2.1/DeskUptime-v0.2.1-macOS-x86_64-apple-darwin.zip" style="color:var(--accent)">DeskUptime-v0.2.1-macOS-x86_64-apple-darwin.zip</a></p>
+<p><strong>Windows:</strong><br>
+<a href="https://github.com/mahope/deskuptime/releases/download/v0.2.1/DeskUptime_0.1.0_x64-setup.exe" style="color:var(--accent)">DeskUptime_0.1.0_x64-setup.exe</a></p>
+</div>
+
+<p>Unzip and run. The app lives in your system tray — checks continue even when the window is closed. <strong>Pro license ($19)</strong> unlocks unlimited URLs, system tray background monitoring, and email/webhook alerts. Free tier monitors up to 3 URLs with no license key.</p>
+
+<p>The CLI and watch mode are also ready today. Same engine, different interface:</p>
 
 <hr style="border:none;border-top:1px solid #d0d8e0;margin:32px 0">
 

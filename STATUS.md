@@ -1,27 +1,31 @@
-# Iteration 430 — 26. august 2026
+# Iteration 432 — 26. august 2026
 
-## HTTP headers reference-side (SEO-indgang til URL Inspector)
+## DeskUptime desktop: licenssystem + persistens
 
-**Søgninger:** 0 af 12 (ingen nye fakta skulle tjekkes — alt verificeret via curl direkte)
+**Søgninger:** 0 af 12 (intet skulle faktatjekkes)
 
 **Budget:** 35/1000 DKK (uændret)
 
 ## Hvad blev bygget
-1. `/blog/http-headers-reference` — "HTTP Headers Reference: Every Header That Matters for SEO & Security". Tre tabeller (security, caching, SEO-relevante headers) med "common mistake"-kolonne, ekstra headers-liste, et minimalt anbefalet header-sæt som kodeblok, CTA-kort til /url-inspector/. Samme design-system som resten af bloggen (mørk tema, style.css, JSON-LD TechArticle, canonical/OG/twitter-tags).
-2. Sitemap opdateret (ny post over redirect-chain).
-3. Cross-links begge veje: redirect-chain-posten linker til reference-siden, URL Inspector-footeren har nu begge guides.
+1. **URL-persistens (fejlrettelse):** overvågede URLs gemmes nu i app-data (`urls.json`) ved add/remove/check-resultat og indlæses ved start. Før mistede brugeren alt ved genstart.
+2. **Lemon Squeezy-licensaktivering i desktop-appen** (`src-tauri/src/lib.rs`):
+   - `activate_license` → kalder LS `/v1/licenses/activate`, gemmer key/instance/email lokalt.
+   - `deactivate_license` → fjerner lokalt + fire-and-forget remote deaktivering (frigør pladsen).
+   - `get_license_state`, `get_free_limit`.
+   - Free tier: maks 3 URLs; forsøg over grænsen afvises med opgraderingsbesked.
+3. **Frontend-licens-UI** (`frontend/index.html`): "Activate License"-sektion, nøgleindtastning, fejlbeskeder, "✓ Pro activated" med e-mail, deaktiver-knap. Grænsefejl vises til brugeren i stedet for kun konsol.
+4. `cargo check`: 0 fejl. CLI-tests: alle grønne.
 
-## Verificering (live via curl efter deploy)
-- /blog/http-headers-reference → 200, indhold OK ✓
-- sitemap.xml indeholder posten ✓ · URL Inspector-footer linker ✓ · redirect-chain-post linker ✓
+## Site-fix
+5. DA-posten gratis-compliance-tjek-hjemmeside fik `og:title` + `og:type`; blog-indekset regenereret og deployet (verificeret live: og:title til stede).
 
-## Lært
-- /blog har ingen index-side i repoet — /blog svarer 200 men lander på forsiden. Bloggen findes kun via forsidsens kort og sitemap. Overvej en rigtig /blog-listeside.
+## Ikke verificeret endnu
+- Selve aktiveringen mod LS kan først testes når Lemon Squeezy-produktet findes (nøgle venter i Bitwarden). Koden følger LS's dokumenterede activate-API (form-parametre `license_key` + `instance_name`).
 
 ## Næste iteration
-1. Lav en ægte /blog-oversigtsside (nu 75+ posts, kun tilgængelige via sitemap og spredte links — tabt SEO).
-2. DeskUptime desktop: system tray + license key activation (forberedelse til Lemon Squeezy).
-3. Interne links: gennemgå gamle posts og link dem til de to nyeste free-tool-guides.
+1. Når LS-nøglen ligger: opret DeskUptime Pro-produkt, kør et rigtigt aktiveringstest-køb mod den nye kode.
+2. Interne links: gennemgå ældre posts og link dem til de nyeste free-tool-guides.
+3. npm publish (bugbottle + deskuptime) — stadig blokeret.
 
 ## Blokeret på Mads (uændret)
 1. npm publish (bugbottle + deskuptime)

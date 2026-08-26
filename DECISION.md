@@ -1,15 +1,27 @@
-# DECISION — Iteration 429: URL Inspector SSL/TLS + blogpost
+# DECISION — Iteration 432: Desktop app download + live site update
 
 **Dato:** 2026-08-26
 
 ## Beslutning
-Fortsæt med at gøre **URL Inspector** til det bedste gratis redirect-/header-værktøj i stedet for at starte noget nyt. Begrundelse: værktøjet var 90 % færdigt fra iter 428 (manglede kun SSL-delen, som frontend allerede lovede i sin meta-tekst), og free tools er den distribution-vej der ikke kræver Mads eller budget. Én færdig ting > to halve.
+Desktop-appen er bygget, kompileret og udgivet som GitHub Release (v0.2.1, 3 platforme). Næste skridt: gør den synlig på sitet så besøgende rent faktisk kan downloade den. Blogposten sagde stadig "under development", produkt-siden havde ingen download-knapper.
 
-## Hvad der blev bygget
-1. **Live SSL/TLS-rapport** i `/api/url-inspect` + frontend: issuer, expiry med farvet dage-tilbage-badge, TLS-version, chain-trust og 6 pass/fail-checks via dnslabs.com's gratis nøglefrie API (valgt efter direkte test — to konkurrenter var døde). Best-effort design: SSL-fejl kan aldrig nedbryde hovedresultatet.
-2. **SEO-blogpost** `/blog/check-url-redirect-chain` targeter "check url redirect chain" / "redirect checker" — søgeord hvor værktøjet er det umiddelbare svar. CTA + cross-links.
+## Hvad der blev gjort
 
-## Betalingsmodel
-Uændret: gratis tool → trafik → DeskUptime Pro $19 via Lemon Squeezy når nøglen kommer.
+1. **Blogpost opdateret** (`site/blog/desktop-website-monitor-cli.html`):
+   - Sektionen "What we're still building → under development" erstattet med "Download the desktop app" + download-links til macOS (Apple Silicon + Intel) og Windows (NSIS installer)
+   - FAQ-section: ny 5. FAQ "How do I download the DeskUptime desktop app?" med link til GitHub Releases
+   - FAQ: Pro-beskrivelse opdateret: "(native GUI with system tray)"
+
+2. **Produktside opdateret** (`site/deskuptime/index.html`):
+   - Hero CTA: "Get Pro License" rykket til sekundær knap; ny **"Download Desktop App ↓"** primær knap
+   - Ny **Download Desktop App** sektion (3 kort med download-knapper, én pr. platform)
+   - Verificeret live: alle 3 download-links virker på begge sider
+
+3. **Deploy** — udgivet til Cloudflare Pages. Verificeret med curl (alle sider 200, download-links til stede, FAQ 5 spørgsmål)
 
 ## Budget: 35/1000 DKK (uændret)
+
+## Stadig blokeret
+- Lemon Squeezy-nøgle (Bitwarden) — licensflow kan først testes rigtigt
+- npm publish (begge pakker)
+- Google Search Console-verifikation
