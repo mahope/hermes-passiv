@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Consent Banner — Live Demo</title>
+<meta name="description" content="Live demo of the lightweight GDPR-compliant cookie consent banner. Drop-in one script, zero dependencies.">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/cookie-consent-banner-demo">
+<meta property="og:title" content="Cookie Consent Banner — Live Demo">
+<meta property="og:description" content="Try the lightweight GDPR cookie consent banner. Drop-in one script, works on any site.">
+<style>
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;color:#222;line-height:1.6; }
+.container { max-width:700px; margin:60px auto; padding:0 24px; }
+h1 { font-size:28px; }
+pre { background:#f5f5f5;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px; }
+code { background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:13px; }
+.btn-primary { display:inline-block;padding:10px 22px;background:#1a73e8;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px; }
+.note { background:#e8f5e9;border:1px solid #4caf50;color:#2e7d32;padding:14px 20px;border-radius:8px;font-size:14px;margin:24px 0; }
+footer { text-align:center;padding:40px 24px;color:#888;font-size:13px; }
+footer a { color:#1a73e8; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Cookie Consent Banner — Live Demo</h1>
+  <p class="note">The banner should appear at the bottom of this page. Accept to see it disappear. Reload the page after accepting — it won't show again for 365 days.</p>
+
+  <h2>Why this banner?</h2>
+  <p>EU websites need a cookie consent banner under the ePrivacy Directive. Most solutions are bloated, track users, or cost money. This one is <strong>free, self-contained, and never makes a network request</strong>.</p>
+
+  <h2>Try it</h2>
+  <p>The banner on this page is loaded from <code>/downloads/cookie-consent-banner.js</code>.</p>
+
+  <h2>Install on your site</h2>
+  <p>One script tag:</p>
+  <pre>&lt;script src="https://hermes-passiv.pages.dev/downloads/cookie-consent-banner.js"
+        data-site-name="Your Site"&gt;&lt;/script&gt;</pre>
+
+  <h3>With privacy policy and both buttons</h3>
+  <pre>&lt;script src="https://hermes-passiv.pages.dev/downloads/cookie-consent-banner.js"
+        data-site-name="My Shop"
+        data-policy-url="/privacy"
+        data-necessary-text="Necessary Only"
+        data-accept-text="Accept All"&gt;&lt;/script&gt;</pre>
+
+  <p><a href="https://github.com/mahope/cookie-consent-banner" class="btn-primary">View on GitHub →</a></p>
+
+  <h2>Related guides</h2>
+  <ul>
+    <li><a href="/books/cookie-consent-guide">Free e-book: Cookie Consent &amp; GDPR Compliance for Web Agencies</a></li>
+    <li><a href="/compliance-site-check">Free compliance scanner</a></li>
+    <li><a href="https://github.com/mahope/compliance-site-check">Compliance Site Check — GitHub Action</a></li>
+  </ul>
+</div>
+
+<footer>
+  <p><a href="/">Home</a> · <a href="/books">Free E-Books</a> · <a href="/compliance-site-check">Compliance Scanner</a></p>
+  <p>Cookie consent banner by <a href="https://github.com/mahope/cookie-consent-banner">mahope/cookie-consent-banner</a> · MIT License</p>
+</footer>
+
+<script src="/downloads/cookie-consent-banner.js"
+        data-site-name="Cookie Consent Banner Demo"
+        data-policy-url="/books/cookie-consent-guide"
+        data-necessary-text="Necessary Only"
+        data-accept-text="Accept All"></script>
+</body>
+</html>
