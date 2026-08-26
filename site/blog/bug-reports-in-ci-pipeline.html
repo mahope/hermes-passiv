@@ -108,5 +108,8 @@ jobs:
 <footer style="padding:32px 24px;">
     <p><a href="/">← Home</a> · <a href="/compliance-site-check">Free scanner</a> · <a href="/free-tools">Free tools</a> · <a href="/#blog">Blog</a></p>
 </footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
 </body>
 </html>

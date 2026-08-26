@@ -24,7 +24,7 @@ changed = skipped = 0
 for f in sorted(root.rglob('*.html')):
     if '/da/' in str(f) and False: pass
     html = f.read_text(encoding='utf-8')
-    if 'api/track' in html:
+    if "JSON.stringify({path:p}),keepalive:true" in html.replace('\n',''):
         skipped += 1; continue
     if '</body>' not in html:
         print('NO BODY TAG:', f); continue
