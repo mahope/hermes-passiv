@@ -13,8 +13,10 @@ def check_file(path):
         body = m.group(1)
         if not body.strip():
             continue
-        # spring JSON-LD og templates over
+        # spring JSON-LD, importmap og templates over
         if re.search(r'application/ld\+json', html[m.start():m.start()+120], re.I):
+            continue
+        if re.search(r'<script[^>]*type=["\']importmap["\']', html[max(0,m.start()-60):m.start()+80], re.I):
             continue
         if '<%' in body or '{{' in body:
             continue

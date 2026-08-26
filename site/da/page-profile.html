@@ -154,13 +154,27 @@
           <span style="font-size:0.8rem;color:#94a3b8;">om året</span>
           <ul>
             <li>Alt i Gratis, plus:</li>
-            <li>Sammenligning — diff to URLs</li>
-            <li>Historik — se hvordan en side ændrer sig over tid</li>
-            <li>Kunde-klar PDF-rapport</li>
-            <li>Batch-tilstand — tjek flere URLs ad gangen</li>
-            <li><strong>Kommer snart</strong> — når betalingen er koblet på</li>
+            <li>Sammenligning — diff to URLs side om side</li>
+            <li>Batch-tilstand — tjek flere URLs, rangeret efter score</li>
+            <li>Kunde-klar HTML-rapport</li>
+            <li>Offline licens — ingen konto, ingen netværk</li>
           </ul>
-          <span class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Kommer snart</span>
+          <a href="#" id="pp-buy-live" class="btn btn-primary" style="display:none;text-decoration:none;" target="_blank" rel="noopener">Køb Pro — $19/år →</a>
+          <span id="pro-cta-da" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Kommer snart</span>
+          <script>
+          (function(){
+            try {
+              fetch('/api/checkout?product=pp').then(function(r){return r.json();}).then(function(d){
+                if (d && d.live && d.checkout_url) {
+                  var buy = document.getElementById('pp-buy-live');
+                  var cs = document.getElementById('pro-cta-da');
+                  if (buy) { buy.href = d.checkout_url; buy.style.display = 'inline-block'; }
+                  if (cs) cs.style.display = 'none';
+                }
+              }).catch(function(){});
+            } catch(e) {}
+          })();
+          </script>
         </div>
       </div>
     </section>
@@ -219,7 +233,7 @@
         </details>
         <details>
           <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">Hvad er forskellen på Free og Pro?</summary>
-          <p>Free-versionen dækker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro (119 DKK/år) tilføjer sammenligningstilstand mellem to URL'er, historik, kundeklar PDF-rapport og batch-tilstand.</p>
+          <p>Free-versionen dækker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro ($19/år) tilføjer sammenligningstilstand mellem to URL'er, batch-tilstand og kundeklar HTML-rapport. Historik er gratis for alle.</p>
         </details>
       </div>
     </div>
@@ -282,7 +296,7 @@
             "name": "Hvad er forskellen p\u00e5 Free og Pro?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Free-versionen d\u00e6kker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro (119 DKK/\u00e5r) tilf\u00f8jer sammenligningstilstand mellem to URL'er, historik, kundeklar PDF-rapport og batch-tilstand."
+              "text": "Free-versionen d\u00e6kker alle tjek, terminalrapport med score og karakter samt JSON-output. Pro ($19/\u00e5r) tilf\u00f8jer sammenligningstilstand mellem to URL'er, batch-tilstand og kundeklar HTML-rapport. Historik er gratis for alle."
             }
           }
         ]

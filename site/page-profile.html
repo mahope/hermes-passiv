@@ -251,11 +251,24 @@
             <li>Offline license — no account, no phoning home</li>
             <li>History tracking (free for everyone)</li>
           </ul>
+          <a href="#" id="pp-buy-live" class="btn btn-primary" style="display:none;text-decoration:none;" target="_blank" rel="noopener">Buy Pro — $19/year →</a>
           <span id="pro-cta" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Available soon</span>
-          <!-- CHECKOUT_URL_PLACEHOLDER: replace the span above with
-               <a href="LEMON_SQUEEZY_CHECKOUT_URL" class="btn btn-primary">Buy Pro — $19/year</a>
-               when the Lemon Squeezy key arrives. Keys are issued with
-               page_profile.py --gen-key SEED (offline validation). -->
+          <script>
+          (function(){
+            try {
+              fetch('/api/checkout?product=pp').then(function(r){return r.json();}).then(function(d){
+                if (d && d.live && d.checkout_url) {
+                  var buy = document.getElementById('pp-buy-live');
+                  var cs = document.getElementById('pro-cta');
+                  if (buy) { buy.href = d.checkout_url; buy.style.display = 'inline-block'; }
+                  if (cs) cs.style.display = 'none';
+                }
+              }).catch(function(){});
+            } catch(e) {}
+          })();
+          </script>
+          <!-- When the Lemon Squeezy key arrives, set the KV key instead of editing HTML:
+               ./tools/set-checkout-url.sh pp "LEMON_SQUEEZY_CHECKOUT_URL" -->
         </div>
       </div>
     </section>

@@ -2034,8 +2034,9 @@ async function handleComplianceScan(request, url, env) {
  * Returns the Lemon Squeezy checkout URL and whether Pro is available.
  * Until the LS product is created, checkout_url is null and the
  * frontend renders a "coming soon" state.
- * KV key: cc-pro-checkout — set via tools/set-checkout-url.sh
- * after running lemon-setup.js.
+ * KV keys: cc-pro-checkout (Clean Copy Pro), pp-pro-checkout (Page Profile
+ * Pro) — set via tools/set-checkout-url.sh after running lemon-setup.js.
+ * ?product=pp returns the Page Profile Pro entry; default is clean-copy-pro.
  */
 async function handleCheckout(url, env) {
   const corsHeaders = {
@@ -2045,10 +2046,24 @@ async function handleCheckout(url, env) {
     'Content-Type': 'application/json',
   };
 
+  const which = url.searchParams.get('product') === 'pp' ? 'pp' : 'cc';
+  const kvKey = which === 'pp' ? 'pp-pro-checkout' : 'cc-pro-checkout';
+  const meta = which === 'pp'
+    ? {
+        product: 'page-profile-pro',
+        price: '$19/year',
+        note: 'Pro adds comparison mode, batch mode and client-ready HTML reports to the page-profile CLI.',
+      }
+    : {
+        product: 'clean-copy-pro',
+        price: '$19/year',
+        note: 'One license covers all 7 surfaces: Chrome, Firefox, Edge, CLI, VS Code, Obsidian, GitHub Action.',
+      };
+
   let checkoutUrl = null;
   let live = false;
   try {
-    checkoutUrl = (await env.VISITS.get('cc-pro-checkout')) || null;
+    checkoutUrl = (await env.VISITS.get(kvKey)) || null;
     live = !!checkoutUrl;
   } catch { /* KV not available */ }
 
@@ -2056,9 +2071,7 @@ async function handleCheckout(url, env) {
     ok: true,
     live,
     checkout_url: checkoutUrl,
-    product: 'clean-copy-pro',
-    price: '$19/year',
-    note: 'One license covers all 7 surfaces: Chrome, Firefox, Edge, CLI, VS Code, Obsidian, GitHub Action.',
+    ...meta,
   }), { status: 200, headers: corsHeaders });
 }
 
