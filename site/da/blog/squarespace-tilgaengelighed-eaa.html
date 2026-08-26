@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squarespace og tilgængelighed: bliv EAA-compliant (guide 2026)</title>
+<meta name="description" content="Gør din Squarespace-side compliant med European Accessibility Act og WCAG 2.1 AA: farvepar, alt-tekst, overskriftsstruktur, code injection og en verificerings-workflow — trin for trin på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Squarespace og tilgængelighed: bliv EAA-compliant">
+<meta property="og:description" content="Gør din Squarespace-side compliant med European Accessibility Act og WCAG 2.1 AA: farvepar, alt-tekst, overskriftsstruktur, code injection og en verificerings-workflow — trin for trin på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/squarespace-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/squarespace-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/squarespace-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Squarespace og tilgængelighed: bliv EAA-compliant", "description": "Gør din Squarespace-side compliant med European Accessibility Act og WCAG 2.1 AA: farvepar, alt-tekst, overskriftsstruktur, code injection og en verificerings-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/squarespace-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA min Squarespace-side?", "acceptedAnswer": {"@type": "Answer", "text": "Tilbyder den forbrugertjenester eller e-handel til EU, ja — også for små virksomheder, da online shops ikke har nogen generel mikrovirksomhedsbefrielse. Rent indholdsbaserede hobbiesider falder stort set udenfor, men WCAG tæller stadig for rækkevidde og kvalitet."}}, {"@type": "Question", "name": "Er Squarespace selv tilgængeligt?", "acceptedAnswer": {"@type": "Answer", "text": "Squarespace oplyser at platformen sigter mod WCAG 2.1 AA, og aktuelle skabeloner er fornemme udgangspunkter. Men ejeren ejer sin konfiguration og sit indhold — en compliant platform gør ikke hver side bygget på den compliant."}}, {"@type": "Question", "name": "Kan jeg redigere HTML i Squarespace for at rette fejl?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke den underliggende skabelonmarkering på standardabonnementer. Du arbejder via site styles, sektionsindstillinger, alt-tekstfelter, CSS-panelet og code injection-punkter — tilsammen dækker de næsten alt en audit finder."}}, {"@type": "Question", "name": "Virker de der accessibility-widget-scripts på Squarespace?", "acceptedAnswer": {"@type": "Answer", "text": "De kan injiceres, men de giver ikke conformance: overlays kan ikke rette kontrast i billeder, ødelagte embeds eller manglende alt-tekst, og EU-myndigheder har kritiseret at markedsføre dem som compliance."}}, {"@type": "Question", "name": "Hvor lang tid tager det typisk?", "acceptedAnswer": {"@type": "Answer", "text": "En velholdt skabelonside: 2-4 timer til indstillinger, alt-tekst-backfill og test. Sider på gamle legacy-skabeloner eller med tunge embed-stakke kræver mere — som regel udskiftning af de værste embeds først."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">SQUARESPACE &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>Squarespace og tilgængelighed:<br>bliv EAA-compliant</h1>
+    <p class="subtitle">Praktisk compliance-guide for Squarespace-ejere og bureauer: hvad du kan og ikke kan rette i Squarespace, og workflowet der bringer en skabelonbaseret side op på WCAG 2.1 AA.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Enhver Squarespace-side der sælger til eller informerer EU-forbrugere er omfattet af European Accessibility Act, hvor tjenesten er forbrugervendt — webshops allerførst. Det tekniske benchmark er EN 301 549 / WCAG 2.1 niveau AA. Squarespace lever rimeligt compliant skabeloner og infrastruktur, men sidens ejer ansvar for sit konfigurerede tema, sit indhold og sine tredjeparts-indlejringer. Den praktiske udfordring adskiller sig fra open source-CMS'er: du styrer ikke markeringen, så compliance-arbejdet består i at arbejde indstillingerne, indholdet og et kort liste over code injection-punkter.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>⚖️ Juridisk omfang</h3><p>E-handel og forbrugertjenester er nævnt direkte i EAA; salg til EU udløser reglerne uanset hvor ejeren er baseret.</p></div>
+      <div class="card"><h3>🧱 Skabelon-realiteten</h3><p>Du kan ikke redigere den underliggende HTML på almindelige abonnementer. De fleste mekaniske retter ligger i site styles, sektionsindstillinger og billedfelter.</p></div>
+      <div class="card"><h3>🛡️ Ejers ansvar</h3><p>Platformen giver dig værktøjerne; conformance opnås (eller tabes) af hvordan du konfigurerer og fylder dem.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Squarespace-sider typisk fejler</h2>
+    <div class="problem-cards"><div class="card"><h3>🎨 Farvevalg</h3><p>Lysgrå brødtekst, lavkontrast-knapper oven på bannerbilleder, transparente headers oven på hero-sektioner. Squarespace lad dig vælge vilkårlige farvepar — det advarer dig ikke om kontrast.</p></div><div class="card"><h3>🖼️ Manglende alt-tekst</h3><p>Den største enkeltkategori. Galleribilleder, baggrundsbilleder og inline-billeder skal alle have alt udfyldt pr. element; mange ejere rører aldrig feltet.</p></div><div class="card"><h3>📐 Overskriftsmisbrug</h3><p>I Fluid Engine vælger tekstblokke "Overskrift 2" pga. størrelsen snarere end struktur — resultatet er sprunget niveauer og sider uden sammenhængende outline.</p></div><div class="card"><h3>🔌 Indlejringer og kodeblokke</h3><p>Booking-widgets, formularer og video-embeds injicerer deres egen markering — unlabelled kontroller og keyboard-fælder kommer med ind.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Indstillinger du kan rette i dag — uden kode</h2>
+    <p><strong>Farvepar:</strong> mørk gør brødtekst- og knapfarver i site styles til hver kombination klarer 4,5:1 (3:1 for stor tekst). Tjek announcement bars, footers og formularetiketter separat — de bærer egne par.</p>
+    <p><strong>Alt-tekst overalt:</strong> udfyld alt pr. billede på sider, i gallerier og produktkort. Dekorative baggrunde håndterer temaet med tom alt; indholdsbilleder må beskrive sig selv.</p>
+    <p><strong>Overskriftsstruktur:</strong> én h1 pr. side (typisk sidetitlen). Om-mærk sektionstitler så outline går ned uden spring — brug stiloverrides for udseendet i stedet for at vælge "større" overskrifter.</p>
+    <p><strong>Linktekster:</strong> udskift gentagne "læs mere" med beskrivende tekst. Knapper der er billeder, skal have alt-tekst der navngiver handlingen.</p>
+    <p><strong>Bevægelse og fokus:</strong> slå autospillende bannere fra eller hold dem subtile; verificér at fokusindikatorer stadig er synlige efter eventuel custom CSS.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Code injection-punkter</h2>
+    <p>Når indstillingerne slipper op, giver Squarespace tre kontrollerede nødudgange:</p>
+    <p><strong>Kode-/embed-blokke:</strong> brug dem sparsomt, og kun med widgets du har tab-testet. Fælder en bookings- eller formular-widget tastaturet, så udskift den — ingen mængde styling retter det.</p>
+    <p><strong>Code injection (footer):</strong> små CSS-patches er legitime her — at genskabe synlige <code>:focus-visible</code>-outlines en skabelon fjernede, er en én-linjes ret med reel effekt.</p>
+    <p><strong>Custom CSS-panelet:</strong> ret kontrast ved at override specifikke klasser frem for at re-theme. Hold ændringerne dokumenteret; skabelonopdateringer kan flytte klassenavne.</p>
+    <p><strong>Undgå overlay-scripts:</strong> "accessibility widgets" gør ikke en Squarespace-side conformant og har mødt europæisk regulatorisk kritik. Ret årsagerne i stedet.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Verificering i fem skridt</h2>
+    <p>En realistisk verificeringsloop tager to til fire timer:</p>
+    <p><strong>Trin 1 — automatisk scanning</strong> af forsiden, én index-/kollektionsside, en detaljeside og kontaktsiden. Forvent 5-15 fund første gang, mest alt-tekst og kontrast.</p>
+    <p><strong>Trin 2 — ret og genscan</strong> via site styles og billedfelter til de mekaniske fund er væk.</p>
+    <p><strong>Trin 3 — keyboard-gennemgang</strong> af navigation → side → kurv/kontakt-afsendelse. Alt der kræver mus fejler WCAG 2.1.2; indlejrede widgets er de sædvanlige synder.</p>
+    <p><strong>Trin 4 — mobil-tjek:</strong> Squarespace renderer et andet navigationsmønster på mobil — test at burger-menuen åbner, lukker og kan nås med tastatur.</p>
+    <p><strong>Trin 5 — dokumentér:</strong> publicér en tilgængelighedserklæring med conformance-status og kendte begrænsninger (fx en specifik indlejring). Under EAA er det forventet, ikke valgfrit.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA min Squarespace-side?</h3><p>Tilbyder den forbrugertjenester eller e-handel til EU, ja — også for små virksomheder, da online shops ikke har nogen generel mikrovirksomhedsbefrielse. Rent indholdsbaserede hobbiesider falder stort set udenfor, men WCAG tæller stadig for rækkevidde og kvalitet.</p></div>
+      <div class="card"><h3>Er Squarespace selv tilgængeligt?</h3><p>Squarespace oplyser at platformen sigter mod WCAG 2.1 AA, og aktuelle skabeloner er fornemme udgangspunkter. Men ejeren ejer sin konfiguration og sit indhold — en compliant platform gør ikke hver side bygget på den compliant.</p></div>
+      <div class="card"><h3>Kan jeg redigere HTML i Squarespace for at rette fejl?</h3><p>Ikke den underliggende skabelonmarkering på standardabonnementer. Du arbejder via site styles, sektionsindstillinger, alt-tekstfelter, CSS-panelet og code injection-punkter — tilsammen dækker de næsten alt en audit finder.</p></div>
+      <div class="card"><h3>Virker de der accessibility-widget-scripts på Squarespace?</h3><p>De kan injiceres, men de giver ikke conformance: overlays kan ikke rette kontrast i billeder, ødelagte embeds eller manglende alt-tekst, og EU-myndigheder har kritiseret at markedsføre dem som compliance.</p></div>
+      <div class="card"><h3>Hvor lang tid tager det typisk?</h3><p>En velholdt skabelonside: 2-4 timer til indstillinger, alt-tekst-backfill og test. Sider på gamle legacy-skabeloner eller med tunge embed-stakke kræver mere — som regel udskiftning af de værste embeds først.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);">Overlays og EAA</a> &middot; <a href="/da/blog/skriv-tilgaengelighedserklaering" style="color:var(--color-accent);">Skriv en tilgængelighedserklæring</a> &middot; <a href="/da/blog/eaa-haandhaevelse-2026" style="color:var(--color-accent);">EAA-håndhævelse i 2026</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/squarespace-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

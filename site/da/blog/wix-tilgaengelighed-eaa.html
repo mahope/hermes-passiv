@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wix og tilgængelighed: bliv EAA-compliant (guide 2026)</title>
+<meta name="description" content="Gør din Wix-side compliant med European Accessibility Act og WCAG 2.1 AA: editor-retter, app-risici, mobil-layout-fælder og en gratis scannings-workflow — trin for trin på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Wix og tilgængelighed: bliv EAA-compliant">
+<meta property="og:description" content="Gør din Wix-side compliant med European Accessibility Act og WCAG 2.1 AA: editor-retter, app-risici, mobil-layout-fælder og en gratis scannings-workflow — trin for trin på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/wix-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/wix-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/wix-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Wix og tilgængelighed: bliv EAA-compliant", "description": "Gør din Wix-side compliant med European Accessibility Act og WCAG 2.1 AA: editor-retter, app-risici, mobil-layout-fælder og en gratis scannings-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/wix-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Er Wix tilgængeligt ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Moderne Wix-skabeloner klarer sig fornuftigt på automatiske tjek, og Wix leverer rigtige tilgængelighedsindstillinger. Men byggerens valg — tekst oven på fotos, manglende alt, falske overskrifter — skaber fejl på stort set hver rigtig side. Ud af boksen hjælper; det comply'er ikke for dig."}}, {"@type": "Question", "name": "Gælder EAA min kundes lille Wix-butik?", "acceptedAnswer": {"@type": "Answer", "text": "EAA dækker forbruger-e-handel og -tjenester med begrænsede undtagelser for mikrovirksomheder der yder tjenester (under 10 ansatte og 2 mio. euro omsætning). E-handel har som regel ingen størrelsesbefrielse — antag at en webshop er i omfang."}}, {"@type": "Question", "name": "Må jeg bruge et tilgængeligheds-overlay på Wix?", "acceptedAnswer": {"@type": "Answer", "text": "Overlays kan ikke skabe manglende semantik, rette ubrugelige apps eller reparere kontrast inde i dine egne billeder, og at markedsføre dem som automatisk compliance har mødt regulatorisk kritik i EU. Ret årsagerne i editoren i stedet."}}, {"@type": "Question", "name": "Hvordan tester jeg Wix' separate mobil-layout?", "acceptedAnswer": {"@type": "Answer", "text": "Publicér og åbn den live side på en telefon eller i browserens mobilemulator. Wix vedligeholder et distinkt mobil-view, så desktop-rettelser skal verificeres dér også — især tekststørrelse og knapafstande."}}, {"@type": "Question", "name": "Kan bureauer sælge Wix-tilgængelighedsaudits?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Millioner af EU-småvirksomheder ligger på Wix og står nu med EAA-spørgsmål de ikke kan svare på. En fastpris scan-ret-rapport-pakke er let at sælge og parres naturligt med den leverede tilgængelighedserklæring."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">WIX &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>Wix og tilgængelighed:<br>bliv EAA-compliant</h1>
+    <p class="subtitle">Praktisk compliance-guide for Wix-ejere og bureauer: hvad du kan rette i editoren, hvad platformen bestemmer for dig, og hvordan du får en Wix-side op på WCAG 2.1 AA.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Wix driver millioner af små virksomhedssider i EU — restauranter, klinikker, lokale butikker og selvstændige. Siden juni 2025 er mange af de virksomheder omfattet af European Accessibility Act som leverandører af forbrugertjenester og e-handel, og spørgsmålet fra kunden lyder: kan denne side bestå et WCAG 2.1 AA-tjek? Wix har investeret kraftigt i tilgængelighedsværktøjer de seneste år, men resultatet er kun så compliant som den person der bygger siden.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🧩 Platform vs. bygger</h3><p>Wix-skabeloner lever med fornuftig semantik, men hver trukket sektion, strip og tekstboks kan bryde dem. De fleste audits fejler på byggerens valg, ikke platformens grænser.</p></div>
+      <div class="card"><h3>⚙️ Rigtige indstillinger findes</h3><p>Wix eksponerer alt-tekst på billeder, overskrift-tags pr. tekstelement, fokus-tilstande på knapper og en tilgængelighedscheckliste i editoren — brug det hele.</p></div>
+      <div class="card"><h3>📜 Salgbart deliverable</h3><p>En fundrapport plus tilgængelighedserklæring er en fakturerbar linje for de små virksomheder, der skal comply.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Hvor Wix-sider typisk fejler</h2>
+    <p>Fejlbilledet på Wix-audits er bemærkelsesværdigt ensformigt:</p>
+    <p><strong>Tekst over foto-strips:</strong> hvid tekst oven på billeder fejler kontrasten et sted på næsten alle enheder. Læg et farveoverlay bag teksten eller flyt den ned på en solid baggrundsblok.</p>
+    <p><strong>Dekorative "overskrifter":</strong> tekstbokse gjort større og federe for at ligne overskrifter, men stadig med paragraph-tags. Sæt den rigtige overskriftstype i hvert tekstelements indstillinger.</p>
+    <p><strong>Manglende alt-tekst:</strong> gallerielementer, logoer uploadet som almindelige billeder, dekorative strips brugt som bannere. Hvert indholdsbillede skal have alt; rent dekorative skal have eksplicit tom alt.</p>
+    <p><strong>Kun-hover-menuer:</strong> fler-niveau-menuer der kun åbner ved hover strander tastaturbrugere. Slå klik-for-at-åbne til i menuindstillingerne.</p>
+    <p><strong>Knap-lignende tekst:</strong> tekst stylet som en knap men ikke bygget som én — ingen fokusring, ingen knaprolle. Brug rigtige knap-elementer til alle handlinger.</p>
+    <p><strong>Anker-kaos:</strong> lange one-page-sider bygget udelukkende af ankre giver linktekster som "klik her" ti gange i træk. Giv ankre beskrivende navne.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Editor-retter — uden kode</h2>
+    <p>Gå disse igennem inde i Wix-editoren — de rydder de fleste automatiske fund:</p>
+    <p><strong>Overskriftsstruktur:</strong> vælg hvert tekstelement → Indstillinger → sæt rigtige h1/h2/h3-tags. Én h1 pr. side; nest resten logisk.</p>
+    <p><strong>Alt-tekst:</strong> hvert billede får sit alt-felt udfyldt — beskrivende for indholdsbilleder, tomt for dekoration. Gallerier skal gennemgås element for element; kedeligt og ikke-forhandleligt.</p>
+    <p><strong>Kontrast:</strong> mørk gør kropstekstens gråtoner globalt under Sitedesign → Farver. Tjek hero-overlays og footer-links separat — dér fejer det oftest.</p>
+    <p><strong>Fokus-synlighed:</strong> behold standardens fokusring i knap- og linkdesign, eller definér en synlig erstatning. Fjern aldrig outlines uden alternativ.</p>
+    <p><strong>Sprog:</strong> sæt sidens sprog i Indstillinger så <code>html lang</code> bliver korrekt — skærmlæsere vælger udtale ud fra den.</p>
+    <p><strong>Formularer:</strong> label hvert felt tydeligt, slå fejlbeskeder til der beskriver hvad der skal rettes, og bekræft afsendelse både visuelt og i tekst.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Apps og platformgrænser</h2>
+    <p>Tredjeparts Wix-apps (booking-widgets, chat-popups, review-slidere) er den største compliance-risiko du ikke fuldt styrer: mange injicerer iframes med egen markering, små tap-mål og keyboard-fælder. Gennemgangsmetoden er at tabbe dig gennem hver apps widget på en live side — er appen utilgængelig, så udskift den eller giv samme funktion via et tilgængeligt alternativ (fx en simpel bookingsformular ved siden af en utilgængelig widget).</p>
+    <p>Kend også de ægte platformgrænser: enkelte legacy-funktioner og visse dynamiske sider giver mindre semantisk kontrol end moderne editor-sektioner. Dokumentér resterende huller ærligt i sitens tilgængelighedserklæring frem for at påstå en full conformance du ikke kan bevise.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Audit-workflow i fem skridt</h2>
+    <p><strong>Trin 1 — automatisk scanning</strong> af forsiden, én nøgleservice-/produktside og kontaktsiden. Forvent 10-25 fund på en typisk småvirksomhedsside.</p>
+    <p><strong>Trin 2 — ret i editoren, publicér, genscan</strong> til de automatiske fund er væk.</p>
+    <p><strong>Trin 3 — keyboard-gennemgang:</strong> tag musen fra bordet — menuer, gallerier, lightboxes, formularer og cookie-banneret skal alle kunne betjenes.</p>
+    <p><strong>Trin 4 — mobil-tjek:</strong> Wix renderer et separat mobil-layout; gen-tjek tap-mål og tekstskalering dér specifikt.</p>
+    <p><strong>Trin 5 — levér:</strong> fundrapport plus tilgængelighedserklæring med conformance-status og kendte begrænsninger (fx en booking-widget). Genscan efter større redigeringer.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Er Wix tilgængeligt ud af boksen?</h3><p>Moderne Wix-skabeloner klarer sig fornuftigt på automatiske tjek, og Wix leverer rigtige tilgængelighedsindstillinger. Men byggerens valg — tekst oven på fotos, manglende alt, falske overskrifter — skaber fejl på stort set hver rigtig side. Ud af boksen hjælper; det comply'er ikke for dig.</p></div>
+      <div class="card"><h3>Gælder EAA min kundes lille Wix-butik?</h3><p>EAA dækker forbruger-e-handel og -tjenester med begrænsede undtagelser for mikrovirksomheder der yder tjenester (under 10 ansatte og 2 mio. euro omsætning). E-handel har som regel ingen størrelsesbefrielse — antag at en webshop er i omfang.</p></div>
+      <div class="card"><h3>Må jeg bruge et tilgængeligheds-overlay på Wix?</h3><p>Overlays kan ikke skabe manglende semantik, rette ubrugelige apps eller reparere kontrast inde i dine egne billeder, og at markedsføre dem som automatisk compliance har mødt regulatorisk kritik i EU. Ret årsagerne i editoren i stedet.</p></div>
+      <div class="card"><h3>Hvordan tester jeg Wix' separate mobil-layout?</h3><p>Publicér og åbn den live side på en telefon eller i browserens mobilemulator. Wix vedligeholder et distinkt mobil-view, så desktop-rettelser skal verificeres dér også — især tekststørrelse og knapafstande.</p></div>
+      <div class="card"><h3>Kan bureauer sælge Wix-tilgængelighedsaudits?</h3><p>Ja. Millioner af EU-småvirksomheder ligger på Wix og står nu med EAA-spørgsmål de ikke kan svare på. En fastpris scan-ret-rapport-pakke er let at sælge og parres naturligt med den leverede tilgængelighedserklæring.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/tilgaengeligheds-overlays-eaa" style="color:var(--color-accent);">Overlays og EAA</a> &middot; <a href="/da/blog/pris-tilgaengelighedsgennemgang" style="color:var(--color-accent);">Pris på tilgængelighedsgennemgang</a> &middot; <a href="/da/blog/gratis-tilgaengelighedsvaerktoejer" style="color:var(--color-accent);">Gratis tilgængelighedsværktøjer</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/wix-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>

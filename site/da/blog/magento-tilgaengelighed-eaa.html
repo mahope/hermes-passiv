@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magento og tilgængelighed: bliv EAA-compliant (guide 2026)</title>
+<meta name="description" content="Gør din Magento- eller Adobe Commerce-butik compliant med European Accessibility Act og WCAG 2.1 AA: temaer, extensions, checkout og remediation-workflowet — trin for trin på dansk.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Hermes Passiv">
+<meta property="og:title" content="Magento og tilgængelighed: bliv EAA-compliant">
+<meta property="og:description" content="Gør din Magento- eller Adobe Commerce-butik compliant med European Accessibility Act og WCAG 2.1 AA: temaer, extensions, checkout og remediation-workflowet — trin for trin på dansk.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/magento-tilgaengelighed-eaa">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/magento-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/magento-tilgaengelighed-eaa">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article", "headline": "Magento og tilgængelighed: bliv EAA-compliant", "description": "Gør din Magento- eller Adobe Commerce-butik compliant med European Accessibility Act og WCAG 2.1 AA: temaer, extensions, checkout og remediation-workflowet — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/magento-tilgaengelighed-eaa", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+</script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder EAA små Magento-butikker?", "acceptedAnswer": {"@type": "Answer", "text": "Ja for e-handel: i modsætning til tjenesteydere har online shops ingen mikrovirksomhedsbefrielse under EAA. En lille Magento-butik der sælger til EU-forbrugere er i omfang uanset antal ansatte."}}, {"@type": "Question", "name": "Er Adobe Commerce mere tilgængeligt end open source-Magento?", "acceptedAnswer": {"@type": "Answer", "text": "Adobe har forbedret kerne-tilgængeligheden, men næsten enhver butik lægger et custom tema og extensions ovenpå, og det afgør den reelle conformance. Platformudgaven betyder langt mindre end tema- og extensionkvalitet."}}, {"@type": "Question", "name": "Vi bruger en stor kommerciel checkout-extension — er vi så dækket?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke automatisk. Store checkout-moduler har været leveret med alvorlige tastatur- og skærmlæserproblemer. Auditér jeres præcise installerede version på staging; stol ikke på markedsføring."}}, {"@type": "Question", "name": "Hvor lang tid tager en Magento-tilgængelighedsoprydning?", "acceptedAnswer": {"@type": "Answer", "text": "En typisk mellemstor butik behøver 2-6 ugers fokuseret tema- og skabelonarbejde afhængig af tilpasningsdybde. Automatisk scanning skærer det ned betydeligt ved at give udviklerne en præcis arbejdsliste."}}, {"@type": "Question", "name": "Skal vi have VPAT/EN 301 549-dokumentation?", "acceptedAnswer": {"@type": "Answer", "text": "Sælger I til offentlige kunder eller store B2B-kunder, ja — de beder om en EN 301 549-conformitetsrapport. En audit plus jeres tilgængelighedserklæring føder direkte ind i det dokument."}}]}
+</script>
+<script defer src="/track.js"></script>
+<style>
+  .compare { width:100%; border-collapse:collapse; font-size:0.92rem; margin:1.5rem 0; }
+  .compare th, .compare td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--color-border); vertical-align:top; }
+  .compare th { border-bottom:2px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">MAGENTO &middot; TILGÆNGELIGHED &middot; EAA</div>
+    <h1>Magento og tilgængelighed:<br>bliv EAA-compliant</h1>
+    <p class="subtitle">Praktisk compliance-guide for Magento-butikker og bureauer: hvor butikker fejler WCAG 2.1 AA — temaer, extensions, checkout — og remediation-workflowet der gør EU-butikker EAA-klar.</p>
+    <div class="hero-cta">
+      <a href="#indhold" class="btn-primary">Læs guiden</a>
+      <a href="/scan-da" class="btn-secondary">Scan din side gratis &rarr;</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 7 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="indhold">
+  <div class="container">
+    <h2>Hvorfor dette gælder dig</h2>
+    <p>Magento (nu Adobe Commerce) driver en stor del af Europas mellemstore og enterprise-webshops — netop den e-handelskategori European Accessibility Act regulerer uden mikrovirksomhedsbefrielse. Siden juni 2025 er en utilgængelig Magento-butik en juridisk eksponering i ethvert EU-marked, og B2B-indkøbere kaskader i stigende grad EN 301 549-krav ned i leverandørkontrakter. Skalaen adskiller sig fra WordPress og Wix: Magento-butikker har mere custom theming, flere extensions og mere komplekse transaktionsflows — hvilket betyder mere fejlflade, men også større budget til at rette det ordentligt.</p>
+    <div class="problem-cards">
+      <div class="card"><h3>🛒 Ingen størrelsesbefrielse</h3><p>I modsætning til tjenesteydere har e-handel ingen mikrovirksomhedsbefrielse under EAA. Selv en to-mands Magento-butik skal comply.</p></div>
+      <div class="card"><h3>🧱 Tema-arvsrisiko</h3><p>De fleste butikker kører tungt tilpassede efterkommere af Luma — tilgængelighedsfejl bagt ind i forældretemaet replikerer på hver enkel side.</p></div>
+      <div class="card"><h3>🔌 Extension-vildvest</h3><p>Checkout-opgraderinger, søgning, reviews og wishlists kommer ofte fra tredjepartsleverandører med ukendt tilgængelighedskvalitet. Hver enkelt skal auditeres.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Typiske Magento-fejl</h2>
+    <div class="problem-cards"><div class="card"><h3>🧭 Lagernavigation</h3><p>Filter-facets renderet som div-baserede toggles uden aria-expanded eller tastaturstøtte. Skærmlæserbrugere kan slet ikke indsnævre et produktrude.</p></div><div class="card"><h3>🔢 Antals- og variantinput</h3><p>Custom steppers der erstatter native number-inputs, swatches uden labels eller annoncering af valgt tilstand — de klassiske kurv-ødelæggende fejl.</p></div><div class="card"><h3>💳 One-page checkout</h3><p>Ajax-swappede checkout-sektioner hverken flytter fokus eller annoncerer fejl. Betalingsfelter uden programmatisk koblede labels.</p></div><div class="card"><h3>🖼️ Produktmedier</h3><p>Zoom-gallerier uden tastaturbetjening eller alt-tekst; farvevarianter formidlet kun visuelt via swatches.</p></div><div class="card"><h3>🔔 Toasts og mini-cart</h3><p>"Lagt i kurv"-bekræftelser vist kun visuelt — ingen ARIA live region, så ikke-synende shoppere lægger varer i igen og igen.</p></div><div class="card"><h3>🔍 Søgeautofuldførelse</h3><p>Type-ahead-forslag i utilgængelige popups der ignorerer piletaster og Escape.</p></div></div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Tema- og skabelonretter</h2>
+    <p>Remediation sker mest i dit custom tema:</p>
+    <p><strong>Start med semantikken:</strong> genskab rigtige landmarks (header, nav, main, footer), én h1 pr. side, og produktopslag som rigtige overskrifter i lister og grids.</p>
+    <p><strong>Native inputs først:</strong> udskift custom antals-steppers og selects med native elementer stylet til at matche — de arver tastatur- og skærmlæseradfærd gratis.</p>
+    <p><strong>ARIA-tilstande:</strong> facetnavigation behøver aria-expanded på toggles, aria-pressed på filter-chips, og resultatantal annonceret via aria-live.</p>
+    <p><strong>Fokusstyring:</strong> hver Ajax-section-swap (kurv-opdateringer, checkout-trin) flytter fokus til sit nye indhold; fejlopsummeringer modtager fokus og linker til de enkelte feltfejl.</p>
+    <p><strong>Formlabels:</strong> auditér hver skabelon der renderer formfelter for eksplicitte label-koblinger — Magentos knockout-skabeloner udelader dem ofte.</p>
+    <p><strong>Kontrast-tokens:</strong> ret grå-på-grå pris/metatekst ét sted i temavariablerne, og verificér derefter på sale badges og knapper.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Extensions og opgraderinger</h2>
+    <p>Behandl hver tredjeparts-extension som en tilgængeligheds-ukendt indtil det modsatte er bevist. Metoden: på staging, gå extensionens komplette flow igennem kun med tastatur, derefter med en skærmlæser — installér, konfigurér, brug, fortryd. Leverandører varierer vildt; nogle store checkout- og søgemoduler har kendte offentlige tilgængelhedsproblemer.</p>
+    <p>Når en extension fejler og leverandøren ikke vil rette, så beslut bevidst: udskift den, wrap den med et korrigerende lag, eller dokumentér den som begrænsning i tilgængelighedserklæringen med en workaround-vej.</p>
+    <p>Bemærk desuden at opgraderinger mellem Magento-versioner lydløst genintroducerer gamle fejl dér hvor du patchede vendor-filer — kør din scanning igen efter hver opgradering som standardpraksis.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Audit-workflow i fem skridt</h2>
+    <p><strong>Trin 1 — automatisk crawl</strong> af home-, kategori-, produkt-, cart-, checkout- og konto-skabeloner — forvent 20-50 distinkte fund på en typisk butik.</p>
+    <p><strong>Trin 2 — transaktionsforløb:</strong> gennemfør søgning → filtrering → produkt → kurv → checkout ende-til-ende med tastatur, derefter med skærmlæser. Det er her EAA-risikoen sidder.</p>
+    <p><strong>Trin 3 — extension-pass:</strong> auditér hvert installeret moduls widgets individuelt.</p>
+    <p><strong>Trin 4 — ret i temaet</strong> (ikke vendor-patcher hvor det kan undgås), deploy til staging, genscan til ren.</p>
+    <p><strong>Trin 5 — levér:</strong> fundrapport, verificeret butik og en tilgængelighedserklæring med conformance-status og dokumenterede begrænsninger. Re-audit efter hver versionsopgradering og større extension-ændring.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Gælder EAA små Magento-butikker?</h3><p>Ja for e-handel: i modsætning til tjenesteydere har online shops ingen mikrovirksomhedsbefrielse under EAA. En lille Magento-butik der sælger til EU-forbrugere er i omfang uanset antal ansatte.</p></div>
+      <div class="card"><h3>Er Adobe Commerce mere tilgængeligt end open source-Magento?</h3><p>Adobe har forbedret kerne-tilgængeligheden, men næsten enhver butik lægger et custom tema og extensions ovenpå, og det afgør den reelle conformance. Platformudgaven betyder langt mindre end tema- og extensionkvalitet.</p></div>
+      <div class="card"><h3>Vi bruger en stor kommerciel checkout-extension — er vi så dækket?</h3><p>Ikke automatisk. Store checkout-moduler har været leveret med alvorlige tastatur- og skærmlæserproblemer. Auditér jeres præcise installerede version på staging; stol ikke på markedsføring.</p></div>
+      <div class="card"><h3>Hvor lang tid tager en Magento-tilgængelighedsoprydning?</h3><p>En typisk mellemstor butik behøver 2-6 ugers fokuseret tema- og skabelonarbejde afhængig af tilpasningsdybde. Automatisk scanning skærer det ned betydeligt ved at give udviklerne en præcis arbejdsliste.</p></div>
+      <div class="card"><h3>Skal vi have VPAT/EN 301 549-dokumentation?</h3><p>Sælger I til offentlige kunder eller store B2B-kunder, ja — de beder om en EN 301 549-conformitetsrapport. En audit plus jeres tilgængelighedserklæring føder direkte ind i det dokument.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/scan-da" class="btn-primary">Start med en gratis scanning &rarr;</a>
+    </div>
+    <div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/eaa-frister-2026" style="color:var(--color-accent);">EAA-frister i 2026</a> &middot; <a href="/da/blog/eaa-tjekliste-2026" style="color:var(--color-accent);">EAA-tjekliste</a> &middot; <a href="/da/blog/pris-tilgaengelighedsgennemgang" style="color:var(--color-accent);">Pris på tilgængelighedsgennemgang</a></p></div>
+  </div>
+</section>
+
+<footer style="padding:32px 24px;">
+  <p><a href="/">Forside</a> &middot; <a href="/scan-da">EAA-scanner</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/blog">Blog (EN)</a> &middot; <a href="https://hermes-passiv.pages.dev/blog/magento-eaa-accessibility">Engelsk version</a></p>
+  <p>Mahope © 2026 · Praktisk EU-compliance for små webbureauer</p>
+</footer>
+<script>
+(function(){{try{{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{path:p}}),keepalive:true}}).catch(function(){{}});}}catch(e){{}}}})();
+</script>
+</body>
+</html>
