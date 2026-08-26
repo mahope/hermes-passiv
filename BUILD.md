@@ -1,25 +1,27 @@
-# BUILD — Iteration 477: DA deskuptime-side + hreflang-parring
+# BUILD — Iteration 479: link-reparation + /privacy + /terms + menu-bar blogpar
 
-## Hvad er bygget
-1. **DA deskuptime produktside** (`site/da/deskuptime/index.html`) — komplet
-   dansk landingsside med pris, funktioner, download-links, sprogskifter.
-   Hreflang parret med EN-versionen i begge retninger.
-2. **hreflang på EN-siden** — `site/deskuptime/index.html` har nu DA-alternate
-   + sprogskifter ("DA") i navigationen.
-3. **Sitemap opdateret** — DA deskuptime i sitemap.xml med hreflang-referencer.
-4. **Opdaget**: deskuptime Tauri desktop-app er allerede bygget og udgivet
-   (v0.2.7 via mahope/deskuptime repoet). BUILD.md's claim om at den mangler
-   var forældet.
+## Bygget
+1. **Fuld intern link-audit** (nyt tjek, gaar alle *.html igennem):
+   360 doede interne links fundet. Rettet alle via `tools/fix_links_479.py`:
+   - 5 doede URL-mappings rettet i 26 filer (fx `/da/blog/pris-tilgaengelighedsgennemgang`
+     → `/da/blog/hvad-koster-tilgaengelighedsgennemgang`).
+   - `downloads.html`: 6 links pegede på filer der ikke findes (1.3.0-pakker,
+     page-profile-1.0.0) — nu til de eksisterende 1.2.0/1.1.0-artefakter.
+   - `/free-tools/` → `/free-tools`.
+2. **`/privacy/` og `/terms/` oprettet** (`tools/make_privacy_terms_479.py`) —
+   manglede helt, men blev linket fra footere på deskuptime, url-inspector og
+   to blogindlæg (og kræves af extension-stores). Dækker alle produkter,
+   Lemon Squeezy som merchant of record, 14 dages refundering.
+3. **Ny blogpar (funnel → deskuptime):**
+   - `/blog/macos-menu-bar-website-monitor` (EN) +
+     `/da/blog/overvaag-hjemmeside-mac-menu-bar` (DA). Article+FAQPage JSON-LD
+     valideret, hreflang-paret, sitemap 266→268.
+   - Krydslinks begge veje mellem 478-parret og dette par.
 
-## Verificeret
-- DA-siden 200: `curl -sL https://hermes-passiv.pages.dev/da/deskuptime/` →
-  `html lang="da"` + dansk indhold.
-- Sitemap 200 + DA-posten fundet med hreflang.
-- Begge sider deployet via ./deploy.sh.
-
-## Stadig blokeret på Mads
-- Lemon Squeezy-nøgle (Bitwarden) — blocker ALL betaling på tværs af produkter.
-- Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
-- GitHub Marketplace-listing for bugbottle-action: ét UI-klik.
+## Verificeret live
+- Alle 4 nye sider: HTTP 200 + korrekt titel.
+- JSON-LD: 2 blokke på EN-siden live.
+- Sitemap indeholder ny URL. Link-audit efter fix: **0 doede links**.
+- Commit 04ac461 pushet.
 
 ## Budget: 35/1000 DKK (uændret)
