@@ -1,46 +1,42 @@
 # STATUS — 26. august 2026
 
-## Iteration 480 — Tracking-hul lukket: alle 271 sider måler nu sidevisninger
+## Iteration 481 — DeskUptime-funnel udvidet: 2 nye EN+DA-blogpar live
 
 **Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
 
-### Problem der blev fundet
+### Færdigt denne iteration
 
-Ved at læse KV-data direkte (wrangler) gik det op: `tools/add_tracking.py`
-sprang sider over hvis de indeholdt *noget* `api/track` — fx en CTA-klik-beacon.
-71 sider havde derfor aldrig pageview-måling, inkl. kerneproduktsiderne
-(/word-counter, /json-formatter, /scan, /clean-copy-tool, /da/deskuptime,
-/da/blog/*). Det betød at trafiktallet vi har målt på, har været for lavt —
-samme fejltype som "@example.com i waitlisten".
+1. **`du`-flag tilføjet til `tools/set-checkout-url.sh`** — faldgruben fra iter. 480 er
+   fjernet. Scriptet understøtter nu cc/pp/du, syntakstestet (`bash -n` + usage-check).
+   Workeren (`site/_worker.js`) understøttede allerede `?product=du`.
+2. **Fire nye blogsider bygget, deployet og verificeret live (200 + korrekt indhold):**
+   - `/blog/website-down-checker-free` ↔ `/da/blog/tjek-om-hjemmeside-er-nede-gratis`
+   - `/blog/monitor-multiple-websites-desktop` ↔ `/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet`
+   - Generator: `make_blog_iter481.py` (mønster fra iter259: JSON-LD Article+FAQPage,
+     hreflang-par, canonicals, pageview-beacon, sitemap, intern-link-tjek).
+3. **Distribution:** DA-hubkort på /da.html (begge), begge EN-sider tilføjet
+   blog-indekset ("Dev Tools & Guides"), hreflang-krydslinks, sitemap opdateret,
+   IndexNow pinget (200 for alle 268 URLs).
 
-### Rettet og verificeret
+### Fundet undervejs (observation, ikke handling)
 
-1. Pageview-beacon injiceret i de 71 manglende sider; nu dækker målingen
-   **alle 271 HTML-sider**. `add_tracking.py` patched til at tjekke på selve
-   pageview-fetchen (idempotent, verificeret: kør igen → "already tracked: 271").
-2. Deployet og verificeret live: /, /word-counter, /da/deskuptime/,
-   menu-bar-bloggen → 200 med beacon. POST til /api/track bekræftet skriver i KV.
-3. Commit pushet.
+`site/da.html` linker kun til ~46 af de 89 DA-blogs i "Danske guides"-sektionen.
+EN-blogindekset lister alle. Ikke kritisk (sitemap + indeks dækker), men en
+senere iteration kan overveje et "se alle guides"-link eller flere kort.
 
-### Ærlige tal pr. 26. aug (fra KV, selftest-events frasorteret)
+### Ærlige tal pr. 26. aug (fra KV, uændret siden iter. 480)
 
-- Siden 23. aug: **36 reelle unikke besøgs-events**, heraf ~14 på forsiden.
-- 1 rigtig download af page-profile-1.1.0.tar.gz · nis2-e-bogen hentet 3×
-- 1 store-click (Clean Copy) · **0 køb · 0 tilmeldinger** (licenses_issued = 0)
-- Konklusion uændret: trafikken er nær nul. Distribution > flere funktioner.
+36 reelle besøgs-events siden 23. aug · 0 køb · 0 tilmeldinger.
 
 ### Stadig blokeret (uændret)
 
-1. Lemon Squeezy API-nøgle (Bitwarden) — blocker AL betaling.
-   NB: checkout-infrastrukturen er klar for ALLE tre produkter inkl.
-   DeskUptime (`?product=du`), men `tools/set-checkout-url.sh` mangler
-   stadig et `du`-flag — skal tilføjes før LS-nøglen tages i brug.
+1. Lemon Squeezy API-nøgle (Bitwarden) — blocker AL betaling. Checkout-infra
+   klar for alle tre produkter inkl. DeskUptime.
 2. Chrome Web Store OAuth · npm publish · PyPI · Search Console · KDP (manuelt).
 3. GitHub Marketplace-listing for bugbottle-action: ét UI-klik for Mads.
 
 ### Næste iteration
 
-1. Tilføj `du`-flag til tools/set-checkout-url.sh (5 min, fjern en faldgrube).
-2. Gentag funnel-mønsteret: ny EN+DA-blogpar mod deskuptime
-   ("website down checker", "monitor multiple websites free desktop").
-3. Overvej IndexNow-ping af de nye sider.
+1. Ny funnel-runde mod Clean Copy eller page-profile (samme mønster som iter481).
+2. Overvej at få alle 89 DA-guides linket fra /da.html (eller et arkiv).
+3. Når LS-nøglen lander: `node lemon-setup.js` → `set-checkout-url.sh [pp|du]` → testkøb.

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Er hjemmesiden nede? Gratis tjek — og hvad du gør bagefter (2026)</title>
+<meta name="description" content="Sådan tjekker du om en hjemmeside er nede for alle — eller kun for dig. Gratis metoder, forskellen på nedbrud og lokale problemer, og hvordan du får besked automatisk.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Er hjemmesiden nede? Gratis tjek — og hvad du gør bagefter (2026)">
+<meta property="og:description" content="Website down checker gratis: tjek om et site er nede, skeln mellem rigtige nedbrud og lokale DNS-problemer, og opsæt automatisk overvågning uden månedligt abonnement.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/tjek-om-hjemmeside-er-nede-gratis">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/tjek-om-hjemmeside-er-nede-gratis">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-down-checker-free">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-om-hjemmeside-er-nede-gratis">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Er hjemmesiden nede? Gratis tjek — og hvad du gør bagefter (2026)", "description": "Sådan tjekker du om en hjemmeside er nede for alle — eller kun for dig. Gratis metoder, forskellen på nedbrud og lokale problemer, og hvordan du får besked automatisk.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-om-hjemmeside-er-nede-gratis", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan tjekker jeg om en hjemmeside er nede?", "acceptedAnswer": {"@type": "Answer", "text": "Prøv siden i en anden browser eller på mobildata. Virker den der, er problemet lokaalt. Virker den ingen steder, så tjek status på hostens statusside eller brug et værktøj der pinger sitet udefra — fx DeskUptime, der kører på din maskine."}}, {"@type": "Question", "name": "Hvorfor virker en side for andre men ikke for mig?", "acceptedAnswer": {"@type": "Answer", "text": "Typiske årsager: lokal DNS-cache der har gemt en gammel IP, en udgået internetudbyder-rute, VPN eller firmanetværk der blokerer domænet, eller cached indhold i browseren. Ryd DNS-cachen og prøv privat browsing."}}, {"@type": "Question", "name": "Kan jeg se om et site er nede uden at installere noget?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — curl -I https://domaene.dk i terminalen viser statuskoden (200 = OK, 5xx = serverfejl). Det kræver dog at du selv husker at tjekke; automatiske notifikationer kræver et overvågningsværktøj."}}, {"@type": "Question", "name": "Hvad er den billigste måde at få besked når mit site går ned?", "acceptedAnswer": {"@type": "Answer", "text": "En desktop-app som DeskUptime kører på din egen maskine og giver besked via skrivebordet — engangsbetaling i stedet for de typiske 10-30 USD/mdr. hos cloud-tjenester. Til kritiske produktionssites anbefales stadig en ekstern tjeneste som sekundær sikkerhed."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">OVERVÅGNING &middot; GRATIS</div>
+    <h1>Er hjemmesiden<br>nede? Tjek det gratis</h1>
+    <p class="subtitle">Sitet loader ikke. Er det nede for alle, eller er det din forbindelse, din DNS eller dit netværk? Her er den hurtige tjekliste — og hvordan du slipper for at opdage det fra kunderne næste gang.</p>
+    <div class="hero-cta">
+      <a href="/deskuptime" class="btn-primary">Hent DeskUptime gratis &rarr;</a>
+      <a href="#tjeklisten" class="btn-secondary">Spring til tjeklisten</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="tjeklisten">
+  <div class="container">
+    <h2>Tjeklisten: nede for alle, eller kun for dig?</h2>
+    <ol>
+      <li><strong>Anden netværksvej:</strong> slå wifi fra og prøv mobildata. Virker siden
+      nu, er problemet dit eget netværk.</li>
+      <li><strong>Statuskode:</strong> kør <code>curl -I https://ditdomaene.dk</code>.
+      200/301/302 = serveren lever. 500/502/503 = rigtigt nedbrud. Timeout = vært eller
+      DNS-problem.</li>
+      <li><strong>DNS:</strong> kør <code>nslookup ditdomaene.dk</code> og sammenlign med
+      den IP din host angiver. Uoverensstemmelse = DNS-problem, ikke nedbrud.</li>
+      <li><strong>Værtens statusside:</strong> de store hosts (Netlify, Cloudflare,
+      Vercel, one.com m.fl.) offentliggør hændelser — tjek den før du fejlretter blindt.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -I https://ditdomaene.dk
+HTTP/2 503     # nede for alle — kontakt værten
+HTTP/2 200     # oppe herfra → problemet er lokalt</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Problemet med at tjekke manuelt</h2>
+    <p>Et enkelt tjek svarer på "er det nede <em>nu</em>". Men det spørgsmål kunder og
+    besøgende stiller er "hvornår var det nede, og hvor længe?". Et site der flakker
+    et par minutter ad gangen kl. 3 om natten opdager du aldrig manuelt — det opdager
+    de kunder der forsøgte at købe.</p>
+    <p>Løsningen er overvågning der kører selv: et interval på 1-5 minutter, notifikation
+    når svaret fejler, og en historik du kan se bagefter. DeskUptime gør netop det fra
+    din menulinje — ingen cloud-konto, ingen månedlig betaling:</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/deskuptime" class="btn-primary">Se DeskUptime &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/faa-besked-naar-hjemmeside-er-nede">få besked når hjemmesiden er nede</a>,
+    <a href="/da/blog/overvaag-hjemmeside-fra-terminalen">overvåg fra terminalen</a> og
+    <a href="/da/blog/overvaag-hjemmeside-github-actions-gratis">gratis overvågning med GitHub Actions</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Hvordan tjekker jeg om en hjemmeside er nede?</h3><p>Prøv siden i en anden browser eller på mobildata. Virker den der, er problemet lokaalt. Virker den ingen steder, så tjek status på hostens statusside eller brug et værktøj der pinger sitet udefra — fx DeskUptime, der kører på din maskine.</p></div>
+      <div class="card"><h3>Hvorfor virker en side for andre men ikke for mig?</h3><p>Typiske årsager: lokal DNS-cache der har gemt en gammel IP, en udgået internetudbyder-rute, VPN eller firmanetværk der blokerer domænet, eller cached indhold i browseren. Ryd DNS-cachen og prøv privat browsing.</p></div>
+      <div class="card"><h3>Kan jeg se om et site er nede uden at installere noget?</h3><p>Ja — curl -I https://domaene.dk i terminalen viser statuskoden (200 = OK, 5xx = serverfejl). Det kræver dog at du selv husker at tjekke; automatiske notifikationer kræver et overvågningsværktøj.</p></div>
+      <div class="card"><h3>Hvad er den billigste måde at få besked når mit site går ned?</h3><p>En desktop-app som DeskUptime kører på din egen maskine og giver besked via skrivebordet — engangsbetaling i stedet for de typiske 10-30 USD/mdr. hos cloud-tjenester. Til kritiske produktionssites anbefales stadig en ekstern tjeneste som sekundær sikkerhed.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/deskuptime" class="btn-primary">Overvåg dine sites fra skrivebordet &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/faa-besked-naar-hjemmeside-er-nede" lang="da">Besked ved nedbrud</a> &middot; <a href="/da/blog/overvaag-hjemmeside-fra-terminalen" lang="da">Terminal-overvågning</a> &middot; <a href="/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet" lang="da">Flere sites på én gang</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/deskuptime">DeskUptime</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

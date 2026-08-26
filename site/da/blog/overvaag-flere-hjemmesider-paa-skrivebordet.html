@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overvåg flere hjemmesider fra skrivebordet — uden cloud-abonnement</title>
+<meta name="description" content="Sådan holder du øje med 5, 20 eller 100 websites fra din egen maskine: intervaller, notifikationer, statushistorik — og hvad desktop-overvågning kan som cloud-tjenester ikke.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Overvåg flere hjemmesider fra skrivebordet — uden cloud-abonnement">
+<meta property="og:description" content="Monitor multiple websites from your desktop: intervals, notifications and status history without a monthly cloud subscription. DeskUptime-guide.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/monitor-multiple-websites-desktop">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Overvåg flere hjemmesider fra skrivebordet — uden cloud-abonnement", "description": "Sådan holder du øje med 5, 20 eller 100 websites fra din egen maskine: intervaller, notifikationer, statushistorik — og hvad desktop-overvågning kan som cloud-tjenester ikke.", "url": "https://hermes-passiv.pages.dev/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Kan min computer overvåge websites mens jeg sover?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, hvis den ikke går i fuld dvale. På macOS holdes netværket aktivt i standby; på Windows skal du deaktivere fuld dvale eller bruge 'væk-timer'. Til mission-kritisk overvågning døgnet rundt er en cloud-tjeneste stadig mere pålidelig end en bærbar der lukker ned."}}, {"@type": "Question", "name": "Hvor ofte bør et website tjekkes?", "acceptedAnswer": {"@type": "Answer", "text": "Hvert 1.-5. minut er normalt for produktions-sites. Hyppigere giver falske alarmer ved kortvarige netværksblips; sjældnere (15+ min) kan overse korte nedbrud. Kombinér gerne to tjek i træk før alarm udløses."}}, {"@type": "Question", "name": "Hvad er fordelene frem for en cloud-overvågningstjeneste?", "acceptedAnswer": {"@type": "Answer", "text": "Ingen månedlig betaling, ingen konto, og dataene forlader aldrig din maskine. Ulempen: overvågningen stopper når computeren er slukket. Mange bruger derfor desktop-værktøjet til arbejdsdagen og en cloud-tjeneste som nat-dækning."}}, {"@type": "Question", "name": "Kan jeg overvåge specifikke sider og ikke bare forsidelen?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Giv værktøjet en komplet URL — fx /checkout eller /login. En forside kan svare 200 mens betalingsflowet er nede; de sider der tjener penge, er dem der skal overvåges."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">OVERVÅGNING &middot; DESKTOP</div>
+    <h1>Overvåg flere<br>sites fra skrivebordet</h1>
+    <p class="subtitle">Én hjemmeside kan du huske at tjekke. Fem klienters sites, dit eget og staging-miljøet — det kræver et system. Cloud-overvågning koster typisk 10-30 USD/mdr.; din egen maskine kan gøre jobbet gratis.</p>
+    <div class="hero-cta">
+      <a href="/deskuptime" class="btn-primary">Hent DeskUptime gratis &rarr;</a>
+      <a href="#saadan" class="btn-secondary">Sådan sætter du det op</a>
+    </div>
+    <p class="hero-note">Opdateret august 2026 &middot; 6 minutters læsning</p>
+  </div>
+</header>
+
+<section class="problem" id="saadan">
+  <div class="container">
+    <h2>Sådan sætter du det op på fem minutter</h2>
+    <ol>
+      <li><strong>Hent DeskUptime</strong> — en lille desktop-app til macOS. Ingen konto,
+      ingen konfigurationsfil.</li>
+      <li><strong>Tilføj dine URLs:</strong> forside, checkout, API-endpoint, staging.
+      Én linje pr. site.</li>
+      <li><strong>Vælg interval:</strong> 60 sekunder til produktion, 300 til staging.
+      To fejl i træk = alarm.</li>
+      <li><strong>Slå notifikationer til:</strong> du ser besked direkte på skrivebordet
+      når et site svarer forkert.</li>
+      <li><strong>Kig i historikken:</strong> hver statusændring logges, så du kan se
+      mønstre — fx nedbrud hver nat kl. 03 under backup-vinduet.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>Hvornår er desktop-overvågning det rigtige valg?</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Situation</th><th>Anbefaling</th></tr>
+      <tr><td>Egen maskine står tændt i arbejdstiden</td><td>Desktop-app rækker helt</td></tr>
+      <tr><td>Frie konsulenter med 5-20 kundesites</td><td>Desktop-app + historik pr. site</td></tr>
+      <tr><td>Mission-kritisk e-handel, døgndrift</td><td>Cloud som primær, desktop som sekundær</td></tr>
+      <tr><td>Budget nær nul</td><td>Desktop-app: engangsbeløb, intet abonnement</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/deskuptime" class="btn-primary">Hent DeskUptime &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Læs videre</h2>
+    <p>Læs også:
+    <a href="/da/blog/overvaag-hjemmeside-mac-menu-bar">overvågning i Mac-menulinjen</a>,
+    <a href="/da/blog/overvaag-hjemmeside-fra-terminalen">terminal-baseret overvågning</a> og
+    <a href="/da/blog/tjek-om-hjemmeside-er-nede-gratis">gratis tjek af om et site er nede</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Ofte stillede spørgsmål</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Kan min computer overvåge websites mens jeg sover?</h3><p>Ja, hvis den ikke går i fuld dvale. På macOS holdes netværket aktivt i standby; på Windows skal du deaktivere fuld dvale eller bruge 'væk-timer'. Til mission-kritisk overvågning døgnet rundt er en cloud-tjeneste stadig mere pålidelig end en bærbar der lukker ned.</p></div>
+      <div class="card"><h3>Hvor ofte bør et website tjekkes?</h3><p>Hvert 1.-5. minut er normalt for produktions-sites. Hyppigere giver falske alarmer ved kortvarige netværksblips; sjældnere (15+ min) kan overse korte nedbrud. Kombinér gerne to tjek i træk før alarm udløses.</p></div>
+      <div class="card"><h3>Hvad er fordelene frem for en cloud-overvågningstjeneste?</h3><p>Ingen månedlig betaling, ingen konto, og dataene forlader aldrig din maskine. Ulempen: overvågningen stopper når computeren er slukket. Mange bruger derfor desktop-værktøjet til arbejdsdagen og en cloud-tjeneste som nat-dækning.</p></div>
+      <div class="card"><h3>Kan jeg overvåge specifikke sider og ikke bare forsidelen?</h3><p>Ja. Giv værktøjet en komplet URL — fx /checkout eller /login. En forside kan svare 200 mens betalingsflowet er nede; de sider der tjener penge, er dem der skal overvåges.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/deskuptime" class="btn-primary">Prøv skrivebords-overvågning nu &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<div style="text-align:center;margin-top:16px;"><p>Relateret: <a href="/da/blog/overvaag-hjemmeside-mac-menu-bar" lang="da">Mac-menulinje</a> &middot; <a href="/da/blog/overvaag-hjemmeside-fra-terminalen" lang="da">Terminal</a> &middot; <a href="/da/blog/tjek-om-hjemmeside-er-nede-gratis" lang="da">Nedtjek gratis</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/da">Forside</a> &middot; <a href="/free-tools">Gratis værktøjer</a> &middot; <a href="/deskuptime">DeskUptime</a> &middot; <a href="/da/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
+</script>
+</body>
+</html>

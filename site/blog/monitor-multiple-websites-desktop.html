@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor Multiple Websites From Your Desktop — Without a Cloud Subscription</title>
+<meta name="description" content="How to watch 5, 20 or 100 websites from your own machine: intervals, notifications, status history — and what desktop monitoring does that cloud services can't.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Monitor Multiple Websites From Your Desktop — Without a Cloud Subscription">
+<meta property="og:description" content="Monitor multiple websites from your desktop: intervals, desktop notifications and per-site status history with no monthly subscription.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/monitor-multiple-websites-desktop">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/monitor-multiple-websites-desktop">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/monitor-multiple-websites-desktop">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Monitor Multiple Websites From Your Desktop — Without a Cloud Subscription", "description": "How to watch 5, 20 or 100 websites from your own machine: intervals, notifications, status history — and what desktop monitoring does that cloud services can't.", "url": "https://hermes-passiv.pages.dev/blog/monitor-multiple-websites-desktop", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can my computer monitor websites while I sleep?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, as long as it doesn't enter full sleep. On macOS the network stays active in standby; on Windows disable full sleep or schedule wake timers. For round-the-clock critical monitoring, a cloud service remains more reliable than a laptop that powers down."}}, {"@type": "Question", "name": "How often should a website be checked?", "acceptedAnswer": {"@type": "Answer", "text": "Every 1–5 minutes is typical for production sites. More frequent checks create false alarms from brief network blips; less frequent (15+ min) misses short outages. Consider requiring two consecutive failures before alerting."}}, {"@type": "Question", "name": "What are the advantages over a cloud monitoring service?", "acceptedAnswer": {"@type": "Answer", "text": "No monthly fee, no account, and data never leaves your machine. The trade-off: monitoring stops when your computer shuts down. Many people pair the desktop tool during work hours with a cloud service for night coverage."}}, {"@type": "Question", "name": "Can I monitor specific pages instead of just the homepage?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Give the tool full URLs — e.g. /checkout or /login. A homepage can return 200 while the payment flow is broken; the pages that make money are the ones worth watching."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">MONITORING &middot; DESKTOP</div>
+    <h1>Monitor multiple<br>sites from your desktop</h1>
+    <p class="subtitle">One website you can remember to check. Five client sites plus staging requires a system. Cloud monitoring typically costs $10–30/month; your own machine can do the job free.</p>
+    <div class="hero-cta">
+      <a href="/deskuptime" class="btn-primary">Get DeskUptime free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>Set it up in five minutes</h2>
+    <ol>
+      <li><strong>Download DeskUptime</strong> — a small macOS desktop app. No account,
+      no config file.</li>
+      <li><strong>Add your URLs:</strong> homepage, checkout, API endpoint, staging.
+      One line each.</li>
+      <li><strong>Pick an interval:</strong> 60 seconds for production, 300 for staging.
+      Two failures in a row = alert.</li>
+      <li><strong>Enable notifications:</strong> you'll see a message on your desktop the
+      moment a site responds wrongly.</li>
+      <li><strong>Review history:</strong> every status change is logged, so patterns become
+      visible — like an outage every night at 3 AM during the backup window.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>When is desktop monitoring the right choice?</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="text-align:left;"><th>Situation</th><th>Recommendation</th></tr>
+      <tr><td>Your machine stays on during work hours</td><td>A desktop app covers it fully</td></tr>
+      <tr><td>Freelancers with 5–20 client sites</td><td>Desktop app + per-site history</td></tr>
+      <tr><td>Mission-critical e-commerce, 24/7</td><td>Cloud primary, desktop secondary</td></tr>
+      <tr><td>Near-zero budget</td><td>Desktop app: one-time cost, no subscription</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/deskuptime" class="btn-primary">Get DeskUptime &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Read more</h2>
+    <p>Also:
+    <a href="/blog/macos-menu-bar-website-monitor">menu bar monitoring on macOS</a>,
+    <a href="/blog/desktop-website-monitor-cli">terminal-based monitoring</a> and
+    <a href="/blog/website-down-checker-free">free checks for a down site</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>Can my computer monitor websites while I sleep?</h3><p>Yes, as long as it doesn't enter full sleep. On macOS the network stays active in standby; on Windows disable full sleep or schedule wake timers. For round-the-clock critical monitoring, a cloud service remains more reliable than a laptop that powers down.</p></div>
+      <div class="card"><h3>How often should a website be checked?</h3><p>Every 1–5 minutes is typical for production sites. More frequent checks create false alarms from brief network blips; less frequent (15+ min) misses short outages. Consider requiring two consecutive failures before alerting.</p></div>
+      <div class="card"><h3>What are the advantages over a cloud monitoring service?</h3><p>No monthly fee, no account, and data never leaves your machine. The trade-off: monitoring stops when your computer shuts down. Many people pair the desktop tool during work hours with a cloud service for night coverage.</p></div>
+      <div class="card"><h3>Can I monitor specific pages instead of just the homepage?</h3><p>Yes. Give the tool full URLs — e.g. /checkout or /login. A homepage can return 200 while the payment flow is broken; the pages that make money are the ones worth watching.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/deskuptime" class="btn-primary">Try desktop monitoring now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/overvaag-flere-hjemmesider-paa-skrivebordet" lang="da">Dansk version af denne guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/macos-menu-bar-website-monitor">macOS menu bar monitor</a> &middot; <a href="/blog/desktop-website-monitor-cli">CLI monitoring</a> &middot; <a href="/blog/website-down-checker-free">Free down checks</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/deskuptime">DeskUptime</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>

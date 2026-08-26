@@ -4,6 +4,7 @@
 # Brug efter at have kørt node lemon-setup.js:
 #   ./tools/set-checkout-url.sh "https://checkout.lemonsqueezy.com/..."        # Clean Copy Pro (standard)
 #   ./tools/set-checkout-url.sh pp "https://checkout.lemonsqueezy.com/..."     # Page Profile Pro
+#   ./tools/set-checkout-url.sh du "https://checkout.lemonsqueezy.com/..."     # DeskUptime Pro
 #
 # BEMÆRK: Kræver at wrangler er logget ind (npx wrangler whoami).
 
@@ -15,9 +16,11 @@ if [ $# -eq 1 ]; then
   PRODUCT="cc"; URL="$1"
 elif [ $# -eq 2 ] && [ "$1" = "pp" ]; then
   PRODUCT="pp"; URL="$2"
+elif [ $# -eq 2 ] && [ "$1" = "du" ]; then
+  PRODUCT="du"; URL="$2"
 else
-  echo "Brug: $0 [pp] <checkout-url>"
-  echo "  (uden 'pp' gemmes URL'en som Clean Copy Pro; med 'pp' som Page Profile Pro)"
+  echo "Brug: $0 [pp|du] <checkout-url>"
+  echo "  (uden flag gemmes URL'en som Clean Copy Pro; 'pp' = Page Profile Pro; 'du' = DeskUptime Pro)"
   exit 1
 fi
 
@@ -26,12 +29,14 @@ if [[ "$URL" != https://*lemonsqueezy.com/* ]]; then
   exit 1
 fi
 
-KEY="$([ "$PRODUCT" = pp ] && echo pp-pro-checkout || echo cc-pro-checkout)"
+case "$PRODUCT" in
+  pp) KEY="pp-pro-checkout" ;;
+  du) KEY="du-pro-checkout" ;;
+  *)  KEY="cc-pro-checkout" ;;
+esac
 
 echo "Gemmer checkout-URL i KV under '$KEY'..."
 npx wrangler kv key put "$KEY" "$URL" --namespace-id "$KV_NS" --remote
 
 echo ""
-echo "URL gemt. $([ "$PRODUCT" = pp ] && echo '/page-profile og /da/page-profile viser nu Køb Pro.' || echo '/clean-copy viser nu Buy Pro.')"
-echo ""
-echo "Verificér: curl 'https://hermes-passiv.pages.dev/api/checkout$([ "$PRODUCT" = pp ] && echo '?product=pp' || echo '')'"
+echo "URL gemt. Verificér: curl 'https://hermes-passiv.pages.dev/api/checkout?product=$PRODUCT'"

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is the Website Down? Free Checks — and What to Do Next (2026)</title>
+<meta name="description" content="How to check whether a website is down for everyone or just you. Free methods, how to tell real outages from local problems, and how to get alerted automatically.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Is the Website Down? Free Checks — and What to Do Next (2026)">
+<meta property="og:description" content="Free website down checker: tell real outages apart from local DNS or network issues, and set up automatic monitoring without a subscription.">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/blog/website-down-checker-free">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/blog/website-down-checker-free">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/blog/website-down-checker-free">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/tjek-om-hjemmeside-er-nede-gratis">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Is the Website Down? Free Checks — and What to Do Next (2026)", "description": "How to check whether a website is down for everyone or just you. Free methods, how to tell real outages from local problems, and how to get alerted automatically.", "url": "https://hermes-passiv.pages.dev/blog/website-down-checker-free", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I check if a website is down?", "acceptedAnswer": {"@type": "Answer", "text": "Try it on another network (mobile data). If it works there, the problem is local. If not, check your host's status page or use a tool that probes the site externally — such as DeskUptime, which runs on your own machine."}}, {"@type": "Question", "name": "Why does a site work for others but not for me?", "acceptedAnswer": {"@type": "Answer", "text": "Common causes: a stale local DNS cache, ISP routing problems, VPN/corporate firewalls blocking the domain, or cached content. Flush your DNS cache and try a private window first."}}, {"@type": "Question", "name": "Can I check if a site is down without installing anything?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — run curl -I https://example.com in a terminal. A 200 means the server is up; 5xx means a real server error; a timeout suggests hosting or DNS trouble. But manual checks only answer 'is it down right now' — automatic alerts need monitoring software."}}, {"@type": "Question", "name": "What's the cheapest way to get alerted when my site goes down?", "acceptedAnswer": {"@type": "Answer", "text": "A desktop app like DeskUptime runs locally and notifies you on your machine — a one-time cost instead of the typical $10–30/month cloud services charge. For mission-critical production sites, keep an external service as backup coverage."}}]}</script>
+<script defer src="/track.js"></script>
+</head>
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="badge">MONITORING &middot; FREE</div>
+    <h1>Is the website<br>down? Check it free</h1>
+    <p class="subtitle">The site won't load. Is it down for everyone — or is it your connection, your DNS, your network? Here's the quick checklist, and how to stop finding out from your customers next time.</p>
+    <div class="hero-cta">
+      <a href="/deskuptime" class="btn-primary">Get DeskUptime free &rarr;</a>
+      <a href="#guide" class="btn-secondary">Jump to the guide</a>
+    </div>
+    <p class="hero-note">Updated August 2026 &middot; 6 min read</p>
+  </div>
+</header>
+
+<section class="problem" id="guide">
+  <div class="container">
+    <h2>The checklist: down for everyone, or just you?</h2>
+    <ol>
+      <li><strong>Another network:</strong> switch to mobile data. If it loads now, the
+      problem is your own connection.</li>
+      <li><strong>Status code:</strong> run <code>curl -I https://yoursite.com</code>.
+      200/301/302 = server alive. 500/502/503 = real outage. Timeout = host or DNS issue.</li>
+      <li><strong>DNS:</strong> run <code>nslookup yoursite.com</code> and compare with the
+      IP your host documents. A mismatch means DNS, not downtime.</li>
+      <li><strong>Host status page:</strong> major hosts publish incidents publicly —
+      check there before debugging blindly.</li>
+    </ol>
+<pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -I https://yoursite.com
+HTTP/2 503     # down for everyone — call your host
+HTTP/2 200     # up from here &rarr; the problem is local</pre>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="container">
+    <h2>The problem with checking manually</h2>
+    <p>A single check answers "is it down <em>now</em>". But customers ask a different
+    question: "when was it down, and for how long?" A site that flickers for two minutes
+    at 3 AM never gets noticed manually — except by the customers who tried to buy.</p>
+    <p>The fix is monitoring that runs itself: a short interval, a notification when the
+    response fails, and history you can inspect afterwards. DeskUptime does exactly that
+    from your menu bar — no cloud account, no monthly fee:</p>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/deskuptime" class="btn-primary">See DeskUptime &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Read more</h2>
+    <p>Also:
+    <a href="/blog/get-notified-when-website-goes-down">get notified when your site goes down</a>,
+    <a href="/blog/desktop-website-monitor-cli">monitor from the terminal</a> and
+    <a href="/blog/monitor-website-github-actions-free">free monitoring with GitHub Actions</a>.</p>
+  </div>
+</section>
+
+<section class="products">
+  <div class="container">
+    <h2>Frequently asked questions</h2>
+    <div class="problem-cards">
+      <div class="card"><h3>How do I check if a website is down?</h3><p>Try it on another network (mobile data). If it works there, the problem is local. If not, check your host's status page or use a tool that probes the site externally — such as DeskUptime, which runs on your own machine.</p></div>
+      <div class="card"><h3>Why does a site work for others but not for me?</h3><p>Common causes: a stale local DNS cache, ISP routing problems, VPN/corporate firewalls blocking the domain, or cached content. Flush your DNS cache and try a private window first.</p></div>
+      <div class="card"><h3>Can I check if a site is down without installing anything?</h3><p>Yes — run curl -I https://example.com in a terminal. A 200 means the server is up; 5xx means a real server error; a timeout suggests hosting or DNS trouble. But manual checks only answer 'is it down right now' — automatic alerts need monitoring software.</p></div>
+      <div class="card"><h3>What's the cheapest way to get alerted when my site goes down?</h3><p>A desktop app like DeskUptime runs locally and notifies you on your machine — a one-time cost instead of the typical $10–30/month cloud services charge. For mission-critical production sites, keep an external service as backup coverage.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="/deskuptime" class="btn-primary">Try desktop monitoring now &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<p style="text-align:center;"><a href="/da/blog/tjek-om-hjemmeside-er-nede-gratis" lang="da">Dansk version af denne guide</a></p>
+<div style="text-align:center;margin-top:16px;"><p>Related: <a href="/blog/get-notified-when-website-goes-down">Get notified when a site goes down</a> &middot; <a href="/blog/desktop-website-monitor-cli">CLI monitoring</a> &middot; <a href="/blog/monitor-multiple-websites-desktop">Monitor many sites at once</a></p></div>
+<footer style="padding:32px 24px;">
+  <p><a href="/">Home</a> &middot; <a href="/free-tools">Free tools</a> &middot; <a href="/deskuptime">DeskUptime</a> &middot; <a href="/#blog">Blog</a></p>
+</footer>
+<script>
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+</body>
+</html>
