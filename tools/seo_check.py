@@ -20,6 +20,7 @@ import argparse
 import html as htmllib
 import re
 import sys
+import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -158,9 +159,14 @@ def scan_urls(urls: list[str]) -> tuple[int, int, dict]:
     report = {}
     for u in urls:
         req = urllib.request.Request(u, headers={"User-Agent": "seo_check/1.0"})
-        with urllib.request.urlopen(req, timeout=30) as r:
-            text = r.read().decode("utf-8", errors="ignore")
-        errs = check_page(text, u)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                text = r.read().decode("utf-8", errors="ignore")
+            errs = check_page(text, u)
+        except urllib.error.HTTPError as e:
+            errs = [f"http {e.code}"]
+        except (urllib.error.URLError, TimeoutError) as e:
+            errs = [f"fetch failed: {e}"]
         pages += 1
         if errs:
             report[u] = errs

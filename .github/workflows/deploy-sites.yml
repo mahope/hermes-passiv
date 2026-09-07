@@ -34,6 +34,8 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # build_sites.py læser datePublished/dateModified fra git-historikken
 
       - uses: actions/checkout@v4
         with:
@@ -48,7 +50,9 @@ jobs:
         env:
           AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
         run: |
+          set -o pipefail
           python build_sites.py --only "${{ matrix.domain }}" | tee build.log
+          python tools/seo_check.py --only "${{ matrix.domain }}"
           if grep -q "extra file missing" build.log; then
             echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"
             exit 1

@@ -90,7 +90,8 @@ def main() -> int:
                 d.mkdir(parents=True, exist_ok=True)
                 for w in a.widths:
                     page.set_viewport_size({"width": w, "height": 800})
-                    page.goto(u, wait_until="networkidle")
+                    page.goto(u, wait_until="load")
+                    page.wait_for_timeout(600)
                     over = page.evaluate(OVERFLOW_JS)
                     out = d / f"live-{w}-{slug(m.group(2) or '/')}.png"
                     page.screenshot(path=str(out), full_page=(w != 360))
