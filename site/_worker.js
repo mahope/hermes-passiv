@@ -161,12 +161,10 @@ export default {
       // ASSETS.fetch throws when no matching asset
     }
 
-    // Fallback: serve index.html (SPA-like behavior for deep links)
-    const indexResponse = await env.ASSETS.fetch(new Request(
-      new URL('/index.html', request.url),
-      request
-    ));
-    return indexResponse;
+    // Fallback: a real 404 with the site's own not-found page (Danish under /da/)
+    const nfPath = path.startsWith('/da/') ? '/da/404.html' : '/404.html';
+    const nf = await env.ASSETS.fetch(new Request(new URL(nfPath, request.url), { headers: request.headers }));
+    return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
   },
 };
 
