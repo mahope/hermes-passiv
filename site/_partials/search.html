@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="robots" content="noindex, follow">
+<meta name="description" content="{{description}}">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main id="main">
+  <div class="container search-page">
+    <h1>{{heading}}</h1>
+    <form action="{{search_url}}" method="get" role="search" data-search-page><input type="search" name="q" placeholder="{{search_placeholder}}" aria-label="{{search_label}}" autofocus><button type="submit" class="btn-primary">{{search_label}}</button></form>
+    <ol class="search-results" data-search-results aria-live="polite"><li class="hint">{{search_hint}}</li></ol>
+    <noscript><p>{{noscript}}</p></noscript>
+  </div>
+</main>
+</body>
+</html>

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import html as htmllib
 import json
 import os
 import re
@@ -49,10 +50,10 @@ SITES: dict[str, dict] = {
         "brand": "Clean Copy",
         "github": "https://github.com/mahope/clean-copy",
         "nav": {
-            "en": [("Install", "/#install"), ("CLI", "/clean-copy-cli-ref"), ("Web tool", "/clean-copy-tool"),
-                   ("Blog", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
-            "da": [("Installér", "/da/#install"), ("CLI", "/clean-copy-cli-ref"), ("Webværktøj", "/clean-copy-tool"),
-                   ("Blog", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
+            "en": [("Extensions", "/#install"), ("CLI", "/clean-copy-cli-ref"), ("Tool", "/clean-copy-tool"),
+                   ("Guides", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
+            "da": [("Udvidelser", "/da/#install"), ("CLI", "/clean-copy-cli-ref"), ("Værktøj", "/clean-copy-tool"),
+                   ("Guides", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
         },
         "include": [
             "clean-copy*.html",
@@ -81,10 +82,10 @@ SITES: dict[str, dict] = {
         "brand": "DeskUptime",
         "github": "https://github.com/mahope/deskuptime",
         "nav": {
-            "en": [("Install", "/#install"), ("Pro", "/#pro"), ("Free checkers", "/tools/"),
-                   ("FAQ", "/#faq"), ("GitHub", "https://github.com/mahope/deskuptime")],
-            "da": [("Installér", "/da/#install"), ("Pro", "/da/#pro"), ("Gratis tjek", "/tools/"),
-                   ("FAQ", "/da/#faq"), ("GitHub", "https://github.com/mahope/deskuptime")],
+            "en": [("Tools", "/tools/"), ("Pro", "/#pro"), ("Docs", "https://github.com/mahope/deskuptime#readme"),
+                   ("Compare", "/#compare")],
+            "da": [("Værktøjer", "/tools/"), ("Pro", "/da/#pro"), ("Docs", "https://github.com/mahope/deskuptime#readme"),
+                   ("Sammenlign", "/da/#compare")],
         },
         "include": ["deskuptime/**", "da/deskuptime/**"],
         "remap": {"deskuptime/": "", "da/deskuptime/": "da/"},
@@ -102,9 +103,9 @@ SITES: dict[str, dict] = {
         "brand": "BugBottle",
         "github": "https://github.com/mahope/bugbottle",
         "nav": {
-            "en": [("Install", "/#install"), ("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
+            "en": [("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
                    ("npm", "https://www.npmjs.com/package/bugbottle"), ("GitHub", "https://github.com/mahope/bugbottle")],
-            "da": [("Installér", "/da/#install"), ("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
+            "da": [("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
                    ("npm", "https://www.npmjs.com/package/bugbottle"), ("GitHub", "https://github.com/mahope/bugbottle")],
         },
         "include": [
@@ -128,10 +129,10 @@ SITES: dict[str, dict] = {
         "brand": "mahope.tools",
         "github": "https://github.com/mahope",
         "nav": {
-            "en": [("Free tools", "/free-tools"), ("Downloads", "/free-downloads"), ("Blog", "/blog/"),
-                   ("E-books", "/books/"), ("Compliance", "/compliance-guide")],
-            "da": [("Gratis værktøjer", "/free-tools"), ("Downloads", "/free-downloads"), ("Blog", "/blog/"),
-                   ("E-bøger", "/books/"), ("Compliance", "/da/compliance-site-check")],
+            "en": [("Tools", "/free-tools"), ("Books", "/books/"), ("Blog", "/blog/"),
+                   ("Clean Copy", "https://cleancopy.tools"), ("Compliance", "/compliance-guide")],
+            "da": [("Værktøjer", "/free-tools"), ("Bøger", "/books/"), ("Blog", "/blog/"),
+                   ("Clean Copy", "https://cleancopy.tools/da/"), ("Compliance", "/da/compliance-site-check")],
         },
         "rest": True,
         "index_from": "free-tools.html",
@@ -139,7 +140,7 @@ SITES: dict[str, dict] = {
 }
 
 # Copied into every dist (never "claimed" by a single site).
-SHARED = ["style.css", "track.js", "_worker.js"]
+SHARED = ["style.css", "track.js", "shell.js", "_worker.js"]
 # Never copied (regenerated per site, or junk).
 SKIP_NAMES = {"sitemap.xml", "robots.txt"}
 SKIP_SUFFIXES = (".orig", ".bak")
@@ -153,7 +154,8 @@ WORKER_PREFIXES = ("/api/", "/scan-proxy")
 # Files generated per dist by write_site (root-relative). Never "broken".
 GENERATED = ("/sitemap.xml", "/robots.txt", "/wrangler.toml", "/llms.txt", "/llms-full.txt", "/humans.txt",
              "/.well-known/security.txt", "/404.html", "/favicon.svg", "/favicon.ico", "/apple-touch-icon.png",
-             "/icon-192.png", "/icon-512.png", "/site.webmanifest", "/og.png", "/og-da.png")
+             "/icon-192.png", "/icon-512.png", "/site.webmanifest", "/og.png", "/og-da.png",
+             "/search-index.json", "/search/", "/da/search/", "/search/index.html", "/da/search/index.html")
 
 
 # ---------------------------------------------------------------------------
@@ -389,36 +391,83 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
 
 
 # ---------------------------------------------------------------------------
-# Shared shell: header + footer partials injected into every HTML page.
+# Shared shell: family bar + header + footer partials injected into every HTML page,
+# breadcrumbs, article layout (prose + TOC), BugBottle tag, search index.
 # ---------------------------------------------------------------------------
 PARTIALS = SITE / "_partials"
-PRODUCTS = [
-    ("Clean Copy", "https://cleancopy.tools"),
-    ("DeskUptime", "https://deskuptime.com"),
-    ("BugBottle", "https://bugbottle.dev"),
-    ("Transmute", "https://transmute.run"),
-    ("EU Comply Pro", "https://eucomplypro.com"),
-    ("mahope.tools", "https://mahope.tools"),
+# The family, in the order it appears in the bar and the footer on every site.
+FAMILY = [
+    ("EUComply", "EU Comply Pro", "https://eucomplypro.com"),
+    ("Clean Copy", "Clean Copy", "https://cleancopy.tools"),
+    ("DeskUptime", "DeskUptime", "https://deskuptime.com"),
+    ("Transmute", "Transmute", "https://transmute.run"),
+    ("BugBottle", "BugBottle", "https://bugbottle.dev"),
+    ("All tools", "mahope.tools", "https://mahope.tools"),
 ]
+PRODUCTS = [(full, url) for _short, full, url in FAMILY]
+BUGBOTTLE_VERSION = "0.5.0"
+BUGBOTTLE_ENDPOINT = "https://mahope.tools/api/bugreport"
 L10N = {
     "en": dict(skip_label="Skip to content", nav_label="Main", menu_label="Menu", brand_by="by mahoje.dk",
-               other_products_label="More from mahoje.dk", privacy_label="Privacy",
+               family_label="Mahope tools:", family_heading="Family", site_heading="Site",
+               privacy_link="Privacy", security_link="Security", sitemap_link="Sitemap", report_link="Report a bug",
+               report_subject="Bug%20report", bb_badge="Feedback powered by BugBottle",
                privacy_note="No cookies, no trackers — only an anonymous page-view counter we run ourselves.",
-               privacy_link="Privacy policy", terms_link="Terms",
-               maker_note='Built by Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — developer and technical partner, Odense, Denmark. Source on <a href="{github}">GitHub</a>.'),
+               maker_note='Built by Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — developer and technical partner for small businesses, Odense, Denmark.',
+               license_note='<span>MIT-licensed — source on <a href="{github}">GitHub</a></span>',
+               search_label="Search", search_placeholder="Search pages, tools and guides…", search_hint="Type to search every page on this site.",
+               search_nav="navigate", search_open="open", search_close="close", theme_label="Theme: system",
+               search_title="Search {brand}", search_heading="Search this site", search_description="Search every page, tool and guide on this site.",
+               noscript="Search needs JavaScript. Try the sitemap instead.",
+               home="Home", blog="Blog", guides="Guides", books="E-books", tools="Tools", pages="Pages",
+               updated="Updated", read="min read", on_this_page="On this page", share="Copy link", newer="Newer", older="Older"),
     "da": dict(skip_label="Spring til indhold", nav_label="Hovedmenu", menu_label="Menu", brand_by="af mahoje.dk",
-               other_products_label="Mere fra mahoje.dk", privacy_label="Privatliv",
+               family_label="Mahope tools:", family_heading="Familien", site_heading="Sitet",
+               privacy_link="Privatliv", security_link="Sikkerhed", sitemap_link="Sitemap", report_link="Rapportér en fejl",
+               report_subject="Fejlrapport", bb_badge="Feedback drevet af BugBottle",
                privacy_note="Ingen cookies, ingen trackere — kun en anonym sidevisningstæller, vi selv kører.",
-               privacy_link="Privatlivspolitik", terms_link="Vilkår",
-               maker_note='Lavet af Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — udvikler og teknisk partner, Odense. Kildekode på <a href="{github}">GitHub</a>.'),
+               maker_note='Lavet af Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — udvikler og teknisk partner for små virksomheder, Odense.',
+               license_note='<span>MIT-licens — kildekode på <a href="{github}">GitHub</a></span>',
+               search_label="Søg", search_placeholder="Søg i sider, værktøjer og guides…", search_hint="Skriv for at søge på hele sitet.",
+               search_nav="navigér", search_open="åbn", search_close="luk", theme_label="Tema: system",
+               search_title="Søg på {brand}", search_heading="Søg på sitet", search_description="Søg i alle sider, værktøjer og guides på sitet.",
+               noscript="Søgning kræver JavaScript. Prøv sitemappet i stedet.",
+               home="Forside", blog="Blog", guides="Guides", books="E-bøger", tools="Værktøjer", pages="Sider",
+               updated="Opdateret", read="min. læsning", on_this_page="På denne side", share="Kopiér link", newer="Nyere", older="Ældre"),
 }
 BODY_RE = re.compile(r"<body[^>]*>", re.I)
+BODY_END_RE = re.compile(r"</body>", re.I)
 HEAD_END_RE = re.compile(r"</head>", re.I)
 HTML_TAG_RE = re.compile(r"<html([^>]*)>", re.I)
 FIRST_HEADER_RE = re.compile(r"\s*<header\b[^>]*>.*?</header>", re.S | re.I)
 FOOTER_RE = re.compile(r"<footer\b[^>]*>.*?</footer>", re.S | re.I)
 FOOTER_NAV_RE = re.compile(r'\s*<nav aria-label="Footer">.*?</nav>', re.S | re.I)
 HREFLANG_RE = re.compile(r'<link[^>]+hreflang="(en|da)"[^>]+href="([^"]+)"|<link[^>]+href="([^"]+)"[^>]+hreflang="(en|da)"', re.I)
+MAIN_OPEN_RE = re.compile(r"<main\b[^>]*>", re.I)
+HERO_RE = re.compile(r"<(header|div)\s+class=\"(?:hero|book-header)[^\"]*\"[^>]*>.*?</\1>", re.S | re.I)
+HEADING_RE = re.compile(r"<(h2|h3)\b([^>]*)>(.*?)</\1>", re.S | re.I)
+IMG_RE = re.compile(r"<img(\s[^>]*)>", re.I)
+EXT_A_RE = re.compile(r'<a\b([^>]*\shref="https?://[^"]+"[^>]*)>', re.I)
+TAG_RE = re.compile(r"<[^>]+>")
+SCRIPT_STYLE_RE = re.compile(r"<(script|style|noscript|svg|template)\b.*?</\1>", re.S | re.I)
+# split() variant: parts[0::3] is prose, parts[1::3] the skipped blocks (verbatim), parts[2::3] the tag names
+SKIP_SPLIT_RE = re.compile(r"(<(script|style|noscript|svg|template|pre|textarea|code)\b.*?</\2>)", re.S | re.I)
+TOOL_MAIN_RE = re.compile(r'<main\b([^>]*\sclass="[^"]*\b(?:[\w-]+-)?wrap\b[^"]*"[^>]*)>', re.I)
+
+
+def _main_end(text: str) -> int:
+    """Offset of the last </main> that is not inside script/style/pre/textarea/code (generator pages
+    carry whole HTML documents in templates). -1 when there is none."""
+    spans = [m.span() for m in SKIP_SPLIT_RE.finditer(text)]
+    for m in reversed(list(re.finditer(r"</main>", text, re.I))):
+        if not any(a <= m.start() < b for a, b in spans):
+            return m.start()
+    return -1
+
+
+def _join_skip(parts: list[str]) -> str:
+    """Re-join a SKIP_SPLIT_RE.split() result: drop the tag-name captures at parts[2::3]."""
+    return "".join(p for i, p in enumerate(parts) if i % 3 != 2)
 
 
 def _partial(name: str) -> str:
@@ -433,7 +482,8 @@ def _nav_links(links, current: str, indent: str = "      ") -> str:
     out = []
     for label, href in links:
         cur = ' aria-current="page"' if href == current else ""
-        out.append(f'{indent}<a href="{href}"{cur}>{label}</a>')
+        ext = ' class="ext" rel="noopener"' if href.startswith("http") else ""
+        out.append(f'{indent}<a href="{href}"{cur}{ext}>{label}</a>')
     return "\n".join(out)
 
 
@@ -443,6 +493,197 @@ def _alternates(head: str) -> dict:
         lang, href = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
         alts.setdefault(lang.lower(), href)
     return alts
+
+
+def _lang_switch(lang: str, alts: dict[str, str]) -> str:
+    if "en" in alts and "da" in alts and alts["en"] != alts["da"]:
+        parts = []
+        for code in ("en", "da"):
+            if code == lang:
+                parts.append(f'<span aria-current="true" lang="{code}">{code.upper()}</span>')
+            else:
+                parts.append(f'<a href="{alts[code]}" lang="{code}" hreflang="{code}">{code.upper()}</a>')
+        return '      <span class="lang-switch">' + "".join(parts) + "</span>"
+    # keep the space so the header never shifts between translated and untranslated pages
+    return '      <span class="lang-switch is-empty" aria-hidden="true"><span>EN</span><span>DA</span></span>'
+
+
+def slugify(text: str) -> str:
+    t = htmllib.unescape(TAG_RE.sub("", text)).lower()
+    t = re.sub(r"[^a-z0-9æøå]+", "-", t).strip("-")
+    return t[:60] or "section"
+
+
+def text_of(html: str) -> str:
+    return re.sub(r"\s+", " ", htmllib.unescape(TAG_RE.sub(" ", SCRIPT_STYLE_RE.sub(" ", html)))).strip()
+
+
+def section_of(dest: str, text: str, lang: str) -> str:
+    t = L10N[lang]
+    d = dest[3:] if dest.startswith("da/") else dest
+    if d.startswith("blog/"):
+        return t["blog"]
+    if d.startswith("guides/"):
+        return t["guides"]
+    if d.startswith("books/"):
+        return t["books"]
+    if d in ("index.html",):
+        return t["pages"]
+    if re.search(r"<(form|textarea|input)\b", text, re.I) and "/" not in d:
+        return t["tools"]
+    return t["pages"]
+
+
+def crumbs_for(site: Site, dest: str, lang: str, title: str, section: str) -> list[tuple[str, str]]:
+    """[(label, url)] — home, optional section index, current page."""
+    t = L10N[lang]
+    home = "/da/" if lang == "da" else "/"
+    if dest in ("index.html", "da/index.html"):
+        return []
+    out = [(t["home"], home)]
+    d = dest[3:] if dest.startswith("da/") else dest
+    prefix = "da/" if dest.startswith("da/") else ""
+    dests = {v[1] for v in site.files.values()}
+    for folder, key in (("blog/", "blog"), ("guides/", "guides"), ("books/", "books")):
+        if d.startswith(folder) and d != folder + "index.html":
+            if prefix + folder + "index.html" in dests:
+                out.append((t[key], "/" + prefix + folder))
+            elif folder + "index.html" in dests:
+                out.append((t[key], "/" + folder))
+            break
+    else:
+        if section == t["tools"] and site.cfg["product"] == "mahope":
+            out.append((t["tools"], "/free-tools"))
+    out.append((title, canonical_url(dest)))
+    return out
+
+
+def _crumbs_html(crumbs: list[tuple[str, str]], lang: str) -> str:
+    if not crumbs:
+        return ""
+    items = []
+    for i, (label, url) in enumerate(crumbs):
+        if i == len(crumbs) - 1:
+            items.append(f'<li aria-current="page">{esc_html(label)}</li>')
+        else:
+            items.append(f'<li><a href="{url}">{esc_html(label)}</a></li>')
+    label = "Brødkrumme" if lang == "da" else "Breadcrumb"
+    return f'<nav class="crumbs container" aria-label="{label}"><ol>' + "".join(items) + "</ol></nav>\n"
+
+
+def esc_html(s: str) -> str:
+    return htmllib.escape(htmllib.unescape(s), quote=True)
+
+
+def _reading_minutes(html: str) -> int:
+    words = len(text_of(html).split())
+    return max(1, round(words / 220))
+
+
+def _toc(article: str) -> tuple[str, list[tuple[str, str, str]]]:
+    """Give every h2/h3 an id; return (article, [(level, id, text)])."""
+    used: set[str] = set()
+    entries: list[tuple[str, str, str]] = []
+
+    def sub(m: re.Match) -> str:
+        level, attrs, inner = m.group(1).lower(), m.group(2), m.group(3)
+        idm = re.search(r'\sid="([^"]*)"', attrs)
+        text = re.sub(r"\s+", " ", htmllib.unescape(TAG_RE.sub("", inner))).strip()
+        if not text or len(text) > 120:
+            return m.group(0)
+        if idm:
+            hid = idm.group(1)
+        else:
+            base = slugify(text)
+            hid, n = base, 2
+            while hid in used:
+                hid, n = f"{base}-{n}", n + 1
+            attrs = attrs + f' id="{hid}"'
+        used.add(hid)
+        entries.append((level, hid, text))
+        return f"<{level}{attrs}>{inner}</{level}>"
+
+    parts = SKIP_SPLIT_RE.split(article)
+    for i in range(0, len(parts), 3):
+        parts[i] = HEADING_RE.sub(sub, parts[i])
+    return _join_skip(parts), entries
+
+
+def _toc_html(entries, lang: str) -> str:
+    entries = [e for e in entries if e[0] == "h2" or len(entries) < 25]
+    if len([e for e in entries if e[0] == "h2"]) < 2:
+        return ""
+    items = "".join(f'<li class="lvl{lvl[1]}"><a href="#{htmllib.escape(hid, quote=True)}">{esc_html(text)}</a></li>' for lvl, hid, text in entries)
+    return f'<nav class="toc" aria-label="{L10N[lang]["on_this_page"]}"><details><summary>{L10N[lang]["on_this_page"]}</summary><ol>{items}</ol></details></nav>'
+
+
+def article_layout(text: str, lang: str, dates, neighbours: dict) -> str:
+    """Blog/guide: wrap everything after the hero in .prose-layout with a sidebar (meta, TOC, prev/next)."""
+    mm = MAIN_OPEN_RE.search(text)
+    if not mm:
+        return text
+    end = _main_end(text)
+    if end < 0:
+        return text
+    body_start = mm.end()
+    inner = text[body_start:end]
+    hm = HERO_RE.search(inner)
+    if hm:
+        hero, rest = inner[: hm.end()], inner[hm.end():]
+    else:
+        hero, rest = "", inner
+    if not rest.strip():
+        return text
+    rest, entries = _toc(rest)
+    t = L10N[lang]
+    meta = []
+    if dates:
+        meta.append(f'<span>{t["updated"]} <time datetime="{dates[1]}">{dates[1]}</time></span>')
+    meta.append(f'<span>{_reading_minutes(rest)} {t["read"]}</span>')
+    meta.append(f'<button type="button" class="share-btn" data-copy-link><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>{t["share"]}</button>')
+    aside = '<aside class="prose-aside"><div class="article-meta">' + "".join(meta) + "</div>" + _toc_html(entries, lang) + "</aside>"
+    pn = ""
+    prev_p, next_p = neighbours.get("prev"), neighbours.get("next")
+    if prev_p or next_p:
+        pn = '<nav class="prev-next" aria-label="Previous and next">'
+        pn += f'<a class="prev" href="{prev_p[0]}"><span class="lbl">← {t["newer"]}</span>{esc_html(prev_p[1])}</a>' if prev_p else "<span></span>"
+        pn += f'<a class="next" href="{next_p[0]}"><span class="lbl">{t["older"]} →</span>{esc_html(next_p[1])}</a>' if next_p else "<span></span>"
+        pn += "</nav>"
+    new_inner = hero + '\n<div class="container prose-layout">\n<article class="prose">' + rest + pn + "</article>\n" + aside + "\n</div>\n"
+    return text[:body_start] + new_inner + text[end:]
+
+
+def lazy_images(text: str) -> str:
+    def sub(m: re.Match) -> str:
+        a = m.group(1)
+        if "loading=" in a:
+            return m.group(0)
+        return f'<img{a} loading="lazy" decoding="async">'
+    parts = SKIP_SPLIT_RE.split(text)
+    for i in range(0, len(parts), 3):
+        parts[i] = IMG_RE.sub(sub, parts[i])
+    return _join_skip(parts)
+
+
+def mark_external(text: str, domain: str) -> str:
+    def sub(m: re.Match) -> str:
+        a = m.group(1)
+        host = re.search(r'href="https?://([^/"]+)', a).group(1)
+        if host.endswith(domain) or host.endswith("mahoje.dk"):
+            return m.group(0)
+        if 'rel="' in a:
+            a = re.sub(r'rel="([^"]*)"', lambda r: f'rel="{r.group(1)}"' if "noopener" in r.group(1) else f'rel="{r.group(1)} noopener"', a)
+        else:
+            a += ' rel="noopener"'
+        if 'class="' in a:
+            a = re.sub(r'class="([^"]*)"', lambda c: c.group(0) if "ext" in c.group(1).split() else f'class="{c.group(1)} ext"', a, count=1)
+        else:
+            a += ' class="ext"'
+        return f"<a{a}>"
+    parts = SKIP_SPLIT_RE.split(text)
+    for i in range(0, len(parts), 3):
+        parts[i] = EXT_A_RE.sub(sub, parts[i])
+    return _join_skip(parts)
 
 
 def git_dates() -> dict[str, tuple[str, str]]:
@@ -516,27 +757,44 @@ def hreflang_pairs(sites: dict[str, Site], global_idx: dict, local_idx: dict) ->
     return pairs
 
 
-def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]) -> str:
+def bugbottle_tag(site: Site, lang: str) -> str:
+    brand = BRANDS[site.cfg["product"]]
+    return (f'<script src="https://cdn.jsdelivr.net/npm/bugbottle@{BUGBOTTLE_VERSION}/dist/bugbottle.js" defer '
+            f'data-endpoint="{BUGBOTTLE_ENDPOINT}" data-locale="{lang}" data-primary="{brand["accent"]}" '
+            f'data-brand="{site.cfg["brand"]}" data-position="bottom-right" data-scrub></script>')
+
+
+def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str], *, title: str = "",
+                dates=None, neighbours: dict | None = None, kind: str | None = None) -> tuple[str, dict]:
+    """Inject family bar, header, breadcrumbs, article layout, footer, scripts. Returns (html, info)."""
     cfg = site.cfg
+    info: dict = {"crumbs": [], "section": "", "toc": False}
     if "brand" not in cfg or not BODY_RE.search(text):
-        return text
+        return text, info
     lang = "da" if re.search(r'<html[^>]*lang="da"', text[:400], re.I) else "en"
     t = L10N[lang]
-    sw = ""
-    if "en" in alts and "da" in alts and alts["en"] != alts["da"]:
-        parts = []
-        for code in ("en", "da"):
-            if code == lang:
-                parts.append(f'<span aria-current="true" lang="{code}">{code.upper()}</span>')
-            else:
-                parts.append(f'<a href="{alts[code]}" lang="{code}" hreflang="{code}">{code.upper()}</a>')
-        sw = '      <span class="lang-switch">' + "".join(parts) + "</span>"
+    brand = BRANDS[cfg["product"]]
+    home = "/da/" if lang == "da" else "/"
+    search_url = "/da/search/" if lang == "da" else "/search/"
     current = canonical_url(dest)
-    ctx = dict(t, brand=cfg["brand"], home="/da/" if lang == "da" else "/",
-               nav=_nav_links(cfg["nav"][lang], current), lang_switch=sw,
-               footer_links=_nav_links(cfg["nav"][lang], current, "        ").replace("<a ", "<li><a ").replace("</a>", "</a></li>"),
-               product_links="\n".join(f'        <li><a href="{u}">{n}</a></li>' for n, u in PRODUCTS if not u.endswith(site.domain)),
-               maker_note=t["maker_note"].format(github=cfg["github"]))
+    sw = _lang_switch(lang, alts)
+    own_url = "https://" + site.domain
+    fam = []
+    for short, _full, url in FAMILY:
+        cur = ' aria-current="true"' if url == own_url else ""
+        cls = ' class="family-all"' if short == "All tools" else ""
+        href = url if url == own_url else url + ("/da/" if lang == "da" and url.split("//")[1] in SITES else "")
+        fam.append(f'<a href="{href}"{cur}{cls}>{short}</a>')
+    footer_links = [(label, href) for label, href in cfg["nav"][lang] if not href.startswith("http")]
+    footer_links += [("GitHub", cfg["github"]), ("Releases" if lang == "en" else "Udgivelser", cfg["github"] + "/releases")] if cfg["product"] != "mahope" else []
+    ctx = dict(t, brand=cfg["brand"], home=home, nav=_nav_links(cfg["nav"][lang], current), lang_switch=sw,
+               family_links="\n".join(fam), search_url=search_url,
+               product_line=brand["tagline"][lang],
+               footer_links=_nav_links(footer_links, current, "          ").replace("<a ", "<li><a ").replace("</a>", "</a></li>"),
+               product_links="\n".join('          <li><a href="%s"%s>%s</a></li>' % (u, ' aria-current="true"' if u == own_url else "", n) for n, u in PRODUCTS),
+               privacy_url="/privacy/" if (SITE / "privacy" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/privacy/",
+               maker_note=t["maker_note"], year=datetime.now(timezone.utc).year,
+               license_note=t["license_note"].format(github=cfg["github"]) if cfg["product"] != "mahope" else "")
     header = _render(_partial("header.html"), ctx)
     footer = _render(_partial("footer.html"), ctx)
 
@@ -563,17 +821,71 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
         text = re.sub(r"</body>", footer + "\n</body>", text, count=1, flags=re.I)
     # main: exactly one <main id="main"> around the page content
     if re.search(r"<main\b", text, re.I):
-        if 'id="main"' not in text:
-            text = re.sub(r"<main\b", '<main id="main"', text, count=1, flags=re.I)
-        text = text[:body_start] + "\n" + header + text[body_start:]
+        mo = re.search(r"<main\b([^>]*)>", text, re.I)
+        attrs = mo.group(1)
+        # main is always full-width: no inline style, no .container on the element itself
+        attrs = re.sub(r'\s+style="[^"]*"', "", attrs)
+        had_container = bool(re.search(r'class="[^"]*\bcontainer\b', attrs))
+        attrs = re.sub(r'class="([^"]*)"', lambda c: 'class="%s"' % " ".join(x for x in c.group(1).split() if x != "container"), attrs)
+        attrs = attrs.replace(' class=""', "")
+        if 'id="main"' not in attrs:
+            attrs = ' id="main"' + attrs
+        open_tag = f"<main{attrs}>" + ('\n<div class="container">' if had_container else "")
+        end = _main_end(text)
+        if end < 0:
+            # unclosed <main>: close it right before the page's own footer (or </body>)
+            fm = re.search(r"<footer\b|</body>", text[mo.end():], re.I)
+            at = mo.end() + fm.start()
+            text = text[:at] + "</main>\n" + text[at:]
+            end = at
+        close_tag = ("</div>\n" if had_container else "") + "</main>"
+        # anything the page put between <body> and <main> (its own skip link, family bar, chrome
+        # header, a hero with the h1, CTA strips) is dropped when it is chrome and moved inside main
+        # when it is content — so main always starts right under the shared header
+        pre = text[body_start: mo.start()]
+        pre = re.sub(r'<a\s+class="skip[^"]*"[^>]*>.*?</a>', "", pre, flags=re.S | re.I)
+        pre = re.sub(r"<nav\b[^>]*>.*?</nav>", "", pre, flags=re.S | re.I)
+        pre = re.sub(r"<header\b[^>]*>.*?</header>", lambda h: h.group(0) if re.search(r"<h1\b", h.group(0), re.I) else "", pre, flags=re.S | re.I)
+        text = (text[:body_start] + "\n" + header + "\n" + open_tag + pre + text[mo.end():end] + close_tag + text[end + len("</main>"):])
     else:
         fpos = text.rfind('<footer class="site-footer">')
         inner = text[body_start:fpos]
         if 'class="container' not in inner and not re.search(r'class="[^"]*wrap', inner):
             inner = '\n<div class="container">' + inner + "</div>\n"
         text = text[:body_start] + "\n" + header + '\n<main id="main">' + inner + "</main>\n" + text[fpos:]
+    # tool pages: <main class="x-wrap"> becomes a wide container inside a full-width main
+    tm = TOOL_MAIN_RE.search(text)
+    if tm and "layout-wide" not in tm.group(1):
+        end = _main_end(text)
+        if end > tm.end():
+            # "<main class="x-wrap">" is a tool page (wide); a plain "wrap" is ordinary content
+            wide = bool(re.search(r'class="[^"]*\b[\w-]+-wrap\b', tm.group(1)))
+            attrs = tm.group(1).replace('class="', 'class="layout-wide ') if wide else tm.group(1)
+            text = (text[: tm.start()] + f'<main{attrs}>\n<div class="container{" tool" if wide else ""}">'
+                    + text[tm.end():end] + "</div>\n" + text[end:])
+    # breadcrumbs (visual) right after <main>
+    mm = MAIN_OPEN_RE.search(text)
+    main_html = text[mm.end(): _main_end(text)] if mm else ""
+    section = section_of(dest, main_html, lang)
+    info["section"] = section
+    if kind is None:
+        kind = pagepass.page_kind(dest)
+    crumbs = crumbs_for(site, dest, lang, title or cfg["brand"], section) if kind != "home" else []
+    info["crumbs"] = crumbs
+    if crumbs and mm:
+        text = text[: mm.end()] + "\n" + _crumbs_html(crumbs, lang) + text[mm.end():]
+    if kind in ("article", "guide"):
+        text = article_layout(text, lang, dates, neighbours or {})
+        info["toc"] = True
+    text = lazy_images(text)
+    text = mark_external(text, site.domain)
+    # scripts: shell + BugBottle on every page (the demo page mounts its own copy)
+    tags = f'<script src="/shell.js?v={pagepass.SHELL_VERSION}" defer></script>'
+    if not dest.endswith("bugbottle-demo.html"):
+        tags += "\n" + bugbottle_tag(site, lang)
+    text = BODY_END_RE.sub(lambda m: tags + "\n</body>", text, count=1)
     site.shelled += 1
-    return text
+    return text, info
 
 
 def og_image_for(site: Site, existing: str | None, lang: str, local: dict, global_idx: dict) -> str:
@@ -609,7 +921,7 @@ HEADERS_TXT = """/*
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https:; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://mahope.tools https:; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https:; frame-ancestors 'none'; upgrade-insecure-requests
 
 /style.css
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
@@ -701,15 +1013,39 @@ def write_generated(site: Site, pages: list[dict]) -> None:
     (dist / "_headers").write_text(HEADERS_TXT, encoding="utf-8")
     for lang, fname in (("en", "404.html"), ("da", "da/404.html")):
         nf = NOT_FOUND[lang]
+        t = L10N[lang]
         links = "\n".join(f'        <li><a href="{h}">{l}</a></li>' for l, h in site.cfg["nav"][lang] if h.startswith("/"))
-        home = ("/da/" if lang == "da" else "/", "Forside" if lang == "da" else "Home")
+        home = ("/da/" if lang == "da" else "/", t["home"])
         links = f'        <li><a href="{home[0]}">{home[1]}</a></li>\n' + links
-        html = _render(_partial("404.html"), dict(nf, lang=lang, links=links))
-        html = apply_shell(site, fname, fname, html, {})
+        search_url = "/da/search/" if lang == "da" else "/search/"
+        html = _render(_partial("404.html"), dict(nf, lang=lang, links=links, search_url=search_url,
+                                                   search_placeholder=t["search_placeholder"], search_label=t["search_label"]))
+        html, _ = apply_shell(site, fname, fname, html, {}, title=nf["title"], kind="home")
         html = html.replace('<link rel="stylesheet" href="/style.css">',
-                            '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n<link rel="stylesheet" href="/style.css">')
+                            '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+                            f'<link rel="stylesheet" href="/style.css?v={pagepass.CSS_VERSION}">')
         (dist / fname).parent.mkdir(exist_ok=True)
         (dist / fname).write_text(html, encoding="utf-8")
+
+    # search: one page per language, same index
+    alts = {"en": own + "/search/", "da": own + "/da/search/"}
+    for lang, fname in (("en", "search/index.html"), ("da", "da/search/index.html")):
+        t = L10N[lang]
+        search_url = "/da/search/" if lang == "da" else "/search/"
+        html = _render(_partial("search.html"), dict(lang=lang, title=t["search_title"].format(brand=site.cfg["brand"]), heading=t["search_heading"],
+                                                     description=t["search_description"], search_url=search_url,
+                                                     search_placeholder=t["search_placeholder"], search_label=t["search_label"],
+                                                     search_hint=t["search_hint"], noscript=t["noscript"]))
+        html, _ = apply_shell(site, fname, fname, html, alts, title=t["search_title"].format(brand=site.cfg["brand"]), kind="page")
+        html, _info = pagepass.normalize_head(html, site_url=own, brand=brand, lang=lang, dest=fname, canonical=own + search_url,
+                                              alternates=alts, og_image=own + ("/og-da.png" if lang == "da" else "/og.png"),
+                                              dates=None, github=site.cfg["github"], kind="page")
+        (dist / fname).parent.mkdir(parents=True, exist_ok=True)
+        (dist / fname).write_text(html, encoding="utf-8")
+
+    index = [dict(url=p["url"].replace(own, "") or "/", title=p["title"], description=p["description"], lang=p["lang"],
+                  section=p.get("section", ""), body=p.get("body", ""), tags=p.get("tags", [])) for p in pages]
+    (dist / "search-index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
 def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dict, dates: dict) -> list[dict]:
@@ -720,6 +1056,28 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
     own = "https://" + site.domain
     brand = BRANDS[site.cfg["product"]]
     pages: list[dict] = []
+    # prev/next: blog and guide pages of the same language, newest first (first commit date)
+    series: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
+    for key, (src, dest) in site.files.items():
+        if src.suffix.lower() != ".html":
+            continue
+        k = pagepass.page_kind(dest)
+        if k not in ("article", "guide") or dest.endswith("index.html"):
+            continue
+        lg = "da" if dest.startswith("da/") else "en"
+        try:
+            rs = src.resolve().relative_to(ROOT).as_posix()
+        except ValueError:
+            rs = ""
+        dd = dates.get(rs, ("0000-00-00", "0000-00-00"))
+        title = pagepass.clamp_title(title_of(src).split(" | ")[0] or dest)
+        series.setdefault((k, lg), []).append((dd[0], canonical_url(dest), title))
+    neighbours: dict[str, dict] = {}
+    for lst in series.values():
+        lst.sort(key=lambda x: (x[0], x[1]), reverse=True)
+        for i, (_d, url, _t) in enumerate(lst):
+            neighbours[url] = {"prev": (lst[i - 1][1], lst[i - 1][2]) if i > 0 else None,
+                               "next": (lst[i + 1][1], lst[i + 1][2]) if i + 1 < len(lst) else None}
     for key, (src, dest) in site.files.items():
         out = dist / dest
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -738,20 +1096,34 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
                 page_url = own + canonical_url(idx_target)
             alts = pairs.get(page_url, {}) or pairs.get(own + canonical_url(dest), {})
             text = pagepass.normalize_body(text)
-            text = apply_shell(site, key, dest, text, alts)
             try:
                 rel_src = src.resolve().relative_to(ROOT).as_posix()
             except ValueError:
                 rel_src = ""
             d = dates.get(rel_src)
+            kind = "home" if (idx_target or dest in ("index.html", "da/index.html")) else pagepass.page_kind(dest)
+            raw_title = pagepass.clamp_title(title_of(src).split(" | ")[0] or dest)
+            text, shell_info = apply_shell(site, key, dest, text, alts, title=raw_title, dates=d,
+                                           neighbours=neighbours.get(canonical_url(dest), {}), kind=kind)
             ogs = re.search(r'<meta\s+property="og:image"\s+content="([^"]*)"', text)
             og_image = og_image_for(site, ogs.group(1) if ogs else None, lang, local, global_idx)
             text, info = pagepass.normalize_head(
                 text, site_url=own, brand=brand, lang=lang, dest=dest, canonical=page_url,
                 alternates=alts, og_image=og_image, dates=d, github=site.cfg["github"],
                 kind="home" if (idx_target or dest in ("index.html", "da/index.html")) else None)
+            if shell_info["crumbs"]:
+                ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "name": name, "item": own + url}
+                    for i, (name, url) in enumerate(shell_info["crumbs"])]}
+                text = re.sub(r"</head>", '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + "</script>\n</head>",
+                              text, count=1, flags=re.I)
+            mm = MAIN_OPEN_RE.search(text)
+            main_txt = text_of(text[mm.end(): _main_end(text)]) if mm else ""
+            main_txt = re.sub(r"^.*?" + re.escape(info["title"][:20]), "", main_txt, count=1) if info["title"][:20] in main_txt else main_txt
+            tags = sorted({m.strip() for m in re.findall(r'<(?:span|div)\s+class="(?:badge|tag|tagchip)"[^>]*>([^<]{2,40})<', text)})
             pages.append(dict(dest=dest, url=page_url, lang=lang, alternates=alts, title=info["title"],
-                              description=info["description"], lastmod=(d[1] if d else pagepass.now_iso())))
+                              description=info["description"], lastmod=(d[1] if d else pagepass.now_iso()),
+                              section=shell_info["section"], body=main_txt[:400].strip(), tags=tags))
         text = rewrite_text(site, text, is_html, local, global_idx)
         out.write_text(text, encoding="utf-8", errors="surrogateescape")
 

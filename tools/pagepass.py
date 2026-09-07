@@ -21,6 +21,16 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 CSS_VERSION = hashlib.sha1((_ROOT / 'site' / 'style.css').read_bytes()).hexdigest()[:8]
+SHELL_VERSION = hashlib.sha1((_ROOT / 'site' / 'shell.js').read_bytes()).hexdigest()[:8]
+# Google Fonts per product identity (display=swap is in the query string).
+FONTS = {
+    "Clean Copy": "family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600",
+    "DeskUptime": "family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500",
+    "BugBottle": "family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600",
+}
+FONTS_DEFAULT = "family=Inter:wght@400;500;600;700"
+THEME_SCRIPT = ("<script>(function(){var d=document.documentElement;d.classList.add('has-js');"
+                "try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t)}catch(e){}})();</script>")
 
 # ---------------------------------------------------------------------------
 # Body
@@ -48,7 +58,11 @@ OWNED_SELECTORS = {
     ":root",
 }
 # Prefixes: any selector starting with one of these is dropped too.
-OWNED_PREFIXES = (".site-header", ".site-footer", ".site-nav", ".lang-switch", ".nav-toggle", ".skip-link")
+OWNED_PREFIXES = (".site-header", ".site-footer", ".site-nav", ".lang-switch", ".nav-toggle", ".skip-link", ".family-bar",
+                  ".crumbs", ".toc", ".prose-layout", ".prose-aside", ".search-", ".btt", ".copy-btn", ".prev-next", ".bb-live",
+                  ".layout-wide", ".article-meta", ".header-tools", ".theme-btn")
+# Page-level layout wrappers (main.jf-wrap { max-width: 1100px; … }): the shell owns the width now.
+WRAP_SELECTOR_RE = re.compile(r"^(?:main|div)?\.(?:[\w-]+-)?wrap$")
 
 # Exact style="" values -> class names (the value is removed from the element).
 STYLE_TO_CLASS = {
@@ -133,7 +147,7 @@ def _norm_sel(s: str) -> str:
 
 def _owned(selector: str) -> bool:
     s = _norm_sel(selector)
-    if s in OWNED_SELECTORS or s.startswith(OWNED_PREFIXES):
+    if s in OWNED_SELECTORS or s.startswith(OWNED_PREFIXES) or WRAP_SELECTOR_RE.match(s):
         return True
     # ".compare th, .compare td" style lists: owned only if every part is owned
     return False
@@ -204,6 +218,10 @@ def _apply_style_attr(m: re.Match) -> str:
     for rx, rep in STYLE_COLOR_MAP:
         new = rx.sub(rep, new)
     new = HEX_DECL_RE.sub(_hex_to_token, new)
+    if tag.lower() not in ("img", "svg", "td", "th", "col"):
+        new = re.sub(r"max-width\s*:[^;]*;?", "", new).strip()
+    if not new:
+        return f"<{tag}{before}{after}>"
     return f'<{tag}{before} style="{new}"{after}>'
 
 
@@ -406,7 +424,8 @@ def build_head(*, site_url: str, brand: dict, lang: str, dest: str, canonical: s
         '<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">',
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">',
+        f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{FONTS.get(name, FONTS_DEFAULT)}&display=swap">',
+        THEME_SCRIPT,
         f'<link rel="stylesheet" href="/style.css?v={CSS_VERSION}">',
     ]
     if og_image.endswith("/og.png") or og_image.endswith("/og-da.png"):

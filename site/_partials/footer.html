@@ -1,19 +1,35 @@
 <footer class="site-footer">
-  <div class="cols"><div><h4>{{brand}}</h4>
-      <ul>
+  <div class="container">
+    <div class="cols">
+      <div><h4>{{brand}}</h4>
+        <p class="product-line">{{product_line}}</p>
+        <ul>
 {{footer_links}}
-      </ul>
-    </div>
-    <div><h4>{{other_products_label}}</h4>
-      <ul>
+        </ul>
+      </div>
+      <div><h4>{{family_heading}}</h4>
+        <ul>
 {{product_links}}
-      </ul>
+        </ul>
+      </div>
+      <div><h4>{{site_heading}}</h4>
+        <ul>
+          <li><a href="{{privacy_url}}">{{privacy_link}}</a></li>
+          <li><a href="/.well-known/security.txt">{{security_link}}</a></li>
+          <li><a href="/llms.txt">llms.txt</a></li>
+          <li><a href="/sitemap.xml">{{sitemap_link}}</a></li>
+          <li><a href="{{search_url}}">{{search_label}}</a></li>
+          <li><a href="mailto:mads@mahoje.dk?subject={{report_subject}}" data-bugbottle-open>{{report_link}}</a></li>
+        </ul>
+        <a class="bb-badge" href="https://bugbottle.dev">{{bb_badge}}</a>
+      </div>
+      <div class="maker">
+        <p>{{maker_note}}</p>
+        <p>{{privacy_note}}</p>
+      </div>
     </div>
-    <div><h4>{{privacy_label}}</h4>
-      <p>{{privacy_note}}</p>
-      <p><a href="/privacy/">{{privacy_link}}</a> · <a href="/terms/">{{terms_link}}</a></p>
+    <div class="bottom"><span>© {{year}} Mads Holst Jensen</span>{{license_note}}
+{{lang_switch}}
     </div>
-  </div>
-  <div class="maker"><p>{{maker_note}}</p>
   </div>
 </footer>
