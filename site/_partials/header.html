@@ -1,9 +1,24 @@
 <a class="skip-link" href="#main">{{skip_label}}</a>
 <header class="site-header">
   <div class="bar"><a class="brand" href="{{home}}">{{brand}} <span class="brand-by">{{brand_by}}</span></a>
-    <nav class="site-nav" aria-label="{{nav_label}}">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="{{menu_label}}">
+      <svg class="icon icon-menu" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="icon icon-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <nav class="site-nav" id="site-nav" aria-label="{{nav_label}}">
 {{nav}}
 {{lang_switch}}
     </nav>
   </div>
 </header>
+<script>
+(function(){
+  document.documentElement.classList.add('has-js');
+  var h=document.querySelector('.site-header'),b=h&&h.querySelector('.nav-toggle');
+  if(!b)return;
+  function set(o){h.classList.toggle('nav-open',o);b.setAttribute('aria-expanded',o?'true':'false');}
+  b.addEventListener('click',function(){set(!h.classList.contains('nav-open'));});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&h.classList.contains('nav-open')){set(false);b.focus();}});
+  document.addEventListener('click',function(e){if(h.classList.contains('nav-open')&&!h.contains(e.target))set(false);});
+})();
+</script>
