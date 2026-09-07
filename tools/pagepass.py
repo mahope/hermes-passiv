@@ -14,8 +14,13 @@ from __future__ import annotations
 
 import html as htmllib
 import json
+import hashlib
 import re
 from datetime import datetime, timezone
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+CSS_VERSION = hashlib.sha1((_ROOT / 'site' / 'style.css').read_bytes()).hexdigest()[:8]
 
 # ---------------------------------------------------------------------------
 # Body
@@ -402,7 +407,7 @@ def build_head(*, site_url: str, brand: dict, lang: str, dest: str, canonical: s
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
         '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">',
-        '<link rel="stylesheet" href="/style.css">',
+        f'<link rel="stylesheet" href="/style.css?v={CSS_VERSION}">',
     ]
     if og_image.endswith("/og.png") or og_image.endswith("/og-da.png"):
         lines.insert(lines.index(f'<meta property="og:image:alt" content="{esc(name)}">'),
