@@ -452,6 +452,7 @@ TAG_RE = re.compile(r"<[^>]+>")
 SCRIPT_STYLE_RE = re.compile(r"<(script|style|noscript|svg|template)\b.*?</\1>", re.S | re.I)
 # split() variant: parts[0::3] is prose, parts[1::3] the skipped blocks (verbatim), parts[2::3] the tag names
 SKIP_SPLIT_RE = re.compile(r"(<(script|style|noscript|svg|template|pre|textarea|code)\b.*?</\2>)", re.S | re.I)
+LEGACY_CRUMBS_RE = re.compile(r"\s*<(p|nav|div)\s+class=\"breadcrumb\"[^>]*>.*?</\1>", re.S | re.I)
 TOOL_MAIN_RE = re.compile(r'<main\b([^>]*\sclass="[^"]*\b(?:[\w-]+-)?wrap\b[^"]*"[^>]*)>', re.I)
 
 
@@ -873,6 +874,9 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
     crumbs = crumbs_for(site, dest, lang, title or cfg["brand"], section) if kind != "home" else []
     info["crumbs"] = crumbs
     if crumbs and mm:
+        # the shell's breadcrumbs replace any breadcrumb trail the page carried itself
+        text = LEGACY_CRUMBS_RE.sub("", text, count=1)
+        mm = MAIN_OPEN_RE.search(text)
         text = text[: mm.end()] + "\n" + _crumbs_html(crumbs, lang) + text[mm.end():]
     if kind in ("article", "guide"):
         text = article_layout(text, lang, dates, neighbours or {})

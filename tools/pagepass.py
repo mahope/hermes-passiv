@@ -424,7 +424,8 @@ def build_head(*, site_url: str, brand: dict, lang: str, dest: str, canonical: s
         '<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">',
         '<link rel="preconnect" href="https://fonts.googleapis.com">',
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
-        f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{FONTS.get(name, FONTS_DEFAULT)}&display=swap">',
+        f'<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?{FONTS.get(name, FONTS_DEFAULT)}&display=swap" onload="this.onload=null;this.rel=\'stylesheet\'">',
+        f'<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?{FONTS.get(name, FONTS_DEFAULT)}&display=swap"></noscript>',
         THEME_SCRIPT,
         f'<link rel="stylesheet" href="/style.css?v={CSS_VERSION}">',
     ]
