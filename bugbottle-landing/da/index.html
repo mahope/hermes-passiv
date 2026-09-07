@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="da" data-product="bugbottle">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BugBottle — headless fejlrapporter i din app, med beviserne vedhæftet</title>
+<meta name="description" content="BugBottle er et lille MIT-licenseret bibliotek, der samler sidekontekst, console errors, det element brugeren peger på og et valgfrit screenshot, og POSTer det som JSON til en route, du selv ejer. Headless, framework-uafhængigt, ingen afhængigheder.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://bugbottle.dev/da/">
+<link rel="alternate" hreflang="en" href="https://bugbottle.dev/">
+<link rel="alternate" hreflang="da" href="https://bugbottle.dev/da/">
+<link rel="alternate" hreflang="x-default" href="https://bugbottle.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BugBottle">
+<meta property="og:title" content="BugBottle — headless fejlrapporter i din app, med beviserne vedhæftet">
+<meta property="og:description" content="Saml console errors, sidekontekst, et valgt element og et screenshot; POST det til dit eget endpoint. MIT, ingen afhængigheder.">
+<meta property="og:url" content="https://bugbottle.dev/da/">
+<meta name="twitter:card" content="summary">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .sizes { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+  .sizes li { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; }
+  .sizes span { font-family: var(--mono); font-size: 0.85rem; color: var(--color-text-muted); }
+  .steps h3 { margin-top: 1.75rem; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Fejlrapporter inde fra din app — med beviserne vedhæftet.</h1>
+    <p>"Gem-knappen gør ingenting" kan man ikke handle på. BugBottle samler det, der faktisk foregik, da nogen lagde mærke til fejlen — siden, viewporten, de seneste console errors, det element de peger på, og eventuelt et screenshot — og sender det som JSON til en route, du allerede ejer. Du tegner formularen; biblioteket klarer indsamlingen.</p>
+    <div class="hero-cta">
+      <a href="#install" class="btn-primary">Installér</a>
+      <a href="/bugbottle-demo" class="btn-secondary">Prøv live-demoen</a>
+      <a href="https://github.com/mahope/bugbottle" class="btn-secondary">Kildekode på GitHub</a>
+    </div>
+    <span class="hero-note">MIT-licens, ingen runtime-afhængigheder, ingen hosted service. <code>npm install bugbottle</code></span>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2>Hvad det gør</h2>
+    <p>Error trackers fanger det, der kaster en exception. De kan ikke fange det, der bare ser forkert ud, og de fortæller sjældent, hvad personen var i gang med. BugBottle står på den anden side: en person siger "det her er forkert", og rapporten kommer med nok kontekst til at reproducere det.</p>
+    <dl class="feature-list">
+      <div><dt>Headless</dt><dd>Du ejer din markup. Biblioteket ejer state, indsamling og afsendelse — som en React hook eller som tre almindelige funktioner, der virker med ethvert framework eller uden.</dd></div>
+      <div><dt>Dit eget backend</dt><dd>En rapport er en JSON-body på et <code>fetch</code>. Modtageren er en route, du selv skriver; valideringshjælpere til den følger med i samme pakke.</dd></div>
+      <div><dt>Lille</dt><dd>Kernen cirka 0,8 kB gzippet. Med element picker og React hook 3,9 kB. Det færdige panel 6,9 kB. Alt-i-ét script tag 11,6 kB.</dd></div>
+      <div><dt>Sender videre</dt><dd>Server-side hjælpere sender en rapport videre til e-mail via Resend, Slack, Discord, en almindelig webhook eller et GitHub issue. Nøglerne bliver på serveren.</dd></div>
+      <div><dt>Dit sprog, dit brand</dt><dd>Otte sprog med i pakken, alle tekster kan overskrives, og det valgfrie panel styles med en håndfuld CSS-variabler.</dd></div>
+      <div><dt>Defensiv på serveren</dt><dd>Hvert felt, en browser sender, trimmes, klippes og tjekkes, før det når lageret — inklusive PNG-signatur og størrelse på et screenshot.</dd></div>
+    </dl>
+    <p>Hvad det ikke er: ikke et dashboard, ikke session replay, ikke en hosted service. Vil du have annoterede issues oprettet i Jira af en leverandør, så kig på Marker.io eller Jam. Vil du optage alt, en bruger gør, så kig på rrweb. BugBottle er det mindste, der gør "det virker ikke" til en reproducerbar payload.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem det er til</h2>
+    <p>Teams, der bygger en webapp og vil have en "rapportér et problem"-knap, som giver brugbare rapporter — uden en tredjepartstjeneste, et script fra et fremmed domæne eller endnu en månedlig regning. Det passer til interne værktøjer, SaaS-produkter og kundeprojekter, hvor data skal blive på egen infrastruktur.</p>
+  </div>
+</section>
+
+<section id="install" class="steps">
+  <div class="container">
+    <h2>Installation og brug</h2>
+<pre><code>npm install bugbottle
+npm install html-to-image   # valgfrit, kun hvis du vil have screenshots</code></pre>
+    <p>Uden npm: <code>npm install github:mahope/bugbottle#v0.4.0</code>, eller importér de byggede filer fra jsDelivr — <code>dist/</code> er committet netop til det.</p>
+
+    <h3>1. Optag console errors, byg så en formular (React)</h3>
+<pre><code>import { initConsoleBuffer } from "bugbottle";
+import { useBugReport } from "bugbottle/react";
+import { htmlToImage } from "bugbottle/html-to-image"; // valgfrit
+
+initConsoleBuffer(); // én gang, så tidligt som muligt
+
+function ReportForm() {
+  const report = useBugReport({
+    endpoint: "/api/feedback",
+    screenshot: htmlToImage, // udelad for at slå screenshots fra
+  });
+  return (
+    &lt;form data-bugbottle onSubmit={(e) =&gt; { e.preventDefault(); void report.submit(); }}&gt;
+      {report.types.map((t) =&gt; (
+        &lt;button key={t} type="button" onClick={() =&gt; report.setType(t)}&gt;{t}&lt;/button&gt;
+      ))}
+      &lt;textarea value={report.message} onChange={(e) =&gt; report.setMessage(e.target.value)} /&gt;
+      &lt;button type="submit" disabled={report.status === "sending"}&gt;Send&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+    <h3>2. Alle andre steder: tre funktioner</h3>
+<pre><code>import { captureScreenshot, pickElement, buildReport, sendReport } from "bugbottle";
+import { htmlToImage } from "bugbottle/html-to-image";
+
+const screenshot = await captureScreenshot(htmlToImage); // PNG data URL
+const element = await pickElement();                     // null hvis brugeren trykkede Escape
+const report = buildReport({ type: "bug", message, screenshotDataUrl: screenshot, elements: element ? [element] : [] });
+const { id } = await sendReport("/api/feedback", report);</code></pre>
+    <p>Vil du helst ikke bygge en formular? <code>bugbottle/ui</code> monterer en flydende knap og en lille dialog i en shadow root, og <code>dist/bugbottle.js</code> gør det samme fra ét <code>&lt;script&gt;</code>-tag med attributterne <code>data-endpoint</code>, <code>data-locale</code> og <code>data-brand</code>.</p>
+
+    <h3>3. Modtag den på serveren</h3>
+<pre><code>import {
+  decodeScreenshotDataUrl, InvalidScreenshotError, isReportType,
+  normaliseConsole, normaliseContext, normaliseElements, normaliseMessage,
+} from "bugbottle/server";
+
+export async function POST(req: Request) {
+  const payload = await req.json();
+  const message = normaliseMessage(payload.message);
+  if (!message) return Response.json({ error: "Skriv en besked først" }, { status: 400 });
+  const type = isReportType(payload.type) ? payload.type : "other";
+  const context = normaliseContext(payload.context);
+  const console = normaliseConsole(payload.console);
+  const elements = normaliseElements(payload.elements);
+  let screenshot: Uint8Array | null = null;
+  try {
+    if (payload.screenshotDataUrl) screenshot = decodeScreenshotDataUrl(payload.screenshotDataUrl);
+  } catch (err) {
+    if (!(err instanceof InvalidScreenshotError)) throw err; // et dårligt billede må ikke fejle rapporten
+  }
+  const { id } = await save({ type, message, context, console, elements, screenshot });
+  return Response.json({ id }, { status: 201 });
+}</code></pre>
+    <p>Virker uændret i en Next.js route handler, Hono, Cloudflare Workers, Bun, Deno eller alt andet bygget på web-<code>Request</code>. Hjælperne beholder de seneste 50 console-linjer og verificerer den rigtige PNG-signatur, før et screenshot når dit lager. Fuld API i <a href="https://github.com/mahope/bugbottle#readme">README</a> (engelsk).</p>
+
+    <h3>Bundle-størrelser</h3>
+    <ul class="sizes">
+      <li>Kerne (buildReport, sendReport, console buffer)<span>~0,8 kB gzip</span></li>
+      <li>Kerne + element picker + React hook<span>3,9 kB gzip</span></li>
+      <li>Færdigt panel (<code>bugbottle/ui</code>)<span>6,9 kB gzip</span></li>
+      <li>Ét script tag (<code>dist/bugbottle.js</code>)<span>11,6 kB gzip</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Pris</h2>
+    <p>Gratis. MIT-licens, ingen hosted komponent, intet at abonnere på. Har du brug for hjælp til at integrere det i et produkt, er det den slags arbejde, <a href="https://mahoje.dk">mahoje.dk</a> laver.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Spørgsmål</h2>
+    <details>
+      <summary>Hvor ender rapporterne?</summary>
+      <p>Dér, hvor dit endpoint lægger dem. BugBottle taler aldrig med en server, der er dets egen. Eksemplet ovenfor gemmer i din database; server-hjælperne kan også sende videre til Slack, Discord, e-mail eller et GitHub issue.</p>
+    </details>
+    <details>
+      <summary>Virker screenshots på alle sider?</summary>
+      <p>Screenshots bruger <code>html-to-image</code>, som tegner DOM'en til et canvas. Cross-origin-billeder uden CORS-headers, visse CSS-features og meget store sider kan give ufuldstændige billeder. Derfor er screenshot valgfrit, og derfor fejler et dårligt screenshot aldrig rapporten.</p>
+    </details>
+    <details>
+      <summary>Hvad med persondata?</summary>
+      <p>Rapporten indeholder det, du vælger at samle: beskeden, URL'en, viewport, user agent, seneste console-linjer, det valgte elements selector og, hvis slået til, et screenshot. Console-linjer og screenshots kan indeholde persondata, så behandl endpointet som ethvert andet sted, hvor brugerinput lander — normalise-hjælperne klipper størrelser, men de redigerer ikke indhold.</p>
+    </details>
+    <details>
+      <summary>Virker det uden React?</summary>
+      <p>Ja. React-hooken er et tyndt lag oven på <code>buildReport</code> og <code>sendReport</code>. Vue, Svelte, ren JavaScript og script-tag-udgaven bruger alle samme kerne.</p>
+    </details>
+    <details>
+      <summary>Er det stabilt?</summary>
+      <p>Nuværende release er 0.4.x. Det bruges i produktion, men det offentlige API kan stadig ændre sig før 1.0. Ændringer står i GitHub releases.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem står bag</h2>
+    <p>BugBottle er bygget af Mads Holst Jensen, selvstændig udvikler i Odense, under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Det blev trukket ud af et kundeprojekt, hvor "kan du tilføje en rapportér-en-fejl-knap" blev til spørgsmålet om, hvad en fejlrapport egentlig bør indeholde. Issues og pull requests på <a href="https://github.com/mahope/bugbottle">GitHub</a>.</p>
+    <p>Læs mere: <a href="/da/blog/tilfoej-fejlrapport-formular-hjemmeside">tilføj en fejlrapport-formular til enhver hjemmeside</a>, <a href="/da/blog/bugrapporter-i-ci-pipeline">bugrapporter i din CI-pipeline</a>.</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

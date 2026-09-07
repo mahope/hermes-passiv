@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="da" data-product="cleancopy">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Copy — kopiér websider som ren Markdown eller ren tekst</title>
+<meta name="description" content="Clean Copy laver enhver webside, markering eller HTML-fil om til ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin, GitHub Action. Gratis, MIT-licens, intet forlader din maskine.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://cleancopy.tools/da/">
+<link rel="alternate" hreflang="en" href="https://cleancopy.tools/">
+<link rel="alternate" hreflang="da" href="https://cleancopy.tools/da/">
+<link rel="alternate" hreflang="x-default" href="https://cleancopy.tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Clean Copy">
+<meta property="og:title" content="Clean Copy — kopiér websider som ren Markdown eller ren tekst">
+<meta property="og:description" content="Browser-extension, CLI, Obsidian- og VS Code-plugin. Gratis, MIT-licens, kører lokalt.">
+<meta property="og:url" content="https://cleancopy.tools/da/">
+<meta property="og:image" content="https://cleancopy.tools/clean-copy/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .surfaces { display: grid; gap: 0.5rem 1.5rem; grid-template-columns: 1fr; margin: 0; padding: 0; list-style: none; }
+  @media (min-width: 560px) { .surfaces { grid-template-columns: 1fr 1fr; } }
+  .surfaces li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; }
+  .surfaces span { color: var(--color-text-muted); font-size: 0.9rem; }
+  .install h3 { margin-top: 1.75rem; }
+  .install ol { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Kopiér enhver webside som ren Markdown eller ren tekst.</h1>
+    <p>Clean Copy tager det, du markerer i browseren — eller en hel side, eller en HTML-fil — og giver dig Markdown, der kan sættes direkte ind i Obsidian, en README, en ticket eller en mail. Typografiske anførselstegn, usynlige tegn og layout-støj fjernes undervejs.</p>
+    <div class="hero-cta">
+      <a href="#install" class="btn-primary">Installér</a>
+      <a href="/clean-copy-tool" class="btn-secondary">Prøv i browseren</a>
+      <a href="https://github.com/mahope/clean-copy" class="btn-secondary">Kildekode på GitHub</a>
+    </div>
+    <span class="hero-note">Gratis og MIT-licenseret. Kører udelukkende på din egen maskine — ingen konto, ingen server, ingen data sendes nogen steder hen.</span>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2>Hvad det gør</h2>
+    <p>Markér tekst på en side, højreklik, vælg <strong>Copy as Markdown</strong> eller <strong>Copy as clean text</strong>. Eller tryk <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>. Den samme converter kører i terminalen:</p>
+<pre class="term"><span class="p">$</span> curl -sL https://example.com/artikel | clean-copy
+<span class="dim"># Artiklens titel</span>
+
+<span class="dim">Afsnit bliver til afsnit. Links bliver til [tekst](url), overskrifter beholder
+deres niveau, kodeblokke bliver fenced, og tabeller bliver til pipe-tabeller
+med den oprindelige kolonnejustering.</span>
+
+<span class="p">$</span> clean-copy --url https://example.com/docs --text > docs.txt</pre>
+    <dl class="feature-list">
+      <div><dt>Markdown der matcher siden</dt><dd>Overskrifter, lister, links, billeder, fed og kursiv, fenced code blocks med sprog-tag, tabeller med justering, nummererede lister der beholder deres startnummer.</dd></div>
+      <div><dt>Typografisk oprydning</dt><dd>Krøllede anførselstegn bliver lige, hårde mellemrum bliver almindelige, zero-width og andre usynlige tegn fjernes.</dd></div>
+      <div><dt>Ren tekst</dt><dd>Når du kun vil have ordene: ingen Markdown-syntaks, bare afsnit og linjeskift.</dd></div>
+      <div><dt>Intet forlader din maskine</dt><dd>Converteren er én lille JavaScript-fil uden runtime-afhængigheder. Extensionen har ingen server; CLI'en åbner kun en netværksforbindelse, hvis du bruger <code>--url</code>.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem det er til</h2>
+    <p>Folk, der flytter tekst fra nettet ind i noget andet hver dag: udviklere der skriver docs og tickets, researchere med noter i Obsidian, skribenter der sætter kilder ind i et udkast — og alle, der har sat tekst fra en webside ind i en code editor og fået et krøllet anførselstegn i en string.</p>
+    <p>Det er én converter leveret i syv former, så du får samme resultat, uanset hvor du er:</p>
+    <ul class="surfaces">
+      <li>Chrome / Edge / Brave-extension <span>v1.5.2</span></li>
+      <li>Firefox-extension <span>v1.5.2, hedder Clean Copy MD</span></li>
+      <li>Kommandolinje <span>Homebrew eller npm</span></li>
+      <li>Obsidian-plugin <span>indsæt som Markdown</span></li>
+      <li>VS Code-extension <span>indsæt som Markdown</span></li>
+      <li>GitHub Action <span>konvertér URL'er eller filer i CI</span></li>
+      <li>Webværktøj og bookmarklet <span>uden installation</span></li>
+    </ul>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container">
+    <h2>Installation</h2>
+    <p class="section-intro">Extensions ligger endnu ikke i Chrome Web Store eller på addons.mozilla.org, så de installeres fra en zip-fil. Det tager cirka et minut og kræver ingen developer-konto.</p>
+
+    <h3>Chrome, Edge, Brave</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-v1.5.2.zip">clean-copy-v1.5.2.zip</a> og pak den ud.</li>
+      <li>Åbn <code>chrome://extensions</code> og slå <strong>Developer mode</strong> til.</li>
+      <li>Klik <strong>Load unpacked</strong> og vælg den udpakkede mappe.</li>
+    </ol>
+
+    <h3>Firefox</h3>
+    <ol>
+      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.2.zip">clean-copy-firefox-v1.5.2.zip</a> og pak den ud.</li>
+      <li>Åbn <code>about:debugging#/runtime/this-firefox</code>, klik <strong>Load Temporary Add-on</strong> og vælg <code>manifest.json</code>.</li>
+      <li>Midlertidige add-ons fjernes, når Firefox lukkes. En signeret udgave til addons.mozilla.org er på vej.</li>
+    </ol>
+
+    <h3>Kommandolinje</h3>
+<pre><code>brew install mahope/tap/clean-copy      # macOS / Linux
+npm install -g github:mahope/clean-copy-cli
+npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></pre>
+    <p>Læser stdin eller en fil, skriver Markdown til stdout. <code>--url</code> henter en side og beholder selve artiklen, <code>--text</code> giver ren tekst, <code>--copy</code> lægger resultatet på clipboardet. Fuld oversigt: <a href="/clean-copy-cli-ref">CLI-reference</a> (engelsk).</p>
+
+    <h3>Obsidian</h3>
+    <p>Tilføj <code>mahope/clean-copy-obsidian</code> via <a href="https://github.com/TfTHacker/obsidian42-brat">BRAT</a>, eller kopiér <code>main.js</code>, <code>manifest.json</code> og <code>styles.css</code> fra <a href="https://github.com/mahope/clean-copy-obsidian/releases/latest">seneste release</a> til <code>.obsidian/plugins/clean-copy-obsidian/</code>. Indsæt derefter med <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>. Optagelse i community plugins afventer.</p>
+
+    <h3>VS Code</h3>
+    <p>Download <code>.vsix</code>-filen fra <a href="https://github.com/mahope/clean-copy-vscode/releases/latest">seneste release</a> og kør <code>code --install-extension clean-copy-1.0.0.vsix</code>, eller brug <strong>Install from VSIX</strong> i Extensions-panelet. Indsæt HTML som Markdown med <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.</p>
+
+    <h3>GitHub Action</h3>
+<pre><code>- uses: mahope/clean-copy-cli@v1
+  with:
+    url: https://example.com/changelog
+    output_file: docs/changelog.md</code></pre>
+    <p>Tager også <code>file:</code> eller rå <code>html:</code> som input og har fire output-modes: <code>markdown</code>, <code>plain</code>, <code>wikilinks</code> og <code>csv</code>.</p>
+
+    <h3>Uden installation</h3>
+    <p><a href="/clean-copy-tool">Webværktøjet</a> konverterer indsat HTML eller formateret tekst direkte i browserfanen. <a href="/clean-copy-bookmarklet">Bookmarkletten</a> virker i alle browsere. Der er også en <a href="/da/url-til-markdown">URL til Markdown</a>-side og et <a href="/clean-copy-api">HTTP-API</a> til scripts, der ikke kan køre Node.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Pris</h2>
+    <p>Gratis. Alle udgaver er MIT-licenserede, og hele kildekoden ligger på <a href="https://github.com/mahope/clean-copy">GitHub</a>. En betalt udgave med egne rense-regler og standarder pr. site er skitseret, men der er hverken checkout eller dato. Den gratis version er komplet — ikke en prøveversion.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Spørgsmål</h2>
+    <details>
+      <summary>Hvorfor ligger extensionen ikke i Chrome Web Store?</summary>
+      <p>Store-listningen kræver en developer-konto og en review-runde, som jeg ikke er færdig med. Load unpacked giver dig præcis samme kode; store-versionen bliver identisk, når den kommer.</p>
+    </details>
+    <details>
+      <summary>Sender den min tekst nogen steder hen?</summary>
+      <p>Nej. Extensionen har ingen server og beder ikke om netværkstilladelse. CLI'en laver kun en request, når du beder den hente en URL. Denne side kører en anonym sidevisningstæller og intet andet.</p>
+    </details>
+    <details>
+      <summary>Hvor god er Markdown-outputtet?</summary>
+      <p>Godt på artikler, dokumentation og de fleste tabeller; kolonnejustering, sprog-tags på kodeblokke og nestede lister bevares. Det er ikke en browser-rendering-engine, så tungt scriptede sider eller indhold, der indsættes efter load, kan komme ufuldstændigt ud. Sæt resultatet ind i <a href="/clean-copy-tool">webværktøjet</a>, hvis du vil se, hvad converteren gør ved en bestemt side, før du installerer noget.</p>
+    </details>
+    <details>
+      <summary>Chrome advarer om extensions i developer mode.</summary>
+      <p>Den advarsel kommer for alle unpacked extensions. Den forsvinder, når store-listningen findes. Du kan læse hele extensionen igennem — det er nogle få filer uden build-step.</p>
+    </details>
+    <details>
+      <summary>Må jeg bruge converteren i mit eget projekt?</summary>
+      <p>Ja. <code>clean-copy-core.js</code> er ét modul uden afhængigheder under MIT-licens. CLI'en, extensions og plugins importerer det uændret, og en paritetstest sørger for, at de ikke driver fra hinanden.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem står bag</h2>
+    <p>Clean Copy er bygget og vedligeholdt af Mads Holst Jensen, selvstændig udvikler i Odense, under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Det begyndte som en løsning på en personlig irritation — at sætte tekst fra websider ind i Obsidian — og voksede til værktøjerne ovenfor. Fejlrapporter og pull requests er velkomne på <a href="https://github.com/mahope/clean-copy/issues">GitHub</a>.</p>
+    <p>Læs mere: <a href="/da/blog/html-til-markdown-cli">HTML til Markdown fra terminalen</a>, <a href="/da/blog/indsæt-i-obsidian-ren-markdown">indsæt i Obsidian som ren Markdown</a>, <a href="/da/blog/tabeljustering-html-til-markdown">tabeljustering fra HTML til Markdown</a>.</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

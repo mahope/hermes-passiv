@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="da" data-product="mahope">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mahope.tools — gratis webværktøjer, guides og e-bøger fra mahoje.dk</title>
+<meta name="description" content="Gratis browserbaserede værktøjer til udviklere og små webbureauer: GDPR-dokumentgeneratorer, WCAG-kontrast- og farveværktøjer, NIS2-selvtjek, tekst- og udviklerværktøjer. Plus guides og e-bøger om EU-compliance for hjemmesider. Ingen konti, intet uploades.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://mahope.tools/da/">
+<link rel="alternate" hreflang="en" href="https://mahope.tools/">
+<link rel="alternate" hreflang="da" href="https://mahope.tools/da/">
+<link rel="alternate" hreflang="x-default" href="https://mahope.tools/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="mahope.tools">
+<meta property="og:title" content="mahope.tools — gratis webværktøjer, guides og e-bøger">
+<meta property="og:description" content="GDPR-generatorer, WCAG-farveværktøjer, NIS2-tjek, udviklerværktøjer. Kører i din browser, ingen konto.">
+<meta property="og:url" content="https://mahope.tools/da/">
+<meta name="twitter:card" content="summary">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .catalog { display: grid; gap: 2rem 2.5rem; }
+  @media (min-width: 720px) { .catalog { grid-template-columns: 1fr 1fr; } }
+  .catalog h3 { margin-bottom: 0.4rem; }
+  .catalog ul { list-style: none; padding: 0; margin: 0; }
+  .catalog li { border-top: 1px solid var(--color-border); padding: 0.45rem 0; margin: 0; display: flex; justify-content: space-between; gap: 1rem; }
+  .catalog li span { color: var(--color-text-muted); font-size: 0.85rem; white-space: nowrap; }
+  .catalog .all { border-top: 0; padding-top: 0.6rem; }
+  .products { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+  @media (min-width: 640px) { .products { grid-template-columns: repeat(3, 1fr); } }
+  .products li { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1rem; background: var(--color-surface); margin: 0; }
+  .products li p { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--color-text-muted); }
+</style>
+</head>
+<body>
+<main id="main">
+
+<div class="hero">
+  <div class="container">
+    <h1>Små, gratis webværktøjer, der kører i din browser.</h1>
+    <p>Generatorer til GDPR-dokumenter, farve- og kontrasttjek til WCAG, NIS2-selvtjek og de sædvanlige udviklerværktøjer — ordtæller, JSON-formatter, diff, hashes. Intet uploades, der er ingen konti, og guides og e-bøger er gratis at læse og hente. De fleste værktøjer findes på dansk; resten er på engelsk.</p>
+    <div class="hero-cta">
+      <a href="/free-tools" class="btn-primary">Alle værktøjer</a>
+      <a href="/blog/" class="btn-secondary">Guides</a>
+      <a href="/books/" class="btn-secondary">E-bøger</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="container wide">
+    <h2>Værktøjer</h2>
+    <div class="catalog">
+      <div>
+        <h3>GDPR-dokumenter</h3>
+        <ul>
+          <li><a href="/privacy-notice-generator-da">Privatlivspolitik-generator</a><span>art. 13/14</span></li>
+          <li><a href="/dpa-generator-da">Databehandleraftale-generator</a><span>art. 28</span></li>
+          <li><a href="/ropa-generator-da">Fortegnelse over behandlingsaktiviteter</a><span>art. 30</span></li>
+          <li><a href="/cookie-check-da">Cookie-tjek</a><span>cookies før samtykke</span></li>
+          <li><a href="/privacy-policy-template-da">Skabelon til privatlivspolitik</a><span>Markdown</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Tilgængelighed og farver</h3>
+        <ul>
+          <li><a href="/contrast-checker-da">WCAG-kontrasttjek</a><span>AA / AAA</span></li>
+          <li><a href="/palette-generator-da">Tilgængelig farvepalette</a><span></span></li>
+          <li><a href="/color-blindness-simulator-da">Farveblindhedssimulator</a><span></span></li>
+          <li><a href="/text-on-image-checker-da">Tekst på billede — kontrast</a><span>rigtige pixels</span></li>
+          <li><a href="/scan-da">Tilgængelighedsscanner</a><span>WCAG 2.2 / EAA</span></li>
+          <li><a href="/tilgaengelighedserklaering-generator-da">Tilgængelighedserklæring</a><span></span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>NIS2</h3>
+        <ul>
+          <li><a href="/nis2-check-da">Er jeg omfattet af NIS2?</a><span>12 spørgsmål</span></li>
+          <li><a href="/nis2-gap-assessment-da">Gap-analyse</a><span>art. 21-foranstaltninger</span></li>
+          <li><a href="/nis2-incident-generator-da">Hændelsesrapport-generator</a><span>art. 23</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Site-tjek</h3>
+        <ul>
+          <li><a href="/da/compliance-site-check">Compliance-tjek af hjemmeside</a><span>9 punkter</span></li>
+          <li><a href="/security-headers-check">Security headers</a><span>engelsk</span></li>
+          <li><a href="/url-inspector/">URL inspector</a><span>engelsk</span></li>
+          <li><a href="/da/page-profile">page-profile</a><span>CLI</span></li>
+          <li><a href="/site-icons">site-icons</a><span>CLI, engelsk</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Tekst- og udviklerværktøjer</h3>
+        <ul>
+          <li><a href="/word-counter">Ordtæller</a><span>engelsk</span></li>
+          <li><a href="/json-formatter">JSON-formatter og -validator</a><span>engelsk</span></li>
+          <li><a href="/text-diff">Tekst-diff</a><span>engelsk</span></li>
+          <li><a href="/case-converter">Case converter</a><span>engelsk</span></li>
+          <li><a href="/markdown-table-generator">Markdown-tabelgenerator</a><span>CSV / TSV</span></li>
+          <li><a href="/base64-encoder-decoder">Base64</a>, <a href="/url-encoder-decoder">URL-encoding</a>, <a href="/hash-generator">hashes</a>, <a href="/uuid-generator">UUID'er</a><span></span></li>
+        </ul>
+        <p class="all"><a href="/free-tools">Fuld liste med beskrivelser</a> · <a href="/free-downloads">Skabeloner og CLI'er til download</a></p>
+      </div>
+      <div>
+        <h3>CI og GitHub Actions</h3>
+        <ul>
+          <li><a href="https://github.com/mahope/compliance-site-check">compliance-site-check</a><span>efter hvert deploy</span></li>
+          <li><a href="https://github.com/mahope/deskuptime">deskuptime</a><span>oppetid og SSL i CI</span></li>
+          <li><a href="https://github.com/mahope/clean-copy-cli">clean-copy-cli</a><span>HTML til Markdown</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container wide">
+    <h2>Læsning</h2>
+    <div class="two-col">
+      <div>
+        <h3>Guides</h3>
+        <p>Praktiske artikler om EU-compliance for hjemmesider — European Accessibility Act, GDPR for bureauer, NIS2 — og om værktøjerne ovenfor. De fleste findes på dansk. <a href="/blog/">Se bloggen</a>, eller start med <a href="/da/guides">guiderne på dansk</a>.</p>
+      </div>
+      <div>
+        <h3>E-bøger</h3>
+        <p>Seks korte bøger som gratis EPUB-download (engelsk): en EAA-tjekliste, EAA for Shopify, GDPR og NIS2 for bureauer, en guide til cookie-samtykke og en tutorial i at bygge sin første Chrome-extension. <a href="/books/">Se bøgerne</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container wide">
+    <h2>Større værktøjer med egne sites</h2>
+    <ul class="products">
+      <li><a href="https://cleancopy.tools/da/">Clean Copy</a><p>Kopiér websider som ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin.</p></li>
+      <li><a href="https://deskuptime.com/da/">DeskUptime</a><p>Oppetid, SSL-udløb og indholdsændringer tjekket fra din egen maskine. Gratis CLI, desktop-app.</p></li>
+      <li><a href="https://bugbottle.dev/da/">BugBottle</a><p>Headless fejlrapporter i din app med console errors, kontekst og screenshot, sendt til dit eget endpoint.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Spørgsmål</h2>
+    <details>
+      <summary>Bliver det, jeg skriver, sendt til en server?</summary>
+      <p>Generatorer, tjek og tekstværktøjer: nej, de kører udelukkende i siden. Site-scannerne (tilgængelighedsscanner, compliance-tjek, security headers, URL inspector) er nødt til at hente den URL, du giver dem, og det sker gennem en lille Cloudflare Worker; URL'en gemmes ikke. Det eneste, sitet registrerer, er en anonym sidevisningstæller.</p>
+    </details>
+    <details>
+      <summary>Er de genererede dokumenter juridisk rådgivning?</summary>
+      <p>Nej. De er strukturerede skabeloner bygget ud fra forordningernes artikler og tænkt som et solidt førsteudkast. Få en advokat til at gennemgå alt, du stoler på — især databehandleraftaler og NIS2-forpligtelser.</p>
+    </details>
+    <details>
+      <summary>Hvorfor er e-bøgerne gratis?</summary>
+      <p>Fordi der ikke er koblet en betalt checkout på, og det hjælper ingen at holde bøgerne tilbage, indtil der er. De er Creative Commons BY-NC 4.0. Ændrer det sig, forbliver de gratis EPUB'er gratis.</p>
+    </details>
+    <details>
+      <summary>Kan jeg ønske et værktøj eller melde en fejl?</summary>
+      <p>Ja — hurtigst via et issue på <a href="https://github.com/mahope">GitHub</a> eller en mail gennem <a href="https://mahoje.dk">mahoje.dk</a>.</p>
+    </details>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Hvem står bag</h2>
+    <p>mahope.tools drives af Mads Holst Jensen, selvstændig udvikler i Odense, der arbejder med små virksomheder og bureauer under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Værktøjerne startede som ting, der var brug for i kundearbejde — et udkast til privatlivspolitik, et kontrasttjek, en smoke test efter deploy — og blev lagt ud, så andre kan bruge dem uden endnu et abonnement.</p>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

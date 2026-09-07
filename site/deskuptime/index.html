@@ -1,524 +1,175 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-product="deskuptime">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deskuptime — Desktop Website Monitor. No Monthly Fees.</title>
-<meta name="description" content="Monitor uptime, SSL certificates, and content changes from your desktop or terminal. One-time $19 purchase. No SaaS subscription. Works on any website.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
-<link rel="canonical" href="https://hermes-passiv.pages.dev/deskuptime/">
-<meta property="og:title" content="Deskuptime — Desktop Website Monitor">
-<meta property="og:description" content="Monitor uptime, SSL, and content changes. $19 one-time. Runs on your machine — no cloud, no monthly fee.">
-<meta property="og:url" content="https://hermes-passiv.pages.dev/deskuptime/">
+<title>DeskUptime — uptime, SSL and content checks from your own machine</title>
+<meta name="description" content="DeskUptime checks whether your websites are up, when their SSL certificates expire and whether their content changed — from the terminal or a small desktop app. Free CLI, MIT-licensed. Pro desktop licence 19 USD one-time.">
+<meta name="author" content="Mads Holst Jensen">
+<link rel="canonical" href="https://deskuptime.com/">
+<link rel="alternate" hreflang="en" href="https://deskuptime.com/">
+<link rel="alternate" hreflang="da" href="https://deskuptime.com/da/">
+<link rel="alternate" hreflang="x-default" href="https://deskuptime.com/">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="DeskUptime">
+<meta property="og:title" content="DeskUptime — uptime, SSL and content checks from your own machine">
+<meta property="og:description" content="Free CLI for uptime, SSL expiry and content-change checks. Desktop app for macOS and Windows. No monthly fee.">
+<meta property="og:url" content="https://deskuptime.com/">
+<meta property="og:image" content="https://deskuptime.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Deskuptime — Desktop Website Monitor">
-<meta name="twitter:description" content="Monitor uptime, SSL, and content changes. $19 one-time. Runs on your machine — no cloud, no monthly fee.">
-<meta property="og:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
-<meta name="twitter:image" content="https://hermes-passiv.pages.dev/deskuptime/og.png">
-<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/deskuptime/">
-<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/deskuptime/">
-<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/deskuptime/">
-<style>
-  :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
-        --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
-        --code:#1e293b;}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
-
-  header{border-bottom:1px solid var(--line);padding:14px 0}
-  header .wrap{display:flex;align-items:center;justify-content:space-between}
-  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
-  .logo span{color:var(--accent)}
-  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
-  nav a.cta{background:var(--accent);color:#fff;padding:7px 14px;border-radius:6px;font-weight:600;font-size:13px}
-  nav a.cta:hover{background:var(--accent-dark)}
-
-  .hero{text-align:center;padding:64px 0 40px;border-bottom:1px solid var(--line)}
-  .hero h1{font-size:42px;line-height:1.15;letter-spacing:-.03em;max-width:680px;margin:0 auto 14px}
-  .hero h1 span{color:var(--accent)}
-  .hero .sub{font-size:17px;color:var(--muted);max-width:600px;margin:0 auto 28px}
-  .hero .price-big{font-size:44px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
-  .hero .price-label{font-size:14px;color:var(--muted);margin-top:2px}
-  .hero .btn-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
-  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:8px;font-size:15px;transition:background .15s}
-  .btn:hover{background:var(--accent-dark)}
-  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--line)}
-  .btn.ghost:hover{border-color:var(--accent);background:var(--soft)}
-  .btn.code{font-family:monospace;font-size:14px;background:var(--code);color:#e2e8f0}
-  .btn.code:hover{background:#334155}
-  .hero .note{font-size:13px;color:var(--muted);margin-top:12px}
-
-  section{padding:56px 0;border-bottom:1px solid var(--line)}
-  section:last-of-type{border-bottom:0}
-  h2{font-size:30px;letter-spacing:-.025em;margin-bottom:8px;text-align:center}
-  .lede{color:var(--muted);max-width:600px;margin:0 auto 32px;text-align:center;font-size:16px}
-
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .card{border:1px solid var(--line);border-radius:10px;padding:24px}
-  .card h3{font-size:16px;margin-bottom:4px}
-  .card p{font-size:14px;color:var(--muted)}
-  .card .icon{font-size:28px;margin-bottom:8px;display:block}
-
-  .demo-wrap{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:20px 24px;font-family:monospace;font-size:13px;line-height:1.7;max-width:580px;margin:0 auto;overflow-x:auto}
-  .demo-wrap .ok{color:var(--ok)}
-  .demo-wrap .accent{color:var(--accent)}
-  .demo-wrap .muted{color:var(--muted)}
-  .demo-wrap .warn{color:var(--warn)}
-
-  table{width:100%;border-collapse:collapse;margin-top:16px}
-  td,th{border:1px solid var(--line);padding:12px 16px;text-align:left;font-size:14px}
-  th{background:var(--soft);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-  td:first-child{font-weight:600}
-  td.inc{background:#f0f9f4;color:var(--ok);font-weight:600;text-align:center}
-  td.missing{text-align:center;color:var(--muted)}
-
-  .cta-section{text-align:center;padding:56px 0}
-  .cta-section h2{margin-bottom:10px}
-  .cta-section .sub{margin-bottom:24px;color:var(--muted)}
-  .email-form{display:flex;gap:10px;max-width:440px;margin:0 auto;flex-wrap:wrap;justify-content:center}
-  .email-form input{flex:1;min-width:200px;padding:13px 16px;border:1px solid var(--line);border-radius:8px;font-size:15px;outline:none}
-  .email-form input:focus{border-color:var(--accent)}
-  .email-form button{padding:13px 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
-  .email-form button:hover{background:var(--accent-dark)}
-  .email-form .note{font-size:12px;color:var(--muted);margin-top:6px;flex-basis:100%}
-
-  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted)}
-  footer a{color:var(--accent);text-decoration:none}
-  footer a:hover{text-decoration:underline}
-
-  @media(max-width:640px){
-    .hero h1{font-size:30px}
-    .hero .price-big{font-size:34px}
-    .grid2,.grid3{grid-template-columns:1fr}
-    nav a{margin-left:12px;font-size:12px}
-    .btn-wrap{flex-direction:column;align-items:center}
-    .btn{width:100%;justify-content:center}
-    td,th{padding:8px 10px;font-size:13px}
-  }
-</style>
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "SoftwareApplication",
-      "name": "DeskUptime",
-      "applicationCategory": "Utilities",
-      "operatingSystem": "macOS, Windows",
-      "description": "Desktop website monitor. Checks uptime, SSL expiry and content changes. $19 one-time purchase. Runs on your own machine.",
-      "offers": {
-        "@type": "Offer",
-        "price": "19.00",
-        "priceCurrency": "USD",
-        "priceValidUntil": "2027-12-31"
-      }
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Do I need an internet connection for the desktop app?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The app checks your websites over the internet. It only works when your computer is online, but checks continue running silently in the background via the system tray."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I monitor multiple websites with the free CLI?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The free CLI watch mode supports up to 3 URLs. The Pro license removes that limit entirely — you can monitor as many websites as you want."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How does the license key work?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "You buy once at $19 and receive a license key. The key activates the Pro features — unlimited URLs, the desktop system tray app, email and webhook alerts. It works on up to 3 machines and covers all v1.x updates."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What happens if my computer is turned off?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Monitoring pauses while your computer is off. The CLI and desktop app only work on your own machine. This is a deliberate choice — it keeps your data private and eliminates monthly hosting costs."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Why would I pay $19 when there are free uptime services?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Free services either limit you to a single URL, require a cloud account, show your URLs to a third party, or serve ads. DeskUptime gives you unlimited private monitoring on your own machine for a one-time payment. After 3 months it's cheaper than UptimeRobot Pro ($7/mo)."
-          }
-        }
-      ]
-    }
-  ]
-}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"DeskUptime","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Windows, Linux","offers":[{"@type":"Offer","name":"CLI","price":"0","priceCurrency":"USD"},{"@type":"Offer","name":"Pro desktop licence","price":"19","priceCurrency":"USD"}],"url":"https://deskuptime.com/","author":{"@type":"Person","name":"Mads Holst Jensen","url":"https://mahoje.dk"}}
 </script>
+<style>
+  .downloads { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.5rem; }
+  .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
+  .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
+  table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
+</style>
 </head>
 <body>
-
-<header>
-<div class="wrap">
-  <a href="/" class="logo">Passiv</a>
-  <nav>
-    <a href="/free-tools">Free Tools</a>
-    <a href="/deskuptime/" style="color:var(--accent);font-weight:600">Deskuptime</a>
-    <a href="/books/">Books</a>
-    <a href="/blog/" class="cta" style="background:transparent;color:var(--muted);padding:0;font-weight:400">Blog</a>
-    <a href="/da/deskuptime/" style="font-size:13px;color:var(--muted);text-decoration:none">DA</a>
-  </nav>
-</div>
-</header>
+<main id="main">
 
 <div class="hero">
-<div class="wrap">
-  <h1>Desktop website monitoring.<br><span>No monthly fees.</span></h1>
-  <p class="sub">Monitor uptime, SSL certificates, and content changes from your desktop or terminal. One purchase. Runs on your machine.</p>
-  <div>
-    <div class="price-big">$19</div>
-    <div class="price-label">one-time &middot; 3 activations &middot; lifetime updates</div>
+  <div class="container">
+    <h1>Is the site up, is the certificate still valid, did the page change?</h1>
+    <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee, nothing about your sites stored on someone else's server.</p>
+    <div class="hero-cta">
+      <a href="#install" class="btn-primary">Install the CLI</a>
+      <a href="#desktop" class="btn-secondary">Download the desktop app</a>
+      <a href="https://github.com/mahope/deskuptime" class="btn-secondary">Source on GitHub</a>
+    </div>
+    <span class="hero-note">CLI is free and MIT-licensed. Desktop app is free for up to 3 sites; Pro licence 19 USD one-time.</span>
   </div>
-  <div class="btn-wrap">
-    <a href="#download" class="btn">Download Desktop App &darr;</a>
-    <a href="#pro" class="btn ghost">Get Pro License</a>
-    <a href="#try" class="btn ghost">Try CLI Free</a>
-    <a href="https://github.com/mahope/deskuptime" class="btn ghost">GitHub</a>
-  </div>
-  <p class="note">Or just run <code style="background:var(--soft);padding:2px 6px;border-radius:4px;font-size:13px">npx github:mahope/deskuptime check https://your-site.com</code></p>
-</div>
 </div>
 
 <section>
-<div class="wrap">
-  <h2>Try it right now</h2>
-  <p class="lede">No install. No account. Just run this in your terminal:</p>
-  <div class="demo-wrap">
-$ <span class="accent">npx github:mahope/deskuptime check</span> https://example.com https://cloudflare.com<br>
-🔍 Checking 2 URL(s)...<br>
-<br>
-<span class="ok">&#10003;</span> <span class="accent">https://example.com</span><br>
-&nbsp;&nbsp; Status:   <span class="ok">200 OK</span><br>
-&nbsp;&nbsp; Response: 85ms<br>
-&nbsp;&nbsp; <span class="ok">&#x1f512;</span> SSL:     63 days &#10003;<br>
-&nbsp;&nbsp; &mdash; Content: 559 bytes<br>
-<br>
-<span class="ok">&#10003;</span> <span class="accent">https://cloudflare.com</span><br>
-&nbsp;&nbsp; Status:   <span class="ok">200 OK</span><br>
-&nbsp;&nbsp; Response: 312ms<br>
-&nbsp;&nbsp; <span class="ok">&#x1f512;</span> SSL:     42 days &#10003;<br>
-&nbsp;&nbsp; &mdash; Content: 1,316,377 bytes
+  <div class="container">
+    <h2>How it works</h2>
+    <p>One command, no install, no account:</p>
+<pre class="term"><span class="p">$</span> npx github:mahope/deskuptime check https://example.com https://cloudflare.com
+Checking 2 URL(s)...
+
+<span class="ok">ok</span>  https://example.com
+    Status:    200 OK
+    Response:  85 ms
+    SSL:       expires in 63 days
+    Content:   559 bytes, sha256 unchanged
+
+<span class="ok">ok</span>  https://cloudflare.com
+    Status:    200 OK
+    Response:  312 ms
+    SSL:       expires in 42 days
+    Content:   1,316,377 bytes</pre>
+    <p>Add <code>watch</code> to keep checking on an interval, and it prints a line each time something changes:</p>
+<pre><code>deskuptime watch https://example.com --interval 300</code></pre>
+    <dl class="feature-list">
+      <div><dt>Uptime and response time</dt><dd>HTTP status, redirect chain and how long the response took. A non-2xx status or a timeout is reported as down.</dd></div>
+      <div><dt>SSL certificate</dt><dd>Days until expiry, issuer, protocol version. The default warning threshold is 14 days.</dd></div>
+      <div><dt>Content changes</dt><dd>A SHA-256 hash of the response body is compared with the previous run. Useful for spotting a broken deploy, an injected script or a defaced page.</dd></div>
+      <div><dt>Exit codes and JSON for CI</dt><dd>Exit 0 when everything passes, 2 when a site is down. <code>--json</code> gives machine-readable output, <code>watch --once</code> runs a single pass for cron. Use it as a post-deploy smoke test or on a schedule in GitHub Actions.</dd></div>
+    </dl>
   </div>
-</div>
 </section>
 
 <section>
-<div class="wrap">
-  <h2>What you can monitor</h2>
-  <div class="grid3">
-    <div class="card">
-      <span class="icon">&#x1f7e2;</span>
-      <h3>Uptime &amp; Response</h3>
-      <p>HTTP status codes, redirect chains, and response time measurement. Know when your site is down — and how fast it loads.</p>
-    </div>
-    <div class="card">
-      <span class="icon">&#x1f512;</span>
-      <h3>SSL Certificate</h3>
-      <p>Certificate expiry countdown, issuer details, cipher info, and protocol version. Get alerted before your cert expires.</p>
-    </div>
-    <div class="card">
-      <span class="icon">&#x1f504;</span>
-      <h3>Content Changes</h3>
-      <p>SHA-256 content hash comparison between checks. Detect unauthorized changes, injected scripts, or broken layouts.</p>
-    </div>
+  <div class="container">
+    <h2>Who it is for</h2>
+    <p>Freelancers and small agencies who look after a handful of client sites and do not want another subscription for it. Developers who want a smoke test after every deploy. Anyone who has found out from a customer that a certificate expired.</p>
+    <p>It is not a replacement for a distributed monitoring service with a status page and on-call rotation. Checks run from the machine you run them on; if that machine is asleep, nothing is checked. That is the trade-off for keeping it local and free of running costs.</p>
   </div>
-</div>
 </section>
 
-<section>
-<div class="wrap">
-  <h2>Install</h2>
-  <p class="lede">Three ways to get the CLI. All free, no account needed.</p>
-  <div class="grid3">
-    <div class="card">
-      <span class="icon">&#x1f34e;</span>
-      <h3>Homebrew (macOS / Linux)</h3>
-      <p style="font-family:monospace;font-size:12px;background:var(--code);color:#e2e8f0;padding:10px;border-radius:6px;overflow-x:auto">brew tap mahope/tap<br>brew install deskuptime</p>
-    </div>
-    <div class="card">
-      <span class="icon">&#x2b21;</span>
-      <h3>npx (no install)</h3>
-      <p style="font-family:monospace;font-size:12px;background:var(--code);color:#e2e8f0;padding:10px;border-radius:6px;overflow-x:auto">npx github:mahope/<br>deskuptime check https://your-site.com</p>
-    </div>
-    <div class="card">
-      <span class="icon">&#x1f4e5;</span>
-      <h3>Download release</h3>
-      <p><a href="https://github.com/mahope/deskuptime/releases">Grab a tagged tarball from GitHub Releases</a> and run it with Node 18+.</p>
-    </div>
+<section id="install">
+  <div class="container">
+    <h2>Install the CLI</h2>
+<pre><code>brew tap mahope/tap && brew install deskuptime   # macOS / Linux
+npx github:mahope/deskuptime check https://your-site.com   # no install, needs Node 18+</code></pre>
+    <p>Tagged tarballs are on <a href="https://github.com/mahope/deskuptime/releases">GitHub Releases</a>. In GitHub Actions, use the <code>mahope/deskuptime</code> action with a list of URLs; the job fails when a site is down and a status table lands in the job summary. There is a <a href="/blog/monitor-website-github-actions-free">walkthrough for the CI setup</a>.</p>
   </div>
-</div>
 </section>
 
-<section id="download">
-<div class="wrap">
-  <h2>Download Desktop App</h2>
-  <p class="lede">Native app for macOS and Windows. Lives in your system tray. Checks continue even when the window is closed.</p>
-  <div class="grid3">
-    <div class="card" style="text-align:center">
-      <span class="icon">&#x1f34e;</span>
-      <h3>macOS (Apple Silicon)</h3>
-      <p>M1, M2, M3, M4 — native aarch64 build</p>
-      <p style="margin-top:10px"><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip" class="btn" style="font-size:13px;padding:10px 20px">Download &darr;</a></p>
-    </div>
-    <div class="card" style="text-align:center">
-      <span class="icon">&#x1f5a5;&#xfe0f;</span>
-      <h3>macOS (Intel)</h3>
-      <p>Intel Macs — x86_64 build</p>
-      <p style="margin-top:10px"><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip" class="btn" style="font-size:13px;padding:10px 20px">Download &darr;</a></p>
-    </div>
-    <div class="card" style="text-align:center">
-      <span class="icon">&#x1f4bb;</span>
-      <h3>Windows</h3>
-      <p>Windows 10+ — NSIS installer</p>
-      <p style="margin-top:10px"><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime_0.2.7_x64-setup.exe" class="btn" style="font-size:13px;padding:10px 20px">Download &darr;</a></p>
-    </div>
-  </div>
-  <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:16px">
-    Free tier monitors up to 3 URLs. <a href="#pro" style="color:var(--accent)">Get a Pro license</a> to unlock unlimited URLs and email/webhook alerts.
-  </p>
-</div>
-</section>
-
-<section id="try">
-<div class="wrap">
-  <h2>Free vs Pro</h2>
-  <table>
-    <tr>
-      <th>Feature</th>
-      <th style="text-align:center">Free (CLI)</th>
-      <th style="text-align:center">Pro ($19)</th>
-    </tr>
-    <tr>
-      <td>URL checking</td>
-      <td class="inc">&#10003;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>SSL expiry check</td>
-      <td class="inc">&#10003;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>Content hash comparison</td>
-      <td class="inc">&#10003;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>Use from terminal</td>
-      <td class="inc">&#10003;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>System tray desktop app</td>
-      <td class="missing">&mdash;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>Background monitoring (watch mode, up to 3 URLs)</td>
-      <td class="inc">&#10003;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>More than 3 monitored URLs</td>
-      <td class="missing">&mdash;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>Email / webhook alerts</td>
-      <td class="missing">&mdash;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-    <tr>
-      <td>Unlimited URLs</td>
-      <td class="missing">&mdash;</td>
-      <td class="inc">&#10003;</td>
-    </tr>
-  </table>
-</div>
-</section>
-
-<section>
-<div class="wrap">
-  <h2>Why a desktop app?</h2>
-  <div class="grid2">
-    <div class="card">
-      <h3>&#x1f50c; No monthly bill</h3>
-      <p>Pingdom costs $12/mo. UptimeRobot Pro is $7/mo. That's $84&ndash;144/year. DeskUptime is <strong>$19 once</strong>. Three months and you've saved money.</p>
-    </div>
-    <div class="card">
-      <h3>&#x1f3e0; Runs on your machine</h3>
-      <p>No cloud account. No third-party server seeing your URLs. Your data stays on your computer. Privacy by default.</p>
-    </div>
-    <div class="card">
-      <h3>&#x1f6e0;&#xfe0f; CLI + Desktop</h3>
-      <p>Use the terminal for quick checks, the desktop app for continuous monitoring. Same engine, two interfaces.</p>
-    </div>
-    <div class="card">
-      <h3>&#x1f50d; Universal</h3>
-      <p>Works on any website — WordPress, Shopify, Netlify, Cloudflare Pages, your grandma's hand-coded HTML. No integration needed.</p>
-    </div>
-    <div class="card">
-      <h3>&#x1f510; License key</h3>
-      <p>Pro features unlock via Lemon Squeezy license key. 3 machines per purchase. No DRM, no phone-home — just a key.</p>
-    </div>
-    <div class="card">
-      <h3>&#x1f4c8; Lifetime updates</h3>
-      <p>One purchase covers all future v1.x releases. Major version upgrades at a discount. No subscription treadmill.</p>
-    </div>
-  </div>
-</div>
-</section>
-
-<section id="pro" class="cta-section">
-<div class="wrap">
-  <h2>Get DeskUptime Pro</h2>
-  <p class="sub">$19 one-time. License key unlocks the desktop app, system notifications and unlimited URLs. Watch mode is free in the CLI.</p>
-
-  <div style="max-width:400px;margin:0 auto;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:28px;text-align:center">
-    <div style="font-size:48px;font-weight:800;color:var(--accent);letter-spacing:-.03em">$19</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">one-time &middot; 3 activations</div>
-    <ul style="list-style:none;font-size:14px;text-align:left;display:inline-block;margin:0 auto">
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Desktop app (Tauri, Mac + Windows)</li>
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Background monitoring</li>
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; System notifications</li>
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Email &amp; webhook alerts</li>
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Unlimited URLs</li>
-      <li style="padding:5px 0 5px 22px;position:relative">&#10003; Lifetime updates (v1.x)</li>
+<section id="desktop">
+  <div class="container">
+    <h2>Desktop app</h2>
+    <p>A small Tauri app for macOS and Windows that lives in the system tray and runs the same checks on a schedule. Notifications when a site goes down, a certificate approaches expiry or the content hash changes. Current version 0.2.7.</p>
+    <ul class="downloads">
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip">macOS, Apple Silicon</a><span>zip, aarch64</span></li>
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip">macOS, Intel</a><span>zip, x86_64</span></li>
+      <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime_0.2.7_x64-setup.exe">Windows 10 and later</a><span>NSIS installer</span></li>
     </ul>
-    <div id="pro-status" style="margin-top:20px;padding:12px 20px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;font-size:13px;text-align:center">
-      &#x23f3; License sales starting soon via Lemon Squeezy.<br>
-      Leave your email and we'll notify you.
-    </div>
-    <p style="margin-top:18px;display:none" id="pro-buy-wrap">
-      <a id="pro-buy-btn" class="btn" href="#"
-         style="background:var(--accent);color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px">Buy Pro — $19 one-time &rarr;</a>
-      <span style="display:block;font-size:12px;color:var(--muted);margin-top:8px">Instant license key by email · 30-day money-back guarantee</span>
-    </p>
-    <form id="pro-waitlist-form" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-      <input type="email" id="pro-email" placeholder="your@email.com" required
-             style="padding:11px 14px;border:1px solid var(--line);border-radius:6px;font-size:14px">
-      <button type="submit" id="pro-notify-btn"
-              style="background:var(--accent);color:#fff;border:0;border-radius:6px;padding:11px;font-size:14px;font-weight:600;cursor:pointer">Notify Me</button>
-      <p class="note" id="pro-msg" role="status" aria-live="polite">No spam. Only one email when licenses go live.</p>
-    </form>
+    <p class="muted">If macOS or Windows warns about an unidentified developer on first launch, that is because the build is not code-signed through their paid programmes. Right-click and choose Open on macOS; choose "More info" then "Run anyway" on Windows.</p>
   </div>
-</div>
+</section>
+
+<section id="pro">
+  <div class="container">
+    <h2>Free and Pro</h2>
+    <table class="compare">
+      <thead><tr><th></th><th>CLI</th><th>Desktop</th><th>Desktop Pro</th></tr></thead>
+      <tbody>
+        <tr><td>Uptime, SSL and content checks</td><td>yes</td><td>yes</td><td>yes</td></tr>
+        <tr><td>One-off <code>check</code> of any number of URLs</td><td>yes</td><td>yes</td><td>yes</td></tr>
+        <tr><td>Continuous watch / background checks</td><td>yes</td><td>yes</td><td>yes</td></tr>
+        <tr><td>System tray and notifications</td><td>—</td><td>yes</td><td>yes</td></tr>
+        <tr><td>Sites in watch mode</td><td>3</td><td>3</td><td>unlimited</td></tr>
+        <tr><td>Email and webhook alerts</td><td>—</td><td>—</td><td>yes</td></tr>
+        <tr><td>Price</td><td>free</td><td>free</td><td>19 USD once</td></tr>
+      </tbody>
+    </table>
+    <div class="pricing">
+      <div>
+        <h3>CLI and desktop app</h3>
+        <p class="price">Free</p>
+        <p>MIT-licensed. One-off checks have no limits; continuous watch mode covers up to three sites.</p>
+      </div>
+      <div>
+        <h3>Desktop Pro</h3>
+        <p class="price">19 USD <small>one-time, 3 machines, all 1.x updates</small></p>
+        <p>Removes the three-site limit and adds email and webhook alerts. A licence key, no subscription, no phone-home.</p>
+        <p class="notice">Pro is coming — checkout is not open yet. The free version is complete and MIT-licensed, and nothing in it expires.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="faq">
-<div class="wrap">
-  <h2>Frequently Asked Questions</h2>
-  <p class="lede">Quick answers to common questions about DeskUptime.</p>
-  <div class="grid2">
-    <div class="card">
-      <h3>Do I need internet for the desktop app?</h3>
-      <p>Yes. The app checks your websites over the internet. It only works when your computer is online, but checks continue running silently in the background via the system tray.</p>
-    </div>
-    <div class="card">
-      <h3>Can I monitor multiple sites with the free CLI?</h3>
-      <p>Yes. The free CLI watch mode supports up to 3 URLs. The Pro license removes that limit — monitor as many websites as you want.</p>
-    </div>
-    <div class="card">
-      <h3>How does the license key work?</h3>
-      <p>You buy once at $19 and receive a key. It activates unlimited URLs, the desktop system tray app, email and webhook alerts. Works on up to 3 machines and covers all v1.x updates.</p>
-    </div>
-    <div class="card">
-      <h3>What if my computer is off?</h3>
-      <p>Monitoring pauses while your computer is off. This is deliberate — it keeps your data private on your machine and eliminates monthly hosting costs.</p>
-    </div>
-    <div class="card">
-      <h3>Why pay $19 when free services exist?</h3>
-      <p>Free services limit you to 1 URL, require a cloud account, or serve ads. DeskUptime gives unlimited private monitoring on your machine for a one-time price. After 3 months it's cheaper than UptimeRobot Pro.</p>
-    </div>
-    <div class="card">
-      <h3>Is the CLI also free?</h3>
-      <p>Yes. The CLI is free for all features — checking, SSL verify, content hashing. The $19 Pro license is only needed to unlock the desktop system tray app, email/webhook alerts and unlimited URLs.</p>
-    </div>
+  <div class="container">
+    <h2>Questions</h2>
+    <details>
+      <summary>What happens when my computer is off or asleep?</summary>
+      <p>Nothing is checked until it wakes up. DeskUptime runs where you run it. If you need checks that continue while your laptop is closed, run the CLI on a server or in a scheduled GitHub Actions workflow — both are free.</p>
+    </details>
+    <details>
+      <summary>Does it send my URLs anywhere?</summary>
+      <p>Only to the sites being checked. There is no account, no central server and no telemetry. This site runs an anonymous page-view counter and nothing else.</p>
+    </details>
+    <details>
+      <summary>How is this different from UptimeRobot or Pingdom?</summary>
+      <p>Those check from many locations around the clock and charge monthly for it. DeskUptime checks from one place — yours — and costs nothing to run. For a personal site or a few client sites that is usually enough. For a service with an SLA, it is not.</p>
+    </details>
+    <details>
+      <summary>Can I check many sites at once?</summary>
+      <p>Yes. Pass any number of URLs to <code>check</code>. Watch mode is limited to three sites without a Pro key. The <a href="/tools/">free web checkers</a> do a bulk URL check and a security-headers check without installing anything.</p>
+    </details>
+    <details>
+      <summary>Is there a Linux desktop build?</summary>
+      <p>Not yet. The CLI runs on Linux; the desktop app is currently built for macOS and Windows only. It is a Tauri app, so a Linux build is possible if there is demand — open an issue on GitHub.</p>
+    </details>
   </div>
-</div>
 </section>
 
-<script>
-(function() {
-  // Waitlist signup via main site API (unified, test-domains rejected server-side)
-  var WAITLIST = '/api/waitlist';
+<section>
+  <div class="container">
+    <h2>Who makes this</h2>
+    <p>DeskUptime is built by Mads Holst Jensen, an independent developer in Odense, Denmark, working as <a href="https://mahoje.dk">mahoje.dk</a>. It came out of looking after client WordPress sites and wanting a check that did not need another account. The engine, the CLI and the desktop app are all on <a href="https://github.com/mahope/deskuptime">GitHub</a>.</p>
+    <p>Related reading: <a href="/blog/check-ssl-certificate-expiry">checking SSL certificate expiry</a>, <a href="/blog/desktop-website-monitor-cli">website monitoring from the terminal</a>, <a href="/blog/post-deploy-smoke-tests-static-sites">post-deploy smoke tests for static sites</a>.</p>
+  </div>
+</section>
 
-  // Live checkout: if a Deskuptime Pro checkout URL exists in KV,
-  // swap the waitlist block for the buy button automatically.
-  fetch('/api/checkout?product=du').then(function(r){ return r.json(); }).then(function(d){
-    if (d && d.live && d.checkout_url) {
-      var btn = document.getElementById('pro-buy-btn');
-      if (btn) btn.href = d.checkout_url;
-      var wrap = document.getElementById('pro-buy-wrap');
-      if (wrap) wrap.style.display = 'block';
-      var status = document.getElementById('pro-status');
-      if (status) status.style.display = 'none';
-    }
-  }).catch(function(){ /* stay on waitlist state */ });
-
-  // Track clicks on the Pro buy button (fires whenever it is live).
-  document.getElementById('pro-buy-btn').addEventListener('click', function(){
-    try { if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/deskuptime', event: 'buy-click' })], { type: 'application/json' })); } catch(e){}
-  });
-
-  document.getElementById('pro-waitlist-form').addEventListener('submit', async function(e){
-    e.preventDefault();
-    var email = document.getElementById('pro-email').value.trim();
-    var msg = document.getElementById('pro-msg');
-    var btn = document.getElementById('pro-notify-btn');
-    if (!email) { msg.textContent = 'Please enter your email.'; return; }
-    btn.disabled = true;
-    try {
-      var r = await fetch(WAITLIST, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, source: 'deskuptime-pro' })
-      });
-      var d = await r.json();
-      if (r.ok) {
-        msg.textContent = d.message || "You're on the list!";
-        btn.textContent = '\u2713 Joined';
-      } else {
-        msg.textContent = d.error || 'Try again.';
-        btn.disabled = false;
-      }
-    } catch (err) {
-      msg.textContent = 'Network error — please try again.';
-      btn.disabled = false;
-    }
-  });
-})();
-</script>
-
-<footer>
-<div class="wrap">
-  Built by <a href="https://github.com/mahope">Mahope</a> &middot; Engine open source on <a href="https://github.com/mahope/deskuptime">GitHub</a> &middot; 
-  <a href="/privacy/">Privacy</a> &middot; <a href="/terms/">Terms</a> &middot;
-  <a href="/blog/check-ssl-certificate-expiry">Blog: SSL Check</a>
-</div>
-</footer>
-
-<script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
-</script>
+</main>
 </body>
 </html>
