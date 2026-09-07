@@ -257,6 +257,8 @@ main > h1 { margin-top: 2.5rem; }
 @media (prefers-color-scheme: dark) { .btn, .btn-primary, .quiz-cta, .btn:hover, .btn-primary:hover, button.primary, .cta-btn { color: #101214; } }
 .btn-secondary, button.secondary, .secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border); }
 .btn-secondary:hover, button.secondary:hover { border-color: var(--color-text); color: var(--color-text); }
+.btn.ghost, .btn.outline { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border); }
+.btn.ghost:hover, .btn.outline:hover { background: var(--color-surface); color: var(--color-text); border-color: var(--color-text); }
 .btn-small { padding: 0.35rem 0.75rem; font-size: 0.85rem; background: var(--color-accent); color: #fff; }
 button:not([class]) { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.5rem 0.9rem; cursor: pointer; transition: border-color .15s; }
 button:not([class]):hover { border-color: var(--color-text); }
