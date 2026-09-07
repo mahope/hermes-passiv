@@ -1027,6 +1027,8 @@ def write_generated(site: Site, pages: list[dict]) -> None:
         html, _ = apply_shell(site, fname, fname, html, {}, title=nf["title"], kind="home")
         html = html.replace('<link rel="stylesheet" href="/style.css">',
                             '<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
+                            f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{pagepass.FONTS.get(site.cfg["brand"], pagepass.FONTS_DEFAULT)}&display=swap">\n'
+                            + pagepass.THEME_SCRIPT + '\n'
                             f'<link rel="stylesheet" href="/style.css?v={pagepass.CSS_VERSION}">')
         (dist / fname).parent.mkdir(exist_ok=True)
         (dist / fname).write_text(html, encoding="utf-8")

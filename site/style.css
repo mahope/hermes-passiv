@@ -333,7 +333,7 @@ html:not([data-theme]) .theme-btn .icon-auto, html[data-theme="light"] .theme-bt
 .site-footer .cols { display: grid; gap: 1.75rem 2rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 899px) { .site-footer .cols { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 599px) { .site-footer .cols { grid-template-columns: 1fr; } }
-.site-footer h2 { font-size: 0.9rem; color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font); font-weight: 650; letter-spacing: 0; }
+.site-footer .cols h2 { font-size: 0.9rem; color: var(--color-text); margin-bottom: 0.5rem; font-family: var(--font); font-weight: 650; letter-spacing: 0; }
 .site-footer ul { list-style: none; padding: 0; margin: 0; }
 .site-footer li { margin: 0.2rem 0; }
 .site-footer a { color: inherit; }
