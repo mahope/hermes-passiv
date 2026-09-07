@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "HTTP-headere: referencen for SEO og sikkerhed", "description": "Komplet reference til HTTP-response-headere: caching, sikkerhedsheadere (CSP, HSTS), SEO-relevante headere — og hvad hver enkelt gør. Gratis værktøj til at tjekke enhver URL.", "url": "https://hermes-passiv.pages.dev/da/blog/http-headere-reference", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTTP-headere: referencen for SEO og sikkerhed", "description": "Komplet reference til HTTP-response-headere: caching, sikkerhedsheadere (CSP, HSTS), SEO-relevante headere — og hvad hver enkelt gør. Gratis værktøj til at tjekke enhver URL.", "url": "https://hermes-passiv.pages.dev/da/blog/http-headere-reference", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilke HTTP-headere bør ethvert site have?", "acceptedAnswer": {"@type": "Answer", "text": "Minimum: Strict-Transport-Security (max-age mindst ét år, includeSubDomains), X-Content-Type-Options: nosniff, Referrer-Policy: strict-origin-when-cross-origin og en Content-Security-Policy — selv en beskeden en med frame-ancestors er bedre end ingen."}}, {"@type": "Question", "name": "Hvad er forskellen på Expires og Cache-Control?", "acceptedAnswer": {"@type": "Answer", "text": "Cache-Control er den moderne header og vinder altid når begge er sat. Expires er en ældre forgænger du kun behøver for meget gamle klienter — sæt ikke Expires og tro at den tilsidesætter Cache-Control."}}, {"@type": "Question", "name": "Hvordan tjekker jeg en sides headere?", "acceptedAnswer": {"@type": "Answer", "text": "Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du ser alle response-headere, en pass/warn/fail-bedømmelse af sikkerhedsheaderne, hele redirect-kæden og SSL-certifikatet."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Hver gang en browser loader en side, sender serveren et sæt HTTP-response-headere før noget HTML ankommer. De styrer caching, sikkerhed, redirects og hvordan søgemaskiner behandler din side — og alligevel får de fleste sider flere af dem forkert. Dette er en praktisk reference: hvad hver header gør, hvornår den tæller, og en typisk fejl du skal undgå. Til sidst kan du tjekke enhver URL med det gratis URL Inspector-værktøj.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🔐 Sikkerhed</h3><p>CSP, HSTS, nosniff, frame-beskyttelse og Referrer-Policy er de fem headere enhver side bør have.</p></div>
-      <div class="card"><h3>⚡ Cache rigtigt</h3><p>Lang cache på hashede statiske filer, no-cache på HTML. Lang cache på HTML betyder at besøgende ser gamle sider efter din deploy.</p></div>
-      <div class="card"><h3>🔎 SEO-relevante</h3><p>Link: rel=canonical, X-Robots-Tag og Location (3xx) styrer hvordan søgemaskiner behandler dine URLs.</p></div>
+      <div class="card"><h3>Sikkerhed</h3><p>CSP, HSTS, nosniff, frame-beskyttelse og Referrer-Policy er de fem headere enhver side bør have.</p></div>
+      <div class="card"><h3>Cache rigtigt</h3><p>Lang cache på hashede statiske filer, no-cache på HTML. Lang cache på HTML betyder at besøgende ser gamle sider efter din deploy.</p></div>
+      <div class="card"><h3>SEO-relevante</h3><p>Link: rel=canonical, X-Robots-Tag og Location (3xx) styrer hvordan søgemaskiner behandler dine URLs.</p></div>
     </div>
   </div>
 </section>

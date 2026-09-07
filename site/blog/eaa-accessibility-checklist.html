@@ -28,7 +28,7 @@
   "@type": "Article",
   "headline": "EAA Accessibility Checklist for WordPress Sites — 10 Steps to WCAG Compliance",
   "description": "10-point EAA/WCAG 2.1 AA checklist for WordPress sites. Each check takes 5 minutes. Free automated scanner included.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
 <script defer src="/track.js"></script>
@@ -49,7 +49,7 @@
     <p class="hero-note">Updated August 2026 · Reading time: 6 minutes</p>
   </div>
 </header>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
@@ -77,7 +77,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 1</div>
         <div class="product-body">
-          <h3>🌓 Color Contrast</h3>
+          <h3>Color Contrast</h3>
           <p class="product-desc"><strong>Requirement:</strong> Text must have a contrast ratio of at least 4.5:1 (normal text) or 3:1 (large text 18pt+).</p>
           <p class="product-desc"><strong>How to check:</strong> Install the WebAIM Contrast Checker extension or the Accessibility Insights browser extension. Click on any text element to see its contrast ratio.</p>
           <p class="product-desc"><strong>Most common WordPress violations:</strong> Light gray footer text on white backgrounds, blue link text on dark backgrounds, button text that blends into button color. Fix these in Appearance → Customize → Colors, or add custom CSS via Appearance → Customize → Additional CSS.</p>
@@ -88,7 +88,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 2</div>
         <div class="product-body">
-          <h3>🖼️ Alt Text on All Images</h3>
+          <h3>Alt Text on All Images</h3>
           <p class="product-desc"><strong>Requirement:</strong> Every meaningful image needs descriptive alt text. Decorative images need <code>alt=""</code> (empty).</p>
           <p class="product-desc"><strong>How to check:</strong> Run the WAVE browser extension — it lists every image with missing alt. Or use your scanner's IMG_ALT rule — it catches both missing and empty alt attributes.</p>
           <p class="product-desc"><strong>Common WordPress violations:</strong> Product images in WooCommerce uploaded without alt text, logo in header without alt, social media icons, gallery images, and decorative spacer images. Fix in Media Library → select image → Alternative Text field. For bulk fixes, use Accessibility Checker plugin.</p>
@@ -99,7 +99,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 3</div>
         <div class="product-body">
-          <h3>📐 Heading Structure</h3>
+          <h3>Heading Structure</h3>
           <p class="product-desc"><strong>Requirement:</strong> Headings must form a logical hierarchy (h1 → h2 → h3 → ...) with no skipped levels and only one h1 per page.</p>
           <p class="product-desc"><strong>How to check:</strong> Install the HeadingsMap browser extension. It shows the full outline. Look for missing h1, skipped levels (h1 → h3), or multiple h1s.</p>
           <p class="product-desc"><strong>Most common WordPress violations:</strong> Page title is h1 (good), but widget headings use h3 while section headings use h2 — producing a flat hierarchy. Some themes output multiple h1s. The Block Editor's heading dropdown lets you pick the correct level.</p>
@@ -110,7 +110,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 4</div>
         <div class="product-body">
-          <h3>🔗 Link Text</h3>
+          <h3>Link Text</h3>
           <p class="product-desc"><strong>Requirement:</strong> Every link must have visible, meaningful text. No generic "click here" or "read more." Links must also be distinguishable from surrounding text.</p>
           <p class="product-desc"><strong>How to check:</strong> Your scanner checks LINK_TEXT — it flags links with empty text, generic text, or links where the text equals the URL. WAVE also lists link issues.</p>
           <p class="product-desc"><strong>Common WordPress violations:</strong> "Read more" links on archive pages (fix by using Excerpts with meaningful text), "Continue reading" in theme templates, linked image without alt text on the image.</p>
@@ -121,7 +121,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 5</div>
         <div class="product-body">
-          <h3>📝 Form Labels</h3>
+          <h3>Form Labels</h3>
           <p class="product-desc"><strong>Requirement:</strong> Every form input must have a programmatically associated label (the <code>&lt;label&gt;</code> tag with <code>for</code> attribute).</p>
           <p class="product-desc"><strong>How to check:</strong> The scanner's FORM_LABEL rule. Also use WAVE — it highlights unlabeled form controls in purple.</p>
           <p class="product-desc"><strong>Common WordPress violations:</strong> Contact Form 7 and Gravity Forms sometimes miss labels when using placeholder-only fields. Search forms in themes often lack labels (they use a magnifying glass icon instead). WooCommerce checkout fields are usually labeled correctly — check custom forms.</p>
@@ -143,7 +143,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 7</div>
         <div class="product-body">
-          <h3>🌐 Page Language</h3>
+          <h3>Page Language</h3>
           <p class="product-desc"><strong>Requirement:</strong> The page must declare a language in the <code>&lt;html&gt;</code> tag (<code>lang="en"</code> or equivalent).</p>
           <p class="product-desc"><strong>How to check:</strong> The scanner's LANGUAGE rule. Look at <code>&lt;html lang="..."&gt;</code> in the page source. If absent or wrong, screen readers use the wrong pronunciation engine.</p>
           <p class="product-desc"><strong>Most common WordPress violations:</strong> Missing lang attribute (rare in WordPress — it's set by default). More common: pages that mix languages (English content on a Danish-site template) without declaring language changes with <code>lang</code> attributes on specific elements.</p>
@@ -154,7 +154,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 8</div>
         <div class="product-body">
-          <h3>📱 Viewport and Zoom</h3>
+          <h3>Viewport and Zoom</h3>
           <p class="product-desc"><strong>Requirement:</strong> Users must be able to zoom to 200% without loss of content or functionality. The viewport meta tag must not disable zooming.</p>
           <p class="product-desc"><strong>How to check:</strong> The scanner's VIEWPORT rule catches <code>user-scalable=no</code> or <code>maximum-scale=1.0</code>. Then test: zoom the page to 200% in your browser and verify no text overflows, no buttons disappear, and all content still readable.</p>
           <p class="product-desc"><strong>Common WordPress violations:</strong> Some themes copy-paste a <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"&gt;</code> — the <code>maximum-scale=1.0</code> disables zoom. Remove it in the theme's <code>header.php</code> or via a child theme filter.</p>
@@ -165,7 +165,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 9</div>
         <div class="product-body">
-          <h3>🧩 ARIA and Roles</h3>
+          <h3>ARIA and Roles</h3>
           <p class="product-desc"><strong>Requirement:</strong> ARIA attributes must be used correctly. No focusable elements with <code>aria-hidden="true"</code>. No incorrect ARIA roles that override native semantics.</p>
           <p class="product-desc"><strong>How to check:</strong> The scanner's ARIA_HIDDEN_FOCUSABLE rule catches focusable elements hidden from screen readers. Use Accessibility Insights to audit the full ARIA structure.</p>
           <p class="product-desc"><strong>Most common WordPress violations:</strong> Themes adding <code>aria-hidden="true"</code> to icon fonts or SVG icons while leaving them focusable (keyboard users can tab to invisible elements). Modals and menus with incorrect roles.</p>
@@ -176,7 +176,7 @@
       <div class="product-card">
         <div class="product-badge product-badge-secondary">CHECK 10</div>
         <div class="product-body">
-          <h3>📄 Accessibility Statement</h3>
+          <h3>Accessibility Statement</h3>
           <p class="product-desc"><strong>Requirement:</strong> Under the EAA, every public-facing site must have a published accessibility statement. This is a page on your site describing your accessibility level, any known issues, and how users can report problems.</p>
           <p class="product-desc"><strong>How to check:</strong> Visit /accessibility or /accessibility-statement on the site. Your scanner does not check this (it's a content check, not a code check) — you need to verify manually.</p>
           <p class="product-desc"><strong>What to include:</strong> Conformance level (WCAG 2.1 AA), any exempt content, testing methods used, known issues, feedback mechanism, and enforcement contact. Use our free <a href="/accessibility-statement-generator">Accessibility Statement Generator</a> to create one in 2 minutes.</p>

@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek SSL-certifikatets udløb fra kommandolinjen", "description": "Tjek SSL-certifikatets udløb fra terminalen med et gratis CLI-værktøj. Én kommando, ingen konto, intet abonnement. Virker på ethvert domæne.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek SSL-certifikatets udløb fra kommandolinjen", "description": "Tjek SSL-certifikatets udløb fra terminalen med et gratis CLI-værktøj. Én kommando, ingen konto, intet abonnement. Virker på ethvert domæne.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-ssl-certifikat-udloeb", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan tjekker jeg SSL-udløb fra kommandolinjen?", "acceptedAnswer": {"@type": "Answer", "text": "Kør npx github:mahope/deskuptime check https://dit-site.dk. Du får HTTPS-status, SSL-issuer og dage til udløb. Ingen installation, ingen konto, kører helt lokalt."}}, {"@type": "Question", "name": "Hvad er openssl-kommandoen?", "acceptedAnswer": {"@type": "Answer", "text": "openssl s_client -connect example.com:443 -servername example.com &lt; /dev/null 2&gt;/dev/null | openssl x509 -noout -enddate. Den viser udløbsdatoen, men kræver bøvlet parsing — DeskUptime formaterer det som et rent antal dage tilbage."}}, {"@type": "Question", "name": "Kan jeg tjekke flere domæner på én gang?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. DeskUptime tager flere URLs: npx github:mahope/deskuptime check https://site1.dk https://site2.dk. Hver får sit eget SSL-tjek, og exit-koden er 3 hvis noget udløber inden for 14 dage."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Alle certifikater udløber. Når dit gør det, viser browseren en advarsel, API-kaldene fejler, og kunderne forsvinder. De store monitorservices sælger dig et abonnement for at fortælle dig hvornår det er ved at ske — men selve tjekket er trivielt: åbn en forbindelse, læs certifikatet, beregn dage tilbage. Det behøver du ikke et SaaS-abonnement til.</p>
     <div class="problem-cards">
-      <div class="card"><h3>💻 Én kommando</h3><p>npx github:mahope/deskuptime check https://dit-site.dk — issuer, dage til udløb og HTTP-status med det samme.</p></div>
-      <div class="card"><h3>🆓 Gratis uden grænser</h3><p>CLI'ens SSL-tjek er gratis og uden begrænsninger. Pro ($19 engang) tilfører skrivebordsapp og e-mail-advarsler.</p></div>
-      <div class="card"><h3>🚨 Exit-kode 3</h3><p>Udløber et certifikat inden for 14 dage returnerer CLI'en exit-kode 3 — perfekt som gate i CI/CD.</p></div>
+      <div class="card"><h3>Én kommando</h3><p>npx github:mahope/deskuptime check https://dit-site.dk — issuer, dage til udløb og HTTP-status med det samme.</p></div>
+      <div class="card"><h3>Gratis uden grænser</h3><p>CLI'ens SSL-tjek er gratis og uden begrænsninger. Pro ($19 engang) tilfører skrivebordsapp og e-mail-advarsler.</p></div>
+      <div class="card"><h3>Exit-kode 3</h3><p>Udløber et certifikat inden for 14 dage returnerer CLI'en exit-kode 3 — perfekt som gate i CI/CD.</p></div>
     </div>
   </div>
 </section>
@@ -63,7 +63,7 @@
   <div class="container">
     <h2>One-lineren</h2>
     <pre>$ npx github:mahope/deskuptime check https://example.com\n\n✅ https://example.com\n   Status:   200 OK\n   Response: 85ms\n   🔒 SSL:     63 days ✅\n   — Content: 559 bytes</pre>
-    <p>🔒-linjen viser præcis hvor mange dage til udløb: grøn over 30 dage, gul 14–30, rød under 14.</p>
+    <p>-linjen viser præcis hvor mange dage til udløb: grøn over 30 dage, gul 14–30, rød under 14.</p>
   </div>
 </section>
 

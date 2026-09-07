@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Website SEO Metadata Audit: the Complete Pre-Launch Checklist", "description": "Run a full SEO metadata audit on any site: titles, descriptions, canonicals, Open Graph, headings, alt text and structured data — checked automatically, page by page.", "url": "https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Website SEO Metadata Audit: the Complete Pre-Launch Checklist", "description": "Run a full SEO metadata audit on any site: titles, descriptions, canonicals, Open Graph, headings, alt text and structured data — checked automatically, page by page.", "url": "https://hermes-passiv.pages.dev/blog/website-seo-metadata-audit", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a website SEO metadata audit?", "acceptedAnswer": {"@type": "Answer", "text": "It is a structured check of everything search engines and social platforms read before a human does: title tags, meta descriptions, robots directives, canonical URLs, Open Graph and Twitter cards, heading structure, image alt text and structured data. A good audit catches problems before they cost rankings or clicks."}}, {"@type": "Question", "name": "How do I audit every page of my site without checking them by hand?", "acceptedAnswer": {"@type": "Answer", "text": "Use a crawler-style CLI tool that takes a list of URLs (or your sitemap) and reports each issue per page. The free page-profile command does exactly this: point it at a URL and it grades title length, description, canonical, viewport, Open Graph, headings and alt text in seconds."}}, {"@type": "Question", "name": "How long should a title tag and meta description be?", "acceptedAnswer": {"@type": "Answer", "text": "Aim for roughly 50–60 characters for titles and 140–160 characters for meta descriptions. Longer text is truncated in results pages, which lowers click-through even when the page still ranks."}}, {"@type": "Question", "name": "Is Open Graph really an SEO factor?", "acceptedAnswer": {"@type": "Answer", "text": "Not directly for ranking — but shares on Slack, LinkedIn, Facebook and X drive real traffic, and a missing og:image or og:title makes those shares look broken. Most audits treat social metadata as first-class because the traffic impact is measurable."}}, {"@type": "Question", "name": "What should I fix first if the audit shows many issues?", "acceptedAnswer": {"@type": "Answer", "text": "Prioritise in this order: missing or duplicated titles and descriptions, wrong or conflicting canonical URLs, robots noindex on pages that should rank, then social tags and structured data. The first group affects indexing directly; the rest affect clicks."}}]}
@@ -52,16 +52,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
     <h2>Why metadata breaks quietly</h2>
     <p>Metadata has no visual failure state. A missing canonical, a truncated title or a page with no <code>og:image</code> renders perfectly fine in a browser — and leaks clicks and rankings for months until someone checks.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🔍 Nobody views source</h3><p>Title truncation, duplicate descriptions and missing viewport tags are invisible on the rendered page. They only show up in an audit.</p></div>
-      <div class="card"><h3>📉 Small errors compound</h3><p>One weak title costs little. Two hundred of them across a site is a systematic ceiling on click-through rate.</p></div>
-      <div class="card"><h3>🤝 Shares look broken</h3><p>A link pasted into Slack or LinkedIn with no og:title and og:image looks like spam — even from a trusted domain.</p></div>
+      <div class="card"><h3>Nobody views source</h3><p>Title truncation, duplicate descriptions and missing viewport tags are invisible on the rendered page. They only show up in an audit.</p></div>
+      <div class="card"><h3>Small errors compound</h3><p>One weak title costs little. Two hundred of them across a site is a systematic ceiling on click-through rate.</p></div>
+      <div class="card"><h3>Shares look broken</h3><p>A link pasted into Slack or LinkedIn with no og:title and og:image looks like spam — even from a trusted domain.</p></div>
     </div>
   </div>
 </section>
@@ -94,9 +94,9 @@
 npx page-profile --urls-from-file urls.txt  # batch mode (Pro)
 npx page-profile --compare old.html new.html # diff two versions (Pro)</code></pre>
     <div class="problem-cards">
-      <div class="card"><h3>✅ Graded, not just listed</h3><p>Each check gets a pass/warn/fail so you can triage instead of reading raw HTML dumps.</p></div>
-      <div class="card"><h3>📦 Batch &amp; compare</h3><p>Pro adds batch mode over a URL file, side-by-side compares and shareable HTML reports.</p></div>
-      <div class="card"><h3>🔒 Runs locally</h3><p>No account, no upload. Your client's staging URLs never leave your machine.</p></div>
+      <div class="card"><h3>Graded, not just listed</h3><p>Each check gets a pass/warn/fail so you can triage instead of reading raw HTML dumps.</p></div>
+      <div class="card"><h3>Batch &amp; compare</h3><p>Pro adds batch mode over a URL file, side-by-side compares and shareable HTML reports.</p></div>
+      <div class="card"><h3>Runs locally</h3><p>No account, no upload. Your client's staging URLs never leave your machine.</p></div>
     </div>
     <div style="text-align:center;margin-top:24px;">
       <a href="/page-profile" class="btn-primary">Get page-profile free &rarr;</a>

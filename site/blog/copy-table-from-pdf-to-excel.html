@@ -21,7 +21,7 @@
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "How to Copy a Table From a PDF Into Excel (Columns Intact)", "description": "Copy a table from a PDF and paste it into Excel or Google Sheets with rows and columns intact — no OCR errors, no retyping. Free browser method.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-from-pdf-to-excel", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "How to Copy a Table From a PDF Into Excel (Columns Intact)", "description": "Copy a table from a PDF and paste it into Excel or Google Sheets with rows and columns intact — no OCR errors, no retyping. Free browser method.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-from-pdf-to-excel", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why does copying directly from a PDF turn into a mess?", "acceptedAnswer": {"@type": "Answer", "text": "A PDF stores text as positioned blocks, not as a table. When you select and copy, you usually get each column as its own line of text — all content from row 1 first, then everything from row 2. The text has to be rebuilt into a real table before it can be pasted into Excel."}}, {"@type": "Question", "name": "Can I avoid using OCR?", "acceptedAnswer": {"@type": "Answer", "text": "In most cases, yes. If the PDF was generated digitally (from Excel or a reporting tool), the text is already in the file. Clean Copy rebuilds the table from the page structure instead of reading pixels."}}, {"@type": "Question", "name": "What about scanned PDFs?", "acceptedAnswer": {"@type": "Answer", "text": "Scanned PDFs contain images rather than text, so they require OCR (Adobe Acrobat or an online OCR tool). Always check the numbers afterwards — OCR typically fails on digits."}}, {"@type": "Question", "name": "Does it work with Google Sheets too?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The clipboard contains ordinary table structure, so it pastes correctly into Google Sheets, Excel, Numbers and LibreOffice Calc."}}, {"@type": "Question", "name": "Do my data leave the browser?", "acceptedAnswer": {"@type": "Answer", "text": "No. Clean Copy runs entirely in your browser. The table never leaves your machine until you paste it somewhere yourself."}}]}
@@ -52,15 +52,15 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
     <h2>Why the usual methods fail</h2>
     <p>The problem is not Excel — it is the clipboard. A PDF has no real table structure to hand over.</p>
     <div class="problem-cards">
-      <div class="card"><h3>📋 Direct copy destroys the structure</h3><p>PDF viewers render text in reading order, not table order. The result is typically every value stacked column-wise, one per line.</p></div>
-      <div class="card"><h3>📸 Screenshot + OCR = number errors</h3><p>OCR reads pixels, and digits are exactly what it gets wrong most often. One wrong digit in a financial statement is worse than no data.</p></div>
+      <div class="card"><h3>Direct copy destroys the structure</h3><p>PDF viewers render text in reading order, not table order. The result is typically every value stacked column-wise, one per line.</p></div>
+      <div class="card"><h3>Screenshot + OCR = number errors</h3><p>OCR reads pixels, and digits are exactly what it gets wrong most often. One wrong digit in a financial statement is worse than no data.</p></div>
       <div class="card"><h3>⌨️ Retyping does not scale</h3><p>Fine for three rows. Not fine for a 40-page annual report with twenty tables.</p></div>
     </div>
   </div>
@@ -87,9 +87,9 @@ then scroll to the table.</code></pre>
 Every value lands in its own cell — headers included.</code></pre>
 
     <div class="problem-cards">
-      <div class="card"><h3>✅ Cells stay cells</h3><p>The clipboard carries real table structure, so Excel maps each value to the right cell.</p></div>
-      <div class="card"><h3>🧹 No junk included</h3><p>No page headers, footer page numbers or running text — only the table you pointed at.</p></div>
-      <div class="card"><h3>🔁 Works elsewhere too</h3><p>The same paste works in Google Sheets, Numbers and LibreOffice Calc.</p></div>
+      <div class="card"><h3>Cells stay cells</h3><p>The clipboard carries real table structure, so Excel maps each value to the right cell.</p></div>
+      <div class="card"><h3>No junk included</h3><p>No page headers, footer page numbers or running text — only the table you pointed at.</p></div>
+      <div class="card"><h3>Works elsewhere too</h3><p>The same paste works in Google Sheets, Numbers and LibreOffice Calc.</p></div>
     </div>
   </div>
 </section>

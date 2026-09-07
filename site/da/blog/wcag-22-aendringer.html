@@ -20,7 +20,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "WCAG 2.2: Hvad er \u00e6ndret \u2014 guide til sm\u00e5 webbureauer", "description": "WCAG 2.2 i 2026: de 9 nye successkriterier for tilg&aelig;ngelighed, hvad der blev fjernet, og hvordan sm&aring; webbureauer opdaterer klient-sites til EAA-standard uden et compliance-team.", "url": "https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "WCAG 2.2: Hvad er \u00e6ndret \u2014 guide til sm\u00e5 webbureauer", "description": "WCAG 2.2 i 2026: de 9 nye successkriterier for tilg&aelig;ngelighed, hvad der blev fjernet, og hvordan sm&aring; webbureauer opdaterer klient-sites til EAA-standard uden et compliance-team.", "url": "https://hermes-passiv.pages.dev/da/blog/wcag-22-aendringer", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script defer src="/track.js"></script>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
@@ -39,7 +39,7 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="content">
   <div class="container">
@@ -48,9 +48,9 @@
     <p>WCAG 2.2 erstatter ikke 2.1 &mdash; det udvider den. Et site der overholder 2.2 AA overholder automatisk 2.1 AA. Det g&oslash;r opgradering til det sikreste langsigtede m&aring;l for ethvert bureau, der vedligeholder klient-sites i EU.</p>
     <div class="problem-cards">
       <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">UPTIME</span><h3><a href="/deskuptime/" style="color:var(--color-accent);text-decoration:none;">DeskUptime: Gratis Desktop Uptime- &amp; SSL-overvågning</a></h3></div>
-      <div class="card"><h3>⚖️ EAA-h&aring;ndh&aelig;velse</h3><p>Siden juni 2025 skal e-handel, bank, transport og teleservices i EU v&aelig;re tilg&aelig;ngelige. Nationale markedsoverv&aring;gningsmyndigheder kan b&oslash;de- l&aelig;gge ikke-konforme virksomheder.</p></div>
-      <div class="card"><h3>🎯 9 nye kriterier</h3><p>WCAG 2.2 tilf&oslash;jer ni nye successkriterier med fokus p&aring; kognitiv tilg&aelig;ngelighed, mobilinteraktion og formularer &mdash; omr&aring;der hvor de fleste sites fejler i dag.</p></div>
-      <div class="card"><h3>🗑️ 4 fjernede</h3><p>Fire gamle kriterier blev fjernet fordi de overlappede med andre. Sites bygget til 2.0 kan opleve at nogle krav er forsvundet &mdash; men ingen er blevet sv&aelig;rere uden erstatning.</p></div>
+      <div class="card"><h3>EAA-h&aring;ndh&aelig;velse</h3><p>Siden juni 2025 skal e-handel, bank, transport og teleservices i EU v&aelig;re tilg&aelig;ngelige. Nationale markedsoverv&aring;gningsmyndigheder kan b&oslash;de- l&aelig;gge ikke-konforme virksomheder.</p></div>
+      <div class="card"><h3>9 nye kriterier</h3><p>WCAG 2.2 tilf&oslash;jer ni nye successkriterier med fokus p&aring; kognitiv tilg&aelig;ngelighed, mobilinteraktion og formularer &mdash; omr&aring;der hvor de fleste sites fejler i dag.</p></div>
+      <div class="card"><h3>4 fjernede</h3><p>Fire gamle kriterier blev fjernet fordi de overlappede med andre. Sites bygget til 2.0 kan opleve at nogle krav er forsvundet &mdash; men ingen er blevet sv&aelig;rere uden erstatning.</p></div>
     </div>
   </div>
 </section>
@@ -67,8 +67,8 @@
     <p><strong>3.3.8 Accessible Authentication (Minimum) &mdash; AA.</strong> Login m&aring; ikke kr&aelig;ve kognitive funktionstests &mdash; det er tilladt at huske adgangskoder, men puslespil, genindtastning af koder fra billeder eller transkriptionstests er ikke. Tillad inds&aelig;tning i adgangskodefelter og underst&oslash;t password managers.</p>
     <div class="problem-cards">
       <div class="card"><h3>⌨️ Fokussynlighed</h3><p>2.4.11 + 2.4.13 betyder tilsammen at sticky headers ikke m&aring; sluge tastaturfokus. Rettelsen er typisk scroll-padding-top i CSS &mdash; billigt at implementere, let at demonstrere for klienter.</p></div>
-      <div class="card"><h3>📱 Mobil m&aring;lst&oslash;rrelse</h3><p>2.5.8 fanger de tommelfinger-tr&aelig;thedsproblemer som rigtige brugere klager over. F&aring; tilg&aelig;ngelighedsopgraderinger til at ligne UX-forbedringer n&aring;r du taler med klienter.</p></div>
-      <div class="card"><h3>🔐 Login-flow</h3><p>3.3.8 p&aring;virker enhver klient med et login. CAPTCHA'er der kr&aelig;ver transkription er en direkte fejl &mdash; skift til usynlige risikobaserede checks.</p></div>
+      <div class="card"><h3>Mobil m&aring;lst&oslash;rrelse</h3><p>2.5.8 fanger de tommelfinger-tr&aelig;thedsproblemer som rigtige brugere klager over. F&aring; tilg&aelig;ngelighedsopgraderinger til at ligne UX-forbedringer n&aring;r du taler med klienter.</p></div>
+      <div class="card"><h3>Login-flow</h3><p>3.3.8 p&aring;virker enhver klient med et login. CAPTCHA'er der kr&aelig;ver transkription er en direkte fejl &mdash; skift til usynlige risikobaserede checks.</p></div>
     </div>
   </div>
 </section>
@@ -93,9 +93,9 @@
     <p><strong>4. Formularer og checkouts.</strong> Autoudfyld gentagne felter, tillad inds&aelig;tning overalt, fjern puzzle-CAPTCHA'er.</p>
     <p><strong>5. Gen-audit.</strong> K&oslash;r en scanning (vores er gratis, ovenfor), ret hvad den finder, og spot-tjek de nye kriterier manuelt. Dokumenter overensstemmelsesp&aring;stande mod 2.2 AA fremadrettet.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🆓 Gratis scanner</h3><p>Vores scanner tjekker alt-tekster, labels, kontrast, target sizes, duplikerede ID'er og mere &mdash; inds&aelig;t en URL, f&aring; en score p&aring; sekunder. Ingen tilmelding.</p></div>
-      <div class="card"><h3>📚 Platform-guides</h3><p>Vi har trinvise fix-guides til WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla og flere &mdash; se guides-sektionen p&aring; forsiden.</p></div>
-      <div class="card"><h3>📄 Erkl&aelig;ringsgenerator</h3><p>Efter rettelse kan du generere en tilg&aelig;ngelighedserkl&aelig;ring til din klient p&aring; minutter med vores gratis v&aelig;rkt&oslash;j.</p></div>
+      <div class="card"><h3>Gratis scanner</h3><p>Vores scanner tjekker alt-tekster, labels, kontrast, target sizes, duplikerede ID'er og mere &mdash; inds&aelig;t en URL, f&aring; en score p&aring; sekunder. Ingen tilmelding.</p></div>
+      <div class="card"><h3>Platform-guides</h3><p>Vi har trinvise fix-guides til WordPress, Shopify, Webflow, Wix, Squarespace, Drupal, Joomla og flere &mdash; se guides-sektionen p&aring; forsiden.</p></div>
+      <div class="card"><h3>Erkl&aelig;ringsgenerator</h3><p>Efter rettelse kan du generere en tilg&aelig;ngelighedserkl&aelig;ring til din klient p&aring; minutter med vores gratis v&aelig;rkt&oslash;j.</p></div>
     </div>
   </div>
 </section>

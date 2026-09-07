@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Tilføj en fejlrapport-formular til enhver hjemmeside", "description": "Bugbottle er et open source (MIT) JavaScript-bibliotek der samler console errors, browser-kontekst og skærmbillede med ét script-tag. Virker på WordPress, Shopify, statisk HTML og alt derimellem.", "url": "https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tilføj en fejlrapport-formular til enhver hjemmeside", "description": "Bugbottle er et open source (MIT) JavaScript-bibliotek der samler console errors, browser-kontekst og skærmbillede med ét script-tag. Virker på WordPress, Shopify, statisk HTML og alt derimellem.", "url": "https://hermes-passiv.pages.dev/da/blog/tilfoej-fejlrapport-formular-hjemmeside", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Virker Bugbottle på alle hjemmesider?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Biblioteket er rent JavaScript uden afhængigheder og virker på WordPress, Shopify, Squarespace, Wix, statisk HTML, Next.js, Vue, React — alt der kan køre et script-tag. Selve formen skal du selv tilføje, men biblioteket giver dig console-data, kontekst og screenshot i én funktion."}}, {"@type": "Question", "name": "Hvad med GDPR?", "acceptedAnswer": {"@type": "Answer", "text": "Skærmbilleder indeholder potentielt personoplysninger — sørg for at din fortrolighedserklæring dækker det, og overvej at lade brugeren vælge fra i formularen. Biblioteket gemmer intet selv; det er kun din modtager-endpoint der gemmer data."}}, {"@type": "Question", "name": "Kan jeg bruge det uden en server?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Brug GitHub Issues + Action-måden: rapporten postes direkte til et repository uden at du selv hoster noget. Eller brug en form-tjeneste som Formspree der modtager JSON."}}, {"@type": "Question", "name": "Er det gratis?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, MIT-licenseret. Biblioteket, server-validatoren og GitHub Action er alle open source og koster ingenting."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Et typisk feedback-formular beder brugeren beskrive problemet i ord. De fleste gør det ikke. De kan ikke se console'en, kender ikke deres viewport-størrelse, og det tager tid at skrive trin op. Resultatet: du hører om måske ét ud af halvtreds reelle problemer — hver med detaljer der er ubrugelige. Bugbottle løser præcis dét: det fanger console-fejlene automatisk, samler kontekst (user-agent, viewport, sprog, tidsstempel) og tager et skærmbillede — alt sammen med ét script-tag og ingen afhængigheder.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🖥️ Console-fejl automatisk</h3><p>Det faktiske stack trace sidder allerede i brugerens browser. Bugbottle fanger det — fjerner den sværeste del af remote debugging.</p></div>
-      <div class="card"><h3>📱 Kontekstsamling</h3><p>User agent, viewport, sprog, tidsstempel, side-URL — indsamlet automatisk i stedet for gættet over mail.</p></div>
-      <div class="card"><h3>📸 Skærmbillede med ét kald</h3><p>Ét billede erstatter ti frem-og-tilbage-beskeder om "dan der ser underligt ud".</p></div>
+      <div class="card"><h3>Console-fejl automatisk</h3><p>Det faktiske stack trace sidder allerede i brugerens browser. Bugbottle fanger det — fjerner den sværeste del af remote debugging.</p></div>
+      <div class="card"><h3>Kontekstsamling</h3><p>User agent, viewport, sprog, tidsstempel, side-URL — indsamlet automatisk i stedet for gættet over mail.</p></div>
+      <div class="card"><h3>Skærmbillede med ét kald</h3><p>Ét billede erstatter ti frem-og-tilbage-beskeder om "dan der ser underligt ud".</p></div>
     </div>
   </div>
 </section>

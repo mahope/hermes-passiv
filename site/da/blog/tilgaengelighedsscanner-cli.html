@@ -20,7 +20,7 @@
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Tilg\u00e6ngelighedsscanning fra kommandolinjen (dansk)", "description": "Gratis kommandolinje-scanner til WCAG 2.2 / EAA-problemer: 16+ regler, kontrastberegning, JSON-output og --fail-on til CI. Python og Node.js, nul afh\u00e6ngigheder \u2014 guide p\u00e5 dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tilg\u00e6ngelighedsscanning fra kommandolinjen (dansk)", "description": "Gratis kommandolinje-scanner til WCAG 2.2 / EAA-problemer: 16+ regler, kontrastberegning, JSON-output og --fail-on til CI. Python og Node.js, nul afh\u00e6ngigheder \u2014 guide p\u00e5 dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/tilgaengelighedsscanner-cli", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script defer src="/track.js"></script>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
@@ -38,7 +38,7 @@
     <p class="hero-note">Opdateret august 2026 &middot; L&aelig;setid: 8 minutter</p>
   </div>
 </header>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="content">
   <div class="container">
@@ -47,9 +47,9 @@
     <p>Vores scanner er skrevet til netop det: ingen installation ud over Python eller Node.js, ingen konto, ingen gr&aelig;nser. Du giver den en URL, den returnerer fundene struktureret &mdash; i terminalen eller som JSON til videre behandling.</p>
     <div class="problem-cards">
       <div class="card"><span class="badge" style="font-size:0.75em;display:inline-block;margin-bottom:6px;">UPTIME</span><h3><a href="/deskuptime/" style="color:var(--color-accent);text-decoration:none;">DeskUptime: Gratis Desktop Uptime- &amp; SSL-overvågning</a></h3></div>
-      <div class="card"><h3>🆓 Gratis og ubegrænset</h3><p>Ingen freemium-væg, ingen scan-grænser. Kør den på alle dine klient-sites hver nat hvis du vil.</p></div>
-      <div class="card"><h3>🔌 Platform-uafhængig</h3><p>WordPress, Shopify, Webflow, Umbraco eller håndskrevet HTML — scanneren ser bare DOM. Kravet om universalitet er designet ind, ikke boltret på.</p></div>
-      <div class="card"><h3>⚙️ CI-klar</h3><p>--fail-on flaget gør den til en gate i GitHub Actions: ny kode med kritiske fund stopper pipelinen.</p></div>
+      <div class="card"><h3>Gratis og ubegrænset</h3><p>Ingen freemium-væg, ingen scan-grænser. Kør den på alle dine klient-sites hver nat hvis du vil.</p></div>
+      <div class="card"><h3>Platform-uafhængig</h3><p>WordPress, Shopify, Webflow, Umbraco eller håndskrevet HTML — scanneren ser bare DOM. Kravet om universalitet er designet ind, ikke boltret på.</p></div>
+      <div class="card"><h3>CI-klar</h3><p>--fail-on flaget gør den til en gate i GitHub Actions: ny kode med kritiske fund stopper pipelinen.</p></div>
     </div>
   </div>
 </section>
@@ -81,9 +81,9 @@
     4. Udskriv fundene sorteret efter alvor &mdash; eller emit JSON med --json.</p>
     <p><strong>CI-eksempel.</strong> I GitHub Actions k&oslash;rer du scanneren mod staging-URL'en efter deploy og s&aelig;tter <code>--fail-on critical</code>: kritiske fund fejler buildet, advarsler logger blot. S&aring;dan holder du gulvet under det niveau der allerede er opn&aring;et &mdash; uden at blokere hverdagen.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🌙 Natlig portefølje-runde</h3><p>Et cron-job der scanner alle klient-sites én gang i døgnet og mailler diffen. Du ser regressioner dagen efter de lander — ikke ved næste audit.</p></div>
-      <div class="card"><h3>📊 Score som salgsargument</h3><p>Før/efter-scores er det letteste bevis over for klienter: "dit site gik fra 62 til 91 — dokumenteret."</p></div>
-      <div class="card"><h3>⚠️ Grænser</h3><p>Automatik fanger ikke tastaturfælder, skærmlæser-flow eller kognitive krav. Brug CLI'en som filter, og brug manual test på checkout/login-flows.</p></div>
+      <div class="card"><h3>Natlig portefølje-runde</h3><p>Et cron-job der scanner alle klient-sites én gang i døgnet og mailler diffen. Du ser regressioner dagen efter de lander — ikke ved næste audit.</p></div>
+      <div class="card"><h3>Score som salgsargument</h3><p>Før/efter-scores er det letteste bevis over for klienter: "dit site gik fra 62 til 91 — dokumenteret."</p></div>
+      <div class="card"><h3>Grænser</h3><p>Automatik fanger ikke tastaturfælder, skærmlæser-flow eller kognitive krav. Brug CLI'en som filter, og brug manual test på checkout/login-flows.</p></div>
     </div>
   </div>
 </section>

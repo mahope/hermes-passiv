@@ -63,15 +63,15 @@
 </head>
 <body>
   <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
-    <div class="badge">🆕 Nyt værktøj</div>
+    <div class="badge">Nyt værktøj</div>
     <h1>page-profile</h1>
     <p class="tagline" style="font-size:1.2rem;max-width:560px;margin:0 auto;">
       Sundhedstjek af enhver webside.<br>
       Meta-tags, Open Graph, JSON-LD, overskrifter, alt-tekster og security headers — én URL ind, rapport ud.
     </p>
     <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-      <a href="#prov" class="btn btn-primary">⚡ Prøv det nu →</a>
-      <a href="#cli" class="btn btn-secondary">🖥️ Til terminal-brugere</a>
+      <a href="#prov" class="btn btn-primary">Prøv det nu →</a>
+      <a href="#cli" class="btn btn-secondary">Til terminal-brugere</a>
     </div>
   </header>
 
@@ -126,12 +126,12 @@
         <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page_profile.py</span></div>
         <div><span class="prompt">$</span> python3 page_profile.py https://din-hjemmeside.dk</div>
         <div><span class="output">page-profile v1.1.0  —  https://example.com</span></div>
-        <div><span class="output">  status: ✅ HTTP 200</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
         <div><span class="output">──────────────────────────────────────────────────────</span></div>
-        <div><span class="output">  Title:        ⚠️ Example Domain (14 chars)</span></div>
-        <div><span class="output">  Description:  ❌ Missing</span></div>
-        <div><span class="output">  Open Graph:   ❌ All missing</span></div>
-        <div><span class="output">  Security:     ⚠️ No HSTS, no CSP</span></div>
+        <div><span class="output"> Title: Example Domain (14 chars)</span></div>
+        <div><span class="output"> Description: Missing</span></div>
+        <div><span class="output"> Open Graph: All missing</span></div>
+        <div><span class="output"> Security: No HSTS, no CSP</span></div>
         <div><span class="output">  Score:        6.0/21.0  Grade: F</span></div>
       </div>
       <p style="margin-top:1rem;">Til CI-pipelines kan scriptet outputte JSON (<code>--json</code>), så du kan gate deploys på en minimumsscore.</p>
@@ -160,7 +160,7 @@
             <li>Offline licens — ingen konto, ingen netværk</li>
           </ul>
           <a href="#" id="pp-buy-live" class="btn btn-primary" style="display:none;text-decoration:none;" target="_blank" rel="noopener">Køb Pro — $19/år →</a>
-          <span id="pro-cta-da" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">🔒 Kommer snart</span>
+          <span id="pro-cta-da" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">Kommer snart</span>
           <script>
           (function(){
             try {
@@ -188,12 +188,12 @@
           <th style="padding:0.5rem 0;border-bottom:2px solid var(--color-border);">Gratis</th>
           <th style="padding:0.5rem 0;border-bottom:2px solid var(--color-border);color:#38bdf8;">Pro</th>
         </tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Alle tjek (meta, sociale, sikkerhed, flersproget)</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Rapport med score og karakter</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">JSON-output til CI</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Sammenlign to URLs side om side</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Batch-tilstand (flere URLs, rangeret)</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
-        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Kunde-klar HTML-rapport</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">✅</td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Alle tjek (meta, sociale, sikkerhed, flersproget)</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Rapport med score og karakter</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">JSON-output til CI</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Sammenlign to URLs side om side</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Batch-tilstand (flere URLs, rangeret)</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
+        <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Kunde-klar HTML-rapport</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
         <tr><td style="padding:0.45rem 0;">Pris</td><td style="text-align:center;"><strong>$0 for altid</strong></td><td style="text-align:center;color:#38bdf8;"><strong>$19/år</strong></td></tr>
       </table>
       <p style="margin-top:0.75rem;font-size:0.9rem;color:#94a3b8;">Pro er én beslutning om året: offline licensnøgle, ingen konto, ingen netværkstrafik. Reviser du sider for kunder, betaler HTML-rapporten og batch-tilstanden sig på den første opgave.</p>
@@ -205,14 +205,14 @@
       <p>Kørt mod dette site:</p>
       <div class="cli-demo">
         <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://hermes-passiv.pages.dev/</span></div>
-        <div><span class="output">  status: ✅ HTTP 200</span></div>
-        <div><span class="pass">  Title:        ✅ EU Compliance Guides for Small Web Agencies</span></div>
-        <div><span class="warn">  Description:  ⚠️ 214 chars (outside recommended 50-165)</span></div>
-        <div><span class="pass">  Canonical:    ✅</span></div>
-        <div><span class="pass">  OG:           ✅ All three present</span></div>
-        <div><span class="pass">  JSON-LD:      ✅ 1 block (Series)</span></div>
-        <div><span class="pass">  Images:       ✅ 5/5 with alt text</span></div>
-        <div><span class="output">  Hreflang:     ✅ 3 alternates</span></div>
+        <div><span class="output"> status: HTTP 200</span></div>
+        <div><span class="pass"> Title: EU Compliance Guides for Small Web Agencies</span></div>
+        <div><span class="warn"> Description: 214 chars (outside recommended 50-165)</span></div>
+        <div><span class="pass"> Canonical: </span></div>
+        <div><span class="pass"> OG: All three present</span></div>
+        <div><span class="pass"> JSON-LD: 1 block (Series)</span></div>
+        <div><span class="pass"> Images: 5/5 with alt text</span></div>
+        <div><span class="output"> Hreflang: 3 alternates</span></div>
         <div><span class="output">  Score:        16.5/21.0  Grade: B</span></div>
       </div>
     

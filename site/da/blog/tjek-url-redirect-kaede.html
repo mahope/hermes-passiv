@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Sådan tjekker du en URL's redirect-kæde", "description": "Spor den fulde redirect-kæde for enhver URL, inspicér sikkerhedsheadere og tjek SSL-certifikatet. Gratis browserværktøj, ingen tilmelding — plus hvorfor 301 vs 302 betyder noget for SEO.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Sådan tjekker du en URL's redirect-kæde", "description": "Spor den fulde redirect-kæde for enhver URL, inspicér sikkerhedsheadere og tjek SSL-certifikatet. Gratis browserværktøj, ingen tilmelding — plus hvorfor 301 vs 302 betyder noget for SEO.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-url-redirect-kaede", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvordan ser jeg en URL's redirect-kæde?", "acceptedAnswer": {"@type": "Answer", "text": "Indsæt URL'en i det gratis URL Inspector på /url-inspector/. Du får hele kæden med statuskoder, alle response-headere, analyse af sikkerhedsheadere og SSL-rapport for destinationen — intet gemmes."}}, {"@type": "Question", "name": "Hvilken statuskode skal jeg bruge?", "acceptedAnswer": {"@type": "Answer", "text": "301 til permanente flytninger (domæneskift, HTTPS-opgradering) — den vidererører SEO-værdien. 302/307 kun til midlertidige ændringer. 308 når POST-data skal bevares gennem redirecten."}}, {"@type": "Question", "name": "Hvor mange hop er for mange?", "acceptedAnswer": {"@type": "Answer", "text": "Ét hop er ideelt, to er okay. Over tre hop bør du korte af ved at pege de tidlige redirects direkte på slut-URL'en — hvert ekstra hop koster latenstid og udvander signaler."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Når du taster en URL, lander du ofte et helt andet sted. Serveren sender browseren gennem to, tre eller flere hop inden den rigtige side dukker op. Hvert hop er en HTTP-redirect — og når ét af dem er forkert, får du langsomme loads, tabt SEO-værdi eller en ødelagt side. Denne guide viser hvordan du sporer kæden på sekunder med det gratis URL Inspector-værktøj, og hvad du gør ved problemerne.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🔗 Hele kæden</h3><p>Se hvert hop, hver statuskode og alle response-headere for den endelige destination — inklusive SSL-certifikatets udløb.</p></div>
-      <div class="card"><h3>📉 Hvert hop koster</h3><p>Google følger op til 10 hop, men unødvendige hop udvander link-signaler og tilføjer latenstid — især på mobil.</p></div>
-      <div class="card"><h3>🔒 Certifikatet til sidst</h3><p>En redirect kan skjule et SSL-problem: første hop virker, men slutværten har udløbet certifikat.</p></div>
+      <div class="card"><h3>Hele kæden</h3><p>Se hvert hop, hver statuskode og alle response-headere for den endelige destination — inklusive SSL-certifikatets udløb.</p></div>
+      <div class="card"><h3>Hvert hop koster</h3><p>Google følger op til 10 hop, men unødvendige hop udvander link-signaler og tilføjer latenstid — især på mobil.</p></div>
+      <div class="card"><h3>Certifikatet til sidst</h3><p>En redirect kan skjule et SSL-problem: første hop virker, men slutværten har udløbet certifikat.</p></div>
     </div>
   </div>
 </section>

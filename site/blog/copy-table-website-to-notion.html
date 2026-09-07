@@ -21,7 +21,7 @@
     <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Copy a Table From a Website Into Notion (Rows and Columns Intact)", "description": "Copy any table from a website and paste it straight into Notion as real database rows — every column its own property, no CSV gymnastics. Free browser method.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-website-to-notion", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Copy a Table From a Website Into Notion (Rows and Columns Intact)", "description": "Copy any table from a website and paste it straight into Notion as real database rows — every column its own property, no CSV gymnastics. Free browser method.", "url": "https://hermes-passiv.pages.dev/blog/copy-table-website-to-notion", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I copy a table from a website into Notion?", "acceptedAnswer": {"@type": "Answer", "text": "Install the free Clean Copy extension for Chrome or Firefox, click the icon while the table is on screen, choose Copy as Markdown — then paste into a Notion database view with Ctrl+V (Cmd+V on Mac). Notion turns the markdown into rows and columns, and the first row becomes the property names."}}, {"@type": "Question", "name": "Why do pasted tables end up in one column in Notion?", "acceptedAnswer": {"@type": "Answer", "text": "If the clipboard only holds plain text without consistent separators, Notion cannot tell where one cell ends and the next begins — so values stack in a single column. Copying the actual table element as markdown (which Clean Copy does) preserves the row and column boundaries Notion needs."}}, {"@type": "Question", "name": "Can I paste directly into an existing Notion database?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Open the view you want to fill, select the first target cell and paste. Notion fills existing properties left to right — check that the column order matches your properties before pasting."}}, {"@type": "Question", "name": "Does it work on tables behind a login?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Clean Copy runs in your own logged-in browser session, so any table you can see while signed in can be copied — dashboards, admin panels, SaaS reports. Server-based scrapers typically fail here."}}, {"@type": "Question", "name": "Is anything sent to a server?", "acceptedAnswer": {"@type": "Answer", "text": "No. Clean Copy works entirely inside your browser. The table never leaves your machine until you paste it where it needs to go yourself."}}]}
@@ -52,15 +52,15 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
     <h2>Why the usual methods fail</h2>
     <p>The problem is not Notion — it is what reaches the clipboard.</p>
     <div class="problem-cards">
-      <div class="card"><h3>📋 Select + copy grabs too much</h3><p>Drag-selecting a table also catches captions, ads and surrounding text — and cells collapse into one long run of text when pasted.</p></div>
-      <div class="card"><h3>🧱 Plain text has no structure</h3><p>Without consistent separators, Notion cannot see where one cell ends and the next begins — everything stacks in a single column.</p></div>
+      <div class="card"><h3>Select + copy grabs too much</h3><p>Drag-selecting a table also catches captions, ads and surrounding text — and cells collapse into one long run of text when pasted.</p></div>
+      <div class="card"><h3>Plain text has no structure</h3><p>Without consistent separators, Notion cannot see where one cell ends and the next begins — everything stacks in a single column.</p></div>
       <div class="card"><h3>⌨️ Retyping does not scale</h3><p>Fine for three rows. Not fine for a 200-row pricing matrix you need refreshed every quarter.</p></div>
     </div>
   </div>
@@ -89,9 +89,9 @@ Pasting into an existing database? Check that the
 column order matches your properties first.</code></pre>
 
     <div class="problem-cards">
-      <div class="card"><h3>✅ Rows become records</h3><p>Clean Copy reads the real HTML <code>&lt;table&gt;</code> element, so each <code>&lt;td&gt;</code> lands in its own Notion property automatically.</p></div>
-      <div class="card"><h3>🧹 No junk rows</h3><p>No ad fragments, cookie banners or captions — only the table you pointed at.</p></div>
-      <div class="card"><h3>🔐 Works behind logins</h3><p>Dashboards, admin panels and SaaS reports all work, because conversion happens in your own logged-in browser session.</p></div>
+      <div class="card"><h3>Rows become records</h3><p>Clean Copy reads the real HTML <code>&lt;table&gt;</code> element, so each <code>&lt;td&gt;</code> lands in its own Notion property automatically.</p></div>
+      <div class="card"><h3>No junk rows</h3><p>No ad fragments, cookie banners or captions — only the table you pointed at.</p></div>
+      <div class="card"><h3>Works behind logins</h3><p>Dashboards, admin panels and SaaS reports all work, because conversion happens in your own logged-in browser session.</p></div>
     </div>
   </div>
 </section>

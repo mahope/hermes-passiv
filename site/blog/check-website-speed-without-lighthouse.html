@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Website Speed Test: Check Performance Without Lighthouse", "description": "Run a fast website speed and health check from your terminal — no browser devtools, no Lighthouse install, no signup. A free CLI profiler scores metadata, structured data, security headers and more in seconds.", "url": "https://hermes-passiv.pages.dev/blog/check-website-speed-without-lighthouse", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Website Speed Test: Check Performance Without Lighthouse", "description": "Run a fast website speed and health check from your terminal — no browser devtools, no Lighthouse install, no signup. A free CLI profiler scores metadata, structured data, security headers and more in seconds.", "url": "https://hermes-passiv.pages.dev/blog/check-website-speed-without-lighthouse", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I check website speed without running Lighthouse?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. The free page-profile CLI fetches the page server-side and reports response time, HTTP status, redirects and page weight signals in a few seconds — no Chrome, no npm install, no Lighthouse setup. It complements Lighthouse: use it for quick health checks and CI gates, and Lighthouse for deep rendering audits."}}, {"@type": "Question", "name": "Is this an alternative to Google PageSpeed Insights?", "acceptedAnswer": {"@type": "Answer", "text": "It measures different things. PageSpeed Insights runs a full browser render and scores Core Web Vitals; page-profile checks what is actually served — metadata, Open Graph tags, canonical, hreflang, structured data, image alt text, HTTPS headers and redirect chains. Many teams run both: PSI monthly, page-profile on every deploy."}}, {"@type": "Question", "name": "Do I need to install anything?", "acceptedAnswer": {"@type": "Answer", "text": "No. page-profile is a single Python file using only the standard library. Download it, run python3 page_profile.py https://example.com — works on macOS, Linux and Windows with Python 3.8+. There is also a browser version on the site that needs no download at all."}}, {"@type": "Question", "name": "Can I use it in CI to fail a build on a bad score?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Add --json for machine-readable output and check the score field in your pipeline. The Pro tier adds batch mode over many URLs and client-ready HTML reports, but the single-URL check and JSON output are free."}}, {"@type": "Question", "name": "What counts as a good response time?", "acceptedAnswer": {"@type": "Answer", "text": "Under about 200 ms server response (TTFB) for a static page is healthy; 200-800 ms is typical for dynamic sites; anything consistently above one second usually means caching is missing or the origin is slow. Run the check a few times — first hits include DNS and TLS setup."}}]}
@@ -52,7 +52,7 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem">
   <div class="container">
@@ -60,8 +60,8 @@
     <p>Full-render audits have their place. But three everyday jobs do not need them:</p>
     <div class="problem-cards">
       <div class="card"><h3>⏱️ Quick pre-deploy sanity check</h3><p>Did the new build ship a canonical tag? Is TTFB still sane? You want an answer now, not after a 40-second audit.</p></div>
-      <div class="card"><h3>🤖 CI pipelines</h3><p>Installing headless Chrome in CI just to gate a deploy on a score is slow and fragile. A stdlib Python script has zero dependencies.</p></div>
-      <div class="card"><h3>📊 Many URLs at once</h3><p>Lighthouse runs one page per invocation. Checking twenty landing pages means scripting around it — or one batch command.</p></div>
+      <div class="card"><h3>CI pipelines</h3><p>Installing headless Chrome in CI just to gate a deploy on a score is slow and fragile. A stdlib Python script has zero dependencies.</p></div>
+      <div class="card"><h3>Many URLs at once</h3><p>Lighthouse runs one page per invocation. Checking twenty landing pages means scripting around it — or one batch command.</p></div>
     </div>
   </div>
 </section>
@@ -83,9 +83,9 @@ python3 page_profile.py https://example.com
 python3 page_profile.py --json https://example.com | jq .score</code></pre>
 
     <div class="problem-cards">
-      <div class="card"><h3>⚡ Seconds, not minutes</h3><p>No headless browser. The check fetches once and parses — typical run time is under two seconds.</p></div>
-      <div class="card"><h3>🔁 Track changes over time</h3><p><code>--history</code> stores past scores locally so you can see whether a release made things better or worse. Free for everyone.</p></div>
-      <div class="card"><h3>🧰 Works anywhere</h3><p>Pure Python standard library — any machine with Python 3.8+, including CI containers and Raspberry Pis.</p></div>
+      <div class="card"><h3>Seconds, not minutes</h3><p>No headless browser. The check fetches once and parses — typical run time is under two seconds.</p></div>
+      <div class="card"><h3>Track changes over time</h3><p><code>--history</code> stores past scores locally so you can see whether a release made things better or worse. Free for everyone.</p></div>
+      <div class="card"><h3>Works anywhere</h3><p>Pure Python standard library — any machine with Python 3.8+, including CI containers and Raspberry Pis.</p></div>
     </div>
   </div>
 </section>

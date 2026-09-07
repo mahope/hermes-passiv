@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra en hjemmeside på iPhone & iPad (rækker og kolonner intakte)", "description": "Sådan kopierer du en tabel fra en hjemmeside på iPhone og iPad — og får den ind i Noter, Numbers, Excel eller Notion med rækker og kolonner intakte. Gratis Safari-bookmarklet-metode uden app.", "url": "/da/blog/kopier-tabel-iphone-ipad", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra en hjemmeside på iPhone & iPad (rækker og kolonner intakte)", "description": "Sådan kopierer du en tabel fra en hjemmeside på iPhone og iPad — og får den ind i Noter, Numbers, Excel eller Notion med rækker og kolonner intakte. Gratis Safari-bookmarklet-metode uden app.", "url": "/da/blog/kopier-tabel-iphone-ipad", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Kan man kopiere en tabel fra en hjemmeside på en iPhone?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Tricket er et Safari-bookmarklet: gem en vilkårlig side som bogmærke, redigér den og indsæt Clean Copy-bookmarklet-adressen. Åbn siden med tabellen, tryk på bogmærket — tabellen kopieres som ren Markdown, klar til at sætte ind hvor som helst som rækker og kolonner."}}, {"@type": "Question", "name": "Hvorfor bliver min tabel én klat tekst i Noter?", "acceptedAnswer": {"@type": "Answer", "text": "En almindelig kopiering tager ren tekst uden skilletegn, så iOS kan ikke se, hvor én celle slutter og den næste begynder. Kopierer du selve tabel-elementet som Markdown, bevares række- og kolonnegrænserne — og apps som Notion, Obsidian og Craft læser dem tilbage til en ægte struktur."}}, {"@type": "Question", "name": "Virker det i Chrome eller Firefox på iOS?", "acceptedAnswer": {"@type": "Answer", "text": "Ja — alle browsere på iPhone og iPad bruger WebKit under motorhjelmen, og bookmarklet-metoden virker overalt hvor bogmærker kan redigeres. I de fleste iOS-browsere betyder det, at du tilføjer et bogmærke manuelt og erstatter adressen, præcis som i Safari."}}, {"@type": "Question", "name": "Kan jeg få tabellen ind i Excel eller Numbers på iPad?", "acceptedAnswer": {"@type": "Answer", "text": "Kopiér tabellen med bookmarklet'et, åbn Numbers eller Excel, tryk på den første målcelle og indsæt. Tabelindhold i udklipsholderen fordeles automatisk i celler — tjek kolonnerækkefølgen inden du sætter ind."}}, {"@type": "Question", "name": "Bliver noget sendt til en server?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Bookmarklet'et kører helt inde i din browser. Tabellen forlader ikke din enhed, før du selv sætter den ind der, hvor den skal bruges."}}]}
@@ -52,16 +52,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem">
   <div class="container">
     <h2>Hvorfor det normalt mislykkes på iOS</h2>
     <p>Problemet er ikke din iPhone — det er det, der når ud til udklipsholderen.</p>
     <div class="problem-cards">
-      <div class="card"><h3>👆 Langtryk vælger kun én celle</h3><p>iOS markerer den enkelte celle du trykker på — ikke hele tabellen, og at trække markeringen hen over en tabel er højest usikkert.</p></div>
-      <div class="card"><h3>🧱 Ren tekst har ingen struktur</h3><p>Selv når du får valgt hele tabellen, ankommer den som tekst uden skilletegn. Apps kan ikke se, hvor én kolonne slutter og næste begynder.</p></div>
-      <div class="card"><h3>🚫 Ingen desktop-udvidelser</h3><p>Safari på iOS understøtter web-udvidelser først fra iOS 15, og installationen er intet som de one-click-butikker på computer. De fleste gider ikke.</p></div>
+      <div class="card"><h3>Langtryk vælger kun én celle</h3><p>iOS markerer den enkelte celle du trykker på — ikke hele tabellen, og at trække markeringen hen over en tabel er højest usikkert.</p></div>
+      <div class="card"><h3>Ren tekst har ingen struktur</h3><p>Selv når du får valgt hele tabellen, ankommer den som tekst uden skilletegn. Apps kan ikke se, hvor én kolonne slutter og næste begynder.</p></div>
+      <div class="card"><h3>Ingen desktop-udvidelser</h3><p>Safari på iOS understøtter web-udvidelser først fra iOS 15, og installationen er intet som de one-click-butikker på computer. De fleste gider ikke.</p></div>
     </div>
   </div>
 </section>
@@ -95,9 +95,9 @@ hver værdi lander i sin egen celle.
 Notion: indsæt i en databasevisning for rækker + egenskaber.</code></pre>
 
     <div class="problem-cards">
-      <div class="card"><h3>✅ Strukturen overlever</h3><p>Clean Copy læser den ægte HTML-<code>&lt;table&gt;</code>, så hver <code>&lt;td&gt;</code> lander, hvor den hører hjemme.</p></div>
-      <div class="card"><h3>🧹 Ingen junk-rækker</h3><p>Ingen annoncer, cookiebannere eller billedtekster — kun tabellen du pegede på.</p></div>
-      <div class="card"><h3>🔐 Intet forlader din enhed</h3><p>Konverteringen kører inde i Safari selv. Ingen server, ingen upload — virker også bag login.</p></div>
+      <div class="card"><h3>Strukturen overlever</h3><p>Clean Copy læser den ægte HTML-<code>&lt;table&gt;</code>, så hver <code>&lt;td&gt;</code> lander, hvor den hører hjemme.</p></div>
+      <div class="card"><h3>Ingen junk-rækker</h3><p>Ingen annoncer, cookiebannere eller billedtekster — kun tabellen du pegede på.</p></div>
+      <div class="card"><h3>Intet forlader din enhed</h3><p>Konverteringen kører inde i Safari selv. Ingen server, ingen upload — virker også bag login.</p></div>
     </div>
   </div>
 </section>

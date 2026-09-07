@@ -27,7 +27,7 @@
   "@type": "Article",
   "headline": "Webflow vs Squarespace: Accessibility Compared",
   "description": "Webflow vs Squarespace accessibility compared for EU site owners: where each builder fails WCAG 2.1 AA under the EAA, designer vs template tooling, and which is faster to remediate.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
 <script defer src="/track.js"></script>
@@ -47,13 +47,13 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="same-law-two-builders">Same Law Two Builders</h2>
     <p>Webflow and Squarespace are both visual website builders, and sites on either that serve EU consumers fall under the European Accessibility Act: EN 301 549 / WCAG 2.1 AA conformance, enforced nationally since mid-2025. The law does not distinguish between them — but the building experience does. Webflow gives designers low-level control over every element's HTML tag, ARIA attributes and custom code. Squarespace abstracts the markup behind templates and section blocks, exposing only curated settings. That difference shapes both where defects come from and who can fix them.</p>
     <div class="problem-cards">
-      <div class="card"><h3>⚖️ Same Standard</h3><p>EAA-covered services on either builder must meet WCAG 2.1 Level AA. Regulators do not care which tool produced the page.</p></div>
-      <div class="card"><h3>🎛️ Control Spectrum</h3><p>Webflow exposes tags, ARIA and custom code per element; Squarespace exposes curated settings. More control means more ways to fix — and more ways to break.</p></div>
-      <div class="card"><h3>🔌 Widget Risk</h3><p>Webflow interactions/custom embeds and Squarespace third-party blocks both inject controls of varying keyboard quality.</p></div>
+      <div class="card"><h3>Same Standard</h3><p>EAA-covered services on either builder must meet WCAG 2.1 Level AA. Regulators do not care which tool produced the page.</p></div>
+      <div class="card"><h3>Control Spectrum</h3><p>Webflow exposes tags, ARIA and custom code per element; Squarespace exposes curated settings. More control means more ways to fix — and more ways to break.</p></div>
+      <div class="card"><h3>Widget Risk</h3><p>Webflow interactions/custom embeds and Squarespace third-party blocks both inject controls of varying keyboard quality.</p></div>
     </div>  </div>
 </section>
 
@@ -61,9 +61,9 @@
   <div class="container">    <h2 id="where-webflow-fails">Where Webflow Fails</h2>
     <p>Typical Webflow defect patterns:</p>
     <div class="problem-cards">
-      <div class="card"><h3>🧱 Div-Soup Structure</h3><p>Designer-built layouts frequently use div elements styled as headings and buttons — no real h1-h6 hierarchy, no native button semantics.</p></div>
-      <div class="card"><h3>🎬 Interaction Overload</h3><p>Hover-only reveals, scroll-triggered animations and click-triggered dropdowns that never appear for keyboard users.</p></div>
-      <div class="card"><h3>🎨 Custom Code Embeds</h3><p>Third-party embeds pasted into custom-code fields ship with their own contrast, label and focus problems outside Webflow's checks.</p></div>
+      <div class="card"><h3>Div-Soup Structure</h3><p>Designer-built layouts frequently use div elements styled as headings and buttons — no real h1-h6 hierarchy, no native button semantics.</p></div>
+      <div class="card"><h3>Interaction Overload</h3><p>Hover-only reveals, scroll-triggered animations and click-triggered dropdowns that never appear for keyboard users.</p></div>
+      <div class="card"><h3>Custom Code Embeds</h3><p>Third-party embeds pasted into custom-code fields ship with their own contrast, label and focus problems outside Webflow's checks.</p></div>
       <div class="card"><h3>⌨️ Focus Handling</h3><p>Custom nav components and modals without focus traps or visible focus styles — common in hand-built Designer projects.</p></div>
     </div>  </div>
 </section>
@@ -72,10 +72,10 @@
   <div class="container">    <h2 id="where-squarespace-fails">Where Squarespace Fails</h2>
     <p>Typical Squarespace defect patterns:</p>
     <div class="problem-cards">
-      <div class="card"><h3>🖼️ Gallery Alt Gaps</h3><p>Image blocks and galleries accept empty alt text silently; image-heavy marketing pages routinely ship with none.</p></div>
-      <div class="card"><h3>🎨 Template Contrast</h3><p>Site-style overrides (grey text on tinted backgrounds) drop below 4.5:1 while looking intentional in the editor preview.</p></div>
-      <div class="card"><h3>🧭 Section Semantics</h3><p>Drag-reordered sections produce heading orders chosen visually; some blocks render clickable cards as divs with JS handlers.</p></div>
-      <div class="card"><h3>📱 Mobile Overrides</h3><p>Style changes applied only to mobile breakpoints leave desktop fixes incomplete — or vice versa.</p></div>
+      <div class="card"><h3>Gallery Alt Gaps</h3><p>Image blocks and galleries accept empty alt text silently; image-heavy marketing pages routinely ship with none.</p></div>
+      <div class="card"><h3>Template Contrast</h3><p>Site-style overrides (grey text on tinted backgrounds) drop below 4.5:1 while looking intentional in the editor preview.</p></div>
+      <div class="card"><h3>Section Semantics</h3><p>Drag-reordered sections produce heading orders chosen visually; some blocks render clickable cards as divs with JS handlers.</p></div>
+      <div class="card"><h3>Mobile Overrides</h3><p>Style changes applied only to mobile breakpoints leave desktop fixes incomplete — or vice versa.</p></div>
     </div>  </div>
 </section>
 
@@ -95,9 +95,9 @@
   <div class="container">    <h2 id="which-should-you-pick">Which Should You Pick</h2>
     <p>For an existing site, stay put — migration costs more than remediation and the EAA obligation is identical. For a new EU project: pick Webflow when a professional designer maintains the site and you can enforce an accessibility checklist in the design process, since every defect is ultimately fixable at the element level. Pick Squarespace for simple sites maintained by non-designers, accepting documented limitations where blocks cannot be fixed. Either way the workflow is identical: automated scan across key templates, fix mechanical failures (contrast, alt text, labels, heading order), audit each embed or block individually, publish an accessibility statement, and re-scan after meaningful changes.</p>
     <div class="problem-cards">
-      <div class="card"><h3>✅ Both Can Comply</h3><p>Conformant sites exist on both builders. Process quality beats tooling choice.</p></div>
-      <div class="card"><h3>🚀 Start With a Scan</h3><p>An automated scan separates fixable-today issues from structural ones in minutes — on any platform.</p></div>
-      <div class="card"><h3>📄 Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and known limitations.</p></div>
+      <div class="card"><h3>Both Can Comply</h3><p>Conformant sites exist on both builders. Process quality beats tooling choice.</p></div>
+      <div class="card"><h3>Start With a Scan</h3><p>An automated scan separates fixable-today issues from structural ones in minutes — on any platform.</p></div>
+      <div class="card"><h3>Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and known limitations.</p></div>
     </div>  </div>
 </section>
 

@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Meta Tag Checker \u2014 inspect any page\u2019s meta tags (free)", "description": "Free meta tag checker for any URL: title, meta description, robots, canonical, viewport and social tags. See exactly what search engines and social platforms read from your page \u2014 no signup.", "url": "https://hermes-passiv.pages.dev/blog/meta-tag-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Meta Tag Checker \u2014 inspect any page\u2019s meta tags (free)", "description": "Free meta tag checker for any URL: title, meta description, robots, canonical, viewport and social tags. See exactly what search engines and social platforms read from your page \u2014 no signup.", "url": "https://hermes-passiv.pages.dev/blog/meta-tag-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script defer src="/track.js"></script>
 </head>
@@ -39,19 +39,19 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem" id="what-to-check">
   <div class="container">
     <h2>The meta tags that actually matter</h2>
     <p>Most pages carry a dozen meta tags; only a handful affect traffic. A good checker reads the raw HTML response — the same thing a search engine crawler sees on first fetch — and reports each one's presence and validity.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🔍 Title tag</h3><p>Not strictly a meta tag, but the single strongest on-page signal. Aim for unique, descriptive titles of roughly 50–60 characters per page.</p></div>
-      <div class="card"><h3>📝 Meta description</h3><p>Does not rank directly, but Google often shows it as the snippet. Missing or duplicated descriptions mean Google writes your ad copy for you.</p></div>
-      <div class="card"><h3>🤖 Robots meta</h3><p><code>noindex</code> or <code>nofollow</code> here silently removes pages from search. It is the most common accidental traffic killer we see.</p></div>
-      <div class="card"><h3>🔗 Canonical link</h3><p>Tells search engines which URL is the real one. Wrong canonicals merge your pages' value into someone else's URL — or into nothing.</p></div>
-      <div class="card"><h3>📱 Viewport</h3><p><code>&lt;meta name="viewport"&gt;</code> controls mobile rendering. Missing it means an unreadable zoomed-out page on phones.</p></div>
-      <div class="card"><h3>💬 Social tags</h3><p>Open Graph and twitter:card tags control share previews on LinkedIn, Facebook and X. They are invisible until someone shares your link.</p></div>
+      <div class="card"><h3>Title tag</h3><p>Not strictly a meta tag, but the single strongest on-page signal. Aim for unique, descriptive titles of roughly 50–60 characters per page.</p></div>
+      <div class="card"><h3>Meta description</h3><p>Does not rank directly, but Google often shows it as the snippet. Missing or duplicated descriptions mean Google writes your ad copy for you.</p></div>
+      <div class="card"><h3>Robots meta</h3><p><code>noindex</code> or <code>nofollow</code> here silently removes pages from search. It is the most common accidental traffic killer we see.</p></div>
+      <div class="card"><h3>Canonical link</h3><p>Tells search engines which URL is the real one. Wrong canonicals merge your pages' value into someone else's URL — or into nothing.</p></div>
+      <div class="card"><h3>Viewport</h3><p><code>&lt;meta name="viewport"&gt;</code> controls mobile rendering. Missing it means an unreadable zoomed-out page on phones.</p></div>
+      <div class="card"><h3>Social tags</h3><p>Open Graph and twitter:card tags control share previews on LinkedIn, Facebook and X. They are invisible until someone shares your link.</p></div>
     </div>
   </div>
 </section>
@@ -64,9 +64,9 @@
     <p><strong>Option C — curl for developers.</strong> <code>curl -s https://example.com | grep -i '&lt;meta'</code> gives you the raw list in the terminal, perfect for quick CI checks.</p>
     <p><strong>Fixing icons too?</strong> Missing or broken favicons are a common finding in meta tag audits. The free <a href="/site-icons" style="color:var(--color-accent);">site-icons CLI</a> generates every favicon size plus favicon.ico from one SVG — run it once, ship the folder, done.</p>
     <div class="problem-cards">
-      <div class="card"><h3>📏 Length limits that matter</h3><p>Title truncates around 55–65 characters, description around 150–160. Longer is not punished — it is simply cut off mid-sentence.</p></div>
-      <div class="card"><h3>🧩 One set per page</h3><p>Template-wide defaults mean every article shares one description. Most CMSs fix this with one SEO plugin or one template partial per content type.</p></div>
-      <div class="card"><h3>🔁 After fixing</h3><p>Crawlers re-fetch on their own schedule. Request re-indexing in Google Search Console after deploying fixes to see them reflected within days rather than weeks.</p></div>
+      <div class="card"><h3>Length limits that matter</h3><p>Title truncates around 55–65 characters, description around 150–160. Longer is not punished — it is simply cut off mid-sentence.</p></div>
+      <div class="card"><h3>One set per page</h3><p>Template-wide defaults mean every article shares one description. Most CMSs fix this with one SEO plugin or one template partial per content type.</p></div>
+      <div class="card"><h3>After fixing</h3><p>Crawlers re-fetch on their own schedule. Request re-indexing in Google Search Console after deploying fixes to see them reflected within days rather than weeks.</p></div>
     </div>
   </div>
 </section>

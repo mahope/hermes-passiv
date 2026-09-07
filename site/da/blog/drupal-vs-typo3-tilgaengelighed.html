@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Drupal vs TYPO3: tilgængelighed sammenlignet", "description": "To open-source CMS'er der bruges af den europæiske offentlige sektor. Hvordan deres WCAG 2.1 AA-baselines, extension-økosystemer og remedierings-workflows adskiller sig.", "url": "https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Drupal vs TYPO3: tilgængelighed sammenlignet", "description": "To open-source CMS'er der bruges af den europæiske offentlige sektor. Hvordan deres WCAG 2.1 AA-baselines, extension-økosystemer og remedierings-workflows adskiller sig.", "url": "https://hermes-passiv.pages.dev/da/blog/drupal-vs-typo3-tilgaengelighed", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilket CMS er mest tilgængeligt ud af boksen?", "acceptedAnswer": {"@type": "Answer", "text": "Drupal med Olivero-temaet har en stærkere baseline — core'en håndhæver semantisk markup og ARIA. TYPO3 kræver mere manuel opsætning af Fluid-templates for at opnå samme niveau. Men begge kan nå fuld AA-compliance — det afhænger af hvad du gør med dem."}}, {"@type": "Question", "name": "Er extensions/moduler et problem?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, det er den største kilde til defekter i praksis. Tredjeparts-moduler i begge CMS'er har ujævn tilgængelighedskvalitet — test hvert modul individuelt før deployment."}}, {"@type": "Question", "name": "Hvad med opdateringer?", "acceptedAnswer": {"@type": "Answer", "text": "Modul- og kernel-opdateringer kan genindføre tidligere fiksedee fejl. Tilgængelighedstest bør være en fast del af hver update-runde — ikke noget der gøres én gang om året."}}, {"@type": "Question", "name": "Bør jeg vælge Drupal eller TYPO3 for compliance?", "acceptedAnswer": {"@type": "Answer", "text": "Begge er brugbare. Drupal kræver mindre manuel opsætning for at nå en AA-baseline; TYPO3 giver mere fleksibilitet i output men kræver strengere editor-disciplin. Vælg efter hvad dit team kender — et velbygget site i ethvert CMS er bedre end et dårligt bygget site i det \"rigtige\" CMS."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Drupal og TYPO3 er de to open source-CMS'er der oftest bruges af europæiske offentlige myndigheder — præcis de organisationer med de strengeste tilgængelighedskrav. Offentlige myndigheder har været omfattet af EN 301 549 / WCAG 2.1 AA siden 2019 under Webtilgængelighedsdirektivet og siden juni 2025 også under European Accessibility Act. Begge CMS'er er i stand til fuld compliance; de adskiller sig i hvor deres standardstyrker ligger, og hvordan deres extension-økosystemer introducerer risiko.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🏛️ Directive Veterans</h3><p>Begge økosystemer har levet med Webtilgængelighedsdirektivet siden 2019 — tilgængelighedserklæringer, monitorering og feedback-mekanismer er velkendt territorium.</p></div>
-      <div class="card"><h3>⚙️ Stærke kerner</h3><p>Drupal leverer Olivero-fronter temaet bygget til AA; TYPO3 giver tilgængelig output via Fluid Styled Content og sine tilgængelighedsfokuserede extensions.</p></div>
-      <div class="card"><h3>🧩 Extension-risiko</h3><p>Drupal contrib-moduler og TYPO3-extensions injicerer formularer, views og widgets af ujævn kvalitet — den største kilde til defekter i praksis.</p></div>
+      <div class="card"><h3>Directive Veterans</h3><p>Begge økosystemer har levet med Webtilgængelighedsdirektivet siden 2019 — tilgængelighedserklæringer, monitorering og feedback-mekanismer er velkendt territorium.</p></div>
+      <div class="card"><h3>Stærke kerner</h3><p>Drupal leverer Olivero-fronter temaet bygget til AA; TYPO3 giver tilgængelig output via Fluid Styled Content og sine tilgængelighedsfokuserede extensions.</p></div>
+      <div class="card"><h3>Extension-risiko</h3><p>Drupal contrib-moduler og TYPO3-extensions injicerer formularer, views og widgets af ujævn kvalitet — den største kilde til defekter i praksis.</p></div>
     </div>
   </div>
 </section>
@@ -62,14 +62,14 @@
 <section class="products">
   <div class="container">
     <h2>Hvor Drupal fejler</h2>
-    <p>Typiske Drupal-defektmønstre:</p><ul><li><strong>🧩 Contrib-moduler</strong> — formularbyggere, sliders og kortmoduler overskriver core's tilgængelige defaults: placeholder-only felter, div-baserede kontroller, manglende aria-expanded.</li><li><strong>🎨 Custom-temaer</strong> — sub-temaer dropper Oliveros fokus-styles, springer landmarks over eller hardcoder ikke-semantisk markup.</li><li><strong>📝 Editor-indhold</strong> — rich-text-indhold omgår strukturerede felter: fed-tekst pseudo-overskrifter, tom alt på uploadede billeder, "klik her"-links.</li><li><strong>🔄 Opdateringsregressioner</strong> — modulopdateringer genindfører stille og roligt fiksedee fejl.</li></ul>
+    <p>Typiske Drupal-defektmønstre:</p><ul><li><strong>Contrib-moduler</strong> — formularbyggere, sliders og kortmoduler overskriver core's tilgængelige defaults: placeholder-only felter, div-baserede kontroller, manglende aria-expanded.</li><li><strong>Custom-temaer</strong> — sub-temaer dropper Oliveros fokus-styles, springer landmarks over eller hardcoder ikke-semantisk markup.</li><li><strong>Editor-indhold</strong> — rich-text-indhold omgår strukturerede felter: fed-tekst pseudo-overskrifter, tom alt på uploadede billeder, "klik her"-links.</li><li><strong>Opdateringsregressioner</strong> — modulopdateringer genindfører stille og roligt fiksedee fejl.</li></ul>
   </div>
 </section>
 
 <section class="products">
   <div class="container">
     <h2>Hvor TYPO3 fejler</h2>
-    <p>Typiske TYPO3-defektmønstre:</p><ul><li><strong>🖼️ Alt-disciplin</strong> — legacy-indhold og quick-uploads springer alt-metadata over.</li><li><strong>🧱 Gamle templates</strong> — sider på Protostar-æra eller stærkt overridede Fluid-templates bærer strukturelle tilgængelighedsfejl.</li><li><strong>🔌 Extension-overlap</strong> — flere extensions der håndterer samme funktion (fx kalender, kort) giver inkonsistent keyboard-adfærd.</li><li><strong>📄 PDF-generering</strong> — TYPO3's indbyggede PDF-output mangler ofte tags og sprogmetadata.</li></ul>
+    <p>Typiske TYPO3-defektmønstre:</p><ul><li><strong>Alt-disciplin</strong> — legacy-indhold og quick-uploads springer alt-metadata over.</li><li><strong>Gamle templates</strong> — sider på Protostar-æra eller stærkt overridede Fluid-templates bærer strukturelle tilgængelighedsfejl.</li><li><strong>Extension-overlap</strong> — flere extensions der håndterer samme funktion (fx kalender, kort) giver inkonsistent keyboard-adfærd.</li><li><strong>PDF-generering</strong> — TYPO3's indbyggede PDF-output mangler ofte tags og sprogmetadata.</li></ul>
     <p>For en dybdegående guide til Drupal alene, se vores <a href="/da/blog/drupal-tilgaengelighed-eaa" style="color:var(--color-accent);">Drupal EAA-guide</a>. For TYPO3, se <a href="/da/blog/typo3-tilgaengelighed-bitv" style="color:var(--color-accent);">TYPO3 BITV-tjek</a>.</p>
   </div>
 </section>

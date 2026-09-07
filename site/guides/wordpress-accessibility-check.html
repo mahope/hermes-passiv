@@ -58,9 +58,9 @@
     <p>The European Accessibility Act (EAA) is the strongest regulatory driver yet. It applies to any website offering services or products to EU consumers — from a WooCommerce boutique in Berlin to a membership portal in Dublin. Non-compliance carries real legal exposure, and enterprise procurement teams increasingly require a signed VPAT or documented WCAG conformance before signing. The most frequent failures on WordPress sites — missing alt text on product images, generic "read more" links, low-contrast themes, empty form labels, and absent page language declarations — are also the cheapest and fastest to fix. That's exactly what our automated scanner catches.</p>
     <p>Beyond regulation, the business case is clear: accessible sites rank higher in Google search (alt text is semantic content), convert better (clear CTAs and forms), and reduce bounce rates from users who rely on assistive technology — an estimated 15% of the EU population.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🔍 What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
-      <div class="card"><h3>⚡ Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
-      <div class="card"><h3>🛡️ Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
+      <div class="card"><h3>What gets checked</h3><p>16 automated rules covering images, links, forms, headings, language, viewport, contrast, ARIA misuse, and more — mapped to real WCAG success criteria.</p></div>
+      <div class="card"><h3>Instant results</h3><p>Paste your URL, get a letter grade with every issue listed by severity. No account, no email, no waiting for an audit report.</p></div>
+      <div class="card"><h3>Built for the EAA</h3><p>The rule set targets what EU enforcement and enterprise procurement actually look at: WCAG 2.1 AA basics you can document today.</p></div>
     </div>
   </div>
 </section>
@@ -103,7 +103,7 @@
     <h2>WordPress-specific tools &amp; modules</h2>
     <p>WordPress has its own accessibility ecosystem — some plugins genuinely help, others introduce new problems. Here is what to use, what to avoid, and how each tool fits into a real workflow.</p>
 
-    <h3 style="margin-top:24px;">🛠️ Plugins that help</h3>
+    <h3 style="margin-top:24px;">Plugins that help</h3>
     <ul style="line-height:2;margin-top:8px;">
       <li><strong>Accessibility Checker (Equalize Digital)</strong> — Audits each post or page inside the Block Editor as you write. Flags missing alt text, broken heading hierarchy, empty links, and contrast issues before you publish. Runs the same underlying rules as our scanner but inline in the editor so you catch issues mid-draft. Free tier covers basic checks; Pro adds colour-contrast validation and team reporting.</li>
       <li><strong>WP Accessibility (by Joe Dolson)</strong> — A lightweight toolkit that adds skip-to-content links, enforces lang attributes, highlights images missing alt text in the admin, and lets you set a minimum font size. Does not auto-fix your content — it surfaces what needs attention. Ideal as a baseline layer on any theme.</li>
@@ -111,20 +111,20 @@
       <li><strong>WAVE Evaluation Tool (browser extension)</strong> — Not a plugin but an essential companion. Overlays WCAG violations directly on your rendered page. Works with any WordPress site and is widely referenced in EAA compliance documentation.</li>
     </ul>
 
-    <h3 style="margin-top:24px;">⚠️ Plugins that can hurt</h3>
+    <h3 style="margin-top:24px;">Plugins that can hurt</h3>
     <ul style="line-height:2;margin-top:8px;">
       <li><strong>"Auto accessibility" or "one-click fix" plugins</strong> — These globally inject JavaScript to re-write colour values, re-arrange DOM structure, or append ARIA attributes. They often break theme layout, introduce duplicate landmark roles, and degrade performance. More importantly, they hide underlying problems: the EAA cares about the authoring experience, not third-party JS patches.</li>
       <li><strong>Complex page builders (Elementor, Divi Builder, WPBakery)</strong> — These generate deeply nested HTML with inline styles and non-semantic wrapper divs. Elements inside a builder container frequently fail heading-level checks, skip ARIA roles, and produce inconsistent focus order. If you use a page builder, test every template individually with the scanner.</li>
     </ul>
 
-    <h3 style="margin-top:24px;">🎨 Theme-specific patterns</h3>
+    <h3 style="margin-top:24px;">Theme-specific patterns</h3>
     <ul style="line-height:2;margin-top:8px;">
       <li><strong>Astra</strong> — Generally strong semantic HTML but the Customiser colour pickers let you set text colours that violate contrast ratios (especially on transparent headers). Fix: test every colour scheme against WCAG AA contrast before deploying.</li>
       <li><strong>GeneratePress</strong> — Cleanest semantic output of the popular lightweight themes. Its dynamic blocks respect heading hierarchy. Still, verify that custom colour overrides in the Customiser meet the 4.5:1 contrast ratio for normal text.</li>
       <li><strong>Divi</strong> — The heaviest accessibility burden of the big three. Divi modules output deeply nested divs with inline styles, often skip heading levels, and its Visual Builder bypasses the Gutenberg editor's accessibility hooks entirely. Plan for manual ARIA adjustments or use a child-theme override file.</li>
     </ul>
 
-    <h3 style="margin-top:24px;">🧩 Gutenberg Block Editor considerations</h3>
+    <h3 style="margin-top:24px;">Gutenberg Block Editor considerations</h3>
     <p>The Block Editor itself has known accessibility gaps. Heading blocks default to H2 with no prompt for the correct level — editors routinely create H2 → H2 → H2 chains instead of a proper H2 → H3 → H3 hierarchy. Image blocks do not enforce alt text before publishing, and the Columns block can produce a non-sequential tab order in some configurations. Custom HTML blocks let editors bypass every accessibility safeguard. Train your content team to be deliberate about heading levels and always fill alt text, and enforce the habit of running the scanner before publishing every new page.</p>
   </div>
 </section>
@@ -134,7 +134,7 @@
     <h2>Maintaining accessibility on WordPress</h2>
     <p>Accessibility is not a one-time scan. WordPress sites evolve constantly — new plugins, theme updates, fresh content from multiple editors, and third-party integrations all introduce regressions. Building ongoing practices into your workflow prevents the compliance gap from widening between audits.</p>
 
-    <h3 style="margin-top:24px;">📅 Recommended review cycle</h3>
+    <h3 style="margin-top:24px;">Recommended review cycle</h3>
     <ul style="line-height:2;margin-top:8px;">
       <li><strong>Weekly.</strong> Content editors run the scanner on every new page or post before publishing. Train them to fix alt text, heading levels, and link text themselves — the scanner gives them everything they need.</li>
       <li><strong>Monthly.</strong> Full scan of the homepage, main product or service pages, and the contact / checkout funnel. Check for regressions introduced by theme or plugin updates.</li>
@@ -142,10 +142,10 @@
       <li><strong>Annually.</strong> Review against the latest WCAG version (2.2 is now the reference for many EU frameworks). Update your VPAT or compliance statement. Check that your tools and plugins still support the current standard.</li>
     </ul>
 
-    <h3 style="margin-top:24px;">🧪 CI and automation</h3>
+    <h3 style="margin-top:24px;">CI and automation</h3>
     <p>If you manage WordPress through a staging workflow, integrate automated accessibility checks into your deployment pipeline. Tools like Pa11y CI or axe-core can be run against your staging environment on every deploy — they catch contrast and ARIA regressions before they reach production. For agencies: a pre-deploy accessibility check is a strong differentiator when a client asks about your QA process.</p>
 
-    <h3 style="margin-top:24px;">📝 Training content editors</h3>
+    <h3 style="margin-top:24px;">Training content editors</h3>
     <p>Your content team is your first line of defence. A 30-minute training session on the Block Editor covers the three most impactful habits:</p>
     <ul style="line-height:2;margin-top:8px;">
       <li>Always set alt text on every image — the scanner flags it, but teaching <em>why</em> (screen-reader users perceive the image through alt text) makes the habit stick.</li>

@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Open Graph Checker \u2014 see how your links look when shared (free)", "description": "Check any URL's Open Graph and Twitter Card tags free: og:title, og:description, og:image and twitter:card. See how your link looks when shared on LinkedIn, Facebook and X \u2014 no signup.", "url": "https://hermes-passiv.pages.dev/blog/open-graph-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Open Graph Checker \u2014 see how your links look when shared (free)", "description": "Check any URL's Open Graph and Twitter Card tags free: og:title, og:description, og:image and twitter:card. See how your link looks when shared on LinkedIn, Facebook and X \u2014 no signup.", "url": "https://hermes-passiv.pages.dev/blog/open-graph-checker", "datePublished": "2026-08-24", "dateModified": "2026-08-24", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script defer src="/track.js"></script>
 </head>
@@ -39,7 +39,7 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div>
 
 <section class="problem" id="why-it-breaks">
   <div class="container">
@@ -47,9 +47,9 @@
     <p>When a URL is pasted into a social network or chat app, that platform's crawler fetches your page and reads four meta tags from the <code>og:</code> namespace: <strong>og:title</strong>, <strong>og:description</strong>, <strong>og:image</strong> and <strong>og:url</strong>. X (Twitter) uses its parallel <code>twitter:card</code> tags, falling back to Open Graph when they are missing.</p>
     <p>If the tags are absent, the platform guesses &mdash; usually badly: no image, a truncated title, or a description scraped from random page text. If the tags are wrong, the wrong card shows, and the platforms cache aggressively: fixing the tags today does not fix cards already cached.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🖼️ The image problem</h3><p>The single most common failure: og:image missing, relative instead of absolute, smaller than 200&times;200 px, or pointing at a URL behind auth. Any of these renders no image at all.</p></div>
-      <div class="card"><h3>🗄️ The cache problem</h3><p>Facebook and LinkedIn cache share data for days. Fix tags first, then use each platform's debugger to force a re-scrape — otherwise you're testing stale data.</p></div>
-      <div class="card"><h3>✅ One check, all tags</h3><p>A good checker validates every tag at once: presence, sizes, absolute URLs, image dimensions and twitter:card fallbacks.</p></div>
+      <div class="card"><h3>The image problem</h3><p>The single most common failure: og:image missing, relative instead of absolute, smaller than 200&times;200 px, or pointing at a URL behind auth. Any of these renders no image at all.</p></div>
+      <div class="card"><h3>The cache problem</h3><p>Facebook and LinkedIn cache share data for days. Fix tags first, then use each platform's debugger to force a re-scrape — otherwise you're testing stale data.</p></div>
+      <div class="card"><h3>One check, all tags</h3><p>A good checker validates every tag at once: presence, sizes, absolute URLs, image dimensions and twitter:card fallbacks.</p></div>
     </div>
   </div>
 </section>
@@ -61,9 +61,9 @@
     <p><strong>Option B — view-source.</strong> Open your page, view source, and search for <code>og:</code>. You should find at least title, description, image and url inside the &lt;head&gt;. Remember: tags rendered client-side by JavaScript are invisible to most platform crawlers — they must be in the raw HTML response.</p>
     <p><strong>Option C — platform debuggers.</strong> After fixing, run Facebook's Sharing Debugger and LinkedIn's Post Inspector to refresh their caches and confirm the new card. Each platform caches independently; clearing one does not clear the others.</p>
     <div class="problem-cards">
-      <div class="card"><h3>📏 Image rules of thumb</h3><p>1200&times;630 px, absolute URL, under ~8 MB, publicly reachable, PNG or JPEG. That passes every major platform's requirements with margin.</p></div>
-      <div class="card"><h3>✍️ Title and description lengths</h3><p>Cards truncate around 55–65 characters of title and ~110–160 of description depending on platform. Put the important words first.</p></div>
-      <div class="card"><h3>🧩 Per-page tags</h3><p>One shared set of OG tags across a whole site means every shared article shows the homepage card. Generate them per template — most CMSs do this with one plugin or one meta partial.</p></div>
+      <div class="card"><h3>Image rules of thumb</h3><p>1200&times;630 px, absolute URL, under ~8 MB, publicly reachable, PNG or JPEG. That passes every major platform's requirements with margin.</p></div>
+      <div class="card"><h3>Title and description lengths</h3><p>Cards truncate around 55–65 characters of title and ~110–160 of description depending on platform. Put the important words first.</p></div>
+      <div class="card"><h3>Per-page tags</h3><p>One shared set of OG tags across a whole site means every shared article shows the homepage card. Generate them per template — most CMSs do this with one plugin or one meta partial.</p></div>
     </div>
   </div>
 </section>

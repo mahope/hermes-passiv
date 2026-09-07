@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Joomla og tilgængelighed: mød BITV 2.0 og EN 301 549", "description": "Gør Joomla-sites compliant med BITV 2.0, EN 301 549 og EAA: template-overrides, redaktørvaner, extension-audit og en praktisk test-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/joomla-tilgaengelighed-bitv", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Joomla og tilgængelighed: mød BITV 2.0 og EN 301 549", "description": "Gør Joomla-sites compliant med BITV 2.0, EN 301 549 og EAA: template-overrides, redaktørvaner, extension-audit og en praktisk test-workflow — trin for trin på dansk.", "url": "https://hermes-passiv.pages.dev/da/blog/joomla-tilgaengelighed-bitv", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Gælder BITV 2.0 min kommercielle kunde?", "acceptedAnswer": {"@type": "Answer", "text": "BITV 2.0 binder tyske offentlige organer. Private virksomheder falder under Barrierefreiheitsstärkungsgesetz (BFSG), som implementerer EAA — men begge refererer EN 301 549 / WCAG-baserede krav, så det samme tekniske arbejde tilfredsstiller begge rammer."}}, {"@type": "Question", "name": "Er Joomla selv tilgængeligt?", "acceptedAnswer": {"@type": "Answer", "text": "Joomla-kernen er markant forbedret, og CMS'et leverer værktøjerne (semantisk rendering, flersprogede associationer, mediemetadata). Faktisk compliance afhænger næsten helt af den enkelte template, extensionsættet og den redaktionelle praksis."}}, {"@type": "Question", "name": "Hvilken WCAG-version bør vi sigte efter?", "acceptedAnswer": {"@type": "Answer", "text": "EN 301 549 refererer i øjeblikket WCAG 2.1 niveau AA. At bygge mod WCAG 2.2 AA giver luft — tilføjelserne handler mest om fokus-udseende, alternativer til træk og konsekvent hjælp."}}, {"@type": "Question", "name": "Vi bruger en populær forms-extension — er vi fine?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke automatisk. Flere udbredte formular-extensions renderer felter med kun placeholder eller custom selects uden tastaturstøtte. Auditér den præcise installerede versions renderede markup på staging."}}, {"@type": "Question", "name": "Hvor lang tid tager Joomla-udbedring?", "acceptedAnswer": {"@type": "Answer", "text": "For et typisk 20-50 siders site på en vedligeholdt template: 2-5 arbejdsdage til mekaniske retter plus redaktørtræning. Sites stadig på Protostar-era-templates tager længere — templatemigreringen dominerer."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Joomla er stadig udbredt i tysk offentlig forvaltning, foreninger og Mittelstand — målgrupper der er styret af BITV 2.0 i Tyskland og, siden juni 2025, af European Accessibility Act i hele EU. BITV 2.0 er i praksis EN 301 549, den europæiske ICT-tilgængelighedsstandard som indarbejder WCAG 2.1 niveau AA. Et Joomla-site bygget uden en bevidst tilgængelighedsindsats fejler typisk flere EN 301 549-krav på hver eneste side — og tyske offentlige kunder kræver i stigende grad en dokumenteret tilgængelighedserklæring før kontrakten underskrives.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🏛️ Offentlige kunder</h3><p>Tyske offentlige organer skal opfylde BITV 2.0. Bureauer der betjener dem skal kunne vise dokumenteret conformance — ikke blive gode intentioner.</p></div>
-      <div class="card"><h3>📜 BFSG for private</h3><p>Private tjenester falder under BFSG — den tyske implementering af EAA. Samme tekniske standard, bare en anden juridisk vej.</p></div>
-      <div class="card"><h3>🧱 Template-arv</h3><p>De fleste Joomla-sider kører tungt tilpassede efterkommere af gamle Protostar-baserede templates — ti år gamle markup-mønstre replikeres på tværs af hele sitet.</p></div>
+      <div class="card"><h3>Offentlige kunder</h3><p>Tyske offentlige organer skal opfylde BITV 2.0. Bureauer der betjener dem skal kunne vise dokumenteret conformance — ikke blive gode intentioner.</p></div>
+      <div class="card"><h3>BFSG for private</h3><p>Private tjenester falder under BFSG — den tyske implementering af EAA. Samme tekniske standard, bare en anden juridisk vej.</p></div>
+      <div class="card"><h3>Template-arv</h3><p>De fleste Joomla-sider kører tungt tilpassede efterkommere af gamle Protostar-baserede templates — ti år gamle markup-mønstre replikeres på tværs af hele sitet.</p></div>
     </div>
   </div>
 </section>
@@ -62,7 +62,7 @@
 <section class="products">
   <div class="container">
     <h2>Hvor Joomla-sider fejler</h2>
-    <div class="problem-cards"><div class="card"><h3>📝 Redaktørindhold</h3><p>Manglende alt-tekst er den hyppigste defekt — Joomla gennemtvinger ikke alt-feltet på medier. Andet: overskrifter indsat fra Word som visuel formatering i stedet for rigtige h2/h3-elementer.</p></div><div class="card"><h3>🧩 Templates &amp; overrides</h3><p>Gamle templates springer landmark-elementer over, renderer ikonknapper uden aria-labels og gentager identiske "læs mere"-linktekster på alle artikelteasers.</p></div><div class="card"><h3>🔌 Extensions</h3><p>Formularer, gallerier, sliders og forum-extensions renderer egen markup med varierende kvalitet — hver skal auditeres enkeltvis.</p></div></div>
+    <div class="problem-cards"><div class="card"><h3>Redaktørindhold</h3><p>Manglende alt-tekst er den hyppigste defekt — Joomla gennemtvinger ikke alt-feltet på medier. Andet: overskrifter indsat fra Word som visuel formatering i stedet for rigtige h2/h3-elementer.</p></div><div class="card"><h3>Templates &amp; overrides</h3><p>Gamle templates springer landmark-elementer over, renderer ikonknapper uden aria-labels og gentager identiske "læs mere"-linktekster på alle artikelteasers.</p></div><div class="card"><h3>Extensions</h3><p>Formularer, gallerier, sliders og forum-extensions renderer egen markup med varierende kvalitet — hver skal auditeres enkeltvis.</p></div></div>
   </div>
 </section>
 

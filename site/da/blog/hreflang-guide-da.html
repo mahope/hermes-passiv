@@ -23,7 +23,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Guide til hreflang: Sådan implementerer og tjekker du sprogstyring", "description": "Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.", "url": "https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Guide til hreflang: Sådan implementerer og tjekker du sprogstyring", "description": "Lær hvordan hreflang fungerer, de mest almindelige fejl (manglende retur-tags, manglende x-default), og hvordan du automatisk tjekker hver side på et flersproget site.", "url": "https://hermes-passiv.pages.dev/da/blog/hreflang-guide-da", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvad er hreflang?", "acceptedAnswer": {"@type": "Answer", "text": "Hreflang er en HTML-attribut (<link rel=\"alternate\" hreflang=\"...\">), der fortæller søgemaskinerne, hvilken sprog- og regionsversion af en side der skal vises til hvilke brugere. Eksisterer dit site på dansk og engelsk, hjælper hreflang Google med at vise den danske side til danske søgende og den engelske til alle andre."}}, {"@type": "Question", "name": "Påvirker hreflang dine placeringer i søgninger?", "acceptedAnswer": {"@type": "Answer", "text": "Ikke direkte — men den sender de rigtige brugere til den rigtige version, hvilket forbedrer engagement og konvertering i hvert marked. Den forhindrer også dubletindholds-forvirring mellem oversatte sider."}}, {"@type": "Question", "name": "Skal man have x-default med?", "acceptedAnswer": {"@type": "Answer", "text": "Det er ikke et krav, men det anbefales. x-default fortæller søgemaskinerne, hvilken URL der skal vises til brugere, hvis sprog ikke matcher nogen af dine versioner — typisk din globale eller engelske side. Enhver komplet hreflang-sæt bør have den."}}, {"@type": "Question", "name": "Skal hreflang-tags være gensidige?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Hvis side A lister side B som alternativ, skal side B liste side A tilbage. Manglende retur-tags er den mest almindelige hreflang-fejl og får søgemaskinerne til at ignorere hele annotationssættet."}}, {"@type": "Question", "name": "Hvor placerer jeg hreflang-tags?", "acceptedAnswer": {"@type": "Answer", "text": "Tre steder virker: i <head> på hver side (mest almindeligt), i en XML-sitemap med xhtml:link-entries, eller i HTTP-headers (til ikke-HTML-filer som PDF'er). Vælg én metode og hold den konsekvent."}}, {"@type": "Question", "name": "Hvordan tjekker jeg min hreflang-implementering?", "acceptedAnswer": {"@type": "Answer", "text": "Inspicér <head> på hver side for <link rel=\"alternate\">-tags og verificér at hver listet URL svarer 200 og linker gensidigt tilbage. Til mere end et par sider kan et CLI-værktøj som <a href=\"/da/page-profile\">page-profile</a> automatisere tjekket på tværs af hele dit sitemap."}}]}
@@ -51,7 +51,7 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem">
   <div class="container">
@@ -62,9 +62,9 @@
 &lt;link rel="alternate" hreflang="x-default" href="https://eksempel.dk/page"&gt;</code></pre>
     <p>Sammen siger de tre linjer: engelsktalende får den første URL, dansktalende den anden, og alle andre får x-default. Hver version bør også have en selvrefererende <a href="/da/blog/canonisk-url-guide">kanonisk URL</a>.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🌍 Rigtige brugere, rigtig version</h3><p>Danske sögende ser den danske side i resultaterne — bedre forståelse, højere konvertering, færre afbrydelser.</p></div>
-      <div class="card"><h3>📑 Oversættelser er ikke dubletter</h3><p>Uden hreflang kan Google behandle oversatte sider som dubletindhold og vælge én version til at rangere overalt.</p></div>
-      <div class="card"><h3>🎯 Regionsvarianter understøttet</h3><p><code>en-gb</code>, <code>de-at</code>, <code>pt-br</code> — hreflang håndterer sprog-region-par når stavning, valuta eller juridisk tekst adskiller sig.</p></div>
+      <div class="card"><h3>Rigtige brugere, rigtig version</h3><p>Danske sögende ser den danske side i resultaterne — bedre forståelse, højere konvertering, færre afbrydelser.</p></div>
+      <div class="card"><h3>Oversættelser er ikke dubletter</h3><p>Uden hreflang kan Google behandle oversatte sider som dubletindhold og vælge én version til at rangere overalt.</p></div>
+      <div class="card"><h3>Regionsvarianter understøttet</h3><p><code>en-gb</code>, <code>de-at</code>, <code>pt-br</code> — hreflang håndterer sprog-region-par når stavning, valuta eller juridisk tekst adskiller sig.</p></div>
     </div>
   </div>
 </section>

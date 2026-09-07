@@ -85,7 +85,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
 <main class="urld-wrap">
 
 <p class="breadcrumb">
-  <a href="/">Passiv</a> <span>›</span>
+  <a href="/">Home</a> <span>›</span>
   <a href="/uuid-generator" style="color:var(--color-accent);">UUID Generator</a> &middot;
     <a href="/free-tools">Free tools</a> <span>›</span>
   URL encoder / decoder
@@ -94,7 +94,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
 <header style="text-align:center;padding:1rem 0 0.5rem;">
   <h1 style="margin:0;">URL Encoder &amp; Decoder</h1>
   <p class="tagline" style="margin-top:0.4rem;">Encode special characters for safe URL transmission, or decode percent-encoded strings back to readable text — instantly, in your browser.</p>
-  <p class="urld-privacy">🔒 Nothing leaves your device. All encoding and decoding happens locally on this page.</p>
+  <p class="urld-privacy">Nothing leaves your device. All encoding and decoding happens locally on this page.</p>
 </header>
 
 <div class="urld-pane">
@@ -161,7 +161,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
       <div class="card"><h3>What is URL encoding?</h3><p>URL encoding (percent-encoding) replaces unsafe ASCII characters with a % followed by two hexadecimal digits. For example, a space becomes %20.</p></div>
       <div class="card"><h3>Why encode URLs?</h3><p>URLs can only contain a limited set of ASCII characters. Characters like spaces, &amp;, ?, and non-ASCII characters must be encoded to be transmitted safely over the internet.</p></div>
       <div class="card"><h3>What's the difference between encodeURI and encodeURIComponent?</h3><p>encodeURI() leaves URL structure characters (/, ?, #) alone, while encodeURIComponent() encodes everything. For query parameter values, always use the "Full" (encodeURIComponent) mode.</p></div>
-      <div class="card"><h3>Does this work with non-ASCII characters like æøå or emoji?</h3><p>Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and 😀 encode correctly.</p></div>
+      <div class="card"><h3>Does this work with non-ASCII characters like æøå or emoji?</h3><p>Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and encode correctly.</p></div>
   </div>
 </section>
 

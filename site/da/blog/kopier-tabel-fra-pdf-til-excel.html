@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra PDF til Excel", "description": "Årsrapporter, kvartalsregnskaber, offentlig statistik — tabellerne sidder fanget i PDF-filer. Markér-og-kopiér giver næsten altid én lang klump tekst. Sådan kommer du rundt om det, med hver kolonne der hvor den skal.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Kopiér en tabel fra PDF til Excel", "description": "Årsrapporter, kvartalsregnskaber, offentlig statistik — tabellerne sidder fanget i PDF-filer. Markér-og-kopiér giver næsten altid én lang klump tekst. Sådan kommer du rundt om det, med hver kolonne der hvor den skal.", "url": "https://hermes-passiv.pages.dev/da/blog/kopier-tabel-fra-pdf-til-excel", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvorfor bliver direkte kopiering fra PDF til rod?", "acceptedAnswer": {"@type": "Answer", "text": "En PDF gemmer tekst som positionerede blokke uden reel tabelstruktur. Viewer-en renderer tekst i læserækkefølge — ikke tabelrækkefølge — så kolonner kollapser, og hver værdi lander typisk på sin egen linje. Udklipsholderen har simpelthen ingen struktur at give Excel."}}, {"@type": "Question", "name": "Er OCR en sikker vej?", "acceptedAnswer": {"@type": "Answer", "text": "Nej, til tal aldrig. OCR læser pixels, og cifre er den hyppigste kilde til fejl. Et forkert digit i et regnskab er svært at opdage og værre end ingen data. Brug kun OCR på rent prosatekst, og verificér altid tallene imod originalen."}}, {"@type": "Question", "name": "Kræver metoden betalt software?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Browser-vejen bruger Chromes eller Firefox' indbyggede PDF-viewer plus den gratis Clean Copy-udvidelse. Acrobat-eksport og Excels \"Hent data fra PDF\" fungerer godt men kræver betalte abonnementer (Acrobat / Microsoft 365)."}}, {"@type": "Question", "name": "Virker indsættelsen i Google Sheets også?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Samme princip: Markdown-tabellen indsættes som rigtige rækker og kolonner i Google Sheets, Numbers og LibreOffice Calc — ikke kun Excel."}}, {"@type": "Question", "name": "Hvad med scannede PDF'er uden rigtig tekst?", "acceptedAnswer": {"@type": "Answer", "text": "Hvis PDF'en er et billedscannet dokument, findes der ingen tekst at kopiere — browser-metoden kræver at teksten er rigtig tekst. Scannede dokumenter skal gennem OCR først, med de risici for talfejl det indebærer. Tjek om du kan markere tekst i viewer-en — kan du ikke, er det en scan."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Problemet er ikke Excel — det er udklipsholderen. En PDF har ingen reel tabelstruktur at give videre. Direkte kopiering fra viewer-en giver typisk alle værdier stablet kolonnevis, én pr. linje. Skærmbillede plus OCR læser pixels — og cifre er præcis det OCR tager fejl af oftest. Ét forkert ciffer i et regnskab er værre end ingen data. Og manuel genindtasting skalerer ikke: fint til tre rækker, ej til en årsrapport på 40 sider.</p>
     <div class="problem-cards">
-      <div class="card"><h3>✅ Celler forbliver celler</h3><p>Udklipsholderen bærer reel tabelstruktur, så Excel mapper hver værdi til den rigtige celle — headers inkluderet.</p></div>
-      <div class="card"><h3>🧹 Intet rod med</h3><p>Ingen sidehoveder, fodnotenumre eller løbende tekst — kun tabellen du pegede på.</p></div>
-      <div class="card"><h3>🔁 Virker andre steder også</h3><p>Samme indsættelse virker i Google Sheets, Numbers og LibreOffice Calc.</p></div>
+      <div class="card"><h3>Celler forbliver celler</h3><p>Udklipsholderen bærer reel tabelstruktur, så Excel mapper hver værdi til den rigtige celle — headers inkluderet.</p></div>
+      <div class="card"><h3>Intet rod med</h3><p>Ingen sidehoveder, fodnotenumre eller løbende tekst — kun tabellen du pegede på.</p></div>
+      <div class="card"><h3>Virker andre steder også</h3><p>Samme indsættelse virker i Google Sheets, Numbers og LibreOffice Calc.</p></div>
     </div>
   </div>
 </section>

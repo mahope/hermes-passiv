@@ -27,7 +27,7 @@
   "@type": "Article",
   "headline": "WordPress vs Wix: Accessibility Compared",
   "description": "WordPress vs Wix accessibility compared for EU site owners: where each platform fails WCAG 2.1 AA under the EAA, plugin vs built-in tooling, and which is faster to remediate.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
 <script defer src="/track.js"></script>
@@ -47,13 +47,13 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="one-law-two-architectures">One Law Two Architectures</h2>
     <p>WordPress powers roughly four times more websites than Wix, and both audiences now fall under the European Accessibility Act where they offer services to EU consumers. Legally the two are identical: EN 301 549 / WCAG 2.1 AA conformance, enforced nationally since mid-2025. Architecturally they could hardly be more different. WordPress is open-source software you host yourself, themed and extended from an enormous plugin ecosystem. Wix is a hosted website builder where visual editing writes the markup for you. Those two models produce distinctly different accessibility failure patterns — and distinctly different fix workflows.</p>
     <div class="problem-cards">
-      <div class="card"><h3>⚖️ Same Obligation</h3><p>EAA-covered services on either platform must meet WCAG 2.1 Level AA. Enforcement authorities do not care which CMS renders your pages.</p></div>
-      <div class="card"><h3>🔓 Open vs Hosted</h3><p>WordPress gives full control over every byte of HTML — including the power to break it. Wix constrains what you can change, for better and worse.</p></div>
-      <div class="card"><h3>🧩 Extension Risk</h3><p>WordPress plugins and Wix apps both inject widgets of unknown quality. Forms, sliders and popups are the worst offenders on both.</p></div>
+      <div class="card"><h3>Same Obligation</h3><p>EAA-covered services on either platform must meet WCAG 2.1 Level AA. Enforcement authorities do not care which CMS renders your pages.</p></div>
+      <div class="card"><h3>Open vs Hosted</h3><p>WordPress gives full control over every byte of HTML — including the power to break it. Wix constrains what you can change, for better and worse.</p></div>
+      <div class="card"><h3>Extension Risk</h3><p>WordPress plugins and Wix apps both inject widgets of unknown quality. Forms, sliders and popups are the worst offenders on both.</p></div>
     </div>  </div>
 </section>
 
@@ -61,10 +61,10 @@
   <div class="container">    <h2 id="where-wordpress-fails">Where WordPress Fails</h2>
     <p>Typical WordPress defect patterns:</p>
     <div class="problem-cards">
-      <div class="card"><h3>📝 Editor Content</h3><p>Missing alt text (the media uploader allows empty alt), headings pasted as bold text, and link text like "click here" written directly in the block editor.</p></div>
-      <div class="card"><h3>🧩 Plugin Widgets</h3><p>Form builders, page-builder blocks and slider plugins shipping placeholder-only fields, div-based "buttons" and keyboard traps.</p></div>
-      <div class="card"><h3>🎨 Theme Inheritance</h3><p>Custom themes and page-builder layouts skipping landmarks, removing focus outlines, or repeating identical "read more" links in archive loops.</p></div>
-      <div class="card"><h3>🔄 Update Regressions</h3><p>Plugin and theme updates silently reintroduce fixed defects — accessibility needs a place in the update routine.</p></div>
+      <div class="card"><h3>Editor Content</h3><p>Missing alt text (the media uploader allows empty alt), headings pasted as bold text, and link text like "click here" written directly in the block editor.</p></div>
+      <div class="card"><h3>Plugin Widgets</h3><p>Form builders, page-builder blocks and slider plugins shipping placeholder-only fields, div-based "buttons" and keyboard traps.</p></div>
+      <div class="card"><h3>Theme Inheritance</h3><p>Custom themes and page-builder layouts skipping landmarks, removing focus outlines, or repeating identical "read more" links in archive loops.</p></div>
+      <div class="card"><h3>Update Regressions</h3><p>Plugin and theme updates silently reintroduce fixed defects — accessibility needs a place in the update routine.</p></div>
     </div>  </div>
 </section>
 
@@ -72,10 +72,10 @@
   <div class="container">    <h2 id="where-wix-fails">Where Wix Fails</h2>
     <p>Typical Wix defect patterns:</p>
     <div class="problem-cards">
-      <div class="card"><h3>🎨 Visual-First Defaults</h3><p>Drag-positioned text boxes produce heading levels chosen for looks, not structure — multiple missing or out-of-order headings per page.</p></div>
-      <div class="card"><h3>🖼️ Alt Text Gaps</h3><p>Wix prompts for alt text but does not require it; galleries imported from photos routinely ship empty.</p></div>
-      <div class="card"><h3>📱 Mobile Layout Duplication</h3><p>The separate mobile editor lets fixes applied to desktop miss the mobile view entirely — a classic source of "fixed but still failing".</p></div>
-      <div class="card"><h3>🔌 Third-Party Apps</h3><p>Forms, chat widgets and booking apps inject iframes and custom controls with inconsistent keyboard support.</p></div>
+      <div class="card"><h3>Visual-First Defaults</h3><p>Drag-positioned text boxes produce heading levels chosen for looks, not structure — multiple missing or out-of-order headings per page.</p></div>
+      <div class="card"><h3>Alt Text Gaps</h3><p>Wix prompts for alt text but does not require it; galleries imported from photos routinely ship empty.</p></div>
+      <div class="card"><h3>Mobile Layout Duplication</h3><p>The separate mobile editor lets fixes applied to desktop miss the mobile view entirely — a classic source of "fixed but still failing".</p></div>
+      <div class="card"><h3>Third-Party Apps</h3><p>Forms, chat widgets and booking apps inject iframes and custom controls with inconsistent keyboard support.</p></div>
     </div>  </div>
 </section>
 
@@ -95,9 +95,9 @@
   <div class="container">    <h2 id="which-should-you-choose">Which Should You Choose</h2>
     <p>If a site already exists on either platform, stay put — migration costs more than remediation, and the EAA obligations are identical. For a new EU project choosing between them: pick WordPress when you have (or can hire) someone comfortable maintaining themes and plugins, since every accessibility defect is ultimately fixable. Pick Wix for simple brochure-style sites maintained by non-technical owners, accepting that some third-party widgets may be irremediable and must be documented. Either way the workflow is the same: automated scan across key templates, fix mechanical failures (contrast, alt text, labels, heading order), audit each extension individually, publish an accessibility statement, and re-scan on every meaningful change.</p>
     <div class="problem-cards">
-      <div class="card"><h3>✅ Both Can Comply</h3><p>Fully conformant sites exist on both platforms. Process quality beats platform choice.</p></div>
-      <div class="card"><h3>🚀 Start With a Scan</h3><p>An automated scan separates fixable-today issues from architectural ones in minutes — on any CMS.</p></div>
-      <div class="card"><h3>📄 Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and documented limitations.</p></div>
+      <div class="card"><h3>Both Can Comply</h3><p>Fully conformant sites exist on both platforms. Process quality beats platform choice.</p></div>
+      <div class="card"><h3>Start With a Scan</h3><p>An automated scan separates fixable-today issues from architectural ones in minutes — on any CMS.</p></div>
+      <div class="card"><h3>Statement Required</h3><p>EAA-covered businesses should publish an accessibility statement with conformance status and documented limitations.</p></div>
     </div>  </div>
 </section>
 

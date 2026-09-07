@@ -27,7 +27,7 @@
   "@type": "Article",
   "headline": "Ghost Accessibility: Making Publications EAA-Compliant",
   "description": "How to make Ghost publication sites compliant with the European Accessibility Act and WCAG 2.2 AA. Theme-level fixes, Koenig editor content checks, membership flows, and a free scanning workflow.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
 <script defer src="/track.js"></script>
@@ -47,7 +47,7 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="ghost-and-the-eaa">Ghost and the EAA</h2>
     <p>Ghost runs newsletters, paid publications, and membership sites — exactly the kind of services the European Accessibility Act covers when they operate commercially in the EU. Since 28 June 2025, e-commerce-like services and consumer-facing digital services must be perceivable, operable, understandable and robust (the four WCAG principles). For a Ghost publisher that means the theme, the article content, and crucially the signup and checkout flows all need attention. The good news: a modern Ghost install has fewer moving parts than most platforms, so reaching WCAG 2.2 AA is genuinely achievable.</p>
   </div>
@@ -57,11 +57,11 @@
   <div class="container">    <h2 id="theme-level-checks">Theme Level Checks</h2>
     <p>Most Ghost accessibility problems live in the theme, not the core. Work through these:</p>
     <div class="problem-cards">
-      <div class="card"><h3>🎨 Colour Contrast</h3><p>Many magazine-style themes use light-grey text on white or text over gradient hero images. Body text needs 4.5:1; large headings 3:1; form inputs and icons 3:1. Fix in the theme CSS or custom settings once, benefit everywhere.</p></div>
+      <div class="card"><h3>Colour Contrast</h3><p>Many magazine-style themes use light-grey text on white or text over gradient hero images. Body text needs 4.5:1; large headings 3:1; form inputs and icons 3:1. Fix in the theme CSS or custom settings once, benefit everywhere.</p></div>
       <div class="card"><h3>⌨️ Keyboard & Focus</h3><p>Test tabbing through header navigation, post cards, and the member portal. Dropdown menus and card overlays are the usual traps. Ensure :focus-visible styles exist and are clearly visible.</p></div>
-      <div class="card"><h3>🖼️ Images & Cards</h3><p>Post-card thumbnails rendered as background-image divs carry no alt text. Prefer img elements fed from the post feature image, with meaningful alt text inherited from the post.</p></div>
-      <div class="card"><h3>🔤 Typography & Zoom</h3><p>Verify the layout survives 200% browser zoom and 320px width without horizontal scrolling (WCAG 1.4.10). Fluid type systems in newer themes handle this well; older ones break.</p></div>
-      <div class="card"><h3>🧭 Structure</h3><p>One h1 per page (the post title), logical heading levels inside articles, a skip-to-content link, and a proper lang attribute set by the theme.</p></div>
+      <div class="card"><h3>Images & Cards</h3><p>Post-card thumbnails rendered as background-image divs carry no alt text. Prefer img elements fed from the post feature image, with meaningful alt text inherited from the post.</p></div>
+      <div class="card"><h3>Typography & Zoom</h3><p>Verify the layout survives 200% browser zoom and 320px width without horizontal scrolling (WCAG 1.4.10). Fluid type systems in newer themes handle this well; older ones break.</p></div>
+      <div class="card"><h3>Structure</h3><p>One h1 per page (the post title), logical heading levels inside articles, a skip-to-content link, and a proper lang attribute set by the theme.</p></div>
     </div>  </div>
 </section>
 

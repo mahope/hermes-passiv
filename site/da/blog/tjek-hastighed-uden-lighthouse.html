@@ -19,7 +19,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek hjemmesidehastighed uden Lighthouse", "description": "Lighthouse er tungt: fuld browser-render, snart minutter pr. kørsel, besværligt i CI. Til hverdagsspørgsmålet \"er denne side hurtig, gyldig og korrekt koblet sammen?\" svarer en letvægts-terminalprofiler på sekunder.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Tjek hjemmesidehastighed uden Lighthouse", "description": "Lighthouse er tungt: fuld browser-render, snart minutter pr. kørsel, besværligt i CI. Til hverdagsspørgsmålet \"er denne side hurtig, gyldig og korrekt koblet sammen?\" svarer en letvægts-terminalprofiler på sekunder.", "url": "https://hermes-passiv.pages.dev/da/blog/tjek-hastighed-uden-lighthouse", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Kan jeg teste hastighed uden at køre Lighthouse?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Den gratis page-profile CLI henter siden server-side og rapporterer svartid, HTTP-status, redirects og sidevægt-signaler på få sekunder — uden Chrome, uden npm-installation, uden Lighthouse-setup. Den supplerer Lighthouse: brug den til hurtige helbredstjek og CI-gates, Lighthouse til dybe render-audits."}}, {"@type": "Question", "name": "Er dette en alternativ til Google PageSpeed Insights?", "acceptedAnswer": {"@type": "Answer", "text": "Den måler noget andet. PageSpeed Insights giver feltdata og lab-scores fra en fuld render — nyttigt til Core Web Vitals-arbejde, men langsomt pr. kørsel. page-profile svarer på det tekniske helbred: status, svartid, meta-tags, struktureret data, headere. Hurtigt og gentageligt."}}, {"@type": "Question", "name": "Kræver det installation?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Enten kører du den direkte i browseren på /page-profile, eller også downloader du én enkelt Python-fil og kører den med python3. Ingen pip, ingen npm, ingen afhængigheder — standardbiblioteket klarer alt."}}, {"@type": "Question", "name": "Kan jeg bruge det i CI?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, det er et af hovedformålene. Outputtet findes som maskinlæsbar JSON (--json), scriptet afslutter med exit-koder, og fordi det er ren standardbiblioteks-Python kører det i enhver container med Python 3.8+ — inklusive GitHub Actions uden ekstra steps."}}, {"@type": "Question", "name": "Hvad koster Pro-versionen?", "acceptedAnswer": {"@type": "Answer", "text": "Pro ($19/år) tilføjer compare, batch-kørsler og eksportérbar HTML-rapport med offline licensnøgler. Historik-funktionen — scores gemt lokalt over tid — er gratis for alle."}}]}
@@ -45,16 +45,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem" id="indhold">
   <div class="container">
     <h2>Hvorfor dette gælder dig</h2>
     <p>Fuld-render-audits har deres plads. Men tre daglige opgaver behøver dem ikke: et hurtigt pre-deploy sanity check (kom canonical-tagget med? Er TTFB stadig fornuftig?), CI-pipelines (headless Chrome i CI bare for at gate en deploy på en score er langsomt og skrøbeligt) og mange URLs på én gang (Lighthouse kører én side pr. invocation). Til det bruger man en let profiler der henter én gang, parser og svare.</p>
     <div class="problem-cards">
-      <div class="card"><h3>⚡ Sekunder, ikke minutter</h3><p>Ingen headless browser. Tjekket henter én gang og parser — typisk køretid under to sekunder.</p></div>
-      <div class="card"><h3>🔁 Følg udviklingen</h3><p>--history gemmer tidligere scores lokalt, så du kan se om en release gjorde det bedre eller værre. Gratis for alle.</p></div>
-      <div class="card"><h3>🧰 Virker overalt</h3><p>Ren Python-standardbibliotek — enhver maskine med Python 3.8+, herunder CI-containere og Raspberry Pi.</p></div>
+      <div class="card"><h3>Sekunder, ikke minutter</h3><p>Ingen headless browser. Tjekket henter én gang og parser — typisk køretid under to sekunder.</p></div>
+      <div class="card"><h3>Følg udviklingen</h3><p>--history gemmer tidligere scores lokalt, så du kan se om en release gjorde det bedre eller værre. Gratis for alle.</p></div>
+      <div class="card"><h3>Virker overalt</h3><p>Ren Python-standardbibliotek — enhver maskine med Python 3.8+, herunder CI-containere og Raspberry Pi.</p></div>
     </div>
   </div>
 </section>

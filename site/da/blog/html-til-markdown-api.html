@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "HTML til Markdown API: Et gratis REST-endpoint du kan kalde i dag", "description": "En gratis HTML-til-Markdown REST-API: send din HTML som JSON, få ren Markdown tilbage. Ingen nøgle, ingen tilmelding.", "url": "https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Organization", "name": "Hermes Compliance"}, "publisher": {"@type": "Organization", "name": "Hermes Compliance"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "HTML til Markdown API: Et gratis REST-endpoint du kan kalde i dag", "description": "En gratis HTML-til-Markdown REST-API: send din HTML som JSON, få ren Markdown tilbage. Ingen nøgle, ingen tilmelding.", "url": "https://hermes-passiv.pages.dev/da/blog/html-til-markdown-api", "datePublished": "2026-08-26", "dateModified": "2026-08-26", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Findes der en gratis HTML til Markdown API?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Clean Copy API'et på hermes-passiv.pages.dev/api/clean-copy konverterer HTML til Markdown over almindelig REST. Ingen API-nøgle, ingen konto, maks. 50 KB HTML pr. forespørgsel."}}, {"@type": "Question", "name": "Hvordan kalder jeg den fra curl?", "acceptedAnswer": {"@type": "Answer", "text": "Send JSON med et html-felt: curl -X POST https://hermes-passiv.pages.dev/api/clean-copy -H 'Content-Type: application/json' -d '{\"html\":\"<h1>Hej</h1>\"}'. Svaret indeholder et markdown-felt med den konverterede tekst."}}, {"@type": "Question", "name": "Skal der bruges en API-nøgle?", "acceptedAnswer": {"@type": "Answer", "text": "Nej. Endpointet er åbent. Hold bare forespørgslene nede (maks. 10 i sekundet) og input under 50 KB HTML."}}, {"@type": "Question", "name": "Hvad overlever konverteringen?", "acceptedAnswer": {"@type": "Answer", "text": "Overskrifter bliver til #-niveauer, links til [tekst](url), lister forbliver lister, fed og kursiv overlever, kodeblokke bliver hegnede blokke og simple tabeller bliver til pipe-tabeller. Scripts, styles og sporingsmarkup fjernes. mode=text giver ren tekst i stedet."}}]}
@@ -49,16 +49,16 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a></div>
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:</span> <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Spørg Compliance-AI’en →</a></div>
 
 <section class="problem">
   <div class="container">
     <h2>Hvorfor en REST-API til det?</h2>
     <p>Du kan godt konvertere HTML til Markdown i hånden: indsæt det i et converter-faneblad, kopier resultatet tilbage. Det virker én gang. Det virker ikke, når konverteringen skal ligge inde i et script, et build-step, en LLM-pipeline eller et cron-job.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🤖 Fodring af LLM'er</h3><p>Modeller læser Markdown langt bedre end rå HTML. Strip tags og støj, før sider sendes ind i en prompt — færre tokens, bedre svar.</p></div>
-      <div class="card"><h3>📚 Indholdspipelines</h3><p>Hent dokumentation, changelogs eller artikler fra hvor som helst og land dem i dit CMS, din wiki eller dit statiske site som rene Markdown-filer.</p></div>
-      <div class="card"><h3>🔗 Lim-scripts</h3><p>Én <code>curl</code> fra bash, ét <code>requests.post()</code> fra Python, ét <code>fetch()</code> fra Node. Kan det tale HTTP, kan det bruge den.</p></div>
+      <div class="card"><h3>Fodring af LLM'er</h3><p>Modeller læser Markdown langt bedre end rå HTML. Strip tags og støj, før sider sendes ind i en prompt — færre tokens, bedre svar.</p></div>
+      <div class="card"><h3>Indholdspipelines</h3><p>Hent dokumentation, changelogs eller artikler fra hvor som helst og land dem i dit CMS, din wiki eller dit statiske site som rene Markdown-filer.</p></div>
+      <div class="card"><h3>Lim-scripts</h3><p>Én <code>curl</code> fra bash, ét <code>requests.post()</code> fra Python, ét <code>fetch()</code> fra Node. Kan det tale HTTP, kan det bruge den.</p></div>
     </div>
   </div>
 </section>
@@ -112,7 +112,7 @@ const { markdown } = await res.json();</code></pre>
       <div class="card"><h3># Overskrifter bevaret</h3><p>H1–H6 mappes til det rigtige antal <code>#</code>, så dokumentstrukturen overlever.</p></div>
       <div class="card"><h3>[Links](intakte)</h3><p>Links bliver til standard Markdown-referencer med originale URL'er.</p></div>
       <div class="card"><h3>Tabeller → pipe-tabeller</h3><p>Simple HTML-tabeller bliver Markdown-pipe-tabeller, inklusive justering.</p></div>
-      <div class="card"><h3>🗑️ Støj strippet</h3><p>Scripts, styles, sporingspixels og skjult junk fjernes automatisk.</p></div>
+      <div class="card"><h3>Støj strippet</h3><p>Scripts, styles, sporingspixels og skjult junk fjernes automatisk.</p></div>
     </div>
   </div>
 </section>

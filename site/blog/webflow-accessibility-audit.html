@@ -27,7 +27,7 @@
   "@type": "Article",
   "headline": "Webflow Accessibility: A Practical EAA Audit Guide",
   "description": "How to run an accessibility audit on Webflow sites and pass EAA/WCAG 2.1 AA. Designer settings, common Webflow-specific failures, interactions, and a free scanning workflow for agencies.",
-  "publisher": { "@type": "Organization", "name": "Mahope" }
+  "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
 <script defer src="/track.js"></script>
@@ -47,13 +47,13 @@
   </div>
 </header>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-primary">Run the Free Scanner →</a></div>
-<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a></div><section class="problem" id="content">
+<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:</span> <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">Ask the Compliance AI →</a></div><section class="problem" id="content">
   <div class="container">    <h2 id="why-webflow-and-eaa">Why Webflow and EAA</h2>
     <p>Webflow is the build tool of choice for EU marketing sites, SaaS landing pages and agency clients — exactly the e-commerce and consumer-service territory the European Accessibility Act covers since June 2025. Agencies delivering Webflow projects therefore deliver the accessibility state themselves: unlike WordPress there is less plugin noise, but also no plugin that saves you. The good news is that Webflow gives you unusually direct control over semantics, and most failures come from design decisions rather than platform limits.</p>
     <div class="problem-cards">
-      <div class="card"><h3>🎯 You Own Semantics</h3><p>Webflow lets you set any element tag (div → nav, section, h2...). Most accessibility bugs are simply divs doing semantic jobs.</p></div>
-      <div class="card"><h3>⚡ Fast Remediation</h3><p>Because everything is visual and centralised, fixing 20 contrast failures takes minutes in the style panel once you find them.</p></div>
-      <div class="card"><h3>📜 Client Deliverable</h3><p>An audit report plus accessibility statement is now a sellable line item — clients in EAA scope must have both.</p></div>
+      <div class="card"><h3>You Own Semantics</h3><p>Webflow lets you set any element tag (div → nav, section, h2...). Most accessibility bugs are simply divs doing semantic jobs.</p></div>
+      <div class="card"><h3>Fast Remediation</h3><p>Because everything is visual and centralised, fixing 20 contrast failures takes minutes in the style panel once you find them.</p></div>
+      <div class="card"><h3>Client Deliverable</h3><p>An audit report plus accessibility statement is now a sellable line item — clients in EAA scope must have both.</p></div>
     </div>  </div>
 </section>
 
@@ -61,11 +61,11 @@
   <div class="container">    <h2 id="common-webflow-failures">Common Webflow Failures</h2>
     <p>Across audits of Webflow builds, the same handful of defects dominate:</p>
     <div class="problem-cards">
-      <div class="card"><h3>🧱 Div Soup Headings</h3><p>Text styled to look like headings but left as plain divs. Screen readers see no document outline. Fix: select element → Settings → change tag to h1/h2/h3.</p></div>
-      <div class="card"><h3>🎨 Contrast on Gradients</h3><p>Hero text over gradient or image backgrounds fails 4.5:1 somewhere along the gradient. Test the worst-case corner, add an overlay scrim.</p></div>
+      <div class="card"><h3>Div Soup Headings</h3><p>Text styled to look like headings but left as plain divs. Screen readers see no document outline. Fix: select element → Settings → change tag to h1/h2/h3.</p></div>
+      <div class="card"><h3>Contrast on Gradients</h3><p>Hero text over gradient or image backgrounds fails 4.5:1 somewhere along the gradient. Test the worst-case corner, add an overlay scrim.</p></div>
       <div class="card"><h3>⌨️ Interaction Traps</h3><p>Hover-driven dropdowns, tabs and sliders built with Interactions often ignore keyboard entirely — no focus, no escape, no touch alternative.</p></div>
-      <div class="card"><h3>🖼️ Background Images as Content</h3><p>Images uploaded as background-image styles carry no alt attribute. Content-bearing images must be Image elements with alt text.</p></div>
-      <div class="card"><h3>🔗 Link Blocks</h3><p>"Link Block" wrapping entire cards produces repeated bare links; inner text spans are not read as link context reliably.</p></div>
+      <div class="card"><h3>Background Images as Content</h3><p>Images uploaded as background-image styles carry no alt attribute. Content-bearing images must be Image elements with alt text.</p></div>
+      <div class="card"><h3>Link Blocks</h3><p>"Link Block" wrapping entire cards produces repeated bare links; inner text spans are not read as link context reliably.</p></div>
     </div>  </div>
 </section>
 

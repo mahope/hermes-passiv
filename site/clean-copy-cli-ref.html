@@ -42,7 +42,7 @@
 <main class="ref-wrap">
 
 <nav aria-label="Breadcrumb" style="font-size:0.82rem;margin-bottom:1rem;">
-  <a href="/">Passiv</a> · <a href="/clean-copy">Clean Copy</a> · <span aria-current="page">CLI ref</span>
+  <a href="/">Home</a> · <a href="/clean-copy">Clean Copy</a> · <span aria-current="page">CLI ref</span>
 </nav>
 
 <h1>Clean Copy CLI — <span style="font-weight:400;">quick reference</span></h1>
@@ -59,13 +59,13 @@
 
 <div class="grid-2">
   <div class="card">
-    <h3>📋 Basic usage</h3>
+    <h3>Basic usage</h3>
     <pre>echo "&lt;h1&gt;Title&lt;/h1&gt;" | clean-copy
 clean-copy -i input.html -o output.md
 cat article.html | clean-copy -m csv</pre>
   </div>
   <div class="card">
-    <h3>⚡ Pipe from anywhere</h3>
+    <h3>Pipe from anywhere</h3>
     <pre># From a web page (curl + pipe)
 curl -s https://example.com | clean-copy
 # From clipboard (macOS)
@@ -122,7 +122,7 @@ xclip -o | clean-copy | xclip -i</pre>
 
 <div class="grid-2">
   <div class="card">
-    <h3>🔧 Real-world pipeline</h3>
+    <h3>Real-world pipeline</h3>
     <pre># Grab the main content of a page, clean it, save
 curl -sL https://example.com/article \
   | clean-copy -m text -s \
@@ -134,7 +134,7 @@ curl -sL https://example.com/prices \
   > prices.csv</pre>
   </div>
   <div class="card">
-    <h3>📡 Also available</h3>
+    <h3>Also available</h3>
     <p style="font-size:0.85rem;">
       <a href="/clean-copy-tool"><strong>Web tool</strong></a> — same engine in your browser, no install needed.<br>
       <a href="/clean-copy"><strong>Browser extension</strong></a> — right-click → clean copy on any page.<br>
