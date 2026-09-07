@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bugbottle — Headless in-app bug reports with the evidence attached</title>
+<meta name="description" content="bugbottle collects the page, viewport, recent console errors, the element the user points at and an optional screenshot, and POSTs it as JSON to a route you own. Zero dependencies, MIT, npm i bugbottle.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="bugbottle — in-app bug reports with the evidence attached">
+<meta property="og:description" content="Headless bug report library for React, vanilla JS and Node. Console errors, page context and screenshots — sent to your own endpoint.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+<link rel="stylesheet" href="/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "bugbottle",
+  "url": "https://hermes-passiv.pages.dev/",
+  "codeRepository": "https://github.com/mahope/bugbottle",
+  "license": "https://opensource.org/licenses/MIT",
+  "programmingLanguage": ["TypeScript", "JavaScript"],
+  "description": "Headless in-app bug reports that arrive with the evidence attached: console errors, page context and an optional screenshot."
+}
+</script>
+<style>
+.bb-wrap { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.bb-hero { text-align: center; padding: 3rem 0 2rem; }
+.bb-hero .tagline { margin: 0.6rem auto 1.4rem; }
+.bb-actions { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
+.bb-install { display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: #161a22; color: #dce2ee; padding: 0.55rem 1rem; border-radius: 10px; font-size: 0.95rem; margin-top: 1.2rem; }
+.bb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.bb-card { border: 1px solid var(--color-border); border-radius: 12px; padding: 1.1rem; background: var(--color-surface); }
+.bb-card h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.bb-card p { margin: 0; font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.5; }
+section h2 { font-size: 1.4rem; margin: 2.2rem 0 0.6rem; }
+section p.lead { color: var(--color-text-muted); line-height: 1.6; max-width: 700px; }
+pre.bb-code { background: #161a22; color: #dce2ee; padding: 0.9rem 1rem; border-radius: 10px; overflow-x: auto; font-size: 0.8rem; line-height: 1.55; margin: 0.6rem 0 1.4rem; }
+.bb-not { border-left: 3px solid var(--color-border); padding: 0.2rem 1rem; color: var(--color-text-muted); font-size: 0.92rem; line-height: 1.6; }
+.bb-links { list-style: none; padding: 0; display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: 0.9rem; }
+.bb-links a { color: var(--color-accent); }
+</style>
+<script defer src="/track.js"></script>
+</head>
+<body>
+
+<main class="bb-wrap">
+
+<header class="bb-hero">
+  <span class="badge">Open source · MIT · zero dependencies</span>
+  <h1>bugbottle</h1>
+  <p class="tagline">Headless in-app bug reports that arrive with the evidence attached. Your UI, your endpoint, a few kilobytes.</p>
+  <div class="bb-actions">
+    <a class="btn-primary" href="/bugbottle-demo">Try the live demo</a>
+    <a class="btn-secondary" href="https://github.com/mahope/bugbottle">GitHub → mahope/bugbottle</a>
+  </div>
+  <code class="bb-install">npm i bugbottle</code>
+</header>
+
+<section>
+  <h2>What it is</h2>
+  <p class="lead">Error trackers catch what throws. They cannot catch what merely <em>looks</em> wrong, and they never tell you what the person was doing when it did. <em>“The save button does nothing”</em> is not a report anyone can act on.</p>
+  <p class="lead">bugbottle collects the context at the moment someone notices — the page, the viewport, the recent console errors, the element they point at, optionally a picture of what they were looking at — and POSTs it as JSON to a route you already own.</p>
+
+  <div class="bb-grid">
+    <div class="bb-card"><h3>Headless</h3><p>You render the form. bugbottle owns the state, the capture and the submit — not your markup.</p></div>
+    <div class="bb-card"><h3>Bring your own backend</h3><p>No dashboard, no hosted service. A report is a JSON body on a <code>fetch</code>; the receiving end is a route you write, with validation helpers shipped alongside.</p></div>
+    <div class="bb-card"><h3>Tiny</h3><p>Core ~0.8 kB gzipped; with picker and React hook 3.9 kB; ready-made panel 6.9 kB; the everything script tag 11.6 kB.</p></div>
+    <div class="bb-card"><h3>Sends itself onward</h3><p>Email via Resend, Slack, Discord or plain webhook, or a GitHub issue — server-side helpers, keys never in the browser.</p></div>
+    <div class="bb-card"><h3>Your language, your brand</h3><p>Eight bundled locales, every string overridable, and a panel themed with a handful of CSS variables.</p></div>
+    <div class="bb-card"><h3>Server helpers included</h3><p>Every field a browser sends is checked before it reaches your database, because that is where the sharp edges are.</p></div>
+  </div>
+
+  <p class="bb-not"><strong>What it is not:</strong> not a dashboard, not session replay, not a hosted service. If you want annotated issues filed in Jira by a vendor, look at Marker.io or Jam. If you want to record everything a user does, look at rrweb. bugbottle is the smallest thing that turns “it's broken” into a reproducible payload, and stays out of the way otherwise.</p>
+</section>
+
+<section>
+  <h2>Install</h2>
+<pre class="bb-code">npm install bugbottle
+npm install html-to-image   # optional, only if you want screenshots</pre>
+  <p class="lead">Without npm: install the tagged release straight from GitHub (<code>npm install github:mahope/bugbottle#v0.4.0</code>) or import the built files from jsDelivr — <code>dist/</code> is committed for exactly that.</p>
+</section>
+
+<section>
+  <h2>1. Record console errors, then build a form (React)</h2>
+<pre class="bb-code">import { initConsoleBuffer } from "bugbottle";
+import { useBugReport } from "bugbottle/react";
+import { htmlToImage } from "bugbottle/html-to-image"; // optional
+
+initConsoleBuffer(); // once, as early as your app can manage
+
+function ReportForm() {
+  const report = useBugReport({
+    endpoint: "/api/feedback",
+    screenshot: htmlToImage, // leave out to disable screenshots
+  });
+
+  return (
+    &lt;form data-bugbottle onSubmit={(e) =&gt; { e.preventDefault(); void report.submit(); }}&gt;
+      {report.types.map((t) =&gt; (
+        &lt;button key={t} type="button" onClick={() =&gt; report.setType(t)}&gt;{t}&lt;/button&gt;
+      ))}
+      &lt;textarea value={report.message} onChange={(e) =&gt; report.setMessage(e.target.value)} /&gt;
+      &lt;button type="submit" disabled={report.status === "sending"}&gt;Send&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</pre>
+</section>
+
+<section>
+  <h2>2. Anything else: three functions that work anywhere</h2>
+<pre class="bb-code">import { captureScreenshot, pickElement, buildReport, sendReport } from "bugbottle";
+import { htmlToImage } from "bugbottle/html-to-image";
+
+const screenshot = await captureScreenshot(htmlToImage); // PNG data URL
+const element = await pickElement();                     // null if they pressed Escape
+const report = buildReport({
+  type: "bug",
+  message,
+  screenshotDataUrl: screenshot,
+  elements: element ? [element] : [],
+});
+const { id } = await sendReport("/api/feedback", report);</pre>
+  <p class="lead">Would rather not build a form at all? <code>bugbottle/ui</code> mounts a floating button and a small dialog in a shadow root, and <code>dist/bugbottle.js</code> does the same from a single <code>&lt;script&gt;</code> tag with <code>data-endpoint</code>, <code>data-locale</code> and <code>data-brand</code> attributes.</p>
+</section>
+
+<section>
+  <h2>3. Receive it on the server</h2>
+<pre class="bb-code">import {
+  decodeScreenshotDataUrl, InvalidScreenshotError, isReportType,
+  normaliseConsole, normaliseContext, normaliseElements, normaliseMessage,
+} from "bugbottle/server";
+
+export async function POST(req: Request) {
+  const payload = await req.json();
+  const message = normaliseMessage(payload.message);
+  if (!message) return Response.json({ error: "Write a message first" }, { status: 400 });
+
+  const type = isReportType(payload.type) ? payload.type : "other";
+  const context = normaliseContext(payload.context);
+  const console = normaliseConsole(payload.console);
+  const elements = normaliseElements(payload.elements);
+
+  let screenshot: Uint8Array | null = null;
+  try {
+    if (payload.screenshotDataUrl) screenshot = decodeScreenshotDataUrl(payload.screenshotDataUrl);
+  } catch (err) {
+    if (!(err instanceof InvalidScreenshotError)) throw err; // a bad picture must not fail the report
+  }
+
+  const { id } = await save({ type, message, context, console, elements, screenshot });
+  return Response.json({ id }, { status: 201 });
+}</pre>
+  <p class="lead">Works unchanged in a Next.js route handler, Hono, Cloudflare Workers, Bun, Deno or anything else built on the web <code>Request</code>. The helpers never trust the browser: they trim, clip, strip null bytes, keep the most recent 50 console entries and verify the real PNG signature and size before a screenshot reaches your storage.</p>
+</section>
+
+<section>
+  <h2>Read more</h2>
+  <ul class="bb-links">
+    <li><a href="/bugbottle-demo">Live demo</a></li>
+    <li><a href="https://github.com/mahope/bugbottle#readme">Full README &amp; API</a></li>
+    <li><a href="https://www.npmjs.com/package/bugbottle">npm package</a></li>
+    <li><a href="/blog/add-bug-report-form-to-any-website">Add a bug report form to any website</a></li>
+    <li><a href="/blog/bug-reports-in-ci-pipeline">Bug reports in your CI pipeline</a></li>
+    <li><a href="/da/blog/tilfoej-fejlrapport-formular-hjemmeside">På dansk: tilføj en fejlrapport-formular</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>bugbottle is MIT licensed and built by <a href="https://github.com/mahope">Mahope</a>. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></p>
+</footer>
+
+</body>
+</html>
