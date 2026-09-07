@@ -607,7 +607,8 @@ main.layout-wide > .crumbs + .container { padding-top: 0; }
 /* BugBottle on bugbottle.dev: the panel is the product ---------------------- */
 .bb-live { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding: 1rem 1.25rem; border: 1px solid var(--color-accent); border-radius: var(--radius); background: var(--color-accent-soft); margin: 1.5rem 0 0; font-size: 0.95rem; }
 .bb-live strong { font-family: var(--font-display); }
-.bb-live .arrow { margin-left: auto; font-family: var(--font-display); color: var(--color-accent); white-space: nowrap; }
+.bb-live .arrow { margin-left: auto; font-family: var(--font-display); color: var(--color-accent-hover); white-space: nowrap; }
+.bb-live a { color: var(--color-accent-hover); }
 
 /* Prose helpers ---------------------------------------------------------- */
 .two-col { display: grid; gap: 2rem; }
