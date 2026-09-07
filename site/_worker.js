@@ -55,6 +55,9 @@ export default {
     // === Route: bugbottle live demo (receive + list reports) ===
     if (path === '/api/bugbottle-demo') return handleBugbottleDemo(request, url, env);
 
+    // === Route: BugBottle inbox for every Mahope site (mail via Resend) ===
+    if (path === '/api/bugreport') return handleBugreport(request, url, env);
+
     // === Route: Lemon Squeezy webhook (auto-issues license keys) ===
     if (path === '/api/lemon-webhook') return handleLemonWebhook(request, env);
 
@@ -2362,4 +2365,311 @@ async function fetchSslInfo(finalUrl) {
   } catch (_) {
     return { available: false, reason: 'SSL lookup failed or timed out' };
   }
+}
+
+/* ================= BugBottle inbox (all Mahope sites) =================
+ *
+ * POST /api/bugreport  — receives a BugBottle report from any of the product
+ *                        sites, stores it in KV (bb:inbox:<ts>:<id>, 30 days)
+ *                        and mails it to Mads through Resend.
+ * GET  /api/bugreport?key=<BB_ADMIN_KEY> — the last 50 reports as JSON,
+ *                        screenshot data left out.
+ *
+ * Only the mahope.tools Pages project carries RESEND_API_KEY / BB_ADMIN_KEY;
+ * the other dists answer 503 so their pages post to https://mahope.tools.
+ */
+const BB_INBOX_ORIGINS = new Set([
+  'eucomplypro.com', 'deskuptime.com', 'bugbottle.dev', 'cleancopy.tools', 'transmute.run', 'mahope.tools',
+].flatMap((h) => [`https://${h}`, `https://www.${h}`]));
+const BB_INBOX_IP_LIMIT = 30;
+const BB_INBOX_DAY_LIMIT = 300;
+const BB_INBOX_MAX_BODY = 4 * 1024 * 1024;
+const BB_INBOX_STORE_SCREENSHOT_MAX = 1_000_000;      // chars of data URL kept in KV
+const BB_INBOX_MAIL_SCREENSHOT_MAX = 2 * 1024 * 1024; // decoded bytes attached to the mail
+const BB_INBOX_FROM = 'BugBottle <bugs@mahoje.dk>';
+const BB_INBOX_TO = 'mads@mahoje.dk';
+
+function bbInboxOriginAllowed(origin) {
+  if (!origin) return false;
+  if (BB_INBOX_ORIGINS.has(origin)) return true;
+  return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.pages\.dev$/i.test(origin);
+}
+
+function bbInboxHeaders(origin) {
+  const h = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin' };
+  if (bbInboxOriginAllowed(origin)) {
+    h['Access-Control-Allow-Origin'] = origin;
+    h['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
+    h['Access-Control-Allow-Headers'] = 'Content-Type';
+    h['Access-Control-Max-Age'] = '86400';
+  }
+  return h;
+}
+
+function bbInboxJson(obj, status, origin) {
+  return new Response(JSON.stringify(obj), { status, headers: bbInboxHeaders(origin) });
+}
+
+function bbEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function bbStr(v, max) {
+  return typeof v === 'string' ? v.replace(/\0/g, '').slice(0, max) : '';
+}
+
+function bbHostOf(request, page) {
+  for (const cand of [request.headers.get('origin'), request.headers.get('referer'), page]) {
+    try {
+      if (cand && /^https?:\/\//i.test(cand)) return new URL(cand).host;
+    } catch { /* not a URL */ }
+  }
+  return 'unknown-site';
+}
+
+function bbNormaliseElements(raw) {
+  const list = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? [raw] : [];
+  const out = [];
+  for (const item of list.slice(0, 10)) {
+    if (!item || typeof item !== 'object') continue;
+    const r = item.rect && typeof item.rect === 'object' ? item.rect : {};
+    const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : 0);
+    const attributes = {};
+    if (item.attributes && typeof item.attributes === 'object') {
+      for (const [k, v] of Object.entries(item.attributes).slice(0, 20)) {
+        if (typeof v === 'string' && !/^data-bugbottle/i.test(k)) attributes[bbStr(k, 60)] = bbStr(v, 200);
+      }
+    }
+    out.push({
+      selector: bbStr(item.selector, 300), tag: bbStr(item.tag, 40), text: bbStr(item.text, 200),
+      rect: { x: num(r.x), y: num(r.y), width: num(r.width), height: num(r.height) }, attributes,
+    });
+  }
+  return out;
+}
+
+function bbNormaliseBreadcrumbs(raw) {
+  if (!Array.isArray(raw)) return [];
+  const kinds = new Set(['click', 'navigation', 'submit', 'visibility']);
+  const out = [];
+  for (const item of raw.slice(-30)) {
+    if (!item || typeof item !== 'object' || !kinds.has(item.kind)) continue;
+    const c = { ts: bbStr(item.ts, 40), kind: item.kind };
+    for (const k of ['target', 'text', 'from', 'to']) if (typeof item[k] === 'string') c[k] = bbStr(item[k], k === 'text' ? 40 : 300);
+    out.push(c);
+  }
+  return out;
+}
+
+function bbNormaliseConsole(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(-50).filter((e) => e && typeof e === 'object').map((e) => ({
+    ts: bbStr(e.ts, 40),
+    level: e.level === 'error' || e.level === 'warn' ? e.level : 'log',
+    message: bbStr(e.message ?? e.text, 500),
+  })).filter((e) => e.message);
+}
+
+function bbRenderMail(rec, host) {
+  const TYPE = { bug: 'Bug', idea: 'Idea', other: 'Feedback' };
+  const facts = [
+    ['Site', host], ['Type', TYPE[rec.type] || rec.type], ['Page', rec.context.page || '—'],
+    ['Viewport', rec.context.viewport || '—'], ['Language', rec.context.language || '—'],
+    ['Browser', rec.context.userAgent || '—'], ['Reporter', rec.email || 'not given'],
+    ['Received', new Date(rec.at).toISOString()], ['Id', rec.id],
+  ];
+  const text = [];
+  const html = [];
+  text.push(`${TYPE[rec.type] || 'Report'} from ${host}`, '', rec.message, '');
+  html.push(`<h2 style="margin:0 0 .5em;font:600 18px system-ui,sans-serif">${bbEsc(TYPE[rec.type] || 'Report')} from ${bbEsc(host)}</h2>`);
+  html.push(`<pre style="white-space:pre-wrap;font:15px/1.5 system-ui,sans-serif;margin:0 0 1em">${bbEsc(rec.message)}</pre>`);
+  html.push('<table style="border-collapse:collapse;font:13px system-ui,sans-serif">');
+  for (const [k, v] of facts) {
+    text.push(`${k}: ${v}`);
+    html.push(`<tr><td style="padding:2px 12px 2px 0;color:#666;vertical-align:top">${bbEsc(k)}</td><td style="padding:2px 0">${bbEsc(v)}</td></tr>`);
+  }
+  html.push('</table>');
+  if (rec.elements.length) {
+    text.push('', 'Element pointed at:');
+    html.push('<h3 style="font:600 14px system-ui,sans-serif;margin:1em 0 .3em">Element pointed at</h3><ul style="font:13px system-ui,sans-serif">');
+    for (const el of rec.elements) {
+      const attrs = Object.entries(el.attributes).map(([k, v]) => `${k}="${v}"`).join(' ');
+      const line = `${el.selector}${el.text ? ` — "${el.text}"` : ''}${attrs ? ` (${attrs})` : ''} at ${el.rect.x},${el.rect.y} ${el.rect.width}×${el.rect.height}`;
+      text.push(`- ${line}`);
+      html.push(`<li><code>${bbEsc(line)}</code></li>`);
+    }
+    html.push('</ul>');
+  }
+  if (rec.breadcrumbs.length) {
+    text.push('', 'What happened before:');
+    html.push('<h3 style="font:600 14px system-ui,sans-serif;margin:1em 0 .3em">What happened before</h3><ul style="font:13px system-ui,sans-serif">');
+    for (const c of rec.breadcrumbs) {
+      const bits = [c.ts, c.kind, c.target, c.text ? `"${c.text}"` : '', c.from ? `${c.from} →` : '', c.to].filter(Boolean).join(' ');
+      text.push(`- ${bits}`);
+      html.push(`<li>${bbEsc(bits)}</li>`);
+    }
+    html.push('</ul>');
+  }
+  if (rec.console.length) {
+    text.push('', `Console (${rec.console.length}):`);
+    const lines = rec.console.map((e) => `${e.ts ? e.ts + ' ' : ''}[${e.level}] ${e.message}`);
+    text.push(...lines);
+    html.push(`<h3 style="font:600 14px system-ui,sans-serif;margin:1em 0 .3em">Console (${rec.console.length})</h3>`);
+    html.push(`<pre style="font:12px/1.4 ui-monospace,monospace;background:#f4f4f2;padding:8px;overflow:auto">${bbEsc(lines.join('\n'))}</pre>`);
+  }
+  if (rec.screenshot) {
+    text.push('', rec.screenshot.attached ? 'Screenshot attached.' : `Screenshot omitted (${rec.screenshot.bytes} bytes).`);
+    html.push(`<p style="font:13px system-ui,sans-serif;color:#666">${rec.screenshot.attached ? 'Screenshot attached.' : `Screenshot omitted (${rec.screenshot.bytes} bytes).`}</p>`);
+  }
+  text.push('', 'Sent by BugBottle · https://bugbottle.dev');
+  html.push('<p style="font:12px system-ui,sans-serif;color:#888;margin-top:1.5em">Sent by <a href="https://bugbottle.dev">BugBottle</a></p>');
+  return { text: text.join('\n'), html: html.join('\n') };
+}
+
+async function handleBugreport(request, url, env) {
+  const origin = request.headers.get('origin') || '';
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: bbInboxOriginAllowed(origin) ? 204 : 403, headers: bbInboxHeaders(origin) });
+  }
+  if (origin && !bbInboxOriginAllowed(origin)) {
+    return bbInboxJson({ ok: false, error: 'Origin not allowed.' }, 403, origin);
+  }
+  if (!env || !env.RESEND_API_KEY) {
+    return bbInboxJson({ ok: false, error: 'inbox not configured' }, 503, origin);
+  }
+
+  if (request.method === 'GET') {
+    const key = url.searchParams.get('key') || '';
+    if (!env.BB_ADMIN_KEY || !key || !timingSafeEqual(key, env.BB_ADMIN_KEY)) {
+      return bbInboxJson({ ok: false, error: 'Unauthorized.' }, 401, origin);
+    }
+    const names = [];
+    let cursor = null;
+    do {
+      const page = await env.VISITS.list({ prefix: 'bb:inbox:', cursor });
+      for (const k of page.keys) names.push(k.name);
+      cursor = page.list_complete ? null : page.cursor;
+    } while (cursor);
+    names.sort().reverse();
+    const reports = [];
+    for (const name of names.slice(0, 50)) {
+      const v = await env.VISITS.get(name);
+      if (!v) continue;
+      try {
+        const rec = JSON.parse(v);
+        if (rec.screenshot) rec.screenshot = { bytes: rec.screenshot.bytes, stored: !!rec.screenshot.dataUrl };
+        reports.push(rec);
+      } catch { /* skip */ }
+    }
+    return bbInboxJson({ ok: true, count: reports.length, reports }, 200, origin);
+  }
+
+  if (request.method !== 'POST') return bbInboxJson({ ok: false, error: 'POST only.' }, 405, origin);
+
+  const declared = parseInt(request.headers.get('content-length') || '0', 10);
+  if (declared > BB_INBOX_MAX_BODY) return bbInboxJson({ ok: false, error: 'Report is too large.' }, 413, origin);
+  let raw;
+  try {
+    raw = await request.text();
+  } catch {
+    return bbInboxJson({ ok: false, error: 'Could not read body.' }, 400, origin);
+  }
+  if (raw.length > BB_INBOX_MAX_BODY) return bbInboxJson({ ok: false, error: 'Report is too large.' }, 413, origin);
+  let body;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    return bbInboxJson({ ok: false, error: 'Body must be JSON.' }, 400, origin);
+  }
+  if (!body || typeof body !== 'object') return bbInboxJson({ ok: false, error: 'Body must be JSON.' }, 400, origin);
+
+  // --- validation: same rules as handleBugbottleDemo / bugbottle/server ---
+  const message = bbStr(body.message, BB_MAX_MESSAGE).trim();
+  if (!message) return bbInboxJson({ ok: false, error: 'Write a message first.' }, 400, origin);
+  const type = BB_REPORT_TYPES.includes(body.type) ? body.type : 'other';
+  const emailRaw = bbStr(body.email, 200).trim();
+  const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : '';
+  const ctxIn = body.context && typeof body.context === 'object' ? body.context : {};
+  const context = {
+    page: bbStr(ctxIn.page ?? ctxIn.url, 500),
+    viewport: bbStr(ctxIn.viewport, 32),
+    language: bbStr(ctxIn.language, 20),
+    userAgent: bbStr(ctxIn.userAgent, 500),
+  };
+  let screenshotDataUrl = '';
+  let screenshotBytes = 0;
+  if (typeof body.screenshotDataUrl === 'string' && body.screenshotDataUrl.length > 0) {
+    if (body.screenshotDataUrl.length > BB_MAX_SCREENSHOT_DATA_URL) {
+      return bbInboxJson({ ok: false, error: 'Screenshot too large.' }, 413, origin);
+    }
+    if (!body.screenshotDataUrl.startsWith('data:image/png;base64,')) {
+      return bbInboxJson({ ok: false, error: 'Only PNG data URLs are accepted.' }, 415, origin);
+    }
+    screenshotDataUrl = body.screenshotDataUrl;
+    screenshotBytes = Math.floor((screenshotDataUrl.length - 22) * 0.75);
+  }
+  const consoleEntries = bbNormaliseConsole(body.console);
+  const elements = bbNormaliseElements(body.elements ?? body.element);
+  const breadcrumbs = bbNormaliseBreadcrumbs(body.breadcrumbs);
+
+  // --- rate limit: 30 per IP per day, 300 per day in total ---
+  const day = bbDay();
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const ipDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip));
+  const ipHash = [...new Uint8Array(ipDigest)].slice(0, 12).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const ipKey = `bb:rl:${day}:${ipHash}`;
+  const allKey = `bb:rl:${day}:all`;
+  const [ipCount, allCount] = await Promise.all([env.VISITS.get(ipKey), env.VISITS.get(allKey)]);
+  if (parseInt(ipCount || '0', 10) >= BB_INBOX_IP_LIMIT || parseInt(allCount || '0', 10) >= BB_INBOX_DAY_LIMIT) {
+    return bbInboxJson({ ok: false, error: 'Too many reports today. Try again tomorrow.' }, 429, origin);
+  }
+
+  // --- store ---
+  const at = Date.now();
+  const id = crypto.randomUUID().slice(0, 8);
+  const host = bbHostOf(request, context.page);
+  const rec = { id, at, host, type, message, email, context, console: consoleEntries, elements, breadcrumbs, screenshot: null };
+  if (screenshotDataUrl) {
+    rec.screenshot = { bytes: screenshotBytes, attached: screenshotBytes <= BB_INBOX_MAIL_SCREENSHOT_MAX };
+    if (screenshotDataUrl.length <= BB_INBOX_STORE_SCREENSHOT_MAX) rec.screenshot.dataUrl = screenshotDataUrl;
+  }
+  await env.VISITS.put(`bb:inbox:${String(at).padStart(14, '0')}:${id}`, JSON.stringify(rec), { expirationTtl: 30 * 86400 });
+  await Promise.all([
+    env.VISITS.put(ipKey, String(parseInt(ipCount || '0', 10) + 1), { expirationTtl: 2 * 86400 }),
+    env.VISITS.put(allKey, String(parseInt(allCount || '0', 10) + 1), { expirationTtl: 2 * 86400 }),
+  ]);
+
+  // --- mail via Resend ---
+  const TYPE = { bug: 'Bug', idea: 'Idea', other: 'Feedback' };
+  const firstLine = message.split(/\r?\n/)[0].trim();
+  const subject = `[BugBottle] ${host} · ${TYPE[type]}: ${firstLine.length > 60 ? firstLine.slice(0, 59).trimEnd() + '…' : firstLine}`;
+  const { text, html } = bbRenderMail(rec, host);
+  const mail = { from: BB_INBOX_FROM, to: [BB_INBOX_TO], subject, html, text, tags: [{ name: 'source', value: 'bugbottle' }] };
+  if (email) mail.reply_to = email;
+  if (rec.screenshot && rec.screenshot.attached) {
+    mail.attachments = [{ filename: `bugbottle-${id}.png`, content: screenshotDataUrl.slice(22), content_type: 'image/png' }];
+  }
+  let mailed = false;
+  let mailId = null;
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(mail),
+    });
+    if (r.ok) {
+      const j = await r.json().catch(() => ({}));
+      mailed = true;
+      mailId = j.id || null;
+    } else {
+      console.error('bugreport: resend answered', r.status, (await r.text()).slice(0, 300));
+    }
+  } catch (e) {
+    console.error('bugreport: resend failed', e && e.message);
+  }
+  if (mailId) {
+    rec.mailId = mailId;
+    await env.VISITS.put(`bb:inbox:${String(at).padStart(14, '0')}:${id}`, JSON.stringify(rec), { expirationTtl: 30 * 86400 });
+  }
+  return bbInboxJson({ ok: true, id, mailed }, 201, origin);
 }
