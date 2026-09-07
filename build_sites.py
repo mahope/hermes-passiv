@@ -795,6 +795,8 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
                product_links="\n".join('          <li><a href="%s"%s>%s</a></li>' % (u, ' aria-current="true"' if u == own_url else "", n) for n, u in PRODUCTS),
                privacy_url="/privacy/" if (SITE / "privacy" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/privacy/",
                maker_note=t["maker_note"], year=datetime.now(timezone.utc).year,
+               # no mailto: in the shell — Cloudflare would inject its render-blocking email-decode script
+               report_url=(cfg["github"] + "/issues") if cfg["product"] != "mahope" else "https://mahoje.dk",
                license_note=t["license_note"].format(github=cfg["github"]) if cfg["product"] != "mahope" else "")
     header = _render(_partial("header.html"), ctx)
     footer = _render(_partial("footer.html"), ctx)
