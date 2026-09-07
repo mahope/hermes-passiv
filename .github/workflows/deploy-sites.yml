@@ -1,0 +1,79 @@
+name: deploy-sites
+
+# Bygger dist/<domæne> med build_sites.py og deployer hvert produktsite til sit
+# Cloudflare Pages-projekt ved push på main. build_sites.py henter deskuptime-
+# værktøjssider fra auditedwp-repoet, som derfor checkes ud ved siden af.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'bugbottle-landing/**'
+      - 'build_sites.py'
+      - '.github/workflows/deploy-sites.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - domain: cleancopy.tools
+            project: cleancopy-tools
+          - domain: deskuptime.com
+            project: deskuptime
+          - domain: bugbottle.dev
+            project: bugbottle-dev
+          - domain: mahope.tools
+            project: mahope-tools
+    concurrency:
+      group: pages-${{ matrix.project }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mahope/auditedwp
+          path: auditedwp-src
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Byg dist/${{ matrix.domain }}
+        env:
+          AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
+        run: |
+          python build_sites.py --only "${{ matrix.domain }}" | tee build.log
+          if grep -q "extra file missing" build.log; then
+            echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"
+            exit 1
+          fi
+          test -f "dist/${{ matrix.domain }}/index.html"
+
+      - name: Deploy til Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: dist/${{ matrix.domain }}
+          command: pages deploy . --project-name ${{ matrix.project }} --branch main --commit-dirty=true
+
+      - name: Tjek produktion
+        run: |
+          url="https://${{ matrix.domain }}/"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -o body.html -w '%{http_code}' "$url" || echo 000)
+            if [ "$code" = "200" ] && grep -q "mahoje.dk" body.html; then
+              echo "OK: $url svarer 200 og indeholder mahoje.dk"
+              exit 0
+            fi
+            echo "Forsøg $i: status $code — venter 10s"
+            sleep 10
+          done
+          echo "FEJL: $url gav status $code eller manglede 'mahoje.dk'"
+          exit 1

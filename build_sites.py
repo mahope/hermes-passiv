@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import os
 import re
 import shutil
 import sys
@@ -22,7 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SITE = ROOT / "site"
 DIST = ROOT / "dist"
-AUDITEDWP_DESKUPTIME = ROOT.parent / "auditedwp" / "site" / "deskuptime"
+AUDITEDWP_DIR = Path(os.environ.get("AUDITEDWP_DIR") or (ROOT.parent / "auditedwp"))
+AUDITEDWP_DESKUPTIME = AUDITEDWP_DIR / "site" / "deskuptime"
 OLD_ORIGIN = "https://hermes-passiv.pages.dev"
 
 # ---------------------------------------------------------------------------
