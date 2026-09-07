@@ -39,6 +39,15 @@ OLD_ORIGIN = "https://hermes-passiv.pages.dev"
 SITES: dict[str, dict] = {
     "cleancopy.tools": {
         "project": "cleancopy-tools",
+        "product": "cleancopy",
+        "brand": "Clean Copy",
+        "github": "https://github.com/mahope/clean-copy",
+        "nav": {
+            "en": [("Install", "/#install"), ("CLI", "/clean-copy-cli-ref"), ("Web tool", "/clean-copy-tool"),
+                   ("Blog", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
+            "da": [("Installér", "/da/#install"), ("CLI", "/clean-copy-cli-ref"), ("Webværktøj", "/clean-copy-tool"),
+                   ("Blog", "/blog/"), ("GitHub", "https://github.com/mahope/clean-copy")],
+        },
         "include": [
             "clean-copy*.html",
             "copy-clean-guide.html",
@@ -51,15 +60,26 @@ SITES: dict[str, dict] = {
             "api-readme.md",
             "openapi.yaml",
             "da/url-til-markdown.html",
+            "da/clean-copy.html",
+            "downloads/clean-copy*",
         ],
         "title_match": [
             ("blog/*.html", r"Clean Copy|Markdown|clean-copy"),
             ("da/blog/*.html", r"Clean Copy|Markdown|clean-copy"),
         ],
-        "index_from": "clean-copy.html",
+        "index_from": {"index.html": "clean-copy.html", "da/index.html": "da/clean-copy.html"},
     },
     "deskuptime.com": {
         "project": "deskuptime",
+        "product": "deskuptime",
+        "brand": "DeskUptime",
+        "github": "https://github.com/mahope/deskuptime",
+        "nav": {
+            "en": [("Install", "/#install"), ("Pro", "/#pro"), ("Free checkers", "/tools/"),
+                   ("FAQ", "/#faq"), ("GitHub", "https://github.com/mahope/deskuptime")],
+            "da": [("Installér", "/da/#install"), ("Pro", "/da/#pro"), ("Gratis tjek", "/tools/"),
+                   ("FAQ", "/da/#faq"), ("GitHub", "https://github.com/mahope/deskuptime")],
+        },
         "include": ["deskuptime/**", "da/deskuptime/**"],
         "remap": {"deskuptime/": "", "da/deskuptime/": "da/"},
         "extra": [
@@ -72,6 +92,15 @@ SITES: dict[str, dict] = {
     },
     "bugbottle.dev": {
         "project": "bugbottle-dev",
+        "product": "bugbottle",
+        "brand": "BugBottle",
+        "github": "https://github.com/mahope/bugbottle",
+        "nav": {
+            "en": [("Install", "/#install"), ("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
+                   ("npm", "https://www.npmjs.com/package/bugbottle"), ("GitHub", "https://github.com/mahope/bugbottle")],
+            "da": [("Installér", "/da/#install"), ("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
+                   ("npm", "https://www.npmjs.com/package/bugbottle"), ("GitHub", "https://github.com/mahope/bugbottle")],
+        },
         "include": [
             "bugbottle-demo.html",
             "bugbottle-demo.js",
@@ -84,10 +113,20 @@ SITES: dict[str, dict] = {
         ],
         "extra": [
             (ROOT / "bugbottle-landing" / "index.html", "bugbottle-landing/index.html", "index.html"),
+            (ROOT / "bugbottle-landing" / "da" / "index.html", "bugbottle-landing/da/index.html", "da/index.html"),
         ],
     },
     "mahope.tools": {
         "project": "mahope-tools",
+        "product": "mahope",
+        "brand": "mahope.tools",
+        "github": "https://github.com/mahope",
+        "nav": {
+            "en": [("Free tools", "/free-tools"), ("Downloads", "/free-downloads"), ("Blog", "/blog/"),
+                   ("E-books", "/books/"), ("Compliance", "/compliance-guide")],
+            "da": [("Gratis værktøjer", "/free-tools"), ("Downloads", "/free-downloads"), ("Blog", "/blog/"),
+                   ("E-bøger", "/books/"), ("Compliance", "/da/compliance-site-check")],
+        },
         "rest": True,
         "index_from": "free-tools.html",
     },
@@ -98,6 +137,7 @@ SHARED = ["style.css", "track.js", "_worker.js", "_headers"]
 # Never copied (regenerated per site, or junk).
 SKIP_NAMES = {"sitemap.xml", "robots.txt"}
 SKIP_SUFFIXES = (".orig", ".bak")
+SKIP_DIRS = ("_partials/",)
 # Root-relative refs to these extensions are auto-pulled into a dist if the
 # file exists in site/ (og:image, icons, extra css/js…).
 ASSET_EXT = {".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".ico", ".css", ".js", ".woff", ".woff2"}
@@ -165,6 +205,7 @@ class Site:
         # source-key (site-relative) -> (absolute source path, dest-relative path)
         self.files: dict[str, tuple[Path, str]] = {}
         self.rewritten = 0
+        self.shelled = 0
         self.cross = 0
         self.broken: dict[str, int] = {}
 
@@ -185,7 +226,7 @@ def select_files(sites: dict[str, Site]) -> None:
             continue
         for p in all_files:
             r = rel(p)
-            if r in claimed or p.name in SKIP_NAMES or r.endswith(SKIP_SUFFIXES) or r in SHARED:
+            if r in claimed or p.name in SKIP_NAMES or r.endswith(SKIP_SUFFIXES) or r in SHARED or r.startswith(SKIP_DIRS):
                 continue
             hit = any(matches(r, g) for g in cfg.get("include", []))
             if not hit:
@@ -205,7 +246,7 @@ def select_files(sites: dict[str, Site]) -> None:
         if site.cfg.get("rest"):
             for p in all_files:
                 r = rel(p)
-                if r in claimed or p.name in SKIP_NAMES or r.endswith(SKIP_SUFFIXES) or r in SHARED:
+                if r in claimed or p.name in SKIP_NAMES or r.endswith(SKIP_SUFFIXES) or r in SHARED or r.startswith(SKIP_DIRS):
                     continue
                 site.add(r, p)
     for site in sites.values():
@@ -336,6 +377,133 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
     return CSSURL_RE.sub(css_sub, text)
 
 
+
+# ---------------------------------------------------------------------------
+# Shared shell: header + footer partials injected into every HTML page.
+# ---------------------------------------------------------------------------
+PARTIALS = SITE / "_partials"
+PRODUCTS = [
+    ("Clean Copy", "https://cleancopy.tools"),
+    ("DeskUptime", "https://deskuptime.com"),
+    ("BugBottle", "https://bugbottle.dev"),
+    ("Transmute", "https://transmute.run"),
+    ("EU Comply Pro", "https://eucomplypro.com"),
+    ("mahope.tools", "https://mahope.tools"),
+]
+L10N = {
+    "en": dict(skip_label="Skip to content", nav_label="Main", brand_by="by mahoje.dk",
+               other_products_label="More from mahoje.dk", privacy_label="Privacy",
+               privacy_note="No cookies, no trackers — only an anonymous page-view counter we run ourselves.",
+               privacy_link="Privacy policy", terms_link="Terms",
+               maker_note='Built by Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — developer and technical partner, Odense, Denmark. Source on <a href="{github}">GitHub</a>.'),
+    "da": dict(skip_label="Spring til indhold", nav_label="Hovedmenu", brand_by="af mahoje.dk",
+               other_products_label="Mere fra mahoje.dk", privacy_label="Privatliv",
+               privacy_note="Ingen cookies, ingen trackere — kun en anonym sidevisningstæller, vi selv kører.",
+               privacy_link="Privatlivspolitik", terms_link="Vilkår",
+               maker_note='Lavet af Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — udvikler og teknisk partner, Odense. Kildekode på <a href="{github}">GitHub</a>.'),
+}
+BODY_RE = re.compile(r"<body[^>]*>", re.I)
+HEAD_END_RE = re.compile(r"</head>", re.I)
+HTML_TAG_RE = re.compile(r"<html([^>]*)>", re.I)
+FIRST_HEADER_RE = re.compile(r"\s*<header\b[^>]*>.*?</header>", re.S | re.I)
+FOOTER_RE = re.compile(r"<footer\b[^>]*>.*?</footer>", re.S | re.I)
+FOOTER_NAV_RE = re.compile(r'\s*<nav aria-label="Footer">.*?</nav>', re.S | re.I)
+HREFLANG_RE = re.compile(r'<link[^>]+hreflang="(en|da)"[^>]+href="([^"]+)"|<link[^>]+href="([^"]+)"[^>]+hreflang="(en|da)"', re.I)
+
+
+def _partial(name: str) -> str:
+    return (PARTIALS / name).read_text(encoding="utf-8")
+
+
+def _render(tpl: str, ctx: dict) -> str:
+    return re.sub(r"\{\{(\w+)\}\}", lambda m: str(ctx.get(m.group(1), "")), tpl)
+
+
+def _nav_links(links, current: str, indent: str = "      ") -> str:
+    out = []
+    for label, href in links:
+        cur = ' aria-current="page"' if href == current else ""
+        out.append(f'{indent}<a href="{href}"{cur}>{label}</a>')
+    return "\n".join(out)
+
+
+def _alternates(head: str) -> dict:
+    alts = {}
+    for m in HREFLANG_RE.finditer(head):
+        lang, href = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
+        alts.setdefault(lang.lower(), href)
+    return alts
+
+
+def apply_shell(site: Site, key: str, dest: str, text: str) -> str:
+    cfg = site.cfg
+    if "brand" not in cfg or not BODY_RE.search(text):
+        return text
+    lang = "da" if re.search(r'<html[^>]*lang="da"', text[:400], re.I) else "en"
+    t = L10N[lang]
+    head_end = HEAD_END_RE.search(text)
+    head = text[: head_end.start()] if head_end else text[:6000]
+    alts = _alternates(head)
+    own = "/" + dest
+    sw = ""
+    if "en" in alts and "da" in alts and alts["en"] != alts["da"]:
+        parts = []
+        for code in ("en", "da"):
+            if code == lang:
+                parts.append(f'<span aria-current="true" lang="{code}">{code.upper()}</span>')
+            else:
+                parts.append(f'<a href="{alts[code]}" lang="{code}" hreflang="{code}">{code.upper()}</a>')
+        sw = '      <span class="lang-switch">' + "".join(parts) + "</span>"
+    current = canonical_url(dest)
+    ctx = dict(t, brand=cfg["brand"], home="/da/" if lang == "da" else "/",
+               nav=_nav_links(cfg["nav"][lang], current), lang_switch=sw,
+               footer_links=_nav_links(cfg["nav"][lang], current, "        ").replace("<a ", "<li><a ").replace("</a>", "</a></li>"),
+               product_links="\n".join(f'        <li><a href="{u}">{n}</a></li>' for n, u in PRODUCTS if not u.endswith(site.domain)),
+               maker_note=t["maker_note"].format(github=cfg["github"]))
+    header = _render(_partial("header.html"), ctx)
+    footer = _render(_partial("footer.html"), ctx)
+
+    # <html data-product=…> + make sure the shared stylesheet is loaded
+    def html_sub(m):
+        attrs = m.group(1)
+        if "data-product" in attrs:
+            return m.group(0)
+        return f'<html{attrs} data-product="{cfg["product"]}">'
+    text = HTML_TAG_RE.sub(html_sub, text, count=1)
+    text = text.replace('og:site_name" content="Hermes Passiv"', f'og:site_name" content="{cfg["brand"]}"')
+    if 'href="/style.css"' not in text:
+        style_pos = re.search(r"<style\b", text, re.I)
+        ins = '<link rel="stylesheet" href="/style.css">\n'
+        if style_pos and (not head_end or style_pos.start() < head_end.start()):
+            text = text[: style_pos.start()] + ins + text[style_pos.start():]
+        elif head_end:
+            text = text[: head_end.start()] + ins + text[head_end.start():]
+
+    # body: drop an old chrome header (a <header> without <h1> right after <body>), inject ours
+    bm = BODY_RE.search(text)
+    body_start = bm.end()
+    m = FIRST_HEADER_RE.match(text, body_start)
+    if m and not re.search(r"<h1\b", m.group(0), re.I):
+        text = text[: m.start()] + text[m.end():]
+    text = FOOTER_NAV_RE.sub("", text)
+    text = text[:body_start] + "\n" + header + text[body_start:]
+    if 'id="main"' not in text:
+        if re.search(r"<main\b", text, re.I):
+            text = re.sub(r"<main\b", '<main id="main"', text, count=1, flags=re.I)
+        else:
+            text = text.replace("</header>\n", '</header>\n<div id="main"></div>\n', 1)
+
+    # footer: replace the last <footer>…</footer>, else insert before </body>
+    footers = list(FOOTER_RE.finditer(text))
+    if footers:
+        f = footers[-1]
+        text = text[: f.start()] + footer + text[f.end():]
+    else:
+        text = re.sub(r"</body>", footer + "\n</body>", text, count=1, flags=re.I)
+    site.shelled += 1
+    return text
+
+
 def kv_namespace_id() -> str:
     toml = (SITE / "wrangler.toml").read_text(encoding="utf-8")
     m = re.search(r'binding\s*=\s*"VISITS"\s*\n\s*id\s*=\s*"([0-9a-f]+)"', toml)
@@ -354,17 +522,22 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str) -> None:
         out.parent.mkdir(parents=True, exist_ok=True)
         if src.suffix.lower() in TEXT_EXT:
             text = src.read_text(encoding="utf-8", errors="surrogateescape")
+            if src.suffix.lower() in (".html", ".htm"):
+                text = apply_shell(site, key, dest, text)
             text = rewrite_text(site, text, src.suffix.lower() in (".html", ".htm"), local, global_idx)
             out.write_text(text, encoding="utf-8", errors="surrogateescape")
         else:
             shutil.copy2(src, out)
 
-    # index.html fallback
-    idx = site.cfg.get("index_from")
-    if not (dist / "index.html").exists() and idx and (dist / idx).exists():
-        html = (dist / idx).read_text(encoding="utf-8")
-        html = html.replace(f"https://{site.domain}{canonical_url(idx)}\"", f"https://{site.domain}/\"")
-        (dist / "index.html").write_text(html, encoding="utf-8")
+    # index.html fallback(s): "index_from": "src.html" or {"index.html": "src.html", "da/index.html": "da/src.html"}
+    idx_cfg = site.cfg.get("index_from")
+    idx_map = {"index.html": idx_cfg} if isinstance(idx_cfg, str) else (idx_cfg or {})
+    idx = idx_map.get("index.html")
+    for target, source in idx_map.items():
+        if not (dist / target).exists() and source and (dist / source).exists():
+            html = (dist / source).read_text(encoding="utf-8")
+            html = html.replace(f"https://{site.domain}{canonical_url(source)}\"", f"https://{site.domain}{canonical_url(target)}\"")
+            (dist / target).write_text(html, encoding="utf-8")
 
     # wrangler.toml (Pages flavour)
     (dist / "wrangler.toml").write_text(
@@ -419,10 +592,10 @@ def main() -> int:
         n_files = sum(1 for p in s.dist.rglob("*") if p.is_file())
         n_html = sum(1 for _ in s.dist.rglob("*.html"))
         n_broken = sum(s.broken.values())
-        summary[domain] = dict(project=s.project, files=n_files, html=n_html, rewritten=s.rewritten,
+        summary[domain] = dict(project=s.project, files=n_files, html=n_html, shelled=s.shelled, rewritten=s.rewritten,
                                cross_domain=s.cross, broken=n_broken)
         print(f"\n== {domain} ({s.project}) -> dist/{domain}")
-        print(f"   files: {n_files} ({n_html} html)  rewritten: {s.rewritten}  cross-domain: {s.cross}  broken: {n_broken}")
+        print(f"   files: {n_files} ({n_html} html, {s.shelled} shelled)  rewritten: {s.rewritten}  cross-domain: {s.cross}  broken: {n_broken}")
         for path, n in sorted(s.broken.items(), key=lambda kv: -kv[1])[:15]:
             print(f"     broken {n:3d}x {path}")
         if len(s.broken) > 15:
