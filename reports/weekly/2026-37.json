@@ -1,6 +1,6 @@
 {
   "iso_week": "2026-37",
-  "generated_at": "2026-09-08T21:37:48+00:00",
+  "generated_at": "2026-09-08T21:44:38+00:00",
   "health": {
     "status": "healthy",
     "kv": true,
@@ -230,7 +230,7 @@
     "mahope/hermes-passiv": {
       "product": "mahope.tools",
       "open_issues": 0,
-      "pushed_at": "2026-09-08T21:37:16Z",
+      "pushed_at": "2026-09-08T21:44:10Z",
       "stars": 0,
       "latest_release": "eaa-scanner-desktop-v1.3.3",
       "latest_release_at": "2026-08-25T17:11:43Z",
