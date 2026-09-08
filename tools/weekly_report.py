@@ -222,8 +222,15 @@ def collect_github() -> dict:
             continue
         try:
             rels = gh_json(["api", f"repos/{repo}/releases?per_page=100"]) or []
-            if rels:
-                latest = rels[0]
+            # GitHub returnerer ikke listen i dato-orden — sortér selv, ellers
+            # skifter "seneste release" tilfældigt fra uge til uge.
+            published = sorted(
+                (r for r in rels if not r.get("draft")),
+                key=lambda r: str(r.get("published_at") or r.get("created_at") or ""),
+                reverse=True,
+            )
+            if published:
+                latest = published[0]
                 row["latest_release"] = latest.get("tag_name")
                 row["latest_release_at"] = latest.get("published_at")
                 row["latest_release_downloads"] = sum(int(a.get("download_count") or 0) for a in latest.get("assets") or [])
@@ -495,8 +502,9 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
                 ["Gemt i indbakken i alt", fmt_num(bb.get("stored_total")), ""]]
         for host, n in sorted((bb.get("by_host") or {}).items(), key=lambda kv: -kv[1]):
             rows.append([f"  fra {host}", str(n), ""])
-        if bb.get("last_week"):
-            notable.append(f"{bb['last_week']} BugBottle-rapporter")
+        if d or (first_run and bb.get("last_week")):
+            notable.append(f"{bb['last_week']} BugBottle-rapporter ({fmt_delta(d)})" if d
+                           else f"{bb['last_week']} BugBottle-rapporter")
         sections.append({"title": "BugBottle-rapporter", "headers": ["Måltal", "Antal", "Δ uge"],
                          "rows": rows, "note": None})
     else:
@@ -539,7 +547,8 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
     if ls.get("available"):
         rows = [["Ordrer sidste 7 dage", fmt_num(ls.get("orders_last_week")), ""],
                 ["Beløb i alt", f"{(ls.get('total_cents') or 0) / 100:.2f} {ls.get('currency') or ''}".strip(), ""]]
-        if ls.get("orders_last_week"):
+        dlo = delta(ls.get("orders_last_week"), dig(prev, "lemon", "orders_last_week"))
+        if dlo or (first_run and ls.get("orders_last_week")):
             notable.append(f"{ls['orders_last_week']} Lemon Squeezy-ordrer")
         sections.append({"title": "Lemon Squeezy", "headers": ["Måltal", "Værdi", ""], "rows": rows,
                          "note": "Butikken kører stadig i test mode." if ls.get("test_mode") else None})
