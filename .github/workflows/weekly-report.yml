@@ -1,0 +1,73 @@
+name: weekly-report
+
+# Ugentlig faktarapport: samler tal fra Cloudflare-KV, npm, GitHub,
+# BugBottle-indbakken og build_sites.py's link-tjek, gemmer dem som JSON i
+# reports/weekly/ (så næste uge kan regne forskellen ud) og sender én mail.
+# Jobbet må aldrig fejle på manglende data — kun på egentlige programfejl.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # mandag 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # build_sites.py læser datoer fra git-historikken
+
+      # build_sites.py henter deskuptime-værktøjssider fra auditedwp-repoet.
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: mahope/auditedwp
+          path: auditedwp-src
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Link-tjekket er et biprodukt af byggeriet: dist/build-summary.json
+      # indeholder antal døde interne links pr. domæne. Fejler byggeriet,
+      # springer rapporten punktet over i stedet for at vælte.
+      - name: Byg sites (giver link-tjekkets tal)
+        continue-on-error: true
+        env:
+          AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
+        run: python build_sites.py > build-report.log 2>&1 || tail -40 build-report.log
+
+      - name: Saml og send ugerapport
+        env:
+          BB_ADMIN_KEY: ${{ secrets.BB_ADMIN_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          LS_API_KEY: ${{ secrets.LS_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python tools/weekly_report.py
+
+      - name: Commit ugens tal
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/weekly
+          if git diff --cached --quiet; then
+            echo "Ingen ændringer i reports/weekly — intet at committe."
+            exit 0
+          fi
+          week=$(date -u +%G-%V)
+          git commit -m "Gem ugerapportens tal for uge $week"
+          for i in 1 2 3; do
+            git pull --rebase --quiet origin main && git push origin HEAD:main && exit 0
+            echo "Push-forsøg $i mislykkedes — prøver igen"
+            sleep 5
+          done
+          exit 1
