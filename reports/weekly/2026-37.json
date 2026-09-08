@@ -1,0 +1,300 @@
+{
+  "iso_week": "2026-37",
+  "generated_at": "2026-09-08T21:37:48+00:00",
+  "health": {
+    "status": "healthy",
+    "kv": true,
+    "visits_2d": 566,
+    "downloads_2d": 185,
+    "waitlist": 0,
+    "scans": 11
+  },
+  "traffic": {
+    "window_days": 7,
+    "visits": 593,
+    "downloads": 198,
+    "top_paths": [
+      {
+        "path": "/",
+        "visits": 301
+      },
+      {
+        "path": "/da/",
+        "visits": 31
+      },
+      {
+        "path": "/bugbottle-demo",
+        "visits": 14
+      },
+      {
+        "path": "/da/blog/bugrapporter-i-ci-pipeline",
+        "visits": 10
+      },
+      {
+        "path": "/blog/add-bug-report-form-to-any-website",
+        "visits": 9
+      },
+      {
+        "path": "/blog/bug-reports-in-ci-pipeline",
+        "visits": 9
+      },
+      {
+        "path": "/da/blog/tilfoej-fejlrapport-formular-hjemmeside",
+        "visits": 9
+      },
+      {
+        "path": "/clean-copy-tool",
+        "visits": 6
+      }
+    ],
+    "top_downloads": [
+      {
+        "file": "clean-copy-firefox-v1.5.2.zip",
+        "hits": 16
+      },
+      {
+        "file": "clean-copy-v1.5.2.zip",
+        "hits": 16
+      },
+      {
+        "file": "clean-copy-obsidian-v1.0.9.zip",
+        "hits": 15
+      },
+      {
+        "file": "cookie-consent-guide.epub",
+        "hits": 14
+      },
+      {
+        "file": "nis2-for-agencies.epub",
+        "hits": 14
+      },
+      {
+        "file": "build-your-first-chrome-extension.epub",
+        "hits": 14
+      },
+      {
+        "file": "eaa-checklist.epub",
+        "hits": 14
+      },
+      {
+        "file": "eaa-shopify.epub",
+        "hits": 14
+      }
+    ],
+    "waitlist": 0,
+    "licenses_issued": 0,
+    "ai_asks": 0,
+    "scans": 11
+  },
+  "npm": {
+    "@mahope/clean-copy": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "@mahope/deskuptime": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "@mahope/transmute": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "@mahope/eucomply-scanner": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "@mahope/passiv-mcp": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "@mahope/cookie-consent-banner": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    },
+    "bugbottle": {
+      "downloads": null,
+      "note": "ingen data endnu"
+    }
+  },
+  "github": {
+    "mahope/eucomply-scanner": {
+      "product": "EUComply",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:28Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T12:49:19Z",
+      "stars": 0,
+      "latest_release": "v1.5.2",
+      "latest_release_at": "2026-08-24T21:31:36Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 15
+    },
+    "mahope/clean-copy-cli": {
+      "product": "Clean Copy",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:13Z",
+      "stars": 0,
+      "latest_release": "v1.5.3",
+      "latest_release_at": "2026-09-07T18:24:30Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 29
+    },
+    "mahope/clean-copy-firefox": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T12:49:24Z",
+      "stars": 0,
+      "latest_release": "v1.5.2-fx",
+      "latest_release_at": "2026-08-24T21:31:42Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/clean-copy-vscode": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T12:49:29Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-08-25T06:26:01Z",
+      "latest_release_downloads": 2,
+      "release_downloads_total": 2
+    },
+    "mahope/clean-copy-obsidian": {
+      "product": "Clean Copy",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T12:49:33Z",
+      "stars": 0,
+      "latest_release": "v1.0.9",
+      "latest_release_at": "2026-08-25T09:56:40Z",
+      "latest_release_downloads": 1,
+      "release_downloads_total": 23
+    },
+    "mahope/deskuptime": {
+      "product": "DeskUptime",
+      "open_issues": 5,
+      "pushed_at": "2026-09-07T21:56:00Z",
+      "stars": 0,
+      "latest_release": "v0.2.8",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 82
+    },
+    "mahope/transmute": {
+      "product": "Transmute",
+      "open_issues": 5,
+      "pushed_at": "2026-09-07T22:53:52Z",
+      "stars": 0,
+      "latest_release": "v0.2.1",
+      "latest_release_at": "2026-09-07T18:23:15Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 4
+    },
+    "mahope/bugbottle": {
+      "product": "BugBottle",
+      "open_issues": 0,
+      "pushed_at": "2026-09-08T11:40:59Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-08T11:42:27Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/bugbottle-wordpress": {
+      "product": "BugBottle",
+      "open_issues": 1,
+      "pushed_at": "2026-09-08T11:37:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.0",
+      "latest_release_at": "2026-09-08T11:37:33Z",
+      "latest_release_downloads": 1,
+      "release_downloads_total": 8
+    },
+    "mahope/bugbottle-action": {
+      "product": "BugBottle",
+      "open_issues": 0,
+      "pushed_at": "2026-09-07T11:48:06Z",
+      "stars": 0,
+      "latest_release": "v1.0.2",
+      "latest_release_at": "2026-08-25T23:17:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/hermes-passiv": {
+      "product": "mahope.tools",
+      "open_issues": 0,
+      "pushed_at": "2026-09-08T21:37:16Z",
+      "stars": 0,
+      "latest_release": "eaa-scanner-desktop-v1.3.3",
+      "latest_release_at": "2026-08-25T17:11:43Z",
+      "latest_release_downloads": 24,
+      "release_downloads_total": 36
+    },
+    "mahope/passiv-mcp": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:33Z",
+      "stars": 0,
+      "latest_release": "v1.2.1",
+      "latest_release_at": "2026-09-07T18:23:22Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    },
+    "mahope/cookie-consent-banner": {
+      "product": "mahope.tools",
+      "open_issues": 2,
+      "pushed_at": "2026-09-07T18:19:37Z",
+      "stars": 0,
+      "latest_release": "v1.0.1",
+      "latest_release_at": "2026-09-07T18:23:24Z",
+      "latest_release_downloads": 0,
+      "release_downloads_total": 0
+    }
+  },
+  "bugreports": {
+    "available": true,
+    "last_week": 7,
+    "stored_total": 7,
+    "by_host": {
+      "eucomplypro.com": 1,
+      "transmute.run": 2,
+      "mahope.tools": 1,
+      "bugbottle.dev": 1,
+      "deskuptime.com": 1,
+      "cleancopy.tools": 1
+    },
+    "by_type": {
+      "bug": 7
+    }
+  },
+  "uptime": {
+    "conclusion": "success",
+    "created_at": "2026-09-08T21:11:21Z",
+    "url": "https://github.com/mahope/deskuptime/actions/runs/34279161835",
+    "runs_last_week": 10,
+    "failures_last_week": 0
+  },
+  "links": {
+    "available": true,
+    "broken_total": 18,
+    "by_domain": {
+      "cleancopy.tools": 1,
+      "deskuptime.com": 6,
+      "bugbottle.dev": 2,
+      "mahope.tools": 9
+    },
+    "html_total": 313
+  },
+  "lemon": {
+    "available": false,
+    "note": "afventer godkendelse (LS_API_KEY er ikke sat)"
+  },
+  "errors": []
+}
