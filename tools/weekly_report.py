@@ -13,8 +13,6 @@ via Resend. Hver kilde fejler blødt: dør én URL, står rækken som
 Miljøvariabler:
     BB_ADMIN_KEY     nøgle til https://mahope.tools/api/bugreport (valgfri)
     RESEND_API_KEY   nøgle til afsendelse (valgfri; uden den sendes ingen mail)
-    LS_API_KEY       Lemon Squeezy (valgfri; mangler den, står punktet
-                     som "afventer godkendelse")
     STATS_TOKEN      token til /api/stats (default: den i site/_worker.js)
     GITHUB_STEP_SUMMARY  fil der får rapporten i markdown
 """
@@ -324,38 +322,6 @@ def collect_links() -> dict:
 
 
 # --------------------------------------------------------------------------
-# 7. Lemon Squeezy
-# --------------------------------------------------------------------------
-def collect_lemon() -> dict:
-    key = os.environ.get("LS_API_KEY", "").strip()
-    if not key:
-        return {"available": False, "note": "afventer godkendelse (LS_API_KEY er ikke sat)"}
-    since = (datetime.now(timezone.utc) - timedelta(days=7)).date().isoformat()
-    url = "https://api.lemonsqueezy.com/v1/orders?page[size]=100&sort=-createdAt"
-    d = http_json(url, timeout=30, headers={
-        "Accept": "application/vnd.api+json",
-        "Content-Type": "application/vnd.api+json",
-        "Authorization": f"Bearer {key}",
-    })
-    orders = d.get("data") or []
-    cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    recent = []
-    for o in orders:
-        ts = _parse_ts((o.get("attributes") or {}).get("created_at"))
-        if ts and ts >= cutoff:
-            recent.append(o)
-    total = sum(int((o.get("attributes") or {}).get("total") or 0) for o in recent)
-    return {
-        "available": True,
-        "since": since,
-        "orders_last_week": len(recent),
-        "total_cents": total,
-        "currency": ((recent[0].get("attributes") or {}).get("currency") if recent else None),
-        "test_mode": bool((recent[0].get("attributes") or {}).get("test_mode")) if recent else None,
-    }
-
-
-# --------------------------------------------------------------------------
 # indsamling + sammenligning
 # --------------------------------------------------------------------------
 def collect_all() -> dict:
@@ -370,7 +336,6 @@ def collect_all() -> dict:
         "bugreports": soft("api/bugreport", collect_bugreports, {"available": False, "note": "kunne ikke hentes"}),
         "uptime": soft("deskuptime self-monitor", collect_uptime, {"note": "kunne ikke hentes"}),
         "links": soft("link-tjek", collect_links, {"available": False, "note": "kunne ikke hentes"}),
-        "lemon": soft("lemon squeezy", collect_lemon, {"available": False, "note": "kunne ikke hentes"}),
     }
     data["errors"] = list(ERRORS)
     return data
@@ -541,20 +506,6 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
     else:
         sections.append({"title": "Døde links (build_sites.py)", "headers": [], "rows": [],
                          "note": lk.get("note", "kunne ikke hentes")})
-
-    # --- Lemon Squeezy ---
-    ls = data.get("lemon") or {}
-    if ls.get("available"):
-        rows = [["Ordrer sidste 7 dage", fmt_num(ls.get("orders_last_week")), ""],
-                ["Beløb i alt", f"{(ls.get('total_cents') or 0) / 100:.2f} {ls.get('currency') or ''}".strip(), ""]]
-        dlo = delta(ls.get("orders_last_week"), dig(prev, "lemon", "orders_last_week"))
-        if dlo or (first_run and ls.get("orders_last_week")):
-            notable.append(f"{ls['orders_last_week']} Lemon Squeezy-ordrer")
-        sections.append({"title": "Lemon Squeezy", "headers": ["Måltal", "Værdi", ""], "rows": rows,
-                         "note": "Butikken kører stadig i test mode." if ls.get("test_mode") else None})
-    else:
-        sections.append({"title": "Lemon Squeezy", "headers": [], "rows": [],
-                         "note": ls.get("note", "afventer godkendelse")})
 
     # --- notabelt / emne ---
     if first_run:

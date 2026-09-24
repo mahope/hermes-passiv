@@ -44,7 +44,7 @@ NYE RAMMER FRA MADS (23. august) - se AGENTS.md for detaljerne:
 5. BLIV VED MED AT FORBEDRE: et produkt er aldrig faerdigt. Er du blokeret paa Mads konti, saa stop IKKE - forbedr det du har, eller byg det naeste der ikke er blokeret. Ventetid er arbejdstid. Prioritér i denne raekkefoelge: det der staar mellem besoegende og betaling, selve produktet, det der traekker folk til, og til sidst bredden.
 
 ENDNU NYERE RAMMER (23. august, aften):
-- BETALING: Gumroad er DROPPET. Mads har en Lemon Squeezy-konto - MoR (haandterer moms) OG med skrive-API, saa du kan selv oprette produkt og checkout naar noeglen ligger i Bitwarden (ventes 24/8). Brug ALDRIG Stripe direkte.
+- BETALING: Alt salg koerer via Stripe Payment Links (kontoen Mahope.dk) siden 24/9-2026; LS afviste kontoen, Gumroad er droppet. Kontrakt: business/planer/2026-09-24-stripe-kontrakt.md. Ingen Stripe-noegler i sider, klienter eller CI.
 - AMAZON KDP KAN ALDRIG AUTOMATISERES. Ingen offentlig API - Mads skal uploade manuelt hver gang. Planlaeg aldrig omkring en KDP-automatisering.
 - CHROME WEB STORE: Mads HAR allerede en udviklerkonto, og den har API. Ingen dev-fee-blokering.
 - HELT FRIE RAMMER: Mads siger du maa gaa videre til HELT NYE PROJEKTER, ogsaa uden for hans fagomraade.

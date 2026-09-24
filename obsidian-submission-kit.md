@@ -24,7 +24,7 @@ Submissions går gennem web-dashboardet med automatisk review på få minutter.
   https://github.com/mahope, isDesktopOnly false
 - **Licens:** MIT
 - **Pro:** licensing-endpoints findes på /api/license/activate og /api/license/validate
-  (Cloudflare Worker + KV). Kræver Lemon Squeezy-nøgle for at gå live.
+  (Cloudflare Worker + KV) på mahope.tools; salg via Stripe.
 
 ## Efter godkendelse
 

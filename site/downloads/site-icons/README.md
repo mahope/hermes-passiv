@@ -66,7 +66,7 @@ icons/
 **Free** — 3 favicon sizes (16, 32, 48) + ICO + HTML snippet.  
 **Pro ($29 one-time)** — everything: all Apple/PWA/tile icons, OG image, manifest, browserconfig.
 
-Pro requires a license key. When Mads opens Bitwarden (Lemon Squeezy API), keys are sold there. For now: `site-icons --pro` skips the check.
+Pro will require a license key from the mahope.tools license API. Sales are not open yet, so for now `site-icons --pro` skips the check.
 
 ## Tech
 

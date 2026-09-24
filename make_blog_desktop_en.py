@@ -116,7 +116,7 @@ POST = f"""<!DOCTYPE html>
     <p>Automated checks catch roughly 30–40% of accessibility issues. For full EAA conformance, pair with manual testing — see our <a href="/scan">free online scan tool</a> and <a href="/">compliance guides</a>.</p>
 
     <h2>Licensing</h2>
-    <p>The free tier is MIT-licensed and open source. Pro requires an annual license key ($19/year). License keys will be issued through Lemon Squeezy once payment integration is live. <a href="/downloads">Check the downloads page</a> for current availability.</p>
+    <p>The free tier is MIT-licensed and open source. Pro requires an annual license key ($19/year). Pro is coming — the free version is complete and MIT-licensed. <a href="/downloads">Check the downloads page</a> for current availability.</p>
 
     <p><a href="/downloads" class="btn-primary" style="display:inline-block;padding:12px 28px;margin:8px 0;text-decoration:none;border-radius:8px">⬇ Download the Desktop App →</a></p>
 

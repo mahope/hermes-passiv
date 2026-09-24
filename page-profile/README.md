@@ -30,7 +30,7 @@ python3 page_profile.py https://example.com --json | jq
 
 ## Pro features
 
-When the Lemon Squeezy payment integration is live:
+Page Profile Pro ($19/year, [buy via Stripe](https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04)) adds:
 - **Comparison mode** — diff two URLs
 - **History tracking** — see how a page changes over time
 - **PDF report** — client-ready report

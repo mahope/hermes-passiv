@@ -49,7 +49,6 @@ jobs:
         env:
           BB_ADMIN_KEY: ${{ secrets.BB_ADMIN_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          LS_API_KEY: ${{ secrets.LS_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python tools/weekly_report.py
 

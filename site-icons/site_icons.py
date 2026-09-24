@@ -42,7 +42,7 @@ LICENSE_FILE = LICENSE_DIR / "license.key"
 
 def _has_pro_license() -> bool:
     """Checks for a valid license file.  Simple hash check; real impl will use
-    Lemon Squeezy API when available."""
+    the mahope.tools license API (/api/license/validate)."""
     if not LICENSE_FILE.exists():
         return False
     content = LICENSE_FILE.read_text().strip()

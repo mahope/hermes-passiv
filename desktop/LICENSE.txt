@@ -14,6 +14,6 @@ THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-A paid Pro license (available via Lemon Squeezy) adds features such as batch
+A planned paid Pro license adds features such as batch
 scanning, automated reports, and CI/CD integration. The core scanner engine
 remains free indefinitely.
