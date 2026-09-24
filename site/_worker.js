@@ -44,6 +44,7 @@ export default {
     if (path === '/api/license/activate') return handleLicenseActivate(request, env);
     if (path === '/api/license/lookup') return handleLicenseLookup(request, env);
     if (path === '/api/license/validate') return handleLicenseValidate(request, env);
+    if (path === '/api/license/deactivate') return handleLicense(request, env, 'deactivate');
 
     // === Route: Clean Copy API (HTML → Markdown) ===
     if (path === '/api/clean-copy') return handleCleanCopyAPI(request);
@@ -843,6 +844,14 @@ async function handleLicense(request, env, mode) {
     const device = String(body.device_id || '').slice(0, 128);
     if (!device) {
       return jsonResp({ ok: false, error: 'Missing device_id.' }, 400);
+    }
+
+    // Deactivate mode: frigør enheden, så licensen kan flyttes til en ny maskine.
+    if (mode === 'deactivate') {
+      const before = (rec.devices || []).length;
+      rec.devices = (rec.devices || []).filter(d => d !== device);
+      if (rec.devices.length !== before) await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+      return jsonResp({ ok: true, deactivated: rec.devices.length !== before, devices_in_use: rec.devices.length });
     }
 
     // Validate mode: just report status without mutating anything.

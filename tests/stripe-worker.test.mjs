@@ -76,6 +76,10 @@ r = await act({ license_key: key, device_id: 'd4', product: 'deskuptime-pro' });
 ok('4. enhed afvist', r.status === 409);
 r = await act({ license_key: key, device_id: 'd2' });
 ok('kendt enhed uden produktfelt ok', r.status === 200);
+r = await call('/api/license/deactivate', { method: 'POST', body: JSON.stringify({ license_key: key, device_id: 'd3' }), headers: { 'content-type': 'application/json' } });
+ok('deaktivering frigør enhed', r.status === 200 && (await r.json()).devices_in_use === 2);
+r = await act({ license_key: key, device_id: 'd4', product: 'deskuptime-pro' });
+ok('ny enhed efter deaktivering', r.status === 200);
 // Abonnement: antal × grænse, udløb, fornyelse
 r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB'); j = await r.json();
 ok('eucomply 2 sites', j.max_devices === 2 && j.expires_at && j.expires_at.startsWith('2033'), JSON.stringify(j));
