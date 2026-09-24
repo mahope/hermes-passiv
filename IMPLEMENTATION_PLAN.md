@@ -8,7 +8,7 @@
 - `NEXT_TASK`: `1 — Fjern Lemon Squeezy-ruten helt`
 - `TASK_ATTEMPTS`: `1: 0/2`
 - `LAST_BRANCH`: `ceo/initial-research-plan`
-- `PLAN_COMMIT`: `udfyldes efter første research-commit`
+- `PLAN_COMMIT`: `10c5908`
 - `BASELINE`: `main@b3a42cf`
 - `RESULT`: Research og prioritering er færdig; produktkode er ikke ændret.
 - `GATE`: `GRØN — 41/41 Stripe-tests, 0 inline-JS-problemer; build/SEO grøn`
@@ -413,4 +413,4 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Commitlog
 
-- Research og initial plan: registrér commit-SHA efter commit.
+- Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
