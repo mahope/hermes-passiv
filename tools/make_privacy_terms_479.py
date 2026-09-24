@@ -63,10 +63,11 @@ Page Profile, URL Inspector, and the compliance scanners.</p>
 anonymous visit counts per page URL (no IP addresses stored, no cookies, no
 cross-site tracking, no third-party analytics). We cannot identify you from
 this data.</p>
-<p><strong>Purchases.</strong> Payments are handled by Lemon Squeezy as our
-merchant of record. If you buy a license, Lemon Squeezy processes your payment
-details and email address under their own privacy policy. We receive only your
-email address for license delivery.</p>
+<p><strong>Purchases.</strong> Payments are processed by Stripe. If you buy a
+license or a download, Stripe handles your card details under its own privacy
+policy; we never see them. We receive your email address from Stripe and use it
+only to deliver your license key or download links and for our accounting. The
+order email is sent through our email provider, Resend.</p>
 
 <h2>Your tools, your data</h2>
 <p>Clean Copy, DeskUptime, Page Profile and the scanners process content and
