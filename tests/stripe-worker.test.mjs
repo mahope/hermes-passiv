@@ -1,7 +1,14 @@
 // Ende-til-ende-test af Stripe-levering i site/_worker.js med falsk KV, Stripe og Resend.
 import { createHmac } from 'node:crypto';
-const workerPath = process.argv[2] || new URL("../site/_worker.js", import.meta.url).pathname;
-const worker = (await import('file:///' + workerPath.replace(/\\/g, '/'))).default;
+import { copyFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+// _worker.js er ESM, men repoet er ikke "type": "module" — kopiér til en .mjs før import.
+const src = process.argv[2] || fileURLToPath(new URL('../site/_worker.js', import.meta.url));
+const tmp = join(tmpdir(), `worker-under-test-${process.pid}.mjs`);
+copyFileSync(src, tmp);
+const worker = (await import(pathToFileURL(tmp).href)).default;
 
 const kv = new Map();
 const VISITS = {
