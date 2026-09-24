@@ -260,15 +260,14 @@
       </details>
 
       <p id="pro-buy-row">
-        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="#" rel="nofollow noopener" hidden>Buy Clean Copy Pro — $19/year</a>
-        <span id="pro-soon" class="tool-hint">Checkout opens shortly — join the
-        <a href="/#waitlist">announcement list</a> to hear first.</span>
+        <a class="btn-primary pro-buy" id="pro-buy" style="text-decoration:none;display:inline-block;" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>
+        <span class="tool-hint">Secure checkout via Stripe. Your license key arrives by email and on the thank-you page.</span>
       </p>
       <details class="faq" id="pro-activate-details">
         <summary>Already have a license key? Activate it here</summary>
         <p style="font-size:0.85rem;color:var(--color-text-muted);margin:0.5rem 0 0 0;">
-          Lost your key? <a href="/license-lookup">Look it up here</a> — you'll need
-          the order id from your receipt and the email you paid with.
+          Lost your key? It is in your order email from orders@mahoje.dk —
+          <a href="https://mahope.tools/license-lookup">here is how to find it</a>.
         </p>
         <form id="pro-form" style="margin-top:.8rem;">
           <label for="pro-key" style="font-weight:400;font-size:.9rem;">License key</label>
@@ -426,16 +425,10 @@
     });
 
     // ── Clean Copy Pro: license activation ──────────────────────────
-    // Checkout link is injected at deploy time when the Lemon Squeezy
-    // checkout exists (see PRO_CHECKOUT_URL). Until then the buy button
-    // stays hidden — no dead purchase links.
-    var PRO_CHECKOUT_URL = ''; // filled by lemon-setup output → sed placeholder
-    if (PRO_CHECKOUT_URL) {
-      var buy = document.getElementById('pro-buy');
-      buy.href = PRO_CHECKOUT_URL;
-      buy.hidden = false;
-      document.getElementById('pro-soon').hidden = true;
-    }
+    // Buy button links straight to the Stripe Payment Link (see
+    // business/planer/2026-09-24-stripe-kontrakt.md); keys are issued by
+    // the worker's /api/stripe-webhook.
+    var PRO_PRODUCT = 'clean-copy-pro';
 
     function deviceId() {
       // Non-identifying random device token, persisted locally only.
@@ -483,7 +476,7 @@
         fetch('/api/license/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ license_key: saved, device_id: deviceId() })
+          body: JSON.stringify({ license_key: saved, device_id: deviceId(), product: PRO_PRODUCT })
         }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
           .then(function (res) {
             if (!(res.s === 200 && res.j.ok && res.j.valid)) clearPro();
@@ -550,7 +543,7 @@
       fetch('/api/license/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ license_key: key, device_id: deviceId() })
+        body: JSON.stringify({ license_key: key, device_id: deviceId(), product: PRO_PRODUCT })
       }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
         .then(function (res) {
           if (res.s === 200 && res.j.ok && res.j.activated) {

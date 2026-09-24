@@ -159,22 +159,8 @@
             <li>Kunde-klar HTML-rapport</li>
             <li>Offline licens — ingen konto, ingen netværk</li>
           </ul>
-          <a href="#" id="pp-buy-live" class="btn btn-primary" style="display:none;text-decoration:none;" target="_blank" rel="noopener">Køb Pro — $19/år →</a>
-          <span id="pro-cta-da" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">Kommer snart</span>
-          <script>
-          (function(){
-            try {
-              fetch('/api/checkout?product=pp').then(function(r){return r.json();}).then(function(d){
-                if (d && d.live && d.checkout_url) {
-                  var buy = document.getElementById('pp-buy-live');
-                  var cs = document.getElementById('pro-cta-da');
-                  if (buy) { buy.href = d.checkout_url; buy.style.display = 'inline-block'; }
-                  if (cs) cs.style.display = 'none';
-                }
-              }).catch(function(){});
-            } catch(e) {}
-          })();
-          </script>
+          <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Køb Pro — $19/år →</a>
+          <span style="display:block;font-size:0.8rem;color:#94a3b8;margin-top:0.5rem;">Sikker betaling via Stripe. Licensnøglen kommer på mail.</span>
         </div>
       </div>
     </section>

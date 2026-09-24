@@ -251,21 +251,11 @@
             <li>Offline license — no account, no phoning home</li>
             <li>History tracking (free for everyone)</li>
           </ul>
-          <a href="#" id="pp-buy-live" class="btn btn-primary" style="display:none;text-decoration:none;" target="_blank" rel="noopener">Buy Pro — $19/year →</a>
-          <span id="pro-cta" class="btn btn-secondary" style="opacity:0.6;cursor:not-allowed;">Available soon</span>
+          <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Buy Pro — $19/year →</a>
+          <span style="display:block;font-size:0.8rem;color:#94a3b8;margin-top:0.5rem;">Secure checkout via Stripe. License key by email.</span>
           <script>
           (function(){
-            try {
-              fetch('/api/checkout?product=pp').then(function(r){return r.json();}).then(function(d){
-                if (d && d.live && d.checkout_url) {
-                  var buy = document.getElementById('pp-buy-live');
-                  var cs = document.getElementById('pro-cta');
-                  if (buy) { buy.href = d.checkout_url; buy.style.display = 'inline-block'; }
-                  if (cs) cs.style.display = 'none';
-                }
-              }).catch(function(){});
-            } catch(e) {}
-            // Track clicks on the Pro buy button (fires whenever it is live).
+            // Track clicks on the Pro buy button.
             try {
               document.getElementById('pp-buy-live').addEventListener('click', function(){
                 if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/page-profile', event: 'buy-click' })], { type: 'application/json' }));
@@ -273,8 +263,6 @@
             } catch(e) {}
           })();
           </script>
-          <!-- When the Lemon Squeezy key arrives, set the KV key instead of editing HTML:
-               ./tools/set-checkout-url.sh pp "LEMON_SQUEEZY_CHECKOUT_URL" -->
         </div>
       </div>
     </section>
