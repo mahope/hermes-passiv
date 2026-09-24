@@ -2735,7 +2735,7 @@ async function stripeGet(env, path) {
   const r = await fetch('https://api.stripe.com/v1/' + path, {
     headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}` },
   });
-  if (!r.ok) throw new Error(`stripe ${r.status}`);
+  if (!r.ok) { const e = new Error(`stripe ${r.status}`); e.status = r.status; throw e; }
   return r.json();
 }
 
@@ -2859,8 +2859,10 @@ async function handleStripeFulfillment(request, url, env) {
   try {
     const r = await fulfillStripeSession(env, sid);
     return jsonResp(r, r.ok ? 200 : (r.pending ? 202 : 404));
-  } catch {
-    return jsonResp({ ok: false, error: 'Could not look up the payment. Refresh in a minute.' }, 502);
+  } catch (e) {
+    // Cloudflare erstatter 502-svar med sin egen fejlside, så brug 404/503.
+    if (e && e.status === 404) return jsonResp({ ok: false, error: 'Order not found.' }, 404);
+    return jsonResp({ ok: false, error: 'Could not look up the payment. Refresh in a minute.' }, 503);
   }
 }
 
