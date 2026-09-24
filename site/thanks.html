@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanks for your purchase | Mahope tools</title>
+  <meta name="description" content="Your license key or downloads from your Mahope tools purchase.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://mahope.tools/thanks">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .thanks-wrap { max-width: 620px; margin: 0 auto; padding: 2rem 1rem; }
+    .thanks-card {
+      background: var(--color-surface-2, #f8fafc);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.6rem;
+      margin-top: 1.5rem;
+    }
+    .key-box { margin-top: 0.8rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+    .key-box code {
+      flex: 1; min-width: 220px; word-break: break-all;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 8px; padding: 0.7rem 0.8rem;
+      font-family: 'SF Mono', 'Monaco', monospace; font-size: 0.95rem;
+    }
+    .thanks-card ul { padding-left: 1.2rem; }
+    .thanks-card li { margin: 0.35rem 0; }
+    .hint { color: var(--color-text-muted); font-size: 0.88rem; }
+    #status.err { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <main class="thanks-wrap">
+    <h1 id="title">Thanks for your purchase!</h1>
+    <p id="status" class="hint" role="status">Looking up your order…</p>
+    <div class="thanks-card" id="result" hidden></div>
+    <p class="hint">We have also emailed this to you. Nothing arrived? Check spam, or reply to your Stripe receipt and Mads will sort it out.</p>
+  </main>
+  <script>
+    (function () {
+      var status = document.getElementById('status');
+      var box = document.getElementById('result');
+      var sid = new URLSearchParams(location.search).get('session_id') || '';
+      function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+      function fail(msg) { status.textContent = msg; status.className = 'hint err'; }
+      if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail('No order reference in the link. Check your email for your license key or downloads.'); return; }
+      var tries = 0;
+      function show(d) {
+        status.textContent = '';
+        document.getElementById('title').textContent = 'Thanks for buying ' + d.product_name + '!';
+        var html;
+        if (d.kind === 'license') {
+          html = '<p><strong>Your license key</strong></p><div class="key-box"><code id="key">' + esc(d.license_key) + '</code>'
+            + '<button type="button" class="btn" id="copy">Copy</button></div>'
+            + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
+            + (d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
+            + '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>';
+        } else {
+          html = '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
+            + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>';
+        }
+        box.innerHTML = html;
+        box.hidden = false;
+        var copy = document.getElementById('copy');
+        if (copy) copy.addEventListener('click', function () {
+          navigator.clipboard.writeText(d.license_key).then(function () { copy.textContent = 'Copied'; });
+        });
+      }
+      function poll() {
+        fetch('/api/stripe/fulfillment?session_id=' + encodeURIComponent(sid))
+          .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
+          .then(function (x) {
+            if (x.code === 200 && x.d.ok) return show(x.d);
+            if (x.code === 202 && tries++ < 12) { status.textContent = 'Confirming your payment…'; return setTimeout(poll, 2500); }
+            fail(x.d.error || 'We could not find this order. Check your email, or reply to your receipt.');
+          })
+          .catch(function () { if (tries++ < 5) return setTimeout(poll, 3000); fail('Network problem. Refresh this page in a moment.'); });
+      }
+      poll();
+    })();
+  </script>
+</body>
+</html>
