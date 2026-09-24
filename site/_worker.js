@@ -835,8 +835,14 @@ async function handleLicense(request, env, mode) {
       return jsonResp({ ok: false, valid: false, error: `License expired. Renew at ${home}` }, 403);
     }
     // Nøgler er bundet til ét produkt (ældre nøgler uden kendt produkt accepteres).
+    // Aktivering af en Stripe-nøgle kræver produktet, så en billig nøgle ikke
+    // kan låse et dyrere produkt op ved blot at udelade feltet.
     const wanted = String(body.product || '').trim();
-    if (wanted && STRIPE_PRODUCTS[rec.product] && wanted !== rec.product) {
+    const stripeKey = !!STRIPE_PRODUCTS[rec.product];
+    if (stripeKey && mode === 'activate' && !wanted) {
+      return jsonResp({ ok: false, error: 'Missing product.' }, 400);
+    }
+    if (wanted && stripeKey && wanted !== rec.product) {
       return jsonResp({ ok: false, valid: false, error: 'This license key is for another product.' }, 403);
     }
     const maxDevices = rec.max_devices || LICENSE_MAX_DEVICES;
@@ -857,6 +863,10 @@ async function handleLicense(request, env, mode) {
     // Validate mode: just report status without mutating anything.
     if (mode === 'validate') {
       const known = (rec.devices || []).includes(device);
+      if (!known && stripeKey) {
+        // Stripe-nøgler er kun gyldige på enheder, der er aktiveret.
+        return jsonResp({ ok: true, valid: false, reason: 'not_activated', devices_in_use: (rec.devices || []).length });
+      }
       if (!known && (rec.devices || []).length >= maxDevices) {
         return jsonResp({ ok: true, valid: false, reason: 'device_limit', devices_in_use: rec.devices.length });
       }
@@ -2726,6 +2736,7 @@ const STRIPE_PRODUCTS = {
   'eucomply-report-kit': { name: 'Client Compliance Report Kit', kind: 'download', files: ['monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
   'eucomply-template-bundle': { name: 'EUComply Complete Template Bundle', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md', 'nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md', 'nda-clause-set.pdf', 'nda-clause-set.md', 'eaa-statement-template.pdf', 'eaa-statement-template.md', 'monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
   'eu-compliance-ebook-bundle': { name: 'Complete EU Compliance E-book Bundle', kind: 'download', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
+  'support-mahope-oss': { name: 'Support for Mahope open source', kind: 'donation' },
 };
 const DOWNLOAD_TTL_DAYS = 60;
 const SUBSCRIPTION_GRACE_DAYS = 7;
@@ -2764,13 +2775,60 @@ async function verifyStripeSignature(header, rawBody, secret) {
 }
 
 /**
- * Leverer én betalt checkout-session. Idempotent: resultatet gemmes i
- * ful:<session_id>, så gentagne kald (tak-side + webhook + retries) giver
- * samme licensnøgle/downloadlink og kun én mail.
+ * Deterministisk id pr. session: HMAC(webhook-secret, "<formål>:<session>").
+ * Tak-side og webhook kan køre samtidigt (og KV er eventually consistent), så
+ * begge veje SKAL nå frem til samme licensnøgle/download-token.
+ */
+async function sessionDerivedId(env, purpose, sessionId) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.STRIPE_WEBHOOK_SECRET || env.STRIPE_SECRET_KEY),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${purpose}:${sessionId}`));
+  return hex(new Uint8Array(mac)).slice(0, 32);
+}
+
+async function ipHash(request) {
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(dailySalt() + '|ip|' + ip));
+  return hex(new Uint8Array(d));
+}
+
+/** Besked til Mads, når en betaling ikke kan leveres automatisk. */
+async function alertMads(env, subject, text) {
+  if (!env.RESEND_API_KEY) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: SALES_FROM, to: ['mads@mahope.dk'], subject: `[Stripe] ${subject}`, text,
+        tags: [{ name: 'source', value: 'stripe-alert' }] }),
+    });
+  } catch {}
+}
+
+/**
+ * Leverer én betalt checkout-session. Idempotent på tre måder:
+ *  - licensnøgle og download-token er afledt af session-id'et (samme resultat
+ *    uanset om tak-side og webhook kører samtidigt),
+ *  - en eksisterende licens-record overskrives aldrig (aktiverede enheder bevares),
+ *  - mailen sendes med Resend-idempotency-nøgle og gentages, hvis den fejlede.
  */
 async function fulfillStripeSession(env, sessionId) {
-  const cached = await env.VISITS.get(`ful:${sessionId}`);
-  if (cached) return JSON.parse(cached);
+  const cachedRaw = await env.VISITS.get(`ful:${sessionId}`);
+  if (cachedRaw) {
+    const cached = JSON.parse(cachedRaw);
+    if (cached.ok && cached.emailed === false && cached.kind !== 'donation') {
+      // Mailen fejlede sidst: hent mailadressen igen og prøv at sende.
+      try {
+        const s = await stripeGet(env, `checkout/sessions/${encodeURIComponent(sessionId)}`);
+        const email = String((s.customer_details && s.customer_details.email) || '').trim().toLowerCase();
+        if (email && await sendSaleEmail(env, email, cached, sessionId)) {
+          cached.emailed = true;
+          await env.VISITS.put(`ful:${sessionId}`, JSON.stringify(cached));
+        }
+      } catch {}
+    }
+    return cached;
+  }
 
   const s = await stripeGet(env, `checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=line_items.data.price`);
   if (s.status !== 'complete' || !['paid', 'no_payment_required'].includes(s.payment_status)) {
@@ -2779,42 +2837,55 @@ async function fulfillStripeSession(env, sessionId) {
   const item = (s.line_items && s.line_items.data && s.line_items.data[0]) || {};
   const productKey = String((item.price && item.price.lookup_key) || '').replace(/-v\d+$/, '');
   const product = STRIPE_PRODUCTS[productKey];
-  if (!product) return { ok: false, error: 'Unknown product.' };
+  if (!product) {
+    // Betalt, men vi ved ikke hvad der skal leveres — må aldrig ske i stilhed.
+    await alertMads(env, 'Betaling uden kendt produkt',
+      `Checkout-session ${sessionId} er betalt, men prisen har lookup_key "${(item.price && item.price.lookup_key) || '(ingen)'}", som workeren ikke kender. Køberen har IKKE fået noget leveret.`);
+    return { ok: false, error: 'Unknown product. Mads has been notified and will deliver manually.' };
+  }
   const qty = Math.max(1, parseInt(item.quantity || 1, 10));
   const email = String((s.customer_details && s.customer_details.email) || '').trim().toLowerCase();
   const now = new Date();
   const result = { ok: true, product: productKey, product_name: product.name, kind: product.kind };
+  const pi = s.payment_intent || null;
 
-  if (product.kind === 'license') {
+  if (product.kind === 'donation') {
+    // Intet at levere — Stripe viser selv takkebeskeden.
+  } else if (product.kind === 'license') {
     let expiresAt = null;
     if (s.subscription) {
       const sub = await stripeGet(env, `subscriptions/${encodeURIComponent(s.subscription)}`);
       const end = sub.current_period_end || (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end);
       if (end) expiresAt = new Date((end + SUBSCRIPTION_GRACE_DAYS * 86400) * 1000).toISOString();
     }
-    const key = randomHex(16);
-    const rec = {
-      status: 'active', plan: productKey, product: productKey,
-      max_devices: product.maxDevices * qty, created_at: now.toISOString(), expires_at: expiresAt,
-      devices: [], stripe_session: sessionId, stripe_subscription: s.subscription || null,
-    };
-    await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+    const key = await sessionDerivedId(env, 'lic', sessionId);
+    if (!(await env.VISITS.get(`lic:${key}`))) {
+      await env.VISITS.put(`lic:${key}`, JSON.stringify({
+        status: 'active', plan: productKey, product: productKey,
+        max_devices: product.maxDevices * qty, created_at: now.toISOString(), expires_at: expiresAt,
+        devices: [], stripe_session: sessionId, stripe_subscription: s.subscription || null, stripe_payment_intent: pi,
+      }));
+    }
     if (s.subscription) await env.VISITS.put(`lic-sub:${s.subscription}`, key);
+    if (pi) await env.VISITS.put(`lic-pi:${pi}`, key);
     if (email) {
       const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:' + email));
       await env.VISITS.put(`lic-email:${hex(new Uint8Array(d))}:${sessionId}`, key);
     }
-    Object.assign(result, { license_key: key, expires_at: expiresAt, max_devices: rec.max_devices, activate_url: product.home });
+    Object.assign(result, { license_key: key, expires_at: expiresAt, max_devices: product.maxDevices * qty, activate_url: product.home });
   } else {
-    const token = randomHex(16);
+    const token = await sessionDerivedId(env, 'dl', sessionId);
     const expires = new Date(now.getTime() + DOWNLOAD_TTL_DAYS * 86400000).toISOString();
-    await env.VISITS.put(`dl:${token}`, JSON.stringify({ product: productKey, files: product.files, expires_at: expires, session: sessionId }),
-      { expirationTtl: DOWNLOAD_TTL_DAYS * 86400 });
+    if (!(await env.VISITS.get(`dl:${token}`))) {
+      await env.VISITS.put(`dl:${token}`, JSON.stringify({ product: productKey, files: product.files, expires_at: expires, session: sessionId, payment_intent: pi }),
+        { expirationTtl: DOWNLOAD_TTL_DAYS * 86400 });
+    }
+    if (pi) await env.VISITS.put(`dl-pi:${pi}`, token, { expirationTtl: DOWNLOAD_TTL_DAYS * 86400 });
     result.downloads = product.files.map(f => ({ file: f, url: `https://mahope.tools/api/download/${token}/${encodeURIComponent(f)}` }));
     result.downloads_expire_at = expires;
   }
 
-  result.emailed = email ? await sendSaleEmail(env, email, result) : false;
+  result.emailed = product.kind === 'donation' ? true : (email ? await sendSaleEmail(env, email, result, sessionId) : false);
   await env.VISITS.put(`ful:${sessionId}`, JSON.stringify(result));
   try {
     const k = `t:all:sales:${productKey}`;
@@ -2823,7 +2894,7 @@ async function fulfillStripeSession(env, sessionId) {
   return result;
 }
 
-async function sendSaleEmail(env, to, r) {
+async function sendSaleEmail(env, to, r, sessionId) {
   if (!env.RESEND_API_KEY) return false;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let text, html;
@@ -2843,7 +2914,9 @@ async function sendSaleEmail(env, to, r) {
   try {
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json',
+        // Samme session = samme mail, også hvis tak-side og webhook sender samtidigt.
+        'Idempotency-Key': `sale-${sessionId}` },
       body: JSON.stringify({ from: SALES_FROM, to: [to], reply_to: 'mads@mahope.dk', subject: `Your ${r.product_name}`, text, html,
         tags: [{ name: 'source', value: 'stripe-sale' }] }),
     });
@@ -2859,8 +2932,8 @@ async function handleStripeFulfillment(request, url, env) {
   if (!/^cs_(live|test)_[A-Za-z0-9]{10,200}$/.test(sid)) return jsonResp({ ok: false, error: 'Invalid session.' }, 400);
   if (!env.VISITS || !env.STRIPE_SECRET_KEY) return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
   try {
-    const vh = await visitorHash(request);
-    const rlKey = `rl:ful:${vh}:${Math.floor(Date.now() / 3600000)}`;
+    // Pr. IP (ikke IP+UA), så man ikke kan omgå grænsen ved at skifte User-Agent.
+    const rlKey = `rl:ful:${await ipHash(request)}:${Math.floor(Date.now() / 3600000)}`;
     const hits = parseInt((await env.VISITS.get(rlKey)) || '0', 10);
     if (hits >= 30) return jsonResp({ ok: false, error: 'Too many attempts. Try again later.' }, 429);
     await env.VISITS.put(rlKey, String(hits + 1), { expirationTtl: 7200 });
@@ -2875,7 +2948,29 @@ async function handleStripeFulfillment(request, url, env) {
   }
 }
 
-/** POST /api/stripe-webhook — levering + forlængelse ved fornyelse. */
+/** Tilbagekald licens/download ved fuld refundering eller chargeback. */
+async function revokeForCharge(env, charge) {
+  let key = charge.payment_intent ? await env.VISITS.get(`lic-pi:${charge.payment_intent}`) : null;
+  if (!key && charge.invoice) {
+    // Abonnementer: find licensen via fakturaens abonnement.
+    const inv = await stripeGet(env, `invoices/${encodeURIComponent(charge.invoice)}`);
+    const subId = inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription);
+    if (subId) key = await env.VISITS.get(`lic-sub:${subId}`);
+  }
+  if (key) {
+    const rec = JSON.parse((await env.VISITS.get(`lic:${key}`)) || 'null');
+    if (rec && rec.status !== 'revoked') {
+      rec.status = 'revoked';
+      rec.revoked_at = new Date().toISOString();
+      await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+    }
+  }
+  const token = charge.payment_intent ? await env.VISITS.get(`dl-pi:${charge.payment_intent}`) : null;
+  if (token) await env.VISITS.delete(`dl:${token}`);
+  return !!(key || token);
+}
+
+/** POST /api/stripe-webhook — levering, forlængelse, refundering. */
 async function handleStripeWebhook(request, env) {
   if (request.method !== 'POST') return jsonResp({ ok: false, error: 'POST only' }, 405);
   if (!env.STRIPE_WEBHOOK_SECRET || !env.VISITS) return jsonResp({ ok: false, error: 'Webhook not configured.' }, 503);
@@ -2888,21 +2983,36 @@ async function handleStripeWebhook(request, env) {
   const obj = (evt.data && evt.data.object) || {};
   try {
     if (evt.type === 'checkout.session.completed' || evt.type === 'checkout.session.async_payment_succeeded') {
+      if (obj.payment_status && !['paid', 'no_payment_required'].includes(obj.payment_status)) {
+        return jsonResp({ ok: true, pending: true }); // async-betaling: leveres ved async_payment_succeeded
+      }
       const r = await fulfillStripeSession(env, obj.id);
+      // Mail fejlede: 500 får Stripe til at prøve igen senere (leveringen er idempotent).
+      if (r.ok && r.emailed === false) return jsonResp({ ok: false, error: 'Email not sent yet.' }, 500);
       return jsonResp({ ok: true, fulfilled: !!r.ok });
     }
-    if (evt.type === 'invoice.paid' && obj.subscription) {
-      const key = await env.VISITS.get(`lic-sub:${obj.subscription}`);
-      const line = obj.lines && obj.lines.data && obj.lines.data[0];
-      if (key && line && line.period && line.period.end) {
+    if (evt.type === 'invoice.paid') {
+      // Stripe API ≥ 2025-03-31 flytter abonnementet til parent.subscription_details.
+      const subId = obj.subscription || (obj.parent && obj.parent.subscription_details && obj.parent.subscription_details.subscription);
+      const key = subId ? await env.VISITS.get(`lic-sub:${subId}`) : null;
+      const ends = ((obj.lines && obj.lines.data) || []).map(l => l.period && l.period.end).filter(Boolean);
+      if (key && ends.length) {
         const rec = JSON.parse((await env.VISITS.get(`lic:${key}`)) || '{}');
-        const exp = new Date((line.period.end + SUBSCRIPTION_GRACE_DAYS * 86400) * 1000).toISOString();
-        if (!rec.expires_at || rec.expires_at < exp) {
+        const exp = new Date((Math.max(...ends) + SUBSCRIPTION_GRACE_DAYS * 86400) * 1000).toISOString();
+        if (rec.status !== 'revoked' && (!rec.expires_at || rec.expires_at < exp)) {
           rec.expires_at = exp;
           await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
         }
       }
       return jsonResp({ ok: true, renewed: !!key });
+    }
+    if (evt.type === 'charge.refunded') {
+      if (!obj.refunded) return jsonResp({ ok: true, partial_refund: true }); // delvis refundering: behold adgang
+      return jsonResp({ ok: true, revoked: await revokeForCharge(env, obj) });
+    }
+    if (evt.type === 'charge.dispute.created') {
+      const charge = obj.charge ? await stripeGet(env, `charges/${encodeURIComponent(obj.charge)}`) : null;
+      return jsonResp({ ok: true, revoked: charge ? await revokeForCharge(env, charge) : false });
     }
     return jsonResp({ ok: true, ignored: evt.type });
   } catch {
@@ -2915,8 +3025,9 @@ async function handleStripeWebhook(request, env) {
 async function handlePaidDownload(url, env) {
   const m = url.pathname.match(/^\/api\/download\/([a-f0-9]{32})\/([^/]+)$/);
   if (!m || !env.VISITS) return new Response('Not found', { status: 404 });
+  let file;
+  try { file = decodeURIComponent(m[2]); } catch { return new Response('Not found', { status: 404 }); }
   const rec = JSON.parse((await env.VISITS.get(`dl:${m[1]}`)) || 'null');
-  const file = decodeURIComponent(m[2]);
   if (!rec || !rec.files.includes(file) || rec.expires_at < new Date().toISOString()) {
     return new Response('This download link is invalid or has expired. Reply to your receipt email for a new one.', { status: 404 });
   }
