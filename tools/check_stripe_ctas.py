@@ -33,6 +33,8 @@ CATALOG = ROOT / "tools/stripe_catalog.json"
 CONTRACT = ROOT / "docs/stripe-kontrakt.md"
 WORKER = ROOT / "site/_worker.js"
 
+KNOWN_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
+
 LINK_PATTERN = re.compile(r"https://(?:buy|donate)\.stripe\.com/[A-Za-z0-9]+")
 PRICE_TOKEN = re.compile(r"\$\s?\d[\d.]*")
 PRODUCT_KEY = re.compile(r"^[a-z0-9-]+$")
@@ -330,6 +332,52 @@ def price_tokens(text: str) -> set[str]:
     return {normalize(token) for token in PRICE_TOKEN.findall(text)}
 
 
+ROUTE_PATTERN = re.compile(r"^/(?:[a-z0-9._~-]+/)*[a-z0-9._~-]*$")
+
+
+def route_file(domain: str, route: str) -> Path | None:
+    """Den byggede fil for en public route, hvis buildet ligger i dist/."""
+    if (ROOT / "dist" / domain).is_dir():
+        base = ROOT / "dist" / domain / route.strip("/")
+        for candidate in (base.with_suffix(".html"), base / "index.html", base):
+            if candidate.is_file():
+                return candidate
+    return None
+
+
+def check_routes(offers: list[dict], core_pages: object) -> list[str]:
+    """Hver købsside skal have sit domæne og sin public route, og de fire
+    centrale produktsider skal findes med den CTA de erklærer."""
+    problems: list[str] = []
+    listed = {(offer.get("path"), offer.get("product")) for offer in offers if isinstance(offer, dict)}
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        domain, route = offer.get("domain"), offer.get("route")
+        label = f"{offer.get('path')} ({offer.get('product')})"
+        if domain not in KNOWN_DOMAINS:
+            problems.append(f"{label}: ukendt domæne {domain!r}")
+        if not isinstance(route, str) or not ROUTE_PATTERN.match(route):
+            problems.append(f"{label}: ugyldig route {route!r}")
+            continue
+        if domain in KNOWN_DOMAINS and route_file(domain, route) is None:
+            problems.append(f"{label}: {domain}{route} findes ikke i dist/")
+
+    if not isinstance(core_pages, list) or len(core_pages) != 4:
+        problems.append("catalog: core_pages skal være præcis fire centrale produktsider")
+        return problems
+    for page in core_pages:
+        if not isinstance(page, dict):
+            problems.append("catalog: en central produktside er ikke et objekt")
+            continue
+        label = f"core_page {page.get('product')!r}"
+        if (page.get("path"), page.get("product")) not in listed:
+            problems.append(f"{label}: {page.get('path')} sælger ikke {page.get('product')} i inventoriet")
+        if not str(page.get("why", "")).strip():
+            problems.append(f"{label}: mangler begrundelse")
+    return problems
+
+
 def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
     products = catalog["products"]
     offers = catalog.get("offers")
@@ -361,6 +409,8 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
         tokens = sorted(price_tokens(visible))
         inventory.append({
             "path": offer["path"],
+            "domain": offer.get("domain"),
+            "route": offer.get("route"),
             "product": product,
             "price": products[product]["price"],
             "prices_on_page": tokens,
@@ -425,6 +475,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_links(catalog)
     offer_problems, inventory = check_offers(catalog)
     problems += offer_problems
+    problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
     problems += check_forbidden_claims()
     return problems, inventory
 
@@ -475,6 +526,10 @@ def self_test() -> int:
         "requires_text": ["et krav der ikke kan stå på siden"],
     }]}
     uninventoried = {**good, "offers": []}
+    wrong_domain = {**good, "offers": [
+        {**offer, "domain": "example.com"} if offer["path"] == "site/scan.html" else offer
+        for offer in good["offers"]]}
+    missing_core = {**good, "core_pages": good["core_pages"][:3]}
 
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
@@ -482,6 +537,8 @@ def self_test() -> int:
         ("ét link delt mellem to produkter", check_catalog(shared_link)),
         ("en opfundet påstand på en virkelig købsside", check_offers(unsatisfiable_offer)[0]),
         ("en dokumenteret købsside uden inventar", check_offers(uninventoried)[0]),
+        ("en købsside med forkert domæne", check_routes(wrong_domain["offers"], good["core_pages"])),
+        ("for få centrale produktsider", check_routes(good["offers"], missing_core["core_pages"])),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:

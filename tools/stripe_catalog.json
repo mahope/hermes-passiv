@@ -119,6 +119,8 @@
   "offers": [
     {
       "path": "site/clean-copy.html",
+      "domain": "cleancopy.tools",
+      "route": "/",
       "product": "clean-copy-pro",
       "prices": [
         "$19"
@@ -129,6 +131,8 @@
     },
     {
       "path": "site/da/clean-copy.html",
+      "domain": "cleancopy.tools",
+      "route": "/da/",
       "product": "clean-copy-pro",
       "prices": [
         "$19"
@@ -139,6 +143,8 @@
     },
     {
       "path": "site/clean-copy-tool.html",
+      "domain": "cleancopy.tools",
+      "route": "/clean-copy-tool",
       "product": "clean-copy-pro",
       "prices": [
         "$19"
@@ -149,6 +155,8 @@
     },
     {
       "path": "site/activate/index.html",
+      "domain": "cleancopy.tools",
+      "route": "/activate/",
       "product": "clean-copy-pro",
       "prices": [
         "$19"
@@ -159,6 +167,8 @@
     },
     {
       "path": "site/deskuptime/index.html",
+      "domain": "deskuptime.com",
+      "route": "/",
       "product": "deskuptime-pro",
       "prices": [],
       "requires_text": [
@@ -168,6 +178,8 @@
     },
     {
       "path": "site/da/deskuptime/index.html",
+      "domain": "deskuptime.com",
+      "route": "/da/",
       "product": "deskuptime-pro",
       "prices": [],
       "requires_text": [
@@ -177,6 +189,8 @@
     },
     {
       "path": "site/blog/desktop-website-monitor-cli.html",
+      "domain": "mahope.tools",
+      "route": "/blog/desktop-website-monitor-cli",
       "product": "deskuptime-pro",
       "prices": [
         "$7",
@@ -197,6 +211,8 @@
     },
     {
       "path": "site/page-profile.html",
+      "domain": "mahope.tools",
+      "route": "/page-profile",
       "product": "page-profile-pro",
       "prices": [
         "$0",
@@ -208,6 +224,8 @@
     },
     {
       "path": "site/da/page-profile.html",
+      "domain": "mahope.tools",
+      "route": "/da/page-profile",
       "product": "page-profile-pro",
       "prices": [
         "$0",
@@ -219,6 +237,8 @@
     },
     {
       "path": "site/books/compliance-bundle.html",
+      "domain": "mahope.tools",
+      "route": "/books/compliance-bundle",
       "product": "eu-compliance-ebook-bundle",
       "prices": [
         "$29"
@@ -229,6 +249,8 @@
     },
     {
       "path": "site/compliance-report.html",
+      "domain": "mahope.tools",
+      "route": "/compliance-report",
       "product": "eucomply-report-kit",
       "prices": [
         "$69",
@@ -240,6 +262,8 @@
     },
     {
       "path": "site/compliance-report.html",
+      "domain": "mahope.tools",
+      "route": "/compliance-report",
       "product": "eucomply-pro",
       "prices": [
         "$69",
@@ -251,6 +275,8 @@
     },
     {
       "path": "site/scan.html",
+      "domain": "mahope.tools",
+      "route": "/scan",
       "product": "eucomply-report-kit",
       "prices": [
         "$69"
@@ -261,6 +287,8 @@
     },
     {
       "path": "site/scan-da.html",
+      "domain": "mahope.tools",
+      "route": "/scan-da",
       "product": "eucomply-report-kit",
       "prices": [
         "$69"
@@ -271,11 +299,43 @@
     },
     {
       "path": "site/support.html",
+      "domain": "mahope.tools",
+      "route": "/support",
       "product": "support-mahope-oss",
       "prices": [],
       "requires_text": [
         "Donate via Stripe"
       ]
+    }
+  ],
+  "core_pages": [
+    {
+      "product": "clean-copy-pro",
+      "domain": "cleancopy.tools",
+      "route": "/",
+      "path": "site/clean-copy.html",
+      "why": "hovedsiden for Clean Copy: gratis værktøj mod Pro, første skridt i købsrejsen"
+    },
+    {
+      "product": "deskuptime-pro",
+      "domain": "deskuptime.com",
+      "route": "/",
+      "path": "site/deskuptime/index.html",
+      "why": "hjemmesiden for DeskUptime: lokal gratis overvågning mod online Pro-licens"
+    },
+    {
+      "product": "page-profile-pro",
+      "domain": "mahope.tools",
+      "route": "/page-profile",
+      "path": "site/page-profile.html",
+      "why": "Page Profiles eneste produktside med gratis/Pro-sammenligning"
+    },
+    {
+      "product": "eucomply-pro",
+      "domain": "mahope.tools",
+      "route": "/compliance-report",
+      "path": "site/compliance-report.html",
+      "why": "eneste side med EUComply Pro-årsabonnementet"
     }
   ]
 }

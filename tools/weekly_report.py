@@ -27,11 +27,12 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
+OFFER_CATALOG = ROOT / "tools/stripe_catalog.json"
 
 SITE = "https://mahope.tools"
 STATS_AUTH_CONTEXT = "stats-auth-v1:"
@@ -40,6 +41,17 @@ MAIL_TO = "mads@mahoje.dk"
 MAIL_FROM = "Mahope rapport <bugs@mahoje.dk>"
 
 TRAFFIC_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
+
+# Konverteringsrangeringen gælder de seneste syv *fulde* dage. Dagens time er
+# ikke et fuldt døgn og kan ikke sammenlignes med syv hele, så den tælles
+# aldrig med. Tærsklerne er kontraktens: uden dem må rapporten ikke påstå,
+# at nogen side er mest besøgt.
+RANKING_DAYS = 7
+RANKING_MIN_TOTAL_PAGEVIEWS = 30
+RANKING_MIN_PAGEVIEWS_PER_DOMAIN = 5
+# API'et leverer dage inklusive i dag, så der hentes én dag mere end
+# rankingvinduet kræver.
+RANKING_FETCH_DAYS = RANKING_DAYS + 1
 
 NPM_PACKAGES = [
     "@mahope/clean-copy",
@@ -175,6 +187,7 @@ def unknown_stats() -> dict:
         "licenses_issued": None,
         "ai_asks": None,
         "scans": None,
+        "ranking": _unknown_ranking("trafikken kunne ikke hentes"),
     }
 
 
@@ -184,13 +197,16 @@ def _window_by_domain(
     *,
     pageviews: bool,
     domain_status: dict | None = None,
-) -> tuple[dict, int | None, list, bool]:
+    start: str | None = None,
+    end: str | None = None,
+) -> tuple[dict, int | None, list, bool, dict]:
     if not isinstance(raw_by_domain, dict):
         raise RuntimeError("stats_by_domain mangler")
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days - 1)).date().isoformat()
     domains = {}
     total = 0
     aggregate = {}
+    per_domain_paths: dict[str, dict[str, int]] = {}
     complete = True
     top_key = "top_paths" if pageviews else "top_downloads"
     item_key = "path" if pageviews else "file"
@@ -211,7 +227,10 @@ def _window_by_domain(
         for day, entries in raw_domain.items():
             if not is_day(day):
                 raise RuntimeError(f"ugyldig dato i stats: {day}")
-            if day < cutoff:
+            if start and end:
+                if not (start <= day <= end):
+                    continue
+            elif day < cutoff:
                 continue
             if not isinstance(entries, dict):
                 raise RuntimeError(f"ugyldige stats for {domain}/{day}")
@@ -241,8 +260,10 @@ def _window_by_domain(
             "visits": sum(per_name.values()),
             top_key: [{item_key: name, "visits": count} for name, count in top],
         }
+        if pageviews:
+            per_domain_paths[domain] = per_name
     top_aggregate = sorted(aggregate.items(), key=lambda item: (-item[1], item[0]))[:8]
-    return domains, total if complete else None, top_aggregate, complete
+    return domains, total if complete else None, top_aggregate, complete, per_domain_paths
 
 
 def _collect_sales(data: dict) -> dict:
@@ -269,6 +290,171 @@ def _collect_sales(data: dict) -> dict:
     }
 
 
+def ranking_period(days: int = RANKING_DAYS, today: date | None = None) -> tuple[str, str]:
+    """(start, end) for de seneste `days` fulde dage.
+
+    Dagens time er ikke et fuldt døgn, så den tælles aldrig med i en
+    rangering: en side må ikke se mere trafik ud, fordi rapporten tilfældigt
+    blev kørt en tirsdag formiddag.
+    """
+    end_date = (today or datetime.now(timezone.utc).date()) - timedelta(days=1)
+    return (end_date - timedelta(days=days - 1)).isoformat(), end_date.isoformat()
+
+
+def load_offer_inventory() -> dict | None:
+    """Domæne og public route for hver købsside + de fire centrale produktsider.
+
+    Kilden er `tools/stripe_catalog.json`, som `tools/check_stripe_ctas.py`
+    holder på linje med de virkelige sider (én CTA, tilladt link, dokumenteret
+    pris). Uden filen er fallbacken *ukendt* — så påstår rapporten hverken en
+    rangering eller en liste over synlige tilbud.
+    """
+    try:
+        catalog = json.loads(OFFER_CATALOG.read_text(encoding="utf-8"))
+        product_prices = {key: product.get("price") for key, product in catalog["products"].items()}
+        offers = [offer for offer in catalog["offers"]
+                  if isinstance(offer, dict) and offer.get("domain") in TRAFFIC_DOMAINS
+                  and str(offer.get("route") or "").startswith("/")]
+        core = [page for page in catalog["core_pages"]
+                if isinstance(page, dict) and page.get("domain") in TRAFFIC_DOMAINS
+                and str(page.get("route") or "").startswith("/") and str(page.get("why") or "").strip()]
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        note_error("købsinventar", exc)
+        return None
+    if not offers or len(core) != 4:
+        note_error("købsinventar", "katalogens offers/core_pages er ufuldstændige")
+        return None
+    routes: dict[tuple[str, str], dict] = {}
+    for offer in offers:
+        key = (offer["domain"], offer["route"])
+        entry = routes.setdefault(key, {"domain": key[0], "route": key[1], "products": [], "price": None})
+        if offer["product"] not in entry["products"]:
+            entry["products"].append(offer["product"])
+        prices = {str(product_prices[product]) for product in entry["products"]
+                  if product in product_prices and product_prices[product]}
+        entry["price"] = ", ".join(sorted(prices)) or None
+    return {
+        "routes": routes,
+        "core_pages": sorted(core, key=lambda page: (page["domain"], page["route"])),
+    }
+
+
+def _fallback(inventory: dict | None, reason: str) -> dict | None:
+    """Den dokumenterede erstatning for en trafikrangering.
+
+    Den er bevidst ikke en mest-besøgte-liste: den er den faste liste over de
+    fire centrale produktsider og alle synlige Pro-tilbud, som konverterings-
+    arbejdet går efter, indtil der er verificeret trafik at rangere på.
+    """
+    if inventory is None:
+        return None
+    return {
+        "kind": "core_product_pages_and_visible_offers",
+        "is_traffic_ranking": False,
+        "reason": reason,
+        "core_pages": [
+            {"product": page["product"], "domain": page["domain"], "route": page["route"],
+             "source": page.get("path"), "why": page["why"]}
+            for page in inventory["core_pages"]
+        ],
+        "offer_pages": [dict(entry, products=sorted(entry["products"]))
+                        for entry in sorted(inventory["routes"].values(),
+                                            key=lambda entry: (entry["domain"], entry["route"]))],
+    }
+
+
+def build_ranking(
+    per_domain_paths: dict,
+    domain_status: dict,
+    *,
+    start: str,
+    end: str,
+    inventory: dict | None,
+) -> dict:
+    """Rangér de sælgende sider på de seneste syv fulde dages trafik.
+
+    `basis` er kun `traffic`, når perioden faktisk kan bære en rangering:
+    inventaret kan læses, alle fire domæner har et verificeret grundlag i
+    perioden, og hvert rangeret domæne har mindst
+    RANKING_MIN_PAGEVIEWS_PER_DOMAIN pageviews med mindst
+    RANKING_MIN_TOTAL_PAGEVIEWS i alt. Ellers er den `unknown`, og rapporten
+    falder tilbage på de centrale produktsider uden at påstå, at nogen af dem
+    er mest besøgt. En rangeret liste uden det underlag er en løgn.
+    """
+    domains: list[dict] = []
+    missing: list[str] = []
+    below: list[dict] = []
+    total = 0
+    for domain in TRAFFIC_DOMAINS:
+        paths = per_domain_paths.get(domain)
+        if not isinstance(paths, dict) or (domain_status or {}).get(domain) != "ok" or not paths:
+            missing.append(domain)
+            below.append({"domain": domain, "visits": None, "reason": "ukendt datagrundlag i perioden"})
+            continue
+        visits = sum(paths.values())
+        total += visits
+        if visits >= RANKING_MIN_PAGEVIEWS_PER_DOMAIN:
+            domains.append({"domain": domain, "visits": visits})
+        else:
+            below.append({"domain": domain, "visits": visits,
+                          "reason": f"under {RANKING_MIN_PAGEVIEWS_PER_DOMAIN} verificerede pageviews"})
+
+    ranked: list[dict] = []
+    if inventory is not None:
+        for (domain, route), entry in inventory["routes"].items():
+            visits = (per_domain_paths.get(domain) or {}).get(route)
+            if isinstance(visits, int) and visits > 0:
+                ranked.append({"domain": domain, "route": route, "visits": visits,
+                               "products": sorted(entry["products"])})
+        ranked.sort(key=lambda row: (-row["visits"], row["domain"], row["route"]))
+
+    if inventory is None:
+        reason = "købsinventaret kunne ikke læses, så de sælgende sider kan ikke identificeres"
+    elif missing:
+        reason = (f"{', '.join(missing)} har ikke et verificeret datagrundlag i de seneste syv fulde dage, "
+                  "så ingen side kan kaldes mest besøgt")
+    elif not domains:
+        reason = (f"intet domæne nåede {RANKING_MIN_PAGEVIEWS_PER_DOMAIN} verificerede "
+                  "pageviews i de seneste syv fulde dage")
+    elif total < RANKING_MIN_TOTAL_PAGEVIEWS:
+        reason = (f"kun {total} verificerede pageviews i perioden "
+                  f"(tærskel {RANKING_MIN_TOTAL_PAGEVIEWS})")
+    else:
+        reason = None
+
+    return {
+        "basis": "traffic" if reason is None else "unknown",
+        "basis_reason": reason,
+        "period": {"days": RANKING_DAYS, "kind": "last_7_full_days", "start": start, "end": end},
+        "thresholds": {"min_total_pageviews": RANKING_MIN_TOTAL_PAGEVIEWS,
+                       "min_pageviews_per_domain": RANKING_MIN_PAGEVIEWS_PER_DOMAIN},
+        "total_pageviews": total,
+        "ranked_domains": sorted(domains, key=lambda row: (-row["visits"], row["domain"]))
+                           if reason is None else [],
+        "ranked_offer_pages": ranked if reason is None else [],
+        "domains_below_threshold": below,
+        "fallback": _fallback(inventory, reason) if reason is not None else None,
+    }
+
+
+def _unknown_ranking(reason: str) -> dict:
+    """Rangering uden datagrundlag. Fail-closed: ingen rangerede sider, ingen
+    påstand om hvilke sider der er mest besøgte."""
+    start, end = ranking_period()
+    return {
+        "basis": "unknown",
+        "basis_reason": reason,
+        "period": {"days": RANKING_DAYS, "kind": "last_7_full_days", "start": start, "end": end},
+        "thresholds": {"min_total_pageviews": RANKING_MIN_TOTAL_PAGEVIEWS,
+                       "min_pageviews_per_domain": RANKING_MIN_PAGEVIEWS_PER_DOMAIN},
+        "total_pageviews": None,
+        "ranked_domains": [],
+        "ranked_offer_pages": [],
+        "domains_below_threshold": [],
+        "fallback": _fallback(load_offer_inventory(), reason),
+    }
+
+
 def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
     result = {
         "available": True,
@@ -292,6 +478,7 @@ def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
         "licenses_issued": None,
         "ai_asks": None,
         "scans": None,
+        "ranking": _unknown_ranking(error or "trafikstatus er ukendt"),
     }
     if error:
         result["error"] = error
@@ -299,7 +486,9 @@ def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
 
 
 def collect_stats(days: int = 7) -> dict:
-    url = f"{SITE}/api/stats?days={days}"
+    # Hent én dag mere end vinduet: rangeringen gælder de seneste syv *fulde*
+    # dage, og API'ets `days` tæller i dag med.
+    url = f"{SITE}/api/stats?days={max(days, RANKING_FETCH_DAYS)}"
     token = stats_bearer_token()
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     data = http_json(url, timeout=120, headers=headers)
@@ -313,18 +502,26 @@ def collect_stats(days: int = 7) -> dict:
     if not isinstance(domain_status, dict) or not any(domain_status.get(domain) == "ok" for domain in TRAFFIC_DOMAINS):
         return _unknown_traffic(sales, days, "alle domæner er ukendte")
 
+    start, end = ranking_period()
     try:
-        domains, visits, top, pages_complete = _window_by_domain(
+        domains, visits, top, pages_complete, _ = _window_by_domain(
             data.get("stats_by_domain"), days, pageviews=True, domain_status=domain_status
         )
         if not any(domains[domain]["status"] == "ok" for domain in TRAFFIC_DOMAINS):
             return _unknown_traffic(sales, days, "ingen domæner har verificerede pageviews")
-        download_domains, downloads, top_downloads, downloads_complete = _window_by_domain(
+        download_domains, downloads, top_downloads, downloads_complete, _ = _window_by_domain(
             data.get("downloads_by_domain"), days, pageviews=False, domain_status=domain_status
+        )
+        _, _, _, _, ranking_paths = _window_by_domain(
+            data.get("stats_by_domain"), days, pageviews=True, domain_status=domain_status,
+            start=start, end=end,
         )
     except RuntimeError as exc:
         note_error("api/stats trafik", exc)
         return _unknown_traffic(sales, days, str(exc))
+
+    ranking = build_ranking(ranking_paths, domain_status, start=start, end=end,
+                            inventory=load_offer_inventory())
 
     status = "ok" if pages_complete and downloads_complete else "partial"
     return {
@@ -337,12 +534,13 @@ def collect_stats(days: int = 7) -> dict:
         "downloads": downloads,
         "download_domains": download_domains,
         "top_paths": [{"path": path, "visits": count} for path, count in top],
-        "top_downloads": [{"file": file_name, "hits": count} for file_name, count in top_downloads],
+        "top_downloads": [{"file": file_name, "hits": count} for file_name, hits in top_downloads],
         "sales": sales,
         "waitlist": known_counter(data.get("waitlist")),
         "licenses_issued": known_counter(data.get("licenses_issued")) if sales.get("available") is True else None,
         "ai_asks": known_counter(data.get("ai_asks")),
         "scans": known_counter(data.get("scans")),
+        "ranking": ranking,
     }
 
 
@@ -505,6 +703,7 @@ def collect_all() -> dict:
         "links": soft("link-tjek", collect_links, {"available": False, "note": "kunne ikke hentes"}),
     }
     data["errors"] = list(ERRORS)
+    data["ranking_basis"] = ((data.get("traffic") or {}).get("ranking") or {}).get("basis", "unknown")
     return data
 
 
@@ -553,6 +752,69 @@ def fmt_num(v) -> str:
 # --------------------------------------------------------------------------
 # rapport
 # --------------------------------------------------------------------------
+def _ranking_sections(ranking: dict) -> list[dict]:
+    """Konverteringsrangeringen, ærligt mærket med sit datagrundlag.
+
+    Rækker `basis: traffic`, vises de sælgende sider i de seneste syv fulde
+    dage. Eller står der, hvorfor perioden ikke kan bære en rangering, og den
+    dokumenterede fallback — de fire centrale produktsider og inventaret af
+    alle synlige Pro-tilbud — uden at påstå, at nogen af dem er mest besøgte.
+    """
+    period = ranking.get("period") or {}
+    start, end = period.get("start") or "?", period.get("end") or "?"
+    thresholds = ranking.get("thresholds") or {}
+    basis = ranking.get("basis", "unknown")
+    title = f"Konverteringsrangering — seneste {period.get('days', RANKING_DAYS)} fulde dage ({start} til {end})"
+    headers = ["Side", "Produkt", "Besøg"]
+    fallback = ranking.get("fallback")
+    reason = ranking.get("basis_reason")
+    rows: list[list[str]] = []
+    note_parts = [
+        f"ranking_basis: **{basis}**",
+        f"Tærskel: {thresholds.get('min_total_pageviews', RANKING_MIN_TOTAL_PAGEVIEWS)} verificerede "
+        f"pageviews i perioden og {thresholds.get('min_pageviews_per_domain', RANKING_MIN_PAGEVIEWS_PER_DOMAIN)} "
+        "i hvert domæne, der rangeres. Bot-, CI- og interne tjek filtreres i workeren.",
+    ]
+
+    if basis == "traffic":
+        for row in ranking.get("ranked_offer_pages") or []:
+            rows.append([f"{row['domain']}{row['route']}", ", ".join(row.get("products") or []),
+                         str(row["visits"])])
+        below = [entry for entry in ranking.get("domains_below_threshold") or []
+                 if entry.get("visits") is not None]
+        if below:
+            note_parts.append("Under tærsklen og derfor ikke rangeret: "
+                              + ", ".join(f"{entry['domain']} ({entry['visits']})" for entry in below) + ".")
+        if not rows:
+            note_parts.append("Ingen af de inventerede købssider havde besøg i perioden.")
+        return [{"title": title, "headers": headers, "rows": rows, "note": " ".join(note_parts)}]
+
+    note_parts.append(f"Rangering på trafik er ikke mulig: {reason or 'ukendt årsag'}.")
+    if fallback is None:
+        note_parts.append("Fallbacken er også ukendt, fordi købsinventaret ikke kunne læses. "
+                          "Det er en fejl i `tools/stripe_catalog.json`, ikke et tomt resultat.")
+        return [{"title": title, "headers": headers, "rows": [], "note": " ".join(note_parts)}]
+
+    note_parts.append("Nedenfor er den dokumenterede fallback, **ikke** en mest-besøgte-rangering. "
+                      "Den bruges, indtil en periode har verificeret trafik.")
+    for page in fallback.get("core_pages") or []:
+        rows.append([f"{page['domain']}{page['route']}", page.get("product") or "", "—"])
+    sections = [{"title": title, "headers": headers, "rows": rows, "note": " ".join(note_parts)}]
+
+    offers = fallback.get("offer_pages") or []
+    if offers:
+        sections.append({
+            "title": "Synlige Pro-tilbud (inventar, ikke rangering)",
+            "headers": ["Side", "Produkt", "Pris"],
+            "rows": [[f"{offer['domain']}{offer['route']}", ", ".join(offer.get("products") or []),
+                      str(offer.get("price") or "")] for offer in offers],
+            "note": (f"{len(offers)} sider fra `tools/stripe_catalog.json`, som "
+                     "`tools/check_stripe_ctas.py` holder på linje med de virkelige købsknapper. "
+                     "Det er et inventar, ikke en rangering efter besøg."),
+        })
+    return sections
+
+
 def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[dict]]:
     """Returnerer (emne, notabelt, sektioner). Sektion = {title, headers, rows, note}."""
     week = data["iso_week"].split("-")[1]
@@ -601,6 +863,8 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
     if traffic_complete and tr.get("top_downloads"):
         sections.append({"title": "Mest hentede filer (7 dage)", "headers": ["Fil", "Hits"],
                          "rows": [[item["file"], str(item["hits"])] for item in tr["top_downloads"]], "note": None})
+
+    sections.extend(_ranking_sections(tr.get("ranking") or {}))
 
     sales = tr.get("sales") or {"available": False, "status": "unknown"}
     if sales.get("available") is True and sales.get("status") == "ok":

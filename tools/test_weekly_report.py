@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 import unittest
 from datetime import datetime, timezone
@@ -7,7 +9,7 @@ from unittest.mock import patch
 import weekly_report as report
 
 
-class WeeklyReportTests(unittest.TestCase):
+class ReportFixture:
     def setUp(self) -> None:
         report.ERRORS.clear()
         self.day = datetime.now(timezone.utc).date().isoformat()
@@ -61,6 +63,8 @@ class WeeklyReportTests(unittest.TestCase):
             "errors": [],
         }
 
+
+class WeeklyReportTests(ReportFixture, unittest.TestCase):
     def test_collects_all_domains_and_stripe_sales(self) -> None:
         with patch.object(report, "http_json", return_value=self.payload()):
             result = report.collect_stats(7)
@@ -79,7 +83,9 @@ class WeeklyReportTests(unittest.TestCase):
             result = report.collect_stats(7)
         args, kwargs = http_json.call_args
         self.assertEqual("ok", result["status"])
-        self.assertEqual("https://mahope.tools/api/stats?days=7", args[0])
+        # Rankingen gælder de seneste syv *fulde* dage, og API'ets `days`
+        # tæller i dag med, så der hentes én dag mere end vinduet.
+        self.assertEqual(f"https://mahope.tools/api/stats?days={report.RANKING_FETCH_DAYS}", args[0])
         self.assertNotIn("token=", args[0])
         self.assertEqual(f"Bearer {report.stats_bearer_token()}", kwargs["headers"]["Authorization"])
 
@@ -243,6 +249,245 @@ class WeeklyReportTests(unittest.TestCase):
         self.assertIn("alle tider", markdown)
         self.assertIn("Clean Copy Pro", markdown)
         self.assertIn("Page Profile Pro", markdown)
+
+
+class RankingTests(ReportFixture, unittest.TestCase):
+    """Rangeringen må aldrig påstå en mest-besøgt-liste uden datagrundlag."""
+
+    def ranked_payload(self, *, per_domain: dict, days: tuple[str, ...] | None = None) -> dict:
+        """Payload med trafik spredt over de seneste fulde dage.
+
+        Tallene i `per_domain` er domænets samlede pageviews i rankingvinduet
+        og skrives på vindets sidste dag, så både periodens total og
+        syvdagesoversigten bliver præcis summen.
+        """
+        start, end = report.ranking_period()
+        window = list(days or [start, end])
+        domains = {}
+        for domain in report.TRAFFIC_DOMAINS:
+            paths = per_domain.get(domain) or {}
+            domains[domain] = {
+                day: ({path: {"visits": visits, "uniques": visits} for path, visits in paths.items()}
+                      if day == window[-1] else {})
+                for day in window
+            }
+        payload = self.payload()
+        payload["stats_by_domain"] = domains
+        return payload
+
+    def test_ranking_period_is_seven_full_days_without_today(self) -> None:
+        today = datetime.now(timezone.utc).date()
+        start, end = report.ranking_period(today=today)
+        self.assertEqual((today - report.timedelta(days=7)).isoformat(), start)
+        self.assertEqual((today - report.timedelta(days=1)).isoformat(), end)
+        self.assertLess(start, end)
+        self.assertNotIn(today.isoformat(), (start, end))
+
+    def test_traffic_basis_ranks_offer_pages_by_domain_and_route(self) -> None:
+        start, end = report.ranking_period()
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 9, "/": 20, "/scan": 4},
+            "cleancopy.tools": {"/": 11},
+            "deskuptime.com": {"/": 7},
+            "bugbottle.dev": {"/": 6},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("traffic", ranking["basis"])
+        self.assertIsNone(ranking["basis_reason"])
+        self.assertEqual(57, ranking["total_pageviews"])
+        self.assertEqual(["mahope.tools", "cleancopy.tools", "deskuptime.com", "bugbottle.dev"],
+                         [row["domain"] for row in ranking["ranked_domains"]])
+        ranked = {(row["domain"], row["route"]): row["visits"] for row in ranking["ranked_offer_pages"]}
+        self.assertEqual(9, ranked[("mahope.tools", "/page-profile")])
+        self.assertEqual(11, ranked[("cleancopy.tools", "/")])
+        self.assertEqual(7, ranked[("deskuptime.com", "/")])
+        self.assertEqual(4, ranked[("mahope.tools", "/scan")])
+        # mahope.tools' forside sælger intet direkte og er derfor ikke med.
+        self.assertEqual([11, 9, 7, 4], [row["visits"] for row in ranking["ranked_offer_pages"]])
+        self.assertIsNone(ranking["fallback"])
+        self.assertEqual({"days": 7, "kind": "last_7_full_days", "start": start, "end": end},
+                         ranking["period"])
+
+    def test_todays_partial_traffic_never_enters_the_ranking(self) -> None:
+        today = datetime.now(timezone.utc).date().isoformat()
+        start, end = report.ranking_period()
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 12},
+            "cleancopy.tools": {"/": 12},
+            "deskuptime.com": {"/": 12},
+            "bugbottle.dev": {"/": 12},
+        })
+        # 500 besøg i dag må hverken give basis `traffic` med et oppblæst tal
+        # eller fortrænge de syv fulde dage.
+        payload["stats_by_domain"]["mahope.tools"][today] = {"/page-profile": {"visits": 500, "uniques": 500}}
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("traffic", ranking["basis"])
+        self.assertEqual(48, ranking["total_pageviews"])
+        ranked = {(row["domain"], row["route"]): row["visits"] for row in ranking["ranked_offer_pages"]}
+        self.assertEqual(12, ranked[("mahope.tools", "/page-profile")])
+        self.assertNotIn(today, (ranking["period"]["start"], ranking["period"]["end"]))
+        self.assertNotIn(today, (start, end))
+
+    def test_fewer_than_thirty_pageviews_is_unknown_with_documented_fallback(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 9},
+            "cleancopy.tools": {"/": 9},
+            "deskuptime.com": {"/": 9},
+            "bugbottle.dev": {"/": 2},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("unknown", ranking["basis"])
+        self.assertIn("29", ranking["basis_reason"])
+        self.assertEqual([], ranking["ranked_offer_pages"])
+        fallback = ranking["fallback"]
+        self.assertFalse(fallback["is_traffic_ranking"])
+        self.assertEqual(4, len(fallback["core_pages"]))
+        self.assertEqual(
+            ["cleancopy.tools", "deskuptime.com", "mahope.tools", "mahope.tools"],
+            [page["domain"] for page in fallback["core_pages"]],
+        )
+        self.assertTrue(all(page["why"] for page in fallback["core_pages"]))
+        self.assertTrue(any(page["product"] == "clean-copy-pro" for page in fallback["core_pages"]))
+        self.assertGreaterEqual(len(fallback["offer_pages"]), 10)
+
+    def test_domain_below_five_pageviews_is_never_ranked(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 40},
+            "cleancopy.tools": {"/": 20},
+            "deskuptime.com": {"/": 4},
+            "bugbottle.dev": {"/": 6},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("traffic", ranking["basis"])
+        # bugbottle.dev har 6 og rangeres med; deskuptime.com har 4 og gør ikke.
+        self.assertEqual(["mahope.tools", "cleancopy.tools", "bugbottle.dev"],
+                         [row["domain"] for row in ranking["ranked_domains"]])
+        below = {row["domain"]: row for row in ranking["domains_below_threshold"]}
+        self.assertEqual(4, below["deskuptime.com"]["visits"])
+        self.assertIn("5", below["deskuptime.com"]["reason"])
+
+    def test_no_domain_above_the_floor_is_unknown(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 4},
+            "cleancopy.tools": {"/": 4},
+            "deskuptime.com": {"/": 4},
+            "bugbottle.dev": {"/": 4},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("unknown", ranking["basis"])
+        self.assertIn("5 verificerede pageviews", ranking["basis_reason"])
+        self.assertIsNotNone(ranking["fallback"])
+
+    def test_uninstrumented_domain_blocks_the_ranking(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 200},
+            "cleancopy.tools": {"/": 60},
+            "deskuptime.com": {"/": 60},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("unknown", ranking["basis"])
+        self.assertIn("bugbottle.dev", ranking["basis_reason"])
+        self.assertEqual([], ranking["ranked_domains"])
+        self.assertIsNotNone(ranking["fallback"])
+
+    def test_missing_inventory_makes_the_fallback_unknown_instead_of_empty(self) -> None:
+        with patch.object(report, "load_offer_inventory", return_value=None):
+            payload = self.ranked_payload(per_domain={
+                "mahope.tools": {"/page-profile": 12},
+                "cleancopy.tools": {"/": 12},
+                "deskuptime.com": {"/": 12},
+                "bugbottle.dev": {"/": 12},
+            })
+            with patch.object(report, "http_json", return_value=payload):
+                ranking = report.collect_stats(7)["ranking"]
+            with patch.object(report, "http_json", return_value=self.payload(empty=True)):
+                failed = report.collect_stats(7)["ranking"]
+        # Uden inventar kan de sælgende sider ikke identificeres, så selv
+        # verificeret trafik må ikke give en rangering.
+        self.assertEqual("unknown", ranking["basis"])
+        self.assertIn("købsinventaret", ranking["basis_reason"])
+        self.assertEqual([], ranking["ranked_offer_pages"])
+        self.assertIsNone(ranking["fallback"])
+        self.assertEqual("unknown", failed["basis"])
+        self.assertIsNone(failed["fallback"])
+
+    def test_unknown_traffic_reports_unknown_ranking_with_fallback(self) -> None:
+        payload = self.payload()
+        payload["traffic_status"] = "unknown"
+        payload["domain_status"] = {domain: "unknown" for domain in report.TRAFFIC_DOMAINS}
+        payload["stats_by_domain"] = {domain: None for domain in report.TRAFFIC_DOMAINS}
+        payload["downloads_by_domain"] = {domain: None for domain in report.TRAFFIC_DOMAINS}
+        with patch.object(report, "http_json", return_value=payload):
+            result = report.collect_stats(7)
+        ranking = result["ranking"]
+        self.assertEqual("unknown", ranking["basis"])
+        self.assertIsNone(ranking["total_pageviews"])
+        self.assertEqual([], ranking["ranked_domains"])
+        self.assertEqual(4, len(ranking["fallback"]["core_pages"]))
+
+    def test_collect_all_exposes_top_level_ranking_basis(self) -> None:
+        with patch.object(report, "http_json", return_value=self.ranked_payload(per_domain={
+                "mahope.tools": {"/page-profile": 9}, "cleancopy.tools": {"/": 9}, "deskuptime.com": {"/": 9}})):
+            with patch.object(report, "collect_health", return_value={"status": "healthy", "kv": True, "stats": {}}), \
+                 patch.object(report, "collect_npm", return_value={}), \
+                 patch.object(report, "collect_github", return_value={}), \
+                 patch.object(report, "collect_bugreports", return_value={"available": False}), \
+                 patch.object(report, "collect_uptime", return_value={}), \
+                 patch.object(report, "collect_links", return_value={"available": False}):
+                data = report.collect_all()
+        self.assertEqual("unknown", data["ranking_basis"])
+
+    def test_report_renders_ranking_basis_and_fallback_without_claiming_visits(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 9},
+            "cleancopy.tools": {"/": 9},
+            "deskuptime.com": {"/": 8},
+            "bugbottle.dev": {"/": 2},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            traffic = report.collect_stats(7)
+        data = self.other_data(traffic)
+        subject, notable, sections = report.build_report(data, None)
+        markdown = report.render_markdown(data, None, notable, sections)
+        self.assertIn("ranking_basis: **unknown**", markdown)
+        self.assertIn("Konverteringsrangering", markdown)
+        self.assertIn("ikke** en mest-besøgte-rangering", markdown)
+        self.assertIn("cleancopy.tools/", markdown)
+        self.assertIn("mahope.tools/page-profile", markdown)
+        self.assertIn("Synlige Pro-tilbud", markdown)
+        self.assertIn("ikke en rangering efter besøg", markdown)
+        titles = [section["title"] for section in sections]
+        self.assertTrue(any("Stripe-salg" in title for title in titles), titles)
+
+    def test_ranked_report_lists_offer_pages_with_real_visits(self) -> None:
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 9, "/scan": 2},
+            "cleancopy.tools": {"/": 20},
+            "deskuptime.com": {"/": 7},
+            "bugbottle.dev": {"/": 6},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            traffic = report.collect_stats(7)
+        data = self.other_data(traffic)
+        subject, notable, sections = report.build_report(data, None)
+        markdown = report.render_markdown(data, None, notable, sections)
+        self.assertEqual("traffic", traffic["ranking"]["basis"])
+        self.assertIn("ranking_basis: **traffic**", markdown)
+        self.assertIn("| mahope.tools/page-profile | page-profile-pro | 9 |", markdown)
+        self.assertIn("| cleancopy.tools/ | clean-copy-pro | 20 |", markdown)
+        self.assertNotIn("Synlige Pro-tilbud", markdown)
+
+    def test_thresholds_are_the_documented_contract_values(self) -> None:
+        self.assertEqual(7, report.RANKING_DAYS)
+        self.assertEqual(30, report.RANKING_MIN_TOTAL_PAGEVIEWS)
+        self.assertEqual(5, report.RANKING_MIN_PAGEVIEWS_PER_DOMAIN)
+        self.assertEqual(8, report.RANKING_FETCH_DAYS)
 
 
 if __name__ == "__main__":
