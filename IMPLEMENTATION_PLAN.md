@@ -2,21 +2,20 @@
 
 ## Status
 
-- `ITERATION_ID`: `site-icons-arkiv-2026-09-26`
-- `STATE`: `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
-- `STATE` (før): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
+- `ITERATION_ID`: `clean-copy-indre-version-2026-09-26`
+- `STATE`: `Opgave 21 FÆRDIG — opgavens forudsætning var forkert: de fire Clean Copy-arkiver har haft en indholdsgate siden opgave 7 del 2 (gatestep 11 beviser byte-identisk regeneration, kilde-identiske medlemmer, version.txt og ingen død vært), og --check var grøn for alle tre. Det rigtige hul lå i check_versions.py, som læste filnavnets version for de tre Clean Copy-zip OG desktop-kildearkivet, men ikke deres egen version indeni — og alle fire bærer den. Beviset for at hullet var ældre end opgaven troede, lå i selve fixtureen: de fire arkiver bar "manifest.json": "{}". Nu erklærer alle fire produkter inner=(...), 25 → 31 mutationer, 1 → 2 negative kontroller. Fund: den nye check diagnosticerer hvad byte-sammenligning kun kan sige "afviger fra"; fixtureen måtte ikke blive stående; den anden negativ kontrol er den der beskytter de fire nye linjer mod at gøre publicerede arkiver røde.`
+- `STATE` (før): `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
+- `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `21 — de fire Clean Copy-arkiver har heller ingen indholdsgate`
-- `PLAN_COMMIT`: `4bcfb9e (merge af ceo/site-icons-arkiv)`
-- `BASELINE`: `main@cf0fae0`
-- `LAST_BRANCH`: `ceo/site-icons-arkiv`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1.`
-- `GATE` (opgave 20): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (fra 36). build_site_icons_archive --self-test: OK (8 mutationer + positiv kontrol + determinisme + 2 falsk-positive-tests). --check: grøn, 2 filer i tarballet + 2 løse filer = regeneration af site-icons/. Porten fandt 5 fejl på det gamle arkiv FØR rettelsen, heraf de to med den lukkede udbyder. test_deploy_workflow: grøn, og fejler hvis site-icons/** tages ud af filteret. Stripe-worker uændret, dist/uændret (gitignored).`
-- `DEPLOY` (ny, opgave 20): `AFVENTER 4bcfb9e 26/9 ca. 01:50` — merge til main gjort; GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne iteration rørte `site/downloads/site-icons/**`, så de tre domæners download-arkiv skal skifte indhold.
-- `VERIFICÉR DEPLOY` (ny): `site-icons-arkivet er bygget af kilden <SHA> <tidspunkt>` — GitHub Actions deployer automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
-  - `https://mahope.tools/downloads/site-icons/site-icons-1.0.0.tar.gz` skal pakkkes ud til præcis to filer, `README.md` (2581 bytes) og `site_icons.py` (15287 bytes), og **ingen** af dem må nævne `lemon`. Før dette var de 2596 og 15267 bytes, og README'en sagde at nøgler sælges i en Lemon Squeezy-konto.
-  - `https://mahope.tools/downloads/site-icons/README.md` skal være byte-identisk med `site-icons/README.md` i repoet.
-  - `/downloads/site-icons/site_icons.py` skal være byte-identisk med `site-icons/site_icons.py`.
+- `NEXT_TASK`: `22 — research-iteration: hvad nyt skal der bygges ud fra trafikdata og de åbne ❓-punkter`
+- `PLAN_COMMIT`: `f58386d (merge af ceo/clean-copy-arkiv-gate)`
+- `BASELINE`: `main@e489826`
+- `LAST_BRANCH`: `ceo/clean-copy-arkiv-gate`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1.`
+- `GATE` (opgave 21): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_versions --self-test: OK (31 mutationer fra 25, 2 negative kontroller fra 1, positiv kontrol grøn, rigtige filer grønne). Bevis på de rigtige filer: Obsidian-arkivet muteret til manifest 1.0.9 under 1.0.10-navn → check_versions melder "kunden henter gammel kode under et nyt filnavn", distribution-gaten melder blot "afviger fra en regeneration". Stripe-worker uændret, dist/uændret (gitignored).`
+- `DEPLOY` (ny, opgave 21): `AFVENTER f58386d 26/9 ca. 02:20` — merge til main gjort; GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne iteration rørte kun `tools/check_versions.py`, så **intet i `site/` eller `dist/` ændrer sig** — domænerne skal være byte-uændrede.`
+- `VERIFICÉR DEPLOY` (lukket): `site-icons-arkivet er bygget af kilden 4bcfb9e 26/9` — kørsel `36202426086` grøn. Live-indhold verificeret: `https://mahope.tools/downloads/site-icons/site-icons-1.0.0.tar.gz` (5601 bytes) pakker ud til præcis to filer, `README.md` 2581 bytes og `site_icons.py` 15287 bytes, mtime 2000-01-01, og **nul** af dem nævner `lemon`. Løse kopier `/downloads/site-icons/README.md` og `/downloads/site-icons/site_icons.py` er begge byte-identiske med `site-icons/` i repoet. Tarballets sha256 `cbafbd98e35a3fc67addf820de74108fcac22a2f2e205a4c7e4b68c2242cf88e`.
+- `GATE` (før, opgave 20): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (fra 36). build_site_icons_archive --self-test: OK (8 mutationer + positiv kontrol + determinisme + 2 falsk-positive-tests). --check: grøn, 2 filer i tarballet + 2 løse filer = regeneration af site-icons/. Porten fandt 5 fejl på det gamle arkiv FØR rettelsen, heraf de to med den lukkede udbyder. test_deploy_workflow: grøn, og fejler hvis site-icons/** tages ud af filteret. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (før, opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
 - `VERIFICÉR DEPLOY` (lukket): `check_versions læser nu de fem byggeoutput-arkivers indre version 956f19f 2026-09-26` — kørsel `36201588862` grøn. Verificér **indhold**: de fire filer kunden henter skal være byte-uændrede, fordi committen ikke rørte dem.
 - `DEPLOY` (ny): `DEPLOY OK 956f19f 26/9` — kørsel `36201588862`: `gate` grøn (36 steps) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Intet i `site/` eller `dist/` blev rørt af committen, så domænerne er uændrede. Live-indhold verificeret på de tre publicerede byggeoutput-arkiver: `eaa_scanner-1.2.0-py3-none-any.whl`, `mahope-eaa-scanner-1.2.0.tgz` og `site-icons/site-icons-1.0.0.tar.gz` er hvert især **byte-identiske** med repoet (sha256 `0fc4b3ba…`, `d9e74ffb…`, `882ab49d…`). Se Deployloggen.
@@ -1375,27 +1374,59 @@ mutationer) + `python3 tools/quality_gate.py` (GRØN, 38 steps fra 36). Porten
 fandt den rigtige fejl på de rigtige filer *før* nogen blev rettet: 5 fund på det
 gamle arkiv, heraf de to med den lukkede udbyder.
 
-### 21. UFÆRDIG — de fire Clean Copy-arkiver har heller ingen indholdsgate
+### 21. FÆRDIG (implementering `ceo/clean-copy-arkiv-gate`, `f58386d`) — de fire sidste arkiver erklærer deres version indeni, men ingen læste den
 
-**Begrundelse:** Opgave 19 dækkede de fem byggeoutput-arkiver. De fire øvrige
-publicerede arkiver er ikke byggeoutput, men de er heller ikke sammenlignet med
-kilden af `check_versions.py` — de er kun kontrolleret på *filnavnets* version.
-Og de indeholder hver især en `manifest.json` med en version:
+**RESULT:** Opgaven troede, de fire Clean Copy-arkiver manglede en indholdsgate.
+De har haft en siden opgave 7 del 2 — `check_clean_copy_distribution.py` er
+gatestep 11 og beviser at hvert publiceret arkiv er en *byte-identisk*
+regeneration af kilden, at hvert medlem er kilde-identisk, at `version.txt`
+nævner udgaven, og at intet arkiv indeholder den døde vært. `--check` i
+`build_clean_copy_archives.py` er grøn for alle tre. Begge
+acceptkriterier var altså allerede opfyldt, og det er niende gang i dette
+repo at noget, der så komplet ud, viser sig at være teater — her i planens
+egen opgavebeskrivelse.
 
-- `clean-copy-v1.5.3.zip` → `manifest.json` (fra `extension-clean-copy/`)
-- `clean-copy-firefox-v1.5.3.zip` → `manifest.json` (fra `extension-clean-copy-firefox/`)
-- `clean-copy-obsidian-v1.0.10.zip` → `manifest.json` + `version.txt`
-- `eaa-scanner-desktop-src-1.3.3.zip` → dækket af opgave 18
+**Det rigtige hul var et andet sted, og det var ældre end opgaven troede.**
+`check_versions.py` læste *filnavnets* version for de tre Clean Copy-zip og
+ikke deres `manifest.json`, og gjorde det samme for desktop-kildearkivet.
+Alle fire bærer den version de lover indeni — det er den kunden læser, når de
+unzipper eller installerer. Beviset for at hullet var ældre, lå i selve
+fixtureen: de fire arkiver bar `"manifest.json": "{}"` — en fil uden version,
+fordi porten aldrig læste den.
 
-Opgave 14 fandt præcis denne fejlform i `manifest.json` vs
-`obsidian-plugin/manifest.json` vs arkivnavnet. `extension-clean-copy/manifest.json`
-siger i dag 1.5.3, men intet beviser at *zippen* gør. `tools/build_clean_copy_archives.py`
-findes allerede, så arkiverne er reproducerbare bygget — spørgsmålet er kun om
-`--check` er grøn.
+Nu erklærer alle fire produkter `inner=(...)`. Selvstesten går 25 → 31
+mutationer og 1 → 2 negative kontroller.
 
-**Acceptkriterier:** En `--check`-kørsel af `build_clean_copy_archives.py` er grøn
-for alle tre, eller forskellen er fundet og rettet. `version.txt` i
-obsidian-arkivet matcher `obsidian-plugin/manifest.json`.
+**Fund 1 — den nye check fanger noget byte-sammenligning ikke kan.** Jeg
+muterede det rigtige Obsidian-arkiv, så `manifest.json` sagde 1.0.9 under et
+1.0.10-navn. `check_clean_copy_distribution` siger "afviger fra en
+regeneration af obsidian-plugin" — sandt, men uden at sige *hvad* den burde
+være. `check_versions` siger nu: `clean-copy-obsidian → manifest.json siger
+1.0.9, mens kilden siger 1.0.10 — kunden henter gammel kode under et nyt
+filnavn`. Det er den diagnose en udgiver kan handle på.
+
+**Fund 2 — fixtureen måtte ikke blive stående.** Positiv kontrol blev kørt
+**før** de nye mutationer, fordi en check der slet ikke læser arkivet lader
+fixtureen med `{}` være grøn. Den holdt ikke: de fire `{}` er nu erstattet af
+de rigtige versioner, så porten er nødt til at læse dem.
+
+**Fund 3 — den anden negativ kontrol er den der beskytter de fire nye
+linjer.** Uden den ville hver af de fire `inner=` kunne være *for* stram og
+gøre et publiceret arkiv rødt i stedet for grønt, og den eneste måde at opdage
+det på var at læse dem. Den bekræfter at et zip med en `manifest.json` uden
+`version` er grønt, når porten ikke har bedt om den.
+
+**Kendte begrænsninger:** `version.txt` i de tre Clean Copy-arkiver læses
+ stadig ikke af `check_versions` — notationen er en ren tekstlinje
+ (`clean-copy 1.5.3`) uden nogen nøgle, og `check_clean_copy_distribution`
+ dækker den. `site/extension-zips/`-kopierne af Chrome-arkivet kontrolleres
+ ikke i `dist/`, fordi ingen af de to domæner bygger den mappe; de dækkes af
+ regenerationstjekket.
+
+**Gate:** `python3 tools/check_versions.py --self-test` (OK, 31 mutationer +
+2 negative kontroller + positiv kontrol + rigtige filer) +
+`python3 tools/quality_gate.py` (GRØN, 38 steps uændret).
+
 
 ## ❓ Til Mads
 

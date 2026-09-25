@@ -25,6 +25,12 @@ for hvert produkt, og fire checks der alle kan fejle:
    arkivfamilier på `site/downloads.html` skal være den kanoniske version, og
    siden skal have en reference på den. Ellers lover siden en version kunden
    ikke kan hente.
+5. **Arkivet erklæver den samme version *indeni*.** Filnavnet er det kunden
+   *ser*; `manifest.json`/`package.json` i arkivet er det kunden *læser*, når
+   de unzipper eller installerer. Opgave 21 sluttede de sidste fire produkter
+   til denne check: de tre Clean Copy-zip og desktop-kildearkivet erklærer
+   alle siden versionen indeni, men var kun kontrolleret på filnavnet — så
+   "1.0.10" i navnet og 1.0.9 i manifesten var et grønt resultat.
 
 Derudover holder porten fast i, at der findes *én* kilde pr. produkt:
 `manifest.json` og `versions.json` i repo-roden er forbudt, fordi de er de to
@@ -100,12 +106,26 @@ PRODUCTS: tuple[Product, ...] = (
         artifacts=(
             ("site/downloads/clean-copy-v*.zip", "site/downloads/clean-copy-v{version}.zip"),
         ),
+        # Opgave 21. Chrome-arkivet bærer sin egen `manifest.json` i roden, så
+        # det er den fil kunden unzipper og læser versionen i. Udden denne linje
+        # var kun *filnavnet* kontrolleret, og det er filnavnet der skal være
+        # mistænkt: et zip med gammel kode under et nyt navn hedder 1.5.3, men
+        # siger 1.5.2 indeni, og kun den der læser begge dele kan se det.
+        inner=(
+            ("site/downloads/clean-copy-v*.zip", "manifest.json", "version"),
+        ),
     ),
     Product(
         key="clean-copy-firefox",
         canonical="extension-clean-copy-firefox/manifest.json",
         artifacts=(
             ("site/downloads/clean-copy-firefox-v*.zip", "site/downloads/clean-copy-firefox-v{version}.zip"),
+        ),
+        # Opgave 21, som for chrome. Firefox-arkivet har sin egen rodmappe med
+        # egen `manifest.json` (ikke en kopi af Chromes — den har egne nøgler),
+        # og det er den kunden læser.
+        inner=(
+            ("site/downloads/clean-copy-firefox-v*.zip", "manifest.json", "version"),
         ),
     ),
     Product(
@@ -114,6 +134,13 @@ PRODUCTS: tuple[Product, ...] = (
         mirrors=(("obsidian-plugin/versions.json", "versions.json"),),
         artifacts=(
             ("site/downloads/clean-copy-obsidian-v*.zip", "site/downloads/clean-copy-obsidian-v{version}.zip"),
+        ),
+        # Opgave 21. Obsidian læser `manifest.json` fra zippen ved installation,
+        # så den skal sige præcis den udgave filnavnet lover. Opgave 14 fandt
+        # fejlen i den anden ende (rod-`manifest.json` mod
+        # `obsidian-plugin/manifest.json`); den her er den tredje.
+        inner=(
+            ("site/downloads/clean-copy-obsidian-v*.zip", "manifest.json", "version"),
         ),
     ),
     Product(
@@ -132,6 +159,13 @@ PRODUCTS: tuple[Product, ...] = (
                 "site/downloads/eaa-scanner-desktop-src-*.zip",
                 "site/downloads/eaa-scanner-desktop-src-{version}.zip",
             ),
+        ),
+        # Opgave 21. Kildearkivet fra opgave 18 lægges *inde i* zippen, så
+        # `package.json` — den samme fil porten bruger som sandheden — er
+        # til stede der. Det er det stærkeste bevis på at arkivet er den kode,
+        # der er bygget af `desktop/`.
+        inner=(
+            ("site/downloads/eaa-scanner-desktop-src-*.zip", "package.json", "version"),
         ),
     ),
     Product(
@@ -513,10 +547,28 @@ FIXTURE: dict[str, object] = {
     "page-profile/pyproject.toml": '[project]\nname = "page-profile"\nversion = "1.2.0"\n',
     "page-profile/page_profile.py": '__version__ = "1.2.0"\n',
     "site-icons/pyproject.toml": '[project]\nname = "site-icons"\nversion = "1.0.0"\n',
-    "site/downloads/clean-copy-v1.5.3.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
-    "site/downloads/clean-copy-firefox-v1.5.3.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
-    "site/downloads/clean-copy-obsidian-v1.0.10.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
-    "site/downloads/eaa-scanner-desktop-src-1.3.3.zip": {"format": "zip", "files": {"package.json": "{}"}},
+    # Opgave 21: de fire arkiver her bar `{}` som deres indre
+    # `manifest.json`/`package.json` — altså en fil *uden* version, fordi
+    # `inner=()` gjorde at porten aldrig læste den. Da deklarationen kom, måtte
+    # fixture ikke blive stående: ellers ville den positive kontrol gå rød, og
+    # det ville være det eneste bevis på at den nye check gør noget. Derfor
+    # ligger de rigtige versioner i dem nu, ligesom i de publicerede arkiver.
+    "site/downloads/clean-copy-v1.5.3.zip": {
+        "format": "zip",
+        "files": {"manifest.json": json.dumps({"name": "Clean Copy", "version": "1.5.3"})},
+    },
+    "site/downloads/clean-copy-firefox-v1.5.3.zip": {
+        "format": "zip",
+        "files": {"manifest.json": json.dumps({"name": "Clean Copy", "version": "1.5.3"})},
+    },
+    "site/downloads/clean-copy-obsidian-v1.0.10.zip": {
+        "format": "zip",
+        "files": {"manifest.json": json.dumps({"id": "clean-copy", "version": "1.0.10"})},
+    },
+    "site/downloads/eaa-scanner-desktop-src-1.3.3.zip": {
+        "format": "zip",
+        "files": {"package.json": json.dumps({"name": "desktop", "version": "1.3.3"})},
+    },
     "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl": {
         "format": "zip",
         "files": {
@@ -736,6 +788,39 @@ def scenarios() -> list[tuple[str, dict[str, object], str]]:
         {**FIXTURE, "site/downloads/mahope-eaa-scanner-1.2.0.tgz": b"\x1f\x8b\x08\x00" + b"\x00" * 40},
         "kan ikke åbnes som arkiv",
     ))
+    # Opgave 21: de fire arkiver der først nu erklærer en indre version. Én
+    # mutation pr. fejlform, så en check der ikke virker ikke kan gemmes bag de
+    # andre tre.
+    out.append((
+        "manifest.json i Chrome-zippen siger 1.5.2",
+        edit_inside(FIXTURE, "site/downloads/clean-copy-v1.5.3.zip", "manifest.json", '"1.5.3"', '"1.5.2"'),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "manifest.json i Firefox-zippen siger 1.5.2",
+        edit_inside(FIXTURE, "site/downloads/clean-copy-firefox-v1.5.3.zip", "manifest.json", '"1.5.3"', '"1.5.2"'),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "manifest.json i Obsidian-zippen siger 1.0.9",
+        edit_inside(FIXTURE, "site/downloads/clean-copy-obsidian-v1.0.10.zip", "manifest.json", '"1.0.10"', '"1.0.9"'),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "package.json i desktop-kildearkivet siger 1.3.0",
+        edit_inside(FIXTURE, "site/downloads/eaa-scanner-desktop-src-1.3.3.zip", "package.json", '"1.3.3"', '"1.3.0"'),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "manifest.json mangler i Obsidian-zippen",
+        drop_member(FIXTURE, "site/downloads/clean-copy-obsidian-v1.0.10.zip", "manifest.json"),
+        "har ingen manifest.json",
+    ))
+    out.append((
+        "package.json i desktop-kildearkivet har ingen version",
+        edit_inside(FIXTURE, "site/downloads/eaa-scanner-desktop-src-1.3.3.zip", "package.json", ', "version": "1.3.3"', ""),
+        "har ingen aflæselig version",
+    ))
     return out
 
 
@@ -761,7 +846,34 @@ def negative_controls() -> list[tuple[str, dict[str, object], tuple[Product, ...
             "files": {"package/cli.js": "// ingen versionserklæring her\n"},
         },
     }
-    return [("arkiv uden indre versionserklæring, erklæret som sådan", bare_tgz, no_inner)]
+    controls = [("arkiv uden indre versionserklæring, erklæret som sådan", bare_tgz, no_inner)]
+
+    # Opgave 21: samme fælde for de fire nye erklæringer. Et zip med en
+    # `manifest.json` *uden* `version` er ikke en fejl, hvis porten ikke har
+    # bedt om den — ellers ville tilføjelsen af `inner` gøre de fire
+    # publicerede arkiver røde i stedet for grønne, og så ville den
+    # eneste måde at finde ud af det være at læse dem.
+    no_inner_archives = tuple(
+        replace(product, inner=())
+        if product.key in ("clean-copy-chrome", "clean-copy-firefox", "clean-copy-obsidian", "eaa-scanner-desktop")
+        else product
+        for product in PRODUCTS
+    )
+    version_less = {
+        **FIXTURE,
+        "site/downloads/clean-copy-v1.5.3.zip": {
+            "format": "zip",
+            "files": {"manifest.json": json.dumps({"name": "Clean Copy"})},
+        },
+        "site/downloads/eaa-scanner-desktop-src-1.3.3.zip": {
+            "format": "zip",
+            "files": {"package.json": json.dumps({"name": "desktop"})},
+        },
+    }
+    controls.append(
+        ("zip uden versionsfelt i manifesten, erklæret som sådan", version_less, no_inner_archives)
+    )
+    return controls
 
 
 def self_test() -> int:
