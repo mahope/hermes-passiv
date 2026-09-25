@@ -3,15 +3,15 @@
 ## Status
 
 - `ITERATION_ID`: `license-worker-gaps-2026-09-25`
-- `STATE`: `I GANG`
-- `ACTIVE_TASK`: `4F`
-- `NEXT_TASK`: `4F — Luk tre huller i licens-workeren`
-- `TASK_ATTEMPTS`: `4F: 1/2`
+- `STATE`: `FÆRDIG`
+- `ACTIVE_TASK`: `INGEN`
+- `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter`
+- `TASK_ATTEMPTS`: `4F: 1/1`
 - `LAST_BRANCH`: `ceo/close-license-worker-gaps`
-- `PLAN_COMMIT`: `fa1e830`
+- `PLAN_COMMIT`: `4ad9457`
 - `BASELINE`: `main@fa1e830`
-- `RESULT`: Iterationen er startet på `ceo/close-license-worker-gaps`. Opgave 4F er markeret `I GANG`; endelig resultat og gate-resultat skrives efter implementeringen.
-- `GATE`: `I KØRSEL — Worker-test, node syntax, build/sitemap, SEO, Stripe-worker og inline-JS skal være grønne før merge.`
+- `RESULT`: Opgave 4F er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 var queued ved planopdatering.
+- `GATE`: `GRØN — build/sitemap 4/4, SEO 308/0, node --check, Stripe-worker 57/57, inline JS 297/0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -197,7 +197,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 page-profile/test_page_profile.py` plus hele kvalitetsgaten.
 
-### 4F. I GANG — Luk tre huller i licens-workeren
+### 4F. FÆRDIG — Luk tre huller i licens-workeren
 
 **Begrundelse:** Licens-audit 2026-09-25 af `site/_worker.js`.
 
@@ -215,6 +215,15 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Stripe-worker-testens antal tests falder ikke.
 
 **Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+
+**Implementeret denne iteration:**
+
+- `fulfillStripeSession` gemmer `lic-invoice:<invoice>`; `invoice.paid` udtrækker PaymentIntents fra både eventens `payments` og en ekspanderet faktura og gemmer `lic-pi:<payment_intent>`. `revokeForCharge` bruger disse koblinger før sin subscription-fallback.
+- Licenshandlerens uventede fejl er 503 i stedet for 500, uden at afsløre stack traces.
+- `clean-copy-pro` bruger `https://cleancopy.tools/activate/`. Siden er indexérbar, ligger i Clean Copy-sitemap og har instruktioner til Chrome/Edge/Brave, Firefox, Obsidian og webværktøjet.
+- Worker-testen dækker 57 assertions, inklusive abonnement uden session-payment-intent, refundering, 503 og den nye aktiverings-URL.
+
+**Commit:** `4ad9457` — `Ret licensrefunding og Clean Copy-aktivering`.
 
 ### 4A. FÆRDIG — Gør trafikdata domæneopdelt og troværdige
 
@@ -533,6 +542,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25T14:13:40Z: `VERIFICÉR DEPLOY: licensrefunding, 503-fejl og /activate/ 4ad9457 2026-09-25T14:13:40Z` — GitHub Actions-run `36146060595` var queued ved denne planopdatering.
 - 2026-09-25: `DEPLOY OK ea4e6c3` — GitHub Actions-run `36142200546` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig sitemap-kontrol bekræftede alle tre domæner; live 1.2.0-script, tarball, EN/DA-licenstekst og 404 på det gamle 1.1.0-arkiv blev verificeret. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK 9569979` — GitHub Actions-run `36133997658` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 956997979390f5b0b28e3c8359350e581937e7fb` bekræftede alle tre domæner; live `/stats` viste den nye token-prompt uden tredjepartsscript, og det gamle URL-token gav 401. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK b7c8a64` — GitHub Actions-run `36099316657` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit b7c8a64` bekræftede byte-identiske robots/sitemap/build-info og alle 288 sitemap-sider; CI meldte kun eksisterende Node 20-/Ubuntu 26-advarsler.
@@ -545,6 +555,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Commitlog
 
+- Licensrefunding og Clean Copy-aktivering: `4ad9457` — `Ret licensrefunding og Clean Copy-aktivering`.
 - Stripe-kompatibel Page Profile-licens: `ea4e6c3` — `Ret Page Profile Stripe-licensen`.
 - Domæneopdelt trafik- og salgsledger: `df25c8b` — `Gør trafikdata domæneopdelt og troværdige`.
 - Fail-closed review-rettelser: `9569979` — `Gør trafikledgeren fail-closed`.
