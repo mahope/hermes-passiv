@@ -1,7 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
-Sitemap: https://hermes-passiv.pages.dev/sitemap.xml
-
-# Machine-readable tool catalog for AI assistants
-# https://hermes-passiv.pages.dev/llms.txt
+Sitemap: https://mahope.tools/sitemap.xml

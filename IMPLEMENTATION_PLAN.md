@@ -2,21 +2,21 @@
 
 ## Status
 
-- `ITERATION_ID`: `truthful-deskuptime-copy-2026-09-25`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
+- `ITERATION_ID`: `correct-sitemaps-domains-2026-09-25-r2`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `3 — Gør robots, sitemap og domænedrift korrekt`
 - `NEXT_TASK`: `3 — Gør robots, sitemap og domænedrift korrekt`
-- `TASK_ATTEMPTS`: `2: 1/2`
-- `LAST_BRANCH`: `ceo/truthful-deskuptime-copy`
-- `PLAN_COMMIT`: `41758af`
-- `BASELINE`: `main@7aa7b42`
-- `RESULT`: Opgave 2 er færdig; fire public sider og den generative DA-kilde skelner nu korrekt mellem lokal overvågning og online Pro-licensdata, uden ændringer i Worker eller licenslogik.
-- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 0 inline-JS-problemer, 5/5 copy-kilder, 5/5 semantiske probes og uafhængig review uden P1/P2-fund`
+- `TASK_ATTEMPTS`: `3: 2/2`
+- `LAST_BRANCH`: `ceo/correct-sitemaps-domains`
+- `PLAN_COMMIT`: `df8dcd2`
+- `BASELINE`: `main@df8dcd2`
+- `RESULT`: Lokal implementering er grøn: 251 unikke mahope.tools-ruter, 32 Clean Copy, 5 DeskUptime og 7 lokale BugBottle; routeinventaret er uafhængigt af dist, CI's pinned `auditedwp`-commit `5e244dcff242352cd5be31a55ca5f7d260f7e520` er også verificeret fra en ren checkout, og den separate `mahope/bugbottle`-kilde matcher live på commit `07828a1d605383c58cf44416447e0497e91fdac3`. De tre Pages-domæner afviger stadig fra lokal build, fordi dette commit endnu ikke er merged/deployet.
+- `GATE`: `GRØN — 11/11 sitemap-tests, 3/3 live-checker-tests, deterministisk routeinventory, build, 4/4 domænecheckere, SEO 307 sider/0 fund, Stripe 43/43, inline JS 296/0, workflow YAML/syntax`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
-- **Blokerede opgaver:** ingen.
+- **Blokerede opgaver:** Opgave 3 afventer kun post-merge live-verificering af de tre Pages-domæner; BugBottle-kildeejerskabet er nu dokumenteret read-only og kræver ingen ny kildeændring.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
 - `../auditedwp` er en ekstern buildkilde og må ikke ændres.
-- Secrets, `.env*`, produktionsdatabaser og udadvendte writes er forbudte. Eneste eksplicitte undtagelse er den kontraktstyrede merge/push til `main` i dette repo, som må deploye de fire sites; ingen anden extern handling må udføres.
+- Secrets, `.env*`, produktionsdatabaser og udadvendte writes er forbudte. Eneste eksplicitte undtagelse er den kontraktstyrede merge/push til `main` i dette repo, som må deploye de tre Cloudflare-Pages-domæner; `bugbottle.dev` er read-only og ejes af `mahope/bugbottle`.
 
 ### Kanonisk state-protokol
 
@@ -27,7 +27,7 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 Denne gate er den obligatoriske minimum før merge til `main`:
 
 ```bash
-python3 build_sites.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py
+python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py
 ```
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
@@ -70,7 +70,10 @@ Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-
 
 - Robots og sitemap genereres korrekt domænespecifikt for Clean Copy og DeskUptime.
 - `mahope.tools/sitemap.xml` indeholder `https://mahope.tools/` to gange, fordi både `index.html` og `free-tools.html` bliver canonical root: `build_sites.py:126-139`, `dist/mahope.tools/sitemap.xml:3-4`.
-- Live `bugbottle.dev/sitemap.xml` afviger fra det nuværende lokale buildoutput. Dette skal diagnosticeres som deployment-drift, ikke ved at redigere `dist/`.
+- Live `bugbottle.dev/sitemap.xml` afviger fra det nuværende lokale buildoutput. Dette er diagnosticeret som deployment-ejerskabsdrift, ikke ved at redigere `dist/`.
+- `bugbottle.dev` serverer 40 routes fra `mahope/bugbottle` via Dokploy på commit `07828a1d605383c58cf44416447e0497e91fdac3` og viser BugBottle 1.0.1. Denne repo bygger 7 routes fra v0.4.0-landingmateriale; `bugbottle-dev.pages.dev` matcher den lokale shadow-build. Deploy-workflowen udgiver derfor ikke denne forældede shadow; den separate `--all` livekontrol matcher den autoritative kilde read-only.
+- Den nye lokale gate finder kun selv-referencede, indexerede HTML-ruter; noindex, de fire erklærede 404/search-ruter, Clean Copy-aliaserne og Workerens deklarerede redirectkilder er ekskluderet og dækket af negative tests.
+- Hver build publicerer `build-info.json` med domæne, commit, routeantal og SHA-256 af sitemap/routes. Live-gaten kræver byte-identiske robots/sitemap/build-info og derefter 200 + self-canonical + indexerbar status for hver sitemap-URL.
 - Kilde-scripts som `tools/gen_sitemap.py`, `tools/fix_sitemap_redirects.py`, `tools/full_site_check.py`, `health_check.py` og `verify_live.sh` er hardcoded til det gamle `hermes-passiv.pages.dev`.
 - Den seneste build registrerer 18 unresolved references: Clean Copy 1, DeskUptime 6, BugBottle 2, mahope.tools 9. `build_sites.py` tæller dem men returnerer alligevel succes: `build_sites.py:1181-1195`.
 - Deploy-CI kører build og SEO-check, men ikke Stripe-worker-test, inline-JS-test eller broken-reference-gate: `.github/workflows/deploy-sites.yml:49-83`.
@@ -130,7 +133,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_product_copy.py` plus hele kvalitetsgaten.
 
-### 3. UFÆRDIG — Gør robots, sitemap og domænedrift korrekt
+### 3. I GANG — Gør robots, sitemap og domænedrift korrekt
 
 **Begrundelse:** Fire domæner skal have én kanonisk, komplet og live-matchende SEO-overflade. Den nuværende mahope.tools-dublet og BugBottle-driften kan skade indeksering.
 
@@ -138,10 +141,20 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 - Ret den dublede `https://mahope.tools/` i `build_sites.py` uden at slette en reel side.
 - Gør robots/sitemap-kontrollen domæne-aware og automatisér den i kvalitetsgaten med `tools/check_sitemaps.py`.
-- Tilføj `tools/check_live_sitemaps.py`, som verificerer de fire live domæners robots, sitemap, canonicale URL'er og commit-version read-only efter deploy.
+- Tilføj `tools/check_live_sitemaps.py`, som som standard verificerer de tre Pages-ejede live domæner og med `--all` også den separate BugBottle-kilde read-only: robots, sitemap, canonicale URL'er, sider og commit-version.
 - Definer routeinventaret eksplicit: hver indexerbar, self-referenced canonical-HTML-rute skal forekomme én gang; `404.html`, generated search-ruter, redirect-only sider og dokumenterede aliaser skal udelukkes. Et alias skal enten have en reel canonical/redirect-strategi eller eksplicit noindex.
 - Opdatér gamle hardcoded sitemap/health-check-scripts, så de ikke peger på `hermes-passiv.pages.dev`.
 - Diagnosticér hvorfor live BugBottle-output afviger fra source-buildet; ret source/CI, ikke `dist/`.
+
+**Implementeret denne iteration:**
+
+- `free-tools.html` er en reel, self-canonical `/free-tools`-side; mahope.tools-hjemmesiden kommer ikke længere fra en alias-kopi. Sitemap, llms og search-index filtrerer noindex og ikke-self-canonical sider.
+- `tools/route_inventory.json` er den uafhængige, eksplicitte inventory med 32 Clean Copy-, 5 DeskUptime-, 7 lokale BugBottle- og 251 mahope.tools-ruter. `build_sites.py` og `tools/check_sitemaps.py` afviser nye, manglende eller slash-ekvivalente ruter; 11 negative/positive tests dækker domæne, duplikater, inventory, noindex, redirects og commit.
+- `tools/check_live_sitemaps.py` verificerer de tre Pages-ejede domæner mod lokale bytes, commit, title, JSON-LD, HTTP `X-Robots-Tag` og alle sitemap-sider. `--all` kræver en disposable, read-only BugBottle-kilde med genererede robots/sitemap og verificerer dens Git-commit.
+- Den separate `mahope/bugbottle`-kilde er diagnosticeret read-only på commit `07828a1d605383c58cf44416447e0497e91fdac3`: dens `build-docs.mjs` genererer 33 docs-sider, fire selvstændige sider og changelog, i alt 40 sitemap-routes. Live `bugbottle.dev` matcher dens robots/sitemap og alle sider.
+- Deploy-CI bruger den nye lokale og live-gate for de tre Pages-ejede domæner, kører Stripe-worker- og inline-JS-tests før deploy, dækker alle buildinputs i path-filteret, pinner `mahope/auditedwp` til `5e244dcff242352cd5be31a55ca5f7d260f7e520` og deployer kun fra `main`.
+
+**Åben delhandling:** De tre Pages-domæner er endnu ikke udgivet fra dette commit. Efter merge/push skal `check_live_sitemaps.py --commit <merge-sha>` være grøn; indtil da må opgaven ikke markeres færdig.
 
 **Acceptkriterier:**
 
@@ -152,9 +165,9 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Efter deploy er live robots, sitemap og sidesantal identiske med det seneste `main`-build.
 - Search Console-punktet står under `❓ Til Mads`.
 
-**Gate:** `python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py` plus resten af kvalitetsgaten.
+**Gate:** `python3 tools/test_check_sitemaps.py && python3 tools/test_check_live_sitemaps.py && python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py` plus resten af kvalitetsgaten.
 
-**Deploy-gate:** `python3 tools/check_live_sitemaps.py --commit <merge-sha>` efter GitHub Actions er grøn.
+**Deploy-gate:** `python3 tools/check_live_sitemaps.py --commit <merge-sha>` for de tre Pages-domæner efter GitHub Actions er grøn. Den separate read-only driftkontrol er `python3 tools/check_live_sitemaps.py --all --commit <merge-sha> --bugbottle-source <disposable-checkout> --bugbottle-source-commit 07828a1d605383c58cf44416447e0497e91fdac3 --attempts 1`; kontrollen arkiverer og bygger den pinned commit i en midlertidig mappe og matcher derefter den autoritative BugBottle-kilde.
 
 ### 4A. UFÆRDIG — Gør trafikdata domæneopdelt og troværdige
 
@@ -399,13 +412,32 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_versions.py` plus hele kvalitetsgaten.
 
+### 14. UFÆRDIG — Fjern døde sitemap-generator- og deploystier
+
+**Begrundelse:** Flere historiske bloggeneratorer skriver stadig til `site/sitemap.xml`, selv om builden nu kun bruger `dist/<domain>/sitemap.xml`; gamle instruktioner refererer desuden til den deaktiverede manuelle `deploy.sh`.
+
+**Omfang:**
+
+- Opdatér alle shippede generatorer, så de ikke kan mutere en ubrugt source-sitemap eller den gamle `hermes-passiv.pages.dev`-origin.
+- Ret `indexnow_ping.sh` og relaterede health-/deploy-dokumentation til de aktive domæner og CI-deploystien.
+- Behold kun read-only/public discovery-pings; ingen nye udadvendte writes uden Mads-godkendelse.
+
+**Acceptkriterier:**
+
+- Ingen generator eller aktivt helbredsscript peger på `hermes-passiv.pages.dev` eller skriver i `site/sitemap.xml`.
+- `deploy.sh` har én dokumenteret, idempotent adgang; ingen aktiv instruktion beder om manuel Pages-upload.
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/check_legacy_seo_paths.py` plus hele kvalitetsgaten.
+
 
 ## ❓ Til Mads
 
 1. **Tilføj property i Google Search Console** for `mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahoje.dk`. Verificér sitemap og robots efter tilføjelse. Denne handling må ikke udføres af repoet.
-2. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
-3. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
-4. **Udfør én lavendt Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
+2. **Beslut om den lokale BugBottle-shadow:** live `bugbottle.dev` er dokumenteret som den separate `mahope/bugbottle`/Dokploy-kilde med 40 routes på commit `07828a1d605383c58cf44416447e0497e91fdac3`; dette repo har en ubrugt 7-routes shadow. Vælg om shadowen skal fjernes helt eller holdes som et lokalt kildesnapshot. Det er ikke længre en blocker for den nuværende deploy.
+3. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
+4. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
+5. **Udfør én lavendt Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
 
 ## Deploylog
 

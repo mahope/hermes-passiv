@@ -4,15 +4,18 @@
 Covers both ebooks (NIS2 + EAA), both covers, and site health.
 Run: python3 health_check.py
 """
+import json
 import os
+import re
+import subprocess
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 import zipfile
 import xml.etree.ElementTree as ET
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SITE_URL = "https://hermes-passiv.pages.dev"
+SITE_URL = "https://mahope.tools"
 
 checks = {"passed": 0, "failed": 0, "skipped": 0}
 
@@ -60,6 +63,59 @@ def check_cover(path, name, w=1600, h=2560):
     im = Image.open(path)
     ok(f"Cover {name}: {im.size[0]}x{im.size[1]}") if (im.size[0] == w and im.size[1] == h) else fail(f"Cover {name}: dimensions", f"got {im.size[0]}x{im.size[1]}")
     ok(f"Cover {name}: RGB") if im.mode == "RGB" else fail(f"Cover {name}: mode", f"got {im.mode}")
+
+
+def fetch_text(path: str, timeout: int = 15) -> tuple[int, str]:
+    request = urllib.request.Request(
+        SITE_URL + path,
+        headers={"User-Agent": "HermesHealthCheck/3.0"},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return response.status, response.read().decode("utf-8", "replace")
+
+
+def check_json_ld(body: str, label: str) -> None:
+    blocks = re.findall(r'<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', body, re.I | re.S)
+    try:
+        valid = bool(blocks) and all(json.loads(block).get("@context") == "https://schema.org" for block in blocks)
+    except (TypeError, json.JSONDecodeError):
+        valid = False
+    ok(f"{label} JSON-LD valid") if valid else fail(f"{label} JSON-LD", f"{len(blocks)} blocks")
+
+
+def check_live_content() -> None:
+    try:
+        status, body = fetch_text("/")
+        ok(f"HTTP {status}") if status == 200 else fail("HTTP status", f"got {status}")
+        for keyword in ("NIS2", "EAA", "GDPR", "schema.org", "viewport"):
+            ok(f"Contains '{keyword}'") if keyword in body else fail(f"{keyword} keyword", "missing")
+        ok("Books link") if "/books/" in body else fail("Books link", "missing")
+    except Exception as error:
+        fail("Site reachable", str(error))
+
+    for path, label, required in (
+        ("/cookie-check", "Cookie checker", ("Consent", "scan-proxy")),
+        ("/cookie-check-da", "Dansk cookie-tjek", ("samtykke", "scan-proxy")),
+        ("/nis2-check", "NIS2 check", ("NIS2", "track.js")),
+    ):
+        try:
+            status, body = fetch_text(path)
+            ok(f"HTTP 200 {path}") if status == 200 else fail(f"{path} status", f"got {status}")
+            ok(f"{label} content") if all(value.casefold() in body.casefold() for value in required) else fail(f"{label} content", "missing")
+            check_json_ld(body, label)
+        except Exception as error:
+            fail(f"{path} reachable", str(error))
+
+    for slug, minimum in (("cmp-comparison-2026", 2), ("cookie-consent-gdpr-compliance", 4)):
+        try:
+            status, body = fetch_text(f"/blog/{slug}")
+            count = body.count('href="/cookie-check"')
+            if status == 200 and count >= minimum:
+                ok(f"Blog {slug} → /cookie-check ({count} links)")
+            else:
+                fail(f"Blog {slug} CTAs", f"status {status}, {count} links")
+        except Exception as error:
+            fail(f"Blog {slug}", str(error))
 
 
 def main():
@@ -111,81 +167,30 @@ def main():
     print("\n--- Cover: GDPR ---")
     check_cover(os.path.join(ROOT, "ebook", "gdpr-cover.jpg"), "GDPR")
 
-    # 8. Site health
     print("\n--- Site ---")
+    build = subprocess.run([sys.executable, os.path.join(ROOT, "build_sites.py")])
+    if build.returncode:
+        fail("Local site build", f"exit {build.returncode}")
+    else:
+        result = subprocess.run(
+            [sys.executable, os.path.join(ROOT, "tools/check_live_sitemaps.py"), "--attempts", "1", "--delay", "0"]
+        )
+        if result.returncode == 0:
+            ok("Pages live sitemap og sider")
+        else:
+            fail("Pages live sitemap og sider", f"exit {result.returncode}")
+    check_live_content()
     try:
-        req = urllib.request.Request(SITE_URL, headers={"User-Agent": "HermesHealthCheck/2.0"})
-        resp = urllib.request.urlopen(req, timeout=15)
-        body = resp.read().decode()
-        status = resp.status
-        ok(f"HTTP {status}") if status == 200 else fail("HTTP status", f"got {status}")
-        ok("Contains 'NIS2'") if "NIS2" in body else fail("NIS2 keyword", "missing")
-        ok("Contains 'EAA'") if "EAA" in body else fail("EAA keyword", "missing")
-        ok("Contains 'GDPR'") if "GDPR" in body else fail("GDPR keyword", "missing")
-        ok("Contains 'ComplianceDocs'") if "ComplianceDocs" in body else fail("ComplianceDocs keyword", "missing")
-        ok("Schema.org present") if "@type" in body else fail("Schema.org", "missing")
-        ok("Viewport meta") if "viewport" in body else fail("Viewport meta", "missing")
-        ok("Cover images linked") if "cover.jpg" in body and "gdpr-cover.jpg" in body else fail("Cover images", "not in page")
+        request = urllib.request.Request("https://mahope.tools/api/health", headers={"User-Agent": "HermesHealthCheck/3.0"})
+        with urllib.request.urlopen(request, timeout=15) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        if response.status == 200 and data.get("status") == "healthy":
+            ok("mahope.tools API health")
+        else:
+            fail("mahope.tools API health", f"HTTP {response.status}, status {data.get('status')!r}")
+    except Exception as error:
+        fail("mahope.tools API health", str(error))
 
-        # Cookie Consent Checker live
-        try:
-            cc = urllib.request.urlopen(urllib.request.Request(
-                SITE_URL + "/cookie-check", headers={"User-Agent": "HermesHealthCheck/2.0"}), timeout=15)
-            cbody = cc.read().decode()
-            ok("HTTP 200 /cookie-check") if cc.status == 200 else fail("/cookie-check status", f"got {cc.status}")
-            ok("Cookie checker content") if "Consent" in cbody and "scan-proxy" in cbody else fail("Cookie checker", "content missing")
-            import json as _json, re as _re
-            blocks = _re.findall(r'<script type="application/ld\+json">(.*?)</script>', cbody, _re.DOTALL)
-            all_ok = all(_json.loads(b).get("@context") == "https://schema.org" for b in blocks) and blocks
-            ok("Cookie checker JSON-LD valid") if all_ok else fail("Cookie checker JSON-LD", f"{len(blocks)} blocks")
-        except Exception as e:
-            fail("/cookie-check reachable", str(e))
-
-        # Dansk cookie-tjek live
-        try:
-            ccd = urllib.request.urlopen(urllib.request.Request(
-                SITE_URL + "/cookie-check-da", headers={"User-Agent": "HermesHealthCheck/2.0"}), timeout=15)
-            cdbody = ccd.read().decode()
-            ok("HTTP 200 /cookie-check-da") if ccd.status == 200 else fail("/cookie-check-da status", f"got {ccd.status}")
-            ok("Dansk cookie-tjek indhold") if "samtykke" in cdbody.lower() and "scan-proxy" in cdbody else fail("Dansk cookie-tjek", "indhold mangler")
-            import json as _json2, re as _re2
-            blocks2 = _re2.findall(r'<script type="application/ld\+json">(.*?)</script>', cdbody, _re2.DOTALL)
-            all_ok2 = all(_json2.loads(b).get("@context") == "https://schema.org" for b in blocks2) and blocks2
-            ok("Dansk cookie-tjek JSON-LD valid") if all_ok2 else fail("Dansk cookie-tjek JSON-LD", f"{len(blocks2)} blocks")
-            # Blog CTA cross-links: cookie blogs must link to the free /cookie-check tool
-            for slug, minlinks in (("cmp-comparison-2026", 2), ("cookie-consent-gdpr-compliance", 4)):
-                try:
-                    req = urllib.request.Request(f"{SITE_URL}/blog/{slug}", headers={"User-Agent": "Mozilla/5.0 (health-check)"})
-                    b = urllib.request.urlopen(req, timeout=30)
-                    bb = b.read().decode("utf-8", "replace")
-                    n = bb.count('href="/cookie-check"')
-                    ok(f"Blog {slug} → /cookie-check ({n} links)") if n >= minlinks else fail(f"Blog {slug} CTAs", f"only {n} links")
-                except Exception as e:
-                    fail(f"Blog {slug}", str(e))
-        except Exception as e:
-            fail("/cookie-check-da reachable", str(e))
-        # NIS2 self-assessment live
-        try:
-            nis = urllib.request.urlopen(urllib.request.Request(
-                SITE_URL + "/nis2-check", headers={"User-Agent": "HermesHealthCheck/2.0"}), timeout=15)
-            nbody = nis.read().decode()
-            ok("HTTP 200 /nis2-check") if nis.status == 200 else fail("/nis2-check status", f"got {nis.status}")
-            ok("NIS2 check content") if "NIS2" in nbody and "track.js" in nbody else fail("NIS2 check", "content missing")
-            import json as _json3, re as _re3
-            blocks3 = _re3.findall(r'<script type="application/ld\+json">(.*?)</script>', nbody, _re3.DOTALL)
-            all_ok3 = all(_json3.loads(b).get("@context") == "https://schema.org" for b in blocks3) and blocks3
-            ok("NIS2 check JSON-LD valid") if all_ok3 else fail("NIS2 check JSON-LD", f"{len(blocks3)} blocks")
-        except Exception as e:
-            fail("/nis2-check reachable", str(e))
-
-    except urllib.error.HTTPError as e:
-        fail("HTTP status", f"HTTP {e.code}")
-        for kw in ["NIS2", "EAA", "GDPR", "ComplianceDocs", "schema.org"]:
-            skip(f"Site: {kw}")
-    except Exception as e:
-        fail("Site reachable", str(e))
-
-    # 7. Summary
     print(f"\n=== Results: {checks['passed']} passed, {checks['failed']} failed, {checks['skipped']} skipped ===")
     return 1 if checks["failed"] > 0 else 0
 

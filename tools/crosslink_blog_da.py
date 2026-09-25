@@ -16,7 +16,6 @@ import glob
 import html as htmllib
 import os
 import re
-import subprocess
 import sys
 
 SITE = 'site'
@@ -138,7 +137,7 @@ def main():
     assert not missing, f'/da/-forsiden mangler nu: {missing}'
 
     if deploy:
-        subprocess.run(['./deploy.sh'], check=True)
+        raise SystemExit("Manuel deploy er deaktiveret; commit til main og lad GitHub Actions udgive.")
     print(f'done — ændret: {len(changed)} filer')
 
 

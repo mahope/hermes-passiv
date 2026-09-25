@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import html as htmllib
 import json
 import os
@@ -26,6 +27,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "tools"))
 from brand import BRANDS, BRAND_DIR  # noqa: E402
 import pagepass  # noqa: E402
+from route_inventory import load_inventory  # noqa: E402
 SITE = ROOT / "site"
 DIST = ROOT / "dist"
 AUDITEDWP_DIR = Path(os.environ.get("AUDITEDWP_DIR") or (ROOT.parent / "auditedwp"))
@@ -135,7 +137,7 @@ SITES: dict[str, dict] = {
                    ("Clean Copy", "https://cleancopy.tools/da/"), ("Compliance", "/da/compliance-site-check")],
         },
         "rest": True,
-        "index_from": "free-tools.html",
+        "required_routes": ["/free-tools"],
     },
 }
 
@@ -152,7 +154,7 @@ TEXT_EXT = {".html", ".htm", ".xml", ".js", ".json", ".txt", ".md", ".yaml", ".y
 # Worker routes exist on every site; never count them as broken.
 WORKER_PREFIXES = ("/api/", "/scan-proxy")
 # Files generated per dist by write_site (root-relative). Never "broken".
-GENERATED = ("/sitemap.xml", "/robots.txt", "/wrangler.toml", "/llms.txt", "/llms-full.txt", "/humans.txt",
+GENERATED = ("/sitemap.xml", "/robots.txt", "/build-info.json", "/wrangler.toml", "/llms.txt", "/llms-full.txt", "/humans.txt",
              "/.well-known/security.txt", "/404.html", "/favicon.svg", "/favicon.ico", "/apple-touch-icon.png",
              "/icon-192.png", "/icon-512.png", "/site.webmanifest", "/og.png", "/og-da.png",
              "/search-index.json", "/search/", "/da/search/", "/search/index.html", "/da/search/index.html")
@@ -198,6 +200,51 @@ def canonical_url(relpath: str) -> str:
     if p.endswith(".html"):
         return p[:-5]
     return p
+
+
+def meta_robots_allows_index(text: str) -> bool:
+    head = re.search(r"<head\b.*?</head>", text, re.S | re.I)
+    directives = []
+    for match in re.finditer(r"<meta\b[^>]*>", head.group(0) if head else "", re.I):
+        tag = match.group(0)
+        name = re.search(r"\bname=[\"']([^\"']+)[\"']", tag, re.I)
+        http_equiv = re.search(r"\bhttp-equiv=[\"']([^\"']+)[\"']", tag, re.I)
+        content = re.search(r"\bcontent=[\"']([^\"']*)[\"']", tag, re.I)
+        robots_key = name.group(1).casefold() if name else http_equiv.group(1).casefold() if http_equiv else ""
+        if content and robots_key == "robots":
+            directives.extend(re.split(r"[\s,]+", content.group(1).casefold()))
+    return "noindex" not in directives and "none" not in directives
+
+
+def route_digest(urls: list[str]) -> str:
+    return hashlib.sha256("\n".join(sorted(urls)).encode()).hexdigest()
+
+
+def build_commit() -> str:
+    for name in ("GITHUB_SHA", "CF_PAGES_COMMIT_SHA"):
+        value = os.environ.get(name, "").strip().lower()
+        if re.fullmatch(r"[0-9a-f]{40,64}", value):
+            return value
+    try:
+        value = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True
+        ).stdout.strip().lower()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+    return value if re.fullmatch(r"[0-9a-f]{40,64}", value) else "unknown"
+
+
+def build_date() -> str:
+    epoch = os.environ.get("SOURCE_DATE_EPOCH", "")
+    if epoch.isdigit():
+        return datetime.fromtimestamp(int(epoch), timezone.utc).strftime("%Y-%m-%d")
+    try:
+        value = subprocess.run(
+            ["git", "show", "-s", "--format=%cs", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        value = ""
+    return value if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) else datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def apply_remap(relpath: str, remap: dict[str, str]) -> str:
@@ -956,6 +1003,26 @@ NOT_FOUND = {
 }
 
 
+def sitemap_pages(site: Site, pages: list[dict]) -> list[dict]:
+    own = "https://" + site.domain
+    selected: dict[str, dict] = {}
+    normalized: dict[str, str] = {}
+    for page in pages:
+        if not page.get("indexable", True):
+            continue
+        expected = own + canonical_url(page["dest"])
+        if page["url"] != expected:
+            continue
+        if page["url"] in selected:
+            raise ValueError(f"{site.domain}: duplicate sitemap URL {page['url']}")
+        route_key = page["url"].removeprefix(own).rstrip("/") or "/"
+        if route_key in normalized and normalized[route_key] != page["url"]:
+            raise ValueError(f"{site.domain}: slash-equivalent sitemap URLs {normalized[route_key]} and {page['url']}")
+        normalized[route_key] = page["url"]
+        selected[page["url"]] = page
+    return sorted(selected.values(), key=lambda page: page["url"])
+
+
 def write_generated(site: Site, pages: list[dict]) -> None:
     """Sitemap, robots, llms, security.txt, humans.txt, _headers, 404, brand assets."""
     dist = site.dist
@@ -967,16 +1034,27 @@ def write_generated(site: Site, pages: list[dict]) -> None:
         shutil.copy2(f, dist / f.name)
 
     urls = []
-    for pg in sorted(pages, key=lambda p: p["url"]):
+    for pg in pages:
         alt = ""
         if pg["alternates"]:
             alt = "".join(f'<xhtml:link rel="alternate" hreflang="{c}" href="{u}"/>' for c, u in sorted(pg["alternates"].items()))
             alt += f'<xhtml:link rel="alternate" hreflang="x-default" href="{pg["alternates"].get("en", pg["url"])}"/>'
         urls.append(f'  <url><loc>{pg["url"]}</loc><lastmod>{pg["lastmod"]}</lastmod>{alt}</url>')
-    (dist / "sitemap.xml").write_text(
+    sitemap_data = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
-        + "\n".join(urls) + "\n</urlset>\n", encoding="utf-8")
+        + "\n".join(urls) + "\n</urlset>\n"
+    ).encode()
+    (dist / "sitemap.xml").write_bytes(sitemap_data)
+    build_info = {
+        "version": 1,
+        "domain": site.domain,
+        "commit": build_commit(),
+        "sitemap_count": len(pages),
+        "sitemap_sha256": hashlib.sha256(sitemap_data).hexdigest(),
+        "routes_sha256": route_digest([page["url"] for page in pages]),
+    }
+    (dist / "build-info.json").write_text(json.dumps(build_info, sort_keys=True) + "\n", encoding="utf-8")
 
     (dist / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: {own}/sitemap.xml\n\n"
@@ -1057,7 +1135,8 @@ def write_generated(site: Site, pages: list[dict]) -> None:
     (dist / "search-index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
-def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dict, dates: dict) -> list[dict]:
+def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dict, dates: dict,
+               inventory: dict[str, tuple[str, ...]]) -> list[dict]:
     dist = site.dist
     if dist.exists():
         shutil.rmtree(dist)
@@ -1131,8 +1210,9 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
             main_txt = re.sub(r"^.*?" + re.escape(info["title"][:20]), "", main_txt, count=1) if info["title"][:20] in main_txt else main_txt
             tags = sorted({m.strip() for m in re.findall(r'<(?:span|div)\s+class="(?:badge|tag|tagchip)"[^>]*>([^<]{2,40})<', text)})
             pages.append(dict(dest=dest, url=page_url, lang=lang, alternates=alts, title=info["title"],
-                              description=info["description"], lastmod=(d[1] if d else pagepass.now_iso()),
-                              section=shell_info["section"], body=main_txt[:400].strip(), tags=tags))
+                              description=info["description"], lastmod=(d[1] if d else build_date()),
+                              section=shell_info["section"], body=main_txt[:400].strip(), tags=tags,
+                              indexable=meta_robots_allows_index(text)))
         text = rewrite_text(site, text, is_html, local, global_idx)
         out.write_text(text, encoding="utf-8", errors="surrogateescape")
 
@@ -1145,6 +1225,13 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
             if src_pg:  # the copy is the canonical page; the source is a duplicate pointing at it
                 src_pg["dest"] = target
 
+    pages = sitemap_pages(site, pages)
+    actual_urls = {page["url"] for page in pages}
+    expected_urls = {f"https://{site.domain}{route}" for route in inventory[site.domain]}
+    if actual_urls != expected_urls:
+        missing = sorted(expected_urls - actual_urls)
+        extra = sorted(actual_urls - expected_urls)
+        raise ValueError(f"{site.domain}: route inventory mismatch; missing={missing}, extra={extra}")
     (dist / "wrangler.toml").write_text(
         f'name = "{site.project}"\n'
         f'compatibility_date = "2024-09-01"\n'
@@ -1162,6 +1249,7 @@ def main() -> int:
     args = ap.parse_args()
 
     sites = {d: Site(d, c) for d, c in SITES.items()}
+    inventory = load_inventory()
     select_files(sites)
     for s in sites.values():
         pulled = pull_assets(s)
@@ -1177,14 +1265,14 @@ def main() -> int:
     for domain, s in sites.items():
         if args.only and domain != args.only:
             continue
-        write_site(s, local_idx[domain], global_idx, kv_id, pairs, dates)
+        pages = write_site(s, local_idx[domain], global_idx, kv_id, pairs, dates, inventory)
         n_files = sum(1 for p in s.dist.rglob("*") if p.is_file())
         n_html = sum(1 for _ in s.dist.rglob("*.html"))
         n_broken = sum(s.broken.values())
-        summary[domain] = dict(project=s.project, files=n_files, html=n_html, shelled=s.shelled, rewritten=s.rewritten,
-                               cross_domain=s.cross, broken=n_broken)
+        summary[domain] = dict(project=s.project, files=n_files, html=n_html, sitemap_pages=len(pages),
+                               shelled=s.shelled, rewritten=s.rewritten, cross_domain=s.cross, broken=n_broken)
         print(f"\n== {domain} ({s.project}) -> dist/{domain}")
-        print(f"   files: {n_files} ({n_html} html, {s.shelled} shelled)  rewritten: {s.rewritten}  cross-domain: {s.cross}  broken: {n_broken}")
+        print(f"   files: {n_files} ({n_html} html, {len(pages)} sitemap, {s.shelled} shelled)  rewritten: {s.rewritten}  cross-domain: {s.cross}  broken: {n_broken}")
         for path, n in sorted(s.broken.items(), key=lambda kv: -kv[1])[:15]:
             print(f"     broken {n:3d}x {path}")
         if len(s.broken) > 15:

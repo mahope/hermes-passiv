@@ -211,5 +211,5 @@ Alt herunder er færdigskrevet. Mads: åbn kdp.amazon.com, opret konto, vælg "C
 ## Efter udgivelse (jeg gør det)
 
 - Opdater landingssiden med købs-links (erstatter "Awaiting account")
-- Genudgiv via `./deploy.sh`
-- Verificér links virker via self-check
+- Merge til `main`; GitHub Actions udgiver de aktive sites
+- Verificér links og live-indhold via `python3 tools/check_live_sitemaps.py --commit <merge-sha>`

@@ -135,28 +135,29 @@ Mads har 23. august godkendt, at du bruger OpenRouter-credits på **fallback-mod
 
 Det er stadig gratis Ox Alpha først; fallbacken er sikkerhedsnettet. Modelforbrug tæller ikke med i dit projektbudget nedenfor.
 
-## Udgivelse — du har din egen adgang
+## Udgivelse — CI-deploy til de aktive domæner
 
-Dit site skal ligge på **Cloudflare Pages**. Du har adgang, og du behøver ikke spørge om lov.
+De fire sites udgives fra `main` af `.github/workflows/deploy-sites.yml`. Der er ingen
+manuel Pages-upload: `deploy.sh` er bevidst deaktiveret, så en lokal kørsel kan ikke
+starte en utilsigtet udgivelse.
 
 ```bash
-./deploy.sh          # udgiver mappen "site"
-./deploy.sh public   # hvis din mappe hedder noget andet
+git switch main
+git pull --ff-only
+# merge den grønne ceo-branch og push til main
 ```
 
-Scriptet er låst til dit eget projekt — du kan ikke komme til at udgive til et andet.
-Dit site ligger på **https://hermes-passiv.pages.dev**
-
-Efter hver udgivelse skal du **selv kontrollere resultatet**. HTTP 200 er ikke bevis for
-noget — et site kan svare 200 og være tomt eller vise gammelt indhold. Hent siderne og
-se på indholdet:
+Efter push skal du **selv kontrollere resultatet**. HTTP 200 er ikke bevis for noget —
+et site kan svare 200 og være tomt eller vise gammelt indhold. Hent siderne og se på
+indholdet på `https://mahope.tools`, `https://cleancopy.tools`, `https://deskuptime.com`
+og den separate `https://bugbottle.dev`-kilde.
 
 ```bash
-curl -s https://hermes-passiv.pages.dev/ | head -40
+python3 tools/check_live_sitemaps.py --commit <merge-sha>
 ```
 
 Gå hver underside igennem. Virker et link ikke, eller peger noget stadig på en gammel
-adresse, så ret det og udgiv igen.
+adresse, så ret det i source og lad CI udgive igen.
 
 Mads sætter domæne og betaling på, når du siger til at det er klar. Byg videre på
 `.pages.dev`-adressen indtil da — alt du bygger, følger med over på domænet bagefter.
