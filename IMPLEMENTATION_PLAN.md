@@ -5,7 +5,7 @@
 - `ITERATION_ID`: `correct-sitemaps-domains-2026-09-25-r3`
 - `STATE`: `FÆRDIG`
 - `ACTIVE_TASK`: `INGEN`
-- `NEXT_TASK`: `4A — Gør trafikdata domæneopdelt og troværdige`
+- `NEXT_TASK`: `4E — Page Profile Pro skal acceptere Stripe-nøgler` (flyttet frem 2026-09-25: blokerer betalende kunder)
 - `TASK_ATTEMPTS`: `3: 2/2`
 - `LAST_BRANCH`: `ceo/repair-sitemap-deploy-gate`
 - `PLAN_COMMIT`: `b7c8a64`
@@ -170,6 +170,43 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Deploy-gate:** `python3 tools/check_live_sitemaps.py --commit <merge-sha>` for de tre Pages-domæner efter GitHub Actions er grøn. Den separate read-only driftkontrol er `python3 tools/check_live_sitemaps.py --all --commit <merge-sha> --bugbottle-source <disposable-checkout> --bugbottle-source-commit 07828a1d605383c58cf44416447e0497e91fdac3 --attempts 1`; kontrollen arkiverer og bygger den pinned commit i en midlertidig mappe og matcher derefter den autoritative BugBottle-kilde.
 
+### 4E. UFÆRDIG — Page Profile Pro skal acceptere Stripe-nøgler
+
+**Begrundelse:** Licens-audit 2026-09-25: `page-profile/page_profile.py:54-59` accepterer kun `PPRO-`+32 base32, men Stripe-leveringen udsteder 32 hex-tegn, så **enhver købt nøgle afvises**. Samtidig kan `--gen-key` (linje ~912-920) med det offentlige salt (linje ~37) lave gyldige nøgler, så Pro kan låses op gratis. Købslinket i CLI'en (linje ~79) peger på det forældede `hermes-passiv.pages.dev`.
+
+**Omfang:**
+
+- Erstat den offline validering med `activate`/`validate` mod `https://mahope.tools/api/license/` med `product: "page-profile-pro"` efter `C:\Projects\business\planer\2026-09-24-stripe-kontrakt.md` (32 hex, trim + små bogstaver; stabilt `device_id` gemt i `~/.page-profile-license`; 7 dages cache ved 503/netværksfejl; tydelige beskeder for 403/404/409).
+- Fjern `--gen-key` og saltet.
+- Købslink: `https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04`.
+- Udgiv som 1.2.0 i `site/downloads/page-profile/` og opdatér versionsreferencer.
+
+**Acceptkriterier:**
+
+- Test uden netværk (mocket HTTP): gyldig hex-nøgle aktiveres, `PPRO-`-nøgler og `--gen-key` findes ikke længere, 503 giver Pro i højst 7 dage fra seneste validering, 403/404/409 giver korrekt besked.
+- Live read-only: `validate` med en tilfældig 32-hex-nøgle giver 404.
+
+**Gate:** `python3 -m pytest page-profile` (eller repoets eksisterende Page Profile-test) plus hele kvalitetsgaten.
+
+### 4F. UFÆRDIG — Luk tre huller i licens-workeren
+
+**Begrundelse:** Licens-audit 2026-09-25 af `site/_worker.js`.
+
+**Omfang:**
+
+- Refundering af abonnementer: ved checkout i abonnementstilstand er `s.payment_intent` null, så der skrives ingen `lic-pi:`, og `revokeForCharge` (~linje 2818) falder tilbage på `charge.invoice`, som ikke findes i nyere Stripe-API-versioner. Gem koblingen payment_intent → licens i `invoice.paid` (første faktura) eller slå op via `invoice_payments`, så en refunderet årslicens (`clean-copy-pro`, `eucomply-pro`, `page-profile-pro`) tilbagekaldes.
+- Uventede fejl i licens-API'et skal svare 503 (kontrakten), ikke 500 (~linje 889).
+- `activate_url` for `clean-copy-pro` skal pege på en side, der forklarer hvor nøglen indtastes i hver klient (Chrome, Firefox, Obsidian), fx `https://cleancopy.tools/activate/`; opret siden i `site/`.
+
+**Acceptkriterier:**
+
+- Worker-test: `charge.refunded` for et abonnement (uden `payment_intent` på sessionen) tilbagekalder licensen; engangskøb virker som før.
+- Worker-test: en kastet fejl i licens-handleren giver 503.
+- Aktiveringssiden findes i sitemap og består SEO-checket.
+- Stripe-worker-testens antal tests falder ikke.
+
+**Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+
 ### 4A. UFÆRDIG — Gør trafikdata domæneopdelt og troværdige
 
 **Begrundelse:** Ugerapport 2026-39 er tom, og de gamle rapporter kan ikke adskille fire domæner eller skelne duplikattracking. Uden troværdige data kan opgave 4B ikke vælge sider fra data.
@@ -249,43 +286,6 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 - En worker-test beviser, at leveringsmailen for `clean-copy-pro` indeholder portal-linket, og at mailen for `deskuptime-pro` (engangskøb) ikke gør.
 - `/thanks` viser linket for et abonnementsprodukt i den eksisterende mock-test.
-- Stripe-worker-testens antal tests falder ikke.
-
-**Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
-
-### 4E. UFÆRDIG — Page Profile Pro skal acceptere Stripe-nøgler
-
-**Begrundelse:** Licens-audit 2026-09-25: `page-profile/page_profile.py:54-59` accepterer kun `PPRO-`+32 base32, men Stripe-leveringen udsteder 32 hex-tegn, så **enhver købt nøgle afvises**. Samtidig kan `--gen-key` (linje ~912-920) med det offentlige salt (linje ~37) lave gyldige nøgler, så Pro kan låses op gratis. Købslinket i CLI'en (linje ~79) peger på det forældede `hermes-passiv.pages.dev`.
-
-**Omfang:**
-
-- Erstat den offline validering med `activate`/`validate` mod `https://mahope.tools/api/license/` med `product: "page-profile-pro"` efter `C:\Projects\business\planer\2026-09-24-stripe-kontrakt.md` (32 hex, trim + små bogstaver; stabilt `device_id` gemt i `~/.page-profile-license`; 7 dages cache ved 503/netværksfejl; tydelige beskeder for 403/404/409).
-- Fjern `--gen-key` og saltet.
-- Købslink: `https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04`.
-- Udgiv som 1.2.0 i `site/downloads/page-profile/` og opdatér versionsreferencer.
-
-**Acceptkriterier:**
-
-- Test uden netværk (mocket HTTP): gyldig hex-nøgle aktiveres, `PPRO-`-nøgler og `--gen-key` findes ikke længere, 503 giver Pro i højst 7 dage fra seneste validering, 403/404/409 giver korrekt besked.
-- Live read-only: `validate` med en tilfældig 32-hex-nøgle giver 404.
-
-**Gate:** `python3 -m pytest page-profile` (eller repoets eksisterende Page Profile-test) plus hele kvalitetsgaten.
-
-### 4F. UFÆRDIG — Luk tre huller i licens-workeren
-
-**Begrundelse:** Licens-audit 2026-09-25 af `site/_worker.js`.
-
-**Omfang:**
-
-- Refundering af abonnementer: ved checkout i abonnementstilstand er `s.payment_intent` null, så der skrives ingen `lic-pi:`, og `revokeForCharge` (~linje 2818) falder tilbage på `charge.invoice`, som ikke findes i nyere Stripe-API-versioner. Gem koblingen payment_intent → licens i `invoice.paid` (første faktura) eller slå op via `invoice_payments`, så en refunderet årslicens (`clean-copy-pro`, `eucomply-pro`, `page-profile-pro`) tilbagekaldes.
-- Uventede fejl i licens-API'et skal svare 503 (kontrakten), ikke 500 (~linje 889).
-- `activate_url` for `clean-copy-pro` skal pege på en side, der forklarer hvor nøglen indtastes i hver klient (Chrome, Firefox, Obsidian), fx `https://cleancopy.tools/activate/`; opret siden i `site/`.
-
-**Acceptkriterier:**
-
-- Worker-test: `charge.refunded` for et abonnement (uden `payment_intent` på sessionen) tilbagekalder licensen; engangskøb virker som før.
-- Worker-test: en kastet fejl i licens-handleren giver 503.
-- Aktiveringssiden findes i sitemap og består SEO-checket.
 - Stripe-worker-testens antal tests falder ikke.
 
 **Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
