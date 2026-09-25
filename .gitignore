@@ -24,3 +24,7 @@ dist/
 # Byggescripts må gerne skrive hertil lokalt, men output committes aldrig.
 products/*
 !products/bundle-cover.png
+
+# `python3 -m build site-icons` (opgave 13) — byggeartefakter, ikke kilde
+site-icons/dist/
+site-icons/build/

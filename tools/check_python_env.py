@@ -335,9 +335,27 @@ def check_site_icons_manifest(errors: list[str], root: Path) -> None:
         )
 
     build_system = data.get("build-system")
-    if not isinstance(build_system, dict) or not build_system.get("build-backend"):
+    backend = build_system.get("build-backend") if isinstance(build_system, dict) else None
+    requires = (build_system or {}).get("requires") or []
+    if not backend:
         errors.append("site-icons/pyproject.toml: [build-system].build-backend mangler")
-    if isinstance(build_system, dict) and not build_system.get("requires"):
+    else:
+        # En backend skal pege på en distribution der faktisk er erklæret, ellers
+        # bygger pip den i et isolat miljø hvor den hverken findes eller installeres.
+        # Om selve attributtet findes bevises ikke her — det gør `python3 -m build`
+        # i opgave 13s port, som faktisk kalder backenden.
+        module = str(backend).split(":")[0].split(".")[0]
+        declared = {
+            re.sub(r"[-_.]+", "-", re.split(r"[<>=!~\[]", str(item))[0]).lower()
+            for item in requires
+        }
+        if module and module not in declared:
+            errors.append(
+                f"site-icons/pyproject.toml: build-backend {backend!r} kræver "
+                f"{module!r}, men [build-system].requires erklærer kun "
+                f"{sorted(declared) or 'intet'}"
+            )
+    if isinstance(build_system, dict) and not requires:
         errors.append("site-icons/pyproject.toml: [build-system].requires mangler")
 
     scripts = project.get("scripts")
@@ -362,11 +380,18 @@ def check_site_icons_manifest(errors: list[str], root: Path) -> None:
         )
 
     requires_python = str(project.get("requires-python", ""))
-    if ">=3.10" in requires_python:
+    floor = re.search(r">=\s*(\d+)\.(\d+)", requires_python)
+    if floor is None:
         errors.append(
-            "site-icons/pyproject.toml: requires-python er hævet uden at koden er "
-            "ændret — site_icons.py bruger `from __future__ import annotations` og "
-            "kører derfor fint på 3.9"
+            f"site-icons/pyproject.toml: requires-python {requires_python!r} er ikke et "
+            f"gulv (`>=X.Y`) — porten kan ikke vide hvad en hævet version betyder"
+        )
+    elif (int(floor.group(1)), int(floor.group(2))) > (3, 9):
+        errors.append(
+            f"site-icons/pyproject.toml: requires-python er hævet til "
+            f"{requires_python!r} — site_icons.py bruger `from __future__ import "
+            f"annotations` og er testet på 3.9, så hæver man gulvet uden at teste "
+            f"den nye Python, udelukker man bare brugere uden grund"
         )
 
 
@@ -379,6 +404,15 @@ def run_checks(root: Path) -> list[str]:
     check_declared_matches_imports(errors, by_file, root)
     check_site_icons_manifest(errors, root)
     return errors
+
+
+def _pin_line(path: Path, name: str) -> str:
+    """Den pin-linje der starter med `navn==`, uanset hvilken version der står."""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stem = read_stem(line)
+        if PIN_LINE.match(stem) and stem.startswith(f"{name}=="):
+            return line
+    raise SystemExit(f"selftest: ingen pin for {name} i {path.name}")
 
 
 def _mutate(path: Path, old: str, new: str) -> None:
@@ -411,12 +445,6 @@ def run_self_test() -> int:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
 
-        # Positiv kontrol først: de rigtige filer skal være grønne, ellers beviser
-        # hver mutation nedenfor intet.
-        scenarios.append(
-            ("de rigtige filer skal være grønne",
-             lambda r, f: [] if not run_checks(r) else ["porten fejler på de rigtige filer"])
-        )
 
         def without_project_table(r: Path, f: Path) -> list[str]:
             _mutate(f, "[project]", "[projectx]")
@@ -435,8 +463,7 @@ def run_self_test() -> int:
             return run_checks(r)
 
         def without_build_backend(r: Path, f: Path) -> list[str]:
-            _mutate(f, 'build-backend = "setuptools.build_meta"',
-                    'build-backend = "setuptools.MISSING"')
+            _mutate(f, 'build-backend = "setuptools.build_meta"\n', "")
             return run_checks(r)
 
         def without_pillow(r: Path, f: Path) -> list[str]:
@@ -451,29 +478,45 @@ def run_self_test() -> int:
             # Rører KUN det midlertidige copy. En tidligere udgave af denne
             # mutation skrev i den rigtige låsefil og efterlod den med en hash
             # mindre — selftesten må aldrig kunne ændre repoet, den kontrollerer.
+            # ALLE hashes på den første pin, ikke én. At fjerne én af to er
+            # stadig en gyldig låst pin — det ville være synd at gøre porten rød
+            # for det, så mutationen skal ramme hele blokken.
             target = r / "requirements-build.txt"
             lines = target.read_text(encoding="utf-8").splitlines()
-            for index, line in enumerate(lines):
-                if HASH_LINE.match(line):
-                    del lines[index]
-                    break
-            else:
-                raise SystemExit("selftest: ingen hash-linje at fjerne")
+            first = next(i for i, line in enumerate(lines) if PIN_LINE.match(read_stem(line)))
+            end = first + 1
+            while end < len(lines) and HASH_LINE.match(lines[end]):
+                end += 1
+            del lines[first + 1:end]
             target.write_text("\n".join(lines) + "\n", encoding="utf-8")
             return run_checks(r)
 
         def with_unpinned_requirement(r: Path, f: Path) -> list[str]:
-            _mutate(r / "requirements-build.txt", "pillow==11.3.0 \\", "pillow>=10.0 \\")
+            # Finder den version der står i låsen i stedet for at hardkode den: en
+            # selftest der kender et versionsnummer holder op med at teste noget
+            # den dag nr. opdateres, og fejler så med en forvirrende SystemExit.
+            target = r / "requirements-build.txt"
+            stem = read_stem(_pin_line(target, "pillow")).removesuffix("!")
+            _mutate(target, stem, "pillow>=10.0")
             return run_checks(r)
 
         def with_editable_requirement(r: Path, f: Path) -> list[str]:
-            _mutate(r / "requirements-build.txt", "build==1.4.4 \\", "-e .\\")
+            target = r / "requirements-build.txt"
+            _mutate(target, read_stem(_pin_line(target, "build")), "-e .\\")
             return run_checks(r)
 
         def with_conflicting_versions(r: Path, f: Path) -> list[str]:
-            audit = (ROOT / "requirements-audit.txt").read_text(encoding="utf-8")
+            # Vælger en pakke der står i BEGGE låse, så mutationen tester
+            # versionskonflikten og ikke en pakke der kun findes i den ene.
+            shared = sorted(
+                set(locked_pins(r / "requirements-build.txt"))
+                & set(locked_pins(r / "requirements-audit.txt"))
+            )
+            if not shared:
+                raise SystemExit("selftest: ingen pakke i begge låse at konflikttere på")
             (r / "requirements-audit.txt").write_text(
-                audit + "\ncertifi==2020.1.1 \\\n    --hash=sha256:" + "0" * 64 + "\n",
+                (r / "requirements-audit.txt").read_text(encoding="utf-8")
+                + f"\n{shared[0]}==0.0.1 \\\n    --hash=sha256:" + "0" * 64 + "\n",
                 encoding="utf-8",
             )
             return run_checks(r)
@@ -485,11 +528,11 @@ def run_self_test() -> int:
             return run_checks(r)
 
         def with_unused_pin(r: Path, f: Path) -> list[str]:
-            (r / "requirements-build.txt").write_text(
-                (ROOT / "requirements-build.txt").read_text(encoding="utf-8")
-                + "\nleftpad==1.0.0 \\\n    --hash=sha256:" + "1" * 64 + "\n",
-                encoding="utf-8",
-            )
+            # Det ubrugte-punktet gælder kun topniveau, så en ekstra pin i
+            # låsefilen er lovlig — den er transitiv. Den ulovlige er en
+            # topniveau-pakke intet værktøj bruger, og den skrives i generatoren.
+            generator = r / "tools" / "lock_python_env.py"
+            _mutate(generator, '    "build",\n', '    "build",\n    "leftpad",\n')
             return run_checks(r)
 
         def without_a_lock_file(r: Path, f: Path) -> list[str]:
@@ -501,7 +544,7 @@ def run_self_test() -> int:
                 ("[project] fjernet fra site-icons-manifestet", without_project_table),
                 ("py-modules erstattet af packages.find", with_packages_instead_of_modules),
                 ("[project.scripts] peger på en der ikke findes", without_entry_point),
-                ("build-backend er en der ikke findes", without_build_backend),
+                ("build-backend-nøglen fjernet", without_build_backend),
                 ("Pillow fjernet fra dependencies", without_pillow),
                 ("requires-python hævet uden kodeændring", with_raised_floor),
                 ("én hash fjernet fra en pin", without_a_hash),
@@ -514,7 +557,13 @@ def run_self_test() -> int:
             ]
         )
 
-        failures = []
+        # Positiv kontrol først, og som sin egen påstand: mutationerne kræver at
+        # porten **fejler** på dem, så uden en grøn start kan en port der altid
+        # siger "fejl" se ud som om den fanger alt.
+        failures: list[str] = []
+        if run_checks(root):
+            failures.append("  ✗ de rigtige filer er røde — mutationerne nedenfor kan ikke fange noget")
+
         for name, scenario in scenarios:
             # Hvert scenario får et rent snapshot af de kildefiler det rører, så
             # en mutation ikke kan arve fejlen fra den forrige.
@@ -526,14 +575,18 @@ def run_self_test() -> int:
                 (root / filename).write_text(
                     (ROOT / filename).read_text(encoding="utf-8"), encoding="utf-8"
                 )
+            (root / "tools" / "lock_python_env.py").write_text(
+                (ROOT / "tools" / "lock_python_env.py").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
             probe = root / "tools" / "tmp_dep_probe.py"
             if probe.exists():
                 probe.unlink()
             errors = scenario(root, root / "site-icons" / "pyproject.toml")
             if errors:
-                failures.append(f"  ✗ {name} — burde have fejlet, men var grøn")
+                print(f"  ✓ mutation fanget: {name} ({len(errors)} fejl)")
             else:
-                print(f"  ✓ mutation fanget: {name}")
+                failures.append(f"  ✗ {name} — burde have fejlet, men var grøn")
 
         # Rigsige file skal stadig være grønne efter alle mutationerne.
         probe = root / "tools" / "tmp_dep_probe.py"
@@ -543,10 +596,10 @@ def run_self_test() -> int:
             (root / filename).write_text(
                 (ROOT / filename).read_text(encoding="utf-8"), encoding="utf-8"
             )
-        (root / "site-icons" / "pyproject.toml").write_text(
-            (ROOT / "site-icons" / "pyproject.toml").read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
+        for filename in ("site-icons/pyproject.toml", "tools/lock_python_env.py"):
+            (root / filename).write_text(
+                (ROOT / filename).read_text(encoding="utf-8"), encoding="utf-8"
+            )
         leftover = run_checks(root)
         if leftover:
             failures.append("  ✗ efter alle mutationer er porten stadig rød på de rigtige filer")
