@@ -2,15 +2,15 @@
 
 ## Status
 
-- `ITERATION_ID`: `conversion-stripe-contract-2026-09-25`
-- `STATE`: `I GANG (del 1 merged og deployet; del 2 = ranking_basis)`
-- `ACTIVE_TASK`: `4B`
-- `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter (del 2: `ranking_basis` i ugerapporten)`
-- `TASK_ATTEMPTS`: `4B: 1/2`
-- `LAST_BRANCH`: `ceo/stripe-cta-contract`
+- `ITERATION_ID`: `ranking-basis-2026-09-25`
+- `STATE`: `4B FÆRDIG (del 1 i 1bf981f, del 2 i ceo/ranking-basis)`
+- `ACTIVE_TASK`: `4C`
+- `NEXT_TASK`: `4C — Send support og købersvar til de nye support-adresser`
+- `TASK_ATTEMPTS`: `4B: 2/2`
+- `LAST_BRANCH`: `ceo/ranking-basis`
 - `PLAN_COMMIT`: `4ad9457`
-- `BASELINE`: `main@fa1e830`
-- `RESULT`: Opgave 4B del 1 er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 og uafhængig live-kontrol var grønne.
+- `BASELINE`: `main@3792cc2`
+- `RESULT`: Opgave 4B er færdig i begge dele. Del 1 (1bf981f) gjorde købsrejsen sand og tilladt. Del 2 gør rangeringen datadrevet og fail-closed: `tools/weekly_report.py` har nu `ranking_basis: traffic|unknown` for de seneste syv *fulde* dage med domæne/route, tærsklerne 30 totale og 5 pr. domæne, og den dokumenterede fallback til de fire centrale produktsider + inventaret af alle synlige Pro-tilbud, som udtrykkeligt ikke er en mest-besøgte-rangering.
 - `GATE`: `GRØN — build/sitemap 4/4, SEO 308/0, node --check, Stripe-worker 57/57, inline JS 297/0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
@@ -257,7 +257,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node tests/tracking-worker.test.mjs && python3 tools/test_weekly_report.py` plus hele kvalitetsgaten.
 
-### 4B. I GANG (del 1 gjort i `1bf981f`) — Prioritér konvertering uden nye Stripe-produkter
+### 4B. FÆRDIG (del 1 i `1bf981f`, del 2 i `ceo/ranking-basis`) — Prioritér konvertering uden nye Stripe-produkter
 
 **Begrundelse:** De fire centrale produktsider er stærke, men gamle Pro-tilbud uden købsmulighed og modstridende checkout-claims skader købsrejsen.
 
@@ -279,7 +279,17 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Alle 12 Payment Links + donationslinket gav HTTP 200 ved read-only GET 2026-09-25.
 - **Kontraktens rankingdel er ikke implementeret endnu** (se næste iteration): `tools/weekly_report.py` har ingen `ranking_basis`, så intet i konverteringsarbejdet er endnu rangeret på data.
 
-**Rangering på data er bevidst ikke påstået:** Ugerapport 2026-39 (den seneste) har tom trafik efter timeout, så ingen side kan rangplacere på besøgstal. Næste iteration tilføjer `ranking_basis: traffic|unknown` med de aftalte tærskler (30 pageviews i perioden, 5 pr. domæne) og den deterministiske fallback til de fire centrale produktsider.
+**Del 2 — implementeret i `ceo/ranking-basis`:**
+
+- `tools/weekly_report.py` rangerer nu de sælgende sider på **de seneste syv fulde dage** (`ranking_period()` = `[i dag-7, i dag-1]`). Dagens time er ikke et fuldt døgn og tæller aldrig med; API'et hentes derfor med `days=8`, fordi dets `days` tæller i dag med.
+- `ranking.basis` er kun `traffic`, når *alt* holder: inventaret kan læses, alle fire domæner har et verificeret grundlag i perioden, hvert rangeret domæne har mindst 5 pageviews, og perioden har mindst 30 i alt. Ellers er den `unknown` med en konkret `basis_reason`, tomme ranked-lister og den dokumenterede fallback.
+- Fallbacken er de fire centrale produktsider (Clean Copy, DeskUptime, Page Profile, EUComply) hver med et `why`, plus inventaret af alle 14 synlige købsruter med produkt og pris. Begge dele er mærket `is_traffic_ranking: false` og gengives i rapporten som *ikke* en mest-besøgte-rangering. Kan inventaret ikke læses, er fallbacken `null` — altså en fejl, ikke et tomt resultat.
+- `tools/stripe_catalog.json` har nu `domain` + `route` pr. købsside (15 sider) og `core_pages` med de fire centrale produktsider. `tools/check_stripe_ctas.py` fejler ved ukendt domæne, ugyldig route, en route der ikke findes i `dist/`, for få centrale sider eller en central side der ikke sælger sit produkt; selftesten fanger nu 7/7 fejlformer.
+- Rapporten får to nye sektioner: `Konverteringsrangering — seneste 7 fulde dage (…)` med eksplicit `ranking_basis:` i noten, og `Synlige Pro-tilbud (inventar, ikke rangering)` når fallbacken bruges. `collect_all()` løfter `ranking_basis` til rapportens øverste niveau, så den kan læses uden at grave i `traffic`.
+- `tools/test_weekly_report.py` er vokset fra 15 til 28 tests. Nye dækning: perioden er syv fulde dage uden i dag, 500 besøg i dag kan hverken give rangering eller fortrænge perioden, 30/5-tærsklerne, domæne under tæsklen rangeres aldrig, et domæne uden datagrundlag blokerer hele rangeringen, manglende inventar gør rangeringen `unknown`, og rapporten viser fallbacken uden at hævde besøgstal.
+- Den eksisterende assertion for `/api/stats`-URL'en blev opdateret fra `days=7` til `days=RANKING_FETCH_DAYS`, fordi rankingvinduet kræver den ekstra dag. Testens eget formål (bearer-token, intet token i URL'en) er bevaret, og ingen test er fjernet.
+
+**Konklusion på rangeringen:** Ugerapport 2026-39 (den seneste) kan ikke give `ranking_basis: traffic`. Konverteringsarbejdet må derfor fortsætte på den dokumenterede fallback, ikke på påstande om mest-besøgte sider.
 
 **Acceptkriterier:**
 
@@ -290,7 +300,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Hvis perioden mangler data, har færre end 30 totale verificerede pageviews eller færre end 5 i et domæne, der rangeres, står `ranking_basis: unknown` sammen med den dokumenterede fallback; ingen egen trafik indgår.
 - `python3 tools/check_stripe_ctas.py` er grøn og beviser, at `tools/stripe_catalog.json` matcher den tilladte kontrakt og alle brugte CTA'er.
 
-**Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
+**Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test && python3 tools/test_weekly_report.py` plus hele kvalitetsgaten.
 
 ### 4C. UFÆRDIG — Send support og købersvar til de nye support-adresser
 
@@ -570,6 +580,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Commitlog
 
+- Datadrevet konverteringsrangering: `ceo/ranking-basis` — `Rangér Pro-sider på syv fulde dage` (4B del 2).
 - Licensrefunding og Clean Copy-aktivering: `4ad9457` — `Ret licensrefunding og Clean Copy-aktivering`.
 - Stripe-kompatibel Page Profile-licens: `ea4e6c3` — `Ret Page Profile Stripe-licensen`.
 - Domæneopdelt trafik- og salgsledger: `df25c8b` — `Gør trafikdata domæneopdelt og troværdige`.
