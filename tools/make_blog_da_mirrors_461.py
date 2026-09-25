@@ -12,6 +12,8 @@ _spec = importlib.util.spec_from_file_location(
     'mirrors_453', os.path.join(HERE, 'make_blog_da_mirrors_453.py'))
 m = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(m)
+m.ROOT = os.path.dirname(HERE)
+m.SITE = os.path.join(m.ROOT, 'site')
 
 PAGES = [
     # ------------------------------------------- Bug report form (Bugbottle) ---
@@ -155,9 +157,12 @@ PAGES = [
                 'en rigtig besøgende ville. WordPress, Shopify, Netlify, '
                 'håndskrevet HTML: det er ligegyldigt, fordi værktøjet ikke '
                 'installeres på serveren, men kører på din egen maskine.</p>',
-                '<p>Licensnøglen aktiveres offline med en checksum — ingen '
-                'licensserver, ingen database, intet der går ned når du er '
-                'væk i tre måneder.</p>',
+                '<p>Pro-licensen aktiveres og revalideres online mod '
+                'mahope.tools. Ved aktivering og revalidering sender appen '
+                'licensnøglen, et stabilt device-id og produktidentifieren '
+                'deskuptime-pro til mahope.tools og modtager licensstatus. '
+                'URL-liste og tjekresultater bliver på din maskine og uploades '
+                'ikke til en central monitoreringstjeneste.</p>',
             ]),
         ],
         ctas=[('/deskuptime/', 'Se DeskUptime'),
@@ -172,17 +177,21 @@ PAGES = [
              'samt email- og webhook-alarmer.'),
             ('Kan jeg bruge det uden internet?',
              'Værktøjet kører lokalt og tjekker eksterne URL\'er — så det kræver '
-             'internet til selve tjekkene. Men licensaktivering, state '
-             'og konfiguration er helt offline.'),
+             'internet til selve tjekkene. Pro-licensen aktiveres og '
+             'revalideres desuden online mod mahope.tools; state og '
+             'konfiguration ligger stadig lokalt.'),
             ('Erstatte det UptimeRobot / Pingdom?',
              'Ja. DeskUptime dækker HTTP-status, SSL-udløb, responstid, '
              'redirect-tracking og indholdsændringer — det samme som de '
              'betalte SaaS-tjenester. Forskellen er én betaling i stedet for '
              'løbende abonnement.'),
             ('Hvordan virker licensnøglen?',
-             'Pro-nøglen er en checksum genereret fra din hardware. Du aktiverer '
-             'den med <code>deskuptime activate NØGLE</code> — helt offline, '
-             'ingen licensserver, intet der kan gå ned.'),
+             'Pro-nøglen aktiverer du med '
+             '<code>deskuptime activate NØGLE</code>. Pro-licensen aktiveres '
+             'og revalideres online mod mahope.tools. Ved aktivering og '
+             'revalidering sender appen licensnøglen, et stabilt device-id og '
+             'produktidentifieren deskuptime-pro til mahope.tools og modtager '
+             'licensstatus.'),
         ],
     ),
     # ------------------------------------------- Drupal vs TYPO3 ---

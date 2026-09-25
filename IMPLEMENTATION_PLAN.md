@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `remove-lemon-webhook-2026-09-25`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
+- `ITERATION_ID`: `truthful-deskuptime-copy-2026-09-25`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `2 — Gør DeskUptime-teksten sand`
 - `NEXT_TASK`: `2 — Gør DeskUptime-teksten sand`
-- `TASK_ATTEMPTS`: `1: 1/2`
-- `LAST_BRANCH`: `ceo/remove-lemon-webhook`
+- `TASK_ATTEMPTS`: `2: 1/2`
+- `LAST_BRANCH`: `ceo/truthful-deskuptime-copy`
 - `PLAN_COMMIT`: `28c7f64`
-- `BASELINE`: `main@6023b14`
-- `RESULT`: Opgave 1 er færdig; død Lemon-rute, handler, secret og fixtures er fjernet, mens øvrige licens- og Stripe-ruter er bevaret.
-- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 15/15 legacy-licenstests, 0 inline-JS-problemer; uafhængig review uden fund`
+- `BASELINE`: `main@7aa7b42`
+- `RESULT`: Opgave 2 er implementeret i fire public sider og den generative DA-kilde; online licensdata og lokal overvågning er nu adskilt eksplicit, og generatoren er gjort checkout-sikker.
+- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 0 inline-JS-problemer, 5/5 copy-kilder; generatorens JSON/link-validering er grøn`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -110,7 +110,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node --check site/_worker.js && node tools/test_license_flow.js && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten ovenfor.
 
-### 2. UFÆRDIG — Gør DeskUptime-teksten sand
+### 2. I GANG — Gør DeskUptime-teksten sand
 
 **Begrundelse:** Pro-licensen kontakter licensserveren, så absolutte påstande om “no phone-home”, “no central server” og “no telemetry” er fejl.
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill</title>
-<meta name="description" content="Pingdom, UptimeRobot, Better Uptime — they all cost $7-12/month for the same thing. DeskUptime is $19 once. No cloud, no monthly fee. CLI included.">
+<meta name="description" content="Pingdom, UptimeRobot, Better Uptime — they all cost $7-12/month for the same thing. DeskUptime is $19 once. Local checks, no monthly fee. CLI included.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Hermes Passiv">
 <meta property="og:title" content="Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill">
@@ -27,7 +27,7 @@
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
   {"@type": "Question", "name": "Is there a free desktop website monitor?","acceptedAnswer": {"@type": "Answer","text": "Yes. DeskUptime's CLI is free — run npx github:mahope/deskuptime check https://yoursite.com from any terminal. Watch mode monitors up to 3 URLs with downtime alerts. Pro ($19) unlocks the desktop app (native GUI with system tray), notifications, and unlimited URLs."}},
   {"@type": "Question", "name": "What does DeskUptime check?","acceptedAnswer": {"@type": "Answer","text": "HTTP status + response time, SSL certificate validity + expiry countdown, and SHA-256 content hash comparison for change detection. It works on any URL regardless of CMS or hosting provider."}},
-  {"@type": "Question", "name": "How is DeskUptime different from UptimeRobot or Pingdom?","acceptedAnswer": {"@type": "Answer","text": "DeskUptime runs on your machine, not a cloud server. This means no monthly subscription ($19 one-time vs $7-12/month), your data never leaves your computer, and you can check internal/staging URLs without exposing them. The trade-off is that monitoring stops when your computer is off, though the CLI watch mode can run on any always-on machine (Raspberry Pi, server, etc.)"}},
+  {"@type": "Question", "name": "How is DeskUptime different from UptimeRobot or Pingdom?","acceptedAnswer": {"@type": "Answer","text": "DeskUptime runs monitoring on your machine, not on a cloud monitoring service. Your monitoring URLs and check results stay on your machine and are not uploaded. Pro activation and revalidation send the licence key, a stable device ID and the product identifier deskuptime-pro to mahope.tools and receive the licence status. You can also check internal or staging URLs without exposing them to a hosted monitor. The trade-off is that monitoring stops when your computer is off, though the CLI can run on an always-on machine."}},
   {"@type": "Question", "name": "Can I use DeskUptime in CI/CD?","acceptedAnswer": {"@type": "Answer","text": "Yes. The CLI is a standard Node.js script — it works in GitHub Actions, GitLab CI, or any Unix terminal. Exit codes are 0 for success, 1 for errors. Use it for pre-deploy URL checks, scheduled monitoring, or integration tests."}},
   {"@type": "Question", "name": "How do I download the DeskUptime desktop app?","acceptedAnswer": {"@type": "Answer","text": "Download the desktop app from GitHub Releases: https://github.com/mahope/deskuptime/releases — choose macOS (Apple Silicon or Intel) or Windows. The desktop app requires a Pro license key ($19) to unlock beyond the free 3-URL limit and activate system tray background monitoring."}}
 ]}
@@ -127,6 +127,8 @@
 <h2>Licensing &amp; privacy</h2>
 
 <p>Payment runs through Stripe. Your purchase generates a license key instantly, shown on the thank-you page and sent by email.</p>
+
+<p>Your monitoring URLs and check results stay on your machine and are not uploaded to a central monitoring service. Pro activation and revalidation send the licence key, a stable device ID and the product identifier deskuptime-pro to mahope.tools and receive the licence status.</p>
 
 <p>The open-source engine is MIT licensed. <a href="https://github.com/mahope/deskuptime">Review it on GitHub</a>.</p>
 
