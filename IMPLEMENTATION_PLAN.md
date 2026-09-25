@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `research-2026-09-25`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
-- `NEXT_TASK`: `1 — Fjern Lemon Squeezy-ruten helt`
-- `TASK_ATTEMPTS`: `1: 0/2`
-- `LAST_BRANCH`: `ceo/initial-research-plan`
+- `ITERATION_ID`: `remove-lemon-webhook-2026-09-25`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `1 — Fjern Lemon Squeezy-ruten helt`
+- `NEXT_TASK`: `1`
+- `TASK_ATTEMPTS`: `1: 1/2`
+- `LAST_BRANCH`: `ceo/remove-lemon-webhook`
 - `PLAN_COMMIT`: `10c5908`
-- `BASELINE`: `main@b3a42cf`
-- `RESULT`: Research og prioritering er færdig; produktkode er ikke ændret.
-- `GATE`: `GRØN — 41/41 Stripe-tests, 0 inline-JS-problemer; build/SEO grøn`
+- `BASELINE`: `main@6023b14`
+- `RESULT`: I gang med at fjerne den døde Lemon-webhook uden at ændre Stripe-leveringen.
+- `GATE`: `AFVENTER`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -91,7 +91,7 @@ Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-
 
 Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdagede security-, purchase- og CI-opgaver. Opgraderingsreglen “sikkerhed først” gælder blandt alle øvrige backlogitems efter denne åbne missionsekvens.
 
-### 1. UFÆRDIG — Fjern Lemon Squeezy-ruten helt
+### 1. I GANG — Fjern Lemon Squeezy-ruten helt
 
 **Begrundelse:** Den gamle webhook er stadig i den fælles Worker og kopieres til alle fire sites, selv om Lemon Squeezy ikke længere er en gyldig betalingsvej.
 

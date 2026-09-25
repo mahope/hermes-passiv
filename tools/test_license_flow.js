@@ -4,17 +4,14 @@
  * licensing stack in site/_worker.js, with NO Cloudflare and NO secrets.
  *
  * Simulates the Worker's fetch handler against an in-memory KV and covers:
- *   1. Lemon webhook: bad signature -> 403, missing secret -> 503,
- *      non-order events ignored, valid order_created -> license issued
- *      (idempotent on retries), counter incremented.
- *   2. /api/license/activate + /validate: format checks, unknown key 404,
+ *   1. /api/license/activate + /validate: format checks, unknown key 404,
  *      device binding, device limit (LICENSE_MAX_DEVICES), revoked 403.
- *   3. Expiry: an expired key is rejected by both activate and validate.
+ *   2. Expiry: an expired key is rejected by both activate and validate.
+ *   3. Legacy lookup and its rate limit.
  *
  * Run: node tools/test_license_flow.js
  */
 const assert = require('assert');
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -35,7 +32,6 @@ function makeKV() {
   };
 }
 
-const SECRET = 'test-webhook-secret-0123456789abcdef';
 let passed = 0;
 function ok(name, fn) {
   try { fn(); console.log('  ok -', name); passed++; }
@@ -51,85 +47,15 @@ async function call(env, pathName, opts = {}) {
   return worker.fetch(req, env);
 }
 
-function signedBody(payload) {
-  const raw = JSON.stringify(payload);
-  const sig = crypto.createHmac('sha256', SECRET).update(raw).digest('hex');
-  return { raw, headers: { 'content-type': 'application/json', 'x-signature': sig } };
-}
-
-function orderPayload(orderId, email) {
-  return {
-    meta: { event_name: 'order_created', custom_data: { order_id: orderId } },
-    data: {
-      id: orderId,
-      attributes: {
-        user_email: email || undefined,
-        first_order_item: { variant_name: 'Clean Copy Pro — Yearly' },
-      },
-    },
-  };
-}
-
 async function main() {
-  // ─── webhook signature handling ───
-  console.log('\n[webhook]');
-  let env = { VISITS: makeKV() }; // no LS_WEBHOOK_SECRET
-
-  await okAsync('missing secret -> 503 (LS will retry)', async () => {
-    const r = await call(env, '/api/lemon-webhook', { method: 'POST', body: '{}' });
-    assert.strictEqual(r.status, 503);
-  });
-
-  env = { VISITS: makeKV(), LS_WEBHOOK_SECRET: SECRET };
-
-  await okAsync('bad signature -> 403, nothing stored', async () => {
-    const r = await call(env, '/api/lemon-webhook', {
-      method: 'POST',
-      headers: { 'x-signature': 'a'.repeat(64) },
-      body: JSON.stringify(orderPayload('o1')),
-    });
-    assert.strictEqual(r.status, 403);
-    assert.strictEqual(env.VISITS._store.size, 0);
-  });
-
-  await okAsync('non-POST -> 405', async () => {
-    const r = await call(env, '/api/lemon-webhook', { method: 'GET' });
-    assert.strictEqual(r.status, 405);
-  });
-
-  await okAsync('valid ping event acknowledged, no key minted', async () => {
-    const { raw, headers } = signedBody({ meta: { event_name: 'ping' }, data: {} });
-    const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
-    const j = await r.json();
-    assert.ok(j.ok && j.ignored === 'ping');
-    assert.strictEqual(env.VISITS._store.size, 0);
-  });
-
-  let key1 = '';
-  await okAsync('valid order_created -> license key issued', async () => {
-    const { raw, headers } = signedBody(orderPayload('order-A', 'buyer@example.com'));
-    const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
-    const j = await r.json();
-    assert.ok(j.ok, 'ok flag');
-    assert.match(j.license_key, /^[a-f0-9]{32}$/, 'key format');
-    assert.ok(j.expires_at > new Date().toISOString(), 'expiry in future');
-    key1 = j.license_key;
-  });
-
-  await okAsync('webhook retry same order -> same key (idempotent)', async () => {
-    const { raw, headers } = signedBody(orderPayload('order-A', 'buyer@example.com'));
-    const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
-    const j = await r.json();
-    assert.ok(j.duplicate === true && j.license_key === key1);
-  });
-
-  await okAsync('second order -> different key; counter == 2', async () => {
-    const { raw, headers } = signedBody(orderPayload('order-B'));
-    const r = await call(env, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
-    const j = await r.json();
-    assert.notStrictEqual(j.license_key, key1);
-    assert.strictEqual(await env.VISITS.get('t:all:licenses-issued'), '2');
-  });
+  const env = { VISITS: makeKV() };
+  const key1 = '1'.repeat(32);
+  await env.VISITS.put(`lic:${key1}`, JSON.stringify({
+    status: 'active', plan: 'pro-yearly', expires_at: '2099-01-01T00:00:00Z', devices: [],
+  }));
+  const emailDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:buyer@example.com'));
+  const emailHash = [...new Uint8Array(emailDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  await env.VISITS.put(`lic-email:${emailHash}:order-A`, key1);
 
   // ─── activate / validate ───
   console.log('\n[activate/validate]');
@@ -286,9 +212,12 @@ async function main() {
   });
 
   await okAsync('lookup rate limit: 11th attempt in hour -> 429', async () => {
-    const rlEnv = { VISITS: makeKV(), LS_WEBHOOK_SECRET: SECRET };
-    const { raw, headers } = signedBody(orderPayload('order-RL', 'rl@example.com'));
-    await call(rlEnv, '/api/lemon-webhook', { method: 'POST', headers, body: raw });
+    const rlEnv = { VISITS: makeKV() };
+    const rlKey = '2'.repeat(32);
+    const rlEmailDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:rl@example.com'));
+    const rlEmailHash = [...new Uint8Array(rlEmailDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
+    await rlEnv.VISITS.put(`lic:${rlKey}`, JSON.stringify({ status: 'active', plan: 'pro-yearly', devices: [] }));
+    await rlEnv.VISITS.put(`lic-email:${rlEmailHash}:order-RL`, rlKey);
     let last;
     for (let i = 0; i < 11; i++) {
       last = await call(rlEnv, '/api/license/lookup', {

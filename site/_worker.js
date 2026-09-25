@@ -61,9 +61,6 @@ export default {
     // === Route: BugBottle inbox for every Mahope site (mail via Resend) ===
     if (path === '/api/bugreport') return handleBugreport(request, url, env);
 
-    // === Route: Lemon Squeezy webhook (auto-issues license keys) ===
-    if (path === '/api/lemon-webhook') return handleLemonWebhook(request, env);
-
     // === Routes: Stripe (levering af licenser og downloads) ===
     if (path === '/api/stripe-webhook') return handleStripeWebhook(request, env);
     if (path === '/api/stripe/fulfillment') return handleStripeFulfillment(request, url, env);
@@ -81,6 +78,8 @@ export default {
 
     // === Route: URL Inspector (redirect chain + security headers) ===
     if (path === '/api/url-inspect') return handleUrlInspect(request, url);
+
+    if (path.startsWith('/api/')) return new Response('Not found', { status: 404 });
 
     // === Route: Danish posts moved from /blog to /da/blog (301) ===
     const DA_BLOG_REDIRECTS = {
@@ -784,12 +783,8 @@ function jsonResp(obj, status = 200) {
  * device fingerprint (hashed) — max 5 devices per key, re-activating the
  * same device is free. Validation is idempotent and rate-limit friendly.
  *
- * Keys can be issued two ways:
- *  1. LS webhook (POST /api/license/activate with {checkout_id} handled by
- *     lemon-webhook flow once Lemon Squeezy is live — see lemon-setup.js).
- *  2. Manual: admin creates keys via `node tools/license-admin.js issue N`.
- *     Until then this endpoint accepts keys from KV only; nothing is
- *     auto-issued without payment.
+ * Keys are issued server-side after verified payment. Manual issuance is
+ * available via `node tools/license-admin.js issue N`.
  */
 
 const LICENSE_MAX_DEVICES = 5;
@@ -896,21 +891,6 @@ async function handleLicense(request, env, mode) {
   }
 }
 
-/**
- * Lemon Squeezy webhook — POST /api/lemon-webhook
- *
- * Receives order_created webhooks, verifies the HMAC-SHA256 signature
- * (secret: env.LS_WEBHOOK_SECRET, set via `wrangler pages secret put`),
- * and auto-issues a Clean Copy Pro license key into KV (lic:<key>).
- *
- * Idempotent: one key per LS order id — retries never mint duplicates.
- * The response echoes { license_key } so the buyer's key is attached to
- * the order in Lemon Squeezy's logs. Fail-safe: bad signature = 403,
- * missing secret = 503 (LS will retry), malformed body = 400.
- */
-
-const LICENSE_TTL_YEARS = 1;
-
 function timingSafeEqual(a, b) {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -918,123 +898,10 @@ function timingSafeEqual(a, b) {
   return diff === 0;
 }
 
-async function verifyWebhookSignature(request, rawBody) {
-  const secret = request.env && request.env.LS_WEBHOOK_SECRET;
-  if (!secret) return { ok: false, reason: 'no_secret' };
-  const sigHeader = request.headers.get('x-signature') || '';
-  // Lemon Squeezy sends hex-encoded HMAC-SHA256 of the raw body.
-  if (!/^[a-f0-9]{64}$/i.test(sigHeader)) return { ok: false, reason: 'bad_header' };
-  const key = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(rawBody));
-  const expected = [...new Uint8Array(mac)].map(b => b.toString(16).padStart(2, '0')).join('');
-  return { ok: timingSafeEqual(sigHeader.toLowerCase(), expected) };
-}
-
-async function handleLemonWebhook(request, env) {
-  // Route table passes (request, env) — verifyWebhookSignature reads the
-  // secret from a request.env shim for symmetry with standalone handlers.
-  request.env = env;
-  if (request.method === 'OPTIONS') {
-    return jsonResp({ ok: true }, 204);
-  }
-  if (request.method !== 'POST') {
-    return jsonResp({ ok: false, error: 'POST only' }, 405);
-  }
-
-  const rawBody = await request.text();
-  const check = await verifyWebhookSignature(request, rawBody);
-  if (!check.ok) {
-    return jsonResp({ ok: false, error: check.reason === 'no_secret'
-      ? 'Webhook not configured.' : 'Invalid signature.' },
-      check.reason === 'no_secret' ? 503 : 403);
-  }
-
-  let payload;
-  try { payload = JSON.parse(rawBody); } catch {
-    return jsonResp({ ok: false, error: 'Bad JSON.' }, 400);
-  }
-
-  const meta = payload.meta || {};
-  const eventName = meta.event_name || '';
-  const orderId = String((meta.custom_data && meta.custom_data.order_id)
-    || payload.data?.id || '');
-  // Buyer email — LS puts it in data.attributes.user_email. Stored hashed so
-  // the lookup page (order id + email) can hand back the key without KV
-  // holding plaintext addresses.
-  const buyerEmail = String(payload.data?.attributes?.user_email || '')
-    .trim().toLowerCase();
-
-  // LS sends test pings and other event types — acknowledge politely.
-  if (eventName !== 'order_created') {
-    return jsonResp({ ok: true, ignored: eventName || 'unknown' });
-  }
-
-  if (!env.VISITS) {
-    return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
-  }
-
-  // Idempotency: one key per order id.
-  if (orderId) {
-    const existing = await env.VISITS.get(`lic-order:${orderId}`);
-    if (existing) {
-      return jsonResp({ ok: true, duplicate: true, license_key: existing });
-    }
-  }
-
-  const productName = String(payload.data?.attributes?.first_order_item?.variant_name
-    || payload.data?.attributes?.product_name || '').slice(0, 120);
-
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + LICENSE_TTL_YEARS * 365 * 86400 * 1000).toISOString();
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  const key = [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
-
-  const rec = {
-    status: 'active',
-    plan: 'pro-yearly',
-    product: productName,
-    order_id: orderId,
-    created_at: now.toISOString(),
-    expires_at: expiresAt,
-    devices: [],
-  };
-  await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
-  if (orderId) {
-    await env.VISITS.put(`lic-order:${orderId}`, key);
-    // Lookup index: lic-email:<sha256(email)>:<orderId> -> key, so the buyer
-    // can retrieve their key with order id + email (both are secrets-ish:
-    // order ids are unguessable, email is verified as second factor).
-    if (buyerEmail) {
-      const eDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:' + buyerEmail));
-      const eHash = [...new Uint8Array(eDigest)].map(b => b.toString(16).padStart(2, '0')).join('');
-      await env.VISITS.put(`lic-email:${eHash}:${orderId}`, key);
-    }
-  }
-
-  // Server-side counter of real paid licenses (never self-testable).
-  try {
-    const prev = parseInt((await env.VISITS.get('t:all:licenses-issued')) || '0', 10);
-    await env.VISITS.put('t:all:licenses-issued', String(prev + 1));
-  } catch {}
-
-  return jsonResp({
-    ok: true,
-    license_key: key,
-    expires_at: expiresAt,
-    activate_url: 'https://cleancopy.tools/',
-    lookup_url: 'https://hermes-passiv.pages.dev/license-lookup',
-  });
-}
-
 /**
  * License key lookup — POST { order_id, email } -> { license_key }.
  *
- * Closes the delivery gap: LS receipts can't carry the key, so buyers
- * retrieve it themselves with their order id + the email they bought with.
+ * Lets buyers retrieve a legacy license with their order id and email.
  * Both values are required; a wrong pair answers exactly like an unknown
  * order (no enumeration oracle). Rate-limited by simple KV counter per IP
  * hash per hour to blunt brute-forcing.
@@ -2084,12 +1951,9 @@ async function handleComplianceScan(request, url, env) {
 }
 
 /* ── Clean Copy Pro Checkout — GET /api/checkout ────────────────
- * Returns the Lemon Squeezy checkout URL and whether Pro is available.
- * Until the LS product is created, checkout_url is null and the
- * frontend renders a "coming soon" state.
+ * Returns the Stripe Payment Link and whether Pro is available.
  * KV keys: cc-pro-checkout (Clean Copy Pro), pp-pro-checkout (Page Profile
- * Pro), du-pro-checkout (Deskuptime Pro) — set via tools/set-checkout-url.sh
- * after running lemon-setup.js.
+ * Pro), du-pro-checkout (DeskUptime Pro) — set via tools/set-checkout-url.sh.
  * ?product=pp / ?product=du select those entries; default is clean-copy-pro.
  */
 async function handleCheckout(url, env) {

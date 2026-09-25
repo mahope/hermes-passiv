@@ -18,7 +18,12 @@ const VISITS = {
 };
 const WHSEC = 'whsec_test123';
 const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHSEC, RESEND_API_KEY: 're_x',
-  ASSETS: { fetch: async () => new Response('asset', { status: 200 }) } };
+  ASSETS: { fetch: async (request) => {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === '/downloads/eaa-checklist.epub') return new Response('asset', { status: 200 });
+    if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
+    return new Response('Not found', { status: 404 });
+  } } };
 
 const mails = []; let stripeCalls = 0; let resendNede = false;
 const sessions = {
@@ -59,8 +64,14 @@ const ok = (navn, cond, info = '') => { if (cond) pass++; else { fail++; console
 const call = (path, init) => worker.fetch(new Request('https://mahope.tools' + path, init), env, {});
 const sign = (body, t = Math.floor(Date.now() / 1000)) => `t=${t},v1=${createHmac('sha256', WHSEC).update(`${t}.${body}`).digest('hex')}`;
 
+let r;
+r = await call('/api/lemon-webhook', { method: 'GET' });
+ok('gammel Lemon-rute: GET = 404', r.status === 404);
+r = await call('/api/lemon-webhook', { method: 'POST', body: '{}' });
+ok('gammel Lemon-rute: POST = 404', r.status === 404);
+
 // Licens via tak-siden
-let r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA');
+r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA');
 let j = await r.json();
 ok('licens udstedt', r.status === 200 && /^[a-f0-9]{32}$/.test(j.license_key), JSON.stringify(j));
 ok('max 3 enheder', j.max_devices === 3);
