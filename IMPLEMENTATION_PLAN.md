@@ -3,14 +3,14 @@
 ## Status
 
 - `ITERATION_ID`: `conversion-stripe-contract-2026-09-25`
-- `STATE`: `I GANG`
+- `STATE`: `I GANG (del 1 merged og deployet; del 2 = ranking_basis)`
 - `ACTIVE_TASK`: `4B`
 - `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter (del 2: `ranking_basis` i ugerapporten)`
 - `TASK_ATTEMPTS`: `4B: 1/2`
 - `LAST_BRANCH`: `ceo/stripe-cta-contract`
 - `PLAN_COMMIT`: `4ad9457`
 - `BASELINE`: `main@fa1e830`
-- `RESULT`: Opgave 4F er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 og uafhængig live-kontrol var grønne.
+- `RESULT`: Opgave 4B del 1 er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 og uafhængig live-kontrol var grønne.
 - `GATE`: `GRØN — build/sitemap 4/4, SEO 308/0, node --check, Stripe-worker 57/57, inline JS 297/0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
@@ -554,6 +554,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK 1bf981f` — GitHub Actions-run `36153509552` byggede og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdskontrol bekræfter de ærlige claims: `/compliance-report` viser kun Report Kit $69 og EUComply Pro $79/år, `/scan` og `/scan-da` linker til Report Kit, `/site-icons` og `/downloads` siger at der ikke findes en Pro-licens, og `/` + `/da/` har ingen checkout-påstand længere. Ingen "store launches" eller "Pro is coming" fandtes live.
 - 2026-09-25: `VERIFICÉR DEPLOY: kun tilladte Stripe-links, 15 dokumenterede købssider og ærlige Pro-claims 1bf981f 2026-09-25T17:25+02:00` — GitHub Actions-run `36153509552` kører. Verificér på live: `site/compliance-report.html` viser Report Kit $69 + EUComply Pro $79/år og ingen "store launches"; `site/scan.html` og `/scan-da` linker til Report Kit; `site/site-icons.html` og `site/downloads.html` har ingen Pro-pris; `site/index.html` og `/da/` har ingen "checkout ikke koblet på".
 
 - 2026-09-25T14:15:28Z: `DEPLOY OK 4ad9457` — GitHub Actions-run `36146060595` deployede cleancopy.tools, deskuptime.com og mahope.tools grønt; uafhængig `check_live_sitemaps.py --commit 4ad9457235887f05d2e7723cc184e8956a50444a` bekræftede live sitemap, robots, build-info og alle sider. Live `/activate/` viste den nye guide.
