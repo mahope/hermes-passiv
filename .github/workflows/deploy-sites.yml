@@ -8,6 +8,10 @@ on:
   push:
     branches: [main]
     paths:
+      # Bemærk: listen er ikke håndskrevet ukritisk. `tools/quality_gate.py`
+      # erklærer, hvilke filer hvert gatestep læser, og
+      # `tools/test_deploy_workflow.py` fejler hvis et af dem mangler her. Se
+      # `python3 tools/quality_gate.py --inputs` for den afledte liste.
       - 'site/**'
       - 'bugbottle-landing/**'
       - 'build_sites.py'
@@ -27,6 +31,13 @@ on:
       - 'tools/check_clean_copy_distribution.py'
       - 'tools/check_links.py'
       - 'tools/build_clean_copy_archives.py'
+      - 'tools/check_product_copy.py'
+      - 'tools/check_stripe_ctas.py'
+      - 'tools/stripe_catalog.json'
+      - 'tools/make_blog_da_mirrors_461.py'
+      - 'tools/quality_gate.py'
+      - 'tools/mini_yaml.py'
+      - 'tools/test_license_flow.js'
       - 'extension-clean-copy/**'
       - 'extension-clean-copy-firefox/**'
       - 'obsidian-plugin/**'
@@ -42,21 +53,42 @@ on:
       - 'tools/test_deploy_workflow.py'
       - 'tests/stripe-worker.test.mjs'
       - 'tests/tracking-worker.test.mjs'
+      - 'test.js'
+      # Licenskatalogen og kontrakten definerer priserne; `products/` er de
+      # betalte filer `check_private_content.py` holder ude af dist.
+      - 'docs/**'
+      - 'products/**'
+      # `check_license_clients.py` har `desktop/main.js` som dokumenteret
+      # undtagelse. Kun den ene fil, så en desktop-ændring ikke deployer sites.
+      - 'desktop/main.js'
       - '.github/workflows/deploy-sites.yml'
+      # `tools/test_deploy_workflow.py` læser begge workflows, og
+      # `build-desktop.yml` kører ingen gate selv — så uden denne linje ville
+      # enændring af desktop-workflowen aldrig blive gaten afkontrolleret.
+      - '.github/workflows/build-desktop.yml'
   workflow_dispatch:
 
 jobs:
-  # `tools/check_clean_copy_distribution.py` skal vide hvilket domæne der
-  # publicerer hvilket arkiv, og det kan det kun se i et dist der er bygget.
-  # Matrix-jobs bygger ét domæne hver, så de to checks ville springes over dér.
-  # Derfor bygges alle fire dists her, og deploy afhænger af jobbet.
-  gate-distribution:
+  # Den fulde kvalitetsgate, ét sted, før noget deployes.
+  #
+  # Før denne opgave kørte hvert matrixjob sin egen, kortere liste, og tre af
+  # de dokumenterede checks kørte aldrig i CI. Tre separate lister kan ikke
+  # bevise, at de er ens — én kan. `tools/quality_gate.py` ejer listen, og
+  # `tools/test_deploy_workflow.py` (et step i gaten selv) beviser bagefter at
+  # path-filteret dækker hver fil listen læser.
+  #
+  # Den bygger alle fire dists, fordi `check_clean_copy_distribution.py` skal
+  # vide hvilket domæne der publicerer hvilket arkiv, og `check_links.py` skal
+  # opløse krydsdomæne-links mod det domænes dist — begge kan det kun se i et
+  # dist der er bygget. Deploy afhænger af dette job, så en fælles gatefejl
+  # dræber alle tre deploys i stedet for at sende dem videre hver for sig.
+  gate:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # build_sites.py læser datePublished/dateModified fra git-historikken
 
       - uses: actions/checkout@v4
         with:
@@ -68,21 +100,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Byg alle dists og gaten for den publicerede distribution
+      - name: Kør hele kvalitetsgaten
         env:
           AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
         run: |
           set -o pipefail
-          python build_sites.py
-          python tools/check_clean_copy_distribution.py
-          python tools/check_clean_copy_distribution.py --self-test
-          python3 tools/check_links.py --only "${{ matrix.domain }}"
-          python3 tools/check_links.py
-          python3 tools/check_links.py --self-test
+          python3 tools/quality_gate.py
 
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: gate-distribution
+    needs: gate
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -112,27 +139,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Gaten kørte i `gate`-jobbet over alle fire domæner. Her bygges kun det
+      # domæne der skal deployes, og resten er bevis på at bygget virkede.
       - name: Byg dist/${{ matrix.domain }}
         env:
           AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
         run: |
           set -o pipefail
-          python3 tools/test_check_sitemaps.py
-          python3 tools/test_check_live_sitemaps.py
           python build_sites.py --only "${{ matrix.domain }}" | tee build.log
-          python tools/seo_check.py --only "${{ matrix.domain }}"
-          python tools/check_sitemaps.py --only "${{ matrix.domain }}"
-          node tests/stripe-worker.test.mjs
-          node tests/tracking-worker.test.mjs
-          python3 tools/test_weekly_report.py
-          python3 tools/test_deploy_workflow.py
-          python tools/check_inline_js.py
-          python3 tools/check_private_content.py
-          python3 tools/check_page_profile_distribution.py
-          python3 tools/check_clean_copy_distribution.py
-          python3 tools/check_clean_copy_distribution.py --self-test
-          python3 tools/check_page_profile_distribution.py --self-test
-          python3 page-profile/test_page_profile.py
           if grep -q "extra file missing" build.log; then
             echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"
             exit 1
