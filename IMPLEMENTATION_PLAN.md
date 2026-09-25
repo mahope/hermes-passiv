@@ -217,6 +217,24 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_stripe_ctas.py` plus hele kvalitetsgaten.
 
+### 4C. UFÆRDIG — Send support og købersvar til de nye support-adresser
+
+**Begrundelse:** Siden 2026-09-25 modtager alle produktdomæner mail (MX → Stalwart, catch-all → den fælles indbakke `support@mahope.tools`), som automations-serverens produktpuls læser og poster i #produkter. Sidernes kontaktlinks og leveringsmailens svar-adresse peger stadig på Mads' private indbakker, så kundehenvendelser bliver ikke sporet som produktfeedback.
+
+**Omfang:**
+
+- Erstat synlige `mailto:mads@mahope.dk`/`mailto:mads@mahoje.dk` på produktsiderne (bl.a. `site/privacy/`, `site/terms/`) med `support@<sidens domæne>` for cleancopy.tools, deskuptime.com og bugbottle.dev og `support@mahope.tools` for mahope.tools.
+- Sæt `reply_to` i leveringsmailen (`site/_worker.js`, `Your ${r.product_name}`) til `support@<produktets domæne>` ud fra produktets `home` i produktkataloget, med `support@mahope.tools` som fallback. `from` forbliver `orders@mahoje.dk`, og salgsnotitsen til Mads ændres ikke.
+- Ingen DNS-, Stalwart- eller Stripe-ændringer; adresserne findes allerede.
+
+**Acceptkriterier:**
+
+- `grep -rn "mailto:mads@" site/` giver ingen fund.
+- En worker-test beviser, at leveringsmailen for `clean-copy-pro` har `reply_to: support@cleancopy.tools`, og at et produkt uden `home` falder tilbage til `support@mahope.tools`.
+- Stripe-worker-testens antal tests falder ikke.
+
+**Gate:** `! grep -rn "mailto:mads@" site/ && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+
 ### 5. UFÆRDIG — Stop offentlig eksponering af betalt indhold
 
 **Begrundelse:** Betalte kilder og artefakter ligger allerede i det offentlige repo, selv om missionen kræver private filer og kun offentlig open-core-kode.
