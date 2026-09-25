@@ -3,17 +3,17 @@
 ## Status
 
 - `ITERATION_ID`: `correct-sitemaps-domains-2026-09-25-r3`
-- `STATE`: `I GANG`
-- `ACTIVE_TASK`: `3 — Gør robots, sitemap og domænedrift korrekt`
-- `NEXT_TASK`: `3 — Gør robots, sitemap og domænedrift korrekt`
+- `STATE`: `FÆRDIG`
+- `ACTIVE_TASK`: `INGEN`
+- `NEXT_TASK`: `4A — Gør trafikdata domæneopdelt og troværdige`
 - `TASK_ATTEMPTS`: `3: 2/2`
 - `LAST_BRANCH`: `ceo/repair-sitemap-deploy-gate`
-- `PLAN_COMMIT`: `fb4189d`
+- `PLAN_COMMIT`: `b7c8a64`
 - `BASELINE`: `main@fb4189d`
-- `RESULT`: Første deployment `fb4189d` nåede alle tre Pages-domæner, men CI-live-gaten fejlede fordi Wrangler blev installeret i `dist/<domæne>` og skabte HTML-filer under `node_modules`. Den efterfølgende live-kontrol fandt også én ugyldig JSON-LD-side. Den korrigerende lokale implementering er grøn: Wrangler installeres uden for deploymappen, pagepass springer scripts over ved tabel-indpakning, og SEO-gaten parserer alle JSON-LD-blokke; 251 unikke mahope.tools-ruter, 32 Clean Copy, 5 DeskUptime og 7 lokale BugBottle er uændrede. Den separate `mahope/bugbottle`-kilde matcher live på commit `07828a1d605383c58cf44416447e0497e91fdac3`.
-- `GATE`: `GRØN — 11/11 sitemap-tests, 3/3 live-checker-tests, deterministisk routeinventory, build, 4/4 domænecheckere, SEO 307 sider/0 fund, Stripe 43/43, inline JS 296/0, workflow YAML/syntax`
+- `RESULT`: Opgave 3 er færdig. De tre Pages-domæner har domænekorrekte robots/sitemaps med 32 Clean Copy-, 5 DeskUptime- og 251 mahope.tools-ruter; CI bygger, deployer og live-verificerer præcis `b7c8a64`. Den separate `mahope/bugbottle`-kilde matcher live på commit `07828a1d605383c58cf44416447e0497e91fdac3`.
+- `GATE`: `GRØN — 11/11 sitemap-tests, 3/3 live-checker-tests, deterministisk routeinventory, build, 4/4 domænecheckere, SEO 307 sider/0 fund, Stripe 43/43, inline JS 296/0, workflow YAML/syntax, GitHub Actions 3/3 og uafhængig live-kontrol 3/3`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
-- **Blokerede opgaver:** Opgave 3 afventer kun post-merge live-verificering af de tre Pages-domæner; BugBottle-kildeejerskabet er nu dokumenteret read-only og kræver ingen ny kildeændring.
+- **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
 - `../auditedwp` er en ekstern buildkilde og må ikke ændres.
 - Secrets, `.env*`, produktionsdatabaser og udadvendte writes er forbudte. Eneste eksplicitte undtagelse er den kontraktstyrede merge/push til `main` i dette repo, som må deploye de tre Cloudflare-Pages-domæner; `bugbottle.dev` er read-only og ejes af `mahope/bugbottle`.
@@ -133,7 +133,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_product_copy.py` plus hele kvalitetsgaten.
 
-### 3. I GANG — Gør robots, sitemap og domænedrift korrekt
+### 3. FÆRDIG — Gør robots, sitemap og domænedrift korrekt
 
 **Begrundelse:** Fire domæner skal have én kanonisk, komplet og live-matchende SEO-overflade. Den nuværende mahope.tools-dublet og BugBottle-driften kan skade indeksering.
 
@@ -155,7 +155,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Deploy-CI bruger den nye lokale og live-gate for de tre Pages-ejede domæner, kører Stripe-worker- og inline-JS-tests før deploy, dækker alle buildinputs i path-filteret, pinner `mahope/auditedwp` til `5e244dcff242352cd5be31a55ca5f7d260f7e520` og deployer kun fra `main`.
 - Den røde første live-gate gav permanent harness-dækning: Wrangler installeres i repo-roden og deployer en eksplicit `dist/<domæne>`-sti; `pagepass.py` indpakker ikke `<table>` i scripts/pre/textarea; `seo_check.py` afviser ugyldig JSON-LD før deploy.
 
-**Åben delhandling:** Den korrigerende commit er endnu ikke merged/deployet. Efter merge/push skal både GitHub Actions og `check_live_sitemaps.py --commit <merge-sha>` være grønne; indtil da må opgaven ikke markeres færdig.
+**Resultat:** Implementeringen blev merged i `fb4189d`; den korrigerende deploy-gate blev merged i `b7c8a64`. GitHub Actions-run `36099316657` og en uafhængig live-kontrol bekræfter robots, sitemap, build-info, JSON-LD, canonicale og alle 288 Pages-ruter.
 
 **Acceptkriterier:**
 
@@ -442,8 +442,10 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK b7c8a64` — GitHub Actions-run `36099316657` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit b7c8a64` bekræftede byte-identiske robots/sitemap/build-info og alle 288 sitemap-sider; CI meldte kun eksisterende Node 20-/Ubuntu 26-advarsler.
+- 2026-09-25T07:37:10+02:00: `VERIFICÉR DEPLOY: korrigeret Wrangler-sti og JSON-LD-gate b7c8a64 2026-09-25T07:37:10+02:00`
 - 2026-09-25T07:27:55+02:00: `VERIFICÉR DEPLOY: domænekorrekt robots/sitemap og tre Pages-domæner fb4189d 2026-09-25T07:27:55+02:00`
-- 2026-09-25T05:28:41Z: `DEPLOY FEJL 36098659762` — alle tre Pages-deploysteps lykkedes, men post-deploy-gaten fejlede lokalt, fordi `wrangler-action` installerede `node_modules` i hver `dist/<domæne>`. En uafhængig live-kontrol bekræftede de nye robots/sitemap/build-info, men fandt ugyldig JSON-LD på `/blog/html-table-to-csv-converter`; korrigerende commit er grøn lokalt og afventer merge.
+- 2026-09-25T05:28:41Z: `DEPLOY FEJL 36098659762` — alle tre Pages-deploysteps lykkedes, men post-deploy-gaten fejlede lokalt, fordi `wrangler-action` installerede `node_modules` i hver `dist/<domæne>`. En uafhængig live-kontrol bekræftede de nye robots/sitemap/build-info, men fandt ugyldig JSON-LD på `/blog/html-table-to-csv-converter`; korrigerende commit `b7c8a64` blev efterfølgende grøn live.
 - 2026-09-25: Researchiterationen ændrer kun `IMPLEMENTATION_PLAN.md`. Deploy-workflowens path-filter forventes derfor ikke at udløse en site-deploy. Efter merge/push kontrolleres GitHub Actions read-only, og der tilføjes en `VERIFICÉR DEPLOY`-note kun hvis workflowen alligevel kører.
 - 2026-09-25: `DEPLOY OK 28c7f64` — GitHub Actions-run `36076793409` deployede alle fire sites grønt. Live GET og POST på `/api/lemon-webhook` gav `404` på `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahope.tools`; de tre Worker-domaener returnerede `Not found`, mens BugBottle returnerede sit nginx-404-svar. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
@@ -453,3 +455,5 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
 - Fjern død Lemon-webhook: `28c7f64` — `Fjern den døde Lemon-webhook`.
 - Gør DeskUptime-teksten sand: `41758af` — `Gør DeskUptime-teksten sand`.
+- Gør robots, sitemap og domænedrift korrekt: `fb4189d` — `Gør robots, sitemap og domænedrift korrekt`.
+- Ret deploy-gaten efter Wrangler-forurening: `b7c8a64` — `Ret deploy-gaten efter Wrangler-forurening`.
