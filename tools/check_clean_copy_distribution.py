@@ -22,6 +22,17 @@ Gaten fejler ved:
 6. En side der stadig viser en gammel udgave af et af de tre produkter.
 7. En `dist/`-kopi af et arkiv der afviger fra det publicerede (springes over,
    hvis intet er bygget).
+8. En reference i det *byggede output* der peger på et Clean Copy-arkiv i et
+   domæne, der ikke publicerer det — altså den download, der ville give 404.
+   Gaten læser selv, hvilket domæne der publicerer hvilket arkiv, i stedet for
+   at tro på en filliste. Springes over, hvis intet er bygget.
+
+Opgave 8 i `IMPLEMENTATION_PLAN.md`. Punkt 5-7 tjekker navnet på et arkiv, men
+aldrig domænet: `site/downloads.html` ligger på mahope.tools, mens arkiverne kun
+publiceres på cleancopy.tools, og det er `build_sites.py`s
+`build_index()`/`rewrite_text()` der gør linket til en absolut URL i outputtet.
+Uden punkt 8 kan den ordning brydes — eller holdt op at virke — uden at nogen
+opdager det, og resultatet er en 404 på selve købsstien.
 
     python3 tools/check_clean_copy_distribution.py
     python3 tools/check_clean_copy_distribution.py --self-test
@@ -35,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import posixpath
 import re
 import sys
 import zipfile
@@ -55,10 +67,18 @@ ROOT = Path(__file__).resolve().parent.parent
 DEAD_HOST = "hermes-passiv.pages.dev"
 PRODUCT = "clean-copy-pro"
 
+# De fire domæner `build_sites.py` bygger. Kun disse tjekkes: et link til et
+# tredjepartsdomæne (en GitHub-release) er ikke denne gats sag.
+DIST_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
+# Href'er i det byggede output. Kun arkivnavne bruges af check_publish_targets.
+HREF_RE = re.compile(r"""(?:href|src)=["']([^"']+)["']""")
+
 # Sider der linker på de publicerede arkiver. Findes automatisk i `check_pages`;
 # listen bruges kun til at slå den korrekte fejlmeddelelse ud.
 VERSION_TOKEN = re.compile(r"(?<![\w.])(?:[vV])?(\d+\.\d+\.\d+)(?![\w.])")
 VERSION_CONTEXT = re.compile(r"clean[- ]copy|obsidian|softwareVersion|covers|version", re.I)
+# Et publiceret arkivs filnavn, uden sti. Bruges både på kilden og på output.
+ARCHIVE_RE = re.compile(r"clean-copy[a-z-]*-v\d+\.\d+\.\d+\.zip")
 
 # Omtaler af en tidligere udgave som feature-historik. Alt andet end den aktuelle
 # udgave på en af siderne er en fejl.
@@ -84,8 +104,39 @@ def site_pages() -> dict[str, str]:
     pages: dict[str, str] = {}
     for path in sorted((ROOT / "site").rglob("*.html")):
         text = path.read_text(encoding="utf-8", errors="replace")
-        if re.search(r"clean-copy[a-z-]*-v\d+\.\d+\.\d+\.zip", text):
+        if ARCHIVE_RE.search(text):
             pages[str(path.relative_to(ROOT))] = text
+    return pages
+
+
+def dist_publishes(names: set[str]) -> dict[str, set[str]]:
+    """domæne -> de arkivnavne der faktisk ligger i dets dist.
+
+    Læses ud af `dist/`, ikke hardcoded: en hardcoded liste ville blot være den
+    fejlform gaten skal fange, skrevet ned som data.
+    """
+    publishes: dict[str, set[str]] = {domain: set() for domain in DIST_DOMAINS}
+    for domain in DIST_DOMAINS:
+        downloads = ROOT / "dist" / domain / "downloads"
+        if not downloads.is_dir():
+            continue
+        for path in downloads.iterdir():
+            if path.is_file() and path.name in names:
+                publishes[domain].add(path.name)
+    return publishes
+
+
+def dist_pages() -> dict[str, str]:
+    """Alle byggede HTML-sider der nævner et Clean Copy-arkiv, med dist-sti."""
+    pages: dict[str, str] = {}
+    dist = ROOT / "dist"
+    for domain in DIST_DOMAINS:
+        if not (dist / domain).is_dir():
+            continue
+        for path in sorted((dist / domain).rglob("*.html")):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            if ARCHIVE_RE.search(text):
+                pages[str(path.relative_to(ROOT))] = text
     return pages
 
 
@@ -145,6 +196,8 @@ def load() -> dict:
         "versions_json": versions_json,
         "pages": site_pages(),
         "dist": dist,
+        "dist_pages": dist_pages(),
+        "publishes": dist_publishes({entry["name"] for entry in archives.values()}),
     }
 
 
@@ -276,6 +329,73 @@ def check_dist(dist: dict[str, bytes | None], archives: dict[str, dict]) -> list
     return problems
 
 
+def _split_href(href: str, page: str) -> tuple[str | None, str]:
+    """(domæne eller None hvis ikke vores, sti) for en href i en bygget side.
+
+    `None` betyder et tredjepartsdomæne: det er ikke denne gats at dømme.
+    """
+    path = href.split("#")[0].split("?")[0]
+    if path.startswith("//"):
+        host, _, rest = path[2:].partition("/")
+        domain, target = host, "/" + rest
+    elif "://" in path:
+        host, _, rest = path.partition("://")[2].partition("/")
+        domain, target = host, "/" + rest
+    elif path.startswith("/"):
+        domain, target = page.split("/", 1)[0], path
+    else:
+        domain = page.split("/", 1)[0]
+        target = posixpath.normpath(posixpath.join(posixpath.dirname(page), path))
+    domain = domain.split(":")[0].lower()
+    if domain not in DIST_DOMAINS:
+        return None, target
+    return domain, target
+
+
+def check_publish_targets(pages: dict[str, str], publishes: dict[str, set[str]]) -> list[str]:
+    """En reference i outputtet skal ramme et domæne, der publicerer arkivet.
+
+    Dette er den fejl, `check_pages` ikke kan se: den kender navnet på arkivet,
+    men ikke hvilket domæne der har det. En rodrelativ reference på en side, der
+    ligger et andet sted end arkivet, er en 404 på købsstien.
+    """
+    problems: list[str] = []
+    for rel, text in sorted(pages.items()):
+        page = rel.split("dist/", 1)[1]
+        for href in HREF_RE.findall(text):
+            domain, target = _split_href(href, page)
+            if domain is None:
+                continue
+            name = posixpath.basename(target)
+            if not ARCHIVE_RE.fullmatch(name):
+                continue
+            if name not in publishes.get(domain, set()):
+                problems.append(
+                    f"{rel} linker på {href}, men {domain} publicerer ikke {name}"
+                )
+    return problems
+
+
+def check_every_archive_is_reachable(
+    archives: dict[str, dict], publishes: dict[str, set[str]]
+) -> list[str]:
+    """Ingen arkiv må være publiceret uden at nogen kan hente det.
+
+    Springes over når intet er bygget, i samme mønster som `check_dist`.
+    """
+    if not any(publishes.get(domain) for domain in DIST_DOMAINS):
+        return []
+    reachable = set().union(*publishes.values()) if publishes else set()
+    problems: list[str] = []
+    for entry in archives.values():
+        if entry["name"] not in reachable:
+            problems.append(
+                f"{entry['name']} ligger publiceret, men i ingen dist — "
+                f"downloadstien er død i hele familien"
+            )
+    return problems
+
+
 def run(data: dict) -> list[str]:
     archives = data["archives"]
     return (
@@ -285,6 +405,8 @@ def run(data: dict) -> list[str]:
         + check_license_contract(archives)
         + check_pages(data["pages"], {entry["name"] for entry in archives.values()})
         + check_dist(data["dist"], archives)
+        + check_publish_targets(data["dist_pages"], data["publishes"])
+        + check_every_archive_is_reachable(archives, data["publishes"])
     )
 
 
@@ -362,11 +484,43 @@ def self_test() -> int:
          check_dist({f"dist/mahope.tools/downloads/{chrome_name}": b"drift"}, archives)),
         ("en dist-kopi der mangler",
          check_dist({f"dist/mahope.tools/downloads/{chrome_name}": None}, archives)),
+        # Punkt 8: domænet, ikke navnet. Det er her den oprindelige 404 boede.
+        ("en rodrelativ reference på et domæne uden arkivet",
+         check_publish_targets(
+             {f"dist/mahope.tools/downloads.html": f'<a href="/downloads/{chrome_name}">x</a>'},
+             {"cleancopy.tools": {chrome_name}})),
+        ("en absolut reference til et domæne uden arkivet",
+         check_publish_targets(
+             {f"dist/mahope.tools/downloads.html":
+              f'<a href="https://mahope.tools/downloads/{chrome_name}">x</a>'},
+             {"cleancopy.tools": {chrome_name}})),
+        ("en rodrelativ reference på det domæne der har arkivet (skal ikke fejle)",
+         check_publish_targets(
+             {f"dist/cleancopy.tools/clean-copy.html": f'<a href="/downloads/{chrome_name}">x</a>'},
+             {"cleancopy.tools": {chrome_name}})),
+        ("en reference til et tredjepartsdomæne (skal ikke fejle)",
+         check_publish_targets(
+             {f"dist/mahope.tools/downloads.html":
+              f'<a href="https://github.com/mahope/clean-copy/releases/{chrome_name}">x</a>'},
+             {"cleancopy.tools": {chrome_name}})),
+        ("et publiceret arkiv der ikke findes i nogen dist",
+         check_every_archive_is_reachable(
+             archives, {"cleancopy.tools": {"clean-copy-v0.0.1.zip"}, "mahope.tools": set()})),
+        ("et publiceret arkiv der findes i en dist (skal ikke fejle)",
+         check_every_archive_is_reachable(archives, {"cleancopy.tools": published})),
     ]
 
     missed = [label for label, problems in scenarios if not problems and "skal ikke fejle" not in label]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
+
+    # En positiv kontrol der fejler, ville ellers bare blive ignoreret — og så
+    # kan scenariet ikke bruges som bevis på at den rigtige kode er grøn.
+    over_firing = [label for label, problems in scenarios
+                   if problems and "skal ikke fejle" in label]
+    for label in over_firing:
+        print(f"SELFTEST FEJLER: {label} fejler, men skulle ikke: "
+              f"{scenarios[[s[0] for s in scenarios].index(label)][1]}")
 
     green_problems = run(data)
     for problem in green_problems:
@@ -374,9 +528,10 @@ def self_test() -> int:
 
     negative = [label for label, problems in scenarios
                 if not problems and "skal ikke fejle" not in label]
-    print(f"clean copy-distribution: {len(scenarios) - len(negative)}/{len(scenarios)} "
+    caught = len(scenarios) - len(negative) - len(over_firing)
+    print(f"clean copy-distribution: {caught}/{len(scenarios)} "
           f"fejlformer fanget, {len(green_problems)} problemer på den rigtige kode")
-    return 1 if missed or green_problems else 0
+    return 1 if missed or over_firing or green_problems else 0
 
 
 def _replace_member(payload: bytes, member: str, data: bytes) -> bytes:

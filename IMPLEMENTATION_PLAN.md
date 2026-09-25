@@ -2,16 +2,17 @@
 
 ## Status
 
-- `ITERATION_ID`: `clean-copy-archives-2026-09-25`
-- `STATE`: `Opgave 7 FÆRDIG — del 1, del 2 pkt. 1/3/4 og pkt. 2 (publicerede arkiver) er alle implementeret; næste iteration er opgave 8 (electron-builder-advisory)`
+- `ITERATION_ID`: `clean-copy-publish-targets-2026-09-25`
+- `STATE`: `Opgave 8 FÆRDIG — domæne-bevis for de publicerede Clean Copy-arkiver; næste iteration er opgave 9 (electron-builder-advisory)`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `8 — ret de døde Clean Copy-downloadlinks på mahope.tools/downloads (fund under deploy-verificering 25/9); derefter 9 — electron-builder-advisory`
-- `TASK_ATTEMPTS`: `7: 3/3 (del 1, del 2 pkt. 1/3/4, del 2 pkt. 2 — ingen mislykkede forsøg)`
-- `LAST_BRANCH`: `ceo/clean-copy-archives`
+- `NEXT_TASK`: `9 — opgradér electron-builder i desktop/ og fjern de 15 advisory-fund`
+- `TASK_ATTEMPTS`: `8: 1/1 (ingen mislykkede forsøg)`
+- `LAST_BRANCH`: `ceo/clean-copy-publish-targets`
 - `PLAN_COMMIT`: `(denne commit)`
-- `BASELINE`: `main@55fbe15`
-- `RESULT`: Webværktøjet på `cleancopy.tools` og `mahope.tools` lå sine kunder i fare: `site/clean-copy-tool.html` kaldte `clearPro()` ved ethvert ikke-200-svar, så en 503 fra licensserveren slettede Pro-status hos en kunde der havde betalt — præcis den fejl kontrakten forbyder. Siden indlejrer nu `tools/clean_copy_license.js` ordret og bruger `decide()`: 200 er Pro, 503/5xx/status 0 er Pro fra cache i højst syv dage med en synlig forklaring, 403/404/400/409 og `valid:false` er aldrig Pro og rydder nøglen, og et lokalt udløbet `cc_pro_expires` ryddes ved indlæsning med datoen nævnt. Aktivering afviser et nøgleformat der ikke er 32 hex, før der laves et netværkskald. `site/compliance-report.html` sendte slet ingen `product`, så workeren afviste hver nøgle med 403 — siden sælger kun EUComply Pro, og den sender nu `eucomply-pro`. Rødderne `main.js` og `core.js` er væk: `core.js` var byte-identisk med `obsidian-plugin/core.js`, mens `main.js` var en ældre variant med det døde `hermes-passiv.pages.dev`-endepunkt og ingen cache, altså to kilder der kunne komme i drift i en udgivelse. Samtidig viste det sig, at *begge* tests der påstod at teste `main.js` (rodens `test.js` og `obsidian-plugin/test.js`) genskrev requesten inde i testen og hævede sit eget mock mod den døde vært; de er nu et kald til den rigtige suite. Testene udvides til at indlæse webværktøjet i en `vm`-sandbox med DOM-stubs: 103 checks, grønne. `tools/check_license_clients.py` med `--self-test` (9/9) finder nu selv de klienter der kalder `/api/license` og fejler ved manglende `product`, død vært i et licenskald, Lemon Squeezy, et indlejret modul der afviger fra den kanoniske kilde, en divergeret Firefox-kopi eller en undtagelse der ikke længere findes; `desktop/main.js` står som dokumenteret undtagelse, fordi EAA endnu ikke findes i Stripe-kontrakten.
-- `GATE`: `GRØN — build OK, check_sitemaps OK (3 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile OK, product-copy 0, stripe-cta 0 + --self-test 10/10, test_license_flow OK, test_license_clients 103 checks, obsidian-plugin OK, extension-tools 13/13, check_license_clients 0 + --self-test 9/9, check_clean_copy_distribution OK + --self-test 15/15`
+- `BASELINE`: `main@2410f49`
+- `RESULT`: Opgave 8 viste sig at hvile på en fejlagtig konklusion, så den blev rettet frem for bygget oveni. Den rapporterede 404 (`mahope.tools/downloads/clean-copy-v1.5.3.zip`) er et probe mod det forkerte domæne, ikke et link en kunde kan ramme: `build_sites.py`s `build_index()`/`rewrite_text()` (`build_sites.py:349-412`) skriver alle rodrelative referencer gennem et domæneindeks, og fordi `build_sites.py:74` giver `downloads/clean-copy*` til cleancopy.tools først, står der i *outputtet* `https://cleancopy.tools/downloads/…`. Read-only live 25/9: `/downloads` er 200, de tre links på den side peger på cleancopy.tools, og alle tre arkiver svarer 200 dér; kun den direkte adresse på mahope.tools er 404, fordi arkivet aldrig publiceres der. Det reelle problem var, at intet beviste ordningen — `check_pages` kendte arkivets *navn* men aldrig hvilket domæne der havde det, så en fremtidig ændring af include-rækkefølgen eller af skrivningen af rodrelative links ville give præcis den 404 igen, helt uopdaget. `tools/check_clean_copy_distribution.py` har nu `check_publish_targets` og `check_every_archive_is_reachable`, som læser det **byggede output** i `dist/` og finder selv ud af hvilket domæne der publicerer hvilket arkiv frem for at tro på en filliste — en hardcoded liste ville blot være den fejlform den skal fange, nedskrevet som data. Gaten fejler nu på en rodrelativ reference til et arkiv i et domæne uden det, på en absolut reference til et af vores domæner uden det, og på et publiceret arkiv der ikke kan hentes i nogen dist; den springes over når intet er bygget, i samme mønster som `check_dist`. Selftesten går 15 → **21/21** og har fået en ny kontrol: en positiv kontrol der *fejler* giver nu exit 1, så et scenarie der siger "skal ikke fejle" ikke længere kan stå som bevis på at den rigtige kode er grøn. Mutationstest på det ægte dist-output bekræfter gaten: `dist/mahope.tools/downloads.html` med linket sat tilbage til `/downloads/clean-copy-v1.5.3.zip` giver præcis `mahope.tools publicerer ikke clean-copy-v1.5.3.zip`, og grøn igen efter gendannelse.
+- `GATE`: `GRØN — build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, test_license_flow 15 checks, test_license_clients 103 checks, obsidian-plugin OK, extension-tools 13/13, check_license_clients 0 + --self-test 9/9, check_clean_copy_distribution OK + --self-test 21/21, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report OK, dist/uændret`
+
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -56,6 +57,15 @@ købsfejl: køberen får en CLI der afviser sin egen Stripe-nøgle, eller en
 downloadside der lover en udgave, der ikke kan hentes. Den afhænger af
 `page-profile/`, `site/downloads/page-profile/` og de to landingssider, og alle
 tre ligger i deploy-workflowens path-filter.
+
+`check_clean_copy_distribution.py` blev udvidet 2026-09-25 i opgave 8 med
+`check_publish_targets` og `check_every_archive_is_reachable`, fordi gaten
+kun kendte et arkivs *navn* og aldrig hvilket domæne der publicerede det. En
+rodrelativ reference til et arkiv i et domæne uden det er en 404 på købsstien,
+og `build_sites.py` tæller den ikke som unresolved, fordi filen findes i
+`site/`. De to checks læser det **byggede** `dist/` og springes over, når
+intet er bygget. Fordi de læser `dist/`, skal gaten køre *efter*
+`build_sites.py` — den gør allerede, i deploy-workflowens gate-trin.
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
@@ -561,34 +571,80 @@ allerede korrekte — de var bare ubevogtede.
 
 **Hvorfor del 2 gav mening:** de publicerede zips var den kode en køber rent faktisk hentede. Del 1 og 2 rettede kilden, og uden denne del rettelsen ville aldrig nå en kunde. `IMPLEMENTATION_PLAN.md` førte den gamle kode som *dokumenteret* i dist, fordi arkiverne lå i `site/downloads/` og blev kopieret ukritisk.
 
-### 8. UFÆNDIG (ny — fund under deploy-verificering 25/9) — Ret de døde Clean Copy-downloadlinks på mahope.tools
+### 8. FÆRDIG (implementering `ceo/clean-copy-publish-targets`) — Bevis hvilket domæne der publicerer hvilket Clean Copy-arkiv
 
-**Begrundelse:** Live-verificering af arkiverne fandt fire 404'ere på en købssti.
-`build_sites.py:74` giver `downloads/clean-copy*` **kun** til cleancopy.tools, så
-arkiverne findes aldrig på mahope.tools. `site/downloads.html` ligger på
-mahope.tools (rest-fangsten, `build_sites.py:140`) og linker på
-`/downloads/clean-copy-v1.5.3.zip`, `/downloads/clean-copy-firefox-v1.5.3.zip` og
-`/downloads/clean-copy-obsidian-v1.0.10.zip` — alle tre er rodrelative og giver
-**HTTP 404 på mahope.tools** (bekræftet read-only 2026-09-25 efter deploy
-`3289b5b`). Det er en farlig 404: den ligger på siden med købslinks, og den er
-ældre end denne iteration — de gamle 1.5.2/1.0.9/1.0.6-arkiver gav præcis samme
-404. Den tæller derfor med i opgave 9's 18 unresolved references.
+**Begrundelse, korrigeret 25. september:** Den oprindelige begrundelse var, at
+`site/downloads.html` linkede rodrelativt på arkiver, der kun publiceres på
+cleancopy.tools, så købsstien gav fire 404'er. **Live-verificeringen viser, at
+den konklusion var forkert.** `build_sites.py` skriver alle rodrelative
+referencer gennem `build_index()`/`rewrite_text()`, og fordi
+`build_sites.py:74` giver `downloads/clean-copy*` til cleancopy.tools først,
+omdøbes linket i *outputtet* til `https://cleancopy.tools/downloads/…`
+(`build_sites.py:349-412`). Read-only mod live den 25. september:
+
+| URL | HTTP |
+|---|---|
+| `mahope.tools/downloads` | 200 |
+| live `/downloads`-sideens link til arkivet | `https://cleancopy.tools/downloads/clean-copy-v1.5.3.zip` |
+| `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` | 200 |
+| `cleancopy.tools/downloads/clean-copy-firefox-v1.5.3.zip` | 200 |
+| `cleancopy.tools/downloads/clean-copy-obsidian-v1.0.10.zip` | 200 |
+| `mahope.tools/downloads/clean-copy-v1.5.3.zip` | 404 ← arkivet findes *kun* dér |
+
+Den 404, der blev rapporteret, var altså et **probe mod det forkerte domæne**,
+ikke et link en kunde kan ramme. Købsstien er grøn.
+
+**Det reelle problem er, at intet beviser det.** To ting kunne gå galt uden at
+nogen opdager det: (1) hvis `build_sites.py`s include-rækkefølge eller
+`global_idx` ændres, så `downloads/clean-copy*` havner på mahope.tools, eller
+tværtom; (2) hvis skrivningen af et rodrelativt link holdt op at virke, ville
+`site/downloads.html` få `/downloads/clean-copy-v1.5.3.zip` tilbage — præcis
+det link der gav 404 i den oprindelige rapport. Den eksisterende gate
+(`tools/check_clean_copy_distribution.py`) tjekker kun *navnet* på arkivet
+(`check_pages`, linje 238-253), aldrig domænet, så ingen af de to fejl
+opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 
 **Omfang:**
 
-- Gør de tre links på `site/downloads.html` absolutte (`https://cleancopy.tools/downloads/…`), da arkiverne kun publiceres der. `site/free-downloads.html` ligger også på mahope.tools og har samme to Chrome/Firefox-links — ret den på samme måde.
-- Udvid `tools/check_clean_copy_distribution.py`, så den kender hvilket domæne der publicerer hvilken familie, og fejler ved en rodrelativ link på en side der ligger på et andet domæne. Det er præcis den fejlform den nye gate overså: den tjekkede navnet, ikke domænet.
-- Efter deploy: live-GET på alle tre links fra mahope.tools skal være 200.
+- Udvid `tools/check_clean_copy_distribution.py` med `check_publish_targets`, som
+  læser **det byggede output** i `dist/` og fejler ved:
+  - en rodrelativ reference til et Clean Copy-arkiv på en side, hvis domæne ikke
+    publicerer det arkiv;
+  - en absolut reference til et af vores domæner, der ikke publicerer arkivet;
+  - et publiceret arkiv, der ikke publiceres på noget domæne (når `dist/` er
+    bygget), altså en død downloadsti i hele familien.
+- Gaten skal selv finde ud af hvilket domæne der publicerer hvad — ingen
+  hardcoded filliste, der kan blive ligeså forkert som det link den skulle
+  fange.
+- Springes over, når intet er bygget, i samme mønster som den eksisterende
+  `check_dist`.
+- Dæk hver fejlform af selftesten.
 
 **Acceptkriterier:**
 
-- `https://mahope.tools/downloads` har nul 404'er på de ni downloadlinks.
-- Gaten fejler ved en rodrelativ reference til et Clean Copy-arkiv på en mahope.tools-side (dækket af selftesten).
+- Gaten fejler ved en rodrelativ reference til et Clean Copy-arkiv på en side, der
+  ligger på et domæne uden arkivet (dækket af selftesten).
+- Gaten fejler ved en absolut reference til et af vores domæner uden arkivet.
+- Gaten fejler, når et publiceret arkiv ikke findes i nogen dist.
+- Gaten fejler ikke ved en rodrelativ reference på cleancopy.tools selv, hvor
+  arkivet ligger (positiv kontrol i selftesten).
+- Den rigtige kode fejler ikke, og `dist/mahope.tools/downloads.html` +
+  `dist/mahope.tools/free-downloads.html` indeholder `https://cleancopy.tools/downloads/…`.
 - Hele kvalitetsgaten er grøn.
 
 **Gate:** `python3 tools/check_clean_copy_distribution.py && python3 tools/check_clean_copy_distribution.py --self-test` plus hele kvalitetsgaten.
 
-**Post-merge-gate:** `curl -s -o /dev/null -w '%{http_code}' https://mahope.tools/downloads/clean-copy-v1.5.3.zip` skal være 200 efter deploy.
+**Post-merge-gate:** `curl -s -o /dev/null -w '%{http_code}' https://cleancopy.tools/downloads/clean-copy-v1.5.3.zip` skal være 200, og live `mahope.tools/downloads` skal linke på `cleancopy.tools` — ikke på sig selv.
+
+**Implementeret denne iteration:**
+
+- `check_publish_targets` læser hver bygget side i `dist/<domæne>/` der nævner et arkiv, og slår hvert `href`/`src` op: rodrelative links arver sidens eget domæne, `https://`-links bruger værten, og et tredjepartsdomæne (fx en GitHub-release) springes over, fordi det ikke er denne gats at dømme. Fejl gives med både domæne og filnavn, så en fejlmeddelelse alene peger på den konkrete købssti.
+- `check_every_archive_is_reachable` kræver, at hvert publiceret arkiv kan hentes i mindst én dist, når der overhovedet er bygget. Det er den fejl, der ville slå *alle* downloads ihjel — fx hvis `build_sites.py:74`s include-globs slap arkiverne på ingen af domænerne.
+- `_split_href` er delt, så rodrelativ, absolut, protokol-relative og dokumentrelative links gennemgås af samme logik. `ARCHIVE_RE` er nu én fælles konstant for kilde- og outputscanning, så de to ikke kan komme i drift.
+- **Selftesten blev strammere, ikke bare større.** Scenarier mærket "skal ikke fejle" blev hidtilkun ignoreret, hvis de fejlede — de kunne altså ikke bruges som bevis. Nu giver en sådan kontrol exit 1 og tælles ikke med i fangne fejlformer, så en gaten der affyger alle vegne ikke kan bestå.
+- Deploy-workflowen behøver ingen ændring: `tools/check_clean_copy_distribution.py` ligger allerede i path-filteret fra opgave 7 del 2, så den nye fejlform giver rød gate frem for en deploy. `dist/` er uændret af denne iteration (git bekræfter det), så der er intet nyt site-indhold at udgive.
+
+**Hvorfor opgaven ikke blev implementeret som skrevet:** den specificerede løsning var at skrive de tre links absolutte i `site/downloads.html`. Det ville have vædet det samme resultat to steder — buildet skriver dem alligevel absolutte — og ville blot have gjort kilden mindre læselig og fjernet buildens ansvar for domænet. Det dybere problem, at ingen vidste hvilket domæne der publicerer hvad, stod stadig. Derfor blev rettet det, der manglede.
 
 ### 9. UFÆNDIG — Opgrader electron-builder og fjern advisory-fund
 
@@ -745,6 +801,10 @@ mahope.tools (rest-fangsten, `build_sites.py:140`) og linker på
 
 ## Deploylog
 
+- 2026-09-25: `VERIFICÉR DEPLOY: domæne-bevis for Clean Copy-arkiverne (kun en gate, intet nyt site-indhold) <merge-sha> 2026-09-25` — `tools/check_clean_copy_distribution.py` ligger i workflowens path-filter, så GitHub Actions kører, men `dist/` er byte-identisk før og efter (`git status` viser ingen dist-ændring), så live-indholdet skal være uændret. Verificér: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` svarer 200, live `mahope.tools/downloads` linker på `https://cleancopy.tools/downloads/…` (ikke på sig selv), og live `mahope.tools/downloads/clean-copy-v1.5.3.zip` svarer fortsat 404 — det er korrekt, da arkivet kun publiceres på cleancopy.tools.
+
+- 2026-09-25: **Korrektion af en tidligere deploy-note.** Noten under `DEPLOY OK 3289b5b` rapporterede "Fire 404 fundet samtidig: `mahope.tools/downloads/clean-copy-*.zip` giver 404 … Det er ældre end denne iteration og er oprettet som opgave 8." Konklusionen var forkert: de fire 404'er var ét arkiv probet fire gange mod det domæne, det ikke ligger på. Live `/downloads`-sideens links er absolutte mod cleancopy.tools og svarer 200, så ingen kunde rammer en 404. Opgave 8 blev derfor skrevet om til det, der faktisk manglede: et bevis for hvilket domæne der publicerer hvilket arkiv.
+
 - 2026-09-25: `VERIFICÉR DEPLOY: Clean Copy-arkiverne 1.5.3 / 1.0.10 med den nye licensklient <merge-sha> 2026-09-25` — GitHub Actions udgiver automatisk: `site/downloads/*.zip`, `site/extension-zips/`, `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, begge Obsidian-guides og `tools/make_blog_da_mirrors_461.py` er i path-filteret. Verificér på live: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` og `/downloads/clean-copy-firefox-v1.5.3.zip` er byte-identiske med repoets arkiver, `/downloads/clean-copy-obsidian-v1.0.10.zip` indeholder `main.js` med `clean-copy-pro` og `mahope.tools`, `license.js` i begge browserarkiver har `API_BASE = 'https://mahope.tools/api/license'`, de fire gamle arkiver svarer 404, og `/clean-copy` + `/downloads` viser 1.5.3 og 1.0.10. CI's egen post-deploy-gate skal være grøn for alle tre domæner.
 
 - 2026-09-25: `DEPLOY OK 3289b5b`
@@ -786,6 +846,7 @@ mahope.tools (rest-fangsten, `build_sites.py:140`) og linker på
 
 ## Commitlog
 
+- Bevis hvilket domæne der publicerer hvilket Clean Copy-arkiv: `ceo/clean-copy-publish-targets` — `Bevis hvilket domæne der publicerer Clean Copy-arkiverne` (8).
 - Publicerede Clean Copy-arkiver fra kilden: `ceo/clean-copy-archives` — `Pak Clean Copy-arkiverne reproducerbart fra kilden` (7 del 2 pkt. 2).
 - Clean Copy-klienter på licenskontrakten: `ceo/clean-copy-delivery` — `Hold Clean Copy-klienterne på licenskontrakten` (7 del 2 pkt. 1, 3, 4).
 - Clean Copy-licensklienter Stripe-kompatible: `ceo/clean-copy-license-clients` — `Gør Clean Copy-licensklienterne Stripe-kompatible` (7 del 1).
