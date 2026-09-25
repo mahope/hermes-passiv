@@ -564,6 +564,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25: `VERIFICÉR DEPLOY: datadrevet konverteringsrangering (ranking_basis, syv fulde dage, 14 synlige købsruter) 2528300 2026-09-25T17:52+02:00` — GitHub Actions-run `36157042428` kører, udløst af `tools/weekly_report.py` + `tools/test_weekly_report.py` i path-filteret. Ingen `site/`-fil er rørt, så live-indholdet skal være uændret; kontrollér at live `build-info.json` bærer commit `2528300` og at de tre Pages-domæner fortsat er grønne.
 - 2026-09-25: `DEPLOY OK 1bf981f` — GitHub Actions-run `36153509552` byggede og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdskontrol bekræfter de ærlige claims: `/compliance-report` viser kun Report Kit $69 og EUComply Pro $79/år, `/scan` og `/scan-da` linker til Report Kit, `/site-icons` og `/downloads` siger at der ikke findes en Pro-licens, og `/` + `/da/` har ingen checkout-påstand længere. Ingen "store launches" eller "Pro is coming" fandtes live.
 - 2026-09-25: `VERIFICÉR DEPLOY: kun tilladte Stripe-links, 15 dokumenterede købssider og ærlige Pro-claims 1bf981f 2026-09-25T17:25+02:00` — GitHub Actions-run `36153509552` kører. Verificér på live: `site/compliance-report.html` viser Report Kit $69 + EUComply Pro $79/år og ingen "store launches"; `site/scan.html` og `/scan-da` linker til Report Kit; `site/site-icons.html` og `site/downloads.html` har ingen Pro-pris; `site/index.html` og `/da/` har ingen "checkout ikke koblet på".
 
