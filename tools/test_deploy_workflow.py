@@ -23,6 +23,13 @@ tjek her er beviset på at CI faktisk bruger den:
   de filer der faktisk ligger under `site/`.
 - `auditedwp` skal være pinnet til én 40-tegns SHA i alle jobs.
 
+Baggrund del 3 (opgave 12, 25. september 2026): Node-versionen stod som
+`node-version: '22'` i alle tre build-jobs, `engines` manglede i
+`desktop/package.json`, og `.nvmrc` fandtes ikke — mens Electron 44 kræver
+`>=22.12.0`. `check_desktop_runtime` gør runtimeen til én erklæring: den skal
+findes i `.nvmrc`, den skal opfylde `engines.node`, alle tre jobs skal læse den
+derfra, og den skal være i path-filteret så en runtime-bump bygger noget.
+
 En YAML-læsning kan ikke bevise en trigger. Derfor simulerer denne gate de
 faktiske events mod workflowens egne filtre med GitHubs dokumenterede
 filtersemantik:
@@ -46,6 +53,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import json
 import re
 import sys
 from functools import lru_cache
@@ -312,6 +320,136 @@ def check_deploy(wf: dict[str, Any], label: str) -> list[str]:
         if (spec.get("permissions") or {}).get("contents") == "write":
             problems.append(f"{site}: jobbet `{job}` har contents: write uden grund")
     problems += check_gate(wf, "repo")
+    return problems
+
+
+# --------------------------------------------------------------------------
+# Opgave 12: runtime-versionen skal være erklæret ét sted, ikke skrevet tre
+# --------------------------------------------------------------------------
+NVMRC = "desktop/.nvmrc"
+DESKTOP_MANIFEST = "desktop/package.json"
+
+# `None` er et gyldigt input (filen mangler), så selftesten skal kunne sige
+# "læs fra disken" med en anden værdi end "filen mangler".
+_UNSET: Any = object()
+
+
+def _version_tuple(text: str) -> tuple[int, int, int] | None:
+    match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", (text or "").strip())
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())  # type: ignore[return-value]
+
+
+def _engine_floor(range_text: str) -> tuple[int, int, int] | None:
+    """Laveste version i en `engines.node`-række, eller None hvis ulæselig.
+
+    Vi læser kun den nedre grænse (`>=`, `^`, `>`). Det er den der dræber en
+    bygserver, hvis den vælger en for gammel Node — præcis den fejl der
+    ramte jordemoderstudy 23. august, hvor Next.js 16 installerede lokalt og
+    først faldt i produktion.
+    """
+    versions = [v for v in (_version_tuple(m) for m in re.findall(r"\d+\.\d+\.\d+", range_text or ""))
+                if v is not None]
+    return min(versions) if versions else None
+
+
+def _read_manifest(path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def check_desktop_runtime(wf: dict[str, Any], label: str, *,
+                          manifest: Any = _UNSET,
+                          nvmrc: Any = _UNSET) -> list[str]:
+    """Electron kræver en Node-version. Den skal stå i ÉN fil, og alle tre
+    build-jobs skal læse den derfra.
+
+    Uden denne erklæring er der tre steder at vedligeholde (manifest,
+    `.nvmrc`, tre `node-version:` i workflowen) og ingen der siger, når de
+    er uvede over hinanden. Før denne opgave stod `node-version: '22'` i
+    alle tre jobs, `engines` manglede i manifestet, og Electron 44 kræver
+    `>=22.12.0` — intet sted sagde det.
+    """
+    problems: list[str] = []
+    desk = f"{label}: desktop-runtime"
+    jobs = wf.get("jobs") or {}
+
+    if manifest is _UNSET:
+        manifest = _read_manifest(ROOT / DESKTOP_MANIFEST)
+    if nvmrc is _UNSET:
+        nvmrc_path = ROOT / NVMRC
+        nvmrc = nvmrc_path.read_text(encoding="utf-8") if nvmrc_path.is_file() else None
+
+    if manifest is None:
+        problems.append(f"{desk}: {DESKTOP_MANIFEST} kan ikke læses, så det er "
+                        "umuligt at bevise hvilken Node-version pakken kræver")
+        floor = None
+    else:
+        engines = manifest.get("engines")
+        node_range = (engines or {}).get("node") if isinstance(engines, dict) else None
+        if not node_range:
+            problems.append(f"{desk}: {DESKTOP_MANIFEST} erklærer ikke "
+                            "`engines.node`, så en bygserver må gætte sig til en "
+                            "runtime — og den fejler først ved build, ikke lokalt")
+            floor = None
+        else:
+            floor = _engine_floor(str(node_range))
+            if floor is None:
+                problems.append(f"{desk}: `engines.node` er `{node_range}`, som ikke "
+                                "kan læses som en nedre grænse")
+
+    pinned = _version_tuple(nvmrc) if nvmrc is not None else None
+    if nvmrc is None:
+        problems.append(f"{desk}: {NVMRC} mangler, så hverken en lokal maskine "
+                        "eller CI ved hvilken Node-version der skal bruges")
+    elif pinned is None:
+        problems.append(f"{desk}: {NVMRC} er `{nvmrc.strip()}` — skriv en konkret "
+                        "`major.minor.patch`, så bygget ikke afhænger af hvilken "
+                        "patch der tilfældigvis er nyeste")
+    elif floor is not None and pinned < floor:
+        problems.append(
+            f"{desk}: {NVMRC} er {pinned[0]}.{pinned[1]}.{pinned[2]}, men "
+            f"`engines.node` kræver mindst {floor[0]}.{floor[1]}.{floor[2]} — "
+            "bygget ville køre på en runtime pakken ikke understøtter")
+
+    # Hvert build-job skal læse den erklærede fil. En hårdkodet `node-version`
+    # er en anden liste, og den kan glide fra både `.nvmrc` og `engines`.
+    for job in DESKTOP_JOBS:
+        spec = jobs.get(job)
+        if not isinstance(spec, dict):
+            continue
+        for step in (spec.get("steps") or []):
+            if not isinstance(step, dict) or "setup-node" not in str(step.get("uses") or ""):
+                continue
+            with_ = step.get("with") if isinstance(step.get("with"), dict) else {}
+            version_file = with_.get("node-version-file")
+            if version_file:
+                if str(version_file) != NVMRC:
+                    problems.append(f"{desk}: jobbet `{job}` læser sin Node-version "
+                                    f"fra `{version_file}` i stedet for `{NVMRC}`")
+                continue
+            if with_.get("node-version"):
+                problems.append(f"{desk}: jobbet `{job}` skriver sin egen "
+                                f"`node-version: {with_['node-version']}` i stedet for "
+                                f"at læse `{NVMRC}` — den kan glide fra både "
+                                "`engines.node` og de to andre jobs")
+            else:
+                problems.append(f"{desk}: jobbet `{job}` kalder setup-node uden "
+                                "version, så den bruger runnerens forudindstillede "
+                                "Node — måske ikke den pakken kræver")
+
+    # En runtime-opdatering skal udløse en ny build, ellers merger den uden
+    # at nogen bygger med den.
+    if not push(wf, "refs/heads/main", NVMRC):
+        problems.append(f"{desk}: path-filteret dækker ikke {NVMRC}, så en push "
+                        "der kun retter runtime-versionen ikke bygger nogen af "
+                        "`DESKTOP_JOBS`")
     return problems
 
 
@@ -696,6 +834,66 @@ def self_test() -> int:
     ok &= _expect(problems, "uden at have en matrix", "spoegelses-matrix",
                   any("uden at have en matrix" in p for p in problems))
 
+    # 16. Opgave 12: runtime. De fire mutationer er de fire fejlformer, de
+    #     to erklæringer kan have imellem sig. Positiv kontrol først: de
+    #     rigtige filer skal være grønne, ellers beviser mutationerne intet.
+    real_runtime = check_desktop_runtime(real["desktop"], "rigtige filer")
+    if real_runtime:
+        print(f"FEJL: de rigtige runtime-filer har fejl: {real_runtime}", file=sys.stderr)
+        ok = False
+
+    # 16a. `engines.node` væk — det var tilstanden før denne opgave.
+    no_engines = _read_manifest(ROOT / DESKTOP_MANIFEST) or {}
+    no_engines = {k: v for k, v in no_engines.items() if k != "engines"}
+    problems = check_desktop_runtime(real["desktop"], "uden engines",
+                                     manifest=no_engines, nvmrc="22.23.2")
+    ok &= _expect(problems, "erklærer ikke `engines.node`", "uden-engines",
+                  any("engines.node" in p for p in problems))
+
+    # 16b. `.nvmrc` på en Node, pakken ikke understøtter. Uden denne fejl
+    #      bygger alle tre jobs grønt på den forkerte runtime.
+    problems = check_desktop_runtime(real["desktop"], "gammel nvmrc", nvmrc="18.20.0")
+    ok &= _expect(problems, "men `engines.node` kræver mindst", "gammel-nvmrc",
+                  any("kræver mindst" in p for p in problems))
+
+    # 16c. `.nvmrc` uden patch-version: '22' løser sig til en nyeste patch
+    #      hver gang, så bygget er ikke reproducerbart.
+    problems = check_desktop_runtime(real["desktop"], "flydende nvmrc", nvmrc="22")
+    ok &= _expect(problems, "skriv en konkret", "flydende-nvmrc",
+                  any("major.minor.patch" in p for p in problems))
+
+    # 16d. Et job der skriver sin egen version — den anden liste, præcis
+    #      som den `node-version: '22'` der stod i alle tre jobs.
+    inline_version = copy.deepcopy(real["desktop"])
+    for step in inline_version["jobs"]["build-linux"]["steps"]:
+        if isinstance(step, dict) and "setup-node" in str(step.get("uses") or ""):
+            step["with"] = {"node-version": "22"}
+    problems = check_desktop_runtime(inline_version, "inline version")
+    ok &= _expect(problems, "skriver sin egen `node-version", "inline-version",
+                  any("skriver sin egen" in p for p in problems))
+
+    # 16e. Runtime-filen er ikke i path-filteret, så en runtime-bump merger
+    #      uden at nogen bygger med den.
+    filtered = copy.deepcopy(real["desktop"])
+    filtered["on"]["push"]["paths"] = [
+        p for p in filtered["on"]["push"]["paths"]
+        if not _any_match([str(p)], NVMRC) or str(p) == ".github/workflows/build-desktop.yml"
+    ]
+    if push(filtered, "refs/heads/main", NVMRC):
+        print("FEJL: mutationen `uden-nvmrc` er ikke en mutation — path-filteret "
+              f"dækker stadig {NVMRC}", file=sys.stderr)
+        ok = False
+    else:
+        problems = check_desktop_runtime(filtered, "uden nvmrc-filter")
+        ok &= _expect(problems, "path-filteret dækker ikke", "uden-nvmrc-filter",
+                      any("path-filteret dækker ikke" in p for p in problems))
+
+    # 16f. `.nvmrc` væk fra repoet: setup-node ville finde en fil, der ikke
+    #      findes, og alle tre jobs ville døje med en kryptisk fejl.
+    problems = check_desktop_runtime(real["desktop"], "nvmrc væk", nvmrc=None)
+    ok &= _expect(problems, "mangler, så hverken en lokal maskine", "nvmrc-væk",
+                  any("mangler" in p for p in problems))
+
     print(f"test_deploy_workflow selftest {'OK' if ok else 'FEJLEDE'}")
     return 0 if ok else 1
 
@@ -708,6 +906,7 @@ def run_all(workflows: dict[str, Any]) -> list[str]:
         problems.append("mangler deploy-sites.yml")
     if "desktop" in workflows:
         problems += check_desktop(workflows["desktop"], "repo")
+        problems += check_desktop_runtime(workflows["desktop"], "repo")
     if "deploy" in workflows:
         problems += check_deploy(workflows["deploy"], "repo")
     return problems
@@ -730,6 +929,8 @@ def main(argv: list[str] | None = None) -> int:
             problems.append(str(exc))
             continue
         problems += check_desktop(wf, name) if name == "desktop" else check_deploy(wf, name)
+        if name == "desktop":
+            problems += check_desktop_runtime(wf, name)
 
     for problem in problems:
         print(f"FEJL: {problem}", file=sys.stderr)

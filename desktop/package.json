@@ -81,7 +81,10 @@
     "url": "git+https://github.com/mahope/hermes-passiv.git"
   },
   "devDependencies": {
-    "electron": "^44.0.0",
+    "electron": "^44.4.5",
     "electron-builder": "^26.15.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
