@@ -2891,6 +2891,21 @@ const STRIPE_PRODUCTS = {
 const DOWNLOAD_TTL_DAYS = 60;
 const SUBSCRIPTION_GRACE_DAYS = 7;
 const SALES_FROM = 'Mahope tools <orders@mahoje.dk>';
+// Kundehenvendelser skal lande i produktets egen indbakke (support@<produktets domæne>)
+// og dermed læses som produktfeedback. `home` er katalogens autoritative domæne;
+// produkter uden `home` (downloads, donationer) bruger mahope.tools.
+const SUPPORT_FALLBACK = 'support@mahope.tools';
+
+function supportAddress(productKey) {
+  const home = STRIPE_PRODUCTS[productKey] && STRIPE_PRODUCTS[productKey].home;
+  if (typeof home !== 'string') return SUPPORT_FALLBACK;
+  try {
+    const host = new URL(home).hostname.toLowerCase();
+    return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(host) ? `support@${host}` : SUPPORT_FALLBACK;
+  } catch {
+    return SUPPORT_FALLBACK;
+  }
+}
 
 function hex(bytes) {
   return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -3117,7 +3132,7 @@ async function sendSaleEmail(env, to, r, sessionId) {
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json',
         // Samme session = samme mail, også hvis tak-side og webhook sender samtidigt.
         'Idempotency-Key': `sale-${sessionId}` },
-      body: JSON.stringify({ from: SALES_FROM, to: [to], reply_to: 'mads@mahope.dk', subject: `Your ${r.product_name}`, text, html,
+      body: JSON.stringify({ from: SALES_FROM, to: [to], reply_to: supportAddress(r.product), subject: `Your ${r.product_name}`, text, html,
         tags: [{ name: 'source', value: 'stripe-sale' }] }),
     });
     return resp.ok;

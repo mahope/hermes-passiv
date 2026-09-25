@@ -6,7 +6,7 @@ import os
 
 ROOT = '/Users/madsholstjensen/hermes-passiv'
 SITE = os.path.join(ROOT, 'site')
-CONTACT = 'mads@mahope.dk'
+CONTACT = 'support@mahope.tools'
 SITEURL = 'https://hermes-passiv.pages.dev'
 
 STYLE = """

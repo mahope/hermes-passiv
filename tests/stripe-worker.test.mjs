@@ -53,6 +53,10 @@ const sessions = {
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'transmute-desktop-v1' } }] } },
   cs_live_pendingfailKKKKKKKKKK: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'p@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
+  cs_live_supccNNNNNNNNNNNNNN: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'cc@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'clean-copy-pro-v1' } }] } },
+  cs_live_supdlNNNNNNNNNNNNNN: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'dl@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'eucomply-dpa-v1' } }] } },
 };
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
@@ -236,5 +240,14 @@ r = await act({ license_key: subRefundKey, device_id: 'sub-refund', product: 'cl
 ok('refunderet abonnement giver 403', r.status === 403, r.status);
 r = await call('/api/download/' + 'b'.repeat(32) + '/%E0%A4%A');
 ok('ødelagt kodning = 404', r.status === 404);
+// 7) Svaradresse følger produktets domæne; produkter uden `home` falder tilbage til mahope.tools
+const m7 = mails.length;
+r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN');
+ok('Clean Copy Pro leveret', r.status === 200, r.status);
+ok('svaradresse følger Clean Copy-domænet', mails[m7] && mails[m7].reply_to === 'support@cleancopy.tools', JSON.stringify(mails[m7] && mails[m7].reply_to));
+r = await call('/api/stripe/fulfillment?session_id=cs_live_supdlNNNNNNNNNNNNNN');
+ok('download leveret', r.status === 200, r.status);
+ok('produkt uden home bruger mahope.tools', mails[m7 + 1] && mails[m7 + 1].reply_to === 'support@mahope.tools', JSON.stringify(mails[m7 + 1] && mails[m7 + 1].reply_to));
+ok('ingen kundemail svarer til en privat indbakke', mails.every(m => !String(m.reply_to || '').startsWith('mads@')));
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);
