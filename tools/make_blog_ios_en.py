@@ -233,7 +233,11 @@ assert not missing, missing
 print('All internal link targets exist:', len(set(refs)), 'checked')
 
 # --- sitemap (idempotent) ---
-sm = os.path.join(ROOT, 'site/sitemap.xml')
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 c = open(sm).read()
 if URL + '</loc>' not in c:
     entry = f'<url><loc>{URL}</loc><lastmod>{TODAY}</lastmod></url>'

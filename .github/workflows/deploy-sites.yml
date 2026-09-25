@@ -41,6 +41,14 @@ on:
       - 'tools/check_python_env.py'
       - 'tools/lock_python_env.py'
       - 'tools/check_versions.py'
+      # `check_legacy_seo_paths` læser hvert .py/.sh i roden og i tools/ — de
+      # skal kunne ramme den døde kilde-sitemap eller den døde vært, så de er
+      # input til gaten og dermed til filteret.
+      - '*.py'
+      - '*.sh'
+      - 'tools/*.py'
+      - 'tools/*.sh'
+      - 'tools/check_legacy_seo_paths.py'
       - 'requirements-build.txt'
       - 'requirements-audit.txt'
       - 'site-icons/pyproject.toml'

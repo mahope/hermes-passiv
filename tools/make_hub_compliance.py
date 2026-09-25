@@ -266,7 +266,11 @@ else:
     print('frontpage card already present')
 
 # --- sitemap (idempotent) ---
-sm = os.path.join(ROOT, 'site/sitemap.xml')
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 c = open(sm).read()
 before = len(set(re.findall(r'<loc>(.*?)</loc>', c)))
 if URL + '</loc>' not in c:

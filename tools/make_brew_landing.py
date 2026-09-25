@@ -177,7 +177,11 @@ assert not bad, bad
 print('No .html links')
 
 # --- sitemap (idempotent) ---
-sm = os.path.join(ROOT, 'site/sitemap.xml')
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 c = open(sm).read()
 if URL + '</loc>' not in c:
     entry = f'<url>\n    <loc>{URL}</loc>\n    <lastmod>{TODAY}</lastmod>\n    <priority>0.8</priority>\n  </url>\n  '

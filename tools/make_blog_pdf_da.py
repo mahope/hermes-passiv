@@ -218,7 +218,11 @@ for ref in [
 print('All internal link targets exist')
 
 # --- sitemap (idempotent) ---
-sm = '/Users/madsholstjensen/hermes-passiv/site/sitemap.xml'
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 c = open(sm).read()
 if URL + '</loc>' not in c:
     entry = f'<url><loc>{URL}</loc><lastmod>{TODAY}</lastmod></url>'

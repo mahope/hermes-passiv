@@ -729,11 +729,14 @@ def self_test() -> int:
     # 7. Deploy-workflowen taber et buildinput.
     thin_deploy = copy.deepcopy(real["deploy"])
     thin_deploy["on"]["push"]["paths"] = [
-        p for p in thin_deploy["on"]["push"]["paths"] if p != "tools/seo_check.py"
+        p for p in thin_deploy["on"]["push"]["paths"] if p != "tests/stripe-worker.test.mjs"
     ]
     problems = check_deploy(thin_deploy, "tyndt filter")
-    ok &= _expect(problems, "tools/seo_check.py", "tyndt-filter",
-                  any("tools/seo_check.py" in p for p in problems))
+    # Ikke `tools/seo_check.py`: siden opgave 15 dækker `*.py` og `tools/*.py`
+    # den og, så fjernels den eksplicitte linje stadig filteret. Scenariet skal
+    # pege på en fil ONLY dens egen linje dækker — ellers beviser det intet.
+    ok &= _expect(problems, "tests/stripe-worker.test.mjs", "tyndt-filter",
+                  any("tests/stripe-worker.test.mjs" in p for p in problems))
 
     # 8. Nyt fra opgave 11: gaten fjernet fra CI. Det var den virkelige
     #    fejlform — dokumenteret i planen, kørt tre steder i en kortere

@@ -209,7 +209,11 @@ print("Link check:", "OK" if not bad else f"BROKEN {bad}")
 assert not bad
 
 # --- Sitemap ---
-sm_path = "site/sitemap.xml"
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 sm = open(sm_path).read()
 if SLUG not in sm:
     entry = f"  <url><loc>{URL}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n"
