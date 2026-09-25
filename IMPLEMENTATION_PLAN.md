@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `private-content-gate-2026-09-25`
-- `STATE`: `5 FÆRDIG (implementering 978f950)`
+- `ITERATION_ID`: `page-profile-distribution-2026-09-25`
+- `STATE`: `6 FÆRDIG (implementering ceo/page-profile-distribution)`
 - `ACTIVE_TASK`: `(ingen)`
-- `NEXT_TASK`: `6 — Reparer Page Profile-købsflowet` (se bemærkning: 4E har allerede løst kernen i `ea4e6c3`, så 6 bør afgrænses eller lukkes)
-- `TASK_ATTEMPTS`: `5: 1/1`
-- `LAST_BRANCH`: `ceo/private-content-gate`
-- `PLAN_COMMIT`: `978f950`
-- `BASELINE`: `main@cb58700`
-- `RESULT`: Opgave 5 er færdig for stop af ny eksponering. Faktatjekket viser, at betalt indhold **allerede** var væk fra den offentlige tree: `3eb1dac` fjernede tolv filer, og ingen af de seksten betalte leveringsfiler findes i dag i den git-tracked tree eller i `dist/`, og `/api/download` læser udelukkende `paidfile:*` fra KV. Det manglede alene en holdning. `tools/paid_content.json` er nu det maskinlæsbare inventar over alle syv downloadprodukter med forventede KV-nøgler og privat kilderepo, og `tools/check_private_content.py` fejler ved ti konkrete læk- og driftformer — heraf at historikken påstår at være remedieret, hvilket den ikke er (selftest 10/10). Gaten kører i deploy-CI efter buildet, fordi `dist/` først findes der. Ikke gjort: `build_command`, `sha256` og `kv_verified` står som `null`/`false`, fordi `mahope/paid-products` ikke findes lokalt, og det er ført op som `❓ Til Mads` 4 og 8.
-- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69, inline JS 297/0, check_private_content 0 problemer, check_private_content --self-test 10/10`
+- `NEXT_TASK`: `7 — Gør Clean Copy-pluginklienterne Stripe-kompatible`
+- `TASK_ATTEMPTS`: `6: 1/1`
+- `LAST_BRANCH`: `ceo/page-profile-distribution`
+- `PLAN_COMMIT`: `(denne commit)`
+- `BASELINE`: `main@279f4cf`
+- `RESULT`: Opgave 6 er færdig. Kernen i opgaven var allerede rettet af 4E (`ea4e6c3`), så denne iteration gjorde den anden halvdel: `site/downloads/page-profile/` er en manuelt kopieret udgave af `page-profile/`, og intet holdt de to sammen. `tools/check_page_profile_distribution.py` fejler nu ved nitten konkrete fejlformer — heraf en publiceret kopi eller et source-arkiv, der afviger fra den kanoniske kode, en version der ikke matcher mellem `pyproject.toml`, `__version__` og arkivnavnet, en landingsside der linker på en udgave eller en `cd`-mappe, der ikke findes, drift i `dist/`, en offline-påstand om licensen, og en side der mister online-aktiveringen eller syvdages cache. Selftesten er grøn 20/20 og læser det rigtige arkiv, så arkiv-fejlen er ikke håndlavet. Udgivelsesreglen står i gaten og er reproduceret her: `python3 -m build --sdist --outdir /tmp/pp page-profile` giver præcis de samme arkivmedlemmer som den publicerede fil. Gaten kører nu i deploy-CI sammen med `page-profile/test_page_profile.py`.
+- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69, inline JS 297/0, check_private_content 0 problemer, check_page_profile_distribution 0 problemer, --self-test 20/20, page-profile 11/11`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -27,12 +27,19 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 Denne gate er den obligatoriske minimum før merge til `main`:
 
 ```bash
-python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py
+python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py
 ```
 
 `check_private_content.py` blev tilføjet 2026-09-25 i opgave 5, fordi et betalt
 leveringsfil i `dist/` er en reel læk, ikke en SEO-fejl. Den afhænger af
 `tools/paid_content.json`, så begge filer ligger i deploy-workflowens path-filter.
+
+`check_page_profile_distribution.py` blev tilføjet 2026-09-25 i opgave 6, fordi den
+publicerede Page Profile-kopi er håndkopieret, og en divergerende kopi er en reel
+købsfejl: køberen får en CLI der afviser sin egen Stripe-nøgle, eller en
+downloadside der lover en udgave, der ikke kan hentes. Den afhænger af
+`page-profile/`, `site/downloads/page-profile/` og de to landingssider, og alle
+tre ligger i deploy-workflowens path-filter.
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
@@ -420,7 +427,7 @@ unavailable"). Det er ikke en regression — det er den nuværende tilstand — 
 også et køb, der ikke leverer, og det skal løses **før** det første reelle salg på en
 downloadvare. Reelle, dokumenterede salg i repoet: 0.
 
-### 6. UFÆRDIG — Reparer Page Profile-købsflowet
+### 6. FÆRDIG (implementering ceo/page-profile-distribution) — Reparer Page Profile-købsflowet
 
 **Begrundelse:** En kunde kan betale og få en gyldig 32-hex Stripe-nøgle, som den solgte CLI afviser.
 
@@ -443,7 +450,48 @@ downloadvare. Reelle, dokumenterede salg i repoet: 0.
 - Den publicerede CLI-kopi er byte-for-byte/parity-kontrolleret mod den kanoniske kode, og EN/DA-siderne har ingen offline-Pro-claims.
 - `python3 page-profile/test_page_profile.py` og `python3 tools/check_page_profile_distribution.py` er grønne.
 
-**Gate:** `python3 page-profile/test_page_profile.py && python3 tools/check_page_profile_distribution.py` plus hele kvalitetsgaten.
+**Gate:** `python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py` plus hele kvalitetsgaten.
+
+**Implementeret denne iteration:**
+
+- Kernen i opgaven var allerede rettet af 4E (`ea4e6c3`): 32-hex Stripe-nøgler
+  aktiverer Pro via licens-API'et, `--gen-key` og saltet er væk, og EN/DA-siderne
+  fortæller sandt om online-aktivering og syvdages cache. Det, der manglede, var
+  den anden halvdel af acceptkriterierne: `site/downloads/page-profile/` er en
+  manuelt kopieret udgave af `page-profile/`, og intet holdt de to sammen.
+- `tools/check_page_profile_distribution.py` sammenligner nu den kanoniske kode
+  med alle tre publicerede steder og fejler ved nitten former: en manglende
+  kanonisk fil; en version der ikke matcher mellem `pyproject.toml` og
+  `__version__`; en publiceret kopi der mangler eller afviger; intet source-arkiv;
+  flere arkiver i den publicerede mappe; et arkiv på en gammel udgave; en
+  rodmappe der ikke følger den pakkede udgave; en kildefil i arkivet der afviger
+  eller mangler; et arkiv der ikke kan læses; en landingsside der linker på et
+  arkiv der ikke findes; en `cd`-mappe i vejledningen der ikke findes i arkivet;
+  en version i et eksempel der ikke er koden; en offline-påstand om licensen; en
+  side der mister online-aktiveringen; en dansk side der mister syvdages cache; en
+  manglende landingsside; og drift i `dist/`.
+- Selftesten er grøn **20/20** og læser det rigtige `page-profile-1.2.0.tar.gz`,
+  så arkiv-fejlene er læst fra et arkiv og ikke håndlavet. Den fejler også, hvis
+  den rigtige kopi ikke er grøn, så en gaten, der altid siger "ok", kan ikke
+  passere.
+- `dist/mahope.tools/downloads/page-profile/page_profile.py` er bygget og
+  byte-identisk med den kanoniske kode, så dist-kontrollen er reelt grøn og ikke
+  springet over.
+- **Udgivelsesreglen er dokumenteret i gaten**, fordi den var uskrevet: ret
+  `version` og `__version__`, kør `python3 -m build --sdist --outdir /tmp/pp
+  page-profile`, kopier arkivet til `page-profile-<udgave>.tar.gz` (setuptools
+  døber det med bindestreg, men download-linket bruger bindestreg), kopier
+  `page_profile.py`, ret udgaven og `cd`-mappen på begge sider, slet det gamle
+  arkiv, kør gaten. Reglen er i denne iteration reproduceret read-only: det nybyggede
+  arkiv har præcis de samme medlemmer og indhold som den publicerede fil.
+- Deploy-CI kører nu `check_page_profile_distribution.py` med selftest og
+  `page-profile/test_page_profile.py` (11 offline tests, 0,1 s) i gate-trinet, og
+  `page-profile/**` + `site/downloads/page-profile/**` ligger i path-filteret, så
+  en divergerende kopi får rød gate frem for en deploy.
+
+**Ikke gjort:** Der er ingen ny licenskode. Denne iteration tilføjer holdningen, der
+skulle have været der med 4E. Den publicerede kopi, arkivet og dist er alle tre
+allerede korrekte — de var bare ubevogtede.
 
 
 ### 7. UFÆRDIG — Gør Clean Copy-pluginklienterne Stripe-kompatible
@@ -649,6 +697,8 @@ downloadvare. Reelle, dokumenterede salg i repoet: 0.
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- Page Profile-distributionen bevogtet: `ceo/page-profile-distribution` — `Hold den publicerede Page Profile-kopi på linjen` (6).
 
 - Betalt indhold ude af det offentlige repo: `ceo/private-content-gate` — `Hold betalt indhold ude af det offentlige repo` (5).
 

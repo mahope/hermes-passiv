@@ -22,7 +22,10 @@ on:
       - 'tools/seo_check.py'
       - 'tools/check_inline_js.py'
       - 'tools/check_private_content.py'
+      - 'tools/check_page_profile_distribution.py'
       - 'tools/paid_content.json'
+      - 'page-profile/**'
+      - 'site/downloads/page-profile/**'
       - 'tools/add_tracking.py'
       - 'tools/weekly_report.py'
       - 'tools/test_weekly_report.py'
@@ -78,6 +81,9 @@ jobs:
           python3 tools/test_weekly_report.py
           python tools/check_inline_js.py
           python3 tools/check_private_content.py
+          python3 tools/check_page_profile_distribution.py
+          python3 tools/check_page_profile_distribution.py --self-test
+          python3 page-profile/test_page_profile.py
           if grep -q "extra file missing" build.log; then
             echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"
             exit 1
