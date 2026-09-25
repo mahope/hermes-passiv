@@ -7,7 +7,7 @@
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `11 — få CI til at køre den faktiske kvalitetsgate`
 - `TASK_ATTEMPTS`: `10: 1/1. Grøn første gang. En fejl undervejs: jeg skrev først `/blog/copy-table-from-website-to-word` som erstatning for en ubrugt `{URL}`-placeholder uden at slå slaget op — den artikel findes ikke, så jeg rettede begge links til artikler der faktisk ligger i `site/blog/`.`
-- `LAST_BRANCH`: `ceo/broken-refs-hard-gate`
+- `LAST_BRANCH`: `ceo/broken-refs-hard-gate` (implementering `0cd0909`, merge `c3dea91`)
 - `PLAN_COMMIT`: `(denne commit)`
 - `BASELINE`: `main@099b87f`
 - `RESULT` (opgave 10): De 18 "broken references" var ikke 18 fejl, og de var heller ikke 0. Optællingen blandede **ni reelle døde referencer** med **to falske positiver fra kodeeksempler**, og fordi buildet kun skrev dem til `build-summary.json` og returnerede 0, blev ingen rettet i en måned. De ni reelle er nu rettet i source, de to eksempler tælles ikke længere med, og porten er erstattet af `tools/check_links.py` — en `html.parser`-baseret gade over det **byggede** `dist/`, der springer `pre`/`code`/`script`/`style` over og tjekker krydsdomæne-referencer mod det domænes dist, så et cleancopy→mahope-link ikke kan være en 404, fordi mahope-distet ikke var bygget i samme job.
@@ -1021,7 +1021,7 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
-- 2026-09-25: `VERIFICÉR DEPLOY: døde links rettet, DeskUptime-assets tilføjet, 404-/søgenav omskrevet og hard gate for uopklarede referencer <merge-sha> 2026-09-25` — GitHub Actions kører automatisk, fordi `site/**`, `build_sites.py` og `tools/check_links.py` er i path-filteret. Denne deploy **ændrer synligt indhold** på tre domæner, så verificér indhold, ikke bare HTTP 200:
+- 2026-09-25: `VERIFICÉR DEPLOY: døde links rettet, DeskUptime-assets tilføjet, 404-/søgenav omskrevet og hard gate for uopklarede referencer c3dea9189e2207c4ed2ac63beacd195e1e1ea0e0 2026-09-25` — GitHub Actions kører automatisk, fordi `site/**`, `build_sites.py` og `tools/check_links.py` er i path-filteret. Denne deploy **ændrer synligt indhold** på tre domæner, så verificér indhold, ikke bare HTTP 200:
   - `deskuptime.com/assets/site.css` og `/assets/site.js` svarer **200** — de har aldrig eksisteret, så de tre værktøjssider kørte uden stylesheet og uden sitets JS. Tjek at `/tools/` og `/bulk-url-checker/` er stylet, og at sidens JS indlæses uden 404 i netværksfanen.
   - `cleancopy.tools/404` og `/search/` har **"Guides"** i navigationen som `https://mahope.tools/blog/` — før denne deploy var det `/blog/`, som er 404 på cleancopy.tools. Samme forventning på `deskuptime.com/404` og `mahope.tools/404`.
   - `mahope.tools/blog/copy-table-from-website-to-excel` og `/blog/copy-table-website-to-google-sheets` har ingen `{URL}`-placeholder længere; de to `Related:`-links peger på artikler der findes.
