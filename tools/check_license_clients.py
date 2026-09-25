@@ -58,6 +58,8 @@ NOT_CLIENTS = {
     "tools/test_license_flow.js",
     "tools/stripe_catalog.json",
     "tools/check_license_clients.py",
+    "tools/check_clean_copy_distribution.py",
+    "tools/build_clean_copy_archives.py",
 }
 
 # Marker omkring det indlejrede kanoniske modul.

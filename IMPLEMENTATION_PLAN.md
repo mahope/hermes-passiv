@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `clean-copy-clients-contract-2026-09-25`
-- `STATE`: `Opgave 7 del 2 FÆRDIG for punkt 1, 3 og 4; del 2 punkt 2 (publicerede arkiver) er den næste iteration`
-- `ACTIVE_TASK`: `7 (del 2 — ét delpunkt tilbage)`
-- `NEXT_TASK`: `7 del 2 punkt 2 — pak de publicerede Clean Copy-arkiver reproducerbart med nye patch-udgaver`
-- `TASK_ATTEMPTS`: `7: 2/2`
-- `LAST_BRANCH`: `ceo/clean-copy-delivery`
+- `ITERATION_ID`: `clean-copy-archives-2026-09-25`
+- `STATE`: `Opgave 7 FÆRDIG — del 1, del 2 pkt. 1/3/4 og pkt. 2 (publicerede arkiver) er alle implementeret; næste iteration er opgave 8 (electron-builder-advisory)`
+- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
+- `NEXT_TASK`: `8 — opgradér electron-builder 25.x til 26.15.x og fjern de 15 advisory-fund`
+- `TASK_ATTEMPTS`: `7: 3/3 (del 1, del 2 pkt. 1/3/4, del 2 pkt. 2 — ingen mislykkede forsøg)`
+- `LAST_BRANCH`: `ceo/clean-copy-archives`
 - `PLAN_COMMIT`: `(denne commit)`
 - `BASELINE`: `main@55fbe15`
 - `RESULT`: Webværktøjet på `cleancopy.tools` og `mahope.tools` lå sine kunder i fare: `site/clean-copy-tool.html` kaldte `clearPro()` ved ethvert ikke-200-svar, så en 503 fra licensserveren slettede Pro-status hos en kunde der havde betalt — præcis den fejl kontrakten forbyder. Siden indlejrer nu `tools/clean_copy_license.js` ordret og bruger `decide()`: 200 er Pro, 503/5xx/status 0 er Pro fra cache i højst syv dage med en synlig forklaring, 403/404/400/409 og `valid:false` er aldrig Pro og rydder nøglen, og et lokalt udløbet `cc_pro_expires` ryddes ved indlæsning med datoen nævnt. Aktivering afviser et nøgleformat der ikke er 32 hex, før der laves et netværkskald. `site/compliance-report.html` sendte slet ingen `product`, så workeren afviste hver nøgle med 403 — siden sælger kun EUComply Pro, og den sender nu `eucomply-pro`. Rødderne `main.js` og `core.js` er væk: `core.js` var byte-identisk med `obsidian-plugin/core.js`, mens `main.js` var en ældre variant med det døde `hermes-passiv.pages.dev`-endepunkt og ingen cache, altså to kilder der kunne komme i drift i en udgivelse. Samtidig viste det sig, at *begge* tests der påstod at teste `main.js` (rodens `test.js` og `obsidian-plugin/test.js`) genskrev requesten inde i testen og hævede sit eget mock mod den døde vært; de er nu et kald til den rigtige suite. Testene udvides til at indlæse webværktøjet i en `vm`-sandbox med DOM-stubs: 103 checks, grønne. `tools/check_license_clients.py` med `--self-test` (9/9) finder nu selv de klienter der kalder `/api/license` og fejler ved manglende `product`, død vært i et licenskald, Lemon Squeezy, et indlejret modul der afviger fra den kanoniske kilde, en divergeret Firefox-kopi eller en undtagelse der ikke længere findes; `desktop/main.js` står som dokumenteret undtagelse, fordi EAA endnu ikke findes i Stripe-kontrakten.
-- `GATE`: `GRØN — build OK, check_sitemaps OK (3 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile OK, product-copy 0, stripe-cta 0, test_license_flow OK, test.js → 103 checks, extension-tools 13/13, check_license_clients 0 + --self-test 9/9`
+- `GATE`: `GRØN — build OK, check_sitemaps OK (3 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile OK, product-copy 0, stripe-cta 0 + --self-test 10/10, test_license_flow OK, test_license_clients 103 checks, obsidian-plugin OK, extension-tools 13/13, check_license_clients 0 + --self-test 9/9, check_clean_copy_distribution OK + --self-test 15/15`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -510,7 +510,7 @@ skulle have været der med 4E. Den publicerede kopi, arkivet og dist er alle tre
 allerede korrekte — de var bare ubevogtede.
 
 
-### 7. I GANG (del 1 + del 2 pkt. 1, 3, 4 færdig) — Gør Clean Copy-pluginklienterne Stripe-kompatible
+### 7. FÆRDIG (del 1, del 2 pkt. 1/3/4 og pkt. 2) — Gør Clean Copy-pluginklienterne Stripe-kompatible
 
 **Begrundelse:** Root- og Obsidian-plugin sender ikke `product`, selv om workeren afviser payloaden.
 
@@ -549,10 +549,17 @@ allerede korrekte — de var bare ubevogtede.
 - Rodens `main.js` og `core.js` er slettet; `test.js` er nu en tynd indgang til `obsidian-plugin/test.js` + `tools/test_license_clients.js`. Den teaterblok i `obsidian-plugin/test.js` der hævede sit eget mock mod `hermes-passiv.pages.dev` er væk.
 - `tools/check_license_clients.py` (+ `--self-test`, 9/9) holder CLIENTS-listen, EXCEPTIONS og de indlejrede moduler i linje. Den døde vært flagges kun i et licenskald, fordi kildefilerne stadig har `hermes-passiv.pages.dev` i OG/canonical-tags, som `build_sites.py` skriver om til det rette domæne.
 
-**Del 2 punkt 2 — næste iteration (publicerede arkiver):**
+**Del 2 punkt 2 — implementeret i `ceo/clean-copy-archives`:**
 
-1. `site/downloads/clean-copy-v1.5.2.zip`, `clean-copy-firefox-v1.5.2.zip` og `clean-copy-obsidian-v1.0.9.zip` indeholder stadig den gamle kode med det døde endepunkt og uden `product`. De skal pakkes reproducerbart fra `extension-clean-copy/`, `extension-clean-copy-firefox/` og `obsidian-plugin/` med nye patch-udgaver, og alle links på `site/clean-copy.html`, `site/downloads.html` og `site/free-downloads.html` (samt evt. DA-sider) skal følge med. Gaten skal kræve at arkiverne er byte-identiske med en regeneration, ligesom `check_page_profile_distribution.py` gør for Page Profile.
-2. Uden dette er del 1 og 2 af denne iteration endnu ude hos kunderne: de publicerede zips er den kode, en køber hentede.
+- `tools/build_clean_copy_archives.py` bygger de tre publicerede arkiver fra `extension-clean-copy/`, `extension-clean-copy-firefox/` og `obsidian-plugin/`. Arkiverne er deterministiske: fast tidsstempel (1980-01-01), sorteret rækkefølge, `create_system = 0` og fast filtilladelse, så samme kilde giver præcis samme SHA-256 på enhver maskine. Det er forudsætningen for at gaten overhovedet kan kræve byte-identitet. Hvert arkiv får en `version.txt`, så en køber kan se udgaven inde i den udpakkede mappe.
+- Nye patch-udgaver: Chrome/Firefox **1.5.3**, Obsidian **1.0.10** (`obsidian-plugin/versions.json` har nu både 1.0.9 og 1.0.10). Browserarkiverne fik samtidig den `license.js`, de aldrig havde haft — `options.html` indlæser den, så det gamle arkiv ville have givet en 404 i options-siden.
+- De tre gamle arkiver (`clean-copy-v1.5.2.zip`, `clean-copy-firefox-v1.5.2.zip`, `clean-copy-obsidian-v1.0.9.zip`, samt den legacy `clean-copy-obsidian-v1.0.6.zip`) er slettet, ikke bare overskrevet: de indeholdt licenskode, der ringede til `hermes-passiv.pages.dev` og ikke sendte `product`, så ingen må kunne downloade dem. `site/extension-zips/clean-copy-v1.5.2.zip` er den samme fil i en anden mappe og er erstattet af 1.5.3.
+- Links opdateret i `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, `site/blog/install-obsidian-plugin-clean-copy.html`, `site/da/blog/installer-clean-copy-obsidian.html` og den generative DA-kilde `tools/make_blog_da_mirrors_461.py`. Begge Obsidian-guides siger nu ærligt hvad 1.0.10 er: samme funktioner som 1.0.9, men Pro-licensen aktiverer og validerer mod samme licensserver som browserudvidelserne, med syv dages cache ved en udfaldende server.
+- `tools/check_clean_copy_distribution.py` (+ `--self-test`, 15/15) fejler ved ti fejlformer: et kilde-manifest uden version, en Obsidian-`versions.json` der ikke kender udgaven, et arkiv der mangler, et arkiv der afviger fra en regeneration, en forældet udgave der stadig ligger publiceret, en kildefil der mangler i arkivet, en kildefil der afviger fra kilden, en ekstra fil i arkivet, en død licensvært i et arkiv, et licenskald uden `product`, en død side-link, en side der viser en gammel udgave, en driftende `dist/`-kopi og en manglende `dist/`-kopi. Den læser de rigtige zips i selftesten — mutationerne er bygget fra den samme builder, som gaten selv bruger.
+- Deploy-workflowen kører nu gaten med og uden selftest i gate-trinet, og `extension-clean-copy/`, `extension-clean-copy-firefox/`, `obsidian-plugin/`, `site/extension-zips/` og de to nye tools ligger i path-filteret, så en ny kildeudgave eller en håndredigeret zip får rød gate frem for en deploy.
+- **Fund under arbejdet:** den nye gate blev selv fanget af `check_license_clients.py`, fordi den nævner den døde vært i en selftest-fixture. Det er holdet løst med to dokumenterede `NOT_CLIENTS`-poster — samme mekanisme som de øvrige gater og tests, og beviset at licensklient-scanneren stadig gælder for nye filer.
+
+**Hvorfor del 2 gav mening:** de publicerede zips var den kode en køber rent faktisk hentede. Del 1 og 2 rettede kilden, og uden denne del rettelsen ville aldrig nå en kunde. `IMPLEMENTATION_PLAN.md` førte den gamle kode som *dokumenteret* i dist, fordi arkiverne lå i `site/downloads/` og blev kopieret ukritisk.
 
 ### 8. UFÆRDIG — Opgrader electron-builder og fjern advisory-fund
 
@@ -709,6 +716,8 @@ allerede korrekte — de var bare ubevogtede.
 
 ## Deploylog
 
+- 2026-09-25: `VERIFICÉR DEPLOY: Clean Copy-arkiverne 1.5.3 / 1.0.10 med den nye licensklient <merge-sha> 2026-09-25` — GitHub Actions udgiver automatisk: `site/downloads/*.zip`, `site/extension-zips/`, `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, begge Obsidian-guides og `tools/make_blog_da_mirrors_461.py` er i path-filteret. Verificér på live: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` og `/downloads/clean-copy-firefox-v1.5.3.zip` er byte-identiske med repoets arkiver, `/downloads/clean-copy-obsidian-v1.0.10.zip` indeholder `main.js` med `clean-copy-pro` og `mahope.tools`, `license.js` i begge browserarkiver har `API_BASE = 'https://mahope.tools/api/license'`, de fire gamle arkiver svarer 404, og `/clean-copy` + `/downloads` viser 1.5.3 og 1.0.10. CI's egen post-deploy-gate skal være grøn for alle tre domæner.
+
 - 2026-09-25: `DEPLOY OK 7e2b883` — GitHub Actions-run `36170930593` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Alle domæners live `build-info.json` bærer `7e2b88302cbbd35d6841ae051f90f6d48662ccab`. Indholdskontrol: live `/clean-copy-tool` på cleancopy.tools indeholder begge markører om det indlejrede licensmodul, modulet er byte-identisk med `tools/clean_copy_license.js`, siden kalder `decide()`, og den gamle `clearPro()`-på-alt er væk; live `/compliance-report` på mahope.tools sender `eucomply-pro`. CI's egen post-deploy-gate meldte grønt for alle tre.
 - 2026-09-25: `VERIFICÉR DEPLOY ( lukket af ovenstående ): webværktøjets syvdagesregel og compliance-rapportsidens product 8207ca1 2026-09-25` — GitHub Actions kører automatisk, fordi `site/clean-copy-tool.html` og `site/compliance-report.html` er i path-filteret. Verificér på live: `cleancopy.tools/clean-copy-tool` (og `mahope.tools/clean-copy-tool`) har det indlejrede licensmodul mellem `/* >>> clean-copy-license …` og `/* <<< clean-copy-license */`, og `mahope.tools/compliance-report` sender `product: 'eucomply-pro'` i sit validate-kald. Det kan ses direkte i sidens JS.
 
@@ -745,6 +754,7 @@ allerede korrekte — de var bare ubevogtede.
 
 ## Commitlog
 
+- Publicerede Clean Copy-arkiver fra kilden: `ceo/clean-copy-archives` — `Pak Clean Copy-arkiverne reproducerbart fra kilden` (7 del 2 pkt. 2).
 - Clean Copy-klienter på licenskontrakten: `ceo/clean-copy-delivery` — `Hold Clean Copy-klienterne på licenskontrakten` (7 del 2 pkt. 1, 3, 4).
 - Clean Copy-licensklienter Stripe-kompatible: `ceo/clean-copy-license-clients` — `Gør Clean Copy-licensklienterne Stripe-kompatible` (7 del 1).
 - Page Profile-distributionen bevogtet: `ceo/page-profile-distribution` — `Hold den publicerede Page Profile-kopi på linjen` (6).
