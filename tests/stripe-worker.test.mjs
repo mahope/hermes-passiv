@@ -47,6 +47,8 @@ const sessions = {
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'support-mahope-oss-v1' } }] } },
   cs_live_refundIIIIIIIIIIII: { status: 'complete', payment_status: 'paid', subscription: null, payment_intent: 'pi_ref', customer_details: { email: 'f@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
+  cs_live_subrefundMMMMMMMM: { status: 'complete', payment_status: 'paid', subscription: 'sub_refund', invoice: 'in_refund', customer_details: { email: 'sr@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'clean-copy-pro-v1' } }] } },
   cs_live_ledgerfailJJJJJJJJJJ: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'l@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'transmute-desktop-v1' } }] } },
   cs_live_pendingfailKKKKKKKKKK: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'p@x.dk' },
@@ -61,7 +63,14 @@ globalThis.fetch = async (url, opts = {}) => {
   }
   if (url.startsWith('https://api.stripe.com/v1/subscriptions/')) return new Response(JSON.stringify({ current_period_end: 2000000000 }));
   if (url === 'https://api.resend.com/emails') { if (resendNede) return new Response('{}', { status: 503 }); mails.push({ ...JSON.parse(opts.body), idem: opts.headers['Idempotency-Key'] }); return new Response('{}', { status: 200 }); }
-  if (url.startsWith('https://api.stripe.com/v1/invoices/')) return new Response(JSON.stringify({ parent: { subscription_details: { subscription: 'sub_1' } } }));
+  if (url.startsWith('https://api.stripe.com/v1/invoices/')) {
+    const id = decodeURIComponent(url.split('/invoices/')[1].split('?')[0]);
+    const invoice = { parent: { subscription_details: { subscription: 'sub_1' } } };
+    if (id === 'in_refund' && url.includes('expand[]=payments')) {
+      invoice.payments = { data: [{ payment: { payment_intent: 'pi_sub_refund' } }] };
+    }
+    return new Response(JSON.stringify(invoice));
+  }
   if (url.startsWith('https://api.stripe.com/v1/charges/')) return new Response(JSON.stringify({ id: 'ch_d', payment_intent: 'pi_lic', refunded: false }));
   throw new Error('uventet fetch ' + url);
 };
@@ -100,6 +109,11 @@ r = await call('/api/stripe-webhook', { method: 'POST', body, headers: { 'stripe
 ok('gammel timestamp afvist', r.status === 400);
 // Aktivering: produkt-tjek og enhedsgrænse
 const act = (b) => call('/api/license/activate', { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
+const originalGet = VISITS.get;
+VISITS.get = async () => { throw new Error('license KV unavailable'); };
+r = await act({ license_key: key, device_id: 'error-test', product: 'deskuptime-pro' });
+VISITS.get = originalGet;
+ok('uventet licensfejl svarer 503', r.status === 503, r.status);
 r = await act({ license_key: key, device_id: 'd1', product: 'transmute-desktop' });
 ok('forkert produkt afvist', r.status === 403);
 for (const d of ['d1', 'd2', 'd3']) { r = await act({ license_key: key, device_id: d, product: 'deskuptime-pro' }); ok('aktivering ' + d, r.status === 200); }
@@ -210,7 +224,16 @@ ok('delvis refundering bevarer adgang', r.status === 200);
 r = await wh('charge.refunded', { payment_intent: 'pi_ref', refunded: true });
 r = await act({ license_key: refKey, device_id: 'x2', product: 'deskuptime-pro' });
 ok('fuld refundering tilbagekalder', r.status === 403);
-// 7) Ødelagt procent-kodning i download
+r = await call('/api/stripe/fulfillment?session_id=cs_live_subrefundMMMMMMMM');
+j = await r.json();
+const subRefundKey = j.license_key;
+ok('Clean Copy-aktiveringsguide i leveringssvar', j.activate_url === 'https://cleancopy.tools/activate/', j.activate_url);
+r = await wh('invoice.paid', { id: 'in_refund', subscription: 'sub_refund', lines: { data: [{ period: { end: 2000000000 } }] } });
+ok('første faktura kobler payment intent til licens', kv.get('lic-pi:pi_sub_refund') === subRefundKey, kv.get('lic-pi:pi_sub_refund'));
+r = await wh('charge.refunded', { payment_intent: 'pi_sub_refund', refunded: true });
+ok('abonnementsrefunding tilbagekalder licens', (await r.json()).revoked === true);
+r = await act({ license_key: subRefundKey, device_id: 'sub-refund', product: 'clean-copy-pro' });
+ok('refunderet abonnement giver 403', r.status === 403, r.status);
 r = await call('/api/download/' + 'b'.repeat(32) + '/%E0%A4%A');
 ok('ødelagt kodning = 404', r.status === 404);
 console.log(`${pass}/${pass + fail} ok`);

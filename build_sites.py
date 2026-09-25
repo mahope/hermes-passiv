@@ -63,6 +63,7 @@ SITES: dict[str, dict] = {
             "url-to-markdown.html",
             "mcp.html",
             "clean-copy/**",
+            "activate/**",
             "extension-zips/**",
             "clean-copy-core.js",
             "clean-copy-bookmarklet.js",

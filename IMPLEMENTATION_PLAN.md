@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `page-profile-stripe-license-2026-09-25`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
+- `ITERATION_ID`: `license-worker-gaps-2026-09-25`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `4F`
 - `NEXT_TASK`: `4F — Luk tre huller i licens-workeren`
-- `TASK_ATTEMPTS`: `4E: 1/2`
-- `LAST_BRANCH`: `ceo/page-profile-license`
-- `PLAN_COMMIT`: `ea4e6c3`
-- `BASELINE`: `main@cb725e9`
-- `RESULT`: Opgave 4E er færdig. Stripe-udstedte 32-hex-nøgler aktiveres og valideres online med produktet `page-profile-pro` og et stabilt, lokalt gemt device-id. Kun netværksfejl og 5xx kan bruge en tidligere positiv status i højst syv dage; 403/404/409, ugyldige svar og inaktiv licens fejler hårdt. Legacy-PPRO, salt og `--gen-key` er fjernet. Version 1.2.0 er publiceret som kanonisk script, download-kopi og sdist, og offline-claims er rettet.
-- `GATE`: `GRØN — Page Profile 11/11, sdist-build, build/sitemap 4/4, SEO 307/0, Stripe 52/52, inline JS 296/0, canonical/published/tar parity, live-validering 404 og frisk review med alle P1 rettet`
+- `TASK_ATTEMPTS`: `4F: 1/2`
+- `LAST_BRANCH`: `ceo/close-license-worker-gaps`
+- `PLAN_COMMIT`: `fa1e830`
+- `BASELINE`: `main@fa1e830`
+- `RESULT`: Iterationen er startet på `ceo/close-license-worker-gaps`. Opgave 4F er markeret `I GANG`; endelig resultat og gate-resultat skrives efter implementeringen.
+- `GATE`: `I KØRSEL — Worker-test, node syntax, build/sitemap, SEO, Stripe-worker og inline-JS skal være grønne før merge.`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -197,7 +197,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 page-profile/test_page_profile.py` plus hele kvalitetsgaten.
 
-### 4F. UFÆRDIG — Luk tre huller i licens-workeren
+### 4F. I GANG — Luk tre huller i licens-workeren
 
 **Begrundelse:** Licens-audit 2026-09-25 af `site/_worker.js`.
 

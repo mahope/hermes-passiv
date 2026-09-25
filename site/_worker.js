@@ -914,7 +914,7 @@ async function handleLicense(request, env, mode) {
     });
   } catch {
     // Licensing must fail safe, never leak stack traces.
-    return jsonResp({ ok: false, error: 'Something went wrong. Please try again.' }, 500);
+    return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
   }
 }
 
@@ -975,12 +975,13 @@ async function handleLicenseLookup(request, env) {
   const recRaw = await env.VISITS.get(`lic:${key}`);
   let rec = {};
   try { rec = JSON.parse(recRaw); } catch {}
+  const home = (STRIPE_PRODUCTS[rec.product] && STRIPE_PRODUCTS[rec.product].home) || STRIPE_PRODUCTS['clean-copy-pro'].home;
   return jsonResp({
     ok: true,
     license_key: key,
     plan: rec.plan || 'pro-yearly',
     expires_at: rec.expires_at || null,
-    activate_url: 'https://cleancopy.tools/',
+    activate_url: home,
   });
 }
 
@@ -2873,7 +2874,7 @@ async function handleBugreport(request, url, env) {
  * RESEND_API_KEY. Betalte filer ligger i KV som paidfile:<navn> (ikke i dist).
  */
 const STRIPE_PRODUCTS = {
-  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, home: 'https://cleancopy.tools/' },
+  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, home: 'https://cleancopy.tools/activate/' },
   'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/' },
   'transmute-desktop': { name: 'Transmute Desktop', kind: 'license', maxDevices: 3, home: 'https://transmute.run/' },
   'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, home: 'https://eucomplypro.com/pricing/' },
@@ -2906,6 +2907,40 @@ async function stripeGet(env, path) {
   });
   if (!r.ok) { const e = new Error(`stripe ${r.status}`); e.status = r.status; throw e; }
   return r.json();
+}
+
+function stripeId(value) {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') return String(value.id || value.payment_intent || '');
+  return '';
+}
+
+function invoicePaymentIntents(invoice) {
+  const intents = [];
+  const add = (value) => {
+    const id = stripeId(value);
+    if (id.startsWith('pi_')) intents.push(id);
+    if (value && typeof value === 'object') {
+      add(value.payment_intent);
+      add(value.payment);
+    }
+  };
+  add(invoice && invoice.payment_intent);
+  const payments = invoice && invoice.payments && (Array.isArray(invoice.payments) ? invoice.payments : invoice.payments.data);
+  if (Array.isArray(payments)) payments.forEach(add);
+  return [...new Set(intents)];
+}
+
+async function invoicePaymentIntentsFromStripe(env, invoice) {
+  const ids = invoicePaymentIntents(invoice);
+  const invoiceId = stripeId(invoice && invoice.id);
+  if (ids.length || !invoiceId) return ids;
+  try {
+    const expanded = await stripeGet(env, `invoices/${encodeURIComponent(invoiceId)}?expand[]=payments`);
+    return invoicePaymentIntents(expanded);
+  } catch {
+    return ids;
+  }
 }
 
 /** Stripe-Signature: t=<ts>,v1=<hex hmac of "t.body">. 5 minutters tolerance. */
@@ -3013,7 +3048,8 @@ async function fulfillStripeSession(env, sessionId) {
   const now = new Date();
   const result = { ok: true, product: productKey, product_name: product.name, kind: product.kind };
   await setFulfillmentPending(env, pendingKey, { ...pendingRecord, product: productKey, product_name: product.name, kind: product.kind });
-  const pi = s.payment_intent || null;
+  const pi = stripeId(s.payment_intent) || null;
+  const invoice = stripeId(s.invoice) || null;
 
   if (product.kind === 'donation') {
     // Intet at levere — Stripe viser selv takkebeskeden.
@@ -3029,10 +3065,11 @@ async function fulfillStripeSession(env, sessionId) {
       await env.VISITS.put(`lic:${key}`, JSON.stringify({
         status: 'active', plan: productKey, product: productKey,
         max_devices: product.maxDevices * qty, created_at: now.toISOString(), expires_at: expiresAt,
-        devices: [], stripe_session: sessionId, stripe_subscription: s.subscription || null, stripe_payment_intent: pi,
+        devices: [], stripe_session: sessionId, stripe_subscription: s.subscription || null, stripe_invoice: invoice, stripe_payment_intent: pi,
       }));
     }
     if (s.subscription) await env.VISITS.put(`lic-sub:${s.subscription}`, key);
+    if (invoice) await env.VISITS.put(`lic-invoice:${invoice}`, key);
     if (pi) await env.VISITS.put(`lic-pi:${pi}`, key);
     if (email) {
       const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lemail:' + email));
@@ -3113,12 +3150,16 @@ async function handleStripeFulfillment(request, url, env) {
 
 /** Tilbagekald licens/download ved fuld refundering eller chargeback. */
 async function revokeForCharge(env, charge) {
-  let key = charge.payment_intent ? await env.VISITS.get(`lic-pi:${charge.payment_intent}`) : null;
-  if (!key && charge.invoice) {
-    // Abonnementer: find licensen via fakturaens abonnement.
-    const inv = await stripeGet(env, `invoices/${encodeURIComponent(charge.invoice)}`);
-    const subId = inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription);
-    if (subId) key = await env.VISITS.get(`lic-sub:${subId}`);
+  const paymentIntent = stripeId(charge.payment_intent);
+  const invoice = stripeId(charge.invoice);
+  let key = paymentIntent ? await env.VISITS.get(`lic-pi:${paymentIntent}`) : null;
+  if (!key && invoice) {
+    key = await env.VISITS.get(`lic-invoice:${invoice}`);
+    if (!key) {
+      const inv = await stripeGet(env, `invoices/${encodeURIComponent(invoice)}`);
+      const subId = inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription);
+      if (subId) key = await env.VISITS.get(`lic-sub:${subId}`);
+    }
   }
   if (key) {
     const rec = JSON.parse((await env.VISITS.get(`lic:${key}`)) || 'null');
@@ -3128,7 +3169,7 @@ async function revokeForCharge(env, charge) {
       await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
     }
   }
-  const token = charge.payment_intent ? await env.VISITS.get(`dl-pi:${charge.payment_intent}`) : null;
+  const token = paymentIntent ? await env.VISITS.get(`dl-pi:${paymentIntent}`) : null;
   if (token) await env.VISITS.delete(`dl:${token}`);
   return !!(key || token);
 }
@@ -3157,7 +3198,15 @@ async function handleStripeWebhook(request, env) {
     if (evt.type === 'invoice.paid') {
       // Stripe API ≥ 2025-03-31 flytter abonnementet til parent.subscription_details.
       const subId = obj.subscription || (obj.parent && obj.parent.subscription_details && obj.parent.subscription_details.subscription);
-      const key = subId ? await env.VISITS.get(`lic-sub:${subId}`) : null;
+      const invoiceId = stripeId(obj.id);
+      let key = subId ? await env.VISITS.get(`lic-sub:${subId}`) : null;
+      if (!key && invoiceId) key = await env.VISITS.get(`lic-invoice:${invoiceId}`);
+      if (key) {
+        if (invoiceId) await env.VISITS.put(`lic-invoice:${invoiceId}`, key);
+        for (const paymentIntent of await invoicePaymentIntentsFromStripe(env, obj)) {
+          await env.VISITS.put(`lic-pi:${paymentIntent}`, key);
+        }
+      }
       const ends = ((obj.lines && obj.lines.data) || []).map(l => l.period && l.period.end).filter(Boolean);
       if (key && ends.length) {
         const rec = JSON.parse((await env.VISITS.get(`lic:${key}`)) || '{}');
