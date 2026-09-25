@@ -81,6 +81,9 @@ IMPORT_TO_DISTRIBUTION = {
 #: fejles som en udeklareret afhængighed på den version, hvor den mangler.
 STDLIB_EVEN_IF_MISSING = {"tomllib"}
 
+#: Endelser på C-udvidelser i standardbiblioteket, se `stdlib_names`.
+EXTENSION_SUFFIXES = (".so", ".pyd", ".dylib")
+
 #: Kilder der læses for tredjepartsimport. Alt i repoet er dækket med vilje:
 #: en ny `import requests` i et hvilket som helst værktøj skal give en rød port,
 #: ikke en ny fil i låsen ved næste tilfældighed.
@@ -188,6 +191,13 @@ def stdlib_names() -> set[str]:
 
     Læst fra `sysconfig` i stedet for en håndlavet liste, fordi en håndlavet
     liste bliver forældet præcis på de Python-versioner den skal beskytte.
+
+   også C-udvidelser, også dem der ligger i `lib-dynload`. `zlib` er
+    `lib-dynload/zlib.cpython-39-darwin.so` — ingen `.py`, ingen `__init__.py` i
+    mappen over den — så en kun-`.py`-optælling erklærer stdlib-modulet for
+    tredjepart, og så kræver låsen `zlib` i `requirements-build.txt`. Fundet da
+    `tools/check_versions.py` begyndte at læse beskadigede gzip-arkiver; navnet
+    før `cpython` er modulet, resten er ABI-mærket.
     """
     names: set[str] = set()
     for key in ("stdlib", "platstdlib"):
@@ -197,8 +207,25 @@ def stdlib_names() -> set[str]:
         for entry in directory.iterdir():
             if entry.suffix == ".py" and entry.stem != "__init__":
                 names.add(entry.stem)
-            elif entry.is_dir() and (entry / "__init__.py").is_file():
-                names.add(entry.name)
+            elif entry.is_dir():
+                if (entry / "__init__.py").is_file():
+                    names.add(entry.name)
+                names.update(extension_names(entry))
+    return names
+
+
+def extension_names(directory: Path) -> set[str]:
+    """Modulnavne for C-udvidelser i én mappe, som `lib-dynload`."""
+    names: set[str] = set()
+    try:
+        entries = list(directory.iterdir())
+    except OSError:
+        return names
+    for entry in entries:
+        if entry.suffix in EXTENSION_SUFFIXES:
+            stem = entry.name.split(".", 1)[0]
+            if stem:
+                names.add(stem)
     return names
 
 
@@ -611,6 +638,25 @@ def run_self_test() -> int:
             failures.append("  ✗ efter alle mutationer er porten stadig rød på de rigtige filer")
         else:
             print("  ✓ de rigtige filer er grønne før og efter alle mutationer")
+
+    # C-udvidelserne i `stdlib_names` kan ikke mutationeres gennem `run_checks`:
+    # de læses fra `sysconfig` i den kørende interpreter, ikke fra workspace-kopien.
+    # Så de får deres egen kontrol, der køres mod `stdlib_names` direkte.
+    controls: list[tuple[str, bool]] = []
+    names = stdlib_names()
+    for module in ("zlib", "readline", "sqlite3", "json", "tarfile", "zipfile"):
+        controls.append((f"{module} genkendes som stdlib", module in names))
+    with tempfile.TemporaryDirectory() as scratch:
+        fake = Path(scratch)
+        (fake / "some_cmodule.cpython-99-darwin.so").write_bytes(b"")
+        (fake / "readme.txt").write_text("ikke en udvidelse", encoding="utf-8")
+        found = extension_names(fake)
+        controls.append(("navnet før ABI-mærket læses ud", found == {"some_cmodule"}))
+    for name, ok in controls:
+        if ok:
+            print(f"  ✓ kontrol: {name}")
+        else:
+            failures.append(f"  ✗ kontrol: {name}")
 
     passed = len(scenarios)
     if failures:
