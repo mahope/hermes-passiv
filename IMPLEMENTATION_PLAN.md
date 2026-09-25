@@ -2,19 +2,22 @@
 
 ## Status
 
-- `ITERATION_ID`: `scanner-arkiv-aktuelt-2026-09-26`
+- `ITERATION_ID`: `aab-indre-version-2026-09-26`
 - `STATE`: `Opgave 18 FÆRDIG — svaret på spørgsmålet var ja for ét arkiv og nej for otte. site/downloads/eaa-scanner-desktop-src-1.3.3.zip hed 1.3.3 men indeholdt 1.3.0: lockfilens version 1.3.0, electron-builder ^25.0.0, ingen engines, ingen .nvmrc. Den er nu bygget reproducerbart fra desktop/ og gaten kræver lighed. Nyt værktøj tools/build_desktop_archive.py (--check + --self-test) og to nye gatestræk (36 fra 34). Åbent og skrevet op: pip- og npm-artefakterne er stadig uåbnede, og en ren desktop-commit udløser ikke gaten.`
+- `STATE`: `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `19 — åbn byggeoutput-artefakterne (pip-hjul, sdist, npm-tgz) i check_versions.py`
-- `PLAN_COMMIT`: `f3148a5 (merge 14f0ee3)`
-- `BASELINE`: `main@997371d`
-- `LAST_BRANCH`: `ceo/scanner-arkiv-aktuelt`
-- `TASK_ATTEMPTS`: `18: 1/1.`
+- `NEXT_TASK`: `20 — byg site-icons-1.0.0.tar.gz reproducerbart; den er en forældet håndlavet kopi med Lemon Squeezy-referencer`
+- `PLAN_COMMIT`: `ceo/aab-indre-version (afventer merge)`
+- `BASELINE`: `main@8d0ae76`
+- `LAST_BRANCH`: `ceo/aab-indre-version`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1.`
 - `DEPLOY`: `DEPLOY OK 14f0ee3 26/9` — kørsel `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Live-indhold verificeret (11 filer, lockfil 1.3.3/`^26.15.3`, `engines` + `.nvmrc` med). Se Deployloggen.
 - `VERIFICÉR DEPLOY (lukket)`: `desktop-kildearkivet er et 1.3.3-arkiv 14f0ee3 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
   - `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` skal pakkes ud til 11 filer; `package-lock.json` skal sige `version 1.3.3` og `electron-builder ^26.15.3`, `package.json` skal have `engines.node >=22.12.0`, og `.nvmrc` skal være med. Før dette var der 10 filer, lockfilen sagde 1.3.0 og `^25.0.0`, og `.nvmrc` manglede.
 - `DEPLOY` (før): `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
+- `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
+- `VERIFICÉR DEPLOY`: `check_versions læser nu de fem byggeoutput-arkivers indre version (aab-indre-version 2026-09-26)` — GitHub Actions kører automatisk (`tools/**` er i path-filteret). Intet i `site/` eller `dist/` ændres af denne commit, så **intet på de tre domæner ændrer udseende**; live-verificér at `gate` var grøn i kørslen, og at `mahope.tools/downloads/eaa_scanner-1.2.0-py3-none-any.whl` stadig er den samme fil (HTTP 200 er ikke nok, men her skal sha256 være uændret).
 - `RESULT` (opgave 17): Opgaven troede, de to sider var bygget af to forskellige designs, og at løsningen krævede at vælge mellem auditedwps skal og vores. **Halvdelen af den forudsætning var forkert, og det viste sig først i det byggede dist:** bygget indlæser allerede `/shell.js` og `<header class="site-header">` på alle fire sider — én header, én footer, ét skeln. Headeren, footeren, knapperne og IBM Plex kom alle fra vores skal. Det, der så forkert ud, var **tokens**: de tre værktøjssider indlæser derudover `../auditedwp`s `/assets/site.css`, et komplet designsystem med sit eget palet (grøn `#0b6e4f`) og sin egen skrifttype (Inter). Dens eget `<style>`-blok og deres eget `site.js` bruger kun de klassenavne, den kender, så filen skal rejse med — men de 27 tokens den erklærer, må ikke.
 
   **Fund 1 — beslutningen var at lade deres fil rejse med og trodse dens tokens.** At fjerne `assets/site.css` ville have brudt resultaterne: `site.js` indsætter `.ck-tools`, `.btn.secondary.sm`, `.ic`, `.pre-wrap`, `.copy-btn`, `.recent`, `.rcard`, `.post-grid` — elementer, kun den fil styler. Bridgen er derfor 27 `var(--color-*)`-linjer i `site/style.css`, ikke en ny side og ikke en ændring i `../auditedwp`.
@@ -1183,7 +1186,83 @@ opgave 17 fund 3.
   stadig uåbnede. De er alle fundet byte-identiske med kilden i denne iteration,
   men intet holder dem der. Det er opgave 19.
 
-### 19. UFÆNDIG — åbn byggeoutput-artefakterne i `check_versions.py`
+### 19. FÆRDIG (implementering `ceo/aab-indre-version`) — åbn byggeoutput-artefakterne i `check_versions.py`
+
+**Resultat:** De fem byggeoutput-arkiver læses nu *inde i*. Fire produkter har fået
+et `inner`-felt på `Product` — `(arkivglob, memberglob, notation)` — og
+`check_inner_versions` åbner hvert kanonisk arkiv og kræver, at den erklærede
+fil bærer den kanoniske version:
+
+| Arkiv | Læst fil | Læser |
+|---|---|---|
+| `eaa_scanner-1.2.0-py3-none-any.whl` | `eaa_scanner-1.2.0.dist-info/METADATA` | `Version:`-linje |
+| `eaa_scanner-1.2.0.tar.gz` | `eaa_scanner-1.2.0/PKG-INFO` | `Version:`-linje |
+| `mahope-eaa-scanner-1.2.0.tgz` | `package/package.json` | JSON `version` |
+| `page-profile/page-profile-1.2.0.tar.gz` | `page_profile-1.2.0/PKG-INFO` | `Version:`-linje |
+| `site-icons/site-icons-1.0.0.tar.gz` | `site_icons.py` | `__version__` |
+
+Alle fem er fundet korrekte på de rigtige filer. Selftesten går fra 16 mutationer
+til **25 mutationer + 1 negativ kontrol + positiv kontrol**, og `de rigtige filer`
+er stadig en del af den.
+
+**Fund 1 — planens forudsætning om site-icons var forkert, og det gav mere
+dækning end den troede.** Planen skrev at `site-icons-1.0.0.tar.gz` er "et
+håndlavet tarball med to filer og ingen `PKG-INFO`" og derfor skulle skrives op som
+*uden indre versionserklæring*. Det er sandt at der ingen `PKG-INFO` er — men den
+ene af de to filer erklærer versionen alligevel, som `__version__ = "1.0.0"` i
+`site_icons.py:25`. Så det er dækket lige så vel som de fire andre, i stedet for
+at blive en hvid plet i tabellen. Før `inner` fandt porten ingen som helst i
+arkiverne; nu læser den alle otte produkter.
+
+**Fund 2 — `fnmatch` lader `*` spænde over `/`, så det var den tredje måde
+`*/PKG-INFO` kunne have talt byggeaffald med.** En sdist indeholder både
+`eaa_scanner-1.2.0/PKG-INFO` *og* `eaa_scanner-1.2.0/eaa_scanner.egg-info/PKG-INFO`,
+fordi setuptools skriver sit eget metadata indeni. Det er **to** filer, der ligner
+som én, og kun den øverste er sdistens egen erklæring. Derfor matcher `member_matches`
+segment for segment, så `*` ikke krydser `/`. Beviset ligger i fixtureen: den har
+en `egg-info/PKG-INFO` på **1.1.0** i et 1.2.0-sdist, og den skal ignoreres. En
+fnmatch der spænder over `/` ville slå den positive kontrol rød.
+
+**Fund 3 — fixture-arkiverne var tekst, så hele den nye kontrol ville have været
+teater.** `FIXTURE` skrev `"whl"`, `"tar"` og `"tgz"` som filindhold. `read_members`
+kan ikke åbne dem, så uden ændringen ville porten have læst *intet* i *intet*
+arkiv og alligevel været grøn på alle 25 mutationer. Fixtureen bygger nu ægte
+arkiver med `build_archive`, på låste tidsstempler så resultatet er reproducerbart.
+
+**Fund 4 — mutationen for et beskadiget arkiv fandt en uhåndteret undtagelse.**
+Den mutation kørte porten i en `zlib.error` (beskadiget gzip-strøm), som ingen
+`except` dækkede, så selftesten døde med en staksporing i stedet for en fejl.
+Nu fanges `EOFError` og `zlib.error` sammen med de andre arkiv-fejl. Samme
+fejlform som opgave 18: en port der aldrig har set arkivet fejle, kan heller ikke
+rapportere det.
+
+**Fund 5 — den negative kontrol er den pointe, ikke en bivirkning.** `inner=()` betyder
+"dette arkiv erklærer ingen indre version", og porten skal tie. Hvis den krævede
+en erklæring alligevel, ville den fejle de håndlavede arkiver uden grund. Negativ
+kontrollen kører derfor `PRODUCTS` med `eaa-scanner-npm`'s `inner` sat til tom, på
+en fixture hvor `tgz'en` slet ikke har nogen versionserklæring, og kræver nul fund.
+
+**Sidebevis undervejs:** `read_members` bestemmer formatet af magiske bytes, ikke
+af endelsen, fordi `.whl` er en ZIP uden at hedde `.zip` — den første kørsel
+fejlede netop på det. En `.tgz` der viser sig at være en ZIP læses fint; det er
+formatsvaghed, ikke en fejl.
+
+**Gate:** `python3 tools/quality_gate.py` — **GRØN, 36 steps** (uændret antal; de
+to nye kontrol-stræk i `check_python_env --self-test` ligger inde i steppet).
+`python3 tools/check_versions.py --self-test`: OK (25 mutationer + 1 negativ
+kontrol + positiv kontrol + rigtige filer). `python3 tools/check_versions.py`: OK,
+8 produkter.
+
+**Rettelse i en anden port, som gaten afslørede:** `check_python_env` erklærede
+C-udvidelser i standardbiblioteket for tredjepart. `zlib` ligger som
+`lib-dynload/zlib.cpython-39-darwin.so` — ingen `.py`, ingen `__init__.py` i
+mappen over den — så `stdlib_names()` så den som en udeklareret afhængighed og
+krævede den i `requirements-build.txt`. `stdlib_names` scanner nu også
+C-udvidelser, også i `lib-dynload`, og tager navnet før ABI-mærket. Det er en
+*løsning* på en gate, så den fik sin egen kontrol: syv moduler skal genkendes som
+stdlib, og `extension_names` skal læse navnet før `cpython` — ikke slå `.txt` for
+en udvidelse. Mutationen "værktøj importerer en pakke låsen ikke kender" er stadig
+fanget, så den nye gren har ikke slækket porten.
 
 **Begrundelse:** Opgave 18 fandt, at intet i repoet nogensinde har læst en byte
 inde i `site/downloads/`. Desktop-arkivet fik en indholdsgate. Det gjorde
@@ -1218,6 +1297,69 @@ holder dem der, og de er præcis de filer en kunde `pip install`er.
   gør allerede).
 
 **Gate:** `python3 tools/check_versions.py --self-test` plus hele kvalitetsgaten.
+
+### 20. UFÆRDIG — byg `site-icons-1.0.0.tar.gz` reproducerbart; den er en forældet håndlavet kopi
+
+**Begrundelse:** Opgave 19 fandt, mens den læste arkiverne, at
+`site/downloads/site-icons/site-icons-1.0.0.tar.gz` **ikke** er en kopi af kilden.
+Begge filer i tarballet afviger fra `site-icons/`, og det er ikke kosmetik:
+
+- `site_icons.py:45` siger *„Lemon Squeezy API when available"* — kilden siger
+  *„the mahope.tools license API (/api/license/validate)"*.
+- `README.md:69` siger *„When Mads opens Bitwarden (Lemon Squeezy API), keys are
+  sold there"* — kilden siger *„Pro will require a license key from the
+  mahope.tools license API"*.
+
+Det er præcis den døde udbyder kontrakten lukkede den 24. september, leveret til
+kunder i et publiceret download. Opgave 19 dækker kun versionen, som er korrekt
+(1.0.0), så denne fejl glider igennem. Samme fejlform som opgave 18: et
+publiceret arkiv der ikke er bygget af kilden.
+
+**Omfang:**
+
+- Nyt `tools/build_site_icons_archive.py` i samme form som
+  `tools/build_desktop_archive.py`: byg + `--check` + `--self-test`, låste
+  tidsstempler, kun de to filer kunden skal have (`site_icons.py`, `README.md`).
+- Byg arkivet fra `site-icons/`, så det får kildens Lemon Squeezy-rettelse med.
+- Hæng et step på `tools/quality_gate.py` og sørg for at `site-icons/**` er med i
+  path-filteret — ellers fanger gaten kun commits der rører selve arkivet, hvilket
+  var præcis den utænkelighed opgave 18 skrev op under `❓ Til Mads` pkt. 10.
+
+**Acceptkriterier:**
+
+- `python3 tools/build_site_icons_archive.py --check` er grøn, og arkivet er
+  byte-identisk med et arkiv bygget af kilden.
+- Tarballets to filer er byte-identiske med `site-icons/site_icons.py` og
+  `site-icons/README.md`.
+- Ingen forekomst af `lemon` i noget publiceret arkiv under `site/downloads/`
+  (fanges af `check_legacy_seo_paths.py`-lignende grep, eller en ny linje i
+  `check_versions.py`).
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/build_site_icons_archive.py --self-test` plus hele
+kvalitetsgaten.
+
+### 21. UFÆRDIG — de fire Clean Copy-arkiver har heller ingen indholdsgate
+
+**Begrundelse:** Opgave 19 dækkede de fem byggeoutput-arkiver. De fire øvrige
+publicerede arkiver er ikke byggeoutput, men de er heller ikke sammenlignet med
+kilden af `check_versions.py` — de er kun kontrolleret på *filnavnets* version.
+Og de indeholder hver især en `manifest.json` med en version:
+
+- `clean-copy-v1.5.3.zip` → `manifest.json` (fra `extension-clean-copy/`)
+- `clean-copy-firefox-v1.5.3.zip` → `manifest.json` (fra `extension-clean-copy-firefox/`)
+- `clean-copy-obsidian-v1.0.10.zip` → `manifest.json` + `version.txt`
+- `eaa-scanner-desktop-src-1.3.3.zip` → dækket af opgave 18
+
+Opgave 14 fandt præcis denne fejlform i `manifest.json` vs
+`obsidian-plugin/manifest.json` vs arkivnavnet. `extension-clean-copy/manifest.json`
+siger i dag 1.5.3, men intet beviser at *zippen* gør. `tools/build_clean_copy_archives.py`
+findes allerede, så arkiverne er reproducerbare bygget — spørgsmålet er kun om
+`--check` er grøn.
+
+**Acceptkriterier:** En `--check`-kørsel af `build_clean_copy_archives.py` er grøn
+for alle tre, eller forskellen er fundet og rettet. `version.txt` i
+obsidian-arkivet matcher `obsidian-plugin/manifest.json`.
 
 ## ❓ Til Mads
 

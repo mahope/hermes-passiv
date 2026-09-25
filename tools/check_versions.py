@@ -40,13 +40,19 @@ pointe som opgave 13 og 16.
 """
 from __future__ import annotations
 
+import io
 import json
 import re
 import shutil
 import sys
+import tarfile
 import tempfile
-from dataclasses import dataclass
+import zipfile
+import zlib
+from dataclasses import dataclass, replace
+from fnmatch import fnmatch as _segment_match
 from pathlib import Path
+from typing import Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -56,6 +62,12 @@ import mini_toml  # noqa: E402
 SEMVER = re.compile(r"\d+\.\d+\.\d+")
 EXACT_VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 DOWNLOADS = "site/downloads.html"
+
+#: Filer hvis versionserklæring er en RFC822-linje `Version: x.y.z` — setuptools'
+#: `PKG-INFO` i en sdist og `*.dist-info/METADATA` i et hjul. Kun disse navne:
+#: en vilkårlig tekstfil med en `Version:`-linje er ikke en versionserklæring, og
+#: hvis porten læste den, ville den finde "versioner" i README'er og changelog'er.
+METADATA_NAMES = ("PKG-INFO", "METADATA")
 
 
 @dataclass(frozen=True)
@@ -70,6 +82,15 @@ class Product:
     #: (glob, template): `template` har `{version}`, `glob` finder hele familien,
     #: så et gammelt arkiv i samme familie kan tælles.
     artifacts: tuple[tuple[str, str], ...] = ()
+    #: (arkivglob, memberglob, notation) for filer **inde i** et publiceret arkiv.
+    #: Byggeoutput — pip-hjul, sdists, `npm pack`-tgz — kan ikke sammenlignes fil
+    #: for fil med kilden, fordi `python -m build` og `npm pack` skriver
+    #: `PKG-INFO`, `setup.cfg` og `.dist-info/` ind i dem. Men de bærer deres
+    #: egen versionserklæring, og *den* skal være den kanoniske version: en
+    #: kunde der `pip install`er et 1.2.0-navngivet hjul med 1.1.0 indeni har
+    #: fået gammel kode under et nyt navn. Tom tuple betyder "arkivet erklærer
+    #: ingen indre version" — og så må porten **ikke** kræve en.
+    inner: tuple[tuple[str, str, str], ...] = ()
 
 
 PRODUCTS: tuple[Product, ...] = (
@@ -121,12 +142,22 @@ PRODUCTS: tuple[Product, ...] = (
             ("site/downloads/eaa_scanner-*.whl", "site/downloads/eaa_scanner-{version}-py3-none-any.whl"),
             ("site/downloads/eaa_scanner-*.tar.gz", "site/downloads/eaa_scanner-{version}.tar.gz"),
         ),
+        # Segmentvis glob: `*` matcher ikke `/`, ellers ville
+        # `eaa_scanner-1.2.0/eaa_scanner.egg-info/PKG-INFO` også matche
+        # `*/PKG-INFO` — og så ville porten tælle to erklæringer for én arkiv.
+        inner=(
+            ("site/downloads/eaa_scanner-*.whl", "*.dist-info/METADATA", "Version:"),
+            ("site/downloads/eaa_scanner-*.tar.gz", "*/PKG-INFO", "Version:"),
+        ),
     ),
     Product(
         key="eaa-scanner-npm",
         canonical="scanner/npm/eaa-scanner/package.json",
         artifacts=(
             ("site/downloads/mahope-eaa-scanner-*.tgz", "site/downloads/mahope-eaa-scanner-{version}.tgz"),
+        ),
+        inner=(
+            ("site/downloads/mahope-eaa-scanner-*.tgz", "package/package.json", "version"),
         ),
     ),
     Product(
@@ -139,6 +170,9 @@ PRODUCTS: tuple[Product, ...] = (
                 "site/downloads/page-profile/page-profile-{version}.tar.gz",
             ),
         ),
+        inner=(
+            ("site/downloads/page-profile/page-profile-*.tar.gz", "*/PKG-INFO", "Version:"),
+        ),
     ),
     Product(
         key="site-icons",
@@ -148,6 +182,15 @@ PRODUCTS: tuple[Product, ...] = (
                 "site/downloads/site-icons/site-icons-*.tar.gz",
                 "site/downloads/site-icons/site-icons-{version}.tar.gz",
             ),
+        ),
+        # Planen antog at dette håndlavede tarball "er uden indre
+        # versionserklæring", fordi det har to filer og ingen `PKG-INFO`. Den
+        # ene af de to filer erklærer versionen alligevel, som `__version__` i
+        # modulets egen rod: `site_icons.py:25`. Så den dækkes lige så vel som
+        # de tre øvrige. (At arkivet er en håndlavet *gammel* kopi er en anden
+        # fejl — den står som opgave 20.)
+        inner=(
+            ("site/downloads/site-icons/site-icons-*.tar.gz", "site_icons.py", "__version__"),
         ),
     ),
 )
@@ -176,55 +219,117 @@ def read(path: Path) -> str | None:
         return None
 
 
-def toml_version(root: Path, rel: str, report: Report) -> str | None:
-    """`[project] version` — læst med `loads(text)`.
+def version_from_text(name: str, raw: str, path: str, report: Report) -> str | None:
+    """Læs én version ud af en tekst, uanset om den kom fra disk eller fra et arkiv.
 
-    Ikke `load(path)`: den indlejrede `tomllib.load` kræver et binært filobjekt,
-    mens `mini_toml.load` tager en `Path`. `loads` findes i begge, så vejen er
-    den samme på 3.9 og 3.12 — samme løsning som opgave 13 fandt i CI.
+    `path` er den notation spejlene bruger: `version` i en JSON-fil,
+    `__version__` i en Python-fil. `.toml` og metadatafiler bruger ingen notation
+    for sig — de *er* notationsformen. `report` får kun JSON- og TOML-fejl, så en
+    arkivfejl peger på arkivet og ikke på en fil der ikke findes.
+
+    TOML læses med `mini_toml.loads(text, name)`, ikke `load(path)`: den
+    indlejrede `tomllib.load` kræver et binært filobjekt, mens `mini_toml.load`
+    tager en `Path`. `loads` findes i begge, så vejen er den samme på 3.9 og 3.12
+    — samme løsning som opgave 13 fandt i CI.
     """
-    raw = read(root / rel)
-    if raw is None:
-        return None
-    try:
-        data = mini_toml.loads(raw, root / rel)
-    except (mini_toml.TOMLDecodeError, ValueError) as exc:
-        report.add(f"{rel}: kan ikke læses som TOML ({exc})")
-        return None
-    version = data.get("project", {}).get("version")
-    return None if version is None else str(version)
+    if name.endswith(".toml"):
+        try:
+            data = mini_toml.loads(raw, name)
+        except (mini_toml.TOMLDecodeError, ValueError) as exc:
+            report.add(f"{name}: kan ikke læses som TOML ({exc})")
+            return None
+        version = data.get("project", {}).get("version")
+        return None if version is None else str(version)
+    if name.endswith(".json"):
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            report.add(f"{name}: kan ikke læses som JSON ({exc})")
+            return None
+        for step in path.split("."):
+            if not isinstance(data, dict):
+                return None
+            key = "" if step == '""' else step
+            if key not in data:
+                return None
+            data = data[key]
+        return str(data) if isinstance(data, (str, int, float)) else None
+    if name.endswith(".py"):
+        match = re.search(r"""^__version__\s*=\s*["']([^"']+)["']""", raw, re.MULTILINE)
+        return match.group(1) if match else None
+    if Path(name).name in METADATA_NAMES:
+        match = re.search(r"^Version:[ \t]*(\S+)[ \t]*$", raw, re.MULTILINE)
+        return match.group(1) if match else None
+    return None
 
 
 def json_version(root: Path, rel: str, path: str, report: Report) -> str | None:
     raw = read(root / rel)
     if raw is None:
         return None
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        report.add(f"{rel}: kan ikke læses som JSON ({exc})")
-        return None
-    for step in path.split("."):
-        if not isinstance(data, dict):
-            return None
-        key = "" if step == '""' else step
-        if key not in data:
-            return None
-        data = data[key]
-    return str(data) if isinstance(data, (str, int, float)) else None
+    return version_from_text(rel, raw, path, report)
 
 
 def source_version(root: Path, rel: str, report: Report) -> str | None:
-    if rel.endswith(".toml"):
-        return toml_version(root, rel, report)
-    if rel.endswith(".json"):
-        return json_version(root, rel, "version", report)
-    if rel.endswith(".py"):
-        raw = read(root / rel)
-        if raw is None:
-            return None
-        match = re.search(r"""^__version__\s*=\s*["']([^"']+)["']""", raw, re.MULTILINE)
-        return match.group(1) if match else None
+    raw = read(root / rel)
+    if raw is None:
+        return None
+    return version_from_text(rel, raw, "version", report)
+
+
+def member_matches(name: str, pattern: str) -> bool:
+    """Segmentvis glob: `*` matcher ikke `/`.
+
+    `fnmatch` lader `*` spænde over skillestreger, så `*/PKG-INFO` ville ramme
+    både `eaa_scanner-1.2.0/PKG-INFO` og
+    `eaa_scanner-1.2.0/eaa_scanner.egg-info/PKG-INFO` — to erklæringer for ét
+    arkiv, hvoraf kun den ene er sdistens egen. Segmentvis sammenligning er det
+    samme som det globsystem de fleste byggeværktøjer bruger.
+    """
+    parts = name.split("/")
+    wanted = pattern.split("/")
+    if len(parts) != len(wanted):
+        return False
+    return all(_segment_match(part, want) for part, want in zip(parts, wanted))
+
+
+def read_members(path: Path, report: Report) -> dict[str, str] | None:
+    """{membernavn: tekst} for et arkiv, uanset format.
+
+    ZIP til hjul og extension-arkiver, gzipped tar til sdists, `npm pack`-tgz og
+    det håndlavede site-icons-tarball. Formatet læses af magiske bytes, ikke af
+    endelsen: `.whl` er en ZIP men hedder ikke `.zip`, og en liste af endelser
+    ville være en fejl, der bare venter på det nye format. `None` betyder at
+    arkivet ikke kan læses, og så har fundet en fejl — en port der springer et
+    korrupt arkiv over ville lade det være grønt, fordi den intet fandt.
+    """
+    try:
+        with open(path, "rb") as handle:
+            magic = handle.read(4)
+    except OSError as exc:
+        report.add(f"{path.name}: kan ikke læses ({exc})")
+        return None
+
+    def texts(names: Iterable[str], load) -> dict[str, str]:
+        return {name: load(name).decode("utf-8", "replace") for name in names}
+
+    try:
+        if magic[:2] == b"PK":
+            with zipfile.ZipFile(path) as archive:
+                return texts(
+                    (info.filename for info in archive.infolist() if not info.is_dir()),
+                    archive.read,
+                )
+        if magic[:2] == b"\x1f\x8b":
+            with tarfile.open(path, "r:gz") as archive:
+                return texts(
+                    (member.name for member in archive.getmembers() if member.isfile()),
+                    lambda name: archive.extractfile(name).read(),  # type: ignore[union-attr]
+                )
+    except (OSError, EOFError, KeyError, tarfile.TarError, zipfile.BadZipFile, zlib.error) as exc:
+        report.add(f"{path.name}: kan ikke åbnes som arkiv ({exc})")
+        return None
+    report.add(f"{path.name}: ukendt arkivformat (de første bytes er {magic!r})")
     return None
 
 
@@ -290,13 +395,57 @@ def check_product(root: Path, product: Product, report: Report) -> None:
                 )
 
 
-def check_download_page(root: Path, report: Report) -> None:
+def check_inner_versions(root: Path, product: Product, report: Report) -> None:
+    """Versionserklæringen *inde i* hvert publiceret byggeoutput-arkiv.
+
+    Kun det kanoniske arkiv læses: et ældre arkiv i samme familie er allerede
+    fundet ovenfor, og at læse det igen ville give to fejl for én.
+    """
+    version = report.versions.get(product.key)
+    if version is None:
+        return
+    templates = {glob: template for glob, template in product.artifacts}
+    for glob, member_glob, notation in product.inner:
+        template = templates.get(glob)
+        if template is None:
+            raise AssertionError(
+                f"selftest/opsætning: {product.key} erklærer en indre version for {glob!r}, "
+                f"som ikke er en af dens arkivfamilier"
+            )
+        archive = root / template.format(version=version)
+        if not archive.is_file():
+            continue  # Already reported as missing.
+        members = read_members(archive, report)
+        if members is None:
+            continue
+        hits = sorted(name for name in members if member_matches(name, member_glob))
+        if not hits:
+            report.add(
+                f"{product.key}: {archive.name} har ingen {member_glob} — filen der erklærer "
+                f"hvilken version kunden får, findes ikke inde i arkivet"
+            )
+            continue
+        for name in hits:
+            found = version_from_text(name, members[name], notation, report)
+            if found is None:
+                report.add(
+                    f"{product.key}: {archive.name} → {name} har ingen aflæselig version "
+                    f"({notation}) — porten kan ikke bevise at kunden får {version}"
+                )
+            elif found != version:
+                report.add(
+                    f"{product.key}: {archive.name} → {name} siger {found}, mens kilden siger "
+                    f"{version} — kunden henter gammel kode under et nyt filnavn"
+                )
+
+
+def check_download_page(root: Path, report: Report, products: tuple[Product, ...]) -> None:
     """Download-siden skal love den version der faktisk kan hentes."""
     raw = read(root / DOWNLOADS)
     if raw is None:
         report.add(f"{DOWNLOADS}: mangler")
         return
-    for product in PRODUCTS:
+    for product in products:
         version = report.versions.get(product.key)
         if version is None:
             continue
@@ -319,12 +468,16 @@ def check_single_source(root: Path, report: Report) -> None:
             )
 
 
-def run(root: Path) -> tuple[list[str], dict[str, str]]:
+def run(root: Path, products: tuple[Product, ...] = PRODUCTS) -> tuple[list[str], dict[str, str]]:
     report = Report()
     check_single_source(root, report)
-    for product in PRODUCTS:
+    for product in products:
         check_product(root, product, report)
-    check_download_page(root, report)
+    # Efter alle produkter, så `report.versions` er fuldt når `check_inner_versions`
+    # slår op. Arkiverne læses kun for produkter hvis sandhed faktisk blev fundet.
+    for product in products:
+        check_inner_versions(root, product, report)
+    check_download_page(root, report, products)
     return report.problems, report.versions
 
 
@@ -335,7 +488,19 @@ def run(root: Path) -> tuple[list[str], dict[str, str]]:
 #: Ét komplet fixture: alle otte produkter, alle spejle, alle ni arkiver og en
 #: downloads-side der kun nævner de aktuelle versioner. Mutationerne sker her,
 #: så hver enkelt fejl måtte kun have ÉN årsag.
-FIXTURE: dict[str, str] = {
+#:
+#: Værdierne er enten tekst (skrives som fil) eller et arkiv-spec
+#: `{"format": "zip"|"targz", "files": {member: tekst}}` (skrives som ægte arkiv).
+#: Det er ikke pænthed: et fixture hvor arkiverne er teksten `"whl"` gør den
+#: indre versionskontrol til teater, fordi `read_members` aldrig finder noget. De
+#: skal være rigtige nok til at `zipfile` og `tarfile` kan åbne dem, og de skal
+#: rumme de samme filer de rigtige byggeoutput har — inklusive et
+#: `*.egg-info/PKG-INFO` på den *gamle* version, fordi det er præcis den der
+#: beviser at `*/PKG-INFO` kun rammer sdistens egen og ikke dyret inde.
+EAA_METADATA = "Metadata-Version: 2.1\nName: eaa-scanner\nVersion: {version}\n"
+EAA_PKG_INFO = "Metadata-Version: 2.1\nName: eaa-scanner\nVersion: {version}\n"
+
+FIXTURE: dict[str, object] = {
     "extension-clean-copy/manifest.json": json.dumps({"name": "Clean Copy", "version": "1.5.3"}),
     "extension-clean-copy-firefox/manifest.json": json.dumps({"name": "Clean Copy", "version": "1.5.3"}),
     "obsidian-plugin/manifest.json": json.dumps({"id": "clean-copy", "version": "1.0.10"}),
@@ -348,15 +513,51 @@ FIXTURE: dict[str, str] = {
     "page-profile/pyproject.toml": '[project]\nname = "page-profile"\nversion = "1.2.0"\n',
     "page-profile/page_profile.py": '__version__ = "1.2.0"\n',
     "site-icons/pyproject.toml": '[project]\nname = "site-icons"\nversion = "1.0.0"\n',
-    "site/downloads/clean-copy-v1.5.3.zip": "zip",
-    "site/downloads/clean-copy-firefox-v1.5.3.zip": "zip",
-    "site/downloads/clean-copy-obsidian-v1.0.10.zip": "zip",
-    "site/downloads/eaa-scanner-desktop-src-1.3.3.zip": "zip",
-    "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl": "whl",
-    "site/downloads/eaa_scanner-1.2.0.tar.gz": "tar",
-    "site/downloads/mahope-eaa-scanner-1.2.0.tgz": "tgz",
-    "site/downloads/page-profile/page-profile-1.2.0.tar.gz": "tar",
-    "site/downloads/site-icons/site-icons-1.0.0.tar.gz": "tar",
+    "site/downloads/clean-copy-v1.5.3.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
+    "site/downloads/clean-copy-firefox-v1.5.3.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
+    "site/downloads/clean-copy-obsidian-v1.0.10.zip": {"format": "zip", "files": {"manifest.json": "{}"}},
+    "site/downloads/eaa-scanner-desktop-src-1.3.3.zip": {"format": "zip", "files": {"package.json": "{}"}},
+    "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl": {
+        "format": "zip",
+        "files": {
+            "eaa_scanner/__init__.py": '__version__ = "1.2.0"\n',
+            "eaa_scanner-1.2.0.dist-info/METADATA": EAA_METADATA.format(version="1.2.0"),
+            "eaa_scanner-1.2.0.dist-info/RECORD": "eaa_scanner/__init__.py,,\n",
+        },
+    },
+    "site/downloads/eaa_scanner-1.2.0.tar.gz": {
+        "format": "targz",
+        "files": {
+            "eaa_scanner-1.2.0/PKG-INFO": EAA_PKG_INFO.format(version="1.2.0"),
+            "eaa_scanner-1.2.0/pyproject.toml": '[project]\nname = "eaa-scanner"\nversion = "1.2.0"\n',
+            "eaa_scanner-1.2.0/eaa_scanner/__init__.py": '__version__ = "1.2.0"\n',
+            # Stale byggeaffald. En segmentvis glob skal IGNORERE den; en fnmatch
+            # der spænder over `/` ville tælle den og slå positiv kontrol rød.
+            "eaa_scanner-1.2.0/eaa_scanner.egg-info/PKG-INFO": EAA_PKG_INFO.format(version="1.1.0"),
+        },
+    },
+    "site/downloads/mahope-eaa-scanner-1.2.0.tgz": {
+        "format": "targz",
+        "files": {
+            "package/package.json": json.dumps({"name": "@mahope/eaa-scanner", "version": "1.2.0"}),
+            "package/index.js": "module.exports = {};\n",
+            "package/README.md": "# eaa-scanner\n",
+        },
+    },
+    "site/downloads/page-profile/page-profile-1.2.0.tar.gz": {
+        "format": "targz",
+        "files": {
+            "page_profile-1.2.0/PKG-INFO": "Metadata-Version: 2.1\nName: page-profile\nVersion: 1.2.0\n",
+            "page_profile-1.2.0/page_profile.py": '__version__ = "1.2.0"\n',
+        },
+    },
+    "site/downloads/site-icons/site-icons-1.0.0.tar.gz": {
+        "format": "targz",
+        "files": {
+            "site_icons.py": '__version__ = "1.0.0"\n',
+            "README.md": "# site-icons\n",
+        },
+    },
     DOWNLOADS: "\n".join(
         f'<a href="/{rel}">{rel}</a>'
         for rel in (
@@ -373,36 +574,106 @@ FIXTURE: dict[str, str] = {
     ),
 }
 
+#: Fast tidspunkt for alle arkivmedlemmer. Uden det er `--self-test` afhængig af
+#: at filerne skrives samme sekund, og en archive-header tidsstempel ville gøre
+#: hver kørsel til et nyt sammenligningsgrundlag.
+ARCHIVE_EPOCH = (1980, 1, 1, 0, 0, 0)
 
-def write_fixture(root: Path, files: dict[str, str]) -> None:
+
+def build_archive(spec: dict) -> bytes:
+    """Byg et byte-arkiv af et spec, så fixture-filerne er ægte arkiver."""
+    files: dict[str, str] = spec["files"]
+    if spec["format"] == "zip":
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            for name, body in files.items():
+                info = zipfile.ZipInfo(name, date_time=ARCHIVE_EPOCH)
+                info.external_attr = 0o644 << 16
+                archive.writestr(info, body)
+        return buffer.getvalue()
+
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz", format=tarfile.GNU_FORMAT) as archive:
+        for name, body in files.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(body.encode("utf-8"))
+            info.mtime = 0
+            info.mode = 0o644
+            info.uid = info.gid = 0
+            info.uname = info.gname = ""
+            archive.addfile(info, io.BytesIO(body.encode("utf-8")))
+    return buffer.getvalue()
+
+
+def write_fixture(root: Path, files: dict[str, object]) -> None:
     for rel, body in files.items():
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(body, encoding="utf-8")
+        if isinstance(body, dict):
+            path.write_bytes(build_archive(body))
+        elif isinstance(body, (bytes, bytearray)):
+            path.write_bytes(bytes(body))
+        else:
+            path.write_text(str(body), encoding="utf-8")
 
 
-def edit(files: dict[str, str], rel: str, old: str, new: str) -> dict[str, str]:
+def edit(files: dict[str, object], rel: str, old: str, new: str) -> dict[str, object]:
     out = dict(files)
     if old not in out[rel]:
         raise AssertionError(f"selftest: {rel} indeholder ikke {old!r}")
-    out[rel] = out[rel].replace(old, new)
+    out[rel] = out[rel].replace(old, new)  # type: ignore[union-attr]
     return out
 
 
-def scenarios() -> list[tuple[str, dict[str, str], str]]:
+def edit_inside(
+    files: dict[str, object], rel: str, member: str, old: str, new: str
+) -> dict[str, object]:
+    """Udskift tekst i ÉN fil inde i et fixture-arkiv.
+
+    Bevidst en egen mutationstype: `edit` ville ændre arkiv-teksten, hvilket er
+    umuligt, fordi arkivet er komprimeret. Og en mutation der bygger et helt nyt
+    arkiv uden den medlem ville teste en anden ting end den tilsigtede.
+    """
+    out = dict(files)
+    spec = out[rel]
+    assert isinstance(spec, dict), f"selftest: {rel} er ikke et arkiv-spec"
+    members = dict(spec["files"])  # type: ignore[index]
+    if member not in members:
+        raise AssertionError(f"selftest: {rel} har ikke medlemmet {member!r}")
+    if old not in members[member]:
+        raise AssertionError(f"selftest: {rel} → {member} indeholder ikke {old!r}")
+    members[member] = members[member].replace(old, new)
+    out[rel] = {**spec, "files": members}  # type: ignore[dict-item]
+    return out
+
+
+def drop_member(files: dict[str, object], rel: str, member: str) -> dict[str, object]:
+    """Fjern ÉN medlem fra et fixture-arkiv, som en mutation der gør klar det."""
+    out = dict(files)
+    spec = out[rel]
+    assert isinstance(spec, dict), f"selftest: {rel} er ikke et arkiv-spec"
+    members = dict(spec["files"])  # type: ignore[index]
+    if member not in members:
+        raise AssertionError(f"selftest: {rel} har ikke medlemmet {member!r}")
+    del members[member]
+    out[rel] = {**spec, "files": members}  # type: ignore[dict-item]
+    return out
+
+
+def scenarios() -> list[tuple[str, dict[str, object], str]]:
     """(navn, mutation, forventet fejl)."""
-    out: list[tuple[str, dict[str, str], str]] = []
+    out: list[tuple[str, dict[str, object], str]] = []
 
     out.append(("kanonisk fil mangler", {k: v for k, v in FIXTURE.items() if k != "extension-clean-copy/manifest.json"}, "mangler eller har ingen aflæselig version"))
     out.append(("version er ikke x.y.z", edit(FIXTURE, "extension-clean-copy/manifest.json", '"1.5.3"', '"1.5.3-rc1"'), "er ikke x.y.z"))
     out.append(("arkiv mangler", {k: v for k, v in FIXTURE.items() if k != "site/downloads/clean-copy-v1.5.3.zip"}, "kan ikke hente den version kilden er på"))
 
     stale = dict(FIXTURE)
-    stale["site/downloads/clean-copy-v1.5.2.zip"] = "zip"
+    stale["site/downloads/clean-copy-v1.5.2.zip"] = {"format": "zip", "files": {"manifest.json": "{}"}}
     out.append(("gammelt arkiv i mappen", stale, "gammelt arkiv i publiceringsmappen"))
 
     stale_dep = dict(FIXTURE)
-    stale_dep["site/downloads/eaa_scanner-1.1.0-py3-none-any.whl"] = "whl"
+    stale_dep["site/downloads/eaa_scanner-1.1.0-py3-none-any.whl"] = {"format": "zip", "files": {"x": ""}}
     out.append(("gammelt hjul i mappen", stale_dep, "gammelt arkiv i publiceringsmappen"))
 
     out.append(("siden nævner en anden version", edit(FIXTURE, DOWNLOADS, "clean-copy-v1.5.3.zip", "clean-copy-v1.5.2.zip"), "nævner"))
@@ -418,20 +689,93 @@ def scenarios() -> list[tuple[str, dict[str, str], str]]:
     out.append(("spejlfil mangler", {k: v for k, v in FIXTURE.items() if k != "desktop/package-lock.json"}, "har ingen aflæselig version"))
     out.append(("manifest.json ugyldig JSON", edit(FIXTURE, "extension-clean-copy/manifest.json", '"1.5.3"}', '"1.5.3",}'), "kan ikke læses som JSON"))
     out.append(("pyproject.toml ugyldig TOML", {**FIXTURE, "page-profile/pyproject.toml": "[project\nname = 'x'\n"}, "kan ikke læses som TOML"))
+
+    # --- Den indre version: filerne INDE I byggeoutput-arkiverne -------------
+    #
+    # Disse otte filer hedder 1.2.0/1.0.0 i publiceringsmappen, og det er den
+    # eneste måde de bliver kontrolleret på. Før denne kontrol fandt ingen noget
+    # inde i dem — opgave 18 fandt den samme fejlform i et helt andet arkiv.
+
+    out.append((
+        "METADATA i hjulet siger 1.1.0",
+        edit_inside(FIXTURE, "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl", "eaa_scanner-1.2.0.dist-info/METADATA", "Version: 1.2.0", "Version: 1.1.0"),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "PKG-INFO i sdisten siger 1.1.0",
+        edit_inside(FIXTURE, "site/downloads/eaa_scanner-1.2.0.tar.gz", "eaa_scanner-1.2.0/PKG-INFO", "Version: 1.2.0", "Version: 1.1.0"),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "METADATA mangler i hjulet",
+        drop_member(FIXTURE, "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl", "eaa_scanner-1.2.0.dist-info/METADATA"),
+        "har ingen *.dist-info/METADATA",
+    ))
+    out.append((
+        "tgz uden package/package.json",
+        drop_member(FIXTURE, "site/downloads/mahope-eaa-scanner-1.2.0.tgz", "package/package.json"),
+        "har ingen package/package.json",
+    ))
+    out.append((
+        "PKG-INFO mangler i page-profile-sdisten",
+        drop_member(FIXTURE, "site/downloads/page-profile/page-profile-1.2.0.tar.gz", "page_profile-1.2.0/PKG-INFO"),
+        "har ingen */PKG-INFO",
+    ))
+    out.append((
+        "site_icons.py i tarballet siger 0.9.0",
+        edit_inside(FIXTURE, "site/downloads/site-icons/site-icons-1.0.0.tar.gz", "site_icons.py", '__version__ = "1.0.0"', '__version__ = "0.9.0"'),
+        "kunden henter gammel kode under et nyt filnavn",
+    ))
+    out.append((
+        "arkivet er slet ikke et arkiv",
+        {**FIXTURE, "site/downloads/mahope-eaa-scanner-1.2.0.tgz": "disse bytes er ikke et arkiv"},
+        "ukendt arkivformat",
+    ))
+    out.append((
+        "arkivet er beskadiget",
+        {**FIXTURE, "site/downloads/mahope-eaa-scanner-1.2.0.tgz": b"\x1f\x8b\x08\x00" + b"\x00" * 40},
+        "kan ikke åbnes som arkiv",
+    ))
     return out
+
+
+def negative_controls() -> list[tuple[str, dict[str, object], tuple[Product, ...]]]:
+    """Scenarier der skal VÆRE GRØNNE, fordi porten ikke skal gribe i dem.
+
+    Samme pointe som opgave 13, 15, 16 og 17: en mutation der fanger en fejl
+    uden at have set den fanget, er ingen bevismålstyring. Her er den fælde
+    `inner` kan falde i: hvis porten kræver en indre versionserklæring også for
+    et produkt der erklærer ingen, så fejler den de håndlavede arkiver uden
+    grund — og så en fjerdes del af kundens downloads.
+    """
+    no_inner = tuple(
+        replace(product, inner=()) if product.key == "eaa-scanner-npm" else product
+        for product in PRODUCTS
+    )
+    # tgzen er her bevidst uden nogen indre versionserklæring overhovedet: kun
+    # `package/cli.js`. Med `inner=()` skal porten tie om den.
+    bare_tgz = {
+        **FIXTURE,
+        "site/downloads/mahope-eaa-scanner-1.2.0.tgz": {
+            "format": "targz",
+            "files": {"package/cli.js": "// ingen versionserklæring her\n"},
+        },
+    }
+    return [("arkiv uden indre versionserklæring, erklæret som sådan", bare_tgz, no_inner)]
 
 
 def self_test() -> int:
     base = Path(tempfile.mkdtemp(prefix="check_versions_"))
     failures: list[str] = []
 
-    def collect(files: dict[str, str], name: str) -> list[str]:
+    def collect(files: dict[str, object], name: str, products: tuple[Product, ...] = PRODUCTS) -> list[str]:
         root = base / name
         write_fixture(root, files)
-        found, _versions = run(root)
+        found, _versions = run(root, products)
         return found
 
     cases = scenarios()
+    clean = negative_controls()
 
     # Positiv kontrol FØRST: de uændrede fixture skal være grønne. Ellers ved vi
     # ikke om mutationerne overhovedet betyder noget.
@@ -444,6 +788,11 @@ def self_test() -> int:
         if not any(expected in problem for problem in found):
             failures.append(f"{name}: forventede {expected!r}, fik {found}")
 
+    for index, (name, files, products) in enumerate(clean):
+        found = collect(files, f"clean{index:02d}", products)
+        if found:
+            failures.append(f"negativ kontrol ({name}): forventede ingen fund, fik {found}")
+
     # Og de rigtige filer skal være grønne, ellers gater vi det forkerte.
     real, _versions = run(ROOT)
     if real:
@@ -455,7 +804,10 @@ def self_test() -> int:
             print(f"FEJL: {failure}")
         print(f"\ncheck_versions --self-test: {len(failures)} fejl")
         return 1
-    print(f"check_versions --self-test: OK ({len(cases)} mutationer + positiv kontrol + rigtige filer)")
+    print(
+        f"check_versions --self-test: OK ({len(cases)} mutationer + "
+        f"{len(clean)} negativ kontrol + positiv kontrol + rigtige filer)"
+    )
     return 0
 
 
