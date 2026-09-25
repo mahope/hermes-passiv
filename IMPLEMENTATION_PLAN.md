@@ -3,15 +3,15 @@
 ## Status
 
 - `ITERATION_ID`: `remove-lemon-webhook-2026-09-25`
-- `STATE`: `I GANG`
-- `ACTIVE_TASK`: `1 — Fjern Lemon Squeezy-ruten helt`
-- `NEXT_TASK`: `1`
+- `STATE`: `FÆRDIG`
+- `ACTIVE_TASK`: `INGEN`
+- `NEXT_TASK`: `2 — Gør DeskUptime-teksten sand`
 - `TASK_ATTEMPTS`: `1: 1/2`
 - `LAST_BRANCH`: `ceo/remove-lemon-webhook`
-- `PLAN_COMMIT`: `10c5908`
+- `PLAN_COMMIT`: `28c7f64`
 - `BASELINE`: `main@6023b14`
-- `RESULT`: I gang med at fjerne den døde Lemon-webhook uden at ændre Stripe-leveringen.
-- `GATE`: `AFVENTER`
+- `RESULT`: Opgave 1 er færdig; død Lemon-rute, handler, secret og fixtures er fjernet, mens øvrige licens- og Stripe-ruter er bevaret.
+- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 15/15 legacy-licenstests, 0 inline-JS-problemer; uafhængig review uden fund`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -91,7 +91,7 @@ Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-
 
 Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdagede security-, purchase- og CI-opgaver. Opgraderingsreglen “sikkerhed først” gælder blandt alle øvrige backlogitems efter denne åbne missionsekvens.
 
-### 1. I GANG — Fjern Lemon Squeezy-ruten helt
+### 1. FÆRDIG — Fjern Lemon Squeezy-ruten helt
 
 **Begrundelse:** Den gamle webhook er stadig i den fælles Worker og kopieres til alle fire sites, selv om Lemon Squeezy ikke længere er en gyldig betalingsvej.
 
@@ -410,7 +410,9 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 ## Deploylog
 
 - 2026-09-25: Researchiterationen ændrer kun `IMPLEMENTATION_PLAN.md`. Deploy-workflowens path-filter forventes derfor ikke at udløse en site-deploy. Efter merge/push kontrolleres GitHub Actions read-only, og der tilføjes en `VERIFICÉR DEPLOY`-note kun hvis workflowen alligevel kører.
+- 2026-09-25: `DEPLOY OK 28c7f64` — GitHub Actions-run `36076793409` deployede alle fire sites grønt. Live GET og POST på `/api/lemon-webhook` gav `404` på `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahope.tools`; de tre Worker-domaener returnerede `Not found`, mens BugBottle returnerede sit nginx-404-svar. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
 
 - Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
+- Fjern død Lemon-webhook: `28c7f64` — `Fjern den døde Lemon-webhook`.
