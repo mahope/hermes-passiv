@@ -44,8 +44,40 @@ on:
   workflow_dispatch:
 
 jobs:
+  # `tools/check_clean_copy_distribution.py` skal vide hvilket domæne der
+  # publicerer hvilket arkiv, og det kan det kun se i et dist der er bygget.
+  # Matrix-jobs bygger ét domæne hver, så de to checks ville springes over dér.
+  # Derfor bygges alle fire dists her, og deploy afhænger af jobbet.
+  gate-distribution:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mahope/auditedwp
+          ref: 5e244dcff242352cd5be31a55ca5f7d260f7e520
+          path: auditedwp-src
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Byg alle dists og gaten for den publicerede distribution
+        env:
+          AUDITEDWP_DIR: ${{ github.workspace }}/auditedwp-src
+        run: |
+          set -o pipefail
+          python build_sites.py
+          python tools/check_clean_copy_distribution.py
+          python tools/check_clean_copy_distribution.py --self-test
+
   deploy:
     if: github.ref == 'refs/heads/main'
+    needs: gate-distribution
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

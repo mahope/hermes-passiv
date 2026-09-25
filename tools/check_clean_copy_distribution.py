@@ -112,17 +112,26 @@ def site_pages() -> dict[str, str]:
 def dist_publishes(names: set[str]) -> dict[str, set[str]]:
     """domæne -> de arkivnavne der faktisk ligger i dets dist.
 
-    Læses ud af `dist/`, ikke hardcoded: en hardcoded liste ville blot være den
-    fejlform gaten skal fange, skrevet ned som data.
+    Kun domæner hvis dist findes, indgår. Deploy-workflowen bygger ét domæne pr.
+    matrix-job, så et domæne der ikke er bygget i dette kørsel kan hverken
+    bekræftes eller afkræftes: at kalde det "publicerer ikke noget" ville give
+    en rød gate på en grøn ordning. `tools/test_deploy_workflow.py` og det
+    all-domænes gate-job er derfor påkrævet, ellers springes hele checket over i
+    CI.
+
+    Hvilket domæne der publicerer hvad, læses ud af `dist/` frem for en
+    hardcoded liste: en sådan liste ville blot være den fejlform gaten skal
+    fange, skrevet ned som data.
     """
-    publishes: dict[str, set[str]] = {domain: set() for domain in DIST_DOMAINS}
+    publishes: dict[str, set[str]] = {}
     for domain in DIST_DOMAINS:
-        downloads = ROOT / "dist" / domain / "downloads"
-        if not downloads.is_dir():
+        if not (ROOT / "dist" / domain).is_dir():
             continue
-        for path in downloads.iterdir():
+        found: set[str] = set()
+        for path in (ROOT / "dist" / domain / "downloads").glob("*"):
             if path.is_file() and path.name in names:
-                publishes[domain].add(path.name)
+                found.add(path.name)
+        publishes[domain] = found
     return publishes
 
 
@@ -364,12 +373,14 @@ def check_publish_targets(pages: dict[str, str], publishes: dict[str, set[str]])
         page = rel.split("dist/", 1)[1]
         for href in HREF_RE.findall(text):
             domain, target = _split_href(href, page)
-            if domain is None:
+            if domain is None or domain not in publishes:
+                # Et tredjepartsdomæne eller et domæne der ikke er bygget i
+                # denne kørsel. Begge kan hverken bekræftes eller afkræftes.
                 continue
             name = posixpath.basename(target)
             if not ARCHIVE_RE.fullmatch(name):
                 continue
-            if name not in publishes.get(domain, set()):
+            if name not in publishes[domain]:
                 problems.append(
                     f"{rel} linker på {href}, men {domain} publicerer ikke {name}"
                 )
@@ -421,6 +432,9 @@ def self_test() -> int:
     pages = data["pages"]
     chrome = archives["chrome"]
     chrome_name = chrome["name"]
+    # Begge domæner er bygget; kun cleancopy.tools har arkivet. Det er den
+    # realistiske fejl: siden er bygget, målet er bygget, og målet har filen ikke.
+    BOTH_DOMAINS = {"mahope.tools": set(), "cleancopy.tools": published}
 
     def mutated_archive(key: str, replacement: bytes) -> dict[str, dict]:
         copy = {k: dict(v) for k, v in archives.items()}
@@ -488,21 +502,26 @@ def self_test() -> int:
         ("en rodrelativ reference på et domæne uden arkivet",
          check_publish_targets(
              {f"dist/mahope.tools/downloads.html": f'<a href="/downloads/{chrome_name}">x</a>'},
-             {"cleancopy.tools": {chrome_name}})),
+             BOTH_DOMAINS)),
         ("en absolut reference til et domæne uden arkivet",
          check_publish_targets(
              {f"dist/mahope.tools/downloads.html":
               f'<a href="https://mahope.tools/downloads/{chrome_name}">x</a>'},
-             {"cleancopy.tools": {chrome_name}})),
+             BOTH_DOMAINS)),
         ("en rodrelativ reference på det domæne der har arkivet (skal ikke fejle)",
          check_publish_targets(
              {f"dist/cleancopy.tools/clean-copy.html": f'<a href="/downloads/{chrome_name}">x</a>'},
-             {"cleancopy.tools": {chrome_name}})),
+             BOTH_DOMAINS)),
+        ("en reference til et domæne der ikke er bygget (skal ikke fejle)",
+         check_publish_targets(
+             {f"dist/mahope.tools/downloads.html":
+              f'<a href="https://cleancopy.tools/downloads/{chrome_name}">x</a>'},
+             {"mahope.tools": set()})),
         ("en reference til et tredjepartsdomæne (skal ikke fejle)",
          check_publish_targets(
              {f"dist/mahope.tools/downloads.html":
               f'<a href="https://github.com/mahope/clean-copy/releases/{chrome_name}">x</a>'},
-             {"cleancopy.tools": {chrome_name}})),
+             BOTH_DOMAINS)),
         ("et publiceret arkiv der ikke findes i nogen dist",
          check_every_archive_is_reachable(
              archives, {"cleancopy.tools": {"clean-copy-v0.0.1.zip"}, "mahope.tools": set()})),
