@@ -3,15 +3,15 @@
 ## Status
 
 - `ITERATION_ID`: `truthful-deskuptime-copy-2026-09-25`
-- `STATE`: `I GANG`
-- `ACTIVE_TASK`: `2 — Gør DeskUptime-teksten sand`
-- `NEXT_TASK`: `2 — Gør DeskUptime-teksten sand`
+- `STATE`: `FÆRDIG`
+- `ACTIVE_TASK`: `INGEN`
+- `NEXT_TASK`: `3 — Gør robots, sitemap og domænedrift korrekt`
 - `TASK_ATTEMPTS`: `2: 1/2`
 - `LAST_BRANCH`: `ceo/truthful-deskuptime-copy`
-- `PLAN_COMMIT`: `28c7f64`
+- `PLAN_COMMIT`: `41758af`
 - `BASELINE`: `main@7aa7b42`
-- `RESULT`: Opgave 2 er implementeret i fire public sider og den generative DA-kilde; online licensdata og lokal overvågning er nu adskilt eksplicit, og generatoren er gjort checkout-sikker.
-- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 0 inline-JS-problemer, 5/5 copy-kilder; generatorens JSON/link-validering er grøn`
+- `RESULT`: Opgave 2 er færdig; fire public sider og den generative DA-kilde skelner nu korrekt mellem lokal overvågning og online Pro-licensdata, uden ændringer i Worker eller licenslogik.
+- `GATE`: `GRØN — build/SEO, 43/43 Stripe-tests, 0 inline-JS-problemer, 5/5 copy-kilder, 5/5 semantiske probes og uafhængig review uden P1/P2-fund`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -110,7 +110,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node --check site/_worker.js && node tools/test_license_flow.js && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten ovenfor.
 
-### 2. I GANG — Gør DeskUptime-teksten sand
+### 2. FÆRDIG — Gør DeskUptime-teksten sand
 
 **Begrundelse:** Pro-licensen kontakter licensserveren, så absolutte påstande om “no phone-home”, “no central server” og “no telemetry” er fejl.
 
@@ -411,9 +411,10 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 - 2026-09-25: Researchiterationen ændrer kun `IMPLEMENTATION_PLAN.md`. Deploy-workflowens path-filter forventes derfor ikke at udløse en site-deploy. Efter merge/push kontrolleres GitHub Actions read-only, og der tilføjes en `VERIFICÉR DEPLOY`-note kun hvis workflowen alligevel kører.
 - 2026-09-25: `DEPLOY OK 28c7f64` — GitHub Actions-run `36076793409` deployede alle fire sites grønt. Live GET og POST på `/api/lemon-webhook` gav `404` på `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahope.tools`; de tre Worker-domaener returnerede `Not found`, mens BugBottle returnerede sit nginx-404-svar. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
-- 2026-09-25 01:28 UTC: `VERIFICÉR DEPLOY: sand DeskUptime-copy på fire sider 41758af 2026-09-25 01:28 UTC`
+- 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
 
 - Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
 - Fjern død Lemon-webhook: `28c7f64` — `Fjern den døde Lemon-webhook`.
+- Gør DeskUptime-teksten sand: `41758af` — `Gør DeskUptime-teksten sand`.
