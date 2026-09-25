@@ -60,7 +60,7 @@ Exit code is `0` when clean, `1` when findings at `--fail-on` severity exist
 ## GitHub Actions
 
 A ready-made workflow is published alongside this README:
-[`eaa-scan-github-action.yml`](https://hermes-passiv.pages.dev/downloads/eaa-scan-github-action.yml).
+[`eaa-scan-github-action.yml`](https://mahope.tools/downloads/eaa-scan-github-action.yml).
 Drop it into `.github/workflows/eaa-scan.yml`, edit the `PAGES` list, and every
 push / pull request / weekly schedule runs the scanner with `--fail-on warning`.
 The template also includes an optional `crawl-audit` job that runs
@@ -88,7 +88,7 @@ A native macOS desktop app (DMG or ZIP) is available for Apple Silicon:
 
 Or download the source and build it yourself:
 
-- [`eaa-scanner-desktop-src-1.3.3.zip`](https://hermes-passiv.pages.dev/downloads/eaa-scanner-desktop-src-1.3.3.zip)
+- [`eaa-scanner-desktop-src-1.3.3.zip`](https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip)
 
 Then build and run:
 

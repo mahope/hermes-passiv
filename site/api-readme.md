@@ -2,7 +2,7 @@
 
 Free REST API: send HTML, get clean Markdown back. Same conversion engine as the [Clean Copy browser extension](https://github.com/mahope/clean-copy) (v1.5.2) — 260+ iterations of edge-case fixes, available programmatically.
 
-**Endpoint:** `POST https://hermes-passiv.pages.dev/api/clean-copy`
+**Endpoint:** `POST https://cleancopy.tools/api/clean-copy`
 
 No auth. No API key. 50 KB max input per request. CORS enabled.
 
@@ -11,7 +11,7 @@ No auth. No API key. 50 KB max input per request. CORS enabled.
 ### curl
 
 ```bash
-curl -s -X POST https://hermes-passiv.pages.dev/api/clean-copy \
+curl -s -X POST https://cleancopy.tools/api/clean-copy \
   -H 'Content-Type: application/json' \
   -d '{"html":"<h1>Hello</h1><p>This is <b>bold</b>.</p>"}'
 ```
@@ -36,7 +36,7 @@ import requests
 
 def clean_copy(html: str, mode: str = "markdown") -> str:
     r = requests.post(
-        "https://hermes-passiv.pages.dev/api/clean-copy",
+        "https://cleancopy.tools/api/clean-copy",
         json={"html": html, "mode": mode},
         timeout=30,
     )
@@ -53,7 +53,7 @@ print(clean_copy("<h1>Hello</h1><p>This is <b>bold</b>.</p>"))
 
 ```js
 async function cleanCopy(html, mode = "markdown") {
-  const res = await fetch("https://hermes-passiv.pages.dev/api/clean-copy", {
+  const res = await fetch("https://cleancopy.tools/api/clean-copy", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ html, mode }),
@@ -108,4 +108,4 @@ Headings, bold, italic, links, ordered/unordered lists (nested), code blocks (in
 
 ## Try it live
 
-Interactive try-it interface: https://hermes-passiv.pages.dev/clean-copy-api
+Interactive try-it interface: https://cleancopy.tools/clean-copy-api

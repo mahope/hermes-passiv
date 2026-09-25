@@ -250,7 +250,7 @@ async function handleScanProxy(request, url) {
     const response = await fetch(targetUrl.toString(), {
       method: 'GET',
       headers: {
-        'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://hermes-passiv.pages.dev)',
+        'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://mahope.tools)',
         'Accept': 'text/html,application/xhtml+xml,*/*',
       },
       redirect: 'follow',
@@ -352,7 +352,7 @@ async function handleProfile(request, url, env) {
   try {
     resp = await fetch(targetUrl.toString(), {
       method: 'GET',
-      headers: { 'User-Agent': 'HermesPassiv-PageProfile/1.0 (+https://hermes-passiv.pages.dev/page-profile)', Accept: 'text/html,application/xhtml+xml,*/*' },
+      headers: { 'User-Agent': 'HermesPassiv-PageProfile/1.0 (+https://mahope.tools/page-profile)', Accept: 'text/html,application/xhtml+xml,*/*' },
       redirect: 'follow',
     });
   } catch (err) {
@@ -686,7 +686,7 @@ Guidelines:
 - IMPORTANT: You are NOT a lawyer. Always include a brief disclaimer when giving specific legal interpretation.
 - End with a practical next-step suggestion where appropriate.
 
-The user's site is: https://hermes-passiv.pages.dev — a free resource with an EAA scanner, platform guides, and compliance templates. Mention it only when directly relevant to their question.`;
+The user's site is: https://mahope.tools — a free resource with an EAA scanner, platform guides, and compliance templates. Mention it only when directly relevant to their question.`;
 
   const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
   const payload = {
@@ -705,7 +705,7 @@ The user's site is: https://hermes-passiv.pages.dev — a free resource with an 
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://hermes-passiv.pages.dev',
+        'HTTP-Referer': 'https://mahope.tools',
         'X-Title': 'Hermes Passiv Compliance AI',
       },
       body: JSON.stringify(payload),
@@ -1495,7 +1495,7 @@ async function handleHeaderCheck(request, url) {
     const response = await fetch(targetUrl.toString(), {
       method: 'GET',
       headers: {
-        'User-Agent': 'HermesPassiv-SecurityHeaders/1.0 (+https://hermes-passiv.pages.dev)',
+        'User-Agent': 'HermesPassiv-SecurityHeaders/1.0 (+https://mahope.tools)',
         'Accept': 'text/html,application/xhtml+xml,application/xml,*/*',
       },
       redirect: 'follow',
@@ -1960,7 +1960,7 @@ async function cscFetch(urlStr, timeoutMs) {
     const resp = await fetch(urlStr, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'ComplianceSiteCheck/2.0 (+https://hermes-passiv.pages.dev)',
+        'User-Agent': 'ComplianceSiteCheck/2.0 (+https://mahope.tools)',
         'Accept': 'text/html,application/xhtml+xml,*/*',
       },
       redirect: 'follow',
@@ -2441,7 +2441,7 @@ async function handleUrlInspect(request, url) {
     const response = await fetch(currentUrl, {
       method: 'GET',
       redirect: 'manual',
-      headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker; https://hermes-passiv.pages.dev)' }
+      headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker; https://mahope.tools)' }
     });
 
     const statusCode = response.status;

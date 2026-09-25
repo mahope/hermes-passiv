@@ -39,6 +39,6 @@ Date created / updated: ____________________________
 
 ---
 
-*Free template from https://hermes-passiv.pages.dev/ropa-template —
+*Free template from https://mahope.tools/ropa-template —
 pair it with the free RoPA generator at /ropa-generator to fill in your first
 entries in minutes.*

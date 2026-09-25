@@ -7,7 +7,7 @@ info:
     - GET /api/profile: structured page profile with SEO/quality score.
   version: "1.5.2"
 servers:
-  - url: https://hermes-passiv.pages.dev
+  - url: https://cleancopy.tools
 paths:
   /api/profile:
     get:

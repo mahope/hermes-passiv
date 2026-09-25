@@ -13,7 +13,7 @@ Every web agency generates the same set of icons for every site. Existing tools 
 pip install site-icons
 
 # From source (today)
-curl -O https://hermes-passiv.pages.dev/downloads/site-icons/site_icons.py
+curl -O https://mahope.tools/downloads/site-icons/site_icons.py
 python3 site_icons.py logo.svg -o my-icons
 ```
 

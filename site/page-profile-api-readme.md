@@ -2,7 +2,7 @@
 
 Free JSON API: send a public URL, get a structured profile back — HTTP status, title, meta description, canonical, Open Graph and Twitter Card tags, JSON-LD structured data, heading outline, image alt-text coverage, security headers — plus a quality score (0–21) and letter grade. Same engine as the [page-profile CLI](/page-profile).
 
-**Endpoint:** `GET https://hermes-passiv.pages.dev/api/profile?url=...`
+**Endpoint:** `GET https://mahope.tools/api/profile?url=...`
 
 No auth. No API key. CORS enabled. Fair use: 30 requests per visitor per day.
 
@@ -11,7 +11,7 @@ No auth. No API key. CORS enabled. Fair use: 30 requests per visitor per day.
 ### curl
 
 ```bash
-curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://example.com"
+curl -s "https://mahope.tools/api/profile?url=https://example.com"
 ```
 
 Response:
@@ -50,7 +50,7 @@ import requests
 
 def profile(url: str) -> dict:
     r = requests.get(
-        "https://hermes-passiv.pages.dev/api/profile",
+        "https://mahope.tools/api/profile",
         params={"url": url},
         timeout=30,
     )
@@ -64,7 +64,7 @@ print(p["grade"], p["score"], "/", p["max_score"])
 ### JavaScript / TypeScript
 
 ```js
-const res = await fetch(`https://hermes-passiv.pages.dev/api/profile?url=${encodeURIComponent(url)}`);
+const res = await fetch(`https://mahope.tools/api/profile?url=${encodeURIComponent(url)}`);
 const data = await res.json();
 if (!data.ok) throw new Error(data.error);
 console.log(data.grade);
@@ -106,7 +106,7 @@ console.log(data.grade);
 Gate deploys on a minimum grade using `--json`-style checks against the API:
 
 ```bash
-grade=$(curl -s "https://hermes-passiv.pages.dev/api/profile?url=$URL" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("grade",""))')
+grade=$(curl -s "https://mahope.tools/api/profile?url=$URL" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("grade",""))')
 [ "$grade" = "A" ] || [ "$grade" = "B" ] || { echo "Quality gate failed: $grade"; exit 1; }
 ```
 

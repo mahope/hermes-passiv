@@ -51,6 +51,6 @@ Vi beskytter dataene med TLS-kryptering, adgangsstyring og
 Senest opdateret: [dato]
 
 ---
-*Gratis skabelon fra https://hermes-passiv.pages.dev/privacy-policy-template-da —
+*Gratis skabelon fra https://mahope.tools/privacy-policy-template-da —
 lav en version der matcher præcis jeres formål med
 /privacy-notice-generator-da.*

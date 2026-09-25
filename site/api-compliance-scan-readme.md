@@ -1,8 +1,8 @@
 # Compliance Scan API
 
-Free REST API: send a URL, get a 9-point EU compliance report back. Same engine as the [Website Compliance Checker](https://hermes-passiv.pages.dev/compliance-site-check) and the [mahope/compliance-site-check GitHub Action](https://github.com/mahope/compliance-site-check).
+Free REST API: send a URL, get a 9-point EU compliance report back. Same engine as the [Website Compliance Checker](https://mahope.tools/compliance-site-check) and the [mahope/compliance-site-check GitHub Action](https://github.com/mahope/compliance-site-check).
 
-**Endpoint:** `GET https://hermes-passiv.pages.dev/api/compliance-scan?url=<target>`
+**Endpoint:** `GET https://mahope.tools/api/compliance-scan?url=<target>`
 
 No auth. No API key. CORS enabled.
 
@@ -21,7 +21,7 @@ No auth. No API key. CORS enabled.
 ## Quick start
 
 ```bash
-curl -s "https://hermes-passiv.pages.dev/api/compliance-scan?url=example.com"
+curl -s "https://mahope.tools/api/compliance-scan?url=example.com"
 ```
 
 Response:
@@ -64,4 +64,4 @@ Keep it reasonable: one origin per client per 10 seconds. For automated checking
 
 ## Try it live
 
-Interactive UI: https://hermes-passiv.pages.dev/compliance-site-check (English) or https://hermes-passiv.pages.dev/da/compliance-site-check (Danish).
+Interactive UI: https://mahope.tools/compliance-site-check (English) or https://mahope.tools/da/compliance-site-check (Danish).
