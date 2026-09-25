@@ -2,14 +2,17 @@
 
 ## Status
 
-- `ITERATION_ID`: `electron-builder-26-2026-09-25`
-- `STATE`: `Opgave 9 FÆRDIG — electron-builder 25.x → 26.15.3 i desktop/; 13 advisory-fund (12 high, 1 critical) → 0`
-- `ACTIVE_TASK`: `16 — build-desktop.yml skal køre igen på main`
-- `NEXT_TASK`: `16 (I GANG)`
-- `TASK_ATTEMPTS`: `9: 1/1 (grøn gate i første forsøg; ingen rettelser nødvendige)`
-- `LAST_BRANCH`: `ceo/electron-builder-26`
-- `PLAN_COMMIT`: `9ed7af6` (implementering + plan) og `(denne commit)` (post-merge-fund)
-- `BASELINE`: `main@3566c48`
+- `ITERATION_ID`: `desktop-ci-trigger-2026-09-25`
+- `STATE`: `Opgave 16 FÆRDIG — build-desktop-CI'en kører igen på main; matrixen er grøn på alle tre platforme med electron-builder 26.15.3, hvilket er den manglende halvdel af opgave 9s post-merge-gate`
+- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
+- `NEXT_TASK`: `10 — gør de 18 broken references til en hard gate`
+- `TASK_ATTEMPTS`: `16: 1/2. Første push fejlede: mit `on.push` i listeform er ugyldig for GitHubs schema (kørsel 36180365427 døde i 0 s), og den nye gate døde i alle tre deploy-jobs på `import yaml`. Andet forsøg grønt og kørselsbevist.`
+- `LAST_BRANCH`: `ceo/desktop-ci-trigger` (merge `f6b2695`; rettelsen `7ccfd43` direkte på main, fordi det var en rød CI)
+- `PLAN_COMMIT`: `6d95958` (første commit + plan) og `(denne commit)` (resultat, fejl og deploy-noter)
+- `BASELINE`: `main@e0618da`
+- `RESULT`: Desktop-CI'en kører igen siden 25. august 2026, og det er **bevist med rigtige kørsler, ikke ved at læse YAML**. Rodårsagen holdt: `6766501` havde efterladt `on.push` med KUN `tags` (og `paths`), og GitHub springer et push over på den ref-type den ikke definerer et filter for — `branches: [main]` var væk, så intet push til `main` der rørte `desktop/` udløste noget i en hel måned. Rettelsen er én mapping med `branches: [main]`, `tags: ['eaa-scanner-desktop-v*']` og `paths`. Kørsel `36180893396` startede alle fire jobs (`build-macos` x64 + arm64, `build-linux`, `build-windows`) på et push til `main`, og alle blev grønne. **Første forsøg var forkert og kostede en rød kørsel:** jeg antog, at `branches` og `tags` ikke må stå i samme mapping, og skrev `on.push` i listeform. Kørsel `36180365427` viste det modsatte — workflowen startede, men alle jobs faldt i **0 sekunder** med ingen jobs, fordi GitHs schema kræver en mapping. Antagelsen er nu fjernet fra koden og fra gatens dokumentation, og gaten afviser eksplicit en liste under `on.push`. Samme kørsel afslørede en anden ægte fejl i min egen løsning: den nye gate dræbte alle tre deploy-jobs på `ModuleNotFoundError: No module named 'yaml'`, fordi `deploy-sites.yml` kører på `setup-python` uden PyYAML. Løsningen er ikke `pip install` i en deploy-sti, men `tools/mini_yaml.py`: en stdlib-læser til den del af YAML de to workflows bruger, som fejler hvidt i stedet for at gætte. Gaten simulerer GitHubs filtersemantik over begge workflows — mappings, sekvenser, skalarskalarer, glob med `**`/`*`/`?` og `!`-eksklusion — så en historisk fejlform fanges som mutation frem for som hårdkodet streng. Permissions er samtidig strammet: `contents: read` i topniveau, `contents: write` kun på `release`.
+- `CI-BEVIS`: `36180893396` build-desktop (main) — fire jobs grønne. `36180893496` deploy-sites (main) — `gate-distribution` grøn, de tre deploy-jobs med den nye gate grønne. `36180365427` — 0-s fejl fra listeformen. `36180367257` — deploy-fejl fra `import yaml`.
+- `GATE`: `GRØN — build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, node test.js OK (licensklienter 103 checks), check_license_clients 0 + --self-test 9/9, check_clean_copy_distribution OK + --self-test 22/22, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report 28 tests, obsidian-plugin OK, test_deploy_workflow OK + --self-test 8/8, dist/uændret`
 - `CI-FEJL — POST-MERGE-GATEN KØRTE IKKE:` Opgave 9s post-merge-gate kræver, at `build-desktop.yml`s matrix er grøn for macOS x64/arm64, Linux og Windows. Den kørte ikke: pushet af `9ed7af6` til `main` ændrer `desktop/package.json` og `desktop/package-lock.json`, som matcher `paths: desktop/**`, og workflowen startede alligevel ikke. Workflowen er `state=active`, så det er ikke deaktiveret. Sidste kørsel overhovedet er run `32876161399` fra 25. august. Bevis på at det er en ældre fejl: `cde9a96` (24/9) ændrede `desktop/LICENSE.txt` — samme glob — og udløste heller intet. Rodårsagen er commit `6766501` "fix CI: tag-only trigger" fra 25. august 17:08:41 UTC, som gjorde `on.push` tag-only; den seneste `main`-kørsel startede 100 sekunder før den. **Konsekvens for denne opgaves ærlighed:** linux- og Windows-byggene er *ikke* verificeret, kun macOS er. Det står oprettet som opgave 16, fordi det samme problem gælder opgave 12 og enhver fremtidig desktop-ændring. Der er ikke påstået en grøn platformdækning, der ikke findes.
 - `RESULT`: Sikkerhedsopgaven er lukket rent. `desktop/package.json` hæver **kun** `electron-builder` fra `^25.0.0` til `^26.15.3`, og `desktop/package-lock.json` er regenereret; `electron` står urørt på `^44.0.0`, fordi den er opgave 12 og kontrakten forbyder to major-opgraderinger i én commit. **Optællingen i opgaveteksten var forældet:** den sagde 15 advisory-fund, `npm audit --audit-level=high` meldte 13 (12 high, 1 critical). Det er samme fejlform, bare et ældre snapshot — derfor er fundet noteret i `TASK_ATTEMPTS`, så næste iteration ikke jagter et tal, der ikke kan reproduceres. Alle 13 stammede fra ét klyngeled: `tar <=7.5.20` (11 af dem), som `app-builder-lib <=26.14.0` og `builder-util-runtime <9.7.0` begge trækker ind, og som `cacache` → `make-fetch-happen` → `node-gyp` viderefører. Det er byggetidsafhængigheder, ikke noget der kører i den udgivende app, men de giver `npm audit` exit 1 og ville blokeret enhver fremtidig `npm ci`-hygiejne. Efter opgraderingen er `npm audit` **0 vulnerabilities**, `npm ci` kører rent fra den nye lockfil, og alle fire forventede macOS-artefakter (dmg + zip for x64 og arm64) bygges med den nye builder. **Ingen buildkonfiguration behøvede ændring** — opgaven sagde at læse migrationsnoterne og kun rette configen hvis de krævede det; de gjorde ikke, og det er ikke antaget, det er verificeret: de fire artefakter blev bygget af den uændrede `build`-sektion. Den rene linje-ændring i `package.json` er gjort manuelt, fordi `npm install` samtidig omformatterede `mac.target`-arrayerne; det ville være 20 linjer diff-rauschi i en sikkerhedscommit. Lockfilen *shrank* 3427 ændrede linjer (netto ca. −1300), så den nye builder trækker en mindre træ. Platformene Linux og Windows er ikke bygget lokalt — de kræver hhv. en Linux-container og Windows; de er overladt til CI-matrixen, som er opgavens erklærede post-merge-gate.
 - `GATE`: `GRØN — npm ci OK (0 vulnerabilities), npm audit --audit-level=high = 0 fund, npm run build:mac producerede dmg+zip for x64 og arm64; sitegaten: build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, check_clean_copy_distribution OK + --self-test 22/22, page-profile 11/11, node test.js (test_license_flow) OK, test_license_clients 103 checks, obsidian-plugin OK, extension-tools OK (core/extension parity), check_license_clients 0 + --self-test 9/9, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report 28 tests, dist/uændret`
@@ -34,7 +37,7 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 Denne gate er den obligatoriske minimum før merge til `main`:
 
 ```bash
-python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py
+python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py && python3 tools/test_deploy_workflow.py && python3 tools/test_deploy_workflow.py --self-test
 ```
 
 Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1,
@@ -72,6 +75,15 @@ og `build_sites.py` tæller den ikke som unresolved, fordi filen findes i
 `site/`. De to checks læser det **byggede** `dist/` og springes over, når
 intet er bygget. Fordi de læser `dist/`, skal gaten køre *efter*
 `build_sites.py` — den gør allerede, i deploy-workflowens gate-trin.
+
+`tools/test_deploy_workflow.py` blev tilføjet 2026-09-25 i opgave 16. Den
+simulerer de faktiske push- og pull_request-events mod begge workflows' egne
+filtre med GitHubs dokumenterede semantik, så en fejl i path-filteret eller i
+ref-filtret fanges som fejl og ikke som "workflowen kører næste gang". Den
+læser YAML med `tools/mini_yaml.py` og ikke PyYAML, fordi `deploy-sites.yml`
+kører på `setup-python` uden installerede pakker — bevist af kørsel
+`36180367257`, hvor `import yaml` dræbte alle tre deploy-jobs. Den ligger i
+deploy-workflowens path-filter og i dens gate-trin.
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
@@ -689,7 +701,7 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 - **Ikke verificeret lokalt: Linux og Windows.** De kræver hhv. en Linux-container og en Windows-vært, og de ligger i CI-matrixen i `.github/workflows/build-desktop.yml`, som kører på ethvert push til `desktop/**` — altså også på denne branch. Det er opgavens egen post-merge-gate.
 - `dist/` er uændret af denne iteration (`git status` viser ingen dist-ændring), så intet site-indhold er berørt. Deploy-workflowens path-filter rører `desktop/` ikke, så merge til `main` deployer ingen sites for denne commits skyld.
 
-### 16. I GANG — Få `build-desktop.yml` til at køre igen på `main`
+### 16. FÆRDIG (implementering `6d95958`, rettelse `7ccfd43`) — Få `build-desktop.yml` til at køre igen på `main`
 
 **Begrundelse:** Opgave 9s post-merge-gate afdøde den 25. september, fordi
 desktop-CI'en ikke har kørt siden 25. august. Bevist, ikke formodet:
@@ -740,6 +752,40 @@ triggerne) plus hele kvalitetsgaten.
 
 **Post-merge-gate:** `gh run watch` på den kørsel, pushet udløser, skal være grøn
 for alle tre platforme. Det er den samme kørsel, der beviser opgave 9.
+
+**Resultat:** Opgaver 1-3 er verificeret i rigtige kørsler, ikke ved læsning af
+YAML.
+
+- Push til `main` der rører `desktop/**` starter matrixen: `36180893396` kørte
+  `build-macos` (x64 og arm64), `build-linux` og `build-windows` — alle grønne
+  med electron-builder 26.15.3. Det her er opgave 9s manglende post-merge-gate:
+  linux- og windows-byggene er verificeret for første gang siden 25. august.
+- Push til `main` der ikke rører `desktop/**` starter intet: gaten simulerer
+  `site/index.html` + denne plan mod path-filteret og forventer intet match.
+- Tag `eaa-scanner-desktop-v*` starter alle fire jobs *og* `release`: samme
+  simulator, og `release` har `needs` på alle tre byggejobs. **`release` er
+  ikke kørt endnu** — det kræver et rigtigt tag, og det er Mads' opgave. Den
+  næste udgivelse er derfor utestet indtil den faktisk kører, og det er sagt
+  her frem for at påstå, at tag-stien er bevist.
+- Hele kvalitetsgaten er grøn.
+
+**To fund undervejs, begge ægte fejl i min egen løsning:**
+
+1. **Listeform for `on.push` er ugyldig.** Min første antagelse var, at `branches`
+   og `tags` ikke kan stå i samme mapping, så de skulle være to elementer i en
+   liste. Kørsel `36180365427` viste at workflowen så startede, men alle jobs
+   faldt i 0 sekunder: GitHs schema kræver en mapping. Gaten afviser nu en
+   liste under `on.push`, så det ikke kan ske igen uopdaget.
+2. **PyYAML findes ikke i CI.** Den nye gate blev lagt ind i deploy-jobbene og
+   dræbte alle tre på `ModuleNotFoundError: No module named 'yaml'`, fordi
+   `deploy-sites.yml` bruger `setup-python` uden installationer. Rettelsen er
+   `tools/mini_yaml.py` frem for `pip install` i en deploy-sti: en gate må ikke
+   afhænge af en pakke ingen workflow installerer.
+
+**Sidefund, ikke rettet her:** `tools/build_obsidian_bundle.js` fejler med
+`bundle: require("./core.js") not found — main.js changed?`. Den er død
+engangsstøtte, der ikke kaldes fra nogen workflow eller gate, altså ingen
+regression. Lagt under opgave 15 (døde stier).
 
 ### 10. UFÆRDIG — Gør alle 18 broken references til en hard gate
 
@@ -843,6 +889,12 @@ for alle tre platforme. Det er den samme kørsel, der beviser opgave 9.
 
 ### 15. UFÆNDIG — Fjern døde sitemap-generator- og deploystier
 
+**Sidefund 25. september 2026 (opgave 16):** `tools/build_obsidian_bundle.js`
+fejler med `bundle: require("./core.js") not found — main.js changed?`. Den
+kaldes fra ingen workflow, ingen gate og intet script, så enten er den død
+engangsstøtte der skal slettes, eller den er en rigtig byggetrins manglende
+kald. Findes ud — hvis intet bruger den, slettes den.
+
 **Begrundelse:** Flere historiske bloggeneratorer skriver stadig til `site/sitemap.xml`, selv om builden nu kun bruger `dist/<domain>/sitemap.xml`; gamle instruktioner refererer desuden til den deaktiverede manuelle `deploy.sh`.
 
 **Omfang:**
@@ -874,6 +926,21 @@ for alle tre platforme. Det er den samme kørsel, der beviser opgave 9.
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK 7ccfd43` — begge kørsler grønne. `36180893396`
+  (build-desktop, main) kørte `build-macos` x64 + arm64, `build-linux` og
+  `build-windows` grønt med electron-builder 26.15.3 — første gang siden
+  25. august at linux og windows er bygget, så opgave 9s post-merge-gate er
+  endelig lukket. `36180893496` (deploy-sites, main) kørte `gate-distribution`
+  og alle tre domæner grønt, inklusive den nye `test_deploy_workflow.py` med
+  stdlib-parseren. Intet site-indhold er ændret: de tre domæner får samme
+  `dist/` som før, kun gate-kommandoerne er nye.
+- 2026-09-25: `DEPLOY FEJL 36180367257` — alle tre deploy-jobs døde på
+  `ModuleNotFoundError: No module named 'yaml'`, fordi den nye gate blev lagt
+  ind i `deploy-sites.yml`, der kører på `setup-python` uden PyYAML. Ingen
+  site blev deployet. Rettet i `7ccfd43` med `tools/mini_yaml.py`.
+- 2026-09-25: `DEPLOY FEJL 36180365427` — `build-desktop` faldt i 0 sekunder
+  uden ét job, fordi `on.push` stod i listeform, som GitHubs schema afviser.
+  Bevis for at jeg ikke måtte skrive filtre som liste. Rettet i `7ccfd43`.
 - 2026-09-25: `INGEN SITE-DEPLOY FORVENTET — 9ed7af6` — mergecommit for opgave 9 rørte kun `desktop/package.json`, `desktop/package-lock.json` og denne plan. Deploy-workflowens path-filter rører `desktop/` ikke, så GitHub Actions deployer ingen sites. `dist/` er byte-identisk før og efter. **Verificér ikke live-intet — intet site-indhold er ændret.** Den eneste post-merge-gate for denne commit er `build-desktop.yml`, og den kørte ikke; se `CI-FEJL` i statusblokken og opgave 16.
 
 - 2026-09-25: `DEPLOY OK b401e7d` — GitHub Actions-run `36175801912` kørte det nye `gate-distribution`-job (grønt) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt, inklusive CI's egen live-gate. Alle tre live `build-info.json` bærer `b401e7dda5d261dd5b667d655d2a8a8a65c26fd1`, og uafhængig `check_live_sitemaps.py --commit b401e7d…` meldte `live sitemap OK` for alle tre. Indholdskontrol: de tre arkiver på cleancopy.tools svarer 200, de fire gamle (1.5.2 ×2, 1.0.9, 1.0.6) svarer 404, og live `mahope.tools/downloads` linker på `https://cleancopy.tools/downloads/…` — præcis den ordning opgave 8 nu gater. Dette lukker `VERIFICÉR DEPLOY` nedenfor og `DEPLOY FEJL 36175438151`.
