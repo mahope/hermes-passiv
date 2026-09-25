@@ -14,7 +14,10 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import sys
+import tempfile
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -66,14 +69,43 @@ NOT_CLIENTS = {
 MARK_A = "/* >>> clean-copy-license: tools/clean_copy_license.js — do not edit by hand */"
 MARK_B = "/* <<< clean-copy-license */"
 
-SKIP_DIRS = {"dist", "node_modules", ".git", ".wrangler", "site-icons/dist"}
+SKIP_DIRS = {"dist", "node_modules", ".git", ".wrangler", "site-icons/dist",
+             # CI checkouter det eksterne build-repo ved siden af workspace
+             # (se `AUDITEDWP_DIR` i deploy-sites.yml), så det ligger inde i
+             # `ROOT` kun i CI — aldrig lokalt. Uden den her regel fejlede
+             # gaten i kørsel 36185964282 med fem fund i `mahope/auditedwp`,
+             # som er et andet repo med sin egen licenskontrakt, som vi ikke
+             # må ændre. Fundene er noteret i planen i stedet for at drukne i
+             # en rød port på hvert push.
+             "auditedwp-src", "deskuptime-src"}
 SKIP_SUFFIX = {".md", ".zip", ".tar.gz", ".png", ".jpg", ".ico", ".woff", ".woff2"}
 
 
+@lru_cache(maxsize=None)
+def is_external_checkout(top: str) -> bool:
+    """Er denne mappe på øverste niveau en indlejret checkout af et andet repo?
+
+    Regelprincip, ikke en navneliste: en mappe der indeholder en `.git` et sted
+    under sig er ikke vores kode, uanset hvor dybt den ligger og hvad CI har
+    kaldt den. Eftersom CI checkouter `auditedwp-src` *ved siden af* workspace
+    (`AUDITEDWP_DIR`), ligger det kun inde i `ROOT` i CI — aldrig lokalt, så
+    uden denne regel så gaten ren på min maskine og rød i kørsel 36185964282.
+    """
+    base = ROOT / top
+    if not base.is_dir():
+        return False
+    return any(path.is_dir() for path in base.rglob(".git"))
+
+
 def is_skipped(path: Path) -> bool:
-    if any(part in SKIP_DIRS for part in path.parts):
+    # `find_callers` giver en relativ sti, kalderne til `check_exceptions` en
+    # absolut. `relative_to` ville kaste på den relative, så begge normaliseres.
+    rel = path if not path.is_absolute() else path.relative_to(ROOT)
+    if any(part in SKIP_DIRS for part in rel.parts):
         return True
-    name = path.name
+    if rel.parts and is_external_checkout(rel.parts[0]):
+        return True
+    name = rel.name
     return any(name.endswith(sfx) for sfx in SKIP_SUFFIX)
 
 
@@ -243,6 +275,49 @@ def self_test() -> int:
             print(f"FELO {name}: gaten siger OK, men den skulle have fanget noget")
             failures += 1
 
+    # Den indlejret-checkout-regel kræver en rigtig mappe at kigge på, så den
+    # probes på filsystemet i stedet for i en dict. Uden denne test kunne
+    # reglen slettes uden at nogen opdagede det, og gaten ville blive rød i
+    # hvert CI-run igen — se kørsel 36185964282.
+    with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+        name = Path(tmp).name
+        probe = ROOT / name / "probe"
+        probe.mkdir(parents=True)
+        (probe / "lic.js").write_text("fetch('https://api.lemonsqueezy.com/v1/licenses/validate')",
+                                      encoding="utf-8")
+        try:
+            # Uden `.git` må mappen kun springes over, hvis den hedder det, CI
+            # bruger. Ellers ville reglen springe enhver midlertidig mappe over.
+            if name in SKIP_DIRS:
+                print("FELO testen ligger i en mappe, der er på skip-listen — "
+                      "den beviser intet om navne-listen")
+                failures += 1
+            elif is_skipped(probe / "lic.js"):
+                print("FELO en almindelig mappe blev springet over som om den "
+                      "var et eksternt repo")
+                failures += 1
+            else:
+                print("OK   en almindelig mappe læses: kun et eksternt repo "
+                      "springes over")
+            (probe / ".git").mkdir()
+            is_external_checkout.cache_clear()
+            if is_skipped(probe / "lic.js"):
+                print("OK   en indlejret checkout springes over: den har sin egen .git")
+            else:
+                print("FELO en mappe med sin egen .git blev læst som vores kode — "
+                      "gaten fejler i CI på et repo vi ikke ejer")
+                failures += 1
+        finally:
+            shutil.rmtree(ROOT / name, ignore_errors=True)
+
+    # Den navngivne regel: CI's checkout hedder `auditedwp-src`, og den skal
+    # springes over også hvis den er eksporteret uden `.git`.
+    if "auditedwp-src" not in SKIP_DIRS:
+        print("FELO `auditedwp-src` mangler i skip-listen — se kørsel 36185964282")
+        failures += 1
+    else:
+        print("OK   CI's `auditedwp-src` står på skip-listen")
+
     # Den sunde tilstand skal være ren.
     clean = (check_callers(callers) + check_exceptions()
              + check_copies(canon) + check_cache_rule())
@@ -251,7 +326,8 @@ def self_test() -> int:
         failures += 1
     else:
         print("OK   den nuværende kode holder kontrakten")
-    print(f"{len(scenarios) + 1 - failures}/{len(scenarios) + 1} self-tests bestået")
+    total = len(scenarios) + 3
+    print(f"{total - failures}/{total} self-tests bestået")
     return 1 if failures else 0
 
 
