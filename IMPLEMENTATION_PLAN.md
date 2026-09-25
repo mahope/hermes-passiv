@@ -10,7 +10,8 @@
 - `BASELINE`: `main@997371d`
 - `LAST_BRANCH`: `ceo/scanner-arkiv-aktuelt`
 - `TASK_ATTEMPTS`: `18: 1/1.`
-- `DEPLOY`: `VERIFICÉR DEPLOY: desktop-kildearkivet er et 1.3.3-arkiv 14f0ee3 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
+- `DEPLOY`: `DEPLOY OK 14f0ee3 26/9` — kørsel `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Live-indhold verificeret (11 filer, lockfil 1.3.3/`^26.15.3`, `engines` + `.nvmrc` med). Se Deployloggen.
+- `VERIFICÉR DEPLOY (lukket)`: `desktop-kildearkivet er et 1.3.3-arkiv 14f0ee3 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
   - `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` skal pakkes ud til 11 filer; `package-lock.json` skal sige `version 1.3.3` og `electron-builder ^26.15.3`, `package.json` skal have `engines.node >=22.12.0`, og `.nvmrc` skal være med. Før dette var der 10 filer, lockfilen sagde 1.3.0 og `^25.0.0`, og `.nvmrc` manglede.
 - `DEPLOY` (før): `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
@@ -1250,7 +1251,14 @@ holder dem der, og de er præcis de filer en kunde `pip install`er.
 
 ## Deploylog
 
-- 2026-09-26: `DEPLOY OK` for opgave 18 afventer — se `VERIFICÉR DEPLOY` i Status.
+- 2026-09-26: `DEPLOY OK 14f0ee3` — lukker `VERIFICÉR DEPLOY` for opgave 18. Kørsel
+  `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Indholdsverificeret, ikke
+  HTTP 200: live `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` er
+  byte-identisk med repoets arkiv, pakker ud til **11** filer (før: 10), og dens
+  `package-lock.json` siger `version 1.3.3` med `electron ^44.4.5` og
+  `electron-builder ^26.15.3` (før: 1.3.0 og `^25.0.0`), `package.json` har
+  `engines.node >=22.12.0` (før: feltet manglet), og `.nvmrc` er med (før: manglet).
+  Live `build-info.json` bærer merge-SHA'en.
 
 - 2026-09-26: `DEPLOY OK 4805eaa` — kørsel `36198367044`: `gate` grøn (34 steps) + tre grønne deploys. Indholdsverificeret, ikke HTTP 200: live `deskuptime.com/style.css` indeholder broen (`--accent: var(--color-accent)` under `html[data-product="deskuptime"]`), og alle tre live værktøjssider indlæser `/assets/site.css` FØR `/style.css`, så broen er den der vinder. Dette lukker `VERIFICÉR DEPLOY` for opgave 17.
 
