@@ -5,11 +5,12 @@
 - `ITERATION_ID`: `electron-builder-26-2026-09-25`
 - `STATE`: `Opgave 9 FÆRDIG — electron-builder 25.x → 26.15.3 i desktop/; 13 advisory-fund (12 high, 1 critical) → 0`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `10 — gør de 18 broken references til en hard gate`
+- `NEXT_TASK`: `16 — få build-desktop.yml til at køre på main igen (hævet foran opgave 10: desktop-CI'en har ikke kørt siden 25/8, så opgave 9s og 12s eneste platformdækning er død, og en opgradering der kun virker på macOS ville passere gaten grøn)`
 - `TASK_ATTEMPTS`: `9: 1/1 (grøn gate i første forsøg; ingen rettelser nødvendige)`
 - `LAST_BRANCH`: `ceo/electron-builder-26`
-- `PLAN_COMMIT`: `(denne commit)`
+- `PLAN_COMMIT`: `9ed7af6` (implementering + plan) og `(denne commit)` (post-merge-fund)
 - `BASELINE`: `main@3566c48`
+- `CI-FEJL — POST-MERGE-GATEN KØRTE IKKE:` Opgave 9s post-merge-gate kræver, at `build-desktop.yml`s matrix er grøn for macOS x64/arm64, Linux og Windows. Den kørte ikke: pushet af `9ed7af6` til `main` ændrer `desktop/package.json` og `desktop/package-lock.json`, som matcher `paths: desktop/**`, og workflowen startede alligevel ikke. Workflowen er `state=active`, så det er ikke deaktiveret. Sidste kørsel overhovedet er run `32876161399` fra 25. august. Bevis på at det er en ældre fejl: `cde9a96` (24/9) ændrede `desktop/LICENSE.txt` — samme glob — og udløste heller intet. Rodårsagen er commit `6766501` "fix CI: tag-only trigger" fra 25. august 17:08:41 UTC, som gjorde `on.push` tag-only; den seneste `main`-kørsel startede 100 sekunder før den. **Konsekvens for denne opgaves ærlighed:** linux- og Windows-byggene er *ikke* verificeret, kun macOS er. Det står oprettet som opgave 16, fordi det samme problem gælder opgave 12 og enhver fremtidig desktop-ændring. Der er ikke påstået en grøn platformdækning, der ikke findes.
 - `RESULT`: Sikkerhedsopgaven er lukket rent. `desktop/package.json` hæver **kun** `electron-builder` fra `^25.0.0` til `^26.15.3`, og `desktop/package-lock.json` er regenereret; `electron` står urørt på `^44.0.0`, fordi den er opgave 12 og kontrakten forbyder to major-opgraderinger i én commit. **Optællingen i opgaveteksten var forældet:** den sagde 15 advisory-fund, `npm audit --audit-level=high` meldte 13 (12 high, 1 critical). Det er samme fejlform, bare et ældre snapshot — derfor er fundet noteret i `TASK_ATTEMPTS`, så næste iteration ikke jagter et tal, der ikke kan reproduceres. Alle 13 stammede fra ét klyngeled: `tar <=7.5.20` (11 af dem), som `app-builder-lib <=26.14.0` og `builder-util-runtime <9.7.0` begge trækker ind, og som `cacache` → `make-fetch-happen` → `node-gyp` viderefører. Det er byggetidsafhængigheder, ikke noget der kører i den udgivende app, men de giver `npm audit` exit 1 og ville blokeret enhver fremtidig `npm ci`-hygiejne. Efter opgraderingen er `npm audit` **0 vulnerabilities**, `npm ci` kører rent fra den nye lockfil, og alle fire forventede macOS-artefakter (dmg + zip for x64 og arm64) bygges med den nye builder. **Ingen buildkonfiguration behøvede ændring** — opgaven sagde at læse migrationsnoterne og kun rette configen hvis de krævede det; de gjorde ikke, og det er ikke antaget, det er verificeret: de fire artefakter blev bygget af den uændrede `build`-sektion. Den rene linje-ændring i `package.json` er gjort manuelt, fordi `npm install` samtidig omformatterede `mac.target`-arrayerne; det ville være 20 linjer diff-rauschi i en sikkerhedscommit. Lockfilen *shrank* 3427 ændrede linjer (netto ca. −1300), så den nye builder trækker en mindre træ. Platformene Linux og Windows er ikke bygget lokalt — de kræver hhv. en Linux-container og Windows; de er overladt til CI-matrixen, som er opgavens erklærede post-merge-gate.
 - `GATE`: `GRØN — npm ci OK (0 vulnerabilities), npm audit --audit-level=high = 0 fund, npm run build:mac producerede dmg+zip for x64 og arm64; sitegaten: build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, check_clean_copy_distribution OK + --self-test 22/22, page-profile 11/11, node test.js (test_license_flow) OK, test_license_clients 103 checks, obsidian-plugin OK, extension-tools OK (core/extension parity), check_license_clients 0 + --self-test 9/9, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report 28 tests, dist/uændret`
 - `PLAN_COMMIT`: `(denne commit)`
@@ -675,6 +676,8 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 
 **Post-merge-gate:** `gh run watch <run-id> --exit-status` skal være grøn for macOS x64/arm64, Linux og Windows; en rød post-merge-gate reverteres straks i en ny commit.
 
+**Post-merge-gate KØRTE IKKE — se `CI-FEJL` i statusblokken.** Den lokale halvdel er grøn (dmg + zip for x64 og arm64 bygget af electron-builder 26.15.3), men matrixen for Linux og Windows sprang helt over, fordi `build-desktop.yml` ikke udløses af et push til `main`. Det er en **ældre fejl, ikke en følge af denne opgradering** — se opgave 16.
+
 **Implementeret denne iteration:**
 
 - `desktop/package.json`: `electron-builder` `^25.0.0` → `^26.15.3`. Det er den *eneste* kodeændring. `electron` er bevidst urørt på `^44.0.0` — den er opgave 12, og kontrakten siger én major-opgradering pr. commit, så den kan rulles tilbage præcist.
@@ -685,6 +688,58 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 - Lokalt bygget: `EAA Compliance Scanner-1.3.3-mac-{x64,arm64}.{dmg,zip}`, alle fire ~127-131 MB, med `CSC_IDENTITY_AUTO_DISCOVERY=false` (ingen signeringsidentitet er konfigureret lokalt; CI har samme adfærd, så intet i diffet afhænger af det).
 - **Ikke verificeret lokalt: Linux og Windows.** De kræver hhv. en Linux-container og en Windows-vært, og de ligger i CI-matrixen i `.github/workflows/build-desktop.yml`, som kører på ethvert push til `desktop/**` — altså også på denne branch. Det er opgavens egen post-merge-gate.
 - `dist/` er uændret af denne iteration (`git status` viser ingen dist-ændring), så intet site-indhold er berørt. Deploy-workflowens path-filter rører `desktop/` ikke, så merge til `main` deployer ingen sites for denne commits skyld.
+
+### 16. UFÆRDIG — Få `build-desktop.yml` til at køre igen på `main`
+
+**Begrundelse:** Opgave 9s post-merge-gate afdøde den 25. september, fordi
+desktop-CI'en ikke har kørt siden 25. august. Bevist, ikke formodet:
+
+- `build-desktop.yml` er `state=active`, så workflowen er ikke deaktiveret.
+- Sidste kørsel: run `32876161399` (tag `eaa-scanner-desktop-v1.3.3`).
+- `cde9a96` (24. september 23:45) ændrede `desktop/LICENSE.txt`, som matcher
+  `desktop/**` — og udløste ingen kørsel.
+- `9ed7af6` (denne iterations merge) ændrede `desktop/package.json` og
+  `desktop/package-lock.json` — og udløste heller ingen kørsel.
+
+**Rodårsag:** `6766501` "fix CI: tag-only trigger (avoid SHA dedup loss of tag
+event)" fra 25. august kl. **19:08:41 +0200 = 17:08:41 UTC**. Den seneste
+`main`-kørsel, `32875977126`, startede **17:07:01 UTC** — 100 sekunder *før*
+ændringen. Den efterfølgende tag-kørsel kl. 17:08:54 UTC brugte den nye
+workflow og var grøn, fordi et tag matcher `tags`-filteret. Committen har altså
+gjort workflowen **tag-only**: med `on.push.tags` sat ved siden af
+`on.push.paths` udløser den ikke længere et push til en branch. Siden da er
+ethvert `main`-push der rørte `desktop/` sprunget over i en måned.
+
+**Hvorfor det er vigtigere end det ser ud:** opgave 9, 12 og enhver fremtidig
+desktop- eller Electron-ændring har brugt denne matrix som sin eneste
+platformdækning. Uden den er der ingen Linux- og Windows-verificering overhovedet,
+og en opgradering der kun virker på macOS vil passere gaten grøn. Det er præcis
+den klasse fejl kontrakten forbyder: en opgradering der ikke er Testet, før den
+lives.
+
+**Omfang:**
+
+- Ret `on.push` så branch-push med `paths`-match igen udløser kørsel, uden at
+  tag-udløsningen går tabt.
+- Bevis rettelsen med et faktisk push, ikke ved at læse YAML'en.
+- Overvej samtidig at fjerne `permissions: contents: write` fra ikke-release-
+  jobbene; kun `release`-jobbet har brug for skriveadgang.
+
+**Acceptkriterier:**
+
+- Et push til `main` der rører `desktop/**` starter `build-macos` (x64 og
+  arm64), `build-linux` og `build-windows`.
+- Et push til `main` der *ikke* rører `desktop/**` starter ingen kørsel.
+- Et tag `eaa-scanner-desktop-v*` starter stadig alle fire jobs *og* `release`.
+- macOS x64/arm64, Linux og Windows er alle grønne med electron-builder 26.15.3 —
+  det er den manglende halvdel af opgave 9s post-merge-gate.
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/test_deploy_workflow.py` (udvid med build-desktop-
+triggerne) plus hele kvalitetsgaten.
+
+**Post-merge-gate:** `gh run watch` på den kørsel, pushet udløser, skal være grøn
+for alle tre platforme. Det er den samme kørsel, der beviser opgave 9.
 
 ### 10. UFÆRDIG — Gør alle 18 broken references til en hard gate
 
@@ -818,6 +873,8 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 9. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
 
 ## Deploylog
+
+- 2026-09-25: `INGEN SITE-DEPLOY FORVENTET — 9ed7af6` — mergecommit for opgave 9 rørte kun `desktop/package.json`, `desktop/package-lock.json` og denne plan. Deploy-workflowens path-filter rører `desktop/` ikke, så GitHub Actions deployer ingen sites. `dist/` er byte-identisk før og efter. **Verificér ikke live-intet — intet site-indhold er ændret.** Den eneste post-merge-gate for denne commit er `build-desktop.yml`, og den kørte ikke; se `CI-FEJL` i statusblokken og opgave 16.
 
 - 2026-09-25: `DEPLOY OK b401e7d` — GitHub Actions-run `36175801912` kørte det nye `gate-distribution`-job (grønt) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt, inklusive CI's egen live-gate. Alle tre live `build-info.json` bærer `b401e7dda5d261dd5b667d655d2a8a8a65c26fd1`, og uafhængig `check_live_sitemaps.py --commit b401e7d…` meldte `live sitemap OK` for alle tre. Indholdskontrol: de tre arkiver på cleancopy.tools svarer 200, de fire gamle (1.5.2 ×2, 1.0.9, 1.0.6) svarer 404, og live `mahope.tools/downloads` linker på `https://cleancopy.tools/downloads/…` — præcis den ordning opgave 8 nu gater. Dette lukker `VERIFICÉR DEPLOY` nedenfor og `DEPLOY FEJL 36175438151`.
 - 2026-09-25: `DEPLOY FEJL 36175438151` — cleancopy.tools og deskuptime.com blev grønt deployet, mahope.tools fik rød gate **før** deploy med fem `check_publish_targets`-fejl om `cleancopy.tools publicerer ikke …`. Årsagen var en fejl i den nye gate (se `CI-FEJL RETTET` i statusblokken), ikke en fejl i siterne. `dist/` var byte-identisk, så live-indholdet er uændret, og mahope.tools blev ikke deployet overhovedet. Rettelsen gik ud i samme iteration; genkør `36175438151`s afløser.
