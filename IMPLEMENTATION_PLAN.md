@@ -3,12 +3,12 @@
 ## Status
 
 - `ITERATION_ID`: `ci-runs-real-gate-2026-09-25`
-- `STATE`: `Opgave 11 FÆRDIG — CI kører nu præcis den dokumenterede kvalitetsgate, og det er bevist at den gør. Én liste med én ejer: tools/quality_gate.py.`
+- `STATE`: `Opgave 11 FÆRDIG og deployet — CI kører præcis den dokumenterede kvalitetsgate, og det er bevist af en grøn kørsel i CI (run 36186489675, 26/26 steps) og af live-indhold, ikke af HTTP 200. Én liste med én ejer: tools/quality_gate.py.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `12 — deklarér runtime og opgradér Electron-patchlinjen`
 - `TASK_ATTEMPTS`: `11: 1/1. Grøn første gang, men kun fordi porten selv fangede to fejl undervejs: build-desktop.yml lå uden for path-filteret, og min første `_is_deploy_job` læste kun \`run:\`-steps, så \`pages deploy\` i wrangler-action's \`with.command\` aldrig blev set — og uden den erkendelse krævede checken aldrig et \`needs\`.`
 - `LAST_BRANCH`: `ceo/ci-runs-real-gate` (implementering + plan i samme commit)
-- `PLAN_COMMIT`: `(denne commit)` (kode + plan)
+- `PLAN_COMMIT`: `4f513e0` (kode + plan) og `3e35408` (audit-checkout-rettelsen + plan)
 - `BASELINE`: `main@e9045ca`
 - `RESULT` (opgave 11): Den dokumenterede gate og CI's gate var **to forskellige lister**, og ingen af dem var sande. `IMPLEMENTATION_PLAN.md` loved 13 kommandoer; hvert af de tre matrix-jobs kørte sin egen, kortere liste. Resultatet: **`check_license_clients.py`, `check_product_copy.py` og `check_stripe_ctas.py` kørte aldrig i CI**, selv om de stod i planens gaten og i hver tidligere iterations GATE-linje; `--self-test` manglede for to af dem; og licensklienternes 103 checks (`node test.js`) kørte aldrig i CI overhovedet. De tre matrixjobs kørte desuden hver især 15 af de samme kommandoer, så ét domænes fejl kunne ikke stoppe de to andre.
 
@@ -1111,6 +1111,17 @@ aldrig har fået den version de blev lovet?
 
 
 ## Deploylog
+
+- 2026-09-25: `DEPLOY OK 3e35408` — CI kører `python3 tools/quality_gate.py` i det nye
+  `gate`-job, og run `36186489675` på `main` er **grøn i alle 26 steps** (`quality_gate:
+  GRØN — 26 steps`) efterfulgt af tre grønne deploys. De tre deploys uploadede
+  2/2/2 filer og 66/29/319 var allerede uploadet — altså intet nyt site-indhold, kun
+  byggestien ændret, præcis som forventet. Uafhængig `python3 tools/check_live_sitemaps.py
+  --commit 3e354080d9f57a89147c2bb05a3d7800f3426195` melder `live sitemap OK` for
+  cleancopy.tools, deskuptime.com og mahope.tools. CI's egen post-deploy-gate var grøn
+  i alle tre jobs. Forrige kørsel `36185964282` var rød i step 13 med de fem
+  `auditedwp`-fund, der nu er noteret under `❓ Til Mads` punkt 10 — de var ægte, men
+  de tilhører et andet repo.
 
 - 2026-09-25: `VERIFICÉR DEPLOY: døde links rettet, DeskUptime-assets tilføjet, 404-/søgenav omskrevet og hard gate for uopklarede referencer c3dea9189e2207c4ed2ac63beacd195e1e1ea0e0 2026-09-25` — GitHub Actions kører automatisk, fordi `site/**`, `build_sites.py` og `tools/check_links.py` er i path-filteret. Denne deploy **ændrer synligt indhold** på tre domæner, så verificér indhold, ikke bare HTTP 200:
   - `deskuptime.com/assets/site.css` og `/assets/site.js` svarer **200** — de har aldrig eksisteret, så de tre værktøjssider kørte uden stylesheet og uden sitets JS. Tjek at `/tools/` og `/bulk-url-checker/` er stylet, og at sidens JS indlæses uden 404 i netværksfanen.
