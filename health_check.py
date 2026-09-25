@@ -132,11 +132,7 @@ def main():
         "ebook/eaa-checklist.md", "ebook/eaa-checklist.html",
         "ebook/eaa-checklist.epub",
         "ebook/gdpr-for-agencies.md", "ebook/gdpr-for-agencies.epub",
-        "products/compliance-bundle.html",
-        "products/dpa-template.md",
-        "products/eaa-statement-template.md",
-        "products/nis2-contract-clauses.md",
-        "products/vendor-assessment-checklist.md",
+        # products/ (betalt indhold) ligger i det private repo mahope/paid-products
         "site/index.html", "site/style.css",
     ]
     for f in expected:

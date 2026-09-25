@@ -19,3 +19,8 @@ eu-compliance-guides/
 bugbottle-action-repo/
 cookie-consent-banner/
 dist/
+
+# Betalt indhold (bundle, skabeloner, Pro-audits) ligger i det private repo mahope/paid-products.
+# Byggescripts må gerne skrive hertil lokalt, men output committes aldrig.
+products/*
+!products/bundle-cover.png
