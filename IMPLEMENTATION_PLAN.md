@@ -2,14 +2,14 @@
 
 ## Status
 
-- `ITERATION_ID`: `legacy-seo-paths-2026-09-25`
-- `STATE`: `Opgave 15 FÆRDIG — 21 bloggeneratorer skrev i site/sitemap.xml som builden aldrig læser, indexnow_ping.sh pegede paa en vaert der ikke findes, site/sitemap.xml + tools/build_obsidian_bundle.js er slettet, og to nye steps i den ene gaten holder begge dode veje lukkede.`
+- `ITERATION_ID`: `dead-host-shipped-files-2026-09-26`
+- `STATE`: `Opgave 19 FÆRDIG — 33 døde herter er væk fra otte publicerede filer + search-indekset. Den alvorligste: /compliance-site-check forudfyldte scanningsfeltet med den dode vaert og stemplede den ind i den eksporterede rapport. Nye checks 5+6 i legacy-seo-paths-gaten (shippede filer + bygget dist) med 7 mutationer og positiv kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `19 — de døde herter væk fra de shippede filer, en kunde kan kopiere`
+- `NEXT_TASK`: `17 — få DeskUptimes landside og værktøjssider til at ligne hinanden`
 - `PLAN_COMMIT`: `(denne commit)`
 - `BASELINE`: `main@0b0be44`
-- `LAST_BRANCH`: `ceo/legacy-seo-paths` (implementering `ab17545`)
-- `TASK_ATTEMPTS`: `14: 1/1. 15: 1/1.`
+- `LAST_BRANCH`: `ceo/dead-host-shipped-files`
+- `TASK_ATTEMPTS`: `14: 1/1. 15: 1/1. 19: 1/1.`
 - `DEPLOY`: `DEPLOY OK 25/9 22:07` — **én rød kørsel undervejs, rettet og grøn.** Kørsel `36194467339` døde i `legacy-seo-paths` på `auditedwp-src/site/deploy.sh`: CI checkouter auditedwp *ved siden af* workspace, så mappen ligger inde i `ROOT` og aldrig lokalt, og min regel for eksterne checkouts ledede kun ét niveau op fra filens forælder, mens `.git` lå i *forfader*directoryet. Rettet i `4e801f8` ved at lede hele kæden op til `root`, med to nye selftest-scenarier (eksternt checkout springes over, vores egen kode fanges stadig). Kørsel `36194850293` grøn. Read-only live 25/9 22:07: mahope.tools/sitemap.xml 200 med 251 URLs, cleancopy.tools 33, deskuptime.com 5, robots.txt 200 — uændret, ingen `site/`-fil blev rørt.
 - `GATE` (opgave 15): `GRØN — python3 tools/quality_gate.py: GRØN, 32 steps (30 + legacy-seo-paths + legacy-seo-paths-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og en grøn kontrol der fejler giver exit 1. Bevis paa de RIGTIGE filer: med de pre-fix-filer genskabt (site/sitemap.xml + den gamle indexnow_ping.sh + en gammel generator) fejlede gaten med "site/sitemap.xml findes igen". Stripe-worker 69/69, licensklienter 103 checks, links 0, dist/uændret (gitignored), intet site-indhold rørt.`
 - `RESULT` (opgave 15): `site/sitemap.xml` var en **tom urlset** (153 bytes, nul `<url>`), tracked og aldrig læst. `build_sites.py:155` har den i `SKIP_NAMES`, og sitemapperne skrives til `dist/<domaene>/sitemap.xml` (build_sites.py:1113). `tools/check_sitemaps.py` læser kun dist. Så 21 generatorer skrev URL'er ind i en fil, der aldrig blev publiceret, og skrev "Sitemap updated: N URLs" bagefter — præcis samme fejlform som de 18 "broken references" i opgave 10: en tælling der så rigtig ud og rettede ingenting.
@@ -1099,7 +1099,21 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Gate:** `python3 tools/check_legacy_seo_paths.py` plus hele kvalitetsgaten (32 steps).
 
-### 19. NØJ — de døde herter væk fra de filer, en kunde kan kopiere
+### 19. FÆRDIG (`ceo/dead-host-shipped-files`) — de døde herter væk fra de filer, en kunde kan kopiere
+
+**Resultat:** 33 forekomster af `hermes-passiv.pages.dev` i otte publicerede filer er rettet, `search-index.json`s `body` kører nu gennem `rewrite_text`, og `dist/index.js` er untracket. **Gaten:** `python3 tools/quality_gate.py` — GRØN, 32 steps; `legacy-seo-paths --self-test` 7 mutationer + positiv kontrol; Stripe-worker uændret 69/69, tracking-worker uændret 83/83.
+
+**Fund 1 — opgaven undervurderede omfanget 3 gange, fordi den læste `site/` og ikke dist.** 300+ kildefiler har den døde vært i `canonical`/`og:url`, og builden omskriver dem alle — det er *ikke* fejl. Kun **to** filer i det byggede `dist/` havde den: `cleancopy.tools/search-index.json` og `dist/index.js`. At søge i `site/` giver det modsatte indtryk, fordi de 300 filer er korrekte. Det er derfor den nye check 6 læser dist.
+
+**Fund 2 — den værste fejl var den, opgaven ikke nævnte: scannerens forudfyldte felt.** `site/compliance-site-check.html` + `/da/` (8 steder hver) havde den døde vært i (a) det synlige link `Try: hermes-passiv.pages.dev`, (b) **`urlInput.value = 'https://hermes-passiv.pages.dev'`** — scanneren *forudfyldte* dødt som det URL den scanner, og (c) `'Scanned: … · via hermes-passiv.pages.dev/compliance-site-check'`, som ender i den rapport brugeren eksporterer og deler. Det er 33 fund, ikke de 10 opgaven havde listet.
+
+**Fund 3 — de ni READMEs og templates, planen aldrig nævnte, er de værste at ramme.** Gaten fandt dem i første kørsel: `api-readme.md` (`POST /api/clean-copy`), `page-profile-api-readme.md`, `api-compliance-scan-readme.md`, `downloads/cookie-consent-banner.js`, `eaa-scanner-README.md`, `site-icons/README.md` og tre GDPR-skabeloner. 22 `curl`/`npm install`/`fetch`-kommandoer, en kunde kopierer bogstaveligt. Hvert filnavn er publiceret i **præcis én** dist, så væerten er udregnet af builden (`cleancopy.tools` for `api-readme.md`, ellers `mahope.tools`) — ikke gættet. `openapi.yaml` er publiceret på cleancopy.tools, så dens `servers:` er `https://cleancopy.tools`; workeren ligger i alle tre dists, så begge paths virker derfra.
+
+**Fund 4 — `search-index.json` havde den døde vært, fordi `body` aldrig kørte gennem `rewrite_text`.** Samme fejlform som `write_generated()` i opgave 10: to skriveveje, én omskrivning. Rettelsen er i `build_sites.py`, så *alle* snitte er dækket — ikke kun denne ene fil. `broken` holder 0 i alle fire dists, og `rewritten` steg 49→50 på cleancopy.tools, altså præcis den ene reelle omskrivning.
+
+**Fund 5 — min egen dist-check var død, og det var sjette gang i dette repo.** Den brugte `SKIP_DIRS` til at springe filer over, og `SKIP_DIRS` indeholder `"dist"` — så check 6 sprang præcis over den mappe den skulle læse. Selftesten skrev sit scenarie i `dist/` og blev *også* sprunget over, så mutationen stod som fanget, fordi den netop var fanget. Rettet med `DIST_SKIP_DIRS = SKIP_DIRS - {"dist"}`; scenariet fanger den nu. Mit andet selftest-fejl var samme slags: jeg skrev et HTML-casenum som `.yml`, så det blev skrevet *mens* mutationsfilen stadig lå der.
+
+**Bevis for porten:** de to nye checks er fundet på de rigtige filer *før* nogen blev rettet (9 fund i første kørsel), 7 mutationer fanges med navngiven grund, positiv kontrol grøn før og efter, og HTML med død vært i `canonical` giver **ikke** en falsk positiv — den fejlform, der skjulte `search-index.json`. `dist/` er rent for den døde vært i alle fire domæner.
 
 **Sidefund 25. september 2026 (opgave 15):** den døde vært `hermes-passiv.pages.dev` står stadig i filer, der **er** publicerede eller som en kunde kopierer:
 
@@ -1196,6 +1210,12 @@ aldrig har fået den version de blev lovet?
 
 
 ## Deploylog
+
+- 2026-09-26: `VERIFICÉR DEPLOY: døde værter væk fra 8 publicerede filer, search-indekset og scannerens forudfyldte felt <merge-sha> 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne deploy **ændrer synligt indhold**, så verificér indhold, ikke HTTP 200:
+  - `mahope.tools/compliance-site-check` og `/da/compliance-site-check`: scanningsfeltet er forudfyldt med `https://mahope.tools` (før: den døde vært), det synlige `Try:`-link peger på `mahope.tools`, og den eksporterede rapports `Scanned:`-linje siger `via mahope.tools/compliance-site-check`.
+  - `cleancopy.tools/search-index.json`: nul fund af `hermes-passiv.pages.dev` (før: `POST https://hermes-passiv.pages.dev/api/clean-copy` i `/clean-copy-api`'s uddrag). Bemærk at selve siden altid var rigtig — kun uddraget var løgnen.
+  - `cleancopy.tools/api-readme.md` skal pege på `https://cleancopy.tools/api/clean-copy`; `mahope.tools/page-profile-api-readme.md`, `api-compliance-scan-readme.md`, `downloads/cookie-consent-banner.js`, `downloads/eaa-scanner-README.md`, `downloads/site-icons/README.md` og de tre GDPR-skabeloner skal pege på `mahope.tools`.
+  - Live `build-info.json` bærer merge-SHA'en.
 
 - 2026-09-25: `DEPLOY OK d7d97f6` — kørsel `36191570696` kørte `gate` grønt i
   54 s (28 steps, inkl. de to nye `python-env`-steps på CI's Python 3.12) og

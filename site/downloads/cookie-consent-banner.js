@@ -4,7 +4,7 @@
  * Zero dependencies, no tracking, ~2.5 KB minified.
  *
  * Usage:
- *   <script src="https://hermes-passiv.pages.dev/downloads/cookie-consent-banner.js"
+ *   <script src="https://mahope.tools/downloads/cookie-consent-banner.js"
  *           data-site-name="My Website"></script>
  *
  * The banner shows once, sets a consent cookie, and hides for 365 days.

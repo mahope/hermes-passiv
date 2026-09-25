@@ -8,14 +8,14 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Free Website Compliance Checker — 9-Point Scan">
 <meta property="og:description" content="Check any website for 9 EU compliance items. Free, server-side scan, no login required.">
-<meta property="og:url" content="https://hermes-passiv.pages.dev/compliance-site-check">
+<meta property="og:url" content="https://mahope.tools/compliance-site-check">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Free Website Compliance Checker — 9-Point Scan">
 <meta name="twitter:description" content="Check any website for 9 EU compliance items (privacy policy, terms, cookies, imprint, accessibility, DPA, security headers, meta tags, hreflang). Free, server-side scan.">
-<link rel="canonical" href="https://hermes-passiv.pages.dev/compliance-site-check">
-<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/compliance-site-check">
-<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/compliance-site-check">
-<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/compliance-site-check">
+<link rel="canonical" href="https://mahope.tools/compliance-site-check">
+<link rel="alternate" hreflang="en" href="https://mahope.tools/compliance-site-check">
+<link rel="alternate" hreflang="da" href="https://mahope.tools/da/compliance-site-check">
+<link rel="alternate" hreflang="x-default" href="https://mahope.tools/compliance-site-check">
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -141,7 +141,7 @@
   </div>
 
   <div class="examples">
-    Try: <a href="javascript:scanExample()">hermes-passiv.pages.dev</a> &middot;
+    Try: <a href="javascript:scanExample()">mahope.tools</a> &middot;
     <a href="javascript:;" onclick="document.getElementById('urlInput').value='https://example.com';scan()">example.com</a>
   </div>
 
@@ -213,7 +213,7 @@ function scan() {
     lines.push('# Compliance Report — ' + data.url);
     lines.push('');
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
-    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via hermes-passiv.pages.dev/compliance-site-check');
+    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via mahope.tools/compliance-site-check');
     lines.push('');
     var all = [];
     if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
@@ -290,7 +290,7 @@ function renderResults(data) {
 urlInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') scan(); });
 
 function scanExample() {
-  document.getElementById('urlInput').value = 'https://hermes-passiv.pages.dev';
+  document.getElementById('urlInput').value = 'https://mahope.tools';
   scan();
 }
 

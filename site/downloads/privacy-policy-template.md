@@ -48,6 +48,6 @@ We protect your data with TLS encryption, access controls and
 Last updated: [date]
 
 ---
-*Free template from https://hermes-passiv.pages.dev/privacy-policy-template —
+*Free template from https://mahope.tools/privacy-policy-template —
 generate a version matched to your exact processing purposes at
 /privacy-notice-generator.*

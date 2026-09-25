@@ -1195,8 +1195,15 @@ def write_generated(site: Site, pages: list[dict], local: dict, global_idx: dict
         (dist / fname).parent.mkdir(parents=True, exist_ok=True)
         (dist / fname).write_text(rewrite_text(site, html, True, local, global_idx), encoding="utf-8")
 
+    # `body` er ren tekst fra kilde-HTML'en, som *ikke* kører gennem
+    # `rewrite_text` — den fik derfor den døde `hermes-passiv.pages.dev`-vært
+    # liggende i sit eget uddrag, selvom selve siden var korrekt. Samme
+    # fejlform som `write_generated()` i opgave 10: to skriveveje, én
+    # omskrivning. Derfor kører body'et nu den samme omskrivning som siden.
     index = [dict(url=p["url"].replace(own, "") or "/", title=p["title"], description=p["description"], lang=p["lang"],
-                  section=p.get("section", ""), body=p.get("body", ""), tags=p.get("tags", [])) for p in pages]
+                  section=p.get("section", ""),
+                  body=rewrite_text(site, p.get("body", ""), False, local, global_idx),
+                  tags=p.get("tags", [])) for p in pages]
     (dist / "search-index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 

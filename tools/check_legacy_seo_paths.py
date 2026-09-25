@@ -51,6 +51,13 @@ DEAD_SOURCE_SITEMAP = "site/sitemap.xml"
 # opgavetext, og historiske sider i `site/` skal kunne linke til /sitemap.xml.
 SCRIPT_SUFFIXES = (".py", ".sh")
 
+# Filer under `site/` der publiceres uden `rewrite_text`: `_worker.js`,
+# de shippede nedladinger, YAML og Markdown. En kunde eller en maskine læser
+# dem ordret, så den døde vært i dem er en reel fejl — ikke en kildefil, der
+# bliver rigtig ved buildet. HTML er bevidst *ikke* med: 300+ HTML-filer har
+# den døde vært i `canonical`/`og:url`, og builden omskriver dem alle.
+SHIPPED_SUFFIXES = (".js", ".yml", ".yaml", ".md", ".json", ".sh")
+
 # Sunde aktive scripts, der springes over med vilje: de er negative
 # testtilfælde, hvor den døde vært er pointen. Holdes her, ikke i en
 # navne-liste-som-fraviges-andetsteds.
@@ -72,6 +79,9 @@ GATE_SELF = "tools/check_legacy_seo_paths.py"
 # netop det — reglen under er den egentlige beskyttelse, ikke denne linje.
 SKIP_DIRS = {".git", "dist", "node_modules", ".wrangler", "build", "__pycache__",
              "auditedwp-src", "auditedwp"}
+
+# Samme liste minus `dist`, fordi dist-scannen skal læse netop den mappe.
+DIST_SKIP_DIRS = SKIP_DIRS - {"dist"}
 
 
 def _is_external_checkout(path: Path, root: Path) -> bool:
@@ -169,6 +179,83 @@ def check_single_deploy_path(root: Path, files: dict[str, str]) -> list[str]:
     return problems
 
 
+def _shipped_files(root: Path) -> dict[str, str]:
+    """Filer under `site/` der publiceres *uden* at gå gennem `rewrite_text`.
+
+    `build_sites.py` omskriver alle absolutte `https://hermes-passiv.pages.dev/…`
+    i HTML til det rigtige domæne, så de ~300 kildefiler med den døde vært i
+    `canonical`/`og:url` er ikke et problem i sig selv. Det er de filer, der
+    går uden om omskrivningen: `_worker.js` (copied til hver dist), de
+    shippede nedladdinger, YAML og Markdown. Dem læses ordret af en kunde
+    eller en maskine, så et galt domæne der er en reel fejl.
+    """
+    found: dict[str, str] = {}
+    for path in sorted((root / "site").rglob("*")):
+        if not path.is_file() or path.suffix not in SHIPPED_SUFFIXES:
+            continue
+        if SKIP_DIRS & set(path.relative_to(root).parts):
+            continue
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        if _is_external_checkout(path, root):
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel in ALLOWED_DEAD_HOST_FILES:
+            continue
+        try:
+            found[rel] = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+    return found
+
+
+def check_shipped_files_have_live_host(root: Path) -> list[str]:
+    """Punkt 5 — intet shippet arkiv må pege på den døde vært."""
+    problems = []
+    for name, text in _shipped_files(root).items():
+        if DEAD_HOST not in text:
+            continue
+        line = next((i for i, l in enumerate(text.splitlines(), 1) if DEAD_HOST in l), 0)
+        problems.append(f"{name}:{line} peger på {DEAD_HOST} — filen publiceres "
+                        f"uden buildens domæneomskrivning")
+    return problems
+
+
+def check_built_dist_have_live_host(root: Path) -> list[str]:
+    """Punkt 6 — det *byggede* output må ikke indeholde den døde vært.
+
+    Dette er det endelige bevis: det er den tekst en kunde får. Før denne
+    check fandt den præcis de fejl, kildefilerne skjulte — `search-index.json`
+    havde `POST https://hermes-passiv.pages.dev/api/clean-copy` i sit
+    uddrag, mens selve API-siden var rigtig, fordi `body` ikke kørte
+    gennem `rewrite_text`.
+    """
+    dist = root / "dist"
+    if not dist.is_dir():
+        return []  # intet bygget — samme mønster som de øvrige dist-checks
+    problems = []
+    for path in sorted(dist.rglob("*")):
+        if not path.is_file():
+            continue
+        # Her må `dist` *ikke* springes over — det er præcis den mappe der
+        # skal læses. `DIST_SKIP_DIRS` er derfor SKIP_DIRS uden `dist`; min
+        # første version brugte SKIP_DIRS, hvilket gjorde checken død uden
+        # at selftesten tog den (den skrev sit scenarie i `dist/`, som så
+        # også blev sprunget over). Selftest-scenariet fangede det.
+        if DIST_SKIP_DIRS & set(path.relative_to(root).parts):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if DEAD_HOST not in text:
+            continue
+        line = next((i for i, l in enumerate(text.splitlines(), 1) if DEAD_HOST in l), 0)
+        problems.append(f"{path.relative_to(root).as_posix()}:{line} indeholder "
+                        f"{DEAD_HOST} — det er den tekst kunden henter")
+    return problems
+
+
 def run(root: Path) -> list[str]:
     scripts = _script_files(root)
     problems = []
@@ -176,6 +263,8 @@ def run(root: Path) -> list[str]:
     problems += check_no_script_touches_source_sitemap(scripts)
     problems += check_active_scripts_have_live_host(scripts)
     problems += check_single_deploy_path(root, scripts)
+    problems += check_shipped_files_have_live_host(root)
+    problems += check_built_dist_have_live_host(root)
     return problems
 
 
@@ -277,6 +366,36 @@ def self_test() -> int:
         if not still:
             print("FEJL: reglen slår alt fra — vores egen kode fanges ikke", file=sys.stderr)
             return 1
+
+        # 5 — et shippet arkiv peger på den døde vært. HTML er bevidst ikke
+        # med i SHIPPED_SUFFIXES, så en HTML-fil med død vært i `canonical`
+        # må IKKE fejle: builden omskriver den. Det er den fejlform, der
+        # skjulte `search-index.json` i opgave 19.
+        (root / "site").mkdir(exist_ok=True)
+        (root / "site" / "eaa-scan.yml").write_text(
+            "run: npm install -g https://hermes-passiv.pages.dev/downloads/x.tgz\n",
+            encoding="utf-8")
+        scenarios.append(("et shippet arkiv peger på den døde vært",
+                          check_shipped_files_have_live_host(root)))
+        (root / "site" / "eaa-scan.yml").unlink()
+        (root / "site" / "canonical.html").write_text(
+            '<link rel="canonical" href="https://hermes-passiv.pages.dev/x">\n',
+            encoding="utf-8")
+        no_html_fp = check_shipped_files_have_live_host(root)
+        (root / "site" / "canonical.html").unlink()
+        if no_html_fp:
+            for problem in no_html_fp:
+                print(f"FALSK POSITIV: {problem}", file=sys.stderr)
+            return 1
+
+        # 6 — det byggede output indeholder den døde vært
+        (root / "dist").mkdir(exist_ok=True)
+        (root / "dist" / "search-index.json").write_text(
+            '[{"body":"POST https://hermes-passiv.pages.dev/api/clean-copy"}]',
+            encoding="utf-8")
+        scenarios.append(("det byggede output indeholder den døde vært",
+                          check_built_dist_have_live_host(root)))
+        (root / "dist" / "search-index.json").unlink()
 
     failed = 0
     for name, problems in scenarios:
