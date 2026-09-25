@@ -1165,6 +1165,13 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK d7d97f6` — kørsel `36191570696` kørte `gate` grønt i
+  54 s (28 steps, inkl. de to nye `python-env`-steps på CI's Python 3.12) og
+  deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Det lukker
+  `DEPLOY FEJL 36191355378`. **Intet site-indhold er ændret** — ingen `site/`-fil
+  blev rørt, så de tre domæner får præcis det indhold de havde før merge; kun
+  bygge- og gatestierne er nye.
+
 - 2026-09-25: `DEPLOY FEJL 36191355378` — `gate`-jobbet døde i step 25 `python-env`
   med `AttributeError: 'PosixPath' object has no attribute 'read'`, fordi CI's
   Python 3.12 bruger den indlejrede `tomllib`, hvis `load()` kræver en binær
