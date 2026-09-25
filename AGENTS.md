@@ -147,6 +147,12 @@ git pull --ff-only
 # merge den grønne ceo-branch og push til main
 ```
 
+**Committet aldrig direkte på `main`.** Selv en planrettelse efter en merge skal
+gå på `ceo/*`-branchen og merges. En løs commit på `main` kan kun rettes ved
+`git reset --soft` plus et merge-oprydningsfad, og det efterlader to
+merge-commits for én opgave. Rækkefølgen er altid: `git switch <ceo-branch>` →
+commit → `git switch main` → `git merge --no-ff` → `git push origin main <ceo-branch>`.
+
 Efter push skal du **selv kontrollere resultatet**. HTTP 200 er ikke bevis for noget —
 et site kan svare 200 og være tomt eller vise gammelt indhold. Hent siderne og se på
 indholdet på `https://mahope.tools`, `https://cleancopy.tools`, `https://deskuptime.com`
