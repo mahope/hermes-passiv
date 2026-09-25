@@ -2,14 +2,24 @@
 
 ## Status
 
-- `ITERATION_ID`: `desktop-ci-trigger-2026-09-25`
-- `STATE`: `Opgave 16 FÆRDIG — build-desktop-CI'en kører igen på main; matrixen er grøn på alle tre platforme med electron-builder 26.15.3, hvilket er den manglende halvdel af opgave 9s post-merge-gate`
+- `ITERATION_ID`: `broken-refs-hard-gate-2026-09-25`
+- `STATE`: `Opgave 10 FÆRDIG — broken: 0 på alle fire sites, og både buildet og CI fejler nu på en reel uopklaret reference. Den nye port er `tools/check_links.py`.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `10 — gør de 18 broken references til en hard gate`
-- `TASK_ATTEMPTS`: `16: 1/2. Første push fejlede: mit `on.push` i listeform er ugyldig for GitHubs schema (kørsel 36180365427 døde i 0 s), og den nye gate døde i alle tre deploy-jobs på `import yaml`. Andet forsøg grønt og kørselsbevist.`
-- `LAST_BRANCH`: `ceo/desktop-ci-trigger` (merge `f6b2695`; rettelsen `7ccfd43` direkte på main, fordi det var en rød CI)
-- `PLAN_COMMIT`: `6d95958` (første commit + plan) og `(denne commit)` (resultat, fejl og deploy-noter)
-- `BASELINE`: `main@e0618da`
+- `NEXT_TASK`: `11 — få CI til at køre den faktiske kvalitetsgate`
+- `TASK_ATTEMPTS`: `10: 1/1. Grøn første gang. En fejl undervejs: jeg skrev først `/blog/copy-table-from-website-to-word` som erstatning for en ubrugt `{URL}`-placeholder uden at slå slaget op — den artikel findes ikke, så jeg rettede begge links til artikler der faktisk ligger i `site/blog/`.`
+- `LAST_BRANCH`: `ceo/broken-refs-hard-gate`
+- `PLAN_COMMIT`: `(denne commit)`
+- `BASELINE`: `main@099b87f`
+- `RESULT` (opgave 10): De 18 "broken references" var ikke 18 fejl, og de var heller ikke 0. Optællingen blandede **ni reelle døde referencer** med **to falske positiver fra kodeeksempler**, og fordi buildet kun skrev dem til `build-summary.json` og returnerede 0, blev ingen rettet i en måned. De ni reelle er nu rettet i source, de to eksempler tælles ikke længere med, og porten er erstattet af `tools/check_links.py` — en `html.parser`-baseret gade over det **byggede** `dist/`, der springer `pre`/`code`/`script`/`style` over og tjekker krydsdomæne-referencer mod det domænes dist, så et cleancopy→mahope-link ikke kan være en 404, fordi mahope-distet ikke var bygget i samme job.
+
+  **Fund 1 — de reelle ni.** (a) Seks døde referencer på *live*: DeskUptimes tre værktøjssider (`/tools/`, `/bulk-url-checker/`, `/security-headers-checker/`) indlæser `/assets/site.css` og `/assets/site.js`, som **aldrig har eksisteret** i noget dist — de ligger i `../auditedwp/site/assets/`, og fordi de hentes via `extra` (ikke `pull_assets`) fulgte de ikke med. Værktøjerne har kørret uden stylesheet og uden sitets JS. Rettet ved to `extra`-poster, så de 6 referencer opløses. (b) Fire `ld+json`-"url"-felter på danske artikler pegede på den engelske sti, hvilket brød Googles kanoniske URL for præcis de sider. (c) `/da/blog` i privacy-skabelonen — der findes intet dansk blogindeks; linket peger nu på `/da/guides`. (d) NIS2-siden viste sig selv som `…pages.dev/da/nis2-gap-assessment-da`, mens siden ligger i roden. (e) README'en linkede til desktop-kilde-1.2.0, som ikke findes længere (1.3.3 gør). (f) `llms.txt` linkede scanneren med et efterstillet `` `, `` som regex'en slugtede ind i stien.
+
+  **Fund 2 — to falske positiver, og hvorfor de aldrig kunne rettes.** `blog/open-graph-checker.html` *viser* `<meta … content="/img/cover.jpg">` som eksempel på en fejl, og `blog/check-website-speed-without-lighthouse.html` har `Open hermes-passiv.pages.dev/page-profile,` i en `<pre>`. Regex'en kan ikke se forskel på en reference og et eksempel, så begge stod på den permanente liste, og ingen af dem *kunne* rettes, uden at et korrekt eksempel blev ødelagt. Kun bogføringen springer dem nu over; den synlige tekst skrives stadig om, så brugeren stadig ser sit eget domæne.
+
+  **Fund 3 — tre ting porten afslørede, som ingen før havde set.** (a) `write_generated()` skrev 404- og søgesiderne *uden* `rewrite_text`, så cleancopy.tools' navigationslink "Guides" stod som `/blog/` — et 404 i headeren på fire sider pr. sprog, fordi blogindekset ligger på mahope.tools. Nu skriver de siderne gennem samme omskrivning. (b) To publicerede blogartikler indeholdt den aldrig udfyldte generator-placeholder `{URL}`/`{label}` som et dødt link. (c) Download-siden lovede scanneren som **1.3.0**, mens de faktiske arkiver er 1.2.0 (`scanner/npm/eaa-scanner/package.json` siger 1.2.0) — en falsk påstand om den version en kunde henter. Etiketterne er rettet, og to `npm install`-kommandoer, der var kopieringsklare med en rodrelativ sti, har nu fuld URL.
+
+  **Bevis, ikke påstand:** `broken: 0` i `dist/build-summary.json` for alle fire sites. En syntetisk død reference i `site/guides.html` gav build exit 1 med den navngivne sti, og blev fjernet igen. Samme mutation i det byggede `dist/` gav `check_links.py` exit 1 med fil og linje. Selftesten er 12 mutationer + 5 kodeeksempler, der *ikke* må fejle. Byggetiden for porten er 1,4 s.
+- `GATE`: `GRØN — build OK (broken 0/0/0/0), check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile OK, check_clean_copy_distribution OK + --self-test 22/22, check_license_clients 0 + --self-test 9/9, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report OK, licensklienter 103 checks, test_deploy_workflow OK + --self-test OK, check_links 0 + --self-test OK, dist/uændret (gitignored)`
 - `RESULT`: Desktop-CI'en kører igen siden 25. august 2026, og det er **bevist med rigtige kørsler, ikke ved at læse YAML**. Rodårsagen holdt: `6766501` havde efterladt `on.push` med KUN `tags` (og `paths`), og GitHub springer et push over på den ref-type den ikke definerer et filter for — `branches: [main]` var væk, så intet push til `main` der rørte `desktop/` udløste noget i en hel måned. Rettelsen er én mapping med `branches: [main]`, `tags: ['eaa-scanner-desktop-v*']` og `paths`. Kørsel `36180893396` startede alle fire jobs (`build-macos` x64 + arm64, `build-linux`, `build-windows`) på et push til `main`, og alle blev grønne. **Første forsøg var forkert og kostede en rød kørsel:** jeg antog, at `branches` og `tags` ikke må stå i samme mapping, og skrev `on.push` i listeform. Kørsel `36180365427` viste det modsatte — workflowen startede, men alle jobs faldt i **0 sekunder** med ingen jobs, fordi GitHs schema kræver en mapping. Antagelsen er nu fjernet fra koden og fra gatens dokumentation, og gaten afviser eksplicit en liste under `on.push`. Samme kørsel afslørede en anden ægte fejl i min egen løsning: den nye gate dræbte alle tre deploy-jobs på `ModuleNotFoundError: No module named 'yaml'`, fordi `deploy-sites.yml` kører på `setup-python` uden PyYAML. Løsningen er ikke `pip install` i en deploy-sti, men `tools/mini_yaml.py`: en stdlib-læser til den del af YAML de to workflows bruger, som fejler hvidt i stedet for at gætte. Gaten simulerer GitHubs filtersemantik over begge workflows — mappings, sekvenser, skalarskalarer, glob med `**`/`*`/`?` og `!`-eksklusion — så en historisk fejlform fanges som mutation frem for som hårdkodet streng. Permissions er samtidig strammet: `contents: read` i topniveau, `contents: write` kun på `release`.
 - `CI-BEVIS`: `36180893396` build-desktop (main) — fire jobs grønne. `36180893496` deploy-sites (main) — `gate-distribution` grøn, de tre deploy-jobs med den nye gate grønne. `36180365427` — 0-s fejl fra listeformen. `36180367257` — deploy-fejl fra `import yaml`.
 - `GATE`: `GRØN — build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, node test.js OK (licensklienter 103 checks), check_license_clients 0 + --self-test 9/9, check_clean_copy_distribution OK + --self-test 22/22, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report 28 tests, obsidian-plugin OK, test_deploy_workflow OK + --self-test 8/8, dist/uændret`
@@ -37,7 +47,7 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 Denne gate er den obligatoriske minimum før merge til `main`:
 
 ```bash
-python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py && python3 tools/test_deploy_workflow.py && python3 tools/test_deploy_workflow.py --self-test
+python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py && python3 tools/test_deploy_workflow.py && python3 tools/test_deploy_workflow.py --self-test && python3 tools/check_links.py && python3 tools/check_links.py --self-test
 ```
 
 Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1,
@@ -76,6 +86,20 @@ og `build_sites.py` tæller den ikke som unresolved, fordi filen findes i
 intet er bygget. Fordi de læser `dist/`, skal gaten køre *efter*
 `build_sites.py` — den gør allerede, i deploy-workflowens gate-trin.
 
+`tools/check_links.py` blev tilføjet 2026-09-25 i opgave 10, fordi buildets egen
+optælling var regex-baseret og derfor ikke kunne skelne en reference fra et
+kodeeksempel: `blog/open-graph-checker.html` viser `<meta … content="/img/cover.jpg">`
+som eksempel på en fejl, og det blev bogført som en død reference, ingen kunne
+rette. Den bruger `html.parser` på det **byggede** `dist/`, springer
+`pre`/`code`/`script`/`style` over, og løser krydsdomæne-referencer mod det
+domænes dist — kun hvis det dist faktisk er bygget i samme kørsel, ellers dør
+matrix-jobbet i CI på en 404 der ikke findes. Den kræver desuden at alle
+download-artefakter kan hentes og at formularer med en `action` uden
+worker-marker peger på en rute, der findes. Den springes over når intet er bygget.
+`build_sites.py` har nu *også* exit 1 ved uopklarede referencer, så porten ikke
+kan slås fra ved at glemme at køre den. Begge er i deploy-workflowens
+path-filter; fuld kontrol i `gate-distribution`, `--only` i matrix-jobbet.
+
 `tools/test_deploy_workflow.py` blev tilføjet 2026-09-25 i opgave 16. Den
 simulerer de faktiske push- og pull_request-events mod begge workflows' egne
 filtre med GitHubs dokumenterede semantik, så en fejl i path-filteret eller i
@@ -113,6 +137,21 @@ Efter et mergecommit skal livekontrollen køre som `python3 build_sites.py && py
 - Stripe-salg skriver `t:all:sales:<product>`, mens `/api/stats` og ugerapporten stadig læser den gamle Lemon-tæller: `site/_worker.js:1235-1246`, `site/_worker.js:2888-2893`, `tools/weekly_report.py:148-180`. Den nuværende salgstæller er desuden en read-modify-write-operation og må ikke alene være ground truth ved parallelle fulfillments.
 
 ### sider, claims og konvertering
+
+**Optællet 25. september 2026 i opgave 10 — de 18 var ni fejl og ni falske positiver.**
+Reelle: (1) `/assets/site.css` + `/assets/site.css` på DeskUptimes tre værktøjssider
+har aldrig eksisteret i noget dist; (2) fire `ld+json`-"url" på danske artikler pegede
+på engelsk sti; (3) `/da/blog` findes ikke; (4) NIS2-siden viste sig selv med `/da/`;
+(5) README linkede desktop-kilde-1.2.0; (6) `llms.txt` havde et efterstillet `` `, `` i stien.
+Falske: `blog/open-graph-checker.html` **viser** `content="/img/cover.jpg"` som et
+eksempel på en fejl, og `blog/check-website-speed-without-lighthouse.html` har
+`Open hermes-passiv.pages.dev/page-profile,` i en `<pre>`. Resten af listen var
+krydsdomæne- eller tekstfund uden egen værdi.
+Fire fejl kom først frem af den nye port: `write_generated()` sprang over
+`rewrite_text` for 404- og søgesiderne (dødt "Guides"-link i headeren på fire
+sider pr. sprog), to publicerede artikler havde en ubrugt `{URL}`-generator-
+placeholder, `downloads.html` lovede scanner-1.3.0 mens disken har 1.2.0, og
+`compliance-ai.html` bruger relative `href="scan"`-referencer der kun virker i roden.
 
 - DeskUptime EN/DA lover “no phone-home”, “no central server” og “no telemetry”, selv om Pro aktiverer og revaliderer mod `mahope.tools`: `site/deskuptime/index.html:130-150`, `site/da/deskuptime/index.html:127-147`, `../deskuptime/src/license.js:70-152`.
 - Den danske DeskUptime-blogartikel siger også, at licensen er offline: `site/da/blog/overvaag-hjemmeside-fra-terminalen.html:25-86`.
@@ -787,7 +826,7 @@ YAML.
 engangsstøtte, der ikke kaldes fra nogen workflow eller gate, altså ingen
 regression. Lagt under opgave 15 (døde stier).
 
-### 10. UFÆRDIG — Gør alle 18 broken references til en hard gate
+### 10. FÆRDIG — Gør de 18 broken references til en hard gate
 
 **Begrundelse:** Nuværende build tæller 18 fejl men deployer, og missionen forbyder døde links, downloads og formularer.
 
@@ -799,12 +838,14 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Acceptkriterier:**
 
-- `dist/build-summary.json` har `broken: 0` for alle fire sites.
-- `python3 tools/check_links.py` og build/CI returnerer non-zero ved en syntetisk broken reference.
-- Hvert downloadlink og hver kritisk formular har mindst én repræsentativ smoke test.
-- Hele kvalitetsgaten er grøn.
+- `dist/build-summary.json` har `broken: 0` for alle fire sites. **Opfyldt** — 0/0/0/0.
+- `python3 tools/check_links.py` og build/CI returnerer non-zero ved en syntetisk broken reference. **Opfyldt og beviset begge veje**: mutation i `site/guides.html` → build exit 1; mutation i `dist/cleancopy.tools/clean-copy.html` → `check_links.py` exit 1 med fil og linje. CI har begge kommandoer i `gate-distribution` (alle fire dists) og `--only <domæne>` i matrix-jobbet.
+- Hvert downloadlink og hver kritisk formular har mindst én repræsentativ smoke test. **Opfyldt som afledt dækning, ikke som liste**: `check_links.py` kræver at *alle* download-artefakter i det byggede dist kan hentes, og at enhver formular med en `action` uden worker-marker peger på en rute, der findes. En hardkodet liste af "vigtige" links ville være præcis den fejlform porten skal fange, nedskrevet som data — samme læring som opgave 8.
+- Hele kvalitetsgaten er grøn. **Opfyldt.**
 
-**Gate:** `python3 build_sites.py && python3 tools/check_links.py` plus resten af kvalitetsgaten.
+**Gate:** `python3 build_sites.py && python3 tools/check_links.py && python3 tools/check_links.py --self-test` plus resten af kvalitetsgaten.
+
+**Rækkevidde ændret undervejs, og hvorfor:** opgaven sagde "18". Det viste sig at være ni reelle fejl plus ni falske positiver, hvoraf to kodeeksempler. De to eksempler *kunne* ikke rettes uden at ødelægge en korrekt, pædagogisk kodeblok — så de blev fjernet fra *regningen*, ikke fra siden. Til gengæld fandt porten fire ekstra fejl, som ikke stod på de 18: manglende DeskUptime-assets, et uomskrevet 404-nav, `{URL}`-placeholders på to publicerede artikler og en falsk versionspåstand på downloadsiden.
 
 ### 11. UFÆRDIG — Få CI til at køre den faktiske kvalitetsgate
 
@@ -912,6 +953,60 @@ kald. Findes ud — hvis intet bruger den, slettes den.
 **Gate:** `python3 tools/check_legacy_seo_paths.py` plus hele kvalitetsgaten.
 
 
+### 17. UFÆNDIG — Få DeskUptimes landside og værktøjssider til at ligne hinanden
+
+**Sidefund 25. september 2026 (opgave 10):** `../auditedwp/site/deskuptime/index.html`
+er 29 395 bytes og bruger EUComply-skallen med `/assets/site.css` + `/assets/site.js`.
+Dette repos `site/deskuptime/index.html` er 11 852 bytes, blev skrevet om i opgave 2
+(ærlig licenstekst) og bruger **dette repos** skal. Resultatet er, at
+`deskuptime.com/` og `deskuptime.com/tools/` er bygget af to forskellige designs
+på samme domæne, og de tre værktøjssider bærer en header, footer og
+tema-tokens, der ikke ligner resten af sitet. Opgave 10 har gjort værktøjerne
+funktionsdygtige igen ved at levere de to assets, men ikke ensformet.
+
+**Omfang:**
+
+- Beslut, om de tre værktøjssider skal skales med auditedwp's skal eller med
+  denne repos `style.css`/`shell.js`. Førstnævnte kræver at `site.css`/`site.js`
+  mødes af `pagepass`, hvilket er en reel designopgave, ikke en tekstretning.
+- Uden at ændre `../auditedwp` (read-only).
+
+**Acceptkriterier:**
+
+- `deskuptime.com/`, `/tools/`, `/bulk-url-checker/` og `/security-headers-checker/`
+  deler samme skrifttype, containerbredde og temafarver.
+- Ingen reference på deskuptime.com er død (`check_links.py --only deskuptime.com` grøn).
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/check_links.py --only deskuptime.com` plus hele kvalitetsgaten.
+
+### 18. UFÆNDIG — afgør om de publicerede scanner-arkiver er forsinkede
+
+**Sidefund 25. september 2026 (opgave 10):** `site/downloads.html` mærkede
+arkiverne som **1.3.0**, mens filerne på disk og `scanner/npm/eaa-scanner/package.json`
+siger **1.2.0**. Opgave 10 rettede mærkaten til den version, der faktisk kan
+hentes. Det åbner det ærlige spørgsmål: er det *arkiverne* der er forsinkede, så
+kunderne henter gammel kode, eller er det *teksten* der var for forkert, så kunderne
+aldrig har fået den version de blev lovet?
+
+**Omfang:**
+
+- Sammenlign `scanner/npm/eaa-scanner/` og `scanner/packaging/` med de arkiver,
+  der ligger i `site/downloads/`, og fastslå hvilken version kilden faktisk er på.
+- Hvis kilden er foran: byg arkiverne reproducerbart fra kilden, opdatér
+  download-sidens etiketter, og gør det til en gate, så et arkiv ikke kan ligge
+  under den version siden lover igen.
+
+**Acceptkriterier:**
+
+- Versionsnummeret i `site/downloads.html`, i `llms.txt` og i README matcher
+  præcis det arkiv, der serveres.
+- `python3 tools/check_versions.py` (opgave 14) dækker forholdet mellem
+  arkivnavn, pakkeversion og download-side.
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/check_versions.py` plus hele kvalitetsgaten.
+
 ## ❓ Til Mads
 
 1. **Tilføj property i Google Search Console** for `mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahoje.dk`. Verificér sitemap og robots efter tilføjelse. Denne handling må ikke udføres af repoet.
@@ -925,6 +1020,13 @@ kald. Findes ud — hvis intet bruger den, slettes den.
 9. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: døde links rettet, DeskUptime-assets tilføjet, 404-/søgenav omskrevet og hard gate for uopklarede referencer <merge-sha> 2026-09-25` — GitHub Actions kører automatisk, fordi `site/**`, `build_sites.py` og `tools/check_links.py` er i path-filteret. Denne deploy **ændrer synligt indhold** på tre domæner, så verificér indhold, ikke bare HTTP 200:
+  - `deskuptime.com/assets/site.css` og `/assets/site.js` svarer **200** — de har aldrig eksisteret, så de tre værktøjssider kørte uden stylesheet og uden sitets JS. Tjek at `/tools/` og `/bulk-url-checker/` er stylet, og at sidens JS indlæses uden 404 i netværksfanen.
+  - `cleancopy.tools/404` og `/search/` har **"Guides"** i navigationen som `https://mahope.tools/blog/` — før denne deploy var det `/blog/`, som er 404 på cleancopy.tools. Samme forventning på `deskuptime.com/404` og `mahope.tools/404`.
+  - `mahope.tools/blog/copy-table-from-website-to-excel` og `/blog/copy-table-website-to-google-sheets` har ingen `{URL}`-placeholder længere; de to `Related:`-links peger på artikler der findes.
+  - `mahope.tools/downloads` mærkede scanner-arkiverne 1.3.0; live skal de nu sige 1.2.0, fordi det er den version der ligger på disken (se opgave 18).
+  - Live `build-info.json` bærer merge-SHA'en for alle tre domæner.
 
 - 2026-09-25: `DEPLOY OK 7ccfd43` — begge kørsler grønne. `36180893396`
   (build-desktop, main) kørte `build-macos` x64 + arm64, `build-linux` og

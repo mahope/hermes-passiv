@@ -25,6 +25,7 @@ on:
       - 'tools/check_page_profile_distribution.py'
       - 'tools/check_license_clients.py'
       - 'tools/check_clean_copy_distribution.py'
+      - 'tools/check_links.py'
       - 'tools/build_clean_copy_archives.py'
       - 'extension-clean-copy/**'
       - 'extension-clean-copy-firefox/**'
@@ -75,6 +76,9 @@ jobs:
           python build_sites.py
           python tools/check_clean_copy_distribution.py
           python tools/check_clean_copy_distribution.py --self-test
+          python3 tools/check_links.py --only "${{ matrix.domain }}"
+          python3 tools/check_links.py
+          python3 tools/check_links.py --self-test
 
   deploy:
     if: github.ref == 'refs/heads/main'

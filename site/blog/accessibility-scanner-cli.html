@@ -84,7 +84,7 @@
   <div class="container">    <h2 id="install-and-use">Install and Use</h2>
     <p>Two distributions, same engine and identical output:</p>
     <p></p>
-    <p><strong>Node.js (npm):</strong> npm install /downloads/mahope-eaa-scanner-1.2.0.tgz — then npx eaa-scan https://example.com. Zero dependencies; works on Node 18+.</p>
+    <p><strong>Node.js (npm):</strong> npm install https://mahope.tools/downloads/mahope-eaa-scanner-1.2.0.tgz — then npx eaa-scan https://example.com. Zero dependencies; works on Node 18+.</p>
     <p></p>
     <p><strong>Python:</strong> download the wheel from the downloads page and pip install it — then eaa-scan https://example.com. Also zero runtime dependencies.</p>
     <p></p>
@@ -96,7 +96,7 @@
   <div class="container">    <h2 id="ci-pipeline">CI Pipeline</h2>
     <p>The point of a CLI scanner is that nobody has to remember to run it. A minimal GitHub Actions workflow checks every push:</p>
     <p></p>
-    <p><pre style="background:var(--color-surface-2);padding:16px;border-radius:8px;overflow-x:auto;font-size:0.85em;"><code>name: accessibility<br>on: [push]<br>jobs:<br>  a11y:<br>    runs-on: ubuntu-latest<br>    steps:<br>      - uses: actions/checkout@v4<br>      - uses: actions/setup-node@v4<br>        with:<br>          node-version: 20<br>      - run: npm install /downloads/mahope-eaa-scanner-1.2.0.tgz<br>      - run: npx eaa-scan https://yoursite.example --fail-on error</code></pre></p>
+    <p><pre style="background:var(--color-surface-2);padding:16px;border-radius:8px;overflow-x:auto;font-size:0.85em;"><code>name: accessibility<br>on: [push]<br>jobs:<br>  a11y:<br>    runs-on: ubuntu-latest<br>    steps:<br>      - uses: actions/checkout@v4<br>      - uses: actions/setup-node@v4<br>        with:<br>          node-version: 20<br>      - run: npm install https://mahope.tools/downloads/mahope-eaa-scanner-1.2.0.tgz<br>      - run: npx eaa-scan https://yoursite.example --fail-on error</code></pre></p>
     <p></p>
     <p>Start with --fail-on error so only unambiguous failures block the build, then tighten to warnings once the obvious issues are fixed. The same pattern works in GitLab CI, CircleCI, or a plain pre-deploy script.</p>
   </div>
