@@ -49,23 +49,11 @@ assert.strictEqual(Core.batchConvert(['<p>no table</p>'], 'csv', [])[0].content.
 const batch = Core.batchConvert([null, '<p>ok</p>'], 'markdown', []);
 assert.deepStrictEqual(batch.map(b => b.ok), [true, true]);
 
-// ── main.js: settings merge + license payload shape (mocked fetch) ──
-// Simulate activateLicense against a fake API to lock the request contract.
-(async () => {
-  let captured;
-  global.fetch = async (url, opts) => {
-    captured = { url, body: JSON.parse(opts.body) };
-    return { ok: true, status: 200, json: async () => ({ ok: true, activated: true, plan: 'pro-yearly', expires_at: '2027-08-24T00:00:00Z', devices_in_use: 1 }) };
-  };
-  // minimal stub of plugin surface
-  const settings = { licenseKey: 'A'.repeat(32).toLowerCase(), deviceId: 'd'.repeat(16), proActive: false };
-  const key = settings.licenseKey.toLowerCase().trim();
-  assert.ok(/^[a-f0-9]{32}$/.test(key));
-  await fetch('https://hermes-passiv.pages.dev/api/license/activate', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ license_key: key, device_id: settings.deviceId }),
-  });
-  assert.strictEqual(captured.url.endsWith('/activate'), true);
-  assert.strictEqual(captured.body.device_id.length, 16);
-  console.log('All Clean Copy Obsidian tests passed.');
-})().catch(e => { console.error(e); process.exit(1); });
+// ── main.js: the real request contract lives in tools/test_license_clients.js ──
+// This file used to end with a block that re-implemented the activation request
+// against the old `hermes-passiv.pages.dev` host and asserted on its own mock,
+// so it could never fail when the shipped plugin broke. `tools/test_license_clients.js`
+// loads this plugin's main.js for real and covers 200/403/404/400/409/500/503,
+// the seven-day outage cache, and the product payload.
+require('../tools/test_license_clients.js');
+console.log('All Clean Copy Obsidian tests passed.');

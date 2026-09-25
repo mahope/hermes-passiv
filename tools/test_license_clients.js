@@ -248,5 +248,182 @@ function makePlugin(settings) {
     === fs.readFileSync(path.join(ROOT, 'tools/clean_copy_license.js'), 'utf8'),
     'extension license.js is byte-identical to the canonical rules');
 
+  /* ── 4. The web tool (site/clean-copy-tool.html) ──────────────────────── */
+
+  const vm = require('vm');
+  const html = fs.readFileSync(path.join(ROOT, 'site/clean-copy-tool.html'), 'utf8');
+
+  const MARK_A = '/* >>> clean-copy-license: tools/clean_copy_license.js — do not edit by hand */';
+  const MARK_B = '/* <<< clean-copy-license */';
+  const a = html.indexOf(MARK_A);
+  const b = html.indexOf(MARK_B);
+  ok(a > -1 && b > a, 'web tool carries the canonical license module');
+  ok(html.slice(a + MARK_A.length, b).trim() === fs.readFileSync(path.join(ROOT, 'tools/clean_copy_license.js'), 'utf8').trim(),
+    'web tool license module is byte-identical to the canonical rules');
+
+  const inlineScripts = [];
+  const scriptRe = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+  let m;
+  while ((m = scriptRe.exec(html)) !== null) {
+    if (!/application\/ld\+json/.test(m[0].slice(0, 120))) inlineScripts.push(m[1]);
+  }
+  const toolScript = inlineScripts.find((s) => s.includes('Clean Copy Pro: license activation'));
+  ok(!!toolScript, 'web tool license block is found in the page');
+  /* Run every inline script in document order, exactly like the browser does. */
+  const toolScripts = inlineScripts.slice(inlineScripts.indexOf(toolScript) - 1);
+  ok(toolScripts[0].includes('clean-copy-license'), 'web tool loads the license module first');
+
+  const flush = async () => { for (let i = 0; i < 8; i++) await new Promise((r) => setImmediate(r)); };
+
+  /* Load the page's real script in a stubbed browser and return its state. */
+  function loadTool(opts) {
+    const store = Object.assign({ cc_device_id: 'dev-web' }, opts.store);
+    const requests = [];
+    const nodes = {};
+    const node = (id) => nodes[id] || (nodes[id] = {
+      id, textContent: '', innerHTML: '', hidden: false, disabled: false,
+      style: {}, className: '', value: '', listeners: {},
+      addEventListener(ev, fn) { this.listeners[ev] = fn; },
+    });
+    const sandbox = {
+      console, Math, Date, JSON, setTimeout, clearTimeout,
+      location: { pathname: '/clean-copy-tool' },
+      CleanCopyCore: { batchConvert: () => [], htmlToMarkdown: () => '', htmlToWikilinks: () => '', htmlToCsv: () => '', cleanText: (s) => s },
+      DOMParser: function () { return { body: {} }; },
+      URL: { createObjectURL: () => 'blob:x', revokeObjectURL() {} },
+      Blob: function () {},
+      crypto: { randomUUID: () => 'uuid-' + Math.random() },
+      navigator: { doNotTrack: '1', sendBeacon: () => {}, clipboard: { writeText: async () => {} } },
+      localStorage: {
+        getItem: (k) => (k in store ? store[k] : null),
+        setItem: (k, v) => { store[k] = String(v); },
+        removeItem: (k) => { delete store[k]; },
+      },
+      document: { getElementById: node, addEventListener() {}, createElement: () => node('tmp') },
+      fetch: (url, o) => {
+        if (String(url).startsWith('/api/license/')) requests.push({ url, body: JSON.parse(o.body) });
+        else return Promise.resolve({ status: 200, json: () => Promise.resolve({}) });
+        const r = opts.respond(url);
+        if (r instanceof Error) return Promise.reject(r);
+        return Promise.resolve({ status: r.status, json: () => Promise.resolve(r.json) });
+      },
+    };
+    sandbox.window = sandbox;
+    sandbox.self = sandbox;
+    vm.createContext(sandbox);
+    for (const s of toolScripts) vm.runInContext(s, sandbox, { filename: 'clean-copy-tool.html' });
+    return { store, requests, nodes, node, sandbox };
+  }
+
+  const VALID = { status: 200, json: { ok: true, valid: true, plan: 'pro-yearly', expires_at: '2027-08-24T00:00:00Z' } };
+  const valid200 = () => VALID;
+  const proVisible = (t) => t.nodes['batch-details'].hidden === false;
+
+  /* 1. No stored key: no request, no Pro. */
+  let t = loadTool({ store: {}, respond: valid200 });
+  await flush();
+  ok(t.requests.length === 0, 'web: an unactivated visitor sends no license request');
+  ok(!proVisible(t), 'web: no key means no Pro features');
+
+  /* 2. Stored key + 200 → Pro on, request carries product, check is stamped. */
+  t = loadTool({ store: { cc_pro_license: KEY, cc_pro_checked: String(Date.now() - DAY) }, respond: valid200 });
+  await flush();
+  ok(t.requests.length === 1 && t.requests[0].url === '/api/license/validate', 'web: a stored key re-validates');
+  ok(t.requests[0].body.product === 'clean-copy-pro', 'web: validate sends product');
+  ok(t.requests[0].body.license_key === KEY, 'web: validate sends the key');
+  ok(t.requests[0].body.device_id === 'dev-web', 'web: validate sends the device id');
+  ok(proVisible(t), 'web: 200 valid keeps Pro on');
+  ok(Number(t.store.cc_pro_checked) > Date.now() - 60_000, 'web: a positive check is re-stamped');
+
+  /* 3. 503 with a recent positive check → Pro stays, and the user is told. */
+  t = loadTool({
+    store: { cc_pro_license: KEY, cc_pro_checked: String(Date.now() - 2 * DAY) },
+    respond: () => ({ status: 503, json: { ok: false, error: 'Service unavailable.' } }),
+  });
+  await flush();
+  ok(proVisible(t), 'web: 503 inside the seven-day cache keeps Pro');
+  ok(t.store.cc_pro_license === KEY, 'web: 503 inside the cache keeps the key');
+  ok(/unreachable/i.test(t.node('pro-status').textContent), 'web: the outage is explained, not silent');
+
+  /* 4. 503 with a stale check → Pro goes, because the cache ran out. */
+  t = loadTool({
+    store: { cc_pro_license: KEY, cc_pro_checked: String(Date.now() - 8 * DAY) },
+    respond: () => ({ status: 503, json: {} }),
+  });
+  await flush();
+  ok(!proVisible(t), 'web: 503 after seven days drops Pro');
+  ok(t.store.cc_pro_license === undefined, 'web: 503 after seven days clears the key');
+  ok(t.store.cc_pro_checked === undefined, 'web: the cache stamp is cleared with it');
+
+  /* 5. A hard answer always wins, even over a fresh cache. */
+  for (const [status, json, re] of [
+    [403, { ok: false, error: 'This license has expired.' }, /expired/i],
+    [404, { ok: false, error: 'License key not found.' }, /not found/i],
+    [409, { ok: false, error: 'Device limit reached.' }, /device limit/i],
+    [200, { ok: true, valid: false, reason: 'revoked' }, /not valid/i],
+  ]) {
+    t = loadTool({
+      store: { cc_pro_license: KEY, cc_pro_checked: String(Date.now()) },
+      respond: () => ({ status, json }),
+    });
+    await flush();
+    ok(!proVisible(t), 'web: status ' + status + ' revokes Pro despite a fresh cache');
+    ok(t.store.cc_pro_license === undefined, 'web: status ' + status + ' clears the key');
+    ok(re.test(t.node('pro-status').textContent), 'web: status ' + status + ' shows a deterministic reason');
+  }
+
+  /* 6. No answer at all (offline) counts as an outage, not a lost license. */
+  t = loadTool({
+    store: { cc_pro_license: KEY, cc_pro_checked: String(Date.now() - DAY) },
+    respond: () => new Error('network down'),
+  });
+  await flush();
+  ok(proVisible(t), 'web: an offline load keeps Pro from cache');
+  ok(/unreachable/i.test(t.node('pro-status').textContent), 'web: offline is announced');
+
+  /* 7. A locally expired license is cleared on load, with the date named. */
+  t = loadTool({
+    store: { cc_pro_license: KEY, cc_pro_expires: '2026-01-01T00:00:00Z', cc_pro_checked: String(Date.now()) },
+    respond: valid200,
+  });
+  await flush();
+  ok(!proVisible(t), 'web: an expired stored license is cleared without a request');
+  ok(t.requests.length === 0, 'web: an expired key is not re-validated');
+  ok(/2026-01-01/.test(t.node('pro-status').textContent), 'web: the expiry date is shown');
+
+  /* 8. Activation through the form. */
+  t = loadTool({ store: {}, respond: valid200 });
+  await flush();
+  t.node('pro-key').value = 'nope';
+  t.node('pro-form').listeners.submit({ preventDefault() {} });
+  await flush();
+  ok(t.requests.length === 0, 'web: a malformed key is rejected without a request');
+  ok(/32 characters/.test(t.node('pro-status').textContent), 'web: a malformed key gets a useful message');
+
+  t.node('pro-key').value = '  ' + KEY.toUpperCase() + '  ';
+  t.node('pro-form').listeners.submit({ preventDefault() {} });
+  await flush();
+  ok(t.requests.length === 1 && t.requests[0].url === '/api/license/activate', 'web: the form activates');
+  ok(t.requests[0].body.product === 'clean-copy-pro', 'web: activate sends product');
+  ok(t.requests[0].body.license_key === KEY, 'web: activate trims and lowercases the key');
+  ok(t.store.cc_pro_license === KEY, 'web: a successful activation is stored');
+  ok(proVisible(t), 'web: a successful activation opens the Pro features');
+
+  t = loadTool({ store: {}, respond: () => ({ status: 409, json: { ok: false, error: 'Device limit reached.' } }) });
+  await flush();
+  t.node('pro-key').value = KEY;
+  t.node('pro-form').listeners.submit({ preventDefault() {} });
+  await flush();
+  ok(t.store.cc_pro_license === undefined, 'web: a refused activation stores nothing');
+  ok(/device limit/i.test(t.node('pro-status').textContent), 'web: a refused activation names the reason');
+
+  t = loadTool({ store: {}, respond: () => ({ status: 503, json: {} }) });
+  await flush();
+  t.node('pro-key').value = KEY;
+  t.node('pro-form').listeners.submit({ preventDefault() {} });
+  await flush();
+  ok(t.store.cc_pro_license === undefined, 'web: activation during an outage does not fake Pro');
+  ok(/unreachable/i.test(t.node('pro-status').textContent), 'web: an outage during activation is explained');
+
   console.log('Clean Copy license clients OK (' + checks + ' checks).');
 })().catch((e) => { console.error(e); process.exit(1); });

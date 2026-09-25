@@ -303,6 +303,108 @@
 
   <script src="/clean-copy-core.js"></script>
   <script>
+/* >>> clean-copy-license: tools/clean_copy_license.js — do not edit by hand */
+/* Clean Copy — canonical license client rules.
+ *
+ * This file is the single source of truth for how a Clean Copy client talks
+ * to the license API. It is inlined verbatim into every shipped client
+ * (Chrome extension, Firefox add-on, Obsidian plugin, web tool);
+ * `tools/check_license_clients.py` fails if a copy drifts from these bytes.
+ *
+ * Contract (24/9-2026): keys are 32 lowercase hex characters, product is
+ * `clean-copy-pro`, and a paying customer must never be locked out by a
+ * license-server outage — hence the seven-day positive cache.
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CleanCopyLicense = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var PRODUCT = 'clean-copy-pro';
+  var API_BASE = 'https://mahope.tools/api/license';
+  var CACHE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+
+  function normalizeKey(key) {
+    return String(key === null || key === undefined ? '' : key).trim().toLowerCase();
+  }
+
+  function isKeyFormat(key) {
+    return /^[a-f0-9]{32}$/.test(normalizeKey(key));
+  }
+
+  // status 0 = the request never got an answer (offline, DNS, timeout).
+  function isServerError(status) {
+    return status === 0 || status >= 500;
+  }
+
+  /* Decide what a client shows, from one HTTP exchange.
+   * opts: { status, data, checkedAt, expiresAt, now }
+   * Returns { active, message, cached, checkedAt, expiresAt }. */
+  function decide(opts) {
+    var status = opts.status;
+    var data = opts.data || {};
+    var now = typeof opts.now === 'number' ? opts.now : Date.now();
+    var checkedAt = typeof opts.checkedAt === 'number' ? opts.checkedAt : 0;
+
+    if (status === 200 && data.ok && (data.activated === true || data.valid === true)) {
+      return {
+        active: true, message: '', cached: false,
+        checkedAt: now, expiresAt: data.expires_at || opts.expiresAt || ''
+      };
+    }
+
+    if (isServerError(status)) {
+      if (checkedAt > 0 && now - checkedAt <= CACHE_MAX_MS) {
+        return {
+          active: true, cached: true, checkedAt: checkedAt,
+          expiresAt: opts.expiresAt || '',
+          message: 'License server unreachable — Pro stays active until ' +
+            new Date(checkedAt + CACHE_MAX_MS).toISOString().slice(0, 10) + '.'
+        };
+      }
+      return {
+        active: false, cached: false, checkedAt: 0, expiresAt: '',
+        message: 'License server unreachable. Try again later — Pro comes back on its own.'
+      };
+    }
+
+    if (status === 409) {
+      return { active: false, message: data.error || 'Device limit reached for this license.', checkedAt: 0, expiresAt: '' };
+    }
+    if (status === 403) {
+      return { active: false, message: data.error || 'This license is expired, revoked, or for another product.', checkedAt: 0, expiresAt: '' };
+    }
+    if (status === 404) {
+      return { active: false, message: data.error || 'License key not found.', checkedAt: 0, expiresAt: '' };
+    }
+    if (status === 400) {
+      return { active: false, message: data.error || 'Invalid license key.', checkedAt: 0, expiresAt: '' };
+    }
+    if (status === 200) {
+      return {
+        active: false, message: data.reason === 'device_limit'
+          ? 'Device limit reached for this license.'
+          : (data.error || 'This license is not valid anymore.'),
+        checkedAt: 0, expiresAt: ''
+      };
+    }
+    return { active: false, message: data.error || 'License check failed. Try again.', checkedAt: 0, expiresAt: '' };
+  }
+
+  function payload(key, deviceId) {
+    return { license_key: normalizeKey(key), device_id: String(deviceId || ''), product: PRODUCT };
+  }
+
+  return {
+    PRODUCT: PRODUCT, API_BASE: API_BASE, CACHE_MAX_MS: CACHE_MAX_MS,
+    normalizeKey: normalizeKey, isKeyFormat: isKeyFormat,
+    isServerError: isServerError, decide: decide, payload: payload
+  };
+});
+/* <<< clean-copy-license */
+  </script>
+  <script>
   (function () {
     'use strict';
     var input = document.getElementById('input-box');
@@ -426,9 +528,11 @@
 
     // ── Clean Copy Pro: license activation ──────────────────────────
     // Buy button links straight to the Stripe Payment Link (see
-    // business/planer/2026-09-24-stripe-kontrakt.md); keys are issued by
-    // the worker's /api/stripe-webhook.
-    var PRO_PRODUCT = 'clean-copy-pro';
+    // docs/stripe-kontrakt.md); keys are issued by the worker's
+    // /api/stripe-webhook. Every decision goes through CleanCopyLicense, the
+    // canonical rules inlined above, so a license-server outage can never
+    // revoke Pro from someone who has paid.
+    var L = window.CleanCopyLicense;
 
     function deviceId() {
       // Non-identifying random device token, persisted locally only.
@@ -446,44 +550,88 @@
     var proStatus = document.getElementById('pro-status');
     var proKeyInput = document.getElementById('pro-key');
 
-    function savePro(key, expiresAt) {
-      try { localStorage.setItem('cc_pro_license', key); } catch (e) {}
-      if (expiresAt) {
-        try { localStorage.setItem('cc_pro_expires', expiresAt); } catch (e) {}
-      }
-      showProActive(expiresAt);
-      enableBatch(true); // Pro feature gate
+    function readStore(name) {
+      try { return localStorage.getItem(name) || ''; } catch (e) { return ''; }
     }
+    function writeStore(name, value) {
+      try { localStorage.setItem(name, value); } catch (e) {}
+    }
+    function dropStore(name) {
+      try { localStorage.removeItem(name); } catch (e) {}
+    }
+
     function showProActive(expiresAt) {
       proStatus.textContent = '✓ Pro activated' + (expiresAt ? ' — valid until ' + expiresAt.slice(0, 10) : '') + '.';
       proStatus.style.color = '#16a34a';
       proKeyInput.value = '';
     }
+    function showProNote(message) {
+      proStatus.textContent = message;
+      proStatus.style.color = '#b45309';
+    }
     function clearPro() {
-      try { localStorage.removeItem('cc_pro_license'); localStorage.removeItem('cc_pro_expires'); } catch (e) {}
+      dropStore('cc_pro_license');
+      dropStore('cc_pro_expires');
+      dropStore('cc_pro_checked');
       enableBatch(false);
     }
-    try {
-      var saved = localStorage.getItem('cc_pro_license');
-      if (saved) showProActive(localStorage.getItem('cc_pro_expires'));
-      var expiresSaved = localStorage.getItem('cc_pro_expires');
-      var notExpired = !expiresSaved || expiresSaved > new Date().toISOString();
-      if (saved && !notExpired) {
-        clearPro();
-      } else if (saved) {
-        // Re-validate the saved license quietly; revoke it server-side if invalid.
-        enableBatch(true);
-        fetch('/api/license/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ license_key: saved, device_id: deviceId(), product: PRO_PRODUCT })
-        }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
-          .then(function (res) {
-            if (!(res.s === 200 && res.j.ok && res.j.valid)) clearPro();
-          })
-          .catch(function () { /* offline: keep working */ });
+    function savePro(key, expiresAt) {
+      writeStore('cc_pro_license', L.normalizeKey(key));
+      if (expiresAt) writeStore('cc_pro_expires', expiresAt);
+      writeStore('cc_pro_checked', String(Date.now()));
+      showProActive(expiresAt);
+      enableBatch(true); // Pro feature gate
+    }
+
+    // One exchange with the license API, reduced to one decision. A thrown
+    // request counts as status 0, i.e. an outage, not a lost license.
+    function licenseCall(endpoint, key) {
+      return fetch('/api/license/' + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(L.payload(key, deviceId()))
+      }).then(function (r) {
+        return r.json().then(
+          function (j) { return { status: r.status, data: j }; },
+          function () { return { status: r.status, data: {} }; }
+        );
+      }).catch(function () { return { status: 0, data: {} }; });
+    }
+
+    function applyDecision(d) {
+      if (d.active) {
+        enableBatch(true); // Pro feature gate
+        if (d.cached) showProNote(d.message);
+        else showProActive(d.expiresAt || readStore('cc_pro_expires'));
+        if (!d.cached) writeStore('cc_pro_checked', String(Date.now()));
       } else {
+        clearPro();
+        proStatus.textContent = d.message;
+        proStatus.style.color = '#dc2626';
+      }
+    }
+
+    try {
+      var saved = L.normalizeKey(readStore('cc_pro_license'));
+      var expiresSaved = readStore('cc_pro_expires');
+      if (!saved) {
         enableBatch(false);
+      } else if (expiresSaved && expiresSaved <= new Date().toISOString()) {
+        clearPro();
+        proStatus.textContent = 'Your Pro license expired on ' + expiresSaved.slice(0, 10) + '.';
+        proStatus.style.color = '#dc2626';
+      } else {
+        // Show Pro immediately from the local copy, then re-validate quietly.
+        showProActive(expiresSaved);
+        enableBatch(true);
+        licenseCall('validate', saved).then(function (res) {
+          applyDecision(L.decide({
+            status: res.status,
+            data: res.data,
+            checkedAt: Number(readStore('cc_pro_checked')) || 0,
+            expiresAt: expiresSaved
+          }));
+        });
       }
     } catch (e) {}
 
@@ -536,27 +684,23 @@
 
     proForm.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var key = proKeyInput.value.trim().toLowerCase();
+      var key = L.normalizeKey(proKeyInput.value);
       if (!key) return;
       proStatus.textContent = 'Checking license…';
       proStatus.style.color = '';
-      fetch('/api/license/activate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ license_key: key, device_id: deviceId(), product: PRO_PRODUCT })
-      }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
-        .then(function (res) {
-          if (res.s === 200 && res.j.ok && res.j.activated) {
-            savePro(key, res.j.expires_at);
-          } else {
-            proStatus.textContent = res.j && res.j.error ? res.j.error : 'Activation failed. Please try again.';
-            proStatus.style.color = '#dc2626';
-          }
-        })
-        .catch(function () {
-          proStatus.textContent = 'Network error — check your connection and try again.';
+      if (!L.isKeyFormat(key)) {
+        proStatus.textContent = 'A license key is 32 characters, like a-f0-9. Check the key in your receipt mail.';
+        proStatus.style.color = '#dc2626';
+        return;
+      }
+      licenseCall('activate', key).then(function (res) {
+        var d = L.decide({ status: res.status, data: res.data, checkedAt: 0 });
+        if (d.active) savePro(key, d.expiresAt);
+        else {
+          proStatus.textContent = d.message;
           proStatus.style.color = '#dc2626';
-        });
+        }
+      });
     });
   })();
   </script>
