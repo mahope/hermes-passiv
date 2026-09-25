@@ -235,6 +235,24 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `! grep -rn "mailto:mads@" site/ && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
 
+### 4D. UFÆRDIG — Link til Stripe-kundeportalen for årsabonnenter
+
+**Begrundelse:** Stripe-kundeportalen blev oprettet 2026-09-25 (standardkonfiguration: opsigelse ved periodens udløb, fakturahistorik, opdatering af betalingskort, adresse og momsnummer). Årsabonnenter på `clean-copy-pro`, `eucomply-pro` og `page-profile-pro` har i dag ingen vej til at opsige eller hente fakturaer selv. EU-forbrugerregler kræver et let opsigelsesflow.
+
+**Omfang:**
+
+- Vis linket `https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00` ("Manage subscription, invoices and VAT ID") på `/thanks` og i leveringsmailen, når produktet i kataloget er et abonnement (årligt). Engangskøb får ikke linket.
+- Tilføj samme link på `/support` og i `site/terms/` under opsigelse.
+- Ingen ændring i Stripe-konfigurationen.
+
+**Acceptkriterier:**
+
+- En worker-test beviser, at leveringsmailen for `clean-copy-pro` indeholder portal-linket, og at mailen for `deskuptime-pro` (engangskøb) ikke gør.
+- `/thanks` viser linket for et abonnementsprodukt i den eksisterende mock-test.
+- Stripe-worker-testens antal tests falder ikke.
+
+**Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+
 ### 5. UFÆRDIG — Stop offentlig eksponering af betalt indhold
 
 **Begrundelse:** Betalte kilder og artefakter ligger allerede i det offentlige repo, selv om missionen kræver private filer og kun offentlig open-core-kode.
