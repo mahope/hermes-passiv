@@ -80,8 +80,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: dist/${{ matrix.domain }}
-          command: pages deploy . --project-name ${{ matrix.project }} --branch main --commit-dirty=true
+          workingDirectory: .
+          command: pages deploy dist/${{ matrix.domain }} --project-name ${{ matrix.project }} --branch main --commit-dirty=true
 
       - name: Tjek produktion
         run: python3 tools/check_live_sitemaps.py --only "${{ matrix.domain }}" --commit "$GITHUB_SHA"

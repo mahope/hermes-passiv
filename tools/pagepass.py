@@ -225,18 +225,26 @@ def _apply_style_attr(m: re.Match) -> str:
     return f'<{tag}{before} style="{new}"{after}>'
 
 
-def _wrap_tables(text: str) -> str:
-    def sub(m: re.Match) -> str:
-        start = m.start()
-        # already wrapped? look back a little for an open .table-wrap
-        back = text[max(0, start - 200): start]
-        if re.search(r'class="[^"]*table-wrap[^"]*"[^>]*>\s*$', back):
-            return m.group(0)
-        return '<div class="table-wrap">' + m.group(0) + "</div>"
-    return TABLE_RE.sub(sub, text)
-
-
 SCRIPT_SPLIT_RE = re.compile(r"(<script\b.*?</script>|<pre\b.*?</pre>|<textarea\b.*?</textarea>)", re.S | re.I)
+
+
+def _wrap_tables(text: str) -> str:
+    parts = SCRIPT_SPLIT_RE.split(text)
+    for i in range(0, len(parts), 2):
+        part = parts[i]
+
+        def sub(m: re.Match) -> str:
+            start = m.start()
+            # already wrapped? look back a little for an open .table-wrap
+            back = part[max(0, start - 200): start]
+            if re.search(r'class="[^"]*table-wrap[^"]*"[^>]*>\s*$', back):
+                return m.group(0)
+            return '<div class="table-wrap">' + m.group(0) + "</div>"
+
+        parts[i] = TABLE_RE.sub(sub, part)
+    return "".join(parts)
+
+
 H1_TAG_RE = re.compile(r"<h1\b([^<>]*)>(.*?)</h1>", re.S | re.I)
 
 

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import html as htmllib
+import json
 import re
 import sys
 import urllib.error
@@ -79,8 +80,14 @@ def check_page(text: str, name: str) -> list[str]:
     if ogs.get("og:image") and not ogs["og:image"].startswith("https://"):
         errs.append("og:image not absolute")
 
-    if not find(head, r'<script\s+type="application/ld\+json"'):
+    jsonld_blocks = find(head, r'<script\s+type="application/ld\+json"[^>]*>(.*?)</script>')
+    if not jsonld_blocks:
         errs.append("no JSON-LD")
+    for block in jsonld_blocks:
+        try:
+            json.loads(block)
+        except json.JSONDecodeError as error:
+            errs.append(f"invalid JSON-LD: {error}")
     if not find(head, r'<meta\s+name="viewport"'):
         errs.append("no viewport")
     if not re.search(r'<html[^>]*\slang="(en|da)"', text[:400], re.I):
