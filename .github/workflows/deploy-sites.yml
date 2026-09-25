@@ -38,6 +38,7 @@ on:
       - 'tools/add_tracking.py'
       - 'tools/weekly_report.py'
       - 'tools/test_weekly_report.py'
+      - 'tools/test_deploy_workflow.py'
       - 'tests/stripe-worker.test.mjs'
       - 'tests/tracking-worker.test.mjs'
       - '.github/workflows/deploy-sites.yml'
@@ -120,6 +121,7 @@ jobs:
           node tests/stripe-worker.test.mjs
           node tests/tracking-worker.test.mjs
           python3 tools/test_weekly_report.py
+          python3 tools/test_deploy_workflow.py
           python tools/check_inline_js.py
           python3 tools/check_private_content.py
           python3 tools/check_page_profile_distribution.py

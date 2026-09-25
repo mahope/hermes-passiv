@@ -4,8 +4,8 @@
 
 - `ITERATION_ID`: `electron-builder-26-2026-09-25`
 - `STATE`: `Opgave 9 FÆRDIG — electron-builder 25.x → 26.15.3 i desktop/; 13 advisory-fund (12 high, 1 critical) → 0`
-- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `16 — få build-desktop.yml til at køre på main igen (hævet foran opgave 10: desktop-CI'en har ikke kørt siden 25/8, så opgave 9s og 12s eneste platformdækning er død, og en opgradering der kun virker på macOS ville passere gaten grøn)`
+- `ACTIVE_TASK`: `16 — build-desktop.yml skal køre igen på main`
+- `NEXT_TASK`: `16 (I GANG)`
 - `TASK_ATTEMPTS`: `9: 1/1 (grøn gate i første forsøg; ingen rettelser nødvendige)`
 - `LAST_BRANCH`: `ceo/electron-builder-26`
 - `PLAN_COMMIT`: `9ed7af6` (implementering + plan) og `(denne commit)` (post-merge-fund)
@@ -689,7 +689,7 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 - **Ikke verificeret lokalt: Linux og Windows.** De kræver hhv. en Linux-container og en Windows-vært, og de ligger i CI-matrixen i `.github/workflows/build-desktop.yml`, som kører på ethvert push til `desktop/**` — altså også på denne branch. Det er opgavens egen post-merge-gate.
 - `dist/` er uændret af denne iteration (`git status` viser ingen dist-ændring), så intet site-indhold er berørt. Deploy-workflowens path-filter rører `desktop/` ikke, så merge til `main` deployer ingen sites for denne commits skyld.
 
-### 16. UFÆRDIG — Få `build-desktop.yml` til at køre igen på `main`
+### 16. I GANG — Få `build-desktop.yml` til at køre igen på `main`
 
 **Begrundelse:** Opgave 9s post-merge-gate afdøde den 25. september, fordi
 desktop-CI'en ikke har kørt siden 25. august. Bevist, ikke formodet:
