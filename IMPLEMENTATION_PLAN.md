@@ -933,7 +933,14 @@ kald. Findes ud — hvis intet bruger den, slettes den.
   endelig lukket. `36180893496` (deploy-sites, main) kørte `gate-distribution`
   og alle tre domæner grønt, inklusive den nye `test_deploy_workflow.py` med
   stdlib-parseren. Intet site-indhold er ændret: de tre domæner får samme
-  `dist/` som før, kun gate-kommandoerne er nye.
+  `dist/` som før, kun gate-kommandoerne er nye. Uafhængig read-only
+  kontrol: alle tre live `build-info.json` bærer `7ccfd43`;
+  `cleancopy.tools/` + `/clean-copy` + `/downloads/clean-copy-v1.5.3.zip`,
+  `deskuptime.com/`, `mahope.tools/` + `/downloads` + `/thanks` + `/support`
+  svarer 200. `cleancopy.tools/downloads` er 404, og det er korrekt: domænet
+  publicerer kun arkiverne, `/downloads`-siden ligger på mahope.tools — præcis
+  den ordning opgave 8 gater. `dist/` er byte-identigt før og efter
+  (`git status dist/` er tom), så intet site-indhold er ændret.
 - 2026-09-25: `DEPLOY FEJL 36180367257` — alle tre deploy-jobs døde på
   `ModuleNotFoundError: No module named 'yaml'`, fordi den nye gate blev lagt
   ind i `deploy-sites.yml`, der kører på `setup-python` uden PyYAML. Ingen
