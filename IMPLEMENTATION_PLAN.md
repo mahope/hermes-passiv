@@ -10,7 +10,7 @@
 - `LAST_BRANCH`: `ceo/close-license-worker-gaps`
 - `PLAN_COMMIT`: `4ad9457`
 - `BASELINE`: `main@fa1e830`
-- `RESULT`: Opgave 4F er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 var queued ved planopdatering.
+- `RESULT`: Opgave 4F er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 og uafhængig live-kontrol var grønne.
 - `GATE`: `GRØN — build/sitemap 4/4, SEO 308/0, node --check, Stripe-worker 57/57, inline JS 297/0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
@@ -542,7 +542,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
-- 2026-09-25T14:13:40Z: `VERIFICÉR DEPLOY: licensrefunding, 503-fejl og /activate/ 4ad9457 2026-09-25T14:13:40Z` — GitHub Actions-run `36146060595` var queued ved denne planopdatering.
+- 2026-09-25T14:15:28Z: `DEPLOY OK 4ad9457` — GitHub Actions-run `36146060595` deployede cleancopy.tools, deskuptime.com og mahope.tools grønt; uafhængig `check_live_sitemaps.py --commit 4ad9457235887f05d2e7723cc184e8956a50444a` bekræftede live sitemap, robots, build-info og alle sider. Live `/activate/` viste den nye guide.
 - 2026-09-25: `DEPLOY OK ea4e6c3` — GitHub Actions-run `36142200546` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig sitemap-kontrol bekræftede alle tre domæner; live 1.2.0-script, tarball, EN/DA-licenstekst og 404 på det gamle 1.1.0-arkiv blev verificeret. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK 9569979` — GitHub Actions-run `36133997658` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 956997979390f5b0b28e3c8359350e581937e7fb` bekræftede alle tre domæner; live `/stats` viste den nye token-prompt uden tredjepartsscript, og det gamle URL-token gav 401. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK b7c8a64` — GitHub Actions-run `36099316657` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit b7c8a64` bekræftede byte-identiske robots/sitemap/build-info og alle 288 sitemap-sider; CI meldte kun eksisterende Node 20-/Ubuntu 26-advarsler.
