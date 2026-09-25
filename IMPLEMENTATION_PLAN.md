@@ -1144,7 +1144,7 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
-- 2026-09-26: `VERIFICÉR DEPLOY: ét designsystem på hele deskuptime.com <merge-sha> 2026-09-26` — GitHub Actions kører automatisk (`site/style.css` er i path-filteret). Verificér **indhold**, ikke HTTP 200: de tre værktøjssiders knapper, pills og resultatfelter skal være blå (`--accent` = `#2456d6`) og ikke længere grøn (`#0b6e4f`). Kortest tjek: hent `https://deskuptime.com/style.css` og bekræft at den indeholder `--accent: var(--color-accent)` i `html[data-product="deskuptime"]`, og at `https://deskuptime.com/bulk-url-checker/` indlæser `/assets/site.css` FØR `/style.css`.
+- 2026-09-26: `VERIFICÉR DEPLOY: ét designsystem på hele deskuptime.com 4805eaa 2026-09-26` — kørsel `36198367044`. — GitHub Actions kører automatisk (`site/style.css` er i path-filteret). Verificér **indhold**, ikke HTTP 200: de tre værktøjssiders knapper, pills og resultatfelter skal være blå (`--accent` = `#2456d6`) og ikke længere grøn (`#0b6e4f`). Kortest tjek: hent `https://deskuptime.com/style.css` og bekræft at den indeholder `--accent: var(--color-accent)` i `html[data-product="deskuptime"]`, og at `https://deskuptime.com/bulk-url-checker/` indlæser `/assets/site.css` FØR `/style.css`.
 
 - 2026-09-26: `DEPLOY OK cba6c10` — lukker `VERIFICÉR DEPLOY` ovenfor. Kørsel `36196613182`: `gate` grøn (32 steps) + tre grønne deploys. Indholdsverificeret, ikke HTTP 200: begke `search-index.json` 0 fund af `hermes-passiv.pages.dev`; live `cleancopy.tools/api-readme.md` 4 fund af `cleancopy.tools/api/clean-copy`; live `mahope.tools/compliance-site-check` forudfylder `urlInput` med `https://mahope.tools`; alle tre `build-info.json` bærer `cba6c10`. CI meldte kun kendte ubuntu-latest-/git-advarsler.
 
