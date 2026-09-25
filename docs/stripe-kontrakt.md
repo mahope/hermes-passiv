@@ -31,6 +31,19 @@ Efter betaling lander køberen på `https://mahope.tools/thanks?session_id=…`,
 som viser licensnøgle eller downloadlinks. Det samme sendes pr. mail fra
 orders@mahoje.dk.
 
+## Kundeportal (opsigelse og fakturaer)
+
+Årsabonnenter — `clean-copy-pro`, `eucomply-pro` og `page-profile-pro` — skal
+kunne opsige, hente fakturaer og rette kort, adresse og momsnummer selv. Det sker
+i Stripe-kundeportalen:
+
+https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00
+
+Linket vises på `/thanks`, på `/support` og under opsigelse i `site/terms/`, og
+i leveringsmailen for de tre årlige produkter. Engangskøb (DeskUptime Pro,
+Transmute Desktop, alle downloads og donationen) får **ikke** linket, fordi
+deres betaling ikke fornyes. Kun denne ene portal-URL må bruges offentligt.
+
 ## Licens-API
 
 Base: `https://mahope.tools/api/license/`. Alle kald er `POST` med JSON og

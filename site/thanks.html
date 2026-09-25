@@ -26,6 +26,8 @@
     }
     .thanks-card ul { padding-left: 1.2rem; }
     .thanks-card li { margin: 0.35rem 0; }
+    .portal-row { margin-top: 1.2rem; border-top: 1px solid var(--color-border); padding-top: 1rem; }
+    .portal-row p { margin: 0.4rem 0 0.6rem; }
     .hint { color: var(--color-text-muted); font-size: 0.88rem; }
     #status.err { color: #dc2626; }
   </style>
@@ -55,7 +57,12 @@
             + '<button type="button" class="btn" id="copy">Copy</button></div>'
             + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
             + (d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
-            + '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>';
+            + '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>'
+            + (d.billing_portal
+              ? '<div class="portal-row"><p><strong>Your subscription renews yearly.</strong> You can cancel any time, '
+                + 'download your invoices and update your card or VAT ID yourself here: '
+                + '<a href="' + esc(d.billing_portal) + '" rel="nofollow noopener">Manage your subscription</a>.</p></div>'
+              : '');
         } else {
           html = '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
             + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>';

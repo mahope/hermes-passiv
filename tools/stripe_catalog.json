@@ -5,6 +5,8 @@
   "established": "2026-09-24",
   "note": "Maskinlæsbar allowlist. Kun disse product_keys og betalingslinks må bruges offentligt. Lemon Squeezy og Gumroad er lukket og må aldrig genoplives.",
   "license_api": "https://mahope.tools/api/license/",
+  "billing_portal": "https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00",
+  "portal_pages": ["site/thanks.html", "site/support.html", "site/terms/index.html"],
   "products": {
     "clean-copy-pro": {
       "name": "Clean Copy Pro",
@@ -13,6 +15,7 @@
       "price": "$19/år",
       "price_note": "yearly subscription",
       "max_devices": 5,
+      "subscription": true,
       "payment_link": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
     },
     "deskuptime-pro": {
@@ -40,6 +43,7 @@
       "price": "$79/år pr. website",
       "price_note": "yearly subscription per website",
       "max_devices": 1,
+      "subscription": true,
       "payment_link": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
     },
     "page-profile-pro": {
@@ -49,6 +53,7 @@
       "price": "$19/år",
       "price_note": "yearly subscription",
       "max_devices": 3,
+      "subscription": true,
       "payment_link": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
     },
     "eucomply-dpa": {

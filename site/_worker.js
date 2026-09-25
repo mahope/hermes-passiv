@@ -2873,12 +2873,15 @@ async function handleBugreport(request, url, env) {
  * Secrets på mahope-tools-projektet: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
  * RESEND_API_KEY. Betalte filer ligger i KV som paidfile:<navn> (ikke i dist).
  */
+// `subscription: true` betyder, at produktet sælges som et årligt abonnement.
+// Kunden skal kunne opsige og hente fakturaer selv, så sådanne køb får kundeportalen.
+const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00';
 const STRIPE_PRODUCTS = {
-  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, home: 'https://cleancopy.tools/activate/' },
+  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, subscription: true, home: 'https://cleancopy.tools/activate/' },
   'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/' },
   'transmute-desktop': { name: 'Transmute Desktop', kind: 'license', maxDevices: 3, home: 'https://transmute.run/' },
-  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, home: 'https://eucomplypro.com/pricing/' },
-  'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, home: 'https://mahope.tools/page-profile' },
+  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, home: 'https://eucomplypro.com/pricing/' },
+  'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, subscription: true, home: 'https://mahope.tools/page-profile' },
   'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md'] },
   'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
   'eucomply-nda-clauses': { name: 'Mutual NDA Clause Set', kind: 'download', files: ['nda-clause-set.pdf', 'nda-clause-set.md'] },
@@ -3091,6 +3094,11 @@ async function fulfillStripeSession(env, sessionId) {
       await env.VISITS.put(`lic-email:${hex(new Uint8Array(d))}:${sessionId}`, key);
     }
     Object.assign(result, { license_key: key, expires_at: expiresAt, max_devices: product.maxDevices * qty, activate_url: product.home });
+    if (product.subscription) {
+      // Årsabonnenter skal selv kunne opsige, hente fakturaer og rette momsnummer.
+      result.subscription = true;
+      result.billing_portal = BILLING_PORTAL_URL;
+    }
   } else {
     const token = await sessionDerivedId(env, 'dl', sessionId);
     const expires = new Date(now.getTime() + DOWNLOAD_TTL_DAYS * 86400000).toISOString();
@@ -3114,12 +3122,17 @@ async function sendSaleEmail(env, to, r, sessionId) {
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let text, html;
   if (r.kind === 'license') {
+    const portalText = r.subscription ? `\nManage your subscription, invoices and VAT ID:\n${BILLING_PORTAL_URL}\n` : '';
+    const portalHtml = r.subscription
+      ? `<p>Manage your subscription, invoices and VAT ID: <a href="${esc(r.billing_portal || BILLING_PORTAL_URL)}">${esc(r.billing_portal || BILLING_PORTAL_URL)}</a></p>`
+      : '';
     text = `Thanks for buying ${r.product_name}!\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
-      + `It works on up to ${r.max_devices} device(s)${r.expires_at ? ` and renews with your subscription` : ''}.\n\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
+      + `It works on up to ${r.max_devices} device(s)${r.expires_at ? ` and renews with your subscription` : ''}.\n`
+      + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
     html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p><p>Your license key:</p>`
       + `<p style="font:16px monospace;background:#f4f4f5;padding:12px;border-radius:6px">${esc(r.license_key)}</p>`
       + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>Up to ${r.max_devices} device(s).</p>`
-      + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+      + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   } else {
     const list = r.downloads.map(d => `${d.file}: ${d.url}`).join('\n');
     text = `Thanks for buying ${r.product_name}!\n\nYour downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
