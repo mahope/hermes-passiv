@@ -178,6 +178,30 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_clean_copy_distribution.py", "--self-test"),
         inputs=("tools/check_clean_copy_distribution.py",),
     ),
+    # Opgave 18: det publicerede desktop-kildearkiv skal være en regeneration
+    # af `desktop/`. Før dette kendte ingen arkivet indhold — kun dets navn, så
+    # et 1.3.0-arkiv kunne ligge under et 1.3.3-navn, og gaten var grøn.
+    #
+    # `inputs` er bevidst KUN builderen og arkivet. `desktop/package.json` er
+    # ikke her, fordi workflowens path-filter med vilje udelukker `desktop/**`
+    # (opgave 14 og 16: en desktop-ændring skal ikke deploye sites), og
+    # `tools/test_deploy_workflow.py` fejler hvis et gatestep læser en fil
+    # filteret ikke dækker. Konsekvensen er ærlig og skrevet ned: en commit der
+    # kun retter `desktop/package.json` udløser ikke DENNE gate. Den fanges
+    # først, når næste commit rører arkivet eller builderen. Se `❓ Til Mads`.
+    Step(
+        id="desktop-archive",
+        argv=("python3", "tools/build_desktop_archive.py", "--check"),
+        inputs=(
+            "tools/build_desktop_archive.py",
+            "site/downloads/eaa-scanner-desktop-src-*.zip",
+        ),
+    ),
+    Step(
+        id="desktop-archive-selftest",
+        argv=("python3", "tools/build_desktop_archive.py", "--self-test"),
+        inputs=("tools/build_desktop_archive.py",),
+    ),
     # Finder kilder der kalder /api/license uden `product`, en død vært,
     # den lukkede Lemon Squeezy-API og en divergeret Firefox-kopi.
     Step(
