@@ -1106,7 +1106,7 @@ def write_generated(site: Site, pages: list[dict]) -> None:
     wk.mkdir(exist_ok=True)
     expires = (datetime.now(timezone.utc) + timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
     (wk / "security.txt").write_text(
-        f"Contact: mailto:mads@mahoje.dk\nExpires: {expires}\nPreferred-Languages: en, da\n"
+        f"Contact: mailto:support@{site.domain}\nExpires: {expires}\nPreferred-Languages: en, da\n"
         f"Canonical: {own}/.well-known/security.txt\nPolicy: https://mahoje.dk\n", encoding="utf-8")
     (dist / "humans.txt").write_text(
         f"/* TEAM */\n  Developer: Mads Holst Jensen\n  Site: https://mahoje.dk\n  Contact: mads@mahoje.dk\n  Location: Odense, Denmark\n\n"

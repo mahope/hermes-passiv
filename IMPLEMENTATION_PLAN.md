@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `ranking-basis-2026-09-25`
-- `STATE`: `4B FÆRDIG (del 1 i 1bf981f, del 2 i ceo/ranking-basis)`
+- `ITERATION_ID`: `support-reply-routing-2026-09-25`
+- `STATE`: `4C I GANG — implementeret på ceo/support-reply-routing, gaten grøn`
 - `ACTIVE_TASK`: `4C`
-- `NEXT_TASK`: `4C — Send support og købersvar til de nye support-adresser`
-- `TASK_ATTEMPTS`: `4B: 2/2`
-- `LAST_BRANCH`: `ceo/ranking-basis`
-- `PLAN_COMMIT`: `4ad9457`
-- `BASELINE`: `main@3792cc2`
-- `RESULT`: Opgave 4B er færdig i begge dele. Del 1 (1bf981f) gjorde købsrejsen sand og tilladt. Del 2 gør rangeringen datadrevet og fail-closed: `tools/weekly_report.py` har nu `ranking_basis: traffic|unknown` for de seneste syv *fulde* dage med domæne/route, tærsklerne 30 totale og 5 pr. domæne, og den dokumenterede fallback til de fire centrale produktsider + inventaret af alle synlige Pro-tilbud, som udtrykkeligt ikke er en mest-besøgte-rangering.
-- `GATE`: `GRØN — build/sitemap 4/4, SEO 308/0, node --check, Stripe-worker 57/57, inline JS 297/0`
+- `NEXT_TASK`: `4C — Send support og købersvar til de nye support-adresser (merge + plan-lukning)`
+- `TASK_ATTEMPTS`: `4C: 1/1`
+- `LAST_BRANCH`: `ceo/support-reply-routing`
+- `PLAN_COMMIT`: `29c9c6a`
+- `BASELINE`: `main@29c9c6a`
+- `RESULT`: Leveringsmailens `reply_to` følger nu produktets domæne ud fra katalogens `home` (f.eks. Clean Copy → `support@cleancopy.tools`), produkter uden `home` falder tilbage til `support@mahope.tools`. `site/privacy/`, `site/terms/` og `site/license-lookup.html` peger på `support@mahope.tools`, og hvert dist får `support@<sit domæne>` i `.well-known/security.txt`. Salgsnotitsen til Mads (`to: mads@mahope.dk`) er urørt.
+- `GATE`: `GRØN — grep ingen privat indbakke i site/, build 4/4, sitemap 4/4 OK, SEO 308/0, Stripe-worker 62/62, inline JS 297/0, check_stripe_ctas problems: 0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -302,7 +302,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test && python3 tools/test_weekly_report.py` plus hele kvalitetsgaten.
 
-### 4C. UFÆRDIG — Send support og købersvar til de nye support-adresser
+### 4C. I GANG — Send support og købersvar til de nye support-adresser
 
 **Begrundelse:** Siden 2026-09-25 modtager alle produktdomæner mail (MX → Stalwart, catch-all → den fælles indbakke `support@mahope.tools`), som automations-serverens produktpuls læser og poster i #produkter. Sidernes kontaktlinks og leveringsmailens svar-adresse peger stadig på Mads' private indbakker, så kundehenvendelser bliver ikke sporet som produktfeedback.
 
@@ -318,7 +318,17 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - En worker-test beviser, at leveringsmailen for `clean-copy-pro` har `reply_to: support@cleancopy.tools`, og at et produkt uden `home` falder tilbage til `support@mahope.tools`.
 - Stripe-worker-testens antal tests falder ikke.
 
-**Gate:** `! grep -rn "mailto:mads@" site/ && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+**Gate:** `! grep -rn "mads@mahope" site/ --exclude=_worker.js && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+
+**Implementeret denne iteration (grøn gate, endnu ikke merged):**
+
+- `supportAddress(productKey)` i `site/_worker.js` udleder `support@<hostname>` fra produktets `home` i `STRIPE_PRODUCTS` og validerer værtsnavnet; `support@mahope.tools` er fallback for produkter uden `home` (alle downloadprodukter og donationen) og for en `home`, der ikke kan parses. `sendSaleEmail` bruger den i stedet for den private `mads@mahope.dk`.
+- Fire nye worker-assertions (57 → 62): Clean Copy Pro → `support@cleancopy.tools`, `eucomply-dpa` uden `home` → `support@mahope.tools`, ingen kundemail har en `reply_to` på en `mads@`-adresse, og begge nye sessioner leverer (200).
+- `site/privacy/index.html`, `site/terms/index.html` (kontakt og refusion) og `site/license-lookup.html` (inkl. "write to me"-formuleringerne) peger på `support@mahope.tools`. Den generative kilde `tools/make_privacy_terms_479.py` er opdateret, så en regenerering ikke genindfører den private adresse.
+- `build_sites.py` skriver `Contact: mailto:support@<sit domæne>` i `.well-known/security.txt`, så hvert dist peker på sin egen indbakke. `humans.txt` beholder den faktiske personoplysning om Mads.
+- Salgsnotitsen til Mads (`to: ['mads@mahope.dk']`) og `BB_INBOX_TO` er urørt, som opgaven kræver.
+- Read-only DNS er bekræftet umiddelbart før ændringen: `cleancopy.tools`, `deskuptime.com`, `mahope.tools`, `transmute.run`, `eucomplypro.com`, `bugbottle.dev` og `mahoje.dk` har alle MX → `mail.mahoje.dk`. En catch-all kan ikke verificeres read-only; hvis den ikke findes, bouncer svar på de nye adresser, og det skal meldes i `❓ Til Mads`.
+- Bemærkning til omfanget: `site/privacy/`, `site/terms/` og `site/license-lookup.html` udgives kun på `mahope.tools` (de er ikke i nogen `include`-liste), så de får `support@mahope.tools`. De øvrige domæner får deres adresse gennem `security.txt` og leveringsmailen.
 
 ### 4D. UFÆRDIG — Link til Stripe-kundeportalen for årsabonnenter
 
