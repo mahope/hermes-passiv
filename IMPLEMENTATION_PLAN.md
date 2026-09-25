@@ -330,6 +330,8 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Read-only DNS er bekræftet umiddelbart før ændringen: `cleancopy.tools`, `deskuptime.com`, `mahope.tools`, `transmute.run`, `eucomplypro.com`, `bugbottle.dev` og `mahoje.dk` har alle MX → `mail.mahoje.dk`. En catch-all kan ikke verificeres read-only; hvis den ikke findes, bouncer svar på de nye adresser, og det skal meldes i `❓ Til Mads`.
 - Bemærkning til omfanget: `site/privacy/`, `site/terms/` og `site/license-lookup.html` udgives kun på `mahope.tools` (de er ikke i nogen `include`-liste), så de får `support@mahope.tools`. De øvrige domæner får deres adresse gennem `security.txt` og leveringsmailen.
 
+**Commit:** `3fe72c3` (implementering `46a2c2f`) — `Send kundehenvendelser til produkternes egne support-adresser`. Deployet og live-verificeret (`DEPLOY OK 3fe72c3`).
+
 ### 4D. UFÆRDIG — Link til Stripe-kundeportalen for årsabonnenter
 
 **Begrundelse:** Stripe-kundeportalen blev oprettet 2026-09-25 (standardkonfiguration: opsigelse ved periodens udløb, fakturahistorik, opdatering af betalingskort, adresse og momsnummer). Årsabonnenter på `clean-copy-pro`, `eucomply-pro` og `page-profile-pro` har i dag ingen vej til at opsige eller hente fakturaer selv. EU-forbrugerregler kræver et let opsigelsesflow.
@@ -574,6 +576,9 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
 
 ## Deploylog
+
+- 2026-09-25: `DEPLOY OK 3fe72c3` — GitHub Actions-run `36159004578` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 3fe72c3…` (kørt fra et checkout af netop deploy-committen, jf. fælden nedenfor) meldte `live sitemap OK` for alle tre domæner, og alle tre live `build-info.json` bærer `3fe72c3ad72c14fabda60ac84730de618afb2a46`. Indholdskontrol: `privacy/`, `terms/` og `license-lookup` på mahope.tools indeholder kun `support@mahope.tools` og nul fund af den private indbakke, og hvert domænes `.well-known/security.txt` har `Contact: mailto:support@<sit domæne>`.
+- 2026-09-25: **Observeret fælde #2 — Cloudflare e-mail-obfuscering.** Live `/privacy/`, `/terms/` og `/license-lookup/` indeholder ikke `support@mahope.tools` i klar tekst: Cloudflare Pages erstatter alle mailto'er med `/cdn-cgi/l/email-protection#…` og en `data-cfemail`-attribut. En naiv `grep` på live-HTML giver derfor 0 fund på både den nye og den gamle adresse og kan fejltolkes som "ændringen ikke er live". Korrekt live-verifikation er at afkode `data-cfemail` (XOR med første byte) eller sammenligne mod dist-bytes. Samme forvriddring gælder alle eksisterende mailto'er på de tre Pages-domæner.
 
 - 2026-09-25: `VERIFICÉR DEPLOY: produkternes egne support-adresser i leveringsmail, privacy/terms, licens-opslag og security.txt 3fe72c3 2026-09-25T18:12+02:00` — GitHub Actions-run `36159004578` kører, udløst af `site/`, `site/_worker.js` og `build_sites.py` i path-filteret. Verificér på live: `mahope.tools/privacy/`, `/terms/` og `/license-lookup` viser `support@mahope.tools` og ingen `mads@mahope.dk`; hvert af de tre Pages-domæners `.well-known/security.txt` har `Contact: mailto:support@<sit domæne>`; live `build-info.json` bærer commit `3fe72c3`. `_worker.js` er identisk i alle tre dist, så reply_to-logikken er live i samme deploy.
 
