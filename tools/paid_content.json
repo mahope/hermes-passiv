@@ -1,0 +1,128 @@
+{
+  "schema": "hermes-paid-content-1",
+  "note": "Maskinlæsbart inventar over alt betalt indhold. Betalte filer leveres fra Cloudflare KV som paidfile:<fil> og må aldrig ligge i det offentlige repo eller i dist/. Gate: python3 tools/check_private_content.py",
+  "public_delivery": {
+    "worker_route": "GET /api/download/<token>/<fil>",
+    "kv_prefix": "paidfile:",
+    "token_key": "dl:",
+    "note": "Ruten læser filen fra KV og aldrig fra en statisk fil. Den er dækket af tests/stripe-worker.test.mjs."
+  },
+  "private_source": {
+    "repo": "mahope/paid-products",
+    "visibility": "privat",
+    "local_checkout": null,
+    "note": "Kilderne ligger i det private repo. Dette offentlige repo har ingen checkout af dem, og det må heller ikke få en.",
+    "confirmed_by": null
+  },
+  "history": {
+    "public_commits_with_paid_content": true,
+    "cleanup_commit": "3eb1dac",
+    "remediation": "BLOCKED: kræver Mads-godkendelse",
+    "note": "Fjernede filer fra products/ findes stadig i commit 3eb1dac og dets forfædre. Loop-kontrakten forbyder historik-rewrite, og opgaven påstår ikke fuld sletning."
+  },
+  "products": [
+    {
+      "product_key": "eucomply-dpa",
+      "name": "GDPR DPA template",
+      "price": "$59",
+      "delivery_files": ["dpa-template.pdf", "dpa-template.md"],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eucomply-nis2-clauses",
+      "name": "NIS2 / DORA Vendor Clause Set",
+      "price": "$49",
+      "delivery_files": ["nis2-vendor-clauses.pdf", "nis2-vendor-clauses.md"],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eucomply-nda-clauses",
+      "name": "Mutual NDA Clause Set",
+      "price": "$29",
+      "delivery_files": ["nda-clause-set.pdf", "nda-clause-set.md"],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eucomply-eaa-statement",
+      "name": "EAA Accessibility Statement Template",
+      "price": "$39",
+      "delivery_files": ["eaa-statement-template.pdf", "eaa-statement-template.md"],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eucomply-report-kit",
+      "name": "Client Compliance Report Kit",
+      "price": "$69",
+      "delivery_files": [
+        "monthly-report-template.pdf",
+        "monthly-report-template.md",
+        "quarterly-narrative-template.pdf",
+        "quarterly-narrative-template.md",
+        "change-log-spec.pdf",
+        "change-log-spec.md"
+      ],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eucomply-template-bundle",
+      "name": "EUComply Complete Template Bundle",
+      "price": "$149",
+      "delivery_files": [
+        "dpa-template.pdf",
+        "dpa-template.md",
+        "nis2-vendor-clauses.pdf",
+        "nis2-vendor-clauses.md",
+        "nda-clause-set.pdf",
+        "nda-clause-set.md",
+        "eaa-statement-template.pdf",
+        "eaa-statement-template.md",
+        "monthly-report-template.pdf",
+        "monthly-report-template.md",
+        "quarterly-narrative-template.pdf",
+        "quarterly-narrative-template.md",
+        "change-log-spec.pdf",
+        "change-log-spec.md"
+      ],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    },
+    {
+      "product_key": "eu-compliance-ebook-bundle",
+      "name": "Complete EU Compliance E-book Bundle",
+      "price": "$29",
+      "delivery_files": ["compliance-bundle.pdf", "compliance-bundle-v1.0.zip"],
+      "build_command": null,
+      "sha256": null,
+      "kv_verified": false
+    }
+  ],
+  "retired_public_files": {
+    "removed_in": "3eb1dac",
+    "files": [
+      "products/compliance-bundle.html",
+      "products/compliance-bundle.pdf",
+      "products/compliance-bundle.zip",
+      "products/dpa-template.md",
+      "products/eaa-statement-template.md",
+      "products/nis2-contract-clauses.md",
+      "products/pro-audit-clean.pdf",
+      "products/pro-audit-example.pdf",
+      "products/pro-audit-gumroad.md",
+      "products/pro-audit-instagram.pdf",
+      "products/pro-audit-sample.pdf",
+      "products/vendor-assessment-checklist.md"
+    ],
+    "note": "Aldrig offentlig igen. Navnene bruges kun som regressionsvåg, så den oprindelige fejl fanges hvis filerne dukker op igen."
+  }
+}

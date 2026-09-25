@@ -2,18 +2,18 @@
 
 ## Status
 
-- `ITERATION_ID`: `billing-portal-link-2026-09-25`
-- `STATE`: `4D FÆRDIG (merge aa8bf32, implementering f16305f)`
+- `ITERATION_ID`: `private-content-gate-2026-09-25`
+- `STATE`: `5 FÆRDIG (implementering 978f950)`
 - `ACTIVE_TASK`: `(ingen)`
-- `NEXT_TASK`: `5 — Stop offentlig eksponering af betalt indhold`
-- `TASK_ATTEMPTS`: `4D: 1/1`
-- `LAST_BRANCH`: `ceo/billing-portal-link`
-- `PLAN_COMMIT`: `aa8bf32`
-- `BASELINE`: `main@83aeffd`
-- `RESULT`: Opgave 4D er færdig. De tre årlige produkter (`clean-copy-pro`, `eucomply-pro`, `page-profile-pro`) er markeret `subscription: true` i både `tools/stripe_catalog.json` og `STRIPE_PRODUCTS`, så leveringssvaret og leveringsmailen giver kunden Stripe-kundeportalen. `/thanks` renderer linket fra leveringssvaret, `/support` og `site/terms/` linker til den direkte, og terms-påstanden "there are no recurring charges" er fjernet i både siden og dens generative kilde. `tools/check_stripe_ctas.py` fanger nu tre nye driftformer: en portal-URL uden for allowlisten, en portal der mangler på portalsiderne og en abonnement-markering der ikke er i allowlisten (selftest 7/7 → 10/10).
-- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69 (62 → 69), inline JS 297/0, check_stripe_ctas problems: 0, check_stripe_ctas --self-test 10/10`
+- `NEXT_TASK`: `6 — Reparer Page Profile-købsflowet` (se bemærkning: 4E har allerede løst kernen i `ea4e6c3`, så 6 bør afgrænses eller lukkes)
+- `TASK_ATTEMPTS`: `5: 1/1`
+- `LAST_BRANCH`: `ceo/private-content-gate`
+- `PLAN_COMMIT`: `978f950`
+- `BASELINE`: `main@cb58700`
+- `RESULT`: Opgave 5 er færdig for stop af ny eksponering. Faktatjekket viser, at betalt indhold **allerede** var væk fra den offentlige tree: `3eb1dac` fjernede tolv filer, og ingen af de seksten betalte leveringsfiler findes i dag i den git-tracked tree eller i `dist/`, og `/api/download` læser udelukkende `paidfile:*` fra KV. Det manglede alene en holdning. `tools/paid_content.json` er nu det maskinlæsbare inventar over alle syv downloadprodukter med forventede KV-nøgler og privat kilderepo, og `tools/check_private_content.py` fejler ved ti konkrete læk- og driftformer — heraf at historikken påstår at være remedieret, hvilket den ikke er (selftest 10/10). Gaten kører i deploy-CI efter buildet, fordi `dist/` først findes der. Ikke gjort: `build_command`, `sha256` og `kv_verified` står som `null`/`false`, fordi `mahope/paid-products` ikke findes lokalt, og det er ført op som `❓ Til Mads` 4 og 8.
+- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69, inline JS 297/0, check_private_content 0 problemer, check_private_content --self-test 10/10`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
-- **Blokerede opgaver:** ingen.
+- **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
 - `../auditedwp` er en ekstern buildkilde og må ikke ændres.
 - Secrets, `.env*`, produktionsdatabaser og udadvendte writes er forbudte. Eneste eksplicitte undtagelse er den kontraktstyrede merge/push til `main` i dette repo, som må deploye de tre Cloudflare-Pages-domæner; `bugbottle.dev` er read-only og ejes af `mahope/bugbottle`.
@@ -27,8 +27,12 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 Denne gate er den obligatoriske minimum før merge til `main`:
 
 ```bash
-python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py
+python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py
 ```
+
+`check_private_content.py` blev tilføjet 2026-09-25 i opgave 5, fordi et betalt
+leveringsfil i `dist/` er en reel læk, ikke en SEO-fejl. Den afhænger af
+`tools/paid_content.json`, så begge filer ligger i deploy-workflowens path-filter.
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
@@ -54,7 +58,7 @@ Efter et mergecommit skal livekontrollen køre som `python3 build_sites.py && py
 - Page Profile Stripe-udsteder 32 hex-tegn, men CLI'en kræver `PPRO-` + 32 tegn: `site/_worker.js:2861-2875`, `page-profile/page_profile.py:33-58`.
 - Clean Copy-webværktøjet sender korrekt `product: clean-copy-pro`, men root/Obsidian-pluginterne og mindst én browserudvidelseslicensklient mangler produktfeltet: `site/clean-copy-tool.html:427-432`, `obsidian-plugin/main.js:718-729`, `main.js:204-218`, `extension-clean-copy/options.js:46-92`.
 - Licensklienter skal cache Pro-status i rimelig tid, eksempelvis syv dage, ved `503`/5xx, så betalende brugere ikke låses ude.
-- Betalte downloads forventes i KV som `paidfile:*`: `site/_worker.js:2717-2725`, `site/_worker.js:3024-3040`. Repoet har ingen reproducerbar producer/uploader, og betalte kilder som `products/compliance-bundle.pdf`, `products/compliance-bundle.zip`, `products/dpa-template.md` og `products/nis2-contract-clauses.md` ligger allerede i det offentlige repo.
+- Betalte downloads forventes i KV som `paidfile:*`: `site/_worker.js:2717-2725`, `site/_worker.js:3024-3040`. Repoet har ingen reproducerbar producer/uploader. **Korrigeret 25. september:** de betalte kilder lå *oprindeligt* i det offentlige repo (`products/`), men `3eb1dac` fjernede alle tolv, og ingen af de seksten betalte leveringsfiler findes i dag i tree eller `dist/`. Historikken er uændret og kræver Mads' go; se opgave 5 og `❓ Til Mads` 3.
 - Stripe-salg skriver `t:all:sales:<product>`, mens `/api/stats` og ugerapporten stadig læser den gamle Lemon-tæller: `site/_worker.js:1235-1246`, `site/_worker.js:2888-2893`, `tools/weekly_report.py:148-180`. Den nuværende salgstæller er desuden en read-modify-write-operation og må ikke alene være ground truth ved parallelle fulfillments.
 
 ### sider, claims og konvertering
@@ -361,7 +365,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Commit:** `f16305f` — `Giv abonnenter selvbetjent opsigelse via Stripe-kundeportalen`.
 
-### 5. UFÆRDIG — Stop offentlig eksponering af betalt indhold
+### 5. FÆRDIG (implementering 978f950) — Stop offentlig eksponering af betalt indhold
 
 **Begrundelse:** Betalte kilder og artefakter ligger allerede i det offentlige repo, selv om missionen kræver private filer og kun offentlig open-core-kode.
 
@@ -387,6 +391,34 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 **Gate:** `python3 tools/check_private_content.py && python3 build_sites.py && python3 tools/seo_check.py` plus resten af kvalitetsgaten.
 
 **Ekstern read-only-gate:** En Cloudflare-KV-inventering af forventede `paidfile:*`-nøgler skal gemmes read-only i planen af Mads eller en godkendt driftsti; ingen upload/sletning må ske i denne iteration.
+
+**Resultat — faktatjek den 25. september:** Betalt indhold er **allerede** væk fra den
+offentlige tree. `3eb1dac` ("Fjern betalt indhold fra products/") fjernede tolv filer,
+og ingen af de seksten betalte leveringsfiler (`dpa-template.*`, `nis2-vendor-clauses.*`,
+`nda-clause-set.*`, `eaa-statement-template.*`, `monthly-report-template.*`,
+`quarterly-narrative-template.*`, `change-log-spec.*`, `compliance-bundle.pdf`,
+`compliance-bundle-v1.0.zip`) findes i dag hverken i den git-tracked tree eller under
+`dist/`. Handlekreditten fanger desuden kun KV. Det var altså alene holdningen, der
+manglede, ikke lækagen — og holdningen er nu kodet ind.
+
+**Implementeret denne iteration:**
+
+- `tools/paid_content.json` er det maskinlæsbare inventar over alle syv downloadprodukter: product_key, navn, pris, de forventede `paidfile:*`-nøgler, det private kilderepo, `build_command`, `sha256` og `kv_verified`. Den er bevidst *ikke* en fuldstændighedsliste af filer, der findes: den er en aftale om, hvad der **aldrig må** ligge i det offentlige repo.
+- `tools/check_private_content.py` fejler ved ti fejlformer: et betalt leveringsfil i den git-tracked tree, en fil fjernet i `3eb1dac` der er dukket op igen, et nyt arkiv under `products/`, et betalt fil i `dist/`, en offentlig side der linker direkte på det betalte fil, et worker-downloadprodukt uden inventar, en ændret fil-liste i workeren, en pris der ikke matcher `tools/stripe_catalog.json`, en historik der påstår at være remedieret, og en `/api/download` der ikke læser fra `paidfile:`-KV. Selftesten er grøn 10/10.
+- Gaten er lagt ind i deploy-workflowens gate-trin **efter** buildet, fordi `dist/` først findes der, og `tools/paid_content.json` + gaten ligger i path-filteret, så en læk i enten fil udløser en rød gate frem for en deploy.
+- `check_provenance` fejler, hvis nogen senere skriver historikken som remedieret. Det er derfor umuligt at få denne opgave til at påstå fuld sletning ved en senere redigering.
+
+**Hvad der IKKE er gjort, og hvorfor:** Ingen fil blev flyttet i denne iteration, fordi
+der ikke er noget betalt indhold i repoet at flytte, og fordi `mahope/paid-products`
+ikke findes som lokal checkout. `build_command` og `sha256` står derfor som `null`, og
+`kv_verified` er `false` for alle syv produkter. Det er ærligt, ikke løst: se `❓ Til Mads`
+punkt 4 og 8.
+
+**Konsekvens for salget:** Fordi ingen `paidfile:*`-nøgle er verificeret, vil en køber
+af et af de syv downloadprodukter få HTTP 503 fra `/api/download` ("File temporarily
+unavailable"). Det er ikke en regression — det er den nuværende tilstand — men det er
+også et køb, der ikke leverer, og det skal løses **før** det første reelle salg på en
+downloadvare. Reelle, dokumenterede salg i repoet: 0.
 
 ### 6. UFÆRDIG — Reparer Page Profile-købsflowet
 
@@ -581,12 +613,15 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 1. **Tilføj property i Google Search Console** for `mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahoje.dk`. Verificér sitemap og robots efter tilføjelse. Denne handling må ikke udføres af repoet.
 2. **Beslut om den lokale BugBottle-shadow:** live `bugbottle.dev` er dokumenteret som den separate `mahope/bugbottle`/Dokploy-kilde med 40 routes på commit `07828a1d605383c58cf44416447e0497e91fdac3`; dette repo har en ubrugt 7-routes shadow. Vælg om shadowen skal fjernes helt eller holdes som et lokalt kildesnapshot. Det er ikke længre en blocker for den nuværende deploy.
 3. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
-4. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
+4. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Der findes ingen lokal checkout af `mahope/paid-products`, så `tools/paid_content.json` har `build_command: null` og `sha256: null` for alle syv downloadprodukter. Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
 5. **Beslut om to nye Stripe-produkter:** `site/site-icons.html` (Site Icons Pro: Apple touch-, PWA-, Windows- og OG-ikoner) og `site/downloads.html` + `blog/eaa-compliance-scanner-desktop.html` (EAA-scanner Pro: batch-scanning, CSV/JSON-eksport, ubegrænset crawl) har nu ingen pris og ingen købsknap, fordi kontrakten ikke indeholder produkter til dem. Opret kun dem, hvis du vil sælge dem; repoet gør det aldrig selv.
 6. **Udfør én lavendet Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
 7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
+8. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: betalt-indholds-gate i deploy-CI (ny gate efter build) 978f950 <merge-sha> 2026-09-25` — `tools/check_private_content.py` og `tools/paid_content.json` er lagt i path-filteret, så merge-committen udløser workflowen. Deployen ændrer intet site-indhold; verificér at de tre Pages-domæner er grønne, at live `build-info.json` bærer merge-SHA'en, og at et betalt leveringsfilnavn hverken findes i live-HTML eller i noget `paidfile:`-link på de offentlige sider.
 
 - 2026-09-25: `DEPLOY OK aa8bf32` — GitHub Actions-run `36160847300` lykkedes, og alle tre live `build-info.json` bærer `aa8bf32`. Indholdskontrol: live `/support` og `/terms/` har kundeportalen, live `/thanks` renderer den fra leveringssvaret, og den gamle påstand om ingen fornyelser findes ikke live. CI meldte kun kendte ubuntu-latest-advarsler.
 - 2026-09-25: `VERIFICÉR DEPLOY ( lukket af ovenstående ): Stripe-kundeportalen for de tre årlige produkter (tak-side, mail, support, vilkår) aa8bf32 2026-09-25` — GitHub Actions kører automatisk, fordi `site/_worker.js`, `site/thanks.html`, `site/support.html`, `site/terms/index.html` og `tools/stripe_catalog.json` er i path-filteret. Verificér på live: `mahope.tools/thanks` (kræver en rigtig session), `/support` og `/terms/` viser kundeportalen, og live `build-info.json` bærer `aa8bf32`. Bemærk: portal-URL'en er statisk på de to sider, så den kan findes i live-HTML; på `/thanks` ligger den i JS'en, ikke som statisk anker.
@@ -614,6 +649,8 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- Betalt indhold ude af det offentlige repo: `ceo/private-content-gate` — `Hold betalt indhold ude af det offentlige repo` (5).
 
 - Support- og svaradresser per produkt: `ceo/support-reply-routing` — `Send kundehenvendelser til produkternes egne support-adresser` (4C).
 

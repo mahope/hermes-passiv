@@ -21,6 +21,8 @@ on:
       - 'tools/test_check_live_sitemaps.py'
       - 'tools/seo_check.py'
       - 'tools/check_inline_js.py'
+      - 'tools/check_private_content.py'
+      - 'tools/paid_content.json'
       - 'tools/add_tracking.py'
       - 'tools/weekly_report.py'
       - 'tools/test_weekly_report.py'
@@ -75,6 +77,7 @@ jobs:
           node tests/tracking-worker.test.mjs
           python3 tools/test_weekly_report.py
           python tools/check_inline_js.py
+          python3 tools/check_private_content.py
           if grep -q "extra file missing" build.log; then
             echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"
             exit 1
