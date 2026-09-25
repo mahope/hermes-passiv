@@ -1143,14 +1143,20 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
-- 2026-09-25: `INGEN SITE-DEPLOY FORVENTET — desktop-node-runtime` — mergecommit for
-  opgave 12 rører kun `desktop/`, `tools/test_deploy_workflow.py`,
-  `.github/workflows/build-desktop.yml` og denne plan. Deploy-workflowens path-filter
-  dækker intet af dem (en desktop-ændring må *ikke* deploye sites — det gater
-  `check_deploy`), og `dist/` er byte-identisk før og efter. **Verificér ikke
-  live-intet — intet site-indhold er ændret.** Den eneste post-merge-gate er
-  `build-desktop.yml`: macOS x64/arm64, Linux og Windows skal være grønne på
-  Electron 44.4.5.
+- 2026-09-25: **KORREKTION til noten ovenfor — `deploy-sites` KØR alligevel.** Min antagelse
+  var, at kun `desktop/` var rørt, men `tools/test_deploy_workflow.py` og
+  `.github/workflows/build-desktop.yml` står i deploy-workflowens path-filter (det
+  lagde opgave 11 ind med vilje, fordi gaten læser begge). Kørslen `36188355972`
+  startede derfor og deployer tre domæner med et `dist/`, der er **byte-identisk**
+  med det der ligger live — ingen ny notesætning, samme som sidste gang. Verificér
+  derfor `build-info.json` på de tre domæner: den skal bære `cc5164f`, og indholdet
+  skal være uændret. Kun hvis indholdet afviger, er der tale om en reel fejl.
+- 2026-09-25: `INGEN SITE-INDHOLD ÆNDRET — desktop-node-runtime cc5164f` — mergecommit
+  for opgave 12 rører kun `desktop/`, `tools/test_deploy_workflow.py`,
+  `.github/workflows/build-desktop.yml` og denne plan. Ingen `site/`-fil er rørt, så
+  de tre domæner får præcis det indhold de havde. Den eneste post-merge-gate der
+  betyder noget er `build-desktop.yml` (kørsel `36188356033`): macOS x64/arm64, Linux
+  og Windows skal være grønne på Electron 44.4.5 med Node 22.23.2 fra `.nvmrc`.
 
 - 2026-09-25: `DEPLOY OK 3e35408` — CI kører `python3 tools/quality_gate.py` i det nye
   `gate`-job, og run `36186489675` på `main` er **grøn i alle 26 steps** (`quality_gate:
