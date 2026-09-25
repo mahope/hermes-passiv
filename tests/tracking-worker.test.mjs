@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, readFileSync, readdirSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -39,12 +40,26 @@ class MemoryKV {
   }
 }
 
+const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
+const STATS_SECRET = 're_test_stats';
+
 function makeEnv() {
   const VISITS = new MemoryKV();
   return {
     VISITS,
+    RESEND_API_KEY: STATS_SECRET,
     ASSETS: { fetch: async request => new URL(request.url).pathname.startsWith('/downloads/') ? new Response('asset') : new Response('Not found', { status: 404 }) },
   };
+}
+
+function statsToken(secret = STATS_SECRET) {
+  return createHash('sha256').update(STATS_AUTH_CONTEXT + secret).digest('hex');
+}
+
+async function statsFetch(env, days = 7, token = statsToken()) {
+  return worker.fetch(new Request(`https://mahope.tools/api/stats?days=${days}`, {
+    headers: { authorization: `Bearer ${token}` },
+  }), env, {});
 }
 
 let pass = 0;
@@ -113,7 +128,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   const env = makeEnv();
   const responses = await Promise.all(Array.from({ length: 32 }, () =>
     track(env, 'mahope.tools', { path: '/concurrent' })));
-  const statsResponse = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const statsResponse = await statsFetch(env, 7);
   const stats = await statsResponse.json();
   const row = stats.stats_by_domain?.['mahope.tools']?.[day]?.['/concurrent'];
   ok('samtidige pageviews tælles uden tab',
@@ -124,7 +139,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   const response = await track(env, 'mahope.tools', { path: '/spoofed-client-path' }, chromeUA, '/verified-referrer');
-  const statsResponse = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const statsResponse = await statsFetch(env, 7);
   const stats = await statsResponse.json();
   ok('besøgsstien kommer fra same-origin-referer',
     response.status === 200
@@ -137,10 +152,12 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   const env = makeEnv();
   const automated = [
     'Googlebot/2.1',
+    'Google-InspectionTool/1.0',
     'bingbot/2.0',
     'curl/8.7.1',
     'Wget/1.24',
     'HeadlessChrome/140.0',
+    'Chrome-Lighthouse/140.0',
     'GitHub-Actions/1',
     'HermesHealthCheck/3.0',
     'HermesSitemapCheck/1.0',
@@ -164,7 +181,14 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     headers: { 'content-type': 'application/json', 'user-agent': chromeUA },
     body: JSON.stringify({ path: '/forged' }),
   }), env, {});
-  ok('cross-origin tracking afvises', crossOrigin.status === 403 && missingOrigin.status === 403);
+  const missingReferer = await worker.fetch(new Request('https://mahope.tools/api/track', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'https://mahope.tools', 'user-agent': chromeUA },
+    body: JSON.stringify({ path: '/forged' }),
+  }), env, {});
+  ok('cross-origin tracking afvises',
+    crossOrigin.status === 403 && missingOrigin.status === 403 && missingReferer.status === 403,
+    `${crossOrigin.status}/${missingOrigin.status}/${missingReferer.status}`);
   ok('cross-origin request skriver ingen data', ![...env.VISITS.values.keys()].some(key => key.includes('forged')));
   const invalidEvent = await track(env, 'mahope.tools', { path: '/pricing', event: 'bad_event' });
   ok('ugyldigt event afvises', invalidEvent.status === 400);
@@ -195,7 +219,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   putMetric(env, 'mahope.tools', 'event', '/pricing@cta', 1, 1);
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const response = await statsFetch(env, 7);
   const data = await response.json();
   ok('event-only domæne er ukendt for pageviews', data.traffic_status === 'unknown'
     && data.domain_status?.['mahope.tools'] === 'unknown', JSON.stringify(data));
@@ -216,9 +240,13 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   await put('ful:cs_live_0000000000000002', JSON.stringify({ ok: true, product: 'page-profile-pro', product_name: 'Page Profile Pro', kind: 'license' }));
   await put('ful:cs_live_0000000000000003', JSON.stringify({ ok: true, product: 'clean-copy-pro', product_name: 'Clean Copy Pro', kind: 'license' }));
 
-  const unauthorized = await worker.fetch(new Request('https://mahope.tools/api/stats?token=wrong&days=30'), env, {});
+  const unconfigured = makeEnv();
+  delete unconfigured.RESEND_API_KEY;
+  const unconfiguredResponse = await statsFetch(unconfigured, 7);
+  ok('stats uden serverkonfiguration er utilgængelig', unconfiguredResponse.status === 503, unconfiguredResponse.status);
+  const unauthorized = await statsFetch(env, 30, 'wrong');
   ok('stats afviser forkert token', unauthorized.status === 401);
-  const response = await worker.fetch(new Request(`https://mahope.tools/api/stats?token=hp-stats-v1&days=30`), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('stats svarer komplet', response.status === 200 && data.traffic_status === 'ok', JSON.stringify(data));
   ok('stats er ikke cross-origin læsbar', !response.headers.get('access-control-allow-origin'));
@@ -247,7 +275,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
       kind: 'license',
     }));
   }
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('salgsledgeren har ingen arbitrær 75-post-grænse', data.sales_status === 'ok'
     && data.sales.by_product['clean-copy-pro'] === 76 && data.licenses_issued === 76, JSON.stringify(data));
@@ -261,7 +289,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     product_name: 'Retired Clean Copy',
     kind: 'license',
   }));
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('historisk produkt tælles uden aktuel katalog', data.sales_status === 'ok'
     && data.sales?.by_product?.['retired-clean-copy'] === 1, JSON.stringify(data.sales));
@@ -275,7 +303,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     product_name: 'Clean Copy Pro',
     kind: 'license',
   }));
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('Stripe-testkøb tælles ikke som reelt salg', data.sales_status === 'unknown'
     && data.sales === null && data.licenses_issued === null, JSON.stringify(data.sales));
@@ -284,7 +312,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   putMetric(env, 'cleancopy.tools', 'page', '/known', 1, 1, 'known');
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const response = await statsFetch(env, 7);
   const data = await response.json();
   ok('uinstrumenteret domæne er ukendt', data.traffic_status === 'partial'
     && data.domain_status?.['cleancopy.tools'] === 'ok'
@@ -295,7 +323,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   for (const domain of domains) await env.VISITS.put(`traffic:coverage:v3:${domain}:page`, '1');
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const response = await statsFetch(env, 7);
   const data = await response.json();
   ok('gammel coverage-markør giver ikke falsk nul', data.traffic_status === 'unknown'
     && domains.every(domain => data.domain_status?.[domain] === 'unknown')
@@ -306,7 +334,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 
 {
   const env = makeEnv();
-  await env.VISITS.put('ful:cs_live_ledger00000000000001', JSON.stringify({
+  await env.VISITS.put('ful:cs_live_pending00000000001', JSON.stringify({
     ok: true,
     product: 'clean-copy-pro',
     product_name: 'Clean Copy Pro',
@@ -316,14 +344,14 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     session_id: 'cs_live_pending00000000001',
     started_at: new Date().toISOString(),
   }));
-  let response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  let response = await statsFetch(env, 30);
   let data = await response.json();
   ok('aktiv fulfillment gør salg ukendt', data.sales_status === 'unknown' && data.sales === null);
   await env.VISITS.put('fulpending:cs_live_pending00000000001', JSON.stringify({
     session_id: 'cs_live_pending00000000001',
     started_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   }));
-  response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  response = await statsFetch(env, 30);
   data = await response.json();
   ok('forfalden pending-markør blokerer ikke salgsledger', data.sales_status === 'ok'
     && data.sales?.by_product?.['clean-copy-pro'] === 1, JSON.stringify(data.sales));
@@ -331,8 +359,26 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 
 {
   const env = makeEnv();
+  await env.VISITS.put('ful:cs_live_complete000000000000001', JSON.stringify({
+    ok: true,
+    product: 'clean-copy-pro',
+    product_name: 'Clean Copy Pro',
+    kind: 'license',
+  }));
+  await env.VISITS.put('fulpending:cs_live_incomplete00000000001', JSON.stringify({
+    session_id: 'cs_live_incomplete00000000001',
+    started_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  }));
+  const response = await statsFetch(env, 30);
+  const data = await response.json();
+  ok('gammel pending-markør uden fulfillment gør salg ukendt',
+    data.sales_status === 'unknown' && data.sales === null, JSON.stringify(data.sales));
+}
+
+{
+  const env = makeEnv();
   await env.VISITS.put('ful:broken', '{not-json');
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('ødelagt sales-ledger er ukendt', data.sales_status === 'unknown' && data.sales === null, JSON.stringify(data));
 }
@@ -340,7 +386,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   await env.VISITS.put('ful:incomplete', JSON.stringify({ ok: true, product: 'clean-copy-pro' }));
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('ufuldstændig sales-ledger er ukendt', data.sales_status === 'unknown' && data.licenses_issued === null);
 }
@@ -348,15 +394,28 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 {
   const env = makeEnv();
   await env.VISITS.put('ful:not-a-checkout-session', JSON.stringify({ ok: true, product: 'clean-copy-pro', product_name: 'Clean Copy Pro', kind: 'license' }));
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('ugyldig fulfillment-session gør salg ukendt', data.sales_status === 'unknown' && data.sales === null, JSON.stringify(data));
 }
 
 {
   const env = makeEnv();
+  putMetric(env, 'mahope.tools', 'page', '/valid', 1, 1, 'valid');
+  await env.VISITS.put(`p:v3:${day}:mahope.tools:page:malformed`, '1');
+  const response = await statsFetch(env, 30);
+  const data = await response.json();
+  ok('ugyldigt domænespecifiktKV-format gør kun det domæne ukendt',
+    data.traffic_status === 'unknown'
+    && data.domain_status?.['mahope.tools'] === 'unknown'
+    && data.stats_by_domain?.['mahope.tools'] === null,
+    JSON.stringify(data.domain_status));
+}
+
+{
+  const env = makeEnv();
   putMetric(env, 'mahope.tools', 'page', '/missing-unique', 1, 0);
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('manglende unik nøgle bevarer pageview men markerer unik som ukendt',
     data.traffic_status === 'partial' && data.unique_status === 'unknown'
@@ -374,7 +433,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   for (let index = 0; index < 251; index++) {
     putMetric(env, 'mahope.tools', 'page', `/page-${index}`, 1, 1, `scale-${index}`);
   }
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('251 reelle sider kan stadig rapporteres', data.traffic_status === 'ok'
     && Object.keys(data.stats_by_domain?.['mahope.tools']?.[day] || {}).length === 251, data.traffic_status);
@@ -386,7 +445,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   for (let index = 0; index <= 5000; index++) {
     env.VISITS.values.set(`p:v3:${day}:mahope.tools:page:%2Fpage-${index}:event-${index}`, '1');
   }
-  const response = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=30'), env, {});
+  const response = await statsFetch(env, 30);
   const data = await response.json();
   ok('for stort datagrundlag gør data ukendt', data.traffic_status === 'unknown', data.traffic_status);
 }
@@ -402,7 +461,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   ok('fejlet pageview skriver ingen trafikdata', response.status === 202
     && ![...env.VISITS.values.keys()].some(key => key.startsWith('p:v3:') || key.startsWith('u:v3:')),
     [...env.VISITS.values.keys()].join(','));
-  const statsResponse = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const statsResponse = await statsFetch(env, 7);
   const stats = await statsResponse.json();
   ok('fejlet skrivning rapporteres som ukendt', stats.traffic_status === 'unknown', JSON.stringify(stats));
 }
@@ -415,7 +474,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     return originalPut(key, value, options);
   };
   const response = await track(env, 'mahope.tools', { path: '/unique-failure' });
-  const statsResponse = await worker.fetch(new Request('https://mahope.tools/api/stats?token=hp-stats-v1&days=7'), env, {});
+  const statsResponse = await statsFetch(env, 7);
   const stats = await statsResponse.json();
   const row = stats.stats_by_domain?.['mahope.tools']?.[day]?.['/unique-failure'];
   ok('fejlet unikskrivning gør ikke hele trafikken ukendt', response.status === 202
@@ -425,11 +484,27 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 
 {
   const env = makeEnv();
+  await env.VISITS.put('wl-count', 'many');
+  await env.VISITS.put('csc-count', '');
+  let response = await statsFetch(env, 7);
+  let data = await response.json();
+  ok('ugyldige counters rapporteres som ukendte', data.waitlist === null && data.scans === null, JSON.stringify(data));
+  await env.VISITS.put('wl-count', '0');
+  await env.VISITS.put('csc-count', '3');
+  response = await statsFetch(env, 7);
+  data = await response.json();
+  ok('eksplicit gemte counters kan være nul eller positive', data.waitlist === 0 && data.scans === 3, JSON.stringify(data));
+}
+
+{
+  const env = makeEnv();
   const response = await worker.fetch(new Request('https://mahope.tools/api/health'), env, {});
   const data = await response.json();
   ok('tom men tilgængelig KV er healthy', data.status === 'healthy' && data.kv === true, JSON.stringify(data));
   ok('ukendt trafik rapporteres ikke som nul', data.traffic_status === 'unknown'
     && data.stats.recentVisits === null && data.stats.recentDownloads === null, JSON.stringify(data));
+  ok('manglende counters rapporteres ikke som nul',
+    data.stats.waitlist === null && data.stats.scans === null, JSON.stringify(data.stats));
 }
 
 {
@@ -496,6 +571,13 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   ok('bygget output findes før tracking-gaten', existsSync(summary) && htmlCount > 0 && sharedTrackerCount > 0,
     `${summary}: html=${htmlCount}, shared=${sharedTrackerCount}`);
   ok('ingen buildet side har dobbelt pageview', duplicates.length === 0, duplicates.join('\n'));
+  const statsSourcePath = fileURLToPath(new URL('../site/stats.html', import.meta.url));
+  const statsSource = readFileSync(statsSourcePath, 'utf8');
+  const statsPath = join(root, 'mahope.tools', 'stats.html');
+  const statsHtml = existsSync(statsPath) ? readFileSync(statsPath, 'utf8') : '';
+  ok('admin-statistikside har hverken tredjepartsscript eller persistent token',
+    !statsSource.includes('bugbottle@') && statsSource.includes('data-no-bugbottle')
+    && !statsSource.includes('sessionStorage') && (!statsHtml || !statsHtml.includes('bugbottle@')));
 }
 
 console.log(`${pass}/${pass + fail} ok`);

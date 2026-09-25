@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
@@ -10,6 +11,9 @@ class WeeklyReportTests(unittest.TestCase):
     def setUp(self) -> None:
         report.ERRORS.clear()
         self.day = datetime.now(timezone.utc).date().isoformat()
+        environment = patch.dict(os.environ, {"RESEND_API_KEY": "re_test_stats"})
+        environment.start()
+        self.addCleanup(environment.stop)
 
     def payload(self, *, empty: bool = False, sales_status: str = "ok") -> dict:
         domains = {}
@@ -69,6 +73,15 @@ class WeeklyReportTests(unittest.TestCase):
         self.assertEqual(3, result["sales"]["by_product"]["clean-copy-pro"])
         self.assertEqual(2, result["sales"]["by_product"]["page-profile-pro"])
         self.assertEqual("all_time_gross_fulfillments", result["sales"]["scope"])
+
+    def test_stats_uses_server_side_bearer_authentication(self) -> None:
+        with patch.object(report, "http_json", return_value=self.payload()) as http_json:
+            result = report.collect_stats(7)
+        args, kwargs = http_json.call_args
+        self.assertEqual("ok", result["status"])
+        self.assertEqual("https://mahope.tools/api/stats?days=7", args[0])
+        self.assertNotIn("token=", args[0])
+        self.assertEqual(f"Bearer {report.stats_bearer_token()}", kwargs["headers"]["Authorization"])
 
     def test_complete_empty_traffic_does_not_invent_sales(self) -> None:
         with patch.object(report, "http_json", return_value=self.payload(empty=True, sales_status="unknown")):
@@ -177,6 +190,19 @@ class WeeklyReportTests(unittest.TestCase):
         subject, notable, sections = report.build_report(data, previous)
         markdown = report.render_markdown(data, previous, notable, sections)
         self.assertIn("| Besøg (7 dage) | 10 | — |", markdown)
+
+    def test_invalid_counters_are_unknown(self) -> None:
+        payload = self.payload()
+        payload["waitlist"] = "many"
+        payload["licenses_issued"] = []
+        payload["ai_asks"] = {}
+        payload["scans"] = "0"
+        with patch.object(report, "http_json", return_value=payload):
+            result = report.collect_stats(7)
+        self.assertIsNone(result["waitlist"])
+        self.assertIsNone(result["licenses_issued"])
+        self.assertIsNone(result["ai_asks"])
+        self.assertIsNone(result["scans"])
 
     def test_timeout_is_explicitly_unknown(self) -> None:
         collectors = {

@@ -949,9 +949,9 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
         info["toc"] = True
     text = lazy_images(text)
     text = mark_external(text, site.domain)
-    # scripts: shell + BugBottle on every page (the demo page mounts its own copy)
+    # scripts: shell + BugBottle unless the page opts out (the demo mounts its own copy)
     tags = f'<script src="/shell.js?v={pagepass.SHELL_VERSION}" defer></script>'
-    if not dest.endswith("bugbottle-demo.html"):
+    if not dest.endswith("bugbottle-demo.html") and not re.search(r'<html[^>]*\bdata-no-bugbottle\b', text[:500], re.I):
         tags += "\n" + bugbottle_tag(site, lang)
     text = BODY_END_RE.sub(lambda m: tags + "\n</body>", text, count=1)
     site.shelled += 1

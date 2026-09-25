@@ -12,13 +12,13 @@ via Resend. Hver kilde fejler blødt: dør én URL, står rækken som
 
 Miljøvariabler:
     BB_ADMIN_KEY     nøgle til https://mahope.tools/api/bugreport (valgfri)
-    RESEND_API_KEY   nøgle til afsendelse (valgfri; uden den sendes ingen mail)
-    STATS_TOKEN      token til /api/stats (default: den i site/_worker.js)
+    RESEND_API_KEY   nøgle til afsendelse og server-side stats-autentisering
     GITHUB_STEP_SUMMARY  fil der får rapporten i markdown
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
 
 SITE = "https://mahope.tools"
-STATS_TOKEN = os.environ.get("STATS_TOKEN", "hp-stats-v1")
+STATS_AUTH_CONTEXT = "stats-auth-v1:"
 
 MAIL_TO = "mads@mahoje.dk"
 MAIL_FROM = "Mahope rapport <bugs@mahoje.dk>"
@@ -89,6 +89,17 @@ def note_error(source: str, exc: object) -> None:
     ERRORS.append(f"{source}: {msg[:200]}")
 
 
+def stats_bearer_token() -> str:
+    secret = os.environ.get("RESEND_API_KEY", "").strip()
+    if not secret:
+        return ""
+    return hashlib.sha256((STATS_AUTH_CONTEXT + secret).encode("utf-8")).hexdigest()
+
+
+def known_counter(value: object) -> int | None:
+    return value if type(value) is int and value >= 0 else None
+
+
 def soft(source: str, fn, default=None):
     """Kør fn(); enhver fejl bliver til en note, aldrig et crash."""
     try:
@@ -135,8 +146,8 @@ def collect_health() -> dict:
         "traffic_status": traffic_status,
         "visits_2d": st.get("recentVisits") if traffic_known else None,
         "downloads_2d": st.get("recentDownloads") if traffic_known else None,
-        "waitlist": st.get("waitlist"),
-        "scans": st.get("scans"),
+        "waitlist": known_counter(st.get("waitlist")),
+        "scans": known_counter(st.get("scans")),
     }
 
 
@@ -288,8 +299,10 @@ def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
 
 
 def collect_stats(days: int = 7) -> dict:
-    url = f"{SITE}/api/stats?token={urllib.parse.quote(STATS_TOKEN)}&days={days}"
-    data = http_json(url, timeout=120)
+    url = f"{SITE}/api/stats?days={days}"
+    token = stats_bearer_token()
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    data = http_json(url, timeout=120, headers=headers)
     if not data.get("ok"):
         raise RuntimeError(data.get("error") or "stats svarede ok=false")
     sales = _collect_sales(data)
@@ -326,10 +339,10 @@ def collect_stats(days: int = 7) -> dict:
         "top_paths": [{"path": path, "visits": count} for path, count in top],
         "top_downloads": [{"file": file_name, "hits": count} for file_name, count in top_downloads],
         "sales": sales,
-        "waitlist": data.get("waitlist"),
-        "licenses_issued": data.get("licenses_issued") if sales.get("available") is True else None,
-        "ai_asks": data.get("ai_asks"),
-        "scans": data.get("scans"),
+        "waitlist": known_counter(data.get("waitlist")),
+        "licenses_issued": known_counter(data.get("licenses_issued")) if sales.get("available") is True else None,
+        "ai_asks": known_counter(data.get("ai_asks")),
+        "scans": known_counter(data.get("scans")),
     }
 
 

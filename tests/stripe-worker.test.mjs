@@ -1,5 +1,5 @@
 // Ende-til-ende-test af Stripe-levering i site/_worker.js med falsk KV, Stripe og Resend.
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,6 +27,8 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
   } } };
 
 const mails = []; let stripeCalls = 0; let resendNede = false;
+const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
+const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
   cs_live_licenseAAAAAAAAAA: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'Buyer@Example.com' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
@@ -157,7 +159,7 @@ const raceFulfillmentKeys = [...kv.keys()].filter(k => k === 'ful:cs_live_raceEE
 ok('race/replay giver én fulfillment-record', raceFulfillmentKeys.length === 1);
 ok('fulfillment-ledger har ét produkt', JSON.parse(kv.get(raceFulfillmentKeys[0])).product === 'transmute-desktop');
 ok('ingen separat salgstæller skrives', ![...kv.keys()].some(k => k.startsWith('t:all:sales:')));
-r = await call('/api/stats?token=hp-stats-v1&days=30'); j = await r.json();
+r = await statsCall(); j = await r.json();
 ok('race/replay tæller præcis ét salg', j.sales_status === 'ok' && j.sales.by_product['transmute-desktop'] === 1, JSON.stringify(j.sales));
 const originalPut = VISITS.put;
 VISITS.put = async (k, v, options) => {
@@ -166,7 +168,7 @@ VISITS.put = async (k, v, options) => {
 };
 r = await call('/api/stripe/fulfillment?session_id=cs_live_pendingfailKKKKKKKKKK');
 VISITS.put = originalPut;
-ok('fejlet pending-markør blokerer ikke betalt levering', r.status === 200 && kv.has('ful:cs_live_pendingfailKKKKKKKKKK'), r.status);
+ok('fejlet pending-markør afbryder levering uden salgsrecord', r.status === 503 && !kv.has('ful:cs_live_pendingfailKKKKKKKKKK'), r.status);
 VISITS.put = async (k, v, options) => {
   if (k === 'ful:cs_live_ledgerfailJJJJJJJJJJ' && String(v).includes('"ok":true')) throw new Error('ledger write failed');
   return originalPut(k, v, options);
@@ -176,7 +178,7 @@ VISITS.put = originalPut;
 ok('ufuldstændig fulfillment svarer 503', r.status === 503, r.status);
 for (const key of [...kv.keys()]) if (key.startsWith('fulpending:')) kv.delete(key);
 for (const key of [...kv.keys()]) if (key.startsWith('ful:')) kv.delete(key);
-r = await call('/api/stats?token=hp-stats-v1&days=30'); j = await r.json();
+r = await statsCall(); j = await r.json();
 ok('ufuldstændig fulfillment-ledger er ukendt, ikke nul', j.sales_status === 'unknown' && j.sales === null, JSON.stringify(j.sales));
 // 2) Nyt fakturaformat (parent.subscription_details) forlænger
 r = await wh('invoice.paid', { parent: { subscription_details: { subscription: 'sub_1' } }, lines: { data: [{ period: { end: 2200000000 } }] } });

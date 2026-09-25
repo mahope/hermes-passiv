@@ -17,12 +17,13 @@ const TRACKING_DOMAINS = Object.freeze([
 ]);
 const TRACKING_DOMAIN_SET = new Set(TRACKING_DOMAINS);
 const UNTRACKED_PATHS = new Set(['/api/track', '/api/stats', '/stats']);
-const AUTOMATED_USER_AGENT = /googlebot|bingbot|ahrefsbot|semrushbot|duckduckbot|applebot|\bbot\b|crawl|spider|curl|wget|headless|github-actions|hermes(?:health|sitemap)check|seo_check|mahope-weekly-report|python-requests|go-http-client|okhttp/i;
+const AUTOMATED_USER_AGENT = /googlebot|google-inspectiontool|bingbot|ahrefsbot|semrushbot|duckduckbot|applebot|chrome-lighthouse|\bbot\b|crawl|spider|curl|wget|headless|github-actions|hermes(?:health|sitemap)check|seo_check|mahope-weekly-report|python-requests|go-http-client|okhttp/i;
 const STATS_TRAFFIC_KEY_LIMIT = 5000;
 const STATS_SOURCE_KEY_LIMIT = 15;
 const TRACKING_RATE_LIMIT = 1000;
 const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
+const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
 
 export default {
   async fetch(request, env) {
@@ -749,8 +750,6 @@ The user's site is: https://hermes-passiv.pages.dev — a free resource with an 
  * an event key, so concurrent writes cannot overwrite a shared counter.
  */
 
-const STATS_TOKEN = 'hp-stats-v1'; // change to something secret before sharing stats URL
-
 function dailySalt() {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
 }
@@ -782,6 +781,24 @@ function privateJsonResp(obj, status = 200) {
       'Cache-Control': 'no-store',
     },
   });
+}
+
+async function statsAuthToken(env) {
+  const secret = String(env.RESEND_API_KEY || '');
+  if (!secret) return '';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(STATS_AUTH_CONTEXT + secret));
+  return hex(new Uint8Array(digest));
+}
+
+async function readKvCounter(env, key) {
+  try {
+    const raw = await env.VISITS.get(key);
+    if (raw === null || !/^(?:0|[1-9]\d*)$/.test(String(raw))) return null;
+    const value = Number(raw);
+    return Number.isSafeInteger(value) ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1079,17 +1096,16 @@ async function handleTrack(request, url, env) {
   if (request.headers.get('origin') !== url.origin || isCrossSiteRequest(request, url)) {
     return privateJsonResp({ ok: false, error: 'Same-origin requests only.' }, 403);
   }
+  const referer = request.headers.get('referer');
+  if (!referer) return privateJsonResp({ ok: false, error: 'Same-origin referer required.' }, 403);
+  let refererUrl;
+  try { refererUrl = new URL(referer); } catch { return privateJsonResp({ ok: false, error: 'Invalid referer.' }, 400); }
+  if (refererUrl.origin !== url.origin) {
+    return privateJsonResp({ ok: false, error: 'Same-origin referer required.' }, 403);
+  }
   try {
     const body = await request.json();
-    let reportedPath = body.path;
-    const referer = request.headers.get('referer');
-    if (referer) {
-      try {
-        const refererUrl = new URL(referer);
-        if (refererUrl.origin === url.origin) reportedPath = refererUrl.pathname;
-      } catch {}
-    }
-    const path = normalizeTrackedPath(reportedPath);
+    const path = normalizeTrackedPath(refererUrl.pathname);
     if (UNTRACKED_PATHS.has(path)) return privateJsonResp({ ok: true });
     const event = String(body.event || 'pageview').slice(0, 64);
     if (!/^[a-z0-9-]+$/.test(event)) {
@@ -1138,11 +1154,16 @@ function parseTrafficKey(name, kind) {
   return { domain, day, metric, subject };
 }
 
+function trafficKeyDomain(name) {
+  const parts = name.split(':');
+  return parts.length >= 4 && TRACKING_DOMAIN_SET.has(parts[3]) ? parts[3] : null;
+}
+
 function addAggregateStat(target, day, subject, info) {
   if (!target[day]) target[day] = {};
   const current = target[day][subject] || { visits: 0, uniques: 0 };
   current.visits += info.visits;
-  current.uniques += info.uniques;
+  current.uniques = current.uniques === null || info.uniques === null ? null : current.uniques + info.uniques;
   target[day][subject] = current;
 }
 
@@ -1162,7 +1183,8 @@ async function collectTraffic(env, days) {
       new Date(Date.now() - index * 86400000).toISOString().slice(0, 10)
     );
     const all = emptyDomainStats();
-    let invalid = false;
+    const invalidDomains = new Set();
+    let invalidAll = false;
     let pageKeys = 0;
 
     for (const day of windowDays) {
@@ -1171,7 +1193,11 @@ async function collectTraffic(env, days) {
       if (pageKeys > STATS_TRAFFIC_KEY_LIMIT) throw new Error('Stats operation budget exceeded');
       for (const key of keys) {
         const parsed = parseTrafficKey(key.name, 'p');
-        if (!parsed) { invalid = true; continue; }
+        if (!parsed) {
+          const domain = trafficKeyDomain(key.name);
+          if (domain) invalidDomains.add(domain); else invalidAll = true;
+          continue;
+        }
         const dayStats = all[parsed.domain][parsed.day] ||= {};
         const metricStats = dayStats[parsed.metric] ||= {};
         const bucket = metricStats[parsed.subject] ||= { visits: 0, uniques: 0 };
@@ -1186,7 +1212,11 @@ async function collectTraffic(env, days) {
       if (uniqueKeys > STATS_TRAFFIC_KEY_LIMIT) throw new Error('Stats operation budget exceeded');
       for (const key of keys) {
         const parsed = parseTrafficKey(key.name, 'u');
-        if (!parsed) { invalid = true; continue; }
+        if (!parsed) {
+          const domain = trafficKeyDomain(key.name);
+          if (domain) invalidDomains.add(domain); else invalidAll = true;
+          continue;
+        }
         const bucket = all[parsed.domain]?.[parsed.day]?.[parsed.metric]?.[parsed.subject];
         if (bucket) bucket.uniques += 1;
       }
@@ -1203,7 +1233,7 @@ async function collectTraffic(env, days) {
         }
       }
     }
-    if (invalid) return empty;
+    if (invalidAll) return empty;
 
     const statsByDomain = emptyDomainStats();
     const downloadsByDomain = emptyDomainStats();
@@ -1211,6 +1241,12 @@ async function collectTraffic(env, days) {
     const domainStatus = {};
     const aggregate = {};
     for (const domain of TRACKING_DOMAINS) {
+      if (invalidDomains.has(domain)) {
+        domainStatus[domain] = 'unknown';
+        statsByDomain[domain] = null;
+        downloadsByDomain[domain] = null;
+        continue;
+      }
       const domainMetrics = all[domain];
       const hasCurrentPageviews = Object.values(domainMetrics).some(metrics => Object.keys(metrics.page || {}).length > 0);
       for (const [day, metrics] of Object.entries(domainMetrics).sort(([a], [b]) => b.localeCompare(a))) {
@@ -1259,14 +1295,16 @@ async function collectSalesLedger(env) {
   if (!env.VISITS) return { status: 'unknown', sales: null, licenses_issued: null };
   try {
     const keys = await listKvKeys(env.VISITS, 'ful:');
-    const pending = await listKvKeys(env.VISITS, 'fulpending:', 1);
+    const pending = await listKvKeys(env.VISITS, 'fulpending:', STATS_TRAFFIC_KEY_LIMIT + 1);
     if (!keys.length) return { status: 'unknown', sales: null, licenses_issued: null };
-    if (pending.length) {
+    const ledgerSessions = new Set(keys.map(key => key.name.slice(4)));
+    for (const pendingKey of pending) {
+      const session = pendingKey.name.slice('fulpending:'.length);
+      if (!CHECKOUT_SESSION_RE.test(session)) throw new Error('Invalid pending fulfillment session');
       let startedAt = 0;
-      try { startedAt = Date.parse(JSON.parse((await env.VISITS.get(pending[0].name)) || '{}').started_at || ''); } catch {}
-      if (!startedAt || Date.now() - startedAt < FULFILLMENT_PENDING_TTL_SECONDS * 1000) {
-        return { status: 'unknown', sales: null, licenses_issued: null };
-      }
+      try { startedAt = Date.parse(JSON.parse((await env.VISITS.get(pendingKey.name)) || '{}').started_at || ''); } catch { throw new Error('Invalid pending fulfillment record'); }
+      const active = !startedAt || Date.now() - startedAt < FULFILLMENT_PENDING_TTL_SECONDS * 1000;
+      if (active || !ledgerSessions.has(session)) throw new Error('Incomplete fulfillment ledger');
     }
     const byProduct = {};
     const productNames = {};
@@ -1305,15 +1343,23 @@ async function collectSalesLedger(env) {
 
 async function handleStats(request, url, env) {
   if (request.method !== 'GET') return privateJsonResp({ ok: false, error: 'GET only' }, 405);
-  if (url.searchParams.get('token') !== STATS_TOKEN) {
+  const expectedToken = await statsAuthToken(env);
+  if (!expectedToken) return privateJsonResp({ ok: false, error: 'Stats access is not configured.' }, 503);
+  const authorization = request.headers.get('authorization') || '';
+  const providedToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  if (!/^[a-f0-9]{64}$/.test(providedToken) || !timingSafeEqual(providedToken, expectedToken)) {
     return privateJsonResp({ ok: false, error: 'unauthorized' }, 401);
   }
   const days = Math.max(1, Math.min(parseInt(url.searchParams.get('days') || '30', 10) || 30, 90));
   const traffic = await collectTraffic(env, days);
   const salesLedger = await collectSalesLedger(env);
 
-  let waitlist = null;
-  try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
+  const [waitlist, aiAsks, aiLimitedToday, scans] = await Promise.all([
+    readKvCounter(env, 'wl-count'),
+    readKvCounter(env, 'ai-ask-count'),
+    readKvCounter(env, `airl-hit:${dailySalt()}`),
+    readKvCounter(env, 'csc-count'),
+  ]);
   const wl_sources = {};
   try {
     for (const key of await listKvKeys(env.VISITS, 'wlsrc:', STATS_SOURCE_KEY_LIMIT)) {
@@ -1321,13 +1367,6 @@ async function handleStats(request, url, env) {
       if (value > 0) wl_sources[key.name.slice(6)] = value;
     }
   } catch {}
-
-  let ai_asks = null;
-  try { ai_asks = parseInt((await env.VISITS.get('ai-ask-count')) || '0', 10); } catch {}
-  let ai_limited_today = null;
-  try { ai_limited_today = parseInt((await env.VISITS.get(`airl-hit:${dailySalt()}`)) || '0', 10); } catch {}
-  let scans = null;
-  try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
 
   return privateJsonResp({
     ok: true,
@@ -1344,8 +1383,8 @@ async function handleStats(request, url, env) {
     waitlist,
     wl_sources,
     licenses_issued: salesLedger.licenses_issued,
-    ai_asks,
-    ai_limited_today,
+    ai_asks: aiAsks,
+    ai_limited_today: aiLimitedToday,
     scans,
   });
 }
@@ -1388,10 +1427,10 @@ async function handleHealth(url, env) {
     }
   } catch {}
 
-  let waitlist = null;
-  try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
-  let scans = null;
-  try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
+  const [waitlist, scans] = await Promise.all([
+    readKvCounter(env, 'wl-count'),
+    readKvCounter(env, 'csc-count'),
+  ]);
 
   return jsonResp({
     ok: true,
@@ -2923,9 +2962,7 @@ async function alertMads(env, subject, text) {
  *  - mailen sendes med Resend-idempotency-nøgle og gentages, hvis den fejlede.
  */
 async function setFulfillmentPending(env, key, value) {
-  try {
-    await env.VISITS.put(key, JSON.stringify(value), { expirationTtl: FULFILLMENT_PENDING_TTL_SECONDS });
-  } catch {}
+  await env.VISITS.put(key, JSON.stringify(value), { expirationTtl: FULFILLMENT_PENDING_TTL_SECONDS });
 }
 
 async function clearFulfillmentPending(env, key) {
