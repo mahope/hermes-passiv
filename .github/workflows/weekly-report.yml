@@ -50,7 +50,9 @@ jobs:
           BB_ADMIN_KEY: ${{ secrets.BB_ADMIN_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python tools/weekly_report.py
+        run: |
+          python tools/test_weekly_report.py
+          python tools/weekly_report.py
 
       - name: Commit ugens tal
         run: |

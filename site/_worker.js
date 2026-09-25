@@ -9,6 +9,21 @@
  * maximum compatibility with existing Pages projects.
  */
 
+const TRACKING_DOMAINS = Object.freeze([
+  'cleancopy.tools',
+  'deskuptime.com',
+  'bugbottle.dev',
+  'mahope.tools',
+]);
+const TRACKING_DOMAIN_SET = new Set(TRACKING_DOMAINS);
+const UNTRACKED_PATHS = new Set(['/api/track', '/api/stats', '/stats']);
+const AUTOMATED_USER_AGENT = /googlebot|bingbot|ahrefsbot|semrushbot|duckduckbot|applebot|\bbot\b|crawl|spider|curl|wget|headless|github-actions|hermes(?:health|sitemap)check|seo_check|mahope-weekly-report|python-requests|go-http-client|okhttp/i;
+const STATS_TRAFFIC_KEY_LIMIT = 5000;
+const STATS_SOURCE_KEY_LIMIT = 15;
+const TRACKING_RATE_LIMIT = 1000;
+const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
+const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -29,8 +44,8 @@ export default {
     if (path === '/api/waitlist') return handleWaitlist(request, env);
 
     // === Route: cookieless visit tracking ===
-    if (path === '/api/track') return handleTrack(request, env);
-    if (path === '/api/stats') return handleStats(url, env);
+    if (path === '/api/track') return handleTrack(request, url, env);
+    if (path === '/api/stats') return handleStats(request, url, env);
 
     // === Route: self-monitoring health check ===
     if (path === '/api/health') return handleHealth(url, env);
@@ -178,31 +193,16 @@ export default {
   },
 };
 
-/**
- * Count a /downloads/<file> hit server-side, then serve the asset.
- * Key format matches pageview stats: t:<day>:downloads@<file>, plus
- * unique u:<day>:downloads@<file>:<hash>. Bots are skipped.
- */
 async function handleDownload(request, url, env) {
   const file = url.pathname.slice('/downloads/'.length).split('?')[0];
-  try {
-    const ua = request.headers.get('user-agent') || '';
-    if (!/bot|crawl|spider|curl|wget|headless/i.test(ua)) {
-      const day = dailySalt();
-      const vh = await visitorHash(request);
-      const p = 'downloads@' + file;
-      const uniqueKey = `u:${day}:${p}:${vh}`;
-      if (!(await env.VISITS.get(uniqueKey))) {
-        await env.VISITS.put(uniqueKey, '1', { expirationTtl: 90 * 86400 });
-      }
-      const totKey = `t:${day}:${p}`;
-      const prev = parseInt((await env.VISITS.get(totKey)) || '0', 10);
-      await env.VISITS.put(totKey, String(prev + 1), { expirationTtl: 90 * 86400 });
-    }
-  } catch {
-    // counting must never break the download
+  const response = await env.ASSETS.fetch(new Request(new URL(url.pathname, request.url), request));
+  const domain = trackingDomain(url);
+  if (response.ok && domain && env.VISITS) {
+    try {
+      await recordTraffic(env, request, domain, 'download', file);
+    } catch {}
   }
-  return env.ASSETS.fetch(new Request(new URL(url.pathname, request.url), request));
+  return response;
 }
 
 /**
@@ -745,8 +745,8 @@ The user's site is: https://hermes-passiv.pages.dev — a free resource with an 
  *
  * Privacy: no cookies, no localStorage, no cross-site identifiers.
  * A daily salt (rotates at 00:00 UTC) is hashed with the visitor IP so
- * unique counts work without ever storing an IP address. Keys are
- * aggregated per path per day and expire after 90 days.
+ * unique counts work without ever storing an IP address. Each pageview is
+ * an event key, so concurrent writes cannot overwrite a shared counter.
  */
 
 const STATS_TOKEN = 'hp-stats-v1'; // change to something secret before sharing stats URL
@@ -755,10 +755,10 @@ function dailySalt() {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
 }
 
-async function visitorHash(request) {
+async function visitorHash(request, scope = '') {
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
   const ua = request.headers.get('user-agent') || '';
-  const data = new TextEncoder().encode(dailySalt() + '|' + ip + '|' + ua);
+  const data = new TextEncoder().encode(scope ? `${dailySalt()}|${scope}|${ip}|${ua}` : `${dailySalt()}|${ip}|${ua}`);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
@@ -769,6 +769,16 @@ function jsonResp(obj, status = 200) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
+function privateJsonResp(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
     },
   });
@@ -1011,98 +1021,307 @@ async function handleWaitlist(request, env) {
   }
 }
 
-async function handleTrack(request, env) {
+function trackingDomain(url) {
+  const domain = String(url.hostname || '').toLowerCase();
+  return TRACKING_DOMAIN_SET.has(domain) ? domain : null;
+}
+
+function normalizeTrackedPath(value) {
+  let path = String(value || '/').trim().split(/[?#]/, 1)[0] || '/';
+  if (!path.startsWith('/')) path = '/' + path;
+  path = path.replace(/\/{2,}/g, '/');
+  path = path.replace(/\/index\.html?$/i, '/');
+  path = path.replace(/\.html?$/i, '');
+  path = path.replace(/\/+$/, '');
+  const encoder = new TextEncoder();
+  let truncated = '';
+  for (const character of path || '/') {
+    if (encoder.encode(truncated + character).length > 100) break;
+    truncated += character;
+  }
+  return truncated || '/';
+}
+
+function isAutomatedRequest(request) {
+  const userAgent = request.headers.get('user-agent') || '';
+  return !userAgent || AUTOMATED_USER_AGENT.test(userAgent);
+}
+
+function isCrossSiteRequest(request, url) {
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite && !['same-origin', 'same-site', 'none'].includes(fetchSite)) return true;
+  const origin = request.headers.get('origin');
+  return !!origin && origin !== url.origin;
+}
+
+async function recordTraffic(env, request, domain, metric, subject) {
+  if (isAutomatedRequest(request)) return false;
+  const day = dailySalt();
+  const encodedSubject = encodeURIComponent(subject);
+  const visitor = await visitorHash(request, domain);
+  const eventKey = `p:v3:${day}:${domain}:${metric}:${encodedSubject}:${crypto.randomUUID()}`;
+  await env.VISITS.put(eventKey, '1', { expirationTtl: 90 * 86400 });
+  const uniqueKey = `u:v3:${day}:${domain}:${metric}:${encodedSubject}:${visitor}`;
+  if (!(await env.VISITS.get(uniqueKey))) {
+    await env.VISITS.put(uniqueKey, '1', { expirationTtl: 90 * 86400 });
+  }
+  return true;
+}
+
+async function handleTrack(request, url, env) {
   if (request.method !== 'POST') {
-    return jsonResp({ ok: false, error: 'POST only' }, 405);
+    return privateJsonResp({ ok: false, error: 'POST only' }, 405);
+  }
+  const domain = trackingDomain(url);
+  if (!domain) return privateJsonResp({ ok: false, error: 'Unknown site.' }, 404);
+  if (!env.VISITS) return privateJsonResp({ ok: false }, 503);
+  if (isAutomatedRequest(request)) return privateJsonResp({ ok: true });
+  if (request.headers.get('origin') !== url.origin || isCrossSiteRequest(request, url)) {
+    return privateJsonResp({ ok: false, error: 'Same-origin requests only.' }, 403);
   }
   try {
     const body = await request.json();
-    let p = String(body.path || '/');
-    // keep keys tidy: strip query strings, cap length
-    p = p.split('?')[0].slice(0, 120) || '/';
-    // event type: default pageview; tools send event=scan on actual use
-    let ev = String(body.event || 'pageview').slice(0, 24);
-    if (!/^[a-z0-9-]+$/.test(ev)) ev = 'pageview';
-    if (ev !== 'pageview') p = p + '@' + ev;
-    const day = dailySalt();
-
-    const vh = await visitorHash(request);
-    const uniqueKey = `u:${day}:${p}:${vh}`;
-    const isNew = !(await env.VISITS.get(uniqueKey));
-    if (isNew) {
-      await env.VISITS.put(uniqueKey, '1', { expirationTtl: 90 * 86400 });
+    let reportedPath = body.path;
+    const referer = request.headers.get('referer');
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        if (refererUrl.origin === url.origin) reportedPath = refererUrl.pathname;
+      } catch {}
     }
-
-    const totKey = `t:${day}:${p}`;
-    const prev = parseInt((await env.VISITS.get(totKey)) || '0', 10);
-    await env.VISITS.put(totKey, String(prev + 1), { expirationTtl: 90 * 86400 });
-
-    return jsonResp({ ok: true });
+    const path = normalizeTrackedPath(reportedPath);
+    if (UNTRACKED_PATHS.has(path)) return privateJsonResp({ ok: true });
+    const event = String(body.event || 'pageview').slice(0, 64);
+    if (!/^[a-z0-9-]+$/.test(event)) {
+      return privateJsonResp({ ok: false, error: 'Invalid event.' }, 400);
+    }
+    const rateVisitor = await visitorHash(request, domain);
+    const rateKey = `tr:rl:${domain}:${Math.floor(Date.now() / 3600000)}:${rateVisitor}`;
+    const rateHits = parseInt((await env.VISITS.get(rateKey)) || '0', 10);
+    if (rateHits >= TRACKING_RATE_LIMIT) return privateJsonResp({ ok: false, error: 'Too many requests.' }, 429);
+    await env.VISITS.put(rateKey, String(rateHits + 1), { expirationTtl: 7200 });
+    const metric = event === 'pageview' ? 'page' : 'event';
+    const subject = metric === 'page' ? path : `${path}@${event}`;
+    await recordTraffic(env, request, domain, metric, subject);
+    return privateJsonResp({ ok: true });
   } catch {
-    // never let analytics break anything
-    return jsonResp({ ok: false }, 202);
+    return privateJsonResp({ ok: false }, 202);
   }
 }
 
-async function handleStats(url, env) {
-  if (url.searchParams.get('token') !== STATS_TOKEN) {
-    return jsonResp({ ok: false, error: 'unauthorized' }, 401);
-  }
-  const days = Math.min(parseInt(url.searchParams.get('days') || '30', 10) || 30, 90);
-  const out = {};
-  let cursor = null;
+async function listKvKeys(kv, prefix, maxKeys = Infinity) {
+  const keys = [];
+  let cursor = '';
   do {
-    const page = await env.VISITS.list({ cursor });
-    for (const k of page.keys) {
-      // key formats: t:<day>:<path> (total) and u:<day>:<path>:<hash> (unique)
-      const parts = k.name.split(':');
-      if (parts.length < 3) continue;
-      const kind = parts[0], day = parts[1];
-      if (!out[day]) out[day] = {};
-      if (kind === 't') {
-        const p = parts.slice(2).join(':');
-        out[day][p] = out[day][p] || {};
+    const page = await kv.list({ prefix, cursor });
+    keys.push(...(page.keys || []));
+    if (keys.length > maxKeys) throw new Error('Stats operation budget exceeded');
+    cursor = page.list_complete ? '' : (page.cursor || '');
+  } while (cursor);
+  return keys;
+}
+
+function emptyDomainStats() {
+  return Object.fromEntries(TRACKING_DOMAINS.map(domain => [domain, {}]));
+}
+
+function parseTrafficKey(name, kind) {
+  const prefix = `${kind}:v3:`;
+  if (!name.startsWith(prefix)) return null;
+  const parts = name.slice(prefix.length).split(':');
+  if (parts.length !== 5) return null;
+  const [day, domain, metric, encodedSubject, identity] = parts;
+  if (!TRACKING_DOMAIN_SET.has(domain) || !/^\d{4}-\d{2}-\d{2}$/.test(day) || !identity) return null;
+  if (!['page', 'event', 'download'].includes(metric) || !encodedSubject) return null;
+  let subject;
+  try { subject = decodeURIComponent(encodedSubject); } catch { return null; }
+  return { domain, day, metric, subject };
+}
+
+function addAggregateStat(target, day, subject, info) {
+  if (!target[day]) target[day] = {};
+  const current = target[day][subject] || { visits: 0, uniques: 0 };
+  current.visits += info.visits;
+  current.uniques += info.uniques;
+  target[day][subject] = current;
+}
+
+async function collectTraffic(env, days) {
+  const empty = {
+    status: 'unknown',
+    unique_status: 'unknown',
+    domain_status: Object.fromEntries(TRACKING_DOMAINS.map(domain => [domain, 'unknown'])),
+    stats_by_domain: null,
+    downloads_by_domain: null,
+    events_by_domain: null,
+    stats: {},
+  };
+  if (!env.VISITS) return empty;
+  try {
+    const windowDays = Array.from({ length: days }, (_, index) =>
+      new Date(Date.now() - index * 86400000).toISOString().slice(0, 10)
+    );
+    const all = emptyDomainStats();
+    let invalid = false;
+    let pageKeys = 0;
+
+    for (const day of windowDays) {
+      const keys = await listKvKeys(env.VISITS, `p:v3:${day}:`, STATS_TRAFFIC_KEY_LIMIT + 1);
+      pageKeys += keys.length;
+      if (pageKeys > STATS_TRAFFIC_KEY_LIMIT) throw new Error('Stats operation budget exceeded');
+      for (const key of keys) {
+        const parsed = parseTrafficKey(key.name, 'p');
+        if (!parsed) { invalid = true; continue; }
+        const dayStats = all[parsed.domain][parsed.day] ||= {};
+        const metricStats = dayStats[parsed.metric] ||= {};
+        const bucket = metricStats[parsed.subject] ||= { visits: 0, uniques: 0 };
+        bucket.visits += 1;
       }
     }
-    cursor = page.list_complete ? null : page.cursor;
-  } while (cursor);
 
-  // second pass: read values (list doesn't return values)
-  for (const day of Object.keys(out)) {
-    for (const p of Object.keys(out[day])) {
-      const v = parseInt((await env.VISITS.get(`t:${day}:${p}`)) || '0', 10);
-      const prefix = `u:${day}:${p}:`;
-      const upage = await env.VISITS.list({ prefix });
-      out[day][p] = { visits: v, uniques: upage.keys.length };
+    let uniqueKeys = 0;
+    for (const day of windowDays) {
+      const keys = await listKvKeys(env.VISITS, `u:v3:${day}:`, STATS_TRAFFIC_KEY_LIMIT + 1);
+      uniqueKeys += keys.length;
+      if (uniqueKeys > STATS_TRAFFIC_KEY_LIMIT) throw new Error('Stats operation budget exceeded');
+      for (const key of keys) {
+        const parsed = parseTrafficKey(key.name, 'u');
+        if (!parsed) { invalid = true; continue; }
+        const bucket = all[parsed.domain]?.[parsed.day]?.[parsed.metric]?.[parsed.subject];
+        if (bucket) bucket.uniques += 1;
+      }
     }
-  }
 
-  // keep only requested window, newest first
-  const cutoff = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10);
-  const filtered = {};
-  for (const day of Object.keys(out).sort().reverse()) {
-    if (day >= cutoff) filtered[day] = out[day];
+    let uniqueStatus = 'ok';
+    for (const domainStats of Object.values(all)) {
+      for (const metrics of Object.values(domainStats)) {
+        for (const entries of Object.values(metrics)) {
+          for (const info of Object.values(entries)) {
+            info.uniques = info.uniques > 0 && info.uniques <= info.visits ? info.uniques : null;
+            if (info.uniques === null) uniqueStatus = 'unknown';
+          }
+        }
+      }
+    }
+    if (invalid) return empty;
+
+    const statsByDomain = emptyDomainStats();
+    const downloadsByDomain = emptyDomainStats();
+    const eventsByDomain = emptyDomainStats();
+    const domainStatus = {};
+    const aggregate = {};
+    for (const domain of TRACKING_DOMAINS) {
+      const domainMetrics = all[domain];
+      const hasCurrentPageviews = Object.values(domainMetrics).some(metrics => Object.keys(metrics.page || {}).length > 0);
+      for (const [day, metrics] of Object.entries(domainMetrics).sort(([a], [b]) => b.localeCompare(a))) {
+        for (const [subject, info] of Object.entries(metrics.event || {})) {
+          eventsByDomain[domain][day] = eventsByDomain[domain][day] || {};
+          eventsByDomain[domain][day][subject] = { ...info };
+        }
+      }
+      domainStatus[domain] = hasCurrentPageviews ? 'ok' : 'unknown';
+      if (!hasCurrentPageviews) {
+        statsByDomain[domain] = null;
+        downloadsByDomain[domain] = null;
+        continue;
+      }
+      for (const [day, metrics] of Object.entries(domainMetrics).sort(([a], [b]) => b.localeCompare(a))) {
+        for (const [subject, info] of Object.entries(metrics.page || {})) {
+          statsByDomain[domain][day] = statsByDomain[domain][day] || {};
+          statsByDomain[domain][day][subject] = { ...info };
+          addAggregateStat(aggregate, day, subject, info);
+        }
+        for (const [file, info] of Object.entries(metrics.download || {})) {
+          downloadsByDomain[domain][day] = downloadsByDomain[domain][day] || {};
+          downloadsByDomain[domain][day][file] = { ...info };
+          addAggregateStat(aggregate, day, `downloads@${file}`, info);
+        }
+      }
+    }
+    const knownDomains = Object.values(domainStatus).filter(value => value === 'ok').length;
+    if (!knownDomains) uniqueStatus = 'unknown';
+    const status = knownDomains === TRACKING_DOMAINS.length ? 'ok' : (knownDomains ? 'partial' : 'unknown');
+    return {
+      status,
+      unique_status: uniqueStatus,
+      domain_status: domainStatus,
+      stats_by_domain: statsByDomain,
+      downloads_by_domain: downloadsByDomain,
+      events_by_domain: eventsByDomain,
+      stats: aggregate,
+    };
+  } catch {
+    return empty;
   }
-  // waitlist count (honest metric)
+}
+
+async function collectSalesLedger(env) {
+  if (!env.VISITS) return { status: 'unknown', sales: null, licenses_issued: null };
+  try {
+    const keys = await listKvKeys(env.VISITS, 'ful:');
+    const pending = await listKvKeys(env.VISITS, 'fulpending:', 1);
+    if (!keys.length) return { status: 'unknown', sales: null, licenses_issued: null };
+    if (pending.length) {
+      let startedAt = 0;
+      try { startedAt = Date.parse(JSON.parse((await env.VISITS.get(pending[0].name)) || '{}').started_at || ''); } catch {}
+      if (!startedAt || Date.now() - startedAt < FULFILLMENT_PENDING_TTL_SECONDS * 1000) {
+        return { status: 'unknown', sales: null, licenses_issued: null };
+      }
+    }
+    const byProduct = {};
+    const productNames = {};
+    const seen = new Set();
+    let licensesIssued = 0;
+    for (const key of keys) {
+      const session = key.name.slice(4);
+      if (!CHECKOUT_SESSION_RE.test(session)) throw new Error('Invalid fulfillment session');
+      const raw = await env.VISITS.get(key.name);
+      let record;
+      try { record = JSON.parse(raw || ''); } catch { throw new Error('Invalid fulfillment ledger'); }
+      const product = record && STRIPE_PRODUCTS[record.product];
+      if (!record || record.ok !== true || !/^[a-z0-9-]+$/.test(record.product || '')
+          || typeof record.product_name !== 'string' || !record.product_name
+          || !['license', 'download', 'donation'].includes(record.kind)
+          || (product && product.kind !== record.kind)) {
+        throw new Error('Incomplete fulfillment ledger');
+      }
+      if (session.startsWith('cs_test_')) throw new Error('Test fulfillment in sales ledger');
+      const sale = `${session}\u0000${record.product}`;
+      if (seen.has(sale)) continue;
+      seen.add(sale);
+      byProduct[record.product] = (byProduct[record.product] || 0) + 1;
+      productNames[record.product] = record.product_name;
+      if (record.kind === 'license') licensesIssued += 1;
+    }
+    return {
+      status: 'ok',
+      licenses_issued: licensesIssued,
+      sales: { scope: 'all_time_gross_fulfillments', by_product: byProduct, product_names: productNames },
+    };
+  } catch {
+    return { status: 'unknown', sales: null, licenses_issued: null };
+  }
+}
+
+async function handleStats(request, url, env) {
+  if (request.method !== 'GET') return privateJsonResp({ ok: false, error: 'GET only' }, 405);
+  if (url.searchParams.get('token') !== STATS_TOKEN) {
+    return privateJsonResp({ ok: false, error: 'unauthorized' }, 401);
+  }
+  const days = Math.max(1, Math.min(parseInt(url.searchParams.get('days') || '30', 10) || 30, 90));
+  const traffic = await collectTraffic(env, days);
+  const salesLedger = await collectSalesLedger(env);
+
   let waitlist = null;
   try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
-  // per-source lead counts (wlsrc:<source>) — scan KV keys, aggregate top sources
   const wl_sources = {};
   try {
-    let scursor = null;
-    do {
-      const page = await env.VISITS.list({ prefix: 'wlsrc:', cursor: scursor });
-      for (const k of page.keys) {
-        const v = parseInt((await env.VISITS.get(k.name)) || '0', 10);
-        if (v > 0) wl_sources[k.name.slice(6)] = v;
-      }
-      scursor = page.list_complete ? null : page.cursor;
-    } while (scursor);
+    for (const key of await listKvKeys(env.VISITS, 'wlsrc:', STATS_SOURCE_KEY_LIMIT)) {
+      const value = parseInt((await env.VISITS.get(key.name)) || '0', 10);
+      if (value > 0) wl_sources[key.name.slice(6)] = value;
+    }
   } catch {}
-  let licenses_issued = null;
-  try { licenses_issued = parseInt((await env.VISITS.get('t:all:licenses-issued')) || '0', 10); } catch {}
 
-  // AI assistant usage (anonymous counters, no question content stored)
   let ai_asks = null;
   try { ai_asks = parseInt((await env.VISITS.get('ai-ask-count')) || '0', 10); } catch {}
   let ai_limited_today = null;
@@ -1110,7 +1329,25 @@ async function handleStats(url, env) {
   let scans = null;
   try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
 
-  return jsonResp({ ok: true, days, stats: filtered, waitlist, wl_sources, licenses_issued, ai_asks, ai_limited_today, scans });
+  return privateJsonResp({
+    ok: true,
+    days,
+    traffic_status: traffic.status,
+    unique_status: traffic.unique_status,
+    domain_status: traffic.domain_status,
+    stats: traffic.stats,
+    stats_by_domain: traffic.stats_by_domain,
+    downloads_by_domain: traffic.downloads_by_domain,
+    events_by_domain: traffic.events_by_domain,
+    sales_status: salesLedger.status,
+    sales: salesLedger.sales,
+    waitlist,
+    wl_sources,
+    licenses_issued: salesLedger.licenses_issued,
+    ai_asks,
+    ai_limited_today,
+    scans,
+  });
 }
 
 /**
@@ -1124,28 +1361,36 @@ async function handleHealth(url, env) {
   const today = new Date(now).toISOString().slice(0, 10);
   const yesterday = new Date(now - DAY).toISOString().slice(0, 10);
 
-  let kvOk = false, statsOk = false, recentVisits = 0, recentDownloads = 0, lastDeploy = null;
+  let kvOk = false, recentVisits = null, recentDownloads = null, lastDeploy = null;
+  let trafficStatus = 'unknown';
   try {
-    // check KV is reachable by reading yesterday's homepage visits
-    const test = await env.VISITS.get(`t:${yesterday}:/`);
+    await env.VISITS.get('__health_probe__');
     kvOk = true;
-    // count recent traffic (today + yesterday)
-    for (const day of [today, yesterday]) {
-      const page = await env.VISITS.list({ prefix: `t:${day}:` });
-      for (const k of page.keys) {
-        const v = parseInt((await env.VISITS.get(k.name)) || '0', 10);
-        if (k.name.includes('downloads@')) recentDownloads += v;
-        else recentVisits += v;
+  } catch {}
+  try {
+    const traffic = await collectTraffic(env, 2);
+    trafficStatus = traffic.status;
+    if (kvOk && ['ok', 'partial'].includes(traffic.status)) {
+      recentVisits = 0;
+      recentDownloads = 0;
+      for (const domainStats of Object.values(traffic.stats_by_domain || {})) {
+        if (!domainStats) continue;
+        for (const day of [today, yesterday]) {
+          for (const info of Object.values(domainStats[day] || {})) recentVisits += info.visits;
+        }
+      }
+      for (const domainStats of Object.values(traffic.downloads_by_domain || {})) {
+        if (!domainStats) continue;
+        for (const day of [today, yesterday]) {
+          for (const info of Object.values(domainStats[day] || {})) recentDownloads += info.visits;
+        }
       }
     }
-    statsOk = true;
-  } catch (e) {
-    // KV may be unreachable or empty — not a fatal error
-  }
+  } catch {}
 
-  let waitlist = 0;
+  let waitlist = null;
   try { waitlist = parseInt((await env.VISITS.get('wl-count')) || '0', 10); } catch {}
-  let scans = 0;
+  let scans = null;
   try { scans = parseInt((await env.VISITS.get('csc-count')) || '0', 10); } catch {}
 
   return jsonResp({
@@ -1154,8 +1399,9 @@ async function handleHealth(url, env) {
     kv: kvOk,
     timestamp: new Date().toISOString(),
     stats: { recentVisits, recentDownloads, waitlist, scans },
+    traffic_status: trafficStatus,
     lastDeploy: lastDeploy,
-    version: 1,
+    version: 3,
   });
 }
 
@@ -2676,8 +2922,20 @@ async function alertMads(env, subject, text) {
  *  - en eksisterende licens-record overskrives aldrig (aktiverede enheder bevares),
  *  - mailen sendes med Resend-idempotency-nøgle og gentages, hvis den fejlede.
  */
+async function setFulfillmentPending(env, key, value) {
+  try {
+    await env.VISITS.put(key, JSON.stringify(value), { expirationTtl: FULFILLMENT_PENDING_TTL_SECONDS });
+  } catch {}
+}
+
+async function clearFulfillmentPending(env, key) {
+  try { await env.VISITS.delete(key); } catch {}
+}
+
 async function fulfillStripeSession(env, sessionId) {
-  const cachedRaw = await env.VISITS.get(`ful:${sessionId}`);
+  const ledgerKey = `ful:${sessionId}`;
+  const pendingKey = `fulpending:${sessionId}`;
+  const cachedRaw = await env.VISITS.get(ledgerKey);
   if (cachedRaw) {
     const cached = JSON.parse(cachedRaw);
     if (cached.ok && cached.emailed === false && cached.kind !== 'donation') {
@@ -2687,17 +2945,22 @@ async function fulfillStripeSession(env, sessionId) {
         const email = String((s.customer_details && s.customer_details.email) || '').trim().toLowerCase();
         if (email && await sendSaleEmail(env, email, cached, sessionId)) {
           cached.emailed = true;
-          await env.VISITS.put(`ful:${sessionId}`, JSON.stringify(cached));
+          await env.VISITS.put(ledgerKey, JSON.stringify(cached));
         }
       } catch {}
     }
-    return cached;
+    if (cached.ok) {
+      await clearFulfillmentPending(env, pendingKey);
+      return cached;
+    }
   }
 
   const s = await stripeGet(env, `checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=line_items.data.price`);
   if (s.status !== 'complete' || !['paid', 'no_payment_required'].includes(s.payment_status)) {
     return { ok: false, pending: true, error: 'Payment not completed yet.' };
   }
+  const pendingRecord = { session_id: sessionId, state: 'processing', started_at: new Date().toISOString() };
+  await setFulfillmentPending(env, pendingKey, pendingRecord);
   const item = (s.line_items && s.line_items.data && s.line_items.data[0]) || {};
   const productKey = String((item.price && item.price.lookup_key) || '').replace(/-v\d+$/, '');
   const product = STRIPE_PRODUCTS[productKey];
@@ -2705,12 +2968,14 @@ async function fulfillStripeSession(env, sessionId) {
     // Betalt, men vi ved ikke hvad der skal leveres — må aldrig ske i stilhed.
     await alertMads(env, 'Betaling uden kendt produkt',
       `Checkout-session ${sessionId} er betalt, men prisen har lookup_key "${(item.price && item.price.lookup_key) || '(ingen)'}", som workeren ikke kender. Køberen har IKKE fået noget leveret.`);
+    await clearFulfillmentPending(env, pendingKey);
     return { ok: false, error: 'Unknown product. Mads has been notified and will deliver manually.' };
   }
   const qty = Math.max(1, parseInt(item.quantity || 1, 10));
   const email = String((s.customer_details && s.customer_details.email) || '').trim().toLowerCase();
   const now = new Date();
   const result = { ok: true, product: productKey, product_name: product.name, kind: product.kind };
+  await setFulfillmentPending(env, pendingKey, { ...pendingRecord, product: productKey, product_name: product.name, kind: product.kind });
   const pi = s.payment_intent || null;
 
   if (product.kind === 'donation') {
@@ -2750,11 +3015,8 @@ async function fulfillStripeSession(env, sessionId) {
   }
 
   result.emailed = product.kind === 'donation' ? true : (email ? await sendSaleEmail(env, email, result, sessionId) : false);
-  await env.VISITS.put(`ful:${sessionId}`, JSON.stringify(result));
-  try {
-    const k = `t:all:sales:${productKey}`;
-    await env.VISITS.put(k, String(parseInt((await env.VISITS.get(k)) || '0', 10) + 1));
-  } catch {}
+  await env.VISITS.put(ledgerKey, JSON.stringify(result));
+  await clearFulfillmentPending(env, pendingKey);
   return result;
 }
 
@@ -2793,22 +3055,22 @@ async function sendSaleEmail(env, to, r, sessionId) {
 /** GET /api/stripe/fulfillment?session_id=cs_… — bruges af tak-siden. */
 async function handleStripeFulfillment(request, url, env) {
   const sid = url.searchParams.get('session_id') || '';
-  if (!/^cs_(live|test)_[A-Za-z0-9]{10,200}$/.test(sid)) return jsonResp({ ok: false, error: 'Invalid session.' }, 400);
-  if (!env.VISITS || !env.STRIPE_SECRET_KEY) return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
+  if (!/^cs_(live|test)_[A-Za-z0-9]{10,200}$/.test(sid)) return privateJsonResp({ ok: false, error: 'Invalid session.' }, 400);
+  if (!env.VISITS || !env.STRIPE_SECRET_KEY) return privateJsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
   try {
     // Pr. IP (ikke IP+UA), så man ikke kan omgå grænsen ved at skifte User-Agent.
     const rlKey = `rl:ful:${await ipHash(request)}:${Math.floor(Date.now() / 3600000)}`;
     const hits = parseInt((await env.VISITS.get(rlKey)) || '0', 10);
-    if (hits >= 30) return jsonResp({ ok: false, error: 'Too many attempts. Try again later.' }, 429);
+    if (hits >= 30) return privateJsonResp({ ok: false, error: 'Too many attempts. Try again later.' }, 429);
     await env.VISITS.put(rlKey, String(hits + 1), { expirationTtl: 7200 });
   } catch {}
   try {
     const r = await fulfillStripeSession(env, sid);
-    return jsonResp(r, r.ok ? 200 : (r.pending ? 202 : 404));
+    return privateJsonResp(r, r.ok ? 200 : (r.pending ? 202 : 404));
   } catch (e) {
     // Cloudflare erstatter 502-svar med sin egen fejlside, så brug 404/503.
-    if (e && e.status === 404) return jsonResp({ ok: false, error: 'Order not found.' }, 404);
-    return jsonResp({ ok: false, error: 'Could not look up the payment. Refresh in a minute.' }, 503);
+    if (e && e.status === 404) return privateJsonResp({ ok: false, error: 'Order not found.' }, 404);
+    return privateJsonResp({ ok: false, error: 'Could not look up the payment. Refresh in a minute.' }, 503);
   }
 }
 

@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `correct-sitemaps-domains-2026-09-25-r3`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
-- `NEXT_TASK`: `4E — Page Profile Pro skal acceptere Stripe-nøgler` (flyttet frem 2026-09-25: blokerer betalende kunder)
-- `TASK_ATTEMPTS`: `3: 2/2`
-- `LAST_BRANCH`: `ceo/repair-sitemap-deploy-gate`
-- `PLAN_COMMIT`: `b7c8a64`
-- `BASELINE`: `main@fb4189d`
-- `RESULT`: Opgave 3 er færdig. De tre Pages-domæner har domænekorrekte robots/sitemaps med 32 Clean Copy-, 5 DeskUptime- og 251 mahope.tools-ruter; CI bygger, deployer og live-verificerer præcis `b7c8a64`. Den separate `mahope/bugbottle`-kilde matcher live på commit `07828a1d605383c58cf44416447e0497e91fdac3`.
-- `GATE`: `GRØN — 11/11 sitemap-tests, 3/3 live-checker-tests, deterministisk routeinventory, build, 4/4 domænecheckere, SEO 307 sider/0 fund, Stripe 43/43, inline JS 296/0, workflow YAML/syntax, GitHub Actions 3/3 og uafhængig live-kontrol 3/3`
+- `ITERATION_ID`: `domain-traffic-ledger-2026-09-25-r1`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `4A — Gør trafikdata domæneopdelt og troværdige`
+- `NEXT_TASK`: `4E — Page Profile Pro skal acceptere Stripe-nøgler`
+- `TASK_ATTEMPTS`: `4A: 1/2`
+- `LAST_BRANCH`: `ceo/domain-traffic-ledger`
+- `PLAN_COMMIT`: `0243faa`
+- `BASELINE`: `main@0243faa`
+- `RESULT`: Igangværende domæneopdelt trafik- og salgsledger med syntetiske tests og eksplicit ukendt-håndtering.
+- `GATE`: `AFVENTER efter rebase på main@0243faa`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -207,7 +207,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
 
-### 4A. UFÆRDIG — Gør trafikdata domæneopdelt og troværdige
+### 4A. I GANG — Gør trafikdata domæneopdelt og troværdige
 
 **Begrundelse:** Ugerapport 2026-39 er tom, og de gamle rapporter kan ikke adskille fire domæner eller skelne duplikattracking. Uden troværdige data kan opgave 4B ikke vælge sider fra data.
 

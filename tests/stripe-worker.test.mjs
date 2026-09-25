@@ -14,7 +14,8 @@ const kv = new Map();
 const VISITS = {
   get: async (k, type) => { const v = kv.get(k); if (v === undefined) return null; return type === 'arrayBuffer' ? new TextEncoder().encode(v).buffer : v; },
   put: async (k, v) => { kv.set(k, typeof v === 'string' ? v : v); },
-  list: async () => ({ keys: [], list_complete: true }),
+  delete: async (k) => { kv.delete(k); },
+  list: async ({ prefix = '' } = {}) => ({ keys: [...kv.keys()].filter(key => key.startsWith(prefix)).sort().map(name => ({ name })), list_complete: true }),
 };
 const WHSEC = 'whsec_test123';
 const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHSEC, RESEND_API_KEY: 're_x',
@@ -43,6 +44,10 @@ const sessions = {
   cs_live_donationHHHHHHHHHH: { status: 'complete', payment_status: 'paid', customer_details: { email: 'd@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'support-mahope-oss-v1' } }] } },
   cs_live_refundIIIIIIIIIIII: { status: 'complete', payment_status: 'paid', subscription: null, payment_intent: 'pi_ref', customer_details: { email: 'f@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
+  cs_live_ledgerfailJJJJJJJJJJ: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'l@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'transmute-desktop-v1' } }] } },
+  cs_live_pendingfailKKKKKKKKKK: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'p@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
 };
 globalThis.fetch = async (url, opts = {}) => {
@@ -74,6 +79,7 @@ ok('gammel Lemon-rute: POST = 404', r.status === 404);
 r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA');
 let j = await r.json();
 ok('licens udstedt', r.status === 200 && /^[a-f0-9]{32}$/.test(j.license_key), JSON.stringify(j));
+ok('leveringssvar er ikke cross-origin læsbare', !r.headers.get('access-control-allow-origin'));
 ok('max 3 enheder', j.max_devices === 3);
 ok('én mail', mails.length === 1 && mails[0].to[0] === 'buyer@example.com');
 const key = j.license_key;
@@ -147,6 +153,31 @@ ok('samtidig levering giver én licens', raceKeys.length === 1, raceKeys.length)
 r = await call('/api/stripe/fulfillment?session_id=cs_live_raceEEEEEEEEEEEEEE'); j = await r.json();
 ok('samme nøgle bagefter', j.license_key === a1.license_key);
 ok('mails har idempotency-nøgle', mails.slice(mailsFoer).every(m => m.idem === 'sale-cs_live_raceEEEEEEEEEEEEEE'));
+const raceFulfillmentKeys = [...kv.keys()].filter(k => k === 'ful:cs_live_raceEEEEEEEEEEEEEE');
+ok('race/replay giver én fulfillment-record', raceFulfillmentKeys.length === 1);
+ok('fulfillment-ledger har ét produkt', JSON.parse(kv.get(raceFulfillmentKeys[0])).product === 'transmute-desktop');
+ok('ingen separat salgstæller skrives', ![...kv.keys()].some(k => k.startsWith('t:all:sales:')));
+r = await call('/api/stats?token=hp-stats-v1&days=30'); j = await r.json();
+ok('race/replay tæller præcis ét salg', j.sales_status === 'ok' && j.sales.by_product['transmute-desktop'] === 1, JSON.stringify(j.sales));
+const originalPut = VISITS.put;
+VISITS.put = async (k, v, options) => {
+  if (k.startsWith('fulpending:')) throw new Error('pending write failed');
+  return originalPut(k, v, options);
+};
+r = await call('/api/stripe/fulfillment?session_id=cs_live_pendingfailKKKKKKKKKK');
+VISITS.put = originalPut;
+ok('fejlet pending-markør blokerer ikke betalt levering', r.status === 200 && kv.has('ful:cs_live_pendingfailKKKKKKKKKK'), r.status);
+VISITS.put = async (k, v, options) => {
+  if (k === 'ful:cs_live_ledgerfailJJJJJJJJJJ' && String(v).includes('"ok":true')) throw new Error('ledger write failed');
+  return originalPut(k, v, options);
+};
+r = await call('/api/stripe/fulfillment?session_id=cs_live_ledgerfailJJJJJJJJJJ');
+VISITS.put = originalPut;
+ok('ufuldstændig fulfillment svarer 503', r.status === 503, r.status);
+for (const key of [...kv.keys()]) if (key.startsWith('fulpending:')) kv.delete(key);
+for (const key of [...kv.keys()]) if (key.startsWith('ful:')) kv.delete(key);
+r = await call('/api/stats?token=hp-stats-v1&days=30'); j = await r.json();
+ok('ufuldstændig fulfillment-ledger er ukendt, ikke nul', j.sales_status === 'unknown' && j.sales === null, JSON.stringify(j.sales));
 // 2) Nyt fakturaformat (parent.subscription_details) forlænger
 r = await wh('invoice.paid', { parent: { subscription_details: { subscription: 'sub_1' } }, lines: { data: [{ period: { end: 2200000000 } }] } });
 const subRec = JSON.parse(kv.get('lic:' + kv.get('lic-sub:sub_1')));
@@ -163,6 +194,7 @@ ok('retry sender mailen', r.status === 200 && mails.length === m0 + 1 && mails[m
 const m1 = mails.length;
 r = await call('/api/stripe/fulfillment?session_id=cs_live_ukendtGGGGGGGGGGGG');
 ok('ukendt produkt = 404', r.status === 404);
+ok('ukendt produkt efterlader ingen pending-markør', ![...kv.keys()].some(key => key.startsWith('fulpending:cs_live_ukendt')));
 ok('alarm til Mads', mails.length === m1 + 1 && mails[mails.length - 1].to[0] === 'mads@mahope.dk');
 // 5) Donation: ok, ingen alarm, ingen kundemail
 const m2 = mails.length;

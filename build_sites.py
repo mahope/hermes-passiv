@@ -372,6 +372,22 @@ def build_index(sites: dict[str, Site]):
 ABS_RE = re.compile(r"(?<![\.\w])(https?://)?" + re.escape(OLD_ORIGIN.split("//")[1]) + r"(/[^\s\"'<>)\]]*)?")
 ATTR_RE = re.compile(r"""((?:href|src|content|action|poster|data-href)=["'])(/[^"'\s]*)(["'])""")
 CSSURL_RE = re.compile(r"""(url\(["']?)(/[^)"'\s]+)(["']?\))""")
+SHARED_TRACK_RE = re.compile(r"""<script\b[^>]*\bsrc\s*=\s*["'][^"']*/track\.js(?:\?[^"']*)?["']""", re.I | re.S)
+INLINE_PAGEVIEW_RE = re.compile(
+    r"""fetch\(\s*['"]\/api\/track['"]\s*,\s*[{]+[^;]*?body\s*:\s*JSON\.stringify\([{]+\s*path\s*:\s*p\s*[}]+\s*\)[^;]*?[}]+\s*\)\.catch\(\s*function\s*\(\)\s*\{.*?\}[\s}]*\)\s*;?""",
+    re.I | re.S,
+)
+MALFORMED_TRACKING_SCRIPT_RE = re.compile(
+    r"""<script\b[^>]*>\s*\(function\(\)\{\{.*?/api/track.*?</script\s*>""",
+    re.I | re.S,
+)
+
+
+def strip_duplicate_pageviews(text: str) -> str:
+    if not SHARED_TRACK_RE.search(text):
+        return text
+    text = INLINE_PAGEVIEW_RE.sub("", text)
+    return MALFORMED_TRACKING_SCRIPT_RE.sub("", text)
 
 
 def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: dict) -> str:
@@ -1214,6 +1230,8 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
                               section=shell_info["section"], body=main_txt[:400].strip(), tags=tags,
                               indexable=meta_robots_allows_index(text)))
         text = rewrite_text(site, text, is_html, local, global_idx)
+        if is_html:
+            text = strip_duplicate_pageviews(text)
         out.write_text(text, encoding="utf-8", errors="surrogateescape")
 
     idx_cfg = site.cfg.get("index_from")

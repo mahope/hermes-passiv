@@ -287,7 +287,7 @@
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    if (window.trackEvent) window.trackEvent('nis2_incident_generate');
+    if (window.trackEvent) window.trackEvent('nis2-incident-generate');
     current = buildData();
     $('report').innerHTML = renderHTML(current);
     $('reportWrap').hidden = false;
@@ -341,7 +341,7 @@
             body: JSON.stringify({ email: email }),
           }).then(function (r) { return r.json(); }).then(function (d) {
             if (d.ok) {
-              if(window.trackEvent)window.trackEvent('lead_nis2-incident-generator');
+              if(window.trackEvent)window.trackEvent('lead-nis2-incident-generator');
 status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</span>';
               document.getElementById('leadForm').innerHTML = '<p style="color:var(--color-green);font-weight:600">✓ You\'re on the list!</p>';
             } else {

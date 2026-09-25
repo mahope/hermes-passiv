@@ -39,7 +39,7 @@
 
 <div class="container" style="max-width:900px;">
   <h1 style="margin-bottom:0.5rem;">Site Traffic</h1>
-  <p style="opacity:0.5;">Cookieless visit counts per page. Data from the last 30 days in Cloudflare KV (90-day TTL).</p>
+  <p style="opacity:0.5;">Cookieless pageview counts split across the four product domains. Data from the last 30 days in Cloudflare KV (90-day TTL).</p>
 
   <div id="loading">Loading traffic data…</div>
   <div id="noauth" class="err">Unauthorized. Stats are for the site owner only.</div>
@@ -47,12 +47,19 @@
   <div id="dashboard" style="display:none;"></div>
 
   <div class="warn" style="margin-top:2rem;">
-    <strong>Only counts pages with the tracking script.</strong> About 184 of 189 pages have <code>&lt;script defer src="/track.js"&gt;</code>. 
-    Data includes my own curl/polling requests. "Unique" = visitors not seen before today on that page (90-day uniqueness window).
+    <strong>Only pageviews from the four allowed domains are counted.</strong>
+    Known bots, CI jobs and internal health checks are excluded. “Unique” means one visitor per domain, page and UTC day.
   </div>
 </div>
 
 <script>
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+function formatCount(value) {
+  return typeof value === 'number' ? String(value) : '—';
+}
+
 async function load() {
   try {
     const resp = await fetch('/api/stats?token=hp-stats-v1&days=30');
@@ -72,30 +79,80 @@ async function load() {
 }
 
 function render(data) {
-  const stats = data.stats;
+  if (!['ok', 'partial'].includes(data.traffic_status) || !data.stats_by_domain || typeof data.stats_by_domain !== 'object') {
+    throw new Error('Traffic data is incomplete or unknown.');
+  }
+  function mergeKnownDomains(source) {
+    const merged = {};
+    Object.values(source || {}).forEach(domainStats => {
+      Object.entries(domainStats || {}).forEach(([day, entries]) => {
+        merged[day] = merged[day] || {};
+        Object.entries(entries || {}).forEach(([name, info]) => {
+          merged[day][name] = merged[day][name] || { visits: 0, uniques: 0, uniques_known: true };
+          merged[day][name].visits += info.visits || 0;
+          if (typeof info.uniques === 'number') merged[day][name].uniques += info.uniques;
+          else merged[day][name].uniques_known = false;
+        });
+      });
+    });
+    Object.values(merged).forEach(entries => Object.values(entries).forEach(info => {
+      if (!info.uniques_known) info.uniques = null;
+      delete info.uniques_known;
+    }));
+    return merged;
+  }
+  const stats = mergeKnownDomains(data.stats_by_domain);
+  const downloadStats = mergeKnownDomains(data.downloads_by_domain);
   const days = Object.keys(stats).sort().reverse();
+  const knownOnly = data.traffic_status === 'partial';
   
   // Aggregate totals
-  let totalVisits = 0, totalUnique = 0, totalDownloads = 0;
+  let totalVisits = 0, totalUnique = 0, totalUniqueKnown = true, totalDownloads = 0;
   const pageTotals = {};
+  const downloadTotals = {};
   
   days.forEach(day => {
     Object.entries(stats[day] || {}).forEach(([path, info]) => {
       totalVisits += info.visits || 0;
-      totalUnique += info.uniques || 0;
-      if (path.startsWith('downloads@')) {
-        totalDownloads += info.visits || 0;
-        const ebook = path.replace('downloads@', '');
-        pageTotals[path] = pageTotals[path] || { visits: 0, uniques: 0 };
-        pageTotals[path].visits += info.visits;
-        pageTotals[path].uniques += info.uniques;
-        return;
-      }
+      if (typeof info.uniques === 'number') totalUnique += info.uniques;
+      else totalUniqueKnown = false;
       const cleanPath = path;
-      pageTotals[cleanPath] = pageTotals[cleanPath] || { visits: 0, uniques: 0 };
+      pageTotals[cleanPath] = pageTotals[cleanPath] || { visits: 0, uniques: 0, uniques_known: true };
       pageTotals[cleanPath].visits += info.visits;
-      pageTotals[cleanPath].uniques += info.uniques;
+      if (typeof info.uniques === 'number') pageTotals[cleanPath].uniques += info.uniques;
+      else pageTotals[cleanPath].uniques_known = false;
     });
+  });
+  Object.entries(downloadStats).forEach(([day, entries]) => {
+    Object.entries(entries || {}).forEach(([file, info]) => {
+      totalDownloads += info.visits || 0;
+      downloadTotals[file] = downloadTotals[file] || { visits: 0, uniques: 0, uniques_known: true };
+      downloadTotals[file].visits += info.visits;
+      if (typeof info.uniques === 'number') downloadTotals[file].uniques += info.uniques;
+      else downloadTotals[file].uniques_known = false;
+    });
+  });
+  Object.values(pageTotals).forEach(info => {
+    if (!info.uniques_known) info.uniques = null;
+    delete info.uniques_known;
+  });
+  Object.values(downloadTotals).forEach(info => {
+    if (!info.uniques_known) info.uniques = null;
+    delete info.uniques_known;
+  });
+  if (!totalUniqueKnown) totalUnique = null;
+
+  const domainTotals = Object.entries(data.stats_by_domain).map(([domain, domainStats]) => {
+    let visits = 0, uniques = 0, uniqueKnown = true, activeDays = 0;
+    Object.values(domainStats || {}).forEach(dayStats => {
+      if (Object.keys(dayStats).length) activeDays++;
+      Object.values(dayStats).forEach(info => {
+        visits += info.visits || 0;
+        if (typeof info.uniques === 'number') uniques += info.uniques;
+        else uniqueKnown = false;
+      });
+    });
+    return { domain, status: data.domain_status?.[domain] || 'unknown', visits, uniques: uniqueKnown ? uniques : null, activeDays };
   });
 
   // Render summary cards
@@ -104,30 +161,37 @@ function render(data) {
   document.getElementById('loading').style.display = 'none';
 
   el.innerHTML = '<div class="stat-grid">' +
-    '<div class="stat-card"><h3>Total visits</h3><div class="num">' + totalVisits + '</div><div class="note">Across all tracked pages</div></div>' +
-    '<div class="stat-card"><h3>Unique visitors</h3><div class="num">' + totalUnique + '</div><div class="note">Per-page unique count (not deduplicated across pages)</div></div>' +
+    '<div class="stat-card"><h3>' + (knownOnly ? 'Known visits' : 'Total visits') + '</h3><div class="num">' + totalVisits + '</div><div class="note">' + (knownOnly ? 'Verified domains only' : 'Across all tracked pages') + '</div></div>' +
+    '<div class="stat-card"><h3>Unique visitors</h3><div class="num">' + formatCount(totalUnique) + '</div><div class="note">Per-page unique count (not deduplicated across pages)</div></div>' +
     '<div class="stat-card"><h3>E-book downloads</h3><div class="num">' + totalDownloads + '</div><div class="note">EPUB downloads tracked</div></div>' +
     '<div class="stat-card"><h3>Days with data</h3><div class="num">' + days.length + '</div><div class="note">In last 30 days</div></div>' +
     '</div>';
+
+  el.innerHTML += '<h2 style="margin-top:2rem;">Traffic by domain</h2>';
+  el.innerHTML += '<table><tr><th>Domain</th><th>Status</th><th>Visits</th><th>Unique</th><th>Days with data</th></tr>';
+  domainTotals.forEach(row => {
+    el.innerHTML += '<tr><td>' + row.domain + '</td><td>' + row.status + '</td><td>' + (row.status === 'ok' ? row.visits : '—') + '</td><td>' + (row.status === 'ok' ? formatCount(row.uniques) : '—') + '</td><td>' + (row.status === 'ok' ? row.activeDays : '—') + '</td></tr>';
+  });
+  el.innerHTML += '</table>';
 
   // Top pages
   const sorted = Object.entries(pageTotals).sort((a, b) => b[1].visits - a[1].visits);
   el.innerHTML += '<h2 style="margin-top:2rem;">Top pages by visits</h2>';
   el.innerHTML += '<table><tr><th>Page</th><th>Visits</th><th>Unique</th></tr>';
   sorted.slice(0, 20).forEach(([path, info]) => {
-    const display = path.replace(/^\/?/, '/').replace(/@.*$/, '');
-    el.innerHTML += '<tr><td><a href="' + display + '">' + display + '</a></td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+    const display = escapeHtml(path.replace(/^\/?/, '/').replace(/@.*$/, ''));
+    el.innerHTML += '<tr><td><a href="' + display + '">' + display + '</a></td><td>' + info.visits + '</td><td>' + formatCount(info.uniques) + '</td></tr>';
   });
   el.innerHTML += '</table>';
 
   // Downloads
-  const downloads = Object.entries(pageTotals).filter(([p]) => p.startsWith('downloads@'));
+  const downloads = Object.entries(downloadTotals);
   if (downloads.length) {
     el.innerHTML += '<h2 style="margin-top:2rem;">📥 E-book downloads</h2>';
     el.innerHTML += '<table><tr><th>E-book</th><th>Downloads</th><th>Unique</th></tr>';
     downloads.sort((a, b) => b[1].visits - a[1].visits).forEach(([path, info]) => {
-      const name = path.replace('downloads@', '');
-      el.innerHTML += '<tr><td>' + name + '</td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+      const name = escapeHtml(path);
+      el.innerHTML += '<tr><td>' + name + '</td><td>' + info.visits + '</td><td>' + formatCount(info.uniques) + '</td></tr>';
     });
     el.innerHTML += '</table>';
   }
@@ -136,23 +200,25 @@ function render(data) {
   el.innerHTML += '<h2 style="margin-top:2rem;">Daily breakdown</h2>';
   days.slice(0, 14).forEach(day => {
     const dayData = stats[day] || {};
-    const dayTotal = Object.values(dayData).reduce((s, v) => s + (v.visits || 0), 0);
-    const dayUnique = Object.values(dayData).reduce((s, v) => s + (v.uniques || 0), 0);
-    el.innerHTML += '<div class="day-header">' + day + ' — ' + dayTotal + ' visits / ' + dayUnique + ' unique</div>';
+    const dayPages = Object.entries(dayData).filter(([path]) => !path.startsWith('downloads@'));
+    const dayTotal = dayPages.reduce((s, [, v]) => s + (v.visits || 0), 0);
+    const dayUnique = dayPages.some(([, v]) => typeof v.uniques !== 'number') ? null : dayPages.reduce((s, [, v]) => s + v.uniques, 0);
+    el.innerHTML += '<div class="day-header">' + day + ' — ' + dayTotal + ' visits / ' + formatCount(dayUnique) + ' unique</div>';
     
-    const pages = Object.entries(dayData).sort((a, b) => b[1].visits - a[1].visits);
+    const pages = dayPages.sort((a, b) => b[1].visits - a[1].visits);
     if (pages.length) {
       el.innerHTML += '<table><tr><th>Page</th><th>Visits</th><th>Unique</th></tr>';
       pages.forEach(([path, info]) => {
-        const display = path;
-        el.innerHTML += '<tr><td><code>' + display + '</code></td><td>' + info.visits + '</td><td>' + info.uniques + '</td></tr>';
+        const display = escapeHtml(path);
+        el.innerHTML += '<tr><td><code>' + display + '</code></td><td>' + info.visits + '</td><td>' + formatCount(info.uniques) + '</td></tr>';
       });
       el.innerHTML += '</table>';
     }
   });
 
   // Raw data note
-  el.innerHTML += '<details style="margin-top:2rem;"><summary style="cursor:pointer;opacity:0.5;">Raw JSON (last 7 days)</summary><pre style="font-size:0.75rem;max-height:400px;overflow:auto;background:rgba(0,0,0,0.2);padding:1rem;border-radius:8px;">' + JSON.stringify({ days: data.days, waitlist: data.waitlist, licenses: data.licenses_issued, stats: days.slice(0, 7).reduce((o, d) => { o[d] = stats[d]; return o; }, {}) }, null, 2) + '</pre></details>';
+  const raw = JSON.stringify({ days: data.days, traffic_status: data.traffic_status, unique_status: data.unique_status, domain_status: data.domain_status, events_by_domain: data.events_by_domain, sales_status: data.sales_status, sales: data.sales, waitlist: data.waitlist, licenses: data.licenses_issued, stats: days.slice(0, 7).reduce((o, d) => { o[d] = stats[d]; return o; }, {}) }, null, 2);
+  el.innerHTML += '<details style="margin-top:2rem;"><summary style="cursor:pointer;opacity:0.5;">Raw JSON (last 7 days)</summary><pre style="font-size:0.75rem;max-height:400px;overflow:auto;background:rgba(0,0,0,0.2);padding:1rem;border-radius:8px;">' + escapeHtml(raw) + '</pre></details>';
 }
 
 load();

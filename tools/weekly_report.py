@@ -39,15 +39,7 @@ STATS_TOKEN = os.environ.get("STATS_TOKEN", "hp-stats-v1")
 MAIL_TO = "mads@mahoje.dk"
 MAIL_FROM = "Mahope rapport <bugs@mahoje.dk>"
 
-# Produkt -> domæne (kun til overskrifter; ingen tal udledes heraf)
-PRODUCTS = {
-    "EUComply": "eucomplypro.com",
-    "Clean Copy": "cleancopy.tools",
-    "DeskUptime": "deskuptime.com",
-    "Transmute": "transmute.run",
-    "BugBottle": "bugbottle.dev",
-    "mahope.tools": "mahope.tools",
-}
+TRAFFIC_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
 
 NPM_PACKAGES = [
     "@mahope/clean-copy",
@@ -135,48 +127,209 @@ def is_day(key: str) -> bool:
 def collect_health() -> dict:
     d = http_json(f"{SITE}/api/health", timeout=30)
     st = d.get("stats") or {}
+    traffic_status = d.get("traffic_status")
+    traffic_known = traffic_status in ("ok", "partial")
     return {
         "status": d.get("status"),
         "kv": d.get("kv"),
-        "visits_2d": st.get("recentVisits"),
-        "downloads_2d": st.get("recentDownloads"),
+        "traffic_status": traffic_status,
+        "visits_2d": st.get("recentVisits") if traffic_known else None,
+        "downloads_2d": st.get("recentDownloads") if traffic_known else None,
         "waitlist": st.get("waitlist"),
         "scans": st.get("scans"),
     }
 
 
-def collect_stats(days: int = 7) -> dict:
-    url = f"{SITE}/api/stats?token={urllib.parse.quote(STATS_TOKEN)}&days={days + 1}"
-    d = http_json(url, timeout=120)
-    if not d.get("ok"):
-        raise RuntimeError(d.get("error") or "stats svarede ok=false")
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).date().isoformat()
-    visits = downloads = 0
-    per_path: dict[str, int] = {}
-    per_download: dict[str, int] = {}
-    for day, paths in (d.get("stats") or {}).items():
-        if not is_day(day) or day < cutoff:
-            continue
-        for path, v in paths.items():
-            n = int(v.get("visits") or 0)
-            if "downloads@" in path:
-                downloads += n
-                per_download[path.split("downloads@", 1)[1]] = per_download.get(path.split("downloads@", 1)[1], 0) + n
-            else:
-                visits += n
-                per_path[path] = per_path.get(path, 0) + n
-    top = sorted(per_path.items(), key=lambda kv: -kv[1])[:8]
-    top_dl = sorted(per_download.items(), key=lambda kv: -kv[1])[:8]
+def unknown_stats() -> dict:
+    unknown_domains = {
+        domain: {"status": "unknown", "visits": None, "top_paths": []}
+        for domain in TRAFFIC_DOMAINS
+    }
     return {
+        "available": False,
+        "status": "unknown",
+        "unique_status": "unknown",
+        "window_days": 7,
+        "visits": None,
+        "domains": unknown_domains,
+        "downloads": None,
+        "download_domains": {
+            domain: {"status": "unknown", "visits": None, "top_downloads": []}
+            for domain in TRAFFIC_DOMAINS
+        },
+        "top_paths": [],
+        "top_downloads": [],
+        "sales": {"available": False, "status": "unknown"},
+        "waitlist": None,
+        "licenses_issued": None,
+        "ai_asks": None,
+        "scans": None,
+    }
+
+
+def _window_by_domain(
+    raw_by_domain: dict,
+    days: int,
+    *,
+    pageviews: bool,
+    domain_status: dict | None = None,
+) -> tuple[dict, int | None, list, bool]:
+    if not isinstance(raw_by_domain, dict):
+        raise RuntimeError("stats_by_domain mangler")
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days - 1)).date().isoformat()
+    domains = {}
+    total = 0
+    aggregate = {}
+    complete = True
+    top_key = "top_paths" if pageviews else "top_downloads"
+    item_key = "path" if pageviews else "file"
+    for domain in TRAFFIC_DOMAINS:
+        raw_domain = raw_by_domain.get(domain)
+        state = (domain_status or {}).get(domain)
+        if state != "ok":
+            complete = False
+            domains[domain] = {
+                "status": "unknown",
+                "visits": None,
+                top_key: [],
+            }
+            continue
+        if not isinstance(raw_domain, dict):
+            raise RuntimeError(f"stats mangler for {domain}")
+        per_name = {}
+        for day, entries in raw_domain.items():
+            if not is_day(day):
+                raise RuntimeError(f"ugyldig dato i stats: {day}")
+            if day < cutoff:
+                continue
+            if not isinstance(entries, dict):
+                raise RuntimeError(f"ugyldige stats for {domain}/{day}")
+            for name, info in entries.items():
+                if not isinstance(name, str) or (pageviews and not name.startswith("/")):
+                    raise RuntimeError(f"ugyldig sti i stats: {name}")
+                if not isinstance(info, dict) or type(info.get("visits")) is not int or info["visits"] < 0:
+                    raise RuntimeError(f"ugyldigt besøgstal for {domain}/{day}/{name}")
+                count = info["visits"]
+                unique = info.get("uniques")
+                if unique is not None and (type(unique) is not int or unique < 0 or unique > count):
+                    raise RuntimeError(f"ugyldigt uniktal for {domain}/{day}/{name}")
+                per_name[name] = per_name.get(name, 0) + count
+                aggregate[name] = aggregate.get(name, 0) + count
+                total += count
+        if pageviews and not per_name:
+            complete = False
+            domains[domain] = {
+                "status": "unknown",
+                "visits": None,
+                top_key: [],
+            }
+            continue
+        top = sorted(per_name.items(), key=lambda item: (-item[1], item[0]))[:8]
+        domains[domain] = {
+            "status": "ok",
+            "visits": sum(per_name.values()),
+            top_key: [{item_key: name, "visits": count} for name, count in top],
+        }
+    top_aggregate = sorted(aggregate.items(), key=lambda item: (-item[1], item[0]))[:8]
+    return domains, total if complete else None, top_aggregate, complete
+
+
+def _collect_sales(data: dict) -> dict:
+    if data.get("sales_status") != "ok":
+        return {"available": False, "status": "unknown"}
+    source = data.get("sales")
+    if not isinstance(source, dict) or source.get("scope") != "all_time_gross_fulfillments":
+        return {"available": False, "status": "unknown"}
+    by_product = source.get("by_product")
+    product_names = source.get("product_names")
+    if not isinstance(by_product, dict) or not by_product or not isinstance(product_names, dict) \
+            or any(not re.fullmatch(r"[a-z0-9-]+", product) or type(count) is not int or count < 0
+                   for product, count in by_product.items()) \
+            or any(not isinstance(product, str) or not isinstance(name, str) or not name
+                   for product, name in product_names.items()) \
+            or set(by_product) != set(product_names):
+        return {"available": False, "status": "unknown"}
+    return {
+        "available": True,
+        "status": "ok",
+        "scope": source["scope"],
+        "by_product": by_product,
+        "product_names": product_names,
+    }
+
+
+def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
+    result = {
+        "available": True,
+        "status": "unknown",
+        "unique_status": "unknown",
+        "window_days": days,
+        "visits": None,
+        "domains": {
+            domain: {"status": "unknown", "visits": None, "top_paths": []}
+            for domain in TRAFFIC_DOMAINS
+        },
+        "downloads": None,
+        "download_domains": {
+            domain: {"status": "unknown", "visits": None, "top_downloads": []}
+            for domain in TRAFFIC_DOMAINS
+        },
+        "top_paths": [],
+        "top_downloads": [],
+        "sales": sales,
+        "waitlist": None,
+        "licenses_issued": None,
+        "ai_asks": None,
+        "scans": None,
+    }
+    if error:
+        result["error"] = error
+    return result
+
+
+def collect_stats(days: int = 7) -> dict:
+    url = f"{SITE}/api/stats?token={urllib.parse.quote(STATS_TOKEN)}&days={days}"
+    data = http_json(url, timeout=120)
+    if not data.get("ok"):
+        raise RuntimeError(data.get("error") or "stats svarede ok=false")
+    sales = _collect_sales(data)
+    domain_status = data.get("domain_status")
+    traffic_status = data.get("traffic_status")
+    if traffic_status not in ("ok", "partial"):
+        return _unknown_traffic(sales, days, "trafikstatus er ukendt")
+    if not isinstance(domain_status, dict) or not any(domain_status.get(domain) == "ok" for domain in TRAFFIC_DOMAINS):
+        return _unknown_traffic(sales, days, "alle domæner er ukendte")
+
+    try:
+        domains, visits, top, pages_complete = _window_by_domain(
+            data.get("stats_by_domain"), days, pageviews=True, domain_status=domain_status
+        )
+        if not any(domains[domain]["status"] == "ok" for domain in TRAFFIC_DOMAINS):
+            return _unknown_traffic(sales, days, "ingen domæner har verificerede pageviews")
+        download_domains, downloads, top_downloads, downloads_complete = _window_by_domain(
+            data.get("downloads_by_domain"), days, pageviews=False, domain_status=domain_status
+        )
+    except RuntimeError as exc:
+        note_error("api/stats trafik", exc)
+        return _unknown_traffic(sales, days, str(exc))
+
+    status = "ok" if pages_complete and downloads_complete else "partial"
+    return {
+        "available": True,
+        "status": status,
+        "unique_status": data.get("unique_status", "unknown"),
         "window_days": days,
         "visits": visits,
+        "domains": domains,
         "downloads": downloads,
-        "top_paths": [{"path": p, "visits": n} for p, n in top],
-        "top_downloads": [{"file": p, "hits": n} for p, n in top_dl],
-        "waitlist": d.get("waitlist"),
-        "licenses_issued": d.get("licenses_issued"),
-        "ai_asks": d.get("ai_asks"),
-        "scans": d.get("scans"),
+        "download_domains": download_domains,
+        "top_paths": [{"path": path, "visits": count} for path, count in top],
+        "top_downloads": [{"file": file_name, "hits": count} for file_name, count in top_downloads],
+        "sales": sales,
+        "waitlist": data.get("waitlist"),
+        "licenses_issued": data.get("licenses_issued") if sales.get("available") is True else None,
+        "ai_asks": data.get("ai_asks"),
+        "scans": data.get("scans"),
     }
 
 
@@ -327,10 +480,11 @@ def collect_links() -> dict:
 def collect_all() -> dict:
     now = datetime.now(timezone.utc)
     data = {
+        "schema_version": 2,
         "iso_week": iso_week_key(now),
         "generated_at": now.isoformat(timespec="seconds"),
         "health": soft("api/health", collect_health, {}),
-        "traffic": soft("api/stats", collect_stats, {}),
+        "traffic": soft("api/stats", collect_stats, unknown_stats()),
         "npm": soft("npm", collect_npm, {}),
         "github": soft("github", collect_github, {}),
         "bugreports": soft("api/bugreport", collect_bugreports, {"available": False, "note": "kunne ikke hentes"}),
@@ -379,7 +533,7 @@ def fmt_delta(d) -> str:
 
 def fmt_num(v) -> str:
     if v is None:
-        return "kunne ikke hentes"
+        return "ukendt"
     return str(v)
 
 
@@ -395,30 +549,60 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
 
     # --- Trafik ---
     tr, hl = data.get("traffic") or {}, data.get("health") or {}
-    ptr = (prev or {}).get("traffic") or {}
+    traffic_status = tr.get("status")
+    traffic_complete = tr.get("available") is True and traffic_status == "ok"
+    traffic_available = tr.get("available") is True and traffic_status in ("ok", "partial")
+    ptr = ((prev or {}).get("traffic") or {}) if (prev or {}).get("schema_version") == 2 else {}
     rows = []
     for label, key in [("Besøg (7 dage)", "visits"), ("Downloads (7 dage)", "downloads"),
-                       ("Compliance-scans (total)", "scans"), ("Licenser udstedt (total)", "licenses_issued"),
+                       ("Compliance-scans (total)", "scans"), ("Licenser udstedt (alle tider)", "licenses_issued"),
                        ("Ventelisten (total)", "waitlist"), ("AI-spørgsmål (total)", "ai_asks")]:
         cur = tr.get(key)
         if cur is None and key in ("scans", "waitlist"):
             cur = hl.get(key)
-        d = delta(cur, ptr.get(key))
-        rows.append([label, fmt_num(cur), fmt_delta(d)])
-        if d:
-            notable.append(f"{label.split(' (')[0].lower()} {fmt_delta(d)}")
-    note = None
-    if not tr:
-        note = "Trafiktal kunne ikke hentes fra mahope.tools/api/stats."
+        change = delta(cur, ptr.get(key))
+        rows.append([label, fmt_num(cur), fmt_delta(change)])
+        if change:
+            notable.append(f"{label.split(' (')[0].lower()} {fmt_delta(change)}")
+    if traffic_complete:
+        note = None
+    elif traffic_status == "partial":
+        note = "Trafiktallet er delvist ukendt, fordi ikke alle fire domæner har verificeret datagrundlag."
+    else:
+        note = "Trafiktal er ukendt, fordi mahope.tools/api/stats ikke leverede komplette data."
     sections.append({"title": "Trafik og brug (Cloudflare KV)", "headers": ["Måltal", "Nu", "Δ uge"],
                      "rows": rows, "note": note})
 
-    if tr.get("top_paths"):
-        sections.append({"title": "Mest besøgte sider (7 dage)", "headers": ["Side", "Besøg"],
-                         "rows": [[p["path"], str(p["visits"])] for p in tr["top_paths"]], "note": None})
-    if tr.get("top_downloads"):
+    for domain in TRAFFIC_DOMAINS:
+        domain_data = (tr.get("domains") or {}).get(domain) or {}
+        if traffic_available and domain_data.get("status") == "ok":
+            top_paths = domain_data.get("top_paths") or []
+            domain_rows = [[item["path"], str(item["visits"])] for item in top_paths]
+            domain_note = None if domain_rows else "Ingen verificerede pageviews i denne 7-dages periode."
+        else:
+            domain_rows = []
+            domain_note = "Trafik for dette domæne er ukendt."
+        sections.append({"title": f"Mest besøgte sider — {domain}", "headers": ["Side", "Besøg"],
+                         "rows": domain_rows, "note": domain_note})
+
+    if traffic_complete and tr.get("top_downloads"):
         sections.append({"title": "Mest hentede filer (7 dage)", "headers": ["Fil", "Hits"],
-                         "rows": [[p["file"], str(p["hits"])] for p in tr["top_downloads"]], "note": None})
+                         "rows": [[item["file"], str(item["hits"])] for item in tr["top_downloads"]], "note": None})
+
+    sales = tr.get("sales") or {"available": False, "status": "unknown"}
+    if sales.get("available") is True and sales.get("status") == "ok":
+        by_product = sales.get("by_product") or {}
+        product_names = sales.get("product_names") or {}
+        sales_rows = [[product_names.get(product, product), str(count), ""]
+                      for product, count in sorted(by_product.items(), key=lambda item: item[0])]
+        if not sales_rows:
+            sales_rows = [["Ingen dokumenterede salg", "0", ""]]
+        sales_note = "Brutto, deduplikerede Stripe-checkout-sessioner fra `ful:`-ledgeren; ikke omsætning."
+    else:
+        sales_rows = []
+        sales_note = "Stripe-salg er ukendt, fordi fulfillment-ledgeren ikke kunne læses komplet."
+    sections.append({"title": "Stripe-salg (alle tider, deduplikeret)", "headers": ["Produkt", "Salg", ""],
+                     "rows": sales_rows, "note": sales_note})
 
     # --- npm ---
     npm, pnpm = data.get("npm") or {}, (prev or {}).get("npm") or {}

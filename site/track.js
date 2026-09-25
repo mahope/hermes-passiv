@@ -3,9 +3,16 @@
  * No cookies, no localStorage. Sends one beacon per page view.
  */
 (function () {
+  var noop = function () {};
+  window.trackEvent = window.trackEvent || noop;
+  if (window.__hermesTrackLoaded) return;
+  window.__hermesTrackLoaded = true;
   try {
+    var dnt = navigator.doNotTrack === '1' || navigator.doNotTrack === 'yes' || window.doNotTrack === '1';
+    var gpc = navigator.globalPrivacyControl === true;
+    if (dnt || gpc) return;
     var p = location.pathname;
-    if (p === '/api/track' || p === '/api/stats') return;
+    if (p === '/api/track' || p === '/api/stats' || p === '/stats') return;
     var body = JSON.stringify({ path: p });
     var sent = false;
     function send() {

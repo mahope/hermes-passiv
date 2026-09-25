@@ -21,7 +21,11 @@ on:
       - 'tools/test_check_live_sitemaps.py'
       - 'tools/seo_check.py'
       - 'tools/check_inline_js.py'
+      - 'tools/add_tracking.py'
+      - 'tools/weekly_report.py'
+      - 'tools/test_weekly_report.py'
       - 'tests/stripe-worker.test.mjs'
+      - 'tests/tracking-worker.test.mjs'
       - '.github/workflows/deploy-sites.yml'
   workflow_dispatch:
 
@@ -68,6 +72,8 @@ jobs:
           python tools/seo_check.py --only "${{ matrix.domain }}"
           python tools/check_sitemaps.py --only "${{ matrix.domain }}"
           node tests/stripe-worker.test.mjs
+          node tests/tracking-worker.test.mjs
+          python3 tools/test_weekly_report.py
           python tools/check_inline_js.py
           if grep -q "extra file missing" build.log; then
             echo "FEJL: build_sites.py manglede en extra-fil (auditedwp-checkout?)"

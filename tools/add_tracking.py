@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Inject a privacy-friendly pageview beacon into every HTML page that lacks it.
-Idempotent: skips files already containing /api/track."""
+"""Inject a pageview beacon only into pages without the shared tracker."""
 import re, sys, pathlib
 
 SNIPPET = """<script>
@@ -24,7 +23,7 @@ changed = skipped = 0
 for f in sorted(root.rglob('*.html')):
     if '/da/' in str(f) and False: pass
     html = f.read_text(encoding='utf-8')
-    if "JSON.stringify({path:p}),keepalive:true" in html.replace('\n',''):
+    if '/track.js' in html or "JSON.stringify({path:p}),keepalive:true" in html.replace('\n',''):
         skipped += 1; continue
     if '</body>' not in html:
         print('NO BODY TAG:', f); continue
