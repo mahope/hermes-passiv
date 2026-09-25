@@ -2,14 +2,26 @@
 
 ## Status
 
-- `ITERATION_ID`: `broken-refs-hard-gate-2026-09-25`
-- `STATE`: `Opgave 10 FÆRDIG — broken: 0 på alle fire sites, og både buildet og CI fejler nu på en reel uopklaret reference. Den nye port er `tools/check_links.py`.`
+- `ITERATION_ID`: `ci-runs-real-gate-2026-09-25`
+- `STATE`: `Opgave 11 FÆRDIG — CI kører nu præcis den dokumenterede kvalitetsgate, og det er bevist at den gør. Én liste med én ejer: tools/quality_gate.py.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `11 — få CI til at køre den faktiske kvalitetsgate`
-- `TASK_ATTEMPTS`: `10: 1/1. Grøn første gang. En fejl undervejs: jeg skrev først `/blog/copy-table-from-website-to-word` som erstatning for en ubrugt `{URL}`-placeholder uden at slå slaget op — den artikel findes ikke, så jeg rettede begge links til artikler der faktisk ligger i `site/blog/`.`
-- `LAST_BRANCH`: `ceo/broken-refs-hard-gate` (implementering `0cd0909`, merge `c3dea91`)
-- `PLAN_COMMIT`: `0cd0909` (kode + plan) og `(denne commit)` (deploy-bevis)
-- `BASELINE`: `main@099b87f`
+- `NEXT_TASK`: `12 — deklarér runtime og opgradér Electron-patchlinjen`
+- `TASK_ATTEMPTS`: `11: 1/1. Grøn første gang, men kun fordi porten selv fangede to fejl undervejs: build-desktop.yml lå uden for path-filteret, og min første `_is_deploy_job` læste kun \`run:\`-steps, så \`pages deploy\` i wrangler-action's \`with.command\` aldrig blev set — og uden den erkendelse krævede checken aldrig et \`needs\`.`
+- `LAST_BRANCH`: `ceo/ci-runs-real-gate` (implementering + plan i samme commit)
+- `PLAN_COMMIT`: `(denne commit)` (kode + plan)
+- `BASELINE`: `main@e9045ca`
+- `RESULT` (opgave 11): Den dokumenterede gate og CI's gate var **to forskellige lister**, og ingen af dem var sande. `IMPLEMENTATION_PLAN.md` loved 13 kommandoer; hvert af de tre matrix-jobs kørte sin egen, kortere liste. Resultatet: **`check_license_clients.py`, `check_product_copy.py` og `check_stripe_ctas.py` kørte aldrig i CI**, selv om de stod i planens gaten og i hver tidligere iterations GATE-linje; `--self-test` manglede for to af dem; og licensklienternes 103 checks (`node test.js`) kørte aldrig i CI overhovedet. De tre matrixjobs kørte desuden hver især 15 af de samme kommandoer, så ét domænes fejl kunne ikke stoppe de to andre.
+
+  **Løsningen er ikke en længere liste — det er én ejer.** `tools/quality_gate.py` erklærer alle 26 steps med deres kommando og, for hver, **hvilke filer de læser**. Deploy-workflowen kalder den i et nyt `gate`-job over alle fire dists, og `deploy` har `needs: gate`, så en fælles gatefejl dræber alle tre domæner i stedet for at sende dem videre hver for sig. Der kan ikke længere være en afvigende liste, fordi der kun er én.
+
+  **Fund 1 — path-filteret var smallere end gaten, og det viste sig først da porten fik det spørgsmål.** To filer som gaten læser stod ikke i filteret: `docs/stripe-kontrakt.md` (priserne og produktnøglerne, læst af `check_stripe_ctas.py`) og `tools/make_blog_da_mirrors_461.py` (importeret af `check_product_copy.py`). En prisændring eller en generatorændring kunne altså merge og deploye uden at én eneste kørsel så den. `tools/quality_gate.py --inputs` er nu den afledte liste, og porten fejler på alt i den, der ikke matcher filteret. Yderligere ni mønstre kom med, fordi de er reelle input: `tools/quality_gate.py`, `tools/mini_yaml.py`, `tools/check_product_copy.py`, `tools/check_stripe_ctas.py`, `tools/stripe_catalog.json`, `tools/test_license_flow.js`, `test.js`, `products/**` og `desktop/main.js`.
+
+  **Fund 2 — `build-desktop.yml` var slet ikke gaten af nogen slags.** Den læses af `tools/test_deploy_workflow.py`, som kun kører i deploy-gaten, og dens egen workflow kører ingen gate. Før denne port lå den derfor uden for path-filteret, og en push til `main` der kun rettede desktop-workflowen ville bygge deskapps uden at nogen tjekkede triggere, permissions eller `needs`. Nu er den med i filteret. Det er fundet, porten fandt i sit første kørselsti — altså før selftesten.
+
+  **Fund 3 — en kommando, der ingenting gjorde.** `gate-distribution`-jobbet indeholdt `python3 tools/check_links.py --only "${{ matrix.domain }}"` i et job uden matrix. Variablen var tom, kommandoen dækkede intet, og ingen så det fordi den så plausibel ud. Check nummer 6 afviser nu `${{ matrix.* }}` i et job uden matrix.
+
+  **Fund 4 — min egen check var død, indtil selftesten sagde det.** `pages deploy` står i `cloudflare/wrangler-action`s `with.command`, ikke i et `run:`-step. Min første `_is_deploy_job` læste kun `run:`, fandt ingen deploy-job, og checken "deploy-jobbet skal have `needs: gate`" ville aldrig have kørt. Selftestens mutation 9 (fjernet `needs`) forventede en fejl og fik ingen — mutationen reddede porten fra at være teater. Derfor læser `_step_text` hele step'et nu, og selftesten har en positiv kontrol på hver af de nye checks.
+- `GATE`: `GRØN — python3 tools/quality_gate.py: 26 steps, 2 min. build grøn, sitemaps grøn (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer (101 s), check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, check_clean_copy_distribution 0 + --self-test 22/22, check_license_clients 0 + --self-test 9/9, licensklienter 103 checks, test_license_flow 15 checks, obsidian-plugin OK, extension-tools 13/13, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report OK, test_deploy_workflow OK + --self-test OK (15 mutationer), check_links 0 + --self-test OK, dist/uændret (gitignored)`
 - `RESULT` (opgave 10): De 18 "broken references" var ikke 18 fejl, og de var heller ikke 0. Optællingen blandede **ni reelle døde referencer** med **to falske positiver fra kodeeksempler**, og fordi buildet kun skrev dem til `build-summary.json` og returnerede 0, blev ingen rettet i en måned. De ni reelle er nu rettet i source, de to eksempler tælles ikke længere med, og porten er erstattet af `tools/check_links.py` — en `html.parser`-baseret gade over det **byggede** `dist/`, der springer `pre`/`code`/`script`/`style` over og tjekker krydsdomæne-referencer mod det domænes dist, så et cleancopy→mahope-link ikke kan være en 404, fordi mahope-distet ikke var bygget i samme job.
 
   **Fund 1 — de reelle ni.** (a) Seks døde referencer på *live*: DeskUptimes tre værktøjssider (`/tools/`, `/bulk-url-checker/`, `/security-headers-checker/`) indlæser `/assets/site.css` og `/assets/site.js`, som **aldrig har eksisteret** i noget dist — de ligger i `../auditedwp/site/assets/`, og fordi de hentes via `extra` (ikke `pull_assets`) fulgte de ikke med. Værktøjerne har kørret uden stylesheet og uden sitets JS. Rettet ved to `extra`-poster, så de 6 referencer opløses. (b) Fire `ld+json`-"url"-felter på danske artikler pegede på den engelske sti, hvilket brød Googles kanoniske URL for præcis de sider. (c) `/da/blog` i privacy-skabelonen — der findes intet dansk blogindeks; linket peger nu på `/da/guides`. (d) NIS2-siden viste sig selv som `…pages.dev/da/nis2-gap-assessment-da`, mens siden ligger i roden. (e) README'en linkede til desktop-kilde-1.2.0, som ikke findes længere (1.3.3 gør). (f) `llms.txt` linkede scanneren med et efterstillet `` `, `` som regex'en slugtede ind i stien.
@@ -44,11 +56,63 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 
 ## Kvalitetsgate
 
-Denne gate er den obligatoriske minimum før merge til `main`:
+Gaten er **én kommando**, og den har én ejer:
 
 ```bash
-python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py && python3 tools/test_deploy_workflow.py && python3 tools/test_deploy_workflow.py --self-test && python3 tools/check_links.py && python3 tools/check_links.py --self-test
+python3 tools/quality_gate.py
 ```
+
+Den bygger alle fire dists og kører 26 checks i rækkefølge, og dræber ved den
+første røde med navnet på steppet. `python3 tools/quality_gate.py --list` printer
+den som den gamle `&&`-linje, og `--inputs` printer de filer, path-filteret skal
+dække. Opgave 11 (25. september 2026) flyttede den herfra, fordi den lå i planen
+som en håndskrevet linje, mens CI kørte tre kortere lister — og fordi ingen af
+dem var sande.
+
+CI kalder præcis den kommando i `deploy-sites.yml`s `gate`-job, og `deploy` har
+`needs: gate`. `tools/test_deploy_workflow.py` beviser bagefter, at workflowen
+kører den, at deploy-jobbene afhænger af den, at ingen gatestræk står skrevet ud
+uden om den, at path-filteret dækker alt `--inputs`, og at `auditedwp` er pinnet
+til én 40-tegns SHA i begge jobs.
+
+Den underliggende check-liste, hvert step med de filer det læser:
+
+| # | Step | Kommando | Kræver dist |
+|---|---|---|---|
+| 1 | build | `python3 build_sites.py` | — |
+| 2 | sitemaps | `python3 tools/check_sitemaps.py` | ja |
+| 3 | seo | `python3 tools/seo_check.py` | ja |
+| 4 | stripe-worker | `node tests/stripe-worker.test.mjs` | — |
+| 5 | tracking-worker | `node tests/tracking-worker.test.mjs` | — |
+| 6 | inline-js | `python3 tools/check_inline_js.py` | ja |
+| 7 | private-content | `python3 tools/check_private_content.py` | ja |
+| 8 | page-profile-distribution | `python3 tools/check_page_profile_distribution.py` | ja |
+| 9 | page-profile-distribution-selftest | `… --self-test` | — |
+| 10 | page-profile-tests | `python3 page-profile/test_page_profile.py` | — |
+| 11 | clean-copy-distribution | `python3 tools/check_clean_copy_distribution.py` | ja |
+| 12 | clean-copy-distribution-selftest | `… --self-test` | — |
+| 13 | license-clients | `python3 tools/check_license_clients.py` | — |
+| 14 | license-clients-selftest | `… --self-test` | — |
+| 15 | license-client-tests | `node test.js` (103 checks) | — |
+| 16 | license-flow | `node tools/test_license_flow.js` (15 checks) | — |
+| 17 | obsidian-plugin-tests | `node obsidian-plugin/test.js` | — |
+| 18 | extension-tests | `node extension-clean-copy/tools/test_clean_copy.js` | — |
+| 19 | product-copy | `python3 tools/check_product_copy.py` | — |
+| 20 | stripe-ctas | `python3 tools/check_stripe_ctas.py` | — |
+| 21 | stripe-ctas-selftest | `… --self-test` | — |
+| 22 | weekly-report-tests | `python3 tools/test_weekly_report.py` | — |
+| 23 | deploy-workflow | `python3 tools/test_deploy_workflow.py` | — |
+| 24 | deploy-workflow-selftest | `… --self-test` | — |
+| 25 | links | `python3 tools/check_links.py` | ja |
+| 26 | links-selftest | `… --self-test` | — |
+
+Steps der kræver dist springes over, når `dist/` er tomt, så porten kan bruges
+på et delvis checkout uden at lyve om grønt. Lokalt tager hele gaten 2 minutter,
+hvoraf `check_inline_js.py` står for 100.
+
+### Baggrund for de enkelte gates
+
+Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
 Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1,
 udvidet i del 2) er `node tools/test_license_clients.js`, og `node test.js` indlæser
@@ -98,16 +162,27 @@ download-artefakter kan hentes og at formularer med en `action` uden
 worker-marker peger på en rute, der findes. Den springes over når intet er bygget.
 `build_sites.py` har nu *også* exit 1 ved uopklarede referencer, så porten ikke
 kan slås fra ved at glemme at køre den. Begge er i deploy-workflowens
-path-filter; fuld kontrol i `gate-distribution`, `--only` i matrix-jobbet.
+path-filter; fuld kontrol i `gate`-jobbet.
 
-`tools/test_deploy_workflow.py` blev tilføjet 2026-09-25 i opgave 16. Den
-simulerer de faktiske push- og pull_request-events mod begge workflows' egne
-filtre med GitHubs dokumenterede semantik, så en fejl i path-filteret eller i
-ref-filtret fanges som fejl og ikke som "workflowen kører næste gang". Den
-læser YAML med `tools/mini_yaml.py` og ikke PyYAML, fordi `deploy-sites.yml`
-kører på `setup-python` uden installerede pakker — bevist af kørsel
-`36180367257`, hvor `import yaml` dræbte alle tre deploy-jobs. Den ligger i
-deploy-workflowens path-filter og i dens gate-trin.
+`tools/test_deploy_workflow.py` blev tilføjet 2026-09-25 i opgave 16 og udvidet
+2026-09-25 i opgave 11 med `check_gate`. Den første del simulerer de faktiske
+push- og pull_request-events mod begge workflows' egne filtre med GitHubs
+dokumenterede semantik, så en fejl i path-filteret eller i ref-filtret fanges som
+fejl og ikke som "workflowen kører næste gang". Den læser YAML med
+`tools/mini_yaml.py` og ikke PyYAML, fordi `deploy-sites.yml` kører på
+`setup-python` uden installerede pakker — bevist af kørsel `36180367257`, hvor
+`import yaml` dræbte alle tre deploy-jobs. `check_gate` beviser de ting en
+trigger-analyse ikke kan: at `gate`-jobbet faktisk kalder
+`python3 tools/quality_gate.py`, at deploy-jobbene har `needs: gate`, at ingen
+gatestræk står skrevet ud i en `run:`-blok ved siden af den, at path-filteret
+dækker hver fil i `quality_gate.py --inputs` (glob-input udvides mod den rigtige
+filstruktur), og at `auditedwp` er pinnet til én 40-tegns SHA i begge jobs.
+
+`tools/quality_gate.py` blev tilføjet 2026-09-25 i opgave 11, fordi gaten lå i
+to steder der ikke var ens: planens `&&`-linje med 13 kommandoer og tre
+matrixjobs med 15 hver. Tre af planens checks kørte aldrig i CI. Én fil med én
+liste løser det, og filen er den der definerer `--inputs`, så path-filteret er
+afledt i stedet for håndskrevet.
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
 
@@ -839,7 +914,7 @@ regression. Lagt under opgave 15 (døde stier).
 **Acceptkriterier:**
 
 - `dist/build-summary.json` har `broken: 0` for alle fire sites. **Opfyldt** — 0/0/0/0.
-- `python3 tools/check_links.py` og build/CI returnerer non-zero ved en syntetisk broken reference. **Opfyldt og beviset begge veje**: mutation i `site/guides.html` → build exit 1; mutation i `dist/cleancopy.tools/clean-copy.html` → `check_links.py` exit 1 med fil og linje. CI har begge kommandoer i `gate-distribution` (alle fire dists) og `--only <domæne>` i matrix-jobbet.
+- `python3 tools/check_links.py` og build/CI returnerer non-zero ved en syntetisk broken reference. **Opfyldt og beviset begge veje**: mutation i `site/guides.html` → build exit 1; mutation i `dist/cleancopy.tools/clean-copy.html` → `check_links.py` exit 1 med fil og linje. CI kører begge kommandoer i `gate`-jobbet over alle fire dists (opgave 11 flyttede dem fra matrix-jobbets `--only <domæne>` til den fulde kontrol ét sted; se opgave 11).
 - Hvert downloadlink og hver kritisk formular har mindst én repræsentativ smoke test. **Opfyldt som afledt dækning, ikke som liste**: `check_links.py` kræver at *alle* download-artefakter i det byggede dist kan hentes, og at enhver formular med en `action` uden worker-marker peger på en rute, der findes. En hardkodet liste af "vigtige" links ville være præcis den fejlform porten skal fange, nedskrevet som data — samme læring som opgave 8.
 - Hele kvalitetsgaten er grøn. **Opfyldt.**
 
@@ -847,7 +922,7 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Rækkevidde ændret undervejs, og hvorfor:** opgaven sagde "18". Det viste sig at være ni reelle fejl plus ni falske positiver, hvoraf to kodeeksempler. De to eksempler *kunne* ikke rettes uden at ødelægge en korrekt, pædagogisk kodeblok — så de blev fjernet fra *regningen*, ikke fra siden. Til gengæld fandt porten fire ekstra fejl, som ikke stod på de 18: manglende DeskUptime-assets, et uomskrevet 404-nav, `{URL}`-placeholders på to publicerede artikler og en falsk versionspåstand på downloadsiden.
 
-### 11. UFÆRDIG — Få CI til at køre den faktiske kvalitetsgate
+### 11. FÆRDIG (implementering `ceo/ci-runs-real-gate`) — Få CI til at køre den faktiske kvalitetsgate
 
 **Begrundelse:** Workflowen kører kun build og SEO-check; den betalingskritiske Worker-test og inline-JS-test mangler.
 
@@ -860,13 +935,17 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Acceptkriterier:**
 
-- CI fejler, hvis Stripe-worker-testen eller inline-JS-testen fejler.
-- En ændring i et buildinput udløser workflowen.
-- Den pinnede `auditedwp`-revision står i planen.
-- `python3 tools/test_deploy_workflow.py` beviser gatekommandoer, path-triggere og fail-fast-adfærd.
-- Hele kvalitetsgaten er grøn.
+- CI fejler, hvis Stripe-worker-testen eller inline-JS-testen fejler. **Opfyldt og nu *enforet***: gaten kører i ét job over alle fire dists, og alle tre deploys har `needs: gate`. Stripe-worker-testen og inline-JS-testen kørte begge allerede, men kun i matrix-jobbet og uden at en fælles fejl stoppede de andre domæner.
+- En ændring i et buildinput udløser workflowen. **Opfyldt, og hævet fra 4 til 19 konkrete filer**: `tools/quality_gate.py --inputs` er den afledte liste over alt hvad gaten læser, og `test_deploy_workflow.py` fejler på alt i den, der ikke matcher filteret. To af dem lå ikke i filteret (`docs/stripe-kontrakt.md`, `tools/make_blog_da_mirrors_461.py`), og `build-desktop.yml` lå uden for, selv om det er det eneste sted gaten overhovedet køres.
+- Den pinnede `auditedwp`-revision står i planen. **Opfyldt og håndhævet**: `5e244dcff242352cd5be31a55ca5f7d260f7e520` i begge jobs, og porten fejler på et flyt tag og på at de to jobs bruger hver sin revision.
+- `python3 tools/test_deploy_workflow.py` beviser gatekommandoer, path-triggere og fail-fast-adfærd. **Opfyldt**: `check_gate` har seks checks, og selftesten har otte nye mutationer (gaten væk, deploy uden `needs`, dobbeltliste, `docs/` væk, `products/**` væk, flydende ref, divergerende ref, spøgelses-matrix). To af dem fangede en fejl i min egen kode, først og fremmest `_is_deploy_job`.
+- Hele kvalitetsgaten er grøn. **Opfyldt**: `python3 tools/quality_gate.py` → 26 steps grønne på 2 min.
 
-**Gate:** `python3 tools/test_deploy_workflow.py` plus hele kvalitetsgaten.
+**Gate:** `python3 tools/quality_gate.py` (byg + alle checks) og `python3 tools/quality_gate.py --self-test`-delen heraf.
+
+**Pinnet `auditedwp`:** `5e244dcff242352cd5be31a55ca5f7d260f7e520` — både i `gate` og i `deploy`, kontrolleret af porten. Det er en `mahope/auditedwp`-commit, og bygget læser den via `AUDITEDWP_DIR`; en ny pin kræver en bevidst commit, fordi porten afviser alt der ikke er 40 hex-tegn.
+
+**Ændret omfang, og hvorfor:** opgaven sagde "kør gaten før deploy" og fire underpunkter. Den konkrete fejl var større end formuleret: tre dokumenterede checks kørte aldrig i CI, to manglede deres selftest, og licensklienternes 103 checks kørte aldrig. Derfor blev løsningen ikke "tilføj kommandoer til matrix-jobbet" — det ville have været den fjerde liste — men én ejer for hele listen. Konsekvensen er at matrix-jobbet nu kun bygger, deployer og tjekker live; de 15 duplikerede checks pr. domæne er væk, og de kører én gang over alle fire dists i stedet, hvilket også er det eneste sted `check_clean_copy_distribution.py` og `check_links.py` kan se alle dists på én gang.
 
 ### 12. UFÆRDIG — Deklarér runtime og opgradér Electron-patchlinjen
 
@@ -1114,6 +1193,7 @@ aldrig har fået den version de blev lovet?
 
 ## Commitlog
 
+- CI kører den dokumenterede kvalitetsgate, ét sted: `ceo/ci-runs-real-gate` — `Kør den dokumenterede kvalitetsgate i CI` (11).
 - electron-builder 25 → 26.15.3, advisory-fundene lukket: `ceo/electron-builder-26` — `Opgradér electron-builder og luk advisory-fundene` (9).
 - Bevis hvilket domæne der publicerer hvilket Clean Copy-arkiv: `ceo/clean-copy-publish-targets` — `Bevis hvilket domæne der publicerer Clean Copy-arkiverne` (8).
 - Publicerede Clean Copy-arkiver fra kilden: `ceo/clean-copy-archives` — `Pak Clean Copy-arkiverne reproducerbart fra kilden` (7 del 2 pkt. 2).

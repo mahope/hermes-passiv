@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate for GitHub-workflows' triggere, permissions og jobs.
+"""Gate for GitHub-workflows' triggere, permissions, jobs og gaten selv.
 
 Baggrund (opgave 16, 25. september 2026): `build-desktop.yml` har ikke kørt
 siden 25. august 2026. Rodårsagen var commit `6766501`, som lagde `tags:` ved
@@ -8,6 +8,20 @@ hvert push, en branch-push er aldrig et tag, så workflowen blev tag-only, og
 ethvert push til `main` der rørte `desktop/` sprang over. Opgave 9, 12 og enhver
 fremtidig desktop-ændring brugte den matrix som sin eneste platformdækning, så
 en opgradering der kun virker på macOS ville passere gaten grøn.
+
+Baggrund del 2 (opgave 11, 25. september 2026): gaten var dokumenteret i planen
+som én `&&`-linje, mens CI kørte tre separate, kortere lister. Tre lister kan
+ikke bevise at de er ens. Listen har nu én ejer, `tools/quality_gate.py`, og de
+tjek her er beviset på at CI faktisk bruger den:
+
+- Deploy-workflowen skal kalde `python3 tools/quality_gate.py` — præcis den
+  kommando, og ingen gatestræk må derudover være skrevet ud i en `run:`-blok.
+- Hvert deploy-job skal `needs:` det job der kører gaten, så en fælles gatefejl
+  dræber alle domæner i stedet for at sende dem videre hver for sig.
+- Path-filteret skal dække **hver** fil `quality_gate.py` erklærer, at den
+  læser. Glob-input udvides mod den rigtige filstruktur, så `site/**` testes mod
+  de filer der faktisk ligger under `site/`.
+- `auditedwp` skal være pinnet til én 40-tegns SHA i alle jobs.
 
 En YAML-læsning kan ikke bevise en trigger. Derfor simulerer denne gate de
 faktiske events mod workflowens egne filtre med GitHubs dokumenterede
@@ -34,11 +48,13 @@ import argparse
 import copy
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mini_yaml import YamlSubsetError, parse  # noqa: E402
+from quality_gate import STEPS as GATE_STEPS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = {
@@ -48,6 +64,13 @@ WORKFLOWS = {
 
 DESKTOP_JOBS = ("build-macos", "build-linux", "build-windows")
 DESKTOP_TAG = "eaa-scanner-desktop-v1.4.0"
+
+# Den ene kommando der må køre gaten. Helt navn, ikke et mønster: en
+# `run:`-blok med `python3 tools/quality_gate` uden `.py` ville køre intet.
+GATE_COMMAND = "python3 tools/quality_gate.py"
+
+# Mapper der springes over ved filoptælling: byguddata, ikke kilder.
+WALK_SKIP = {".git", "dist", "node_modules", "__pycache__", ".wrangler", "vendor"}
 
 
 # --------------------------------------------------------------------------
@@ -288,6 +311,201 @@ def check_deploy(wf: dict[str, Any], label: str) -> list[str]:
     for job, spec in (wf.get("jobs") or {}).items():
         if (spec.get("permissions") or {}).get("contents") == "write":
             problems.append(f"{site}: jobbet `{job}` har contents: write uden grund")
+    problems += check_gate(wf, "repo")
+    return problems
+
+
+# --------------------------------------------------------------------------
+# Opgave 11: CI skal køre den dokumenterede gate, og kun den
+# --------------------------------------------------------------------------
+def _run_commands(spec: dict[str, Any]) -> list[str]:
+    """Alle kommandoer i et jobs `run:`-blokke, én ad gangen pr. linje."""
+    commands: list[str] = []
+    for step in (spec.get("steps") or []):
+        if not isinstance(step, dict):
+            continue
+        body = step.get("run")
+        if not isinstance(body, str):
+            continue
+        for line in body.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith(("if ", "for ", "while ", "do ", "done ", "fi", "else",
+                                "elif ", "esac", "then")):
+                continue
+            commands.append(line)
+    return commands
+
+
+def _needs(spec: dict[str, Any]) -> list[str]:
+    needs = spec.get("needs")
+    return [needs] if isinstance(needs, str) else list(needs or [])
+
+
+def _step_text(step: dict[str, Any]) -> str:
+    """Hele step'ets tekst, uanset hvilken nøgel den ligger i."""
+    if not isinstance(step, dict):
+        return ""
+    parts: list[str] = []
+    for key in ("run", "name", "uses"):
+        value = step.get(key)
+        if isinstance(value, str):
+            parts.append(value)
+    with_ = step.get("with")
+    if isinstance(with_, dict):
+        parts += [f"{k}={v}" for k, v in with_.items() if isinstance(v, str)]
+    return "\n".join(parts)
+
+
+def _is_deploy_job(spec: dict[str, Any]) -> bool:
+    """Deployer jobbet? Ikke bare et `run:`-step — `pages deploy` står i
+    `with.command` på wrangler-action, så en gate der kun læser `run:` ville
+    aldrig finde nogen deploy-job og aldrig kræve `needs`."""
+    return any("pages deploy" in _step_text(step)
+               for step in (spec.get("steps") or []) if isinstance(step, dict))
+
+
+def _pinned_auditedwp(wf: dict[str, Any]) -> list[str]:
+    """Revisions for auditedwp-checkoutet, i rækkefølge forekomst."""
+    refs: list[str] = []
+    for spec in (wf.get("jobs") or {}).values():
+        if not isinstance(spec, dict):
+            continue
+        for step in (spec.get("steps") or []):
+            if not isinstance(step, dict):
+                continue
+            with_ = step.get("with") or {}
+            if isinstance(with_, dict) and with_.get("repository") == "mahope/auditedwp":
+                refs.append(str(with_.get("ref") or ""))
+    return refs
+
+
+@lru_cache(maxsize=1)
+def _repo_files() -> tuple[str, ...]:
+    """Alle sporbare filer i repoet, til at udvide glob-input mod."""
+    found: list[str] = []
+    for path in ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+        if any(part in WALK_SKIP for part in path.relative_to(ROOT).parts):
+            continue
+        found.append(path.relative_to(ROOT).as_posix())
+    return tuple(sorted(found))
+
+
+def _expand(pattern: str) -> list[str]:
+    """Glob → de rigtige filer den dækker (tom hvis mønsteret er en fil)."""
+    if not any(ch in pattern for ch in "*?["):
+        return [pattern]
+    regex = _pattern_regex(pattern)
+    return [f for f in _repo_files() if regex.match(f)]
+
+
+def _uncovered(step_id: str, pattern: str, filters: list[str]) -> list[str]:
+    """Filer i `pattern` som path-filteret ikke dækker."""
+    covered = lambda f: any(_pattern_regex(p).match(f) for p in filters)  # noqa: E731
+    expanded = _expand(pattern)
+    if not expanded:
+        # Mønsteret peger på filer der ikke findes (ny kilde, ikke endnu
+        # committet). Så må mønsteret selv matche, ellers er det uopklaret.
+        return [] if covered(pattern) else [pattern]
+    return [f for f in expanded if not covered(f)]
+
+
+def check_gate(wf: dict[str, Any], label: str) -> list[str]:
+    """Deploy-workflowen skal køre `quality_gate.py` og intet andet."""
+    problems: list[str] = []
+    site = f"{label}: deploy-sites.yml"
+    jobs = wf.get("jobs") or {}
+    push_paths = (event(wf, "push") or {}).get("paths")
+    filters = [str(p) for p in (push_paths or []) if not str(p).startswith("!")]
+
+    # 1. Der skal være præcis ét job, der kører gaten.
+    gate_jobs: list[str] = []
+    for job, spec in jobs.items():
+        if not isinstance(spec, dict):
+            continue
+        if any(cmd == GATE_COMMAND for cmd in _run_commands(spec)):
+            gate_jobs.append(job)
+    if not gate_jobs:
+        problems.append(f"{site}: intet job kører `{GATE_COMMAND}`, så den "
+                        "dokumenterede kvalitetsgate kører aldrig i CI")
+    elif len(gate_jobs) > 1:
+        problems.append(f"{site}: {len(gate_jobs)} jobs kører gaten "
+                        f"({', '.join(sorted(gate_jobs))}) — en fejl ville give "
+                        "to uafhængige sandheder om porten")
+
+    # 2. Hvert deploy-job skal afhænge af gate-jobbet, så en fælles gatefejl
+    #    dræber alle domæner i stedet for at sende dem videre hver for sig.
+    for job, spec in jobs.items():
+        if not isinstance(spec, dict) or not _is_deploy_job(spec):
+            continue
+        if gate_jobs and not set(gate_jobs) & set(_needs(spec)):
+            problems.append(
+                f"{site}: deploy-jobbet `{job}` har ikke `needs: "
+                f"{gate_jobs[0]}`, så en fælles gatefejl ville stadig deploye "
+                "dette domæne")
+
+    # 3. Ingen gatestræk må være skrevet ud i en `run:`-blok. Det er hele
+    #    pointen med én ejer: to lister kan ikke bevise at de er ens.
+    for job, spec in jobs.items():
+        if not isinstance(spec, dict):
+            continue
+        for cmd in _run_commands(spec):
+            for step in GATE_STEPS:
+                if cmd == step.command and not (job in gate_jobs and cmd == GATE_COMMAND):
+                    problems.append(
+                        f"{site}: `{cmd}` står som sin egen kommando i jobbet "
+                        f"`{job}` — kør gaten gennem `{GATE_COMMAND}`, ellers "
+                        "kan de to lister glide fra hinanden")
+
+    # 4. Path-filteret skal dække alt, hvad gaten læser.
+    for step in GATE_STEPS:
+        for pattern in step.inputs:
+            missing = _uncovered(step.id, pattern, filters)
+            if missing:
+                shown = ", ".join(missing[:3]) + (" …" if len(missing) > 3 else "")
+                problems.append(
+                    f"{site}: path-filteret dækker ikke {shown}, som gatestrækket "
+                    f"`{step.id}` ({step.command}) læser — en push der kun rører "
+                    "den fil springer gaten over")
+
+    # 5. `auditedwp` skal være pinnet, og ens i alle jobs.
+    refs = _pinned_auditedwp(wf)
+    if not refs:
+        problems.append(f"{site}: intet job checkouter auditedwp, men "
+                        "build_sites.py henter værktøjssider derfra")
+    for ref in refs:
+        if not re.fullmatch(r"[0-9a-f]{40}", ref):
+            problems.append(f"{site}: auditedwp er checkoutet på `{ref}`, som "
+                            "ikke er en 40-tegns SHA — et flyt tag eller en "
+                            "branch kan ændre det under buildet")
+    if len(set(refs)) > 1:
+        problems.append(f"{site}: auditedwp er checkoutet på forskellige "
+                        f"revisioner ({', '.join(sorted(set(refs)))}) — de tre "
+                        "domæner ville bygge fra forskellige kilder")
+
+    # 6. Et job uden matrix må ikke bruge matrix-udtryk. Før denne opgave stod
+    #    `check_links.py --only "${{ matrix.domain }}"` i gate-jobbet, som ikke
+    #    har nogen matrix — variablen var tom, og porten dækkede intet.
+    for job, spec in jobs.items():
+        if not isinstance(spec, dict):
+            continue
+        matrix = (spec.get("strategy") or {}).get("matrix")
+        if matrix:
+            continue
+        for step in (spec.get("steps") or []):
+            if not isinstance(step, dict):
+                continue
+            for key in ("run", "name", "with"):
+                value = step.get(key)
+                text = value if isinstance(value, str) else repr(value)
+                if "matrix." in text:
+                    problems.append(f"{site}: jobbet `{job}` bruger "
+                                    "`${{ matrix.* }}` uden at have en matrix — "
+                                    "variablen er tom, så kommandoen kører "
+                                    "ufuldstændig i stedet for at fejle")
     return problems
 
 
@@ -377,7 +595,106 @@ def self_test() -> int:
     ]
     problems = check_deploy(thin_deploy, "tyndt filter")
     ok &= _expect(problems, "tools/seo_check.py", "tyndt-filter",
-                 any("tools/seo_check.py" in p for p in problems))
+                  any("tools/seo_check.py" in p for p in problems))
+
+    # 8. Nyt fra opgave 11: gaten fjernet fra CI. Det var den virkelige
+    #    fejlform — dokumenteret i planen, kørt tre steder i en kortere
+    #    form, aldrig som hele gaten.
+    no_gate = copy.deepcopy(real["deploy"])
+    for spec in no_gate["jobs"].values():
+        for step in spec.get("steps", []):
+            if isinstance(step, dict) and isinstance(step.get("run"), str):
+                step["run"] = step["run"].replace(GATE_COMMAND, "true")
+    problems = check_gate(no_gate, "gaten væk")
+    ok &= _expect(problems, "kvalitetsgate kører aldrig i CI", "gaten-væk",
+                  any("kører aldrig i CI" in p for p in problems))
+
+    # 9. Deploy-jobbet kan køre uden gaten, fordi `needs` mangler.
+    no_needs = copy.deepcopy(real["deploy"])
+    no_needs["jobs"]["deploy"].pop("needs", None)
+    problems = check_gate(no_needs, "deploy uden gate")
+    ok &= _expect(problems, "har ikke `needs:", "deploy-uden-gate",
+                  any("har ikke `needs:" in p for p in problems))
+
+    # 10. En afgrenset gateliste ved siden af quality_gate.py. Den fejlform
+    #     gjorde tre af dokumenterede checks aldrig køre i CI, og ingen
+    #     kunne se den, fordi planen sagde at de kørte.
+    partial = copy.deepcopy(real["deploy"])
+    partial["jobs"]["deploy"]["steps"].insert(0, {
+        "name": "Delvis gate",
+        "run": "node tests/stripe-worker.test.mjs\n"
+               "python3 tools/check_product_copy.py",
+    })
+    problems = check_gate(partial, "dobbeltliste")
+    ok &= _expect(problems, "python3 tools/check_product_copy.py", "dobbeltliste",
+                  any("check_product_copy.py" in p and "kør gaten gennem" in p
+                      for p in problems))
+    if not any("stripe-worker.test.mjs" in p for p in problems):
+        print("FEJL: selftesten `dobbeltliste` forventede, at også et "
+              "stripe-worker-step uden for quality_gate.py meldes", file=sys.stderr)
+        ok = False
+
+    # 11. Et gatestræks fil mangler i path-filteret. `docs/stripe-kontrakt.md`
+    #     lå netop sådan: `check_stripe_ctas.py` læser den, og den stod ikke
+    #     i filteret, så en prisændring kunne deploye uopdaget.
+    no_docs = copy.deepcopy(real["deploy"])
+    no_docs["on"]["push"]["paths"] = [
+        p for p in no_docs["on"]["push"]["paths"]
+        if not str(p).startswith("docs/")
+    ]
+    problems = check_gate(no_docs, "uden docs")
+    ok &= _expect(problems, "docs/stripe-kontrakt.md", "uden-docs",
+                  any("docs/stripe-kontrakt.md" in p for p in problems))
+
+    # 12. Glob-input testes mod de rigtige filer. `products/**` lå i filteret,
+    #     men ikke de enkelte filer, så det er filerne der skal afgøre det —
+    #     ellers ville porten være en ny håndskrevet filiste.
+    thin_products = copy.deepcopy(real["deploy"])
+    thin_products["on"]["push"]["paths"] = [
+        p for p in thin_products["on"]["push"]["paths"] if p != "products/**"
+    ]
+    problems = check_gate(thin_products, "uden products")
+    ok &= _expect(problems, "products/", "uden-products",
+                  any("products/" in p for p in problems))
+
+    # 13. `auditedwp` på et flyt tag i stedet for en SHA.
+    floating = copy.deepcopy(real["deploy"])
+    for spec in floating["jobs"].values():
+        for step in spec.get("steps", []):
+            with_ = step.get("with") if isinstance(step, dict) else None
+            if isinstance(with_, dict) and with_.get("repository") == "mahope/auditedwp":
+                with_["ref"] = "main"
+    problems = check_gate(floating, "flydende ref")
+    ok &= _expect(problems, "40-tegns SHA", "flydende-ref",
+                  any("40-tegns SHA" in p for p in problems))
+
+    # 14. De to jobs checkouter auditedwp på hver sin revision: tre domæner
+    #     ville bygge fra forskellige kilder, og ingen placeholder ville sige det.
+    drifted = copy.deepcopy(real["deploy"])
+    seen_refs = 0
+    for spec in drifted["jobs"].values():
+        for step in spec.get("steps", []):
+            with_ = step.get("with") if isinstance(step, dict) else None
+            if isinstance(with_, dict) and with_.get("repository") == "mahope/auditedwp":
+                seen_refs += 1
+                with_["ref"] = f"{seen_refs:0>40}"[:39] + str(seen_refs)
+    problems = check_gate(drifted, "divergerende ref")
+    ok &= _expect(problems, "forskellige revisioner", "divergerende-ref",
+                  any("forskellige revisioner" in p for p in problems))
+
+    # 15. Matrix-udtryk i et job uden matrix. Det stod i gate-jobbet før denne
+    #     opgave: `check_links.py --only "${{ matrix.domain }}"` med tom
+    #     variabel, så porten dækkede intet uden at sige det.
+    ghost_matrix = copy.deepcopy(real["deploy"])
+    gate_steps = ghost_matrix["jobs"]["gate"]["steps"]
+    for step in gate_steps:
+        if isinstance(step, dict) and isinstance(step.get("run"), str):
+            step["run"] = (step["run"] + "\n"
+                           "python3 tools/check_links.py --only "
+                           '"${{ matrix.domain }}"')
+    problems = check_gate(ghost_matrix, "spøgelses-matrix")
+    ok &= _expect(problems, "uden at have en matrix", "spoegelses-matrix",
+                  any("uden at have en matrix" in p for p in problems))
 
     print(f"test_deploy_workflow selftest {'OK' if ok else 'FEJLEDE'}")
     return 0 if ok else 1
