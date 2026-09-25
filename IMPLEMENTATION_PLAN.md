@@ -2,10 +2,26 @@
 
 ## Status
 
-- `ITERATION_ID`: `desktop-node-runtime-2026-09-25`
-- `STATE`: `Opgave 12 FÆRDIG og post-merge-gaten grøn på alle fire platforme (run 36188356033) — Electron 44.0.0 → 44.4.5, og Node-versionen er erklæret ét sted (desktop/.nvmrc) i stedet for tre gange i workflowen, med en gate der beviser de to erklæringer er enige.`
+- `ITERATION_ID`: `python-build-lock-2026-09-25`
+- `STATE`: `Opgave 13 FÆRDIG — Python-byggemiljøet er låst og hash-tjekket, pip-audit er ren på alle 44 pins, site-icons bygger og installerer, og porten der holder på det er 2 nye steps i den ene gaten.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `13 — lå Python-buildmiljøet og reparer site-icons`
+- `NEXT_TASK`: `14 — ret dokumentation, privacy og versiondrift`
+- `BASELINE`: `main@4520ef2`
+- `LAST_BRANCH`: `ceo/python-build-lock` (implementering + plan i samme commit)`
+- `PLAN_COMMIT`: `(denne commit)`
+- `TASK_ATTEMPTS`: `13: 1/1.`
+- `GATE` (opgave 13): `GRØN — python3 tools/quality_gate.py: GRØN, 28 steps (26 + python-env + python-env-selftest). Opgavens egen port: ren hash-tjekket installation på Python 3.13 af alle 17 build-pins, pip-audit -r requirements-build.txt = "No known vulnerabilities found", python3 -m build site-icons bygger både sdist og hjul, hjulet indeholder site_icons.py, og `site-icons --help` virker efter pip install --force-reinstall. dist/uændret (gitignored), intet site-indhold rørt.`
+- `RESULT` (opgave 13): Der var **to** fejl, ikke én, og den synlige var ikke den vigtigste. `site-icons/pyproject.toml` havde metadata under `[tool]` i stedet for `[project]` — men også `[tool.setuptools.packages.find]`, som **aldrig kunne have fundet noget**: `site_icons.py` er et fladt modul uden `__init__.py`. Så selv et korrekt `[project]`-manifest ville have bygget et hjul uden kode. Rettelsen er derfor begge dele, og porten gater begge.
+
+  **Fund 1 — låsen afslørede to afhængigheder, ingen vidste var med.** `markdown` importeres af `build_bundle.py`, `build_ebook.py` og `build_ebook_all.py`, og `fpdf` af `build_bundle_pdf.py` og `scanner/scan_pro.py`. De var installeret på maskinen ved et tidligere tilfældigt `pip install` og stod i ingen kravfil. Fire værktøjer, to skjulte afhængigheder — opgaven sagde "fire siteværktøjer bruger tredjepartspakker uden samlet lock", og det viste sig at være **seks**.
+
+  **Fund 2 — Pillow 11.3.0 havde 18 kendte advisories, og der var ingen måde at komme uden om dem på denne maskine.** `pip-audit` meldte PYSEC-2026-165/-2249…/-3496, alle rettet i 12.2.0/12.3.0. Pillow 12 kræver `python >=3.10`, og systemets Python her er **3.9.6** — så den seneste sårbare version var også den eneste opnåelige. Løsningen var ikke at dokumentere en undtagelse, men at **erklære runtime'en**, præcis som opgave 12 gjorde for Node: `.python-version` på `3.13` (Homebrew, samme som den sti der kørte `python3 -m build`), og låsen regenereret på den. Derefter: Pillow 12.3.0, `pip-audit` **"No known vulnerabilities found"**, 0 fund. Deploy-CI'en er upåvirket, fordi `build_sites.py` kun bruger stdlib og derfor aldrig installerer nogen af disse.
+
+  **Fund 3 — min egen port havde fejl i alle tre afgange, og det er den del der er værd at huske.** Først fandt den ingen `PIL` i låsen, fordi jeg sammenlignede *importnavnet* med *distributionsnavnet* — de er ikke ens, og den stærkeste fejl i låsen så ud som en udeklareret afhængighed. Så fandt den `charset-normalizer`, `pyee`, `zipp` m.fl. som "ubrugte", fordi den krævede at *alle* pins skulle bruges af et værktøj — men alt transitivt er løst af pip, så det er kun **topniveau** der må være det, og det er `BUILD_TOP_LEVEL` i `lock_python_env.py`, som porten nu læser derfra. Så ignorerede den `HASH_LINE` alle hashes med et `\`-fortsættelsestegn, altså alle undtagen den sidste pr. pin, og erklærede `build` hashløs. Til sidst havde selftesten **inverteret logik**: tom `errors` betyder porten er grøn, altså mutationen **ikke** fanget — og den skrev det modsatte. Otte mutationer stod som fanget, fordi de netop var fanget. Det er den samme fejlform som opgave 16 og 11: en gate uden positiv kontrol på sin egen logik er teater. Nu er der 13 mutationer **og** en grøn start, og hver mutation er fundet ved at læse den rigtige fil, ikke ved at genkende et versionsnummer — to af dem hardcodede `pillow==11.3.0` og `build==1.4.4` og døde da låsen opdaterede dem.
+
+  **Fund 4 — selftesten skrev i den rigtige låsefil.** `without_a_hash` fjernede en hash fra `ROOT/requirements-build.txt` i stedet for fra sit midlertidige copy, og efterlod repoet med en pin der var beskadiget. Den er fundet ved at køre `git status` efter selftesten, som nu er ren; mutationen rører kun sit eget copy. Det er præcis den kontrol man ikke har lavet, før man har lavet skaden.
+
+  **Bevis for porten, ikke bare grønt:** 13 mutationer fanget med 1–7 fejl hver, positiv kontrol grøn før og efter alle mutationerne, og `git status` rent efter kørslen. `tools/mini_toml.py` er stdlib-fallback fordi CI kører Python 3.12 mens denne maskine er 3.9 — samme begrundelse som `mini_yaml` (kørsel 36180367257 døde på `import yaml`).
 - `GATE` (opgave 12): `GRØN — npm ci rent fra den nye lockfil, npm audit --audit-level=high = 0 fund, fire nye macOS-artefakter (dmg+zip for x64 og arm64) bygget med electron 44.4.5 (bekreftet på den indlejrede Electron Framework-streng) — men USIGNEREDE, se fund 4. Sitegaten: python3 tools/quality_gate.py → GRØN, 26 steps, inkl. deploy-workflow + --self-test med de seks nye runtime-mutationer. dist/uændret (gitignored), intet site-indhold rørt.`
 - `TASK_ATTEMPTS`: `12: 1/1.`
 - `LAST_BRANCH`: `ceo/desktop-node-runtime` (implementering + plan i samme commit)
@@ -36,7 +52,7 @@
   **Fund 5 — gaten blev rød i CI med det samme den blev grøn lokalt, og det var ikke et miljøproblem.** Kørsel `36185964282` døde i step 13 `license-clients` med fem fund i `auditedwp-src/…`. Årsagen er reel og vigtig: CI checkouter det eksterne build-repo *ved siden af* workspace (`AUDITEDWP_DIR`), så det ligger inde i `ROOT` i CI og **aldrig lokalt**. `check_license_clients.py` læste derfor vores licenskontrakt med et andet repos klienter i bunken, og gaten fejlede på hvert push med fejl, ingen kan rette her. Rettelsen er et **regelprincip, ikke en navneliste**: `is_external_checkout` springer enhver mappe over, der indeholder en `.git` et sted under sig, uanset navn og dybde — så den fanger checkouten uanset hvad CI har kaldt den. `auditedwp-src` står stadig på `SKIP_DIRS` til forsikring, og begge dele gates nu af tre nye selftests, der probe'r et rigtigt midlertidigt repo (9 → 11/11). Bevist tre veje: CI-navnet springes over, et vilkårligt navn med indlejret `.git` springes over, og **vores egen kode fejler stadig**, så reglen har ikke slået alt fra. De fem fund er ikke slettet — de står ordret under `❓ Til Mads` punkt 10, fordi de er reelle og `mahope/auditedwp` er et andet repo, planen ikke må ændre.
 
   **Fund 6 — min egen første rettelse var en fejl.** `is_external_checkout` fik først kun prefixerne i den relative sti, så den kunne aldrig se et `.git` dybt under sig, og mit første selftest-scenarie forventede at en helt almindelig mappe med *ingen* `.git` blev springet over — hvilket ville have slået porten fra for enhver midlertidig mappe. Begge dele er rettet og dækket af selftests der fejler, hvis reglen fjernes. Det er samme mønster som opgave 16: en gate uden positiv kontrol på sin egen regel er teater.
-- `GATE`: `GRØN — python3 tools/quality_gate.py: 26 steps, 2 min. build grøn, sitemaps grøn (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer (101 s), check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, check_clean_copy_distribution 0 + --self-test 22/22, check_license_clients 0 + --self-test 11/11, licensklienter 103 checks, test_license_flow 15 checks, obsidian-plugin OK, extension-tools 13/13, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report OK, test_deploy_workflow OK + --self-test OK (15 mutationer), check_links 0 + --self-test OK, dist/uændret (gitignored)`
+- `GATE`: `GRØN — python3 tools/quality_gate.py: 28 steps, 2 min. build grøn, sitemaps grøn (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer (101 s), check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, check_clean_copy_distribution 0 + --self-test 22/22, check_license_clients 0 + --self-test 11/11, licensklienter 103 checks, test_license_flow 15 checks, obsidian-plugin OK, extension-tools 13/13, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report OK, test_deploy_workflow OK + --self-test OK (15 mutationer), check_links 0 + --self-test OK, dist/uændret (gitignored)`
 - `CI-BEVIS`: `36185964282` (main) — `gate`-jobbet kørte `python3 tools/quality_gate.py` og døde i step 13 med de fem `auditedwp`-fund, præcis som forventet af fail-fast. Efter rettelsen skal næste kørsel være grøn; resultatet står i deployloggen.
 - `RESULT` (opgave 10): De 18 "broken references" var ikke 18 fejl, og de var heller ikke 0. Optællingen blandede **ni reelle døde referencer** med **to falske positiver fra kodeeksempler**, og fordi buildet kun skrev dem til `build-summary.json` og returnerede 0, blev ingen rettet i en måned. De ni reelle er nu rettet i source, de to eksempler tælles ikke længere med, og porten er erstattet af `tools/check_links.py` — en `html.parser`-baseret gade over det **byggede** `dist/`, der springer `pre`/`code`/`script`/`style` over og tjekker krydsdomæne-referencer mod det domænes dist, så et cleancopy→mahope-link ikke kan være en 404, fordi mahope-distet ikke var bygget i samme job.
 
@@ -78,7 +94,7 @@ Gaten er **én kommando**, og den har én ejer:
 python3 tools/quality_gate.py
 ```
 
-Den bygger alle fire dists og kører 26 checks i rækkefølge, og dræber ved den
+Den bygger alle fire dists og kører 28 checks i rækkefølge, og dræber ved den
 første røde med navnet på steppet. `python3 tools/quality_gate.py --list` printer
 den som den gamle `&&`-linje, og `--inputs` printer de filer, path-filteret skal
 dække. Opgave 11 (25. september 2026) flyttede den herfra, fordi den lå i planen
@@ -119,8 +135,10 @@ Den underliggende check-liste, hvert step med de filer det læser:
 | 22 | weekly-report-tests | `python3 tools/test_weekly_report.py` | — |
 | 23 | deploy-workflow | `python3 tools/test_deploy_workflow.py` | — |
 | 24 | deploy-workflow-selftest | `… --self-test` | — |
-| 25 | links | `python3 tools/check_links.py` | ja |
-| 26 | links-selftest | `… --self-test` | — |
+| 25 | python-env | `python3 tools/check_python_env.py` | — |
+| 26 | python-env-selftest | `… --self-test` | — |
+| 27 | links | `python3 tools/check_links.py` | ja |
+| 28 | links-selftest | `… --self-test` | — |
 
 Steps der kræver dist springes over, når `dist/` er tomt, så porten kan bruges
 på et delvis checkout uden at lyve om grønt. Lokalt tager hele gaten 2 minutter,
@@ -1003,7 +1021,7 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Post-merge-gate:** `gh run watch <run-id> --exit-status` skal være grøn for macOS x64/arm64, Linux og Windows; en rød post-merge-gate reverteres straks i en ny commit.
 
-### 13. UFÆNDIG — Lå Python-buildmiljøet og reparer site-icons
+### 13. FÆRDIG (`ceo/python-build-lock`) — Lå Python-buildmiljøet og reparer site-icons
 
 **Begrundelse:** Fire siteværktøjer bruger tredjepartspakker uden samlet lock, og Site Icons har ugyldig PEP 621-metadata.
 
@@ -1015,12 +1033,14 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Acceptkriterier:**
 
-- En ren installation installerer de deklarerede buildafhængigheder.
-- `pip-audit` har ingen kendte high/critical-fund eller har en dokumenteret, begrundet undtagelse.
-- `pip install` fra Site Icons-sdist installerer Pillow og `site-icons --help` virker.
-- Hele kvalitetsgaten er grøn.
+- En ren installation installerer de deklarerede buildafhængigheder. **OPFYLDT** — ren venv på 3.13, `--require-hashes` på alle 17 pins, exit 0.
+- `pip-audit` har ingen kendte high/critical-fund eller har en dokumenteret, begrundet undtagelse. **OPFYLDT** — "No known vulnerabilities found" på 44 pins, efter Pillow 11.3.0 → 12.3.0.
+- `pip install` fra Site Icons-sdist installerer Pillow og `site-icons --help` virker. **OPFYLDT** — `python3 -m build site-icons` bygger sdist + hjul, hjulet indeholder `site_icons.py`, `--force-reinstall` efterfulgt af `site-icons --help` virker.
+- Hele kvalitetsgaten er grøn. **OPFYLDT** — 28 steps.
 
 **Gate:** `python3 -m pip install --require-hashes -r requirements-build.txt && pip-audit -r requirements-build.txt && python3 -m build site-icons && python3 -m pip install --force-reinstall site-icons/dist/*.whl && site-icons --help` plus hele kvalitetsgaten.
+
+**Resultat:** se `RESULT` (opgave 13) i statusblokken. Kort: `.python-version` på 3.13, to hash-tjekkede låsefiler genereret af `tools/lock_python_env.py` (kun topniveau vælges i repoet), `tools/check_python_env.py` som port med 13 mutationer, og to nye steps i `tools/quality_gate.py` + syv nye mønstre i deploy-workflowens path-filter. `.gitignore` dækker nu `site-icons/dist/` og `site-icons/build/`.
 
 ### 14. UFÆNDIG — Ret dokumentation, privacy og versiondrift
 
@@ -1142,6 +1162,16 @@ aldrig har fået den version de blev lovet?
 
 
 ## Deploylog
+
+- 2026-09-25: `INGEN SITE-INDHOLD ÆNDRET — python-build-lock` — mergecommit for
+  opgave 13 rørrer `requirements-build.txt`, `requirements-audit.txt`,
+  `.python-version`, `.gitignore`, `site-icons/pyproject.toml` og fire filer i
+  `tools/`. Ingen `site/`-fil er rørt, så de tre domæner får præcis det indhold de
+  havde. Deploy-workflowens path-filter rører `tools/**` og
+  `site-icons/pyproject.toml`, så kørselen forventes, og `gate`-jobbet kører de to
+  nye steps. **Verificér ikke live-indhold** — intet er ændret. Den eneste
+  post-merge-gate er CI's egen grønne `gate`.
+
 
 - `CI-BEVIS` (opgave 12): `36188356033` (build-desktop, main) — `build-macos` x64 og
   arm64, `build-linux` og `build-windows` **grønne** på Electron 44.4.5 med den Node

@@ -282,6 +282,25 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/test_deploy_workflow.py", "tools/mini_yaml.py"),
     ),
     Step(
+        id="python-env",
+        argv=("python3", "tools/check_python_env.py"),
+        inputs=(
+            "tools/check_python_env.py",
+            # Locken må ikke kunne ændre sig uden at porten ser det, og
+            # generatoren ejer topniveau-listen porten sammenligner import imod.
+            "tools/lock_python_env.py",
+            "tools/mini_toml.py",
+            "requirements-build.txt",
+            "requirements-audit.txt",
+            "site-icons/pyproject.toml",
+        ),
+    ),
+    Step(
+        id="python-env-selftest",
+        argv=("python3", "tools/check_python_env.py", "--self-test"),
+        inputs=("tools/check_python_env.py", "tools/mini_toml.py"),
+    ),
+    Step(
         id="links",
         argv=("python3", "tools/check_links.py"),
         inputs=("tools/check_links.py", "build_sites.py", "site/**"),
