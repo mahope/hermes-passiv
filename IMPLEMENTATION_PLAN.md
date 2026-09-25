@@ -2,12 +2,12 @@
 
 ## Status
 
-- `ITERATION_ID`: `license-worker-gaps-2026-09-25`
-- `STATE`: `FÆRDIG`
-- `ACTIVE_TASK`: `INGEN`
+- `ITERATION_ID`: `conversion-stripe-contract-2026-09-25`
+- `STATE`: `I GANG`
+- `ACTIVE_TASK`: `4B`
 - `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter`
-- `TASK_ATTEMPTS`: `4F: 1/1`
-- `LAST_BRANCH`: `ceo/close-license-worker-gaps`
+- `TASK_ATTEMPTS`: `4B: 1/2`
+- `LAST_BRANCH`: `ceo/stripe-cta-contract`
 - `PLAN_COMMIT`: `4ad9457`
 - `BASELINE`: `main@fa1e830`
 - `RESULT`: Opgave 4F er færdig. Abonnementskøb uden payment-intent på checkout-sessen gemmer invoice- og payment-intent-koblinger, så fuld refunding tilbagekalder licensen; uventede licensfejl svarer 503; Clean Copy Pro sender købere til den nye `/activate/`-guide. Deploy-run 36146060595 og uafhængig live-kontrol var grønne.
