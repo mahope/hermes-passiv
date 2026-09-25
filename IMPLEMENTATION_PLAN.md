@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `support-reply-routing-2026-09-25`
-- `STATE`: `4C FÆRDIG (merge 3fe72c3, implementering 46a2c2f)`
-- `ACTIVE_TASK`: `4D`
-- `NEXT_TASK`: `4D — Link til Stripe-kundeportalen for årsabonnenter`
-- `TASK_ATTEMPTS`: `4C: 1/1`
-- `LAST_BRANCH`: `ceo/support-reply-routing`
-- `PLAN_COMMIT`: `3fe72c3`
-- `BASELINE`: `main@29c9c6a`
-- `RESULT`: Opgave 4C er færdig. Leveringsmailens `reply_to` følger nu produktets domæne ud fra katalogens `home` (Clean Copy → `support@cleancopy.tools`), produkter uden `home` falder tilbage til `support@mahope.tools`; privacy, terms, licens-opslag og hvert dist's `security.txt` peger på den fælles indbakke. Salgsnotitsen til Mads er urørt.
-- `GATE`: `GRØN — grep ingen privat indbakke i site/, build 4/4, sitemap 4/4 OK, SEO 308/0, Stripe-worker 62/62, inline JS 297/0, check_stripe_ctas problems: 0`
+- `ITERATION_ID`: `billing-portal-link-2026-09-25`
+- `STATE`: `4D FÆRDIG (merge aa8bf32, implementering f16305f)`
+- `ACTIVE_TASK`: `(ingen)`
+- `NEXT_TASK`: `5 — Stop offentlig eksponering af betalt indhold`
+- `TASK_ATTEMPTS`: `4D: 1/1`
+- `LAST_BRANCH`: `ceo/billing-portal-link`
+- `PLAN_COMMIT`: `aa8bf32`
+- `BASELINE`: `main@83aeffd`
+- `RESULT`: Opgave 4D er færdig. De tre årlige produkter (`clean-copy-pro`, `eucomply-pro`, `page-profile-pro`) er markeret `subscription: true` i både `tools/stripe_catalog.json` og `STRIPE_PRODUCTS`, så leveringssvaret og leveringsmailen giver kunden Stripe-kundeportalen. `/thanks` renderer linket fra leveringssvaret, `/support` og `site/terms/` linker til den direkte, og terms-påstanden "there are no recurring charges" er fjernet i både siden og dens generative kilde. `tools/check_stripe_ctas.py` fanger nu tre nye driftformer: en portal-URL uden for allowlisten, en portal der mangler på portalsiderne og en abonnement-markering der ikke er i allowlisten (selftest 7/7 → 10/10).
+- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69 (62 → 69), inline JS 297/0, check_stripe_ctas problems: 0, check_stripe_ctas --self-test 10/10`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -332,7 +332,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Commit:** `3fe72c3` (implementering `46a2c2f`) — `Send kundehenvendelser til produkternes egne support-adresser`. Deployet og live-verificeret (`DEPLOY OK 3fe72c3`).
 
-### 4D. UFÆRDIG — Link til Stripe-kundeportalen for årsabonnenter
+### 4D. FÆRDIG (implementering f16305f, merge aa8bf32) — Link til Stripe-kundeportalen for årsabonnenter
 
 **Begrundelse:** Stripe-kundeportalen blev oprettet 2026-09-25 (standardkonfiguration: opsigelse ved periodens udløb, fakturahistorik, opdatering af betalingskort, adresse og momsnummer). Årsabonnenter på `clean-copy-pro`, `eucomply-pro` og `page-profile-pro` har i dag ingen vej til at opsige eller hente fakturaer selv. EU-forbrugerregler kræver et let opsigelsesflow.
 
@@ -348,7 +348,18 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - `/thanks` viser linket for et abonnementsprodukt i den eksisterende mock-test.
 - Stripe-worker-testens antal tests falder ikke.
 
-**Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
+**Gate:** `node tests/stripe-worker.test.mjs && python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
+
+**Implementeret denne iteration:**
+
+- `BILLING_PORTAL_URL` ligger i `site/_worker.js` og bruges kun, når katalogens produkt er markeret `subscription: true`. Leveringssvaret får da `subscription: true` + `billing_portal`, så `/thanks` og mailen kan vise linket; `ful:`-ledgeren bevarer begge felter, så en gentaget mail efter fejl stadig har dem.
+- Leveringsmailen får en linje om opsigelse, fakturaer og momsnummer. Testen beviser at `deskuptime-pro` (engangskøb) og download-køb **ikke** får portalen, og at kun de tre årlige produkters mails gør det.
+- `site/thanks.html` renderer portalen under nøgleboksen med egen blok; `site/support.html` får et kort om abonnementsstyring; `site/terms/index.html` får en sektion "Cancelling a subscription", og den generative kilde `tools/make_privacy_terms_479.py` er rettet med, så en regenerering ikke genindfører den gamle tekst.
+- **Ærlighedsreparation:** terms sagde "Each purchase is a one-time payment ... there are no recurring charges", hvilket var forkert for tre produkter. Det er nu "Some products are sold as a one-time payment, others as a yearly subscription", og `there are no recurring charges` ligger i `FORBIDDEN_CLAIMS`, så gaten fejler hvis påstanden kommer tilbage.
+- `tools/stripe_catalog.json` får `billing_portal` + `portal_pages` og `subscription: true` på de tre årlige produkter. `check_stripe_ctas.py` bruger katalogens portal-URL som den eneste tilladte, tillader den kun på de tre deklarerede sider og sammenligner workerens `subscription`-markeringer med allowlisten.
+- Worker-testen går 62 → 69; ingen eksisterende assertion er fjernet. Selftesten går 7/7 → 10/10. Bemærkning fra testen: portal-URL'en har sti-segmenter (`/p/login/…`), så `LINK_PATTERN` måtte udvides til at tage `/`-segmenter — ellers ville den set `https://billing.stripe.com/p` og fejle på fire filer.
+
+**Commit:** `f16305f` — `Giv abonnenter selvbetjent opsigelse via Stripe-kundeportalen`.
 
 ### 5. UFÆRDIG — Stop offentlig eksponering af betalt indhold
 
@@ -576,6 +587,8 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: Stripe-kundeportalen for de tre årlige produkter (tak-side, mail, support, vilkår) aa8bf32 2026-09-25` — GitHub Actions kører automatisk, fordi `site/_worker.js`, `site/thanks.html`, `site/support.html`, `site/terms/index.html` og `tools/stripe_catalog.json` er i path-filteret. Verificér på live: `mahope.tools/thanks` (kræver en rigtig session), `/support` og `/terms/` viser kundeportalen, og live `build-info.json` bærer `aa8bf32`. Bemærk: portal-URL'en er statisk på de to sider, så den kan findes i live-HTML; på `/thanks` ligger den i JS'en, ikke som statisk anker.
 
 - 2026-09-25: `DEPLOY OK 3fe72c3` — GitHub Actions-run `36159004578` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 3fe72c3…` (kørt fra et checkout af netop deploy-committen, jf. fælden nedenfor) meldte `live sitemap OK` for alle tre domæner, og alle tre live `build-info.json` bærer `3fe72c3ad72c14fabda60ac84730de618afb2a46`. Indholdskontrol: `privacy/`, `terms/` og `license-lookup` på mahope.tools indeholder kun `support@mahope.tools` og nul fund af den private indbakke, og hvert domænes `.well-known/security.txt` har `Contact: mailto:support@<sit domæne>`.
 - 2026-09-25: **Observeret fælde #2 — Cloudflare e-mail-obfuscering.** Live `/privacy/`, `/terms/` og `/license-lookup/` indeholder ikke `support@mahope.tools` i klar tekst: Cloudflare Pages erstatter alle mailto'er med `/cdn-cgi/l/email-protection#…` og en `data-cfemail`-attribut. En naiv `grep` på live-HTML giver derfor 0 fund på både den nye og den gamle adresse og kan fejltolkes som "ændringen ikke er live". Korrekt live-verifikation er at afkode `data-cfemail` (XOR med første byte) eller sammenligne mod dist-bytes. Samme forvriddring gælder alle eksisterende mailto'er på de tre Pages-domæner.
