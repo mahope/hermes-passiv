@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `domain-traffic-ledger-2026-09-25-r1`
-- `STATE`: `I GANG`
-- `ACTIVE_TASK`: `4A — Gør trafikdata domæneopdelt og troværdige`
+- `ITERATION_ID`: `domain-traffic-ledger-2026-09-25-r2`
+- `STATE`: `FÆRDIG`
+- `ACTIVE_TASK`: `INGEN`
 - `NEXT_TASK`: `4E — Page Profile Pro skal acceptere Stripe-nøgler`
-- `TASK_ATTEMPTS`: `4A: 1/2`
+- `TASK_ATTEMPTS`: `4A: 2/2`
 - `LAST_BRANCH`: `ceo/domain-traffic-ledger`
-- `PLAN_COMMIT`: `0243faa`
+- `PLAN_COMMIT`: `9569979`
 - `BASELINE`: `main@0243faa`
-- `RESULT`: Igangværende domæneopdelt trafik- og salgsledger med syntetiske tests og eksplicit ukendt-håndtering.
-- `GATE`: `AFVENTER efter rebase på main@0243faa`
+- `RESULT`: Opgave 4A er færdig. Trafik og downloads er domæneopdelt, spoofede clientfelter og kendte bots/CI filtreres, salg tælles fra unikke fulfillment-posts, og al manglende/ugyldig trafik-, counter- eller salgsdata rapporteres som `unknown`, ikke 0. Stats kræver et server-side bearer-token og dashboard-tokenet gemmes ikke i browserlagring.
+- `GATE`: `GRØN — build/sitemap, SEO 307 sider/0 fund, Stripe 52/52, tracking 83/83, inline JS 296/0, weekly 15/15, domæne-specifik CI-build 83/83, frisk review uden fund, GitHub Actions 3/3 og uafhængig live-kontrol 3/3`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -31,6 +31,8 @@ python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_c
 ```
 
 Den dækker kun siteproduktionen. Hver opgave skal have én konkret `**Gate:**`-linje med arbejdsmappe og kommandoer. Hvis en viste opgave endnu mangler en eksakt produktkommando, skal den researches og skrives ind, før opgaven markeres `I GANG`; usikre placeholder-gates er ikke gyldige. `site/_worker.js` kræver altid Stripe-worker-testen. Helt nye worker-ruter skal have en test, der beviser både success og failure. En eksisterende testtælle må ikke reduceres for at få gaten grøn.
+
+Efter et mergecommit skal livekontrollen køre som `python3 build_sites.py && python3 tools/check_live_sitemaps.py --commit "$(git rev-parse HEAD)"`. Først efter commitet må buildet regenereres, og live-scriptet kræver fuld 40-tegns SHA; en short SHA eller `dist/` fra et tidligere commit afvises.
 
 ## Mission og autoritative kilder
 
@@ -207,7 +209,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
 
-### 4A. I GANG — Gør trafikdata domæneopdelt og troværdige
+### 4A. FÆRDIG — Gør trafikdata domæneopdelt og troværdige
 
 **Begrundelse:** Ugerapport 2026-39 er tom, og de gamle rapporter kan ikke adskille fire domæner eller skelne duplikattracking. Uden troværdige data kan opgave 4B ikke vælge sider fra data.
 
@@ -219,6 +221,15 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Undtag kendte bots, CI og interne health checks; tilføj tests, at sådanne besøg ikke øger tælleren.
 - Gør `/api/stats` og `tools/weekly_report.py` domæneopdelt.
 - Brug den eksisterende unikke `ful:<checkout-session>`-post som eneste idempotente salgsledger og tæl unikke session/product-poster; fjern den separate `t:all:sales:*`-tæller som ground truth.
+
+**Implementeret i `df25c8b` og `9569979`:**
+
+- Hver pageview/download er en egen KV-event med domæne, dato, path og daily hash af IP+UA; rå IP gemmes ikke. Path kommer fra et påkrævet same-origin `Referer`, og domæne/dato kan ikke spoofes via JSON.
+- Kendte bots, CI, Lighthouse, health/sitemap-checks og den ugentlige rapport filtreres. Dobbelt pageviews fjernes ved at fjerne inline pageview-kald fra sider, der allerede indlæser `track.js`.
+- `/api/stats` kræver et afledt bearer-token fra den eksisterende server-secret, og dashboardet hverken logger tokenet i URL'en eller i sessionStorage. Tredjeparts-BugBottle-scriptet er fjernet fra admin-siden.
+- Salgsledgeren er `ful:<checkout-session>`, og både replay og parallel fulfillment giver én dokumenteret post. En pending-markør uden fuldført `ful:`-post gør status `unknown`; fejlet pending-skrivning afbryder leveringen, så der ikke opstås usynlig delvis salgsdata.
+- Manglende eller ugyldige KV-counters, unikke, traffic- og fulfillmentdata er `unknown`; den ugentlige rapport parser kun dokumenterede heltal og bevarer kendte domæner adskilt.
+- Frisk pre-land review fandt fire konkrete huller og en CI-regression; alle er rettet og dækket af de grønne gates ovenfor.
 
 **Acceptkriterier:**
 
@@ -515,6 +526,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK 9569979` — GitHub Actions-run `36133997658` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 956997979390f5b0b28e3c8359350e581937e7fb` bekræftede alle tre domæner; live `/stats` viste den nye token-prompt uden tredjepartsscript, og det gamle URL-token gav 401. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK b7c8a64` — GitHub Actions-run `36099316657` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit b7c8a64` bekræftede byte-identiske robots/sitemap/build-info og alle 288 sitemap-sider; CI meldte kun eksisterende Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25T07:37:10+02:00: `VERIFICÉR DEPLOY: korrigeret Wrangler-sti og JSON-LD-gate b7c8a64 2026-09-25T07:37:10+02:00`
 - 2026-09-25T07:27:55+02:00: `VERIFICÉR DEPLOY: domænekorrekt robots/sitemap og tre Pages-domæner fb4189d 2026-09-25T07:27:55+02:00`
@@ -525,6 +537,8 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Commitlog
 
+- Domæneopdelt trafik- og salgsledger: `df25c8b` — `Gør trafikdata domæneopdelt og troværdige`.
+- Fail-closed review-rettelser: `9569979` — `Gør trafikledgeren fail-closed`.
 - Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
 - Fjern død Lemon-webhook: `28c7f64` — `Fjern den døde Lemon-webhook`.
 - Gør DeskUptime-teksten sand: `41758af` — `Gør DeskUptime-teksten sand`.
