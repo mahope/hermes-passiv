@@ -301,8 +301,14 @@ def check_site_icons_manifest(errors: list[str], root: Path) -> None:
     if not path.is_file():
         errors.append("site-icons/pyproject.toml mangler")
         return
+    # `loads(text)` — ikke `load(path)`. Den indlejrede `tomllib.load` kræver en
+    # binær filobjekt og døde med `AttributeError: 'PosixPath' object has no
+    # attribute 'read'` i CI (kørsel 36191355378), fordi kun Python 3.9 rammer
+    # mini_toml-fallbacken. Begge moduler har `loads`, så vejen er den samme på
+    # 3.9 og 3.12, og selftesten dækker den kode der faktisk kører.
+    text = path.read_text(encoding="utf-8")
     try:
-        data = tomllib.load(path)
+        data = tomllib.loads(text)
     except mini_toml.TOMLDecodeError as exc:
         errors.append(f"site-icons/pyproject.toml kan ikke læses: {exc}")
         return
