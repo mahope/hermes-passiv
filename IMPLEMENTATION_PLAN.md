@@ -5,7 +5,7 @@
 - `ITERATION_ID`: `clean-copy-archives-2026-09-25`
 - `STATE`: `Opgave 7 FÆRDIG — del 1, del 2 pkt. 1/3/4 og pkt. 2 (publicerede arkiver) er alle implementeret; næste iteration er opgave 8 (electron-builder-advisory)`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `8 — opgradér electron-builder 25.x til 26.15.x og fjern de 15 advisory-fund`
+- `NEXT_TASK`: `8 — ret de døde Clean Copy-downloadlinks på mahope.tools/downloads (fund under deploy-verificering 25/9); derefter 9 — electron-builder-advisory`
 - `TASK_ATTEMPTS`: `7: 3/3 (del 1, del 2 pkt. 1/3/4, del 2 pkt. 2 — ingen mislykkede forsøg)`
 - `LAST_BRANCH`: `ceo/clean-copy-archives`
 - `PLAN_COMMIT`: `(denne commit)`
@@ -561,7 +561,36 @@ allerede korrekte — de var bare ubevogtede.
 
 **Hvorfor del 2 gav mening:** de publicerede zips var den kode en køber rent faktisk hentede. Del 1 og 2 rettede kilden, og uden denne del rettelsen ville aldrig nå en kunde. `IMPLEMENTATION_PLAN.md` førte den gamle kode som *dokumenteret* i dist, fordi arkiverne lå i `site/downloads/` og blev kopieret ukritisk.
 
-### 8. UFÆRDIG — Opgrader electron-builder og fjern advisory-fund
+### 8. UFÆNDIG (ny — fund under deploy-verificering 25/9) — Ret de døde Clean Copy-downloadlinks på mahope.tools
+
+**Begrundelse:** Live-verificering af arkiverne fandt fire 404'ere på en købssti.
+`build_sites.py:74` giver `downloads/clean-copy*` **kun** til cleancopy.tools, så
+arkiverne findes aldrig på mahope.tools. `site/downloads.html` ligger på
+mahope.tools (rest-fangsten, `build_sites.py:140`) og linker på
+`/downloads/clean-copy-v1.5.3.zip`, `/downloads/clean-copy-firefox-v1.5.3.zip` og
+`/downloads/clean-copy-obsidian-v1.0.10.zip` — alle tre er rodrelative og giver
+**HTTP 404 på mahope.tools** (bekræftet read-only 2026-09-25 efter deploy
+`3289b5b`). Det er en farlig 404: den ligger på siden med købslinks, og den er
+ældre end denne iteration — de gamle 1.5.2/1.0.9/1.0.6-arkiver gav præcis samme
+404. Den tæller derfor med i opgave 9's 18 unresolved references.
+
+**Omfang:**
+
+- Gør de tre links på `site/downloads.html` absolutte (`https://cleancopy.tools/downloads/…`), da arkiverne kun publiceres der. `site/free-downloads.html` ligger også på mahope.tools og har samme to Chrome/Firefox-links — ret den på samme måde.
+- Udvid `tools/check_clean_copy_distribution.py`, så den kender hvilket domæne der publicerer hvilken familie, og fejler ved en rodrelativ link på en side der ligger på et andet domæne. Det er præcis den fejlform den nye gate overså: den tjekkede navnet, ikke domænet.
+- Efter deploy: live-GET på alle tre links fra mahope.tools skal være 200.
+
+**Acceptkriterier:**
+
+- `https://mahope.tools/downloads` har nul 404'er på de ni downloadlinks.
+- Gaten fejler ved en rodrelativ reference til et Clean Copy-arkiv på en mahope.tools-side (dækket af selftesten).
+- Hele kvalitetsgaten er grøn.
+
+**Gate:** `python3 tools/check_clean_copy_distribution.py && python3 tools/check_clean_copy_distribution.py --self-test` plus hele kvalitetsgaten.
+
+**Post-merge-gate:** `curl -s -o /dev/null -w '%{http_code}' https://mahope.tools/downloads/clean-copy-v1.5.3.zip` skal være 200 efter deploy.
+
+### 9. UFÆNDIG — Opgrader electron-builder og fjern advisory-fund
 
 **Begrundelse:** En aktuel OSV-scanning fandt 15 kendte advisory-fund i desktop-buildværktøjet. Sikkerhedshallere skal eftergives de fire prioriterede missionstasks.
 
@@ -583,7 +612,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Post-merge-gate:** `gh run watch <run-id> --exit-status` skal være grøn for macOS x64/arm64, Linux og Windows; en rød post-merge-gate reverteres straks i en ny commit.
 
-### 9. UFÆRDIG — Gør alle 18 broken references til en hard gate
+### 10. UFÆRDIG — Gør alle 18 broken references til en hard gate
 
 **Begrundelse:** Nuværende build tæller 18 fejl men deployer, og missionen forbyder døde links, downloads og formularer.
 
@@ -602,7 +631,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Gate:** `python3 build_sites.py && python3 tools/check_links.py` plus resten af kvalitetsgaten.
 
-### 10. UFÆRDIG — Få CI til at køre den faktiske kvalitetsgate
+### 11. UFÆRDIG — Få CI til at køre den faktiske kvalitetsgate
 
 **Begrundelse:** Workflowen kører kun build og SEO-check; den betalingskritiske Worker-test og inline-JS-test mangler.
 
@@ -623,7 +652,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Gate:** `python3 tools/test_deploy_workflow.py` plus hele kvalitetsgaten.
 
-### 11. UFÆRDIG — Deklarér runtime og opgradér Electron-patchlinjen
+### 12. UFÆRDIG — Deklarér runtime og opgradér Electron-patchlinjen
 
 **Begrundelse:** Desktop kræver Node `>=22.12.0`, men manifestet og repoet erklærer det ikke.
 
@@ -644,7 +673,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Post-merge-gate:** `gh run watch <run-id> --exit-status` skal være grøn for macOS x64/arm64, Linux og Windows; en rød post-merge-gate reverteres straks i en ny commit.
 
-### 12. UFÆRDIG — Lå Python-buildmiljøet og reparer site-icons
+### 13. UFÆNDIG — Lå Python-buildmiljøet og reparer site-icons
 
 **Begrundelse:** Fire siteværktøjer bruger tredjepartspakker uden samlet lock, og Site Icons har ugyldig PEP 621-metadata.
 
@@ -663,7 +692,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Gate:** `python3 -m pip install --require-hashes -r requirements-build.txt && pip-audit -r requirements-build.txt && python3 -m build site-icons && python3 -m pip install --force-reinstall site-icons/dist/*.whl && site-icons --help` plus hele kvalitetsgaten.
 
-### 13. UFÆRDIG — Ret dokumentation, privacy og versiondrift
+### 14. UFÆNDIG — Ret dokumentation, privacy og versiondrift
 
 **Begrundelse:** `STATUS.md`, `DECISION.md`, `BUILD.md`, `BUDGET.md`, root-README og privacy beskriver delvist Lemon Squeezy, gamle produkter eller urigtige data claims.
 
@@ -683,7 +712,7 @@ allerede korrekte — de var bare ubevogtede.
 
 **Gate:** `python3 tools/check_versions.py` plus hele kvalitetsgaten.
 
-### 14. UFÆRDIG — Fjern døde sitemap-generator- og deploystier
+### 15. UFÆNDIG — Fjern døde sitemap-generator- og deploystier
 
 **Begrundelse:** Flere historiske bloggeneratorer skriver stadig til `site/sitemap.xml`, selv om builden nu kun bruger `dist/<domain>/sitemap.xml`; gamle instruktioner refererer desuden til den deaktiverede manuelle `deploy.sh`.
 
@@ -718,6 +747,9 @@ allerede korrekte — de var bare ubevogtede.
 
 - 2026-09-25: `VERIFICÉR DEPLOY: Clean Copy-arkiverne 1.5.3 / 1.0.10 med den nye licensklient <merge-sha> 2026-09-25` — GitHub Actions udgiver automatisk: `site/downloads/*.zip`, `site/extension-zips/`, `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, begge Obsidian-guides og `tools/make_blog_da_mirrors_461.py` er i path-filteret. Verificér på live: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` og `/downloads/clean-copy-firefox-v1.5.3.zip` er byte-identiske med repoets arkiver, `/downloads/clean-copy-obsidian-v1.0.10.zip` indeholder `main.js` med `clean-copy-pro` og `mahope.tools`, `license.js` i begge browserarkiver har `API_BASE = 'https://mahope.tools/api/license'`, de fire gamle arkiver svarer 404, og `/clean-copy` + `/downloads` viser 1.5.3 og 1.0.10. CI's egen post-deploy-gate skal være grøn for alle tre domæner.
 
+- 2026-09-25: `DEPLOY OK 3289b5b`
+
+- 2026-09-25: `DEPLOY OK 3289b5b` — GitHub Actions-run `36173523329` byggede, gatede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. De nye gatekommandoer `check_clean_copy_distribution.py` + `--self-test` kørte i alle tre jobs. Indholdskontrol: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip`, `clean-copy-firefox-v1.5.3.zip` og `clean-copy-obsidian-v1.0.10.zip` svarer 200; de fire gamle arkiver (1.5.2 ×2, 1.0.9, 1.0.6) svarer 404, så ingen kan længre hente licenskode med det døde endepunkt. **Fire 404 fundet samtidig:** `mahope.tools/downloads/clean-copy-*.zip` giver 404, fordi arkiverne kun publiceres på cleancopy.tools mens `site/downloads.html` ligger på mahope.tools med rodrelative links. Det er ældre end denne iteration og er oprettet som opgave 8.
 - 2026-09-25: `DEPLOY OK 7e2b883` — GitHub Actions-run `36170930593` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Alle domæners live `build-info.json` bærer `7e2b88302cbbd35d6841ae051f90f6d48662ccab`. Indholdskontrol: live `/clean-copy-tool` på cleancopy.tools indeholder begge markører om det indlejrede licensmodul, modulet er byte-identisk med `tools/clean_copy_license.js`, siden kalder `decide()`, og den gamle `clearPro()`-på-alt er væk; live `/compliance-report` på mahope.tools sender `eucomply-pro`. CI's egen post-deploy-gate meldte grønt for alle tre.
 - 2026-09-25: `VERIFICÉR DEPLOY ( lukket af ovenstående ): webværktøjets syvdagesregel og compliance-rapportsidens product 8207ca1 2026-09-25` — GitHub Actions kører automatisk, fordi `site/clean-copy-tool.html` og `site/compliance-report.html` er i path-filteret. Verificér på live: `cleancopy.tools/clean-copy-tool` (og `mahope.tools/clean-copy-tool`) har det indlejrede licensmodul mellem `/* >>> clean-copy-license …` og `/* <<< clean-copy-license */`, og `mahope.tools/compliance-report` sender `product: 'eucomply-pro'` i sit validate-kald. Det kan ses direkte i sidens JS.
 
