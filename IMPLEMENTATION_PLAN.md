@@ -8,12 +8,12 @@
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `22 — research-iteration: hvad nyt skal der bygges ud fra trafikdata og de åbne ❓-punkter`
-- `PLAN_COMMIT`: `f58386d (merge af ceo/clean-copy-arkiv-gate)`
+- `PLAN_COMMIT`: `077a67b (merge af ceo/clean-copy-arkiv-gate)`
 - `BASELINE`: `main@e489826`
 - `LAST_BRANCH`: `ceo/clean-copy-arkiv-gate`
 - `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1.`
 - `GATE` (opgave 21): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_versions --self-test: OK (31 mutationer fra 25, 2 negative kontroller fra 1, positiv kontrol grøn, rigtige filer grønne). Bevis på de rigtige filer: Obsidian-arkivet muteret til manifest 1.0.9 under 1.0.10-navn → check_versions melder "kunden henter gammel kode under et nyt filnavn", distribution-gaten melder blot "afviger fra en regeneration". Stripe-worker uændret, dist/uændret (gitignored).`
-- `DEPLOY` (ny, opgave 21): `AFVENTER f58386d 26/9 ca. 02:20` — merge til main gjort; GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne iteration rørte kun `tools/check_versions.py`, så **intet i `site/` eller `dist/` ændrer sig** — domænerne skal være byte-uændrede.`
+- `DEPLOY` (ny, opgave 21): `AFVENTER 077a67b 26/9 ca. 02:20` — merge til main gjort; GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne iteration rørte kun `tools/check_versions.py`, så **intet i `site/` eller `dist/` ændrer sig** — domænerne skal være byte-uændrede.`
 - `VERIFICÉR DEPLOY` (lukket): `site-icons-arkivet er bygget af kilden 4bcfb9e 26/9` — kørsel `36202426086` grøn. Live-indhold verificeret: `https://mahope.tools/downloads/site-icons/site-icons-1.0.0.tar.gz` (5601 bytes) pakker ud til præcis to filer, `README.md` 2581 bytes og `site_icons.py` 15287 bytes, mtime 2000-01-01, og **nul** af dem nævner `lemon`. Løse kopier `/downloads/site-icons/README.md` og `/downloads/site-icons/site_icons.py` er begge byte-identiske med `site-icons/` i repoet. Tarballets sha256 `cbafbd98e35a3fc67addf820de74108fcac22a2f2e205a4c7e4b68c2242cf88e`.
 - `GATE` (før, opgave 20): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (fra 36). build_site_icons_archive --self-test: OK (8 mutationer + positiv kontrol + determinisme + 2 falsk-positive-tests). --check: grøn, 2 filer i tarballet + 2 løse filer = regeneration af site-icons/. Porten fandt 5 fejl på det gamle arkiv FØR rettelsen, heraf de to med den lukkede udbyder. test_deploy_workflow: grøn, og fejler hvis site-icons/** tages ud af filteret. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (før, opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
@@ -1374,7 +1374,7 @@ mutationer) + `python3 tools/quality_gate.py` (GRØN, 38 steps fra 36). Porten
 fandt den rigtige fejl på de rigtige filer *før* nogen blev rettet: 5 fund på det
 gamle arkiv, heraf de to med den lukkede udbyder.
 
-### 21. FÆRDIG (implementering `ceo/clean-copy-arkiv-gate`, `f58386d`) — de fire sidste arkiver erklærer deres version indeni, men ingen læste den
+### 21. FÆRDIG (implementering `ceo/clean-copy-arkiv-gate` `f58386d`, merge `077a67b`) — de fire sidste arkiver erklærer deres version indeni, men ingen læste den
 
 **RESULT:** Opgaven troede, de fire Clean Copy-arkiver manglede en indholdsgate.
 De har haft en siden opgave 7 del 2 — `check_clean_copy_distribution.py` er
