@@ -1,24 +1,28 @@
-[tool]
+[project]
 name = "site-icons"
 version = "1.0.0"
 description = "Generate favicons, OG images, PWA icons, and web app manifest from a single SVG/PNG source"
+readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "Pillow>=10.0",
 ]
-license = "MIT"
+license = { text = "MIT" }
 keywords = ["favicon", "og-image", "pwa", "icon", "web", "cli"]
 
 [project.urls]
-Homepage = "https://hermes-passiv.pages.dev/site-icons"
-Repository = "https://github.com/mahope/site-icons"
+Homepage = "https://mahope.tools/site-icons"
+Repository = "https://github.com/mahope/hermes-passiv"
+
+[project.scripts]
+site-icons = "site_icons:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
-[project.scripts]
-site-icons = "site_icons:main"
-
-[tool.setuptools.packages.find]
-include = ["site_icons*"]
+# `site_icons.py` er et fladt modul, ikke en pakke: der er ingen
+# `site_icons/__init__.py`. `packages.find` fandt derfor ingenting, så selv et
+# korrekt `[project]`-manifest ville have bygget et hjælpeløst tomt hjul.
+[tool.setuptools]
+py-modules = ["site_icons"]
