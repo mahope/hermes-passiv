@@ -8,7 +8,7 @@
 - `NEXT_TASK`: `4F — Luk tre huller i licens-workeren`
 - `TASK_ATTEMPTS`: `4E: 1/2`
 - `LAST_BRANCH`: `ceo/page-profile-license`
-- `PLAN_COMMIT`: `PENDING_IMPLEMENTATION_COMMIT`
+- `PLAN_COMMIT`: `ea4e6c3`
 - `BASELINE`: `main@cb725e9`
 - `RESULT`: Opgave 4E er færdig. Stripe-udstedte 32-hex-nøgler aktiveres og valideres online med produktet `page-profile-pro` og et stabilt, lokalt gemt device-id. Kun netværksfejl og 5xx kan bruge en tidligere positiv status i højst syv dage; 403/404/409, ugyldige svar og inaktiv licens fejler hårdt. Legacy-PPRO, salt og `--gen-key` er fjernet. Version 1.2.0 er publiceret som kanonisk script, download-kopi og sdist, og offline-claims er rettet.
 - `GATE`: `GRØN — Page Profile 11/11, sdist-build, build/sitemap 4/4, SEO 307/0, Stripe 52/52, inline JS 296/0, canonical/published/tar parity, live-validering 404 og frisk review med alle P1 rettet`
@@ -533,6 +533,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Deploylog
 
+- 2026-09-25: `DEPLOY OK ea4e6c3` — GitHub Actions-run `36142200546` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig sitemap-kontrol bekræftede alle tre domæner; live 1.2.0-script, tarball, EN/DA-licenstekst og 404 på det gamle 1.1.0-arkiv blev verificeret. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK 9569979` — GitHub Actions-run `36133997658` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit 956997979390f5b0b28e3c8359350e581937e7fb` bekræftede alle tre domæner; live `/stats` viste den nye token-prompt uden tredjepartsscript, og det gamle URL-token gav 401. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `DEPLOY OK b7c8a64` — GitHub Actions-run `36099316657` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig `check_live_sitemaps.py --commit b7c8a64` bekræftede byte-identiske robots/sitemap/build-info og alle 288 sitemap-sider; CI meldte kun eksisterende Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25T07:37:10+02:00: `VERIFICÉR DEPLOY: korrigeret Wrangler-sti og JSON-LD-gate b7c8a64 2026-09-25T07:37:10+02:00`
@@ -544,6 +545,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 ## Commitlog
 
+- Stripe-kompatibel Page Profile-licens: `ea4e6c3` — `Ret Page Profile Stripe-licensen`.
 - Domæneopdelt trafik- og salgsledger: `df25c8b` — `Gør trafikdata domæneopdelt og troværdige`.
 - Fail-closed review-rettelser: `9569979` — `Gør trafikledgeren fail-closed`.
 - Research og initial plan: `10c5908` — `Lav en prioriteret plan for næste Hermes-iterationer`.
