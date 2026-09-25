@@ -2,15 +2,29 @@
 
 ## Status
 
-- `ITERATION_ID`: `version-source-of-truth-2026-09-25`
-- `STATE`: `Opgave 14 FÆRDIG — otte produkter har nu én versionskilde hver, 5 fund af reel drift er rettet i source (2 ekstra versionskilder i roden + 3 forældede arkiver), privacy fortæller hvad der faktisk behandles, de seks roddokumenter er gjort til faktuelle arkiver, og porten der holder på det er 2 nye steps i den ene gaten.`
+- `ITERATION_ID`: `legacy-seo-paths-2026-09-25`
+- `STATE`: `Opgave 15 FÆRDIG — 21 bloggeneratorer skrev i site/sitemap.xml som builden aldrig læser, indexnow_ping.sh pegede paa en vaert der ikke findes, site/sitemap.xml + tools/build_obsidian_bundle.js er slettet, og to nye steps i den ene gaten holder begge dode veje lukkede.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `15 — fjern døde sitemap-generator- og deploystier`
-- `BASELINE`: `main@8aa10f3`
-- `LAST_BRANCH`: `ceo/version-source-of-truth` (implementering + plan i samme commit)`
+- `NEXT_TASK`: `19 — de døde herter væk fra de shippede filer, en kunde kan kopiere`
+- `BASELINE`: `main@0b0be44`
+- `LAST_BRANCH`: `ceo/legacy-seo-paths` (implementering `ab17545`)
 - `PLAN_COMMIT`: `(denne commit)`
-- `TASK_ATTEMPTS`: `14: 1/1.`
-- `DEPLOY`: `VERIFICÉR DEPLOY: opgave 14 (privacy + check_versions + 6 slettede filer) c81ab1f, merge 5110723, 25/9 23:5x. Dette repo deployer ved push til main (ikke batch), så CI-kørslen af deploy-sites skal vise de 30 steps grønne, og https://mahope.tools/privacy/ skal vise den nye tekst. Bemærk: de tre slettede arkiver skal give 404 på cleancopy/mahope `/downloads/` — det er tilsigtet, ingen side linkede til dem.`
+- `TASK_ATTEMPTS`: `14: 1/1. 15: 1/1.`
+- `DEPLOY`: `DEPLOY OK ab17545` — kørsel `36193100058` (opgave 14s merge) var grøn. Denne merge deployer ved push til main; `site/sitemap.xml` var en tom urlset builden springer over, så intet publiceret indhold ændrer sig. VERIFICÉR: https://mahope.tools/robots.txt + /sitemap.xml skal være uændrede, og https://mahope.tools/sitemap.xml skal stadig have alle 308 sider.`
+- `GATE` (opgave 15): `GRØN — python3 tools/quality_gate.py: GRØN, 32 steps (30 + legacy-seo-paths + legacy-seo-paths-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og en grøn kontrol der fejler giver exit 1. Bevis paa de RIGTIGE filer: med de pre-fix-filer genskabt (site/sitemap.xml + den gamle indexnow_ping.sh + en gammel generator) fejlede gaten med "site/sitemap.xml findes igen". Stripe-worker 69/69, licensklienter 103 checks, links 0, dist/uændret (gitignored), intet site-indhold rørt.`
+- `RESULT` (opgave 15): `site/sitemap.xml` var en **tom urlset** (153 bytes, nul `<url>`), tracked og aldrig læst. `build_sites.py:155` har den i `SKIP_NAMES`, og sitemapperne skrives til `dist/<domaene>/sitemap.xml` (build_sites.py:1113). `tools/check_sitemaps.py` læser kun dist. Så 21 generatorer skrev URL'er ind i en fil, der aldrig blev publiceret, og skrev "Sitemap updated: N URLs" bagefter — præcis samme fejlform som de 18 "broken references" i opgave 10: en tælling der så rigtig ud og rettede ingenting.
+
+  **Fund 1 — to af dem havde en hardkodet hjemmesti.** `tools/make_blog_pdf_da.py:221` og `tools/make_blog_sheets_en.py:214` skrev til `/Users/madsholstjensen/hermes-passiv/site/sitemap.xml`, så de kunne aldrig have kørt på en anden maskine. Rettelsen er ikke at tage stien relativ — filen skal ikke findes.
+
+  **Fund 2 — indexnow_ping.sh var et helbredsscript, der aldrig kunne bestå sin egen test.** `HOST="hermes-passiv.pages.dev"` er ikke et deployet Pages-projekt, så `curl https://hermes-passiv.pages.dev/indexnow-<key>` svarede ikke med nøglen, og første linje efter selftesten var `FAIL … — deploy first` + `exit 1`. Read-only verificeret 25/9: nøgleendepunktet svarer korrekt på **alle tre** rigtige domæner, så der var intet at udgive — kun en død vært i et script der så ud til at virke. Det looper nu pr. domæne og indsamler URLs fra hvert domænes egen sitemap.
+
+  **Fund 3 — min egen port fejlede to gange, og selftesten fandt begge.** Først sagde gaten `tools/check_legacy_seo_paths.py:4 refererer til site/sitemap.xml` — porten fandt sin egen kildekontekst, fordi den skal kunne *nævne* den sti den forbyder. Undtagelsen er derfor navngivet (kun sig selv, så en ny fil med samme fejl stadig fanges). Så døde selftesten med `FileNotFoundError: '…/site/sitemap.xml'`, fordi den skrev til en temp-mappe uden `site/`. Begge rettet, og det er fjerde gang i dette repo at en gate uden kontrol på sin egen logik viser sig at være teater.
+
+  **Fund 4 — path-filteret måtte vokse, og det brød et eksisterende selftests-scenarie.** Gaten læser alle 117 `.py`/`.sh`, så input blev `*.py`, `*.sh`, `tools/*.py`, `tools/*.sh` — ellers kunne en generator ændres uden at gaten nogensinde så den (samme fejl som fund 1 i opgave 11). Men `test_deploy_workflow.py`s `tyndt-filter`-scenarie fjernede `tools/seo_check.py` og forventede en fejl, og nu dækker globben den, så scenariet kunne ikke fejle længere. Rettelsen er ikke at fjerne globben, men at få scenariet til at pege på `tests/stripe-worker.test.mjs`, som kun sin egen linje dækker. Scenariets pointe er "filteret skal dække alt gaten læser" — det skal den stadig kunne fejle på.
+
+  **Sidefundet fra opgave 16 er besvaret.** `tools/build_obsidian_bundle.js` fejlede med `bundle: require("./core.js") not found`. Ingen kalder den — ingen workflow, ingen gate, intet script — så den var død engangsstøtte fra før den monorepo-layout og er slettet. Den pegede desuden på et `core.js` der ikke findes i repoet.
+
+  **Denne gate dækker ikke de shippede filer.** `site/openapi.yaml`, `site/downloads/eaa-scan-github-action.yml` (den beder en kunde `npm install --global https://hermes-passiv.pages.dev/downloads/…`) og `site/_worker.js`'s User-Agent-strenge peger stadig på den døde vært. Det er opgave 19, fordi `_worker.js` kræver worker-tests.
 - `GATE` (opgave 14): `GRØN — python3 tools/quality_gate.py: GRØN, 30 steps (28 + versions + versions-selftest). Portens egen bevis: check_versions fandt 6 fund på de rigtige filer FØR nogen blev rettet, og 16 mutationer + positiv kontrol + de rigtige filer er grønne bagefter. deploy-workflow + --self-test grøn (15 mutationer), Stripe-worker 69/69, licensklienter 103 checks, links 0, dist/uændret (gitignored).`
 - `RESULT` (opgave 14): `tools/check_versions.py` erklærer otte produkter med hver **én** kanonisk fil og fire checks: sandheden findes, ingen spejling lyver (lockfil, `__version__`, Obsidians `versions.json`), det publicerede arkiv findes på den version og **intet** gammelt arkiv må ligge i samme familie, og `site/downloads.html` skal nævne præcis den version. Det er samme fejlform som de 18 "broken references" i opgave 10 gjorde til en port: værdi med to hjemsteder er ikke et versionsproblem, det er et kildefejl, fordi spørgsmålet "hvad er versionen" så er en mening og ikke et faktum.
 
@@ -1077,30 +1091,33 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Gate:** `python3 tools/check_versions.py` plus hele kvalitetsgaten.
 
-### 15. UFÆNDIG — Fjern døde sitemap-generator- og deploystier
+### 15. FÆRDIG (`ceo/legacy-seo-paths`, implementering `ab17545`) — Fjern døde sitemap-generator- og deploystier
 
-**Sidefund 25. september 2026 (opgave 16):** `tools/build_obsidian_bundle.js`
-fejler med `bundle: require("./core.js") not found — main.js changed?`. Den
-kaldes fra ingen workflow, ingen gate og intet script, så enten er den død
-engangsstøtte der skal slettes, eller den er en rigtig byggetrins manglende
-kald. Findes ud — hvis intet bruger den, slettes den.
+**Resultat:** `site/sitemap.xml` (tom urlset, aldrig læst) og `tools/build_obsidian_bundle.js` (død, ingen kalder den) er slettet. 21 generatorers sitemap-step er erstattet af en ærlig stop med beskeden om at `build_sites.py` ejer sitemapperne. `indexnow_ping.sh` looper de tre rigtige domæner. `tools/check_legacy_seo_paths.py` gater det hele og kører som step 31 + 32.
 
-**Begrundelse:** Flere historiske bloggeneratorer skriver stadig til `site/sitemap.xml`, selv om builden nu kun bruger `dist/<domain>/sitemap.xml`; gamle instruktioner refererer desuden til den deaktiverede manuelle `deploy.sh`.
+**Gate:** `python3 tools/check_legacy_seo_paths.py` plus hele kvalitetsgaten (32 steps).
+
+### 19. NØJ — de døde herter væk fra de filer, en kunde kan kopiere
+
+**Sidefund 25. september 2026 (opgave 15):** den døde vært `hermes-passiv.pages.dev` står stadig i filer, der **er** publicerede eller som en kunde kopierer:
+
+- `site/downloads/eaa-scan-github-action.yml:30,64` — `npm install --global https://hermes-passiv.pages.dev/downloads/mahope-eaa-scanner-1.2.0.tgz`. Det er en GitHub-Actions-skabelon i en `npm`-pakke: kører den, henter den en tarball der ikke findes. Linje 53 peger på `https://hermes-passiv.pages.dev/scan`.
+- `site/openapi.yaml:10` — `url: https://hermes-passiv.pages.dev` i det serverede API-schema.
+- `site/_worker.js` — syv steder (User-Agent-strenge 253/355/1498/1963, `HTTP-Referer` 708, og en AI-prompt 689) der fortæller scanneren hvilken site den besøger. Kun `HTTP-Referer` har reel betydning for en modtagende server.
 
 **Omfang:**
 
-- Opdatér alle shippede generatorer, så de ikke kan mutere en ubrugt source-sitemap eller den gamle `hermes-passiv.pages.dev`-origin.
-- Ret `indexnow_ping.sh` og relaterede health-/deploy-dokumentation til de aktive domæner og CI-deploystien.
-- Behold kun read-only/public discovery-pings; ingen nye udadvendte writes uden Mads-godkendelse.
+- Sæt domænerne på de rigtige: scanneren ligger på `mahope.tools`, Page Profile på `mahope.tools`, Security Headers på `deskuptime.com`. Verificér hvilken dist der hvilket arkiv indeholder, med `tools/check_clean_copy_distribution.py`s `publishes`-logik som forlæg — ikke ved gæt.
+- `site/_worker.js` kræver worker-tests for hver rørte sti (`tests/stripe-worker.test.mjs` og `tests/tracking-worker.test.mjs`), og de eksisterende testtal må ikke reduceres.
+- Saml de ~100 generatorers `URL = f"https://hermes-passiv.pages.dev/…"`-konstanter i en note: en generator der køres i dag skriver en canonical- og `og:url`-reference til en død vært ind i et nyt blogindlæg.
 
 **Acceptkriterier:**
 
-- Ingen generator eller aktivt helbredsscript peger på `hermes-passiv.pages.dev` eller skriver i `site/sitemap.xml`.
-- `deploy.sh` har én dokumenteret, idempotent adgang; ingen aktiv instruktion beder om manuel Pages-upload.
-- Hele kvalitetsgaten er grøn.
+- Ingen fil under `site/` der publiceres, peger på `hermes-passiv.pages.dev`.
+- `npm install`-kommandoerne i GitHub-Actions-skabelonen henter et arkiv der faktisk findes på det domæne, det står i.
+- Hele kvalitetsgaten er grøn, Stripe-worker uændret på 69/69.
 
-**Gate:** `python3 tools/check_legacy_seo_paths.py` plus hele kvalitetsgaten.
-
+**Gate:** `python3 tools/check_links.py` plus hele kvalitetsgaten.
 
 ### 17. UFÆNDIG — Få DeskUptimes landside og værktøjssider til at ligne hinanden
 
