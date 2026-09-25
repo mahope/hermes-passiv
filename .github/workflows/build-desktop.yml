@@ -1,19 +1,27 @@
 name: Build EAA Desktop
 
 on:
+  # Listeform: hvert element er en selvstændig udløser, og et push rammer den
+  # første det matcher. `branches` og `tags` kan ikke stå i SAMME mapping —
+  # GitHub filtrerer dem begge på hver push, og en branch-push er aldrig et
+  # tag. Det var sådan denne workflow blev tag-only den 25. august 2026
+  # (6766501), så et push til main der rørte desktop/ ikke udløste noget i en
+  # hel måned. Se `tools/test_deploy_workflow.py`, der beviser triggerne.
   push:
-    paths:
-      - desktop/**
-      - .github/workflows/build-desktop.yml
-    tags:
-      - 'eaa-scanner-desktop-v*'
+    - branches: [main]
+      paths:
+        - desktop/**
+        - .github/workflows/build-desktop.yml
+    - tags: ['eaa-scanner-desktop-v*']
   pull_request:
     paths:
       - desktop/**
     branches: [main]
 
+# Kun `release` har brug for skriveadgang (det opretter et GitHub release).
+# De tre build-jobs får read, så et kompromitteret byggetræn ikke kan skrive.
 permissions:
-  contents: write
+  contents: read
 
 env:
   APP_NAME: EAA Compliance Scanner
@@ -136,6 +144,8 @@ jobs:
     needs: [build-macos, build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/eaa-scanner-desktop-v')
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
