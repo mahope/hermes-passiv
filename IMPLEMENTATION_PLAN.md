@@ -3,14 +3,14 @@
 ## Status
 
 - `ITERATION_ID`: `support-reply-routing-2026-09-25`
-- `STATE`: `4C I GANG — implementeret på ceo/support-reply-routing, gaten grøn`
-- `ACTIVE_TASK`: `4C`
-- `NEXT_TASK`: `4C — Send support og købersvar til de nye support-adresser (merge + plan-lukning)`
+- `STATE`: `4C FÆRDIG (merge 3fe72c3, implementering 46a2c2f)`
+- `ACTIVE_TASK`: `4D`
+- `NEXT_TASK`: `4D — Link til Stripe-kundeportalen for årsabonnenter`
 - `TASK_ATTEMPTS`: `4C: 1/1`
 - `LAST_BRANCH`: `ceo/support-reply-routing`
-- `PLAN_COMMIT`: `29c9c6a`
+- `PLAN_COMMIT`: `3fe72c3`
 - `BASELINE`: `main@29c9c6a`
-- `RESULT`: Leveringsmailens `reply_to` følger nu produktets domæne ud fra katalogens `home` (f.eks. Clean Copy → `support@cleancopy.tools`), produkter uden `home` falder tilbage til `support@mahope.tools`. `site/privacy/`, `site/terms/` og `site/license-lookup.html` peger på `support@mahope.tools`, og hvert dist får `support@<sit domæne>` i `.well-known/security.txt`. Salgsnotitsen til Mads (`to: mads@mahope.dk`) er urørt.
+- `RESULT`: Opgave 4C er færdig. Leveringsmailens `reply_to` følger nu produktets domæne ud fra katalogens `home` (Clean Copy → `support@cleancopy.tools`), produkter uden `home` falder tilbage til `support@mahope.tools`; privacy, terms, licens-opslag og hvert dist's `security.txt` peger på den fælles indbakke. Salgsnotitsen til Mads er urørt.
 - `GATE`: `GRØN — grep ingen privat indbakke i site/, build 4/4, sitemap 4/4 OK, SEO 308/0, Stripe-worker 62/62, inline JS 297/0, check_stripe_ctas problems: 0`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
@@ -302,7 +302,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test && python3 tools/test_weekly_report.py` plus hele kvalitetsgaten.
 
-### 4C. I GANG — Send support og købersvar til de nye support-adresser
+### 4C. FÆRDIG (implementering 46a2c2f, merge 3fe72c3) — Send support og købersvar til de nye support-adresser
 
 **Begrundelse:** Siden 2026-09-25 modtager alle produktdomæner mail (MX → Stalwart, catch-all → den fælles indbakke `support@mahope.tools`), som automations-serverens produktpuls læser og poster i #produkter. Sidernes kontaktlinks og leveringsmailens svar-adresse peger stadig på Mads' private indbakker, så kundehenvendelser bliver ikke sporet som produktfeedback.
 
@@ -320,7 +320,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `! grep -rn "mads@mahope" site/ --exclude=_worker.js && node tests/stripe-worker.test.mjs` plus hele kvalitetsgaten.
 
-**Implementeret denne iteration (grøn gate, endnu ikke merged):**
+**Implementeret denne iteration (merged i `3fe72c3`):**
 
 - `supportAddress(productKey)` i `site/_worker.js` udleder `support@<hostname>` fra produktets `home` i `STRIPE_PRODUCTS` og validerer værtsnavnet; `support@mahope.tools` er fallback for produkter uden `home` (alle downloadprodukter og donationen) og for en `home`, der ikke kan parses. `sendSaleEmail` bruger den i stedet for den private `mads@mahope.dk`.
 - Fire nye worker-assertions (57 → 62): Clean Copy Pro → `support@cleancopy.tools`, `eucomply-dpa` uden `home` → `support@mahope.tools`, ingen kundemail har en `reply_to` på en `mads@`-adresse, og begge nye sessioner leverer (200).
@@ -570,9 +570,12 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 3. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
 4. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
 5. **Beslut om to nye Stripe-produkter:** `site/site-icons.html` (Site Icons Pro: Apple touch-, PWA-, Windows- og OG-ikoner) og `site/downloads.html` + `blog/eaa-compliance-scanner-desktop.html` (EAA-scanner Pro: batch-scanning, CSV/JSON-eksport, ubegrænset crawl) har nu ingen pris og ingen købsknap, fordi kontrakten ikke indeholder produkter til dem. Opret kun dem, hvis du vil sælge dem; repoet gør det aldrig selv.
-6. **Udfør én lavendt Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
+6. **Udfør én lavendet Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
+7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: produkternes egne support-adresser i leveringsmail, privacy/terms, licens-opslag og security.txt 3fe72c3 2026-09-25T18:12+02:00` — GitHub Actions-run `36159004578` kører, udløst af `site/`, `site/_worker.js` og `build_sites.py` i path-filteret. Verificér på live: `mahope.tools/privacy/`, `/terms/` og `/license-lookup` viser `support@mahope.tools` og ingen `mads@mahope.dk`; hvert af de tre Pages-domæners `.well-known/security.txt` har `Contact: mailto:support@<sit domæne>`; live `build-info.json` bærer commit `3fe72c3`. `_worker.js` er identisk i alle tre dist, så reply_to-logikken er live i samme deploy.
 
 - 2026-09-25: `DEPLOY OK 2528300` — GitHub Actions-run `36157042428` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. CI's egen post-deploy-gate meldte `live sitemap OK` for alle tre domæner, og alle tre live `build-info.json` bærer commit `2528300`. CI kørte desuden de fulde gates i byggetrinene: `check_live_sitemaps`-tests OK, `check_sitemaps` OK, Stripe-worker 57/57, tracking-worker 83/83, inline-JS OK og `check_stripe_ctas` `problems: 0`. Kun kendte Node 20-/Ubuntu 26-advarsler.
 - 2026-09-25: `VERIFICÉR DEPLOY: datadrevet konverteringsrangering (ranking_basis, syv fulde dage, 14 synlige købsruter) 2528300 2026-09-25T17:52+02:00` — GitHub Actions-run `36157042428` kører, udløst af `tools/weekly_report.py` + `tools/test_weekly_report.py` i path-filteret. Ingen `site/`-fil er rørt, så live-indholdet skal være uændret; kontrollér at live `build-info.json` bærer commit `2528300` og at de tre Pages-domæner fortsat er grønne.
@@ -592,6 +595,8 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- Support- og svaradresser per produkt: `ceo/support-reply-routing` — `Send kundehenvendelser til produkternes egne support-adresser` (4C).
 
 - Datadrevet konverteringsrangering: `ceo/ranking-basis` — `Rangér Pro-sider på syv fulde dage` (4B del 2).
 - Licensrefunding og Clean Copy-aktivering: `4ad9457` — `Ret licensrefunding og Clean Copy-aktivering`.
