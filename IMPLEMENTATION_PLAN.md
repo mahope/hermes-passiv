@@ -10,7 +10,7 @@
 - `BASELINE`: `main@f3e2321`
 - `LAST_BRANCH`: `ceo/deskuptime-one-shell`
 - `TASK_ATTEMPTS`: `17: 1/1.`
-- `DEPLOY`: `DEPLOY OK 26/9 00:29` — uændret fra opgave 19 (kørsel `36196613182`). Denne iteration merger efter næste batch-vindue; se Deployloggen.
+- `DEPLOY`: `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
 - `RESULT` (opgave 17): Opgaven troede, de to sider var bygget af to forskellige designs, og at løsningen krævede at vælge mellem auditedwps skal og vores. **Halvdelen af den forudsætning var forkert, og det viste sig først i det byggede dist:** bygget indlæser allerede `/shell.js` og `<header class="site-header">` på alle fire sider — én header, én footer, ét skeln. Headeren, footeren, knapperne og IBM Plex kom alle fra vores skal. Det, der så forkert ud, var **tokens**: de tre værktøjssider indlæser derudover `../auditedwp`s `/assets/site.css`, et komplet designsystem med sit eget palet (grøn `#0b6e4f`) og sin egen skrifttype (Inter). Dens eget `<style>`-blok og deres eget `site.js` bruger kun de klassenavne, den kender, så filen skal rejse med — men de 27 tokens den erklærer, må ikke.
 
@@ -1144,7 +1144,7 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
-- 2026-09-26: `VERIFICÉR DEPLOY: ét designsystem på hele deskuptime.com 4805eaa 2026-09-26` — kørsel `36198367044`. — GitHub Actions kører automatisk (`site/style.css` er i path-filteret). Verificér **indhold**, ikke HTTP 200: de tre værktøjssiders knapper, pills og resultatfelter skal være blå (`--accent` = `#2456d6`) og ikke længere grøn (`#0b6e4f`). Kortest tjek: hent `https://deskuptime.com/style.css` og bekræft at den indeholder `--accent: var(--color-accent)` i `html[data-product="deskuptime"]`, og at `https://deskuptime.com/bulk-url-checker/` indlæser `/assets/site.css` FØR `/style.css`.
+- 2026-09-26: `DEPLOY OK 4805eaa` — kørsel `36198367044`: `gate` grøn (34 steps) + tre grønne deploys. Indholdsverificeret, ikke HTTP 200: live `deskuptime.com/style.css` indeholder broen (`--accent: var(--color-accent)` under `html[data-product="deskuptime"]`), og alle tre live værktøjssider indlæser `/assets/site.css` FØR `/style.css`, så broen er den der vinder. Dette lukker `VERIFICÉR DEPLOY` for opgave 17.
 
 - 2026-09-26: `DEPLOY OK cba6c10` — lukker `VERIFICÉR DEPLOY` ovenfor. Kørsel `36196613182`: `gate` grøn (32 steps) + tre grønne deploys. Indholdsverificeret, ikke HTTP 200: begke `search-index.json` 0 fund af `hermes-passiv.pages.dev`; live `cleancopy.tools/api-readme.md` 4 fund af `cleancopy.tools/api/clean-copy`; live `mahope.tools/compliance-site-check` forudfylder `urlInput` med `https://mahope.tools`; alle tre `build-info.json` bærer `cba6c10`. CI meldte kun kendte ubuntu-latest-/git-advarsler.
 
