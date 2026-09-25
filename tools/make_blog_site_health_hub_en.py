@@ -4,7 +4,11 @@ Idempotent: regenerates the page, updates sitemap once."""
 import re, datetime
 
 OUT = "site/blog/site-health-github-actions.html"
-SITEMAP = "site/sitemap.xml"
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 URL = "https://hermes-passiv.pages.dev/blog/site-health-github-actions"
 TODAY = "2026-08-26"
 

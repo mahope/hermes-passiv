@@ -163,7 +163,11 @@ for b in blocks:
 print('JSON-LD OK:', [d['@type'] for d in map(json.loads, blocks)])
 
 # --- Sitemap update ---
-sm_path = 'site/sitemap.xml'
+raise SystemExit(
+    "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
+    "Kildefilens sitemap blev aldrig publiceret, så dette step er fjernet. "
+    "Kør build_sites.py — den bygger sitemap.xml ud fra den rigtige dist."
+)
 sm = open(sm_path).read()
 assert URL_DA not in sm, 'already in sitemap'
 entry = f'<url><loc>{URL_DA}</loc><lastmod>{TODAY}</lastmod></url>'

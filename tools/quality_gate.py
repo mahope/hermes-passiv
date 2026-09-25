@@ -340,6 +340,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_links.py", "--self-test"),
         inputs=("tools/check_links.py",),
     ),
+    # Opgave 15: de døde sitemap-generator- og deploystier. Uden dette step
+    # kan 21 generatorer igen skrive i en kilde-sitemap, builden springer over,
+    # og indexnow_ping.sh igen pege på en vært der ikke findes.
+    Step(
+        id="legacy-seo-paths",
+        argv=("python3", "tools/check_legacy_seo_paths.py"),
+        # Gaten læser ALLE .py/.sh i roden og i tools/, fordi det er dem, der
+        # kunne skrive i den døde kilde-sitemap eller pege på den døde vært.
+        # Derfor er familierne i input — ellers kunne en generator ændres uden at
+        # gaten nogensinde så den, præcis som fund 1 i RESULT (opgave 11).
+        inputs=("tools/check_legacy_seo_paths.py", "indexnow_ping.sh", "deploy.sh",
+                "*.py", "*.sh", "tools/*.py", "tools/*.sh"),
+    ),
+    Step(
+        id="legacy-seo-paths-selftest",
+        argv=("python3", "tools/check_legacy_seo_paths.py", "--self-test"),
+        inputs=("tools/check_legacy_seo_paths.py",),
+    ),
 )
 
 
