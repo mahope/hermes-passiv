@@ -2,17 +2,22 @@
 
 ## Status
 
-- `ITERATION_ID`: `aab-indre-version-2026-09-26`
-- `STATE`: `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
-- `STATE` (før): `Opgave 18 FÆRDIG — svaret på spørgsmålet var ja for ét arkiv og nej for otte. site/downloads/eaa-scanner-desktop-src-1.3.3.zip hed 1.3.3 men indeholdt 1.3.0: lockfilens version 1.3.0, electron-builder ^25.0.0, ingen engines, ingen .nvmrc. Den er nu bygget reproducerbart fra desktop/ og gaten kræver lighed. Nyt værktøj tools/build_desktop_archive.py (--check + --self-test) og to nye gatestræk (36 fra 34). Åbent og skrevet op: pip- og npm-artefakterne er stadig uåbnede, og en ren desktop-commit udløser ikke gaten.`
+- `ITERATION_ID`: `site-icons-arkiv-2026-09-26`
+- `STATE`: `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
+- `STATE` (før): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `20 — byg site-icons-1.0.0.tar.gz reproducerbart; den er en forældet håndlavet kopi med Lemon Squeezy-referencer`
+- `NEXT_TASK`: `21 — de fire Clean Copy-arkiver har heller ingen indholdsgate`
 - `PLAN_COMMIT`: `956f19f (merge af e833812)`
-- `BASELINE`: `main@8d0ae76`
-- `LAST_BRANCH`: `ceo/aab-indre-version`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1.`
-- `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
-- `DEPLOY` (ny): `DEPLOY OK 956f19f 26/9` — kørsel `36201588862`: `gate` grøn (36 steps) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Intet i `site/` eller `dist/` blev rørt af committen, så domænerne er uændrede; live-indhold verificeret på det der faktisk kan have ændret sig — de publicerede download-arkiver. Se Deployloggen.
+- `BASELINE`: `main@cf0fae0`
+- `LAST_BRANCH`: `ceo/site-icons-arkiv`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1.`
+- `GATE` (opgave 20): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (fra 36). build_site_icons_archive --self-test: OK (8 mutationer + positiv kontrol + determinisme + 2 falsk-positive-tests). --check: grøn, 2 filer i tarballet + 2 løse filer = regeneration af site-icons/. Porten fandt 5 fejl på det gamle arkiv FØR rettelsen, heraf de to med den lukkede udbyder. test_deploy_workflow: grøn, og fejler hvis site-icons/** tages ud af filteret. Stripe-worker uændret, dist/uændret (gitignored).`
+- `DEPLOY` (ny, opgave 20): `AFVENTER — merge af ceo/site-icons-arkiv. Denne iteration rørte site/downloads/site-icons/**, så de tre domæners download-arkiv skal skifte indhold.`
+- `VERIFICÉR DEPLOY` (ny): `site-icons-arkivet er bygget af kilden <SHA> <tidspunkt>` — GitHub Actions deployer automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
+  - `https://mahope.tools/downloads/site-icons/site-icons-1.0.0.tar.gz` skal pakkkes ud til præcis to filer, `README.md` (2581 bytes) og `site_icons.py` (15287 bytes), og **ingen** af dem må nævne `lemon`. Før dette var de 2596 og 15267 bytes, og README'en sagde at nøgler sælges i en Lemon Squeezy-konto.
+  - `https://mahope.tools/downloads/site-icons/README.md` skal være byte-identisk med `site-icons/README.md` i repoet.
+  - `/downloads/site-icons/site_icons.py` skal være byte-identisk med `site-icons/site_icons.py`.
+- `GATE` (før, opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
 - `VERIFICÉR DEPLOY` (lukket): `check_versions læser nu de fem byggeoutput-arkivers indre version 956f19f 2026-09-26` — kørsel `36201588862` grøn. Verificér **indhold**: de fire filer kunden henter skal være byte-uændrede, fordi committen ikke rørte dem.
 - `DEPLOY` (ny): `DEPLOY OK 956f19f 26/9` — kørsel `36201588862`: `gate` grøn (36 steps) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Intet i `site/` eller `dist/` blev rørt af committen, så domænerne er uændrede. Live-indhold verificeret på de tre publicerede byggeoutput-arkiver: `eaa_scanner-1.2.0-py3-none-any.whl`, `mahope-eaa-scanner-1.2.0.tgz` og `site-icons/site-icons-1.0.0.tar.gz` er hvert især **byte-identiske** med repoet (sha256 `0fc4b3ba…`, `d9e74ffb…`, `882ab49d…`). Se Deployloggen.
 - `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
@@ -1301,46 +1306,74 @@ holder dem der, og de er præcis de filer en kunde `pip install`er.
 
 **Gate:** `python3 tools/check_versions.py --self-test` plus hele kvalitetsgaten.
 
-### 20. UFÆRDIG — byg `site-icons-1.0.0.tar.gz` reproducerbart; den er en forældet håndlavet kopi
+### 20. FÆRDIG (implementering `ceo/site-icons-arkiv`) — byg `site-icons-1.0.0.tar.gz` reproducerbart
 
-**Begrundelse:** Opgave 19 fandt, mens den læste arkiverne, at
-`site/downloads/site-icons/site-icons-1.0.0.tar.gz` **ikke** er en kopi af kilden.
-Begge filer i tarballet afviger fra `site-icons/`, og det er ikke kosmetik:
+**RESULT:** `site/downloads/site-icons/site-icons-1.0.0.tar.gz` var en håndlavet
+kopi fra **24. august**, ikke bygget af `site-icons/`. Begge filer i arkivet afveg
+fra kilden, og forskellen var den døde udbyder: `site_icons.py:45` sagde *"Lemon
+Squeezy API when available"* (kilden: mahope.tools-licens-API'et) og
+`README.md:69` sagde *"When Mads opens Bitwarden (Lemon Squeezy API), keys are
+sold there"* — altså en publiceret README, der fortæller kunden hvor de kan købe
+en nøgle i en konto der blev lukket 24. september. Opgave 19 glippede over den
+fordi den kun læste arkivets *version* (1.0.0, korrekt). Arkivet er nu bygget af
+kilden og er byte-identisk, verificeret både med Pythons `tarfile` og med
+kommandolinjens `tar tzvf`.
 
-- `site_icons.py:45` siger *„Lemon Squeezy API when available"* — kilden siger
-  *„the mahope.tools license API (/api/license/validate)"*.
-- `README.md:69` siger *„When Mads opens Bitwarden (Lemon Squeezy API), keys are
-  sold there"* — kilden siger *„Pro will require a license key from the
-  mahope.tools license API"*.
+Nyt `tools/build_site_icons_archive.py` i samme form som
+`tools/build_desktop_archive.py` (build + `--check` + `--self-test`), låst
+`tarnummer` (mtime 2000-01-01, uid/gid 0, ingen ejernavne, 0644, sorteret) og
+låst gzip (`mtime=0`, intet filnavn i headeren). To nye gatestræk, 36 → 38.
 
-Det er præcis den døde udbyder kontrakten lukkede den 24. september, leveret til
-kunder i et publiceret download. Opgave 19 dækker kun versionen, som er korrekt
-(1.0.0), så denne fejl glider igennem. Samme fejlform som opgave 18: et
-publiceret arkiv der ikke er bygget af kilden.
+**Fund 1 — de tre publicerede artefakter var tre håndlavede kopier, ikke én.**
+`downloads.html` linker både `site_icons.py` (curl -O) og tarballet. README'en
+havde derfor fået en *håndredigeret* linje med det rigtige domæne i den løse kopi,
+mens tarballet beholdt den døde vært — to filer der sagde hver sit om det samme.
+Derfor bygges nu alle tre fra `site-icons/`, og `--check` kræver at løse filer og
+tarball begge er byte-identiske med kilden. Uden det ville de to glide fra
+hinanden igen, og det er jo netop det der skete.
 
-**Omfang:**
+**Fund 2 — kilden havde selv den døde vært, som aldrig blev rettet.**
+`site-icons/README.md:16` sagde `curl -O https://hermes-passiv.pages.dev/...`.
+Den lå i kilden, blev aldrig set af nogen port, og ville være blevet publiceret
+med i det nye arkiv, fordi porten bygger *af kilden*. Kun den håndredigerede løse
+kopi havde rettet den. Rettet i kilden; porten læser den nu, fordi `site-icons/**`
+er i path-filteret.
 
-- Nyt `tools/build_site_icons_archive.py` i samme form som
-  `tools/build_desktop_archive.py`: byg + `--check` + `--self-test`, låste
-  tidsstempler, kun de to filer kunden skal have (`site_icons.py`, `README.md`).
-- Byg arkivet fra `site-icons/`, så det får kildens Lemon Squeezy-rettelse med.
-- Hæng et step på `tools/quality_gate.py` og sørg for at `site-icons/**` er med i
-  path-filteret — ellers fanger gaten kun commits der rører selve arkivet, hvilket
-  var præcis den utænkelighed opgave 18 skrev op under `❓ Til Mads` pkt. 10.
+**Fund 3 — hullet fra opgave 18 er lukket her, og beviset for det stod i
+`test_deploy_workflow`.** Opgave 18 måtte oplyse at `desktop/**` er bevidst
+udeladt fra filteret, så en ren kilde-commit ikke udløser porten. Her er
+`site-icons/**` med. Beviset er ikke at linjen står i YAML'en, men at porten
+fejler når den tages ud: `site-icons-archive` læser alle syv filer i
+`site-icons/`, og uden filterlinjen melder `test_deploy_workflow` dem som
+udækkede. Derimod viste testen mig at `site/downloads/site-icons/**` er
+*overflødigt* — `site/**` dækker det — så den linje blev fjernet igen frem for at
+stå som pynt.
 
-**Acceptkriterier:**
+**Fund 4 — porten fandt sin egen fejl i gaten.** Min første docstring citerede
+kildens rettelse som *"the mahope.tools license API (/api/license/validate)"*, og
+`check_license_clients.py` meldte da `build_site_icons_archive.py` som
+licensklient uden `product`. Det er porten, der har ret: filen er ikke en klient,
+og den kan heller ikke være det, fordi kontrakten ikke har et site-icons-produkt.
+Citatet er derfor forkortet til det, det beviser — hvilken udbyder teksten nævner.
+Bemærk at porten *stripper kommentarer* men ikke docstrings, så det er et
+dokumentationsvalg og ikke en fejl i porten.
 
-- `python3 tools/build_site_icons_archive.py --check` er grøn, og arkivet er
-  byte-identisk med et arkiv bygget af kilden.
-- Tarballets to filer er byte-identiske med `site-icons/site_icons.py` og
-  `site-icons/README.md`.
-- Ingen forekomst af `lemon` i noget publiceret arkiv under `site/downloads/`
-  (fanges af `check_legacy_seo_paths.py`-lignende grep, eller en ny linje i
-  `check_versions.py`).
-- Hele kvalitetsgaten er grøn.
+**Bevis for porten:** 8 mutationer fanget med navngiven grund, positiv kontrol
+grøn, determinisme grøn, og to falsk-positive-tests (en kilde må gerne have flere
+filer end de publicerede; en *ikke-publiceret* kildefil må gerne nævne den lukkede
+udbyder). De låste konstanter testes for deres værdi, ikke kun for determinisme —
+to builds i samme proces er ens, hvad enten `TAR_MTIME` er 0 eller 2026.
 
-**Gate:** `python3 tools/build_site_icons_archive.py --self-test` plus hele
-kvalitetsgaten.
+**Kendte begrænsninger, skrevet op i stedet for skjult:** Arkivet er fladt, to
+filer i roden, fordi det er det kunden har hentet siden 24. august. Det er ikke en
+sdist: ingen `PKG-INFO`, ingen topniveau-mappe, ingen `LICENSE` (repoens MIT-licens
+nævnes i README'en). `pyproject.toml` og `cli.py` medtages bevidst ikke — de er
+byggeinput til en wheel vi ikke udgiver.
+
+**Gate:** `python3 tools/build_site_icons_archive.py --self-test` (OK, 8
+mutationer) + `python3 tools/quality_gate.py` (GRØN, 38 steps fra 36). Porten
+fandt den rigtige fejl på de rigtige filer *før* nogen blev rettet: 5 fund på det
+gamle arkiv, heraf de to med den lukkede udbyder.
 
 ### 21. UFÆRDIG — de fire Clean Copy-arkiver har heller ingen indholdsgate
 

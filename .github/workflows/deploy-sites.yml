@@ -52,6 +52,14 @@ on:
       - 'requirements-build.txt'
       - 'requirements-audit.txt'
       - 'site-icons/pyproject.toml'
+      # Opgave 20: hele `site-icons/` er input til `build_site_icons_archive.py`,
+      # fordi de publicerede filer er en regeneration af kilden. Uden hele
+      # familien ville en commit der kun retter `site_icons.py` merge uden at
+      # nogen læste det publicerede arkiv — præcis det hullet opgave 18 måtte
+      # oplyse for `desktop/**`, og det er lukket her i stedet for at blive noteret.
+      # `site/downloads/site-icons/**` dækkes allerede af `site/**` ovenfor, så
+      # der står ingen overflødige linjer for filteret at vedligeholde.
+      - 'site-icons/**'
       # Én versionskilde pr. produkt: en ændring i en af disse skal kunne
       # udløse gaten, der fortæller om resten af versionerne stadig er i takt.
       # `desktop/package.json` er bevidst IKKE med: `test_deploy_workflow`

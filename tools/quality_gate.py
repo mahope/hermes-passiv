@@ -202,6 +202,30 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/build_desktop_archive.py", "--self-test"),
         inputs=("tools/build_desktop_archive.py",),
     ),
+    # Opgave 20: `site-icons-1.0.0.tar.gz` viste sig at være en håndlavet kopi fra
+    # 24/8, ikke bygget af `site-icons/`. Den indeholdt den døde udbyder
+    # (Lemon Squeezy) i en README, der fortæller kunden hvor de køber en nøgle.
+    # Opgave 19 læste kun arkivets *version*, som var korrekt — så fejlen slap igennem.
+    #
+    # `inputs` er hele familien: kilde, publicerede filer OG builderen. `site-icons/**`
+    # er også i workflowens path-filter, så en commit der kun retter
+    # `site-icons/site_icons.py` udløser gaten — det hullet, opgave 18 måtte oplyse
+    # for `desktop/**`, gentages altså ikke her.
+    Step(
+        id="site-icons-archive",
+        argv=("python3", "tools/build_site_icons_archive.py", "--check"),
+        inputs=(
+            "tools/build_site_icons_archive.py",
+            "tools/mini_toml.py",
+            "site-icons/**",
+            "site/downloads/site-icons/**",
+        ),
+    ),
+    Step(
+        id="site-icons-archive-selftest",
+        argv=("python3", "tools/build_site_icons_archive.py", "--self-test"),
+        inputs=("tools/build_site_icons_archive.py", "tools/mini_toml.py"),
+    ),
     # Finder kilder der kalder /api/license uden `product`, en død vært,
     # den lukkede Lemon Squeezy-API og en divergeret Firefox-kopi.
     Step(
