@@ -3,21 +3,24 @@
 ## Status
 
 - `ITERATION_ID`: `aab-indre-version-2026-09-26`
-- `STATE`: `Opgave 18 FÆRDIG — svaret på spørgsmålet var ja for ét arkiv og nej for otte. site/downloads/eaa-scanner-desktop-src-1.3.3.zip hed 1.3.3 men indeholdt 1.3.0: lockfilens version 1.3.0, electron-builder ^25.0.0, ingen engines, ingen .nvmrc. Den er nu bygget reproducerbart fra desktop/ og gaten kræver lighed. Nyt værktøj tools/build_desktop_archive.py (--check + --self-test) og to nye gatestræk (36 fra 34). Åbent og skrevet op: pip- og npm-artefakterne er stadig uåbnede, og en ren desktop-commit udløser ikke gaten.`
 - `STATE`: `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
+- `STATE` (før): `Opgave 18 FÆRDIG — svaret på spørgsmålet var ja for ét arkiv og nej for otte. site/downloads/eaa-scanner-desktop-src-1.3.3.zip hed 1.3.3 men indeholdt 1.3.0: lockfilens version 1.3.0, electron-builder ^25.0.0, ingen engines, ingen .nvmrc. Den er nu bygget reproducerbart fra desktop/ og gaten kræver lighed. Nyt værktøj tools/build_desktop_archive.py (--check + --self-test) og to nye gatestræk (36 fra 34). Åbent og skrevet op: pip- og npm-artefakterne er stadig uåbnede, og en ren desktop-commit udløser ikke gaten.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `20 — byg site-icons-1.0.0.tar.gz reproducerbart; den er en forældet håndlavet kopi med Lemon Squeezy-referencer`
-- `PLAN_COMMIT`: `ceo/aab-indre-version (afventer merge)`
+- `PLAN_COMMIT`: `956f19f (merge af e833812)`
 - `BASELINE`: `main@8d0ae76`
 - `LAST_BRANCH`: `ceo/aab-indre-version`
 - `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1.`
-- `DEPLOY`: `DEPLOY OK 14f0ee3 26/9` — kørsel `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Live-indhold verificeret (11 filer, lockfil 1.3.3/`^26.15.3`, `engines` + `.nvmrc` med). Se Deployloggen.
+- `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
+- `DEPLOY` (ny): `DEPLOY OK 956f19f 26/9` — kørsel `36201588862`: `gate` grøn (36 steps) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Intet i `site/` eller `dist/` blev rørt af committen, så domænerne er uændrede; live-indhold verificeret på det der faktisk kan have ændret sig — de publicerede download-arkiver. Se Deployloggen.
+- `VERIFICÉR DEPLOY` (lukket): `check_versions læser nu de fem byggeoutput-arkivers indre version 956f19f 2026-09-26` — kørsel `36201588862` grøn. Verificér **indhold**: de fire filer kunden henter skal være byte-uændrede, fordi committen ikke rørte dem.
+- `DEPLOY` (ny): `DEPLOY OK 956f19f 26/9` — kørsel `36201588862`: `gate` grøn (36 steps) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Intet i `site/` eller `dist/` blev rørt af committen, så domænerne er uændrede. Live-indhold verificeret på de tre publicerede byggeoutput-arkiver: `eaa_scanner-1.2.0-py3-none-any.whl`, `mahope-eaa-scanner-1.2.0.tgz` og `site-icons/site-icons-1.0.0.tar.gz` er hvert især **byte-identiske** med repoet (sha256 `0fc4b3ba…`, `d9e74ffb…`, `882ab49d…`). Se Deployloggen.
+- `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
+- `DEPLOY` (før): `DEPLOY OK 14f0ee3 26/9` — kørsel `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Live-indhold verificeret (11 filer, lockfil 1.3.3/`^26.15.3`, `engines` + `.nvmrc` med). Se Deployloggen.
 - `VERIFICÉR DEPLOY (lukket)`: `desktop-kildearkivet er et 1.3.3-arkiv 14f0ee3 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
   - `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` skal pakkes ud til 11 filer; `package-lock.json` skal sige `version 1.3.3` og `electron-builder ^26.15.3`, `package.json` skal have `engines.node >=22.12.0`, og `.nvmrc` skal være med. Før dette var der 10 filer, lockfilen sagde 1.3.0 og `^25.0.0`, og `.nvmrc` manglede.
 - `DEPLOY` (før): `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
-- `GATE` (opgave 19): `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (uændret). check_versions --self-test: OK (25 mutationer + 1 negativ kontrol + positiv kontrol + rigtige filer). check_versions: OK, 8 produkter. check_python_env --self-test: OK (13 mutationer + 7 stdlib-kontroller). Stripe-worker uændret, dist/uændret (gitignored).`
-- `VERIFICÉR DEPLOY`: `check_versions læser nu de fem byggeoutput-arkivers indre version (aab-indre-version 2026-09-26)` — GitHub Actions kører automatisk (`tools/**` er i path-filteret). Intet i `site/` eller `dist/` ændres af denne commit, så **intet på de tre domæner ændrer udseende**; live-verificér at `gate` var grøn i kørslen, og at `mahope.tools/downloads/eaa_scanner-1.2.0-py3-none-any.whl` stadig er den samme fil (HTTP 200 er ikke nok, men her skal sha256 være uændret).
 - `RESULT` (opgave 17): Opgaven troede, de to sider var bygget af to forskellige designs, og at løsningen krævede at vælge mellem auditedwps skal og vores. **Halvdelen af den forudsætning var forkert, og det viste sig først i det byggede dist:** bygget indlæser allerede `/shell.js` og `<header class="site-header">` på alle fire sider — én header, én footer, ét skeln. Headeren, footeren, knapperne og IBM Plex kom alle fra vores skal. Det, der så forkert ud, var **tokens**: de tre værktøjssider indlæser derudover `../auditedwp`s `/assets/site.css`, et komplet designsystem med sit eget palet (grøn `#0b6e4f`) og sin egen skrifttype (Inter). Dens eget `<style>`-blok og deres eget `site.js` bruger kun de klassenavne, den kender, så filen skal rejse med — men de 27 tokens den erklærer, må ikke.
 
   **Fund 1 — beslutningen var at lade deres fil rejse med og trodse dens tokens.** At fjerne `assets/site.css` ville have brudt resultaterne: `site.js` indsætter `.ck-tools`, `.btn.secondary.sm`, `.ic`, `.pre-wrap`, `.copy-btn`, `.recent`, `.rcard`, `.post-grid` — elementer, kun den fil styler. Bridgen er derfor 27 `var(--color-*)`-linjer i `site/style.css`, ikke en ny side og ikke en ændring i `../auditedwp`.
@@ -1393,6 +1396,22 @@ obsidian-arkivet matcher `obsidian-plugin/manifest.json`.
 
 ## Deploylog
 
+- 2026-09-26: `DEPLOY OK 956f19f` — lukker `VERIFICÉR DEPLOY` for opgave 19. Kørsel
+  `36201588862`: `gate` grøn (36 steps) + tre grønne deploys. Committen rørte kun
+  `tools/` og planen, så intet på domænerne kunne ændre sig — og det blev
+  verificeret på indhold, ikke HTTP-status: de tre publicerede byggeoutput-arkiver
+  er byte-identiske med repoet.
+
+  | Filer | sha256 (første 16) | HTTP | Byte |
+  |---|---|---|---|
+  | `downloads/eaa_scanner-1.2.0-py3-none-any.whl` | `0fc4b3ba7931df48` | 200 | 14086 = 14086 |
+  | `downloads/mahope-eaa-scanner-1.2.0.tgz` | `d9e74ffb97db8386` | 200 | 10664 = 10664 |
+  | `downloads/site-icons/site-icons-1.0.0.tar.gz` | `882ab49d4571bb4f` | 200 | 5674 = 5674 |
+
+  Det er samme tre filer som opgave 19 åbner for første gang. De var alle korrekte,
+  hvilket også er svar på spørgsmålet om hvor de tre fund var: de to sdists og det
+  ene håndlavede tarball var ikke forsinkede, de var bare uåbnede.
+
 - 2026-09-26: `DEPLOY OK 14f0ee3` — lukker `VERIFICÉR DEPLOY` for opgave 18. Kørsel
   `36199954971`: `gate` grøn (36 steps) + tre grønne deploys. Indholdsverificeret, ikke
   HTTP 200: live `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` er
@@ -1569,6 +1588,7 @@ obsidian-arkivet matcher `obsidian-plugin/manifest.json`.
 
 ## Commitlog
 
+- Læs versionserklæringen inde i de publicerede byggeoutput-arkiver: `ceo/aab-indre-version` — `Læs versionserklæringen inde i de publicerede byggeoutput-arkiver` (19).
 - Electron 44.0.0 → 44.4.5 og én erklæret Node-version: `ceo/desktop-node-runtime` — `Erklær desktopens runtime ét sted og opgradér Electron` (12).
 - CI kører den dokumenterede kvalitetsgate, ét sted: `ceo/ci-runs-real-gate` — `Kør den dokumenterede kvalitetsgate i CI` (11).
 - electron-builder 25 → 26.15.3, advisory-fundene lukket: `ceo/electron-builder-26` — `Opgradér electron-builder og luk advisory-fundene` (9).
