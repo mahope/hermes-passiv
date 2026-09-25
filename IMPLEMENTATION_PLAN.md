@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `clean-copy-license-clients-2026-09-25`
-- `STATE`: `Opgave 7 del 1 FÆRDIG (implementering ceo/clean-copy-license-clients); opgave 7 står I GANG med del 2`
-- `ACTIVE_TASK`: `7 (del 2 — se opgavetekst)`
-- `NEXT_TASK`: `7 del 2 — check-script, publicerede arkiver og webværktøjets cache`
-- `TASK_ATTEMPTS`: `7: 1/1`
-- `LAST_BRANCH`: `ceo/clean-copy-license-clients`
+- `ITERATION_ID`: `clean-copy-clients-contract-2026-09-25`
+- `STATE`: `Opgave 7 del 2 FÆRDIG for punkt 1, 3 og 4; del 2 punkt 2 (publicerede arkiver) er den næste iteration`
+- `ACTIVE_TASK`: `7 (del 2 — ét delpunkt tilbage)`
+- `NEXT_TASK`: `7 del 2 punkt 2 — pak de publicerede Clean Copy-arkiver reproducerbart med nye patch-udgaver`
+- `TASK_ATTEMPTS`: `7: 2/2`
+- `LAST_BRANCH`: `ceo/clean-copy-delivery`
 - `PLAN_COMMIT`: `(denne commit)`
-- `BASELINE`: `main@b6a8a40`
-- `RESULT`: Opgave 7 del 1 er færdig og grønt testet. Fundet var værre end "mangler product": **alle shippede Clean Copy-klienter talte med det gamle `hermes-passiv.pages.dev`**, som ikke er et af de fire deployede Pages-projekter, og de sendte ingen `product`, så serveren ville afvise købte nøgler med 400. Der er nu én kanonisk fil `tools/clean_copy_license.js` (API-base, `clean-copy-pro`, 32-hex nøgleformat, syvdages positiv cache), som indlejres ordret i `obsidian-plugin/main.js` og kopieres byte-identisk til begge udvidelser som `license.js`. Chrome/Firefox `options.js` var desuden byte-identiske med hinanden uden at noget holde dem sammen, så Firefox-kopien er nu en kopiering af Chrome-kilden. Den gamle offline-grænse i udvidelsen var ubegrænset: en netværksfejl kaldte `showLicensed('', true)` for evigt; nu gælder samme syvdages regel som kontrakten. Vigtigst: den gamle test var theater. `test.js` genskrerev requesten inde i testen og hævede så sit eget mock ("14 assertions") og indlæste aldrig en klient. Den nye `tools/test_license_clients.js` indlæser de filer der faktisk ships — `obsidian-plugin/main.js` med en `obsidian`-stub og `extension-clean-copy/options.js` med `chrome`/`document`-stubs — og dækker 200, 403, 404, 400, 409, 500, 503, status 0 (kastet request), cache i 1 dag / præcis 7 dage / 8 dage, samt at en hård altid svarer over cachen: 57 checks, grønne. Live-sitet er uændret af denne iteration: de publicerede zips i `site/downloads/` har stadig den gamle kode, hvilket er del 2.
-- `GATE`: `GRØN — build OK, check_sitemaps OK, SEO OK, Stripe-worker 69/69, tracking-worker OK, inline JS OK, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, product-copy OK, stripe-cta 0, test.js → 57 checks, obsidian-plugin/test.js OK, extension-tools 13/13`
+- `BASELINE`: `main@55fbe15`
+- `RESULT`: Webværktøjet på `cleancopy.tools` og `mahope.tools` lå sine kunder i fare: `site/clean-copy-tool.html` kaldte `clearPro()` ved ethvert ikke-200-svar, så en 503 fra licensserveren slettede Pro-status hos en kunde der havde betalt — præcis den fejl kontrakten forbyder. Siden indlejrer nu `tools/clean_copy_license.js` ordret og bruger `decide()`: 200 er Pro, 503/5xx/status 0 er Pro fra cache i højst syv dage med en synlig forklaring, 403/404/400/409 og `valid:false` er aldrig Pro og rydder nøglen, og et lokalt udløbet `cc_pro_expires` ryddes ved indlæsning med datoen nævnt. Aktivering afviser et nøgleformat der ikke er 32 hex, før der laves et netværkskald. `site/compliance-report.html` sendte slet ingen `product`, så workeren afviste hver nøgle med 403 — siden sælger kun EUComply Pro, og den sender nu `eucomply-pro`. Rødderne `main.js` og `core.js` er væk: `core.js` var byte-identisk med `obsidian-plugin/core.js`, mens `main.js` var en ældre variant med det døde `hermes-passiv.pages.dev`-endepunkt og ingen cache, altså to kilder der kunne komme i drift i en udgivelse. Samtidig viste det sig, at *begge* tests der påstod at teste `main.js` (rodens `test.js` og `obsidian-plugin/test.js`) genskrev requesten inde i testen og hævede sit eget mock mod den døde vært; de er nu et kald til den rigtige suite. Testene udvides til at indlæse webværktøjet i en `vm`-sandbox med DOM-stubs: 103 checks, grønne. `tools/check_license_clients.py` med `--self-test` (9/9) finder nu selv de klienter der kalder `/api/license` og fejler ved manglende `product`, død vært i et licenskald, Lemon Squeezy, et indlejret modul der afviger fra den kanoniske kilde, en divergeret Firefox-kopi eller en undtagelse der ikke længere findes; `desktop/main.js` står som dokumenteret undtagelse, fordi EAA endnu ikke findes i Stripe-kontrakten.
+- `GATE`: `GRØN — build OK, check_sitemaps OK (3 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile OK, product-copy 0, stripe-cta 0, test_license_flow OK, test.js → 103 checks, extension-tools 13/13, check_license_clients 0 + --self-test 9/9`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -30,10 +30,21 @@ Denne gate er den obligatoriske minimum før merge til `main`:
 python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py
 ```
 
-Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1) er
-`node tools/test_license_clients.js`, og `node test.js` indlæser den. Den indlæser de
-filer der faktisk ships og dækker 200/403/404/400/409/500/503, status 0 og
-syvdagescachen.
+Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1,
+udvidet i del 2) er `node tools/test_license_clients.js`, og `node test.js` indlæser
+den. Den indlæser de filer der faktisk ships — Obsidian-pluginen, Chrome/Firefox
+options.js og webværktøjets inline blok i en vm-sandbox — og dækker
+200/403/404/400/409/500/503, status 0 og syvdagescachen.
+
+`tools/check_license_clients.py` blev tilføjet 2026-09-25 i opgave 7 del 2, fordi
+tests ikke kan se en *ny* klient, der kalder `/api/license` uden `product`. Den
+finder alle sådanne kilder i repoet og fejler ved manglende `product`, død vært i et
+licenskald, den lukkede Lemon Squeezy-API, et indlejret modul der afviger fra
+`tools/clean_copy_license.js`, en divergeret Firefox-kopi eller en undtagelse uden
+fil. `site/_worker.js` (serveren) og `desktop/main.js` (EAA, endnu uden produkt i
+kontrakten) er dokumenterede undtagelser. Den afhænger af `tools/clean_copy_license.js`,
+`site/clean-copy-tool.html`, `site/compliance-report.html` og de to extensionsmapper,
+og skal derfor ligge i deploy-workflowens path-filter.
 
 `check_private_content.py` blev tilføjet 2026-09-25 i opgave 5, fordi et betalt
 leveringsfil i `dist/` er en reel læk, ikke en SEO-fejl. Den afhænger af
@@ -499,7 +510,7 @@ skulle have været der med 4E. Den publicerede kopi, arkivet og dist er alle tre
 allerede korrekte — de var bare ubevogtede.
 
 
-### 7. I GANG (del 1 færdig) — Gør Clean Copy-pluginklienterne Stripe-kompatible
+### 7. I GANG (del 1 + del 2 pkt. 1, 3, 4 færdig) — Gør Clean Copy-pluginklienterne Stripe-kompatible
 
 **Begrundelse:** Root- og Obsidian-plugin sender ikke `product`, selv om workeren afviser payloaden.
 
@@ -518,7 +529,7 @@ allerede korrekte — de var bare ubevogtede.
 - `tools/check_license_clients.py` dækker alle fundne callers og offentlige dist-kopier.
 - Hele kvalitetsgaten er grøn.
 
-**Gate:** `node tools/test_license_clients.js && node obsidian-plugin/test.js && node test.js && node extension-clean-copy/tools/test_clean_copy.js && python3 tools/check_license_clients.py` plus hele kvalitetsgaten.
+**Gate:** `node tools/test_license_clients.js && node obsidian-plugin/test.js && node test.js && node extension-clean-copy/tools/test_clean_copy.js && python3 tools/check_license_clients.py && python3 tools/check_license_clients.py --self-test` plus hele kvalitetsgaten.
 
 **Del 1 — implementeret i `ceo/clean-copy-license-clients`:**
 
@@ -530,12 +541,18 @@ allerede korrekte — de var bare ubevogtede.
 - `tools/test_license_clients.js` (57 checks) indlæser de shippede filer med `obsidian`-, `chrome`- og `document`-stubs og dækker success, 403, 404, 400, 409, 500, 503, status 0, cache i 1 dag / præcis 7 dage / 8 dage, at en hård svar altid sår cache, at en dårlig nøgleformat aldrig rammer netværket, og at de to udvidelsers `options.js`/`license.js` er byte-identiske med hinanden og med den kanoniske fil.
 - Den gamle `test.js`-licenstest var theater: den genskrev requesten i testen og hævede sit eget mock. Den er erstattet af et kald til den rigtige suite.
 
-**Del 2 — næste iteration (opgaven er derfor `I GANG`, ikke `FÆRDIG`):**
+**Del 2 — implementeret i `ceo/clean-copy-delivery` (punkt 1, 3 og 4):**
 
-1. `tools/check_license_clients.py` med `--self-test`: skal finde alle callers af `/api/license` i source (ikke dist/node_modules) og fejle ved manglende `product`, gammel API-base, manglende syvdagesregel, et inline modul der ikke er byte-identisk med `tools/clean_copy_license.js`, og en Firefox-kopi der er divergeret. `site/_worker.js` er serveren og undtages dokumenteret; `desktop/main.js` er EAA-scannerens klient og har ingen `product` — EAA Pro findes ikke i kontrakten (se `❓ Til Mads` 5), så den kræver en beslutning, ikke en blind rettelse.
-2. Publicerede arkiver: `site/downloads/clean-copy-v1.5.2.zip`, `clean-copy-firefox-v1.5.2.zip` og `clean-copy-obsidian-v1.0.9.zip` indeholder stadig den gamle kode med det døde endepunkt og uden `product`. De skal pakkes reproducerbart fra `extension-clean-copy/`, `extension-clean-copy-firefox/` og `obsidian-plugin/` med nye patch-udgaver, og alle links på `site/clean-copy.html`, `site/downloads.html` og `site/free-downloads.html` (samt evt. DA-sider) skal følge med. Gaten skal kræve at arkiverne er byte-identiske med en regeneration, ligesom `check_page_profile_distribution.py` gør for Page Profile.
-3. `site/clean-copy-tool.html` skal have samme syvdagesregel: den kalder `clearPro()` ved ethvert ikke-200-svar, så en 503 på licensserveren sletter Pro for en kunde der har betalt.
-4. Rådderne `main.js` + `core.js` + `test.js` er en død kopi af Obsidian-pluginen: `core.js` er byte-identisk med `obsidian-plugin/core.js`, mens `main.js` er en ældre variant med `fetch` i stedet for `requestUrl`, gammel API-base og ingen cache. Den ligger i intet publiceret arkiv og skal enten fjernes eller gøres til den shippede fil, så der ikke er to kilder der kan komme i drift.
+- `site/clean-copy-tool.html` indlejrer `tools/clean_copy_license.js` mellem to markører og kalder `decide()` for både den stille revalidering ved indlæsning og aktiveringen via formularen. Det kanoniske modul bruges dermed af alle fire shippede klienttyper.
+- `tools/test_license_clients.js` indlæser siden i en `vm`-sandbox med `document`/`localStorage`/`fetch`-stubs og dækker: ingen nøgle → intet kald, 200 → produkt + device_id + tidsstempel, 503 i og over syvdagesvinduet, 403/404/409/`valid:false` over en frisk cache, kastet request som status 0, lokalt udløbet nøgle, samt aktivering med afvist format, 409 og 503. 103 checks i alt. Mutationstest bekræfter, at gaten faktisk fanger en fjernet cache og en hardkodet `checkedAt: 0`.
+- `site/compliance-report.html` sender `product: eucomply-pro`. Siden sælger kun EUComply Pro, så det er den eneste licensnøgle den kan modtage.
+- Rodens `main.js` og `core.js` er slettet; `test.js` er nu en tynd indgang til `obsidian-plugin/test.js` + `tools/test_license_clients.js`. Den teaterblok i `obsidian-plugin/test.js` der hævede sit eget mock mod `hermes-passiv.pages.dev` er væk.
+- `tools/check_license_clients.py` (+ `--self-test`, 9/9) holder CLIENTS-listen, EXCEPTIONS og de indlejrede moduler i linje. Den døde vært flagges kun i et licenskald, fordi kildefilerne stadig har `hermes-passiv.pages.dev` i OG/canonical-tags, som `build_sites.py` skriver om til det rette domæne.
+
+**Del 2 punkt 2 — næste iteration (publicerede arkiver):**
+
+1. `site/downloads/clean-copy-v1.5.2.zip`, `clean-copy-firefox-v1.5.2.zip` og `clean-copy-obsidian-v1.0.9.zip` indeholder stadig den gamle kode med det døde endepunkt og uden `product`. De skal pakkes reproducerbart fra `extension-clean-copy/`, `extension-clean-copy-firefox/` og `obsidian-plugin/` med nye patch-udgaver, og alle links på `site/clean-copy.html`, `site/downloads.html` og `site/free-downloads.html` (samt evt. DA-sider) skal følge med. Gaten skal kræve at arkiverne er byte-identiske med en regeneration, ligesom `check_page_profile_distribution.py` gør for Page Profile.
+2. Uden dette er del 1 og 2 af denne iteration endnu ude hos kunderne: de publicerede zips er den kode, en køber hentede.
 
 ### 8. UFÆRDIG — Opgrader electron-builder og fjern advisory-fund
 
@@ -687,9 +704,12 @@ allerede korrekte — de var bare ubevogtede.
 5. **Beslut om to nye Stripe-produkter:** `site/site-icons.html` (Site Icons Pro: Apple touch-, PWA-, Windows- og OG-ikoner) og `site/downloads.html` + `blog/eaa-compliance-scanner-desktop.html` (EAA-scanner Pro: batch-scanning, CSV/JSON-eksport, ubegrænset crawl) har nu ingen pris og ingen købsknap, fordi kontrakten ikke indeholder produkter til dem. Opret kun dem, hvis du vil sælge dem; repoet gør det aldrig selv.
 6. **Udfør én lavendet Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
 7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
-8. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
+8. **Beslut om EAA-scannerens licensvært.** `desktop/main.js` kalder `https://hermes-passiv.pages.dev/api/license/*`, som ikke er et deployet Pages-projekt, og sender intet `product`. Selv hvis værten rettes, afviser workeren payloaden, fordi kontrakten ikke har et EAA-produkt. `tools/check_license_clients.py` holder den som dokumenteret undtagelse, så den kan ikke komme i drift ved et uheld. Den samme mangel gælder `site/compliance-report.html`, som nu er rettet til `eucomply-pro`; bekræft at det er det produkt du vil have folks nøgle fra dér.
+9. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: webværktøjets syvdagesregel og compliance-rapportsidens product 8207ca1 2026-09-25` — GitHub Actions kører automatisk, fordi `site/clean-copy-tool.html` og `site/compliance-report.html` er i path-filteret. Verificér på live: `cleancopy.tools/clean-copy-tool` (og `mahope.tools/clean-copy-tool`) har det indlejrede licensmodul mellem `/* >>> clean-copy-license …` og `/* <<< clean-copy-license */`, og `mahope.tools/compliance-report` sender `product: 'eucomply-pro'` i sit validate-kald. Det kan ses direkte i sidens JS.
 
 - 2026-09-25: `INGEN DEPLOY FORVENTET — 55fbe15` — mergecommit for opgave 7 del 1 rørte kun `obsidian-plugin/main.js`, `extension-clean-copy*/`, `test.js` og to nye filer i `tools/`. Ingen af dem står i deploy-workflowens path-filter, så GitHub Actions udløste ikke (bekræftet read-only: seneste run er `36166003612` fra `badefa2`). Live-sitet er derfor uændret, og det er korrekt: de publicerede zips i `site/downloads/` er endnu den gamle kode, hvilket er præcis opgave 7 del 2. **Verificér ikke live — intet er deployet.** Nær del 2 pakker nye arkiver, skal deploys køre og de nye `/downloads/*.zip` verificeres for indhold (HTTP 200 og byte-identisk `options.js` med `product`).
 
@@ -724,6 +744,7 @@ allerede korrekte — de var bare ubevogtede.
 
 ## Commitlog
 
+- Clean Copy-klienter på licenskontrakten: `ceo/clean-copy-delivery` — `Hold Clean Copy-klienterne på licenskontrakten` (7 del 2 pkt. 1, 3, 4).
 - Clean Copy-licensklienter Stripe-kompatible: `ceo/clean-copy-license-clients` — `Gør Clean Copy-licensklienterne Stripe-kompatible` (7 del 1).
 - Page Profile-distributionen bevogtet: `ceo/page-profile-distribution` — `Hold den publicerede Page Profile-kopi på linjen` (6).
 
