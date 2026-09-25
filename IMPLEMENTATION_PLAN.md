@@ -2,12 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `clean-copy-publish-targets-2026-09-25`
-- `STATE`: `Opgave 8 FÆRDIG — domæne-bevis for de publicerede Clean Copy-arkiver; næste iteration er opgave 9 (electron-builder-advisory)`
+- `ITERATION_ID`: `electron-builder-26-2026-09-25`
+- `STATE`: `Opgave 9 FÆRDIG — electron-builder 25.x → 26.15.3 i desktop/; 13 advisory-fund (12 high, 1 critical) → 0`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `9 — opgradér electron-builder i desktop/ og fjern de 15 advisory-fund`
-- `TASK_ATTEMPTS`: `8: 1/1 (første commit rødte CI og blev rettet i samme iteration; ingen nye fejl)`
-- `LAST_BRANCH`: `ceo/clean-copy-publish-targets`
+- `NEXT_TASK`: `10 — gør de 18 broken references til en hard gate`
+- `TASK_ATTEMPTS`: `9: 1/1 (grøn gate i første forsøg; ingen rettelser nødvendige)`
+- `LAST_BRANCH`: `ceo/electron-builder-26`
+- `PLAN_COMMIT`: `(denne commit)`
+- `BASELINE`: `main@3566c48`
+- `RESULT`: Sikkerhedsopgaven er lukket rent. `desktop/package.json` hæver **kun** `electron-builder` fra `^25.0.0` til `^26.15.3`, og `desktop/package-lock.json` er regenereret; `electron` står urørt på `^44.0.0`, fordi den er opgave 12 og kontrakten forbyder to major-opgraderinger i én commit. **Optællingen i opgaveteksten var forældet:** den sagde 15 advisory-fund, `npm audit --audit-level=high` meldte 13 (12 high, 1 critical). Det er samme fejlform, bare et ældre snapshot — derfor er fundet noteret i `TASK_ATTEMPTS`, så næste iteration ikke jagter et tal, der ikke kan reproduceres. Alle 13 stammede fra ét klyngeled: `tar <=7.5.20` (11 af dem), som `app-builder-lib <=26.14.0` og `builder-util-runtime <9.7.0` begge trækker ind, og som `cacache` → `make-fetch-happen` → `node-gyp` viderefører. Det er byggetidsafhængigheder, ikke noget der kører i den udgivende app, men de giver `npm audit` exit 1 og ville blokeret enhver fremtidig `npm ci`-hygiejne. Efter opgraderingen er `npm audit` **0 vulnerabilities**, `npm ci` kører rent fra den nye lockfil, og alle fire forventede macOS-artefakter (dmg + zip for x64 og arm64) bygges med den nye builder. **Ingen buildkonfiguration behøvede ændring** — opgaven sagde at læse migrationsnoterne og kun rette configen hvis de krævede det; de gjorde ikke, og det er ikke antaget, det er verificeret: de fire artefakter blev bygget af den uændrede `build`-sektion. Den rene linje-ændring i `package.json` er gjort manuelt, fordi `npm install` samtidig omformatterede `mac.target`-arrayerne; det ville være 20 linjer diff-rauschi i en sikkerhedscommit. Lockfilen *shrank* 3427 ændrede linjer (netto ca. −1300), så den nye builder trækker en mindre træ. Platformene Linux og Windows er ikke bygget lokalt — de kræver hhv. en Linux-container og Windows; de er overladt til CI-matrixen, som er opgavens erklærede post-merge-gate.
+- `GATE`: `GRØN — npm ci OK (0 vulnerabilities), npm audit --audit-level=high = 0 fund, npm run build:mac producerede dmg+zip for x64 og arm64; sitegaten: build OK, check_sitemaps OK (4 domæner), SEO 308 sider 0 fund, Stripe-worker 69/69, tracking-worker 83/83, inline JS 297 filer 0 problemer, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, check_clean_copy_distribution OK + --self-test 22/22, page-profile 11/11, node test.js (test_license_flow) OK, test_license_clients 103 checks, obsidian-plugin OK, extension-tools OK (core/extension parity), check_license_clients 0 + --self-test 9/9, check_product_copy 0, check_stripe_ctas 0 + --self-test 10/10, test_weekly_report 28 tests, dist/uændret`
 - `PLAN_COMMIT`: `(denne commit)`
 - `BASELINE`: `main@2410f49`
 - `RESULT`: Opgave 8 viste sig at hvile på en fejlagtig konklusion, så den blev rettet frem for bygget oveni. Den rapporterede 404 (`mahope.tools/downloads/clean-copy-v1.5.3.zip`) er et probe mod det forkerte domæne, ikke et link en kunde kan ramme: `build_sites.py`s `build_index()`/`rewrite_text()` (`build_sites.py:349-412`) skriver alle rodrelative referencer gennem et domæneindeks, og fordi `build_sites.py:74` giver `downloads/clean-copy*` til cleancopy.tools først, står der i *outputtet* `https://cleancopy.tools/downloads/…`. Read-only live 25/9: `/downloads` er 200, de tre links på den side peger på cleancopy.tools, og alle tre arkiver svarer 200 dér; kun den direkte adresse på mahope.tools er 404, fordi arkivet aldrig publiceres der. Det reelle problem var, at intet beviste ordningen — `check_pages` kendte arkivets *navn* men aldrig hvilket domæne der havde det, så en fremtidig ændring af include-rækkefølgen eller af skrivningen af rodrelative links ville give præcis den 404 igen, helt uopdaget. `tools/check_clean_copy_distribution.py` har nu `check_publish_targets` og `check_every_archive_is_reachable`, som læser det **byggede output** i `dist/` og finder selv ud af hvilket domæne der publicerer hvilket arkiv frem for at tro på en filliste — en hardcoded liste ville blot være den fejlform den skal fange, nedskrevet som data. Gaten fejler nu på en rodrelativ reference til et arkiv i et domæne uden det, på en absolut reference til et af vores domæner uden det, og på et publiceret arkiv der ikke kan hentes i nogen dist; den springes over når intet er bygget, i samme mønster som `check_dist`. Selftesten går 15 → **21/21** og har fået en ny kontrol: en positiv kontrol der *fejler* giver nu exit 1, så et scenarie der siger "skal ikke fejle" ikke længere kan stå som bevis på at den rigtige kode er grøn. Mutationstest på det ægte dist-output bekræfter gaten: `dist/mahope.tools/downloads.html` med linket sat tilbage til `/downloads/clean-copy-v1.5.3.zip` giver præcis `mahope.tools publicerer ikke clean-copy-v1.5.3.zip`, og grøn igen efter gendannelse.
@@ -649,7 +653,7 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 
 **Hvorfor opgaven ikke blev implementeret som skrevet:** den specificerede løsning var at skrive de tre links absolutte i `site/downloads.html`. Det ville have vædet det samme resultat to steder — buildet skriver dem alligevel absolutte — og ville blot have gjort kilden mindre læselig og fjernet buildens ansvar for domænet. Det dybere problem, at ingen vidste hvilket domæne der publicerer hvad, stod stadig. Derfor blev rettet det, der manglede.
 
-### 9. UFÆNDIG — Opgrader electron-builder og fjern advisory-fund
+### 9. FÆRDIG (`ceo/electron-builder-26`) — Opgrader electron-builder og fjern advisory-fund
 
 **Begrundelse:** En aktuel OSV-scanning fandt 15 kendte advisory-fund i desktop-buildværktøjet. Sikkerhedshallere skal eftergives de fire prioriterede missionstasks.
 
@@ -670,6 +674,17 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 **Gate:** `npm ci && npm audit --audit-level=high && npm run build:mac` i `desktop/`, derefter platform-CI, plus hele kvalitetsgaten.
 
 **Post-merge-gate:** `gh run watch <run-id> --exit-status` skal være grøn for macOS x64/arm64, Linux og Windows; en rød post-merge-gate reverteres straks i en ny commit.
+
+**Implementeret denne iteration:**
+
+- `desktop/package.json`: `electron-builder` `^25.0.0` → `^26.15.3`. Det er den *eneste* kodeændring. `electron` er bevidst urørt på `^44.0.0` — den er opgave 12, og kontrakten siger én major-opgradering pr. commit, så den kan rulles tilbage præcist.
+- `desktop/package-lock.json` regenereret. Den faldt 3427 ændrede linjer (netto ca. −1300), altså et mindre afhængighedstræ.
+- `npm install` ville samtidig have omformatteret `mac.target`-arrayerne i `package.json` (én linje → 14, plus tilføjet newline ved EOF). Det blev kasseret og linjen rettet manuelt, så diffen i `package.json` er præcis én linje. Diff-rauschi i en sikkerhedscommit gør den sværere at gennemgå.
+- **Optællingen var forældet:** opgaven sagde 15 fund, `npm audit` sagde 13 (12 high, 1 critical). Én rodårsag: `tar <=7.5.20` (11 fund) via `app-builder-lib`/`builder-util-runtime`, som igen deles med `cacache` → `make-fetch-happen` → `node-gyp`. Efter opgraderingen: `found 0 vulnerabilities`.
+- **Ingen konfigurationsændring var nødvendig.** Opgaven sagde "læs migrationsnoterne og opgradér buildkonfiguration kun hvis de kræver det" — det viste sig ikke at være tilfældet, og det er ikke antaget: dmg + zip for x64 og arm64 blev bygget af den uændrede `build`-sektion med electron-builder 26.15.3.
+- Lokalt bygget: `EAA Compliance Scanner-1.3.3-mac-{x64,arm64}.{dmg,zip}`, alle fire ~127-131 MB, med `CSC_IDENTITY_AUTO_DISCOVERY=false` (ingen signeringsidentitet er konfigureret lokalt; CI har samme adfærd, så intet i diffet afhænger af det).
+- **Ikke verificeret lokalt: Linux og Windows.** De kræver hhv. en Linux-container og en Windows-vært, og de ligger i CI-matrixen i `.github/workflows/build-desktop.yml`, som kører på ethvert push til `desktop/**` — altså også på denne branch. Det er opgavens egen post-merge-gate.
+- `dist/` er uændret af denne iteration (`git status` viser ingen dist-ændring), så intet site-indhold er berørt. Deploy-workflowens path-filter rører `desktop/` ikke, så merge til `main` deployer ingen sites for denne commits skyld.
 
 ### 10. UFÆRDIG — Gør alle 18 broken references til en hard gate
 
@@ -810,7 +825,7 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 
 - 2026-09-25: **Korrektion af en tidligere deploy-note.** Noten under `DEPLOY OK 3289b5b` rapporterede "Fire 404 fundet samtidig: `mahope.tools/downloads/clean-copy-*.zip` giver 404 … Det er ældre end denne iteration og er oprettet som opgave 8." Konklusionen var forkert: de fire 404'er var ét arkiv probet fire gange mod det domæne, det ikke ligger på. Live `/downloads`-sideens links er absolutte mod cleancopy.tools og svarer 200, så ingen kunde rammer en 404. Opgave 8 blev derfor skrevet om til det, der faktisk manglede: et bevis for hvilket domæne der publicerer hvilket arkiv.
 
-- 2026-09-25: `VERIFICÉR DEPLOY: Clean Copy-arkiverne 1.5.3 / 1.0.10 med den nye licensklient <merge-sha> 2026-09-25` — GitHub Actions udgiver automatisk: `site/downloads/*.zip`, `site/extension-zips/`, `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, begge Obsidian-guides og `tools/make_blog_da_mirrors_461.py` er i path-filteret. Verificér på live: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` og `/downloads/clean-copy-firefox-v1.5.3.zip` er byte-identiske med repoets arkiver, `/downloads/clean-copy-obsidian-v1.0.10.zip` indeholder `main.js` med `clean-copy-pro` og `mahope.tools`, `license.js` i begge browserarkiver har `API_BASE = 'https://mahope.tools/api/license'`, de fire gamle arkiver svarer 404, og `/clean-copy` + `/downloads` viser 1.5.3 og 1.0.10. CI's egen post-deploy-gate skal være grøn for alle tre domæner.
+- 2026-09-25: `VERIFICÉR DEPLOY (lukket af `DEPLOY OK 3289b5b`): Clean Copy-arkiverne 1.5.3 / 1.0.10 med den nye licensklient <merge-sha> 2026-09-25` — GitHub Actions udgiver automatisk: `site/downloads/*.zip`, `site/extension-zips/`, `site/clean-copy.html`, `site/da/clean-copy.html`, `site/downloads.html`, `site/free-downloads.html`, begge Obsidian-guides og `tools/make_blog_da_mirrors_461.py` er i path-filteret. Verificér på live: `cleancopy.tools/downloads/clean-copy-v1.5.3.zip` og `/downloads/clean-copy-firefox-v1.5.3.zip` er byte-identiske med repoets arkiver, `/downloads/clean-copy-obsidian-v1.0.10.zip` indeholder `main.js` med `clean-copy-pro` og `mahope.tools`, `license.js` i begge browserarkiver har `API_BASE = 'https://mahope.tools/api/license'`, de fire gamle arkiver svarer 404, og `/clean-copy` + `/downloads` viser 1.5.3 og 1.0.10. CI's egen post-deploy-gate skal være grøn for alle tre domæner. **Lukket 25/9:** `DEPLOY OK 3289b5b` ovenfor verificerer præcis disse tre arkiver (200) og de fire gamle (404). Noten havde aldrig fået sit merge-commit indsat — `<merge-sha>` stod stadig som pladsholder, fordi den var skrevet før committen fandtes.
 
 - 2026-09-25: `DEPLOY OK 3289b5b`
 
@@ -851,6 +866,7 @@ opdages. Det er samme blindspalt som opgave 7 del 2 rettede for kildekoden.
 
 ## Commitlog
 
+- electron-builder 25 → 26.15.3, advisory-fundene lukket: `ceo/electron-builder-26` — `Opgradér electron-builder og luk advisory-fundene` (9).
 - Bevis hvilket domæne der publicerer hvilket Clean Copy-arkiv: `ceo/clean-copy-publish-targets` — `Bevis hvilket domæne der publicerer Clean Copy-arkiverne` (8).
 - Publicerede Clean Copy-arkiver fra kilden: `ceo/clean-copy-archives` — `Pak Clean Copy-arkiverne reproducerbart fra kilden` (7 del 2 pkt. 2).
 - Clean Copy-klienter på licenskontrakten: `ceo/clean-copy-delivery` — `Hold Clean Copy-klienterne på licenskontrakten` (7 del 2 pkt. 1, 3, 4).
