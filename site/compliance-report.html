@@ -356,12 +356,17 @@ function getDeviceId() {
   return did;
 }
 
+// ── License validation ────────────────────────────────────────────
+// The worker rejects a payload without `product`, so the key must be sent as
+// an EUComply Pro key — the one licensed product this page sells.
+const LICENSE_PRODUCT = 'eucomply-pro';
+
 async function validateLicense(key) {
   try {
     const r = await fetch('/api/license/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ license_key: key, device_id: getDeviceId() })
+      body: JSON.stringify({ license_key: key, device_id: getDeviceId(), product: LICENSE_PRODUCT })
     });
     return await r.json();
   } catch { return { ok: false, error: 'Network error — check your connection.' }; }
