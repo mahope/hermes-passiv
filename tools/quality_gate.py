@@ -358,6 +358,26 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_legacy_seo_paths.py", "--self-test"),
         inputs=("tools/check_legacy_seo_paths.py",),
     ),
+    # Opgave 17: de tre DeskUptime-værktøjssider indlæser `../auditedwp`s eget
+    # designsystem. Uden dette step kan en ny token der blive erklæret der, uden
+    # at nogen bro dækker den, og siden får to farver igen — samme fejlform som
+    # de 18 "broken references" i opgave 10.
+    Step(
+        id="design-tokens",
+        argv=("python3", "tools/check_design_tokens.py"),
+        # Gaten læser det byggede dist (hvilke sider der indlæser hvilket
+        # stylesheet), `site/style.css` (broen) og `build_sites.py` (hvilke
+        # assets der følger med fra auditedwp). `site/**` er med, fordi en ny
+        # side med sit eget stylesheet ellers kunne merge uden at nogen kørte
+        # porten — samme fejl som fund 1 i RESULT (opgave 11).
+        inputs=("tools/check_design_tokens.py", "build_sites.py", "site/style.css", "site/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="design-tokens-selftest",
+        argv=("python3", "tools/check_design_tokens.py", "--self-test"),
+        inputs=("tools/check_design_tokens.py",),
+    ),
 )
 
 

@@ -111,6 +111,34 @@ html[data-product="cleancopy"][data-theme="dark"]  { --color-accent: #4fc4b0; --
 html[data-product="deskuptime"][data-theme="dark"] { --color-accent: #7ea3ff; --color-accent-hover: #a3bdff; --color-accent-soft: rgba(126,163,255,0.14); --color-bg: #10141c; --color-surface: #171c26; --color-surface-2: #1f2633; --color-border: #2e3747; --color-header-bg: rgba(16,20,28,0.84); }
 html[data-product="bugbottle"][data-theme="dark"]  { --color-accent: #f0a15f; --color-accent-hover: #f6b981; --color-accent-soft: rgba(240,161,95,0.14); --color-bg: #121212; --color-surface: #1a1918; --color-surface-2: #242220; --color-border: #35322e; --color-header-bg: rgba(18,18,18,0.84); }
 
+/* Token bridge ------------------------------------------------------------
+   The three DeskUptime tool pages under /tools/, /bulk-url-checker/ and
+   /security-headers-checker/ ship their own stylesheet, /assets/site.css, which
+   is a second design system with its own palette (a green) and its own font
+   (Inter). Their own <style> block and their own site.js render results through
+   the class names in that file, so the file has to travel with them — but its
+   tokens must not. Every custom property it declares under :root is remapped
+   here to this repo's tokens, so one page shows one product.
+
+   This only works because the build injects /style.css *after* the page's own
+   stylesheets: both sides have the same specificity, so document order decides.
+   tools/check_design_tokens.py fails if that order ever changes, or if a token
+   is added to /assets/site.css without a mapping here. */
+html[data-product="deskuptime"] {
+  --bg: var(--color-bg);          --panel: var(--color-surface);   --soft: var(--color-surface-2);
+  --surface: var(--color-surface); --card: var(--color-surface);    --ink: var(--color-text);
+  --text: var(--color-text);       --code: var(--color-text);
+  --muted: var(--color-text-muted); --dim: var(--color-text-muted); --line: var(--color-border);
+  --border: var(--color-border);   --accent: var(--color-accent);   --acc: var(--color-accent);
+  --accent-dark: var(--color-accent-hover); --accent-hover: var(--color-accent-hover);
+  --accent-soft: var(--color-accent-soft);   --on-accent: var(--color-on-accent);
+  --ok: var(--color-green); --green: var(--color-green); --warn: var(--color-yellow);
+  --warn-soft: var(--color-yellow-soft); --fail: var(--color-red); --fail-soft: var(--color-red-soft);
+  --code-bg: var(--color-code-bg);
+  --serif: var(--font-display);
+  --measure: var(--w-prose); --wrap: var(--w-page);
+}
+
 /* Base ------------------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { font-size: 16px; -webkit-text-size-adjust: 100%; overflow-x: clip; scrollbar-gutter: stable; scroll-padding-top: calc(var(--header-h) + 1rem); }
