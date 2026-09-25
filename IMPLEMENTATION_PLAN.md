@@ -3,14 +3,16 @@
 ## Status
 
 - `ITERATION_ID`: `scanner-arkiv-aktuelt-2026-09-26`
-- `STATE`: `Opgave 18 I GANG — researchfasen er slut, fundet er: site/downloads/eaa-scanner-desktop-src-1.3.3.zip er et 1.3.0-arkiv under et 1.3.3-navn. Dens package-lock.json siger version 1.3.0 og electron-builder ^25.0.0, mens desktop/package.json siger 1.3.3 og ^26.15.3. Kunden der henter den får præcis den advisory-remediering opgave 9 lavede, plus en lockfile der lyver om sin egen udgave. De øvrige otte arkiver er byte-identiske med kilden.`
-- `ACTIVE_TASK`: `18`
-- `NEXT_TASK`: `18 (I GANG)`
-- `PLAN_COMMIT`: `(denne commit)`
+- `STATE`: `Opgave 18 FÆRDIG — svaret på spørgsmålet var ja for ét arkiv og nej for otte. site/downloads/eaa-scanner-desktop-src-1.3.3.zip hed 1.3.3 men indeholdt 1.3.0: lockfilens version 1.3.0, electron-builder ^25.0.0, ingen engines, ingen .nvmrc. Den er nu bygget reproducerbart fra desktop/ og gaten kræver lighed. Nyt værktøj tools/build_desktop_archive.py (--check + --self-test) og to nye gatestræk (36 fra 34). Åbent og skrevet op: pip- og npm-artefakterne er stadig uåbnede, og en ren desktop-commit udløser ikke gaten.`
+- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
+- `NEXT_TASK`: `19 — åbn byggeoutput-artefakterne (pip-hjul, sdist, npm-tgz) i check_versions.py`
+- `PLAN_COMMIT`: `f3148a5 (merge 14f0ee3)`
 - `BASELINE`: `main@997371d`
 - `LAST_BRANCH`: `ceo/scanner-arkiv-aktuelt`
 - `TASK_ATTEMPTS`: `18: 1/1.`
-- `DEPLOY`: `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
+- `DEPLOY`: `VERIFICÉR DEPLOY: desktop-kildearkivet er et 1.3.3-arkiv 14f0ee3 2026-09-26` — GitHub Actions kører automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
+  - `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` skal pakkes ud til 11 filer; `package-lock.json` skal sige `version 1.3.3` og `electron-builder ^26.15.3`, `package.json` skal have `engines.node >=22.12.0`, og `.nvmrc` skal være med. Før dette var der 10 filer, lockfilen sagde 1.3.0 og `^25.0.0`, og `.nvmrc` manglede.
+- `DEPLOY` (før): `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
 - `RESULT` (opgave 17): Opgaven troede, de to sider var bygget af to forskellige designs, og at løsningen krævede at vælge mellem auditedwps skal og vores. **Halvdelen af den forudsætning var forkert, og det viste sig først i det byggede dist:** bygget indlæser allerede `/shell.js` og `<header class="site-header">` på alle fire sider — én header, én footer, ét skeln. Headeren, footeren, knapperne og IBM Plex kom alle fra vores skal. Det, der så forkert ud, var **tokens**: de tre værktøjssider indlæser derudover `../auditedwp`s `/assets/site.css`, et komplet designsystem med sit eget palet (grøn `#0b6e4f`) og sin egen skrifttype (Inter). Dens eget `<style>`-blok og deres eget `site.js` bruger kun de klassenavne, den kender, så filen skal rejse med — men de 27 tokens den erklærer, må ikke.
 
@@ -1095,7 +1097,7 @@ over når intet er bygget. Steps `design-tokens` og `design-tokens-selftest` i
 `tools/quality_gate.py`; `site/style.css`, `site/**`, `build_sites.py` og
 `tools/check_design_tokens.py` er nu i path-filteret.
 
-### 18. I GANG — afgør om de publicerede scanner-arkiver er forsinkede
+### 18. FÆRDIG (implementering `f3148a5`, merge `14f0ee3`) — afgør om de publicerede scanner-arkiver er forsinkede
 
 **Sidefund 25. september 2026 (opgave 10):** `site/downloads.html` mærkede
 arkiverne som **1.3.0**, mens filerne på disk og `scanner/npm/eaa-scanner/package.json`
@@ -1132,6 +1134,90 @@ sdist'en og npm-`tgz'en.
 
 **Gate:** `python3 tools/check_versions.py` plus hele kvalitetsgaten.
 
+**Resultat:** Det var arkiverne, der var forsinkede — og kun ét af dem. Det er
+nu rettet, og der er en gate derfor.
+
+**Fund 1 — arkivet løj om sin egen udgave, og det var den billigste at rette.**
+`eaa-scanner-desktop-src-1.3.3.zip` pakkede ud til 10 filer, hvoraf 8 var
+byte-identiske med `desktop/`. De to der ikke var, var lige præcis de to der
+skal være sandheden: `package-lock.json` sagde `version 1.3.0` og
+`electron-builder ^25.0.0`, og `package.json` manglede `engines`. En kunde der
+pakker arkivet ud og kører `npm ci` får derfor præcis den
+electron-builder-advisory-remediering opgave 9 lavede i kilden — leveret uden om
+kilden. `.nvmrc` (22.23.2) var heller ikke med, så kunden fik slet ingen
+runtime-erklæring. Det nye arkiv har 11 filer, lockfilen siger 1.3.3 og
+`^26.15.3`, og `engines` og `.nvmrc` er med.
+
+**Fund 2 — ingen port i repoet havde nogensinde åbnet et arkiv.** Opgave 14s
+`check_versions.py` læser produktets versionskilde, dens spejle, arkivfamiliens
+*filnavne* og download-siden. Den læser ikke en eneste byte inde i
+`site/downloads/*.zip`. Derfor var den grøn på et arkiv med en 1.3.0-lockfil under
+et 1.3.3-navn. Det er ottende gang i dette repo at en regel, der så komplet ud,
+viste sig at læse det forkerte sted — efter opgave 10, 13, 15 og 17. De tre
+Clean Copy-arkiver havde allerede en indholdsgate i
+`tools/check_clean_copy_distribution.py`; desktop-arkivet havde ingen, fordi det
+aldrig blev bygget af et script.
+
+**Fund 3 — determinisme-testen i min egen selftest var teater i første
+udførelse.** Den sammenlignede to builds i samme proces, og en *ændret*
+`ZIP_EPOCH`-konstant giver stadig to ens builds — så mutationen af konstanten
+passerede. Beviset blev kontrolleret ved at ændre konstanten til 2020:
+selftesten sagde grøn. Nu testes konstantens værdi og hvert medlems tidsstempel
+særskilt, og mutationen af konstanten giver to navngiven fejl. Samme mønster som
+opgave 17 fund 3.
+
+**GATE (opgave 18):** `GRØN — python3 tools/quality_gate.py: GRØN, 36 steps (34 + desktop-archive + desktop-archive-selftest). Den nye port er grøn på de rigtige filer, selftesten fanger 4 mutationer med navngiven grund, og `EXCLUDED_DIRS`-mutationen (node_modules slap med) gav 5 — så undtagelsen er testet, ikke antaget. `build_clean_copy_archives.py --check` urørt, Stripe-worker uændret 69/69, tracking-worker uændret 83/83.`
+
+**Kendte begrænsninger, skrevet ned i stedet for skjult:**
+
+- `deploy-sites.yml`s path-filter udelukker med vilje `desktop/**` (opgave 14 og
+  16: en desktop-ændring må ikke deploye sites), og `test_deploy_workflow.py`
+  fejler hvis et gatestep læser en fil filteret ikke dækker. Derfor erklærer
+  gatestrækket `desktop-archive` kun builderen og arkivet som inputs. En commit
+  der *kun* retter `desktop/package.json` udløser derfor ikke gaten. Jeg har
+  ikke selv lavet om på opgave 14s beslutning midt i en iteration; det er lagt
+  under `❓ Til Mads` som et valg, fordi det kræver at filtre flyttes fra
+  workflow- til jobniveau.
+- Arkiverne der er *buildoutput* — pip-hjulet, sdist'en og npm-`tgz'en` — er
+  stadig uåbnede. De er alle fundet byte-identiske med kilden i denne iteration,
+  men intet holder dem der. Det er opgave 19.
+
+### 19. UFÆNDIG — åbn byggeoutput-artefakterne i `check_versions.py`
+
+**Begrundelse:** Opgave 18 fandt, at intet i repoet nogensinde har læst en byte
+inde i `site/downloads/`. Desktop-arkivet fik en indholdsgate. Det gjorde
+**kun** kildearkiverne dækkede: `eaa_scanner-1.2.0-py3-none-any.whl`,
+`eaa_scanner-1.2.0.tar.gz` og `mahope-eaa-scanner-1.2.0.tgz` er buildoutput fra
+henholdsvis `python -m build` og `npm pack`, så de kan ikke sammenlignes fil for
+fil med kilden. De blev fundet byte-identiske den 26. september 2026, men intet
+holder dem der, og de er præcis de filer en kunde `pip install`er.
+
+**Omfang:**
+
+- Tilføj til `check_versions.py` et felt på hvert produkt, der erklærer hvilke
+  filer **inde i** arkivet skal bære den kanoniske version, med samme `#`-notation
+  som `mirrors`: `package/package.json` for npm-`tgz'en, `PKG-INFO` for
+  sdist'en, `*.dist-info/METADATA` for hjulet. Læsningen af en `Version:`-linje er
+  en ren tilføjelse til `source_version`, så de eksisterende 16 mutationer ikke
+  ændrer betydning.
+- `site-icons-1.0.0.tar.gz` er et håndlavet tarball med to filer og ingen
+  `PKG-INFO`. Skriv det ærligt op i tabellen som *uden indre versionserklæring*
+  i stedet for at lade det se dækket ud.
+- Udvid `FIXTURE` og mutationerne, så selftesten fanger: en `PKG-INFO` med
+  1.1.0 i et 1.2.0-hjul, en `tgz` uden `package/package.json`, og en METADATA
+  der slet ikke findes. Mindst én positiv kontrol der IKKE må fejle: et
+  byggeoutput-arkiv uden indre versionserklæring skal være grønt, ikke rødt.
+
+**Acceptkriterier:**
+
+- `python3 tools/check_versions.py --self-test` fanger de tre mutationer med
+  navngiven grund, og den eksisterende positive kontrol er stadig grøn.
+- `python3 tools/check_versions.py` er grøn på de rigtige filer.
+- Hele kvalitetsgaten er grøn, og `check_versions` står i path-filteret (den
+  gør allerede).
+
+**Gate:** `python3 tools/check_versions.py --self-test` plus hele kvalitetsgaten.
+
 ## ❓ Til Mads
 
 1. **Tilføj property i Google Search Console** for `mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahoje.dk`. Verificér sitemap og robots efter tilføjelse. Denne handling må ikke udføres af repoet.
@@ -1143,7 +1229,17 @@ sdist'en og npm-`tgz'en.
 7. **Bekræft catch-all på `mail.mahoje.dk`:** opgave 4D har nu sat leveringsmailens `reply_to` til `support@<produktets domæne>`. MX er read-only bekræftet for alle domæner, men om en catch-all findes og videresender til `support@mahope.tools` kan kun afklares ved at sende én testmail til hvert domæne. Uden catch-all bouncer kunders svar, og det skal rettes straks.
 8. **Beslut om EAA-scannerens licensvært.** `desktop/main.js` kalder `https://hermes-passiv.pages.dev/api/license/*`, som ikke er et deployet Pages-projekt, og sender intet `product`. Selv hvis værten rettes, afviser workeren payloaden, fordi kontrakten ikke har et EAA-produkt. `tools/check_license_clients.py` holder den som dokumenteret undtagelse, så den kan ikke komme i drift ved et uheld. Den samme mangel gælder `site/compliance-report.html`, som nu er rettet til `eucomply-pro`; bekræft at det er det produkt du vil have folks nøgle fra dér.
 9. **Gør de syv downloadvarer leveringsklare FØR det første salg.** `tools/paid_content.json` har `kv_verified: false` for alle syv, så `/api/download` svarer 503 på en købt fil. Det er det aktuelle problem, ikke en ny regression — men det er et køb, der ikke leverer. Når de private kilder er lagt et sted, skal filerne uploades til KV som `paidfile:<fil>` og `kv_verified`/`sha256`/`build_command` udfyldes i inventaret. Gaten `python3 tools/check_private_content.py --report` viser præcis de 16 nøgler, der mangler.
-10. **Fem licensklienter i `mahope/auditedwp` er uden for denne licenskontrakt.** De blev fundet af `tools/check_license_clients.py` i CI for første gang i kørsel `36185964282`, fordi CI checkouter det repo ved siden af workspace mens maskinen ikke gør det. Fundene er ægte og skal ikke forsvinde, men de kan ikke rettes her: `auditedwp` er et andet repo med sin egen kontrakt, og denne plan må ikke ændre det. Fundene er derfor skrevet ud af gaten — efter et **regelprincip** (en mappe med sin egen `.git` er ikke vores kode) og ikke en navneliste, og de er noteret her i stedet:
+10. **Beslut om desktop-filtrene i `deploy-sites.yml`.** `desktop/package.json` er
+    bevidst udelukket fra path-filteret, så en desktop-ændning ikke deployer sites
+    (opgave 14 og 16). Men opgave 18 har nu en gate, der netop skal køre når
+    `desktop/` ændrer sig, fordi det publicerede kildearkiv er bygget af den mappe.
+    De to regler kan ikke begge være sande i dagens form, fordi filteret hænger på
+    workflowniveau og derved gælder både `gate` og `deploy`. Løsningen er at flytte
+    filtrene ned på jobniveau: `gate` får et filter der dækker alt den læser
+    (inkl. `desktop/package.json`), `deploy` beholder sit site-only filter, så
+    desktop-ændringer gater men ikke deployer. Det er en ændring i den
+    produktionskritiske deploy-workflow, og den hører til dig, ikke til mig.
+11. **Fem licensklienter i `mahope/auditedwp` er uden for denne licenskontrakt.** De blev fundet af `tools/check_license_clients.py` i CI for første gang i kørsel `36185964282`, fordi CI checkouter det repo ved siden af workspace mens maskinen ikke gør det. Fundene er ægte og skal ikke forsvinde, men de kan ikke rettes her: `auditedwp` er et andet repo med sin egen kontrakt, og denne plan må ikke ændre det. Fundene er derfor skrevet ud af gaten — efter et **regelprincip** (en mappe med sin egen `.git` er ikke vores kode) og ikke en navneliste, og de er noteret her i stedet:
     - `deskuptime/desktop/src-tauri/src/lib.rs` kalder `api.lemonsqueezy.com` — den lukkede API. Kunden får en fejlslæng.
     - `deskuptime/src/license.js` kalder `api.lemonsqueezy.com` — samme.
     - `devnotify/src-tauri/src/lib.rs` kalder `api.lemonsqueezy.com` — samme.
@@ -1153,6 +1249,8 @@ sdist'en og npm-`tgz'en.
 
 
 ## Deploylog
+
+- 2026-09-26: `DEPLOY OK` for opgave 18 afventer — se `VERIFICÉR DEPLOY` i Status.
 
 - 2026-09-26: `DEPLOY OK 4805eaa` — kørsel `36198367044`: `gate` grøn (34 steps) + tre grønne deploys. Indholdsverificeret, ikke HTTP 200: live `deskuptime.com/style.css` indeholder broen (`--accent: var(--color-accent)` under `html[data-product="deskuptime"]`), og alle tre live værktøjssider indlæser `/assets/site.css` FØR `/style.css`, så broen er den der vinder. Dette lukker `VERIFICÉR DEPLOY` for opgave 17.
 
