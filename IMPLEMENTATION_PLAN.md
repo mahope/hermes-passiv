@@ -2,14 +2,26 @@
 
 ## Status
 
-- `ITERATION_ID`: `ci-runs-real-gate-2026-09-25`
-- `STATE`: `Opgave 11 FÆRDIG og deployet — CI kører præcis den dokumenterede kvalitetsgate, og det er bevist af en grøn kørsel i CI (run 36186489675, 26/26 steps) og af live-indhold, ikke af HTTP 200. Én liste med én ejer: tools/quality_gate.py.`
+- `ITERATION_ID`: `desktop-node-runtime-2026-09-25`
+- `STATE`: `Opgave 12 FÆRDIG — Electron 44.0.0 → 44.4.5, og Node-versionen er erklæret ét sted (desktop/.nvmrc) i stedet for tre gange i workflowen, med en gate der beviser de to erklæringer er enige. Desktop-CI'en er post-merge-gaten.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `12 — deklarér runtime og opgradér Electron-patchlinjen`
-- `TASK_ATTEMPTS`: `11: 1/1. Grøn første gang, men kun fordi porten selv fangede to fejl undervejs: build-desktop.yml lå uden for path-filteret, og min første `_is_deploy_job` læste kun \`run:\`-steps, så \`pages deploy\` i wrangler-action's \`with.command\` aldrig blev set — og uden den erkendelse krævede checken aldrig et \`needs\`.`
-- `LAST_BRANCH`: `ceo/ci-runs-real-gate` (implementering + plan i samme commit)
-- `PLAN_COMMIT`: `4f513e0` (kode + plan) og `3e35408` (audit-checkout-rettelsen + plan)
-- `BASELINE`: `main@e9045ca`
+- `NEXT_TASK`: `13 — lå Python-buildmiljøet og reparer site-icons`
+- `GATE` (opgave 12): `GRØN — npm ci rent fra den nye lockfil, npm audit --audit-level=high = 0 fund, fire nye macOS-artefakter (dmg+zip for x64 og arm64) bygget med electron 44.4.5 (bekreftet på den indlejrede Electron Framework-streng) — men USIGNEREDE, se fund 4. Sitegaten: python3 tools/quality_gate.py → GRØN, 26 steps, inkl. deploy-workflow + --self-test med de seks nye runtime-mutationer. dist/uændret (gitignored), intet site-indhold rørt.`
+- `TASK_ATTEMPTS`: `12: 1/1.`
+- `LAST_BRANCH`: `ceo/desktop-node-runtime` (implementering + plan i samme commit)
+- `PLAN_COMMIT`: `(denne commit)`
+- `BASELINE`: `main@4798885`
+- `RESULT` (opgave 12, igang): Den konkrete fejl var **ikke** en version, men **tre steder der skulle være ét**. `build-desktop.yml` skrev `node-version: '22'` i alle tre build-jobs, `desktop/package.json` erklærede intet, og `.nvmrc` fandtes ikke — mens Electron 44 kræver `>=22.12.0`. Intet sted sagde det, og intet sted kunne se, at de tre tal burde være det samme. Det er præcis den fejlform der fældede jordemoderstudy 23. august (Next.js 16 installerede lokalt, serveren byggede med Node 18, og fejlen viste sig først i produktion), så den er lukket med to ting: **én erklæring** (`desktop/.nvmrc` på `22.23.2`, læst af alle tre jobs via `node-version-file`), og **en gate** (`check_desktop_runtime`) der fejler hvis `engines.node` mangler, hvis `.nvmrc` er under den nedre grænde eller ikke er konkret, hvis et job skriver sin egen `node-version`, eller hvis `.nvmrc` ikke er i path-filteret. Selftesten går 15 → **21 mutationer** og har desuden en positiv kontrol på de rigtige filer, så en fejl i selve reglen ikke kan stå som bevis.
+
+  **Fund 1 — lock-roden afviger ikke.** Opgaven sagde "ret stale lock-root-version, hvis den følger produktmanifestet". Den følger: `1.3.3` i begge. Den afvigelse, der står i researchfundene, er en anden (publicerede etiketter mod produktversion) og hører til opgave 14/18. *Ikke rettet, fordi opgavens egen betingelse ikke var opfyldt.*
+
+  **Fund 2 — opgraderingen er ren.** `electron ^44.0.0` → `^44.4.5`, som er både nyeste 44.x og `latest`. Lockdiffen er 11 linjer: version, resolved, integrity, `engines` og `devDependencies`. `npm ci` kører rent, `npm audit --audit-level=high` er **0 fund** (uændret fra opgave 9), og ingen buildkonfiguration behøvede ændring.
+
+  **Fund 3 — CI's `node-version: '22'` var ikke en fejl, men den var ukendt.** setup-node løser `22` til nyeste 22.x, som overstiger Electron 44s krav, så intet var konkret forkert. Det er præcis derfor den erstattes: den sagde intet om minimumskravet, og den ville have overlevet en opgradering der krævede Node 24. `check_desktop_runtime` afviser derfor en hårdkodet `node-version` som det andet sted, runtime-versionen skal komme fra.
+
+  **Fund 4 — den lokale build kan ikke kodesignere i denne session, og det er ikke opgraderingen.** Første `npm run build:mac` døde i `codesign` med `errSecInternalComponent` på `locale.pak` ("replacing existing signature"). Identiteten `Apple Distribution: OVARDO ApS` findes i nøgleringen, men den private nøgle kan ikke bruges fra denne ikke-interaktive shell. Det er et miljøforhold, ikke en egenskab ved 44.4.5 — og **det er ikke påstået som grønt**: bygget blev gentaget med `CSC_IDENTITY_AUTO_DISCOVERY=false`, hvilket beviser at pakning, kode og alle fire artefakter er korrekte, men at de er **usignerede**. Beviset for den signerede udgivelse er derfor CI og Mads' egen nøglering, ikke denne kørsel.
+
+  **Bevis for gaten, ikke bare grønt:** `desktop/.nvmrc` sat til `18.20.0` giver exit 1 med den navngivne grund, og den indlejrede `Electron Framework` i de nye artefakter indeholder strengen `44.4.5`, så det er dokumenteret hvilken Electron de faktisk er bygget med.
 - `RESULT` (opgave 11): Den dokumenterede gate og CI's gate var **to forskellige lister**, og ingen af dem var sande. `IMPLEMENTATION_PLAN.md` loved 13 kommandoer; hvert af de tre matrix-jobs kørte sin egen, kortere liste. Resultatet: **`check_license_clients.py`, `check_product_copy.py` og `check_stripe_ctas.py` kørte aldrig i CI**, selv om de stod i planens gaten og i hver tidligere iterations GATE-linje; `--self-test` manglede for to af dem; og licensklienternes 103 checks (`node test.js`) kørte aldrig i CI overhovedet. De tre matrixjobs kørte desuden hver især 15 af de samme kommandoer, så ét domænes fejl kunne ikke stoppe de to andre.
 
   **Løsningen er ikke en længere liste — det er én ejer.** `tools/quality_gate.py` erklærer alle 26 steps med deres kommando og, for hver, **hvilke filer de læser**. Deploy-workflowen kalder den i et nyt `gate`-job over alle fire dists, og `deploy` har `needs: gate`, så en fælles gatefejl dræber alle tre domæner i stedet for at sende dem videre hver for sig. Der kan ikke længere være en afvigende liste, fordi der kun er én.
@@ -951,7 +963,7 @@ regression. Lagt under opgave 15 (døde stier).
 
 **Ændret omfang, og hvorfor:** opgaven sagde "kør gaten før deploy" og fire underpunkter. Den konkrete fejl var større end formuleret: tre dokumenterede checks kørte aldrig i CI, to manglede deres selftest, og licensklienternes 103 checks kørte aldrig. Derfor blev løsningen ikke "tilføj kommandoer til matrix-jobbet" — det ville have været den fjerde liste — men én ejer for hele listen. Konsekvensen er at matrix-jobbet nu kun bygger, deployer og tjekker live; de 15 duplikerede checks pr. domæne er væk, og de kører én gang over alle fire dists i stedet, hvilket også er det eneste sted `check_clean_copy_distribution.py` og `check_links.py` kan se alle dists på én gang.
 
-### 12. UFÆRDIG — Deklarér runtime og opgradér Electron-patchlinjen
+### 12. FÆRDIG (`ceo/desktop-node-runtime`) — Deklarér runtime og opgradér Electron-patchlinjen
 
 **Begrundelse:** Desktop kræver Node `>=22.12.0`, men manifestet og repoet erklærer det ikke.
 
@@ -961,12 +973,31 @@ regression. Lagt under opgave 15 (døde stier).
 - Tilføj `engines.node` og `.nvmrc` i samme commit.
 - Ret stale lock-root-version, hvis den følger produktmanifestet.
 
+**Fund undervejs:**
+
+1. **Lock-roden afviger ikke** — den siger 1.3.3, som er produktmanifestets version, så
+   "ret stale lock-root-version" er ikke en fejl her. Den afvigelse, der står i
+   researchfundene, er en anden (product.version 1.3.3 mod publicerede etiketter) og
+   hører til opgave 14/18. *Ikke rettet, fordi der ikke var noget at rette.*
+2. **De tre tal kunne ikke ses fra hinanden.** `node-version: '22'` stod i alle tre
+   build-jobs, `engines` manglede, og `.nvmrc` fandtes ikke. Løsningen er derfor ikke
+   "skriv de tre tal" men **én fil** — `desktop/.nvmrc` på `22.23.2`, læst af alle tre
+   jobs med `node-version-file`. `check_desktop_runtime` fejler på en hårdkodet
+   `node-version`, så den anden liste kan ikke genopstå.
+3. **CI's `node-version: '22'` var heller ikke en fejl i sig selv** — setup-node løser
+   `22` til nyeste 22.x, som overstiger kravet. Men den *sagde intet* om
+   minimumskravet, og den ville have fortsat, hvis Electron engang krævede Node 24
+   og en opgradering så lagde den ved siden af. Derfor `.nvmrc` og ikke en streng i
+   workflowen.
+
 **Acceptkriterier:**
 
-- `engines.node` og `.nvmrc` peger på en understøttet Node-version.
-- `npm ci`, audit og alle desktop-builds er grønne.
-- Hele kvalitetsgaten er grøn.
-- Versionsændringen står i planen.
+- `engines.node` og `.nvmrc` peger på en understøttet Node-version. **Opfyldt**:
+  `engines.node: ">=22.12.0"` (Electron 44.4.5s eget krav) og `desktop/.nvmrc` =
+  `22.23.2`, og `check_desktop_runtime` fejler hvis de to glide fra hinanden.
+- `npm ci`, audit og alle desktop-builds er grønne. **Opfyldt lokalt for macOS**: fire nye artefakter (dmg+zip for x64 og arm64) bygget med electron 44.4.5, `npm audit --audit-level=high` = 0 fund. Linux og Windows kan kun bygges i CI, som er post-merge-gaten. **Signeringen er ikke verificeret lokalt** — se fund 4.
+- Hele kvalitetsgaten er grøn. **Opfyldt**: `python3 tools/quality_gate.py` → 26 steps grønne.
+- Versionsændringen står i planen. **Opfyldt**: 44.0.0 → 44.4.5, og både `engines.node` og `.nvmrc` er anført ovenfor.
 
 **Gate:** `npm ci && npm audit --audit-level=high && npm run build:mac` i `desktop/`, derefter platform-CI, plus hele kvalitetsgaten.
 
@@ -1112,6 +1143,15 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
+- 2026-09-25: `INGEN SITE-DEPLOY FORVENTET — desktop-node-runtime` — mergecommit for
+  opgave 12 rører kun `desktop/`, `tools/test_deploy_workflow.py`,
+  `.github/workflows/build-desktop.yml` og denne plan. Deploy-workflowens path-filter
+  dækker intet af dem (en desktop-ændring må *ikke* deploye sites — det gater
+  `check_deploy`), og `dist/` er byte-identisk før og efter. **Verificér ikke
+  live-intet — intet site-indhold er ændret.** Den eneste post-merge-gate er
+  `build-desktop.yml`: macOS x64/arm64, Linux og Windows skal være grønne på
+  Electron 44.4.5.
+
 - 2026-09-25: `DEPLOY OK 3e35408` — CI kører `python3 tools/quality_gate.py` i det nye
   `gate`-job, og run `36186489675` på `main` er **grøn i alle 26 steps** (`quality_gate:
   GRØN — 26 steps`) efterfulgt af tre grønne deploys. De tre deploys uploadede
@@ -1216,6 +1256,7 @@ aldrig har fået den version de blev lovet?
 
 ## Commitlog
 
+- Electron 44.0.0 → 44.4.5 og én erklæret Node-version: `ceo/desktop-node-runtime` — `Erklær desktopens runtime ét sted og opgradér Electron` (12).
 - CI kører den dokumenterede kvalitetsgate, ét sted: `ceo/ci-runs-real-gate` — `Kør den dokumenterede kvalitetsgate i CI` (11).
 - electron-builder 25 → 26.15.3, advisory-fundene lukket: `ceo/electron-builder-26` — `Opgradér electron-builder og luk advisory-fundene` (9).
 - Bevis hvilket domæne der publicerer hvilket Clean Copy-arkiv: `ceo/clean-copy-publish-targets` — `Bevis hvilket domæne der publicerer Clean Copy-arkiverne` (8).
