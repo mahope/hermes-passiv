@@ -22,35 +22,77 @@
 <div class="container">
 
 <h1>Privacy Policy</h1>
-<p class="muted">Last updated: August 26, 2026</p>
+<p class="muted">Last updated: September 25, 2026</p>
 
-<p>This policy covers the websites under https://hermes-passiv.pages.dev and the related products:
-Clean Copy (browser extensions and CLI), DeskUptime (desktop app and CLI),
-Page Profile, URL Inspector, and the compliance scanners.</p>
+<p>This policy covers the sites we operate — <a href="https://mahope.tools">mahope.tools</a>,
+<a href="https://cleancopy.tools">cleancopy.tools</a> and
+<a href="https://deskuptime.com">deskuptime.com</a> — and the products we publish
+from them: Clean Copy (Chrome and Firefox extensions, Obsidian plugin), DeskUptime
+(desktop app and CLI), Page Profile, the EAA accessibility scanner and Site Icons.
+<code>bugbottle.dev</code> is built and hosted separately and has its own notice; see below.</p>
 
 <h2>The short version</h2>
 <ul>
-<li>We do not collect, store, or transmit your personal data or your browsing data.</li>
-<li>There are no accounts on this site. Nothing to sign up for, nothing leaked.</li>
-<li>All tools run locally on your machine. The URLs you check stay with you.</li>
+<li>No accounts, no cookies, no third-party analytics, no cross-site tracking.</li>
+<li>The tools run on your machine. What you scan, copy or clean stays with you.</li>
+<li>What we do store is listed below, in full, with how long it is kept.</li>
+<li>We never see your card details. Stripe handles those.</li>
 </ul>
 
-<h2>Data we process</h2>
-<p><strong>Aggregate, anonymous page-view counts.</strong> This website records
-anonymous visit counts per page URL (no IP addresses stored, no cookies, no
-cross-site tracking, no third-party analytics). We cannot identify you from
-this data.</p>
-<p><strong>Purchases.</strong> Payments are processed by Stripe. If you buy a
-license or a download, Stripe handles your card details under its own privacy
-policy; we never see them. We receive your email address from Stripe and use it
-only to deliver your license key or download links and for our accounting. The
-order email is sent through our email provider, Resend.</p>
+<h2>Page views</h2>
+<p>Each page records an anonymous count against the page's own URL. The count
+carries no IP address, no cookie and no identifier that follows you to another
+site, so we cannot tell who you are from it. Aggregate page and event counters
+expire after 90 days.</p>
+<p>To keep the counter honest we store a short-lived hash of the request for
+rate limiting. It is deleted after two hours and is never used for anything else.
+If your browser sends <code>Do&nbsp;Not&nbsp;Track: 1</code>, the request is
+dropped before anything is written.</p>
+
+<h2>Waitlist and email</h2>
+<p>When you sign up for a waitlist, we store the email address you type and the
+page you signed up from. The address is the key, so signing up twice does not
+create a second entry. Entries expire after 365 days. We use the list to tell you
+when something you asked for is ready — nothing else.</p>
+<p>When you buy something, Stripe gives us the email on the order. We use it to
+deliver your license key or download link, to send the receipt, and for our
+accounting. Order and license mail is sent through our email provider, Resend.
+Replies go to the support address for the product's own domain, and the order
+number is looked up together with a hash of your email address.</p>
+
+<h2>Licenses</h2>
+<p>Paid tools check their license online against a license endpoint on
+<code>mahope.tools</code>. That check sends your license key and a
+device identifier — a random value the app generates for the machine or browser
+profile it runs on, not a hardware serial number. The tools work offline if the
+check cannot complete, and a temporary answer is cached for a short period so a
+server outage does not lock you out.</p>
+<p>We do not create an account for you. The license key and its device
+identifiers are the whole record of what you bought.</p>
+
+<h2>Bug reports</h2>
+<p>If you choose to send a bug report through the form on our sites, the report
+text and the page you sent it from are stored so we can reproduce and fix the
+problem, and an email with the report is sent through Resend. The BugBottle demo
+on mahope.tools keeps reports in a public inbox, so anything you send there is
+readable on that page by anyone who opens it. Please do not put anything
+sensitive in a public report form.</p>
 
 <h2>Your tools, your data</h2>
-<p>Clean Copy, DeskUptime, Page Profile and the scanners process content and
-URLs entirely on your device. No checked URL, copied text, scan result or file
-is ever uploaded to us. The desktop and CLI apps make network requests only to
-the sites <em>you</em> ask them to check.</p>
+<p>Clean Copy, DeskUptime, Page Profile and the scanners process content and URLs
+entirely on your device. No scanned URL, copied text, scan result or file is
+uploaded to us. Those apps make network requests only to the sites
+<em>you</em> ask them to check, plus the license check described above.</p>
+
+<h2>Third parties</h2>
+<p>We use Stripe for payments, Resend for transactional email and Cloudflare for
+hosting and storage. Each of them processes data under its own policy. We do not
+sell or share your data with anyone for advertising, and we do not run ads.</p>
+
+<h2>Your choices</h2>
+<p>Ask us to delete your waitlist entry, your order record or a stored bug report
+and we will do it. Write to the address below from the same email address, and
+include the order number if it concerns a purchase.</p>
 
 <h2>Contact</h2>
 <p>Questions or data requests: <a href="mailto:support@mahope.tools">support@mahope.tools</a>.</p>

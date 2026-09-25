@@ -1,5 +1,9 @@
 # Iter 313: CTA + rapport-download + SEO-blogpost for compliance-site-check
 
+> **Arkiv.** Undersøgelser fra enkelte iterationer, skrevet da de blev
+> lavet. Tal og konklusioner gælder det tidspunkt. Den operative state ligger
+> i `IMPLEMENTATION_PLAN.md`.
+
 **Metode:** 0 eksterne soegninger (data: /api/stats via curl). Alt arbejde er bygge-arbejde.
 
 ## Data der styrede valget (kilde: /api/health + /api/stats, 25/8)

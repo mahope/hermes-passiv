@@ -301,6 +301,35 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_python_env.py", "tools/mini_toml.py"),
     ),
     Step(
+        id="versions",
+        argv=("python3", "tools/check_versions.py"),
+        # `desktop/package.json` står bevidst IKKE her: `test_deploy_workflow`
+        # forbyder at en desktop-ændring udløser sites-deployen, fordi desktop
+        # udgives af build-desktop.yml. Se `RESULT` (opgave 14) om hullet.
+        inputs=(
+            "tools/check_versions.py",
+            "tools/mini_toml.py",
+            "site/downloads.html",
+            "extension-clean-copy/manifest.json",
+            "extension-clean-copy-firefox/manifest.json",
+            "obsidian-plugin/manifest.json",
+            "obsidian-plugin/versions.json",
+            "scanner/packaging/pyproject.toml",
+            "scanner/packaging/eaa_scanner/__init__.py",
+            "scanner/npm/eaa-scanner/package.json",
+            "page-profile/pyproject.toml",
+            "page-profile/page_profile.py",
+            "site-icons/pyproject.toml",
+            "manifest.json",
+            "versions.json",
+        ),
+    ),
+    Step(
+        id="versions-selftest",
+        argv=("python3", "tools/check_versions.py", "--self-test"),
+        inputs=("tools/check_versions.py", "tools/mini_toml.py"),
+    ),
+    Step(
         id="links",
         argv=("python3", "tools/check_links.py"),
         inputs=("tools/check_links.py", "build_sites.py", "site/**"),

@@ -40,9 +40,18 @@ on:
       - 'tools/mini_toml.py'
       - 'tools/check_python_env.py'
       - 'tools/lock_python_env.py'
+      - 'tools/check_versions.py'
       - 'requirements-build.txt'
       - 'requirements-audit.txt'
       - 'site-icons/pyproject.toml'
+      # Én versionskilde pr. produkt: en ændring i en af disse skal kunne
+      # udløse gaten, der fortæller om resten af versionerne stadig er i takt.
+      # `desktop/package.json` er bevidst IKKE med: `test_deploy_workflow`
+      # forbyder at en desktop-ændring deployer sites, fordi desktop udgives
+      # af `build-desktop.yml`. Se `RESULT` (opgave 14) om det hullet.
+      - 'scanner/**'
+      - 'manifest.json'
+      - 'versions.json'
       - 'tools/test_license_flow.js'
       - 'extension-clean-copy/**'
       - 'extension-clean-copy-firefox/**'

@@ -35,7 +35,11 @@ All behavior is configurable in settings (default paste format, Pro rules).
 
 ## Privacy
 
-No network access. No telemetry. The plugin reads your clipboard only when you run a paste command.
+The free plugin makes no network requests. Pro activation checks your license
+key against `mahope.tools/api/license` — that is the only request the plugin ever
+sends, and it contains the key and a random per-installation device id, nothing
+from your notes or clipboard. If the check cannot complete, the plugin keeps
+using the last known answer instead of locking you out.
 
 ## Note on naming
 
