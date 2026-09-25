@@ -7,12 +7,12 @@
 - `STATE` (før): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `21 — de fire Clean Copy-arkiver har heller ingen indholdsgate`
-- `PLAN_COMMIT`: `956f19f (merge af e833812)`
+- `PLAN_COMMIT`: `4bcfb9e (merge af ceo/site-icons-arkiv)`
 - `BASELINE`: `main@cf0fae0`
 - `LAST_BRANCH`: `ceo/site-icons-arkiv`
 - `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1.`
 - `GATE` (opgave 20): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (fra 36). build_site_icons_archive --self-test: OK (8 mutationer + positiv kontrol + determinisme + 2 falsk-positive-tests). --check: grøn, 2 filer i tarballet + 2 løse filer = regeneration af site-icons/. Porten fandt 5 fejl på det gamle arkiv FØR rettelsen, heraf de to med den lukkede udbyder. test_deploy_workflow: grøn, og fejler hvis site-icons/** tages ud af filteret. Stripe-worker uændret, dist/uændret (gitignored).`
-- `DEPLOY` (ny, opgave 20): `AFVENTER — merge af ceo/site-icons-arkiv. Denne iteration rørte site/downloads/site-icons/**, så de tre domæners download-arkiv skal skifte indhold.`
+- `DEPLOY` (ny, opgave 20): `AFVENTER 4bcfb9e 26/9 ca. 01:50` — merge til main gjort; GitHub Actions kører automatisk (`site/**` er i path-filteret). Denne iteration rørte `site/downloads/site-icons/**`, så de tre domæners download-arkiv skal skifte indhold.
 - `VERIFICÉR DEPLOY` (ny): `site-icons-arkivet er bygget af kilden <SHA> <tidspunkt>` — GitHub Actions deployer automatisk (`site/**` er i path-filteret). Verificér **indhold**, ikke HTTP 200:
   - `https://mahope.tools/downloads/site-icons/site-icons-1.0.0.tar.gz` skal pakkkes ud til præcis to filer, `README.md` (2581 bytes) og `site_icons.py` (15287 bytes), og **ingen** af dem må nævne `lemon`. Før dette var de 2596 og 15267 bytes, og README'en sagde at nøgler sælges i en Lemon Squeezy-konto.
   - `https://mahope.tools/downloads/site-icons/README.md` skal være byte-identisk med `site-icons/README.md` i repoet.
