@@ -1,18 +1,21 @@
 name: Build EAA Desktop
 
 on:
-  # Listeform: hvert element er en selvstændig udløser, og et push rammer den
-  # første det matcher. `branches` og `tags` kan ikke stå i SAMME mapping —
-  # GitHub filtrerer dem begge på hver push, og en branch-push er aldrig et
-  # tag. Det var sådan denne workflow blev tag-only den 25. august 2026
-  # (6766501), så et push til main der rørte desktop/ ikke udløste noget i en
-  # hel måned. Se `tools/test_deploy_workflow.py`, der beviser triggerne.
+  # `branches` og `tags` må begge stå her. Siden 6766501 (25. august 2026) stod
+  # der KUN `tags`, og GitHub springer så et push over på en ref-type den ikke
+  # definerer et filter for — derfor har intet push til main rørt desktop/
+  # siden. Med begge filtre defineret matcher hver sin ref-type, og `paths`
+  # gør at en build kun kører når desktop-/** faktisk er rørt.
+  #
+  # Bemærk: `on.push` må være en mapping, ikke en liste. En liste-form er
+  # ugyldig for GitHubs schema og fejler hele kørslen i 0 sekunder med ingen
+  # jobs — bevist i kørsel 36180365427 den 25. september 2026.
   push:
-    - branches: [main]
-      paths:
-        - desktop/**
-        - .github/workflows/build-desktop.yml
-    - tags: ['eaa-scanner-desktop-v*']
+    branches: [main]
+    tags: ['eaa-scanner-desktop-v*']
+    paths:
+      - desktop/**
+      - .github/workflows/build-desktop.yml
   pull_request:
     paths:
       - desktop/**

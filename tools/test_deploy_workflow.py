@@ -37,7 +37,8 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable
 
-import yaml
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from mini_yaml import YamlSubsetError, parse  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = {
@@ -56,12 +57,13 @@ def load(rel: str) -> dict[str, Any]:
     path = ROOT / rel
     if not path.is_file():
         raise SystemExit(f"FEJL: mangler {rel}")
-    # `on` er YAML 1.1's bool-værdi, så PyYAML giver nøglen som True.
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    try:
+        data = parse(path.read_text(encoding="utf-8"))
+    except YamlSubsetError as exc:
+        raise SystemExit(f"FEJL: {rel} kunne ikke læses: {exc}")
     if not isinstance(data, dict):
         raise SystemExit(f"FEJL: {rel} er ikke et workflow-objekt")
-    data["on"] = data.get("on", data.get(True))
-    if data["on"] is None:
+    if data.get("on") is None:
         raise SystemExit(f"FEJL: {rel} mangler `on:`")
     return data
 
@@ -121,12 +123,20 @@ def _matches(filt: dict[str, Any], *, ref: str, base_ref: str | None,
     # pull_request mod base-ref'en.
     branch_ref = ref[len("refs/heads/"):] if is_branch else (base_ref or "")
 
-    if branches is not None and (not is_branch or not _any_match(branches, branch_ref)):
-        return False
-    if tags is not None and (not is_tag or not _any_match(tags, ref[len("refs/tags/"):])):
-        return False
-    if branches is None and tags is None and is_tag and is_branch:
-        return False
+    # En ref-type uden filter springes over: definerer workflowen KUN `tags`,
+    # kører intet på et branch-push. Det er præcis den fejl, der lå bag
+    # `6766501` (25. august 2026) og som holdt desktop-CI'en død i en måned.
+    # Hver ref-type kræver sit eget filter. En workflow med KUN `tags` kører
+    # aldrig på et branch-push, og en med KUN `branches` aldrig på et
+    # tag-push — det er den regel, `6766501` brød ved at slette `branches`.
+    # Er begge defineret, matcher hver sin ref-type, og pushet kører hvis det
+    # ene af dem rammer (aldrig begge, en ref er aldrig branch og tag).
+    if is_tag:
+        if tags is None or not _any_match(tags, ref[len("refs/tags/"):]):
+            return False
+    elif is_branch or base_ref:
+        if branches is None or not _any_match(branches, branch_ref):
+            return False
 
     changed = filt.get("paths")
     if changed is not None:
@@ -164,6 +174,10 @@ def triggers(workflow: dict[str, Any], name: str, *, ref: str, base_ref: str | N
         )
     if isinstance(filt, str):
         return filt == name
+    if not filt:
+        # `workflow_dispatch:` uden filtre: enhver kørsel på main er nok for de
+        # gates, der bare spørger om en manuel udløser findes.
+        return True
     if not isinstance(filt, dict):
         # `workflow_dispatch:` uden filtre — enhver kørsel på main er nok for
         # de gates, der spørger om en manuel udløser findes.
@@ -208,6 +222,12 @@ def check_desktop(wf: dict[str, Any], label: str) -> list[str]:
                     paths=["desktop/main.js"]):
         problems.append(f"{desktop}: et PR mod main der rører desktop/** udløser "
                         "ikke bygningen")
+
+    for name in ("push", "pull_request"):
+        if isinstance(event(wf, name), list):
+            problems.append(f"{desktop}: `on.{name}` er en liste, som GitHubs schema "
+                            "afviser — kørslen fejler i 0 sekunder uden at køre "
+                            "noget job. Skal være en mapping.")
 
     jobs = wf.get("jobs") or {}
     for job in DESKTOP_JOBS:
@@ -255,6 +275,8 @@ def check_deploy(wf: dict[str, Any], label: str) -> list[str]:
     if push(wf, "refs/heads/main", "desktop/package.json"):
         problems.append(f"{site}: en desktop-ændring deployer sites — den skal kun "
                         "køre build-desktop.yml")
+    if isinstance(event(wf, "push"), list):
+        problems.append(f"{site}: `on.push` er en liste, som GitHubs schema afviser")
     if not triggers(wf, "workflow_dispatch", ref="refs/heads/main"):
         problems.append(f"{site}: workflow_dispatch mangler, så et deploy ikke kan "
                         "køres manuelt")
@@ -295,11 +317,9 @@ def self_test() -> int:
     #    fejlformen fra 25. august: taget kører, branch-push gør ikke. Tjekkes
     #    begge veje, så mutationen ikke "beviser" noget ved et uventet match.
     tag_only = copy.deepcopy(real["desktop"])
-    filt = tag_only["on"]["push"]
-    tag_only["on"]["push"] = [{
-        "paths": filt[0]["paths"],
-        "tags": filt[1]["tags"],
-    }]
+    tag_only["on"]["push"] = {
+        k: v for k, v in tag_only["on"]["push"].items() if k != "branches"
+    }
     problems = check_desktop(tag_only, "6766501-formen")
     ok &= _expect(problems, "udløser ikke build-jobbene", "tag-only", bool(problems))
     if not push(tag_only, f"refs/tags/{DESKTOP_TAG}", "desktop/package.json"):
@@ -313,15 +333,14 @@ def self_test() -> int:
 
     # 2. Tag-udløsningen forsvundet.
     no_tags = copy.deepcopy(real["desktop"])
-    no_tags["on"]["push"] = [f for f in no_tags["on"]["push"] if "tags" not in f]
+    no_tags["on"]["push"].pop("tags", None)
     problems = check_desktop(no_tags, "uden tag-filter")
     ok &= _expect(problems, "udløser ikke build-jobbene, så en ny udgivelse",
                  "uden-tags", any("udgivelse" in p for p in problems))
 
     # 3. Path-filteret forsvundet: matrixen kører på ethvert push.
     no_paths = copy.deepcopy(real["desktop"])
-    for filt in no_paths["on"]["push"]:
-        filt.pop("paths", None)
+    no_paths["on"]["push"].pop("paths", None)
     problems = check_desktop(no_paths, "uden path-filter")
     ok &= _expect(problems, "uden desktop/** udløser", "uden-paths",
                  any("uden desktop/**" in p for p in problems))
@@ -340,7 +359,18 @@ def self_test() -> int:
     ok &= _expect(problems, "mangler contents: write", "release-read",
                  any("mangler contents: write" in p for p in problems))
 
-    # 6. Deploy-workflowen taber et buildinput.
+    # 6. Listeform for `on.push` — den fejlmulighed der lå bag kørsel
+    #    36180365427: workflowen startede, men alle jobs faldt i 0 sekunder.
+    list_form = copy.deepcopy(real["desktop"])
+    list_form["on"]["push"] = [
+        {"branches": ["main"], "paths": list_form["on"]["push"]["paths"]},
+        {"tags": list_form["on"]["push"]["tags"]},
+    ]
+    problems = check_desktop(list_form, "listeform")
+    ok &= _expect(problems, "er en liste", "listeform",
+                  any("er en liste" in p for p in problems))
+
+    # 7. Deploy-workflowen taber et buildinput.
     thin_deploy = copy.deepcopy(real["deploy"])
     thin_deploy["on"]["push"]["paths"] = [
         p for p in thin_deploy["on"]["push"]["paths"] if p != "tools/seo_check.py"
