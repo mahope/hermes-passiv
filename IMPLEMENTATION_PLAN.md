@@ -2,14 +2,14 @@
 
 ## Status
 
-- `ITERATION_ID`: `deskuptime-one-shell-2026-09-26`
-- `STATE`: `Opgave 17 FÆRDIG — deskuptime.com/, /tools/, /bulk-url-checker/ og /security-headers-checker/ har nu ét designsystem. De tre værktøjssider beholder auditedwps /assets/site.css (deres eget site.js tegner resultater med de klassenavne kun den kender), men alle 27 af dens tokens er nu broet til DeskUptimes identitet, så der ikke er to farver på én side. Ny port tools/check_design_tokens.py + --self-test (5 mutationer, positiv kontrol, to falske-positiv-tests).`
-- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `18 — afgør om de publicerede scanner-arkiver er forsinkede`
+- `ITERATION_ID`: `scanner-arkiv-aktuelt-2026-09-26`
+- `STATE`: `Opgave 18 I GANG — researchfasen er slut, fundet er: site/downloads/eaa-scanner-desktop-src-1.3.3.zip er et 1.3.0-arkiv under et 1.3.3-navn. Dens package-lock.json siger version 1.3.0 og electron-builder ^25.0.0, mens desktop/package.json siger 1.3.3 og ^26.15.3. Kunden der henter den får præcis den advisory-remediering opgave 9 lavede, plus en lockfile der lyver om sin egen udgave. De øvrige otte arkiver er byte-identiske med kilden.`
+- `ACTIVE_TASK`: `18`
+- `NEXT_TASK`: `18 (I GANG)`
 - `PLAN_COMMIT`: `(denne commit)`
-- `BASELINE`: `main@f3e2321`
-- `LAST_BRANCH`: `ceo/deskuptime-one-shell`
-- `TASK_ATTEMPTS`: `17: 1/1.`
+- `BASELINE`: `main@997371d`
+- `LAST_BRANCH`: `ceo/scanner-arkiv-aktuelt`
+- `TASK_ATTEMPTS`: `18: 1/1.`
 - `DEPLOY`: `DEPLOY OK 26/9` — kørsel `36198367044` kørte `gate` grønt (34 steps) og deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Live-indholdsverificeret: se Deployloggen.
 - `GATE` (opgave 17): `GRØN — python3 tools/quality_gate.py: GRØN, 34 steps (32 + design-tokens + design-tokens-selftest). Portens egen bevis: 5 mutationer fanget med navngiven grund, positiv kontrol grøn, og to scenarier der skal IKKE fejle (en side kun med /style.css, en Google-Fonts-udfyldning) fejler ikke. Bridgefindet er gjort på de rigtige filer FØR nogen blev rettet: --measure og --wrap. Stripe-worker uændret 69/69, tracking-worker uændret 83/83, dist/uændret (gitignored).`
 - `RESULT` (opgave 17): Opgaven troede, de to sider var bygget af to forskellige designs, og at løsningen krævede at vælge mellem auditedwps skal og vores. **Halvdelen af den forudsætning var forkert, og det viste sig først i det byggede dist:** bygget indlæser allerede `/shell.js` og `<header class="site-header">` på alle fire sider — én header, én footer, ét skeln. Headeren, footeren, knapperne og IBM Plex kom alle fra vores skal. Det, der så forkert ud, var **tokens**: de tre værktøjssider indlæser derudover `../auditedwp`s `/assets/site.css`, et komplet designsystem med sit eget palet (grøn `#0b6e4f`) og sin egen skrifttype (Inter). Dens eget `<style>`-blok og deres eget `site.js` bruger kun de klassenavne, den kender, så filen skal rejse med — men de 27 tokens den erklærer, må ikke.
@@ -1095,7 +1095,7 @@ over når intet er bygget. Steps `design-tokens` og `design-tokens-selftest` i
 `tools/quality_gate.py`; `site/style.css`, `site/**`, `build_sites.py` og
 `tools/check_design_tokens.py` er nu i path-filteret.
 
-### 18. UFÆNDIG — afgør om de publicerede scanner-arkiver er forsinkede
+### 18. I GANG — afgør om de publicerede scanner-arkiver er forsinkede
 
 **Sidefund 25. september 2026 (opgave 10):** `site/downloads.html` mærkede
 arkiverne som **1.3.0**, mens filerne på disk og `scanner/npm/eaa-scanner/package.json`
@@ -1103,6 +1103,16 @@ siger **1.2.0**. Opgave 10 rettede mærkaten til den version, der faktisk kan
 hentes. Det åbner det ærlige spørgsmål: er det *arkiverne* der er forsinkede, så
 kunderne henter gammel kode, eller er det *teksten* der var for forkert, så kunderne
 aldrig har fået den version de blev lovet?
+
+**Researchfund 26. september 2026 (inden der blev skrevet kode):** svaret er ja for
+ét arkiv og nej for otte. `site/downloads/eaa-scanner-desktop-src-1.3.3.zip`
+indeholder en `package-lock.json`, der siger `version 1.3.0` og
+`electron-builder ^25.0.0`, og en `package.json` uden `engines`, mens
+`desktop/package.json` siger 1.3.3, `^26.15.3` og `>=22.12.0`. Resten af
+arkivet (`main.js`, `scanner-core.js`, `scanner.js`, `index.html`, `preload.js`,
+`style.css`, `icon.png`, `LICENSE.txt`) er identisk med kilden. De otte andre
+publicerede arkiver er byte-identiske med kilden, inklusive pip-hjulet,
+sdist'en og npm-`tgz'en.
 
 **Omfang:**
 
