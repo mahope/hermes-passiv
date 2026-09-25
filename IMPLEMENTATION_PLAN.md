@@ -21,6 +21,8 @@
 
   **Fund 4 — selftesten skrev i den rigtige låsefil.** `without_a_hash` fjernede en hash fra `ROOT/requirements-build.txt` i stedet for fra sit midlertidige copy, og efterlod repoet med en pin der var beskadiget. Den er fundet ved at køre `git status` efter selftesten, som nu er ren; mutationen rører kun sit eget copy. Det er præcis den kontrol man ikke har lavet, før man har lavet skaden.
 
+  **Fund 5 — porten var grøn på 3.9 og rød på 3.12, i CI, efter merge.** Kørsel `36191355378` døde i step 25 `python-env` med `AttributeError: 'PosixPath' object has no attribute 'read'`. Årsagen er præcis den `mini_toml`/`tomllib`-deling: på 3.9 rammer importen fallbacken, som tager en `Path`, mens CI's 3.12 bruger den indlejrede `tomllib`, hvis `load()` kræver en **binær filobjekt**. Selftesten kunne ikke fange det, fordi den også kører på 3.9 og derfor aldrig rørte den anden vej. Rettelsen er ikke et shim, men at begge veje går gennem `loads(text)`, som begge moduler har — så koden der kører er den samme på 3.9 og 3.12, og selftesten dækker den. Verificeret grønt på begge fortolkere inden merge.
+
   **Bevis for porten, ikke bare grønt:** 13 mutationer fanget med 1–7 fejl hver, positiv kontrol grøn før og efter alle mutationerne, og `git status` rent efter kørslen. `tools/mini_toml.py` er stdlib-fallback fordi CI kører Python 3.12 mens denne maskine er 3.9 — samme begrundelse som `mini_yaml` (kørsel 36180367257 døde på `import yaml`).
 - `GATE` (opgave 12): `GRØN — npm ci rent fra den nye lockfil, npm audit --audit-level=high = 0 fund, fire nye macOS-artefakter (dmg+zip for x64 og arm64) bygget med electron 44.4.5 (bekreftet på den indlejrede Electron Framework-streng) — men USIGNEREDE, se fund 4. Sitegaten: python3 tools/quality_gate.py → GRØN, 26 steps, inkl. deploy-workflow + --self-test med de seks nye runtime-mutationer. dist/uændret (gitignored), intet site-indhold rørt.`
 - `TASK_ATTEMPTS`: `12: 1/1.`
@@ -1162,6 +1164,20 @@ aldrig har fået den version de blev lovet?
 
 
 ## Deploylog
+
+- 2026-09-25: `DEPLOY OK d7d97f6` — kørsel `36191570696` kørte `gate` grønt i
+  54 s (28 steps, inkl. de to nye `python-env`-steps på CI's Python 3.12) og
+  deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Det lukker
+  `DEPLOY FEJL 36191355378`. **Intet site-indhold er ændret** — ingen `site/`-fil
+  blev rørt, så de tre domæner får præcis det indhold de havde før merge; kun
+  bygge- og gatestierne er nye.
+
+- 2026-09-25: `DEPLOY FEJL 36191355378` — `gate`-jobbet døde i step 25 `python-env`
+  med `AttributeError: 'PosixPath' object has no attribute 'read'`, fordi CI's
+  Python 3.12 bruger den indlejrede `tomllib`, hvis `load()` kræver en binær
+  filobjekt, mens kun 3.9 rammer `mini_toml`-fallbacken. **Intet site blev
+  deployet**, og `dist/` er uændret. Rettet i samme iteration ved at bruge
+  `loads(text)` i stedet for `load(path)`.
 
 - 2026-09-25: `INGEN SITE-INDHOLD ÆNDRET — python-build-lock` — mergecommit for
   opgave 13 rørrer `requirements-build.txt`, `requirements-audit.txt`,
