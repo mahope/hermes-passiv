@@ -88,12 +88,12 @@ A native macOS desktop app (DMG or ZIP) is available for Apple Silicon:
 
 Or download the source and build it yourself:
 
-- [`eaa-scanner-desktop-src-1.2.0.zip`](https://hermes-passiv.pages.dev/downloads/eaa-scanner-desktop-src-1.2.0.zip)
+- [`eaa-scanner-desktop-src-1.3.3.zip`](https://hermes-passiv.pages.dev/downloads/eaa-scanner-desktop-src-1.3.3.zip)
 
 Then build and run:
 
 ```bash
-unzip eaa-scanner-desktop-src-1.2.0.zip && cd desktop
+unzip eaa-scanner-desktop-src-1.3.3.zip && cd desktop
 npm install
 npm start
 ```

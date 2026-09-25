@@ -32,6 +32,11 @@ SITE = ROOT / "site"
 DIST = ROOT / "dist"
 AUDITEDWP_DIR = Path(os.environ.get("AUDITEDWP_DIR") or (ROOT.parent / "auditedwp"))
 AUDITEDWP_DESKUPTIME = AUDITEDWP_DIR / "site" / "deskuptime"
+# The auditedwp tool pages load /assets/site.css and /assets/site.js from the
+# root of *their* site. We publish those pages under deskuptime.com/tools/…,
+# so the two files have to travel with them or the tools ship unstyled with
+# every fetch() to the checker failing.
+AUDITEDWP_ASSETS = AUDITEDWP_DIR / "site" / "assets"
 OLD_ORIGIN = "https://hermes-passiv.pages.dev"
 
 # ---------------------------------------------------------------------------
@@ -98,6 +103,8 @@ SITES: dict[str, dict] = {
              "deskuptime/bulk-url-checker/index.html", "bulk-url-checker/index.html"),
             (AUDITEDWP_DESKUPTIME / "security-headers-checker" / "index.html",
              "deskuptime/security-headers-checker/index.html", "security-headers-checker/index.html"),
+            (AUDITEDWP_ASSETS / "site.css", "assets/site.css", "assets/site.css"),
+            (AUDITEDWP_ASSETS / "site.js", "assets/site.js", "assets/site.js"),
         ],
     },
     "bugbottle.dev": {
@@ -391,6 +398,30 @@ def strip_duplicate_pageviews(text: str) -> str:
     return MALFORMED_TRACKING_SCRIPT_RE.sub("", text)
 
 
+# A reference inside a code example is not a link. `site/blog/open-graph-checker.html`
+# shows <code>&lt;meta … content="/img/cover.jpg"&gt;</code> to explain why relative
+# og:image URLs break, and that "/img/cover.jpg" is not a page we owe anyone. Counting
+# it put a permanent, unfalsifiable 1 on the broken list, which is what kept the whole
+# gate advisory. Only the accounting is skipped — the visible text is still rewritten.
+CODE_SPAN_RE = re.compile(
+    r"<(pre|code|script|style|textarea)\b[^>]*>.*?</\1\s*>", re.I | re.S)
+
+
+def code_spans(text: str) -> list[tuple[int, int]]:
+    return [(m.start(), m.end()) for m in CODE_SPAN_RE.finditer(text)]
+
+
+def in_code_span(spans: list[tuple[int, int]], pos: int) -> bool:
+    return any(start <= pos < end for start, end in spans)
+
+
+# Sluttegn fra den løbende tekst, ikke en del af referencen. `llms.txt` skriver
+# "…/mahope-eaa-scanner-1.2.0.tgz`, installér med `npm install …`", og uden
+# denne trim er den levende fil registreret som død, fordi kommaet og
+# backsticket havnede i stien.
+TRAILING_PUNCT = ",;`'\""
+
+
 def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: dict) -> str:
     own = "https://" + site.domain
 
@@ -398,6 +429,9 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
         """returns (new absolute-or-local path or None if unchanged, kind)"""
         m = re.match(r"([^?#]*)(.*)", path)
         base, suffix = m.group(1), m.group(2)
+        trimmed = base.rstrip(TRAILING_PUNCT)
+        if trimmed != base:
+            base, path = trimmed, trimmed + suffix
         if base == "" or base == "/":
             return None, "root"
         if base in local:
@@ -411,6 +445,13 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
         remapped = "/" + apply_remap(base.lstrip("/"), site.remap)
         return (remapped + suffix if remapped != base else None), "broken"
 
+    def note_broken(path: str, spans: list[tuple[int, int]], pos: int) -> None:
+        if in_code_span(spans, pos):
+            return
+        site.broken[path] = site.broken.get(path, 0) + 1
+
+    spans = code_spans(text)
+
     def abs_sub(m: re.Match) -> str:
         scheme, path = m.group(1) or "", m.group(2) or "/"
         new, kind = resolve(path)
@@ -418,7 +459,7 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
             site.cross += 1
             return new if scheme else new.split("//", 1)[1]
         if kind == "broken":
-            site.broken[path] = site.broken.get(path, 0) + 1
+            note_broken(path, spans, m.start())
         site.rewritten += 1
         return (own if scheme else site.domain) + (new if new else path)
 
@@ -426,13 +467,15 @@ def rewrite_text(site: Site, text: str, is_html: bool, local: dict, global_idx: 
     if not is_html:
         return text
 
+    spans = code_spans(text)
+
     def attr_sub(m: re.Match) -> str:
         new, kind = resolve(m.group(2))
         if kind == "cross":
             site.cross += 1
             return m.group(1) + new + m.group(3)
         if kind == "broken":
-            site.broken[m.group(2)] = site.broken.get(m.group(2), 0) + 1
+            note_broken(m.group(2), spans, m.start())
         if new:
             site.rewritten += 1
             return m.group(1) + new + m.group(3)
@@ -1040,8 +1083,13 @@ def sitemap_pages(site: Site, pages: list[dict]) -> list[dict]:
     return sorted(selected.values(), key=lambda page: page["url"])
 
 
-def write_generated(site: Site, pages: list[dict]) -> None:
-    """Sitemap, robots, llms, security.txt, humans.txt, _headers, 404, brand assets."""
+def write_generated(site: Site, pages: list[dict], local: dict, global_idx: dict) -> None:
+    """Sitemap, robots, llms, security.txt, humans.txt, _headers, 404, brand assets.
+
+    404- og søgesiderne skal gennemgå samme rewrite som de øvrige sider. Ellers
+    står nav-linket til /blog/ uændret på cleancopy.tools, hvor blogindekset
+    ligger på mahope.tools — et 404-link i headeren på to sider pr. sprog.
+    """
     dist = site.dist
     own = "https://" + site.domain
     brand = BRANDS[site.cfg["product"]]
@@ -1129,7 +1177,7 @@ def write_generated(site: Site, pages: list[dict]) -> None:
                             + pagepass.THEME_SCRIPT + '\n'
                             f'<link rel="stylesheet" href="/style.css?v={pagepass.CSS_VERSION}">')
         (dist / fname).parent.mkdir(exist_ok=True)
-        (dist / fname).write_text(html, encoding="utf-8")
+        (dist / fname).write_text(rewrite_text(site, html, True, local, global_idx), encoding="utf-8")
 
     # search: one page per language, same index
     alts = {"en": own + "/search/", "da": own + "/da/search/"}
@@ -1145,7 +1193,7 @@ def write_generated(site: Site, pages: list[dict]) -> None:
                                               alternates=alts, og_image=own + ("/og-da.png" if lang == "da" else "/og.png"),
                                               dates=None, github=site.cfg["github"], kind="page")
         (dist / fname).parent.mkdir(parents=True, exist_ok=True)
-        (dist / fname).write_text(html, encoding="utf-8")
+        (dist / fname).write_text(rewrite_text(site, html, True, local, global_idx), encoding="utf-8")
 
     index = [dict(url=p["url"].replace(own, "") or "/", title=p["title"], description=p["description"], lang=p["lang"],
                   section=p.get("section", ""), body=p.get("body", ""), tags=p.get("tags", [])) for p in pages]
@@ -1258,7 +1306,7 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
         f'[[kv_namespaces]]\nbinding = "VISITS"\nid = "{kv_id}"\n',
         encoding="utf-8",
     )
-    write_generated(site, pages)
+    write_generated(site, pages, local, global_idx)
     return pages
 
 
@@ -1299,6 +1347,15 @@ def main() -> int:
         if not (s.dist / "index.html").exists():
             print("   WARN: no index.html!")
     (DIST / "build-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    # Et kogt dødt link er en købsfejl, ikke en observation. Så længe denne
+    # linje returnerer 0, kan 18 døde referencer ligge i hvert build i en måned
+    # uden at nogen stopper. tools/check_links.py er den uafhængige port.
+    total_broken = sum(v["broken"] for v in summary.values())
+    if total_broken:
+        print(f"\nFEJL: {total_broken} uopklaret(e) reference(s). Ret kilden, eller "
+              f"markér den som et eksempel i <pre>/<code> — ikke som en undtagelse.",
+              file=sys.stderr)
+        return 1
     return 0
 
 
