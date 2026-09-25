@@ -68,12 +68,28 @@ GATE_SELF = "tools/check_legacy_seo_paths.py"
 
 # Filer der springes over ved skanning af scripts. Samme regelprincip som
 # `check_license_clients.py`: en mappe med sin egen `.git` er ikke vores kode.
-SKIP_DIRS = {".git", "dist", "node_modules", ".wrangler", "build", "__pycache__"}
+# `auditedwp-src` står her til forsikring, fordi CI's side-checkout hedder
+# netop det — reglen under er den egentlige beskyttelse, ikke denne linje.
+SKIP_DIRS = {".git", "dist", "node_modules", ".wrangler", "build", "__pycache__",
+             "auditedwp-src", "auditedwp"}
 
 
-def _is_external_checkout(path: Path) -> bool:
-    """Sand for en mappe med egen `.git` under sig — CI's side-checkout."""
-    return any((child / ".git").exists() for child in [path, *path.iterdir()] if child.is_dir())
+def _is_external_checkout(path: Path, root: Path) -> bool:
+    """Sand hvis `path` ligger inde i et andet git-repo end `root`.
+
+    CI checkouter `../auditedwp` *ved siden af* workspace, så den havner
+    inde i `ROOT` og aldrig lokalt. `.git` ligger i sådanne checkouts i
+    checkoutens egen rod — altså et *forfader*-directory af filen, ikke
+    nødvendigvis dens forældre. Derfor ledes der op ad hele kæden. Kun
+    op til `root`: `root` selv har et `.git`, som ikke må gøre os til et
+    eksternt checkout.
+    """
+    for parent in path.resolve().parents:
+        if parent == root.resolve() or parent == parent.parent:
+            return False
+        if (parent / ".git").exists():
+            return True
+    return False
 
 
 def _script_files(root: Path) -> dict[str, str]:
@@ -86,7 +102,7 @@ def _script_files(root: Path) -> dict[str, str]:
             continue
         if any(part in SKIP_DIRS for part in path.parts):
             continue
-        if _is_external_checkout(path.parent):
+        if _is_external_checkout(path, root):
             continue
         try:
             found[path.relative_to(root).as_posix()] = path.read_text(encoding="utf-8", errors="replace")
@@ -235,6 +251,31 @@ def self_test() -> int:
         if no_false_positive:
             for problem in no_false_positive:
                 print(f"FALSK POSITIV: {problem}", file=sys.stderr)
+            return 1
+
+        # 5 — CI's side-checkout. Kørsel 36194467339 døde i `legacy-seo-paths`
+        # på `auditedwp-src/site/deploy.sh`: CI checkouter auditedwp VED SIDEN
+        # af workspace, så mappen ligger inde i ROOT og aldrig lokalt, og
+        # `.git` ligger i checkoutens rod — et forfaderdirectory, ikke
+        # filens egen forælder. Første rettelse ledede kun ét niveau op og
+        # fangede det ikke.
+        (root / "vendored").mkdir()
+        (root / "vendored" / ".git").mkdir()
+        (root / "vendored" / "site").mkdir()
+        (root / "vendored" / "site" / "deploy.sh").write_text(
+            "#!/bin/zsh\nnpx wrangler pages deploy dist\nexit 0\n", encoding="utf-8")
+        external = _script_files(root)
+        if any(name.startswith("vendored/") for name in external):
+            print("FEJL: et eksternt checkout blev ikke sprunget over", file=sys.stderr)
+            return 1
+        # …men vores egen kode skal stadig fejle, så reglen har ikke slået
+        # alt fra — præcis som de 11/11 i `check_license_clients.py`.
+        (root / "tools/publish.sh").write_text(
+            "#!/bin/bash\nnpx wrangler pages deploy dist\nexit 0\n", encoding="utf-8")
+        still = check_single_deploy_path(root, _script_files(root))
+        (root / "tools/publish.sh").unlink()
+        if not still:
+            print("FEJL: reglen slår alt fra — vores egen kode fanges ikke", file=sys.stderr)
             return 1
 
     failed = 0
