@@ -249,5 +249,19 @@ r = await call('/api/stripe/fulfillment?session_id=cs_live_supdlNNNNNNNNNNNNNN')
 ok('download leveret', r.status === 200, r.status);
 ok('produkt uden home bruger mahope.tools', mails[m7 + 1] && mails[m7 + 1].reply_to === 'support@mahope.tools', JSON.stringify(mails[m7 + 1] && mails[m7 + 1].reply_to));
 ok('ingen kundemail svarer til en privat indbakke', mails.every(m => !String(m.reply_to || '').startsWith('mads@')));
+// 8) Kundeportal: kun abonnenter må opsige selv
+const PORTAL = 'https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00';
+ok('Clean Copy Pro (abonnement) får kundeportalen i mailen', mails[m7].text.includes(PORTAL) && mails[m7].html.includes(PORTAL), JSON.stringify(mails[m7].text));
+ok('EUComply Pro (abonnement) får kundeportalen', mails[1].text.includes(PORTAL) && mails[1].html.includes(PORTAL), JSON.stringify(mails[1].text));
+ok('DeskUptime Pro (engangskøb) får ikke kundeportalen', !mails[0].text.includes(PORTAL) && !mails[0].html.includes('billing.stripe.com'), JSON.stringify(mails[0].text));
+ok('download-køb får ikke kundeportalen', !mails[2].text.includes(PORTAL) && !mails[2].html.includes('billing.stripe.com'));
+const mSub = mails.filter(m => m.text.includes(PORTAL));
+ok('kun de tre årlige produkter får kundeportalen', mSub.length === 3 && mSub.every(m => /Your (Clean Copy Pro|EUComply Pro|Page Profile Pro)/.test(m.subject)), mSub.map(m => m.subject).join(' | '));
+r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN');
+j = await r.json();
+ok('Clean Copy Pro leveringssvar bærer kundeportalen', j.subscription === true && j.billing_portal === PORTAL, JSON.stringify(j));
+r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA');
+j = await r.json();
+ok('engangskøb har ingen kundeportal i leveringssvaret', j.subscription === undefined && !j.billing_portal, JSON.stringify(j));
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);

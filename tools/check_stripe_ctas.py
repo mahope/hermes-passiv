@@ -35,7 +35,8 @@ WORKER = ROOT / "site/_worker.js"
 
 KNOWN_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
 
-LINK_PATTERN = re.compile(r"https://(?:buy|donate)\.stripe\.com/[A-Za-z0-9]+")
+# Kundeportalen har sti-segmenter (billing.stripe.com/p/login/…), betalingslinks ikke.
+LINK_PATTERN = re.compile(r"https://(?:buy|donate|billing)\.stripe\.com/[A-Za-z0-9]+(?:/[A-Za-z0-9]+)*")
 PRICE_TOKEN = re.compile(r"\$\s?\d[\d.]*")
 PRODUCT_KEY = re.compile(r"^[a-z0-9-]+$")
 
@@ -65,6 +66,7 @@ FORBIDDEN_CLAIMS = (
     "kommer når butikken åbner.",
     "paid checkout is not wired up",
     "ikke er koblet en betalt checkout",
+    "there are no recurring charges",
 )
 
 REQUIRED_PRODUCT_KEYS = (
@@ -221,7 +223,11 @@ def load_catalog(path: Path) -> dict:
 
 
 def catalog_links(catalog: dict) -> set[str]:
-    return {product["payment_link"] for product in catalog["products"].values()}
+    links = {product["payment_link"] for product in catalog["products"].values()}
+    portal = catalog.get("billing_portal")
+    if isinstance(portal, str):
+        links.add(portal)
+    return links
 
 
 def scan_files() -> list[Path]:
@@ -293,6 +299,7 @@ def check_worker(catalog: dict) -> list[str]:
     if block is None:
         return ["site/_worker.js: STRIPE_PRODUCTS blev ikke fundet"]
     worker_keys = set(re.findall(r"^\s*'([a-z0-9-]+)':\s*\{", block.group(1), re.M))
+    entries = dict(re.findall(r"^\s*'([a-z0-9-]+)':\s*\{([^\n]*)$", block.group(1), re.M))
     for key in sorted(worker_keys - set(products)):
         problems.append(f"site/_worker.js: produktet {key} mangler i allowlisten")
     for key, product in sorted(products.items()):
@@ -301,6 +308,16 @@ def check_worker(catalog: dict) -> list[str]:
             continue
         if key in REQUIRED_PRODUCT_KEYS and product["name"] not in text.split("const STRIPE_PRODUCTS")[1]:
             problems.append(f"site/_worker.js: navnet på {key} afviger fra allowlisten ({product['name']!r})")
+    # Kun de årlige produkter må markeres som abonnement, ellers får et engangskøb
+    # et kundeportalslink den aldrig kan bruge — eller et abonnement mangler det.
+    worker_subscriptions = {key for key, entry in entries.items() if re.search(r"\bsubscription:\s*true\b", entry)}
+    catalog_subscriptions = {key for key, product in products.items() if product.get("subscription") is True}
+    for key in sorted(worker_subscriptions - catalog_subscriptions):
+        problems.append(f"site/_worker.js: {key} er markeret som abonnement, men allowlisten siger engangskøb")
+    for key in sorted(catalog_subscriptions - worker_subscriptions):
+        problems.append(f"site/_worker.js: {key} er et årligt abonnement i allowlisten, men er ikke markeret som abonnement")
+    if catalog_subscriptions and catalog.get("billing_portal") not in text:
+        problems.append("site/_worker.js: kundeportalen mangler i workeren, så abonnenter ikke kan opsige selv")
     links_block = re.search(r"const STRIPE_LINKS = \{(.*?)\n  \};", text, re.S)
     if links_block is None:
         problems.append("site/_worker.js: STRIPE_LINKS blev ikke fundet")
@@ -444,12 +461,46 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
         _, anchors = parse_page(text)
         visible_links = {href for href, _ in anchors}
         for link in sorted(visible_links & set(LINK_PATTERN.findall(text))):
+            if link == catalog.get("billing_portal"):
+                # Kundeportalen er ikke en købsknap; den har sin egen sidekontrol.
+                continue
             owner = next((key for key, product in products.items() if product["payment_link"] == link), None)
             if owner is None:
                 problems.append(f"{relative}: synligt link {link} er ikke i allowlisten")
             elif (relative, owner) not in listed:
                 problems.append(f"{relative}: synlig købsknap for {owner} mangler i inventoryet")
     return problems, inventory
+
+
+def check_billing_portal(catalog: dict) -> list[str]:
+    """Kundeportalen skal findes præcis de steder, en abonnent kan opsige fra.
+
+    `/thanks` bygger linket ud fra leveringssvaret, så den skal referere
+    `billing_portal`; `/support` og `/terms/` linker til den direkte.
+    """
+    problems: list[str] = []
+    portal = catalog.get("billing_portal")
+    if not isinstance(portal, str) or not portal.startswith("https://billing.stripe.com/p/login/"):
+        return [f"tools/stripe_catalog.json: billing_portal skal være en billing.stripe.com-punktal, fik {portal!r}"]
+    pages = catalog.get("portal_pages")
+    if not isinstance(pages, list) or not pages:
+        return ["tools/stripe_catalog.json: portal_pages skal være en ikke-tom liste"]
+    for page in pages:
+        path = ROOT / page
+        if not path.is_file():
+            problems.append(f"tools/stripe_catalog.json: portalsiden {page!r} findes ikke")
+            continue
+        text = path.read_text(encoding="utf-8")
+        if portal not in text and "billing_portal" not in text:
+            problems.append(f"{page}: mangler kundeportalen, så abonnenter kan ikke opsige selv")
+    for path in scan_files():
+        relative = str(path.relative_to(ROOT))
+        # Kun sider: workerens brug af portalen er styret af check_worker.
+        if path.suffix != ".html" or relative in pages or relative.startswith("dist/"):
+            continue
+        if portal in path.read_text(encoding="utf-8", errors="ignore"):
+            problems.append(f"{relative}: bruger kundeportalen uden at være deklareret portalside")
+    return problems
 
 
 def check_forbidden_claims() -> list[str]:
@@ -476,6 +527,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     offer_problems, inventory = check_offers(catalog)
     problems += offer_problems
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
+    problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
     return problems, inventory
 
@@ -530,6 +582,10 @@ def self_test() -> int:
         {**offer, "domain": "example.com"} if offer["path"] == "site/scan.html" else offer
         for offer in good["offers"]]}
     missing_core = {**good, "core_pages": good["core_pages"][:3]}
+    rogue_portal = {**good, "billing_portal": "https://billing.stripe.com/p/login/ukjendtPortal0"}
+    no_subscriptions = {**good, "products": {
+        key: {field: value for field, value in product.items() if field != "subscription"}
+        for key, product in good["products"].items()}}
 
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
@@ -539,6 +595,9 @@ def self_test() -> int:
         ("en dokumenteret købsside uden inventar", check_offers(uninventoried)[0]),
         ("en købsside med forkert domæne", check_routes(wrong_domain["offers"], good["core_pages"])),
         ("for få centrale produktsider", check_routes(good["offers"], missing_core["core_pages"])),
+        ("en kundeportal-URL der ikke er allowlistet", check_links(rogue_portal)),
+        ("en kundeportal der ikke findes på portalsiderne", check_billing_portal(rogue_portal)),
+        ("en abonnement-markering der ikke er i allowlisten", check_worker(no_subscriptions)),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
