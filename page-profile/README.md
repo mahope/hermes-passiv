@@ -21,7 +21,7 @@ python3 page_profile.py https://example.com
 
 ```bash
 # Single file — no install
-curl -O https://hermes-passiv.pages.dev/downloads/page-profile/page_profile.py
+curl -O https://mahope.tools/downloads/page-profile/page_profile.py
 python3 page_profile.py https://example.com
 
 # JSON output
@@ -31,9 +31,17 @@ python3 page_profile.py https://example.com --json | jq
 ## Pro features
 
 Page Profile Pro ($19/year, [buy via Stripe](https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04)) adds:
-- **Comparison mode** — diff two URLs
-- **History tracking** — see how a page changes over time
-- **PDF report** — client-ready report
+- **Comparison mode** — compare two URLs side by side
+- **Batch mode** — profile many URLs and rank them by score
+- **HTML report** — create a client-ready report
+
+Activate the 32-character key from your Stripe receipt:
+
+```bash
+python3 page_profile.py --activate YOUR-KEY
+```
+
+Activation and regular Pro checks contact `mahope.tools`. After a successful check, Pro can be used for up to seven days if the license service is temporarily unavailable. Page profiling and history remain free.
 
 ## License
 

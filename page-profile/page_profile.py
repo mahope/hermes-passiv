@@ -21,64 +21,179 @@ import json
 import re
 import sys
 import os
+import time
+import uuid
 from html.parser import HTMLParser
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from urllib.parse import urlparse, urljoin
 from collections import OrderedDict
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
-# ---------------------------------------------------------------------------
-# License (Pro) — offline key validation, no network calls.
-# A Pro key is "PPRO-" followed by 32 base32 chars; the last 8 are a checksum
-# of the first 24 + salt, so random strings are rejected without phoning home.
-# ---------------------------------------------------------------------------
-_LICENSE_SALT = "page-profile-pro-v1"
+LICENSE_API = "https://mahope.tools/api/license/"
+LICENSE_PRODUCT = "page-profile-pro"
+LICENSE_BUY_URL = "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
 LICENSE_FILE = os.path.join(os.path.expanduser("~"), ".page-profile-license")
+LICENSE_CACHE_SECONDS = 7 * 24 * 60 * 60
+_LICENSE_KEY_PATTERN = re.compile(r"^[a-f0-9]{32}$")
 
 
-def _b32_checksum(payload: str) -> str:
-    import hashlib
-    import base64
-    digest = hashlib.sha256((_LICENSE_SALT + payload).encode()).digest()
-    return base64.b32encode(digest).decode()[:8]
+class LicenseError(Exception):
+    pass
 
 
-def make_license_key(seed: str) -> str:
-    """Generate a valid Pro key from a customer seed (used by the seller)."""
-    payload = "".join(c for c in seed.upper() if c.isalnum())[:24].ljust(24, "X")
-    return "PPRO-" + payload + _b32_checksum(payload)
+class LicenseServiceUnavailable(LicenseError):
+    pass
 
 
-def validate_license_key(key: str) -> bool:
-    if not key or not key.startswith("PPRO-") or len(key) != len("PPRO-") + 32:
-        return False
-    payload = key[5:29]
-    return _b32_checksum(payload) == key[29:]
+def normalize_license_key(key: str) -> str:
+    normalized = str(key or "").strip().lower()
+    if not _LICENSE_KEY_PATTERN.fullmatch(normalized):
+        raise ValueError("License keys contain 32 lowercase hexadecimal characters.")
+    return normalized
 
 
-def load_license() -> str:
-    """Read stored license key from env var or ~/.page-profile-license."""
-    key = os.environ.get("PAGE_PROFILE_LICENSE", "")
-    if not key and os.path.exists(LICENSE_FILE):
+def _read_license_state() -> dict:
+    if not os.path.exists(LICENSE_FILE):
+        return {}
+    try:
+        with open(LICENSE_FILE, encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError, TypeError):
+        return {}
+    return state if isinstance(state, dict) else {}
+
+
+def _license_input() -> tuple:
+    state = _read_license_state()
+    environment_key = os.environ.get("PAGE_PROFILE_LICENSE", "").strip()
+    if environment_key:
+        key = normalize_license_key(environment_key)
+    else:
         try:
-            with open(LICENSE_FILE) as f:
-                key = f.read().strip()
-        except OSError:
-            pass
-    return key
+            key = normalize_license_key(state.get("license_key", ""))
+        except ValueError:
+            return "", state
+    device_id = state.get("device_id") if state.get("license_key") == key else ""
+    if not isinstance(device_id, str) or not device_id or len(device_id) > 128:
+        device_id = uuid.uuid4().hex
+    return key, {"device_id": device_id, "state": state}
+
+
+def _license_error_message(payload, fallback: str) -> str:
+    if isinstance(payload, dict):
+        message = payload.get("error") or payload.get("reason")
+        if isinstance(message, str) and message.strip():
+            return message.strip()
+    return fallback
+
+
+def _license_request(action: str, key: str, device_id: str) -> dict:
+    body = json.dumps({
+        "license_key": key,
+        "device_id": device_id,
+        "product": LICENSE_PRODUCT,
+    }).encode("utf-8")
+    request = Request(
+        f"{LICENSE_API}{action}",
+        data=body,
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        try:
+            payload = json.loads(exc.read().decode("utf-8"))
+        except (OSError, ValueError, TypeError):
+            payload = {}
+        message = _license_error_message(payload, f"License service returned HTTP {exc.code}.")
+        if exc.code >= 500:
+            raise LicenseServiceUnavailable(message) from exc
+        raise LicenseError(message) from exc
+    except (URLError, TimeoutError, OSError) as exc:
+        raise LicenseServiceUnavailable("License service is temporarily unavailable.") from exc
+    except (ValueError, TypeError) as exc:
+        raise LicenseError("License service returned an invalid response.") from exc
+    if not isinstance(payload, dict):
+        raise LicenseError("License service returned an invalid response.")
+    return payload
+
+
+def _write_license_state(key: str, device_id: str, validated_at=None) -> None:
+    state = {
+        "license_key": key,
+        "device_id": device_id,
+        "validated_at": time.time() if validated_at is None else validated_at,
+    }
+    fd = os.open(LICENSE_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(state, f, sort_keys=True)
+        f.write("\n")
+    try:
+        os.chmod(LICENSE_FILE, 0o600)
+    except OSError:
+        pass
+
+
+def _has_fresh_positive_cache(state: dict, key: str, now: float) -> bool:
+    if state.get("license_key") != key:
+        return False
+    validated_at = state.get("validated_at")
+    if isinstance(validated_at, bool) or not isinstance(validated_at, (int, float)):
+        return False
+    age = now - validated_at
+    return 0 <= age <= LICENSE_CACHE_SECONDS
+
+
+def _print_upgrade(feature: str) -> None:
+    print(f"Error: '{feature}' is a page-profile Pro feature.", file=sys.stderr)
+    print(f"Get a Pro license at {LICENSE_BUY_URL} ($19/year).", file=sys.stderr)
+    print("Then run:  page-profile --activate YOUR-KEY", file=sys.stderr)
+    sys.exit(2)
 
 
 def require_pro(feature: str) -> str:
-    """Return a valid license key or exit with an upgrade message."""
-    key = load_license()
-    if key and validate_license_key(key):
-        return key
-    print(f"Error: '{feature}' is a page-profile Pro feature.", file=sys.stderr)
-    print("Get a Pro license at https://hermes-passiv.pages.dev/page-profile ($19/year).", file=sys.stderr)
-    print("Then run:  page-profile --activate YOUR-KEY   (or set PAGE_PROFILE_LICENSE)", file=sys.stderr)
-    sys.exit(2)
+    try:
+        key, details = _license_input()
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
+    if not key:
+        _print_upgrade(feature)
+
+    state = details["state"]
+    device_id = details["device_id"]
+    try:
+        payload = _license_request("validate", key, device_id)
+    except LicenseServiceUnavailable as exc:
+        if _has_fresh_positive_cache(state, key, time.time()):
+            return key
+        print(f"Error: {exc}", file=sys.stderr)
+        print("No recent successful validation is cached. Try again later.", file=sys.stderr)
+        sys.exit(2)
+    except LicenseError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    if payload.get("ok") is not True or payload.get("valid") is not True:
+        reason = payload.get("reason")
+        if reason == "not_activated":
+            message = "This license is not activated on this device. Run page-profile --activate YOUR-KEY."
+        elif reason == "device_limit":
+            message = "This device is not activated and the license has reached its device limit."
+        else:
+            message = _license_error_message(payload, "License validation failed.")
+        print(f"Error: {message}", file=sys.stderr)
+        sys.exit(2)
+
+    try:
+        _write_license_state(key, device_id)
+    except OSError:
+        pass
+    return key
 
 
 # ---------------------------------------------------------------------------
@@ -255,7 +370,7 @@ def fetch_page(url, timeout=15):
         req = Request(
             current_url,
             headers={
-                "User-Agent": f"page-profile/{__version__} (hermes-passiv.pages.dev)",
+                "User-Agent": f"page-profile/{__version__} (mahope.tools)",
                 "Accept": "text/html,application/xhtml+xml",
             },
             method="GET",
@@ -865,7 +980,7 @@ footer{{color:#64748b;font-size:.85rem;margin-top:2rem;border-top:1px solid #e2e
 <p>URL: <code>{esc(p['url'])}</code><br>Status: HTTP {p['status']} · Generated {esc(__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'))}</p>
 <table><tr><th>Check</th><th>Result</th><th>Detail</th></tr>{rows}</table>
 <h2>Improvement points</h2><ul>{pens}</ul>
-<footer>Generated with page-profile v{__version__} Pro · <a href="https://hermes-passiv.pages.dev/page-profile">hermes-passiv.pages.dev/page-profile</a></footer>
+<footer>Generated with page-profile v{__version__} Pro · <a href="https://mahope.tools/page-profile">mahope.tools/page-profile</a></footer>
 </body></html>"""
     path = out_path or "page-profile-report.html"
     with open(path, "w") as f:
@@ -874,18 +989,33 @@ footer{{color:#64748b;font-size:.85rem;margin-top:2rem;border-top:1px solid #e2e
 
 
 def activate(key):
-    key = key.strip()
-    if not validate_license_key(key):
-        print("Error: that license key is not valid. Check it and try again.")
-        sys.exit(2)
     try:
-        with open(LICENSE_FILE, "w") as f:
-            f.write(key)
-        os.chmod(LICENSE_FILE, 0o600)
-        print(f"Pro activated ✓  (stored in {LICENSE_FILE})")
-    except OSError as e:
-        print(f"Could not write license file: {e}")
+        key = normalize_license_key(key)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         sys.exit(2)
+
+    state = _read_license_state()
+    device_id = state.get("device_id") if state.get("license_key") == key else ""
+    if not isinstance(device_id, str) or not device_id or len(device_id) > 128:
+        device_id = uuid.uuid4().hex
+
+    try:
+        payload = _license_request("activate", key, device_id)
+    except LicenseError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    if payload.get("ok") is not True or payload.get("activated") is not True:
+        print(f"Error: {_license_error_message(payload, 'License activation failed.')}", file=sys.stderr)
+        sys.exit(2)
+
+    try:
+        _write_license_state(key, device_id)
+    except OSError as exc:
+        print(f"Could not write license file: {exc}", file=sys.stderr)
+        sys.exit(2)
+    print(f"Pro activated ✓  (stored in {LICENSE_FILE})")
 
 
 def main():
@@ -911,14 +1041,8 @@ def main():
                         help="Show how pages scored over previous runs (free)")
     parser.add_argument("--activate", metavar="KEY",
                         help="Activate a page-profile Pro license key")
-    parser.add_argument("--gen-key", metavar="SEED",
-                        help=argparse.SUPPRESS)  # seller-only helper
 
     args = parser.parse_args()
-
-    if args.gen_key:
-        print(make_license_key(args.gen_key))
-        return
 
     if args.activate:
         activate(args.activate)

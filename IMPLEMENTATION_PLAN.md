@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `domain-traffic-ledger-2026-09-25-r2`
+- `ITERATION_ID`: `page-profile-stripe-license-2026-09-25`
 - `STATE`: `FÆRDIG`
 - `ACTIVE_TASK`: `INGEN`
-- `NEXT_TASK`: `4E — Page Profile Pro skal acceptere Stripe-nøgler`
-- `TASK_ATTEMPTS`: `4A: 2/2`
-- `LAST_BRANCH`: `ceo/domain-traffic-ledger`
-- `PLAN_COMMIT`: `9569979`
-- `BASELINE`: `main@0243faa`
-- `RESULT`: Opgave 4A er færdig. Trafik og downloads er domæneopdelt, spoofede clientfelter og kendte bots/CI filtreres, salg tælles fra unikke fulfillment-posts, og al manglende/ugyldig trafik-, counter- eller salgsdata rapporteres som `unknown`, ikke 0. Stats kræver et server-side bearer-token og dashboard-tokenet gemmes ikke i browserlagring.
-- `GATE`: `GRØN — build/sitemap, SEO 307 sider/0 fund, Stripe 52/52, tracking 83/83, inline JS 296/0, weekly 15/15, domæne-specifik CI-build 83/83, frisk review uden fund, GitHub Actions 3/3 og uafhængig live-kontrol 3/3`
+- `NEXT_TASK`: `4F — Luk tre huller i licens-workeren`
+- `TASK_ATTEMPTS`: `4E: 1/2`
+- `LAST_BRANCH`: `ceo/page-profile-license`
+- `PLAN_COMMIT`: `PENDING_IMPLEMENTATION_COMMIT`
+- `BASELINE`: `main@cb725e9`
+- `RESULT`: Opgave 4E er færdig. Stripe-udstedte 32-hex-nøgler aktiveres og valideres online med produktet `page-profile-pro` og et stabilt, lokalt gemt device-id. Kun netværksfejl og 5xx kan bruge en tidligere positiv status i højst syv dage; 403/404/409, ugyldige svar og inaktiv licens fejler hårdt. Legacy-PPRO, salt og `--gen-key` er fjernet. Version 1.2.0 er publiceret som kanonisk script, download-kopi og sdist, og offline-claims er rettet.
+- `GATE`: `GRØN — Page Profile 11/11, sdist-build, build/sitemap 4/4, SEO 307/0, Stripe 52/52, inline JS 296/0, canonical/published/tar parity, live-validering 404 og frisk review med alle P1 rettet`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen.
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -172,7 +172,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Deploy-gate:** `python3 tools/check_live_sitemaps.py --commit <merge-sha>` for de tre Pages-domæner efter GitHub Actions er grøn. Den separate read-only driftkontrol er `python3 tools/check_live_sitemaps.py --all --commit <merge-sha> --bugbottle-source <disposable-checkout> --bugbottle-source-commit 07828a1d605383c58cf44416447e0497e91fdac3 --attempts 1`; kontrollen arkiverer og bygger den pinned commit i en midlertidig mappe og matcher derefter den autoritative BugBottle-kilde.
 
-### 4E. UFÆRDIG — Page Profile Pro skal acceptere Stripe-nøgler
+### 4E. FÆRDIG — Page Profile Pro skal acceptere Stripe-nøgler
 
 **Begrundelse:** Licens-audit 2026-09-25: `page-profile/page_profile.py:54-59` accepterer kun `PPRO-`+32 base32, men Stripe-leveringen udsteder 32 hex-tegn, så **enhver købt nøgle afvises**. Samtidig kan `--gen-key` (linje ~912-920) med det offentlige salt (linje ~37) lave gyldige nøgler, så Pro kan låses op gratis. Købslinket i CLI'en (linje ~79) peger på det forældede `hermes-passiv.pages.dev`.
 
@@ -183,12 +183,19 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Købslink: `https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04`.
 - Udgiv som 1.2.0 i `site/downloads/page-profile/` og opdatér versionsreferencer.
 
+**Implementeret denne iteration:**
+
+- `~/.page-profile-license` er en 0600 JSON-state med normaliseret 32-hex-nøgle, stabilt device-id og tidspunkt for seneste positive svar. Aktivering og validate bruger henholdsvis `/activate` og `/validate` med `product: page-profile-pro`.
+- Netværksfejl og HTTP 5xx kan bruge højst syv dages positive cache. HTTP 403/404/409, `valid: false`, formatfejl og malformed HTTP 200-svar bruger aldrig cachen. 11 offline tests dækker payload, hard/soft fejl, cache-grænse, legacy-fjernelse og public copy.
+- Kanonisk og publiceret script er byte-identiske; `page-profile-1.2.0.tar.gz` er bygget fra samme kilde og indeholder den kanoniske kode. EN/DA landingssider, README og dansk blogkilde fortæller nu korrekt om online licensstjek og syvdages outage-cache.
+- Frisk review fandt to P1-fejl: malformed 200-svar kunne bruge cache, og tarball-vejledningen pegede på bindestreg. Begge er rettet og dækket af de grønne gates. Den planlagte separate distributions-CI-forsvar er bevaret som opgave 6.
+
 **Acceptkriterier:**
 
 - Test uden netværk (mocket HTTP): gyldig hex-nøgle aktiveres, `PPRO-`-nøgler og `--gen-key` findes ikke længere, 503 giver Pro i højst 7 dage fra seneste validering, 403/404/409 giver korrekt besked.
 - Live read-only: `validate` med en tilfældig 32-hex-nøgle giver 404.
 
-**Gate:** `python3 -m pytest page-profile` (eller repoets eksisterende Page Profile-test) plus hele kvalitetsgaten.
+**Gate:** `python3 page-profile/test_page_profile.py` plus hele kvalitetsgaten.
 
 ### 4F. UFÆRDIG — Luk tre huller i licens-workeren
 

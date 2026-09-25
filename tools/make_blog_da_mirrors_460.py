@@ -284,8 +284,9 @@ PAGES = [
                 'alt-tekster og sikkerhedsheadere. Alt hvad der afgør om en side er '
                 'teknisk sund — uden at rendere den.</p>',
                 '<p>I Pro-versionen kommer compare (to URLs side om side), batch (hele '
-                'listefiler) og en HTML-rapport du kan vedhæfte en ticket — med offline '
-                'licensnøgler så intet afhænger af en server.</p>',
+                'listefiler) og en HTML-rapport du kan vedhæfte en ticket. Pro-licensen '
+                'aktiveres og revalideres mod mahope.tools; en senest bekræftet Pro-status '
+                'kan bruges i op til syv dage ved en midlertidig serverfejl.</p>',
             ]),
         ],
         ctas=[('/page-profile', 'Prøv i browseren'),
@@ -315,10 +316,11 @@ PAGES = [
              '(--json), scriptet afslutter med exit-koder, og fordi det er ren '
              'standardbiblioteks-Python kører det i enhver container med Python 3.8+ — '
              'inklusive GitHub Actions uden ekstra steps.'),
-            ('Hvad koster Pro-versionen?',
-             'Pro ($19/år) tilføjer compare, batch-kørsler og eksportérbar HTML-rapport '
-             'med offline licensnøgler. Historik-funktionen — scores gemt lokalt over '
-             'tid — er gratis for alle.'),
+             ('Hvad koster Pro-versionen?',
+              'Pro ($19/år) tilføjer compare, batch-kørsler og eksportérbar HTML-rapport. '
+              'Pro-licensen aktiveres og revalideres mod mahope.tools; en senest bekræftet '
+              'Pro-status kan bruges i op til syv dage ved en midlertidig serverfejl. '
+              'Historik-funktionen — scores gemt lokalt over tid — er gratis for alle.'),
         ],
     ),
     # --------------------------------------------- Kopiér tabel fra PDF til Excel ---

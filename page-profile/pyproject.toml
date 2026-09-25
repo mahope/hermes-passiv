@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "page-profile"
-version = "1.0.0"
+version = "1.2.0"
 description = "Zero-dependency web page profiler — HTTP status, meta tags, OG, JSON-LD, headings, alt text, security headers in one command"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -21,8 +21,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://hermes-passiv.pages.dev/page-profile"
-Source = "https://hermes-passiv.pages.dev/downloads/page-profile/page_profile.py"
+Homepage = "https://mahope.tools/page-profile"
+Source = "https://mahope.tools/downloads/page-profile/page_profile.py"
 
 [project.scripts]
 page-profile = "page_profile:main"
+
+[tool.setuptools]
+py-modules = ["page_profile", "cli"]

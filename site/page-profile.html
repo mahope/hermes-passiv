@@ -116,7 +116,7 @@
           "name": "What is the difference between Free and Pro?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Keys work offline — no account needed."
+            "text": "The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Pro activation and regular license checks contact mahope.tools; a successful check is cached for up to seven days during temporary service outages."
           }
         }
       ]
@@ -134,7 +134,7 @@
       HTTP status, meta tags, Open Graph, JSON-LD, headings, alt text, security headers — one command, no install.
     </p>
     <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-      <a href="/downloads/page-profile/page-profile-1.1.0.tar.gz" class="btn btn-primary">Download (tar.gz)</a>
+      <a href="/downloads/page-profile/page-profile-1.2.0.tar.gz" class="btn btn-primary">Download (tar.gz)</a>
       <a href="/downloads/page-profile/page_profile.py" class="btn btn-secondary">Single file</a>
       <a href="#quickstart" class="btn btn-secondary">Quick start →</a>
     </div>
@@ -146,7 +146,7 @@
       <h2>How it works</h2>
       <div class="cli-demo">
         <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://example.com</span></div>
-        <div><span class="output">page-profile v1.1.0  —  https://example.com</span></div>
+        <div><span class="output">page-profile v1.2.0  —  https://example.com</span></div>
         <div><span class="output"> status: HTTP 200</span></div>
         <div><span class="output">──────────────────────────────────────────────────────</span></div>
         <div><span class="output"> Title: Example Domain (14 chars)</span></div>
@@ -200,9 +200,9 @@
       </div>
       <p style="margin-top:1rem;">Or download the full package:</p>
       <div class="cli-demo">
-        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page-profile-1.1.0.tar.gz</span></div>
-        <div><span class="prompt">$</span> tar xzf page-profile-1.1.0.tar.gz</div>
-        <div><span class="prompt">$</span> cd page-profile-1.1.0</div>
+        <div><span class="prompt">$</span> curl -O <span style="color:#38bdf8;">/downloads/page-profile/page-profile-1.2.0.tar.gz</span></div>
+        <div><span class="prompt">$</span> tar xzf page-profile-1.2.0.tar.gz</div>
+        <div><span class="prompt">$</span> cd page_profile-1.2.0</div>
         <div><span class="prompt">$</span> python3 page_profile.py https://your-site.com</div>
       </div>
     </section>
@@ -248,7 +248,7 @@
             <li>Comparison mode — diff two URLs side by side</li>
             <li>Batch mode — profile multiple URLs, ranked by score</li>
             <li>Client-ready HTML report</li>
-            <li>Offline license — no account, no phoning home</li>
+            <li>Online activation and validation — no account required</li>
             <li>History tracking (free for everyone)</li>
           </ul>
           <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Buy Pro — $19/year →</a>
@@ -284,7 +284,7 @@
         <tr><td style="padding:0.45rem 0;border-bottom:1px solid var(--color-border);">Client-ready HTML report</td><td style="text-align:center;border-bottom:1px solid var(--color-border);">—</td><td style="text-align:center;border-bottom:1px solid var(--color-border);"></td></tr>
         <tr><td style="padding:0.45rem 0;">Price</td><td style="text-align:center;"><strong>$0 forever</strong></td><td style="text-align:center;color:#38bdf8;"><strong>$19/year</strong></td></tr>
       </table>
-      <p style="margin-top:0.75rem;font-size:0.9rem;color:#94a3b8;">Pro is a one-time decision per year: offline license key, no account, no phoning home. If you audit pages for clients, the HTML report and batch mode pay for themselves on the first job.</p>
+      <p style="margin-top:0.75rem;font-size:0.9rem;color:#94a3b8;">Pro is a one-time decision per year: activation and regular license checks contact mahope.tools, while the last successful Pro status remains available for up to seven days during temporary service outages. If you audit pages for clients, the HTML report and batch mode pay for themselves on the first job.</p>
     </section>
 
     <!-- Why use it -->
@@ -295,7 +295,7 @@
         <li><strong>5-second check</strong> — faster than opening DevTools or a web auditor. Great for quick QA before publishing a page.</li>
         <li><strong>CI-ready</strong> — JSON output works with jq, grep, or any pipeline. Gate deploys on a minimum score.</li>
         <li><strong>Universal</strong> — works on any website (WordPress, Shopify, Next.js, static HTML — anything with a URL).</li>
-        <li><strong>Offline-capable</strong> — the tool has no external dependencies beyond what comes with Python.</li>
+        <li><strong>Dependency-free</strong> — the profiling core uses only what comes with Python.</li>
       </ul>
     </section>
 
@@ -305,7 +305,7 @@
       <p>Running against hermes-passiv.pages.dev:</p>
       <div class="cli-demo">
         <div><span class="prompt">$</span> <span class="highlight">python3 page_profile.py https://hermes-passiv.pages.dev/</span></div>
-        <div><span class="output">page-profile v1.1.0  —  https://hermes-passiv.pages.dev/</span></div>
+        <div><span class="output">page-profile v1.2.0  —  https://hermes-passiv.pages.dev/</span></div>
         <div><span class="output"> status: HTTP 200</span></div>
         <div><span class="output">──────────────────────────────────────────────────────</span></div>
         <div><span class="pass"> Title: EU Compliance Guides for Small Web Agencies</span></div>
@@ -367,7 +367,7 @@
         </details>
         <details>
           <summary style="cursor:pointer;font-weight:600;padding:0.6rem 0;">What is the difference between Free and Pro?</summary>
-          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Keys work offline — no account needed.</p>
+          <p>The free version covers all checks, the terminal report with score and grade, and JSON output. Pro ($19/year) adds comparison mode between two URLs, batch mode and client-ready HTML reports. Pro activation and regular license checks contact mahope.tools; a successful check is cached for up to seven days during temporary service outages.</p>
         </details>
       </div>
     </div>
