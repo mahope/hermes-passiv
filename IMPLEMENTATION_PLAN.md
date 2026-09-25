@@ -3,7 +3,7 @@
 ## Status
 
 - `ITERATION_ID`: `desktop-node-runtime-2026-09-25`
-- `STATE`: `Opgave 12 FÆRDIG — Electron 44.0.0 → 44.4.5, og Node-versionen er erklæret ét sted (desktop/.nvmrc) i stedet for tre gange i workflowen, med en gate der beviser de to erklæringer er enige. Desktop-CI'en er post-merge-gaten.`
+- `STATE`: `Opgave 12 FÆRDIG og post-merge-gaten grøn på alle fire platforme (run 36188356033) — Electron 44.0.0 → 44.4.5, og Node-versionen er erklæret ét sted (desktop/.nvmrc) i stedet for tre gange i workflowen, med en gate der beviser de to erklæringer er enige.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `13 — lå Python-buildmiljøet og reparer site-icons`
 - `GATE` (opgave 12): `GRØN — npm ci rent fra den nye lockfil, npm audit --audit-level=high = 0 fund, fire nye macOS-artefakter (dmg+zip for x64 og arm64) bygget med electron 44.4.5 (bekreftet på den indlejrede Electron Framework-streng) — men USIGNEREDE, se fund 4. Sitegaten: python3 tools/quality_gate.py → GRØN, 26 steps, inkl. deploy-workflow + --self-test med de seks nye runtime-mutationer. dist/uændret (gitignored), intet site-indhold rørt.`
@@ -1143,6 +1143,20 @@ aldrig har fået den version de blev lovet?
 
 ## Deploylog
 
+- `CI-BEVIS` (opgave 12): `36188356033` (build-desktop, main) — `build-macos` x64 og
+  arm64, `build-linux` og `build-windows` **grønne** på Electron 44.4.5 med den Node
+  fra `.nvmrc`; `release` korrekt skipped (intet tag). `36188355972` (deploy-sites,
+  main) — `gate` grøn og alle tre domæner grønne deployet med det byte-identiske
+  `dist/`. Post-merge-gaten er dermed lukket på alle fire platforme, inklusive dem
+  der aldrig var bygget før.
+- 2026-09-25: `DEPLOY OK cc5164f` — kørsel `36188355972` kørte `gate` (26 steps) og
+  deployede cleancopy.tools, deskuptime.com og mahope.tools grønt. Intet site-indhold
+  er ændret: ingen `site/`-fil blev rørt, så de tre domæner får det samme indhold som
+  før merge.
+- 2026-09-25: `VERIFICÉR DEPLOY: intet site-indhold ændret cc5164f 2026-09-25` —
+  live `build-info.json` på de tre domæner skal bære `cc5164f`; indholdet skal være
+  uændret, fordi ingen `site/`-fil blev rørt. Brug `python3 tools/check_live_sitemaps.py
+  --commit cc5164f…` med fuld 40-tegns SHA.
 - 2026-09-25: **KORREKTION til noten ovenfor — `deploy-sites` KØR alligevel.** Min antagelse
   var, at kun `desktop/` var rørt, men `tools/test_deploy_workflow.py` og
   `.github/workflows/build-desktop.yml` står i deploy-workflowens path-filter (det
