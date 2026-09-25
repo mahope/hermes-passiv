@@ -5,7 +5,7 @@
 - `ITERATION_ID`: `conversion-stripe-contract-2026-09-25`
 - `STATE`: `I GANG`
 - `ACTIVE_TASK`: `4B`
-- `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter`
+- `NEXT_TASK`: `4B — Prioritér konvertering uden nye Stripe-produkter (del 2: `ranking_basis` i ugerapporten)`
 - `TASK_ATTEMPTS`: `4B: 1/2`
 - `LAST_BRANCH`: `ceo/stripe-cta-contract`
 - `PLAN_COMMIT`: `4ad9457`
@@ -257,7 +257,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Gate:** `node tests/tracking-worker.test.mjs && python3 tools/test_weekly_report.py` plus hele kvalitetsgaten.
 
-### 4B. UFÆRDIG — Prioritér konvertering uden nye Stripe-produkter
+### 4B. I GANG (del 1 gjort i `1bf981f`) — Prioritér konvertering uden nye Stripe-produkter
 
 **Begrundelse:** De fire centrale produktsider er stærke, men gamle Pro-tilbud uden købsmulighed og modstridende checkout-claims skader købsrejsen.
 
@@ -268,7 +268,18 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Opret `docs/stripe-kontrakt.md` fra missionens eksisterende offentlige Stripe-tabel og `tools/stripe_catalog.json` som maskinlæsbar allowlist; check-scriptet skal fejle ved drift mellem dem.
 - Inventér alle synlige Pro/premium-tilbud med side, produkt, pris og CTA.
 - Brug kun Payment Links og product keys fra missionen. Findes intet tilladt tilbud, skal den gamle købs-påstand fjernes eller flyttes til `❓ Til Mads`; opret ikke et nyt Stripe-produkt.
-- Fjern de forældede globale claims om manglende checkout.
+- Fjern de forældrede globale claims om manglende checkout.
+
+**Del 1 — implementeret og merged i `1bf981f`:**
+
+- `tools/stripe_catalog.json` er maskinlæsbar allowlist med alle 13 kontraktsprodukter (product_key, navn, kind, pris, antal maskiner, payment link). `docs/stripe-kontrakt.md` er den menneskelæselige modstykke med hele købstabellen, licens-API'et og hvad der ikke er tilladt.
+- `tools/check_stripe_ctas.py` fejler ved drift mellem katalog, kontraktdok, `site/_worker.js` (`STRIPE_PRODUCTS` + `STRIPE_LINKS`), ethvert `buy.stripe.com`/`donate.stripe.com`-link i source og shippede klienter, priser der ikke er dokumenteret pr. side, manglende eller dobbelte CTA'er, købssider der mangler i inventaret og alle forbudte claims. `--report` printer det fundne inventaret, `--self-test` beviser at fem driftformer fanges (5/5).
+- Inventaret dækker 15 købssider: Clean Copy EN/DA + webværktøj + aktiveringsguide, DeskUptime EN/DA + bloggen, Page Profile EN/DA, e-bogpakken, Report Kit på tre sider, EUComply Pro og donationen på `/support`.
+- **Falske tilbud fjernet:** `compliance-report.html` havde to opfundne trin ($29/report, $99/år, "Available when store launches") — erstattet af de to produkter der faktisk sælges, Report Kit $69 og EUComply Pro $79/år pr. website. `scan.html`/`scan-da.html` solgte en $29-rapport "når butikken åbner" — peger nu på Report Kit. `site-icons.html` (Pro $29, "Available soon") og `downloads.html` (EAA-scanner Pro $19/år) og `blog/eaa-compliance-scanner-desktop.html` ("Pro is coming") siger nu, at der ikke findes en Pro-licens og ingen pris. `site/index.html` + `site/da/index.html` er renset for "paid checkout is not wired up".
+- Alle 12 Payment Links + donationslinket gav HTTP 200 ved read-only GET 2026-09-25.
+- **Kontraktens rankingdel er ikke implementeret endnu** (se næste iteration): `tools/weekly_report.py` har ingen `ranking_basis`, så intet i konverteringsarbejdet er endnu rangeret på data.
+
+**Rangering på data er bevidst ikke påstået:** Ugerapport 2026-39 (den seneste) har tom trafik efter timeout, så ingen side kan rangplacere på besøgstal. Næste iteration tilføjer `ranking_basis: traffic|unknown` med de aftalte tærskler (30 pageviews i perioden, 5 pr. domæne) og den deterministiske fallback til de fire centrale produktsider.
 
 **Acceptkriterier:**
 
@@ -279,7 +290,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 - Hvis perioden mangler data, har færre end 30 totale verificerede pageviews eller færre end 5 i et domæne, der rangeres, står `ranking_basis: unknown` sammen med den dokumenterede fallback; ingen egen trafik indgår.
 - `python3 tools/check_stripe_ctas.py` er grøn og beviser, at `tools/stripe_catalog.json` matcher den tilladte kontrakt og alle brugte CTA'er.
 
-**Gate:** `python3 tools/check_stripe_ctas.py` plus hele kvalitetsgaten.
+**Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
 
 ### 4C. UFÆRDIG — Send support og købersvar til de nye support-adresser
 
@@ -538,9 +549,12 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 2. **Beslut om den lokale BugBottle-shadow:** live `bugbottle.dev` er dokumenteret som den separate `mahope/bugbottle`/Dokploy-kilde med 40 routes på commit `07828a1d605383c58cf44416447e0497e91fdac3`; dette repo har en ubrugt 7-routes shadow. Vælg om shadowen skal fjernes helt eller holdes som et lokalt kildesnapshot. Det er ikke længre en blocker for den nuværende deploy.
 3. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
 4. **Bekræft private paid-file-kilder:** hvilket privat repo eller hvilken godkendt buildkilde skal producere de filer, der forventes i Cloudflare KV? Ingen produktionsupload må køre automatisk fra dette repo uden separat godkendelse.
-5. **Udfør én lavendt Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
+5. **Beslut om to nye Stripe-produkter:** `site/site-icons.html` (Site Icons Pro: Apple touch-, PWA-, Windows- og OG-ikoner) og `site/downloads.html` + `blog/eaa-compliance-scanner-desktop.html` (EAA-scanner Pro: batch-scanning, CSV/JSON-eksport, ubegrænset crawl) har nu ingen pris og ingen købsknap, fordi kontrakten ikke indeholder produkter til dem. Opret kun dem, hvis du vil sælge dem; repoet gør det aldrig selv.
+6. **Udfør én lavendt Stripe-testkøb**, når de lokale mock-tests er grønne, hvis licensaktivering, kvittering og download skal verificeres mod rigtige Stripe/CF-tjenester. Brug kun et allerede oprettet produkt; opret ikke et nyt.
 
 ## Deploylog
+
+- 2026-09-25: `VERIFICÉR DEPLOY: kun tilladte Stripe-links, 15 dokumenterede købssider og ærlige Pro-claims 1bf981f 2026-09-25T17:25+02:00` — GitHub Actions-run `36153509552` kører. Verificér på live: `site/compliance-report.html` viser Report Kit $69 + EUComply Pro $79/år og ingen "store launches"; `site/scan.html` og `/scan-da` linker til Report Kit; `site/site-icons.html` og `site/downloads.html` har ingen Pro-pris; `site/index.html` og `/da/` har ingen "checkout ikke koblet på".
 
 - 2026-09-25T14:15:28Z: `DEPLOY OK 4ad9457` — GitHub Actions-run `36146060595` deployede cleancopy.tools, deskuptime.com og mahope.tools grønt; uafhængig `check_live_sitemaps.py --commit 4ad9457235887f05d2e7723cc184e8956a50444a` bekræftede live sitemap, robots, build-info og alle sider. Live `/activate/` viste den nye guide.
 - 2026-09-25: `DEPLOY OK ea4e6c3` — GitHub Actions-run `36142200546` byggede, deployede og live-verificerede cleancopy.tools, deskuptime.com og mahope.tools grønt. Uafhængig sitemap-kontrol bekræftede alle tre domæner; live 1.2.0-script, tarball, EN/DA-licenstekst og 404 på det gamle 1.1.0-arkiv blev verificeret. CI meldte kun kendte Node 20-/Ubuntu 26-advarsler.
