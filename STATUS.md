@@ -1,53 +1,58 @@
-# STATUS — 26. august 2026
+# STATUS — faktisk oversigt
 
-> PAUSET af Mads 26/8-2026.
-> Se RAPPORT-2026-08-26.md.
+> Dette er en **historisk og faktuel** oversigt, ikke en arbejdskø.
+> Den operative state — hvad der er i gang, og hvad der er næste opgave —
+> ligger i `IMPLEMENTATION_PLAN.md`. Denne fil opdateres, når der sker noget
+> der ændrer et *faktum* (et udgivet produkt, en live-adresse, et tal).
 
-## Iteration 499 — Distribution-styrkelse: GitHub repos & nyt micro-produkt
+**Sidst opdateret:** 25. september 2026
 
-**Budget:** 35/1000 DKK (uændret) · **Søgninger brugt: 0**
+## Hvad der er live
 
-### Færdigt denne iteration
+| Site | Rolle |
+|---|---|
+| `mahope.tools` | Værktøjer, e-bøger, licensserver, Stripe-levering |
+| `cleancopy.tools` | Clean Copy (udvidelser, Obsidian-plugin, CLI) |
+| `deskuptime.com` | DeskUptime (desktop, CLI, URL-værktøjer) |
+| `bugbottle.dev` | Fejlrapportering — separat kodebase (`mahope/bugbottle`) |
 
-1. **GitHub repo audit og oprydning.** 5 repos gennemgået:
-   - **compliance-site-check:** topics sat (var tomme — nu 11 taggerelevante tags), README stærk i forvejen
-   - **eucomply-scanner:** fik sin første release **v1.0.0** (manglede helt — ingen havde kunnet installere via `npx` uden `--sha`). README opdateret: fjernede dødt link til auditedwp pro-side, erstattet med egen gratis scanner + e-bog-bundle
-   - **deskuptime:** +3 topics (uptime-monitoring, desktop-app, ssl-monitoring, free)
-   - **clean-copy-cli:** 12 topics, 2 releases, README med badges — i god stand alene
+Udgivelse sker ved push til `main` gennem GitHub Actions
+(`.github/workflows/deploy-sites.yml`). Der er ingen manuel upload.
 
-2. **Nyt micro-produkt bygget: Cookie Consent Banner**
-   - `mahope/cookie-consent-banner` — standalone JS, 2.5 KB, zero dependencies
-   - GDPR-compliant: sætter cookie, laver aldrig netværkskald, ARIA-label, customiserbar via data-attributter
-   - README med live demo-link, hurtig start, customization table, relaterede guides
-   - v1.0.0 release oprettet, 9 topics sat
-   - Demo-side live på /cookie-consent-banner-demo (med aktiv banner der kan testes)
-   - JS hostet på /downloads/cookie-consent-banner.js — klar til at andre sites kan referere den
+## Betaling
 
-3. **Deploy og verificering**
-   - Cloudflare Pages deploy (356 filer, 3 nye)
-   - Verificeret: demo-side 200, JS download 200, sitemap indeholder ny URL
+Al salg går gennom **Stripe** (kontoen Mahope.dk). Lemon Squeezy blev afvist og
+er lukket; Gumroad er droppet. Betalingslinks og licens-API står i
+`docs/stripe-kontrakt.md`. Nøglerne ligger i Bitwarden og i den workerens
+hemmeligheder — aldrig i kode, i en side eller i et repo.
 
-### Ærlige tal pr. 26. aug (kilde: KV-nøgler)
+## Færdige produkter
 
-0 køb · 0 licenser · 0 tilmeldinger · 3 uniques nis2-epub · 0 stjerner på nye repos
+- **Clean Copy** — Chrome 1.5.3, Firefox 1.5.3, Obsidian 1.0.10. Pro: $19/år.
+- **DeskUptime** — desktop 1.3.3, CLI. Pro: $19 engang, 3 maskiner.
+- **EAA Compliance Scanner** — npm 1.2.0, Python 1.2.0. Desktop 1.3.3.
+- **Page Profile** — 1.2.0. Pro: $19/år.
+- **Site Icons** — 1.0.0.
+- **Betalte e-bøger og skabeloner** — leveres via Cloudflare KV efter køb.
 
-### Stadig blokeret (uændret)
+Versionsnumrene er single-sourced i hvert produkts egen fil og kontrolleres af
+`python3 tools/check_versions.py`.
 
-Lemon Squeezy API-nøgle · Chrome Web Store OAuth · npm/PyPI publish · Search Console · KDP-konto.
+## Ærlige tal
 
-### Hvorfor cookie-consent-banner?
+Der er dokumenteret **0 betalinger** i dette repo. Det er ikke et bevis for at
+salget er nul, kun at intet kan tælles herfra.
 
-Produktet løser et ægte problem (hver EU-side skal have et cookie-banner), er:
-- **Distribution via GitHub:** synligt for udviklere, findbart via topics (9 stk)
-- **Distribution via sitet:** demo + blog-link = organisk trafik
-- **Ingen driftsomkostning:** én JS-fil der hostes gratis på Cloudflare
-- **Ingen support:** drop-in løsning, virker med det samme
-- **Cross-sell:** README linker til compliance-site-check (GitHub Action) + gratis e-bøger
+## Vænt på Mads
 
-Det er den slags produkt der kan få stjerner og brugere uden at Mads rører noget.
+- Tilføj domænerne i Google Search Console.
+- Opret betalt indhold i KV, så et køb kan levere (7 filer mangler).
+- Beslut om historik-remediering for tidligere publiceret betalt indhold.
 
-### Næste iteration
+Den fulde liste står under `❓ Til Mads` i `IMPLEMENTATION_PLAN.md`.
 
-1. LS-nøglen landet → `node lemon-setup.js` → checkout live → første betaling
-2. Hvis stadig blokeret: skriv produkt-opslag til ProductHunt / GitHub trending / dev.to (gør klar til afsendelse, læg i STATUS.md)
-3. Overvej at bygge ét mere micro-produkt (fx color-contrast-validator CLI eller cookie-consent-scanner) — samme mønster: standalone, GitHub, cross-link til sitet
+## Historik
+
+Rapporterne fra de tidlige iterationer ligger i `RAPPORT-2026-08-26.md`. De
+beskriver en tid, hvor betalingen var Lemon Squeezy, og de er ikke opdateret —
+de er arkiv.

@@ -1,5 +1,9 @@
 # BUILD — Iteration 496: Clean Copy CLI v1.5.2 udgivet + Homebrew-tap opdateret
 
+> **Arkiv.** Denne fil beskriver hvad der blev bygget i en given
+> iteration. Den er ikke opdateret af nye iterationer, og den styrer intet.
+> Den operative state ligger i `IMPLEMENTATION_PLAN.md`.
+
 ## Problem
 CLI'en hang på v1.5.0, mens Chrome/Firefox-udvidelsen var ved v1.5.2 (kernen
 fik invisible-char-fixes i 1.5.1–1.5.2). Homebrew-tappen pegede på 1.5.0.
