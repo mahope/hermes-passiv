@@ -2,14 +2,14 @@
 
 ## Status
 
-- `ITERATION_ID`: `billing-portal-link-2026-09-25`
-- `STATE`: `4D FÆRDIG (merge aa8bf32, implementering f16305f)`
-- `ACTIVE_TASK`: `(ingen)`
-- `NEXT_TASK`: `5 — Stop offentlig eksponering af betalt indhold`
-- `TASK_ATTEMPTS`: `4D: 1/1`
-- `LAST_BRANCH`: `ceo/billing-portal-link`
-- `PLAN_COMMIT`: `aa8bf32`
-- `BASELINE`: `main@83aeffd`
+- `ITERATION_ID`: `private-content-gate-2026-09-25`
+- `STATE`: `5 I GANG (ceo/private-content-gate)`
+- `ACTIVE_TASK`: `5 — Stop offentlig eksponering af betalt indhold`
+- `NEXT_TASK`: `5 (fortsat)`
+- `TASK_ATTEMPTS`: `5: 1/2`
+- `LAST_BRANCH`: `ceo/private-content-gate`
+- `PLAN_COMMIT`: `cb58700`
+- `BASELINE`: `main@cb58700`
 - `RESULT`: Opgave 4D er færdig. De tre årlige produkter (`clean-copy-pro`, `eucomply-pro`, `page-profile-pro`) er markeret `subscription: true` i både `tools/stripe_catalog.json` og `STRIPE_PRODUCTS`, så leveringssvaret og leveringsmailen giver kunden Stripe-kundeportalen. `/thanks` renderer linket fra leveringssvaret, `/support` og `site/terms/` linker til den direkte, og terms-påstanden "there are no recurring charges" er fjernet i både siden og dens generative kilde. `tools/check_stripe_ctas.py` fanger nu tre nye driftformer: en portal-URL uden for allowlisten, en portal der mangler på portalsiderne og en abonnement-markering der ikke er i allowlisten (selftest 7/7 → 10/10).
 - `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69 (62 → 69), inline JS 297/0, check_stripe_ctas problems: 0, check_stripe_ctas --self-test 10/10`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
@@ -361,7 +361,7 @@ Opgave 1-4 er missionens eksplicitte åbne opgaver og kommer derfor før nyopdag
 
 **Commit:** `f16305f` — `Giv abonnenter selvbetjent opsigelse via Stripe-kundeportalen`.
 
-### 5. UFÆRDIG — Stop offentlig eksponering af betalt indhold
+### 5. I GANG — Stop offentlig eksponering af betalt indhold
 
 **Begrundelse:** Betalte kilder og artefakter ligger allerede i det offentlige repo, selv om missionen kræver private filer og kun offentlig open-core-kode.
 
