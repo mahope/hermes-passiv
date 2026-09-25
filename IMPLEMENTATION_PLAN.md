@@ -2,16 +2,16 @@
 
 ## Status
 
-- `ITERATION_ID`: `page-profile-distribution-2026-09-25`
-- `STATE`: `6 FÆRDIG (implementering ceo/page-profile-distribution)`
-- `ACTIVE_TASK`: `(ingen)`
-- `NEXT_TASK`: `7 — Gør Clean Copy-pluginklienterne Stripe-kompatible`
-- `TASK_ATTEMPTS`: `6: 1/1`
-- `LAST_BRANCH`: `ceo/page-profile-distribution`
+- `ITERATION_ID`: `clean-copy-license-clients-2026-09-25`
+- `STATE`: `Opgave 7 del 1 FÆRDIG (implementering ceo/clean-copy-license-clients); opgave 7 står I GANG med del 2`
+- `ACTIVE_TASK`: `7 (del 2 — se opgavetekst)`
+- `NEXT_TASK`: `7 del 2 — check-script, publicerede arkiver og webværktøjets cache`
+- `TASK_ATTEMPTS`: `7: 1/1`
+- `LAST_BRANCH`: `ceo/clean-copy-license-clients`
 - `PLAN_COMMIT`: `(denne commit)`
-- `BASELINE`: `main@279f4cf`
-- `RESULT`: Opgave 6 er færdig. Kernen i opgaven var allerede rettet af 4E (`ea4e6c3`), så denne iteration gjorde den anden halvdel: `site/downloads/page-profile/` er en manuelt kopieret udgave af `page-profile/`, og intet holdt de to sammen. `tools/check_page_profile_distribution.py` fejler nu ved nitten konkrete fejlformer — heraf en publiceret kopi eller et source-arkiv, der afviger fra den kanoniske kode, en version der ikke matcher mellem `pyproject.toml`, `__version__` og arkivnavnet, en landingsside der linker på en udgave eller en `cd`-mappe, der ikke findes, drift i `dist/`, en offline-påstand om licensen, og en side der mister online-aktiveringen eller syvdages cache. Selftesten er grøn 20/20 og læser det rigtige arkiv, så arkiv-fejlen er ikke håndlavet. Udgivelsesreglen står i gaten og er reproduceret her: `python3 -m build --sdist --outdir /tmp/pp page-profile` giver præcis de samme arkivmedlemmer som den publicerede fil. Gaten kører nu i deploy-CI sammen med `page-profile/test_page_profile.py`.
-- `GATE`: `GRØN — build 4/4, check_sitemaps 4/4 OK, SEO 308/0, Stripe-worker 69/69, inline JS 297/0, check_private_content 0 problemer, check_page_profile_distribution 0 problemer, --self-test 20/20, page-profile 11/11`
+- `BASELINE`: `main@b6a8a40`
+- `RESULT`: Opgave 7 del 1 er færdig og grønt testet. Fundet var værre end "mangler product": **alle shippede Clean Copy-klienter talte med det gamle `hermes-passiv.pages.dev`**, som ikke er et af de fire deployede Pages-projekter, og de sendte ingen `product`, så serveren ville afvise købte nøgler med 400. Der er nu én kanonisk fil `tools/clean_copy_license.js` (API-base, `clean-copy-pro`, 32-hex nøgleformat, syvdages positiv cache), som indlejres ordret i `obsidian-plugin/main.js` og kopieres byte-identisk til begge udvidelser som `license.js`. Chrome/Firefox `options.js` var desuden byte-identiske med hinanden uden at noget holde dem sammen, så Firefox-kopien er nu en kopiering af Chrome-kilden. Den gamle offline-grænse i udvidelsen var ubegrænset: en netværksfejl kaldte `showLicensed('', true)` for evigt; nu gælder samme syvdages regel som kontrakten. Vigtigst: den gamle test var theater. `test.js` genskrerev requesten inde i testen og hævede så sit eget mock ("14 assertions") og indlæste aldrig en klient. Den nye `tools/test_license_clients.js` indlæser de filer der faktisk ships — `obsidian-plugin/main.js` med en `obsidian`-stub og `extension-clean-copy/options.js` med `chrome`/`document`-stubs — og dækker 200, 403, 404, 400, 409, 500, 503, status 0 (kastet request), cache i 1 dag / præcis 7 dage / 8 dage, samt at en hård altid svarer over cachen: 57 checks, grønne. Live-sitet er uændret af denne iteration: de publicerede zips i `site/downloads/` har stadig den gamle kode, hvilket er del 2.
+- `GATE`: `GRØN — build OK, check_sitemaps OK, SEO OK, Stripe-worker 69/69, tracking-worker OK, inline JS OK, check_private_content 0, check_page_profile_distribution 0 + --self-test 20/20, page-profile 11/11, product-copy OK, stripe-cta 0, test.js → 57 checks, obsidian-plugin/test.js OK, extension-tools 13/13`
 - **Reelle, dokumenterede salg i repoet:** 0. Det er ikke bevis for 0 salg; kun dokumentation, der kan tælles.
 - **Blokerede opgaver:** ingen. Delhandlinger under opgave 5 står som `BLOCKED: kræver Mads-godkendelse` (git-historik, privat kilde, KV-inventering).
 - `dist/` må regenereres af `build_sites.py`, men må ikke redigeres manuelt eller committes.
@@ -29,6 +29,11 @@ Denne gate er den obligatoriske minimum før merge til `main`:
 ```bash
 python3 build_sites.py && python3 tools/check_sitemaps.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py && python3 tools/check_private_content.py && python3 tools/check_page_profile_distribution.py && python3 tools/check_page_profile_distribution.py --self-test && python3 page-profile/test_page_profile.py
 ```
+
+Produktgaten for de shippede licensklienter (tilføjet 2026-09-25 i opgave 7 del 1) er
+`node tools/test_license_clients.js`, og `node test.js` indlæser den. Den indlæser de
+filer der faktisk ships og dækker 200/403/404/400/409/500/503, status 0 og
+syvdagescachen.
 
 `check_private_content.py` blev tilføjet 2026-09-25 i opgave 5, fordi et betalt
 leveringsfil i `dist/` er en reel læk, ikke en SEO-fejl. Den afhænger af
@@ -494,7 +499,7 @@ skulle have været der med 4E. Den publicerede kopi, arkivet og dist er alle tre
 allerede korrekte — de var bare ubevogtede.
 
 
-### 7. UFÆRDIG — Gør Clean Copy-pluginklienterne Stripe-kompatible
+### 7. I GANG (del 1 færdig) — Gør Clean Copy-pluginklienterne Stripe-kompatible
 
 **Begrundelse:** Root- og Obsidian-plugin sender ikke `product`, selv om workeren afviser payloaden.
 
@@ -513,7 +518,24 @@ allerede korrekte — de var bare ubevogtede.
 - `tools/check_license_clients.py` dækker alle fundne callers og offentlige dist-kopier.
 - Hele kvalitetsgaten er grøn.
 
-**Gate:** `node obsidian-plugin/test.js && node test.js && node extension-clean-copy/tools/test_clean_copy.js && python3 tools/check_license_clients.py` plus hele kvalitetsgaten.
+**Gate:** `node tools/test_license_clients.js && node obsidian-plugin/test.js && node test.js && node extension-clean-copy/tools/test_clean_copy.js && python3 tools/check_license_clients.py` plus hele kvalitetsgaten.
+
+**Del 1 — implementeret i `ceo/clean-copy-license-clients`:**
+
+- `tools/clean_copy_license.js` er den kanoniske klientregel: `API_BASE = https://mahope.tools/api/license`, `PRODUCT = clean-copy-pro`, 32-hex nøgleformat og `decide(...)`, der svarer således: 200 med `activated`/`valid` er Pro; 503/5xx/status 0 giver Pro fra cache i højst 7 dage (præcis 7 dage er stadig Pro, 7 dage + 1 ms er ikke); 403, 404, 400, 409 og `valid: false` er aldrig Pro og overskriver altid en cache.
+- Det gamle `hermes-passiv.pages.dev`-endepunkt er fjernet fra alle Clean Copy-klienter. Live-tjek 2026-09-25: den gamle host svarer stadig 200/405, men den er ikke et af de fire deployede Pages-projekter, og kontrakten peger på `mahope.tools`.
+- Klienterne sender nu `product` i både activate og validate: `obsidian-plugin/main.js` (indlejret modul), `extension-clean-copy/options.js` og den byte-identiske Firefox-kopi.
+- Udevidelsens offline-adfærd var ubegrænset (`showLicensed('', true)` ved ethvert netværkskast). Nu gemmes `proCheckedAt`, og samme syvdagesregel gælder; en 503 çldre end vinduet fjerner nøglen og siger det.
+- `obsidian-plugin/main.js` får ny `licenseExchange` (et kastet request bliver status 0) og `applyLicenseDecision`, så pluginen bruger præcis samme regel som webværktøjet.
+- `tools/test_license_clients.js` (57 checks) indlæser de shippede filer med `obsidian`-, `chrome`- og `document`-stubs og dækker success, 403, 404, 400, 409, 500, 503, status 0, cache i 1 dag / præcis 7 dage / 8 dage, at en hård svar altid sår cache, at en dårlig nøgleformat aldrig rammer netværket, og at de to udvidelsers `options.js`/`license.js` er byte-identiske med hinanden og med den kanoniske fil.
+- Den gamle `test.js`-licenstest var theater: den genskrev requesten i testen og hævede sit eget mock. Den er erstattet af et kald til den rigtige suite.
+
+**Del 2 — næste iteration (opgaven er derfor `I GANG`, ikke `FÆRDIG`):**
+
+1. `tools/check_license_clients.py` med `--self-test`: skal finde alle callers af `/api/license` i source (ikke dist/node_modules) og fejle ved manglende `product`, gammel API-base, manglende syvdagesregel, et inline modul der ikke er byte-identisk med `tools/clean_copy_license.js`, og en Firefox-kopi der er divergeret. `site/_worker.js` er serveren og undtages dokumenteret; `desktop/main.js` er EAA-scannerens klient og har ingen `product` — EAA Pro findes ikke i kontrakten (se `❓ Til Mads` 5), så den kræver en beslutning, ikke en blind rettelse.
+2. Publicerede arkiver: `site/downloads/clean-copy-v1.5.2.zip`, `clean-copy-firefox-v1.5.2.zip` og `clean-copy-obsidian-v1.0.9.zip` indeholder stadig den gamle kode med det døde endepunkt og uden `product`. De skal pakkes reproducerbart fra `extension-clean-copy/`, `extension-clean-copy-firefox/` og `obsidian-plugin/` med nye patch-udgaver, og alle links på `site/clean-copy.html`, `site/downloads.html` og `site/free-downloads.html` (samt evt. DA-sider) skal følge med. Gaten skal kræve at arkiverne er byte-identiske med en regeneration, ligesom `check_page_profile_distribution.py` gør for Page Profile.
+3. `site/clean-copy-tool.html` skal have samme syvdagesregel: den kalder `clearPro()` ved ethvert ikke-200-svar, så en 503 på licensserveren sletter Pro for en kunde der har betalt.
+4. Rådderne `main.js` + `core.js` + `test.js` er en død kopi af Obsidian-pluginen: `core.js` er byte-identisk med `obsidian-plugin/core.js`, mens `main.js` er en ældre variant med `fetch` i stedet for `requestUrl`, gammel API-base og ingen cache. Den ligger i intet publiceret arkiv og skal enten fjernes eller gøres til den shippede fil, så der ikke er to kilder der kan komme i drift.
 
 ### 8. UFÆRDIG — Opgrader electron-builder og fjern advisory-fund
 
@@ -700,6 +722,7 @@ allerede korrekte — de var bare ubevogtede.
 
 ## Commitlog
 
+- Clean Copy-licensklienter Stripe-kompatible: `ceo/clean-copy-license-clients` — `Gør Clean Copy-licensklienterne Stripe-kompatible` (7 del 1).
 - Page Profile-distributionen bevogtet: `ceo/page-profile-distribution` — `Hold den publicerede Page Profile-kopi på linjen` (6).
 
 - Betalt indhold ude af det offentlige repo: `ceo/private-content-gate` — `Hold betalt indhold ude af det offentlige repo` (5).

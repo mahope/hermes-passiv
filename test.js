@@ -28,23 +28,10 @@ assert.strictEqual(Core.batchConvert(['<p>abc 123</p>'], 'markdown', rr)[0].cont
 const batch = Core.batchConvert([null, '<p>ok</p>'], 'markdown', []);
 assert.deepStrictEqual(batch.map(b => b.ok), [true, true]);
 
-// ── main.js: settings merge + license payload shape (mocked fetch) ──
-// Simulate activateLicense against a fake API to lock the request contract.
-(async () => {
-  let captured;
-  global.fetch = async (url, opts) => {
-    captured = { url, body: JSON.parse(opts.body) };
-    return { ok: true, status: 200, json: async () => ({ ok: true, activated: true, plan: 'pro-yearly', expires_at: '2027-08-24T00:00:00Z', devices_in_use: 1 }) };
-  };
-  // minimal stub of plugin surface
-  const settings = { licenseKey: 'A'.repeat(32).toLowerCase(), deviceId: 'd'.repeat(16), proActive: false };
-  const key = settings.licenseKey.toLowerCase().trim();
-  assert.ok(/^[a-f0-9]{32}$/.test(key));
-  await fetch('https://hermes-passiv.pages.dev/api/license/activate', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ license_key: key, device_id: settings.deviceId }),
-  });
-  assert.strictEqual(captured.url.endsWith('/activate'), true);
-  assert.strictEqual(captured.body.device_id.length, 16);
-  console.log('All Clean Copy Obsidian tests passed (' + 14 + ' assertions).');
-})().catch(e => { console.error(e); process.exit(1); });
+// ── license clients: the real suite ──────────────────────────────
+// The block below used to re-implement the request inside the test and assert
+// on its own mock, so it could never fail when a shipped client broke. It now
+// loads obsidian-plugin/main.js and extension-clean-copy/options.js — the files
+// that actually ship — and covers 200, 403, 409, 503 and the seven-day cache.
+console.log('Clean Copy core tests passed.');
+require('./tools/test_license_clients.js');
