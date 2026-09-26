@@ -3,16 +3,17 @@
 ## Status
 
 - `ITERATION_ID`: `koeb-uden-levering-2026-09-26`
-- `STATE`: `Opgave 22 FÆRDIG — researchiterationen fandt missionens første prioritet ulukket i sitet: syv downloadprodukter har \`kv_verified: false\`, så ingen af deres 30 leveringsfiler findes i KV, og \`/api/download\` svarer 503. To af dem blev alligevel solgt fra fire sider. Siterne tog imod pengene og lovede en fil de ikke kunne levere. Nu sælges intet downloadprodukt før flaget står på true, og en ny check i \`check_stripe_ctas.py\` gater begge retninger — så den heller ikke kan komme tilbage ved en fejl. Fund: kun 2 af 7 produkter havde overhovedet en købsknap, så hullet var mindre end rapporten antydede; men 190 blogfiler hævdede stadig \`$29\` for den afskaffede PDF-bundle, deraf 94 EN + 96 DA fra én generator; JSON-LD på books-siden erklærede \`InStock\` for et produkt der ikke kan leveres; og selftestens domænescenarie pegede på \`site/scan.html\`, som forlod inventaret — en stum kontrol, der ville have set grøn ud. Licensprodukterne er derimod OK: EUComply Pro aktiverer online og låser PDF'en.`
+- `STATE`: `Opgave 22 FÆRDIG — researchiterationen fandt missionens første prioritet ulukket i sitet: syv downloadprodukter har \`kv_verified: false\`, så ingen af deres 30 leveringsfiler findes i KV, og \`/api/download\` svarer 503. To af dem blev alligevel solgt fra fire sider. Siterne tog imod pengene og lovede en fil de ikke kunne levere. Nu sælges intet downloadprodukt før flaget står på true, og en ny check i \`check_stripe_ctas.py\` gater begge retninger — så den heller ikke kan komme tilbage ved en fejl. Fund: kun 2 af 7 produkter havde overhovedet en købsknap, så hullet var mindre end rapporten antydede; men 190 kildefiler hævdede stadig \`$29\` for den afskaffede PDF-bundle fra én generator, hvoraf 49 EN-sider var publiceret (bygget stripper DA-blokkene); JSON-LD på books-siden erklærede \`InStock\` for et produkt der ikke kan leveres; og selftestens domænescenarie pegede på \`site/scan.html\`, som forlod inventaret — en stum kontrol, der ville have set grøn ud. Licensprodukterne er derimod OK: EUComply Pro aktiverer online og låser PDF'en.`
 - `STATE` (før): `Opgave 21 FÆRDIG — opgavens forudsætning var forkert: de fire Clean Copy-arkiver har haft en indholdsgate siden opgave 7 del 2 (gatestep 11 beviser byte-identisk regeneration, kilde-identiske medlemmer, version.txt og ingen død vært), og --check var grøn for alle tre. Det rigtige hul lå i check_versions.py, som læste filnavnets version for de tre Clean Copy-zip OG desktop-kildearkivet, men ikke deres egen version indeni — og alle fire bærer den. Beviset for at hullet var ældre end opgaven troede, lå i selve fixtureen: de fire arkiver bar "manifest.json": "{}". Nu erklærer alle fire produkter inner=(...), 25 → 31 mutationer, 1 → 2 negative kontroller. Fund: den nye check diagnosticerer hvad byte-sammenligning kun kan sige "afviger fra"; fixtureen måtte ikke blive stående; den anden negativ kontrol er den der beskytter de fire nye linjer mod at gøre publicerede arkiver røde.`
 - `STATE` (før): `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `NEXT_TASK`: `23 — ❓ Til Mads punkt 9: upload de 30 filer til KV og sæt kv_verified, så de syv produkter kan sælges igen (gaten kræver købssiden med)`
-- `PLAN_COMMIT`: `077a67b (merge af ceo/clean-copy-arkiv-gate)`
+- `PLAN_COMMIT`: `aae4a72 (merge af ceo/levering-uden-fil)`
 - `BASELINE`: `main@da67823`
 - `LAST_BRANCH`: `ceo/levering-uden-fil`
 - `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1.`
+- `DEPLOY` (opgave 22, lukket): `DEPLOY OK aae4a72 26/9` — kørsel `36204568679`: `gate` grøn (38 steps) + tre grønne deploys (mahope.tools, cleancopy.tools, deskuptime.com). Live-indhold verificeret, ikke HTTP 200: `build-info.json` bærer merge-SHA'en; `/books/compliance-bundle` har **0** fund af `InStock`, af de to betalingslinks og af `$29`, og viser den nye tekst (*"All six e-books are free"*, *"We do not sell a combined PDF of these guides"*); `/compliance-report` har 0 fund af Report Kit og 1 af EUComply Pro-linket, så licenssalget er urørt; `/scan` og `/scan-da` har 0 fund af begge links; `/blog/nis2-gap-assessment-guide` viser den nye korsel-linje.
 - `GATE` (opgave 22): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_stripe_ctas: 0 problems, 13 produkter, 11 dokumenterede købssider (fra 15). check_stripe_ctas --self-test: 12/12 fejlformer (fra 10) + positiv kontrol grøn + ny guard mod stumme scenarier. Bevis på de rigtige filer: porten fandt 4 sider med et betalingslink til et produkt uden filer, FØR nogen blev rettet. test_weekly_report: 28 tests grønne. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (opgave 21): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_versions --self-test: OK (31 mutationer fra 25, 2 negative kontroller fra 1, positiv kontrol grøn, rigtige filer grønne). Bevis på de rigtige filer: Obsidian-arkivet muteret til manifest 1.0.9 under 1.0.10-navn → check_versions melder "kunden henter gammel kode under et nyt filnavn", distribution-gaten melder blot "afviger fra en regeneration". Stripe-worker uændret, dist/uændret (gitignored).`
 - `DEPLOY` (opgave 21, lukket): `DEPLOY OK 077a67b 26/9` — kørsel `36202790956` (den kørsel udløses af selve kode-committen `f58386d`): `gate` grøn (38 steps, `check_versions --self-test` 31 mutationer + 2 negative kontroller) + tre grønne deploys (cleancopy.tools, deskuptime.com, mahope.tools). Kode-committen rørte kun `tools/check_versions.py`, så domænerne er uændrede — bekræftet på indhold: `site-icons-1.0.0.tar.gz` er byte-uændret (sha256 `cbafbd98…`) og `clean-copy-obsidian-v1.0.10.zip` (12879 bytes) er byte-identisk med repoet. De tre efterfølgende merges (plan + `AGENTS.md`) ligger **uden for workflowens path-filter**, så de deployer ikke med vilje — intet i `site/` er rørt siden `36202790956`.`
@@ -1453,12 +1454,14 @@ kontrakten ("Mads må ikke røre det") og den danske forbrugerlov.
   `mahope.tools` og låser PDF-download i `verifyAndDownload()`. Clean Copy Pro,
   DeskUptime Pro, Transmute Desktop og Page Profile Pro har hver deres
   udgivne klient med syvdages cache. De virker, og de sælges videre.
-- **190 blogfiler hævdede stadig en pris på den afskaffede vare.** 94 EN +
-  96 DA-krossellier skrev *"combined PDF + all EPUBs, $29"* / *"samlet PDF +
-  alle EPUB'er, $29"*, alle fra `tools/iter498_books_cta.py`. At fjerne
-  købsknappen alene ville have efterladt 190 sider, der lovede et køb der ikke
-  længere fandtes. Generatoren er rettet med, så en regenerering ikke
-  genindfører den.
+- **190 kildefiler hævdede stadig en pris på den afskaffede vare — 49 af dem
+  var live.** 94 EN + 96 DA-krossellier skrev *"combined PDF + all EPUBs, $29"*
+  / *"samlet PDF + alle EPUB'er, $29"*, alle fra `tools/iter498_books_cta.py`.
+  **Korrigeret efter live-verificering:** bygget beholder korsel-blokken på kun
+  49 af de 94 EN-sider og stripper alle 96 DA-blokke, så den gamle pris stod
+  live på 49 sider, ikke 190. Kildelinjerne var alligevel ikke kosmetik: en
+  regenerering af bloggen ville have bragt dem tilbage, og de er rettet i
+  samme commit som de publicerede, så de to ikke kan glide fra hinanden.
 - **JSON-LD erklærede et udsolgt produkt som `InStock`.**
   `books/compliance-bundle.html` havde `@type: Product` med
   `offers.availability: https://schema.org/InStock` og købslinket i
@@ -1477,7 +1480,8 @@ kontrakten ("Mads må ikke røre det") og den danske forbrugerlov.
 
 - Fjern Report Kit-CTA'en fra `compliance-report.html`, `scan.html` og
   `scan-da.html`, og $29-bundlen fra `books/compliance-bundle.html` +
-  `books/index.html` + de seks øvrige bogsider + 190 blogfiler.
+  `books/index.html` + de seks øvrige bogsider + 190 blogfiler i kilden (49 af
+  dem publiceres).
 - Omskriv books-siden til det den faktisk er: seks gratis EPUB'er. FAQ'en,
   benefits, titel, description og JSON-LD følger med.
 - Ny `check_deliverable` i `tools/check_stripe_ctas.py`: et `download`-produkt
@@ -1501,7 +1505,8 @@ kontrakten ("Mads må ikke røre det") og den danske forbrugerlov.
 - Et domænescenarie der ikke muterer nogen købsside giver exit 1. **Bevis ved
   mutation af selftestens egen betingelse: exit 1 med navngiven grund.**
 - `rg '\$29' site/` finder kun én forekomst, og den er om et tredjepartsprodukt
-  i en NIS2-artikel. **Oprevet.**
+  i en NIS2-artikel. **Oprevet.** `rg 'combined PDF|samlet PDF' dist/` er 0
+  filer, og live `/blog/nis2-gap-assessment-guide` viser den nye linje.
 - Live `books/compliance-bundle` har ingen `InStock` og ingen købslink.
 - Hele kvalitetsgaten er grøn. **Oprevet: 38 steps.**
 
@@ -1557,6 +1562,23 @@ kontrakten ("Mads må ikke røre det") og den danske forbrugerlov.
 
 
 ## Deploylog
+
+- 2026-09-26: `DEPLOY OK aae4a72` — lukker `VERIFICÉR DEPLOY` for opgave 22. Kørsel
+  `36204568679` kørte `gate` grønt i 38 steps og deployede de tre Pages-domæner
+  grønt. Indholdsverificeret, ikke HTTP-status:
+
+  | Side | Før | Efter |
+  |---|---|---|
+  | `/books/compliance-bundle` | `Product`+`InStock`+købslink, `$29` | 0 fund af alle tre; *"All six e-books are free"* |
+  | `/compliance-report` | Report Kit $69 + EUComply Pro $79 | 0 Report Kit, 1 Pro-link |
+  | `/scan`, `/scan-da` | Report Kit-link | 0 fund |
+  | 49 publicerede blogkorseller | *"combined PDF + all EPUBs, $29"* | *"all six listed together, each a free EPUB"* |
+
+  `build-info.json` bærer `aae4a72e642926f857955b45e4978e132dd7be90`.
+  **Én fund undervejs, som rettede min egen plan:** de 190 kildelinjer var ikke
+  190 publicerede. Bygget beholder korsel-blokken på 49 af de 94 EN-sider og
+  stripper alle 96 DA-blokke, så den gamle pris stod live på 49 sider. Det er
+  skrevet op i opgavens researchfund, ikke kun her.
 
 - 2026-09-26: `DEPLOY OK 956f19f` — lukker `VERIFICÉR DEPLOY` for opgave 19. Kørsel
   `36201588862`: `gate` grøn (36 steps) + tre grønne deploys. Committen rørte kun
