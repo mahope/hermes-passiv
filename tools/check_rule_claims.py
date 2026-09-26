@@ -28,6 +28,7 @@ på hvert løfte, der ikke matcher.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import re
 import shutil
 import sys
@@ -50,6 +51,22 @@ RE_ELSE_IF = re.compile(r"\belse\s+if\s*\(")
 RE_PHP_FREE_ID = re.compile(
     r"""add\(\s*'([A-Z_0-9]+)'|'rule_id'\s*=>\s*'([A-Z_0-9]+)'""")
 
+# Desktop-appen og npm-CLI'en skriver deres fund med nøglen `rule_id` i stedet
+# for `id`, så `RE_FREE_ID` ville måle 11 i stedet for 22 i dem. Derfor måles
+# alle tre JS-former.
+RE_JS_ID = re.compile(
+    r"""add\('([A-Z_0-9]+)'|findings\.push\(\{\s*id:'([A-Z_0-9]+)'"""
+    r"""|rule_id\s*:\s*'([A-Z_0-9]+)'""")
+
+# Python bruger dobbelte anførselstegn og skriver desuden regel-id'et på den
+# næste linje end kaldet. Derfor måles denne motor på hele filen.
+RE_PY_ID = re.compile(
+    r"""add\(\s*['"]([A-Z_0-9]+)['"]"""
+    r"""|['"]?rule_id['"]?\s*(?:=>|:)\s*['"]([A-Z_0-9]+)['"]"""
+    r"""|Finding\(\s*['"]([A-Z_0-9]+)['"]""",
+    re.DOTALL,
+)
+
 # Motoren i det zip, kunden henter. Ikke `scanner/wp-plugin/`: kilden er
 # versioneret i dette repo, men **den publicerede fil er det, løftet gælder** —
 # og den er ikke den samme (opgave 85 målte 16 i zip'en mod 22 i kilden).
@@ -57,11 +74,18 @@ PLUGIN_ENGINE_IN_ZIP = "eaa-compliance-scanner/engine.php"
 
 # Et løfte er et tal umiddelbart før en af disse. Kun disse former gater:
 # opgaven er at holde *regel*-tal sande, ikke at tælle alle tal på en side.
+#
+# `automated (WCAG N.N AA )?rules` dækker *også* "16 WCAG 2.1 AA rules". Den
+# lange form lå uden om porten indtil opgave 86, fordi den gav 34 løfter porten
+# ikke kunne dømme. Årsagen var ikke de 34, men at porten havde **én** motor
+# (`scan.html`) som svar på alle spørgsmål. Med produkt→motor-kortet nedenfor er
+# de 34 dømmelige, så den lange form er sat i igen.
 RE_CLAIM = re.compile(
     r"(?P<n>\d+)\s+"
     r"(?:"
     r"automatiske\s+regler"           # 16 automatiske regler
     r"|automated\s+(?:WCAG\s+[\d.]+\s+AA\s+)?rules"   # 16 automated rules
+    r"|WCAG\s+[\d.]+\s+AA\s+rules"     # 16 WCAG 2.1 AA rules
     r"|automatiske\s+tjek"             # 11 automatiske tjek
     r"|automated\s+checks"             # 11 automated checks
     r"|automated\s+accessibility\s+rules"
@@ -95,6 +119,10 @@ class Layout:
     site: Path
 
     @property
+    def repo(self) -> Path:
+        return self.site.parent
+
+    @property
     def worker(self) -> Path:
         return self.site / "_worker.js"
 
@@ -119,6 +147,186 @@ class Layout:
 
     def rel(self, path: Path) -> str:
         return str(path.relative_to(self.site.parent))
+
+
+# --- Motorerne -------------------------------------------------------------
+#
+# Der er **fire** motorer i dette repo, og de er ikke ens. Opgave 86 målte dem:
+#
+#   web      site/scan.html + scan-da + compliance-report   15
+#   plugin   site/eaa-compliance-scanner.zip (den publicerede) 16
+#   desktop  desktop/scanner-core.js                         22
+#   cli      scanner/npm/eaa-scanner/index.js                22
+#            scanner/packaging/eaa_scanner/core.py           22
+#
+# `plugin` er **seks regler bag de øvrige**, fordi zip'en er en ældre build af
+# den samme motor. De fire bygger der kører 22 er det samme regelsæt — ikke
+# tilfældigt, men fordi de er samme motor. Det er derfor `engine_disagreements`
+# tjekker det: hvis de fire divergerer, er der en reel fejl, ikke en ny regel.
+#
+# Et løfte skal måles mod den motor **den side sælger**. Det er derfor
+# `PRODUCT_ENGINE` findes: et kort fra produkt til motor. Uden det svarede
+# porten "15" på alt, og de 34 løfter i den lange `WCAG N.N AA rules`-form kunne
+# ikke dømmes — de fleste af dem handler om en motor porten aldrig spurgte.
+
+@dataclass(frozen=True)
+class Engine:
+    """Én motor, målt i den kode der faktisk kører."""
+
+    key: str
+    label: str
+    ids: tuple[str, ...]
+    source: str
+
+    @property
+    def n(self) -> int:
+        return len(self.ids)
+
+
+def _missing(path: Path) -> SystemExit:
+    return SystemExit(
+        f"check_rule_claims: motoren {path} mangler — et løfte på den side der "
+        f"sælger den kan ikke måles, og det er ikke det samme som 0")
+
+
+def js_engine_ids(path: Path) -> tuple[str, ...]:
+    """Regel-id'er i en JS-motor. Ét kald pr. linje, som de står.
+
+    Samme form som `free_rule_ids`, plus `rule_id: 'ID'`: desktop-appen og
+    npm-CLI'en skriver deres fund som `findings.push({ rule_id: 'ID' })` og ikke
+    som `findings.push({ id: 'ID' })`. Den forskel er præcis den fejl opgave 83
+    lavede, bare i en anden retning — så den måles, ikke antages.
+    """
+    if not path.is_file():
+        raise _missing(path)
+    seen: list[str] = []
+    for line in _read(path).splitlines():
+        if RE_ELSE_IF.search(line):
+            continue
+        for m in RE_JS_ID.finditer(line):
+            rid = m.group(1) or m.group(2) or m.group(3)
+            if rid not in seen:
+                seen.append(rid)
+    return tuple(seen)
+
+
+def py_engine_ids(path: Path) -> tuple[str, ...]:
+    """Regel-id'er i en Python-motor — målt på hele filen, ikke linje for linje.
+
+    Python bryder et kald over flere linjer:
+
+        findings.append(Finding(
+            "TABLE_HEADER", "warning", …))
+
+    En linje-vis måling så derfor 17 i stedet for 22, fordi de fem lange kalde
+    skriver id'en på næste linje. Det er samme fejlklasse som opgave 83 og 85,
+    bare fordi sproget bryder linjer. Derfor måles Python helt.
+    """
+    if not path.is_file():
+        raise _missing(path)
+    seen: list[str] = []
+    for m in RE_PY_ID.finditer(_read(path)):
+        rid = m.group(1) or m.group(2) or m.group(3)
+        if rid not in seen:
+            seen.append(rid)
+    return tuple(seen)
+
+
+# De fire bygger der skal være ens. Rækkefølgen er den rækkefølge `--list`
+# printer dem i, og den første er den målte resten sammenlignes mod.
+CLONE_GROUP = ("desktop", "cli-npm", "cli-pip", "plugin-source")
+
+
+def engines(lay: Layout) -> dict[str, Engine]:
+    """Alle motorerne, målt i den kode der kører."""
+    zip_ids = php_rule_ids(lay.plugin_zip)
+    return {
+        "web": Engine("web", "webscanneren i browseren",
+                      free_rule_ids(lay.primary), "site/scan.html"),
+        "plugin": Engine("plugin", "WordPress-pluginet i det publicerede zip",
+                         zip_ids, f"site/eaa-compliance-scanner.zip → "
+                                  f"{PLUGIN_ENGINE_IN_ZIP}"),
+        "desktop": Engine("desktop", "desktop-appen (Electron)",
+                          js_engine_ids(lay.repo / "desktop" / "scanner-core.js"),
+                          "desktop/scanner-core.js"),
+        "cli-npm": Engine("cli-npm", "CLI'en på npm",
+                          js_engine_ids(lay.repo / "scanner" / "npm"
+                                        / "eaa-scanner" / "index.js"),
+                          "scanner/npm/eaa-scanner/index.js"),
+        # Ikke `scanner/scanner_core.py`: det er en efterlader på 16 regler.
+        # Hjulene bygges af `scanner/packaging/eaa_scanner/core.py` — målt på
+        # den fil, ellers ville porten robre en motor ingen downloader.
+        "cli-pip": Engine("cli-pip", "CLI'en på pip",
+                          py_engine_ids(lay.repo / "scanner" / "packaging"
+                                        / "eaa_scanner" / "core.py"),
+                          "scanner/packaging/eaa_scanner/core.py"),
+        "plugin-source": Engine("plugin-source", "pluginens kildekode @1.1.0",
+                                py_engine_ids(lay.repo / "scanner" / "wp-plugin"
+                                              / "eaa-compliance-scanner"
+                                              / "engine.php"),
+                                "scanner/wp-plugin/eaa-compliance-scanner/"
+                                "engine.php"),
+    }
+
+
+# Kortet produkt → motor. Rækkefølgen betyder: første match vinder, så de
+# specifikke mønster skal stå før `guides/*`.
+#
+# Hver post er et produktvalg, ikke en undtagelse: den siger *hvilken motor
+# siden sælger*, så løftet måles mod den motor kunden får regler fra. Kortet
+# er fuldt udskrevet i `--list`, så det kan efterprøves af en læser.
+PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
+    # Sælger pluginet → den publicerede zip, ikke kilden og ikke webkernen.
+    ("wordpress-plugin.html", "plugin"),
+    # Sider der sælger eller omtaler CLI'en og desktop-appen. Begge kører 22.
+    ("downloads.html", "desktop"),
+    ("free-downloads.html", "desktop"),
+    ("blog/eaa-compliance-scanner-desktop.html", "desktop"),
+    ("blog/free-accessibility-testing-tools.html", "desktop"),
+    # Købssiden for EUComply Pro: kører `compliance-report.html`.
+    ("compliance-report.html", "web"),
+    ("da/compliance-report.html", "web"),
+    ("da/compliance-ai.html", "web"),
+    ("scan.html", "web"),
+    ("scan-da.html", "web"),
+    # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
+    ("guides/*", "web"),
+)
+
+
+def engine_key_for(rel_to_site: str) -> str | None:
+    """Hvilken motor siden sælger, eller `None` hvis siden ikke står i kortet.
+
+    `None` er en **fejl**, ikke et fallback. Før opgave 86 faldt alt ukendte
+    tilbage på `scan.html`, og det var netop derfor de 34 løfter i den lange
+    form ikke kunne dømmes: de var ikke forkerte, de var udømt.
+    """
+    for pattern, key in PRODUCT_ENGINE:
+        if fnmatch.fnmatch(rel_to_site, pattern):
+            return key
+    return None
+
+
+def engine_disagreements(eng: dict[str, Engine]) -> list[str]:
+    """De fire bygger af samme motor skal køre præcis samme regelsæt."""
+    ref = eng[CLONE_GROUP[0]]
+    ref_set = set(ref.ids)
+    errs: list[str] = []
+    for key in CLONE_GROUP[1:]:
+        other = set(eng[key].ids)
+        if other == ref_set:
+            continue
+        only_ref = sorted(ref_set - other)
+        only_other = sorted(other - ref_set)
+        parts = []
+        if only_other:
+            parts.append(f"kun her: {', '.join(only_other)}")
+        if only_ref:
+            parts.append(f"mangler hos {key}: {', '.join(only_ref)}")
+        errs.append(f"{ref.source} kører {ref.n} regler, {eng[key].source} "
+                    f"kører {eng[key].n} — samme motor, to tal "
+                    f"({'; '.join(parts)})")
+    return errs
 
 
 def _read(path: Path) -> str:
@@ -188,9 +396,26 @@ def pro_rule_ids(worker: Path) -> tuple[str, ...]:
     return tuple(seen)
 
 
-def engine_for(path: Path, lay: Layout) -> Path:
-    """Hvilken motor et løfte på denne side henviser til."""
-    return path if path in lay.engines else lay.primary
+def engine_for(path: Path, lay: Layout) -> Engine:
+    """Hvilken motor et løfte på denne side henviser til.
+
+    Kortet `PRODUCT_ENGINE` afgør det. **Der er intet fallback**: en side med et
+    løfte, der ikke står i kortet, er en fejl. Før opgave 86 faldt alt ukendte
+    tilbage på `scan.html`, og det skjulte præcis de løfter der handlede om en
+    anden motor.
+    """
+    rel = path.relative_to(lay.site).as_posix()
+    key = engine_key_for(rel)
+    if key is None:
+        raise SystemExit(
+            f"check_rule_claims: {rel} har et regel-løfte men står ikke i "
+            f"PRODUCT_ENGINE — mål den mod den motor siden sælger, eller fjern "
+            f"løftet")
+    eng = engines(lay)
+    if key not in eng:                      # kortet kan ikke nå motoren
+        raise SystemExit(f"check_rule_claims: {rel} peger på ukendte motoren "
+                         f"{key!r}")
+    return eng[key]
 
 
 def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
@@ -215,13 +440,12 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
 
 def check(lay: Layout) -> list[str]:
     """Fejlmeldinger for alle løfter der ikke matcher den målte kode."""
-    free = {p: len(free_rule_ids(p)) for p in lay.engines}
-    php_n = len(php_rule_ids(lay.plugin_zip))
+    eng = engines(lay)
     pro = len(pro_rule_ids(lay.worker))
-    errs: list[str] = []
+    errs: list[str] = list(engine_disagreements(eng))
     for path, line_no, claimed, is_total in collect(lay):
-        # Pluginsiden sælger PHP-motoren i zip'en, de andre sider JS-motoren.
-        base = php_n if path == lay.plugin_page else free[engine_for(path, lay)]
+        # Hver side måles mod den motor den sælger, ikke mod én global motor.
+        base = engine_for(path, lay).n
         expected = base + (pro if is_total else 0)
         if claimed != expected:
             kind = "Pro-total" if is_total else "frie regler"
@@ -235,22 +459,25 @@ def check(lay: Layout) -> list[str]:
 
 
 def show_list(lay: Layout) -> str:
-    free_n = len(free_rule_ids(lay.primary))
-    pro_n = len(pro_rule_ids(lay.worker))
-    lines = ["Målte regeltal (kilden er koden, ikke en note):", ""]
-    for p in lay.engines:
-        ids = free_rule_ids(p)
-        lines.append(f"  {lay.rel(p)}: {len(ids)} regler")
-        lines.append(f"    {', '.join(ids)}")
+    eng = engines(lay)
     pro = pro_rule_ids(lay.worker)
-    php = php_rule_ids(lay.plugin_zip)
-    lines += ["", f"  site/_worker.js reportProFindings(): {len(pro)} betalte checks",
-              f"    {', '.join(pro)}", "",
-              f"  site/eaa-compliance-scanner.zip {PLUGIN_ENGINE_IN_ZIP}: "
-              f"{len(php)} regler",
-              f"    {', '.join(php)}",
-              f"    (kilden scanner/wp-plugin/ har flere — de er ikke i zip'en)", "",
-              f"  Pro-total = {free_n} + {len(pro)} = {free_n + len(pro)}"]
+    lines = ["Målte regeltal (kilden er koden, ikke en note):", "",
+             f"  {'motor':<14}{'regler':>7}  hvad den er"]
+    for key, e in eng.items():
+        lines.append(f"  {key:<14}{e.n:>7}  {e.label}")
+        lines.append(f"  {'':<14}{'':>7}    {e.source}")
+    lines.append("")
+    for key, e in eng.items():
+        lines.append(f"  {key} ({e.n}):")
+        lines.append(f"    {', '.join(e.ids)}")
+    lines += ["",
+              f"  site/_worker.js reportProFindings(): {len(pro)} betalte checks",
+              f"    {', '.join(pro)}", ""]
+    web = eng["web"].n
+    lines.append(f"  Pro-total = {web} + {len(pro)} = {web + len(pro)}")
+    lines += ["", "Produkt → motor (hvert løfte måles mod den motor siden sælger):"]
+    for pattern, key in PRODUCT_ENGINE:
+        lines.append(f"  {pattern:<42} → {key} ({eng[key].n})")
     return "\n".join(lines)
 
 
@@ -334,13 +561,23 @@ def self_test() -> int:
         # PHP-måling ubevistet: en fejl i zip-udpakningen ville give 0 og alt
         # gå grønt, fordi ingen løfte på siden matcher et målt tal.
         wp = lay.plugin_page
-        wp_claim = first_claim(wp, re.compile(r"\d+(?=\s+automated\s+rules)"))
+        wp_claim = first_claim(wp, re.compile(r"\d+(?=\s+WCAG\s+[\d.]+\s+AA\s+rules)"))
         if wp_claim:
             php_real = len(php_rule_ids(lay.plugin_zip))
-            cases.append(("pluginside", wp, wp_claim, f"{php_real + 1} automated rules"))
+            cases.append(("pluginside", wp, wp_claim, f"{php_real + 1} WCAG 2.1 AA rules"))
+        # Den femte arm: produkt→motor-kortet. Den skriver **webscannerens** tal
+        # ind på en side der sælger desktop-appen. Hvis kortet ikke virkede, faldt
+        # siden tilbage på `scan.html`, og 15 ville være grønt — så mutationen
+        # ville *ikke* fange, at kortet var dødt. Den skal derfor skrive netop
+        # det tal der er forkert for den motor siden sælger.
+        dl = lay.site / "downloads.html"
+        dl_claim = first_claim(dl, re.compile(r"\d+(?=\s+WCAG\s+[\d.]+\s+AA\s+rules)"))
+        if dl_claim:
+            cases.append(("motor-kort", dl, dl_claim,
+                          f"{len(free_rule_ids(lay.primary))} WCAG 2.1 AA rules"))
 
-        if len(cases) != 4:
-            fails.append(f"selftest: fandt {len(cases)}/4 løfter at mutere")
+        if len(cases) != 5:
+            fails.append(f"selftest: fandt {len(cases)}/5 løfter at mutere")
 
         for name, path, old, new in cases:
             original = path.read_text(encoding="utf-8")
@@ -368,6 +605,26 @@ def self_test() -> int:
             if not check(lay):
                 fails.append(f"selftest: mutationen {name!r} gav ingen fejl")
             scan.write_text(original, encoding="utf-8")
+
+        # Den sjette fejlform: en side med et løfte, der ikke står i
+        # produkt→motor-kortet. Før opgave 86 faldt den tilbage på `scan.html`
+        # i stilhed, og det er præcis derfor de 34 løfter i den lange form ikke
+        # kunne dømmes. Kortet skal derfor være lukket: en ukendt side er en
+        # fejl, ikke et gæt.
+        stray = lay.site / "omtalt-men-ikke-i-kortet.html"
+        stray.write_text(
+            '<meta name="description" content="15 automated rules, free.">\n',
+            encoding="utf-8")
+        try:
+            check(lay)
+        except SystemExit as exc:
+            if "PRODUCT_ENGINE" not in str(exc):
+                fails.append(f"selftest: ukendt side gav en anden fejl end den "
+                             f"forventede: {exc}")
+        else:
+            fails.append("selftest: en side med et løfte, som ikke står i "
+                         "produkt→motor-kortet, gav ingen fejl — kortet lækker")
+        stray.unlink()
 
     for f in fails:
         print(f)
