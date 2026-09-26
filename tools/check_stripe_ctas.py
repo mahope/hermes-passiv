@@ -240,6 +240,17 @@ FREE_TIER_PHRASES = re.compile(
 FREE_LABEL = re.compile(r"\bfree\b|\bgratis\b", re.I)
 PAID_LABEL = re.compile(r"\bpro\b|\bpaid\b|\bpremium\b|\$|\busd\b|\bkr\.?|\beur\b|\bdkk\b", re.I)
 
+# `PRICE_TOKEN` kræver et `$`, og det er ikke nok. `/clean-copy-tool` skriver
+# sin Pro-pris som "19 USD per year" — hele den families vigtigste købsside
+# står altså med en pris, en `$`-baseret regel ikke kan se. Derfor tæller
+# valutaord og symboler begge, ellers er porten grøn på præcis den
+# forsvundne købsmulighed den er skrevet til at fange.
+CURRENCY_AMOUNT = re.compile(
+    r"[$€£]\s?\d[\d.]*"
+    r"|\b\d[\d.,]*\s?(?:usd|eur|dkk|kr\.?)\b",
+    re.I,
+)
+
 
 class VisibleBlocks(HTMLParser):
     """Synlig tekst plus overskrifterne i de tabeller der er synlige.
@@ -323,6 +334,80 @@ class VisibleBlocks(HTMLParser):
         return normalize(" ".join(self.parts))
 
 
+def free_pro_tables(text: str) -> list[tuple[list[list[str]], int]]:
+    """Synlige gratis/Pro-sammenligningstabeller, med Pro-kolonnens index.
+
+    Kun synlige: en lukket `<details>`, `<head>`, JSON-LD eller en `style`
+    med `display:none` tæller ikke, fordi det er præcis de steder en
+    sammenligning bliver usynlig uden at forsvinde fra koden.
+
+    Pro-kolonnen er den første overskrift der ligner en betalt udgave, men
+    ikke ligner den gratis. `Feature` og `Free` kan ikke være den, og
+    `Pro (not released)` kan godt være det — en kolonne der siger "Pro,
+    ikke udgivet endnu" er stadig den kolonne, der lover noget.
+    """
+    blocks = VisibleBlocks()
+    blocks.feed(text)
+    blocks.close()
+    tables: list[tuple[list[list[str]], int]] = []
+    for rows in blocks.comparisons:
+        header = rows[0]
+        if not any(FREE_LABEL.search(cell) for cell in header):
+            continue
+        paid_column = next(
+            (index for index, cell in enumerate(header)
+             if PAID_LABEL.search(cell) and not FREE_LABEL.search(cell)),
+            None,
+        )
+        if paid_column is not None:
+            tables.append((rows, paid_column))
+    return tables
+
+
+def check_comparisons(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En gratis/Pro-tabel skal vise forskellen, og den skal kun prise noget
+    der kan købes.
+
+    To regler, begge på *alle* sider og ikke kun på dem, der sælger et
+    katalogprodukt — det var præcis det hul, der lod en helt ukendt
+    "EAA Scanner Pro — $19/år" stå på en publiceret side i ugevisninger:
+
+    1. **Tomme celler.** En sammenligningstabel med tomme celler er
+       værre end ingen tabel: den lader som om den viser forskellen, og
+       en køber kan ikke se den. Oprindelsen var ikke sløshed, men en
+       oprydning (`2c9909d`) der fjernede `✓`-ikoner: de tre celler der
+       kun indeholdt et `✓`, blev tomme, da symbolet forsvandt.
+    2. **En pris uden en købsknap.** En Pro-kolonne der viser en pris, er
+       et løfte om at pengene kan bruges. Hvis siden ingen steder har et
+       betalingslink fra katalogen, er prisen ubetalingsbar — og den er
+       dobbelt sådan, fordi produktet ikke findes i katalogen overhovedet.
+       Samme fejl som en død knap, bare uden knappen.
+    """
+    links = catalog_links(catalog)
+    problems: list[str] = []
+    for relative, text in pages:
+        has_payment_link = any(href in links for href, _ in parse_page(text)[1])
+        for rows, paid_column in free_pro_tables(text):
+            for index, row in enumerate(rows[1:], start=2):
+                if len(row) < paid_column + 1:
+                    continue
+                blanks = [position for position, cell in enumerate(row[1:], start=2)
+                          if not cell.strip()]
+                if blanks:
+                    problems.append(
+                        f"{relative}: gratis/Pro-tabellen har tomme celler i række {index} "
+                        f"({row[0][:40]!r}, kolonne {blanks[0]}) — den viser ikke, hvad niveauet giver"
+                    )
+                price = row[paid_column]
+                if CURRENCY_AMOUNT.search(price) and not has_payment_link:
+                    problems.append(
+                        f"{relative}: Pro-kolonnen viser prisen {normalize(price)[:40]!r} i "
+                        f"række {index} ({row[0][:40]!r}), men siden har ingen købsknap — "
+                        f"prisen kan ikke betales, og produktet findes ikke i katalogen"
+                    )
+    return problems
+
+
 def check_free_tier(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
     """En side der sælger en licens, skal vise hvad den gratis udgave giver.
 
@@ -354,21 +439,7 @@ def check_free_tier(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
         blocks.feed(text)
         blocks.close()
         visible = blocks.text
-        comparisons = [rows for rows in blocks.comparisons
-                       if any(FREE_LABEL.search(cell) for cell in rows[0])
-                       and any(PAID_LABEL.search(cell) for cell in rows[0])]
-        # En sammenligningstabel med tomme celler er værre end ingen tabel:
-        # den lader som om den viser forskellen, og en køber kan ikke se den.
-        for rows in comparisons:
-            for index, row in enumerate(rows[1:], start=2):
-                if len(row) < 2:
-                    continue
-                blanks = [position for position, cell in enumerate(row[1:], start=2) if not cell.strip()]
-                if blanks:
-                    problems.append(
-                        f"{relative}: gratis/Pro-tabellen har tomme celler i række {index} "
-                        f"({row[0][:40]!r}, kolonne {blanks[0]}) — den viser ikke, hvad niveauet giver"
-                    )
+        comparisons = [rows for rows, _ in free_pro_tables(text)]
         if FREE_TIER_PHRASES.search(visible) or comparisons:
             continue
         problems.append(
@@ -768,6 +839,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_forbidden_claims()
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
+    problems += check_comparisons(catalog, source_pages())
     return problems, inventory
 
 
@@ -870,7 +942,10 @@ def self_test() -> int:
     free_tier_only = {**good, "offers": only_offer}
     no_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", buys_only)])
     buried_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", says_free_but_buried)])
-    hollow_table = check_free_tier(free_tier_only, [("site/eksempel.html", empty_table)])
+    # Tomme celler hører nu til `check_comparisons`, som læser alle sider og
+    # ikke kun katalogens købssider. Scenariet beholder sin købsknap, så det
+    # isolerer den ene regel: her skal kun den tomme celle fanges.
+    hollow_table = check_comparisons(good, [("site/eksempel.html", empty_table)])
     # Negativ kontrol: siden siger gratis-udgaven, og en donation skal ikke
     # fejle på en regel om gratis-udgaven — den har ikke en.
     should_also_pass = check_free_tier(free_tier_only, [("site/eksempel.html", says_free)])
@@ -885,6 +960,37 @@ def self_test() -> int:
         return 1
     if FREE_TIER_PHRASES.search("The free version is the complete tool, not a trial.") is None:
         print("SELFTEST FEJLER: frasen i det positive scenarie matcher ikke portens egen mønster")
+        return 1
+
+    # 7: en sammenligningstabel på en side der ikke sælger. Opgave 32 blev
+    # meldt "kræver Mads", fordi porten kun læste katalogens købssider — så
+    # en helt ukendt "EAA Scanner Pro — $19/år" kunne stå på en publiceret
+    # side. Scenarierne er syntetiske, så selftesten ikke skriver fejlen ind i
+    # de rigtige sider.
+    def table(price: str, free_cell: str = "yes", pro_cell: str = "yes", link: str = "") -> str:
+        return (f'<html><body><table><tr><th>Feature</th><th>Free</th>'
+                f'<th>Pro (not released)</th></tr>'
+                f'<tr><td>Batch scanning</td><td>{free_cell}</td><td>{pro_cell}</td></tr>'
+                f'<tr><td>Price</td><td>Free (MIT)</td><td>{price}</td></tr></table>'
+                f'{link}</body></html>')
+
+    unbuyable_symbol = check_comparisons(good, [("site/eksempel.html", table("$19/year"))])
+    unbuyable_words = check_comparisons(good, [("site/eksempel.html", table("19 USD per year"))])
+    hollow_unsold = check_comparisons(
+        good, [("site/eksempel.html", table("Not for sale yet", pro_cell=""))])
+    # Negativ kontroller: det samme med en købsknap, og det samme uden pris.
+    buyable = check_comparisons(
+        good, [("site/eksempel.html", table("$19/year", link=f'<a href="{clean_copy_link}">Buy</a>'))])
+    priceless = check_comparisons(good, [("site/eksempel.html", table("Not for sale yet"))])
+    # Uden denne kontrol er `unbuyable_words` en stum scene: `$`-mønsteret
+    # ville have fundet nul priser i "19 USD per year", så scenariet kunne
+    # stå som fanget uden at have prøvet det valutaordene er der for.
+    if PRICE_TOKEN.search("19 USD per year") is not None:
+        print("SELFTEST FEJLER: valutaord-scenariet kan ikke skelnes fra PRICE_TOKEN — "
+              "reglen om valutaord er uden betydning")
+        return 1
+    if CURRENCY_AMOUNT.search("19 USD per year") is None:
+        print("SELFTEST FEJLER: CURRENCY_AMOUNT finder ikke sit eget positive eksempel")
         return 1
 
     scenarios: list[tuple[str, list[str] | Any]] = [
@@ -903,12 +1009,17 @@ def self_test() -> int:
         ("en Pro-side der aldrig siger hvad gratis-udgaven giver", no_free_tier),
         ("en gratis-udgave forklaret i en lukket FAQ", buried_free_tier),
         ("en gratis/Pro-tabel med tomme celler", hollow_table),
+        ("en Pro-pris uden nogen købsknap", unbuyable_symbol),
+        ("en Pro-pris i valutaord uden købsknap", unbuyable_words),
+        ("en tom celle i en tabel på en side der ikke sælger", hollow_unsold),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
     for label, problems in (("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
-                            ("en donationsside uden gratis-udgave", donation_no_free)):
+                            ("en donationsside uden gratis-udgave", donation_no_free),
+                            ("en gratis/Pro-tabel med købsknap", buyable),
+                            ("en gratis/Pro-tabel uden pris", priceless)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
