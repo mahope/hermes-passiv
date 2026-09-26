@@ -257,8 +257,9 @@ en_body = f'''
   <div class="container">
     <h2>Check a multilingual site automatically</h2>
     <p>The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI audits the <code>&lt;head&gt;</code> of any URL — canonical, hreflang alternates, meta robots, titles:</p>
-    <pre class="cmd"><code>npx page-profile https://example.com/da/page        # single page report
-npx page-profile --urls-from-file urls.txt          # batch all language versions (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://example.com/da/page        # single page report
+python3 page_profile.py --urls-from-file urls.txt          # batch all language versions (Pro)</code></pre>
     <div style="text-align:center;margin-top:24px;">
       <a href="/page-profile" class="btn-primary">Get page-profile free &rarr;</a>
     </div>
@@ -336,8 +337,9 @@ da_body = f'''
   <div class="container">
     <h2>Tjek et flersproget site automatisk</h2>
     <p>Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> reviderer <code>&lt;head&gt;</code> på enhver URL — canonical, hreflang-alternativer, meta robots, titler:</p>
-    <pre class="cmd"><code>npx page-profile https://eksempel.dk/da/side       # rapport for én side
-npx page-profile --urls-from-file urls.txt         # batch alle sprogversioner (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://eksempel.dk/da/side       # rapport for én side
+python3 page_profile.py --urls-from-file urls.txt         # batch alle sprogversioner (Pro)</code></pre>
     <div style="text-align:center;margin-top:24px;">
       <a href="/da/page-profile" class="btn-primary">Hent page-profile gratis &rarr;</a>
     </div>

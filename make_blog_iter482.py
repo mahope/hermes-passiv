@@ -90,7 +90,8 @@ PAGES = [
     <p>Manuelt tjek tager 10-15 minutter pr. side og bliver glemt efter første redesign.
     Page Profile læser siden og scorer hvert punkt — som terminaloutput, JSON eller en
     HTML-rapport du kan sende til en kunde:</p>
-    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ npx page-profile https://ditdomaene.dk/side
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+$ python3 page_profile.py https://ditdomaene.dk/side
 title       "Side titel her"          54 chars   OK
 description 148 chars                            OK
 canonical   https://ditdomaene.dk/side           OK
@@ -183,7 +184,8 @@ score       11/12                                WARN</pre>
       felt: titler, descriptions, canonicals, Open Graph og struktureret data.</li>
       <li>Eksportér som HTML-rapport, hvis resultatet skal deles med en kunde.</li>
     </ol>
-    <p>I CLI fungerer det samme med <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    <p>I CLI fungerer det samme med
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
     og JSON-API'et lader dig bygge sammenligningen ind i din egen CI:</p>
     <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.dk" | jq .score
 $ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.dk" | jq .score</pre>
@@ -277,7 +279,8 @@ EN = {
     <p>A manual check takes 10–15 minutes per page and gets forgotten after the next
     redesign. Page Profile reads the page and scores every point — as terminal output,
     JSON, or an HTML report you can hand to a client:</p>
-    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ npx page-profile https://yoursite.com/page
+    <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+$ python3 page_profile.py https://yoursite.com/page
 title       "Your page title here"    54 chars   OK
 description 148 chars                            OK
 canonical   https://yoursite.com/page            OK
@@ -359,7 +362,8 @@ score       11/12                                WARN</pre>
       titles, descriptions, canonicals, Open Graph and structured data.</li>
       <li>Export as an HTML report if the result needs to be shared with a client.</li>
     </ol>
-    <p>In the CLI it works the same way with <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    <p>In the CLI it works the same way with
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
     and the JSON API lets you build comparisons into your own CI:</p>
     <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.com" | jq .score
 $ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.com" | jq .score</pre>

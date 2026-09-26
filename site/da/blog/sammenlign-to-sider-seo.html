@@ -63,7 +63,8 @@
       felt: titler, descriptions, canonicals, Open Graph og struktureret data.</li>
       <li>Eksportér som HTML-rapport, hvis resultatet skal deles med en kunde.</li>
     </ol>
-    <p>I CLI fungerer det samme med <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    <p>I CLI fungerer det samme med
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
     og JSON-API'et lader dig bygge sammenligningen ind i din egen CI:</p>
     <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.dk" | jq .score
 $ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.dk" | jq .score</pre>

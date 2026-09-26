@@ -186,9 +186,10 @@ en_body = f'''
   <div class="container">
     <h2>Automate the whole pass</h2>
     <p>Checking nine items per page by hand stops being realistic after about ten pages. The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI runs the entire table above against any URL and returns a graded report:</p>
-    <pre class="cmd"><code>npx page-profile https://example.com        # single page report
-npx page-profile --urls-from-file urls.txt  # batch mode (Pro)
-npx page-profile --compare old.html new.html # diff two versions (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://example.com        # single page report
+python3 page_profile.py --urls-from-file urls.txt  # batch mode (Pro)
+python3 page_profile.py --compare https://old.example.com https://new.example.com  # diff two pages (Pro)</code></pre>
     <div class="problem-cards">
       <div class="card"><h3>✅ Graded, not just listed</h3><p>Each check gets a pass/warn/fail so you can triage instead of reading raw HTML dumps.</p></div>
       <div class="card"><h3>📦 Batch &amp; compare</h3><p>Pro adds batch mode over a URL file, side-by-side compares and shareable HTML reports.</p></div>
@@ -273,9 +274,10 @@ da_body = f'''
   <div class="container">
     <h2>Automatisér hele runden</h2>
     <p>At tjekke ni punkter pr. side i hånden holder op med at være realistisk efter cirka ti sider. Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> kører hele tabellen ovenfor mod enhver URL og returnerer en karaktergivende rapport:</p>
-    <pre class="cmd"><code>npx page-profile https://eksempel.dk          # rapport for én side
-npx page-profile --urls-from-file urls.txt   # batch (Pro)
-npx page-profile --compare gammel.html ny.html  # sammenlign to versioner (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://eksempel.dk          # rapport for én side
+python3 page_profile.py --urls-from-file urls.txt   # batch (Pro)
+python3 page_profile.py --compare https://gammel.example.dk https://ny.example.dk  # sammenlign to sider (Pro)</code></pre>
     <div class="problem-cards">
       <div class="card"><h3>✅ Karakterer, ikke bare lister</h3><p>Hvert tjek får bestået/advar/dump, så du kan prioritere i stedet for at læse rå HTML-dumps.</p></div>
       <div class="card"><h3>📦 Batch &amp; sammenlign</h3><p>Pro tilføjer batch over en URL-fil, side-om-side-sammenligning og delbare HTML-rapporter.</p></div>

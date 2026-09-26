@@ -103,7 +103,7 @@ Headings, bold, italic, links, ordered/unordered lists (nested), code blocks (in
 
 - [Clean Copy for Chrome](https://github.com/mahope/clean-copy)
 - [Clean Copy for Firefox](https://github.com/mahope/clean-copy-firefox)
-- [clean-copy-cli](https://github.com/mahope/clean-copy-cli) — `brew install clean-copy`
+- [clean-copy-cli](https://github.com/mahope/clean-copy-cli) — `brew install mahope/tap/clean-copy`
 - [Obsidian plugin](https://github.com/mahope/clean-copy-obsidian)
 
 ## Try it live

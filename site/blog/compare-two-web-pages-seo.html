@@ -63,7 +63,8 @@
       titles, descriptions, canonicals, Open Graph and structured data.</li>
       <li>Export as an HTML report if the result needs to be shared with a client.</li>
     </ol>
-    <p>In the CLI it works the same way with <code>npx page-profile &lt;url1&gt; &lt;url2&gt;</code>,
+    <p>In the CLI it works the same way with
+    <code>python3 page_profile.py --compare &lt;url1&gt; &lt;url2&gt;</code> (Pro),
     and the JSON API lets you build comparisons into your own CI:</p>
     <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;font-size:0.9rem;">$ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://a.com" | jq .score
 $ curl -s "https://hermes-passiv.pages.dev/api/profile?url=https://b.com" | jq .score</pre>

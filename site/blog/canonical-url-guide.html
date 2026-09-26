@@ -87,9 +87,10 @@
   <div class="container">
     <h2>Check every page automatically</h2>
     <p>Inspecting the canonical tag on each page by hand is feasible for five pages — not for fifty or five hundred. The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI checks canonical presence, self-reference status, absolute URL format and more against any URL:</p>
-    <pre class="cmd"><code>npx page-profile https://example.com          # single page report
-npx page-profile --urls-from-file urls.txt   # batch check all pages (Pro)
-npx page-profile --compare prod.html staging.html  # diff canonicals (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://example.com          # single page report
+python3 page_profile.py --urls-from-file urls.txt   # batch check all pages (Pro)
+python3 page_profile.py --compare https://prod.example.com https://staging.example.com  # diff canonicals (Pro)</code></pre>
     <div class="problem-cards">
       <div class="card"><h3>Graded checks</h3><p>Canonical presence, absolute vs relative, self-referencing — each gets a pass/warn/fail so you triage instead of reading raw HTML.</p></div>
       <div class="card"><h3>Batch mode</h3><p>Feed it your sitemap URLs or a text file and check every page in one pass. Pro feature with HTML report output.</p></div>
