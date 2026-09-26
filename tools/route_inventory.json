@@ -2,6 +2,7 @@
   "cleancopy.tools": [
     "/",
     "/activate/",
+    "/da/activate/",
     "/blog/building-html-to-markdown-converter",
     "/blog/copy-as-markdown-chrome-extension",
     "/blog/copy-from-chatgpt-into-word",
