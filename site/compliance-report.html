@@ -348,15 +348,99 @@ function getDeviceId() {
 // an EUComply Pro key — the one licensed product this page sells.
 const LICENSE_PRODUCT = 'eucomply-pro';
 
+// A paying customer must never be locked out by a license-server blip, so a
+// successful check is cached for seven days and an unreachable server keeps
+// that cache — the same rule as tools/clean_copy_license.js. That module
+// cannot be inlined here: its PRODUCT is hardcoded to clean-copy-pro, and
+// inlining it verbatim would make the worker answer 403 "This license key is
+// for another product." to every EUComply key, locking out exactly the
+// customers this page charges $79/year.
+//
+// Stored under its own names on purpose: `cc_pro_license` holds a
+// clean-copy-pro key, and a cached key of the wrong product must never
+// unlock this one.
+const CACHE_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+const CACHE_KEY = 'euc_pro_license';
+const CHECKED_KEY = 'euc_pro_checked';
+const EXPIRES_KEY = 'euc_pro_expires';
+
+function readStore(name) {
+  try { return localStorage.getItem(name) || ''; } catch (e) { return ''; }
+}
+function writeStore(name, value) {
+  try { localStorage.setItem(name, value); } catch (e) {}
+}
+
+// status 0 = the request never got an answer (offline, DNS, timeout).
+function isServerError(status) { return status === 0 || status >= 500; }
+
+function normalizeKey(key) {
+  return String(key === null || key === undefined ? '' : key).trim().toLowerCase();
+}
+
+// One HTTP exchange, reduced to one decision: may this customer save the
+// report, and what do we tell them? Mirrors decide() in the canonical module.
+function decideLicense(status, data, key) {
+  data = data || {};
+  if (status === 200 && data.ok && (data.valid === true || data.activated === true)) {
+    return { active: true, cached: false, message: '', expiresAt: data.expires_at || '' };
+  }
+  if (isServerError(status)) {
+    const checkedAt = Number(readStore(CHECKED_KEY)) || 0;
+    // Only this exact key may ride out an outage — otherwise any 32-hex string
+    // would open the report while the server is down.
+    if (checkedAt > 0 && Date.now() - checkedAt <= CACHE_MAX_MS && readStore(CACHE_KEY) === key) {
+      return {
+        active: true, cached: true, expiresAt: readStore(EXPIRES_KEY),
+        message: 'License server unreachable — Pro stays active until ' +
+          new Date(checkedAt + CACHE_MAX_MS).toISOString().slice(0, 10) + '.'
+      };
+    }
+    return {
+      active: false, cached: false, message: '',
+    };
+  }
+  if (status === 409) return { active: false, message: data.error || 'Device limit reached for this license.' };
+  if (status === 403) return { active: false, message: data.error || 'This license is expired, revoked, or for another product.' };
+  if (status === 404) return { active: false, message: data.error || 'License key not found.' };
+  if (status === 400) return { active: false, message: data.error || 'Invalid license key.' };
+  return {
+    active: false, cached: false,
+    message: data.error || (data.reason === 'device_limit'
+      ? 'Device limit reached for this license.'
+      : 'This license is not valid anymore.')
+  };
+}
+
 async function validateLicense(key) {
+  const norm = normalizeKey(key);
+  let status = 0;
+  let data = {};
   try {
     const r = await fetch('/api/license/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ license_key: key, device_id: getDeviceId(), product: LICENSE_PRODUCT })
+      // The contract is 32 *lowercase* hex characters, so the key is trimmed
+      // and lowercased here: a customer who retypes it from the email with
+      // caps lock on was otherwise rejected with 400 on a key they paid for.
+      body: JSON.stringify({ license_key: norm, device_id: getDeviceId(), product: LICENSE_PRODUCT })
     });
-    return await r.json();
-  } catch { return { ok: false, error: 'Network error — check your connection.' }; }
+    status = r.status;
+    data = await r.json().catch(function () { return {}; });
+  } catch (e) {
+    status = 0;
+  }
+  const decision = decideLicense(status, data, norm);
+  if (decision.active && !decision.cached) {
+    writeStore(CACHE_KEY, norm);
+    writeStore(CHECKED_KEY, String(Date.now()));
+    if (decision.expiresAt) writeStore(EXPIRES_KEY, decision.expiresAt);
+  }
+  if (decision.active && !decision.message) decision.message = '';
+  if (!decision.active && !decision.message) {
+    decision.message = 'License server unreachable. Try again in a moment — your report is not lost, just re-open this page.';
+  }
+  return decision;
 }
 
 // ── Report rendering ──────────────────────────────────────────────
@@ -453,6 +537,13 @@ function renderReport(data, url) {
   document.getElementById('reportOutput').style.display = 'block';
   document.getElementById('loading').style.display = 'none';
   document.getElementById('pricingSection').style.display = 'none';
+  // A customer who paid $79/year should not have to find the key again to get
+  // the report a second time. Prefilled, never submitted automatically.
+  var cachedKey = readStore(CACHE_KEY);
+  if (cachedKey) {
+    var keyField = document.getElementById('licenseInput');
+    if (keyField) keyField.value = cachedKey;
+  }
   document.getElementById('reportOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // Store scan data for PDF download
@@ -520,14 +611,16 @@ async function verifyAndDownload() {
   document.getElementById('verifyBtn').disabled = true;
 
   const result = await validateLicense(key);
-  if (result.ok && result.valid) {
+  if (result.active) {
     status.className = 'license-status ok';
-    status.textContent = '✓ License valid — preparing your PDF report…';
+    status.textContent = result.cached
+      ? '✓ License valid (checked ' + (readStore(EXPIRES_KEY) || '').slice(0, 10) + ' — server unreachable now) — preparing your PDF report…'
+      : '✓ License valid — preparing your PDF report…';
     // Trigger print (which uses @media print styles)
     window.setTimeout(() => window.print(), 500);
   } else {
     status.className = 'license-status err';
-    status.textContent = result.error || 'License not valid. Check your key or visit the pricing page.';
+    status.textContent = result.message || 'License not valid. Check your key or visit the pricing page.';
     document.getElementById('verifyBtn').disabled = false;
   }
 }

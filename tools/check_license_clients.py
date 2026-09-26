@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 from functools import lru_cache
@@ -74,6 +75,15 @@ NOT_CLIENTS = {
     # data. Ingen af dem kalder den — de beskriver hvorfor en *kunde* gør det.
     "tools/check_retired_downloads.py",
     "tools/retired_downloads.json",
+}
+
+# Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er
+# den kanoniske regel selv og de to byte-identiske kopier af den. Uden en linje
+# her er en afvigelse en fejl, så listen kan ikke vokse ved et uheld.
+CACHE_RULE_SKIP = {
+    "tools/clean_copy_license.js": "den kanoniske kilde — filen ER reglen",
+    "extension-clean-copy/license.js": "byte-identisk kopi af den kanoniske kilde",
+    "extension-clean-copy-firefox/license.js": "byte-identisk kopi af den kanoniske kilde",
 }
 
 # Marker omkring det indlejrede kanoniske modul.
@@ -234,14 +244,42 @@ def check_copies(canon: str) -> list[str]:
     return problems
 
 
-def check_cache_rule() -> list[str]:
+def browser_license_clients() -> list[str]:
+    """Licensklienter der er JavaScript i en side eller en udvidelse.
+
+    Afledt af CLIENTS, ikke en navneliste. Opgave 51: reglen var en hardkodet
+    trefilers-liste, og den var grøn præcis på `site/compliance-report.html` —
+    den eneste betalte klient uden syvdagesregel. En navneliste kan ikke se en
+    klient der bliver tilføjet, så den er dødt kode for alt andet end de tre
+    filer den nævner.
+    """
+    return sorted(
+        rel for rel in CLIENTS
+        if rel not in EXCEPTIONS and rel not in NOT_CLIENTS
+        and rel not in CACHE_RULE_SKIP
+        and rel.endswith((".html", ".js"))
+    )
+
+
+# Klienter der kalder /api/license og låser en betalende kunde ud ved en
+# netværksfejl eller et 5xx. Mindst ét af disse skal stå i filen.
+SOFT_FAIL_MARKERS = ("CACHE_MAX_MS", "isServerError")
+
+
+def check_cache_rule(overrides: dict[str, str] | None = None) -> list[str]:
     """Klienter der kan låse en betalende kunde ude skal have syvdagesreglen."""
     problems: list[str] = []
-    for rel in ("obsidian-plugin/main.js", "extension-clean-copy/options.js",
-                "site/clean-copy-tool.html"):
-        text = (ROOT / rel).read_text(encoding="utf-8")
-        if "CleanCopyLicense" not in text:
-            problems.append(f"{rel}: bruger ikke det kanoniske licensmodul")
+    for rel in browser_license_clients():
+        text = (overrides or {}).get(rel) or (ROOT / rel).read_text(encoding="utf-8")
+        if "CleanCopyLicense" in text:
+            continue  # bruger det kanoniske modul, som rummer reglen
+        missing = [m for m in SOFT_FAIL_MARKERS if m not in text]
+        if missing:
+            problems.append(
+                f"{rel}: kalder /api/license uden syvdagesreglen — mangler "
+                f"{', '.join(missing)}. En betalende kunde låses ud, hvis "
+                f"licensserveren svarer 503 eller netværket falder."
+            )
     return problems
 
 
@@ -306,6 +344,15 @@ def self_test() -> int:
         ("en klient der kan aktivere men ikke afgive pladsen",
          check_seat_release({**callers, "site/ny-klient.html":
                              "const A = API_BASE + '/activate'; chrome.storage.local.set({proLicense: k});"})),
+        # Opgave 51: den betalte EUComply-klient uden syvdagesregel. Beviset er
+        # den RIGTIGE gamle kode, så reglen kan ikke være grøn på en konstrueret
+        # fejlform. Stripper kun de to markører, så resten af filen er den
+        # gamle funktion.
+        ("en betalt klient uden syvdagesregel",
+         check_cache_rule({"site/compliance-report.html":
+                           (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
+                           .replace("CACHE_MAX_MS", "NO_CACHE_AT_ALL")
+                           .replace("isServerError", "noServerError")})),
     ]
 
     failures = 0
@@ -332,6 +379,58 @@ def self_test() -> int:
             failures += 1
         else:
             print(f"OK   {name}: ikke fejlet")
+
+    # Samme negative kontrol for syvdagesreglen: en klient der bruger det
+    # kanoniske modul har reglen indbygget og må aldrig fejle. Ellers ville
+    # porten straffe netop de klienter der gør det rigtigt.
+    canonical_client = check_cache_rule({
+        "site/clean-copy-tool.html": "var L = window.CleanCopyLicense; L.decide({});"})
+    if canonical_client:
+        print(f"FELO en klient med det kanoniske modul blev fejlet: {canonical_client[0]}")
+        failures += 1
+    else:
+        print("OK   en klient med det kanoniske modul: ikke fejlet")
+
+    # Stumheds-kontrol på den afledte liste. Opgave 51's fejl var præcis at
+    # listen var hardkodet, så en ny klient aldrig kom med. Hvis
+    # browser_license_clients() igen bliver en navneliste, fanger denne kontrol
+    # det i stedet for at porten bliver grøn på den nye klient.
+    derived = browser_license_clients()
+    expected = sorted(rel for rel in CLIENTS
+                      if rel not in EXCEPTIONS and rel not in NOT_CLIENTS
+                      and rel.endswith((".html", ".js")))
+    if CACHE_RULE_SKIP.keys() - set(CLIENTS):
+        print(f"FELO CACHE_RULE_SKIP nævner en klient der ikke står i CLIENTS: "
+              f"{sorted(CACHE_RULE_SKIP.keys() - set(CLIENTS))}")
+        failures += 1
+    else:
+        print("OK   CACHE_RULE_SKIP nævner kun klient der findes")
+    for rel in expected:
+        if rel in CACHE_RULE_SKIP:
+            continue
+        if rel not in derived:
+            print(f"FELO {rel} står i CLIENTS men springes over af "
+                  f"browser_license_clients() — reglen ville være grøn på den")
+            failures += 1
+            break
+    else:
+        print(f"OK   alle {len(expected)} JS-klienter i CLIENTS er dækket af reglen")
+
+    # Bevis på den rigtige gamle kode fra git HEAD, ikke på en konstrueret
+    # fejlform: den betalte klient før opgave 51 skal give præcis ét fund, og
+    # den rettede skal give nul.
+    old = subprocess.run(["git", "show", "HEAD:site/compliance-report.html"],
+                         cwd=ROOT, capture_output=True, text=True)
+    if old.returncode == 0:
+        got = check_cache_rule({"site/compliance-report.html": old.stdout})
+        if len(got) != 1:
+            print(f"FELO den gamle compliance-report.html giver {len(got)} fund, "
+                  f"forventet 1 — beviset på den rigtige kode holder ikke")
+            failures += 1
+        else:
+            print(f"OK   den gamle compliance-report.html giver 1 fund: {got[0][:72]}…")
+    else:
+        print("OK   git-HEAD-læsning kunne ikke ske — springer beviset over")
 
     # Den indlejret-checkout-regel kræver en rigtig mappe at kigge på, så den
     # probes på filsystemet i stedet for i en dict. Uden denne test kunne
