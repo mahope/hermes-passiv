@@ -20,6 +20,8 @@ Opgaverne er:
    uden købsside ville blive solgt helt uden.
 6. Hver købsside skal have mindst én indgang fra en side læser kan nå, målt
    i det byggede `dist/` — se `check_buy_page_entry`.
+7. Hver side med et synligt kassalink skal indlæse `/track.js`, og trackeren
+   skal stadig have kliklytteren — se `check_buy_click_tracking`.
 
     python3 tools/check_stripe_ctas.py           # gate
     python3 tools/check_stripe_ctas.py --report  # inventaret, uden at fejle
@@ -42,6 +44,7 @@ CATALOG = ROOT / "tools/stripe_catalog.json"
 CONTRACT = ROOT / "docs/stripe-kontrakt.md"
 PAID_CONTENT = ROOT / "tools/paid_content.json"
 WORKER = ROOT / "site/_worker.js"
+TRACK_JS = ROOT / "site/track.js"
 
 KNOWN_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
 
@@ -878,6 +881,65 @@ def check_client_purchase_targets(
                     f"betalingslink fra katalogen. I en klient er det en død vej — der er ingen "
                     f"købsside ved siden af den."
                 )
+    return problems
+
+
+CHECKOUT_LINK_RE = re.compile(r"https://(?:buy|donate)\.stripe\.com/")
+TRACKER_SRC_RE = re.compile(r"""<script[^>]*\bsrc=["']/track\.js["']""")
+BUY_CLICK_RE = re.compile(r"""event:\s*['"]buy-click['"]""")
+CLICK_LISTENER_RE = re.compile(r"""addEventListener\(\s*['"]click['"]""")
+
+
+def check_buy_click_tracking(
+    catalog: dict,
+    pages: list[tuple[str, str]] | None = None,
+    track_text: str | None = None,
+) -> list[str]:
+    """En købsknap ingen måler, er en købsknap ingen ved om virker.
+
+    Målt før reglen blev skrevet: 1 af 13 købssider sendte et `buy-click`, og
+    de tre sider med et kassalink uden `/track.js` (`/activate/`, `/da/activate/`
+    og `/support`) sendte slet ingen begivenheder. Det er den fejl, der gør
+    "0 salg" uden et datagrundlag — vi kunne ikke se et eneste forsøg på at
+    købe, fordi ingen af knapperne meldte sig. Derfor skal både siden og
+    sporingen findes: en side med en kassalink skal indlæse trackeren, og
+    trackeren skal stadig have kliklytteren.
+
+    Matcherens selve regex (`^https://(buy|donate).stripe.com/`) kan ikke
+    dømmes statisk, så reglen lover præcis det den kan bevise: siden indlæser
+    en tracker, og trackeren lytter på klik og sender `buy-click`.
+    """
+    if track_text is None:
+        try:
+            track_text = TRACK_JS.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            return [f"{TRACK_JS.relative_to(ROOT)}: kan ikke læses, så intet købsklik kan måles"]
+    problems: list[str] = []
+    if not BUY_CLICK_RE.search(track_text):
+        problems.append(
+            f"{TRACK_JS.relative_to(ROOT)}: sender ikke længere et 'buy-click'. Uden det er "
+            "hvert købsklik på tværs af de 13 købssider usynligt."
+        )
+    if not CLICK_LISTENER_RE.search(track_text):
+        problems.append(
+            f"{TRACK_JS.relative_to(ROOT)}: har ingen click-lytter, så ingen købsknap "
+            "kan melde fra — uanset hvilken begivenhed den ellers sender."
+        )
+    portal = catalog.get("billing_portal")
+    for relative, text in source_pages() if pages is None else pages:
+        _, anchors = parse_page(text)
+        checkouts = {
+            href for href, _ in anchors
+            if CHECKOUT_LINK_RE.match(href) and href != portal
+        }
+        if not checkouts:
+            continue
+        if TRACKER_SRC_RE.search(text) or BUY_CLICK_RE.search(text):
+            continue
+        problems.append(
+            f"{relative}: har {len(checkouts)} synligt kassalink, men indlæser ikke /track.js "
+            "og sender ikke selv et 'buy-click' — klik på købsknappen kan ikke ses"
+        )
     return problems
 
 
@@ -1816,6 +1878,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_comparisons(catalog, source_pages())
     problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
+    problems += check_buy_click_tracking(catalog, source_pages())
     return problems, inventory
 
 
@@ -2435,6 +2498,36 @@ def self_test() -> int:
               "alligevel: " + "; ".join(cross_real))
         return 1
 
+    # ── købsklik der ikke måles ────────────────────────────────────────────
+    #
+    # De tre scenarier dækker de to målte fejlformer: en side med kassalink uden
+    # tracker, og en tracker hvor kliklytteren er væk. Kundenportalen er med som
+    # negativ kontrol, fordi den ligner en kassalink men ikke er et køb — ellers
+    # ville porten være strammere end den virkelige købsrejse, hvor en abonnent
+    # skal kunne nå sin portal uden at tælle som købsklik.
+    portal_link = good["billing_portal"]
+    untracked_page = [("site/eksempel.html", f'<html><body><a href="{clean_copy_link}">Buy</a></body></html>')]
+    untracked_click = check_buy_click_tracking(good, untracked_page)
+    tracked_page = [("site/eksempel.html", f'<html><head><script defer src="/track.js"></script>'
+                     f'</head><body><a href="{clean_copy_link}">Buy</a></body></html>')]
+    tracked_click = check_buy_click_tracking(good, tracked_page)
+    portal_only = [("site/portal.html", f'<html><body><a href="{portal_link}">Manage billing</a></body></html>')]
+    portal_click = check_buy_click_tracking(good, portal_only)
+    real_track = TRACK_JS.read_text(encoding="utf-8")
+    muted_track = re.sub(r"\n  // Every Stripe checkout link counts.*?\n  \}, true\);\n", "\n",
+                         real_track, flags=re.S)
+    if muted_track == real_track:
+        print("SELFTEST FEJLER: kliklytteren i site/track.js blev ikke fundet — scenariet "
+              "muterer intet, så intet beviser at porten fanger en fjernet lytter")
+        return 1
+    muted_click = check_buy_click_tracking(good, source_pages(), muted_track)
+    renamed_track = real_track.replace("event: 'buy-click'", "event: 'buyclick'")
+    if renamed_track == real_track:
+        print("SELFTEST FEJLER: buy-begivenhedens navn blev ikke fundet i site/track.js — "
+              "scenariet muterer intet")
+        return 1
+    renamed_click = check_buy_click_tracking(good, source_pages(), renamed_track)
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -2472,6 +2565,9 @@ def self_test() -> int:
         ("en dansk side der henter /api/report men siger at browseren analyserer", stale_da_found),
         ("en købsside ingen bygget side linker til", unreachable),
         ("en købsside der kun har en indgang på et andet domæne", cross_domain),
+        ("en købsknap på en side uden tracker", untracked_click),
+        ("en tracker uden kliklytter", muted_click),
+        ("en tracker der sender en anden begivenhed end buy-click", renamed_click),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -2498,7 +2594,9 @@ def self_test() -> int:
                              print_should_pass),
                             ("en skjult browser-påstand i en kommentar", hidden_should_pass),
                             ("en købsside med en indgang fra en bygget side", reachable),
-                            ("en købsside der linkes krydsdomæne fra en bygget side", cross_real)):
+                            ("en købsside der linkes krydsdomæne fra en bygget side", cross_real),
+                            ("en købsknap på en side med tracker", tracked_click),
+                            ("en kundeportal som ikke er et køb", portal_click)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)

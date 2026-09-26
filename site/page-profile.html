@@ -253,16 +253,6 @@
           </ul>
           <a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" id="pp-buy-live" class="btn btn-primary" style="text-decoration:none;" rel="nofollow noopener">Buy Pro — $19/year →</a>
           <span style="display:block;font-size:0.8rem;color:#94a3b8;margin-top:0.5rem;">Secure checkout via Stripe. License key by email.</span>
-          <script>
-          (function(){
-            // Track clicks on the Pro buy button.
-            try {
-              document.getElementById('pp-buy-live').addEventListener('click', function(){
-                if (navigator.sendBeacon) navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ path: '/page-profile', event: 'buy-click' })], { type: 'application/json' }));
-              });
-            } catch(e) {}
-          })();
-          </script>
         </div>
       </div>
     </section>
