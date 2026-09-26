@@ -12,7 +12,9 @@ via Resend. Hver kilde fejler blødt: dør én URL, står rækken som
 
 Miljøvariabler:
     BB_ADMIN_KEY     nøgle til https://mahope.tools/api/bugreport (valgfri)
-    RESEND_API_KEY   nøgle til afsendelse og server-side stats-autentisering
+    STATS_TOKEN      egen nøgle til https://mahope.tools/api/stats (valgfri,
+                    foretrækkes over RESEND_API_KEY på begge sider)
+    RESEND_API_KEY   nøgle til afsendelse, og stats-autentisering som fallback
     GITHUB_STEP_SUMMARY  fil der får rapporten i markdown
 """
 from __future__ import annotations
@@ -102,7 +104,11 @@ def note_error(source: str, exc: object) -> None:
 
 
 def stats_bearer_token() -> str:
-    secret = os.environ.get("RESEND_API_KEY", "").strip()
+    # Samme rækkefølge som `statsAuthToken` i site/_worker.js: den dedikerede
+    # nøgle tages først, mailnøglen er kun fallback. Sætter Mads STATS_TOKEN på
+    # workeren, skal den også sættes her — ellers læser rapporten videre med
+    # mailnøglen, som workeren så afviser, og uge-rapporten får ingen trafik.
+    secret = os.environ.get("STATS_TOKEN", "").strip() or os.environ.get("RESEND_API_KEY", "").strip()
     if not secret:
         return ""
     return hashlib.sha256((STATS_AUTH_CONTEXT + secret).encode("utf-8")).hexdigest()

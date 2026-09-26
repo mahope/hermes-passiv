@@ -839,7 +839,13 @@ function privateJsonResp(obj, status = 200) {
 }
 
 async function statsAuthToken(env) {
-  const secret = String(env.RESEND_API_KEY || '');
+  // /api/stats' egen hemmelighed. Før dette var den mailnøglen, så den nøgle der
+  // sender købermail fra orders@mahope.dk også gav adgang til salgstotal, og en
+  // lækket mailnøgle lækkede begge. STATS_TOKEN tages først, og mailnøglen er
+  // kun fallback, så Mads kan sætte den nye nøgle uden at rapporten eller en
+  // kunde låses ude — og-tokenet er byte-identisk med det gamle, fordi
+  // STATS_AUTH_CONTEXT er uændret.
+  const secret = String(env.STATS_TOKEN || env.RESEND_API_KEY || '');
   if (!secret) return '';
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(STATS_AUTH_CONTEXT + secret));
   return hex(new Uint8Array(digest));

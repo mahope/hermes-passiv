@@ -303,6 +303,26 @@ for (const key of [...kv.keys()]) if (key.startsWith('fulpending:')) kv.delete(k
 for (const key of [...kv.keys()]) if (key.startsWith('ful:')) kv.delete(key);
 r = await statsCall(); j = await r.json();
 ok('ufuldstændig fulfillment-ledger er ukendt, ikke nul', j.sales_status === 'unknown' && j.sales === null, JSON.stringify(j.sales));
+// 10) /api/stats har sin egen nøgle, ikke mailnøglen. Målt 26/9: tokenet var
+// SHA-256 af RESEND_API_KEY, så nøglen der sender købermail fra
+// orders@mahope.dk gav også adgang til salgstal — en lækket mailnøgle lækkede
+// begge. Fire asserts, fire tilstande: egen nøgle virker, mailnøglen låses ude
+// når den egen er sat, mailnøglen virker stadig når den egen IKKE er sat (så
+// Mads kan sætte den nye nøgle uden at rapporten låses ude), og uden nogen
+// nøgle er ruten ikke konfigureret. Uden den tredje assert ville en fejl i
+// rækkefølgen låse rapporten ude, og det er den fejl der gør nytte.
+const callWith = (path, init, e) => worker.fetch(new Request('https://mahope.tools' + path, init), e, {});
+const tokenFor = (secret) => createHash('sha256').update('stats-auth-v1:' + secret).digest('hex');
+const STATS_SECRET = 'st_stats_egen_noegle_0123456789';
+const statsWith = (token, e) => callWith('/api/stats?days=30', { headers: { authorization: `Bearer ${token}` } }, e);
+r = await statsWith(tokenFor(STATS_SECRET), { ...env, STATS_TOKEN: STATS_SECRET });
+ok('egen stats-nøgle giver adgang', r.status === 200 && (await r.json()).ok === true, r.status);
+r = await statsWith(statsToken, { ...env, STATS_TOKEN: STATS_SECRET });
+ok('mailnøglen låses ude når den egen nøgle er sat', r.status === 401, r.status);
+r = await statsWith(statsToken, env);
+ok('uden egen nøgel virker mailnøglen stadig, så ingen låses ude', r.status === 200, r.status);
+r = await statsWith(statsToken, { ...env, RESEND_API_KEY: '' });
+ok('uden nogen nøgle er /api/stats ikke konfigureret', r.status === 503, r.status);
 // 2) Nyt fakturaformat (parent.subscription_details) forlænger
 r = await wh('invoice.paid', { parent: { subscription_details: { subscription: 'sub_1' } }, lines: { data: [{ period: { end: 2200000000 } }] } });
 const subRec = JSON.parse(kv.get('lic:' + kv.get('lic-sub:sub_1')));
