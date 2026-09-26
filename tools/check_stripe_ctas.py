@@ -327,6 +327,36 @@ PAID_LABEL = re.compile(r"\bpro\b|\bpaid\b|\bpremium\b|\$|\busd\b|\bkr\.?|\beur\
 YES_CELL = re.compile(r"^[\s]*(?:yes|ja|ok)[\s.]*$|^\s*[✓✔xX]\s*$", re.I)
 NO_CELL = re.compile(r"^(?:[—–\-‐]\s*)+$|^\s*(?:no|nej)[\s.]*$", re.I)
 
+#: Ord der bærer en rækkes *identitet* i `row_claims_paid`. De er korte,
+#: almindelige eller står i begge søjler, så de identificerer intet:
+#: `page-profile` har rækkerne "All checks (meta, social, security, i18n)"
+#: og "Score + grade report" med "ja" i **begge** spalter, fordi de er
+#: gratis *og* en del af Pro. Kun det der adskiller en betalt række fra en
+#: gratis — navnet — må dømme, så bindordene er lukket ude.
+TABLE_STOPWORDS = frozenset("""
+og eller men som den de det en et alle alt andre anden hver hvilke hvis
+for med til af er ikke kan skal du din dit de dem den her der hvad hvor
+this that with without for and from are was were will your you our all any
+not but its per via plus over under more most new old one two three each
+every can may must should would could free pro paid plan price feature yes
+no ok ja nej
+""".split())
+
+#: Ord i et rækkenavn. Delt på alle tegn, ikke på mellemrum: katalogens
+#: `da`-labels skriver "GDPR/cookie- og NIS2/sikkerhedstjekkene", og en
+#: tokenizer der splitter på mellemrum slår `gdpr/cookie-` sammen til ét
+#: ord og matcher ingenting. Det var målt, ikke formodet — den første
+#: version af denne regel fandt **nul** af de to rækker den skulle finde.
+TABLE_WORD = re.compile(r"[a-z0-9æøåäöüß]+")
+
+#: Længden et ord skal have, og hvor mange ord der skal genkendes, før en
+#: række matcher en betalt label. Begge tal er målet: ét ord alene giver
+#: falsk alarm på de rigtige sider ("Score + grade report" deler ordet
+#: *report* med labelen "html report", og rækken har "ja" i gratis-spalten),
+#: to ord med fire tegn fanger de to danske rækker opgave 80 rettede.
+STEM_MIN_LEN = 4
+STEM_MIN_MATCHES = 2
+
 # `PRICE_TOKEN` kræver et `$`, og det er ikke nok. `/clean-copy-tool` skriver
 # sin Pro-pris som "19 USD per year" — hele den families vigtigste købsside
 # står altså med en pris, en `$`-baseret regel ikke kan se. Derfor tæller
@@ -615,6 +645,130 @@ def check_comparisons(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
                         f"{relative}: Pro-kolonnen viser prisen {normalize(price)[:40]!r} i "
                         f"række {index} ({row[0][:40]!r}), men siden har ingen købsknap — "
                         f"prisen kan ikke betales, og produktet findes ikke i katalogen"
+                    )
+    return problems
+
+
+def _stems(text: str) -> set[str]:
+    """Ord i en tekst der kan bære en rækkes identitet."""
+    return {word for word in TABLE_WORD.findall(text.casefold())
+            if len(word) >= STEM_MIN_LEN and word not in TABLE_STOPWORDS}
+
+
+def _same_stem(one: str, other: str) -> bool:
+    """Deler to ord de første `STEM_MIN_LEN` tegn — sådan skriver en
+    dansk overskrift og en kataloglabel den samme ting.
+
+    Målt, ikke formodet: katalogen skriver "sikkerhedstjekkene" og siden
+    "sikkerhedsheadere", og uden stammen matcher de to rækker fra opgave 80
+    ingen vegne. Fuld lighed ville heller ikke gå: "cookiesamtykke" og
+    "cookie" deler kun de første seks tegn.
+    """
+    length = min(len(one), len(other), STEM_MIN_LEN)
+    return length >= STEM_MIN_LEN and one[:length] == other[:length]
+
+
+def row_claims_paid_name(name: str, label: str) -> bool:
+    """Hører en tabelrække navn til en katalogen erklæret Pro-funktion?
+
+    To veje, fordi katalogen og siden ikke skriver det samme. **Snævert**
+    først: hele labelen i rækkenavnet eller omvendt, så en række der
+    gentager katalogens egen sætning altid findes. **Løst** bagefter: to
+    ord der deler en stamme, fordi de to kilder skriver det samme med
+    forskellige ord — "NIS2 / sikkerhedsheadere (HSTS, CSP, XFO)" mod
+    "GDPR/cookie- og NIS2/sikkerhedstjekkene" deler *nis2* og stammen
+    *sikkerheds*, og uden den anden vej ville porten være blind for præcis
+    den fejl den er skrevet til at finde. Det er målt: kun den snævre vej
+    giver **null** fund på de to danske rækker.
+    """
+    left, right = normalize(label).casefold(), normalize(name).casefold()
+    if left in right or right in left:
+        return True
+    stems, names = _stems(left), _stems(right)
+    matched = sum(
+        1 for stem in stems
+        if stem in names or any(_same_stem(stem, other) for other in names)
+    )
+    return matched >= STEM_MIN_MATCHES
+
+
+def check_free_cells_for_paid(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En gratis/Pro-tabel må ikke skrive "ja" i gratis-spalten for en
+    betalt funktion.
+
+    Oprindelsen er målt, ikke formodet. Opgave 80 fandt på den danske
+    købsside en tabel der skrev "ja" i **begge** spalter for *GDPR /
+    cookiesamtykke*, *NIS2 / sikkerhedsheadere (HSTS, CSP, XFO)* og *Alle 24
+    automatiske tjek*, og skrev oveni *"Pro tilføjer filen, ikke flere
+    funktioner."* — så $79/år blev solgt mod en løfte der ikke holdt.
+    Alle porte var grønne: `check_free_tier` spørger om siden siger noget om
+    gratis, `check_pro_features` om den nævner det betalte,
+    `check_pro_not_built` om den ikke lover det ubygde, og ingen af dem ved
+    hvad der er *gratis* — den viden lå i `free_features`, som kun blev læst
+    for at se om en gratis funktion stod i en **betalt** sætning.
+
+    Retningen her er den der manglede: en række hvis navn er en erklæret
+    `pro_features`-post, og som svarer ja i gratis-spalten. Rækker der er
+    erklæret **gratis** og har "ja" i begge spalter er korrekte — de er
+    gratis *og* en del af Pro, og det er præcis sådan `page-profile`
+    beskriver sine fem gratis-funktioner. Derfor dømmer kun betalte navne,
+    og derfor skal en række uden et betalt navn aldrig blive rød.
+
+    Målt på de otte købssider med tabel: 68 rækker, 20 med et betalt navn,
+    **0** med "ja" i gratis-spalten. Siden opgave 80 rettede de to danske
+    rækker, så porten er en genindføjelse af præcis den fejl — ikke en
+    opfindelse.
+    """
+    products = catalog.get("products")
+    offers = catalog.get("offers")
+    if not isinstance(products, dict) or not isinstance(offers, list):
+        return []
+    by_path = dict(pages)
+    problems: list[str] = []
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        key = offer.get("product")
+        product = products.get(key)
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        features = product.get("pro_features")
+        if not isinstance(features, list) or not features:
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue  # check_offers melder en manglende fil.
+        lang = page_lang(str(relative), text)
+        for rows, paid_column in free_pro_tables(text):
+            free_column = next(
+                (index for index, cell in enumerate(rows[0])
+                 if FREE_LABEL.search(cell) and not PAID_LABEL.search(cell)),
+                None,
+            )
+            if free_column is None:
+                continue
+            for index, row in enumerate(rows[1:], start=2):
+                if not row or not row[0].strip():
+                    continue
+                free_cell = row[free_column] if len(row) > free_column else ""
+                if YES_CELL.match(free_cell) is None:
+                    continue
+                name = normalize(row[0])
+                for feature in features:
+                    labels = pro_labels(feature, lang)
+                    if not labels:
+                        continue
+                    if not any(row_claims_paid_name(name, label) for label in labels):
+                        continue
+                    where = feature.get("where")
+                    suffix = f" ({where})" if isinstance(where, str) and where else ""
+                    problems.append(
+                        f"{relative}: række {index} i gratis/Pro-tabellen svarer 'ja' i "
+                        f"gratis-spalten for {name[:50]!r}, men katalogen erklærer den "
+                        f"betalt: pro_features {feature.get('id')!r}{suffix}. En køber "
+                        f"tror den får den funktion uden at betale — skriv '—' i "
+                        f"gratis-spalten."
                     )
     return problems
 
@@ -2374,6 +2528,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_language_coverage(catalog, source_pages())
     problems += check_checkout_notes(catalog)
     problems += check_comparisons(catalog, source_pages())
+    problems += check_free_cells_for_paid(catalog, source_pages())
     problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
     problems += check_buy_click_tracking(catalog, source_pages())
@@ -2940,6 +3095,66 @@ def self_test() -> int:
               f"ikke følger spalten (forventet 0). En kryds-tabel skal give hver række en "
               f"placering, ellers sælger porten en funktion på en side der ikke læser den "
               f"som betalt")
+        return 1
+
+    # ── "ja" i gratis-spalten for en betalt funktion ─────────────────────
+    #
+    # Mutationen er den rigtige fejl fra opgave 80, læst fra den rigtige fil:
+    # `site/da/compliance-report.html` skrev "ja" i **begge** spalter for GDPR,
+    # NIS2 og alle 24 tjek, så $79/år blev solgt mod "Pro tilføjer filen, ikke
+    # flere funktioner." Rækken er muteret tilbage til den fejl, kun én celle.
+    #
+    # Beviset går fire veje, fordi en regel der matcher for lidt lige så let
+    # er blind som en der slår for vildt: (a) mutationen giver præcis én rød
+    # der nævner rækken og funktionen, (b) cellen tilbage til "—" giver nul,
+    # (c) de tre rækker der *er* erklæret gratis og har "ja" i begge spalter
+    # giver nul — de er korrekte, og en port der rødmarkerede dem ville gøre
+    # hver købsside rød, (d) isolationen gør genkendelsen blind, og da skal
+    # mutationen holde op med at fejle mens de rigtige sider er grønne. Uden
+    # (d) er de grønne rækker i (c) lige så velbeviste som reglen.
+    paid_cell_relative = "site/da/compliance-report.html"
+    paid_row = "<tr><td>NIS2 / sikkerhedsheadere (HSTS, CSP, XFO)</td><td>—</td><td>ja</td></tr>"
+    paid_row_yes = paid_row.replace("<td>—</td>", "<td>ja</td>")
+    paid_cell_text = (ROOT / paid_cell_relative).read_text(encoding="utf-8")
+    paid_cell_key = "eucomply-pro"
+    if paid_row not in paid_cell_text:
+        print(f"SELFTEST FEJLER: mutationen passer ikke længere på {paid_cell_relative} — "
+              f"rækken er flyttet eller slettet")
+        return 1
+    paid_cell_catalog = {**real_catalog, "offers": [{"path": paid_cell_relative,
+                                                    "product": paid_cell_key}]}
+
+    def paid_cells(text: str, blinded: bool = False) -> list[str]:
+        """Gratis-spalten der svarer ja for en betalt række, med og uden reglen."""
+        if not blinded:
+            return check_free_cells_for_paid(paid_cell_catalog, [(paid_cell_relative, text)])
+        # Isolationen gør præcis genkendelsen blind. `free_pro_tables` og
+        # `YES_CELL` er urørt, så den blinde kørsel måles stadig rigtigt:
+        # den skal finde nul, fordi ingen række *kan* matche.
+        saved = globals()["row_claims_paid_name"]
+        globals()["row_claims_paid_name"] = lambda name, label: False
+        try:
+            return check_free_cells_for_paid(paid_cell_catalog,
+                                             [(paid_cell_relative, text)])
+        finally:
+            globals()["row_claims_paid_name"] = saved
+
+    free_claimed = paid_cells(paid_cell_text)
+    mutated_claimed = paid_cells(paid_cell_text.replace(paid_row, paid_row_yes, 1))
+    blind_claimed = paid_cells(paid_cell_text.replace(paid_row, paid_row_yes, 1), blinded=True)
+    real_pages_claimed = check_free_cells_for_paid(real_catalog, source_pages())
+    if (len(mutated_claimed) != 1
+            or "NIS2 / sikkerhedsheadere" not in mutated_claimed[0]
+            or "'server-checks'" not in mutated_claimed[0]
+            or free_claimed
+            or blind_claimed
+            or real_pages_claimed):
+        print("SELFTEST FEJLER: gratis-spalten skal kunne svare ja for en betalt række, "
+              "og kun dér. En række med 'ja' i gratis-spalten for en erklæret "
+              f"pro_features-post giver {len(mutated_claimed)} røde (forventet 1 om "
+              f"NIS2-rækken / server-checks), den uændrede side giver {len(free_claimed)} "
+              f"(forventet 0), den blinde port giver {len(blind_claimed)} (forventet 0), "
+              f"og alle rigtige sider giver {len(real_pages_claimed)} (forventet 0)")
         return 1
 
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
