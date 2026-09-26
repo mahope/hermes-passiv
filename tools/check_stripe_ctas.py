@@ -773,6 +773,74 @@ def check_free_cells_for_paid(catalog: dict, pages: list[tuple[str, str]]) -> li
     return problems
 
 
+#: Den betalte spalte *tilføjer* en funktion til den gratis udgave. Det er
+#: den konstruktion, alle otte fund er skrevet i, og den er derfor den der
+#: gør hele siden umulig at dømme: en blok der siger "Pro adds batch
+#: conversion to the free version" nævner det betalte navn **og** siger
+#: *gratis* i samme sætning, uden at påstande om batch er gratis.
+PRO_ADDS = re.compile(
+    r"\bpro\b[^.]{0,80}?\b(?:adds?|giver|tilføjer)\b"
+    r"|\b(?:adds?|giver|tilføjer)\b[^.]{0,80}?\bpro\b"
+    r"|\bpart of pro\b|\bdel af pro\b",
+    re.I,
+)
+
+
+def free_claim_blocks_in_prose(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """Proseblokker der nævner et betalt navn og samtidig siger *gratis*.
+
+    **Dette er ikke en port.** Det er opgave 81s regel, skrevet på hele
+    siden i stedet for kun i gratis/Pro-tabellerne — den udformning
+    `paid_contexts` ikke kan give, fordi den læser den betalte spalte.
+
+    Målt på de rigtige købssider: **12 blokker, 12 korrekte.** De er otte
+    sider der siger *"Pro adds X to the free version"*, *"The free version
+    is the complete tool … Pro adds X"* og *"The CLI is free. The desktop
+    app is part of Pro"* — altså den ærlige konstruktion, hvor den gratis
+    påstand gælder basen og det betalte navn står i en *tilføjelse*. En port
+    på hele siden ville gøre alle otte sider røde, så den er **ikke** bygget,
+    og selftesten beviser at målingen stadig holder.
+
+    Bevaret fordi resultatet er dyrt at genfinde: opgave 79 målte den
+    næsten identiske retning til 11 røde og 8 falske og brugte en time på
+    den. Skrivet som kode er den én kørsel.
+    """
+    products = catalog.get("products")
+    offers = catalog.get("offers")
+    if not isinstance(products, dict) or not isinstance(offers, list):
+        return []
+    by_path = dict(pages)
+    found: list[str] = []
+    for offer in offers:
+        product = products.get(offer.get("product"))
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        features = product.get("pro_features")
+        if not isinstance(features, list) or not features:
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue
+        lang = page_lang(str(relative), text)
+        for block in prose_blocks(text):
+            flat = normalize(block)
+            if FREE_TIER_PHRASES.search(flat) is None:
+                continue
+            for feature in features:
+                labels = pro_labels(feature, lang)
+                if not labels:
+                    continue
+                if not any(row_claims_paid_name(flat, label) for label in labels):
+                    continue
+                if PRO_ADDS.search(flat) is not None:
+                    # Den ærlige konstruktion: basen er gratis, Pro tilføjer.
+                    continue
+                found.append(f"{relative}: {feature.get('id')!r} i prosa: {flat[:120]}")
+                break
+    return found
+
+
 #: Et element hvis hele formål er at vise en pris. Ikke en tilfældig
 #: omtale i en løbende tekst — det er den forskel, der gør reglen brugbar.
 #: `site/guides.html` og en GDPR-blogpost må gerne nævne $19 og €900.000;
@@ -3155,6 +3223,46 @@ def self_test() -> int:
               f"NIS2-rækken / server-checks), den uændrede side giver {len(free_claimed)} "
               f"(forventet 0), den blinde port giver {len(blind_claimed)} (forventet 0), "
               f"og alle rigtige sider giver {len(real_pages_claimed)} (forventet 0)")
+        return 1
+
+    # ── hele siden som dømmingsflade: målt, bevaret, ikke en port ──────────
+    #
+    # Beviset er tre tal, og alle tre skal være sådan. (a) På de rigtige
+    # sider giver helsides-reglen **0** fund, fordi de otte blokke der siger
+    # "gratis" *og* et betalt navn alle er den ærlige "Pro tilføjer"-form.
+    # (b) Den syntetiske fejlform — en sætning der *lukrer* at en betalt
+    # funktion er gratis — giver præcis 1 fund, så nul fundene i (a) er
+    # ikke en port der er blind. (c) Samme syntetiske sætning med
+    # PRO_ADDS slået fra springer **frem** som fund: det beviser at
+    # (a) ikke er grøn fordi funktionen slet ikke kan findes.
+    whole_page_real = free_claim_blocks_in_prose(real_catalog, source_pages())
+    whole_page_catalog = {**real_catalog, "offers": [
+        {**offer, "path": "site/eksempel.html"}
+        for offer in real_catalog["offers"][:1]
+        if offer.get("product") == "clean-copy-pro"]}
+    lying_prose = (f'<html><body><p>Batch conversion is free in the web tool, '
+                   f'along with everything else you paste.</p></html>')
+    whole_page_synthetic = free_claim_blocks_in_prose(
+        whole_page_catalog, [("site/eksempel.html", lying_prose)])
+    saved_adds = globals()["PRO_ADDS"]
+    globals()["PRO_ADDS"] = re.compile(r"(?!x)x")
+    try:
+        whole_page_without_marker = free_claim_blocks_in_prose(
+            real_catalog, source_pages())
+    finally:
+        globals()["PRO_ADDS"] = saved_adds
+    if (whole_page_real
+            or len(whole_page_synthetic) != 1
+            or "'batch'" not in whole_page_synthetic[0]
+            or len(whole_page_without_marker) != 7):
+        print("SELFTEST FEJLER: helsides-reglen skal finde 0 på de rigtige sider "
+              "(de otte blokke er den ærlige 'Pro tilføjer'-form), 1 på den "
+              "syntetiske løgn, og 7 når 'tilføjer'-markøren slås fra. "
+              f"Målt: {len(whole_page_real)} / {len(whole_page_synthetic)} / "
+              f"{len(whole_page_without_marker)}. Et tal der ikke passer kan "
+              "være en ny fejl i prosaen — eller en redaktion der har flyttet "
+              "en betalt funktion uden for en tilføjelses-sætning. Se "
+              "`free_claim_blocks_in_prose`.")
         return 1
 
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
