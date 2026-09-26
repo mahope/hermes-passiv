@@ -56,9 +56,14 @@ export default {
     // fra git ligger stadig i CDN'en og kan hentes — med gammel kode og gammel
     // tekst. 1.5.3 lovede "nothing leaves your browser", mens license.js poster
     // nøglen til mahope.tools. Kildesandheden er `tools/retired_downloads.json`,
-    // og `tools/check_retired_downloads.py` fejler hvis de to er uenige.
+    // og `tools/check_retired_downloads.py` fejler hvis de to er uenige — eller
+    // hvis et arkiv er slettet i git-historikken uden at stå nogen af steder.
+    //
+    // 1.3.3 er den anden slettede fil, der stadig svarede 200: dens index.html
+    // lovede "$19/year" for et produkt uden product_key (opgave 37/38).
     const RETIRED_DOWNLOADS = {
     '/downloads/clean-copy-firefox-v1.5.3.zip': '/downloads/clean-copy-firefox-v1.5.4.zip',
+    '/downloads/eaa-scanner-desktop-src-1.3.3.zip': '/downloads/eaa-scanner-desktop-src-1.3.4.zip',
     };
     if (RETIRED_DOWNLOADS[path]) {
       return Response.redirect(new URL(RETIRED_DOWNLOADS[path], request.url).toString(), 301);

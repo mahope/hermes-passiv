@@ -1,9 +1,32 @@
 {
-  "_readme": "Arkiver der er taget ud af repoet, men stadig kan hentes i CDN'en. Cloudflare Pages fjerner ikke slettede assets, så den gamle fil bliver liggende og kan downloades med gammel kode og gammel tekst. Hver linje skal have en 301 i site/_worker.js, så et gammelt link (blog, butiksliste, mail) lander på den nuværende fil. `tools/check_retired_downloads.py` holder json, worker og dist i overensstemmelse, og `tools/check_live_sitemaps.py` bekræfter efter deployen at stien ikke længere svarer 200.",
+  "_readme": "Arkiver der er taget ud af repoet, men stadig kan hentes i CDN'en. Cloudflare Pages fjerner ikke slettede assets, så den gamle fil bliver liggende og kan downloades med gammel kode og gammel tekst. Hver linje skal have en 301 i site/_worker.js, så et gammelt link (blog, butiksliste, mail) lander på den nuværende fil. `tools/check_retired_downloads.py` holder json, worker og dist i overensstemmelse, `tools/check_live_sitemaps.py` bekræfter efter deployen at stien ikke længere svarer 200, og porten kræver at ethvert arkiv, der er slettet i git-historikken, enten står her eller er noteret under `_gone` med en begrundelse.",
+  "_gone_readme": "Arkiver under `site/downloads/` der er slettet i git, og som `curl -sI` 26/9 viste svarer 404 på BÅDE domæner — altså ikke hentbare, så en 301 ville løse intet. De står her, ikke i `tools/*.py`, så listen er data i én fil og kan revideres uden at ændre kode. Har en af dem nogensinde svaret 200, skal den flyttes op i domæn-blokken med en `replaced_by` — det er præcis hvad der skete med 1.3.3.",
   "cleancopy.tools": {
     "/downloads/clean-copy-firefox-v1.5.3.zip": {
       "replaced_by": "/downloads/clean-copy-firefox-v1.5.4.zip",
       "reason": "README'en i 1.5.3 lovede \"No network requests — nothing leaves your browser\", men license.js POSTer nøglen til mahope.tools/api/license. 1.5.4 siger det rigtige, og badge'et stod stadig på version 1.4.1."
     }
+  },
+  "mahope.tools": {
+    "/downloads/eaa-scanner-desktop-src-1.3.3.zip": {
+      "replaced_by": "/downloads/eaa-scanner-desktop-src-1.3.4.zip",
+      "reason": "1.3.3-arkivet indeholdt den urettede fejl fra opgave 38: index.html lovede \"$19/year\" for EAA-scanneren, som ikke har nogen product_key, og \"Purchase a license at hermes-passiv.pages.dev/clean-copy\" pegede på en side der ikke sælger den. `curl -sI` 26/9 viste 200 med 58052 byte, altså stadig hentbar med den løgn. 1.3.4 siger \"nothing to buy yet\"."
+    }
+  },
+  "_gone": {
+    "/downloads/eaa-scanner-desktop-src-1.3.0.zip": "Slet da desktop-kilden fik lockfil og .nvmrc. Målt 404 på mahope.tools og cleancopy.tools 26/9.",
+    "/downloads/eaa-scanner-desktop-src-1.2.0.zip": "Slet da desktop-kilden gik fra 1.2.0 til 1.3.0. Målt 404 på begge domæner 26/9.",
+    "/downloads/clean-copy-firefox-v1.5.2.zip": "Slet i opgave 7 da extension-kilden blev regenereret. Målt 404 på begge domæner 26/9 (opgave 8 havde set 404, opgave 28s note om 1.5.3 er en anden fil).",
+    "/downloads/clean-copy-v1.5.2.zip": "Samme som firefox-arkivet, Chrome-udgaven. Målt 404 på begge domæner 26/9.",
+    "/downloads/clean-copy-obsidian-v1.0.6.zip": "Slet da Obsidian-plugin-kilden blev regenereret. Målt 404 på begge domæner 26/9.",
+    "/downloads/clean-copy-obsidian-v1.0.7.zip": "Mellemudgave, slettet ved regenerering. Målt 404 på begge domæner 26/9.",
+    "/downloads/clean-copy-obsidian-v1.0.8.zip": "Mellemudgave, slettet ved regenerering. Målt 404 på begge domæner 26/9.",
+    "/downloads/clean-copy-obsidian-v1.0.9.zip": "Mellemudgave, slettet da 1.0.10 blev det publicerede arkiv. Målt 404 på begge domæner 26/9.",
+    "/downloads/compliance-bundle-v1.0.zip": "Den betalte PDF-bundle blev afskaffet (opgave 22: ingen product_key, ingen fil i KV, alle seks e-bøger er gratis). Den har ingen erstatning, fordi erstatningen ville være et betalt produkt — derfor 404 og ikke en 301. Målt 404 på begge domæner 26/9.",
+    "/downloads/compliance-bundle.pdf": "Samme som .zip: den løse PDF blev slettet med bundlen. Målt 404 på begge domæner 26/9.",
+    "/downloads/eaa_scanner-1.1.0-py3-none-any.whl": "Slet da scanneren gik fra 1.1.0 til 1.2.0. Målt 404 på begge domæner 26/9.",
+    "/downloads/eaa_scanner-1.1.0.tar.gz": "Samme som .whl. Målt 404 på begge domæner 26/9.",
+    "/downloads/page-profile/page-profile-1.0.0.tar.gz": "Første udgivelse af Page Profile-pakken, slettet ved regenerering. Målt 404 på begge domæner 26/9.",
+    "/downloads/page-profile/page-profile-1.1.0.tar.gz": "Mellemudgave, slettet da 1.2.0 blev det publicerede arkiv. Målt 404 på begge domæner 26/9."
   }
 }
