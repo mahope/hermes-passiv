@@ -390,6 +390,22 @@ STEPS: tuple[Step, ...] = (
             "site/downloads/eaa-scanner-README.md",
         ),
     ),
+    # Opgave 88: opgave 87's port dømte *kommandoen* i README'en, men den
+    # lover fire veje ind i produktet, og de tre andre var i stykker:
+    # `pip install eaa-scanner` (404 på PyPI), `unzip … && cd desktop` (den
+    # publicerede zip har ingen mappe) og DMG'en på v1.2.0 mens downloadsiden
+    # sælger v1.3.3. Denne port måler alle fire mod de artefakter kunden får.
+    Step(
+        id="readme-paths",
+        argv=("python3", "tools/check_readme_paths.py", "--self-test"),
+        inputs=(
+            "tools/check_readme_paths.py",
+            "site/downloads/eaa-scanner-README.md",
+            "site/downloads.html",
+            "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl",
+            "site/downloads/eaa-scanner-desktop-src-1.3.4.zip",
+        ),
+    ),
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),
