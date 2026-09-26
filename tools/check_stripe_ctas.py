@@ -29,6 +29,7 @@ import argparse
 import json
 import re
 import sys
+import tempfile
 from typing import Any
 from html.parser import HTMLParser
 from pathlib import Path
@@ -405,6 +406,116 @@ def check_comparisons(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
                         f"række {index} ({row[0][:40]!r}), men siden har ingen købsknap — "
                         f"prisen kan ikke betales, og produktet findes ikke i katalogen"
                     )
+    return problems
+
+
+# ── Hvor en kunde bliver sendt hen for at købe ───────────────────────────
+#
+# `check_comparisons` læser HTML-sider. Den læser ikke de filer, en kunde
+# *installerer* — og det var præcis der den værste fejl stod: `desktop/index.html`
+# skrev "Purchase a license at <død vært>" og opgav en $19-pris på et produkt,
+# der ikke findes i kontrakten. Brugeren får den besked i en Electron-app,
+# hvor der ikke er en side ved siden af med en købsknap, så den er en
+# dødsport, ikke en konverteringsmulighed.
+#
+# Reglen er derfor skærpet i forhold til siderne: på en *side* er en Pro-pris
+# uden købsknap en konverteringsfejl, fordi produktet sælges et andet sted.
+# I en *klient* er den en løgn, fordi klienten er det eneste sted brugeren
+# ser. Derfor gælder kravet om et betalingslink hele klientens fil.
+#
+# **Kendte begrænsning, opskrevet frem for skjult:** porten kræver, at linjen
+# peger et sted hen (`DESTINATION`). En ren "Purchase a licence" uden nogen
+# adresse giver intet fund, fordi den ikke kan skelnes fra en knap, der gør
+# noget i appen. Til gengæld kan reglen ikke slås fra med en advarsel.
+CLIENT_DIRS = (
+    "desktop",
+    "extension-clean-copy",
+    "extension-clean-copy-firefox",
+    "extension-clean-copy-vscode",
+    "obsidian-plugin",
+    "page-profile",
+    "scanner",
+    "companion",
+)
+CLIENT_SKIP_DIRS = {"node_modules", "dist", "__pycache__", ".wrangler"}
+CLIENT_SUFFIXES = {".html", ".js", ".mjs", ".cjs", ".py", ".md", ".json", ".txt", ".ts"}
+BUY_INSTRUCTION = re.compile(
+    r"\b(?:purchase|purchasing|buy|order|order now|shop|checkout|get (?:a|your) licen[cs]e"
+    r"|køb|bestil)\b",
+    re.I,
+)
+LICENCE_WORD = re.compile(r"\b(?:licen[cs]e|pro|premium|paid)\b", re.I)
+#: En *henvisning* til et købssted: et anker, en URL eller et værtnavn.
+#:
+#: Uden den var porten rød på den ærlige sætning. Den rettede tekst siger
+#: "There is no Pro licence ... and no price to pay for one — so there is
+#: nothing to buy yet", og den har både "licence" og "buy" på samme linje.
+#: Det er ikke en død vej, det er modsatte: en tekst der fortæller, at
+#: der intet er at købe. Derfor skal fejlen være en *henvisning* — noget der
+#: peger et sted hen — og ikke et ord. Så kan reglen ikke slås fra ved at
+#: skrive en advarsel ind i den.
+DESTINATION = re.compile(
+    r"<a\s[^>]*href|https?://|\b[\w-]+(?:\.[\w-]+)*\.(?:dev|com|tools|dk|io|app|net)\b",
+    re.I,
+)
+
+
+def client_sources() -> list[Path]:
+    """Kildefiler der en kunde får i hånden: de shippede klienter.
+
+    Ikke `site/` — siderne er dækket af `check_comparisons` med den anden
+    regel. Ikke `dist/` — det er bygget, og bygget er gaten's første step.
+    """
+    files: list[Path] = []
+    for name in CLIENT_DIRS:
+        base = ROOT / name
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*")):
+            if not path.is_file() or CLIENT_SKIP_DIRS & set(path.parts):
+                continue
+            if path.suffix.lower() in CLIENT_SUFFIXES:
+                files.append(path)
+    return files
+
+
+def check_client_purchase_targets(
+    catalog: dict, paths: list[Path] | None = None
+) -> list[str]:
+    """En klient må ikke sende brugeren hen for at købe noget uden et købssted.
+
+    Kun ét fund gjaldt i hele familien, og det var den alvorlige fejl:
+    `desktop/index.html:72`. Alt andet — extensionernes "Pro $19/år" og
+    "Clean Copy Pro ($19/year)" — er *sandt*, fordi `clean-copy-pro` findes i
+    kontrakten; de linker bare ikke til kassen i den samme fil, hvilket er en
+    anden fejl end at sende nogen ud i det blå.
+    """
+    links = catalog_links(catalog)
+    problems: list[str] = []
+    for path in client_sources() if paths is None else paths:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        # Selftesten sender syntetiske filer ind uden for repoet, så et
+        # `relative_to(ROOT)` ville kaste i selve porten. Opgave 28 gjorde
+        # det samme med en sti, der pegede ud af repoet, og den dræbte alle
+        # tre deploys i stedet for at advare om sig selv.
+        try:
+            label = str(path.relative_to(ROOT))
+        except ValueError:
+            label = str(path)
+        if any(link in text for link in links):
+            continue
+        for number, line in enumerate(text.splitlines(), 1):
+            if (BUY_INSTRUCTION.search(line) and LICENCE_WORD.search(line)
+                    and DESTINATION.search(line)):
+                problems.append(
+                    f"{label}:{number}: beder brugeren om at købe eller "
+                    f"bestille en licens ({normalize(line)[:60]!r}), men filen indeholder intet "
+                    f"betalingslink fra katalogen. I en klient er det en død vej — der er ingen "
+                    f"købsside ved siden af den."
+                )
     return problems
 
 
@@ -840,6 +951,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_comparisons(catalog, source_pages())
+    problems += check_client_purchase_targets(catalog)
     return problems, inventory
 
 
@@ -982,6 +1094,33 @@ def self_test() -> int:
     buyable = check_comparisons(
         good, [("site/eksempel.html", table("$19/year", link=f'<a href="{clean_copy_link}">Buy</a>'))])
     priceless = check_comparisons(good, [("site/eksempel.html", table("Not for sale yet"))])
+
+    # 7: en *klient* må ikke sende brugeren ud for at købe noget uden et
+    # købssted. Scenarierne er rigtige filer i en midlertidig mappe, fordi
+    # porten læser filer — ikke strenge.
+    with tempfile.TemporaryDirectory() as tmp:
+        def client(name: str, body: str) -> Path:
+            path = Path(tmp) / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(body, encoding="utf-8")
+            return path
+
+        dead_buy = client("desktop/index.html", (
+            '<p class="pro-note">Purchase a license at '
+            '<a href="#" id="buyLicenseLink">hermes-passiv.pages.dev/clean-copy</a></p>\n'))
+        danish_buy = client("desktop/om.js", (
+            "// K\u00f8b en licens p\u00e5 https://example.invalid/licens\n"))
+        # Uden en anden filnavn skriver denne linje sin egen tekst oven i
+        # `dead_buy`, og scenarioen ville stå som fanget uden at have
+        # prøvet noget: præcis det porten er skrevet til at fange.
+        honest = client("desktop/honest.html", (
+            '<p>There is no Pro licence for the EAA scanner today, and no price to pay for '
+            'one \u2014 so there is nothing to buy yet.</p>\n'))
+        with_link = client("page-profile/readme.md", (
+            f'K\u00f8b licensen her: {clean_copy_link}\n'))
+        dead_client_buy = check_client_purchase_targets(good, [dead_buy, danish_buy])
+        honest_client = check_client_purchase_targets(good, [honest])
+        linked_client = check_client_purchase_targets(good, [with_link])
     # Uden denne kontrol er `unbuyable_words` en stum scene: `$`-mønsteret
     # ville have fundet nul priser i "19 USD per year", så scenariet kunne
     # stå som fanget uden at have prøvet det valutaordene er der for.
@@ -1012,11 +1151,14 @@ def self_test() -> int:
         ("en Pro-pris uden nogen købsknap", unbuyable_symbol),
         ("en Pro-pris i valutaord uden købsknap", unbuyable_words),
         ("en tom celle i en tabel på en side der ikke sælger", hollow_unsold),
+        ("en klient der sender brugeren ud for at købe uden et købssted", dead_client_buy),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
-    for label, problems in (("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
+    for label, problems in (("en klient der siger at der intet er at købe", honest_client),
+                            ("en klient med et katalogens betalingslink", linked_client),
+                            ("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
                             ("en donationsside uden gratis-udgave", donation_no_free),
                             ("en gratis/Pro-tabel med købsknap", buyable),
                             ("en gratis/Pro-tabel uden pris", priceless)):

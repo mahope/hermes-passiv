@@ -17,17 +17,17 @@
 - `STATE` (før): `Opgave 21 FÆRDIG — opgavens forudsætning var forkert: de fire Clean Copy-arkiver har haft en indholdsgate siden opgave 7 del 2 (gatestep 11 beviser byte-identisk regeneration, kilde-identiske medlemmer, version.txt og ingen død vært), og --check var grøn for alle tre. Det rigtige hul lå i check_versions.py, som læste filnavnets version for de tre Clean Copy-zip OG desktop-kildearkivet, men ikke deres egen version indeni — og alle fire bærer den. Beviset for at hullet var ældre end opgaven troede, lå i selve fixtureen: de fire arkiver bar "manifest.json": "{}". Nu erklærer alle fire produkter inner=(...), 25 → 31 mutationer, 1 → 2 negative kontroller. Fund: den nye check diagnosticerer hvad byte-sammenligning kun kan sige "afviger fra"; fixtureen måtte ikke blive stående; den anden negativ kontrol er den der beskytter de fire nye linjer mod at gøre publicerede arkiver røde.`
 - `STATE` (før): `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
-- `ITERATION_ID`: `free-tier-clarity-2026-09-26`
+- `ITERATION_ID`: `desktop-pro-claim-2026-09-26`
 - `STATE`: `Opgave 37 FÆRDIG — researchiterationen (opgave 36 kræver Mads) fandt den hidtil værste udgave af den fejlklasse, opgave 26, 29, 30, 31 og 35 har jaget fem gange: **en påstand om noget der ikke findes — her en PRIS.** `site/blog/eaa-compliance-scanner-desktop.html` havde `Price | Free (MIT) | $19/year` i sin Free/Pro-tabel og **0 betalingslinks på hele siden** (udmålt, ikke antaget). Der findes ingen `product_key` for EAA-scanneren, ingen knap, ingen checkout. **Fund 1 — siden modsagde sig selv 39 linjer nede:** eget Licensing-afsnit sagde *"There is no Pro licence for the EAA scanner today, and no price to pay for one"*, og `site/downloads.html` sagde det samme. To sider i samme produkt modsagde hinanden, og bloggen var den, der løftede en pris. **Fund 2 — min egen plan lod opgaven ligge med en forudsætning, der var forkert.** Opgave 31 skrev at Pro-cellerne ikke kan fyldes fordi produktet ikke står i kontrakten, og meldte derfor opgave 32 `BLOCKED: kræver Mads`. Men de reelle tal findes tre steder i repoet (`downloads.html:109`, `desktop/main.js:132`, bloggens egen bulletliste). **Det der ikke kan udledes, er kun prisen** — og en pris på en vare, der ikke eksisterer, skal ikke udledes, den skal fjernes. Det gjorde opgaven til en tekstopgave, ikke en produktafgørelse; ❓ punkt 12 (om Mads vil *oprette* produktet) står uændret. **Fund 3 — de tomme celler var ikke sløshed, men en bivirkning af en god oprydning.** `2c9909d` ("Ryd emoji-ikoner…") fjernede `✓` fra tabellen; de tre celler der kun *indeholdt* et `✓`, blev tomme, mens `✓ Unlimited` bare mistede symbolet. Samme fejlform som opgave 30 fund 1. Derfor er cellerne nu ord (`yes`, `planned`, `Not for sale yet`) frem for symboler, så en fremtidig oprydning ikke kan tømme dem igen. **Fund 4 — porten var grøn på præcis den fejl, den skulle fange, fordi den kun læste katalogens købssider.** `check_free_tier` gennemgår `catalog["offers"]`, og EAA-siden er ikke et tilbud, så ingen regel læste den — samme hullet som opgave 26 (rod-README) og opgave 35 (`reports/weekly/`). Ny `check_comparisons(catalog, source_pages())` læser *alle* sider: ingen tomme celler i en synlig gratis/Pro-tabel, og **en Pro-pris kræver et betalingslink på samme side**. Bevis på de rigtige gamle filer fra `git HEAD`: 4 problemer (3 tomme celler + `$19/year`), mod den rettede fil 0, mod hele treeet 0. **Fund 5 — min egen første portversion ville have været grøn på `/clean-copy-tool`.** `PRICE_TOKEN` er `\$\s?\d[\d.]*` og kan kun se et `$`, men sidens Pro-pris celle skriver **"19 USD per year"**. Bevis: med kun `PRICE_TOKEN` er der **0** priser at finde i hele familiens vigtigste købsside; fjerner man dens købsknap, ville porten være grøn på præcis den manglende købsmulighed den er skrevet til at fange. Ny `CURRENCY_AMOUNT` tæller `$19`/`€19`/`£19`/`19 USD`/`19 kr`, og selftesten sigter eksplicit på forskellen, så et scenarie der kun virker med `$` ikke kan stå som fanget. **Fund 6 — generatoren skrev den værre version end den publicerede side:** `make_blog_desktop_en.py` skrev `"$19/year (coming soon)"` i tabellen og *"Pro requires an annual license key ($19/year)"* i Licensing, hvor den publicerede side allerede havde den ærlige sætning. Kun en rettelse i `site/` ville være gået tabt, præcis som opgave 30 fund 1. Begge er rettet. **Konvertering:** den direkte effekt er lille og ærlig — der var ingen købsknap at miste. Den vigtige effekt er at en citatpris er væk fra en publiceret side, så EAA-scanneren kan sælges uden at nogen beskyldes om at love noget. Samme øjeblik en `product_key` kommer i katalogen, bliver `$19/year` i tabellen lovlig, fordi siden så skal have et betalingslink. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `BASELINE`: `main@935cbfc`
-- `LAST_BRANCH`: `ceo/eaa-pro-pris-laegning`
-- `NEXT_TASK`: `36 — /thanks må ikke vise filer der ikke kan hentes. Se opgave 36. Kræver Mads' svar på opgave 24/25, så den næste iteration igen bliver en researchiteration — og opgave 38 (desktop-appens "Activate Pro License…"-menu) er den frie, hvis den lader sig gøre uden at røre `desktop/`.`
+- `LAST_BRANCH`: `ceo/desktop-pro-claim`
+- `NEXT_TASK`: `39 — 301 for den slettede 1.3.3-kildearkiv, se opgave 39. Den rører `site/_worker.js` og kræver en worker-test, så den er sin egen iteration. Derefter: en researchiteration, fordi køen så er tøm.`
 - `DEPLOY` (opgave 35, LUKKET): `DEPLOY OK 0ebfec7 26/9` — kørsel `36212353040` grøn:
   `gate` (46 steps) + tre grønne deploys. Alle tre domæners `build-info.json` bærer
   `0ebfec7`. `site/` urørt, så domænerne er uændrede indholdsmæssigt.
 - `PLAN_COMMIT`: `denne iteration: kode + plan i samme commit (9609475), + én ren plan-commit for deploynoten (0ebfec7)`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1., 27: 1/1., 28: 1/1., 29: 1/1., 30: 1/1., 31: 1/1., 32: 0/0 (kræver Mads), 33: 1/1., 34: 1/1., 35: 1/1.`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1., 27: 1/1., 28: 1/1., 29: 1/1., 30: 1/1., 31: 1/1., 32: 0/0 (kræver Mads), 33: 1/1., 34: 1/1., 35: 1/1., 37: 1/1., 38: 1/1.`
 - `DEPLOY` (opgave 34, LUKKET): `DEPLOY OK 07a9a85 26/9` — kørsel `36211523572` grøn: `gate` (44 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `07a9a854fc20b31a4fbc9f36b0f7b1f1f33d1ac6`, hvilket er præcis merge-SHA'en den åbne note bad om. `site/` var urørt af opgave 34, så domænerne er indholdsmæssigt uændrede — kun byggemetadata bærer den nye SHA. Den efterfølgende merge `3d94884` (deploynote-34) lå **uden for** path-filteret, så den deployede ikke med vilje, og det er korrekt: intet i `site/` eller `dist/` er rørt.`
 - `GATE` (opgave 35): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (fra 44). Nye steps weekly-history + weekly-history-selftest. check_weekly_history: OK. --self-test: OK, 11 kontroller, 0 fejl — inklusive tre negative kontroller (en blok writeren KAN skrive må ikke markeres som død; en fuldt gyldig rapport med tomt trafikblok må ikke fejle; selftesten efterlader arkivet gyldigt) og en provenance-kontrol med et helt andet død-navn (`gumroad`), så porten ikke kan være grøn på en navneliste. Bevis på de rigtige gamle filer: `git archive HEAD reports/weekly` ind over porten → 3 fejl, én pr. arkivfil, fundet i den rigtige fil. Stripe-worker uændret 77/77, tracking-worker uændret 83/83, test_weekly_report uændret grøn, site/_worker.js urørt, dist/uændret (gitignored). test_deploy_workflow grøn og dækker nu reports/weekly/*.json.`
 - `DEPLOY` (opgave 33, LUKKET): `DEPLOY OK 45b75a9 26/9` — kørsel `36211041371` grøn: `gate` (44 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `45b75a9`. Den **hentede** `/thanks` er hentet fra `mahope.tools` og dens eget script kørt i node mod de fem betalingsformer: donation → 1 fetch, kortet synligt, `Thank you — there is nothing to activate`, ingen netværksfejl (før: 6 fetch, kortet `hidden`, `Network problem. Refresh this page in a moment.`); licens med email → nøgle + "We have also emailed"; licens **uden** email → "We could not email this to you"; download → filnavn + workerens `/api/download`-adresse. Den gamle statiske mail-påstand findes ikke længere som markup på siden.
@@ -90,6 +90,10 @@ Før en ny iteration ændrer kode skal den sætte `ACTIVE_TASK` til opgavenummer
 - `DEPLOY` (opgave 37, LUKKET): `DEPLOY OK 5dc38eb 26/9` — kørsel `36213156292` grøn: `gate` (46 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `5dc38ebfb36e0d9e845f64a15e7e77ae818aac60`, som er merge-SHA'en. Den **hentede** `https://mahope.tools/blog/eaa-compliance-scanner-desktop` (22261 byte) har **0** fund af `19/year` eller `19 USD` og har `Not for sale yet`, `Pro (not released)`, 2× `planned, not in this build` og den ærlige `There is no Pro licence`. `check_comparisons` kørt mod den hentede live-side: 0 problemer — porten er altså grøn på præcis den tekst der er publiceret, ikke kun på kilden.
 - `GATE` (opgave 37): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (uændret — de nye regler bor i de eksisterende steps `stripe-ctas` + `stripe-ctas-selftest`, så path-filteret er urørt). check_stripe_ctas: 0 problems, 13 produkter, 11 dokumenterede købssider. --self-test: 18/18 fejlformer (fra 15), 4 negative kontroller grønne (en side der SAYER gratis-udgaven, en donationsside, en gratis/Pro-tabel MED købsknap, en gratis/Pro-tabel UDEN pris), plus to stumheds-kontroller: `PRICE_TOKEN` må ikke kunne se "19 USD per year", ellers er reglen om valutaord meningsløs, og `CURRENCY_AMOUNT` skal kunne finde sit eget positive eksempel. Bevis på de rigtige gamle filer fra `git HEAD`: 4 problemer i den ene fil (3 tomme celler + `$19/year` uden købsknap), 0 i den rettede, 0 i hele treeet. Stripe-worker uændret 77/77, tracking-worker uændret 83/83, site/_worker.js urørt, dist/uændret (gitignored).`
 - `PLAN_COMMIT` (opgave 37): `kode + plan i samme commit`
+- `STATE`: `Opgave 38 FÆRDIG — desktop-appens licensdialog sendte brugeren ud for at købe en licens til en vært der ikke findes, for det **andet** produkt, og opgav samtidig en $19-pris på et produkt uden product_key. Alt sammen i en Electron-modal, hvor der ikke er en købsside ved siden af den. Priserne og den døde henvisning er væk; Pro-laget er urørt, så ❓ 12 og ❓ 5 er uændrede. **Målingen nægtede mig den største regel:** målebeviset for "den døde vært" viste sig at være *bygdens* kanoniske OLD_ORIGIN, som build_sites.py skriver hver side om fra — en regel mod døde værter ville have renset hele sitet. Se opgave 38, fund 1-6.`
+- `GATE` (opgave 38): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (uændret — den nye regel bor i det eksisterende step stripe-ctas). check_stripe_ctas: 0 problems, 13 produkter, 11 dokumenterede købssider. --self-test: 19/19 fejlformer (fra 18), 5 negative kontroller grønne (de tre fra opgave 37 plus to nye: en klient der siger at der intet er at købe, og en klient med katalogens betalingslink). Bevis på de rigtige gamle filer: desktop/index.html fra git HEAD ind over porten → præcis 1 fund, i den rigtige fil på den rigtige linje; den rettede fil → 0. Målt over hele familien af shippede klienter (desktop, fire extensions, obsidian-plugin, page-profile, scanner, companion): 1 fund. Stripe-worker uændret 77/77, tracking-worker uændret, site/_worker.js urørt, dist/uændret (gitignored). build_desktop_archive --check grøn på 1.3.4.`
+- `PLAN_COMMIT` (opgave 38): `kode + plan i samme commit`
+- `DEPLOY` (opgave 38, ÅBEN): `VERIFICÉR DEPLOY: desktop-kildearkiv 1.3.3 → 1.3.4 + de rette Pro-tekster i appen og downloads.html <merge-sha> 26/9` — CI deployer med det samme (`site/**` er i path-filteret, og arkivet ligger i `site/downloads/`). Verificér på **indhold**: `https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` skal pakkes ud til 11 filer, `package.json` skal sige 1.3.4, og arkivets `index.html` skal have `nothing to buy yet` og **0** fund af `$19/year` og **0** af `Purchase a license at`. `build-info.json` skal bære merge-SHA'en på de tre domæner.
 ## Kvalitetsgate
 
 Gaten er **én kommando**, og den har én ejer:
@@ -2010,7 +2014,7 @@ skal have et betalingslink.
 
 **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.
 
-### 38. UFÆRDIG — desktop-appens "Activate Pro License…" leder til et produkt, der ikke findes
+### 38. FÆRDIG (`ceo/desktop-pro-claim`) — desktop-appen sendte brugeren til en død vært for at købe et produkt, der ikke findes
 
 **Begrundelse:** fund 6 i opgave 37, fundet fordi jeg læste kilden bag de tal, jeg rettede tabellen
 med. `desktop/main.js:122` har en menupunkt, der hedder *"Activate Pro License…"*, og
@@ -2030,6 +2034,92 @@ fulde produkt, og `check_comparisons` fra opgave 37 gater den ikke — den måle
 ikke en Electron-meny. **Bemærk:** den nye port dækker altså ikke denne fil, så opgaven skal
 finde sin egen kontrol (fx en `NOT_CLIENTS`-lignende undtagelse i `check_license_clients.py`
 for den døde `hermes-passiv.pages.dev`-vært, ❓ punkt 8) og ikke regne med opgave 37's.
+
+---
+
+## Resultat af opgave 38
+
+**Fund 1 — det var værre end et menupunkt.** `desktop/index.html:72` stod
+*"Purchase a license at ‴hermes-passiv.pages.dev/clean-copy›"* — altså tre fejl i én sætning:
+en **pris** på et produkt uden `product_key` (samme klasse som opgave 37), en
+**henvisning til en vært der ikke findes**, og en henvisning til **et andet produkt**
+end det appen er. Og det hele stod i en Electron-modal, så der ikke er en købsside
+ved siden af den at falde tilbage på. Batch-fanen tilbød samtidig
+`$19/year — covers all platforms: desktop, CLI, web, and CI`.
+
+**Fund 2 — målingen viste sig at være *mest* → *mindst* sand, og det ændrede opgaven.**
+Jeg gik ind med planen om at fjerne hele Pro-laget. Det viste sig unødvendigt: Pro-laget er
+ægte kode (`batch-scan` i `main.js:286`, CSV/JSON-eksport, en licens-IPC), og det eneste
+**objektivt usande** var de tre ting ovenfor. Så blev rettelsen den kirurgiske: priserne og
+den døde købshenvisning væk, resten urørt. ❓ 12 og ❓ 5 er dermed **uændrede** —
+jeg har ikke oprettet produktet og ikke taget Pro-laget fra brugeren, kun løftet løgnen.
+Til gengæld blev dialogen omdøbt fra *"Activate Pro License"* til *"Enter a licence key"*,
+så den ikke længere lover noget den ikke kan holde, selvom den ikke længere sælger noget.
+
+**Fund 3 — mit målebrev om "den døde vært" var næsten helt forkert, og en port på den
+fejl ville have renset hele sitet.** Jeg målte `hermes-passiv.pages.dev` i 200+ filer og ville
+have skrevet en regel mod døde værter. **Den værter er bygdens kanoniske udgangspunkt:**
+`build_sites.py:40` bruger den som `OLD_ORIGIN` og skriver hver side om til sit rigtige
+domæne. En "ingen døde vært"-regel ville have gjort hver side rød. Samme fejl som
+opgave 30 fund 3: det "fund" der ser størst ud, er en målefejl. Derfor er den eneste
+vært-rettelse den i `desktop/`, hvor **intet** omskriver den — mappen bygges ikke af
+`build_sites.py`. About-dialogen og footer-linket peger nu på `https://mahope.tools`;
+`main.js:43` (licensværten) er **urørt med vilje**, fordi den er ❓ 8s dokumenterede undtagelse.
+
+**Fund 4 — min første version af porten var rød på den *rettede* fil.** Samme mønster
+som opgave 29/30/33/37. Den ærlige sætning siger *"There is no Pro licence … and no price
+to pay for one — so there is nothing to buy yet"* og har både "licence" og "buy" på samme
+linje, så porten rødte på min egen rettelse. Løsningen er ikke en undtagelsesliste
+(sådan er enhver undtagelse en senere løj), men et skeln: fejlen skal være en **henvisning**
+(`DESTINATION`: et anker, en URL, et værtnavn), ikke et ord. Så kan reglen ikke slås fra
+ved at skrive en advarsel ind i løgnen — den afsløtende tekst har ingen adresse.
+
+**Fund 5 — kun ÉN fejl i hele familien → målet FØR reglen blev skrevet.** Målt over
+`desktop/`, alle fire extensions, `obsidian-plugin/`, `page-profile/`, `scanner/` og
+`companion/`: **1 fund**, `desktop/index.html:72`. De øvrige — extensionernes *"Pro $19/år"*
+og *"Clean Copy Pro ($19/year)"* — er **sandt**, fordi `clean-copy-pro` findes i kontrakten; de
+linker bare ikke til kassen i samme fil. Det er en anden fejl end at sende nogen ud i det
+blå, og en regel om *priser* ville have gjort dem røde. Selftesten sigter således: 19/19
+fejlformer, og to negative kontroller — *en klient der siger at der intet er at købe* må
+**ikke** fejle, og *en klient med katalogens betalingslink* må ikke fejle.
+
+**Fund 6 — min egen selftest overskrev sit eget scenario.** `honest` skrev til
+`desktop/index.html` i temp-mappen — samme sti som `dead_buy` — så den døde linje forsvandt,
+før porten fik at læse den. Scenariet stod som *fanget* uden at have prøvet noget:
+præcis den fejl, porten er skrevet til at fange. Nu får de hver sit filnavn.
+
+**Afgrænsningen, der ikke er lukket:** åndringslisten ændrer installatørerne på
+`downloads.html` til `v1.3.4`, men **git-tags og releases er Mads'**, så de bliver på 1.3.3.
+Siden siger derfor nu eksplicit, at kildearkivet er 1.3.4 og installatørerne 1.3.3 — ellers
+skulle en læser tro at de får samme version begge steder.
+
+**Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.
+
+### 39. UFÆRDIG — 301 for den slettede 1.3.3-kildearkiv
+
+**Begrundelse:** fund fra opgave 38. `python3 tools/build_desktop_archive.py` slettede
+`site/downloads/eaa-scanner-desktop-src-1.3.3.zip` da versionen steg. **Men Cloudflare Pages
+fjerner ikke slettede assets** — det er præcis opgave 28s dokumenterede årsag, og opgave 27
+fandt beviset: et slettet arkiv med en løgn i README'en blev serveret i dagevis. Det
+1.3.3-arkiv indeholder den **u**rettede fejl fra opgave 38: `$19/year` på et produkt uden
+`product_key` og *"Purchase a license at hermes-passiv.pages.dev/clean-copy"*. Den, der har
+hentet det, beholder altså et program, der sender ham ud for at købe noget uden at vide det.
+
+**Acceptkriterier:** en linje i `tools/retired_downloads.json` for
+`/downloads/eaa-scanner-desktop-src-1.3.3.zip` → `replaced_by` 1.3.4 med en begrundelse;
+en 301 i `site/_worker.js` på samme mønster som 1.5.3 (opgave 28);
+`tests/stripe-worker.test.mjs` udvidet sådan at den gamle sti **kræver** at svare 301 — må det
+give 200, kan den gamle kode stadig hentes; `python3 tools/check_retired_downloads.py` grøn;
+`curl -sI` på live efter deploy.
+
+**Hvorfor ikke i denne iteration:** den rører `site/_worker.js` og kræver en worker-test, og
+kontrakten siger hellere en lille færdig opgave end en stor halvfærdig. Opgave 38 havde
+allerede brugt tidsbudgetten på versionstigning + arkiv + gaten.
+
+**Bemærk om gaten:** `check_retired_downloads` er grøn lige nu, fordi den måler
+json ↔ worker ↔ dist, og sletningen ikke er opført nogen steder. Det er samme hul som
+opgave 26 fandt i rod-README: porten læser de tre steder, men ingen af dem siger, at et arkiv
+der er **slettet mellem to releases** skal have en 301. Den forbedring hører til samme opgave.
 
 ## ❓ Til Mads
 
