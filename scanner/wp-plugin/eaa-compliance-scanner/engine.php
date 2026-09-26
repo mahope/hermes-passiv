@@ -47,6 +47,19 @@ final class EAA_Scanner_Engine {
 			}
 		};
 
+		// --- HTML comments are not markup: drop them before tokenising ---
+		// A comment is invisible to the browser, so a tag inside one is not a
+		// tag on the page. Without this, a theme that comments out the <marquee>
+		// it replaced is reported as blinking content, and a page whose only
+		// <title> sits in a comment is reported as accessible.
+		// The other three engines of this motor (desktop, npm, pip) already skip
+		// comments in their tokeniser, and the Python one gets it free from
+		// html.parser — so this line is what makes the four agree.
+		// Deliberately the same `<!--[\s\S]*?-->` the JS tokenisers use: a
+		// comment left unterminated runs to the end of the file there, and
+		// diverging on that would trade this bug for a smaller one.
+		$html = preg_replace( '/<!--[\s\S]*?-->/', ' ', $html );
+
 		// --- single-pass tokeniser: tag events + the text that follows them --
 		// One regex yields every event in document order: open/close tags and
 		// text runs, so buffers (title/link/button/contrast) stay consistent.
