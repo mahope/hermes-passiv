@@ -625,7 +625,15 @@ async function verifyAndDownload() {
       // say plainly that it is not the full report.
       note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
     } else {
-      note = ' — the report server refused the key: ' + (j && j.error ? j.error : 'try again');
+      // Nøglen er allerede bekræftet aktiv ovenfor, så intet herfra kan være
+      // en afvisning af den. Den gamle tekst sagde "the report server refused
+      // the key" og nåede ethvert 4xx — også et 400 for en privat værtsadresse,
+      // som /scan-proxy lader igennem men rapporten ikke gør. En kunde der
+      // betalte $79 fik så skylden lagt på sin egen nøgle for et problem med
+      // den URL, han havde tastet. Sig hvad der faktisk stoppede, og at nøglen
+      // stadig er i orden.
+      const why = j && j.error ? j.error : 'try again';
+      note = ' — your key is valid, but this report could not be produced: ' + why;
     }
   } catch {
     note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
