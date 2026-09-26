@@ -2347,6 +2347,126 @@ def check_buy_page_entry(offers: list[dict],
     return problems
 
 
+class DiscoverabilityMeta(HTMLParser):
+    """Robots og canonical fra et dokuments *head*, ikke dets JavaScript.
+
+    Regex på rå HTML læser også kode: `site/compliance-report.html:451` har
+    `'Add <link rel="canonical" href="..."> to prevent duplicate content'` som
+    en **streng i den genererede rapport**, og en regex-på-`<head>` ville
+    aldrig nå den, mens en regex på hele filen tager den for en virkelig
+    canonical. Det gjorde den første udgave af reglen til at *undtage* en
+    rigtig købsside. En parser læser kun de rigtige attributter, og slet
+    aldrig tekst inde i `<script>` eller `<style>`.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.robots: list[str] = []
+        self.canonicals: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        values = {key.lower(): (value or "") for key, value in attrs}
+        if tag == "meta" and values.get("name", "").lower() == "robots":
+            self.robots.append(values.get("content", ""))
+        elif tag == "link" and "canonical" in values.get("rel", "").lower().split():
+            href = values.get("href", "").strip()
+            # `rel="canonical"` uden `href` erklærer intet: canonical kræver en
+            # adresse. `/blog/canonical-url-guide` viser netop den tomme form som
+            # kodeeksempel i sin egen brødtekst, og en regel der læste den som
+            # en canonical til `/` ville undtage en rigtig guideartikel.
+            if href:
+                self.canonicals.append(href)
+
+
+def page_is_discoverable(text: str, here: tuple[str, str]) -> bool:
+    """Om siden er en side, en læser eller en søgemaskine skal kunne finde.
+
+    To målte grupper er undtaget, og begge er **erklæret af siden selv** —
+    der er ingen håndlavet undtagelsesliste, der kan blive gammel:
+
+    - `noindex`: siden siger selv at den ikke skal indekseres. `/thanks` og
+      `/stats` er begge `noindex, nofollow` og uden for sitemap, fordi de er
+      transaktions- og driftsværktøjssider. De skal *ikke* have en indgang.
+    - Canonical peger på en **anden** route: siden er så en dublet, og
+      canonical er dens erklæring om hvilken adresse der er den ægte.
+      `/clean-copy` og `/da/clean-copy` er shellede varianter af deres egne
+      hjemmers indhold (målt: 8145 mod 8145 tegn identisk tekst på engelsk,
+      8094 mod 8094 på dansk) og peger på `https://cleancopy.tools/` og
+      `https://cleancopy.tools/da/`. En dublet skal ikke have en indgang —
+      den skal have sin canonical, og den har den.
+
+    Alt andet er en side der *skal* kunne findes, uanset om den ligger i
+    sitemap. Det er derfor reglen ikke er en sitemap-regel: sitemap er en
+    maskinlæsbar liste, ingen læser følger den, og en side uden indgang er
+    uopdaget for alle der ikke gætter URL'en.
+    """
+    meta = DiscoverabilityMeta()
+    try:
+        meta.feed(text)
+        meta.close()
+    except Exception:  # en ikke-parsebar side er ikke en undtagelse
+        return True
+    for content in meta.robots:
+        if "noindex" in content.lower():
+            return False
+    for href in meta.canonicals:
+        target = urlsplit(href.strip())
+        if target.netloc and target.netloc.lower() != here[0]:
+            continue  # canonical til et andet domæne: ikke en dublet her.
+        if route_key(here[0], target.path or "/")[1] != here[1]:
+            return False
+    return True
+
+
+def check_indexable_entry(index: dict[tuple[str, str], set[str]],
+                          dist_root: Path | None = None) -> list[str]:
+    """En side der skal kunne findes, skal have mindst én indgang.
+
+    Fejlformen er målt i det byggede `dist/`, ikke antaget. 310 sider, hvoraf
+    **3** stod uden indgang fra nogen anden bygget side — og de tre fejler
+    alle tre af egne vilkår, så de er korrekte:
+
+    - `cleancopy.tools/da/clean-copy` er en shelled dublet af `/da/`
+      (8094 mod 8094 tegn identisk synlig tekst) med canonical på `/da/`.
+    - `mahope.tools/thanks` og `mahope.tools/stats` er `noindex, nofollow`
+      og uden for sitemap.
+
+    Det er derfor opgave 62's håndlavede femtalsliste er unødvendig: siden
+    erklærer selv, om den skal findes, og reglen læser den erklæring. Den
+    ændrede dog målingen fra "8 af 318" til "3 af 310, alle tre korrekte",
+    fordi de to DeskUptime-værktøjer og Clean Copies MCP-side efterhånden
+    har fået indgange fra deres egne hubs.
+    """
+    root = dist_root or (ROOT / "dist")
+    problems: list[str] = []
+    for domain in KNOWN_DOMAINS:
+        base = root / domain
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*.html")):
+            relative = path.relative_to(base).as_posix()
+            if relative == "404.html" or relative.endswith("/404.html"):
+                continue  # En 404-side er ikke en side nogen skal finde.
+            here = route_key(domain, "/" + relative)
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            if not page_is_discoverable(text, here):
+                continue
+            if index.get(here):
+                continue
+            problems.append(
+                f"{domain}/{relative} ({here[1]}): siden skal kunne findes — den er "
+                f"indexable og dens canonical peger på sig selv — men ingen af de "
+                f"byggede sider linker til den. Den ligger i sitemap, og en sitemap "
+                f"er ikke en indgang en læser kan følge, så siden er uopdaget for "
+                f"alle der ikke gætter URL'en. Link til den fra en side læseren "
+                f"faktisk lander på."
+            )
+    return problems
+
+
 def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
     products = catalog["products"]
     offers = catalog.get("offers")
@@ -2585,6 +2705,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += offer_problems
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
     problems += check_buy_page_entry(catalog.get("offers") or [], entry_point_index())
+    problems += check_indexable_entry(entry_point_index())
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
     problems += check_analysis_location(source_pages())
@@ -3740,6 +3861,76 @@ def self_test() -> int:
         print("SELFTEST FEJLER: en bygget side der linker krydsdomæne til købssiden fejler "
               "alligevel: " + "; ".join(cross_real))
         return 1
+
+    # ── findbarhed: en indexabel side skal have en indgang ─────────────────
+    #
+    # Scenarierne bygger en syntetisk dist med de **fire** grupper, målingen på
+    # de rigtige sites deler sig i: en side der skal findes og ikke kan, de to
+    # grupper der *ikke* skal have en indgang fordi de erklærer det selv
+    # (`noindex` og canonical-dublet), og en krydsdomæne-indgang der tæller.
+    # Uden de tre negative ville reglen være grøn fordi den springer alt over,
+    # og uden den første positive ville den være grøn fordi den intet måler.
+    with tempfile.TemporaryDirectory() as tmp:
+        idx_root = Path(tmp) / "indgang"
+        host = idx_root / "mahope.tools"
+        host.mkdir(parents=True)
+
+        def idx_page(name: str, head: str = "", body: str = "") -> None:
+            (host / name).write_text(
+                f"<html><head>{head}</head><body>{body}</body></html>", encoding="utf-8")
+
+        own = '<link rel="canonical" href="https://mahope.tools/vaerktoj">'
+        idx_page("vaerktoj.html", own)                       # skal findes, ingen indgang
+        idx_page("noindex.html",
+                 '<meta name="robots" content="noindex, nofollow">',
+                 # En undtaget side kan stadig *give* en indgang. Uden dette
+                 # ville indgangssiden selv være den næste røde, og reglen
+                 # ville have en uendelig regres af røde sider.
+                 '<a href="/indgang">Videre</a>')
+        idx_page("dublet.html",
+                 '<link rel="canonical" href="https://mahope.tools/vaerktoj">')
+        (host / "404.html").write_text(
+            '<html><body><a href="/vaerktoj">Findes ikke</a></body></html>',
+            encoding="utf-8")
+        orphan = check_indexable_entry(entry_point_index(idx_root), idx_root)
+        if len(orphan) != 1 or "/vaerktoj" not in orphan[0]:
+            print("SELFTEST FEJLER: findbarhedsreglen skal give præcis 1 rød for "
+                  "vaerktoj.html — indexabel, canonical på sig selv, ingen indgang. "
+                  "Fandt " + str(len(orphan)) + ": " + "; ".join(orphan))
+            return 1
+        # Grøn: den samme side, når en rigtig side linker til den. Kun den
+        # ændrede vi gør forskellen — `noindex`, dublet og 404 ligger urørt.
+        # `andet-sted.html` kommer med her: canonical til et *andet domæne* er
+        # ikke en dublet (domænet er selv den erklærede adresse), så siden har
+        # krav på en indgang — og får en fra samme side.
+        idx_page("andet-sted.html",
+                 '<link rel="canonical" href="https://cleancopy.tools/vaerktoj">')
+        idx_page("indgang.html",
+                 body='<a href="/vaerktoj">Se værktøjet</a>'
+                      '<a href="/andet-sted">Se siden</a>')
+        if reachable_now := check_indexable_entry(entry_point_index(idx_root), idx_root):
+            print("SELFTEST FEJLER: findbarhedsreglen fejler på en side der har en "
+                  "indgang: " + "; ".join(reachable_now))
+            return 1
+    # Krydsdomæne: en bygget side på et andet domæne der linker absolut til
+    # siden tæller, fordi buildet skriver krydsdomæne-links som absolutte URL'er.
+    # De to sider henviser gensidigt, så grønt her betyder at indgangen er
+    # accepteret — hvis krydsdomænet blev ignoreret, ville begge blive røde.
+    with tempfile.TemporaryDirectory() as tmp:
+        cross_root = Path(tmp) / "kryds"
+        (cross_root / "mahope.tools").mkdir(parents=True)
+        (cross_root / "cleancopy.tools").mkdir(parents=True)
+        (cross_root / "mahope.tools" / "vaerktoj.html").write_text(
+            '<html><head><link rel="canonical" href="https://mahope.tools/vaerktoj">'
+            '</head><body><a href="https://cleancopy.tools/blog">Se bloggen</a>'
+            '</body></html>', encoding="utf-8")
+        (cross_root / "cleancopy.tools" / "blog.html").write_text(
+            '<html><body><a href="https://mahope.tools/vaerktoj">Se værktøjet</a>'
+            '</body></html>', encoding="utf-8")
+        if cross_entry := check_indexable_entry(entry_point_index(cross_root), cross_root):
+            print("SELFTEST FEJLER: en krydsdomæne-indgang til en indexabel side tæller "
+                  "ikke: " + "; ".join(cross_entry))
+            return 1
 
     # ── købsklik der ikke måles ────────────────────────────────────────────
     #
