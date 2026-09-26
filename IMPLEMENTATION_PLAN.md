@@ -23,10 +23,14 @@
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ITERATION_ID`: `desktop-pro-claim-2026-09-26`
 - `STATE`: `Opgave 37 FÆRDIG — researchiterationen (opgave 36 kræver Mads) fandt den hidtil værste udgave af den fejlklasse, opgave 26, 29, 30, 31 og 35 har jaget fem gange: **en påstand om noget der ikke findes — her en PRIS.** `site/blog/eaa-compliance-scanner-desktop.html` havde `Price | Free (MIT) | $19/year` i sin Free/Pro-tabel og **0 betalingslinks på hele siden** (udmålt, ikke antaget). Der findes ingen `product_key` for EAA-scanneren, ingen knap, ingen checkout. **Fund 1 — siden modsagde sig selv 39 linjer nede:** eget Licensing-afsnit sagde *"There is no Pro licence for the EAA scanner today, and no price to pay for one"*, og `site/downloads.html` sagde det samme. To sider i samme produkt modsagde hinanden, og bloggen var den, der løftede en pris. **Fund 2 — min egen plan lod opgaven ligge med en forudsætning, der var forkert.** Opgave 31 skrev at Pro-cellerne ikke kan fyldes fordi produktet ikke står i kontrakten, og meldte derfor opgave 32 `BLOCKED: kræver Mads`. Men de reelle tal findes tre steder i repoet (`downloads.html:109`, `desktop/main.js:132`, bloggens egen bulletliste). **Det der ikke kan udledes, er kun prisen** — og en pris på en vare, der ikke eksisterer, skal ikke udledes, den skal fjernes. Det gjorde opgaven til en tekstopgave, ikke en produktafgørelse; ❓ punkt 12 (om Mads vil *oprette* produktet) står uændret. **Fund 3 — de tomme celler var ikke sløshed, men en bivirkning af en god oprydning.** `2c9909d` ("Ryd emoji-ikoner…") fjernede `✓` fra tabellen; de tre celler der kun *indeholdt* et `✓`, blev tomme, mens `✓ Unlimited` bare mistede symbolet. Samme fejlform som opgave 30 fund 1. Derfor er cellerne nu ord (`yes`, `planned`, `Not for sale yet`) frem for symboler, så en fremtidig oprydning ikke kan tømme dem igen. **Fund 4 — porten var grøn på præcis den fejl, den skulle fange, fordi den kun læste katalogens købssider.** `check_free_tier` gennemgår `catalog["offers"]`, og EAA-siden er ikke et tilbud, så ingen regel læste den — samme hullet som opgave 26 (rod-README) og opgave 35 (`reports/weekly/`). Ny `check_comparisons(catalog, source_pages())` læser *alle* sider: ingen tomme celler i en synlig gratis/Pro-tabel, og **en Pro-pris kræver et betalingslink på samme side**. Bevis på de rigtige gamle filer fra `git HEAD`: 4 problemer (3 tomme celler + `$19/year`), mod den rettede fil 0, mod hele treeet 0. **Fund 5 — min egen første portversion ville have været grøn på `/clean-copy-tool`.** `PRICE_TOKEN` er `\$\s?\d[\d.]*` og kan kun se et `$`, men sidens Pro-pris celle skriver **"19 USD per year"**. Bevis: med kun `PRICE_TOKEN` er der **0** priser at finde i hele familiens vigtigste købsside; fjerner man dens købsknap, ville porten være grøn på præcis den manglende købsmulighed den er skrevet til at fange. Ny `CURRENCY_AMOUNT` tæller `$19`/`€19`/`£19`/`19 USD`/`19 kr`, og selftesten sigter eksplicit på forskellen, så et scenarie der kun virker med `$` ikke kan stå som fanget. **Fund 6 — generatoren skrev den værre version end den publicerede side:** `make_blog_desktop_en.py` skrev `"$19/year (coming soon)"` i tabellen og *"Pro requires an annual license key ($19/year)"* i Licensing, hvor den publicerede side allerede havde den ærlige sætning. Kun en rettelse i `site/` ville være gået tabt, præcis som opgave 30 fund 1. Begge er rettet. **Konvertering:** den direkte effekt er lille og ærlig — der var ingen købsknap at miste. Den vigtige effekt er at en citatpris er væk fra en publiceret side, så EAA-scanneren kan sælges uden at nogen beskyldes om at love noget. Samme øjeblik en `product_key` kommer i katalogen, bliver `$19/year` i tabellen lovlig, fordi siden så skal have et betalingslink. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.`
-- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `BASELINE`: `main@3103177`
-- `LAST_BRANCH`: `ceo/anker-gate`
-- `NEXT_TASK`: `44 — se køen; opgave 43 lukkede sit hul, men den afdækker kun *fragmenter vi selv linker til*.`
+- `ACTIVE_TASK`: `45`
+- `ITERATION_ID`: `seat-frigivelse-2026-09-26`
+- `STATE`: `Opgave 45 FÆRDIG — researchiterationen startede med at måle opgave 44 og fik **0**, så den blev droppet målt i stedet for gættet. Målingen af de to øvrige punkter i opgave 44 (knapper uden href, href skrevet af JavaScript) er dog ikke et resultat i sig selv: **alle 20 `.href =` i site/ er `URL.createObjectURL(blob)`** — fil-downloads, ikke navigation — og de to `location.href` ligger i `shell.js:105` på et *rigtigt* `a[sel].href`. `window.open` er to printvinduer i nis2-gap-assessment. `onclick` er 30 filer, men ingen af dem navigerer; de kalder `window.print()`, `trackEvent(…)` og in-page-funktioner. **Fund 1 — den rigtige fejl var et sted, ingen port læste: kunden kan ikke frigive sin egen licensplads.** Kontrakten tæller én plads pr. maskine og *har* et `deactivate`-endpoint til formået. Målt: **0 af 16 licensklient-kilder kalder det.** `extension-clean-copy/options.js:131` fjernede nøglen lokalt med kommentaren *"Local removal only — does not free a seat remotely"* — forfatteren vidste det, og sagde det ikke til brugeren. **Konsekvensen er en permanent låst kunde:** med 3 pladser brugt på en ny bærbarcomputer får den 4. maskine `409 Device limit reached`; brugeren fjerner licensen på en gammel maskine, som **kun** tømmer lokal lagring; serveren tæller stadig den gamle maskine; den nye får 409 igen — og den eneste udveje er at skrive til et menneske. Det er præcis den supportlast, missionen forbyder, og den opstår *hos betalende kunder*. **Fund 2 — det var de to Clean Copy-udvidelser, ikke desktop-appen.** Desktop-appens `main.js:243` gør det samme, men dens licensvært er `hermes-passiv.pages.dev`, som ikke er et deployet Pages-projekt, og kontrakten har intet EAA-produkt — den er derfor undtaget (❓ 8) og urørt. Udvidelserne bruger derimod det *live* `https://mahope.tools` fra det kanoniske modul, så de kan få rettet i dag. **Fund 3 — rettelsen må ikke låse Pro ude, så den rækkefølge erERVERST.** Lokal rydning sker altid; serverkaldet er først, og *kun hvis nøglen er gyldig*. Fejler serveren, fjernes nøglen alligevel, og beskeden siger ærligt at pladsen måske stadig tælles og at man skal prøve igen — den tidligere (*"License removed from this device."*) var ikke direkte løgn, men den holdt den udokumenterede følge skjult. Begge `options.js` er kopieret fra den samme rettelse, så `cmp` beviser at de er byte-identiske. **Fund 4 — arkiverne er den kode købere faktisk henter,** så en kilderettelse uden regeneration *aldrig* når ud: `tools/build_clean_copy_archives.py` skrev de tre zips igen, ellers ville `check_clean_copy_distribution` være rød på byte-identiteten.`
+- `GATE` (opgave 45): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (uændret — den nye regel bor i det eksisterende step license-clients, så workflowens path-filter er urørt). check_license_clients: 16 kilder, 0 problemer. --self-test: 14/14 (fra 11), heraf **+1 fejlform** (en klient der kan aktivere men ikke afgiver pladsen) og **+2 negative kontroller** (en klient der både aktiverer og afgiver plads, og en klient der kun tjekker uden at gemme nøglen) — uden dem ville reglen smadre enhver klient og lukke porten for de fejl den er skrevet til at finde. **Bevis på den rigtige gamle fil fra git HEAD:** \`git show HEAD:extension-clean-copy/options.js\` ind over \`check_seat_release\` → 1 fund, i den rigtige fil; den rettede → 0. Stripe-worker uændret, takkeside uændret, tracking-worker uændret, site/_worker.js urørt, dist/uændret (gitignored).`
+- `SLIP` (opgave 45): `Ingen. ~38 min, commit før 45-minuttersgrænsen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~90 linjer.`
+- `BASELINE`: `main@9be192c`
+- `LAST_BRANCH`: `ceo/knap-og-js-links`
+- `NEXT_TASK`: `46 — versionsbump for arkiverne, så rettelsen fra opgave 45 ikke leveres som cachede bytes. Se opgave 46.`
 - `ITERATION_ID`: `anker-gate-2026-09-26`
 - `STATE`: `Opgave 43 FÆRDIG — de 199 krydsside-ankere er nu valideret, og porten fandt **37 fejl i 4 fejlklasser** i det samme kørsel, hvor den blev skrevet. **Fund 1 — porten tabte fragmentet ved design, ikke ved en fejl:** `split_ref()` gjorde `ref.split("?")[0].split("#")[0]`, så `/#products` så ud som en gyldig reference til `/`. Det er præcis den løgned, der lå bag de 65 sider i opgave 41 fund 2. Målt på det *rene* træ før rettelsen: **3341 same-page-fragmenter + 202 krydsside-fragmenter, ingen af dem nogensinde tjekket.** **Fund 2 — den første fejlklassse var 33 links fra én nav-linje, og den skyldes builden, ikke siderne.** `build_sites.py:62` har DA-navet `("Udvidelser", "/da/#install")` for cleancopy.tools. `build_index()` registrerede kun *kildefiler*, men `da/index.html` er en `index_from`-kopi lavet ved skrivetidspunktet — så `/da/` fandtes ikke i cleancopy.tools' eget indeks, faldt videre til `global_idx` og blev skrevet om til `https://mahope.tools/da/#install`. Det er **en anden side** (mahope.tools' DA-gr gratisværktøjshub, `id` = site-nav/main/faq), så 33 links fra 12 DA-sider endte i browserens top uden installationsafsnit. Bevis på effekten uden at gætte: cleancopy.tools' krydsdomæne-omskrivninger faldt **276 → 215** ved rettelsen, fordi 61 links nu bliver hvor de hører hjemme. **Fund 3 — en fejlklasse, jeg ikke havde fundet ved læsning: et hash-fragment er ikke altid et anker.** 7 guidesider linker `/scan#url=https%3A%2F%2Fwww.wordpress.org`, og `scan.html:430` læser dem med `location.hash.match(/#url=(.+)$/)`. En port der kræver et `id="url=https://…"` ville have rødmet 7 *fungerende* dybe links. Derfor skelner porten: fragmentet på formen `nøgle=værdi` skal **læses af den side det peger på** (`location.hash` i målfilens script), ellers er det en død reference forklædt som en. **Fund 4 — min egen målefejl var en fejl i *porten*, ikke bare i mig.** Første kørsel meldte `guides/platforms.html#main` død, men filen har `id="main"`. Årsagen: `build_sites.py` injicerer `id="main"` i `<main>` *uden* at se efter om elementet har et id, så siden fik `<main id="main" id="platforms">` — **to `id`-attributter**. Browseren bruger den første og dropper den anden, så min dict-baserede parser (sidste vinder) så `#main` som død. Jeg rettede porten til browserens regel (`_attrs`, første vinder) — og så viste den **den ægte fejl**: `#platforms` er uopnåeligt i en rigtig browser, fordi det andet id er dødt. Siden har altså et dødt "Browse Platforms"-link, og det er *buildens* skyld. Rettelsen flytter sidens eget id til næste element inde i `<main>`. **Fund 5 — de to resterende klasser var håndskrevet tekst, som porten lokaliserede præcist:** `site/da/guides.html:90` linked `/da/#tools` fra en CTA "Se de gratis værktøjer", mens den EN-side peger på `/free-tools` — et `#tools` der aldrig har eksisteret; og `site/da/blog/html-til-markdown-cli.html` havde **tre** `/clean-copy#cli`, men `cleancopy.tools/clean-copy.html` har id'erne `site-nav/main/install/faq` — ingen `cli`. Nu: de to "Hent CLI'en"-knapper peger på `/clean-copy-cli-ref` (CLI'ens egen side, som navet allerede bruger), og "Installationsinstrukser" på `/clean-copy#install`. **Fund 6 — `/#portal` så ud til en 5. klasse, men er det ikke.** Den står i to bloggen-siders *brødtekst* ("…en tag-side, en komplet artikel, /#/portal og tilmeldingssider") og beskriver Ghosts *eget* medlemsportal-url. Derfor validerer porten fragmenter **kun i attributter** — `anchors` er en separat liste fra `refs`, og brødtekst er ikke et link. Det er ikke en bekvemmelighedsregel: en browser navigerer ikke på prosa.`
 - `GATE` (opgave 43): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (uændret — de nye regler bor i det eksisterende step links + links-selftest, så workflowens path-filter er urørt, samme krav som opgave 31 og 42). check_links: 0 uopklarede referencer på alle fire domæner, efter **37 fejl** på det gamle træ. --self-test: OK, **+5 fejlformer** (dødt same-page-, krydsside-, krydsdomæne- og relativt fragment + død hash-parameter) og **+9 negative kontroller** (levende fragment i alle fire former, hash-parameter der læses, duplikat-id, tomt fragment, deklareret rute, prosa, kodeeksempel). seo_check 308 sider 0 fund, stripe-worker uændret 83/83, check_inline_js 297 filer 0 problemer, site/_worker.js urørt, dist/uændret (gitignored). Bevis på de *urettede* dist-filer: de 37 fund fordeler sig på 33 `mahope.tools/da/#install`, 3 `/clean-copy#cli`, 1 `/da/#tools`, 1 `#platforms` (sidste fra duplikat-id'en).`
@@ -2303,21 +2307,89 @@ kender nu `index_from`-ruter, `apply_shell()` sætter ikke længere to `id` på 
 element, og de to håndskrevne links peger på eksisterende mål. Se `STATE` for målingerne
 og for de tre fund, der rettede *porten* frem for siderne.
 
-### 44. KANDIDAT — hvad porten stadig ikke dækker
+### 44. DROPPET — målt til nul, så opgaven faldt væk (se opgave 45)
 
-Målt, ikke gæt: `check_links` validerer nu fragmenter i attributter på tværs af alle fire
-dist. Det den **ikke** dækker, målt som de tre steder en bruger kan falde:
+**Resultat:** målt den 26/9 på det rene træ før nogen kode blev rørt, fordi opgavens eget
+acceptkriterium krævede et målt tal.
 
-1. **Knapper uden `href`.** En `<button>` eller `<div onclick>` sender ingen reference til
-   porten. Tællet på det rene træ først — hvis tallet er lille, er opgaven ikke værd.
-2. **`href` skrevet af JavaScript** efter indlæsning (`location.href = …`,
-   `a.setAttribute('href', …)`). Porten ser dem ikke, fordi de ikke står i markup.
-3. **Ankere der virker i DOM'en men ikke ved tastatur**, fordi målet ikke kan fokuseres
-   (`tabindex="-1"` mangler). Det er et tilgængelighedsproblem, ikke et linkproblem, og
-   hører hjemme i en a11y-gate — ikke her.
+1. **Knapper uden `href`: 0.** En `<button>`/`<div onclick>` der *navigerer* findes ikke.
+   `onclick` står i 30 filer, men ingen af dem sætter en adresse: de kalder
+   `window.print()` (16), `trackEvent(…)` (18), `shareResult()`, `scan()` eller
+   `ask(…)` — alle in-page. 0 elementer med en navigerende handler.
+2. **`href` skrevet af JavaScript: 0.** De 20 `.href =` er alle
+   `a.href = URL.createObjectURL(blob)` — download af en genereret fil, ikke
+   navigation, og der er ingen sti i dem at validere. `location.href` findes to
+   steder, begge i `shell.js`: linje 105 (`location.href = a[sel].href`, altså et
+   *rigtigt* href) og linje 163 (`copyText(location.href…)`). `setAttribute('href', …)`:
+   0. `window.open`: 2, begge `window.open('','_blank')` i nis2-gap-assessment til et
+   printvindue.
 
-Skriv den her kun hvis målingen i punkt 1 eller 2 giver et reelt tal. **Acceptkriterium:**
-tallet står i planen målt med kommandoen, og opgaven droppes hvis tallet er ubetydeligt.
+**Konklusion:** porten `check_links` dækker de to eneste steder, hvor en reference
+opstår i dette træ. Punkt 3 (fokusérbare anker) er et a11y-problem og hører hjemme i
+en a11y-gate, ikke her. Opgaven lukkes som *dækket*, ikke som *uløst* — hvis der en
+dag opstår `setAttribute('href', …)` eller et `<div onclick>` der springer, er den
+samme måling kun tre linjer lang igen.
+
+### 45. FÆRDIG (`ceo/knap-og-js-links`) — kunden kunne ikke frigive sin egen licensplads
+
+**Begrundelse:** missionens prioritet 1 og dens krav om nul menneskelig indsats.
+Kontrakten tæller **én plads pr. maskine** og har et `deactivate`-endpoint
+(`docs/stripe-kontrakt.md`) *netop* til at afgive en plads. Målt: **0 af 16
+licensklient-kilder kalder det.** De to Clean Copy-udvidelser (`options.js:131`) og
+desktop-appen (`main.js:243`) fjerner nøglen lokalt og intet andet; udvidelsernes egen
+kommentar siger *"Local removal only — does not free a seat remotely"*.
+
+**Konsekvensen er en varigt låst betalende kunde:** 3 pladser brugt, en ny bærbarcomputer
+får `409`, brugeren fjerner licensen på en gammel maskine (kun lokal rydning), den nye
+maskine får `409` igen, og eneste udveje er support. Det er den supportlast, hele
+missionen er bygget på at undgå.
+
+**Acceptkriterier:**
+1. Udvidelserne kalder `/api/license/deactivate` med `{license_key, device_id}` fra
+   kontrakten, *før* lokal rydning. ✅
+2. Lokal rydning sker altid, også når serveren er nede eller nøglen ikke findes — en
+   fejl må aldrig låse en betalende kunde ude. ✅
+3. Beskeden er ærlig i begge udfald: serveren svarer, så *denne plads er fri*; den svarer
+   ikke, så brugeren får at vide at pladsen måske stadig tæller og skal prøve igen. ✅
+4. De to `options.js` forbliver byte-identiske. ✅ (`cmp`)
+5. Ny regel `check_seat_release` i `tools/check_license_clients.py`: en klient der kan
+   aktivere og gemmer nøglen skal kunne afgive pladsen, med selftest-fejlform og to
+   negative kontroller. Bevis: rød på `git show HEAD:extension-clean-copy/options.js`,
+   grøn på den rettede.
+6. De tre publicerede zips regenereret, ellers når rettelsen ikke ud. ✅
+7. `quality_gate.py` grøn. ✅ 46 steps.
+
+**Resultat:** alle svy accepteret. Se `STATE` for de fire fund — især fund 1 (hvor
+forfatteren vidste det og skjulte det), fund 2 (hvorfor desktop-appen er urørt) og
+fund 4 (arkiverne er den kode købere henter).
+
+### 46. KANDIDAT — rettelsen fra opgave 45 ligger på URL'er, der allerede er udgivet
+
+**Begrundelse:** `tools/build_clean_copy_archives.py` skrev de tre zips igen **på
+samme filnavne** (`clean-copy-v1.5.3.zip`, `clean-copy-firefox-v1.5.4.zip`,
+`clean-copy-obsidian-v1.0.10.zip`). Opgave 28s måling dokumenterer præcis den fare:
+den slettede `1.3.3` svarede stadig 200 fra CDN'en, og `1.5.3` stadig 200 efter at
+filen blev fjernet lokalt. **En zip der genbygges på samme navn kan derfor blive
+serveret fra cache med den gamle fejl i**, og ingen port kan se det — porten læser
+*repoet*, ikke CDN'en. Konverteringsvirkningen af opgave 45 afhæger derfor af om
+brugeren får de nye bytes.
+
+**Acceptkriterier:**
+1. Versionsbump efter repoets egen udgivelsesvej: `version` i de to `manifest.json` +
+   `obsidian-plugin/versions.json`, alle sider der linker på arkiverne retes, så ingen
+   side peger på den gamle fil.
+2. `build_clean_copy_archives.py` kørt, `check_clean_copy_distribution` grøn,
+   `check_versions` grøn, `quality_gate.py` grøn.
+3. **Live-verifikation af *indhold*, ikke af statuskode:** hent den nye zip med en
+   cachebuster og pakk den ud; `options.js` inde i den skal have
+   `API_BASE + '/deactivate'` og **0** fund af *"does not free a seat remotely"*.
+4. Skriv `DEPLOY OK`/`DEPLOY-MISSING` i planen med kørsel-id.
+
+**Hvorfor det ikke var denne iteration:** det er en udgivelsesbevægelse der rører
+manifester, Obsidian-versionsfil og de sider der linker arkiverne — for stort til at
+gøre sikkert med få minutter tilbage, og kontrakten siger hellere en lille færdig
+opgave end en stor halvfærdig. Kilderne, porten og de regenererede zips er på plads,
+så der er kun filnavne og sider tilbage.
 
 
 ## ❓ Til Mads
