@@ -976,6 +976,141 @@ def check_pro_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]
     return problems
 
 
+def pro_labels(feature: object, lang: str) -> list[str] | None:
+    """Labels for én deklareret Pro-funktion i ét sprog, eller None.
+
+    `None` betyder at katalogen ikke kan dømme siden: en manglende
+    `labels`-nøgle må ikke give en grøn port, men en *tom* liste må heller
+    ikke gøre den rød for en funktion, ingen side nogensinde nævner.
+    """
+    if not isinstance(feature, dict) or not isinstance(feature.get("id"), str):
+        return None
+    labels = feature.get("labels")
+    labels = labels.get(lang) if isinstance(labels, dict) else None
+    if not isinstance(labels, list) or not labels:
+        return None
+    return [str(label) for label in labels if str(label)]
+
+
+def not_built_by_product(catalog: dict) -> dict[str, list[dict]]:
+    """`pro_not_built` pr. produkt — de løfter, koden modsiger.
+
+    Målt i opgave 49, ikke formodet. `deskuptime-pro` lovede "email and
+    webhook alerts" på fire live flader, og der er **ingen e-mail-kode**
+    i hverken `deskuptime/` eller `deskuptime-desktop/`; produktets egen
+    `src/features.js:145-153` markerer rækken `implemented: false`.
+    `eucomply-pro` lovede "Continuous compliance monitoring", "Unlimited
+    scans and history tracking", "Client-ready branded PDF reports" og
+    "Priority support (email within 24h)" — de tre første findes ikke i
+    nogen fil, og den fjerde er den supportlast, missionen forbyder.
+
+    Katalogen er derfor ikke kun en prisliste: den siger nu, hvad hvert
+    betalt produkt *faktisk* gater, og hvilke løfter der ikke findes.
+    """
+    products = catalog.get("products")
+    if not isinstance(products, dict):
+        return {}
+    out: dict[str, list[dict]] = {}
+    for key, product in products.items():
+        if not isinstance(product, dict):
+            continue
+        entries = product.get("pro_not_built")
+        if isinstance(entries, list) and entries:
+            out[key] = [entry for entry in entries if isinstance(entry, dict)]
+    return out
+
+
+def check_pro_not_built(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En købsside må ikke love en Pro-funktion, katalogen siger ikke findes.
+
+    Modstående til `check_pro_features`: den gater at siden *nævner* det
+    betalte, denne gater at den ikke *lover det ubygde*. Begge læser kun
+    synlig tekst, aldrig `<head>`, JSON-LD, attributter eller en lukket
+    `<details>` — en kunde skal kunne læse det samme som porten.
+
+    Hver post skal have en `where`, der peger på koden der afviser løftet.
+    Uden den er listen bare en måde at slå en fejl fra på, så en post
+    uden bevis meldes i stedet for at troes.
+    """
+    products = catalog.get("products")
+    offers = catalog.get("offers")
+    if not isinstance(products, dict) or not isinstance(offers, list):
+        return []
+    not_built = not_built_by_product(catalog)
+    by_path = dict(pages)
+    problems: list[str] = []
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        key = offer.get("product")
+        product = products.get(key)
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue  # check_offers melder en manglende fil.
+        blocks = VisibleBlocks()
+        blocks.feed(text)
+        blocks.close()
+        haystack = normalize(blocks.text).casefold()
+        lang = page_lang(str(relative))
+        for entry in not_built.get(key, []):
+            where = entry.get("where")
+            if not isinstance(where, str) or not where.strip():
+                problems.append(
+                    f"{key}: pro_not_built {entry.get('id')!r} står i katalogen uden en "
+                    f"`where` der peger på koden der modsiger løftet"
+                )
+                continue
+            labels = pro_labels(entry, lang)
+            if labels is None:
+                problems.append(
+                    f"{relative}: {key} erklærer pro_not_built {entry.get('id')!r} "
+                    f"uden {lang}-labels i katalogen"
+                )
+                continue
+            for label in labels:
+                if normalize(label).casefold() in haystack:
+                    problems.append(
+                        f"{relative}: {key} lover {label!r}, men katalogen siger at "
+                        f"{entry.get('id')!r} ikke er bygget ({where}). En betalt kunde "
+                        f"må ikke købe et løfte koden ikke holder."
+                    )
+    return problems
+
+
+def check_checkout_notes(catalog: dict, worker_text: str | None = None) -> list[str]:
+    """Samme krav på `/checkout`-noten i workeren.
+
+    Fundet fra opgave 45: en flade ingen port læste. `/api/stripe/checkout`
+    bygger sin beskrivelse af hvert produkt i en `note`-streng i
+    `site/_worker.js`, og den løvede "email & webhook alerts" for
+    `deskuptime-pro` — den samme løgned som på fire HTML-sider, på en
+    route ingen af dem så.
+    """
+    not_built = not_built_by_product(catalog)
+    if not not_built:
+        return []
+    text = WORKER.read_text(encoding="utf-8") if worker_text is None else worker_text
+    pairs = re.findall(r"product: '([a-z0-9-]+)'[\s\S]{0,400}?note: '([^']*)'", text)
+    if not pairs:
+        return ["site/_worker.js: ingen `product:`/`note:`-par fundet i /checkout"]
+    problems: list[str] = []
+    for key, note in pairs:
+        haystack = normalize(note).casefold()
+        for entry in not_built.get(key, []):
+            for lang in ("en", "da"):
+                labels = pro_labels(entry, lang)
+                for label in labels or []:
+                    if normalize(label).casefold() in haystack:
+                        problems.append(
+                            f"site/_worker.js: /checkout-noten for {key} lover {label!r}, "
+                            f"men {entry.get('id')!r} ikke er bygget ({entry.get('where')})"
+                        )
+    return problems
+
+
 def parse_page(text: str) -> tuple[str, list[tuple[str, str]]]:
     visible = Page()
     visible.feed(text)
@@ -1367,6 +1502,8 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_pro_features(catalog, source_pages())
+    problems += check_pro_not_built(catalog, source_pages())
+    problems += check_checkout_notes(catalog)
     problems += check_comparisons(catalog, source_pages())
     problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
@@ -1522,6 +1659,145 @@ def self_test() -> int:
         print("SELFTEST FEJLER: pro_features-scenariet rammer den manglende funktion, "
               f"ikke den anden fejl: {pro_missing}")
         return 1
+    # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
+    #
+    # Beviset er de rigtige publicerede sætninger fra opgave 49, hentet fra
+    # git og skrevet tilbage i de rigtige filer. En fejlform der kun findes
+    # i en streng porten selv har fundet, er ingen fejlform — derfor læses
+    # hver fil fra `site/`, og påstanden der testes muteres alene.
+    superseded_promises = {
+        "site/deskuptime/index.html": (
+            "Email and webhook alerts",
+            "Webhook alerts from the CLI",
+        ),
+        "site/deskuptime/index.html#prose": (
+            "adds email and webhook alerts",
+            "adds webhook alerts and a client-ready report",
+        ),
+        "site/da/deskuptime/index.html": (
+            "E-mail- og webhook-alarmer",
+            "Webhook-alarmer fra CLI'en",
+        ),
+        "site/da/deskuptime/index.html#prose": (
+            "tilføjer e-mail- og webhook-alarmer",
+            "tilføjer webhook-alarmer og en kunderapport",
+        ),
+        "site/blog/desktop-website-monitor-cli.html": (
+            "Email &amp; webhook alerts",
+            "Webhook alerts (CLI)",
+        ),
+    }
+    promise_found: list[str] = []
+    promise_offers = [{"path": path.split("#")[0], "product": key}
+                      for key, path in (("deskuptime-pro", "site/deskuptime/index.html"),
+                                        ("deskuptime-pro", "site/blog/desktop-website-monitor-cli.html"))]
+    promise_catalog = {**good, "offers": promise_offers}
+    for relative, (old, new) in superseded_promises.items():
+        base = relative.split("#")[0]
+        real = (ROOT / base).read_text(encoding="utf-8")
+        if new not in real:
+            raise AssertionError(f"{base}: den rettede tekst mangler i den rigtige fil: {new[:60]!r}")
+        if old in real:
+            raise AssertionError(f"{base}: den udgående løgned står stadig i den rigtige fil: {old[:60]!r}")
+        path = base if base.endswith(".html") else base
+        product = "deskuptime-pro"
+        # Den danske side er sin egen købsside, så den får sin egen katalog.
+        lang_catalog = (promise_catalog if "/da/" not in path
+                        else {**promise_catalog, "offers": [{"path": path, "product": product}]})
+        found = check_pro_not_built(lang_catalog, [(path, real.replace(new, old, 1))])
+        if not found:
+            raise AssertionError(
+                f"{base}: pro_not_built fangt ikke den publicerede løgned {old[:60]!r} — "
+                "reglen er grøn for præcis det den skal fange")
+        promise_found.extend(found)
+    # Det samme på den anden slags løfte: EUComply Pro lovede fire funktioner,
+    # ingen af dem findes i koden.
+    eucomply_real = (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
+    eucomply_old = ("Continuous compliance monitoring for one website",
+                    "Client-ready branded PDF reports",
+                    "Priority support (email within 24h)")
+    for old in eucomply_old:
+        if old in eucomply_real:
+            raise AssertionError(
+                f"site/compliance-report.html: den udgående løgned står stadig i den "
+                f"rigtige fil: {old[:60]!r}")
+    for anchor in ("PDF download of the full report", "Licence covers 1 machine",
+                   "24 automated checks, including 16 accessibility rules"):
+        if anchor not in eucomply_real:
+            raise AssertionError(
+                f"site/compliance-report.html: mutationsankeret mangler i den rigtige "
+                f"fil: {anchor[:60]!r}")
+    eucomply_catalog = {**good, "offers": [{"path": "site/compliance-report.html",
+                                            "product": "eucomply-pro"}]}
+    eucomply_back = eucomply_real.replace(
+        "PDF download of the full report", "Continuous compliance monitoring for one website", 1)
+    eucomply_back = eucomply_back.replace(
+        "Licence covers 1 machine", "Client-ready branded PDF reports", 1)
+    eucomply_back = eucomply_back.replace(
+        "24 automated checks, including 16 accessibility rules", "Priority support (email within 24h)", 1)
+    eucomply_found = check_pro_not_built(eucomply_catalog, [("site/compliance-report.html", eucomply_back)])
+    if not eucomply_found or "compliance monitoring" not in " ".join(eucomply_found):
+        raise AssertionError(
+            "site/compliance-report.html: pro_not_built fangt ikke de publicerede løfter "
+            f"på EUComply Pro: {eucomply_found}")
+    # Og på den flade ingen HTML-port så: /checkout-noten i workeren.
+    old_note = ("One-time license: desktop tray app, email & webhook alerts, unlimited URLs. "
+                "Up to 3 machines, all v1.x updates.")
+    new_note = ("One-time license: desktop tray app, unlimited sites, webhook alerts and a "
+                "client-ready report. Up to 3 machines, all v1.x updates.")
+    worker_text = WORKER.read_text(encoding="utf-8")
+    if new_note not in worker_text or old_note in worker_text:
+        raise AssertionError("site/_worker.js: /checkout-noten er ikke i den forventede stand")
+    checkout_found = check_checkout_notes(good, worker_text.replace(new_note, old_note, 1))
+    if not checkout_found:
+        raise AssertionError(
+            "site/_worker.js: check_checkout_notes fangt ikke den publicerede løgned i "
+            "/checkout-noten")
+    # Negativ kontrol: de rettede flader skal være grønne. Uden den kunne
+    # reglen være for stram til at sælge nogen somhelst.
+    honest_pages = [("site/deskuptime/index.html",
+                     (ROOT / "site/deskuptime/index.html").read_text(encoding="utf-8")),
+                    ("site/da/deskuptime/index.html",
+                     (ROOT / "site/da/deskuptime/index.html").read_text(encoding="utf-8")),
+                    ("site/blog/desktop-website-monitor-cli.html",
+                     (ROOT / "site/blog/desktop-website-monitor-cli.html").read_text(encoding="utf-8")),
+                    ("site/compliance-report.html", eucomply_real)]
+    honest_offers = [{"path": path, "product": ("eucomply-pro" if "compliance-report" in path
+                                                 else "deskuptime-pro")}
+                     for path, _ in honest_pages]
+    honest = check_pro_not_built({**good, "offers": honest_offers}, honest_pages)
+    if honest:
+        raise AssertionError(f"SELFTEST FEJLER (falsk alarm): de rettede købssider fejler: {honest[0]}")
+    checkout_ok = check_checkout_notes(good, worker_text)
+    if checkout_ok:
+        raise AssertionError(
+            f"SELFTEST FEJLER (falsk alarm): den rettede /checkout-note fejler: {checkout_ok[0]}")
+    # En post uden `where` er ikke et løfte, koden modsiger — den er en måde
+    # at slå fejlen fra på. Den skal derfor selv meldes.
+    silent = {**good, "products": {**good["products"], "deskuptime-pro": {
+        **good["products"]["deskuptime-pro"],
+        "pro_not_built": [{"id": "email-alerts", "labels": {"en": ["email alerts"], "da": []}}]}}}
+    silent_found = check_pro_not_built(
+        {**silent, "offers": [{"path": "site/deskuptime/index.html", "product": "deskuptime-pro"}]},
+        [("site/deskuptime/index.html", "<html><body><p>Email alerts</p></body></html>")])
+    if not silent_found or "where" not in " ".join(silent_found):
+        raise AssertionError(
+            "SELFTEST FEJLER: en pro_not_best-post uden `where` bliver troet — "
+            f"listen kan så slås fra på: {silent_found}")
+    # Og et produkt uden `pro_not_built` gates ikke, samme hensigt som
+    # `pro_features`: porten dømmer ikke produkter den ikke kan se.
+    undeclared = {**good, "products": {
+        **good["products"],
+        "deskuptime-pro": {k: v for k, v in good["products"]["deskuptime-pro"].items()
+                           if k != "pro_not_built"}}}
+    undeclared_found = check_pro_not_built(
+        {**undeclared, "offers": [{"path": "site/deskuptime/index.html", "product": "deskuptime-pro"}]},
+        [("site/deskuptime/index.html",
+          "<html><body><p>Email and webhook alerts, the works.</p></body></html>")])
+    if undeclared_found:
+        raise AssertionError(
+            "SELFTEST FEJLER: et produkt uden pro_not_built fejler alligevel — "
+            f"porten dømmer produkter den ikke kan se: {undeclared_found}")
     # Tomme celler hører nu til `check_comparisons`, som læser alle sider og
     # ikke kun katalogens købssider. Scenariet beholder sin købsknap, så det
     # isolerer den ene regel: her skal kun den tomme celle fanges.
@@ -1709,11 +1985,16 @@ def self_test() -> int:
         ("en købsside der ikke navngiver en Pro-funktion", pro_missing),
         ("en dansk købsside der kun siger funktionen på engelsk", pro_missing_da),
         ("en Pro-funktion der kun står i en lukket FAQ", pro_buried),
+        ("en publiceret løgned om en Pro-funktion koden ikke har bygget", promise_found),
+        ("en købsside der lover overvågning, historik, branding og support", eucomply_found),
+        ("en /checkout-note der lover en Pro-funktion koden ikke har bygget", checkout_found),
+        ("en pro_not_built-post uden bevis i koden", silent_found),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
-    for label, problems in (("en klient der siger at der intet er at købe", honest_client),
+    for label, problems in (("et produkt uden pro_not_best i katalogen", undeclared_found),
+                            ("en klient der siger at der intet er at købe", honest_client),
                             ("en klient med et katalogens betalingslink", linked_client),
                             ("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
                             ("en donationsside uden gratis-udgave", donation_no_free),

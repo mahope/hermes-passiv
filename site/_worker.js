@@ -2281,7 +2281,7 @@ async function handleCheckout(url, env) {
     ? {
         product: 'deskuptime-pro',
         price: '$19 one-time',
-        note: 'One-time license: desktop tray app, email & webhook alerts, unlimited URLs. Up to 3 machines, all v1.x updates.',
+        note: 'One-time license: desktop tray app, unlimited sites, webhook alerts and a client-ready report. Up to 3 machines, all v1.x updates.',
       }
     : {
         product: 'clean-copy-pro',
