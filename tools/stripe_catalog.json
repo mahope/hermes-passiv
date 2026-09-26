@@ -200,6 +200,38 @@
             "en": ["history tracking"],
             "da": ["historik"]
           }
+        },
+        {
+          "id": "all-checks",
+          "where": "page-profile/page_profile.py:1085 analyze(args.url, html, headers) -> analyze :408-464. Ingen require_pro mellem :1080 fetch_page og :1085, saa den frie enkelt-URL-profil kører ALLE tjek",
+          "labels": {
+            "en": ["All checks"],
+            "da": ["Alle tjek"]
+          }
+        },
+        {
+          "id": "score-grade",
+          "where": "page-profile/page_profile.py:1086 score(result) -> score :465-577, og :1103 format_terminal(...) -> format_terminal :593-750. Begge kaldes uden nogen require_pro",
+          "labels": {
+            "en": ["Terminal report with score and grade"],
+            "da": ["Rapport i terminalen med score og karakter"]
+          }
+        },
+        {
+          "id": "json-output",
+          "where": "page-profile/page_profile.py:1101 print(format_json(...)) -> format_json :751-784. Det eneste require_pro i den frie sti er :1094 og det gælder kun --html-report",
+          "labels": {
+            "en": ["JSON output"],
+            "da": ["JSON-output"]
+          }
+        },
+        {
+          "id": "redirect-chain",
+          "where": "page-profile/page_profile.py:1080 fetch_page -> redirect_chain :363-402, trykt af format_terminal :727-731 og format_json :755. Ingen require_pro imellem på den vej",
+          "labels": {
+            "en": ["Redirect chain trace"],
+            "da": ["Redirect-kæde"]
+          }
         }
       ]
     },
