@@ -1266,9 +1266,19 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
     (:1094). Sælgeren havde altså taget betaling for en funktion alle har, og
     ingen port så det, fordi ingen kendte den gratis side.
 
-    Kun Pro-kortet dømmes, og kun for den side der sælger. Gratis-kortet må
-    gerne nævne funktionen — det er der den hører hjemme — og en note i
-    brødteksten er ikke en påstand om betaling.
+    Begge retninger dømmes nu, og kun for den side der sælger: Pro-kortet må
+    ikke sælge den, og **Gratis-kortet skal nævne den**. Den anden retning er
+    NEXT_TASK (1) fra opgave 70, og den var målt i mangel: med kun den første
+    regel var porten grøn selv om Gratis-sætningen var slettet fra begge sider,
+    så den eneste måde at rette en gratis-funktion der lå i Pro-kortet var
+    "fjern påstanden" i stedet for "sig hvor den hører hjemme". En kunde der
+    læser salgstavlen skal kunne se hvad der er gratis — ellers er
+    `free_features` en påstand uden flade, og det er præcis den fejlklasse
+    opgave 69 startede.
+
+    Kravet er **én** sætning pr. sprog, så et katalogsignal der ligner to
+    synonymer ikke giver to halve krav. Mere end én label er derfor en
+    særskilt katalogfejl, ikke to krav på samme funktion.
     """
     products = catalog.get("products")
     offers = catalog.get("offers")
@@ -1289,6 +1299,19 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
                     f"{key}: free_features {feature.get('id')!r} står i katalogen uden en "
                     f"`where` der peger på den kode der giver den gratis"
                 )
+            # Ét sprog, ét krav. Rækker katalogen to sætninger for den samme
+            # funktion, kan porten ikke vide hvilken af dem der skal stå i
+            # Gratis-kortet, så den melder katalogfejlen og bruger den første
+            # sætning. Synonymer er en redaktørbeslutning, ikke et krav.
+            labels_by_lang = feature.get("labels")
+            if isinstance(labels_by_lang, dict):
+                for lang, values in sorted(labels_by_lang.items()):
+                    if isinstance(values, list) and len(values) != 1:
+                        problems.append(
+                            f"{key}: free_features {feature.get('id')!r} erklærer "
+                            f"{len(values)} {lang}-labels, men porten dømmer én sætning "
+                            f"pr. sprog. Skriv den ene sætning der står i Gratis-kortet."
+                        )
     for offer in offers:
         if not isinstance(offer, dict):
             continue
@@ -1306,6 +1329,7 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
         pro_card = normalize(cards.text("pro")).casefold()
         if not pro_card:
             continue  # Sider uden salgstavle dømmes af de andre checks.
+        free_card = normalize(cards.text("free")).casefold()
         lang = page_lang(str(relative), text)
         for feature in declared.get(key, []):
             where = feature.get("where")
@@ -1325,6 +1349,18 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
                         f"{feature.get('id')!r} er gratis ({where}). En betalt kunde må "
                         f"ikke købe en funktion alle har."
                     )
+            # Den anden retning: den skal *stå* i Gratis-kortet, fordi det er
+            # den eneste flade hvor "dette er gratis" er en påstand. Sætningen
+            # er den første, så et katalogsignal med flere sætninger (meldt
+            # ovenfor) dømmes på én af dem i stedet for på ingen.
+            said_free = labels[0]
+            if normalize(said_free).casefold() not in free_card:
+                problems.append(
+                    f"{relative}: Gratis-kortet nævner ikke {said_free!r}, men katalogen "
+                    f"siger at {feature.get('id')!r} er gratis ({where}). Kunden skal kunne "
+                    f"se hvad de får gratis på den side der sælger — ellers er påstanden "
+                    f"uden flade."
+                )
     return problems
 
 
@@ -2301,6 +2337,70 @@ def self_test() -> int:
     if silent:
         print("SELFTEST FEJLER: disse gratis-funktioner kan flyttes ind i Pro-kortet "
               "uden at porten siger noget: " + "; ".join(silent))
+        return 1
+
+    # Den anden retning, som var målt i mangel: den erklærede gratis-funktion
+    # skal *stå* i Gratis-kortet. Beviset er den rigtige sætning i de rigtige
+    # filer, kun slettet — med kravet "må ikke stå i Pro-kortet" alene var
+    # porten grøn på præcis denne mutation, så rettelsen af en gratis-funktion
+    # der lå i Pro-kortet kunne have været "fjern påstanden" i stedet for
+    # "sig hvor den hører hjemme". Samme fem poster, samme to sprog.
+    LI_RE = re.compile(r"[ \t]*<li>(?:(?!</li>).)*?</li>\n", re.S)
+
+    def out_of_free_card(real: str, label: str) -> str:
+        """Slet den Gratis-sætning der nævner `label`, og kun den.
+
+        Slicet er Gratis-kortets egen blok, ikke hele siden: samme ord står
+        flere steder (navigation, sammenligningstabel), så en mutation der
+        ramte en anden `<li>` ville slette det forkerte og lade porten grøn
+        af en grund den ikke måtte være grøn af.
+        """
+        start = real.index('class="tier-card"')
+        end = real.index('class="tier-card pro"', start)
+        for match in LI_RE.finditer(real[start:end]):
+            if label.casefold() in match.group(0).casefold():
+                at = start + match.start()
+                return real[:at] + real[start + match.end():]
+        return real
+
+    unsaid: list[str] = []
+    for feature in free_features:
+        for relative, real in (("site/da/page-profile.html", da_real),
+                               ("site/page-profile.html", en_real)):
+            labels = (feature.get("labels") or {}).get(page_lang(relative, real)) or []
+            if not labels:
+                continue
+            trimmed = out_of_free_card(real, labels[0])
+            if trimmed == real:
+                unsaid.append(f"{feature.get('id')} på {relative}: sætningen "
+                              f"{labels[0]!r} findes ikke i Gratis-kortets liste")
+                continue
+            pages = [(p, trimmed if p == relative else t) for p, t in da_pairs]
+            if not [x for x in check_free_features(good, pages)
+                    if f"'{feature.get('id')}'" in x and "Gratis-kortet" in x]:
+                unsaid.append(f"{feature.get('id')} på {relative}")
+    if unsaid:
+        print("SELFTEST FEJLER: disse gratis-funktioner kan forsvinde fra Gratis-kortet "
+              "uden at porten siger noget: " + "; ".join(unsaid))
+        return 1
+
+    # Ét sprog, ét krav: to sætninger for samme funktion er en katalogfejl, for
+    # så kan porten ikke vide hvilken der skal stå i Gratis-kortet. Den må
+    # meldes én gang pr. produkt — den gælder alle sider — og den må ikke
+    # afføde et krav pr. sætning oveni.
+    twin = {**good["products"]["page-profile-pro"]["free_features"][0],
+            "labels": {"en": ["Redirect chain trace", "Redirect trail"],
+                       "da": ["Redirect-kæde"]}}
+    two_labels = {**good, "products": {**good["products"], "page-profile-pro": {
+        **good["products"]["page-profile-pro"],
+        "free_features": [twin] + good["products"]["page-profile-pro"]["free_features"][1:]}}}
+    twin_problems = check_free_features(two_labels, da_pairs)
+    twin_lines = [x for x in twin_problems if "2 en-labels" in x]
+    if (len(twin_lines) != 1
+            or any("Gratis-kortet nævner ikke" in x for x in twin_problems)
+            or len({x.split(":")[0] for x in twin_problems}) != 1):
+        print("SELFTEST FEJLER: to labels for én funktion meldes ikke én gang pr. "
+              f"produkt uden at dømme dem hver især: {twin_problems}")
         return 1
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
     #
