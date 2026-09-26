@@ -253,6 +253,128 @@ CURRENCY_AMOUNT = re.compile(
 )
 
 
+def amount_value(token: str) -> float | None:
+    """Tallet i et valutatoken, eller `None` hvis det ikke er et tal.
+
+    Nødvedig for nul-prisen. `$0` og `"0"` er ikke et løfte om at betale —
+    de er en *sand* måde at sige "den her er gratis" — så reglen må kun
+    slå ned på positive beløb. Uden denne skelnen ville porten være rød på
+    `site/site-icons.html`, der skriver `$0` under en gratis pakke.
+    """
+    digits = re.sub(r"[^\d.,]", "", token)
+    if not digits:
+        return None
+    # Dansk og tysk notation bruger komma som decimaltegn ("1.299 kr").
+    if "," in digits and "." in digits:
+        digits = digits.replace(".", "").replace(",", ".")
+    elif "," in digits:
+        head, _, tail = digits.rpartition(",")
+        digits = f"{head}.{tail}" if len(tail) in (1, 2) and head else digits.replace(",", "")
+    try:
+        return float(digits)
+    except ValueError:
+        return None
+
+
+#: Tags hvis indhold er en *meddelelse om* vores produkter. Indholdet i et
+#: `<pre>` eller `<code>` er derimod det en læser kopierer — en
+#: kommandolinje, en fejlmelding, en pythonsnit, et eksempel på markup.
+#: Det er ikke prosa, og det må ikke læses som en påstand om, hvad noget
+#: koster.
+#:
+#: To forskellige ting er holdt ude her, og det er værd at skelne dem:
+#:
+#: **Bloksegmenteringen** (`ProseBlocks`) er den, der rettede
+#: `site/site-icons.html`. `parse_page` normaliserer alle linjeskift væk, så
+#: `$ pip install Pillow … site-icons-1.0.0.tar.gz` og den ærlige sætning
+#: "not for sale yet" blev ét enkelt segment med både et tal og et
+#: løfteord. Det var en *sand* side, som reglen ville have gjort rød.
+#:
+#: **`CODE_TAGS`** er den, der holder `'# $1'` ude — en regex i et
+#: JavaScript-eksempel på `/blog/building-html-to-markdown-converter`, hvor
+#: `$1` er en gruppe-reference og ikke en dollar. Den fangede intet i det
+#: øjeblik reglen blev skrevet, og det er opført her fordi den er billig og
+#: fordi selftesten beviser at den virker: en dokumentationsside skal kunne
+#: vise et eksempel på en pris uden at blive anklaget for at løfte om den.
+CODE_TAGS = {"pre", "code", "kbd", "samp"}
+
+
+class ProseBlocks(HTMLParser):
+    """Synlig prosa i blokke, med `<pre>`/`<code>` holdt ude.
+
+    `VisibleBlocks` giver hele sidens tekst, og `parse_page` giver den
+    normaliseret — altså uden linjeskift. Det er nok til en sætning, men
+    ikke til at segmentere *afsnit*, fordi en kommandolinje og en sætning
+    derefter bliver ét. Her følges derfor de synlige blokke, så hver enhed
+    er noget en læser kunne læse som ét.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hidden: dict[str, int] = {}
+        self.in_json_ld = False
+        self.in_code = 0
+        self.blocks: list[str] = []
+        self._parts: list[str] = []
+
+    def _is_hidden(self) -> bool:
+        return any(self.hidden.values())
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        attributes = {key.lower(): value or "" for key, value in attrs}
+        style = attributes.get("style", "")
+        hidden = (
+            tag in HIDDEN_TAGS
+            or "hidden" in attributes
+            or attributes.get("aria-hidden", "").casefold() == "true"
+            or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I) is not None
+            or (tag == "details" and "open" not in attributes)
+        )
+        if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
+            self.in_json_ld = True
+        if hidden and tag not in VOID_TAGS:
+            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+        if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
+            self.in_code += 1
+        # Et nyt blokelement afslutter det foregående afsnit. Uden det ville
+        # en hel side være ét segment, fordi tekstnoderne løber sammen.
+        if (not self._is_hidden() and not self.in_code
+                and tag in ("p", "li", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6",
+                            "div", "section", "article", "blockquote", "figcaption", "tr")):
+            self._flush()
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self.in_json_ld:
+            self.in_json_ld = False
+        if tag in CODE_TAGS and self.in_code > 0:
+            self.in_code -= 1
+        if tag in ("p", "li", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6",
+                   "div", "section", "article", "blockquote", "figcaption", "tr"):
+            self._flush()
+        if tag in self.hidden and self.hidden[tag] > 0:
+            self.hidden[tag] -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self.in_json_ld or self._is_hidden() or self.in_code:
+            return
+        if data.strip():
+            self._parts.append(data)
+
+    def _flush(self) -> None:
+        text = normalize(" ".join(self._parts))
+        if text:
+            self.blocks.append(text)
+        self._parts = []
+
+
+def prose_blocks(text: str) -> list[str]:
+    blocks = ProseBlocks()
+    blocks.feed(text)
+    blocks.close()
+    blocks._flush()
+    return blocks.blocks
+
+
 class VisibleBlocks(HTMLParser):
     """Synlig tekst plus overskrifterne i de tabeller der er synlige.
 
@@ -406,6 +528,227 @@ def check_comparisons(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
                         f"række {index} ({row[0][:40]!r}), men siden har ingen købsknap — "
                         f"prisen kan ikke betales, og produktet findes ikke i katalogen"
                     )
+    return problems
+
+
+#: Et element hvis hele formål er at vise en pris. Ikke en tilfældig
+#: omtale i en løbende tekst — det er den forskel, der gør reglen brugbar.
+#: `site/guides.html` og en GDPR-blogpost må gerne nævne $19 og €900.000;
+#: de *tilbyder* ikke noget til det beløb.
+PRICE_LABEL_CLASS = re.compile(r"^(?:[\w-]*-)?price(?:-(?:tag|now|amount|value))?$")
+
+#: Et købssted uden for katalogen. Vi sælger gennem Stripe Payment Links,
+#: så en pris ved siden af en tredjeparts-butik er enten en vare vi ikke
+#: har, eller en markedsplads vi ikke kan levere fra.
+FOREIGN_VENUE = re.compile(
+    r"\bon\s+amazon\b|\bp[åa]\s+amazon\b|amazon\.(?:com|co|dk|de|deals)"
+    r"|\bapp\s+store\b|\bgoogle\s+play\b|\bitch\.io\b|\bgumroad\b",
+    re.I,
+)
+
+#: En betalt udgave, der er lovet men ikke findes. Opgave 41 fandt seks
+#: sider med "Paid individual editions ($9.99 each) are planned once our
+#: payment setup is complete" — og betalingsopsætningen har været komplet
+#: siden 24/9, så påstanden var falsk om virksomhedens egen tilstand.
+UNFULFILLED_CLAIM = re.compile(
+    r"paid\s+(?:edition|individual|version|premium)"
+    r"|individuel\w*\s+udgave|betalte\s+udgave"
+    r"|\(\s*coming\s*\)|\bcoming\b|\bplanned\b(?!.*\bgratis\b)|\bkommende\b"
+    r"|\bnot\s+for\s+sale\b|\bikke\s+til\s+salg\b|\bnot\s+released\b",
+    re.I,
+)
+
+
+class PriceLabels(HTMLParser):
+    """Synlig tekst i elementer der *er* en prislabel."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hidden: dict[str, int] = {}
+        self.in_json_ld = False
+        self.in_code = 0
+        self.depth = 0
+        self.parts: list[str] = []
+        self.labels: list[str] = []
+
+    def _is_hidden(self) -> bool:
+        return any(self.hidden.values())
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        attributes = {key.lower(): value or "" for key, value in attrs}
+        style = attributes.get("style", "")
+        hidden = (
+            tag in HIDDEN_TAGS
+            or "hidden" in attributes
+            or attributes.get("aria-hidden", "").casefold() == "true"
+            or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I) is not None
+            or (tag == "details" and "open" not in attributes)
+        )
+        if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
+            self.in_json_ld = True
+        if hidden and tag not in VOID_TAGS:
+            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+        if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
+            self.in_code += 1
+        if self.depth:
+            self.depth += 1
+            return
+        if self._is_hidden() or tag in VOID_TAGS:
+            return
+        signature = " ".join((attributes.get("class", "") + " " + attributes.get("id", "")).split())
+        if signature and PRICE_LABEL_CLASS.match(signature):
+            self.depth = 1
+            self.parts = []
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self.in_json_ld:
+            self.in_json_ld = False
+        if tag in CODE_TAGS and self.in_code > 0:
+            self.in_code -= 1
+        if tag in self.hidden and self.hidden[tag] > 0:
+            self.hidden[tag] -= 1
+        if self.depth:
+            self.depth -= 1
+            if self.depth == 0:
+                text = normalize(" ".join(self.parts))
+                if text:
+                    self.labels.append(text)
+                self.parts = []
+
+    def handle_data(self, data: str) -> None:
+        if self.depth and not self.in_json_ld and not self._is_hidden() and not self.in_code:
+            self.parts.append(data)
+
+
+def price_labels(text: str) -> list[str]:
+    labels = PriceLabels()
+    labels.feed(text)
+    labels.close()
+    return labels.labels
+
+
+def structured_offers(text: str) -> list[tuple[str, str | None]]:
+    """`(price, availability)` fra JSON-LD `offers`, i dokumentrækkefølge.
+
+    En `offers`-pris er en *maskinlæsbar* påstand om at noget kan købes til
+    beløbet. Den er derfor strengere end en pris i løbende tekst: den er
+    skrevet til søgemaskiner og til enhver der læser siden som data.
+    """
+    found: list[tuple[str, str | None]] = []
+    for block in re.findall(
+        r"<script[^>]*application/ld\+json[^>]*>(.*?)</script>", text, re.S | re.I
+    ):
+        try:
+            data = json.loads(block)
+        except (ValueError, TypeError):
+            continue
+        stack = [data]
+        while stack:
+            item = stack.pop()
+            if isinstance(item, dict):
+                offers = item.get("offers")
+                if isinstance(offers, dict) and "price" in offers:
+                    found.append((str(offers.get("price")), offers.get("availability")))
+                stack.extend(item.values())
+            elif isinstance(item, list):
+                stack.extend(item)
+    return found
+
+
+def check_unbuyable_prices(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En pris skal kun stå på en side, hvor den kan betales.
+
+    Opgave 41 rettede 15 filer med **ingen port**. Det er præcis det
+    mønster, opgave 26 fandt i rod-README'en: en rettelse uden gaten
+    holder kun til næste researchiteration ved et tilfældigt læs. Tre
+    former af den samme løgne, målt på de rigtige gamle filer:
+
+    1. **Struktureret data.** `"price": "9.99"` med `PreOrder` i JSON-LD,
+       på en side med nul betalingslinks. Søgemaskiner læser den.
+    2. **En prislabel.** `<div class="price">$9.99</div>` — elementet
+       *er* tilbudet, så beløbet er en invitation, ikke en omtale.
+    3. **En løftet pris i prosa.** "Paid edition: $9.99 (coming)" og
+       "NIS2 Compliance Kit e-book ($9.99 on Amazon)" — en pris ved
+       siden af et købssted eller en udgave, der ikke findes.
+
+    **Kriteriet er ikke "har siden en købsknap", men "kan beløbet betales
+    her".** En side må gerne linke til et produkt den ikke sælger — det er
+    sådan en tværhenvisning ser ud — men en pris der ikke kan betales på
+    den side, hvor den står, er enten en løgn eller en død vej. Derfor
+    afgøres hvert beløb mod den pris, katalogens produkter har, og kun
+    det beløb der står ved siden af et betalingslink på *samme* side
+    regnes som betalingsbart.
+
+    **Nul er ikke en fejl.** `$0` og `"0"` er en sand måde at sige
+    "gratis" på, og de er lige så sande som "Free". Uden den skelnelse
+    ville porten være rød på `site/site-icons.html`, der skriver `$0`.
+
+    **Prose, ikke kommandoer.** `<pre>` og `<code>` er holdt ude: en
+    `$`-prompt i en terminal er ikke et pristilbud. Det er ikke en
+    kosmetisk undtagelse — `parse_page` normaliserer linjeskift væk, så
+    `$ pip install …` og den ærlige "not for sale yet" blev ét segment,
+    og reglen fangede en *sand* side.
+    """
+    products = catalog["products"]
+    link_to_key = {product["payment_link"]: key for key, product in products.items()}
+    problems: list[str] = []
+
+    for relative, text in pages:
+        _, anchors = parse_page(text)
+        # Hvilke beløb kan betales på netop denne side? Sammenlignes på
+        # *tallet*, ikke på teksten: katalogens `$79/år pr. website` og
+        # sidens `$79` er det samme beløb, og en streng tekstsammenligning
+        # gjorde alle fire købssider røde på deres *egne* priser.
+        sold = {link_to_key[href] for href, _ in anchors if href in link_to_key}
+        payable = {value for value in
+                   (amount_value(str(products[key]["price"])) for key in sold)
+                   if value is not None}
+
+        def unpayable(token: str) -> bool:
+            """Er `token` et beløb uden tilsvarende købsmulighed på siden?"""
+            value = amount_value(token)
+            return value is not None and value > 0 and value not in payable
+
+        def sold_text() -> str:
+            return ", ".join(sorted(sold)) or "intet"
+
+        for price, availability in structured_offers(text):
+            if amount_value(price) in (None, 0.0):
+                continue  # `price: "0"` er en sand gratis-angivelse
+            if not unpayable(price):
+                continue
+            problems.append(
+                f"{relative}: JSON-LD angiver et tilbud til {price!r}"
+                f"{f' ({availability})' if availability else ''}, men siden kan ikke "
+                f"betale det beløb — den sælger {sold_text()}. "
+                f"Ret structured data, eller fjern den"
+            )
+
+        for label in price_labels(text):
+            for token in CURRENCY_AMOUNT.findall(label):
+                if unpayable(token):
+                    problems.append(
+                        f"{relative}: prislabelen viser {token!r} ({label[:50]!r}), men "
+                        f"siden har ingen købsknap til det beløb — beløbet kan ikke betales"
+                    )
+                    break
+
+        for block in prose_blocks(text):
+            for sentence in re.split(r"(?<=[.!?])\s+|\s+[•·|]\s+", block):
+                markers = [name for name, pattern in
+                           (("et købssted uden for katalogen", FOREIGN_VENUE),
+                            ("en betalt udgave der ikke findes", UNFULFILLED_CLAIM))
+                           if pattern.search(sentence)]
+                if not markers:
+                    continue
+                for token in CURRENCY_AMOUNT.findall(sentence):
+                    if unpayable(token):
+                        problems.append(
+                            f"{relative}: {normalize(sentence)[:90]!r} nævner {token!r} "
+                            f"ved siden af {' og '.join(markers)} — beløbet kan ikke betales "
+                            f"på denne side"
+                        )
+                        break
     return problems
 
 
@@ -951,6 +1294,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_comparisons(catalog, source_pages())
+    problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
     return problems, inventory
 
@@ -1132,6 +1476,87 @@ def self_test() -> int:
         print("SELFTEST FEJLER: CURRENCY_AMOUNT finder ikke sit eget positive eksempel")
         return 1
 
+    # 8: en pris på en side, hvor den ikke kan betales. Opgave 41 rettede 15
+    # filer uden port. Scenarierne er syntetiske, så selftesten ikke skriver
+    # fejlen ind i de rigtige sider — beviset på de rigtige gamle filer står i
+    # opgave 42 i planen.
+    def page(body: str, link: str = "") -> str:
+        return f"<html><body>{body}{link}</body></html>"
+
+    jsonld = ('<script type="application/ld+json">{"@type":"WebApplication",'
+              '"name":"E-book","offers":{"@type":"Offer","price":"%s",'
+              '"availability":"%s"}}</script>')
+    preorder_price = check_unbuyable_prices(
+        good, [("site/eksempel.html", page(jsonld % ("9.99", "https://schema.org/PreOrder")))])
+    label_price = check_unbuyable_prices(
+        good, [("site/eksempel.html", page('<div class="price">$9.99</div>'))])
+    promised_edition = check_unbuyable_prices(
+        good, [("site/eksempel.html", page("<p>Paid edition: $9.99 (coming)</p>"))])
+    foreign_venue = check_unbuyable_prices(
+        good, [("site/eksempel.html",
+                page('<p>Get the NIS2 e-book ($9.99 on Amazon).</p>'))])
+    stale_structured = check_unbuyable_prices(
+        good, [("site/eksempel.html", page(jsonld % ("29", ""), f'<a href="{report_kit}">Buy</a>'))])
+
+    # ── Negative kontroller. Uden dem er hver regel ovenfor teater i sit
+    # eget tilfælde — præcis fejlformen opgave 38 fund 4.
+    #
+    # (a) Den ærlige sætning fra opgave 41: "we do not sell a paid edition"
+    #     må ikke fejle. Den har *ordene* "paid edition" men intet beløb, så
+    #     reglen må kræve begge dele.
+    honest_edition = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        "<p>This e-book is free, and it stays free — we do not sell a paid edition of it.</p>"))])
+    # (b) Nul-priser er sande. `$0` under en gratis pakke og `price: "0"` +
+    #     InStock i JSON-LD er to måder at sige "gratis" på — de er ikke et
+    #     løfte om at betale. Uden denne kontrol ville porten være rød på
+    #     `site/site-icons.html`.
+    free_jsonld = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        jsonld % ("0", "https://schema.org/InStock")))])
+    free_label = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        '<div class="price">$0</div>'))])
+    # (c) Samme pris som katalogens produkt, med købsknappen ved siden:
+    #     skal være grøn. Uden den ville reglen gøre hver købsside rød på
+    #     sine egne priser — og det gjorde min første version netop.
+    buyable_label = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        f'<div class="price">$19</div>', f'<a href="{clean_copy_link}">Buy</a>'))])
+    # (d) En kommandolinje er ikke et pristilbud, og et eksempel i en
+    #     dokumentationsside er ikke et løfte. `$` er shell-prompten, og
+    #     `$1` i et regex er en gruppe-reference.
+    shell_prompt = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        "<pre><code>$ pip install Pillow\n$ curl -O site-icons-1.0.0.tar.gz\n"
+        "$ python3 site_icons.py logo.svg</code></pre>"
+        "<p>That package is not for sale — it is free and MIT licensed.</p>"))])
+    example_in_docs = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        "<p>Et betalingslink ser sådan ud:</p>"
+        "<pre><code>&lt;a href=\"https://buy.stripe.com/ukjendt0\"&gt;"
+        "Paid edition: $9.99 (coming)&lt;/a&gt;</code></pre>"))])
+    # (e) En omtale af en tredjeparts-pris i prosa er ikke vores tilbud. En
+    #     GDPR-bot står ikke ved siden af en købsknap, og det er korrekt.
+    quoted_price = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        "<p>Irish authorities have fined companies up to €10 million under the GDPR.</p>"))])
+    # (f) Samme beløb som det sælges til andre steder: det må gerne stå som
+    #     en krydshenvisning, fordi købet sker på den side der sælger det.
+    cross_reference = check_unbuyable_prices(good, [("site/eksempel.html", page(
+        '<p>Clean Copy Pro costs $19 per year. <a href="/clean-copy-tool">See the tool</a></p>'))])
+
+    # De negative kontroller skal bestå af *deres egen grund*. Hvis
+    # (a) ikke rammer portens mønster, består den kun fordi reglen aldrig
+    # var tændt — og så beviser den intet. Samme krav som opgave 17 fund 3:
+    # siger porten intet om sin egen evne, skal den sige det med en fejl.
+    if not UNFULFILLED_CLAIM.search(
+            "This e-book is free, and it stays free — we do not sell a paid edition of it."):
+        print("SELFTEST FEJLER: den negative kontrol (a) rammer ikke UNFULFILLED_CLAIM — "
+              "den er grøn fordi reglen slet ikke er tændt, og beviser intet")
+        return 1
+    # Og (d) skal bevise at CODE_TAGS faktisk gør en forskel: samme
+    # eksempelpris *uden* `<pre>`/`code` skal fejle. Ellers er undtagelsen
+    # tom, og kommentaren ovenfor en påstand uden dækning.
+    if not check_unbuyable_prices(good, [("site/eksempel.html", page(
+            "<p>Paid edition: $9.99 (coming)</p>"))]):
+        print("SELFTEST FEJLER: eksempelprisen fejler heller ikke uden <pre>/<code> — "
+              "CODE_TAGS er uden betydning for den negative kontrol (d)")
+        return 1
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -1152,6 +1577,11 @@ def self_test() -> int:
         ("en Pro-pris i valutaord uden købsknap", unbuyable_words),
         ("en tom celle i en tabel på en side der ikke sælger", hollow_unsold),
         ("en klient der sender brugeren ud for at købe uden et købssted", dead_client_buy),
+        ("en struktureret pris på et beløb siden ikke sælger til", preorder_price),
+        ("en prislabel med et beløb siden ikke sælger til", label_price),
+        ("en løftet betalt udgave med en pris", promised_edition),
+        ("en pris ved siden af et købssted uden for katalogen", foreign_venue),
+        ("en struktureret pris der ikke er produktets egen pris", stale_structured),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -1161,7 +1591,16 @@ def self_test() -> int:
                             ("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
                             ("en donationsside uden gratis-udgave", donation_no_free),
                             ("en gratis/Pro-tabel med købsknap", buyable),
-                            ("en gratis/Pro-tabel uden pris", priceless)):
+                            ("en gratis/Pro-tabel uden pris", priceless),
+                            ("en side der ærligt siger at der ingen betalt udgave er", honest_edition),
+                            ("en gratis vare med price 0 i JSON-LD", free_jsonld),
+                            ("en gratis pakke med en $0-prislabel", free_label),
+                            ("en prislabel i katalogens egen pris", buyable_label),
+                            ("en kommandolinje der ligner et pristilbud", shell_prompt),
+                            ("en eksempelpris i en dokumentationsside", example_in_docs),
+                            ("en omtalt tredjeparts-pris i prosa", quoted_price),
+                            ("en krydshenvisning til en pris der sælges andre steder",
+                             cross_reference)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
