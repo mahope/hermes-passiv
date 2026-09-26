@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import unittest
@@ -106,6 +107,24 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         self.assertEqual(f"https://mahope.tools/api/stats?days={report.RANKING_FETCH_DAYS}", args[0])
         self.assertNotIn("token=", args[0])
         self.assertEqual(f"Bearer {report.stats_bearer_token()}", kwargs["headers"]["Authorization"])
+
+    def test_stats_token_is_preferred_over_the_mail_key(self) -> None:
+        # Samme rækkefølge som `statsAuthToken` i site/_worker.js. Hvis de to
+        # glide fra hinanden, læser rapporten med mailnøglen mens workeren
+        # kræver STATS_TOKEN, og uge-rapporten får en tom trafikblok uden at
+        # sige hvorfor. Derfor testes rækkefølgen, ikke bare at tokenet findes.
+        with patch.dict(os.environ, {"RESEND_API_KEY": "re_test_stats", "STATS_TOKEN": "st_egen"}):
+            with_token = report.stats_bearer_token()
+        with patch.dict(os.environ, {"RESEND_API_KEY": "re_test_stats"}, clear=False):
+            os.environ.pop("STATS_TOKEN", None)
+            without_token = report.stats_bearer_token()
+        self.assertNotEqual(with_token, without_token)
+        self.assertEqual(hashlib.sha256((report.STATS_AUTH_CONTEXT + "st_egen").encode()).hexdigest(), with_token)
+        self.assertEqual(hashlib.sha256((report.STATS_AUTH_CONTEXT + "re_test_stats").encode()).hexdigest(), without_token)
+
+    def test_no_stats_token_and_no_mail_key_gives_no_bearer(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual("", report.stats_bearer_token())
 
     def test_complete_empty_traffic_does_not_invent_sales(self) -> None:
         with patch.object(report, "http_json", return_value=self.payload(empty=True, sales_status="unknown")):
