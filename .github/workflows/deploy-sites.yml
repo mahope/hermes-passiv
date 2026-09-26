@@ -41,6 +41,12 @@ on:
       - 'tools/check_python_env.py'
       - 'tools/lock_python_env.py'
       - 'tools/check_versions.py'
+      # Opgave 26: porten over de publicerede tekster uden for site/.
+      # README.md og FUNDING.yml er det offentlige ansigt, og de lå uden for
+      # filteret — så en rettelse af dem deployede slet ikke.
+      - 'tools/check_repo_readme.py'
+      - 'README.md'
+      - '.github/FUNDING.yml'
       # `check_legacy_seo_paths` læser hvert .py/.sh i roden og i tools/ — de
       # skal kunne ramme den døde kilde-sitemap eller den døde vært, så de er
       # input til gaten og dermed til filteret.

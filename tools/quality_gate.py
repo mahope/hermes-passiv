@@ -377,6 +377,33 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_versions.py", "--self-test"),
         inputs=("tools/check_versions.py", "tools/mini_toml.py"),
     ),
+    # Opgave 26: de publicerede tekster *uden for* `site/`. Rod-README'en for
+    # `mahope/hermes-passiv` løb som Clean Copy for Obsidian, havde en changelog
+    # på 1.0.1 mod en publiceret 1.0.10 og ingen donation — og ingen af de 38
+    # steps læste den. Rettelsen i opgave 23 holdt kun, fordi en researchiteration
+    # tilfældigvis læste den.
+    #
+    # `inputs` er de filer porten læser, så en commit der kun retter rod-README'en
+    # eller FUNDING.yml udløser porten. `docs/stripe-kontrakt.md` er med, fordi
+    # `stripe_catalog.json` er genereret ud fra den.
+    Step(
+        id="repo-readme",
+        argv=("python3", "tools/check_repo_readme.py"),
+        inputs=(
+            "tools/check_repo_readme.py",
+            "README.md",
+            ".github/FUNDING.yml",
+            "tools/stripe_catalog.json",
+            "tools/route_inventory.json",
+            "docs/stripe-kontrakt.md",
+        ),
+    ),
+    Step(
+        id="repo-readme-selftest",
+        argv=("python3", "tools/check_repo_readme.py", "--self-test"),
+        inputs=("tools/check_repo_readme.py", "tools/stripe_catalog.json",
+                "tools/route_inventory.json"),
+    ),
     Step(
         id="links",
         argv=("python3", "tools/check_links.py"),
