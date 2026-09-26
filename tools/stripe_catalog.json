@@ -38,6 +38,24 @@
             "da": ["egne rense regler"]
           }
         }
+      ],
+      "free_features": [
+        {
+          "id": "all-conversion-modes",
+          "where": "extension-clean-copy/background.js:437-440 withProRules(result) — `if (!result || result.error || !proState.active || !result.content) return result;` sender resultatet UDEN at røre det, saa konverteringen er altid sket. proState styres kun af :385-392 (d.proLicense -> compiled rules) og bruges ellers alene i :438 og applyCompiled :380. Ingen licenskontrol findes paa nogen konverteringssti: rg for license/premium/pro_ i extension-clean-copy/ giver ingen gating i background.js. Webværktøjet er samme sag: site/clean-copy-tool.html:156-163 har ingen maxlength, og :253 siger selv at Pro kun tilføjer batch og egne rense regler",
+          "labels": {
+            "en": ["every conversion mode in the extension and on the web tool"],
+            "da": ["alle konverteringsmoduler i udvidelsen og på webværktøjet"]
+          }
+        },
+        {
+          "id": "no-paste-limit",
+          "where": "site/clean-copy-tool.html:156 `<textarea id=\"input-box\">` og :161 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :615 er Pro-nøglens validate/activate mod /api/license, og :442 + :739 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :243 (Free: no limit / Pro: no limit) og i :253-256 (no account, no expiry and no limit)",
+          "labels": {
+            "en": ["no limit on how much text you paste"],
+            "da": ["ingen grænse på hvor meget tekst du indsætter"]
+          }
+        }
       ]
     },
     "deskuptime-pro": {
