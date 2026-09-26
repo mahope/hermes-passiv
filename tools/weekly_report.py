@@ -841,6 +841,12 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
             notable.append(f"{label.split(' (')[0].lower()} {fmt_delta(change)}")
     if traffic_complete:
         note = None
+    elif not tr:
+        # Intet trafikblok blev gemt. Det er en anden fejl end et svar vi fik og
+        # ikke kunne bruge, og kun den første må siges. At skylde på
+        # /api/stats for en blok der aldrig blev skrevet, er en påstand om en
+        # årsag rapporten ikke har undersøgt.
+        note = "Trafiktal er ukendt, fordi denne rapport ikke gemte et trafikblok."
     elif traffic_status == "partial":
         note = "Trafiktallet er delvist ukendt, fordi ikke alle fire domæner har verificeret datagrundlag."
     else:
