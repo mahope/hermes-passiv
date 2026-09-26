@@ -925,6 +925,75 @@ def page_lang(relative: str) -> str:
     return "da" if "da" in parts[1:-1] else "en"
 
 
+LANG_NAMES = {"en": "engelsk", "da": "dansk"}
+
+
+def lang_name(code: str) -> str:
+    """Sprogkoden som læsevenlig tekst i en fejlmeddelelse.
+
+    Kun *teksten* er navngivet — betingelsen i `check_language_coverage` er
+    afledt af `page_lang()`, så et tredje sprog gør kravet gælde uden at denne
+    tabel kender det. Ukendte koder vises som de er, aldrig som det engelske.
+    """
+    return LANG_NAMES.get(code, code)
+
+
+def check_language_coverage(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """Et licensprodukt skal kunne købes på hvert sprog sitet udgiver.
+
+    Fejlformen er målt, ikke antaget. Da `eucomply-pro` fik sin danske købsside,
+    havde de tre øvrige licensprodukter en dansk side hver, og den nye side blev
+    skrevet som en *fuld dansk købsside* — uden at nogen spiste, at det er
+    betingelsen for at danske læsere kan købe. Sproget afledes af
+    `page_lang()` over alle sider i `site/` (305 sider: 199 `en`, 106 `da`), så
+    kravet er ikke en navneliste: en ny `/da/`-flade gør det gælde uden at
+    porten ved det på forhånd, og en slettet dansk købsside får den ikke til at
+    falde sammen til ét sprog.
+
+    Kun produkter der faktisk sælges i dette repo gates. `transmute-desktop`
+    erklærer ingen `pro_features` — katalogens egen note siger at købslinket
+    ligger på transmute.run — så det ville være en fejl at kræve en side her.
+
+    Beviset ligger i selftesten: katalogen *før* den danske side gav præcis én
+    rød, `eucomply-pro`, og dagens katalog giver nul.
+    """
+    products = catalog["products"]
+    offers = catalog.get("offers")
+    if not isinstance(offers, list):
+        return []
+    spoken = {page_lang(str(relative)) for relative, _ in pages}
+    for offer in offers:
+        if isinstance(offer, dict):
+            spoken.add(page_lang(str(offer.get("path"))))
+    if len(spoken) < 2:
+        return []  # Kun ét sprog: der er ingen anden, der mangler.
+    sold: dict[str, set[str]] = {}
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        key = str(offer.get("product"))
+        product = products.get(key)
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        features = product.get("pro_features")
+        if not isinstance(features, list) or not features:
+            continue
+        sold.setdefault(key, set()).add(page_lang(str(offer.get("path"))))
+    problems: list[str] = []
+    for key, langs in sorted(sold.items()):
+        missing = sorted(spoken - langs)
+        if not missing:
+            continue
+        first = lang_name(missing[0])
+        problems.append(
+            f"catalog: {key} sælges kun på "
+            f"{', '.join(lang_name(code) for code in sorted(langs))}, men sitet udgiver også {first}. "
+            f"Uden en {first} købsside kan en {first} læser hverken se hvad Pro giver eller hvor det "
+            f"sælges, så hver {first} flade må sende folk videre til den anden sprogs side."
+        )
+    return problems
+
+
 def check_pro_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
     """En side der sælger en licens, skal navngive den betalte udgaves funktioner.
 
@@ -1558,6 +1627,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_free_tier(catalog, source_pages())
     problems += check_pro_features(catalog, source_pages())
     problems += check_pro_not_built(catalog, source_pages())
+    problems += check_language_coverage(catalog, source_pages())
     problems += check_checkout_notes(catalog)
     problems += check_comparisons(catalog, source_pages())
     problems += check_unbuyable_prices(catalog, source_pages())
@@ -2042,6 +2112,42 @@ def self_test() -> int:
               "CODE_TAGS er uden betydning for den negative kontrol (d)")
         return 1
 
+    # ── sprogdækning: en købsside kun på ét sprog ─────────────────────────
+    #
+    # Mutationen er den rigtige gamle katalog, ikke en konstrueret fejlform:
+    # den danske købsside for `eucomply-pro` fjernes fra inventaret, så porten
+    # genfinder præcis den fejl, opgave 59s danske side lukkede. Derfor
+    # forventes her ÉN rød, og at den rammer det produkt og ikke et andet.
+    without_da_offer = {**good, "offers": [offer for offer in good["offers"]
+                                           if offer["path"] != "site/da/compliance-report.html"]}
+    if len(good["offers"]) - len(without_da_offer["offers"]) != 1:
+        print("SELFTEST FEJLER: mutationen fjerner ikke præcis én købsside — de andre "
+              "scenarier ville så teste en tilfældighed i stedet for sprogdækningen")
+        return 1
+    coverage_missing = check_language_coverage(without_da_offer, source_pages())
+    coverage_ok = check_language_coverage(good, source_pages())
+    # Negativ kontrol: et produkt der ikke sælges fra dette repo kræver ingen
+    # side her. `transmute-desktop` er uden `pro_features`, fordi købslinket
+    # ligger på transmute.run. Uden den kontrol ville porten kræve en dansk
+    # side for et produkt den ikke engang kan dømme.
+    ungated = {**good, "products": {
+        **good["products"],
+        "clean-copy-pro": {k: v for k, v in good["products"]["clean-copy-pro"].items()
+                           if k != "pro_features"}}}
+    coverage_ungated = check_language_coverage(ungated, source_pages())
+    if len(coverage_missing) != 1 or "eucomply-pro" not in coverage_missing[0]:
+        print("SELFTEST FEJLER: sprogdækningen fanger ikke den manglende danske købsside, "
+              "eller rammer et andet produkt: " + "; ".join(coverage_missing))
+        return 1
+    if coverage_ok:
+        print("SELFTEST FEJLER: sprogdækningen fejler på den katalog, der er komplet — "
+              "kravet er for stramt: " + "; ".join(coverage_ok))
+        return 1
+    if coverage_ungated != coverage_ok:
+        print("SELFTEST FEJLER: et produkt uden pro_features i katalogen fejler alligevel — "
+              "porten dømmer produkter den ikke sælger her: " + "; ".join(coverage_ungated))
+        return 1
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -2069,6 +2175,7 @@ def self_test() -> int:
         ("en struktureret pris der ikke er produktets egen pris", stale_structured),
         ("en købsside der ikke navngiver en Pro-funktion", pro_missing),
         ("en dansk købsside der kun siger funktionen på engelsk", pro_missing_da),
+        ("et licensprodukt uden købsside på dansk", coverage_missing),
         ("en Pro-funktion der kun står i en lukket FAQ", pro_buried),
         ("en publiceret løgned om en Pro-funktion koden ikke har bygget", promise_found),
         ("en købsside der lover overvågning, historik, branding og support", eucomply_found),
