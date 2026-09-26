@@ -151,18 +151,25 @@ class Layout:
 
 # --- Motorerne -------------------------------------------------------------
 #
-# Der er **fire** motorer i dette repo, og de er ikke ens. Opgave 86 målte dem:
+# Der er **fire** motorer i dette repo, og de er ikke ens. Opgave 86 målte dem,
+# og denne opgave flyttede pluginet ind i den store gruppe:
 #
 #   web      site/scan.html + scan-da + compliance-report   15
-#   plugin   site/eaa-compliance-scanner.zip (den publicerede) 16
 #   desktop  desktop/scanner-core.js                         22
 #   cli      scanner/npm/eaa-scanner/index.js                22
 #            scanner/packaging/eaa_scanner/core.py           22
+#   plugin   site/eaa-compliance-scanner.zip (den publicerede) 22
 #
-# `plugin` er **seks regler bag de øvrige**, fordi zip'en er en ældre build af
-# den samme motor. De fire bygger der kører 22 er det samme regelsæt — ikke
-# tilfældigt, men fordi de er samme motor. Det er derfor `engine_disagreements`
-# tjekker det: hvis de fire divergerer, er der en reel fejl, ikke en ny regel.
+# `plugin` var **seks regler bag de øvrige**, fordi zip'en var en ældre build af
+# den samme motor — sådan som en 16-tals påstand på en 22-reglers motorside er
+# sand for det publicerede arkiv og falsk for koden. Det er rettet ved at bygge
+# kilden ind som v1.1.0, så de fem byggere der kører 22 er det samme regelsæt —
+# ikke tilfældigt, men fordi de er samme motor. Det er derfor
+# `engine_disagreements` tjekker det: hvis de divergerer, er der en reel fejl,
+# ikke en ny regel.
+#
+# `test_plugin_engine_rules.py` er modstykket. Denne port læser koden og kan
+# aldrig alene se, at det publicerede arkiv ikke er den kode vi udgiver.
 #
 # Et løfte skal måles mod den motor **den side sælger**. Det er derfor
 # `PRODUCT_ENGINE` findes: et kort fra produkt til motor. Uden det svarede
@@ -232,9 +239,15 @@ def py_engine_ids(path: Path) -> tuple[str, ...]:
     return tuple(seen)
 
 
-# De fire bygger der skal være ens. Rækkefølgen er den rækkefølge `--list`
-# printer dem i, og den første er den målte resten sammenlignes mod.
-CLONE_GROUP = ("desktop", "cli-npm", "cli-pip", "plugin-source")
+# De bygger der skal være ens. Rækkefølgen er den rækkefølge `--list` printer
+# dem i, og den første er den målte resten sammenlignes mod.
+#
+# `plugin` er her for første gang. Opgave 85 holdt det ude, fordi zip'en var en
+# ældre build med 16 mod kildens 22. Det er bygget ind som v1.1.0, så de to er
+# ens og kan dømmes af samme port. Havde det stadig været 16, ville `plugin` have
+# stået uden for gruppen igen — ikke fordi pluginet så anderledes ud, men fordi
+# det er *forskert*, og en forskert motor må ikke bruges som mål for de andre.
+CLONE_GROUP = ("desktop", "cli-npm", "cli-pip", "plugin-source", "plugin")
 
 
 def engines(lay: Layout) -> dict[str, Engine]:

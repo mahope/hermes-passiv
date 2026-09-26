@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EAA Compliance Scanner
  * Plugin URI:  https://hermes-passiv.pages.dev/scan
- * Description: Universal accessibility scanner (EAA / WCAG 2.1 AA subset, 15 rules). Scans your front page — or any URL — from the WordPress dashboard. Nothing is sent to third parties; the scan runs on your own server. Works with any theme.
+ * Description: Universal accessibility scanner (EAA / WCAG 2.1 AA subset, 22 rules). Scans your front page — or any URL — from the WordPress dashboard. Nothing is sent to third parties; the scan runs on your own server. Works with any theme.
  * Version:     1.1.0
  * Author:      ComplianceDocs
  * Author URI:  https://hermes-passiv.pages.dev
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once __DIR__ . '/engine.php';
 
-const EAA_SCANNER_VERSION = '1.0.0';
+const EAA_SCANNER_VERSION = '1.1.0';
 
 /** Register admin menu. */
 add_action( 'admin_menu', function () {
@@ -91,7 +91,7 @@ function eaa_scanner_render_admin() {
 	<div class="wrap eaa-wrap">
 		<h1>EAA Compliance Scanner <span style="font-size:13px;color:#667">v<?php echo esc_html( EAA_SCANNER_VERSION ); ?></span></h1>
 		<p>Universal accessibility check against an EAA / WCAG 2.1 AA subset
-		(15 rules). Runs entirely on this server — no data leaves your site.</p>
+		(22 rules). Runs entirely on this server — no data leaves your site.</p>
 
 		<form method="post" action="">
 			<?php wp_nonce_field( 'eaa_scan', 'eaa_nonce' ); ?>

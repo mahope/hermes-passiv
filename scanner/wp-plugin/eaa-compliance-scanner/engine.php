@@ -4,8 +4,12 @@
  *
  * Port of scanner_core.py (the platform-independent core) to PHP. Scans raw
  * HTML against a WCAG 2.1 AA subset relevant to the European Accessibility
- * Act: 21 rules, same rule IDs and scoring as the web scanner at
+ * Act: 22 rules, same rule IDs and scoring as the web scanner at
  * hermes-passiv.pages.dev/scan.
+ *
+ * The rule count is not a claim in a docblock: `tools/test_plugin_engine_rules.py`
+ * runs this file on `tools/fixtures/eaa_engine_all_rules.html` and requires all
+ * 22 to fire. A count written here can only ever be checked by a human.
  *
  * @package eaa-compliance-scanner
  * @version 1.1.0
