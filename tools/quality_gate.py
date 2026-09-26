@@ -110,6 +110,14 @@ STEPS: tuple[Step, ...] = (
             "tools/paid_content.json",
         ),
     ),
+    # Tak-siden. Den er den eneste bekræftelse en donator får, og den renderer
+    # worker's leveringssvar. Uden dette step var der ingen test, der viste at
+    # den overhovedet kan vise et svar (opgave 33).
+    Step(
+        id="thanks-page",
+        argv=("node", "tests/thanks-page.test.mjs"),
+        inputs=("tests/thanks-page.test.mjs", "site/thanks.html", "site/_worker.js"),
+    ),
     Step(
         id="tracking-worker",
         argv=("node", "tests/tracking-worker.test.mjs"),

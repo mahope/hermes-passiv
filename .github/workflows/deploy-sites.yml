@@ -95,6 +95,7 @@ on:
       - 'tools/test_weekly_report.py'
       - 'tools/test_deploy_workflow.py'
       - 'tests/stripe-worker.test.mjs'
+      - 'tests/thanks-page.test.mjs'
       - 'tests/tracking-worker.test.mjs'
       - 'test.js'
       # Licenskatalogen og kontrakten definerer priserne; `products/` er de
