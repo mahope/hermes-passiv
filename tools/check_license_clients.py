@@ -13,9 +13,9 @@ Kør: python3 tools/check_license_clients.py            (fra repo-roden)
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from functools import lru_cache
@@ -23,6 +23,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CANON = ROOT / "tools/clean_copy_license.js"
+# Det betalte EUComply Pro-licensafsnit fra før opgave 51, ordret kopieret fra
+# commit 67faa67^. Det er det vidne selftesten bruger, og det ligger i træet
+# frem for i git-historikken, fordi et vidne fra HEAD er grønt kun før commit.
+WITNESS = ROOT / "tools/fixtures/compliance-report-pre51-licens.html"
 
 # Kilder der SKAL findes, hvis de kalder /api/license. Hver linje er
 # (sti, forventet product_key). Tom streng = ingen product forventet (kun
@@ -75,6 +79,10 @@ NOT_CLIENTS = {
     # data. Ingen af dem kalder den — de beskriver hvorfor en *kunde* gør det.
     "tools/check_retired_downloads.py",
     "tools/retired_downloads.json",
+    # Opgave 52: selftestens vidne. Det er gaten selv der nævner API'en, ikke en
+    # kunde — det er et bevisst bevis på den kode der var, så det skal findes
+    # eksakt fordi det kalder den.
+    "tools/fixtures/compliance-report-pre51-licens.html",
 }
 
 # Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er
@@ -323,6 +331,7 @@ def self_test() -> int:
     canon = CANON.read_text(encoding="utf-8")
     callers = find_callers()
     page = (ROOT / "site/clean-copy-tool.html").read_text(encoding="utf-8")
+    witness_text = WITNESS.read_text(encoding="utf-8")
     scenarios: list[tuple[str, list[str]]] = [
         ("et kald uden product",
          check_callers({**callers, "site/ny-klient.html": "fetch('/api/license/validate', {body:'{}'})"})),
@@ -345,14 +354,11 @@ def self_test() -> int:
          check_seat_release({**callers, "site/ny-klient.html":
                              "const A = API_BASE + '/activate'; chrome.storage.local.set({proLicense: k});"})),
         # Opgave 51: den betalte EUComply-klient uden syvdagesregel. Beviset er
-        # den RIGTIGE gamle kode, så reglen kan ikke være grøn på en konstrueret
-        # fejlform. Stripper kun de to markører, så resten af filen er den
-        # gamle funktion.
+        # den RIGTIGE gamle kode fra det committede vidne, ikke en mutation af
+        # den nuværende, så reglen hverken kan være grøn på en konstrueret
+        # fejlform eller afhænge af hvordan den rette kode ser ud i dag.
         ("en betalt klient uden syvdagesregel",
-         check_cache_rule({"site/compliance-report.html":
-                           (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
-                           .replace("CACHE_MAX_MS", "NO_CACHE_AT_ALL")
-                           .replace("isServerError", "noServerError")})),
+         check_cache_rule({"site/compliance-report.html": witness_text})),
     ]
 
     failures = 0
@@ -416,21 +422,81 @@ def self_test() -> int:
     else:
         print(f"OK   alle {len(expected)} JS-klienter i CLIENTS er dækket af reglen")
 
-    # Bevis på den rigtige gamle kode fra git HEAD, ikke på en konstrueret
-    # fejlform: den betalte klient før opgave 51 skal give præcis ét fund, og
-    # den rettede skal give nul.
-    old = subprocess.run(["git", "show", "HEAD:site/compliance-report.html"],
-                         cwd=ROOT, capture_output=True, text=True)
-    if old.returncode == 0:
-        got = check_cache_rule({"site/compliance-report.html": old.stdout})
-        if len(got) != 1:
-            print(f"FELO den gamle compliance-report.html giver {len(got)} fund, "
-                  f"forventet 1 — beviset på den rigtige kode holder ikke")
-            failures += 1
-        else:
-            print(f"OK   den gamle compliance-report.html giver 1 fund: {got[0][:72]}…")
+    # Bevis på den RIGTIGE gamle kode, ikke på en konstrueret fejlform: den
+    # betalte klient før opgave 51 skal give præcis ét fund.
+    #
+    # Kilden er et committet vidne, ikke `git show HEAD:`. Det var den
+    # bevægelige version, og den var grøn KUN mellem det øjeblik rettelsen
+    # blev skrevet og det øjeblik den blev committet. Da opgave 51 landede på
+    # main, blev HEAD den rettede kode, selftesten gik rød, og gaten dræbte
+    # hver eneste deploy (kørsel 36225565892) — den rettelse, der skulle løse
+    # en låst betalende kunde, kom aldrig ud. Et vidne skal være en fil, der er
+    # identisk før, under og efter enhver commit.
+    got = check_cache_rule({"site/compliance-report.html": witness_text})
+    if len(got) != 1:
+        print(f"FELO vidnet fra før opgave 51 giver {len(got)} fund, forventet 1 "
+              f"— beviset på den rigtige kode holder ikke")
+        failures += 1
     else:
-        print("OK   git-HEAD-læsning kunne ikke ske — springer beviset over")
+        print(f"OK   vidnet fra før opgave 51 giver 1 fund: {got[0][:64]}…")
+
+    # Tre holdbarhedskontroller på vidnet. Uden dem kan et vidne råne i stilhed
+    # og holde porten grøn på præcis det den skal fange — det er den
+    # fejlklasse opgave 23, 26, 38 og 51 selv handlede om.
+    # (a) Det skal stadig være den gamle form: de to markører skal mangle, elses
+    #     ville porten finde intet og vidnet ville intet bevise. Bemærk at
+    #     skriver man dem ind i vidnets egen kommentar, rydder man sig selv.
+    rot = [m for m in SOFT_FAIL_MARKERS if m in witness_text]
+    if rot:
+        print(f"FELO vidnet nævner {', '.join(rot)} — det er den RETTEDE kode, "
+              f"ikke den gamle, så beviset intet")
+        failures += 1
+    # (b) Og det skal stadig være den gamle form rent kodemæssigt: det rå
+    #     JSON-kald, der gik direkte i klientens ansvar.
+    if "return await r.json()" not in witness_text:
+        print("FELO vidnet er ikke længere den gamle kode — det rå JSON-kald "
+              "er væk, så porten ville være grøn på en konstrueret fejlform")
+        failures += 1
+    # (c) Vidnet må ikke være en kopi af den nuværende kode, så det heller ikke
+    #     kan vedligeholdes ved at blive regenereret fra den.
+    if witness_text == (ROOT / "site/compliance-report.html").read_text(encoding="utf-8"):
+        print("FELO vidnet er en kopi af den nuværende kode — det beviser "
+              "intet og kan ikke holdes ægte")
+        failures += 1
+
+    # Den generelle regel for hele gaten: ingen selftest må hente sit ventede
+    # vidne ud af repoets bevægelige tilstand. `git show HEAD:<fil>` er grønt
+    # før commit og rødt bagefter, uanset om porten har gjort sit arbejde, og
+    # det dræber deployen i stedet for at advare om porten. Beviset skal være en
+    # fil, der ligger i træet.
+    #
+    # Kigger kun i kode, ikke i kommentarer eller docstrings: reglen skal kunne
+    # sige *hvad* i sin egen forklaring uden at finde sig selv, ellers gør den
+    # det umuligt at dokumentere fejlen. Samme fejlklasse som opgave 26 fund 1.
+    history_ref = "HEAD" + ":"  # bygget, så reglen ikke matcher sin egen mønsterstreng
+    for path in sorted((ROOT / "tools").glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        docs = {ast.get_docstring(n, clean=False) for n in ast.walk(tree)
+                if isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                                  ast.AsyncFunctionDef))}
+        found = False
+        for node in ast.walk(tree):
+            # Den rigtige kode var `["git", "show", "HEAD:site/…"]` — tre
+            # strenge, så det kan ikke kræves at de nævner git og show i den
+            # samme. Tilstrækkeligt er, at en kode-streng peger på en revision.
+            if (isinstance(node, ast.Constant) and isinstance(node.value, str)
+                    and history_ref in node.value
+                    and node.value not in docs):
+                found = True
+                break
+        if found:
+            print(f"FELO {path.relative_to(ROOT)} henter sit vidne fra "
+                  f"repoets historik (HEAD) — det er grønt kun før commit og "
+                  f"dræber deployen bagefter")
+            failures += 1
+            break
+    else:
+        print("OK   ingen gate henter sit vidne fra repoets historik")
 
     # Den indlejret-checkout-regel kræver en rigtig mappe at kigge på, så den
     # probes på filsystemet i stedet for i en dict. Uden denne test kunne
@@ -484,7 +550,7 @@ def self_test() -> int:
         failures += 1
     else:
         print("OK   den nuværende kode holder kontrakten")
-    total = len(scenarios) + 5
+    total = len(scenarios) + 9
     print(f"{total - failures}/{total} self-tests bestået")
     return 1 if failures else 0
 
