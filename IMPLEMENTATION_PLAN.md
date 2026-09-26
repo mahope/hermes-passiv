@@ -1,5 +1,17 @@
 # IMPLEMENTATION_PLAN
 
+- `ITERATION_ID`: `pro-rapporten-regnes-serveren-2026-09-26`
+- `STATE`: `Opgave 54 FÆRDIG — ❓ 14s *første* halvdel er lukket med kode, ikke med en etiket. EUComply Pro solgte $79/website/år på **én** ting: rapporten. Den var ikke en adgangskontrol, den var en knap: GDPR/cookie-, NIS2- og metadata-fundene blev beregnet i browseren på den HTML `/scan-proxy` lige havde leveret, skrevet i DOM'en **før** nøglen blev tastet, og `@media print` skjulte kun `.license-area`. Ctrl+P gav altså præcis den PDF, knappen skulle låse op for. **Fund 1 — den eksisterende `/api/compliance-scan` kunne ikke bruges, selv om den ligner:** den er et *andet* produkt (offentligt site-tjek med 9 tjek), den er uden licens, og dens tjek er hverken GDPR-krav eller severity-rangering. At have genbrugt den ville have været det samme som at sætte en etiket på. **Fund 2 — den nye rute delegerer licensen i stedet for at kopiere den.** `/api/report` kalder `handleLicense(probe, env, 'validate')` — den samme funktion `/api/license/validate` bruger — så der er én implementering af tilbagekaldt/udløbt/forkert-produkt/uaktiveret, ikke to der kan komme i drift med forskellige svar. Det er grunden til at diffen er lille i den farlige del. **Fund 3 — en betalt rute der henter en brugervalgt URL er en SSRF-primitive, fordi `cscFetch()` ingen guard har.** `reportTargetIsPublic()` afviser nu loopback, RFC1918, link-local, CGNAT, `.local`/`.internal`/`.home.arpa` og ikke-`http(s)`. Fire tests dækker den. **Fund 4 — FAQ'en lovede HSTS og CSP, og de var ubetalte løfter.** De to kan *kun* svares af serveren, fordi de ligger i response-headers — de kunne aldrig have været i browseranalysen. De er derfor ikke en tilfældig tilføjelse: de er grunden til at flytningen er nødvendig for at gøre den publicerede tekst sand. **Fund 5 — en fejl må ikke låse en betalende kunde ud.** Et 503 fra `/api/report` giver den gratis analyse og *siger* det i stedet for at nægte print; kun et 402 med en ægte afvisning viser fejl. Rækkefølgen er bevidst: etiket først, sådan at kunden aldrig står med et tomt dokument. **Fund 6 — en gratis print må ikke kunne forveksles med den betalte.** Summaries uden Pro-fund bærer nu en `.print-only`-linje, og den udløses af *fundenes fravær*, ikke af et flag der kan komme i drift med koden. **Fund 7 — en skrivefejl i min egen diff forsagede en ReferenceError.** Jeg skrev `EXPITES_KEY` i stedet for `EXPIRES_KEY`; `check_inline_js.py` sagde 0 problemer, og ingen port i gaten fanger et navn der ikke findes. Fandt den ved at læse linjen efter green. Samme fejlklasse som opgave 52: en port der er grøn på det den tjekker, ikke på det den burde.`
+- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
+- `BASELINE`: `main@1401675`
+- `LAST_BRANCH`: `ceo/pro-report-gates`
+- `NEXT_TASK`: `Køen er tom igen, og ❓ 14 er nu delt i to dele hvor den tunge er lukket. **(1) Den falske COOKIE_BANNER-værdi, som flytningen nu har gjort serverens ejendom, er bevidst ikke rettet.** `hasCookieBanner` tester hele HTML'en for `/cookie|consent|gdpr|cmp|…/`, så en side med en footer-link "Privacy" består tjekket. Det er portet 1:1, fordi en rettelse nu ville ændre tal i en betalt kundes rapport uden varsel. Det er et selvstændig opgave: enten stramme mønsteret, eller slette påstanden. Mål først. **(2) `/api/report` har ingen rate limit**, mens `/scan-proxy` og `/api/compliance-scan` heller ikke har det — så det er ikke en regression, men en betalt rute der fetcher en URL er værd at dække, især fordi nøglen tæller enheder og ikke kalde. **(3) ❓ 14 punkt (a) og (b) står stadig og er Mads' valg:** byg historik + PDF med kundenavn, sænk prisen, eller stop salget af \`eucomply-pro\`. Min anbefaling står: (a) — rapporten er nu en reel adgangskontrol, så der er noget at bygge oven på.`
+- `GATE`: `GRØN — build_sites.py OK, seo_check 309 sider 0 fund, **stripe-worker 106/106** (fra 93/93: 13 nye, ingen tab), check_inline_js 298 filer 0 problemer. De 13 nye: 4 afvisninger (ingen nøgle / forkert produkt / ikke aktiveret / GET=405), 2 SSRF, 1 succes med fund i alle tre kategorier, 1 velformethed på hvert fund, 3 kilde-porte der beviser at browseren ikke længere beregner noget. Sidste tre er de egentlige: de er den eneste port der fanger Ctrl+P-hullet, fordi de læser \`site/compliance-report.html\`.`
+- `SLIP`: `Ingen. ~42 min, committet før dræbningen. Review sprunget over som kontrakten tillader: ~290 linjer, og beviset er 13 tests kørt på det rigtige træ inkl. to negative (forkert produkt, uaktiveret nøgle) og to SSRF, ikke en læsning.`
+- `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 1/1, 50: 1/1, 51: 1/1, 52: 1/1, 53: 1/1, 54: 1/1`
+- `DEPLOY`: `(opgave 54, ÅBEN): \`VERIFICÉR DEPLOY: /api/report lukker Ctrl+P-hullet på EUComply Pro 8c62ad3 26/9\`. Dette repo deployer ved push til main, så CI kører \`gate\` før de tre deploys.`
+
+
 
 - `ITERATION_ID`: `vidne-reglen-ogsa-paa-js-tests-2026-09-26`
 - `STATE`: `Opgave 53 FÆRDIG — køen var tom, så det var en researchiteration, og den målte den ene åbne ting fra opgave 52: opgave 52 kaldte sin vidne-regel *generel* efter at have scannet `tools/*.py` alene. **Fund 1 — målingen gav 0, og det er et resultat:** `grep` over de tre node-testsuiters efter `git show|rev-parse|git log|git archive|child_process|execSync` gav **0 fund**, så ingen suite har et vidne fra historien lige nu. **Fund 2 — men intet bevisede at reglen KUNNE se en suite, og det er præcis opgave 52s egen fejlklasse.** Opgave 52 fund 2 var en selftest grøn kun før commit; her er det en regel, der udgiver sig for generel uden at være prøvet på den anden halvdel af gaten. De tre suites er 47 step i gaten og vejer tungere end nogen port, så det er præcis der et landmine fra denne klasse ville ligge. **Fund 3 — min første JS-scanner var grøn på præcis det den skulle fange.** Jeg skjulte strengindhold, fordi `//` inde i en streng så ud som en kommentar — men et revisions-kald *er* en streng (`["git","show","HEAD:site/…"]`), så jeg fjernede præcis det jeg ledte efter. Selftesten fangede det: den forventede linje 2 og fandt ingen. **Fund 4 — min anden fejl var linjetælling, ikke mønstergen.** Den første scanner skrev kun en ny linje ud ved en `//`-kommentar, så en fil uden kommentarer blev én lang linje, og fundet fik linje 1 i stedet for 2. En port der finder det rigtige sted på den forkerte linje er ubrugelig: ingen kan gå ned og se fejlen. Nu afsluttes hver linje for sig, og fundene er fundernes egne linjenumre. **Fund 5 — kommentarer er skjult, kode er ikke.** Scanneren følger statet tegn for tegn, så `https://` inde i en streng ikke sletter linjen, og de tre kommentar-former (`//`, `/* */`, `/** */`) giver 0 fund — bevist af selftestens egen probe.`
@@ -2652,6 +2664,20 @@ loop** uden Mads' hjælp — se ❓ 13. Indtil da må konverteringsarbejdet fort
 løftet-op imod implementeringen, som opgave 48 gjorde, aldrig på påstande om
 besøgstal.
 
+### 54. FÆRDIG (implementering `734c2f7`, merge `8c62ad3`) — EUComply Pro-rapporten regnes server-side
+
+**Begrundelse:** ❓ 14. $79/website/år var sat på en knap, ikke på en adgangskontrol:
+Ctrl+P gav den betalte PDF, fordi rapporten lå i DOM'en før nøglen blev tastet.
+
+**Resultat:** Ny rute `POST /api/report` i `site/_worker.js` kører NIS2/GDPR/metadata-
+analysen (og HSTS/CSP fra response-headers) server-side efter at `handleLicense()` har
+accepteret nøglen. Browseren beholder kun tilgængelighedsgraden. `reportTargetIsPublic()`
+lukker SSRF. Print uden licens er mærket med en rød `.print-only`-linje.
+
+**Acceptkriterium (målt):** stripe-worker 106/106 med 13 nye tests; tre af dem læser
+`site/compliance-report.html` og fejler, hvis GDPR/NIS2-tjekne kommer tilbage i
+`runScan()` eller hvis siden slutter at hente `/api/report`.
+
 ## ❓ Til Mads
 
 14. **EUComply Pro er $79 pr. website pr. år, og efter målingen er det den eneste
@@ -2666,7 +2692,15 @@ besøgstal.
     **kun** det sidste halve: siden lyver ikke længere, og jeg kan ikke oprette nye
     Stripe-priser. Bemærk også at porten er en knap-handler, ikke adgangskontrol —
     rapporten ligger i DOM'en før nøglen indtastes, så Ctrl+P giver den samme PDF.
-    Den bør lukkes, hvis Pro skal sælge på porten.
+    ~~Den bør lukkes, hvis Pro skal sælge på porten.~~
+    **LUKKET DEL 1 som opgave 54 (`8c62ad3`):** porten er væk. `POST /api/report` i
+    `site/_worker.js` beregner rapporten server-side efter `handleLicense()` har accepteret
+    nøglen, og browseren beregner ikke længere noget om NIS2/GDPR. Ctrl+P giver nu en
+    print mærket "Free scan", fordi en sådan print mangler de fund kun serveren kan finde.
+    HSTS/CSP er kommet med, så FAQ'ens løfte holder. **Del 2 — vælget (a)/(b)/(c) står
+    stadig:** byg historik + PDF med kundenavn, sænk prisen, eller stop salget. Min
+    anbefaling er (a), fordi rapporten nu er en reel adgangskontrol og der dermed er
+    noget reelt at bygge oven på.
 
 15. ~~**`/activate/` findes kun på engelsk.**~~ **LUKKET 26/9 som opgave 50:**
     `/da/activate/` findes, er i sitemap'en og har egen købsknap, og sprogskiftet
