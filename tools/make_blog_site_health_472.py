@@ -277,19 +277,7 @@ def main():
     broken = check_links(written)
     print('broken internal links:', broken if broken else 'none')
 
-    # llms.txt entries
-    ll_path = f'{SITE}/llms.txt'
-    ll = open(ll_path).read()
-    adds = []
-    en_url = f'/blog/{EN_SLUG}'
-    da_url = f'/da/blog/{DA_SLUG}'
-    if en_url not in ll:
-        adds.append('- [Monitor Your Website from GitHub Actions](https://hermes-passiv.pages.dev/blog/monitor-website-github-actions-free): free daily uptime, SSL and compliance checks with four open-source Actions.')
-    if da_url not in ll:
-        adds.append('- [Overvåg hjemmeside fra GitHub Actions](https://hermes-passiv.pages.dev/da/blog/overvaag-hjemmeside-github-actions-gratis): gratis daglig overvågning af oppetid, SSL og compliance.')
-    if adds:
-        open(ll_path, 'a').write('\n'.join(adds) + '\n')
-    print('llms.txt:', len(adds), 'entries added')
+    # llms-filen i site/ er fjernet. Se tools/check_legacy_seo_paths.py.
 
 
 if __name__ == '__main__':

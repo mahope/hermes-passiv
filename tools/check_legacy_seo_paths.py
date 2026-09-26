@@ -15,10 +15,10 @@ kun rapporterede en død vært. Nøglen ligger på alle tre rigtige domæner.
 
 Gaten fejler ved:
 
-1. `site/sitemap.xml` findes igen — den skal være slettet, for builden ejer
-   sitemapperne.
-2. Et script (`.py`/`.sh`) referererer til den døde kilde-sitemap. Ren
-   nævnes-per-fil: generatorerne må ikke ramme den igen.
+1. `site/sitemap.xml` eller `site/llms.txt` findes igen — de skal være
+   slettede, for builden ejer sitemapperne og llms.txt.
+2. Et script (`.py`/`.sh`) refererer til en af dem. Ren nævnes-per-fil:
+   generatorerne må ikke ramme dem igen.
 3. Et aktivt helbreds- eller deployscript peger på `hermes-passiv.pages.dev`.
 4. `deploy.sh` ikke er den dokumenterede nægtelse, eller en fil beder om
    manuel Pages-upload. Der er én udgivelsesvej: merge til `main`.
@@ -46,6 +46,25 @@ DEAD_HOST = "hermes-passiv.pages.dev"
 
 # Kildefilens sitemap. Builden springer den over og skriver dist-sitemapper.
 DEAD_SOURCE_SITEMAP = "site/sitemap.xml"
+
+# Kildefilens llms.txt. Samme fejlform som sitemappen, fundet i opgave 89:
+# `build_sites.py` skriver `dist/<domaene>/llms.txt` ud fra sidernes `pages`
+# (GENERATED-listen), så kildefilens egen kopi blev skrevet helt over og
+# publicerede *aldrig* noget. Fire generatorer appendede alligevel linjer til
+# den, hver med preview-værten i URL'en. Filen var 10 kB død kode med 58
+# forekomster af `hermes-passiv.pages.dev` — en fælde for den der læser den
+# og tror den er den publicerede.
+DEAD_SOURCE_LLMS = "site/llms.txt"
+
+# Begge døde kildefiler, med den grund de dør på. Rækkefølgen er den
+# rækkefølge portene dømmer dem i.
+DEAD_SOURCE_FILES = (
+    (DEAD_SOURCE_SITEMAP,
+     "builden springer den over (SKIP_NAMES), så intet i den publiceres"),
+    (DEAD_SOURCE_LLMS,
+     "builden skriver dist/<domaene>/llms.txt ud fra sidernes pages, så "
+     "intet i kildefilen publiceres"),
+)
 
 # Kun scripts. `IMPLEMENTATION_PLAN.md` skal kunne *nævne* stien som
 # opgavetext, og historiske sider i `site/` skal kunne linke til /sitemap.xml.
@@ -122,25 +141,58 @@ def _script_files(root: Path) -> dict[str, str]:
 
 
 def check_source_sitemap_gone(root: Path) -> list[str]:
-    """Punkt 1 — kildefilens sitemap skal være slettet."""
-    dead = root / DEAD_SOURCE_SITEMAP
-    if dead.exists():
-        return [f"{DEAD_SOURCE_SITEMAP} findes igen — builden springer den over "
-                f"(SKIP_NAMES), så intet i den publiceres"]
-    return []
+    """Punkt 1 — de døde kildefiler skal være slettede."""
+    problems = []
+    for relative, reason in DEAD_SOURCE_FILES:
+        if (root / relative).exists():
+            problems.append(f"{relative} findes igen — {reason}")
+    return problems
+
+
+# Scripts der har lov til at nævne `llms.txt` overhovedet. Alle tre er
+# dokumenteret af *hvorfor*, ikke af en navne-liste som fraviges andetsteds:
+#
+#   build_sites.py            — ejer filen; skriver `dist/<domaene>/llms.txt`
+#   tools/check_links.py      — fører `/llms.txt` på listen over genererede
+#                               dist-filer den ikke skal dømme som brudte
+#   tools/make_blog_index.py  — skriver `<link rel="alternate" href="/llms.txt">`
+#                               ind i en blogside; rodrelativ, altså den
+#                               publicerede fil
+#
+# Uden denne liste så `llms.txt`-reglen fange alle tre, selv om ingen af dem
+# rører kildefilen.
+ALLOWED_LLMS_FILES = {
+    "build_sites.py",
+    "tools/check_links.py",
+    "tools/make_blog_index.py",
+}
 
 
 def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]:
-    """Punkt 2 — intet script må ramme den døde kilde-sitemap."""
+    """Punkt 2 — intet script må ramme en død kildefil."""
     problems = []
     for name, text in scripts.items():
-        if name == GATE_SELF:
+        if name == GATE_SELF or name in ALLOWED_LLMS_FILES:
             continue
-        if DEAD_SOURCE_SITEMAP in text:
+        for relative, _reason in DEAD_SOURCE_FILES:
+            if relative == DEAD_SOURCE_LLMS:
+                # Søg på `llms.txt` uden `site/`: `make_blog_site_health_472.py`
+                # bygger stien i en f-string (`f'{SITE}/llms.txt'`), så en ren
+                # `site/llms.txt`-søgning dømte 3 af de 4 generatorer. Samme
+                # fejlklasse som opgave 88 — porten så den rigtige overflade
+                # med den forkerte metode.
+                needle = "llms.txt"
+            else:
+                needle = relative
+            if needle not in text:
+                continue
             line = next((i for i, l in enumerate(text.splitlines(), 1)
-                         if DEAD_SOURCE_SITEMAP in l), 0)
-            problems.append(f"{name}:{line} refererer til {DEAD_SOURCE_SITEMAP} — "
-                            f"build_sites.py ejer sitemapperne (dist/<domaene>/sitemap.xml)")
+                         if needle in l), 0)
+            owner = ("build_sites.py ejer sitemapperne (dist/<domaene>/sitemap.xml)"
+                     if relative == DEAD_SOURCE_SITEMAP
+                     else "build_sites.py ejer llms.txt (dist/<domaene>/llms.txt, "
+                          "bygget ud fra sidernes pages)")
+            problems.append(f"{name}:{line} refererer til {relative} — {owner}")
     return problems
 
 
@@ -303,10 +355,28 @@ def self_test() -> int:
                           check_source_sitemap_gone(root)))
         (root / DEAD_SOURCE_SITEMAP).unlink()
 
+        # 1b — kildefilens llms.txt findes igen. Samme fejlform som
+        # sitemappen, anden fil: generatorerne skrev linjer ind i en fil
+        # builden skriver helt over, så de publicerede aldrig noget.
+        (root / DEAD_SOURCE_LLMS).write_text("# Site\n- [x](https://hermes-passiv.pages.dev/a)\n",
+                                             encoding="utf-8")
+        scenarios.append(("kildefilens llms.txt findes igen",
+                          check_source_sitemap_gone(root)))
+        (root / DEAD_SOURCE_LLMS).unlink()
+
         # 2 — et script rammer den døde kilde-sitemap
         (root / "tools/make_blog_x.py").write_text(
             'sm_path = "site/sitemap.xml"\nopen(sm_path, "w").write(x)\n', encoding="utf-8")
         scenarios.append(("et script skriver i kildefilens sitemap",
+                          check_no_script_touches_source_sitemap(_script_files(root))))
+        (root / "tools/make_blog_x.py").write_text(healthy["tools/make_blog_x.py"], encoding="utf-8")
+
+        # 2b — et script appenderer til den døde kilde-llms.txt. Stien er
+        # bygget i en f-string, som `make_blog_site_health_472.py` gør: en ren
+        # `site/llms.txt`-søgning slap den, så den skrives som den gjorde.
+        (root / "tools/make_blog_x.py").write_text(
+            "ll_path = f'{SITE}/llms.txt'\nopen(ll_path, 'a').write(line)\n", encoding="utf-8")
+        scenarios.append(("et script skriver i kildefilens llms.txt",
                           check_no_script_touches_source_sitemap(_script_files(root))))
         (root / "tools/make_blog_x.py").write_text(healthy["tools/make_blog_x.py"], encoding="utf-8")
 
