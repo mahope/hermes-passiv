@@ -292,9 +292,5 @@
     },
     "html_total": 313
   },
-  "lemon": {
-    "available": false,
-    "note": "afventer godkendelse (LS_API_KEY er ikke sat)"
-  },
   "errors": []
 }
