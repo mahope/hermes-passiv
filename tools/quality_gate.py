@@ -370,6 +370,26 @@ STEPS: tuple[Step, ...] = (
             "site/eaa-compliance-scanner.zip",
         ),
     ),
+    # Opgave 87: `scanner/scanner_core.py` var en kopi af motoren med 16
+    # regler, mens alt vi bygger kører de 22 i `scanner/packaging/`. Den var
+    # ikke død kode — README'en kunden henter dokumenterer `python scan.py`,
+    # som gik gennem den, så kildevejen gav seks færre regler end `pip install`.
+    # Filen er nu en omdirigering, og testen *kører* vejen i stedet for at
+    # tælle kode, så de 22 kan ikke komme tilbage som en stille kopiering.
+    Step(
+        id="scanner-core-redirect",
+        argv=("python3", "tools/test_scanner_core_redirect.py"),
+        inputs=(
+            "tools/test_scanner_core_redirect.py",
+            "tools/check_rule_claims.py",
+            "tools/fixtures/eaa_engine_all_rules.html",
+            "scanner/scanner_core.py",
+            "scanner/packaging/eaa_scanner/",
+            # README'en er den vej porten dømmer, så en rettelse af den skal
+            # kunne finde en kommando der ikke virker.
+            "site/downloads/eaa-scanner-README.md",
+        ),
+    ),
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),

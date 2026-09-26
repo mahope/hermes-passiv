@@ -43,6 +43,14 @@ on:
       - 'tools/test_plugin_engine_rules.py'
       - 'tools/build_plugin_zip.py'
       - 'tools/plugin_engine_probe.php'
+      # Opgave 87: samme fejlform for kildevejen. Uden disse springer en push,
+      # der kun retter `scanner/scanner_core.py` eller README'ens
+      # installationsvej, gaten over — og det er den push, der skal kunne
+      # finde de 16 regler igen i stedet for de 22.
+      - 'tools/test_scanner_core_redirect.py'
+      - 'scanner/scanner_core.py'
+      - 'scanner/packaging/eaa_scanner/**'
+      - 'site/downloads/eaa-scanner-README.md'
       - 'tools/fixtures/**'
       - 'tools/mini_yaml.py'
       - 'tools/mini_toml.py'
