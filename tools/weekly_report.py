@@ -121,10 +121,30 @@ def soft(source: str, fn, default=None):
         return default
 
 
-def http_json(url: str, timeout: int = 30, headers: dict | None = None):
+def _transient(exc: BaseException) -> bool:
+    # HTTPError er en subclass af URLError, så den skal dømmes først: 4xx er et
+    # svar og ikke en fejl, der går over, mens 5xx og 429 er forbigående.
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code >= 500 or exc.code == 429
+    return isinstance(exc, (urllib.error.URLError, TimeoutError, ConnectionError))
+
+
+def http_json(url: str, timeout: int = 30, headers: dict | None = None, attempts: int = 2):
+    # Ét read-fejl må ikke tage en hel uges trafiktal med sig. Uge 39 (2026-09-21)
+    # endte med `traffic: {}` og "api/stats: The read operation timed out", fordi
+    # ét 120 s-læs slog timeout — så de 706 og 593 besøg fra ugerne 38 og 37 fik
+    # ingen afløser, og missionens "find siderne med flest besøg" havde ingen tal.
+    # Alle kald her er GET, så et forsøg til er sikkert. 4xx prøves ikke igen: et
+    # 404 eller en 403 bliver ikke bedre af et forsøg, og vil bare trække 2 min.
     req = urllib.request.Request(url, headers={"User-Agent": "mahope-weekly-report/1", **(headers or {})})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    for attempt in range(1, max(1, attempts) + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as exc:  # noqa: BLE001 — kun de forbigående prøves igen
+            if attempt >= max(1, attempts) or not _transient(exc):
+                raise
+    raise RuntimeError("http_json nåede ikke sit sidste forsøg")
 
 
 def gh_json(args: list[str], timeout: int = 60):

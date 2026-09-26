@@ -1,12 +1,30 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import os
 import unittest
+import urllib.error
 from datetime import datetime, timezone
 from unittest.mock import patch
 
 import weekly_report as report
+
+
+class _FakeResponse:
+    """Nok til at lade http_json læse en krop, som en urlopen-kontekst."""
+
+    def __init__(self, body: bytes) -> None:
+        self._body = body
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
 
 
 class ReportFixture:
@@ -257,6 +275,62 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         markdown = report.render_markdown(data, None, notable, sections)
         self.assertIn("ukendt", subject.lower() + markdown.lower())
         self.assertNotIn("Besøg (7 dage) | 0 |", markdown)
+
+    def test_stats_read_timeout_is_retried_once(self) -> None:
+        # Uge 39 (2026-09-21) tabte hele trafikblokken på ét read-timeout.
+        # Beviset er at et forbigående fejl prøves igen, ikke at tallene findes.
+        calls = []
+
+        def flaky(req, timeout=None):
+            calls.append(timeout)
+            if len(calls) == 1:
+                raise TimeoutError("The read operation timed out")
+            return _FakeResponse(b'{"ok": true}')
+
+        with patch.object(report.urllib.request, "urlopen", side_effect=flaky):
+            self.assertEqual({"ok": True}, report.http_json("https://x/api/stats", timeout=120))
+        self.assertEqual(2, len(calls))
+        self.assertEqual([120, 120], calls)
+
+    def test_stats_read_timeout_survives_a_retry(self) -> None:
+        # Et forsøg til er alt hvad rapporten har tid til; to fejl er ærligt
+        # ukendte tal, og de må ikke skjules som nul.
+        with patch.object(report.urllib.request, "urlopen", side_effect=TimeoutError("boom")) as urlopen:
+            with self.assertRaises(TimeoutError):
+                report.http_json("https://x/api/stats", timeout=120)
+        self.assertEqual(2, urlopen.call_count)
+
+    def test_client_error_is_not_retried(self) -> None:
+        # En 403 eller 404 er et svar, ikke en fejl der går over. Et forsøg til
+        # ville bare brænde 2 minutter på at få det samme svar igen.
+        err = urllib.error.HTTPError("https://x/api/stats", 403, "Forbidden", {}, None)
+        with patch.object(report.urllib.request, "urlopen", side_effect=err) as urlopen:
+            with self.assertRaises(urllib.error.HTTPError):
+                report.http_json("https://x/api/stats", timeout=120)
+        self.assertEqual(1, urlopen.call_count)
+
+    def test_server_error_is_retried(self) -> None:
+        err = urllib.error.HTTPError("https://x/api/stats", 503, "Unavailable", {}, None)
+        responses = [err, _FakeResponse(b'{"ok": true}')]
+        with patch.object(report.urllib.request, "urlopen", side_effect=responses) as urlopen:
+            self.assertEqual({"ok": True}, report.http_json("https://x/api/stats"))
+        self.assertEqual(2, urlopen.call_count)
+
+    def test_retried_stats_read_still_yields_traffic(self) -> None:
+        # Slutbeviset: et flaky /api/stats må give en rigtig trafikblok, fordi
+        # collect_stats går gennem http_json.
+        state = {"n": 0}
+
+        def flaky(req, timeout=None):
+            state["n"] += 1
+            if state["n"] == 1:
+                raise TimeoutError("The read operation timed out")
+            return _FakeResponse(json.dumps(self.payload()).encode("utf-8"))
+
+        with patch.object(report.urllib.request, "urlopen", side_effect=flaky):
+            traffic = report.collect_stats(7)
+        self.assertTrue(traffic["available"])
+        self.assertEqual(2, state["n"])
 
     def test_report_renders_each_domain_and_sales(self) -> None:
         with patch.object(report, "http_json", return_value=self.payload()):
