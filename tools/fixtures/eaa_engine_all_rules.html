@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  Et dokument bygget til at få HVER regel i pluginens motor til at fyre.
+
+  Det er bevidst ubrugeligt. Hver linje nedenfor har én regel i kommentar, så
+  en ny regel i `engine.php` kan få sin egen linje, og så testen kan sige
+  hvilken der mangler i stedet for blot at sige "21 af 22".
+
+  Hvad der er UDELELIGT med vilkår: title-elementet, lang-attributten,
+  viewport-metataget og h1-elementet er alle UDELEDE, fordi DOC_TITLE,
+  HTML_LANG, VIEWPORT og HEADING_H1 netop fyrer på deres fravær.
+
+  Skriv ALDRIG en tag med spidsede vinkler i en kommentar her. Motorens
+  tokeniser læser dem som rigtige tags, uanset at de står i en kommentar: da
+  satte denne fil's egen forklaring DOC_TITLE og HEADING_H1 til at VÆRE
+  tilstede, og 21 af 22 regler fyrer i stedet for 22. Det er ikke en
+  motorfejl — det er en fixture, der ligner markup, som den ikke er.
+
+  Denne fil er fixtures, ikke indhold: den publiceres aldrig.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+<!-- DOC_TITLE, HTML_LANG, VIEWPORT, HEADING_H1: alle fire fyrer på fravær. -->
+<!-- HEADING_SKIP: h2 → h4 springer et niveau. -->
+<h2>Fixture</h2>
+<h4>Skipped level</h4>
+
+<!-- IMG_ALT: img uden alt. -->
+<img src="/a.png">
+
+<!-- FORM_LABEL: felt uden label, uden id, uden aria-label. -->
+<input type="text" name="q">
+
+<!-- LINK_TEXT: link uden tekst. -->
+<a href="/x"></a>
+
+<!-- BUTTON_TEXT: knap uden tekst. -->
+<button type="button"></button>
+
+<!-- DUP_ID: to elementer med samme id. -->
+<p id="dup">a</p><p id="dup">b</p>
+
+<!-- TARGET_BLANK: nyt vindue uden advarsel i linkteksten. -->
+<a href="/y" target="_blank">Documentation</a>
+
+<!-- IFRAME_TITLE: iframe uden title. -->
+<iframe src="/frame"></iframe>
+
+<!-- TABLE_HEADER: tabel uden th. -->
+<table><tbody><tr><td>cell</td></tr></tbody></table>
+
+<!-- FIXED_PX_FONTS: motoren regner først ved tre inline px-fonstørrelser. -->
+<p style="font-size:12px">a</p>
+<p style="font-size:13px">b</p>
+<p style="font-size:14px">c</p>
+
+<!-- ARIA_HIDDEN_FOCUS: skjult for hjælpemidler, men stadig fokuserbar. -->
+<a href="/z" aria-hidden="true" tabindex="0">Hidden link</a>
+
+<!-- INPUT_TYPE_IMAGE_ALT: billedknap uden alt. -->
+<input type="image" src="/i.png">
+
+<!-- VIDEO_TRACKS: video uden track og uden data-captions-present. -->
+<video src="/v.mp4"></video>
+
+<!-- AUDIO_TRANSCRIPT: audio uden transcript/captions i aria-label eller title. -->
+<audio src="/a.mp3"></audio>
+
+<!-- AUTOPLAY_MEDIA: autoplay uden muted (video) og uden controls (audio). -->
+<video src="/v2.mp4" autoplay></video>
+<audio src="/a2.mp3" autoplay></audio>
+
+<!-- MARQUEE_BLINK: bevægeligt element, og blinkende tekst. -->
+<marquee>beveger sig</marquee>
+<span style="text-decoration:blink">blinker</span>
+
+<!-- POSITIVE_TABINDEX: tabindex > 0 bryder den naturlige rækkefølge. -->
+<div tabindex="1">springer frem</div>
+
+<!-- CONTRAST: 1.0-ish på hvid, under 4.5:1 for normal tekst. -->
+<span style="color:#f7f7f7;background-color:#ffffff">hvidt på hvidt</span>
+
+</body>
+</html>

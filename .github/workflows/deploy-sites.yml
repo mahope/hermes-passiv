@@ -36,6 +36,14 @@ on:
       - 'tools/stripe_catalog.json'
       - 'tools/make_blog_da_mirrors_461.py'
       - 'tools/quality_gate.py'
+      # Gatestrækket `plugin-engine-rules` kører PHP-motoren fra det publicerede
+      # arkiv på en fixture. Uden disse to springer en push, der kun retter
+      # motoren eller kun dens fixture, gaten over — og det er præcis den
+      # push der skal kunne finde en motor, der ikke er den vi udgiver.
+      - 'tools/test_plugin_engine_rules.py'
+      - 'tools/build_plugin_zip.py'
+      - 'tools/plugin_engine_probe.php'
+      - 'tools/fixtures/**'
       - 'tools/mini_yaml.py'
       - 'tools/mini_toml.py'
       - 'tools/check_python_env.py'

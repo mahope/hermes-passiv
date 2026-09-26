@@ -1,6 +1,6 @@
 # EAA Compliance Scanner — WordPress plugin
 
-Universal accessibility scanner (EAA / WCAG 2.1 AA subset, 15 rules) that runs
+Universal accessibility scanner (EAA / WCAG 2.1 AA subset, 22 rules) that runs
 entirely on your own server. Works with **any theme** and scans any URL — the
 engine is platform-independent (the same rule set as the web scanner at
 hermes-passiv.pages.dev/scan).
@@ -32,5 +32,5 @@ human judgement — see the guides and e-books at hermes-passiv.pages.dev.
 ## Testing
 
 `php test_engine.php` (from this directory) exercises the engine against a
-deliberately broken document (all 15 rules must fire), a clean document
+deliberately broken document (all 22 rules must fire), a clean document
 (must score 100/A), and a live URL.

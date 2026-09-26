@@ -353,6 +353,23 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_rule_claims.py", "--self-test"),
         inputs=("tools/check_rule_claims.py",),
     ),
+    # Opgave 85: pluginsiden sagde 16, og det var **sandt** — fordi porten læste
+    # det publicerede zip, som var seks regler bag kilden. En port der måler det
+    # forkerte produkt, er ikke en port. Derfor måles motoren her desuden ved at
+    # køre den, og kræver at arkivet er den kode vi udgiver.
+    Step(
+        id="plugin-engine-rules",
+        argv=("python3", "tools/test_plugin_engine_rules.py"),
+        inputs=(
+            "tools/test_plugin_engine_rules.py",
+            "tools/build_plugin_zip.py",
+            "tools/plugin_engine_probe.php",
+            "tools/fixtures/eaa_engine_all_rules.html",
+            "tools/check_rule_claims.py",
+            "scanner/wp-plugin/eaa-compliance-scanner/",
+            "site/eaa-compliance-scanner.zip",
+        ),
+    ),
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),
