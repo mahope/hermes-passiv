@@ -88,6 +88,24 @@ HISTORICAL_VERSIONS: dict[str, set[str]] = {
     "tools/make_blog_da_mirrors_461.py": {"1.0.8", "1.0.9"},
 }
 
+# Tekstmedlemmer i et publiceret arkiv, hvor en udgave-påstand står. Kun README:
+# det er den, butikslisten viser, og den ligger i Firefox-arkivet. `manifest.json`
+# dækkes af `check_versions`, og resten af koden siger ikke noget om udgaven.
+DOC_MEMBERS = ("README.md",)
+
+# En påstand er et versions-token på en linje, der *nævner* en udgave — et
+# shields.io-badge, "version 1.5.4", "udgaven 1.5.4". Bevis: den virkelige
+# Firefox-README havde badge på 1.4.1 i et 1.5.3-arkiv, og det blev fundet.
+#
+# Bevidst uden undtagelsesliste. Min første version af denne check havde en
+# `SHIPPED_HISTORICAL_VERSIONS` med 1.4.1, fordi README'en nævner
+# "Table column alignment preserved (v1.4.1)" som feature-historik — og så var
+# porten grøn på præcis det badge, den var skrevet til at fange, fordi undtagelsen
+# var skrevet efter *tallet* og ikke efter *påstanden*. Linjescoping løser
+# begge dele: historikken nævner ikke ordet "version", så den er uden for
+# reglen, og en påstand kan ikke skjule sig bag en undtagelse.
+VERSION_WORD_RE = re.compile(r"version|udgave", re.I)
+
 
 # --------------------------------------------------------------------------
 # Indlæsning
@@ -407,6 +425,39 @@ def check_every_archive_is_reachable(
     return problems
 
 
+def check_shipped_docs(archives: dict[str, dict]) -> list[str]:
+    """En README i et publiceret arkiv skal tale om den udgave, den ligger i.
+
+    Opgave 27. Firefox-README'en sagde `version-1.4.1`, mens arkivet den lå i
+    hed `clean-copy-firefox-v1.5.3.zip`. Ingen gate læste den: `check_versions`
+    læser manifesten, `check_pages` læser `site/`, og byte-sammenligning af
+    arkivet kan ikke vide, at den *tekst* er forældet. Det er den påstand, der
+    vises i butikslisten og i den udpakket mappe.
+    """
+    problems: list[str] = []
+    for entry in archives.values():
+        payload = entry["published"].get(f"site/downloads/{entry['name']}")
+        members = archive_members(payload or b"")
+        if members is None:
+            continue  # `check_members` melder et ulæseligt arkiv
+        for member in DOC_MEMBERS:
+            data = members.get(member)
+            if data is None:
+                continue  # ikke alle produkter har en README med
+            text = data.decode("utf-8", "replace")
+            for line in text.splitlines():
+                if not VERSION_WORD_RE.search(line):
+                    continue
+                for match in VERSION_TOKEN.finditer(line):
+                    token = match.group(1)
+                    if token != entry["version"]:
+                        problems.append(
+                            f"{entry['name']}/{member} siger version {token}, "
+                            f"men udgaven er {entry['version']}"
+                        )
+    return problems
+
+
 def run(data: dict) -> list[str]:
     archives = data["archives"]
     return (
@@ -414,6 +465,7 @@ def run(data: dict) -> list[str]:
         + check_archives(archives)
         + check_members(archives)
         + check_license_contract(archives)
+        + check_shipped_docs(archives)
         + check_pages(data["pages"], {entry["name"] for entry in archives.values()})
         + check_dist(data["dist"], archives)
         + check_publish_targets(data["dist_pages"], data["publishes"])
@@ -527,6 +579,25 @@ def self_test() -> int:
              archives, {"cleancopy.tools": {"clean-copy-v0.0.1.zip"}, "mahope.tools": set()})),
         ("et publiceret arkiv der findes i en dist (skal ikke fejle)",
          check_every_archive_is_reachable(archives, {"cleancopy.tools": published})),
+        # Opgave 27: en README i et arkiv, der påstår en gammel udgave. Dette er
+        # den fejl, den virkelige Firefox-README havde (badge 1.4.1 i et 1.5.3-
+        # arkiv), og ingen eksisterende check så den.
+        ("en README med badge på en gammel udgave",
+         check_shipped_docs(mutated_archive("firefox", _replace_member(
+             firefox_payload(archives), "README.md",
+             _readme_version_text(archives["firefox"], r"badge/version-[\d.]+-",
+                                  "badge/version-1.0.0-"))))),
+        ("en README, der kalder en gammel udgave feature-historik med ordet version",
+         check_shipped_docs(mutated_archive("firefox", _replace_member(
+             firefox_payload(archives), "README.md",
+             _readme_version_text(archives["firefox"], r"preserved\*\* \(v[\d.]+\)",
+                                  "preserved** since version 1.4.1"))))),
+        ("en README med badge på den aktuelle udgave (skal ikke fejle)",
+         check_shipped_docs(archives)),
+        ("en README med feature-historik uden ordet version (skal ikke fejle)",
+         check_shipped_docs(archives)),
+        ("et arkiv uden README (skal ikke fejle)",
+         check_shipped_docs({k: v for k, v in archives.items() if k == "chrome"})),
     ]
 
     missed = [label for label, problems in scenarios if not problems and "skal ikke fejle" not in label]
@@ -551,6 +622,25 @@ def self_test() -> int:
     print(f"clean copy-distribution: {caught}/{len(scenarios)} "
           f"fejlformer fanget, {len(green_problems)} problemer på den rigtige kode")
     return 1 if missed or over_firing or green_problems else 0
+
+
+def firefox_payload(archives: dict[str, dict]) -> bytes:
+    """Det publicerede Firefox-arkiv, som den virkelige fixture indeholder."""
+    entry = archives["firefox"]
+    payload = entry["published"].get(f"site/downloads/{entry['name']}")
+    assert payload, "fixtureen mangler det publicerede Firefox-arkiv"
+    return payload
+
+
+def _readme_version_text(entry: dict, pattern: str, replacement: str) -> bytes:
+    """Den virkelige README med ét mønster erstattet — til en mutation."""
+    members = archive_members(firefox_payload({"firefox": entry}))
+    assert members is not None and "README.md" in members, "fixtureen mangler README.md"
+    text = members["README.md"].decode("utf-8")
+    import re as _re
+    patched, count = _re.subn(pattern, replacement, text, count=1)
+    assert count == 1, f"README'en har ikke ét match for {pattern}"
+    return patched.encode("utf-8")
 
 
 def _replace_member(payload: bytes, member: str, data: bytes) -> bytes:

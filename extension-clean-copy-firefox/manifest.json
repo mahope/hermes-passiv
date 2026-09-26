@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clean Copy MD",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Copy any text as clean, formatted Markdown. No more messy pastes — just right-click and copy.",
   "browser_specific_settings": {
     "gecko": {

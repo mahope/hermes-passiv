@@ -2,7 +2,7 @@
 
 Copy any selected text as **clean, formatted Markdown** — right from your browser's right-click menu. No more messy pastes with broken styling, inline CSS junk, or lost formatting.
 
-![Version](https://img.shields.io/badge/version-1.4.1-blue) ![Firefox](https://img.shields.io/badge/Firefox-MV3-orange) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![Version](https://img.shields.io/badge/version-1.5.4-blue) ![Firefox](https://img.shields.io/badge/Firefox-MV3-orange) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 ![Extension demo](demo-extension.gif)
 
@@ -37,19 +37,35 @@ No build step. No dependencies. Plain JavaScript.
 
 Note: temporary add-ons are removed when Firefox restarts. A signed listing on addons.mozilla.org is planned.
 
+## Clean Copy Pro — $19/year
+
+The free version does the whole job on any page: it never asks for an account and never phones home. Pro is for the case where the *same* cleanup has to happen every single time:
+
+- **Custom cleanup rules** applied on every copy — your own find/replace patterns, with regex support
+- **Batch conversion** of many snippets at once in the [web tool](https://cleancopy.tools/clean-copy-tool)
+
+[Buy Clean Copy Pro — $19/year](https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00)
+
+The license key arrives by email and on the thank-you page. Paste it into the extension's options page (**Add-on manager → Clean Copy MD → Preferences**, or right-click the toolbar icon → Options) and the rules unlock. One license covers 5 devices, and the free version stays free forever.
+
 ## Privacy
 
 Clean Copy does exactly one thing on the page you're looking at, when you ask it to. There is:
 
 - **No analytics, no tracking, no telemetry**
-- **No network requests** — nothing leaves your browser
-- Declared data collection: **none** (`data_collection_permissions` in the manifest)
+- **No network requests while you copy** — nothing leaves your browser
+- One exception, and only if you choose it: activating or checking a **Pro license key** sends that key and a random device id to `mahope.tools` so the key can be validated. The pages you visit are never sent, and the free version never makes that call.
+- Declared data collection for the free version: **none** (`data_collection_permissions` in the manifest)
 
 ## Tests
 
 ```bash
 node tools/test_clean_copy.js
 ```
+
+## Support
+
+Clean Copy is free and MIT-licensed, and it stays that way. If it saved you a bit of time, a [small donation](https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c) keeps the free tools maintained.
 
 ## License
 
