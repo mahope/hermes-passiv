@@ -528,7 +528,7 @@ BUGBOTTLE_ENDPOINT = "https://mahope.tools/api/bugreport"
 L10N = {
     "en": dict(skip_label="Skip to content", nav_label="Main", menu_label="Menu", brand_by="by mahoje.dk",
                family_label="Mahope tools:", family_heading="Family", site_heading="Site",
-               privacy_link="Privacy", support_link="Support the tools", security_link="Security", sitemap_link="Sitemap", report_link="Report a bug",
+               privacy_link="Privacy", terms_link="Terms", support_link="Support the tools", security_link="Security", sitemap_link="Sitemap", report_link="Report a bug",
                report_subject="Bug%20report", bb_badge="Feedback powered by BugBottle",
                privacy_note="No cookies, no trackers — only an anonymous page-view counter we run ourselves.",
                maker_note='Built by Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — developer and technical partner for small businesses, Odense, Denmark.',
@@ -541,7 +541,7 @@ L10N = {
                updated="Updated", read="min read", on_this_page="On this page", share="Copy link", newer="Newer", older="Older"),
     "da": dict(skip_label="Spring til indhold", nav_label="Hovedmenu", menu_label="Menu", brand_by="af mahoje.dk",
                family_label="Mahope tools:", family_heading="Familien", site_heading="Sitet",
-               privacy_link="Privatliv", support_link="Støt værktøjerne", security_link="Sikkerhed", sitemap_link="Sitemap", report_link="Rapportér en fejl",
+               privacy_link="Privatliv", terms_link="Vilkår", support_link="Støt værktøjerne", security_link="Sikkerhed", sitemap_link="Sitemap", report_link="Rapportér en fejl",
                report_subject="Fejlrapport", bb_badge="Feedback drevet af BugBottle",
                privacy_note="Ingen cookies, ingen trackere — kun en anonym sidevisningstæller, vi selv kører.",
                maker_note='Lavet af Mads Holst Jensen · <a href="https://mahoje.dk">mahoje.dk</a> — udvikler og teknisk partner for små virksomheder, Odense.',
@@ -917,6 +917,7 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
                footer_links=_nav_links(footer_links, current, "          ").replace("<a ", "<li><a ").replace("</a>", "</a></li>"),
                product_links="\n".join('          <li><a href="%s"%s>%s</a></li>' % (u, ' aria-current="true"' if u == own_url else "", n) for n, u in PRODUCTS),
                privacy_url="/privacy/" if (SITE / "privacy" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/privacy/",
+               terms_url="/terms/" if (SITE / "terms" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/terms/",
                support_url="/support" if cfg["product"] == "mahope" else "https://mahope.tools/support",
                maker_note=t["maker_note"], year=datetime.now(timezone.utc).year,
                # no mailto: in the shell — Cloudflare would inject its render-blocking email-decode script
