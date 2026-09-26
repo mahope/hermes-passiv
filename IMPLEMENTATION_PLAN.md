@@ -2,8 +2,9 @@
 
 ## Status
 
-- `ITERATION_ID`: `traffic-ukendt-arsag-2026-09-26`
-- `STATE`: `Opgave 34 FÆRDIG — researchiterationen. To af de tre kandidater fra NEXT_TASK viste sig at være lukkede, og den tredje bar en fejl af samme klasse som opgave 29, 30 og 31: **en påstand om en årsag, rapporten aldrig har undersøgt.** **Fund 1 — kandidat (a), aktiveringsvejen, er fuldstændig dækket.** Jeg gik ind i den forventende at finde hullet og fandt i stedet fire separate gater. `tools/test_license_clients.js` (79 linjer) tester præcis den invariante Stripe-kontrakten kræver: `CACHE_MAX_MS === 7 * DAY`, 503 inden for syv dage beholder Pro, 503 *præcis* på dag syv beholder Pro, 503 efter dag syv slår den fra, obsidian og chrome hver for sig, og offline erklæres lydigt. `check_copies` beviser så at `site/clean-copy-tool.html`, `obsidian-plugin/main.js` og begge `options.js` er **byte-identiske** med det testede kanoniske modul `tools/clean_copy_license.js` — så siderne arver testen i stedet for at være utestede kopier. Jeg læste også sideløbs `site/clean-copy-tool.html:655` og bekræftede at sideindlæsningen faktisk føder det lagrede `cc_pro_checked` ind i `decide()`; en nede server slår altså ikke en betalende kunde ude. Python-klienten har syv egne tests om samme ting (`test_any_5xx_uses_a_fresh_positive_cache`, `test_service_failure_does_not_use_a_cache_older_than_seven_days`, `test_hard_failures_never_use_the_positive_cache`). **Ingen af de fem klienter mangler fail-soft, og ingen af dem er utestet.** Kandidat (a) er lukket og skal ikke genbesøges. **Fund 2 — kandidat (b) er reelt blokeret, ikke min.** Opgave 22 har allerede gjort det umuligt at *sælge* et downloadprodukt uden `kv_verified`, så den betalte sti er lukket; det der står tilbage er at `/thanks` viser filer der ikke kan hentes, hvilket kun kan ske via de syv payment links der stadig er live — og dem kan jeg ikke lukke, jeg har ingen Stripe-nøgler (opgave 25). **Fund 3 — kandidat (c) gav fundet, men en del af forudsætningen var forkert.** `reports/weekly/2026-39.json` har `traffic: {}` mens `health` siger `"healthy"` med `visits_2d: 18`, `downloads_2d: 6`, `scans: 19`. Rendererens note for et trafikblok uden `status` var *"Trafiktal er ukendt, fordi mahope.tools/api/stats ikke leverede komplette data."* — altså skylder den **et API der aldrig blev spurgt om noget**, fordi blokken aldrig blev gemt. Bevis på den rigtige fil: `build_report(2026-39, 2026-38)` skrev nu *"…fordi denne rapport ikke gemte et trafikblok."* **Fund 4 — den næsten samme fejlform lå i den guard, jeg først ville "rette", og den er med vilje korrekt.** `weekly_report.py:830` læser kun forrige uge ved `schema_version == 2`, så ingen af uge 37, 38, 39 bidrager til `Δ uge`. Det så ud som at tre ugers brugbare tal smides vægt, fordi de gamle filer bruger *samme* nøglenavne (`visits`, `downloads`, `scans`). Jeg læste `test_legacy_schema_does_not_create_false_traffic_delta` først, og den har ret: den gamle `visits` var en **anden måling** (ikke domæneverificeret), så 706 mod 10 ville være en *opdigtet* ændring. At have fjernet guarden ville være over-korrektion på en sand påstand — samme fælde som opgave 30. **Guarden er urørt.** **Fund 5 — mit eget negative kontrol-behov lå i den eksisterende kode, ikke i min diff.** Uden `test_explicitly_unknown_traffic_still_blames_the_api` ville min rettelse også have slugt den *ægte* fejl, fordi `_unknown_traffic()` har nøgler nok til at være sand. De to tests er derfor et par, ikke en. **Konvertering:** ingen direkte, men rapporten er dokumentationen Mads læser om morgenen, og en rapport der skylder en API for en fejl den ikke har, gør at man ikke kan regne med de andre tal. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.`
+- `ITERATION_ID`: `weekly-history-gate-2026-09-26`
+- `STATE`: `Opgave 35 FÆRDIG. **To af opgavens tre foreskrivne fejlformer viste sig at være falske, og kun den tredje var ærlig** — så porten blev bygget om den, der holder, i stedet for en port der skulle have tvunget to løgne ind i arkivet. **Fund 1 — den reelle fejl var ikke trafikken, men en død betalingsudbyder.** Alle tre arkivfiler har et topnøgle `lemon` med teksten *"afventer godkendelse (LS_API_KEY er ikke sat)"*. Lemon Squeezy blev lukket 24/9, og `tools/weekly_report.py` indeholder **0 forekomster** af `lemon` og samler ikke længere den data. Så arkivet siger om en død udbyder at den *stadig afventer godkendelse* — i en fil, der er det eneste sted i repoet hvor et dokumenteret tal ligger gemt uden at nogen port læser den. Samme fejlklasse som opgave 26 fandt i rod-README'en ("en lukket udbyder nævnt som om den virker"). **Fund 2 — reglen er skrevet som et princip, ikke en navneliste.** En topnøgle i arkivet skal kunne findes som en *bogstavelig streng* i den nuværende `weekly_report.py`; det er målt, ikke håndlistet, så den fanger den næste lukkede udbyder selv. Bevis: `lemon` er den **eneste** af tolv arkivnøgler, der ikke er en literal streng i writeren. Selftesten beviser det med et helt andet navn (`gumroad`), så porten ikke kan være grøn på en navneliste. **Fund 3 — forudsætning (b) er falsk, og det er den der var dyrest at tro på.** Opgaven skrev at et rapport-arkiv "ikke må sige healthy med tomt trafikblok". Uge 39 har `traffic: {}` — og det er den **korrekte** repræsentation: filens egen `errors` siger `api/stats: The read operation timed out`, og `unknown_stats()` ville have skrevet en note der *skylder API'et for en blok der aldrig blev skrevet*, præcis den løgn opgave 34 fjernede. En port der krævede et udfyldt blok ville have gravet den løgn op igen. **Fund 4 — forudsætning (c) er også falsk, på en måde jeg ikke havde set.** Opgaven forventede at mangle `schema_version` gjorde Δ-kolonnen stum. Men `build_report:830` sætter `ptr = {}` uden schema, og `fmt_delta(None)` er netop `—`. Kolonnen siger altså "ikke sammenlignelig", ikke "ingen ændring". Det er den ærlige notation, ikke en fejl — og derfor skrev jeg ingen kodeændring til `weekly_report.py` overhovedet. **Fund 5 — en fjerde fejlform opgaven ikke havde set, som porten tog gratis.** `ALWAYS_WRITTEN` er læst fra `collect_all()`s egne nøgler, ikke hardkodet, så porten kan ikke blive grøn på en nøgle koden har holdt op med at skrive. **Fund 6 — `reports/weekly/**` lå uden for workflowens path-filter.** `tools/*.py` dækkede den nye port, men ikke de data den læser: en commit der kun rører en rapportfil ville have mergeret uden at nogen læser den. Præcis det hullet opgave 26 og 28 fandt, en tredje gang. **Datarettelsen er 12 slettede linjer og intet andet:** `lemon`-blokken er væk fra alle tre filer, ingen anden nøgle rørt (round-trip gennem `json.dumps(indent=2, ensure_ascii=False)` er byte-identisk, så der er ingen skjult omformatering). Bevis på de rigtige gamle filer fra `git HEAD`: 3 fejl, én pr. arkivfil.`
+- `STATE` (før): `Opgave 34 FÆRDIG — researchiterationen. To af de tre kandidater fra NEXT_TASK viste sig at være lukkede, og den tredje bar en fejl af samme klasse som opgave 29, 30 og 31: **en påstand om en årsag, rapporten aldrig har undersøgt.** **Fund 1 — kandidat (a), aktiveringsvejen, er fuldstændig dækket.** Jeg gik ind i den forventende at finde hullet og fandt i stedet fire separate gater. `tools/test_license_clients.js` (79 linjer) tester præcis den invariante Stripe-kontrakten kræver: `CACHE_MAX_MS === 7 * DAY`, 503 inden for syv dage beholder Pro, 503 *præcis* på dag syv beholder Pro, 503 efter dag syv slår den fra, obsidian og chrome hver for sig, og offline erklæres lydigt. `check_copies` beviser så at `site/clean-copy-tool.html`, `obsidian-plugin/main.js` og begge `options.js` er **byte-identiske** med det testede kanoniske modul `tools/clean_copy_license.js` — så siderne arver testen i stedet for at være utestede kopier. Jeg læste også sideløbs `site/clean-copy-tool.html:655` og bekræftede at sideindlæsningen faktisk føder det lagrede `cc_pro_checked` ind i `decide()`; en nede server slår altså ikke en betalende kunde ude. Python-klienten har syv egne tests om samme ting (`test_any_5xx_uses_a_fresh_positive_cache`, `test_service_failure_does_not_use_a_cache_older_than_seven_days`, `test_hard_failures_never_use_the_positive_cache`). **Ingen af de fem klienter mangler fail-soft, og ingen af dem er utestet.** Kandidat (a) er lukket og skal ikke genbesøges. **Fund 2 — kandidat (b) er reelt blokeret, ikke min.** Opgave 22 har allerede gjort det umuligt at *sælge* et downloadprodukt uden `kv_verified`, så den betalte sti er lukket; det der står tilbage er at `/thanks` viser filer der ikke kan hentes, hvilket kun kan ske via de syv payment links der stadig er live — og dem kan jeg ikke lukke, jeg har ingen Stripe-nøgler (opgave 25). **Fund 3 — kandidat (c) gav fundet, men en del af forudsætningen var forkert.** `reports/weekly/2026-39.json` har `traffic: {}` mens `health` siger `"healthy"` med `visits_2d: 18`, `downloads_2d: 6`, `scans: 19`. Rendererens note for et trafikblok uden `status` var *"Trafiktal er ukendt, fordi mahope.tools/api/stats ikke leverede komplette data."* — altså skylder den **et API der aldrig blev spurgt om noget**, fordi blokken aldrig blev gemt. Bevis på den rigtige fil: `build_report(2026-39, 2026-38)` skrev nu *"…fordi denne rapport ikke gemte et trafikblok."* **Fund 4 — den næsten samme fejlform lå i den guard, jeg først ville "rette", og den er med vilje korrekt.** `weekly_report.py:830` læser kun forrige uge ved `schema_version == 2`, så ingen af uge 37, 38, 39 bidrager til `Δ uge`. Det så ud som at tre ugers brugbare tal smides vægt, fordi de gamle filer bruger *samme* nøglenavne (`visits`, `downloads`, `scans`). Jeg læste `test_legacy_schema_does_not_create_false_traffic_delta` først, og den har ret: den gamle `visits` var en **anden måling** (ikke domæneverificeret), så 706 mod 10 ville være en *opdigtet* ændring. At have fjernet guarden ville være over-korrektion på en sand påstand — samme fælde som opgave 30. **Guarden er urørt.** **Fund 5 — mit eget negative kontrol-behov lå i den eksisterende kode, ikke i min diff.** Uden `test_explicitly_unknown_traffic_still_blames_the_api` ville min rettelse også have slugt den *ægte* fejl, fordi `_unknown_traffic()` har nøgler nok til at være sand. De to tests er derfor et par, ikke en. **Konvertering:** ingen direkte, men rapporten er dokumentationen Mads læser om morgenen, og en rapport der skylder en API for en fejl den ikke har, gør at man ikke kan regne med de andre tal. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 77/77.`
 
 - `STATE` (før, opgave 33): `Opgave 33 FÆRDIG — researchiterationen (køen var tom; opgave 32 kræver Mads) fandt en fejl på den mest ubeskyttede side i hele købsrejsen: **en donator så "Network problem. Refresh this page in a moment." i rødt på en betaling der lykkedes.** Fund 1 — `site/thanks.html` renderer to af de tre `kind` i `STRIPE_PRODUCTS`. En donation (`support-mahope-oss`, `kind: 'donation'`) faldt igennem til download-grenen, hvor `d.downloads.map(...)` kaster, fordi `downloads` ikke findes på et donationssvar. Kasteren lander i sidens egen `.catch`, som *genkalder poll fem gange* og så viser netværksfejlen. Bevis målt på den rigtige fil fra `git HEAD`, rendret i node med sidens eget script: 6 kald til `/api/stripe/fulfillment`, kortet `hidden=true`, status `"Network problem. Refresh this page in a moment."`. **Det er den værste slags fejl i en købsrejse:** den ser ud som om betalingen mislykkedes, for en der lige har lagt penge. Fund 2 — den ødelagte side var donatorens *eneste* bekræftelse. Workeren sætter `emailed: true` for donation med kommentaren "Stripe viser selv takkebeskeden", så der kommer ingen mail. Den gamle sides statiske linje lovede alligevel "We have also emailed this to you" — og det gjorde den også for et køb hvor `emailed` er `false`, altså når kunden ikke gav en mailadresse eller Resend ikke svarede. Fund 3 — **min egen første version af testen var grøn på præcis den fejl den skulle fange.** Jeg målte først mail-påstanden som `claimsEmail === (emailed === true)`, hvilket er *sandt* for en donation (`emailed: true` betyder "intet skal sendes") — så porten ville have godkendt den gamle sides løgn. Den korrekte invariant er: "vi har også sendt det" må kun siges om en nøgle eller download, og kun når `emailed` er sand. Fund 4 — min anden kontrol var også teater. Jeg ville finde `d.downloads` uden `Array.isArray`-guard ved at scanne linjer for sig, men `d.downloads.map(...)` står på en *fortsættelseslinje* inde i den guardede gren, så linjescanet ville have været rødt på den korrekte kode. Erstattet med en *adfærdsprøve*, der er stærkere end regex: et `download`-svar **uden** `downloads`-feltet må ikke hvidvaske siden. Den fanger den kastende linje direkte. Fund 5 — gaten fandt sig selv ikke dækket. `tools/test_deploy_workflow.py` (et step i gaten) dræbte på `path-filteret dækker ikke tests/thanks-page.test.mjs` — uden den linje i `deploy-sites.yml` ville en push der kun rørte testen aldrig have kørt gaten. Samme fejlform som opgave 26 og 23, fundet af porten i stedet for af mig. Fund 6 — `download` har ingen `kind ===`-gren, men dækkes af `Array.isArray(d.downloads)`, som er en *bredere* regel end en kind-gren. Jeg lod bevidst ikke den sædvanlige kravlisme indføre en ekstra gren: de to huller specialcasen efterlader er dækket andre steder i testen, og det står kommenteret. **Konvertering:** donation er den vej missionen peger på, når gratis-værktøjet ikke sælger (`/support`, `.github/FUNDING.yml`, overalt hvor en glad bruger siger tak), og den har nu en tak-side der fungerer. **Worker urørt:** `site/_worker.js`, `/api/stripe-webhook`, `/api/stripe/fulfillment` og `/api/download` er ikke ændret — fejlen var udelukkende i sidens rendering, så `tests/stripe-worker.test.mjs` er uændret 77/77.`
 - `STATE` (før): `Opgave 30 FÆRDIG — den samme påstandsklasse som opgave 2, 27 og 29, i guide-siderne.
@@ -19,12 +20,13 @@
 - `ITERATION_ID`: `free-tier-clarity-2026-09-26`
 - `STATE`: `Opgave 31 FÆRDIG — researchiterationenMissionens punkt 4 ("hver Pro-side klart viser, hvad gratis og betalt giver") viste sig at være den mest konkrete utænkte fejl i familien, og den viste sig **på to måder, hvor den anden var værre end den første.** **Fund 1 — den side hvor Clean Copy Pro faktisk købes, sagde aldrig hvad den gratis udgave giver.** `site/clean-copy-tool.html` har "Clean Copy Pro — $19/year", Stripe-knappen og aktiveringsformularen, men ordet "free" om *dette* produkt findes ikke i synlig tekst en gang. De tre fund af "free" var "More free tools"-linket nederst, "All free tools →" og en ogag:description. Søsteren DeskUptime og Page Profile har begge en hel "Free and Pro"-tabel; den side der tager pengene for Clean Copy havde ikke engang en sætning. **Fund 2 — den værste fejl: Page Profiles "Free vs Pro — side by side"-tabel havde tomme celler.** Alle otte rækker var skrevet, overskriften læste `Feature | Free | Pro`, og *prisrækken* var udfyldt ($0 forever / $19/year) — men alle seks funktionsrækker havde **tomme celler i begge kolonner**: "All checks", "Score + grade report", "JSON output for CI" stod med intet, og "Compare two URLs", "Batch mode", "Client-ready HTML report" stod med "—" i gratis-kolonnen og intet i Pro-kolonnen. Den lader som en sammenligning og viser ingen. Den ligger lige oveni den $19/år-knap, og `stripe_catalog.json` selv peger på den som grund til at svare ja til Page Profile ("Page Profiles eneste produktside med gratis/Pro-sammenligning"). Samme fejl i DA-versionen. **Hvorfor ingen port så den:** `check_stripe_ctas` tællede *priser* på siden og vidste, at "$19/year" stod i tabellen — den læste aldrig cellerne. `check_product_copy` led efter forbudte og påkrævede sætninger, ikke efter struktur. `seo_check` og resten af gaten læser slet ikke tabeller. **Fund 3 — min egen første version af porten var grøn på præcis den fejl, den skulle fange.** Jeg målte først med et løst ordmønster (`\bfree\b`), og det gav **9 fund på den gamle fil** — hele bugtet. Ordet stod jo i "More free tools". En port der tæller ordet "free" et sted på siden er teater: den kan ikke se forskel på "More free tools" og "the free version is the complete tool, not a trial". Derfor kræver porten nu enten en **sætningsformulering** eller en **synlig gratis/Pro-tabel** — og den må ikke scores af en lukket `<details>`, `<head>`, JSON-LD eller en attribut, fordi det er præcis de steder fejlen gemmer sig. **Fund 4 — porten var rød på en sund side, fordi jeg glemte `re.I`.** `FREE_LABEL`/`PAID_LABEL` var case-sensitive, så tabeloverskrifternes `Free` og `Pro` (med stort begge steder) matchede aldrig, og `site/page-profile.html` blev meldt som "siger aldrig hvad gratis-udgaven giver" — den side har den bedste sammenligning i hele familien. Først ved at køre porten mod de *urettede* filer fra `git HEAD` blev det tydeligt at den røde side var min fejl og ikke sideens. Beviset holdt først da porten gav præcis **14 problemer mod de gamle filer** (2 manglende + 12 tomme celler) og **0 mod de rettede**. **Scopet blev bevidst Small:** `site/blog/eaa-compliance-scanner-desktop.html` har den samme hule tabel, men **blev ikke rødgjort** — EAA-scanner Pro har ingen Stripe-produkt (❓ punkt 5), så "hvad giver Pro-niveauet" kan ikke udledes fra repoet uden at opfinde påstande. Den står som opgave 32.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `BASELINE`: `main@20e2899`
-- `LAST_BRANCH`: `ceo/traffic-ukendt-arsag`
-- `NEXT_TASK`: `35 — gater rapportarkivet i reports/weekly/. Se opgave 35.`
+- `BASELINE`: `main@3d94884`
+- `LAST_BRANCH`: `ceo/weekly-history-gate`
+- `NEXT_TASK`: `36 — /thanks må ikke vise filer der ikke kan hentes. Se opgave 36. Kræver Mads' svar på opgave 24/25, så den næste frie opgave bliver en researchiteration.`
 - `PLAN_COMMIT`: `— denne iteration: kode + plan i samme commit, ingen ren plan-commit`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1., 27: 1/1., 28: 1/1., 29: 1/1., 30: 1/1., 31: 1/1., 32: 0/0 (kræver Mads), 33: 1/1., 34: 1/1.`
-- `DEPLOY` (opgave 34, åben): `VERIFICÉR DEPLOY: ugerapportens trafik-note 07a9a85 26/9` — `tools/**` er i path-filteret, så GitHub Actions kører gaten og deployer. `site/` er urørt, så **domænerne skal være uændrede**; verificér derfor på indhold at `build-info.json` bærer `07a9a85` på de tre domæner, og at de fire sites er byte-uændrede. Kørslen skal være grøn på 44 steps.
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1., 27: 1/1., 28: 1/1., 29: 1/1., 30: 1/1., 31: 1/1., 32: 0/0 (kræver Mads), 33: 1/1., 34: 1/1., 35: 1/1.`
+- `DEPLOY` (opgave 34, LUKKET): `DEPLOY OK 07a9a85 26/9` — kørsel `36211523572` grøn: `gate` (44 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `07a9a854fc20b31a4fbc9f36b0f7b1f1f33d1ac6`, hvilket er præcis merge-SHA'en den åbne note bad om. `site/` var urørt af opgave 34, så domænerne er indholdsmæssigt uændrede — kun byggemetadata bærer den nye SHA. Den efterfølgende merge `3d94884` (deploynote-34) lå **uden for** path-filteret, så den deployede ikke med vilje, og det er korrekt: intet i `site/` eller `dist/` er rørt.`
+- `GATE` (opgave 35): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (fra 44). Nye steps weekly-history + weekly-history-selftest. check_weekly_history: OK. --self-test: OK, 11 kontroller, 0 fejl — inklusive tre negative kontroller (en blok writeren KAN skrive må ikke markeres som død; en fuldt gyldig rapport med tomt trafikblok må ikke fejle; selftesten efterlader arkivet gyldigt) og en provenance-kontrol med et helt andet død-navn (`gumroad`), så porten ikke kan være grøn på en navneliste. Bevis på de rigtige gamle filer: `git archive HEAD reports/weekly` ind over porten → 3 fejl, én pr. arkivfil, fundet i den rigtige fil. Stripe-worker uændret 77/77, tracking-worker uændret 83/83, test_weekly_report uændret grøn, site/_worker.js urørt, dist/uændret (gitignored). test_deploy_workflow grøn og dækker nu reports/weekly/*.json.`
 - `DEPLOY` (opgave 33, LUKKET): `DEPLOY OK 45b75a9 26/9` — kørsel `36211041371` grøn: `gate` (44 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `45b75a9`. Den **hentede** `/thanks` er hentet fra `mahope.tools` og dens eget script kørt i node mod de fem betalingsformer: donation → 1 fetch, kortet synligt, `Thank you — there is nothing to activate`, ingen netværksfejl (før: 6 fetch, kortet `hidden`, `Network problem. Refresh this page in a moment.`); licens med email → nøgle + "We have also emailed"; licens **uden** email → "We could not email this to you"; download → filnavn + workerens `/api/download`-adresse. Den gamle statiske mail-påstand findes ikke længere som markup på siden.
 - `GATE` (opgave 34): `GRØN — python3 tools/quality_gate.py: GRØN, 44 steps (uændret — de to nye tests bor i det eksisterende step weekly-report, ikke i et nyt step, så path-filteret er urørt). test_weekly_report: 30/30 (fra 28). Bevis på den rigtige arkivfil: build_report(2026-39, 2026-38) → note = "Trafiktal er ukendt, fordi denne rapport ikke gemte et trafikblok.", og den gamle API-skyld-note er væk. Negativ kontrol grøn: _unknown_traffic() giver stadig API-noten. Stripe-worker uændret 77/77, tracking-worker uændret 83/83, site/_worker.js urørt, dist/uændret (gitignored).`
 - `GATE` (opgave 33): `GRØN — python3 tools/quality_gate.py: GRØN, 44 steps (fra 43). Nyt step thanks-page. tests/thanks-page.test.mjs: 50/50. Bevis på de rigtige gamle filer: node tests/thanks-page.test.mjs site/_worker.js /tmp/thanks_old.html (git HEAD) → 36/50, 14 fejl, heraf præcis fejlen: donatorens status = "Network problem. Refresh this page in a moment." og 6 fetch-kald, plus "siden har en egen gren for kind=donation -> grenet: license". Testen henter de rigtige leveringssvar fra workeren (fem sessions, én per kind plus én uden mailadresse), så payload'en kan ikke aftales med siden ved en fejl. Stripe-worker uændret 77/77, tracking-worker uændret, site/_worker.js urørt, dist/uændret (gitignored).`'
@@ -90,7 +92,7 @@ Gaten er **én kommando**, og den har én ejer:
 python3 tools/quality_gate.py
 ```
 
-Den bygger alle fire dists og kører 44 checks i rækkefølge, og dræber ved den
+Den bygger alle fire dists og kører 46 checks i rækkefølge, og dræber ved den
 første røde med navnet på steppet. `python3 tools/quality_gate.py --list` printer
 den som den gamle `&&`-linje, og `--inputs` printer de filer, path-filteret skal
 dække. Opgave 11 (25. september 2026) flyttede den herfra, fordi den lå i planen
@@ -136,8 +138,9 @@ Den underliggende check-liste, hvert step med de filer det læser:
 | 27 | links | `python3 tools/check_links.py` | ja |
 | 28 | links-selftest | `… --self-test` | — |
 
-Opgave 26 tilføjede `repo-readme` og `repo-readme-selftest` (→ 40 steps), og opgave 33
-`thanks-page` (→ 44 steps).
+Opgave 26 tilføjede `repo-readme` og `repo-readme-selftest` (→ 40 steps), opgave 33
+`thanks-page` (→ 44 steps), og opgave 35 `weekly-history` + `weekly-history-selftest`
+(→ 46 steps).
 Tabellen ovenfor er fra opgave 11 og er ikke vokset med siden; de præcise
 stepnavne står i `tools/quality_gate.py` og printes af `--list`.
 
@@ -1879,35 +1882,45 @@ trafikblok blev gemt* og *vi fik et svar vi ikke kunne bruge*. `tools/test_weekl
 
 **Resultat:** Se `STATE`. `site/_worker.js` urørt, stripe-worker uændret 77/77.
 
-### 35. UFÆRDIG — gater `reports/weekly/`: en rapport må ikke sige "healthy" med tomt trafikblok
+### 35. FÆRDIG — gater `reports/weekly/`: en død udbyder som sit eget arkiv
 
-**Begrundelse:** fund 2 og 3 i `STATE`. Arkivet er det eneste sted i repoet hvor
-`health.status == "healthy"` og `traffic == {}` kan sameksistere, og intet i gaten
-læser arkivet — `test_weekly_report` bruger kun syntetiske fixtures i det nye schema.
-Uge 39 er præcis et sådant eksempel i den rigtige fil.
+**Resultat:** porten blev bygget, men **ikke som opgaven skrev den.** To af de tre
+foreskrivne fejlformer viste sig at være falske, da de blev målt på de rigtige
+filer, og en af dem ville have tvunget en løgn tilbage ind i arkivet. Se `STATE`
+for de seks fund.
 
-**Omfang:** nyt `tools/check_weekly_history.py` med `--self-test` + to gatestræk, og
-`tests/…`/`tools/…` i path-filteret. Porten skal fange: (a) en gemt rapport uden
-`schema_version`; (b) `traffic` der er tomt eller mangler `status`, mens `health.status`
-er `healthy`; (c) en rapport hvor `traffic` er ældre end syv dage gamle tal uden
-`generated_at`. Bevis på de rigtige arkivfiler fra `git HEAD` (37, 38, 39).
+**Hvad der blev gjort:** nyt `tools/check_weekly_history.py` med `--self-test` +
+to gatestræk (44 → 46 steps) + `reports/weekly/*.json` i path-filteret. Fire
+kontroller: `dead_provider_block` (en topnøgle arkivet har, men den nuværende
+writer ikke kan skrive), `week_mismatch`, `no_generated_at`, `missing_block`.
+Datarettelsen er 12 slettede linjer: `lemon`-blokken er væk fra alle tre filer.
 
-**Acceptkriterier:**
+**De to forudsætninger der viste sig falske — lad dem ikke komme tilbage:**
 
-- `python3 tools/check_weekly_history.py` → 3 fejl på de tre nuværende filer.
-- `--self-test` grøn med mutationer på hver af de tre fejlformer + negativ kontrol
-  (en fuldt gyldig rapport må ikke fejle).
-- `python3 tools/quality_gate.py` grøn, 46 steps.
-- `tools/test_deploy_workflow.py` grøn.
+- *"Et trafikblok må ikke være tomt, mens `health.status` er `healthy`."* Uge 39s
+  `traffic: {}` er **korrekt**: 7-dagesblokken gik tabt i et timeout, filens egen
+  `errors` siger det, og `unknown_stats()` ville have skrevet en note der skylder
+  API'et for en blok der aldrig blev skrevet. Det er præcis den løgn opgave 34
+  fjernede. **En port der krævede et udfyldt blok ville have gravet den op igen.**
+- *"Arkivfiler skal have `schema_version`."* Uden den bliver `ptr = {}` i
+  `build_report:830`, og `fmt_delta(None)` er netop `—`. Kolonnen siger
+  "ikke sammenlignelig", ikke "ingen ændring". Ingen kodeændring var nødvendig,
+  og det er derfor `weekly_report.py` er urørt i hele denne iteration.
 
-**Gate:** `python3 tools/quality_gate.py`.
+**Beslutningen der var krævet** (regenerér uge 37-39, eller håndlavet undtagelsesliste)
+er **hverken eller**: regenerering ville have skrevet *nuværende* npm/GitHub-tal
+ind i gamle uger og slettet den eneste dokumentation af de 593 og 706 besøg vi
+nogensinde har haft. Porten løser i stedet problemet på sin rod: `lemon`-blokken
+er fjernet fra data, så der er ingen undtagelse at håndliste. `schema_version` er
+ikke gater, fordi uden den er udlæsningen *ærlig* — det er dokumenteret i
+portens docstring, så den næste iteration ikke genopfinder reglen.
 
-**Beslutning der kræves:** porten vil være rød på de tre eksisterende filer, fordi de er
-skrevet af en ældre scriptversion. De skal enten regenereres (kræver at `weekly_report.py`
-kan læse de gamle former, hvilket det kan) eller porten skal have en håndlavet
-undtagelsesliste pr. fil — hvilket ville være nøjagtig den fejlform opgave 27 rettede.
-**Anbefaling: regenerér uge 37-39 fra deres `generated_at` og behold kun tal der kan
-læses igen; skriv i porten at en fil uden `schema_version` er ældre end porten.**
+**Nyt fund der kræver en beslutning:** de tre arkivfiler har tal i
+`health.visits_2d`/`downloads_2d` men **mangler `health.traffic_status`**, et
+nøgle `collect_health` skriver i dag. Uden nøglen kan porten ikke bevise om
+trafikken var kendt, så en fremtidig bagvending (`"trafikken så ud til at være
+ukendt"`) kan hverken bevises eller modsiges. Bagvendingen er **mulig** — uge 37
+har 566 `visits_2d` og uge 39 har 18, altså et tal der faldt 31×. Se `❓ Til Mads`.
 
 ### 36. UFÆRDIG — `/thanks` skal ikke vise filer der ikke kan hentes
 
@@ -1924,6 +1937,23 @@ no-op-kontrol; hvis ikke, skal `/thanks` sige "filen er klar i din mail" kun nå
 
 ## ❓ Til Mads
 
+13. **Bagvendingen i trafiktallene kan ikke bevises mod arkivet.** `reports/weekly/`
+    viser `health.visits_2d` 566 (uge 37) → 24 (uge 38) → 18 (uge 39), altså et
+    fald på 31× på ni dage, og `downloads_2d` 185 → 90 → 6, altså 31×. Men de tre
+    filer mangler `health.traffic_status`, det nøgle `collect_health` skriver i dag,
+    så porten kan ikke bevise om `visits_2d` overhovedet var *talt* eller var en
+    arv fra en svarskema der svarede 200 med nul. Uge 37's egen `traffic`-blok er
+    derimod fyldt (593 besøg, 198 downloads), så uge 37's 566 er næsten
+    sikkert rigtigt — men 39's 18 og 6 kan ikke bekræftes, fordi netop den blok
+    der ville have bekræftet dem, gik tabt i timeoutet.
+    **Beslutning:** skal arkivet skrive `traffic_status` bagud for de tre filer
+    (`ok` for 37 og 38, hvor 7-dagesblokken er fyldt; `unknown` for 39, hvor den
+    ikke er), eller skal filerne forblive urørte og næste iteration bare skriver,
+    at bagvendingen står uafklaret? Jeg har **ikke** gjort det: at skrive `ok` for
+    uge 39 ville være en påstand tallet ikke kan bære, præcis den fejlklasse
+    opgave 29-31 fjernede. Bemærk at tallene uanset hvad *ikke* kan bruges til at
+    ranke sider — `ranking` og `ranking_basis` mangler i alle tre filer, så
+    konverteringsrangeringen starter først med næste rapport.
 12. **Beslut om EAA Scanner Pro som produkt.** `site/blog/eaa-compliance-scanner-desktop.html`
     har en "Free / Pro ($19/year)"-tabel med **fire tomme celler** — samme hule sammenligning som
     opgave 31 fandt på Page Profile, og den er **med vilje ikke rettet**: EAA Scanner Pro har ingen
@@ -1971,6 +2001,12 @@ no-op-kontrol; hvis ikke, skal `/thanks` sige "filen er klar i din mail" kun nå
 
 ## Deploylog
 
+- 2026-09-26: `VERIFICÉR DEPLOY: rapportarkivet gater døde udbyderblokke <merge-sha> 26/9` —
+  GitHub Actions kører automatisk: `tools/*.py` dækker `check_weekly_history.py`, og
+  `reports/weekly/*.json` er tilføjet path-filteret i denne iteration. `site/` er urørt,
+  så **domænerne skal være uændrede**; verificér derfor på indhold at `build-info.json`
+  bærer merge-SHA'en på de tre domæner. Kørslen skal være grøn på 46 steps.
+- 2026-09-26: `DEPLOY OK 07a9a85` — lukker `VERIFICÉR DEPLOY` for opgave 34.
 - 2026-09-26: `DEPLOY OK aae4a72` — lukker `VERIFICÉR DEPLOY` for opgave 22. Kørsel
   `36204568679` kørte `gate` grønt i 38 steps og deployede de tre Pages-domæner
   grønt. Indholdsverificeret, ikke HTTP-status:

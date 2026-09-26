@@ -325,6 +325,33 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/test_weekly_report.py"),
         inputs=("tools/test_weekly_report.py", "tools/weekly_report.py"),
     ),
+    # Opgave 35: `reports/weekly/*.json` er det eneste sted i repoet hvor et
+    # dokumenteret tal ligger gemt uden at nogen port læser filen.
+    # `test_weekly_report.py` bruger syntetiske fixtures i det nye schema, så
+    # den kan ikke se en arkivfil fra en ældre scriptversion — og alle tre
+    # filer i arkivet er præcis det. Fundet var et `lemon`-blok, der sagde
+    # "afventer godkendelse" om en udbyder der blev lukket 24/9, mens
+    # `weekly_report.py` ikke indeholder ét `lemon` og ikke kan skrive blokken.
+    # `weekly_report.py` er input, fordi porten beviser hvilke blokke koden kan
+    # producere; `reports/weekly/**` er input, fordi arkivet er det den læser.
+    Step(
+        id="weekly-history",
+        argv=("python3", "tools/check_weekly_history.py"),
+        inputs=(
+            "tools/check_weekly_history.py",
+            "tools/weekly_report.py",
+            "reports/weekly/*.json",
+        ),
+    ),
+    Step(
+        id="weekly-history-selftest",
+        argv=("python3", "tools/check_weekly_history.py", "--self-test"),
+        inputs=(
+            "tools/check_weekly_history.py",
+            "tools/weekly_report.py",
+            "reports/weekly/*.json",
+        ),
+    ),
     Step(
         id="deploy-workflow",
         argv=("python3", "tools/test_deploy_workflow.py"),

@@ -53,6 +53,11 @@ on:
       # slet ikke, og den gamle fil ville blive liggende.
       - 'tools/check_retired_downloads.py'
       - 'tools/retired_downloads.json'
+      # Opgave 35: `reports/weekly/*.json` er arkivet over de dokumenterede
+      # ugetal, og `check_weekly_history.py` læser dem. De lå uden for
+      # filteret — så en commit der kun rører en rapportfil ville merge uden at
+      # nogen læser den, præcis det hullet opgave 26 og 28 fandt.
+      - 'reports/weekly/*.json'
       # `check_legacy_seo_paths` læser hvert .py/.sh i roden og i tools/ — de
       # skal kunne ramme den døde kilde-sitemap eller den døde vært, så de er
       # input til gaten og dermed til filteret.
