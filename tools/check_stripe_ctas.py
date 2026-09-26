@@ -922,8 +922,33 @@ def check_free_tier(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
     return problems
 
 
-def page_lang(relative: str) -> str:
-    """Sproget for en købsside, så et dansk krav ikke kan passes med engelsk."""
+LANG_ATTR_RE = re.compile(r"""<html[^>]*\blang\s*=\s*["']([A-Za-z-]+)["']""", re.I)
+
+
+def page_lang(relative: str, text: str | None = None) -> str:
+    """Sproget for en købsside, så et dansk krav ikke kan passes med engelsk.
+
+    Kilden er sidens *erklærede* `lang`, fordi det er den eneste der ikke kan
+    ligge. Stien var det eneste signal før, og målingen viser at den lyver for en
+    tredjedel af de danske sider: 14 af dem hedder `<navn>-da.html` i stedet for at
+    ligge under `/da/` (`scan-da`, `nis2-check-da`, `cookie-check-da`, …), så de
+    blev talt som engelske. Det er ikke en tænkt fejl — `check_language_coverage`
+    bygger både `spoken` og `sold` på denne funktion, så en dansk købsside uden
+    `/da/` i stien passede som engelsk, og kravet om dansk dækning faldt bort.
+
+    Stien er fallback for filer der ikke kan læses eller ikke erklærer et sprog
+    porten kender, så en ny `/da/`-flade stadig gør kravet gælde med det samme.
+    """
+    if text is None:
+        try:
+            text = (ROOT / relative).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            text = ""
+    match = LANG_ATTR_RE.search(text[:2000])
+    if match:
+        code = match.group(1).lower().split("-")[0]
+        if code in LANG_NAMES:
+            return code
     parts = relative.replace("\\", "/").split("/")
     return "da" if "da" in parts[1:-1] else "en"
 
@@ -1040,7 +1065,7 @@ def check_pro_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]
         blocks.feed(text)
         blocks.close()
         haystack = normalize(blocks.text).casefold()
-        lang = page_lang(str(relative))
+        lang = page_lang(str(relative), text)
         for feature in features:
             if not isinstance(feature, dict) or not isinstance(feature.get("id"), str):
                 continue
@@ -1142,7 +1167,7 @@ def check_pro_not_built(catalog: dict, pages: list[tuple[str, str]]) -> list[str
         blocks.feed(text)
         blocks.close()
         haystack = normalize(blocks.text).casefold()
-        lang = page_lang(str(relative))
+        lang = page_lang(str(relative), text)
         for entry in not_built.get(key, []):
             where = entry.get("where")
             if not isinstance(where, str) or not where.strip():
@@ -2305,6 +2330,33 @@ def self_test() -> int:
     if coverage_ungated != coverage_ok:
         print("SELFTEST FEJLER: et produkt uden pro_features i katalogen fejler alligevel — "
               "porten dømmer produkter den ikke sælger her: " + "; ".join(coverage_ungated))
+        return 1
+
+    # Sprog fra stien alene lyver for de danske sider der hedder `<navn>-da.html`:
+    # 14 af dem ligger i `site/` uden `/da/`, så de gamle tællinger sagde `en`.
+    # Beviset er derfor ikke et opdigtet par sider men en rigtig dansk side fra
+    # repoet, sat som købsside for et produkt der mangler sin danske side. Den
+    # gamle kode krævede så en danske side, der allerede var der; den nye ser
+    # `lang="da"` og går grøn.
+    da_suffix_page = next((relative for relative, text in source_pages()
+                           if relative.endswith("-da.html")
+                           and '<html lang="da"' in text[:400].replace("'", '"')
+                           and relative not in {str(o.get("path")) for o in good["offers"]}), None)
+    if not da_suffix_page:
+        print("SELFTEST FEJLER: ingen dansk `-da.html`-side at bruge som mutation — "
+              "sprogskellet er så ikke længere til stede i site/ og porten er uden dækning")
+        return 1
+    suffixed = {**good, "offers": [offer for offer in good["offers"]
+                                  if offer["path"] != "site/da/compliance-report.html"]
+                + [{"product": "eucomply-pro", "path": da_suffix_page}]}
+    if check_language_coverage(suffixed, source_pages()):
+        print(f"SELFTEST FEJLER: en dansk købsside med engelsk sti ({da_suffix_page}) "
+              "tælles ikke som dansk — `page_lang()` læser stien og ikke `lang`")
+        return 1
+    parts = da_suffix_page.replace("\\", "/").split("/")
+    if "da" in parts[1:-1]:
+        print(f"SELFTEST FEJLER: mutationen er ikke længere en dansk side med engelsk sti "
+              f"({da_suffix_page}) — scenariet ville teste intet")
         return 1
 
     # ── indgang til købssiden: en købsside ingen kan nå ───────────────────
