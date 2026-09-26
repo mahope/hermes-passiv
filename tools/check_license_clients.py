@@ -28,6 +28,78 @@ CANON = ROOT / "tools/clean_copy_license.js"
 # frem for i git-historikken, fordi et vidne fra HEAD er grønt kun før commit.
 WITNESS = ROOT / "tools/fixtures/compliance-report-pre51-licens.html"
 
+# `HEAD:` er bygget, så hverken reglen eller dens egen kode matcher dens mønster.
+HISTORY_REF = "HEAD" + ":"
+
+# Hele gaten, ikke bare Python-delen: de tre node-testsuiters vejer tungere end
+# nogen port, fordi de er de eneste der tester betalingsleveringen.
+WITNESS_SCANNED = sorted((ROOT / "tools").glob("*.py")) + sorted((ROOT / "tests").glob("*.mjs"))
+
+
+def _js_code_spans(text: str) -> list[str]:
+    """Kun den kode del af en JS-fil, kommentarer og strenge skilt ud.
+
+    Uden skiltningen kunne reglen finde sig selv i sin egen forklaring, og så
+    var den umulig at dokumentere. En naiv `//`-strip ville også slette
+    `https://` inde i en streng, så statet følges tegn for tegn.
+    """
+    out, buf = [], []
+    i, n = 0, len(text)
+    state = "code"  # code | line | block | sq | dq | tpl
+    while i < n:
+        c = text[i]
+        nxt = text[i + 1] if i + 1 < n else ""
+        if c == "\n":
+            # Hver linje skal forblive sin egen linje, ellers får fundene
+            # forkerte numre, og så er det umuligt at finde det i filen.
+            out.append("".join(buf)); buf = []; i += 1; continue
+        if state == "code":
+            if c == "/" and nxt == "/":
+                state = "line"; i += 2; continue
+            if c == "/" and nxt == "*":
+                state = "block"; i += 2; continue
+            if c == "'":
+                state = "sq"
+            elif c == '"':
+                state = "dq"
+            elif c == "`":
+                state = "tpl"
+        elif state == "line":
+            if c == "\n":
+                state = "code"
+        elif state == "block":
+            if c == "*" and nxt == "/":
+                state = "code"; i += 2; continue
+        else:
+            # Inde i en streng er indholdet KODE — det er dér et revisions-kald
+            # står, som `["git", "show", "HEAD:site/…"]`. Kun kommentarer skjules.
+            if (state == "sq" and c == "'") or (state == "dq" and c == '"') \
+                    or (state == "tpl" and c == "`"):
+                state = "code"
+        buf.append(" " if state in ("line", "block") else c)
+        i += 1
+    out.append("".join(buf))
+    return out
+
+
+def history_witness_lines(path: Path) -> list[int]:
+    """Linjer hvor filen henter sit ventede svar ud af repoets historik."""
+    text = path.read_text(encoding="utf-8")
+    if path.suffix == ".py":
+        # Kun kode, ikke docstrings: porten skal kunne sige *hvad* i sin egen
+        # forklaring uden at finde sig selv. Samme krav som opgave 26 fund 1.
+        docs = {ast.get_docstring(n, clean=False) for n in ast.walk(ast.parse(text))
+                if isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                                  ast.AsyncFunctionDef))}
+        return [node.lineno for node in ast.walk(ast.parse(text))
+                if isinstance(node, ast.Constant) and isinstance(node.value, str)
+                and HISTORY_REF in node.value and node.value not in docs]
+    hits = []
+    for number, line in enumerate(_js_code_spans(text), start=1):
+        if HISTORY_REF in line:
+            hits.append(number)
+    return hits
+
 # Kilder der SKAL findes, hvis de kalder /api/license. Hver linje er
 # (sti, forventet product_key). Tom streng = ingen product forventet (kun
 # tilladt hvor der står en begrundelse).
@@ -470,33 +542,46 @@ def self_test() -> int:
     # det dræber deployen i stedet for at advare om porten. Beviset skal være en
     # fil, der ligger i træet.
     #
-    # Kigger kun i kode, ikke i kommentarer eller docstrings: reglen skal kunne
-    # sige *hvad* i sin egen forklaring uden at finde sig selv, ellers gør den
-    # det umuligt at dokumentere fejlen. Samme fejlklasse som opgave 26 fund 1.
-    history_ref = "HEAD" + ":"  # bygget, så reglen ikke matcher sin egen mønsterstreng
-    for path in sorted((ROOT / "tools").glob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        docs = {ast.get_docstring(n, clean=False) for n in ast.walk(tree)
-                if isinstance(n, (ast.Module, ast.ClassDef, ast.FunctionDef,
-                                  ast.AsyncFunctionDef))}
-        found = False
-        for node in ast.walk(tree):
-            # Den rigtige kode var `["git", "show", "HEAD:site/…"]` — tre
-            # strenge, så det kan ikke kræves at de nævner git og show i den
-            # samme. Tilstrækkeligt er, at en kode-streng peger på en revision.
-            if (isinstance(node, ast.Constant) and isinstance(node.value, str)
-                    and history_ref in node.value
-                    and node.value not in docs):
-                found = True
-                break
-        if found:
+    # Dækker både Python-portene og de tre node-testsuiters. Opgave 52 skrev
+    # reglen for `tools/*.py` alene og kaldte den generel; målingen af
+    # `tests/*.mjs` fandt 0 brud, men ingen mutation, så intet bevisede at reglen
+    # overhovedet kan se en JS-suite. Det er præcis samme fejlklasse som
+    # opgave 52 fund 2: en regel der siger "generel" uden at være prøvet.
+    for path in WITNESS_SCANNED:
+        hits = history_witness_lines(path)
+        if hits:
             print(f"FELO {path.relative_to(ROOT)} henter sit vidne fra "
-                  f"repoets historik (HEAD) — det er grønt kun før commit og "
-                  f"dræber deployen bagefter")
+                  f"repoets historik (HEAD) i linje {hits[0]} — det er grønt "
+                  f"kun før commit og dræber deployen bagefter")
             failures += 1
             break
     else:
-        print("OK   ingen gate henter sit vidne fra repoets historik")
+        print(f"OK   ingen af {len(WITNESS_SCANNED)} gater henter sit vidne "
+              f"fra repoets historik")
+
+    # Bevis på at reglen kan se en JS-suite. Uden denne mutation kunne
+    # `history_witness_lines` være død for alt uden for Python, og de tre
+    # testsuiters er 47 step i gaten.
+    with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+        probe = Path(tmp) / "probe.test.mjs"
+        ref = HISTORY_REF + "site/thanks.html"  # bygget, så filen ikke finder sig selv
+        probe.write_text(
+            "import { execFileSync } from 'node:child_process';\n"
+            f"const old = execFileSync('git', ['show', '{ref}'])\n"
+            "  .toString();\n"
+            f"// git show {ref} i en kommentar er ikke kode\n"
+            f"/* git show {ref} i en blok er heller ikke kode */\n"
+            f"/** @example git show {ref} */\n",
+            encoding="utf-8")
+        js_hits = history_witness_lines(probe)
+        if js_hits != [2]:
+            print(f"FELO selftesten fandt {js_hits} i en JS-suite med ét "
+                  f"kodekald, forventet [2] — reglen ser ikke JS, så de tre "
+                  f"testsuiters er uden dækning")
+            failures += 1
+        else:
+            print("OK   vidne-reglen ser en JS-suite: kodekald på linje 2 "
+                  "fanget, de tre kommentar-former ikke")
 
     # Den indlejret-checkout-regel kræver en rigtig mappe at kigge på, så den
     # probes på filsystemet i stedet for i en dict. Uden denne test kunne
