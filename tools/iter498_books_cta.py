@@ -32,10 +32,10 @@ DA_BOOK_HINTS = [
 
 EN_BUNDLE_LINE = ('  <p style="margin:12px 0 0;font-size:13px;color:#555;">Want all six guides? '
                   '<a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a>'
-                  ' — combined PDF + all EPUBs, $29.</p>\n')
+                  ' — all six listed together, each a free EPUB.</p>\n')
 DA_BUNDLE_LINE = ('  <p style="margin:12px 0 0;font-size:13px;color:#555;">Alle seks guides i én pakke: '
                   '<a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a>'
-                  ' — samlet PDF + alle EPUB&#39;er, $29. De enkelte bøger er gratis som EPUB.</p>\n')
+                  ' — alle seks samlet, hver som gratis EPUB.</p>\n')
 
 def book_cta_en(slug, title, heading, blurb):
     return (f'<div class="book-cta" style="border:1px solid #ddd;border-radius:8px;padding:16px 20px;margin:32px 0;">\n'

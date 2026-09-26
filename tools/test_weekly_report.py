@@ -286,7 +286,7 @@ class RankingTests(ReportFixture, unittest.TestCase):
     def test_traffic_basis_ranks_offer_pages_by_domain_and_route(self) -> None:
         start, end = report.ranking_period()
         payload = self.ranked_payload(per_domain={
-            "mahope.tools": {"/page-profile": 9, "/": 20, "/scan": 4},
+            "mahope.tools": {"/page-profile": 9, "/": 20, "/compliance-report": 4},
             "cleancopy.tools": {"/": 11},
             "deskuptime.com": {"/": 7},
             "bugbottle.dev": {"/": 6},
@@ -302,7 +302,7 @@ class RankingTests(ReportFixture, unittest.TestCase):
         self.assertEqual(9, ranked[("mahope.tools", "/page-profile")])
         self.assertEqual(11, ranked[("cleancopy.tools", "/")])
         self.assertEqual(7, ranked[("deskuptime.com", "/")])
-        self.assertEqual(4, ranked[("mahope.tools", "/scan")])
+        self.assertEqual(4, ranked[("mahope.tools", "/compliance-report")])
         # mahope.tools' forside sælger intet direkte og er derfor ikke med.
         self.assertEqual([11, 9, 7, 4], [row["visits"] for row in ranking["ranked_offer_pages"]])
         self.assertIsNone(ranking["fallback"])
