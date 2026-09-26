@@ -291,6 +291,11 @@ STEPS: tuple[Step, ...] = (
         ),
     ),
     Step(
+        id="product-copy-selftest",
+        argv=("python3", "tools/check_product_copy.py", "--self-test"),
+        inputs=("tools/check_product_copy.py", "site/**"),
+    ),
+    Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),
         inputs=(
