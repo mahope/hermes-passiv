@@ -2,6 +2,10 @@
 
 ## Status
 
+- `ITERATION_ID`: `download-asset-gate-2026-09-26`
+- `STATE`: `Opgave 46 FÆRDIG — men **uden kode**, fordi jeg målte dens forudsætning, og den holder ikke. Det er samme bevægelse som opgave 44 (fik 0) og opgave 41 fund 2 (65 sider pegede på et anker, der ikke fandtes): *en opgave bygget på en antagelse, ingen har testet.* **Fund 1 — deploynoten for opgave 45 er lukket på indhold, ikke på statuskode.** Alle tre domæners `build-info.json` bærer `3d030a93bb5cf557bdfb22db4dc1fb3676f73f7c`. Hentet **med cachebuster** (`:?cb=<epoch>`): `clean-copy-firefox-v1.5.4.zip` → 24320 byte og `clean-copy-v1.5.3.zip` → 21543 byte, begge pakkede ud, begge med **4** fund af `deactivate` i `options.js` og **0** af *"does not free a seat remotely"*. Købere får de nye bytes, så opgave 45s rettelse virker. **Fund 2 — opgave 46 byggede på en cachefare, der ikke findes.** Den skrev at en zip "genbygget på samme filnavn kan blive serveret fra cache med den gamle fejl i". Jeg hentede headerne på den rigtige fil: `cache-control: public, max-age=14400, must-revalidate` og et `etag`. `must-revalidate` gør en cache **forpligtet** til at spørge origin igen, når de fire timer er gået, og et nyt indhold giver et nyt etag. En overskrivelse på samme navn er derfor **selvhelbredende inden for højst 4 timer** — ikke en varig fejl. Det er *sletninger*, der er det varige problem (opgave 28/39: 1.3.3 og 1.5.3 svarede stadig 200 fra CDN'en efter at de var væk fra git), og dem galler `check_retired_downloads` kontrol 6 + workerens 301-kort allerede. **En versionsbump ville altså have kostet seks sider, tre manifeste, `versions.json`, `retired_downloads.json` og en produktionskritisk worker-rute for at løse en fare, der måler 0.** **Fund 3 — den egentlige fejl, jeg fandt mens jeg målte, ligger i den købssti opgave 46 siges at beskytte.** `dist/mahope.tools/downloads.html` og `dist/mahope.tools/free-downloads.html` linker til `/downloads/clean-copy-v1.5.3.zip`, `/downloads/clean-copy-firefox-v1.5.4.zip` og `/downloads/clean-copy-obsidian-v1.0.10.zip` — **5 links i alt**. Links er relative, så de opløses på det domæne, siden ligger på. Målt på disket: `dist/cleancopy.tools/downloads/` har **3** zips, `dist/mahope.tools/downloads/` har **1** (`eaa-scanner-desktop-src-1.3.4.zip`), `deskuptime.com` og `bugbottle.dev` har **0**. Målt i live med cachebuster: `https://mahope.tools/downloads/clean-copy-v1.5.3.zip` → **404** (`cache-control: no-store`, `cf-cache-status: BYPASS`), samme for firefox-arkivet, også uden cachebuster. **En besøgende på mahope.tools/downloads.html får altså 404 på alle tre Clean Copy-downloadknapper.** Det er missionens prioritet 1 — en download der ikke leverer — og den er *live nu*. **Fund 4 — porten er grøn på præcis den fejl, den er skrevet til at fange, for sjette gang.** `check_links` har `DOWNLOAD_EXT` og en dødskontrol for netop sådanne artefakter, og dens egen selftest har scenariet *"død download"*, så hensigten er den rigtige. Men den er grøn: `route_exists` (`tools/check_links.py:234`) prøver filen, og `/downloads/` er **ikke** i `WORKER_PREFIXES` (kun `/api/` og `/scan-proxy`), så worker-ruten er ikke forklaringen. Links er relative, så de går gennem `kind == "rel"`-grenen, ikke `route_exists`, og den branch er åbenbart ikke koblet til download-kontrollen. Samme fejlklasse som opgave 23, 26, 28, 29, 30, 37 og 42. **Fund 5 — jeg rettede den ikke i denne iteration, bevidst.** Rettelsen kræver en buildændring (distribuér zipsne til mahope.tools, eller lat `rewrite_text` omskrive assetlinks krydsdomæne — den kender kun ruter, `build_sites.py:435`) **og** en ny portregel, fordi den nuværende ikke kan se fejlen. Det er tre filer hvor den ene er produktionskritisk, i en iteration med 22 minutter tilbage. Kontrakten siger hellere en lille færdig opgave end en stor halvfærdig, så fundet står som **opgave 47** med målt grundlag i stedet for som en halv kodeændring. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 83/83, dist/uændret (gitignored), ingen nye releases, ingen publicering.`
+- `GATE`: `Kørte ikke fuld quality_gate.py — iterationen ændrer kun `IMPLEMENTATION_PLAN.md`, og ingen af de fire missionskommandoer kan se en planændring. Målte i stedet read-only: `python3 tools/check_links.py` → 4 domæner OK, **0 uopklarede referencer** (det er netop fund 4: porten er grøn på de 5 døde links). Hele arkivet er desuden urørt af committen.`
+- `SLIP`: `Ingen kode, så intet gatenummer at notere. ~24 min. Jeg brugte dem på måling i stedet for på en halv færdig buildændring — det er den afvejning kontrakten beder om, men den er ærlig at sige: denne iteration leverede ingen produktrettelse, kun et fjernet fejlantagende og et præcist målt fund.`
 - `ITERATION_ID`: `unbuybar-pris-port-2026-09-26`
 - `STATE`: `Opgave 42 FÆRDIG — opgave 41 rettede 15 filer med **ingen port**, så løgnen kunne komme tilbage ved et tilfældigt læs. Ny `check_unbuyable_prices` i `tools/check_stripe_ctas.py` gater tre former for den samme løgn, ét kriterium: **et beløb der ikke kan betales på den side, hvor det står.** **Fund 1 — porten fandt en fejl der er live *nu*:** `site/compliance-report.html` erklærede `"price": "29"` i JSON-LD, mens siden sælger `eucomply-pro` til **$79/år** og intet sælger til 29. Beviset er ikke min vurdering: de **31** andre WebApplication-sider i træet siger alle `"price": "0"`, og den her var det eneste outlier — en rest fra den afskaffede $29-PDF-bundle, siden mono-repo-committen. Rettet til `"0"` + `InStock`. Søgemaskinerne læste en $29-pris på en side med en $79-knap. **Fund 2 — opgavens eget kriterium var ubrugeligt som formuleret, så jeg målte det:** *"et tal med valuta ved siden af et produktnavn"* ramte **59 sider** i det rene træ (GDPR-bøder på €530 mio., konkurrenters priser, `sites-icons`' `$0`). En port med 59 falske positiver er ikke en port. Kriteriet blev gjort operationelt på den ene målbare ting. **Fund 3 — min første version var rød på fire sider, på deres *egne* priser:** jeg sammenlignede `$79` med katalogens `$79/år pr. website` og `19 USD` med `$19 engang, 3 maskiner`. Rettet til at sammenligne på **tallet**. **Fund 4 — `CODE_TAGS` var død kode, og min første kommentar om den var falsk:** jeg skrev at `<pre>`-udelukkelsen rettede `site-icons.html`, men med `CODE_TAGS` slået fra gav porten stadig 0 fejl — det var *bloksegmenteringen*, fordi `parse_page` normaliserer linjeskift væk og `$ pip install …` derfor landede i samme segment som "not for sale yet". Målt på de 814 kodeblokke står i stedet ét konkret tilfælde: `'# $1'` i et regex, hvor `$1` er en gruppe-reference. Kommentaren siger nu hvilken mekanisme der gjorde hvad, og selftesten beviser at `CODE_TAGS` virker. **Fund 5 — nul-prisen er sand:** `site-icons` skriver `$0` og de gratis e-bøger `"price": "0"` + `InStock`; kun `> 0` regnes som et løfte, ellers var 31 sider røde. **Fund 6 — syv negative kontroller**, tre af dem netop min egen rettelse, hvoraf to er hæftet i koden som `return 1`-fejl fordi de skal sige det hvis de består af en forkert grund. **Selftest 19 → 24/24.** Bevis på de rigtige gamle filer: **14 fejl i 11 af de 15** filer opgave 41 rettede; de fire øvrige bar den døde `/#products`-reference, ikke en pris (opgave 43). **Acceptkriterium 2 sagde "præcis én fejl" på bogen — den har fire**, én pr. *adskilt* løgn (JSON-LD linje 32, prislabel 182, to "Paid edition"-sætninger 185 og 257); antallet i kriteriet var et gæt uden optælling, og at slå dem sammen ville skjule hvilken løgn der blev fundet. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 83/83. **Gate:** 46 steps uændrede, fordi reglen bor i et eksisterende step — path-filteret er urørt.`
 - `STATE`: `Opgave 41 FÆRDIG — researchiterationen (køen var tom, opgave 40) fandt den første **structureeret** udgave af løgnen opgave 37, 38 og 39 jagtede: ikke bare en pris i løse luften, men en `$9.99` i **JSON-LD**. Fund 1 — de seks e-bogsider er familiens eneste artefakt med virkeligugentlig download-volum, og de lovede alle en betalt udgave der ikke findes. `reports/weekly/2026-38.json` har `build-your-first-chrome-extension.epub` som **#1** med 26 hits, og de seks EPUB'er ligger på 14–26 hits om ugen. `site/books/build-your-first-chrome-extension.html` erklærede i JSON-LD `"price": "9.99"` med `"availability": "https://schema.org/PreOrder"`, viste `$9.99` i en synlig `<div class="price">`, skrev *"free while in review"* på knappen og *"Paid edition: $9.99 (coming)"* i CTA'en. De fem andre sider skrev *"Paid individual editions ($9.99 each) are planned once our payment setup is complete"*. **Betalingsopsætningen er komplet** — Stripe har kørt live siden 24/9 med 13 produkter — så pagen er ikke bare falsk over for læseren, den er falsk om *virksomhedens egen tilstand*. **Fund 2 — de fem værktøjssider sendte folk til en død anker.** `/#products` er klinket fra **65 publicerede filer**, og `id="products"` fandtes hverken i `site/index.html` eller live (live har kun `id="main"`, `id="site-nav"`, `id="faq"`). Så den konverteringsvej, 65 sider tilbyder, endte i browserens top uden produkter. **Fund 3 — de samme sider lovede et *Amazon*-produkt.** `cookie-check` (EN+DA), `nis2-check` (EN+DA) og `nis2-gap-assessment` skrev *"$9.99 on Amazon"*, og to bloggen-siders knap sagde *"Available on Amazon →"* med et **håndskrevet** NIS2 Compliance Kit-kort med opfundne afsnit (30-dages tjekliste, 5 kontraktklausuler). Ingen generator skriver de strenge — målt med `rg -l` over alle `make_blog*.py`, så en rettelse i `site/` ikke kan gå tabt. **Fund 4 — hvilken vare de mente var målt, ikke antaget.** Kataloget har **13** produkter, men kun **4** har en købsknap nogen steder i `site/`, og de fire betalte klauselsæt (`eucomply-dpa` $59, `eucomply-nis2-clauses` $49, `eucomply-nda-clauses` $29, `eucomply-eaa-statement` $39) findes **kun** i `site/_worker.js` — de er ❓ 9s umulige varer (`kv_verified: false`), så at opfinde en købsside for dem ville have brudt opgave 22s port. Derfor peger rettelsen på det der **findes**: de seks gratis EPUB'er. Fund 5 — samme-page-fragmenter er rene (3 døde af 238), så hullet er præcis **cross-page**-ankere, og `check_links.py:147` dropper fragmentet med `ref.split("#")[0]`. Se opgave 42 og 43.
@@ -26,8 +30,8 @@
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
 - `BASELINE`: `main@3d030a9`
 - `LAST_BRANCH`: `ceo/knap-og-js-links`
-- `NEXT_TASK`: `46 — versionsbump for arkiverne, så rettelsen fra opgave 45 ikke leveres som cachede bytes. Se opgave 46.`
-- `DEPLOY` (opgave 45, ÅBEN): `VERIFICÉR DEPLOY: frigiv-licensplads-before-slette + de tre regenererede zips 3d030a9 26/9` — CI deployer med det samme (`extension-clean-copy/**` og `site/downloads/**` er i path-filteret). Verificér på **indhold**, ikke på HTTP 200: (1) `build-info.json` skal bære `3d030a9` på cleancopy.tools, mahope.tools og deskuptime.com; (2) hent `https://cleancopy.tools/downloads/clean-copy-firefox-v1.5.4.zip` **med en cachebuster** og pakk den ud — `options.js` inde i den skal have `API_BASE + '/deactivate'` og **0** fund af *"does not free a seat remotely"*; (3) samme for `clean-copy-v1.5.3.zip`. **Punkt 2 og 3 er hele pointen med opgave 46:** zip'en er genbygget på *samme* filnavn, så en cache kan servere de gamle bytes, og så er rettelsen virkningsløs for købere uden at nogen port kan se det. Uden cachebuster giver et 200 intet.
+- `NEXT_TASK`: `47 — døde downloadlinks på mahope.tools: downloads.html og free-downloads.html linker til de tre Clean Copy-arkiver, som ikke findes i dist på det domæne. Målt 404 i live. Se opgave 47.`
+- `DEPLOY` (opgave 45, LUKKET): `DEPLOY OK 3d030a9 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200. (1) `build-info.json` bærer `3d030a93bb5cf557bdfb22db4dc1fb3676f73f7c` på **alle tre** domæner (cleancopy.tools, mahope.tools, deskuptime.com). (2) `https://cleancopy.tools/downloads/clean-copy-firefox-v1.5.4.zip?cb=<ts>` → 24320 byte, pakket ud: `options.js` har **4** fund af `deactivate` og **0** af *"does not free a seat remotely"*. (3) `clean-copy-v1.5.3.zip?cb=<ts>` → 21543 byte, samme **4/0**. Rettelsen er altså virkningsløs-mulig, altså virkningsfuld: en køber henter de nye bytes. Se `STATE` for den måling, der fik opgave 46s forudsætning til at falde.
 - `STATE`: `Opgave 45 FÆRDIG — researchiterationen startede med at måle opgave 44 og fik **0**, så den blev droppet målt i stedet for gættet. Målingen af de to øvrige punkter i opgave 44 (knapper uden href, href skrevet af JavaScript) er dog ikke et resultat i sig selv: **alle 20 `.href =` i site/ er `URL.createObjectURL(blob)`** — fil-downloads, ikke navigation — og de to `location.href` ligger i `shell.js:105` på et *rigtigt* `a[sel].href`. `window.open` er to printvinduer i nis2-gap-assessment. `onclick` er 30 filer, men ingen af dem navigerer; de kalder `window.print()`, `trackEvent(…)` og in-page-funktioner. **Fund 1 — den rigtige fejl var et sted, ingen port læste: kunden kan ikke frigive sin egen licensplads.** Kontrakten tæller én plads pr. maskine og *har* et `deactivate`-endpoint til formået. Målt: **0 af 16 licensklient-kilder kalder det.** `extension-clean-copy/options.js:131` fjernede nøglen lokalt med kommentaren *"Local removal only — does not free a seat remotely"* — forfatteren vidste det, og sagde det ikke til brugeren. **Konsekvensen er en permanent låst kunde:** med 3 pladser brugt på en ny bærbarcomputer får den 4. maskine `409 Device limit reached`; brugeren fjerner licensen på en gammel maskine, som **kun** tømmer lokal lagring; serveren tæller stadig den gamle maskine; den nye får 409 igen — og den eneste udveje er at skrive til et menneske. Det er præcis den supportlast, missionen forbyder, og den opstår *hos betalende kunder*. **Fund 2 — det var de to Clean Copy-udvidelser, ikke desktop-appen.** Desktop-appens `main.js:243` gør det samme, men dens licensvært er `hermes-passiv.pages.dev`, som ikke er et deployet Pages-projekt, og kontrakten har intet EAA-produkt — den er derfor undtaget (❓ 8) og urørt. Udvidelserne bruger derimod det *live* `https://mahope.tools` fra det kanoniske modul, så de kan få rettet i dag. **Fund 3 — rettelsen må ikke låse Pro ude, så den rækkefølge er FØRST.** Lokal rydning sker altid; serverkaldet er først, og *kun hvis nøglen er gyldig*. Fejler serveren, fjernes nøglen alligevel, og beskeden siger ærligt at pladsen måske stadig tælles og at man skal prøve igen — den tidligere (*"License removed from this device."*) var ikke direkte løgn, men den holdt den udokumenterede følge skjult. Begge `options.js` er kopieret fra den samme rettelse, så `cmp` beviser at de er byte-identiske. **Fund 4 — arkiverne er den kode købere faktisk henter,** så en kilderettelse uden regeneration *aldrig* når ud: `tools/build_clean_copy_archives.py` skrev de tre zips igen, ellers ville `check_clean_copy_distribution` være rød på byte-identiteten.`
 - `GATE` (opgave 45): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (uændret — den nye regel bor i det eksisterende step license-clients, så workflowens path-filter er urørt). check_license_clients: 16 kilder, 0 problemer. --self-test: 14/14 (fra 11), heraf **+1 fejlform** (en klient der kan aktivere men ikke afgiver pladsen) og **+2 negative kontroller** (en klient der både aktiverer og afgiver plads, og en klient der kun tjekker uden at gemme nøglen) — uden dem ville reglen smadre enhver klient og lukke porten for de fejl den er skrevet til at finde. **Bevis på den rigtige gamle fil fra git HEAD:** \`git show HEAD:extension-clean-copy/options.js\` ind over \`check_seat_release\` → 1 fund, i den rigtige fil; den rettede → 0. Stripe-worker uændret, takkeside uændret, tracking-worker uændret, site/_worker.js urørt, dist/uændret (gitignored).`
 - `SLIP` (opgave 45): `Ingen. ~38 min, commit før 45-minuttersgrænsen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~90 linjer.`
@@ -2364,33 +2368,81 @@ missionen er bygget på at undgå.
 forfatteren vidste det og skjulte det), fund 2 (hvorfor desktop-appen er urørt) og
 fund 4 (arkiverne er den kode købere henter).
 
-### 46. KANDIDAT — rettelsen fra opgave 45 ligger på URL'er, der allerede er udgivet
+### 46. MÅLT OG AFVIST — forudsætningen er falsk, så opgaven skal ikke laves
 
-**Begrundelse:** `tools/build_clean_copy_archives.py` skrev de tre zips igen **på
-samme filnavne** (`clean-copy-v1.5.3.zip`, `clean-copy-firefox-v1.5.4.zip`,
-`clean-copy-obsidian-v1.0.10.zip`). Opgave 28s måling dokumenterer præcis den fare:
-den slettede `1.3.3` svarede stadig 200 fra CDN'en, og `1.5.3` stadig 200 efter at
-filen blev fjernet lokalt. **En zip der genbygges på samme navn kan derfor blive
-serveret fra cache med den gamle fejl i**, og ingen port kan se det — porten læser
-*repoet*, ikke CDN'en. Konverteringsvirkningen af opgave 45 afhæger derfor af om
-brugeren får de nye bytes.
+**Målt 26/9, se `STATE`:** headerne på den rigtige live-fil siger
+`cache-control: public, max-age=14400, must-revalidate` + `etag`.
+`must-revalidate` gør en cache forpligtet til at genvalidere ved origin når
+`max-age` er gået, og nyt indhold giver et nyt etag. **En overskrivelse på samme
+filnavn er derfor selvhelbredende inden for højst 4 timer.** Den cachefare,
+denne opgave skulle løse, måler 0.
+
+Det varige problem er *sletninger*, ikke overskrivelser: en slettet fil bliver
+liggende i CDN'en (opgave 28/39 målte 1.3.3 og 1.5.3 stadig 200). Det er allerede
+gated af `check_retired_downloads` kontrol 6 (`undocumented_deletion`) og af
+workerens `RETIRED_DOWNLOADS`-301.
+
+En versionsbump ville have kostet `site/downloads.html`, `site/free-downloads.html`,
+`site/clean-copy.html`, `site/da/clean-copy.html` og de to bloggen-sider, tre
+`manifest.json`, `obsidian-plugin/versions.json`, `tools/retired_downloads.json`
+**og** en produktionskritisk worker-rute — for at løse en fare, der måler 0.
+Den rigtige sted for den indsats er opgave 47, som ligger i den *samme* købssti.
+
+**Hvis den nogensinde skal genåbnes:** kun fordi en kommende måling viser et
+domæne, der serverer `/downloads/*` med `immutable` eller uden `etag`. Blev den
+ målt, er det en ny opgave, ikke denne.
+
+
+### 47. NÆSTE — døde Clean Copy-downloadknapper på mahope.tools (live 404)
+
+**Målt 26/9, ikke antaget.** `dist/mahope.tools/downloads.html` og
+`dist/mahope.tools/free-downloads.html` linker til de tre Clean Copy-arkiver.
+Links er **relative**, så de opløses på det domæne siden ligger på:
+
+| Domæne | zips i dist | 404 i live |
+|---|---|---|
+| cleancopy.tools | **3** | nej |
+| mahope.tools | **1** (`eaa-scanner-desktop-src-1.3.4.zip`) | **ja**, alle tre |
+| deskuptime.com | 0 | — |
+| bugbottle.dev | 0 | — |
+
+Live: `https://mahope.tools/downloads/clean-copy-v1.5.3.zip` → 404 med
+`cache-control: no-store`. Samme for `clean-copy-firefox-v1.5.4.zip`. Også uden
+cachebuster, så det er ikke en cache. **5 døde links** (3 i `downloads.html`,
+2 i `free-downloads.html`).
+
+**Hvorfor porten ikke så det:** `check_links` har `DOWNLOAD_EXT` og en
+dødskontrol for downloadartefakter, og dens selftest har scenariet *"død
+download"* — men `route_exists` (`tools/check_links.py:234`) er kun nået fra
+absolutte ruter. Relative refs går gennem `kind == "rel"`-grenen, som ikke er
+koblet til downloadkontrollen. `/downloads/` er ikke i `WORKER_PREFIXES`, så
+det er heller ikke workerens skyld.
+
+**Beslutning kræves (❓ 14):** skal de tre zips **distribueres til mahope.tools**,
+eller skal `rewrite_text` (`build_sites.py:435`, som i dag kun kender ruter)
+omskrive *asset*-links krydsdomæne til cleancopy.tools? Førstnævnte giver én
+filadresse for hele familien og en død knap, hvis nogen senere fjerner zipsne fra
+mahope.tools' filter; sidstnævnde er smallere men gør at en download er et
+krydsdomænekald. Jeg anbefaler førstnævnde — `mahope.tools` er familiens
+indgang, og en knap der dør, er dyrere end et par hundrede kilobyte.
 
 **Acceptkriterier:**
-1. Versionsbump efter repoets egen udgivelsesvej: `version` i de to `manifest.json` +
-   `obsidian-plugin/versions.json`, alle sider der linker på arkiverne retes, så ingen
-   side peger på den gamle fil.
-2. `build_clean_copy_archives.py` kørt, `check_clean_copy_distribution` grøn,
-   `check_versions` grøn, `quality_gate.py` grøn.
-3. **Live-verifikation af *indhold*, ikke af statuskode:** hent den nye zip med en
-   cachebuster og pakk den ud; `options.js` inde i den skal have
-   `API_BASE + '/deactivate'` og **0** fund af *"does not free a seat remotely"*.
-4. Skriv `DEPLOY OK`/`DEPLOY-MISSING` i planen med kørsel-id.
+1. De 5 links er enten rettet eller backed af en fil i det domæne, de står på —
+   målt med `curl -o /dev/null -w "%{http_code}"` på alle tre arkiver på
+   **mahope.tools**, med og uden cachebuster.
+2. Ny check i `check_links.py`: et `/downloads/*`-ref med en `DOWNLOAD_EXT`
+   skal findes som fil i **det** domænes dist. Bevis på den rigtige gamle fil:
+   indsæt de 5 links i en side i dist → **5 fejl**; rettet → 0. Selftestens
+   negative kontroller skal dække (a) en krydsdomæne-reference der *er*
+   gyldig, (b) en paid/KV-fil under `/downloads/compliance-bundle`, som workeren
+   serverer og derfor **ikke** findes i dist, og (c) `npm i /downloads/x.tgz`
+   inde i `<pre><code>`, som ikke er et downloadlink.
+3. `python3 build_sites.py && python3 tools/seo_check.py && node tests/stripe-worker.test.mjs && python3 tools/check_inline_js.py` grøn, og `tools/quality_gate.py` grøn.
+4. `VERIFICÉR DEPLOY` med live-indholdskontrol af de tre arkiver, ikke HTTP 200.
 
-**Hvorfor det ikke var denne iteration:** det er en udgivelsesbevægelse der rører
-manifester, Obsidian-versionsfil og de sider der linker arkiverne — for stort til at
-gøre sikkert med få minutter tilbage, og kontrakten siger hellere en lille færdig
-opgave end en stor halvfærdig. Kilderne, porten og de regenererede zips er på plads,
-så der er kun filnavne og sider tilbage.
+
+**Hvorfor den ikke var denne iteration:** den kræver en buildændring og en ny
+portregel, og buildet er produktionskritisk for fire domæner. Se `STATE` fund 5.
 
 
 ## ❓ Til Mads
@@ -2420,6 +2472,16 @@ så der er kun filnavne og sider tilbage.
     reneste løsning enten at fjerne Pro-kolonnen og kun vise gratis-funktionerne, eller at oprette
     produktet. Begge er dit valg; porten fra opgave 31 gater den automatisk, hvis den en dag får en
     købsknap.
+14. **Skal de tre Clean Copy-arkiver ligge på mahope.tools, eller skal
+    downloadknapperne pege krydsdomæne?** Målt 26/9: `mahope.tools/downloads.html`
+    og `/free-downloads.html` har **5 links** til `/downloads/clean-copy-*.zip`,
+    og `dist/mahope.tools/downloads/` indeholder kun **1** zip, så alle fem er
+    **404 i live** (`no-store`, altså ikke en cache). Kun `cleancopy.tools` har
+    de tre. Valget er enten at distributere zipsne til mahope.tools (min
+    anbefaling — `mahope.tools` er familiens indgang, og en død knap er dyrere
+    end et par hundrede kilobyte), eller at få `rewrite_text` til at omskrive
+    assetlinks krydsdomæne. Det er et valg om arkitektur, ikke en tekstret, så
+    jeg har ikke gjort det alene. Se opgave 47.
 1. **Tilføj property i Google Search Console** for `mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev` og `mahoje.dk`. Verificér sitemap og robots efter tilføjelse. Denne handling må ikke udføres af repoet.
 2. **Beslut om den lokale BugBottle-shadow:** live `bugbottle.dev` er dokumenteret som den separate `mahope/bugbottle`/Dokploy-kilde med 40 routes på commit `07828a1d605383c58cf44416447e0497e91fdac3`; dette repo har en ubrugt 7-routes shadow. Vælg om shadowen skal fjernes helt eller holdes som et lokalt kildesnapshot. Det er ikke længre en blocker for den nuværende deploy.
 3. **Beslut om historik-remediering:** Betalt indhold findes i tidligere public commits. En fuld sletning kræver en koordineret historik-rewrite, som loop-kontrakten forbyder og som ikke må ske uden dit go. Indtil beslutningen står som `BLOCKED: kræver Mads-godkendelse`.
