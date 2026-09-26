@@ -35,7 +35,13 @@ All behavior is configurable in settings (default paste format, Pro rules).
 
 ## Privacy
 
-No network access. No telemetry. The plugin reads your clipboard only when you run a paste command.
+No analytics, no tracking, no telemetry. The plugin makes no network request at all while you paste — nothing about your vault or clipboard is sent anywhere.
+
+One exception, and only if you choose it: activating or checking a **Pro license key** sends that key and a random device id to `mahope.tools` so the key can be validated. The free version never makes that call. See [Clean Copy's privacy notes](https://cleancopy.tools/clean-copy#faq) for the full picture.
+
+## Support
+
+Clean Copy is free and MIT-licensed, and it stays that way. If it saved you a bit of time, a [small donation](https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c) keeps the free tools maintained.
 
 ## Note on naming
 

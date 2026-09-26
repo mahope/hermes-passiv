@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clean Copy — kopiér websider som ren Markdown eller ren tekst</title>
-<meta name="description" content="Clean Copy laver enhver webside, markering eller HTML-fil om til ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin, GitHub Action. Gratis, MIT-licens, intet forlader din maskine.">
+<meta name="description" content="Clean Copy laver enhver webside, markering eller HTML-fil om til ren Markdown eller ren tekst. Browser-extension, CLI, Obsidian- og VS Code-plugin, GitHub Action. Gratis, MIT-licens, intet forlader din maskine, mens du konverterer.">
 <meta name="author" content="Mads Holst Jensen">
 <link rel="canonical" href="https://cleancopy.tools/da/">
 <link rel="alternate" hreflang="en" href="https://cleancopy.tools/">
@@ -61,7 +61,7 @@ med den oprindelige kolonnejustering.</span>
       <div><dt>Markdown der matcher siden</dt><dd>Overskrifter, lister, links, billeder, fed og kursiv, fenced code blocks med sprog-tag, tabeller med justering, nummererede lister der beholder deres startnummer.</dd></div>
       <div><dt>Typografisk oprydning</dt><dd>Krøllede anførselstegn bliver lige, hårde mellemrum bliver almindelige, zero-width og andre usynlige tegn fjernes.</dd></div>
       <div><dt>Ren tekst</dt><dd>Når du kun vil have ordene: ingen Markdown-syntaks, bare afsnit og linjeskift.</dd></div>
-      <div><dt>Intet forlader din maskine</dt><dd>Converteren er én lille JavaScript-fil uden runtime-afhængigheder. Extensionen har ingen server; CLI'en åbner kun en netværksforbindelse, hvis du bruger <code>--url</code>.</dd></div>
+      <div><dt>Intet forlader din maskine</dt><dd>Converteren er én lille JavaScript-fil uden runtime-afhængigheder. Extensionen har ingen server; CLI'en åbner kun en netværksforbindelse, hvis du bruger <code>--url</code>. Den ene undtagelse er en Pro-licensnøgle, der valideres online — se spørgsmålet om privatliv nedenfor.</dd></div>
     </dl>
   </div>
 </section>
@@ -73,7 +73,7 @@ med den oprindelige kolonnejustering.</span>
     <p>Det er én converter leveret i syv former, så du får samme resultat, uanset hvor du er:</p>
     <ul class="surfaces">
       <li>Chrome / Edge / Brave-extension <span>v1.5.3</span></li>
-      <li>Firefox-extension <span>v1.5.3, hedder Clean Copy MD</span></li>
+      <li>Firefox-extension <span>v1.5.4, hedder Clean Copy MD</span></li>
       <li>Kommandolinje <span>Homebrew eller npm</span></li>
       <li>Obsidian-plugin <span>indsæt som Markdown</span></li>
       <li>VS Code-extension <span>indsæt som Markdown</span></li>
@@ -97,7 +97,7 @@ med den oprindelige kolonnejustering.</span>
 
     <h3>Firefox</h3>
     <ol>
-      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.3.zip">clean-copy-firefox-v1.5.3.zip</a> og pak den ud.</li>
+      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.4.zip">clean-copy-firefox-v1.5.4.zip</a> og pak den ud.</li>
       <li>Åbn <code>about:debugging#/runtime/this-firefox</code>, klik <strong>Load Temporary Add-on</strong> og vælg <code>manifest.json</code>.</li>
       <li>Midlertidige add-ons fjernes, når Firefox lukkes. En signeret udgave til addons.mozilla.org er på vej.</li>
     </ol>
@@ -145,7 +145,8 @@ npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></p
     </details>
     <details>
       <summary>Sender den min tekst nogen steder hen?</summary>
-      <p>Nej. Extensionen har ingen server og beder ikke om netværkstilladelse. CLI'en laver kun en request, når du beder den hente en URL. Denne side kører en anonym sidevisningstæller og intet andet.</p>
+      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. Denne side kører en anonym sidevisningtæller og intet andet.</p>
+      <p><strong>Én undtagelse:</strong> hvis du aktiverer en Clean Copy Pro-licensnøgle, sendes nøglen og et tilfældigt enheds-id til <code>mahope.tools</code>, så licensen kan valideres. De sider du besøger og den tekst du kopierer sendes aldrig. Uden en Pro-nøgle sendes intet overhovedet.</p>
     </details>
     <details>
       <summary>Hvor god er Markdown-outputtet?</summary>

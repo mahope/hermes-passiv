@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clean Copy — copy web pages as clean Markdown or plain text</title>
-<meta name="description" content="Clean Copy turns any web page, selection or HTML file into clean Markdown or plain text. Browser extension, CLI, Obsidian and VS Code plugins, GitHub Action. Free, MIT-licensed, nothing leaves your machine.">
+<meta name="description" content="Clean Copy turns any web page, selection or HTML file into clean Markdown or plain text. Browser extension, CLI, Obsidian and VS Code plugins, GitHub Action. Free, MIT-licensed, nothing leaves your machine while you convert.">
 <meta name="author" content="Mads Holst Jensen">
 <link rel="canonical" href="https://cleancopy.tools/">
 <link rel="alternate" hreflang="en" href="https://cleancopy.tools/">
@@ -64,7 +64,7 @@ original column alignment.</span>
       <div><dt>Markdown that matches the page</dt><dd>Headings, lists, links, images, bold and italic, fenced code blocks with language tags, tables with alignment, ordered lists that keep their start number.</dd></div>
       <div><dt>Typographic clean-up</dt><dd>Curly quotes become straight quotes, non-breaking spaces become spaces, zero-width and other invisible characters are dropped.</dd></div>
       <div><dt>Plain-text mode</dt><dd>When you only want the words: no Markdown syntax, just paragraphs and line breaks.</dd></div>
-      <div><dt>Nothing leaves your machine</dt><dd>The converter is a small JavaScript file with no runtime dependencies. The extension has no server; the CLI only opens a network connection if you pass <code>--url</code>.</dd></div>
+      <div><dt>Nothing leaves your machine</dt><dd>The converter is a small JavaScript file with no runtime dependencies. The extension has no server; the CLI only opens a network connection if you pass <code>--url</code>. The one exception is a Pro license key, which is validated online — see the privacy question below.</dd></div>
     </dl>
   </div>
 </section>
@@ -76,7 +76,7 @@ original column alignment.</span>
     <p>It is one converter shipped in seven forms, so you can use the same behaviour wherever you happen to be:</p>
     <ul class="surfaces">
       <li>Chrome / Edge / Brave extension <span>v1.5.3</span></li>
-      <li>Firefox extension <span>v1.5.3, named Clean Copy MD</span></li>
+      <li>Firefox extension <span>v1.5.4, named Clean Copy MD</span></li>
       <li>Command-line tool <span>Homebrew or npm</span></li>
       <li>Obsidian plugin <span>paste as Markdown</span></li>
       <li>VS Code extension <span>paste as Markdown</span></li>
@@ -100,7 +100,7 @@ original column alignment.</span>
 
     <h3>Firefox</h3>
     <ol>
-      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.3.zip">clean-copy-firefox-v1.5.3.zip</a> and unzip it.</li>
+      <li>Download <a href="/downloads/clean-copy-firefox-v1.5.4.zip">clean-copy-firefox-v1.5.4.zip</a> and unzip it.</li>
       <li>Open <code>about:debugging#/runtime/this-firefox</code>, click <strong>Load Temporary Add-on</strong> and pick <code>manifest.json</code>.</li>
       <li>Temporary add-ons are removed when Firefox closes. A signed build for addons.mozilla.org is in progress.</li>
     </ol>
@@ -148,7 +148,8 @@ npx github:mahope/clean-copy-cli page.html   # run without installing</code></pr
     </details>
     <details>
       <summary>Does it send my text anywhere?</summary>
-      <p>No. The extension has no background server and requests no network permission. The CLI only makes a request when you ask it to fetch a URL. This site runs an anonymous page-view counter and nothing else.</p>
+      <p>The text you convert does not. The extension has no background server, and while you copy, it makes no network request at all. The CLI only makes a request when you ask it to fetch a URL. This site runs an anonymous page-view counter and nothing else.</p>
+      <p><strong>One exception:</strong> if you activate a Clean Copy Pro license key, the key and a random device id are sent to <code>mahope.tools</code> so the license can be validated. The pages you visit and the text you copy are never sent. Without a Pro key, nothing is sent at all.</p>
     </details>
     <details>
       <summary>How good is the Markdown?</summary>
