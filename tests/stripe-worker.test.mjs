@@ -27,6 +27,10 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
     // skal serveres af ASSETS, så reglen er den eneste grund til at kunden ikke
     // får den.
     if (pathname === '/downloads/clean-copy-firefox-v1.5.3.zip') return new Response('No network requests — nothing leaves your browser', { status: 200 });
+    // Samme tilstand for desktop-kildearkivet: 1.3.3 lovede "$19/year" for et
+    // produkt uden product_key og sendte kunden ud for at købe. Målt 200 på
+    // mahope.tools 26/9, så det er denne regel — ikke kilden — der lukker den.
+    if (pathname === '/downloads/eaa-scanner-desktop-src-1.3.3.zip') return new Response('Pro requires an annual license key ($19/year) — Purchase a license at hermes-passiv.pages.dev/clean-copy', { status: 200 });
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     return new Response('Not found', { status: 404 });
   } } };
@@ -110,6 +114,22 @@ ok('den nuværende fil er ikke omfattet af reglen', r.status === 404, r.status);
 r = await call('/downloads/eaa-checklist.epub', { ...UA, redirect: 'manual' });
 ok('en eksisterende fil serveres stadig', r.status === 200);
 ok('ikke-tilbagetrukne downloads tælles stadig', [...kv.keys()].some(key => key.includes('download:eaa-checklist.epub')), [...kv.keys()].join(' '));
+
+// 9b) Samme krav for desktop-kildearkivet. Her handler det ikke om privatlivs-
+// løftet men om en PRIS: 1.3.3 lovede "$19/year" for EAA-scanneren, som ikke
+// har nogen product_key, og den lå stadig i CDN'en med 200 (målt 26/9).
+const gammelDesktop = await call('/downloads/eaa-scanner-desktop-src-1.3.3.zip', { ...UA, redirect: 'manual' });
+ok('slettet desktop-kildearkiv = 301', gammelDesktop.status === 301, gammelDesktop.status);
+ok('301 peger på 1.3.4', gammelDesktop.headers.get('location') === 'https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip', gammelDesktop.headers.get('location'));
+const gammelDesktopBody = await gammelDesktop.text();
+ok('den gamle desktop-pris serveres ikke, selv om CDN\'en stadig har filen', !/\$19\/year|Purchase a license at/.test(gammelDesktopBody), gammelDesktopBody.slice(0, 80));
+ok('slettet desktop-arkiv tælles ikke som download', ![...kv.keys()].some(key => key.includes('eaa-scanner-desktop-src-1.3.3.zip')), [...kv.keys()].join(' '));
+// Uden denne ville porten være grøn på præcis den fejl den er skrevet til: en
+// regel der kun dækker Clean Copy ville efterlade desktop-filen hentbar.
+r = await call('/downloads/eaa-scanner-desktop-src-1.3.4.zip', { ...UA, redirect: 'manual' });
+ok('det nuværende desktop-arkiv er ikke omfattet af reglen', r.status === 404, r.status);
+r = await call('/downloads/eaa-scanner-desktop-src-1.3.3.zip?cb=2', { ...UA, redirect: 'manual' });
+ok('query-streng følger med også for desktop-arkivet', r.status === 301 && r.headers.get('location') === 'https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip', r.status + ' ' + r.headers.get('location'));
 
 r = await call('/api/lemon-webhook', { method: 'GET' });
 ok('gammel Lemon-rute: GET = 404', r.status === 404);
