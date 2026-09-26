@@ -1,63 +1,78 @@
-# Clean Copy for Obsidian
+# Hermes
 
-Paste and clean text as proper Markdown inside [Obsidian](https://obsidian.md).
+Source for the [mahope.tools](https://mahope.tools) family of small web tools.
+Everything here is MIT licensed and free to use. The paid tiers are optional
+upgrades for teams that need more than one person needs.
 
-- **Free:** "Paste as clean Markdown" (Ctrl/Cmd+Shift+V) converts clipboard HTML — headings, bold, italic, links, lists, tables, code, entities — to proper Markdown using the same engine as [Clean Copy for Chrome/Firefox](https://github.com/mahope/clean-copy). "Clean selection" tidies the current selection (strips pasted HTML junk, smart quotes, zero-width characters).
-- **Pro ($19/yr):** custom find/replace cleanup rules applied after every conversion, with regex support. Activated with a license key in settings.
+This repository builds the sites and the packages — it is not a single product.
 
-## Install
+| Site | What it is |
+|---|---|
+| [mahope.tools](https://mahope.tools) | The tool index, the free e-books, and the license server |
+| [cleancopy.tools](https://cleancopy.tools) | Clean Copy: paste as clean Markdown, CSV and JSON — in the browser, your editor, and the CLI |
+| [deskuptime.com](https://deskuptime.com) | Uptime and bulk URL checks you run yourself |
+| [bugbottle.dev](https://bugbottle.dev) | Browser bug reports into an issue tracker (separate repo: [mahope/bugbottle](https://github.com/mahope/bugbottle)) |
 
-### From Community Plugins (coming)
+## Free tools
 
-Submission is pending. When approved: Settings → Community plugins → Browse → search **Clean Copy**.
+| Tool | Where |
+|---|---|
+| Clean Copy — Chrome, Firefox, VS Code, Obsidian, CLI | [cleancopy.tools](https://cleancopy.tools) |
+| DeskUptime — uptime and bulk URL checker, CLI `@mahope/deskuptime` | [deskuptime.com/tools](https://deskuptime.com/tools) |
+| Transmute — document converter, CLI `@mahope/transmute` | [npm](https://www.npmjs.com/package/@mahope/transmute) |
+| EUComply / EAA scanner — compliance and accessibility checks, CLI `@mahope/eucomply-scanner` | [mahope.tools/downloads](https://mahope.tools/downloads) |
+| Online site check — scan any URL for common compliance problems | [mahope.tools/compliance-site-check](https://mahope.tools/compliance-site-check) |
+| Page Profile — per-page audits, CLI `@mahope/passiv-mcp` | [mahope.tools/page-profile](https://mahope.tools/page-profile) |
+| Site Icons — app and social icons from one source image | [mahope.tools/site-icons](https://mahope.tools/site-icons) |
+| Cookie consent banner | [demo](https://mahope.tools/cookie-consent-banner-demo) |
+| Free e-books — GDPR, NIS2, EAA, cookie consent | [mahope.tools/books](https://mahope.tools/books) |
 
-### Manual install today
+## Paid tiers
 
-1. Go to the [latest release](https://github.com/mahope/clean-copy-obsidian/releases/latest) and download `main.js`, `manifest.json` and `styles.css`.
-2. Put them in `<vault>/.obsidian/plugins/clean-copy-obsidian/`.
-3. Reload Obsidian, then enable **Clean Copy** under Settings → Community plugins.
+The same tools, licensed for a team. A license key activates against
+`mahope.tools/api/license` and works in the clients listed above.
 
-### Via BRAT
-
-```
-https://github.com/mahope/clean-copy-obsidian
-```
-
-## Commands
-
-| Command | Default hotkey | What it does |
-|---|---|---|
-| Paste as clean Markdown | Ctrl/Cmd+Shift+V | Clipboard HTML → clean Markdown at cursor |
-| Paste as plain text | — | Stripped, unformatted text |
-| Clean selection | — | Tidy already-pasted text in place |
-
-All behavior is configurable in settings (default paste format, Pro rules).
+| Product | Price |
+|---|---|
+| [Clean Copy Pro](https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00) — custom cleanup rules with regex support | $19/year |
+| [DeskUptime Pro](https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01) — 3 machines | $19 once |
+| [Transmute Desktop](https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02) — 3 machines | $19 once |
+| [Page Profile Pro](https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04) | $19/year |
+| [EUComply Pro](https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03) — per website | $79/year |
 
 ## Privacy
 
-The free plugin makes no network requests. Pro activation checks your license
-key against `mahope.tools/api/license` — that is the only request the plugin ever
-sends, and it contains the key and a random per-installation device id, nothing
-from your notes or clipboard. If the check cannot complete, the plugin keeps
-using the last known answer instead of locking you out.
+Free features do not send your content anywhere. A paid tier makes exactly one
+kind of request: a license check against `mahope.tools/api/license`, carrying
+your key and a random per-installation device id — nothing about the file or
+page you are working on. If a check cannot complete, the client keeps the last
+known answer for up to seven days rather than locking you out. Each tool's own
+page documents its requests.
 
-## Note on naming
+## Build
 
-The community plugin id is `clean-copy-obsidian`; another developer uses the id `clean-copy` for a different plugin.
-
-## Development
+Requires Python 3.12 (see `.python-version`).
 
 ```bash
-node test.js
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements-build.txt
+python3 build_sites.py          # writes dist/ — never edit dist/ by hand
 ```
 
-Tests cover HTML→Markdown conversion (tables, nested lists, code blocks, entities), cleanup rules and edge cases. `core.js` is the shared engine, identical to the browser extensions' core.
+The full quality gate, which is what CI runs before every deploy:
+
+```bash
+python3 tools/quality_gate.py
+```
+
+`../auditedwp` is a sibling repository used as a build source. It has its own
+contract and is not modified from here.
+
+## Support
+
+[mahope.tools/support](https://mahope.tools/support). If a tool saved you time, a
+thank-you is welcome: [donate](https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c).
 
 ## License
 
 MIT
-
-## Changelog
-
-- **1.0.1** — Shared core with Clean Copy 1.3.0 (full entity decoder, hardened tables), `versions.json` for Obsidian's updater, styles for settings pane.
-- **1.0.0** — Initial release: paste as clean Markdown, paste as plain text, clean selection, Pro cleanup rules.
