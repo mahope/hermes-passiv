@@ -78,9 +78,15 @@
 .license-status { margin-top: 10px; font-size: 14px; }
 .license-status.ok { color: #157a3c; }
 .license-status.err { color: #a31515; }
+/* The paid deliverable used to be reachable with Ctrl+P, because the whole
+   report sat in the DOM before the key was typed. The NIS2/GDPR findings now
+   come from /api/report after the server accepted the key, so a print made
+   without one carries this line and cannot pass for the Pro report. */
+.print-only { display: none; }
 
 @media print {
   header.hero, footer.site-footer, .pricing-grid, .license-area, .scanbox, .no-print { display: none !important; }
+  .print-only { display: block !important; }
   body { background: #fff; color: #000; }
   .report-summary { border: 1px solid #ccc; }
   .finding-item { break-inside: avoid; border: 1px solid #ddd; }
@@ -282,49 +288,15 @@ function runScan(html, url) {
     const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
     if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
   }
+  // The GDPR/cookie, NIS2/security and metadata checks that used to live here
+  // are gone on purpose. They ran in the browser on HTML that /scan-proxy had
+  // already handed back, so their output sat in the DOM before a license key
+  // was ever typed and @media print printed it — Ctrl+P handed out exactly
+  // what the $79 "Unlock & Download" button was meant to unlock (❓ 14). They
+  // now run server-side in /api/report (site/_worker.js), so nothing about
+  // NIS2 or GDPR reaches the DOM before the server has accepted a key. What
+  // stays here is the accessibility grade, which is the free product.
   add('CONTRAST','error','{n} text colour combination(s) below WCAG AA (4.5:1 normal, 3:1 large)',low);
-
-  // Cookie/GDPR checks
-  const scripts = [...doc.querySelectorAll('script[src]')];
-  const hasCookieBanner = /cookie|consent|gdpr|cmp|trustarc|onetrust|usercentrics|cookiebot/i.test(html);
-  const cookieScripts = scripts.filter(s => /cookie|consent|gdpr|cmp/i.test(s.src));
-  const hasGtm = scripts.some(s => /googletagmanager\.com/.test(s.src));
-  const hasGA = scripts.some(s => /google-analytics\.com|googletagmanager\.com\/gtag/.test(s.src));
-  const hasFb = scripts.some(s => /connect\.facebook\.net/.test(s.src));
-  const privacyLink = doc.querySelector('a[href*="privacy"],a[href*="cookie"],a[href*="datenschutz"],footer a[href*="legal"],footer a[href*="imprint"]');
-
-  if (!hasCookieBanner) findings.push({id:'COOKIE_BANNER',sev:'error',msg:'No cookie consent banner found — required by GDPR/ePrivacy for EU visitors using tracking technologies'});
-  if (hasGA && !hasCookieBanner) findings.push({id:'GA_NO_CONSENT',sev:'error',msg:'Google Analytics detected but no consent banner — GA sets cookies and requires prior consent in the EU'});
-  if (hasFb && !hasCookieBanner) findings.push({id:'FB_NO_CONSENT',sev:'error',msg:'Facebook/Meta pixel detected but no consent banner — pixel sets cookies and requires prior consent'});
-  if (!privacyLink) findings.push({id:'PRIVACY_LINK',sev:'warning',msg:'No privacy policy or cookie link found in the footer — GDPR requires easy access to privacy information'});
-  if (cookieScripts.length > 0) findings.push({id:'COOKIE_SCRIPTS',sev:'notice',msg:'{n} cookie/consent management script(s) found on the page'.replace('{n}',cookieScripts.length)});
-
-  // NIS2 / Security checks
-  const metaCs = doc.querySelector('meta[http-equiv="Content-Security-Policy"]');
-  const formCount = doc.querySelectorAll('form').length;
-  const hasFormsOverHttp = [...doc.querySelectorAll('form[action^="http:"]')].length > 0;
-
-  findings.push({id:'FORM_COUNT',sev:'notice',msg:'{n} form(s) found on the page — verify submissions use HTTPS and include CSRF protection'.replace('{n}',formCount)});
-  if (hasFormsOverHttp) findings.push({id:'FORM_HTTP',sev:'error',msg:'{n} form(s) submit over HTTP — all forms must submit over HTTPS for NIS2 compliance'.replace('{n}',[...doc.querySelectorAll('form[action^="http:"]')].length)});
-  if (metaCs) findings.push({id:'META_CSP',sev:'notice',msg:'Page has a meta-tag CSP — best practice is to set CSP via an HTTP header'});
-
-  // Page metadata checks
-  const ogTitle = doc.querySelector('meta[property="og:title"],meta[name="og:title"]');
-  const ogDesc = doc.querySelector('meta[property="og:description"],meta[name="og:description"]');
-  const ogImage = doc.querySelector('meta[property="og:image"],meta[name="og:image"]');
-  const twitterCard = doc.querySelector('meta[name="twitter:card"]');
-  const canonical = doc.querySelector('link[rel="canonical"]');
-  const charset = doc.querySelector('meta[charset]');
-  const jsonldCount = (html.match(/<script[^>]*type="application\/ld\+json"[^>]*>/gi)||[]).length;
-
-  if (!ogTitle) findings.push({id:'OG_TITLE',sev:'warning',msg:'Missing og:title meta tag — social shares will show a generic title'});
-  if (!ogDesc) findings.push({id:'OG_DESC',sev:'warning',msg:'Missing og:description — social shares will have no description'});
-  if (!ogImage) findings.push({id:'OG_IMAGE',sev:'warning',msg:'Missing og:image — shared links will not show a preview image'});
-  if (!twitterCard) findings.push({id:'TWITTER_CARD',sev:'notice',msg:'Missing twitter:card meta — Twitter/X shares may lack rich preview format'});
-  if (!canonical) findings.push({id:'CANONICAL',sev:'warning',msg:'No canonical link — duplicate content issues may affect SEO'});
-  if (!charset) findings.push({id:'CHARSET',sev:'warning',msg:'No charset declaration — page may render incorrectly in some browsers'});
-  if (jsonldCount===0) findings.push({id:'JSONLD',sev:'notice',msg:'No JSON-LD structured data found — helps search engines understand your content'});
-  if (!hasGtm && !hasGA) findings.push({id:'NO_ANALYTICS',sev:'notice',msg:'No analytics or tag manager detected — if the site has tracking, it may use a custom implementation'});
 
   // Score
   const errors=findings.filter(f=>f.sev==='error').length;
@@ -469,6 +441,8 @@ const FIXES = {
   FORM_COUNT:'Verify all forms submit over HTTPS and include CSRF tokens for NIS2 compliance.',
   FORM_HTTP:'Change form action URLs to HTTPS — HTTP form submissions are insecure and violate NIS2.',
   META_CSP:'Move CSP to an HTTP header for stronger protection against XSS and data injection.',
+  SEC_HSTS:'Send `Strict-Transport-Security: max-age=31536000; includeSubDomains` from your web server so browsers only reach the site over HTTPS.',
+  SEC_CSP:'Send a `Content-Security-Policy` response header. Start narrow with `default-src \'self\'` and widen only where you must.',
   OG_TITLE:'Add <meta property="og:title" content="..."> for better social sharing previews.',
   OG_DESC:'Add <meta property="og:description" content="..."> for social sharing descriptions.',
   OG_IMAGE:'Add <meta property="og:image" content="..."> for a preview image when shared.',
@@ -494,6 +468,12 @@ function renderReport(data, url) {
   h += '<p style="margin-top:8px;font-size:14px;color:#667">' + data.errors + ' error(s), ' + data.warnings + ' warning(s), ' + data.notices + ' notice(s)</p>';
   if (data.title) h += '<p style="font-size:14px;color:#667;margin-top:4px">Page: ' + data.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').slice(0,80) + '</p>';
   h += '<p style="font-size:13px;color:#94a3b8;margin-top:4px;word-break:break-all">URL: ' + url.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</p>';
+  // A print made with Ctrl+P before a key was entered must not be mistakable
+  // for the thing $79 buys. Pro findings arrive only from /api/report, so
+  // their absence is the honest signal — no extra flag to keep in sync.
+  if (!data.pro) {
+    h += '<p class="print-only" style="font-size:12px;color:#a31515;margin-top:10px">Free scan — accessibility findings only. This is not the EUComply Pro report: the GDPR/cookie and NIS2/security checks need a license key.</p>';
+  }
   h += '</div>';
 
   // Metrics row
@@ -611,18 +591,73 @@ async function verifyAndDownload() {
   document.getElementById('verifyBtn').disabled = true;
 
   const result = await validateLicense(key);
-  if (result.active) {
-    status.className = 'license-status ok';
-    status.textContent = result.cached
-      ? '✓ License valid (checked ' + (readStore(EXPIRES_KEY) || '').slice(0, 10) + ' — server unreachable now) — preparing your PDF report…'
-      : '✓ License valid — preparing your PDF report…';
-    // Trigger print (which uses @media print styles)
-    window.setTimeout(() => window.print(), 500);
-  } else {
+  if (!result.active) {
     status.className = 'license-status err';
     status.textContent = result.message || 'License not valid. Check your key or visit the pricing page.';
     document.getElementById('verifyBtn').disabled = false;
+    return;
   }
+
+  status.className = 'license-status';
+  status.textContent = 'License verified — running the full report…';
+
+  // The paid half of the report is computed server-side now. Printing first and
+  // asking afterwards would put the free-only document in front of the customer,
+  // so the fetch happens before window.print().
+  let note = result.cached
+    ? ' (server unreachable earlier — checked ' + (readStore(EXPIRES_KEY) || '').slice(0, 10) + ')'
+    : '';
+  let pro = null;
+  try {
+    const r = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_key: key, device_id: getDeviceId(), url: window._lastScanUrl }),
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok) pro = j.findings;
+    else if (r.status >= 500 || !j) {
+      // A blip must never lock out a customer who paid. Print what we have and
+      // say plainly that it is not the full report.
+      note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
+    } else {
+      note = ' — the report server refused the key: ' + (j && j.error ? j.error : 'try again');
+    }
+  } catch {
+    note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
+  }
+
+  if (pro) {
+    mergeProFindings(pro);
+    // Re-rendering replaces the license box, so the status node has to be
+    // looked up again afterwards.
+    renderReport(window._lastScanData, window._lastScanUrl);
+  }
+
+  const final = document.getElementById('licenseStatus');
+  if (final) {
+    final.className = 'license-status ' + (pro ? 'ok' : 'err');
+    final.textContent = (pro ? '✓ License valid' : '⚠ License valid') + note + ' — your PDF opens now.';
+  }
+  window.setTimeout(() => window.print(), 500);
+}
+
+// Merge the server-side NIS2/GDPR/metadata findings into the scan already in
+// the DOM and restate the score, so the printed grade covers all of it.
+function mergeProFindings(extra) {
+  const data = window._lastScanData;
+  if (!data || !Array.isArray(extra)) return;
+  const have = new Set(data.findings.map(f => f.id));
+  extra.forEach(f => { if (f && f.id && !have.has(f.id)) data.findings.push(f); });
+  const errors = data.findings.filter(f => f.sev === 'error').length;
+  const warnings = data.findings.filter(f => f.sev === 'warning').length;
+  const notices = data.findings.filter(f => f.sev === 'notice').length;
+  data.errors = errors;
+  data.warnings = warnings;
+  data.notices = notices;
+  data.score = Math.max(0, 100 - errors * 12 - warnings * 5 - notices * 2);
+  data.grade = gradeOf(data.score);
+  data.pro = true;
 }
 
 // ── Form handler ──────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 // Ende-til-ende-test af Stripe-levering i site/_worker.js med falsk KV, Stripe og Resend.
 import { createHash, createHmac } from 'node:crypto';
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -82,6 +82,10 @@ globalThis.fetch = async (url, opts = {}) => {
     return new Response(JSON.stringify(sessions[id] || {}), { status: sessions[id] ? 200 : 404 });
   }
   if (url.startsWith('https://api.stripe.com/v1/subscriptions/')) return new Response(JSON.stringify({ current_period_end: 2000000000 }));
+  // /api/report henter den scannede side. En side uden cookie-banner, med en
+  // form over http og uden HSTS/CSP-header giver fund i hver af de tre
+  // kategorier, saa testen kan bevise at Pro-analysen virker.
+  if (url.startsWith('https://scan.example/')) return new Response('<html lang="en"><head><title>Test</title></head><body><form action="http://insecure.example/send"></form></body></html>', { status: 200 });
   if (url === 'https://api.resend.com/emails') { if (resendNede) return new Response('{}', { status: 503 }); mails.push({ ...JSON.parse(opts.body), idem: opts.headers['Idempotency-Key'] }); return new Response('{}', { status: 200 }); }
   if (url.startsWith('https://api.stripe.com/v1/invoices/')) {
     const id = decodeURIComponent(url.split('/invoices/')[1].split('?')[0]);
@@ -340,5 +344,40 @@ ok('Clean Copy Pro leveringssvar bærer kundeportalen', j.subscription === true 
 r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA');
 j = await r.json();
 ok('engangskøb har ingen kundeportal i leveringssvaret', j.subscription === undefined && !j.billing_portal, JSON.stringify(j));
+// 9) EUComply Pro: rapporten er betalt indhold, så den skal regnes server-side.
+//    Før dette laa GDPR/NIS2-fundene i DOM'en, før nøglen blev tastet, og
+//    @media print skjulte kun licensfeltet — Ctrl+P gav den betalte PDF.
+r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB');
+const euKey = (await r.json()).license_key;
+const rep = (b) => call('/api/report', { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
+r = await rep({ license_key: 'a'.repeat(32), device_id: 'pro-dev', product: 'eucomply-pro', url: 'https://scan.example/' });
+ok('rapport uden gyldig nøgle er afvist', r.status === 402, r.status);
+r = await rep({ license_key: key, device_id: 'd1', url: 'https://scan.example/' });
+ok('nøgle til et andet produkt giver ikke rapporten', r.status === 402, r.status);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://scan.example/' });
+ok('nøgle uden aktivering på maskinen giver ikke rapporten', r.status === 402, r.status);
+r = await act({ license_key: euKey, device_id: 'pro-dev', product: 'eucomply-pro' });
+ok('EUComply Pro kan aktiveres', r.status === 200, r.status);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://scan.example/' });
+j = await r.json();
+const ids = (j.findings || []).map(f => f.id);
+ok('gyldig nøgle får serverens Pro-fund', r.status === 200 && j.ok === true, r.status);
+ok('NIS2, GDPR og header-fund er med', ['FORM_HTTP', 'COOKIE_BANNER', 'SEC_HSTS', 'SEC_CSP'].every(i => ids.includes(i)), ids.join(','));
+ok('alle fund har en rettelse eller er notices', (j.findings || []).every(f => f.id && f.sev && f.msg));
+r = await call('/api/report?url=https://scan.example/');
+ok('GET på rapporten er 405', r.status === 405, r.status);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://127.0.0.1/' });
+ok('rapporten henter ikke private værter (SSRF)', r.status === 400, r.status);
+r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://scan.example.local/' });
+ok('.local-vært afvist', r.status === 400, r.status);
+
+// Selve hullet: hvis nøglen ikke gør Pro-fundene afhængige af serveren, er
+// Ctrl+P stadig en gratis vej til det betalte. Porten læser derfor kilden.
+const reportHtml = await readFileSync(new URL('../site/compliance-report.html', import.meta.url), 'utf8');
+const clientSide = reportHtml.slice(reportHtml.indexOf('function runScan'), reportHtml.indexOf('// ── License validation'));
+ok('ingen GDPR/NIS2-tjek er beregnet i browseren', !/COOKIE_BANNER|SEC_HSTS|OG_TITLE|hasCookieBanner/.test(clientSide));
+ok('siden henter Pro-fund fra /api/report', /fetch\('\/api\/report'/.test(reportHtml));
+ok('print uden licens er mærket som gratis', /print-only/.test(reportHtml));
+
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);
