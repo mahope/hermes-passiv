@@ -197,6 +197,28 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         markdown = report.render_markdown(data, previous, notable, sections)
         self.assertIn("| Besøg (7 dage) | 10 | — |", markdown)
 
+    def test_absent_traffic_block_is_not_blamed_on_the_api(self) -> None:
+        # Uge 39 i reports/weekly/ er gemt med `traffic: {}` mens `health` siger
+        # "healthy" med rigtige tællere. Den gam kode skrev så "fordi
+        # /api/stats ikke leverede komplette data" — en årsag om en blok der
+        # aldrig blev gemt, og aldrig efteret.
+        data = self.other_data({})
+        data["health"] = {"status": "healthy", "kv": True, "visits_2d": 18,
+                          "downloads_2d": 6, "scans": 19}
+        subject, notable, sections = report.build_report(data, None)
+        markdown = report.render_markdown(data, None, notable, sections)
+        self.assertIn("ikke gemte et trafikblok", markdown)
+        self.assertNotIn("/api/stats ikke leverede komplette data", markdown)
+
+    def test_explicitly_unknown_traffic_still_blames_the_api(self) -> None:
+        # Negativ kontrol: et svar vi fik, men ikke kunne bruge, skal stadig
+        # skyldes API'et. Ellers ville rettelsen ovenfor sluge den ægte fejl.
+        data = self.other_data(report._unknown_traffic({"available": False}, 7))
+        subject, notable, sections = report.build_report(data, None)
+        markdown = report.render_markdown(data, None, notable, sections)
+        self.assertIn("/api/stats ikke leverede komplette data", markdown)
+        self.assertNotIn("ikke gemte et trafikblok", markdown)
+
     def test_invalid_counters_are_unknown(self) -> None:
         payload = self.payload()
         payload["waitlist"] = "many"
