@@ -2,13 +2,19 @@
 
 ## Status
 
-- `ITERATION_ID`: `dublet-id-2026-09-26`
-- `STATE`: `Opgave 47 AFVIST på målt grundlag, og fundet fra målingen blev rettet i samme iteration. **Fund 1 — opgaven beskrev en fejl, der ikke findes.** Den skrev at `downloads.html` og `free-downloads.html` *"linker til de tre Clean Copy-arkiver, som ikke findes i dist på det domæne. Målt 404 i live."* Jeg hentede de to **live**-sider: `href` er `https://cleancopy.tools/downloads/clean-copy-v1.5.3.zip` — **absolut krydsdomæne, ikke relative links**. Den målte 404-adresse (`https://mahope.tools/downloads/…`) er en URL, ingen link på nogen side peger på. Målt over hele familien: **74 downloadreferencer, 23 unikke URL'er, 4 domæner, 0 døde.** De 5 links opgaven ville have "bakket af" virker alle. **Fund 2 — dens anden påstand var også falsk.** Den skrev at `check_links` er grøn på præcis denne fejl, fordi relative refs går uden om downloadkontrollen. Jeg indsprøjtede begge former i en dist-side: en død krydsdomæne-zip og en død relativ zip → **4 fejl, 2 pr. link, fundet i den rigtige fil.** Porten er altså ikke grøn på fejlen; den fangede den på første kørsel. Begge acceptkriterier 1 og 2 var altså allerede opfyldt. **Fund 3 — ❓ 14 er et spørgsmål om noget, der længe er shippet.** Arkitekturvalget (distribuér zips vs. krydsdomæne) er ikke længere et valg: `build_sites.py` har omskrevet disse links krydsdomæne siden `b384e7b`. At "løse" det ville have dupliceret ~58 KB for at løse en fare, der måler 0. **Fund 4 — målingen afgav den fejl, der så ud som at ligge i opgaven.** Jeg målte de ulækkede kvalitetsklasser, porten ikke dækkede, og fandt **dublet-id i den live DOM på 2 sider**: `blog/index.html` havde hvert af 5 `<section id="…">` og deres egen `<h2 id="…">`, og `da/blog/shopify-tilgaengelighed-eaa.html` havde `id="indhold"` på både `<section class="problem">` og et `<h3>`. **Det er ikke kosmetik.** Browseren beholder det *første* element med et id, så indholdets ToC-punkt "Indhold" — et lvl3-punkt *under* "Hvor Shopify-butikker typisk fejler" — sprang til `<section>`-en 17 linjer *over* sin egen forfader. Læseren landede i et tidligere afsnit end det han bad om. **Fund 5 — alle 6 dubletter har ÉN rodårsag, i byggen, ikke i siderne.** `site/blog/index.html` har id'et kun på `<section>`; `<h2 id="…">` er *byggets* eget. `build_sites.py:703` seedede `used: set[str] = set()` tomt, og `_toc` går kun efter `h2`/`h3` — så et håndskrevet id på et **ikke-overskrift**-element (`<section id="indhold">`) var usynligt for gangen, og `<h3>Indhold</h3>` fik samme id. Én linje retter alle 6, fordi begge sider fejlede af samme grund. Bevis: efter rettelsen er `dublet id` **0 sider** i hele familien (298 sider), og ToC-linket på Shopify-siden er nu `#indhold-2` (h3'en) mens hero-CTA'en bevare `#indhold` (section'en) — **begpe peger på det de siger.** **Fund 6 — porten ligger i seo_check, ikke i et nyt step, fordi den skal se alle 308 sider.** Ny regel i `check_page` + `--self-test` der dækker *begge* lag: reglen på en bygget side, og `_toc`s seeder importeret fra `build_sites.py`. Fire negative kontroller: id i en kommentar, id i en script-streng, unikke id'er, og en overskrift der har sit eget id. Mute-kontrollen læser begge kildefiler og fejler, hvis reglen eller seederet forsvinder — ellers er selftesten teater i sit eget tilfælde. **Worker urørt:** `site/_worker.js` ikke ændret, stripe-worker uændret 83/83, dist/uændret (gitignored), ingen publicering.`
-
+- `ITERATION_ID`: `pro-vaardi-paa-forsiden-2026-09-26`
+- `STATE`: `Opgave 48 FÆRDIG — den betalte halvdel af købsrejsen var ikke dækket af nogen port, og den målte fejl var reel. **Fund 1 — katalogen vidste slet ikke, hvad der sælges.** \`check_free_tier\` gater den *gratis* halvdel af hver Pro-side; der var ingen port på den *betalte*. Det er den døde halvdel af den konverteringsopgave, missionen ranker højest, og den var usynlig. **Fund 2 — de to Pro-funktioner nåede kunden i to forskellige versioner.** Målt på de fire købssider for \`clean-copy-pro\`: \`site/clean-copy-tool.html:258\` siger "batch conversion …, custom cleanup rules you define once and reuse everywhere, and a year of major updates" (3 funktioner), og \`site/activate/index.html\` siger at "the only things a Pro key adds are batch conversion and custom cleanup rules in the extension". Forsiden — \`site/clean-copy.html\`, som \`stripe_catalog.json\` selv kalder "første skridt i købsrejsen" — sagde derimod kun "batch conversion of many snippets at once in the web tool **and supports development of the free version**". Den nævnte altså 1 af 3 funktioner. **Fund 3 — den manglende funktion er den eneste Pro-funktion i den udvidelse, siden selv beder folk installere.** \`extension-clean-copy/options.js:203\` gater "Custom cleanup rules" bag \`loadRules(proActive)\`, og \`background.js:436\` anvender dem efter hver kopi. Siden sælger udvidelsen som første CTA og skriver "Install" som knap. En kunde der læser forsiden, betaler $19 og så leder efter batch-konvertering i udvidelsen, finder den ikke — og den funktion de *kunne* have brugt, stod aldrig på den side de læste. Begge sprog havde samme fejl (\`site/da/clean-copy.html:133\`). **Fund 4 — den anden halvdel af løftet var ikke en funktion.** "Supports development of the free version" / "støtter udviklingen af den gratis version" er en donatationsopfordring skrevet som en produktfunktion, i en liste sammen med en rigtig. Den er nu en egen, ærlig sætning efter funktionerne, ikke en af dem. **Fund 5 — betalingskvitteringen pegede kun på én af de to flader.** Begge forsiders hero-note sagde "aktivér den i webværktøjet" og linkede \`/clean-copy-tool#pro-activate-details\`, men \`/activate/\` dækker alle fire klienter (udvidelse, Firefox, Obsidian, webværktøj) — så den note sendte en udvidelsesbruger, der lige har betalt, hen til den ene flade hvor Pro *ikke* virker for dem. Noterne peger nu på \`/activate/\`. **Fund 6 — datagrundlaget for opgaven holdt ikke, så den blev lavet uden påstander.** ❓ 13's arkiv kan ikke give \`ranking\`: alle tre \`reports/weekly/*.json\` mangler både \`ranking\` og \`ranking_basis\`, og 2026-39's egen \`traffic\`-blok er tom (\`{}\`), så uge 39s \`visits_2d: 18\` kan ikke rangeres på noget. Jeg målte derfor **ikke** hvilken side der er mest besøgt — jeg målte hvilken side der **løfter sig mest**, altså forskellen mellem den Pro-værdi en side lover og den den betalte udgave faktisk har. Det er målbart uden trafik, og det er præcis den klasse fejl de foregående 30 iterationer fjernede.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `BASELINE`: `main@0629d10`
-- `LAST_BRANCH`: `ceo/udodelte-downloadlinks`
-- `NEXT_TASK`: `48 — mål konverteringsflaskehalsen på de tre betalte produkter. Foreløbig står kun ❓ 13: `reports/weekly/*.json` mangler `ranking`, så ingen side kan rangeres. Se `Prioriteret kø`.`
+- `BASELINE`: `main@26ca840`
+- `LAST_BRANCH`: `ceo/pro-værdi-paa-forsiden`
+- `NEXT_TASK`: `49 — samme måling på de tre andre betalte produkter. \`check_pro_features\` er færdig og generisk, men kun \`clean-copy-pro\` erklærer \`pro_features\` i katalogen, så de fire andre licensprodukter er **ugatede**. Se \`Prioriteret kø\`.`
+- `GATE`: `GRØN — python3 tools/quality_gate.py: GRØN, **47 steps** (uændret — den nye regel bor i det eksisterende step \`stripe-ctas\`, så workflowens path-filter er urørt). check_stripe_ctas: 13 produkter / 11 købssider, **0 fejl**. Bevis på de rigtige gamle filer fra \`git show HEAD:site/clean-copy.html\`: den gamle EN-forsid giver **1 fejl** på præcis \`cleanup-rules\`; den gamle DA-forsid giver **1 fejl** på samme regel med danske labels. \`--self-test\`: **27/27 fejlformer** (fra 24) — de tre nye er "en købsside der ikke navngiver en Pro-funktion", "en dansk købsside der kun siger funktionen på engelsk" (beviser at \`page_lang\` vælger de danske labels, så porten ikke kan passes med den engelske sætning) og "en Pro-funktion der kun står i en lukket FAQ". Selftesten har **tre negative kontroller** uden for tælleren: en side der navngiver begge funktioner skal være grøn, et produkt uden \`pro_features\` i katalogen skal **aldrig** fejle, og mutationen skal ramme den manglende funktion (\`cleanup-rules\`) frem for den anden fejlform — de to sidste fordi de er præcis de måder porten kan være grøn på præcis det den skal fange (samme fejlklasse som opgave 23, 26, 38 og 43 fund 4). seo_check 308 sider 0 fund, stripe-worker uændret 93/93, check_inline_js 297 filer 0 problemer, \`site/_worker.js\` urørt, dist/uændret (gitignored). Missionens egen linje exit 0.`
+- `SLIP`: `Ingen. ~40 min, commit før dræbningen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~150 linjer, og beviset er porten kørt på de rigtige gamle filer fra HEAD, ikke en læsning.`
+- `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 0/0`
+- `DEPLOY` (opgave 47, LUKKET): `DEPLOY OK 47d6a85 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200. (1) \`build-info.json\` bærer \`47d6a85\` på alle tre domæner, og \`d78e299\` (dublet-id-mergen) er en stamfar af den, så de rettede sider er udgivet. (2) Hentet \`https://mahope.tools/blog/?cb=…\`: **0** dublet-id, og de fem sektions-id findes nu som \`accessibility-eaa\` + \`accessibility-eaa-2\`, \`gdpr-nis2-cookie-compliance\` + \`-2\`, \`copy-tables-markdown-tools\` + \`-2\`, \`seo-website-health\` + \`-2\`, \`dev-tools-guides\` + \`-2\`. (3) Hentet \`https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa?cb=…\`: **præcis 1** \`id="indhold"\` og **1** \`id="indhold-2"\`, ToC-linket er \`href="#indhold-2"\` og hero-CTA'en bevarer \`href="#indhold"\` — præcis den adfærd, der var forkert, fordi punktet "Indhold" sprang før over sin egen forfader. Bemærk: \`python3 tools/seo_check.py --url https://mahope.tools/blog\` giver **308**, fordi ruten er \`/blog/\` med skråstreg; porten skal have den uden den, som jeg gjorde.`
+- `PLAN_COMMIT`: `denne iteration: kode + plan i samme commit, ingen ren plan-commit`
+
+
 - `STATE`: `Opgave 36 FÆRDIG — en betalt kunde fik et downloadlink til en fil der ikke findes, og både tak-siden og kvitteringsmailen lovede den. **Fund 1 — løftet lå i workeren, ikke på siden.** `fulfillStripeSession` byggede `result.downloads` som `product.files.map(...)` uden at spørge KV, om filerne overhovedet findes. `handlePaidDownload` svarer **503 "File temporarily unavailable"** på en fil der mangler i `paidfile:`. Målt: **0 af de 7 downloadprodukter har `kv_verified`** (opgave 24), så det er ikke en hypothetisk tilstand — det er den * nuværende. Kunden betalte $59, så tak-siden viste to filnavne, mailen indeholdt to `/api/download`-adresser, og begge dele svarede 503. **Fund 2 — mailen var lige så falsk som siden.** `sendSaleEmail` skrev `r.downloads.map(d => ...url)` ukritisk, så kvitteringen lovede det samme, kunden ikke kunne få. **Fund 3 — rettelsen må ikke gøre kunden afvist.** Filerne forsvinder ikke; de nævnes ved navn uden adresse, og betalingen siges at være gået igennem med kvitteringsmailen som bevis. Det er præcis opgave 36s ordlyd: "pege på support i stedet for på en død `/api/download`-adresse". **Fund 4 — ledgeren er permanent, så et engangssvar ville være en løgned der bliver stående.** Første gennemløb skriver svaret i `ful:<session>` uden udløb. Uden genberegning ville en kunde, der betalte mens filerne manglede, se "ikke tilgængelig" *for evigt*, også efter at Mads har lagt filerne ind. Derfor genberegnes `paidFilesStatus` på **hver** respons: kun metadata læses (`head`), og token'en gendannes lokalt med HMAC — ingen Stripe-kald, ingen ekstra roundtrip. Testen beviser selvhelbredningen: samme session, filen lagt ind efter købet, svaret giver straks et virkende link. **Fund 5 — min første kørsel lå en betalt kunde ude.** Jeg kaldte `env.VISITS.head()` uden fallback, og `tests/thanks-page.test.mjs`'s KV-mock har ingen `head`. Fulfillment svarede **503 "Could not look up the payment"** — altså præcis den fejl, mine egne tests skulle forhindre. Rettet til et `stream`-fallback, aldrig `get` uden type, der ville hente en hel PDF ind i hukommelsen. Nu er **begge veje dækket af virkelige kørsler**: stripe-testen bruger `head`, tak-sidens test bruger fallbacken.`
 - `GATE`: `GRØN — python3 tools/quality_gate.py: GRØN, **47 steps** (uændret — de nye tests bor i de to eksisterende steps stripe-worker + thanks-page, så workflowens path-filter er urørt). tests/stripe-worker.test.mjs: **93/93** (fra 83, +10). tests/thanks-page.test.mjs: **59/59** (fra 50, +9). Bevis på den rigtige gamle kode: \`git show HEAD:site/_worker.js\` → den gamle worker giver **2 links** for et køb uden en eneste fil i KV, **0 fund** af downloads_missing, og kvitteringsmailen **2 døde adresser**; mod den rettede: 0 links, 2 navne, 0 adresser. Leveringen selv er urørt og beviset: den lagte fil hentes stadig med sit eget navn i `content-disposition`, en fil uden for købet giver stadig 404, en stadig manglende fil i samme køb giver stadig 503, og et fuldt leveret køb (`tak-side`-testens egen seed) giver stadig virkende links. /api/stripe-webhook, /api/stripe/fulfillment-routingen og /api/download er ikke ændret i adfærd for et køb, der kan leveres. site/urørt udover de to filer, dist/uændret (gitignored).`
 - `DEPLOY` (opgave 45, LUKKET): `DEPLOY OK 3d030a9 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200. (1) `build-info.json` bærer `3d030a93bb5cf557bdfb22db4dc1fb3676f73f7c` på **alle tre** domæner (cleancopy.tools, mahope.tools, deskuptime.com). (2) `https://cleancopy.tools/downloads/clean-copy-firefox-v1.5.4.zip?cb=<ts>` → 24320 byte, pakket ud: `options.js` har **4** fund af `deactivate` og **0** af *"does not free a seat remotely"*. (3) `clean-copy-v1.5.3.zip?cb=<ts>` → 21543 byte, samme **4/0**. Rettelsen er altså virkningsløs-mulig, altså virkningsfuld: en køber henter de nye bytes. Se `STATE` for den måling, der fik opgave 46s forudsætning til at falde.
@@ -2447,6 +2453,86 @@ indgang, og en knap der dør, er dyrere end et par hundrede kilobyte.
 portregel, og buildet er produktionskritisk for fire domæner. Se `STATE` fund 5.
 
 
+### 48. FÆRDIG (`ceo/pro-værdi-paa-forsiden`) — den betalte halvdel af købsrejsen var ugated
+
+**Begrundelse:** missionens konverteringspunkt 2 og 3. `check_free_tier` gater hver
+Pro-sides *gratis* halvdel. Den *betalte* halvdel — hvad kunden køber — havde ingen
+port, og målingen fandt en reel fejl på de to vigtigste sider i familien.
+
+**Fund (målt, se `STATE`):** `/clean-copy-tool` og `/activate` lovede begge to
+Pro-funktioner + et år opdateringer. Forsiden lovede én funktion og fyldte den anden
+plads med "supports development of the free version". Den manglende funktion —
+custom cleanup rules — er den eneste Pro-funktion i den udvidelse, siden selv
+beder folk installere. Begge sprog, begge hjemmesider.
+
+**Omfang:**
+
+- `tools/stripe_catalog.json`: `pro_features` pr. produkt, med `id`, `where` og
+  `labels` pr. sprog. Katalogen bliver dermed sandheden om *hvad der sælges*.
+- `tools/check_stripe_ctas.py`: `check_pro_features()` — hver side der sælger et
+  produkt med `pro_features`, skal navngive dem alle i læsbar tekst. Samme synlig-
+  tekst-krav som `check_free_tier` (aldrig `<head>`, JSON-LD, attribut, lukket
+  `<details>`). `page_lang()` vælger de danske labels på en `/da/`-side, så en dansk
+  side ikke kan passes med den engelske sætning.
+- `site/clean-copy.html` + `site/da/clean-copy.html`: begge Pro-funktioner navngivet
+  med den flade de lever i, "supports development" flyttet ud af funktionslisten til
+  en egen ærlig sætning, og hero-noten peger på `/activate/` (alle fire klienter)
+  i stedet for kun webværktøjet.
+- Selftest: 3 nye fejlformer (27/24) + 3 negative kontroller.
+
+**Resultat:** `check_stripe_ctas.py` giver **2 fejl** på de gamle filer — én pr.
+forside, begge med præcis `cleanup-rules` — og 0 på de rettede.
+
+**Acceptkriterier:**
+
+- Katalogen erklærer `pro_features` med danske og engelske labels for hvert produkt
+  der har en deklareret Pro-værdi.
+- Enhver købsside for et sådant produkt navngiver hver funktion i læsbar tekst.
+- Selftesten fanger en manglende funktion, en dansk side der kun siger den på engelsk
+  og en funktion gemt i en lukket FAQ — og er grøn for en side der navngiver alle,
+  for et produkt uden `pro_features`, og hvis mutationen rammer den rigtige fejl.
+- Hele kvalitetsgaten er grøn, og `stripe-ctas` beholder sit step-id, så workflowens
+  path-filter er urørt.
+
+**Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
+
+### 49. Næste i køen — samme måling på de fire andre licensprodukter
+
+**Begrundelse:** `check_pro_features` er generisk, men kun `clean-copy-pro` erklærer
+`pro_features`. `deskuptime-pro`, `transmute-desktop`, `eucomply-pro` og
+`page-profile-pro` er derfor **ugatede** på den betalte halvdel — præcis den fejlklasse
+opgave 48 fandt, bare et andet sted.
+
+**Omfang:** Find hver af de fire købssiders reelle Pro-funktioner i koden (hvor er
+adgangen gateret? hvilken fil? hvilken kontrol?). Er en Pro-funktion implementeret
+men aldrig nævnt, er det samme fund som opgave 48. Er den nævnt i meta, JSON-LD eller
+en lukket `<details>` men ikke i læsbar tekst, giver `check_pro_features` den fejl
+med det samme. Er den **ikke** implementeret, skal løftet fjernes, ikke opfindes —
+samme regel som opgave 37.
+
+**Acceptkriterier:** Alle fire produkter har `pro_features` i katalogen, eller en
+begrundelse i planen for hvorfor de ikke har det. `check_stripe_ctas` er grøn på det
+reelle træ, og selftesten dækker mindst ét produkt mere.
+
+**Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
+
+### 50. Åben følge — en dansk aktiveringsguide
+
+`/activate/` findes kun på engelsk, og opgave 48pegede den danske Clean Copy-forside
+til den. Det er ikke en løgned, men en dansk betaler der lige har købt og nu skal
+sætte nøglen ind, møder en engelsk side. Skriv `site/da/activate/index.html` med
+samme fire klienter, og tilføj den som en købsside i `tools/stripe_catalog.json`, så
+den også gates. Lille, men den ligger lige i den betalte købsrejse.
+
+### 51. Målt grundlag for ❓ 13 findes ikke i repoet
+
+Konverteringsrangeringen kan ikke begynde, før `reports/weekly/*.json` har et
+fyldt `traffic`-blok med `ranking`. Det kræver et kørende `/api/stats` med gyldigt
+bearer-token, som kun findes på workeren. **Dette er ikke en opgave for denne
+loop** uden Mads' hjælp — se ❓ 13. Indtil da må konverteringsarbejdet fortsætte på
+løftet-op imod implementeringen, som opgave 48 gjorde, aldrig på påstande om
+besøgstal.
+
 ## ❓ Til Mads
 
 13. **Bagvendingen i trafiktallene kan ikke bevises mod arkivet.** `reports/weekly/`
@@ -2535,10 +2621,7 @@ portregel, og buildet er produktionskritisk for fire domæner. Se `STATE` fund 5
 
 ## Deploylog
 
-- `DEPLOY` (opgave 47, ÅBEN): `VERIFICÉR DEPLOY: 6 dublet-id væk fra den live DOM d78e299 26/9` — GitHub Actions deployer med det samme (`site/**` og `tools/**` er i path-filteret, og `build_sites.py` er ændret). Verificér på **indhold**, ikke HTTP 200:
-  - `https://mahope.tools/blog` skal have **0** fund af `id="accessibility-eaa"` der optræder to gange, og hvert af de 5 sektions-id skal forekomme **én** gang. Kør `python3 tools/seo_check.py --url https://mahope.tools/blog` — den skal være grøn på præcis denne regel.
-  - `https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa` skal have **1** `id="indhold"` og **1** `id="indhold-2"`, og ToC-linket skal være `href="#indhold-2"` mens hero-CTA'en bevarer `href="#indhold"`. Det er den adfærd, der var forkert: punktet "Indhold" sprang før over sin egen forfader.
-  - `build-info.json` skal bære `d78e299` på alle tre domæner.
+- `DEPLOY` (opgave 47, LUKKET): `DEPLOY OK 47d6a85 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200: (1) `build-info.json` bærer `47d6a85` på alle tre domæner, og `d78e299` (dublet-id-mergen) er en stamfar af den; (2) hentet `https://mahope.tools/blog/?cb=…` har **0** dublet-id, og de fem sektions-id står nu som `x` + `x-2`; (3) hentet `https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa?cb=…` har **1** `id="indhold"`, **1** `id="indhold-2"`, ToC-linket `href="#indhold-2"` og hero-CTA'en bevarer `href="#indhold"` — præcis den adfærd der var forkert, fordi punktet "Indhold" sprang før over sin egen forfader. **Bemærk til næste måling:** `python3 tools/seo_check.py --url https://mahope.tools/blog` giver **308**, fordi ruten er `/blog/` med skråstreg; porten skal køres på den fulde sti.
 
 - 2026-09-26: `VERIFICÉR DEPLOY: den betalte e-bog-udgave er væk fra 15 publicerede sider + `id="products"` på forsiden fcd6cff 26/9` — kørsel `36216127580` — GitHub Actions deployer automatisk (`site/**` er i path-filteret), så der er intet at vente på. Verificér på **indhold**, ikke HTTP 200:
   - `https://mahope.tools/books/build-your-first-chrome-extension` skal have 0 fund af `9.99` og `PreOrder` og 1 af `schema.org/InStock`.

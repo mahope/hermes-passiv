@@ -903,6 +903,79 @@ def check_free_tier(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
     return problems
 
 
+def page_lang(relative: str) -> str:
+    """Sproget for en købsside, så et dansk krav ikke kan passes med engelsk."""
+    parts = relative.replace("\\", "/").split("/")
+    return "da" if "da" in parts[1:-1] else "en"
+
+
+def check_pro_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En side der sælger en licens, skal navngive den betalte udgaves funktioner.
+
+    `check_free_tier` gater den *gratis* halvdel. Denne gater den *betalte*:
+    hvis katalogen erklærer `pro_features` for et produkt, skal hver side der
+    sælger det navngive dem alle i læsbar tekst.
+
+    Fejlformen er målt, ikke antaget. `/clean-copy-tool` og `/activate/` sagde
+    begge at en Pro-nøgle giver "batch conversion and custom cleanup rules",
+    mens forsiden — katalogens egen "første skridt i købsrejsen" — kun nævnte
+    batch og fyldte den anden halvdel med "supports development of the free
+    version". Den eneste Pro-funktion i den udvidelse, siden selv beder folk
+    installere, var altså aldrig nævnt der.
+
+    Samme krav som `check_free_tier`: kun synlig tekst, aldrig `<head>`,
+    JSON-LD, attributter eller en lukket `<details>`. Et produkt uden
+    `pro_features` i katalogen gates ikke — kravet må kun gælde, hvor
+    katalogen faktisk erklærer, hvad der sælges, ellers ville porten finde
+    fejl på produkter, den ikke kan dømme.
+    """
+    products = catalog["products"]
+    offers = catalog.get("offers")
+    if not isinstance(offers, list):
+        return []
+    by_path = dict(pages)
+    problems: list[str] = []
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        product = products.get(offer.get("product"))
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        features = product.get("pro_features")
+        if not isinstance(features, list) or not features:
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue  # check_offers melder en manglende fil.
+        blocks = VisibleBlocks()
+        blocks.feed(text)
+        blocks.close()
+        haystack = normalize(blocks.text).casefold()
+        lang = page_lang(str(relative))
+        for feature in features:
+            if not isinstance(feature, dict) or not isinstance(feature.get("id"), str):
+                continue
+            labels = feature.get("labels")
+            labels = labels.get(lang) if isinstance(labels, dict) else None
+            if not isinstance(labels, list) or not labels:
+                problems.append(
+                    f"{relative}: {offer.get('product')} erklærer pro_features "
+                    f"{feature.get('id')!r} uden {lang}-labels i katalogen"
+                )
+                continue
+            if any(normalize(str(label)).casefold() in haystack for label in labels):
+                continue
+            where = feature.get("where")
+            suffix = f" ({where})" if isinstance(where, str) else ""
+            problems.append(
+                f"{relative}: sælger {offer.get('product')} men navngiver ikke Pro-funktionen "
+                f"{feature.get('id')!r}{suffix} i læsbar tekst. Katalogen erklærer den som en del "
+                f"af det købspris, så en kunde der læser denne side kan ikke se, hvad de får."
+            )
+    return problems
+
+
 def parse_page(text: str) -> tuple[str, list[tuple[str, str]]]:
     visible = Page()
     visible.feed(text)
@@ -1293,6 +1366,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_forbidden_claims()
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
+    problems += check_pro_features(catalog, source_pages())
     problems += check_comparisons(catalog, source_pages())
     problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
@@ -1393,11 +1467,61 @@ def self_test() -> int:
                    f'<tr><td>Price</td><td>free</td><td>$19/year</td></tr></table>'
                    f'<a href="{clean_copy_link}">Buy</a></body></html>')
     donation = f'<html><body><p>Thanks for using the free tools.</p><a href="{donate_link}">Donate</a></body></html>'
+    # Pro-funktioner. Den danske variant skal med vilje kun nævne den EN funktion
+    # på engelsk, så selftesten beviser at side-sproget vælger de danske labels —
+    # ellers ville porten være grøn på en dansk side, der aldrig siger det danske.
+    names_one_feature = (f'<html><body><p>Pro adds batch conversion in the web tool.</p>'
+                         f'<a href="{clean_copy_link}">Buy</a></body></html>')
+    names_one_feature_da = (f'<html><body><p>Pro giver batch-konvertering i webværktøjet.</p>'
+                            f'<a href="{clean_copy_link}">Køb</a></body></html>')
+    names_second_feature = '<p>Pro also gives you custom cleanup rules in the extension.</p>'
+    second_feature_buried = (f'<html><body><p>Pro adds batch conversion.</p><details>'
+                             f'<summary>Pro</summary><p>And custom cleanup rules.</p></details>'
+                             f'<a href="{clean_copy_link}">Buy</a></body></html>')
     only_offer = [{**offer, "path": "site/eksempel.html"} for offer in good["offers"]
                   if offer["product"] == "clean-copy-pro"]
     free_tier_only = {**good, "offers": only_offer}
     no_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", buys_only)])
     buried_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", says_free_but_buried)])
+    # Pro-værdien skal være *navngivet*, ikke kun prissat. Forsiden nævnte
+    # batch men aldrig de regler, der er den eneste Pro-funktion i den
+    # udvidelse siden selv beder folk installere.
+    da_offer = [{**offer, "path": "site/da/eksempel.html"} for offer in only_offer]
+    pro_only = {**good, "offers": only_offer}
+    pro_missing = check_pro_features(pro_only, [("site/eksempel.html", names_one_feature)])
+    pro_missing_da = check_pro_features({**good, "offers": da_offer},
+                                        [("site/da/eksempel.html", names_one_feature_da)])
+    # Samme krav som check_free_tier: kun synlig tekst. En funktion der kun
+    # står i en lukket `<details>` er ikke noget en kunde læser før et køb.
+    pro_buried = check_pro_features(pro_only, [("site/eksempel.html", second_feature_buried)])
+    # Negativ kontrol: en side der navngiver begge funktioner skal være grøn,
+    # ellers ville porten blot forbyde at sælge.
+    pro_complete = check_pro_features(
+        pro_only, [("site/eksempel.html", names_one_feature + names_second_feature)])
+    # Og et produkt uden `pro_features` i katalogen gates ikke: porten må
+    # ikke finde fejl på produkter den ikke kan dømme.
+    no_features = {**good, "products": {
+        **good["products"],
+        "clean-copy-pro": {k: v for k, v in good["products"]["clean-copy-pro"].items()
+                           if k != "pro_features"}}}
+    pro_undeclared = check_pro_features(
+        {**no_features, "offers": [{**offer, "product": "clean-copy-pro"} for offer in only_offer]},
+        [("site/eksempel.html", buys_only)])
+    if not pro_missing or not pro_missing_da or not pro_buried:
+        print("SELFTEST FEJLER: pro_features-scenarierne fanger ikke den manglende funktion")
+        return 1
+    if pro_complete:
+        print("SELFTEST FEJLER: en side der navngiver alle Pro-funktioner fejler alligevel — "
+              "kravet er for stramt: " + "; ".join(pro_complete))
+        return 1
+    if pro_undeclared:
+        print("SELFTEST FEJLER: et produkt uden pro_features i katalogen fejler alligevel — "
+              "porten dømmer produkter den ikke kan se: " + "; ".join(pro_undeclared))
+        return 1
+    if "cleanup-rules" not in " ".join(pro_missing):
+        print("SELFTEST FEJLER: pro_features-scenariet rammer den manglende funktion, "
+              f"ikke den anden fejl: {pro_missing}")
+        return 1
     # Tomme celler hører nu til `check_comparisons`, som læser alle sider og
     # ikke kun katalogens købssider. Scenariet beholder sin købsknap, så det
     # isolerer den ene regel: her skal kun den tomme celle fanges.
@@ -1582,6 +1706,9 @@ def self_test() -> int:
         ("en løftet betalt udgave med en pris", promised_edition),
         ("en pris ved siden af et købssted uden for katalogen", foreign_venue),
         ("en struktureret pris der ikke er produktets egen pris", stale_structured),
+        ("en købsside der ikke navngiver en Pro-funktion", pro_missing),
+        ("en dansk købsside der kun siger funktionen på engelsk", pro_missing_da),
+        ("en Pro-funktion der kun står i en lukket FAQ", pro_buried),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:

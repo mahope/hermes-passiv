@@ -20,7 +20,25 @@
       "price_note": "yearly subscription",
       "max_devices": 5,
       "subscription": true,
-      "payment_link": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
+      "payment_link": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+      "pro_features": [
+        {
+          "id": "batch",
+          "where": "the web tool",
+          "labels": {
+            "en": ["batch conversion"],
+            "da": ["batch-konvertering"]
+          }
+        },
+        {
+          "id": "cleanup-rules",
+          "where": "the browser extension",
+          "labels": {
+            "en": ["custom cleanup rules"],
+            "da": ["egne rense regler"]
+          }
+        }
+      ]
     },
     "deskuptime-pro": {
       "name": "DeskUptime Pro",
