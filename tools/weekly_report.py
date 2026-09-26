@@ -383,6 +383,34 @@ def _fallback(inventory: dict | None, reason: str) -> dict | None:
     }
 
 
+def constant_paths(current: dict, previous: dict | None) -> dict:
+    """Stier hvis besøgstal er *uændret* fra forrige uge, pr. domæne.
+
+    Menneskelige besøg er ikke identiske fra uge til uge. To målte uger med
+    præcis samme tal på samme sti er automatisering, ikke publikum: de
+    deploy-verificeringer hver iteration rammer de samme URL'er. Målt i uge 37
+    mod 38 var seks af otte stier byte-identiske (/da/ 31, /bugbottle-demo 14,
+    fire blogstier 9), mens alle reelle tal steg.
+
+    Sådanne tal er utilladelige ifølge AGENTS.md — de måles på min egen trafik —
+    og derfor tæller de ikke med i en rangering. Kræver begge ugers fulde
+    ranking-periode; uden den forrige uge er intet konstant, fordi en enkelt
+    måling ikke kan bevise gentagelse.
+    """
+    if not isinstance(previous, dict):
+        return {}
+    found: dict[str, dict] = {}
+    for domain, paths in (current or {}).items():
+        prev_paths = previous.get(domain)
+        if not isinstance(paths, dict) or not isinstance(prev_paths, dict):
+            continue
+        same = {route: count for route, count in paths.items()
+                if isinstance(count, int) and count > 0 and prev_paths.get(route) == count}
+        if same:
+            found[domain] = same
+    return found
+
+
 def build_ranking(
     per_domain_paths: dict,
     domain_status: dict,
@@ -390,6 +418,7 @@ def build_ranking(
     start: str,
     end: str,
     inventory: dict | None,
+    previous_paths: dict | None = None,
 ) -> dict:
     """Rangér de sælgende sider på de seneste syv fulde dages trafik.
 
@@ -397,24 +426,35 @@ def build_ranking(
     inventaret kan læses, alle fire domæner har et verificeret grundlag i
     perioden, og hvert rangeret domæne har mindst
     RANKING_MIN_PAGEVIEWS_PER_DOMAIN pageviews med mindst
-    RANKING_MIN_TOTAL_PAGEVIEWS i alt. Ellers er den `unknown`, og rapporten
-    falder tilbage på de centrale produktsider uden at påstå, at nogen af dem
-    er mest besøgt. En rangeret liste uden det underlag er en løgn.
+    RANKING_MIN_TOTAL_PAGEVIEWS i alt. Tallene er desuden renset for
+    automatisering: en sti hvis besøgstal er uændret fra forrige uge tælles ikke
+    med, fordi den er målt på min egen trafik. Ellers er den `unknown`, og
+    rapporten falder tilbage på de centrale produktsider uden at påstå, at nogen
+    af dem er mest besøgt. En rangeret liste uden det underlag er en løgn.
     """
+    constant = constant_paths(per_domain_paths, previous_paths)
     domains: list[dict] = []
     missing: list[str] = []
     below: list[dict] = []
     total = 0
+    observed_total = 0
     for domain in TRAFFIC_DOMAINS:
         paths = per_domain_paths.get(domain)
         if not isinstance(paths, dict) or (domain_status or {}).get(domain) != "ok" or not paths:
             missing.append(domain)
             below.append({"domain": domain, "visits": None, "reason": "ukendt datagrundlag i perioden"})
             continue
-        visits = sum(paths.values())
+        observed = sum(paths.values())
+        observed_total += observed
+        automated = constant.get(domain) or {}
+        visits = observed - sum(automated.values())
         total += visits
         if visits >= RANKING_MIN_PAGEVIEWS_PER_DOMAIN:
             domains.append({"domain": domain, "visits": visits})
+        elif automated:
+            below.append({"domain": domain, "visits": visits,
+                          "reason": f"{sum(automated.values())} af {observed} besøg var uændret fra forrige uge, "
+                                    "altså automatisering der ikke kan tælles som publikum"})
         else:
             below.append({"domain": domain, "visits": visits,
                           "reason": f"under {RANKING_MIN_PAGEVIEWS_PER_DOMAIN} verificerede pageviews"})
@@ -423,9 +463,12 @@ def build_ranking(
     if inventory is not None:
         for (domain, route), entry in inventory["routes"].items():
             visits = (per_domain_paths.get(domain) or {}).get(route)
-            if isinstance(visits, int) and visits > 0:
-                ranked.append({"domain": domain, "route": route, "visits": visits,
-                               "products": sorted(entry["products"])})
+            if not isinstance(visits, int) or visits <= 0:
+                continue
+            if (constant.get(domain) or {}).get(route) == visits:
+                continue  # uændret fra forrige uge: automatisering, ikke en side at rangere på
+            ranked.append({"domain": domain, "route": route, "visits": visits,
+                           "products": sorted(entry["products"])})
         ranked.sort(key=lambda row: (-row["visits"], row["domain"], row["route"]))
 
     if inventory is None:
@@ -434,11 +477,25 @@ def build_ranking(
         reason = (f"{', '.join(missing)} har ikke et verificeret datagrundlag i de seneste syv fulde dage, "
                   "så ingen side kan kaldes mest besøgt")
     elif not domains:
-        reason = (f"intet domæne nåede {RANKING_MIN_PAGEVIEWS_PER_DOMAIN} verificerede "
-                  "pageviews i de seneste syv fulde dage")
+        automated_total = sum(sum(paths.values()) for paths in constant.values())
+        if automated_total:
+            # Ellers siger den generelle tærskel-tekst noget der er sandt, men
+            # skjuler *hvorfor*: at tallene var uændret. Det er den grund, der
+            # skal læses først, fordi den er en advarsel om datagrunden.
+            reason = (f"alle {automated_total} verificerede pageviews i perioden var uændret fra "
+                      "forrige uge, så de er automatisering og kan ikke tælles som publikum")
+        else:
+            reason = (f"intet domæne nåede {RANKING_MIN_PAGEVIEWS_PER_DOMAIN} verificerede "
+                      "pageviews i de seneste syv fulde dage")
     elif total < RANKING_MIN_TOTAL_PAGEVIEWS:
-        reason = (f"kun {total} verificerede pageviews i perioden "
-                  f"(tærskel {RANKING_MIN_TOTAL_PAGEVIEWS})")
+        automated_total = sum(sum(paths.values()) for paths in constant.values())
+        if automated_total:
+            reason = (f"kun {total} af {observed_total} verificerede pageviews i perioden "
+                      f"(tærskel {RANKING_MIN_TOTAL_PAGEVIEWS}); de {automated_total} øvrige var "
+                      "uændret fra forrige uge og kan derfor ikke tælles som publikum")
+        else:
+            reason = (f"kun {total} verificerede pageviews i perioden "
+                      f"(tærskel {RANKING_MIN_TOTAL_PAGEVIEWS})")
     else:
         reason = None
 
@@ -449,6 +506,9 @@ def build_ranking(
         "thresholds": {"min_total_pageviews": RANKING_MIN_TOTAL_PAGEVIEWS,
                        "min_pageviews_per_domain": RANKING_MIN_PAGEVIEWS_PER_DOMAIN},
         "total_pageviews": total,
+        "observed_pageviews": observed_total,
+        "constant_pageviews": sum(sum(paths.values()) for paths in constant.values()),
+        "constant_paths": {domain: sorted(paths) for domain, paths in sorted(constant.items())},
         "ranked_domains": sorted(domains, key=lambda row: (-row["visits"], row["domain"]))
                            if reason is None else [],
         "ranked_offer_pages": ranked if reason is None else [],
@@ -505,7 +565,7 @@ def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
     return result
 
 
-def collect_stats(days: int = 7) -> dict:
+def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
     # Hent én dag mere end vinduet: rangeringen gælder de seneste syv *fulde*
     # dage, og API'ets `days` tæller i dag med.
     url = f"{SITE}/api/stats?days={max(days, RANKING_FETCH_DAYS)}"
@@ -541,7 +601,8 @@ def collect_stats(days: int = 7) -> dict:
         return _unknown_traffic(sales, days, str(exc))
 
     ranking = build_ranking(ranking_paths, domain_status, start=start, end=end,
-                            inventory=load_offer_inventory())
+                            inventory=load_offer_inventory(),
+                            previous_paths=dig(previous, "traffic", "ranking_paths"))
 
     status = "ok" if pages_complete and downloads_complete else "partial"
     return {
@@ -554,6 +615,10 @@ def collect_stats(days: int = 7) -> dict:
         "downloads": downloads,
         "download_domains": download_domains,
         "top_paths": [{"path": path, "visits": count} for path, count in top],
+        # Hele ranking-periodens stier pr. domæne, ikke kun top-8: næste uges
+        # automatiseringstjek skal kunne sammenligne en sti der lå nr. 9 i dag
+        # og nr. 3 i sidste uge, og top-8 kan ikke det (målt fejlform).
+        "ranking_paths": ranking_paths,
         "top_downloads": [{"file": file_name, "hits": count} for file_name, hits in top_downloads],
         "sales": sales,
         "waitlist": known_counter(data.get("waitlist")),
@@ -708,14 +773,14 @@ def collect_links() -> dict:
 # --------------------------------------------------------------------------
 # indsamling + sammenligning
 # --------------------------------------------------------------------------
-def collect_all() -> dict:
-    now = datetime.now(timezone.utc)
+def collect_all(now: datetime | None = None, previous: dict | None = None) -> dict:
+    now = now or datetime.now(timezone.utc)
     data = {
         "schema_version": 2,
         "iso_week": iso_week_key(now),
         "generated_at": now.isoformat(timespec="seconds"),
         "health": soft("api/health", collect_health, {}),
-        "traffic": soft("api/stats", collect_stats, unknown_stats()),
+        "traffic": soft("api/stats", lambda: collect_stats(previous=previous), unknown_stats()),
         "npm": soft("npm", collect_npm, {}),
         "github": soft("github", collect_github, {}),
         "bugreports": soft("api/bugreport", collect_bugreports, {"available": False, "note": "kunne ikke hentes"}),
@@ -859,6 +924,11 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
         rows.append([label, fmt_num(cur), fmt_delta(change)])
         if change:
             notable.append(f"{label.split(' (')[0].lower()} {fmt_delta(change)}")
+    constant = ((tr.get("ranking") or {}).get("constant_pageviews") or 0)
+    if constant:
+        rows.append(["heraf uændret fra sidste uge (automatisering)", fmt_num(constant), ""])
+        notable.append(f"{fmt_num(constant)} besøg var uændret fra sidste uge og er derfor "
+                       "automatisering, ikke publikum")
     if traffic_complete:
         note = None
     elif not tr:
@@ -1107,8 +1177,12 @@ def main() -> int:
     ap.add_argument("--print", dest="do_print", action="store_true", default=True)
     args = ap.parse_args()
 
-    data = collect_all()
-    prev = load_previous(data["iso_week"])
+    # Én klokkelæsning for både den forrige uge og rapporten: to `now` kunne
+    # falde på hver side af et uges-skift, så `previous` ville tilhøre en anden
+    # uge end den der rapporteres.
+    now = datetime.now(timezone.utc)
+    prev = load_previous(iso_week_key(now))
+    data = collect_all(now=now, previous=prev)
     data["errors"] = list(ERRORS)  # opsamlet efter load_previous
     subject, notable, sections = build_report(data, prev)
     data["errors"] = list(ERRORS)
