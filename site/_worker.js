@@ -21,6 +21,19 @@ const AUTOMATED_USER_AGENT = /googlebot|google-inspectiontool|bingbot|ahrefsbot|
 const STATS_TRAFFIC_KEY_LIMIT = 5000;
 const STATS_SOURCE_KEY_LIMIT = 15;
 const TRACKING_RATE_LIMIT = 1000;
+// Per-IP grænser pr. time for de ruter, der henter en URL eller gør tungt
+// arbejde for en kaller. Målt 26/9: ingen af dem havde nogen tæller, mens de
+// tre billige ruter (lookup, fulfillment, demo) alle havde. Uden en tæller er
+// enhver et script en ubremset forstærker af vores Worker-kvota, og alle fire
+// domæner deler den samme worker — så en løbet kvote tager også
+// /api/license/validate med, altså den rute betalende kunder skal bruge.
+// Tallene ligger langt over hvad et menneske bruger på en time.
+const SCAN_PROXY_RATE_LIMIT = 60;
+const COMPLIANCE_SCAN_RATE_LIMIT = 30;
+const URL_INSPECT_RATE_LIMIT = 60;
+const HEADER_CHECK_RATE_LIMIT = 60;
+const CLEAN_COPY_API_RATE_LIMIT = 120;
+const REPORT_RATE_LIMIT = 120;
 const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
@@ -32,7 +45,7 @@ export default {
 
     // === Route: scan-proxy ===
     if (path === '/scan-proxy') {
-      return handleScanProxy(request, url);
+      return handleScanProxy(request, url, env);
     }
 
     // === Route: AI Compliance Assistant ===
@@ -84,10 +97,10 @@ export default {
     if (path === '/api/report') return handleReport(request, env);
 
     // === Route: Clean Copy API (HTML → Markdown) ===
-    if (path === '/api/clean-copy') return handleCleanCopyAPI(request);
+    if (path === '/api/clean-copy') return handleCleanCopyAPI(request, env);
 
     // === Route: Security Headers Checker ===
-    if (path === '/api/header-check') return handleHeaderCheck(request, url);
+    if (path === '/api/header-check') return handleHeaderCheck(request, url, env);
 
     // === Route: Compliance Site Check (9 checks, server-side) ===
     if (path === '/api/compliance-scan') return handleComplianceScan(request, url, env);
@@ -114,7 +127,7 @@ export default {
     if (path === '/api/checkout') return handleCheckout(url, env);
 
     // === Route: URL Inspector (redirect chain + security headers) ===
-    if (path === '/api/url-inspect') return handleUrlInspect(request, url);
+    if (path === '/api/url-inspect') return handleUrlInspect(request, url, env);
 
     if (path.startsWith('/api/')) return new Response('Not found', { status: 404 });
 
@@ -231,7 +244,7 @@ async function handleDownload(request, url, env) {
  * Handle the scan-proxy endpoint.
  * Fetches a URL server-side and returns the HTML as JSON.
  */
-async function handleScanProxy(request, url) {
+async function handleScanProxy(request, url, env) {
   const targetUrlParam = url.searchParams.get('url');
 
   const headers = {
@@ -244,6 +257,16 @@ async function handleScanProxy(request, url) {
   // Preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
+  }
+
+  // Tælleren før selve hentningen: en rute der henter en URL for en kaller er
+  // en forstærker af vores kvote, så den skal være dækket inden arbejdet starter.
+  const limited = await rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT);
+  if (limited) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Too many scans this hour. Try again later.' }),
+      { status: 429, headers }
+    );
   }
 
   // Validate URL parameter
@@ -1122,6 +1145,15 @@ async function handleReport(request, env) {
     return new Response(JSON.stringify({ ok: false, error: 'That host cannot be scanned.' }), { status: 400, headers: corsHeaders });
   }
 
+  // Tælleren sidder *efter* licenstjekket og lige før hentningen. En nøgle der
+  // ikke findes koster os intet, så den må ikke æde en betalende kundes kvote;
+  // en gyldig nøgle kan ellers hente uafgrænset, fordi nøglen tæller enheder
+  // og ikke kalde. 120 i timen er langt over hvad et menneske bruger.
+  const limited = await rateLimitIp(request, env, 'report', REPORT_RATE_LIMIT);
+  if (limited) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many reports this hour. Try again later.' }), { status: 429, headers: corsHeaders });
+  }
+
   const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);
   if (!page.ok || page.status >= 400) {
     return new Response(JSON.stringify({ ok: false, error: 'Cannot reach ' + target.host + ': ' + (page.error || page.status) }),
@@ -1671,7 +1703,7 @@ async function handleHealth(url, env) {
  * Handle /api/header-check — fetches a URL server-side and returns all response headers.
  * Used by the Security Headers Checker tool. No CORS issues since it's server-side.
  */
-async function handleHeaderCheck(request, url) {
+async function handleHeaderCheck(request, url, env) {
   const targetUrlParam = url.searchParams.get('url');
 
   const headers = {
@@ -1683,6 +1715,14 @@ async function handleHeaderCheck(request, url) {
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
+  }
+
+  const limited = await rateLimitIp(request, env, 'header-check', HEADER_CHECK_RATE_LIMIT);
+  if (limited) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Too many header checks this hour. Try again later.' }),
+      { status: 429, headers }
+    );
   }
 
   if (!targetUrlParam) {
@@ -1738,7 +1778,7 @@ async function handleHeaderCheck(request, url) {
   }
 }
 
-async function handleCleanCopyAPI(request) {
+async function handleCleanCopyAPI(request, env) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -1748,6 +1788,16 @@ async function handleCleanCopyAPI(request) {
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
+  }
+
+  // Ren CPU på et kaldersstyrt HTML-dokument, ingen ude-fetch. Tælles
+  // alligevel, fordi arbejdet fylder den samme kvote som en hentning gør.
+  const limited = await rateLimitIp(request, env, 'clean-copy', CLEAN_COPY_API_RATE_LIMIT);
+  if (limited) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'Too many conversions this hour. Try again later.' }),
+      { status: 429, headers }
+    );
   }
 
   if (request.method !== 'POST') {
@@ -2338,6 +2388,11 @@ async function handleComplianceScan(request, url, env) {
 
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
+  const limited = await rateLimitIp(request, env, 'compliance-scan', COMPLIANCE_SCAN_RATE_LIMIT);
+  if (limited) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many site checks this hour. Try again later.' }), { status: 429, headers: corsHeaders });
+  }
+
   const targetParam = url.searchParams.get('url');
   if (!targetParam) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
@@ -2637,6 +2692,11 @@ async function handleUrlInspect(request, url) {
     'content-type': 'application/json',
   };
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+
+  const limited = await rateLimitIp(request, env, 'url-inspect', URL_INSPECT_RATE_LIMIT);
+  if (limited) {
+    return new Response(JSON.stringify({ error: 'Too many URL inspections this hour. Try again later.' }), { status: 429, headers: corsHeaders });
+  }
 
   const targetUrlParam = url.searchParams.get('url');
   if (!targetUrlParam) {
@@ -3206,6 +3266,31 @@ async function ipHash(request) {
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(dailySalt() + '|ip|' + ip));
   return hex(new Uint8Array(d));
+}
+
+/**
+ * Tæller kald pr. IP pr. time og svarer 429 over grænsen.
+ *
+ * Fejler åbent: hvis KV ikke findes eller kaster, er svaret null og kaldet
+ * går igennem. En tæller der går ned må aldrig tage en betalende kundes
+ * værktøj med, og en 429 skal derfor aldrig være den eneste grund til at et
+ * scanner-kald fejler.
+ *
+ * Nøglen er pr. IP og ikke pr. IP+UA, så grænsen ikke kan omgås ved at skifte
+ * User-Agent. `scope` holder ruterne adskilte, så et bureau der scanner mange
+ * kunders sider ikke brænder sin egen rapportkvote af.
+ */
+async function rateLimitIp(request, env, scope, max) {
+  try {
+    if (!env.VISITS) return null;
+    const key = `rl:${scope}:${await ipHash(request)}:${Math.floor(Date.now() / 3600000)}`;
+    const hits = parseInt((await env.VISITS.get(key)) || '0', 10);
+    if (hits >= max) return { scope, max };
+    await env.VISITS.put(key, String(hits + 1), { expirationTtl: 7200 });
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /** Besked til Mads, når en betaling ikke kan leveres automatisk. */

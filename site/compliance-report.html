@@ -616,7 +616,11 @@ async function verifyAndDownload() {
     });
     const j = await r.json().catch(() => null);
     if (r.ok && j && j.ok) pro = j.findings;
-    else if (r.status >= 500 || !j) {
+    else if (r.status === 429) {
+      // The hourly limit is not a verdict on the key, so it must not be
+      // reported as one. The PDF still opens with the free analysis.
+      note = ' — you have used the hourly report limit, so this PDF holds the free analysis only. It resets within the hour.';
+    } else if (r.status >= 500 || !j) {
       // A blip must never lock out a customer who paid. Print what we have and
       // say plainly that it is not the full report.
       note = ' — the server could not be reached, so this PDF holds the free analysis only. Try again in a moment.';
