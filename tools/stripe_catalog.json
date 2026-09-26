@@ -191,6 +191,16 @@
             "da": ["kunde-klar html-rapport", "html-rapport"]
           }
         }
+      ],
+      "free_features": [
+        {
+          "id": "history",
+          "where": "page-profile/page_profile.py:1040 --history (aldrig gated) -> run_history :1046-1048, og :1088 append_history() ligger FØR det første require_pro :1094",
+          "labels": {
+            "en": ["history tracking"],
+            "da": ["historik"]
+          }
+        }
       ]
     },
     "eucomply-dpa": {
