@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 import urllib.error
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 import weekly_report as report
@@ -366,6 +366,197 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         self.assertIn("Page Profile Pro", markdown)
 
 
+class CheckoutClickTests(ReportFixture, unittest.TestCase):
+    """Købsklik skal kunne besvares som 0 — eller som ukendt, aldrig som ingenting.
+
+    Målt 26/9: 1 af 13 købssider sendte et `buy-click`, og ingen rapport læste
+    dem, så `0 salg` kunne ikke skelnes fra `0 forsøg`. Her skal 0 være et målt
+    svar, og alt der ikke kan læses skal være "ukendt" — modsat trafikkens
+    tærskler, der med vilje gør et lille tal ukendt.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        # Sporingen kom live 27/9, så en test der bruger "i dag" ville være
+        # afhængig af hvornår den kører. Datoen sættes derfor fast her, og
+        # `test_the_tracking_date_is_the_one_that_shipped` vogter den rigtige.
+        self.tracked_since = self.day_as_date() - timedelta(days=3)
+        self.before = (self.day_as_date() - timedelta(days=5)).isoformat()
+
+    def day_as_date(self) -> date:
+        return datetime.now(timezone.utc).date()
+
+    def events_payload(self, per_domain: dict) -> dict:
+        """Events for de domæner der nævnes; de øvrige er læst og tomme.
+
+        Et domæne der *mangler* i svaret er en fejlform, så den testes
+        eksplicit frem for at opstå ved en forglemmelse.
+        """
+        payload = self.payload()
+        payload["events_by_domain"] = {
+            domain: per_domain.get(domain, {}) for domain in report.TRAFFIC_DOMAINS
+        }
+        return payload
+
+    def checkout(self, per_domain: dict) -> dict:
+        payload = self.events_payload(per_domain)
+        with patch.object(report, "BUY_CLICK_TRACKING_SINCE", self.tracked_since):
+            with patch.object(report, "http_json", return_value=payload):
+                return report.collect_stats(7)["checkout"]
+
+    def test_buy_clicks_are_counted_per_domain_and_per_buy_page(self) -> None:
+        checkout = self.checkout({
+            "mahope.tools": {self.day: {
+                "/page-profile@buy-click": {"visits": 3, "uniques": 2},
+                # Et andet event end buy-click er ikke et købsforsøg.
+                "/page-profile@tool-used": {"visits": 9, "uniques": 4},
+            }},
+            "cleancopy.tools": {self.day: {
+                "/@buy-click": {"visits": 2, "uniques": 2},
+                # Slutstreg: workerens `normalizeTrackedPath` tager stien fra
+                # *refereren*, så `/activate/` registreres som `/activate`.
+                # Katalogen skriver den offentlige rute med slutstreg, så de to
+                # former skal mødes — ellers tælles et klik på en dokumenteret
+                # købsside som et klik uden for købssiderne.
+                "/activate/@buy-click": {"visits": 1, "uniques": 1},
+            }},
+            # bugbottle.dev står ikke i katalogens 13 købssider, så de fire
+            # klik skal skilles fra købssidernes.
+            "bugbottle.dev": {self.day: {"/@buy-click": {"visits": 4, "uniques": 3}}},
+        })
+        self.assertEqual("ok", checkout["status"])
+        self.assertEqual(10, checkout["clicks"])
+        self.assertEqual(3, checkout["domains"]["mahope.tools"]["clicks"])
+        self.assertEqual(3, checkout["domains"]["cleancopy.tools"]["clicks"])
+        self.assertEqual(0, checkout["domains"]["deskuptime.com"]["clicks"])
+        # Alle fire domæner er læst, så intet er et delsum.
+        self.assertEqual(6, checkout["offer_clicks"])
+        self.assertEqual(4, checkout["other_clicks"])
+        self.assertEqual([
+            {"domain": "bugbottle.dev", "route": "/", "clicks": 4},
+            {"domain": "mahope.tools", "route": "/page-profile", "clicks": 3},
+            {"domain": "cleancopy.tools", "route": "/", "clicks": 2},
+            {"domain": "cleancopy.tools", "route": "/activate", "clicks": 1},
+        ], checkout["pages"])
+        self.assertEqual(self.day, checkout["last_click_day"])
+        # Sporing fra i dag-2: fire dage målt (i dag-2, i dag-1, i dag), tre
+        # dage i vinduet ligger før den.
+        self.assertEqual(4, checkout["tracked_days"])
+        self.assertEqual(3, checkout["untracked_days"])
+
+    def test_a_week_without_buy_clicks_is_a_measured_zero(self) -> None:
+        checkout = self.checkout({domain: {} for domain in report.TRAFFIC_DOMAINS})
+        self.assertEqual("ok", checkout["status"])
+        self.assertEqual(0, checkout["clicks"])
+        self.assertEqual([], checkout["pages"])
+        self.assertIsNone(checkout["last_click_day"])
+        # Og det skal stå som et svar i rapporten, ikke som en manglende række.
+        with patch.object(report, "BUY_CLICK_TRACKING_SINCE", self.tracked_since):
+            with patch.object(report, "http_json", return_value=self.events_payload(
+                    {domain: {} for domain in report.TRAFFIC_DOMAINS})):
+                traffic = report.collect_stats(7)
+        data = self.other_data(traffic)
+        _, notable, sections = report.build_report(data, None)
+        section = next(s for s in sections if "Købsklik" in s["title"])
+        self.assertEqual(["Købsklik på Stripe-links", "0", "—"], section["rows"][0])
+        self.assertIn("målt nul", section["note"])
+        self.assertNotIn("målt nul", " ".join(notable))
+
+    def test_unreadable_events_are_unknown_and_never_zero(self) -> None:
+        # `events_by_domain: null` er hvad workeren svarer, når KV er ude
+        # nået eller nøglebudgettet er overskredet. Det er ikke et nul.
+        for value in (None, [], "ok"):
+            payload = self.payload()
+            payload["events_by_domain"] = value
+            with patch.object(report, "BUY_CLICK_TRACKING_SINCE", self.tracked_since):
+                with patch.object(report, "http_json", return_value=payload):
+                    checkout = report.collect_stats(7)["checkout"]
+            self.assertEqual("unknown", checkout["status"], value)
+            self.assertIsNone(checkout["clicks"], value)
+            self.assertIn("kunne ikke læses", checkout["reason"], value)
+        data = self.other_data({"status": "unknown", "checkout": checkout})
+        _, _, sections = report.build_report(data, None)
+        section = next(s for s in sections if "Købsklik" in s["title"])
+        self.assertEqual(["Købsklik på Stripe-links", "ukendt", "—"], section["rows"][0])
+        self.assertIn("Det er ikke et nul", section["note"])
+
+    def test_a_domain_missing_from_the_response_is_a_partial_sum(self) -> None:
+        payload = self.events_payload({
+            "mahope.tools": {self.day: {"/page-profile@buy-click": {"visits": 2}}},
+            "cleancopy.tools": {self.day: {"/@buy-click": {"visits": 1}}},
+        })
+        del payload["events_by_domain"]["deskuptime.com"]
+        with patch.object(report, "BUY_CLICK_TRACKING_SINCE", self.tracked_since):
+            with patch.object(report, "http_json", return_value=payload):
+                checkout = report.collect_stats(7)["checkout"]
+        self.assertEqual("partial", checkout["status"])
+        self.assertEqual(3, checkout["clicks"])
+        self.assertIsNone(checkout["domains"]["deskuptime.com"]["clicks"])
+        self.assertIn("deskuptime.com", checkout["reason"])
+        data = self.other_data({"status": "unknown", "checkout": checkout})
+        _, _, sections = report.build_report(data, None)
+        section = next(s for s in sections if "Købsklik" in s["title"])
+        self.assertIn("Kun domæner med læst datagrundlag", section["note"])
+
+    def test_an_unreadable_click_count_is_unknown_instead_of_zero(self) -> None:
+        checkout = self.checkout({
+            "mahope.tools": {self.day: {"/page-profile@buy-click": {"visits": "3"}}},
+            "cleancopy.tools": {self.day: {"/@buy-click": {"visits": 1}}},
+        })
+        # Tallet i mahope.tools kan ikke læses, så det tælles ikke med — og
+        # den samlede 1 må ikke læses som "der var præcis ét købsklik".
+        self.assertEqual("partial", checkout["status"])
+        self.assertEqual(1, checkout["clicks"])
+        self.assertIsNone(checkout["domains"]["mahope.tools"]["clicks"])
+        self.assertIn("ugyldigt kliktal", checkout["reason"])
+
+    def test_clicks_from_before_the_tracker_existed_are_not_a_zero(self) -> None:
+        # Fem dage før sporingen kom live. De dage blev aldrig sendt, så de
+        # tælles ikke som et målt nul — og vinduet siger hvor mange dage der
+        # faktisk er målt.
+        checkout = self.checkout({
+            "mahope.tools": {self.before: {"/page-profile@buy-click": {"visits": 5}},
+                             self.day: {"/page-profile@buy-click": {"visits": 1}}},
+        })
+        self.assertEqual(1, checkout["clicks"])
+        self.assertEqual(4, checkout["tracked_days"])
+        self.assertEqual(3, checkout["untracked_days"])
+        self.assertEqual(self.day, checkout["last_click_day"])
+
+    def test_a_window_without_a_single_instrumented_day_is_unknown(self) -> None:
+        payload = self.events_payload({
+            "mahope.tools": {self.day: {"/page-profile@buy-click": {"visits": 1}}},
+        })
+        with patch.object(report, "BUY_CLICK_TRACKING_SINCE", self.day_as_date() + timedelta(days=1)):
+            with patch.object(report, "http_json", return_value=payload):
+                checkout = report.collect_stats(7)["checkout"]
+        self.assertEqual("unknown", checkout["status"])
+        self.assertIsNone(checkout["clicks"])
+        self.assertEqual(0, checkout["tracked_days"])
+        self.assertEqual(7, checkout["untracked_days"])
+        self.assertIn("sporingen startede først", checkout["reason"])
+
+    def test_the_tracking_date_is_the_one_that_shipped(self) -> None:
+        # `buy-click`-lytteren kom live i merge-committen 7190fbd 26/9 15:06
+        # CET = 13:06 UTC, så 26/9 er kun delvist målt og 27/9 er første fulde
+        # døgn. En senere dato gør uge-rapporterne skylde færre dage end de
+        # dækker; en tidligere gør dem påstå et nul for umålte dage.
+        self.assertEqual(date(2026, 9, 27), report.BUY_CLICK_TRACKING_SINCE)
+        self.assertEqual("buy-click", report.BUY_CLICK_EVENT)
+
+    def test_normalized_routes_match_the_worker(self) -> None:
+        # Samme fem normaliseringer som `normalizeTrackedPath` i
+        # `site/_worker.js`, fordi et klik ellers tælles på en rute kataloget
+        # ikke kender — altså som et klik uden for de dokumenterede købssider.
+        self.assertEqual("/activate", report.tracked_route("/activate/"))
+        self.assertEqual("/", report.tracked_route("/"))
+        self.assertEqual("/", report.tracked_route(""))
+        self.assertEqual("/da", report.tracked_route("/da/index.html"))
+        self.assertEqual("/page-profile", report.tracked_route("/page-profile.html"))
+        self.assertEqual("/a/b", report.tracked_route("/a//b/"))
+        self.assertEqual("/side", report.tracked_route("/side?x=1#anker"))
+
+
 class RankingTests(ReportFixture, unittest.TestCase):
     """Rangeringen må aldrig påstå en mest-besøgt-liste uden datagrundlag."""
 
@@ -389,6 +580,31 @@ class RankingTests(ReportFixture, unittest.TestCase):
         payload = self.payload()
         payload["stats_by_domain"] = domains
         return payload
+
+    def test_offer_routes_are_matched_in_the_workers_normalized_form(self) -> None:
+        # Katalogen skriver den *offentlige* rute med slutstreg — den skal
+        # `check_stripe_ctas.py` kunne finde i href'et — mens workerens
+        # `normalizeTrackedPath` registrerer stien *uden* slutstreg. Målt 26/9:
+        # 4 af de 13 katalogruter har slutstreg, så uden normalisering kan de
+        # aldrig findes i trafikken og rangerer aldrig, uanset hvor mange
+        # besøg de har.
+        inventory = report.load_offer_inventory()
+        self.assertIn(("cleancopy.tools", "/activate"), inventory["routes"])
+        self.assertIn(("cleancopy.tools", "/da/activate"), inventory["routes"])
+        self.assertIn(("cleancopy.tools", "/da"), inventory["routes"])
+        payload = self.ranked_payload(per_domain={
+            "mahope.tools": {"/page-profile": 9, "/compliance-report": 20},
+            "cleancopy.tools": {"/activate": 11, "/da/activate": 6},
+            "deskuptime.com": {"/": 7},
+            "bugbottle.dev": {"/": 6},
+        })
+        with patch.object(report, "http_json", return_value=payload):
+            ranking = report.collect_stats(7)["ranking"]
+        self.assertEqual("traffic", ranking["basis"])
+        ranked = {(row["domain"], row["route"]): row["visits"] for row in ranking["ranked_offer_pages"]}
+        self.assertEqual(11, ranked[("cleancopy.tools", "/activate")])
+        self.assertEqual(6, ranked[("cleancopy.tools", "/da/activate")])
+        self.assertEqual(20, ranked[("mahope.tools", "/compliance-report")])
 
     def test_ranking_period_is_seven_full_days_without_today(self) -> None:
         today = datetime.now(timezone.utc).date()

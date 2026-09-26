@@ -55,6 +55,14 @@ RANKING_MIN_PAGEVIEWS_PER_DOMAIN = 5
 # rankingvinduet kræver.
 RANKING_FETCH_DAYS = RANKING_DAYS + 1
 
+# `buy-click` sendes af den delegerede lytter i `site/track.js`. Den kom live
+# i merge-committen 7190fbd 26/9 15:06 CET = 13:06 UTC og blev verificeret på
+# det levende site samme dag, så 26/9 er kun delvist målt. Første fulde UTC-dag
+# er derfor 27/9. Dage før den dato er *ummålte*, ikke tomme: et vindue der
+# tæller dem med ville påstå et målt 0 for en periode der aldrig blev sendt.
+BUY_CLICK_EVENT = "buy-click"
+BUY_CLICK_TRACKING_SINCE = date(2026, 9, 27)
+
 NPM_PACKAGES = [
     "@mahope/clean-copy",
     "@mahope/deskuptime",
@@ -213,6 +221,7 @@ def unknown_stats() -> dict:
         "licenses_issued": None,
         "ai_asks": None,
         "scans": None,
+        "checkout": _unknown_checkout("trafikken kunne ikke hentes"),
         "ranking": _unknown_ranking("trafikken kunne ikke hentes"),
     }
 
@@ -292,6 +301,148 @@ def _window_by_domain(
     return domains, total if complete else None, top_aggregate, complete, per_domain_paths
 
 
+def tracked_route(value: str) -> str:
+    """Samme normalisering som `normalizeTrackedPath` i `site/_worker.js`.
+
+    Workeren tager stien fra *refereren*, så `/activate/` bliver `/activate` og
+    `/side.html` bliver `/side`. Kataloget skriver derimod ruter med slutstreg
+    (`/activate/`, `/da/`), så uden den her spejling ville et købsklik på en
+    dokumenteret købsside tælle som et klik uden for dem.
+    """
+    path = str(value or "/").strip().split("?", 1)[0].split("#", 1)[0] or "/"
+    if not path.startswith("/"):
+        path = "/" + path
+    path = re.sub(r"/{2,}", "/", path)
+    path = re.sub(r"/index\.html?$", "/", path, flags=re.IGNORECASE)
+    path = re.sub(r"\.html?$", "", path, flags=re.IGNORECASE)
+    return path if path == "/" else (path.rstrip("/") or "/")
+
+
+def _unknown_checkout(reason: str) -> dict:
+    return {
+        "status": "unknown",
+        "reason": reason,
+        "window_days": None,
+        "tracked_since": BUY_CLICK_TRACKING_SINCE.isoformat(),
+        "clicks": None,
+        "domains": {domain: {"status": "unknown", "clicks": None} for domain in TRAFFIC_DOMAINS},
+        "pages": [],
+        "offer_clicks": None,
+        "other_clicks": None,
+        "tracked_days": None,
+        "untracked_days": None,
+        "last_click_day": None,
+    }
+
+
+def collect_checkout(events_by_domain: object, days: int, *, inventory: dict | None = None) -> dict:
+    """Købsklik på Stripe-links, pr. domæne og pr. købsside.
+
+    Her skal **0 være 0** — det er modsat trafikkens tærskler, der med vilje
+    gør et lille tal til "ukendt". Uden den forskel kan rapporten ikke svare på
+    det eneste spørgsmål der betyder noget: prøvede nogen at købe? Før dette felt
+    var det umuligt at skelne `0 salg` fra `0 forsøg`, fordi intet købsklik nogensinde
+    blev læst (målt 26/9: 1 af 13 købssider sendte et `buy-click`).
+
+    Fail-closed på tre måder, fordi et tal her er et salgssignal:
+      - `events_by_domain` er ikke en dict (KV ude nået, nøglebudget overskredet)
+        → hele blokken er ukendt, aldrig 0.
+      - et domæne mangler i svaret, eller en besøgstælling ikke er et tal
+        → det domæne er ukendt, og kun domæner med `status: ok` tælles med i
+        `clicks`; `status` bliver `partial` i stedet for at præsentere et
+        delsum som om det var det hele.
+      - dage før `BUY_CLICK_TRACKING_SINCE` er umålte og tælles ikke med, så
+        en stille uge ikke påstår et 0 for dage der ikke var instrumenteret.
+
+    `buy-click` er et *forsøg på at købe*, ikke et salg: klikket sendes fra
+    browseren umiddelbart før den forlader siden til Stripe, så intet beviser
+    at betalingssiden blev fuldført. Salget står i Stripe-blokken.
+    """
+    if not isinstance(events_by_domain, dict):
+        return _unknown_checkout("begivenhedstællerne kunne ikke læses fra /api/stats")
+
+    today = datetime.now(timezone.utc).date()
+    cutoff = today - timedelta(days=days - 1)
+    first = max(cutoff, BUY_CLICK_TRACKING_SINCE)
+    window_days = max((today - first).days + 1, 0)
+    if window_days == 0:
+        # Hele vinduet ligger før sporingen fandtes. Et 0 her ville være et
+        # målt nul for en periode intet blev sendt for.
+        return {**_unknown_checkout(f"sporingen startede først {BUY_CLICK_TRACKING_SINCE.isoformat()}"),
+                "window_days": days, "tracked_days": 0, "untracked_days": days}
+
+    domains: dict[str, dict] = {}
+    pages: dict[tuple[str, str], int] = {}
+    problems: list[str] = []
+    last_click_day: str | None = None
+    for domain in TRAFFIC_DOMAINS:
+        raw_domain = events_by_domain.get(domain)
+        if not isinstance(raw_domain, dict):
+            problems.append(f"{domain} mangler i svaret")
+            domains[domain] = {"status": "unknown", "clicks": None}
+            continue
+        per_route: dict[str, int] = {}
+        domain_problems: list[str] = []
+        for day, entries in raw_domain.items():
+            if not isinstance(entries, dict):
+                domain_problems.append(f"{domain}/{day} er ikke en dag-tabel")
+                break
+            if not is_day(day) or not (first.isoformat() <= day <= today.isoformat()):
+                continue  # umålt periode, ugyldig dato eller en dag der ikke kan være sket
+            for subject, info in entries.items():
+                route, _, event = str(subject).rpartition("@")
+                if event != BUY_CLICK_EVENT:
+                    continue
+                if not route.startswith("/"):
+                    domain_problems.append(f"{domain}/{day}: buy-click uden gyldig sti ({subject!r})")
+                    break
+                if not isinstance(info, dict) or type(info.get("visits")) is not int or info["visits"] < 0:
+                    domain_problems.append(f"{domain}/{day}/{subject}: ugyldigt kliktal")
+                    break
+                per_route[route] = per_route.get(route, 0) + info["visits"]
+                if info["visits"] and (last_click_day is None or day > last_click_day):
+                    last_click_day = day
+            if domain_problems:
+                break
+        if domain_problems:
+            problems.extend(domain_problems)
+            domains[domain] = {"status": "unknown", "clicks": None}
+            continue
+        for route, count in per_route.items():
+            key = (domain, tracked_route(route))
+            pages[key] = pages.get(key, 0) + count
+        domains[domain] = {"status": "ok", "clicks": sum(per_route.values())}
+
+    known = [entry for entry in domains.values() if entry["status"] == "ok"]
+    if not known:
+        return {**_unknown_checkout(problems[0] if problems else "ingen domæner leverede læsbare begivenheder"),
+                "tracked_days": window_days,
+                "untracked_days": max(days - window_days, 0)}
+    clicks = sum(entry["clicks"] for entry in known)
+
+    offer_clicks: int | None = None
+    if inventory is not None:
+        offer_clicks = sum(count for (domain, route), count in pages.items()
+                           if (domain, route) in inventory["routes"])
+    page_rows = [{"domain": domain, "route": route, "clicks": count}
+                 for (domain, route), count in pages.items() if count > 0]
+    page_rows.sort(key=lambda row: (-row["clicks"], row["domain"], row["route"]))
+    return {
+        "status": "ok" if len(known) == len(TRAFFIC_DOMAINS) else "partial",
+        "reason": None if len(known) == len(TRAFFIC_DOMAINS) else "; ".join(problems) or "et domæne mangler i svaret",
+        "window_days": days,
+        "tracked_since": BUY_CLICK_TRACKING_SINCE.isoformat(),
+        "clicks": clicks,
+        "domains": domains,
+        "pages": page_rows,
+        "offer_clicks": offer_clicks,
+        "other_clicks": None if offer_clicks is None else clicks - offer_clicks,
+        "tracked_days": window_days,
+        "untracked_days": max(days - window_days, 0),
+        "last_click_day": last_click_day,
+    }
+
+
 def _collect_sales(data: dict) -> dict:
     if data.get("sales_status") != "ok":
         return {"available": False, "status": "unknown"}
@@ -352,7 +503,14 @@ def load_offer_inventory() -> dict | None:
         return None
     routes: dict[tuple[str, str], dict] = {}
     for offer in offers:
-        key = (offer["domain"], offer["route"])
+        # Katalogen skriver den *offentlige* rute med slutstreg (`/activate/`,
+        # `/da/`) — den skal `tools/check_stripe_ctas.py` kunne finde i href'et.
+        # Workerens `normalizeTrackedPath` derimod registrerer stien *uden*
+        # slutstreg, så de to skal mødes i workerens form. Uden den her
+        # normalisering kan de fire ruter med slutstreg aldrig findes i trafikken
+        # (målt 26/9: 4 af 13 katalogruter), og et købsklik på dem ville tælles
+        # som et klik uden for de dokumenterede købssider.
+        key = (offer["domain"], tracked_route(offer["route"]))
         entry = routes.setdefault(key, {"domain": key[0], "route": key[1], "products": [], "price": None})
         if offer["product"] not in entry["products"]:
             entry["products"].append(offer["product"])
@@ -541,7 +699,8 @@ def _unknown_ranking(reason: str) -> dict:
     }
 
 
-def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
+def _unknown_traffic(sales: dict, days: int, error: str | None = None,
+                     checkout: dict | None = None) -> dict:
     result = {
         "available": True,
         "status": "unknown",
@@ -564,6 +723,10 @@ def _unknown_traffic(sales: dict, days: int, error: str | None = None) -> dict:
         "licenses_issued": None,
         "ai_asks": None,
         "scans": None,
+        # Købsklik læses uafhængigt af pageviews: en uge uden trafik skal
+        # stadig kunne sige om nogen trykkede på en købsknap. Derfor får
+        # trafikblokken købsklikket med, uanset hvorfor trafikken er ukendt.
+        "checkout": checkout or _unknown_checkout(error or "trafikstatus er ukendt"),
         "ranking": _unknown_ranking(error or "trafikstatus er ukendt"),
     }
     if error:
@@ -583,10 +746,17 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
     sales = _collect_sales(data)
     domain_status = data.get("domain_status")
     traffic_status = data.get("traffic_status")
+    # Købsklik er uafhængigt af pageviews og læses derfor før trafikkens
+    # tærskler: en uge uden verificeret trafik skal stadig svare på om nogen
+    # trykkede på en købsknap. Kortlægningen af købssiderne til ruter kommer
+    # fra samme inventar som konverteringsrangeringen, så de to aldrig kan
+    # komme ud af trit.
+    inventory = load_offer_inventory()
+    checkout = collect_checkout(data.get("events_by_domain"), days, inventory=inventory)
     if traffic_status not in ("ok", "partial"):
-        return _unknown_traffic(sales, days, "trafikstatus er ukendt")
+        return _unknown_traffic(sales, days, "trafikstatus er ukendt", checkout=checkout)
     if not isinstance(domain_status, dict) or not any(domain_status.get(domain) == "ok" for domain in TRAFFIC_DOMAINS):
-        return _unknown_traffic(sales, days, "alle domæner er ukendte")
+        return _unknown_traffic(sales, days, "alle domæner er ukendte", checkout=checkout)
 
     start, end = ranking_period()
     try:
@@ -594,7 +764,7 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
             data.get("stats_by_domain"), days, pageviews=True, domain_status=domain_status
         )
         if not any(domains[domain]["status"] == "ok" for domain in TRAFFIC_DOMAINS):
-            return _unknown_traffic(sales, days, "ingen domæner har verificerede pageviews")
+            return _unknown_traffic(sales, days, "ingen domæner har verificerede pageviews", checkout=checkout)
         download_domains, downloads, top_downloads, downloads_complete, _ = _window_by_domain(
             data.get("downloads_by_domain"), days, pageviews=False, domain_status=domain_status
         )
@@ -604,10 +774,10 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
         )
     except RuntimeError as exc:
         note_error("api/stats trafik", exc)
-        return _unknown_traffic(sales, days, str(exc))
+        return _unknown_traffic(sales, days, str(exc), checkout=checkout)
 
     ranking = build_ranking(ranking_paths, domain_status, start=start, end=end,
-                            inventory=load_offer_inventory(),
+                            inventory=inventory,
                             previous_paths=dig(previous, "traffic", "ranking_paths"))
 
     status = "ok" if pages_complete and downloads_complete else "partial"
@@ -631,6 +801,7 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
         "licenses_issued": known_counter(data.get("licenses_issued")) if sales.get("available") is True else None,
         "ai_asks": known_counter(data.get("ai_asks")),
         "scans": known_counter(data.get("scans")),
+        "checkout": checkout,
         "ranking": ranking,
     }
 
@@ -906,6 +1077,52 @@ def _ranking_sections(ranking: dict) -> list[dict]:
     return sections
 
 
+def _checkout_sections(checkout: dict, previous: dict, notable: list[str]) -> list[dict]:
+    """Købsklik: det eneste sted i rapporten der svarer "prøvede nogen at købe?".
+
+    Rækkerne skrives altid, også når tallet er 0 — en målt 0 er et svar, en
+    manglende række er et spørgsmål. `status: unknown` skriver "ukendt" i
+    kolonnen og siger i noten hvorfor, så de to aldrig ligner hinanden.
+    """
+    status = checkout.get("status", "unknown")
+    clicks = checkout.get("clicks")
+    change = delta(clicks, previous.get("clicks"))
+    rows = [["Købsklik på Stripe-links", fmt_num(clicks), fmt_delta(change)]]
+    for domain in TRAFFIC_DOMAINS:
+        entry = (checkout.get("domains") or {}).get(domain) or {}
+        rows.append([f"  {domain}", fmt_num(entry.get("clicks")), ""])
+    offer_clicks = checkout.get("offer_clicks")
+    if offer_clicks is not None:
+        rows.append(["  heraf på dokumenterede købssider", fmt_num(offer_clicks), ""])
+    for page in checkout.get("pages") or []:
+        rows.append([f"    {page['domain']}{page['route']}", str(page["clicks"]), ""])
+
+    note_parts = [
+        f"Status: **{status}**. `buy-click` sendes af `site/track.js` umiddelbart "
+        "før browseren forlader siden til Stripe. Det er et *forsøg på at købe*, ikke "
+        "et salg — intet beviser at betalingssiden blev fuldført. Salget står i "
+        "Stripe-blokken nedenfor.",
+        f"Sporet først fra {checkout.get('tracked_since') or BUY_CLICK_TRACKING_SINCE.isoformat()}, så i dette "
+        f"vindue er {fmt_num(checkout.get('tracked_days'))} dage målt og "
+        f"{fmt_num(checkout.get('untracked_days'))} dage umålte.",
+        "Bot-, CI- og interne tjek filtreres i workeren, før begivenheden tælles.",
+    ]
+    if status == "unknown":
+        note_parts.insert(1, f"Købsklik er ukendt, fordi {checkout.get('reason') or 'årsagen ikke er oplyst'}. "
+                             "Det er ikke et nul.")
+    elif status == "partial":
+        note_parts.insert(1, "Kun domæner med læst datagrundlag er talt med i totalen: "
+                             f"{checkout.get('reason')}.")
+    elif clicks == 0:
+        note_parts.insert(1, "Ingen købsknap blev trykket i de målte dage. Det er et målt nul for de "
+                             f"{fmt_num(checkout.get('tracked_days'))} dage, ikke for hele vinduet.")
+    if clicks:
+        notable.append(f"{clicks} købsklik på Stripe-links"
+                       + (f" (senest {checkout['last_click_day']})" if checkout.get("last_click_day") else ""))
+    return [{"title": "Købsklik (buy-click) — forsøg på at købe", "headers": ["Måltal", "Klik", "Δ uge"],
+             "rows": rows, "note": " ".join(note_parts)}]
+
+
 def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[dict]]:
     """Returnerer (emne, notabelt, sektioner). Sektion = {title, headers, rows, note}."""
     week = data["iso_week"].split("-")[1]
@@ -967,6 +1184,8 @@ def build_report(data: dict, prev: dict | None) -> tuple[str, list[str], list[di
                          "rows": [[item["file"], str(item["hits"])] for item in tr["top_downloads"]], "note": None})
 
     sections.extend(_ranking_sections(tr.get("ranking") or {}))
+
+    sections.extend(_checkout_sections(tr.get("checkout") or {}, ptr.get("checkout") or {}, notable))
 
     sales = tr.get("sales") or {"available": False, "status": "unknown"}
     if sales.get("available") is True and sales.get("status") == "ok":
