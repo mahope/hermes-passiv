@@ -63,6 +63,11 @@ NOT_CLIENTS = {
     "tools/check_license_clients.py",
     "tools/check_clean_copy_distribution.py",
     "tools/build_clean_copy_archives.py",
+    # Opgave 26: porten over rod-README'en nævner licens-API'en i en kommentar om
+    # hvorfor den *ikke* står i sin egen liste over ikke-sider. Samme fejlform som
+    # opgave 20 (check_license_clients fangede sin egen docstring): en gate der
+    # leder efter en sti i al tekst, træffer alt der vil forklare stien.
+    "tools/check_repo_readme.py",
 }
 
 # Marker omkring det indlejrede kanoniske modul.

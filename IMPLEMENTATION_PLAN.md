@@ -2,20 +2,22 @@
 
 ## Status
 
-- `ITERATION_ID`: `hub-readme-2026-09-26`
-- `STATE`: `Opgave 23 FÆRDIG — køen var tom (1-22 FÆRDIG, og den næste opgave kræver Mads' private filer), så dette er den researchiteration kontrakten forlanger. Fundet var ikke i koden, men i repoets **egentlige indgangsside**: rod-README.md for `mahope/hermes-passiv` — hubrepoet der bygger fire sites og otte produkter — var en kopi af *Clean Copy for Obsidian*s README. Den løb altså ud som ét produkts README, havde en changelog på 1.0.1 mens den publicerede udgave er 1.0.10, og ingen donation. Den er nu en hub-README med en kort fejlsikret kortlægning. **Tre ting blev fanget, før commit, som alle viser hvorfor mit første udkast ikke måtte lande:** (a) jeg skrev `mahope.tools/eucomply` og `deskuptime.com/transmute`, og *ingen af dem findes* — de står ikke i noget sitemap, og Transmute har slet ingen offentlig side; (b) jeg skrev "the free tools do not phone home", som er præcis den påstand opgave 2 var nødt til at trække tilbage, fordi licenstjekket er online; (c) jeg skrev at Clean Copy Pro virker "everywhere", uden at nogen klient er tjekket for det. Alt er nu verificeret mod de *live* sitemaps. To negative kontroller fra denne klasse findes allerede i gaten og fangede ingenting her, fordi ingen af dem læser rod-README — det er præcis hullet.`
+- `ITERATION_ID`: `repo-readme-gate-2026-09-26`
+- `STATE`: `Opgave 26 FÆRDIG — fund 3 fra opgave 23 er nu lukket: rod-README'en lå uden for alle 38 gatestræk, så den fejl, opgave 23 rettede ved hånd, holdt kun fordi en researchiteration tilfældigvis læste den. Ny port \`tools/check_repo_readme.py\` med \`--self-test\`, to nye steps (**38 → 40**). Den fanger fire fejlformer: rod-README der ikke linker til nogen af de fire domæner, en bygget sti der ikke findes i route_inventory, et købslink uden for katalogens allowlist eller en pris der ikke er produktets, og en lukket udbyder nævnt som om den virker. **Bevis på den gamle, rigtige fil fra git (\`7aef580^\`): 1 fejl**, netop \`no_domains\`. **Fire fund, hvor tre var fejl i min egen port.** (a) \`no_domains\` ledede efter domænenavnet i *teksten* — og den gamle README nævner \`mahope.tools/api/license\` i en privatlivssætning, så porten var grøn på præcis den fejl, den blev skrevet til at fange; nu kræver den et link til en rigtig rute. (b) Sti-sammenligningen manglede foranledende skråstreg, så \`/books\` (i README) og \`/books/\` (i sitemapet) ikke var ens, og porten ville have fundet fejl i *alle* links. (c) Negationen \`"old "\` var et substring og fangede derfor \`"keys are **sold** at lemonsqueezy.com"\` — altså den fejl, porten er skrevet til at finde; nu ordbøger. (d) Min egen \`wrong_repo\`-kontrol blev **bygget og kasseret**: den krævede en håndskrevet liste over søskenderepos og fejlede på \`mahope/deskuptime\`, som er en ægte del af familien. \`no_domains\` dækker samme fejl uden nogen liste. En syvende fejlform kom fra en eksisterende port: \`check_license_clients.py\` erklærede min nye fil for en licensklient, fordi den nævner licens-API'en i en kommentar om hvorfor den ikke gør det — samme forvirring som opgave 20, lukket via portens egen \`NOT_CLIENTS\`.`
+- `STATE` (før): `Opgave 23 FÆRDIG — køen var tom (1-22 FÆRDIG, og den næste opgave kræver Mads' private filer), så dette er den researchiteration kontrakten forlanger. Fundet var ikke i koden, men i repoets **egentlige indgangsside**: rod-README.md for `mahope/hermes-passiv` — hubrepoet der bygger fire sites og otte produkter — var en kopi af *Clean Copy for Obsidian*s README. Den løb altså ud som ét produkts README, havde en changelog på 1.0.1 mens den publicerede udgave er 1.0.10, og ingen donation. Den er nu en hub-README med en kort fejlsikret kortlægning. **Tre ting blev fanget, før commit, som alle viser hvorfor mit første udkast ikke måtte lande:** (a) jeg skrev `mahope.tools/eucomply` og `deskuptime.com/transmute`, og *ingen af dem findes* — de står ikke i noget sitemap, og Transmute har slet ingen offentlig side; (b) jeg skrev "the free tools do not phone home", som er præcis den påstand opgave 2 var nødt til at trække tilbage, fordi licenstjekket er online; (c) jeg skrev at Clean Copy Pro virker "everywhere", uden at nogen klient er tjekket for det. Alt er nu verificeret mod de *live* sitemaps. To negative kontroller fra denne klasse findes allerede i gaten og fangede ingenting her, fordi ingen af dem læser rod-README — det er præcis hullet.`
 - `STATE` (før, opgave 22): `Opgave 22 FÆRDIG — researchiterationen fandt missionens første prioritet ulukket i sitet: syv downloadprodukter har \`kv_verified: false\`, så ingen af deres 30 leveringsfiler findes i KV, og \`/api/download\` svarer 503. To af dem blev alligevel solgt fra fire sider. Siterne tog imod pengene og lovede en fil de ikke kunne levere. Nu sælges intet downloadprodukt før flaget står på true, og en ny check i \`check_stripe_ctas.py\` gater begge retninger — så den heller ikke kan komme tilbage ved en fejl. Fund: kun 2 af 7 produkter havde overhovedet en købsknap, så hullet var mindre end rapporten antydede; men 190 kildefiler hævdede stadig \`$29\` for den afskaffede PDF-bundle fra én generator, hvoraf 49 EN-sider var publiceret (bygget stripper DA-blokkene); JSON-LD på books-siden erklærede \`InStock\` for et produkt der ikke kan leveres; og selftestens domænescenarie pegede på \`site/scan.html\`, som forlod inventaret — en stum kontrol, der ville have set grøn ud. Licensprodukterne er derimod OK: EUComply Pro aktiverer online og låser PDF'en.`
 - `STATE` (før): `Opgave 21 FÆRDIG — opgavens forudsætning var forkert: de fire Clean Copy-arkiver har haft en indholdsgate siden opgave 7 del 2 (gatestep 11 beviser byte-identisk regeneration, kilde-identiske medlemmer, version.txt og ingen død vært), og --check var grøn for alle tre. Det rigtige hul lå i check_versions.py, som læste filnavnets version for de tre Clean Copy-zip OG desktop-kildearkivet, men ikke deres egen version indeni — og alle fire bærer den. Beviset for at hullet var ældre end opgaven troede, lå i selve fixtureen: de fire arkiver bar "manifest.json": "{}". Nu erklærer alle fire produkter inner=(...), 25 → 31 mutationer, 1 → 2 negative kontroller. Fund: den nye check diagnosticerer hvad byte-sammenligning kun kan sige "afviger fra"; fixtureen måtte ikke blive stående; den anden negativ kontrol er den der beskytter de fire nye linjer mod at gøre publicerede arkiver røde.`
 - `STATE` (før): `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `24 — ❓ Til Mads punkt 9 (kræver ham): upload de 30 filer til KV og sæt kv_verified. 25, 26, 27 er nye fund fra opgave 23.`
+- `NEXT_TASK`: `27 — skriv de to shippede README'er (Obsidian, Firefox) ferdige som et versionsforslag til Mads' næste udgivelse. 24 og 25 er markeret BLOCKED: kræver Mads.`
 - `PLAN_COMMIT`: `(denne iteration)`
-- `BASELINE`: `main@b55abed`
-- `LAST_BRANCH`: `ceo/hub-readme`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1.`
+- `BASELINE`: `main@828ea1f`
+- `LAST_BRANCH`: `ceo/repo-readme-gate`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1.`
 - `DEPLOY` (opgave 22, lukket): `DEPLOY OK aae4a72 26/9` — kørsel `36204568679`: `gate` grøn (38 steps) + tre grønne deploys (mahope.tools, cleancopy.tools, deskuptime.com). Live-indhold verificeret, ikke HTTP 200: `build-info.json` bærer merge-SHA'en; `/books/compliance-bundle` har **0** fund af `InStock`, af de to betalingslinks og af `$29`, og viser den nye tekst (*"All six e-books are free"*, *"We do not sell a combined PDF of these guides"*); `/compliance-report` har 0 fund af Report Kit og 1 af EUComply Pro-linket, så licenssalget er urørt; `/scan` og `/scan-da` har 0 fund af begge links; `/blog/nis2-gap-assessment-guide` viser den nye korsel-linje.
 - `DEPLOY` (opgave 23): `INGEN DEPLOY FORVENTET 37d8a04 26/9` — committen rørte kun `README.md` og planen, som begge ligger uden for workflowens path-filter. GitHub Actions kørte **ikke** (nyeste kørsel er stadig `36204568679` fra opgave 22), hvilket er korrekt og ikke en fejl. Live `build-info.json` bærer derfor stadig `aae4a72` på alle tre domæner, og det er korrekt: intet i `site/` eller `dist/` er ændret. Den nye README ligger i GitHub, ikke i dist, så den kan heller ikke verificeres på et domæne — den er verificeret mod de tre **live sitemaps**.
+- `GATE` (opgave 26): `GRØN — python3 tools/quality_gate.py: GRØN, 40 steps (fra 38). check_repo_readme: 0 fejl på den rigtige rod-README og FUNDING.yml. check_repo_readme --self-test: OK — 11 fejlformer fanget, 5 falsk-positive-kontroller grønne, positiv kontrol på exit-koden (1 på defekt fil, 0 på sund), og dead_link testet med indsprøjtet fetcher så selftesten rører ikke netværk. Bevis på de rigtige filer: den gamle rod-README fra git \`7aef580^\` giver 1 fejl. test_deploy_workflow grøn og fejler hvis README.md, .github/FUNDING.yml eller check_repo_readme.py tages ud af path-filteret. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (opgave 23): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). Bevis på rigtighed: de 12 URL'er i den nye rod-README er verificeret mod de tre live sitemaps (mahope.tools, cleancopy.tools, deskuptime.com) og tools/stripe_catalog.json, ikke mod en antagelse. To af dem (mahope.tools/eucomply, deskuptime.com/transmute) fandtes ikke og var fanget i mit første udkast. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (opgave 22): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_stripe_ctas: 0 problems, 13 produkter, 11 dokumenterede købssider (fra 15). check_stripe_ctas --self-test: 12/12 fejlformer (fra 10) + positiv kontrol grøn + ny guard mod stumme scenarier. Bevis på de rigtige filer: porten fandt 4 sider med et betalingslink til et produkt uden filer, FØR nogen blev rettet. test_weekly_report: 28 tests grønne. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (opgave 21): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_versions --self-test: OK (31 mutationer fra 25, 2 negative kontroller fra 1, positiv kontrol grøn, rigtige filer grønne). Bevis på de rigtige filer: Obsidian-arkivet muteret til manifest 1.0.9 under 1.0.10-navn → check_versions melder "kunden henter gammel kode under et nyt filnavn", distribution-gaten melder blot "afviger fra en regeneration". Stripe-worker uændret, dist/uændret (gitignored).`
@@ -104,6 +106,10 @@ Den underliggende check-liste, hvert step med de filer det læser:
 | 26 | python-env-selftest | `… --self-test` | — |
 | 27 | links | `python3 tools/check_links.py` | ja |
 | 28 | links-selftest | `… --self-test` | — |
+
+Opgave 26 tilføjede `repo-readme` og `repo-readme-selftest` (→ 40 steps).
+Tabellen ovenfor er fra opgave 11 og er ikke vokset med siden; de præcise
+stepnavne står i `tools/quality_gate.py` og printes af `--list`.
 
 Steps der kræver dist springes over, når `dist/` er tomt, så porten kan bruges
 på et delvis checkout uden at lyve om grønt. Lokalt tager hele gaten 2 minutter,
@@ -1584,7 +1590,7 @@ ikke en del af nogen gate, så grøn gate er her bevis på *ingen skade*, ikke p
 
 ## Ny kø fra opgave 23s researchfund
 
-### 24. UFÆRDIG — ❓ Til Mads punkt 9: gør de syv downloadvarer leveringsklare *(kræver ham, ikke mig)*
+### 24. BLOCKED: kræver Mads — ❓ Til Mads punkt 9: gør de syv downloadvarer leveringsklare *(kræver ham, ikke mig)*
 De syv produkter har `kv_verified: false`, og deres 30 filer findes ikke i KV. Uden dem
 er `$59 + $49 + $29 + $39 + $69 + $149` i Stripe-priser dødt salg, og kun
 `eu-compliance-ebook-bundle` har lagt `compliance-bundle.pdf` i sit leveringskrav.
@@ -1594,7 +1600,7 @@ er `$59 + $49 + $29 + $39 + $69 + $149` i Stripe-priser dødt salg, og kun
 **Findes ved:** kv-nøglerne og de private kilder. Ikke mit arbejde; skrives her for at
 det ikke tabes.
 
-### 25. UFÆRDIG — de syv betalingslinks er stadig live, selv om varerne ikke kan leveres
+### 25. BLOCKED: kræver Mads — de syv betalingslinks er stadig live, selv om varerne ikke kan leveres
 Opgave 22 lukkede *vores* salgssider. Stripe Payment Links kan ikke slås fra her (ingen
 nøgler), så `buy.stripe.com/…` for de syv produkter tager stadig imod betaling og sender
 en køber til `/thanks`, hvor `/api/download` svarer 503. Det er præcis det scenarie
@@ -1602,15 +1608,42 @@ opgave 22 beskriver som farligt — pengene ind, filen ud. **Acceptkriterium:** 
 hviler Mads de syv links, eller de får filer (opgave 24). Repoet skal *kun* sikre sig,
 at ingen af vores sider peger på dem, hvilket `check_stripe_ctas.py` nu gater.
 
-### 26. UFÆRDIG — gaten skal dække de publicerede tekster uden for `site/`
+### 26. FÆRDIG — gaten dækker de publicerede tekster uden for `site/`
 Fund 3 fra opgave 23. i dag læser ingen gate `README.md`, `AGENTS.md` eller
-`.github/FUNDING.yml`, som er det offentlige ansigt. **Acceptkriterium:** en ny check
-`tools/check_repo_readme.py` med `--self-test` der fejler på (a) et link i rod-README
-meden rødt svar, (b) en bygget sti i rod-README der ikke findes i noget sitemap, (c) en
-pris der ikke findes i `tools/stripe_catalog.json`, (d) en død udbyder (`lemon`,
-`gumroad`) nævnt som om den virker, og (e) en FALSK-positiv-kontrol: en README med kun
-relative links eller kun npm-URLer skal ikke fejle. Bevis: find mindst én fejl på den
-*gamle* rod-README før den rettes.
+`.github/FUNDING.yml`, som er det offentlige ansigt. **RESULT:** `tools/check_repo_readme.py` med `--self-test`, to steps i gaten
+(38 → 40), og `README.md` + `.github/FUNDING.yml` + checken selv lagt ind i
+workflowens path-filter, så en rettelse af dem nu *deployer* — før lå de
+komplet uden for filteret. (b) `bad_path` bruger `tools/route_inventory.json`,
+samme kilde `check_sitemaps` bruger. (c) `bad_price` tjekker både
+betalingslinks mod katalogens allowlist *og* priser på linjer der nævner et
+katalogprodukt. (d) `dead_vendor` med ordbogs-negationer. (e) fem
+falsk-positive-kontroller grønne: relative links, kun npm/GitHub-adresser,
+historisk omtalt lukket udbyder, et takke-beløb uden produktnavn, og
+`.github/thanks`-portal-siden. (a) `dead_link` findes og er **kun** `--online`,
+ikke en del af gaten: den kan kun tjekke vore egne domæner, og en
+netværkspause i CI må ikke låse tre domæners deploy. Den har en strømbryder —
+transportfejl slår tjekket fra i stedet for at fyre rødt port — og dens to
+retninger (404/503 rødt, 200 grønt, transport fra) er testet med en
+indsprøjtet fetcher, så selftesten er deterministisk.
+
+**Bevis på den rigtige gamle fil:** `git show 7aef580^:README.md` (den
+Obsidian-README, opgave 23 rettede) giver **1 fejl**. Ikke flere, og det er
+ærligt: de tre øvrige kontroller har intet at gribe i, fordi den gamle README
+havde ingen købslinks, ingen døde udbydere og ingen opbyggede stier. Den fejl,
+den *havde*, var at den ikke var dette repos README — og det er præcis den, der
+nu er rød.
+
+**AGENTS.md er bevidst uden for porten:** filen er agentinstruktion, ikke
+kundesiden, og den nævner de lukkede udbydere bevidst og historisk. En port der
+flaggede den ville gøre porten ligegyldig for alt andet.
+
+**Fire fund, hvor tre var fejl i min egen port** — se `STATE`. Den lærerigste:
+`no_domains` ledede efter domænenavnet i teksten, og den gamle README nævner
+`mahope.tools/api/license` i en privatlivssætning. Porten var altså grøn på
+præcis den fejl, den var skrevet til at fange. Femte fund kom fra en *eksisterende*
+port: `check_license_clients.py` erklærede den nye fil for en licensklient, fordi
+den nævner licens-API'en i en kommentar om hvorfor den ikke gør det — samme
+forvirring som opgave 20, lukket via portens egen `NOT_CLIENTS`.
 
 ### 27. UFÆRDIG — de shippede README'er kan ikke nævne Pro, fordi en ændring kræver en version
 `extension-clean-copy-firefox/README.md` (Pro: 0 fund, donation: 0) og
