@@ -403,6 +403,18 @@
       ]
     },
     {
+      "path": "site/da/compliance-report.html",
+      "domain": "mahope.tools",
+      "route": "/da/compliance-report",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — $79/år"
+      ]
+    },
+    {
       "path": "site/support.html",
       "domain": "mahope.tools",
       "route": "/support",
