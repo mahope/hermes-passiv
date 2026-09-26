@@ -37,7 +37,7 @@
     <h1 id="title">Thanks for your purchase!</h1>
     <p id="status" class="hint" role="status">Looking up your order…</p>
     <div class="thanks-card" id="result" hidden></div>
-    <p class="hint">We have also emailed this to you. Nothing arrived? Check spam, or reply to your Stripe receipt and Mads will sort it out.</p>
+    <p class="hint" id="mail"></p>
   </main>
   <script>
     (function () {
@@ -52,23 +52,44 @@
         status.textContent = '';
         document.getElementById('title').textContent = 'Thanks for buying ' + d.product_name + '!';
         var html;
+        // Hver `kind` i worker's STRIPE_PRODUCTS skal have en egen gren. En
+        // donation har hverken nøgle eller downloads, så den må ikke falde
+        // igennem til download-grenen: det kaster en TypeError, og kunden
+        // ender med at se "Network problem" på en betaling der lykkedes.
         if (d.kind === 'license') {
           html = '<p><strong>Your license key</strong></p><div class="key-box"><code id="key">' + esc(d.license_key) + '</code>'
             + '<button type="button" class="btn" id="copy">Copy</button></div>'
             + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
             + (d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
-            + '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>'
+            + (d.activate_url ? '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>' : '')
             + (d.billing_portal
               ? '<div class="portal-row"><p><strong>Your subscription renews yearly.</strong> You can cancel any time, '
                 + 'download your invoices and update your card or VAT ID yourself here: '
                 + '<a href="' + esc(d.billing_portal) + '" rel="nofollow noopener">Manage your subscription</a>.</p></div>'
               : '');
-        } else {
+        } else if (d.kind === 'donation') {
+          html = '<p><strong>Thank you — there is nothing to activate.</strong></p>'
+            + '<p class="hint">Your donation keeps the free tools free, and Stripe has emailed your receipt. '
+            + 'Questions? Just reply to that email.</p>';
+        } else if (Array.isArray(d.downloads)) {
           html = '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
             + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>';
+        } else {
+          html = '<p>We could not read your order. Your payment went through — reply to your Stripe receipt '
+            + 'and Mads will send what you bought.</p>';
         }
         box.innerHTML = html;
         box.hidden = false;
+        // "Vi har også sendt det" må kun siges, når det er sandt. `emailed` er
+        // false, hvis kunden ikke gav en mailadresse eller Resend ikke svarede.
+        var mail = document.getElementById('mail');
+        if (mail) {
+          mail.textContent = d.kind === 'donation'
+            ? 'Stripe has emailed your receipt. There is nothing else to activate.'
+            : (d.emailed
+              ? 'We have also emailed this to you. Nothing arrived? Check spam, or reply to your Stripe receipt and Mads will sort it out.'
+              : 'We could not email this to you, so save what is on this page now. Reply to your Stripe receipt and Mads will resend it.');
+        }
         var copy = document.getElementById('copy');
         if (copy) copy.addEventListener('click', function () {
           navigator.clipboard.writeText(d.license_key).then(function () { copy.textContent = 'Copied'; });
