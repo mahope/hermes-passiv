@@ -9,7 +9,7 @@
 - `GATE`: `GRØN — build_sites.py OK, seo_check 309 sider 0 fund, **stripe-worker 106/106** (fra 93/93: 13 nye, ingen tab), check_inline_js 298 filer 0 problemer. De 13 nye: 4 afvisninger (ingen nøgle / forkert produkt / ikke aktiveret / GET=405), 2 SSRF, 1 succes med fund i alle tre kategorier, 1 velformethed på hvert fund, 3 kilde-porte der beviser at browseren ikke længere beregner noget. Sidste tre er de egentlige: de er den eneste port der fanger Ctrl+P-hullet, fordi de læser \`site/compliance-report.html\`.`
 - `SLIP`: `Ingen. ~42 min, committet før dræbningen. Review sprunget over som kontrakten tillader: ~290 linjer, og beviset er 13 tests kørt på det rigtige træ inkl. to negative (forkert produkt, uaktiveret nøgle) og to SSRF, ikke en læsning.`
 - `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 1/1, 50: 1/1, 51: 1/1, 52: 1/1, 53: 1/1, 54: 1/1`
-- `DEPLOY`: `(opgave 54, ÅBEN): \`VERIFICÉR DEPLOY: /api/report lukker Ctrl+P-hullet på EUComply Pro 8c62ad3 26/9\`. Dette repo deployer ved push til main, så CI kører \`gate\` før de tre deploys.`
+- `DEPLOY`: `(opgave 54, LUKKET): \`DEPLOY OK 8c62ad3 26/9\` — CI-kørslen for merge-SHA'en grøn, og \`build-info.json\` på mahope.tools bærer \`8c62ad3c\`. Verificeret på **adfærd**, ikke på HTTP 200: et live \`POST /api/report\` med en 32-tegns nøgle der ikke findes svarer **402** med \`A valid EUComply Pro license is required for the full report.\` — altså den nye rutes egen fejltekst i live, ikke en 404 fra en rute der ikke findes. Ruten er deployet og den afviser.`
 
 
 
