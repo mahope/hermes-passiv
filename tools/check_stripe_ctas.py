@@ -1325,10 +1325,18 @@ class TierBlocks(HTMLParser):
         if self.skip:
             self._unwind(tag)
             return
-        while self._open and self._open[-1]["tag"] != tag:
-            self.blocks.append(self._open.pop())
-        if self._open:
-            self.blocks.append(self._open.pop())
+        # Kun en blok-slutning lukker blokke. En inline-slutning (`</strong>`,
+        # `</code>`, `</a>`) må ikke lukke den `<p>` den står i — målt på
+        # `site/activate/index.html`: `</strong>` i det nye gratis-afsnit
+        # lukkede afsnittet efter den følende tekst, så porten så kun
+        # "you do not have a license key?" og resten af sætningen forsvandt.
+        # Det er samme fejl som opgave 69/70/71: et krav der ikke kan fejle,
+        # fordi halvdelen af teksten aldrig blev læst.
+        if tag in self.BLOCK_TAGS:
+            while self._open and self._open[-1]["tag"] != tag:
+                self.blocks.append(self._open.pop())
+            if self._open:
+                self.blocks.append(self._open.pop())
         self._unwind(tag)
 
     def _close(self, block: dict) -> None:
