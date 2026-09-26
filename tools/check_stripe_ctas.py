@@ -69,6 +69,56 @@ HIDDEN_TAGS = {"head", "script", "style", "template", "noscript"}
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link",
              "meta", "param", "source", "track", "wbr"}
 
+#: Tags der kun er struktur *i dokumenthovedet*. Skrevet i brødteksten er de
+#: bogstavelig tekst — en browser ignorerer dem — så de må ikke åbne en skjult
+#: region. Målt: `site/blog/canonical-url-guide.html` skriver "a `<head>` tag"
+#: i to afsnit, og porten holdt resten af artiklen for usynlig resten af
+#: dokumentet, fordi de to aldrig lukkes.
+HEAD_LEVEL_TAGS = {"head", "title", "meta", "link", "base"}
+
+
+class HiddenStack:
+    """De skjulte regioner i et dokument, som en stak.
+
+    Målt, ikke antaget. Før denne iteration var de en tæller pr. tag, og den
+    kunne blive falsk på to måder, begge målt på rigtige filer:
+
+    1. **Ned under nul.** `TierBlocks.handle_endtag` trak `span` ned for en
+       `</span>` inde i en lukket `<details>`, selv om den `span` aldrig var
+       talt op, fordi `<span>` selv ikke er skjult. `any(dict.values())` så
+       `-1` som *sandt*, så hele resten af siden blev dømt usynlig. Målt på
+       `site/clean-copy-tool.html`: parseren endte med `{'span': -2}` og så
+       altså ikke Pro-afsnittet, footeren eller FAQ'en — på den købsside hvor
+       Clean Copy Pro sælges.
+    2. **Op men aldrig ned.** Se `HEAD_LEVEL_TAGS`: en region der aldrig
+       lukkes, gør hele dokumentets bagside usynlig.
+
+    En stak kan ingen af delene. En `</tag>` lukker hele den region den
+    afslutter, også de tællere der lå indeni, og en tag der ikke åbnede en
+    region kan ikke lukke en. Det er præcis en browsers egen model.
+    """
+
+    def __init__(self) -> None:
+        self.tags: list[str] = []
+        self.in_body = False
+
+    def __bool__(self) -> bool:
+        return bool(self.tags)
+
+    def open(self, tag: str) -> None:
+        if tag in HEAD_LEVEL_TAGS and self.in_body:
+            return  # Bogstavelig tekst i brødteksten, ikke en beholder.
+        self.tags.append(tag)
+
+    def close(self, tag: str) -> None:
+        for index in range(len(self.tags) - 1, -1, -1):
+            if self.tags[index] == tag:
+                del self.tags[index:]
+                return
+
+    def enter_body(self) -> None:
+        self.in_body = True
+
 FORBIDDEN_CLAIMS = (
     "pro is coming",
     "coming soon",
@@ -136,7 +186,7 @@ class Page(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.visible_parts: list[str] = []
         self.all_links: list[str] = []
         self.in_json_ld = False
@@ -144,7 +194,7 @@ class Page(HTMLParser):
         self.current_anchor_parts: list[str] = []
 
     def _is_hidden(self) -> bool:
-        return any(self.hidden.values())
+        return bool(self.hidden)
 
     def handle_starttag(self, tag: str, attrs) -> None:
         attributes = {key.lower(): value or "" for key, value in attrs}
@@ -162,14 +212,15 @@ class Page(HTMLParser):
         )
         if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
             self.in_json_ld = True
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "script" and self.in_json_ld:
             self.in_json_ld = False
-        if tag in self.hidden and self.hidden[tag] > 0:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
         if tag == "a":
             self.current_href = None
             self.current_anchor_parts = []
@@ -191,7 +242,7 @@ class AnchorCollector(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.anchors: list[tuple[str, str]] = []
         self.open: list[tuple[str, list[str]]] = []
         self.in_json_ld = False
@@ -207,13 +258,15 @@ class AnchorCollector(HTMLParser):
             or attributes.get("aria-hidden", "").casefold() == "true"
             or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I) is not None
         )
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
         if tag == "a" and not self._hidden():
             self.open.append((attributes.get("href", ""), []))
 
     def _hidden(self) -> bool:
-        return self.in_json_ld or any(self.hidden.values())
+        return self.in_json_ld or bool(self.hidden)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "script" and self.in_json_ld:
@@ -223,8 +276,7 @@ class AnchorCollector(HTMLParser):
             text = normalize(" ".join(parts))
             if text:
                 self.anchors.append((href, text))
-        if tag in self.hidden and self.hidden[tag] > 0:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
 
     def handle_data(self, data: str) -> None:
         if self._hidden():
@@ -333,14 +385,14 @@ class ProseBlocks(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.in_json_ld = False
         self.in_code = 0
         self.blocks: list[str] = []
         self._parts: list[str] = []
 
     def _is_hidden(self) -> bool:
-        return any(self.hidden.values())
+        return bool(self.hidden)
 
     def handle_starttag(self, tag: str, attrs) -> None:
         attributes = {key.lower(): value or "" for key, value in attrs}
@@ -354,8 +406,10 @@ class ProseBlocks(HTMLParser):
         )
         if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
             self.in_json_ld = True
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
         if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
             self.in_code += 1
         # Et nyt blokelement afslutter det foregående afsnit. Uden det ville
@@ -373,8 +427,7 @@ class ProseBlocks(HTMLParser):
         if tag in ("p", "li", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6",
                    "div", "section", "article", "blockquote", "figcaption", "tr"):
             self._flush()
-        if tag in self.hidden and self.hidden[tag] > 0:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
 
     def handle_data(self, data: str) -> None:
         if self.in_json_ld or self._is_hidden() or self.in_code:
@@ -407,7 +460,7 @@ class VisibleBlocks(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.parts: list[str] = []
         self.in_json_ld = False
         self.table_headers: list[list[str]] = []
@@ -418,7 +471,7 @@ class VisibleBlocks(HTMLParser):
         self._in_header = False
 
     def _is_hidden(self) -> bool:
-        return any(self.hidden.values())
+        return bool(self.hidden)
 
     def handle_starttag(self, tag: str, attrs) -> None:
         attributes = {key.lower(): value or "" for key, value in attrs}
@@ -434,8 +487,10 @@ class VisibleBlocks(HTMLParser):
         )
         if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
             self.in_json_ld = True
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
         if self._is_hidden():
             return
         if tag == "table":
@@ -464,8 +519,7 @@ class VisibleBlocks(HTMLParser):
                 self.table_headers.append(self._table[0])
                 self.comparisons.append(self._table)
             self._table = None
-        if tag in self.hidden and self.hidden[tag] > 0:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
 
     def handle_data(self, data: str) -> None:
         if self.in_json_ld or self._is_hidden():
@@ -586,7 +640,7 @@ class PriceLabels(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.in_json_ld = False
         self.in_code = 0
         self.depth = 0
@@ -594,7 +648,7 @@ class PriceLabels(HTMLParser):
         self.labels: list[str] = []
 
     def _is_hidden(self) -> bool:
-        return any(self.hidden.values())
+        return bool(self.hidden)
 
     def handle_starttag(self, tag: str, attrs) -> None:
         attributes = {key.lower(): value or "" for key, value in attrs}
@@ -608,8 +662,10 @@ class PriceLabels(HTMLParser):
         )
         if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
             self.in_json_ld = True
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
         if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
             self.in_code += 1
         if self.depth:
@@ -627,8 +683,7 @@ class PriceLabels(HTMLParser):
             self.in_json_ld = False
         if tag in CODE_TAGS and self.in_code > 0:
             self.in_code -= 1
-        if tag in self.hidden and self.hidden[tag] > 0:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
         if self.depth:
             self.depth -= 1
             if self.depth == 0:
@@ -1248,7 +1303,7 @@ class TierBlocks(HTMLParser):
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.hidden: dict[str, int] = {}
+        self.hidden = HiddenStack()
         self.skip = 0
         self.in_json_ld = False
         self.open_tags: list[tuple[str, bool]] = []
@@ -1257,7 +1312,7 @@ class TierBlocks(HTMLParser):
         self.pro_depth = 0
 
     def _is_hidden(self) -> bool:
-        return any(self.hidden.values())
+        return bool(self.hidden)
 
     def _tier(self, attrs: dict[str, str]) -> str | None:
         classes = (attrs.get("class") or "").split()
@@ -1277,8 +1332,10 @@ class TierBlocks(HTMLParser):
         )
         if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
             self.in_json_ld = True
+        if tag == "body":
+            self.hidden.enter_body()
         if hidden and tag not in VOID_TAGS:
-            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+            self.hidden.open(tag)
         if self._is_hidden():
             self.open_tags.append((tag, False))
             return
@@ -1320,8 +1377,7 @@ class TierBlocks(HTMLParser):
             self.in_json_ld = False
         if tag in ("script", "style") and self.skip:
             self.skip -= 1
-        if self._is_hidden() and tag in self.hidden:
-            self.hidden[tag] -= 1
+        self.hidden.close(tag)
         if self.skip:
             self._unwind(tag)
             return
@@ -2631,6 +2687,161 @@ def self_test() -> int:
         print("SELFTEST FEJLER: to labels for én funktion meldes ikke én gang pr. "
               f"produkt uden at dømme dem hver især: {twin_problems}")
         return 1
+    # ── de otte flader: en erklæret gratis-funktion skal kunne bide på dem ──
+    #
+    # `paid_contexts` læser tre slags flader (målt i dens egen docstring):
+    # Pro-kortet, den betalte spalte i en tabel, og brødteksten. Selftestens
+    # øvrige mutationer læser alle **én** af dem — Gratis-kortet på de to
+    # page-profile-sider — så de otte købssider der *kun* har en sætning
+    # eller en tabel var ubevidnede. En gratis-funktion der flyttede til
+    # "Pro adds history tracking" på `site/deskuptime/index.html` ville være
+    # gået ubemærket.
+    #
+    # Derfor otte mutationer, én pr. flade, og hver kræver **præcis én** rød
+    # der nævner netop den side. Mutationen er den rigtige fejlform: siden siger
+    # ærligt at funktionen er gratis (det sætter testen op, som en kunde
+    # ellers ikke ville se nogen steder), og mutationen sætter den *samme*
+    # sætning ind i den betalte kontekst. Ét katalogsignal, ét krav, én fejl.
+    #
+    # Kun én `free_features`-post i katalogkopien, ikke alle fem: ellers ville
+    # hver mutation også kræve de fire andres labels på alle otte sider, og
+    # det er ikke den fejlform der testes her.
+    prose_surfaces = [
+        "site/clean-copy.html",
+        "site/da/clean-copy.html",
+        "site/activate/index.html",
+        "site/da/activate/index.html",
+        "site/clean-copy-tool.html",
+        "site/deskuptime/index.html",
+        "site/da/deskuptime/index.html",
+        "site/blog/desktop-website-monitor-cli.html",
+    ]
+    # Sætningen skal være naturlig i begge sprog, og den skal ramme præcis det
+    # porten dømmer: et gratis-afsnit med *gratis* og uden noget betalt ord, og
+    # et betalt afsnit med *Pro* og uden noget gratis ord. `<strong>` før
+    # sætningen er ikke kosmetik — den er der, fordi isolationen nedenfor
+    # spørger om porten stadig ser den tekst der står *efter* et inline-element.
+    free_sentence = {
+        "en": "<p>{} is free for everyone.</p>",
+        "da": "<p>{} er gratis for alle.</p>",
+    }
+    paid_sentence = {
+        "en": "<p><strong>Pro</strong> also adds {} for every run.</p>",
+        "da": "<p><strong>Pro</strong> tilføjer også {} for hver kørsel.</p>",
+    }
+    feature = good["products"]["page-profile-pro"]["free_features"][0]
+    feature_id = str(feature.get("id"))
+    unproven: list[str] = []
+    for relative in prose_surfaces:
+        real = (ROOT / relative).read_text(encoding="utf-8")
+        lang = page_lang(relative, real)
+        label = (feature.get("labels") or {}).get(lang) or []
+        if not label:
+            unproven.append(f"{relative}: {feature_id} har ingen {lang}-label at sætte ind")
+            continue
+        sentence = str(label[0])
+        spoken = sentence[:1].upper() + sentence[1:]
+        honest = real.replace("</main>", free_sentence[lang].format(spoken) + "\n</main>", 1)
+        mutated = honest.replace("</main>", paid_sentence[lang].format(sentence) + "\n</main>", 1)
+        if honest == real or mutated == honest:
+            unproven.append(f"{relative}: sætningen blev ikke indsat — mutationen er en "
+                            "stum kontrol, fordi den ikke rammer siden")
+            continue
+        one = {**good, "products": {**good["products"], "page-profile-pro": {
+            **good["products"]["page-profile-pro"], "free_features": [feature]}},
+            "offers": [{"path": relative, "product": "page-profile-pro"}]}
+        # Negativ kontrol: den ærlige side — gratis-fladen siger den, den
+        # betalte kontekst gør ikke — skal være grøn. Ellers ville mutationen
+        # ramme en fejl der allerede var der.
+        clean = check_free_features(one, [(relative, honest)])
+        if clean:
+            unproven.append(f"{relative}: den ærlige side fejler allerede: " + "; ".join(clean))
+            continue
+        sold = check_free_features(one, [(relative, mutated)])
+        if len(sold) != 1 or relative not in sold[0] or f"'{feature_id}'" not in sold[0]:
+            unproven.append(f"{relative}: den betalte kontekst giver "
+                            f"{len(sold)} fejl i stedet for én om {feature_id}: " + "; ".join(sold))
+    if unproven:
+        print("SELFTEST FEJLER: en gratis-funktion kan flytte ind i den betalte kontekst "
+              "på disse sider uden at porten siger præcis én ting om siden: "
+              + "; ".join(unproven))
+        return 1
+
+    # Isolationen fra opgave 74, skrevet permanent. Inden parser-rettelsen lukkede
+    # enhver slutning hele `<p>`-blokken, så alt der stod efter det første
+    # inline-element forsvandt, og porten var grøn på otte sider den kun læste
+    # halvdelen af. Det er skrevet som en måling i loggen to gange; her er det
+    # en permanent blok, fordi "porten læser hele siden" er et krav der skal
+    # kunne fejle. Vagten gøres blind — ethvert tag lukker blokke — og de otte
+    # mutationer skal da **holde op med at fejle**, mens de rigtige sider
+    # stadig er grønne. Blinde man vagten og mutationerne stadig fejler, er
+    # de grønne af en anden grund end den, porten tror.
+    class EveryTagClosesBlocks(frozenset):
+        def __contains__(self, item: object) -> bool:
+            return True
+
+    class BlindedTierBlocks(TierBlocks):
+        """`handle_endtag`s betingelse er blind, som den var før opgave 74.
+
+        **Kun** slutningen blændes. `handle_starttag` skal stadig åbne blokke
+        kun for de rigtige blok-tags, ellers genskaber vi en anden fejl: så
+        åbner hvert inline-element også en blok, og mutationen overlever af
+        den grund. Derfor blændes vagten kun for varigheden af ét
+        `handle_endtag` — præcis den kode der blev rettet.
+        """
+
+        def handle_endtag(self, tag: str) -> None:
+            self.BLOCK_TAGS = EveryTagClosesBlocks()
+            try:
+                super().handle_endtag(tag)
+            finally:
+                del self.BLOCK_TAGS
+
+    def with_blinded_parser(work):
+        """Kør `work` med den blinde parser i stedet for den rigtige."""
+        saved = globals()["TierBlocks"]
+        globals()["TierBlocks"] = BlindedTierBlocks
+        try:
+            return work()
+        finally:
+            globals()["TierBlocks"] = saved
+
+    def mutation_for(relative: str) -> tuple[dict, list[tuple[str, str]]]:
+        real = (ROOT / relative).read_text(encoding="utf-8")
+        lang = page_lang(relative, real)
+        sentence = str(((feature.get("labels") or {}).get(lang) or [""])[0])
+        spoken = sentence[:1].upper() + sentence[1:]
+        honest = real.replace("</main>", free_sentence[lang].format(spoken) + "\n</main>", 1)
+        mutated = honest.replace("</main>", paid_sentence[lang].format(sentence) + "\n</main>", 1)
+        one = {**good, "products": {**good["products"], "page-profile-pro": {
+            **good["products"]["page-profile-pro"], "free_features": [feature]}},
+            "offers": [{"path": relative, "product": "page-profile-pro"}]}
+        return one, [(relative, mutated)]
+
+    def sold_by_blind_parser(relative: str) -> list[str]:
+        one, pages = mutation_for(relative)
+        return [x for x in with_blinded_parser(
+                    lambda: check_free_features(one, pages))
+                if f"'{feature_id}'" in x and "Pro-kortet sælger" in x]
+
+    blind = [relative for relative in prose_surfaces if sold_by_blind_parser(relative)]
+    # Blindingen skal også kunne *måles*, ellers er den otte mutationers
+    # grådige pause et tegn på en mutation der ingenting ændrede. Den rigtige
+    # parser læser mere tekst end den blinde på de rigtige filer — målt, ikke
+    # formodet: `site/clean-copy.html` læser 289/113 med den rigtige
+    # (opgave 74, Fund 2) og taber alt efter første inline-element med den
+    # blinde.
+    real_text = (ROOT / "site/clean-copy.html").read_text(encoding="utf-8")
+    read_right = paid_contexts(real_text)
+    read_blind = with_blinded_parser(lambda: paid_contexts(real_text))
+    if blind or not all(len(a) >= len(b) for a, b in zip(read_right[:2], read_blind[:2])):
+        print("SELFTEST FEJLER: porten læser ikke hele siden. Med den blinde vagt i "
+              "handle_endtag skulle de otte mutationer holde op med at fejle, og den "
+              "blinde parser læse mindre end den rigtige — "
+              f"fejlende mutationer: {blind}; læst med/uden blindning: {read_right} "
+              f"mod {read_blind}")
+        return 1
+
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
     #
     # Beviset er de rigtige publicerede sætninger fra opgave 49, hentet fra
