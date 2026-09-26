@@ -2,6 +2,23 @@
 
 ## Status
 
+- `ITERATION_ID`: `da-aktiveringsguide-2026-09-26`
+- `STATE`: `Opgave 50 FÆRDIG — den danske betaler mødte en engelsk side midt i købsrejsen, og det var målbart i den hjemme: `site/da/clean-copy.html:135` skrev "Licensnøglen kommer på mail og på taksesiden; aktivér den dér" og linkede `aktiveringsguiden` til `/activate/`, som **kun findes på engelsk**. Den side er den danske første skridt i købsrejsen (den bærer købsknappen), så den danske vejledning lå lige i den betalte strøm. **Fund 1 — den nye side er ikke bare en oversættelse, den løftede de danske UI-navne, der ikke findes.** Udvidelsens `options.html:61,63` hedder `License key` og `Activate` på engelsk, Obsidian-pluginets felt hedder `Clean Copy Pro license`, og webværktøjets `<summary>` er `Already have a license key? Activate it here` — altså fire UI-strenge på engelsk. En side der havde oversat dem til "Licensnøgle"/"Aktivér" ville sendt den danske bruger ud i en menu der ikke findes, så siden **citerer de rigtige engelske navne** og siger det i en egen linje. Det er samme regel som opgave 30 og 37: skriv det kunden møder, ikke det der lyder bedst på dansk. **Fund 2 — den døde klasse `eyebrow` blev fundet undervejs.** Begge aktiveringssider bar `<p class="eyebrow">`, og `grep -c '\.eyebrow' site/style.css` er **0** — klassen findes i intet stylesheet i repoet, så den har aldrig gjort noget; den erstat af `.activate-kicker` med en reel regel i sidens egen `<style>`, på begge sider. **Fund 3 — tilføjelsen af en DA-side lå i tre registre, ikke ét.** (a) `build_sites.py:71` cleancopy.tools' `include` havde `activate/**` men ikke `da/activate/**`, så filen ville være faldet ned i mahope.tools' `rest`-regel og publiceret på **forkert domæne**; (b) `tools/route_inventory.json` er sandheden for `check_sitemaps` — en rute i dist men ikke i inventaret er en fejl, og omvendt; (c) `tools/stripe_catalog.json` er sandheden for hele købsporten. Med alle tre er `/da/activate/` en rigtig dansk rute med sin egen købsknap, egen sitemap-post og **sin egen gate**.`
+- `ACTIVE_TASK`: `— (ingen opgave I GANG)`
+- `BASELINE`: `main@5279395`
+- `LAST_BRANCH`: `ceo/da-aktiveringsguide`
+- `NEXT_TASK`: `Køen er tom på konkrete opgaver — næste iteration er en researchiteration. Målingsforslag, prioriteret efter hvor meget den kan flytte: (1) **Mål de danske sider som købsrejse, ikke som tekst.** `check_pro_features` bruger `page_lang()` på `/da/`-stier, så den danske halvdel er gate'd for de fire produkter med `pro_features` — men ingen port gater om en dansk købsside findes *overhovedet*, før den engelske gjorde. Tæl `site/da/**/*.html` med en synlig betalingsadresse mod `offers` i katalogen. (2) **Den anden halvdel af samme måling:** de 251 mahope.tools-ruter har en `/da/`-modstøjelse på et ukendt antal. (3) **❓ 14 er en reel forretningsmulighed målt i ❓-teksten:** EUComply Pro's eneste Pro-værdi er print-dialogen, og rapporten ligger i DOM'en *inden* nøglen indtastes — så Ctrl+P giver den samme PDF. En port der tjekker at rapportens print-vej kræver en valid licens ville finde det samme hul andre steder.`
+- `GATE`: `GRØN — python3 tools/quality_gate.py: GRØN, **47 steps** (uændret — ingen ny port, kun en ny købsside, så workflowens path-filter er urørt). check_stripe_ctas: 13 produkter / **12** købssider (fra 11), **0 fejl**; --self-test **31/31** uændret. seo_check **309** sider (fra 308) 0 fund. site/_worker.js urørt, stripe-worker uændret, dist/uændret (gitignored). Bevis på den rigtige kode: buildet viser `dist/cleancopy.tools/da/activate/index.html` med **én** `canonical` på `/da/activate/`, `hreflang` en+da+x-default, sitemap-post `<loc>https://cleancopy.tools/da/activate/</loc>`, og et **fungerende sprogskift på begge sider** — først når hreflag-rækken findes på begge kilder danner `_lang_switch` den (`build_sites.py:616-626`), så kun at skrive den danske side ville have givet en DA-side med link til EN og en EN-side uden skift.`
+- `SLIP`: `Ingen. ~33 min, committet før dræbningen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~60 linjer fordelt på 6 filer (én ny side), og beviset er porten + det byggede output, ikke en læsning.`
+- `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 1/1, 50: 1/1`
+- `DEPLOY` (opgave 50, ÅBEN): `VERIFICÉR DEPLOY: /da/activate/ er publiceret med egen købsknap, egen sitemap-post og sprogskift på begge sprog <merge-sha> 26/9` — GitHub Actions deployer med det samme (`site/**`, `build_sites.py` og `tools/**` er i path-filteret). Verificér på **indhold**:
+  - `https://cleancopy.tools/build-info.json` skal bære merge-SHA'en (mahope.tools og deskuptime.com bør også, de bygges i samme kørsel).
+  - Hentet `https://cleancopy.tools/da/activate/?cb=…` skal have `canonical` på `/da/activate/`, `hreflang="da"`, præcis **1** `buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00`, **`batch-konvertering`** og **`egne rense regler`** i læsbar tekst, og `href="/da/"` på tilbageknappen.
+  - Hentet `https://cleancopy.tools/activate/?cb=…` skal have **0** fund af `class="eyebrow"` og **1** af `activate-kicker`, og et sprogskift med `hreflang="da"` (før var den `is-empty`).
+  - Hentet `https://cleancopy.tools/da/?cb=…` skal have **0** fund af `href="/activate/"` og mindst **1** af `/da/activate/`.
+  - `https://cleancopy.tools/sitemap.xml` skal indeholde `<loc>https://cleancopy.tools/da/activate/</loc>`.
+- `PLAN_COMMIT` (opgave 50): `kode + plan i samme commit, ingen ren plan-commit`
+
 - `ITERATION_ID`: `pro-loefter-mod-koden-2026-09-26`
 - `STATE`: `Opgave 49 FÆRDIG — målingen af de fire andre licensprodukter fandt **to betalte løfter, koden ikke holder**, på flader ingen port læste. **Fund 1 — `deskuptime-pro` solgte e-mail-alarmer, der ikke findes.** Fire live flader løvede dem (\`site/deskuptime/index.html\`, \`site/da/deskuptime/index.html\`, \`site/blog/desktop-website-monitor-cli.html\` og \`/checkout\`-noten i \`site/_worker.js:2284\`), og der er **ingen e-mail-kode** i hverken \`deskuptime/\` eller \`deskuptime-desktop/\`. Produktets egen kilde vidste det: \`deskuptime/src/features.js:145-153\` markerer rækken \`implemented: false\`, og \`deskuptime-desktop/docs/pro-alerts.md:85-95\` siger *"the app has no email code at all"*. \`deskuptime/IMPLEMENTATION_PLAN.md:166\` har det som P0-12. Siden har altså solgt en funktion i et halvt år, som produktets egen kode siger ikke findes. **Fund 2 — \`eucomply-pro\` til $79/år solgte fire funktioner ud over den ene den har.** Kortet lovede "Continuous compliance monitoring for one website", "Unlimited scans and history tracking", "Client-ready branded PDF reports" og "Priority support (email within 24h)". Målt: ingen scheduler, ingen cron og ingen gemte scans nogen sted (\`site/_worker.js\` har 19 ruter, ingen periodisk); ingen historikstore og ingen kvote at løfte, fordi \`/scan\` kører uden licens (\`site/compliance-report.html:205-338\` er klient-side); \`verifyAndDownload()\` (\`:504-535\`) kalder \`window.print()\`, så der er ingen PDF-generator og intet brand; og ingen supportkanal og ingen SLA findes — den direkte sidste er den supportlast, missionen forbyder. Den **eneste** reelle gate er at licensen må åbne print-dialogen. **Fund 3 — de to portroller var ens, men kun den ene læste siderne.** \`check_pro_features\` (opgave 48) gater at en købsside *nævner* det betalte; ingen port gater at den ikke *lover det ubygde*. Derfor var en hel fejlklasse usynlig for gaten, uanset hvor mange fejlformer \`check_pro_features\` havde. **Fund 4 — den fjerde flade lå i workerens checkout-note.** \`site/_worker.js:2284\` skrev *"desktop tray app, email & webhook alerts, unlimited URLs"* på \`/api/stripe/checkout\` — samme løgned, på en route ingen HTML-port så, præcis fejlformen fra opgave 45. **Fund 5 — \`page-profile-pro\` er det eneste produkt, hvor løfte og kode er 1:1.** Alle tre gater findes og alle tre navngives på begge sprog (\`page_profile.py:1066\`, \`:1071\`, \`:1094\`). Rettelsen derfor: ingen tekstændring, kun *beskyttelse* — de samme løfter holdes nu af porten. Det er også en måling, ikke en antagelse: de fire produkter er ikke ens, så "søg og ret alle" ville være gætteri. **Fund 6 — porten fandt en reel dansk mangel ved første kørsel.** \`site/da/page-profile.html\` skrev "Sammenligning" i kortet og "Sammenlign to URLs side om side" i tabellen, mens \`sammenligningstilstand\` kun stod i en lukket FAQ. Samme fejlklasse som opgave 48 fund 3.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
@@ -23,12 +40,13 @@
 - `SLIP`: `Ingen. ~40 min, commit før dræbningen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~150 linjer, og beviset er porten kørt på de rigtige gamle filer fra HEAD, ikke en læsning.`
 - `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 0/0`
 - `DEPLOY` (opgave 47, LUKKET): `DEPLOY OK 47d6a85 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200. (1) \`build-info.json\` bærer \`47d6a85\` på alle tre domæner, og \`d78e299\` (dublet-id-mergen) er en stamfar af den, så de rettede sider er udgivet. (2) Hentet \`https://mahope.tools/blog/?cb=…\`: **0** dublet-id, og de fem sektions-id findes nu som \`accessibility-eaa\` + \`accessibility-eaa-2\`, \`gdpr-nis2-cookie-compliance\` + \`-2\`, \`copy-tables-markdown-tools\` + \`-2\`, \`seo-website-health\` + \`-2\`, \`dev-tools-guides\` + \`-2\`. (3) Hentet \`https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa?cb=…\`: **præcis 1** \`id="indhold"\` og **1** \`id="indhold-2"\`, ToC-linket er \`href="#indhold-2"\` og hero-CTA'en bevarer \`href="#indhold"\` — præcis den adfærd, der var forkert, fordi punktet "Indhold" sprang før over sin egen forfader. Bemærk: \`python3 tools/seo_check.py --url https://mahope.tools/blog\` giver **308**, fordi ruten er \`/blog/\` med skråstreg; porten skal have den uden den, som jeg gjorde.`
-- `DEPLOY` (opgave 48, ÅBEN): `VERIFICÉR DEPLOY: begge Clean Copy-forsider navngiver begge Pro-funktioner + hero-noten peger på /activate/ 2509913 26/9` — GitHub Actions deployer med det samme (`site/**` og `tools/**` er i path-filteret). Verificér på **indhold**, ikke HTTP 200:
+- `DEPLOY` (opgave 48, LUKKET): ~~`VERIFICÉR DEPLOY: begge Clean Copy-forsider navngiver begge Pro-funktioner + hero-noten peger på /activate/ 2509913 26/9` — GitHub Actions deployer med det samme (`site/**` og `tools/**` er i path-filteret). Verificér på **indhold**, ikke HTTP 200:
   - `build-info.json` skal bære `2509913` på cleancopy.tools, mahope.tools og deskuptime.com.
   - Hentet `https://cleancopy.tools/?cb=…` skal have **0** fund af `supports development of the free version`, mindst **1** fund af `custom cleanup rules` og **1** af `batch conversion`, og `href="/activate/"`.
   - Hentet `https://cleancopy.tools/da/?cb=…` skal have **0** fund af `støtter udviklingen af den gratis version`, mindst **1** fund af `egne rense regler` og **1** af `batch-konvertering`.
   - Købsknappen `buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00` skal være **urørt** på begge sider, og `/clean-copy-tool` + `/activate/` skal stadig vise begge funktioner (de var korrekte i forvejen).
 - `PLAN_COMMIT` (opgave 48): `kode + plan i samme commit (3457638), + én ren plan-commit for deploynoten`
+- `DEPLOY OK 3d8c553 26/9` (lukker opgave 48s note) — denne iterations måling, ikke en ny kørsel: `build-info.json` bærer `3d8c553` på alle tre domæner, og `2509913` er en stamfar af den, så opgave 48s kode er live. Indholdet efterprøvet med cachebuster: `cleancopy.tools/?cb=…` har **0** fund af `supports development of the free version`, **1** af `custom cleanup rules`, **1** af `batch conversion`, **1** af `href="/activate/"` og **1** købslink. `cleancopy.tools/da/?cb=…` har **0** af `støtter udviklingen af den gratis version`, **1** af `egne rense regler`, **1** af `batch-konvertering`, **1** af `href="/activate/"` og **1** købslink. `/clean-copy-tool` har 5 + 2 fund af de to funktioner, og `/activate/` har dem begge (linjeskiftet i teksten gjorde det første måltal til 0 ved et flugt grep — jeg læste den hentede side i stedet). Bemærk: opgave 50 skriver den danske forside til `/da/activate/`, så det er den adresse `/activate/`-linket på den danske forside nu peger på, der afgør om betalingerne stadig virker.
 
 
 - `STATE`: `Opgave 36 FÆRDIG — en betalt kunde fik et downloadlink til en fil der ikke findes, og både tak-siden og kvitteringsmailen lovede den. **Fund 1 — løftet lå i workeren, ikke på siden.** `fulfillStripeSession` byggede `result.downloads` som `product.files.map(...)` uden at spørge KV, om filerne overhovedet findes. `handlePaidDownload` svarer **503 "File temporarily unavailable"** på en fil der mangler i `paidfile:`. Målt: **0 af de 7 downloadprodukter har `kv_verified`** (opgave 24), så det er ikke en hypothetisk tilstand — det er den * nuværende. Kunden betalte $59, så tak-siden viste to filnavne, mailen indeholdt to `/api/download`-adresser, og begge dele svarede 503. **Fund 2 — mailen var lige så falsk som siden.** `sendSaleEmail` skrev `r.downloads.map(d => ...url)` ukritisk, så kvitteringen lovede det samme, kunden ikke kunne få. **Fund 3 — rettelsen må ikke gøre kunden afvist.** Filerne forsvinder ikke; de nævnes ved navn uden adresse, og betalingen siges at være gået igennem med kvitteringsmailen som bevis. Det er præcis opgave 36s ordlyd: "pege på support i stedet for på en død `/api/download`-adresse". **Fund 4 — ledgeren er permanent, så et engangssvar ville være en løgned der bliver stående.** Første gennemløb skriver svaret i `ful:<session>` uden udløb. Uden genberegning ville en kunde, der betalte mens filerne manglede, se "ikke tilgængelig" *for evigt*, også efter at Mads har lagt filerne ind. Derfor genberegnes `paidFilesStatus` på **hver** respons: kun metadata læses (`head`), og token'en gendannes lokalt med HMAC — ingen Stripe-kald, ingen ekstra roundtrip. Testen beviser selvhelbredningen: samme session, filen lagt ind efter købet, svaret giver straks et virkende link. **Fund 5 — min første kørsel lå en betalt kunde ude.** Jeg kaldte `env.VISITS.head()` uden fallback, og `tests/thanks-page.test.mjs`'s KV-mock har ingen `head`. Fulfillment svarede **503 "Could not look up the payment"** — altså præcis den fejl, mine egne tests skulle forhindre. Rettet til et `stream`-fallback, aldrig `get` uden type, der ville hente en hel PDF ind i hukommelsen. Nu er **begge veje dækket af virkelige kørsler**: stripe-testen bruger `head`, tak-sidens test bruger fallbacken.`
@@ -2542,13 +2560,41 @@ reelle træ, og selftesten dækker mindst ét produkt mere.
 
 **Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
 
-### 50. Åben følge — en dansk aktiveringsguide
+### 50. FÆRDIG (`ceo/da-aktiveringsguide`) — en dansk aktiveringsguide
 
-`/activate/` findes kun på engelsk, og opgave 48pegede den danske Clean Copy-forside
-til den. Det er ikke en løgned, men en dansk betaler der lige har købt og nu skal
-sætte nøglen ind, møder en engelsk side. Skriv `site/da/activate/index.html` med
-samme fire klienter, og tilføj den som en købsside i `tools/stripe_catalog.json`, så
-den også gates. Lille, men den ligger lige i den betalte købsrejse.
+**Begrundelse:** missionens konverteringspunkt 2. Opgave 48 pegede den danske
+Clean Copy-forside på `/activate/`, som kun findes på engelsk — en dansk betaler
+mødte en engelsk side midt i købsrejsen.
+
+**Fund (målt):** `site/da/clean-copy.html:135` linkede `aktiveringsguiden` til
+`/activate/`. Dansk guide findes ikke. Undervejs fandt målingen den døde klasse
+`eyebrow`, der findes i **intet** stylesheet i repoet.
+
+**Omfang:**
+
+- `site/da/activate/index.html` — samme fire klienter som den engelske, med de
+  **faktiske** UI-navne citeret (`License key`, `Activate`,
+  `Clean Copy Pro license`, `Already have a license key? Activate it here`),
+  fordi klienterne ikke er oversat. Finder `site/da/activate/**` i buildens
+  `include`, så den havner på cleancopy.tools og ikke i mahope.tools' `rest`.
+- `tools/route_inventory.json` + `tools/stripe_catalog.json` — ruten som
+  inventar og den nye side som købsside, så den gates af `check_offers`,
+  `check_free_tier`, `check_pro_features` og `check_pro_not_built`.
+- `site/activate/index.html` — hreflang-række, så sprogskiftet dannes på begge
+  sider; `.eyebrow` → `.activate-kicker` med en reel regel, på begge sider.
+- `site/da/clean-copy.html` — hero-noten peger på `/da/activate/`.
+
+**Resultat:** `check_stripe_ctas` går fra 11 til 12 købssider, 0 fejl;
+`seo_check` fra 308 til 309 sider, 0 fund.
+
+**Acceptkriterier:**
+
+- `/da/activate/` er en rigtig dansk rute med egen købsknap, egen sitemap-post og
+  eget sprogskift — på begge sprog.
+- Den navngiver begge Pro-funktioner på dansk (`batch-konvertering`,
+  `egne rense regler`) og siger, hvad den gratis version giver.
+- Den citerer de UI-navne klienten faktisk viser, så brugeren kan finde dem.
+- Hele kvalitetsgaten er grøn, og ingen portstep eller path-filter er rørt.
 
 ### 51. Målt grundlag for ❓ 13 findes ikke i repoet
 
@@ -2575,9 +2621,10 @@ besøgstal.
     rapporten ligger i DOM'en før nøglen indtastes, så Ctrl+P giver den samme PDF.
     Den bør lukkes, hvis Pro skal sælge på porten.
 
-15. **`/activate/` findes kun på engelsk, og opgave 48 pegede den danske Clean
-    Copy-forside til den.** En dansk betaler der lige har købt møder nu en engelsk
-    side. Det er opgave 50, og den er lille.
+15. ~~**`/activate/` findes kun på engelsk.**~~ **LUKKET 26/9 som opgave 50:**
+    `/da/activate/` findes, er i sitemap'en og har egen købsknap, og sprogskiftet
+    findes på begge sider. Dansk betaler behøver ikke længere engelsk midt i
+    købsrejsen.
 
 13. **Bagvendingen i trafiktallene kan ikke bevises mod arkivet.** `reports/weekly/`
     viser `health.visits_2d` 566 (uge 37) → 24 (uge 38) → 18 (uge 39), altså et
@@ -2664,6 +2711,8 @@ besøgstal.
 
 
 ## Deploylog
+
+- 2026-09-26: `DEPLOY OK 3d8c553` — lukker `VERIFICÉR DEPLOY` for opgave 48. Ikke en ny kørsel: `build-info.json` bærer `3d8c553` på alle tre domæner, og `2509913` er en stamfar af den, så opgave 48s kode er live. Indholdet efterprøvet med cachebuster: `cleancopy.tools/?cb=…` → **0** fund af *supports development of the free version*, **1** *custom cleanup rules*, **1** *batch conversion*, **1** `href="/activate/"`, **1** købslink. `cleancopy.tools/da/?cb=…` → **0** *støtter udviklingen af den gratis version*, **1** *egne rense regler*, **1** *batch-konvertering*, **1** købslink. `/clean-copy-tool` har begge funktioner (5 + 2 fund), og `/activate/` har dem også — målt ved at læse den hentede side, fordi et flugt-grep på `batch conversion` gav 0 alene på en linjeskiftet linje.
 
 - `DEPLOY` (opgave 47, LUKKET): `DEPLOY OK 47d6a85 26/9` — live-**indhold** verificeret med cachebuster, ikke på HTTP 200: (1) `build-info.json` bærer `47d6a85` på alle tre domæner, og `d78e299` (dublet-id-mergen) er en stamfar af den; (2) hentet `https://mahope.tools/blog/?cb=…` har **0** dublet-id, og de fem sektions-id står nu som `x` + `x-2`; (3) hentet `https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa?cb=…` har **1** `id="indhold"`, **1** `id="indhold-2"`, ToC-linket `href="#indhold-2"` og hero-CTA'en bevarer `href="#indhold"` — præcis den adfærd der var forkert, fordi punktet "Indhold" sprang før over sin egen forfader. **Bemærk til næste måling:** `python3 tools/seo_check.py --url https://mahope.tools/blog` giver **308**, fordi ruten er `/blog/` med skråstreg; porten skal køres på den fulde sti.
 
@@ -2935,6 +2984,12 @@ besøgstal.
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- **Opgave 50** `ceo/da-aktiveringsguide`: `/da/activate/` som rigtig dansk rute med egen
+  købsknap, egen sitemap-post og sprogskift på begge sprog; de faktiske engelske
+  UI-navne citeret i stedet for oversatte; den døde `eyebrow`-klasse erstattet af
+  `.activate-kicker` med en reel regel. `check_stripe_ctas` 11 → 12 købssider,
+  `seo_check` 308 → 309 sider, 47 steps uændret.
 
 - **Opgave 49** `ceo/pro-loefter-mod-koden`: to betalte løfter uden kode fjernet
   (DeskUptime-e-mail på fire flader, fire EUComply-funktioner), de reelle Pro-

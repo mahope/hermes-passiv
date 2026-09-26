@@ -308,6 +308,18 @@
       ]
     },
     {
+      "path": "site/da/activate/index.html",
+      "domain": "cleancopy.tools",
+      "route": "/da/activate/",
+      "product": "clean-copy-pro",
+      "prices": [
+        "$19"
+      ],
+      "requires_text": [
+        "Køb Clean Copy Pro — $19/år"
+      ]
+    },
+    {
       "path": "site/deskuptime/index.html",
       "domain": "deskuptime.com",
       "route": "/",
