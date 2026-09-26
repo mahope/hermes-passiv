@@ -1229,6 +1229,205 @@ class TierCards(HTMLParser):
         return normalize(" ".join(self.cards.get(tier, [])))
 
 
+class TierBlocks(HTMLParser):
+    """Synlig tekst pr. blok, med to ting ved hver blok: ligger den i
+    Pro-kortet, og er den en celle i en gratis/Pro-tabel.
+
+    Blokke er de elementer en læser læser som ét afsnit: `<p>`, `<li>`, en
+    overskrift, en tabelcelle. `<div>` og `<section>` er *beholdere*, ikke
+    afsnit, så de åbner ingen blok — ellers ville en hel side være én blok,
+    og "nævner den betalte udgave" ville blive sand for alt. En blok der
+    ligger i en anden blok (`<li><p>`) får teksten begge steder, så den
+    ydre afsnitstext ikke taber en indlejret sætning.
+    """
+
+    BLOCK_TAGS = frozenset(
+        {"p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "td", "th",
+         "caption", "blockquote", "dd", "dt", "figcaption"}
+    )
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hidden: dict[str, int] = {}
+        self.skip = 0
+        self.in_json_ld = False
+        self.open_tags: list[tuple[str, bool]] = []
+        self.blocks: list[dict] = []
+        self._open: list[dict] = []
+        self.pro_depth = 0
+
+    def _is_hidden(self) -> bool:
+        return any(self.hidden.values())
+
+    def _tier(self, attrs: dict[str, str]) -> str | None:
+        classes = (attrs.get("class") or "").split()
+        if "tier-card" not in classes:
+            return None
+        return "pro" if "pro" in classes else "free"
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        attributes = {key.lower(): value or "" for key, value in attrs}
+        style = attributes.get("style", "")
+        hidden = (
+            tag in HIDDEN_TAGS
+            or "hidden" in attributes
+            or attributes.get("aria-hidden", "").casefold() == "true"
+            or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I) is not None
+            or (tag == "details" and "open" not in attributes)
+        )
+        if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
+            self.in_json_ld = True
+        if hidden and tag not in VOID_TAGS:
+            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+        if self._is_hidden():
+            self.open_tags.append((tag, False))
+            return
+        if tag in ("script", "style"):
+            self.skip += 1
+            self.open_tags.append((tag, False))
+            return
+        if self.skip:
+            self.open_tags.append((tag, False))
+            return
+        entered_pro = self._tier(attributes) == "pro"
+        if entered_pro:
+            self.pro_depth += 1
+        if tag in self.BLOCK_TAGS:
+            self._open.append({
+                "tag": tag,
+                "parts": [],
+                "pro": self.pro_depth > 0,
+                "heading": tag.startswith("h") and len(tag) == 2 and tag[1].isdigit(),
+            })
+        self.open_tags.append((tag, entered_pro))
+
+    def _unwind(self, tag: str) -> None:
+        """Luk alle åbne elementer til og med `tag`, og tæl Pro-kort-dybden ned
+        igen for hvert af dem. Uden denne fortryder en `</div>` der lukker et
+        helt Pro-kort, dybden ikke, og resten af siden dømmes som betalt."""
+        while self.open_tags:
+            open_tag, entered_pro = self.open_tags.pop()
+            if entered_pro and self.pro_depth:
+                self.pro_depth -= 1
+            if open_tag == tag:
+                return
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self.in_json_ld:
+            # Uden denne nulstilling forblev `in_json_ld` sandt resten af
+            # dokumentet, og hele `<body>` blev dømt som usynlig. Målt på
+            # `site/clean-copy.html`: 51 blokke, alle tomme.
+            self.in_json_ld = False
+        if tag in ("script", "style") and self.skip:
+            self.skip -= 1
+        if self._is_hidden() and tag in self.hidden:
+            self.hidden[tag] -= 1
+        if self.skip:
+            self._unwind(tag)
+            return
+        while self._open and self._open[-1]["tag"] != tag:
+            self.blocks.append(self._open.pop())
+        if self._open:
+            self.blocks.append(self._open.pop())
+        self._unwind(tag)
+
+    def _close(self, block: dict) -> None:
+        self.blocks.append(block)
+
+    def handle_data(self, data: str) -> None:
+        if self.skip or self.in_json_ld or self._is_hidden() or not data.strip():
+            return
+        for block in self._open:
+            block["parts"].append(data)
+
+    def close(self) -> None:
+        super().close()
+        while self._open:
+            self._close(self._open.pop())
+
+
+def paid_contexts(text: str) -> tuple[str, str, bool]:
+    """Sidens betalte og gratis side som læsbar tekst, målt på markupen.
+
+    Målt først, skrevet bagefter. Opgave 72 efterlod at porten springer syv —
+    i virkeligheden otte — købssider fra, fordi de kun har et
+    `<div class="tier-card pro">`. De otte har hver sin form på at sige hvad
+    der er gratis og hvad der koster, målt på de rigtige filer:
+
+    | Side | Flade |
+    |---|---|
+    | `clean-copy.html` (EN/DA) | et afsnit i "Price"/"Pris" der siger *Free* … og et der siger hvad Pro *tilføjer* |
+    | `activate/` (EN/DA) | to sætninger i brødteksten, resten et kassalink |
+    | `clean-copy-tool` | tabel med `id="free-vs-pro"`, kolonnerne Free/Pro |
+    | `deskuptime/` (EN/DA) | `id="compare"`, `h3` "Desktop Pro" + `h3` "CLI and desktop app" |
+    | `blog/desktop-website-monitor-cli` | tabel med kolonnerne Free/Pro ($19) |
+    | `compliance-report` (EN) | Pro-kort, men ingen gratis-kort og ingen tabel |
+
+    Så en port der kun læser kortene kan ikke dømme otte af de ti købssider,
+    og det er præcis de sider hvor opgave 69s fejlform lå. Derfor tre kilder,
+    alle målt på markupen og ikke på en navneliste:
+
+    1. **Pro-kortet** og **den betalte spalte** i en synlig gratis/Pro-tabel.
+       Strukturelt: de to er den betalte side, uanset hvad teksten siger — en
+       `<li>Gratis kerne … Pro-versionen tilføjer … historik</li>` i Pro-kortet
+       nævner *gratis* og er stadig den betalte side.
+    2. **Et afsnit, en punktumtekst eller en overskrift der nævner den
+       betalte udgave og ikke den gratis.** Det er den rene tekstform: "Pro
+       adds two things …" og `<h3>Desktop Pro</h3>`. Begge nævner den
+       betalte side, ingen af dem siger *gratis*, og derfor er de betalt
+       kontekst. Omvendt er en blok der nævner *begge* ("Free and Pro")
+       en sammenligning, ikke en betalt side, og den dømmes ikke som sådan.
+
+    Returnerer `(betalte, gratis, har_flade)`. Den tredje værdi er målet der
+    forsvandt: før denne iteration læste porten kun sider med et Pro-kort og
+    sprang de otte øvrige fra **uden at sige det**, så en gratis-funktion der
+    flyttede til en betalt sætning på dem ville være usynlig. Med
+    `har_flade=False` er det en melding i stedet for en tavshed.
+    """
+    blocks = TierBlocks()
+    blocks.feed(text)
+    blocks.close()
+    paid_cells: set[str] = set()
+    free_cells: set[str] = set()
+    for rows, paid_column in free_pro_tables(text):
+        free_column = next(
+            (index for index, cell in enumerate(rows[0])
+             if FREE_LABEL.search(cell) and not PAID_LABEL.search(cell)),
+            None,
+        )
+        for row in rows[1:]:
+            if len(row) > paid_column:
+                paid_cells.add(normalize(row[paid_column]).casefold())
+            if free_column is not None and len(row) > free_column:
+                free_cells.add(normalize(row[free_column]).casefold())
+    cards = TierCards()
+    cards.feed(text)
+    cards.close()
+    pro_card = cards.text("pro")
+    free_card = cards.text("free")
+
+    # Casefold på begge sider: kort-teksten kommer med sin oprindelige
+    # casing, blokkene kommer casefoldede, og de skal kunne sammenlignes.
+    paid: list[str] = [pro_card.casefold()] if pro_card else []
+    free: list[str] = [free_card.casefold()] if free_card else []
+    paid.extend(sorted(paid_cells))
+    free.extend(sorted(free_cells))
+    for block in blocks.blocks:
+        body = normalize(" ".join(block["parts"])).casefold()
+        if not body:
+            continue
+        if block["pro"]:
+            paid.append(body)
+            continue
+        says_paid = PAID_LABEL.search(body) is not None
+        says_free = FREE_LABEL.search(body) is not None
+        if says_paid and not says_free:
+            paid.append(body)
+        elif says_free and not says_paid:
+            free.append(body)
+    return " ".join(paid), " ".join(free), bool(paid or free or paid_cells or free_cells)
+
+
 def free_features_by_product(catalog: dict) -> dict[str, list[dict]]:
     """`free_features` pr. produkt — det koden giver uden en nøgle.
 
@@ -1323,13 +1522,19 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
         text = by_path.get(relative)
         if text is None:
             continue  # check_offers melder en manglende fil.
-        cards = TierCards()
-        cards.feed(text)
-        cards.close()
-        pro_card = normalize(cards.text("pro")).casefold()
-        if not pro_card:
-            continue  # Sider uden salgstavle dømmes af de andre checks.
-        free_card = normalize(cards.text("free")).casefold()
+        paid_side, free_side, has_surface = paid_contexts(text)
+        if not has_surface:
+            # Før denne iteration sprang porten sådanne sider fra i tavshed, og
+            # en gratis-funktion der flyttede til en betalt sætning på dem var
+            # usynlig. Tavshed er den værste slags port: den ligner en der
+            # passerer. Se `paid_contexts` for målingen af de otte flader.
+            problems.append(
+                f"{relative}: siden sælger {key}, men har ingen synlig gratis/Pro- "
+                f"flade at vise de {len(declared.get(key, []))} erklærede gratis-"
+                f"funktioner på. Skriv dem i en sammenligning, et kort eller en "
+                f"sætning der siger gratis — ellers er påstanden uden flade."
+            )
+            continue
         lang = page_lang(str(relative), text)
         for feature in declared.get(key, []):
             where = feature.get("where")
@@ -1343,7 +1548,7 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
                 )
                 continue
             for label in labels:
-                if normalize(label).casefold() in pro_card:
+                if normalize(label).casefold() in paid_side:
                     problems.append(
                         f"{relative}: Pro-kortet sælger {label!r}, men katalogen siger at "
                         f"{feature.get('id')!r} er gratis ({where}). En betalt kunde må "
@@ -1354,9 +1559,9 @@ def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str
             # er den første, så et katalogsignal med flere sætninger (meldt
             # ovenfor) dømmes på én af dem i stedet for på ingen.
             said_free = labels[0]
-            if normalize(said_free).casefold() not in free_card:
+            if normalize(said_free).casefold() not in free_side:
                 problems.append(
-                    f"{relative}: Gratis-kortet nævner ikke {said_free!r}, men katalogen "
+                    f"{relative}: den gratis side af siden nævner ikke {said_free!r}, men katalogen "
                     f"siger at {feature.get('id')!r} er gratis ({where}). Kunden skal kunne "
                     f"se hvad de får gratis på den side der sælger — ellers er påstanden "
                     f"uden flade."
@@ -2355,13 +2560,29 @@ def self_test() -> int:
         ramte en anden `<li>` ville slette det forkerte og lade porten grøn
         af en grund den ikke måtte være grøn af.
         """
+        trimmed = real
         start = real.index('class="tier-card"')
         end = real.index('class="tier-card pro"', start)
         for match in LI_RE.finditer(real[start:end]):
             if label.casefold() in match.group(0).casefold():
                 at = start + match.start()
-                return real[:at] + real[start + match.end():]
-        return real
+                trimmed = real[:at] + real[start + match.end():]
+                break
+        # Gratis-siden er i dag to flader: kortet *og* den gratis spalte i
+        # sammenligningstabellen. Mutationen skal fjerne sætningen fra begge,
+        # ellers er den ikke en mutation af "kunden kan se at den er gratis"
+        # men kun af "kortet er væk" — og porten ville være grøn af en grund
+        # den ikke måtte være grøn af. Målt på `site/page-profile.html`: den
+        # engelske historik-sætning findes i tabellen, så kun et kort-klip
+        # slap alle otte mutationer igennem.
+        for cell in re.finditer(r"<td[^>]*>((?:(?!</td>).)*?)</td>", trimmed, re.S):
+            body = cell.group(1)
+            if label.casefold() not in body.casefold():
+                continue
+            if PAID_LABEL.search(body) or not FREE_LABEL.search(body):
+                continue  # Den betalte spalte er en anden fejlform.
+            trimmed = (trimmed[:cell.start(1)] + "—" + trimmed[cell.end(1):])
+        return trimmed
 
     unsaid: list[str] = []
     for feature in free_features:
@@ -2377,7 +2598,7 @@ def self_test() -> int:
                 continue
             pages = [(p, trimmed if p == relative else t) for p, t in da_pairs]
             if not [x for x in check_free_features(good, pages)
-                    if f"'{feature.get('id')}'" in x and "Gratis-kortet" in x]:
+                    if f"'{feature.get('id')}'" in x and "gratis side af siden" in x]:
                 unsaid.append(f"{feature.get('id')} på {relative}")
     if unsaid:
         print("SELFTEST FEJLER: disse gratis-funktioner kan forsvinde fra Gratis-kortet "
@@ -2397,7 +2618,7 @@ def self_test() -> int:
     twin_problems = check_free_features(two_labels, da_pairs)
     twin_lines = [x for x in twin_problems if "2 en-labels" in x]
     if (len(twin_lines) != 1
-            or any("Gratis-kortet nævner ikke" in x for x in twin_problems)
+            or any("gratis side af siden nævner ikke" in x for x in twin_problems)
             or len({x.split(":")[0] for x in twin_problems}) != 1):
         print("SELFTEST FEJLER: to labels for én funktion meldes ikke én gang pr. "
               f"produkt uden at dømme dem hver især: {twin_problems}")
