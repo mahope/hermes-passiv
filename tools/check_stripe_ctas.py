@@ -214,6 +214,170 @@ def normalize(text: str) -> str:
     return " ".join(text.split())
 
 
+# ── Hvad en Pro-side skal vise om den gratis udgave ──────────────────────
+#
+# Missionens punkt 4: "hver Pro-side klart viser, hvad gratis og betalt
+# giver". Indtil nu var det kun en hensigtserklæring i katalogens `why`, og
+# ingen port læste den — så /clean-copy-tool, siden hvor Clean Copy Pro
+# faktisk købes og aktiveres, ikke nævnte den gratis udgave overhovedet.
+# Ordet "free" stod kun i "More free tools"-linket nederst på siden.
+#
+# Både en sætning og en tabel tæller, fordi de sunde sider bruger begge
+# former: DeskUptime og Page Profile har en "Free and Pro"-tabel, mens
+# /clean-copy og /activate har en sætning. En port der krævede den ene
+# form ville gøre de andre sider røde uden grund.
+FREE_TIER_PHRASES = re.compile(
+    r"\bfree (?:version|tier|tool|cli|web|edition|plan)\b"
+    r"|\bstays free\b"
+    r"|\bnot a trial\b"
+    r"|\bis free\b"
+    r"|\bgratis (?:version|udgave|værktøj|web|plan|cli)\b"
+    r"|\ber gratis\b"
+    r"|\bgratis og\b"
+    r"|\bgratis cli\b"
+    r"|\bingen prøveversion\b"
+)
+FREE_LABEL = re.compile(r"\bfree\b|\bgratis\b", re.I)
+PAID_LABEL = re.compile(r"\bpro\b|\bpaid\b|\bpremium\b|\$|\busd\b|\bkr\.?|\beur\b|\bdkk\b", re.I)
+
+
+class VisibleBlocks(HTMLParser):
+    """Synlig tekst plus overskrifterne i de tabeller der er synlige.
+
+    En lukket `<details>` er ikke synlig uden et klik, så dens indhold tæller
+    ikke. Det er den tunge del: en gratis- forklaring gemt i en lukket FAQ
+    er netop den måde denne fejlform kommer tilbage på.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.hidden: dict[str, int] = {}
+        self.parts: list[str] = []
+        self.in_json_ld = False
+        self.table_headers: list[list[str]] = []
+        self.comparisons: list[list[list[str]]] = []
+        self._table: list[list[str]] | None = None
+        self._row: list[str] | None = None
+        self._cell: list[str] | None = None
+        self._in_header = False
+
+    def _is_hidden(self) -> bool:
+        return any(self.hidden.values())
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        attributes = {key.lower(): value or "" for key, value in attrs}
+        style = attributes.get("style", "")
+        hidden = (
+            tag in HIDDEN_TAGS
+            or "hidden" in attributes
+            or attributes.get("aria-hidden", "").casefold() == "true"
+            or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I) is not None
+            # En <details> uden `open` er lukket. `hidden` i attributerne
+            # dækker ikke dette, og det er den vigtigste skjulested.
+            or (tag == "details" and "open" not in attributes)
+        )
+        if tag == "script" and attributes.get("type", "").casefold() == "application/ld+json":
+            self.in_json_ld = True
+        if hidden and tag not in VOID_TAGS:
+            self.hidden[tag] = self.hidden.get(tag, 0) + 1
+        if self._is_hidden():
+            return
+        if tag == "table":
+            self._table = []
+        elif tag == "tr" and self._table is not None:
+            self._row = []
+        elif tag in ("td", "th") and self._row is not None:
+            self._cell = []
+            if tag == "th":
+                self._in_header = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self.in_json_ld:
+            self.in_json_ld = False
+        if tag in ("td", "th"):
+            if self._cell is not None and self._row is not None:
+                self._row.append(normalize(" ".join(self._cell)))
+            self._cell = None
+            if tag == "th":
+                self._in_header = False
+        elif tag == "tr" and self._row is not None and self._table is not None:
+            self._table.append(self._row)
+            self._row = None
+        elif tag == "table" and self._table is not None:
+            if self._table:
+                self.table_headers.append(self._table[0])
+                self.comparisons.append(self._table)
+            self._table = None
+        if tag in self.hidden and self.hidden[tag] > 0:
+            self.hidden[tag] -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self.in_json_ld or self._is_hidden():
+            return
+        self.parts.append(data)
+        if self._cell is not None:
+            self._cell.append(data)
+
+    @property
+    def text(self) -> str:
+        return normalize(" ".join(self.parts))
+
+
+def check_free_tier(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En side der sælger en licens, skal vise hvad den gratis udgave giver.
+
+    Kun produkter med `kind: license`. En donation og et download-produkt har
+    per definition ingen gratis udgave at vise, så de skal ikke fejle på en
+    regel de ikke kan opfylde.
+
+    Sætningen skal stå i læsbar tekst: hverken i `<head>`, i JSON-LD, i en
+    attribut eller i en lukket `<details>`. En løsning på at skjule den
+    gratis-fordelen i en collapsed FAQ er derfor umulig.
+    """
+    products = catalog["products"]
+    offers = catalog.get("offers")
+    if not isinstance(offers, list):
+        return []
+    by_path = dict(pages)
+    problems: list[str] = []
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        product = products.get(offer.get("product"))
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue  # check_offers melder en manglende fil.
+        blocks = VisibleBlocks()
+        blocks.feed(text)
+        blocks.close()
+        visible = blocks.text
+        comparisons = [rows for rows in blocks.comparisons
+                       if any(FREE_LABEL.search(cell) for cell in rows[0])
+                       and any(PAID_LABEL.search(cell) for cell in rows[0])]
+        # En sammenligningstabel med tomme celler er værre end ingen tabel:
+        # den lader som om den viser forskellen, og en køber kan ikke se den.
+        for rows in comparisons:
+            for index, row in enumerate(rows[1:], start=2):
+                if len(row) < 2:
+                    continue
+                blanks = [position for position, cell in enumerate(row[1:], start=2) if not cell.strip()]
+                if blanks:
+                    problems.append(
+                        f"{relative}: gratis/Pro-tabellen har tomme celler i række {index} "
+                        f"({row[0][:40]!r}, kolonne {blanks[0]}) — den viser ikke, hvad niveauet giver"
+                    )
+        if FREE_TIER_PHRASES.search(visible) or comparisons:
+            continue
+        problems.append(
+            f"{relative}: sælger {offer.get('product')} men siger aldrig, hvad den gratis "
+            f"udgave giver — hverken i læsbar tekst eller i en synlig gratis/Pro-tabel"
+        )
+    return problems
+
+
 def parse_page(text: str) -> tuple[str, list[tuple[str, str]]]:
     visible = Page()
     visible.feed(text)
@@ -603,6 +767,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
     problems += check_deliverable(catalog, source_pages())
+    problems += check_free_tier(catalog, source_pages())
     return problems, inventory
 
 
@@ -685,6 +850,43 @@ def self_test() -> int:
         offer for offer in good["offers"] if offer["product"] != "eucomply-report-kit"]}
     forgot_the_page = check_deliverable(delisted, [], verified)
 
+    # 6: en Pro-side skal vise hvad den gratis udgave giver. Scenarierne er
+    # syntetiske, så selftesten ikke skriver den fejl ind i de rigtige sider.
+    clean_copy_link = good["products"]["clean-copy-pro"]["payment_link"]
+    donate_link = good["products"]["support-mahope-oss"]["payment_link"]
+    buys_only = f'<html><body><h1>Tool</h1><p>Convert text.</p><a href="{clean_copy_link}">Buy</a></body></html>'
+    says_free = (f'<html><body><p>The free version is the complete tool, not a trial.</p>'
+                 f'<a href="{clean_copy_link}">Buy</a></body></html>')
+    says_free_but_buried = (f'<html><body><details><summary>FAQ</summary>'
+                            f'<p>The free version is the complete tool, not a trial.</p></details>'
+                            f'<a href="{clean_copy_link}">Buy</a></body></html>')
+    empty_table = (f'<html><body><table><tr><th>Feature</th><th>Free</th><th>Pro</th></tr>'
+                   f'<tr><td>Batch mode</td><td>—</td><td></td></tr>'
+                   f'<tr><td>Price</td><td>free</td><td>$19/year</td></tr></table>'
+                   f'<a href="{clean_copy_link}">Buy</a></body></html>')
+    donation = f'<html><body><p>Thanks for using the free tools.</p><a href="{donate_link}">Donate</a></body></html>'
+    only_offer = [{**offer, "path": "site/eksempel.html"} for offer in good["offers"]
+                  if offer["product"] == "clean-copy-pro"]
+    free_tier_only = {**good, "offers": only_offer}
+    no_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", buys_only)])
+    buried_free_tier = check_free_tier(free_tier_only, [("site/eksempel.html", says_free_but_buried)])
+    hollow_table = check_free_tier(free_tier_only, [("site/eksempel.html", empty_table)])
+    # Negativ kontrol: siden siger gratis-udgaven, og en donation skal ikke
+    # fejle på en regel om gratis-udgaven — den har ikke en.
+    should_also_pass = check_free_tier(free_tier_only, [("site/eksempel.html", says_free)])
+    donation_only = {**good, "offers": [
+        offer for offer in good["offers"] if offer["product"] == "support-mahope-oss"]}
+    donation_no_free = check_free_tier(donation_only, [("site/support.html", donation)])
+    # Uden denne kontrol er de tre scenarier ovenfor stumme: en syntese der
+    # ikke rammer købssiden, ville stå som fanget uden at prøve noget, præcis
+    # som fejlen i opgave 30.
+    if not only_offer or only_offer == good["offers"]:
+        print("SELFTEST FEJLER: gratis-udgave-scenarierne muterer ingen købsside — de er stumme")
+        return 1
+    if FREE_TIER_PHRASES.search("The free version is the complete tool, not a trial.") is None:
+        print("SELFTEST FEJLER: frasen i det positive scenarie matcher ikke portens egen mønster")
+        return 1
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -698,10 +900,18 @@ def self_test() -> int:
         ("en abonnement-markering der ikke er i allowlisten", check_worker(no_subscriptions)),
         ("et download-produkt der ikke kan leveres, men sælges", undeliverable),
         ("et leverbart download-produkt uden købsside", forgot_the_page),
+        ("en Pro-side der aldrig siger hvad gratis-udgaven giver", no_free_tier),
+        ("en gratis-udgave forklaret i en lukket FAQ", buried_free_tier),
+        ("en gratis/Pro-tabel med tomme celler", hollow_table),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
+    for label, problems in (("en Pro-side der siger hvad gratis-udgaven giver", should_also_pass),
+                            ("en donationsside uden gratis-udgave", donation_no_free)):
+        if problems:
+            print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
+            missed.append(label)
     if should_pass:
         # En kontrol der aldrig må fejle. Uden den kunne den nye regel være
         # stram nok til at gøre hver købsside rød, uden at nogen ser det.
