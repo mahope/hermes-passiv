@@ -51,6 +51,19 @@ export default {
     // === Route: self-monitoring health check ===
     if (path === '/api/health') return handleHealth(url, env);
 
+    // === Route: arkiver der er taget ud af repoet (opgave 28) ===
+    // Cloudflare Pages fjerner ikke slettede assets, så en arkivfil der forsvinder
+    // fra git ligger stadig i CDN'en og kan hentes — med gammel kode og gammel
+    // tekst. 1.5.3 lovede "nothing leaves your browser", mens license.js poster
+    // nøglen til mahope.tools. Kildesandheden er `tools/retired_downloads.json`,
+    // og `tools/check_retired_downloads.py` fejler hvis de to er uenige.
+    const RETIRED_DOWNLOADS = {
+    '/downloads/clean-copy-firefox-v1.5.3.zip': '/downloads/clean-copy-firefox-v1.5.4.zip',
+    };
+    if (RETIRED_DOWNLOADS[path]) {
+      return Response.redirect(new URL(RETIRED_DOWNLOADS[path], request.url).toString(), 301);
+    }
+
     // === Route: download counting for /downloads/* files ===
     // Betalte bundle-filer sælges via Stripe og må ikke kunne hentes frit
     if (/^\/downloads\/compliance-bundle/.test(path)) return new Response('Not found', { status: 404 });

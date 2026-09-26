@@ -22,6 +22,11 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
   ASSETS: { fetch: async (request) => {
     const pathname = new URL(request.url).pathname;
     if (pathname === '/downloads/eaa-checklist.epub') return new Response('asset', { status: 200 });
+    // CDN'en har stadig den gamle fil, selv om den er slettet i git — det er
+    // præcis den tilstand, der gjorde 1.5.3 hentbar med den falske README. Den
+    // skal serveres af ASSETS, så reglen er den eneste grund til at kunden ikke
+    // får den.
+    if (pathname === '/downloads/clean-copy-firefox-v1.5.3.zip') return new Response('No network requests — nothing leaves your browser', { status: 200 });
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     return new Response('Not found', { status: 404 });
   } } };
@@ -85,6 +90,27 @@ const call = (path, init) => worker.fetch(new Request('https://mahope.tools' + p
 const sign = (body, t = Math.floor(Date.now() / 1000)) => `t=${t},v1=${createHmac('sha256', WHSEC).update(`${t}.${body}`).digest('hex')}`;
 
 let r;
+// 9) Tilbagetrukne arkiver: 301 til den nuværende fil, aldrig en gammel 200.
+// Opslås FØR /downloads/-ruten, ellers ville handleDownload tælle den gamle fil
+// som et download og den falske README blive serveret videre.
+//
+// Kaldene sender en rigtig browser-UA. Uden en ville `isAutomatedRequest` sige
+// ja, og "tælles ikke som download"-påstanden ville være grøn uden at prøve
+// noget — den skal kunne fange den gamle kode, så den skal have en UA.
+const UA = { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0' } };
+r = await call('/downloads/clean-copy-firefox-v1.5.3.zip', { ...UA, redirect: 'manual' });
+ok('tilbagetrukket arkiv = 301', r.status === 301, r.status);
+ok('301 peger på den nuværende fil', r.headers.get('location') === 'https://mahope.tools/downloads/clean-copy-firefox-v1.5.4.zip', r.headers.get('location'));
+ok('den gamle fil serveres ikke, selv om CDN\'en stadig har den', !(await r.text()).includes('nothing leaves your browser'));
+r = await call('/downloads/clean-copy-firefox-v1.5.3.zip?cb=1', { ...UA, redirect: 'manual' });
+ok('query-streng følger med i reglen', r.status === 301 && r.headers.get('location') === 'https://mahope.tools/downloads/clean-copy-firefox-v1.5.4.zip', r.status + ' ' + r.headers.get('location'));
+ok('tilbagetrukket arkiv tælles ikke som download', ![...kv.keys()].some(key => key.includes('clean-copy-firefox-v1.5.3.zip')), [...kv.keys()].join(' '));
+r = await call('/downloads/clean-copy-firefox-v1.5.4.zip', { ...UA, redirect: 'manual' });
+ok('den nuværende fil er ikke omfattet af reglen', r.status === 404, r.status);
+r = await call('/downloads/eaa-checklist.epub', { ...UA, redirect: 'manual' });
+ok('en eksisterende fil serveres stadig', r.status === 200);
+ok('ikke-tilbagetrukne downloads tælles stadig', [...kv.keys()].some(key => key.includes('download:eaa-checklist.epub')), [...kv.keys()].join(' '));
+
 r = await call('/api/lemon-webhook', { method: 'GET' });
 ok('gammel Lemon-rute: GET = 404', r.status === 404);
 r = await call('/api/lemon-webhook', { method: 'POST', body: '{}' });
