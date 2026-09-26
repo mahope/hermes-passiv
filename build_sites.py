@@ -700,7 +700,12 @@ def _reading_minutes(html: str) -> int:
 
 def _toc(article: str) -> tuple[str, list[tuple[str, str, str]]]:
     """Give every h2/h3 an id; return (article, [(level, id, text)])."""
-    used: set[str] = set()
+    # Seed with every id the article already carries, not only the ones we hand
+    # out below. A hand-written id on a non-heading — <section id="indhold"> —
+    # is invisible to the heading walk, so an <h3>Indhold</h3> further down got
+    # the same id. The browser keeps the first, so that ToC entry jumped to the
+    # section above its own parent instead of to the heading.
+    used: set[str] = set(re.findall(r'\sid="([^"]*)"', article))
     entries: list[tuple[str, str, str]] = []
 
     def sub(m: re.Match) -> str:

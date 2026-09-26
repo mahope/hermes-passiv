@@ -98,6 +98,15 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/seo_check.py", "build_sites.py"),
         needs_dist=True,
     ),
+    # Selvtesten til seo_check. Den dækker dublet-id-reglen og dens rodårsag i
+    # build_sites._toc. Den kommer som sit eget step, men dens inputs ligger
+    # allerede i path-filteret via `seo`, så filteret er uændret — samme krav som
+    # opgave 31, 42 og 45.
+    Step(
+        id="seo-selftest",
+        argv=("python3", "tools/seo_check.py", "--self-test"),
+        inputs=("tools/seo_check.py", "build_sites.py"),
+    ),
     # Licensserveren. `_worker.js` leverer nøgler og downloads for rigtige
     # Stripe-køb, så dette step må aldrig droppes fra en kortere liste.
     Step(
