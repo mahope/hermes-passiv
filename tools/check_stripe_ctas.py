@@ -1167,7 +1167,169 @@ def pro_labels(feature: object, lang: str) -> list[str] | None:
     return [str(label) for label in labels if str(label)]
 
 
+class TierCards(HTMLParser):
+    """Synlig tekst i hvert `tier-card`, med en dybde der gør det muligt at
+    læse ét kort uden at få det næste med.
+
+    Kortene er sidens *salgstavle*: en `<div class="tier-card pro">` der
+    lister hvad en betalt kunde får. Det er derfra opgave 69s fejl kom —
+    "Pro-versionen tilføjer sammenligning, batch og historik" lå i Pro-kortets
+    `<li>`, selv om historik er gratis. Kortene er derfor den eneste flade hvor
+    "dette er betalt" er en påstand, og de er målt på den rigtige markup
+    (`.tier-card` + `.tier-card.pro`) frem for på en navneliste.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.stack: list[tuple[str, list[str]]] = []
+        self.cards: dict[str, list[str]] = {}
+        self.active: tuple[str, list[str]] | None = None
+        self.skip = 0
+
+    def _tier(self, attrs: dict[str, str | None]) -> str | None:
+        classes = (attrs.get("class") or "").split()
+        if "tier-card" not in classes:
+            return None
+        return "pro" if "pro" in classes else "free"
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        values = {key: (value or "") for key, value in attrs}
+        if tag in ("script", "style"):
+            self.skip += 1
+            return
+        if self.skip:
+            return
+        tier = self._tier(values)
+        if tier is not None:
+            # Kortene ligger ikke i hinanden, så det seneste kort ejer al
+            # tekst indtil det lukker. Uden den ejerskab fik hvert barn sin egen
+            # tom liste, og porten ville have været grøn af en fejl grund.
+            self.active = (tier, [])
+        self.stack.append((tier or "", []))
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ("script", "style") and self.skip:
+            self.skip -= 1
+            return
+        if self.skip or not self.stack:
+            return
+        tier, _ = self.stack.pop()
+        if tier and self.active and self.active[0] == tier:
+            self.cards.setdefault(tier, []).append(
+                " ".join(" ".join(self.active[1]).split())
+            )
+            self.active = None
+
+    def handle_data(self, data: str) -> None:
+        if self.skip or self.active is None or not data.strip():
+            return
+        self.active[1].append(data)
+
+    def text(self, tier: str) -> str:
+        return normalize(" ".join(self.cards.get(tier, [])))
+
+
+def free_features_by_product(catalog: dict) -> dict[str, list[dict]]:
+    """`free_features` pr. produkt — det koden giver uden en nøgle.
+
+    Modstående til `not_built_by_product`: den holder oversiden i tråd med
+    koden, denne holder *undersiden* i tråd med koden. En `pro_features`-post
+    uden kode bagved gør en kunde betale for ingenting; en `free_features`-post
+    uden kode bagved får en funktion solgt som betalt, fordi ingen holdt øje.
+    """
+    products = catalog.get("products")
+    if not isinstance(products, dict):
+        return {}
+    out: dict[str, list[dict]] = {}
+    for key, product in products.items():
+        if not isinstance(product, dict):
+            continue
+        entries = product.get("free_features")
+        if isinstance(entries, list) and entries:
+            out[key] = [entry for entry in entries if isinstance(entry, dict)]
+    return out
+
+
+def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """Pro-kortet må ikke sælge en funktion koden giver gratis.
+
+    De tre andre checks dømmer hver én retning: `check_free_tier` kræver at
+    siden siger noget om gratis, `check_pro_features` at den nævner det
+    betalte, `check_pro_not_built` at den ikke lover det ubygde. Ingen af dem
+    kan se en funktion *flyttet* fra gratis til betalt — fordi det kræver at
+    porten ved hvilke funktioner der er gratis, og det stod ingen steder.
+
+    Målt, ikke antaget. Opgave 69 fandt på den danske købsside: "Gratis kerne —
+    web-tjekket er altid gratis. Pro-versionen tilføjer sammenligning, batch og
+    historik." Historik er gratis i `page_profile.py` — `--history` er ikke
+    gated, og `append_history()` (:1088) kører før det første `require_pro`
+    (:1094). Sælgeren havde altså taget betaling for en funktion alle har, og
+    ingen port så det, fordi ingen kendte den gratis side.
+
+    Kun Pro-kortet dømmes, og kun for den side der sælger. Gratis-kortet må
+    gerne nævne funktionen — det er der den hører hjemme — og en note i
+    brødteksten er ikke en påstand om betaling.
+    """
+    products = catalog.get("products")
+    offers = catalog.get("offers")
+    if not isinstance(products, dict) or not isinstance(offers, list):
+        return []
+    declared = free_features_by_product(catalog)
+    if not declared:
+        return []
+    by_path = dict(pages)
+    problems: list[str] = []
+    # Katalogfejl meldes én gang pr. produkt: de gælder alle sider, så at
+    # gentage dem pr. tilbud ville fylde rapporten med den samme linje.
+    for key, features in declared.items():
+        for feature in features:
+            where = feature.get("where")
+            if not isinstance(where, str) or not where.strip():
+                problems.append(
+                    f"{key}: free_features {feature.get('id')!r} står i katalogen uden en "
+                    f"`where` der peger på den kode der giver den gratis"
+                )
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        key = offer.get("product")
+        product = products.get(key)
+        if not isinstance(product, dict) or product.get("kind") != "license":
+            continue
+        relative = offer.get("path")
+        text = by_path.get(relative)
+        if text is None:
+            continue  # check_offers melder en manglende fil.
+        cards = TierCards()
+        cards.feed(text)
+        cards.close()
+        pro_card = normalize(cards.text("pro")).casefold()
+        if not pro_card:
+            continue  # Sider uden salgstavle dømmes af de andre checks.
+        lang = page_lang(str(relative), text)
+        for feature in declared.get(key, []):
+            where = feature.get("where")
+            if not isinstance(where, str) or not where.strip():
+                continue  # Allerede meldt ovenfor, én gang pr. produkt.
+            labels = pro_labels(feature, lang)
+            if labels is None:
+                problems.append(
+                    f"{relative}: {key} erklærer free_features {feature.get('id')!r} "
+                    f"uden {lang}-labels i katalogen"
+                )
+                continue
+            for label in labels:
+                if normalize(label).casefold() in pro_card:
+                    problems.append(
+                        f"{relative}: Pro-kortet sælger {label!r}, men katalogen siger at "
+                        f"{feature.get('id')!r} er gratis ({where}). En betalt kunde må "
+                        f"ikke købe en funktion alle har."
+                    )
+    return problems
+
+
 def not_built_by_product(catalog: dict) -> dict[str, list[dict]]:
+
     """`pro_not_built` pr. produkt — de løfter, koden modsiger.
 
     Målt i opgave 49, ikke formodet. `deskuptime-pro` lovede "email and
@@ -1872,6 +2034,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_pro_features(catalog, source_pages())
+    problems += check_free_features(catalog, source_pages())
     problems += check_pro_not_built(catalog, source_pages())
     problems += check_language_coverage(catalog, source_pages())
     problems += check_checkout_notes(catalog)
@@ -2030,6 +2193,78 @@ def self_test() -> int:
     if "cleanup-rules" not in " ".join(pro_missing):
         print("SELFTEST FEJLER: pro_features-scenariet rammer den manglende funktion, "
               f"ikke den anden fejl: {pro_missing}")
+        return 1
+    # ── free_features: Pro-kortet må ikke sælge noget der er gratis ───────
+    #
+    # Beviset er de rigtige publicerede sætninger fra opgave 69, som lå i
+    # Pro-kortet i produktion: den danske "Pro-versionen tilføjer sammenligning,
+    # batch og historik" og den engelske "History tracking"-bullet. De læses
+    # fra de rigtige filer, og kun sætningen muteres — en fejlform der kun
+    # findes i en streng porten selv har fundet, er ingen fejlform.
+    da_real = (ROOT / "site/da/page-profile.html").read_text(encoding="utf-8")
+    en_real = (ROOT / "site/page-profile.html").read_text(encoding="utf-8")
+    old_da_pro = ("<li>Gratis kerne — web-tjekket er altid gratis. Pro-versionen "
+                  "tilføjer sammenligning, batch og historik.</li>")
+    old_en_pro = "<li>History tracking across runs</li>"
+    if old_da_pro in da_real or old_en_pro in en_real:
+        print("SELFTEST FEJLER: de publicerede fejlformer fra opgave 69 står stadig i "
+              "site/da/page-profile.html og site/page-profile.html")
+        return 1
+    da_sold_free = da_real.replace(
+        "<li>Sammenligning — diff to URLs side om side",
+        f"{old_da_pro}\n            <li>Sammenligning — diff to URLs side om side")
+    en_sold_free = en_real.replace(
+        "<li>Comparison mode — diff two URLs side by side",
+        f"{old_en_pro}\n            <li>Comparison mode — diff two URLs side by side")
+    da_in_free_card = da_real.replace(
+        "<li>Historik — hver kørsel",
+        f"{old_da_pro}\n            <li>Historik — hver kørsel")
+    if old_da_pro not in da_sold_free or old_en_pro not in en_sold_free:
+        print("SELFTEST FEJLER: kun påstanden muteres alene, men insertionsstedet "
+              "findes ikke i de rigtige filer")
+        return 1
+    da_pairs = [("site/da/page-profile.html", da_real), ("site/page-profile.html", en_real)]
+    sold_both = [x for x in check_free_features(
+        good,
+        [("site/da/page-profile.html", da_sold_free), ("site/page-profile.html", en_sold_free)],
+    ) if "page-profile" in x]
+
+    # Negativ kontrol 1: den samme sætning i GRATIS-kortet er ikke en fejl —
+    # det er der funktionen hører hjemme, ellers ville porten forbyde at
+    # fortælle kunderne hvad de får gratis.
+    free_card_ok = [x for x in check_free_features(
+        good,
+        [("site/da/page-profile.html", da_in_free_card), ("site/page-profile.html", en_real)],
+    ) if "page-profile" in x]
+    # Negativ kontrol 2: dagens sider er grønne. Uden denne ville en port der
+    # altid fejler se ud som om den virkede.
+    untouched = [x for x in check_free_features(good, da_pairs) if "page-profile" in x]
+    # En post uden `where` kan ikke dømmes: den siger ikke hvilken kode der
+    # giver funktionen gratis, så den er en måde at slå porten fra på.
+    no_where = {**good, "products": {**good["products"], "page-profile-pro": {
+        **good["products"]["page-profile-pro"],
+        "free_features": [{k: v for k, v in entry.items() if k != "where"}
+                          for entry in good["products"]["page-profile-pro"]["free_features"]]}}}
+    missing_where = check_free_features(no_where, da_pairs)
+    if not sold_both:
+        print("SELFTEST FEJLER: Pro-kortet der sælger historik fejler ikke — det er "
+              "præcis den fejl opgave 69 rettede, og porten skal fange den igen")
+        return 1
+    if "historik" not in " ".join(sold_both) or "history tracking" not in " ".join(sold_both):
+        print("SELFTEST FEJLER: free_features-scenarierne rammer ikke den gratis "
+              f"funktion i begge sprog: {sold_both}")
+        return 1
+    if free_card_ok:
+        print("SELFTEST FEJLER: en funktion der står i GRATIS-kortet fejler alligevel — "
+              "kravet er for stramt: " + "; ".join(free_card_ok))
+        return 1
+    if untouched:
+        print("SELFTEST FEJLER: de uændrede købssider fejler — porten kan ikke "
+              f"finde fejlen: {untouched}")
+        return 1
+    if len(missing_where) != 1 or "where" not in missing_where[0]:
+        print("SELFTEST FEJLER: en free_features-post uden `where` meldes ikke "
+              f"én gang pr. produkt: {missing_where}")
         return 1
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
     #
