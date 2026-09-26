@@ -3290,7 +3290,7 @@ regel), `check_inline_js.py` 299 filer 0 problemer. `check_stripe_ctas --self-te
 
 ## Deploylog
 
-- 2026-09-26: `VERIFICÉR DEPLOY: regeltallene er sande på 20 sider + 4 fund med manglende fix-tekst + to nye gate-steps <merge-sha> 26/9` — GitHub Actions deployer automatisk (`site/**` og `tools/**` er i path-filteret), så intet at vente på. Denne deploy **ændrer synligt indhold på 20 sider**, så verificér indhold, ikke HTTP 200:
+- 2026-09-26: `VERIFICÉR DEPLOY: regeltallene er sande på 20 sider + 4 fund med manglende fix-tekst + to nye gate-steps a0b633c 26/9` — GitHub Actions deployer automatisk (`site/**` og `tools/**` er i path-filteret), så intet at vente på. Denne deploy **ændrer synligt indhold på 20 sider**, så verificér indhold, ikke HTTP 200:
   1. `https://mahope.tools/scan` skal have **0** fund af `16 automated` og FAQ-JSON-LD skal sige `15 automated WCAG 2.1 AA rules`.
   2. `https://mahope.tools/guides/comparison` skal have **0** fund af `16 automated rules`.
   3. `https://mahope.tools/compliance-report` skal have `33 checks in all` + `the free 15 accessibility rules` og **0** fund af `11 accessibility` / `29 checks in all` / `11 automated`.
