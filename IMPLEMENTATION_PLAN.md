@@ -25,6 +25,7 @@
 - `BASELINE`: `main@281c1cb`
 - `LAST_BRANCH`: `ceo/retire-desktop-1-3-3`
 - `NEXT_TASK`: `40 — researchiteration, fordi køen er tom. Se opgave 40.`
+- `DEPLOY` (opgave 39, LUKKET): `DEPLOY OK dc032e2 26/9` — kørsel `36215583891` grøn: `gate` (46 steps) + tre grønne deploys. Live-**indhold** verificeret: 1.3.3 svarer 301 med Location på 1.3.4, 1.3.4 er stadig 200 med 58052 byte, 1.5.3 er stadig 301, og alle tre domæners `build-info.json` bærer `dc032e2`. Se Deployloggen.
 - `DEPLOY` (opgave 35, LUKKET): `DEPLOY OK 0ebfec7 26/9` — kørsel `36212353040` grøn:
   `gate` (46 steps) + tre grønne deploys. Alle tre domæners `build-info.json` bærer
   `0ebfec7`. `site/` urørt, så domænerne er uændrede indholdsmæssigt.
@@ -2228,6 +2229,25 @@ researchiteration, når køen er tom.
 
 
 ## Deploylog
+
+- 2026-09-26: `DEPLOY OK dc032e2` — lukker `VERIFICÉR DEPLOY` for opgave 39. Kørsel
+  `36215583891`: `gate` grøn (46 steps) + tre grønne deploys. Live-**indhold**
+  verificeret, ikke HTTP 200:
+
+  | Sti | Før | Efter (målt 26/9 03:43) |
+  |---|---|---|
+  | `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.3.zip` | 200, 58052 byte, arkiv med `$19/year` og `Purchase a license at hermes-passiv.pages.dev/clean-copy` | **HTTP/2 301** → `location: https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip`, `content-length: 0` |
+  | `mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip` | 200 | 200, 58052 byte (uændret) |
+  | `cleancopy.tools/downloads/clean-copy-firefox-v1.5.3.zip` | 301 | 301 (uændret — den gamle regel fra opgave 28 lever) |
+
+  Den falske `$19/year` kan altså **ikke hentes** mere. `build-info.json` bærer
+  `dc032e2` på alle tre domæner, så de kørte den nye kode. CI-jobbet "Tjek
+  produktion" (`check_live_sitemaps.py`) læser den nye post i
+  `tools/retired_downloads.json` automatisk og var grøn — altså min nye
+  post-deploy-kontrol passerede mod ægte produktion, ikke kun mod en mock.
+  De fjorten andre slettede arkiver ligger i `_gone` og bliver derfor ikke
+  tjekket live; de er målt til 404 26/9, og `_gone`-reglen gater dokumentationen,
+  ikke statuskoden.
 
 - 2026-09-26: `VERIFICÉR DEPLOY: 301 på /downloads/eaa-scanner-desktop-src-1.3.3.zip + kontrol 6 i retired-downloads <merge-sha> 26/9` —
   GitHub Actions deployer **automatisk**: `site/_worker.js`, `tests/**` og
