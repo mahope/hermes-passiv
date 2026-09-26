@@ -46,6 +46,8 @@ Response:
 ### Python
 
 ```python
+pip install requests
+
 import requests
 
 def profile(url: str) -> dict:

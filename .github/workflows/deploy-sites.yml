@@ -30,6 +30,7 @@ on:
       - 'tools/check_license_clients.py'
       - 'tools/check_clean_copy_distribution.py'
       - 'tools/check_links.py'
+      - 'tools/check_asset_instructions.py'
       - 'tools/build_clean_copy_archives.py'
       - 'tools/check_product_copy.py'
       - 'tools/check_stripe_ctas.py'
