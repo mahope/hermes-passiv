@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  Uforanderligt vidne. Dette er det betalte EUComply Pro-licensafsnit fra
+  site/compliance-report.html FØR opgave 51, ordret kopieret fra commit
+  67faa67^ (udgaven der lå låst ude af sin egen licensserver ved en 503).
+
+  Hvorfor filen findes: selftesten i tools/check_license_clients.py skal
+  bevise at syvdagesreglen fanger netop denne kode. Beviset lå tidligere i
+  `git show HEAD:site/compliance-report.html`, og det er grønt KUN mens
+  rettelsen endnu ikke er committet. Samme sekund den lander på main er
+  HEAD den rettede kode, selftesten bliver rød, og gaten dræber hver eneste
+  deploy — præcis det der skete med kørsel 36225565892 den 26/9.
+
+  Et vidne må derfor ikke læses fra repoets bevægelige tilstand. Det skal være
+  en fil, der er identisk før, under og efter enhver commit.
+
+  PAS PÅ: kommentarerne her må ikke nævne de to markører, reglen leder efter.
+  Skriver man dem ind i denne fil, holder porten sig selv grøn på sit eget
+  vidne. Selftesten kontrollerer derfor eksplicit, at de mangler.
+-->
+<html lang="en">
+<head><meta charset="utf-8"><title>Vidne — EUComply Pro-licensfør opgave 51</title></head>
+<body>
+<!-- Kunden betalte $79/år. Alt nedenfor er uændret kode fra den gamle side. -->
+<script>
+function getDeviceId() {
+  let did = localStorage.getItem('cc_device_id');
+  if (!did) { did = 'cc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10); localStorage.setItem('cc_device_id', did); }
+  return did;
+}
+
+// ── License validation ────────────────────────────────────────────
+// The worker rejects a payload without `product`, so the key must be sent as
+// an EUComply Pro key — the one licensed product this page sells.
+const LICENSE_PRODUCT = 'eucomply-pro';
+
+async function validateLicense(key) {
+  try {
+    const r = await fetch('/api/license/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_key: key, device_id: getDeviceId(), product: LICENSE_PRODUCT })
+    });
+    return await r.json();
+  } catch { return { ok: false, error: 'Network error — check your connection.' }; }
+}
+</script>
+</body>
+</html>
