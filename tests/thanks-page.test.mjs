@@ -107,8 +107,12 @@ async function render(payload) {
 // --------------------------------------------------------------------------
 // 3. Hver kind i STRIPE_PRODUCTS skal kunne renderes på den rigtige side.
 //    Kilderne er de ægte leveringssvar, så payload'en kan ikke aftales med
-//    siden ved en fejl.
+//    siden ved en fejl. Download-filen lægges i KV først, så dette er den
+//    fuldt leverede købsvej; den delvist manglende udgave står længere nede med
+//    sit eget håndlavede svar.
 // --------------------------------------------------------------------------
+kv.set('paidfile:dpa-template.pdf', '%PDF-dpa');
+kv.set('paidfile:dpa-template.md', '# DPA');
 const cases = [
   ['license (engangskøb)', 'cs_live_thankslicAAAAAAAA'],
   ['license (abonnement, 2 enheder)', 'cs_live_thankssubBBBBBBBB'],
@@ -146,6 +150,34 @@ ok('licens: aktiveringslink følger produktets home', lic.page.result.innerHTML.
 const dl = rendered['download'];
 ok('download: filnavn vises', dl.page.result.innerHTML.includes('dpa-template.pdf'), dl.page.result.innerHTML);
 ok('download: linket er workerens /api/download-adresse', dl.page.result.innerHTML.includes(dl.payload.downloads[0].url));
+
+// En fil kunden har betalt for, men som ikke kan hentes, må ikke blive et link.
+// `/api/download` svarer 503 på den, så et link ville være et dødt løfte.
+const blandet = await render({ ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
+  downloads: [{ file: 'dpa-template.pdf', url: 'https://mahope.tools/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf' }],
+  downloads_missing: ['dpa-template.md'] });
+ok('delvist manglende: den virkende fil er stadig et link', blandet.result.innerHTML.includes('/api/download/'), blandet.result.innerHTML);
+ok('delvist manglende: den manglende fil er nævnt uden adresse',
+  blandet.result.innerHTML.includes('dpa-template.md') && !blandet.result.innerHTML.includes('dpa-template.md</a>'), blandet.result.innerHTML);
+ok('delvist manglende: siden beder kunden svare på kvitteringen',
+  /reply to that email/i.test(blandet.result.innerHTML), blandet.result.innerHTML);
+
+const alleMangler = await render({ ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
+  downloads: [], downloads_missing: ['dpa-template.pdf', 'dpa-template.md'] });
+ok('intet hentbart: ingen downloadlinks overhovedet', !/\/api\/download\//.test(alleMangler.result.innerHTML), alleMangler.result.innerHTML);
+ok('intet hentbart: siger det rent ud, uden en tom "Your downloads"-liste',
+  /not available for download yet/i.test(alleMangler.result.innerHTML) && !/Your downloads/.test(alleMangler.result.innerHTML), alleMangler.result.innerHTML);
+ok('intet hentbart: kvitteringsmailen er nævnt som bevis på betalingen',
+  /record of it/i.test(alleMangler.result.innerHTML), alleMangler.result.innerHTML);
+ok('intet hentbart: begge filer nævnes ved navn',
+  alleMangler.result.innerHTML.includes('dpa-template.pdf') && alleMangler.result.innerHTML.includes('dpa-template.md'), alleMangler.result.innerHTML);
+ok('en manglende fil sender ingen mail-påstand om at alt er gemt',
+  !/save what is on this page/i.test(alleMangler.mail.textContent) || alleMangler.payload.emailed === true, alleMangler.mail.textContent);
+
+const kunReady = await render({ ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
+  downloads: [{ file: 'dpa-template.pdf', url: 'https://mahope.tools/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf' }] });
+ok('fuldt hentbart køb siger intet om manglende filer',
+  !/not available/i.test(kunReady.result.innerHTML), kunReady.result.innerHTML);
 
 const don = rendered['donation'];
 ok('donation: ingen licensnøgle-kasse', !/key-box/.test(don.page.result.innerHTML), don.page.result.innerHTML);

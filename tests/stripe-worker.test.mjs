@@ -13,6 +13,9 @@ const worker = (await import(pathToFileURL(tmp).href)).default;
 const kv = new Map();
 const VISITS = {
   get: async (k, type) => { const v = kv.get(k); if (v === undefined) return null; return type === 'arrayBuffer' ? new TextEncoder().encode(v).buffer : v; },
+  // Kun metadata, som den rigtige binding: workeren må aldrig hente en hel fil
+  // for at finde ud af om den er der.
+  head: async (k) => (kv.has(k) ? { metadata: null } : null),
   put: async (k, v) => { kv.set(k, typeof v === 'string' ? v : v); },
   delete: async (k) => { kv.delete(k); },
   list: async ({ prefix = '' } = {}) => ({ keys: [...kv.keys()].filter(key => key.startsWith(prefix)).sort().map(name => ({ name })), list_complete: true }),
@@ -46,6 +49,10 @@ const sessions = {
   cs_live_downloadCCCCCCCCCC: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'c@d.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'eucomply-dpa-v1' } }] } },
   cs_live_unpaidDDDDDDDDDDDD: { status: 'open', payment_status: 'unpaid', line_items: { data: [] } },
+  // Betalt download der endnu ikke ligger i KV — tilstanden for alle svyv
+  // downloadprodukter, indtil Mads har lagt filerne ind (opgave 24).
+  cs_live_manglendeMMMMMMMMMM: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'mangler@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'eucomply-nis2-clauses-v1' } }] } },
   cs_live_raceEEEEEEEEEEEEEE: { status: 'complete', payment_status: 'paid', subscription: null, payment_intent: 'pi_race', customer_details: { email: 'r@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'transmute-desktop-v1' } }] } },
   cs_live_mailfejlFFFFFFFFFF: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'm@x.dk' },
@@ -187,15 +194,39 @@ r = await call('/api/stripe-webhook', { method: 'POST', body: inv, headers: { 's
 const rec = JSON.parse(kv.get('lic:' + j.license_key));
 ok('fornyelse forlænger', rec.expires_at.startsWith('2036'), rec.expires_at);
 // Download
+kv.set('paidfile:dpa-template.pdf', '%PDF-test');
+kv.set('paidfile:dpa-template.md', '# DPA');
 r = await call('/api/stripe/fulfillment?session_id=cs_live_downloadCCCCCCCCCC'); j = await r.json();
 ok('downloadlinks', j.downloads && j.downloads.length === 2, JSON.stringify(j));
-kv.set('paidfile:dpa-template.pdf', '%PDF-test');
+ok('filer der ligger i KV giver ingen manglende-liste', !j.downloads_missing, JSON.stringify(j.downloads_missing));
 r = await call(new URL(j.downloads[0].url).pathname);
 ok('betalt fil serveres', r.status === 200 && r.headers.get('content-disposition').includes('dpa-template.pdf'));
 r = await call(new URL(j.downloads[0].url).pathname.replace('dpa-template.pdf', 'nda-clause-set.pdf'));
 ok('fil uden for købet afvist', r.status === 404);
 r = await call('/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf');
 ok('ukendt token afvist', r.status === 404);
+// En betalt fil der ikke ligger i KV må ikke gives en adresse, der svarer 503.
+r = await call('/api/stripe/fulfillment?session_id=cs_live_manglendeMMMMMMMMMM'); j = await r.json();
+ok('manglende filer giver nul links', Array.isArray(j.downloads) && j.downloads.length === 0, JSON.stringify(j.downloads));
+ok('manglende filer nævnes ved navn', j.downloads_missing && j.downloads_missing.length === 2
+  && j.downloads_missing.includes('nis2-vendor-clauses.pdf') && j.downloads_missing.includes('nis2-vendor-clauses.md'), JSON.stringify(j.downloads_missing));
+ok('svaret indeholder ingen /api/download-adresse', !JSON.stringify(j).includes('/api/download/'), JSON.stringify(j).slice(0, 200));
+const manglendeMail = mails.filter(m => (m.to || []).includes('mangler@x.dk')).pop();
+const manglendeTekst = (manglendeMail && manglendeMail.text) || '';
+ok('kvitteringsmailen har heller ingen død adresse', !!manglendeMail && !JSON.stringify(manglendeMail).includes('/api/download/'), manglendeTekst.slice(0, 200));
+ok('kvitteringsmailen siger det er betalt og beder svare', /reply to this email/i.test(manglendeTekst) && /went through/i.test(manglendeTekst), manglendeTekst.slice(0, 240));
+// Leveringen selv er urørt: filen er der, så den serveres stadig med sit navn.
+kv.set('paidfile:nis2-vendor-clauses.pdf', '%PDF-nis2');
+r = await call('/api/stripe/fulfillment?session_id=cs_live_manglendeMMMMMMMMMM'); j = await r.json();
+ok('fil lagt ind efter køb giver straks et virkende link', j.downloads.length === 1
+  && j.downloads[0].file === 'nis2-vendor-clauses.pdf', JSON.stringify(j.downloads));
+ok('manglende-listen er frisk, ikke ledgerens gamle', j.downloads_missing.length === 1
+  && j.downloads_missing[0] === 'nis2-vendor-clauses.md', JSON.stringify(j.downloads_missing));
+const nis2Token = new URL(j.downloads[0].url).pathname.split('/')[3];
+r = await call(new URL(j.downloads[0].url).pathname);
+ok('den senere lagte fil hentes med sit navn', r.status === 200 && r.headers.get('content-disposition').includes('nis2-vendor-clauses.pdf'), r.status);
+r = await call(`/api/download/${nis2Token}/nis2-vendor-clauses.md`);
+ok('en stadig manglende fil i samme køb giver stadig 503', r.status === 503, r.status);
 // Ubetalt, ugyldig session, offentlig bundle
 r = await call('/api/stripe/fulfillment?session_id=cs_live_unpaidDDDDDDDDDDDD');
 ok('ubetalt = 202', r.status === 202);
