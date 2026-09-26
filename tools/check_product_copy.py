@@ -9,12 +9,17 @@ To klasser:
   hvor et absolutt løfte om at intet forlader maskinen er en løgnest i samme
   dokument. Opgave 27 rettede FAQ'en på /clean-copy, men hero-noten og
   privatlivsnoten på /clean-copy-tool sagde videre det samme.
+* **Guide-sider** — de publicerede FAQ'er der lovede at Clean Copy "works
+  entirely inside your browser" / "everything runs locally in your browser".
+  Tre af dem bliver skrevet af generatorer, så rettelsen skal ske i
+  *generatoren* — ellers skriver næste kørslest den gamle tekst tilbage.
 
     python3 tools/check_product_copy.py
     python3 tools/check_product_copy.py --self-test
 """
 from html.parser import HTMLParser
 import argparse
+import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -141,7 +146,52 @@ CLEAN_COPY_CHECKS = (
     ),
 )
 
-# De præcise sætninger der var publiceret indtil denne iteration. Beviset på
+# Den afsløring alle fire guides skal stå med. Den er ens fordi den er sand
+# for alle fire: selve tabellen bliver i browseren, og de to ting der faktisk
+# forlader den sker kun på kundens egen handling.
+GUIDE_REQUIRED = (
+    "the table does not",
+    "an anonymous page-view count",
+    "if you activate a clean copy pro key",
+    "sent to our license api on mahope.tools so the license can be validated",
+)
+
+# Guide-siderne. Tre af de fire skrives af en generator, så den publicerede
+# tekst er her kun *resultatet* — men det er den læseren ser, og det er den
+# der skal gates. Airtable-siden er håndskrevet (ingen generator findes), de
+# tre andre regenereres af make_blog_sheets_en.py, make_blog_notion_en.py og
+# make_hub_copy_clean.py.
+GUIDE_CHECKS = (
+    (
+        "site/blog/copy-table-website-to-google-sheets.html",
+        ("works entirely inside your browser",),
+        GUIDE_REQUIRED,
+    ),
+    (
+        "site/blog/copy-table-website-to-notion.html",
+        ("works entirely inside your browser",),
+        GUIDE_REQUIRED,
+    ),
+    (
+        "site/blog/copy-table-website-to-airtable.html",
+        ("works entirely inside your browser",),
+        GUIDE_REQUIRED,
+    ),
+    (
+        "site/copy-clean-guide.html",
+        ("everything runs locally in your browser", "nothing is uploaded until you paste"),
+        GUIDE_REQUIRED,
+    ),
+)
+
+# Generatorerne skal og give den rigtige tekst. Ellers skriver næste kørsel
+# den gamle løgnest tilbage, og porten på de publicerede sider fanger den først
+# når nogen har kørt generatoren.
+GUIDE_GENERATOR_CHECKS = (
+    ("tools/make_blog_sheets_en.py", ("works entirely inside your browser",), GUIDE_REQUIRED),
+    ("tools/make_blog_notion_en.py", ("works entirely inside your browser",), GUIDE_REQUIRED),
+    ("tools/make_hub_copy_clean.py", ("everything runs locally in your browser", "nothing is uploaded until you paste"), GUIDE_REQUIRED),
+)
 # porten er at den bliver rød på *den rigtige fil* med lige præcis den gamle
 # tekst — ikke på en syntetisk streng, der ligner den.
 SUPERSEDED_COPY = {
@@ -166,6 +216,49 @@ SUPERSEDED_COPY = {
     ),
 }
 
+
+# De præcise FAQ-sætninger der var publiceret indtil denne iteration, for de
+# fire guidesider. Samme (gammel, ny) rækkefølge som SUPERSEDED_COPY, og kun
+# de bruges i selftestens bevis på de rigtige filer.
+GUIDE_SUPERSEDED = {
+    "site/blog/copy-table-website-to-google-sheets.html": (
+        "No. Clean Copy works entirely inside your browser. The table never leaves your machine "
+        "until you paste it where you want it.",
+        "The table does not. Clean Copy reads and converts it in your own browser, so it never "
+        "reaches a server — the result only exists on your clipboard until you paste it. Two "
+        "other things do leave your browser, and both only when you ask for them: an anonymous "
+        "page-view count, and — if you activate a Clean Copy Pro key — that key and a device "
+        "id, sent to our license API on mahope.tools so the license can be validated.",
+    ),
+    "site/blog/copy-table-website-to-notion.html": (
+        "No. Clean Copy works entirely inside your browser. The table never leaves your machine "
+        "until you paste it where it needs to go yourself.",
+        "The table does not. Clean Copy reads and converts it in your own browser, so it never "
+        "reaches a server — the result only exists on your clipboard until you paste it where "
+        "it needs to go. Two other things do leave your browser, and both only when you ask "
+        "for them: an anonymous page-view count, and — if you activate a Clean Copy Pro key — "
+        "that key and a device id, sent to our license API on mahope.tools so the license can "
+        "be validated.",
+    ),
+    "site/blog/copy-table-website-to-airtable.html": (
+        "No. Clean Copy works entirely inside your browser. The table never leaves your machine "
+        "until you paste it where you want it.",
+        "The table does not. Clean Copy reads and converts it in your own browser, so it never "
+        "reaches a server — the result only exists on your clipboard until you paste it. Two "
+        "other things do leave your browser, and both only when you ask for them: an anonymous "
+        "page-view count, and — if you activate a Clean Copy Pro key — that key and a device "
+        "id, sent to our license API on mahope.tools so the license can be validated.",
+    ),
+    "site/copy-clean-guide.html": (
+        "No. The clipboard work happens entirely in your browser. Nothing is uploaded until you "
+        "paste it somewhere yourself.",
+        "The table does not. The clipboard work happens in your own browser and nothing you copy "
+        "is uploaded — it only exists on your clipboard until you paste it yourself. Two other "
+        "things do leave your browser, and both only when you ask for them: an anonymous "
+        "page-view count, and — if you activate a Clean Copy Pro key — that key and a device "
+        "id, sent to our license API on mahope.tools so the license can be validated.",
+    ),
+}
 
 def collect_strings(value) -> list[str]:
     if isinstance(value, str):
@@ -232,6 +325,38 @@ def normalize(text: str) -> str:
     return " ".join(text.casefold().split())
 
 
+def generator_literals(relative, source=None) -> str:
+    """Alle tekststrenge i en generator, som én søgbar streng.
+
+    En generator skriver sin tekst i Python-strenge der ofte er linjebrudte
+    og limt sammen med implicit konkatenering. Et simpelt grep rammer derfor
+    aldrig hele sætningen, og det er netop derfor et forbudt løfte har kunnet
+    ligge fordelt på to linjer. `ast` folder de sammensatte strenge ind i én
+    `Constant` pr. stykke, så hele sætningen bliver søgbar — uden at vi
+    kører generatoren, som ville skrive filer.
+    """
+    if source is None:
+        source = (ROOT / relative).read_text(encoding="utf-8")
+    pieces = [
+        node.value
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    ]
+    return normalize("\n".join(pieces))
+
+
+def check_generator(relative, forbidden, required, source=None) -> list[str]:
+    literals = generator_literals(relative, source)
+    problems = []
+    for phrase in forbidden:
+        if normalize(phrase) in literals:
+            problems.append(f"{relative}: forbidden claim {phrase!r} in generator text")
+    for phrase in required:
+        if normalize(phrase) not in literals:
+            problems.append(f"{relative}: missing required disclosure {phrase!r} in generator text")
+    return problems
+
+
 def semantic_html(text: str) -> tuple[str, str]:
     parser = CopyHTMLParser()
     parser.feed(text)
@@ -269,6 +394,11 @@ def collect_problems() -> list[str]:
     for relative, forbidden, required in CLEAN_COPY_CHECKS:
         text = (ROOT / relative).read_text(encoding="utf-8")
         problems.extend(check_text(relative, text, forbidden, required))
+    for relative, forbidden, required in GUIDE_CHECKS:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        problems.extend(check_text(relative, text, forbidden, required))
+    for relative, forbidden, required in GUIDE_GENERATOR_CHECKS:
+        problems.extend(check_generator(relative, forbidden, required))
     try:
         generated, generator_root = generated_blog_copy()
     except Exception as error:
@@ -337,10 +467,54 @@ def self_test() -> int:
              "no text sent anywhere", "no data sent anywhere.", 1), *cases["site/clean-copy.html"])),
     ]
 
+    # Bevis på de rigtige filer: de publicerede FAQ'er fra før rettelsen, i
+    # alle fire. Det er den tekst læseren faktisk har læst.
+    guide_cases = {relative: (forbidden, required) for relative, forbidden, required in GUIDE_CHECKS}
+    guide_real = {relative: (ROOT / relative).read_text(encoding="utf-8") for relative in guide_cases}
+    for relative, (old, new) in GUIDE_SUPERSEDED.items():
+        if new not in guide_real[relative]:
+            raise AssertionError(f"{relative}: current text not found in the real file: {new[:60]!r}")
+        if old in guide_real[relative]:
+            raise AssertionError(f"{relative}: superseded text still present in the real file")
+        scenarios.append((
+            f"den gamle FAQ-påstand på {relative}",
+            check_text(relative, guide_real[relative].replace(new, old, 1), *guide_cases[relative]),
+        ))
+
+    # Bevis på de rigtige generatorer: løftet der skriver den gamle tekst
+    # tilbage skal fanges i selve kilden, ikke først i det publicerede
+    # resultat. `make_hub_copy_clean.py` er valgt fordi dens gamle sætning
+    # var delt på to Python-strenge — et grep ville ikke have fundet den.
+    for relative, forbidden, required in GUIDE_GENERATOR_CHECKS:
+        source = (ROOT / relative).read_text(encoding="utf-8")
+        old_claim = "The table does not."
+        if old_claim not in source:
+            raise AssertionError(f"{relative}: mutation anchor not found: {old_claim!r}")
+        scenarios.append((
+            f"generatoren {relative} der skriver det gamle løfte tilbage",
+            check_generator(relative, forbidden, required, source.replace(old_claim, "Everything runs locally in your browser.", 1)),
+        ))
+        scenarios.append((
+            f"generatoren {relative} uden nogen afsløring",
+            check_generator(relative, forbidden, required,
+                            source.replace("page-view count", "view count", 1)),
+        ))
+        # Scenariet ovenfor er grønt kun hvis mutationen overhovedet ramte.
+        # `page-view count` står i alle tre generatorer som ét lig streng; de
+        # lange sætninger er delt på to Python-strenge, så et rent grep ville
+        # aldrig have fundet det gamle løfte.
+        if "page-view count" not in source:
+            raise AssertionError(f"{relative}: generator anchor not found: 'page-view count'")
+
     # Positiv kontrol: de rigtige filer skal være grønne, ellers er porten
     # grøn fordi den intet kan.
     positive = [f"{relative}: {problem}" for relative, (forbidden, required) in cases.items()
                 for problem in check_text(relative, real[relative], forbidden, required)]
+    positive += [f"{relative}: {problem}" for relative, (forbidden, required) in guide_cases.items()
+                 for problem in check_text(relative, guide_real[relative], forbidden, required)]
+    positive += [f"{relative}: {problem}" for relative, forbidden, required in GUIDE_GENERATOR_CHECKS
+                 for problem in check_generator(relative, forbidden, required)]
+    positive_controls = len(cases) + len(guide_cases) + len(GUIDE_GENERATOR_CHECKS)
 
     # Negativ kontrol: en kvalificeret påstand er ikke en forbudt påstand.
     qualified = ('<p>Your text never leaves this page. If you activate a Pro key, that key and a '
@@ -364,7 +538,7 @@ def self_test() -> int:
     if not negative:
         print("falsk-alarm-kontrol: en kvalificeret påstand fejler ikke")
     if not positive:
-        print(f"positiv kontrol: {len(cases)} rigtige filer er grønne")
+        print(f"positiv kontrol: {positive_controls} rigtige filer og generatorer er grønne")
     print(f"self-test: {'OK' if not failed else 'FEJLET'} — {len(scenarios)} fejlformer, "
           f"{failed} fejlede")
     return 1 if failed else 0
@@ -380,6 +554,7 @@ def main() -> int:
     problems = collect_problems()
     print(f"{len(PUBLIC_CHECKS) + 1} DeskUptime copy sources checked")
     print(f"{len(CLEAN_COPY_CHECKS)} Clean Copy Pro copy sources checked")
+    print(f"{len(GUIDE_CHECKS)} guide pages + {len(GUIDE_GENERATOR_CHECKS)} guide generators checked")
     print(f"problems: {len(problems)}")
     for problem in problems:
         print(problem)

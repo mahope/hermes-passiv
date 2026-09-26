@@ -67,11 +67,16 @@ FAQPAGE = {
         {'@type': 'Question', 'name': 'Is all of this free?',
          'acceptedAnswer': {'@type': 'Answer', 'text':
             'Yes. The guides use the free Clean Copy browser extension for Chrome '
-            'and Firefox. Everything runs locally in your browser.'}},
+            'and Firefox. The clipboard work runs locally in your browser, so the '
+            'free version is a complete tool — not a trial.'}},
         {'@type': 'Question', 'name': 'Do my data leave my computer?',
          'acceptedAnswer': {'@type': 'Answer', 'text':
-            'No. The clipboard work happens entirely in your browser. Nothing is '
-            'uploaded until you paste it somewhere yourself.'}},
+            'The table does not. The clipboard work happens in your own browser and '
+            'nothing you copy is uploaded — it only exists on your clipboard until '
+            'you paste it yourself. Two other things do leave your browser, and both '
+            'only when you ask for them: an anonymous page-view count, and — if you '
+            'activate a Clean Copy Pro key — that key and a device id, sent to our '
+            'license API on mahope.tools so the license can be validated.'}},
         {'@type': 'Question', 'name': 'Which destinations are covered?',
          'acceptedAnswer': {'@type': 'Answer', 'text':
             'Excel, Google Sheets, Numbers, LibreOffice Calc, Notion, Airtable, '
