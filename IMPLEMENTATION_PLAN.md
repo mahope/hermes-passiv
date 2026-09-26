@@ -2516,6 +2516,11 @@ portregel, og buildet er produktionskritisk for fire domæner. Se `STATE` fund 5
 
 ## Deploylog
 
+- `DEPLOY` (opgave 47, ÅBEN): `VERIFICÉR DEPLOY: 6 dublet-id væk fra den live DOM d78e299 26/9` — GitHub Actions deployer med det samme (`site/**` og `tools/**` er i path-filteret, og `build_sites.py` er ændret). Verificér på **indhold**, ikke HTTP 200:
+  - `https://mahope.tools/blog` skal have **0** fund af `id="accessibility-eaa"` der optræder to gange, og hvert af de 5 sektions-id skal forekomme **én** gang. Kør `python3 tools/seo_check.py --url https://mahope.tools/blog` — den skal være grøn på præcis denne regel.
+  - `https://mahope.tools/da/blog/shopify-tilgaengelighed-eaa` skal have **1** `id="indhold"` og **1** `id="indhold-2"`, og ToC-linket skal være `href="#indhold-2"` mens hero-CTA'en bevarer `href="#indhold"`. Det er den adfærd, der var forkert: punktet "Indhold" sprang før over sin egen forfader.
+  - `build-info.json` skal bære `d78e299` på alle tre domæner.
+
 - 2026-09-26: `VERIFICÉR DEPLOY: den betalte e-bog-udgave er væk fra 15 publicerede sider + `id="products"` på forsiden fcd6cff 26/9` — kørsel `36216127580` — GitHub Actions deployer automatisk (`site/**` er i path-filteret), så der er intet at vente på. Verificér på **indhold**, ikke HTTP 200:
   - `https://mahope.tools/books/build-your-first-chrome-extension` skal have 0 fund af `9.99` og `PreOrder` og 1 af `schema.org/InStock`.
   - `https://mahope.tools/books/cookie-consent-guide` skal have 0 fund af `payment setup` og `9.99`.
