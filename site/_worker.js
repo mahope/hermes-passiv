@@ -290,6 +290,17 @@ async function handleScanProxy(request, url, env) {
     );
   }
 
+  // Samme værn som på den betalte rapportrute. Uden det hentede denne åbne rute
+  // loopback, RFC1918, link-local og CGNAT og *gav body'en tilbage til kalderen*,
+  // altså en informationsudlæsning der ikke kræver en licens. Den skal også
+  // ligge her, fordi de to ruter ellers ville svare forskelligt på samme URL.
+  if (!targetIsPublic(targetUrl)) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'That host cannot be scanned. Only public websites can be scanned — local and private network addresses are not reachable from here.' }),
+      { status: 400, headers }
+    );
+  }
+
   try {
     const response = await fetch(targetUrl.toString(), {
       method: 'GET',
@@ -997,9 +1008,14 @@ const TRACKING_SCRIPT = /google-analytics\.com|googletagmanager\.com|analytics\.
 // replaces.
 const CONSENT_CONTAINER = /<(?:div|section|aside|iframe|nav|form|p)\b[^>]{0,300}?\b(?:id|class|data-testid|data-consent|data-qc|aria-label)\s*=\s*["'][^"']{0,200}?(?:cookie[-_\s]?(?:banner|bar|notice|consent|wall|dialog|box)|consent[-_\s]?(?:banner|bar|notice|wall|dialog|manager|modal|box)|gdpr[-_\s]?(?:banner|bar|modal|consent|popup)|onetrust|usercentrics|consentmanager|didomi|borlabs|klaro|cookieyes|cmp[-_\s]?(?:container|banner|wrapper|box)|qc[-_\s]?cmp)/i;
 
-// A paid endpoint that fetches an attacker-chosen URL is an SSRF primitive.
-// cscFetch() has no guard of its own, so the guard lives with the route.
-function reportTargetIsPublic(target) {
+// Any endpoint that fetches an attacker-chosen URL is an SSRF primitive, and
+// cscFetch() has no guard of its own, so the guard lives with the routes. It
+// must sit on *both* of them: /api/report is the paid one, and /scan-proxy is
+// the open one that six public tools share, so a guard on only the paid route
+// leaves the cheaper door open — and makes the two routes disagree, so a
+// customer can pass a host the free scanner accepts and then be told their
+// license was refused by the paid report.
+function targetIsPublic(target) {
   if (!target || !['http:', 'https:'].includes(target.protocol)) return false;
   const host = target.hostname.toLowerCase().replace(/^\[|\]$/g, '');
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')
@@ -1141,7 +1157,7 @@ async function handleReport(request, env) {
   } catch {
     return new Response(JSON.stringify({ ok: false, error: 'Invalid URL.' }), { status: 400, headers: corsHeaders });
   }
-  if (!reportTargetIsPublic(target)) {
+  if (!targetIsPublic(target)) {
     return new Response(JSON.stringify({ ok: false, error: 'That host cannot be scanned.' }), { status: 400, headers: corsHeaders });
   }
 

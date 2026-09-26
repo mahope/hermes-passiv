@@ -38,7 +38,7 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
     return new Response('Not found', { status: 404 });
   } } };
 
-const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0;
+const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0; let privFetches = 0;
 const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
 const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
@@ -90,6 +90,15 @@ globalThis.fetch = async (url, opts = {}) => {
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
   if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+  // En privat vært SKAL svare her. Uden denne rute er SSRF-porten grøn af en
+  // fejl, der ligner en rettelse: stubben ville kaste på en ukendt URL, så det
+  // gamle kode sendte et kald og fik en fejl — og fejlen ligner afvisningen.
+  // Med routen svarer den gamle kode 200 *og* giver body'en tilbage, hvilket er
+  // selve lækagen. Tælleren er så det eneste bevis på at intet slap ud.
+  if (/^https?:\/\/(127\.0\.0\.1|localhost|10\.|192\.168\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|\[::1\]|[\w-]+\.(local|internal|home\.arpa))/.test(url)) {
+    privFetches++;
+    return new Response('<html><body>INTERNAL SECRET: database=admin/hemmeligt</body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  }
   // GDPR-fundene skal hvile på bevis, ikke på ord. Fire sider, der dækker de
   // fire former det virkelige web har:
   if (url.startsWith('https://sporing.example/')) return new Response('<html lang="en"><head><title>Butik</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><h1>Butik</h1></body></html>', { status: 200 });
@@ -473,14 +482,91 @@ for (let i = 1; i < 120; i++) await call('/api/report', repIp);
 r = await call('/api/report', repIp);
 ok('rapporten over grænsen giver 429 med timegrænsen', r.status === 429 && /hour/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 
-// Klienten må ikke kalde en tidsgrænse for en afvisning af nøglen. Den gamle
-// 4xx-gren sagde "the report server refused the key", og en 429 nåede den.
-// Beviset er rækkefølgen: 429-grenen skal stå *før* den afvisende gren, ellers
-// kan en timegrænse aldrig nå den.
+// ── SSRF på den åbne rute ────────────────────────────────────────────
+// /scan-proxy er ubeskyttet af licens og deles af seks offentlige værktøjer,
+// så en manglende værn-der er en informationsudlæsning uden betaling. Den skal
+// afvise præcis de værter, rapporten allerede afviste, ellers svarer de to
+// ruter forskelligt på samme URL — og det er sådan en kunde kommer til at få
+// skylden lagt på sin egen nøgle (se de to tests efter dette).
+const PRIVATE_TARGETS = [
+  ['http://127.0.0.1:8787/', 'loopback'],
+  ['http://192.168.1.10/', 'RFC1918'],
+  ['http://10.0.0.5/', 'RFC1918'],
+  ['http://169.254.169.254/latest/meta-data/', 'link-local (cloud metadata)'],
+  ['http://[::1]:8080/', 'IPv6 loopback'],
+  ['http://printer.local/', '.local'],
+  ['http://100.64.0.1/', 'CGNAT'],
+];
+for (const [target, why] of PRIVATE_TARGETS) {
+  r = await call('/scan-proxy?url=' + encodeURIComponent(target), ip(4));
+  const body = await r.json().catch(() => ({}));
+  ok(`scan-proxy afviser ${why}`, r.status === 400 && /cannot be scanned/i.test(body.error || ''), `${target} -> ${r.status} ${JSON.stringify(body).slice(0, 90)}`);
+  // Samme afvisning på den betalte rute. De to skal være enige, ellers opstår
+  // fundet her: en kunde der har fået sin frie scanning af en privat vært.
+  r = await call('/api/report', { ...ip(5), method: 'POST', headers: { 'content-type': 'application/json', 'cf-connecting-ip': '203.0.113.5' },
+    body: JSON.stringify({ license_key: euKey, device_id: 'pro-dev', product: 'eucomply-pro', url: target }) });
+  const rbody = await r.json().catch(() => ({}));
+  ok(`rapporten afviser ${why} på samme måde`, r.status === 400 && /cannot be scanned/i.test(rbody.error || ''), `${target} -> ${r.status}`);
+}
+// Det stærkeste bevis: stubben ville have svaret en privat vært med en 200 og
+// en krop. Der kom 0 af de 7, så ingen anmodning slap ud overhovedet.
+ok('ingen privat vært blev hentet overhovedet', privFetches === 0, `${privFetches} ude-fetch`);
+
+// Den offentlige rute skal stadig virke. Uden denne ville porten være grøn fordi
+// den afviser alt — det er den fejlretning, der låser et virkende værktøj ude.
+r = await call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', ip(4));
+ok('en offentlig side scanner stadig', r.status === 200 && (await r.json()).ok === true, r.status);
+
+// Værterne skal heller ikke slippe igennem som ren tekst, f.eks. "127.0.0.1.nip.io".
+// Vi lader den ligge som en kendt begrænsning i stedet for at tro at vi dækker
+// DNS-rebinding: kun den bogstavelige IP og de fire suffikser afvises.
+// Beviset på at porten ikke er grøn af vilje: en URL med en offentlig vært
+// men ugyldigt protokol er stadig afvist med dens egen tekst.
+r = await call('/scan-proxy?url=' + encodeURIComponent('file:///etc/passwd'), ip(4));
+ok('file:// er afvist med protokol-teksten', r.status === 400 && /http/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
+// ── Nøglen må ikke få skylden for noget der ikke er nøglen ───────────
+// Nøglen er bekræftet aktiv, før /api/report kaldes, så ingen gren efter det
+// kald kan afvise den. Den gamle 4xx-gren sagde "the report server refused
+// the key" og nåede et 400 for en privat værtsadresse: en kunde der betalte
+// $79 fik at vide at hans egen nøgle var afvist, fordi han havde tastet en
+// adresse i sit eget netværk.
 const reportClient = reportHtml.slice(reportHtml.indexOf("fetch('/api/report'"));
 ok('siden har en egen 429-gren', /r\.status === 429/.test(reportClient));
-ok('timegrænsen nåer aldrig "refused the key"', reportClient.indexOf('r.status === 429') < reportClient.indexOf('refused the key'));
+ok('siden siger aldrig at nøglen blev afvist', !/refused the key/.test(reportClient), 'refused the key');
+ok('siden siger at nøglen er gyldig og hvad der stoppede', /your key is valid/.test(reportClient) && /could not be produced/.test(reportClient));
+ok('timegrænsen nåer aldrig nøgle-teksten', reportClient.indexOf('r.status === 429') < reportClient.indexOf('your key is valid'));
 ok('siden siger timegrænsen og åbner PDF\'en alligevel', /hourly report limit/.test(reportHtml) && /resets within the hour/.test(reportHtml));
+
+// Adfærd, ikke læsning: blokken køres med de svar den kan få. Den er
+// ekstraheret fra den indlejrede kode, ikke kopieret, så en ændring i siden
+// ændrer denne test. Den løber fra den note der sættes ved svaret til den
+// statuslinje kunden faktisk ser — altså hele den tekst, påstanden handler om.
+const flowSrc = reportHtml.slice(reportHtml.indexOf('let note =', reportHtml.indexOf("fetch('/api/report'") - 400),
+  reportHtml.indexOf('window.setTimeout(() => window.print()'));
+const runFlow = async (svar) => {
+  const statusNode = { className: '', textContent: '' };
+  const doc = { getElementById: () => statusNode };
+  const win = { print() {}, setTimeout() {} };
+  const f = new Function('fetch', 'getDeviceId', 'renderReport', 'mergeProFindings', 'document', 'window', 'key', 'result',
+    `return (async () => { ${flowSrc} return { text: document.getElementById('licenseStatus').textContent }; })()`);
+  await f(async () => svar, () => 'dev', () => {}, () => {}, doc, win, euKey, { cached: false });
+  return { text: statusNode.textContent };
+};
+const verdicts = {};
+for (const [navn, svar] of [
+  ['private-host', new Response(JSON.stringify({ ok: false, error: 'That host cannot be scanned.' }), { status: 400 })],
+  ['ugyldig-url', new Response(JSON.stringify({ ok: false, error: 'Invalid URL.' }), { status: 400 })],
+  ['timegraense', new Response(JSON.stringify({ ok: false, error: 'Too many reports this hour. Try again later.' }), { status: 429 })],
+  ['server-nede', new Response('nope', { status: 503 })],
+  ['fuld-rapport', new Response(JSON.stringify({ ok: true, findings: [] }), { status: 200 })],
+]) verdicts[navn] = await runFlow(svar);
+ok('ingen af fejlene skyldes nøglen', ['private-host', 'ugyldig-url', 'timegraense', 'server-nede']
+  .every((k) => !/refus|invalid license|license (not valid|expired|revoked)/i.test(verdicts[k].text)), JSON.stringify(verdicts));
+ok('kunden får at vide nøglen stadig er gyldig', /your key is valid/.test(verdicts['private-host'].text), verdicts['private-host'].text);
+ok('kunden får at vide hvad der stoppede', /cannot be scanned/.test(verdicts['private-host'].text), verdicts['private-host'].text);
+ok('en fuld rapport siger den er fuld', /License valid/.test(verdicts['fuld-rapport'].text) && !/only/.test(verdicts['fuld-rapport'].text), verdicts['fuld-rapport'].text);
+ok('alle fem ender med at PDF\'en åbner', Object.values(verdicts).every((v) => /your PDF opens now/.test(v.text)), JSON.stringify(verdicts, null, 0));
 
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);
