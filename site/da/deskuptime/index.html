@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DeskUptime">
 <meta property="og:title" content="DeskUptime — oppetid, SSL og indholdstjek fra din egen maskine">
-<meta property="og:description" content="Gratis CLI til oppetid, SSL-udløb og indholdsændringer. Desktop-app til macOS og Windows. Ingen månedlig betaling.">
+<meta property="og:description" content="Gratis MIT-CLI til oppetid, SSL-udløb og indholdsændringer. Desktop-app til macOS og Windows med Pro, 19 USD én gang. Ingen månedlig betaling.">
 <meta property="og:url" content="https://deskuptime.com/da/">
 <meta property="og:image" content="https://deskuptime.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -36,10 +36,10 @@
     <p>DeskUptime svarer på de tre spørgsmål fra din egen computer. Et gratis kommandolinjeværktøj til enkelttjek og CI, og en lille desktop-app, der bliver ved med at tjekke i baggrunden. Intet hosted dashboard, ingen månedlig betaling, intet om dine sites gemt på andres servere.</p>
     <div class="hero-cta">
       <a href="#install" class="btn-primary">Installér CLI'en</a>
-      <a href="#desktop" class="btn-secondary">Download desktop-appen</a>
+      <a href="#desktop" class="btn-secondary">Desktop-app — med Pro</a>
       <a href="https://github.com/mahope/deskuptime" class="btn-secondary">Kildekode på GitHub</a>
     </div>
-    <span class="hero-note">CLI'en er gratis og MIT-licenseret. Desktop-appen er gratis til op til 3 sites; Pro-licens 19 USD én gang.</span>
+    <span class="hero-note">CLI'en er gratis og MIT-licenseret. Desktop-appen er en del af Pro: 19 USD én gang, 3 maskiner.</span>
   </div>
 </div>
 
@@ -93,6 +93,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
   <div class="container">
     <h2>Desktop-app</h2>
     <p>En lille Tauri-app til macOS og Windows, der ligger i system tray og kører de samme tjek efter et schedule. Notifikationer når et site går ned, et certifikat nærmer sig udløb, eller indholds-hashen ændrer sig. Nuværende version 0.2.7.</p>
+    <p>Appen er closed source og en del af DeskUptime Pro. Du kan hente installeren her, og den beder om licensnøglen fra din Stripe-kvittering, første gang du starter den. <a href="#pro">Pro er 19 USD én gang</a>.</p>
     <ul class="downloads">
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip">macOS, Apple Silicon</a><span>zip, aarch64</span></li>
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip">macOS, Intel</a><span>zip, x86_64</span></li>
@@ -106,21 +107,22 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
   <div class="container">
     <h2>Gratis og Pro</h2>
     <table class="compare" id="compare">
-      <thead><tr><th></th><th>CLI</th><th>Desktop</th><th>Desktop Pro</th></tr></thead>
+      <thead><tr><th></th><th>Gratis CLI</th><th>Desktop Pro</th></tr></thead>
       <tbody>
-        <tr><td>Oppetid, SSL og indholdstjek</td><td>ja</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Enkeltstående <code>check</code> af vilkårligt mange URL'er</td><td>ja</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Løbende watch / baggrundstjek</td><td>ja</td><td>ja</td><td>ja</td></tr>
-        <tr><td>System tray og notifikationer</td><td>—</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Sites i watch mode</td><td>3</td><td>3</td><td>ubegrænset</td></tr>
-        <tr><td>Webhook-alarmer fra CLI'en</td><td>—</td><td>—</td><td>ja</td></tr>
-        <tr><td>Kunderapport fra CLI'en (Markdown og JSON)</td><td>—</td><td>—</td><td>ja</td></tr>
-        <tr><td>Pris</td><td>gratis</td><td>gratis</td><td>19 USD én gang</td></tr>
+        <tr><td>Oppetid, SSL og indholdstjek</td><td>ja</td><td>ja</td></tr>
+        <tr><td>Enkeltstående <code>check</code> af vilkårligt mange URL'er</td><td>ja</td><td>ja</td></tr>
+        <tr><td>Løbende watch / baggrundstjek</td><td>ja</td><td>ja</td></tr>
+        <tr><td>Desktop-appen til macOS og Windows</td><td>—</td><td>ja</td></tr>
+        <tr><td>System tray og notifikationer</td><td>—</td><td>ja</td></tr>
+        <tr><td>Sites i watch mode</td><td>3</td><td>ubegrænset</td></tr>
+        <tr><td>Webhook-alarmer fra CLI'en</td><td>—</td><td>ja</td></tr>
+        <tr><td>Kunderapport fra CLI'en (Markdown og JSON)</td><td>—</td><td>ja</td></tr>
+        <tr><td>Pris</td><td>gratis</td><td>19 USD én gang</td></tr>
       </tbody>
     </table>
     <div class="pricing">
       <div>
-        <h3>CLI og desktop-app</h3>
+        <h3>CLI</h3>
         <p class="price">Gratis</p>
         <p>MIT-licens. Enkelttjek er ubegrænsede; løbende watch mode dækker op til tre sites.</p>
         <p>Gratis uden licensnøgle: enkelttjek, SSL- og content-tjek og JSON-output til scripts og CI.</p>
@@ -128,7 +130,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
       <div>
         <h3>Desktop Pro</h3>
         <p class="price">19 USD <small>én gang, 3 maskiner, alle 1.x-opdateringer</small></p>
-        <p>Fjerner grænsen på tre sites, lad CLI'en tjekke hvert 30. sekund i stedet for hvert 60., tilføjer webhook-alarmer og en kunderapport i Markdown og JSON. Du får en licensnøgle og betaler kun én gang. Pro aktiverer og revaliderer din licens mod mahope.tools.</p>
+        <p>Giver dig desktop-appen til macOS og Windows, fjerner grænsen på tre sites, lad CLI'en tjekke hvert 30. sekund i stedet for hvert 60., og tilføjer webhook-alarmer og en kunderapport i Markdown og JSON. Du får en licensnøgle og betaler kun én gang. Pro aktiverer og revaliderer din licens mod mahope.tools.</p>
         <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Køb DeskUptime Pro — 19 USD</a></p>
         <p class="notice">Sikker betaling via Stripe. Licensnøglen kommer på mail og på takkesiden. Den gratis version er fortsat komplet og MIT-licenseret, og intet i den udløber.</p>
       </div>
@@ -165,7 +167,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
 <section>
   <div class="container">
     <h2>Hvem står bag</h2>
-    <p>DeskUptime er bygget af Mads Holst Jensen, selvstændig udvikler i Odense, under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Det opstod af at passe kunders WordPress-sites og ville have et tjek, der ikke krævede endnu en konto. Motoren, CLI'en og desktop-appen ligger alle på <a href="https://github.com/mahope/deskuptime">GitHub</a>.</p>
+    <p>DeskUptime er bygget af Mads Holst Jensen, selvstændig udvikler i Odense, under navnet <a href="https://mahoje.dk">mahoje.dk</a>. Det opstod af at passe kunders WordPress-sites og ville have et tjek, der ikke krævede endnu en konto. Motoren og CLI'en ligger som MIT-licenseret kode på <a href="https://github.com/mahope/deskuptime">GitHub</a>. Desktop-appen er closed source og kommer med Pro.</p>
     <p>Læs mere: <a href="/da/blog/tjek-ssl-certifikat-udloeb">tjek af SSL-certifikatets udløb</a>, <a href="/da/blog/overvaag-hjemmeside-fra-terminalen">overvågning af hjemmesider fra terminalen</a>, <a href="/da/blog/roegtest-efter-udgivelse-statiske-sites">smoke test efter deploy af statiske sites</a>.</p>
   </div>
 </section>
