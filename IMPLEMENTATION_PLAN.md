@@ -2288,7 +2288,7 @@ findes (falsk-positive-kontrol); `quality_gate.py` grøn.
 
 ## Deploylog
 
-- 2026-09-26: `VERIFICÉR DEPLOY: den betalte e-bog-udgave er væk fra 15 publicerede sider + `id="products"` på forsiden <merge-sha> 26/9` — GitHub Actions deployer automatisk (`site/**` er i path-filteret), så der er intet at vente på. Verificér på **indhold**, ikke HTTP 200:
+- 2026-09-26: `VERIFICÉR DEPLOY: den betalte e-bog-udgave er væk fra 15 publicerede sider + `id="products"` på forsiden fcd6cff 26/9` — kørsel `36216127580` — GitHub Actions deployer automatisk (`site/**` er i path-filteret), så der er intet at vente på. Verificér på **indhold**, ikke HTTP 200:
   - `https://mahope.tools/books/build-your-first-chrome-extension` skal have 0 fund af `9.99` og `PreOrder` og 1 af `schema.org/InStock`.
   - `https://mahope.tools/books/cookie-consent-guide` skal have 0 fund af `payment setup` og `9.99`.
   - `https://mahope.tools/` skal have `id="products"` (krævet af 65 sider).
