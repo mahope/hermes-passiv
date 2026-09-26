@@ -32,7 +32,7 @@ import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
@@ -64,9 +64,18 @@ class RefParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.rel = rel
         self.refs: list[tuple[str, int]] = []      # (reference, line)
+        self.anchors: list[tuple[str, int]] = []   # (reference, line) — kun attributter
         self.forms: list[tuple[str, int, str]] = []  # (action, line, method)
         self.downloads: list[tuple[str, int]] = []
+        # id="…"-værdier i filen. Ved duplikattributter tager browseren den
+        # FØRSTE, så gør vi det samme — ellers ville `<main id="main"
+        # id="platforms">` få os til at melde et levende #main-link dødt.
+        self.ids: set[str] = set()
+        # Læser siden sin egen location.hash? Så er `#url=…` en parameter og
+        # ikke et anker, og porten skal ikke krave et id med det navn.
+        self.reads_hash = False
         self._skip_depth = 0
+        self._script_depth = 0
         self._line = 1
         self._newline_re = re.compile("\n")
 
@@ -74,43 +83,62 @@ class RefParser(HTMLParser):
     def _bump(self, chunk: str) -> None:
         self._line += self._newline_re.count(chunk)
 
-    def _add(self, value: str | None, line: int) -> None:
+    def _add(self, value: str | None, line: int, anchor: bool = False) -> None:
         if not value:
             return
         value = value.strip()
-        if not value or value.startswith(("#", "data:", "javascript:", "mailto:", "tel:")):
+        if not value or value.startswith(("data:", "javascript:", "mailto:", "tel:")):
+            return
+        if anchor:
+            self.anchors.append((value, line))
+        if value.startswith("#"):
             return
         if is_download(value):
             self.downloads.append((value, line))
 
+    def _attrs(self, attrs) -> dict[str, str]:
+        """Første værdi vinner for duplikattributter — det er browserens regel."""
+        out: dict[str, str] = {}
+        for k, v in attrs:
+            k = k.lower()
+            if k not in out:
+                out[k] = v or ""
+        return out
+
     # -- parser ----------------------------------------------------------
     def handle_starttag(self, tag: str, attrs) -> None:  # noqa: D102
         self._line += 1
-        a = {k.lower(): (v or "") for k, v in attrs}
+        a = self._attrs(attrs)
+        if tag == "script":
+            self._script_depth += 1
         if tag in self.SKIP_CONTENT:
             self._skip_depth += 1
             return
         if self._skip_depth:
             return
+        if a.get("id"):
+            self.ids.add(a["id"].strip())
+        if tag == "a" and a.get("name"):
+            self.ids.add(a["name"].strip())
         for key in ("href", "src", "action", "poster", "data-href", "cite"):
             if key in a:
-                self._add(a[key], self._line)
+                self._add(a[key], self._line, anchor=True)
                 self.refs.append((a[key].strip(), self._line))
         if tag == "link" and a.get("rel", "").lower() in ("stylesheet", "icon", "apple-touch-icon"):
-            self._add(a.get("href"), self._line)
+            self._add(a.get("href"), self._line, anchor=True)
             self.refs.append((a.get("href", "").strip(), self._line))
         if tag == "img" and a.get("srcset"):
             for part in a["srcset"].split(","):
-                self._add(part.strip().split(" ")[0], self._line)
+                self._add(part.strip().split(" ")[0], self._line, anchor=True)
         if tag == "source" and a.get("srcset"):
             for part in a["srcset"].split(","):
-                self._add(part.strip().split(" ")[0], self._line)
+                self._add(part.strip().split(" ")[0], self._line, anchor=True)
         if tag == "form":
             self.forms.append((a.get("action", "").strip(), self._line, a.get("method", "get").lower()))
         if tag == "meta":
             prop = (a.get("property") or a.get("name") or "").lower()
             if prop in ("og:image", "og:url") and a.get("content"):
-                self._add(a["content"], self._line)
+                self._add(a["content"], self._line, anchor=True)
                 self.refs.append((a["content"].strip(), self._line))
 
     def handle_startendtag(self, tag, attrs) -> None:  # noqa: D102
@@ -118,10 +146,16 @@ class RefParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:  # noqa: D102
         self._line += 1
+        if tag == "script" and self._script_depth:
+            self._script_depth -= 1
         if tag in self.SKIP_CONTENT and self._skip_depth:
             self._skip_depth -= 1
 
     def handle_data(self, data: str) -> None:  # noqa: D102
+        if self._script_depth:
+            if "location.hash" in data or "window.location.hash" in data:
+                self.reads_hash = True
+            return
         if self._skip_depth:
             return
         # Kun urls i ren tekst (llms.txt, robots, txt-filer), ikke i markup.
@@ -150,19 +184,51 @@ def is_download(ref: str) -> bool:
 
 def split_ref(ref: str) -> tuple[str, str, str]:
     """(kind, domain, path) hvor kind er 'skip', 'external', 'root' eller 'rel'."""
+    kind, domain, path, _frag = split_target(ref)
+    return kind, domain, path
+
+
+def split_target(ref: str) -> tuple[str, str, str, str]:
+    """(kind, domain, path, fragment) — fragmentet er URL-dekodet.
+
+    `split_ref` tabte fragmentet, og det er derfor 199 krydsside-ankere aldrig
+    blev set af porten: `/#products` så ud som en gyldig reference til `/`.
+    """
     ref = ref.strip()
-    if not ref or ref.startswith(("#", "data:", "javascript:", "mailto:", "tel:", "blob:")):
-        return "skip", "", ""
+    if not ref or ref.startswith(("data:", "javascript:", "mailto:", "tel:", "blob:")):
+        return "skip", "", "", ""
+    if ref.startswith("#"):
+        return "same", "", "", unquote(ref[1:])
     if "://" in ref:
         parts = urlsplit(ref)
         if parts.netloc.lower() not in OUR_DOMAINS:
-            return "external", parts.netloc.lower(), parts.path
-        return "root", parts.netloc.lower(), parts.path
+            return "external", parts.netloc.lower(), parts.path, unquote(parts.fragment)
+        return "cross", parts.netloc.lower(), parts.path, unquote(parts.fragment)
     if ref.startswith("//"):
-        return "external", "", ref
+        return "external", "", ref, ""
+    frag = unquote(ref.split("#", 1)[1]) if "#" in ref else ""
     if not ref.startswith("/"):
-        return "rel", "", ref
-    return "root", "", ref.split("#")[0].split("?")[0]
+        return "rel", "", ref, frag
+    return "root", "", ref.split("#")[0].split("?")[0], frag
+
+
+# `#url=https%3A%2F%2F…` er ikke et anker, men en parameter siden læser af
+# location.hash. Fragmentet skal ligne en nøgle-til-værdi, ellers er det et id.
+HASH_PARAM = re.compile(r"^[A-Za-z_][\w.-]*=")
+
+
+def resolve_page(dist: Path, path: str) -> Path | None:
+    """Hvilken fil i distet svarer ruten /path til? None hvis ingen."""
+    clean = path.rstrip("/")
+    if any(clean == d or clean.startswith(d + "/") for d in DECLARED):
+        return None
+    if not clean or clean == "/":
+        return dist / "index.html" if (dist / "index.html").is_file() else None
+    for cand in (clean.lstrip("/"), clean.lstrip("/") + ".html", clean.lstrip("/") + "/index.html"):
+        target = dist / cand
+        if target.is_file():
+            return target
+    return None
 
 
 def route_exists(domain_dist: Path, path: str) -> bool:
@@ -190,6 +256,72 @@ def built_domains() -> dict[str, Path]:
     if not DIST.is_dir():
         return {}
     return {d.name: d for d in sorted(DIST.iterdir()) if d.is_dir() and (d / "index.html").is_file()}
+
+
+_ANCHORS: dict[Path, tuple[set[str], bool]] = {}
+
+
+def page_anchors(path: Path) -> tuple[set[str], bool]:
+    """(id'er + <a name>, læser siden location.hash?) for én fil, cachelagret."""
+    hit = _ANCHORS.get(path)
+    if hit is not None:
+        return hit
+    parser = RefParser(path.name)
+    try:
+        parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
+        parser.close()
+    except Exception:  # noqa: BLE001 - en ugyldig fil må ikke slå porten fra
+        parser.ids = set()
+    hit = (parser.ids, parser.reads_hash)
+    _ANCHORS[path] = hit
+    return hit
+
+
+def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
+                   dist: Path, dists: dict[str, Path], own_ids: set[str]) -> str | None:
+    """Én fejltekst hvis fragmentet i ref ikke findes, ellers None."""
+    kind, ref_domain, ref_path, frag = split_target(ref)
+    if not frag or kind in ("skip", "external"):
+        return None
+    if kind == "same":
+        # Samme fil: brug de id'er vi netop har parset. At læse filen igen
+        # ville give en cache, der er forældet i selftesten, hvor probe.html
+        # skrives om mellem hver kørsel.
+        ids, reads_hash = own_ids, False
+        target = own
+    elif kind == "rel":
+        base = own.parent
+        stem = ref_path.split("#")[0].split("?")[0]
+        target = None
+        for cand in (base / stem, base / (stem + ".html"), base / stem / "index.html"):
+            if cand.is_file():
+                target = cand
+                break
+        if target is None:
+            return None  # stien er død; det er link-gatens job, ikke fragmentets
+        ids, reads_hash = page_anchors(target)
+    else:
+        target_dist = dists.get(ref_domain) if ref_domain else dist
+        if target_dist is None:
+            return None
+        target = resolve_page(target_dist, ref_path)
+        if target is None:
+            return None  # deklareret rute eller worker: ingen fil at slå ids op i
+        ids, reads_hash = page_anchors(target)
+    if HASH_PARAM.match(frag):
+        # En hash-parameter skal læses af den side, den peger på — ellers er
+        # den bare en død reference forklædt som en.
+        if not reads_hash:
+            return (f"{domain}: {rel}:{line}: {ref!r} — siden læser ikke sin egen "
+                    f"location.hash, så #{frag} virker ikke")
+        return None
+    if frag in ids:
+        return None
+    try:
+        where = target.relative_to(DIST).as_posix()
+    except ValueError:  # selftesten kører på et midlertidigt dist
+        where = target.name
+    return f"{domain}: {rel}:{line}: ankeret {ref!r} findes ikke i {where}"
 
 
 def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_downloads: bool) -> list[str]:
@@ -231,6 +363,10 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
                 continue
             if not route_exists(dist, ref_path):
                 problems.append(f"{domain}: {rel}:{line}: {ref!r} findes ikke i distet")
+        for ref, line in parser.anchors:
+            bad = anchor_problem(domain, rel, line, ref, path, dist, dists, parser.ids)
+            if bad:
+                problems.append(bad)
     if check_downloads:
         for ref, rel in downloads:
             kind, ref_domain, ref_path = split_ref(ref)
@@ -256,6 +392,7 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
 
 
 def check(only: str | None = None) -> tuple[int, list[str]]:
+    _ANCHORS.clear()
     dists = built_domains()
     if not dists:
         print("check_links: intet dist at kontrollere (kør build_sites.py først) — springer over")
@@ -292,7 +429,12 @@ def _fixture(root: Path) -> dict[str, Path]:
             '<code>&lt;meta content="/img/cover.jpg"&gt;</code>'
             '</body></html>', encoding="utf-8")
         (d / "style.css").write_text("body{}\n", encoding="utf-8")
-        (d / "findes.html").write_text("<!doctype html><p>ja</p>", encoding="utf-8")
+        (d / "findes.html").write_text(
+            '<!doctype html><html><body><main id="main" id="platforms"><h2 id="her">ja</h2>'
+            '<script>var u = location.hash.replace("#url=", "");</script>'
+            "</main></body></html>", encoding="utf-8")
+        (d / "findes2.html").write_text(
+            '<!doctype html><html><body><h2 id="her">ja</h2></body></html>', encoding="utf-8")
         dists[domain] = d
     return dists
 
@@ -340,6 +482,29 @@ def self_test() -> int:
         expect("død download", '<a href="/downloads/mangler.zip">x</a>', "/downloads/mangler.zip")
         expect("krydsdomæne 404", '<a href="https://cleancopy.tools/udenfor">x</a>', "udenfor")
         expect("død iframe", '<iframe src="/indlejret"></iframe>', "/indlejret")
+
+        # 1b. Ankere. Før denne port tabte split_ref() fragmentet, så 199
+        #     krydsside-ankere blev aldrig set — opgave 43.
+        expect("dødt same-page-fragment", '<a href="#findes-ikke">x</a>', "#findes-ikke")
+        expect("dødt krydsside-fragment", '<a href="/findes#mangler">x</a>', "#mangler")
+        expect("dødt krydsdomæne-fragment", '<a href="https://cleancopy.tools/findes#mangler">x</a>', "#mangler")
+        expect("dødt relativt fragment", '<a href="findes2.html#mangler">x</a>', "#mangler")
+        expect("død hash-parameter", '<a href="/findes2.html#url=x">x</a>', "læser ikke sin egen")
+
+        # 1c. Falsk-positive-kontroller. `#main` SKAL være grønt selv om
+        #     <main> bærer to id'er: browseren bruger den første, så et
+        #     "fix" på porten ville have hængt et levende skip-link. Det er
+        #     præcis markup fra site/guides/platforms.html.
+        expect_clean("levende same-page-fragment", '<h2 id="her"></h2><a href="#her">x</a>')
+        expect_clean("duplikat-id: browseren tager den første",
+                     '<main id="main" id="platforms"></main><a href="#main">x</a>')
+        expect_clean("levende krydsside-fragment", '<a href="/findes#her">x</a>')
+        expect_clean("levende krydsdomæne-fragment", '<a href="https://cleancopy.tools/findes#her">x</a>')
+        expect_clean("hash-parameter læst af siden", '<a href="/findes#url=https%3A%2F%2Fx.dk">x</a>')
+        expect_clean("tomt fragment", '<a href="/findes#">x</a>')
+        expect_clean("fragment på deklareret rute", '<a href="/thanks#mangler">x</a>')
+        expect_clean("prose er ikke et link", '<p>brug /#products i din tekst</p>')
+        expect_clean("kodeeksempel med fragment", '<pre><code>&lt;a href="/findes#mangler"&gt;</code></pre>')
 
         # 2. Kodeeksempler må ALDRIG fejle, uanset hvor døde de ser ud.
         for snippet in ('<pre><code>npm i /downloads/dod.zip</code></pre>',

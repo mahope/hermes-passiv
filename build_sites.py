@@ -370,6 +370,16 @@ def build_index(sites: dict[str, Site]):
         # generated per site, so they always exist locally
         for gen in GENERATED:
             local[gen] = gen
+        # index_from copies: the target route is published on THIS domain, so a
+        # link to it must not be rewritten to another domain. Without this,
+        # cleancopy.tools' own nav entry /da/#install was rewritten to
+        # mahope.tools/da/#install — a different page without that id, so 33
+        # links pointed at nothing (opgave 43).
+        idx_cfg = site.cfg.get("index_from")
+        idx_map = {"index.html": idx_cfg} if isinstance(idx_cfg, str) else (idx_cfg or {})
+        for tgt in idx_map:
+            route = canonical_url(tgt)
+            local.setdefault(route, route)
         local_idx[domain] = local
     return global_idx, local_idx
 
@@ -939,8 +949,18 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
         had_container = bool(re.search(r'class="[^"]*\bcontainer\b', attrs))
         attrs = re.sub(r'class="([^"]*)"', lambda c: 'class="%s"' % " ".join(x for x in c.group(1).split() if x != "container"), attrs)
         attrs = attrs.replace(' class=""', "")
+        carry = None
         if 'id="main"' not in attrs:
-            attrs = ' id="main"' + attrs
+            # <main> må ikke bære to id'er: browseren dropper den efterfølggende,
+            # så sidens eget anker dør stille. Er elementet allerede identificeret,
+            # flytter vi det id til næste element inde i main i stedet for at
+            # overskrive det (opgave 43: site/guides/platforms.html).
+            own_id = re.search(r'\bid="([^"]*)"', attrs)
+            attrs = ' id="main"' + (re.sub(r'\bid="[^"]*"', "", attrs) if own_id else attrs)
+            if own_id:
+                carry = own_id.group(1)
+        else:
+            carry = None
         open_tag = f"<main{attrs}>" + ('\n<div class="container">' if had_container else "")
         end = _main_end(text)
         if end < 0:
@@ -957,7 +977,15 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
         pre = re.sub(r'<a\s+class="skip[^"]*"[^>]*>.*?</a>', "", pre, flags=re.S | re.I)
         pre = re.sub(r"<nav\b[^>]*>.*?</nav>", "", pre, flags=re.S | re.I)
         pre = re.sub(r"<header\b[^>]*>.*?</header>", lambda h: h.group(0) if re.search(r"<h1\b", h.group(0), re.I) else "", pre, flags=re.S | re.I)
-        text = (text[:body_start] + "\n" + header + "\n" + open_tag + pre + text[mo.end():end] + close_tag + text[end + len("</main>"):])
+        content = pre + text[mo.end():end]
+        if carry:
+            def _carry(m: re.Match) -> str:
+                tag, rest = m.group(1), m.group(2)
+                if re.search(r'\bid="', tag):
+                    return m.group(0)
+                return f"<{tag} id=\"{carry}\"{rest}>"
+            content = re.sub(r"<([a-zA-Z][\w-]*)((?:\s[^>]*)?)>", _carry, content, count=1)
+        text = (text[:body_start] + "\n" + header + "\n" + open_tag + content + close_tag + text[end + len("</main>"):])
     else:
         fpos = text.rfind('<footer class="site-footer">')
         inner = text[body_start:fpos]
