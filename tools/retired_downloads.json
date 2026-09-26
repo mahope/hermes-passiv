@@ -1,0 +1,9 @@
+{
+  "_readme": "Arkiver der er taget ud af repoet, men stadig kan hentes i CDN'en. Cloudflare Pages fjerner ikke slettede assets, så den gamle fil bliver liggende og kan downloades med gammel kode og gammel tekst. Hver linje skal have en 301 i site/_worker.js, så et gammelt link (blog, butiksliste, mail) lander på den nuværende fil. `tools/check_retired_downloads.py` holder json, worker og dist i overensstemmelse, og `tools/check_live_sitemaps.py` bekræfter efter deployen at stien ikke længere svarer 200.",
+  "cleancopy.tools": {
+    "/downloads/clean-copy-firefox-v1.5.3.zip": {
+      "replaced_by": "/downloads/clean-copy-firefox-v1.5.4.zip",
+      "reason": "README'en i 1.5.3 lovede \"No network requests — nothing leaves your browser\", men license.js POSTer nøglen til mahope.tools/api/license. 1.5.4 siger det rigtige, og badge'et stod stadig på version 1.4.1."
+    }
+  }
+}

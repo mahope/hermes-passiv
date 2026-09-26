@@ -68,6 +68,12 @@ NOT_CLIENTS = {
     # opgave 20 (check_license_clients fangede sin egen docstring): en gate der
     # leder efter en sti i al tekst, træffer alt der vil forklare stien.
     "tools/check_repo_readme.py",
+    # Opgave 28: samme fejlform igen. `check_retired_downloads.py` nævner
+    # licens-API'en i portens egen docstring og i en begrundelse om hvorfor 1.5.3
+    # blev trukket tilbage, og `retired_downloads.json` har samme begrundelse som
+    # data. Ingen af dem kalder den — de beskriver hvorfor en *kunde* gør det.
+    "tools/check_retired_downloads.py",
+    "tools/retired_downloads.json",
 }
 
 # Marker omkring det indlejrede kanoniske modul.

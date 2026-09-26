@@ -47,6 +47,12 @@ on:
       - 'tools/check_repo_readme.py'
       - 'README.md'
       - '.github/FUNDING.yml'
+      # Opgave 28: slettede arkiver, som Cloudflare Pages stadig serverer.
+      # `site/_worker.js` lå allerede i filteret via `site/**`, men de to nye
+      # filer lå ikke — så en rettelse af kilde-tabel eller port ville deploye
+      # slet ikke, og den gamle fil ville blive liggende.
+      - 'tools/check_retired_downloads.py'
+      - 'tools/retired_downloads.json'
       # `check_legacy_seo_paths` læser hvert .py/.sh i roden og i tools/ — de
       # skal kunne ramme den døde kilde-sitemap eller den døde vært, så de er
       # input til gaten og dermed til filteret.

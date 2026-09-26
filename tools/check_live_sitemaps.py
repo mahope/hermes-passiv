@@ -135,6 +135,44 @@ def check_page(url: str, require_jsonld: bool = True) -> list[str]:
     return problems
 
 
+def check_retired_downloads_live(domain: str) -> list[str]:
+    """En tilbagetrukket arkivsti må ikke svare 200 i produktion.
+
+    Opgave 28: `clean-copy-firefox-v1.5.3.zip` blev slettet i git, fordi README'en
+    lovede "nothing leaves your browser" mens nøglen bliver sendt til
+    mahope.tools. Rettelsen holdt i kilden, men Cloudflare Pages fjerner ikke
+    slettede assets — filen blev ved med at svare 200, med den gamle tekst. Det er
+    den eneste kontrol, der kan se det: alt i `tools/` læser repoet og dist, og
+    begge var rene. Derfor ligger den her, i det job der kører efter hver deploy.
+    """
+    problems: list[str] = []
+    try:
+        catalog = json.loads((DIST.parent.parent / "tools" / "retired_downloads.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return [f"cannot read tools/retired_downloads.json: {error}"]
+    for retired, meta in (catalog.get(domain) or {}).items():
+        status, _, headers, error = fetch(f"https://{domain}{retired}")
+        if error:
+            problems.append(f"https://{domain}{retired}: {error}")
+            continue
+        location = headers.get("Location") if headers else None
+        if status == 200:
+            problems.append(
+                f"https://{domain}{retired}: HTTP 200 — den tilbagetrukne fil er stadig hentbar"
+                + (f" (stænder: {meta.get('reason', 'ingen begrundelse')[:60]}…)" if isinstance(meta, dict) else "")
+            )
+        elif status in (301, 302, 307, 308):
+            if not location:
+                problems.append(f"https://{domain}{retired}: HTTP {status} without a Location header")
+            elif isinstance(meta, dict) and location.rstrip("/").endswith(str(meta.get("replaced_by", "\0")).rstrip("/")):
+                pass
+            else:
+                problems.append(f"https://{domain}{retired}: HTTP {status} to {location!r}, expected {meta.get('replaced_by')!r}")
+        elif status != 404:
+            problems.append(f"https://{domain}{retired}: HTTP {status} (expected a 301 to the current file, or 404)")
+    return problems
+
+
 def check_live_domain(domain: str, commit: str | None, attempts: int, delay: int, workers: int) -> list[str]:
     local_problems = check_domain(domain, expected_commit=commit)
     if local_problems:
@@ -150,6 +188,7 @@ def check_live_domain(domain: str, commit: str | None, attempts: int, delay: int
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         for result in executor.map(check_page, urls):
             problems.extend(result)
+    problems.extend(check_retired_downloads_live(domain))
     return problems
 
 

@@ -404,6 +404,30 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_repo_readme.py", "tools/stripe_catalog.json",
                 "tools/route_inventory.json"),
     ),
+    # Opgave 28: arkiver, der er slettet i git men stadig kan hentes. 1.5.3s
+    # README lovede "nothing leaves your browser", og Cloudflare Pages fjerner
+    # ikke slettede assets — så filen blev ved med at svare 200 med den gamle
+    # tekst, selv om den var væk fra både git og dist. `inputs` er de filer
+    # porten læser, så en commit der kun retter json'en eller workerens
+    # redirect-tabel udløser porten. `check_live_sitemaps.py` (efter deploy)
+    # bekræfter det samme i produktion — den her port kan kun se repoet.
+    Step(
+        id="retired-downloads",
+        argv=("python3", "tools/check_retired_downloads.py"),
+        inputs=(
+            "tools/check_retired_downloads.py",
+            "tools/retired_downloads.json",
+            "site/_worker.js",
+            "README.md",
+            "site/**",
+        ),
+        needs_dist=True,
+    ),
+    Step(
+        id="retired-downloads-selftest",
+        argv=("python3", "tools/check_retired_downloads.py", "--self-test"),
+        inputs=("tools/check_retired_downloads.py", "tools/retired_downloads.json"),
+    ),
     Step(
         id="links",
         argv=("python3", "tools/check_links.py"),
