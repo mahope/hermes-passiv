@@ -422,6 +422,21 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_install_commands.py", "--self-test"),
         inputs=("tools/check_install_commands.py", "site/blog/canonical-url-guide.html"),
     ),
+    # Opgave 88, anden halvdel: `check_install_commands.py` dommer
+    # pakkeregistre, men de filer der *loades* i koden (curl -O paa en fil der
+    # ikke findes, `cd` ind i et arkiv uden den mappe, `import requests` uden
+    # pip-linje) la i en fejlform den ikke saa. Malt paa det publicerede
+    # output, fordi `check_links.py` med vilje springer `pre`/`code` over.
+    Step(
+        id="asset-instructions",
+        argv=("python3", "tools/check_asset_instructions.py"),
+        inputs=("tools/check_asset_instructions.py", "site/**", "build_sites.py", "site/**/*.zip"),
+    ),
+    Step(
+        id="asset-instructions-selftest",
+        argv=("python3", "tools/check_asset_instructions.py", "--self-test"),
+        inputs=("tools/check_asset_instructions.py",),
+    ),
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),

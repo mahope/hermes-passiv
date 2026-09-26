@@ -63,7 +63,14 @@ PENDING_MARKERS = (
 )
 
 # Findes, verificeret 27/9-2026.
-PYPI = {"Pillow": "pypi.org/pypi/Pillow/json -> 200"}
+PYPI = {
+    "Pillow": "pypi.org/pypi/Pillow/json -> 200",
+    # Vores to API-README'er viste et Python-eksempel med `import requests`
+    # uden nogen pip-linje, saa kunden kopierede blokken og fik
+    # ModuleNotFoundError. 27/9 efterfulgende fik de linjen — og saa dømte
+    # denne port den nye linje, fordi pakken ikke var katalogiseret.
+    "requests": "pypi.org/pypi/requests/json -> 200",
+}
 
 # Vores egne filer. Verificeret med et rigtigt HTTP-kald 27/9-2026.
 OWN_URLS = {

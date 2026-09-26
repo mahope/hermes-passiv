@@ -32,6 +32,8 @@ Response:
 ### Python
 
 ```python
+pip install requests
+
 import requests
 
 def clean_copy(html: str, mode: str = "markdown") -> str:
