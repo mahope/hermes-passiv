@@ -329,6 +329,30 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_stripe_ctas.py", "--self-test"),
         inputs=("tools/check_stripe_ctas.py",),
     ),
+    # Opgave 84: regeltallet i løfterne. Opgave 80, 83 og 84 rettede hver især
+    # det samme tal, og alle tre var forkert, fordi ingen målte motoren. Nu er
+    # tallet målt i koden ved hver kørsel, så en ny regel eller en ny side ikke
+    # kan løfte om et tal uden at porten rødmer.
+    Step(
+        id="rule-claims",
+        argv=("python3", "tools/check_rule_claims.py"),
+        inputs=(
+            "tools/check_rule_claims.py",
+            # Motorerne: de frie regler tælles i `site/scan.html` og
+            # `site/scan-da.html`, de betalte i `reportProFindings()`.
+            "site/scan.html",
+            "site/scan-da.html",
+            "site/compliance-report.html",
+            "site/_worker.js",
+            # …og løfterne, der ligger i de 15 guidespejl plus de danske sider.
+            "site/**",
+        ),
+    ),
+    Step(
+        id="rule-claims-selftest",
+        argv=("python3", "tools/check_rule_claims.py", "--self-test"),
+        inputs=("tools/check_rule_claims.py",),
+    ),
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),
