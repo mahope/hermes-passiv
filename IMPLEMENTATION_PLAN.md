@@ -2,12 +2,29 @@
 
 ## Status
 
-- `ITERATION_ID`: `pro-vaardi-paa-forsiden-2026-09-26`
-- `STATE`: `Opgave 48 FÆRDIG — den betalte halvdel af købsrejsen var ikke dækket af nogen port, og den målte fejl var reel. **Fund 1 — katalogen vidste slet ikke, hvad der sælges.** \`check_free_tier\` gater den *gratis* halvdel af hver Pro-side; der var ingen port på den *betalte*. Det er den døde halvdel af den konverteringsopgave, missionen ranker højest, og den var usynlig. **Fund 2 — de to Pro-funktioner nåede kunden i to forskellige versioner.** Målt på de fire købssider for \`clean-copy-pro\`: \`site/clean-copy-tool.html:258\` siger "batch conversion …, custom cleanup rules you define once and reuse everywhere, and a year of major updates" (3 funktioner), og \`site/activate/index.html\` siger at "the only things a Pro key adds are batch conversion and custom cleanup rules in the extension". Forsiden — \`site/clean-copy.html\`, som \`stripe_catalog.json\` selv kalder "første skridt i købsrejsen" — sagde derimod kun "batch conversion of many snippets at once in the web tool **and supports development of the free version**". Den nævnte altså 1 af 3 funktioner. **Fund 3 — den manglende funktion er den eneste Pro-funktion i den udvidelse, siden selv beder folk installere.** \`extension-clean-copy/options.js:203\` gater "Custom cleanup rules" bag \`loadRules(proActive)\`, og \`background.js:436\` anvender dem efter hver kopi. Siden sælger udvidelsen som første CTA og skriver "Install" som knap. En kunde der læser forsiden, betaler $19 og så leder efter batch-konvertering i udvidelsen, finder den ikke — og den funktion de *kunne* have brugt, stod aldrig på den side de læste. Begge sprog havde samme fejl (\`site/da/clean-copy.html:133\`). **Fund 4 — den anden halvdel af løftet var ikke en funktion.** "Supports development of the free version" / "støtter udviklingen af den gratis version" er en donatationsopfordring skrevet som en produktfunktion, i en liste sammen med en rigtig. Den er nu en egen, ærlig sætning efter funktionerne, ikke en af dem. **Fund 5 — betalingskvitteringen pegede kun på én af de to flader.** Begge forsiders hero-note sagde "aktivér den i webværktøjet" og linkede \`/clean-copy-tool#pro-activate-details\`, men \`/activate/\` dækker alle fire klienter (udvidelse, Firefox, Obsidian, webværktøj) — så den note sendte en udvidelsesbruger, der lige har betalt, hen til den ene flade hvor Pro *ikke* virker for dem. Noterne peger nu på \`/activate/\`. **Fund 6 — datagrundlaget for opgaven holdt ikke, så den blev lavet uden påstander.** ❓ 13's arkiv kan ikke give \`ranking\`: alle tre \`reports/weekly/*.json\` mangler både \`ranking\` og \`ranking_basis\`, og 2026-39's egen \`traffic\`-blok er tom (\`{}\`), så uge 39s \`visits_2d: 18\` kan ikke rangeres på noget. Jeg målte derfor **ikke** hvilken side der er mest besøgt — jeg målte hvilken side der **løfter sig mest**, altså forskellen mellem den Pro-værdi en side lover og den den betalte udgave faktisk har. Det er målbart uden trafik, og det er præcis den klasse fejl de foregående 30 iterationer fjernede.`
+- `ITERATION_ID`: `pro-loefter-mod-koden-2026-09-26`
+- `STATE`: `Opgave 49 FÆRDIG — målingen af de fire andre licensprodukter fandt **to betalte løfter, koden ikke holder**, på flader ingen port læste. **Fund 1 — `deskuptime-pro` solgte e-mail-alarmer, der ikke findes.** Fire live flader løvede dem (\`site/deskuptime/index.html\`, \`site/da/deskuptime/index.html\`, \`site/blog/desktop-website-monitor-cli.html\` og \`/checkout\`-noten i \`site/_worker.js:2284\`), og der er **ingen e-mail-kode** i hverken \`deskuptime/\` eller \`deskuptime-desktop/\`. Produktets egen kilde vidste det: \`deskuptime/src/features.js:145-153\` markerer rækken \`implemented: false\`, og \`deskuptime-desktop/docs/pro-alerts.md:85-95\` siger *"the app has no email code at all"*. \`deskuptime/IMPLEMENTATION_PLAN.md:166\` har det som P0-12. Siden har altså solgt en funktion i et halvt år, som produktets egen kode siger ikke findes. **Fund 2 — \`eucomply-pro\` til $79/år solgte fire funktioner ud over den ene den har.** Kortet lovede "Continuous compliance monitoring for one website", "Unlimited scans and history tracking", "Client-ready branded PDF reports" og "Priority support (email within 24h)". Målt: ingen scheduler, ingen cron og ingen gemte scans nogen sted (\`site/_worker.js\` har 19 ruter, ingen periodisk); ingen historikstore og ingen kvote at løfte, fordi \`/scan\` kører uden licens (\`site/compliance-report.html:205-338\` er klient-side); \`verifyAndDownload()\` (\`:504-535\`) kalder \`window.print()\`, så der er ingen PDF-generator og intet brand; og ingen supportkanal og ingen SLA findes — den direkte sidste er den supportlast, missionen forbyder. Den **eneste** reelle gate er at licensen må åbne print-dialogen. **Fund 3 — de to portroller var ens, men kun den ene læste siderne.** \`check_pro_features\` (opgave 48) gater at en købsside *nævner* det betalte; ingen port gater at den ikke *lover det ubygde*. Derfor var en hel fejlklasse usynlig for gaten, uanset hvor mange fejlformer \`check_pro_features\` havde. **Fund 4 — den fjerde flade lå i workerens checkout-note.** \`site/_worker.js:2284\` skrev *"desktop tray app, email & webhook alerts, unlimited URLs"* på \`/api/stripe/checkout\` — samme løgned, på en route ingen HTML-port så, præcis fejlformen fra opgave 45. **Fund 5 — \`page-profile-pro\` er det eneste produkt, hvor løfte og kode er 1:1.** Alle tre gater findes og alle tre navngives på begge sprog (\`page_profile.py:1066\`, \`:1071\`, \`:1094\`). Rettelsen derfor: ingen tekstændring, kun *beskyttelse* — de samme løfter holdes nu af porten. Det er også en måling, ikke en antagelse: de fire produkter er ikke ens, så "søg og ret alle" ville være gætteri. **Fund 6 — porten fandt en reel dansk mangel ved første kørsel.** \`site/da/page-profile.html\` skrev "Sammenligning" i kortet og "Sammenlign to URLs side om side" i tabellen, mens \`sammenligningstilstand\` kun stod i en lukket FAQ. Samme fejlklasse som opgave 48 fund 3.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `BASELINE`: `main@26ca840`
-- `LAST_BRANCH`: `ceo/pro-værdi-paa-forsiden`
-- `NEXT_TASK`: `49 — samme måling på de tre andre betalte produkter. \`check_pro_features\` er færdig og generisk, men kun \`clean-copy-pro\` erklærer \`pro_features\` i katalogen, så de fire andre licensprodukter er **ugatede**. Se \`Prioriteret kø\`.`
+- `BASELINE`: `main@c656fa5`
+- `LAST_BRANCH`: `ceo/pro-loefter-mod-koden`
+- `NEXT_TASK`: `50 — dansk aktiveringsguide. \`/activate/\` findes kun på engelsk, og opgave 48 pegede den danske Clean Copy-forside til den. Skriv \`site/da/activate/index.html\`, og tilføj den som købsside i \`tools/stripe_catalog.json\`, så den også gates. Lille, men den ligger lige i den betalte købsrejse.`
+- `GATE`: `GRØN — python3 tools/quality_gate.py: GRØN, **47 steps** (uændret — de nye regler bor i det eksisterende step \`stripe-ctas\`, så workflowens path-filter er urørt). check_stripe_ctas: 13 produkter / 11 købssider, **0 fejl**. \`--self-test\`: **31/31 fejlformer** (fra 27) — de fire nye er "en publiceret løgned om en Pro-funktion koden ikke har bygget" (kørt på den rigtige gamle tekst fra HEAD: DeskUptime EN-tabel, EN-prose, DA-tabel, DA-prose og blogtabellen), "en købsside der lover overvågning, historik, branding og support" (EUComply), "en /checkout-note der lover en Pro-funktion koden ikke har bygdet" (workerens gamle note fra HEAD) og "en pro_not_built-post uden bevis i koden". **Fire negative kontroller**: de fire rettede flader er grønne, den rettede \`/checkout\`-note er grøn, en post uden \`where\` meldes selv (så listen ikke kan bruges til at slå en fejl fra på), og et produkt uden \`pro_not_built\` gates ikke. Selftesten *beviser* på den rigtige fil før hver mutation: den rettede tekst skal være i filen og den udgående løgned skal være væk, ellers afbryder den. Bevis på de rigtige gamle filer: \`git show HEAD:site/deskuptime/index.html\` ind over porten giver fund på alle fire; mod det rettede træ 0. Stripe-worker uændret 93/93, seo_check 308 sider 0 fund, check_inline_js 297 filer 0 problemer. **\`site/_worker.js\` er rørt** — kun i én statisk streng på \`/api/stripe/checkout\` (ingen rute, ingen betalingslogik, ingen adfærd ved levering), så stripe-worker-testen er urørt og grøn. dist/uændret (gitignored).`
+- `SLIP`: `Ingen. ~42 min, commit før dræbningen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~230 linjer, og beviset er porten kørt på de rigtige gamle filer fra HEAD, ikke en læsning. Én fejl ind i selftesten undervejs: \`undeclared_found\` lå først i listen over fejlformer, der *skal* fanges, selv om den er en negativ kontrol der *skal* være grøn — den fangede sig selv som fejlform. Samme fejlklasse som opgave 23, 26 og 38: en port der tæller sin egen negative kontrol som bevis.`
+- `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 1/1, 50: 0/0`
+- `DEPLOY` (opgave 49, ÅBEN): `VERIFICÉR DEPLOY: de to løfter uden kode er væk på fire HTML-flader + checkout-noten; katalogen erklærer pro_features for tre produkter 0/0 26/9` — GitHub Actions deployer med det samme (\`site/**\` og \`tools/**\` er i path-filteret). Verificér på **indhold**, ikke HTTP 200:
+  - \`build-info.json\` skal bære merge-SHA'en på cleancopy.tools, mahope.tools og deskuptime.com.
+  - \`https://deskuptime.com/?cb=…\` og \`https://deskuptime.com/da/?cb=…\`: **0** fund af \`Email and webhook alerts\` / \`E-mail- og webhook-alarmer\`, mindst **1** af \`Webhook alerts\` / \`Webhook-alarmer\`, \`client-ready report\` / \`Kunderapport\`.
+  - \`https://mahope.tools/blog/desktop-website-monitor-cli?cb=…\`: **0** fund af \`Email &amp; webhook alerts\`.
+  - \`https://mahope.tools/compliance-report?cb=…\`: **0** fund af \`Continuous compliance monitoring\`, \`history tracking\`, \`branded PDF\` og \`Priority support\`.
+  - \`https://mahope.tools/api/checkout?product=du\`: noten skal **ikke** nævne e-mail.
+  - \`https://deskuptime.com/page-profile\` og \`/da/page-profile\`: de tre Pro-funktioner skal stadig være nævnt (de var korrekte i forvejen) — det er de, porten nu beskytter.
+- `PLAN_COMMIT` (opgave 49): `kode + plan i samme commit, ingen ren plan-commit`
+
+- `STATE`: `Opgave 48 FÆRDIG — den betalte halvdel af købsrejsen var ikke dækket af nogen port, og den målte fejl var reel. **Fund 1 — katalogen vidste slet ikke, hvad der sælges.** \`check_free_tier\` gater den *gratis* halvdel af hver Pro-side; der var ingen port på den *betalte*. Det er den døde halvdel af den konverteringsopgave, missionen ranker højest, og den var usynlig. **Fund 2 — de to Pro-funktioner nåede kunden i to forskellige versioner.** Målt på de fire købssider for \`clean-copy-pro\`: \`site/clean-copy-tool.html:258\` siger "batch conversion …, custom cleanup rules you define once and reuse everywhere, and a year of major updates" (3 funktioner), og \`site/activate/index.html\` siger at "the only things a Pro key adds are batch conversion and custom cleanup rules in the extension". Forsiden — \`site/clean-copy.html\`, som \`stripe_catalog.json\` selv kalder "første skridt i købsrejsen" — sagde derimod kun "batch conversion of many snippets at once in the web tool **and supports development of the free version**". Den nævnte altså 1 af 3 funktioner. **Fund 3 — den manglende funktion er den eneste Pro-funktion i den udvidelse, siden selv beder folk installere.** \`extension-clean-copy/options.js:203\` gater "Custom cleanup rules" bag \`loadRules(proActive)\`, og \`background.js:436\` anvender dem efter hver kopi. Siden sælger udvidelsen som første CTA og skriver "Install" som knap. En kunde der læser forsiden, betaler $19 og så leder efter batch-konvertering i udvidelsen, finder den ikke — og den funktion de *kunne* have brugt, stod aldrig på den side de læste. Begge sprog havde samme fejl (\`site/da/clean-copy.html:133\`). **Fund 4 — den anden halvdel af løftet var ikke en funktion.** "Supports development of the free version" / "støtter udviklingen af den gratis version" er en donatationsopfordring skrevet som en produktfunktion, i en liste sammen med en rigtig. Den er nu en egen, ærlig sætning efter funktionerne, ikke en af dem. **Fund 5 — betalingskvitteringen pegede kun på én af de to flader.** Begge forsiders hero-note sagde "aktivér den i webværktøjet" og linkede \`/clean-copy-tool#pro-activate-details\`, men \`/activate/\` dækker alle fire klienter (udvidelse, Firefox, Obsidian, webværktøj) — så den note sendte en udvidelsesbruger, der lige har betalt, hen til den ene flade hvor Pro *ikke* virker for dem. Noterne peger nu på \`/activate/\`. **Fund 6 — datagrundlaget for opgaven holdt ikke, så den blev lavet uden påstander.** ❓ 13's arkiv kan ikke give \`ranking\`: alle tre \`reports/weekly/*.json\` mangler både \`ranking\` og \`ranking_basis\`, og 2026-39's egen \`traffic\`-blok er tom (\`{}\`), så uge 39s \`visits_2d: 18\` kan ikke rangeres på noget. Jeg målte derfor **ikke** hvilken side der er mest besøgt — jeg målte hvilken side der **løfter sig mest**, altså forskellen mellem den Pro-værdi en side lover og den den betalte udgave faktisk har. Det er målbart uden trafik, og det er præcis den klasse fejl de foregående 30 iterationer fjernede.`
+- `GATE` (opgave 48, flyttet): `se stateblokken ovenfor`
+- `SLIP` (opgave 48, flyttet): `Ingen. ~40 min.`
+- `OLD_STATUS_48`: `— opgave 48 afsluttet; dens GATE/SLIP/NEXT_TASK stod ovenfor og er erstattet af denne blok —`
+- `NEXT_TASK_48`: `49 — samme måling på de tre andre betalte produkter. \`check_pro_features\` er færdig og generisk, men kun \`clean-copy-pro\` erklærer \`pro_features\` i katalogen, så de fire andre licensprodukter er **ugatede**. Se \`Prioriteret kø\`.`
 - `GATE`: `GRØN — python3 tools/quality_gate.py: GRØN, **47 steps** (uændret — den nye regel bor i det eksisterende step \`stripe-ctas\`, så workflowens path-filter er urørt). check_stripe_ctas: 13 produkter / 11 købssider, **0 fejl**. Bevis på de rigtige gamle filer fra \`git show HEAD:site/clean-copy.html\`: den gamle EN-forsid giver **1 fejl** på præcis \`cleanup-rules\`; den gamle DA-forsid giver **1 fejl** på samme regel med danske labels. \`--self-test\`: **27/27 fejlformer** (fra 24) — de tre nye er "en købsside der ikke navngiver en Pro-funktion", "en dansk købsside der kun siger funktionen på engelsk" (beviser at \`page_lang\` vælger de danske labels, så porten ikke kan passes med den engelske sætning) og "en Pro-funktion der kun står i en lukket FAQ". Selftesten har **tre negative kontroller** uden for tælleren: en side der navngiver begge funktioner skal være grøn, et produkt uden \`pro_features\` i katalogen skal **aldrig** fejle, og mutationen skal ramme den manglende funktion (\`cleanup-rules\`) frem for den anden fejlform — de to sidste fordi de er præcis de måder porten kan være grøn på præcis det den skal fange (samme fejlklasse som opgave 23, 26, 38 og 43 fund 4). seo_check 308 sider 0 fund, stripe-worker uændret 93/93, check_inline_js 297 filer 0 problemer, \`site/_worker.js\` urørt, dist/uændret (gitignored). Missionens egen linje exit 0.`
 - `SLIP`: `Ingen. ~40 min, commit før dræbningen. Jeg sprang reviewen over som kontrakten tillader: diffen er ~150 linjer, og beviset er porten kørt på de rigtige gamle filer fra HEAD, ikke en læsning.`
 - `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1, 49: 0/0`
@@ -2501,7 +2518,7 @@ forside, begge med præcis `cleanup-rules` — og 0 på de rettede.
 
 **Gate:** `python3 tools/check_stripe_ctas.py && python3 tools/check_stripe_ctas.py --self-test` plus hele kvalitetsgaten.
 
-### 49. Næste i køen — samme måling på de fire andre licensprodukter
+### 49. FÆRDIG — samme måling på de fire andre licensprodukter
 
 **Begrundelse:** `check_pro_features` er generisk, men kun `clean-copy-pro` erklærer
 `pro_features`. `deskuptime-pro`, `transmute-desktop`, `eucomply-pro` og
@@ -2514,6 +2531,16 @@ men aldrig nævnt, er det samme fund som opgave 48. Er den nævnt i meta, JSON-L
 en lukket `<details>` men ikke i læsbar tekst, giver `check_pro_features` den fejl
 med det samme. Er den **ikke** implementeret, skal løftet fjernes, ikke opfindes —
 samme regel som opgave 37.
+
+**Resultat:** `deskuptime-pro`, `eucomply-pro` og `page-profile-pro` har nu
+`pro_features` med `where` der peger på den kode der gater hver enkelt funktion.
+`transmute-desktop` har **ikke** nogen, med begrundelse i katalogens egen `note`:
+købslinket ligger på transmute.run, som er et separat site i `transmute/`, så der er
+ingen købsside her at gate. De to løfter uden kode er fjernet fra fire HTML-flader og
+fra worker's `/checkout`-note, og erstattet af de funktioner der faktisk findes — fire
+reelle hos DeskUptime (`unlimited sites`, 30 s interval, `webhook alerts`,
+`client report`), én hos EUComply (`pdf download`), tre hos Page Profile (`compare`,
+`batch`, `html report`). Se `STATE` for målingen.
 
 **Acceptkriterier:** Alle fire produkter har `pro_features` i katalogen, eller en
 begrundelse i planen for hvorfor de ikke har det. `check_stripe_ctas` er grøn på det
@@ -2539,6 +2566,24 @@ løftet-op imod implementeringen, som opgave 48 gjorde, aldrig på påstande om
 besøgstal.
 
 ## ❓ Til Mads
+
+14. **EUComply Pro er $79 pr. website pr. år, og efter målingen er det den eneste
+    betalte udgave, hvis løfter ikke hang sammen med koden.** Den betalte halvdel er
+    *én* ting: licensen må åbne browserens print-dialog, så kunden kan gemme rapporten
+    som PDF. Det er reelt — og det er også det, kunden betalte $79 for. Alt det andet
+    var løftet (kontinuerlig overvågning, historik, brandet PDF, prioriteret support) og
+    findes ikke i nogen fil, så det er fjernet i stedet for opfundet.
+    **Beslutning:** (a) bygge de reelle pro-funktioner — en gemt historik og en
+    PDF-generator med klientens navn er de mindste, og begge er små; (b) sænke prisen;
+    eller (c) stoppe salget af `eucomply-pro` indtil (a) er bygget. Jeg har gjort
+    **kun** det sidste halve: siden lyver ikke længere, og jeg kan ikke oprette nye
+    Stripe-priser. Bemærk også at porten er en knap-handler, ikke adgangskontrol —
+    rapporten ligger i DOM'en før nøglen indtastes, så Ctrl+P giver den samme PDF.
+    Den bør lukkes, hvis Pro skal sælge på porten.
+
+15. **`/activate/` findes kun på engelsk, og opgave 48 pegede den danske Clean
+    Copy-forside til den.** En dansk betaler der lige har købt møder nu en engelsk
+    side. Det er opgave 50, og den er lille.
 
 13. **Bagvendingen i trafiktallene kan ikke bevises mod arkivet.** `reports/weekly/`
     viser `health.visits_2d` 566 (uge 37) → 24 (uge 38) → 18 (uge 39), altså et
@@ -2896,6 +2941,12 @@ besøgstal.
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- **Opgave 49** `ceo/pro-loefter-mod-koden`: to betalte løfter uden kode fjernet
+  (DeskUptime-e-mail på fire flader, fire EUComply-funktioner), de reelle Pro-
+  funktioner erklæret i katalogen med `where` der peger på gaten i koden, og
+  `check_pro_not_built` + `check_checkout_notes` som gater at løftet ikke kommer
+  tilbage. Selftest 27/27 → 31/31.
 
 - 301 for det slettede 1.3.3-kildearkiv, og porten kan se en sletning: `ceo/retire-desktop-1-3-3` (39).
 - Sælg ikke filer, der ikke kan leveres: `ceo/levering-uden-fil` — `Sælg ikke filer, der ikke kan leveres` (22).

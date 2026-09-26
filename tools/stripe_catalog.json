@@ -47,7 +47,51 @@
       "price": "$19 engang",
       "price_note": "one-time, 3 machines",
       "max_devices": 3,
-      "payment_link": "https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01"
+      "payment_link": "https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01",
+      "pro_features": [
+        {
+          "id": "unlimited-sites",
+          "where": "deskuptime/src/features.js:33-34 (FREE.urlLimit 3 -> PRO.urlLimit Infinity), håndhævet i src/watch.js:372-376",
+          "labels": {
+            "en": ["unlimited sites", "unlimited"],
+            "da": ["ubegrænsede sites", "ubegrænset"]
+          }
+        },
+        {
+          "id": "interval",
+          "where": "deskuptime/src/features.js:34 (PRO.minIntervalSeconds 30), håndhævet i src/watch.js:590-591",
+          "labels": {
+            "en": ["30 second", "30 s"],
+            "da": ["30. sekund", "30 sekunder"]
+          }
+        },
+        {
+          "id": "webhooks",
+          "where": "deskuptime/src/watch.js:601-605 (nægtelse uden nøgle) og :624-628 (sendWebhook kun hvis isPro)",
+          "labels": {
+            "en": ["webhook alerts", "webhook"],
+            "da": ["webhook-alarmer", "webhook"]
+          }
+        },
+        {
+          "id": "client-report",
+          "where": "deskuptime/src/cli.js:609-618 (report-kommandoen afslutter med exit 1 uden isPro)",
+          "labels": {
+            "en": ["client-ready report", "client report"],
+            "da": ["kunderapport"]
+          }
+        }
+      ],
+      "pro_not_built": [
+        {
+          "id": "email-alerts",
+          "where": "ingen e-mail-kode i deskuptime/ eller deskuptime-desktop/; deskuptime/src/features.js:145-153 markerer rækken implemented: false",
+          "labels": {
+            "en": ["email and webhook alerts", "email alerts", "email & webhook alerts"],
+            "da": ["e-mail- og webhook-alarmer", "e-mail-alarmer"]
+          }
+        }
+      ]
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
@@ -56,7 +100,8 @@
       "price": "$19 engang",
       "price_note": "one-time, 3 machines",
       "max_devices": 3,
-      "payment_link": "https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02"
+      "payment_link": "https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02",
+      "note": "Ingen købsside i dette repo: linket ligger på transmute.run, som er et separat site i transmute/. Derfor ingen pro_features her — porten ville ikke have nogen side at gate."
     },
     "eucomply-pro": {
       "name": "EUComply Pro",
@@ -66,7 +111,51 @@
       "price_note": "yearly subscription per website",
       "max_devices": 1,
       "subscription": true,
-      "payment_link": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
+      "payment_link": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+      "pro_features": [
+        {
+          "id": "pdf-download",
+          "where": "site/compliance-report.html:504-535 verifyAndDownload() — validateLicense() mod /api/license/validate, derefter window.print()",
+          "labels": {
+            "en": ["pdf download", "download the pdf", "pdf report", "save the pdf"],
+            "da": ["pdf-download", "hele pdf-rapporten"]
+          }
+        }
+      ],
+      "pro_not_built": [
+        {
+          "id": "monitoring",
+          "where": "ingen scheduler, ingen cron og ingen gemte scans nogen sted i site/_worker.js eller scanner/",
+          "labels": {
+            "en": ["compliance monitoring", "continuous monitoring"],
+            "da": ["kontinuerlig overvågning"]
+          }
+        },
+        {
+          "id": "history",
+          "where": "scanner/ har ingen historikstore, og der er ingen kvote at løfte: /scan kører uden licens",
+          "labels": {
+            "en": ["history tracking", "scan history"],
+            "da": ["scanhistorik"]
+          }
+        },
+        {
+          "id": "branding",
+          "where": "site/compliance-report.html:529 kalder window.print(); der er ingen PDF-generator og intet brand",
+          "labels": {
+            "en": ["branded pdf", "professional pdf"],
+            "da": ["brandet pdf"]
+          }
+        },
+        {
+          "id": "priority-support",
+          "where": "ingen supportkanal og ingen SLA i koden; missionen forbyder support et menneske skal svare på",
+          "labels": {
+            "en": ["priority support", "support within 24h", "within 24h"],
+            "da": ["prioriteret support"]
+          }
+        }
+      ]
     },
     "page-profile-pro": {
       "name": "Page Profile Pro",
@@ -76,7 +165,33 @@
       "price_note": "yearly subscription",
       "max_devices": 3,
       "subscription": true,
-      "payment_link": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+      "payment_link": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04",
+      "pro_features": [
+        {
+          "id": "compare",
+          "where": "page-profile/page_profile.py:1066 require_pro(\"compare mode\") -> run_compare :801-855",
+          "labels": {
+            "en": ["comparison mode", "compare two urls"],
+            "da": ["sammenligning", "sammenlign to urls"]
+          }
+        },
+        {
+          "id": "batch",
+          "where": "page-profile/page_profile.py:1071 require_pro(\"batch mode\") og :1056 require_pro(\"batch mode from file\") -> run_batch :857-885",
+          "labels": {
+            "en": ["batch mode"],
+            "da": ["batch-tilstand"]
+          }
+        },
+        {
+          "id": "html-report",
+          "where": "page-profile/page_profile.py:1094 require_pro(\"HTML report\") -> run_html_report :936-989",
+          "labels": {
+            "en": ["client-ready html report", "html report"],
+            "da": ["kunde-klar html-rapport", "html-rapport"]
+          }
+        }
+      ]
     },
     "eucomply-dpa": {
       "name": "GDPR DPA template",
