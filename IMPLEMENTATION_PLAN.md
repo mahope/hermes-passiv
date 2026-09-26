@@ -23,7 +23,10 @@
 - `BASELINE`: `main@3d94884`
 - `LAST_BRANCH`: `ceo/weekly-history-gate`
 - `NEXT_TASK`: `36 — /thanks må ikke vise filer der ikke kan hentes. Se opgave 36. Kræver Mads' svar på opgave 24/25, så den næste frie opgave bliver en researchiteration.`
-- `PLAN_COMMIT`: `— denne iteration: kode + plan i samme commit, ingen ren plan-commit`
+- `DEPLOY` (opgave 35, LUKKET): `DEPLOY OK 0ebfec7 26/9` — kørsel `36212353040` grøn:
+  `gate` (46 steps) + tre grønne deploys. Alle tre domæners `build-info.json` bærer
+  `0ebfec7`. `site/` urørt, så domænerne er uændrede indholdsmæssigt.
+- `PLAN_COMMIT`: `denne iteration: kode + plan i samme commit (9609475), + én ren plan-commit for deploynoten (0ebfec7)`
 - `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1., 26: 1/1., 27: 1/1., 28: 1/1., 29: 1/1., 30: 1/1., 31: 1/1., 32: 0/0 (kræver Mads), 33: 1/1., 34: 1/1., 35: 1/1.`
 - `DEPLOY` (opgave 34, LUKKET): `DEPLOY OK 07a9a85 26/9` — kørsel `36211523572` grøn: `gate` (44 steps) + tre grønne deploys. Live-**indhold** verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `07a9a854fc20b31a4fbc9f36b0f7b1f1f33d1ac6`, hvilket er præcis merge-SHA'en den åbne note bad om. `site/` var urørt af opgave 34, så domænerne er indholdsmæssigt uændrede — kun byggemetadata bærer den nye SHA. Den efterfølgende merge `3d94884` (deploynote-34) lå **uden for** path-filteret, så den deployede ikke med vilje, og det er korrekt: intet i `site/` eller `dist/` er rørt.`
 - `GATE` (opgave 35): `GRØN — python3 tools/quality_gate.py: GRØN, 46 steps (fra 44). Nye steps weekly-history + weekly-history-selftest. check_weekly_history: OK. --self-test: OK, 11 kontroller, 0 fejl — inklusive tre negative kontroller (en blok writeren KAN skrive må ikke markeres som død; en fuldt gyldig rapport med tomt trafikblok må ikke fejle; selftesten efterlader arkivet gyldigt) og en provenance-kontrol med et helt andet død-navn (`gumroad`), så porten ikke kan være grøn på en navneliste. Bevis på de rigtige gamle filer: `git archive HEAD reports/weekly` ind over porten → 3 fejl, én pr. arkivfil, fundet i den rigtige fil. Stripe-worker uændret 77/77, tracking-worker uændret 83/83, test_weekly_report uændret grøn, site/_worker.js urørt, dist/uændret (gitignored). test_deploy_workflow grøn og dækker nu reports/weekly/*.json.`
@@ -2006,6 +2009,15 @@ no-op-kontrol; hvis ikke, skal `/thanks` sige "filen er klar i din mail" kun nå
   `reports/weekly/*.json` er tilføjet path-filteret i denne iteration. `site/` er urørt,
   så **domænerne skal være uændrede**; verificér derfor på indhold at `build-info.json`
   bærer merge-SHA'en på de tre domæner. Kørslen skal være grøn på 46 steps.
+- 2026-09-26: `DEPLOY OK 0ebfec7` — kørsel `36212353040` grøn: `gate` (46 steps, begge
+  nye `weekly-history`-steps kørte i CI) + tre grønne deploys. Live-**indhold**
+  verificeret, ikke HTTP 200: alle tre domæners `build-info.json` bærer `0ebfec7`,
+  præcis merge-SHA'en. `site/` var urørt af committen, så domænerne er
+  indholdsmæssigt uændrede — kun byggemetadata bærer den nye SHA. Bevis på
+  path-filteret: kørslen startede overhovedet, fordi `reports/weekly/*.json` lå
+  uden for det før denne iteration; en commit der kun rettede en rapportfil
+  ville have mergeret uden at porten kørte. CI meldte kun kendte
+  ubuntu-latest-/Node-advarsler. Lukker `VERIFICÉR DEPLOY` nedenfor.
 - 2026-09-26: `DEPLOY OK 07a9a85` — lukker `VERIFICÉR DEPLOY` for opgave 34.
 - 2026-09-26: `DEPLOY OK aae4a72` — lukker `VERIFICÉR DEPLOY` for opgave 22. Kørsel
   `36204568679` kørte `gate` grønt i 38 steps og deployede de tre Pages-domæner
