@@ -227,7 +227,8 @@ en_body = f'''
   <div class="container">
     <h2>Check every page automatically</h2>
     <p>Inspecting the canonical tag on each page by hand is feasible for five pages — not for fifty or five hundred. The free, open-source <a href="/page-profile" style="color:var(--color-accent);">page-profile</a> CLI checks canonical presence, self-reference status, absolute URL format and more against any URL:</p>
-    <pre class="cmd"><code>npx page-profile https://example.com          # single page report\nnpx page-profile --urls-from-file urls.txt   # batch check all pages (Pro)\nnpx page-profile --compare prod.html staging.html  # diff canonicals (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://example.com          # single page report\npython3 page_profile.py --urls-from-file urls.txt   # batch check all pages (Pro)\npython3 page_profile.py --compare https://prod.example.com https://staging.example.com  # diff canonicals (Pro)</code></pre>
     <div class="problem-cards">
       <div class="card"><h3>✅ Graded checks</h3><p>Canonical presence, absolute vs relative, self-referencing — each gets a pass/warn/fail so you triage instead of reading raw HTML.</p></div>
       <div class="card"><h3>📦 Batch mode</h3><p>Feed it your sitemap URLs or a text file and check every page in one pass. Pro feature with HTML report output.</p></div>
@@ -324,7 +325,8 @@ da_body = f'''
   <div class="container">
     <h2>Tjek hver side automatisk</h2>
     <p>At inspicere canonical-tagget på hver side i hånden er muligt for fem sider — men ikke for halvtreds eller fem hundrede. Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> tjekker canonical-tags, selvreferencer, absolutte URL-formater og mere på enhver URL:</p>
-    <pre class="cmd"><code>npx page-profile https://eksempel.dk             # rapport for én side\nnpx page-profile --urls-from-file urls.txt      # batch (Pro)\nnpx page-profile --compare prod.html staging.html  # sammenlign canonicals (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://eksempel.dk             # rapport for én side\npython3 page_profile.py --urls-from-file urls.txt      # batch (Pro)\npython3 page_profile.py --compare https://prod.example.dk https://staging.example.dk  # sammenlign canonicals (Pro)</code></pre>
     <div class="problem-cards">
       <div class="card"><h3>✅ Karaktergivende tjek</h3><p>Canonical findes, absolut vs. relativ, selvrefererende — hver får bestået/advar/dump, så du kan prioritere i stedet for at læse rå HTML.</p></div>
       <div class="card"><h3>📦 Batch-tilstand</h3><p>Giv den dit sitemaps URL'er eller en tekstfil, og tjek alle sider i ét gennemløb. Pro-funktion med HTML-rapport.</p></div>

@@ -90,8 +90,9 @@
   <div class="container">
     <h2>Tjek et flersproget site automatisk</h2>
     <p>Det gratis open source-værktøj <a href="/da/page-profile" style="color:var(--color-accent);">page-profile</a> reviderer <code>&lt;head&gt;</code> på enhver URL — canonical, hreflang-alternativer, meta robots, titler:</p>
-    <pre class="cmd"><code>npx page-profile https://eksempel.dk/da/side       # rapport for én side
-npx page-profile --urls-from-file urls.txt         # batch alle sprogversioner (Pro)</code></pre>
+    <pre class="cmd"><code>curl -O https://mahope.tools/downloads/page-profile/page_profile.py
+python3 page_profile.py https://eksempel.dk/da/side       # rapport for én side
+python3 page_profile.py --urls-from-file urls.txt         # batch alle sprogversioner (Pro)</code></pre>
     <div style="text-align:center;margin-top:24px;">
       <a href="/da/page-profile" class="btn-primary">Hent page-profile gratis &rarr;</a>
     </div>

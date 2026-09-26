@@ -397,7 +397,7 @@ STEPS: tuple[Step, ...] = (
     # sælger v1.3.3. Denne port måler alle fire mod de artefakter kunden får.
     Step(
         id="readme-paths",
-        argv=("python3", "tools/check_readme_paths.py", "--self-test"),
+        argv=("python3", "tools/check_readme_paths.py"),
         inputs=(
             "tools/check_readme_paths.py",
             "site/downloads/eaa-scanner-README.md",
@@ -405,6 +405,22 @@ STEPS: tuple[Step, ...] = (
             "site/downloads/eaa_scanner-1.2.0-py3-none-any.whl",
             "site/downloads/eaa-scanner-desktop-src-1.3.4.zip",
         ),
+    ),
+    # Opgave 89: `npx page-profile` stod i 10 publicerede blog-sider, men
+    # pakken findes hverken paa npm eller som et repo, og page-profile er et
+    # enkelt Python-script. Samme fejlform som `pip install eaa-scanner` i
+    # opgave 87, bare i 10x flere sider — og de la i `make_blog_*.py` saa
+    # nogen kunne have skrevet den tilbage. Porten dommer derfor baade
+    # publiceret tekst og generatorer, og kun kommandoer i kodekontekst.
+    Step(
+        id="install-commands",
+        argv=("python3", "tools/check_install_commands.py"),
+        inputs=("tools/check_install_commands.py", "site/**", "make_blog_*.py", "tools/*blog*.py", "tools/iter*.py"),
+    ),
+    Step(
+        id="install-commands-selftest",
+        argv=("python3", "tools/check_install_commands.py", "--self-test"),
+        inputs=("tools/check_install_commands.py", "site/blog/canonical-url-guide.html"),
     ),
     Step(
         id="weekly-report-tests",
