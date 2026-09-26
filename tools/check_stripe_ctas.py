@@ -2262,9 +2262,45 @@ def self_test() -> int:
         print("SELFTEST FEJLER: de uændrede købssider fejler — porten kan ikke "
               f"finde fejlen: {untouched}")
         return 1
-    if len(missing_where) != 1 or "where" not in missing_where[0]:
+    free_features = good["products"]["page-profile-pro"]["free_features"]
+    # Én linje pr. post, og kun én gruppe pr. produkt. Før denne iteration var
+    # der én post, så "1" dækkede begge tal; med fem poster er det antallet af
+    # poster der dømmes, og antallet af *sider* der ikke må blande sig ind —
+    # produktet har to købssider, så en port der meldte pr. tilbud ville give 10.
+    if (len(missing_where) != len(free_features)
+            or any("where" not in x for x in missing_where)
+            or len({x.split(":")[0] for x in missing_where}) != 1):
         print("SELFTEST FEJLER: en free_features-post uden `where` meldes ikke "
-              f"én gang pr. produkt: {missing_where}")
+              f"én gang pr. post og kun én gang pr. produkt: {missing_where}")
+        return 1
+
+    # Hver erklæret gratis-funktion skal kunne *bide* — den rigtige Gratis-
+    # sætning flyttet ind i Pro-kortet på den rigtige købsside er den fejlform
+    # porten er skrevet for. Uden denne blok passede fire nye poster på at de
+    # aldrig blev læst, fordi porten er grøn på en side der er i orden.
+    def into_pro_card(real: str, li: str) -> str:
+        start = real.index('class="tier-card pro"')
+        at = real.index("<ul>", start) + len("<ul>")
+        return real[:at] + li + real[at:]
+
+    silent: list[str] = []
+    for feature in free_features:
+        for relative, real in (("site/da/page-profile.html", da_real),
+                               ("site/page-profile.html", en_real)):
+            labels = (feature.get("labels") or {}).get(page_lang(relative, real)) or []
+            if not labels:
+                continue
+            moved = into_pro_card(real, f"<li>{labels[0]}</li>")
+            if f"<li>{labels[0]}</li>" not in moved:
+                silent.append(f"{feature.get('id')} på {relative}: Pro-kortet har ingen liste")
+                continue
+            pages = [(p, moved if p == relative else t) for p, t in da_pairs]
+            if not [x for x in check_free_features(good, pages)
+                    if f"'{feature.get('id')}'" in x]:
+                silent.append(f"{feature.get('id')} på {relative}")
+    if silent:
+        print("SELFTEST FEJLER: disse gratis-funktioner kan flyttes ind i Pro-kortet "
+              "uden at porten siger noget: " + "; ".join(silent))
         return 1
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
     #
