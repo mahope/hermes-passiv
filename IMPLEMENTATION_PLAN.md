@@ -1,10 +1,10 @@
-- `ITERATION_ID`: `eucomply-antal-tjek-2026-09-26`
-- `STATE`: `Opgave 83 FÆRDIG — den dyreste købsside ($79/år) lovede **16** tilgængelighedsregler og **24** tjek i alt. Koden siger **11** og **29**. Begge tal er målt mod koden, ikke mod en sætning, og det er samme slags fejl som opgave 80 lukkede — bare i de tal, der stod ved siden af den. **Fund 1 — frie-siden kører 11 regler, ikke 16.** `site/compliance-report.html` `runScan()` har præcis **elleve** `add('…')`-kald: IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST. Samme elleve ligger i `site/scan.html`, så **de 16 er ikke en anden motor** — det er samme regelsæt, der har stået med et for højt tal. **Fund 2 — den betalte halvdel har 18 checks, så totalen er 29, ikke 24.** `reportProFindings()` i `site/_worker.js:1047` har 18 unikke `push('…')`-id'er: 6 GDPR/cookie (COOKIE_BANNER, COOKIE_SCRIPTS, GA_NO_CONSENT, FB_NO_CONSENT, PRIVACY_LINK, NO_ANALYTICS), 4 sikkerhed (SEC_CSP, SEC_HSTS, FORM_HTTP, FORM_COUNT) og 8 metadata (CANONICAL, CHARSET, JSONLD, OG_TITLE, OG_DESC, OG_IMAGE, TWITTER_CARD + loginet). 11 + 18 = **29**. **Fund 3 — de tre løfte-steder var ikke samme fejl, de var tre.** (a) EAA-kortet og FAQ'ens *"Which standards"* sagde 16 (→ 11). (b) Pro-kortet sagde *"24 automated checks, including 16 accessibility rules"* (→ *"29 checks in all — the free 11 accessibility rules, plus 18 server-side…"*). (c) **FAQ'ens første svar solgte to ting der er gratis:** *"combines **accessibility**, GDPR/cookie, and NIS2/security into one document, **ranks the findings by severity**"* — men siden siger selv ved :151 at accessibility, score og hele rapporten er gratis, og den danske tabel siger at fund grupperes efter alvor i **begge** kolonner. Den første storhed læste altså: *"Pro tilføjer tilgængelighed"* og *"Pro tilføjer alvorsgruppering"*. Begge dele er nu skrevet om til sandheden på EN og DA. **Fund 4 — rettelsen holdt porten grøn uden at jeg svækkede den.** `check_free_features` bruger `paid_contexts`, så en gratis-påstand i Pro-kortet er rød; den nye Pro-bullet siger derfor *"the free 11 accessibility rules"* og ikke katalogens label *"the accessibility checks"* — samme ord, anden rækkefølge, så label-substringet rammer ikke. Selftesten er **39/39** uændret, fordi de tre mutationer kun var forankret på teksten jeg ændrede. **Fund 5 — det er **samme** 16-tal på 15 flere sider, målt, ikke rettet.** `/scan` og hele `/guides/*`-fladen (wordpress, shopify, drupal, weebly, umbraco, squarespace, prestashop, magento + `guides/comparison.html`) siger *"16 automated rules"* / *"16 automatiske regler"*. Det er **samme fejlklasse på SEO-siden af huset** og den er konkurrencenævn værd, men den er 15 filer med meta- og JSON-LD-tal, så den er en egen opgave (NEXT_TASK 1) og ikke en sidefod i denne. **Fund 6 — pengevejen er målt grøn, så den var ikke fejlen.** Alle 13 Stripe-links + donationslink svarer **200** efter redirect; `POST /api/license/{activate,validate,deactivate}` svarer 404 på ukendt nøgle, 400 på dårligt format, og CORS er `*`; `/api/stripe-webhook` og `/api/stripe/fulfillment` svarer 400 uden signatur, `/api/download` 404. Fejlklasse 1 (køb der ikke leverer) er altså målt fraværende i dag. **Fund 7 — `reports/weekly/2026-39.json` mangler stadig \`ranking\`, men det er ikke længere en mangel: \`tools/weekly_report.py\` har \`build_ranking()\`, \`RANKING_DAYS\` og \`traffic.ranking_paths\`, så rapporten fra mandag 28/9 har den.** ❓ 13 kan derfor lukkes som besvaret af målingen, ikke af mig.`
+- `ITERATION_ID`: `regeltal-15-2026-09-26`
+- `STATE`: `Opgave 84 FÆRDIG — regeltallet i løfterne er ikke en skrivefejl, det er en manglende definition, og nu er den målt i koden. **Fund 1 — sandheden er 15, ikke 16 og ikke 11.** `site/scan.html`, `site/scan-da.html` og `site/compliance-report.html` kører præcis de samme **15** regler (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, DOC_TITLE, HTML_LANG, VIEWPORT, HEADING_H1, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST), og `reportProFindings()` har **18** → **Pro-total 33**. Opgave 83 fandt 11 ved at tælle kun `add('…')`-kaldene og overså de fire `findings.push({id:…})`; dens "11" stod på fire steder, heraf den dyreste købsside. `HTML_LANG_SHORT` er ikke en 16. regel, men et `else if`-udfald af HTML_LANG. **Fund 2 — en rigtig fejl for brugeren.** DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 skubbede `findings.push({sev,msg})` **uden id** på begge scanner-sider, mens renderingen er `FIX[f.id] || ''`. Målt på `main` før rettelsen: 4 af 15 fund kom ud med en tom linje — altså besked om bl.a. manglende `<title>` og manglende viewport uden at få sagt hvad der skal gøres. Nu 15 fund / 15 FIX-nøgler / 0 manglende. **Fund 3 — 42 løfter rettet i målt kontekst:** 33 steder `16→15`, 5 steder `11→15`, 4 steder `29→33`. Samme tegnlængde, så ingen meta-længde flyttede sig. **Fund 4 — opgave 83 brød sin egen test.** `check_stripe_ctas --self-test` havdeankeret på `"29 checks in all"` og døde med "mutationsankeret mangler"; ankeret læses nu live, så et nyt regeltal ikke kan brække porten igen. Selftesten uændret 39/39. **Fund 5 — årsagen lå over i tre iterationer:** opgave 80, 83 og 84 rettede hver især det samme tal, fordi ingen målte motoren rigtigt. `tools/check_rule_claims.py` måler nu i koden ved hver kørsel og er koblet på som to steps i gaten, så fejlformen er lukket og ikke kun denne forekomst.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `BASELINE`: `main@19acc2e`
-- `LAST_BRANCH`: `ceo/eucomply-antal-tjek`
-- `NEXT_TASK`: `Køen er tom igen, og første post er **fund 5 — de 15 sider der siger 16 i stedet for 11.** Det er samme måling som her, bare bredere, og det er SEO-flade: **/scan** og otte `/guides/*`-sider plus `guides/comparison.html`. **Mål først, skriv så:** tjek om nogen af dem beskriver en *anden* motor end `runScan()` (mål som her: tæl `add('…')`-kaldene i den side og sammenlign), og lad **JSON-LD og `meta description` være i fred** hvis tallet der er sandt — ellers går der 15 SEO-tekster på én fejl. Acceptkriterium: **0** forekomster af *"16 automated rules"* / *"16 automatiske regler"* på de sider der kører `runScan()`, hver udskiftning samme tegnlængde (så `seo_check` ikke flytter en meta-længde), og `seo_check` + `check_stripe_ctas` grønne. **(2) ❓ uændrede:** Search Console for de fem domæner, de otte produkter uden købsside (opgave 58), ❓ 14 (a)/(b)/(c) om EUComply Pro-prisen, ❓ om desktop-appen stadig er Pro (opgave 78), ❓ 12 EAA Scanner Pro. **(3) Målt og bevidst ikke rettet:** `XFO` står stadig i NIS2-kortet på begge sider, og `reportProFindings()` har ingen XFO-push — kun `SEC_CSP` og `SEC_HSTS`. Det kan være rigtigt (XFO kan komme fra `/scan-proxy`-motorens `xfo`-felt, `site/_worker.js:431`), så det skal måles, ikke gættes. **(4) Opgraderinger:** ingen ny; diffen rører ingen afhængighed, så \`~/.local/oxloop/AFHAENGIGHEDER.md\` er uændret. **(5) Bevar afsnit 1 fra opgave 82:** mål enhver ny port på de rigtige sider før den skrives.`
-- `GATE`: `GRØN — missionens fire kommandoer i række: \`build_sites.py\` **321 filer / 252 sitemap-rutter / 0 brudte**, \`seo_check.py\` **310 sider 0 fund**, \`stripe-worker\` **155/155 ok** (\`site/_worker.js\` urørt pr missionens regel), \`check_inline_js.py\` **299 filer 0 problemer**. \`tools/check_stripe_ctas.py\`: **13 produkter / 13 købssider, 0 fejl**; \`--self-test\` **39/39 fejlformer** uændret. \`python3 tools/quality_gate.py\` var **RØD** i step \`stripe-ctas-selftest\` med *"mutationsankeret mangler: 'PDF download of the full report'"* — de tre EUComply-mutationer var forankret på den gamle tekst, som jeg havde ændret. Rettet ved at pege ankerne på de nye sætninger (\`"PDF download of the whole report"\`, \`"29 checks in all"\`), **ikke** ved at fjerne mutationerne; de tre falske løfter de indsætter er uændrede. \`site/_worker.js\` **urørt**, \`/api/stripe-webhook\`, \`/api/stripe/fulfillment\`, \`/api/download\` urørt. \`dist/\` uændret (gitignored). Diffen er **8 ændrede linjer i 3 filer** (6 i de to sider, 2 i porten), så jeg sprang reviewen over som kontrakten tillader; beviset er målingen af 11 og 18 og de ni fund, ikke en læsning.`
+- `BASELINE`: `main@9679fcf`
+- `LAST_BRANCH`: `ceo/regeltal-15`
+- `NEXT_TASK`: `Køen er tom igen. Første post er **❓ 15 — mål WordPress-pluginets eget regeltal i `auditedwp`**: `mahope.tools/wordpress-plugin` siger "15 automated checks", men pluginens motor ligger i et søster-repo, og auditedwps egen pluginside siger "the same nine URL checks". Mål de ni + de seks WordPress-specifikke der, ret siden, og træk så `wordpress-plugin.html` ud af `EXCLUDED` i `tools/check_rule_claims.py`. **Derefter:** genkør de fire missionens åbne opgaver, især **#2** (DeskUptime-sidernes "no phone-home" er ikke længere sandt, fordi licensen aktiveres online mod mahope.tools) og **#1** (den døde Lemon Squeezy-rute `/api/lemon-webhook`), som stadig står åbne fra 24/9. **(2) ❓ uændrede:** Search Console for de fem domæner, de otte produkter uden købsside (opgave 58), ❓ 14 (a)/(b)/(c) om EUComply Pro-prisen, ❓ om desktop-appen stadig er Pro (opgave 78), ❓ 12 EAA Scanner Pro, ❓ 15 ovenfor. **(3) Målt og bevidst ikke rettet:** `XFO` står stadig i NIS2-kortet på begge sider, og `reportProFindings()` har ingen XFO-push — kun `SEC_CSP` og `SEC_HSTS`. Det kan komme fra `/scan-proxy`-motorens `xfo`-felt (`site/_worker.js:431`), så det skal måles, ikke gættes. **(4) Opgraderinger:** ingen ny; diffen rører ingen afhængighed, så `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret. **(5) Bevar afsnit 1 fra opgave 82:** mål enhver ny port på de rigtige sider før den skrives.`
+- `GATE`: `GRØN — python3 tools/quality_gate.py: **GRØN, 49 steps** (47 → 49, de to nye er `rule-claims` og `rule-claims-selftest`). Missionens fire kommandoer i række: `build_sites.py` **321 filer / 252 sitemap-rutter / 0 brudte**, `seo_check.py` **310 sider 0 fund**, `stripe-worker` **155/155 ok** (`site/_worker.js` urørt pr missionens regel), `check_inline_js.py` **299 filer 0 problemer**. `tools/check_rule_claims.py`: **44 regel-løfter, alle matcher koden (15 frie + 18 Pro = 33)**; `--self-test` rødmer på 5 mutationer og er grøn på de rigtige tal. `check_stripe_ctas`: 13 produkter / 13 købssider, 0 fejl; `--self-test` **39/39** uændret efter at ankeret blev læst live.`
 - `SLIP`: `Ingen på indhold, **~40 min mod et hårdt loft på 45**. **(a) Jeg brugte de første ~12 minutter på at måle pengevejen og fandt nul** — 13 Stripe-links, licens-API'ets tre svar, to webhooks. Det var ikke spildt: missionen siger fejlklasse 1 først, og jeg kan nu skrive at købsvejen er målt grøn i stedet for at antage det. Men den del af opgaven, der faktisk rettede noget, lå i de sidste ti minutter, så jeg skulle have brugt de første ti på FAQ'en i stedet. **(b) Jeg læste katalogens \`where\` med vilje, fordi den peger på linjer** (\`runScan()\` :209-309, \`fetch('/api/report')\` :613), og derfor skrev jeg **alle otte redigeringer 1:1 uden at tilføje eller fjerne en linje**. Det er grunden til at ingen \`where\` er blevet forældet af denne diff, og det er gratis her — det er bare ikke gratis på en side hvor en tekstblok flytter sig. **(c) Jeg ramte porten som jeg forventede, og det kostede intet:** \`check_free_features\` læser \`paid_contexts\`, så Pro-kortet må ikke gentage gratis-labelen; skriver man "the accessibility checks" i Pro-kortet, bliver siden rød. Jeg skrev "the free 11 accessibility rules" i stedet, fordi talet er det nye sande. **(d) Én ting jeg lod ligge med vilje:** de 15 guidesider med "16 automated rules" (fund 5). De er SEO-flade og samme fejl, men de er 15 filer med meta- og JSON-LD-længder, og en halv omgang ville være værre end ingen. Den ligger som NEXT_TASK (1) med målingen vedhæftet, så næste iteration ikke skal lede efter den. **Og en måling der er værd at huske:** planen er 639 KB og vokser med ~10 KB pr. iteration. Den er ved at blive dyrere at læse end den er nyttig — fund 1-9 ovenfor er den længde, der faktisk gav noget.`
 - `TASK_ATTEMPTS`: `36: 1/1, 47: 1/1 (afvist på målt grundlag), 48: 1/1 … 82: 1/1, 83: 1/1`
 - `DEPLOY`: `VERIFICÉR DEPLOY: EUComply Pro-siderne siger 11 + 18 = 29 i stedet for 16 og 24 (branch ceo/eucomply-antal-tjek) 26/9` — GitHub Actions deployer med det samme (\`site/**\`, \`tools/**\` er i path-filteret), og diffen rører **to købssider på mahope.tools**, så den skal verificeres på indhold. Verificér:
@@ -3099,6 +3099,62 @@ lukker SSRF. Print uden licens er mærket med en rød `.print-only`-linje.
 `site/compliance-report.html` og fejler, hvis GDPR/NIS2-tjekne kommer tilbage i
 `runScan()` eller hvis siden slutter at hente `/api/report`.
 
+### 84. FÆRDIG (`ceo/regeltal-15`) — regeltallet i løfterne er nu målt, ikke gættet
+
+**Begrundelse:** `NEXT_TASK` fra opgave 83 (fund 5: de 15 `/guides/*`-sider sagde
+"16"). Men målingen viste noget værre: **opgave 83s eget tal var også forkert.** Den
+tællede `add('…')`-kaldene og fandt 11, mens motoren har fire `findings.push({id:…})`
+uden `add()`. Sådan opstod tre rettelser af samme løfte på tre iterationer (80, 83, 84),
+og ingen af dem ramte sandheden, fordi **regeltallet aldrig blev defineret et sted.**
+
+**Resultat — målt, ikke gættet:** `tools/check_rule_claims.py` tæller reglerne i koden
+og fejler på hvert løfte der ikke matcher. Sandheden er **15 frie regler + 18 Pro = 33**:
+
+- `site/scan.html`, `site/scan-da.html` og `site/compliance-report.html` kører præcis
+  de samme **15** regler: IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID,
+  TARGET_BLANK, DOC_TITLE, HTML_LANG, VIEWPORT, HEADING_H1, HEADING_SKIP,
+  IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST.
+- `_worker.js reportProFindings()` har **18** unikke id'er ( Cookie/GDPR 6, sikkerhed 4,
+  metadata 8). `HTML_LANG_SHORT` er **ikke** en 16. regel — det er et `else if`-udfald af
+  HTML_LANG og kan aldrig fyre sammen med den.
+
+**Fejl 1 — en rigtig fejl for brugeren, ikke bare et løfte.** På `scan.html` og
+`scan-da.html` skubbede DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 `findings.push({sev,msg})`
+**uden `id`**, mens renderingen er `FIX[f.id] || ''`. Bevis på `main` (målt før
+rettelsen): 4 fund kom ud med en tom linje under fundet. Brugeren fik altså besked om
+fire af femten problemer — bl.a. *manglende `<title>`* og *manglende viewport* — uden at
+ få at vide hvad der skulle gøres. Alle 15 har nu id, og målingen er 15 fund / 15
+FIX-nøgler / 0 manglende. Samme check gater det fremover.
+
+**Fejl 2 — de skrevne tal.** 42 løfter rettet, alle i målt kontekst (aldrig et tal uden
+for et regel-ord): **33** steder `16 → 15` (15 guidespejl + `scan.html` +
+`da/compliance-ai.html`), **5** steder `11 → 15` på `compliance-report.html` +
+`da/compliance-report.html` (opgave 83s tal), **4** steder `29 → 33` (Pro-total på begge
+sprog). `16`→`15` og `29`→`33` er samme tegnlængde, så ingen meta-længde flyttede sig.
+`scan.html`'s JSON-LD nævner 15 i en 14-sætning-oprindelse ("heading structure"
+dækker H1 + HEADING_SKIP) — rigtigt, ikke en mangel.
+
+**Fejl 3 — en tidligere iteration brød sin egen test.** `check_stripe_ctas.py --self-test`
+havdeankeret på teksten `"29 checks in all"`, så da totalet blev 33, døde selftesten med
+*"mutationsankeret mangler"*. Ankeret læses nu **live** med `re.search(r"\d+(?= checks
+in all)")` i stedet for at være hårdkodet — så et fremtidigt regeltal ikke kan brække
+porten igen. Selftesten er uændret 39/39.
+
+**Porten (ny, to steps i gaten):** `rule-claims` + `rule-claims-selftest`. Den måler
+frit og Pro i koden på hver kørsel, skelner et frit tal fra et Pro-total **per
+forekomst** (linjen "33 checks in all — the free 15 accessibility rules" rummer begge),
+og fejler på fund uden fix-tekst. `site/wordpress-plugin.html` er **udeholdt med vilje**:
+den beskriver WordPress-pluginet, hvis motor ligger i `../auditedwp` og som dette repo
+ikke ejer — sandheden skal måles der, ikke gættes her (se ❓ 15).
+
+**Acceptkriterium (målt):** `python3 tools/check_rule_claims.py` → **44 løfter, alle
+matcher koden (15 + 18 = 33)**; `--list` viser de målte tal med kilde; `--self-test`
+rødmer på fem mutationer (to forker, en for lav, dansk total, fund uden id, fix-tekst
+væk). `python3 tools/quality_gate.py` → **GRØN, 49 steps** (47 → 49). Missionens fire
+kommandoer: `build_sites.py` 321 filer / 252 sitemap-rutter / 0 brudte, `seo_check.py`
+310 sider 0 fund, `stripe-worker` **155/155 ok** (`site/_worker.js` urørt pr missionens
+regel), `check_inline_js.py` 299 filer 0 problemer. `check_stripe_ctas --self-test` 39/39.
+
 ## ❓ Til Mads
 
 15. **Sæt `STATS_TOKEN` på workeren (valgfri, men det er pointen).** `/api/stats`
@@ -3108,6 +3164,15 @@ lukker SSRF. Print uden licens er mærket med en rød `.print-only`-linje.
     som fallback, så intet låses ude, og rapporten gør det samme. **Det du skal
     gøre er at sætte en ny, tilfældig værdi som `STATS_TOKEN` på workeren *og* som
     hemmelighed i rapportens kørsel** (GitHub Actions → workflowets secrets).
+15. **WordPress-pluginets eget regeltal skal måles i `auditedwp`, ikke her.**
+    `mahope.tools/wordpress-plugin` siger **"15 automated checks"** og beskriver
+    billeder, links, formularer, overskrifter, language, viewport og kontrast. Men
+    pluginens motor ligger i `../auditedwp/plugin/eucomply.php`, som dette repo
+    hverken ejer eller må ændre, og auditedwps egen pluginside siger *"the same
+    nine URL checks"* — altså **9**, ikke 15. `tools/check_rule_claims.py` udelader
+    derfor siden **med vilje** og med grund, i stedet for at gætte et tal her.
+    Opgaven er måle de ni (og de seks WordPress-specifikke) i auditedwp, rette
+    pluginsiden, og trække så undtagelsen fra `EXCLUDED`.
     Uden det virker alt som nu; med det er mailnøglen kun mail. **Rækkefølgen
     er ligegyldig for udgivelsen, men ikke for rapporten:** sæt den på workeren
     og i rapporten i samme commit, ellers får uge-rapporten 401 og en tom
@@ -3224,6 +3289,15 @@ lukker SSRF. Print uden licens er mærket med en rød `.print-only`-linje.
 
 
 ## Deploylog
+
+- 2026-09-26: `VERIFICÉR DEPLOY: regeltallene er sande på 20 sider + 4 fund med manglende fix-tekst + to nye gate-steps <merge-sha> 26/9` — GitHub Actions deployer automatisk (`site/**` og `tools/**` er i path-filteret), så intet at vente på. Denne deploy **ændrer synligt indhold på 20 sider**, så verificér indhold, ikke HTTP 200:
+  1. `https://mahope.tools/scan` skal have **0** fund af `16 automated` og FAQ-JSON-LD skal sige `15 automated WCAG 2.1 AA rules`.
+  2. `https://mahope.tools/guides/comparison` skal have **0** fund af `16 automated rules`.
+  3. `https://mahope.tools/compliance-report` skal have `33 checks in all` + `the free 15 accessibility rules` og **0** fund af `11 accessibility` / `29 checks in all` / `11 automated`.
+  4. `https://mahope.tools/da/compliance-report` skal have `Alle 33 automatiske tjek` og `33 tjek i alt — de 15 gratis tilgængelighedsregler`.
+  5. `https://mahope.tools/build-info.json` skal bære merge-SHA'en på alle tre domæner.
+  6. CI's `gate`-job skal være grøn med **49 steps** (var 47) — de to nye steps er `rule-claims` og `rule-claims-selftest`.
+  7. **Den egentlige funktionsprøv** (resten er tekst): på `/scan` skal et scan af en side uden `<title>` vise fundet **med** en fix-linje. Før rettelsen kom de fire fund ud med en tom linje under fundet.
 
 - 2026-09-26: `DEPLOY OK 3d8c553` — lukker `VERIFICÉR DEPLOY` for opgave 48. Ikke en ny kørsel: `build-info.json` bærer `3d8c553` på alle tre domæner, og `2509913` er en stamfar af den, så opgave 48s kode er live. Indholdet efterprøvet med cachebuster: `cleancopy.tools/?cb=…` → **0** fund af *supports development of the free version*, **1** *custom cleanup rules*, **1** *batch conversion*, **1** `href="/activate/"`, **1** købslink. `cleancopy.tools/da/?cb=…` → **0** *støtter udviklingen af den gratis version*, **1** *egne rense regler*, **1** *batch-konvertering*, **1** købslink. `/clean-copy-tool` har begge funktioner (5 + 2 fund), og `/activate/` har dem også — målt ved at læse den hentede side, fordi et flugt-grep på `batch conversion` gav 0 alene på en linjeskiftet linje.
 
@@ -3497,6 +3571,14 @@ lukker SSRF. Print uden licens er mærket med en rød `.print-only`-linje.
 - 2026-09-25: `DEPLOY OK 41758af` — GitHub Actions-run `36082138701` deployede alle fire sites grønt. Live-contentcheck af de fire EN/DA-sider fandt de nye licens- og lokalitetsoplysninger, mens de gamle claims var fraværende. CI meldte kun eksisterende Node 20-/Ubuntu-26-advarsler.
 
 ## Commitlog
+
+- **Opgave 84** `ceo/regeltal-15`: regeltallene i løfterne er nu målt i koden. Sandheden
+  er **15 frie regler + 18 Pro = 33** — ikke 16 (33 guidespejl-steder) og ikke 11
+  (opgave 83s egen måling, som overså fire `findings.push({id:…})` uden `add()`). Rettet
+  42 løfter i målt kontekst. Fire fund på begge scanner-sider manglede `id`, så de viste
+  en tom fix-linje; nu har alle 15 fund en fix-tekst. Ny port `tools/check_rule_claims.py`
+  (måler + gater tal og fix-tekster) koblet på som to steps, 47 → 49. Ankeret i
+  `check_stripe_ctas --self-test` læses nu live, så et nyt regeltal ikke kan brække porten.
 
 - **Opgave 50** `ceo/da-aktiveringsguide`: `/da/activate/` som rigtig dansk rute med egen
   købsknap, egen sitemap-post og sprogskift på begge sprog; de faktiske engelske

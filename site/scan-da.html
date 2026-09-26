@@ -229,10 +229,10 @@ async function scan(url){
         const t=(a.textContent||'').toLowerCase();
         return t && !t.includes('new window') && !t.includes('new tab');
       }).length);
-  if(!doc.title||!doc.title.trim())findings.push({sev:'error',msg:'siden har ingen <title>'});
-  if(!doc.documentElement.lang)findings.push({sev:'error',msg:'<html> mangler en lang-attribut'});
-  if(!doc.querySelector('meta[name="viewport"]'))findings.push({sev:'warning',msg:'manglende viewport-meta-tag'});
-  if(!doc.querySelector('h1'))findings.push({sev:'warning',msg:'ingen <h1> fundet'});
+  if(!doc.title||!doc.title.trim())findings.push({id:'DOC_TITLE',sev:'error',msg:'siden har ingen <title>'});
+  if(!doc.documentElement.lang)findings.push({id:'HTML_LANG',sev:'error',msg:'<html> mangler en lang-attribut'});
+  if(!doc.querySelector('meta[name="viewport"]'))findings.push({id:'VIEWPORT',sev:'warning',msg:'manglende viewport-meta-tag'});
+  if(!doc.querySelector('h1'))findings.push({id:'HEADING_H1',sev:'warning',msg:'ingen <h1> fundet'});
   let skips=0,prev=0;
   doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
   add('HEADING_SKIP','warning','{n} sprunget(t) overskriftsniveau(er)',skips);
