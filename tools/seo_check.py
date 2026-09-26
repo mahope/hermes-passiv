@@ -108,6 +108,15 @@ def check_page(text: str, name: str) -> list[str]:
             errs.append(f"no <{tag}>")
     if len(find(body, r'<main\b')) != 1:
         errs.append("main count != 1")
+    # A duplicate id is swallowed silently: the browser keeps the first element
+    # with that id and every later one is unreachable through its anchor.
+    # Measured 26/9 on shopify-tilgaengelighed-eaa: a hand-written
+    # <section id="indhold"> plus a build-assigned <h3 id="indhold"> meant the
+    # ToC entry for "Indhold" jumped to the section *above* its own parent.
+    live = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    for dup, n in sorted(Counter(find(live, r'\bid="([^"]+)"')).items()):
+        if n > 1:
+            errs.append(f"duplicate id {dup!r} x{n}")
     for img in find(body, r"<img\b[^>]*>"):
         if not re.search(r'\salt="', img):
             errs.append(f"img without alt: {img[:60]}")
@@ -181,12 +190,93 @@ def scan_urls(urls: list[str]) -> tuple[int, int, dict]:
     return total, pages, report
 
 
+def _ids_only_errors(page: str) -> list[str]:
+    return [e for e in check_page(page, "probe") if e.startswith("duplicate id")]
+
+
+def self_test() -> int:
+    """Prove the duplicate-id rule fires, and that it fires for the right reason.
+
+    Two halves, because the defect had two layers: the rule in check_page reads a
+    built page, and the root cause is build_sites._toc handing a heading an id
+    that the page already used. Testing only the rule would stay green if _toc
+    regressed, and testing only _toc would not notice a page that arrives from
+    somewhere else.
+    """
+    import importlib.util
+
+    ok = True
+
+    def expect(label: str, got: list[str], want: int) -> None:
+        nonlocal ok
+        if len(got) != want:
+            print(f"  FEJL {label}: {len(got)} fund, forventede {want} -> {got}")
+            ok = False
+
+    def expect_ids(label: str, got: list[str], want: list[str]) -> None:
+        nonlocal ok
+        if got != want:
+            print(f"  FEJL {label}: {got}, forventede {want}")
+            ok = False
+
+    shell = "<body><header><nav></nav></header><main id='main'><h1>x</h1>{b}</main><footer></footer></body>"
+
+    # The real markup, twice over: the hand-written section and the heading the
+    # build gave the same id.
+    expect("sektion + h3 med samme id", _ids_only_errors(shell.format(
+        b='<section id="indhold"><h2>a</h2></section><h3 id="indhold">Indhold</h3>')), 1)
+    expect("samme id tre gange", _ids_only_errors(shell.format(
+        b='<p id="x">1</p><p id="x">2</p><p id="x">3</p>')), 1)
+
+    # Negative controls. A duplicate-looking id that no browser ever resolves is
+    # not a duplicate: comments, inline CSS and script strings are not the DOM.
+    expect("id i en kommentar", _ids_only_errors(shell.format(
+        b='<!-- <p id="indhold"> --><h3 id="indhold">ok</h3>')), 0)
+    expect("id i en script-streng", _ids_only_errors(shell.format(
+        b='<script>var s="<p id=\\"indhold\\">";</script><h3 id="indhold">ok</h3>')), 0)
+    expect("unikke id'er", _ids_only_errors(shell.format(
+        b='<section id="a"><h2 id="b">t</h2></section><h3 id="c">u</h3>')), 0)
+
+    # The root cause. _toc must start from the ids the article already carries,
+    # including ids on non-headings, or it re-issues one that is already taken.
+    spec = importlib.util.spec_from_file_location("_bs", ROOT / "build_sites.py")
+    bs = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bs)
+
+    def toc_ids(article: str) -> list[str]:
+        out, entries = bs._toc(article)
+        return [e[1] for e in entries]
+
+    expect_ids("id på en ikke-overskrift", toc_ids(
+        '<section id="indhold">a</section><h3>Indhold</h3>'), ["indhold-2"])
+    expect_ids("to ens overskrifter", toc_ids("<h3>Samme</h3><h3>Samme</h3>"), ["samme", "samme-2"])
+    expect_ids("overskrift med sit eget id beholder det", toc_ids(
+        '<section id="indhold">a</section><h3 id="andet">Indhold</h3>'), ["andet"])
+    expect_ids("ingen kollision", toc_ids('<h3>Emt</h3><h3>To</h3>'), ["emt", "to"])
+
+    # Mute control: with the rule deleted, the first probe drops to 0 findings
+    # and the _toc probes all hand out the colliding id. If this test can pass
+    # with the rule removed, it is theatre.
+    src = (ROOT / "tools" / "seo_check.py").read_text(encoding="utf-8")
+    if "duplicate id" in src and 'set(re.findall(r\'\\sid="([^"]*)"\', article))' not in \
+            (ROOT / "build_sites.py").read_text(encoding="utf-8"):
+        print("  FEJL mute-kontrol: build_sites._toc seeder ikke længere med sidens id'er")
+        ok = False
+
+    print("seo_check --self-test: " + ("OK" if ok else "FEJLT"))
+    return 0 if ok else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only")
     ap.add_argument("--url", nargs="*")
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--self-test", action="store_true",
+                    help="bevis at reglen for dublet id fanger fejlformen")
     a = ap.parse_args()
+    if a.self_test:
+        return self_test()
     total, pages, report = scan_urls(a.url) if a.url else scan_dist(a.only)
     kinds: Counter = Counter()
     for errs in report.values():
