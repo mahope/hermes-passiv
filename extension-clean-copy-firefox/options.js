@@ -10,6 +10,7 @@
 
 const LICENSE_API = CleanCopyLicense.API_BASE + '/validate';
 const ACTIVATE_API = CleanCopyLicense.API_BASE + '/activate';
+const DEACTIVATE_API = CleanCopyLicense.API_BASE + '/deactivate';
 
 function deviceId() {
   // Non-identifying random device token, persisted locally only.
@@ -128,10 +129,31 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     }
   });
 
-  document.getElementById('deactivate').addEventListener('click', () => {
-    // Local removal only — does not free a seat remotely.
+  document.getElementById('deactivate').addEventListener('click', async () => {
+    // Removing the key only clears this machine. The license server counts a
+    // seat per device, so a customer who moves to a new laptop and removes the
+    // license here would still be over the limit there — with no way to fix it
+    // except emailing a human. Free the seat first, then forget the key.
+    let freed = false;
+    let key = '';
+    try {
+      const data = await chrome.storage.local.get(['proLicense']);
+      key = String((data && data.proLicense) || '').trim().toLowerCase();
+      if (CleanCopyLicense.isKeyFormat(key)) {
+        const res = await fetch(DEACTIVATE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ license_key: key, device_id: await deviceId() })
+        });
+        freed = res.status >= 200 && res.status < 300;
+      }
+    } catch (err) {
+      freed = false;
+    }
     chrome.storage.local.remove(['proLicense', 'proExpires', 'proCheckedAt']);
-    showUnlicensed('License removed from this device.');
+    showUnlicensed(freed
+      ? 'License removed here, and this seat is free for another machine.'
+      : 'License removed from this device. The license server could not be reached, so this seat may still be counted — if the new machine says the device limit is reached, try removing the license here once more.');
     loadRules(false);
   });
 

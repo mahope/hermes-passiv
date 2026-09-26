@@ -245,12 +245,39 @@ def check_cache_rule() -> list[str]:
     return problems
 
 
+def check_seat_release(callers: dict[str, str]) -> list[str]:
+    """En klient der kan aktivere skal også kunne afgive sin plads.
+
+    Kontrakten tæller én plads pr. maskine og har et `deactivate`-endpoint
+    netop til det. Uden et kald til det kan en kunde, der flytter til en ny
+    maskine, ikke komme under grænsen igen — og den eneste udveje er at
+    skrive til et menneske, hvilket missionen forbyder.
+    """
+    problems: list[str] = []
+    for rel, text in sorted(callers.items()):
+        if rel in EXCEPTIONS or rel in NOT_CLIENTS:
+            continue
+        body = strip_comments(text)
+        if "proLicense" not in body:
+            continue
+        if "/activate" not in body:
+            continue
+        if "/deactivate" in body:
+            continue
+        problems.append(
+            f"{rel}: kan aktivere en licens, men kalder aldrig /deactivate — "
+            "pladsen på licensserveren kan så aldrig frigives af brugeren selv"
+        )
+    return problems
+
+
 def run() -> list[str]:
     canon = CANON.read_text(encoding="utf-8")
     if "clean-copy-pro" not in canon or "7 * 24 * 60 * 60 * 1000" not in canon:
         return ["tools/clean_copy_license.js: den kanoniske regel mangler product eller syvdagesregel"]
     return (check_callers(find_callers()) + check_exceptions()
-            + check_copies(canon) + check_cache_rule())
+            + check_copies(canon) + check_cache_rule()
+            + check_seat_release(find_callers()))
 
 
 def self_test() -> int:
@@ -276,6 +303,9 @@ def self_test() -> int:
         ("et indlejret modul der mangler i siden",
          check_inline(page.replace(MARK_A, "/* slettet */").replace(MARK_B, ""),
                       "site/clean-copy-tool.html", canon)),
+        ("en klient der kan aktivere men ikke afgive pladsen",
+         check_seat_release({**callers, "site/ny-klient.html":
+                             "const A = API_BASE + '/activate'; chrome.storage.local.set({proLicense: k});"})),
     ]
 
     failures = 0
@@ -285,6 +315,23 @@ def self_test() -> int:
         else:
             print(f"FELO {name}: gaten siger OK, men den skulle have fanget noget")
             failures += 1
+
+    # Negativ kontrol: en klient der *kan* afgive pladsen, og en der slet ikke
+    # kan aktivere, må begge være grønne. Uden dem kunne reglen smadre enhver
+    # klient, og det ville lukke porten for de fejl den er skrevet til at finde.
+    for name, probe in [
+        ("en klient der både aktiverer og afgiver plads",
+         "const A = API_BASE + '/activate', D = API_BASE + '/deactivate'; "
+         "chrome.storage.local.set({proLicense: k});"),
+        ("en klient der kun tjekker, uden at gemme nøglen",
+         "const V = API_BASE + '/validate'; fetch(V);"),
+    ]:
+        got = check_seat_release({"site/probe.html": probe})
+        if got:
+            print(f"FELO {name} blev fejlet: {got[0]}")
+            failures += 1
+        else:
+            print(f"OK   {name}: ikke fejlet")
 
     # Den indlejret-checkout-regel kræver en rigtig mappe at kigge på, så den
     # probes på filsystemet i stedet for i en dict. Uden denne test kunne
@@ -331,13 +378,14 @@ def self_test() -> int:
 
     # Den sunde tilstand skal være ren.
     clean = (check_callers(callers) + check_exceptions()
-             + check_copies(canon) + check_cache_rule())
+             + check_copies(canon) + check_cache_rule()
+             + check_seat_release(callers))
     if clean:
         print("FELO den nuværende kode giver problemer: " + "; ".join(clean[:3]))
         failures += 1
     else:
         print("OK   den nuværende kode holder kontrakten")
-    total = len(scenarios) + 3
+    total = len(scenarios) + 5
     print(f"{total - failures}/{total} self-tests bestået")
     return 1 if failures else 0
 
