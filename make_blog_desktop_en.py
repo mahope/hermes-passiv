@@ -45,8 +45,8 @@ POST = f"""<!DOCTYPE html>
       <li><strong>Single-page scan</strong> — paste a URL, get results in seconds with pass/fail per rule, issue counts (errors, warnings, notices), and an overall score.</li>
       <li><strong>Whole-site crawl</strong> — scan up to 200 same-origin pages with live progress and a per-page findings breakdown. Average score and most frequent issue types are summarized automatically.</li>
       <li><strong>One-click PDF reports</strong> — save scan results as formatted PDF reports for documentation, sharing, or compliance records.</li>
-      <li><strong>Batch scanning (Pro)</strong> — scan a list of URLs in sequence with progress tracking plus aggregate stats (average score, total errors, failure rate per URL).</li>
-      <li><strong>CSV / JSON export (Pro)</strong> — export individual or batch results for spreadsheet analysis, dashboards, or programmatic consumption.</li>
+      <li><strong>Batch scanning (planned, not in this build)</strong> — scan a list of URLs in sequence with progress tracking plus aggregate stats (average score, total errors, failure rate per URL).</li>
+      <li><strong>CSV / JSON export (planned, not in this build)</strong> — export individual or batch results for spreadsheet analysis, dashboards, or programmatic consumption.</li>
     </ul>
 
     <h2>Why a Desktop App?</h2>
@@ -54,7 +54,7 @@ POST = f"""<!DOCTYPE html>
     <ul>
       <li><strong>Fully offline</strong> — scans run locally. Page data never leaves your machine. Great for internal sites, staging environments, and air-gapped networks.</li>
       <li><strong>No rate limits</strong> — scan as many pages as you like, as fast as your machine can handle.</li>
-      <li><strong>No accounts</strong> — download and run. Free tier doesn't need signup. Pro only needs a license key when you're ready.</li>
+      <li><strong>No accounts</strong> — download and run. There is no signup, because there is no Pro edition to sign up for today.</li>
       <li><strong>Cross-platform</strong> — native builds for macOS (Apple Silicon + Intel), Linux (AppImage + .deb), and Windows (installer + portable).</li>
     </ul>
 
@@ -69,15 +69,18 @@ POST = f"""<!DOCTYPE html>
     <p>NSIS installer for permanent install and a portable .exe that runs from any folder — USB sticks, build agents, CI runners. No admin rights needed for the portable version.</p>
 
     <h2>Free vs Pro</h2>
+    <p>Everything in the Free column is in the build you download today. The Pro
+    column lists what a paid edition is planned to add &mdash; it is not for sale
+    yet, and there is no price for it.</p>
     <table style="width:100%;border-collapse:collapse;margin:1rem 0">
-      <tr><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Feature</th><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Free</th><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Pro</th></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #222">Single-page scan</td><td style="padding:8px;border-bottom:1px solid #222">✓ Unlimited</td><td style="padding:8px;border-bottom:1px solid #222">✓ Unlimited</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #222">Whole-site crawl</td><td style="padding:8px;border-bottom:1px solid #222">✓ Up to 200 pages</td><td style="padding:8px;border-bottom:1px solid #222">✓ Unlimited</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #222">PDF reports</td><td style="padding:8px;border-bottom:1px solid #222">✓</td><td style="padding:8px;border-bottom:1px solid #222">✓</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #222">Batch scanning</td><td style="padding:8px;border-bottom:1px solid #222">—</td><td style="padding:8px;border-bottom:1px solid #222">✓</td></tr>
-      <tr><td style="padding:8px;border-bottom:1px solid #222">CSV / JSON export</td><td style="padding:8px;border-bottom:1px solid #222">—</td><td style="padding:8px;border-bottom:1px solid #222">✓</td></tr>
+      <tr><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Feature</th><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Free</th><th style="text-align:left;padding:8px;border-bottom:1px solid #333">Pro (not released)</th></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #222">Single-page scan</td><td style="padding:8px;border-bottom:1px solid #222">Unlimited</td><td style="padding:8px;border-bottom:1px solid #222">Unlimited</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #222">Whole-site crawl</td><td style="padding:8px;border-bottom:1px solid #222">Up to 200 pages</td><td style="padding:8px;border-bottom:1px solid #222">Unlimited</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #222">PDF reports</td><td style="padding:8px;border-bottom:1px solid #222">yes</td><td style="padding:8px;border-bottom:1px solid #222">yes</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #222">Batch scanning</td><td style="padding:8px;border-bottom:1px solid #222">&mdash;</td><td style="padding:8px;border-bottom:1px solid #222">planned</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid #222">CSV / JSON export</td><td style="padding:8px;border-bottom:1px solid #222">&mdash;</td><td style="padding:8px;border-bottom:1px solid #222">planned</td></tr>
       <tr><td style="padding:8px;border-bottom:1px solid #222">Crawl depth</td><td style="padding:8px;border-bottom:1px solid #222">200 pages</td><td style="padding:8px;border-bottom:1px solid #222">Unlimited</td></tr>
-      <tr><td style="padding:8px">Price</td><td style="padding:8px">Free (MIT)</td><td style="padding:8px">$19/year <span style="color:var(--color-text-muted);font-size:13px">(coming soon)</span></td></tr>
+      <tr><td style="padding:8px">Price</td><td style="padding:8px">Free (MIT)</td><td style="padding:8px">Not for sale yet</td></tr>
     </table>
 
     <h2>Download</h2>
@@ -116,7 +119,7 @@ POST = f"""<!DOCTYPE html>
     <p>Automated checks catch roughly 30–40% of accessibility issues. For full EAA conformance, pair with manual testing — see our <a href="/scan">free online scan tool</a> and <a href="/">compliance guides</a>.</p>
 
     <h2>Licensing</h2>
-    <p>The free tier is MIT-licensed and open source. Pro requires an annual license key ($19/year). Pro is coming — the free version is complete and MIT-licensed. <a href="/downloads">Check the downloads page</a> for current availability.</p>
+    <p>The free tier is MIT-licensed and open source, and nothing in it expires. There is no Pro licence for the EAA scanner today, and no price to pay for one. <a href="/downloads">Check the downloads page</a> for current availability.</p>
 
     <p><a href="/downloads" class="btn-primary" style="display:inline-block;padding:12px 28px;margin:8px 0;text-decoration:none;border-radius:8px">⬇ Download the Desktop App →</a></p>
 
