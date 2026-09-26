@@ -72,8 +72,19 @@
             + '<p class="hint">Your donation keeps the free tools free, and Stripe has emailed your receipt. '
             + 'Questions? Just reply to that email.</p>';
         } else if (Array.isArray(d.downloads)) {
-          html = '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
-            + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>';
+          // `downloads` indeholder kun filer der ligger i KV lige nu, så et link
+          // her er et link der virker. `downloads_missing` er filer kunden har
+          // betalt for, som ikke kan hentes endnu: de nævnes ved navn, aldrig som
+          // adresse, fordi `/api/download` svarer 503 på dem.
+          var missing = Array.isArray(d.downloads_missing) ? d.downloads_missing : [];
+          html = (d.downloads.length
+            ? '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
+              + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>'
+            : '<p><strong>Your files are not available for download yet.</strong></p>')
+            + (missing.length
+              ? '<p class="hint">' + (d.downloads.length ? esc(missing.length) + ' of your files are' : 'The files you bought are')
+                + ' not available for download right now: ' + esc(missing.join(', ')) + '. Your payment went through, and your receipt email is the record of it — reply to that email and we will sort it out.</p>'
+              : '');
         } else {
           html = '<p>We could not read your order. Your payment went through — reply to your Stripe receipt '
             + 'and Mads will send what you bought.</p>';

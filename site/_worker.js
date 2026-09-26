@@ -3040,6 +3040,35 @@ async function clearFulfillmentPending(env, key) {
   try { await env.VISITS.delete(key); } catch {}
 }
 
+/**
+ * Split et downloadprodukts filer i dem der ligger i KV lige nu, og dem der
+ * mangler. `handlePaidDownload` svarer 503 på en fil der mangler, så et link
+ * til en sådan fil er et løfte kunden ikke kan indfri. Målt 26/9: ingen af de
+ * svyv downloadprodukter har `kv_verified` (opgave 24), så det er ikke hypotetisk.
+ * Kun metadata læses — `head` henter ikke filens indhold.
+ */
+async function paidFilesStatus(env, files) {
+  const ready = [], missing = [];
+  for (const f of files) {
+    // `head` er metadata-only og den normale vej. En binding uden den må ikke
+    // låse en betalt kunde ude, så der faldes tilbage på et stream — aldrig på
+    // `get` uden type, der ville hente hele filen ind i hukommelsen.
+    const there = env.VISITS.head ? await env.VISITS.head(`paidfile:${f}`) : await env.VISITS.get(`paidfile:${f}`, 'stream');
+    if (there) ready.push(f); else missing.push(f);
+  }
+  return { ready, missing };
+}
+
+/** Svarformen til /thanks og kvitteringsmailen: kun filer der virker, plus de manglende ved navn. */
+async function withPaidFiles(env, result, token) {
+  const product = STRIPE_PRODUCTS[result.product];
+  if (!product || product.kind !== 'download') return result;
+  const { ready, missing } = await paidFilesStatus(env, product.files);
+  const out = { ...result, downloads: ready.map(f => ({ file: f, url: `https://mahope.tools/api/download/${token}/${encodeURIComponent(f)}` })) };
+  if (missing.length) out.downloads_missing = missing; else delete out.downloads_missing;
+  return out;
+}
+
 async function fulfillStripeSession(env, sessionId) {
   const ledgerKey = `ful:${sessionId}`;
   const pendingKey = `fulpending:${sessionId}`;
@@ -3059,7 +3088,10 @@ async function fulfillStripeSession(env, sessionId) {
     }
     if (cached.ok) {
       await clearFulfillmentPending(env, pendingKey);
-      return cached;
+      // KV er den eneste sandhed om hvad der kan hentes, og ledgeren er
+      // permanent. Uden genberegningen ville en kunde, der betalte mens
+      // filerne manglede, se "ikke tilgængelig" selv efter at de er lagt ind.
+      return cached.kind === 'download' ? withPaidFiles(env, cached, await sessionDerivedId(env, 'dl', sessionId)) : cached;
     }
   }
 
@@ -3125,10 +3157,10 @@ async function fulfillStripeSession(env, sessionId) {
         { expirationTtl: DOWNLOAD_TTL_DAYS * 86400 });
     }
     if (pi) await env.VISITS.put(`dl-pi:${pi}`, token, { expirationTtl: DOWNLOAD_TTL_DAYS * 86400 });
-    result.downloads = product.files.map(f => ({ file: f, url: `https://mahope.tools/api/download/${token}/${encodeURIComponent(f)}` }));
     result.downloads_expire_at = expires;
+    // Før mailen skrives: en fil der ikke ligger i KV må ikke få en adresse.
+    Object.assign(result, await withPaidFiles(env, result, token));
   }
-
   result.emailed = product.kind === 'donation' ? true : (email ? await sendSaleEmail(env, email, result, sessionId) : false);
   await env.VISITS.put(ledgerKey, JSON.stringify(result));
   await clearFulfillmentPending(env, pendingKey);
@@ -3152,10 +3184,17 @@ async function sendSaleEmail(env, to, r, sessionId) {
       + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>Up to ${r.max_devices} device(s).</p>`
       + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   } else {
-    const list = r.downloads.map(d => `${d.file}: ${d.url}`).join('\n');
-    text = `Thanks for buying ${r.product_name}!\n\nYour downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
-    html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p><p>Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):</p><ul>`
-      + r.downloads.map(d => `<li><a href="${esc(d.url)}">${esc(d.file)}</a></li>`).join('') + `</ul><p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+    const list = (r.downloads || []).map(d => `${d.file}: ${d.url}`).join('\n');
+    // En fil der mangler i KV ville give kunden en adresse der svarer 503. Den
+    // skal nævnes ved navn uden adresse, så kvitteringen er sand.
+    const missing = (r.downloads_missing || []).length
+      ? `\n\nNot available for download right now: ${r.downloads_missing.join(', ')}. Your payment went through — reply to this email and we will sort it out.`
+      : '';
+    const listHtml = (r.downloads || []).map(d => `<li><a href="${esc(d.url)}">${esc(d.file)}</a></li>`).join('');
+    const head = listHtml ? `<p>Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):</p><ul>${listHtml}</ul>` : '';
+    const missHtml = missing ? `<p><strong>Not available for download right now:</strong> ${esc(r.downloads_missing.join(', '))}. Your payment went through — reply to this email and we will sort it out.</p>` : '';
+    text = `Thanks for buying ${r.product_name}!\n\n${list ? `Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n` : ''}${missing}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
+    html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p>${head}${missHtml}<p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   }
   try {
     const resp = await fetch('https://api.resend.com/emails', {
