@@ -6,7 +6,11 @@
   "note": "Maskinlæsbar allowlist. Kun disse product_keys og betalingslinks må bruges offentligt. Lemon Squeezy og Gumroad er lukket og må aldrig genoplives.",
   "license_api": "https://mahope.tools/api/license/",
   "billing_portal": "https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00",
-  "portal_pages": ["site/thanks.html", "site/support.html", "site/terms/index.html"],
+  "portal_pages": [
+    "site/thanks.html",
+    "site/support.html",
+    "site/terms/index.html"
+  ],
   "products": {
     "clean-copy-pro": {
       "name": "Clean Copy Pro",
@@ -241,31 +245,6 @@
       ]
     },
     {
-      "path": "site/books/compliance-bundle.html",
-      "domain": "mahope.tools",
-      "route": "/books/compliance-bundle",
-      "product": "eu-compliance-ebook-bundle",
-      "prices": [
-        "$29"
-      ],
-      "requires_text": [
-        "Buy — $29"
-      ]
-    },
-    {
-      "path": "site/compliance-report.html",
-      "domain": "mahope.tools",
-      "route": "/compliance-report",
-      "product": "eucomply-report-kit",
-      "prices": [
-        "$69",
-        "$79"
-      ],
-      "requires_text": [
-        "Buy the Report Kit — $69"
-      ]
-    },
-    {
       "path": "site/compliance-report.html",
       "domain": "mahope.tools",
       "route": "/compliance-report",
@@ -276,30 +255,6 @@
       ],
       "requires_text": [
         "Buy EUComply Pro — $79/year"
-      ]
-    },
-    {
-      "path": "site/scan.html",
-      "domain": "mahope.tools",
-      "route": "/scan",
-      "product": "eucomply-report-kit",
-      "prices": [
-        "$69"
-      ],
-      "requires_text": [
-        "Client Compliance Report Kit — $69"
-      ]
-    },
-    {
-      "path": "site/scan-da.html",
-      "domain": "mahope.tools",
-      "route": "/scan-da",
-      "product": "eucomply-report-kit",
-      "prices": [
-        "$69"
-      ],
-      "requires_text": [
-        "Client Compliance Report Kit — $69"
       ]
     },
     {

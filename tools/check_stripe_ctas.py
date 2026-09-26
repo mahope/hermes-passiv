@@ -13,6 +13,11 @@ Opgaverne er:
    skal have præcis én synlig CTA med det rette link og kun dokumenterede priser.
 4. Ingen side må love et køb der ikke findes ("coming soon", "når butikken
    åbner", "paid checkout is not wired up").
+5. Et download-produkt må kun sælges, når dets filer faktisk kan leveres.
+   `tools/paid_content.json` er den eneste kilde til det (`kv_verified`), og
+   et produkt uden `kv_verified: true` må ikke have sit betalingslink nogen
+   sted i `site/`. Modsat retning tæller også som fejl: et leverbart produkt
+   uden købsside ville blive solgt helt uden.
 
     python3 tools/check_stripe_ctas.py           # gate
     python3 tools/check_stripe_ctas.py --report  # inventaret, uden at fejle
@@ -31,6 +36,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "tools/stripe_catalog.json"
 CONTRACT = ROOT / "docs/stripe-kontrakt.md"
+PAID_CONTENT = ROOT / "tools/paid_content.json"
 WORKER = ROOT / "site/_worker.js"
 
 KNOWN_DOMAINS = ("cleancopy.tools", "deskuptime.com", "bugbottle.dev", "mahope.tools")
@@ -519,6 +525,73 @@ def check_forbidden_claims() -> list[str]:
     return problems
 
 
+def source_pages() -> list[tuple[str, str]]:
+    """Alle sider i `site/`, som parret (relativ sti, tekst).
+
+    Kun kilden, ikke `dist/`: bygget er gaten's første step og kopierer
+    siderne uændret, så en kilde der er ren giver et rent dist.
+    """
+    pages: list[tuple[str, str]] = []
+    for path in scan_files():
+        if path.suffix != ".html":
+            continue
+        relative = str(path.relative_to(ROOT))
+        if relative.startswith("dist/"):
+            continue
+        try:
+            pages.append((relative, path.read_text(encoding="utf-8")))
+        except (UnicodeDecodeError, OSError):
+            continue
+    return pages
+
+
+def check_deliverable(catalog: dict, pages: list[tuple[str, str]], paid: dict | None = None) -> list[str]:
+    """Et download-produkt må kun sælges, når filen kan leveres.
+
+    Betalte filer ligger i Cloudflare KV, og `/api/download` svarer 503 når
+    nøglen `paidfile:<fil>` mangker. `tools/paid_content.json` er den eneste
+    kilde til om den findes. Så længe den ikke gør det, tager et køb penge
+    ind og leverer intet — og fordi produkterne sælges gennem statiske Stripe
+    Payment Links kan checkout ikke blokeres. Så må siden ikke tilbyde købet.
+
+    Begge retninger er fejl. Uden den modsatte regel ville et produkt, der
+    bliver leveringsklart, kunne forblive uden købsside og så aldrig sælges
+    igen.
+    """
+    problems: list[str] = []
+    relative_inventory = str(PAID_CONTENT.relative_to(ROOT))
+    if paid is None:
+        if not PAID_CONTENT.is_file():
+            return [f"{relative_inventory}: betalt-indholds-inventaret mangler"]
+        paid = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
+    entries = paid.get("products")
+    if not isinstance(entries, list):
+        return [f"{relative_inventory}: products skal være en liste"]
+    inventory = {entry.get("product_key"): entry for entry in entries if isinstance(entry, dict)}
+    sold = {offer.get("product") for offer in catalog.get("offers") or [] if isinstance(offer, dict)}
+
+    for key, product in sorted(catalog["products"].items()):
+        if product.get("kind") != "download":
+            continue
+        entry = inventory.get(key)
+        if entry is None:
+            problems.append(f"catalog: {key} er et download-produkt uden post i {relative_inventory}")
+            continue
+        if entry.get("kv_verified") is True:
+            if key not in sold:
+                problems.append(f"catalog: {key} kan leveres, men ingen købsside sælger det")
+            continue
+        files = ", ".join(entry.get("delivery_files") or []) or "ingen filer"
+        for label, text in pages:
+            if product["payment_link"] in text:
+                problems.append(
+                    f"{label}: sælger {key}, men filerne er ikke i KV ({files}) — "
+                    f"køberen betaler for et køb der svarer 503 i /api/download. "
+                    f"Sæt kv_verified på true i {relative_inventory} når de er uploadet."
+                )
+    return problems
+
+
 def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems = check_catalog(catalog)
     problems += check_contract_doc(catalog)
@@ -529,6 +602,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
+    problems += check_deliverable(catalog, source_pages())
     return problems, inventory
 
 
@@ -578,14 +652,38 @@ def self_test() -> int:
         "requires_text": ["et krav der ikke kan stå på siden"],
     }]}
     uninventoried = {**good, "offers": []}
+    # Muterer scenariet en side, der ikke lenger sælger noget, bliver det en
+    # stum kontrol: den fejl, den skal fange, kan så ikke opstå. Derfor
+    # verificeres her, at mutationen rent faktisk rammer en købsside.
     wrong_domain = {**good, "offers": [
-        {**offer, "domain": "example.com"} if offer["path"] == "site/scan.html" else offer
+        {**offer, "domain": "example.com"} if offer["path"] == "site/clean-copy.html" else offer
         for offer in good["offers"]]}
+    if wrong_domain["offers"] == good["offers"]:
+        print("SELFTEST FEJLER: domænescenariet muterer ingen købsside — det er en stum kontrol")
+        return 1
     missing_core = {**good, "core_pages": good["core_pages"][:3]}
     rogue_portal = {**good, "billing_portal": "https://billing.stripe.com/p/login/ukjendtPortal0"}
     no_subscriptions = {**good, "products": {
         key: {field: value for field, value in product.items() if field != "subscription"}
         for key, product in good["products"].items()}}
+
+    # 5: et download-produkt uden filer i KV må ikke sælges. Kilden scanneres
+    # normalt, så scenarierne sender syntetiske sider ind i stedet for at
+    # røre de rigtige filer — ellers ville selftesten selv skrive den fejl,
+    # den skal fange.
+    report_kit = good["products"]["eucomply-report-kit"]["payment_link"]
+    synthetic_sale = [("site/eksempel.html", f'<a href="{report_kit}">Buy</a>')]
+    undeliverable = check_deliverable(good, synthetic_sale)
+    # Samme side med et produkt, der faktisk kan leveres: må ikke fejle.
+    deliverable_page = [("site/eksempel.html", '<a href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00">Buy</a>')]
+    should_pass = check_deliverable(good, deliverable_page)
+    verified = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
+    for entry in verified["products"]:
+        if entry["product_key"] == "eucomply-report-kit":
+            entry["kv_verified"] = True
+    delisted = {**good, "offers": [
+        offer for offer in good["offers"] if offer["product"] != "eucomply-report-kit"]}
+    forgot_the_page = check_deliverable(delisted, [], verified)
 
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
@@ -598,10 +696,17 @@ def self_test() -> int:
         ("en kundeportal-URL der ikke er allowlistet", check_links(rogue_portal)),
         ("en kundeportal der ikke findes på portalsiderne", check_billing_portal(rogue_portal)),
         ("en abonnement-markering der ikke er i allowlisten", check_worker(no_subscriptions)),
+        ("et download-produkt der ikke kan leveres, men sælges", undeliverable),
+        ("et leverbart download-produkt uden købsside", forgot_the_page),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
         print(f"SELFTEST FEJLER: {label} blev ikke fanget")
+    if should_pass:
+        # En kontrol der aldrig må fejle. Uden den kunne den nye regel være
+        # stram nok til at gøre hver købsside rød, uden at nogen ser det.
+        print(f"SELFTEST FEJLER: et leverbart produkt blev meldt som ikke-leverbart: {should_pass[0]}")
+        missed.append("et leverbart produkt på en syntetisk købsside")
     print(f"selftest: {len(scenarios) - len(missed)}/{len(scenarios)} fejlformer fanget")
     return 1 if missed else 0
 

@@ -31,6 +31,19 @@ Efter betaling lander køberen på `https://mahope.tools/thanks?session_id=…`,
 som viser licensnøgle eller downloadlinks. Det samme sendes pr. mail fra
 orders@mahoje.dk.
 
+## Downloadprodukter er ikke til salg, før filerne ligger i KV
+
+De syv downloadprodukter leveres fra Cloudflare KV som `paidfile:<fil>`. Findes
+nøglen ikke, svarer `/api/download` 503, og køberen har betalt for en fil der
+ikke kommer. Payment Links er statiske, så checkout kan ikke blokeres — derfor
+må sitet ikke tilbyde købet, før leveringen virker.
+
+`tools/paid_content.json` er den eneste kilde til det (`kv_verified` pr.
+produkt), og `tools/check_stripe_ctas.py` fejler hvis et downloadprodukt uden
+`kv_verified: true` har sit betalingslink nogen sted i `site/`. Sæt flaget til
+`true` først når filerne faktisk er uploadet — gaten kræver så, at
+købssiden er med igen, så et leverbart produkt ikke bliver glemt.
+
 ## Kundeportal (opsigelse og fakturaer)
 
 Årsabonnenter — `clean-copy-pro`, `eucomply-pro` og `page-profile-pro` — skal
