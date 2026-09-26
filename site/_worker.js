@@ -958,6 +958,22 @@ async function handleLicense(request, env, mode) {
  */
 const REPORT_FETCH_TIMEOUT_MS = 10000;
 
+// Consent platforms, recognised by the host they serve their stub from. A CMP
+// injects the banner itself, so its script is proof the banner exists.
+const CMP_VENDOR = /cookiebot|cookielaw|cadalog|trustarc|onetrust|onetrustconsent|usercentrics|consentmanager|cookieconsent|cookieyes|termly|getbeamer|didomi|quantcast|sourcepoint|osano|iubenda|borlabs|klaro|cookie-script|complianz|borlabs-cookie/i;
+
+// Non-essential trackers, recognised by the host they are served from. These
+// are what makes a consent banner a legal requirement rather than good
+// manners, so they decide whether the GDPR findings below say anything at all.
+const TRACKING_SCRIPT = /google-analytics\.com|googletagmanager\.com|analytics\.js|connect\.facebook\.net|ads\.linkedin\.com|doubleclick\.net|googlesyndication\.com|googleadservices\.com|adsystem\.com|bat\.bing\.com|clarity\.ms|hotjar|matomo|piwik|plausible\.io|mixpanel|amplitude|segment\.(com|io)|fullstory|mouseflow|criteo|taboola|tiktok|snapchat|licdn\.com|pinterest|redditstatic/i;
+
+// A container the site marks as the banner itself. Only tag attributes count —
+// never body text, because "cookie" in a sentence is not a consent mechanism.
+// Anchors are deliberately excluded: a link to a cookie *policy* is the page
+// GDPR requires, and treating it as the banner is exactly the bug this
+// replaces.
+const CONSENT_CONTAINER = /<(?:div|section|aside|iframe|nav|form|p)\b[^>]{0,300}?\b(?:id|class|data-testid|data-consent|data-qc|aria-label)\s*=\s*["'][^"']{0,200}?(?:cookie[-_\s]?(?:banner|bar|notice|consent|wall|dialog|box)|consent[-_\s]?(?:banner|bar|notice|wall|dialog|manager|modal|box)|gdpr[-_\s]?(?:banner|bar|modal|consent|popup)|onetrust|usercentrics|consentmanager|didomi|borlabs|klaro|cookieyes|cmp[-_\s]?(?:container|banner|wrapper|box)|qc[-_\s]?cmp)/i;
+
 // A paid endpoint that fetches an attacker-chosen URL is an SSRF primitive.
 // cscFetch() has no guard of its own, so the guard lives with the route.
 function reportTargetIsPublic(target) {
@@ -990,19 +1006,36 @@ function reportProFindings(html, headers) {
   const srcs = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map(m => m[1]);
 
   // Cookie / GDPR
-  const hasCookieBanner = /cookie|consent|gdpr|cmp|trustarc|onetrust|usercentrics|cookiebot/i.test(html);
-  const cookieScripts = srcs.filter(s => /cookie|consent|gdpr|cmp/i.test(s));
-  const hasGtm = srcs.some(s => /googletagmanager\.com/i.test(s));
-  const hasGA = srcs.some(s => /google-analytics\.com|googletagmanager\.com\/gtag/i.test(s));
-  const hasFb = srcs.some(s => /connect\.facebook\.net/i.test(s));
+  //
+  // hasCookieBanner used to be /cookie|consent|gdpr|cmp|…/i over the whole
+  // HTML. That measured vocabulary, not a banner, and it failed in both
+  // directions. Measured on our own 298 published pages: 254 passed it with no
+  // consent script at all — mostly because their <title> says "GDPR" — while
+  // the case the check exists for, Google Analytics plus the cookie policy GDPR
+  // itself demands, passed too, because the policy link contains the word
+  // "cookie". So a customer tracking people without consent was told they were
+  // clean. And 295 of those 298 pages set no cookies at all, yet 36 of them got
+  // a red error claiming they break GDPR "for EU visitors using tracking
+  // technologies" they do not use. Evidence instead: a CMP script, a
+  // consent script the site hosts itself, or a container marked as a banner —
+  // and only report a missing one when something is actually tracked, which
+  // NO_ANALYTICS below then says out loud.
+  const srcHas = (re) => srcs.some(s => re.test(s));
+  const cookieScripts = srcs.filter(s => CMP_VENDOR.test(s) || /cookie|consent|gdpr|cmp/i.test(s));
+  const hasConsentContainer = CONSENT_CONTAINER.test(html);
+  const hasCookieBanner = cookieScripts.length > 0 || hasConsentContainer;
+  const hasGtm = srcHas(/googletagmanager\.com/i);
+  const hasGA = srcHas(/google-analytics\.com|googletagmanager\.com\/gtag/i);
+  const hasFb = srcHas(/connect\.facebook\.net/i);
+  const hasTracking = srcHas(TRACKING_SCRIPT);
   const footer = (html.match(/<footer[\s\S]*?<\/footer>/i) || [''])[0];
   // The client only accepted legal/imprint inside a <footer>, the rest anywhere.
   const hasPrivacyLink = /<a[^>]+href=["'][^"']*(privacy|cookie|datenschutz)/i.test(html)
     || /<a[^>]+href=["'][^"']*(legal|imprint)/i.test(footer);
 
-  if (!hasCookieBanner) push('COOKIE_BANNER', 'error', 'No cookie consent banner found — required by GDPR/ePrivacy for EU visitors using tracking technologies');
-  if (hasGA && !hasCookieBanner) push('GA_NO_CONSENT', 'error', 'Google Analytics detected but no consent banner — GA sets cookies and requires prior consent in the EU');
-  if (hasFb && !hasCookieBanner) push('FB_NO_CONSENT', 'error', 'Facebook/Meta pixel detected but no consent banner — pixel sets cookies and requires prior consent');
+  if (hasTracking && !hasCookieBanner) push('COOKIE_BANNER', 'error', 'No cookie consent banner found — required by GDPR/ePrivacy for EU visitors using tracking technologies');
+  if (hasTracking && hasGA && !hasCookieBanner) push('GA_NO_CONSENT', 'error', 'Google Analytics detected but no consent banner — GA sets cookies and requires prior consent in the EU');
+  if (hasTracking && hasFb && !hasCookieBanner) push('FB_NO_CONSENT', 'error', 'Facebook/Meta pixel detected but no consent banner — pixel sets cookies and requires prior consent in the EU');
   if (!hasPrivacyLink) push('PRIVACY_LINK', 'warning', 'No privacy policy or cookie link found in the footer — GDPR requires easy access to privacy information');
   if (cookieScripts.length > 0) push('COOKIE_SCRIPTS', 'notice', cookieScripts.length + ' cookie/consent management script(s) found on the page');
 
@@ -1032,7 +1065,9 @@ function reportProFindings(html, headers) {
   if (!/<link[^>]+rel=["']canonical["']/i.test(html)) push('CANONICAL', 'warning', 'No canonical link — duplicate content issues may affect SEO');
   if (!/<meta[^>]+charset=/i.test(html)) push('CHARSET', 'warning', 'No charset declaration — page may render incorrectly in some browsers');
   if (jsonldCount === 0) push('JSONLD', 'notice', 'No JSON-LD structured data found — helps search engines understand your content');
-  if (!hasGtm && !hasGA) push('NO_ANALYTICS', 'notice', 'No analytics or tag manager detected — if the site has tracking, it may use a custom implementation');
+  // Siger fra hvorfor der ikke står et GDPR-fund ovenfor: en banner skal
+  // dække tracking, så uden tracking er der intet at give samtykke til.
+  if (!hasGtm && !hasGA) push('NO_ANALYTICS', 'notice', 'No analytics or tag manager detected — a consent banner is only required once the site uses non-essential cookies or tracking; if it does so with a custom implementation, this check cannot see it');
 
   return findings;
 }
