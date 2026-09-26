@@ -80,6 +80,9 @@ export default {
     if (path === '/api/license/validate') return handleLicenseValidate(request, env);
     if (path === '/api/license/deactivate') return handleLicense(request, env, 'deactivate');
 
+    // === Route: EUComply Pro report (server-side analysis, license-gated) ===
+    if (path === '/api/report') return handleReport(request, env);
+
     // === Route: Clean Copy API (HTML → Markdown) ===
     if (path === '/api/clean-copy') return handleCleanCopyAPI(request);
 
@@ -934,6 +937,164 @@ async function handleLicense(request, env, mode) {
     // Licensing must fail safe, never leak stack traces.
     return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
   }
+}
+
+/* ── EUComply Pro report — POST /api/report ───────────────────────
+ * This is the one thing EUComply Pro ($79/website/year) sells, and it used
+ * to be a button rather than a gate: the GDPR/cookie, NIS2/security and
+ * metadata findings were computed in the visitor's browser from the HTML that
+ * /scan-proxy handed back, written into the DOM before a key was ever typed,
+ * and @media print simply hid the license box. Ctrl+P produced the same PDF
+ * the paid button was supposed to unlock (❓ 14).
+ *
+ * So the analysis that makes up the deliverable now runs here. The browser
+ * keeps the accessibility grade — that is the free product, and the pricing
+ * copy says so — and nothing about NIS2/GDPR ever reaches the DOM without a
+ * license that the server accepted first.
+ *
+ * License checking is delegated to handleLicense() in 'validate' mode, so this
+ * route cannot drift from /api/license/validate on revoked, expired,
+ * wrong-product or not-activated keys: one implementation, one answer.
+ */
+const REPORT_FETCH_TIMEOUT_MS = 10000;
+
+// A paid endpoint that fetches an attacker-chosen URL is an SSRF primitive.
+// cscFetch() has no guard of its own, so the guard lives with the route.
+function reportTargetIsPublic(target) {
+  if (!target || !['http:', 'https:'].includes(target.protocol)) return false;
+  const host = target.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')
+      || host.endsWith('.internal') || host.endsWith('.home.arpa')) return false;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
+    const p = host.split('.').map(Number);
+    if (p.some(n => n > 255)) return false;
+    if (p[0] === 0 || p[0] === 10 || p[0] === 127) return false;
+    if (p[0] === 169 && p[1] === 254) return false;
+    if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return false;
+    if (p[0] === 192 && p[1] === 168) return false;
+    if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false;
+  }
+  if (host === '::1' || host === '::' || /^f[cd]/.test(host) || host.startsWith('fe80')) return false;
+  return true;
+}
+
+// The same checks the page used to run client-side, expressed as string
+// matches so they work on raw HTML with no DOM. Ids and messages are kept
+// byte-identical to the client version because FIXES[] in
+// site/compliance-report.html is keyed on them and a renamed id would drop the
+// fix text a paying customer sees.
+function reportProFindings(html, headers) {
+  const findings = [];
+  const push = (id, sev, msg, count) =>
+    findings.push(count === undefined ? { id, sev, msg } : { id, sev, msg, count });
+  const srcs = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)].map(m => m[1]);
+
+  // Cookie / GDPR
+  const hasCookieBanner = /cookie|consent|gdpr|cmp|trustarc|onetrust|usercentrics|cookiebot/i.test(html);
+  const cookieScripts = srcs.filter(s => /cookie|consent|gdpr|cmp/i.test(s));
+  const hasGtm = srcs.some(s => /googletagmanager\.com/i.test(s));
+  const hasGA = srcs.some(s => /google-analytics\.com|googletagmanager\.com\/gtag/i.test(s));
+  const hasFb = srcs.some(s => /connect\.facebook\.net/i.test(s));
+  const footer = (html.match(/<footer[\s\S]*?<\/footer>/i) || [''])[0];
+  // The client only accepted legal/imprint inside a <footer>, the rest anywhere.
+  const hasPrivacyLink = /<a[^>]+href=["'][^"']*(privacy|cookie|datenschutz)/i.test(html)
+    || /<a[^>]+href=["'][^"']*(legal|imprint)/i.test(footer);
+
+  if (!hasCookieBanner) push('COOKIE_BANNER', 'error', 'No cookie consent banner found — required by GDPR/ePrivacy for EU visitors using tracking technologies');
+  if (hasGA && !hasCookieBanner) push('GA_NO_CONSENT', 'error', 'Google Analytics detected but no consent banner — GA sets cookies and requires prior consent in the EU');
+  if (hasFb && !hasCookieBanner) push('FB_NO_CONSENT', 'error', 'Facebook/Meta pixel detected but no consent banner — pixel sets cookies and requires prior consent');
+  if (!hasPrivacyLink) push('PRIVACY_LINK', 'warning', 'No privacy policy or cookie link found in the footer — GDPR requires easy access to privacy information');
+  if (cookieScripts.length > 0) push('COOKIE_SCRIPTS', 'notice', cookieScripts.length + ' cookie/consent management script(s) found on the page');
+
+  // NIS2 / security
+  const hasMetaCs = /<meta[^>]+http-equiv=["']?content-security-policy/i.test(html);
+  const formCount = (html.match(/<form[\s>]/gi) || []).length;
+  const formsOverHttp = (html.match(/<form[^>]+action=["']?http:/gi) || []).length;
+
+  push('FORM_COUNT', 'notice', formCount + ' form(s) found on the page — verify submissions use HTTPS and include CSRF protection');
+  if (formsOverHttp) push('FORM_HTTP', 'error', formsOverHttp + ' form(s) submit over HTTP — all forms must submit over HTTPS for NIS2 compliance');
+  if (hasMetaCs) push('META_CSP', 'notice', 'Page has a meta-tag CSP — best practice is to set CSP via an HTTP header');
+
+  // Response headers. The page's FAQ promises "basic NIS2 security posture
+  // (CSP, HSTS, HTTPS enforcement)", and unlike the meta-tag check above these
+  // two can only be answered from the response — which is why the analysis had
+  // to move server-side to be able to promise them at all.
+  const h = (name) => (headers && headers.get ? headers.get(name) : null);
+  if (!h('strict-transport-security')) push('SEC_HSTS', 'warning', 'No Strict-Transport-Security header — browsers are not told to reach this site over HTTPS only');
+  if (!h('content-security-policy')) push('SEC_CSP', 'warning', 'No Content-Security-Policy response header — add one to constrain scripts and framing');
+
+  // Metadata
+  const jsonldCount = (html.match(/<script[^>]*type=["']application\/ld\+json["']/gi) || []).length;
+  if (!/<meta[^>]+(?:property|name)=["']og:title["']/i.test(html)) push('OG_TITLE', 'warning', 'Missing og:title meta tag — social shares will show a generic title');
+  if (!/<meta[^>]+(?:property|name)=["']og:description["']/i.test(html)) push('OG_DESC', 'warning', 'Missing og:description — social shares will have no description');
+  if (!/<meta[^>]+(?:property|name)=["']og:image["']/i.test(html)) push('OG_IMAGE', 'warning', 'Missing og:image — shared links will not show a preview image');
+  if (!/<meta[^>]+name=["']twitter:card["']/i.test(html)) push('TWITTER_CARD', 'notice', 'Missing twitter:card meta — Twitter/X shares may lack rich preview format');
+  if (!/<link[^>]+rel=["']canonical["']/i.test(html)) push('CANONICAL', 'warning', 'No canonical link — duplicate content issues may affect SEO');
+  if (!/<meta[^>]+charset=/i.test(html)) push('CHARSET', 'warning', 'No charset declaration — page may render incorrectly in some browsers');
+  if (jsonldCount === 0) push('JSONLD', 'notice', 'No JSON-LD structured data found — helps search engines understand your content');
+  if (!hasGtm && !hasGA) push('NO_ANALYTICS', 'notice', 'No analytics or tag manager detected — if the site has tracking, it may use a custom implementation');
+
+  return findings;
+}
+
+async function handleReport(request, env) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
+  };
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ ok: false, error: 'POST only' }), { status: 405, headers: corsHeaders });
+  }
+
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
+  const rawUrl = String(body.url || '').trim();
+  if (!rawUrl) {
+    return new Response(JSON.stringify({ ok: false, error: 'Missing url.' }), { status: 400, headers: corsHeaders });
+  }
+
+  // Validate through the one existing implementation rather than a second copy.
+  const probe = new Request('https://mahope.tools/api/license/validate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      license_key: String(body.license_key || '').trim().toLowerCase(),
+      device_id: String(body.device_id || '').slice(0, 128),
+      product: 'eucomply-pro',
+    }),
+  });
+  const probeRes = await handleLicense(probe, env, 'validate');
+  const probeJson = await probeRes.json().catch(() => ({}));
+  // A 503 must not read as "invalid key" — the page then keeps the cached Pro
+  // status instead of telling a paying customer their key stopped working.
+  if (probeRes.status === 503) {
+    return new Response(JSON.stringify({ ok: false, error: 'Service temporarily unavailable.' }), { status: 503, headers: corsHeaders });
+  }
+  if (!probeJson.ok || !probeJson.valid) {
+    return new Response(JSON.stringify({ ok: false, error: 'A valid EUComply Pro license is required for the full report.' }), { status: 402, headers: corsHeaders });
+  }
+
+  let target;
+  try {
+    target = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl);
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL.' }), { status: 400, headers: corsHeaders });
+  }
+  if (!reportTargetIsPublic(target)) {
+    return new Response(JSON.stringify({ ok: false, error: 'That host cannot be scanned.' }), { status: 400, headers: corsHeaders });
+  }
+
+  const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);
+  if (!page.ok || page.status >= 400) {
+    return new Response(JSON.stringify({ ok: false, error: 'Cannot reach ' + target.host + ': ' + (page.error || page.status) }),
+      { status: 502, headers: corsHeaders });
+  }
+
+  return new Response(JSON.stringify({ ok: true, url: page.url || target.toString(), findings: reportProFindings(page.html, page.headers) }),
+    { status: 200, headers: corsHeaders });
 }
 
 function timingSafeEqual(a, b) {
