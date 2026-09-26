@@ -172,6 +172,40 @@
             "en": ["pdf download", "download the pdf", "pdf report", "save the pdf"],
             "da": ["pdf-download", "hele pdf-rapporten"]
           }
+        },
+        {
+          "id": "server-checks",
+          "where": "site/compliance-report.html:613 fetch('/api/report') kaldes først efter at verifyAndDownload() :593 har fået en godkendt nøgle, og fundene lægges sammen med mergeProFindings() :659. Uden nøgle er de ikke i DOM'en — :474-475 siger det til den udskrevne læser. Modstående: free_features[0] `where`",
+          "labels": {
+            "en": ["GDPR/cookie and NIS2/security checks"],
+            "da": ["GDPR/cookie- og NIS2/sikkerhedstjekkene"]
+          }
+        }
+      ],
+      "free_features": [
+        {
+          "id": "accessibility-checks",
+          "where": "site/compliance-report.html:209-309 runScan() — elleve add(...)-kald (:216 IMG_ALT, :218 FORM_LABEL, :225 LINK_TEXT, :227 BUTTON_TEXT, :229 DUP_ID, :231 TARGET_BLANK, :243 HEADING_SKIP, :244 IFRAME_TITLE, :245 TABLE_HEADER, :246 ARIA_HIDDEN_FOCUS, :299 CONTRAST) kører i browseren uden nøgle. GDPR/cookie-, NIS2- og metadata-tjekket blev fjernet fra denne sti med vilje (:291-298) og ligger nu i /api/report, som først kaldes efter en godkendt nøgle (:612)",
+          "labels": {
+            "en": ["the accessibility checks"],
+            "da": ["tilgængelighedstjekkene"]
+          }
+        },
+        {
+          "id": "score-grade",
+          "where": "site/compliance-report.html:302-306 — score og grade beregnes lokalt i runScan() og skrives ud i renderReport() :467-468. Ingen nøkel i den sti",
+          "labels": {
+            "en": ["score and grade"],
+            "da": ["scoren og karakteren"]
+          }
+        },
+        {
+          "id": "in-page-report",
+          "where": "site/compliance-report.html:536 generateReport() -> renderReport() :458 sætter hele rapporten i DOM'en uden licens; :474-475 skriver 'Free scan — accessibility findings only' i den udskrevne rapport, netop fordi GDPR/NIS2-fund først kommer fra /api/report efter nøgle",
+          "labels": {
+            "en": ["the whole report on the page"],
+            "da": ["hele rapporten på siden"]
+          }
         }
       ],
       "pro_not_built": [
