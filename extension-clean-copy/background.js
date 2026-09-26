@@ -551,7 +551,7 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-// Messages from popup + options page (batch conversion)
+// Messages from the popup and the options page: one selection or one pasted text.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'process-selection') {
     chrome.tabs.query({ active: true, currentWindow: true }).then(async (tabs) => {

@@ -100,6 +100,32 @@
           }
         }
       ],
+      "free_features": [
+        {
+          "id": "one-off-checks",
+          "where": "deskuptime/src/features.js:51-56 (MATRIX-rækken 'check', free: YES, status: BOTH). Håndhævet i src/cli.js check/headers, som aldrig læser FREE.urlLimit — kun src/watch.js:441 gør det, og det er watch-stien",
+          "labels": {
+            "en": ["one-off checks"],
+            "da": ["enkelttjek"]
+          }
+        },
+        {
+          "id": "ssl-content-checks",
+          "where": "deskuptime/src/features.js:60-65 (MATRIX-rækken 'ssl-content', free: YES, status: BOTH) — SSL-udløb og content-ændring tjekkes af src/checkers i begge tiers",
+          "labels": {
+            "en": ["SSL and content checks"],
+            "da": ["SSL- og content-tjek"]
+          }
+        },
+        {
+          "id": "json-output",
+          "where": "deskuptime/src/features.js:78-83 (MATRIX-rækken 'json', free: YES, status: BOTH); GitHub Action-rækken :69-74 er også free: YES",
+          "labels": {
+            "en": ["JSON output"],
+            "da": ["JSON-output"]
+          }
+        }
+      ],
       "pro_not_built": [
         {
           "id": "email-alerts",
