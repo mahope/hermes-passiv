@@ -76,6 +76,22 @@ FORBIDDEN_CLAIMS = (
     "there are no recurring charges",
 )
 
+# Hvor analysen sker. Kun den *anden* halvdel af parret er et problem, og
+# begge halve er strukturelle: se `check_analysis_location`.
+SERVER_ANALYSIS_ROUTES = ("/api/report",)
+BROWSER_LOCATION_RE = re.compile(
+    r"\b(?:in|inside|runs? in|processed in)\s+(?:your|the)\s+browser\b"
+    r"|\bi\s+din\s+browser\b",
+    re.IGNORECASE,
+)
+ANALYSIS_VERB_RE = re.compile(
+    r"\banaly[sz]|\banalys|\bbereg|\bfind|\bfund|\bgrade[sd]?\b|\bscor",
+    re.IGNORECASE,
+)
+# "browserens print-dialog" er sandt: siden kalder stadig `window.print()`.
+# Derfor matcher lokationen kun en *analys påstand*, aldrig et print-virk.
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+
 REQUIRED_PRODUCT_KEYS = (
     "clean-copy-pro",
     "deskuptime-pro",
@@ -1422,6 +1438,44 @@ def check_forbidden_claims() -> list[str]:
     return problems
 
 
+def check_analysis_location(pages: list[tuple[str, str]]) -> list[str]:
+    """Hvor rapporten beregnes, skal være sandt — og koden er dommeren.
+
+    Målt i opgave 58, ikke formodet. `site/compliance-report.html` sagde to
+    steder i synlig tekst at rapporten blev "analysed in your browser", efter at
+    opgave 54 flyttede fund-beregningen til `/api/report` i workeren. Kunden
+    betaler $79 for en GDPR-påstand om sine egne data, så det er den dyreste
+    slags fejl på siden: en kunde, der troede på den, ville have bedt om en
+    opbevaringsoverholdelse og fået en rapport der alligevel var beregnet
+    server-side.
+
+    Reglen er derfor **ikke** en ordliste over forbudte formuleringer. Den er
+    strukturel i den ene ende: kun en side der faktisk henter en
+    server-analyse-rute kan få en fejl. Det er derfor `/scan` og
+    `/scan-da` går fri — de to analyserer stadig i browseren, så deres
+    påstand er *sand*, og en global ordliste ville have tvunget en rettelse
+    som gjorde siderne til løgnere. Samme fejlklasse som opgave 26 fund 1.
+
+    I den anden ende må sætningen ikke være en ordliste heller: en kunde skal
+    kunne skrive den samme påstand om en anden ting. Derfor kræves en
+    *sætning* der både siger hvor (browseren) og at der analyseres i den.
+    """
+    problems: list[str] = []
+    for relative, text in pages:
+        if not any(route in text for route in SERVER_ANALYSIS_ROUTES):
+            continue
+        visible, _ = parse_page(text)
+        for sentence in SENTENCE_SPLIT_RE.split(visible):
+            if BROWSER_LOCATION_RE.search(sentence) and ANALYSIS_VERB_RE.search(sentence):
+                problems.append(
+                    f"{relative}: siden henter {'/'.join(SERVER_ANALYSIS_ROUTES)} "
+                    f"(analysen sker på serveren) men siger i synlig tekst at browseren "
+                    f"analyserer: {sentence.strip()[:120]!r}"
+                )
+                break
+    return problems
+
+
 def source_pages() -> list[tuple[str, str]]:
     """Alle sider i `site/`, som parret (relativ sti, tekst).
 
@@ -1499,6 +1553,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
+    problems += check_analysis_location(source_pages())
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
     problems += check_pro_features(catalog, source_pages())
@@ -1740,6 +1795,36 @@ def self_test() -> int:
         raise AssertionError(
             "site/compliance-report.html: pro_not_built fangt ikke de publicerede løfter "
             f"på EUComply Pro: {eucomply_found}")
+    # 7: hvor analysen sker. Fejlformen er målt på den rigtige side fra før
+    # opgave 58, så selftesten bruger netop den sætning.
+    stale_claim = (
+        f'<html><body><p>Public URLs only. The page is fetched server-side, '
+        f'analysed in your browser, and discarded.</p>'
+        f'<script>fetch("/api/report")</script></body></html>')
+    stale_found = check_analysis_location([("site/compliance-report.html", stale_claim)])
+    # Samme påstand uden server-kald: det er `/scan`, og der er den SAND.
+    free_scanner = (
+        f'<html><body><p>The page is fetched server-side through our proxy, '
+        f'analysed in your browser, and immediately discarded.</p>'
+        f'<script>fetch("/scan-proxy?url=")</script></body></html>')
+    free_should_pass = check_analysis_location([("site/scan.html", free_scanner)])
+    # Print-dialogen er sandt siden kalder window.print(): må ikke fejle.
+    print_dialog = (
+        f'<html><body><p>You save the PDF yourself from the browser print dialog.</p>'
+        f'<script>fetch("/api/report")</script></body></html>')
+    print_should_pass = check_analysis_location([("site/compliance-report.html", print_dialog)])
+    # Dansk: samme krav, dansk sætning.
+    stale_da = (
+        f'<html><body><p>Siden hentes og analyseres i din browser, og kasseres bagefter.</p>'
+        f'<script>fetch("/api/report")</script></body></html>')
+    stale_da_found = check_analysis_location([("site/da/compliance-report.html", stale_da)])
+    # Selv en synlig fejlsag må kun fange, fordi den *synlige tekst* er fundet:
+    # samme sætning i en kommentar eller i en JSON-LD-streng er ikke en
+    # påstand kunden læser.
+    hidden_only = (
+        f'<html><body><p>Public URLs only.</p>'
+        f'<script>/* analysed in your browser */ fetch("/api/report")</script></body></html>')
+    hidden_should_pass = check_analysis_location([("site/compliance-report.html", hidden_only)])
     # Og på den flade ingen HTML-port så: /checkout-noten i workeren.
     old_note = ("One-time license: desktop tray app, email & webhook alerts, unlimited URLs. "
                 "Up to 3 machines, all v1.x updates.")
@@ -1989,6 +2074,8 @@ def self_test() -> int:
         ("en købsside der lover overvågning, historik, branding og support", eucomply_found),
         ("en /checkout-note der lover en Pro-funktion koden ikke har bygget", checkout_found),
         ("en pro_not_built-post uden bevis i koden", silent_found),
+        ("en side der henter /api/report men siger at browseren analyserer", stale_found),
+        ("en dansk side der henter /api/report men siger at browseren analyserer", stale_da_found),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -2008,7 +2095,12 @@ def self_test() -> int:
                             ("en eksempelpris i en dokumentationsside", example_in_docs),
                             ("en omtalt tredjeparts-pris i prosa", quoted_price),
                             ("en krydshenvisning til en pris der sælges andre steder",
-                             cross_reference)):
+                             cross_reference),
+                            ("en browser-påstand på en side der analyserer i browseren",
+                             free_should_pass),
+                            ("en sand print-dialog-påstand på en /api/report-side",
+                             print_should_pass),
+                            ("en skjult browser-påstand i en kommentar", hidden_should_pass)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
