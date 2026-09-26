@@ -2361,7 +2361,7 @@ findes (falsk-positive-kontrol); `quality_gate.py` grøn.
   - `https://mahope.tools/nis2-check` skal pege på `/books/nis2-for-agencies` og have 0 fund af `Compliance Kit`.
   - `build-info.json` skal bære merge-SHA'en på alle tre domæner.
 
-- 2026-09-26: `VERIFICÉR DEPLOY: JSON-LD-prisen på /compliance-report er rettet fra $29 til $0 + InStock + de nye beløbsregler i check_stripe_ctas <merge-sha> 26/9` — GitHub Actions deployer automatisk (`site/**` og `tools/**` er i path-filteret). Verificér på **indhold**, ikke HTTP 200: live `https://mahope.tools/compliance-report` skal have `"price": "0"` og `"InStock"` i JSON-LD, **0** fund af `"price": "29"`, og den synlige `$79 / year per website` + knappen skal være urørt. `build-info.json` skal bære merge-SHA'en på de tre domæner. CI's `gate`-job skal være grøn med 46 steps.
+- 2026-09-26: `VERIFICÉR DEPLOY: JSON-LD-prisen på /compliance-report er rettet fra $29 til $0 + InStock + de nye beløbsregler i check_stripe_ctas 3e74f11 26/9` — GitHub Actions deployer automatisk (`site/**` og `tools/**` er i path-filteret). Verificér på **indhold**, ikke HTTP 200: live `https://mahope.tools/compliance-report` skal have `"price": "0"` og `"InStock"` i JSON-LD, **0** fund af `"price": "29"`, og den synlige `$79 / year per website` + knappen skal være urørt. `build-info.json` skal bære merge-SHA'en på de tre domæner. CI's `gate`-job skal være grøn med 46 steps.
 - 2026-09-26: `DEPLOY OK dc032e2` — lukker `VERIFICÉR DEPLOY` for opgave 39. Kørsel
   `36215583891`: `gate` grøn (46 steps) + tre grønne deploys. Live-**indhold**
   verificeret, ikke HTTP 200:
