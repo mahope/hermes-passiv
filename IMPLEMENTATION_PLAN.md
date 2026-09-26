@@ -2,17 +2,18 @@
 
 ## Status
 
-- `ITERATION_ID`: `koeb-uden-levering-2026-09-26`
-- `STATE`: `Opgave 22 FÆRDIG — researchiterationen fandt missionens første prioritet ulukket i sitet: syv downloadprodukter har \`kv_verified: false\`, så ingen af deres 30 leveringsfiler findes i KV, og \`/api/download\` svarer 503. To af dem blev alligevel solgt fra fire sider. Siterne tog imod pengene og lovede en fil de ikke kunne levere. Nu sælges intet downloadprodukt før flaget står på true, og en ny check i \`check_stripe_ctas.py\` gater begge retninger — så den heller ikke kan komme tilbage ved en fejl. Fund: kun 2 af 7 produkter havde overhovedet en købsknap, så hullet var mindre end rapporten antydede; men 190 kildefiler hævdede stadig \`$29\` for den afskaffede PDF-bundle fra én generator, hvoraf 49 EN-sider var publiceret (bygget stripper DA-blokkene); JSON-LD på books-siden erklærede \`InStock\` for et produkt der ikke kan leveres; og selftestens domænescenarie pegede på \`site/scan.html\`, som forlod inventaret — en stum kontrol, der ville have set grøn ud. Licensprodukterne er derimod OK: EUComply Pro aktiverer online og låser PDF'en.`
+- `ITERATION_ID`: `hub-readme-2026-09-26`
+- `STATE`: `Opgave 23 FÆRDIG — køen var tom (1-22 FÆRDIG, og den næste opgave kræver Mads' private filer), så dette er den researchiteration kontrakten forlanger. Fundet var ikke i koden, men i repoets **egentlige indgangsside**: rod-README.md for `mahope/hermes-passiv` — hubrepoet der bygger fire sites og otte produkter — var en kopi af *Clean Copy for Obsidian*s README. Den løb altså ud som ét produkts README, havde en changelog på 1.0.1 mens den publicerede udgave er 1.0.10, og ingen donation. Den er nu en hub-README med en kort fejlsikret kortlægning. **Tre ting blev fanget, før commit, som alle viser hvorfor mit første udkast ikke måtte lande:** (a) jeg skrev `mahope.tools/eucomply` og `deskuptime.com/transmute`, og *ingen af dem findes* — de står ikke i noget sitemap, og Transmute har slet ingen offentlig side; (b) jeg skrev "the free tools do not phone home", som er præcis den påstand opgave 2 var nødt til at trække tilbage, fordi licenstjekket er online; (c) jeg skrev at Clean Copy Pro virker "everywhere", uden at nogen klient er tjekket for det. Alt er nu verificeret mod de *live* sitemaps. To negative kontroller fra denne klasse findes allerede i gaten og fangede ingenting her, fordi ingen af dem læser rod-README — det er præcis hullet.`
+- `STATE` (før, opgave 22): `Opgave 22 FÆRDIG — researchiterationen fandt missionens første prioritet ulukket i sitet: syv downloadprodukter har \`kv_verified: false\`, så ingen af deres 30 leveringsfiler findes i KV, og \`/api/download\` svarer 503. To af dem blev alligevel solgt fra fire sider. Siterne tog imod pengene og lovede en fil de ikke kunne levere. Nu sælges intet downloadprodukt før flaget står på true, og en ny check i \`check_stripe_ctas.py\` gater begge retninger — så den heller ikke kan komme tilbage ved en fejl. Fund: kun 2 af 7 produkter havde overhovedet en købsknap, så hullet var mindre end rapporten antydede; men 190 kildefiler hævdede stadig \`$29\` for den afskaffede PDF-bundle fra én generator, hvoraf 49 EN-sider var publiceret (bygget stripper DA-blokkene); JSON-LD på books-siden erklærede \`InStock\` for et produkt der ikke kan leveres; og selftestens domænescenarie pegede på \`site/scan.html\`, som forlod inventaret — en stum kontrol, der ville have set grøn ud. Licensprodukterne er derimod OK: EUComply Pro aktiverer online og låser PDF'en.`
 - `STATE` (før): `Opgave 21 FÆRDIG — opgavens forudsætning var forkert: de fire Clean Copy-arkiver har haft en indholdsgate siden opgave 7 del 2 (gatestep 11 beviser byte-identisk regeneration, kilde-identiske medlemmer, version.txt og ingen død vært), og --check var grøn for alle tre. Det rigtige hul lå i check_versions.py, som læste filnavnets version for de tre Clean Copy-zip OG desktop-kildearkivet, men ikke deres egen version indeni — og alle fire bærer den. Beviset for at hullet var ældre end opgaven troede, lå i selve fixtureen: de fire arkiver bar "manifest.json": "{}". Nu erklærer alle fire produkter inner=(...), 25 → 31 mutationer, 1 → 2 negative kontroller. Fund: den nye check diagnosticerer hvad byte-sammenligning kun kan sige "afviger fra"; fixtureen måtte ikke blive stående; den anden negativ kontrol er den der beskytter de fire nye linjer mod at gøre publicerede arkiver røde.`
 - `STATE` (før): `Opgave 20 FÆRDIG — site/downloads/site-icons/site-icons-1.0.0.tar.gz viste sig at være en håndlavet kopi fra 24/8, ikke bygget af site-icons/. Den publicerede README sagde at nøgler sælges i en Lemon Squeezy-konto, lukket 24/9, og site_icons.py's docstring pegede på den samme lukkede API. Arkivet er nu bygget af kilden og byte-identisk, verificeret med både tarfile og systemets tar. Nyt værktøj tools/build_site_icons_archive.py (build/--check/--self-test) + to gatestræk (38 fra 36), og site-icons/** er i path-filteret så hullet fra opgave 18 er lukket her. Fire fund: de tre publicerede artefakter var TRE håndlavede kopier; kilden havde selv den døde vært; path-filteret viste at site/downloads/site-icons/** er overflødigt; og check_license_clients fangede min egen docstring som licensklient.`
 - `STATE` (før, opgave 19): `Opgave 19 FÆRDIG — check_versions.py læser nu de fem byggeoutput-arkivers indre versionserklæring (hjul-METADATA, sdist-PKG-INFO, npm-tgz package/package.json, site-icons' site_icons.py). 25 mutationer + negativ kontrol + positiv kontrol. Fire fund skrevet op, bl.a. at planens egen forudsætning om site-icons var forkert (den har en indre version) og at fnmatchs * ville talt setuptools' egg-info/PKG-INFO med. check_python_env erklærede C-udvidelser (zlib) for tredjepart; rettet + egen kontrol.`
 - `ACTIVE_TASK`: `— (ingen opgave I GANG)`
-- `NEXT_TASK`: `23 — ❓ Til Mads punkt 9: upload de 30 filer til KV og sæt kv_verified, så de syv produkter kan sælges igen (gaten kræver købssiden med)`
-- `PLAN_COMMIT`: `aae4a72 (merge af ceo/levering-uden-fil)`
-- `BASELINE`: `main@da67823`
-- `LAST_BRANCH`: `ceo/levering-uden-fil`
-- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1.`
+- `NEXT_TASK`: `24 — ❓ Til Mads punkt 9 (kræver ham): upload de 30 filer til KV og sæt kv_verified. 25, 26, 27 er nye fund fra opgave 23.`
+- `PLAN_COMMIT`: `(denne iteration)`
+- `BASELINE`: `main@b55abed`
+- `LAST_BRANCH`: `ceo/hub-readme`
+- `TASK_ATTEMPTS`: `18: 1/1., 19: 1/1., 20: 1/1., 21: 1/1., 22: 1/1., 23: 1/1.`
 - `DEPLOY` (opgave 22, lukket): `DEPLOY OK aae4a72 26/9` — kørsel `36204568679`: `gate` grøn (38 steps) + tre grønne deploys (mahope.tools, cleancopy.tools, deskuptime.com). Live-indhold verificeret, ikke HTTP 200: `build-info.json` bærer merge-SHA'en; `/books/compliance-bundle` har **0** fund af `InStock`, af de to betalingslinks og af `$29`, og viser den nye tekst (*"All six e-books are free"*, *"We do not sell a combined PDF of these guides"*); `/compliance-report` har 0 fund af Report Kit og 1 af EUComply Pro-linket, så licenssalget er urørt; `/scan` og `/scan-da` har 0 fund af begge links; `/blog/nis2-gap-assessment-guide` viser den nye korsel-linje.
 - `GATE` (opgave 22): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_stripe_ctas: 0 problems, 13 produkter, 11 dokumenterede købssider (fra 15). check_stripe_ctas --self-test: 12/12 fejlformer (fra 10) + positiv kontrol grøn + ny guard mod stumme scenarier. Bevis på de rigtige filer: porten fandt 4 sider med et betalingslink til et produkt uden filer, FØR nogen blev rettet. test_weekly_report: 28 tests grønne. Stripe-worker uændret, dist/uændret (gitignored).`
 - `GATE` (opgave 21): `GRØN — python3 tools/quality_gate.py: GRØN, 38 steps (uændret). check_versions --self-test: OK (31 mutationer fra 25, 2 negative kontroller fra 1, positiv kontrol grøn, rigtige filer grønne). Bevis på de rigtige filer: Obsidian-arkivet muteret til manifest 1.0.9 under 1.0.10-navn → check_versions melder "kunden henter gammel kode under et nyt filnavn", distribution-gaten melder blot "afviger fra en regeneration". Stripe-worker uændret, dist/uændret (gitignored).`
@@ -1528,6 +1529,96 @@ kontrakten ("Mads må ikke røre det") og den danske forbrugerlov.
   side der sælger, og den er ikke rettet her, fordi den kræver en beslutning om
   hvad Pro skal være — ikke en tekstrettelse.
 
+
+### 23. FÆRDIG (`ceo/hub-readme`) — researchiteration: repoets egen indgangsside løb ud som ét produkts README
+
+**Hvorfor denne iteration skrev kode.** Køen var tom: opgave 1-22 er `FÆRDIG`, og den
+næste opgave i køen (nr. 23 før denne) var `❓ Til Mads` punkt 9, som kræver de private
+`paidfile:`-kilder og derfor ikke kan udføres her. Kontrakten siger, at en iteration der
+kun ændrer planen er spildt, så researchfundet blev brugt på en rigtig forbedring.
+
+**Fund 1 — rod-README.md var en anden produkts README.** `mahope/hermes-passiv` bygger
+fire sites og otte produkter, men `README.md` i repo-roden var en tidligere udgave af
+`obsidian-plugin/README.md`: titlen "Clean Copy for Obsidian", tre Obsidian-specifikke
+installationsafsnit og en changelog der stopp ved **1.0.1**, mens den publicerede udgave
+er **1.0.10** (`site/downloads/clean-copy-obsidian-v1.0.10.zip`). GitHub viser
+rod-README som repoets forside, så det er den side en nye bidragsyder eller
+npm-/GitHub-besøgende lander på først — og den sagde " ét produkt" i stedet for "familien".
+Den nye README er en kortlægning af de fire sites, de otte gratis værktøjer og de fem
+licensprodukter, plus donationstaletten missionen kræver.
+
+**Fund 2 — mit eget første udkast havde tre falske påstande, og alle tre var fanget
+inden commit.** Det er det stærkeste fund i iterationen, fordi det viser at
+selv-korrektion uden en maskine ikke er nok:
+1. Jeg skrev `mahope.tools/eucomply` og `deskuptime.com/transmute` som produktsider.
+   **Ingen af dem findes.** Live-sitemaps for de to domæner indeholder hverken
+   `eucomply` eller `transmute`, og Transmute har slet ingen offentlig side — kun
+   npm-pakken. To døde links i en ny README er præcis den fejl `tools/check_links.py`
+   gater for i `site/`, men den læser ikke rod-README.
+2. Jeg skrev "**The free tools do not phone home**". Det er ordret den samme
+   påstand opgave 2 var nødt til at trække tilbage, fordi en licensaktivering er et
+   online-kald mod `mahope.tools/api/license`. Missionen siger eksplicit at påstande
+   skal kunne dokumenteres, så formuleringen blev til det faktiske forhold: frie
+   funktioner sender ikke indholdet nogen steder, betalt tier laver ét slags kald
+   (licenstjek) med nøgle og device-id, og caching i syv dage når tjekket fejler.
+3. Jeg skrev at Clean Copy Pro virker "**everywhere**". Ingen klient er undersøgt
+   for det, så det blev til den dokumenterede værdi: "custom cleanup rules with regex
+   support".
+
+**Fund 3 — hullet er en klasse, ikke en enkeltfil.** Dette er niende gang i dette
+repo (se opgave 10, 15, 17 og 21) at et problem kun findes fordi nogen læser den
+konkrete fil med vilje. `check_links.py`, `check_product_copy.py` og
+`check_private_content.py` dækker alle `site/` og `dist/`. **Ingen af dem læser
+`README.md` i repo-roden**, og den er den eneste PUBLICEREDE tekst om hele familien
+der ligger uden for gaten. Derfor er det ikke nok at have skrevet en ny README —
+se opgave 26.
+
+**Gate:** `python3 tools/quality_gate.py` → **GRØN, 38 steps (uændret)**. README'en er
+ikke en del af nogen gate, så grøn gate er her bevis på *ingen skade*, ikke på
+*korrekthed*; korrekthed er derfor verificeret mod de tre live sitemaps og
+`tools/stripe_catalog.json`. `site/` og `dist/` er urørt, så intet deployes.
+
+---
+
+## Ny kø fra opgave 23s researchfund
+
+### 24. UFÆRDIG — ❓ Til Mads punkt 9: gør de syv downloadvarer leveringsklare *(kræver ham, ikke mig)*
+De syv produkter har `kv_verified: false`, og deres 30 filer findes ikke i KV. Uden dem
+er `$59 + $49 + $29 + $39 + $69 + $149` i Stripe-priser dødt salg, og kun
+`eu-compliance-ebook-bundle` har lagt `compliance-bundle.pdf` i sit leveringskrav.
+**Acceptkriterium for ham:** `python3 tools/check_private_content.py --report` viser
+0 `uverificeret i KV`, og gaten kræver da købssiden tilbage (den fejlbygger, hvis
+`kv_verified` er true uden en købsside — så flaget kan ikke sættes uden salget).
+**Findes ved:** kv-nøglerne og de private kilder. Ikke mit arbejde; skrives her for at
+det ikke tabes.
+
+### 25. UFÆRDIG — de syv betalingslinks er stadig live, selv om varerne ikke kan leveres
+Opgave 22 lukkede *vores* salgssider. Stripe Payment Links kan ikke slås fra her (ingen
+nøgler), så `buy.stripe.com/…` for de syv produkter tager stadig imod betaling og sender
+en køber til `/thanks`, hvor `/api/download` svarer 503. Det er præcis det scenarie
+opgave 22 beskriver som farligt — pengene ind, filen ud. **Acceptkriterium:** enten
+hviler Mads de syv links, eller de får filer (opgave 24). Repoet skal *kun* sikre sig,
+at ingen af vores sider peger på dem, hvilket `check_stripe_ctas.py` nu gater.
+
+### 26. UFÆRDIG — gaten skal dække de publicerede tekster uden for `site/`
+Fund 3 fra opgave 23. i dag læser ingen gate `README.md`, `AGENTS.md` eller
+`.github/FUNDING.yml`, som er det offentlige ansigt. **Acceptkriterium:** en ny check
+`tools/check_repo_readme.py` med `--self-test` der fejler på (a) et link i rod-README
+meden rødt svar, (b) en bygget sti i rod-README der ikke findes i noget sitemap, (c) en
+pris der ikke findes i `tools/stripe_catalog.json`, (d) en død udbyder (`lemon`,
+`gumroad`) nævnt som om den virker, og (e) en FALSK-positiv-kontrol: en README med kun
+relative links eller kun npm-URLer skal ikke fejle. Bevis: find mindst én fejl på den
+*gamle* rod-README før den rettes.
+
+### 27. UFÆRDIG — de shippede README'er kan ikke nævne Pro, fordi en ændring kræver en version
+`extension-clean-copy-firefox/README.md` (Pro: 0 fund, donation: 0) og
+`obsidian-plugin/README.md` (Pro: 2, donation: 0) ligger **inde i de publicerede
+arkiver**. Men opgave 21s gate gør netop, at en ændring af arkivindhold kræver en ny
+version — og versioner, tags og releases er Mads' (kontrakten forbyder mig dem). Så det
+bedste konverteringspunkt for de mest distribuerede klienter kan ikke flyttes af mig.
+**Acceptkriterium:** skriv de to tekster ferdige og læg dem i planen som et
+versionsforslag, så Mads' næste udgivelse tager dem med. Det er tekstforberedelse, ikke
+en kodeændring.
 
 ## ❓ Til Mads
 
