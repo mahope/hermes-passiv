@@ -18,6 +18,8 @@ Opgaverne er:
    et produkt uden `kv_verified: true` må ikke have sit betalingslink nogen
    sted i `site/`. Modsat retning tæller også som fejl: et leverbart produkt
    uden købsside ville blive solgt helt uden.
+6. Hver købsside skal have mindst én indgang fra en side læser kan nå, målt
+   i det byggede `dist/` — se `check_buy_page_entry`.
 
     python3 tools/check_stripe_ctas.py           # gate
     python3 tools/check_stripe_ctas.py --report  # inventaret, uden at fejle
@@ -33,6 +35,7 @@ import tempfile
 from typing import Any
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urljoin, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "tools/stripe_catalog.json"
@@ -1383,6 +1386,161 @@ def check_routes(offers: list[dict], core_pages: object) -> list[str]:
     return problems
 
 
+# --------------------------------------------------------------------------
+# Indgang til en købsside. Målt i det *byggede* dist, fordi det er der
+# domæneopløsningen er sket: cleancopy.tools, deskuptime.com, mahope.tools og
+# bugbottle.dev deler alle `site/`, så `href="/"` i en mahope.tools-side er
+# ikke en indgang til cleancopy.tools' `/`. Uden den opløsning ville reglen
+# være grøn for de forkerte grunde — præcis fejlformen opgave 59 målte, da
+# `scan-da.html` sendte danske læsere til den engelske købsside mens den
+# danske lå i sitemap med nul indgange.
+# --------------------------------------------------------------------------
+
+# Kun disse tre attributter er en indgang. `<link rel=canonical>` og
+# `hreflang` er maskinlæsbare henvisninger, og en URL i en inline
+# JSON-Streng (søgeindekset) er slet ikke et link — tælles de med, bliver
+# reglen grøn fordi en side nævner stien i et script.
+ENTRY_ATTRS = {"a": "href", "area": "href", "form": "action"}
+ENTRY_SKIP = ("script", "style", "template", "noscript")
+
+
+class EntryLinks(HTMLParser):
+    """Alle udgående links i et bygget dokument, i dokumentrækkefølge."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.links: list[str] = []
+        self.skip = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in ENTRY_SKIP:
+            self.skip += 1
+            return
+        attribute = ENTRY_ATTRS.get(tag)
+        if attribute is None or self.skip:
+            return
+        value = {key.lower(): item or "" for key, item in attrs}.get(attribute, "").strip()
+        if value:
+            self.links.append(value)
+
+    def handle_startendtag(self, tag: str, attrs) -> None:
+        if tag not in ENTRY_SKIP:  # `<script/>` er ikke en åbning
+            self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in ENTRY_SKIP and self.skip:
+            self.skip -= 1
+
+
+def entry_links(path: Path) -> list[str]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        return []
+    parser = EntryLinks()
+    parser.feed(text)
+    parser.close()
+    return parser.links
+
+
+def route_key(domain: str, route: str) -> tuple[str, str]:
+    """`(domæne, route)` i én form, så `/da/x`, `/da/x/` og `/da/x.html` er samme.
+
+    Katalogens `route` er den *public* route uden filendelse, fordi det er den
+    der står i canonical, hreflang og sitemap. En fils dist-sti er derimod
+    `da/x.html` eller `da/x/index.html`, så uden denne normalisering ville
+    indgangen aldrig matche købssiden.
+    """
+    path = (route.split("#")[0].split("?")[0] or "/").replace("\\", "/")
+    if not path.startswith("/"):
+        path = "/" + path
+    path = re.sub(r"/index\.html$", "/", path)
+    if path.endswith(".html"):
+        path = path[: -len(".html")]
+    if len(path) > 1:
+        path = path.rstrip("/")
+    return (domain, path or "/")
+
+
+def resolve_entry(domain: str, page: str, href: str) -> tuple[str, str] | None:
+    """`(domæne, route)` et link peger på, eller None hvis det er et andet sted."""
+    target = urlsplit(urljoin(f"https://{domain}/{page}", href))
+    if target.scheme not in ("http", "https") or target.netloc not in KNOWN_DOMAINS:
+        return None
+    return route_key(target.netloc, target.path)
+
+
+def entry_point_index(dist_root: Path | None = None) -> dict[tuple[str, str], set[str]]:
+    """`(domæne, route)` -> de byggede sider der linker til den."""
+    root = dist_root or (ROOT / "dist")
+    index: dict[tuple[str, str], set[str]] = {}
+    for domain in KNOWN_DOMAINS:
+        base = root / domain
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*.html")):
+            relative = path.relative_to(base).as_posix()
+            # En 404-side er ikke en indgang: ingen lærer følger den med vilje,
+            # så en købsside der kun 404'en peger på, er stadig uopdaget.
+            if relative == "404.html" or relative.endswith("/404.html"):
+                continue
+            here = route_key(domain, "/" + relative)
+            targets = {key for key in
+                       (resolve_entry(domain, relative, href) for href in entry_links(path))
+                       if key is not None and key != here}
+            for key in targets:
+                index.setdefault(key, set()).add(f"{domain}/{relative}")
+    return index
+
+
+def check_buy_page_entry(offers: list[dict],
+                         index: dict[tuple[str, str], set[str]],
+                         dist_root: Path | None = None) -> list[str]:
+    """En købsside skal kunne nås: mindst én indgang fra en anden bygget side.
+
+    Fejlformen er målt, ikke antaget. `/da/compliance-report` lå i sitemap som
+    det eneste danske købsside-hit, og **intet** i kodebasen linkede til den:
+    `site/scan-da.html` nævnte EUComply Pro, men pegede på `/compliance-report`
+    i den anden ende. Sitemap er ikke en indgang — det er en maskinlæsbar liste,
+    ingen læser følger den — så siden var uopdaget for præcis den læser den
+    findes for.
+
+    Kun *købssider*. Resten af `dist/` har 8 sider uden indgang (to
+    DeskUptime-værktøjer, Clean Copy's MCP-side, `/terms`, `/thanks` m.fl.), og
+    en regel for hele sitemap ville være en sitemap-port, ikke en
+    konverteringsregel. De otte er målt og skrevet som opgave i planen.
+
+    Selve linket er fundet i det byggede `dist/`, fordi det er der domænet er
+    opløst: de fire sites deler `site/`, så et rodrelativt link kun er en
+    indgang på det domæne der faktisk udgiver målsiden. Et krydsdomæne-link
+    tæller med — buildet skriver det som en absolut URL, så en læser kan følge
+    det — mens hreflang og canonical gør ikke, fordi de ikke er en vej hen til
+    siden. En købsside i et domæne der ikke er bygget springes over: så er det
+    `check_routes` der melder den manglende build, med den præcise fejl.
+    """
+    root = dist_root or (ROOT / "dist")
+    problems: list[str] = []
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        domain, route = offer.get("domain"), offer.get("route")
+        if not isinstance(domain, str) or not isinstance(route, str):
+            continue  # check_routes melder en manglende/ugyldig route.
+        if not (root / domain).is_dir():
+            continue
+        key = route_key(domain, route)
+        sources = index.get(key) or set()
+        if sources:
+            continue
+        problems.append(
+            f"{offer.get('path')} ({offer.get('product')}): {domain}{route} sælges, men ingen "
+            f"af de byggede sider linker til den. Den ligger i sitemap, og en sitemap er ikke en "
+            f"indgang en læser kan følge — så købssiden er uopdaget for alle der ikke gætter "
+            f"URL'en. Link til den fra en side læseren faktisk lander på."
+        )
+    return problems
+
+
 def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
     products = catalog["products"]
     offers = catalog.get("offers")
@@ -1620,6 +1778,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     offer_problems, inventory = check_offers(catalog)
     problems += offer_problems
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
+    problems += check_buy_page_entry(catalog.get("offers") or [], entry_point_index())
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
     problems += check_analysis_location(source_pages())
@@ -2148,6 +2307,82 @@ def self_test() -> int:
               "porten dømmer produkter den ikke sælger her: " + "; ".join(coverage_ungated))
         return 1
 
+    # ── indgang til købssiden: en købsside ingen kan nå ───────────────────
+    #
+    # Scenarierne bygger en *syntetisk* dist, fordi indgangen afgøres i det
+    # byggede output — og fordi den del af reglen der kan være grøn for de
+    # forkerte grunde er link-indsamlingen, ikke katalogen. Derfor er her fire
+    # sider der hver *nævner* købssiden uden at være en indgang: en 404-side, en
+    # side med kun canonical/hreflang, en side med URL'en i en inline
+    # JSON-Streng, og købssiden selv. Tælles nogen af dem, er regelen grøn for
+    # en købsside ingen læser kan nå, og det er præcis fejlformen.
+    with tempfile.TemporaryDirectory() as tmp:
+        fake = Path(tmp)
+        site = fake / "mahope.tools"
+        site.mkdir(parents=True)
+        buy_page = "<html><head><title>Pro</title></head><body><a href=\"/\">Hjem</a></body></html>"
+
+        def page_file(name: str, body: str) -> None:
+            (site / name).write_text(body, encoding="utf-8")
+
+        page_file("koebsside.html", buy_page)
+        page_file("404.html", '<html><body><a href="/koebsside">Køb</a></body></html>')
+        page_file("head.html", (
+            '<html><head><link rel="canonical" href="https://mahope.tools/head">'
+            '<link rel="alternate" hreflang="da" href="https://mahope.tools/koebsside">'
+            '</head><body><p>Ingen link.</p></body></html>'))
+        page_file("script.html", (
+            '<html><body><p>Søg.</p><script>const urls = ["/koebsside", "/andet"];'
+            'fetch("/api/track", {body: JSON.stringify({path: "/koebsside"})});</script>'
+            '</body></html>'))
+        page_file("andet.html", '<html><body><p>En side uden links.</p></body></html>')
+        only_mentions = entry_point_index(fake)
+        entry_offers = [{"path": "site/koebsside.html", "product": "clean-copy-pro",
+                         "domain": "mahope.tools", "route": "/koebsside"}]
+        # Rød: de fire sider ovenfor er ikke indgange, så den syntetiske
+        # købsside er uopdaget præcis som `/da/compliance-report` var det 1/9.
+        unreachable = check_buy_page_entry(entry_offers, only_mentions, fake)
+        # Grøn: den samme side, når en rigtig side faktisk linker til den.
+        page_file("indgang.html", '<html><body><a href="/koebsside">Se Pro</a></body></html>')
+        reachable_index = entry_point_index(fake)
+        reachable = check_buy_page_entry(entry_offers, reachable_index, fake)
+        # Diskriminerende: det er *domænet* der afgør, ikke stien. De fire sites
+        # deler `site/`, så en indgang til samme sti på et andet domæne er en
+        # anden side — ellers ville reglen være grøn for cleancopy.tools' `/`
+        # når kun mahope.tools' `/`linkede.
+        same_path_elsewhere = {key: sources for key, sources in reachable_index.items()
+                               if key != ("mahope.tools", "/koebsside")}
+        same_path_elsewhere[("cleancopy.tools", "/koebsside")] = {"cleancopy.tools/indgang.html"}
+        cross_domain = check_buy_page_entry(entry_offers, same_path_elsewhere, fake)
+        # Og en indgang fra en side på et *andet* domæne tæller med: buildet
+        # skriver et krydsdomæne-link som en absolut URL, så en læser kan
+        # følge det. Ellers ville porten være strammere end den virkelige
+        # købsrejse, hvor Clean Copy-siden linker til EUComply Pro.
+        cross = Path(tmp) / "krydsdomaene"
+        (cross / "mahope.tools").mkdir(parents=True)
+        (cross / "cleancopy.tools").mkdir(parents=True)
+        (cross / "cleancopy.tools" / "værktøj.html").write_text(
+            '<html><body><a href="https://mahope.tools/koebsside">Se EUComply Pro</a>'
+            '</body></html>', encoding="utf-8")
+        cross_real = check_buy_page_entry(
+            entry_offers, entry_point_index(cross), cross)
+        if unreachable and "site/koebsside.html" not in unreachable[0]:
+            print("SELFTEST FEJLER: indgangsreglen rammer ikke den uopdagelige købsside: "
+                  + "; ".join(unreachable))
+            return 1
+    if reachable:
+        print("SELFTEST FEJLER: indgangsreglen fejler på en købsside der har en indgang — "
+              "kravet er for stramt: " + "; ".join(reachable))
+        return 1
+    if not cross_domain:
+        print("SELFTEST FEJLER: en indgang på et andet domæne med samme sti tæller som en "
+              "indgang — reglen er grøn for den forkerte grund")
+        return 1
+    if cross_real:
+        print("SELFTEST FEJLER: en bygget side der linker krydsdomæne til købssiden fejler "
+              "alligevel: " + "; ".join(cross_real))
+        return 1
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -2183,6 +2418,8 @@ def self_test() -> int:
         ("en pro_not_built-post uden bevis i koden", silent_found),
         ("en side der henter /api/report men siger at browseren analyserer", stale_found),
         ("en dansk side der henter /api/report men siger at browseren analyserer", stale_da_found),
+        ("en købsside ingen bygget side linker til", unreachable),
+        ("en købsside der kun har en indgang på et andet domæne", cross_domain),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -2207,7 +2444,9 @@ def self_test() -> int:
                              free_should_pass),
                             ("en sand print-dialog-påstand på en /api/report-side",
                              print_should_pass),
-                            ("en skjult browser-påstand i en kommentar", hidden_should_pass)):
+                            ("en skjult browser-påstand i en kommentar", hidden_should_pass),
+                            ("en købsside med en indgang fra en bygget side", reachable),
+                            ("en købsside der linkes krydsdomæne fra en bygget side", cross_real)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
