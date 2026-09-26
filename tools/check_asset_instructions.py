@@ -132,15 +132,56 @@ def dist_index() -> dict[str, set[str]]:
     return index
 
 
+def zip_top_folders(path: Path) -> set[str]:
+    """Mapperne i roden af et arkiv.
+
+    En zip-mappe er **aldrig** sit eget element i `namelist()`: en mappe
+    `pakke/` med to filer giver `pakke/a.php` og `pakke/b/c.php`, ikke `pakke`.
+    Så et `cd pakke` skal dømmes mod disse rødder, ikke mod hele navnelisten —
+    ellers er *enhver* rigtig mappe falsk rød, og det var præcis fejlen der holdt
+    CI rød 27/9 (M10).
+    """
+    with zipfile.ZipFile(path) as zf:
+        return {n.split("/", 1)[0] for n in zf.namelist() if "/" in n}
+
+
+def zip_folder_index(index: dict[str, set[str]]) -> dict[str, set[str]]:
+    """Arkivnavn -> mapper i roden, læst fra den rigtige fil.
+
+    Nøglen er arkivets navn alene, for det er sådan kommandoen skriver det. To
+    domæner kan have samme filnavn, og da forenes mapperne: det er den
+    konservative retning, for en falsk rød fejl rammer kunden mens en
+    manglende mappe kun er en mistet fejl.
+    """
+    out: dict[str, set[str]] = {}
+    for name, domaener in index.items():
+        if not name.endswith(".zip"):
+            continue
+        for dom in sorted(domaener):
+            p = DIST / dom / name
+            if p.is_file() and zipfile.is_zipfile(p):
+                out.setdefault(name, set()).update(zip_top_folders(p))
+                break
+    return out
+
+
 def line_of(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
 
 
-def check_text(text: str, label: str, dom: str, index: dict[str, set[str]]) -> list[str]:
+def check_text(
+    text: str,
+    label: str,
+    dom: str,
+    index: dict[str, set[str]],
+    zip_folders: dict[str, set[str]] | None = None,
+) -> list[str]:
     spans = code_spans(text)
     if not spans:
         return []
     problems: list[str] = []
+    if zip_folders is None:
+        zip_folders = zip_folder_index(index)
 
     def in_code(offset: int) -> bool:
         return any(a <= offset < b for a, b in spans)
@@ -182,10 +223,7 @@ def check_text(text: str, label: str, dom: str, index: dict[str, set[str]]) -> l
         if not cd:
             continue
         folder = cd.group(1)
-        if not any(
-            zipfile.is_zipfile(p) and folder in zipfile.ZipFile(p).namelist()
-            for p in (DIST / d / name for d in index if any(n.endswith(name) for n in index))
-        ):
+        if folder not in zip_folders.get(name, set()):
             problems.append(
                 f"{label}:{line_of(text, m.start())}: `cd {folder}` efter "
                 f"`{name}` — arkivet har ingen mappe med det navn"
@@ -223,6 +261,7 @@ def iter_files() -> list[tuple[Path, str]]:
 
 def check_dist() -> tuple[list[str], int]:
     index = dist_index()
+    zip_folders = zip_folder_index(index)
     problems: list[str] = []
     for p, dom in iter_files():
         try:
@@ -230,7 +269,7 @@ def check_dist() -> tuple[list[str], int]:
         except (UnicodeDecodeError, OSError):
             continue
         rel = p.relative_to(DIST).as_posix()
-        problems.extend(check_text(text, rel, dom, index))
+        problems.extend(check_text(text, rel, dom, index, zip_folders))
     return problems, len(iter_files())
 
 
@@ -244,10 +283,6 @@ def self_test() -> int:
         print(f"FEJL selftest: {src_name} findes ikke — kør `python3 build_sites.py` først")
         return 1
     index = dist_index()
-    good_zip = next(
-        (n for n in index if n.endswith(".zip") and zipfile.is_zipfile(DIST / next(iter(index[n])) / n)),
-        None,
-    )
     cases: list[tuple[str, str, int, str, bool]] = [
         ("M1 curl -O på en fil der ikke findes", 'curl -O https://mahope.tools/downloads/ghost.py', 1, "ghost.py", False),
         ("M2 curl -O på en publiceret fil er grøn", 'curl -O https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip', 0, "", False),
@@ -297,33 +332,77 @@ def self_test() -> int:
             continue
         print(f"ok   {navn} ({len(fund)} fund)")
 
-    # M9: `cd` ind i en mappe vores arkiv ikke har. Måles mod et rigtigt arkiv i
-    # dist, fordi reglen skal kunne læse zip-indholdet — det var fejlen i opgave 88.
-    if not good_zip:
-        print("FEJL M9: intet zip-arkiv i dist at måle cd-reglen mod")
-        return 1
+    # M9-M11: `cd` efter `unzip` af **vores** arkiv. Måles mod et syntetisk
+    # arkiv, ikke mod et arkiv fra dist: den forrige udgave tog det første zip
+    # `dist_index()` gav, og den rækkefølge er filsystemets. Lokalt var det et
+    # arkiv uden mapper, så M10 aldrig kørte — og blev alligevel talt med i
+    # totalen, som derfor sagde 10/10 mens der var 9 mutationer. I CI ramte den
+    # et arkiv med en mappe, og så løb M10 og fandt fejlen. Fixture'en er derfor
+    # hermetisk nu, og en manglende fixture er en hård fejl, ikke et spring.
     with TemporaryDirectory() as tmp:
-        src = DIST / next(iter(index[good_zip])) / good_zip
-        tekst = muter(f"unzip {good_zip} && cd desktop")
-        fund = [f for f in check_text(tekst, "selftest", "mahope.tools", index) if "cd desktop" in f]
+        fixture = Path(tmp) / "cd-regel-fixture.zip"
+        with zipfile.ZipFile(fixture, "w") as zf:
+            zf.writestr("pakke-mappe/fil.php", "<?php // test")
+            zf.writestr("pakke-mappe/under/anden.php", "<?php // test")
+            zf.writestr("rodfil.txt", "test")
+        if not fixture.is_file():
+            print("FEJL M9: kunne ikke skrive fixture-arkivet")
+            return 1
+        fund_fixture = zip_top_folders(fixture)
+        if fund_fixture != {"pakke-mappe"}:
+            print(f"FEJL M9: fixture-arkivet har uventede mapper {sorted(fund_fixture)}")
+            return 1
+
+        test_index = dict(index)
+        test_index["downloads/cd-regel-fixture.zip"] = {"mahope.tools"}
+        # Fixture'en ligger i en temp-mappe, så `zip_folder_index` — som læser
+        # under dist — kan ikke finde den. Derfor føjes den til med den værdi
+        # `zip_top_folders` netop har læst *ud af den rigtige fil*, så
+        # mappeudtrækket stadig er prøvet mod et ægte arkiv.
+        test_folders = dict(zip_folder_index(test_index))
+        test_folders["cd-regel-fixture.zip"] = fund_fixture
+
+        # Og den virkelige mappeindeksering skal se den mappe CI snublede over:
+        # `eaa-compliance-scanner.zip` har `eaa-compliance-scanner/` i roden.
+        rigtig = zip_folder_index(index).get("eaa-compliance-scanner.zip")
+        if rigtig != {"eaa-compliance-scanner"}:
+            print(f"FEJL M10: eaa-compliance-scanner.zip har uventede mapper {sorted(rigtig or [])}")
+            return 1
+        print("ok   M10a det publicerede arkiv har sin mappe i mappeindekset")
+
+        def dom(folder: str) -> list[str]:
+            tekst = muter(f"unzip cd-regel-fixture.zip && cd {folder}")
+            return [
+                f
+                for f in check_text(tekst, "selftest", "mahope.tools", test_index, test_folders)
+                if f"cd {folder}" in f
+            ]
+
+        fund = dom("desktop")
         if len(fund) != 1:
             print(f"FEJL M9 cd ind i en mappe arkivet ikke har: forventede 1 fund, fik {len(fund)}")
             fejl += 1
         else:
             print("ok   M9 cd ind i en mappe arkivet ikke har (1 fund)")
-        # Og den positive kontrol: en mappe der *findes* i arkivet skal være grøn.
-        with zipfile.ZipFile(src) as zf:
-            mapper = {n.split("/")[0] for n in zf.namelist() if "/" in n}
-        if mapper:
-            mappe = sorted(mapper)[0]
-            tekst2 = muter(f"unzip {good_zip} && cd {mappe}")
-            fund2 = [f for f in check_text(tekst2, "selftest", "mahope.tools", index) if f"cd {mappe}" in f]
-            if fund2:
-                print(f"FEJL M10 mappe der findes i arkivet ({mappe}) er dømt rød")
-                fejl += 1
-            else:
-                print(f"ok   M10 mappe der findes i arkivet ({mappe}) er grøn (0 fund)")
-    total = len(cases) + 2
+
+        fund2 = dom("pakke-mappe")
+        if fund2:
+            print("FEJL M10 mappe der findes i arkivet (pakke-mappe) er dømt rød")
+            for f in fund2:
+                print(f"     {f}")
+            fejl += 1
+        else:
+            print("ok   M10 mappe der findes i arkivet (pakke-mappe) er grøn (0 fund)")
+
+        fund3 = dom("rodfil")
+        if len(fund3) != 1:
+            print(f"FEJL M11 cd ind i en fil der ikke er en mappe: forventede 1 fund, fik {len(fund3)}")
+            fejl += 1
+        else:
+            print("ok   M11 cd ind i en fil der ikke er en mappe (1 fund)")
+
+    # Tæl kun mutationer der faktisk kørte. Et spring må aldrig tælle som grønt.
+    total = len(cases) + 4
     print(f"selftest: {total - fejl}/{total} mutationer fanget")
     return 1 if fejl else 0
 
