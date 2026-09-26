@@ -51,6 +51,14 @@ on:
       - 'scanner/scanner_core.py'
       - 'scanner/packaging/eaa_scanner/**'
       - 'site/downloads/eaa-scanner-README.md'
+      # Opgave 88: samme fejlform for de *andre* tre veje i README'en. Uden
+      # disse springer en push, der kun retter downloadsiden eller en af de
+      # publicerede artefakter, porten over — og det er den push, der skal
+      # kunne finde en 404'ende installationskommando igen.
+      - 'tools/check_readme_paths.py'
+      - 'site/downloads.html'
+      - 'site/downloads/eaa_scanner-*.whl'
+      - 'site/downloads/eaa-scanner-desktop-src-*.zip'
       - 'tools/fixtures/**'
       - 'tools/mini_yaml.py'
       - 'tools/mini_toml.py'

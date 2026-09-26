@@ -25,7 +25,7 @@ automated first check of the issues that matter most:
 ## Install
 
 ```bash
-pip install eaa-scanner
+pip install https://mahope.tools/downloads/eaa_scanner-1.2.0-py3-none-any.whl
 ```
 
 Or run directly from source (no install):
@@ -34,6 +34,11 @@ Or run directly from source (no install):
 git clone <this repo> && cd scanner
 python scan.py https://example.com
 ```
+
+The package is not on PyPI yet, so `pip install eaa-scanner` will not find it —
+install the wheel above, or the sdist
+(`eaa_scanner-1.2.0.tar.gz`) from the same downloads page. Both run the same
+22 rules as the desktop app.
 
 ## Usage
 
@@ -66,6 +71,12 @@ push / pull request / weekly schedule runs the scanner with `--fail-on warning`.
 The template also includes an optional `crawl-audit` job that runs
 `--crawl 25` on schedules for a whole-site report.
 
+**This workflow uses the Node.js build, not the Python one** — it installs
+`@mahope/eaa-scanner` from the published tarball, so the runner needs Node 18+
+and no Python setup step. Same 22 rules, same JSON report. If you want the
+Python build in CI, use `pip install <wheel URL>` from Install above and call
+`eaa-scan` directly.
+
 ## Example output
 
 ```
@@ -81,19 +92,28 @@ A full manual checklist is still required for EAA conformance.
 
 ## Desktop app (optional)
 
-A native macOS desktop app (DMG or ZIP) is available for Apple Silicon:
+Native desktop builds are available for macOS (Apple Silicon and Intel), Linux
+and Windows. Version 1.3.3 is the current installer release:
 
-- [Download DMG (121 MB)](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.2.0/EAA.Compliance.Scanner-1.2.0-arm64.dmg)
-- [Download ZIP (117 MB)](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.2.0/EAA.Compliance.Scanner-1.2.0-arm64-mac.zip)
+- [macOS Apple Silicon DMG](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-arm64.dmg) (~120 MB)
+- [macOS Intel DMG](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-x64.dmg) (~120 MB)
+- [Linux AppImage](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-linux-x86_64.AppImage) (~110 MB)
+- [Windows installer](https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-setup.exe) (~90 MB)
 
-Or download the source and build it yourself:
+All installer downloads are on the
+[downloads page](https://mahope.tools/downloads), which also has ZIP and
+portable builds.
+
+Or download the source and build it yourself. The source archive is 1.3.4 — one
+version ahead of the installers:
 
 - [`eaa-scanner-desktop-src-1.3.4.zip`](https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip)
 
-Then build and run:
+The archive has no top-level folder, so unzip it and you are already in the app
+directory:
 
 ```bash
-unzip eaa-scanner-desktop-src-1.3.4.zip && cd desktop
+unzip eaa-scanner-desktop-src-1.3.4.zip
 npm install
 npm start
 ```
