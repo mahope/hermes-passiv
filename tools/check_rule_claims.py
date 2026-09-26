@@ -12,6 +12,9 @@ rigtigt.
     købsside.
   - Opgave 84: de 15 `/guides/*`-sider sagde "16 automated rules" — også
     forkert, sandheden er 15.
+  - Opgave 85: `site/wordpress-plugin.html` holdt pluginsiden undtaget, fordi
+    motoren "ligger i ../auditedwp". Den gør ikke: `scanner/wp-plugin/` er i
+    *dette* repo, og det tal, siden lovede, var hverken 15 eller 16.
 
 Fejlen var ikke en skrivefejl. Den var, at **regeltallet aldrig blev defineret
 et sted** — hver side gættede sit eget tal, og intet checkede det mod koden.
@@ -29,6 +32,7 @@ import re
 import shutil
 import sys
 import tempfile
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,6 +43,17 @@ ROOT = Path(__file__).resolve().parent.parent
 RE_FREE_ID = re.compile(r"""add\('([A-Z_0-9]+)'|findings\.push\(\{\s*id:'([A-Z_0-9]+)'""")
 RE_PRO_ID = re.compile(r"push\('([A-Z_0-9]+)'")
 RE_ELSE_IF = re.compile(r"\belse\s+if\s*\(")
+
+# PHP-motoren skriver sit regel-id på to måder: `$add( 'ID', …)` og
+# `$findings[] = array( 'rule_id' => 'ID', … )`. Den tredje form i JS,
+# `findings.push({id:'ID'})`, findes ikke i PHP.
+RE_PHP_FREE_ID = re.compile(
+    r"""add\(\s*'([A-Z_0-9]+)'|'rule_id'\s*=>\s*'([A-Z_0-9]+)'""")
+
+# Motoren i det zip, kunden henter. Ikke `scanner/wp-plugin/`: kilden er
+# versioneret i dette repo, men **den publicerede fil er det, løftet gælder** —
+# og den er ikke den samme (opgave 85 målte 16 i zip'en mod 22 i kilden).
+PLUGIN_ENGINE_IN_ZIP = "eaa-compliance-scanner/engine.php"
 
 # Et løfte er et tal umiddelbart før en af disse. Kun disse former gater:
 # opgaven er at holde *regel*-tal sande, ikke at tælle alle tal på en side.
@@ -93,11 +108,14 @@ class Layout:
         return self.site / "scan.html"
 
     @property
-    def excluded(self) -> dict[Path, str]:
-        return {
-            self.site / "wordpress-plugin.html":
-                "motoren ligger i ../auditedwp (dette repo ejer den ikke)",
-        }
+    def plugin_zip(self) -> Path:
+        """Det zip kunden henter. Kilden til pluginsidens regeltal."""
+        return self.site / "eaa-compliance-scanner.zip"
+
+    @property
+    def plugin_page(self) -> Path:
+        """Siden der sælger pluginet — målt mod `plugin_zip`, ikke mod JS."""
+        return self.site / "wordpress-plugin.html"
 
     def rel(self, path: Path) -> str:
         return str(path.relative_to(self.site.parent))
@@ -120,6 +138,34 @@ def free_rule_ids(path: Path) -> tuple[str, ...]:
         if RE_ELSE_IF.search(line):
             continue
         for m in RE_FREE_ID.finditer(line):
+            rid = m.group(1) or m.group(2)
+            if rid not in seen:
+                seen.append(rid)
+    return tuple(seen)
+
+
+def php_rule_ids(zip_path: Path) -> tuple[str, ...]:
+    """Regel-id'erne i PHP-motoren **i det publicerede zip**.
+
+    Måler det, brugeren faktisk installerer, og ikke `scanner/wp-plugin/`.
+    De to er ikke ens: opgave 85 målte 16 i zip'en mod 22 i kilden, fordi
+    kilden har seks v1.2.0-regler der endnu ikke er bygget ind i zip'en.
+
+    En manglende motor er en fejl, ikke nul — ellers ville porten tie om at
+    løftet ikke kan måles, hvilket er præcis det den blev undtaget for.
+    """
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            src = zf.read(PLUGIN_ENGINE_IN_ZIP).decode("utf-8")
+    except (OSError, KeyError, zipfile.BadZipFile) as exc:
+        raise SystemExit(
+            f"check_rule_claims: kan ikke læse {PLUGIN_ENGINE_IN_ZIP} fra "
+            f"{zip_path.name} ({exc}) — pluginsidens regeltal kan ikke måles")
+    seen: list[str] = []
+    for line in src.splitlines():
+        if RE_ELSE_IF.search(line) or re.search(r"\belseif\s*\(", line):
+            continue
+        for m in RE_PHP_FREE_ID.finditer(line):
             rid = m.group(1) or m.group(2)
             if rid not in seen:
                 seen.append(rid)
@@ -151,8 +197,6 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
     """Alle regel-løfter som `(fil, linje, tal, er_total)`."""
     claims: list[tuple[Path, int, int, bool]] = []
     for path in sorted(lay.site.rglob("*.html")):
-        if path in lay.excluded:
-            continue
         for i, line in enumerate(_read(path).splitlines(), 1):
             # Totaltallene tages først og klippes væk, så det frie tal i samme
             # linje ("33 checks in all — the free 15 …") stadig måles som frit.
@@ -172,10 +216,13 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
 def check(lay: Layout) -> list[str]:
     """Fejlmeldinger for alle løfter der ikke matcher den målte kode."""
     free = {p: len(free_rule_ids(p)) for p in lay.engines}
+    php_n = len(php_rule_ids(lay.plugin_zip))
     pro = len(pro_rule_ids(lay.worker))
     errs: list[str] = []
     for path, line_no, claimed, is_total in collect(lay):
-        expected = free[engine_for(path, lay)] + (pro if is_total else 0)
+        # Pluginsiden sælger PHP-motoren i zip'en, de andre sider JS-motoren.
+        base = php_n if path == lay.plugin_page else free[engine_for(path, lay)]
+        expected = base + (pro if is_total else 0)
         if claimed != expected:
             kind = "Pro-total" if is_total else "frie regler"
             errs.append(f"{lay.rel(path)}:{line_no}: {kind} løfter {claimed}, "
@@ -196,11 +243,14 @@ def show_list(lay: Layout) -> str:
         lines.append(f"  {lay.rel(p)}: {len(ids)} regler")
         lines.append(f"    {', '.join(ids)}")
     pro = pro_rule_ids(lay.worker)
+    php = php_rule_ids(lay.plugin_zip)
     lines += ["", f"  site/_worker.js reportProFindings(): {len(pro)} betalte checks",
               f"    {', '.join(pro)}", "",
+              f"  site/eaa-compliance-scanner.zip {PLUGIN_ENGINE_IN_ZIP}: "
+              f"{len(php)} regler",
+              f"    {', '.join(php)}",
+              f"    (kilden scanner/wp-plugin/ har flere — de er ikke i zip'en)", "",
               f"  Pro-total = {free_n} + {len(pro)} = {free_n + len(pro)}"]
-    for p, why in lay.excluded.items():
-        lines += ["", f"  UDEHOLDT: {lay.rel(p)} — {why}"]
     return "\n".join(lines)
 
 
@@ -280,9 +330,17 @@ def self_test() -> int:
         if total:
             wrong = real + pro_count(lay) + 1
             cases.append(("dansk total", da, total, f"{wrong} tjek i alt"))
+        # Den pluginside-port, opgave 85 tilføjede. Uden denne arm er den nye
+        # PHP-måling ubevistet: en fejl i zip-udpakningen ville give 0 og alt
+        # gå grønt, fordi ingen løfte på siden matcher et målt tal.
+        wp = lay.plugin_page
+        wp_claim = first_claim(wp, re.compile(r"\d+(?=\s+automated\s+rules)"))
+        if wp_claim:
+            php_real = len(php_rule_ids(lay.plugin_zip))
+            cases.append(("pluginside", wp, wp_claim, f"{php_real + 1} automated rules"))
 
-        if len(cases) != 3:
-            fails.append(f"selftest: fandt {len(cases)}/3 løfter at mutere")
+        if len(cases) != 4:
+            fails.append(f"selftest: fandt {len(cases)}/4 løfter at mutere")
 
         for name, path, old, new in cases:
             original = path.read_text(encoding="utf-8")
