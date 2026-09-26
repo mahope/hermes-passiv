@@ -84,8 +84,23 @@ globalThis.fetch = async (url, opts = {}) => {
   if (url.startsWith('https://api.stripe.com/v1/subscriptions/')) return new Response(JSON.stringify({ current_period_end: 2000000000 }));
   // /api/report henter den scannede side. En side uden cookie-banner, med en
   // form over http og uden HSTS/CSP-header giver fund i hver af de tre
-  // kategorier, saa testen kan bevise at Pro-analysen virker.
-  if (url.startsWith('https://scan.example/')) return new Response('<html lang="en"><head><title>Test</title></head><body><form action="http://insecure.example/send"></form></body></html>', { status: 200 });
+  // kategorier, saa testen kan bevise at Pro-analysen virker. Den bruger
+  // Google Analytics og linker samtidig til sin cookiepolitik — det er det
+  // virkelige billede, og det er præcis det tilfælde det gamle
+  // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
+  // href'en. Se de fire GDPR-fixtures nede for sig selv.
+  if (url.startsWith('https://scan.example/')) return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200 });
+  // GDPR-fundene skal hvile på bevis, ikke på ord. Fire sider, der dækker de
+  // fire former det virkelige web har:
+  if (url.startsWith('https://sporing.example/')) return new Response('<html lang="en"><head><title>Butik</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><h1>Butik</h1></body></html>', { status: 200 });
+  if (url.startsWith('https://stille.example/')) return new Response('<html lang="en"><head><title>GDPR og cookies forklaret</title><meta name="description" content="Vi tager kun nødvendige cookies"></head><body><h1>Om os</h1><footer><a href="/privatlivspolitik">Privatlivspolitik</a></footer></body></html>', { status: 200 });
+  if (url.startsWith('https://cmp.example/')) return new Response('<html lang="en"><head><title>Butik</title><script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" type="text/javascript"></script><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><h1>Butik</h1></body></html>', { status: 200 });
+  if (url.startsWith('https://egen-banner.example/')) return new Response('<html lang="en"><head><title>Butik</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><div id="cookie-banner" class="cookie-consent" role="dialog">Vi bruger cookies</div></body></html>', { status: 200 });
+  if (url.startsWith('https://meta-pixel.example/')) return new Response('<html lang="en"><head><title>Butik</title><script src="https://connect.facebook.net/en_US/fbevents.js"></script></head><body><h1>Butik</h1></body></html>', { status: 200 });
+  // Ren hjemmeside: ingen tracking og intet ord om cookies. Det gamle tjek
+  // gav den en rød GDPR-fejl om "tracking technologies" den ikke bruger —
+  // 36 af vores egne 298 sider fik den.
+  if (url.startsWith('https://minimal.example/')) return new Response('<html lang="en"><head><title>Cykelsmed</title><meta name="description" content="Reparation af cykler i Aarhus"></head><body><h1>Cykelsmed</h1><footer><a href="/privatlivspolitik">Privatlivspolitik</a></footer></body></html>', { status: 200 });
   if (url === 'https://api.resend.com/emails') { if (resendNede) return new Response('{}', { status: 503 }); mails.push({ ...JSON.parse(opts.body), idem: opts.headers['Idempotency-Key'] }); return new Response('{}', { status: 200 }); }
   if (url.startsWith('https://api.stripe.com/v1/invoices/')) {
     const id = decodeURIComponent(url.split('/invoices/')[1].split('?')[0]);
@@ -370,6 +385,28 @@ r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://127.0.0.
 ok('rapporten henter ikke private værter (SSRF)', r.status === 400, r.status);
 r = await rep({ license_key: euKey, device_id: 'pro-dev', url: 'https://scan.example.local/' });
 ok('.local-vært afvist', r.status === 400, r.status);
+
+// GDPR-fundene skal ramme det de er lavet til. Det gamle tjek var
+// /cookie|consent|gdpr|cmp/ over hele HTML'en, altså et ordmønster: en side
+// der bruger Google Analytics og samtidig linker til den cookiepolitik GDPR
+// kræver, blev meldt som renset, fordi "cookie" stod i href'en. Målt på vores
+// egne 298 sider passede 254 uden eneste consent-script, og 36 fik en rød
+// GDPR-fejl uden at sætte én eneste cookie.
+const idsFor = async (url) => (await (await rep({ license_key: euKey, device_id: 'pro-dev', url })).json()).findings.map(f => f.id);
+let g = await idsFor('https://sporing.example/');
+ok('GA uden banner giver COOKIE_BANNER og GA_NO_CONSENT', g.includes('COOKIE_BANNER') && g.includes('GA_NO_CONSENT'), g.join(','));
+g = await idsFor('https://meta-pixel.example/');
+ok('Meta-pixel uden banner giver COOKIE_BANNER og FB_NO_CONSENT', g.includes('COOKIE_BANNER') && g.includes('FB_NO_CONSENT'), g.join(','));
+g = await idsFor('https://cmp.example/');
+ok('en consent-platform tæller som banner', !g.includes('COOKIE_BANNER') && !g.includes('GA_NO_CONSENT') && g.includes('COOKIE_SCRIPTS'), g.join(','));
+g = await idsFor('https://egen-banner.example/');
+ok('et eget banner-element tæller som banner', !g.includes('COOKIE_BANNER') && !g.includes('GA_NO_CONSENT'), g.join(','));
+g = await idsFor('https://stille.example/');
+ok('en side der hverken tracker eller har banner får ingen GDPR-fejl', !g.includes('COOKIE_BANNER') && !g.includes('GA_NO_CONSENT') && !g.includes('FB_NO_CONSENT'), g.join(','));
+ok('…og siger i stedet hvorfor der ikke står et GDPR-fund', g.includes('NO_ANALYTICS'), g.join(','));
+g = await idsFor('https://minimal.example/');
+ok('en side uden tracking og uden cookie-ord får ingen GDPR-fejl', !g.includes('COOKIE_BANNER') && !g.includes('GA_NO_CONSENT') && !g.includes('FB_NO_CONSENT'), g.join(','));
+ok('en cookiepolitik-ling giver ikke en renset mangel-melding', (await idsFor('https://scan.example/')).includes('COOKIE_BANNER'));
 
 // Selve hullet: hvis nøglen ikke gør Pro-fundene afhængige af serveren, er
 // Ctrl+P stadig en gratis vej til det betalte. Porten læser derfor kilden.
