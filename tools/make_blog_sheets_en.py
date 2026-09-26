@@ -34,8 +34,12 @@ FAQS = [
      'then copy. Lazy-loaded rows that have never rendered cannot be copied because '
      'they are not in the document yet.'),
     ('Is anything uploaded to a server?',
-     'No. Clean Copy works entirely inside your browser. The table never leaves your '
-     'machine until you paste it where you want it.'),
+     'The table does not. Clean Copy reads and converts it in your own browser, so it '
+     'never reaches a server — the result only exists on your clipboard until you paste '
+     'it. Two other things do leave your browser, and both only when you ask for them: an '
+     'anonymous page-view count, and — if you activate a Clean Copy Pro key — that key '
+     'and a device id, sent to our license API on mahope.tools so the license can be '
+     'validated.'),
 ]
 
 ARTICLE = {
