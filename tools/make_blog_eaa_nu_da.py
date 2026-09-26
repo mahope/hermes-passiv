@@ -222,18 +222,7 @@ if SLUG not in x:
 else:
     print('eaa-frister-2026 already linked')
 
-# --- llms.txt: add both new pages if missing ---
-ll = os.path.join(ROOT, 'site/llms.txt')
-l = open(ll).read()
-adds = []
-if '/clean-copy-brew' not in l:
-    adds.append('- [Clean Copy CLI via Homebrew](https://hermes-passiv.pages.dev/clean-copy-brew): one-command brew install of the HTML-to-Markdown CLI.')
-if '/da/blog/' + SLUG not in l:
-    adds.append('- [EAA-fristen er passeret — hvad nu?](https://hermes-passiv.pages.dev/da/blog/eaa-frist-hvad-nu): Danish guide on what the June 2026 accessibility deadline means now, with free checking tools.')
-if adds:
-    open(ll, 'a').write('\n'.join(adds) + '\n')
-    print('llms.txt:', len(adds), 'entries added')
-else:
-    print('llms.txt already up to date')
-
+# llms-filen i site/ er fjernet. build_sites.py skriver den publicerede
+# ud fra sidernes `pages`, saa kildefilens egen kopi naede aldrig ud —
+# linjerne her gjorde ingen. Se tools/check_legacy_seo_paths.py.
 print('\nDone:', out)

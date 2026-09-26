@@ -219,13 +219,7 @@ if SLUG not in x:
 else:
     print('eaa-enforcement-2026 already linked')
 
-# --- llms.txt ---
-ll = os.path.join(ROOT, 'site/llms.txt')
-l = open(ll).read()
-if '/blog/' + SLUG not in l:
-    open(ll, 'a').write('- [EAA deadline passed — what now?](https://hermes-passiv.pages.dev/blog/eaa-deadline-passed): English guide on what the June 2026 accessibility deadline means in practice, with free checking tools.\n')
-    print('llms.txt: entry added')
-else:
-    print('llms.txt already up to date')
-
+# llms-filen i site/ er fjernet. build_sites.py skriver den publicerede
+# ud fra sidernes `pages`, saa kildefilens egen kopi naede aldrig ud —
+# linjerne her gjorde ingen. Se tools/check_legacy_seo_paths.py.
 print('\nDone:', out)

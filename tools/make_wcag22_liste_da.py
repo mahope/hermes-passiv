@@ -282,15 +282,9 @@ for src_rel in ('da/blog/wcag-22-aendringer.html', 'blog/wcag-22-what-changes.ht
     else:
         print(src_rel + ': already linked')
 
-# --- llms.txt ---
-ll = os.path.join(ROOT, 'site/llms.txt')
-l = open(ll).read()
-if '/da/blog/' + SLUG not in l:
-    open(ll, 'a').write('- [WCAG 2.2-kravene pa dansk](https://hermes-passiv.pages.dev/da/blog/wcag-22-krav-liste): Complete Danish WCAG 2.2 A/AA criteria checklist including the nine new-in-2.2 requirements.\n')
-    print('llms.txt: entry added')
-else:
-    print('llms.txt already up to date')
-
+# llms-filen i site/ er fjernet. build_sites.py skriver den publicerede
+# ud fra sidernes `pages`, saa kildefilens egen kopi naede aldrig ud —
+# linjerne her gjorde ingen. Se tools/check_legacy_seo_paths.py.
 # --- sitemap (idempotent) ---
 raise SystemExit(
     "Sitemap: build_sites.py ejer alle sitemapper (dist/<domaene>/sitemap.xml). "
