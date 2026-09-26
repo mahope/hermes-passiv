@@ -3327,8 +3327,8 @@ def self_test() -> int:
             raise AssertionError(
                 f"site/compliance-report.html: den udgående løgned står stadig i den "
                 f"rigtige fil: {old[:60]!r}")
-    for anchor in ("PDF download of the full report", "Licence covers 1 machine",
-                   "24 automated checks, including 16 accessibility rules"):
+    for anchor in ("PDF download of the whole report", "Licence covers 1 machine",
+                   "29 checks in all"):
         if anchor not in eucomply_real:
             raise AssertionError(
                 f"site/compliance-report.html: mutationsankeret mangler i den rigtige "
@@ -3336,11 +3336,11 @@ def self_test() -> int:
     eucomply_catalog = {**good, "offers": [{"path": "site/compliance-report.html",
                                             "product": "eucomply-pro"}]}
     eucomply_back = eucomply_real.replace(
-        "PDF download of the full report", "Continuous compliance monitoring for one website", 1)
+        "PDF download of the whole report", "Continuous compliance monitoring for one website", 1)
     eucomply_back = eucomply_back.replace(
         "Licence covers 1 machine", "Client-ready branded PDF reports", 1)
     eucomply_back = eucomply_back.replace(
-        "24 automated checks, including 16 accessibility rules", "Priority support (email within 24h)", 1)
+        "29 checks in all", "Priority support (email within 24h)", 1)
     eucomply_found = check_pro_not_built(eucomply_catalog, [("site/compliance-report.html", eucomply_back)])
     if not eucomply_found or "compliance monitoring" not in " ".join(eucomply_found):
         raise AssertionError(
