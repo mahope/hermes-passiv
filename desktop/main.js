@@ -129,7 +129,7 @@ const menuTemplate = [
           type: 'info',
           title: 'EAA Compliance Scanner',
           message: `EAA Compliance Scanner v${VERSION}`,
-          detail: 'WCAG 2.1 AA automated scanner for web developers and QA.\n\nFree tier: single-page and whole-site scanning, PDF reports.\nPro: batch URL scanning, CSV/JSON export, unlimited crawl depth.\n\nBuilt by Mahope · https://hermes-passiv.pages.dev',
+          detail: 'WCAG 2.1 AA automated scanner for web developers and QA.\n\nFree: single-page and whole-site scanning, PDF reports.\nThere is no Pro licence for the EAA scanner today, and no price to pay for one.\n\nBuilt by Mahope · https://mahope.tools',
         });
       }},
     ],

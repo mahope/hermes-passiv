@@ -41,9 +41,9 @@
           <span class="pro-badge">PRO</span>
           <h3>Batch URL Scanning</h3>
           <p>Scan up to 100 URLs at once. Get aggregated results, CSV/JSON export, and a single combined report.</p>
-          <p><strong>$19/year</strong> — covers all platforms: desktop, CLI, web, and CI.</p>
-          <button id="activateFromBatchBtn" class="btn-secondary">Activate Pro License</button>
-          <p class="pro-note">Already have a license? Click above to enter it.</p>
+          <p class="pro-note">There is no Pro licence for the EAA scanner today, and no price to pay for one. Everything else in this app is free and unlimited.</p>
+          <button id="activateFromBatchBtn" class="btn-secondary">Enter a licence key</button>
+          <p class="pro-note">Already have a key? Click above to enter it.</p>
         </div>
       </div>
       <div class="batch-ready hidden" id="batchReady">
@@ -67,9 +67,9 @@
     <!-- License activation dialog (modal) -->
     <div class="modal-overlay hidden" id="licenseModal">
       <div class="modal">
-        <h3>🔑 Activate Pro License</h3>
-        <p>Enter your license key to unlock batch scanning, CSV/JSON export, and unlimited crawl depth.</p>
-        <p class="pro-note">Purchase a license at <a href="#" id="buyLicenseLink">hermes-passiv.pages.dev/clean-copy</a></p>
+        <h3>🔑 Enter a licence key</h3>
+        <p>Enter a key to unlock batch scanning, CSV/JSON export, and unlimited crawl depth.</p>
+        <p class="pro-note" id="proForSaleNote">There is no Pro licence for the EAA scanner today, and no price to pay for one — so there is nothing to buy yet. The key field stays here so a licence keeps working if one is released.</p>
         <input type="text" id="licenseKeyInput" placeholder="Paste your 32-character license key" spellcheck="false" class="license-input">
         <div class="modal-buttons">
           <button id="activateBtn" class="btn-primary">Activate</button>
@@ -155,7 +155,6 @@ const activateBtn = document.getElementById('activateBtn');
 const deactivateBtn = document.getElementById('deactivateBtn');
 const closeLicenseModal = document.getElementById('closeLicenseModal');
 const licenseStatus = document.getElementById('licenseStatus');
-const buyLicenseLink = document.getElementById('buyLicenseLink');
 const activateFromBatchBtn = document.getElementById('activateFromBatchBtn');
 
 // Batch scan elements
@@ -607,7 +606,6 @@ deactivateBtn.addEventListener('click', onDeactivate);
 closeLicenseModal.addEventListener('click', () => licenseModal.classList.add('hidden'));
 licenseModal.addEventListener('click', (e) => { if (e.target === licenseModal) licenseModal.classList.add('hidden'); });
 licenseKeyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') onActivate(); });
-buyLicenseLink.addEventListener('click', (e) => { e.preventDefault(); window.electronAPI.openExternal('https://hermes-passiv.pages.dev/clean-copy'); });
 
 // Batch scan
 batchScanBtn.addEventListener('click', doBatchScan);
@@ -637,7 +635,7 @@ exportCsvBtn.addEventListener('click', async () => {
 // External link handler
 document.getElementById('siteLink').addEventListener('click', (e) => {
   e.preventDefault();
-  window.electronAPI.openExternal('https://hermes-passiv.pages.dev');
+  window.electronAPI.openExternal('https://mahope.tools');
 });
 
 // Keyboard shortcut: Cmd+K (or Ctrl+K) to focus URL input
