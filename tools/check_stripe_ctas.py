@@ -315,6 +315,18 @@ FREE_TIER_PHRASES = re.compile(
 FREE_LABEL = re.compile(r"\bfree\b|\bgratis\b", re.I)
 PAID_LABEL = re.compile(r"\bpro\b|\bpaid\b|\bpremium\b|\$|\busd\b|\bkr\.?|\beur\b|\bdkk\b", re.I)
 
+#: En tabelcelle der kun svarer ja eller nej. Den siger intet om hvad
+#: funktionen er — den siger kun hvilken spalte funktionen står i. Målt på
+#: de tre tabeller porten dømmer: `deskuptime.com` skriver "yes"/"—",
+#: bloggen skriver "✓"/"—", og `page-profile` skriver "yes"/"—".
+#:
+#: Uden disse to mønstre taber `paid_contexts` hele rækkens *navn*, fordi
+#: den kun samler cellens egen tekst, og en celle der siger "✓" forteller
+#: intet. Det var målt, ikke formodet: `Webhook alerts (CLI) | — | ✓` gav
+#: en betalt spalte der indeholdt fire tegn, ikke navnet på funktionen.
+YES_CELL = re.compile(r"^[\s]*(?:yes|ja|ok)[\s.]*$|^\s*[✓✔xX]\s*$", re.I)
+NO_CELL = re.compile(r"^(?:[—–\-‐]\s*)+$|^\s*(?:no|nej)[\s.]*$", re.I)
+
 # `PRICE_TOKEN` kræver et `$`, og det er ikke nok. `/clean-copy-tool` skriver
 # sin Pro-pris som "19 USD per year" — hele den families vigtigste købsside
 # står altså med en pris, en `$`-baseret regel ikke kan se. Derfor tæller
@@ -1460,10 +1472,28 @@ def paid_contexts(text: str) -> tuple[str, str, bool]:
             None,
         )
         for row in rows[1:]:
-            if len(row) > paid_column:
-                paid_cells.add(normalize(row[paid_column]).casefold())
-            if free_column is not None and len(row) > free_column:
-                free_cells.add(normalize(row[free_column]).casefold())
+            paid_cell = row[paid_column] if len(row) > paid_column else ""
+            free_cell = (row[free_column] if free_column is not None
+                         and len(row) > free_column else "")
+            if paid_cell.strip():
+                paid_cells.add(normalize(paid_cell).casefold())
+            if free_cell.strip():
+                free_cells.add(normalize(free_cell).casefold())
+            # En kryds-tabel skriver funktionens *navn* i rækkens første
+            # celle og svarer "✓"/"—" i spalterne, så cellerne alene forteller
+            # intet om hvad det er. Rækkens navn hører derfor til den spalte
+            # der svarer ja — og til ingen, når begge spalter svarer ja,
+            # fordi en funktion begge udgaver har ikke er en *betalt* påstand
+            # og heller ikke en *gratis* ene.
+            if not row or not row[0].strip():
+                continue
+            label = normalize(row[0]).casefold()
+            paid_yes = YES_CELL.match(paid_cell) is not None
+            free_yes = YES_CELL.match(free_cell) is not None
+            if paid_yes and not free_yes:
+                paid_cells.add(label)
+            elif free_yes and not paid_yes:
+                free_cells.add(label)
     cards = TierCards()
     cards.feed(text)
     cards.close()
@@ -2840,6 +2870,76 @@ def self_test() -> int:
               "blinde parser læse mindre end den rigtige — "
               f"fejlende mutationer: {blind}; læst med/uden blindning: {read_right} "
               f"mod {read_blind}")
+        return 1
+
+    # ── kryds-tabeller: rækkens navn *er* påstanden ───────────────────────
+    #
+    # En `✓`-tabel skriver funktionens navn i rækkens første celle og
+    # svarer "✓"/"—" i spalterne, så de betalte celler alene forteller intet
+    # om hvad det er. Målt før rettelsen: på `page-profile` gav
+    # `Compare two URLs side by side | — | yes` en betalt spalte uden navnet,
+    # så en erklæret gratis-funktion der lå i den række var usynlig for den
+    # port der skal finde den. Derfor følger rækkens navn den spalte der
+    # svarer ja — og ingen af dem, når begge svarer ja.
+    #
+    # Beviset går tre veje, fordi det er den *modsatte* retning rettelsen
+    # styrker: (a) en erklæret gratis-funktion i rækkens navn giver præcis
+    # én rød, (b) samme side med den betalte spalte sat til "nej" giver nul,
+    # fordi funktionen så ikke længere sælges, og (c) en port der har
+    # glemt reglen giver nul på (a) — ellers er der ingen forskel at bevise,
+    # og en mutation der ikke biter er ingen bevis.
+    real_catalog = load_catalog(CATALOG)
+    tick_relative = "site/page-profile.html"
+    tick_id = "compare two urls side by side"
+    tick_key = "page-profile-pro"
+    tick_text = (ROOT / tick_relative).read_text(encoding="utf-8")
+    tick_lang = page_lang(tick_relative, tick_text)
+    tick_entry = {"id": tick_id, "where": "selftest: mutation", "labels": {tick_lang: [tick_id]}}
+    tick_one = {
+        **real_catalog,
+        "products": {tick_key: {**real_catalog["products"][tick_key],
+                                "free_features": [tick_entry]}},
+        "offers": [{"path": tick_relative, "product": tick_key}],
+    }
+    def tick_sold(blinded: bool) -> list[str]:
+        """Gratis-funktionen i rækkens navn, dømt af porten med og uden reglen."""
+        if not blinded:
+            return check_free_features(tick_one, [(tick_relative, tick_text)])
+        # Isolationen gør præcis den nye kode blind: `YES_CELL` læses kun
+        # af rækkens navn, så en regex der aldrig rammer slår hele reglen
+        # fra — og intet andet.
+        saved = globals()["YES_CELL"]
+        globals()["YES_CELL"] = re.compile(r"(?!x)x")
+        try:
+            return check_free_features(tick_one, [(tick_relative, tick_text)])
+        finally:
+            globals()["YES_CELL"] = saved
+
+    # Kun den første retning tælles: "Pro-kortet sælger". Den anden — den
+    # gratis side skal *nævne* funktionen — er rød for ethvert syntetisk
+    # katalogsignal, fordi siderne ikke er skrevet til den, og den siger
+    # intet om rækkenavnet. Beviset er derfor parret (1, 0): med reglen er
+    # rækkens navn solgt, og uden reglen er det ikke. Den tredje arm —
+    # "sæt den betalte spalte til nej og se det forsvinde" — er bevidst
+    # ikke skrevet: målingen viser at "Compare two URLs side by side"
+    # også står i brødteksten, så en celleflip alene fjerner navnet fra
+    # to steder og beviser intet om reglen.
+    def tick_sold_as_paid(problems: list[str]) -> list[str]:
+        return [x for x in problems if "Pro-kortet sælger" in x and tick_id in x]
+
+    if "Compare two URLs side by side" not in tick_text:
+        print(f"SELFTEST FEJLER: mutationen for {tick_id!r} passer ikke længere på "
+              f"{tick_relative} — rækken er flyttet eller slettet")
+        return 1
+
+    sold = tick_sold_as_paid(tick_sold(False))
+    blind = tick_sold_as_paid(tick_sold(True))
+    if len(sold) != 1 or blind:
+        print(f"SELFTEST FEJLER: kryds-tabellen i {tick_relative} sælger rækkens navn "
+              f"{len(sold)} gange (forventet 1) og {len(blind)} gange når rækkens navn "
+              f"ikke følger spalten (forventet 0). En kryds-tabel skal give hver række en "
+              f"placering, ellers sælger porten en funktion på en side der ikke læser den "
+              f"som betalt")
         return 1
 
     # ── pro_not_built: et løfte koden ikke holder ─────────────────────────
