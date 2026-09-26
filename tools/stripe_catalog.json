@@ -68,6 +68,14 @@
       "payment_link": "https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01",
       "pro_features": [
         {
+          "id": "desktop-app",
+          "where": "deskuptime/src/features.js:136-144 (MATRIX-rækken 'desktop-app', free: NO, pro: YES, status: PRIVATE_APP). Appens kode ligger i et privat repo (sibling-commit 39c434f, 25/9), og deskuptime/README.md:84 og :97-99 siger det samme",
+          "labels": {
+            "en": ["desktop app"],
+            "da": ["desktop-app"]
+          }
+        },
+        {
           "id": "unlimited-sites",
           "where": "deskuptime/src/features.js:33-34 (FREE.urlLimit 3 -> PRO.urlLimit Infinity), håndhævet i src/watch.js:372-376",
           "labels": {

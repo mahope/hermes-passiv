@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DeskUptime">
 <meta property="og:title" content="DeskUptime — uptime, SSL and content checks from your own machine">
-<meta property="og:description" content="Free CLI for uptime, SSL expiry and content-change checks. Desktop app for macOS and Windows. No monthly fee.">
+<meta property="og:description" content="Free MIT CLI for uptime, SSL expiry and content-change checks. Desktop app for macOS and Windows with Pro, 19 USD once. No monthly fee.">
 <meta property="og:url" content="https://deskuptime.com/">
 <meta property="og:image" content="https://deskuptime.com/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -39,10 +39,10 @@
     <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee, nothing about your sites stored on someone else's server.</p>
     <div class="hero-cta">
       <a href="#install" class="btn-primary">Install the CLI</a>
-      <a href="#desktop" class="btn-secondary">Download the desktop app</a>
+      <a href="#desktop" class="btn-secondary">Desktop app — with Pro</a>
       <a href="https://github.com/mahope/deskuptime" class="btn-secondary">Source on GitHub</a>
     </div>
-    <span class="hero-note">CLI is free and MIT-licensed. Desktop app is free for up to 3 sites; Pro licence 19 USD one-time.</span>
+    <span class="hero-note">The CLI is free and MIT-licensed. The desktop app is part of Pro: 19 USD one-time, 3 machines.</span>
   </div>
 </div>
 
@@ -96,6 +96,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
   <div class="container">
     <h2>Desktop app</h2>
     <p>A small Tauri app for macOS and Windows that lives in the system tray and runs the same checks on a schedule. Notifications when a site goes down, a certificate approaches expiry or the content hash changes. Current version 0.2.7.</p>
+    <p>The app is closed-source and part of DeskUptime Pro. You can download the installer here, and it asks for the licence key from your Stripe receipt the first time you start it. <a href="#pro">Pro is 19 USD once</a>.</p>
     <ul class="downloads">
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-aarch64-apple-darwin.zip">macOS, Apple Silicon</a><span>zip, aarch64</span></li>
       <li><a href="https://github.com/mahope/deskuptime/releases/download/desktop-v0.2.7/DeskUptime-macOS-x86_64-apple-darwin.zip">macOS, Intel</a><span>zip, x86_64</span></li>
@@ -124,21 +125,22 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
   <div class="container">
     <h2>Free and Pro</h2>
     <table class="compare" id="compare">
-      <thead><tr><th></th><th>CLI</th><th>Desktop</th><th>Desktop Pro</th></tr></thead>
+        <thead><tr><th></th><th>Free CLI</th><th>Desktop Pro</th></tr></thead>
       <tbody>
-        <tr><td>Uptime, SSL and content checks</td><td>yes</td><td>yes</td><td>yes</td></tr>
-        <tr><td>One-off <code>check</code> of any number of URLs</td><td>yes</td><td>yes</td><td>yes</td></tr>
-        <tr><td>Continuous watch / background checks</td><td>yes</td><td>yes</td><td>yes</td></tr>
-        <tr><td>System tray and notifications</td><td>—</td><td>yes</td><td>yes</td></tr>
-        <tr><td>Sites in watch mode</td><td>3</td><td>3</td><td>unlimited</td></tr>
-        <tr><td>Webhook alerts from the CLI</td><td>—</td><td>—</td><td>yes</td></tr>
-        <tr><td>Client-ready report from the CLI (Markdown and JSON)</td><td>—</td><td>—</td><td>yes</td></tr>
-        <tr><td>Price</td><td>free</td><td>free</td><td>19 USD once</td></tr>
+        <tr><td>Uptime, SSL and content checks</td><td>yes</td><td>yes</td></tr>
+        <tr><td>One-off <code>check</code> of any number of URLs</td><td>yes</td><td>yes</td></tr>
+        <tr><td>Continuous watch / background checks</td><td>yes</td><td>yes</td></tr>
+        <tr><td>The desktop app for macOS and Windows</td><td>—</td><td>yes</td></tr>
+        <tr><td>System tray and notifications</td><td>—</td><td>yes</td></tr>
+        <tr><td>Sites in watch mode</td><td>3</td><td>unlimited</td></tr>
+        <tr><td>Webhook alerts from the CLI</td><td>—</td><td>yes</td></tr>
+        <tr><td>Client-ready report from the CLI (Markdown and JSON)</td><td>—</td><td>yes</td></tr>
+        <tr><td>Price</td><td>free</td><td>19 USD once</td></tr>
       </tbody>
     </table>
     <div class="pricing">
       <div>
-        <h3>CLI and desktop app</h3>
+        <h3>CLI</h3>
         <p class="price">Free</p>
         <p>MIT-licensed. One-off checks have no limits; continuous watch mode covers up to three sites.</p>
         <p>Free without a licence key: one-off checks, SSL and content checks, and JSON output for scripts and CI.</p>
@@ -146,7 +148,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
       <div>
         <h3>Desktop Pro</h3>
         <p class="price">19 USD <small>one-time, 3 machines, all 1.x updates</small></p>
-        <p>Removes the three-site limit, lets the CLI poll every 30 seconds instead of every 60, adds webhook alerts and a client-ready report in Markdown and JSON. You get a licence key and pay only once. Pro activates and revalidates your licence with mahope.tools.</p>
+        <p>Gives you the desktop app for macOS and Windows, removes the three-site limit, lets the CLI poll every 30 seconds instead of every 60, adds webhook alerts and a client-ready report in Markdown and JSON. You get a licence key and pay only once. Pro activates and revalidates your licence with mahope.tools.</p>
         <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Buy DeskUptime Pro — 19 USD</a></p>
         <p class="notice">Secure checkout via Stripe. Your licence key arrives by email and on the thank-you page. The free version stays complete and MIT-licensed, and nothing in it expires.</p>
       </div>
@@ -183,7 +185,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
 <section>
   <div class="container">
     <h2>Who makes this</h2>
-    <p>DeskUptime is built by Mads Holst Jensen, an independent developer in Odense, Denmark, working as <a href="https://mahoje.dk">mahoje.dk</a>. It came out of looking after client WordPress sites and wanting a check that did not need another account. The engine, the CLI and the desktop app are all on <a href="https://github.com/mahope/deskuptime">GitHub</a>.</p>
+    <p>DeskUptime is built by Mads Holst Jensen, an independent developer in Odense, Denmark, working as <a href="https://mahoje.dk">mahoje.dk</a>. It came out of looking after client WordPress sites and wanting a check that did not need another account. The engine and the CLI are on <a href="https://github.com/mahope/deskuptime">GitHub</a> as MIT-licensed source. The desktop app is closed-source and ships with Pro.</p>
     <p>Related reading: <a href="/blog/check-ssl-certificate-expiry">checking SSL certificate expiry</a>, <a href="/blog/desktop-website-monitor-cli">website monitoring from the terminal</a>, <a href="/blog/post-deploy-smoke-tests-static-sites">post-deploy smoke tests for static sites</a>.</p>
   </div>
 </section>
