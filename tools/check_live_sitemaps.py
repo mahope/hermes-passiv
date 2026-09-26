@@ -146,10 +146,14 @@ def check_retired_downloads_live(domain: str) -> list[str]:
     begge var rene. Derfor ligger den her, i det job der kører efter hver deploy.
     """
     problems: list[str] = []
+    # `DIST` er `<repo>/dist`, så kilden er `DIST.parent` — ikke `DIST.parent.parent`,
+    # som var min første og kun fejl: kørsel `36207913926` døde i alle tre deploys
+    # med "cannot read tools/retired_downloads.json", fordi stien pegede ud af repoet.
+    catalog_path = Path(__file__).resolve().parent.parent / "tools" / "retired_downloads.json"
     try:
-        catalog = json.loads((DIST.parent.parent / "tools" / "retired_downloads.json").read_text(encoding="utf-8"))
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
-        return [f"cannot read tools/retired_downloads.json: {error}"]
+        return [f"cannot read {catalog_path.name}: {error}"]
     for retired, meta in (catalog.get(domain) or {}).items():
         status, _, headers, error = fetch(f"https://{domain}{retired}")
         if error:
