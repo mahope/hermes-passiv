@@ -38,7 +38,7 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
     return new Response('Not found', { status: 404 });
   } } };
 
-const mails = []; let stripeCalls = 0; let resendNede = false;
+const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0;
 const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
 const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
@@ -89,7 +89,7 @@ globalThis.fetch = async (url, opts = {}) => {
   // virkelige billede, og det er præcis det tilfælde det gamle
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
-  if (url.startsWith('https://scan.example/')) return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200 });
+  if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
   // GDPR-fundene skal hvile på bevis, ikke på ord. Fire sider, der dækker de
   // fire former det virkelige web har:
   if (url.startsWith('https://sporing.example/')) return new Response('<html lang="en"><head><title>Butik</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><h1>Butik</h1></body></html>', { status: 200 });
@@ -415,6 +415,72 @@ const clientSide = reportHtml.slice(reportHtml.indexOf('function runScan'), repo
 ok('ingen GDPR/NIS2-tjek er beregnet i browseren', !/COOKIE_BANNER|SEC_HSTS|OG_TITLE|hasCookieBanner/.test(clientSide));
 ok('siden henter Pro-fund fra /api/report', /fetch\('\/api\/report'/.test(reportHtml));
 ok('print uden licens er mærket som gratis', /print-only/.test(reportHtml));
+
+// 10) Grænse på de ruter, der henter en URL. Målt 26/9: ingen af de seks
+//     ruter, der henter en kalders URL eller gør tungt arbejde, havde nogen
+//     tæller, mens de tre billige (lookup, fulfillment, demo) alle havde. Alle
+//     fire domæner deler én worker, så en løbet kvote tager også
+//     /api/license/validate med — den rute betalende kunder er afhængige af.
+//
+//     Hver test bruger sin egen cf-connecting-ip, så tællerne ikke smitter
+//     ind i den 'unknown'-spand som resten af suiten deler.
+const ip = (n) => ({ headers: { 'cf-connecting-ip': `203.0.113.${n}` } });
+const scanGet = (init) => call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', init);
+
+// Under grænsen: kaldet går igennem og henter stadig. Beviser at tælleren
+// ikke har brudt scanneren, som er den offentlige indgang.
+r = await scanGet(ip(1));
+ok('scan-proxy under grænsen henter stadig siden', r.status === 200, r.status);
+
+// Over grænsen: 429, og — det der adskiller det fra en låst ude-kunde — med
+// CORS-headers, så browseren kan læse fejlen. Uden dem ser siden en uoplys
+// netværksfejl, som er præcis den følelse en 429 aldrig må give.
+for (let i = 1; i < 60; i++) await scanGet(ip(1));
+r = await scanGet(ip(1));
+const overBody = await r.json().catch(() => null);
+ok('scan-proxy over grænsen giver 429', r.status === 429, r.status);
+ok('429 kan læses i browseren (CORS med)', r.headers.get('Access-Control-Allow-Origin') === '*', r.headers.get('Access-Control-Allow-Origin'));
+ok('429 siger det er timegrænsen, ikke noget andet', /hour/i.test(overBody && overBody.error || ''), JSON.stringify(overBody));
+
+// Det vigtigste: en 429 skal spare arbejdet, ikke bare svare hurtigt. Før
+// kaldet må der ikke være sket en eneste ude-fetch.
+const fetchesBefore = scanFetches;
+for (let i = 0; i < 5; i++) await scanGet(ip(1));
+ok('en 429 henter ikke den url igen', scanFetches === fetchesBefore, `${scanFetches - fetchesBefore} fetch`);
+
+// Scoperne er adskilte. Et bureau der scanner mange kunders sider må ikke brænde
+// sin egen rapport- eller headerkvote af — og omvendt. Samme IP, anden rute.
+r = await call('/api/header-check?url=https%3A%2F%2Fscan.example%2F', ip(1));
+ok('en låst scan-proxy låser ikke header-check', r.status !== 429, r.status);
+
+// Fejler åbent: en tæller der går ned må aldrig tage værktøjet med. Det er den
+// modsatte fejlretning af den vi lukker her, og den er den der låser kunder ude.
+const rlGet = VISITS.get;
+VISITS.get = async (k) => { if (String(k).startsWith('rl:')) throw new Error('rate-KV nede'); return rlGet(k); };
+r = await scanGet(ip(2));
+ok('en nede tæller-KV låser ikke scanneren ude', r.status === 200, r.status);
+VISITS.get = rlGet;
+
+// Betalt rute: tælleren sidder efter licenstjekket, så en ugyldig nøgle koster
+// os intet og må ikke æde en kundes kvote. Den betalte sti skal også virke
+// under sin egen grænse — det er den, kunden betalte for.
+r = await rep({ license_key: 'a'.repeat(32), device_id: 'pro-dev', product: 'eucomply-pro', url: 'https://scan.example/' });
+ok('en ugyldig nøgle tæller ikke på rapportkvoten', r.status === 402, r.status);
+const repIp = { ...ip(3), method: 'POST', body: JSON.stringify({ license_key: euKey, device_id: 'pro-dev', url: 'https://scan.example/' }), headers: { 'content-type': 'application/json', 'cf-connecting-ip': '203.0.113.3' } };
+r = await call('/api/report', repIp);
+ok('en betalt kunde får stadig sin rapport under grænsen', r.status === 200 && (await r.json()).ok === true, r.status);
+for (let i = 1; i < 120; i++) await call('/api/report', repIp);
+r = await call('/api/report', repIp);
+ok('rapporten over grænsen giver 429 med timegrænsen', r.status === 429 && /hour/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
+// Klienten må ikke kalde en tidsgrænse for en afvisning af nøglen. Den gamle
+// 4xx-gren sagde "the report server refused the key", og en 429 nåede den.
+// Beviset er rækkefølgen: 429-grenen skal stå *før* den afvisende gren, ellers
+// kan en timegrænse aldrig nå den.
+const reportClient = reportHtml.slice(reportHtml.indexOf("fetch('/api/report'"));
+ok('siden har en egen 429-gren', /r\.status === 429/.test(reportClient));
+ok('timegrænsen nåer aldrig "refused the key"', reportClient.indexOf('r.status === 429') < reportClient.indexOf('refused the key'));
+ok('siden siger timegrænsen og åbner PDF\'en alligevel', /hourly report limit/.test(reportHtml) && /resets within the hour/.test(reportHtml));
 
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);
