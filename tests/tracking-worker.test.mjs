@@ -505,6 +505,9 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
     && data.stats.recentVisits === null && data.stats.recentDownloads === null, JSON.stringify(data));
   ok('manglende counters rapporteres ikke som nul',
     data.stats.waitlist === null && data.stats.scans === null, JSON.stringify(data.stats));
+  ok('tavse domæner er navngivet, så en monitor ikke skal gætte',
+    data.traffic_domains && Object.values(data.traffic_domains).every(state => state === 'unknown'),
+    JSON.stringify(data.traffic_domains));
 }
 
 {
@@ -514,6 +517,28 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   const data = await response.json();
   ok('delvis trafik rapporteres med kendte tal', data.traffic_status === 'partial'
     && data.stats.recentVisits === 1 && data.stats.recentDownloads === 0, JSON.stringify(data));
+  // Opgave fra planens NEXT_TASK 2: `status` var `kvOk ? 'healthy' : 'degraded'`,
+  // så et domæne der skriver intet aldrig kunne gøre cron rød. Det er den
+  // løgneste der holdt `traffic_status: partial` skjult i måneder.
+  ok('et tavst domæne gør status partial, ikke healthy', data.status === 'partial' && data.kv === true,
+    JSON.stringify({ status: data.status, traffic_domains: data.traffic_domains }));
+  ok('partial-svaret siger hvilke domæner der mangler',
+    data.traffic_domains && data.traffic_domains['mahope.tools'] === 'ok'
+    && Object.entries(data.traffic_domains).filter(([, state]) => state === 'ok').length === 1,
+    JSON.stringify(data.traffic_domains));
+}
+
+{
+  // Alle domæner taler: status skal være healthy igen, ellers går en rød port
+  // aldrig grøn igen — og det er sådan en port dør stille.
+  const env = makeEnv();
+  for (const domain of ['mahope.tools', 'cleancopy.tools', 'deskuptime.com', 'bugbottle.dev']) {
+    putMetric(env, domain, 'page', '/', 1, 1, domain);
+  }
+  const response = await worker.fetch(new Request('https://mahope.tools/api/health'), env, {});
+  const data = await response.json();
+  ok('komplet trafik giver healthy igen',
+    data.traffic_status === 'ok' && data.status === 'healthy', JSON.stringify(data));
 }
 
 {
@@ -524,6 +549,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   ok('degraderet health gør selvstændige counters ukendte', data.traffic_status === 'unknown'
     && data.stats.recentVisits === null && data.stats.recentDownloads === null
     && data.stats.waitlist === null && data.stats.scans === null, JSON.stringify(data));
+  ok('KV nede er degraded, ikke partial', data.status === 'degraded' && data.kv === false, data.status);
 }
 
 {

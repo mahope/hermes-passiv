@@ -679,6 +679,26 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_design_tokens.py", "--self-test"),
         inputs=("tools/check_design_tokens.py",),
     ),
+    # Opgave fra planens NEXT_TASK 2: `traffic_status: "partial"` har stået i
+    # `/api/health` i måneder uden at cron blev rød, fordi `status` var
+    # `kvOk ? 'healthy' : 'degraded'`. Rettelsen er delt: `_worker.js` har nu
+    # `partial` som egen tilstand og `traffic_domains`, og `tools/
+    # check_health_status.py` dømmer på beviset. Det er **kun** porten der kan
+    # køre her — selve dommeren taler med produktion og hører til cron'en.
+    Step(
+        id="health-acknowledgement-tests",
+        argv=("python3", "tools/test_health_acknowledgement.py"),
+        inputs=(
+            "tools/test_health_acknowledgement.py",
+            "tools/check_health_status.py",
+            "tools/health_acknowledged.json",
+            # De to overvågere, der begge nu kalder dommeren. Uden dem i
+            # filteret kunne en af dem blive ændret uden at porten kørte.
+            "daily-health-check.sh",
+            "health_check.py",
+            "site/_worker.js",
+        ),
+    ),
 )
 
 

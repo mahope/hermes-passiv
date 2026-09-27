@@ -8,7 +8,7 @@ cd "$DIR" || exit 1
 output=$(
   python3 build_sites.py &&
   python3 tools/check_live_sitemaps.py --attempts 1 --delay 0 &&
-  python3 -c 'import json, urllib.request; response=urllib.request.urlopen("https://mahope.tools/api/health", timeout=15); data=json.loads(response.read()); raise SystemExit(0 if response.status == 200 and data.get("status") == "healthy" else 1)' 2>&1
+  python3 tools/check_health_status.py 2>&1
 )
 exit_code=$?
 result=$(print -r -- "$output" | tr '\n' ' ' | cut -c1-1000)

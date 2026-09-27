@@ -180,10 +180,18 @@ def main():
         request = urllib.request.Request("https://mahope.tools/api/health", headers={"User-Agent": "HermesHealthCheck/3.0"})
         with urllib.request.urlopen(request, timeout=15) as response:
             data = json.loads(response.read().decode("utf-8"))
-        if response.status == 200 and data.get("status") == "healthy":
-            ok("mahope.tools API health")
+        # `status == "healthy"` var nok for dig, men ikke længere: et
+        # instrumenteret domæne der skriver intet gør alle tal ufuldstændige
+        # uden at KV er nede. Dommeren er `tools/check_health_status.py`, så
+        # cron og denne rapport ikke kan komme frem til hver sin sandhed.
+        sys.path.insert(0, os.path.join(ROOT, "tools"))
+        from check_health_status import decide, load_acknowledgements
+
+        healthy, reason = decide(data, load_acknowledgements())
+        if response.status == 200 and healthy:
+            ok(f"mahope.tools API health — {reason}")
         else:
-            fail("mahope.tools API health", f"HTTP {response.status}, status {data.get('status')!r}")
+            fail("mahope.tools API health", f"HTTP {response.status}, {reason}")
     except Exception as error:
         fail("mahope.tools API health", str(error))
 
