@@ -54,12 +54,76 @@
   <em>clause sets</em>, the <em>reporting kit</em> and the <em>bundle</em>.</p>
 
   <div class="pt-grid" id="pt-grid">
-    <noscript><p class="pt-status">The buy buttons on this page are added by a
-    small script that asks the server which files are actually uploaded right
-    now. With JavaScript off you can still see every product and its price in
-    the
-    <a href="https://docs.stripe.com/payments/links">our contract</a> — or
-    write to us and we will send the files directly.</p></noscript>
+    <article class="pt-card" data-product="eucomply-dpa">
+      <h3>GDPR DPA template</h3>
+      <p>An Article 28 processor agreement with the annexes GDPR actually requires: subject matter, duration, nature and purpose, types of personal data, security measures, and sub-processor rules. Fill in the parties and you have a signed-ready document.</p>
+      <p class="pt-meta">PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$59</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05">Buy GDPR DPA template</a>
+        <p class="pt-status">Delivered as 2 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eucomply-nis2-clauses">
+      <h3>NIS2 / DORA Vendor Clause Set</h3>
+      <p>The clauses to paste into a vendor contract so the ICT supply chain holds up: incident notification deadlines, audit rights, security level, subcontractor approval, and the exit terms DORA expects of a critical provider.</p>
+      <p class="pt-meta">PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$49</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06">Buy NIS2 / DORA Vendor Clause Set</a>
+        <p class="pt-status">Delivered as 2 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eucomply-nda-clauses">
+      <h3>Mutual NDA Clause Set</h3>
+      <p>A mutual non-disclosure agreement that is actually mutual, plus the variants agencies ask for: one-way, project-specific, and a short form for discovery calls.</p>
+      <p class="pt-meta">PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$29</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07">Buy Mutual NDA Clause Set</a>
+        <p class="pt-status">Delivered as 2 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eucomply-eaa-statement">
+      <h3>EAA Accessibility Statement</h3>
+      <p>The accessibility statement the European Accessibility Act expects, structured to the EN 301 549 and WCAG 2.1 AA axes: what was tested, what was found, what is being fixed, and how to complain.</p>
+      <p class="pt-meta">PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$39</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08">Buy EAA Accessibility Statement</a>
+        <p class="pt-status">Delivered as 2 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eucomply-report-kit">
+      <h3>Client Compliance Report Kit</h3>
+      <p>The six documents you send a client every month: a monthly report, a quarterly narrative, and a change-log specification. Fill in the client name and the cadence works itself.</p>
+      <p class="pt-meta">Six files, PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$69</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09">Buy Client Compliance Report Kit</a>
+        <p class="pt-status">Delivered as 6 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eucomply-template-bundle">
+      <h3>EUComply Complete Template Bundle</h3>
+      <p>Everything above in one download: the DPA, the NIS2/DORA clause set, the NDA clauses, the EAA statement and the six reporting files. Fourteen files, and nothing to add on top.</p>
+      <p class="pt-meta">Fourteen files, PDF + Markdown</p>
+      <div class="pt-foot">
+        <p class="pt-price">$149</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a">Buy EUComply Complete Template Bundle</a>
+        <p class="pt-status">Delivered as 14 files right after payment.</p>
+      </div>
+    </article>
+    <article class="pt-card" data-product="eu-compliance-ebook-bundle">
+      <h3>EU Compliance E-book Bundle</h3>
+      <p>The six e-books as one combined PDF and as a ZIP, if you would rather have the whole shelf than six separate files.</p>
+      <p class="pt-meta">Combined PDF + ZIP</p>
+      <div class="pt-foot">
+        <p class="pt-price">$29</p>
+        <a class="pt-buy" rel="noopener" href="https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b">Buy EU Compliance E-book Bundle</a>
+        <p class="pt-status">Delivered as 2 files right after payment.</p>
+      </div>
+    </article>
   </div>
 
   <section aria-labelledby="how-heading">
@@ -89,59 +153,36 @@
   <div class="container"><a href="/">&larr; mahope.tools</a> &middot; <a href="/support">Support</a></div>
 </footer>
 <script>
-// Købsknappen kommer fra serveren, ikke fra denne fil. Grunden er ærlig: et
-// downloadprodukt må kun sælges, når filerne ligger i Cloudflare KV — ellers
-// betaler kunden for noget der svarer 503 i /api/download. `/api/paid-files`
-// svarer 200 med hvert produkt, men udelader betalingslinket, indtil alle
-// filer er uploadet. Så kan siden aldrig sælge noget vi ikke kan levere, og den
-// tænder automatisk den dag filerne uploades — uden at nogen rører denne kode.
+// Betalingslinket står i HTML'en som på de andre produkter i familien, og
+// `/api/paid-files` fjerner knappen igen hvis serveren kan *bevise* at filerne
+// ikke kan leveres — et downloadprodukt må ikke sælges, når leveringen svarer
+// 503 i `/api/download`. Kan serveren ikke svare, står knappen: filerne er
+// deklareret verificerede i `tools/paid_content.json`, og et netværksfejl skal
+// ikke stoppe salget af syv produkter.
 (function () {
-  var DATA = [
-    { p: 'eucomply-dpa', t: 'GDPR DPA template', d: 'An Article 28 processor agreement with the annexes GDPR actually requires: subject matter, duration, nature and purpose, types of personal data, security measures, and sub-processor rules. Fill in the parties and you have a signed-ready document.', m: 'PDF + Markdown', v: '$59' },
-    { p: 'eucomply-nis2-clauses', t: 'NIS2 / DORA Vendor Clause Set', d: 'The clauses to paste into a vendor contract so the ICT supply chain holds up: incident notification deadlines, audit rights, security level, subcontractor approval, and the exit terms DORA expects of a critical provider.', m: 'PDF + Markdown', v: '$49' },
-    { p: 'eucomply-nda-clauses', t: 'Mutual NDA Clause Set', d: 'A mutual non-disclosure agreement that is actually mutual, plus the variants agencies ask for: one-way, project-specific, and a short form for discovery calls.', m: 'PDF + Markdown', v: '$29' },
-    { p: 'eucomply-eaa-statement', t: 'EAA Accessibility Statement', d: 'The accessibility statement the European Accessibility Act expects, structured to the EN 301 549 and WCAG 2.1 AA axes: what was tested, what was found, what is being fixed, and how to complain.', m: 'PDF + Markdown', v: '$39' },
-    { p: 'eucomply-report-kit', t: 'Client Compliance Report Kit', d: 'The six documents you send a client every month: a monthly report, a quarterly narrative, and a change-log specification. Fill in the client name and the cadence works itself.', m: 'Six files, PDF + Markdown', v: '$69' },
-    { p: 'eucomply-template-bundle', t: 'EUComply Complete Template Bundle', d: 'Everything above in one download: the DPA, the NIS2/DORA clause set, the NDA clauses, the EAA statement and the six reporting files. Fourteen files, and nothing to add on top.', m: 'Fourteen files, PDF + Markdown', v: '$149' },
-    { p: 'eu-compliance-ebook-bundle', t: 'EU Compliance E-book Bundle', d: 'The six e-books as one combined PDF and as a ZIP, if you would rather have the whole shelf than six separate files.', m: 'Combined PDF + ZIP', v: '$29' }
-  ];
-  var grid = document.getElementById('pt-grid');
-  var esc = function (s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
-  var card = function (d, extra) {
-    return '<article class="pt-card"><h3>' + esc(d.t) + '</h3><p>' + esc(d.d) +
-      '</p><p class="pt-meta">' + esc(d.m) + ' &middot; ' + esc(d.p) + '</p>' +
-      '<div class="pt-foot">' + (extra || '') + '</div></article>';
-  };
-  var unavailable = '<p class="pt-status">Not open for purchase yet. We only take ' +
-    'payment for a download we can deliver the moment you pay &mdash; this one ' +
-    'is not uploaded, so the button is not here.</p>';
-  var unknown = '<p class="pt-status">We could not reach the delivery check, so ' +
-    'we are not showing a button we cannot stand behind. The price above is ' +
-    'what you pay when it opens.</p>';
-  DATA.forEach(function (d) { grid.insertAdjacentHTML('beforeend', card(d, '<p class="pt-price">' + esc(d.v) + '</p>' + unavailable)); });
-
   fetch('/api/paid-files', { headers: { Accept: 'application/json' } }).then(function (r) {
     if (!r.ok) throw new Error('http ' + r.status);
     return r.json();
   }).then(function (data) {
     if (!data || data.ok !== true) throw new Error('bad payload');
-    // `kv_ok: false` betyder at serveren ikke kunne tjekke. Da ved vi intet om
-    // filerne, og en kodet status ville være en påstand vi ikke kan dokumentere.
     var byKey = {};
     (data.products || []).forEach(function (p) { byKey[p.product] = p; });
-    DATA.forEach(function (d, i) {
-      var info = byKey[d.p];
-      var foot = grid.querySelectorAll('.pt-foot')[i];
-      if (!foot || !info) return;
-      if (info.available && info.payment_link) {
-        foot.innerHTML = '<p class="pt-price">' + esc(d.v) + '</p><a class="pt-buy" rel="noopener" href="' +
-          esc(info.payment_link) + '">Buy ' + esc(d.t) + '</a>' +
-          '<p class="pt-status">Delivered as ' + esc(info.files) + ' files right after payment.</p>';
-      } else if (data.kv_ok === false) {
-        foot.innerHTML = '<p class="pt-price">' + esc(d.v) + '</p>' + unknown;
+    document.querySelectorAll('#pt-grid .pt-card').forEach(function (card) {
+      var info = byKey[card.getAttribute('data-product')];
+      var foot = card.querySelector('.pt-foot');
+      if (!info || !foot) return;
+      var price = foot.querySelector('.pt-price');
+      if (info.available) {
+        var buy = foot.querySelector('.pt-buy');
+        if (buy) buy.href = info.payment_link;
+        var status = foot.querySelector('.pt-status');
+        if (status) status.textContent = "Delivered as {n} files right after payment.".replace('{n}', String(info.files));
+      } else {
+        foot.innerHTML = '<p class="pt-price">' + (price ? price.textContent : '') +
+          '</p><p class="pt-status">' + 'Not open for purchase yet. We only take payment for a download we can deliver the moment you pay \u2014 this one is not uploaded, so the button is not here.' + '</p>';
       }
     });
-  }).catch(function () { /* kortene står med pris og ærlig status; ingen knap, ingen løfte */ });
+  }).catch(function () { /* knapperne er i HTML'en; intet slås fra uden et svar */ });
 })();
 </script>
 </body>

@@ -33,16 +33,24 @@
           "id": "batch",
           "where": "the web tool",
           "labels": {
-            "en": ["batch conversion"],
-            "da": ["batch-konvertering"]
+            "en": [
+              "batch conversion"
+            ],
+            "da": [
+              "batch-konvertering"
+            ]
           }
         },
         {
           "id": "cleanup-rules",
           "where": "the browser extension",
           "labels": {
-            "en": ["custom cleanup rules"],
-            "da": ["egne rense regler"]
+            "en": [
+              "custom cleanup rules"
+            ],
+            "da": [
+              "egne rense regler"
+            ]
           }
         }
       ],
@@ -51,16 +59,24 @@
           "id": "all-conversion-modes",
           "where": "extension-clean-copy/background.js:437-440 withProRules(result) — `if (!result || result.error || !proState.active || !result.content) return result;` sender resultatet UDEN at røre det, saa konverteringen er altid sket. proState styres kun af :385-392 (d.proLicense -> compiled rules) og bruges ellers alene i :438 og applyCompiled :380. Ingen licenskontrol findes paa nogen konverteringssti: rg for license/premium/pro_ i extension-clean-copy/ giver ingen gating i background.js. Webværktøjet er samme sag: site/clean-copy-tool.html:156-163 har ingen maxlength, og :253 siger selv at Pro kun tilføjer batch og egne rense regler",
           "labels": {
-            "en": ["every conversion mode in the extension and on the web tool"],
-            "da": ["alle konverteringsmoduler i udvidelsen og på webværktøjet"]
+            "en": [
+              "every conversion mode in the extension and on the web tool"
+            ],
+            "da": [
+              "alle konverteringsmoduler i udvidelsen og på webværktøjet"
+            ]
           }
         },
         {
           "id": "no-paste-limit",
           "where": "site/clean-copy-tool.html:156 `<textarea id=\"input-box\">` og :161 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :615 er Pro-nøglens validate/activate mod /api/license, og :442 + :739 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :243 (Free: no limit / Pro: no limit) og i :253-256 (no account, no expiry and no limit)",
           "labels": {
-            "en": ["no limit on how much text you paste"],
-            "da": ["ingen grænse på hvor meget tekst du indsætter"]
+            "en": [
+              "no limit on how much text you paste"
+            ],
+            "da": [
+              "ingen grænse på hvor meget tekst du indsætter"
+            ]
           }
         }
       ]
@@ -78,40 +94,67 @@
           "id": "desktop-app",
           "where": "deskuptime/src/features.js:136-144 (MATRIX-rækken 'desktop-app', free: NO, pro: YES, status: PRIVATE_APP). Appens kode ligger i et privat repo (sibling-commit 39c434f, 25/9), og deskuptime/README.md:84 og :97-99 siger det samme",
           "labels": {
-            "en": ["desktop app"],
-            "da": ["desktop-app"]
+            "en": [
+              "desktop app"
+            ],
+            "da": [
+              "desktop-app"
+            ]
           }
         },
         {
           "id": "unlimited-sites",
           "where": "deskuptime/src/features.js:33-34 (FREE.urlLimit 3 -> PRO.urlLimit Infinity), håndhævet i src/watch.js:372-376",
           "labels": {
-            "en": ["unlimited sites", "unlimited"],
-            "da": ["ubegrænsede sites", "ubegrænset"]
+            "en": [
+              "unlimited sites",
+              "unlimited"
+            ],
+            "da": [
+              "ubegrænsede sites",
+              "ubegrænset"
+            ]
           }
         },
         {
           "id": "interval",
           "where": "deskuptime/src/features.js:34 (PRO.minIntervalSeconds 30), håndhævet i src/watch.js:590-591",
           "labels": {
-            "en": ["30 second", "30 s"],
-            "da": ["30. sekund", "30 sekunder"]
+            "en": [
+              "30 second",
+              "30 s"
+            ],
+            "da": [
+              "30. sekund",
+              "30 sekunder"
+            ]
           }
         },
         {
           "id": "webhooks",
           "where": "deskuptime/src/watch.js:601-605 (nægtelse uden nøgle) og :624-628 (sendWebhook kun hvis isPro)",
           "labels": {
-            "en": ["webhook alerts", "webhook"],
-            "da": ["webhook-alarmer", "webhook"]
+            "en": [
+              "webhook alerts",
+              "webhook"
+            ],
+            "da": [
+              "webhook-alarmer",
+              "webhook"
+            ]
           }
         },
         {
           "id": "client-report",
           "where": "deskuptime/src/cli.js:609-618 (report-kommandoen afslutter med exit 1 uden isPro)",
           "labels": {
-            "en": ["client-ready report", "client report"],
-            "da": ["kunderapport"]
+            "en": [
+              "client-ready report",
+              "client report"
+            ],
+            "da": [
+              "kunderapport"
+            ]
           }
         }
       ],
@@ -120,24 +163,36 @@
           "id": "one-off-checks",
           "where": "deskuptime/src/features.js:51-56 (MATRIX-rækken 'check', free: YES, status: BOTH). Håndhævet i src/cli.js check/headers, som aldrig læser FREE.urlLimit — kun src/watch.js:441 gør det, og det er watch-stien",
           "labels": {
-            "en": ["one-off checks"],
-            "da": ["enkelttjek"]
+            "en": [
+              "one-off checks"
+            ],
+            "da": [
+              "enkelttjek"
+            ]
           }
         },
         {
           "id": "ssl-content-checks",
           "where": "deskuptime/src/features.js:60-65 (MATRIX-rækken 'ssl-content', free: YES, status: BOTH) — SSL-udløb og content-ændring tjekkes af src/checkers i begge tiers",
           "labels": {
-            "en": ["SSL and content checks"],
-            "da": ["SSL- og content-tjek"]
+            "en": [
+              "SSL and content checks"
+            ],
+            "da": [
+              "SSL- og content-tjek"
+            ]
           }
         },
         {
           "id": "json-output",
           "where": "deskuptime/src/features.js:78-83 (MATRIX-rækken 'json', free: YES, status: BOTH); GitHub Action-rækken :69-74 er også free: YES",
           "labels": {
-            "en": ["JSON output"],
-            "da": ["JSON-output"]
+            "en": [
+              "JSON output"
+            ],
+            "da": [
+              "JSON-output"
+            ]
           }
         }
       ],
@@ -146,8 +201,15 @@
           "id": "email-alerts",
           "where": "ingen e-mail-kode i deskuptime/ eller deskuptime-desktop/; deskuptime/src/features.js:145-153 markerer rækken implemented: false",
           "labels": {
-            "en": ["email and webhook alerts", "email alerts", "email & webhook alerts"],
-            "da": ["e-mail- og webhook-alarmer", "e-mail-alarmer"]
+            "en": [
+              "email and webhook alerts",
+              "email alerts",
+              "email & webhook alerts"
+            ],
+            "da": [
+              "e-mail- og webhook-alarmer",
+              "e-mail-alarmer"
+            ]
           }
         }
       ]
@@ -183,16 +245,28 @@
           "id": "pdf-download",
           "where": "site/compliance-report.html:504-535 verifyAndDownload() — validateLicense() mod /api/license/validate, derefter window.print()",
           "labels": {
-            "en": ["pdf download", "download the pdf", "pdf report", "save the pdf"],
-            "da": ["pdf-download", "hele pdf-rapporten"]
+            "en": [
+              "pdf download",
+              "download the pdf",
+              "pdf report",
+              "save the pdf"
+            ],
+            "da": [
+              "pdf-download",
+              "hele pdf-rapporten"
+            ]
           }
         },
         {
           "id": "server-checks",
           "where": "site/compliance-report.html:613 fetch('/api/report') kaldes først efter at verifyAndDownload() :593 har fået en godkendt nøgle, og fundene lægges sammen med mergeProFindings() :659. Uden nøgle er de ikke i DOM'en — :474-475 siger det til den udskrevne læser. Modstående: free_features[0] `where`",
           "labels": {
-            "en": ["GDPR/cookie and NIS2/security checks"],
-            "da": ["GDPR/cookie- og NIS2/sikkerhedstjekkene"]
+            "en": [
+              "GDPR/cookie and NIS2/security checks"
+            ],
+            "da": [
+              "GDPR/cookie- og NIS2/sikkerhedstjekkene"
+            ]
           }
         }
       ],
@@ -201,24 +275,36 @@
           "id": "accessibility-checks",
           "where": "site/compliance-report.html:209-309 runScan() — elleve add(...)-kald (:216 IMG_ALT, :218 FORM_LABEL, :225 LINK_TEXT, :227 BUTTON_TEXT, :229 DUP_ID, :231 TARGET_BLANK, :243 HEADING_SKIP, :244 IFRAME_TITLE, :245 TABLE_HEADER, :246 ARIA_HIDDEN_FOCUS, :299 CONTRAST) kører i browseren uden nøgle. GDPR/cookie-, NIS2- og metadata-tjekket blev fjernet fra denne sti med vilje (:291-298) og ligger nu i /api/report, som først kaldes efter en godkendt nøgle (:612)",
           "labels": {
-            "en": ["the accessibility checks"],
-            "da": ["tilgængelighedstjekkene"]
+            "en": [
+              "the accessibility checks"
+            ],
+            "da": [
+              "tilgængelighedstjekkene"
+            ]
           }
         },
         {
           "id": "score-grade",
           "where": "site/compliance-report.html:302-306 — score og grade beregnes lokalt i runScan() og skrives ud i renderReport() :467-468. Ingen nøkel i den sti",
           "labels": {
-            "en": ["score and grade"],
-            "da": ["scoren og karakteren"]
+            "en": [
+              "score and grade"
+            ],
+            "da": [
+              "scoren og karakteren"
+            ]
           }
         },
         {
           "id": "in-page-report",
           "where": "site/compliance-report.html:536 generateReport() -> renderReport() :458 sætter hele rapporten i DOM'en uden licens; :474-475 skriver 'Free scan — accessibility findings only' i den udskrevne rapport, netop fordi GDPR/NIS2-fund først kommer fra /api/report efter nøgle",
           "labels": {
-            "en": ["the whole report on the page"],
-            "da": ["hele rapporten på siden"]
+            "en": [
+              "the whole report on the page"
+            ],
+            "da": [
+              "hele rapporten på siden"
+            ]
           }
         }
       ],
@@ -227,32 +313,53 @@
           "id": "monitoring",
           "where": "ingen scheduler, ingen cron og ingen gemte scans nogen sted i site/_worker.js eller scanner/",
           "labels": {
-            "en": ["compliance monitoring", "continuous monitoring"],
-            "da": ["kontinuerlig overvågning"]
+            "en": [
+              "compliance monitoring",
+              "continuous monitoring"
+            ],
+            "da": [
+              "kontinuerlig overvågning"
+            ]
           }
         },
         {
           "id": "history",
           "where": "scanner/ har ingen historikstore, og der er ingen kvote at løfte: /scan kører uden licens",
           "labels": {
-            "en": ["history tracking", "scan history"],
-            "da": ["scanhistorik"]
+            "en": [
+              "history tracking",
+              "scan history"
+            ],
+            "da": [
+              "scanhistorik"
+            ]
           }
         },
         {
           "id": "branding",
           "where": "site/compliance-report.html:529 kalder window.print(); der er ingen PDF-generator og intet brand",
           "labels": {
-            "en": ["branded pdf", "professional pdf"],
-            "da": ["brandet pdf"]
+            "en": [
+              "branded pdf",
+              "professional pdf"
+            ],
+            "da": [
+              "brandet pdf"
+            ]
           }
         },
         {
           "id": "priority-support",
           "where": "ingen supportkanal og ingen SLA i koden; missionen forbyder support et menneske skal svare på",
           "labels": {
-            "en": ["priority support", "support within 24h", "within 24h"],
-            "da": ["prioriteret support"]
+            "en": [
+              "priority support",
+              "support within 24h",
+              "within 24h"
+            ],
+            "da": [
+              "prioriteret support"
+            ]
           }
         }
       ]
@@ -278,24 +385,40 @@
           "id": "compare",
           "where": "page-profile/page_profile.py:1066 require_pro(\"compare mode\") -> run_compare :801-855",
           "labels": {
-            "en": ["comparison mode", "compare two urls"],
-            "da": ["sammenligning", "sammenlign to urls"]
+            "en": [
+              "comparison mode",
+              "compare two urls"
+            ],
+            "da": [
+              "sammenligning",
+              "sammenlign to urls"
+            ]
           }
         },
         {
           "id": "batch",
           "where": "page-profile/page_profile.py:1071 require_pro(\"batch mode\") og :1056 require_pro(\"batch mode from file\") -> run_batch :857-885",
           "labels": {
-            "en": ["batch mode"],
-            "da": ["batch-tilstand"]
+            "en": [
+              "batch mode"
+            ],
+            "da": [
+              "batch-tilstand"
+            ]
           }
         },
         {
           "id": "html-report",
           "where": "page-profile/page_profile.py:1094 require_pro(\"HTML report\") -> run_html_report :936-989",
           "labels": {
-            "en": ["client-ready html report", "html report"],
-            "da": ["kunde-klar html-rapport", "html-rapport"]
+            "en": [
+              "client-ready html report",
+              "html report"
+            ],
+            "da": [
+              "kunde-klar html-rapport",
+              "html-rapport"
+            ]
           }
         }
       ],
@@ -304,40 +427,60 @@
           "id": "history",
           "where": "page-profile/page_profile.py:1040 --history (aldrig gated) -> run_history :1046-1048, og :1088 append_history() ligger FØR det første require_pro :1094",
           "labels": {
-            "en": ["history tracking"],
-            "da": ["historik"]
+            "en": [
+              "history tracking"
+            ],
+            "da": [
+              "historik"
+            ]
           }
         },
         {
           "id": "all-checks",
           "where": "page-profile/page_profile.py:1085 analyze(args.url, html, headers) -> analyze :408-464. Ingen require_pro mellem :1080 fetch_page og :1085, saa den frie enkelt-URL-profil kører ALLE tjek",
           "labels": {
-            "en": ["All checks"],
-            "da": ["Alle tjek"]
+            "en": [
+              "All checks"
+            ],
+            "da": [
+              "Alle tjek"
+            ]
           }
         },
         {
           "id": "score-grade",
           "where": "page-profile/page_profile.py:1086 score(result) -> score :465-577, og :1103 format_terminal(...) -> format_terminal :593-750. Begge kaldes uden nogen require_pro",
           "labels": {
-            "en": ["Terminal report with score and grade"],
-            "da": ["Rapport i terminalen med score og karakter"]
+            "en": [
+              "Terminal report with score and grade"
+            ],
+            "da": [
+              "Rapport i terminalen med score og karakter"
+            ]
           }
         },
         {
           "id": "json-output",
           "where": "page-profile/page_profile.py:1101 print(format_json(...)) -> format_json :751-784. Det eneste require_pro i den frie sti er :1094 og det gælder kun --html-report",
           "labels": {
-            "en": ["JSON output"],
-            "da": ["JSON-output"]
+            "en": [
+              "JSON output"
+            ],
+            "da": [
+              "JSON-output"
+            ]
           }
         },
         {
           "id": "redirect-chain",
           "where": "page-profile/page_profile.py:1080 fetch_page -> redirect_chain :363-402, trykt af format_terminal :727-731 og format_json :755. Ingen require_pro imellem på den vej",
           "labels": {
-            "en": ["Redirect chain trace"],
-            "da": ["Redirect-kæde"]
+            "en": [
+              "Redirect chain trace"
+            ],
+            "da": [
+              "Redirect-kæde"
+            ]
           }
         }
       ]
@@ -592,6 +735,244 @@
       "prices": [],
       "requires_text": [
         "Donate via Stripe"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-dpa",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "GDPR DPA template"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-nis2-clauses",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "NIS2 / DORA Vendor Clause Set"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-nda-clauses",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "Mutual NDA Clause Set"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-eaa-statement",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "EAA Accessibility Statement"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-report-kit",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "Client Compliance Report Kit"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eucomply-template-bundle",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "EUComply Complete Template Bundle"
+      ]
+    },
+    {
+      "path": "site/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/paid-templates",
+      "product": "eu-compliance-ebook-bundle",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "EU Compliance E-book Bundle"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-dpa",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "GDPR-DPA-skabelon"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-nis2-clauses",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "NIS2 / DORA-leverandørklauselsæt"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-nda-clauses",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "Gensidigt NDA-klauselsæt"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-eaa-statement",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "EAA-tilgængelighedserklæring"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-report-kit",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "Kunderapporteringssæt"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eucomply-template-bundle",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "Komplet skabelonpakke"
+      ]
+    },
+    {
+      "path": "site/da/paid-templates.html",
+      "domain": "mahope.tools",
+      "route": "/da/paid-templates",
+      "product": "eu-compliance-ebook-bundle",
+      "prices": [
+        "$149",
+        "$29",
+        "$39",
+        "$49",
+        "$59",
+        "$69"
+      ],
+      "requires_text": [
+        "E-bogpakke, EU-compliance"
       ]
     }
   ],

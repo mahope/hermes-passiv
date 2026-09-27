@@ -3393,14 +3393,23 @@ def self_test() -> int:
     # den skal fange.
     report_kit = good["products"]["eucomply-report-kit"]["payment_link"]
     synthetic_sale = [("site/eksempel.html", f'<a href="{report_kit}">Buy</a>')]
-    undeliverable = check_deliverable(good, synthetic_sale)
+    # Scenarierne skal ikke afhænge af, hvad der *virkelig* står i
+    # `tools/paid_content.json`. Det gjorde de før 27/9, da `eucomply-report-kit`
+    # stadig var `kv_verified: false` i den rigtige fil: dagen de svyv filer blev
+    # uploadet og porten slog `true` til, holdt armen op at være grøn og
+    # selftesten rødmede med "blev ikke fanget". Rigtige data skal kunne ændre
+    # sig uden at selftesten holder op med at fange fejlen, så begge sider
+    # får deres egen syntetiske inventar.
+    not_uploaded = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
+    for entry in not_uploaded["products"]:
+        entry["kv_verified"] = False
+    undeliverable = check_deliverable(good, synthetic_sale, not_uploaded)
     # Samme side med et produkt, der faktisk kan leveres: må ikke fejle.
     deliverable_page = [("site/eksempel.html", '<a href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00">Buy</a>')]
-    should_pass = check_deliverable(good, deliverable_page)
     verified = json.loads(PAID_CONTENT.read_text(encoding="utf-8"))
     for entry in verified["products"]:
-        if entry["product_key"] == "eucomply-report-kit":
-            entry["kv_verified"] = True
+        entry["kv_verified"] = True
+    should_pass = check_deliverable(good, deliverable_page, verified)
     delisted = {**good, "offers": [
         offer for offer in good["offers"] if offer["product"] != "eucomply-report-kit"]}
     forgot_the_page = check_deliverable(delisted, [], verified)
