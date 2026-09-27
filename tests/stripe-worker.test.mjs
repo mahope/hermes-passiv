@@ -382,6 +382,19 @@ ok('DeskUptime Pro (engangskøb) får ikke kundeportalen', !mails[0].text.includ
 ok('download-køb får ikke kundeportalen', !mails[2].text.includes(PORTAL) && !mails[2].html.includes('billing.stripe.com'));
 const mSub = mails.filter(m => m.text.includes(PORTAL));
 ok('kun de tre årlige produkter får kundeportalen', mSub.length === 3 && mSub.every(m => /Your (Clean Copy Pro|EUComply Pro|Page Profile Pro)/.test(m.subject)), mSub.map(m => m.subject).join(' | '));
+// 8b) EUComply Pro: et link med navnet "Activate it here" er ikke en
+//     instruktion. `activate_url` lå på /pricing/ — en butiksvindue med 0 input
+//     og uden nøgle — så køberen af det dyreste produkt fik en mail og en knap
+//     "How to activate" på /thanks, der begge endte i en butik. Målt 27/9.
+const euMail = mails[1];
+ok('EUComply Pro: aktiveringslinket er ikke længere en prisside', euMail.text.includes('https://eucomplypro.com/pro/') && !euMail.text.includes('eucomplypro.com/pricing/'), JSON.stringify(euMail.text));
+ok('EUComply Pro: mailen siger hvor nøglen sættes ind', euMail.text.includes('Where to paste the key: In WordPress: EUComply > Settings, in the "Pro License Key" field.'), JSON.stringify(euMail.text));
+ok('EUComply Pro: HTML-mailen har samme instruktion', euMail.html.includes('Pro License Key') && euMail.html.includes('eucomplypro.com/pro/'), JSON.stringify(euMail.html));
+ok('EUComply Pro: nøglen og aktiveringslinjen er stadig i mailen', /Your license key:\n[a-f0-9]{32}/.test(euMail.text) && euMail.text.includes('Activate it here:'), JSON.stringify(euMail.text));
+// Negativ kontrol: kun det produkt der har brug for en instruktion får en.
+// Ellers ville mailen bare få en standardsætning, der intet beviser.
+ok('DeskUptime Pro får ingen EUComply-instruktion', !mails[0].text.includes('Where to paste the key') && !mails[0].text.includes('Pro License Key'), JSON.stringify(mails[0].text));
+ok('et downloadprodukt får ingen nøgleinstruktion', !mails[2].text.includes('Where to paste the key'), JSON.stringify(mails[2].text));
 r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN');
 j = await r.json();
 ok('Clean Copy Pro leveringssvar bærer kundeportalen', j.subscription === true && j.billing_portal === PORTAL, JSON.stringify(j));
@@ -392,7 +405,11 @@ ok('engangskøb har ingen kundeportal i leveringssvaret', j.subscription === und
 //    Før dette laa GDPR/NIS2-fundene i DOM'en, før nøglen blev tastet, og
 //    @media print skjulte kun licensfeltet — Ctrl+P gav den betalte PDF.
 r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB');
-const euKey = (await r.json()).license_key;
+j = await r.json();
+const euKey = j.license_key;
+// Det er denne `activate_url` /thanks' knap "How to activate" bruger, så den
+// skal pege på en side der forklarer aktivering — ikke på en prisside.
+ok('EUComply Pro: leveringssvaret peger på Pro-siden, ikke på /pricing/', j.activate_url === 'https://eucomplypro.com/pro/', JSON.stringify(j.activate_url));
 const rep = (b) => call('/api/report', { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
 r = await rep({ license_key: 'a'.repeat(32), device_id: 'pro-dev', product: 'eucomply-pro', url: 'https://scan.example/' });
 ok('rapport uden gyldig nøgle er afvist', r.status === 402, r.status);
