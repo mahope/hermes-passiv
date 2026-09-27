@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
@@ -110,6 +110,27 @@ def parse_sitemap(path: Path) -> tuple[list[str], list[str]]:
     if not urls:
         problems.append("sitemap has no URLs")
     return urls, problems
+
+
+def advertised_own_urls(robots: str, domain: str) -> list[str]:
+    """Absolutte URL'er på eget domæne som robots.txt peger på.
+
+    `Sitemap:` er en linje, `# Machine-readable summary … llms.txt` er en
+    kommentar. Robots-crawlere læser kun linjen, men en agent der læser
+    robots.txt for at finde maskinlæselig sammendrag læser hele filen — så
+    porten skal dømme begge dele ens. Kun eget domæne: en fremmed vært i
+    robots.txt er et redaktionsvalg, ikke en byggefejl, og `sitemap_lines`
+    nedenfor dømmer allerede kravet om egen vært.
+    """
+    urls = set()
+    for url in re.findall(r"https://[^\s\"'<>]+", robots):
+        parsed = urlparse(url)
+        if parsed.netloc.casefold() != domain.casefold():
+            continue
+        if parsed.query or parsed.fragment:
+            continue
+        urls.add(url)
+    return sorted(urls)
 
 
 def build_info_problems(path: Path, domain: str, sitemap_data: bytes, urls: list[str], expected_commit: str | None) -> list[str]:
@@ -243,6 +264,12 @@ def check_domain(domain: str, dist_root: Path = DIST, expected_commit: str | Non
                 problems.append(f"{domain}: robots.txt missing {required!r}")
         if "hermes-passiv.pages.dev" in robots:
             problems.append(f"{domain}: robots.txt references old origin")
+        for url in advertised_own_urls(robots, domain):
+            target = dist / unquote(urlparse(url).path).lstrip("/")
+            if target.is_dir():
+                target = target / "index.html"
+            if not target.is_file():
+                problems.append(f"{domain}: robots.txt advertises {url}, which the build does not ship")
 
     if sitemap_path.is_file():
         problems.extend(build_info_problems(dist / "build-info.json", domain, sitemap_path.read_bytes(), urls, expected_commit))

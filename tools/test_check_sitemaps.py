@@ -42,6 +42,15 @@ class SitemapCheckerTests(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def write_robots_advertising_llms(self, shipped: bool) -> None:
+        (self.dist / "robots.txt").write_text(
+            "User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: https://mahope.tools/sitemap.xml\n"
+            "\n# Machine-readable summary for AI assistants: https://mahope.tools/llms.txt\n",
+            encoding="utf-8",
+        )
+        if shipped:
+            (self.dist / "llms.txt").write_text("# mahope.tools\n", encoding="utf-8")
+
     def write_sitemap(self, urls: list[str]) -> None:
         entries = "".join(f"  <url><loc>{url}</loc></url>\n" for url in urls)
         data = (
@@ -113,6 +122,38 @@ class SitemapCheckerTests(unittest.TestCase):
     def test_expected_commit_mismatch_fails(self) -> None:
         problems = check_sitemaps.check_domain(self.domain, self.root, inventory=self.inventory, expected_commit="b" * 40)
         self.assertTrue(any("expected" in problem and "commit" in problem for problem in problems))
+
+    def test_robots_advertising_a_file_the_build_drops_fails(self) -> None:
+        # Dette er hullet målingen fandt: `llms.txt` skrives ud fra sidernes
+        # `pages`, så en konfiguration der tømmer dem fjerner filen — og før
+        # denne test var porten grøn, fordi den kun læste robots.txt.
+        self.write_robots_advertising_llms(shipped=False)
+        problems = check_sitemaps.check_domain(self.domain, self.root, inventory=self.inventory)
+        self.assertTrue(any("advertises https://mahope.tools/llms.txt" in problem for problem in problems))
+
+    def test_robots_advertising_a_shipped_file_passes(self) -> None:
+        self.write_robots_advertising_llms(shipped=True)
+        self.assertEqual([], check_sitemaps.check_domain(self.domain, self.root, inventory=self.inventory))
+
+    def test_foreign_host_in_robots_is_not_a_build_problem(self) -> None:
+        (self.dist / "robots.txt").write_text(
+            "User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: https://mahope.tools/sitemap.xml\n"
+            "# Se også https://example.invalid/llms.txt\n",
+            encoding="utf-8",
+        )
+        self.assertEqual([], check_sitemaps.check_domain(self.domain, self.root, inventory=self.inventory))
+
+    def test_advertised_own_urls_reads_comments_and_directives(self) -> None:
+        robots = (
+            "User-agent: *\nDisallow: /api/\nAllow: /\n\n"
+            "Sitemap: https://mahope.tools/sitemap.xml\n"
+            "# Machine-readable summary for AI assistants: https://mahope.tools/llms.txt\n"
+            "Disallow: /da/legacy\n# https://mahope.tools/da/old?utm=x\n"
+        )
+        self.assertEqual(
+            ["https://mahope.tools/llms.txt", "https://mahope.tools/sitemap.xml"],
+            check_sitemaps.advertised_own_urls(robots, "mahope.tools"),
+        )
 
 
 if __name__ == "__main__":

@@ -92,6 +92,30 @@ STEPS: tuple[Step, ...] = (
         ),
         needs_dist=True,
     ),
+    # Opgave 90: de to unittest-filer under `tools/` lå i path-filteret, så en
+    # rettelse i dem udløste gaten — men ingen kørte dem. De var filer der så ud
+    # som en port og var det ikke, og det er grunden til at `check_sitemaps.py`
+    # kunne være grøn med en robots.txt der pegede på filer builden ikke
+    # publicerer. De får hvert sit step, som de andre teststeps.
+    Step(
+        id="sitemaps-tests",
+        argv=("python3", "tools/test_check_sitemaps.py"),
+        inputs=(
+            "tools/test_check_sitemaps.py",
+            "tools/check_sitemaps.py",
+            "tools/route_inventory.py",
+            "tools/route_inventory.json",
+        ),
+    ),
+    Step(
+        id="live-sitemaps-tests",
+        argv=("python3", "tools/test_check_live_sitemaps.py"),
+        inputs=(
+            "tools/test_check_live_sitemaps.py",
+            "tools/check_live_sitemaps.py",
+            "tools/check_sitemaps.py",
+        ),
+    ),
     Step(
         id="seo",
         argv=("python3", "tools/seo_check.py"),

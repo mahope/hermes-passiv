@@ -16,7 +16,7 @@ from http.client import HTTPMessage
 from pathlib import Path
 from urllib.parse import quote, urlsplit, urlunsplit
 
-from check_sitemaps import DIST, SITES, check_domain, parse_head, parse_sitemap
+from check_sitemaps import DIST, SITES, advertised_own_urls, check_domain, parse_head, parse_sitemap
 
 USER_AGENT = "Mozilla/5.0 (compatible; HermesSitemapCheck/1.0)"
 PAGES_DOMAINS = tuple(domain for domain in SITES if domain != "bugbottle.dev")
@@ -177,6 +177,26 @@ def check_retired_downloads_live(domain: str) -> list[str]:
     return problems
 
 
+def check_advertised_live(domain: str, robots: str) -> list[str]:
+    """Hver fil den publicerede robots.txt peger på skal findes i produktion.
+
+    `wait_for_artifacts` beviser at den publicerede robots.txt er byte-identisk
+    med den lokale build, så det er den samme liste der skal slås op. Men at
+    robots.txt er rigtig siger intet om at de filer den navngiver findes:
+    `build_sites.py` genererer `llms.txt` fra sidernes `pages`, så en konfiguration
+    der tømmer dem ville publicere en robots.txt der peger på en 404 — og ingen
+    port så den, fordi alt i `tools/` læser repoet og dist, og begge var rene.
+    """
+    problems: list[str] = []
+    for url in advertised_own_urls(robots, domain):
+        status, _, _headers, error = fetch(url)
+        if error:
+            problems.append(f"{url}: {error}")
+        elif status != 200:
+            problems.append(f"{url}: HTTP {status} — robots.txt peger på en fil der ikke findes")
+    return problems
+
+
 def check_live_domain(domain: str, commit: str | None, attempts: int, delay: int, workers: int) -> list[str]:
     local_problems = check_domain(domain, expected_commit=commit)
     if local_problems:
@@ -189,6 +209,7 @@ def check_live_domain(domain: str, commit: str | None, attempts: int, delay: int
     if sitemap_problems:
         return sitemap_problems
     problems = []
+    problems.extend(check_advertised_live(domain, (DIST / domain / "robots.txt").read_text(encoding="utf-8")))
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         for result in executor.map(check_page, urls):
             problems.extend(result)
