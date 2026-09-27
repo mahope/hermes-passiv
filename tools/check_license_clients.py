@@ -152,9 +152,15 @@ NOT_CLIENTS = {
     "tools/check_retired_downloads.py",
     "tools/retired_downloads.json",
     # Opgave 52: selftestens vidne. Det er gaten selv der nævner API'en, ikke en
-    # kunde — det er et bevisst bevis på den kode der var, så det skal findes
+    # kunde — det er et bevidst bevis på den kode der var, så det skal findes
     # eksakt fordi det kalder den.
     "tools/fixtures/compliance-report-pre51-licens.html",
+    # Opgave 96: samme fejlform igen, femte gang. `check_product_copy.py` har en
+    # regex der leder efter `/api/license` for at finde sider der *både* lover
+    # "kun i browseren" *og* kalder licens-API'et. Den skal finde den streng i
+    # publiceret tekst — men kalder den ikke. Gaten nævner API'en fordi den
+    # afslører løgner, hvilket er modsatningen af at være klient.
+    "tools/check_product_copy.py",
 }
 
 # Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er
