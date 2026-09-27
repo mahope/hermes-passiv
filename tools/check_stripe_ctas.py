@@ -803,8 +803,36 @@ def free_claim_blocks_in_prose(catalog: dict, pages: list[tuple[str, str]]) -> l
 
     Bevaret fordi resultatet er dyrt at genfinde: opgave 79 målte den
     næsten identiske retning til 11 røde og 8 falske og brugte en time på
-    den. Skrivet som kode er den én kørsel.
+    den. Skrevet som kode er den én kørsel.
+
+    **Udforsket på hele overfladen: resultatet er 14 blokke på 13 sider, og
+    alle 13 er falske.** Porten kører kun de 13 købssider, fordi et
+    `pro_features`-label er **produktagnostisk** — det er en streng, ikke en
+    reference til et objekt. Målt med denne funktions egen `prose_blocks`
+    over de 305 sider `source_pages()` læser, med `FREE_TIER_PHRASES` som
+    gratis-markering og `PAID_LABEL`/`PRO_ADDS` som betalt-markering:
+
+      - 6 sider er om **EAA Compliance Scanner Desktop**, et andet og
+        gratis produkt. Dets "free, native desktop app" matcher
+        `deskuptime-pro/desktop-app`, fordi begge er en desktop-app.
+      - 4 sider er "Free and unlimited" / "Gratis og ubegrænset" om **CLI'en
+        eller browserudgaven**, der virkelig er gratis og ubegrænset.
+        `unlimited-sites` handler om et *site*-loft, ikke om den app.
+      - 1 dansk side matcher `page-profile-pro/compare` på ordet
+        "sammenligningstabeller" i en tastatur-tip.
+      - 2 er DeskUptimes **egne købssider**, som siger *"A free
+        command-line tool …, and a small desktop app"* — den ærlige
+        konstruktion, hvor gratis gælder CLI'en. `PRO_ADDS` dækker
+        "Pro adds X", men ikke "A free X, and a Y".
+
+    Så en port på hele overfladen ville være **13 røde af 13 forkerte**,
+    og den ville lære ejeren at ignorere porten. Retningen skal først finde
+    ud af *hvilket produkt* en blok handler om; det er samme regel som fund 6
+    i `salgsnaegtelse-port` — et label må aldrig læses uden sin genstand.
+    Beviset for den gamle fejlform er `4f106d0:site/index.html`, der skrev
+    "Free CLI, desktop app" på DeskUptime-kortet.
     """
+
     products = catalog.get("products")
     offers = catalog.get("offers")
     if not isinstance(products, dict) or not isinstance(offers, list):
