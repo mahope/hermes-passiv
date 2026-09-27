@@ -232,6 +232,26 @@ const inv = JSON.stringify({ type: 'invoice.paid', data: { object: { subscriptio
 r = await call('/api/stripe-webhook', { method: 'POST', body: inv, headers: { 'stripe-signature': sign(inv) } });
 const rec = JSON.parse(kv.get('lic:' + j.license_key));
 ok('fornyelse forlænger', rec.expires_at.startsWith('2036'), rec.expires_at);
+// 8e) Én kvittering, to varianter. Før stod abonnementssætningen kun i
+//     tekstvarianten, så det samme køb læstes som to forskellige kvitteringer
+//     alt efter hvilken variant mailklienten viste. Nu afledes den fra
+//     `expires_at` på ét sted, og armene dømmer begge varianter — så en
+//     fremtidig drift kan ikke skille dem igen. De negative kontroller er
+//     beviset på at sætningen ikke er en standardsætning: et engangsprodukt
+//     må ikke høre om fornyelse i nogen af dem.
+const subMail = mails.filter((m) => (m.to || []).includes('a@b.dk')).pop();
+ok('abonnementskvitteringen siger fornyelse i tekst OG html',
+  !!subMail && /and renews with your subscription/.test(subMail.text) && /and renews with your subscription/.test(subMail.html),
+  JSON.stringify(subMail && { text: /renews/.test(subMail.text), html: /renews/.test(subMail.html) }));
+ok('begge varianter siger det samme om enhederne',
+  !!subMail && /Works on up to 2 device\(s\)/.test(subMail.text) && /Works on up to 2 device\(s\)/.test(subMail.html),
+  JSON.stringify(subMail && subMail.text.match(/.*device\(s\).*/g)));
+ok('engangskvitteringen taler ikke om fornyelse — hverken i tekst eller html',
+  !/renews/i.test(mails[0].text) && !/renews/i.test(mails[0].html), JSON.stringify(mails[0].text.match(/.*device\(s\).*/g)));
+ok('engangskøb får ingen kundeportal i kvitteringen',
+  !/billing\.stripe\.com/.test(mails[0].text + mails[0].html), mails[0].html.slice(0, 120));
+ok('abonnementskøb får kundeportalen i begge varianter',
+  !!subMail && /billing\.stripe\.com/.test(subMail.text) && /billing\.stripe\.com/.test(subMail.html));
 // Download
 kv.set('paidfile:dpa-template.pdf', '%PDF-test');
 kv.set('paidfile:dpa-template.md', '# DPA');
