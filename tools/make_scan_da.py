@@ -28,7 +28,7 @@ for a,b in T:
 # FAQ JSON-LD -> Danish
 faq_da = {
 "@context":"https://schema.org","@type":"FAQPage","mainEntity":[
-{"@type":"Question","name":"Hvad tjekker scanneren?","acceptedAnswer":{"@type":"Answer","text":"16 automatiserede WCAG 2.1 AA-regler: billed-alt-tekst, formularmærkater, link- og knaptekst, sidetitel, sprogattribut, viewport-meta, overskriftsstruktur, iframe-titler, tabelhoveder, duplikerede id'er, aria-hidden-elementer der stadig kan fokuseres, tekstkontrast og links der åbner i nyt vindue uden advarsel."}},
+{"@type":"Question","name":"Hvad tjekker scanneren?","acceptedAnswer":{"@type":"Answer","text":"15 automatiserede WCAG 2.1 AA-regler: billed-alt-tekst, formularmærkater, link- og knaptekst, sidetitel, sprogattribut, viewport-meta, overskriftsstruktur, iframe-titler, tabelhoveder, duplikerede id'er, aria-hidden-elementer der stadig kan fokuseres, tekstkontrast og links der åbner i nyt vindue uden advarsel."}},
 {"@type":"Question","name":"Er scanneren gratis?","acceptedAnswer":{"@type":"Answer","text":"Ja. Ingen tilmelding, ingen konto, ingen e-mail. Indsæt en offentlig URL og få straks en karakter med detaljerede fund."}},
 {"@type":"Question","name":"Hvor præcist er det automatiske tjek?","acceptedAnswer":{"@type":"Answer","text":"Automatiserede tjek fanger cirka 30-40 % af tilgængelighedsproblemerne. De resterende 60-70 % kræver menneskelig vurdering: tastaturnavigation, skærmlæsertest og indholdsreview."}},
 {"@type":"Question","name":"Gemmer scanneren de sider jeg tjekker?","acceptedAnswer":{"@type":"Answer","text":"Nej. Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks. Ingen logs, ingen lagring, ingen cookies."}},

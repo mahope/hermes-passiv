@@ -94,6 +94,25 @@ RE_CLAIM = re.compile(
     r"|WCAG\s+[\d.]+\s+AA\s+regler"
     r"|WCAG\s+[\d.]+\s+AA-regler"         # 22 WCAG 2.1 AA-regler (dansk, bindestreg)
     r"|regler"                            # 22 regler
+    # De tre nedenfor er ikke flere synonymer, de er de **formuler den målte
+    # fejl havde**. Før denne iteration stod fire publicerede sider med "16" om
+    # en motor der kører 15, og `RE_CLAIM` fangede præcis **én** af dem:
+    # "16 WCAG-regler". De tre andre slap igennem, fordi mønstret lister
+    # ordformer i stedet for begrebet:
+    #   "16 automatiserede WCAG 2.1 AA-regler" — "automatiserede" er ikke
+    #     "automatiske", så intet før "WCAG" passerede.
+    #   "16 automated WCAG rules" — der står et ord ("WCAG") mellem
+    #     "automated" og "rules", så `automated\s+rules" passede ikke.
+    #   "16 WCAG compliance rules" — samme fejl, plus "compliance" mellem
+    #     "WCAG" og "rules" og ingen versionsstreng.
+    # Derfor er der nu tilladt *ét* valgfrit kvalificerende ord mellem
+    # "automated" og regelordet, og tilladt at en WCAG-streng mangler både
+    # version og A/N-niveau. Det er målt, ikke valgt: se `SUPERSEDED` nedenfor
+    # og selftestens tre nye arme, der genskaber præcis de tre oversete former.
+    r"|automatis(?:ke|erede)\s+(?:[\d.]+\s+)?(?:WCAG\s+)?(?:[\d.]+\s+AA[- ]?)?(?:regler|tjek)"
+    r"|automated\s+(?:[\d.]+\s+AA\s+)?(?:WCAG|compliance|accessibility|EAA)\s*"
+    r"(?:[\d.]+\s+AA\s+)?(?:rules|checks)"
+    r"|WCAG\s*(?:[\d.]+\s*AA\s*)?(?:compliance\s+|-\s*)?(?:rules|regler)"
     r")",
     re.IGNORECASE,
 )
@@ -332,6 +351,12 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("compliance-report.html", "web"),
     ("da/compliance-report.html", "web"),
     ("da/compliance-ai.html", "web"),
+    # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
+    # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance
+    # rules") ikke blev fundet af `RE_CLAIM` — så porten nåede aldrig at spørge
+    # efter en motor. Målt i denne iteration: den side løfter 15, og det er
+    # webkernen der kører den.
+    ("compliance-ai.html", "web"),
     ("scan.html", "web"),
     ("scan-da.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
@@ -703,7 +728,51 @@ def self_test() -> int:
                 fails.append(f"selftest: mutationen {name!r} ({new!r}) gav ingen fejl")
             path.write_text(original, encoding="utf-8")
 
-        # Den fjerde fejlform: et fund igen uden id, som på `main` gav fire fund
+        # Den syvende fejlform, og den derfra forløberne her. Før denne
+        # iteration stod der fire publicerede sider med "16" om en motor der
+        # kører 15, og `RE_CLAIM` fangede **én** af dem. De tre oversete var
+        # ikke tilfældigt valgte former — de var de former `RE_CLAIM` ikke
+        # skrev ned, så en arm der kun testede den fangne form ville have været
+        # grøn på præcis den fejl der slap igennem. Derfor genskabes alle fire
+        # på deres rigtige filer, og porten skal rødme hver især *og* nævne
+        # den fil der blev muteret.
+        for name, rel, published in (
+            ("dansk automatiserede", "site/scan-da.html",
+             "15 automatiserede WCAG 2.1 AA-regler"),
+            ("engelsk ord imellem", "site/guides/platforms.html",
+             "Check any site against 15 WCAG rules."),
+            ("engelsk compliance-rules", "site/compliance-ai.html",
+             "15 WCAG compliance rules"),
+            # Den negative kontrol: den form porten *allerede* fangede. Uden
+            # den er der intet bevis for at de tre nye arme ikke har gjort
+            # mønstret så bredt at alt går rødt.
+            ("dansk WCAG-regler", "site/da/compliance-ai.html",
+             "mod 15 WCAG-regler"),
+        ):
+            target = tmp / rel
+            body = target.read_text(encoding="utf-8")
+            if published not in body:
+                fails.append(f"selftest: {rel} indeholder ikke længere {published!r} "
+                             f"— armen {name!r} genskaber en form der ikke findes")
+                continue
+            claim = RE_CLAIM.search(body)
+            if claim is None:
+                fails.append(f"selftest: {rel} har intet løfte i den form armen "
+                             f"gen skaber — armen {name!r} dør stille")
+                continue
+            wrong = re.sub(r"\d+", str(real + 1), claim.group(0), count=1)
+            target.write_text(body.replace(claim.group(0), wrong, 1), encoding="utf-8")
+            errs = check(lay)
+            target.write_text(body, encoding="utf-8")
+            if not errs:
+                fails.append(f"selftest: mutationen {name!r} på {rel} ({wrong!r}) "
+                             f"gav ingen fejl")
+            elif not any(Path(rel).name in e for e in errs):
+                fails.append(f"selftest: mutationen {name!r} på {rel} gav en fejl "
+                             f"der ikke nævner den muterede side: "
+                             + "; ".join(errs[:3]))
+
+        # Den anden fejlform: et fund igen uden id, som på `main` gav fire fund
         # uden fix-tekst. Den skal give en fejl, ikke gå ubemærket.
         scan = lay.site / "scan.html"
         original = scan.read_text(encoding="utf-8")

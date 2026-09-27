@@ -203,20 +203,28 @@ GUIDE_GENERATOR_CHECKS = (
 # (DeskUptime), opgave 27 (Clean Copy) og guide-siderne.
 #
 # Antallet af regler gates også, men ikke med et tal-parsér: scanneren siger
-# selv 16 (site/scan-da.html:21 og FAQSchema), og "16 WCAG..." som *krævet*
-# sætning gør den rød, hvis nogen skriver 15 igen. Så tæller fejlen sig
+# selv 15 (site/scan.html:21 og FAQSchema), og "15 WCAG..." som *krævet*
+# sætning gør den rød, hvis nogen skriver 16 igen. Så tæller fejlen sig
 # selv, i stedet for at en maintainer skal huske at tjekke tallet.
+#
+# **Tallet var 16 her, og det gjorde denne port til årsagen til et rødt CI.**
+# Da `check_rule_claims` målte motoren og sagde 15, var det denne ports
+# *krævede* sætning der holdt de to sider på 16 — så de to gater modsagde
+# hinanden, og CI blev rød på merge. Sandheden er målt i koden: webkernen
+# kører 15 regler (`free_rule_ids` i `check_rule_claims.py`), og scannerens
+# egen engelske FAQ siger 15. Et *krav* i en port skal derfor aldrig være
+# stærkere end den målte kode.
 SCANNER_REQUIRED_EN = (
     "the page is fetched server-side through our cloudflare proxy",
     "analysed in your browser, and immediately discarded",
     "no logs, no storage, no cookies",
-    "16 wcag compliance rules",
+    "15 wcag compliance rules",
 )
 SCANNER_REQUIRED_DA = (
     "siden hentes server-side gennem vores cloudflare-proxy",
     "analyseres i din browser og kasseres straks",
     "ingen logs, ingen lagring, ingen cookies",
-    "16 wcag-regler",
+    "15 wcag-regler",
 )
 SCANNER_CHECKS = (
     (
@@ -632,13 +640,13 @@ def self_test() -> int:
             f"den gamle scanner-påstand på {relative}",
             check_text(relative, scanner_real[relative].replace(new, old, 1), *scanner_cases[relative]),
         ))
-    # Antallet af regler skal også gates, ikke bare løftet. `15` i stedet for
-    # `16` er den fejl den danske side faktisk havde, og den fanges kun fordi
+    # Antallet af regler skal også gates, ikke bare løftet. `16` i stedet for
+    # `15` er den fejl de fire sider faktisk havde, og den fanges kun fordi
     # det rigtige antal står som *krævet* sætning.
     scenarios.append((
         "scanneren der lover et forkert antal WCAG-regler",
         check_text("scanner-da", scanner_real["site/da/compliance-ai.html"].replace(
-            "16 WCAG-regler", "15 WCAG-regler", 1), *scanner_cases["site/da/compliance-ai.html"]),
+            "15 WCAG-regler", "16 WCAG-regler", 1), *scanner_cases["site/da/compliance-ai.html"]),
     ))
     scenarios.append((
         "scanneren uden nogen afsløring af proxy-kaldet",
