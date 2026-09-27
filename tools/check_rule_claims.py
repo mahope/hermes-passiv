@@ -24,6 +24,31 @@ på hvert løfte, der ikke matcher.
     python3 tools/check_rule_claims.py             # alle løfter mod målt kode
     python3 tools/check_rule_claims.py --list      # de målte tal, med kilde
     python3 tools/check_rule_claims.py --self-test # beviser at porten kan rødme
+
+**Målt dækning, 27/9.** Porten læser **alle 299** sider i `site/`
+(`Layout.site.rglob("*.html")`) — altså hele overfladen, ingen fil-liste som i
+`check_product_copy.py`'s 13 navngivne filer. Dømtekraften er smallere end
+overfladen, og det er værd at skrive ned:
+
+* **31** af 299 sider har mindst ét løfte porten dømmer. De øvrige **268**
+  læses, men ingen regel fyrer på dem.
+* `RE_CLAIM` + `RE_HERO` + `RE_TOTAL` giver **119** dømte løfter, alle matcher
+  koden (15 frie + 18 Pro = 33).
+* `RE_HERO` fyrer **15** gange, på **15** sider. Der er **198** sider med et
+  `hero-note`-element, så porten dømmer bevidst kun en brøkdel af dem — den
+  kræver et regel- eller tjekord, fordi `guides/platforms.html` siger
+  "15 platforms" i præcis samme design. Det er målt, ikke valgt; grunden står
+  ved `RE_HERO`.
+* De **2** tal i en `hero-note` porten *ikke* dømmer er netop de to ovenfor:
+  `platforms.html` ("15 platforms") og `comparison.html` ("15 automated rules",
+  som allerede fanges af `RE_CLAIM` i brødteksten).
+
+    Forsigtig ved at måle denne port med et eget regex. Grene af `RE_CLAIM`
+    ser hver især ud som døde — en håndudtrukket optælling fandt 12 af 26 med
+    nul fund, bl.a. "nøgne N rules", som `downloads.html` skriver *én* gang.
+    Sammensætningen er bredere end grenene, så kun portens egen tæller er
+    gyldig. Det er samme fejl som i `check_product_copy.py`: mål med portens
+    egen normalisering, ellers måler du en anden kode end den der gater.
 """
 from __future__ import annotations
 
