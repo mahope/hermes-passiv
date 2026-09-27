@@ -25,6 +25,7 @@ import json
 from pathlib import Path
 import re
 import sys
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 GENERATOR = ROOT / "tools/make_blog_da_mirrors_461.py"
@@ -192,6 +193,59 @@ GUIDE_GENERATOR_CHECKS = (
     ("tools/make_blog_notion_en.py", ("works entirely inside your browser",), GUIDE_REQUIRED),
     ("tools/make_hub_copy_clean.py", ("everything runs locally in your browser", "nothing is uploaded until you paste"), GUIDE_REQUIRED),
 )
+
+# Den gratis EAA-scanner henter den URL man indtaster server-side gennem
+# `/scan-proxy` (site/scan.html:191) og analyserer svaret i browseren. Derfor
+# er "kører helt i din browser" ikke bare upræcist her — det er modbevist af
+# sidens egen `fetch`, og det modsiger den præcise og sande formulering i
+# scannerens egen FAQ ("Siden hentes server-side gennem vores Cloudflare-proxy,
+# analyseres i din browser og kasseres straks"). Fjerde klasse efter opgave 2
+# (DeskUptime), opgave 27 (Clean Copy) og guide-siderne.
+#
+# Antallet af regler gates også, men ikke med et tal-parsér: scanneren siger
+# selv 16 (site/scan-da.html:21 og FAQSchema), og "16 WCAG..." som *krævet*
+# sætning gør den rød, hvis nogen skriver 15 igen. Så tæller fejlen sig
+# selv, i stedet for at en maintainer skal huske at tjekke tallet.
+SCANNER_REQUIRED_EN = (
+    "the page is fetched server-side through our cloudflare proxy",
+    "analysed in your browser, and immediately discarded",
+    "no logs, no storage, no cookies",
+    "16 wcag compliance rules",
+)
+SCANNER_REQUIRED_DA = (
+    "siden hentes server-side gennem vores cloudflare-proxy",
+    "analyseres i din browser og kasseres straks",
+    "ingen logs, ingen lagring, ingen cookies",
+    "16 wcag-regler",
+)
+SCANNER_CHECKS = (
+    (
+        "site/compliance-ai.html",
+        (
+            "runs entirely in your browser",
+            "no data is stored",
+            "privacy-preserving cors proxy",
+        ),
+        SCANNER_REQUIRED_EN,
+    ),
+    (
+        "site/da/compliance-ai.html",
+        (
+            "kører helt i din browser",
+            "ingen data gemmes",
+            "privatlivsvennligt proxy-kald",
+        ),
+        SCANNER_REQUIRED_DA,
+    ),
+)
+# Generatoren skal give den samme ærlige tekst, ellers skriver næste kørsel
+# den gamle løgnest tilbage — præcis som det skete for guide-siderne.
+SCANNER_GENERATOR = "tools/make_compliance_ai_da.py"
+SCANNER_GENERATOR_FORBIDDEN = (
+    "kører helt i din browser",
+    "privatlivsvennligt proxy-kald",
+    "ingen data gemmes",
+)
 # porten er at den bliver rød på *den rigtige fil* med lige præcis den gamle
 # tekst — ikke på en syntetisk streng, der ligner den.
 SUPERSEDED_COPY = {
@@ -215,6 +269,60 @@ SUPERSEDED_COPY = {
         "En Pro-licensnøgle tjekkes online mod mahope.tools.",
     ),
 }
+
+
+# De publicerede sætninger fra før rettelsen, kun brugt i selftestens bevis på
+# de rigtige filer — samme (gammel, ny) rækkefølge som SUPERSEDED_COPY.
+SCANNER_SUPERSEDED = {
+    "site/compliance-ai.html": (
+        "It runs entirely in your browser (client-side) with a privacy-preserving CORS proxy. No data is stored.",
+        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies.",
+    ),
+    "site/da/compliance-ai.html": (
+        "Den kører helt i din browser med et privatlivsvennligt proxy-kald. Ingen data gemmes.",
+        "Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks. Ingen logs, ingen lagring, ingen cookies.",
+    ),
+}
+
+
+def anchor_problems(relative: str, source_relative: str, generator_source: Optional[str] = None) -> list[str]:
+    """Hvert `old` i generatorens REPLACEMENTS skal findes i kilden.
+
+    En død anchor fejler *stille*: `make_compliance_ai_da.py` renderer færdig,
+    skriver den danske side, og lader bare den uoversatte engelske original stå
+    i stedet for den danske sætning. Det er præcis sådan den danske side fik
+    "15 WCAG-regler" imens generatoren sagde 16, og sådan et engelsk hero-
+    undertitel slap igennem. Uden denne port er en sådan regression usynlig,
+    fordi kørslen siger "Wrote ..." og går med grønt.
+
+    `generator_source` gør det muligt at teste porten mod en muteret
+    generator, som selftestens død-anchor-arm gør.
+    """
+    spec = importlib.util.spec_from_file_location("compliance_ai_da", ROOT / relative)
+    if spec is None or spec.loader is None:
+        return [f"{relative}: could not load generator"]
+    try:
+        if generator_source is None:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            replacements = module.REPLACEMENTS
+        else:
+            # Muteret generator: den skal stadig kunne importeres, så
+            # `exec` sker i et frist navnerum med kun de to navne generatoren
+            # bruger på modulniveau.
+            namespace: dict = {"__file__": str(ROOT / relative), "__name__": "compliance_ai_da"}
+            exec(compile(generator_source, str(ROOT / relative), "exec"), namespace)
+            replacements = namespace["REPLACEMENTS"]
+    except Exception as error:
+        return [f"{relative}: generator failed to load: {error}"]
+    source = (ROOT / source_relative).read_text(encoding="utf-8")
+    return [
+        f"{relative}: dead anchor — {old[:70]!r} is not in {source_relative}, "
+        f"so the generator silently leaves the English original"
+        for old, _new in replacements
+        if old not in source
+    ]
+
 
 
 # De præcise FAQ-sætninger der var publiceret indtil denne iteration, for de
@@ -399,6 +507,11 @@ def collect_problems() -> list[str]:
         problems.extend(check_text(relative, text, forbidden, required))
     for relative, forbidden, required in GUIDE_GENERATOR_CHECKS:
         problems.extend(check_generator(relative, forbidden, required))
+    for relative, forbidden, required in SCANNER_CHECKS:
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        problems.extend(check_text(relative, text, forbidden, required))
+    problems.extend(check_generator(SCANNER_GENERATOR, SCANNER_GENERATOR_FORBIDDEN, SCANNER_REQUIRED_DA))
+    problems.extend(anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html"))
     try:
         generated, generator_root = generated_blog_copy()
     except Exception as error:
@@ -506,6 +619,59 @@ def self_test() -> int:
         if "page-view count" not in source:
             raise AssertionError(f"{relative}: generator anchor not found: 'page-view count'")
 
+    # Scanner-klassen. Beviset er de publicerede sætninger fra før rettelsen,
+    # i begge sprog, fordi det er den tekst læseren faktisk har læst.
+    scanner_cases = {relative: (forbidden, required) for relative, forbidden, required in SCANNER_CHECKS}
+    scanner_real = {relative: (ROOT / relative).read_text(encoding="utf-8") for relative in scanner_cases}
+    for relative, (old, new) in SCANNER_SUPERSEDED.items():
+        if new not in scanner_real[relative]:
+            raise AssertionError(f"{relative}: current text not found in the real file: {new[:60]!r}")
+        if old in scanner_real[relative]:
+            raise AssertionError(f"{relative}: superseded text still present in the real file")
+        scenarios.append((
+            f"den gamle scanner-påstand på {relative}",
+            check_text(relative, scanner_real[relative].replace(new, old, 1), *scanner_cases[relative]),
+        ))
+    # Antallet af regler skal også gates, ikke bare løftet. `15` i stedet for
+    # `16` er den fejl den danske side faktisk havde, og den fanges kun fordi
+    # det rigtige antal står som *krævet* sætning.
+    scenarios.append((
+        "scanneren der lover et forkert antal WCAG-regler",
+        check_text("scanner-da", scanner_real["site/da/compliance-ai.html"].replace(
+            "16 WCAG-regler", "15 WCAG-regler", 1), *scanner_cases["site/da/compliance-ai.html"]),
+    ))
+    scenarios.append((
+        "scanneren uden nogen afsløring af proxy-kaldet",
+        check_text("scanner", scanner_real["site/compliance-ai.html"].replace(
+            "The page is fetched server-side through our Cloudflare proxy,", "The page is fetched on your device,", 1),
+            *scanner_cases["site/compliance-ai.html"]),
+    ))
+    # Generatoren skal give den ærlige tekst, ellers skriver næste kørsel
+    # løgnesten tilbage. Beviset er den gamle sætning i den rigtige kilde.
+    generator_source = (ROOT / SCANNER_GENERATOR).read_text(encoding="utf-8")
+    scanner_anchor = "Siden hentes server-side gennem vores Cloudflare-proxy"
+    if scanner_anchor not in generator_source:
+        raise AssertionError(f"{SCANNER_GENERATOR}: mutation anchor not found")
+    scenarios.append((
+        f"generatoren {SCANNER_GENERATOR} der skriver det gamle løfte tilbage",
+        check_generator(SCANNER_GENERATOR, SCANNER_GENERATOR_FORBIDDEN, SCANNER_REQUIRED_DA,
+                        generator_source.replace(
+                            scanner_anchor,
+                            "Den kører helt i din browser", 1)),
+    ))
+    # Den stille fejl: en død anchor. Generatoren kører færdig og siger
+    # "Wrote ...", men lader den uoversatte engelske original stå. Beviset er
+    # den mutation der dræber præcis den anchor, der døde i virkeligheden.
+    dead = ("<p class=\"subtitle\">Free Q&A for small web agencies.",
+            "<p class=\"subtitle\">Free AI-powered Q&A for small web agencies.")
+    if dead[0] not in (ROOT / "site/compliance-ai.html").read_text(encoding="utf-8"):
+        raise AssertionError("site/compliance-ai.html: subtitle anchor not found for the dead-anchor case")
+    broken_source = (ROOT / SCANNER_GENERATOR).read_text(encoding="utf-8").replace(dead[0], dead[1], 1)
+    scenarios.append((
+        f"{SCANNER_GENERATOR} med en død anchor",
+        anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html", broken_source),
+    ))
+
     # Positiv kontrol: de rigtige filer skal være grønne, ellers er porten
     # grøn fordi den intet kan.
     positive = [f"{relative}: {problem}" for relative, (forbidden, required) in cases.items()
@@ -514,7 +680,13 @@ def self_test() -> int:
                  for problem in check_text(relative, guide_real[relative], forbidden, required)]
     positive += [f"{relative}: {problem}" for relative, forbidden, required in GUIDE_GENERATOR_CHECKS
                  for problem in check_generator(relative, forbidden, required)]
-    positive_controls = len(cases) + len(guide_cases) + len(GUIDE_GENERATOR_CHECKS)
+    positive += [f"{relative}: {problem}" for relative, (forbidden, required) in scanner_cases.items()
+                 for problem in check_text(relative, scanner_real[relative], forbidden, required)]
+    positive += [f"{SCANNER_GENERATOR}: {problem}" for problem
+                 in check_generator(SCANNER_GENERATOR, SCANNER_GENERATOR_FORBIDDEN, SCANNER_REQUIRED_DA)]
+    positive += anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html")
+    positive_controls = (len(cases) + len(guide_cases) + len(GUIDE_GENERATOR_CHECKS)
+                         + len(scanner_cases) + 2)
 
     # Negativ kontrol: en kvalificeret påstand er ikke en forbudt påstand.
     qualified = ('<p>Your text never leaves this page. If you activate a Pro key, that key and a '
@@ -555,6 +727,7 @@ def main() -> int:
     print(f"{len(PUBLIC_CHECKS) + 1} DeskUptime copy sources checked")
     print(f"{len(CLEAN_COPY_CHECKS)} Clean Copy Pro copy sources checked")
     print(f"{len(GUIDE_CHECKS)} guide pages + {len(GUIDE_GENERATOR_CHECKS)} guide generators checked")
+    print(f"{len(SCANNER_CHECKS)} scanner pages + 1 scanner generator + its anchors checked")
     print(f"problems: {len(problems)}")
     for problem in problems:
         print(problem)
