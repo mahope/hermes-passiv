@@ -2660,15 +2660,34 @@ def check_billing_portal(catalog: dict) -> list[str]:
     return problems
 
 
-def check_forbidden_claims() -> list[str]:
+def check_forbidden_claims(pages: list[tuple[str, str]] | None = None) -> list[str]:
+    """Påstande om et køb der ikke findes: "coming soon", "pro is coming" m.fl.
+
+    **Målt dækning, 27/9.** Alle **10** strenge i `FORBIDDEN_CLAIMS` har **nul
+    fund** i hele overfladen, målt med portens egen `parse_page` over de **305**
+    sider `source_pages()` læser (299 under `site/` + 6 i de andre
+    `SCAN_ROOTS`). Ikke én af dem kan altså gøre en publiceret side rød.
+
+    Det er ikke dækning, det er genbrug af de publicerede sætninger: de fanger
+    en *regression* — en generator der begynder at skrive en gammel
+    "coming soon"-sætning — og aldrig en side der er redigeret i dag. Det er
+    værd at have, men det er skrevet her så porten ikke ser ud til at dømme
+    købstaler den ikke dømmer.
+
+    **Derfor har den en selftest-arm.** Alle de andre claims i denne fil
+    dømmes af en funktion der tager `pages` som argument, så en arm kan sende
+    en syntetisk side ind og kræve et fund. Det gjorde denne ikke: den læste
+    selv fra disk og tog ingen argument, så den var umulig at teste — og ingen
+    arm testede den. En port, ingen kan vise rød, er en port der kun kan
+    grønne. Derfor tager den nu `pages` med samme signatur som de andre, og
+    armen sender en syntetisk side ind, så selftesten ikke skriver den fejl
+    den skal fange ind i de rigtige filer.
+    """
+    if pages is None:
+        pages = source_pages()
     problems: list[str] = []
-    for path in scan_files():
-        if path.suffix != ".html":
-            continue
-        relative = str(path.relative_to(ROOT))
-        if relative.startswith("dist/"):
-            continue
-        visible, _ = parse_page(path.read_text(encoding="utf-8"))
+    for relative, text in pages:
+        visible, _ = parse_page(text)
         lowered = visible.casefold()
         for claim in FORBIDDEN_CLAIMS:
             if claim in lowered:
@@ -4128,6 +4147,23 @@ def self_test() -> int:
         return 1
     renamed_click = check_buy_click_tracking(good, source_pages(), renamed_track)
 
+    # En side der lover et køb der ikke findes. `FORBIDDEN_CLAIMS` har nul fund
+    # i hele overfladen (målt i `check_forbidden_claims`' egen docstring), så
+    # uden denne arm er det ubevis at porten kan fyre overhovedet — en gate der
+    # kun kan grønne. Sætningen skrives på den syntetiske side, aldrig i
+    # `site/`: ellers skrev selftesten den fejl ind i de rigtige filer.
+    forbidden_page = [("site/eksempel.html",
+                       "<html lang=\"en\"><body><p>Clean Copy Pro is coming soon.</p></body></html>")]
+    forbidden_found = check_forbidden_claims(forbidden_page)
+    # Samme forbudte sætning i `<head>`: skjult tekst er ikke en købspåstand
+    # en læser ser, så porten skal være grøn på den. Uden denne kontrol ville
+    # armen ovenfor være grøn fordi porten læser *alt* markup, ikke fordi den
+    # dømmer det rigtige.
+    forbidden_head = [("site/eksempel.html",
+                       "<html lang=\"en\"><head><title>Pro is coming soon</title></head>"
+                       "<body><p>Tak.</p></body></html>")]
+    forbidden_hidden = check_forbidden_claims(forbidden_head)
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -4168,6 +4204,7 @@ def self_test() -> int:
         ("en købsknap på en side uden tracker", untracked_click),
         ("en tracker uden kliklytter", muted_click),
         ("en tracker der sender en anden begivenhed end buy-click", renamed_click),
+        ("en side der lover et køb der ikke findes", forbidden_found),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -4196,7 +4233,8 @@ def self_test() -> int:
                             ("en købsside med en indgang fra en bygget side", reachable),
                             ("en købsside der linkes krydsdomæne fra en bygget side", cross_real),
                             ("en købsknap på en side med tracker", tracked_click),
-                            ("en kundeportal som ikke er et køb", portal_click)):
+                            ("en kundeportal som ikke er et køb", portal_click),
+                            ("en forbudt købspåstand i skjult head-tekst", forbidden_hidden)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
