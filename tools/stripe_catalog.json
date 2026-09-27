@@ -562,22 +562,24 @@
       "ctas": 2,
       "ctas_note": "Målt 27/9: to synlige købsknapper med samme link. Kilden er ../auditedwp, som jeg ikke må ændre, så jeg kan ikke reducere den til én her. Konsekvensen er målt, ikke antaget: track.js tæller hvert klik på et Stripe-link, så én købshensigt på denne side tælles 2 gange i recentBuyClicks. Reglen for `offers` er præcis 1, fordi et købsklik skal være én hendelse. Retten kræver enten en ændring i ../auditedwp eller at build_sites.py efterbehandler siden.",
       "why": "Selvstændig Pro-side i vores egen nav ('Tools'/'Værktøjer') med egen canonical, i sitemap og med to synlige købsknapper. Målt 27/9 som den eneste publicerede købsside porten ikke kendte: den er grøn med 13 dokumenterede købssider, mens det byggede site har 16."
+    }
+  ],
+  "redirects": [
+    {
+      "domain": "cleancopy.tools",
+      "from": "/clean-copy",
+      "to": "/",
+      "code": 301,
+      "implemented_in": "site/_worker.js (CANONICAL_HOME_REDIRECTS) — ikke i _redirects",
+      "why": "27/9 lå denne rute som byte-identisk dublet af forsiden (cmp: IDENTISK) med canonical på /, og den blev dokumenteret i built_offers med alias_of fordi den tog penge. Nu er filerne fjernet fra publiceringen af build_sites.py (`index_only`: kilden er stadig forsiden via index_from), så ruten er en 301 og ikke en købsside. Den lå tidligere i built_offers med alias_of=/; en indgang for en side der ikke findes er fjernet, og check_built_offer_entries fanger sådan en indgang fremover."
     },
     {
       "domain": "cleancopy.tools",
-      "route": "/clean-copy",
-      "product": "clean-copy-pro",
-      "source": "build_sites.py `index_from` — site/index.html udgives ved siden af site/clean-copy.html, som er forsiden",
-      "alias_of": "/",
-      "why": "Byte-identisk kopi af forsiden (cmp: IDENTISK) med canonical på /, udgivet af index_from. Den tager penge, så den skal stå i inventaret — men den er en dublet og ikke en landingsside, og alias_of er det der siger det."
-    },
-    {
-      "domain": "cleancopy.tools",
-      "route": "/da/clean-copy",
-      "product": "clean-copy-pro",
-      "source": "build_sites.py `index_from` — site/da/index.html udgives ved siden af site/da/clean-copy.html, som er den danske forside",
-      "alias_of": "/da/",
-      "why": "Samme dublet på dansk: byte-identisk kopi af /da/ med canonical på /da/."
+      "from": "/da/clean-copy",
+      "to": "/da/",
+      "code": 301,
+      "implemented_in": "site/_worker.js (CANONICAL_HOME_REDIRECTS) — ikke i _redirects",
+      "why": "Samme som /clean-copy, danske forside."
     }
   ],
   "core_pages": [
