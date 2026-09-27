@@ -970,7 +970,7 @@ async function handleLicense(request, env, mode) {
       if (!known && (rec.devices || []).length >= maxDevices) {
         return jsonResp({ ok: true, valid: false, reason: 'device_limit', devices_in_use: rec.devices.length });
       }
-      return jsonResp({ ok: true, valid: true, plan: rec.plan || 'pro-yearly', expires_at: rec.expires_at || null });
+      return jsonResp({ ok: true, valid: true, plan: rec.plan || 'pro-yearly', expires_at: rec.expires_at || null, ...lifetimeField(rec) });
     }
 
     // Activate mode: bind the device.
@@ -988,6 +988,7 @@ async function handleLicense(request, env, mode) {
       activated: true,
       plan: rec.plan || 'pro-yearly',
       expires_at: rec.expires_at || null,
+      ...lifetimeField(rec),
       devices_in_use: rec.devices.length,
     });
   } catch {
@@ -1266,6 +1267,7 @@ async function handleLicenseLookup(request, env) {
     license_key: key,
     plan: rec.plan || 'pro-yearly',
     expires_at: rec.expires_at || null,
+    ...lifetimeField(rec),
     activate_url: home,
   };
   // Samme additive felt som leveringssvaret, så nøgleopslaget ikke er det ene
@@ -3254,7 +3256,7 @@ const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdA
 // veje. De to manglende er en produktregulær mangel, ikke en tekstopgave:
 // skrivning dem kræver en side, der ikke findes endnu.
 const STRIPE_PRODUCTS = {
-  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, subscription: true, home: 'https://cleancopy.tools/activate/' },
+  'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, subscription: true, lifetime: true, home: 'https://cleancopy.tools/activate/' },
   'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/', activateHint: 'The desktop app asks for the licence key the first time you start it. Free without a key: the command-line tool.' },
   'transmute-desktop': { name: 'Transmute Desktop', kind: 'license', maxDevices: 3, home: 'https://transmute.run/' },
   // `home` er det leveringssvaret kalder `activate_url`, og det havnede på
@@ -3265,8 +3267,8 @@ const STRIPE_PRODUCTS = {
   // WordPress plugin"), så den er det ærlige mål. `activateHint` siger hvor
   // nøglen sættes ind, målt i auditedwp/plugin/eucomply.php:246 og :1994 —
   // menuen "EUComply > Settings" og feltet "Pro License Key".
-  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, home: 'https://eucomplypro.com/pro/', activateHint: 'In WordPress: EUComply > Settings, in the "Pro License Key" field. On the web: https://mahope.tools/compliance-report' },
-  'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, subscription: true, home: 'https://mahope.tools/page-profile' },
+  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, lifetime: true, home: 'https://eucomplypro.com/pro/', activateHint: 'In WordPress: EUComply > Settings, in the "Pro License Key" field. On the web: https://mahope.tools/compliance-report' },
+  'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, subscription: true, lifetime: true, home: 'https://mahope.tools/page-profile' },
   'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md'] },
   'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
   'eucomply-nda-clauses': { name: 'Mutual NDA Clause Set', kind: 'download', files: ['nda-clause-set.pdf', 'nda-clause-set.md'] },
@@ -3277,6 +3279,20 @@ const STRIPE_PRODUCTS = {
   'support-mahope-oss': { name: 'Support for Mahope open source', kind: 'donation' },
 };
 const DOWNLOAD_TTL_DAYS = 60;
+// Lifetime ("founding-pris", første 100 køb pr. produkt) sælges som en
+// engangspris på det samme Stripe-produkt som årsabonnementet, og kun på
+// produkter med `lifetime: true` ovenfor. Prisen skelnes alene på sin
+// lookup_key: `<product_key>-lifetime-v<n>`. Købet giver en licens til samme
+// produkt (samme `product`, så klienterne ikke skal kende en ny nøgle), men
+// uden `expires_at` og med `lifetime: true`. Den har intet abonnement, så ingen
+// abonnements-webhook kan forkorte den (se `invoice.paid`). Kun en fuld
+// refundering eller en chargeback tilbagekalder den, som ved andre engangskøb.
+const LIFETIME_SUFFIX = /-lifetime$/;
+
+/** Additivt felt til licenssvarene: kun til stede på lifetime-licenser. */
+function lifetimeField(rec) {
+  return rec && rec.lifetime === true ? { lifetime: true } : {};
+}
 const SUBSCRIPTION_GRACE_DAYS = 7;
 const SALES_FROM = 'Mahope tools <orders@mahoje.dk>';
 // Kundehenvendelser skal lande i produktets egen indbakke (support@<produktets domæne>)
@@ -3494,8 +3510,14 @@ async function fulfillStripeSession(env, sessionId) {
   const pendingRecord = { session_id: sessionId, state: 'processing', started_at: new Date().toISOString() };
   await setFulfillmentPending(env, pendingKey, pendingRecord);
   const item = (s.line_items && s.line_items.data && s.line_items.data[0]) || {};
-  const productKey = String((item.price && item.price.lookup_key) || '').replace(/-v\d+$/, '');
-  const product = STRIPE_PRODUCTS[productKey];
+  const lookupBase = String((item.price && item.price.lookup_key) || '').replace(/-v\d+$/, '');
+  // `-lifetime` gælder kun produkter med en lifetime-udgave, og kun et
+  // engangskøb. En lifetime-pris på et abonnement er en fejlkonfiguration: den
+  // skal stoppe og alarmere, ikke levere en licens uden udløb.
+  const lifetime = LIFETIME_SUFFIX.test(lookupBase);
+  const productKey = lookupBase.replace(LIFETIME_SUFFIX, '');
+  const product = (!lifetime || (STRIPE_PRODUCTS[productKey] && STRIPE_PRODUCTS[productKey].lifetime === true && !s.subscription))
+    ? STRIPE_PRODUCTS[productKey] : undefined;
   if (!product) {
     // Betalt, men vi ved ikke hvad der skal leveres — må aldrig ske i stilhed.
     await alertMads(env, 'Betaling uden kendt produkt',
@@ -3515,7 +3537,7 @@ async function fulfillStripeSession(env, sessionId) {
     // Intet at levere — Stripe viser selv takkebeskeden.
   } else if (product.kind === 'license') {
     let expiresAt = null;
-    if (s.subscription) {
+    if (s.subscription && !lifetime) {
       const sub = await stripeGet(env, `subscriptions/${encodeURIComponent(s.subscription)}`);
       const end = sub.current_period_end || (sub.items && sub.items.data && sub.items.data[0] && sub.items.data[0].current_period_end);
       if (end) expiresAt = new Date((end + SUBSCRIPTION_GRACE_DAYS * 86400) * 1000).toISOString();
@@ -3525,6 +3547,7 @@ async function fulfillStripeSession(env, sessionId) {
       await env.VISITS.put(`lic:${key}`, JSON.stringify({
         status: 'active', plan: productKey, product: productKey,
         max_devices: product.maxDevices * qty, created_at: now.toISOString(), expires_at: expiresAt,
+        ...(lifetime ? { lifetime: true } : {}),
         devices: [], stripe_session: sessionId, stripe_subscription: s.subscription || null, stripe_invoice: invoice, stripe_payment_intent: pi,
       }));
     }
@@ -3536,13 +3559,17 @@ async function fulfillStripeSession(env, sessionId) {
       await env.VISITS.put(`lic-email:${hex(new Uint8Array(d))}:${sessionId}`, key);
     }
     Object.assign(result, { license_key: key, expires_at: expiresAt, max_devices: product.maxDevices * qty, activate_url: product.home });
+    if (lifetime) {
+      result.lifetime = true;
+      result.product_name = `${product.name} Lifetime`;
+    }
     // /thanks' knap "How to activate" er et link, ikke en instruktion. Samme
     // `activateHint` som kvitteringsmailen bruger, så køberen læser det samme
     // begge steder. Feltet sættes kun når produktet faktisk har en målt
     // aktivering, så et download eller et produkt uden sted ikke kan få en
     // instruktion der er opfundet på købssiden.
     if (product.activateHint) result.activate_hint = product.activateHint;
-    if (product.subscription) {
+    if (product.subscription && !lifetime) {
       // Årsabonnenter skal selv kunne opsige, hente fakturaer og rette momsnummer.
       result.subscription = true;
       result.billing_portal = BILLING_PORTAL_URL;
@@ -3600,7 +3627,8 @@ async function sendSaleEmail(env, to, r, sessionId) {
     // mailklienten viste. Den afledes herfra, som resten af kvitteringen, så de
     // to ikke kan komme fra hinanden igen. Samme felt driver tak-siden.
     const uses = `Works on up to ${r.max_devices} device(s)`;
-    const renews = r.expires_at ? ' and renews with your subscription' : '';
+    const renews = r.lifetime ? '. Lifetime license: one payment, no renewal and no expiry'
+      : r.expires_at ? ' and renews with your subscription' : '';
     text = `${thanksLine(r)}\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
       + hintText
       + `${uses}${renews}.\n`
@@ -3722,7 +3750,13 @@ async function handleStripeWebhook(request, env) {
       if (key && ends.length) {
         const rec = JSON.parse((await env.VISITS.get(`lic:${key}`)) || '{}');
         const exp = new Date((Math.max(...ends) + SUBSCRIPTION_GRACE_DAYS * 86400) * 1000).toISOString();
-        if (rec.status !== 'revoked' && (!rec.expires_at || rec.expires_at < exp)) {
+        // Kun en faktura fra licensens eget abonnement må sætte en udløbsdato.
+        // Engangslinks har `invoice_creation` slået til, så `invoice.paid`
+        // kommer også for engangskøb (DeskUptime, Transmute, lifetime) og
+        // finder licensen via `lic-invoice:`. Uden betingelsen fik en
+        // engangslicens "fakturaperiodens slut + 7 dage" og udløb efter en uge.
+        const ownSubscription = !!subId && rec.stripe_subscription === subId && rec.lifetime !== true;
+        if (ownSubscription && rec.status !== 'revoked' && (!rec.expires_at || rec.expires_at < exp)) {
           rec.expires_at = exp;
           await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
         }

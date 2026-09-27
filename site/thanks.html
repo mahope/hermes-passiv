@@ -66,7 +66,7 @@
           html = '<p><strong>Your license key</strong></p><div class="key-box"><code id="key">' + esc(d.license_key) + '</code>'
             + '<button type="button" class="btn" id="copy">Copy</button></div>'
             + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
-            + (d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
+            + (d.lifetime ? '. <strong>Lifetime license:</strong> one payment, no renewal and no expiry' : d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
             + (d.activate_url ? '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>' : '')
             // Et link med navnet "How to activate" er ikke en instruktion.
             // `activate_hint` er det samme felt kvitteringsmailen bruger, og det

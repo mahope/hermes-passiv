@@ -986,8 +986,10 @@ def structured_offers(text: str) -> list[tuple[str, str | None]]:
             item = stack.pop()
             if isinstance(item, dict):
                 offers = item.get("offers")
-                if isinstance(offers, dict) and "price" in offers:
-                    found.append((str(offers.get("price")), offers.get("availability")))
+                # `offers` kan være én Offer eller en liste (gratis + lifetime).
+                for offer in (offers if isinstance(offers, list) else [offers]):
+                    if isinstance(offer, dict) and "price" in offer:
+                        found.append((str(offer.get("price")), offer.get("availability")))
                 stack.extend(item.values())
             elif isinstance(item, list):
                 stack.extend(item)
@@ -1029,7 +1031,7 @@ def check_unbuyable_prices(catalog: dict, pages: list[tuple[str, str]]) -> list[
     og reglen fangede en *sand* side.
     """
     products = catalog["products"]
-    link_to_key = {product["payment_link"]: key for key, product in products.items()}
+    link_to_key = link_owners(products)
     problems: list[str] = []
 
     for relative, text in pages:
@@ -1039,8 +1041,10 @@ def check_unbuyable_prices(catalog: dict, pages: list[tuple[str, str]]) -> list[
         # sidens `$79` er det samme beløb, og en streng tekstsammenligning
         # gjorde alle fire købssider røde på deres *egne* priser.
         sold = {link_to_key[href] for href, _ in anchors if href in link_to_key}
+        # Pr. *link*, ikke pr. produkt: et lifetime-link gør lifetime-prisen
+        # betalbar, men det årlige link gør den ikke — og omvendt.
         payable = {value for value in
-                   (amount_value(str(products[key]["price"])) for key in sold)
+                   (amount_value(str(link_price(products, href))) for href, _ in anchors if href in link_to_key)
                    if value is not None}
 
         def unpayable(token: str) -> bool:
@@ -2132,8 +2136,45 @@ def load_catalog(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def lifetime_offer(product: dict) -> dict | None:
+    """Produktets lifetime-udgave (founding-pris), hvis det har en.
+
+    Lifetime er en engangspris på det *samme* produkt som årsabonnementet, med
+    sit eget Payment Link. Workeren kender den på lookup_key'en
+    `<product_key>-lifetime-v<n>` og udsteder en licens til samme product_key,
+    så katalogen modellerer den som en del af produktet, ikke som et nyt.
+    """
+    lifetime = product.get("lifetime")
+    return lifetime if isinstance(lifetime, dict) else None
+
+
+def product_links(product: dict) -> list[str]:
+    """Alle betalingslinks der sælger produktet: det årlige/primære og lifetime."""
+    links = [product["payment_link"]] if isinstance(product.get("payment_link"), str) else []
+    lifetime = lifetime_offer(product)
+    if lifetime and isinstance(lifetime.get("payment_link"), str):
+        links.append(lifetime["payment_link"])
+    return links
+
+
+def link_owners(products: dict) -> dict[str, str]:
+    """`{payment_link: product_key}` for hvert link, lifetime inklusive."""
+    return {link: key for key, product in products.items() for link in product_links(product)}
+
+
+def link_price(products: dict, link: str) -> str | None:
+    """Prisen der betales via netop dette link."""
+    for product in products.values():
+        if product.get("payment_link") == link:
+            return str(product.get("price"))
+        lifetime = lifetime_offer(product)
+        if lifetime and lifetime.get("payment_link") == link:
+            return str(lifetime.get("price"))
+    return None
+
+
 def catalog_links(catalog: dict) -> set[str]:
-    links = {product["payment_link"] for product in catalog["products"].values()}
+    links = {link for product in catalog["products"].values() for link in product_links(product)}
     portal = catalog.get("billing_portal")
     if isinstance(portal, str):
         links.add(portal)
@@ -2176,6 +2217,26 @@ def check_catalog(catalog: dict) -> list[str]:
         previous = links.setdefault(product["payment_link"], key)
         if previous != key:
             problems.append(f"catalog: link {product['payment_link']} bruges af både {previous} og {key}")
+        if "lifetime" in product:
+            lifetime = lifetime_offer(product)
+            if lifetime is None:
+                problems.append(f"catalog: {key}.lifetime skal være et objekt")
+                continue
+            if product.get("subscription") is not True:
+                problems.append(f"catalog: {key} har en lifetime-udgave, men er ikke et abonnement — "
+                                "lifetime findes kun som alternativ til et årsabonnement")
+            for field in ("price", "price_note", "payment_link"):
+                if not isinstance(lifetime.get(field), str) or not lifetime[field]:
+                    problems.append(f"catalog: {key}.lifetime mangler {field}")
+            if not isinstance(lifetime.get("limit"), int) or lifetime["limit"] < 1:
+                problems.append(f"catalog: {key}.lifetime mangler limit (antal køb Payment Linket er begrænset til)")
+            life_link = lifetime.get("payment_link")
+            if isinstance(life_link, str):
+                if not life_link.startswith("https://buy.stripe.com/"):
+                    problems.append(f"catalog: {key}.lifetime har et link uden for Stripe Payment Links")
+                previous = links.setdefault(life_link, key)
+                if previous != key or life_link == product["payment_link"]:
+                    problems.append(f"catalog: link {life_link} bruges af både {previous} og {key}.lifetime")
     for key in REQUIRED_PRODUCT_KEYS:
         if key not in products:
             problems.append(f"catalog: kontraktproduktet {key} mangler")
@@ -2195,6 +2256,9 @@ def check_contract_doc(catalog: dict) -> list[str]:
             problems.append(f"{path.name}: product_key {key} står ikke i tabellen")
         if product["payment_link"] not in text:
             problems.append(f"{path.name}: betalingslink for {key} står ikke i tabellen")
+        lifetime = lifetime_offer(product)
+        if lifetime and lifetime.get("payment_link") not in text:
+            problems.append(f"{path.name}: lifetime-betalingslink for {key} står ikke i tabellen")
     for extra in LINK_PATTERN.findall(text):
         if extra not in catalog_links(catalog):
             problems.append(f"{path.name}: link {extra} er ikke i allowlisten")
@@ -2241,6 +2305,14 @@ def check_worker(catalog: dict) -> list[str]:
         problems.append(f"site/_worker.js: {key} er markeret som abonnement, men allowlisten siger engangskøb")
     for key in sorted(catalog_subscriptions - worker_subscriptions):
         problems.append(f"site/_worker.js: {key} er et årligt abonnement i allowlisten, men er ikke markeret som abonnement")
+    # Lifetime leveres kun for produkter workeren har markeret `lifetime: true`;
+    # ellers alarmerer den og leverer intet. Katalog og worker skal være enige.
+    worker_lifetime = {key for key, entry in entries.items() if re.search(r"\blifetime:\s*true\b", entry)}
+    catalog_lifetime = {key for key, product in products.items() if lifetime_offer(product)}
+    for key in sorted(catalog_lifetime - worker_lifetime):
+        problems.append(f"site/_worker.js: {key} sælges med lifetime i allowlisten, men workeren leverer ikke lifetime for det")
+    for key in sorted(worker_lifetime - catalog_lifetime):
+        problems.append(f"site/_worker.js: {key} er markeret lifetime i workeren, men allowlisten har intet lifetime-link")
     if catalog_subscriptions and catalog.get("billing_portal") not in text:
         problems.append("site/_worker.js: kundeportalen mangler i workeren, så abonnenter ikke kan opsige selv")
     links_block = re.search(r"const STRIPE_LINKS = \{(.*?)\n  \};", text, re.S)
@@ -2248,7 +2320,7 @@ def check_worker(catalog: dict) -> list[str]:
         problems.append("site/_worker.js: STRIPE_LINKS blev ikke fundet")
         return problems
     for short, link in re.findall(r"(\w+):\s*'(https://buy\.stripe\.com/[A-Za-z0-9]+)'", links_block.group(1)):
-        owner = next((key for key, product in products.items() if product["payment_link"] == link), None)
+        owner = link_owners(products).get(link)
         if owner is None:
             problems.append(f"site/_worker.js: STRIPE_LINKS.{short} er ikke i allowlisten ({link})")
         if link not in text:
@@ -2555,8 +2627,7 @@ def check_built_offer_pages(catalog: dict, dist_root: Path | None = None) -> lis
             if relative == "404.html" or relative.endswith("/404.html"):
                 continue
             owners = sorted({owner for link, _ in built_buy_links(path)
-                             if (owner := next((key for key, product in products.items()
-                                                 if product.get("payment_link") == link), None))})
+                             if (owner := link_owners(products).get(link))})
             if not owners:
                 continue
             key = route_key(domain, "/" + relative)
@@ -2816,6 +2887,21 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
         })
         if len(ctas) != 1:
             problems.append(f"{offer['path']}: {len(ctas)} synlige CTA'er for {product}, forventet præcis 1")
+        # Lifetime er et andet link til samme produkt. Et tilbud erklærer det med
+        # `"lifetime": true` og skal så have præcis én synlig lifetime-knap; uden
+        # erklæringen må linket ikke stå synligt, så inventaret er sandt.
+        lifetime = lifetime_offer(products[product])
+        life_link = lifetime.get("payment_link") if lifetime else None
+        life_ctas = [(href, text) for href, text in anchors if life_link and href == life_link]
+        if offer.get("lifetime") is True:
+            if not lifetime:
+                problems.append(f"{offer['path']}: erklærer lifetime, men {product} har ingen lifetime-udgave i katalogen")
+            elif len(life_ctas) != 1:
+                problems.append(f"{offer['path']}: {len(life_ctas)} synlige lifetime-CTA'er for {product}, forventet præcis 1")
+            inventory[-1]["lifetime_cta"] = [text for _, text in life_ctas]
+            inventory[-1]["lifetime_link"] = life_link
+        elif life_ctas:
+            problems.append(f"{offer['path']}: lifetime-knap for {product} uden `\"lifetime\": true` i inventoryet")
         allowed_tokens = set(offer.get("prices") or [])
         unknown = sorted(set(tokens) - allowed_tokens)
         if unknown:
@@ -2844,7 +2930,7 @@ def check_offers(catalog: dict) -> tuple[list[str], list[dict]]:
             if link == catalog.get("billing_portal"):
                 # Kundeportalen er ikke en købsknap; den har sin egen sidekontrol.
                 continue
-            owner = next((key for key, product in products.items() if product["payment_link"] == link), None)
+            owner = link_owners(products).get(link)
             if owner is None:
                 problems.append(f"{relative}: synligt link {link} er ikke i allowlisten")
             elif (relative, owner) not in listed:
@@ -3218,7 +3304,7 @@ def products_of(entry: dict, catalog: dict) -> str:
 def discover_offers(catalog: dict) -> list[dict]:
     """Alle sider med en synlig købsknap, uanset inventaret."""
     products = catalog["products"]
-    by_link = {product["payment_link"]: key for key, product in products.items()}
+    by_link = link_owners(products)
     found: list[dict] = []
     for path in scan_files():
         if path.suffix != ".html" or str(path.relative_to(ROOT)).startswith("dist/"):

@@ -17,6 +17,9 @@ Payment Links; nøglerne ligger kun i Bitwarden og som secrets på workeren.
 | Transmute Desktop | `transmute-desktop` | $19 engang, 3 maskiner | https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02 |
 | EUComply Pro | `eucomply-pro` | $79/år pr. website | https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03 |
 | Page Profile Pro | `page-profile-pro` | $19/år | https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04 |
+| Clean Copy Pro Lifetime | `clean-copy-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d |
+| Page Profile Pro Lifetime | `page-profile-pro` (lifetime) | $39 engang, første 100 køb | https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e |
+| EUComply Pro Lifetime | `eucomply-pro` (lifetime) | $149 engang pr. website, første 100 køb | https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f |
 | GDPR DPA template | `eucomply-dpa` | $59 | https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05 |
 | NIS2 / DORA Vendor Clause Set | `eucomply-nis2-clauses` | $49 | https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06 |
 | Mutual NDA Clause Set | `eucomply-nda-clauses` | $29 | https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07 |
@@ -30,6 +33,22 @@ Stripe vælger valuta efter kundens land; priserne vises også i EUR og DKK.
 Efter betaling lander køberen på `https://mahope.tools/thanks?session_id=…`,
 som viser licensnøgle eller downloadlinks. Det samme sendes pr. mail fra
 orders@mahoje.dk.
+
+## Lifetime (founding-pris, 27/9)
+
+De tre årsabonnementer har også en lifetime-udgave: en engangspris på det
+samme Stripe-produkt med eget Payment Link, begrænset til de første 100 køb
+(`restrictions.completed_sessions.limit=100`; Stripe lukker linket selv, når
+grænsen er nået). Prisen har lookup_key `<product_key>-lifetime-v1`, og det er
+den, workeren genkender. Licensen gælder samme product_key som abonnementet,
+men har ingen `expires_at` og feltet `lifetime: true`, som `activate`,
+`validate` og nøgleopslaget også returnerer. Den har intet abonnement, så
+`invoice.paid` og andre abonnementshændelser kan hverken give den en
+udløbsdato eller tilbagekalde den; kun en fuld refundering eller en
+chargeback gør. Kvittering og `/thanks` siger "Lifetime" og viser ingen
+kundeportal. I `tools/stripe_catalog.json` står lifetime under
+`products.<key>.lifetime`, og en købsside med lifetime-knappen erklærer
+`"lifetime": true` i `offers`.
 
 ## Downloadprodukter er ikke til salg, før filerne ligger i KV
 
@@ -64,8 +83,8 @@ CORS `*`.
 
 | Endpoint | Body | Svar ved succes |
 |---|---|---|
-| `activate` | `{ license_key, device_id, product }` | `200 { ok: true, activated: true, plan, expires_at, devices_in_use }` |
-| `validate` | `{ license_key, device_id, product }` | `200 { ok: true, valid: true\|false, plan, expires_at, reason? }` |
+| `activate` | `{ license_key, device_id, product }` | `200 { ok: true, activated: true, plan, expires_at, lifetime?, devices_in_use }` |
+| `validate` | `{ license_key, device_id, product }` | `200 { ok: true, valid: true\|false, plan, expires_at, lifetime?, reason? }` |
 | `deactivate` | `{ license_key, device_id }` | `200 { ok: true, deactivated, devices_in_use }` |
 
 - `license_key` er 32 hex-tegn (`/^[a-f0-9]{32}$/`). Trim og brug små bogstaver
@@ -87,6 +106,7 @@ licensserver ikke låser betalende kunder ude.
 - En synlig pris eller en "coming soon"-knap på et produkt uden tilladt link er
   en fejl, ikke en købsrejse. Sådanne tilbud skal have prisen fjernet og
   spørgsmålet flyttet til `❓ Til Mads`.
-- Hver købsbar side har præcis én synlig CTA med et link fra tabellen. Den
+- Hver købsbar side har præcis én synlig CTA med et link fra tabellen, plus
+  højst én lifetime-CTA for samme produkt, når tilbuddet erklærer `"lifetime": true`. Den
   fulde inventering ligger i `tools/stripe_catalog.json` under `offers`, og
   `tools/check_stripe_ctas.py` beviser den.

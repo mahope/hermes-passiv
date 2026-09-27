@@ -21,6 +21,13 @@
       "max_devices": 5,
       "subscription": true,
       "payment_link": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+      "lifetime": {
+        "price_usd": 39,
+        "price": "$39 engang (lifetime)",
+        "price_note": "one-time lifetime license, founding price, first 100 purchases",
+        "payment_link": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d",
+        "limit": 100
+      },
       "pro_features": [
         {
           "id": "batch",
@@ -164,6 +171,13 @@
       "max_devices": 1,
       "subscription": true,
       "payment_link": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+      "lifetime": {
+        "price_usd": 149,
+        "price": "$149 engang pr. website (lifetime)",
+        "price_note": "one-time lifetime license per website, founding price, first 100 purchases",
+        "payment_link": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+        "limit": 100
+      },
       "pro_features": [
         {
           "id": "pdf-download",
@@ -252,6 +266,13 @@
       "max_devices": 3,
       "subscription": true,
       "payment_link": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04",
+      "lifetime": {
+        "price_usd": 39,
+        "price": "$39 engang (lifetime)",
+        "price_note": "one-time lifetime license, founding price, first 100 purchases",
+        "payment_link": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
+        "limit": 100
+      },
       "pro_features": [
         {
           "id": "compare",
@@ -391,36 +412,45 @@
       "path": "site/clean-copy.html",
       "domain": "cleancopy.tools",
       "route": "/",
+      "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
-        "$19"
+        "$19",
+        "$39"
       ],
       "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
+        "Buy Clean Copy Pro — $19/year",
+        "Buy Clean Copy Pro Lifetime — $39 once"
       ]
     },
     {
       "path": "site/da/clean-copy.html",
       "domain": "cleancopy.tools",
       "route": "/da/",
+      "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
-        "$19"
+        "$19",
+        "$39"
       ],
       "requires_text": [
-        "Køb Clean Copy Pro — $19/år"
+        "Køb Clean Copy Pro — $19/år",
+        "Køb Clean Copy Pro Lifetime — $39 én gang"
       ]
     },
     {
       "path": "site/clean-copy-tool.html",
       "domain": "cleancopy.tools",
       "route": "/clean-copy-tool",
+      "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
-        "$19"
+        "$19",
+        "$39"
       ],
       "requires_text": [
-        "Buy Clean Copy Pro — $19/year"
+        "Buy Clean Copy Pro — $19/year",
+        "Buy Clean Copy Pro Lifetime — $39 once"
       ]
     },
     {
@@ -495,51 +525,63 @@
       "path": "site/page-profile.html",
       "domain": "mahope.tools",
       "route": "/page-profile",
+      "lifetime": true,
       "product": "page-profile-pro",
       "prices": [
         "$0",
-        "$19"
+        "$19",
+        "$39"
       ],
       "requires_text": [
-        "Buy Pro — $19/year"
+        "Buy Pro — $19/year",
+        "Buy Pro Lifetime — $39 once"
       ]
     },
     {
       "path": "site/da/page-profile.html",
       "domain": "mahope.tools",
       "route": "/da/page-profile",
+      "lifetime": true,
       "product": "page-profile-pro",
       "prices": [
         "$0",
-        "$19"
+        "$19",
+        "$39"
       ],
       "requires_text": [
-        "Køb Pro — $19/år"
+        "Køb Pro — $19/år",
+        "Køb Pro Lifetime — $39 én gang"
       ]
     },
     {
       "path": "site/compliance-report.html",
       "domain": "mahope.tools",
       "route": "/compliance-report",
+      "lifetime": true,
       "product": "eucomply-pro",
       "prices": [
         "$69",
-        "$79"
+        "$79",
+        "$149"
       ],
       "requires_text": [
-        "Buy EUComply Pro — $79/year"
+        "Buy EUComply Pro — $79/year",
+        "Buy EUComply Pro Lifetime — $149 once"
       ]
     },
     {
       "path": "site/da/compliance-report.html",
       "domain": "mahope.tools",
       "route": "/da/compliance-report",
+      "lifetime": true,
       "product": "eucomply-pro",
       "prices": [
-        "$79"
+        "$79",
+        "$149"
       ],
       "requires_text": [
-        "Køb EUComply Pro — $79/år"
+        "Køb EUComply Pro — $79/år",
+        "Køb EUComply Pro Lifetime — $149 én gang"
       ]
     },
     {

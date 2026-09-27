@@ -69,6 +69,22 @@ const sessions = {
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'transmute-desktop-v1' } }] } },
   cs_live_pendingfailKKKKKKKKKK: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'p@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
+  // Lifetime (founding-pris): engangspris på abonnementsprodukterne. Engangs-
+  // links har `invoice_creation` slået til, så købet har en faktura.
+  cs_live_lifeccLLLLLLLLLLLL: { status: 'complete', payment_status: 'paid', mode: 'payment', subscription: null, invoice: 'in_life', payment_intent: 'pi_life', customer_details: { email: 'Life@Example.com' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'clean-copy-pro-lifetime-v1' } }] } },
+  cs_live_lifeeuLLLLLLLLLLLL: { status: 'complete', payment_status: 'paid', mode: 'payment', subscription: null, customer_details: { email: 'eu@x.dk' },
+    line_items: { data: [{ quantity: 3, price: { lookup_key: 'eucomply-pro-lifetime-v1' } }] } },
+  // Et produkt uden lifetime-udgave, og en lifetime-pris på et abonnement: begge
+  // er fejlkonfigurationer, der skal alarmere i stedet for at levere.
+  cs_live_lifeukendtLLLLLLLL: { status: 'complete', payment_status: 'paid', mode: 'payment', subscription: null, customer_details: { email: 'x@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-lifetime-v1' } }] } },
+  cs_live_lifesubLLLLLLLLLLL: { status: 'complete', payment_status: 'paid', mode: 'subscription', subscription: 'sub_life_forkert', customer_details: { email: 'y@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'page-profile-pro-lifetime-v1' } }] } },
+  // Almindeligt engangskøb med faktura (DeskUptime): `invoice.paid` for den
+  // faktura må ikke give licensen en udløbsdato.
+  cs_live_engangfakturaOOOOO: { status: 'complete', payment_status: 'paid', mode: 'payment', subscription: null, invoice: 'in_engang', customer_details: { email: 'o@x.dk' },
+    line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
   cs_live_supccNNNNNNNNNNNNNN: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'cc@x.dk' },
     line_items: { data: [{ quantity: 1, price: { lookup_key: 'clean-copy-pro-v1' } }] } },
   cs_live_supdlNNNNNNNNNNNNNN: { status: 'complete', payment_status: 'paid', subscription: null, customer_details: { email: 'dl@x.dk' },
@@ -417,6 +433,84 @@ r = await act({ license_key: subRefundKey, device_id: 'sub-refund', product: 'cl
 ok('refunderet abonnement giver 403', r.status === 403, r.status);
 r = await call('/api/download/' + 'b'.repeat(32) + '/%E0%A4%A');
 ok('ødelagt kodning = 404', r.status === 404);
+// 6b) Lifetime: licens uden udløb, som abonnements-webhooks ikke kan røre.
+{
+  const mL = mails.length;
+  r = await call('/api/stripe/fulfillment?session_id=cs_live_lifeccLLLLLLLLLLLL');
+  j = await r.json();
+  const lifeKey = j.license_key;
+  ok('lifetime: licens udstedt', r.status === 200 && /^[a-f0-9]{32}$/.test(lifeKey), JSON.stringify(j));
+  ok('lifetime: samme produkt som abonnementet', j.product === 'clean-copy-pro', j.product);
+  ok('lifetime: lifetime=true og ingen udløbsdato', j.lifetime === true && j.expires_at === null, JSON.stringify(j));
+  ok('lifetime: ingen kundeportal og intet abonnement', j.billing_portal === undefined && j.subscription === undefined, JSON.stringify(j));
+  ok('lifetime: produktnavnet siger Lifetime', j.product_name === 'Clean Copy Pro Lifetime', j.product_name);
+  ok('lifetime: 5 enheder som abonnementet', j.max_devices === 5, j.max_devices);
+  const rec = JSON.parse(kv.get(`lic:${lifeKey}`));
+  ok('lifetime: KV-posten er lifetime uden udløb', rec.lifetime === true && rec.expires_at === null && rec.stripe_subscription === null && rec.product === 'clean-copy-pro', JSON.stringify(rec));
+  ok('lifetime: ingen abonnementskobling i KV', ![...kv.keys()].some(k => k.startsWith('lic-sub:') && kv.get(k) === lifeKey));
+  const mail = mails[mL];
+  ok('lifetime: én mail til køberen', mails.length === mL + 1 && mail.to[0] === 'life@example.com', JSON.stringify(mail && mail.to));
+  ok('lifetime: mailens emne siger Lifetime', mail && mail.subject === 'Your Clean Copy Pro Lifetime', mail && mail.subject);
+  ok('lifetime: mailen siger ingen fornyelse og intet udløb i både tekst og HTML',
+    mail && /Lifetime license: one payment, no renewal and no expiry/.test(mail.text) && /Lifetime license: one payment, no renewal and no expiry/.test(mail.html), mail && mail.text);
+  ok('lifetime: mailen nævner hverken fornyelse eller kundeportal',
+    mail && !/renews|Manage your subscription/i.test(mail.text + mail.html), mail && mail.text);
+
+  // Aktivering og validering svarer lifetime uden udløb.
+  r = await act({ license_key: lifeKey, device_id: 'life-1', product: 'clean-copy-pro' });
+  let a = await r.json();
+  ok('lifetime: activate = 200 med lifetime og uden udløb', r.status === 200 && a.activated === true && a.lifetime === true && a.expires_at === null, JSON.stringify(a));
+  r = await call('/api/license/validate', { method: 'POST', body: JSON.stringify({ license_key: lifeKey, device_id: 'life-1', product: 'clean-copy-pro' }), headers: { 'content-type': 'application/json' } });
+  a = await r.json();
+  ok('lifetime: validate = gyldig med lifetime og uden udløb', r.status === 200 && a.valid === true && a.lifetime === true && a.expires_at === null, JSON.stringify(a));
+  r = await act({ license_key: lifeKey, device_id: 'life-1', product: 'page-profile-pro' });
+  ok('lifetime: nøglen låser ikke et andet produkt op', r.status === 403, r.status);
+  // Et almindeligt abonnement får ikke feltet.
+  r = await call('/api/license/validate', { method: 'POST', body: JSON.stringify({ license_key: subRefundKey, device_id: 'x', product: 'clean-copy-pro' }), headers: { 'content-type': 'application/json' } });
+  ok('abonnement: intet lifetime-felt', !('lifetime' in (await r.json())));
+
+  // Fakturaen for engangskøbet betales (invoice_creation), og en fremmed
+  // abonnementsfaktura peger ved en fejl på samme faktura-id: ingen af dem må
+  // give licensen en udløbsdato.
+  r = await wh('invoice.paid', { id: 'in_life', lines: { data: [{ period: { end: 1800000000 } }] } });
+  ok('lifetime: invoice.paid for engangsfakturaen accepteres', r.status === 200, r.status);
+  ok('lifetime: invoice.paid giver ingen udløbsdato', JSON.parse(kv.get(`lic:${lifeKey}`)).expires_at === null, kv.get(`lic:${lifeKey}`));
+  r = await wh('invoice.paid', { id: 'in_life', subscription: 'sub_fremmed', lines: { data: [{ period: { end: 1800000000 } }] } });
+  ok('lifetime: en abonnementsfaktura kan ikke sætte udløb', JSON.parse(kv.get(`lic:${lifeKey}`)).expires_at === null, kv.get(`lic:${lifeKey}`));
+  r = await call('/api/license/validate', { method: 'POST', body: JSON.stringify({ license_key: lifeKey, device_id: 'life-1', product: 'clean-copy-pro' }), headers: { 'content-type': 'application/json' } });
+  a = await r.json();
+  ok('lifetime: stadig gyldig uden udløb efter fakturahændelser', a.valid === true && a.expires_at === null && a.lifetime === true, JSON.stringify(a));
+  // Workeren håndterer ikke abonnementsophør som hændelse; det skal heller ikke ramme lifetime.
+  r = await wh('customer.subscription.deleted', { id: 'sub_fremmed', status: 'canceled' });
+  ok('lifetime: customer.subscription.deleted ignoreres', r.status === 200 && JSON.parse(kv.get(`lic:${lifeKey}`)).status === 'active', kv.get(`lic:${lifeKey}`));
+
+  // EUComply Pro lifetime: antal websites følger antal købt.
+  r = await call('/api/stripe/fulfillment?session_id=cs_live_lifeeuLLLLLLLLLLLL');
+  j = await r.json();
+  ok('lifetime EUComply: 3 websites, uden udløb', j.max_devices === 3 && j.lifetime === true && j.expires_at === null && j.product === 'eucomply-pro', JSON.stringify(j));
+
+  // Fejlkonfigurationer leverer ikke, men alarmerer Mads.
+  let mA = mails.length;
+  r = await call('/api/stripe/fulfillment?session_id=cs_live_lifeukendtLLLLLLLL');
+  ok('lifetime på produkt uden lifetime-udgave = 404 og alarm', r.status === 404 && mails.length === mA + 1 && mails[mA].to[0] === 'mads@mahope.dk', r.status);
+  mA = mails.length;
+  r = await call('/api/stripe/fulfillment?session_id=cs_live_lifesubLLLLLLLLLLL');
+  ok('lifetime-pris på et abonnement = 404 og alarm', r.status === 404 && mails.length === mA + 1 && mails[mA].to[0] === 'mads@mahope.dk', r.status);
+
+  // Fuld refundering tilbagekalder stadig en lifetime-licens.
+  r = await wh('charge.refunded', { payment_intent: 'pi_life', refunded: true });
+  ok('lifetime: fuld refundering tilbagekalder', (await r.json()).revoked === true);
+  r = await act({ license_key: lifeKey, device_id: 'life-2', product: 'clean-copy-pro' });
+  ok('lifetime: refunderet licens giver 403', r.status === 403, r.status);
+
+  // Almindeligt engangskøb (DeskUptime) med faktura: invoice.paid må ikke give
+  // udløb. Før rettelsen fik licensen "periodens slut + 7 dage".
+  r = await call('/api/stripe/fulfillment?session_id=cs_live_engangfakturaOOOOO');
+  const onceKey = (await r.json()).license_key;
+  r = await wh('invoice.paid', { id: 'in_engang', lines: { data: [{ period: { end: 1800000000 } }] } });
+  ok('engangskøb: invoice.paid giver ingen udløbsdato', JSON.parse(kv.get(`lic:${onceKey}`)).expires_at === null, kv.get(`lic:${onceKey}`));
+}
+
 // 7) Svaradresse følger produktets domæne; produkter uden `home` falder tilbage til mahope.tools
 const m7 = mails.length;
 r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN');
