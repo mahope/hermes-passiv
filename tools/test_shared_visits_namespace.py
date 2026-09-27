@@ -38,19 +38,45 @@ def check(name: str, condition: bool, detail: str = "") -> None:
         FAILURES.append(f"{name}{': ' + detail if detail else ''}")
 
 
+class FakeClock:
+    """Virtuel tid, så porten kan vente på en nøgle der dukker op sent uden at
+    vente i virkelighed."""
+
+    def __init__(self) -> None:
+        self.t = 0.0
+        self.slept: list[float] = []
+
+    def __call__(self) -> float:
+        return self.t
+
+    def sleep(self, seconds: float) -> None:
+        self.slept.append(seconds)
+        self.t += seconds
+
+
 class FakeHttp:
     """Erstatter de to netværkskald, så porten ikke rører produktionen.
 
     `namespace` er navnet på den namespace `mahope.tools` læser. Et domæne der
     ikke står i `namespace` svarer 200 på sin beacon og taber tallet — præcis
     fejlen porten skal finde, bygget her i stedet for i Cloudflare.
+
+    `lag` er antal sundhedsafsnit der skal svæve, før en skrevet nøgle bliver
+    synlig. Det er **eventual consistency i `VISITS.list()`**, målt til ~32 s i
+    produktion, og det er den fejl porten *ikke* kunne finde før dette: med
+    `lag=0` lignede den sunde verden den virkelige, og så kom den aldrig
+    udfyldt. Nu kan porten frembringe præcis det scenarie, der lå bag de to
+    falske "TABER"-rækker i `IMPLEMENTATION_PLAN.md`.
     """
 
     def __init__(self, namespace: dict[str, str], reachable: set[str] | None = None,
-                 window: int = 6) -> None:
+                 lag: int = 0) -> None:
         self.namespace = namespace
         self.reachable = reachable
-        self.window = window
+        self.lag = lag
+        self.window = 6
+        self.pending = 0
+        self.stale = 0
         self.calls: list[tuple[str, str]] = []
 
     def request(self, url: str, *, method: str = "GET", headers: dict | None = None,
@@ -61,21 +87,28 @@ class FakeHttp:
         if self.reachable is not None and host not in self.reachable:
             raise urllib.error.URLError(f"{host} svarer ikke")
         if url.startswith("https://mahope.tools/api/health"):
+            if self.pending and self.stale >= self.lag:
+                self.window += self.pending
+                self.pending = 0
+                self.stale = 0
+            elif self.pending:
+                self.stale += 1
             return {"stats": {"recentVisits": self.window}}
         if url.endswith("/api/track"):
             if self.namespace.get(host) != "shared":
                 # Beacon modtaget og bevidst smidt væk.
                 return {"ok": True}
-            self.window += 1
+            self.pending += 1
             return {"ok": True}
         raise AssertionError(f"uventet URL {url}")
 
 
-def measure_with(fake: FakeHttp, domains=probe.DOMAINS) -> dict:
+def measure_with(fake: FakeHttp, domains=probe.DOMAINS, clock: FakeClock | None = None) -> dict:
+    clock = clock or FakeClock()
     original = probe._request
     probe._request = fake.request
     try:
-        return probe.measure(domains)
+        return probe.measure(domains, sleep=clock.sleep, clock=clock)
     finally:
         probe._request = original
 
@@ -179,6 +212,62 @@ worker_domains = [line.strip().strip("',") for line in block.splitlines()[1:]
                   if line.strip().startswith("'")]
 check("portens domæneliste er TRACKING_DOMAINS i workeren",
       worker_domains == list(probe.DOMAINS), f"{worker_domains} vs {list(probe.DOMAINS)}")
+
+# 11. FUNDET 27/9 12:0x: `VISITS.list()` er eventualt konsistent. `recordTraffic`
+#     skriver med `put` med det samme, men `collectTraffic` læser med `list`, så
+#     nøglen er skjult i op til ~32 s (målt). Den gamle `probe_domain` læste
+#     `after` *én* gang lige efter beaconen og erklærede derfor **alle** domæner
+#     for tabte — to iterationers fejlsyn, og en jagt efter en kodefejl i
+#     `recordTraffic` som ikke findes. Disse arme er den fejl, porten ikke
+#     kunne se, fordi fake-klassen gjorde `list` øjeblikkelig.
+fake = FakeHttp(dict(ALL_SHARED), lag=3)
+fake.request("https://cleancopy.tools/api/track", method="POST",
+             headers={"Origin": "https://cleancopy.tools"})
+check("fake-klassen kan overhovedet skjule en skrivning",
+      fake.request("https://mahope.tools/api/health")["stats"]["recentVisits"] == 6,
+      "en nøgle med lag=3 må være usynlig ved den første aflæsning")
+m = measure_with(FakeHttp(dict(ALL_SHARED), lag=3))
+check("en nøgle der bliver synlig sent er skrivende, ikke tabt",
+      m["writing"] == sorted(probe.DOMAINS), str(m["silent"]))
+check("en sent synlig nøge gør ikke rødt", probe.verdict(m)["ok"] is True,
+      probe.verdict(m)["reason"])
+check("en sent synlig nøge tælles ikke som unreachable", m["unreachable"] == [])
+check("svaret siger hvor længe der blev ventet",
+      all((r.get("waited") or 0) > 0 for r in m["domains"]),
+      str([r["waited"] for r in m["domains"]]))
+check("svaret tæller aflæsningerne", all((r.get("samples") or 0) > 2 for r in m["domains"]),
+      str([r["samples"] for r in m["domains"]]))
+
+# 12. Vinduet er dog stadig endeligt: en nøgle der *aldrig* bliver synlig skal
+#     stadig dømmes tabt, ellers er fundet ovenfor blot gjort umuligt at se.
+m = measure_with(FakeHttp(dict(ALL_SHARED), lag=10_000))
+check("en nøgle der aldrig bliver synlig er tavs", len(m["silent"]) == len(probe.DOMAINS),
+      str(m["silent"]))
+check("en nøgle der aldrig bliver synlig gør rød", probe.verdict(m)["ok"] is False)
+check("vinduet er endeligt — ventetiden er deklareret",
+      all(isinstance(r.get("waited"), int) and r["waited"] <= probe.SETTLE_SECONDS for r in m["domains"]),
+      str([r["waited"] for r in m["domains"]]))
+check("vinduet overstiger den målte forsinkelse",
+      probe.SETTLE_SECONDS > 32, f"{probe.SETTLE_SECONDS}s")
+check("et tavst domæne melder den fulde ventetid",
+      all(isinstance(r.get("waited"), int) and r["waited"] >= probe.SETTLE_SECONDS - probe.POLL_SECONDS for r in m["domains"]),
+      str([r["waited"] for r in m["domains"]]))
+
+# 13. Forsinkelse og tab er to forskellige fejl. Med `lag=3` på cleancopy.tools
+#     og en anden namespace på deskuptime.com må kun den sidste være rød.
+m = measure_with(FakeHttp({**ALL_SHARED, "deskuptime.com": "andet"}, lag=3))
+check("forsinkelse gør ikke rødt, en anden namespace gør",
+      m["silent"] == ["deskuptime.com"]
+      and m["writing"] == sorted(d for d in probe.DOMAINS if d != "deskuptime.com"),
+      f"tavst={m['silent']} skrivende={m['writing']}")
+
+# 14. `render` skal fortælle læseren at den ventede — ellers er et "TABER" umuligt
+#     at efterprøve, og det er præcis derfor de to sidste iterationer troede på det.
+rendered = probe.render(measure_with(FakeHttp({**ALL_SHARED, "cleancopy.tools": "andet"})))
+check("render fortæller hvor længe det tabte domæne blev ventet på",
+      f"efter {probe.SETTLE_SECONDS}s" in rendered, rendered)
+check("render nævner det fulde vindue i vurderingen",
+      f"{probe.SETTLE_SECONDS}s" in rendered.splitlines()[0], rendered.splitlines()[0])
 
 total = PASSED + len(FAILURES)
 if FAILURES:
