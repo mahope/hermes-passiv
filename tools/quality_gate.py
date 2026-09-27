@@ -699,6 +699,22 @@ STEPS: tuple[Step, ...] = (
             "site/_worker.js",
         ),
     ),
+    # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
+    # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i
+    # `deploy-sites.yml`, så et domæne kan være deployet, instrumenteret og
+    # stadig usynligt i hvert eneste tal. Før dette var der ingen måling af
+    # *hvilket* domæne der taber trafik. Selve proben taler med produktion og er
+    # bevidst IKKE et gatestep — den skriver én talt sidevisning pr. domæne, så
+    # den skal køres manuelt. Her dømmes kun portens logik, offline.
+    Step(
+        id="shared-visits-namespace-tests",
+        argv=("python3", "tools/test_shared_visits_namespace.py"),
+        inputs=(
+            "tools/test_shared_visits_namespace.py",
+            "tools/check_shared_visits_namespace.py",
+            "site/_worker.js",
+        ),
+    ),
 )
 
 
