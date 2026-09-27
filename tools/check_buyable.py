@@ -48,6 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "tools/stripe_catalog.json"
 PAID_CONTENT = ROOT / "tools/paid_content.json"
 SITE = ROOT / "site"
+DIST = ROOT / "dist"
 
 # Produkter der hører til et *andet* repo. `transmute-desktop` har et
 # fungerende Stripe-link, men Transmute har ingen side i dette repo — den
@@ -109,19 +110,53 @@ def sold_on(key: str, product: dict, site: Path) -> list[str]:
     return hits
 
 
-def evaluate(catalog: dict, paid: dict, site: Path) -> tuple[list[str], list[str]]:
+def sold_on_built(key: str, product: dict, dist: Path, site: Path) -> list[str]:
+    """På hvilke **publicerede** sider står produktets betalings-id?
+
+    Samme fejlform som `check_stripe_ctas.py` havde, målt 27.9: `sold_on` læser
+    kun `site/`, men `deskuptime.com/tools/` bygges fra `../auditedwp` og
+    indeholder to købsknapper. Porten kunne derfor ikke se den ene reelle
+    Pro-side for DeskUptime, og rapporten under-rettede hvilke sider der sælger.
+
+    Her læses det **byggede** site, men kun de ruter der **ikke** findes i
+    `site/`: en bygget kopi af en kilde vi allerede har listet op ville bare
+    være dobbelt sådan. Sådan forsvinder hver side der stammer fra et
+    sibling-repo (`deskuptime.com/tools/`) uden at listen bliver ulæselig.
+    """
+    link = product.get("payment_link") or ""
+    pid = link.rstrip("/").split("/")[-1]
+    if not pid or not dist.is_dir():
+        return []
+    hits = []
+    for path in sorted(dist.glob("*/*.html")) + sorted(dist.glob("*/*/*.html")):
+        dom = path.relative_to(dist).parts[0]
+        rel = path.relative_to(dist / dom).as_posix()
+        if (site / rel).exists():
+            continue
+        if pid in path.read_text(encoding="utf-8", errors="replace"):
+            hits.append(f"{dom}/{rel[:-5]}" if rel.endswith(".html") else f"{dom}/{rel}")
+    return hits
+
+
+def evaluate(catalog: dict, paid: dict, site: Path,
+             dist: Path | None = None) -> tuple[list[str], list[str]]:
     """Returnér (fejl, rapport). `fejl` er tom, når intet købsklart mangler."""
     errs: list[str] = []
     report: list[str] = []
     inv = inventory(paid)
     for key, product in catalog["products"].items():
         pages = sold_on(key, product, site)
+        built = sold_on_built(key, product, dist, site) if dist else []
         if key in OTHER_REPO:
             report.append(f"  {key}: ikke i dette repo (kræver ingen købsknap her)")
             continue
         ready, why = buyable(key, product, inv)
-        if pages:
-            report.append(f"  {key}: sælges på {', '.join(pages)}")
+        if pages or built:
+            # Genererede sider mærkes, så en kilde i et sibling-repo ikke læses
+            # som en side i dette repo — det er præcis det forvekslingspunkt,
+            # der gjorde at `/tools/` ikke blev set.
+            shown = list(pages) + [f"{r} (genereret)" for r in built]
+            report.append(f"  {key}: sælges på {', '.join(shown)}")
             continue
         if ready:
             errs.append(
@@ -134,8 +169,8 @@ def evaluate(catalog: dict, paid: dict, site: Path) -> tuple[list[str], list[str
     return errs, report
 
 
-def run(site: Path) -> int:
-    errs, report = evaluate(load(CATALOG), load(PAID_CONTENT), site)
+def run(site: Path, dist: Path | None = DIST) -> int:
+    errs, report = evaluate(load(CATALOG), load(PAID_CONTENT), site, dist)
     print("== buyable: hvert katalogprodukt og hvor det sælges")
     for line in report:
         print(line)
@@ -264,7 +299,43 @@ def self_test() -> int:
         else:
             print(f"  ✓ mutation fanget: omtale uden betalingslink er ikke et salg ({key})")
 
-    total = 4
+        # M5: et produkt der **kun** sælges på en genereret side må ikke læses
+        # som "står på nul sider". Uden `dist` ville porten rødme et produkt der
+        # har en fungerende købsknap — en falsk rød fejl, fordi knappen findes.
+        site5 = write(real_catalog, paid1, "m5")
+        dist5 = tmp / "d5"
+        (dist5 / "eksempel.test").mkdir(parents=True)
+        (dist5 / "eksempel.test" / "tools.html").write_text(
+            f'<a href="{real_catalog["products"][key]["payment_link"]}">køb</a>',
+            encoding="utf-8",
+        )
+        m5_errs, m5_report = evaluate(real_catalog, paid1, site5, dist5)
+        m5_line = next((l for l in m5_report if l.strip().startswith(f"{key}:")), "")
+        if any(key in e for e in m5_errs):
+            print(f"  FEJL M5: en genereret købsside blev dømt som nul sider ({m5_errs})")
+            failures += 1
+        elif "eksempel.test/tools" not in m5_line or "genereret" not in m5_line:
+            print(f"  FEJL M5: rapporten nævner ikke den genererede side: {m5_line!r}")
+            failures += 1
+        else:
+            print(f"  ✓ positiv kontrol: genereret købsside tæller og mærkes ({key})")
+
+        # M6: en genereret side der *nævner* produktet uden linket må ikke tælle
+        # som salg — samme regel som M4, bare på den byggede overflade.
+        dist6 = tmp / "d6"
+        (dist6 / "eksempel.test").mkdir(parents=True)
+        (dist6 / "eksempel.test" / "om.html").write_text(
+            f'<p>Vi sælger også {real_catalog["products"][key]["name"]}.</p>',
+            encoding="utf-8",
+        )
+        m6 = evaluate(real_catalog, paid1, write(real_catalog, paid1, "m6"), dist6)[0]
+        if not any(key in e for e in m6):
+            print(f"  FEJL M6: en omtale på en genereret side talte som salg ({key})")
+            failures += 1
+        else:
+            print(f"  ✓ mutation fanget: omtale uden link på genereret side er ikke et salg ({key})")
+
+    total = 6
     print(f"selftest: {total - failures}/{total} mutationer fanget")
     return 1 if failures else 0
 
