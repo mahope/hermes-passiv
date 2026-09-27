@@ -832,5 +832,77 @@ ok('kunden får at vide hvad der stoppede', /cannot be scanned/.test(verdicts['p
 ok('en fuld rapport siger den er fuld', /License valid/.test(verdicts['fuld-rapport'].text) && !/only/.test(verdicts['fuld-rapport'].text), verdicts['fuld-rapport'].text);
 ok('alle fem ender med at PDF\'en åbner', Object.values(verdicts).every((v) => /your PDF opens now/.test(v.text)), JSON.stringify(verdicts, null, 0));
 
+// 26) GET /api/paid-files — betalingslinket for et downloadprodukt udleveres
+// KUN når filerne ligger i KV. Det er hele pointen: `check_stripe_ctas.py`
+// (regel 5) forbyder linket i `site/`, når `kv_verified` er false, fordi
+// køberen ellers betaler for en download der svarer 503 i /api/download.
+// Uden denne port har siden ingen kilde til sit købslink, og med en port der
+// bare lister nøglerne ville den sælge alle svyv fra dag ét.
+r = await call('/api/paid-files');
+ok('paid-files svarer 200', r.status === 200, r.status);
+// Tidligere arme har lagt `paidfile:`-nøgler i den delte fake-KV, så målingen
+// skal starte fra en kendt tilstand — ellers ville "tom KV" være en løgneste.
+for (const key of [...kv.keys()]) if (key.startsWith('paidfile:')) kv.delete(key);
+const pfBody = await (await call('/api/paid-files')).json();
+ok('paid-files svarer ok og kv_ok', pfBody.ok === true && pfBody.kv_ok === true, JSON.stringify(pfBody).slice(0, 120));
+ok('alle svyv downloadprodukter er med', pfBody.products.length === 7, pfBody.products.length);
+ok('intet produkt er leverbart i en tom KV', pfBody.products.every((p) => p.available === false), JSON.stringify(pfBody.products.map((p) => p.ready)));
+ok('intet betalingslink udleveres når filerne mangler',
+  pfBody.products.every((p) => p.payment_link === undefined), JSON.stringify(pfBody.products[0]));
+
+// Læg alle filer fra ét produkt ind — kun dét, så "delvis leveret" er en
+// tilstand der faktisk opstår, og ikke en opfundet. Filnavnene står hardkodet
+// her med vilje: de er de nøgler `withPaidFiles` og `handlePaidDownload`
+// læser, så en stavetype i workeren skal kunne fange sig her.
+const dpa = ['dpa-template.pdf', 'dpa-template.md'];
+r = await call('/api/paid-files');
+let pf = await r.json();
+ok('et produkt uden filer i KV er ikke leverbart', pf.products.find((p) => p.product === 'eucomply-dpa').ready === 0);
+for (const f of dpa.slice(0, 1)) kv.set(`paidfile:${f}`, 'x');
+pf = await (await call('/api/paid-files')).json();
+const dpaDelvis = pf.products.find((p) => p.product === 'eucomply-dpa');
+ok('en halvt uploadet filsamling er ikke leverbar', dpaDelvis.ready === 1 && dpaDelvis.available === false, JSON.stringify(dpaDelvis));
+ok('en delvis levering får heller intet link', dpaDelvis.payment_link === undefined);
+for (const f of dpa.slice(1)) kv.set(`paidfile:${f}`, 'x');
+pf = await (await call('/api/paid-files')).json();
+const dpaFuld = pf.products.find((p) => p.product === 'eucomply-dpa');
+ok('alle filer i KV = leverbart', dpaFuld.available === true && dpaFuld.ready === dpaFuld.files, JSON.stringify(dpaFuld));
+ok('betalingslinket kommer først når produktet kan leveres', dpaFuld.payment_link === 'https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05', dpaFuld.payment_link);
+ok('de øvrige produkter er stadig lukket, selv om ét er åbent',
+  pf.products.filter((p) => p.available).length === 1, pf.products.filter((p) => p.available).map((p) => p.product).join(','));
+
+// Mutation-kontrol: kun filerne for *dette* produkt må tænde det. Uden denne
+// arm ville porten være grøn, hvis `available` bare hang på "der er nogen fil".
+kv.delete('paidfile:dpa-template.pdf');
+kv.delete('paidfile:dpa-template.md');
+pf = await (await call('/api/paid-files')).json();
+ok('sletning i KV lukker knappen igen', pf.products.every((p) => !p.available) && pf.products.every((p) => p.payment_link === undefined));
+
+// `?product=` må ikke kunne bruges til at få et link for et produkt der ikke
+// kan leveres — det er samme regel, bare med et andre kald.
+for (const f of dpa) kv.set(`paidfile:${f}`, 'x');
+pf = await (await call('/api/paid-files?product=eucomply-dpa')).json();
+ok('?product= svarer 200 med netop det produkt', pf.products.length === 1 && pf.products[0].product === 'eucomply-dpa', JSON.stringify(pf.products));
+ok('?product= kan ikke fremme et andet produkt', pf.products[0].payment_link === 'https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05');
+kv.delete('paidfile:dpa-template.pdf');
+kv.delete('paidfile:dpa-template.md');
+
+// KV nede må ikke læse som "filer mangler" — ellers slår en fejl fra salget.
+const envNede = { ...env, VISITS: { ...VISITS, list: async () => { throw new Error('kv nede'); } } };
+r = await callWith('/api/paid-files', {}, envNede);
+const nede = await r.json();
+ok('KV-fejl svarer stadig 200 med kv_ok false', r.status === 200 && nede.kv_ok === false, r.status + ' ' + JSON.stringify(nede).slice(0, 80));
+ok('KV-fejl giver ingen betalingslink', nede.products.every((p) => p.payment_link === undefined));
+ok('KV-fejl påstår ikke at filerne mangler', nede.products.every((p) => p.missing === null), JSON.stringify(nede.products[0]));
+
+// Licens- og leveringsvejen er urørt af alt dette — bevist med en rigtig
+// download: token i KV, fil i KV, og så skal `/api/download` levere den.
+ok('/api/stripe-webhook findes stadig', (await call('/api/stripe-webhook', { method: 'POST' })).status !== 404);
+kv.set('dl:' + 'a'.repeat(32), JSON.stringify({ files: ['dpa-template.pdf'], expires_at: '2999-01-01T00:00:00.000Z' }));
+kv.set('paidfile:dpa-template.pdf', 'PDF');
+const dl = await call('/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf');
+ok('/api/download/ leverer stadig filen', dl.status === 200 && await dl.text() === 'PDF', dl.status);
+ok('/api/download/ sætter stadig attachment', (dl.headers.get('content-disposition') || '').includes('dpa-template.pdf'), dl.headers.get('content-disposition'));
+
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);
