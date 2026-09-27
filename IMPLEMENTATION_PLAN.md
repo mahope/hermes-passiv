@@ -1,4 +1,4 @@
-- `VERIFICÉR DEPLOY`: `check_declared_language` + to selftest-arme, ingen publiceret tekst ændret (branch `ceo/lang-attr-afledning`) 27/9 — GitHub Actions deployer med det samme (`tools/**` er i path-filteret). **Ingen kundekendt fil røres, så beviset ligger i CI-loggen og ikke i markup.** Verificér:
+- `VERIFICÉR DEPLOY`: `check_declared_language` + to selftest-arme, ingen publiceret tekst ændret (branch `ceo/lang-attr-afledning`, merge `6e3cb4a`, impl. `fd3658a`) 27/9 — GitHub Actions deployer med det samme (`tools/**` er i path-filteret). **Ingen kundekendt fil røres, så beviset ligger i CI-loggen og ikke i markup.** Verificér:
   - CI skal være grøn, og `stripe-ctas` skal sige **0 problems** og `stripe-ctas-selftest` skal sige **39/39 fejlformer** (uændret tælle — de to nye arme er separate `return 1`-scenarier efter samme mønster som `da_suffix_page`, ikke poster i `scenarios`).
   - `https://mahope.tools/build-info.json` skal bære merge-SHA'en med `sitemap_count` **252** uændret — diffen rører ingen rute, så et ændret tal er en regression.
 - `ITERATION_ID`: `lang-attr-afledning-2026-09-27`
