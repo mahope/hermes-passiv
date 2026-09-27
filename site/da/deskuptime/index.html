@@ -130,7 +130,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
       <div>
         <h3>Desktop Pro</h3>
         <p class="price">19 USD <small>én gang, 3 maskiner, alle 1.x-opdateringer</small></p>
-        <p>Giver dig desktop-appen til macOS og Windows, fjerner grænsen på tre sites, lad CLI'en tjekke hvert 30. sekund i stedet for hvert 60., og tilføjer webhook-alarmer og en kunderapport i Markdown og JSON. Du får en licensnøgle og betaler kun én gang. Pro aktiverer og revaliderer din licens mod mahope.tools.</p>
+        <p>Giver dig desktop-appen til macOS og Windows, fjerner grænsen på tre sites, lad CLI'en tjekke hvert 30. sekund i stedet for hvert 60., og tilføjer webhook-alarmer og en kunderapport i Markdown og JSON. Du får en licensnøgle og betaler kun én gang. Desktop-appen beder om nøglen, første gang du starter den. I version 0.2.7 tjekker den stadig nøglen hos appens tidligere licensudbyder, så Pro-funktionerne i appen låser ikke op endnu.</p>
         <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Køb DeskUptime Pro — 19 USD</a></p>
         <p class="notice">Sikker betaling via Stripe. Licensnøglen kommer på mail og på takkesiden. Den gratis version er fortsat komplet og MIT-licenseret, og intet i den udløber.</p>
       </div>
@@ -147,7 +147,7 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
     </details>
     <details>
       <summary>Sender den mine URL'er nogen steder hen?</summary>
-      <p>Din URL-liste og dine tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste. Appen sender licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro til mahope.tools ved aktivering og revalidering og modtager licensstatus. Denne side kører en separat anonym sidevisningstæller.</p>
+      <p>Din URL-liste og dine tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste. Appen sender licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro til en licensserver over HTTPS, når du indtaster nøglen, og modtager licensstatus. I version 0.2.7 er det stadig appens tidligere licensudbyder, ikke mahope.tools. Denne side kører en separat anonym sidevisningstæller.</p>
     </details>
     <details>
       <summary>Hvordan adskiller det sig fra UptimeRobot eller Pingdom?</summary>
