@@ -3543,13 +3543,19 @@ async function sendSaleEmail(env, to, r, sessionId) {
     const hint = (STRIPE_PRODUCTS[r.product] && STRIPE_PRODUCTS[r.product].activateHint) || '';
     const hintText = hint ? `\nWhere to paste the key: ${hint}\n` : '';
     const hintHtml = hint ? `<p>Where to paste the key: ${esc(hint)}</p>` : '';
+    // Én sætning, to varianter. Abonnementssætningen stod kun i teksten, så
+    // samme køb læstes som to forskellige kvitteringer alt efter hvilken variant
+    // mailklienten viste. Den afledes herfra, som resten af kvitteringen, så de
+    // to ikke kan komme fra hinanden igen. Samme felt driver tak-siden.
+    const uses = `Works on up to ${r.max_devices} device(s)`;
+    const renews = r.expires_at ? ' and renews with your subscription' : '';
     text = `${thanksLine(r)}\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
       + hintText
-      + `It works on up to ${r.max_devices} device(s)${r.expires_at ? ` and renews with your subscription` : ''}.\n`
+      + `${uses}${renews}.\n`
       + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
     html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p><p>Your license key:</p>`
       + `<p style="font:16px monospace;background:#f4f4f5;padding:12px;border-radius:6px">${esc(r.license_key)}</p>`
-      + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>Up to ${r.max_devices} device(s).</p>`
+      + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>${esc(uses)}${esc(renews)}.</p>`
       + hintHtml + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   } else {
     const list = (r.downloads || []).map(d => `${d.file}: ${d.url}`).join('\n');

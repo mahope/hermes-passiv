@@ -146,6 +146,24 @@ ok('licens: nøglen vises', /<code id="key">[0-9a-f]{32}<\/code>/.test(lic.page.
 ok('licens: antal enheder følger antal købt', /Works on up to 2 device\(s\)/.test(lic.page.result.innerHTML), lic.page.result.innerHTML);
 ok('licens: kundeportalen tilbydes ved abonnement', /Manage your subscription/.test(lic.page.result.innerHTML));
 ok('licens: aktiveringslink følger produktets home', lic.page.result.innerHTML.includes(lic.payload.activate_url), lic.payload.activate_url);
+// Engangskøb: de tre felter `/thanks` skriver lige i DOM'en — `max_devices`,
+// `expires_at` og `billing_portal` — var korrekt afledt, men ingen port dømte
+// dem, så de kunne stå på hver især (samme stilling som `product_name` før
+// `receipt-ord`). Her låses både **afledningen** i workeren og den **visning**
+// på siden: en abonnementssætning på et engangsprodukt er den konkrete
+// fejlform, så den skal kunne dø begge steder.
+const engang = rendered['license (engangskøb)'];
+ok('engangskøb: workeren sender hverken udløbsdato eller kundeportal',
+  engang.payload.expires_at == null && engang.payload.billing_portal === undefined,
+  JSON.stringify({ expires_at: engang.payload.expires_at, billing_portal: engang.payload.billing_portal }));
+ok('engangskøb: siden siger "no expiry"', /no expiry/.test(engang.page.result.innerHTML), engang.page.result.innerHTML);
+ok('engangskøb: siden siger ikke "renews"', !/renews/i.test(engang.page.result.innerHTML), engang.page.result.innerHTML);
+ok('engangskøb: ingen kundeportal på siden', !/Manage your subscription/.test(engang.page.result.innerHTML), engang.page.result.innerHTML);
+ok('engangskøb: enhedstallet vises stadig', /Works on up to 3 device\(s\)/.test(engang.page.result.innerHTML), engang.page.result.innerHTML);
+ok('abonnement: workeren sender både udløbsdato og kundeportal',
+  !!lic.payload.expires_at && !!lic.payload.billing_portal, JSON.stringify(lic.payload.expires_at));
+ok('abonnement: siden siger fornyelse, ikke "no expiry"',
+  /renews with your subscription/.test(lic.page.result.innerHTML) && !/no expiry/.test(lic.page.result.innerHTML), lic.page.result.innerHTML);
 
 const dl = rendered['download'];
 ok('download: filnavn vises', dl.page.result.innerHTML.includes('dpa-template.pdf'), dl.page.result.innerHTML);
