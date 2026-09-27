@@ -353,6 +353,27 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_stripe_ctas.py", "--self-test"),
         inputs=("tools/check_stripe_ctas.py",),
     ),
+    # Hvilke betalte produkter der overhovedet *kan* sælges. `stripe-ctas`
+    # dømmer et produkt kun når en side sælger det, så de syv dokumenter der
+    # ligger i `mahope/paid-products` og endnu ikke er uploadet til KV kunne
+    # ligge uudsolgte uden at noget skreg. Denne port er grøn for dem og rød
+    # i det øjeblik `kv_verified` sættes til true — altså gør den
+    # KV-uploaden til en pligt i stedet for en løs aftale.
+    Step(
+        id="buyable",
+        argv=("python3", "tools/check_buyable.py"),
+        inputs=(
+            "tools/check_buyable.py",
+            "tools/stripe_catalog.json",
+            "tools/paid_content.json",
+            "site/**",
+        ),
+    ),
+    Step(
+        id="buyable-selftest",
+        argv=("python3", "tools/check_buyable.py", "--self-test"),
+        inputs=("tools/check_buyable.py",),
+    ),
     # Opgave 84: regeltallet i løfterne. Opgave 80, 83 og 84 rettede hver især
     # det samme tal, og alle tre var forkert, fordi ingen målte motoren. Nu er
     # tallet målt i koden ved hver kørsel, så en ny regel eller en ny side ikke
