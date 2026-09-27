@@ -55,6 +55,16 @@ DOWNLOAD_EXT = (".zip", ".tgz", ".tar.gz", ".whl", ".dmg", ".exe", ".msi", ".deb
 LEAD_MARKERS = ("/api/", "mailto:", "formspree", "netlify")
 
 
+def canonical_url(relpath: str) -> str:
+    """Spejler build_sites.py: filstien som den rute søgemaskinen ser."""
+    p = "/" + relpath
+    if p.endswith("/index.html"):
+        return p[: -len("index.html")]
+    if p.endswith(".html"):
+        return p[:-5]
+    return p
+
+
 class RefParser(HTMLParser):
     """Samler referencer uden at se ind i kodeeksempler."""
 
@@ -324,6 +334,67 @@ def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
     return f"{domain}: {rel}:{line}: ankeret {ref!r} findes ikke i {where}"
 
 
+_CANONICALS: dict[Path, str | None] = {}
+_LINK_TAG_RE = re.compile(r"<link\b[^>]*>", re.I)
+_HREF_ATTR_RE = re.compile(r"""\bhref=["']([^"']+)["']""", re.I)
+
+
+def norm_route(path: str) -> str:
+    """Ruten uden afsluttende skråstreg, med undtagelse af rodens `/`."""
+    return path.rstrip("/") or "/"
+
+
+def page_canonical(path: Path) -> str | None:
+    """Sidens egen `<link rel="canonical">`, cachelagret pr. fil."""
+    if path in _CANONICALS:
+        return _CANONICALS[path]
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        _CANONICALS[path] = None
+        return None
+    canon = None
+    for m in _LINK_TAG_RE.finditer(text[:40000]):
+        tag = m.group(0)
+        if "canonical" not in tag.lower():
+            continue
+        h = _HREF_ATTR_RE.search(tag)
+        if h:
+            canon = h.group(1).strip()
+            break
+    _CANONICALS[path] = canon
+    return canon
+
+
+def duplicate_problem(source: str, rel: str, line: int, ref: str,
+                      target: Path, target_dist: Path) -> str | None:
+    """Én fejltekst hvis linket peger på en dublet, ellers None.
+
+    En side der ligger på to ruter — eller på én rute med en canonical der
+    peger et andet sted — er ikke død, så `route_exists` lader den passere.
+    Men *alle* links vi skriver til den, sender linkværdi til en URL
+    søgemaskinerne kasserer. Målt 27/9: cleancopy.tools udgiver forsiden fra
+    `site/clean-copy.html`, så `/clean-copy` var 159 links værd (53 interne,
+    106 krydsdomæne) på en byte-identisk dublet med canonical `/`.
+    """
+    canon = page_canonical(target)
+    if not canon:
+        return None  # ingen canonical at være uenig med
+    parts = urlsplit(canon)
+    netloc = parts.netloc.lower()
+    if netloc and netloc not in OUR_DOMAINS:
+        return None  # canonical peger uden for familien: ikke vores at dømme
+    if netloc and netloc != target_dist.name:
+        return None  # flyttet et andet sted hen i familien: ikke en dublet her
+    try:
+        own_route = canonical_url(target.relative_to(target_dist).as_posix())
+    except ValueError:  # selftesten kører på et midlertidigt dist
+        return None
+    if norm_route(parts.path) != norm_route(own_route):
+        return f"{source}: {rel}:{line}: {ref!r} peger på en dublet — {canon} er den kanoniske"
+    return None
+
+
 def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_downloads: bool) -> list[str]:
     problems: list[str] = []
     downloads: list[str] = []
@@ -345,12 +416,23 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
             kind, ref_domain, ref_path = split_ref(ref)
             if kind in ("skip", "external"):
                 continue
+
+            def flag_dup(target: Path, target_dist: Path) -> None:
+                bad = duplicate_problem(domain, rel, line, ref, target, target_dist)
+                if bad:
+                    problems.append(bad)
+
             if kind == "rel":
                 base_dir = (dist / rel).parent
-                target = base_dir / ref_path.split("#")[0].split("?")[0]
+                stem = ref_path.split("#")[0].split("?")[0]
+                target = base_dir / stem
                 if not (target.is_file() or (target / "index.html").is_file()
                         or (base_dir / (ref_path + ".html")).is_file()):
                     problems.append(f"{domain}: {rel}:{line}: relativ reference {ref!r} findes ikke")
+                    continue
+                page = (target / "index.html") if (target / "index.html").is_file() else target
+                if page.is_file() and page.suffix.lower() in (".html", ".htm"):
+                    flag_dup(page, dist)
                 continue
             if ref_domain and ref_domain != domain:
                 # Kun domæner vi ejer *og* som faktisk er bygget i dette job.
@@ -360,9 +442,17 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
                 if not route_exists(other, ref_path):
                     problems.append(
                         f"{domain}: {rel}:{line}: krydsdomæne-reference {ref!r} findes ikke i {ref_domain}")
+                    continue
+                page = resolve_page(other, ref_path)
+                if page is not None:
+                    flag_dup(page, other)
                 continue
             if not route_exists(dist, ref_path):
                 problems.append(f"{domain}: {rel}:{line}: {ref!r} findes ikke i distet")
+                continue
+            page = resolve_page(dist, ref_path)
+            if page is not None:
+                flag_dup(page, dist)
         for ref, line in parser.anchors:
             bad = anchor_problem(domain, rel, line, ref, path, dist, dists, parser.ids)
             if bad:
@@ -393,6 +483,7 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
 
 def check(only: str | None = None) -> tuple[int, list[str]]:
     _ANCHORS.clear()
+    _CANONICALS.clear()
     dists = built_domains()
     if not dists:
         print("check_links: intet dist at kontrollere (kør build_sites.py først) — springer over")
@@ -435,6 +526,16 @@ def _fixture(root: Path) -> dict[str, Path]:
             "</main></body></html>", encoding="utf-8")
         (d / "findes2.html").write_text(
             '<!doctype html><html><body><h2 id="her">ja</h2></body></html>', encoding="utf-8")
+        # Til `duplicate_problem`: en side med *rigtig* canonical, en dublet der
+        # erklærer en anden rute som sin, og en side slet uden canonical.
+        (d / "korrekt.html").write_text(
+            f'<!doctype html><html><head><link rel="canonical" '
+            f'href="https://{domain}/korrekt"></head><body>ok</body></html>', encoding="utf-8")
+        (d / "dublet.html").write_text(
+            f'<!doctype html><html><head><link rel="canonical" '
+            f'href="https://{domain}/"></head><body>byte-identisk</body></html>', encoding="utf-8")
+        (d / "uden-canonical.html").write_text(
+            '<!doctype html><html><body>ingen canonical</body></html>', encoding="utf-8")
         dists[domain] = d
     return dists
 
@@ -482,6 +583,23 @@ def self_test() -> int:
         expect("død download", '<a href="/downloads/mangler.zip">x</a>', "/downloads/mangler.zip")
         expect("krydsdomæne 404", '<a href="https://cleancopy.tools/udenfor">x</a>', "udenfor")
         expect("død iframe", '<iframe src="/indlejret"></iframe>', "/indlejret")
+
+        # 1a. Dubletter. En dublet er ikke død, så `route_exists` lader den
+        #     passere; men et link til den sender al linkværdi til en URL
+        #     søgemaskinerne kasserer. Målt 27/9 på cleancopy.tools: 159 links
+        #     på `/clean-copy`, en byte-identisk dublet af `/`.
+        expect("link på en dublet", '<a href="/dublet">x</a>', "peger på en dublet")
+        expect("krydsdomænelink på en dublet",
+               '<a href="https://cleancopy.tools/dublet">x</a>', "peger på en dublet")
+        expect("relativ reference på en dublet", '<a href="dublet.html">x</a>', "peger på en dublet")
+        # Negativkontroller — uden dem kunne reglen bare forbyde at linke nogen
+        # side med en canonical, og porten ville være grøn mod præcis den
+        # fejl den skal fange.
+        expect_clean("link på en side med rigtig canonical", '<a href="/korrekt">x</a>')
+        expect_clean("krydsdomænelink med rigtig canonical",
+                     '<a href="https://cleancopy.tools/korrekt">x</a>')
+        expect_clean("side uden canonical", '<a href="/uden-canonical">x</a>')
+        expect_clean("kodeeksempel med dublet", '<pre><code>&lt;a href="/dublet"&gt;</code></pre>')
 
         # 1b. Ankere. Før denne port tabte split_ref() fragmentet, så 199
         #     krydsside-ankere blev aldrig set — opgave 43.

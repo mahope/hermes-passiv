@@ -381,6 +381,28 @@ def build_index(sites: dict[str, Site]):
         for tgt in idx_map:
             route = canonical_url(tgt)
             local.setdefault(route, route)
+        # `index_from` udgiver Én kilde to steder: som index og under sin egen
+        # rute. cleancopy.tools' forside er `site/clean-copy.html`, så
+        # `/clean-copy` er en byte-identisk dublet af `/` med canonical `/` —
+        # og 159 links fra alle fire sites pegede på dubletten, så al den
+        # interne linkværdi gik til en URL søgemaskinerne kasserer. Skrivningen
+        # længere nede (linje ~1290) sætter allerede canonical til index-URL'en
+        # for præcis denne fil; her gør vi det samme for *linkets* mål, så de to
+        # ikke kan komme i uoverensstemmelse. Dubletruten bliver liggende, så
+        # eksterne links til `/clean-copy` dør ikke — kun de peger videre.
+        for tgt, srcf in idx_map.items():
+            index_route = canonical_url(tgt)
+            for key, (_src, dest) in site.files.items():
+                if dest != srcf:
+                    continue
+                for v in url_variants(key) + url_variants(dest):
+                    if v == index_route:
+                        continue
+                    local[v] = index_route
+                    # Kun hvis denne side allerede ejer varianten — ellers
+                    # stjæler vi den fra det domæne den tilhører.
+                    if global_idx.get(v, (None,))[0] == domain:
+                        global_idx[v] = (domain, index_route)
         local_idx[domain] = local
     return global_idx, local_idx
 
