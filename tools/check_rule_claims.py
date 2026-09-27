@@ -92,7 +92,32 @@ RE_CLAIM = re.compile(
     r"|WCAG-regler"                    # 16 WCAG-regler
     r"|accessibility\s+(?:rules|checks)"
     r"|WCAG\s+[\d.]+\s+AA\s+regler"
+    r"|WCAG\s+[\d.]+\s+AA-regler"         # 22 WCAG 2.1 AA-regler (dansk, bindestreg)
+    r"|regler"                            # 22 regler
     r")",
+    re.IGNORECASE,
+)
+
+# `hero-note` er sidens *egen* resumé-linje: den står i heroen lige ved den CTA
+# der kører motoren, og på guidesiderne siger den "15 checks · No signup ·
+# Instant grade". Opgave 89 målte den: 14 CMS-guides sagde **16** i den linje,
+# fire linjer under en undertitel der sagde **15** — samme side, samme tal, to
+# sandheder, fordi webkernen kører 15. Ingen form i `RE_CLAIM` så den, fordi den
+# siger "checks" uden et modifierende ord.
+#
+# Derfor dømmes *kun* tal i en `hero-note`, og kun når enheden er et regel- eller
+# tjekord. Det er målt, ikke valgt: `guides/platforms.html` siger "15 platforms ·
+# No signup · Instant grade" i præcis samme design — samme tal ved en
+# tilfældighed, en helt anden opgave — og `da/blog/wcag-22-krav-liste.html` siger
+# "50 kriterier (A + AA)". En regel der dømte ethvert tal i en hero-note, ville være
+# grøn på `platforms.html` af en tilfældighed, og det er præcis den slags
+# tilfældighed, der gør en port ubrugelig.
+RE_HERO = re.compile(
+    r'class="hero-note"[^>]*>\s*(?P<n>\d+)\s+'
+    r"(?:automatiske\s+regler|automatiske\s+tjek|automatiske\s+checks"
+    r"|automated\s+rules|automated\s+checks|automated\s+accessibility\s+rules"
+    r"|WCAG\s+[\d.]+\s+AA[- ]?regler|WCAG\s+[\d.]+\s+AA\s+rules|WCAG-regler"
+    r"|accessibility\s+(?:rules|checks)|regler|checks?|tjek)\b",
     re.IGNORECASE,
 )
 
@@ -296,6 +321,13 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("free-downloads.html", "desktop"),
     ("blog/eaa-compliance-scanner-desktop.html", "desktop"),
     ("blog/free-accessibility-testing-tools.html", "desktop"),
+    # De tre danske sider der sælger desktop-scanneren. De siger "Kør alle 22
+    # WCAG 2.1 AA-regler lokalt på din maskine" i den fælles CTA-blok, altså om
+    # *offline*-scanneren — ikke om webkernen. Før denne linje var de tre ikke i
+    # kortet, så et fund ville have været en fejl i stedet for et mål.
+    ("da/blog/eaa-compliance-scanner-desktop-download.html", "desktop"),
+    ("da/blog/tilgaengeligheds-overlays-eaa.html", "desktop"),
+    ("da/blog/wcag-22-krav-liste.html", "desktop"),
     # Købssiden for EUComply Pro: kører `compliance-report.html`.
     ("compliance-report.html", "web"),
     ("da/compliance-report.html", "web"),
@@ -448,6 +480,14 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
                 rest = rest[:start] + " " * (end - start) + rest[end:]
             for m in RE_CLAIM.finditer(rest):
                 claims.append((path, i, int(m.group("n")), False))
+            # Sidens egen resumé-linje i heroen. Den er altid et *frit* tal, fordi
+            # den står ved CTA'en der kører den frie motor — "15 checks · No
+            # signup" — så den løftes til et fri-regel-løfte og ikke til et
+            # total. Samme tal kan stå to steder i linjen (undertitel + hero-note),
+            # og begge skal dømmes: det er præcis den dobbelttydighed der gemte
+            # de 14 forkerede 16'ere.
+            for m in RE_HERO.finditer(line):
+                claims.append((path, i, int(m.group("n")), False))
     return claims
 
 
@@ -591,6 +631,67 @@ def self_test() -> int:
 
         if len(cases) != 5:
             fails.append(f"selftest: fandt {len(cases)}/5 løfter at mutere")
+
+        # Den sjette arm: `hero-note` på en rigtig CMS-guide. De 14 guides sagde
+        # "16 checks" i den linje og "15" i undertitlen fire linjer under — så
+        # mutationen skriver et *forskert* tal ind i heroen og lader undertitlen
+        # være urørt. Gør porten den rød, er den i stand til at se en side der
+        # modsiger sig selv, hvilket var hele fejlformen.
+        hero_file = None
+        for cand in sorted((tmp / "site" / "guides").glob("*.html")):
+            if RE_HERO.search(cand.read_text(encoding="utf-8")):
+                hero_file = cand
+                break
+        if hero_file is None:
+            fails.append("selftest: ingen guide har en hero-note med et regeltal — "
+                         "`RE_HERO` dømmer så ikke den linje den er skrevet for")
+        else:
+            hero_note = RE_HERO.search(hero_file.read_text(encoding="utf-8"))
+            wrong_hero = f"{real + 1} {hero_note.group(0).split(None, 1)[1]}"
+            original = hero_file.read_text(encoding="utf-8")
+            hero_file.write_text(original.replace(hero_note.group(0), wrong_hero, 1),
+                                 encoding="utf-8")
+            hero_errs = check(lay)
+            hero_file.write_text(original, encoding="utf-8")
+            if not hero_errs:
+                fails.append("selftest: en hero-note med et forkert regeltal gav "
+                             "ingen fejl")
+            elif not any(hero_file.name in e for e in hero_errs):
+                fails.append("selftest: hero-note-mutationen gav en fejl der ikke "
+                             "nævner den side der blev muteret: "
+                             + "; ".join(hero_errs[:3]))
+            # Negativ kontrol: de tre danske sider siger "Kør alle 22 WCAG 2.1
+            # AA-regler lokalt" i en fælles CTA-blok. Mutér den til 21 — så skal
+            # *webkernens* rigtige tal stadig være grønt på de andre sider, så
+            # fejlen kun kan komme fra den danske sides egen motor.
+            da_dl = tmp / "site" / "da" / "blog" / "eaa-compliance-scanner-desktop-download.html"
+            da_line = "Kør alle 22 WCAG 2.1 AA-regler"
+            if da_line in da_dl.read_text(encoding="utf-8"):
+                original = da_dl.read_text(encoding="utf-8")
+                da_dl.write_text(original.replace(da_line, da_line.replace("22", "21")),
+                                 encoding="utf-8")
+                da_errs = check(lay)
+                da_dl.write_text(original, encoding="utf-8")
+                if not any("eaa-compliance-scanner-desktop-download" in e for e in da_errs):
+                    fails.append("selftest: den danske sides '22 WCAG 2.1 AA-regler' "
+                                 "dømmes ikke — `regler`-formen fanger ikke dansk")
+            else:
+                fails.append("selftest: den danske desktop-side har ikke længere "
+                             "CTA-teksten med 22 regler — den danske arm er død")
+
+        # Den anden negative kontrol, og den er den derfor er skrevet: samme
+        # designsom `hero-note` med et tal der *ikke* er et regeltal. Hvis
+        # `RE_HERO` dømte ethvert tal i en hero, ville denne blive rød — eller
+        # grøn af en tilfældighed, fordi 15 også er webkernens tal.
+        plat = (tmp / "site" / "guides" / "platforms.html")
+        plat_original = plat.read_text(encoding="utf-8")
+        plat.write_text(plat_original.replace("15 platforms", "17 platforms"), encoding="utf-8")
+        plat_errs = check(lay)
+        plat.write_text(plat_original, encoding="utf-8")
+        if plat_errs:
+            fails.append("selftest: '17 platforms' i en hero-note dømmes som et "
+                         "regeltal — `RE_HERO` er bredere end sit formål: "
+                         + "; ".join(plat_errs[:3]))
 
         for name, path, old, new in cases:
             original = path.read_text(encoding="utf-8")
