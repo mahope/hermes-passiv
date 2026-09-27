@@ -81,6 +81,7 @@ PLUGIN_ENGINE_IN_ZIP = "eaa-compliance-scanner/engine.php"
 # (`scan.html`) som svar på alle spørgsmål. Med produkt→motor-kortet nedenfor er
 # de 34 dømmelige, så den lange form er sat i igen.
 RE_CLAIM = re.compile(
+    r"(?:"
     r"(?P<n>\d+)\s+"
     r"(?:"
     r"automatiske\s+regler"           # 16 automatiske regler
@@ -113,6 +114,27 @@ RE_CLAIM = re.compile(
     r"|automated\s+(?:[\d.]+\s+AA\s+)?(?:WCAG|compliance|accessibility|EAA)\s*"
     r"(?:[\d.]+\s+AA\s+)?(?:rules|checks)"
     r"|WCAG\s*(?:[\d.]+\s*AA\s*)?(?:compliance\s+|-\s*)?(?:rules|regler)"
+    r")"
+    # Nøgne regelord — "16 rules", "22 regler" — kræver et **to-cifret** tal.
+    # Det er målt, ikke valgt, og begge halve er målt:
+    #
+    #  * Uden engelsk tvilling lå der seks publicerede løfter om "16 rules" om
+    #    en motor der kører 15 (fire i JSON-LD-FAQ på CMS-guides, én i en
+    #    `<meta name="description">`, ét i brødteksten på CLI-siden som sælger
+    #    en motor på 22). `downloads.html`'s "Same 22 rules" er rigtig. Den
+    #    danske linje ovenfor dømte nøgne "22 regler" hele tiden, så mønstret
+    #    kendte den danske *form* af regelordet og ikke den engelske — samme
+    #    fejl som fund 5 ovenfor, en linje dybere: en sprogform der mangler i
+    #    listen er usynlig.
+    #  * Uden to-cifret-grænsen dør porten på `blog/nis2-incident-report-checklist`,
+    #    der skriver "2 rules" om NIS2-forretninger. Det er brødtekst om en hel
+    #    anden ting, ikke et løfte om vores motor.
+    #
+    # Grænsen er ikke et arbitrært tal: **alle** motorer i dette repo kører 15
+    # eller 22, og Pro-total er 33. Et ett-cifret tal foran et nøgt regelord kan
+    # derfor ikke være et af vores løfter. Den skal bare fange den næste fejl
+    # skjule sig i, så den måles ligesom alt andet i selftesten.
+    r"|(?P<bare>\d{2,3})\s+(?:rules|regler)\b"
     r")",
     re.IGNORECASE,
 )
@@ -338,6 +360,13 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # Sider der sælger eller omtaler CLI'en og desktop-appen. Begge kører 22.
     ("downloads.html", "desktop"),
     ("free-downloads.html", "desktop"),
+    # Den engelske CLI-side. Den siger "The eaa-scanner applies 16 rules" i
+    # brødteksten, og den sælger `scanner/npm/eaa-scanner` — altså den samme
+    # motor på 22 som desktop-appen og resten af `CLONE_GROUP`. Den lå ikke i
+    # kortet, fordi dens løfte ikke blev *fundet* (se `RE_CLAIM`: nøgne
+    # engelske "rules" var ikke en dømt form). Så løftet slap forbi porten
+    # uden at spørge efter en motor — præcis fejlen `PRODUCT_ENGINE` findes for.
+    ("blog/accessibility-scanner-cli.html", "desktop"),
     ("blog/eaa-compliance-scanner-desktop.html", "desktop"),
     ("blog/free-accessibility-testing-tools.html", "desktop"),
     # De tre danske sider der sælger desktop-scanneren. De siger "Kør alle 22
@@ -504,7 +533,14 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
             for start, end in reversed(spans):
                 rest = rest[:start] + " " * (end - start) + rest[end:]
             for m in RE_CLAIM.finditer(rest):
-                claims.append((path, i, int(m.group("n")), False))
+                # To grupper bærer tallet: `n` for de kvalificerede former og
+                # `bare` for de nøgne regelord. Begge er løfter.
+                claimed = m.group("n") or m.group("bare")
+                if claimed is None:      # kan ikke ske, men ikke døm på et gæt
+                    raise SystemExit(
+                        f"check_rule_claims: mønsteret matchede uden tallet: "
+                        f"{m.group(0)!r} i {path.name}:{i}")
+                claims.append((path, i, int(claimed), False))
             # Sidens egen resumé-linje i heroen. Den er altid et *frit* tal, fordi
             # den står ved CTA'en der kører den frie motor — "15 checks · No
             # signup" — så den løftes til et fri-regel-løfte og ikke til et
@@ -717,6 +753,84 @@ def self_test() -> int:
             fails.append("selftest: '17 platforms' i en hero-note dømmes som et "
                          "regeltal — `RE_HERO` er bredere end sit formål: "
                          + "; ".join(plat_errs[:3]))
+
+        # Den tredje fejlform fra denne iteration: et **nøgt** regelord i
+        # engelsk. `regler` stod i mønstret hele tiden, `rules` gjorde ikke, så
+        # seks publicerede løfter ("16 rules" i JSON-LD-FAQ, i en
+        # `<meta name="description">` og i CLI-sidens brødtekst) lå uden for
+        # portens synsfelt. Armen genskaber formen på en rigtig fil.
+        bare_guide = None
+        for cand in sorted((tmp / "site" / "guides").glob("*.html")):
+            if RE_CLAIM.search(cand.read_text(encoding="utf-8")) and \
+                    re.search(r"\b\d{2,3}\s+rules\b",
+                              cand.read_text(encoding="utf-8")):
+                bare_guide = cand
+                break
+        if bare_guide is None:
+            fails.append("selftest: ingen guide har et nøgt 'N rules' — armen "
+                         "gen skaber en form porten ikke længere ser")
+        else:
+            body = bare_guide.read_text(encoding="utf-8")
+            hit = re.search(r"\b\d{2,3}\s+rules\b", body)
+            wrong_bare = f"{real + 1} rules"
+            bare_guide.write_text(
+                body.replace(hit.group(0), wrong_bare, 1), encoding="utf-8")
+            bare_errs = check(lay)
+            bare_guide.write_text(body, encoding="utf-8")
+            if not bare_errs:
+                fails.append(f"selftest: nøgt {wrong_bare!r} på "
+                             f"{bare_guide.name} gav ingen fejl")
+            elif not any(bare_guide.name in e for e in bare_errs):
+                fails.append(f"selftest: nøgt-regelord-mutationen på "
+                             f"{bare_guide.name} gav en fejl der ikke nævner den "
+                             f"muterede side: " + "; ".join(bare_errs[:3]))
+
+        # Den fjerde arm, og den er den der adskiller *målt* fra *antaget*:
+        # CLI-siden sælger `scanner/npm`, som kører 22 — ikke webkernens 15.
+        # Før denne iteration lå siden ikke i `PRODUCT_ENGINE` overhovedet,
+        # fordi dens løfte ikke blev *fundet*. Mutér dens rigtige 22 til
+        # webkernens 15: uden kortet dør porten med "står ikke i PRODUCT_ENGINE",
+        # og med et forkert kort ville 15 være grønt. Den skal altså være rød
+        # **og** nævne netop den side.
+        cli = tmp / "site" / "blog" / "accessibility-scanner-cli.html"
+        cli_body = cli.read_text(encoding="utf-8")
+        cli_hit = re.search(r"\b22\s+rules\b", cli_body)
+        if cli_hit is None:
+            fails.append("selftest: CLI-siden har ikke længere '22 rules' — "
+                         "motor-kort-armen er død")
+        else:
+            cli.write_text(cli_body.replace(cli_hit.group(0), f"{real} rules", 1),
+                           encoding="utf-8")
+            try:
+                cli_errs = check(lay)
+            except SystemExit as exc:
+                fails.append(f"selftest: CLI-siden med et nøgt regelord døde med "
+                             f"SystemExit i stedet for en fejl — den mangler i "
+                             f"produkt→motor-kortet: {exc}")
+            else:
+                if not cli_errs:
+                    fails.append("selftest: CLI-siden løfter webkernens 15 for en "
+                                 "motor der kører 22, og porten siger intet")
+                elif not any(cli.name in e for e in cli_errs):
+                    fails.append("selftest: CLI-armen gav en fejl der ikke nævner "
+                                 f"{cli.name}: " + "; ".join(cli_errs[:3]))
+            cli.write_text(cli_body, encoding="utf-8")
+
+        # Den negative kontrol på **to-cifret-grænsen**. Uden den dør porten på
+        # `blog/nis2-incident-report-checklist.html`, der skriver "2 rules" om
+        # NIS2-forretninger. Den arm beviser derfor to ting på én fil: at et
+        # ett-cifret nøgt regelord *ikke* er et løfte, og at filen derfor ikke
+        # skal stå i produkt→motor-kortet.
+        prose = lay.site / "nis2-artikel-om-forretninger.html"
+        prose.write_text(
+            "<p>Article 21 still boils down to 2 rules for most suppliers.</p>\n",
+            encoding="utf-8")
+        prose_errs = check(lay)
+        prose.unlink()
+        if prose_errs:
+            fails.append("selftest: '2 rules' i brødtekst dømmes som et "
+                         "regelløfte — to-cifret-grænsen virker ikke: "
+                         + "; ".join(prose_errs[:3]))
 
         for name, path, old, new in cases:
             original = path.read_text(encoding="utf-8")
