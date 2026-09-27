@@ -2695,6 +2695,114 @@ def check_forbidden_claims(pages: list[tuple[str, str]] | None = None) -> list[s
     return problems
 
 
+# En *nægtelse* af at vi sælger noget. Modsat `FORBIDDEN_CLAIMS`, der dømmer
+# løfter om et køb der ikke findes, dømmer denne det modsatte: en side der
+# fortæller en køber, at det produkt de lige har betalt for, ikke findes.
+DENIAL_RE = re.compile(
+    r"we (?:do|does) not (?:sell|offer)"
+    r"|we(?:'re| are) not (?:selling|offering)"
+    r"|we don't (?:sell|offer)"
+    r"|there is no paid"
+    r"|not for sale"
+    r"|no paid version"
+    r"|ikke sælger"
+    r"|vi sælger ikke"
+    r"|sælger vi ikke",
+    re.IGNORECASE,
+)
+# Kun det en læser ser som sidens *navn*: `<h1>` og `<title>`.
+# JSON-LD's `"name"` er bevidst **ikke** med. Det er ikke altid sidens eget navn:
+# `site/books/build-your-first-chrome-extension.html` beskriver en anden
+# genstands `SoftwareApplication` med navnet "Clean Copy Pro", og den blev målt
+# som en falsk alarm her — porten lagde et produkts navn ind i en side om
+# noget helt andet. `<h1>` kan ikke gøre den fejl: det er den overskrift
+# læseren ser.
+HEADING_RE = re.compile(
+    r"<h1[^>]*>(.*?)</h1>|<title[^>]*>(.*?)</title>",
+    re.IGNORECASE | re.DOTALL,
+)
+# Ordfarter der ikke adskiller to produkter. `eu` er 2 tegn og droppes
+# alligevel, så tællen kræver *to* navneord — ikke to tilfældige.
+_HEADING_STOPWORDS = frozenset(
+    {"the", "and", "for", "with", "book", "books", "pro", "app", "set", "edition"}
+)
+
+
+def _heading_words(text: str) -> set[str]:
+    words: set[str] = set()
+    for match in HEADING_RE.finditer(text):
+        heading = next((group for group in match.groups() if group), "")
+        words |= {
+            word
+            for word in re.findall(r"[a-zæøå]+", heading.casefold())
+            if len(word) > 2 and word not in _HEADING_STOPWORDS
+        }
+    return words
+
+
+def _product_words(name: str) -> set[str]:
+    return {
+        word
+        for word in re.findall(r"[a-zæøå]+", name.casefold())
+        if len(word) > 2 and word not in _HEADING_STOPWORDS
+    }
+
+
+def check_sale_denials(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
+    """En side må ikke nægte at sælge et produkt, allowlisten sælger.
+
+    ** fundet 27/9, målt på den rigtige overflade.** `site/books/compliance-bundle`
+    skrev to steder at vi ikke sælger den samlede PDF — "We do not sell a
+    combined PDF of these guides" og, i FAQ'en, skarere "if you have bought one
+    elsewhere, it is not from us". Allowlisten sælger præcis den fil:
+    `eu-compliance-ebook-bundle` ($29) leverer `compliance-bundle.pdf` og
+    `compliance-bundle-v1.0.zip`. Den nægtelse var altså ikke en unødig
+    besked til en gratis-bruger — den var en besked til **en køber der havde
+    betalt**, fortalt at deres køb ikke var hos os.
+
+    Derfor dømmer porten *sammenholdt*, ikke hver for sig. En nægtelse i sig
+    selv er sand og rigtig overforfladen: ni af de ti sider der nægter at sælge
+    noget, er de seks frie e-bøger, og "vi sælger ikke en betalt udgave" er
+    præcis den open-core-løftet hviler på. Først når nægtelsen står på en side
+    hvis **overskrift** navngiver et katalogeret produkt, modsiger den
+    allowlisten — og så er den en fejl, uanset hvor sandt den lyder.
+
+    **Målt dækning.** 10 sider i de 305 `source_pages()` læser indeholder en
+    nægtelse; med to navneord i overskriften rammer præcis **én** — den med
+    fejlen. Tærsklen er målt, ikke valgt: på de ni andre er det højeste
+    overlap **1** navneord, fordi de deler "compliance" eller "gdpr" med et
+    produktnavn uden at handle om det samme produkt.
+    """
+    products = catalog.get("products", {})
+    if not isinstance(products, dict):
+        return []
+    named = {key: _product_words(entry.get("name", "")) for key, entry in products.items() if isinstance(entry, dict)}
+    problems: list[str] = []
+    for relative, text in pages:
+        visible, _ = parse_page(text)
+        denial = DENIAL_RE.search(visible)
+        if denial is None:
+            continue
+        heading = _heading_words(text)
+        # Kun én melding pr. side, og den med *størst* overlap: en side der
+        # nævner to produkter skal ikke give to fejl om den samme sætning.
+        best: tuple[int, str] = (0, "")
+        for key in sorted(named):
+            overlap = len(heading & named[key])
+            if overlap > best[0]:
+                best = (overlap, key)
+        overlap, key = best
+        if overlap < 2:
+            continue
+        problems.append(
+            f"{relative}: nægter at sælge {products[key]['name']!r} "
+            f"({overlap} fælles navneord i overskriften) med {denial.group(0)!r} — "
+            f"men allowlisten sælger {key}. Ret nægtelsen, eller fjern "
+            f"produktet fra katalogen; de to kan ikke begge være sande."
+        )
+    return problems
+
+
 def check_analysis_location(pages: list[tuple[str, str]]) -> list[str]:
     """Hvor rapporten beregnes, skal være sandt — og koden er dommeren.
 
@@ -2812,6 +2920,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_indexable_entry(entry_point_index())
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
+    problems += check_sale_denials(catalog, source_pages())
     problems += check_analysis_location(source_pages())
     problems += check_deliverable(catalog, source_pages())
     problems += check_free_tier(catalog, source_pages())
@@ -4164,6 +4273,29 @@ def self_test() -> int:
                        "<body><p>Tak.</p></body></html>")]
     forbidden_hidden = check_forbidden_claims(forbidden_head)
 
+    # En side der nægter at sælge et produkt, allowlisten sælger. Skrives på
+    # den syntetiske side, aldrig i `site/` — ellers skrev selftesten den
+    # fejl ind i de rigtige filer. Negativ kontrol: *samme* overskrift uden
+    # nægtelse skal være grøn, ellers dømmer porten overskrifter i stedet for
+    # nægtelser, og de ni sande nægtelser i overfladen ville blive røde.
+    denied_page = [("site/eksempel.html",
+                    "<html lang=\"en\"><head><title>Complete EU Compliance Bundle</title></head>"
+                    "<body><p>All six e-books are free. We do not sell a combined PDF "
+                    "of these guides.</p></body></html>")]
+    denied_found = check_sale_denials(good, denied_page)
+    denied_clean = check_sale_denials(
+        good, [("site/eksempel.html",
+                "<html lang=\"en\"><head><title>Complete EU Compliance Bundle</title></head>"
+                "<body><p>All six e-books are free, and each EPUB is the complete text."
+                "</p></body></html>")])
+    # En nægtelse på en side hvis overskrift *ikke* navngiver et katalogeret
+    # produkt er det ærlige open-core-løftet og må være grøn. Det er den
+    # tredje arm, fordi de to ovenfor kun viser at porten kan fyre.
+    honest_denial = check_sale_denials(
+        good, [("site/eksempel.html",
+                "<html lang=\"en\"><head><title>Cookie Consent Guide</title></head>"
+                "<body><p>We do not sell a paid edition.</p></body></html>")])
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -4205,6 +4337,7 @@ def self_test() -> int:
         ("en tracker uden kliklytter", muted_click),
         ("en tracker der sender en anden begivenhed end buy-click", renamed_click),
         ("en side der lover et køb der ikke findes", forbidden_found),
+        ("en side der nægter at sælge et katalogeret produkt", denied_found),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -4234,7 +4367,10 @@ def self_test() -> int:
                             ("en købsside der linkes krydsdomæne fra en bygget side", cross_real),
                             ("en købsknap på en side med tracker", tracked_click),
                             ("en kundeportal som ikke er et køb", portal_click),
-                            ("en forbudt købspåstand i skjult head-tekst", forbidden_hidden)):
+                             ("en forbudt købspåstand i skjult head-tekst", forbidden_hidden),
+                             ("en nægtelse uden en nægtelse", denied_clean),
+                             ("en ærlig nægtelse på en side der ikke sælger produktet",
+                              honest_denial)):
         if problems:
             print(f"SELFTEST FEJLER (falsk alarm): {label}: {problems[0]}")
             missed.append(label)
