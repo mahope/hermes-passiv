@@ -294,6 +294,90 @@ def check_desktop(wf: dict[str, Any], label: str) -> list[str]:
     return problems
 
 
+TRACKING_DOMAINS_RE = re.compile(
+    r"const TRACKING_DOMAINS\s*=\s*Object\.freeze\(\[(?P<body>[^\]]*)\]", re.S)
+
+# Domæner vi ikke selv deployer. Hvert indgang har en grund, fordi det er
+# grunden der skal overleve næste persons genlæsning — ikke navnet.
+#
+# Målt 27. september 2026: `bugbottle.dev` ligger i `TRACKING_DOMAINS`, men
+# deploy-matrixen deployer kun tre domæner, så `dist/bugbottle.dev/` bliver
+# bygget hver eneste kørsel og aldrig lagt noget sted. Domænet serveres i
+# virkeligheden af en nginx, ingen Cloudflare: `https://bugbottle.dev/track.js`
+# svarer 404, og `/build-info.json` svarer 404 fra nginx, mens de tre andre
+# alle bærer den aktuelle merge-sha.
+#
+# Følgen var ikke en 404 på en side. Den var, at `bugbottle.dev` aldrig kunne
+# skrive en `p:v3:`-nøgle, så `collectTraffic` dømte den `unknown` for evigt,
+# `/api/health` svarede `traffic_status: partial` hver time, og **hvert
+# ugental i `reports/weekly/` var strukturelt manglende et helt domæne**. Et
+# måltal uden sit eget domæne er ikke et lille tab — det er et tal, der ser
+# komplet ud og ikke er det. Derfor ligger domænet her, synligt, i stedet for
+# at blive reddet væk i `TRACKING_DOMAINS` hvor ingen ville have fundet det.
+UNMANAGED_DOMAINS: dict[str, str] = {
+    "bugbottle.dev": (
+        "serveres af en nginx, ikke af Cloudflare Pages; deploy-matrixen "
+        "deployer den ikke, så den skal enten flyttes på Pages eller fjernes "
+        "fra TRACKING_DOMAINS — afklares med Mads, se ❓ i IMPLEMENTATION_PLAN.md"
+    ),
+}
+
+
+def tracked_domains() -> set[str]:
+    """Domænerne `site/_worker.js` forventer sidevisninger fra."""
+    path = ROOT / "site" / "_worker.js"
+    if not path.is_file():
+        return set()
+    match = TRACKING_DOMAINS_RE.search(path.read_text(encoding="utf-8"))
+    if not match:
+        return set()
+    return set(re.findall(r"'([^']+)'", match.group("body")))
+
+
+def deployed_domains(wf: dict[str, Any]) -> set[str]:
+    """Domænerne deploy-jobbets matrix faktisk deployer."""
+    matrix = ((wf.get("jobs") or {}).get("deploy") or {}).get("strategy") or {}
+    include = matrix.get("matrix", {}).get("include") if isinstance(matrix, dict) else None
+    if not isinstance(include, list):
+        return set()
+    return {str(entry.get("domain")) for entry in include
+            if isinstance(entry, dict) and entry.get("domain")}
+
+
+def check_domain_coverage(wf: dict[str, Any], label: str) -> list[str]:
+    """Hvert domæne vi forventer trafik fra skal deployes — eller være ungtalt.
+
+    Hullet denne gate lukker opstod fordi to lister levede hver for sig: en
+    matrix med tre domæner og en `TRACKING_DOMAINS` med fire. Ingen af dem
+    sammenlignede med den anden, så et domæne kunne være bygget, aldrig
+    deployet og alligevel forventet at tale — i måneder, uden at nogen
+    opdagede det, fordi ingen målte det sted.
+    """
+    problems: list[str] = []
+    deployed = deployed_domains(wf)
+    tracked = tracked_domains()
+    if not tracked:
+        problems.append(f"{label}: TRACKING_DOMAINS kunne ikke læses i "
+                        "site/_worker.js, så domænedækningen er udokumenteret")
+        return problems
+
+    for domain in sorted(tracked - deployed - set(UNMANAGED_DOMAINS)):
+        problems.append(f"{label}: `{domain}` er i TRACKING_DOMAINS men hverken "
+                        "deployet af matrixen eller ungtalt i UNMANAGED_DOMAINS "
+                        "— det ville aldrig kunne rapportere trafik")
+    for domain, reason in sorted(UNMANAGED_DOMAINS.items()):
+        if domain in deployed:
+            problems.append(f"{label}: `{domain}` står i UNMANAGED_DOMAINS men "
+                            "deployes nu af matrixen — fjern undtagelsen")
+        elif domain not in tracked:
+            problems.append(f"{label}: `{domain}` står i UNMANAGED_DOMAINS men "
+                            "ikke i TRACKING_DOMAINS — undtagelsen er død")
+        elif not reason.strip():
+            problems.append(f"{label}: UNMANAGED_DOMAINS[`{domain}`] mangler en "
+                            "begrundelse")
+    return problems
+
+
 def check_deploy(wf: dict[str, Any], label: str) -> list[str]:
     """Deploy-workflowens filtre må ikke blive rørt af desktop-rettelsen."""
     problems: list[str] = []
@@ -316,6 +400,7 @@ def check_deploy(wf: dict[str, Any], label: str) -> list[str]:
         if not push(wf, "refs/heads/main", needed):
             problems.append(f"{site}: path-filteret mangler `{needed}`, selv om "
                             "filen påvirker build eller gate")
+    problems += check_domain_coverage(wf, label)
     for job, spec in (wf.get("jobs") or {}).items():
         if (spec.get("permissions") or {}).get("contents") == "write":
             problems.append(f"{site}: jobbet `{job}` har contents: write uden grund")
