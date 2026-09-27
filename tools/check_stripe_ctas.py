@@ -1324,7 +1324,8 @@ def check_declared_language(pages: list[tuple[str, str]]) -> list[str]:
 
     Reglen læser *ikke* filnavnet. `nis2-check-da.html` i stieroden er dansk
     på engelsk sti, og det er korrekt; en regel på "-da i navnet" ville være
-    grøn af en tilfældighed, fordi de 14 også hedder `-da`.
+    grøn af en tilfældighed, fordi de 14 også hedder `-da`. Den modsatte retning
+    — at *suffikset* er en dansk-konvention — dømmes af `check_da_suffix_language`.
     """
     problems: list[str] = []
     for relative, text in pages:
@@ -1342,6 +1343,49 @@ def check_declared_language(pages: list[tuple[str, str]]) -> list[str]:
             "Alt under /da/ er dansk, så page_lang() ville tælle siden som "
             f"{lang_name(code)} og den danske dækning ville blive en dansk købsside "
             "mindre uden at nogen bliver advaret."
+        )
+    return problems
+
+
+def check_da_suffix_language(pages: list[tuple[str, str]]) -> list[str]:
+    """En side i stieroden der hedder `<navn>-da.html` skal erklære `lang="da"`.
+
+    Den modsatte retning af `check_declared_language`, og den manglede. Målt over
+    299 sider i `site/`: der er **14** sider i stieroden der hedder
+    `<navn>-da.html` (`scan-da`, `nis2-check-da`, `cookie-check-da`, …), og
+    **alle 14** erklærer `da`. Ingen af dem har en `/da/`-spejling, så suffikset
+    *er* den danske udgave — det er ikke et navngivet filnavn, men en
+    konvention der holder på hele fladen.
+
+    Uden reglen sker driften stumt i den anden retning. En generator der
+    skriver `nis2-check-da.html` med skabelonens `lang="en"` giver
+    `page_lang()` → `en`, så siden tælles engelsk: den forsvinder fra den
+    danske sprogdækning, og en skærmlæser får engelsk på en dansk side.
+    `check_declared_language` kan ikke fange det, fordi den kun dømmer
+    `/da/`-træet, og den ville ikke skulle det — filen ligger i stieroden.
+
+    EN-tvillingerne er ikke kravet. 13 af de 14 har en `<navn>.html` der
+    erklærer `en`; `tilgaengelighedserklaering-generator-da.html` er dansk
+    alene. Reglen dømmer derfor kun suffikset, aldrig tilstedeværelsen af en
+    engelsk side ved siden af.
+    """
+    problems: list[str] = []
+    for relative, text in pages:
+        parts = relative.replace("\\", "/").split("/")
+        if "da" in parts[1:-1] or not relative.endswith("-da.html"):
+            continue
+        match = LANG_ATTR_RE.search(text[:2000])
+        if not match:
+            continue  # Mangler sprog helt: `seo_check` dømmer "no html lang".
+        code = match.group(1).lower().split("-")[0]
+        if code == "da":
+            continue
+        problems.append(
+            f"{relative}: hedder -da.html i stieroden men erklærer "
+            f"lang=\"{match.group(1)}\". Suffikset er den danske udgave her — der "
+            "er ingen /da/-spejling af den — så page_lang() ville tælle siden som "
+            f"{lang_name(code)} og den danske sprogdækning ville miste en side "
+            "uden at nogen bliver advaret."
         )
     return problems
 
@@ -2757,6 +2801,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_pro_not_built(catalog, source_pages())
     problems += check_language_coverage(catalog, source_pages())
     problems += check_declared_language(source_pages())
+    problems += check_da_suffix_language(source_pages())
     problems += check_checkout_notes(catalog)
     problems += check_comparisons(catalog, source_pages())
     problems += check_free_cells_for_paid(catalog, source_pages())
@@ -3863,6 +3908,49 @@ def self_test() -> int:
         print(f"SELFTEST FEJLER: den danske side med engelsk sti ({da_suffix_page}) "
               "er meldt rød — reglen dømmer stien og ikke træet")
         return 1
+
+    # ── suffikset i stieroden mod det erklærede sprog ──────────────────────
+    #
+    # Den modsatte retning af armen ovenfor, og den var uden dækning. Målt: de
+    # 14 `<navn>-da.html` i stieroden erklærer alle `da`, og ingen af dem har en
+    # `/da/`-spejling — så suffikset *er* den danske udgave. Mutationen giver
+    # præcis den drift porten skal se: en generator der skriver skabelonens
+    # engelske `lang` ind i en dansk side, så `page_lang()` tæller den engelsk,
+    # og ingen af de to eksisterende regler rører den — `/da/`-reglen fordi
+    # filen ikke ligger under `/da/`, dækning-reglen fordi sproget så *er*
+    # talte, bare forkert.
+    suffixed_da = next((relative for relative, text in source_pages()
+                        if relative.endswith("-da.html")
+                        and "da" not in relative.split("/")[1:-1]
+                        and '<html lang="da"' in text[:400].replace("'", '"')), None)
+    if not suffixed_da:
+        print("SELFTEST FEJLER: ingen dansk `-da.html` i stieroden at bruge som "
+              "mutation — suffiksreglen er så uden dækning")
+        return 1
+    # Positive kontrol først: reglen skal være grøn på de 14 rigtige sider. Uden
+    # den kunne den være grøn fordi den aldrig kigger — den fejl der gjorde fem
+    # tidligere porte halvdøde.
+    if check_da_suffix_language(source_pages()):
+        print("SELFTEST FEJLER: suffiksreglen er rød på de rigtige sider")
+        return 1
+    english_twin = suffixed_da[: -len("-da.html")] + ".html"
+    twins = [pair for pair in source_pages() if pair[0] == english_twin]
+    if twins and check_da_suffix_language(twins):
+        print(f"SELFTEST FEJLER: den engelske tvilling ({english_twin}) er meldt rød "
+              "— reglen dømmer mere end suffikset")
+        return 1
+    suffixed_switched = [
+        (relative, text.replace('<html lang="da"', '<html lang="en"', 1)
+         if relative == suffixed_da else text)
+        for relative, text in source_pages()
+    ]
+    suffix_problems = check_da_suffix_language(suffixed_switched)
+    if not suffix_problems or not any(suffixed_da in problem for problem in suffix_problems):
+        print(f"SELFTEST FEJLER: en dansk side i stieroden med lang=\"en\" "
+              f"({suffixed_da}) går ubemærket — {len(suffix_problems)} problemer, "
+              "ingen af dem navngiver den side")
+        return 1
+
 
     # ── indgang til købssiden: en købsside ingen kan nå ───────────────────
     #
