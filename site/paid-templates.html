@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paid Compliance Templates &amp; Clause Sets — GDPR, NIS2, EAA</title>
+<meta name="description" content="Ready-to-use compliance documents: a GDPR Article 28 DPA, an NIS2/DORA vendor clause set, a mutual NDA, an EAA accessibility statement, a client reporting kit, and the full template bundle. PDF and Markdown, one payment, no subscription.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Paid Compliance Templates &amp; Clause Sets — GDPR, NIS2, EAA">
+<meta property="og:description" content="Seven ready-to-use compliance document sets. PDF and Markdown. One payment, no subscription.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/paid-templates">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Compliance document templates for GDPR, NIS2 and the EAA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/paid-templates">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/paid-templates">
+<link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/paid-templates">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .pt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; margin: 22px 0 0; }
+  .pt-card { border: 1px solid var(--color-border); border-radius: 14px; padding: 22px; background: var(--color-surface); display: flex; flex-direction: column; }
+  .pt-card h3 { margin: 0 0 .4rem; font-size: 1.05rem; }
+  .pt-card p { margin: 0 0 .6rem; font-size: .95rem; }
+  .pt-meta { font-size: .8rem; color: var(--color-text-dim, #94a3b8); margin-bottom: .8rem; }
+  .pt-foot { margin-top: auto; padding-top: .4rem; }
+  .pt-price { font-weight: 700; font-size: 1.05rem; }
+  .pt-buy { display: inline-block; margin-top: .5rem; padding: .6rem 1.1rem; border-radius: 10px; background: #0b6e8f; color: #fff; font-weight: 600; text-decoration: none; }
+  .pt-buy:hover { background: #095a75; }
+  .pt-status { font-size: .88rem; color: var(--color-text-dim, #94a3b8); }
+  .pt-note { border-left: 3px solid var(--color-border); padding: .2rem 0 .2rem .9rem; margin: 1.6rem 0; font-size: .93rem; }
+  @media (max-width: 600px) { .pt-card { padding: 18px; } }
+</style>
+</head>
+<body>
+<main class="container">
+  <nav style="margin-bottom:1.5rem"><a href="/compliance-guide">&larr; Compliance guide</a></nav>
+
+  <header>
+    <h1>Paid compliance templates &amp; clause sets</h1>
+    <p>Seven document sets written for the European rules that actually cost an
+    agency money: GDPR, NIS2, DORA, the EAA and the European Accessibility Act.
+    Each one is a PDF you can hand to a client and a Markdown file you can drop
+    into your own site, so nothing has to be retyped. One payment, no
+    subscription, no account — the download link is in the receipt email and on
+    the thank-you page.</p>
+  </header>
+
+  <p class="pt-note"><strong>Why these cost money.</strong> The free
+  <a href="/free-downloads">downloads</a> are the single-document versions: one
+  privacy policy template, one RoPA, one NIS2 self-assessment. What is paid for
+  here is the part you would otherwise write from scratch per client — the
+  <em>clause sets</em>, the <em>reporting kit</em> and the <em>bundle</em>.</p>
+
+  <div class="pt-grid" id="pt-grid">
+    <noscript><p class="pt-status">The buy buttons on this page are added by a
+    small script that asks the server which files are actually uploaded right
+    now. With JavaScript off you can still see every product and its price in
+    the
+    <a href="https://docs.stripe.com/payments/links">our contract</a> — or
+    write to us and we will send the files directly.</p></noscript>
+  </div>
+
+  <section aria-labelledby="how-heading">
+    <h2 id="how-heading">How delivery works</h2>
+    <ul>
+      <li>You pay once on Stripe. There is no account to create and no renewal.</li>
+      <li>The receipt email and the thank-you page both carry your download links.</li>
+      <li>Every file is a PDF and a Markdown version, unless the product says otherwise.</li>
+      <li>Refunds: the files are documents, so ask within 14 days and we refund.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="free-heading">
+    <h2 id="free-heading">The free alternatives</h2>
+    <p>If one of these is not what you need, the free versions are genuinely
+    complete: <a href="/privacy-policy-template">privacy policy template</a>,
+    <a href="/ropa-template">RoPA template</a>, the
+    <a href="/dpa-generator">Art. 28 DPA generator</a> (fills in the parties and
+    gives you a printable document), the
+    <a href="/nis2-check">NIS2 self-assessment</a> and the
+    <a href="/books/">six e-books</a>. The
+    <a href="/compliance-report">automated compliance report</a> reads your
+    website and finds the gaps for you — also free.</p>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container"><a href="/">&larr; mahope.tools</a> &middot; <a href="/support">Support</a></div>
+</footer>
+<script>
+// Købsknappen kommer fra serveren, ikke fra denne fil. Grunden er ærlig: et
+// downloadprodukt må kun sælges, når filerne ligger i Cloudflare KV — ellers
+// betaler kunden for noget der svarer 503 i /api/download. `/api/paid-files`
+// svarer 200 med hvert produkt, men udelader betalingslinket, indtil alle
+// filer er uploadet. Så kan siden aldrig sælge noget vi ikke kan levere, og den
+// tænder automatisk den dag filerne uploades — uden at nogen rører denne kode.
+(function () {
+  var DATA = [
+    { p: 'eucomply-dpa', t: 'GDPR DPA template', d: 'An Article 28 processor agreement with the annexes GDPR actually requires: subject matter, duration, nature and purpose, types of personal data, security measures, and sub-processor rules. Fill in the parties and you have a signed-ready document.', m: 'PDF + Markdown', v: '$59' },
+    { p: 'eucomply-nis2-clauses', t: 'NIS2 / DORA Vendor Clause Set', d: 'The clauses to paste into a vendor contract so the ICT supply chain holds up: incident notification deadlines, audit rights, security level, subcontractor approval, and the exit terms DORA expects of a critical provider.', m: 'PDF + Markdown', v: '$49' },
+    { p: 'eucomply-nda-clauses', t: 'Mutual NDA Clause Set', d: 'A mutual non-disclosure agreement that is actually mutual, plus the variants agencies ask for: one-way, project-specific, and a short form for discovery calls.', m: 'PDF + Markdown', v: '$29' },
+    { p: 'eucomply-eaa-statement', t: 'EAA Accessibility Statement', d: 'The accessibility statement the European Accessibility Act expects, structured to the EN 301 549 and WCAG 2.1 AA axes: what was tested, what was found, what is being fixed, and how to complain.', m: 'PDF + Markdown', v: '$39' },
+    { p: 'eucomply-report-kit', t: 'Client Compliance Report Kit', d: 'The six documents you send a client every month: a monthly report, a quarterly narrative, and a change-log specification. Fill in the client name and the cadence works itself.', m: 'Six files, PDF + Markdown', v: '$69' },
+    { p: 'eucomply-template-bundle', t: 'EUComply Complete Template Bundle', d: 'Everything above in one download: the DPA, the NIS2/DORA clause set, the NDA clauses, the EAA statement and the six reporting files. Fourteen files, and nothing to add on top.', m: 'Fourteen files, PDF + Markdown', v: '$149' },
+    { p: 'eu-compliance-ebook-bundle', t: 'EU Compliance E-book Bundle', d: 'The six e-books as one combined PDF and as a ZIP, if you would rather have the whole shelf than six separate files.', m: 'Combined PDF + ZIP', v: '$29' }
+  ];
+  var grid = document.getElementById('pt-grid');
+  var esc = function (s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+  var card = function (d, extra) {
+    return '<article class="pt-card"><h3>' + esc(d.t) + '</h3><p>' + esc(d.d) +
+      '</p><p class="pt-meta">' + esc(d.m) + ' &middot; ' + esc(d.p) + '</p>' +
+      '<div class="pt-foot">' + (extra || '') + '</div></article>';
+  };
+  var unavailable = '<p class="pt-status">Not open for purchase yet. We only take ' +
+    'payment for a download we can deliver the moment you pay &mdash; this one ' +
+    'is not uploaded, so the button is not here.</p>';
+  var unknown = '<p class="pt-status">We could not reach the delivery check, so ' +
+    'we are not showing a button we cannot stand behind. The price above is ' +
+    'what you pay when it opens.</p>';
+  DATA.forEach(function (d) { grid.insertAdjacentHTML('beforeend', card(d, '<p class="pt-price">' + esc(d.v) + '</p>' + unavailable)); });
+
+  fetch('/api/paid-files', { headers: { Accept: 'application/json' } }).then(function (r) {
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  }).then(function (data) {
+    if (!data || data.ok !== true) throw new Error('bad payload');
+    // `kv_ok: false` betyder at serveren ikke kunne tjekke. Da ved vi intet om
+    // filerne, og en kodet status ville være en påstand vi ikke kan dokumentere.
+    var byKey = {};
+    (data.products || []).forEach(function (p) { byKey[p.product] = p; });
+    DATA.forEach(function (d, i) {
+      var info = byKey[d.p];
+      var foot = grid.querySelectorAll('.pt-foot')[i];
+      if (!foot || !info) return;
+      if (info.available && info.payment_link) {
+        foot.innerHTML = '<p class="pt-price">' + esc(d.v) + '</p><a class="pt-buy" rel="noopener" href="' +
+          esc(info.payment_link) + '">Buy ' + esc(d.t) + '</a>' +
+          '<p class="pt-status">Delivered as ' + esc(info.files) + ' files right after payment.</p>';
+      } else if (data.kv_ok === false) {
+        foot.innerHTML = '<p class="pt-price">' + esc(d.v) + '</p>' + unknown;
+      }
+    });
+  }).catch(function () { /* kortene står med pris og ærlig status; ingen knap, ingen løfte */ });
+})();
+</script>
+</body>
+</html>

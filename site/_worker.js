@@ -69,6 +69,9 @@ export default {
     // === Route: self-monitoring health check ===
     if (path === '/api/health') return handleHealth(url, env);
 
+    // === Route: hvilke betalte downloads der faktisk kan leveres lige nu ===
+    if (path === '/api/paid-files') return handlePaidFiles(url, env);
+
     // === Route: arkiver der er taget ud af repoet (opgave 28) ===
     // Cloudflare Pages fjerner ikke slettede assets, så en arkivfil der forsvinder
     // fra git ligger stadig i CDN'en og kan hentes — med gammel kode og gammel
@@ -3288,13 +3291,17 @@ const STRIPE_PRODUCTS = {
   // menuen "EUComply > Settings" og feltet "Pro License Key".
   'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, lifetime: true, home: 'https://eucomplypro.com/pro/', activateHint: 'In WordPress: EUComply > Settings, in the "Pro License Key" field. On the web: https://mahope.tools/compliance-report' },
   'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, subscription: true, lifetime: true, home: 'https://mahope.tools/page-profile' },
-  'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md'] },
-  'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
-  'eucomply-nda-clauses': { name: 'Mutual NDA Clause Set', kind: 'download', files: ['nda-clause-set.pdf', 'nda-clause-set.md'] },
-  'eucomply-eaa-statement': { name: 'EAA Accessibility Statement', kind: 'download', files: ['eaa-statement-template.pdf', 'eaa-statement-template.md'] },
-  'eucomply-report-kit': { name: 'Client Compliance Report Kit', kind: 'download', files: ['monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
-  'eucomply-template-bundle': { name: 'EUComply Complete Template Bundle', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md', 'nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md', 'nda-clause-set.pdf', 'nda-clause-set.md', 'eaa-statement-template.pdf', 'eaa-statement-template.md', 'monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
-  'eu-compliance-ebook-bundle': { name: 'EU Compliance E-book Bundle', kind: 'download', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
+  // `link` er betalingslinket fra Stripe-kontrakten. Det står her og ikke i
+  // `site/*.html`, fordi `tools/check_stripe_ctas.py` (regel 5) forbyder et
+  // download-produkts link at stå på en side, mens filerne ikke ligger i KV —
+  // og fordi `/api/paid-files` så kan vælge at udlevere det *kun* når de gør.
+  'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', link: 'https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05', files: ['dpa-template.pdf', 'dpa-template.md'] },
+  'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', link: 'https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
+  'eucomply-nda-clauses': { name: 'Mutual NDA Clause Set', kind: 'download', link: 'https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07', files: ['nda-clause-set.pdf', 'nda-clause-set.md'] },
+  'eucomply-eaa-statement': { name: 'EAA Accessibility Statement', kind: 'download', link: 'https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08', files: ['eaa-statement-template.pdf', 'eaa-statement-template.md'] },
+  'eucomply-report-kit': { name: 'Client Compliance Report Kit', kind: 'download', link: 'https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09', files: ['monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
+  'eucomply-template-bundle': { name: 'EUComply Complete Template Bundle', kind: 'download', link: 'https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a', files: ['dpa-template.pdf', 'dpa-template.md', 'nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md', 'nda-clause-set.pdf', 'nda-clause-set.md', 'eaa-statement-template.pdf', 'eaa-statement-template.md', 'monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
+  'eu-compliance-ebook-bundle': { name: 'EU Compliance E-book Bundle', kind: 'download', link: 'https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
   'support-mahope-oss': { name: 'Support for Mahope open source', kind: 'donation' },
 };
 const DOWNLOAD_TTL_DAYS = 60;
@@ -3484,6 +3491,58 @@ async function paidFilesStatus(env, files) {
     if (there) ready.push(f); else missing.push(f);
   }
   return { ready, missing };
+}
+
+/**
+ * GET /api/paid-files — hvilke betalte downloadprodukter der kan leveres lige nu.
+ *
+ * Svaret er den *eneste* måde en side må få et betalingslink for et
+ * downloadprodukt. Runden gennem `paidFilesStatus` er ikke kosmetik: et
+ * downloadprodukt uden `kv_verified` må ikke have sit link nogen sted i `site/`
+ * (`tools/check_stripe_ctas.py`, regel 5), fordi køberen ellers betaler for en
+ * download der svarer 503 i `/api/download`. Så linket udleveres her, og kun
+ * når alle filer ligger i KV — ellers udelades det helt, så siden ikke kan sælge
+ * noget vi ikke kan levere, og tænder automatisk den dag filerne uploades.
+ *
+ * KV-fejl er **ikke** "ikke klar": et 503 ville få siden til at skjule alle
+ * købsknapper, altså slås fra salget ved en fejl. Derfor er `kv_ok: false` sin
+ * egen tilstand, og siden viser da ingen status, kun et forsigtigt "vi kunne ikke
+ * nå at tjekke" — aldrig en påstand om at filerne mangler.
+ *
+ * Nøglerne læses med ét `list` og ikke 30 `head`. Samme svar, én KV-rundeslør
+ * i stedet for tredive i træk ved hvert sidevisning — `paidFilesStatus` bruges
+ * kun til det ene produkt en køber lige har betalt, her skal alle produkter på
+ * én side.
+ */
+async function handlePaidFiles(url, env) {
+  const only = (url.searchParams.get('product') || '').trim();
+  const products = [];
+  let present = null;
+  try {
+    const listed = await env.VISITS.list({ prefix: 'paidfile:', limit: 1000 });
+    present = new Set((listed.keys || []).map((k) => k.name));
+  } catch {
+    // `present` bliver null, og svaret siger fra om at vide det i stedet for at
+    // påstå at filerne mangler.
+  }
+  for (const [key, product] of Object.entries(STRIPE_PRODUCTS)) {
+    if (product.kind !== 'download') continue;
+    if (only && key !== only) continue;
+    const ready = present ? product.files.filter((f) => present.has(`paidfile:${f}`)).length : 0;
+    const entry = {
+      product: key,
+      name: product.name,
+      files: product.files.length,
+      ready,
+      missing: present ? product.files.length - ready : null,
+      // Leverbart kræver *alle* filer: en delvis levering er et køb der
+      // mangler noget, og `withPaidFiles` giver kunden netop dem ved navn.
+      available: present ? ready === product.files.length : false,
+    };
+    if (entry.available && product.link) entry.payment_link = product.link;
+    products.push(entry);
+  }
+  return jsonResp({ ok: true, kv_ok: present !== null, products });
 }
 
 /** Svarformen til /thanks og kvitteringsmailen: kun filer der virker, plus de manglende ved navn. */
