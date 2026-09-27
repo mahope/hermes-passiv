@@ -225,6 +225,27 @@ r = await call('/api/license/deactivate', { method: 'POST', body: JSON.stringify
 ok('deaktivering frigør enhed', r.status === 200 && (await r.json()).devices_in_use === 2);
 r = await act({ license_key: key, device_id: 'd4', product: 'deskuptime-pro' });
 ok('ny enhed efter deaktivering', r.status === 200);
+// `instance_id` som alias for `device_id`: de to betalte apps sender
+// Lemon Squeezy's feltnavn, så en app der kun får URL'en ompegt skal kunne
+// aktivere, validere og frigøre en enhed. Beviset på at det er ET alias og
+// ikke en identitet til ved, at samme enhed er gyldig under begge navne.
+const lic = (route, b) => call('/api/license/' + route, { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
+r = await lic('deactivate', { license_key: key, instance_id: 'd4' });
+ok('instance_id frigør en enhed', r.status === 200 && (await r.json()).devices_in_use === 2, r.status);
+r = await act({ license_key: key, instance_id: 'd5', product: 'deskuptime-pro' });
+ok('instance_id aktiverer', r.status === 200, r.status);
+r = await lic('validate', { license_key: key, instance_id: 'd5', product: 'deskuptime-pro' });
+ok('instance_id validerer', (await r.json()).valid === true);
+r = await lic('validate', { license_key: key, device_id: 'd5', product: 'deskuptime-pro' });
+ok('instance_id og device_id er den samme enhed, ikke to', (await r.json()).valid === true);
+// Uden denne arm ville porten være grøn på præcis den fejl den er skrevet til:
+// et menneskelabel som enhedsidentitet ville optære en af kundens tre maskiner
+// på noget deaktiveringen aldrig kan frigøre, fordi appens egen deaktivering
+// bruger instance_id.
+r = await act({ license_key: key, instance_name: 'd6', product: 'deskuptime-pro' });
+ok('instance_name er ikke en enhedsidentitet', r.status === 400 && /Missing device_id/.test((await r.json()).error), r.status);
+r = await lic('deactivate', { license_key: key, instance_id: 'd6' });
+ok('instance_name binder ingen enhed', r.status === 200 && (await r.json()).devices_in_use === 3, r.status);
 // Abonnement: antal × grænse, udløb, fornyelse
 r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB'); j = await r.json();
 ok('eucomply 2 sites', j.max_devices === 2 && j.expires_at && j.expires_at.startsWith('2033'), JSON.stringify(j));

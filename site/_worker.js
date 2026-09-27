@@ -930,7 +930,19 @@ async function handleLicense(request, env, mode) {
     }
     const maxDevices = rec.max_devices || LICENSE_MAX_DEVICES;
 
-    const device = String(body.device_id || '').slice(0, 128);
+    // `instance_id` is accepted as an alias for `device_id`, and it is not a
+    // guess: the shipped DeskUptime/Transmute binaries address their machine
+    // with the Lemon Squeezy field name `instance_id` (measured in the
+    // `desktop-v0.2.7` release of mahope/deskuptime), and repointing a URL is a
+    // much smaller fix for those apps than renaming the field in Rust. Without
+    // this alias, a repointed app gets a hard 400 on the one call it can make.
+    //
+    // `instance_name` is deliberately NOT accepted. The same binaries send a
+    // human label there ("Mads' MacBook"), not a stable machine identity, and
+    // their own deactivate call uses `instance_id` — so binding a device slot
+    // to the label would spend one of the customer's three machines on
+    // something deactivate could never free.
+    const device = String(body.device_id || body.instance_id || '').slice(0, 128);
     if (!device) {
       return jsonResp({ ok: false, error: 'Missing device_id.' }, 400);
     }
