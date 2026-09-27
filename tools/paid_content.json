@@ -50,7 +50,7 @@
     },
     {
       "product_key": "eucomply-eaa-statement",
-      "name": "EAA Accessibility Statement Template",
+      "name": "EAA Accessibility Statement",
       "price": "$39",
       "delivery_files": ["eaa-statement-template.pdf", "eaa-statement-template.md"],
       "build_command": null,
@@ -99,7 +99,7 @@
     },
     {
       "product_key": "eu-compliance-ebook-bundle",
-      "name": "Complete EU Compliance E-book Bundle",
+      "name": "EU Compliance E-book Bundle",
       "price": "$29",
       "delivery_files": ["compliance-bundle.pdf", "compliance-bundle-v1.0.zip"],
       "build_command": null,

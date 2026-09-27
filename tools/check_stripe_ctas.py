@@ -2216,8 +2216,23 @@ def check_worker(catalog: dict) -> list[str]:
         if key not in worker_keys:
             problems.append(f"site/_worker.js: allowlisten har {key}, som workeren ikke kender")
             continue
-        if key in REQUIRED_PRODUCT_KEYS and product["name"] not in text.split("const STRIPE_PRODUCTS")[1]:
-            problems.append(f"site/_worker.js: navnet på {key} afviger fra allowlisten ({product['name']!r})")
+        # Navnet skal være *ordret* det samme. Tjekket var før
+        # `product["name"] not in text.split(...)`, altså et substring-søgning i
+        # den forkerte retning: katalognavnet er et præfiks i workernavnet, så
+        # uligheden var usynlig. Målt 27/9 — to af tretten afveg sådan:
+        #   eucomply-eaa-statement      "EAA Accessibility Statement Template"
+        #   eu-compliance-ebook-bundle  "Complete EU Compliance E-book Bundle"
+        # Kvitteringen, mailens emne og /thanks skriver workernavnet, så en
+        # køber læser et andet produktnavn end det kataloget og Stripe-kontrakten
+        # bruger. Derfor læses `name:` pr. nøgle, ikke hele blokken.
+        worker_name = re.search(r"\bname:\s*'([^']+)'", entries.get(key, ""))
+        if key in REQUIRED_PRODUCT_KEYS and (worker_name is None
+                                             or worker_name.group(1) != product["name"]):
+            problems.append(
+                f"site/_worker.js: navnet på {key} afviger fra allowlisten "
+                f"({product['name']!r} i katalogen, "
+                f"{worker_name.group(1) if worker_name else None!r} i workeren — "
+                f"kvitteringen og mailen skriver workernavnet)")
     # Kun de årlige produkter må markeres som abonnement, ellers får et engangskøb
     # et kundeportalslink den aldrig kan bruge — eller et abonnement mangler det.
     worker_subscriptions = {key for key, entry in entries.items() if re.search(r"\bsubscription:\s*true\b", entry)}
@@ -3063,6 +3078,16 @@ def self_test() -> int:
     no_subscriptions = {**good, "products": {
         key: {field: value for field, value in product.items() if field != "subscription"}
         for key, product in good["products"].items()}}
+    # Et produktnavn der afviger fra workeren. Navnetjekket var før et
+    # substring-søgning i den forkerte retning, så netop denne drift var
+    # usynlig: workeren bar "EAA Accessibility Statement Template"mens
+    # katalogens "EAA Accessibility Statement" lå inde i den — målt 27/9 på
+    # rigtig kode, hvor den gamle regel sagde 0 fejl. Syntetisk her, så
+    # selftesten ikke skriver i `site/_worker.js`.
+    drifted_name = {**good, "products": {
+        **good["products"],
+        "eucomply-eaa-statement": {**good["products"]["eucomply-eaa-statement"],
+                                   "name": "EAA Accessibility Statement Template"}}}
 
     # 5: et download-produkt uden filer i KV må ikke sælges. Kilden scanneres
     # normalt, så scenarierne sender syntetiske sider ind i stedet for at
@@ -4375,6 +4400,7 @@ def self_test() -> int:
         ("en kundeportal-URL der ikke er allowlistet", check_links(rogue_portal)),
         ("en kundeportal der ikke findes på portalsiderne", check_billing_portal(rogue_portal)),
         ("en abonnement-markering der ikke er i allowlisten", check_worker(no_subscriptions)),
+        ("et produktnavn der afviger fra navnet i kvitteringen", check_worker(drifted_name)),
         ("et download-produkt der ikke kan leveres, men sælges", undeliverable),
         ("et leverbart download-produkt uden købsside", forgot_the_page),
         ("en Pro-side der aldrig siger hvad gratis-udgaven giver", no_free_tier),

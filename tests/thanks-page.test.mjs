@@ -185,6 +185,23 @@ ok('donation: ingen downloadliste', !/<li>/.test(don.page.result.innerHTML), don
 ok('donation: siger tak uden at kræve aktivering', /nothing to activate/i.test(don.page.result.innerHTML), don.page.result.innerHTML);
 ok('donation: påstår ikke at vi har sendt mail', !/have also emailed/i.test(don.page.mail.textContent), don.page.mail.textContent);
 
+// Målt 27/9: overskriften skrev "Thanks for buying Support for Mahope open
+// source" til en donator, mens kortet under sagde "there is nothing to
+// activate". Pengene blev *givet*, så det er en påstand kunden kan se er
+// falsh. Negativ kontrol på de to andre `kind`: de er køb, så de SKAL stadig
+// siges købt — ellers er hilsenen blot en global erstatning.
+ok('donation: overskriften siger tak for støtte, ikke at den er købt',
+  /^Thank you for supporting /.test(don.page.title.textContent) && !/buying/i.test(don.page.title.textContent),
+  JSON.stringify(don.page.title.textContent));
+for (const [label, must] of [['license (engangskøb)', /Thanks for buying DeskUptime Pro!/],
+  ['license (abonnement, 2 enheder)', /Thanks for buying EUComply Pro!/],
+  ['download', /Thanks for buying GDPR DPA template!/]]) {
+  ok(`${label}: overskriften siger stadig at varen er købt`,
+    must.test(rendered[label].page.title.textContent), JSON.stringify(rendered[label].page.title.textContent));
+}
+ok('donation: hilsenen er afledt af kind, ikke en standardsætning',
+  /d\.kind === 'donation'/.test(script) && !/title'\)\.textContent = 'Thanks for buying/.test(script));
+
 // Et kvarterprodukt må ikke hvidvaske siden, hvis det nogensinde tilføjes.
 const future = await render({ ok: true, product: 'ny', product_name: 'Nyt produkt', kind: 'seat', emailed: true });
 ok('ukendt kind giver en læsbar besked, ikke en hvid side',
