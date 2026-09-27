@@ -393,7 +393,14 @@ ok('EUComply Pro: HTML-mailen har samme instruktion', euMail.html.includes('Pro 
 ok('EUComply Pro: nøglen og aktiveringslinjen er stadig i mailen', /Your license key:\n[a-f0-9]{32}/.test(euMail.text) && euMail.text.includes('Activate it here:'), JSON.stringify(euMail.text));
 // Negativ kontrol: kun det produkt der har brug for en instruktion får en.
 // Ellers ville mailen bare få en standardsætning, der intet beviser.
-ok('DeskUptime Pro får ingen EUComply-instruktion', !mails[0].text.includes('Where to paste the key') && !mails[0].text.includes('Pro License Key'), JSON.stringify(mails[0].text));
+// Negativ kontrol: kun produkter med en *målt* aktivering får en instruktion.
+// Ellers ville mailen bare få en standardsætning, der intet beviser. Denne arm
+// blev sat op 27/9 med DeskUptime som modpart og sagde "kun EUComply"; da
+// næste iteration målte de fem `home`-sider, viste det at DeskUptime også har
+// et dokumenteret sted (appen spørger ved første start, målt på
+// site/deskuptime/index.html:99), så armen dømmer nu det den egentlig skal:
+// **intet EUComply-materiale i et andet produkts mail.**
+ok('DeskUptime Pro får sin egen instruktion, ikke EUComplys', mails[0].text.includes('Where to paste the key: The desktop app asks for the licence key') && !mails[0].text.includes('Pro License Key') && !mails[0].text.includes('EUComply'), JSON.stringify(mails[0].text));
 ok('et downloadprodukt får ingen nøgleinstruktion', !mails[2].text.includes('Where to paste the key'), JSON.stringify(mails[2].text));
 r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN');
 j = await r.json();
@@ -410,6 +417,53 @@ const euKey = j.license_key;
 // Det er denne `activate_url` /thanks' knap "How to activate" bruger, så den
 // skal pege på en side der forklarer aktivering — ikke på en prisside.
 ok('EUComply Pro: leveringssvaret peger på Pro-siden, ikke på /pricing/', j.activate_url === 'https://eucomplypro.com/pro/', JSON.stringify(j.activate_url));
+// 8c) /thanks' knap "How to activate" er et link, ikke en instruktion. 8b fik
+//     kvitteringsmailen til at sige hvor nøglen sættes ind; her læser køberen
+//     det samme på købssiden. Feltet er **additivt** og findes kun på de
+//     produkter der har en målt aktivering (målingen står over STRIPE_PRODUCTS):
+//     2 af 5 licensprodukter. Derfor er hver arm dømt på sit rigtige produkt,
+//     og de to negative kontroller er ikke pynt — de er beviset på at feltet
+//     ikke er en standardsætning.
+r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB'); j = await r.json();
+ok('EUComply Pro: leveringssvaret siger hvor nøglen sættes ind', j.activate_hint === 'In WordPress: EUComply > Settings, in the "Pro License Key" field. On the web: https://mahope.tools/compliance-report', JSON.stringify(j.activate_hint));
+r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA'); j = await r.json();
+ok('DeskUptime Pro: leveringssvaret siger hvad appen gør med nøglen', j.activate_hint === 'The desktop app asks for the licence key the first time you start it. Free without a key: the command-line tool.', JSON.stringify(j.activate_hint));
+ok('licensnøglen er stadig i svaret — instruktionen har ikke fortrængt den', /^[a-f0-9]{32}$/.test(j.license_key) && j.activate_url === 'https://deskuptime.com/', JSON.stringify(j));
+// Negativ kontrol 1: Clean Copy Pros `home` ER aktiveringen (HowTo med tre
+// trin), så en instruktion dér ville være støj. Mangler feltet her, så skærmen
+// ikke kan have fået en standardsætning.
+r = await call('/api/stripe/fulfillment?session_id=cs_live_supccNNNNNNNNNNNNNN'); j = await r.json();
+ok('Clean Copy Pro får ingen instruktion — hans side ER aktiveringen', j.activate_hint === undefined && j.activate_url === 'https://cleancopy.tools/activate/', JSON.stringify(j.activate_hint));
+// Negativ kontrol 2: et downloadprodukt må ALDRIG få besked om at indsætte en
+// nøgle. Denne arm kan ikke fyre alene: `eucomply-dpa` har ingen `activateHint`,
+// så "feltet mangler" er en tautologi, ikke et bevis — målt 27/9 ved at hænge
+// feltet i downloadgrenen, hvor armen stadig var grøn. Beviset ligger derfor i
+// tabellen nedenfor, der kan bide, fordi den dømmer *hvilke* produkter der har
+// et hint. Leveringssvaret for et download er ellers uændret af denne diff.
+r = await call('/api/stripe/fulfillment?session_id=cs_live_downloadCCCCCCCCCC'); j = await r.json();
+ok('download får ingen nøgleinstruktion', j.activate_hint === undefined && Array.isArray(j.downloads), JSON.stringify(j.activate_hint));
+// Tabelinvarianten der kan bide: kun et `kind: 'license'` må have `activateHint`.
+// Hvis en fremtidig iteration skriver en aktivering på et download, dør den her.
+const workerSrc = await readFileSync(process.argv[2] || new URL('../site/_worker.js', import.meta.url), 'utf8');
+const tableRows = [...workerSrc.matchAll(/^\s*'([a-z0-9-]+)':\s*\{ name: '[^']*', kind: '(\w+)'([^\n]*)\}/gm)];
+const hintOnNonLicense = tableRows.filter(([, key, kind, rest]) => kind !== 'license' && rest.includes('activateHint')).map(([, key]) => key);
+ok('intet download eller donation har en aktiveringsinstruktion', hintOnNonLicense.length === 0, hintOnNonLicense.join(', '));
+const hintedLicenses = tableRows.filter(([, key, kind, rest]) => kind === 'license' && rest.includes('activateHint')).map(([, key]) => key).sort();
+ok('kun de to målte produkter har en instruktion (2 af 5 licensprodukter)', JSON.stringify(hintedLicenses) === JSON.stringify(['deskuptime-pro', 'eucomply-pro']), hintedLicenses.join(', '));
+// 8d) `/api/license/lookup` var utestet og er ændret af samme diff, så den får
+//     sine egne arme. Den skal sige det samme som leveringssvaret — ellers er
+//     den ene af de to veje en kunde kan gå ind ad en sted, hvor svaret er
+//     tyndere. Nøglen i KV er skrevet af den hash mailen blev gemt under, så
+//     testen henter den nøgle, en kunde faktisk ville skrive.
+const look = (b) => call('/api/license/lookup', { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
+r = await look({ order_id: 'cs_live_licenseAAAAAAAAAA', email: 'buyer@example.com' }); j = await r.json();
+ok('nøgleopslag: DeskUptime Pro finder nøglen og siger hvor den sættes ind', r.status === 200 && j.ok === true && /^[a-f0-9]{32}$/.test(j.license_key)
+  && j.activate_hint === 'The desktop app asks for the licence key the first time you start it. Free without a key: the command-line tool.', JSON.stringify(j));
+ok('nøgleopslag: aktiveringslinket er urørt', j.activate_url === 'https://deskuptime.com/', JSON.stringify(j.activate_url));
+r = await look({ order_id: 'cs_live_licenseAAAAAAAAAA', email: 'indrigere@x.dk' }); j = await r.json();
+ok('nøgleopslag med forkert mail giver intet', r.status === 404 && j.license_key === undefined, JSON.stringify(j));
+r = await look({ order_id: 'cs_live_subscripBBBBBBBBBB', email: 'a@b.dk' }); j = await r.json();
+ok('nøgleopslag: EUComply Pro har samme instruktion som leveringssvaret', j.ok === true && j.activate_hint && j.activate_hint.includes('Pro License Key') && j.activate_url === 'https://eucomplypro.com/pro/', JSON.stringify(j));
 const rep = (b) => call('/api/report', { method: 'POST', body: JSON.stringify(b), headers: { 'content-type': 'application/json' } });
 r = await rep({ license_key: 'a'.repeat(32), device_id: 'pro-dev', product: 'eucomply-pro', url: 'https://scan.example/' });
 ok('rapport uden gyldig nøgle er afvist', r.status === 402, r.status);
