@@ -157,10 +157,8 @@ PAGES = [
                 'en rigtig besøgende ville. WordPress, Shopify, Netlify, '
                 'håndskrevet HTML: det er ligegyldigt, fordi værktøjet ikke '
                 'installeres på serveren, men kører på din egen maskine.</p>',
-                '<p>Pro-licensen aktiveres og revalideres online mod '
-                'mahope.tools. Ved aktivering og revalidering sender appen '
-                'licensnøglen, et stabilt device-id og produktidentifieren '
-                'deskuptime-pro til mahope.tools og modtager licensstatus. '
+                '<p>Pro-licensen tjekkes online. I version 0.2.7 tjekker appen '
+                'stadig nøglen hos appens tidligere licensudbyder. '
                 'URL-liste og tjekresultater bliver på din maskine og uploades '
                 'ikke til en central monitoreringstjeneste.</p>',
             ]),
@@ -177,9 +175,8 @@ PAGES = [
              'samt email- og webhook-alarmer.'),
             ('Kan jeg bruge det uden internet?',
              'Værktøjet kører lokalt og tjekker eksterne URL\'er — så det kræver '
-             'internet til selve tjekkene. Pro-licensen aktiveres og '
-             'revalideres desuden online mod mahope.tools; state og '
-             'konfiguration ligger stadig lokalt.'),
+             'internet til selve tjekkene. Pro-licensen tjekkes desuden '
+             'online; state og konfiguration ligger stadig lokalt.'),
             ('Erstatte det UptimeRobot / Pingdom?',
              'Ja. DeskUptime dækker HTTP-status, SSL-udløb, responstid, '
              'redirect-tracking og indholdsændringer — det samme som de '
@@ -187,11 +184,8 @@ PAGES = [
              'løbende abonnement.'),
             ('Hvordan virker licensnøglen?',
              'Pro-nøglen aktiverer du med '
-             '<code>deskuptime activate NØGLE</code>. Pro-licensen aktiveres '
-             'og revalideres online mod mahope.tools. Ved aktivering og '
-             'revalidering sender appen licensnøglen, et stabilt device-id og '
-             'produktidentifieren deskuptime-pro til mahope.tools og modtager '
-             'licensstatus.'),
+             '<code>deskuptime activate NØGLE</code>. I version 0.2.7 tjekker '
+             'appen stadig nøglen hos appens tidligere licensudbyder.'),
         ],
     ),
     # ------------------------------------------- Drupal vs TYPO3 ---

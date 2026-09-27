@@ -148,7 +148,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
       <div>
         <h3>Desktop Pro</h3>
         <p class="price">19 USD <small>one-time, 3 machines, all 1.x updates</small></p>
-        <p>Gives you the desktop app for macOS and Windows, removes the three-site limit, lets the CLI poll every 30 seconds instead of every 60, adds webhook alerts and a client-ready report in Markdown and JSON. You get a licence key and pay only once. Pro activates and revalidates your licence with mahope.tools.</p>
+        <p>Gives you the desktop app for macOS and Windows, removes the three-site limit, lets the CLI poll every 30 seconds instead of every 60, adds webhook alerts and a client-ready report in Markdown and JSON. You get a licence key and pay only once. The desktop app asks for the key the first time you start it. In version 0.2.7 that check still goes to the app's previous licence provider, so the Pro features inside the app do not unlock yet.</p>
         <p><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener">Buy DeskUptime Pro — 19 USD</a></p>
         <p class="notice">Secure checkout via Stripe. Your licence key arrives by email and on the thank-you page. The free version stays complete and MIT-licensed, and nothing in it expires.</p>
       </div>
@@ -165,7 +165,7 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
     </details>
     <details>
       <summary>Does it send my URLs anywhere?</summary>
-      <p>Your URL list and check results stay on your machine and are not uploaded to a central monitoring service. The app sends the licence key, a stable device ID and the product identifier deskuptime-pro to mahope.tools during activation and revalidation, and receives the licence status. This site runs a separate anonymous page-view counter.</p>
+      <p>Your URL list and check results stay on your machine and are not uploaded to a central monitoring service. The app sends the licence key, a stable device ID and the product identifier deskuptime-pro to a licence server over HTTPS when you enter the key, and receives the licence status. In version 0.2.7 that server is the app's previous provider, not mahope.tools. This site runs a separate anonymous page-view counter.</p>
     </details>
     <details>
       <summary>How is this different from UptimeRobot or Pingdom?</summary>

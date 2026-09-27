@@ -58,7 +58,7 @@ PUBLIC_CHECKS = (
             "your data never leaves your computer",
         ),
         (
-            "pro activates and revalidates your licence with mahope.tools",
+            "the desktop app asks for the key the first time you start it",
             "your url list and check results stay on your machine and are not uploaded to a central monitoring service",
             "the licence key, a stable device id and the product identifier deskuptime-pro",
             "and receives the licence status",
@@ -72,7 +72,7 @@ PUBLIC_CHECKS = (
             "ingen telemetri",
         ),
         (
-            "pro aktiverer og revaliderer din licens mod mahope.tools",
+            "desktop-appen beder om nøglen, første gang du starter den",
             "din url-liste og dine tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste",
             "licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro",
             "og modtager licensstatus",
@@ -90,7 +90,7 @@ PUBLIC_CHECKS = (
         ),
         (
             "your monitoring urls and check results stay on your machine and are not uploaded to a central monitoring service",
-            "pro activation and revalidation send the licence key, a stable device id and the product identifier deskuptime-pro to mahope.tools and receive the licence status",
+            "sends the licence key, a stable device id and the product identifier deskuptime-pro to a licence server over https",
         ),
     ),
     (
@@ -102,9 +102,9 @@ PUBLIC_CHECKS = (
             "ingen licensserver",
         ),
         (
-            "pro-licensen aktiveres og revalideres online mod mahope.tools",
+            "i version 0.2.7 tjekker appen stadig nøglen hos appens tidligere licensudbyder",
             "url-liste og tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste",
-            "ved aktivering og revalidering sender appen licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro til mahope.tools og modtager licensstatus",
+            "i version 0.2.7 tjekker appen stadig nøglen hos appens tidligere licensudbyder",
         ),
     ),
 )
@@ -115,9 +115,9 @@ GENERATOR_FORBIDDEN = (
     "ingen licensserver",
 )
 GENERATOR_REQUIRED = (
-    "pro-licensen aktiveres og revalideres online mod mahope.tools",
+    "i version 0.2.7 tjekker appen stadig nøglen hos appens tidligere licensudbyder",
     "url-liste og tjekresultater bliver på din maskine og uploades ikke til en central monitoreringstjeneste",
-    "ved aktivering og revalidering sender appen licensnøglen, et stabilt device-id og produktidentifieren deskuptime-pro til mahope.tools og modtager licensstatus",
+    "i version 0.2.7 tjekker appen stadig nøglen hos appens tidligere licensudbyder",
 )
 
 # Sider hvor kunden indtaster en Clean Copy Pro-nøgle. Her er et absolutt
