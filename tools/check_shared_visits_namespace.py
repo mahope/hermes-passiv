@@ -24,24 +24,39 @@ Denne fil er den manglende måling. Før dette fandt var der ingen måde at se
 **hvilket** domæne der taber sin trafik — kun at *et* gjorde. Nu er der én, og den
 er et svar, ikke en følelse.
 
-⚠️ **Målt 27/9 11:4x UTC, og resultatet er værre end hypotesen.** Første
+⚠️ **Målt 27/9 11:4x UTC. KONKLUSIONEN NEDENFOR VAR FORKERT OG ER TAGET TILBAGE.**
 
-kørsel af denne fil: `cleancopy.tools` **og** `deskuptime.com` **og**
+Første kørling af denne fil: `cleancopy.tools` **og** `deskuptime.com` **og**
 `mahope.tools` taber alle tre deres beacons, selv efter at `mahope.tools` blev
 kaldt på *sin egen* adresse med `Origin: https://mahope.tools` og HTTP 200.
-`bugbottle.dev` svarer 404 fra nginx.
+`bugbottle.dev` svarer 404 fra nginx. Da hypotesen om separate
+namespace-bindinger heller ikke holdt — `mahope.tools` kan umuligt have en
+fremmed namespace — blev der skrevet at `recentVisits` stod på 7 og *rørte sig
+ikke*, for nogen.
 
-**Så hypotesen om en separat namespace-binding er IKKE bekræftet** — den er
-modbevist for de to andre domæner, der burde dele `mahope.tools`' namespace.
-Det der er målt er enklere og dumper værre: **`recentVisits` står på 7 og rører
-sig ikke, for nogen, uanset om kaldet er same-origin eller ej.** Note fra
-sidste iteration havde målt 4 → 6 med "rigtige headers", så skrivningen virkede
-da; hvad der har ændret sig siden, er ikke isoleret her.
+**Alle tre dele af den konklusion var en målefejl, og fejlen var i denne fil.**
+Den læste `after` **én gang, med det samme den havde sendt beaconen** — og
+`collectTraffic` læser med `VISITS.list()`, som er eventualt konsistent. Målt
+27/9 ~12:0x UTC på cleancopy.tools, med identisk kald:
 
-Derfor dømmer denne fil på **hvad der kan måles** og ikke på hvorfor. Den skal
-give det næste svar på to timers arbejde, ikke et gæt: hvis `mahope.tools`
--tabt, er fejlen i `recordTraffic`/`collectTraffic` (kode, målbar her), og hvis
-kun de andre taber, er den i bindingerne (infrastruktur, ❓ til Mads).
+    POST https://cleancopy.tools/api/track  → HTTP 200 på 0,54 s
+    /api/health umiddelbart efter           → recentVisits 12
+    … fire aflæsninger, 8 s imellem        → recentVisits 12, 12, 12, 12
+    /api/health ca. 32 s efter skrivningen → recentVisits 13
+
+**Skrivningen virkede hele vejen.** `recordTraffic` skriver med `VISITS.put` med
+det samme; det er kun *list*-aflæsningen der halter. Beviset er uafhængigt af
+denne fils konklusion: `cleancopy.tools` stod i `traffic_domains` som `unknown`
+da porten gik rød, og stod som `ok` med 12 besøg senere samme dag — skrevet af
+beacons, der efter alt at dømme var faldet på gulvet. Der var ingen kodefejl i
+`recordTraffic`/`collectTraffic` og ingen bindinger at rette. Den næste
+iteration ville have jaget en fejl, der ikke findes, i to timers arbejde.
+
+Derfor dømmer denne fil på **hvad der kan måles** og ikke på hvorfor, og den
+**venter på eventual consistency** (`SETTLE_SECONDS`) i stedet for at læse én
+gang. Et domæne erklæres først tabt, når det har modtaget sin beacon og stadig
+ikke har flyttet tallet efter hele vinduet, og svaret siger hvor længe der blev
+ventet, så påstanden kan efterprøves i stedet for at troes.
 
 ⚠️ **Den skriver i den rigtige statistik.** En beacon fra en automatisk
 bruger-agent filtreres bevidst bort af `isAutomatedRequest`, så en probe der så
@@ -50,6 +65,9 @@ her én ægte, talt sidevisning pr. domæne pr. kørsel, og derfor:
 
 
 - **kør den manuelt, aldrig i cron** — cron skal ikke puste tallene op hver time;
+- **den bruger nu op til `SETTLE_SECONDS` pr. domæne**, så en fuld kørsel tager
+  nogle få minutter. Det er prisen for at svare rigtigt; ventetiden lå bag i
+  det falske "TABER" i to iterationer;
 - **tallene efter en kørsel indeholder den måling** (én pr. domæne), så den skal
   køres, når tallene netop er regenereret, og resultatet skrives i planen;
 - kør `--json` på en gemt måling for at dømme offline, så porten kan teste logikken
@@ -74,6 +92,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -100,6 +119,19 @@ HEALTH_UA = "HermesVisitsNamespaceProbe/1.0"
 PROBE_PATH = "/namespace-probe"
 
 TIMEOUT = 20
+
+# `recordTraffic` skriver nøglen med det samme (`VISITS.put`), men `collectTraffic`
+# læser den med `VISITS.list(prefix)`, og **Cloudflare KV's list er eventualt
+# konsistent**: nøglen er skrevet længe før den dukker op i et list-kald. Målt
+# 27/9 ~12:0x UTC på cleancopy.tools: `POST /api/track` svarede 200 på 0,54 s,
+# `recentVisits` stod uændret på 12 gennem fire aflæsninger og blev 13 på den
+# femte — ca. 32 sekunders forsinkelse. *Det var den fejl, der gjorde at denne
+# fil erklærede alle domæner for tabte i to iterationer:* den læste `after` én
+# gang med det samme, den havde sendt beaconen, så forsinkelsen så ud som tabt
+# trafik. SETTLE_SECONDS er derfor ikke en finjustering, men det som adskiller
+# målingen fra et gæt. Den skal overstige den målte forsinkelse med margin.
+SETTLE_SECONDS = 90
+POLL_SECONDS = 6
 
 
 class Unreachable(Exception):
@@ -150,24 +182,60 @@ def send_beacon(domain: str) -> None:
     )
 
 
-def probe_domain(domain: str) -> dict:
-    """Mål ét domæne. Læser sundhed før og efter sin egen beacon."""
-    result = {"domain": domain, "before": None, "after": None, "wrote": None, "error": None}
+def wait_for_increment(before: int, *, settle: int = SETTLE_SECONDS,
+                       poll: int = POLL_SECONDS, reader=health_visits,
+                       sleep=time.sleep, clock=time.monotonic):
+    """Vent på at KV's list får en nøgle til at blive synlig, og stop i tide.
+
+    Giver `(after, waited, samples)`. `waited` er de overvågede sekunder, så et
+    domæne der erklæres tabt kan efterprøves: skrev den, eller ventede vi bare
+    ikke længe nok? Uden `waited` i svaret er de to umulige at skelne.
+
+    `sleep` og `clock` er injicerbare, så porten kan prøve både en nøgle der
+    dukker op sent og en der aldrig dukker op, uden at vente i virkelighed.
+    """
+    deadline = clock() + settle
+    waited = 0
+    samples = 0
+    while True:
+        after = reader()
+        samples += 1
+        if after > before:
+            return after, waited, samples
+        if clock() >= deadline:
+            return after, waited, samples
+        sleep(poll)
+        waited += poll
+
+
+def probe_domain(domain: str, *, settle: int = SETTLE_SECONDS,
+                 poll: int = POLL_SECONDS, sleep=time.sleep,
+                 clock=time.monotonic) -> dict:
+    """Mål ét domæne. Læser sundhed, sender sin egen beacon, og **venter** på
+    at tallet bliver synligt før den dømmer."""
+    result = {"domain": domain, "before": None, "after": None, "wrote": None,
+              "waited": None, "samples": None, "error": None}
     try:
         before = health_visits()
         result["before"] = before
         send_beacon(domain)
-        after = health_visits()
+        after, waited, samples = wait_for_increment(
+            before, settle=settle, poll=poll, sleep=sleep, clock=clock)
         result["after"] = after
+        result["waited"] = waited
+        result["samples"] = samples
         result["wrote"] = after > before
     except (Unreachable, urllib.error.URLError, OSError, ValueError) as exc:
         result["error"] = str(exc)
     return result
 
 
-def measure(domains=DOMAINS) -> dict:
+def measure(domains=DOMAINS, *, settle: int = SETTLE_SECONDS,
+            poll: int = POLL_SECONDS, sleep=time.sleep,
+            clock=time.monotonic) -> dict:
     """Mål alle domæner. Sekventielt og uden omkring `/api/health`."""
-    results = [probe_domain(domain) for domain in domains]
+    results = [probe_domain(domain, settle=settle, poll=poll, sleep=sleep,
+                            clock=clock) for domain in domains]
     measured = [r for r in results if r["wrote"] is not None]
     return {
         "domains": results,
@@ -196,7 +264,9 @@ def verdict(measurement: dict) -> dict:
     if silent:
         ok = False
         reason = ("disse domæner modtager beacons men tallene dukker ikke op i "
-                  "den delte VISITS-namespace: " + ", ".join(silent))
+                  "den delte VISITS-namespace inden for "
+                  f"{SETTLE_SECONDS}s (målt forsinkelse ~32s, se SETTLE_SECONDS): "
+                  + ", ".join(silent))
     else:
         ok = True
         reason = (f"alle {len(writing)} målbare domæner skriver til den delte "
@@ -218,10 +288,12 @@ def render(measurement: dict) -> str:
             lines.append(f"  {row['domain']:<20} ikke målbart ({row['error']})")
         elif row["wrote"]:
             lines.append(f"  {row['domain']:<20} skriver  "
-                         f"({row['before']} → {row['after']})")
+                         f"({row['before']} → {row['after']}, "
+                         f"synlig efter {row['waited']}s)")
         else:
             lines.append(f"  {row['domain']:<20} TABER    "
-                         f"({row['before']} → {row['after']}, beacon modtaget)")
+                         f"({row['before']} → {row['after']} efter "
+                         f"{row['waited']}s, beacon modtaget)")
     return "\n".join(lines)
 
 
