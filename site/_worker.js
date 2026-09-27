@@ -3218,10 +3218,10 @@ const STRIPE_PRODUCTS = {
   'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md'] },
   'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
   'eucomply-nda-clauses': { name: 'Mutual NDA Clause Set', kind: 'download', files: ['nda-clause-set.pdf', 'nda-clause-set.md'] },
-  'eucomply-eaa-statement': { name: 'EAA Accessibility Statement Template', kind: 'download', files: ['eaa-statement-template.pdf', 'eaa-statement-template.md'] },
+  'eucomply-eaa-statement': { name: 'EAA Accessibility Statement', kind: 'download', files: ['eaa-statement-template.pdf', 'eaa-statement-template.md'] },
   'eucomply-report-kit': { name: 'Client Compliance Report Kit', kind: 'download', files: ['monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
   'eucomply-template-bundle': { name: 'EUComply Complete Template Bundle', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md', 'nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md', 'nda-clause-set.pdf', 'nda-clause-set.md', 'eaa-statement-template.pdf', 'eaa-statement-template.md', 'monthly-report-template.pdf', 'monthly-report-template.md', 'quarterly-narrative-template.pdf', 'quarterly-narrative-template.md', 'change-log-spec.pdf', 'change-log-spec.md'] },
-  'eu-compliance-ebook-bundle': { name: 'Complete EU Compliance E-book Bundle', kind: 'download', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
+  'eu-compliance-ebook-bundle': { name: 'EU Compliance E-book Bundle', kind: 'download', files: ['compliance-bundle.pdf', 'compliance-bundle-v1.0.zip'] },
   'support-mahope-oss': { name: 'Support for Mahope open source', kind: 'donation' },
 };
 const DOWNLOAD_TTL_DAYS = 60;
@@ -3513,6 +3513,21 @@ async function fulfillStripeSession(env, sessionId) {
   return result;
 }
 
+// En donation er ikke et køb. Målt 27/9: `kind: 'donation'` faldt igennem til
+// `else`-grenen under, så kvitteringen skrev "Thanks for buying Support for
+// Mahope open source" om penge der blev *givet*, og mailens emne "Your Support
+// for Mahope open source" læses som en fakturalinje. Donatorens eneste
+// bekræftelse sagde altså, at han havde købt noget. Hilsenen er derfor
+// afledt af `kind` — ikke skrevet som en standard-sætning.
+// `fmt` er til HTML-varianten, hvor navnet stadig skal være fedt — det gjorde
+// den gamle skrivning ved at skrive navnet i `<strong>` direkte.
+function thanksLine(r, fmt) {
+  const name = fmt ? fmt(r.product_name) : r.product_name;
+  return r.kind === 'donation'
+    ? `Thank you for supporting ${name}`
+    : `Thanks for buying ${name}!`;
+}
+
 async function sendSaleEmail(env, to, r, sessionId) {
   if (!env.RESEND_API_KEY) return false;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -3528,11 +3543,11 @@ async function sendSaleEmail(env, to, r, sessionId) {
     const hint = (STRIPE_PRODUCTS[r.product] && STRIPE_PRODUCTS[r.product].activateHint) || '';
     const hintText = hint ? `\nWhere to paste the key: ${hint}\n` : '';
     const hintHtml = hint ? `<p>Where to paste the key: ${esc(hint)}</p>` : '';
-    text = `Thanks for buying ${r.product_name}!\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
+    text = `${thanksLine(r)}\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
       + hintText
       + `It works on up to ${r.max_devices} device(s)${r.expires_at ? ` and renews with your subscription` : ''}.\n`
       + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
-    html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p><p>Your license key:</p>`
+    html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p><p>Your license key:</p>`
       + `<p style="font:16px monospace;background:#f4f4f5;padding:12px;border-radius:6px">${esc(r.license_key)}</p>`
       + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>Up to ${r.max_devices} device(s).</p>`
       + hintHtml + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
@@ -3546,8 +3561,8 @@ async function sendSaleEmail(env, to, r, sessionId) {
     const listHtml = (r.downloads || []).map(d => `<li><a href="${esc(d.url)}">${esc(d.file)}</a></li>`).join('');
     const head = listHtml ? `<p>Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):</p><ul>${listHtml}</ul>` : '';
     const missHtml = missing ? `<p><strong>Not available for download right now:</strong> ${esc(r.downloads_missing.join(', '))}. Your payment went through — reply to this email and we will sort it out.</p>` : '';
-    text = `Thanks for buying ${r.product_name}!\n\n${list ? `Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n` : ''}${missing}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
-    html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p>${head}${missHtml}<p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+    text = `${thanksLine(r)}\n\n${list ? `Your downloads (valid for ${DOWNLOAD_TTL_DAYS} days):\n${list}\n` : ''}${missing}\n\nQuestions? Just reply.\n\nMads Holst Jensen, Mahope`;
+    html = `<p>${thanksLine(r, (n) => `<strong>${esc(n)}</strong>`)}</p>${head}${missHtml}<p>Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   }
   try {
     const resp = await fetch('https://api.resend.com/emails', {
@@ -3555,7 +3570,7 @@ async function sendSaleEmail(env, to, r, sessionId) {
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json',
         // Samme session = samme mail, også hvis tak-side og webhook sender samtidigt.
         'Idempotency-Key': `sale-${sessionId}` },
-      body: JSON.stringify({ from: SALES_FROM, to: [to], reply_to: supportAddress(r.product), subject: `Your ${r.product_name}`, text, html,
+      body: JSON.stringify({ from: SALES_FROM, to: [to], reply_to: supportAddress(r.product), subject: r.kind === 'donation' ? `Thank you for your donation` : `Your ${r.product_name}`, text, html,
         tags: [{ name: 'source', value: 'stripe-sale' }] }),
     });
     return resp.ok;

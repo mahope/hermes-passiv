@@ -50,7 +50,13 @@
       var tries = 0;
       function show(d) {
         status.textContent = '';
-        document.getElementById('title').textContent = 'Thanks for buying ' + d.product_name + '!';
+        // En donation er ikke et køb. Målt 27/9: overskriften skrev
+        // "Thanks for buying Support for Mahope open source" til en donator,
+        // mens kortet under sagde "there is nothing to activate". Hilsenen er
+        // derfor afledt af `kind`, altså det samme som kvitteringsmailen gør.
+        document.getElementById('title').textContent = d.kind === 'donation'
+          ? 'Thank you for supporting ' + d.product_name + '!'
+          : 'Thanks for buying ' + d.product_name + '!';
         var html;
         // Hver `kind` i worker's STRIPE_PRODUCTS skal have en egen gren. En
         // donation har hverken nøgle eller downloads, så den må ikke falde

@@ -178,6 +178,17 @@ ok('licens udstedt', r.status === 200 && /^[a-f0-9]{32}$/.test(j.license_key), J
 ok('leveringssvar er ikke cross-origin læsbare', !r.headers.get('access-control-allow-origin'));
 ok('max 3 enheder', j.max_devices === 3);
 ok('én mail', mails.length === 1 && mails[0].to[0] === 'buyer@example.com');
+// Hilsenen i kvitteringen er afledt af `kind`, så en licens stadig skal siges
+// købt. Uden denne kontrol kunne `thanksLine` blive en global erstatning, der
+// skrev "Thank you for supporting" på de tolv produkter der *er* købt — og
+// ingen anden arm ville have set det, fordi de kun læser nøglen.
+ok('licensens hilsen siger stadig at varen er købt',
+  mails[0].text.startsWith('Thanks for buying DeskUptime Pro!')
+  && mails[0].html.includes('Thanks for buying <strong>DeskUptime Pro</strong>!')
+  && mails[0].subject === 'Your DeskUptime Pro',
+  JSON.stringify({ text: mails[0].text.slice(0, 40), emne: mails[0].subject }));
+ok('licensens hilsen bruger ikke donationsformuleringen',
+  !/supporting|Thank you for your donation/i.test(mails[0].text + mails[0].html + mails[0].subject));
 const key = j.license_key;
 // Idempotens: samme session igen, også via webhook
 r = await call('/api/stripe/fulfillment?session_id=cs_live_licenseAAAAAAAAAA'); j = await r.json();
