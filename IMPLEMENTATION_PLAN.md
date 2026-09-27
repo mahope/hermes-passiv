@@ -1,3 +1,8 @@
+- `VERIFICÉR DEPLOY`: `check_buyable.py` + to gaten-steps, ingen publiceret tekst ændret (branch `ceo/koebsklare-port`, merge `256facd`) 27/9 ~04:4x — GitHub Actions deployer med det samme (`tools/**` er i path-filteret). **Ingen kundekendt fil røres, så beviset ligger i CI-loggen og ikke i markup.** Verificér:
+  - CI skal være grøn, og de to nye `gate`-step `buyable` (**5 produkter sælges på site/, 7 venter på KV-upload**, `transmute-desktop` korrekt undtaget) og `buyable-selftest` (**4/4 mutationer fanget**) skal stå i loggen. **Mangler de, har path-filteret ikke fanget `tools/check_buyable.py`.**
+  - `https://mahope.tools/build-info.json` skal bære `256facd` med `sitemap_count` **252** uændret — diffen rører ingen rute, så et ændret tal er en regression.
+  - *Ingen ny publiceret tekst at verificere.* De 7 købsknapper jeg skrev blev kasseret, fordi de ville sælge filer der ikke kan hentes; det er hele fund 2.
+  - *(Dette er den plan-commit der beskriver kode-committen; den er ikke en ekstra ren plan-commit.)*
 - `DEPLOY OK 370f355 27/9` (lukker noten fra `hero-note-regeltal-2026-09-27`): kørsel `36282772807` grøn på 2m3s. CI's egen log siger `check_rule_claims OK: 108 regel-løfter, alle matcher koden (15 frie + 18 Pro = 33)` og `rule-claims-selftest: grøn`. Live-**indhold**, målt med cachebuster: `build-info.json` bærer `370f355` med `sitemap_count` **252** uændret, og `guides/craftcms-accessibility-check` har **0** `16 checks`, **1** `15 checks`, undertitlen stadig `15 WCAG 2.1 AA rules` — altså at de to tal i *samme* hero nu er ens. Ikke HTTP 200, indhold.
 
 - `ITERATION_ID`: `koebsklare-port-2026-09-27`
