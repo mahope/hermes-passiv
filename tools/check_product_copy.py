@@ -13,6 +13,23 @@ To klasser:
   entirely inside your browser" / "everything runs locally in your browser".
   Tre af dem bliver skrevet af generatorer, så rettelsen skal ske i
   *generatoren* — ellers skriver næste kørslest den gamle tekst tilbage.
+* **EAA-scanneren** — dens egen hentning går server-side gennem
+  `/scan-proxy`, så "runs entirely in your browser" er modbevist af sidens
+  egen `fetch` (opgave fra `scanner-proxy-aelthed`).
+
+**Målt dækning, 27/9.** Porten dømmer **13 navngivne filer**; `site/` har
+**299** sider. Målt med portens *egen* `semantic_html`, ikke et råt grep:
+
+* **37** forbudte strenge i alt. **11** har mindst ét fund i `site/`, altså
+  kan gøre en publiceret side rød. **19 har nul fund i hele `site/`** — de
+  fanger altså kun en regression i en generator, aldrig en redigeret side.
+  Det er ikke dækning, det er genbrug af de publicerede sætninger, og det er
+  skrevet her så porten ikke ser ud til at dække mere end den gør.
+* **44** krav-strenge, alle fundet i deres egen fil (målt: 0 mangler).
+* **57 sider uden for fil-listen** siger et løfte fra den forbudte liste, og
+  **alle 57 er sande**: de er klient-side-værktøjer uden upload og uden
+  Pro-licens. Sandheden afhænger derfor af om siden *også* kalder
+  licens-API'et, og det dømmer `check_claim_surface` — målt **0** af 299.
 
     python3 tools/check_product_copy.py
     python3 tools/check_product_copy.py --self-test
@@ -293,6 +310,90 @@ SCANNER_SUPERSEDED = {
 }
 
 
+LICENSE_CALL = re.compile(r"/api/license|license/activate|license_api", re.I)
+
+
+def _check_tables(value: object) -> list[tuple]:
+    """(fil, forbudte-strenge) og (fil, forbudte-strenge, krav-strenge) rækker.
+
+    Samlet over modulens egne tabeller, så porten ikke kan have en streng
+    stående i en tabel, der ikke tæller med i overfladetællingen. Samme
+    rytme som de øvrige `*_CHECKS`-tabeller, så en ny streng arves med.
+    """
+    out = []
+    for item in value if isinstance(value, tuple) else ():
+        if not isinstance(item, tuple) or len(item) not in (2, 3):
+            continue
+        if not isinstance(item[0], str) or not item[0].endswith(".html"):
+            continue
+        if not isinstance(item[1], tuple) or not item[1]:
+            continue
+        if not all(isinstance(s, str) for s in item[1]):
+            continue
+        out.append(item)
+    return out
+
+
+def forbidden_claims() -> set[str]:
+    """Alle forbudte påstande i denne fil, normaliseret."""
+    claims: set[str] = set()
+    for value in globals().values():
+        for item in _check_tables(value):
+            claims.update(normalize(s) for s in item[1])
+    return claims
+
+
+def gated_files() -> set[str]:
+    """De filer porten dømmer direkte — den lange, navngivne liste."""
+    return {item[0] for value in globals().values() for item in _check_tables(value)}
+
+
+def site_pages() -> dict[str, str]:
+    return {
+        str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / "site").rglob("*.html"))
+    }
+
+
+def check_claim_surface(pages: dict[str, str]) -> list[str]:
+    """Ingen side uden for fil-listen må løfte "kun i browseren" *og* kalde licens-API'et.
+
+    Målt, ikke gættet. Porten dømmer 13 navngivne filer, men `site/` har 299
+    sider, og 57 af dem siger et løfte fra portens egen forbudte liste. 57 af
+    dem er sande: de er rene klient-side-værktøjer uden upload og uden
+    Pro-licens, så "runs entirely in your browser" er sandt dér.
+
+    Det er netop derfor fil-listen ikke kan dømme overfladen: sandheden afhænger
+    af om siden *også* kalder licens-API'et. En side med begge dele er en
+    modsigelse i sig selv — præcis fejlen i `clean-copy-tool.html` og
+    `compliance-ai.html`, to gange fundet ved hånd. Målingen siger **0** af
+    299 i dag, så denne regel koster intet på den nuværende overflade og
+    fanger den næste side, der blander de to ting.
+
+    Uden denne port ville en ny Pro-side kunne arve "runs entirely in your
+    browser" fra en søskendeside og få en licens-kald tilføjet uden at nogen
+    fil-liste nogensinde ville dømme den.
+    """
+    gated = gated_files()
+    claims = forbidden_claims()
+    problems = []
+    for relative, raw in sorted(pages.items()):
+        if relative in gated:
+            continue
+        found = sorted(c for c in claims if c in semantic_html(raw)[1])
+        if not found:
+            continue
+        calls = sorted({m.group(0).lower() for m in LICENSE_CALL.finditer(raw)})
+        if not calls:
+            continue
+        problems.append(
+            f"{relative}: siger {found[0]!r} men kalder licens-API'et ({', '.join(calls)}) — "
+            f"løftet er modbevist af sidens egen kode. Filen staar ikke i portens liste, "
+            f"saa ingen anden regel dømmer den."
+        )
+    return problems
+
+
 def anchor_problems(relative: str, source_relative: str, generator_source: Optional[str] = None) -> list[str]:
     """Hvert `old` i generatorens REPLACEMENTS skal findes i kilden.
 
@@ -520,6 +621,7 @@ def collect_problems() -> list[str]:
         problems.extend(check_text(relative, text, forbidden, required))
     problems.extend(check_generator(SCANNER_GENERATOR, SCANNER_GENERATOR_FORBIDDEN, SCANNER_REQUIRED_DA))
     problems.extend(anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html"))
+    problems.extend(check_claim_surface(site_pages()))
     try:
         generated, generator_root = generated_blog_copy()
     except Exception as error:
@@ -680,6 +782,40 @@ def self_test() -> int:
         anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html", broken_source),
     ))
 
+    # Overfladen uden for fil-listen. Beviset er en *rigtig* side fra `site/`
+    # der siger et løfte fra portens egen liste, og som så får et licens-kald
+    # lagt på. Det er den modsigelse `check_claim_surface` er skrevet for, og
+    # den er fundet to gange ved hånd — først på /clean-copy-tool, så på
+    # /compliance-ai — altså ikke en konstrueret fejlform.
+    surface = site_pages()
+    # `word-counter.html` er valgt fordi det er en side *uden for* listen,
+    # der faktisk siger løftet. Mutationen rammer derfor en side, porten
+    # ellers ikke læser — ellers ville armen bevise noget, porten gør.
+    surface_probe = "site/word-counter.html"
+    if surface_probe in gated_files():
+        raise AssertionError(f"{surface_probe}: probe page is in the gate's own file list")
+    probe_found = sorted(c for c in forbidden_claims() if c in semantic_html(surface[surface_probe])[1])
+    if not probe_found:
+        raise AssertionError(f"{surface_probe}: probe page carries no forbidden claim, "
+                             f"so the mutation would prove nothing")
+    license_anchor = "<script defer src=\"/track.js\"></script>"
+    if license_anchor not in surface[surface_probe]:
+        raise AssertionError(f"{surface_probe}: mutation anchor not found")
+    mutated_surface = dict(surface)
+    mutated_surface[surface_probe] = surface[surface_probe].replace(
+        license_anchor,
+        license_anchor + "\n<script>fetch('/api/license/activate',"
+        "{method:'POST',body:'{}'});</script>", 1)
+    scenarios.append((
+        "en side uden for fil-listen der lover \"kun i browseren\" og kalder licens-API'et",
+        check_claim_surface(mutated_surface),
+    ))
+    # Negativ kontrol for den samme arm: løftet *alene* på en side uden for
+    # listen er sandt og må ikke være rødt. Uden denne kontrol ville porten
+    # bare være en ny rød-maskine over 57 rigtige sider. Den hænger på den
+    # `negative`-liste nedenfor, fordi et grønt scenarie i `scenarios` tælles
+    # som et fejlende scenarie.
+
     # Positiv kontrol: de rigtige filer skal være grønne, ellers er porten
     # grøn fordi den intet kan.
     positive = [f"{relative}: {problem}" for relative, (forbidden, required) in cases.items()
@@ -693,14 +829,25 @@ def self_test() -> int:
     positive += [f"{SCANNER_GENERATOR}: {problem}" for problem
                  in check_generator(SCANNER_GENERATOR, SCANNER_GENERATOR_FORBIDDEN, SCANNER_REQUIRED_DA)]
     positive += anchor_problems(SCANNER_GENERATOR, "site/compliance-ai.html")
+    # Overfladeposten skal være grøn på de *rigtige* 299 sider. Uden denne
+    # kontrol kan den nye regel være grøn fordi den ingenting kan se.
+    positive += [f"overflade: {problem}" for problem in check_claim_surface(site_pages())]
     positive_controls = (len(cases) + len(guide_cases) + len(GUIDE_GENERATOR_CHECKS)
-                         + len(scanner_cases) + 2)
+                         + len(scanner_cases) + 3)
 
     # Negativ kontrol: en kvalificeret påstand er ikke en forbudt påstand.
     qualified = ('<p>Your text never leaves this page. If you activate a Pro key, that key and a '
                  'device id are sent to our license API on <code>mahope.tools</code> so the license '
                  'can be validated. A Pro license key is checked online against mahope.tools.</p>')
     negative = [problem for problem in check_text("qualified", qualified, *tool) if "forbidden" in problem]
+    # Negativ kontrol for overfladeposten: 57 rigtige sider siger et løfte fra
+    # portens egen liste, og alle 57 er sande — de er klient-side-værktøjer
+    # uden licens-kald. Porten skal være stille på dem.
+    surface_only = site_pages()
+    if surface_probe in gated_files():
+        raise AssertionError(f"{surface_probe}: probe page is in the gate's own file list")
+    negative += [f"falsk alarm på en ærlig klient-side-side: {problem}"
+                 for problem in check_claim_surface({surface_probe: surface_only[surface_probe]})]
 
     failed = 0
     for name, problems in scenarios:
