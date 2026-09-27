@@ -30,6 +30,8 @@
     .portal-row p { margin: 0.4rem 0 0.6rem; }
     .hint { color: var(--color-text-muted); font-size: 0.88rem; }
     #status.err { color: #dc2626; }
+    .thanks-foot { margin-top: 2.2rem; border-top: 1px solid var(--color-border); padding-top: 1rem; }
+    .thanks-foot a { margin-right: 1.1rem; }
   </style>
 </head>
 <body>
@@ -38,6 +40,10 @@
     <p id="status" class="hint" role="status">Looking up your order…</p>
     <div class="thanks-card" id="result" hidden></div>
     <p class="hint" id="mail"></p>
+    <nav class="thanks-foot" aria-label="Continue">
+      <a href="/support">Something wrong with your key? Support</a>
+      <a href="/free-tools">Back to the free tools</a>
+    </nav>
   </main>
   <script>
     (function () {
