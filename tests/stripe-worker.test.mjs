@@ -34,6 +34,12 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
     // produkt uden product_key og sendte kunden ud for at købe. Målt 200 på
     // mahope.tools 26/9, så det er denne regel — ikke kilden — der lukker den.
     if (pathname === '/downloads/eaa-scanner-desktop-src-1.3.3.zip') return new Response('Pro requires an annual license key ($19/year) — Purchase a license at hermes-passiv.pages.dev/clean-copy', { status: 200 });
+    // Målt 27/9 på cleancopy.tools: `/clean-copy` lå som byte-identisk kopi af
+    // forsiden (canonical på `/`). `build_sites.py` publicerer filen ikke
+    // længere, men CDN'en beholder den indtil næste deploy — så fakeen skal
+    // have den, ellers ville porten være grøn uden at reglen var prøvet.
+    if (pathname === '/clean-copy' || pathname === '/da/clean-copy') return new Response('<html lang="en"><head><title>Clean Copy</title><link rel="canonical" href="https://cleancopy.tools/"></head><body>DUPLIKAT AF FORSIDEN</body></html>', { status: 200 });
+    if (pathname === '/clean-copy/og-preview.png') return new Response('png', { status: 200 });
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     return new Response('Not found', { status: 404 });
   } } };
@@ -166,9 +172,30 @@ ok('det nuværende desktop-arkiv er ikke omfattet af reglen', r.status === 404, 
 r = await call('/downloads/eaa-scanner-desktop-src-1.3.3.zip?cb=2', { ...UA, redirect: 'manual' });
 ok('query-streng følger med også for desktop-arkivet', r.status === 301 && r.headers.get('location') === 'https://mahope.tools/downloads/eaa-scanner-desktop-src-1.3.4.zip', r.status + ' ' + r.headers.get('location'));
 
+// 9c) cleancopy.tools' to forside-dobletter. Målt 27/9: `cmp` sagde IDENTISK
+// mellem `clean-copy.html` og `index.html`, altså to URL'er for én forside med
+// canonical på `/` — og hver af dem havde en købsknap. Ruterne er nu 301, så
+// gamle links dør ikke, og kun den kanoniske forside kan tage pengene.
+// Reglen er host-scoped: `/clean-copy` er en 404 på de tre andre domæner, og
+// en 301 til *deres* forside derfra ville være en løgneste.
+const onHost = (host, path, init) => worker.fetch(new Request('https://' + host + path, init), env, {});
+const ccDup = await onHost('cleancopy.tools', '/clean-copy', { redirect: 'manual' });
+ok('cleancopy.tools/clean-copy = 301', ccDup.status === 301, ccDup.status);
+ok('301 peger på den kanoniske forside', ccDup.headers.get('location') === 'https://cleancopy.tools/', ccDup.headers.get('location'));
+ok('dubletten serveres ikke, selv om CDN\'en stadig har den', !(await ccDup.text()).includes('DUPLIKAT'));
+const ccDupDa = await onHost('cleancopy.tools', '/da/clean-copy', { redirect: 'manual' });
+ok('cleancopy.tools/da/clean-copy = 301 til /da/', ccDupDa.status === 301 && ccDupDa.headers.get('location') === 'https://cleancopy.tools/da/', ccDupDa.status + ' ' + ccDupDa.headers.get('location'));
+const ccDir = await onHost('cleancopy.tools', '/clean-copy/', { redirect: 'manual' });
+ok('mappen selv sender også 301 (den har ingen side)', ccDir.status === 301, ccDir.status);
+const ccPng = await onHost('cleancopy.tools', '/clean-copy/og-preview.png', { redirect: 'manual' });
+ok('filer under mappen serveres stadig', ccPng.status === 200, ccPng.status);
+const otherHost = await onHost('mahope.tools', '/clean-copy', { redirect: 'manual' });
+ok('reglen gælder kun cleancopy.tools', otherHost.status !== 301, otherHost.status);
+const ccHome = await onHost('cleancopy.tools', '/', { redirect: 'manual' });
+ok('forsiden selv er ikke omfattet af reglen', ccHome.status !== 301, ccHome.status);
+
 r = await call('/api/lemon-webhook', { method: 'GET' });
-ok('gammel Lemon-rute: GET = 404', r.status === 404);
-r = await call('/api/lemon-webhook', { method: 'POST', body: '{}' });
+ok('gammel Lemon-rute: GET = 404', r.status === 404);r = await call('/api/lemon-webhook', { method: 'POST', body: '{}' });
 ok('gammel Lemon-rute: POST = 404', r.status === 404);
 
 // Licens via tak-siden

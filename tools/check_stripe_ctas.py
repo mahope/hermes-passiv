@@ -2613,6 +2613,21 @@ def check_built_offer_entries(catalog: dict, dist_root: Path | None = None) -> l
             continue
         path = built_page_path(domain, route, dist_root)
         if path is None:
+            # Før var ethvert manglende svar det samme som "intet bygget", og
+            # det er de to tingene der skal holdes adskillige. Målt 27/9: de to
+            # `cleancopy.tools`-dubletter blev fjernet fra publiceringen (den
+            # samme kilde er stadig forsiden via `index_from`, og ruten døer
+            # som 301), og porten blev **grøn med 16 dokumenterede købssider**
+            # hvor 14 sider findes. Et inventaret, der tæller en side der ikke
+            # er publiceret, er værre end et der mangler en: det siger at
+            # købsklik på ruten tælles som `offer_clicks`, når de ikke gør det.
+            if ((dist_root or (ROOT / "dist")) / domain).is_dir():
+                problems.append(
+                    f"built_offers: {label} er dokumenteret, men der er ingen bygget side på den "
+                    "route. En dokumenteret købsside der ikke er publiceret, gør at et købsklik "
+                    "på den tælles som `offer_clicks` i rapporten, når besøgeren i virkeligheden "
+                    "følger en redirect. Ret ruten i `built_offers` — eller fjern den."
+                )
             continue  # Ingen bygget site: samme ærlige fravalg som check_buy_page_entry.
         ctas = [label_text for link, label_text in built_buy_links(path)
                 if link == products[product].get("payment_link")]
@@ -4650,6 +4665,23 @@ def self_test() -> int:
         # sig selv — altså en side der *ligner* en dublet uden at være en.
         alias_liar = check_built_offer_pages(
             {**good, "built_offers": [built_ok, *alias_entries, alias_liar_entry]}, fake)
+        # Rød: en dokumenteret købsside der ikke findes i det byggede site.
+        # Målt 27/9 da de to dubletter blev fjernet fra publiceringen: porten
+        # blev grøn med 16 dokumenterede købssider, hvor 14 sider findes — og
+        # et inventaret der tæller en side der ikke er publiceret, tæller
+        # købsklik på en redirect som `offer_clicks`.
+        gone_entry = {"domain": "cleancopy.tools", "route": "/da/clean-copy-væk",
+                      "product": "clean-copy-pro", "source": "syntetisk"}
+        # Alle de øvrige syntetiske sider skal være dokumenterede i samme
+        # katalog, ellers ville armen være grøn på en *anden* fejl end den den
+        # er skrevet til — præcis den løgneste, en arm der ikke kan fejle er.
+        built_gone = check_built_offer_pages(
+            {**good, "built_offers": [built_ok, *alias_entries,
+                                      {**alias_liar_entry, "alias_of": None}, gone_entry]}, fake)
+        # Negativ kontrol: samme indgang i et checkout uden bygget site må ikke
+        # være rød, ellers kan porten ikke køres på et delvis build.
+        built_gone_nodist = check_built_offer_pages(
+            {**good, "built_offers": [gone_entry]}, fake.parent / "dist-ikke-bygget")
 
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
@@ -4698,6 +4730,7 @@ def self_test() -> int:
         ("en built_offers-indgang uden kilde", built_sourceless),
         ("en bygget købsside med flere købsknapper uden forklaring", built_ctas_loud),
         ("en dublet der ligner en dublet uden at være en", alias_liar),
+        ("en dokumenteret købsside der ikke er publiceret", built_gone),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -4731,6 +4764,7 @@ def self_test() -> int:
                              ("en nægtelse uden en nægtelse", denied_clean),
                              ("en bygget købsside der står i inventaret", built_documented),
                              ("to byggede dubletter med rigtig canonical", alias_ok),
+                             ("en inventar-indgang i et checkout uden build", built_gone_nodist),
                              ("en ærlig nægtelse på en side der ikke sælger produktet",
                               honest_denial)):
         if problems:

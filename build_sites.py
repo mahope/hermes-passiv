@@ -85,6 +85,13 @@ SITES: dict[str, dict] = {
             ("da/blog/*.html", r"Clean Copy|Markdown|clean-copy"),
         ],
         "index_from": {"index.html": "clean-copy.html", "da/index.html": "da/clean-copy.html"},
+        # Målt 27/9: `cmp` sagde IDENTISK mellem `clean-copy.html` og
+        # `index.html`, altså var `/clean-copy` en byte-identisk dublet af
+        # forsiden med canonical på `/`. Kilden skal stadig bygges og
+        # publiceres — den ER forsiden via `index_from` — men må ikke få sin
+        # egen rute. `site/_worker.js` sender 301 fra de to ruter, så gamle
+        # links dør ikke.
+        "index_only": ["clean-copy.html", "da/clean-copy.html"],
     },
     "deskuptime.com": {
         "project": "deskuptime",
@@ -306,6 +313,10 @@ def select_files(sites: dict[str, Site]) -> None:
                     if matches(r, glob) and re.search(rx, title_of(p), re.I):
                         hit = True
                         break
+            # `exclude` vinder over `include`: en kilde kan stadig publiceres
+            # som en anden sides `index_from`-kilde, uden selv at få en rute.
+            if hit and any(matches(r, g) for g in cfg.get("exclude", [])):
+                hit = False
             if hit:
                 site.add(r, p)
                 claimed.add(r)
@@ -1379,6 +1390,14 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
             src_pg = next((p for p in pages if p["dest"] == source), None)
             if src_pg:  # the copy is the canonical page; the source is a duplicate pointing at it
                 src_pg["dest"] = target
+    # `index_only`: kilder der bygges, fordi de er forsiden, men som ikke må
+    # få egen rute. Uden denne linje ville de ligge i dist som byte-identiske
+    # dubletter af forsiden — præcis det, de er sat op for at fjerne. Ruten
+    # døer ikke: `site/_worker.js` sender 301 til den kanoniske forside.
+    for source in site.cfg.get("index_only", []):
+        orphan = dist / source
+        if orphan.is_file():
+            orphan.unlink()
 
     pages = sitemap_pages(site, pages)
     actual_urls = {page["url"] for page in pages}

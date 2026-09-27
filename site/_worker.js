@@ -217,6 +217,25 @@ export default {
       return Response.redirect(new URL(`/da/blog/${DA_SLUG_REDIRECTS[daSlugMatch[1]]}`, request.url).toString(), 301);
     }
 
+    // === Redirect cleancopy.tools' two duplicate homepages (iter: canonical dublet) ===
+    // `site/clean-copy.html` is the front page *and* was published a second
+    // time as `/clean-copy` (and `/da/clean-copy`), byte-identical, canonical
+    // pointing at `/`. Two URLs for one page, which search engines collapse —
+    // worse when the duplicate carries a buy button. `build_sites.py` no longer
+    // publishes the files; this keeps old inbound links alive as a real 301.
+    // Host-scoped on purpose: `/clean-copy` is a 404 on the other three
+    // domains, and redirecting it to their home page would be a lie.
+    if (trackingDomain(url) === 'cleancopy.tools') {
+      const CANONICAL_HOME_REDIRECTS = {
+        '/clean-copy': '/',
+        '/da/clean-copy': '/da/',
+      };
+      const canonKey = path.replace(/\/+$/, '') || '/';
+      if (CANONICAL_HOME_REDIRECTS[canonKey]) {
+        return Response.redirect(new URL(CANONICAL_HOME_REDIRECTS[canonKey], request.url).toString(), 301);
+      }
+    }
+
     // === Route: everything else — serve static assets ===
     try {
       const response = await env.ASSETS.fetch(request);
