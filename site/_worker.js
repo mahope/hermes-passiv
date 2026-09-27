@@ -21,6 +21,11 @@ const AUTOMATED_USER_AGENT = /googlebot|google-inspectiontool|bingbot|ahrefsbot|
 const STATS_TRAFFIC_KEY_LIMIT = 5000;
 const STATS_SOURCE_KEY_LIMIT = 15;
 const TRACKING_RATE_LIMIT = 1000;
+// Navnet på den konverteringsbegivenhed, `site/track.js` sender for hvert klik
+// på et Stripe-checkoutlink. Det er samme streng som `BUY_CLICK_EVENT` i
+// `tools/weekly_report.py` — de to skal ikke kunne glide fra hinanden, så
+// `tools/test_health_buy_click.py` dømmer parret.
+const BUY_CLICK_EVENT = 'buy-click';
 // Per-IP grænser pr. time for de ruter, der henter en URL eller gør tungt
 // arbejde for en kaller. Målt 26/9: ingen af dem havde nogen tæller, mens de
 // tre billige ruter (lookup, fulfillment, demo) alle havde. Uden en tæller er
@@ -1687,6 +1692,13 @@ async function handleStats(request, url, env) {
  * and `healthy` (including "no traffic yet" — silence is not an outage).
  * `traffic_domains` says *which* domains are silent, so a monitor can decide
  * without guessing. See `tools/check_health_status.py`.
+ *
+ * `recentEvents` og `recentBuyClicks` er den tredje metrik-gruppe. `collectTraffic`
+ * deler alle `p:v3:`-nøgler i tre: `page` (sidevisninger), `download` (filer) og
+ * `event` (`trackEvent()` — bl.a. `buy-click` fra den delegerede lytter i
+ * `site/track.js`). Kun de to første blev summeret her, så det eneste tal der
+ * svarer på "prøvede nogen at købe?" blev beregnet og aldrig sagt. Det er et
+ * *forsøg* på at købe, ikke et salg — salget står i Stripe-ledgeren.
  */
 async function handleHealth(url, env) {
   const DAY = 86400 * 1000;
@@ -1695,6 +1707,7 @@ async function handleHealth(url, env) {
   const yesterday = new Date(now - DAY).toISOString().slice(0, 10);
 
   let kvOk = false, recentVisits = null, recentDownloads = null, lastDeploy = null;
+  let recentEvents = null, recentBuyClicks = null;
   let trafficStatus = 'unknown', trafficDomains = null;
   try {
     await env.VISITS.get('__health_probe__');
@@ -1707,6 +1720,8 @@ async function handleHealth(url, env) {
     if (kvOk && ['ok', 'partial'].includes(traffic.status)) {
       recentVisits = 0;
       recentDownloads = 0;
+      recentEvents = 0;
+      recentBuyClicks = 0;
       for (const domainStats of Object.values(traffic.stats_by_domain || {})) {
         if (!domainStats) continue;
         for (const day of [today, yesterday]) {
@@ -1717,6 +1732,17 @@ async function handleHealth(url, env) {
         if (!domainStats) continue;
         for (const day of [today, yesterday]) {
           for (const info of Object.values(domainStats[day] || {})) recentDownloads += info.visits;
+        }
+      }
+      // Emner på `event`-gruppen har formen `${sti}@${event}` (se `handleTrack`),
+      // så et købsklik genkendes på suffikset og ikke på et hårdkodet helt path.
+      for (const domainStats of Object.values(traffic.events_by_domain || {})) {
+        if (!domainStats) continue;
+        for (const day of [today, yesterday]) {
+          for (const [subject, info] of Object.entries(domainStats[day] || {})) {
+            recentEvents += info.visits;
+            if (subject.endsWith(`@${BUY_CLICK_EVENT}`)) recentBuyClicks += info.visits;
+          }
         }
       }
     }
@@ -1737,11 +1763,11 @@ async function handleHealth(url, env) {
     status: !kvOk ? 'degraded' : (trafficStatus === 'partial' ? 'partial' : 'healthy'),
     kv: kvOk,
     timestamp: new Date().toISOString(),
-    stats: { recentVisits, recentDownloads, waitlist, scans },
+    stats: { recentVisits, recentDownloads, recentEvents, recentBuyClicks, waitlist, scans },
     traffic_status: trafficStatus,
     traffic_domains: trafficDomains,
     lastDeploy: lastDeploy,
-    version: 3,
+    version: 4,
   });
 }
 
