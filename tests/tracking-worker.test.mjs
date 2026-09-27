@@ -553,6 +553,75 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
 }
 
 {
+  // `handleHealth` summerede i to iterationer kun `page` og `download`, selv om
+  // `collectTraffic` altid har delt nøglerne i tre grupper. Den tredje — `event`,
+  // hvor `trackEvent()` og `buy-click` fra `site/track.js` lander — blev
+  // beregnet og aldrig sagt, så det eneste tal der svarer på "prøvede nogen at
+  // købe?" kun kunne læses med et bearer-token til /api/stats. Cron så den ikke.
+  const env = makeEnv();
+  putMetric(env, 'mahope.tools', 'page', '/pro', 4, 3, 'pro');
+  putMetric(env, 'mahope.tools', 'download', 'tool.zip', 2, 2, 'dl');
+  putMetric(env, 'mahope.tools', 'event', '/pro@buy-click', 2, 2, 'buy');
+  putMetric(env, 'mahope.tools', 'event', '/scan@tool-used', 5, 4, 'used');
+  putMetric(env, 'cleancopy.tools', 'page', '/', 1, 1, 'cc');
+  const response = await worker.fetch(new Request('https://mahope.tools/api/health'), env, {});
+  const data = await response.json();
+  ok('health tæller events, ikke kun sidevisninger og downloads',
+    data.stats.recentEvents === 7, JSON.stringify(data.stats));
+  ok('health tæller købsklik, fordi det er det konverteringssignal cron kan se',
+    data.stats.recentBuyClicks === 2, JSON.stringify(data.stats));
+  ok('de tre grupper er disjunkte — sidevisninger og downloads er ikke besøg',
+    data.stats.recentVisits === 5 && data.stats.recentDownloads === 2,
+    JSON.stringify(data.stats));
+  ok('et ikke-købs-event tælles som event men ikke som købsklik',
+    data.stats.recentEvents === 7 && data.stats.recentBuyClicks === 2, JSON.stringify(data.stats));
+  {
+    const other = makeEnv();
+    for (const domain of ['mahope.tools', 'cleancopy.tools', 'deskuptime.com', 'bugbottle.dev']) {
+      putMetric(other, domain, 'page', '/', 1, 1, domain);
+    }
+    putMetric(other, 'mahope.tools', 'event', '/da/pro@buy-click', 1, 1, 'buy-da');
+    const otherResponse = await worker.fetch(new Request('https://mahope.tools/api/health'), other, {});
+    const otherData = await otherResponse.json();
+    ok('et købsklik på en anden sti tæller med, fordi stien ikke er hårdkodet',
+      otherData.stats.recentBuyClicks === 1, JSON.stringify(otherData.stats));
+  }
+  {
+    // Samme regel som for de øvrige tal: ukendt trafik må ikke læses som nul,
+    // ellers svarer "ingen har prøvet at købe" på en død tæller.
+    const silent = makeEnv();
+    const silentResponse = await worker.fetch(new Request('https://mahope.tools/api/health'), silent, {});
+    const silentData = await silentResponse.json();
+    ok('ukendt trafik gør købsklik ukendt, ikke nul',
+      silentData.stats.recentEvents === null && silentData.stats.recentBuyClicks === null,
+      JSON.stringify(silentData.stats));
+  }
+  {
+    const dead = makeEnv();
+    dead.VISITS.get = async () => { throw new Error('KV unavailable'); };
+    const deadResponse = await worker.fetch(new Request('https://mahope.tools/api/health'), dead, {});
+    const deadData = await deadResponse.json();
+    ok('KV nede gør købsklik ukendt, ikke nul',
+      deadData.stats.recentBuyClicks === null, JSON.stringify(deadData.stats));
+  }
+  {
+    // En brev streng i emnet skal ikke tælle som købsklik. `handleTrack` bygger
+    // emnet som `${sti}@${event}`, så en sti der *slutter* på navnet er et
+    // købsklik, og en der *indeholder* det ikke.
+    const tricky = makeEnv();
+    for (const domain of ['mahope.tools', 'cleancopy.tools', 'deskuptime.com', 'bugbottle.dev']) {
+      putMetric(tricky, domain, 'page', '/', 1, 1, domain);
+    }
+    putMetric(tricky, 'mahope.tools', 'event', '/@buy-clicker', 3, 3, 'tricky');
+    const trickyResponse = await worker.fetch(new Request('https://mahope.tools/api/health'), tricky, {});
+    const trickyData = await trickyResponse.json();
+    ok('en sti der ligner et købsklik tælles som event, ikke som købsklik',
+      trickyData.stats.recentEvents === 3 && trickyData.stats.recentBuyClicks === 0,
+      JSON.stringify(trickyData.stats));
+  }
+}
+
+{
   const root = fileURLToPath(new URL('../site', import.meta.url));
   const invalidEvents = [];
   const visit = directory => {
