@@ -50,6 +50,9 @@ const sessions = {
     customer_details: { email: 'e@f.dk' }, line_items: { data: [{ quantity: 1, price: { lookup_key: 'eucomply-dpa-v1' } }] } },
   cs_live_thanksdonDDDDDDDD: { status: 'complete', payment_status: 'paid', subscription: null,
     customer_details: { email: 'g@h.dk' }, line_items: { data: [{ quantity: 1, price: { lookup_key: 'support-mahope-oss-v1' } }] } },
+  // Lifetime (founding-pris): engangspris på abonnementsproduktet, 2 websites.
+  cs_live_thankslifeFFFFFFFF: { status: 'complete', payment_status: 'paid', subscription: null, mode: 'payment',
+    customer_details: { email: 'l@f.dk' }, line_items: { data: [{ quantity: 2, price: { lookup_key: 'eucomply-pro-lifetime-v1' } }] } },
   cs_live_thanksnoemailEEEEEE: { status: 'complete', payment_status: 'paid', subscription: null,
     customer_details: {}, line_items: { data: [{ quantity: 1, price: { lookup_key: 'deskuptime-pro-v1' } }] } },
 };
@@ -119,6 +122,7 @@ const cases = [
   ['download', 'cs_live_thanksdlCCCCCCCCC'],
   ['donation', 'cs_live_thanksdonDDDDDDDD'],
   ['license (kunden gav ingen mailadresse)', 'cs_live_thanksnoemailEEEEEE'],
+  ['license (lifetime, 2 websites)', 'cs_live_thankslifeFFFFFFFF'],
 ];
 const rendered = {};
 for (const [label, sid] of cases) {
@@ -164,6 +168,18 @@ ok('abonnement: workeren sender både udløbsdato og kundeportal',
   !!lic.payload.expires_at && !!lic.payload.billing_portal, JSON.stringify(lic.payload.expires_at));
 ok('abonnement: siden siger fornyelse, ikke "no expiry"',
   /renews with your subscription/.test(lic.page.result.innerHTML) && !/no expiry/.test(lic.page.result.innerHTML), lic.page.result.innerHTML);
+
+// Lifetime: samme licensgren, men siden skal sige "Lifetime" og hverken
+// fornyelse eller kundeportal — der er intet abonnement at opsige.
+const life = rendered['license (lifetime, 2 websites)'];
+ok('lifetime: workeren sender lifetime uden udløb og uden kundeportal',
+  life.payload.lifetime === true && life.payload.expires_at == null && life.payload.billing_portal === undefined && life.payload.subscription === undefined,
+  JSON.stringify(life.payload));
+ok('lifetime: overskriften siger Lifetime', /Thanks for buying EUComply Pro Lifetime!/.test(life.page.title.textContent), life.page.title.textContent);
+ok('lifetime: kortet siger lifetime og no expiry', /Lifetime license:<\/strong> one payment, no renewal and no expiry/.test(life.page.result.innerHTML), life.page.result.innerHTML);
+ok('lifetime: siden siger ikke "renews"', !/renews/i.test(life.page.result.innerHTML), life.page.result.innerHTML);
+ok('lifetime: ingen kundeportal', !/Manage your subscription/.test(life.page.result.innerHTML), life.page.result.innerHTML);
+ok('lifetime: antal websites følger antal købt', /Works on up to 2 device\(s\)/.test(life.page.result.innerHTML), life.page.result.innerHTML);
 
 const dl = rendered['download'];
 ok('download: filnavn vises', dl.page.result.innerHTML.includes('dpa-template.pdf'), dl.page.result.innerHTML);
