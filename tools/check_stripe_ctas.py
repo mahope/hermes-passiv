@@ -2767,11 +2767,47 @@ def check_sale_denials(catalog: dict, pages: list[tuple[str, str]]) -> list[str]
     hvis **overskrift** navngiver et katalogeret produkt, modsiger den
     allowlisten — og så er den en fejl, uanset hvor sandt den lyder.
 
-    **Målt dækning.** 10 sider i de 305 `source_pages()` læser indeholder en
-    nægtelse; med to navneord i overskriften rammer præcis **én** — den med
-    fejlen. Tærsklen er målt, ikke valgt: på de ni andre er det højeste
-    overlap **1** navneord, fordi de deler "compliance" eller "gdpr" med et
-    produktnavn uden at handle om det samme produkt.
+    **Målt dækning, og kun den ene retning virker.** Efter rettelsen er der
+    **9** sider i de 305 `source_pages()` læser med en nægtelse i synlig
+    tekst, og porten fyrer på **0** af dem. Tærsklen er målt, ikke valgt: på
+    alle ni er det højeste overlap **1** navneord, fordi de deler
+    "compliance" eller "gdpr" med et produktnavn uden at handle om det samme
+    produkt. Før rettelsen var der **10**, og porten ramte præcis den ene med
+    fejlen — så de otte øvrige er ikke nært af porten, de er sande.
+
+    De ni nægtelser falder i **fire** klasser, og porten kan kun se én af dem:
+
+    1. Seks `site/books/*`: "we do not sell a paid edition of it" — det
+       ærlige open-core-løftet på de frie EPUB'er.
+    2. `site/privacy/index.html`: "We do not sell or share your data" — det
+       er en nægtelse om *persondata*, ikke om et produkt. Den er grøn, fordi
+       "Privacy" ikke deler to navneord med noget, ikke fordi porten kan se
+       forskel. Det er held, ikke en regel.
+    3. `site/site-icons.html` og `site/blog/eaa-compliance-scanner-desktop.html`:
+       "not for sale yet" om et Pro der **ikke** står i katalogen. Sandt — de
+       tretten katalogprodukter er de eneste vi sælger, og ingen af dem hedder
+       Site Icons eller EAA-scanner-Pro.
+
+    **Den anden retning er målt væk, og den skal IKKE bygges** (modsat
+    `FORBIDDEN_CLAIMS`, der er ti døde strenge af samme slags). Idéen var at
+    dømme nægtelsen mod `delivery_files`-stammen i stedet for produktoverskriften,
+    fordi den oprindelige fejl handlede om filen `compliance-bundle.pdf`. Den er
+    død **to gange**, og begge gange målt:
+
+    1. **Ingen side nævner nogen stamme.** Målt på de 305 sider med portens egen
+       `parse_page`: **0 fund**. Filnavnene er KV-nøgler (`paidfile:<fil>`), ikke
+       publicerede navne, så ruten kan aldrig blive rød. Kørt mod den gamle fil
+       før rettelsen ville den desuden have **misset** fejlen — overskriften
+       fangede den, ikke stammen.
+    2. **Portens katalog læser slet ikke filerne.** `load_catalog(CATALOG)` læser
+       `stripe_catalog.json`, og `delivery_files` ligger i `paid_content.json`.
+       `CATALOG["products"]["eu-compliance-ebook-bundle"].get("delivery_files")`
+       er `None` i dag. Ruten kræver altså også en join af to filer.
+
+    Der blev skrevet en selftest-arm til den og **fjernet igen**: med
+    `CATALOG` som kilde kan den aldrig fyre, så den var en arm der så ud som
+    bevis uden at være et — den afsløs af selve porten. Samme fejlklasse som de
+    ti døde `FORBIDDEN_CLAIMS`, og det er herfor den ikke blev committet.
     """
     products = catalog.get("products", {})
     if not isinstance(products, dict):
@@ -4295,6 +4331,10 @@ def self_test() -> int:
         good, [("site/eksempel.html",
                 "<html lang=\"en\"><head><title>Cookie Consent Guide</title></head>"
                 "<body><p>We do not sell a paid edition.</p></body></html>")])
+    # Der blev skrevet en arm der lagde en `delivery_files`-stamme ved siden af
+    # nægtelsen på en side uden produktoverskrift. Den er fjernet igen, se
+    # `check_sale_denials`' docstring: med `CATALOG` som kilde kan den aldrig
+    # fyre, så den ville være et bevis der så ud som et bevis.
 
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
