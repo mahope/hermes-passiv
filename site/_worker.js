@@ -3176,7 +3176,15 @@ const STRIPE_PRODUCTS = {
   'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, subscription: true, home: 'https://cleancopy.tools/activate/' },
   'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/' },
   'transmute-desktop': { name: 'Transmute Desktop', kind: 'license', maxDevices: 3, home: 'https://transmute.run/' },
-  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, home: 'https://eucomplypro.com/pricing/' },
+  // `home` er det leveringssvaret kalder `activate_url`, og det havnede på
+  // /pricing/ — en butiksvindue. Køberen fik "Activate it here" og en knap
+  // "How to activate" på /thanks, og begge endte dér, målt 27/9: /pricing/ er
+  // 200 men har 0 input og nævner ikke nøglen. /pro/ er den side der siger hvad
+  // nøglen overhovedet låser op ("The Pro license is validated in the free
+  // WordPress plugin"), så den er det ærlige mål. `activateHint` siger hvor
+  // nøglen sættes ind, målt i auditedwp/plugin/eucomply.php:246 og :1994 —
+  // menuen "EUComply > Settings" og feltet "Pro License Key".
+  'eucomply-pro': { name: 'EUComply Pro', kind: 'license', maxDevices: 1, subscription: true, home: 'https://eucomplypro.com/pro/', activateHint: 'In WordPress: EUComply > Settings, in the "Pro License Key" field. On the web: https://mahope.tools/compliance-report' },
   'page-profile-pro': { name: 'Page Profile Pro', kind: 'license', maxDevices: 3, subscription: true, home: 'https://mahope.tools/page-profile' },
   'eucomply-dpa': { name: 'GDPR DPA template', kind: 'download', files: ['dpa-template.pdf', 'dpa-template.md'] },
   'eucomply-nis2-clauses': { name: 'NIS2 / DORA Vendor Clause Set', kind: 'download', files: ['nis2-vendor-clauses.pdf', 'nis2-vendor-clauses.md'] },
@@ -3479,13 +3487,20 @@ async function sendSaleEmail(env, to, r, sessionId) {
     const portalHtml = r.subscription
       ? `<p>Manage your subscription, invoices and VAT ID: <a href="${esc(r.billing_portal || BILLING_PORTAL_URL)}">${esc(r.billing_portal || BILLING_PORTAL_URL)}</a></p>`
       : '';
+    // Et link med navnet "Activate it here" er ikke en instruktion. De fleste
+    // licensprodukter har en side der *er* aktiveringen, men EUComply Pros nøgle
+    // skal sættes ind i WordPress-plugin'ens felt, og det stod ingen steder.
+    const hint = (STRIPE_PRODUCTS[r.product] && STRIPE_PRODUCTS[r.product].activateHint) || '';
+    const hintText = hint ? `\nWhere to paste the key: ${hint}\n` : '';
+    const hintHtml = hint ? `<p>Where to paste the key: ${esc(hint)}</p>` : '';
     text = `Thanks for buying ${r.product_name}!\n\nYour license key:\n${r.license_key}\n\nActivate it here: ${r.activate_url}\n`
+      + hintText
       + `It works on up to ${r.max_devices} device(s)${r.expires_at ? ` and renews with your subscription` : ''}.\n`
       + portalText + `\nKeep this email. Questions? Just reply.\n\nMads Holst Jensen, Mahope`;
     html = `<p>Thanks for buying <strong>${esc(r.product_name)}</strong>!</p><p>Your license key:</p>`
       + `<p style="font:16px monospace;background:#f4f4f5;padding:12px;border-radius:6px">${esc(r.license_key)}</p>`
       + `<p>Activate it here: <a href="${esc(r.activate_url)}">${esc(r.activate_url)}</a><br>Up to ${r.max_devices} device(s).</p>`
-      + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
+      + hintHtml + portalHtml + `<p>Keep this email. Questions? Just reply.</p><p>Mads Holst Jensen, Mahope</p>`;
   } else {
     const list = (r.downloads || []).map(d => `${d.file}: ${d.url}`).join('\n');
     // En fil der mangler i KV ville give kunden en adresse der svarer 503. Den
