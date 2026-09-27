@@ -1,0 +1,17 @@
+{
+  "_readme": "Undtagelser fra `python3 tools/check_health_status.py`. En indgang kvitterer én målt signatur: de domæner der er tavse lige nu. Tilføj kun en indgang når du kan skrive hvorfor domænet er tavst, og hvilket spørgsmål der skal løse det — en undtagelse uden begrundelse er en fejl, porten afviser den. Signaturen skal matche eksakt, så et nyt tavst domæne gør cron rød i stedet for at blive dækket af en gammel undtagelse.",
+  "traffic": [
+    {
+      "signature": {
+        "traffic_status": "partial",
+        "silent_domains": {
+          "bugbottle.dev": "unknown"
+        }
+      },
+      "reason": "`bugbottle.dev` ligger på en nginx, vi ikke deployer: `.github/workflows/deploy-sites.yml`-matrixen deployer kun cleancopy.tools, deskuptime.com og mahope.tools, så dist/bugbottle.dev/ bygges hver kørsel og lægges ingen steder. Målt 27/9: build-info.json svarer 404 fra nginx, track.js svarer 404, og de tre andre domæner bærer merge-sha'en. Domænet skriver derfor ingen p:v3:-nøgler, og hvert ugental i reports/weekly/ mangler det.",
+      "since": "2026-09-27",
+      "question": "❓ Se `IMPLEMENTATION_PLAN.md` under ❓ Til Mads: skal bugbottle.dev på Cloudflare Pages (kræver at domænet peger om; så skal det til matrixen og denne undtagelse væk i samme commit), eller er domænet ikke vores og skal ud af TRACKING_DOMAINS? Porten `tools/test_deploy_workflow.py` tvinger begge dele, så en halv løsning kan ikke merge.",
+      "removes_when": "bugbottle.dev svarer 200 på /build-info.json med en merge-sha, eller det fjernes fra TRACKING_DOMAINS i site/_worker.js."
+    }
+  ]
+}

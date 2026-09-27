@@ -91,6 +91,10 @@ on:
       - 'tools/*.py'
       - 'tools/*.sh'
       - 'tools/check_legacy_seo_paths.py'
+      # Kvitteringerne for `tools/check_health_status.py`. Uden dem kan en
+      # undtagelse fra `bugbottle.dev` blive tilføjet eller slettet uden at
+      # nogen kørte porten, der afviser en undtagelse uden begrundelse.
+      - 'tools/health_acknowledged.json'
       - 'requirements-build.txt'
       - 'requirements-audit.txt'
       - 'site-icons/pyproject.toml'

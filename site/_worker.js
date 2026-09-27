@@ -1680,6 +1680,13 @@ async function handleStats(request, url, env) {
  * GET /api/health — lightweight self-monitoring endpoint.
  * Returns KV reachability, site status, and basic metrics.
  * Used by cron job to detect silent failures.
+ *
+ * `status` has three states, because two of the three failure modes are
+ * different problems: `degraded` (KV unreachable), `partial` (KV is fine but an
+ * instrumented domain writes nothing, so every number is missing that domain)
+ * and `healthy` (including "no traffic yet" — silence is not an outage).
+ * `traffic_domains` says *which* domains are silent, so a monitor can decide
+ * without guessing. See `tools/check_health_status.py`.
  */
 async function handleHealth(url, env) {
   const DAY = 86400 * 1000;
@@ -1688,7 +1695,7 @@ async function handleHealth(url, env) {
   const yesterday = new Date(now - DAY).toISOString().slice(0, 10);
 
   let kvOk = false, recentVisits = null, recentDownloads = null, lastDeploy = null;
-  let trafficStatus = 'unknown';
+  let trafficStatus = 'unknown', trafficDomains = null;
   try {
     await env.VISITS.get('__health_probe__');
     kvOk = true;
@@ -1696,6 +1703,7 @@ async function handleHealth(url, env) {
   try {
     const traffic = await collectTraffic(env, 2);
     trafficStatus = traffic.status;
+    trafficDomains = traffic.domain_status || null;
     if (kvOk && ['ok', 'partial'].includes(traffic.status)) {
       recentVisits = 0;
       recentDownloads = 0;
@@ -1721,11 +1729,17 @@ async function handleHealth(url, env) {
 
   return jsonResp({
     ok: true,
-    status: kvOk ? 'healthy' : 'degraded',
+    // `partial` er sin egen tilstand og ikke en variant af `healthy`. KV kan være
+    // rask, mens et instrumenteret domæne ikke skriver en eneste nøgle — så er
+    // tallene reelle og mangler et domæne, og det skal kunne ses i `status`.
+    // `unknown` er *ikke* `degraded`: ingen trafik i vinduet er ikke en fejl, så
+    // en ny installation eller to stille dage må ikke gøre cron rød.
+    status: !kvOk ? 'degraded' : (trafficStatus === 'partial' ? 'partial' : 'healthy'),
     kv: kvOk,
     timestamp: new Date().toISOString(),
     stats: { recentVisits, recentDownloads, waitlist, scans },
     traffic_status: trafficStatus,
+    traffic_domains: trafficDomains,
     lastDeploy: lastDeploy,
     version: 3,
   });
