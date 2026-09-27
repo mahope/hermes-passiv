@@ -53,6 +53,7 @@ OLD_ORIGIN = "https://hermes-passiv.pages.dev"
 SITES: dict[str, dict] = {
     "cleancopy.tools": {
         "project": "cleancopy-tools",
+        "plausible": "pa-YbNKzGphR2i_yUi3wtB9n",
         "product": "cleancopy",
         "brand": "Clean Copy",
         "github": "https://github.com/mahope/clean-copy",
@@ -87,6 +88,7 @@ SITES: dict[str, dict] = {
     },
     "deskuptime.com": {
         "project": "deskuptime",
+        "plausible": "pa-FvsapRVTKlZ_CzI5WThCL",
         "product": "deskuptime",
         "brand": "DeskUptime",
         "github": "https://github.com/mahope/deskuptime",
@@ -110,6 +112,7 @@ SITES: dict[str, dict] = {
     },
     "bugbottle.dev": {
         "project": "bugbottle-dev",
+        "plausible": "pa-HQm6yfTYvkvAY6ARnXmPp",
         "product": "bugbottle",
         "brand": "BugBottle",
         "github": "https://github.com/mahope/bugbottle",
@@ -136,6 +139,7 @@ SITES: dict[str, dict] = {
     },
     "mahope.tools": {
         "project": "mahope-tools",
+        "plausible": "pa-eO7P8odw5NrYRHEUw8ZIQ",
         "product": "mahope",
         "brand": "mahope.tools",
         "github": "https://github.com/mahope",
@@ -910,6 +914,24 @@ def bugbottle_tag(site: Site, lang: str) -> str:
             f'data-brand="{site.cfg["brand"]}" data-position="bottom-right" data-scrub></script>')
 
 
+# Plausible CE (analytics.holstjensen.eu, EU-hosted, cookieless). The pa-<id>.js
+# script only sends events once plausible.init() has run, so the init stub
+# always travels with it. Each site has its own script id in SITES[...]["plausible"].
+PLAUSIBLE_HOST = "https://analytics.holstjensen.eu"
+PLAUSIBLE_INIT = ("window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},"
+                  "plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()")
+
+
+def add_plausible(site: Site, html: str) -> str:
+    """Put the site's Plausible script and init stub right before </head>, once."""
+    script_id = site.cfg.get("plausible")
+    if not script_id or PLAUSIBLE_HOST in html:
+        return html
+    tags = (f'<script async src="{PLAUSIBLE_HOST}/js/{script_id}.js"></script>\n'
+            f"<script>{PLAUSIBLE_INIT}</script>\n")
+    return HEAD_END_RE.sub(lambda m: tags + "</head>", html, count=1)
+
+
 def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str], *, title: str = "",
                 dates=None, neighbours: dict | None = None, kind: str | None = None) -> tuple[str, dict]:
     """Inject family bar, header, breadcrumbs, article layout, footer, scripts. Returns (html, info)."""
@@ -1092,7 +1114,7 @@ HEADERS_TXT = """/*
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://mahope.tools https:; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https:; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://analytics.holstjensen.eu; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://mahope.tools https:; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https:; frame-ancestors 'none'; upgrade-insecure-requests
 
 /style.css
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
@@ -1234,7 +1256,7 @@ def write_generated(site: Site, pages: list[dict], local: dict, global_idx: dict
                             + pagepass.THEME_SCRIPT + '\n'
                             f'<link rel="stylesheet" href="/style.css?v={pagepass.CSS_VERSION}">')
         (dist / fname).parent.mkdir(exist_ok=True)
-        (dist / fname).write_text(rewrite_text(site, html, True, local, global_idx), encoding="utf-8")
+        (dist / fname).write_text(rewrite_text(site, add_plausible(site, html), True, local, global_idx), encoding="utf-8")
 
     # search: one page per language, same index
     alts = {"en": own + "/search/", "da": own + "/da/search/"}
@@ -1250,7 +1272,7 @@ def write_generated(site: Site, pages: list[dict], local: dict, global_idx: dict
                                               alternates=alts, og_image=own + ("/og-da.png" if lang == "da" else "/og.png"),
                                               dates=None, github=site.cfg["github"], kind="page")
         (dist / fname).parent.mkdir(parents=True, exist_ok=True)
-        (dist / fname).write_text(rewrite_text(site, html, True, local, global_idx), encoding="utf-8")
+        (dist / fname).write_text(rewrite_text(site, add_plausible(site, html), True, local, global_idx), encoding="utf-8")
 
     # `body` er ren tekst fra kilde-HTML'en, som *ikke* kører gennem
     # `rewrite_text` — den fik derfor den døde `hermes-passiv.pages.dev`-vært
@@ -1342,6 +1364,8 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
                               description=info["description"], lastmod=(d[1] if d else build_date()),
                               section=shell_info["section"], body=main_txt[:400].strip(), tags=tags,
                               indexable=meta_robots_allows_index(text)))
+        if is_html:
+            text = add_plausible(site, text)
         text = rewrite_text(site, text, is_html, local, global_idx)
         if is_html:
             text = strip_duplicate_pageviews(text)
