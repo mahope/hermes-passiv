@@ -1307,6 +1307,45 @@ def page_lang(relative: str, text: str | None = None) -> str:
 LANG_NAMES = {"en": "engelsk", "da": "dansk"}
 
 
+def check_declared_language(pages: list[tuple[str, str]]) -> list[str]:
+    """En side under `/da/` skal erklære `lang="da"`.
+
+    Dømmer *kun* den retning, målingen viste er ren. Målt over 299 sider i
+    `site/`: 14 afleder `da` fra `lang` mens stien siger `en` — de hedder
+    `<navn>-da.html` i stieroden, så **der er ingen `/da/`-side der erklærer
+    `en`**. Det er ikke en tilfældighed, og den bærer hele `page_lang()`:
+    fallback'en til stien er kunrigtig, fordi `/da/`-træet er dansk.
+
+    Uden denne regel sker driften stumt. En dansk side der får `lang="en"`
+    skrevet ind, giver `page_lang()` → `en`, og da `en` og `da` begge allerede
+    er talte sprog, giver det **0 problemer** — målt, ikke antaget. Så en
+    dansk købsside kan holdes ude af den danske dækning, og en skærmlæser får
+    engelsk, uden at porten siger et ord.
+
+    Reglen læser *ikke* filnavnet. `nis2-check-da.html` i stieroden er dansk
+    på engelsk sti, og det er korrekt; en regel på "-da i navnet" ville være
+    grøn af en tilfældighed, fordi de 14 også hedder `-da`.
+    """
+    problems: list[str] = []
+    for relative, text in pages:
+        parts = relative.replace("\\", "/").split("/")
+        if "da" not in parts[1:-1]:
+            continue
+        match = LANG_ATTR_RE.search(text[:2000])
+        if not match:
+            continue  # Mangler sprog helt: `seo_check` dømmer "no html lang".
+        code = match.group(1).lower().split("-")[0]
+        if code == "da":
+            continue
+        problems.append(
+            f"{relative}: ligger under /da/ men erklærer lang=\"{match.group(1)}\". "
+            "Alt under /da/ er dansk, så page_lang() ville tælle siden som "
+            f"{lang_name(code)} og den danske dækning ville blive en dansk købsside "
+            "mindre uden at nogen bliver advaret."
+        )
+    return problems
+
+
 def lang_name(code: str) -> str:
     """Sprogkoden som læsevenlig tekst i en fejlmeddelelse.
 
@@ -1324,7 +1363,9 @@ def check_language_coverage(catalog: dict, pages: list[tuple[str, str]]) -> list
     havde de tre øvrige licensprodukter en dansk side hver, og den nye side blev
     skrevet som en *fuld dansk købsside* — uden at nogen spiste, at det er
     betingelsen for at danske læsere kan købe. Sproget afledes af
-    `page_lang()` over alle sider i `site/` (305 sider: 199 `en`, 106 `da`), så
+    `page_lang()` over alle sider i `site/` (299 sider: 179 `en`, 120 `da` — de 120
+    tælles på den erklærede `lang`, ikke på stien, så de 14 `<navn>-da.html` i
+    stieroden regnes som dansk), så
     kravet er ikke en navneliste: en ny `/da/`-flade gør det gælde uden at
     porten ved det på forhånd, og en slettet dansk købsside får den ikke til at
     falde sammen til ét sprog.
@@ -2715,6 +2756,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_free_features(catalog, source_pages())
     problems += check_pro_not_built(catalog, source_pages())
     problems += check_language_coverage(catalog, source_pages())
+    problems += check_declared_language(source_pages())
     problems += check_checkout_notes(catalog)
     problems += check_comparisons(catalog, source_pages())
     problems += check_free_cells_for_paid(catalog, source_pages())
@@ -3784,6 +3826,42 @@ def self_test() -> int:
     if "da" in parts[1:-1]:
         print(f"SELFTEST FEJLER: mutationen er ikke længere en dansk side med engelsk sti "
               f"({da_suffix_page}) — scenariet ville teste intet")
+        return 1
+
+    # ── erklæret sprog mod træets sprog ───────────────────────────────────
+    #
+    # Mutationen tager den *modsatte* retning: en dansk side under `/da/` der
+    # får `lang="en"` skrevet ind. Det er den drift der før var stum, fordi
+    # `page_lang()` så tæller siden som engelsk — og da begge sprog allerede
+    # er talte, gav det 0 problemer. Beviset kræver derfor at porten *navngiver
+    # den muterede fil*; en grånetallet-tæller ville være lige så stum.
+    da_tree_page = next((relative for relative, text in source_pages()
+                         if relative.split("/")[1:-1].count("da") == 1
+                         and '<html lang="da"' in text[:400].replace("'", '"')),
+                        None)
+    if not da_tree_page:
+        print("SELFTEST FEJLER: ingen dansk side under /da/ at bruge som mutation — "
+              "sprogreglen er så uden dækning")
+        return 1
+    if check_declared_language(source_pages()):
+        print("SELFTEST FEJLER: de rigtige sider giver røde på den nye sprogregel")
+        return 1
+    switched = [
+        (relative, text.replace('<html lang="da"', '<html lang="en"', 1) if relative == da_tree_page else text)
+        for relative, text in source_pages()
+    ]
+    declared = check_declared_language(switched)
+    if not declared or not any(da_tree_page in problem for problem in declared):
+        print(f"SELFTEST FEJLER: en dansk side under /da/ med lang=\"en\" ({da_tree_page}) "
+              f"går ubemærket — {len(declared)} problemer, ingen af dem navngiver den side")
+        return 1
+    # Negative kontrol: de 14 danske sider med engelsk sti skal være grønne,
+    # ellers dømmer reglen stien i stedet for træet.
+    if check_declared_language([
+        (relative, text) for relative, text in source_pages()
+        if relative == da_suffix_page]):
+        print(f"SELFTEST FEJLER: den danske side med engelsk sti ({da_suffix_page}) "
+              "er meldt rød — reglen dømmer stien og ikke træet")
         return 1
 
     # ── indgang til købssiden: en købsside ingen kan nå ───────────────────
