@@ -34,6 +34,7 @@ ikke er skrevet endnu.
 from __future__ import annotations
 
 import argparse
+import ast
 import re
 import sys
 from pathlib import Path
@@ -158,14 +159,62 @@ def check_source_sitemap_gone(root: Path) -> list[str]:
 #   tools/make_blog_index.py  — skriver `<link rel="alternate" href="/llms.txt">`
 #                               ind i en blogside; rodrelativ, altså den
 #                               publicerede fil
+#   tools/check_sitemaps.py      — dømmer at robots.txt kun peger på filer
+#                               builden faktisk publicerer
+#   tools/test_check_sitemaps.py — samme regel, dømt med en robots.txt der
+#                               reklamerer for `llms.txt`
+#   tools/check_live_sitemaps.py — dømmer de samme filer i produktion
+#   tools/test_check_live_sitemaps.py — fixture med en realistisk robots.txt
 #
-# Uden denne liste så `llms.txt`-reglen fange alle tre, selv om ingen af dem
-# rører kildefilen.
+# De fire sidste er ikke en generel undtagelse: de er de filer der skal
+# *navngive* den genererede fil for at kunne dømme den. `_prose_lines` fjerner
+# den anden slags omtale — kommentarer og docstrings — så listen kun rummer
+# scripts der må sige navnet i kode.
 ALLOWED_LLMS_FILES = {
     "build_sites.py",
     "tools/check_links.py",
     "tools/make_blog_index.py",
+    "tools/check_sitemaps.py",
+    "tools/test_check_sitemaps.py",
+    "tools/check_live_sitemaps.py",
+    "tools/test_check_live_sitemaps.py",
 }
+
+
+def _prose_lines(text: str) -> set[int]:
+    """1-baserede linjenummer der ikke er kode: `#`-kommentarer og docstrings.
+
+    Punkt 2 skal dømme en *skrivning* i en død kildefil, ikke en omtale af den.
+    Ellers bliver porten umulig at bruge: en port der dømmer sig selv, fordi den
+    forklarer hvad den dømmer, tvinger den næste agent til at slå den fra — og så
+    er den væk. Det var ikke et hypotetisk problem: da `check_sitemaps.py` fik
+    en regel der læser robots.txt, måtte den navngive `llms.txt` i sin egen
+    docstring, og porten slog rød på de to nye portfiler plus deres tests.
+
+    Docstrings findes med `ast` frem for med et mønster på teksten, så en
+    tekststreng der *er* kode — en fixture, en fejlbesked, en f-string-sti —
+    stadig dømmes. Det er den forskel der holder mutation 2b i live.
+    """
+    lines: set[int] = set()
+    for number, line in enumerate(text.splitlines(), 1):
+        if line.lstrip().startswith("#"):
+            lines.add(number)
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        # Kan vi ikke parse filen, dømmer vi alt. En port der springer en
+        # syntaktisk ugerig fil over ville være en stille blind plet.
+        return set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        body = getattr(node, "body", None)
+        if not body:
+            continue
+        first = body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            lines.update(range(first.lineno, (first.end_lineno or first.lineno) + 1))
+    return lines
 
 
 def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]:
@@ -174,6 +223,7 @@ def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]
     for name, text in scripts.items():
         if name == GATE_SELF or name in ALLOWED_LLMS_FILES:
             continue
+        prose = _prose_lines(text)
         for relative, _reason in DEAD_SOURCE_FILES:
             if relative == DEAD_SOURCE_LLMS:
                 # Søg på `llms.txt` uden `site/`: `make_blog_site_health_472.py`
@@ -186,13 +236,16 @@ def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]
                 needle = relative
             if needle not in text:
                 continue
-            line = next((i for i, l in enumerate(text.splitlines(), 1)
-                         if needle in l), 0)
+            number = next((i for i, l in enumerate(text.splitlines(), 1)
+                           if needle in l and i not in prose), 0)
+            if not number:
+                # Nævner den døde sti, men kun i kommentarer og docstrings.
+                continue
             owner = ("build_sites.py ejer sitemapperne (dist/<domaene>/sitemap.xml)"
                      if relative == DEAD_SOURCE_SITEMAP
                      else "build_sites.py ejer llms.txt (dist/<domaene>/llms.txt, "
                           "bygget ud fra sidernes pages)")
-            problems.append(f"{name}:{line} refererer til {relative} — {owner}")
+            problems.append(f"{name}:{number} refererer til {relative} — {owner}")
     return problems
 
 
@@ -379,6 +432,36 @@ def self_test() -> int:
         scenarios.append(("et script skriver i kildefilens llms.txt",
                           check_no_script_touches_source_sitemap(_script_files(root))))
         (root / "tools/make_blog_x.py").write_text(healthy["tools/make_blog_x.py"], encoding="utf-8")
+
+        # 2c — en *nævnt* i kommentar eller docstring må ikke fejle. Samme
+        # fejlklasse som 4c, fordi punkt 2 læser hele filens tekst: da
+        # `check_sitemaps.py` fik en regel der dømmer robots.txt, måtte den
+        # sige `llms.txt` i sin egen docstring, og porten slog rød på sig
+        # selv og på de to tests. Mutation 2b ovenfor er modsigelsen: samme
+        # filnavn, i kode, og den skal stadig fejle.
+        (root / "tools/make_blog_x.py").write_text(
+            '# Nævner site/llms.txt i en kommentar\n'
+            'def f():\n'
+            '    """Docstring der nævner site/llms.txt og llms.txt."""\n'
+            '    return 1\n', encoding="utf-8")
+        prose = check_no_script_touches_source_sitemap(_script_files(root))
+        (root / "tools/make_blog_x.py").write_text(healthy["tools/make_blog_x.py"], encoding="utf-8")
+        if prose:
+            for problem in prose:
+                print(f"FALSK POSITIV (2c): {problem}", file=sys.stderr)
+            return 1
+
+        # 2d — modsigelsen til 2c: en tekststreng der ER kode, fx en fixture
+        # eller en fejlbesked, skal stadig dømmes. Springes den over, så 2c
+        # og 2b adskiller sig ikke, og porten er død.
+        (root / "tools/make_blog_x.py").write_text(
+            'MSG = "site/llms.txt er slettet — brug dist/llms.txt"\n', encoding="utf-8")
+        string_literal = check_no_script_touches_source_sitemap(_script_files(root))
+        (root / "tools/make_blog_x.py").write_text(healthy["tools/make_blog_x.py"], encoding="utf-8")
+        if not string_literal:
+            print("FALSK NEGATIV (2d): en tekststreng i kode blev sprunget over med "
+                  "kommentarer og docstrings", file=sys.stderr)
+            return 1
 
         # 3 — et helbredsscript peger på den døde vært
         (root / "indexnow_ping.sh").write_text(
