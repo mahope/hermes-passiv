@@ -485,11 +485,19 @@ def load_offer_inventory() -> dict | None:
     holder på linje med de virkelige sider (én CTA, tilladt link, dokumenteret
     pris). Uden filen er fallbacken *ukendt* — så påstår rapporten hverken en
     rangering eller en liste over synlige tilbud.
+
+    `built_offers` tæller med, fordi det er dokumenterede købssider ligesom
+    `offers` — de er bare bygget et andet sted fra. Målt 27/9: `deskuptime.com/`
+    bygges fra `../auditedwp`, så `/tools/` (to synlige købsknapper, egen
+    canonical, i sitemap) lå uden for inventaret, og et købsklik der blev
+    talt som `other_clicks` — altså som om den slags købsside ikke fandtes.
+    Uden denne linje er `other_clicks` ikke bare støj: den skjuler de
+    købssider, der sælger mest, som *mangler*.
     """
     try:
         catalog = json.loads(OFFER_CATALOG.read_text(encoding="utf-8"))
         product_prices = {key: product.get("price") for key, product in catalog["products"].items()}
-        offers = [offer for offer in catalog["offers"]
+        offers = [offer for offer in list(catalog.get("offers") or []) + list(catalog.get("built_offers") or [])
                   if isinstance(offer, dict) and offer.get("domain") in TRAFFIC_DOMAINS
                   and str(offer.get("route") or "").startswith("/")]
         core = [page for page in catalog["core_pages"]

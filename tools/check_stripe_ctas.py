@@ -2475,6 +2475,186 @@ def check_buy_page_entry(offers: list[dict],
     return problems
 
 
+def built_page_path(domain: str, route: str, dist_root: Path | None = None) -> Path | None:
+    """Filen i `dist/` der serverer `(domæne, route)`, eller None hvis ingen gør.
+
+    Samme regel som `build_sites.canonical_url`: `x/index.html` → `/x/` og
+    `x.html` → `/x`. Uden den ville `/page-profile` (katalogens public route)
+    aldrig finde `dist/mahope.tools/page-profile.html`.
+    """
+    root = (dist_root or (ROOT / "dist")) / domain
+    if not root.is_dir():
+        return None
+    path = (route.split("#")[0].split("?")[0] or "/").lstrip("/")
+    candidates = [root / path, root / f"{path}.html", root / path / "index.html"]
+    if path.endswith("/"):
+        candidates.append(root / path.rstrip("/") / "index.html")
+    for candidate in candidates:
+        if candidate.is_file() and candidate.suffix == ".html":
+            return candidate
+    return None
+
+
+def built_buy_links(path: Path) -> list[tuple[str, str]]:
+    """`(payment_link, label)` for hver *synlig* købsknap i en bygget side."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        return []
+    _, anchors = parse_page(text)
+    return [(href, label) for href, label in anchors if href in set(LINK_PATTERN.findall(text))]
+
+
+def check_built_offer_pages(catalog: dict, dist_root: Path | None = None) -> list[str]:
+    """En publiceret købsside skal stå i inventaret — også når den ikke kommer herfra.
+
+    Fejlformen er målt, ikke antaget (27/9). `check_offers`' modsynkontrol læser
+    `scan_files()`, som kun er kilder under `site/`, så porten var grøn med
+    **13 dokumenterede købssider** mens det **byggede** site havde 16 sider med
+    en synlig købsknap. En købsside der kommer ind udefra kan aldrig nå
+    inventory-kravet, fordi det krav er bundet til en `path` i dette repo:
+
+    - `deskuptime.com/tools/` bygges fra sibling-repoet `../auditedwp`
+      (`build_sites.py:102`). Det er vores egen nav-side "Tools", den har egen
+      canonical, den står i sitemap, og den har to synlige købsknapper.
+    - `cleancopy.tools/clean-copy` og `/da/clean-copy` er byte-identiske
+      kopier af forsiden, som `index_from` udgiver ved siden af den.
+
+    Samme fejlform som de fire foregående fund i rækken: *tallet beregnes og
+    siges ikke.* Kortlægningen var sand for de 13 den kendte, og stum for de 3
+    den ikke kendte — så et købsklik på `/tools/` blev talt som
+    `other_clicks`, altså som et klik uden for de dokumenterede købssider.
+
+    Derfor læses det **byggede** site, og derfor kan `built_offers` i katalogen
+    dokumentere en side efter sin publicerede rute i stedet for en filsti.
+    `built_offers` er ikke en undtagelseskløft: hver indgang skal pege på en
+    side der faktisk er bygget med en købsknap, skal nævne hvor den kommer fra,
+    og skal have præcis én synlig CTA — de samme krav som `offers`.
+
+    Uden et bygget site springes domænerne over, som `check_buy_page_entry`
+    gør: gaten bygger først, så et fraværende `dist/` er en kørsel der
+    undgår dækning, ikke en købsside der er glemt.
+    """
+    products = catalog["products"]
+    documented: dict[tuple[str, str], set[str]] = {}
+    for offer in list(catalog.get("offers") or []) + list(catalog.get("built_offers") or []):
+        if not isinstance(offer, dict):
+            continue
+        domain, route = offer.get("domain"), offer.get("route")
+        if not isinstance(domain, str) or not isinstance(route, str):
+            continue
+        documented.setdefault(route_key(domain, route), set()).add(str(offer.get("product")))
+
+    problems: list[str] = []
+    for domain in KNOWN_DOMAINS:
+        base = (dist_root or (ROOT / "dist")) / domain
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob("*.html")):
+            relative = path.relative_to(base).as_posix()
+            if relative == "404.html" or relative.endswith("/404.html"):
+                continue
+            owners = sorted({owner for link, _ in built_buy_links(path)
+                             if (owner := next((key for key, product in products.items()
+                                                 if product.get("payment_link") == link), None))})
+            if not owners:
+                continue
+            key = route_key(domain, "/" + relative)
+            for owner in owners:
+                if owner in documented.get(key, set()):
+                    continue
+                problems.append(
+                    f"købsknap på en genereret side mangler i inventoryet: {domain}/{relative} "
+                    f"({owner}). Den bygges, den er publiceret, og den tager penge — men den "
+                    f"står hverken i `offers` (som kræver en fil i dette repo) eller i "
+                    f"`built_offers` (som kan dokumenteres efter sin publicerede rute). Uden den "
+                    f"tæller et købsklik der som `other_clicks`, altså som om ingen købsside "
+                    f"findes."
+                )
+    problems += check_built_offer_entries(catalog, dist_root)
+    return problems
+
+
+def check_built_offer_entries(catalog: dict, dist_root: Path | None = None) -> list[str]:
+    """`built_offers` skal være sande indgange, ikke løsnoter.
+
+    En indgang uden `source` ville kun være en måde at slå kravet fra, så den
+    skal sige hvor siden kommer fra. En `alias_of` skal pege på en side der
+    *er* dokumenteret, og den byggede sides canonical skal være præcis den —
+    så en side der senere bliver sin egen (eller bygges med en forkert
+    canonical) fanges her og ikke som en stum dobbeltgæng.
+    """
+    products = catalog["products"]
+    offers = [offer for offer in catalog.get("offers") or [] if isinstance(offer, dict)]
+    known_routes = {route_key(offer.get("domain"), offer.get("route"))
+                    for offer in offers
+                    if isinstance(offer.get("domain"), str) and isinstance(offer.get("route"), str)}
+    problems: list[str] = []
+    for entry in catalog.get("built_offers") or []:
+        if not isinstance(entry, dict):
+            problems.append("katalog: en built_offers-indgang er ikke et objekt")
+            continue
+        domain, route, product = entry.get("domain"), entry.get("route"), entry.get("product")
+        label = f"{domain}{route}"
+        if domain not in KNOWN_DOMAINS:
+            problems.append(f"built_offers: {label} bruger ukendt domæne")
+            continue
+        if not isinstance(route, str) or not route.startswith("/"):
+            problems.append(f"built_offers: {label} skal have en publiceret route med start '/'. "
+                            "En filsti er ikke en route — inventaret skal kunne finde siden i "
+                            "trafikken, og det sker på routen.")
+            continue
+        if product not in products:
+            problems.append(f"built_offers: {label} bruger ukendt product_key {product!r}")
+            continue
+        if not str(entry.get("source") or "").strip():
+            problems.append(f"built_offers: {label} mangler `source`. Uden den ved ingen hvor "
+                            "siden kommer fra, så indgangen er en måde at slå kravet fra.")
+            continue
+        path = built_page_path(domain, route, dist_root)
+        if path is None:
+            continue  # Ingen bygget site: samme ærlige fravalg som check_buy_page_entry.
+        ctas = [label_text for link, label_text in built_buy_links(path)
+                if link == products[product].get("payment_link")]
+        expected = entry.get("ctas", 1)
+        if not isinstance(expected, int) or expected < 1:
+            problems.append(f"built_offers: {label} har ctas={expected!r}. Det skal være et "
+                            "heltal ≥ 1, så et tal ikke kan skjule en købsknap.")
+        elif len(ctas) != expected:
+            problems.append(f"built_offers: {label} har {len(ctas)} synlige CTA'er for {product}, "
+                            f"forventet præcis {expected}")
+        if expected != 1 and not str(entry.get("ctas_note") or "").strip():
+            problems.append(f"built_offers: {label} erklærer {expected} købsknapper, så den skal "
+                            "svare på hvorfor siden ikke kan have præcis én — ellers er `ctas` "
+                            "bare en måde at slå reglen fra.")
+        alias = entry.get("alias_of")
+        if alias is not None:
+            if not isinstance(alias, str) or not alias.startswith("/"):
+                problems.append(f"built_offers: {label} har alias_of={alias!r}, som ikke er en route")
+                continue
+            if route_key(domain, alias) not in known_routes:
+                problems.append(f"built_offers: {label} er en dublet af {alias}, og den side er "
+                                "ikke dokumenteret i `offers` — så der er ingen side at være "
+                                "dublet af.")
+                continue
+            canonical = canonical_href(path)
+            if not canonical or canonical.rstrip("/") != f"https://{domain}{alias}".rstrip("/"):
+                problems.append(f"built_offers: {label} siger alias_of={alias}, men dens egen "
+                                f"canonical er {canonical!r}. En dublet der ikke peger på sin "
+                                "kilde er sin egen side og skal dokumenteres som sådan.")
+    return problems
+
+
+def canonical_href(path: Path) -> str | None:
+    """`link rel=canonical` fra dokumentets head, eller None."""
+    parser = DiscoverabilityMeta()
+    try:
+        parser.feed(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, OSError):
+        return None
+    return parser.canonicals[0] if parser.canonicals else None
+
+
 class DiscoverabilityMeta(HTMLParser):
     """Robots og canonical fra et dokuments *head*, ikke dets JavaScript.
 
@@ -2996,6 +3176,7 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += offer_problems
     problems += check_routes(catalog.get("offers") or [], catalog.get("core_pages"))
     problems += check_buy_page_entry(catalog.get("offers") or [], entry_point_index())
+    problems += check_built_offer_pages(catalog)
     problems += check_indexable_entry(entry_point_index())
     problems += check_billing_portal(catalog)
     problems += check_forbidden_claims()
@@ -3015,7 +3196,23 @@ def run(catalog: dict) -> tuple[list[str], list[dict]]:
     problems += check_unbuyable_prices(catalog, source_pages())
     problems += check_client_purchase_targets(catalog)
     problems += check_buy_click_tracking(catalog, source_pages())
+    # `built_offers` tæller med i inventaret, så optællingen på linjen
+    # `dokumenterede købssider` kan ikke længere være mindre end det byggede
+    # site. Det er hele pointen: porten var grøn med 13 mens 16 kunne tage
+    # penge, fordi de tre ikke havde en filsti i dette repo.
+    for entry in catalog.get("built_offers") or []:
+        if isinstance(entry, dict):
+            inventory.append({"path": None, "domain": entry.get("domain"),
+                              "route": entry.get("route"), "product": entry.get("product"),
+                              "price": products_of(entry, catalog), "prices_on_page": [],
+                              "cta": [], "link": catalog["products"].get(entry.get("product"), {}).get("payment_link"),
+                              "built": True})
     return problems, inventory
+
+
+def products_of(entry: dict, catalog: dict) -> str:
+    product = catalog["products"].get(entry.get("product")) or {}
+    return str(product.get("price") or "")
 
 
 def discover_offers(catalog: dict) -> list[dict]:
@@ -4389,6 +4586,71 @@ def self_test() -> int:
     # `check_sale_denials`' docstring: med `CATALOG` som kilde kan den aldrig
     # fyre, så den ville være et bevis der så ud som et bevis.
 
+    # `built_offers`: en købsside der bygges et andet sted fra end dette repo
+    # (`deskuptime.com/tools/` kommer fra `../auditedwp`) lå uden for alle
+    # krav, så porten var grøn med 13 dokumenterede købssider mens det
+    # byggede site havde 16 der kunne tage penge. Scenarierne er et syntetisk
+    # `dist/`, så selftesten ikke skriver i det rigtige build.
+    with tempfile.TemporaryDirectory() as tmp:
+        fake = Path(tmp) / "dist"
+        (fake / "deskuptime.com" / "tools").mkdir(parents=True)
+        (fake / "deskuptime.com" / "index.html").write_text(
+            '<html><head><link rel="canonical" href="https://deskuptime.com/"></head>'
+            '<body><p>Uptime. <a href="/tools/">Se værktøjerne</a></p></body></html>', encoding="utf-8")
+        (fake / "deskuptime.com" / "tools" / "index.html").write_text(
+            '<html><head><link rel="canonical" href="https://deskuptime.com/tools/"></head>'
+            f'<body><p>Tools.</p><a href="{clean_copy_link}">Buy</a>'
+            f'<a href="{clean_copy_link}">Get Pro</a></body></html>', encoding="utf-8")
+        # Den syntetiske side har to købsknapper, som den rigtige `/tools/` har
+        # (målt 27/9), så indgangen skal erklære det og sige hvorfor.
+        built_ok = {"domain": "deskuptime.com", "route": "/tools/",
+                    "product": "clean-copy-pro", "source": "syntetisk",
+                    "ctas": 2, "ctas_note": "søskenderepo, må ikke røres"}
+        # Rød: den er bygget og sælger, men ingen af listerne kender den.
+        built_undocumented = check_built_offer_pages({**good, "built_offers": []}, fake)
+        # Grøn: samme side, dokumenteret efter sin publicerede rute.
+        built_documented = check_built_offer_pages({**good, "built_offers": [built_ok]}, fake)
+        # Rød: en indgang uden `source` siger intet om hvor siden kommer fra.
+        built_sourceless = check_built_offer_pages(
+            {**good, "built_offers": [{k: v for k, v in built_ok.items() if k != "source"}]}, fake)
+        # Rød: `ctas` må ikke være en måde at slå reglen fra uden at svare på
+        # hvorfor siden ikke kan have præcis én købsknap.
+        built_ctas_loud = check_built_offer_pages(
+            {**good, "built_offers": [{k: v for k, v in built_ok.items() if k != "ctas_note"}]}, fake)
+        # `alias_of` må ikke være en seddel man kan hænge på enhver side. Den
+        # kræver, at den byggede sides canonical *er* den side den påstår at
+        # være en dublet af — målt 27/9 på de to `index_from`-kopier af
+        # Clean Copy-forsiden, hvis canonical peger på `/` og `/da/`.
+        (fake / "cleancopy.tools").mkdir(parents=True, exist_ok=True)
+        (fake / "cleancopy.tools" / "clean-copy.html").write_text(
+            '<html><head><link rel="canonical" href="https://cleancopy.tools/"></head>'
+            f'<body><p>Clean Copy.</p><a href="{clean_copy_link}">Buy</a></body></html>', encoding="utf-8")
+        (fake / "cleancopy.tools" / "da").mkdir(parents=True, exist_ok=True)
+        (fake / "cleancopy.tools" / "da" / "clean-copy.html").write_text(
+            '<html><head><link rel="canonical" href="https://cleancopy.tools/da/"></head>'
+            f'<body><p>Clean Copy.</p><a href="{clean_copy_link}">Køb</a></body></html>', encoding="utf-8")
+        (fake / "cleancopy.tools" / "da" / "clean-copy-tool.html").write_text(
+            '<html><head><link rel="canonical" href="https://cleancopy.tools/da/clean-copy-tool"></head>'
+            f'<body><p>Clean Copy.</p><a href="{clean_copy_link}">Køb</a></body></html>', encoding="utf-8")
+        alias_entries = [
+            {"domain": "cleancopy.tools", "route": "/clean-copy", "product": "clean-copy-pro",
+             "source": "syntetisk", "alias_of": "/"},
+            {"domain": "cleancopy.tools", "route": "/da/clean-copy", "product": "clean-copy-pro",
+             "source": "syntetisk", "alias_of": "/da/"},
+        ]
+        alias_liar_entry = {"domain": "cleancopy.tools", "route": "/da/clean-copy-tool",
+                            "product": "clean-copy-pro", "source": "syntetisk", "alias_of": "/da/"}
+        # Negativ kontrol først: samme tre sider, hvor løgneren er dokumenteret
+        # *uden* `alias_of` — altså som sin egen side. Den skal være grøn,
+        # ellers ville porten bare forbyde at udgive siden overhovedet.
+        alias_ok = check_built_offer_pages({**good, "built_offers": [
+            built_ok, *alias_entries,
+            {**alias_liar_entry, "alias_of": None}]}, fake)
+        # Rød: `/da/clean-copy-tool` siger alias_of=/da/, men dens canonical er
+        # sig selv — altså en side der *ligner* en dublet uden at være en.
+        alias_liar = check_built_offer_pages(
+            {**good, "built_offers": [built_ok, *alias_entries, alias_liar_entry]}, fake)
+
     scenarios: list[tuple[str, list[str] | Any]] = [
         ("et link uden for allowlisten", check_links(rogue_link)),
         ("et kontraktprodukt mangler i allowlisten", check_catalog(missing_product)),
@@ -4432,6 +4694,10 @@ def self_test() -> int:
         ("en tracker der sender en anden begivenhed end buy-click", renamed_click),
         ("en side der lover et køb der ikke findes", forbidden_found),
         ("en side der nægter at sælge et katalogeret produkt", denied_found),
+        ("en bygget købsside der ikke står i inventaret", built_undocumented),
+        ("en built_offers-indgang uden kilde", built_sourceless),
+        ("en bygget købsside med flere købsknapper uden forklaring", built_ctas_loud),
+        ("en dublet der ligner en dublet uden at være en", alias_liar),
     ]
     missed = [label for label, problems in scenarios if not problems]
     for label in missed:
@@ -4463,6 +4729,8 @@ def self_test() -> int:
                             ("en kundeportal som ikke er et køb", portal_click),
                              ("en forbudt købspåstand i skjult head-tekst", forbidden_hidden),
                              ("en nægtelse uden en nægtelse", denied_clean),
+                             ("en bygget købsside der står i inventaret", built_documented),
+                             ("to byggede dubletter med rigtig canonical", alias_ok),
                              ("en ærlig nægtelse på en side der ikke sælger produktet",
                               honest_denial)):
         if problems:

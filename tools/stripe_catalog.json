@@ -553,6 +553,33 @@
       ]
     }
   ],
+  "built_offers": [
+    {
+      "domain": "deskuptime.com",
+      "route": "/tools/",
+      "product": "deskuptime-pro",
+      "source": "../auditedwp/index.html — bygges ind i dist af build_sites.py:102, så kilden ligger i et sibling-repo og ikke her",
+      "ctas": 2,
+      "ctas_note": "Målt 27/9: to synlige købsknapper med samme link. Kilden er ../auditedwp, som jeg ikke må ændre, så jeg kan ikke reducere den til én her. Konsekvensen er målt, ikke antaget: track.js tæller hvert klik på et Stripe-link, så én købshensigt på denne side tælles 2 gange i recentBuyClicks. Reglen for `offers` er præcis 1, fordi et købsklik skal være én hendelse. Retten kræver enten en ændring i ../auditedwp eller at build_sites.py efterbehandler siden.",
+      "why": "Selvstændig Pro-side i vores egen nav ('Tools'/'Værktøjer') med egen canonical, i sitemap og med to synlige købsknapper. Målt 27/9 som den eneste publicerede købsside porten ikke kendte: den er grøn med 13 dokumenterede købssider, mens det byggede site har 16."
+    },
+    {
+      "domain": "cleancopy.tools",
+      "route": "/clean-copy",
+      "product": "clean-copy-pro",
+      "source": "build_sites.py `index_from` — site/index.html udgives ved siden af site/clean-copy.html, som er forsiden",
+      "alias_of": "/",
+      "why": "Byte-identisk kopi af forsiden (cmp: IDENTISK) med canonical på /, udgivet af index_from. Den tager penge, så den skal stå i inventaret — men den er en dublet og ikke en landingsside, og alias_of er det der siger det."
+    },
+    {
+      "domain": "cleancopy.tools",
+      "route": "/da/clean-copy",
+      "product": "clean-copy-pro",
+      "source": "build_sites.py `index_from` — site/da/index.html udgives ved siden af site/da/clean-copy.html, som er den danske forside",
+      "alias_of": "/da/",
+      "why": "Samme dublet på dansk: byte-identisk kopi af /da/ med canonical på /da/."
+    }
+  ],
   "core_pages": [
     {
       "product": "clean-copy-pro",
