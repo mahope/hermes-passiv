@@ -62,6 +62,11 @@
             + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
             + (d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
             + (d.activate_url ? '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>' : '')
+            // Et link med navnet "How to activate" er ikke en instruktion.
+            // `activate_hint` er det samme felt kvitteringsmailen bruger, og det
+            // findes kun på produkter med en målt aktivering — så den kan ikke
+            // være en standardsætning, der står på hvert køb.
+            + (d.activate_hint ? '<p class="hint">' + esc(d.activate_hint) + '</p>' : '')
             + (d.billing_portal
               ? '<div class="portal-row"><p><strong>Your subscription renews yearly.</strong> You can cancel any time, '
                 + 'download your invoices and update your card or VAT ID yourself here: '

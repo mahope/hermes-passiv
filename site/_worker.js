@@ -1244,13 +1244,19 @@ async function handleLicenseLookup(request, env) {
   let rec = {};
   try { rec = JSON.parse(recRaw); } catch {}
   const home = (STRIPE_PRODUCTS[rec.product] && STRIPE_PRODUCTS[rec.product].home) || STRIPE_PRODUCTS['clean-copy-pro'].home;
-  return jsonResp({
+  const answer = {
     ok: true,
     license_key: key,
     plan: rec.plan || 'pro-yearly',
     expires_at: rec.expires_at || null,
     activate_url: home,
-  });
+  };
+  // Samme additive felt som leveringssvaret, så nøgleopslaget ikke er det ene
+  // sted en kunde kan læse hvor nøglen sættes ind. Kun når produktet har en
+  // målt aktivering — se målingen over STRIPE_PRODUCTS.
+  const hint = STRIPE_PRODUCTS[rec.product] && STRIPE_PRODUCTS[rec.product].activateHint;
+  if (hint) answer.activate_hint = hint;
+  return jsonResp(answer);
 }
 
 /**
@@ -3172,9 +3178,32 @@ async function handleBugreport(request, url, env) {
 // `subscription: true` betyder, at produktet sælges som et årligt abonnement.
 // Kunden skal kunne opsige og hente fakturaer selv, så sådanne køb får kundeportalen.
 const BILLING_PORTAL_URL = 'https://billing.stripe.com/p/login/6oU4gy76PgvgdBIdAXbMQ00';
+// Målt 27/9, alle fem licensprodukter, med curl mod den URL `home` peger på:
+// hvilken side har et sted at sætte nøglen ind?
+//   clean-copy-pro    cleancopy.tools/activate/ — **siden ER aktiveringen**:
+//                     en HowTo med trinene "Open the Clean Copy extension
+//                     options" / "Paste your license key" / "Confirm
+//                     activation". Knappen lander i instruktionen, så en
+//                     `activateHint` her ville være støj.
+//   deskuptime-pro    deskuptime.com/ — knappen lander på **installations-
+//                     siden**, og den siger hvad appen gør med nøglen
+//                     (site/deskuptime/index.html:99).
+//   transmute-desktop transmute.run/ — dokumentationsside. 0 nøglefelter, og
+//                     ingen af os har et sted, hvor nøglen sættes ind.
+//   page-profile-pro  mahope.tools/page-profile — værktøjet siger "License
+//                     key by email" og "Online activation", men **intet sted
+//                     siger hvor nøglen sættes ind**.
+//   eucomply-pro      eucomplypro.com/pro/ — feltet "Pro License Key" i
+//                     plugin'en (auditedwp/plugin/eucomply.php:246 og :1994).
+// Konklusion: 2 af 5 har et målt sted, 1 har slet ikke brug for det, og 2 har
+// **ingen dokumenteret aktivering**. `activateHint` er derfor et felt der kun
+// findes på de to, aldrig en standardsætning — det er derfor porten
+// `check_stripe_ctas` ikke kan skelne, og derfor dømmes det i testen på begge
+// veje. De to manglende er en produktregulær mangel, ikke en tekstopgave:
+// skrivning dem kræver en side, der ikke findes endnu.
 const STRIPE_PRODUCTS = {
   'clean-copy-pro': { name: 'Clean Copy Pro', kind: 'license', maxDevices: 5, subscription: true, home: 'https://cleancopy.tools/activate/' },
-  'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/' },
+  'deskuptime-pro': { name: 'DeskUptime Pro', kind: 'license', maxDevices: 3, home: 'https://deskuptime.com/', activateHint: 'The desktop app asks for the licence key the first time you start it. Free without a key: the command-line tool.' },
   'transmute-desktop': { name: 'Transmute Desktop', kind: 'license', maxDevices: 3, home: 'https://transmute.run/' },
   // `home` er det leveringssvaret kalder `activate_url`, og det havnede på
   // /pricing/ — en butiksvindue. Køberen fik "Activate it here" og en knap
@@ -3455,6 +3484,12 @@ async function fulfillStripeSession(env, sessionId) {
       await env.VISITS.put(`lic-email:${hex(new Uint8Array(d))}:${sessionId}`, key);
     }
     Object.assign(result, { license_key: key, expires_at: expiresAt, max_devices: product.maxDevices * qty, activate_url: product.home });
+    // /thanks' knap "How to activate" er et link, ikke en instruktion. Samme
+    // `activateHint` som kvitteringsmailen bruger, så køberen læser det samme
+    // begge steder. Feltet sættes kun når produktet faktisk har en målt
+    // aktivering, så et download eller et produkt uden sted ikke kan få en
+    // instruktion der er opfundet på købssiden.
+    if (product.activateHint) result.activate_hint = product.activateHint;
     if (product.subscription) {
       // Årsabonnenter skal selv kunne opsige, hente fakturaer og rette momsnummer.
       result.subscription = true;
