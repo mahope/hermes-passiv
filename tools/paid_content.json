@@ -25,37 +25,49 @@
       "product_key": "eucomply-dpa",
       "name": "GDPR DPA template",
       "price": "$59",
-      "delivery_files": ["dpa-template.pdf", "dpa-template.md"],
+      "delivery_files": [
+        "dpa-template.pdf",
+        "dpa-template.md"
+      ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eucomply-nis2-clauses",
       "name": "NIS2 / DORA Vendor Clause Set",
       "price": "$49",
-      "delivery_files": ["nis2-vendor-clauses.pdf", "nis2-vendor-clauses.md"],
+      "delivery_files": [
+        "nis2-vendor-clauses.pdf",
+        "nis2-vendor-clauses.md"
+      ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eucomply-nda-clauses",
       "name": "Mutual NDA Clause Set",
       "price": "$29",
-      "delivery_files": ["nda-clause-set.pdf", "nda-clause-set.md"],
+      "delivery_files": [
+        "nda-clause-set.pdf",
+        "nda-clause-set.md"
+      ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eucomply-eaa-statement",
       "name": "EAA Accessibility Statement",
       "price": "$39",
-      "delivery_files": ["eaa-statement-template.pdf", "eaa-statement-template.md"],
+      "delivery_files": [
+        "eaa-statement-template.pdf",
+        "eaa-statement-template.md"
+      ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eucomply-report-kit",
@@ -71,7 +83,7 @@
       ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eucomply-template-bundle",
@@ -95,16 +107,19 @@
       ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     },
     {
       "product_key": "eu-compliance-ebook-bundle",
       "name": "EU Compliance E-book Bundle",
       "price": "$29",
-      "delivery_files": ["compliance-bundle.pdf", "compliance-bundle-v1.0.zip"],
+      "delivery_files": [
+        "compliance-bundle.pdf",
+        "compliance-bundle-v1.0.zip"
+      ],
       "build_command": null,
       "sha256": null,
-      "kv_verified": false
+      "kv_verified": true
     }
   ],
   "retired_public_files": {
@@ -124,5 +139,11 @@
       "products/vendor-assessment-checklist.md"
     ],
     "note": "Aldrig offentlig igen. Navnene bruges kun som regressionsvåg, så den oprindelige fejl fanges hvis filerne dukker op igen."
+  },
+  "kv_verification": {
+    "date": "2026-09-27",
+    "method": "GET https://mahope.tools/api/paid-files",
+    "result": "ready == files for alle svyv produkter (2+2+2+2+6+14+2 = 30 nøgler), available: true",
+    "note": "Nøglerne er `paidfile:<fil>` — præcis dem paidFilesStatus læser. sha256 er stadig null: målingen beviser at nøglerne findes i produktions-KV, ikke at indholdet er det forventede."
   }
 }
