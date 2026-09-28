@@ -135,10 +135,51 @@ def known_counter(value: object) -> int | None:
     return value if type(value) is int and value >= 0 else None
 
 
+# Undtagelserne der betyder "vores egen kode er brudt", ikke "kilden svarer
+# ikke". Uge 40 (2026-09-28) endte med `api/stats: NameError: name 'count' is
+# not defined`, og `soft()` slugte den *samme* linje som et 502 fra
+# `mahope.tools/api/stats`: rapporten skrev "Trafiktal er ukendt, fordi
+# mahope.tools/api/stats ikke leverede komplette data", altså skyldte den
+# *kilden* en fejl der lå i os selv — og den lå der i fire uger (37–40).
+#
+# `ValueError` er bevidst *ikke* med: `json.JSONDecodeError` arver fra den, og
+# den kommer frafjern data vi ikke styrer. Det ville gøre "API'et svarede
+# skrot" til et crash, altså præcis den falske alarm porten skal undgå.
+# `RuntimeError` er heller ikke med: den er i `collect_stats`' egen
+# fejlhåndtering for ufuldstændige data.
+CODE_ERRORS = (
+    NameError,  # dækker UnboundLocalError
+    AttributeError,
+    TypeError,
+    KeyError,
+    IndexError,
+    SyntaxError,  # dækker IndentationError
+    ImportError,
+    AssertionError,
+    RecursionError,
+)
+
+
 def soft(source: str, fn, default=None):
-    """Kør fn(); enhver fejl bliver til en note, aldrig et crash."""
+    """Kør fn(); forbigående fejl bliver en note, kodefejl stopper rapporten.
+
+    Uge 40 viste at "enhver fejl er blød" er en løgnest: en `NameError` i
+    `collect_stats` blev læst som "trafikken kunne ikke hentes", fire
+    rapporter i træk, og `top_paths` — missionens grundlag for at finde de
+    sider med flest besøg — var tom i hele perioden. En kodefejl må derfor
+    ikke normaliseres til et grønt sektionsfelt.
+
+    Noten skrives *før* `raise`, så en kaldende længere oppe, der griber
+    fejlen, stadig kan se årsagen i `ERRORS`.
+    """
     try:
         return fn()
+    except CODE_ERRORS as exc:
+        # Noten skrives før `raise`, så en kaldende længere oppe, der griber
+        # fejlen, stadig kan se årsagen i `ERRORS` — og så `errors` ikke er tom
+        # i et spor af fejlen, hvis rapporten alligevel skrives.
+        note_error(source, exc)
+        raise
     except Exception as exc:  # noqa: BLE001 — blød fejl er hele pointen
         note_error(source, exc)
         return default

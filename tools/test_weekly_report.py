@@ -990,5 +990,63 @@ class RankingTests(ReportFixture, unittest.TestCase):
         self.assertEqual(["/page-profile"], data["traffic"]["ranking"]["constant_paths"]["mahope.tools"])
 
 
+class SoftTests(ReportFixture, unittest.TestCase):
+    """`soft()` må ikke sluge kodefejl som om de var en død kilde.
+
+    Uge 40 (2026-09-28) skrev `api/stats: NameError: name 'count' is not
+    defined`, og rapporten skrev samtidig "Trafiktal er ukendt, fordi
+    mahope.tools/api/stats ikke leverede komplette data" — den skyldte
+    *kilden* en `NameError` i vores egen kode, og det skete i fire rapporter
+    (uge 37–40). Formen holdt også `top_paths` tom, som missionens opgave 4
+    bruger til at finde de mest besøgte sider.
+    """
+
+    def test_code_error_is_raised_and_still_noted(self) -> None:
+        def broken():
+            raise NameError("name 'count' is not defined")
+
+        with self.assertRaises(NameError):
+            report.soft("api/stats", broken, {})
+        # Noten skrives *før* raise, så en kaldende længere oppe kan se
+        # årsagen. Uden den ville `errors` være tom i det øjeblik, fejlen
+        # skiller sig fra en forbigående netværksfejl.
+        self.assertEqual(["api/stats: NameError: name 'count' is not defined"], list(report.ERRORS))
+
+    def test_every_declared_code_error_raises(self) -> None:
+        # Hvert navn i `CODE_ERRORS` skal faktisk være fanget. Et navn der
+        # ikke findes ville bare være død kode, og porten ville se grøn ud.
+        for cls in report.CODE_ERRORS:
+            with self.subTest(cls=cls.__name__):
+                with self.assertRaises(cls):
+                    report.soft("api/stats", lambda cls=cls: (_ for _ in ()).throw(cls("b")), {})
+
+    def test_transient_failures_stay_soft(self) -> None:
+        # De forbigående skal * stadig* blive en note og en standardværdi.
+        # Ellers dør hver uge hvor et enkelt timeout tager hele rapporten
+        # med — det var uge 39.
+        for exc in (urllib.error.URLError("forbigående"), TimeoutError("timeout"),
+                    ConnectionError("forbindelse"), RuntimeError("ufuldstændige data")):
+            with self.subTest(exc=type(exc).__name__):
+                report.ERRORS.clear()
+                self.assertEqual({}, report.soft("api/stats", _raise(exc), {}))
+                self.assertEqual(1, len(report.ERRORS))
+                self.assertIn(type(exc).__name__, report.ERRORS[0])
+
+    def test_value_error_stays_soft(self) -> None:
+        # `json.JSONDecodeError` arver fra `ValueError` og kommer fra
+        # fjern data. Hvis den blev dømt som kodefejl, ville "API'et svarede
+        # skrot" crash'e rapporten i stedet for at blive en note.
+        report.ERRORS.clear()
+        self.assertEqual({}, report.soft("api/stats", _raise(ValueError("skrot json")), {}))
+        self.assertEqual(["api/stats: ValueError: skrot json"], list(report.ERRORS))
+
+
+def _raise(exc: BaseException):
+    def boom():
+        raise exc
+
+    return boom
+
+
 if __name__ == "__main__":
     unittest.main()
