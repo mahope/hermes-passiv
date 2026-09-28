@@ -76,6 +76,60 @@ RE_GROUP_INDEX = re.compile(r"\[(\d+)\]")
 # En betinget gren der sender et fast navn: `…test(h)?'donate':…`
 RE_LITERAL_BRANCH = re.compile(rf"({RE_LITERAL})\.test\(h\)\?'([a-z0-9-]+)'", re.S)
 RE_HREF = re.compile(r"""<a\b[^>]*?\bhref=["']([^"']+)["']""", re.I)
+# Den fælles tracker. Sådan indlæser en side den.
+RE_TRACK_JS = re.compile(r"""<script\b[^>]*\bsrc=["']/track\.js["']""", re.I)
+# En `href` der peger på en af familiens egne stier. Samme form som den inline
+# tracker matcher på, så de to veje dømmer det samme.
+RE_FAMILY_PATH = re.compile(
+    r"/(?:da/)?([a-z0-9-]+)(?:\.html)?/?(?:#[^#]*)?\Z")
+
+
+def _shared_tracker(root: Path) -> str:
+    """Indholdet af `site/track.js`, eller en tom streng når den ikke findes."""
+    path = root / "site" / "track.js"
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return ""
+
+
+# Den fælles trackers hvidliste: `var CTA_PATHS = /^\/…(scan|…)…/;`
+#
+# Den skal have sin egen læser. `_trackers` forventer den **indlejrede** form,
+# der læser gruppen lige efter `h.match(…)`; `track.js` læser den i et separat
+# regex-literal og bruger m[1] senere i en anden sætning. At genbruge
+# `_trackers` ville give 0 trackere — altså "denne fil måler intet" — og
+# porten ville advare om de præcis 70 sider rettelsen fik til at sende. En
+# fejl i en port, der ligner de 207 andre sider grønne, er dyrere end ingen
+# port, så formen læses eksplicit og med sin egen selftest.
+RE_SHARED_CTA = re.compile(r"CTA_PATHS\s*=\s*(/[^\n;]+)")
+RE_SHARED_SEND = re.compile(r"event:\s*'cta-'\s*\+|\['cta-'\s*\+")
+
+
+def _shared_has_cta_tracker(text: str) -> Tracker | None:
+    """Trackeren i `track.js`, eller None hvis filen ikke sender cta-begivenheder.
+
+    Dømmer på *begge* dele: en hvidliste der findes, men ingen der sender den,
+    måler lige så lidt som ingen hvidliste.
+    """
+    if not text or not RE_SHARED_SEND.search(text):
+        return None
+    literal = RE_SHARED_CTA.search(text)
+    if not literal:
+        return None
+    return Tracker(_js_regex(literal.group(1)), 1, [])
+
+
+def _family_links(text: str, tool_paths: set[str]) -> list[str]:
+    """De værktøjsstier siden faktisk linker til, i dokumentets rækkefølge."""
+    found: list[str] = []
+    for href in dict.fromkeys(RE_HREF.findall(text)):
+        if href.startswith(("http://", "https://", "#", "mailto:", "tel:", "javascript:", "//")):
+            continue
+        seg = RE_FAMILY_PATH.match(href)
+        if seg and seg.group(1) in tool_paths:
+            found.append(href)
+    return found
 
 
 def _js_regex(source: str) -> re.Pattern[str] | None:
@@ -150,7 +204,10 @@ def check(root: Path = ROOT) -> tuple[list[str], list[str]]:
 
     # Først alle trackere, så vi ved hvilke værktøjsstier der overhovedet er
     # målbare i familien. En sti ingen måler, skal heller ikke advares om.
+    # `track.js` tælles med: den har sin egen delegerede CTA-lytter, så dens
+    # hvidliste er lige så reel som den inline forms.
     pages: list[tuple[Path, list[Tracker]]] = []
+    untracked: list[tuple[str, list[str]]] = []
     tool_paths: set[str] = set()
     for path in sorted(site.rglob("*.html")):
         text = path.read_text(encoding="utf-8", errors="ignore")
@@ -162,6 +219,28 @@ def check(root: Path = ROOT) -> tuple[list[str], list[str]]:
             if t.pattern is not None:
                 tool_paths.update(t.pattern.pattern.split(")")[0].replace("^\\", "").split("|"))
                 tool_paths.discard("")
+
+    shared = _shared_tracker(root)
+    shared_tracker = _shared_has_cta_tracker(shared)
+    if shared_tracker is not None and shared_tracker.pattern is not None:
+        tool_paths.update(
+            x for x in shared_tracker.pattern.pattern.split(")")[0]
+            .replace("^\\", "").split("|") if x)
+
+    # En side *uden* egen tracker kan stadig måles, hvis den indlæser den
+    # fælles `track.js`. Det er præcis rettelsen i denne iteration, så porten
+    # skal kende den vej — ellers ville den advare om de 70 sider, rettelsen
+    # netop fik til at sende. Den skal derfor *kun* advare om sider der hverken
+    # har egen tracker eller indlæser en `track.js` der sender.
+    for path in sorted(site.rglob("*.html")):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if _trackers(text):
+            continue
+        if shared_tracker is not None and RE_TRACK_JS.search(text) is not None:
+            continue
+        targets = _family_links(text, tool_paths)
+        if targets:
+            untracked.append((path.relative_to(site).as_posix(), targets))
 
     unmapped: dict[str, set[str]] = {}
     for path, trackers in pages:
@@ -195,6 +274,14 @@ def check(root: Path = ROOT) -> tuple[list[str], list[str]]:
             f"link til /{target} på {len(sources)} sider sendes ingen cta-begivenhed, "
             f"fordi stien ikke står i de sideres egen whitelist: {shown}{more} — "
             f"klikket kan ikke måles")
+
+    if untracked:
+        shown = ", ".join(f"{rel} ({len(t)} links)" for rel, t in sorted(untracked)[:4])
+        more = f" (+{len(untracked) - 4} flere)" if len(untracked) > 4 else ""
+        warnings.append(
+            f"{len(untracked)} sider linker til en værktøjssti uden nogen vej til at "
+            f"sende: hverken egen CTA-tracker eller en /track.js der har en: "
+            f"{shown}{more} — klikket kan ikke måles")
     return problems, warnings
 
 
@@ -211,6 +298,24 @@ def _fixture(root: Path, pages: dict[str, str]) -> None:
             encoding="utf-8")
 
 
+def _bare(root: Path, rel: str, track_js: bool) -> None:
+    """En side der linker til værktøjsstier, men har *ingen* egen tracker.
+
+    `_fixture` skriver altid en tracker ind. Det er præcis den fejl min første
+    version af scenarie 6 lavede: siden havde en egen tracker, så advarslen
+    udelukkende skyldtes den manglende `track.js` — og scenariet bevisede så
+    intet om det, det siger at det beviser.
+    """
+    f = root / "site" / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    tag = '<script defer src="/track.js"></script>' if track_js else ""
+    f.write_text(
+        f'<!doctype html><html lang="en"><head><title>T</title>{tag}</head>'
+        f'<body><a href="/scan">Scan</a><a href="/page-profile">PP</a>'
+        f'<a href="/da/scan">DA</a></body></html>',
+        encoding="utf-8")
+
+
 def _tracker(regex: str, index: int, hrefs: str = "") -> str:
     return (
         "(function(){try{if(navigator.doNotTrack==='1')return;var p='/';" \
@@ -223,6 +328,24 @@ def _tracker(regex: str, index: int, hrefs: str = "") -> str:
 
 
 GOOD = _tracker(r"/^\/(scan|page-profile)(\.html)?(#[^#]*)?$/", 1)
+
+# Den fælles trackers form, som den ser ud i `site/track.js` efter rettelsen i
+# `track.js` den 28/9. Den skal læses af porten, ellers ville den advare om de
+# præcis 70 sider rettelsen fik til at sende.
+SHARED_GOOD = (
+    "var CTA_MARKER = \"event:'cta-'\";\n"
+    "var CTA_PATHS = /^\\/(?:da\\/)?(scan|page-profile|paid-templates)"
+    "(\\.html)?\\/?(#.*)?$/;\n"
+    "var inlineCta = null;\n"
+    "document.addEventListener('click',function(e){try{\n"
+    "if(inlineCta===null)inlineCta=hasInlineCtaTracker();if(inlineCta)return;\n"
+    "var el=e.target;while(el&&el.tagName!=='A')el=el.parentNode;\n"
+    "var raw=el&&el.getAttribute?el.getAttribute('href'):null;if(!raw)return;\n"
+    "var m=CTA_PATHS.exec(raw);if(!m)return;\n"
+    "var payload=JSON.stringify({path:p,event:'cta-'+m[1]});\n"
+    "if(navigator.sendBeacon){navigator.sendBeacon('/api/track',new Blob("
+    "[payload],{type:'application/json'}));}\n"
+    "}catch(err){}} ,true);\n")
 
 def self_test() -> int:
     """Bevis at porten fanger hver fejlform, den siger at fange."""
@@ -316,6 +439,73 @@ def self_test() -> int:
             return 1
         if not any("/paid-templates" in w for w in warnings):
             print("KONTROLFEJL: advarslen om en umålt værktøjssti kom ikke", file=sys.stderr)
+            return 1
+
+        # 6 — den fejlform denne iteration rettede: en side der linker til en
+        #     værktøjssti og hverken har egen tracker eller indlæser en
+        #     `track.js` med en. Uden advarslen er de 7 sådanne sider usynlige.
+        #     Siden skal *ikke* have en egen tracker — ellers er den jo dækket,
+        #     og så beviser scenariet ingenting.
+        shutil.rmtree(root / "site")
+        _bare(root, "g.html", track_js=True)
+        # En side der *gør* måle, så `tool_paths` ikke er tom. Porten advarser
+        # ikke om en sti ingen måler, og det er rigtigt — men så ville scenariet
+        # advare af den grund og ikke af den, det skal bevise.
+        _fixture(root, {"ok.html": GOOD})
+        (root / "site" / "track.js").write_text(SHARED_GOOD, encoding="utf-8")
+        problems, warnings = check(root)
+        if problems:
+            for p in problems:
+                print(f"KONTROLFEJL (delt track.js skal gøre siden målbar): {p}",
+                      file=sys.stderr)
+            return 1
+        if warnings:
+            print(f"SELFTEST UFORVENTET: en side med fungerende track.js må ikke "
+                  f"advares: {warnings}", file=sys.stderr)
+            return 1
+
+        # 6b — samme side, men `track.js`-taggen er væk: advarselsen skal komme.
+        #     `ok.html` står der stadig, for porten advarser ikke om en sti
+        #     *ingen* måler — så uden en målende side ville advarslen udløse af
+        #     den grunde og ikke af den, den skal bevise.
+        _bare(root, "g.html", track_js=False)
+        warnings = check(root)[1]
+        if not warnings:
+            print("SELFTEST FEJLEDE: en side uden tracker og uden track.js gav "
+                  "ingen advarsel — klikket kan ikke måles, og intet siger det",
+                  file=sys.stderr)
+            return 1
+        scenarios.append(("link til værktøjssti uden nogen tracker at sende med",
+                          warnings))
+
+        # 6c — `track.js` indlæses, men har *kun* sidevisningen. Den skal
+        #     advares: en hvidliste-sti uden en sender måler lige så lidt som
+        #     ingen hvidliste, så en port der kun læser navnet på variablen
+        #     ville være grøn på en fil der ikke gør noget.
+        _bare(root, "g.html", track_js=True)
+        (root / "site" / "track.js").write_text(
+            "var CTA_PATHS = /^\\/(scan|page-profile)(\\.html)?$/;\n", encoding="utf-8")
+        warnings = check(root)[1]
+        if not warnings:
+            print("SELFTEST FEJLEDE: en track.js uden sender gav ingen advarsel",
+                  file=sys.stderr)
+            return 1
+        scenarios.append(("track.js med hvidliste men uden sender", warnings))
+
+        # 6d — kontrol: `track.js` skal *læses*, ikke antaget. Uden denne
+        #     kontrol er hele advarslen ligegyldig, fordi en port der aldrig
+        #     åbner filen ville være grøn på enhver side der indlæser den.
+        _bare(root, "g.html", track_js=True)
+        (root / "site" / "track.js").write_text(SHARED_GOOD, encoding="utf-8")
+        shared = _shared_has_cta_tracker(SHARED_GOOD)
+        if shared is None or shared.pattern is None:
+            print("KONTROLFEJL: track.js blev ikke læst — porten ville være grøn "
+                  "uden at have set, at der står en sender i den", file=sys.stderr)
+            return 1
+        if shared.event_for("/scan") != "cta-scan":
+            print(f"KONTROLFEJL: den delte tracker sendte "
+                  f"{shared.event_for('/scan')!r} for /scan, forventede 'cta-scan'",
+                  file=sys.stderr)
             return 1
 
     for name, problems in scenarios:
