@@ -55,7 +55,21 @@
   // inline scripts. Deferred, so by click time the document is parsed and the
   // test is exact — it is not a heuristic about how the page was built.
   var CTA_MARKER = "event:'cta-'";
-  var CTA_PATHS = /^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
+  // The family's own four domains, as an *optional* prefix.
+  //
+  // Measured 28/9 in the built `dist/`, not in `site/`: the build rewrites
+  // cross-domain links to absolute URLs, so a post on mahope.tools links to
+  // `https://deskuptime.com/`, not `/deskuptime`. A pattern anchored at `^\/`
+  // cannot match one of them, and 2020 of the links that pointed at another
+  // tool in the family were absolute. A click to any other tool was invisible.
+  //
+  // The four domains are written out, not matched loosely, so a link to
+  // `https://deskuptime.com.evil.tld/scan` still sends nothing.
+  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
+  // The four homepages carry no slug — the host *is* the name. 1706 links go
+  // there, more than to every tool put together, and none of them counted.
+  // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.
+  var CTA_HOME = /^https?:\/\/(mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)\/(?:da\/)?(?:#.*)?$/;
   function hasInlineCtaTracker() {
     var scripts = document.getElementsByTagName('script');
     for (var i = 0; i < scripts.length; i++) {
@@ -75,12 +89,17 @@
       var raw = el && el.getAttribute ? el.getAttribute('href') : null;
       if (!raw) return;
       var m = CTA_PATHS.exec(raw);
-      if (!m) return;
-      var payload = JSON.stringify({ path: p, event: 'cta-' + m[1] });
+      var name = m ? m[1] : null;
+      if (!name) {
+        var home = CTA_HOME.exec(raw);
+        if (!home) return;
+        name = home[1].replace(/\.[a-z]+$/, '');
+      }
+      var payload = JSON.stringify({ path: p, event: 'cta-' + name });
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));
       } else {
-        window.trackEvent('cta-' + m[1]);
+        window.trackEvent('cta-' + name);
       }
     } catch (err) { /* analytics must never break the page */ }
   }, true);

@@ -43,6 +43,16 @@ href, men ikke i den sides egen whitelist.** `paid-templates` stod således i
 1 af 207 lister. Advarslerne tælles pr. sti og gør porten rød kun hvis de
 findes — de er en kø, ikke en fejl i en udgivet side.
 
+**Den blinde plet, porten stadig har, og hvorfor selftesten lukker den.** En sti
+*ingen* måler er uden for portens synsfelt, fordi `tool_paths` bygges af de
+whitelister porten kan læse. Det var præcis den plet, der gemte
+`/compliance-ai` (192 links) og hele `/deskuptime`-linkene. Den kan ikke
+lukkes herfra, fordi de links der sås i `site/` er rodrelative, mens bygget
+skriver dem til absolutte URL'er — en kildemåling kan ikke se det. Selftesten
+lukker den *andre* halvdel: den læser den rigtige `site/track.js` og kræver, at
+den matcher de former bygget faktisk producerer. Uden den kontrol kunne næste
+iteration fjerne værts-præfikset igen, og porten ville være grøn.
+
     python3 tools/check_inline_cta_events.py
     python3 tools/check_inline_cta_events.py --self-test
 """
@@ -103,6 +113,7 @@ def _shared_tracker(root: Path) -> str:
 # fejl i en port, der ligner de 207 andre sider grønne, er dyrere end ingen
 # port, så formen læses eksplicit og med sin egen selftest.
 RE_SHARED_CTA = re.compile(r"CTA_PATHS\s*=\s*(/[^\n;]+)")
+RE_SHARED_HOME = re.compile(r"CTA_HOME\s*=\s*(/[^\n;]+)")
 RE_SHARED_SEND = re.compile(r"event:\s*'cta-'\s*\+|\['cta-'\s*\+")
 
 
@@ -508,13 +519,55 @@ def self_test() -> int:
                   file=sys.stderr)
             return 1
 
+        # 7 — kontrol på den **rigtige** `site/track.js`, ikke på en fixture.
+        #     Den skal kunne se de former bygget faktisk producerer: en post på
+        #     mahope.tools linker i `dist/` til `https://deskuptime.com/`, fordi
+        #     bygget skriver krydsdomænelinks absolutte. Målt 28/9 i `dist/` lå
+        #     2020 af de links, der peger på en udgivet route, som absolutte URL'er
+        #     — og et mønron forankret i `^\/` kan ikke matche én af dem. Fjernes
+        #     værts-præfikset igen, dør hele den her dækning, og intet i
+        #     `check()` ville se det: porten læser `site/`, hvor linkene stadig
+        #     er rodrelative. Derfor er det en kontrol mod filen, ikke mod
+        #     portens egen syntaks.
+        real = _shared_tracker(ROOT)
+        real_tracker = _shared_has_cta_tracker(real)
+        if real_tracker is None or real_tracker.pattern is None:
+            print("KONTROLFEJL: site/track.js blev ikke læst — porten ville være "
+                  "grøn uden at se den kode der faktisk udgives", file=sys.stderr)
+            return 1
+        home = _js_regex(RE_SHARED_HOME.search(real).group(1)
+                         if RE_SHARED_HOME.search(real) else "")
+        for href, want in (("https://cleancopy.tools/clean-copy-tool", "cta-clean-copy-tool"),
+                           ("https://deskuptime.com/", "cta-deskuptime"),
+                           ("https://mahope.tools/compliance-ai", "cta-compliance-ai"),
+                           ("/scan", "cta-scan")):
+            got = real_tracker.event_for(href)
+            if got is None and home is not None:
+                m = home.match(href)
+                if m:
+                    got = "cta-" + re.sub(r"\.[a-z]+$", "", m.group(1))
+            if got != want:
+                print(f"KONTROLFEJL: site/track.js sender {got!r} for {href!r}, "
+                      f"forventede {want!r}", file=sys.stderr)
+                return 1
+        # En tredjeparts-URL der *ligner* en af vores må ikke tælles: ellers kunne
+        # enhver `https://deskuptime.com.evil.tld/scan` se ud som et familielink.
+        spoof = "https://deskuptime.com.evil.tld/scan"
+        got = real_tracker.event_for(spoof)
+        if got is None and home is not None and home.match(spoof):
+            got = "tællet"
+        if got is not None:
+            print(f"KONTROLFEJL: site/track.js sender {got!r} for {spoof!r} — "
+                  "en URL der kun ligner familiens skal ikke tælles", file=sys.stderr)
+            return 1
+
     for name, problems in scenarios:
         if not problems:
             print(f"SELFTEST FEJLEDE: scenariet '{name}' gav ingen fejl — porten er død",
                   file=sys.stderr)
             return 1
         print(f"  fanget: {name} ({len(problems)} problem(er))")
-    print(f"selftest grøn: {len(scenarios)} fejlformer fanget, 2 positive kontroller grønne")
+    print(f"selftest grøn: {len(scenarios)} fejlformer fanget, 4 positive kontroller grønne")
     return 0
 
 
