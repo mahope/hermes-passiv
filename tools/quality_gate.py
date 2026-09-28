@@ -720,6 +720,26 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_design_tokens.py", "--self-test"),
         inputs=("tools/check_design_tokens.py",),
     ),
+    # Opgave fra planens NEXT_TASK 1: den indlejrede CTA-tracker på site/scan.html
+    # og site/scan-da.html byggede sit begivenhedsnavn ud fra den **valgfrie
+    # `(da\/)?`-gruppe**, så `/compliance-report` sendte `cta-undefined` og
+    # `/da/compliance-report#pris` sendte `cta-da/`. Begge er gyldig JS uden
+    # fejl i loggen, men `handleTrack` i _worker.js kræver `^[a-z0-9-]+$` og
+    # afviste resten med 400 — så de begivenheder kom aldrig i tallet. Kun to
+    # filer, men 205 andre sider har samme mønster, og intet så det. Denne port
+    # læser hver sides egen href gennem dens egen regex og kræver præcis de to
+    # betingelser handleTrack håndhæver. Beviset: rød på 87b5527~1 med de tre
+    # links STATE ovenfor citerer, grøn på rettelsen.
+    Step(
+        id="inline-cta-events",
+        argv=("python3", "tools/check_inline_cta_events.py"),
+        inputs=("tools/check_inline_cta_events.py", "site/**"),
+    ),
+    Step(
+        id="inline-cta-events-selftest",
+        argv=("python3", "tools/check_inline_cta_events.py", "--self-test"),
+        inputs=("tools/check_inline_cta_events.py",),
+    ),
     # Opgave fra planens NEXT_TASK 2: `traffic_status: "partial"` har stået i
     # `/api/health` i måneder uden at cron blev rød, fordi `status` var
     # `kvOk ? 'healthy' : 'degraded'`. Rettelsen er delt: `_worker.js` har nu
