@@ -107,8 +107,17 @@ for _stream in (sys.stdout, sys.stderr):  # Windows-konsollen er cp1252; rapport
 # hjælpere
 # --------------------------------------------------------------------------
 def note_error(source: str, exc: object) -> None:
-    msg = str(exc).strip() or exc.__class__.__name__
-    ERRORS.append(f"{source}: {msg[:200]}")
+    # Klassenavnet skal *med* i noten. `str(NameError(...))` er
+    # "name 'count' is not defined" — Python skriver aldrig klassenavnet i
+    # beskeden, så uge 40 endte med `api/stats: name 'count' is not defined` i
+    # `errors`, og arkivet så ud som om en adresse svarede forkert. Uden
+    # klassenavn kan hverken en læser eller `check_weekly_code_errors.py` se
+    # forskel på "vores kode er brudt" og "kilden svarer ikke".
+    # `note_error` kaldes også med en ren tekst (købsinventaret og resend), så
+    # dem får klassen `Note` — ellers ville formatet være to forskellige.
+    kind = type(exc).__name__ if isinstance(exc, BaseException) else "Note"
+    msg = str(exc).strip() or kind
+    ERRORS.append(f"{source}: {kind}: {msg[:200]}")
 
 
 def stats_bearer_token() -> str:

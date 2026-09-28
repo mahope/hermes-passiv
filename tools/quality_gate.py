@@ -514,6 +514,31 @@ STEPS: tuple[Step, ...] = (
             "reports/weekly/*.json",
         ),
     ),
+    # Opgave 36: uge 40 skrev `api/stats: name 'count' is not defined` i sin
+    # `errors` og `unknown` i resten af filen, fordi `note_error` kun skrev
+    # `str(exc)` — Python skriver aldrig klassenavnet i beskeden. Fire ugers
+    # rapporter sagde altså "ukendt" om en fejl i os selv. `note_error` skriver
+    # nu klassenavnet, og porten dømmer på den: en kodefejl i vores egen kode må
+    # aldrig stå som "ukendt", mens et timeout må. `weekly_report.py` er input,
+    # fordi porten *kører* `note_error` frem for at læse den.
+    Step(
+        id="weekly-code-errors",
+        argv=("python3", "tools/check_weekly_code_errors.py"),
+        inputs=(
+            "tools/check_weekly_code_errors.py",
+            "tools/weekly_report.py",
+            "reports/weekly/*.json",
+        ),
+    ),
+    Step(
+        id="weekly-code-errors-selftest",
+        argv=("python3", "tools/check_weekly_code_errors.py", "--self-test"),
+        inputs=(
+            "tools/check_weekly_code_errors.py",
+            "tools/weekly_report.py",
+            "reports/weekly/*.json",
+        ),
+    ),
     Step(
         id="deploy-workflow",
         argv=("python3", "tools/test_deploy_workflow.py"),
