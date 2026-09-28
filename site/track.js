@@ -86,7 +86,21 @@
   // and the engine backtracks. Measured, not assumed — the four earlier
   // iterations that prepended names were fixing a regex that was not anchored
   // the same way.
-  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime|books|downloads|blog|wordpress-plugin|activate|license-lookup|mcp|tools|url-inspector|accessibility-statement-generator|privacy-notice-generator|privacy-policy-template|cookie-check|nis2-check|nis2-gap-assessment|nis2-incident-generator|dpa-generator|contrast-checker|color-blindness-simulator|palette-generator|ropa-generator|markdown-table-generator|uuid-generator|text-on-image-checker|bulk-url-checker|security-headers-checker|clean-copy-cli-ref|clean-copy-api|clean-copy-bookmarklet|clean-copy-brew|copy-clean-guide|bugbottle-demo|cookie-consent-banner-demo)(\.html)?\/?(#.*)?$/;
+  // Measured 29/9 i `dist/`: 604 absolutte krydsdomenelinks sendte ingen
+  // begivenhed, fordi 21 af ruterne ikke stod her. De var ikke tilfældige —
+  // de var to hele klasser, begge med en regel der forklarede dem:
+  //
+  // 1. **De danske spejlinger med `-da` som *endelse*.** `(?:da\/)?` dækker
+  //    `/da/scan`, men ikke `/nis2-check-da` — den danske side hedder sådan, og
+  //    `nis2-check` kan ikke sluge `-da`, fordi mønstret er `$`-forankret.
+  // 2. **De fem tekstværktøjer fra `/da/blog/7-gratis-dev-tekstvaerktoejer`**
+  //    (`word-counter`, `json-formatter`, `case-converter`, `hash-generator`,
+  //    `url-encoder-decoder`), som Blog-siden linker til som absolutte URL'er.
+  //
+  // Plus `support` — donationstrafikken. 60 links pegede på den, og det er den
+  // ene rute her der *tjener penge*, så et klik på den var det vigtigste
+  // klik at tælle og det eneste der slet ikke blev talt.
+  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|url-til-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime|books|downloads|blog|wordpress-plugin|activate|license-lookup|mcp|tools|url-inspector|guides|support|accessibility-statement-generator|privacy-notice-generator|privacy-policy-template|privacy-notice-generator-da|privacy-policy-template-da|cookie-check|cookie-check-da|nis2-check|nis2-check-da|nis2-gap-assessment|nis2-gap-assessment-da|nis2-incident-generator|nis2-incident-generator-da|dpa-generator|dpa-generator-da|contrast-checker|contrast-checker-da|color-blindness-simulator|color-blindness-simulator-da|palette-generator|palette-generator-da|ropa-generator|ropa-generator-da|tilgaengelighedserklaering-generator-da|text-on-image-checker|text-on-image-checker-da|markdown-table-generator|uuid-generator|word-counter|json-formatter|case-converter|hash-generator|url-encoder-decoder|bulk-url-checker|security-headers-checker|clean-copy-cli-ref|clean-copy-api|clean-copy-bookmarklet|clean-copy-brew|copy-clean-guide|bugbottle-demo|cookie-consent-banner-demo)(\.html)?\/?(#.*)?$/;
   // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.
