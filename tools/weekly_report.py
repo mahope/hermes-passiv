@@ -803,7 +803,11 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
         # automatiseringstjek skal kunne sammenligne en sti der lå nr. 9 i dag
         # og nr. 3 i sidste uge, og top-8 kan ikke det (målt fejlform).
         "ranking_paths": ranking_paths,
-        "top_downloads": [{"file": file_name, "hits": count} for file_name, hits in top_downloads],
+        # `hits` er løkevariablen her, ikke `count`: det var `count`, der gjorde at
+        # hele trafikblokken døde med NameError, fordi linjen kun evalueres når
+        # `top_downloads` ikke er tom. Tomme downloads gjorde testene grønne
+        # mens uge-rapporten sendte `available: false` uden trafik i fire uger.
+        "top_downloads": [{"file": file_name, "hits": hits} for file_name, hits in top_downloads],
         "sales": sales,
         "waitlist": known_counter(data.get("waitlist")),
         "licenses_issued": known_counter(data.get("licenses_issued")) if sales.get("available") is True else None,

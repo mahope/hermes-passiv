@@ -59,7 +59,15 @@ class ReportFixture:
             "domain_status": {domain: "ok" for domain in report.TRAFFIC_DOMAINS},
             "sales_status": sales_status,
             "stats_by_domain": domains,
-            "downloads_by_domain": {domain: {} for domain in report.TRAFFIC_DOMAINS},
+            # Ikke tomt. `collect_stats` bygger `top_downloads` med en
+            # listeforståelse, hvis krop kun evalueres når der er mindst én
+            # download, så en tom blok lod `NameError: name 'count' is not
+            # defined` ligge i fire ugers rapporter uden at én test så den.
+            "downloads_by_domain": (
+                {domain: {} for domain in report.TRAFFIC_DOMAINS} if empty else
+                {domain: {self.day: {f"{domain}-pro.zip": {"visits": index + 1}}}
+                 for index, domain in enumerate(report.TRAFFIC_DOMAINS)}
+            ),
             "sales": sales if sales_status == "ok" else None,
             "waitlist": 0,
             "licenses_issued": 0 if empty else 5,
@@ -96,6 +104,26 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         self.assertEqual(3, result["sales"]["by_product"]["clean-copy-pro"])
         self.assertEqual(2, result["sales"]["by_product"]["page-profile-pro"])
         self.assertEqual("all_time_gross_fulfillments", result["sales"]["scope"])
+
+    def test_downloads_are_collected_and_ranked(self) -> None:
+        # `top_downloads` bygges af en listeforståelse, hvis krop kun kører når
+        # vinduet indeholder en download. Regressionen her var `count` i stedet
+        # for løkevariablen `hits`: den døde med NameError og sendte
+        # `available: false` uden trafik, mens alle tests var grønne fordi
+        # fixture'en havde tomme downloads. Derfor dømmer denne test både at
+        # tallene kommer igennem og at de er sorteret.
+        with patch.object(report, "http_json", return_value=self.payload()):
+            result = report.collect_stats(7)
+        self.assertEqual("ok", result["status"])
+        self.assertEqual(10, result["downloads"])
+        self.assertEqual(4, len(result["top_downloads"]))
+        # Sorteret efter hits faldende, så et domæne med højere tallet først.
+        self.assertEqual(
+            ["mahope.tools-pro.zip", "bugbottle.dev-pro.zip",
+             "deskuptime.com-pro.zip", "cleancopy.tools-pro.zip"],
+            [row["file"] for row in result["top_downloads"]],
+        )
+        self.assertEqual([4, 3, 2, 1], [row["hits"] for row in result["top_downloads"]])
 
     def test_stats_uses_server_side_bearer_authentication(self) -> None:
         with patch.object(report, "http_json", return_value=self.payload()) as http_json:
