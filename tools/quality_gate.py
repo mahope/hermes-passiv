@@ -674,6 +674,28 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_design_tokens.py", "build_sites.py", "site/style.css", "site/**"),
         needs_dist=True,
     ),
+    # Opgave 32: strukturerede data var grønne og tilfældige. To iterationer
+    # rettede den samme fejlform pr. side i markup, fordi portene talte
+    # *antal* blokke og ikke *hvilke* typer — og fordi `pagepass` kun læste
+    # JSON-LD i `<head>`, så en blok i `<body>` så ud som om siden ingen havde.
+    # Denne port måler typerne i det udgivne dist og kræver samme sæt på begge
+    # sprog. Den fandt `bugbottle.dev/da/` manglende `SoftwareSourceCode` ved
+    # første kørsel — altså en fejl ingen håndmåling havde set.
+    Step(
+        id="jsonld-types",
+        argv=("python3", "tools/check_jsonld_types.py"),
+        # `bugbottle-landing/**` er med, fordi bugbottle.dev's forsider kommer
+        # derfra og ikke fra `site/` — ellers kunne de merge uden at porten
+        # så dem, præcis som de gjorde.
+        inputs=("tools/check_jsonld_types.py", "tools/pagepass.py", "site/**",
+                "bugbottle-landing/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="jsonld-types-selftest",
+        argv=("python3", "tools/check_jsonld_types.py", "--self-test"),
+        inputs=("tools/check_jsonld_types.py",),
+    ),
     Step(
         id="design-tokens-selftest",
         argv=("python3", "tools/check_design_tokens.py", "--self-test"),
