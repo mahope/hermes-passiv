@@ -153,7 +153,7 @@ SITES: dict[str, dict] = {
         "nav": {
             "en": [("Tools", "/free-tools"), ("Books", "/books/"), ("Blog", "/blog/"),
                    ("Clean Copy", "https://cleancopy.tools"), ("Compliance", "/compliance-guide")],
-            "da": [("Værktøjer", "/free-tools"), ("Bøger", "/books/"), ("Blog", "/blog/"),
+            "da": [("Værktøjer", "/da/free-tools"), ("Bøger", "/books/"), ("Blog", "/blog/"),
                    ("Clean Copy", "https://cleancopy.tools/da/"), ("Compliance", "/da/compliance-site-check")],
         },
         "rest": True,
@@ -709,7 +709,12 @@ def crumbs_for(site: Site, dest: str, lang: str, title: str, section: str) -> li
             break
     else:
         if section == t["tools"] and site.cfg["product"] == "mahope":
-            out.append((t["tools"], "/free-tools"))
+            # Følg navens *egne* værktøjs-sti. Den var hardkodet til
+            # `/free-tools`, så brødkrummen sendte en dansk læser på den
+            # engelske side selv efter at `/da/free-tools` fandtes (28/9).
+            tools_url = next((u for label, u in site.cfg["nav"][lang]
+                              if label == t["tools"]), "/free-tools")
+            out.append((t["tools"], tools_url))
     out.append((title, canonical_url(dest)))
     return out
 
