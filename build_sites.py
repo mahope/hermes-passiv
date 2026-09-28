@@ -973,7 +973,8 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
                product_links="\n".join('          <li><a href="%s"%s>%s</a></li>' % (u, ' aria-current="true"' if u == own_url else "", n) for n, u in PRODUCTS),
                privacy_url="/privacy/" if (SITE / "privacy" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/privacy/",
                terms_url="/terms/" if (SITE / "terms" / "index.html").exists() and cfg["product"] == "mahope" else "https://mahope.tools/terms/",
-               support_url="/support" if cfg["product"] == "mahope" else "https://mahope.tools/support",
+               support_url=("/da/support" if lang == "da" else "/support") if cfg["product"] == "mahope"
+               else "https://mahope.tools" + ("/da/support" if lang == "da" else "/support"),
                maker_note=t["maker_note"], year=datetime.now(timezone.utc).year,
                # no mailto: in the shell — Cloudflare would inject its render-blocking email-decode script
                report_url=(cfg["github"] + "/issues") if cfg["product"] != "mahope" else "https://mahoje.dk",

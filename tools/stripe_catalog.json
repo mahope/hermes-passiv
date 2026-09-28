@@ -9,6 +9,7 @@
   "portal_pages": [
     "site/thanks.html",
     "site/support.html",
+    "site/da/support.html",
     "site/terms/index.html"
   ],
   "products": {
@@ -735,6 +736,16 @@
       "prices": [],
       "requires_text": [
         "Donate via Stripe"
+      ]
+    },
+    {
+      "path": "site/da/support.html",
+      "domain": "mahope.tools",
+      "route": "/da/support",
+      "product": "support-mahope-oss",
+      "prices": [],
+      "requires_text": [
+        "Donér via Stripe"
       ]
     },
     {
