@@ -116,15 +116,32 @@
     }
     return false;
   }
+  // Absolute URL to one of the family's own four domains, with or without a
+  // trailing slash. This is the *only* thing `track.js` may take over from a
+  // page that has an inline tracker, and the reason is structural, not
+  // defensive — see the note on `inlineCta` below.
+  var CROSS_DOMAIN = /^https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)(?:[/?#]|$)/;
   var inlineCta = null; // decided on first click, not on load
   document.addEventListener('click', function (e) {
     try {
-      if (inlineCta === null) inlineCta = hasInlineCtaTracker();
-      if (inlineCta) return;
       var el = e.target;
       while (el && el.tagName !== 'A') el = el.parentNode;
       var raw = el && el.getAttribute ? el.getAttribute('href') : null;
       if (!raw) return;
+      if (inlineCta === null) inlineCta = hasInlineCtaTracker();
+      // Measured 28/9 in the built `dist/`: 300 absolute cross-domain links
+      // sat on 87 pages that carry their own inline tracker, and every one of
+      // them was dropped. `track.js` used to bow out of the *whole page* the
+      // moment it saw an inline tracker, and the inline tracker reads the raw
+      // `getAttribute('href')` through a pattern anchored at `^\/` — so it
+      // cannot match a string starting with `https://`. The two sets are
+      // disjoint by construction, which is what makes it safe to measure them
+      // here: one click, one event, never two.
+      //
+      // The bail-out stays for root-relative links, which is the inline
+      // tracker's whole job. The target is read *before* this test, because
+      // deciding it needed the href in the first place.
+      if (inlineCta && !CROSS_DOMAIN.test(raw)) return;
       var m = CTA_PATHS.exec(raw);
       var name = m ? m[1] : null;
       if (!name) {

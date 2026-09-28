@@ -766,6 +766,25 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/audit_unmeasured_routes.py", "--self-test"),
         inputs=("tools/audit_unmeasured_routes.py",),
     ),
+    # `track.js` sprang før hele siden over, når den så en inline-tracker, og
+    # inline-trackeren er `^\/`-forankret, så ingen af dem kunne tælle de 300
+    # absolutte krydsdomenelinks på 87 inline-sider. Denne port dømmer den
+    # egenskab, der gør delingen sikker — at mængderne er disjunkte af
+    # konstruktion — i stedet for at genskrive de to regexer og håbe de ligner.
+    # Den matcher ingen regexer overhovedet, kun *kildedeklarationen*, så den
+    # kan ikke måle en anden kode end den browseren kører.
+    Step(
+        id="cross-domain-cta",
+        argv=("python3", "tools/audit_cross_domain_cta.py"),
+        inputs=("tools/audit_cross_domain_cta.py", "site/track.js",
+                "build_sites.py", "site/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="cross-domain-cta-selftest",
+        argv=("python3", "tools/audit_cross_domain_cta.py", "--self-test"),
+        inputs=("tools/audit_cross_domain_cta.py",),
+    ),
     # Opgave fra planens NEXT_TASK 1: `check_inline_cta_events.py` læser
     # `site/`, men bygget skriver krydsdomænelinks til **absolutte** URL'er — så
     # den måler en anden kode end den browseren kører, og den ser hverken
