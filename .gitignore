@@ -28,3 +28,6 @@ products/*
 # `python3 -m build site-icons` (opgave 13) — byggeartefakter, ikke kilde
 site-icons/dist/
 site-icons/build/
+
+# Midlertidige målingsscripts fra en iteration. De skal ikke i et offentligt repo.
+.scratch/
