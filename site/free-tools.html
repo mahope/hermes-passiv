@@ -182,6 +182,28 @@
   </div>
 </section>
 
+<section aria-labelledby="paid-heading" style="margin-top:48px">
+  <h2 id="paid-heading">When the free tool isn't enough</h2>
+  <p style="color:#94a3b8;max-width:680px">Everything above is free, stays in your browser, and needs no account. Two things are not free, and neither replaces a free tool — they are what you reach for after one of them has told you where the problem is.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:20px">
+    <article style="border:1px solid var(--color-border);border-radius:12px;padding:22px;background:var(--color-surface)">
+      <h3 style="margin-top:0"><a href="/compliance-report">Premium Compliance Report</a> · EUComply Pro</h3>
+      <p>Turns a scan into a report a client will actually read: EAA/WCAG, GDPR
+      cookie consent and NIS2 security findings in one PDF you can attach to an
+      invoice or keep in the compliance file.</p>
+      <p><a href="/compliance-report">See what the report covers →</a></p>
+    </article>
+    <article style="border:1px solid var(--color-border);border-radius:12px;padding:22px;background:var(--color-surface)">
+      <h3 style="margin-top:0"><a href="/paid-templates">Paid templates &amp; clause sets</a></h3>
+      <p>Seven documents sold one at a time: a DPA template, NIS2 and DORA vendor
+      clauses, a mutual NDA clause set, an EAA accessibility statement, monthly and
+      quarterly report templates, and the full bundle. PDF and Markdown, so you can
+      edit them.</p>
+      <p><a href="/paid-templates">See the seven documents →</a></p>
+    </article>
+  </div>
+</section>
+
 <section aria-labelledby="dev-heading">
   <h2 id="dev-heading">Developer tools</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:20px">
@@ -319,7 +341,7 @@
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
 </script>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report|paid-templates)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
 </body>
 </html>
