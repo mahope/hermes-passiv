@@ -69,7 +69,24 @@
   // is built from the whitelists, so a path no page measures is invisible to
   // it — it cannot warn about clicks that every tracker in the family drops.
   // Six pages link to it, two of them the ones that sell templates.
-  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
+  //
+  // 33 more routes were in the same blind spot, measured the same way by
+  // `tools/audit_unmeasured_routes.py`: 2366 links in `dist/` to routes that no
+  // tracker in the family measured, so every one of them was dropped. The two
+  // largest are the ones that sell — `/books`, the e-book shop, 613 inbound
+  // links — and `/blog`, the engine that feeds it, 875. You cannot improve a
+  // funnel you cannot see, and the funnel's two biggest steps were invisible.
+  //
+  // `/privacy` and `/terms` are measured on purpose *not*: they sit in the
+  // footer of 320 pages, and the pageview beacon already counts every visit to
+  // them. A `cta-privacy` on every page load is noise, not a sale.
+  //
+  // The alternation needs no ordering care here, because it is `$`-anchored:
+  // `scan` cannot swallow `/scan-da`, since `-da` cannot match `(\.html)?\/?(#.*)?$`
+  // and the engine backtracks. Measured, not assumed — the four earlier
+  // iterations that prepended names were fixing a regex that was not anchored
+  // the same way.
+  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime|books|downloads|blog|wordpress-plugin|activate|license-lookup|mcp|tools|url-inspector|accessibility-statement-generator|privacy-notice-generator|privacy-policy-template|cookie-check|nis2-check|nis2-gap-assessment|nis2-incident-generator|dpa-generator|contrast-checker|color-blindness-simulator|palette-generator|ropa-generator|markdown-table-generator|uuid-generator|text-on-image-checker|bulk-url-checker|security-headers-checker|clean-copy-cli-ref|clean-copy-api|clean-copy-bookmarklet|clean-copy-brew|copy-clean-guide|bugbottle-demo|cookie-consent-banner-demo)(\.html)?\/?(#.*)?$/;
   // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.

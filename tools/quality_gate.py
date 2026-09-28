@@ -740,6 +740,32 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_inline_cta_events.py", "--self-test"),
         inputs=("tools/check_inline_cta_events.py",),
     ),
+    # Den blinde plet `inline-cta-events` *kan* lukke, målt 28/9: porten bygger
+    # sit `tool_paths`-sæt af de hvidlister den selv kan læse, så en rute ingen
+    # måler er usynlig for den. `/free-downloads` blev fundet på den måde, og så
+    # kom **35** ruter i samme blindplet — 2366 links i `dist/`, blandt dem
+    # `/books` (e-bogbutikken, 613 links) og `/blog` (875). Funnelens to største
+    # trin var usynlige, og porten var grøn hele vejen.
+    #
+    # Denne port lister de ruter i `tools/route_inventory.json` der har
+    # indgående links, men ingen måler, og **genbruger `inline-cta-events`' egne
+    # læsere** — så den kan ikke se noget andet end porten. Undtagelserne står i
+    # `ALLOWED_UNMEASURED` med en grund hver, fordi en undtagelse uden grund er en
+    # fejl der venter på at blive læst som en regel. Selftesten dømmer
+    # beslutningen direkte på syntetisk input: en audit der ikke kan blive rød,
+    # kan heller ikke troes på når den er grøn.
+    Step(
+        id="unmeasured-routes",
+        argv=("python3", "tools/audit_unmeasured_routes.py"),
+        inputs=("tools/audit_unmeasured_routes.py", "tools/check_inline_cta_events.py",
+                "tools/route_inventory.json", "site/track.js", "site/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="unmeasured-routes-selftest",
+        argv=("python3", "tools/audit_unmeasured_routes.py", "--self-test"),
+        inputs=("tools/audit_unmeasured_routes.py",),
+    ),
     # Opgave fra planens NEXT_TASK 1: `check_inline_cta_events.py` læser
     # `site/`, men bygget skriver krydsdomænelinks til **absolutte** URL'er — så
     # den måler en anden kode end den browseren kører, og den ser hverken

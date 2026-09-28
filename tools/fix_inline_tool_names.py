@@ -61,6 +61,45 @@ TARGETS = (
     # den. Først da den kom i `track.js`, blev den synlig — på de to sider med
     # egen tracker, der linker til den. Se kommentaren i `track.js`.
     "free-downloads",
+    # 33 ruter der lå i samme blindplet, målt af `tools/audit_unmeasured_routes.py`:
+    # 2366 links i `dist/` pegede på ruter ingen tracker i familien målte. Listen er
+    # auditets egen ubefalede ruter minus `/privacy` og `/terms`, som bevidst holdes
+    # ude — sidevisnings-beaconen tæller dem allerede. Da de kom i `track.js`, blev
+    # præcis de her navn synlige for porten, som den advarslede om, og sådan fik
+    # denne maskine sin advarselsliste i stedet for en håndplukket udvalg.
+    "books",
+    "blog",
+    "downloads",
+    "wordpress-plugin",
+    "activate",
+    "license-lookup",
+    "mcp",
+    "tools",
+    "url-inspector",
+    "accessibility-statement-generator",
+    "privacy-notice-generator",
+    "privacy-policy-template",
+    "cookie-check",
+    "nis2-check",
+    "nis2-gap-assessment",
+    "nis2-incident-generator",
+    "dpa-generator",
+    "contrast-checker",
+    "color-blindness-simulator",
+    "palette-generator",
+    "ropa-generator",
+    "markdown-table-generator",
+    "uuid-generator",
+    "text-on-image-checker",
+    "bulk-url-checker",
+    "security-headers-checker",
+    "clean-copy-cli-ref",
+    "clean-copy-api",
+    "clean-copy-bookmarklet",
+    "clean-copy-brew",
+    "copy-clean-guide",
+    "bugbottle-demo",
+    "cookie-consent-banner-demo",
 )
 
 # Samme læsning som `check_inline_cta_events.check`: en rodrelativ

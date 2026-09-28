@@ -349,7 +349,7 @@ document.getElementById('scanForm').addEventListener('submit',e=>{
 })();
 </script>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var k=/^https:\/\/donate\.stripe\.com\//.test(h)?'donate':(h.match(/^\/(da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/)||[])[2];if(!k)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+k})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var k=/^https:\/\/donate\.stripe\.com\//.test(h)?'donate':(h.match(/^\/(da\/)?(accessibility-statement-generator|wordpress-plugin|downloads|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/)||[])[2];if(!k)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+k})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
