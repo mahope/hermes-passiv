@@ -62,8 +62,15 @@ ROOT = Path(__file__).resolve().parent.parent
 RE_LANG = re.compile(r'<html[^>]*\blang="(da|en)"', re.I)
 RE_CANONICAL = re.compile(r'<link rel="canonical" href="([^"]+)"', re.I)
 RE_ALT = re.compile(r'<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"', re.I)
+RE_LINK = re.compile(r'<a [^>]*href="(/[a-z0-9][a-z0-9/-]*)"[^>]*>(.*?)</a>', re.I | re.S)
 
 OTHER = {"en": "da", "da": "en"}
+
+# Et link, der *navner* det andet sprog, er et bevidst sprogskift og ikke en fejl.
+# Det er den undtagelse, der gør de tre eksisterende "English version"-links
+# lovlige; alt andet fra en dansk side til en side med dansk spejling er en
+# dansk læser der bliver sendt på engelsk.
+LANG_SWITCH = re.compile(r"engelsk|english", re.I)
 
 
 def read_page(path: Path) -> tuple[str | None, str | None, dict[str, str]]:
@@ -107,6 +114,36 @@ def check(root: Path = ROOT) -> list[str]:
         target = alts.get(other)
         if target:
             claims[(_domain_of(url), target)].append((lang, f))
+
+    # 0 — en dansk side der linker til den engelske udgave af en side, der findes
+    #     på dansk. hreflang er *ikke* nok her: det fortæller Google at der findes
+    #     en søskende, men læseren bliver sendt på engelsk alligevel. Det er den
+    #     fejl, der lå i 11 danske blogsider (33 links) før denne kontrol.
+    #     Ruten bygges på canonical, fordi et rodrelativt link `/page-profile`
+    #     kun kan slås op mod det domæne, siden selv ligger på.
+    da_routes: dict[str, set[str]] = defaultdict(set)
+    for url in by_url:
+        root_path = re.sub(r"^https?://[^/]+", "", url).rstrip("/")
+        if root_path.startswith("/da/"):
+            da_routes[_domain_of(url)].add(root_path)
+
+    for f, url in sorted(by_file.items()):
+        lang, _, _ = read_page(f)
+        if lang != "da":
+            continue
+        text = f.read_text(encoding="utf-8", errors="ignore")
+        for m in RE_LINK.finditer(text):
+            target = m.group(1).rstrip("/") or "/"
+            if target.startswith("/da/"):
+                continue
+            if LANG_SWITCH.search(re.sub(r"<[^>]+>", "", m.group(2))):
+                continue  # bevidst sprogskift
+            da_target = "/da" + target
+            if da_target in da_routes.get(_domain_of(url), ()):
+                problems.append(
+                    f"{f.relative_to(dist).as_posix()} er lang=\"da\" men linker til "
+                    f"{target}, som findes på dansk som {da_target} — enten link til "
+                    f"{da_target}, eller skriv at linket er engelsk i linkteksten")
 
     # 1 — flere sider i samme sprog på én modpartsside
     for (_domain, target), claimants in sorted(claims.items()):
@@ -242,6 +279,47 @@ def self_test() -> int:
             for p in check(root):
                 print(f"KONTROLFEJL (danskoriginal skal være lovlig): {p}", file=sys.stderr)
             return 1
+
+        # 5b — kontrol: en dansk side må gerne linke til den engelske udgave,
+        #      når linkteksten siger at den er engelsk. Uden undtagelsen ville
+        #      porten tvinge de tre "English version"-links væk — de er netop
+        #      det de danske læsere har brug for.
+        _reset(root)
+        _fixture(root, {
+            "a.html": ("en", {"da": "https://mahope.tools/da/a"}),
+            "da/a.html": ("da", {"en": "https://mahope.tools/a"}),
+        })
+        (root / "dist" / "mahope.tools" / "da" / "x.html").write_text(
+            '<!doctype html><html lang="da"><head><title>T</title>'
+            '<link rel="canonical" href="https://mahope.tools/da/x">'
+            "</head><body>"
+            '<a href="/a">English version</a>'
+            '<a href="/a">Se den engelske udgave</a>'
+            "</body></html>", encoding="utf-8")
+        if check(root):
+            for p in check(root):
+                print(f"KONTROLFEJL (bevidst sprogskift skal være lovligt): {p}", file=sys.stderr)
+            return 1
+
+        # 6 — en dansk side der linker til en rute, der findes på dansk
+        _reset(root)
+        _fixture(root, {
+            "page-profile.html": ("en", {"da": "https://mahope.tools/da/page-profile"}),
+            "da/page-profile.html": ("da", {"en": "https://mahope.tools/page-profile"}),
+        })
+        (root / "dist" / "mahope.tools" / "da" / "blog.html").write_text(
+            '<!doctype html><html lang="da"><head><title>T</title>'
+            '<link rel="canonical" href="https://mahope.tools/da/blog">'
+            "</head><body>"
+            '<a href="/page-profile" class="btn-primary">Prøv Page Profile gratis</a>'
+            '<a href="/scan">Kør en scanning</a>'
+            "</body></html>", encoding="utf-8")
+        got = check(root)
+        if len(got) != 1 or "som findes på dansk som /da/page-profile" not in got[0]:
+            for p in got:
+                print(f"KONTROLFEJL: uventet {p!r}", file=sys.stderr)
+            return 1
+        scenarios.append(("dansk side linker til engelsk udgave af en dansk side", got))
 
         # 5 — kontrol: 404 uden <html lang> må ikke fejle
         _reset(root)
