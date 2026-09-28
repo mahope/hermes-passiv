@@ -66,10 +66,26 @@
   // The four domains are written out, not matched loosely, so a link to
   // `https://deskuptime.com.evil.tld/scan` still sends nothing.
   var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
-  // The four homepages carry no slug — the host *is* the name. 1706 links go
+  // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.
-  var CTA_HOME = /^https?:\/\/(mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)\/(?:da\/)?(?:#.*)?$/;
+  //
+  // Two forms, because the build produces two. `build_sites.py` rewrites a
+  // cross-domain link to `https://cleancopy.tools` — no trailing slash — and a
+  // page's own home link is root-relative (`/`, `/da/`). The first version
+  // required both a scheme *and* a slash after the host, so it matched neither.
+  // Measured 28/9 by `tools/check_cta_coverage_dist.py`, which reads the built
+  // `dist/` and not `site/`.
+  var CTA_HOME = /^(?:https?:\/\/(mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)(?:\/da)?\/?|\/(?:da\/)?\/?)(?:#.*)?$/;
+  // The root-relative form has no host in it, so the listener has to ask where
+  // *it* is running. Only the family's own four count: a fork or a
+  // `*.pages.dev` preview hostname is not a click we sell anything on.
+  //
+  // This is the third copy of the same four domains — CTA_PATHS has them as an
+  // optional prefix and CTA_HOME in group 1. That duplication is what let the
+  // two drift apart, so `check_cta_coverage_dist.py` requires all three to
+  // agree, and a fourth host cannot be added to one and forgotten in the rest.
+  var CTA_HOSTS = /^(mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)$/;
   function hasInlineCtaTracker() {
     var scripts = document.getElementsByTagName('script');
     for (var i = 0; i < scripts.length; i++) {
@@ -93,7 +109,12 @@
       if (!name) {
         var home = CTA_HOME.exec(raw);
         if (!home) return;
-        name = home[1].replace(/\.[a-z]+$/, '');
+        // Group 1 is the host, but only in the absolute form. `/` and `/da/`
+        // resolve to the page's own homepage, so they take the hostname we are
+        // running on — and send nothing if that is not one of the four.
+        var host = home[1] || location.hostname;
+        if (!CTA_HOSTS.exec(host)) return;
+        name = host.replace(/\.[a-z]+$/, '');
       }
       var payload = JSON.stringify({ path: p, event: 'cta-' + name });
       if (navigator.sendBeacon) {

@@ -740,6 +740,30 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_inline_cta_events.py", "--self-test"),
         inputs=("tools/check_inline_cta_events.py",),
     ),
+    # Opgave fra planens NEXT_TASK 1: `check_inline_cta_events.py` læser
+    # `site/`, men bygget skriver krydsdomænelinks til **absolutte** URL'er — så
+    # den måler en anden kode end den browseren kører, og den ser hverken
+    # `https://cleancopy.tools` (ingen slutstreg) eller `href="/"` (rodrelative).
+    # `CTA_HOME` krævede både scheme *og* skråstreg efter værten, så de 2184
+    # domænelinks uden slutstreg og alle rodrelative hjemmelinks sendte intet:
+    # flere klik end de 1781 sidste iteration rettede. Denne port læser det
+    # **byggede** `dist/` og tæller pr. udgivet rute, hvor mange links der peger
+    # på den og hvor mange `track.js` kan matche. Forventningen er en
+    # håndskrevet `REQUIRED_SLUGS`, ikke noget læst ud af `track.js` — ellers
+    # var porten grøn præcis når en hvidliste mister et navn. Beviset på at den
+    # ser noget: rød med 2634 link-instanser mod main's `CTA_HOME`, grøn efter.
+    Step(
+        id="cta-coverage-dist",
+        argv=("python3", "tools/check_cta_coverage_dist.py"),
+        inputs=("tools/check_cta_coverage_dist.py", "site/track.js",
+                "build_sites.py", "site/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="cta-coverage-dist-selftest",
+        argv=("python3", "tools/check_cta_coverage_dist.py", "--self-test"),
+        inputs=("tools/check_cta_coverage_dist.py", "site/track.js"),
+    ),
     # Opgave fra planens NEXT_TASK 2: `traffic_status: "partial"` har stået i
     # `/api/health` i måneder uden at cron blev rød, fordi `status` var
     # `kvOk ? 'healthy' : 'degraded'`. Rettelsen er delt: `_worker.js` har nu
