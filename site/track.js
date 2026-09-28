@@ -65,7 +65,11 @@
   //
   // The four domains are written out, not matched loosely, so a link to
   // `https://deskuptime.com.evil.tld/scan` still sends nothing.
-  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
+  // `free-downloads` was measured nowhere on 28/9: the port's `tool_paths` set
+  // is built from the whitelists, so a path no page measures is invisible to
+  // it — it cannot warn about clicks that every tracker in the family drops.
+  // Six pages link to it, two of them the ones that sell templates.
+  var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime)(\.html)?\/?(#.*)?$/;
   // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.

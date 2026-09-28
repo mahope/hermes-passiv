@@ -27,8 +27,41 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# De fire grupper porten advarede om, med flest sider først.
-TARGETS = ("compliance-ai", "scan-da", "compliance-site-check", "compliance-guide")
+# Alle 26 stier porten har advaret om, med flest sider først. Listen er den
+# portens egen advarselsliste, ikke en håndplukket udvalg: hver gruppe er den
+# maskinelle rettelse fra den 28/9, og de er alle samme fejlform.
+TARGETS = (
+    "word-counter",
+    "json-formatter",
+    "case-converter",
+    "base64-encoder-decoder",
+    "url-encoder-decoder",
+    "hash-generator",
+    "contrast-checker-da",
+    "nis2-check-da",
+    "dpa-generator-da",
+    "palette-generator-da",
+    "privacy-notice-generator-da",
+    "ropa-generator-da",
+    "cookie-check-da",
+    "text-on-image-checker-da",
+    "color-blindness-simulator-da",
+    "ropa-template",
+    "scan",
+    "compliance-ai",
+    "scan-da",
+    "compliance-site-check",
+    "compliance-guide",
+    "tilgaengelighedserklaering-generator-da",
+    "nis2-gap-assessment-da",
+    "nis2-incident-generator-da",
+    "security-headers-check",
+    "guides",
+    # Målt 28/9: porten havde ingen advarsel om den, fordi ingen tracker målte
+    # den. Først da den kom i `track.js`, blev den synlig — på de to sider med
+    # egen tracker, der linker til den. Se kommentaren i `track.js`.
+    "free-downloads",
+)
 
 # Samme læsning som `check_inline_cta_events.check`: en rodrelativ
 # værktøjssti, som gruppe 1.
