@@ -696,6 +696,25 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_jsonld_types.py", "--self-test"),
         inputs=("tools/check_jsonld_types.py",),
     ),
+    # Opgave fra planens NEXT_TASK 3: fire danske sider uden søskende viste sig
+    # at være danskoriginaler, men målingen fandt fire **krydsede** hreflang-par
+    # i stedet: to engelske artikler erklærede begge den samme danske, og de to
+    # par pegede gennem hinanden. `hreflang_pairs` i build_sites.py skriver et
+    # dict hvor den der skriver sidst vinder, så det er ikke en fejl bygget
+    # rejser på — det er to sider der begge har en gyldig `<link>`. Denne port
+    # måler derfor par-retningen i `dist/`: ét par pr. søskende, og gensidigt.
+    Step(
+        id="hreflang-pairs",
+        argv=("python3", "tools/check_hreflang_pairs.py"),
+        inputs=("tools/check_hreflang_pairs.py", "build_sites.py", "site/**",
+                "bugbottle-landing/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="hreflang-pairs-selftest",
+        argv=("python3", "tools/check_hreflang_pairs.py", "--self-test"),
+        inputs=("tools/check_hreflang_pairs.py",),
+    ),
     Step(
         id="design-tokens-selftest",
         argv=("python3", "tools/check_design_tokens.py", "--self-test"),
