@@ -101,6 +101,21 @@
   // ene rute her der *tjener penge*, så et klik på den var det vigtigste
   // klik at tælle og det eneste der slet ikke blev talt.
   var CTA_PATHS = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?(scan|scan-da|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|url-til-markdown|free-tools|free-downloads|compliance-report|compliance-ai|compliance-guide|compliance-site-check|paid-templates|deskuptime|books|downloads|blog|wordpress-plugin|activate|license-lookup|mcp|tools|url-inspector|guides|support|accessibility-statement-generator|privacy-notice-generator|privacy-policy-template|privacy-notice-generator-da|privacy-policy-template-da|cookie-check|cookie-check-da|nis2-check|nis2-check-da|nis2-gap-assessment|nis2-gap-assessment-da|nis2-incident-generator|nis2-incident-generator-da|dpa-generator|dpa-generator-da|contrast-checker|contrast-checker-da|color-blindness-simulator|color-blindness-simulator-da|palette-generator|palette-generator-da|ropa-generator|ropa-generator-da|tilgaengelighedserklaering-generator-da|text-on-image-checker|text-on-image-checker-da|markdown-table-generator|uuid-generator|word-counter|json-formatter|case-converter|hash-generator|url-encoder-decoder|bulk-url-checker|security-headers-checker|clean-copy-cli-ref|clean-copy-api|clean-copy-bookmarklet|clean-copy-brew|copy-clean-guide|bugbottle-demo|cookie-consent-banner-demo)(\.html)?\/?(#.*)?$/;
+  // The two sub-pages under `/books/` are two-segment paths, and a group that
+  // swallowed the second segment would produce `cta-books/build-your-first-
+  // chrome-extension` — which `handleTrack` in `_worker.js` rejects with 400,
+  // because an event name is `^[a-z0-9-]+$`. So they get their own pattern and
+  // a name that is *prefixed* rather than nested: `cta-books-compliance-
+  // bundle`. Measured 29/9 in `dist/` by `tools/audit_dist_cta_routes.py`:
+  // 18 absolute cross-domain links to the two book pages, on 18 different
+  // pages, sent nothing. They are the pages that sell, so a click on one was
+  // the single most valuable click in the family to throw away.
+  //
+  // Only `/books/<slug>` is added, not a general "any sub-path" rule: that
+  // would also make `/blog/*` measurable under the name `blog`, which is a
+  // deliberate decision (one bounded name, not one per post) and not this
+  // task's to change.
+  var CTA_BOOK_PAGES = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))\/(?:da\/)?books\/([a-z0-9-]+)(?:\.html)?\/?(#.*)?$/;
   // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.
@@ -158,6 +173,14 @@
       if (inlineCta && !CROSS_DOMAIN.test(raw)) return;
       var m = CTA_PATHS.exec(raw);
       var name = m ? m[1] : null;
+      if (!name) {
+        // `/books/<slug>` first, so a two-segment path never reaches CTA_HOME
+        // and never gets the bare `books` name. The prefix is literal here so
+        // the event name stays inside `^[a-z0-9-]+$` — see the comment on
+        // CTA_BOOK_PAGES.
+        var page = CTA_BOOK_PAGES.exec(raw);
+        if (page) name = 'books-' + page[1];
+      }
       if (!name) {
         var home = CTA_HOME.exec(raw);
         if (!home) return;

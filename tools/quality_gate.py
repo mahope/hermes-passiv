@@ -809,6 +809,32 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_cta_coverage_dist.py", "--self-test"),
         inputs=("tools/check_cta_coverage_dist.py", "site/track.js"),
     ),
+    # Opgave fra planens NEXT_TASK 1 (29/9): de tre forrige CTA-porte dømmer
+    # hver *sin* del — inventaret, kildeklikket, det byggede link — men ingen
+    # spørger det ene spørgsmål, der binder dem sammen: *sender hvert eneste
+    # absolutte krydsdomenelink i `dist/` en `cta-`-begivenhed?* Målt i `dist/`
+    # 29/9: 765 links sendte intet, i 198 stier, og de var ikke tilfældige — de
+    # var seks klasser, hvoraf to var reelle pengehuller (`/books/*`, 18 klik).
+    #
+    # Undtagelserne ligger i `ALLOWED_UNMEASURED` som *(regel, grund)*, fordi
+    # fem af klasserne er URL-mønstre og ikke navne. Selftesten har 14 positive
+    # kontroller, heraf to der muterer `site/track.js`' egen kildekopi: uden
+    # `CTA_BOOK_PAGES` skal bogsiden blive rød, og uden `support` i `CTA_PATHS`
+    # skal donationsruten blive rød. En port der ikke kan blive rød på den
+    # kode den læser, må ikke tælles som bevis.
+    Step(
+        id="dist-cta-routes",
+        argv=("python3", "tools/audit_dist_cta_routes.py"),
+        inputs=("tools/audit_dist_cta_routes.py", "site/track.js",
+                "build_sites.py", "site/**"),
+        needs_dist=True,
+    ),
+    Step(
+        id="dist-cta-routes-selftest",
+        argv=("python3", "tools/audit_dist_cta_routes.py", "--self-test"),
+        inputs=("tools/audit_dist_cta_routes.py", "site/track.js",
+                "tools/check_cta_coverage_dist.py", "tools/check_inline_cta_events.py"),
+    ),
     # Opgave fra planens NEXT_TASK 2: `traffic_status: "partial"` har stået i
     # `/api/health` i måneder uden at cron blev rød, fordi `status` var
     # `kvOk ? 'healthy' : 'degraded'`. Rettelsen er delt: `_worker.js` har nu
