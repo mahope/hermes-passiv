@@ -489,7 +489,12 @@ def normalize_head(text: str, **kw) -> tuple[str, dict]:
     ogs = dict((k.lower(), v) for k, v in OG_RE.findall(head))
     if not desc:
         desc = ogs.get("og:description", "") or kw["brand"]["tagline"][kw["lang"]]
-    existing_ld = LDJSON_RE.findall(head)
+    # `_ld_types` skal se hele dokumentet, ikke kun <head>. Ellers afhænger det
+    # om siden får en WebPage-node af hvor forfatteren lagde sin blok: en blok i
+    # <body> så ud som om siden ingen havde, og fik derfor en node den ikke
+    # skulle have, mens dens engelske søskende (samme blok i <head>) ikke fik
+    # nogen. Det er den fejl, der gjorde EN/DA-pariteten grøn og tilfældig.
+    existing_ld = LDJSON_RE.findall(text)
     dates = kw.get("dates")
     if dates:
         head = LDJSON_RE.sub(lambda m: '<script type="application/ld+json">' + _fix_article_dates(m.group(1), *dates) + "</script>", head)
