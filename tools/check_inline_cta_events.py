@@ -112,6 +112,31 @@ def _shared_tracker(root: Path) -> str:
 # porten ville advare om de præcis 70 sider rettelsen fik til at sende. En
 # fejl i en port, der ligner de 207 andre sider grønne, er dyrere end ingen
 # port, så formen læses eksplicit og med sin egen selftest.
+# Den **plain** kapturerende gruppe i en hvidliste: alternativet af stier.
+# `(?:da\/)` og `(\.html)?` er struktur og skal forbigås — se `_tool_names`.
+RE_TOOL_GROUP = re.compile(r"\(([a-z0-9|_.\-]+)\)")
+
+
+def _tool_names(pattern: "re.Pattern[str]") -> set[str]:
+    """Værktøjsnavnene i en trackers hvidliste.
+
+    Læser den første gruppe **uden** `?` — altså gruppen der rummer
+    alternativet af stier — i stedet for at klippe kilden på det første `)`.
+    Klipningen så `(?:da\/)?` som et navn, og da `(?:da\/)?` blev skrevet
+    foran gruppen i 201 filer den 28/9, gav den `^/(?:da\/` i `tool_paths` og
+    **porten blev grøn uden at se noget**: en sti ingen måler skal ikke
+    advares om, så en rodet `tool_paths` slår alle advarsler fra. Det er den
+    dyreste fejl en port som denne kan have, og derfor har `_tool_names` sin
+    egen kontrol i selftesten.
+    """
+    names: set[str] = set()
+    for group in RE_TOOL_GROUP.findall(pattern.pattern):
+        names.update(
+            name for name in group.split("|")
+            if re.fullmatch(r"[a-z0-9-]+", name))
+    return names
+
+
 RE_SHARED_CTA = re.compile(r"CTA_PATHS\s*=\s*(/[^\n;]+)")
 RE_SHARED_HOME = re.compile(r"CTA_HOME\s*=\s*(/[^\n;]+)")
 RE_SHARED_SEND = re.compile(r"event:\s*'cta-'\s*\+|\['cta-'\s*\+")
@@ -228,15 +253,13 @@ def check(root: Path = ROOT) -> tuple[list[str], list[str]]:
         pages.append((path, trackers))
         for t in trackers:
             if t.pattern is not None:
-                tool_paths.update(t.pattern.pattern.split(")")[0].replace("^\\", "").split("|"))
+                tool_paths.update(_tool_names(t.pattern))
                 tool_paths.discard("")
 
     shared = _shared_tracker(root)
     shared_tracker = _shared_has_cta_tracker(shared)
     if shared_tracker is not None and shared_tracker.pattern is not None:
-        tool_paths.update(
-            x for x in shared_tracker.pattern.pattern.split(")")[0]
-            .replace("^\\", "").split("|") if x)
+        tool_paths.update(_tool_names(shared_tracker.pattern))
 
     # En side *uden* egen tracker kan stadig måles, hvis den indlæser den
     # fælles `track.js`. Det er præcis rettelsen i denne iteration, så porten
@@ -338,7 +361,33 @@ def _tracker(regex: str, index: int, hrefs: str = "") -> str:
         "{path:p,event:'cta-'+k})],{type:'application/json'}));},true);}catch(e){}})();")
 
 
-GOOD = _tracker(r"/^\/(scan|page-profile)(\.html)?(#[^#]*)?$/", 1)
+# Den korrekte form, som den ser ud i de 201 filer rettelsen den 28/9 skrev:
+# `(?:da\/)?` foran gruppen, så `/da/scan` og `/scan` begge sender `cta-scan`
+# på **samme** gruppeindeks. Før rettelsen havde 201 af 208 trackere formen
+# uden præfikset, så de målte ingen danske værktøjslinks — og `_fixture` skriver
+# et `<a href="/da/scan">`, som den gamle form netop ikke kunne matche.
+GOOD = _tracker(r"/^\/(?:da\/)?(scan|page-profile)(\.html)?(#[^#]*)?$/", 1)
+
+# Kontrollen på `_tool_names`: de to former skal læse **samme** navne. Den
+# gamle læsning klippede kilden på det første `)`, så `(?:da\/)?` blev læst
+# som et værktøjsnavn, alle rigtige navne faldt væk, og porten blev grøn uden
+# at advare om en eneste sti. Uden denne kontrol er hele advarselsdelen død,
+# fordi en sti ingen måler ikke skal advares om.
+for _literal, _want in (
+    (r"/^\/(scan|page-profile|free-tools)(\.html)?(#[^#]*)?$/",
+     {"scan", "page-profile", "free-tools"}),
+    (r"/^\/(?:da\/)?(scan|page-profile|free-tools)(\.html)?(#[^#]*)?$/",
+     {"scan", "page-profile", "free-tools"}),
+    (r"/^\/(da\/)?(scan|page-profile|free-tools)(\.html)?(#[^#]*)?$/",
+     {"scan", "page-profile", "free-tools"}),
+):
+    _compiled = _js_regex(_literal)
+    _got = _tool_names(_compiled) if _compiled else set()
+    if _got != _want:
+        print(f"KONTROLFEJL: _tool_names læser {_got} fra {_literal!r}, "
+              f"forventede {_want} — porten ville være grøn uden at se noget",
+              file=sys.stderr)
+        sys.exit(1)
 
 # Den fælles trackers form, som den ser ud i `site/track.js` efter rettelsen i
 # `track.js` den 28/9. Den skal læses af porten, ellers ville den advare om de
