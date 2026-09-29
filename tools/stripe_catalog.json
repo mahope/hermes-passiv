@@ -729,6 +729,30 @@
       ]
     },
     {
+      "path": "site/blog/text-on-image-contrast-check.html",
+      "domain": "mahope.tools",
+      "route": "/blog/text-on-image-contrast-check",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year"
+      ]
+    },
+    {
+      "path": "site/da/blog/tekst-paa-billede-kontrasttjek.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/tekst-paa-billede-kontrasttjek",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
+    },
+    {
       "path": "site/support.html",
       "domain": "mahope.tools",
       "route": "/support",

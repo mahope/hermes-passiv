@@ -404,6 +404,16 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # Købssiden for EUComply Pro: kører `compliance-report.html`.
     ("compliance-report.html", "web"),
     ("da/compliance-report.html", "web"),
+    # Kontrastartiklen og dens danske spejling (29/9). De sælger den samme
+    # licens og lover derfor de samme tal: "15 WCAG-regler" i gratis-spalten
+    # og "18 mere, 33 i alt" i Pro-spalten — altså webkernens 15 plus
+    # `reportProFindings()`'s 18, præcis som `compliance-report.html`. Før
+    # denne linje var de to ikke i kortet, så et fund ville have været en
+    # fejl i stedet for et mål. Det er samme fejlform som de tre linjer
+    # ovenfor: siden der sælger en motor skal stå i kortet, ellers er
+    # løftet udømt.
+    ("blog/text-on-image-contrast-check.html", "web"),
+    ("da/blog/tekst-paa-billede-kontrasttjek.html", "web"),
     ("da/compliance-ai.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance

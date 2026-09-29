@@ -4336,15 +4336,35 @@ def self_test() -> int:
 
     # ── sprogdækning: en købsside kun på ét sprog ─────────────────────────
     #
-    # Mutationen er den rigtige gamle katalog, ikke en konstrueret fejlform:
-    # den danske købsside for `eucomply-pro` fjernes fra inventaret, så porten
-    # genfinder præcis den fejl, opgave 59s danske side lukkede. Derfor
-    # forventes her ÉN rød, og at den rammer det produkt og ikke et andet.
+    # Mutationen fjerner **alle** danske købssider for ét produkt, så porten
+    # genfinder præcis den fejl, opgave 59s danske side lukkede. Den fjerner
+    # først præcis én side, og det var nok så længe hvert produkt kun havde
+    # én: `eucomply-pro` fik 29/9 sin **anden** danske købsside
+    # (`site/da/blog/tekst-paa-billede-kontrasttjek.html`), og mutationen
+    # holdt op med at fange fejlen — den efterlod den anden side, så
+    # porten korrekt sagde "dækket" og selftesten fejlede med *målt: 0*.
+    #
+    # Det er den samme fejlform som hele denne familie: **en mutation der
+    # antager en verden, der kun er vokset én gang.** Fejlen porten skal
+    # finde er "dette produkt mangler en dansk købsside", så mutationen
+    # skal fjerne spørgsmålets genstand — hele den danske flade — ikke én
+    # tilfældig post i den. Tallet kræver derfor ≥ 1 fjernet side, og
+    # porten skal give præcis ÉN rød der rammer *dette* produkt.
+    da_offers = [offer for offer in good["offers"]
+                 if offer.get("product") == "eucomply-pro"
+                 and page_lang(str(offer.get("path"))) == "da"]
+    if not da_offers:
+        print("SELFTEST FEJLER: mutationen kan ikke bygges — `eucomply-pro` har ingen "
+              "danske købssider at fjerne, så resten ville teste en tilfældighed")
+        return 1
+    da_paths = {offer["path"] for offer in da_offers}
     without_da_offer = {**good, "offers": [offer for offer in good["offers"]
-                                           if offer["path"] != "site/da/compliance-report.html"]}
-    if len(good["offers"]) - len(without_da_offer["offers"]) != 1:
-        print("SELFTEST FEJLER: mutationen fjerner ikke præcis én købsside — de andre "
-              "scenarier ville så teste en tilfældighed i stedet for sprogdækningen")
+                                           if offer["path"] not in da_paths]}
+    removed = len(good["offers"]) - len(without_da_offer["offers"])
+    if removed != len(da_paths):
+        print(f"SELFTEST FEJLER: mutationen fjerner {removed} købssider, men der er "
+              f"{len(da_paths)} danske — de andre scenarier ville så teste en "
+              f"tilfældighed i stedet for sprogdækningen")
         return 1
     coverage_missing = check_language_coverage(without_da_offer, source_pages())
     coverage_ok = check_language_coverage(good, source_pages())
