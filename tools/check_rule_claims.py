@@ -414,6 +414,12 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # løftet udømt.
     ("blog/text-on-image-contrast-check.html", "web"),
     ("da/blog/tekst-paa-billede-kontrasttjek.html", "web"),
+    # EAA-tjeklisten og dens danske spejling (30/9) — den mest linkede artikel i
+    # `site/` med 41 indgående sider, målt af `check_article_paid_path.py`.
+    # Samme licens og samme to tal som de to ovenfor, af samme grund: de er
+    # skrevet med `compliance-report.html`'s egen gratis-mod-betalt-tabel.
+    ("blog/eaa-accessibility-checklist.html", "web"),
+    ("da/blog/eaa-tjekliste-2026.html", "web"),
     ("da/compliance-ai.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance

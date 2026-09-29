@@ -64,6 +64,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -362,6 +363,31 @@ def _self_test() -> int:
     check("listen genskabt efter mutationen",
           json.loads(BLIND.read_text(encoding="utf-8"))["blind"] == data["blind"])
 
+    # 9. `--write` må ikke slette filens egen dokumentation. Første kørsel af
+    #    `--write` (30/9) skrev `{"blind": …}` og fjernede `note`, `source` og
+    #    `measured`, fordi `judge()` kun læser nøglen `blind` — så ingen port
+    #    kunne se det. Mutér filen på disk med de tre nøgler, kør `main(["--write"])`
+    #    to gange, og kræv at de overlever. Mutationen rydder op i en `finally`.
+    saved = BLIND.read_text(encoding="utf-8")
+    try:
+        doc = dict(data)
+        doc["note"] = "selftest-note"
+        doc["source"] = "selftest-source"
+        doc["measured"] = "1999-01-01"
+        BLIND.write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+        main(["--write", "--quiet"])
+        main(["--write", "--quiet"])
+        after = json.loads(BLIND.read_text(encoding="utf-8"))
+        check("--write bevarer note/source", after.get("note") == "selftest-note"
+              and after.get("source") == "selftest-source")
+        check("--write opdaterer measured", after.get("measured") == date.today().isoformat())
+        check("--write bevarer blind-listen", after["blind"] == data["blind"],
+              f"{len(after['blind'])} linjer")
+    finally:
+        BLIND.write_text(saved, encoding="utf-8")
+    check("listen genskabt efter --write-mutationen",
+          json.loads(BLIND.read_text(encoding="utf-8"))["blind"] == data["blind"])
+
     failed = 0
     for name, ok, detail in checks:
         if ok:
@@ -391,7 +417,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.write:
         measured = blind_now(SITE, catalog)
-        existing = json.loads(BLIND.read_text(encoding="utf-8"))["blind"]
+        current = json.loads(BLIND.read_text(encoding="utf-8"))
+        existing = current["blind"]
         added = sorted(set(measured) - set(existing))
         if added and not args.force:
             print("article-paid-path: --write ville tilføje linjer:\n  "
@@ -399,10 +426,25 @@ def main(argv: list[str] | None = None) -> int:
                   + "\nListen må kun krympe. Ret artiklen, eller kør med --force "
                     "og skriv en grund i filen.", file=sys.stderr)
             return 1
-        BLIND.write_text(json.dumps({"blind": measured}, ensure_ascii=False, indent=1),
+        # Skriv kun `blind` — de øvrige nøgler er filens egen dokumentation
+        # (`note` siger hvad listen *er*, `source` hvordan den måles, `measured`
+        # hvornår). Første `--write` (30/9) skrev `{"blind": …}` og slettede dem
+        # alle tre uden at sige det, fordi `judge()` kun læser nøglen `blind`.
+        # Beviset er mutationen i `_self_test`: `--write` to gange på en fil med
+        # note/source/measured efterlader dem uændrede.
+        out = dict(current)
+        out["blind"] = measured
+        out["measured"] = date.today().isoformat()
+        BLIND.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n",
                          encoding="utf-8")
+        left = sorted(set(existing) - set(measured))
         print(f"article-paid-path: skrev {len(measured)} linjer "
               f"({len(existing) - len(measured)} færre)")
+        for route in left:
+            # Hver krympet linje skal kunne forklares: enten artiklen har selv
+            # fået en købsvej, eller den linker nu til en side der sælger. Uden
+            # denne udskrift så 31 krympninger ud som 31 rettelser.
+            print(f"  forlod listen: {route}")
         return 0
 
     if not args.quiet:
