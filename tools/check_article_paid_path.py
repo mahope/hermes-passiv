@@ -21,8 +21,10 @@ at lyve. Reglerne er derfor skrevet ned som *målinger*:
    ingen. Derfor læses regionen mellem `</header>` og `<footer>`.
 
 2. **Forsiderne er chrome, ikke købsvej.** Samme måling som punkt 1, skrevet
-   ned som `CHROME_ROUTES` med sin grund, så den ikke kan falde tilbage til
-   en regex der rammer dem igen.
+   ned som `frontpage_routes()` med sin grund, så den ikke kan falde tilbage
+   til en regex der rammer dem igen. Mængden er *afledt* af build-manifestet,
+   fordi den håndlavede udgave måtte lappes, da `/da/` stod med skråstreg her og
+   uden i inventaret.
 
 3. **Alle 190 artikler, ikke 96.** Anden måling filtrerede på
    `"/blog/" in rel`, hvor `rel` er stien *relativt til `site/`* — altså
@@ -106,6 +108,23 @@ er ratcheten: en ny række i klassen skal have en linje med begrundelse i
 `tools/article_click_no_button.json`, en linje der ikke længere er i klassen
 skal fjernes, og listen må kun krympe.
 
+**Dom 7 (forsiden pr. domæne, målt 30/9).** Dom 6 undtager forsiderne med
+vilje, og det er den rigtige regel — men den lagde **fire forskellige sider**
+uden for portens dom. `/` er `site/clean-copy.html` på cleancopy.tools,
+`site/deskuptime/index.html` på deskuptime.com, `site/index.html` på
+mahope.tools og `bugbottle-landing/index.html` på bugbottle.dev, og ét
+trafiktal summerer dem: **461 af 505** målte besøg, altså 91 %. `page_rows()`
+skrev derfor `knapper: None` på de to ruter, og en forside kunne miste sin
+købsknap uden at nogen port sagde det.
+
+Dom 7 måler derfor hver forside på **den fil domænet faktisk serverer**, og
+kilden er `build_sites.SITES` + `select_files()` — buildens egen mapping, så
+et nyt domæne, et nyt `index_from` eller et nyt `remap` giver automatisk en ny
+række. Målt 30/9 på de tre udgivne domæner: cleancopy.tools 2 knapper på begge
+sprog, deskuptime.com 1, mahope.tools 1 — **0** i klassen. `bugbottle.dev`
+måles til **0** men dømmes ikke, fordi det ikke står i deploy-matricen; det er
+❓-et om domænet, synligt i hver kørsel i stedet for gemt i en note.
+
 Ud over det printer porten hele ranglisten, fordi det er den næste iteration
 har brug for. Den behøver ikke selv at finde de mest linkede artikler.
 
@@ -121,10 +140,12 @@ import json
 import re
 import sys
 from datetime import date
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT))
 
 from check_stripe_ctas import Page  # noqa: E402  (delt læser, se punkt 4 nedenfor)
 
@@ -137,12 +158,19 @@ WORKFLOW = ROOT / ".github" / "workflows" / "deploy-sites.yml"
 PUBLISHED = ROOT / "tools" / "article_paid_path_published.json"
 CLICK_NO_BUTTON = ROOT / "tools" / "article_click_no_button.json"
 PAGE_NO_BUTTON = ROOT / "tools" / "article_page_paid_path.json"
+FRONTPAGE_NO_BUTTON = ROOT / "tools" / "frontpage_no_button.json"
 
 # Punkt 1 og 2 ovenfor. Målt: 69 artikler linker til `/` og 32 til `/da/` fra
 # hele dokumentet, og begge er købssider i katalogens `offers`, fordi
 # Clean Copy Pro sælges på forsiden. Uden denne udeladelse er der 0 blinde
 # artikler, og porten ville være grøn på det den er skrevet for at finde.
-CHROME_ROUTES = {"/", "/da/"}
+#
+# Målt 30/9: mængden var **håndlavet**, og den måtte lappes to gange fordi den
+# skrev `/da/` med skråstreg mens inventaret skriver `/da` uden. Derfor er den
+# nu *afledt* af build-manifestet: `frontpage_routes()` spørger `SITES` +
+# `select_files()` — den samme kode der lægger filerne i `dist/<domæne>/` —
+# så den kan ikke komme bag de ruter der faktisk er forsider. Se dom 7.
+FRONTPAGE_DESTS = ("index.html", "da/index.html")
 
 RE_HREF = re.compile(r'href="([^"]+)"')
 RE_BUY = re.compile(r"^(?:https?://)?(?:buy|donate)\.stripe\.com/")
@@ -178,6 +206,92 @@ def content_region(html: str) -> str:
     return html[start:end]
 
 
+def frontpage_sources() -> dict[str, dict[str, Path | None]]:
+    """Domæne → {rute: kildefil} for forsiden — **bygget**, ikke gættet.
+
+    Målt 30/9, og det er hele dom 7: `/` er fire forskellige filer, fordi
+    hvert domæne bygges af sit eget manifest. `site/clean-copy.html`
+    (cleancopy.tools, 2 købsknapper), `site/deskuptime/index.html`
+    (deskuptime.com, 1), `site/index.html` (mahope.tools, 1) og
+    `bugbottle-landing/index.html` (bugbottle.dev, 0). Den gamle
+    `CHROME_ROUTES` vidste at `/` var en forside, men ikke hvilken fil den var
+    på hvilket domæne — så `page_rows()` skrev `knapper: None` for **461 af
+    505** målte besøg, altså 91 % af den trafik porten kender, fordi ét tal
+    summerer fire sider.
+
+    Kilden er `build_sites.SITES` + `select_files()`: den samme funktion der
+    afgør hvad der lander i `dist/<domæne>/index.html`. Derfor kan svaret ikke
+    blive *nyt* på en måde porten ikke ser — en ny `index_from`, et nyt `remap`
+    eller et nyt domæne i manifestet giver automatisk en ny række.
+
+    `index_from` er den del der lå gemt: cleancopy.tools har ingen fil med
+    `dest == "index.html"`, fordi forsiden er `clean-copy.html` der *kopieres*
+    til `index.html`. Uden at læse `index_from` ville porten have fundet fire
+    domæner hvoraf det ene ikke har en forsidefil — altså "kan ikke måle" for
+    det domæne der sælger *to* produkter. Målt 30/9: `bugbottle.dev` er det
+    domæne der *kun* findes via `extra` (kilden ligger uden for `site/`), og
+    `index_only` er grunden til at cleancopy.tools' kilde ikke også får sin egen
+    rute.
+    """
+    try:
+        import build_sites
+    except Exception as exc:  # pragma: no cover - kun hvis importen brydes
+        raise RuntimeError(f"kan ikke læse build-manifestet: {exc}") from exc
+    sites = {d: build_sites.Site(d, c) for d, c in build_sites.SITES.items()}
+    build_sites.select_files(sites)
+    out: dict[str, dict[str, Path | None]] = {}
+    for domain, site in sites.items():
+        index_from = site.cfg.get("index_from") or {}
+        per: dict[str, Path | None] = {}
+        for dest in FRONTPAGE_DESTS:
+            target = index_from.get(dest) or dest
+            per[_route_of_dest(dest)] = next(
+                (src for _key, (src, d) in site.files.items() if d == target), None
+            )
+        out[domain] = per
+    return out
+
+
+def _route_of_dest(dest: str) -> str:
+    """`da/index.html` → `/da/`. Samme form som ruterne i inventaret."""
+    if dest == "index.html":
+        return "/"
+    return "/" + dest[: -len("index.html")]
+
+
+@lru_cache(maxsize=1)
+def _frontpage_sources_cached() -> tuple[dict[str, dict[str, Path | None]], str]:
+    try:
+        return frontpage_sources(), ""
+    except Exception as exc:
+        return {}, str(exc)
+
+
+def frontpage_manifest_error() -> str:
+    """Tom streng hvis manifestet kunne læses, ellers hvorfor det ikke kunne."""
+    return _frontpage_sources_cached()[1]
+
+
+def frontpage_sources_or_empty() -> dict[str, dict[str, Path | None]]:
+    return _frontpage_sources_cached()[0]
+
+
+@lru_cache(maxsize=1)
+def frontpage_routes() -> frozenset[str]:
+    """Ruterne der er en forside i *mindst ét* domæne, afledt af manifestet.
+
+    Samme to ruter som den håndlavede `CHROME_ROUTES` gav, målt 30/9 — men
+    de kan ikke længere komme bag de to former af `/da`. En forside der
+    *kun* findes som `extra` (bugbottle.dev) tælles med, fordi porten skal se
+    den som forside også der; den er ikke publiceret, så dom 7 dømmer den ikke,
+    men den måles og skrives i udskriften, så ❓-et om domænet er synligt.
+    """
+    routes: set[str] = set()
+    for per in frontpage_sources_or_empty().values():
+        routes.update(per)
+    return frozenset(routes)
+
+
 def paid_links(root: Path, path: Path, offer_routes: set[str]) -> list[str]:
     """Links i artikelens egen tekst der fører til et køb.
 
@@ -210,6 +324,7 @@ def paid_links(root: Path, path: Path, offer_routes: set[str]) -> list[str]:
     page = Page()
     page.feed(content_region(html))
     mirrors = {_route_of_href(h) for h in RE_ALTERNATE.findall(html)}
+    chrome = frontpage_routes()
     found = []
     for href in page.all_links:
         if href.startswith(("mailto:", "tel:", "javascript:", "#")):
@@ -218,7 +333,7 @@ def paid_links(root: Path, path: Path, offer_routes: set[str]) -> list[str]:
             found.append(href)
             continue
         route = _route_of_href(href)
-        if route in offer_routes and route not in CHROME_ROUTES and route not in mirrors:
+        if route in offer_routes and route not in chrome and route not in mirrors:
             found.append(route)
     return found
 
@@ -533,14 +648,17 @@ def _visits_by_route(visits: dict[str, int]) -> dict[str, int]:
 def _chrome(route: str) -> bool:
     """Er ruten en forside?
 
-    `CHROME_ROUTES` er skrevet som læseren har brugt den: `/da/` **med**
-    skråstreg. Inventaret skriver samme rute **uden**, så et råt
-    `route in CHROME_ROUTES` ville klassificere den danske forside som en
-    helt almindelig side — og dom 6 ville dømme den. Målt 30/9: det gav
+    Mængden er **afledt** af build-manifestet (`frontpage_routes()`), så den
+    kan ikke falde tilbage til en håndlavet liste der skriver ruten i en anden
+    form end inventaret gør. Den gamle `CHROME_ROUTES` skrev `/da/` med
+    skråstreg mens `route_inventory.json` skriver `/da` uden, så et råt
+    `route in CHROME_ROUTES` klassificerede den danske forside som en helt
+    almindelig side — og dom 6 dømmede den. Målt 30/9: det gav
     `NY SIDE-UDEN-KNAP: /da … 31 målte besøg` på en rute porten netop har
-    undtaget med vilje.
+    undtaget med vilje. Normaliseringen er der stadig, fordi inventaret og
+    trafikken stadig skriver begge former.
     """
-    return (route.rstrip("/") or "/") in {r.rstrip("/") or "/" for r in CHROME_ROUTES}
+    return (route.rstrip("/") or "/") in {r.rstrip("/") or "/" for r in frontpage_routes()}
 
 
 def page_rows(root: Path = SITE, catalog: dict | None = None,
@@ -697,6 +815,176 @@ def page_no_button_problems(table: list[dict] | None = None,
     return problems
 
 
+def frontpage_rows(workflow: Path = WORKFLOW) -> list[dict]:
+    """Dom 7s måling: **hvert domænes egen forside**, med sit eget knaptal.
+
+    Dom 6 undtager forsiderne, fordi de er domænernes hovedsider. Det var den
+    rigtige regel, men den lod **fire forskellige sider** ligge uden for
+    portens dom: målt 30/9 ligger `/` (430) + `/da/` (31) = **461 af 505**
+    målte besøg, altså 91 %, på to ruter porten med vilje så bort fra, og
+    `page_rows()` satte `knapper: None` på dem fordi ét trafiktal summerer
+    fire sider. En forside kunne miste sin købsknap, og ingen port ville sige
+    det.
+
+    Derfor måles den **pr. domæne**, på den fil domænet faktisk serverer — fra
+    build-manifestet, ikke fra en håndlavet liste (`frontpage_sources()`).
+    Besøgstallet kan *ikke* deles pr. domæne, fordi det er summen af alle fire,
+    så hver række bærer tallet med `delt: True` og udskriften siger det.
+
+    Kun domæner i deploy-matricen dømmes. `bugbottle.dev` måles og skrives med
+    sine **0** knapper — det er ❓-et om hvem der ejer domænet, synligt i
+    hver kørsel — men det er ikke i matricen, så det dømmes ikke. Den dag det
+    kommer i matricen, går dom 7 rød med en besked om hvilken fil der skal have
+    en knap, og det er den rigtige rettelse: en forside uden købsvej er et hul.
+    """
+    per_domain = frontpage_sources_or_empty()
+    live = deployed_domains(workflow)
+    visits = _visits_by_route(traffic())
+    dom = route_domain_map(json.loads(INVENTORY.read_text(encoding="utf-8")))
+    out: list[dict] = []
+    for domain in sorted(per_domain):
+        for route, src in per_domain[domain].items():
+            knapper = knap_links(SITE, src) if src else None
+            out.append({
+                "domain": domain,
+                "route": route,
+                "file": _rel(src) if src else None,
+                "knapper": len(knapper) if src else None,
+                "knap_urls": knapper or None,
+                "publiceret": domain in live,
+                "delt": len(dom.get(route.rstrip("/") or "/", ())) > 1,
+                "visits": visits.get(route),
+                "i_inventar": (route.rstrip("/") or "/") in dom,
+            })
+    out.sort(key=lambda r: (r["domain"], r["route"]))
+    return out
+
+
+def _rel(path: Path) -> str:
+    """Sti til læseren. Kilder uden for `site/` står som `../bugbottle-landing/…`."""
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return "../" + path.as_posix().lstrip("/")
+
+
+def frontpage_no_button(table: list[dict] | None = None,
+                        workflow: Path = WORKFLOW) -> list[dict]:
+    """Dom 7: en publiceret forside uden købsknap. Se `frontpage_rows()`.
+
+    Målt 30/30 på de tre udgivne domæner: cleancopy.tools **2** knapper på begge
+    sprog (abonnement + lifetime), deskuptime.com **1**, mahope.tools **1** —
+    efter sidste iteration lagde en købsknap på mahope.tools' egen forside.
+    Klassen er altså **0** i dag, og det er målt på filerne, ikke på en liste.
+
+    En forside hvis fil *ikke* kan findes (`knapper is None`) er ikke i klassen:
+    ukendt er ikke nul, og den bliver rød i `frontpage_problems()` med en
+    anden besked. Ellers ville en fil der forsvinder se ud som en forside
+    uden købsknap — eller værre: som en forside der aldrig har eksisteret.
+    """
+    table = table if table is not None else frontpage_rows(workflow)
+    return [r for r in table if r["publiceret"] and r["knapper"] == 0]
+
+
+def frontpage_problems(table: list[dict] | None = None,
+                       doc: dict | None = None,
+                       workflow: Path = WORKFLOW) -> list[str]:
+    """Dom 7, begrundelses-flås over `frontpage_no_button()`.
+
+    Samme tre domme som dom 5 og 6, af samme grund: en port der konstant er
+    rød bliver slåt fra. Men der kommer to mere, fordi dom 7 måler noget de
+    to andre ikke gør:
+
+    1. En målt forside uden knap uden linje i `tools/frontpage_no_button.json`
+       → rød, med domænet, filen og ruten i beskeden.
+    2. En linje uden begrundelse → rød. Samme regel som `ctas_note`.
+    3. En linje der ikke længere er i klassen → rød, med *hvorfor* den faldt
+       ud (fik knap, er ikke publiceret, filen er væk).
+    4. Dubletter → rød. Nøglen er `domæne + rute`, fordi `/` findes fire gange.
+    5. **En publiceret forside hvis fil ikke kan findes** → rød. Det er det
+       dom 6 *ikke* kunne se: `page_rows()` skrev `knapper: None` og gik videre.
+    6. **Et publiceret domæne uden forside-række** → rød. Samme grund: et
+       domæne der ikke måles må ikke se ud som et domæne uden købsknap.
+    """
+    if table is None:
+        table = frontpage_rows(workflow) if not frontpage_manifest_error() else []
+    doc = doc if doc is not None else (
+        json.loads(FRONTPAGE_NO_BUTTON.read_text(encoding="utf-8"))
+        if FRONTPAGE_NO_BUTTON.is_file() else {"acknowledged": []}
+    )
+    entries = doc.get("acknowledged", [])
+    key = lambda r: f"{r['domain']}{r['route']}"  # noqa: E731
+    known = {e["key"]: e for e in entries
+             if isinstance(e, dict) and isinstance(e.get("key"), str)}
+    measured = {key(r): r for r in frontpage_no_button(table)}
+    problems: list[str] = []
+
+    if frontpage_manifest_error():
+        problems.append(
+            f"KAN IKKE MÅLE FORSIDEN: {frontpage_manifest_error()}. Uden "
+            f"målingen er dom 7 død, og det er værre end rødt: porten ville "
+            f"springe domænernes forsider over i det stille."
+        )
+    for k in sorted(set(measured) - set(known)):
+        row = measured[k]
+        problems.append(
+            f"NY FORSIDE-UDEN-KNAP: {row['domain']}{row['route']} er en "
+            f"publiceret forside ({row['file']}) med 0 købsknapper. Sæt en "
+            f"knap på siden, eller tilføj en linje med en grund i "
+            f"tools/frontpage_no_button.json."
+        )
+    for k, entry in sorted(known.items()):
+        if not str(entry.get("reason") or "").strip():
+            problems.append(
+                f"NY FORSIDE-UDEN-KNAP: {k} står i "
+                f"tools/frontpage_no_button.json, men `reason` er tom. En "
+                f"undtagelse uden grund er en måde at slå reglen fra."
+            )
+        elif k not in measured:
+            row = next((r for r in table if key(r) == k), None)
+            if row is None:
+                why = "domænet eller ruten er ikke længere i build-manifestet"
+            elif row["knapper"]:
+                why = f"den har nu {row['knapper']} købsknap(per)"
+            else:
+                why = f"domænet er ikke publiceret ({row['domain']})"
+            problems.append(
+                f"DØD LINJE i listen: {k} er ikke længere i den målte klasse — "
+                f"{why}. Fjern den fra tools/frontpage_no_button.json — "
+                f"listen må kun krympe."
+            )
+    if len(known) != len(entries):
+        problems.append("forside-uden-knap-listen har dubletter; den er en mængde.")
+
+    # Dom 7s to ekstra domme: det porten ellers ikke ser.
+    for row in table:
+        if not row["publiceret"]:
+            continue
+        if row["knapper"] is None:
+            problems.append(
+                f"KAN IKKE MÅLE FORSIDEN: {row['domain']}{row['route']} er en "
+                f"publiceret forside, men porten fandt ingen kildefil for den. "
+                f"Det er ikke det samme som 0 knapper — målingen skal rettes, "
+                f"ellers er domænets forside usynlig."
+            )
+        elif not row["i_inventar"]:
+            problems.append(
+                f"FORSIDE UDEN RUTE I INVENTARET: {row['domain']}{row['route']} "
+                f"({row['file']}) står ikke i tools/route_inventory.json, så "
+                f"besøgstallet kan ikke slås op. Opdatér inventaret."
+            )
+    covered = {(r["domain"], r["route"]) for r in table}
+    for domain in sorted(deployed_domains(workflow)):
+        for route in sorted(frontpage_routes()):
+            if (domain, route) not in covered:
+                problems.append(
+                    f"FORSLIDE UDEN MÅLING: {domain}{route} er en publiceret "
+                    f"forside, men dom 7 har ingen række for den. Uden rækken "
+                    f"er domænets forside uden for portens syn."
+                )
+    return problems
+
+
 def blind_now(root: Path = SITE, catalog: dict | None = None) -> list[str]:
     return sorted(r["file"] for r in rows(root, catalog) if not r["paid"])
 
@@ -731,6 +1019,10 @@ def judge(root: Path, catalog: dict) -> list[str]:
     # ruter uden for artiklerne med målt trafik er to forsider og én
     # værktøjside med to købsknapper. Se `page_rows()`.
     problems.extend(page_no_button_problems())
+    # Dom 7, forsiden pr. domæne. Dom 6 undtager forsiderne med vilje, og det
+    # er derfor den her måler dem — ellers ligger 461 af 505 målte besøg
+    # uden for portens dom. Se `frontpage_rows()`.
+    problems.extend(frontpage_problems())
     return problems
 
 
@@ -986,6 +1278,32 @@ def _print_ranking(table: list[dict], limit: int, meta: dict | None = None) -> N
         print(f"{row['visits']:>6} {row['links']:>5}  {fil:<52} "
               f"{row['domain']} — {state}")
 
+    # Dom 7, forsiden pr. domæne. Det er den måling dom 6s undtagelse skjuler:
+    # 461 besøg på to ruter der er *fire* forskellige sider, så porten skrev
+    # `knapper: None` og gik videre. Her måles hver side på sin egen fil, fra
+    # build-manifestet. Besøgstallet står på alle fire rækker, fordi det er
+    # summen — det står derfor med "delt" og må ikke læses som fire målinger.
+    forsider = frontpage_rows()
+    klasse7 = frontpage_no_button(forsider)
+    ruter = sorted({r["route"] for r in forsider})
+    delte = sorted({r["route"] for r in forsider if r["delt"]})
+    besog = sum(max((r["visits"] or 0) for r in forsider if r["route"] == rt)
+                for rt in ruter)
+    print(f"\nforside pr. domæne (dom 7): {len(forsider)} forsider på "
+          f"{len({r['domain'] for r in forsider})} domæner · {besog} målte "
+          f"besøg på {len(ruter)} forside-rute(r), hvoraf {len(delte)} er "
+          f"delt af alle domæner · "
+          f"{sum(1 for r in forsider if not r['publiceret'])} rækker på et "
+          f"domæne der ikke udgives (måles, dømmes ikke) · {len(klasse7)} "
+          f"uden købsknap (dømmes)")
+    for row in forsider[:limit]:
+        trafik = str(row["visits"]) if row["visits"] is not None else "-"
+        dele = " · trafikken er delt med de andre domæner" if row["delt"] else ""
+        stat = "udgives ikke" if not row["publiceret"] else "udgives"
+        knap = row["knapper"] if row["knapper"] is not None else "kan ikke måles"
+        print(f"{trafik:>6} {'':>5}  {(row['file'] or '(ingen fil)'):<52} "
+              f"{row['domain']}{row['route']} — {knap} knap(per), {stat}{dele}")
+
 
 def _self_test() -> int:
     """Positive kontroller. Uden dem er `--self-test` grøn på et repo hvor
@@ -1025,7 +1343,9 @@ def _self_test() -> int:
     check("købslink i brødteksten tæller", content_region(body_only).count("buy.stripe.com") == 1)
 
     # 3. Forsiden er chrome: et link til `/` er ikke en købsvej.
-    check("forsiden er ikke en købsvej", "/" in CHROME_ROUTES and "/da/" in CHROME_ROUTES)
+    check("forsiden er ikke en købsvej",
+          {"/", "/da/"} <= frontpage_routes(),
+          f"{sorted(frontpage_routes())}")
 
     # 4. Donationslink tæller som en købsvej — det er det samme køb.
     check("donate.stripe.com er en købsvej", bool(RE_BUY.match("https://donate.stripe.com/7sYeV"))
@@ -1533,6 +1853,97 @@ def _self_test() -> int:
     check("forsidegenkendelsen overlever skråstregformen",
           _chrome("/da/") and _chrome("/") and not _chrome("/blog/x"),
           f"/da/={_chrome('/da/')} /={_chrome('/')} /blog/x={_chrome('/blog/x')}")
+
+    # 16f. Dom 7, forsiden pr. domæne. De otte rækker er målt på filerne, så
+    #      porten ser her *hver* forside og ikke fire sider bag ét tal — og det
+    #      er hele hullet dom 6 lod åbent: 461 af 505 målte besøg.
+    forsider = frontpage_rows()
+    målt = {f"{r['domain']}{r['route']}": r["knapper"] for r in forsider}
+    check("dom 7 måler alle fire domæners forsider, begge sprog",
+          len(forsider) == 8 and sorted({r["domain"] for r in forsider})
+          == ["bugbottle.dev", "cleancopy.tools", "deskuptime.com",
+              "mahope.tools"],
+          f"{len(forsider)} rækker · {sorted(målt)}")
+    # Målt 30/9 på filerne, ikke på en liste. De tre *udgivne* domæner har
+    # 2/2, 1/1 og 1/1; bugbottle.dev står med 0 og er ikke i matricen.
+    check("dom 7: de publicerede forsider har knapper, målt på filerne",
+          målt.get("cleancopy.tools/") == 2
+          and målt.get("cleancopy.tools/da/") == 2
+          and målt.get("deskuptime.com/") == 1
+          and målt.get("deskuptime.com/da/") == 1
+          and målt.get("mahope.tools/") == 1
+          and målt.get("mahope.tools/da/") == 1,
+          f"{målt}")
+    check("dom 7: filerne er fire forskellige, målt fra build-manifestet",
+          len({r["file"] for r in forsider if r["route"] == "/"}) == 4
+          and {r["file"] for r in forsider if r["domain"] == "cleancopy.tools"}
+          == {"site/clean-copy.html", "site/da/clean-copy.html"},
+          f"{sorted({r['file'] for r in forsider if r['route'] == '/'})}")
+    check("dom 7: klassen er 0 på de publicerede forsider",
+          not frontpage_problems(forsider, {"acknowledged": []}),
+          f"{frontpage_problems(forsider, {'acknowledged': []})[:1]}")
+    check("dom 7: bugbottle.dev måles men ikke dømt, fordi det ikke udgives",
+          all(not r["publiceret"] for r in forsider
+              if r["domain"] == "bugbottle.dev")
+          and not [r for r in frontpage_no_button(forsider)
+                   if r["domain"] == "bugbottle.dev"]
+          and målt.get("bugbottle.dev/") == 0,
+          f"bugbottle.dev={målt.get('bugbottle.dev/')} "
+          f"publiceret={[r['publiceret'] for r in forsider if r['domain'] == 'bugbottle.dev']}")
+    # Mutationen: en publiceret forside mister sin knap. Det er præcis det
+    # dom 6 ikke kunne se, fordi den skrev `knapper: None` for delte ruter.
+    minus = [dict(r, knapper=0) if r["domain"] == "mahope.tools" and r["route"] == "/" else r
+             for r in forsider]
+    linjer7 = frontpage_problems(minus, {"acknowledged": []})
+    check("mutationen: en forside uden knap gør dom 7 rød med domæne og fil",
+          [r["domain"] + r["route"] for r in frontpage_no_button(minus)]
+          == ["mahope.tools/"]
+          and any("mahope.tools/" in p and "site/index.html" in p
+                  and "frontpage_no_button.json" in p for p in linjer7),
+          linjer7[0] if linjer7 else "ingen linje")
+    # `knapper is None` må *ikke* være det samme som 0. Uden denne kontrol er
+    # ukendt → grøn, og det er den falske grønde der gjorde dom 6 unyttig på
+    # de to ruter der bærer 91 % af trafikken.
+    ukendt = [dict(r, knapper=None, file=None)
+              if r["domain"] == "deskuptime.com" and r["route"] == "/da/" else r
+              for r in forsider]
+    check("dom 7: en forside porten ikke kan finde er rød, ikke grøn",
+          not frontpage_no_button([r for r in ukendt if r["route"] == "/da/"
+                                   and r["domain"] == "deskuptime.com"])
+          and any("KAN IKKE MÅLE FORSIDEN" in p for p in
+                  frontpage_problems(ukendt, {"acknowledged": []})),
+          f"{[p for p in frontpage_problems(ukendt, {'acknowledged': []})][:1]}")
+    # Et publiceret domæne uden række må heller ikke se ud som et domæne uden
+    # købsknap — det er det andet "kan ikke se" i dom 6.
+    check("dom 7: en manglende række for et publiceret domæne er rød",
+          any("FORSLIDE UDEN MÅLING" in p for p in frontpage_problems(
+              [r for r in forsider if r["domain"] != "deskuptime.com"],
+              {"acknowledged": []})),
+          f"{[p for p in frontpage_problems([r for r in forsider if r['domain'] != 'deskuptime.com'], {'acknowledged': []})][:1]}")
+    check("dom 7: tom begrundelse giver rødt",
+          any("`reason` er tom" in p for p in frontpage_problems(
+              [], {"acknowledged": [{"key": "mahope.tools/", "reason": " "}]})),
+          "tom grund")
+    check("dom 7: en linje uden for klassen giver rødt med årsagen i beskeden",
+          any("DØD LINJE" in p and "har nu 1 købsknap" in p
+              for p in frontpage_problems(
+                  forsider, {"acknowledged": [{"key": "mahope.tools/",
+                                               "reason": "test"}]})),
+          f"{[p for p in frontpage_problems(forsider, {'acknowledged': [{'key': 'mahope.tools/', 'reason': 'test'}]})][:1]}")
+    check("dom 7: dubletter giver rødt (nøglen er domæne + rute)",
+          any("dubletter" in p for p in frontpage_problems(
+              [], {"acknowledged": [{"key": "mahope.tools/", "reason": "a"},
+                                    {"key": "mahope.tools/", "reason": "b"}]})),
+          "dublet")
+    # Sidste kontrol: dom 6 og dom 7 dækker de forskellige ting, så en forside
+    # kan ikke slippe ud mellem dem. Dom 6 springer `chrome` over; dom 7 kræver
+    # en række pr. publiceret domæne pr. forside-rute.
+    check("dom 6 og dom 7 dækker forsiderne mellem sig",
+          {(r["route"].rstrip("/") or "/") for r in forsider if r["publiceret"]}
+          == {(r["route"].rstrip("/") or "/")
+              for r in page_rows() if r["chrome"]},
+          f"dom 7={sorted({r['route'] for r in forsider if r['publiceret']})} "
+          f"dom 6={sorted({r['route'] for r in page_rows() if r['chrome']})}")
 
     # 16b. En delt rute må ikke få *én* sides knaptal. Målt 30/9: `/` er fire
     #      forskellige filer — `site/clean-copy.html` (2 købsknapper),

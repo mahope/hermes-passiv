@@ -900,9 +900,16 @@ STEPS: tuple[Step, ...] = (
             # Dom 6s flås, samme grund: uden den kunne
             # `article_page_paid_path.json` ændres uden at porten læser den.
             "tools/article_page_paid_path.json",
+            # Dom 7s flås, samme grund igen: uden den kunne
+            # `frontpage_no_button.json` ændres uden at porten læser den.
+            "tools/frontpage_no_button.json",
             "tools/route_inventory.json",
             "tools/stripe_catalog.json",
             "tools/check_stripe_ctas.py",
+            # Dom 7 læser build-manifestet for at finde ud af hvilken fil
+            # hvert domæne serverer på forsiden. Uden den i filteret kunne
+            # `index_from`/`remap`/`extra` ændres uden at porten målte igen.
+            "build_sites.py",
             "reports/weekly/*.json",
             "site/**/*.html",
         ),
@@ -910,7 +917,7 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="article-paid-path-selftest",
         argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
-        inputs=("tools/check_article_paid_path.py",),
+        inputs=("tools/check_article_paid_path.py", "build_sites.py"),
     ),
     # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
     # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i

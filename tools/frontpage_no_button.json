@@ -1,0 +1,6 @@
+{
+  "note": "Dom 7: en PUBLICERET forside uden synlig købsknap, målt pr. domæne på den fil domænet faktisk serverer. Dom 6 undtager forsiderne, fordi de er domænernes hovedsider — men `/` er fire forskellige filer (site/clean-copy.html, site/deskuptime/index.html, site/index.html, bugbottle-landing/index.html), så dom 6 skrev `knapper: None` på de ruter der bærer 461 af 505 målte besøg (se check_article_paid_path.py, dom 7 og frontpage_rows). Domæner der ikke står i deploy-matricen måles og skrives i udskriften, men dømmes ikke. Listen er en ratchet: hver linje er en forside med læsere uden en købsknap, og den skal fjernes når siden får en knap — listen må kun krympe. Nøglen er `domæne` + `rute` (fx `mahope.tools/da/`), fordi `/` findes fire gange. Filen skrives med en begrundelse pr. linje, aldrig af --write.",
+  "source": "python3 tools/check_article_paid_path.py",
+  "measured": "2026-09-30",
+  "acknowledged": []
+}

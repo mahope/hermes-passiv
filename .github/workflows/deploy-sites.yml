@@ -51,6 +51,14 @@ on:
       # gaten over. `route_inventory.json` skal også med: dom 6 måler de
       # ruter der står der, så en ændring i inventaret skal kunne rødme.
       - 'tools/article_page_paid_path.json'
+      # Dom 7 i samme gatestræk: listen over publicerede forsider uden
+      # købsknap, målt pr. domæne. Samme grund som linjerne ovenfor — uden
+      # den springer en push, der kun skriver en begrundelse, gaten over.
+      # `build_sites.py` skal også med: dom 7 læser manifestet for at finde
+      # ud af hvilken fil hvert domæne serverer på forsiden, så en ændring i
+      # `index_from`/`remap`/`extra` skal kunne rødme porten.
+      - 'tools/frontpage_no_button.json'
+      - 'build_sites.py'
       - 'tools/route_inventory.json'
       - 'tools/check_article_paid_path.py'
       - 'tools/make_blog_da_mirrors_461.py'
