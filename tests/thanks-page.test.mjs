@@ -79,11 +79,22 @@ const call = (path) => worker.fetch(new Request('https://mahope.tools' + path), 
 const pageHtml = readFileSync(pagePath, 'utf8');
 const script = pageHtml.split('<script>')[1].split('</script>')[0];
 
-async function render(payload) {
+// `steps` giver rækken af svar siden modtager i stedet for ét. Det er sådan
+// et forbigående svar (503, 429, et kastende netværkskald) kan testes på den
+// rigtige side: kunden skal prøve igen, og det skal kunne måles i `fetches`.
+async function render(payload, steps) {
+  const seen = [];
   const els = {
-    title: { textContent: '' }, status: { textContent: '', className: 'hint' },
+    title: { textContent: '' }, status: { _v: '', className: 'hint' },
     result: { innerHTML: '', hidden: true }, mail: { textContent: '' },
   };
+  // Hver skrivning til status'en gemmes, så en test kan se hvad kunden så
+  // *mens* siden arbejdede. `show()` tømmer teksten igen ved succes, så den
+  // endelige tekst alene kan ikke bevise at der stod noget undervejs.
+  Object.defineProperty(els.status, 'textContent', {
+    get() { return this._v; },
+    set(v) { seen.push(String(v)); this._v = String(v); },
+  });
   let fetches = 0;
   const sandbox = {
     console,
@@ -94,8 +105,10 @@ async function render(payload) {
     setTimeout: (fn) => setTimeout(fn, 0),
     fetch: async (url) => {
       if (!String(url).includes('/api/stripe/fulfillment')) throw new Error('uventet kald: ' + url);
-      fetches++;
-      return { status: 200, json: async () => payload };
+      const i = fetches++;
+      const step = steps ? steps[Math.min(i, steps.length - 1)] : { status: 200, body: payload };
+      if (step.throw) throw new Error('netværksfejl');
+      return { status: step.status, json: async () => step.body };
     },
   };
   vm.createContext(sandbox);
@@ -103,8 +116,10 @@ async function render(payload) {
   try { vm.runInContext(script, sandbox); } catch (e) { thrown = e; }
   // `.catch` i poll() fanger en TypeError og genkalder — lad de gentagelser ske,
   // ellers ville porten være grøn på den præcis fejl den er skrevet til at fange.
-  for (let i = 0; i < 12; i++) await new Promise((r) => setTimeout(r, 4));
-  return { ...els, fetches, thrown };
+  // 40 runder: det er nok til et helt retry-budget (12 kald gennem to led) og
+  // koster stadig under 200 ms.
+  for (let i = 0; i < 40; i++) await new Promise((r) => setTimeout(r, 4));
+  return { ...els, fetches, thrown, seen };
 }
 
 // --------------------------------------------------------------------------
@@ -251,6 +266,85 @@ ok('download-svar uden downloads giver en læsbar bessted, ikke en hvid side',
   `thrown=${noFiles.thrown && noFiles.thrown.message} html=${JSON.stringify(noFiles.result.innerHTML.slice(0, 80))}`);
 ok('download-svar uden downloads hænger ikke i en gentagelsesstorm', noFiles.fetches === 1, 'fetches=' + noFiles.fetches);
 ok('siden guardinger d.downloads med Array.isArray', /Array\.isArray\(d\.downloads\)/.test(script));
+
+// --------------------------------------------------------------------------
+// 3b. En betaling der lige er gennemført må aldrig ende i en permanent
+//     fejlside. Målt 29/9: `202` blev gentaget op til 12 gange, men `503` og
+//     `429` gav op med det samme — så ét KV-blip kunne efterlade en kunde, der
+//     netop havde betalt for EUComply Pro, med "Service temporarily
+//     unavailable." og ingen vej videre. Svarene her er de *ægte* fra
+//     workeren: 503 fordi env mangler `STRIPE_SECRET_KEY`, 429 fordi
+//     timegrænsen virkelig er kørt op på et eget KV.
+// --------------------------------------------------------------------------
+const subSid = 'cs_live_thankssubBBBBBBBB';
+const res503 = await worker.fetch(new Request('https://mahope.tools/api/stripe/fulfillment?session_id=' + subSid), { VISITS, RESEND_API_KEY: 're_x' }, {});
+const body503 = await res503.json();
+ok('workeren svarer ægte 503 når STRIPE_SECRET_KEY mangler',
+  res503.status === 503 && body503.error === 'Service temporarily unavailable.', res503.status + ' ' + JSON.stringify(body503));
+
+// Eget KV, så timegrænsetælleren ikke rammer de andre kald i denne fil.
+const kv429 = new Map();
+const env429 = { VISITS: { get: async (k) => (kv429.has(k) ? kv429.get(k) : null), put: async (k, v) => { kv429.set(k, v); } }, STRIPE_SECRET_KEY: 'sk_test_x' };
+let res429 = null;
+for (let i = 0; i < 31; i++) res429 = await worker.fetch(new Request('https://mahope.tools/api/stripe/fulfillment?session_id=' + subSid), env429, {});
+const body429 = await res429.json();
+ok('workeren svarer ægte 429 når timegrænsen er nået', res429.status === 429, res429.status + ' ' + JSON.stringify(body429));
+
+// Den gamle 202-sti skal stadig fungere, og med sit eget budget. Den kan ikke
+// hentes fra workeren her — den falske Stripe har ingen session der står
+// "unpaid", så den svarer 404 — men siden skal behandle 202 præcis som før.
+const uigjort = await render(null, [{ status: 202, body: { ok: false, pending: true } }]);
+ok('202: gentages stadig, og siger at betalingen bekræftes', uigjort.fetches === 13 && /Confirming your payment/i.test(uigjort.seen.join(' ')), 'fetches=' + uigjort.fetches + ' seen=' + JSON.stringify(uigjort.seen.slice(0, 2)));
+ok('202: når budgettet er brugt, er slutningen den ærlige, ikke "could not find"',
+  /payment went through/i.test(uigjort.status.textContent), uigjort.status.textContent);
+
+const helbredt503 = await render(null, [{ status: 503, body: body503 }, { status: 503, body: body503 }, { status: 200, body: lic.payload }]);
+ok('503 der går over: siden viser nøglen alligevel', helbredt503.thrown === null && /<code id="key">[0-9a-f]{32}<\/code>/.test(helbredt503.result.innerHTML),
+  `thrown=${helbredt503.thrown && helbredt503.thrown.message} html=${JSON.stringify(helbredt503.result.innerHTML.slice(0, 80))}`);
+ok('503 der går over: den prøver igen frem for at give op', helbredt503.fetches === 3, 'fetches=' + helbredt503.fetches);
+ok('503 der går over: kunden ser at siden arbejder på det', helbredt503.seen.some((t) => /trying again/i.test(t)), JSON.stringify(helbredt503.seen));
+
+const helbredt429 = await render(null, [{ status: 429, body: body429 }, { status: 200, body: lic.payload }]);
+ok('429 der går over: siden viser nøglen, og kaldene er to ikke én', helbredt429.fetches === 2 && /<code id="key">[0-9a-f]{32}<\/code>/.test(helbredt429.result.innerHTML),
+  'fetches=' + helbredt429.fetches + ' html=' + JSON.stringify(helbredt429.result.innerHTML.slice(0, 80)));
+
+const netvaerk = await render(null, [{ throw: true }, { throw: true }, { status: 200, body: lic.payload }]);
+ok('netværksfejl der går over: siden viser nøglen', netvaerk.fetches === 3 && /<code id="key">[0-9a-f]{32}<\/code>/.test(netvaerk.result.innerHTML), 'fetches=' + netvaerk.fetches);
+
+// Det alvorlige tilfælde: serveren svarer 503 hele vejen. Siden må ikke sige
+// "ordren findes ikke", og den må ikke blive ved i det uendelige.
+const vedlige503 = await render(null, [{ status: 503, body: body503 }]);
+ok('503 hele vejen: siden siger at betalingen gennemførte, ikke at ordren mangler',
+  /payment went through/i.test(vedlige503.status.textContent) && !/could not find this order/i.test(vedlige503.status.textContent), vedlige503.status.textContent);
+ok('503 hele vejen: kunden får et rådt service-svar, ikke vores interne tekst', !/temporarily unavailable/i.test(vedlige503.status.textContent), vedlige503.status.textContent);
+ok('503 hele vejen: kvitteringen nævnes som bevis på betalingen', /receipt/i.test(vedlige503.status.textContent), vedlige503.status.textContent);
+ok('503 hele vejen: gentagelserne er begrænset af et budget, ikke uendelige',
+  vedlige503.fetches === 13, 'fetches=' + vedlige503.fetches);
+ok('503 hele vejen: ingen licence-kasse der ligner en levering', vedlige503.result.hidden === true, JSON.stringify(vedlige503.result.innerHTML.slice(0, 80)));
+
+const vedlige429 = await render(null, [{ status: 429, body: body429 }]);
+ok('429 hele vejen: samke ærlige slutning som ved 503', /payment went through/i.test(vedlige429.status.textContent), vedlige429.status.textContent);
+ok('429 hele vejen: budgettet gælder, så kaldene er 13 og ikke flere', vedlige429.fetches === 13, 'fetches=' + vedlige429.fetches);
+
+// Negativ kontrol: 404 *er* et reelt svar — ordren findes ikke. Det må dømmes
+// med det samme, ellers ville rettelsen have gjort alle fejl forbigående.
+const res404 = await call('/api/stripe/fulfillment?session_id=cs_live_findesikke12345678');
+const body404 = await res404.json();
+ok('workeren svarer 404 på en session der ikke findes', res404.status === 404 && body404.error === 'Order not found.', res404.status + ' ' + JSON.stringify(body404));
+const ukendt = await render(null, [{ status: 404, body: body404 }]);
+ok('404: dømmes med det samme, ikke gentaget i en storm', ukendt.fetches === 1, 'fetches=' + ukendt.fetches);
+// Sidens egen tekst er en *reserveret* nødtekst; her kommer den fra workerens
+// `error`, som er den ærlige. Det der dømmes er at den hverken er tom eller
+// lyder som om betalingen gennemførte.
+ok('404: siden siger at ordren ikke blev fundet, og påstår ikke at betalingen lykkedes',
+  /order not found/i.test(ukendt.status.textContent) && !/payment went through/i.test(ukendt.status.textContent), ukendt.status.textContent);
+
+// 400 (ugyldigt sessions-id) er også terminalt. Det fanges af regexen på
+// siden, så workeren nås aldrig — låst her så det bliver ved med at være sådan.
+const ugyldigt = await render(null, [{ status: 400, body: { ok: false, error: 'Invalid session.' } }]);
+ok('400: heller ikke gentaget', ugyldigt.fetches === 1, 'fetches=' + ugyldigt.fetches);
+
+// Den gamle 202-sti skal stadig fungere, og med sit eget budget.
 
 // --------------------------------------------------------------------------
 // 4. Statisk kontrakt: hver kind i workerens produkttabel skal have en egen

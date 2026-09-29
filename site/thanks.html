@@ -60,6 +60,24 @@
       function fail(msg) { status.textContent = msg; status.className = 'hint err'; }
       if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail('No order reference in the link. Check your email for your license key or downloads.'); return; }
       var tries = 0;
+      // Målt 29/9: kun `202` blev gentaget. `503` ("Service temporarily
+      // unavailable." / "Could not look up the payment.") og `429` ("Too many
+      // attempts.") gav op med det samme, så en kunde der lige havde betalt
+      // for EUComply Pro kunne stå på en permanent fejlside efter ét KV-blip
+      // eller én Stripe-503. Begge er forbigående — de betyder at vi ikke
+      // kunne svare, ikke at ordren ikke findes — så de genkaldes på samme
+      // budget som `202`, og bruger står på de nøgletal der bruges her.
+      var MAX_TRIES = 12;
+      // Når budgettet er brugt, er svaret stadig ikke "ordren findes ikke".
+      // Kunden kommer fra Stripe lige efter en betaling, så betalingen er
+      // gennemført, og det skal siden sige. Ellers ender de i en supportmail,
+      // som er præcis den menneskelige indsats produkterne ikke må kræve.
+      var RAN_OUT = 'We could not load your order just now, but your payment went through. '
+        + 'Your Stripe receipt is the record of it — reply to that email and Mads will send what you bought.';
+      function again(msg, delay) {
+        if (tries++ < MAX_TRIES) { status.textContent = msg; return setTimeout(poll, delay); }
+        fail(RAN_OUT);
+      }
       function show(d) {
         status.textContent = '';
         // En donation er ikke et køb. Målt 27/9: overskriften skrev
@@ -134,10 +152,11 @@
           .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
           .then(function (x) {
             if (x.code === 200 && x.d.ok) return show(x.d);
-            if (x.code === 202 && tries++ < 12) { status.textContent = 'Confirming your payment…'; return setTimeout(poll, 2500); }
+            if (x.code === 202) return again('Confirming your payment…', 2500);
+            if (x.code === 429 || x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000);
             fail(x.d.error || 'We could not find this order. Check your email, or reply to your receipt.');
           })
-          .catch(function () { if (tries++ < 5) return setTimeout(poll, 3000); fail('Network problem. Refresh this page in a moment.'); });
+          .catch(function () { again('Network problem — trying again…', 3000); });
       }
       poll();
     })();
