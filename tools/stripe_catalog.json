@@ -1312,6 +1312,38 @@
       ]
     },
     {
+      "path": "site/blog/release-integrity-explained.html",
+      "domain": "mahope.tools",
+      "route": "/blog/release-integrity-explained",
+      "lifetime": true,
+      "product": "clean-copy-pro",
+      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklen er en case study i Clean Copy-projektet selv: 'See the product, Clean Copy', den fortæller om clean_copy_core.js og de seks overflader der bruger den, og den afsluttes med to 'Try Clean Copy free'-knapper. De to Pro-funktioner er valgt mod artiklens egen læring, som er at generere og ikke kopiere: 'Custom cleanup rules' er den samme pointe anvendt på læserens eget arbejde (én definition af regler, der rejser med, i stedet for seks kopier), og 'batch conversion' er den samme pointe i mængde (én kørsel over en liste i stedet for et rituel pr. side). clean-copy-pro er et licens-produkt med to pro_features og to free_features; begge gratis-labels står i gratis-spalten, da check_free_features dømmer den manglende.",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen havde ingen $-tokens, så begge tokens er fra den nye sektion.",
+      "requires_text": [
+        "Buy Clean Copy Pro — $19/year",
+        "Buy Clean Copy Pro Lifetime — $39 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/release-integrity-hvad-er-det.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/release-integrity-hvad-er-det",
+      "lifetime": true,
+      "product": "clean-copy-pro",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Køb Clean Copy Pro — 19 $ pr. år",
+        "Køb Clean Copy Pro Lifetime — 39 $ én gang"
+      ]
+    },
+    {
       "path": "site/blog/open-graph-checker.html",
       "domain": "mahope.tools",
       "route": "/blog/open-graph-checker",
