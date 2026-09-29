@@ -2,7 +2,5 @@
  "note": "Artikler der er MÅLT til at have ingen betalt vej i egen tekst: ingen buy.stripe.com-link og intet link til en side i stripe_catalog.json offers (forsiderne er chrome, se check_article_paid_path.py). Listen er en ratchet: den må kun krympe. --write skriver den fra målingen.",
  "source": "python3 tools/check_article_paid_path.py --write",
  "measured": "2026-09-29",
- "blind": [
-  "da/blog/cmp-sammenligning-2026.html"
- ]
+ "blind": []
 }

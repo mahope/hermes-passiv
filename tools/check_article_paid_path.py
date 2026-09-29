@@ -621,18 +621,45 @@ def _self_test() -> int:
     #    portens *beslutning* — en audit der kun kan finde fejl uden at
     #    afgøre om noget er en fejl, kan ikke være port.
     measured = blind_now(SITE, catalog)
+    table = rows(SITE, catalog)
     real_problems = judge(SITE, catalog)
     check("listen er i synk med målingen", not real_problems,
           f"{len(real_problems)} problem(er)")
-    check("målingen er ikke tom (listen ville være meningsløs)",
-          0 < len(measured) < len(rows(SITE, catalog)) - 5,
-          f"blind={len(measured)}")
+    check("listen er ikke hele korpus (den ville være meningsløs)",
+          len(measured) < len(table) - 5,
+          f"blind={len(measured)} korpus={len(table)}")
 
-    # 8. Ratchet: en død linje skal give rødt. Mutér listen i hukommelsen.
+    # 7b. Læseren skal kunne sige "blind". Kravet før var `0 < len(measured)`,
+    #     altså at korpus *skal* have en blind artikel — men det er en
+    #     egenskab ved data, ikke ved porten, og den blev rød 30/9 da
+    #     ratchet'en nåede nul: en tom måling kunne være resultatet ( alle
+    #     artikler har en betalt vej ) eller en læser der var holdt op med at
+    #     se. Formen findes ikke i `site/` lige nu, så den bygges syntetisk,
+    #     samme grund som kontrol 5b.
+    synthetic_blind = Path("/tmp/oxloop-selftest-blind.html")
+    synthetic_blind.write_text(
+        '<html><body><div><a href="/da/blog/gdpr-boeder-2026">bøder</a></div>'
+        "<footer>x</footer></body></html>",
+        encoding="utf-8",
+    )
+    try:
+        check("læseren kan stadig sige 'blind' på en artikel uden købsvej",
+              paid_links(synthetic_blind, synthetic_blind, offers) == [],
+              f"{len(paid_links(synthetic_blind, synthetic_blind, offers))} vej(er)")
+    finally:
+        synthetic_blind.unlink(missing_ok=True)
+
+    # 8. Ratchet: en død linje skal give rødt. Mutér listen i hukommersen.
+    #    Når målingen er tom tages den døde linje fra korpus i stedet for fra
+    #    målingen — ellers ville mutationen ikke ske, og kontrollen være
+    #    grøn af den simple grund at den ingenting testede.
     data = json.loads(BLIND.read_text(encoding="utf-8"))
     patched = list(data["blind"])
-    if measured:
-        patched.append(measured[0])
+    dead_line = measured[0] if measured else next(
+        (r["file"] for r in table if r["paid"]), None
+    )
+    if dead_line:
+        patched.append(dead_line)
     saved = BLIND.read_text(encoding="utf-8")
     try:
         BLIND.write_text(json.dumps({"blind": patched}, ensure_ascii=False, indent=1),

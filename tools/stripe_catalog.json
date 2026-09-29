@@ -791,6 +791,22 @@
       ]
     },
     {
+      "path": "site/da/blog/cmp-sammenligning-2026.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/cmp-sammenligning-2026",
+      "product": "eucomply-report-kit",
+      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklens afgørende punkt 4 siger 'Dokumentation: du skal kunne vise hvornår samtykket blev givet. Logning er en del af produktet', og artiklens egen FAQ til et bureau med flere klienter siger 'Til betalte kundeleverancer anbefales en betalt plan — support og dokumentation er en del af det du sælger'. Den dokumentation er præcis leverancen: eucomply-report-kit leverer månedlig rapport-skabelon, kvartalsnarrativ-skabelon og changelog-specifikation (seks filer, tools/paid_content.json). eucomply-pro ville være emnemæssigt tættere på, men den er solgt i to iterationer i træk, og artiklen peger på scanneren via /cookie-check tre gange allerede — den vej er lukket. eucomply-report-kit er et download-produkt (kind: 'download', uden pro_features/free_features), så portens gratis/Pro-krav gater det ikke; siden skal blot have præcis én synlig købsknap med det aftalte link.",
+      "prices": [
+        "$10",
+        "$35",
+        "$69"
+      ],
+      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen nævner allerede to leverandørpriser i sammenligningstabellen ('fra ~$10/md' CookieYes, 'fra ~$35/md' Osano), så de skal være tilladte sammen med det nye købstoken.",
+      "requires_text": [
+        "Køb Client Compliance Report Kit — 69 $"
+      ]
+    },
+    {
       "path": "site/da/blog/kopier-tabel-fra-pdf-til-excel.html",
       "domain": "mahope.tools",
       "route": "/da/blog/kopier-tabel-fra-pdf-til-excel",
