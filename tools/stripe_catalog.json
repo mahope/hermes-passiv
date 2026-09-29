@@ -777,6 +777,20 @@
       ]
     },
     {
+      "path": "site/da/blog/dbbaftale-webbureau.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/dbbaftale-webbureau",
+      "product": "eucomply-dpa",
+      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse: artiklen handler om databehandleraftalen som dokument, og dens egen opsummering siger 'Lav én standard-DBA som bilag til dine serviceaftaler'. Den nævner hverken flere scanningsfund eller et rapport-download, så eucomply-pro ville være en vinkel artiklen ikke har. eucomply-dpa er et download-produkt (kind: 'download', uden pro_features/free_features), så portens gratis/Pro-krav gater det ikke — siden skal blot have præcis én synlig købsknap med det aftalte link.",
+      "prices": [
+        "$59"
+      ],
+      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen har ingen $-tokens overhovedet (bøderne står i euro og procent), så det eneste token er det nye købslink.",
+      "requires_text": [
+        "Køb GDPR-DPA-skabelon — 59 $"
+      ]
+    },
+    {
       "path": "site/blog/text-on-image-contrast-check.html",
       "domain": "mahope.tools",
       "route": "/blog/text-on-image-contrast-check",
