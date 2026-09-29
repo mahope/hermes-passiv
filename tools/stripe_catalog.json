@@ -698,6 +698,34 @@
       ]
     },
     {
+      "path": "site/index.html",
+      "domain": "mahope.tools",
+      "route": "/",
+      "product": "eucomply-pro",
+      "prices": [
+        "$19",
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year per website"
+      ],
+      "product_note": "Forsiden er den mest læste overflade vi har — `/` + `/da/` bærer 461 af 505 målte besøg — og den havde 0 buy.stripe.com, så hele sitet var en gratis demo. Valgt i sidens egen tekst: kortet under 'Larger tools → Sold here' beskriver allerede gratis/Pro-fordelingen i katalogens ordrede labels ('the accessibility checks', 'score and grade', 'the whole report on the page', 'pdf download', 'GDPR/cookie and NIS2/security checks'), så det eneste der manglede var knappen. Clean Copy Pro og DeskUptime Pro sælges på deres egne sites og har knap dér; en knap til dem her ville være en henvisning. Lifetime ($149) er bevidst ikke med — den hører til /compliance-report, hvor den står i en tier-tabel, og check_stripe_ctas dømmer en lifetime-knap uden \"lifetime\": true som rød."
+    },
+    {
+      "path": "site/da/index.html",
+      "domain": "mahope.tools",
+      "route": "/da/",
+      "product": "eucomply-pro",
+      "prices": [
+        "$19",
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — $79/år pr. website"
+      ],
+      "product_note": "Samme knap som den engelske forside, målt i sidens egen danske tekst: 'Gratis uden licensnøgle: tilgængelighedstjekkene, scoren og karakteren og hele rapporten på siden. Pro ($79/år pr. website) tilføjer hele pdf-rapporten samt GDPR/cookie- og NIS2/sikkerhedstjekkene.' Kortet havde ingen 'Se gratis/Pro-tabel'-knap som den engelske, så den danske forside havde ingen vej til købet overhovedet."
+    },
+    {
       "path": "site/compliance-report.html",
       "domain": "mahope.tools",
       "route": "/compliance-report",

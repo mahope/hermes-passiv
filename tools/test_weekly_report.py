@@ -662,8 +662,19 @@ class RankingTests(ReportFixture, unittest.TestCase):
         self.assertEqual(11, ranked[("cleancopy.tools", "/")])
         self.assertEqual(7, ranked[("deskuptime.com", "/")])
         self.assertEqual(4, ranked[("mahope.tools", "/compliance-report")])
-        # mahope.tools' forside sælger intet direkte og er derfor ikke med.
-        self.assertEqual([11, 9, 7, 4], [row["visits"] for row in ranking["ranked_offer_pages"]])
+        # mahope.tools' egen forside sælger nu EUComply Pro direkte (tilbud i
+        # `tools/stripe_catalog.json` med route `/`), så den er med og rangerer
+        # først på sit målte besøgstal. Før `ceo/forside-koebknap` havde den 0
+        # købsknapper og faldt ud, fordi porten kun rangerer tilbudssider.
+        self.assertEqual(
+            [("mahope.tools", "/"), ("cleancopy.tools", "/"),
+             ("mahope.tools", "/page-profile"), ("deskuptime.com", "/"),
+             ("mahope.tools", "/compliance-report")],
+            [(row["domain"], row["route"]) for row in ranking["ranked_offer_pages"]],
+        )
+        visits = [row["visits"] for row in ranking["ranked_offer_pages"]]
+        self.assertEqual([20, 11, 9, 7, 4], visits)
+        self.assertEqual(visits, sorted(visits, reverse=True))
         self.assertIsNone(ranking["fallback"])
         self.assertEqual({"days": 7, "kind": "last_7_full_days", "start": start, "end": end},
                          ranking["period"])
