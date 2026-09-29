@@ -433,6 +433,14 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # "deliver a findings report", og det er præcis den fil Pro leverer.
     ("blog/wix-eaa-accessibility.html", "web"),
     ("da/blog/wix-tilgaengelighed-eaa.html", "web"),
+    # Cookie-consent-guiden og dens danske spejling (30/9) — 14 indgående
+    # sider, målt af samme port. Samme licens og samme to tal som de fem
+    # ovenfor: artiklens eget punkt 3 siger "if you cannot produce a
+    # timestamped record, you cannot prove consent", og det er præcis den
+    # fil Pro leverer. Bemærk at den her *er* om GDPR/cookie-tjek — de 18
+    # server-side tjek er altså ikke en side-note, men artiklens emne.
+    ("blog/cookie-consent-gdpr-compliance.html", "web"),
+    ("da/blog/cookie-consent-gdpr-2026.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance
     # rules") ikke blev fundet af `RE_CLAIM` — så porten nåede aldrig at spørge

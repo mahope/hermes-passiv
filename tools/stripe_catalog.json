@@ -1129,6 +1129,30 @@
       "requires_text": [
         "Køb Clean Copy Pro — $19/år"
       ]
+    },
+    {
+      "path": "site/blog/cookie-consent-gdpr-compliance.html",
+      "domain": "mahope.tools",
+      "route": "/blog/cookie-consent-gdpr-compliance",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year"
+      ]
+    },
+    {
+      "path": "site/da/blog/cookie-consent-gdpr-2026.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/cookie-consent-gdpr-2026",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
     }
   ],
   "built_offers": [
