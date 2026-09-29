@@ -68,17 +68,16 @@ REPLACEMENTS = [
      "content: 'Stil et compliance-spørgsmål nedenfor for at komme i gang.';"),
     ("statusEl.textContent = data.error || 'Something went wrong. Please try again.';",
      "statusEl.textContent = data.error || 'Noget gik galt. Prøv venligst igen.';"),
-    # The transient-retry block. The EN page stopped blaming the visitor's Wi-Fi for
-    # our own 5xx, so the DA page needs the same constants and the same DA wording
-    # or the generator silently leaves the English original.
+    # The retry block. The EN page stopped blaming the visitor's Wi-Fi for our own
+    # 5xx, so the DA page needs the same constants and the same DA wording or the
+    # generator silently leaves the English original. The rule itself is in
+    # /net.js and is shared verbatim, so there is nothing left to translate.
     ("""  var ASK_MAX_TRIES = 3;
   var ASK_SERVER_BUSY = 'Our assistant server is temporarily unavailable. Please try again in a moment.';
   var ASK_OFFLINE = 'We could not reach the assistant server. Check your connection and try again.';""",
      """  var ASK_MAX_TRIES = 3;
   var ASK_SERVER_BUSY = 'Vores assistentserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
   var ASK_OFFLINE = 'Vi kunne ikke nå assistentserveren. Tjek din forbindelse og prøv igen.';"""),
-    ("""        var err = new Error((data && data.error) || ('Server replied with ' + res.status));""",
-     """        var err = new Error((data && data.error) || ('Serveren svarede med ' + res.status));"""),
     ("""      st.textContent = err.transport
         ? 'We could not reach the server. Check your connection and try again.'
         : (err.transient ? 'The server is temporarily unavailable. Please try again in a moment.'

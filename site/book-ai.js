@@ -11,52 +11,17 @@
   var source = 'bookai-' + slug;
   var asked = false;
 
-  // En 5xx er ikke brugerens wifi. Cloudflare svarer en worker der er faldet ned
-  // med sin egen HTML-side, så et blindt `r.json()` kastede, og catch'en skrev
-  // "Network error" for *vores* fejl. Derfor: status læses først, og kun et
-  // rigtigt 4xx er endeligt. Samme mønster som /compliance-ai og de to
-  // scanningsværktøjer.
+  // En 5xx er ikke brugerens wifi. Reglen — læs status først, genkald på 5xx,
+  // 429, ulæselig krop og brudt forbindelse, kun et rigtigt 4xx er endeligt —
+  // ligger i /net.js og deles med /compliance-ai og bogens demosider.
   var BOOK_MAX_TRIES = 3;
   var ASK_BUSY = 'The assistant server is temporarily unavailable. Please try again in a moment.';
   var ASK_OFFLINE = 'We could not reach the assistant server. Check your connection and try again.';
   var SAVE_BUSY = 'Saving is temporarily unavailable on our side. Please try again in a moment.';
   var SAVE_OFFLINE = 'We could not reach the server to save your email. Check your connection and try again.';
 
-  function postJSON(path, payload) {
-    return fetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(function (e) {
-      // Kaldet kom aldrig frem. Ikke vores servers skyld, men en brudt
-      // forbindelse er stadig værd ét forsøg mere.
-      var err = new Error((e && e.message) || 'connection failed');
-      err.transport = true;
-      err.transient = true;
-      throw err;
-    }).then(function (res) {
-      return res.json().catch(function () { return null; }).then(function (data) {
-        if (res.ok && data) return data;
-        var err = new Error((data && data.error) || ('Server replied with ' + res.status));
-        err.status = res.status;
-        // Intet svar at læse er aldrig skrevet af os, uanset status.
-        err.transient = !data || res.status === 429 || res.status >= 500;
-        throw err;
-      });
-    });
-  }
-
   function askServer(path, payload) {
-    var tries = 0;
-    function attempt() {
-      return postJSON(path, payload).catch(function (err) {
-        if (err.transient && ++tries < BOOK_MAX_TRIES) {
-          return new Promise(function (res) { setTimeout(res, 1200 * tries); }).then(attempt);
-        }
-        throw err;
-      });
-    }
-    return attempt();
+    return NET.ask(path, payload, BOOK_MAX_TRIES);
   }
 
   var SUGGESTIONS = {

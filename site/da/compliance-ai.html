@@ -41,6 +41,7 @@
   "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}
 }
 </script>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <style>
 .chat-container {
@@ -399,50 +400,15 @@
   // Focus input
   input.focus();
 
-  // Cloudflare svarer en worker der er faldet ned med en HTML-side — så den gamle
-  // `res.json()` kastede, og catch'en skrev "Netværksfejl. Tjek din forbindelse",
-  // altså skyldte vores egen 5xx besøgerens wifi, og den gav op på første blip.
-  // Status læses først, 5xx og 429 genkaldes, og kun et rigtigt 4xx er endeligt.
+  // The retry rule itself lives in /net.js, next to the two other callers and
+  // judged there by the sandbox. This only decides how many attempts we make
+  // and what the visitor is told when they are gone.
   var ASK_MAX_TRIES = 3;
   var ASK_SERVER_BUSY = 'Vores assistentserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
   var ASK_OFFLINE = 'Vi kunne ikke nå assistentserveren. Tjek din forbindelse og prøv igen.';
 
-  function postJSON(path, payload) {
-    return fetch(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(function(e) {
-      // Kaldet kom aldrig frem. Ikke vores servers skyld, men et brudt forbindelse
-      // er stadig værd ét forsøg mere.
-      var err = new Error((e && e.message) || 'connection failed');
-      err.transport = true;
-      err.transient = true;
-      throw err;
-    }).then(function(res) {
-      return res.json().catch(function() { return null; }).then(function(data) {
-        if (res.ok && data) return data;
-        var err = new Error((data && data.error) || ('Serveren svarede med ' + res.status));
-        err.status = res.status;
-        // Mangler krop betyder at svaret ikke var skrevet af os, så det er
-        // forbigående uanset hvilken status kanten meldte.
-        err.transient = !data || res.status === 429 || res.status >= 500;
-        throw err;
-      });
-    });
-  }
-
   function askServer(payload) {
-    var tries = 0;
-    function attempt() {
-      return postJSON('/api/compliance-ai', payload).catch(function(err) {
-        if (err.transient && ++tries < ASK_MAX_TRIES) {
-          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
-        }
-        throw err;
-      });
-    }
-    return attempt();
+    return NET.ask('/api/compliance-ai', payload, ASK_MAX_TRIES);
   }
 
   window.ask = function(text) {
@@ -484,7 +450,7 @@
       removeTyping();
       sendBtn.disabled = false;
       statusEl.textContent = err.transport ? ASK_OFFLINE
-        : (err.transient ? ASK_SERVER_BUSY : (err.message || 'Noget gik galt. Prøv venligst igen.'));
+        : (err.transient ? ASK_SERVER_BUSY : (err.message || 'Something went wrong. Please try again.'));
       statusEl.className = 'chat-status error';
     });
   };
@@ -594,18 +560,9 @@
     }
     var btn = document.getElementById('leadBtn');
     btn.disabled = true;
-    // En tabt tilmelding er en tabt tilmelding, og "Netværksfejl" skyldte vores
-    // blip besøgeren. Ét genkald på et forbigående svar, samme regel som chatten.
-    var tries = 0;
-    function attempt() {
-      return postJSON('/api/waitlist', { email: email }).catch(function(err) {
-        if (err.transient && ++tries < ASK_MAX_TRIES) {
-          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
-        }
-        throw err;
-      });
-    }
-    attempt()
+    // A lost signup is a lost signup, and "Network error" blamed the visitor for
+    // our blip. One retry on a transient answer, same rule as the chat above.
+    NET.ask('/api/waitlist', { email: email }, ASK_MAX_TRIES)
     .then(function(data) {
       try { if (window.trackEvent) window.trackEvent('ai-lead'); } catch (e) {}
       st.textContent = data.ok
@@ -628,7 +585,7 @@
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.href;if(h&&h.indexOf('chromewebstore.google.com')>-1){try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'store-click'})],{type:'application/json'}));}catch(e){}}},true);}catch(e){}})();
 </script>
 <script>
-(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(tilgaengelighedserklaering-generator-da|scan-da|scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
+(function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>
 </body>
 </html>

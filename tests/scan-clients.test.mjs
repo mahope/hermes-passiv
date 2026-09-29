@@ -55,6 +55,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // dem til 0, så en test ikke skal vente minutter — antallet forsøg måles i stedet.
 const fastTimeout = (fn, _ms, ...rest) => setTimeout(fn, 0, ...rest);
 
+// `/net.js` er den delte hjælper. Sektion 10 sætter denne til en muteret kopi for
+// at bevise, at alle tre klienter virkelig læser *én* implementering.
+let netOverride = null;
+
 function loadPage(path, fetchImpl, opts = {}) {
   // En `.js`-fil (som `book-ai.js`) køres som den er; en `.html` får sine egne
   // inline scripts. `match` vælger det rigtige script på de sider hvor et andet
@@ -99,6 +103,10 @@ function loadPage(path, fetchImpl, opts = {}) {
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
+  // `/net.js` står med `defer` i head, så browseren har kørt den længe før nogen
+  // kan klikke. Sandkassen gør det samme — ellers ville de tre klienter der læser
+  // den delte hjælper blive dømt mod en global der aldrig findes.
+  vm.runInContext(netOverride ?? readFileSync(join(root, 'site/net.js'), 'utf8'), sandbox, { filename: 'site/net.js' });
   vm.runInContext(main, sandbox, { filename: path });
   return { sandbox, nodes };
 }
@@ -470,8 +478,9 @@ async function runHeaders(list) {
 //    --------------------------------------------------------------------------
 {
   const book = readFileSync(join(root, 'site/book-ai.js'), 'utf8');
+  const net = readFileSync(join(root, 'site/net.js'), 'utf8');
   ok('mutation: book-ai har samme regel som de andre klienter', /BOOK_MAX_TRIES = 3/.test(book));
-  ok('mutation: bogen læser status før JSON, ikke bagefter', /err\.transient = !data \|\| res\.status === 429/.test(book));
+  ok('mutation: bogen læser status før JSON, ikke bagefter', /err\.transient = !data \|\| res\.status === 429/.test(net));
   for (const p of ['site/page-profile.html', 'site/da/page-profile.html']) {
     const src = readFileSync(join(root, p), 'utf8');
     ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /err\.transient = !j \|\| r\.status === 429/.test(src));
@@ -490,7 +499,9 @@ async function runHeaders(list) {
     document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
       querySelector: () => footer, createElement: () => el(), head: el(), body: el(), addEventListener() {} } };
   sandbox.window = sandbox; sandbox.globalThis = sandbox;
-  vm.createContext(sandbox); vm.runInContext(src, sandbox, { filename: 'site/book-ai.js' });
+  vm.createContext(sandbox);
+  vm.runInContext(netOverride ?? readFileSync(join(root, 'site/net.js'), 'utf8'), sandbox, { filename: 'site/net.js' });
+  vm.runInContext(src, sandbox, { filename: 'site/book-ai.js' });
   nodes.get('baiInput').value = 'Does NIS2 apply?';
   nodes.get('baiAsk').click();
   await sleep(30);
@@ -603,6 +614,55 @@ function mutated(path, from, to) {
   const status = nodes.get('statusBox').textContent || '';
   ok('mutation: den gamle header-tjekker giver op efter ét forsøg', state.calls - base === 1, `calls=${state.calls - base} (forventet 3)`);
   ok("mutation: den gamle header-tjekker viser den rå `Unexpected token '<'`", /Unexpected token/.test(status), status);
+}
+
+// --------------------------------------------------------------------------
+// 10. Én implementering. `postJSON` lå inline i tre filer, og DA-kopien havde
+//     allerede drejet en enkelt streng. Nu ligger reglen i `/net.js`, og de tre
+//     klienter skal bevise at de læser den — ikke at de hver har en kopi.
+//     Beviset er mutationen: gør vi `/net.js` forkert, skal alle tre blive røde
+//     på samme kontrol. Havde de haft hver sin kopi, ville de være grønne.
+// --------------------------------------------------------------------------
+{
+  const net = readFileSync(join(root, 'site/net.js'), 'utf8');
+  ok('net.js: reglen ligger et sted — status læses før kroppen',
+    /res\.json\(\)\.catch/.test(net) && /err\.transient = !data \|\| res\.status === 429/.test(net));
+  // Ingen `site/`-fil må have sin egen `postJSON` igen. Vælger den at inline
+  // hjælperen en tredje gang, skal det kunne ses her, ikke i en diff om et halvt
+  // år. Målt over hele træet, ikke kun de tre kendte filer.
+  const own = execFileSync('grep', ['-rl', 'function postJSON', 'site'], { cwd: root }).toString('utf8')
+    .split('\n').filter((f) => f && f !== 'site/net.js');
+  ok('net.js: ingen site-fil definerer sin egen postJSON', own.length === 0, own.join(', '));
+  for (const p of ['site/compliance-ai.html', 'site/da/compliance-ai.html', 'site/book-ai.js']) {
+    const src = readFileSync(join(root, p), 'utf8');
+    ok(`net.js: ${p} læser den delte regel i stedet for at kopiere den`,
+      /NET\.ask\(/.test(src) && !/function postJSON/.test(src));
+  }
+  for (const p of ['site/compliance-ai.html', 'site/da/compliance-ai.html',
+    'site/books/gdpr-for-agencies.html', 'site/books/nis2-for-agencies.html',
+    'site/books/eaa-checklist.html', 'site/books/eaa-shopify.html', 'site/books/cookie-consent-guide.html']) {
+    const src = readFileSync(join(root, p), 'utf8');
+    ok(`net.js: ${p} indlæser den`, /<script defer src="\/net\.js"><\/script>/.test(src));
+  }
+}
+{
+  // 5xx endeligt i den delte hjælper: alle tre klienter mister genkaldet paa én
+  // gang. Tre røde kontroller i stedet for tre kopier der kan drive fra hinanden.
+  const good = readFileSync(join(root, 'site/net.js'), 'utf8');
+  const broken = good.replace('err.transient = !data || res.status === 429 || res.status >= 500;', 'err.transient = false;');
+  ok('mutation: den delte regel kan gøres forkert', broken !== good);
+  netOverride = broken;
+  try {
+    const r = await runBook([{ status: 503, html: true }], { wait: false });
+    ok('mutation: bogsiden læser /net.js, så den følger med ned', r.calls === 1, `calls=${r.calls} (forventet 3)`);
+  } finally { netOverride = null; }
+  netOverride = broken;
+  try {
+    for (const p of ['site/compliance-ai.html', 'site/da/compliance-ai.html']) {
+      const r = await runAsk(p, [{ status: 503, html: true }]);
+      ok(`mutation: ${p} læser /net.js, så den følger med ned`, r.calls === 1, `calls=${r.calls} (forventet 3)`);
+    }
+  } finally { netOverride = null; }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
