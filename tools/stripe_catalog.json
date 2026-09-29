@@ -1033,6 +1033,30 @@
       "requires_text": [
         "Køb EUComply Pro — 79 $ pr. år"
       ]
+    },
+    {
+      "path": "site/blog/nis2-readiness-guide.html",
+      "domain": "mahope.tools",
+      "route": "/blog/nis2-readiness-guide",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year"
+      ]
+    },
+    {
+      "path": "site/da/blog/nis2-beredskabstjek-2026.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/nis2-beredskabstjek-2026",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
     }
   ],
   "built_offers": [

@@ -420,6 +420,12 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # skrevet med `compliance-report.html`'s egen gratis-mod-betalt-tabel.
     ("blog/eaa-accessibility-checklist.html", "web"),
     ("da/blog/eaa-tjekliste-2026.html", "web"),
+    # NIS2-guiden og dens danske spejling (30/9) — nr. 2 på blindlisten fra
+    # `check_article_paid_path.py` med 25 indgående sider. Samme licens og
+    # samme to tal som de to ovenfor: NIS2 står i Pro-spalten som et af de
+    # 18 server-side tjek, så artiklen sælger præcis den motor den læver.
+    ("blog/nis2-readiness-guide.html", "web"),
+    ("da/blog/nis2-beredskabstjek-2026.html", "web"),
     ("da/compliance-ai.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance
