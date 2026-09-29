@@ -115,7 +115,18 @@
   // would also make `/blog/*` measurable under the name `blog`, which is a
   // deliberate decision (one bounded name, not one per post) and not this
   // task's to change.
-  var CTA_BOOK_PAGES = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))\/(?:da\/)?books\/([a-z0-9-]+)(?:\.html)?\/?(#.*)?$/;
+  //
+  // The absolute prefix is **optional**, exactly as in `CTA_PATHS`, and that is
+  // a fix rather than a style choice. Measured 29/9 in the built `dist/`: the
+  // build only rewrites *cross-domain* links, so a book link written on a
+  // mahope.tools page stays root-relative — 145 of them, and every one of them
+  // was a click on a paid product ($29–$149) that no tracker in the family
+  // counted. The absolute-only pattern could not match them, and the inline
+  // trackers cannot either: their alternates are `$`-anchored lists of single
+  // segments, so a two-segment path falls off the end. Measured with the port's
+  // own reader, not by eye: 0 of 182 inline trackers on mahope.tools produce an
+  // event for `/books/compliance-bundle`, in either form.
+  var CTA_BOOK_PAGES = /^(?:https?:\/\/(?:mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev))?\/(?:da\/)?books\/([a-z0-9-]+)(?:\.html)?\/?(#.*)?$/;
   // The four homepages carry no slug — the host *is* the name. 2184 links go
   // there, more than to every tool put together, and none of them counted.
   // `mahope.tools` -> `cta-mahope`, `deskuptime.com` -> `cta-deskuptime`.
@@ -158,7 +169,7 @@
       var raw = el && el.getAttribute ? el.getAttribute('href') : null;
       if (!raw) return;
       if (inlineCta === null) inlineCta = hasInlineCtaTracker();
-      // Measured 28/9 in the built `dist/`: 300 absolute cross-domain links
+      // Measured 29/9 i `dist/`: 300 absolute cross-domain links
       // sat on 87 pages that carry their own inline tracker, and every one of
       // them was dropped. `track.js` used to bow out of the *whole page* the
       // moment it saw an inline tracker, and the inline tracker reads the raw
@@ -167,10 +178,18 @@
       // disjoint by construction, which is what makes it safe to measure them
       // here: one click, one event, never two.
       //
-      // The bail-out stays for root-relative links, which is the inline
-      // tracker's whole job. The target is read *before* this test, because
-      // deciding it needed the href in the first place.
-      if (inlineCta && !CROSS_DOMAIN.test(raw)) return;
+      // The same argument is why `/books/<slug>` joins the cross-domain links
+      // here, and it is measured rather than assumed: an inline tracker's
+      // alternates are single segments in a `$`-anchored list, so **0 of 182**
+      // of them on mahope.tools produce an event for `/books/compliance-bundle`
+      // — there is no overlap to double-count with. The bail-out is therefore
+      // widened to "anything the inline tracker cannot match", not "any URL",
+      // and the two clauses are named for the two reasons.
+      //
+      // The bail-out stays for every other root-relative link, which is the
+      // inline tracker's whole job. The target is read *before* this test,
+      // because deciding it needed the href in the first place.
+      if (inlineCta && !CROSS_DOMAIN.test(raw) && !CTA_BOOK_PAGES.test(raw)) return;
       var m = CTA_PATHS.exec(raw);
       var name = m ? m[1] : null;
       if (!name) {

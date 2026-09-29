@@ -59,6 +59,14 @@ RE_FAMILY_ABS = re.compile(
 # Nyden: alt efter værten, uden scheme og vært. `/da/support`, `/privacy/`, osv.
 RE_PATH_ONLY = re.compile(r"^https?://[a-z.]+(?P<path>/[^#?]*)")
 
+# Den **rod-relative** form af en bogside, som bygget *ikke* omskriver: kun
+# krydsdomenelinks bliver til absolutte URL'er, så et link skrevet på en
+# mahope.tools-side til `/books/compliance-bundle` står rod-relative i `dist/`.
+# Den blev ikke dømt af porten, fordi `RE_FAMILY_ABS` springer den over — og det
+# er den eneste grund til at de 145 sådanne klik (målt 29/9) ikke blev talt.
+# Målt først, ikke antaget: de er pengeklik på betalte produkter ($29–$149).
+RE_BOOK_ROOT = re.compile(r"^/(?:da/)?books/[a-z0-9-]+/?(?:#.*)?$")
+
 # `/books/<slug>` har sit eget mønster i `track.js`, fordi en tosegmentsti ikke
 # kan give et gyldigt begivenhedsnavn. Læses med samme form som de to andre, så
 # en mutation i filen kan slå porten rød i stedet for at tie.
@@ -174,10 +182,17 @@ def _pages(dist: Path) -> list[Path]:
 def scan(dist: Path, cta: re.Pattern[str] | None,
          home: re.Pattern[str] | None,
          books: re.Pattern[str] | None) -> tuple[int, dict[str, dict]]:
-    """(alle absolutte krydsdomenelinks, ubefalede pr. sti) i `dist/`.
+    """(alle absolutte krydsdomenelinks + rod-relative boglinks, ubefalede pr. sti)
+    i `dist/`.
 
     Tæller *link-instanser*, ikke sider: 116 links til `/terms` er 58 sider,
     og det er klikene der forsvinder, ikke siderne.
+
+    De to former tælles i samme løkke, fordi de er det samme spørgsmål: sender
+    dette klik en `cta-`-begivenhed? En port der kun læser den absolute form er
+    grøn på præcis den fejl, den skulle have fundet — 145 rod-relative
+    bogklik var usynlige, fordi de ikke lignede det porten kiggede efter (målt
+    29/9).
     """
     total = 0
     unmeasured: dict[str, dict] = {}
@@ -185,13 +200,17 @@ def scan(dist: Path, cta: re.Pattern[str] | None,
         rel = page.relative_to(dist).as_posix()
         for href in RE_HREF.findall(page.read_text(encoding="utf-8",
                                                    errors="ignore")):
-            if not RE_FAMILY_ABS.match(href):
+            root_relative = bool(RE_BOOK_ROOT.match(href))
+            if not root_relative and not RE_FAMILY_ABS.match(href):
                 continue
             total += 1
             if event_name(href, cta, home, books) is not None:
                 continue
-            path = RE_PATH_ONLY.match(href)
-            key = path.group("path") if path else href
+            if root_relative:
+                key = href
+            else:
+                path = RE_PATH_ONLY.match(href)
+                key = path.group("path") if path else href
             entry = unmeasured.setdefault(key, {"links": 0, "pages": set()})
             entry["links"] += 1
             entry["pages"].add(rel)
@@ -273,6 +292,38 @@ def _self_test() -> int:
                   _unmeasured_for("https://mahope.tools/books/compliance-bundle",
                                   cta, home, None)
                   == ["https://mahope.tools/books/compliance-bundle"]))
+    # 5. Den **rod-relative** form, som var 184 usynlige klik (målt 29/9). Den
+    #    dømmes med to uafhængige kontroller, fordi fejlen her lå i *begge*
+    #    halse: at porten springer den over, og at `CTA_BOOK_PAGES` kræver et
+    #    scheme. Mutationen sætter `?` tilbage foran gruppen med værterne i
+    #    `track.js`' egen kildekopi — den præcis rettelse, der lå bag fejlen.
+    cases.append(("en rod-relative bogside giver det samme præfikset navn",
+                  event_name("/books/compliance-bundle", cta, home, books)
+                  == "cta-books-compliance-bundle"))
+    cases.append(("en dansk rod-relative bogside måles også",
+                  event_name("/da/books/eaa-checklist", cta, home, books)
+                  == "cta-books-eaa-checklist"))
+    source_books = RE_BOOK_PAGES.search(
+        (ROOT / "site" / "track.js").read_text(encoding="utf-8", errors="ignore"))
+    if source_books is None:
+        cases.append(("CTA_BOOK_PAGES kunne ikke læses fra track.js", False))
+    else:
+        # `?` væk: mønstret kræver så igen et scheme, hvilket er præcis den
+        # tilstand fejlen opstod i. Gruppens `)` og `(?:…)` røres ikke, så det
+        # stadig er en gyldig regex — en ubalanceret ville bare give `None`.
+        absolute_only = _js_regex(
+            source_books.group(1).replace(r"\.dev))?", r"\.dev))", 1))
+        cases.append((
+            "den absolute-only-mutation gør den rod-relative bogside ubefalet",
+            absolute_only is not None
+            and _unmeasured_for("/books/compliance-bundle", cta, home,
+                                absolute_only)
+            == ["/books/compliance-bundle"],
+        ))
+    cases.append(("portens egen rod-relative regel rammer en bogside",
+                  bool(RE_BOOK_ROOT.match("/books/compliance-bundle"))
+                  and bool(RE_BOOK_ROOT.match("/da/books/eaa-checklist"))
+                  and bool(RE_BOOK_ROOT.match("/books/eaa-checklist#køb"))))
 
     # 3. Kan porten blive rød på den kode den læser?
     source = (ROOT / "site" / "track.js").read_text(encoding="utf-8", errors="ignore")
