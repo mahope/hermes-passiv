@@ -189,7 +189,8 @@ for (const [path, lang] of PAGES) {
 }
 {
   const r = await runScan('site/compliance-site-check.html', [{ status: 429, body: { ok: false, error: 'Too many scans this hour.' } }]);
-  ok('EN: 429 er forbigående og genkaldes', r.calls === 3, `calls=${r.calls}`);
+  ok('EN: 429 er endeligt, ét kald, og viser serverens timegrænse',
+    r.calls === 1 && /Too many scans this hour/.test(r.err), `calls=${r.calls} err=${r.err}`);
 }
 {
   const r = await runScan('site/compliance-site-check.html', [{ status: 400, body: { ok: false, error: 'Missing ?url= parameter' } }]);
@@ -259,7 +260,8 @@ for (const [path, lang] of [['site/page-profile.html', 'EN'], ['site/da/page-pro
     `calls=${dead.calls} out=${dead.out.slice(0, 120)}`);
 
   const rate = await runProfile(path, [{ status: 429, body: { ok: false, error: 'Too many profiles this hour.' } }]);
-  ok(`${lang} page-profile: 429 er forbigående og genkaldes`, rate.calls === 3, `calls=${rate.calls}`);
+  ok(`${lang} page-profile: 429 er endeligt, ét kald, og viser serverens timegrænse`,
+    rate.calls === 1 && /Too many profiles this hour/.test(rate.out), `calls=${rate.calls} out=${rate.out}`);
 
   const bad = await runProfile(path, [{ status: 400, body: { ok: false, error: 'Missing ?url= parameter' } }]);
   ok(`${lang} page-profile: et 4xx er endeligt og viser serverens egen tekst`,
@@ -303,16 +305,17 @@ async function runBook(list, { ask = true, wait = true } = {}) {
 {
   const r = await runBook([{ status: 502, html: true }, OK_ASK, OK_WAIT]);
   ok('book-ai: 502 med HTML genkaldes og lykkes', r.calls === 3 && r.chat === '', `calls=${r.calls} chat=${r.chat}`);
+  // 3 = ét mislykket spørgsmål (2 forsøg) + ét godt svar på genkaldet + ventelisten.
 }
 {
   const r = await runBook([{ status: 503, html: true }], { wait: false });
-  ok('book-ai: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk',
-    r.calls === 3 && /temporarily unavailable/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
+  ok('book-ai: 503 hele vejen giver to forsøg og skylder ikke brugerens netværk',
+    r.calls === 2 && /temporarily unavailable/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
 }
 {
   const r = await runBook([{ reject: 'Failed to fetch' }], { wait: false });
   ok('book-ai: et afbrudt kald prøves igen og får sin egen tekst',
-    r.calls === 3 && /could not reach the assistant server/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
+    r.calls === 2 && /could not reach the assistant server/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
 }
 {
   const r = await runBook([OK_ASK, { status: 503, html: true }, OK_WAIT]);
@@ -320,6 +323,8 @@ async function runBook(list, { ask = true, wait = true } = {}) {
 }
 {
   const r = await runBook([OK_ASK, { status: 503, html: true }]);
+  // Ventelisten er vores egen KV-skrivning uden omkostninger opstrøms, så den
+  // beholder tre forsøg selv om spørgsmålet kun får to: 1 (chat) + 3 = 4.
   ok('book-ai: en venteliste der holder op giver en ærlig tekst og fri knap igen',
     r.calls === 4 && /temporarily unavailable/.test(r.lead) && r.btnLive === true, `calls=${r.calls} lead=${r.lead} btn=${r.btnLive}`);
 }
@@ -370,12 +375,22 @@ for (const [path, lang] of [['site/compliance-ai.html', 'EN'], ['site/da/complia
   ok(`${lang} compliance-ai: 502 med HTML genkaldes og lykkes`, busy.calls === 2 && busy.status === '', `calls=${busy.calls} status=${busy.status}`);
 
   const dead = await runAsk(path, [{ status: 503, html: true }]);
-  ok(`${lang} compliance-ai: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk`,
-    dead.calls === 3 && /temporarily unavailable|midlertidigt utilgængelig/.test(dead.status) && !/Network error|Netværksfejl/.test(dead.status),
+  // Spørgsmålet koster penge (OpenRouter), så det har to forsøg: ét plus ét.
+  // Tre var en regel kopieret fra de gratis ruter, hvor et tredje forsøg er
+  // gratis. Serveren giver den daglige kvote tilbage når upstream-kaldet
+  // fejler, så genkaldet koster brugeren ingen kvote — men det er stadig et
+  // betalt kald, og ét er nok til ét spørgsmål.
+  ok(`${lang} compliance-ai: 503 hele vejen giver to forsøg og skylder ikke brugerens netværk`,
+    dead.calls === 2 && /temporarily unavailable|midlertidigt utilgængelig/.test(dead.status) && !/Network error|Netværksfejl/.test(dead.status),
     `calls=${dead.calls} status=${dead.status}`);
 
+  // 429 er endeligt, og her er det dobbelt vigtigt: serverens egen kvota
+  // (20 spørgsmål om dagen) tæller et genkald som et forbrugt spørgsmål. Tre
+  // forsøg på ét spørgsmål brændte tre af de tyve, før brugeren overhovedet
+  // havde fået et svar.
   const rate = await runAsk(path, [{ status: 429, body: { ok: false, error: 'Too many questions this hour.' } }]);
-  ok(`${lang} compliance-ai: 429 er forbigående og genkaldes`, rate.calls === 3, `calls=${rate.calls}`);
+  ok(`${lang} compliance-ai: 429 er endeligt, ét kald, og viser serverens timegrænse`,
+    rate.calls === 1 && /Too many questions this hour/.test(rate.status), `calls=${rate.calls} status=${rate.status}`);
 
   const bad = await runAsk(path, [{ status: 400, body: { ok: false, error: 'That question is too short.' } }]);
   ok(`${lang} compliance-ai: et 4xx er endeligt og viser serverens egen tekst`,
@@ -383,7 +398,7 @@ for (const [path, lang] of [['site/compliance-ai.html', 'EN'], ['site/da/complia
 
   const offline = await runAsk(path, [{ reject: 'Failed to fetch' }]);
   ok(`${lang} compliance-ai: et afbrudt kald prøves igen og får sin egen tekst`,
-    offline.calls === 3 && /could not reach the assistant server|kunne ikke nå assistentserveren/.test(offline.status) && !/Network error|Netværksfejl/.test(offline.status),
+    offline.calls === 2 && /could not reach the assistant server|kunne ikke nå assistentserveren/.test(offline.status) && !/Network error|Netværksfejl/.test(offline.status),
     `calls=${offline.calls} status=${offline.status}`);
 
   // Knappen må ikke blive låst af et blip — ellers kan en bruger ikke prøve igen.
@@ -462,8 +477,12 @@ async function runHeaders(list) {
     r.calls === 1 && r.status === 'Not a valid URL.', `calls=${r.calls} status=${r.status}`);
 }
 {
+  // 429 er endeligt: serveren har sagt hvor længe det varer, og tælleren er
+  // læserens egen timekvote. Genkaldene brugte resten af den på svar serveren
+  // allerede har afslået at give.
   const r = await runHeaders([{ status: 429, body: { ok: false, error: 'Too many checks this hour.' } }]);
-  ok('security-headers-check: 429 er forbigående og genkaldes', r.calls === 3, `calls=${r.calls}`);
+  ok('security-headers-check: 429 er endeligt, ét kald, og viser serverens egen tekst',
+    r.calls === 1 && /Too many checks this hour/.test(r.status), `calls=${r.calls} status=${r.status}`);
 }
 {
   // 200 med `ok:false` er et rigtigt svar, ikke et blip — ét kald, serverens tekst.
@@ -479,16 +498,38 @@ async function runHeaders(list) {
 {
   const book = readFileSync(join(root, 'site/book-ai.js'), 'utf8');
   const net = readFileSync(join(root, 'site/net.js'), 'utf8');
-  ok('mutation: book-ai har samme regel som de andre klienter', /BOOK_MAX_TRIES = 3/.test(book));
-  ok('mutation: bogen læser status før JSON, ikke bagefter', /err\.transient = !data \|\| res\.status === 429/.test(net));
+  ok('mutation: book-ai har samme regel som de andre klienter', /BOOK_MAX_TRIES = 2/.test(book));
+  // Ratchet på den delte regel: 429 må *ikke* stå på genkaldssiden igen. Den
+  // lå der før, og da CEO-køet fangede den, var det fordi den brugte læserens
+  // egen kvote på svar serveren allerede havde afslået.
+  ok('mutation: bogen læser status før JSON, og 429 er endeligt', /err\.transient = !data \|\| res\.status >= 500/.test(net));
+  // Målt 30/9 af review: ratcheten læste kun net.js, så at sætte
+  // `r.status === 429` tilbage i security-headers-check eller de to
+  // compliance-site-check-kopier ville være grønt. Den skal måle hele korpus.
+  // grep giver exit 1 når der ikke er fund — det er det forventede svar her,
+  // ikke en fejl, så den sluges frem for at dræbe porten.
+  let retried429 = [];
+  try {
+    retried429 = execFileSync('grep', ['-rlE', 'transient *= *[^\\n]*=== *429', 'site'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString('utf8').split('\n').filter(Boolean);
+  } catch (e) { retried429 = (e.stdout || '').toString('utf8').split('\n').filter(Boolean); }
+  ok('mutation: ingen klient i site/ genkaller en 429', retried429.length === 0, retried429.join(', '));
   for (const p of ['site/page-profile.html', 'site/da/page-profile.html']) {
     const src = readFileSync(join(root, p), 'utf8');
-    ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /err\.transient = !j \|\| r\.status === 429/.test(src));
+    ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /err\.transient = !j \|\| r\.status >= 500/.test(src));
+  }
+  // Ingen site-fil må have sin egen postJSON igen — de deler /net.js.
+  for (const p of ['site/book-ai.js', 'site/compliance-ai.html', 'site/da/compliance-ai.html',
+                   'site/security-headers-check.html', 'site/compliance-site-check.html',
+                   'site/da/compliance-site-check.html', 'site/page-profile.html', 'site/da/page-profile.html',
+                   'site/url-inspector/index.html']) {
+    const src = readFileSync(join(root, p), 'utf8');
+    ok(`mutation: ${p} bruger den delte postJSON`, !/function postJSON/.test(src), 'egen postJSON');
   }
 }
 {
   // Genkalder vi slået fra i book-ai, skal "503 hele vejen giver tre forsøg" blive rød.
-  const src = readFileSync(join(root, 'site/book-ai.js'), 'utf8').replace('var BOOK_MAX_TRIES = 3;', 'var BOOK_MAX_TRIES = 1;');
+  const src = readFileSync(join(root, 'site/book-ai.js'), 'utf8').replace('var BOOK_MAX_TRIES = 2;', 'var BOOK_MAX_TRIES = 1;');
   ok('mutation: slået genkald kan fremstilles i book-ai', src.includes('var BOOK_MAX_TRIES = 1;'));
   const { fetchImpl, state } = responses([{ status: 503, html: true }]);
   const nodes = new Map();
@@ -547,7 +588,7 @@ function mutated(path, from, to) {
   // "Network error". Sætter vi beskeden tilbage og gør 5xx endeligt, skal både
   // genkaldskontrollen og tekstkontrollen blive røde.
   let m = readFileSync(join(root, 'site/compliance-site-check.html'), 'utf8');
-  m = m.replace('err.transient = !data || r.status === 429 || r.status >= 500;', 'err.transient = false;')
+  m = m.replace('err.transient = !data || r.status >= 500;', 'err.transient = false;')
        .replace("showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')));",
                 "showError('Network error: ' + (err.message || 'unknown'));");
   ok('mutation: den gamle behandling kan fremstilles', /Network error: ' \+ \(err\.message/.test(m) && /err\.transient = false;/.test(m));
@@ -626,7 +667,7 @@ function mutated(path, from, to) {
 {
   const net = readFileSync(join(root, 'site/net.js'), 'utf8');
   ok('net.js: reglen ligger et sted — status læses før kroppen',
-    /res\.json\(\)\.catch/.test(net) && /err\.transient = !data \|\| res\.status === 429/.test(net));
+    /res\.json\(\)\.catch/.test(net) && /err\.transient = !data \|\| res\.status >= 500/.test(net));
   // Ingen `site/`-fil må have sin egen `postJSON` igen. Vælger den at inline
   // hjælperen en tredje gang, skal det kunne ses her, ikke i en diff om et halvt
   // år. Målt over hele træet, ikke kun de tre kendte filer.
@@ -649,7 +690,7 @@ function mutated(path, from, to) {
   // 5xx endeligt i den delte hjælper: alle tre klienter mister genkaldet paa én
   // gang. Tre røde kontroller i stedet for tre kopier der kan drive fra hinanden.
   const good = readFileSync(join(root, 'site/net.js'), 'utf8');
-  const broken = good.replace('err.transient = !data || res.status === 429 || res.status >= 500;', 'err.transient = false;');
+  const broken = good.replace('err.transient = !data || res.status >= 500;', 'err.transient = false;');
   ok('mutation: den delte regel kan gøres forkert', broken !== good);
   netOverride = broken;
   try {

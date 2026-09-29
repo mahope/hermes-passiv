@@ -295,8 +295,12 @@ ok('workeren svarer ægte 429 når timegrænsen er nået', res429.status === 429
 // "unpaid", så den svarer 404 — men siden skal behandle 202 præcis som før.
 const uigjort = await render(null, [{ status: 202, body: { ok: false, pending: true } }]);
 ok('202: gentages stadig, og siger at betalingen bekræftes', uigjort.fetches === 13 && /Confirming your payment/i.test(uigjort.seen.join(' ')), 'fetches=' + uigjort.fetches + ' seen=' + JSON.stringify(uigjort.seen.slice(0, 2)));
-ok('202: når budgettet er brugt, er slutningen den ærlige, ikke "could not find"',
-  /payment went through/i.test(uigjort.status.textContent), uigjort.status.textContent);
+ok('202: når budgettet er brugt, siger siden at betalingen endnu ikke er bekræftet',
+  /not confirmed yet/i.test(uigjort.status.textContent) && !/payment went through/i.test(uigjort.status.textContent), uigjort.status.textContent);
+// 202 betyder "Stripe har endnu ikke bekræftet", så at slutte på "your payment
+// went through" er en påstand vi ikke kan dokumentere — den er modsatte af
+// det vi ved. Det er målt på den gamle kode: samme streng for 202 og for 503.
+ok('202: den lyder ikke som de 503/429-grene gør', /not confirmed yet/i.test(uigjort.status.textContent), uigjort.status.textContent);
 
 const helbredt503 = await render(null, [{ status: 503, body: body503 }, { status: 503, body: body503 }, { status: 200, body: lic.payload }]);
 ok('503 der går over: siden viser nøglen alligevel', helbredt503.thrown === null && /<code id="key">[0-9a-f]{32}<\/code>/.test(helbredt503.result.innerHTML),

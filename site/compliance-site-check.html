@@ -190,7 +190,7 @@ function getStatusIcon(status) {
 // Cloudflare replies to a crashed worker with an HTML error page — so the old
 // `r.json()` threw and the catch reported "Network error: Unexpected token '<'".
 // That blamed the visitor's Wi-Fi, and it gave up on the very first blip. The
-// status is read first, a 5xx or 429 is retried a couple of times, and only a
+// status is read first, a 5xx is retried a couple of times, and only a
 // real 4xx is final.
 var SCAN_MAX_TRIES = 3;
 var SERVER_BUSY = 'Our scan server is temporarily unavailable. Please try again in a moment.';
@@ -211,7 +211,7 @@ function fetchScan(endpoint) {
       err.status = r.status;
       // A missing body means the answer was not ours to read, so it is
       // transient by definition no matter what status the edge reported.
-      err.transient = !data || r.status === 429 || r.status >= 500;
+      err.transient = !data || r.status >= 500;
       throw err;
     });
   });

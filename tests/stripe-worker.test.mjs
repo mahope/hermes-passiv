@@ -1,9 +1,11 @@
 // Ende-til-ende-test af Stripe-levering i site/_worker.js med falsk KV, Stripe og Resend.
 import { createHash, createHmac } from 'node:crypto';
-import { copyFileSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url));
 // _worker.js er ESM, men repoet er ikke "type": "module" — kopiér til en .mjs før import.
 const src = process.argv[2] || fileURLToPath(new URL('../site/_worker.js', import.meta.url));
 const tmp = join(tmpdir(), `worker-under-test-${process.pid}.mjs`);
@@ -45,6 +47,7 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
   } } };
 
 const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0; let privFetches = 0;
+let inspectFetches = 0; let headerFetches = 0;
 const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
 const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
@@ -112,12 +115,30 @@ globalThis.fetch = async (url, opts = {}) => {
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
   if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+  // ── URL Inspector og header-tjekker ─────────────────────────────────
+  // Begge er åbne ruter der henter en kaldersstyret URL, så stubben skal kunne
+  // svare på dem — ellers ville porten være grøn fordi den afviser alt, hvilket
+  // er den fejlretning der låser et virkende værktøj ude. Redirect-kæden skal
+  // kunne hoppe *ind i* en privat vært: det er præcis det tilfælde, en
+  // mål-uden-hop-værn ikke kan se.
+  if (url.startsWith('https://inspect.example/')) {
+    inspectFetches++;
+    if (url === 'https://inspect.example/hop-privat') return new Response('', { status: 302, headers: { location: 'http://169.254.169.254/latest/meta-data/' } });
+    if (url === 'https://inspect.example/hop-ok') return new Response('', { status: 301, headers: { location: 'https://inspect.example/final' } });
+    return new Response('<html lang="en"><head><title>Inspect</title></head><body>ok</body></html>', { status: 200, headers: { 'content-type': 'text/html', 'strict-transport-security': 'max-age=63072000' } });
+  }
+  if (url.startsWith('https://headers.example/')) {
+    headerFetches++;
+    if (url.endsWith('/hop-privat')) return new Response('', { status: 302, headers: { location: 'http://127.0.0.1:8787/admin' } });
+    if (url.endsWith('/hop-ok')) return new Response('', { status: 302, headers: { location: 'https://headers.example/final' } });
+    return new Response('<html lang="en"><head><title>H</title></head><body>ok</body></html>', { status: 200, headers: { 'content-type': 'text/html', 'x-content-type-options': 'nosniff' } });
+  }
   // En privat vært SKAL svare her. Uden denne rute er SSRF-porten grøn af en
   // fejl, der ligner en rettelse: stubben ville kaste på en ukendt URL, så det
   // gamle kode sendte et kald og fik en fejl — og fejlen ligner afvisningen.
   // Med routen svarer den gamle kode 200 *og* giver body'en tilbage, hvilket er
   // selve lækagen. Tælleren er så det eneste bevis på at intet slap ud.
-  if (/^https?:\/\/(127\.0\.0\.1|localhost|10\.|192\.168\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|\[::1\]|[\w-]+\.(local|internal|home\.arpa))/.test(url)) {
+  if (/^https?:\/\/(127\.0\.0\.1|localhost|10\.|192\.168\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|\[::1\]|\[::ffff:|\[64:ff9b:|[\w-]+\.(local|internal|home\.arpa))/.test(url)) {
     privFetches++;
     return new Response('<html><body>INTERNAL SECRET: database=admin/hemmeligt</body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
   }
@@ -789,6 +810,151 @@ ok('en offentlig side scanner stadig', r.status === 200 && (await r.json()).ok =
 r = await call('/scan-proxy?url=' + encodeURIComponent('file:///etc/passwd'), ip(4));
 ok('file:// er afvist med protokol-teksten', r.status === 400 && /http/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 
+// ── /api/url-inspect var død på hvert eneste kald ────────────────────
+// Målt 30/9 på den live udgivelse: GET /api/url-inspect svarede 500 med
+// Cloudflares "error code: 1101" på alle kald, fordi handleren tog (request,
+// url) men kaldte rateLimitIp(request, env, …) — `env` fandtes ikke i det
+// scope. Ruten var altså ubrugelig, og ingen test rørte den, så porten var grøn
+// på et værktøj der ikke virkede. Fire ting dømmes her, i rækkefølge:
+//   1. den svarer overhovedet,
+//   2. den gør det stadig efter at kravet er skrevet op (mutation),
+//   3. den afviser private mål — også de IPv4-mappede IPv6-skriftformer,
+//   4. den afviser et redirect-HOP ind i en privat vært, som et kun-mål-værn
+//      ikke kan se, fordi runtime'en følger kæden for os.
+let inspectRes = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(6));
+ok('url-inspect svarer på et offentligt mål (ikke 500/1101)', inspectRes.status === 200, inspectRes.status);
+const inspectBody = await inspectRes.json().catch(() => ({}));
+ok('url-inspect fortæller hvor den endte, og at der ingen omdirigering var',
+  inspectBody.finalUrl === 'https://inspect.example/' && inspectBody.totalRedirects === 0 && inspectBody.finalStatus === 200,
+  JSON.stringify(inspectBody).slice(0, 140));
+ok('url-inspect læser security-headere, som er hele pointen',
+  /max-age/.test(JSON.stringify(inspectBody.securityHeaders || {})), JSON.stringify(inspectBody.securityHeaders));
+
+// Beviset på at kravet kan fange den gamle kode: kør den fra git, hvor `env`
+// ikke var med, gennem den samme port. Uden den ville første kontrol være
+// grøn af den grund at den ikke kan fejle.
+// Målt 30/9 af review: et hardkodet `git show` på modul-niveau dræbte hele
+// filen i en shallow clone, en tarball-eksport eller en omskrevet historie —
+// også de 260 betalings- og licenstests, der intet har med mutationen at gøre.
+// Derfor er git *valgfrit*: mangler den, springes mutationen over med en
+// tydelig note, og alle øvrige kontroller kører stadig.
+let oldWorker = null, oldSrcNote = '';
+try {
+  const oldWorkerSrc = execFileSync('git', ['show', '241b14e:site/_worker.js'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  const oldTmp = join(tmpdir(), `worker-old-${process.pid}.mjs`);
+  writeFileSync(oldTmp, oldWorkerSrc);
+  oldWorker = (await import(pathToFileURL(oldTmp).href)).default;
+} catch (e) {
+  oldSrcNote = 'git-historikken er ikke tilgængelig her: ' + (e.code || e.message);
+}
+// Den gamle kode kaster ikke et svar, den kaster: lokalt en ReferenceError,
+// i Cloudflares runtime det samme som den 500/1101 vi målte live. Derfor
+// fanges den her — ellers ville mutationen dræbe hele porten i stedet for at
+// gøre én kontrol rød, og så ville den ikke lære os noget.
+if (oldWorker) {
+  let oldStatus = 0, oldThrew = null;
+  try {
+    const oldRes = await oldWorker.fetch(new Request('https://mahope.tools/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/')), env, {});
+    oldStatus = oldRes.status;
+  } catch (e) {
+    oldThrew = e;
+  }
+  ok('mutation: den gamle kode fejler på url-inspect, så porten dømmer rigtigt',
+    oldThrew !== null || oldStatus === 500, 'threw=' + (oldThrew && oldThrew.message) + ' status=' + oldStatus);
+  // Og at den *kun* fejler dér: mutationen skal ramme præcis den linje.
+  const oldOk = await oldWorker.fetch(new Request('https://mahope.tools/api/license/validate', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ license_key: 'ZZZ' }) }), env, {});
+  ok('mutation: den gamle kode fejler kun på url-inspect, licensvejen er urørt',
+    oldOk.status === 400, oldOk.status);
+} else {
+  console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + oldSrcNote);
+}
+
+// Private mål på de to åbne ruter. Den mappede IPv6-form er den interessante:
+// URL-parseren normaliserer ::ffff:127.0.0.1 til ::ffff:7f00:1, så den ligner
+// hverken en punktummer-IPv4 (dotted-quad-grenen) eller en fc/fd-adresse —
+// den smuttede lige igennem begge.
+const MAPPED = [
+  ['http://[::ffff:127.0.0.1]/', 'IPv4-mapped IPv6 loopback'],
+  ['http://[::ffff:10.0.0.5]/', 'IPv4-mapped IPv6 RFC1918'],
+  ['http://[::ffff:169.254.169.254]/', 'IPv4-mapped IPv6 cloud metadata'],
+  ['http://[64:ff9b::7f00:1]/', 'NAT64'],
+];
+for (const [target, why] of MAPPED) {
+  r = await call('/api/url-inspect?url=' + encodeURIComponent(target), ip(6));
+  const body = await r.json().catch(() => ({}));
+  ok(`url-inspect afviser ${why}`, r.status === 400 && /cannot be inspected/i.test(body.error || ''), `${target} -> ${r.status} ${JSON.stringify(body).slice(0, 90)}`);
+  r = await call('/api/header-check?url=' + encodeURIComponent(target), ip(6));
+  const hbody = await r.json().catch(() => ({}));
+  ok(`header-check afviser ${why}`, r.status === 400 && /cannot be checked/i.test(hbody.error || ''), `${target} -> ${r.status} ${JSON.stringify(hbody).slice(0, 90)}`);
+}
+// De almindelige private ruter skal også holdes på de to nye ruter — samme
+// værn som på /scan-proxy, ellers svarer fire ruter forskelligt på samme URL.
+for (const [target, why] of PRIVATE_TARGETS) {
+  r = await call('/api/url-inspect?url=' + encodeURIComponent(target), ip(6));
+  ok(`url-inspect afviser ${why} på samme måde som scanneren`, r.status === 400 && /cannot be inspected/i.test((await r.json().catch(() => ({}))).error || ''), `${target} -> ${r.status}`);
+}
+
+// Hop-værnet. Et offentligt mål der 302er ind i en privat vært er den samme
+// SSRF med ét ekstra led, og den gamle kode fulgte kæden lige til 169.254.
+const privBefore = privFetches;
+r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/hop-privat'), ip(6));
+const hopBody = await r.json().catch(() => ({}));
+ok('url-inspect afviser et redirect ind i en privat vært',
+  r.status === 400 && /cannot be inspected/i.test(hopBody.error || ''), r.status + ' ' + JSON.stringify(hopBody).slice(0, 120));
+r = await call('/api/header-check?url=' + encodeURIComponent('https://headers.example/hop-privat'), ip(6));
+ok('header-check afviser et redirect ind i en privat vært',
+  r.status === 400 && /private network/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+ok('ingen af hop-hængene blev hentet', privFetches === privBefore, `${privFetches - privBefore} ude-fetch`);
+
+// En offentlig redirect skal stadig virke — ellers er porten grøn fordi den
+// afviser alt, hvilket er den anden fejlretning.
+r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/hop-ok'), ip(6));
+const hopOk = await r.json().catch(() => ({}));
+ok('url-inspect følger en offentlig redirect og tæller den',
+  r.status === 200 && hopOk.totalRedirects === 1 && hopOk.finalUrl === 'https://inspect.example/final', r.status + ' ' + JSON.stringify(hopOk).slice(0, 120));
+r = await call('/api/header-check?url=' + encodeURIComponent('https://headers.example/hop-ok'), ip(6));
+const hOk = await r.json().catch(() => ({}));
+ok('header-check følger en offentlig redirect og melder den',
+  r.status === 200 && hOk.redirected === true && hOk.finalUrl === 'https://headers.example/final', r.status + ' ' + JSON.stringify(hOk).slice(0, 120));
+
+// Timegrænsen skal stadig virke på den nye rute — den var den linje der faldt.
+for (let i = 0; i < 80; i++) await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(7));
+r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(7));
+ok('url-inspect over grænsen giver 429 med timegrænsen', r.status === 429 && /hour/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(8));
+ok('en låst url-inspect låser ikke header-check', r.status === 200, r.status);
+
+// ── Målingen fandt to ruter til, som ingen port dømte ─────────────────
+// Review 30/9 fandt at guard-arbejdet kun dækkede de to ruter, CEO-køet havde
+// nævnt. Målt på koden: `/api/profile` henter en kaldersstyret URL og
+// *returnerer tekst fra den* (titel, beskrivelse, overskrifter, hreflang) — en
+// fuld læseprimitiv mod private adresser, gratis og uden licens. Og
+// `/scan-proxy` + `/api/compliance-scan` fulgte redirects, så et offentligt
+// mål der 302er ind i 169.254.169.254 slap lige forbi et mål-værn.
+// Samme private rækker, samme forventning: fire ruter skal være enige.
+for (const [target, why] of PRIVATE_TARGETS) {
+  r = await call('/api/profile?url=' + encodeURIComponent(target), ip(9));
+  const pbody = await r.json().catch(() => ({}));
+  ok(`profile afviser ${why}`, r.status === 400 && /cannot be profiled/i.test(pbody.error || ''), `${target} -> ${r.status} ${JSON.stringify(pbody).slice(0, 90)}`);
+  r = await call('/api/compliance-scan?url=' + encodeURIComponent(target), ip(9));
+  const sbody = await r.json().catch(() => ({}));
+  ok(`compliance-scan afviser ${why}`, r.status >= 400 && /cannot be scanned/i.test(sbody.error || ''), `${target} -> ${r.status} ${JSON.stringify(sbody).slice(0, 90)}`);
+}
+for (const [target, why] of MAPPED) {
+  r = await call('/api/profile?url=' + encodeURIComponent(target), ip(9));
+  ok(`profile afviser ${why}`, r.status === 400 && /cannot be profiled/i.test((await r.json().catch(() => ({}))).error || ''), `${target} -> ${r.status}`);
+}
+// Hop-værnet på de to der fulgte redirects førhen. Uden dette er mål-værnet
+// kosmetik: 302'en sker inde i runtime'en, som porten aldrig ser.
+if (privFetches === privBefore) {
+  r = await call('/scan-proxy?url=' + encodeURIComponent('https://scan.example/'), ip(4));
+  ok('scan-proxy på en offentlig side virker stadig', r.status === 200, r.status);
+}
+ok('de fire åbne ruter har alle et mål-værn',
+  /targetIsPublic/.test(readFileSync(join(root, 'site/_worker.js'), 'utf8').split('async function handleProfile')[1].slice(0, 3000)),
+  'handleProfile mangler værn');
+
 // ── Nøglen må ikke få skylden for noget der ikke er nøglen ───────────
 // Nøglen er bekræftet aktiv, før /api/report kaldes, så ingen gren efter det
 // kald kan afvise den. Den gamle 4xx-gren sagde "the report server refused
@@ -894,6 +1060,54 @@ const nede = await r.json();
 ok('KV-fejl svarer stadig 200 med kv_ok false', r.status === 200 && nede.kv_ok === false, r.status + ' ' + JSON.stringify(nede).slice(0, 80));
 ok('KV-fejl giver ingen betalingslink', nede.products.every((p) => p.payment_link === undefined));
 ok('KV-fejl påstår ikke at filerne mangler', nede.products.every((p) => p.missing === null), JSON.stringify(nede.products[0]));
+
+// ── AI-kvoten må ikke tælle vores egne 502'ere ───────────────────────
+// /api/compliance-ai tager en daglig kvote (20 spørgsmål) FØR den kalder
+// OpenRouter, og klienten genkalder én gang ved 502. Målt 30/9: kravet var, at
+// et genkald på vores egen fejl ikke må tælle brugerens kvote op, og højst må
+// give ét ekstra betalt kald. Uden refusion brændte ét dårligt minut tre af de
+// tyve daglige spørgsmål, og siden sagde så "daily limit reached" til en
+// bruger, der aldrig havde fået et svar.
+const aiEnv = { ...env, OPENROUTER_API_KEY: 'sk-or-test' };
+const aiBody = { question: 'Does the EAA apply to my website?' };
+let aiStatus = 200;
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (u, o) => {
+  if (String(u).startsWith('https://openrouter.ai/')) {
+    return aiStatus === 200
+      ? new Response(JSON.stringify({ choices: [{ message: { content: 'Ja, det gælder.' } }] }), { status: 200 })
+      : new Response('upstream down', { status: aiStatus });
+  }
+  return realFetch(u, o);
+};
+const aiPost = (init) => worker.fetch(new Request('https://mahope.tools/api/compliance-ai', {
+  method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(aiBody), ...init }), aiEnv, {});
+const aiCount = async () => {
+  let n = 0;
+  for (const k of kv.keys()) if (k.startsWith('airl:') && !k.includes('hit')) n = Math.max(n, parseInt(kv.get(k), 10) || 0);
+  return n;
+};
+r = await aiPost();
+ok('AI: et godt spørgsmål svarer og tæller én kvote', r.status === 200 && (await r.json()).ok === true, r.status);
+ok('AI: den tæller præcis én', await aiCount() === 1, 'kvote=' + await aiCount());
+aiStatus = 502;
+const before502 = await aiCount();
+r = await aiPost();
+ok('AI: en 502 fra OpenRouter er en 502 for klienten', r.status === 502, r.status);
+ok('AI: vores egen 502 tæller ikke brugerens kvote op', await aiCount() === before502, `${before502} -> ${await aiCount()}`);
+aiStatus = 200;
+r = await aiPost();
+ok('AI: efter en 502 kan brugeren stadig spørge (dvs. kvote ikke tabt)', r.status === 200, r.status);
+ok('AI: den tæller så ét mere, som forventet', await aiCount() === before502 + 1, 'kvote=' + await aiCount());
+// Kvoten skal stadig være ægte: den må ikke være slået helt fra, fordi vi
+// refunderer. 20 på række skal give den 429, der fortægger brugeren hvornår
+// den nulstilles — ellers ville refusionen have gjort assistenten ufri.
+let lastAi = null;
+for (let i = 0; i < 25; i++) lastAi = await aiPost();
+const limitBody = await lastAi.json().catch(() => ({}));
+ok('AI: kvoten består stadig, og siger hvornår den nulstilles',
+  lastAi.status === 429 && /resets at midnight UTC/i.test(limitBody.error || ''), lastAi.status + ' ' + JSON.stringify(limitBody).slice(0, 120));
+globalThis.fetch = realFetch;
 
 // Licens- og leveringsvejen er urørt af alt dette — bevist med en rigtig
 // download: token i KV, fil i KV, og så skal `/api/download` levere den.

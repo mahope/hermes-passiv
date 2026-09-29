@@ -191,7 +191,7 @@ function getStatusIcon(status) {
 // svarer en worker der er faldet ned med en HTML-side — så det gamle
 // `r.json()` kastede, og catch'en sagde "Netværksfejl: Unexpected token '<'".
 // Den bekyldte besøgerens wifi og gav op ved det første blip. Status læses først,
-// et 5xx eller 429 prøves igen et par gange, og kun et rigtigt 4xx er endeligt.
+// et 5xx prøves igen et par gange, og kun et rigtigt 4xx er endeligt.
 var SCAN_MAX_TRIES = 3;
 var SERVER_BUSY = 'Vores scanningsserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
 var OFFLINE = 'Vi kunne ikke nå scanningsserveren. Tjek din forbindelse og prøv igen.';
@@ -211,7 +211,7 @@ function fetchScan(endpoint) {
       err.status = r.status;
       // Mangler svaret, var det ikke os der skrev det, så det er forbigående
       // uanset hvilken status kanten meldte.
-      err.transient = !data || r.status === 429 || r.status >= 500;
+      err.transient = !data || r.status >= 500;
       throw err;
     });
   });

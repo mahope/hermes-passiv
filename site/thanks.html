@@ -72,11 +72,21 @@
       // Kunden kommer fra Stripe lige efter en betaling, så betalingen er
       // gennemført, og det skal siden sige. Ellers ender de i en supportmail,
       // som er præcis den menneskelige indsats produkterne ikke må kræve.
+      // Det gælder dog kun de fejl, der betyder *vi* ikke kunne svare.
       var RAN_OUT = 'We could not load your order just now, but your payment went through. '
         + 'Your Stripe receipt is the record of it — reply to that email and Mads will send what you bought.';
-      function again(msg, delay) {
+      // `202` er en anden slags svar: Stripe har endnu ikke bekræftet betalingen,
+      // så vi ved det modsatte af RAN_OUT. At lade den 202-strengen ende i "your
+      // payment went through" hævder en bekræftelse vi ikke har — og det er den
+      // eneste besked, kunden ville tro på og så vente på. Målt 30/9: de to
+      // slutninger var ens, så en kunde med en langsom bankoverførsel blev
+      // lovet en nøgle, der aldrig kommer. Her siger siden det den kan stå for.
+      var PENDING_OUT = 'Your payment is not confirmed yet. Stripe is still processing it. '
+        + 'Your license key arrives by email as soon as it clears — if it has been more than an hour, '
+        + 'reply to your Stripe receipt and Mads will sort it out.';
+      function again(msg, delay, pending) {
         if (tries++ < MAX_TRIES) { status.textContent = msg; return setTimeout(poll, delay); }
-        fail(RAN_OUT);
+        fail(pending ? PENDING_OUT : RAN_OUT);
       }
       function show(d) {
         status.textContent = '';
@@ -152,11 +162,11 @@
           .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
           .then(function (x) {
             if (x.code === 200 && x.d.ok) return show(x.d);
-            if (x.code === 202) return again('Confirming your payment…', 2500);
-            if (x.code === 429 || x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000);
+            if (x.code === 202) return again('Confirming your payment…', 2500, true);
+            if (x.code === 429 || x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000, false);
             fail(x.d.error || 'We could not find this order. Check your email, or reply to your receipt.');
           })
-          .catch(function () { again('Network problem — trying again…', 3000); });
+          .catch(function () { again('Network problem — trying again…', 3000, false); });
       }
       poll();
     })();

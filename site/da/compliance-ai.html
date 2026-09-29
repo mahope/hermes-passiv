@@ -403,7 +403,17 @@
   // The retry rule itself lives in /net.js, next to the two other callers and
   // judged there by the sandbox. This only decides how many attempts we make
   // and what the visitor is told when they are gone.
-  var ASK_MAX_TRIES = 3;
+  //
+  // The question costs money (OpenRouter), so it gets its own budget of two:
+  // the call plus at most one extra. Three was a retry rule copied from the
+  // free routes, where a third attempt is free. The server now hands the daily
+  // slot back when the upstream call fails, so the retry costs the visitor no
+  // quota — but it would still be a second paid call, and one is the most a
+  // single question is worth.
+  var ASK_MAX_TRIES = 2;
+  // Ventelisten er vores egen KV-skrivning uden omkostninger opstrøms, så den
+  // beholder tre forsøg.
+  var WAITLIST_MAX_TRIES = 3;
   var ASK_SERVER_BUSY = 'Vores assistentserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
   var ASK_OFFLINE = 'Vi kunne ikke nå assistentserveren. Tjek din forbindelse og prøv igen.';
 
@@ -562,7 +572,7 @@
     btn.disabled = true;
     // A lost signup is a lost signup, and "Network error" blamed the visitor for
     // our blip. One retry on a transient answer, same rule as the chat above.
-    NET.ask('/api/waitlist', { email: email }, ASK_MAX_TRIES)
+    NET.ask('/api/waitlist', { email: email }, WAITLIST_MAX_TRIES)
     .then(function(data) {
       try { if (window.trackEvent) window.trackEvent('ai-lead'); } catch (e) {}
       st.textContent = data.ok

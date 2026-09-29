@@ -257,7 +257,7 @@
     // Cloudflare replies to a crashed worker with an HTML error page — so the old
     // `r.json()` threw and the catch printed "Network error: Unexpected token '<'",
     // which blamed the visitor's Wi-Fi for our own 5xx, showed them a raw JavaScript
-    // error, and gave up on the first blip. The status is read first, a 5xx or 429
+    // error, and gave up on the first blip. The status is read first, a 5xx
     // is retried, and only a real 4xx is final.
     var HEADERS_MAX_TRIES = 3;
     var HEADERS_SERVER_BUSY = 'Our header server is temporarily unavailable. Please try again in a moment.';
@@ -282,7 +282,7 @@
               err.status = r.status;
               // No body means the answer was not ours to read, so it is transient
               // by definition whatever status the edge reported.
-              err.transient = !data || r.status === 429 || r.status >= 500;
+              err.transient = !data || r.status >= 500;
               throw err;
             });
           })

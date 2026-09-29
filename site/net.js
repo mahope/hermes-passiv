@@ -7,10 +7,18 @@
  * visitor sees when we have a bad day, so it lives here once and is judged by
  * the sandbox in tests/scan-clients.test.mjs for every caller.
  *
- * The rule it encodes: a 5xx, a 429, an unreadable body and a broken connection
- * are all *ours* to retry, and only a real 4xx is final. Cloudflare answers a
+ * The rule it encodes: a 5xx, an unreadable body and a broken connection are
+ * all *ours* to retry, and only a real 4xx is final. Cloudflare answers a
  * crashed worker with an HTML page, so a bare `res.json()` throws and the catch
  * blames the visitor's Wi-Fi for our own outage.
+ *
+ * A 429 used to sit on the retry side. It is final: the server already said how
+ * long it lasts ("try again later", "resets at midnight UTC") and the counter it
+ * counts is the visitor's own hourly/daily allowance. Retrying spends the
+ * visitor's remaining budget on answers the server has already refused to give,
+ * so the error carries the server's own sentence and the page shows it. Retrying
+ * it was also what made the AI quota look full: three client retries on one
+ * question burned three of the twenty daily slots before any answer came back.
  */
 (function (global) {
   'use strict';
@@ -32,9 +40,12 @@
         if (res.ok && data) return data;
         var err = new Error((data && data.error) || ('Server replied with ' + res.status));
         err.status = res.status;
+        err.limited = res.status === 429;
         // No body means the answer was not ours to read, so it is transient by
-        // definition whatever status the edge reported.
-        err.transient = !data || res.status === 429 || res.status >= 500;
+        // definition whatever status the edge reported — including a 429 whose
+        // body the edge stripped, which is the one case we may not treat as
+        // final, because then we would have no sentence to show.
+        err.transient = !data || res.status >= 500;
         throw err;
       });
     });

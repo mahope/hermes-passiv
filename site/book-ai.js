@@ -12,16 +12,21 @@
   var asked = false;
 
   // En 5xx er ikke brugerens wifi. Reglen — læs status først, genkald på 5xx,
-  // 429, ulæselig krop og brudt forbindelse, kun et rigtigt 4xx er endeligt —
-  // ligger i /net.js og deles med /compliance-ai og bogens demosider.
-  var BOOK_MAX_TRIES = 3;
+  // ulæselig krop og brudt forbindelse, kun et rigtigt 4xx er endeligt — ligger i
+  // /net.js og deles med /compliance-ai og bogens demosider. 429 er endeligt:
+  // serveren har sagt hvor længe det varer, og tælleren er læserens egen.
+  // Spørgsmålet koster penge (OpenRouter), så det får to forsøg — ét plus ét.
+  var BOOK_MAX_TRIES = 2;
+  // Ventelisten er vores egen KV-skrivning uden omkostninger opstrøms, så den
+  // beholder tre forsøg — en tabt tilmelding er en tabt tilmelding.
+  var WAITLIST_MAX_TRIES = 3;
   var ASK_BUSY = 'The assistant server is temporarily unavailable. Please try again in a moment.';
   var ASK_OFFLINE = 'We could not reach the assistant server. Check your connection and try again.';
   var SAVE_BUSY = 'Saving is temporarily unavailable on our side. Please try again in a moment.';
   var SAVE_OFFLINE = 'We could not reach the server to save your email. Check your connection and try again.';
 
-  function askServer(path, payload) {
-    return NET.ask(path, payload, BOOK_MAX_TRIES);
+  function askServer(path, payload, maxTries) {
+    return NET.ask(path, payload, maxTries || BOOK_MAX_TRIES);
   }
 
   var SUGGESTIONS = {
@@ -112,7 +117,7 @@
       return;
     }
     document.getElementById('baiBtn').disabled = true;
-    askServer('/api/waitlist', { email: email, source: source })
+    askServer('/api/waitlist', { email: email, source: source }, WAITLIST_MAX_TRIES)
       .then(function (data) {
         if (data.ok) track('bookai-lead');
         st.textContent = data.ok

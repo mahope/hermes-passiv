@@ -321,6 +321,9 @@ async function handleScanProxy(request, url, env) {
   // loopback, RFC1918, link-local og CGNAT og *gav body'en tilbage til kalderen*,
   // altså en informationsudlæsning der ikke kræver en licens. Den skal også
   // ligge her, fordi de to ruter ellers ville svare forskelligt på samme URL.
+  // Hop-værnet kommer herfra: følger vi kæden med redirect:'follow', ser
+  // runtime'en den, og et offentligt mål der 302er ind i 169.254.169.254 er
+  // det samme som at skrive den private adresse direkte.
   if (!targetIsPublic(targetUrl)) {
     return new Response(
       JSON.stringify({ ok: false, error: 'That host cannot be scanned. Only public websites can be scanned — local and private network addresses are not reachable from here.' }),
@@ -329,13 +332,12 @@ async function handleScanProxy(request, url, env) {
   }
 
   try {
-    const response = await fetch(targetUrl.toString(), {
+    const { response } = await followChecked(targetUrl.toString(), {
       method: 'GET',
       headers: {
         'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://mahope.tools)',
         'Accept': 'text/html,application/xhtml+xml,*/*',
       },
-      redirect: 'follow',
     });
 
     const contentType = response.headers.get('content-type') || '';
@@ -428,6 +430,12 @@ async function handleProfile(request, url, env) {
   // never profile ourselves — infinite loop risk
   if (/(^|\.)hermes-passiv\.pages\.dev$/.test(targetUrl.hostname)) {
     return new Response(JSON.stringify({ ok: false, error: 'Cannot profile this site itself.' }), { status: 400, headers });
+  }
+  // Målt 30/9 af review: ruten er åben, henter en kaldersstyret URL og
+  // *returnerer tekst fra den* — titel, beskrivelse, overskrifter og hreflang.
+  // Uden dette var den en fuld læseprimitiv mod private adresser, gratis.
+  if (!targetIsPublic(targetUrl)) {
+    return new Response(JSON.stringify({ ok: false, error: 'That host cannot be profiled. Only public websites can be profiled — local and private network addresses are not reachable from here.' }), { status: 400, headers });
   }
 
   let resp;
@@ -720,6 +728,16 @@ async function handleComplianceAI(request, env) {
 
   // === Rate limit: max 20 questions per visitor per day (UTC) ===
   // Keeps OpenRouter spend bounded so the assistant can run unattended.
+  //
+  // The slot is taken before the upstream call and *given back* if that call
+  // fails (see releaseAiSlot below). A 502 from OpenRouter is our outage, not
+  // the visitor spending their allowance, and the client retries — so without
+  // the refund one bad minute cost a visitor three of twenty slots and the page
+  // then told them the daily limit was reached. The refund is what makes the
+  // client's single retry free of quota, as the CEO queue requires.
+  let aiSlotTaken = false;
+  let aiSlotKey = null;
+  let aiSlotValue = null;
   if (env.VISITS) {
     try {
       const vh = await visitorHash(request);
@@ -741,6 +759,9 @@ async function handleComplianceAI(request, env) {
         );
       }
       await env.VISITS.put(rlKey, String(used + 1), { expirationTtl: 2 * 86400 });
+      aiSlotTaken = true;
+      aiSlotKey = rlKey;
+      aiSlotValue = used + 1;
     } catch { /* rate-limit must never block a working answer */ }
 
     // Anonymous usage counter (no content stored) for /api/stats visibility.
@@ -781,6 +802,30 @@ The user's site is: https://mahope.tools — a free resource with an EAA scanner
     temperature: 0.3,
   };
 
+  // Hand the daily slot back when the upstream call failed. Best-effort: a
+  // visitor who loses a slot we cannot refund is a far smaller harm than a
+  // response that hangs on a KV write.
+  //
+  // KV har ingen atomisk decrement, så dette er en read-modify-write og kan
+  // løbe ind i en tabt opdatering. Målt 30/9 af review: to samtidige
+  // forespørgsler kan begge læse 5, begge skrive 6, og så refunderer den ene
+  // ned til 5 — altså en kvote, der drifter *mod* at blive delt ud. Derfor
+  // gemmer vi den værdi vi faktisk skrev, og refunderer kun ned til den, hvis
+  // den stadig er den seneste. Det gør refusionen til det konservative valg:
+  // en kasse kan miste et tal, men aldrig finde på flere.
+  async function releaseAiSlot() {
+    if (!aiSlotTaken || !env.VISITS || !aiSlotKey) return;
+    aiSlotTaken = false;
+    try {
+      const cur = parseInt((await env.VISITS.get(aiSlotKey)) || '0', 10);
+      // Kun ned til det vi selv skrev. Hvis nogen anden har rykket tælleren
+      // siden, ved vi ikke om de fik et svar, så vi rører ikke ved det.
+      if (cur === aiSlotValue && cur > 0) {
+        await env.VISITS.put(aiSlotKey, String(cur - 1), { expirationTtl: 2 * 86400 });
+      }
+    } catch { /* best-effort */ }
+  }
+
   try {
     const orResponse = await fetch(openRouterUrl, {
       method: 'POST',
@@ -795,6 +840,7 @@ The user's site is: https://mahope.tools — a free resource with an EAA scanner
 
     if (!orResponse.ok) {
       const errText = await orResponse.text().catch(() => 'Unknown error');
+      await releaseAiSlot();
       return new Response(
         JSON.stringify({ ok: false, error: 'The AI service is temporarily unavailable. Please try again in a moment.' }),
         { status: 502, headers }
@@ -805,9 +851,16 @@ The user's site is: https://mahope.tools — a free resource with an EAA scanner
     const answer = (data.choices?.[0]?.message?.content || '').trim();
 
     if (!answer) {
+      // Målt 30/9 af review: OpenRouter svarede *200* — vi fik altså et svar,
+      // bare uden indhold. Det er ikke vores nedetid, så kvoten bliver stående,
+      // og det er endeligt (400) så klienten ikke genkalder: en tom kompletion er
+      // typisk en filtrering, og at genkalde den tre gange for det samme
+      // spørgsmål ville brænde kvote *og* penge på et svar der ikke kommer.
+      // Refusionen er reserveret til `!orResponse.ok` og netværksfejlen, hvor
+      // vi reelt ikke fik noget svar.
       return new Response(
-        JSON.stringify({ ok: false, error: 'The AI returned an empty response. Please rephrase your question.' }),
-        { status: 502, headers }
+        JSON.stringify({ ok: false, error: 'The assistant could not answer that. Please rephrase your question.' }),
+        { status: 400, headers }
       );
     }
 
@@ -817,6 +870,7 @@ The user's site is: https://mahope.tools — a free resource with an EAA scanner
       { status: 200, headers }
     );
   } catch (err) {
+    await releaseAiSlot();
     return new Response(
       JSON.stringify({ ok: false, error: 'Network error contacting the AI service. Please try again.' }),
       { status: 502, headers }
@@ -1067,16 +1121,71 @@ function targetIsPublic(target) {
   if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')
       || host.endsWith('.internal') || host.endsWith('.home.arpa')) return false;
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
-    const p = host.split('.').map(Number);
-    if (p.some(n => n > 255)) return false;
-    if (p[0] === 0 || p[0] === 10 || p[0] === 127) return false;
-    if (p[0] === 169 && p[1] === 254) return false;
-    if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return false;
-    if (p[0] === 192 && p[1] === 168) return false;
-    if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false;
+    if (!ipv4IsPublic(host)) return false;
   }
   if (host === '::1' || host === '::' || /^f[cd]/.test(host) || host.startsWith('fe80')) return false;
+  // IPv4-mapped IPv6 (::ffff:127.0.0.1) is the same host as the IPv4 the block
+  // above already rejects, but URL parsing normalises it to hex ("::ffff:7f00:1"),
+  // so it slipped past both the dotted-quad branch and the f[cd]/fe80 branch.
+  // Unwrap it to IPv4 and run the same rules — otherwise every private range is
+  // reachable through the mapped spelling. NAT64 (64:ff9b::/96) is the same trick
+  // and is rejected for the same reason.
+  if (/^(?:::ffff:|0:0:0:0:0:ffff:)/.test(host)) {
+    const tail = host.split(':').filter(Boolean).slice(-2);
+    if (tail.length !== 2 || tail.some(g => !/^[0-9a-f]{1,4}$/.test(g))) return false;
+    const hi = parseInt(tail[0], 16);
+    const lo = parseInt(tail[1], 16);
+    return ipv4IsPublic([hi >> 8, hi & 255, lo >> 8, lo & 255].join('.'));
+  }
+  if (/^64:ff9b:/.test(host)) return false;
+  // Anything else that is still a literal IPv6 address is a public address we do
+  // not enumerate; a name that merely looks like one is handled above.
   return true;
+}
+
+// Shared by the dotted-quad branch and the IPv4-mapped-IPv6 branch, so a range
+// only has to be added once or the two spellings of the same host disagree.
+function ipv4IsPublic(host) {
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
+  const p = host.split('.').map(Number);
+  if (p.some(n => n > 255)) return false;
+  if (p[0] === 0 || p[0] === 10 || p[0] === 127) return false;
+  if (p[0] === 169 && p[1] === 254) return false;
+  if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return false;
+  if (p[0] === 192 && p[1] === 168) return false;
+  if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false;
+  return true;
+}
+
+// Follow a redirect chain by hand so targetIsPublic() can see every hop. With
+// `redirect: 'follow'` the runtime walks the chain on our behalf and the guard
+// only ever sees the first URL — which is exactly the case that turns a public
+// inspector into a way to read 169.254.169.254.
+//
+// Returns the final response plus where it ended up. Throws when a hop points
+// at a private address, so the caller turns it into a 400 with its own text
+// rather than a generic 502.
+async function followChecked(startUrl, init, maxHops = 15) {
+  let current = new URL(startUrl);
+  let redirected = false;
+  for (let hop = 0; hop <= maxHops; hop++) {
+    if (!targetIsPublic(current)) {
+      const err = new Error('That host cannot be checked — it is a local or private network address.');
+      err.privateTarget = true;
+      throw err;
+    }
+    const response = await fetch(current.toString(), { ...init, redirect: 'manual' });
+    const location = response.headers.get('location');
+    if (response.status >= 300 && response.status < 400 && response.status !== 304 && location) {
+      current = new URL(location, current);
+      redirected = true;
+      continue;
+    }
+    return { response, finalUrl: current.toString(), redirected };
+  }
+  const err = new Error('Too many redirects (> ' + maxHops + ' hops)');
+  err.tooManyHops = true;
+  throw err;
 }
 
 // The same checks the page used to run client-side, expressed as string
@@ -1849,14 +1958,24 @@ async function handleHeaderCheck(request, url, env) {
     );
   }
 
+  // Same reasoning as /scan-proxy: this route is open and fetches a
+  // caller-chosen URL, so without the guard it is an SSRF primitive for anyone
+  // who finds it. It follows redirects, so the hop guard below walks the chain
+  // by hand rather than letting the runtime follow it blind.
+  if (!targetIsPublic(targetUrl)) {
+    return new Response(
+      JSON.stringify({ ok: false, error: 'That host cannot be checked. Only public websites can be checked — local and private network addresses are not reachable from here.' }),
+      { status: 400, headers }
+    );
+  }
+
   try {
-    const response = await fetch(targetUrl.toString(), {
+    const { response, finalUrl, redirected } = await followChecked(targetUrl.toString(), {
       method: 'GET',
       headers: {
         'User-Agent': 'HermesPassiv-SecurityHeaders/1.0 (+https://mahope.tools)',
         'Accept': 'text/html,application/xhtml+xml,application/xml,*/*',
       },
-      redirect: 'follow',
     });
 
     // Collect all response headers
@@ -1867,14 +1986,19 @@ async function handleHeaderCheck(request, url, env) {
 
     return new Response(JSON.stringify({
       ok: true,
-      url: response.url,
+      url: finalUrl,
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
-      redirected: response.redirected,
-      finalUrl: response.url,
+      redirected,
+      finalUrl,
     }), { status: 200, headers });
   } catch (err) {
+    // A private hop is the visitor's address, not our outage — 400 like every
+    // other guard rejection, so the page can say what actually happened.
+    if (err.privateTarget || err.tooManyHops) {
+      return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 400, headers });
+    }
     return new Response(JSON.stringify({
       ok: false,
       error: err.message || 'Failed to fetch URL',
@@ -2322,17 +2446,39 @@ function cscScoreLabel(s) {
 }
 
 async function cscFetch(urlStr, timeoutMs) {
+  // Målt 30/9 af review: denne henter kaldersstyrede URL'er (compliance-scan
+  // går videre til op til 12 sider på det samme websted) og fulgte redirects
+  // uden at se dem. Et offentligt mål der 302er ind i 169.254.169.254 er derfor
+  // det samme som at skrive adressen direkte — så værnet på *målet* alene er
+  // ikke nok. Kæden gennemgås manuelt, og hvert hop prøves.
+  let parsed;
+  try { parsed = new URL(urlStr); } catch { return { ok: false, error: 'Invalid URL' }; }
+  if (!targetIsPublic(parsed)) return { ok: false, error: 'That host cannot be scanned' };
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const resp = await fetch(urlStr, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'ComplianceSiteCheck/2.0 (+https://mahope.tools)',
-        'Accept': 'text/html,application/xhtml+xml,*/*',
-      },
-      redirect: 'follow',
-    });
+    let resp = null;
+    for (let hop = 0; hop <= 10; hop++) {
+      resp = await fetch(parsed.toString(), {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'ComplianceSiteCheck/2.0 (+https://mahope.tools)',
+          'Accept': 'text/html,application/xhtml+xml,*/*',
+        },
+        redirect: 'manual',
+      });
+      const location = resp.headers.get('location');
+      if (resp.status >= 300 && resp.status < 400 && resp.status !== 304 && location) {
+        let next;
+        try { next = new URL(location, parsed); } catch { break; }
+        if (!targetIsPublic(next)) return { ok: false, error: 'That redirect cannot be scanned' };
+        parsed = next;
+        continue;
+      }
+      break;
+    }
+    if (!resp) return { ok: false, error: 'No response' };
     clearTimeout(timer);
     const text = await resp.text();
     // Cap HTML size to keep memory bounded on Workers
@@ -2788,7 +2934,7 @@ async function handleBugbottleDemo(request, url, env) {
  * URL Inspector — fetch URL, trace redirect chain, return headers
  * GET /api/url-inspect?url=https://example.com
  */
-async function handleUrlInspect(request, url) {
+async function handleUrlInspect(request, url, env) {
   const corsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, OPTIONS',
@@ -2806,8 +2952,18 @@ async function handleUrlInspect(request, url) {
   if (!targetUrlParam) {
     return new Response(JSON.stringify({ error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
   }
-  try { new URL(targetUrlParam); } catch (_) {
+  let target;
+  try {
+    target = new URL(targetUrlParam);
+  } catch (_) {
     return new Response(JSON.stringify({ error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
+  }
+  // The route is open (no license) and fetches a caller-chosen URL, so it needs
+  // the same guard as /scan-proxy and /api/report. It is guarded on *every*
+  // redirect hop too, not just the first: a public URL that 302s to
+  // http://169.254.169.254/ is the same SSRF with one extra step.
+  if (!targetIsPublic(target)) {
+    return new Response(JSON.stringify({ error: 'That host cannot be inspected. Only public websites can be inspected — local and private network addresses are not reachable from here.' }), { status: 400, headers: corsHeaders });
   }
 
   const redirects = [];
@@ -2840,13 +2996,23 @@ async function handleUrlInspect(request, url) {
         location: location,
         headers: hopHeaders,
       });
+      let next;
       try {
-        currentUrl = new URL(location, currentUrl).href;
+        next = new URL(location, currentUrl);
       } catch (_) {
         return new Response(JSON.stringify({ error: 'Invalid redirect location', redirects, finalUrl: currentUrl }), {
           status: 200, headers: corsHeaders,
         });
       }
+      // Every hop, not only the first: a public URL that redirects into
+      // 169.254.169.254 is the same SSRF one step later. The chain collected so
+      // far is returned so the visitor can see where it stopped.
+      if (!targetIsPublic(next)) {
+        return new Response(JSON.stringify({ error: 'That redirect cannot be inspected — it points at a local or private network address.', redirects, finalUrl: currentUrl }), {
+          status: 400, headers: corsHeaders,
+        });
+      }
+      currentUrl = next.href;
     } else {
       finalResponse = {
         url: currentUrl,

@@ -359,7 +359,7 @@
             if (r.ok && j && j.ok) return j;
             var err = new Error((j && j.error) || ('Server replied with ' + r.status));
             err.status = r.status;
-            err.transient = !j || r.status === 429 || r.status >= 500;
+            err.transient = !j || r.status >= 500;
             throw err;
           });
         }).catch(function (err) {

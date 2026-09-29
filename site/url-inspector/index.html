@@ -187,7 +187,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
   // Cloudflare replies to a crashed worker with an HTML error page — so the old
   // `res.json()` threw and the catch reported "Network error: Unexpected token
   // '<'", blaming the visitor's Wi-Fi and giving up on the first blip. The
-  // status is read first, a 5xx or 429 is retried, and only a real 4xx is
+  // status is read first, a 5xx is retried, and only a real 4xx is
   // final.
   const INSPECT_MAX_TRIES = 3;
   const SERVER_BUSY = 'Our inspection server is temporarily unavailable. Please try again in a moment.';
@@ -211,7 +211,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     err.status = res.status;
     // A missing body was not written by us, so it is transient whatever
     // status the edge reported.
-    err.transient = !data || res.status === 429 || res.status >= 500;
+    err.transient = !data || res.status >= 500;
     throw err;
   }
 
