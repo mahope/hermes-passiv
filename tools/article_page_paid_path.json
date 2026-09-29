@@ -1,0 +1,6 @@
+{
+  "note": "Ruter der IKKE er artikler, men har målt trafik, ligger på et udgivet domæne og ingen synlig købsknap. Forsiderne er undtaget med vilje, fordi de er domænernes hovedsider og tælles i check_stripe_ctas.py i stedet. Klassen måler de læsere porten ellers ikke ser: målt 30/9 ligger 461 af 505 besøg på to forsider (se check_article_paid_path.py, dom 6 og page_rows). Listen er en ratchet: hver linje er en sides begrundelse for at have læsere uden en købsknap, og den skal fjernes når siden får en knap — listen må kun krympe. Filen skrives med en begrundelse pr. rute, aldrig af --write.",
+  "source": "python3 tools/check_article_paid_path.py",
+  "measured": "2026-09-30",
+  "acknowledged": []
+}

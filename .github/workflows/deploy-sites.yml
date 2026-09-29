@@ -45,6 +45,13 @@ on:
       # indirekte købsvej og ingen købsknap. Samme grund som linjen ovenfor —
       # uden den springer en push, der kun skriver en begrundelse, gaten over.
       - 'tools/article_click_no_button.json'
+      # Dom 6 i samme gatestræk: listen over ruter uden for artiklerne der har
+      # læsere, et udgivet domæne og ingen købsknap. Samme grund som linjen
+      # ovenfor — uden den springer en push, der kun skriver en begrundelse,
+      # gaten over. `route_inventory.json` skal også med: dom 6 måler de
+      # ruter der står der, så en ændring i inventaret skal kunne rødme.
+      - 'tools/article_page_paid_path.json'
+      - 'tools/route_inventory.json'
       - 'tools/check_article_paid_path.py'
       - 'tools/make_blog_da_mirrors_461.py'
       - 'tools/quality_gate.py'

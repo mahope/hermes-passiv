@@ -136,6 +136,7 @@ INVENTORY = ROOT / "tools" / "route_inventory.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "deploy-sites.yml"
 PUBLISHED = ROOT / "tools" / "article_paid_path_published.json"
 CLICK_NO_BUTTON = ROOT / "tools" / "article_click_no_button.json"
+PAGE_NO_BUTTON = ROOT / "tools" / "article_page_paid_path.json"
 
 # Punkt 1 og 2 ovenfor. Målt: 69 artikler linker til `/` og 32 til `/da/` fra
 # hele dokumentet, og begge er købssider i katalogens `offers`, fordi
@@ -405,42 +406,64 @@ def deployed_domains(workflow: Path = WORKFLOW) -> set[str]:
     return set(RE_MATRIX_DOMAIN.findall(workflow.read_text(encoding="utf-8")))
 
 
-def route_domains(inventory: dict) -> dict[str, str]:
-    """Rute → domæne, fra `tools/route_inventory.json`.
+def route_domain_map(inventory: dict) -> dict[str, set[str]]:
+    """Rute → **alle** domæner der serverer den, fra `route_inventory.json`.
 
     Ruterne renses for bagvendt skråstreg, fordi inventaret er skrevet med
     både former: målt på cleancopy.tools står `'/'` og `'/activate/'`, mens
     bugbottle.dev har `'/blog/bug-reports-in-ci-pipeline'` uden skråstreg. Uden
     rensningen ville en artikel kunne miste sit domæne på en tegnform, og
     porten ville så *ikke* flåse den — den fejl der ligner grønt.
+
+    **Målt 30/9: to ruter er delte af alle fire domæner.** `/` og `/da/`
+    står i hvert af inventaret fire domæner — og de to bærer **461 af de 505**
+    målte besøg, altså 91 % af al trafik porten kender. Den gamle
+    `route_domains()` var en dict-forståelse, så den gemte fire domæner bag
+    *det sidste i rækkefølgen* (`mahope.tools`) uden at sige det. I dag er
+    valget heldigtvis rigtigt, fordi `mahope.tools` står sidst i inventaret og
+    er udgivet — men det er ikke en egenskab ved porten, det er en egenskab ved
+    rækkefølgen i en JSON-fil. Den dag Mads flytter `bugbottle.dev` ned i
+    inventaret, ville `/` og `/da/` blive `publiceret=False`, og dom 4s flås
+    ville kræve en begrundelse for forsiden af hele mahope.tools.
+
+    Derfor er domænet her et **sæt**, og det er `publiceret` der afgør
+    publicering: mindst ét af domænerne skal være udgivet. Se `rows()`.
     """
-    return {
-        route.rstrip("/") or "/": domain
-        for domain, routes in inventory.items()
-        for route in routes
-    }
+    out: dict[str, set[str]] = {}
+    for domain, routes in inventory.items():
+        for route in routes:
+            out.setdefault(route.rstrip("/") or "/", set()).add(domain)
+    return out
+
+
+def domain_label(domains) -> str:
+    """Domænesæt → tekst til udskriften. `a+b` betyder at ruten er delt."""
+    return "+".join(sorted(domains)) if domains else ""
 
 
 def unpublished_routes(root: Path = SITE, inventory: dict | None = None,
                        workflow: Path = WORKFLOW) -> dict[str, str]:
-    """Artikler hvis domæne ikke står i deploy-matricen. Rute → domæne.
+    """Artikler hvis domæne ikke står i deploy-matricen. Rute → domæneliste.
 
     Målt 30/9 før denne funktion: `blog/bug-reports-in-ci-pipeline.html`,
     `da/blog/bugrapporter-i-ci-pipeline.html`,
     `da/blog/tilfoej-fejlrapport-formular-hjemmeside.html` — de tre artikler
     på `bugbottle.dev` i korpus, alle med 404 på de live domæner.
+
+    En rute er **udpubliceret** først når *intet* af dens domæner er udgivet,
+    fordi en delt rute findes på hvert af dem. Se `route_domain_map()`.
     """
     inventory = inventory if inventory is not None else json.loads(
         INVENTORY.read_text(encoding="utf-8")
     )
     live = deployed_domains(workflow)
-    dom = route_domains(inventory)
+    dom = route_domain_map(inventory)
     out: dict[str, str] = {}
     for path in article_files(root):
         route = route_of(root, path)
-        domain = dom.get(route)
-        if domain and domain not in live:
-            out[route] = domain
+        domains = dom.get(route)
+        if domains and not (domains & live):
+            out[route] = domain_label(domains)
     return out
 
 
@@ -448,14 +471,14 @@ def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
     catalog = catalog if catalog is not None else json.loads(CATALOG.read_text(encoding="utf-8"))
     offers = offer_routes(catalog)
     inbound = inbound_counts(root)
-    visits = traffic()
-    dom = route_domains(json.loads(INVENTORY.read_text(encoding="utf-8")))
+    visits = _visits_by_route(traffic())
+    dom = route_domain_map(json.loads(INVENTORY.read_text(encoding="utf-8")))
     live = deployed_domains()
     out = []
     for path in article_files(root):
         route = route_of(root, path)
         paid = paid_links(root, path, offers)
-        domain = dom.get(route)
+        domains = dom.get(route)
         out.append({
             "file": path.relative_to(root).as_posix(),
             "route": route,
@@ -463,14 +486,215 @@ def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
             "links": len(inbound.get(route, ())),
             "paid": paid,
             "knapper": len(knap_links(root, path)),
-            "domain": domain,
+            "domains": sorted(domains) if domains else [],
+            "domain": domain_label(domains),
+            "delt": bool(domains) and len(domains) > 1,
             # `None` = vi ved ikke hvor den ligger. Det er *ikke* det samme som
             # udgivet, og porten skelner: en rute uden domæne skal findes i
             # inventaret, ellers er læsningen af filen forældet.
-            "publiceret": bool(domain and domain in live),
+            #
+            # `publiceret` er **mindst ét** udgivet domæne, ikke domænet der
+            # kom sidst i inventaret. Se `route_domain_map()` for målingen:
+            # `/` og `/da/` er delte af alle fire, så en rute der findes på et
+            # udgivet og et udpubliceret domæne *er* publiceret. `delt` og
+            # `publiceret_alle` siger det samme uden at skjule det.
+            "publiceret": bool(domains and domains & live),
+            "publiceret_alle": bool(domains) and domains <= live,
         })
     out.sort(key=lambda r: (-(r["visits"] or 0), -r["links"], r["route"]))
     return out
+
+
+def _visits_by_route(visits: dict[str, int]) -> dict[str, int]:
+    """Trafiknøgler i én form, så et opslag ikke kan ramme en skråstreg forbi.
+
+    **Målt 30/9, fundet af selftestens egen kontrol:** rapportens `top_paths`
+    skriver `/da/` **med** bagvendt skråstreg, mens `route_inventory.json`
+    skriver `/da` **uden**. Et dict-opslag på den normaliserede nøgle gav derfor
+    `None` for den danske forside — 31 besøg, den næststørste enkelt-rute i
+    hele korpus — og ruten forsvandt fra målingen af ikke-artikler. Den så ud
+    som en forside der ikke findes, hvilket er præcis det `CHROME_ROUTES`
+    undtagelsen skjuler.
+
+    Begge former lægges ind, så det er ligegyldigt hvilken form kilden bruger.
+    Den med flest besøg vinder, så en rapport der skriver ruten to gange ikke
+    kan få tallet til at falde.
+    """
+    out: dict[str, int] = {}
+    for path, count in visits.items():
+        key = path.rstrip("/") or "/"
+        out[key] = max(out.get(key, 0), count)
+        # Begge former skal kunne slås op. Uden den anden linje forsvandt
+        # `/da/`-besøgene igen, fordi inventaret skriver ruten uden skråstreg.
+        out[path] = max(out.get(path, 0), count)
+    return out
+
+
+def _chrome(route: str) -> bool:
+    """Er ruten en forside?
+
+    `CHROME_ROUTES` er skrevet som læseren har brugt den: `/da/` **med**
+    skråstreg. Inventaret skriver samme rute **uden**, så et råt
+    `route in CHROME_ROUTES` ville klassificere den danske forside som en
+    helt almindelig side — og dom 6 ville dømme den. Målt 30/9: det gav
+    `NY SIDE-UDEN-KNAP: /da … 31 målte besøg` på en rute porten netop har
+    undtaget med vilje.
+    """
+    return (route.rstrip("/") or "/") in {r.rstrip("/") or "/" for r in CHROME_ROUTES}
+
+
+def page_rows(root: Path = SITE, catalog: dict | None = None,
+              inventory: dict | None = None) -> list[dict]:
+    """Målingen af det porten *ikke* så: ruter der ikke er artikler.
+
+    Portens øvrige funktioner læser `site/blog/**` og `site/da/blog/**`.
+    Målt 30/9 er de **tre mest besøgte ruter i hele korpus ikke artikler**:
+    `/` **430**, `/da/` **31** og `/clean-copy-tool` **6** mod `/blog/…-vscode`
+    **8** som bedste artikel — altså **475 af 505** målte besøg lå uden for
+    portens ramme. Ni iterationer skrev "målte besøg" i planen om de 8, og
+    ingen af dem nævnte at 461 lå på to sider porten med vilje ser bort fra
+    (`CHROME_ROUTES`, fordi de er domænernes forside).
+
+    Derfor er de to slags **målt og udskrevet, ikke skjult**:
+    `chrome` er forsiderne, `page` er alt andet. En rute i inventaret uden
+    artikel-fil er ikke en fejl — den er et værktøj, en landingsside, en
+    `/scan`-side eller en 404, og den har brug for en købsknap lige så meget
+    som en artikel gør det. Ruter der står i inventaret men ikke findes som
+    fil i `site/` får `file: None` og tælles med, fordi de serveres alligevel.
+
+    Kun ruter med **målt** trafik er med. Det er samme krav som dom 5, og af
+    samme grund: porten skal ramme læsere, ikke bare sider.
+    """
+    catalog = catalog if catalog is not None else json.loads(CATALOG.read_text(encoding="utf-8"))
+    inventory = inventory if inventory is not None else json.loads(
+        INVENTORY.read_text(encoding="utf-8")
+    )
+    dom = route_domain_map(inventory)
+    live = deployed_domains()
+    articles = {route_of(root, p) for p in article_files(root)}
+    inbound = inbound_counts(root)
+    visits = _visits_by_route(traffic())
+    out = []
+    for route, domains in dom.items():
+        if route in articles:
+            continue
+        visits_here = visits.get(route)
+        if not visits_here:
+            continue
+        delt = len(domains) > 1
+        # En delt rute er **flere forskellige sider**. Målt 30/9: `/` er
+        # `site/clean-copy.html` på cleancopy.tools, `site/deskuptime/index.html`
+        # på deskuptime.com, `site/index.html` på mahope.tools og
+        # `site/bugbottle.html` på bugbottle.dev — fire sider med fire forskellige
+        # købsknapper, som ét trafiktal summerer. `_page_file()` ville finde *én*
+        # af dem og porten ville skrive dens knaptal som om det gjaldt ruten.
+        # Derfor måles filen og knapperne **kun** når ruten har ét domæne; ellers
+        # er de `None`, og det siges i udskriften.
+        path = None if delt else _page_file(root, route)
+        out.append({
+            "route": route,
+            "file": path.relative_to(root).as_posix() if path else None,
+            "visits": visits_here,
+            "links": len(inbound.get(route, ())),
+            "knapper": len(knap_links(root, path)) if path else None,
+            "chrome": _chrome(route),
+            "domains": sorted(domains),
+            "domain": domain_label(domains),
+            "delt": delt,
+            "publiceret": bool(domains & live),
+            "publiceret_alle": domains <= live,
+        })
+    out.sort(key=lambda r: (-r["visits"], r["route"]))
+    return out
+
+
+def _page_file(root: Path, route: str) -> Path | None:
+    """Filen bag en rute. `index.html` er mappens rute — samme som `route_of`."""
+    for cand in (root / f"{route.lstrip('/')}.html",
+                 root / route.lstrip("/") / "index.html"):
+        if cand.is_file():
+            return cand
+    return None
+
+
+def page_no_button(table: list[dict] | None = None) -> list[dict]:
+    """Dom 6: en ikke-artikel med læsere på en udgivet rute uden købsknap.
+
+    Samme fire krav som dom 5, minus `paid`: en ikke-artikel har ingen
+    artikels `indirekte vej`-liste at læse, så kravet er at der ikke står *nogen*
+    synlig købsknap. Forsiderne er undtaget med vilje — de er domænernes
+    hovedsider og har en helt anden rolle end en værktøjside, så at dømme dem
+    ville være at tælle den samme købsknap to gange.
+
+    Målt 30/9 på de 296 ruter i inventaret: **3** har målte besøg, **2** er
+    chrome, og den tredje — `/clean-copy-tool` — har **2** købsknapper
+    (abonnement + lifetime). Klassen er altså **0**, målt på `main`.
+    """
+    table = table if table is not None else page_rows()
+    return [r for r in table if not r["chrome"] and r["publiceret"]
+            and not r["knapper"]]
+
+
+def page_no_button_problems(table: list[dict] | None = None,
+                            doc: dict | None = None,
+                            meta: dict | None = None) -> list[str]:
+    """Dom 6, begrundelses-flås over `page_no_button()`.
+
+    Samme fire domme som dom 5, af samme grund: en port der konstant er rød
+    bliver slåt fra. Forsiderne er undtaget, og beskeden siger hvor mange besøg
+    de bærer, fordi ellers er det uforståeligt at porten springer over dem.
+    """
+    table = table if table is not None else page_rows()
+    doc = doc if doc is not None else (
+        json.loads(PAGE_NO_BUTTON.read_text(encoding="utf-8"))
+        if PAGE_NO_BUTTON.is_file() else {"acknowledged": []}
+    )
+    entries = doc.get("acknowledged", [])
+    known = {e["route"]: e for e in entries if isinstance(e.get("route"), str)}
+    measured = {r["route"]: r for r in page_no_button(table)}
+    problems: list[str] = []
+    chrome = sum(r["visits"] for r in table if r["chrome"])
+
+    for route in sorted(set(measured) - set(known)):
+        row = measured[route]
+        problems.append(
+            f"NY SIDE-UDEN-KNAP: {route} har {row['visits']} målte besøg "
+            f"({traffic_note(meta if meta is not None else traffic_source()[1])}), "
+            f"ligger på {row['domain']} og er ikke en artikel, men har ingen "
+            f"købsknap. Sæt en knap på siden, eller tilføj en linje med en "
+            f"grund i tools/article_page_paid_path.json."
+        )
+    for route, entry in sorted(known.items()):
+        if not str(entry.get("reason") or "").strip():
+            problems.append(
+                f"NY SIDE-UDEN-KNAP: {route} står i "
+                f"tools/article_page_paid_path.json, men `reason` er tom. En "
+                f"undtagelse uden grund er en måde at slå reglen fra."
+            )
+        elif route not in measured:
+            row = next((r for r in table if r["route"] == route), None)
+            if row is None:
+                why = "ruten har ikke længere målte besøg i rapporten"
+            elif row["chrome"]:
+                why = "den er en forside (chrome) og hører ikke i denne klasse"
+            elif row["knapper"]:
+                why = f"den har nu {row['knapper']} købsknap(per)"
+            else:
+                why = f"ruten er ikke publiceret ({row['domain']})"
+            problems.append(
+                f"DØD LINJE i listen: {route} er ikke længere i den målte "
+                f"klasse — {why}. Fjern den fra "
+                f"tools/article_page_paid_path.json — listen må kun krympe."
+            )
+    if len(known) != len(entries):
+        problems.append("side-uden-knap-listen har dubletter; den er en mængde.")
+    if problems and chrome:
+        problems.append(
+            f"note: dom 6 ser {chrome} besøg på forsiderne og dømmer dem ikke. "
+            f"Forsider er domænernes hovedsider og tælles i "
+            f"`check_stripe_ctas.py` i stedet."
+        )
+    return problems
 
 
 def blind_now(root: Path = SITE, catalog: dict | None = None) -> list[str]:
@@ -503,6 +727,10 @@ def judge(root: Path, catalog: dict) -> list[str]:
     # Dom 5, klik uden knap. Samme grund: målingen er nu 0, så porten skal være
     # grøn på en *begrundet* måling, ikke på en tør.
     problems.extend(click_no_button_problems(rows(root, catalog)))
+    # Dom 6, ikke-artikler. Målingen er også 0, men af en anden grund: de tre
+    # ruter uden for artiklerne med målt trafik er to forsider og én
+    # værktøjside med to købsknapper. Se `page_rows()`.
+    problems.extend(page_no_button_problems())
     return problems
 
 
@@ -732,6 +960,31 @@ def _print_ranking(table: list[dict], limit: int, meta: dict | None = None) -> N
               f"route_inventory.json, så publiceringen kan ikke vurderes:")
         for row in unknown[:limit]:
             print(f"{'':>6} {row['links']:>5}  {row['file']:<52} {row['route']}")
+
+    # Dom 6, det porten ellers ikke ser. Målt 30/9 ligger **461 af 505** målte
+    # besøg på to forsider, og porten så dem ikke — de er `CHROME_ROUTES`, så
+    # de var undtaget med vilje. Uden denne blokke er det umuligt at se at 91 %
+    # af trafikken er uden for portens synsfelt, og de ni iterationer der skrev
+    # "målte besøg" om en artikel med 8 besøg havde ingen grund til at vælge den.
+    sider = page_rows()
+    chrome = [r for r in sider if r["chrome"]]
+    andre = [r for r in sider if not r["chrome"]]
+    delt = [r for r in sider if r["delt"]]
+    klasse6 = page_no_button(sider)
+    print(f"uden for artiklerne: {len(sider)} ruter har målte besøg · "
+          f"{sum(r['visits'] for r in chrome)} på {len(chrome)} forside(r) "
+          f"(dømmes ikke) · {sum(r['visits'] for r in andre)} på {len(andre)} "
+          f"andre ruter · {len(delt)} delt af flere domæner · "
+          f"{len(klasse6)} uden købsknap (dømmes)")
+    for row in (chrome + andre)[:limit]:
+        if row["knapper"] is None:
+            state = (f"fordelt på {len(row['domains'])} domæner — porten ved "
+                     f"ikke hvilken side besøgene landede på")
+        else:
+            state = "forside" if row["chrome"] else f"{row['knapper']} knap(per)"
+        fil = row["file"] or f"(hver af {len(row['domains'])} domæner sin side)"
+        print(f"{row['visits']:>6} {row['links']:>5}  {fil:<52} "
+              f"{row['domain']} — {state}")
 
 
 def _self_test() -> int:
@@ -984,13 +1237,13 @@ def _self_test() -> int:
     #      `/blog` — og spørger de to funktioner som rækken bygges af. Det er
     #      præcis den fejl der lå bag den gamle række: en hub-side hvis rute
     #      ikke kan findes, så den ligner ubekendt.
-    no_blog_dom = route_domains({d: [r for r in rs if r.rstrip("/") != "/blog"]
-                                 for d, rs in inv.items()})
+    no_blog_dom = route_domain_map({d: [r for r in rs if r.rstrip("/") != "/blog"]
+                                    for d, rs in inv.items()})
     hub_route = route_of(SITE, SITE / "blog" / "index.html")
     check("inventar uden /blog får hub-ruten til at miste domænet",
-          hub_route == "/blog" and hub_route in route_domains(inv)
+          hub_route == "/blog" and hub_route in route_domain_map(inv)
           and hub_route not in no_blog_dom,
-          f"route={hub_route} i inventaret={hub_route in route_domains(inv)} "
+          f"route={hub_route} i inventaret={hub_route in route_domain_map(inv)} "
           f"i mutant={hub_route in no_blog_dom}")
     check("`ukendt domæne`-rækken kan blive fyldt igen",
           hub_route not in no_blog_dom,
@@ -1204,6 +1457,150 @@ def _self_test() -> int:
     check("den røde linje i dom 5 nævner kildens alder",
           any("2026-38" in p and "6 dage gammel" in p for p in with_src),
           with_src[0] if with_src else "ingen linje")
+
+    # 14. Delte ruter. Målt 30/9 på `main`: `/` og `/da/` står i inventaret
+    #     under *alle fire* domæner, og de bærer 461 af 505 målte besøg. Den
+    #     gamle `route_domains()` var en dict-forståelse, så den gemte fire
+    #     domæner bag det sidste i rækkefølgen. Her dømmes læserens evne med et
+    #     syntetisk inventar, fordi fejlen *kun* kan ses når der findes en delt
+    #     rute — og fordi den i dag er usynlig netop fordi rækkefølgen er
+    #     heldig. (15) dømmer mutationen af den gamle læsning.
+    live_now = deployed_domains()
+    delt_inv = {"mahope.tools": ["/"], "cleancopy.tools": ["/"],
+                "bugbottle.dev": ["/"], "deskuptime.com": ["/"]}
+    delt_map = route_domain_map(delt_inv)
+    check("en delt rute bærer alle sine domæner, ikke det sidste",
+          delt_map.get("/") == {"mahope.tools", "cleancopy.tools",
+                                "bugbottle.dev", "deskuptime.com"},
+          f"{sorted(delt_map.get('/', ()))}")
+    check("delt-udskriften siger at ruten er delt",
+          domain_label(delt_map["/"]).count("+") == 3,
+          domain_label(delt_map["/"]))
+    check("en delt rute er publiceret når ét af domænerne er udgivet",
+          bool(delt_map["/"] & live_now), f"udgivet={sorted(live_now)}")
+    check("en delt rute er publiceret på alle domæner kun hvis de alle er",
+          not (delt_map["/"] <= live_now), f"{sorted(delt_map['/'])}")
+
+    # 14a. Samme spørgsmål stillet til `unpublished_routes()`: en delt rute må
+    #      *aldrig* ende i listen, fordi den findes på mindst ét live domæne.
+    kun_dark = route_domain_map({"mahope.tools": ["/x"], "bugbottle.dev": ["/x"]})
+    check("en delt rute med ét live domæne regnes som publiceret",
+          bool(kun_dark["/x"] & live_now), f"live={sorted(kun_dark['/x'] & live_now)}")
+    kun_mørk = route_domain_map({"bugbottle.dev": ["/y"]})
+    check("en rute på kun udpublicerede domæner er udpubliceret",
+          not (kun_mørk["/y"] & live_now), f"live={sorted(kun_mørk['/y'] & live_now)}")
+
+    # 15. Mutationen af den gamle læsning, i samme diff som kontrollerne der
+    #     dømmer den. Uden denne linje er kontrol 14 grøn fordi `route_domains`
+    #     ikke findes mere, og det er præcis den fejl denne portfamilie har
+    #     dømt ni gange: en kontrol der ikke kan fejle er en grøn cirkel.
+    #     Beviset er at svaret *afhænger af rækkefølgen*: samme inventar,
+    #     to rækkefølger, to forskellige domæne for forsiden.
+    gammel_a = {r.rstrip("/") or "/": d for d, rs in delt_inv.items() for r in rs}
+    delt_inv_by = {d: delt_inv[d] for d in ["bugbottle.dev", "cleancopy.tools",
+                                            "deskuptime.com", "mahope.tools"]}
+    gammel_b = {r.rstrip("/") or "/": d for d, rs in delt_inv_by.items() for r in rs}
+    check("mutationen: den gamle dict-læsning gør forsiden til ét domæne",
+          isinstance(gammel_a["/"], str) and gammel_a["/"] != gammel_b["/"],
+          f"rækkefølge A={gammel_a['/']} · rækkefølge B={gammel_b['/']}")
+
+    # 16. Dom 6, ikke-artikler. Formen *er* målt i dag — `page_rows()` giver tre
+    #     ruter, to forsider og `/clean-copy-tool` med to købsknapper — så
+    #     klassen er 0 af en målt grund og ikke fordi porten ingenting ser.
+    sider = page_rows()
+    chrome_rows = [r for r in sider if r["chrome"]]
+    andre = [r for r in sider if not r["chrome"]]
+    check("ikke-artiklerne måles: fire ruter med trafik, hvoraf to forsider",
+          len(sider) == 4 and len(chrome_rows) == 2
+          and {r["route"] for r in andre} == {"/bugbottle-demo", "/clean-copy-tool"},
+          f"{len(sider)} ruter · {len(chrome_rows)} forside(r) · "
+          f"{sorted(r['route'] for r in andre)}")
+    check("forsiderne bærer størsteparten af den målte trafik",
+          sum(r["visits"] for r in chrome_rows) == 461,
+          f"{sum(r['visits'] for r in chrome_rows)} besøg")
+    check("flåsen er grøn på det målte tilstand (klassen er 0)",
+          not page_no_button_problems(sider),
+          f"{len(page_no_button_problems(sider))} problem(er)")
+    check("klassen er 0 af to målte grunde: knap, eller domænet er ikke udgivet",
+          {r["route"]: (r["knapper"], r["publiceret"]) for r in andre}
+          == {"/clean-copy-tool": (2, True), "/bugbottle-demo": (0, False)},
+          f"{[(r['route'], r['knapper'], r['publiceret']) for r in andre]}")
+
+    # 16a. Forsiderne er undtaget med vilje, og de skal stadig være
+    #      genkendelige efter at ruterne er skrevet uden skråstreg. Uden denne
+    #      kontrol dømte dom 6 den danske forside — målt 30/9 som
+    #      `NY SIDE-UDEN-KNAP: /da … 31 målte besøg`.
+    check("forsidegenkendelsen overlever skråstregformen",
+          _chrome("/da/") and _chrome("/") and not _chrome("/blog/x"),
+          f"/da/={_chrome('/da/')} /={_chrome('/')} /blog/x={_chrome('/blog/x')}")
+
+    # 16b. En delt rute må ikke få *én* sides knaptal. Målt 30/9: `/` er fire
+    #      forskellige filer — `site/clean-copy.html` (2 købsknapper),
+    #      `site/deskuptime/index.html`, `site/index.html` (0 købsknapper) og
+    #      `site/bugbottle.html` — og ét trafiktal summerer dem. Uden `None`
+    #      skrev porten mahope.tools' forside som *siden* bag de 430 besøg.
+    check("en delt rute måler ingen knapper, fordi den er flere sider",
+          all(r["knapper"] is None and r["file"] is None
+              for r in sider if r["delt"]),
+          f"{[(r['route'], r['knapper']) for r in sider if r['delt']]}")
+
+    # 16c. Den syntetiske række: en ikke-artikel med læsere på en udgivet rute
+    #      uden købsknap skal dømmes, og den røde linje skal skrive kilden —
+    #      samme to krav som dom 5.
+    synth6 = [dict(andre[0], route="/scan", file="scan.html", chrome=False,
+                   knapper=0, visits=17, domains=["mahope.tools"],
+                   domain="mahope.tools", publiceret=True)]
+    check("en ikke-artikel med læsere og ingen knap er i klassen",
+          [r["route"] for r in page_no_button(synth6)] == ["/scan"],
+          f"{[r['route'] for r in page_no_button(synth6)]}")
+    check("sætter læseren en knap på, forsvinder rækken af klassen",
+          not page_no_button([dict(synth6[0], knapper=1)]),
+          f"klasse={len(page_no_button([dict(synth6[0], knapper=1)]))}")
+    linjer6 = page_no_button_problems(synth6, {"acknowledged": []}, real_meta)
+    check("den røde linje i dom 6 nævner ruten, besøgene og kildens alder",
+          any("/scan" in p and "17 målte besøg" in p and "dage gammel" in p
+              for p in linjer6),
+          linjer6[0] if linjer6 else "ingen linje")
+    check("dom 6: tom begrundelse giver rødt",
+          any("`reason` er tom" in p for p in page_no_button_problems(
+              [], {"acknowledged": [{"route": "/x", "reason": "  "}]})),
+          "tom grund")
+    check("dom 6: en linje uden for klassen giver rødt med årsagen i beskeden",
+          any("DØD LINJE" in p and "ikke længere målte besøg" in p
+              for p in page_no_button_problems(
+                  sider, {"acknowledged": [{"route": "/blog/ukendt",
+                                           "reason": "test"}]})),
+          "død linje")
+    check("dom 6: dubletter giver rødt",
+          any("dubletter" in p for p in page_no_button_problems(
+              [], {"acknowledged": [{"route": "/x", "reason": "a"},
+                                    {"route": "/x", "reason": "b"}]})),
+          "dublet")
+
+    # 16d. En rute i inventaret uden fil i `site/` må ikke få porten til at
+    #      fejle, og den skal *siges* — ellers forsvinder den fra målingen
+    #      uden at nogen ved det. Rækken bruges også til at dømme at
+    #      `page_rows()` tåler en manglende fil, fordi `knap_links()` ellers
+    #      ville læse `None`.
+    fil_løs = [dict(andre[0], file=None, route="/findes-ikke", knapper=0,
+                    publiceret=True, chrome=False)]
+    check("en rute uden fil i site/ måles stadig og siges det",
+          any("/findes-ikke" in p for p in page_no_button_problems(
+              fil_løs, {"acknowledged": []})),
+          f"{len(page_no_button_problems(fil_løs, {'acknowledged': []}))} linje(r)")
+
+    # 16e. PORTFEJL, fundet af kontrol 16 i samme diff som den dømmer den:
+    #      trafiknøglen og inventarnøglen var skrevet i to former. `top_paths`
+    #      skriver `/da/` med skråstreg, `route_inventory.json` skriver `/da`
+    #      uden, så et dict-opslag på den normaliserede nøgle gav `None` — og
+    #      `/da/` forsvandt fra målingen af ikke-artikler. Det er præcis det
+    #      `CHROME_ROUTES`-undtagelsen skjuler: ruten er en forside, så en
+    #      forsvunden forside ser ud som en forside der ikke er der.
+    check("besøg læses på den normaliserede rute, uanset skråstreg i kilden",
+          _visits_by_route({"/da/": 31}).get("/da") == 31
+          and _visits_by_route({"/da": 31}).get("/da") == 31,
+          f"med skråstreg={_visits_by_route({'/da/': 31})} "
+          f"uden={_visits_by_route({'/da': 31})}")
 
     failed = 0
     for name, ok, detail in checks:

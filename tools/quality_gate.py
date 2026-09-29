@@ -897,6 +897,10 @@ STEPS: tuple[Step, ...] = (
             # `article_click_no_button.json` ændres uden at porten nogensinde
             # læste den — samme fejl som de to overførsler over.
             "tools/article_click_no_button.json",
+            # Dom 6s flås, samme grund: uden den kunne
+            # `article_page_paid_path.json` ændres uden at porten læser den.
+            "tools/article_page_paid_path.json",
+            "tools/route_inventory.json",
             "tools/stripe_catalog.json",
             "tools/check_stripe_ctas.py",
             "reports/weekly/*.json",
