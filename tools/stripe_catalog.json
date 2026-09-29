@@ -1263,6 +1263,35 @@
       "requires_text": [
         "Køb DeskUptime Pro — 19 $ én gang"
       ]
+    },
+    {
+      "path": "site/blog/bug-reports-in-ci-pipeline.html",
+      "domain": "bugbottle.dev",
+      "domain_note": "Målt i tools/route_inventory.json: de to CI-artikler ligger på bugbottle.dev, ikke mahope.tools. At skrive mahope.tools her fik porten til at lede efter filen i dist/mahope.tools/, hvor den ikke findes.",
+      "route": "/blog/bug-reports-in-ci-pipeline",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$19",
+        "$10",
+        "$2"
+      ],
+      "prices_note": "$10 og $2 er artiklens egne markedstal i 'What this replaces' ($10-15/month pr. site, $2,000-10,000 pr. audit). $2 er ikke en pris vi sælger til: PRICE_TOKEN i check_stripe_ctas.py er `\\$\\s?\\d[\\d.]*` og læser derfor '$2,000' som '$2'. Feltet er et pr. side-allowlist over de tal porten faktisk læser, ikke en produktprisliste.",
+      "requires_text": [
+        "Buy DeskUptime Pro — $19 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/bugrapporter-i-ci-pipeline.html",
+      "domain": "bugbottle.dev",
+      "route": "/da/blog/bugrapporter-i-ci-pipeline",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$19"
+      ],
+      "prices_note": "Den danske artikel skriver markedstallene i kroner (70-100 kr./md., 15.000-70.000 kr.). Målt med price_tokens(): filen har ingen $-tokens ud over den nye købsknap, så kun $19 står her.",
+      "requires_text": [
+        "Køb DeskUptime Pro — 19 $ én gang"
+      ]
     }
   ],
   "built_offers": [
