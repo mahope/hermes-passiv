@@ -1300,6 +1300,36 @@
       ]
     },
     {
+      "path": "site/blog/open-graph-checker.html",
+      "domain": "mahope.tools",
+      "route": "/blog/open-graph-checker",
+      "lifetime": true,
+      "product": "page-profile-pro",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Buy Page Profile Pro — $19/year",
+        "Buy Page Profile Pro Lifetime — $39 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/open-graph-tjekker-guide.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/open-graph-tjekker-guide",
+      "lifetime": true,
+      "product": "page-profile-pro",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Køb Page Profile Pro — 19 $ pr. år",
+        "Køb Page Profile Pro Lifetime — 39 $ én gang"
+      ]
+    },
+    {
       "path": "site/da/blog/tjek-url-redirect-kaede.html",
       "domain": "mahope.tools",
       "route": "/da/blog/tjek-url-redirect-kaede",

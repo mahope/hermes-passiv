@@ -4,13 +4,10 @@
  "measured": "2026-09-29",
  "blind": [
   "blog/release-integrity-explained.html",
-  "blog/test-your-zip-before-release.html",
   "da/blog/cmp-sammenligning-2026.html",
   "da/blog/faa-besked-naar-hjemmeside-er-nede.html",
-  "da/blog/open-graph-tjekker-guide.html",
   "da/blog/prestashop-tilgaengelighed-eaa.html",
   "da/blog/release-integrity-hvad-er-det.html",
-  "da/blog/test-din-zip-foer-release.html",
   "da/blog/tilgaengelighedsscanner-cli.html"
  ]
 }
