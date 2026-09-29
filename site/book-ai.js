@@ -11,6 +11,54 @@
   var source = 'bookai-' + slug;
   var asked = false;
 
+  // En 5xx er ikke brugerens wifi. Cloudflare svarer en worker der er faldet ned
+  // med sin egen HTML-side, så et blindt `r.json()` kastede, og catch'en skrev
+  // "Network error" for *vores* fejl. Derfor: status læses først, og kun et
+  // rigtigt 4xx er endeligt. Samme mønster som /compliance-ai og de to
+  // scanningsværktøjer.
+  var BOOK_MAX_TRIES = 3;
+  var ASK_BUSY = 'The assistant server is temporarily unavailable. Please try again in a moment.';
+  var ASK_OFFLINE = 'We could not reach the assistant server. Check your connection and try again.';
+  var SAVE_BUSY = 'Saving is temporarily unavailable on our side. Please try again in a moment.';
+  var SAVE_OFFLINE = 'We could not reach the server to save your email. Check your connection and try again.';
+
+  function postJSON(path, payload) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function (e) {
+      // Kaldet kom aldrig frem. Ikke vores servers skyld, men en brudt
+      // forbindelse er stadig værd ét forsøg mere.
+      var err = new Error((e && e.message) || 'connection failed');
+      err.transport = true;
+      err.transient = true;
+      throw err;
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (res.ok && data) return data;
+        var err = new Error((data && data.error) || ('Server replied with ' + res.status));
+        err.status = res.status;
+        // Intet svar at læse er aldrig skrevet af os, uanset status.
+        err.transient = !data || res.status === 429 || res.status >= 500;
+        throw err;
+      });
+    });
+  }
+
+  function askServer(path, payload) {
+    var tries = 0;
+    function attempt() {
+      return postJSON(path, payload).catch(function (err) {
+        if (err.transient && ++tries < BOOK_MAX_TRIES) {
+          return new Promise(function (res) { setTimeout(res, 1200 * tries); }).then(attempt);
+        }
+        throw err;
+      });
+    }
+    return attempt();
+  }
+
   var SUGGESTIONS = {
     'nis2-for-agencies': [
       'Does NIS2 apply to a 5-person agency?',
@@ -99,12 +147,7 @@
       return;
     }
     document.getElementById('baiBtn').disabled = true;
-    fetch('/api/waitlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, source: source })
-    })
-      .then(function (r) { return r.json(); })
+    askServer('/api/waitlist', { email: email, source: source })
       .then(function (data) {
         if (data.ok) track('bookai-lead');
         st.textContent = data.ok
@@ -112,8 +155,11 @@
           : (data.error || 'Something went wrong. Please try again.');
         st.className = 'bai-status' + (data.ok ? '' : ' bai-error');
       })
-      .catch(function () {
-        st.textContent = 'Network error. Please try again.';
+      .catch(function (err) {
+        // En tabt tilmelding er en tabt tilmelding: knappen skal kunne bruges igen.
+        document.getElementById('baiBtn').disabled = false;
+        st.textContent = err.transport ? SAVE_OFFLINE
+          : (err.transient ? SAVE_BUSY : (err.message || 'Something went wrong. Please try again.'));
         st.className = 'bai-status bai-error';
       });
   }
@@ -141,16 +187,12 @@
     log.appendChild(typing);
     log.scrollTop = log.scrollHeight;
 
-    fetch('/api/compliance-ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: q })
-    })
-      .then(function (r) { track('bookai-ask'); return r.json(); })
+    askServer('/api/compliance-ai', { question: q })
       .then(function (data) {
         typing.remove();
         busy = false;
         btn.disabled = false;
+        track('bookai-ask');
         if (data.ok) {
           addMsg(data.answer, 'assistant');
           showLead();
@@ -161,11 +203,12 @@
           status.className = 'bai-status bai-error';
         }
       })
-      .catch(function () {
+      .catch(function (err) {
         typing.remove();
         busy = false;
         btn.disabled = false;
-        status.textContent = 'Network error. Please try again.';
+        status.textContent = err.transport ? ASK_OFFLINE
+          : (err.transient ? ASK_BUSY : (err.message || 'Something went wrong. Please try again.'));
         status.className = 'bai-status bai-error';
       });
   }

@@ -341,22 +341,45 @@
     function line(html) { return html + '\n'; }
     function mark(ok, warn) { return ok ? '<span class="pass">✅</span>' : (warn ? '<span class="warn">⚠️</span>' : '<span class="fail">❌</span>'); }
 
+    // Vores egen 5xx er ikke brugerens wifi: Cloudflare svarer en worker der er
+    // faldet ned med sin egen HTML-side, så et blindt `r.json()` kastede, og
+    // brugeren fik "Kunne ikke nå profileringstjenesten". Status læses derfor
+    // først, forbigående svar genkaldes, og kun et rigtigt 4xx er endeligt.
+    var PROFILE_MAX_TRIES = 3;
+    function fetchProfile(target) {
+      var tries = 0;
+      function attempt() {
+        return fetch('/api/profile?url=' + encodeURIComponent(target)).catch(function (e) {
+          var err = new Error((e && e.message) || 'connection failed');
+          err.transport = true;
+          err.transient = true;
+          throw err;
+        }).then(function (r) {
+          return r.json().catch(function () { return null; }).then(function (j) {
+            if (r.ok && j && j.ok) return j;
+            var err = new Error((j && j.error) || ('Server replied with ' + r.status));
+            err.status = r.status;
+            err.transient = !j || r.status === 429 || r.status >= 500;
+            throw err;
+          });
+        }).catch(function (err) {
+          if (err.transient && ++tries < PROFILE_MAX_TRIES) {
+            return new Promise(function (res) { setTimeout(res, 1200 * tries); }).then(attempt);
+          }
+          throw err;
+        });
+      }
+      return attempt();
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var target = input.value.trim();
       if (!target) return;
       status.textContent = 'Henter og analyserer ' + target + ' …';
       result.hidden = true;
-      fetch('/api/profile?url=' + encodeURIComponent(target))
-        .then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
-        .then(function (res) {
-          var j = res.j;
-          if (!j.ok) {
-            status.textContent = '';
-            result.hidden = false;
-            result.innerHTML = line('<span class="fail">Fejl: </span>' + esc(j.error || 'Forespørgslen fejlede (' + res.s + ')'));
-            return;
-          }
+      fetchProfile(target)
+        .then(function (j) {
           var out = '';
           out += line('<span class="highlight">page-profile</span>  —  ' + esc(j.url));
           out += line('  status: <span class="pass">HTTP ' + esc(j.status) + '</span>');
@@ -414,10 +437,15 @@
           result.innerHTML = out;
           trackEvent();
         })
-        .catch(function () {
+        .catch(function (err) {
           status.textContent = '';
           result.hidden = false;
-          result.innerHTML = line('<span class="fail">Fejl:</span> Kunne ikke nå profileringstjenesten. Prøv igen senere.');
+          var msg = err.transport
+            ? 'Vi kunne ikke nå profileringstjenesten. Tjek din forbindelse, eller brug CLI\'en.'
+            : (err.transient
+              ? 'Profileringstjenesten er midlertidigt utilgængelig. Prøv igen om et øjeblik.'
+              : (err.message || 'Forespørgslen fejlede.'));
+          result.innerHTML = line('<span class="fail">Fejl:</span> ' + esc(msg));
         });
     });
 

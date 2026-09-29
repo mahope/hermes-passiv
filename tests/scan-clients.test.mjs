@@ -29,13 +29,20 @@ const ok = (navn, cond, info = '') => { if (cond) pass++; else { fail++; console
 // `document`, fordi sidernes `esc()` bruger den.
 function el() {
   const e = {
-    value: '', textContent: '', innerHTML: '', disabled: false, src: '',
+    value: '', disabled: false, src: '', _t: '', _h: undefined,
+    // `esc()` på de nye sider sætter `textContent` og læser `innerHTML` tilbage,
+    // så de to skal hænge sammen. Hver beholder kun det der blev sat.
+    get textContent() { return this._t; },
+    set textContent(v) { this._t = v; this._h = undefined; },
+    get innerHTML() { return this._h !== undefined ? this._h : this._t; },
+    set innerHTML(v) { this._h = v; },
     style: {}, dataset: {}, children: [], _ls: {},
     classList: { _s: new Set(), add(c) { this._s.add(c); }, remove(c) { this._s.delete(c); }, contains(c) { return this._s.has(c); } },
     appendChild() {}, removeChild() {}, setAttribute() {}, remove() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
+    submit() { (this._ls.submit || []).forEach((fn) => fn({ preventDefault() {} })); },
     querySelectorAll: () => [], querySelector: () => null,
   };
   return e;
@@ -46,22 +53,43 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // dem til 0, så en test ikke skal vente minutter — antallet forsøg måles i stedet.
 const fastTimeout = (fn, _ms, ...rest) => setTimeout(fn, 0, ...rest);
 
-function loadPage(path, fetchImpl) {
+function loadPage(path, fetchImpl, opts = {}) {
+  // En `.js`-fil (som `book-ai.js`) køres som den er; en `.html` får sine egne
+  // inline scripts. `match` vælger det rigtige script på de sider hvor et andet
+  // end klientens også rører `fetch` (fx analytics der poster på /api/track).
   const html = readFileSync(join(root, path), 'utf8');
-  const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-  const main = scripts.find((s) => /fetch\(|inspect|scan/.test(s) && !/api\/track/.test(s));
+  const scripts = path.endsWith('.js')
+    ? [html]
+    : [...html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  const main = path.endsWith('.js')
+    ? html
+    : opts.match
+      ? scripts.find((s) => opts.match.test(s))
+      : scripts.find((s) => /fetch\(|inspect|scan/.test(s) && !/api\/track/.test(s));
   if (!main) throw new Error(`ingen brugbar <script> i ${path}`);
   const nodes = new Map();
+  // `book-ai.js` bygger sin egen sektion og hænger den før <footer>, så
+  // sandkassen skal have et footer-element med en forælder.
+  const footer = el();
+  footer.parentNode = { insertBefore() {} };
   const sandbox = {
     console, setTimeout: fastTimeout, clearTimeout, URL, URLSearchParams, Promise, Error, JSON, Date, Math,
-    encodeURIComponent, Object, Array, String, Number, Boolean, RegExp, Map, Set,
+    encodeURIComponent, Object, Array, String, Number, Boolean, RegExp, Map, Set, Blob,
     scrollTo() {}, print() {}, alert() {}, confirm: () => true,
     fetch: fetchImpl,
     document: {
-      getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
-      querySelector() { return null; }, querySelectorAll: () => [],
+      getElementById(id) {
+        // `opts.absent` er id'er siden *ikke* har i DOM'en. Uden dem ville
+        // stubben skabe dem, og en vagt som `if (getElementById('x')) return;`
+        // ville altid tro at elementet allerede var der.
+        if (opts.absent && opts.absent.includes(id)) return null;
+        if (!nodes.has(id)) nodes.set(id, el());
+        return nodes.get(id);
+      },
+      querySelector(sel) { return sel === 'footer' && !opts.noFooter ? footer : null; },
+      querySelectorAll: () => [],
       addEventListener() {}, createElement: () => el(), createTextNode: (t) => ({ textContent: t }),
-      body: el(), documentElement: el(),
+      body: el(), documentElement: el(), head: el(),
     },
     navigator: { doNotTrack: '0' },
     location: { pathname: '/' + path.split('/').pop(), href: 'https://mahope.tools/' },
@@ -192,8 +220,137 @@ for (const [path, lang] of PAGES) {
 }
 
 // --------------------------------------------------------------------------
-// 5. Mutationer af *læseren*, så kontrollerne ovenfor ikke er en grøn cirkel.
+// 5. `/page-profile` (EN + DA): GET-kaldet gjorde også blindt `r.json()`, så
+//    vores egen 5xx blev vist som "Could not reach the profiling service" —
+//    én gang, uden genkald, og en 4xx fik samme tekst.
+// --------------------------------------------------------------------------
+const OK_PROFILE = { status: 200, body: { ok: true, url: 'https://example.com', status: 200, final_url: 'https://example.com', title: 'A perfectly reasonable page title', title_length: 32, meta_description: 'A description that is long enough to pass the length check used by the tool here.', meta_description_length: 90, canonical: 'https://example.com', language: 'en', charset: 'utf-8', og: { title: 't', description: 'd', image: 'i' }, twitter: { card: 'summary' }, json_ld_count: 1, json_ld_types: ['WebSite'], headings: { h1: ['Example'] }, images: { total: 2, with_alt: 2 }, links: { total: 5, internal: 5 }, security: { hsts: true, csp: true, xfo: true }, score: 92, max_score: 100, grade: 'A', penalties: [] } };
+
+async function runProfile(path, list) {
+  const { fetchImpl, state } = responses(list);
+  const { nodes } = loadPage(path, fetchImpl, { match: /profile-form/ });
+  nodes.get('profile-url').value = 'example.com';
+  nodes.get('profile-form').submit();
+  await sleep(30);
+  return { calls: state.calls, out: (nodes.get('profile-result').innerHTML) || '' };
+}
+
+for (const [path, lang] of [['site/page-profile.html', 'EN'], ['site/da/page-profile.html', 'DA']]) {
+  const good = await runProfile(path, [OK_PROFILE]);
+  ok(`${lang} page-profile: et godt svar renderer på ét kald`, good.calls === 1 && !/temporarily unavailable|Error:/.test(good.out), `calls=${good.calls} out=${good.out.slice(0,200)}`);
+
+  const busy = await runProfile(path, [{ status: 502, html: true }, OK_PROFILE]);
+  ok(`${lang} page-profile: 502 med HTML genkaldes og lykkes`, busy.calls === 2 && !/temporarily unavailable/.test(busy.out), `calls=${busy.calls}`);
+
+  const dead = await runProfile(path, [{ status: 503, html: true }]);
+  ok(`${lang} page-profile: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk`,
+    dead.calls === 3 && /temporarily unavailable|midlertidigt utilgængelig/.test(dead.out) && !/Could not reach the profiling service|Vi kunne ikke nå profileringstjenesten/.test(dead.out),
+    `calls=${dead.calls} out=${dead.out.slice(0, 120)}`);
+
+  const rate = await runProfile(path, [{ status: 429, body: { ok: false, error: 'Too many profiles this hour.' } }]);
+  ok(`${lang} page-profile: 429 er forbigående og genkaldes`, rate.calls === 3, `calls=${rate.calls}`);
+
+  const bad = await runProfile(path, [{ status: 400, body: { ok: false, error: 'Missing ?url= parameter' } }]);
+  ok(`${lang} page-profile: et 4xx er endeligt og viser serverens egen tekst`,
+    bad.calls === 1 && /Missing \?url= parameter/.test(bad.out) && !/temporarily unavailable/.test(bad.out), `calls=${bad.calls} out=${bad.out.slice(0, 120)}`);
+
+  const offline = await runProfile(path, [{ reject: 'Failed to fetch' }]);
+  ok(`${lang} page-profile: et afbrudt kald prøves igen og får sin egen tekst`,
+    offline.calls === 3 && /Check your connection|Tjek din forbindelse/.test(offline.out), `calls=${offline.calls} out=${offline.out.slice(0, 120)}`);
+}
+
+// --------------------------------------------------------------------------
+// 6. `book-ai.js`: samme klasse igen, på de fem bog-sider der deler filen.
+//    Både chatten og den lokale venteliste skal genkalde, og en tabt tilmelding
+//    skal kunne prøves igen — knappen bliver derfor aktiv igen.
+// --------------------------------------------------------------------------
+const OK_ASK = { status: 200, body: { ok: true, answer: 'NIS2 applies from 10 employees or €2m turnover.' } };
+const OK_WAIT = { status: 200, body: { ok: true } };
+
+async function runBook(list, { ask = true, wait = true } = {}) {
+  const { fetchImpl, state } = responses(list);
+  const { nodes } = loadPage('site/book-ai.js', fetchImpl, { absent: ['baiLead'] });
+  nodes.get('baiInput').value = 'Does NIS2 apply to a 5-person agency?';
+  nodes.get('baiAsk').click();
+  await sleep(40);
+  const chat = (nodes.get('baiTopStatus').textContent) || '';
+  let lead = '', btnLive = true;
+  if (wait) {
+    nodes.get('baiEmail').value = 'kontakt@eksempel.dk';
+    nodes.get('baiBtn').click();
+    await sleep(40);
+    lead = (nodes.get('baiStatus').textContent) || '';
+    btnLive = nodes.get('baiBtn').disabled === false;
+  }
+  return { calls: state.calls, chat, lead, btnLive };
+}
+
+{
+  const r = await runBook([OK_ASK, OK_WAIT]);
+  ok('book-ai: et godt svar på chat og venteliste, ét kald hver', r.calls === 2 && r.chat === '' && /on the list/.test(r.lead), `calls=${r.calls} chat=${r.chat} lead=${r.lead}`);
+}
+{
+  const r = await runBook([{ status: 502, html: true }, OK_ASK, OK_WAIT]);
+  ok('book-ai: 502 med HTML genkaldes og lykkes', r.calls === 3 && r.chat === '', `calls=${r.calls} chat=${r.chat}`);
+}
+{
+  const r = await runBook([{ status: 503, html: true }], { wait: false });
+  ok('book-ai: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk',
+    r.calls === 3 && /temporarily unavailable/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
+}
+{
+  const r = await runBook([{ reject: 'Failed to fetch' }], { wait: false });
+  ok('book-ai: et afbrudt kald prøves igen og får sin egen tekst',
+    r.calls === 3 && /could not reach the assistant server/.test(r.chat) && !/Network error/.test(r.chat), `calls=${r.calls} chat=${r.chat}`);
+}
+{
+  const r = await runBook([OK_ASK, { status: 503, html: true }, OK_WAIT]);
+  ok('book-ai: ventelisten genkaldes, så en tilmelding ikke tabes', r.calls === 3 && /on the list/.test(r.lead), `calls=${r.calls} lead=${r.lead}`);
+}
+{
+  const r = await runBook([OK_ASK, { status: 503, html: true }]);
+  ok('book-ai: en venteliste der holder op giver en ærlig tekst og fri knap igen',
+    r.calls === 4 && /temporarily unavailable/.test(r.lead) && r.btnLive === true, `calls=${r.calls} lead=${r.lead} btn=${r.btnLive}`);
+}
+{
+  const r = await runBook([OK_ASK, { status: 400, body: { ok: false, error: 'That email is already on the list.' } }]);
+  ok('book-ai: et 4xx er endeligt og viser serverens egen tekst',
+    r.calls === 2 && /already on the list/.test(r.lead) && !/temporarily unavailable/.test(r.lead), `calls=${r.calls} lead=${r.lead}`);
+}
+
+// --------------------------------------------------------------------------
+// 7. Mutationer af *læseren*, så kontrollerne ovenfor ikke er en grøn cirkel.
 //    Hver mutation skal gøre den navngivne kontrol rød.
+// --------------------------------------------------------------------------
+{
+  const book = readFileSync(join(root, 'site/book-ai.js'), 'utf8');
+  ok('mutation: book-ai har samme regel som de andre klienter', /BOOK_MAX_TRIES = 3/.test(book));
+  ok('mutation: bogen læser status før JSON, ikke bagefter', /err\.transient = !data \|\| res\.status === 429/.test(book));
+  for (const p of ['site/page-profile.html', 'site/da/page-profile.html']) {
+    const src = readFileSync(join(root, p), 'utf8');
+    ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /err\.transient = !j \|\| r\.status === 429/.test(src));
+  }
+}
+{
+  // Genkalder vi slået fra i book-ai, skal "503 hele vejen giver tre forsøg" blive rød.
+  const src = readFileSync(join(root, 'site/book-ai.js'), 'utf8').replace('var BOOK_MAX_TRIES = 3;', 'var BOOK_MAX_TRIES = 1;');
+  ok('mutation: slået genkald kan fremstilles i book-ai', src.includes('var BOOK_MAX_TRIES = 1;'));
+  const { fetchImpl, state } = responses([{ status: 503, html: true }]);
+  const nodes = new Map();
+  const footer = el();
+  footer.parentNode = { insertBefore() {} };
+  const sandbox = { console, setTimeout: fastTimeout, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent,
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/x.html' },
+    document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
+      querySelector: () => footer, createElement: () => el(), head: el(), body: el(), addEventListener() {} } };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  vm.createContext(sandbox); vm.runInContext(src, sandbox, { filename: 'site/book-ai.js' });
+  nodes.get('baiInput').value = 'Does NIS2 apply?';
+  nodes.get('baiAsk').click();
+  await sleep(30);
+  ok('mutation: uden genkald bliver bogsiden rød', state.calls === 1, `calls=${state.calls} (forventet 3)`);
+}
+
 // --------------------------------------------------------------------------
 function mutated(path, from, to) {
   const html = readFileSync(join(root, path), 'utf8');
