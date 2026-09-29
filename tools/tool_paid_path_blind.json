@@ -5,13 +5,10 @@
  "blind": [
   "/accessibility-statement-generator",
   "/base64-encoder-decoder",
-  "/books",
   "/books/build-your-first-chrome-extension",
   "/books/cookie-consent-guide",
-  "/books/eaa-checklist",
   "/books/eaa-shopify",
   "/books/gdpr-for-agencies",
-  "/books/nis2-for-agencies",
   "/case-converter",
   "/color-blindness-simulator",
   "/color-blindness-simulator-da",

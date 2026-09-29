@@ -1517,3 +1517,48 @@ Pro. Blindtallet i `tools/check_tool_paid_path.py` faldt **42 → 39**.
 - **GATE**: `python3 tools/quality_gate.py` GRØN, 85 steps (uændret).
   `build_sites` 0 broken, `check_links` 0, `seo_check` 0 fund,
   `check_stripe_ctas` 72 købssider, `check_hreflang_pairs` grøn.
+
+---
+
+## 30/9 — `ceo/vej-til-betalt-tre-boeger` (opgave 4, 6/42)
+
+- **HVAD DE TRE FIK, målt før → efter i `dist/` med `A.paid_links()`:**
+  `/books/eaa-checklist` (49 indgående links) 0 → 1 vej,
+  `/books/nis2-for-agencies` (49) 0 → 1, `/books` (43) 0 → 1. Hver peger på
+  `/compliance-report`, der har virkende `buy.stripe.com`
+  (`compliance-report.html:158`). Blindtallet i `check_tool_paid_path.py`
+  **39 → 36**; 61 → 64 af 104 ruter har nu en betalt vej.
+- **FORRIGE DEPLOY BEKRÆFTET (31f3260)**: de tre sider fra `31f3260` serverer
+  den nye tekst og har præcis **én** `href` til `/compliance-report` hhv.
+  `/da/compliance-report`. `build-info.json` på alle tre domæner bærer
+  31f3260 med `sitemap_count` 256 / 34 / 5 uændret. `DEPLOY OK 2026-09-30`.
+- **LØFTERNE ER DØMTE, 165 → 167.** `books/eaa-checklist.html`,
+  `books/nis2-for-agencies.html` og `books/index.html` løfter nu
+  "15 accessibility rules", så de står i `PRODUCT_ENGINE` som `web` i samme
+  diff — ellers var løfterne udømte, altså en fejl i stedet for et mål.
+- **MÅLT FÆLDE: ET LØFTE SKAL LIGGE PÅ ÉN LINJE.** Første skrivning af
+  `books/index.html` brød "15" og "accessibility rules" over to linjer, og
+  `collect()` læser **én linje ad gangen** — så løftet var usynligt for
+  porten, som meldte 166 i stedet for 167. Efter ombrydningen: 167, og
+  mutationen 15 → 16 giver `site/books/index.html:136: frie regler løfter 16,
+  koden kører 15`. Samme blind plet gælder ethvert løfte i en kildefil, og
+  der er ingen port der dømmer linjebruds.
+- **MÅLT FÆLDE: PORTEN TÆLLER *ET* BETALT LINK, IKKE *HVILKET*.** Min revert
+  af mutationssvaret brugte `replace('href="/books"', …, 1)`, og den første
+  forekomst var `All books →` i cta-sektionen — ikke pro-note-linket. Alle
+  tre porte var grønne, og de to bogsider havde byttet om destinationerne:
+  "All books" pegede på købssiden, "EUComply Pro" på bogkatalogen. Fundet
+  ved at læse `git diff` som reviewer, ikke ved portene. Rettet i samme diff
+  (kun additive linjer) og verificeret i browseren: `All books → -> /books/`,
+  `EUComply Pro -> /compliance-report`. Samme fejlklasse som opgave 8.
+- **MUTATIONER (2, begge røde mod mutationen)**: pro-note-linket på
+  `eaa-checklist` → `/books` gav `NY BLIND VÆRKTØJSSIDE` med de 49 links;
+  "15 accessibility rules" → 16 i `books/index.html` gav rødt i
+  `check_rule_claims`. Den første mutation fra sidste iteration (alle tre
+  sider → `/books`) gav også tre røde linjer.
+- **UI**: 390 og 1280 px på alle tre sider, `scrollWidth` = viewport på alle
+  seks opslag. `.pro-note` er de samme fire deklarationer som på
+  `books/compliance-bundle.html` (640 px på bogsiderne, 900 px på katalogen så
+  den flugter med kortene). Kontrast uændret fra målingen i `31f3260`: link
+  6,25:1, brødtekst 11,37:1. Skærmbilleder i `/tmp/ui-boeger-vej/`.
+- **GATE**: `python3 tools/quality_gate.py` GRØN, 85 steps (uændret).

@@ -540,6 +540,25 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("security-headers-check.html", "web"),
     ("compliance-site-check.html", "web"),
     ("da/compliance-site-check.html", "web"),
+    # De tre næste blinde værktøjssider (30/9) — målt af
+    # `check_tool_paid_path.py`: 49, 49 og 43 indgående sider i `site/`, samme
+    # top-3 som den forrige iteration målte på 199/97/92. Samme licens og
+    # samme tal som de to ovenfor: `books/index.html` siger "the same 15
+    # accessibility rules, plus 18 server-side checks", og de to bogsider
+    # siger det samme. Uden disse tre linjer var løfterne **udømte** — altså
+    # en fejl i stedet for et mål, præcis som de otte artikler ovenfor.
+    #
+    # `books/nis2-for-agencies.html` nævner **kun** de 18, fordi NIS2 ikke
+    # handler om de 15 tilgængelighedsregler: dens server-side halvdel er
+    # HSTS/CSP, formularer over http, samtykkebanner og privatlivslink. Det
+    # er de fund `reportProFindings()` faktisk skubber, målt i kilden. Linjen
+    # står her alligevel, så det næste løfte på siden bliver dømt frem for at
+    # være udømt — `RE_CLAIM` fanger "18 server-side checks" ikke i dag
+    # (samme blinde plet som "33 checks"), og det er porten der skal ændres,
+    # ikke kortet.
+    ("books/eaa-checklist.html", "web"),
+    ("books/nis2-for-agencies.html", "web"),
+    ("books/index.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )
