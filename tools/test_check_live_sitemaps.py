@@ -3,7 +3,7 @@ import unittest
 from email.message import Message
 
 import check_live_sitemaps
-from check_live_sitemaps import encoded_url, has_noindex_header
+from check_live_sitemaps import encoded_url, has_noindex_header, serving_domains
 
 
 class LiveSitemapTests(unittest.TestCase):
@@ -58,6 +58,51 @@ class AdvertisedFileTests(unittest.TestCase):
         self.statuses["https://mahope.tools/llms.txt"] = 404
         problems = check_live_sitemaps.check_advertised_live("mahope.tools", self.ROBOTS)
         self.assertTrue(any("llms.txt" in problem and "HTTP 404" in problem for problem in problems))
+
+
+class ServingDomainTests(unittest.TestCase):
+    """En rute skal verificeres på det domæne der faktisk serverer den.
+
+    De fire sites deler ét `site/`-træ, og `build_sites.SITES` fordeler
+    filerne pr. domæne, så `/url-to-markdown` er en cleancopy-rute selv om
+    andre sider linker til den rod-relative. Verificeret på mahope.tools
+    svarer den 404 og læses som en brudt udgivelse.
+    """
+
+    def test_markdown_tool_resolves_to_cleancopy(self) -> None:
+        self.assertEqual(
+            ["cleancopy.tools"],
+            serving_domains("/url-to-markdown"),
+        )
+
+    def test_danish_mirror_resolves_to_cleancopy(self) -> None:
+        self.assertEqual(
+            ["cleancopy.tools"],
+            serving_domains("/da/url-til-markdown"),
+        )
+
+    def test_mahope_route_resolves_to_mahope(self) -> None:
+        self.assertEqual(["mahope.tools"], serving_domains("/scan"))
+
+    def test_unknown_route_has_no_domain(self) -> None:
+        self.assertEqual([], serving_domains("/no-such-route-here"))
+
+    def test_full_url_and_trailing_slash_normalize(self) -> None:
+        self.assertEqual(
+            serving_domains("/url-to-markdown"),
+            serving_domains("https://cleancopy.tools/url-to-markdown"),
+        )
+        self.assertEqual(
+            serving_domains("/books"),
+            serving_domains("/books/"),
+        )
+
+    def test_unicode_route_is_decoded_before_lookup(self) -> None:
+        # Inventaret gemmer den decodede sti; en kodet URL skal finde den.
+        self.assertEqual(
+            ["mahope.tools"],
+            serving_domains("/da/blog/inds%C3%A6t-uden-formatering-i-chrome"),
+        )
 
 
 if __name__ == "__main__":

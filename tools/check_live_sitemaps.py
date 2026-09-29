@@ -14,9 +14,12 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from http.client import HTTPMessage
 from pathlib import Path
-from urllib.parse import quote, urlsplit, urlunsplit
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
-from check_sitemaps import DIST, SITES, advertised_own_urls, check_domain, parse_head, parse_sitemap
+from check_sitemaps import DIST, ROOT, SITES, advertised_own_urls, check_domain, parse_head, parse_sitemap
+from route_inventory import load_inventory
+
+ROUTE_INVENTORY = ROOT / "tools" / "route_inventory.json"
 
 USER_AGENT = "Mozilla/5.0 (compatible; HermesSitemapCheck/1.0)"
 PAGES_DOMAINS = tuple(domain for domain in SITES if domain != "bugbottle.dev")
@@ -316,17 +319,67 @@ def check_bugbottle_source(source: Path, expected_commit: str | None, attempts: 
     return problems
 
 
+def normalize_route(value: str) -> str:
+    """Reduce a route or full URL to the path form the inventory stores."""
+    parts = urlsplit(value.strip())
+    path = parts.path if parts.scheme or parts.netloc else value.strip()
+    path = unquote(path)
+    if not path.startswith("/"):
+        path = "/" + path
+    if len(path) > 1 and path.endswith("/"):
+        path = path[:-1]
+    return path
+
+
+def serving_domains(route: str, inventory_path: Path = ROUTE_INVENTORY) -> list[str]:
+    """Which domains publish this route, from the build's own route inventory.
+
+    The four sites share one `site/` tree and `build_sites.SITES` claims files
+    per domain, so a route lives on exactly one domain even when sibling sites
+    link to it root-relatively. Verifying such a route on the wrong domain
+    returns 404 and reads as a broken deploy.
+    """
+    path = normalize_route(route)
+    inventory = load_inventory(inventory_path)
+    return [domain for domain in sorted(inventory) if path in inventory[domain]]
+
+
+def check_route_live(route: str, inventory_path: Path = ROUTE_INVENTORY) -> tuple[list[str], list[str]]:
+    """Resolve a route to its domain, then check it live there."""
+    path = normalize_route(route)
+    domains = serving_domains(path, inventory_path)
+    if not domains:
+        return [f"{path}: no domain in {inventory_path.name} publishes this route"], []
+    checked: list[str] = []
+    problems: list[str] = []
+    for domain in domains:
+        url = f"https://{domain}{path}"
+        status, _body, _headers, error = fetch(url, timeout=30)
+        checked.append(url)
+        if status != 200:
+            problems.append(f"{url}: HTTP {status if status is not None else error}")
+    return problems, checked
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", choices=sorted(SITES))
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--commit")
+    parser.add_argument("--route", help="resolve a route to its serving domain, then check it live there")
     parser.add_argument("--bugbottle-source", type=Path)
     parser.add_argument("--bugbottle-source-commit")
     parser.add_argument("--attempts", type=int, default=6)
     parser.add_argument("--delay", type=int, default=10)
     parser.add_argument("--workers", type=int, default=12)
     args = parser.parse_args(argv)
+    if args.route:
+        problems, checked = check_route_live(args.route)
+        for url in checked:
+            print(f"checked {url}")
+        for problem in problems:
+            print(f"- {problem}")
+        return 1 if problems else 0
     if args.only and args.all:
         parser.error("--only and --all cannot be combined")
     if args.commit and not re.fullmatch(r"[0-9a-f]{40,64}", args.commit.lower()):
