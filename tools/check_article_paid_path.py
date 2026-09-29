@@ -267,8 +267,26 @@ def traffic(reports: Path = REPORTS) -> dict[str, int]:
 
 
 def route_of(root: Path, path: Path) -> str:
+    """Fil → rute, som den hedder *på webserveren*.
+
+    `index.html` er mappens rute, ikke en rute ved navn. Målt 30/9: `route_of`
+    gav `site/blog/index.html` ruten `/blog/index`, som ikke findes — live er
+    den en **308** til `/blog/`, målt med `curl -o /dev/null -w '%{redirect_url}'`,
+    og `/blog/` står i både `sitemap.xml` og `tools/route_inventory.json`.
+    Konsekvensen var at hub-siden faldt ud af *alle* opslag på domæne: den lå
+    i `ukendt domæne`-blokken, selv om dens domæne er `mahope.tools` og den
+    er publiceret. Uden denne rettelse er den eneste `ukendt domæne`-række en
+    måling af portens egen fejl, ikke af siderne.
+
+    Bemærk at ruten *ikke* får en skråstreg til sidst. `route_domains` renser
+    inventaret for skråstreg i begge ender, så nøglen skal være `/blog` — samme
+    form som trafikkens (`/blog/html-to-markdown-vscode`) og katalogens.
+    """
     rel = path.relative_to(root).as_posix()
-    return "/" + rel[:-len(".html")]
+    stem = rel[:-len(".html")]
+    if stem.endswith("/index"):
+        stem = stem[: -len("/index")]
+    return "/" + stem if stem else "/"
 
 
 def deployed_domains(workflow: Path = WORKFLOW) -> set[str]:
@@ -493,11 +511,14 @@ def _print_ranking(table: list[dict], limit: int) -> None:
                   f"{row['domain']} — {state}")
     if unknown:
         # Ikke det samme som "ikke udgivet": her kender porten ikke domænet,
-        # fordi ruten ikke står i inventaret. Målt 30/9 er det præcis **én**
-        # fil, `site/blog/index.html`, som `route_of` giver ruten `/blog/index`
-        # mens inventaret skriver `/blog/`. Det er en hub-side der porten
-        # tæller som en artikel — en forældet læsning, ikke et udgivet domæne,
-        # og de to må ikke blandes i én linje.
+        # fordi ruten ikke står i inventaret. Målt 30/9 var denne blokke præcis
+        # **én** fil, `site/blog/index.html`, fordi `route_of` gav ruten
+        # `/blog/index` mens inventaret skriver `/blog/`. `route_of` er rettet,
+        # så blokken skal nu være **tom** på det målte tilstand — og det er den
+        # kontrol `route_of` har i selftesten. Blokerne er to forskellige fejl,
+        # så de må ikke blandes i én linje, og en blok der altid er tom er en
+        # grøn cirkel: hvis en ny fil dukker op uden en rute i inventaret, skal
+        # den siges her.
         print(f"ukendt domæne: {len(unknown)} fil(er) — ruten står ikke i "
               f"route_inventory.json, så publiceringen kan ikke vurderes:")
         for row in unknown[:limit]:
@@ -701,6 +722,43 @@ def _self_test() -> int:
           f"udgivet={bb['publiceret'] if bb else '?'}")
     check("rækken har trafik — flåsen skal kunne ramme præcis dem der har den",
           bb is not None and bb["visits"], f"visits={bb['visits'] if bb else '?'}")
+
+    # 11. `route_of` på `index.html`. Før rettelsen (30/9) gav
+    #     `site/blog/index.html` ruten `/blog/index`, som ikke findes: live er
+    #     den en 308 til `/blog/`. Følgen var at hub-siden ikke blev fundet i
+    #     `route_domains` og derfor lå i `ukendt domæne`-blokken — dens domæne
+    #     er `mahope.tools`, og den *er* publiceret. Blokeren må altså være tom
+    #     på det målte tilstand, ellers måler den portens egen fejl.
+    hub = next((r for r in table if r["file"] == "blog/index.html"), None)
+    check("index.html får mappens rute, ikke /index",
+          hub is not None and hub["route"] == "/blog",
+          f"route={hub['route'] if hub else '?'}")
+    check("hub-side er ikke længere ukendt domæne",
+          hub is not None and hub["domain"] == "mahope.tools" and hub["publiceret"],
+          f"domæne={hub['domain'] if hub else '?'} "
+          f"udgivet={hub['publiceret'] if hub else '?'}")
+    check("`ukendt domæne`-blokken er tom på det målte tilstand",
+          not [r for r in table if not r["domain"]],
+          f"{len([r for r in table if not r['domain']])} fil(er)")
+
+    # 11a. Mutationen: blokeren skal kunne blive rød igen, ellers er den en
+    #      grøn cirkel. `unknown` i `_print_ranking` er præcis
+    #      `[r for r in table if not r["domain"]]`, og `domain` kommer fra
+    #      `route_domains(inventar)`. Derfor muterer vi inventaret — fjerner
+    #      `/blog` — og spørger de to funktioner som rækken bygges af. Det er
+    #      præcis den fejl der lå bag den gamle række: en hub-side hvis rute
+    #      ikke kan findes, så den ligner ubekendt.
+    no_blog_dom = route_domains({d: [r for r in rs if r.rstrip("/") != "/blog"]
+                                 for d, rs in inv.items()})
+    hub_route = route_of(SITE, SITE / "blog" / "index.html")
+    check("inventar uden /blog får hub-ruten til at miste domænet",
+          hub_route == "/blog" and hub_route in route_domains(inv)
+          and hub_route not in no_blog_dom,
+          f"route={hub_route} i inventaret={hub_route in route_domains(inv)} "
+          f"i mutant={hub_route in no_blog_dom}")
+    check("`ukendt domæne`-rækken kan blive fyldt igen",
+          hub_route not in no_blog_dom,
+          f"ville stå som ukendt domæne: {not (hub_route in no_blog_dom)}")
 
     failed = 0
     for name, ok, detail in checks:
