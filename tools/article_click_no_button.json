@@ -1,0 +1,6 @@
+{
+  "note": "Artikler der er MÅLT til at have en indirekte købsvej, nul købsknap, målt trafik og en publiceret rute. Uden de to sidste krav er klassen 148 røde linjer, altså ingenting (se check_article_paid_path.py, dom 5). Listen er en ratchet: hver linje er en artikels begrundelse for at have læsere uden en købsknap, og den skal fjernes når artiklen får en knap — listen må kun krympe. Filen skrives med en begrundelse pr. artikel, aldrig af --write.",
+  "source": "python3 tools/check_article_paid_path.py",
+  "measured": "2026-09-30",
+  "acknowledged": []
+}

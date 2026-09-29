@@ -41,6 +41,10 @@ on:
       # listen, springe gaten over — altså netop den push der gør porten
       # meningsløs.
       - 'tools/article_paid_path_blind.json'
+      # Dom 5 i samme gatestræk: listen over artikler der har læsere, en
+      # indirekte købsvej og ingen købsknap. Samme grund som linjen ovenfor —
+      # uden den springer en push, der kun skriver en begrundelse, gaten over.
+      - 'tools/article_click_no_button.json'
       - 'tools/check_article_paid_path.py'
       - 'tools/make_blog_da_mirrors_461.py'
       - 'tools/quality_gate.py'

@@ -79,6 +79,33 @@ stå i filen med en grund, og grunden skal forsvinde, når hullet lukkes.
 Lukker Mads `❓` om bugbottle.dev, så forsvinder rækken ved at tilføje domænet
 til matricen — og flåsen siger det.
 
+**Dom 5 (klik uden knap, målt 30/9).** Dom 4 forlod porten med ét blinde
+problem tilbage, fordi dens definition er *manglende* købsvej. Men `paid_links()`
+tæller to ting som én (klik til en købsside, og `buy.stripe.com` i egen tekst),
+mens `knap_links()` kun tæller den sidste. En artikel kan derfor være
+**dækket og alligevel uden købsknap** — læseren skal finde et link, åbne en
+andre side og dér finde knappen. Det er den dyreste af de to fejl og den var
+usynlig, fordi porten kun rapporterede den anden halvdel.
+
+Målt i rækken på de 190 artikler: **148** har en indirekte vej og nul knap.
+Uden flere krav er det 148 røde linjer, altså ingenting — så klassen kræver
+**trafik** og **publicering**, som begge er målt, ikke valgt:
+
+| Krav | Hvorfor | Målt 30/9 |
+|---|---|---|
+| `paid` ikke-tom | Ellers er det bare en blind artikel, som dom 1 allerede dømmer | 148 |
+| `knapper == 0` | Klassen *er* forskellen mellem klik og knap | 148 |
+| `visits` | 146 af de 148 har **0** målte besøg; en knap på en side uden læsere er ikke konvertering | 2 |
+| `publiceret` | De 2 med trafik ligger begge på `bugbottle.dev` og gav **404** på alle live-domæner — dom 4s egen måling | **0** |
+
+Klassen er derfor **0** i dag, og det er ikke en grøn cirkel: `--self-test`
+bygger formen syntetisk og dømmer evnen, ikke data (samme regel som kontrol 7b).
+Tilstanden før sidste iteration var målt til **1** — `blog/html-to-markdown-vscode`
+med 8 besøgende på cleancopy.tools — og den fik sin knap i samme iteration. Det
+er ratcheten: en ny række i klassen skal have en linje med begrundelse i
+`tools/article_click_no_button.json`, en linje der ikke længere er i klassen
+skal fjernes, og listen må kun krympe.
+
 Ud over det printer porten hele ranglisten, fordi det er den næste iteration
 har brug for. Den behøver ikke selv at finde de mest linkede artikler.
 
@@ -108,6 +135,7 @@ REPORTS = ROOT / "reports" / "weekly"
 INVENTORY = ROOT / "tools" / "route_inventory.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "deploy-sites.yml"
 PUBLISHED = ROOT / "tools" / "article_paid_path_published.json"
+CLICK_NO_BUTTON = ROOT / "tools" / "article_click_no_button.json"
 
 # Punkt 1 og 2 ovenfor. Målt: 69 artikler linker til `/` og 32 til `/da/` fra
 # hele dokumentet, og begge er købssider i katalogens `offers`, fordi
@@ -402,6 +430,9 @@ def judge(root: Path, catalog: dict) -> list[str]:
     # "find den fejl der er opstået"; den her er "find den der *kunne* opstå",
     # og den må ikke gøre de tre røde af sig selv.
     problems.extend(published_problems(root))
+    # Dom 5, klik uden knap. Samme grund: målingen er nu 0, så porten skal være
+    # grøn på en *begrundet* måling, ikke på en tør.
+    problems.extend(click_no_button_problems(rows(root, catalog)))
     return problems
 
 
@@ -473,6 +504,91 @@ def published_problems(root: Path = SITE, inventory: dict | None = None,
     return problems
 
 
+def click_no_button(table: list[dict]) -> list[dict]:
+    """Klik uden knap — dom 5. Se docstringens måling.
+
+    Kræver fire ting, og hver af dem er målt i stedet for valgt:
+
+    - `paid` ikke-tom: ellers er det en blind artikel, som dom 1 allerede dømmer.
+    - `knapper == 0`: det *er* klassen. 148 af 190 har klik uden knap, så
+      dette krav alene er ikke en port — det er dækning.
+    - `visits`: 146 af de 148 har 0 målte besøg.
+    - `publiceret`: de 2 med trafik ligger på `bugbottle.dev` og gav 404 på
+      alle live-domæner, målt med `curl` 30/9.
+
+    Uden de to sidste er porten 148 røde linjer, altså ingenting. Med dem er
+    den **0** i dag — og det er målt ved at køre `rows()` mod de to tidligere
+    commits, ikke ved at læse en liste.
+    """
+    return [r for r in table if r["paid"] and not r["knapper"]
+            and r["visits"] and r["publiceret"]]
+
+
+def click_no_button_problems(table: list[dict] | None = None,
+                             doc: dict | None = None) -> list[str]:
+    """Dom 5: en artikel med læsere, en betalt vej og ingen købsknap skal have
+    en begrundelse, og grunden skal forsvinde når den får en knap.
+
+    Samme tre domme som `published_problems`, af samme grund: en port der
+    konstant er rød bliver slået fra. Derfor er dette en *begrundelses*-flås
+    over en målt klasse, ikke en tærskel.
+
+    1. En målt række uden linje i `tools/article_click_no_button.json` → rød.
+       Skal have en købsknap, eller en linje med en grund.
+    2. En linje uden begrundelse → rød. Samme regel som `ctas_note`.
+    3. En linje der ikke længere er i den målte klasse → rød, og beskeden siger
+       *hvorfor* den faldt ud (knap, tabt trafik, tabt publicering, slettet
+       fil), fordi ellers får næste iteration fire forskellige forklaringer på
+       den samme linje. Listen må kun krympe, præcis som blindlisten.
+    4. Dubletter → rød. Listen er en mængde.
+    """
+    table = table if table is not None else rows()
+    doc = doc if doc is not None else (
+        json.loads(CLICK_NO_BUTTON.read_text(encoding="utf-8"))
+        if CLICK_NO_BUTTON.is_file() else {"acknowledged": []}
+    )
+    entries = doc.get("acknowledged", [])
+    known = {e["file"]: e for e in entries if isinstance(e.get("file"), str)}
+    measured = {r["file"]: r for r in click_no_button(table)}
+    problems: list[str] = []
+
+    for file in sorted(set(measured) - set(known)):
+        row = measured[file]
+        problems.append(
+            f"NY KLIK-UDEN-KNAP: {file} har {row['visits']} målte besøg og "
+            f"{len(row['paid'])} indirekte vej(er), men ingen købsknap. Sæt en "
+            f"knap på siden, eller tilføj en linje med en grund i "
+            f"tools/article_click_no_button.json."
+        )
+    for file, entry in sorted(known.items()):
+        if not str(entry.get("reason") or "").strip():
+            problems.append(
+                f"NY KLIK-UDEN-KNAP: {file} står i "
+                f"tools/article_click_no_button.json, men `reason` er tom. En "
+                f"undtagelse uden grund er en måde at slå reglen fra."
+            )
+        elif file not in measured:
+            row = next((r for r in table if r["file"] == file), None)
+            if row is None:
+                why = "filen findes ikke længere på disk"
+            elif not row["paid"]:
+                why = "den har ikke længere nogen betalt vej"
+            elif row["knapper"]:
+                why = f"den har nu {row['knapper']} købsknap(per)"
+            elif not row["visits"]:
+                why = "besøgstallet er ikke længere målt i rapporten"
+            else:
+                why = f"ruten er ikke publiceret ({row['domain']})"
+            problems.append(
+                f"DØD LINJE i listen: {file} er ikke længere i den målte "
+                f"klasse — {why}. Fjern den fra "
+                f"tools/article_click_no_button.json — listen må kun krympe."
+            )
+    if len(known) != len(entries):
+        problems.append("klik-uden-knap-listen har dubletter; den er en mængde.")
+    return problems
+
+
 def _print_ranking(table: list[dict], limit: int) -> None:
     knap = [r for r in table if r["knapper"]]
     print(f"artikler: {len(table)} · med betalt vej: "
@@ -493,6 +609,18 @@ def _print_ranking(table: list[dict], limit: int) -> None:
     for row in blind[:limit]:
         trafik = str(row["visits"]) if row["visits"] is not None else "-"
         print(f"{trafik:>6} {row['links']:>5}  {row['file']:<52} {row['route']}")
+    # Dom 5, klik uden knap. De 148 med klik uden knap måles og *tælles* her,
+    # men porten dømmer dem ikke: se `click_no_button()` for hvorfor (trafik og
+    # publicering). Udskriften skal kunne vise at klassen er 0, ellers er det
+    # umuligt at se om porten ser den.
+    loose = [r for r in table if r["paid"] and not r["knapper"]]
+    klasse = click_no_button(table)
+    print(f"klik uden knap: {len(loose)} artikler har en indirekte vej men ingen "
+          f"købsknap · {sum(1 for r in loose if r['visits'])} med målt trafik · "
+          f"{len(klasse)} på en publiceret rute (dømmes)")
+    for row in sorted(klasse, key=lambda r: (-(r["visits"] or 0), r["route"]))[:limit]:
+        print(f"{row['visits']:>6} {row['links']:>5}  {row['file']:<52} "
+              f"{row['route']} — {len(row['paid'])} vej(er)")
     # Publiceringsflåsen i udskriften, målt 30/9. `trafik`-kolonnen er besøg
     # på en rute *vi har bygget* — den siger intet om hvor den ligger. Da de
     # eneste artikler med målt trafik viste sig at ligge på et domæne uden i
@@ -786,6 +914,122 @@ def _self_test() -> int:
     check("`ukendt domæne`-rækken kan blive fyldt igen",
           hub_route not in no_blog_dom,
           f"ville stå som ukendt domæne: {not (hub_route in no_blog_dom)}")
+
+    # 12. Dom 5, klik uden knap. Fire kontroller + fire mutationer. Formen
+    #     findes **ikke** i `site/` i dag — målt 30/9 er den 0 på de 190
+    #     artikler, fordi de eneste med trafik ligger på `bugbottle.dev`. Derfor
+    #     bygges den syntetisk, samme grund som kontrol 5b og 7b: selftester
+    #     skal dømme *evnen*, ikke data (NEXT_TASK fra vscode-artikel-knap).
+    lo = [r for r in table if r["paid"] and not r["knapper"]]
+    check("klassen 'klik uden knap' findes og måles (148 af 190)",
+          len(lo) > 100,
+          f"{len(lo)} af {len(table)}")
+    check("flåsen er grøn på det målte tilstand",
+          not click_no_button_problems(table),
+          f"{len(click_no_button_problems(table))} problem(er)")
+
+    # 12a. Den syntetiske række: målt trafik + publiceret rute + indirekte vej
+    #      + nul knap. Den skal dømmes. Uden denne kontrol er porten grøn fordi
+    #      klassen er tom, hvilket er præcis den fejl 7b beskriver.
+    synth = dict(table[0])
+    synth.update({
+        "file": "blog/syntetisk-klik-uden-knap.html",
+        "route": "/blog/syntetisk-klik-uden-knap",
+        "visits": 42,
+        "links": 1,
+        "paid": ["/clean-copy-tool"],
+        "knapper": 0,
+        "domain": "mahope.tools",
+        "publiceret": True,
+    })
+    check("en række med trafik, publiceret rute og nul knap er i klassen",
+          [r["file"] for r in click_no_button([synth])] == [synth["file"]],
+          f"{len(click_no_button([synth]))} række(r)")
+    check("den syntetiske række gør flåsen rød uden begrundelse",
+          any("NY KLIK-UDEN-KNAP" in p
+              for p in click_no_button_problems([synth])),
+          f"{len(click_no_button_problems([synth]))} problem(er)")
+
+    # 12b. Hvert af de fire krav skal kunne fjerne rækken. Målt på fire
+    #      mutationer af *den samme* syntetiske række — ellers kunne porten være
+    #      grøn fordi den kun læser ét af dem.
+    for name, mut in (
+        ("trafik", {"visits": None}),
+        ("publicering", {"publiceret": False}),
+        ("knap", {"knapper": 1}),
+        ("betalt vej", {"paid": []}),
+    ):
+        mutated = dict(synth, **mut)
+        check(f"kravet '{name}' fjerner rækken fra klassen",
+              click_no_button([mutated]) == [])
+
+    # 12c. En begrundelse uden grund → rød (punkt 2).
+    hit = click_no_button_problems([synth], {"acknowledged": [
+        {"file": synth["file"], "reason": "   "}]})
+    check("begrundelse uden grund giver rødt",
+          any("NY KLIK-UDEN-KNAP" in p and "reason" in p for p in hit),
+          f"{len(hit)} problem(er)")
+
+    # 12d. En linje der ikke længere er i klassen → rød, og beskeden skal sige
+    #      HVORFOR. Uden årsagen får næste iteration fire forklaringer på den
+    #      samme linje, hvilket er målt som den almindelige måde døde linjer
+    #      forsvinder på i de to andre lister. Rækken måles på disk denne gang
+    #      fordi de fire årsager skal kunne skelnes: `blog/html-to-markdown-vscode`
+    #      har 8 målte besøg, en publiceret rute og 1 købsknap, altså præcis en
+    #      linje der har været i klassen og er faldet ud af den med *knappen*.
+    with_knap = next((r for r in table if r["visits"] and r["publiceret"]
+                      and r["knapper"] and r["paid"]), None)
+    check("der findes en række på disk der er faldet ud af klassen med en knap",
+          with_knap is not None,
+          f"{with_knap['file'] if with_knap else '?'}")
+    if with_knap:
+        hit = click_no_button_problems(table, {"acknowledged": [
+            {"file": with_knap["file"], "reason": "testbegrundelse"}]})
+        dead = [p for p in hit if "DØD LINJE" in p]
+        check("død linje giver rødt og siger at årsagen er knappen",
+              len(dead) == 1 and "købsknap" in dead[0],
+              dead[0] if dead else f"{len(hit)} problem(er)")
+    #      Og de tre andre årsager skal kunne *siges*: en fil der ikke findes,
+    #      en der mistede trafik, og en der ikke er publiceret. Alle tre bygges
+    #      syntetisk, for ingen af dem findes i korpus i dag.
+    for name, mut, expect in (
+        ("filen er slettet", None, "ikke længere på disk"),
+        ("trafikken forsvandt", {"visits": None}, "besøgstallet"),
+        ("ruten er ikke publiceret", {"publiceret": False}, "publiceret"),
+    ):
+        if mut is None:
+            # Filen findes hverken på disk eller i korpus, så korpus-tabellen
+            # er tom: det er den eneste af de fire årsager, der ikke kan bygges
+            # som en række.
+            probe: list[dict] = []
+            probe_file = "blog/syntetisk-slettet.html"
+        else:
+            probe = [dict(synth, **mut)]
+            probe_file = probe[0]["file"]
+        hit = click_no_button_problems(probe, {"acknowledged": [
+            {"file": probe_file, "reason": "testbegrundelse"}]})
+        dead = [p for p in hit if "DØD LINJE" in p]
+        check(f"død linje siger at årsagen er: {name}",
+              len(dead) == 1 and expect in dead[0],
+              dead[0] if dead else f"{len(hit)} problem(er)")
+
+    # 12e. Dubletter → rød (punkt 4). Listen er en mængde.
+    hit = click_no_button_problems([synth], {"acknowledged": [
+        {"file": synth["file"], "reason": "a"},
+        {"file": synth["file"], "reason": "b"}]})
+    check("dubletter i listen giver rødt",
+          any("dubletter" in p for p in hit), f"{len(hit)} problem(er)")
+
+    # 12f. Filen på disk skal findes og have de nøgler porten læser. Uden denne
+    #      kontrol kan porten være grøn fordi filen ikke findes, hvilket er det
+    #      samme som kontrol 9 gjorde for blindlisten.
+    doc = json.loads(CLICK_NO_BUTTON.read_text(encoding="utf-8"))
+    check("klassen-filen findes med note, source og acknowledged",
+          set(("note", "source", "acknowledged")) <= set(doc),
+          f"{sorted(doc)}")
+    check("klassen-filen er grøn som den ligger på disk",
+          not click_no_button_problems(table, doc),
+          f"{len(click_no_button_problems(table, doc))} problem(er)")
 
     failed = 0
     for name, ok, detail in checks:

@@ -893,6 +893,10 @@ STEPS: tuple[Step, ...] = (
         inputs=(
             "tools/check_article_paid_path.py",
             "tools/article_paid_path_blind.json",
+            # Dom 5s flås. Uden den i filteret kunne
+            # `article_click_no_button.json` ændres uden at porten nogensinde
+            # læste den — samme fejl som de to overførsler over.
+            "tools/article_click_no_button.json",
             "tools/stripe_catalog.json",
             "tools/check_stripe_ctas.py",
             "reports/weekly/*.json",
