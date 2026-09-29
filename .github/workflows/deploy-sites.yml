@@ -47,6 +47,14 @@ on:
       # listen, springe gaten over — altså netop den push der gør porten
       # meningsløs.
       - 'tools/article_paid_path_blind.json'
+      # Gatestrækket `tool-paid-path` dømmer listen over blinde værktøjssider
+      # mod målingen, og læser de samme filer som `article-paid-path` over.
+      # Uden portens egen fil og ratchet i filteret kunne en push, der kun
+      # tilføjer en linje eller sletter en, springe gaten over — netop den
+      # push der afgør om porten er værd at have. Samme grund som de tre
+      # linjer ovenfor, målt for tiende gang.
+      - 'tools/check_tool_paid_path.py'
+      - 'tools/tool_paid_path_blind.json'
       # Dom 5 i samme gatestræk: listen over artikler der har læsere, en
       # indirekte købsvej og ingen købsknap. Samme grund som linjen ovenfor —
       # uden den springer en push, der kun skriver en begrundelse, gaten over.

@@ -1433,3 +1433,45 @@ svar afhang af hvilken sti den blev kaldt med — selftesten var grøn på en
 mutation porten ellers fangede. (2) `route_pages` skrev nøgler uden præfiks
 mens `link_targets` skrev med, så de to lister mødtes aldrig. Begge er samme
 fejl og samme løsning: ét sted opløser stier, og alle kalder det.
+
+## vaerktoj-betalt-vej (30/9, ceo/vaerktoj-betalt-vej)
+
+- `ITERATION_ID`: `vaerktoj-betalt-vej-2026-09-30`
+- `STATE`: Opgave 3 færdig. Ny port, `tools/check_tool_paid_path.py`, rangerer
+  værktøjssider efter manglende betalt vej. Den fandt **42** blinde sider.
+- **MÅLT FØR → EFTER**: værktøjssider i portens dom **0 → 104** (artikler og
+  forsider er undtaget med vilje, jf. punkt 3 og 4 i portens docstring).
+  Publicerede værktøjssider uden betalt vej, som ingen port så: **42**.
+  Gatestræk: **83 → 85**. Selftest-kontroller: **38**.
+- **DE 42, rangeret** (links, fordi ingen rapport har trafik — `/api/stats`
+  svarer 401): `/books/compliance-bundle` 199, `/da/compliance-ai` 97,
+  `/compliance-ai` 92, `/books/eaa-checklist` 49, `/books/nis2-for-agencies` 49,
+  `/books` 43, `/accessibility-statement-generator` 29, og 34 mindre.
+- **HVORFOR DE LAG MELLEM DE TO PORTER** (dette er hele fundet): dom 6 i
+  `check_article_paid_path.py` dømmer ikke-artikler, men kræver `visits`.
+  `/api/stats` svarer 401 siden uge 37, så ingen værktøjsside har besøg i nogen
+  rapport, så dom 6 har aldrig set dem. Fire iterationer rettede derfor én side
+  ad gangen ved at læse trafikken i hovedet (6a01d8a, 66172a0, ff32199).
+- **MÅLT PÅ KLASSE**: 104 ruter er hverken artikler eller forsider. 3 har ingen
+  fil i `site/` — `/bulk-url-checker`, `/security-headers-checker`, `/tools` —
+  og serveres som 404. 1 ligger på `bugbottle.dev` (❓, ikke i deploy-matricen).
+  0 er delte af flere domæner. 100 dømmes, 42 af dem er blinde.
+- **MUTATIONER (5, alle grønne mod mutationen)**: `judged()`→`True` gav 6 røde
+  kontroller; syntetisk-filteret væk gav 3; artiklerne ikke undtaget gav 2
+  (190 overlap i klassen); ratchet-dommen væk gav 1; ny-blind-dommen væk gav 2.
+- **SYNtetISKE RAPPORTER.** `traffic_rows()` springer over enhver rapport med
+  `"synthetic": true` og navngiver den. Mutationen viser reglen er nødvendig:
+  uden den læser den delte læser fra artikelporten `999999` besøg på
+  `/json-formatter` fra en rapport der ligger i en midlertidig mappe i selftestens
+  kontrol 9.
+- **EN FEJL FUNDET I SELVE PORTEN, MENS DEN SKREV**: `--write` skrev
+  "42 færre" da den såede listen fra 0 til 42, altså at listen blev mindre,
+  mens den blev større. Rettet til at skrive retningen, ikke `minus`.
+- **PLAN-COMMITS**: ingen. Hele diffen er én opgave: port + ratchet-fil +
+  `quality_gate.py` + path-filter, squashet til én commit på `main`.
+- `SLIP-REVIEW`: springet over med vilje. Diffen er to nye filer på 666 og 43
+  ændrede linjer i eksisterende porte/workflow, ingen `site/`-fil og ingen
+  `_worker.js`, så de otte fejltyper i kvalitetslisten (frosne build-værdier,
+  inline data, dobbelt handling, tidszoner, adgangskontrol, GET-mutationer,
+  hemmeligheder, kørte migrationer) rammer ingen af dem. Portens egne
+  mutationer dækker den klasse af fejl der *kan* opstå her.

@@ -951,6 +951,41 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
         inputs=("tools/check_article_paid_path.py", "build_sites.py"),
     ),
+    # Opgave 3 (30/9): værktøjssiderne lå uden for portens dom, fordi
+    # artikelportens dom 6 kræver *målte besøg* — og `/api/stats` har svaret
+    # 401 siden uge 37, så ingen værktøjsside har besøg i nogen rapport. Fire
+    # iterationer i træk rettede derfor én side ad gangen ved at læse trafikken
+    # i hovedet. Målt 30/9: 42 publicerede værktøjssider uden betalt vej, de
+    # mest indgående med 199 links.
+    #
+    # Samme læsere som artikelporten (regel 1 i portens docstring), så de to
+    # gatestræk ikke kan glide fra hinanden. Derfor er de også inputs her:
+    # uden dem kunne `check_article_paid_path.py` ændre sine læsere uden at
+    # dette gatestræk kørte.
+    Step(
+        id="tool-paid-path",
+        argv=("python3", "tools/check_tool_paid_path.py", "--quiet"),
+        inputs=(
+            "tools/check_tool_paid_path.py",
+            # Ratcheten over de blinde værktøjssider. Uden den i filteret kunne
+            # en push, der kun tilføjer eller fjerner en linje, springe gaten
+            # over — altså netop den push der afgør om porten er værd at have.
+            "tools/tool_paid_path_blind.json",
+            "tools/check_article_paid_path.py",
+            "tools/check_stripe_ctas.py",
+            "tools/route_inventory.json",
+            "tools/stripe_catalog.json",
+            "build_sites.py",
+            "reports/weekly/*.json",
+            "site/**/*.html",
+        ),
+    ),
+    Step(
+        id="tool-paid-path-selftest",
+        argv=("python3", "tools/check_tool_paid_path.py", "--self-test"),
+        inputs=("tools/check_tool_paid_path.py", "build_sites.py",
+                "tools/check_article_paid_path.py"),
+    ),
     # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
     # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i
     # `deploy-sites.yml`, så et domæne kan være deployet, instrumenteret og
