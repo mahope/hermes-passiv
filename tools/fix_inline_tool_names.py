@@ -100,6 +100,13 @@ TARGETS = (
     "copy-clean-guide",
     "bugbottle-demo",
     "cookie-consent-banner-demo",
+    # Målt 29/9: portens sidste advarsel. `/url-to-markdown` (EN) og
+    # `/da/url-til-markdown` (DA) er **to ruter**, ikke én med to navne — de
+    # står hver for sig i `tools/route_inventory.json` og i `track.js`'s
+    # `CTA_PATHS`. `(?:da\/)?` dækker den danske, men kun fordi den har sit eget
+    # navn i alternativet: mønstret er `$`-forankret, så `url-to-markdown` ikke
+    # kan sluge `-til-markdown`. Derfor manglede den i de fem sideres egne lister.
+    "url-til-markdown",
 )
 
 # Samme læsning som `check_inline_cta_events.check`: en rodrelativ
