@@ -36,6 +36,12 @@ on:
       - 'tools/check_product_copy.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
+      # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod
+      # målingen. Uden den her ville en push, der kun tilføjer en artikel til
+      # listen, springe gaten over — altså netop den push der gør porten
+      # meningsløs.
+      - 'tools/article_paid_path_blind.json'
+      - 'tools/check_article_paid_path.py'
       - 'tools/make_blog_da_mirrors_461.py'
       - 'tools/quality_gate.py'
       # Gatestrækket `plugin-engine-rules` kører PHP-motoren fra det publicerede

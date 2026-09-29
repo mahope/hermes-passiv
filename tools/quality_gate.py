@@ -880,6 +880,30 @@ STEPS: tuple[Step, ...] = (
             "site/_worker.js",
         ),
     ),
+    # Missionens konverteringskrav: "find de sider der har flest besøg, og
+    # sørg for at hver Pro-side klart viser hvad gratis og betalt giver, og har
+    # én købsknap der virker". Målingen lå i hovedet på to iterationer, så
+    # næste måling måtte selv finde den næste side. Porten rangerer artikler
+    # efter manglende betalt vej og dømmer, at listen over blinde artikler er
+    # en *ratchet*: den må kun krympe. 123 af 190 artikler er blinde i dag, så
+    # en tærskel ville være meningsløs; listen er den ærlige form.
+    Step(
+        id="article-paid-path",
+        argv=("python3", "tools/check_article_paid_path.py", "--quiet"),
+        inputs=(
+            "tools/check_article_paid_path.py",
+            "tools/article_paid_path_blind.json",
+            "tools/stripe_catalog.json",
+            "tools/check_stripe_ctas.py",
+            "reports/weekly/*.json",
+            "site/**/*.html",
+        ),
+    ),
+    Step(
+        id="article-paid-path-selftest",
+        argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
+        inputs=("tools/check_article_paid_path.py",),
+    ),
     # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
     # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i
     # `deploy-sites.yml`, så et domæne kan være deployet, instrumenteret og
