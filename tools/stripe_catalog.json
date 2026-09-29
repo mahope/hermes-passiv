@@ -791,6 +791,20 @@
       ]
     },
     {
+      "path": "site/da/blog/kopier-tabel-fra-pdf-til-excel.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/kopier-tabel-fra-pdf-til-excel",
+      "product": "clean-copy-pro",
+      "product_note": "Målt i artiklens egen tekst, ikke valgt efter følelse. Artiklens hele metode er Clean Copy-udvidelsen: 'Når en PDF åbnes i Chrome eller Firefox, er teksten rigtig tekst på siden — og det er præcis hvad Clean Copy-udvidelsen arbejder med', og siden beder læseren installere den i trin 1. Den eneste betalte sammenligning i artiklen er mod Acrobat og Excel Data, altså mod værktøjer der også gør tabeller &mdash; ikke mod compliance. De to Pro-funktioner er målt mod artiklens egne problemer: den siger at sidehoved, fodnoter og løbende tekst skal være væk ('Ingen sidehoveder, fodnotenumre eller løbende tekst'), og at manuelt arbejde ikke skalerer ('fint til tre rækker, ej til en årsrapport på 40 sider'). Det er egne rense regler og batch-konvertering, i den rækkefølge artiklen selv rejser problemet. clean-copy-pro er et licens-produkt med to pro_features og to free_features, så portens gratis/Pro-krav gater den strukturelt.",
+      "prices": [
+        "$19"
+      ],
+      "prices_note": "Målt med price_tokens() på den rå fil før diffen: artiklen havde ingen $-tokens overhovedet (den nævner Acrobat og Microsoft 365 uden pris), så det eneste token er det nye købslink.",
+      "requires_text": [
+        "Køb Clean Copy Pro — 19 $ pr. år"
+      ]
+    },
+    {
       "path": "site/blog/text-on-image-contrast-check.html",
       "domain": "mahope.tools",
       "route": "/blog/text-on-image-contrast-check",
