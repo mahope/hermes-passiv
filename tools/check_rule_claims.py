@@ -450,6 +450,17 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # server-side tjek er altså ikke en side-note, men artiklens emne.
     ("blog/cookie-consent-gdpr-compliance.html", "web"),
     ("da/blog/cookie-consent-gdpr-2026.html", "web"),
+    # EAA-CLI-guiden på dansk (30/9) — 7 indgående sider, målt af
+    # `check_article_paid_path.py` som blindlistens nr. 1 da --write kørte.
+    # **Kun den danske.** Den engelske spejling `blog/accessibility-scanner-cli`
+    # står allerede i kortet som `desktop` ovenfor (med sine 22 regler fra
+    # scanneren), og de to sider sælger to forskellige motorer: artiklen er om
+    # CLI'en, den nye sektion om webkernen. Samme slug med to kortværdier er
+    # umulig — `engine_key_for` returnerer den første match — så spejlingen
+    # får ingen købsknap, og dens 3 indirekte veje er allerede målt med
+    # `paid_links()`. Uden denne linje var sektionens "18 mere, 33 i alt" et
+    # fund uden motor, altså en fejl i stedet for et mål.
+    ("da/blog/tilgaengelighedsscanner-cli.html", "web"),
     # GitHub-Action-guiden og dens danske spejling (30/9) — 8 indgående
     # sider, målt af `check_article_paid_path.py`. Samme licens og samme to
     # tal som de otte ovenfor, og her er målingen af *hvorfor* særlig

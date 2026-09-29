@@ -1231,6 +1231,18 @@
       ]
     },
     {
+      "path": "site/da/blog/tilgaengelighedsscanner-cli.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/tilgaengelighedsscanner-cli",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
+    },
+    {
       "path": "site/blog/webflow-vs-squarespace-accessibility.html",
       "domain": "mahope.tools",
       "route": "/blog/webflow-vs-squarespace-accessibility",
