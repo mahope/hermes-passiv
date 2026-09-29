@@ -254,8 +254,49 @@
     resultsArea.style.display = 'none';
     var tracked = false;
 
-    fetch('/api/header-check?url=' + encodeURIComponent(url))
-      .then(function(r) { return r.json(); })
+    // Cloudflare replies to a crashed worker with an HTML error page — so the old
+    // `r.json()` threw and the catch printed "Network error: Unexpected token '<'",
+    // which blamed the visitor's Wi-Fi for our own 5xx, showed them a raw JavaScript
+    // error, and gave up on the first blip. The status is read first, a 5xx or 429
+    // is retried, and only a real 4xx is final.
+    var HEADERS_MAX_TRIES = 3;
+    var HEADERS_SERVER_BUSY = 'Our header server is temporarily unavailable. Please try again in a moment.';
+    var HEADERS_OFFLINE = 'We could not reach the header server. Check your connection and try again.';
+
+    function checkHeaders(target) {
+      var tries = 0;
+      function attempt() {
+        return fetch('/api/header-check?url=' + encodeURIComponent(target))
+          .catch(function(e) {
+            // The request never left. Not our server's fault, but a broken
+            // connection is still worth one more try.
+            var err = new Error((e && e.message) || 'connection failed');
+            err.transport = true;
+            err.transient = true;
+            throw err;
+          })
+          .then(function(r) {
+            return r.json().catch(function() { return null; }).then(function(data) {
+              if (r.ok && data) return data;
+              var err = new Error((data && data.error) || ('Server replied with ' + r.status));
+              err.status = r.status;
+              // No body means the answer was not ours to read, so it is transient
+              // by definition whatever status the edge reported.
+              err.transient = !data || r.status === 429 || r.status >= 500;
+              throw err;
+            });
+          })
+          .catch(function(err) {
+            if (err.transient && ++tries < HEADERS_MAX_TRIES) {
+              return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
+            }
+            throw err;
+          });
+      }
+      return attempt();
+    }
+
+    checkHeaders(url)
       .then(function(data) {
         hideStatus();
 
@@ -280,7 +321,8 @@
         renderResults(data);
       })
       .catch(function(err) {
-        showStatus('Network error: ' + err.message, 'sh-err');
+        showStatus(err.transport ? HEADERS_OFFLINE
+          : (err.transient ? HEADERS_SERVER_BUSY : (err.message || 'Failed to check headers.')), 'sh-err');
       });
   }
 

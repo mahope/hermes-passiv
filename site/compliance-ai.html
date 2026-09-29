@@ -397,6 +397,53 @@
   // Focus input
   input.focus();
 
+  // Cloudflare replies to a crashed worker with an HTML error page — so the old
+  // `res.json()` threw and the catch wrote "Network error. Please check your
+  // connection", which blamed the visitor's Wi-Fi for our own 5xx and gave up on
+  // the first blip. The status is read first, a 5xx or 429 is retried, and only
+  // a real 4xx is final.
+  var ASK_MAX_TRIES = 3;
+  var ASK_SERVER_BUSY = 'Our assistant server is temporarily unavailable. Please try again in a moment.';
+  var ASK_OFFLINE = 'We could not reach the assistant server. Check your connection and try again.';
+
+  function postJSON(path, payload) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(e) {
+      // The call never left. Not our server's fault, but a broken connection is
+      // still worth one more try.
+      var err = new Error((e && e.message) || 'connection failed');
+      err.transport = true;
+      err.transient = true;
+      throw err;
+    }).then(function(res) {
+      return res.json().catch(function() { return null; }).then(function(data) {
+        if (res.ok && data) return data;
+        var err = new Error((data && data.error) || ('Server replied with ' + res.status));
+        err.status = res.status;
+        // No body means the answer was not ours to read, so it is transient by
+        // definition whatever status the edge reported.
+        err.transient = !data || res.status === 429 || res.status >= 500;
+        throw err;
+      });
+    });
+  }
+
+  function askServer(payload) {
+    var tries = 0;
+    function attempt() {
+      return postJSON('/api/compliance-ai', payload).catch(function(err) {
+        if (err.transient && ++tries < ASK_MAX_TRIES) {
+          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
+        }
+        throw err;
+      });
+    }
+    return attempt();
+  }
+
   window.ask = function(text) {
     input.value = text;
     sendQuestion();
@@ -418,12 +465,7 @@
 
     showTyping();
 
-    fetch('/api/compliance-ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question })
-    })
-    .then(function(res) { return res.json(); })
+    askServer({ question: question })
     .then(function(data) {
       removeTyping();
       sendBtn.disabled = false;
@@ -437,10 +479,11 @@
         statusEl.className = 'chat-status error';
       }
     })
-    .catch(function() {
+    .catch(function(err) {
       removeTyping();
       sendBtn.disabled = false;
-      statusEl.textContent = 'Network error. Please check your connection and try again.';
+      statusEl.textContent = err.transport ? ASK_OFFLINE
+        : (err.transient ? ASK_SERVER_BUSY : (err.message || 'Something went wrong. Please try again.'));
       statusEl.className = 'chat-status error';
     });
   };
@@ -550,12 +593,18 @@
     }
     var btn = document.getElementById('leadBtn');
     btn.disabled = true;
-    fetch('/api/waitlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email })
-    })
-    .then(function(res) { return res.json(); })
+    // A lost signup is a lost signup, and "Network error" blamed the visitor for
+    // our blip. One retry on a transient answer, same rule as the chat above.
+    var tries = 0;
+    function attempt() {
+      return postJSON('/api/waitlist', { email: email }).catch(function(err) {
+        if (err.transient && ++tries < ASK_MAX_TRIES) {
+          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
+        }
+        throw err;
+      });
+    }
+    attempt()
     .then(function(data) {
       try { if (window.trackEvent) window.trackEvent('ai-lead'); } catch (e) {}
       st.textContent = data.ok
@@ -563,9 +612,12 @@
         : (data.error || 'Something went wrong. Please try again.');
       st.className = 'lead-status' + (data.ok ? '' : ' error');
     })
-    .catch(function() {
+    .catch(function(err) {
       btn.disabled = false;
-      st.textContent = 'Network error. Please try again.';
+      st.textContent = err.transport
+        ? 'We could not reach the server. Check your connection and try again.'
+        : (err.transient ? 'The server is temporarily unavailable. Please try again in a moment.'
+                         : (err.message || 'Something went wrong. Please try again.'));
       st.className = 'lead-status error';
     });
   }

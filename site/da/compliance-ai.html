@@ -399,6 +399,52 @@
   // Focus input
   input.focus();
 
+  // Cloudflare svarer en worker der er faldet ned med en HTML-side — så den gamle
+  // `res.json()` kastede, og catch'en skrev "Netværksfejl. Tjek din forbindelse",
+  // altså skyldte vores egen 5xx besøgerens wifi, og den gav op på første blip.
+  // Status læses først, 5xx og 429 genkaldes, og kun et rigtigt 4xx er endeligt.
+  var ASK_MAX_TRIES = 3;
+  var ASK_SERVER_BUSY = 'Vores assistentserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
+  var ASK_OFFLINE = 'Vi kunne ikke nå assistentserveren. Tjek din forbindelse og prøv igen.';
+
+  function postJSON(path, payload) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(e) {
+      // Kaldet kom aldrig frem. Ikke vores servers skyld, men et brudt forbindelse
+      // er stadig værd ét forsøg mere.
+      var err = new Error((e && e.message) || 'connection failed');
+      err.transport = true;
+      err.transient = true;
+      throw err;
+    }).then(function(res) {
+      return res.json().catch(function() { return null; }).then(function(data) {
+        if (res.ok && data) return data;
+        var err = new Error((data && data.error) || ('Serveren svarede med ' + res.status));
+        err.status = res.status;
+        // Mangler krop betyder at svaret ikke var skrevet af os, så det er
+        // forbigående uanset hvilken status kanten meldte.
+        err.transient = !data || res.status === 429 || res.status >= 500;
+        throw err;
+      });
+    });
+  }
+
+  function askServer(payload) {
+    var tries = 0;
+    function attempt() {
+      return postJSON('/api/compliance-ai', payload).catch(function(err) {
+        if (err.transient && ++tries < ASK_MAX_TRIES) {
+          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
+        }
+        throw err;
+      });
+    }
+    return attempt();
+  }
+
   window.ask = function(text) {
     input.value = text;
     sendQuestion();
@@ -420,12 +466,7 @@
 
     showTyping();
 
-    fetch('/api/compliance-ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question })
-    })
-    .then(function(res) { return res.json(); })
+    askServer({ question: question })
     .then(function(data) {
       removeTyping();
       sendBtn.disabled = false;
@@ -439,10 +480,11 @@
         statusEl.className = 'chat-status error';
       }
     })
-    .catch(function() {
+    .catch(function(err) {
       removeTyping();
       sendBtn.disabled = false;
-      statusEl.textContent = 'Netværksfejl. Tjek din forbindelse og prøv igen.';
+      statusEl.textContent = err.transport ? ASK_OFFLINE
+        : (err.transient ? ASK_SERVER_BUSY : (err.message || 'Noget gik galt. Prøv venligst igen.'));
       statusEl.className = 'chat-status error';
     });
   };
@@ -552,12 +594,18 @@
     }
     var btn = document.getElementById('leadBtn');
     btn.disabled = true;
-    fetch('/api/waitlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email })
-    })
-    .then(function(res) { return res.json(); })
+    // En tabt tilmelding er en tabt tilmelding, og "Netværksfejl" skyldte vores
+    // blip besøgeren. Ét genkald på et forbigående svar, samme regel som chatten.
+    var tries = 0;
+    function attempt() {
+      return postJSON('/api/waitlist', { email: email }).catch(function(err) {
+        if (err.transient && ++tries < ASK_MAX_TRIES) {
+          return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
+        }
+        throw err;
+      });
+    }
+    attempt()
     .then(function(data) {
       try { if (window.trackEvent) window.trackEvent('ai-lead'); } catch (e) {}
       st.textContent = data.ok
@@ -565,9 +613,12 @@
         : (data.error || 'Something went wrong. Please try again.');
       st.className = 'lead-status' + (data.ok ? '' : ' error');
     })
-    .catch(function() {
+    .catch(function(err) {
       btn.disabled = false;
-      st.textContent = 'Network error. Please try again.';
+      st.textContent = err.transport
+        ? 'Vi kunne ikke nå serveren. Tjek din forbindelse og prøv igen.'
+        : (err.transient ? 'Serveren er midlertidigt utilgængelig. Prøv igen om et øjeblik.'
+                         : (err.message || 'Noget gik galt. Prøv venligst igen.'));
       st.className = 'lead-status error';
     });
   }
