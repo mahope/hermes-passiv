@@ -1223,6 +1223,30 @@
       ]
     },
     {
+      "path": "site/blog/html-to-markdown-vscode.html",
+      "domain": "cleancopy.tools",
+      "route": "/blog/html-to-markdown-vscode",
+      "product": "clean-copy-pro",
+      "prices": [
+        "$19"
+      ],
+      "requires_text": [
+        "Buy Clean Copy Pro — $19/year"
+      ]
+    },
+    {
+      "path": "site/da/blog/indsaet-som-markdown-i-vscode.html",
+      "domain": "cleancopy.tools",
+      "route": "/da/blog/indsaet-som-markdown-i-vscode",
+      "product": "clean-copy-pro",
+      "prices": [
+        "$19"
+      ],
+      "requires_text": [
+        "Køb Clean Copy Pro — $19/år"
+      ]
+    },
+    {
       "path": "site/blog/copy-table-website-to-notion.html",
       "domain": "mahope.tools",
       "route": "/blog/copy-table-website-to-notion",
