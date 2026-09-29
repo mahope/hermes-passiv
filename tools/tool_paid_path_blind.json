@@ -15,7 +15,6 @@
   "/guides/comparison",
   "/guides/magento-accessibility-check",
   "/hash-generator",
-  "/json-formatter",
   "/markdown-table-generator",
   "/nis2-gap-assessment-da",
   "/palette-generator",
@@ -29,12 +28,10 @@
   "/ropa-template",
   "/site-icons",
   "/terms",
-  "/text-diff",
   "/tilgaengelighedserklaering-generator-da",
   "/url-encoder-decoder",
   "/url-inspector",
   "/uuid-generator",
-  "/word-counter",
   "/wordpress-plugin"
  ]
 }

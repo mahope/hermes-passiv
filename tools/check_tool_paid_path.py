@@ -409,22 +409,28 @@ def _self_test() -> int:
           and page_file(SITE, "/books/") == SITE / "books" / "index.html")
 
     # 5. Dommeren: en målt værktøjsside uden vej skal kunne gøre porten rød,
-    #    og en med vej skal ikke. Begge former findes i `site/` i dag, så de
-    #    læses fra disk — men dømmes på en tabel med præcis den ene side, så
-    #    portens egen klasse (43 linjer) ikke forurenser testen.
-    with_vej = next(r for r in table if r["file"] == "contrast-checker.html")
-    without_vej = next(r for r in table if r["file"] == "json-formatter.html")
-    rød = judge([with_vej, without_vej], {"blind": []})
+    #    og en med vej skal ikke. Begge former læses fra `site/` i dag, men
+    #    **hvilken** side der er blind, vælger tabellen selv. Det var derfor de
+    #    gjorde grøn i 30/9: `json-formatter.html` stod hårdkodet som eksempel på
+    #    en side uden vej, og da den fik sin, faldt to kontroller — af en opgave
+    #    der *lykkedes*. Samme familie som `RE_CLAIM`s hårdkodede former.
+    kandidater = [r for r in table if judged(r)]
+    with_vej = next((r for r in kandidater if r["paid"]), None)
+    without_vej = next((r for r in kandidater if not r["paid"]), None)
+    rød = judge([r for r in (with_vej, without_vej) if r], {"blind": []})
     check("en side uden vej gør porten rød med filnavn",
-          any("json-formatter.html" in p and "NY BLIND VÆRKTØJSSIDE" in p
-              for p in rød), f"{len(rød)} problem(er)")
+          bool(without_vej)
+          and any(without_vej["file"] in p and "NY BLIND VÆRKTØJSSIDE" in p
+                  for p in rød),
+          f"{len(rød)} problem(er)")
     check("en side med vej er ikke i den røde besked",
-          not any("contrast-checker.html" in p for p in rød),
+          bool(with_vej) and not any(with_vej["file"] in p for p in rød),
           f"{[p[:70] for p in rød]}")
     check("kun en side med vej giver grønt",
-          not judge([with_vej], {"blind": []}), "")
+          bool(with_vej) and not judge([with_vej], {"blind": []}), "")
     check("beskeden siger hvor mange indgående links siden har",
-          any("15 indgående links" in p for p in rød),
+          bool(without_vej)
+          and any(f"{without_vej['links']} indgående link" in p for p in rød),
           f"{[p for p in rød if 'indgående' in p][:1]}")
 
     # 5b. Død linje: en linje i listen uden en reel mangel er rød, fordi
