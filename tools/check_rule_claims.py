@@ -427,6 +427,12 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("blog/nis2-readiness-guide.html", "web"),
     ("da/blog/nis2-beredskabstjek-2026.html", "web"),
     ("da/compliance-ai.html", "web"),
+    # Wix-EAA-guiden og dens danske spejling (30/9) — nr. 1 på blindlisten
+    # efter html-til-markdown, 17 indgående sider målt af samme port. Samme
+    # licens og samme to tal som de fire ovenfor: artiklens eget trin 5 siger
+    # "deliver a findings report", og det er præcis den fil Pro leverer.
+    ("blog/wix-eaa-accessibility.html", "web"),
+    ("da/blog/wix-tilgaengelighed-eaa.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance
     # rules") ikke blev fundet af `RE_CLAIM` — så porten nåede aldrig at spørge
