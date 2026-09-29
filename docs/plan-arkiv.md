@@ -1562,3 +1562,30 @@ Pro. Blindtallet i `tools/check_tool_paid_path.py` faldt **42 → 39**.
   den flugter med kortene). Kontrast uændret fra målingen i `31f3260`: link
   6,25:1, brødtekst 11,37:1. Skærmbilleder i `/tmp/ui-boeger-vej/`.
 - **GATE**: `python3 tools/quality_gate.py` GRØN, 85 steps (uændret).
+
+## 2026-09-30 — `ceo/vej-til-betalt-tre-sider` (c7c01dc)
+
+Opgave 4, 9/42. Valgt af `check_tool_paid_path.py` (indgående links): `/accessibility-statement-generator` (29), `/books/build-your-first-chrome-extension` (26), `/case-converter` (15). 36 → 33 blinde; 67 af 104 ruter har en vej.
+
+**Målt før:** de tre sider havde 0 `buy.stripe.com` og 0 enklaver mod betalt. Efter: præcis én hver, målt i `dist/`.
+
+**Valget af vej per side var ikke vilkårligt:**
+- `/accessibility-statement-generator` → `/compliance-report` (EUComply Pro). Sidens egen "Honest disclaimer" siger "cannot verify your conformance claims — only testing can do that", så note'en gør bare den sætning færdig. Katalogen er målt for, hvad der er gratis: `site/compliance-report.html:209-309` kører accessibility-tjekkene og scorer på siden; Pro tilføjer PDF + de 18 server-side tjek.
+- `/books/build-your-first-chrome-extension` → `/clean-copy-tool` (Clean Copy Pro). Bogen kapitel 10 dækker premium-funktioner og licensnøgler, så det ærlige er et virkeligt eksempel frem for en løfte om et. Pro-funktionerne er målt i `tools/stripe_catalog.json` (batch conversion, custom cleanup rules).
+- `/case-converter` → `/support`. **Målt, at der ikke findes en produktvej:** `grep -rl camelCase` over `extension-clean-copy/*.js`, `site/clean-copy-tool.html`, `../transmute/src` giver ingen konvertering — hverken Clean Copy, Transmute, Page Profile eller DeskUptime laver bogstaver. Så siden siger det rent og beder om en stille tak i stedet for at finde på en kobling. Det er samme regel som fundet fra 29/9 og målt i `aehlige-lagrings-loefter`: en port må aldrig kræve en løgn som sin kontrakt.
+
+**Mutationer (bevis at portene kan fejle):**
+| Mutation | Forventet | Målt |
+|---|---|---|
+| pro-note-linket på hver af de tre → ikke-betalt rute | RØD | RØD, alle tre, med indgående links i beskeden |
+| fjern `PRODUCT_ENGINE`-linjen for accessibility-siden | RØD (udømt løfte) | RØD |
+| `15 accessibility rules` → 14 | RØD | RØD |
+| `18 server-side checks` → 17 | RØD | **GRØN** |
+| `33 checks` → 32 | RØD | **GRØN** |
+| `$79/year` → `$78` | RØD | **GRØN** |
+
+De tre sidste er opgave 9. Årsagen er målt i `tools/check_rule_claims.py:204` — `RE_TOTAL` genkender kun *"33 checks in all"* og *"Alle 33 automatiske tjek"*, så en sætning med totalet alene finder ingen motor. Priser dømmes af ingen port i repoet.
+
+**Layout:** målt i browseren ved 390 og 1280 px over `http://` — `scrollWidth == viewport` på alle tre. Målt over `file://` giver `/accessibility-statement-generator` 432 px, fordi Inter ikke indlæses der; det er et artefakt af testmetoden, ikke en fejl, og live (samme kilde) måler 390. Note: en senere port skal derfor servere `dist/` over http, ikke åbne filer.
+
+**Deploy (forrige iteration, 13a9bd6):** bekræftet. `/books/` **med** skråstreg og bogsider **uden** er de kanoniske former; den omvendte form svarer 308 med tom krop. Et check på `/books` målte derfor 0 links og 0 prober — ikke en fejl på siden.

@@ -3,13 +3,10 @@
  "source": "python3 tools/check_tool_paid_path.py --write --force",
  "measured": "2026-09-30",
  "blind": [
-  "/accessibility-statement-generator",
   "/base64-encoder-decoder",
-  "/books/build-your-first-chrome-extension",
   "/books/cookie-consent-guide",
   "/books/eaa-shopify",
   "/books/gdpr-for-agencies",
-  "/case-converter",
   "/color-blindness-simulator",
   "/color-blindness-simulator-da",
   "/cookie-consent-banner-demo",
