@@ -1237,6 +1237,32 @@
         "Køb Page Profile Pro — 19 $ pr. år",
         "Køb Page Profile Pro Lifetime — 39 $ én gang"
       ]
+    },
+    {
+      "path": "site/blog/monitor-website-github-actions-free.html",
+      "domain": "mahope.tools",
+      "route": "/blog/monitor-website-github-actions-free",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$19",
+        "$10",
+        "$120"
+      ],
+      "requires_text": [
+        "Buy DeskUptime Pro — $19 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/overvaag-hjemmeside-github-actions-gratis.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/overvaag-hjemmeside-github-actions-gratis",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$19"
+      ],
+      "requires_text": [
+        "Køb DeskUptime Pro — 19 $ én gang"
+      ]
     }
   ],
   "built_offers": [

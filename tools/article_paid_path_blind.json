@@ -3,12 +3,10 @@
  "source": "python3 tools/check_article_paid_path.py --write",
  "measured": "2026-09-29",
  "blind": [
-  "blog/bug-reports-in-ci-pipeline.html",
   "blog/compliance-check-github-action.html",
   "blog/free-website-compliance-checker.html",
   "blog/gdpr-vs-nis2-overlap.html",
   "blog/gdpr-website-compliance-checklist.html",
-  "blog/monitor-website-github-actions-free.html",
   "blog/release-integrity-explained.html",
   "blog/test-your-zip-before-release.html",
   "da/blog/bugrapporter-i-ci-pipeline.html",
@@ -19,16 +17,11 @@
   "da/blog/gratis-gdpr-dokumentgeneratorer.html",
   "da/blog/kopier-tabel-fra-pdf-til-excel.html",
   "da/blog/open-graph-tjekker-guide.html",
-  "da/blog/overvaag-flere-hjemmesider-paa-skrivebordet.html",
-  "da/blog/overvaag-hjemmeside-github-actions-gratis.html",
   "da/blog/overvaag-hjemmeside-mac-menu-bar.html",
   "da/blog/prestashop-tilgaengelighed-eaa.html",
   "da/blog/release-integrity-hvad-er-det.html",
-  "da/blog/roegtest-efter-udgivelse-statiske-sites.html",
-  "da/blog/site-health-github-actions-stak.html",
   "da/blog/test-din-zip-foer-release.html",
   "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
-  "da/blog/tilgaengelighedsscanner-cli.html",
-  "da/blog/tjek-om-hjemmeside-er-nede-gratis.html"
+  "da/blog/tilgaengelighedsscanner-cli.html"
  ]
 }
