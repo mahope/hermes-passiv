@@ -496,6 +496,29 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("compliance-ai.html", "web"),
     ("scan.html", "web"),
     ("scan-da.html", "web"),
+    # De otve gratis tjek og deres næste-vej til EUComply Pro (30/9). Målt før
+    # ændringen: de otve sider havde 0 `buy.stripe.com` og 0 enklaver mod
+    # betalt, og de løver alle den samme licens med de samme to tal som
+    # `compliance-report.html` — "15 accessibility checks" i den ene sætning og
+    # "18 server-side … 33 in all" i den næste. Uden disse ni linjer var
+    # løfterne **udømte**, altså en fejl i stedet for et mål: præcis den
+    # fejlform porten findes for, og samme som de artikler ovenfor.
+    #
+    # `security-headers-check.html` står her **uden** dansk spejling, fordi
+    # der ikke findes nogen: sitemap målt 30/9, kun `/security-headers-check`.
+    # Det er ni sider, ikke ti — den tidligere optælling regnede den med.
+    #
+    # Alle ni sælger webkernen, altså motoren der kører 15 frie fund og 18 i
+    # `reportProFindings()`.
+    ("nis2-check.html", "web"),
+    ("nis2-check-da.html", "web"),
+    ("cookie-check.html", "web"),
+    ("cookie-check-da.html", "web"),
+    ("contrast-checker.html", "web"),
+    ("contrast-checker-da.html", "web"),
+    ("security-headers-check.html", "web"),
+    ("compliance-site-check.html", "web"),
+    ("da/compliance-site-check.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )

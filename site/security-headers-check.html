@@ -135,10 +135,19 @@
   <h2>Frequently asked questions</h2>
   <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
       <div class="card"><h3>What are security headers?</h3><p>They are HTTP response headers a server sends to harden the browser: Content-Security-Policy limits what scripts can run, Strict-Transport-Security forces HTTPS, X-Content-Type-Options stops MIME sniffing, and others control framing and referrer leakage. They cost nothing to add and block whole attack classes.</p></div>
-      <div class="card"><h3>Is my URL logged or stored?</h3><p>No. The lookup happens from your browser directly against the site you enter — this page has no backend that records what you scan.</p></div>
+      <div class="card"><h3>Is my URL logged or stored?</h3><p>No. The lookup goes through our server, which fetches the headers and sends them back. We do not store the URL you entered or the result, and we set no cookies. What we do keep is a salted hash of your IP address for the current hour, so that one script cannot use up the check for everyone else; it expires after two hours.</p></div>
       <div class="card"><h3>Why does my site score badly even though it works fine?</h3><p>Headers do not affect how a page looks, only how browsers treat it. Most sites ship without CSP or HSTS because frameworks do not add them by default. The fix is usually a few lines in your web server or hosting configuration.</p></div>
       <div class="card"><h3>Can I copy the recommended headers directly?</h3><p>Yes. Each missing header comes with a suggested value you can paste into nginx, Apache, Netlify, Vercel or Cloudflare settings. Test after deploying — an overly strict CSP can break inline scripts until tuned.</p></div>
   </div>
+</section>
+
+<section style="margin:2.5rem 0;">
+  <h2>This check is free. The rest of your site's security is not.</h2>
+  <p>Headers are one line of a site's security posture, and they are the line a scan reads
+  best. <a href="/compliance-report">EUComply Pro</a> reads the same headers for the site you
+  name and adds what this page cannot see: HTTPS enforcement, mixed content and form
+  submission security, next to 15 accessibility checks — 33 in all, in a PDF report you can
+  hand to a client or your compliance officer.</p>
 </section>
 
 </main>
