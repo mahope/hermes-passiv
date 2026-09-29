@@ -951,9 +951,39 @@ if (privFetches === privBefore) {
   r = await call('/scan-proxy?url=' + encodeURIComponent('https://scan.example/'), ip(4));
   ok('scan-proxy på en offentlig side virker stadig', r.status === 200, r.status);
 }
-ok('de fire åbne ruter har alle et mål-værn',
-  /targetIsPublic/.test(readFileSync(join(root, 'site/_worker.js'), 'utf8').split('async function handleProfile')[1].slice(0, 3000)),
-  'handleProfile mangler værn');
+// Hop-værnet på /api/profile måles adfærd, ikke navn. Review 29/9 fandt at
+// ruten stadig fulgte kæden med redirect:'follow', så et offentligt mål der
+// 302er ind i 127.0.0.1 blev hentet alligevel — og analyzeHtml() lagde title og
+// description fra den side i JSON-svaret. Den gamle port greb kun *navnet*
+// `targetIsPublic` i de første 3000 tegn af funktionen, så den var grøn både
+// før og efter rettelsen. Derfor tælles de ude-fetch her, som for de andre
+// ruter, og det navnegreb er væk: målværnet er allerede dømt adfærdsmæssigt af
+// PRIVATE_TARGETS-løkken ovenfor.
+const profBefore = privFetches;
+r = await call('/api/profile?url=' + encodeURIComponent('https://headers.example/hop-privat'), ip(9));
+const profBody = await r.json().catch(() => ({}));
+ok('profile afviser et redirect ind i en privat vært',
+  r.status === 400 && /private network/i.test(profBody.error || ''), `${r.status} ${JSON.stringify(profBody).slice(0, 120)}`);
+ok('profile hentede ingen af hop-hængene', privFetches === profBefore, `${privFetches - profBefore} ude-fetch`);
+// En offentlig redirect skal stadig virke, ellers er porten grøn fordi den
+// afviser alt — den anden fejlretning, som lå bag de tre andre hop-tests.
+r = await call('/api/profile?url=' + encodeURIComponent('https://headers.example/hop-ok'), ip(9));
+const profOk = await r.json().catch(() => ({}));
+ok('profile følger en offentlig redirect og melder den',
+  r.status === 200 && profOk.final_url === 'https://headers.example/final', `${r.status} ${JSON.stringify(profOk).slice(0, 120)}`);
+
+// Ingen rute må overlade kæden til runtime'en: så ser måleværnet kun første
+// hop, og et offentligt mål der 302er ind i 169.254.169.254 er igen præcis det
+// samme som at skrive den private adresse direkte. Heltalsmålet, fordi det er
+// den egenskab der gælder for hele filen — ikke for én funktion ved navn.
+// Kommentarlinjer tælles ikke med: `_worker.js` forklarer netop denne fejlform
+// to steder, og en port der rødmer på sin egen forklaring er død.
+const liveFollows = readFileSync(join(root, 'site/_worker.js'), 'utf8')
+  .split('\n')
+  .filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l))
+  .filter(l => /redirect:\s*['"`]follow['"`]/.test(l));
+ok('ingen rute overlader redirect-kæden til runtime\'en', liveFollows.length === 0,
+  `${liveFollows.length} kald: ${(liveFollows[0] || '').trim()}`);
 
 // ── Nøglen må ikke få skylden for noget der ikke er nøglen ───────────
 // Nøglen er bekræftet aktiv, før /api/report kaldes, så ingen gren efter det

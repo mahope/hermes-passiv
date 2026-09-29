@@ -439,13 +439,25 @@ async function handleProfile(request, url, env) {
   }
 
   let resp;
+  let finalUrl;
   try {
-    resp = await fetch(targetUrl.toString(), {
+    // Hop for hop, som /scan-proxy og /api/header-check. Med `redirect:
+    // 'follow'` ser targetIsPublic() kun første hop, så et offentligt mål der
+    // 302er ind i 169.254.169.254 blev hentet alligevel — og analyzeHtml() lagde
+    // title, description, overskrifter og hreflang fra den side i svaret.
+    // Målt af review 29/9; ruten var den sidste af fire.
+    const hop = await followChecked(targetUrl.toString(), {
       method: 'GET',
       headers: { 'User-Agent': 'HermesPassiv-PageProfile/1.0 (+https://mahope.tools/page-profile)', Accept: 'text/html,application/xhtml+xml,*/*' },
-      redirect: 'follow',
     });
+    resp = hop.response;
+    finalUrl = hop.finalUrl;
   } catch (err) {
+    // En privat hop er besøgerens adresse, ikke vores driftstid — 400 som de to
+    // andre ruter, så siden kan sige hvad der faktisk skete.
+    if (err.privateTarget || err.tooManyHops) {
+      return new Response(JSON.stringify({ ok: false, error: err.message }), { status: 400, headers });
+    }
     return new Response(JSON.stringify({ ok: false, error: `Could not fetch the page: ${err.message || 'unknown error'}` }), { status: 502, headers });
   }
 
@@ -459,7 +471,7 @@ async function handleProfile(request, url, env) {
   }
 
   const profile = analyzeHtml(html, {
-    finalUrl: resp.url,
+    finalUrl,
     status: resp.status,
     hsts: resp.headers.has('strict-transport-security'),
     csp: resp.headers.has('content-security-policy'),
@@ -468,7 +480,7 @@ async function handleProfile(request, url, env) {
   });
   const scored = scoreProfile(profile);
 
-  return new Response(JSON.stringify({ ok: true, url: targetUrl.toString(), final_url: resp.url, status: resp.status, ...profile, ...scored }), { status: 200, headers });
+  return new Response(JSON.stringify({ ok: true, url: targetUrl.toString(), final_url: finalUrl, status: resp.status, ...profile, ...scored }), { status: 200, headers });
 }
 
 const PP_WEIGHTS = {

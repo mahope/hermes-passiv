@@ -32,8 +32,11 @@ overfladen, og det er værd at skrive ned:
 
 * **31** af 299 sider har mindst ét løfte porten dømmer. De øvrige **268**
   læses, men ingen regel fyrer på dem.
-* `RE_CLAIM` + `RE_HERO` + `RE_TOTAL` giver **119** dømte løfter, alle matcher
-  koden (15 frie + 18 Pro = 33).
+* `RE_CLAIM` + `RE_HERO` + `RE_TOTAL` giver **162** dømte løfter, alle matcher
+  koden (15 frie + 18 Pro = 33). De tre seneste var den sammensatte danske form
+  "15 tilgængelighedsregler" på tre sider — review 29/9 fandt den skrevet som
+  **11** på den danske købsside, og mønstret kendte kun `regler` som et
+  selvstændigt ord.
 * `RE_HERO` fyrer **15** gange, på **15** sider. Der er **198** sider med et
   `hero-note`-element, så porten dømmer bevidst kun en brøkdel af dem — den
   kræver et regel- eller tjekord, fordi `guides/platforms.html` siger
@@ -139,6 +142,17 @@ RE_CLAIM = re.compile(
     r"|automated\s+(?:[\d.]+\s+AA\s+)?(?:WCAG|compliance|accessibility|EAA)\s*"
     r"(?:[\d.]+\s+AA\s+)?(?:rules|checks)"
     r"|WCAG\s*(?:[\d.]+\s*AA\s*)?(?:compliance\s+|-\s*)?(?:rules|regler)"
+    # Den fjerde oversete form, målt 29/9 af review: et tal foran et
+    # **sammensat** dansk ord. Den danske købsside skrev "kører 11
+    # tilgængelighedsregler" i linje 171, mens linje 99, 153 og 179 på *samme
+    # side* skrev 15 — og ingen af dem blev dømt, fordi mønstret kendte
+    # `regler` som et selvstændigt ord og ikke som halvdel af
+    # `tilgængelighedsregler`. Samme fejl som de tre ovenfor, en linje dybere:
+    # en sprogform der mangler i listen er usynlig. Derfor er kun denne ene
+    # sammensætning taget med — ikke et generelt `[\w-]+regler`, der ville
+    # dømme enhver opdiget sammensætning. Selftestens arm genskaber formen på
+    # den rigtige fil.
+    r"|tilgængeligheds(?:regler|tjek)"     # 11 tilgængelighedsregler
     r")"
     # Nøgne regelord — "16 rules", "22 regler" — kræver et **to-cifret** tal.
     # Det er målt, ikke valgt, og begge halve er målt:
@@ -1053,6 +1067,48 @@ def self_test() -> int:
             fails.append("selftest: en side med et løfte, som ikke står i "
                          "produkt→motor-kortet, gav ingen fejl — kortet lækker")
         stray.unlink()
+
+        # Den ottende fejlform, målt 29/9: et tal foran et **sammensat** dansk
+        # ord. `da/compliance-report.html` skrev "kører 11 tilgængelighedsregler"
+        # i den ene linje, mens tre andre linjer på samme side sagde 15, og
+        # porten dømte ingen af dem. Armen genskaber præcis den form på den
+        # rigtige fil — en arm der kun testede den fangne form ville være grøn
+        # på præcis den fejl der slap igennem. Den negative kontrol er den
+        # linje lige under, som porten *allerede* dømte: uden den er der intet
+        # bevis for at den nye gren ikke har gjort mønstret så bredt at alt
+        # går rødt.
+        comp = tmp / "site" / "da" / "compliance-report.html"
+        comp_body = comp.read_text(encoding="utf-8")
+        # Hele frasen og ikke kun tallet: `.replace("15", …, 1)` ville ramt det
+        # første 15 i filen, som er et andet løfte, og armen ville så have
+        # dømt noget andet end den form den er skrevet for.
+        comp_hit = re.search(r"\d+\s+tilgængelighedsregler", comp_body)
+        if comp_hit is None:
+            fails.append("selftest: den danske købsside har ikke længere 'N "
+                         "tilgængelighedsregler' — armen genskaber en form der "
+                         "ikke findes")
+        else:
+            wrong_comp = f"{real + 1} tilgængelighedsregler"
+            comp.write_text(
+                comp_body.replace(comp_hit.group(0), wrong_comp, 1),
+                encoding="utf-8")
+            comp_errs = check(lay)
+            comp.write_text(comp_body, encoding="utf-8")
+            if not comp_errs:
+                fails.append(f"selftest: {wrong_comp!r} på "
+                             f"{comp.name} gav ingen fejl")
+            elif not any(comp.name in e for e in comp_errs):
+                fails.append(f"selftest: sammensat-ords-mutationen på "
+                             f"{comp.name} gav en fejl der ikke nævner den "
+                             f"muterede side: " + "; ".join(comp_errs[:3]))
+
+        # Negativ kontrol på den nye gren: et tal foran `automatiske regler` er
+        # den form porten dømte længe før denne arm, så den skal *stadig* være
+        # grøn når den rigtige 15 står der. Uden denne linje beviser armen over
+        # for sig selv, fordi den ville være rød af den mutation den selv lavede.
+        if check(lay):
+            fails.append("selftest: den danske købsside med det rigtige tal "
+                         "15 tilgængelighedsregler giver stadig fejl")
 
     for f in fails:
         print(f)
