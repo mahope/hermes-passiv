@@ -1147,6 +1147,30 @@
       ]
     },
     {
+      "path": "site/blog/prestashop-eaa-accessibility.html",
+      "domain": "mahope.tools",
+      "route": "/blog/prestashop-eaa-accessibility",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year"
+      ]
+    },
+    {
+      "path": "site/da/blog/prestashop-tilgaengelighed-eaa.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/prestashop-tilgaengelighed-eaa",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
+    },
+    {
       "path": "site/da/blog/nis2-beredskabstjek-2026.html",
       "domain": "mahope.tools",
       "route": "/da/blog/nis2-beredskabstjek-2026",

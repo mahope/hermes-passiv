@@ -433,6 +433,14 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # "deliver a findings report", og det er præcis den fil Pro leverer.
     ("blog/wix-eaa-accessibility.html", "web"),
     ("da/blog/wix-tilgaengelighed-eaa.html", "web"),
+    # PrestaShop-EAA-guiden og dens danske spejling (30/9) — nr. 1 på
+    # blindlisten efter nedbruds-guiden, 4 indgående sider på den danske målt
+    # af `check_article_paid_path.py`. Samme licens og samme to tal som de to
+    # ovenfor, og grunden er artiklens egen trin 5: den siger at du skal
+    # levere en fundrapport, en re-scan-verifikation og en
+    # tilgængelighedserklæring, hvilket er præcis den fil Pro leverer.
+    ("blog/prestashop-eaa-accessibility.html", "web"),
+    ("da/blog/prestashop-tilgaengelighed-eaa.html", "web"),
     # GDPR-vs-NIS2-artiklen og dens danske spejling (30/9) — toppen på
     # blindlisten fra `check_article_paid_path.py` med 9 indgående sider.
     # Samme licens og samme to tal som de otte ovenfor: artiklens egen

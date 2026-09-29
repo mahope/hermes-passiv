@@ -3,7 +3,6 @@
  "source": "python3 tools/check_article_paid_path.py --write",
  "measured": "2026-09-29",
  "blind": [
-  "da/blog/cmp-sammenligning-2026.html",
-  "da/blog/prestashop-tilgaengelighed-eaa.html"
+  "da/blog/cmp-sammenligning-2026.html"
  ]
 }
