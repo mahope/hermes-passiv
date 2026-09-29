@@ -1442,6 +1442,19 @@
       "requires_text": [
         "Køb DeskUptime Pro — 19 $ én gang"
       ]
+    },
+    {
+      "path": "site/da/blog/faa-besked-naar-hjemmeside-er-nede.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/faa-besked-naar-hjemmeside-er-nede",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$10",
+        "$19"
+      ],
+      "requires_text": [
+        "Køb DeskUptime Pro — 19 $ én gang"
+      ]
     }
   ],
   "built_offers": [
