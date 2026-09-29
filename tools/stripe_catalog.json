@@ -1155,6 +1155,36 @@
       ]
     },
     {
+      "path": "site/blog/webflow-vs-squarespace-accessibility.html",
+      "domain": "mahope.tools",
+      "route": "/blog/webflow-vs-squarespace-accessibility",
+      "lifetime": true,
+      "product": "eucomply-pro",
+      "prices": [
+        "$79",
+        "$149"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year",
+        "Buy EUComply Pro Lifetime — $149 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/webflow-vs-squarespace-tilgaengelighed.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/webflow-vs-squarespace-tilgaengelighed",
+      "lifetime": true,
+      "product": "eucomply-pro",
+      "prices": [
+        "$79",
+        "$149"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år",
+        "Køb EUComply Pro Lifetime — 149 $ én gang"
+      ]
+    },
+    {
       "path": "site/blog/copy-clean-text-from-website.html",
       "domain": "mahope.tools",
       "route": "/blog/copy-clean-text-from-website",

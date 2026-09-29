@@ -5,18 +5,15 @@
  "blind": [
   "blog/bug-reports-in-ci-pipeline.html",
   "blog/compliance-check-github-action.html",
-  "blog/drupal-vs-typo3-accessibility.html",
   "blog/free-website-compliance-checker.html",
   "blog/gdpr-vs-nis2-overlap.html",
   "blog/gdpr-website-compliance-checklist.html",
   "blog/monitor-website-github-actions-free.html",
   "blog/release-integrity-explained.html",
   "blog/test-your-zip-before-release.html",
-  "blog/webflow-vs-squarespace-accessibility.html",
   "da/blog/bugrapporter-i-ci-pipeline.html",
   "da/blog/cmp-sammenligning-2026.html",
   "da/blog/dbbaftale-webbureau.html",
-  "da/blog/drupal-vs-typo3-tilgaengelighed.html",
   "da/blog/faa-besked-naar-hjemmeside-er-nede.html",
   "da/blog/gratis-compliance-tjek-hjemmeside.html",
   "da/blog/gratis-gdpr-dokumentgeneratorer.html",
@@ -26,14 +23,12 @@
   "da/blog/overvaag-hjemmeside-github-actions-gratis.html",
   "da/blog/overvaag-hjemmeside-mac-menu-bar.html",
   "da/blog/prestashop-tilgaengelighed-eaa.html",
-  "da/blog/prestashop-vs-shopify-tilgaengelighed.html",
   "da/blog/release-integrity-hvad-er-det.html",
   "da/blog/roegtest-efter-udgivelse-statiske-sites.html",
   "da/blog/site-health-github-actions-stak.html",
   "da/blog/test-din-zip-foer-release.html",
   "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
   "da/blog/tilgaengelighedsscanner-cli.html",
-  "da/blog/tjek-om-hjemmeside-er-nede-gratis.html",
-  "da/blog/webflow-vs-squarespace-tilgaengelighed.html"
+  "da/blog/tjek-om-hjemmeside-er-nede-gratis.html"
  ]
 }

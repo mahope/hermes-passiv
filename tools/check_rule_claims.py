@@ -441,6 +441,15 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # server-side tjek er altså ikke en side-note, men artiklens emne.
     ("blog/cookie-consent-gdpr-compliance.html", "web"),
     ("da/blog/cookie-consent-gdpr-2026.html", "web"),
+    # Webflow-vs-Squarespace-sammenligningen og dens danske spejling (30/9) —
+    # 10 indgående sider, målt af `check_article_paid_path.py`. Samme licens og
+    # samme to tal som de syv ovenfor: artiklens eget kort "Statement Required"
+    # siger "publish an accessibility statement with conformance status and
+    # known limitations", og det er præcis den fil Pro leverer. Begge sider
+    # lå uden denne linje ikke i kortet, så et fund ville have været en fejl i
+    # stedet for et mål — samme fejlform som de tre linjer ovenfor.
+    ("blog/webflow-vs-squarespace-accessibility.html", "web"),
+    ("da/blog/webflow-vs-squarespace-tilgaengelighed.html", "web"),
     # Den engelske `compliance-ai.html` lå her ikke, kun den danske spejling.
     # Det var usynligt, fordi løftet på den engelske side ("16 WCAG compliance
     # rules") ikke blev fundet af `RE_CLAIM` — så porten nåede aldrig at spørge
