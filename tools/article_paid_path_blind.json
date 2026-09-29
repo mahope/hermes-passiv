@@ -4,7 +4,6 @@
  "measured": "2026-09-29",
  "blind": [
   "blog/bug-reports-in-ci-pipeline.html",
-  "blog/check-url-redirect-chain.html",
   "blog/compliance-check-github-action.html",
   "blog/drupal-vs-typo3-accessibility.html",
   "blog/free-website-compliance-checker.html",
@@ -21,7 +20,6 @@
   "da/blog/faa-besked-naar-hjemmeside-er-nede.html",
   "da/blog/gratis-compliance-tjek-hjemmeside.html",
   "da/blog/gratis-gdpr-dokumentgeneratorer.html",
-  "da/blog/http-headere-reference.html",
   "da/blog/kopier-tabel-fra-pdf-til-excel.html",
   "da/blog/open-graph-tjekker-guide.html",
   "da/blog/overvaag-flere-hjemmesider-paa-skrivebordet.html",
@@ -36,7 +34,6 @@
   "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
   "da/blog/tilgaengelighedsscanner-cli.html",
   "da/blog/tjek-om-hjemmeside-er-nede-gratis.html",
-  "da/blog/tjek-url-redirect-kaede.html",
   "da/blog/webflow-vs-squarespace-tilgaengelighed.html"
  ]
 }

@@ -1177,6 +1177,36 @@
       "requires_text": [
         "Køb Clean Copy Pro — 19 $ pr. år"
       ]
+    },
+    {
+      "path": "site/blog/check-url-redirect-chain.html",
+      "domain": "mahope.tools",
+      "route": "/blog/check-url-redirect-chain",
+      "lifetime": true,
+      "product": "page-profile-pro",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Buy Page Profile Pro — $19/year",
+        "Buy Page Profile Pro Lifetime — $39 once"
+      ]
+    },
+    {
+      "path": "site/da/blog/tjek-url-redirect-kaede.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/tjek-url-redirect-kaede",
+      "lifetime": true,
+      "product": "page-profile-pro",
+      "prices": [
+        "$19",
+        "$39"
+      ],
+      "requires_text": [
+        "Køb Page Profile Pro — 19 $ pr. år",
+        "Køb Page Profile Pro Lifetime — 39 $ én gang"
+      ]
     }
   ],
   "built_offers": [
