@@ -433,6 +433,15 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # "deliver a findings report", og det er præcis den fil Pro leverer.
     ("blog/wix-eaa-accessibility.html", "web"),
     ("da/blog/wix-tilgaengelighed-eaa.html", "web"),
+    # GDPR-vs-NIS2-artiklen og dens danske spejling (30/9) — toppen på
+    # blindlisten fra `check_article_paid_path.py` med 9 indgående sider.
+    # Samme licens og samme to tal som de otte ovenfor: artiklens egen
+    # pointe er at ét dokumentsæt dækker begge regværker, og GDPR/NIS2-
+    # tjekkene er præcis de 18 server-side fund i Pro-spalten. Uden denne
+    # linje var artiklens "15 WCAG rules" et fund uden motor — altså en
+    # fejl i stedet for et mål, præcis som de foregående linjer.
+    ("blog/gdpr-vs-nis2-overlap.html", "web"),
+    ("da/blog/gdpr-vs-nis2-overlap-da.html", "web"),
     # Cookie-consent-guiden og dens danske spejling (30/9) — 14 indgående
     # sider, målt af samme port. Samme licens og samme to tal som de fem
     # ovenfor: artiklens eget punkt 3 siger "if you cannot produce a

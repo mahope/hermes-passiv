@@ -729,6 +729,30 @@
       ]
     },
     {
+      "path": "site/da/blog/gdpr-vs-nis2-overlap-da.html",
+      "domain": "mahope.tools",
+      "route": "/da/blog/gdpr-vs-nis2-overlap-da",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Køb EUComply Pro — 79 $ pr. år"
+      ]
+    },
+    {
+      "path": "site/blog/gdpr-vs-nis2-overlap.html",
+      "domain": "mahope.tools",
+      "route": "/blog/gdpr-vs-nis2-overlap",
+      "product": "eucomply-pro",
+      "prices": [
+        "$79"
+      ],
+      "requires_text": [
+        "Buy EUComply Pro — $79/year"
+      ]
+    },
+    {
       "path": "site/blog/text-on-image-contrast-check.html",
       "domain": "mahope.tools",
       "route": "/blog/text-on-image-contrast-check",
