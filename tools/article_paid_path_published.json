@@ -1,0 +1,12 @@
+{
+ "note": "Domæner der bygges (tools/route_inventory.json) men ikke udgives af .github/workflows/deploy-sites.yml. Uden en linje her er domænet uforklaret, og check_article_paid_path.py gør det rødt. Listen er en ratchet: når et domæne kommer i deploy-matricen, skal linjen fjernes — porten siger det. Se docstringens 'Dom 4'.",
+ "source": "python3 tools/check_article_paid_path.py",
+ "measured": "2026-09-30",
+ "acknowledged": [
+  {
+   "domain": "bugbottle.dev",
+   "reason": "Fjernet fra deploy-matricen i fb4189d (25/9) uden forklaring i commit-body, målt med git log -S\"domain: bugbottle.dev\" -- .github/workflows/deploy-sites.yml. Målt 30/9: de tre artikler under bugbottle.dev svarer 404 på bugbottle.dev, mahope.tools, cleancopy.tools og deskuptime.com, fordi den LIVE bugbottle.dev (61 ruter, 'headless in-app bug reports') er en anden udgivelse end vores dist/bugbottle.dev (7 ruter). At sætte domænet i matricen igen ville overskrive den side med 7 ruter, og det er en udgivelse i Mads' nav, så det afventer svar. Se ❓ Til Mads i IMPLEMENTATION_PLAN.md.",
+   "unblocks": "tilføj bugbottle.dev til matrix.include i .github/workflows/deploy-sites.yml, og fjern denne linje"
+  }
+ ]
+}

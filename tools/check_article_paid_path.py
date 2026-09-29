@@ -50,6 +50,35 @@ næsten hver linje `links`, og porten siger det i stedet for at skjule det.
 - En linje i listen der ikke findes på disk er en død linje, så en omdøbt
   artikel kan ikke blive en usynlig undtagelse.
 
+**Dom 4 (publiceret-flåsen, målt 30/9).** Otve iterationer lagde købsknapper på
+artikler og skrev "baseline 0 målbare besøgende" i planen. Den niende fandt at de
+to eneste artikler i hele korpus med *målt* trafik lå på `bugbottle.dev` — et
+domæne der stod i `tools/route_inventory.json` men ikke i deploy-matricen, så
+de sider gav **404** på alle live-domæner. "9 målte besøg" var altså teknisk
+sand og operationelt død, og ingen port kunne fange det: `check_article_paid_path`
+rangerer på `trafik` uden at vide om ruten er publiceret.
+
+Derfor dømmer porten nu fire ting om *publicering*, ikke bare om betalt vej:
+
+- Et domæne i inventaret der **ikke** står i deploy-matricen skal stå i
+  `tools/article_paid_path_published.json` med en begrundelse. Uden den er
+  domænet uforklaret, og det er præcis sådan hullet blev skabt: det stod der
+  uden at nogen spørgsmål.
+- En bekræftelse uden begrundelse er rød. Samme regel som `ctas_note` i
+  `check_stripe_ctas.py`: en undtagelse uden grund er en måde at slå reglen fra.
+- En bekræftelse på et domæne der **nu** står i matricen er rød. Flåsen skal
+  lukkes, ellers bliver den en permanent undtagelse der vokser med tiden.
+- En blind artikel med målt trafik på et domæne der ikke er publiceret, nævnes
+  i rankingen som `IKKE UDGIVET`, så den ikke kan vælges ved en læsning af
+  trafikkolonnen alene.
+
+**Hvorfor flåsen ikke dømmer direkte.** Rå lighed ville gøre gaten rød i dag på
+den ene artikel der faktisk er i den situation — og så ville den blive slået
+fra i stedet for forklaret. Derfor er den en *begrundelses*-flås: hullet skal
+stå i filen med en grund, og grunden skal forsvinde, når hullet lukkes.
+Lukker Mads `❓` om bugbottle.dev, så forsvinder rækken ved at tilføje domænet
+til matricen — og flåsen siger det.
+
 Ud over det printer porten hele ranglisten, fordi det er den næste iteration
 har brug for. Den behøver ikke selv at finde de mest linkede artikler.
 
@@ -77,6 +106,8 @@ CATALOG = ROOT / "tools" / "stripe_catalog.json"
 BLIND = ROOT / "tools" / "article_paid_path_blind.json"
 REPORTS = ROOT / "reports" / "weekly"
 INVENTORY = ROOT / "tools" / "route_inventory.json"
+WORKFLOW = ROOT / ".github" / "workflows" / "deploy-sites.yml"
+PUBLISHED = ROOT / "tools" / "article_paid_path_published.json"
 
 # Punkt 1 og 2 ovenfor. Målt: 69 artikler linker til `/` og 32 til `/da/` fra
 # hele dokumentet, og begge er købssider i katalogens `offers`, fordi
@@ -89,6 +120,7 @@ RE_BUY = re.compile(r"^(?:https?://)?(?:buy|donate)\.stripe\.com/")
 RE_ALTERNATE = re.compile(
     r'<link[^>]+rel="alternate"[^>]+href="([^"]+)"', re.I
 )
+RE_MATRIX_DOMAIN = re.compile(r"^\s+- domain: (\S+)\s*$", re.M)
 
 
 def article_files(root: Path = SITE) -> list[Path]:
@@ -239,15 +271,75 @@ def route_of(root: Path, path: Path) -> str:
     return "/" + rel[:-len(".html")]
 
 
+def deployed_domains(workflow: Path = WORKFLOW) -> set[str]:
+    """Domænerne CI'en faktisk deployer — læst i filen, ikke hardkodet.
+
+    Kilden er `.github/workflows/deploy-sites.yml`'s `matrix.include`. Målt
+    30/9: tre `- domain:`-linjer, `cleancopy.tools`, `deskuptime.com` og
+    `mahope.tools` — og `bugbottle.dev` stod i `tools/route_inventory.json`
+    uden at stå herfra. Det er *én* måling af den samme sandhed fra to sider,
+    og det er den mismatch porten dømmer.
+
+    Hardkodes domænerne ikke, fordi flåsen så ville være grøn præcis når den
+    bliver brug for: den dag Mads sætter bugbottle.dev i matricen, skal porten
+    sige at bekræftelsen er død, ikke fortsat godkende den.
+    """
+    if not workflow.is_file():
+        return set()
+    return set(RE_MATRIX_DOMAIN.findall(workflow.read_text(encoding="utf-8")))
+
+
+def route_domains(inventory: dict) -> dict[str, str]:
+    """Rute → domæne, fra `tools/route_inventory.json`.
+
+    Ruterne renses for bagvendt skråstreg, fordi inventaret er skrevet med
+    både former: målt på cleancopy.tools står `'/'` og `'/activate/'`, mens
+    bugbottle.dev har `'/blog/bug-reports-in-ci-pipeline'` uden skråstreg. Uden
+    rensningen ville en artikel kunne miste sit domæne på en tegnform, og
+    porten ville så *ikke* flåse den — den fejl der ligner grønt.
+    """
+    return {
+        route.rstrip("/") or "/": domain
+        for domain, routes in inventory.items()
+        for route in routes
+    }
+
+
+def unpublished_routes(root: Path = SITE, inventory: dict | None = None,
+                       workflow: Path = WORKFLOW) -> dict[str, str]:
+    """Artikler hvis domæne ikke står i deploy-matricen. Rute → domæne.
+
+    Målt 30/9 før denne funktion: `blog/bug-reports-in-ci-pipeline.html`,
+    `da/blog/bugrapporter-i-ci-pipeline.html`,
+    `da/blog/tilfoej-fejlrapport-formular-hjemmeside.html` — de tre artikler
+    på `bugbottle.dev` i korpus, alle med 404 på de live domæner.
+    """
+    inventory = inventory if inventory is not None else json.loads(
+        INVENTORY.read_text(encoding="utf-8")
+    )
+    live = deployed_domains(workflow)
+    dom = route_domains(inventory)
+    out: dict[str, str] = {}
+    for path in article_files(root):
+        route = route_of(root, path)
+        domain = dom.get(route)
+        if domain and domain not in live:
+            out[route] = domain
+    return out
+
+
 def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
     catalog = catalog if catalog is not None else json.loads(CATALOG.read_text(encoding="utf-8"))
     offers = offer_routes(catalog)
     inbound = inbound_counts(root)
     visits = traffic()
+    dom = route_domains(json.loads(INVENTORY.read_text(encoding="utf-8")))
+    live = deployed_domains()
     out = []
     for path in article_files(root):
         route = route_of(root, path)
         paid = paid_links(root, path, offers)
+        domain = dom.get(route)
         out.append({
             "file": path.relative_to(root).as_posix(),
             "route": route,
@@ -255,6 +347,11 @@ def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
             "links": len(inbound.get(route, ())),
             "paid": paid,
             "knapper": len(knap_links(root, path)),
+            "domain": domain,
+            # `None` = vi ved ikke hvor den ligger. Det er *ikke* det samme som
+            # udgivet, og porten skelner: en rute uden domæne skal findes i
+            # inventaret, ellers er læsningen af filen forældet.
+            "publiceret": bool(domain and domain in live),
         })
     out.sort(key=lambda r: (-(r["visits"] or 0), -r["links"], r["route"]))
     return out
@@ -283,6 +380,78 @@ def judge(root: Path, catalog: dict) -> list[str]:
         )
     if len(known) != len(set(known)):
         problems.append("listen har dubletter; den er en mængde, ikke en liste.")
+    # Dom 4, publiceringsflåsen. Hænger på de tre ovenfor, fordi de alle er
+    # "find den fejl der er opstået"; den her er "find den der *kunne* opstå",
+    # og den må ikke gøre de tre røde af sig selv.
+    problems.extend(published_problems(root))
+    return problems
+
+
+def published_problems(root: Path = SITE, inventory: dict | None = None,
+                       workflow: Path = WORKFLOW,
+                       published: dict | None = None) -> list[str]:
+    """Dom 4: domæner i inventaret der ikke udgives skal have en begrundelse.
+
+    Det er *ikke* det samme som at være rød på dem. En rød port her ville være
+    rød i dag på `bugbottle.dev` — og en port der er konstant rød bliver
+    slået fra, hvilket er præcis hvad der skete i en tidligere iteration hvor
+    en arm altid var grøn. Derfor er dette en **begrundelses**-flås: domænet
+    skal stå i `tools/article_paid_path_published.json` med en grund, og
+    grunden forsvinder, når domænet kommer i matricen.
+
+    Tre domme, alle målte:
+
+    1. Et udpubliceret domæne uden bekræftelse → rød.
+    2. En bekræftelse uden begrundelse → rød. Samme regel som `ctas_note` i
+       `check_stripe_ctas.py:2712`: en undtagelse uden grund kan slås fra af
+       hvem som helst, så den skal koste en sætning.
+    3. En bekræftelse på et domæne der står i matricen → rød. Flåsen skal
+       lukkes når hullet lukkes, ellers bliver den en permanent undtagelse.
+
+    Beviset for at porten kan dømme: `--self-test` muterer matricen, så
+    `bugbottle.dev` *ser* udgivet ud, og dømmer så skal den rød på punkt 3.
+    """
+    inventory = inventory if inventory is not None else json.loads(
+        INVENTORY.read_text(encoding="utf-8")
+    )
+    live = deployed_domains(workflow)
+    doc = published if published is not None else (
+        json.loads(PUBLISHED.read_text(encoding="utf-8"))
+        if PUBLISHED.is_file() else {"acknowledged": []}
+    )
+    acknowledged = {a["domain"]: a for a in doc.get("acknowledged", [])}
+    problems: list[str] = []
+
+    for domain in sorted(set(inventory) - live):
+        entry = acknowledged.get(domain)
+        if entry is None:
+            problems.append(
+                f"UDPUBLICERET DOMÆNE uden begrundelse: {domain} står i "
+                f"tools/route_inventory.json ({len(inventory[domain])} ruter) "
+                f"men ikke i deploy-matricen. Tilføj en linje med en grund i "
+                f"tools/article_paid_path_published.json, eller udgiv domænet."
+            )
+        elif not str(entry.get("reason") or "").strip():
+            problems.append(
+                f"UDPUBLICERET DOMÆNE uden begrundelse: {domain} står i "
+                f"listen, men `reason` er tom. En undtagelse uden grund er en "
+                f"måde at slå reglen fra — samme regel som `ctas_note`."
+            )
+    for domain in sorted(acknowledged):
+        if domain not in inventory:
+            problems.append(
+                f"DØD BEKRÆFTELSE: {domain} er bekræftet som udpubliceret, "
+                f"men findes ikke i tools/route_inventory.json."
+            )
+        elif domain in live:
+            problems.append(
+                f"DØD BEKRÆFTELSE: {domain} står nu i deploy-matricen, så "
+                f"bekræftelsen skal fjernes fra "
+                f"tools/article_paid_path_published.json — ellers bliver den "
+                f"en permanent undtagelse."
+            )
+    if len(acknowledged) != len(doc.get("acknowledged", [])):
+        problems.append("bekræftelseslisten har dubletter.")
     return problems
 
 
@@ -306,6 +475,33 @@ def _print_ranking(table: list[dict], limit: int) -> None:
     for row in blind[:limit]:
         trafik = str(row["visits"]) if row["visits"] is not None else "-"
         print(f"{trafik:>6} {row['links']:>5}  {row['file']:<52} {row['route']}")
+    # Publiceringsflåsen i udskriften, målt 30/9. `trafik`-kolonnen er besøg
+    # på en rute *vi har bygget* — den siger intet om hvor den ligger. Da de
+    # eneste artikler med målt trafik viste sig at ligge på et domæne uden i
+    # matricen, skrev otve iterationer "9 målte besøg" i planen om sider der
+    # gav 404. Derfor står domænet på linjen, og en rute der ikke er publiceret
+    # siges det — også når den *har* en betalt vej, for det er dér dyrt at se
+    # bort fra det.
+    dark = [r for r in table if r["domain"] and not r["publiceret"]]
+    unknown = [r for r in table if not r["domain"]]
+    if dark:
+        print(f"ikke udgivet: {len(dark)} artikler — domænet mangler i deploy-matricen:")
+        for row in dark[:limit]:
+            trafik = str(row["visits"]) if row["visits"] is not None else "-"
+            state = "blind" if not row["paid"] else f"{len(row['paid'])} vej(er)"
+            print(f"{trafik:>6} {row['links']:>5}  {row['file']:<52} "
+                  f"{row['domain']} — {state}")
+    if unknown:
+        # Ikke det samme som "ikke udgivet": her kender porten ikke domænet,
+        # fordi ruten ikke står i inventaret. Målt 30/9 er det præcis **én**
+        # fil, `site/blog/index.html`, som `route_of` giver ruten `/blog/index`
+        # mens inventaret skriver `/blog/`. Det er en hub-side der porten
+        # tæller som en artikel — en forældet læsning, ikke et udgivet domæne,
+        # og de to må ikke blandes i én linje.
+        print(f"ukendt domæne: {len(unknown)} fil(er) — ruten står ikke i "
+              f"route_inventory.json, så publiceringen kan ikke vurderes:")
+        for row in unknown[:limit]:
+            print(f"{'':>6} {row['links']:>5}  {row['file']:<52} {row['route']}")
 
 
 def _self_test() -> int:
@@ -450,6 +646,61 @@ def _self_test() -> int:
         BLIND.write_text(saved, encoding="utf-8")
     check("listen genskabt efter --write-mutationen",
           json.loads(BLIND.read_text(encoding="utf-8"))["blind"] == data["blind"])
+
+    # 10. Publiceringsflåsen (dom 4). Fire kontroller + fire mutationer, fordi
+    #     en flås der aldrig kan rødme er en grøn cirkel. Målt 30/9: porten
+    #     læser matricen og genkender netop de tre domæner CI'en deployer, og
+    #     korpus har fire artikler på et domæne uden i matricen.
+    live = deployed_domains()
+    check("læser deploy-matricen (ikke hardkodet)",
+          {"mahope.tools", "cleancopy.tools", "deskuptime.com"} <= live,
+          f"{sorted(live)}")
+    check("inventaret rummer et domæne matricen ikke kender",
+          bool(set(json.loads(INVENTORY.read_text(encoding="utf-8"))) - live),
+          f"{sorted(set(json.loads(INVENTORY.read_text(encoding='utf-8'))) - live)}")
+
+    inv = json.loads(INVENTORY.read_text(encoding="utf-8"))
+    check("flåsen er grøn på det målte tilstand",
+          not published_problems(SITE, inv),
+          f"{len(published_problems(SITE, inv))} problem(er)")
+
+    # 10a. En syntetisk matrix uden `bugbottle.dev` gør bekræftelsen til en
+    #      død linje. Beviser at punkt 3 kan dømme — altså at porten ikke bare
+    #      accepterer hvad der står i filen.
+    fake_wf = Path("/tmp/oxloop-fake-deploy.yml")
+    fake_wf.parent.mkdir(parents=True, exist_ok=True)
+    fake_wf.write_text("        include:\n          - domain: bugbottle.dev\n",
+                       encoding="utf-8")
+    try:
+        hit = published_problems(SITE, inv, fake_wf)
+        check("bekræftelse på et nu udgivet domæne giver rødt",
+              any("DØD BEKRÆFTELSE" in p for p in hit), f"{len(hit)} problem(er)")
+    finally:
+        fake_wf.unlink(missing_ok=True)
+
+    # 10b. Uden bekræftelse → rød. Beviser punkt 1.
+    hit = published_problems(SITE, inv, WORKFLOW, {"acknowledged": []})
+    check("udpubliceret domæne uden bekræftelse giver rødt",
+          any("UDPUBLICERET DOMÆNE" in p for p in hit), f"{len(hit)} problem(er)")
+
+    # 10c. Bekræftelse uden begrundelse → rød. Beviser punkt 2, og at reglen
+    #      ikke kan slås fra ved at tilføje en tom linje.
+    hit = published_problems(SITE, inv, WORKFLOW,
+                             {"acknowledged": [{"domain": "bugbottle.dev",
+                                                "reason": "  "}]})
+    check("bekræftelse uden begrundelse giver rødt",
+          any("UDPUBLICERET DOMÆNE" in p for p in hit), f"{len(hit)} problem(er)")
+
+    # 10d. Rankingen skal sige det, ellers er flåsen en fil ingen læser. Målt
+    #      på `blog/bug-reports-in-ci-pipeline.html`, den artikel der gav 404
+    #      på alle fire domæner da flåsen blev skrevet.
+    bb = next((r for r in table if r["file"] == "blog/bug-reports-in-ci-pipeline.html"), None)
+    check("rækken ved domænet og siger at det ikke er udgivet",
+          bb is not None and bb["domain"] == "bugbottle.dev" and not bb["publiceret"],
+          f"domæne={bb['domain'] if bb else '?'} "
+          f"udgivet={bb['publiceret'] if bb else '?'}")
+    check("rækken har trafik — flåsen skal kunne ramme præcis dem der har den",
+          bb is not None and bb["visits"], f"visits={bb['visits'] if bb else '?'}")
 
     failed = 0
     for name, ok, detail in checks:
