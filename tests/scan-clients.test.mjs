@@ -1,5 +1,6 @@
-// Ende-til-ende-test af de to gratis scanningsværktøjer, der kalder vores egen
-// worker: `/compliance-site-check` (EN + DA) og `/url-inspector`.
+// Ende-til-ende-test af de gratis værktøjer, der kalder vores egen worker:
+// `/compliance-site-check` (EN + DA), `/url-inspector`, `/page-profile` (EN + DA),
+// `book-ai.js`, `/compliance-ai` (EN + DA) og `/security-headers-check`.
 //
 // Baggrund: begge klienter gjorde `r.json()` på *ethvert* svar. Cloudflare
 // svarer en worker der er faldet ned med en HTML-side, så `.json()` kastede og
@@ -12,6 +13,7 @@
 // kører dem mod et programmeret svarforløb, så "genkalder den?" og "hvad står der
 // i fejlkassen?" dømmes på den kode der faktisk ships — ikke på en kopi.
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
@@ -104,8 +106,9 @@ function loadPage(path, fetchImpl, opts = {}) {
 // Svarene kommer som en række, og der tælles kald, så "prøver den igen?" kan
 // måles i stedet for at læses.
 function responses(list) {
-  const state = { calls: 0 };
-  const fetchImpl = async () => {
+  const state = { calls: 0, urls: [] };
+  const fetchImpl = async (url) => {
+    state.urls.push(String(url));
     const i = state.calls++;
     const step = list[Math.min(i, list.length - 1)];
     if (step.reject) throw new Error(step.reject);
@@ -319,9 +322,152 @@ async function runBook(list, { ask = true, wait = true } = {}) {
 }
 
 // --------------------------------------------------------------------------
-// 7. Mutationer af *læseren*, så kontrollerne ovenfor ikke er en grøn cirkel.
-//    Hver mutation skal gøre den navngivne kontrol rød.
+// 7. `/compliance-ai` (EN + DA): chatten og ventelisten deler én `postJSON()`.
+//    Den blev rettet i 1af9302, men var kun dømt af en grep — her dømmer
+//    sandkassen den på samme måde som de fire klienter ovenfor.
 // --------------------------------------------------------------------------
+// `OK_ASK` og `OK_WAIT` er allerede erklæret ovenfor til book-ai — samme
+// svarform, og de skal måles ens.
+
+// Sidens eget script rører også `/api/track`, så den skal findes på sit eget
+// kendetegn — målt, ikke antaget: `loadPage`s standardfinder ville ellers ramme
+// track-scriptet, der ikke kender `sendQuestion`.
+async function runAsk(path, list) {
+  const { fetchImpl, state } = responses(list);
+  const { sandbox, nodes } = loadPage(path, fetchImpl, { match: /ASK_MAX_TRIES/ });
+  nodes.get('questionInput').value = 'Does NIS2 apply to a 5-person agency?';
+  sandbox.sendQuestion();
+  await sleep(40);
+  return { calls: state.calls, status: nodes.get('chatStatus').textContent || '', btn: nodes.get('sendBtn').disabled };
+}
+
+// Ventelisten ligger bag et vellykket svar, så den måles på den samme kørsel.
+async function runAskLead(path, list) {
+  const { fetchImpl, state } = responses(list);
+  const { sandbox, nodes } = loadPage(path, fetchImpl, { match: /ASK_MAX_TRIES/ });
+  nodes.get('questionInput').value = 'Does NIS2 apply to a 5-person agency?';
+  sandbox.sendQuestion();
+  await sleep(40);
+  nodes.get('leadEmail').value = 'kontakt@eksempel.dk';
+  nodes.get('leadBtn').click();
+  await sleep(40);
+  return { calls: state.calls, lead: nodes.get('leadStatus').textContent || '', btnLive: nodes.get('leadBtn').disabled === false };
+}
+
+for (const [path, lang] of [['site/compliance-ai.html', 'EN'], ['site/da/compliance-ai.html', 'DA']]) {
+  const good = await runAsk(path, [OK_ASK]);
+  ok(`${lang} compliance-ai: et godt svar på ét kald og ingen fejltekst`, good.calls === 1 && good.status === '', `calls=${good.calls} status=${good.status}`);
+
+  const busy = await runAsk(path, [{ status: 502, html: true }, OK_ASK]);
+  ok(`${lang} compliance-ai: 502 med HTML genkaldes og lykkes`, busy.calls === 2 && busy.status === '', `calls=${busy.calls} status=${busy.status}`);
+
+  const dead = await runAsk(path, [{ status: 503, html: true }]);
+  ok(`${lang} compliance-ai: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk`,
+    dead.calls === 3 && /temporarily unavailable|midlertidigt utilgængelig/.test(dead.status) && !/Network error|Netværksfejl/.test(dead.status),
+    `calls=${dead.calls} status=${dead.status}`);
+
+  const rate = await runAsk(path, [{ status: 429, body: { ok: false, error: 'Too many questions this hour.' } }]);
+  ok(`${lang} compliance-ai: 429 er forbigående og genkaldes`, rate.calls === 3, `calls=${rate.calls}`);
+
+  const bad = await runAsk(path, [{ status: 400, body: { ok: false, error: 'That question is too short.' } }]);
+  ok(`${lang} compliance-ai: et 4xx er endeligt og viser serverens egen tekst`,
+    bad.calls === 1 && bad.status === 'That question is too short.', `calls=${bad.calls} status=${bad.status}`);
+
+  const offline = await runAsk(path, [{ reject: 'Failed to fetch' }]);
+  ok(`${lang} compliance-ai: et afbrudt kald prøves igen og får sin egen tekst`,
+    offline.calls === 3 && /could not reach the assistant server|kunne ikke nå assistentserveren/.test(offline.status) && !/Network error|Netværksfejl/.test(offline.status),
+    `calls=${offline.calls} status=${offline.status}`);
+
+  // Knappen må ikke blive låst af et blip — ellers kan en bruger ikke prøve igen.
+  ok(`${lang} compliance-ai: knappen bliver aktiv igen efter en fejl`, dead.btn === false, `disabled=${dead.btn}`);
+
+  // Ventelisten: en tabt tilmelding er en tabt tilmelding.
+  const lGood = await runAskLead(path, [OK_ASK, OK_WAIT]);
+  ok(`${lang} compliance-ai: ventelisten kvitterer på ét kald`, lGood.calls === 2 && /on the list|på listen/i.test(lGood.lead), `calls=${lGood.calls} lead=${lGood.lead}`);
+
+  const lBlip = await runAskLead(path, [OK_ASK, { status: 502, html: true }, OK_WAIT]);
+  ok(`${lang} compliance-ai: ventelisten genkaldes, så en tilmelding ikke tabes`, lBlip.calls === 3 && /on the list|på listen/i.test(lBlip.lead), `calls=${lBlip.calls} lead=${lBlip.lead}`);
+
+  const lDead = await runAskLead(path, [OK_ASK, { status: 503, html: true }]);
+  ok(`${lang} compliance-ai: en venteliste der holder op giver en ærlig tekst og fri knap igen`,
+    lDead.calls === 4 && /temporarily unavailable|midlertidigt utilgængelig/.test(lDead.lead) && lDead.btnLive === true,
+    `calls=${lDead.calls} lead=${lDead.lead} btn=${lDead.btnLive}`);
+
+  const lBad = await runAskLead(path, [OK_ASK, { status: 400, body: { ok: false, error: 'That address is already on the list.' } }]);
+  ok(`${lang} compliance-ai: ventelistens 4xx er endeligt og viser serverens tekst`,
+    lBad.calls === 2 && /already on the list/.test(lBad.lead) && !/temporarily unavailable|midlertidigt utilgængelig/.test(lBad.lead),
+    `calls=${lBad.calls} lead=${lBad.lead}`);
+}
+
+// --------------------------------------------------------------------------
+// 8. `/security-headers-check`: samme klasse, og den var den værste af dem alle,
+//    fordi den skrev den rå JavaScript-fejl `Unexpected token '<'` i
+//    brugerens ansigt. Den har heller ingen egen footer at hænge noget i, så
+//    den behøver ingen særlig sandkasse — målt, ikke antaget.
+//    Siden kører selv et tjek ved sidevisning (`setTimeout(check, 300)`), og
+//    `loadPage`s stub starter med `value: ''`, så det tjek falder på "Please
+//    enter a URL." og bruger **intet** svar fra listen. Målingen kan derfor
+//    bare tælle `/api/header-check`-kaldene; beacon'en på `/api/track` er
+//    ikke en del af det vi dømmer. Skulle siden en dag begynde at køre sit
+//    tjek med en URL i `value`, ville tællingen se den med, og kontrollerne
+//    ville blive røde — altså kan vi højst fejle på den vej.
+// --------------------------------------------------------------------------
+const OK_HEADERS = { status: 200, body: { ok: true, status: 200, statusText: 'OK', finalUrl: 'https://example.com', redirected: false, headers: { 'strict-transport-security': 'max-age=63072000', 'content-security-policy': "default-src 'self'", 'x-frame-options': 'DENY', 'x-content-type-options': 'nosniff' } } };
+
+async function runHeaders(list) {
+  const { fetchImpl, state } = responses(list);
+  const { nodes } = loadPage('site/security-headers-check.html', fetchImpl, { match: /HEADERS_MAX_TRIES/ });
+  await sleep(30);
+  const base = state.urls.length;
+  nodes.get('urlInput').value = 'example.com';
+  nodes.get('checkBtn').click();
+  await sleep(40);
+  return { calls: state.urls.slice(base).filter((u) => u.includes('/api/header-check')).length, status: nodes.get('statusBox').textContent || '' };
+}
+
+{
+  const r = await runHeaders([OK_HEADERS]);
+  ok('security-headers-check: et godt svar renderer på ét kald', r.calls === 1 && !/temporarily unavailable|Network error/.test(r.status), `calls=${r.calls} status=${r.status}`);
+}
+{
+  const r = await runHeaders([{ status: 502, html: true }, OK_HEADERS]);
+  ok('security-headers-check: 502 med HTML genkaldes og lykkes', r.calls === 2 && !/temporarily unavailable/.test(r.status), `calls=${r.calls} status=${r.status}`);
+}
+{
+  const r = await runHeaders([{ status: 503, html: true }]);
+  ok('security-headers-check: 503 hele vejen giver tre forsøg og skylder ikke brugerens netværk',
+    r.calls === 3 && /temporarily unavailable/.test(r.status) && !/Network error/.test(r.status), `calls=${r.calls} status=${r.status}`);
+}
+{
+  // Den rå fejltekst, der slap ud på den gamle side. Den skal aldrig komme tilbage.
+  const r = await runHeaders([{ status: 503, html: true }]);
+  ok("security-headers-check: den rå `Unexpected token '<'` vises aldrig", !/Unexpected token/.test(r.status), r.status);
+}
+{
+  const r = await runHeaders([{ reject: 'Failed to fetch' }]);
+  ok('security-headers-check: et afbrudt kald prøves igen og får sin egen tekst',
+    r.calls === 3 && /could not reach the header server/.test(r.status) && !/Network error/.test(r.status), `calls=${r.calls} status=${r.status}`);
+}
+{
+  const r = await runHeaders([{ status: 400, body: { ok: false, error: 'Not a valid URL.' } }]);
+  ok('security-headers-check: et 4xx er endeligt og viser serverens egen tekst',
+    r.calls === 1 && r.status === 'Not a valid URL.', `calls=${r.calls} status=${r.status}`);
+}
+{
+  const r = await runHeaders([{ status: 429, body: { ok: false, error: 'Too many checks this hour.' } }]);
+  ok('security-headers-check: 429 er forbigående og genkaldes', r.calls === 3, `calls=${r.calls}`);
+}
+{
+  // 200 med `ok:false` er et rigtigt svar, ikke et blip — ét kald, serverens tekst.
+  const r = await runHeaders([{ status: 200, body: { ok: false, error: 'Could not fetch that host.' } }]);
+  ok('security-headers-check: 200 med ok:false er endeligt, ét kald',
+    r.calls === 1 && /Could not fetch that host/.test(r.status), `calls=${r.calls} status=${r.status}`);
+}
+
+// --------------------------------------------------------------------------
+// 9. Mutationer af *læseren*, så kontrollerne ovenfor ikke er en grøn cirkel.
+//    Hver mutation skal gøre den navngivne kontrol rød.
+//    --------------------------------------------------------------------------
 {
   const book = readFileSync(join(root, 'site/book-ai.js'), 'utf8');
   ok('mutation: book-ai har samme regel som de andre klienter', /BOOK_MAX_TRIES = 3/.test(book));
@@ -411,6 +557,52 @@ function mutated(path, from, to) {
     const err = nodes.get('errorBox').textContent || '';
     ok('mutation: gamle kode kalder det en netværksfejl', state.calls === 1 && /Network error/.test(err), `calls=${state.calls} err=${err}`);
   }
+}
+
+// --------------------------------------------------------------------------
+// 10. Den vigtigste mutation: den *gamle kode*, hentet fra git og kørt gennem
+//     samme sandkasse. En hærdet konstant beviser kun at porten kan fremstille
+//     en tilstand; den beviser ikke at den gamle fejl ville være dømt rød.
+// --------------------------------------------------------------------------
+{
+  const old = execFileSync('git', ['show', '1af9302^:site/compliance-ai.html'], { cwd: root, maxBuffer: 1 << 26 }).toString('utf8');
+  const main = [...old.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => /api\/compliance-ai/.test(s));
+  ok('mutation: den gamle compliance-ai-kode kan hentes fra git', !!main);
+  const { fetchImpl, state } = responses([{ status: 503, html: true }]);
+  const nodes = new Map();
+  const sandbox = { console, setTimeout: fastTimeout, clearTimeout, URL, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent, Blob,
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/compliance-ai.html' },
+    document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
+      createElement: () => el(), createTextNode: (t) => ({ textContent: t }), querySelectorAll: () => [], addEventListener() {}, body: el() } };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  vm.createContext(sandbox); vm.runInContext(main, sandbox, { filename: 'old-compliance-ai.html' });
+  nodes.get('questionInput').value = 'Does NIS2 apply?';
+  sandbox.sendQuestion();
+  await sleep(30);
+  const status = nodes.get('chatStatus').textContent || '';
+  ok('mutation: den gamle kode giver op efter ét forsøg', state.calls === 1, `calls=${state.calls} (forventet 3)`);
+  ok('mutation: den gamle kode kalder vores 5xx en netværksfejl', /Network error/.test(status), status);
+}
+{
+  const old = execFileSync('git', ['show', '1af9302^:site/security-headers-check.html'], { cwd: root, maxBuffer: 1 << 26 }).toString('utf8');
+  const main = [...old.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((s) => /header-check/.test(s));
+  ok('mutation: den gamle security-headers-check-kode kan hentes fra git', !!main);
+  const { fetchImpl, state } = responses([{ status: 503, html: true }]);
+  const nodes = new Map();
+  const sandbox = { console, setTimeout: fastTimeout, clearTimeout, URL, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent,
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/security-headers-check.html' },
+    document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
+      createElement: () => el(), querySelectorAll: () => [], addEventListener() {}, body: el() } };
+  sandbox.window = sandbox; sandbox.globalThis = sandbox;
+  vm.createContext(sandbox); vm.runInContext(main, sandbox, { filename: 'old-security-headers-check.html' });
+  await sleep(30);
+  const base = state.calls;
+  nodes.get('urlInput').value = 'example.com';
+  nodes.get('checkBtn').click();
+  await sleep(30);
+  const status = nodes.get('statusBox').textContent || '';
+  ok('mutation: den gamle header-tjekker giver op efter ét forsøg', state.calls - base === 1, `calls=${state.calls - base} (forventet 3)`);
+  ok("mutation: den gamle header-tjekker viser den rå `Unexpected token '<'`", /Unexpected token/.test(status), status);
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
