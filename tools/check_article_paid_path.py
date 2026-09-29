@@ -269,29 +269,99 @@ def inbound_counts(root: Path = SITE) -> dict[str, set[str]]:
     return hits
 
 
-def traffic(reports: Path = REPORTS) -> dict[str, int]:
-    """Besøg pr. rute fra den nyeste rapport der faktisk har tal.
+def traffic_source(reports: Path = REPORTS,
+                   today: date | None = None) -> tuple[dict[str, int], dict]:
+    """Besøg pr. rute **og hvor tallene kommer fra**.
 
     Uge 37 og 38 har `top_paths` med tal, 39 og 40 har ikke. Vi tager den
     nyeste der har tal, så porten bruger det bedste vi har uden at kræve at
     en ny rapport er skrevet.
+
+    **Målt 30/9: det var her den porten holdt op at sige sandheden.** Den gamle
+    `traffic()` gav kun tal, så ranglisten skrev `8` for
+    `/blog/html-to-markdown-vscode` som om det var en måling i dag — men `8` kom
+    fra uge 38, genereret 24/9, **seks dage gammelt**, mens to nyere rapporter
+    står med `traffic.available: false` fordi `/api/stats` svarer 401
+    (`STATS_TOKEN` mangler på workeren, ❓ Til Mads). Ti iterationer har skrevet
+    "målte besøg" i planen uden at nogen kunne se at tallene var en uge gamle.
+
+    Derfor returnerer den nu målingen **sammen med** `file`, `week`,
+    `generated_at`, `age_days` og `newer_without` — antallet af rapporter der er
+    nyere end kilden og ikke har trafik. Uden `newer_without` er alderen ikke
+    nok: en gammel rapport kan være gammel fordi trafikken døde, ikke fordi
+    ingen har skrevet en ny.
     """
     if not reports.is_dir():
-        return {}
+        return {}, {"file": None, "week": None, "generated_at": None,
+                    "age_days": None, "newer_without": 0, "reports": 0}
+    today = today or date.today()
     best: dict[str, int] = {}
+    parsed: list[tuple[Path, dict, list | None]] = []
     for path in sorted(reports.glob("*.json")):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        top = (data.get("traffic") or {}).get("top_paths")
-        if not isinstance(top, list) or not top:
-            continue
+        parsed.append((path, data, (data.get("traffic") or {}).get("top_paths")))
+    with_traffic = [(p, d, t) for p, d, t in parsed if isinstance(t, list) and t]
+    for _path, _data, top in with_traffic:
         for row in top:
             route, visits = row.get("path"), row.get("visits")
             if isinstance(route, str) and isinstance(visits, int):
+                # Sorteret stigende, så den nyeste rapport med tal overskriver
+                # en ældre måling af samme rute — samme rækkefølge som den gamle
+                # løkke. Ruter der kun findes i en ældre rapport bliver stående,
+                # fordi de ikke er målt væk, kun ikke målt i dag.
                 best[route] = visits
-    return best
+    if not with_traffic:
+        return {}, {"file": None, "week": None, "generated_at": None,
+                    "age_days": None, "newer_without": 0, "reports": len(parsed)}
+    chosen_path, chosen_data, _top = with_traffic[-1]
+    # Kun rapporter *efter* kilden tælles. Målt 30/9 i selftesten: en løkke der
+    # talte ved hvert skridt gav `newer_without: 2` for to rapporter der lå
+    # *før* kilden, altså et tal der pegede på det forkerte og ville have
+    # forklaret alderen med det modsatte.
+    newer_without = sum(1 for p, _d, t in parsed
+                        if p > chosen_path and not (isinstance(t, list) and t))
+    generated = str(chosen_data.get("generated_at") or "")[:10]
+    age = None
+    if len(generated) == 10:
+        try:
+            age = (today - date.fromisoformat(generated)).days
+        except ValueError:
+            age = None
+    return best, {"file": chosen_path.name, "week": chosen_data.get("iso_week"),
+                  "generated_at": generated or None, "age_days": age,
+                  "newer_without": newer_without, "reports": len(parsed)}
+
+
+def traffic(reports: Path = REPORTS) -> dict[str, int]:
+    """Kun tallene — brug `traffic_source()` når tallene skal vises for en
+
+    læser, så alderen kommer med. `rows()` bruger denne, fordi en række ikke
+    skal bære kilden i hver celle; `_print_ranking` og dom 5 bruger den anden.
+    """
+    return traffic_source(reports)[0]
+
+
+def traffic_note(meta: dict) -> str:
+    """Menneskelæselig kilde på de målte besøg, til rapporten og til dom 5.
+
+    Uden `age_days` er teksten bevidst vag: *"trafik fra 2026-38 uden dato"* er
+    sand, og den siger at vi ikke ved hvor gammel den er. Det er en måling i
+    sig selv — `generated_at` mangler i en rapport, så porten må ikke gætte.
+    """
+    if not meta or not meta.get("file"):
+        read = (meta or {}).get("reports") or 0
+        return (f"trafik: ingen af {read} rapporter(r) har målte besøg — "
+                f"besøgskolonnen er ikke et tal, det er en fraværende måling")
+    alder = (f"{meta['age_days']} dage gammel" if meta.get("age_days") is not None
+             else "uden dato")
+    nyere = meta.get("newer_without") or 0
+    return (f"trafik: {meta.get('week') or meta['file']} genereret "
+            f"{meta.get('generated_at') or '(ingen dato)'} ({alder}) · "
+            f"{nyere} nyere rapport(er) uden trafik · {meta.get('reports')} "
+            f"rapport(er) læst")
 
 
 def route_of(root: Path, path: Path) -> str:
@@ -525,7 +595,8 @@ def click_no_button(table: list[dict]) -> list[dict]:
 
 
 def click_no_button_problems(table: list[dict] | None = None,
-                             doc: dict | None = None) -> list[str]:
+                             doc: dict | None = None,
+                             meta: dict | None = None) -> list[str]:
     """Dom 5: en artikel med læsere, en betalt vej og ingen købsknap skal have
     en begrundelse, og grunden skal forsvinde når den får en knap.
 
@@ -554,8 +625,13 @@ def click_no_button_problems(table: list[dict] | None = None,
 
     for file in sorted(set(measured) - set(known)):
         row = measured[file]
+        # Kilden skriver i selve røde linje. Det er her porten beder en person
+        # om at skrive en begrundelse, så beskeden skal kunne vejes: "8 målte
+        # besøg" fra en seks dage gammel rapport er et andet krav end "8 målte
+        # besøg" fra i går (målt 30/9 — se `traffic_source`).
         problems.append(
-            f"NY KLIK-UDEN-KNAP: {file} har {row['visits']} målte besøg og "
+            f"NY KLIK-UDEN-KNAP: {file} har {row['visits']} målte besøg "
+            f"({traffic_note(meta if meta is not None else traffic_source()[1])}), "
             f"{len(row['paid'])} indirekte vej(er), men ingen købsknap. Sæt en "
             f"knap på siden, eller tilføj en linje med en grund i "
             f"tools/article_click_no_button.json."
@@ -589,7 +665,7 @@ def click_no_button_problems(table: list[dict] | None = None,
     return problems
 
 
-def _print_ranking(table: list[dict], limit: int) -> None:
+def _print_ranking(table: list[dict], limit: int, meta: dict | None = None) -> None:
     knap = [r for r in table if r["knapper"]]
     print(f"artikler: {len(table)} · med betalt vej: "
           f"{sum(1 for r in table if r['paid'])} · med købsknap: {len(knap)} · "
@@ -605,6 +681,11 @@ def _print_ranking(table: list[dict], limit: int) -> None:
           f"{sum(1 for r in table if not r['knapper'] and len(r['paid']) >= 2)} med 2+ klik · "
           f"{sum(1 for r in table if not r['paid'])} med 0 klik")
     print(f"{'trafik':>6} {'links':>5}  {'fil':<52} købsvej")
+    # Kilden står *over* kolonnen, ikke nederst. Målt 30/9: de målte tal kom fra
+    # en rapport seks dage gammel, og de otte foregående iterationer skrev dem i
+    # planen som "målte besøg" uden at alderen kunne ses. En kolonne uden kilde
+    # er et tal læseren ikke kan veje.
+    print(traffic_note(meta if meta is not None else traffic_source()[1]))
     blind = [r for r in table if not r["paid"]]
     for row in blind[:limit]:
         trafik = str(row["visits"]) if row["visits"] is not None else "-"
@@ -1031,6 +1112,99 @@ def _self_test() -> int:
           not click_no_button_problems(table, doc),
           f"{len(click_no_button_problems(table, doc))} problem(er)")
 
+    # 13. Kilden på de målte besøg. Målt 30/9: de tal porten rangerer på kom fra
+    #     uge 38 (genereret 24/9) mens uge 39 og 40 stod med `available: false`,
+    #     fordi `/api/stats` svarer 401. Ti iterationer skrev "målte besøg" uden
+    #     alder. Formen *er* målt i dag, så syntetiske rapporter bruges kun til
+    #     at dømme evnen — de fire årsager, en kilde kan have, skal kunne skelnes.
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        rep = Path(tmp)
+
+        def write_report(name: str, week: str, generated: str | None,
+                         rows_: list[dict] | None) -> None:
+            body = {"iso_week": week, "traffic": {}}
+            if generated:
+                body["generated_at"] = generated
+            body["traffic"]["top_paths"] = rows_ if rows_ else []
+            if rows_ is None:
+                body["traffic"]["available"] = False
+            (rep / name).write_text(json.dumps(body), encoding="utf-8")
+
+        # (a) Én rapport med tal, genereret i går: alderen skal kunne regnes,
+        #     og ingen nyere uden trafik skal tælles med.
+        write_report("2026-40.json", "2026-40", "2026-09-29",
+                     [{"path": "/blog/x", "visits": 11}])
+        got, meta = traffic_source(rep, today=date(2026, 9, 30))
+        check("kilden regner alderen ud fra generated_at",
+              meta["week"] == "2026-40" and meta["age_days"] == 1
+              and meta["newer_without"] == 0, json.dumps(meta, ensure_ascii=False))
+        check("besøgene læses fra den rapport der er valgt",
+              got == {"/blog/x": 11}, json.dumps(got, ensure_ascii=False))
+
+        # (b) Målt form: to nyere rapporter uden trafik. Uden denne kontrol kunne
+        #     `newer_without` være konstant 0, og alderen alene ville være sand
+        #     uden at sige *hvorfor* tallene er gamle.
+        write_report("2026-41.json", "2026-41", "2026-09-30", None)
+        write_report("2026-42.json", "2026-42", "2026-09-30", [])
+        got, meta = traffic_source(rep, today=date(2026, 9, 30))
+        check("en nyere rapport uden trafik tælles, og kilden bliver den ældre",
+              meta["week"] == "2026-40" and meta["newer_without"] == 2
+              and meta["age_days"] == 1, json.dumps(meta, ensure_ascii=False))
+
+        # (c) Den *nyeste med tal* vinder. Uden denne kontrol kunne læseren tage
+        #     den første rapport den ser, og alle målinger på de tre ville se
+        #     ens ud uanset hvor gamle de var.
+        write_report("2026-43.json", "2026-43", "2026-09-30",
+                     [{"path": "/blog/x", "visits": 99}])
+        got, meta = traffic_source(rep, today=date(2026, 9, 30))
+        check("den nyeste rapport med tal vinder over ældre",
+              got.get("/blog/x") == 99 and meta["week"] == "2026-43"
+              and meta["newer_without"] == 0, json.dumps(meta, ensure_ascii=False))
+
+        # (d) Uden nogen rapport med tal må porten ikke finde på et tal. Den skal
+        #     sige at kolonnen er en fraværende måling — ikke vise `0`, som er
+        #     den samme påstand som "ingen besøgte siden".
+        for path in rep.glob("*.json"):
+            path.unlink()
+        write_report("2026-40.json", "2026-40", "2026-09-29", None)
+        got, meta = traffic_source(rep, today=date(2026, 9, 30))
+        check("ingen rapport med tal giver ingen besøg og ingen kilde",
+              got == {} and meta["file"] is None,
+              json.dumps(meta, ensure_ascii=False))
+        check("teksten siger fraværende måling, ikke et tal",
+              "fraværende måling" in traffic_note(meta), traffic_note(meta))
+
+        # (e) En rapport uden `generated_at` må ikke få en opdigtet alder.
+        (rep / "2026-40.json").write_text(json.dumps({
+            "iso_week": "2026-40",
+            "traffic": {"top_paths": [{"path": "/blog/x", "visits": 5}]},
+        }), encoding="utf-8")
+        got, meta = traffic_source(rep, today=date(2026, 9, 30))
+        check("manglende dato giver alder None og siger 'uden dato'",
+              meta["age_days"] is None and "uden dato" in traffic_note(meta),
+              traffic_note(meta))
+
+    # (f) Dogfooding: den målte tilstand i dag skal kunne vise alderen, ellers
+    #     er hele rettelsen noget der kun virker på syntetiske rapporter.
+    _, real_meta = traffic_source()
+    check("rigtige rapporter giver en kilde med alder",
+          isinstance(real_meta.get("file"), str)
+          and real_meta.get("age_days") is not None,
+          traffic_note(real_meta))
+
+    # (g) Den røde linje i dom 5 skal skrive kilden med, så den beder om en
+    #     begrundelse på et tal læseren kan veje.
+    with_src = click_no_button_problems([synth], {"acknowledged": []},
+                                        {"file": "2026-38.json", "week": "2026-38",
+                                         "generated_at": "2026-09-24",
+                                         "age_days": 6, "newer_without": 2,
+                                         "reports": 4})
+    check("den røde linje i dom 5 nævner kildens alder",
+          any("2026-38" in p and "6 dage gammel" in p for p in with_src),
+          with_src[0] if with_src else "ingen linje")
+
     failed = 0
     for name, ok, detail in checks:
         if ok:
@@ -1091,7 +1265,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if not args.quiet:
-        _print_ranking(rows(SITE, catalog), args.limit)
+        _print_ranking(rows(SITE, catalog), args.limit, traffic_source()[1])
 
     problems = judge(SITE, catalog)
     for problem in problems:
