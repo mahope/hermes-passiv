@@ -34,6 +34,12 @@ on:
       - 'tools/check_asset_instructions.py'
       - 'tools/build_clean_copy_archives.py'
       - 'tools/check_product_copy.py'
+      # Gatestrækket `storage-claims` læser `_worker.js` for at finde de ruter
+      # der kalder `rateLimitIp`, og hele `site/` for at finde de sider der
+      # modsiger dem. Uden linjen her ville en push, der kun tilføjer en
+      # `rateLimitIp(…)` i workeren, springe gaten over — altså netop den push
+      # der gør porten meningsløs. Målt ni gange nu, samme krav.
+      - 'tools/check_storage_claims.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod

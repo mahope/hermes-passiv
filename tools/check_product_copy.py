@@ -233,14 +233,14 @@ GUIDE_GENERATOR_CHECKS = (
 # stærkere end den målte kode.
 SCANNER_REQUIRED_EN = (
     "the page is fetched server-side through our cloudflare proxy",
-    "analysed in your browser, and immediately discarded",
-    "no logs, no storage, no cookies",
+    "analysed in your browser, and discarded",
+    "salted hash of your ip address",
     "15 wcag compliance rules",
 )
 SCANNER_REQUIRED_DA = (
     "siden hentes server-side gennem vores cloudflare-proxy",
-    "analyseres i din browser og kasseres straks",
-    "ingen logs, ingen lagring, ingen cookies",
+    "analyseres i din browser og kasseres",
+    "salt-hash af din ip-adresse",
     "15 wcag-regler",
 )
 SCANNER_CHECKS = (
@@ -298,14 +298,19 @@ SUPERSEDED_COPY = {
 
 # De publicerede sætninger fra før rettelsen, kun brugt i selftestens bevis på
 # de rigtige filer — samme (gammel, ny) rækkefølge som SUPERSEDED_COPY.
+# De to revisioner af den samme løgn, begge publiceret. Den første sagde at
+# værktøjet slet ikke nåede vores server; den næste sagde at det gjorde, men
+# "no logs, no storage, no cookies" — hvilket er sandt for *siden* og falsk for
+# det IP-hash, `rateLimitIp` skriver i to timer. Begge er i portens egen
+# historik, og selftesten bruger dem som de fejlformer den siger at fange.
 SCANNER_SUPERSEDED = {
     "site/compliance-ai.html": (
         "It runs entirely in your browser (client-side) with a privacy-preserving CORS proxy. No data is stored.",
-        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies.",
+        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and discarded. We store nothing about the page itself and set no cookies; the one thing we keep is a salted hash of your IP address, which expires after two hours.",
     ),
     "site/da/compliance-ai.html": (
         "Den kører helt i din browser med et privatlivsvennligt proxy-kald. Ingen data gemmes.",
-        "Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks. Ingen logs, ingen lagring, ingen cookies.",
+        "Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres. Vi gemmer intet om selve siden og sætter ingen cookies; det eneste vi beholder, er et salt-hash af din IP-adresse, som udløber efter to timer.",
     ),
 }
 

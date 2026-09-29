@@ -350,6 +350,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_product_copy.py", "--self-test"),
         inputs=("tools/check_product_copy.py", "site/**"),
     ),
+    # Lagrings-løfterne. Porten læser både `site/_worker.js` — for at finde de
+    # ruter der kalder `rateLimitIp` — og hele `site/`, så begge skal med i
+    # filteret ellers springer en rettelse af *ruten* gaten over, og det er
+    # præcis den push der ville gøre porten meningsløs.
+    Step(
+        id="storage-claims",
+        argv=("python3", "tools/check_storage_claims.py"),
+        inputs=(
+            "tools/check_storage_claims.py",
+            "site/_worker.js",
+            "site/**",
+        ),
+    ),
+    Step(
+        id="storage-claims-selftest",
+        argv=("python3", "tools/check_storage_claims.py", "--self-test"),
+        inputs=("tools/check_storage_claims.py", "site/_worker.js", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),

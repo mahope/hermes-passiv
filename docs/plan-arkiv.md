@@ -1383,3 +1383,53 @@ Kun append. Læs den aldrig hel; brug grep på den du vil finde.
 - `REGEL BEKRÆFTET`: skriv krav på en *brug* som "1 deklaration + 1 brug". Målt fire gange.
 - `REGEL BEKRÆFTET`: et tal-løfte på en **ny** side skal skrives i `PRODUCT_ENGINE` i **samme diff** som teksten. Målt i denne iteration — porten fangede den, fordi den læser linje for linje, så et tal brudt over to linjer ikke ses. Tæl derfor fejlene i `site/`, ikke bare dem porten melder.
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed, så `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret.
+
+---
+
+## 30/9 — `ceo/aehlige-lagrings-loefter`: de tretten lagrings-løfter (opgave 2)
+
+**Hvad der var målt.** `rateLimitIp(request, env, '…', …)` kaldes i seks handlers i
+`site/_worker.js` — `/scan-proxy`, `/api/header-check`, `/api/url-inspect`,
+`/api/report`, `/api/clean-copy`, `/api/compliance-scan` — og skriver
+`rl:<scope>:<sha256(salt|ip)>:<time-slotte>` i KV med `expirationTtl: 7200`.
+**10** sider kalder en af dem gennem deres egen `fetch`.
+
+**De tretten løgnagtige svar**, målt ved at søge hele `site/` på afvisnings-
+mønstre og derefter krydse med listen over de ti:
+
+| Side | Kaldte | Sagde |
+|---|---|---|
+| `scan.html`, `scan-da.html` | `/scan-proxy` | "No logs, no storage, no cookies" / "Ingen logs, ingen lagring" |
+| `cookie-check.html`, `cookie-check-da.html` | `/scan-proxy` | "Nej … kasseres straks" (anden form) |
+| `security-headers-check.html` | `/api/header-check` | "this page has no backend that records what you scan" — kun i JSON-LD |
+| `url-to-markdown.html`, `da/url-til-markdown.html` | `/scan-proxy` | "Nothing is stored" i privatlivsnote + 3 meta |
+| `compliance-ai.html`, `da/compliance-ai.html` | sælger `/scan` i eget `<p>` | "No logs, no storage, no cookies" |
+| `blog/http-headers-reference.html`, `blog/check-url-redirect-chain.html` | sælger `/url-inspector` i eget `<p>` | "Nothing is stored" |
+| `blog/url-to-markdown-converter.html` + DA, `blog/index.html` | sælger konverteren | "Nothing stored" |
+
+Den tiende kalderende side, `compliance-report.html`, gjorde det rigtigt forud
+og er modellen: den siger præcis, at time-tælleren er det eneste der gemmes.
+
+**Nøglefejlen.** `check_product_copy.py` krævede *"no logs, no storage, no
+cookies"* som **påkrævet** sætning på `/compliance-ai` (`SCANNER_REQUIRED_EN`).
+Porten holdt altså løgnen i live. Rettet til at kræve afsløringen, og
+`SCANNER_SUPERSEDED` har nu begge revisioner som selftest-mutationer.
+
+**Den nye port.** `tools/check_storage_claims.py` dømmer adfærd, ikke navne:
+den læser hvilke ruter der kalder `rateLimitIp` direkte i `_worker.js`, og
+hvilke ruter en given side kalder gennem sin egen `fetch` — ingen af delene er
+håndskrevet i porten. Selftesten (7 mutationer på de rigtige filer) beviser
+også at en `rateLimitIp` der forsvinder fra `handleScanProxy` gør `/scan` grøn
+igen.
+
+**Blind plet, målt og noteret i portens docstring.** En side der *beskriver* et
+værktøj uden at linke til det i selve svaret kan ikke dømmes. Fire artikler blev
+rettet fordi porten viste hvor de var, ikke fordi porten dømmer dem; en
+fremtidig artikel med samme fejl er stadig ubemandet.
+
+**Fejl undervejs, begge rettet.** (1) `selling_block` havde sin egen kopi af
+link-opløsningen, og kun den ene var fikset for `site/…`-præfikset, så portens
+svar afhang af hvilken sti den blev kaldt med — selftesten var grøn på en
+mutation porten ellers fangede. (2) `route_pages` skrev nøgler uden præfiks
+mens `link_targets` skrev med, så de to lister mødtes aldrig. Begge er samme
+fejl og samme løsning: ét sted opløser stier, og alle kalder det.
