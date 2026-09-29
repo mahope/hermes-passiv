@@ -3,21 +3,16 @@
  "source": "python3 tools/check_article_paid_path.py --write",
  "measured": "2026-09-29",
  "blind": [
-  "blog/compliance-check-github-action.html",
-  "blog/free-website-compliance-checker.html",
   "blog/release-integrity-explained.html",
   "blog/test-your-zip-before-release.html",
   "da/blog/cmp-sammenligning-2026.html",
   "da/blog/dbbaftale-webbureau.html",
   "da/blog/faa-besked-naar-hjemmeside-er-nede.html",
-  "da/blog/gratis-compliance-tjek-hjemmeside.html",
   "da/blog/kopier-tabel-fra-pdf-til-excel.html",
   "da/blog/open-graph-tjekker-guide.html",
-  "da/blog/overvaag-hjemmeside-mac-menu-bar.html",
   "da/blog/prestashop-tilgaengelighed-eaa.html",
   "da/blog/release-integrity-hvad-er-det.html",
   "da/blog/test-din-zip-foer-release.html",
-  "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
   "da/blog/tilgaengelighedsscanner-cli.html"
  ]
 }

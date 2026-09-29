@@ -450,6 +450,16 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # server-side tjek er altså ikke en side-note, men artiklens emne.
     ("blog/cookie-consent-gdpr-compliance.html", "web"),
     ("da/blog/cookie-consent-gdpr-2026.html", "web"),
+    # GitHub-Action-guiden og dens danske spejling (30/9) — 8 indgående
+    # sider, målt af `check_article_paid_path.py`. Samme licens og samme to
+    # tal som de otte ovenfor, og her er målingen af *hvorfor* særlig
+    # tydelig: artiklens egen tekst siger at action'en prober for
+    # `/privacy` og genkender 15+ samtykkeplatforme, mens Pro's 18
+    # server-side fund er GA_NO_CONSENT, FB_NO_CONSENT og PRIVACY_LINK —
+    # altså forskellen på "siden findes" og "samtykket virker". Det er
+    # artiklens egen pointe, ikke en tilføjet vinkel.
+    ("blog/compliance-check-github-action.html", "web"),
+    ("da/blog/compliance-tjek-github-action.html", "web"),
     # Webflow-vs-Squarespace-sammenligningen og dens danske spejling (30/9) —
     # 10 indgående sider, målt af `check_article_paid_path.py`. Samme licens og
     # samme to tal som de syv ovenfor: artiklens eget kort "Statement Required"
