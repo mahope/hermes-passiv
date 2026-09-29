@@ -156,6 +156,20 @@ STEPS: tuple[Step, ...] = (
         argv=("node", "tests/tracking-worker.test.mjs"),
         inputs=("tests/tracking-worker.test.mjs", "site/_worker.js"),
     ),
+    # De to gratis scanningsværktøjer. De kalder vores egen worker, og en 5xx
+    # fra den er ikke et netværksproblem — det var den gamle tekst, og den gav
+    # op ved det første blip. Uden dette step var der ingen test, der viste at
+    # siderne skelner de to.
+    Step(
+        id="scan-clients",
+        argv=("node", "tests/scan-clients.test.mjs"),
+        inputs=(
+            "tests/scan-clients.test.mjs",
+            "site/compliance-site-check.html",
+            "site/da/compliance-site-check.html",
+            "site/url-inspector/index.html",
+        ),
+    ),
     Step(
         id="inline-js",
         argv=("python3", "tools/check_inline_js.py"),

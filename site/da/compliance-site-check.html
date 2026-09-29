@@ -187,22 +187,61 @@ function getStatusIcon(status) {
   return '<span class="check-status fail">&#10005;</span>';
 }
 
+// Et kvar svar fra vores egen server er ikke et netværksproblem, og Cloudflare
+// svarer en worker der er faldet ned med en HTML-side — så det gamle
+// `r.json()` kastede, og catch'en sagde "Netværksfejl: Unexpected token '<'".
+// Den bekyldte besøgerens wifi og gav op ved det første blip. Status læses først,
+// et 5xx eller 429 prøves igen et par gange, og kun et rigtigt 4xx er endeligt.
+var SCAN_MAX_TRIES = 3;
+var SERVER_BUSY = 'Vores scanningsserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
+var OFFLINE = 'Vi kunne ikke nå scanningsserveren. Tjek din forbindelse og prøv igen.';
+
+function fetchScan(endpoint) {
+  return fetch(endpoint).catch(function(e) {
+    // Kaldet kom aldrig frem. Det er ikke vores servers skyld, men et brudt
+    // forbindelse er stadig værd ét forsøg mere.
+    var err = new Error((e && e.message) || 'forbindelsen brød');
+    err.transport = true;
+    err.transient = true;
+    throw err;
+  }).then(function(r) {
+    return r.json().catch(function() { return null; }).then(function(data) {
+      if (r.ok && data) return data;
+      var err = new Error((data && data.error) || ('Serveren svarede med ' + r.status));
+      err.status = r.status;
+      // Mangler svaret, var det ikke os der skrev det, så det er forbigående
+      // uanset hvilken status kanten meldte.
+      err.transient = !data || r.status === 429 || r.status >= 500;
+      throw err;
+    });
+  });
+}
+
 function scan() {
   var raw = urlInput.value.trim();
   if (!raw) { showError('Indtast en URL først.'); return; }
   if (!raw.startsWith('http://') && !raw.startsWith('https://')) raw = 'https://' + raw;
   try { new URL(raw); } catch (e) { showError('Ugyldig URL. Sørg for at den starter med http:// eller https://'); return; }
   showLoading();
-  fetch('/api/compliance-scan?url=' + encodeURIComponent(raw))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      hideLoading();
-      if (!data.ok) { showError(data.error || 'Scan mislykkedes'); return; }
-      ctaBox.style.display = '';
-      if (window.trackEvent) window.trackEvent('scan');
-      renderResults(data);
-    })
-    .catch(function(err) { showError('Netværksfejl: ' + (err.message || 'ukendt')); });
+  var tries = 0;
+  function attempt() {
+    fetchScan('/api/compliance-scan?url=' + encodeURIComponent(raw))
+      .then(function(data) {
+        hideLoading();
+        if (!data.ok) { showError(data.error || 'Scan mislykkedes'); return; }
+        ctaBox.style.display = '';
+        if (window.trackEvent) window.trackEvent('scan');
+        renderResults(data);
+      })
+      .catch(function(err) {
+        if (err.transient && ++tries < SCAN_MAX_TRIES) {
+          setTimeout(attempt, 1200 * tries);
+          return;
+        }
+        showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scanen kunne ikke gennemføres')));
+      });
+  }
+  attempt();
 }
 
 

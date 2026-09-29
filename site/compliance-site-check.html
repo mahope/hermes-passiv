@@ -186,6 +186,37 @@ function getStatusIcon(status) {
   return '<span class="check-status fail">&#10005;</span>';
 }
 
+// A failed answer from our own worker is not the visitor's network, and
+// Cloudflare replies to a crashed worker with an HTML error page — so the old
+// `r.json()` threw and the catch reported "Network error: Unexpected token '<'".
+// That blamed the visitor's Wi-Fi, and it gave up on the very first blip. The
+// status is read first, a 5xx or 429 is retried a couple of times, and only a
+// real 4xx is final.
+var SCAN_MAX_TRIES = 3;
+var SERVER_BUSY = 'Our scan server is temporarily unavailable. Please try again in a moment.';
+var OFFLINE = 'We could not reach the scan server. Check your connection and try again.';
+
+function fetchScan(endpoint) {
+  return fetch(endpoint).catch(function(e) {
+    // Kaldet kom aldrig frem. Det er ikke vores servers skyld, men et brudt
+    // forbindelse er stadig værd ét forsøg mere.
+    var err = new Error((e && e.message) || 'connection failed');
+    err.transport = true;
+    err.transient = true;
+    throw err;
+  }).then(function(r) {
+    return r.json().catch(function() { return null; }).then(function(data) {
+      if (r.ok && data) return data;
+      var err = new Error((data && data.error) || ('Server replied with ' + r.status));
+      err.status = r.status;
+      // A missing body means the answer was not ours to read, so it is
+      // transient by definition no matter what status the edge reported.
+      err.transient = !data || r.status === 429 || r.status >= 500;
+      throw err;
+    });
+  });
+}
+
 function scan() {
   var raw = urlInput.value.trim();
   if (!raw) { showError('Enter a URL first.'); return; }
@@ -193,16 +224,25 @@ function scan() {
   if (!raw.startsWith('http://') && !raw.startsWith('https://')) raw = 'https://' + raw;
   try { new URL(raw); } catch (e) { showError('Invalid URL. Make sure it starts with http:// or https://'); return; }
   showLoading();
-  fetch('/api/compliance-scan?url=' + encodeURIComponent(raw))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      hideLoading();
-      if (!data.ok) { showError(data.error || 'Scan failed'); return; }
-      ctaBox.style.display = '';
-      if (window.trackEvent) window.trackEvent('scan');
-      renderResults(data);
-    })
-    .catch(function(err) { showError('Network error: ' + (err.message || 'unknown')); });
+  var tries = 0;
+  function attempt() {
+    fetchScan('/api/compliance-scan?url=' + encodeURIComponent(raw))
+      .then(function(data) {
+        hideLoading();
+        if (!data.ok) { showError(data.error || 'Scan failed'); return; }
+        ctaBox.style.display = '';
+        if (window.trackEvent) window.trackEvent('scan');
+        renderResults(data);
+      })
+      .catch(function(err) {
+        if (err.transient && ++tries < SCAN_MAX_TRIES) {
+          setTimeout(attempt, 1200 * tries);
+          return;
+        }
+        showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')));
+      });
+  }
+  attempt();
 }
 
 
