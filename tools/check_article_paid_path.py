@@ -162,6 +162,25 @@ def paid_links(root: Path, path: Path, offer_routes: set[str]) -> list[str]:
     return found
 
 
+def knap_links(root: Path, path: Path) -> list[str]:
+    """Købslinket i artikelens egen tekst — kun den *direkte* form.
+
+    `paid_links()` tæller to former som om de var ens: en købsknap (`buy.
+    stripe.com` i egen tekst) og et link til en side der sælger. Det er ikke
+    ens. Mutationen i `notion-artikel-pro` målte forskellen: med
+    `buy.stripe.com` fjernet fra begge artikler blev porten stadig grøn, fordi
+    den nye sektion også linker til `/clean-copy-tool` — og den rute står i
+    `offers`. To artikler, nul knapper, én indirekte vej, porten grøn.
+
+    Forskellen er målt i de to lister `paid_links()` allerede producerer, så
+    den er to linjer og ikke en ny læsning af filen — punkt 4 i docstringen.
+    """
+    html = path.read_text(encoding="utf-8", errors="ignore")
+    page = Page()
+    page.feed(content_region(html))
+    return [h for h in page.all_links if RE_BUY.match(h)]
+
+
 def _route_of_href(href: str) -> str:
     """Href → rute. Absolutte URL'er reduceres til stien, som katalogen bruger."""
     href = href.split("#")[0]
@@ -235,6 +254,7 @@ def rows(root: Path = SITE, catalog: dict | None = None) -> list[dict]:
             "visits": visits.get(route),
             "links": len(inbound.get(route, ())),
             "paid": paid,
+            "knapper": len(knap_links(root, path)),
         })
     out.sort(key=lambda r: (-(r["visits"] or 0), -r["links"], r["route"]))
     return out
@@ -267,9 +287,20 @@ def judge(root: Path, catalog: dict) -> list[str]:
 
 
 def _print_ranking(table: list[dict], limit: int) -> None:
+    knap = [r for r in table if r["knapper"]]
     print(f"artikler: {len(table)} · med betalt vej: "
-          f"{sum(1 for r in table if r['paid'])} · blinde: "
-          f"{sum(1 for r in table if not r['paid'])}")
+          f"{sum(1 for r in table if r['paid'])} · med købsknap: {len(knap)} · "
+          f"blinde: {sum(1 for r in table if not r['paid'])}")
+    # Dækning efter *klik*, ikke bare efter "har en vej". De to er ikke ens:
+    # en artikel med ét klik til en købsside er dækket, men læseren skal
+    # stadig klikke videre, og det er ikke det samme som en knap på siden.
+    # Uden denne linje skriver hver iteration "N artikler fik en betalt vej",
+    # hvilket er den forkerte påstand — rigtigt er "N fik en knap, M fik ét
+    # klik". Målt for første gang i `notion-artikel-pro` ved håndkontrol.
+    print(f"dækning: {len(knap)} med købsknap · "
+          f"{sum(1 for r in table if not r['knapper'] and len(r['paid']) == 1)} med 1 klik · "
+          f"{sum(1 for r in table if not r['knapper'] and len(r['paid']) >= 2)} med 2+ klik · "
+          f"{sum(1 for r in table if not r['paid'])} med 0 klik")
     print(f"{'trafik':>6} {'links':>5}  {'fil':<52} købsvej")
     blind = [r for r in table if not r["paid"]]
     for row in blind[:limit]:
@@ -327,6 +358,38 @@ def _self_test() -> int:
     da = [r for r in rows(SITE, catalog) if r["file"].startswith("da/blog/")]
     check("ser engelske artikler (ikke kun danske)", len(en) > 50, f"EN={len(en)}")
     check("ser danske artikler", len(da) > 50, f"DA={len(da)}")
+
+    # 5b. Knap vs. klik. De to er ikke ens, og mutationen i `notion-artikel-pro`
+    #     målte at forskellen er rigtig: med `buy.stripe.com` fjernet fra begge
+    #     Notion-artikler blev porten stadig GRØN, fordi sektionen også
+    #     linker til `/clean-copy-tool`, og den rute står i `offers`. Uden
+    #     kontrol 18 og 19 kan de to falde sammen igen stille — og det er sådan
+    #     fire iterationer i træk har rapporteret "N artikler fik en betalt vej",
+    #     hvilket er den forkerte påstand.
+    #
+    #     Den rigtige artikel måles på disk (den har begge dele: egen knap *og*
+    #     et klik til webværktøjet). Formen " klik uden knap" findes ikke i
+    #     `site/` lige nu, så den bygges syntetisk — ellers ville kontrollen
+    #     være grøn af den simple grund at den ingenting kunne se.
+    notion = ROOT / "site" / "blog" / "copy-table-website-to-notion.html"
+    paid_notion = paid_links(SITE, notion, offers)
+    knap_notion = knap_links(SITE, notion)
+    check("artikel med egen knap har knap (og tæller kliket til webværktøjet)",
+          len(knap_notion) == 1 and "/clean-copy-tool" in paid_notion,
+          f"klik={len(paid_notion)} knap={len(knap_notion)}")
+
+    only_click = (
+        '<html><body><div>'
+        '<a href="/clean-copy-tool">webværktøjet</a>'
+        "</div><footer>x</footer></body></html>"
+    )
+    page = Page()
+    page.feed(only_click)
+    indirect = [h for h in page.all_links if _route_of_href(h) == "/clean-copy-tool"]
+    knap_of_page = [h for h in page.all_links if RE_BUY.match(h)]
+    check("ét klik til en købsside er IKKE en knap",
+          len(indirect) == 1 and not knap_of_page,
+          f"klik={len(indirect)} knap={len(knap_of_page)}")
 
     # 6. Rangeringen bruger trafik når den findes, ellers links, og siger
     #    hvilken. Uden `visits` ville porten have skjult at tallene er
