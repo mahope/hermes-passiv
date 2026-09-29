@@ -508,6 +508,13 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # efter en motor. Målt i denne iteration: den side løfter 15, og det er
     # webkernen der kører den.
     ("compliance-ai.html", "web"),
+    # E-bog-bundlens side (30/9) — 199 indgående sider, største blinde
+    # værktøjsside målt af `check_tool_paid_path.py`. Den sælger EUComply Pro
+    # og lover derfor de samme tal som de otte artikler ovenfor: "33 checks",
+    # "de samme 15 accessibility rules, plus 18 server-side …". Uden denne
+    # linje var løfterne **udømte**, altså en fejl i stedet for et mål —
+    # præcis den fejlform porten findes for.
+    ("books/compliance-bundle.html", "web"),
     ("scan.html", "web"),
     ("scan-da.html", "web"),
     # De otve gratis tjek og deres næste-vej til EUComply Pro (30/9). Målt før

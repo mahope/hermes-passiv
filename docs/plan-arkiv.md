@@ -1475,3 +1475,45 @@ fejl og samme løsning: ét sted opløser stier, og alle kalder det.
   inline data, dobbelt handling, tidszoner, adgangskontrol, GET-mutationer,
   hemmeligheder, kørte migrationer) rammer ingen af dem. Portens egne
   mutationer dækker den klasse af fejl der *kan* opstå her.
+
+## 2026-09-30 — ceo/vej-til-betalt-tre-sider (opgave 4, 3/42)
+
+De tre mest indgående blinde værktøjssider fik hver én ærlig vej til EUComply
+Pro. Blindtallet i `tools/check_tool_paid_path.py` faldt **42 → 39**.
+
+- **MÅLT FØR → EFTER, i `dist/`**: `/books/compliance-bundle` 0 → 1 vej
+  (199 indgående links), `/da/compliance-ai` 0 → 1 (97), `/compliance-ai`
+  0 → 1 (92). Hver vej er et inline link til den sprogsspejlede købsside, der
+  har virkende `buy.stripe.com` (`compliance-report.html:158`).
+- **FORRIGE ITERATIONS PÅSTAND VAR FEJL**: statuslinjen sagde, at
+  `/compliance-ai` "fik sin vej i 66172a0 alligevel". Porten målte den til 0, og
+  `--write --force` fjernede den fra listen. Målt i `dist/`, altså der hvor
+  builden skriver — ikke i `site/`.
+- **KNAP VS. VEJ**: opgaven skrev "én købsknap der virker". Målt er
+  `knapper=0` på alle tre: vejen er et inline link i en sætning, præcis som de
+  ni sider i 66172a0. Bevidst: på bogsiden ville ellers to køb stå op ad
+  hinanden (gratis EPUB-download mod $79/år), og det er den forveksling siden
+  skal undgå. Trykflade 17–20 px (link i brødtekst = undtagelsen i WCAG
+  2.5.8). Formen er nu skrevet som regel i planens opgave 4.
+- **EN NO-OP**: EN-kilden havde kun `x-default`, men
+  `build_sites.py:hreflang_pairs` skriver parret symmetrisk fra den danske sides
+  links, så `dist/` havde alle tre alternates i forvejen. Kilden er nu
+  selvforklarende; ingen synlig rettelse, målt først.
+- **LØFTENE BLEV DØMTE**: `books/compliance-bundle.html` stod ikke i
+  `PRODUCT_ENGINE`, så "15 accessibility rules" var et løfte uden motor.
+  Efter tilføjelsen: 165 løfter mod 159, alle matcher. `RE_CLAIM` dømmer
+  "15 accessibility rules" men ikke "33 checks" / "18 server-side checks" —
+  de er verificeret i `compliance-report.html:154`.
+- **MUTATIONER (2)**: linket på bogsiden → `/books` gav
+  `NY BLIND VÆRKTØJSSIDE` med de 199 links i beskeden. `hreflang="da"` fjernet
+  fra EN-kilden gav **grønt** — porten dømmer kun `dist/`, så først efter
+  `build_sites.py` blev mutationen målt. Fælden kostede to mutationer, fordi
+  porten blev kørt mod gammelt dist.
+- **RATCHETENS BLIND PLET** (blev opgave 8): en rute på listen, der mister sin
+  vej igen, er grøn — "blind" er den tilstand porten forventer af den.
+- **UI**: 390 og 1280 px på alle tre sider, `scrollWidth` = viewport på alle
+  seks opslag. Kontrast i den nye `.pro-note`: link 6,25:1, brødtekst 11,37:1,
+  overskrift 16,99:1. Skærmbilleder i `/tmp/ui-vej-til-betalt/`.
+- **GATE**: `python3 tools/quality_gate.py` GRØN, 85 steps (uændret).
+  `build_sites` 0 broken, `check_links` 0, `seo_check` 0 fund,
+  `check_stripe_ctas` 72 købssider, `check_hreflang_pairs` grøn.
