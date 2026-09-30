@@ -20,7 +20,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from shots import DIST, SHOTS, serve, slug  # noqa: E402
+from shots import DIST, SHOTS, block_own_tracking, serve, slug  # noqa: E402
 
 WIDTHS = [360, 768, 1280]
 BOX_JS = """(() => {
@@ -124,6 +124,10 @@ def main() -> int:
             ctx = browser.new_context(viewport={"width": 1280, "height": 900})
             if dist_dir:
                 ctx.route("**/*", serve(dist_dir, domain))
+            else:
+                # Live: uden blokaden tæller hvert layout-besøg som en
+                # kundebesøgsidevisning. Se `block_own_tracking` i shots.py.
+                block_own_tracking(ctx)
             page = ctx.new_page()
             shots_dir = None
             if a.shots:

@@ -70,6 +70,28 @@ def slug(path: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", path.strip("/").lower()).strip("-") or "home"
 
 
+# Vores egen browser må ikke tælles som en kunde. Målt 30/9: `track.js`
+# posterer `location.pathname` til `/api/track` ved hvert sidelad, og workeren
+# tæller det som en sidevisning i `reports/weekly/*.json`. Et `--live`
+# skærmbillede er derfor et **syntetisk besøg på en rigtig rute** — den ene
+# fejlform ingen rute-port kan fange, fordi stien er ægte. Ruter der *kun* findes
+# i vores egne selftester fanges af `check_weekly_history.py` regel 5; den her
+# lukker den anden halvdel, hvor ruten er rigtig og besøget stadig ikke er et
+# kundebesøg.
+#
+# dist-kørslerne har allerede ingen risiko: `serve()` fulfiller *alle* requests
+# på origin, så `/api/track` bliver en lokal 404 og forlader aldrig maskinen.
+# Derfor skal blokaden kun sidde foran live-grenen — og det er præcis den
+# gren DESIGN-reglen beder om ("se den publicerede side, før du skriver at
+# noget virker"), så fjernes den, forsvinder målingen med den.
+TRACK_PATH = "**/api/track"
+
+
+def block_own_tracking(ctx) -> None:
+    """Stop vores egen besøgs-tæller. Køres før `page.goto`."""
+    ctx.route(TRACK_PATH, lambda route: route.abort())
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--widths", nargs="*", type=int, default=[360, 768, 1280])
@@ -83,6 +105,7 @@ def main() -> int:
         browser = pw.chromium.launch()
         if a.live:
             ctx = browser.new_context(viewport={"width": a.widths[0], "height": 800})
+            block_own_tracking(ctx)
             page = ctx.new_page()
             for u in a.live:
                 m = re.match(r"https://([^/]+)(/.*)?", u)

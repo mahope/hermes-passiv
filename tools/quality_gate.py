@@ -535,6 +535,10 @@ STEPS: tuple[Step, ...] = (
             "tools/check_weekly_history.py",
             "tools/weekly_report.py",
             "reports/weekly/*.json",
+            # Regel 5 spørger om hver `top_paths`-rute er publiceret, så
+            # inventaret er ikke længere bare en valgfri målekilde: en push der
+            # kun tilføjer en rute til det skal kunne rødme porten.
+            "tools/route_inventory.json",
         ),
     ),
     Step(
@@ -544,6 +548,7 @@ STEPS: tuple[Step, ...] = (
             "tools/check_weekly_history.py",
             "tools/weekly_report.py",
             "reports/weekly/*.json",
+            "tools/route_inventory.json",
         ),
     ),
     # Opgave 36: uge 40 skrev `api/stats: name 'count' is not defined` i sin
@@ -924,6 +929,9 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_article_paid_path.py", "--quiet"),
         inputs=(
             "tools/check_article_paid_path.py",
+            # Porten arver selvklik-reglen (regel 5) fra arkivporten, så en
+            # push der kun retter `unpublished_rows` skal kunne rødme *begge*.
+            "tools/check_weekly_history.py",
             "tools/article_paid_path_blind.json",
             # Dom 5s flås. Uden den i filteret kunne
             # `article_click_no_button.json` ændres uden at porten nogensinde
@@ -949,7 +957,8 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="article-paid-path-selftest",
         argv=("python3", "tools/check_article_paid_path.py", "--self-test"),
-        inputs=("tools/check_article_paid_path.py", "build_sites.py"),
+        inputs=("tools/check_article_paid_path.py", "build_sites.py",
+                "tools/check_weekly_history.py"),
     ),
     # Opgave 3 (30/9): værktøjssiderne lå uden for portens dom, fordi
     # artikelportens dom 6 kræver *målte besøg* — og `/api/stats` har svaret
@@ -972,6 +981,9 @@ STEPS: tuple[Step, ...] = (
             # over — altså netop den push der afgør om porten er værd at have.
             "tools/tool_paid_path_blind.json",
             "tools/check_article_paid_path.py",
+            # …som nu selv arver `unpublished_rows` herfra, så en push der kun
+            # retter selvklik-reglen skal køre alle tre gatestræk.
+            "tools/check_weekly_history.py",
             "tools/check_stripe_ctas.py",
             "tools/route_inventory.json",
             "tools/stripe_catalog.json",
@@ -984,7 +996,8 @@ STEPS: tuple[Step, ...] = (
         id="tool-paid-path-selftest",
         argv=("python3", "tools/check_tool_paid_path.py", "--self-test"),
         inputs=("tools/check_tool_paid_path.py", "build_sites.py",
-                "tools/check_article_paid_path.py"),
+                "tools/check_article_paid_path.py",
+                "tools/check_weekly_history.py"),
     ),
     # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
     # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i

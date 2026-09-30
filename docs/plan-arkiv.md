@@ -1670,3 +1670,14 @@ REGEL-linjer flyttet ud af arbejdskøen, uændrede:
 - `PORTEN KAN IKKE SPRINGES OVER AF EN RATCHET-PUSH`: `tools/check_jsonld_types.py` lagt i path-filteret i `deploy-sites.yml`, ellers kunne en push der kun tilføjer en fejlform springe netop porten over som afgør om fejlformen må slå. Samme begrundelse som `storage-claims`, `tool-paid-path` og de øvrige filtre.
 - `GATE`: `quality_gate.py` 85 steps grøn, `stripe-worker.test.mjs` 298/298, `check_jsonld_types.py --self-test` 5/5, `seo_check.py` 312 sider 0 fund. `_worker.js` urørt, ingen ny rute.
 - `OPGRADERINGER`: ingen. `AFHAENGIGHEDER.md` uændret.
+
+## Opgave 7 (30/9) — et selvklik kan ikke være et kundes besøg
+
+- `MÅLT, IKKE GÆTTET`: `site/track.js:15` sender `var p = location.pathname` til `/api/track`, og workeren tæller det i `p:v3:`-nøglerne, som `weekly_report.py` læser som `top_paths`. Derfor er **hvert** kald vi selv laver med JavaScript — `tools/shots.py --live` og `tools/layout_check.py --live`, præcis de værktøjer DESIGN-reglen beder om — et syntetisk besøg i kundens tæller. `curl` rammer ikke, fordi `track.js` aldrig kører; det er browseren der gør skaden, og ruten er **ægte**, så ingen rute-port kan se den.
+- `ROD-FIX`: `block_own_tracking()` i `tools/shots.py` (ny, delt) kaldes fra begge live-grene. dist-kørslerne var allerede sikre — `serve()` fulfiller alle requests på origin, så `/api/track` er en lokal 404.
+- `PORT-FIX`: `check_weekly_history.py` regel 5 `synthetic_top_path`. En `top_paths`-række på en rute vi ikke udgiver gør **hele rapporten** rød, ikke kun rækken. Reglen spørger om ruten findes blandt 296 publicerede — ikke om den hedder noget bestemt, så den fanger det næste syntetiske navn uden en navneliste.
+- `FORBRUGEREN`: `traffic_source()` i `check_article_paid_path.py` springer kontaminerede rapporter **over** og skriver dem i `meta["skipped"]`, som `traffic_note()` gør synligt. Advarslen i `meta` alene var ikke nok: en forfalsket besøgstæller i en rangliste er præcis fundet.
+- `MÅLT PÅ DEN RIGTIGE FIL`: `2026-38.json` muteret med `/blog/syntetisk-klik-uden-knap` (42) → rød med præcis den linje; gendannet → grøn. Selvtest 21/21 og 98/98.
+- `SÆLVKONTROLLER`: positiv (publiceret rute grøn, også `/da/` mod inventarets `/da`), fire syntetiske navne i fire former, mutation der blinder `unpublished_rows` → kontrollerne fanges, mutation i `check_weekly_history` → porten grøn igen på arkivet.
+- `SELFTESTENS EGEN FEJL`: de fire gamle fixtures brugtte ruten `/blog/x`, som ikke findes — samme fejltype som opgave 10 (udgangstilfælde i en vokabel porten ikke accepterer). Ruten vælges nu fra målingen.
+- `GATE`: `quality_gate.py` 85 steps grøn. `check_weekly_history.py` fik `tools/route_inventory.json` som input, og artikel- og værktøjsporten fik `check_weekly_history.py`, fordi de nu deler reglen. `site/_worker.js` urørt.

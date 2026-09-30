@@ -40,6 +40,25 @@ Fire kontroller:
                             indsamlingen fejler, så en manglende nøgle betyder
                             en afkortet eller håndredigeret fil, ikke en fejl i
                             en kilde.
+  5. `synthetic_top_path`   en `top_paths`-række der ikke er en publiceret
+                            rute. Målt 30/9: sidevisninger kommer fra
+                            `track.js`, som posterer `location.pathname`, så
+                            *ethvert* kald vi selv laver med JavaScript —
+                            hver `--live`-screenshot, hvert layout-besøg —
+                            lander i `top_paths` og ligner et kundebesøg. Den
+                            ruteform er dog fanget andre steder; her fanges de
+                            ruter, der slet ikke findes, fordi de er skrevet
+                            af en selftest. Regel 5 gør **hele rapporten**
+                            ubrugelig, ikke kun rækken: en rapport, der kan
+                            tælle vores egen trafik, kan ikke bruges til at
+                            bevise at *noget andet* i den er sandt.
+
+**Hvorfor regel 5 er en regel og ikke en navneliste:** den spørger om ruten
+findes blandt de publicerede, så den fanger det næste syntetiske navn uden at
+nogen skal opdatere en liste. Og målt 30/9 er inventaret *hele* grunden:
+`tools/route_inventory.json` har 296 ruter, og de fire `dist/*/sitemap.xml`
+tilføjer **0** oveni, så de to kilder er enige — derfor afhænger porten kun af
+inventaret og ikke af `dist/`.
 
 **To ting denne port bevidst ikke gater**, fordi de viste sig at være *falske*
 regler da de blev målt på de rigtige filer:
@@ -70,6 +89,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
 WRITER = ROOT / "tools" / "weekly_report.py"
+INVENTORY = ROOT / "tools" / "route_inventory.json"
 
 # Blokke `collect_all()` skriver altid, fordi `soft()` lægger nøglen ind selv om
 # indsamlingen fejler. Læst fra koden, ikke hardkodet, så porten ikke kan blive
@@ -95,7 +115,56 @@ def producible_keys(writer_source: str) -> set[str]:
     return {k for k in ALWAYS_WRITTEN if f'"{k}"' in writer_source}
 
 
-def check_report_file(path: Path, writer_source: str) -> list[str]:
+def published_routes() -> set[str] | None:
+    """De ruter vi faktisk udgiver, uden bagvendt skråstreg.
+
+    Målt 30/9: inventaret og de fire `dist/*/sitemap.xml` er enige — 296 ruter,
+    og sitemap'erne tilføjer 0 oveni. Derfor læses kun inventaret, så porten
+    stadig ikke kræver et bygget `dist/`.
+
+    `None` betyder "kan ikke måle". En port der ikke kan måle, må ikke være
+    grøn ved at tie stille — samme som en manglende `weekly_report.py`.
+    """
+    try:
+        raw = json.loads(INVENTORY.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(raw, dict):
+        return None
+    routes: set[str] = set()
+    for value in raw.values():
+        if not isinstance(value, list):
+            return None
+        for route in value:
+            if isinstance(route, str):
+                routes.add(route.split("?")[0].split("#")[0].rstrip("/") or "/")
+    return routes or None
+
+
+def unpublished_rows(top_paths, published: set[str]) -> list[tuple[str, object]]:
+    """`(rute, besøg)` for de rækker i `top_paths` vi ikke udgiver.
+
+    Rækker der ikke er et objekt, eller hvis `path` ikke er en streng, springes
+    over i stedet for at give en undtagelse: `check_weekly_history` skal kunne
+    læse en arkivfil, en anden scriptversion har skrevet.
+    """
+    if not isinstance(top_paths, list) or not published:
+        return []
+    out: list[tuple[str, object]] = []
+    for row in top_paths:
+        if not isinstance(row, dict):
+            continue
+        route = row.get("path")
+        if not isinstance(route, str) or not route:
+            continue
+        norm = route.split("?")[0].split("#")[0].rstrip("/") or "/"
+        if norm not in published:
+            out.append((route, row.get("visits")))
+    return out
+
+
+def check_report_file(path: Path, writer_source: str,
+                       published: set[str]) -> list[str]:
     problems: list[str] = []
     try:
         raw = path.read_text(encoding="utf-8")
@@ -142,6 +211,17 @@ def check_report_file(path: Path, writer_source: str) -> list[str]:
         if key not in data:
             problems.append(f"{path.name}: blokken `{key}` mangler, men collect_all() skriver den altid")
 
+    # 5) En sidevisning af en rute vi ikke udgiver. Se docstring: hele
+    #    rapporten dømmes, fordi en rapport der kan tælle vores egen trafik
+    #    ikke kan bruges som bevis for noget.
+    for route, visits in unpublished_rows(
+            (data.get("traffic") or {}).get("top_paths"), published):
+        problems.append(
+            f"{path.name}: `top_paths` har besøget `{route}` ({visits}), men "
+            f"den rute er ikke blandt de {len(published)} publicerede ruter — "
+            f"en sidevisning af en rute vi ikke udgiver kan kun være vores egen"
+        )
+
     return problems
 
 
@@ -150,13 +230,17 @@ def check() -> list[str]:
         return [f"{REPORT_DIR.relative_to(ROOT)} findes ikke — kan ikke gate arkivet"]
     if not WRITER.is_file():
         return [f"{WRITER.relative_to(ROOT)} findes ikke — kan ikke bevise hvilke blokke koden skriver"]
+    published = published_routes()
+    if published is None:
+        return [f"{INVENTORY.relative_to(ROOT)} findes eller kan ikke læses — "
+                f"kan ikke bevise hvilke ruter der er publicerede"]
     files = sorted(REPORT_DIR.glob("*.json"))
     if not files:
         return [f"{REPORT_DIR.relative_to(ROOT)} indeholder ingen rapporter"]
     writer_source = WRITER.read_text(encoding="utf-8")
     problems: list[str] = []
     for path in files:
-        problems.extend(check_report_file(path, writer_source))
+        problems.extend(check_report_file(path, writer_source, published))
     return problems
 
 
@@ -172,6 +256,14 @@ def self_test() -> int:
             passed += 1
         else:
             failed.append(f"{navn} (forventede {rule!r}, fik {problems})")
+
+    def kontrol(betingelse: bool, navn: str, detalje: object = "") -> None:
+        """En kontrol uden fejlform — bruges når det er *evnen* der dømmes."""
+        nonlocal passed
+        if betingelse:
+            passed += 1
+        else:
+            failed.append(f"{navn} ({detalje})")
 
     def clean() -> list[str]:
         return check()
@@ -253,7 +345,97 @@ def self_test() -> int:
         target.write_text("{ikke json", encoding="utf-8")
         expect(clean(), "ugyldig JSON", "ugyldig JSON")
 
-        # 7) Rigtig kode efter alle mutationer.
+        # 7) Regel 5. Fire kontroller + fire mutationer. Skrevet på de samme
+        #    måder som resten: skæmmet eksempel giver intet, så her er både
+        #    en positiv kontrol på rigtige ruter og fire forskellige
+        #    syntetiske navne, fordi porten ikke må være en navneliste.
+        pub = published_routes()
+        kontrol("de publicerede ruter kan måles",
+              isinstance(pub, set) and len(pub) > 100,
+              f"{len(pub) if pub else 0} ruter")
+
+        # 7a. Positiv kontrol: en publiceret rute i `top_paths` er grøn. Uden
+        #     denne kunne porten være rød på alt og se ud som at virke.
+        write(target, {**good, "traffic": {"top_paths": [
+            {"path": "/blog/add-bug-report-form-to-any-website", "visits": 9},
+            {"path": "/", "visits": 430}]}})
+        if [p for p in clean() if "ikke blandt de" in p]:
+            failed.append("en publiceret rute blev markeret som syntetisk")
+        else:
+            passed += 1
+
+        # 7b. Skråstregformen skal ikke gøre en publiceret rute syntetisk:
+        #      inventaret skriver `/da`, `track.js` sender `/da/`. Målt 30/9.
+        if pub and "/da" in pub:
+            write(target, {**good, "traffic": {
+                "top_paths": [{"path": "/da/", "visits": 31}]}})
+            if [p for p in clean() if "ikke blandt de" in p]:
+                failed.append("en publiceret rute med bagvendt skråstreg blev markeret")
+            else:
+                passed += 1
+
+        # 7c. Fire syntetiske navne, fire røde. Det er *ikke* en navneliste:
+        #      porten kender ingen af dem, den spørger bare om ruten findes.
+        for name, route in (("en selftests rute", "/blog/syntetisk-klik-uden-knap"),
+                            ("en probe-rute", "/oxloop-selftest"),
+                            ("et opkaldt filnavn", "/tmp/oxloop-selftest-blind.html"),
+                            ("en rute med vilkårlig tekst", "/ikke-en-rude")):
+            write(target, {**good, "traffic": {
+                "top_paths": [{"path": route, "visits": 42}]}})
+            expect(clean(), "kan kun være vores egen", f"syntetisk rute: {name}")
+
+        # 7d. Besøgstallet skal stå i beskeden, ellers kan en læser ikke se
+        #      hvor meget af ranglisten der står på spil.
+        write(target, {**good, "traffic": {
+            "top_paths": [{"path": "/oxloop-selftest", "visits": 42}]}})
+        expect(clean(), "42", "besøgstallet står i beskeden")
+
+        # 7e. En `top_paths` der ikke er en liste, eller rækker der ikke er
+        #     objekter, må ikke give en traceback: arkivet kan være skrevet af
+        #     en anden scriptversion.
+        for rows_ in ("nope", [["a", 1]], [None], [{"visits": 3}], None):
+            write(target, {**good, "traffic": {"top_paths": rows_}})
+            try:
+                out = clean()
+            except Exception as exc:  # noqa: BLE001 — selftestens formål
+                failed.append(f"top_paths={rows_!r} gav {exc!r}")
+            else:
+                if [p for p in out if "kan kun være vores egen" in p]:
+                    failed.append(f"top_paths={rows_!r} markeret uden en rute ({out})")
+        passed += 1
+
+        # 7f. Bevis på den *rigtige* fil, ikke på et syntetisk eksempel: den
+        #     nyeste rapport med tal får en syntetisk rute lagt ind, og porten
+        #     skal blive rød på arkivet selv. Uden dette kan hele regel 5 være
+        #     grøn kun fordi den aldrig har set en rigtig fil med en fejl i.
+        real_traffic = [p for p in sorted(REPORT_DIR.glob("*.json"))]
+        with_traffic = []
+        for p in real_traffic:
+            try:
+                top = (json.loads(p.read_text(encoding="utf-8"))
+                       .get("traffic") or {}).get("top_paths")
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(top, list) and top:
+                with_traffic.append(p)
+        if not with_traffic:
+            failed.append("ingen rigtig rapport har top_paths — "
+                          "regel 5 kan ikke bevises på den rigtige fil")
+        else:
+            victim = with_traffic[-1]
+            raw = json.loads(victim.read_text(encoding="utf-8"))
+            raw["traffic"]["top_paths"].append(
+                {"path": "/oxloop-selftest", "visits": 7})
+            victim.write_text(json.dumps(raw, indent=2, ensure_ascii=False) + "\n",
+                              encoding="utf-8")
+            hit = [p for p in clean() if "ikke blandt de" in p]
+            victim.write_text(real_files[victim], encoding="utf-8")
+            if len(hit) == 1 and victim.name in hit[0]:
+                passed += 1
+            else:
+                failed.append(f"regel 5 fangede ikke den muterede {victim.name}: {hit}")
+
+        # 8) Rigtig kode efter alle mutationer.
         target.unlink(missing_ok=True)
         if clean():
             failed.append("selftesten efterlod arkivet i en ugyldig tilstand")

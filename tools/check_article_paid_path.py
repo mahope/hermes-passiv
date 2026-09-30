@@ -148,6 +148,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT))
 
 from check_stripe_ctas import Page  # noqa: E402  (delt læser, se punkt 4 nedenfor)
+from check_weekly_history import (  # noqa: E402  (delt selvklik-regel, se nedenfor)
+    published_routes,
+    unpublished_rows,
+)
 
 SITE = ROOT / "site"
 CATALOG = ROOT / "tools" / "stripe_catalog.json"
@@ -406,11 +410,25 @@ def traffic_source(reports: Path = REPORTS,
     nyere end kilden og ikke har trafik. Uden `newer_without` er alderen ikke
     nok: en gammel rapport kan være gammel fordi trafikken døde, ikke fordi
     ingen har skrevet en ny.
+
+    **Målt 30/9: en rapport, der tæller vores egen trafik, bruges slet ikke.**
+    `reports/weekly/*.json` får sine sidevisninger fra `track.js`, som posterer
+    `location.pathname` — så ethvert kald *vi* selv laver med JavaScript
+    (`tools/shots.py --live`, `tools/layout_check.py --live`) lander i samme
+    tæller som et kundebesøg, på en rute der er ægte. Den kan derfor ikke findes
+    med en navneliste, og det er ikke nok at skrive advarslen i `meta`: en
+    forfalsket besøgstæller i en rangliste er præcis det fundet handler om. En
+    rapport med en rute vi ikke udgiver springes derfor **over**, og dens navn
+    står i `meta["skipped"]`, så læseren ser at der var noget at kassere.
+    Rækkefølgen er bevidst: arkivporten `check_weekly_history.py` dømmer
+    rapporten rød, og den her nægter at citere den.
     """
     if not reports.is_dir():
         return {}, {"file": None, "week": None, "generated_at": None,
-                    "age_days": None, "newer_without": 0, "reports": 0}
+                    "age_days": None, "newer_without": 0, "reports": 0,
+                    "skipped": []}
     today = today or date.today()
+    published = published_routes() or set()
     best: dict[str, int] = {}
     parsed: list[tuple[Path, dict, list | None]] = []
     for path in sorted(reports.glob("*.json")):
@@ -419,7 +437,16 @@ def traffic_source(reports: Path = REPORTS,
         except (OSError, json.JSONDecodeError):
             continue
         parsed.append((path, data, (data.get("traffic") or {}).get("top_paths")))
-    with_traffic = [(p, d, t) for p, d, t in parsed if isinstance(t, list) and t]
+    skipped: list[str] = []
+    with_traffic: list[tuple[Path, dict, list]] = []
+    for path, data, top in parsed:
+        if not (isinstance(top, list) and top):
+            continue
+        bad = unpublished_rows(top, published)
+        if bad:
+            skipped.append(f"{path.name} ({len(bad)} rute(r) vi ikke udgiver)")
+            continue
+        with_traffic.append((path, data, top))
     for _path, _data, top in with_traffic:
         for row in top:
             route, visits = row.get("path"), row.get("visits")
@@ -431,7 +458,8 @@ def traffic_source(reports: Path = REPORTS,
                 best[route] = visits
     if not with_traffic:
         return {}, {"file": None, "week": None, "generated_at": None,
-                    "age_days": None, "newer_without": 0, "reports": len(parsed)}
+                    "age_days": None, "newer_without": 0,
+                    "reports": len(parsed), "skipped": skipped}
     chosen_path, chosen_data, _top = with_traffic[-1]
     # Kun rapporter *efter* kilden tælles. Målt 30/9 i selftesten: en løkke der
     # talte ved hvert skridt gav `newer_without: 2` for to rapporter der lå
@@ -448,7 +476,8 @@ def traffic_source(reports: Path = REPORTS,
             age = None
     return best, {"file": chosen_path.name, "week": chosen_data.get("iso_week"),
                   "generated_at": generated or None, "age_days": age,
-                  "newer_without": newer_without, "reports": len(parsed)}
+                  "newer_without": newer_without, "reports": len(parsed),
+                  "skipped": skipped}
 
 
 def traffic(reports: Path = REPORTS) -> dict[str, int]:
@@ -469,15 +498,26 @@ def traffic_note(meta: dict) -> str:
     """
     if not meta or not meta.get("file"):
         read = (meta or {}).get("reports") or 0
+        kasset = ""
+        if meta and meta.get("skipped"):
+            kasset = (f" · {len(meta['skipped'])} rapport(er) kasseret fordi de "
+                      f"tæller vores egen trafik")
         return (f"trafik: ingen af {read} rapporter(r) har målte besøg — "
-                f"besøgskolonnen er ikke et tal, det er en fraværende måling")
+                f"besøgskolonnen er ikke et tal, det er en fraværende måling"
+                f"{kasset}")
     alder = (f"{meta['age_days']} dage gammel" if meta.get("age_days") is not None
              else "uden dato")
     nyere = meta.get("newer_without") or 0
+    kasset = ""
+    if meta.get("skipped"):
+        # Uden denne er fraværet af en rapport usynligt, og læseren ville
+        # tro at porten bare valgte den nyeste med tal.
+        kasset = (f" · kasseret fordi de tæller vores egen trafik: "
+                  f"{', '.join(meta['skipped'])}")
     return (f"trafik: {meta.get('week') or meta['file']} genereret "
             f"{meta.get('generated_at') or '(ingen dato)'} ({alder}) · "
             f"{nyere} nyere rapport(er) uden trafik · {meta.get('reports')} "
-            f"rapport(er) læst")
+            f"rapport(er) læst{kasset}")
 
 
 def route_of(root: Path, path: Path) -> str:
@@ -1692,6 +1732,17 @@ def _self_test() -> int:
     #     at dømme evnen — de fire årsager, en kilde kan have, skal kunne skelnes.
     import tempfile
 
+    # Målt 30/9: fixtures med ruten `/blog/x` holdt op at være gyldige, da
+    # regel 5 (se `traffic_source`) gør en rapport med en rute vi ikke udgiver
+    # ubrugelig. Det er samme fejltype som opgave 10: selftestens egen
+    # udgangstilfælde lå i en vokabel porten ikke accepterer. Ruten vælges derfor
+    # fra *målingen* — en publiceret rute — så den holder hvis inventaret flytter.
+    _pub = sorted(published_routes() or ())
+    _rute = next((r for r in _pub if r.startswith("/blog/")), None)
+    check("selftestens fixtures bruger en publiceret rute, ikke en opdigtet",
+          _rute is not None, f"{len(_pub)} publicerede ruter")
+    _rute = _rute or "/"
+
     with tempfile.TemporaryDirectory() as tmp:
         rep = Path(tmp)
 
@@ -1708,13 +1759,13 @@ def _self_test() -> int:
         # (a) Én rapport med tal, genereret i går: alderen skal kunne regnes,
         #     og ingen nyere uden trafik skal tælles med.
         write_report("2026-40.json", "2026-40", "2026-09-29",
-                     [{"path": "/blog/x", "visits": 11}])
+                     [{"path": _rute, "visits": 11}])
         got, meta = traffic_source(rep, today=date(2026, 9, 30))
         check("kilden regner alderen ud fra generated_at",
               meta["week"] == "2026-40" and meta["age_days"] == 1
               and meta["newer_without"] == 0, json.dumps(meta, ensure_ascii=False))
         check("besøgene læses fra den rapport der er valgt",
-              got == {"/blog/x": 11}, json.dumps(got, ensure_ascii=False))
+              got == {_rute: 11}, json.dumps(got, ensure_ascii=False))
 
         # (b) Målt form: to nyere rapporter uden trafik. Uden denne kontrol kunne
         #     `newer_without` være konstant 0, og alderen alene ville være sand
@@ -1730,10 +1781,10 @@ def _self_test() -> int:
         #     den første rapport den ser, og alle målinger på de tre ville se
         #     ens ud uanset hvor gamle de var.
         write_report("2026-43.json", "2026-43", "2026-09-30",
-                     [{"path": "/blog/x", "visits": 99}])
+                     [{"path": _rute, "visits": 99}])
         got, meta = traffic_source(rep, today=date(2026, 9, 30))
         check("den nyeste rapport med tal vinder over ældre",
-              got.get("/blog/x") == 99 and meta["week"] == "2026-43"
+              got.get(_rute) == 99 and meta["week"] == "2026-43"
               and meta["newer_without"] == 0, json.dumps(meta, ensure_ascii=False))
 
         # (d) Uden nogen rapport med tal må porten ikke finde på et tal. Den skal
@@ -1752,7 +1803,7 @@ def _self_test() -> int:
         # (e) En rapport uden `generated_at` må ikke få en opdigtet alder.
         (rep / "2026-40.json").write_text(json.dumps({
             "iso_week": "2026-40",
-            "traffic": {"top_paths": [{"path": "/blog/x", "visits": 5}]},
+            "traffic": {"top_paths": [{"path": _rute, "visits": 5}]},
         }), encoding="utf-8")
         got, meta = traffic_source(rep, today=date(2026, 9, 30))
         check("manglende dato giver alder None og siger 'uden dato'",
@@ -1777,6 +1828,75 @@ def _self_test() -> int:
     check("den røde linje i dom 5 nævner kildens alder",
           any("2026-38" in p and "6 dage gammel" in p for p in with_src),
           with_src[0] if with_src else "ingen linje")
+
+    # 13a. En rapport, der tæller vores egen trafik, må **ikke** blive kilden
+    #      for en rangliste. Målt 30/9: `track.js` posterer `location.pathname`,
+    #      så hvert `--live`-screenshot fra disse iterationer er et syntetisk
+    #      besøg på en *ægte* rute — det kan ingen rute-port se. Her måles den
+    #      anden halvdel: ruter vi slet ikke udgiver (selftest-fixtures) må
+    #      gøre hele rapporten ubrugelig, og fraværet skal kunne ses.
+    with tempfile.TemporaryDirectory() as tmp:
+        rep2 = Path(tmp)
+
+        def w2(name: str, week: str, rows_: list[dict]) -> None:
+            (rep2 / name).write_text(json.dumps({
+                "iso_week": week, "generated_at": "2026-09-29",
+                "traffic": {"top_paths": rows_},
+            }), encoding="utf-8")
+
+        # (a) Ren kilde: tallene bruges, og intet kasseres.
+        w2("2026-50.json", "2026-50",
+           [{"path": "/blog/html-to-markdown-vscode", "visits": 8}])
+        got, meta = traffic_source(rep2, today=date(2026, 9, 30))
+        check("en ren rapport bruges som kilde",
+              got.get("/blog/html-to-markdown-vscode") == 8
+              and meta["skipped"] == [] and meta["week"] == "2026-50",
+              json.dumps(meta, ensure_ascii=False))
+
+        # (b) Den syntetiske rute gør hele rapporten ubrugelig — ikke kun
+        #     rækken. Ellers kunne næste iteration blot slette den ene linje
+        #     og citere resten, som om den altid havde været ren.
+        w2("2026-51.json", "2026-51",
+           [{"path": "/blog/html-to-markdown-vscode", "visits": 8},
+            {"path": "/blog/syntetisk-klik-uden-knap", "visits": 42}])
+        got, meta = traffic_source(rep2, today=date(2026, 9, 30))
+        check("en rapport med en rute vi ikke udgiver kasseres helt",
+              meta["file"] == "2026-50.json"
+              and got.get("/blog/syntetisk-klik-uden-knap") is None
+              and any("2026-51" in s for s in meta["skipped"]),
+              f"file={meta['file']} skipped={meta['skipped']}")
+        check("kasseringen står i teksten, så fraværet ikke er usynligt",
+              "2026-51" in traffic_note(meta) and "egen trafik" in traffic_note(meta),
+              traffic_note(meta))
+
+        # (c) Er *alle* rapporter kontaminerede, skal læseren se en fraværende
+        #     måling — ikke `0`, som er den samme påstand som "ingen har
+        #     besøgt siden uge 38".
+        for path in rep2.glob("*.json"):
+            path.unlink()
+        w2("2026-52.json", "2026-52",
+           [{"path": "/oxloop-selftest", "visits": 7}])
+        got, meta = traffic_source(rep2, today=date(2026, 9, 30))
+        check("kun kontaminerede rapporter giver ingen besøg og ingen kilde",
+              got == {} and meta["file"] is None and len(meta["skipped"]) == 1,
+              json.dumps(meta, ensure_ascii=False))
+
+        # (d) Mutation: gør `unpublished_rows` blind, så kontrollerne ovenfor
+        #     taber deres byrde. Uden denne kunne hele rettelsen være grøn fordi
+        #     den aldrig læser rækken. Modulet patch'es i *dette* navnerum —
+        #     scriptet kører som `__main__`, så et `import
+        #     check_article_paid_path` ville lappe en anden kopi, og mutationen
+        #     ville se grøn ud uden at have rørt noget.
+        saved = globals()["unpublished_rows"]
+        try:
+            globals()["unpublished_rows"] = lambda top, published: []
+            w2("2026-53.json", "2026-53", [{"path": "/oxloop-selftest", "visits": 7}])
+            got, meta = traffic_source(rep2, today=date(2026, 9, 30))
+            check("en blind læser tager den syntetiske rapport med (mutation fanges)",
+                  meta["file"] == "2026-53.json" and meta["skipped"] == [],
+                  f"file={meta['file']} skipped={meta['skipped']}")
+        finally:
+            globals()["unpublished_rows"] = saved
 
     # 14. Delte ruter. Målt 30/9 på `main`: `/` og `/da/` står i inventaret
     #     under *alle fire* domæner, og de bærer 461 af 505 målte besøg. Den
