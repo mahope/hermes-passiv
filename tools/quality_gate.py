@@ -1064,6 +1064,11 @@ STEPS: tuple[Step, ...] = (
             # en push, der kun tilføjer eller fjerner en linje, springe gaten
             # over — altså netop den push der afgør om porten er værd at have.
             "tools/tool_paid_path_blind.json",
+            # Ratcheten over de betalte veje hver side lå på da den blev
+            # målt. Samme grund som linjen ovenfor — ellers springer en push,
+            # der kun skriver en destination i den fil, netop den port over
+            # der dømmer om en side har mistet sin vej.
+            "tools/tool_paid_path_ratchet.json",
             "tools/check_article_paid_path.py",
             # …som nu selv arver `unpublished_rows` herfra, så en push der kun
             # retter selvklik-reglen skal køre alle tre gatestræk.
@@ -1081,7 +1086,8 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_tool_paid_path.py", "--self-test"),
         inputs=("tools/check_tool_paid_path.py", "build_sites.py",
                 "tools/check_article_paid_path.py",
-                "tools/check_weekly_history.py"),
+                "tools/check_weekly_history.py",
+                "tools/tool_paid_path_ratchet.json"),
     ),
     # `cleancopy.tools` viste sig at modtage beacons med HTTP 200 og tabe dem:
     # KV-bindingen `VISITS` er sat pr. Pages-projekt i Cloudflare, ikke i

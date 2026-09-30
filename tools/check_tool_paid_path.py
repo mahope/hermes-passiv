@@ -51,12 +51,19 @@ halvdel af verdenen:
    `check_article_paid_path.py`s blind-liste, ikke denne ports. Ellers ville
    de to ringer overlappe, og hver især se en del af fejlen.
 
-**Porten dømmer to ting, og begge kan blive røde:**
+**Porten dømmer tre ting, og alle tre kan blive røde:**
 
 - En værktøjsside **uden** betalt vej som ikke står i
   `tools/tool_paid_path_blind.json` er en ny blind værktøjsside.
 - En linje i listen der **har** fået en betalt vej er en død linje. Listen er
   en *ratchet*: den må kun krympe.
+- En betalt vej der **stod på siden ved målingen og ikke gør mere** er en
+  tilbagefaldet side — se `path_problems()` og
+  `tools/tool_paid_path_ratchet.json`. Dette er den tredje dom, og den er den
+  der fanger mutationen målingen 30/9 ikke kunne: en revert der ramte
+  `All books →` i stedet for pro-note-linket efterlod siden med *én* betalt
+  vej, så de to domme ovenfor var begge grønne, selv om siden havde byttet om
+  destinationerne.
 
 Ruter på et domæne der ikke står i deploy-matricen måles og skrives i
 udskriften, men dømmes ikke — samme regel som dom 4 og dom 7 i artikelporten,
@@ -79,6 +86,12 @@ kontrol 9 dømmer det, og kontrol 9b er mutationen der viser at porten
     python3 tools/check_tool_paid_path.py --limit 60
     python3 tools/check_tool_paid_path.py --write --force
     python3 tools/check_tool_paid_path.py --self-test
+
+`--write` skriver **begge** filer fra samme måling, så de aldrig kan beskrive
+to forskellige øjeblikke: `tool_paid_path_blind.json` (siderne uden vej) og
+`tool_paid_path_ratchet.json` (destinationerne hver side lå på). Uden
+`--force` nægtes skrivningen, hvis en målt vej skal forsvinde — ellers kunne
+ratcheten frigives ved at køre `--write`, og så er den ikke en ratchet.
 """
 from __future__ import annotations
 
@@ -108,12 +121,19 @@ CATALOG = A.CATALOG
 INVENTORY = A.INVENTORY
 REPORTS = A.REPORTS
 BLIND = ROOT / "tools" / "tool_paid_path_blind.json"
+# Ratcheten over de betalte veje hver side havde, da den blev målt. Se
+# `path_problems()`.
+RATCHET = ROOT / "tools" / "tool_paid_path_ratchet.json"
 BUILD = ROOT / "build_sites.py"
 
 # Navnet på den erklæring, en side kan bære om at den intet sælger. Den er
 # kort, så den ikke kan forveksles med en rigtig bruger-meta, og den starter
 # med `x-`, fordi den ikke er en standardegenskab ved HTML.
 DECL_NAME = "x-no-paid-path"
+
+
+class RatchetFejl(RuntimeError):
+    """Ratchetfilen kan ikke læses som en måling — aldrig som "ingen linjer"."""
 
 
 # --------------------------------------------------------------------------
@@ -428,14 +448,125 @@ def blind_now(rows: list[dict] | None = None) -> list[str]:
     return sorted(r["route"] for r in table if judged(r) and not r["paid"])
 
 
-def judge(rows: list[dict] | None = None, doc: dict | None = None) -> list[str]:
-    """Portens domme. Alle skal være grønne."""
+def measured_paths(rows: list[dict] | None = None) -> dict[str, list[str]]:
+    """(`rute` → de betalte veje siden har **i dag**) for de dømte sider.
+
+    Kun *dømte* sider med en vej: en blind side har ingen vej at passe på, og
+    en målt-men-ikke-dømt side (chrome, erklæring, 404) skal ikke låse porten,
+    fordi en side flytter klasse.
+
+    Destinationerne er de **rå** href'er `A.paid_links()` målte, uden
+    normalisering ud over mængden: `paid_links()` returnerer allerede
+    rutestrenge for katalogruter og fuld URL for Stripe-links, så de to former
+    kan ikke sammenlignes uden en ny læsning af filen — og regel 1 i
+    docstringen forbyder netop den.
+    """
+    table = rows if rows is not None else tool_rows()
+    return {r["route"]: sorted(set(r["paid"])) for r in table
+            if judged(r) and r["paid"]}
+
+
+def read_ratchet(path: Path = RATCHET) -> dict[str, list[str]]:
+    """Ratchetfilens `paths`, med fejl der ikke kan læses som svar.
+
+    En fil der ikke kan læses, eller en værdi der ikke er en liste af
+    strenge, er **ikke** det samme som "ingen linjer": det første er en fejl
+    porten skal råbe om, for ellers ville en slettet fil gøre porten grøn
+    (regel 5 i reglerne ovenfor: en port der ikke kan måle, må ikke sige
+    "ok"). Derfor hænger `path_problems()` på en `RatchetFejl`.
+    """
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RatchetFejl(f"kan ikke læse {path.name}: {exc}") from exc
+    paths = doc.get("paths")
+    if not isinstance(paths, dict):
+        raise RatchetFejl(
+            f"{path.name} har ingen `paths`-objekt (fandt "
+            f"{type(paths).__name__}); porten kan ikke vide hvilke veje der "
+            f"blev målt, så den må ikke sige at de stadig er der")
+    out: dict[str, list[str]] = {}
+    for rute, veje in paths.items():
+        if not isinstance(rute, str) or not isinstance(veje, list) or not all(
+                isinstance(v, str) for v in veje):
+            raise RatchetFejl(
+                f"{path.name}: linjen {rute!r} skal være en liste af "
+                f"strenge, fandt {veje!r}")
+        out[rute] = list(veje)
+    return out
+
+
+def path_problems(rows: list[dict], ratchet: dict[str, list[str]]) -> list[str]:
+    """Røde domme for betalte veje der er **forsvundet** siden de blev målt.
+
+    Baggrund (opgave 8, 30. september 2026): porten dømte *om* en side havde
+    en betalt vej, ikke *hvilken*. Beviset stod i målingen: en revert der ramte
+    `All books →` i stedet for pro-note-linket efterlod alle tre porte grønne,
+    selv om siden havde byttet om de to destinationer. Og fordi blindlisten
+    måles på "har den en vej", er en side der står på listen og mister sin vej
+    igen præcis den tilstand porten forventer af den.
+
+    Derfor bærer hver linje her den vej den målte ved skrivningen, og porten
+    dømmer tre ting der alle kan være røde:
+
+    - **Mistet vej.** En destination der stod på linjen og ikke står i
+      målingen mere. Det dækker både "linket blev slettet" og "linket blev
+      byttet ud med et andet", fordi det er den *konkrete* destination der
+      forsvinder, ikke et tal.
+    - **Død linje.** En rute der ikke længere er en dømt værktøjsside. Så
+      står der intet mere at passe på, og linjen ville leve for evigt.
+    - **Tom linje.** En linje uden en eneste vej er den samme fejl som en
+      slettet fil: den kan kun ske ved at skrive den, så den er rød.
+
+    Tilføjelser er **ikke** røde. En ny betalt vej er fremskridt, og den må
+    kunne skrives uden `--force`; kun en forsvunden vej kræver at nogen
+    bevidst frigiver ratcheten.
+    """
+    problems: list[str] = []
+    measured = measured_paths(rows)
+    for rute in sorted(ratchet):
+        registreret = list(ratchet[rute] or [])
+        if rute not in measured:
+            problems.append(
+                f"DØD VEJ-LINJE i {RATCHET.name}: {rute} er ikke længere en "
+                f"dømt værktøjsside med en betalt vej, så linjen passer på "
+                f"intet. Kør --write --force, hvis det er meningen."
+            )
+            continue
+        if not registreret:
+            problems.append(
+                f"TOM VEJ-LINJE i {RATCHET.name}: {rute} står med nul "
+                f"destinationer, så den låser intet. Mål den igen med "
+                f"--write, eller fjern linjen."
+            )
+            continue
+        mistet = sorted(set(registreret) - set(measured[rute]))
+        if mistet:
+            problems.append(
+                f"MISTET BETALT VEJ: {rute} havde {len(registreret)} "
+                f"destination(er) målt, og {', '.join(mistet)} er ikke blandt "
+                f"dem længere — nu har den {len(measured[rute])}: "
+                f"{', '.join(measured[rute]) or '(ingen)'}. En side der mister "
+                f"den betalte vej den lå på er en tilbagefaldet side, også når "
+                f"der stadig står en anden vej på den."
+            )
+    return problems
+
+
+def judge(rows: list[dict] | None = None, doc: dict | None = None,
+          ratchet: dict[str, list[str]] | None = None) -> list[str]:
+    """Portens domme på en målt tabel. Alle skal være grønne.
+
+    `ratchet` gives målingen, så **filen læses ikke her**: `dom()` er den ene
+    sted der læser den fra disk, og selftestens syntetiske rækker skal dømmes
+    mod det de selv siger — ikke mod de 94 rigtige linjer.
+    """
     table = rows if rows is not None else tool_rows()
     doc = doc if doc is not None else json.loads(BLIND.read_text(encoding="utf-8"))
     known = list(doc.get("blind") or [])
     measured = blind_now(table)
     by_route = {r["route"]: r for r in table}
-    problems: list[str] = []
+    problems: list[str] = list(path_problems(table, ratchet or {}))
 
     # 0. Kan porten overhovedet læse, hvad bygten hænger i chrome? Uden
     #    `ctx`-blokken er `/privacy` og `/terms` hverken dømte eller undtagne,
@@ -503,9 +634,87 @@ def judge(rows: list[dict] | None = None, doc: dict | None = None) -> list[str]:
     return problems
 
 
+def _write_ratchet(målt: dict[str, list[str]], force: bool,
+                   sti: Path = RATCHET) -> tuple[str, str]:
+    """Skriv ratchetfilen fra målingen. `(retning, fejl)` — en af dem er tom.
+
+    Samme tommelfingerregel som blindlisten: `--write` må ikke kunne frigive
+    ratcheten ved at man lige kører den. Derfor kræver en forsvunden vej
+    `force`, og fejlen **navngiver** de destinationer der stod på linjen — så
+    beskeden er et spørgsmål ("må de virkelig være væk?") og ikke en
+    afvisning, man læser forbi.
+    """
+    try:
+        gammel = read_ratchet(sti)
+    except RatchetFejl as exc:
+        # En ratchetfil der ikke findes endnu er ikke en fejl: første
+        # skrivning skaber den. Alt andet er.
+        if not sti.exists():
+            gammel = {}
+        else:
+            return "", f"kan ikke skrive {sti.name}: {exc}"
+    tabt: list[str] = []
+    for rute, veje in gammel.items():
+        for vej in sorted(set(veje) - set(målt.get(rute, ()))):
+            tabt.append(f"{rute} mistede {vej}")
+    if tabt and not force:
+        return "", ("--write ville fjerne målte veje fra ratcheten:\n  "
+                    + "\n  ".join(tabt)
+                    + "\nEn forsvunden vej skal frigives bevidst. Ret siden, "
+                      "eller kør med --force hvis den er væk med vilje.")
+    doc = {
+        "note": (
+            "Den betalte vej hver dømt værktøjsside havde, målt af "
+            "check_tool_paid_path.py. Ratchet: en destination der står her "
+            "og ikke længere findes på siden er rød, fordi en side der "
+            "mister den vej den lå på er en tilbagefaldet side — også når "
+            "der stadig står en anden vej på den. `blind` i "
+            "tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE "
+            "ikke har nogen. Begge skrives med `--write --force`."
+        ),
+        "source": (
+            "python3 tools/check_tool_paid_path.py --write  · Destinationerne "
+            "er de rå href'er A.paid_links() målte i sidens egen tekst"
+        ),
+        "measured": date.today().isoformat(),
+        "paths": {rute: sorted(veje) for rute, veje in sorted(målt.items())},
+    }
+    sti.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n",
+                   encoding="utf-8")
+    tilfojet = sorted(set(målt) - set(gammel))
+    nyt = sum(len(set(målt[r]) - set(gammel.get(r, ()))) for r in målt)
+    if tabt:
+        retning = f"{len(tabt)} destination(er) frigivet (krævede --force)"
+    elif tilfojet or nyt:
+        retning = (f"{len(tilfojet)} nye linje(r), {nyt} nye destination(er)"
+                   if tilfojet else f"{nyt} nye destination(er)")
+    else:
+        retning = "uændret"
+    return retning, ""
+
+
+def dom(table: list[dict] | None = None, doc: dict | None = None,
+        ratchet_sti: Path = RATCHET) -> list[str]:
+    """`judge()` med ratchetfilen læst fra disk — det `main()` og selvtesten
+    begge bruger, så der kun er ét sted der læser filen.
+
+    En ratchetfil der ikke kan læses er **rød**, ikke grøn: en slettet eller
+    ødelagt fil må ikke kunne slå porten fra. Det er regel 5 ovenfor — en port
+    der ikke kan måle, må ikke sige "ok".
+    """
+    if table is None:
+        table = tool_rows()
+    try:
+        ratchet = read_ratchet(ratchet_sti)
+    except RatchetFejl as exc:
+        return [f"RATCHET KUNNE IKKE LÆSES: {exc}"]
+    return judge(table, doc, ratchet)
+
+
 # --------------------------------------------------------------------------
 # Udskrift
 # --------------------------------------------------------------------------
+
 def _print_ranking(rows: list[dict], limit: int, meta: dict,
                    skipped: list[str]) -> None:
     ko = [r for r in rows if judged(r)]
@@ -889,7 +1098,18 @@ def _self_test() -> int:
     # 10. Listen på disk er i synk med målingen, og den er ikke hele korpus.
     #     Uden den første kontrol er portens grønne svar værdiløst; uden den
     #     anden er den en konstant rød port, og en sådan bliver slået fra.
-    real_problems = judge(table)
+    ratchet: dict[str, list[str]] = {}
+    ratchet_fejl = ""
+    try:
+        ratchet = read_ratchet()
+    except RatchetFejl as exc:
+        ratchet_fejl = str(exc)
+    check("ratchetfilen kan læses som en måling", not ratchet_fejl,
+          ratchet_fejl)
+    check("ratcheten måler de veje porten målte i dag",
+          ratchet == measured_paths(table),
+          f"{len(ratchet)} linjer mod {len(measured_paths(table))} målte")
+    real_problems = dom(table)
     check("listen er i synk med målingen", not real_problems,
           f"{len(real_problems)} problem(er)")
     check("listen er ikke hele korpus (den ville være meningsløs)",
@@ -901,6 +1121,108 @@ def _self_test() -> int:
     check("listen er en ratchet, så den er skrevet med `--write`",
           set(("note", "source", "measured", "blind"))
           <= set(json.loads(BLIND.read_text(encoding="utf-8"))), "")
+    check("ratchetfilen er skrevet med `--write` (note, source, measured, paths)",
+          set(("note", "source", "measured", "paths"))
+          <= set(json.loads(RATCHET.read_text(encoding="utf-8"))), "")
+
+    # 11. Ratcheten over de betalte veje (opgave 8). Herfra dømmer porten
+    #     *hvilken* vej en side har, ikke om den har en — og det er hele
+    #     forskellen. Alle kontrollerne bygger syntetiske rækker ud fra den
+    #     **målte** række, så de er ikke afhængige af hvilken side der lige
+    #     har en vej (samme regel som kontrol 5).
+    #
+    #     Rækken vælges fra tabellen, og dens destinationer bruges som det,
+    #     der skal *mister* en: så er fejlretningen beviselig. Uden mutationerne
+    #     nederst kunne `path_problems()` være `lambda *_: []` og alle de andre
+    #     kontroller være grønne af den forkerte grund.
+    målt_række = next((r for r in table if judged(r) and len(r["paid"]) > 1),
+                      None) or next((r for r in table if judged(r) and r["paid"]),
+                                    None)
+    if målt_række is None:
+        check("målingen har en side med en betalt vej at dømme", False,
+              "ingen dømt side har en vej")
+    else:
+        rute = målt_række["route"]
+        veje = sorted(set(målt_række["paid"]))
+        base = [målt_række]
+        hel = {rute: veje}
+        check("ratcheten som ligger på disk gør målingen grøn",
+              not path_problems(base, hel), f"{path_problems(base, hel)}")
+        # Den konkrete fejl fra målingen: siden beholder *én* vej og mister
+        # den anden. Alle gamle porte var grønne, fordi de talte veje.
+        check("en side der mister én af to målte veje er rød",
+              any("MISTET BETALT VEJ" in p
+                  for p in path_problems([dict(målt_række, paid=veje[:1])],
+                                         hel)),
+              f"{path_problems([dict(målt_række, paid=veje[:1])], hel)[:1]}")
+        # Byttet om: destinationerne er de samme to, men på hver sin side.
+        check("en side der bytter destination med en anden er rød",
+              any("MISTET BETALT VEJ" in p
+                  for p in path_problems([dict(målt_række, paid=veje[::-1][:1])],
+                                         hel)),
+              f"{veje}")
+        # Flere veje er **ikke** røde: det er fremskridt, og `--write` skriver
+        # dem uden `--force`. Ellers kunne man ikke lappe en side.
+        check("en side der får en ekstra vej ikke er rød",
+              not path_problems([dict(målt_række, paid=veje + ["/support"])],
+                                hel), "")
+        # Død og tom linje: en rute der ikke længere er en dømt værktøjsside,
+        # og en linje der låser intet. Uden dem kunne ratcheten tømmes ved at
+        # skrive den, hvilket er præcis hvad den skal forhindre.
+        check("en linje på en rute der ikke findes mere er rød",
+              any("DØD VEJ-LINJE" in p
+                  for p in path_problems(base, {"/findes-ikke": ["/x"]})), "")
+        check("en linje uden destinationer er rød",
+              any("TOM VEJ-LINJE" in p
+                  for p in path_problems(base, {rute: []})), "")
+        # Ratcheten skal ikke dømme det den ikke kan se: chrome-sider,
+        # erklærede sider og 404-ruter er målt men ikke dømt, så de hører
+        # ikke i filen. En linje på sådan en rute er en død linje, ikke en
+        # måling — ellers kunne byggens eget chrome låse porten fast.
+        check("ratcheten dømmer kun dømte sider",
+              not measured_paths([dict(målt_række, file=None, publiceret=True,
+                                       domains=["mahope.tools"],
+                                       domain="mahope.tools")]), "")
+        # MUTATION: samme måling uden dommen. Uden denne linje kunne
+        # `path_problems()` ignorere sit input og være grøn af den forkerte
+        # grund, at porten ingenting kan se.
+        check("mutation: en målt forsvunden vej uden ratchet er grøn",
+              not path_problems([dict(målt_række, paid=[])], {}), "")
+
+    # 11b. `--write` må ikke selv kunne frigive ratcheten. Uden `--force` skal
+    #     en forsvunden vej nægtes, og fejlen skal **navngive** den — ellers er
+    #     den en afvisning man læser forbi.
+    with tempfile.TemporaryDirectory() as tmp:
+        sti = Path(tmp) / "ratchet.json"
+        sti.write_text(json.dumps({"paths": {"/a": ["/x", "/y"]}},
+                                  ensure_ascii=False), encoding="utf-8")
+        retning, fejl = _write_ratchet({"/a": ["/x"]}, False, sti)
+        check("en forsvunden vej kræver --force",
+              not retning and "/y" in fejl, f"{retning!r} / {fejl!r}")
+        # Én skrivning, ét resultat: `_write_ratchet` skriver, så to kald i
+        # samme kontrol ville måle den anden fil og grønne af den forkerte
+        # grund. Mutationen er at `--force` faktisk frigiver den samme linje.
+        tvungen, tvungen_fejl = _write_ratchet({"/a": ["/x"]}, True, sti)
+        check("mutation: samme skrivning med --force frigiver linjen",
+              tvungen.startswith("1 ") and not tvungen_fejl,
+              f"{tvungen!r} / {tvungen_fejl!r}")
+        check("ratchetfilen efter --write har de fire nøgler",
+              set(("note", "source", "measured", "paths"))
+              <= set(json.loads(sti.read_text(encoding="utf-8"))), "")
+        # En fil der **ikke** findes er ikke en fejl — den opstår jo første
+        # gang porten køres. En fil der findes men er ubrugelig er en fejl,
+        # fordi ellers ville en ødelagt fil gøre porten grøn.
+        check("en manglende ratchetfil kan oprettes ved første skrivning",
+              _write_ratchet({"/a": ["/x"]}, True, Path(tmp) / "ny.json")[0],
+              "")
+        sti.write_text("{ikke json", encoding="utf-8")
+        check("en ødelagt ratchetfil er en fejl, ikke 'ingen linjer'",
+              "kan ikke læse" in _write_ratchet({"/a": ["/x"]}, True, sti)[1],
+              f"{_write_ratchet({'/a': ['/x']}, True, sti)}")
+        check("mutation: en slettet fil giver aldrig grønt i judge()",
+              any("RATCHET KUNNE IKKE LÆSES" in p
+                  for p in dom(table, ratchet_sti=Path(tmp) / "slet.json")),
+              "")
 
     failed = 0
     for name, ok, detail in checks:
@@ -953,6 +1275,17 @@ def main(argv: list[str] | None = None) -> int:
         out["measured"] = date.today().isoformat()
         BLIND.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n",
                          encoding="utf-8")
+        # Ratcheten over de betalte veje skrives i samme kørsel, så de to
+        # filer aldrig kan beskrive forskellige øjeblikke. En forsvunden vej
+        # kræver `--force` — ellers ville porten kunne frigives ved at køre
+        # `--write`, og så er den ikke en ratchet længere. En *ny* vej er
+        # derimod fremskridt og skrives uden samme bevis.
+        sti, fejl = _write_ratchet(measured_paths(table), args.force)
+        if fejl:
+            print(f"tool-paid-path: {fejl}", file=sys.stderr)
+            return 1
+        if sti:
+            print(f"tool-paid-path: ratchet {sti} — {RATCHET.name} skrevet")
         left = sorted(set(existing) - set(measured))
         # Antallet skriver *retningen*, ikke etage minus. Den gamle formel
         # `len(existing) - len(measured)` sagde "42 færre" da den såede listen
@@ -973,7 +1306,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.quiet:
         _print_ranking(table, args.limit, meta, skipped)
 
-    problems = judge(table)
+    problems = dom(table)
     for problem in problems:
         print(f"tool-paid-path: {problem}", file=sys.stderr)
     if problems:

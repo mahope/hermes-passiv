@@ -1,0 +1,396 @@
+{
+ "note": "Den betalte vej hver dømt værktøjsside havde, målt af check_tool_paid_path.py. Ratchet: en destination der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
+ "source": "python3 tools/check_tool_paid_path.py --write  · Destinationerne er de rå href'er A.paid_links() målte i sidens egen tekst",
+ "measured": "2026-09-30",
+ "paths": {
+  "/accessibility-statement-generator": [
+   "/compliance-report"
+  ],
+  "/activate": [
+   "/clean-copy-tool",
+   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
+  ],
+  "/base64-encoder-decoder": [
+   "/support"
+  ],
+  "/books": [
+   "/compliance-report"
+  ],
+  "/books/build-your-first-chrome-extension": [
+   "/clean-copy-tool"
+  ],
+  "/books/compliance-bundle": [
+   "/compliance-report"
+  ],
+  "/books/cookie-consent-guide": [
+   "/compliance-report"
+  ],
+  "/books/eaa-checklist": [
+   "/compliance-report"
+  ],
+  "/books/eaa-shopify": [
+   "/compliance-report"
+  ],
+  "/books/gdpr-for-agencies": [
+   "/compliance-report"
+  ],
+  "/books/nis2-for-agencies": [
+   "/compliance-report"
+  ],
+  "/case-converter": [
+   "/support"
+  ],
+  "/clean-copy-api": [
+   "/clean-copy-tool"
+  ],
+  "/clean-copy-bookmarklet": [
+   "/clean-copy-tool"
+  ],
+  "/clean-copy-brew": [
+   "/clean-copy-tool"
+  ],
+  "/clean-copy-cli-ref": [
+   "/clean-copy-tool"
+  ],
+  "/clean-copy-tool": [
+   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+   "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"
+  ],
+  "/color-blindness-simulator": [
+   "/compliance-report"
+  ],
+  "/color-blindness-simulator-da": [
+   "/da/compliance-report"
+  ],
+  "/compliance-ai": [
+   "/compliance-report"
+  ],
+  "/compliance-guide": [
+   "/blog/cookie-consent-gdpr-compliance",
+   "/blog/eaa-accessibility-checklist",
+   "/blog/gdpr-vs-nis2-overlap",
+   "/blog/nis2-readiness-guide",
+   "/blog/prestashop-eaa-accessibility",
+   "/blog/webflow-vs-squarespace-accessibility",
+   "/blog/wix-eaa-accessibility",
+   "/da/blog/cookie-consent-gdpr-2026",
+   "/da/blog/tilgaengelighedsscanner-cli"
+  ],
+  "/compliance-report": [
+   "/paid-templates",
+   "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+   "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
+  ],
+  "/compliance-site-check": [
+   "/compliance-report"
+  ],
+  "/contrast-checker": [
+   "/compliance-report"
+  ],
+  "/contrast-checker-da": [
+   "/da/compliance-report"
+  ],
+  "/cookie-check": [
+   "/blog/cookie-consent-gdpr-compliance",
+   "/compliance-report"
+  ],
+  "/cookie-check-da": [
+   "/blog/cookie-consent-gdpr-compliance",
+   "/da/compliance-report"
+  ],
+  "/copy-clean-guide": [
+   "/blog/copy-clean-text-from-website",
+   "/blog/copy-table-website-to-notion",
+   "/da/blog/kopier-tabel-fra-pdf-til-excel"
+  ],
+  "/da/activate": [
+   "/clean-copy-tool",
+   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
+  ],
+  "/da/compliance-ai": [
+   "/da/compliance-report"
+  ],
+  "/da/compliance-report": [
+   "/da/paid-templates",
+   "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+   "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
+  ],
+  "/da/compliance-site-check": [
+   "/da/compliance-report"
+  ],
+  "/da/free-tools": [
+   "/da/blog/compliance-tjek-github-action",
+   "/da/blog/cookie-consent-gdpr-2026",
+   "/da/blog/tilgaengelighedsscanner-cli",
+   "/da/compliance-report",
+   "/da/page-profile",
+   "/da/paid-templates",
+   "/da/support"
+  ],
+  "/da/guides": [
+   "/da/blog/cmp-sammenligning-2026",
+   "/da/blog/compliance-tjek-github-action",
+   "/da/blog/cookie-consent-gdpr-2026",
+   "/da/blog/dbbaftale-webbureau",
+   "/da/blog/eaa-tjekliste-2026",
+   "/da/blog/faa-besked-naar-hjemmeside-er-nede",
+   "/da/blog/gdpr-vs-nis2-overlap-da",
+   "/da/blog/html-til-markdown-cli",
+   "/da/blog/indsaet-som-markdown-i-vscode",
+   "/da/blog/kopier-ren-tekst-fra-hjemmeside",
+   "/da/blog/kopier-tabel-fra-pdf-til-excel",
+   "/da/blog/kopier-tabel-hjemmeside-til-notion",
+   "/da/blog/nis2-beredskabstjek-2026",
+   "/da/blog/open-graph-tjekker-guide",
+   "/da/blog/overvaag-hjemmeside-github-actions-gratis",
+   "/da/blog/prestashop-tilgaengelighed-eaa",
+   "/da/blog/release-integrity-hvad-er-det",
+   "/da/blog/tekst-paa-billede-kontrasttjek",
+   "/da/blog/tilgaengelighedsscanner-cli",
+   "/da/blog/tjek-url-redirect-kaede",
+   "/da/blog/webflow-vs-squarespace-tilgaengelighed",
+   "/da/blog/wix-tilgaengelighed-eaa",
+   "/da/page-profile"
+  ],
+  "/da/page-profile": [
+   "/da/blog/open-graph-tjekker-guide",
+   "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
+   "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+  ],
+  "/da/paid-templates": [
+   "/da/compliance-report",
+   "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
+   "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
+   "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
+   "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
+   "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
+   "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
+   "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b"
+  ],
+  "/da/url-til-markdown": [
+   "/clean-copy-tool",
+   "/da/page-profile"
+  ],
+  "/downloads": [
+   "/page-profile"
+  ],
+  "/dpa-generator": [
+   "/compliance-report"
+  ],
+  "/dpa-generator-da": [
+   "/da/compliance-report"
+  ],
+  "/free-downloads": [
+   "/page-profile"
+  ],
+  "/free-tools": [
+   "/blog/compliance-check-github-action",
+   "/blog/nis2-readiness-guide",
+   "/clean-copy-tool",
+   "/compliance-report",
+   "/page-profile",
+   "/paid-templates"
+  ],
+  "/guides": [
+   "/blog/bug-reports-in-ci-pipeline",
+   "/blog/check-url-redirect-chain",
+   "/blog/compliance-check-github-action",
+   "/blog/cookie-consent-gdpr-compliance",
+   "/blog/copy-clean-text-from-website",
+   "/blog/copy-table-website-to-notion",
+   "/blog/desktop-website-monitor-cli",
+   "/blog/eaa-accessibility-checklist",
+   "/blog/gdpr-vs-nis2-overlap",
+   "/blog/html-to-markdown-cli",
+   "/blog/html-to-markdown-vscode",
+   "/blog/monitor-website-github-actions-free",
+   "/blog/nis2-readiness-guide",
+   "/blog/open-graph-checker",
+   "/blog/prestashop-eaa-accessibility",
+   "/blog/release-integrity-explained",
+   "/blog/text-on-image-contrast-check",
+   "/blog/webflow-vs-squarespace-accessibility",
+   "/blog/wix-eaa-accessibility",
+   "/da/blog/bugrapporter-i-ci-pipeline",
+   "/page-profile"
+  ],
+  "/guides/comparison": [
+   "/compliance-report"
+  ],
+  "/guides/craftcms-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/drupal-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/ghost-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/joomla-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/magento-accessibility-check": [
+   "/compliance-report"
+  ],
+  "/guides/platforms": [
+   "/blog/prestashop-eaa-accessibility",
+   "/blog/webflow-vs-squarespace-accessibility",
+   "/blog/wix-eaa-accessibility"
+  ],
+  "/guides/prestashop-accessibility-check": [
+   "/blog/cookie-consent-gdpr-compliance",
+   "/blog/prestashop-eaa-accessibility"
+  ],
+  "/guides/shopify-accessibility-check": [
+   "/blog/eaa-accessibility-checklist"
+  ],
+  "/guides/squarespace-accessibility-check": [
+   "/blog/eaa-accessibility-checklist"
+  ],
+  "/guides/typo3-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/umbraco-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/nis2-readiness-guide"
+  ],
+  "/guides/webflow-accessibility-check": [
+   "/blog/eaa-accessibility-checklist"
+  ],
+  "/guides/weebly-accessibility-check": [
+   "/blog/eaa-accessibility-checklist"
+  ],
+  "/guides/wix-accessibility-check": [
+   "/blog/eaa-accessibility-checklist",
+   "/blog/wix-eaa-accessibility"
+  ],
+  "/guides/wordpress-accessibility-check": [
+   "/blog/eaa-accessibility-checklist"
+  ],
+  "/hash-generator": [
+   "/support"
+  ],
+  "/json-formatter": [
+   "/support"
+  ],
+  "/license-lookup": [
+   "/clean-copy-tool"
+  ],
+  "/markdown-table-generator": [
+   "/support"
+  ],
+  "/mcp": [
+   "/clean-copy-tool",
+   "/page-profile"
+  ],
+  "/nis2-check": [
+   "/blog/nis2-readiness-guide",
+   "/compliance-report"
+  ],
+  "/nis2-check-da": [
+   "/da/compliance-report"
+  ],
+  "/nis2-gap-assessment": [
+   "/blog/nis2-readiness-guide"
+  ],
+  "/nis2-gap-assessment-da": [
+   "/da/compliance-report",
+   "/da/paid-templates"
+  ],
+  "/nis2-incident-generator": [
+   "/blog/nis2-readiness-guide"
+  ],
+  "/nis2-incident-generator-da": [
+   "/da/blog/nis2-beredskabstjek-2026"
+  ],
+  "/page-profile": [
+   "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
+   "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+  ],
+  "/paid-templates": [
+   "/compliance-report",
+   "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
+   "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
+   "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
+   "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
+   "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
+   "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
+   "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b"
+  ],
+  "/palette-generator": [
+   "/compliance-report"
+  ],
+  "/palette-generator-da": [
+   "/da/compliance-report"
+  ],
+  "/privacy-notice-generator": [
+   "/compliance-report"
+  ],
+  "/privacy-notice-generator-da": [
+   "/da/compliance-report"
+  ],
+  "/privacy-policy-template": [
+   "/compliance-report"
+  ],
+  "/privacy-policy-template-da": [
+   "/da/blog/dbbaftale-webbureau"
+  ],
+  "/ropa-generator": [
+   "/compliance-report"
+  ],
+  "/ropa-generator-da": [
+   "/da/compliance-report"
+  ],
+  "/ropa-template": [
+   "/compliance-report"
+  ],
+  "/scan": [
+   "/blog/webflow-vs-squarespace-accessibility",
+   "/compliance-report"
+  ],
+  "/scan-da": [
+   "/blog/webflow-vs-squarespace-accessibility",
+   "/da/compliance-report"
+  ],
+  "/security-headers-check": [
+   "/compliance-report"
+  ],
+  "/text-diff": [
+   "/support"
+  ],
+  "/text-on-image-checker": [
+   "/compliance-report",
+   "/da/blog/tekst-paa-billede-kontrasttjek"
+  ],
+  "/text-on-image-checker-da": [
+   "/da/blog/tekst-paa-billede-kontrasttjek",
+   "/da/compliance-report"
+  ],
+  "/tilgaengelighedserklaering-generator-da": [
+   "/da/compliance-report"
+  ],
+  "/url-encoder-decoder": [
+   "/support"
+  ],
+  "/url-inspector": [
+   "/page-profile"
+  ],
+  "/url-to-markdown": [
+   "/clean-copy-tool"
+  ],
+  "/uuid-generator": [
+   "/support"
+  ],
+  "/word-counter": [
+   "/support"
+  ],
+  "/wordpress-plugin": [
+   "/compliance-report"
+  ]
+ }
+}

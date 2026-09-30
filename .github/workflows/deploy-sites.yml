@@ -83,6 +83,11 @@ on:
       # linjer ovenfor, målt for tiende gang.
       - 'tools/check_tool_paid_path.py'
       - 'tools/tool_paid_path_blind.json'
+      # Ratcheten over de betalte veje hver side lå på. Samme grund som
+      # linjen ovenfor: en push der kun tilføjer eller fjerner én destination
+      # i den fil kan ellers springe netop den port over, der afgør om en side
+      # har mistet sin betalte vej.
+      - 'tools/tool_paid_path_ratchet.json'
       # Dom 5 i samme gatestræk: listen over artikler der har læsere, en
       # indirekte købsvej og ingen købsknap. Samme grund som linjen ovenfor —
       # uden den springer en push, der kun skriver en begrundelse, gaten over.
