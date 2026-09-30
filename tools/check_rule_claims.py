@@ -657,6 +657,25 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # betalt streng. Det betalte er de 18 server-side tjek og de 33 i alt.
     ("color-blindness-simulator.html", "web"),
     ("color-blindness-simulator-da.html", "web"),
+    # NIS2-gapanalysen på dansk (30/9) — 6 indgående sider, målt af
+    # `check_tool_paid_path.py`. Samme måleform som de to simulatorer
+    # ovenfor: gapanalysen er gratis og stiller alle tyve spørgsmål i
+    # artikel 21, stk. 2, så det der ikke er en betalt streng er selve
+    # spørgsmålene. Det betalte er de 18 server-side tjek, fordi det er det
+    # eneste af de ti områder der kan måles på en adresse — og de 33 i alt.
+    ("nis2-gap-assessment-da.html", "web"),
+    # Erklæringsgeneratoren på dansk (30/9) — 6 indgående sider, målt af
+    # samme port. Samme måleform igen: generatoren er gratis og udsender
+    # hele erklæringen efter EU's model, så det betalte er ikke selve
+    # dokumentet men den test, der gør påstanden i det målbar. Note'en
+    # bygger derfor direkte på sidens egen ansvarsfraskrivelse ("kun
+    # test kan det") i stedet for at finde en egen vinkel på den.
+    ("tilgaengelighedserklaering-generator-da.html", "web"),
+    # Privatlivspolitik-skabelonen (30/9) — 6 indgående sider, målt af
+    # samme port. Samme måleform: filen er gratis og komplet, så intet
+    # gemmes bag en licens. Det betalte er at måle det levende site imod
+    # det, dokumentet siger, at I gør.
+    ("privacy-policy-template.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )
