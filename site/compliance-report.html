@@ -533,7 +533,7 @@ function renderReport(data, url) {
   h += '<h3 style="margin:0 0 8px">Download PDF Report</h3>';
   h += '<p style="font-size:14px;color:#94a3b8;margin-bottom:16px">Enter your license key to unlock the professional PDF download.</p>';
   h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">';
-  h += '<input type="text" id="licenseInput" placeholder="License key (32 hex chars)" style="flex:1;min-width:200px;max-width:320px" spellcheck="false" autocomplete="off">';
+  h += '<label for="licenseInput" class="sr-only">License key</label><input type="text" id="licenseInput" placeholder="License key (32 hex chars)" style="flex:1;min-width:200px;max-width:320px" spellcheck="false" autocomplete="off">';
   h += '<button id="verifyBtn" class="btn" onclick="verifyAndDownload()">Unlock & Download</button>';
   h += '</div>';
   h += '<div id="licenseStatus" class="license-status"></div>';

@@ -165,6 +165,7 @@ def clean_copy(html, mode="markdown"):
   <h2>Try it live</h2>
   <p>Paste some HTML below and click Convert:</p>
   <div class="try-it">
+    <label for="input-html" class="sr-only">HTML input</label>
     <textarea id="input-html" placeholder="Paste HTML here, e.g. &lt;h1&gt;Title&lt;/h1&gt;&lt;p&gt;Hello&lt;/p&gt;"><h1>Clean Copy API</h1>
 <p>Paste <strong>any</strong> HTML here and click <em>Convert</em>.</p>
 <ul>
@@ -177,6 +178,7 @@ def clean_copy(html, mode="markdown"):
       <button onclick="convert('plain')" class="btn-secondary">Convert to Plain Text</button>
       <button onclick="clearOutput()" class="btn-secondary">Clear</button>
     </div>
+    <label for="output-md" class="sr-only">Markdown output</label>
     <textarea id="output-md" readonly placeholder="Output will appear here..." style="margin-top:0.8rem;min-height:120px;"></textarea>
     <p id="status-msg" style="font-size:0.8rem;color:var(--color-text-muted);margin-top:0.4rem;"></p>
   </div>

@@ -463,6 +463,23 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_duplicate_headings.py", "--self-test"),
         inputs=("tools/check_duplicate_headings.py", "site/**"),
     ),
+    # Formularfelter uden navn (30/9). Målt først: 14 felter på 13 sider havde
+    # overhverket navn — 6 e-mail-felter var nyhedsbrevstilmeldingen på
+    # NIS2-værktøjerne, 4 URL-felter var indgangen i et værktøj. `placeholder`
+    # er ikke et navn: det forsvinder i det samme øjeblik feltet får fokus på
+    # en telefon, og en skærmlæser læser det kun nogle gange. Porten læser også
+    # inline-`<script>`, fordi NIS2-siderne skriver feltet som strengsammensætning
+    # — ellers så den nul felter præcis der, hvor de er.
+    Step(
+        id="form-labels",
+        argv=("python3", "tools/check_form_labels.py"),
+        inputs=("tools/check_form_labels.py", "site/**"),
+    ),
+    Step(
+        id="form-labels-selftest",
+        argv=("python3", "tools/check_form_labels.py", "--self-test"),
+        inputs=("tools/check_form_labels.py", "site/**"),
+    ),
     # Opgave 21: den første handling over folden. Ratchetet er per rute *med
     # forventet destination*, så en ombytning af to `href` bliver rød — en
     # port der bare tæller `btn-primary` ville være grøn fordi siden stadig har

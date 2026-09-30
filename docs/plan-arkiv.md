@@ -2164,3 +2164,39 @@ rød gate lå foran denne iteration.
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
 - **Åben beslutning (❓):** skal banneren ligge over folden på de 180 sider, eller
   flyttes/slettes den? Det er en promo Mads har bedt om, så det er hans valg.
+
+## 2026-09-30 — Opgave 23: navn på formularfelterne (ceo/formularer-med-navn)
+
+- **Målt udløser:** egen måling 30/9. 14 felter på 13 sider i `site/` havde
+  hverken `<label for>`, omsluttende `<label>`, `aria-label` eller
+  `aria-labelledby`. Kun `placeholder` stod tilbage.
+- **De 14 var ikke tilfældige:** 6 var nyhedsbrevstilmeldingen på NIS2-
+  værktøjerne (`#leadEmail`), 4 var selve indgangen i et værktøj (`#urlInput` i
+  `security-headers-check`, `url-inspector`, `compliance-site-check` EN+DA), og
+  4 var en tekstblok (`word-counter`, `clean-copy-api` ×2) eller licensnøgle
+  (`compliance-report`).
+- **Hvorfor det er en fejl:** WCAG 1.3.1 og 3.3.2 kræver et navn, og
+  `placeholder` er ikke et. AGENTS.md's kvalitetsliste siger «labels på alle
+  felter», og ingen af de 97 gatestræk dømte det.
+- **Rettelse:** `sr-only`-label (repoets egen konvention, allerede brugt på
+  `site/scan.html:64`) på de otte statiske felter, `aria-label` på de seks
+  felter der skrives som strengsammensætning inde i inline-`<script>`.
+- **Ny port `tools/check_form_labels.py`:** dømmer hvert `<input>`/`<select>`/
+  `<textarea>` på `aria-label`, `aria-labelledby`, `<label for>` eller en
+  omsluttende `<label>` **med tekst**. `placeholder` tæller aldrig. Den læser
+  **også hvert `<script>`s krop** — ellers så den nul felter præcis på de fire
+  NIS2-sider, hvor feltet skrives som strengsammensætning; det er samme
+  fejlform som `check_generator_claims` blev lavet til at fange. Kommentarer og
+  `<script>` er lukket ude i markup-passet, og `var a='<input>'` uden
+  egenskaber er ikke et felt.
+- **Selftest 14 kontroller**, heraf (a) `placeholder` alene → rød, (b) tom
+  omsluttende `<label>` → rød, (c) felt i kommentar og i `<script>`-streng →
+  grøn, (d) felt i inline-`<script>` uden navn → rød, (e) **mutation på den
+  rettede side**: fjernet `<label>` giver rødt igen.
+- **Egen fejl undervejs, fanget af gaten:** min første indsættelse i
+  `compliance-report.html` havde et linjeskift inde i en JS-streng, så
+  `check_inline_js` sagde `SyntaxError: Invalid or unexpected token`. Rettet
+  til én linje.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 99 steps.** De to nye
+  steps er lagt i både `quality_gate.py` og `deploy-sites.yml`'s path-filter.
+- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
