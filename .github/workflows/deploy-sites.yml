@@ -100,6 +100,13 @@ on:
       # overskriftsniveau på én side, springe netop den port over som afgør om
       # springet må slå. Samme grund som de linjer ovenfor.
       - 'tools/check_heading_levels.py'
+      # Gatestrækket `contrast-sampling` dømmer de pixels værktøjet måler bag
+      # sin egen tekst. Uden portens egen fil *og* de to sider i filteret
+      # kunne en push, der kun rettede samplingen i en af dem, springe netop
+      # den port over som afgør om tallene på skærmen er rigtige.
+      - 'tools/check_contrast_sampling.py'
+      - 'site/text-on-image-checker.html'
+      - 'site/text-on-image-checker-da.html'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod

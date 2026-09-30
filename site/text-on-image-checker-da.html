@@ -166,42 +166,84 @@
   function fontSizePx() {
     return Math.max(18, Math.round(cv.width * 0.06));
   }
+  // `measureText()` reads whatever font is currently set, so every caller
+  // that measures has to set it first — otherwise the first box after page
+  // load is measured in the canvas default of 10px sans-serif.
+  function applyFont() {
+    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
+    ctx.textBaseline = 'top';
+  }
   function draw() {
     if (!img) return;
     ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
+    applyFont();
     ctx.fillStyle = $('fg').value;
-    ctx.textBaseline = 'top';
+    ctx.fillText($('text').value || ' ', tx, ty);
+  }
+  // The letters on their own, on a cleared canvas. Alpha is then exactly how
+  // much of each pixel the glyph covers, which is the one thing a colour
+  // distance can never tell you.
+  function drawTextLayer() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    applyFont();
+    ctx.fillStyle = $('fg').value;
     ctx.fillText($('text').value || ' ', tx, ty);
   }
 
+  // A pixel with more than this much glyph on it is text, not background.
+  // Measured 30/9: the old filter threw away anything within dr+dg+db < 120
+  // of the text colour, but an anti-aliased glyph edge at 16% coverage
+  // already scores 126 — so the edges survived, the tool measured white
+  // text against its own grey fringe, and answered 1.47:1 for white text
+  // on a white photo.
+  var COVER_MAX = 8;
+  // The box is clipped to the canvas, never nudged back inside it:
+  // getImageData() outside the canvas returns transparent black, which
+  // reads as a black background and invents contrast that is not there.
+  function textBox() {
+    applyFont();
+    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));
+    var w = Math.min(Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width)),
+                     cv.width - x);
+    var h = Math.min(fontSizePx(), cv.height - y);
+    if (w < 2 || h < 2) return null;
+    return { x: x, y: y, w: w, h: h };
+  }
   function sampleContrast() {
     if (!img) return null;
-    draw();
-    var fgRgb = hexToRgb($('fg').value);
-    var fs = fontSizePx();
-    var text = $('text').value || '';
-    var metrics = ctx.measureText(text);
-    var w = Math.max(2, Math.ceil(metrics.width));
-    var x0 = Math.round(tx), y0 = Math.round(ty);
-    x0 = Math.max(0, Math.min(cv.width - w - 1, x0));
-    y0 = Math.max(0, Math.min(cv.height - fs - 1, y0));
-    var data = ctx.getImageData(x0, y0, w, fs).data;
+    var box = textBox();
+    if (!box) return null;
+    // Pass 1 — the photo alone, read back as the background.
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;
+    // Pass 2 — the letters alone, so alpha is the glyph coverage.
+    drawTextLayer();
+    var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;
 
-    var worst = Infinity;
     var bgCandidates = [];
-    for (var i = 0; i < data.length; i += 4) {
-      var r = data[i], g = data[i+1], b = data[i+2];
-      var dr = Math.abs(r - fgRgb[0]), dg = Math.abs(g - fgRgb[1]), db = Math.abs(b - fgRgb[2]);
-      if (dr + dg + db < 120) continue;
-      bgCandidates.push([r, g, b]);
+    for (var i = 0; i < photo.length; i += 4) {
+      if (glyph[i + 3] > COVER_MAX) continue; // this pixel is a letter
+      bgCandidates.push([photo[i], photo[i + 1], photo[i + 2]]);
     }
-    var minL = 1, maxL = 0, minC = null, maxC = null;
+    // Every pixel under the box is more than a letter thick, so there is no
+    // visible background left to read. Fall back to the photo under the box
+    // rather than reporting no number at all.
+    if (!bgCandidates.length) {
+      for (var j = 0; j < photo.length; j += 4) {
+        bgCandidates.push([photo[j], photo[j + 1], photo[j + 2]]);
+      }
+    }
+    // Worst case: the foreground against the lightest and the darkest
+    // background pixel a reader can actually see behind the letters.
+    var minL = Infinity, maxL = -Infinity, minC = null, maxC = null;
     bgCandidates.forEach(function (c) {
       var L = lum(c);
       if (L < minL) { minL = L; minC = c; }
       if (L > maxL) { maxL = L; maxC = c; }
     });
+    var fgRgb = hexToRgb($('fg').value);
+    var worst = Infinity;
     [minC, maxC].forEach(function (c) {
       if (!c) return;
       var r = ratio(fgRgb, c);
@@ -267,12 +309,14 @@
     pos(e);
     updateAll();
   }
-  function updateAll() { draw(); updateResult(); }
+  // `sampleContrast()` ends on a cleared canvas holding only the letters, so
+  // the visible drawing is the last thing that happens, not the first.
+  function updateAll() { updateResult(); draw(); }
 
   $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
   $('text').addEventListener('input', updateAll);
   $('fg').addEventListener('input', updateAll);
-  $('fontsize').addEventListener('change', updateResult);
+  $('fontsize').addEventListener('change', updateAll);
   cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
   window.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
   window.addEventListener('mouseup', function () { dragging = false; });

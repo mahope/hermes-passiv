@@ -1,10 +1,40 @@
 # STATUS
 
-- **Nyt topfund: `/text-on-image-checker` svarer ikke på sit eget billede.** Se
-  opgave 26 — reproduktionen er målt, årsagen er endnu ikke fundet, og jeg
-  gætter ikke på en kontrastalgoritme. Dette er den mest besøgte indgang
-  (8 af 15 besøgende på mahope.tools kommer fra `/blog/text-on-image-contrast-check`,
-  derhen herhen).
+- **`/text-on-image-checker` målte teksten mod sig selv.** Rettet og målt.
+  Årsagen var strukturel, ikke et regnestykke: `sampleContrast()` malede
+  billedet **og** teksten på samme canvas og læste så `getImageData` i tekstens
+  bounding box, idet den kasserede alt hvad der lå inden for
+  `dr+dg+db < 120` af tekstfarven. Men en anti-aliaset glyfkant med 16 %
+  dækning scorer allerede **126** — kantpixelerne overlevede filteret, og
+  værktøjet målte hvid tekst mod sin egen grå frimængse. Målt i Chromium mod
+  den **live** side 30/9: hvid tekst på rent hvidt billede svarede **1.47:1**,
+  og tallet fulgte fontstørrelsen (1.42 / 1.46 / 1.47) i stedet for billedet
+  eller tekstfarven. Hvid på hvid gav desuden *intet resultat*, fordi så blev
+  alle pixels filtreret væk. `lum()` og `ratio()` var korrekte hele vejen.
+- **Rettelsen maler i to lag:** ét pass med kun fotografiet, læst som
+  baggrund, og ét pass med kun bogstaverne, hvor **alpha er dækningen pr.
+  pixel** — den eneste måde at skelne en bogstav fra et billedpixel på, fordi
+  kanten *er* en blanding. Tekstkassen **klippes** nu til canvas i stedet for
+  at flyttes opad, fordi `getImageData` uden for canvas'en giver gennemsigtigt
+  sort, som ville blive læst som sort baggrund. Samme rettelse i EN og DA.
+  Målt efter rettelsen i Chromium: 1.00 / 21.00 / 21.00 / 4.54 / 3.03 — de
+  korrekte WCAG-værdier, mod 1.46 / 1.44 / 1.70 før.
+- **Ny port `tools/check_contrast_sampling.py`:** 22 løfter dømt på de to
+  sider, kørt på **sidens egen kode** i en Node-canvas-stub (source-over,
+  nearest-neighbour, gennemsigtigt sort uden for canvas) mod billeder med
+  kendte farver. Ingen browser, så den kører i CI. Tre mutationer er målt til
+  at gøre den rød: måler i hjørnet i stedet for hvor teksten står, læser
+  farverne fra det lag der indeholder teksten (den gamle kode), og flytter
+  kassen opad i stedet for at klippe den. `--self-test` 11/11.
+  **Fund undervejs:** to af de første mutationer viste sig **ækvivalente** —
+  de kunne ikke gøre en forskel, fordi dækningskortet alligevel springer de
+  pixels over som de tilføjede. De blev byttet ud med mutationer der er fejl,
+  ikke skrivemåder. Samme fejl som de tre fund fra reviewen: et løfte uden dom.
+- **Porten dømmer ikke:** at `worst` springer den mørkeste baggrund over. Det
+  er umærkeligt på de billeder porten bruger, fordi de er ensfarvede eller
+  todelte — der er ingen farvevariation *inde i* tekstkassen at vælge imellem.
+  Det kræver et gradientbillede. Skrevet op nedenfor, ikke som en løftet
+  kontrol.
 - **Opgave 25 deployet og verificeret.** `DEPLOY OK 2026-09-30` — live
   `build-info.json` bærer `commit 9b82111`, `routes_sha256 8367db4b…` og
   `sitemap_count 256`, som er byte-identiske med det lokale byg. Indholdskrav
@@ -52,6 +82,14 @@
   tilbud, som er portens egen måde at godkende et tal.
 - `GATE`: **GRØN — `python3 tools/quality_gate.py`, 103 steps** (101 → 103).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
+## Verificér deploy
+
+- `VERIFICÉR DEPLOY: /text-on-image-checker måler teksten mod sig selv, og
+  porten dømmer 22 løfter mod WCAG ceo/tekst-paa-billed <TIDSPUNK>` — hent
+  `/text-on-image-checker` på 390 og 1280 px, upload et rent hvidt billede med
+  hvid tekst, og læs tallet. Det skal stå 1.00:1. Sammenlign
+  `build-info.json` mod lokalt byg.
+
 ## Åbne opgaver
 
 1. ~~**Samme næste-vej på de øvrige gratis tjek.**~~ **FÆRDIG 30/9, `ceo/vej-til-betalt-otte-tjek` (66172a0).**
@@ -84,25 +122,15 @@
     `ceo/vaerktojer-en-gang`.** Målt rigtigt var det 62 (44 EN + 18 DA), og de
     to lister overlappede i 36 links. Se STATE.
 
-26. **Værktøjet `/text-on-image-checker` svarer ikke på sit eget billede.**
-    Hvorfor: `sampleContrast()` i `site/text-on-image-checker.html:180-216`
-    maler billedet **og teksten** på samme canvas og læser derefter
-    `getImageData` i tekstens bounding box. Den kan ikke skelne tekstegens
-    anti-aliasede kanter fra billedpixels, så de overlever filteret
-    `dr+dg+db < 120` og bliver målt som "baggrund". Bevis, målt i Chromium mod
-    **live** `/text-on-image-checker` 30/9: (a) rent hvidt 400×300-billede +
-    hvid tekst → hele canvaset er 400×300 = 0 ikke-hvide pixels, og WCAG-svaret
-    er 1.00:1 — værktøjet siger **1.47:1**; (b) tallet flytter sig næsten ikke
-    mellem helt forskellige tilstande (1.42 / 1.46 / 1.47), så det følger ikke
-    hverken billedet eller tekstfarven; (c) `getImageData`-kaldene efter upload
-    er `{x:24,y:210,w:58,h:24}` på et 400×300-canvas — korrekt position, men
-    boksen er ren hvid, altså uden de tekstpixels værktøjet siger at det måler.
-    `lum()`/`ratio()` er i sig selv korrekt WCAG-formel (verificeret), så fejlen
-    er i *hvilke* pixels den læser, ikke i regnestykket. **Jeg gætter ikke på en
-    kontrastalgoritme** — næste iteration skal finde årsagen og dømme den med en
-    port, der kører algoritmen mod kendte billeder. Accept: hvid på hvid giver
-    1.00:1, sort på hvid giver 21.00:1, og en mutation der bytter
-    `getImageData`-boksen gør porten rød.
+26. ~~**Værktøjet `/text-on-image-checker` svarer ikke på sit eget billede.**~~
+    **FÆRDIG 30/9, `ceo/tekst-paa-billed`.** Se STATE.
+
+27. **Porten kan ikke dømme at værktøjet svarer på den *bedste* baggrund.**
+    Hvorfor: `sampleContrast()` tager `min` og `max` af baggrunden og svarer på
+    den dårligste. Hvis `worst` sprang den mørkeste over, ville værktøjet svare
+    på den bedste — men det er umærkeligt på de ensfarvede og todelte billeder
+    porten bruger nu. Accept: et gradientbillede i `FARVEPAR` med en mutation
+    på `minC`, så selvtesten kan vise at porten ser forskellen.
 
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.

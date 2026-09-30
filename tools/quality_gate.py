@@ -533,6 +533,30 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_heading_levels.py", "--self-test"),
         inputs=("tools/check_heading_levels.py", "site/**"),
     ),
+    # Sampleringen under teksten på et billede (30/9). Målt i Chromium mod den
+    # live side: hvid tekst på et rent hvidt billede gav **1.47:1**, og tallet
+    # flyttede sig næsten ikke mellem forskellige tilstande (1.42/1.46/1.47) —
+    # det fulgte fontstørrelsen, ikke billedet eller tekstfarven. Årsagen var at
+    # `sampleContrast()` malede billedet *og* teksten på samme canvas og
+    # kasserede alt inden for `dr+dg+db < 120` af tekstfarven, hvilket en
+    # anti-aliaset glyfkant med 16 % dækning passerer med 126. Rettelsen maler i
+    # to lag, så alpha er dækningen pr. pixel. Denne port kører sidens egen
+    # kode i en Node-canvas-stub mod billeder med kendte farver — ingen browser,
+    # så den kan køre i CI. Se docstringen i porten for målingerne.
+    Step(
+        id="contrast-sampling",
+        argv=("python3", "tools/check_contrast_sampling.py"),
+        inputs=("tools/check_contrast_sampling.py",
+                "site/text-on-image-checker.html",
+                "site/text-on-image-checker-da.html"),
+    ),
+    Step(
+        id="contrast-sampling-selftest",
+        argv=("python3", "tools/check_contrast_sampling.py", "--self-test"),
+        inputs=("tools/check_contrast_sampling.py",
+                "site/text-on-image-checker.html",
+                "site/text-on-image-checker-da.html"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),
