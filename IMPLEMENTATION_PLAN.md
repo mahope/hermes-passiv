@@ -1,5 +1,24 @@
 # STATUS
 
+- **En port, der var blind i gaten uden at sige det.** `check_built_css.py`
+  blev altid startet som `python3 tools/check_built_css.py`, altså med `tools/`
+  som `sys.path[0]` — og `import build_sites` fandt intet. Begge `except
+  Exception: return {}` gjorde det **stille**: `source_map()` blev tom, så dommen
+  «tabt regel» aldrig kørte i gaten. Rettelsen er `import_build()`, der lægger
+  roden på stien. Se opgave 30.
+- **Død CSS på klasser er nu dømt.** Fjerde dømning i `check_built_css.py`: en
+  vælger er død, når ingen klasse i dens **venstreste** sammensatte vælger kan
+  nås. Ét navn nok — `.score-badge.A` er levende, fordi `score-badge` står i
+  markup. 17 fund på 8 sider, alle slettet i kilden: 6 `bb-*` på demosiden,
+  `.code-inline`, `.report-badge`, 4 på `/guides/comparison`, `.scanbox` på
+  nis2-check EN+DA, `.sh-results`, `.empty-state`.
+- **Egen diff-gennemgang stoppede fem af dem som falske.** De `.sev-*`-regler
+  porten først meldte døde, var levende: `notice` er en rigtig sværhedsgrad på
+  `/compliance-report` (`SEV_LABELS`) og på `/scan` (`scan.html:288` tæller
+  `f.sev==='notice'`, `:334` skriver `class="sev-'+f.sev+'"`). De var døde kun
+  fordi bogstavel-læseren stoppede ved citationstegnet inde i `class="sev-`; den
+  deler nu på `["'\s=+.]+`. Fem af otte fund var altså portens egen fejl, ikke
+  sidernes. Se opgave 30.
 - **Portene er grønne, og de dømmer flere ting end de læser.** 107 steps i
   `tools/quality_gate.py`. Senest: `ceo/live-check-flake` lod ét netværksreset
   erklære en sund udgivelse for brudt. Se opgave 31.
@@ -26,13 +45,12 @@
 
 ## Verificér deploy
 
-- **Deploy-status pr. 30/9 21:20.** `build-info.json` på mahope.tools =
-  `5f9c678`, som er det seneste mergede. CI's `gate`-job success på alle
-  committene siden `e6137bf`, men **de tre `deploy`-job står røde på `5f9c678`**
-  pga. netværksreset'en i opgave 31. Indholdet er målt live og i orden:
+- `DEPLOY OK 2026-09-30` — `ceo/live-check-flake` (`a97616f`): CI's kørsel
+  `36769685936` er grøn i alle jobs, og `build-info.json` på mahope.tools bærer
+  præcis `a97616fc06b4affe31a98600e5b731f19da3f533` med routes_sha256
+  `8367db4b…`, så live er den commit der retter prøvningen. Målt på indhold:
   `/books/` har seks `<h2 class="sub"><a>` og den publicerede CSS har
-  `.book-card :is(h3, h2.sub) a { color:#111; text-decoration:none }`,
-  `/text-on-image-checker` har donationslinjen i sit script.
+  `.book-card :is(h3, h2.sub) a { color:#111; text-decoration:none }`.
 
 - **CEO-kø punkt 0 (29/9) er lukket og målt 30/9.** Alle fem delpunkter er
     rettet og hver er dækket af en test: `handleUrlInspect(request, url, env)`
@@ -61,6 +79,16 @@
   `5f9c678` selv står som **rød** i CI: ikke en fejl i den kode, men
   netværksreset'en ovenfor, som denne commit retter. Den bliver rød igen hvis
   den kører igen, så grøn herafgør den gamle kørsel ikke retroaktivt.
+
+- `VERIFICÉR DEPLOY: død CSS på klasser fjernet på otte sider, og dommen der
+  kan se den er lagt i gaten — `ceo/port-kan-doe-klasser` 2026-09-30` — dette
+  repo deployer ved push til `main`. Mål på **indhold**, ikke på HTTP 200:
+  `https://mahope.tools/url-inspector/` skal have `.empty-state` væk fra sin
+  `<style>`, `https://mahope.tools/guides/comparison` skal have de fire
+  `.rating-*`/`.tag-blue` væk, `https://mahope.tools/nis2-check` skal have
+  `@media print { .navbtns, #progress { display:none } }` (`.scanbox` væk), og
+  `https://mahope.tools/compliance-report` skal have de tre `.sev-*`-regler
+  væk. Tænk på `/compliance-report` som den vigtigste: den sælger rapport-kit.
 
 ## Åbne opgaver
 
@@ -163,16 +191,8 @@
     undtaget (to `Buy EUComply Pro`-knapper i selve rapporten),
     `clean-copy-tool` har 48 interne links men sit eget købsflow.
 
-30. **Død CSS på *klasser* er stadig udømt.** Hvorfor: opgave 30 viste 23 danske
-    artikler med `.compare`-CSS men uden `<table class="compare">` — ikke en
-    oversættelsesfejl, men død CSS i *begge* sprog, fordi
-    `make_blog_da_mirrors_453.py:404` indsætter `.compare`-blokken i enhver
-    artikel uden at se, om artiklen har en tabel (alle 23 har `EN tabel=0`).
-    15 engelske artikler har rigtige tabeller, så mønstret virker. Kan **ikke**
-    løses med et navnesøg — `.score-badge.A` bygges som `'score-badge ' +
-    bogstav` og `.sh-grade-${g}` ligeså. Kan løses med **præfiks**: `.sh-grade-A`
-    er død kun hvis heller ikke `sh-grade-` står bogstaveligt i siden. Samme
-    tredje dømning som `check_built_css.py` fik 30/9 for døde regler. Accept:
-    porten finder mindst de 23 `.compare` og 0 af de scripts, der bygger
-    klasser ved kørsel.
+30. ~~**Død CSS på *klasser* er stadig udømt.**~~ **FÆRDIG 30/9,
+    `ceo/port-kan-doe-klasser`.** Fjerde dømning i `check_built_css.py`
+    («død klasse») plus 17 fund ryddet, og **«tabt regel» døde stille i gaten**
+    fordi `import build_sites` fandt intet. Se STATE.
 

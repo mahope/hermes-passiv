@@ -2543,3 +2543,72 @@ stadig være grøn.
 
 `quality_gate.py` GRØN — 107 steps. `--route /scan` og `--only mahope.tools`
 begge grøn live efter rettelsen.
+
+## 30/9 — `ceo/port-kan-doe-klasser`: død CSS på klasser + en port der var blind
+
+**Opgave 30 (fjerde dømning i `check_built_css.py`).** Dommen hedder «død
+klasse»: en vælger i sidens *egne* `<style>`-blokke er død, når ingen klasse i
+dens **venstreste sammensatte vælger** kan nås. Dommen på hele vælgeren ville
+være en gætning; på den venstreste er den bevist, fordi en efterfølger ikke kan
+redde en forfader.
+
+**Hvorfor ikke et navnesøg.** `.score-badge.A` bygges som `'score-badge ' +
+bogstav`, `.sh-grade-${g}` i en template-literal, `.sev-error` som
+`'finding-item sev-' + f.sev`. Derfor: **ét** navn i den venstreste vælger er
+nok, og et bogstaveligt præfiks med bindestreg (`sh-grade-`, `sev-`) tæller
+som reachable, fordi det er byggepladen i sammensætningen.
+
+**Den fejl fundet undervejs, som var større end opgaven.** `python3
+tools/check_built_css.py` — altså præcis sådan gaten og CI starter porten —
+sætter `tools/` som `sys.path[0]`, så `import build_sites` **fandt intet**, og
+begge `except Exception: return {}` gjorde det stille. `source_map()` var tom,
+altså dømte «tabt regel» aldrig noget i gaten. Rettelsen er `import_build()`,
+der lægger roden på stien. Målt: mutation 1 i selvtesten (pagepass spiser
+`*-wrap`) gav **0** fund før rettelsen og 9 efter — altså var dommen ikke bare
+død, den døde *stille*.
+
+**Egen diff-gennemgang fandt fem falske fund, og de var næsten de dyreste.**
+Første måling fandt 22, og da de var slettet, viste min egen læsning af
+diffen at fem af dem var **levende CSS**: `.sev-notice` og `.sev-notice .sev-tag`
+på `/compliance-report` (dér er `notice` en rigtig sværhedsgrad,
+`SEV_LABELS = { error, warning, notice }`), og `.sev-notice` på `/scan` og
+`/scan-da`, hvor `scan.html:288` tæller `f.sev==='notice'` og `scan.html:334`
+skriver `class="sev-'+f.sev+'"`. De var fundet af portens **første** udgave af
+bogstavel-læseren, som stoppede ved den dobbelte citationstegn inde i
+`class="sev-` — så byggepladen `sev-` blev et ubrugeligt ord. Rettelsen er at
+dele på `["'\s=+.]+`, så `class=` og `sev-` bliver to ord. **Fem af de otte
+regler, porten først meldte døde, var altså døde kun fordi porten ikke kunne
+læse en rigtig linje kode.** Efter rettelsen er de 17 fund, der bliver, alle
+målt i markup *og* i scripts: `bb-` har ingen præfiks-literal på demosiden, så
+de seks `bb-*` er døde; `code-`, `rating-`, `tag-`, `sh-`, `empty-` og `scan-`
+har heller ingen. `report-badge` står éneste gang i hele
+`site/compliance-report.html` — i sin egen regel.
+
+**Fundene: 17 på 8 sider, alle verificeret i markup og i scripts.** Seks
+`bb-*` på demosiden (bugbottle-landing), `.code-inline code`,
+`.report-badge`, `.sev-notice` + `.sev-notice .sev-tag` +
+`.sev-error .sev-tag` + `.sev-warning .sev-tag` på `/compliance-report`, fire
+på `/guides/comparison`, `.scanbox` på nis2-check EN+DA, `.sh-results` på
+`/security-headers-check`, `.empty-state` på `/url-inspector`. Alle
+undersøgt i kilden og slettet der.
+
+**Undtagelsen er skrevet, ikke gemt.** `external_routes()` bruger byggets eget
+`AUDITEDWP_DIR`, så auditedwp's tre sider (`.g-A`…`.g-F`, `.p-warn`,
+`.email-form`, `.cursor` — alle målt døde) er undtaget, fordi vi ikke må røre
+sibling-repoet. Nøglen `tools/index.html` holdt `dist_pages()`' ruter
+`deskuptime.com/tools/`, så undtagelsen var tom i første måling.
+
+**Selvtesten: 8 → 14 kontroller.** Mutation 4 lægger mutation 3' klasserende i
+dist (`.bb-status` → `.bb-status-x`) og kræver rødt med filnavn; mutation 5
+kræver at `.sev-error` **ikke** dømmes, altså at dommen kan skelne. Bevist i
+processen: `dead_class_selectors` på den muterede demo-side giver `['.bb-status']`,
+og på `/compliance-report` giver den `[]` for `sev-*`, fordi `sev-` står som
+præfiks.
+
+**Præmisen i opgaven holdt ikke, og det er værd at sige:** de «23 danske
+artikler med `.compare`-CSS» er ikke død CSS. `.compare` ligger i
+`site/style.css:221-222` som del af designsystemet og bruges af 12 engelske +
+14 danske blogartikler med rigtige tabeller. `make_blog_da_mirrors_453.py` findes
+ikke længere i repoet, og `.compare` har ligget i `style.css` siden `eb9faab`.
+En port der dømte skallens klasser pr. side ville give hundreder af falske fund,
+så den dømmer kun sidens egne klasser — og de 22 fund den fandt, er de reelle.

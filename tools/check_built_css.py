@@ -86,6 +86,20 @@ RE_THEME_ATTR = re.compile(r"""data-theme\s*=\s*["']?[\w-]+""", re.I)
 # sider i `/palette-generator` og `/color-blindness-simulator`.
 RE_TAG_IN_HTML = re.compile(r"(?i)<\s*/?\s*([a-zA-Z][\w-]*)")
 RE_TAG_CREATED = re.compile(r"""createElement\(\s*['"]([a-zA-Z][\w-]*)['"]""")
+# Et bogstaveligt klassenavn i et script. Alle tre slags citater tæller, fordi
+# klasser bygges i alle tre: `'score-badge ' + bogstav`, `"tab-" + i` og
+# `` `sh-grade-${g}` ``. Uden backticks ville `.sh-grade-A` se død ud, fordi
+# præfikset kun står i en template-literal.
+RE_LITERAL = re.compile(r"""'([^'\n]{1,160})'|"([^"\n]{1,160})"|`([^`\n]{1,160})`""")
+# En klasse kan sættes på et element der bygges ved sammensætning, så et
+# bogstaveligt `active` i `' class="q' + (i ? '' : ' active') + '"'` er nok til
+# at dømme `.q.active` levende. Derfor læses bogstaver *inden i* strengen også.
+RE_CLASS_IN_SEL = re.compile(r"\.([A-Za-z][\w-]*)")
+RE_BARE_CLASS = re.compile(r"^[A-Za-z][\w-]*$")
+RE_PREFIX_TAIL = re.compile(r"^([a-z][\w-]*-)$")
+# Den venstreste sammensatte vælger. Mellemrum er nok, fordi efterkommere
+# uden mellemrum (`>`, `+`, `~`) ikke kan have en klasse *før* forfaderen.
+RE_COMPOUND_HEAD = re.compile(r"\s+")
 RE_SCRIPT_SRC = re.compile(r"""<script[^>]+src\s*=\s*["']([^"']+)["']""", re.I)
 RE_LOCAL_JS = re.compile(r"\.m?js(\?|$)", re.I)
 # Selektorer uden en *type* — `.a`, `#a`, `[a]`, `:hover` — er ikke døde, fordi
@@ -275,14 +289,7 @@ def page_tag_vocabulary(page: Path, html: str) -> set[str]:
     finde sit eget navn i sin egen CSS, og porten ville være grøn på præcis
     den fejl den er skrevet for.
     """
-    parts = [RE_STYLE_BLOCK.sub(" ", html)]
-    for src in RE_SCRIPT_SRC.findall(html):
-        if src.startswith(("http://", "https://", "//")) or not RE_LOCAL_JS.search(src):
-            continue
-        target = (page.parent / src.split("?")[0]).resolve()
-        if target.is_file():
-            parts.append(target.read_text(encoding="utf-8", errors="replace"))
-    text = "\n".join(parts)
+    text = page_text(page, html)
     return {t.lower() for t in RE_TAG_IN_HTML.findall(text)} | {
         t.lower() for t in RE_TAG_CREATED.findall(text)
     }
@@ -319,6 +326,90 @@ def dead_tag_selectors(page: Path, html: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Døde klasser. Samme fejl som `dead_tag_selectors`, men for klasser: `.book-card
+# h3 a` døde fordi *elementet* hed noget andet, `.empty-state` døde fordi ingen
+# nogensinde får den klasse.
+#
+# Et navnesøg kan ikke dømme her — de fleste klasser sættes på ved kørsel:
+# `.score-badge.A` bygges som `'score-badge ' + bogstav`, `.sh-grade-${g}` i en
+# template-literal, `.p-warn` af `p-` + et resultat-flag. Derfor dømmes
+# **vælgeren**, ikke klassen: en vælger er død kun når *ingen* af dens klasser
+# kan nås, fordi så matcher den aldrig noget. Ét navn der kan nås — også et
+# præfiks som `sh-grade-` — gør hele vælgeren levende, fordi så *kan* den
+# matche, og det er alt porten kan bevise.
+# ---------------------------------------------------------------------------
+def page_text(page: Path, html: str) -> str:
+    """Markup og scripts, altså alt hvad der kan sætte en klasse — minus CSS."""
+    parts = [RE_STYLE_BLOCK.sub(" ", html)]
+    for src in RE_SCRIPT_SRC.findall(html):
+        if src.startswith(("http://", "https://", "//")) or not RE_LOCAL_JS.search(src):
+            continue
+        target = (page.parent / src.split("?")[0]).resolve()
+        if target.is_file():
+            parts.append(target.read_text(encoding="utf-8", errors="replace"))
+    return "\n".join(parts)
+
+
+def class_vocabulary(text: str) -> tuple[set[str], set[str]]:
+    """(klasser, præfikser) siden kan sætte på et element.
+
+    Klassen kommer to veje: bogstaveligt i en `class`-attribut, eller som et
+    ord i en streng, fordi den sættes ved sammensætning. Et ord der *ender* på
+    `-` gemmes som præfiks, fordi det er byggepladen i `p-` + `warn` — uden det
+    ville `.p-warn` blive dømt død, selv om scriptet sætter den.
+    """
+    tokens: set[str] = set()
+    prefixes: set[str] = set()
+    for value in RE_CLASS_ATTR.findall(text):
+        tokens.update(value.split())
+    for literal in RE_LITERAL.findall(text):
+        # `class="sev-" + f.sev` går i stykker på `="`, så byggepladen skal
+        # findes bagefter: uden citattegnene i delingen bliver `class="sev-` ét
+        # ord, præfikset forsvinder, og porten dømmer CSS der virker.
+        for part in re.split(r"""["'\s=+.]+""", next(x for x in literal if x)):
+            part = part.strip("\"'`:")
+            if not part:
+                continue
+            if RE_BARE_CLASS.match(part):
+                (prefixes if part.endswith("-") else tokens).add(part)
+                continue
+            m = RE_PREFIX_TAIL.match(part)
+            if m:
+                prefixes.add(m.group(1))
+    return tokens, prefixes
+
+
+def dead_class_selectors(page: Path, html: str, skip: set[str]) -> list[str]:
+    """Vælgere med en klasse, siden aldrig kan ramme med.
+
+    Dømmes på den **venstreste sammensatte vælger**, fordi en efterfølger ikke
+    kan redde en forfader: `.sev-notice .sev-tag` matcher aldrig, fordi intet
+    nogensinde får `sev-notice`, uanset hvor mange `sev-tag` der er. Inden for
+    den holder ét navn nok — `.score-badge.A` er levende, fordi `score-badge`
+    står i markup, selv om `.A` bygges ved kørsel. Det er den ene linje, der
+    adskiller en dom fra en gætning.
+
+    `skip` er de vælgere `dead_tag_selectors` allerede dømmer, så én død
+    regel kun rapporteres én gang.
+    """
+    tokens, prefixes = class_vocabulary(page_text(page, html))
+    dead: list[str] = []
+    for sel in selectors_of(html):
+        if sel in skip:
+            continue
+        classes = RE_CLASS_IN_SEL.findall(RE_COMPOUND_HEAD.split(sel.strip(), 1)[0])
+        if not classes:
+            continue
+        # Ét navn, der kan nås, er nok: `.score-badge.A` er levende, fordi
+        # `score-badge` står bogstaveligt i markup'en, selv om `.A` bygges.
+        if any(c in tokens or any(c.startswith(p) for p in prefixes)
+               for c in classes):
+            continue
+        dead.append(sel)
+    return sorted(set(dead))
+
+
+# ---------------------------------------------------------------------------
 # Fund
 # ---------------------------------------------------------------------------
 class Finding:
@@ -345,6 +436,26 @@ def dist_pages() -> list[tuple[str, Path]]:
     return out
 
 
+def import_build() -> object | None:
+    """`build_sites`, uanset hvordan porten blev startet.
+
+    Porten kører to steder: som `python3 tools/check_built_css.py` fra
+    repo-roden — altså med `tools/` som `sys.path[0]` — og som
+    `import check_built_css` fra en klon, hvor roden er på stien. I den første
+    form fandt det gamle `import build_sites` **intet**, og begge
+    `except Exception: return {}` gjorde det stille: `source_map()` blev tom,
+    så dommen «tabt regel» aldrig kørte i gaten, og `external_routes()` gav
+    ingen undtagelse. En port der er blind uden at sige det er værre end
+    ingen port, så roden lægges på stien her i stedet for at håbe på kaldet.
+    """
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    try:
+        return importlib.import_module("build_sites")
+    except Exception:
+        return None
+
+
 def source_map() -> dict[str, Path]:
     """dist-rute -> kildefil, fra byggets egen filudvalg.
 
@@ -354,9 +465,8 @@ def source_map() -> dict[str, Path]:
     har ingen kilde her og måles ikke for tabte regler — de er undtagelsen,
     ikke reglen.
     """
-    try:
-        build = importlib.import_module("build_sites")
-    except Exception:
+    build = import_build()
+    if build is None:
         return {}
     sites = {d: build.Site(d, c) for d, c in build.SITES.items()}
     try:
@@ -370,6 +480,29 @@ def source_map() -> dict[str, Path]:
     return out
 
 
+def external_routes() -> set[str]:
+    """Ruter hvis kilde ligger uden for dette repo — auditedwp's tre sider.
+
+    Vi må ikke røre `../auditedwp`, så en død regel der kan dømmes men ikke
+    rettes, ville gøre porten umuligt grøn. Undtagelsen er derfor lydende og
+    skrevet her, ikke gemt i en liste: bygget selv forteller hvilke filer der
+    kommer derfra.
+    """
+    build = import_build()
+    base = str(getattr(build, "AUDITEDWP_DIR", "") if build else "")
+    if not base:
+        return set()
+    out = set()
+    for key, src in source_map().items():
+        if not str(src).startswith(base):
+            continue
+        # `source_map` nøgler filen, `dist_pages` nøgler ruten. Uden den her
+        # omdøbning ville `tools/index.html` aldrig møde `tools/`, og undtagelsen
+        # ville være tom — altså rød på præcis de sider den skulle dække.
+        out.add(key[: -len("index.html")] if key.endswith("/index.html") else key)
+    return out
+
+
 def check() -> list[Finding]:
     shell_css_path = SITE / "style.css"
     if not shell_css_path.exists():
@@ -377,6 +510,7 @@ def check() -> list[Finding]:
     shell_css = shell_css_path.read_text(encoding="utf-8")
     classes = shell_classes(shell_css)
     sources = source_map()
+    foreign = external_routes()
 
     findings: list[Finding] = []
     for route, page in dist_pages():
@@ -392,11 +526,22 @@ def check() -> list[Finding]:
 
         # (3) Døde regler. Måles på den byggede fil og dens egne scripts, så
         # CSS der først rammer efter et klik ikke dømmes.
-        for sel in dead_tag_selectors(page, html):
+        type_dead = set(dead_tag_selectors(page, html))
+        for sel in sorted(type_dead):
             findings.append(Finding(route, "død regel",
                                     f"{sel} er i sidens egen CSS, men ingen "
                                     f"regel i markup eller i sidens scripts "
                                     f"har noget element med det navn"))
+
+        # (4) Døde klasser. Samme fejl, bare for klasser. En vælger dømmes kun
+        # når ingen af dens klasser kan nås — `.score-badge.A` er levende,
+        # fordi `score-badge` står i markup, selv om `.A` bygges ved kørsel.
+        if route not in foreign:
+            for sel in dead_class_selectors(page, html, type_dead):
+                findings.append(Finding(route, "død klasse",
+                                        f"{sel} er i sidens egen CSS, men hverken "
+                                        f"markup eller sidens scripts kan sætte "
+                                        f"den klasse på noget element"))
 
         # (1) Tabte regler. Kræver kilden, så det måles på de rigtige filer.
         src = sources.get(route)
@@ -637,6 +782,42 @@ def self_test() -> int:
            f"mutationen gør porten rød med den døde regel ({[f.detail[:60] for f in dead[:2]]})")
         ok(any(f.page.endswith("/books/") for f in dead),
            "den døde regel navnginer den side den står på")
+
+        # Mutation 4: klassedommen. Samme fejl som mutation 3, bare for en
+        # *klasse* — `.bb-status` er i sidens CSS og i dens markup, og mutationen
+        # lægger præcis den publicerede fejl fra 30/9 i den anden ende: en
+        # markupændring der glemmer den ledsagende regel. Rører *dist*, som
+        # revieweren målte, så den kræver ikke et bygge.
+        demo = work / "dist" / "bugbottle.dev" / "bugbottle-demo.html"
+        if not demo.exists():
+            raise AssertionError("demoside mangler i kopiens dist — mutationen kan ikke måles")
+        text = demo.read_text(encoding="utf-8")
+        if 'class="bb-status"' not in text or ".bb-status {" not in text:
+            raise AssertionError("demoside har ikke længere formen mutationen forventer")
+        demo.write_text(text.replace('class="bb-status"', 'class="bb-status-x"',
+                                     1), encoding="utf-8")
+        class_dead = [f for f in check_only_in(work) if f.kind == "død klasse"]
+        ok(any(".bb-status" in f.detail for f in class_dead),
+           f"mutationen gør porten rød med den døde klasse "
+           f"({[f.detail[:60] for f in class_dead[:2]]})")
+        ok(any("bugbottle-demo" in f.page for f in class_dead),
+           "den døde klasse navngiver den side den står på")
+
+        # Mutation 5: porten må ikke dømme CSS der *bygges* ved kørsel. `.sev-error
+        # .sev-tag` på `/compliance-report` sættes som `'finding-item sev-' +
+        # f.sev`, så `sev-error` står aldrig bogstaveligt nogen steder. Uden
+        # præfiksreglen ville porten rømme den her — altså på den mutation der
+        # ellers intet beviser, at dommen kan *finde* noget.
+        report = work / "dist" / "mahope.tools" / "compliance-report.html"
+        if not report.exists():
+            raise AssertionError("rapportsiden mangler i kopiens dist")
+        runtime = [f for f in check_only_in(work) if f.kind == "død klasse"]
+        ok(not any("sev-error" in f.detail for f in runtime),
+           f"en klasse der bygges ved kørsel dømmes ikke død "
+           f"({[f.detail[:60] for f in runtime[:2]]})")
+        ok(".sev-tag {" in report.read_text(encoding="utf-8") or
+           ".finding-item .sev-tag {" in report.read_text(encoding="utf-8"),
+           "rapportsiden har stadig den regel mutationen forventer")
 
     for label in failures:
         print(f"  FEJL  {label}")
