@@ -92,6 +92,13 @@ on:
       # en ny form for dobbeltlisten, springe netop den port over som afgør om
       # den må slå. Samme grund som de linjer ovenfor.
       - 'tools/check_tool_sections.py'
+      # Gatestrækket `donation-paths` dømmer, at donationen bedes om *efter et
+      # resultat* og aldrig som en knap. Uden portens egen fil og ratchetfil i
+      # filteret kunne en push, der kun gør donationslinjen til en knap, springe
+      # netop den port over som afgør om den må slå. Samme grund som de linjer
+      # ovenfor.
+      - 'tools/check_donation_paths.py'
+      - 'tools/donation.json'
       - 'tools/check_form_labels.py'
       - 'tools/check_first_action.py'
       - 'tools/first_action.json'

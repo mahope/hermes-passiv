@@ -274,7 +274,8 @@
       (passAA && !passAAA ? '<br>Passes AA but not AAA (' + (large ? '4.5' : '7') + ':1).' :
        passAAA ? '<br>Also passes AAA.' :
        '<br>Try a darker/lighter text color, or add a translucent scrim behind the text.') +
-      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>';
+      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>' +
+      '<br><span style="font-size:13px;color:var(--color-text-muted)">This check is free and runs entirely in your browser. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</span>';
   }
 
   // ---- events ----------------------------------------------------------

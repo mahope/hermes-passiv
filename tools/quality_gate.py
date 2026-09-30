@@ -485,6 +485,28 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_tool_sections.py", "--self-test"),
         inputs=("tools/check_tool_sections.py", "site/**"),
     ),
+    # Donationen skal bedes om *efter et resultat* (30/9). Målt først: `site/`
+    # har 161 HTML-sider og 4 linkede til donation — `/scan`, `/scan-da` og de
+    # to `/support`. Katalogen, `FUNDING.yml` og kontrakten har alle haft
+    # linket længe, men ingen port målte om det nåede nogen, så missionens
+    # «tak, hvor en glad bruger siger tak» var tre måneder gammel på de 37
+    # værktøjssider der renderer et målt svar. Porten dømmer de to sider der
+    # nu har linjen: katalogens URL, aldrig en knap, og i `<script>` så den
+    # først opstår når værktøjet renderer — ellers viser den sig før læseren
+    # har bedt om noget. Resten tælles og skrives ud i hver kørsel, men dømmes
+    # ikke, fordi «hvor mange sider» er en beslutning, ikke 37 små rettelser.
+    Step(
+        id="donation-paths",
+        argv=("python3", "tools/check_donation_paths.py"),
+        inputs=("tools/check_donation_paths.py", "tools/donation.json",
+                "tools/stripe_catalog.json", "site/**"),
+    ),
+    Step(
+        id="donation-paths-selftest",
+        argv=("python3", "tools/check_donation_paths.py", "--self-test"),
+        inputs=("tools/check_donation_paths.py", "tools/donation.json",
+                "tools/stripe_catalog.json"),
+    ),
     # Formularfelter uden navn (30/9). Målt først: 14 felter på 13 sider havde
     # overhverket navn — 6 e-mail-felter var nyhedsbrevstilmeldingen på
     # NIS2-værktøjerne, 4 URL-felter var indgangen i et værktøj. `placeholder`

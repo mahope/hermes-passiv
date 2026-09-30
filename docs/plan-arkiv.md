@@ -2229,3 +2229,120 @@ sider, `check_ui_constants`, `check_built_css`, dublet `<h2>` på 63 sider,
 CI-layout (4a0fc12), generator der skrev en løgn, port der dæmpede sin egen rute,
 sjakalen på antalsløfter (7 → 14 dømte), værktøjet først over folden, formularer
 med navn (14 → 0) og overskrifts-spring (12 sider → 0).
+
+---
+
+## Arkiveret 30/9 fra `IMPLEMENTATION_PLAN.md` (STATUS før `ceo/tak-efter-resultat`)
+
+# STATUS
+
+- **`/text-on-image-checker` målte teksten mod sig selv.** Rettet og målt.
+  Årsagen var strukturel, ikke et regnestykke: `sampleContrast()` malede
+  billedet **og** teksten på samme canvas og læste så `getImageData` i tekstens
+  bounding box, idet den kasserede alt hvad der lå inden for
+  `dr+dg+db < 120` af tekstfarven. Men en anti-aliaset glyfkant med 16 %
+  dækning scorer allerede **126** — kantpixelerne overlevede filteret, og
+  værktøjet målte hvid tekst mod sin egen grå frimængse. Målt i Chromium mod
+  den **live** side 30/9: hvid tekst på rent hvidt billede svarede **1.47:1**,
+  og tallet fulgte fontstørrelsen (1.42 / 1.46 / 1.47) i stedet for billedet
+  eller tekstfarven. Hvid på hvid gav desuden *intet resultat*, fordi så blev
+  alle pixels filtreret væk. `lum()` og `ratio()` var korrekte hele vejen.
+- **Rettelsen maler i to lag:** ét pass med kun fotografiet, læst som
+  baggrund, og ét pass med kun bogstaverne, hvor **alpha er dækningen pr.
+  pixel** — den eneste måde at skelne en bogstav fra et billedpixel på, fordi
+  kanten *er* en blanding. Tekstkassen **klippes** nu til canvas i stedet for
+  at flyttes opad, fordi `getImageData` uden for canvas'en giver gennemsigtigt
+  sort, som ville blive læst som sort baggrund. Samme rettelse i EN og DA.
+  Målt efter rettelsen i Chromium: 1.00 / 21.00 / 21.00 / 4.54 / 3.03 — de
+  korrekte WCAG-værdier, mod 1.46 / 1.44 / 1.70 før.
+- **Ny port `tools/check_contrast_sampling.py`:** 22 løfter dømt på de to
+  sider, kørt på **sidens egen kode** i en Node-canvas-stub (source-over,
+  nearest-neighbour, gennemsigtigt sort uden for canvas) mod billeder med
+  kendte farver. Ingen browser, så den kører i CI. Tre mutationer er målt til
+  at gøre den rød: måler i hjørnet i stedet for hvor teksten står, læser
+  farverne fra det lag der indeholder teksten (den gamle kode), og flytter
+  kassen opad i stedet for at klippe den. `--self-test` 11/11.
+  **Fund undervejs:** to af de første mutationer viste sig **ækvivalente** —
+  de kunne ikke gøre en forskel, fordi dækningskortet alligevel springer de
+  pixels over som de tilføjede. De blev byttet ud med mutationer der er fejl,
+  ikke skrivemåder. Samme fejl som de tre fund fra reviewen: et løfte uden dom.
+- **Porten dømmer ikke:** at `worst` springer den mørkeste baggrund over. Det
+  er umærkeligt på de billeder porten bruger, fordi de er ensfarvede eller
+  todelte — der er ingen farvevariation *inde i* tekstkassen at vælge imellem.
+  Det kræver et gradientbillede. Skrevet op nedenfor, ikke som en løftet
+  kontrol.
+- **Opgave 25 deployet og verificeret.** `DEPLOY OK 2026-09-30` — live
+  `build-info.json` bærer `commit 9b82111`, `routes_sha256 8367db4b…` og
+  `sitemap_count 256`, som er byte-identiske med det lokale byg. Indholdskrav
+  (a)–(e) er alle målt opfyldt; (c) målt mod `dist/bugbottle.dev/` fordi den
+  route er bugbottle.dev's, ikke mahope.tools', og bugbottle.dev deployes
+  stadig ikke (❓).
+- **Live-måling af de ti mest besøgte sider: rent.** Alle 10 svarer 200 med
+  **nul console-errors, nul page-errors og nul fejlede requests** i Chromium
+  på 390 px. Døde ankre i hele `dist/`: **0** (de 7 fund er `/scan#url=…`,
+  som er en klient-rute, ikke et anker). Alle 16 Stripe-betalingslinks svarer
+  200. `/api/license/validate` giver 404/400 korrekt. `/api/url-inspect` er
+  bekræftet live med CEO-fiksen. `/pro/` er 404, men **intet** linker til den.
+- **Opgave 25 færdig.** 62 sider — 44 EN, 18 DA — havde to afsnit med samme job
+  side om side: «Tools and guides» med et kortgitter og «Related Guides» med en
+  liste. 36 af de relaterede links pegede på en destination siden *allerede*
+  viste i sit eget gitter, så `/blog/text-on-image-contrast-check` (8 af 15
+  besøgende, bounce 100 %) nåede læseren med `/blog/wcag-contrast-checker` to
+  gange under to overskrifter og to navne.
+- **Rettelsen er i generatoren, ikke i filerne.** Ny delt
+  `tools/crosslink_merge.py` fletter de relaterede artikler *ind* i det afsnit
+  siden allerede har: et nyt kort pr. artikel, og findes destinationen i
+  forvejen, bærer *det* kort beskrivelsen. Begge generatorer
+  (`crosslink_blog.py` + `_da`) bruger den, så de ikke kan glide fra hinanden.
+  Målt: 91 EN + 93 DA filer, to kørsler efter hinanden → 0 ændringer (idempotent).
+- **Tre fund undervejs, alle rettet samme sted:**
+  (a) `da/blog/bugrapporter-i-ci-pipeline` havde **den engelske** kasse med
+  `/blog/…`-links på en dansk side — en dansk oversættelse der fik den med i
+  kopien. DA-generatoren fjerner den nu og siger hvis den kommer igen.
+  (b) Begge generatorers `if new != c` sammenlignede med den *allerede*
+  ændrede tekst, så et greb uden ny tekst aldrig blev skrevet — det fjernede
+  lå på disken. Sammenligner nu mod filen.
+  (c) Et krydslink-uddrag lækkede «Kør alle 22 WCAG 2.1 AA-regler lokalt» fra
+  desktop-scannerens beskrivelse ind på siden om den *online* tjekker.
+  `check_rule_claims` blev rød, og den havde ret. Et uddrag med et tal i er nu
+  tomt: **et tal skal stå på den side der kan måle det.**
+- Ny port `tools/check_tool_sections.py`: dømmer to afsnit med samme job på én
+  side (EN og DA som én familie) og én destination to gange i ét afsnit.
+  **GRØN på 190 afsnit i 303 sider**, `--self-test` OK 11/11. Bevis at den
+  dømmer: de 62 sider var røde *før* rettelsen, målt i en klon.
+  Vinduet i porten var først kun «næste `<h2>`», hvilket gav 8 røde
+  `/free-tools`-fund fra **footeren** — en rød uden en fejl. Nu slutter den også
+  ved `<footer>`, `</main>`, `</article>`, `</body>`.
+- `stripe-ctas` blev rød på `$144`/`$7` i en krydslink-titel om
+  *konkurrenternes* SaaS-priser. Dokumenteret i `stripe_catalog.json` for det
+  tilbud, som er portens egen måde at godkende et tal.
+- **Opgave 26 er live og verificeret 30/9.** Hvid tekst på et rent hvidt
+  billede svarede **1.00:1** på den **live** side ved 390 px og 1280 px,
+  nul console-errors og nul page-errors, ingen vandret scroll.
+  `build-info.json` bærer `commit f36fb6b`, og `check_live_sitemaps.py` mod
+  fuld SHA siger «live sitemap OK» på alle tre deployede domæner.
+- **Porten dømmer nu, om værktøjet svarer på den *dårligste* baggrund.**
+  `sampleContrast()` tager `min` og `max` af baggrunden under bogstaverne
+  og svarer på det værste par — det er hele pointen med «worst-case». Men
+  porten havde intet billede, hvor den kunne se forskel på de to: på de
+  ensfarvede og todelte har **alle** dommene hvid tekst, og med hvid tekst
+  er den *lyseste* baggrund altid den dårligste. Springer `worst` den
+  mørkeste over, ændrer tallet sig derfor **ikke** — mutationen var målt
+  grøn, altså uden dom.
+- **Rettelsen er et gradientbillede med sort tekst**, hvor rollerne bytter
+  om: her er den mørkeste baggrund den dårligste. Ny femte mutation
+  `[minC, maxC]` → `[maxC]` er målt til at gøre porten rød med præcis den
+  linje («viser 21.00:1, men billedet og tekstfarven giver 1.00:1») —
+  værktøjet siger PASS oveni en baggrund der indeholder rent sort. Målt på
+  **begge** sider. Selvtesten får tre nye kontroller, hvoraf den ene kræver
+  at casen kan svare 21:1 når kun den bedste baggrund tælles, så den ikke
+  kan blive grøn af tilfældighed. `--self-test` **24/24**.
+- **Fund undervejs: porten dømte 22 løfter og kørte 20.**
+  `antal += len(FARVEPAR) + 2 + len(TODELT)` sagde 11 pr. side mens
+  harnessen faktisk returnerede 10 — målt i en klon af `main` 30/9. To
+  løfter uden dom, i porten der skal dømme netop «et løfte uden dom».
+  Tallet kommer nu fra de rigtige resultater i stedet for en hårdkodet
+  formel. Samme slags hårdkodet `11/11` i selvtestens overskrift er nu en
+  rigtig optælling.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 105 steps** (103 → 105).
+- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
