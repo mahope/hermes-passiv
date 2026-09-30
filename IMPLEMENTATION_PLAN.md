@@ -80,15 +80,41 @@
 - `stripe-ctas` blev rød på `$144`/`$7` i en krydslink-titel om
   *konkurrenternes* SaaS-priser. Dokumenteret i `stripe_catalog.json` for det
   tilbud, som er portens egen måde at godkende et tal.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 103 steps** (101 → 103).
+- **Opgave 26 er live og verificeret 30/9.** Hvid tekst på et rent hvidt
+  billede svarede **1.00:1** på den **live** side ved 390 px og 1280 px,
+  nul console-errors og nul page-errors, ingen vandret scroll.
+  `build-info.json` bærer `commit f36fb6b`, og `check_live_sitemaps.py` mod
+  fuld SHA siger «live sitemap OK» på alle tre deployede domæner.
+- **Porten dømmer nu, om værktøjet svarer på den *dårligste* baggrund.**
+  `sampleContrast()` tager `min` og `max` af baggrunden under bogstaverne
+  og svarer på det værste par — det er hele pointen med «worst-case». Men
+  porten havde intet billede, hvor den kunne se forskel på de to: på de
+  ensfarvede og todelte har **alle** dommene hvid tekst, og med hvid tekst
+  er den *lyseste* baggrund altid den dårligste. Springer `worst` den
+  mørkeste over, ændrer tallet sig derfor **ikke** — mutationen var målt
+  grøn, altså uden dom.
+- **Rettelsen er et gradientbillede med sort tekst**, hvor rollerne bytter
+  om: her er den mørkeste baggrund den dårligste. Ny femte mutation
+  `[minC, maxC]` → `[maxC]` er målt til at gøre porten rød med præcis den
+  linje («viser 21.00:1, men billedet og tekstfarven giver 1.00:1») —
+  værktøjet siger PASS oveni en baggrund der indeholder rent sort. Målt på
+  **begge** sider. Selvtesten får tre nye kontroller, hvoraf den ene kræver
+  at casen kan svare 21:1 når kun den bedste baggrund tælles, så den ikke
+  kan blive grøn af tilfældighed. `--self-test` **24/24**.
+- **Fund undervejs: porten dømte 22 løfter og kørte 20.**
+  `antal += len(FARVEPAR) + 2 + len(TODELT)` sagde 11 pr. side mens
+  harnessen faktisk returnerede 10 — målt i en klon af `main` 30/9. To
+  løfter uden dom, i porten der skal dømme netop «et løfte uden dom».
+  Tallet kommer nu fra de rigtige resultater i stedet for en hårdkodet
+  formel. Samme slags hårdkodet `11/11` i selvtestens overskrift er nu en
+  rigtig optælling.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 105 steps** (103 → 105).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: /text-on-image-checker måler teksten mod sig selv, og
-  porten dømmer 22 løfter mod WCAG ceo/tekst-paa-billed <TIDSPUNK>` — hent
-  `/text-on-image-checker` på 390 og 1280 px, upload et rent hvidt billede med
-  hvid tekst, og læs tallet. Det skal stå 1.00:1. Sammenlign
-  `build-info.json` mod lokalt byg.
+- ~~`VERIFICÉR DEPLOY: /text-on-image-checker måler teksten mod sig selv`~~
+  **DEPLOY OK 2026-09-30** — målt på den live side: 1.00:1 ved 390 og
+  1280 px, nul console-errors, `build-info.json` = f36fb6b, sitemaps OK.
 
 ## Åbne opgaver
 
@@ -125,12 +151,10 @@
 26. ~~**Værktøjet `/text-on-image-checker` svarer ikke på sit eget billede.**~~
     **FÆRDIG 30/9, `ceo/tekst-paa-billed`.** Se STATE.
 
-27. **Porten kan ikke dømme at værktøjet svarer på den *bedste* baggrund.**
-    Hvorfor: `sampleContrast()` tager `min` og `max` af baggrunden og svarer på
-    den dårligste. Hvis `worst` sprang den mørkeste over, ville værktøjet svare
-    på den bedste — men det er umærkeligt på de ensfarvede og todelte billeder
-    porten bruger nu. Accept: et gradientbillede i `FARVEPAR` med en mutation
-    på `minC`, så selvtesten kan vise at porten ser forskellen.
+27. ~~**Porten kan ikke dømme at værktøjet svarer på den *bedste* baggrund.**~~
+     **FÆRDIG 30/9, `ceo/gradient-dommer-baggrund`.** Ny gradientcase med sort
+     tekst + en mutation der springer `minC` over, målt rød på begge sider.
+     Se STATE.
 
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.

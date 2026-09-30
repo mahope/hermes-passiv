@@ -81,6 +81,20 @@ TODELT = (
     ("hvid tekst over den mørke halvdel", 400, 300, 100, "#ffffff", 21.00),
     ("hvid tekst over den lyse halvdel", 400, 300, 300, "#ffffff", 1.00),
 )
+# Et gradientbillede er det eneste sted hvor *bedste* og *dårligste*
+# baggrund kan ligge i den samme tekstkasse, og derfor det eneste sted
+# hvor porten kan se forskel på dem. På de ensfarvede og todelte billeder
+# er det umærkeligt: med hvid tekst er den *lyseste* baggrund altid den
+# dårligste, så at springe den mørkeste over ændrer intet. Med sort tekst
+# bytter roller de om — da er den mørkeste den dårligste — og mutationen
+# springer præcis den over. Det er fejlen: værktøjet svarer på det bedste
+# sted under bogstaverne og siger PASS oveni en læsbarhedsfejl.
+#   (navn, bredde, højde, x, y, tekstfarve, forventet)
+GRADIENT = ("sort tekst over et hvidt-til-sort gradient", 400, 300, 0, 200, "#000000", 1.00)
+# Teksten skal være lang nok til at kassen dækker de flade ender i
+# gradienten. 39 tegn * 0,52 * 24 px = 487, klippet til billedets 400,
+# så kassen dækker hele bredden og begge ender ligger i den.
+GRADIENT_TEKST = "Sort tekst hen over et gradientbillede"
 TOLERANS = 0.02
 
 # --------------------------------------------------------------------------
@@ -265,6 +279,22 @@ function todelt(w, h, hexVenstre, hexHoejre) {
   }
   return a;
 }
+// Gradient med flade ender: de yderste `flad` kolonner er helt hvide og
+// helt sorte. En ren rampe har kun de to yderste pixel i de rene farver,
+// og netop dem kan et bogstav dække. Flade ender er også det et rigtigt
+// billede har: et mørkt forgrund og en lys himmel.
+function gradient(w, h, hexVenstre, hexHoejre, flad) {
+  const a = hexToRgb(hexVenstre), b = hexToRgb(hexHoejre);
+  const p = { w: w, h: h, data: new Uint8ClampedArray(w * h * 4) };
+  const mid = flad, bred = Math.max(1, w - 2 * flad);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const t = Math.min(1, Math.max(0, (x - mid) / bred));
+    const i = (y * w + x) * 4;
+    for (let k = 0; k < 3; k++) p.data[i + k] = Math.round(a[k] + (b[k] - a[k]) * t);
+    p.data[i + 3] = 255;
+  }
+  return p;
+}
 function lodret(w, h, hexOeverst, hexNederst) {
   const a = ensfarvet(w, h, hexOeverst), b = ensfarvet(w, h, hexNederst);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -323,6 +353,7 @@ function spoerg(billede, tekstfarve, tekst, x, y) {
 const FARVEPAR = __FARVEPAR__;
 const FLADT = __FLADT__;
 const TODELT = __TODELT__;
+const GRADIENT = __GRADIENT__;
 const svar = [];
 for (const p of FARVEPAR) {
   svar.push({ navn: p[0], forventet: p[3], fik: spoerg(ensfarvet(400, 300, p[1]), p[2]) });
@@ -331,6 +362,9 @@ svar.push({ navn: FLADT[0], forventet: FLADT[4], fik: spoerg(lodret(FLADT[1], FL
 for (const t of TODELT) {
   svar.push({ navn: t[0], forventet: t[5], fik: spoerg(todelt(t[1], t[2], '#000000', '#ffffff'), t[4], 'Hi', t[3], 200) });
 }
+// Den ene case hvor bedste og dårligste baggrund kan ligge i samme kasse.
+svar.push({ navn: GRADIENT[0], forventet: GRADIENT[6],
+            fik: spoerg(gradient(GRADIENT[1], GRADIENT[2], '#ffffff', '#000000', 120), GRADIENT[5], __GRADIENT_TEKST__, GRADIENT[3], GRADIENT[4]) });
 console.log(JSON.stringify(svar));
 """
 
@@ -370,12 +404,21 @@ MUTATIONER = (
      "    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
      "    var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
      "    if (false) drawTextLayer();"),
-    # Bemærk hvad porten IKKE dømmer: at `worst` springer den mørkeste
-    # baggrund over og svarer på den bedste. Det er umærkeligt på de
-    # billeder porten bruger, fordi de er ensfarvede eller todelte — der er
-    # ingen farvevariation *inde i* tekstkassen at vælge imellem. Det kræver
-    # et gradientbillede, og er skrevet som en opgave, ikke som en løftet
-    # kontrol. En mutation der ikke kan gøre en forskel er ikke et bevis.
+    # Bemærk hvad porten tidligere IKKE dømte: at `worst` springer den
+    # mørkeste baggrund over og svarer på den bedste. Det var umærkeligt
+    # på de ensfarvede og todelte billeder, fordi de andre domme har hvid
+    # tekst — og med hvid tekst er den *lyseste* baggrund altid den
+    # dårligste, så at fjerne den mørkeste fra listen ændrer intet.
+    # Mutation 4 er derfor sort tekst over et gradient, hvor rollerne
+    # bytter om: her er den mørkeste den dårligste, så springer man den
+    # over, svarer værktøjet 21:1 oveni en baggrund der indeholder rent
+    # sort. Det er den fejl en læser aldrig ville få at vide.
+    ("springer den mørkeste baggrund over og svarer på den bedste",
+     "    [minC, maxC].forEach(function (c) {",
+     "    [maxC].forEach(function (c) {"),
+    # Flytter tekstkassen opad i stedet for at klippe den. Det er den fejl
+    # der læseren mærker først på et fladt billede: kassen løber op i det
+    # hvide og svaret falder fra 21:1 til 1:1.
     ("flytter tekstkassen opad i stedet for at klippe den",
      "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
      "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.min(cv.height - fontSizePx() - 1, Math.round(ty)));"),
@@ -386,6 +429,8 @@ def byg_kode(kode: str) -> str:
     return (HARNESS.replace("%%SIDENS_KODE%%", kode)
             .replace("__FARVEPAR__", json.dumps([list(p) for p in FARVEPAR]))
             .replace("__FLADT__", json.dumps(list(FLADT)))
+            .replace("__GRADIENT__", json.dumps(list(GRADIENT)))
+            .replace("__GRADIENT_TEKST__", json.dumps(GRADIENT_TEKST))
             .replace("__TODELT__", json.dumps(list(TODELT))))
 
 
@@ -407,9 +452,9 @@ def koer(kode: str) -> list[dict]:
     return json.loads(linje[-1])
 
 
-def dom(kode: str) -> list[str]:
+def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     fund: list[str] = []
-    for r in koer(kode):
+    for r in (r if r is not None else koer(kode)):
         fik = r["fik"]
         if fik is None:
             fund.append(f"{r['navn']}: værktøjet viser intet forholdstal — det skal "
@@ -422,14 +467,25 @@ def dom(kode: str) -> list[str]:
 
 def self_test() -> int:
     fejl: list[str] = []
+    # Tælles op, ikke hardkodet: en hardkodet tæller sig selv grøn for
+    # kontroller der ikke længere findes, og det er præcis den fejlform
+    # porten er bygget til at dømme — et løfte uden dom.
+    talt = 0
 
     def tjek(navn: str, cond: bool, info: str = "") -> None:
+        nonlocal talt
+        talt += 1
         if not cond:
             fejl.append(f"{navn} — {info}")
 
+    def naer(fik, forventet: float) -> bool:
+        # Ikke `fik or -1`: 0.0 er falsy i Python, så et korrekt nul i
+        # tallene ville blive dømt som et manglende svar.
+        return fik is not None and abs(fik - forventet) <= TOLERANS
+
     kode = hent_kode(SIDER[0])
 
-    # 1–4: de fire mutationer skal gøre dommen rød. Det er beviset på at
+    # 1–5: de fem mutationer skal gøre dommen rød. Det er beviset på at
     # porten dømmer noget og ikke bare læser tallene fra koden.
     for navn, gammel, ny in MUTATIONER:
         tjek(f"mutationen findes i koden: {navn}", gammel in kode, repr(gammel))
@@ -471,13 +527,30 @@ def self_test() -> int:
     svar = {r["navn"]: r["fik"] for r in koer(kode)}
     tjek("fladt billede giver et tal", svar.get(FLADT[0]) is not None, str(svar))
     tjek("todelt billede giver tal", all(svar.get(t[0]) is not None for t in TODELT), str(svar))
-    tjek("hvid tekst på sort er 21:1", abs((svar.get(TODELT[0][0]) or -1) - 21.00) <= TOLERANS, str(svar))
-    tjek("den samme tekst på hvid er 1:1", abs((svar.get(TODELT[1][0]) or -1) - 1.00) <= TOLERANS, str(svar))
+    tjek("hvid tekst på sort er 21:1", naer(svar.get(TODELT[0][0]), 21.00), str(svar))
+    tjek("den samme tekst på hvid er 1:1", naer(svar.get(TODELT[1][0]), 1.00), str(svar))
+
+    # 8: gradientdommet må ikke være dødt. Uden et billede med farvevariation
+    # *inde i* tekstkassen er den mørkeste og den lyseste baggrund samme slags
+    # valg, så springer man den ene over, ændrer tallet sig ikke — og porten
+    # ville være grøn af den grund alene. Den skal både give et tal, og det
+    # skal være det dårligste af de to, ikke det bedste.
+    tjek("gradientbilledet giver et tal", svar.get(GRADIENT[0]) is not None, str(svar))
+    tjek("gradientet svarer på den dårligste baggrund, ikke den bedste",
+         naer(svar.get(GRADIENT[0]), GRADIENT[6]), str(svar))
+    # Bevis på at casen kan overraske: den mutation der springer den mørkeste
+    # baggrund over skal svare 21:1 her, fordi den så kun ser den hvide.
+    spring = kode.replace("    [minC, maxC].forEach(function (c) {",
+                         "    [maxC].forEach(function (c) {", 1)
+    bedste = {r["navn"]: r["fik"] for r in koer(spring)}.get(GRADIENT[0])
+    tjek("gradientet kan svare 21:1 når kun den bedste baggrund tælles",
+         naer(bedste, 21.00),
+         f"mutationen svarede {bedste}, så casen kan ikke se forskellen")
 
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
-          f"({11 - len(fejl)}/11 kontroller)")
+          f"({talt - len(fejl)}/{talt} kontroller)")
     return 1 if fejl else 0
 
 
@@ -495,8 +568,14 @@ def main(argv: list[str] | None = None) -> int:
     antal = 0
     for fil in SIDER:
         kode = hent_kode(fil)
-        antal += len(FARVEPAR) + 2 + len(TODELT)
-        for linje in dom(kode):
+        # Tælles på de rigtige resultater, ikke på et hårdkodet antal
+        # stillinger. Målt 30/9 på den gamle kode: `+ 2` sagde 11 løfter pr.
+        # side mens porten faktisk udførte 10 — den dømte altså 22 løfter
+        # og kørte 20, to af dem uden dom. Samme fejlform som de fund
+        # porten er bygget til at dømme: et løfte uden dom.
+        r = koer(kode)
+        antal += len(r)
+        for linje in dom(kode, r):
             fund.append(f"{fil}: {linje}")
     if args.list:
         for linje in fund:
