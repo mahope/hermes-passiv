@@ -1,33 +1,53 @@
 # STATUS
 
-- **Opgave 24 færdig.** 12 sider sprang fra `<h1>` til `<h3>` uden et `<h2>`
-  imellem — `paid-templates` (EN+DA) satte 14 produkternavne i `<h3>` som det
-  første indhold, og `clean-copy-cli-ref` havde ikke ét `<h2>` på hele siden.
-  46 overskrifter er løftet til `<h2 class="sub">`. Ny port
-  `tools/check_heading_levels.py` dømmer springet i *dokumentrækkefølge* — et
-  `<h3>` før sideens første `<h2>` er springet, selv om siden har `<h2>` længere
-  nede. `compliance-report` og `stats` var i planen mistænkt, men er grønne.
-- **Målt, at rettelsen ikke flytter et pixel:** gammel HTML + gammel CSS mod ny
-  HTML + ny CSS i Chromium, 10 sider × 390/1280 px, alle overskrifter
-  målt på `fontSize/fontFamily/fontWeight/letterSpacing/lineHeight/margin/color`
-  og på bredde/højde — **IDENTISK**. Første forsøg afveg på to tæller:
-  `books/index` (19px → 18px) og `books/build-your-first-chrome-extension`
-  (16px → 18px), fordi seks sider sætter deres `h3`-størrelse i sidens egen
-  `<style>`. Rettet ved at gøre de lokale vælgere til `:is(h3, h2.sub)`.
-- **Fund undervejs:** `blog/macos-menu-bar-website-monitor` har *to* `<h2>` der
-  begge lister værktøjer (`Tools and guides` og `Related Guides`) — se opgave 25.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 101 steps** (99 → 101).
+- **Opgave 25 færdig.** 62 sider — 44 EN, 18 DA — havde to afsnit med samme job
+  side om side: «Tools and guides» med et kortgitter og «Related Guides» med en
+  liste. 36 af de relaterede links pegede på en destination siden *allerede*
+  viste i sit eget gitter, så `/blog/text-on-image-contrast-check` (8 af 15
+  besøgende, bounce 100 %) nåede læseren med `/blog/wcag-contrast-checker` to
+  gange under to overskrifter og to navne.
+- **Rettelsen er i generatoren, ikke i filerne.** Ny delt
+  `tools/crosslink_merge.py` fletter de relaterede artikler *ind* i det afsnit
+  siden allerede har: et nyt kort pr. artikel, og findes destinationen i
+  forvejen, bærer *det* kort beskrivelsen. Begge generatorer
+  (`crosslink_blog.py` + `_da`) bruger den, så de ikke kan glide fra hinanden.
+  Målt: 91 EN + 93 DA filer, to kørsler efter hinanden → 0 ændringer (idempotent).
+- **Tre fund undervejs, alle rettet samme sted:**
+  (a) `da/blog/bugrapporter-i-ci-pipeline` havde **den engelske** kasse med
+  `/blog/…`-links på en dansk side — en dansk oversættelse der fik den med i
+  kopien. DA-generatoren fjerner den nu og siger hvis den kommer igen.
+  (b) Begge generatorers `if new != c` sammenlignede med den *allerede*
+  ændrede tekst, så et greb uden ny tekst aldrig blev skrevet — det fjernede
+  lå på disken. Sammenligner nu mod filen.
+  (c) Et krydslink-uddrag lækkede «Kør alle 22 WCAG 2.1 AA-regler lokalt» fra
+  desktop-scannerens beskrivelse ind på siden om den *online* tjekker.
+  `check_rule_claims` blev rød, og den havde ret. Et uddrag med et tal i er nu
+  tomt: **et tal skal stå på den side der kan måle det.**
+- Ny port `tools/check_tool_sections.py`: dømmer to afsnit med samme job på én
+  side (EN og DA som én familie) og én destination to gange i ét afsnit.
+  **GRØN på 190 afsnit i 303 sider**, `--self-test` OK 11/11. Bevis at den
+  dømmer: de 62 sider var røde *før* rettelsen, målt i en klon.
+  Vinduet i porten var først kun «næste `<h2>`», hvilket gav 8 røde
+  `/free-tools`-fund fra **footeren** — en rød uden en fejl. Nu slutter den også
+  ved `<footer>`, `</main>`, `</article>`, `</body>`.
+- `stripe-ctas` blev rød på `$144`/`$7` i en krydslink-titel om
+  *konkurrenternes* SaaS-priser. Dokumenteret i `stripe_catalog.json` for det
+  tilbud, som er portens egen måde at godkende et tal.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 103 steps** (101 → 103).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
-- `VERIFICÉR DEPLOY: overskrifts-spring ceo/overskrifts-spring 2026-09-30 16:35`:
-  rører 12 `site/`-filer, `site/style.css`, to gatefiler og en ny `tools/`-fil.
-  **Indholdskrav:** (a) `https://mahope.tools/paid-templates` — de syv
-  produkternavne er `<h2 class="sub">` og har stadig 1.05rem;
-  (b) `https://mahope.tools/books` — bogtitlerne er `<h2 class="sub">` og har
-  stadig 19px; (c) `https://cleancopy.tools/clean-copy-cli-ref` — de seks
-  afsnit er `<h2 class="sub">` (1.05rem i `.card`), de fire kort under «Mode
-  examples» er stadig `<h3>`; (d) `python3 tools/check_heading_levels.py` →
-  «GRØN — ingen spring …303 sider»; (e) `--self-test` → OK 13/13.
-  `routes_sha256` forventes **uændret** (ingen ny rute), `sitemap_count` uændret.
+- `VERIFICÉR DEPLOY: ét værktøjsafsnit ceo/vaerktojer-en-gang 2026-09-30 19:05`:
+  rører 184 `site/blog/`-filer, `site/da/blog/`, to generatorer, den nye
+  delte `tools/crosslink_merge.py`, den nye port, to gate-filer og
+  `stripe_catalog.json`. **Indholdskrav:**
+  (a) `https://mahope.tools/blog/text-on-image-contrast-check` — ét afsnit,
+  `/blog/wcag-contrast-checker` **én** gang, med beskrivelse på kortet;
+  (b) `https://mahope.tools/blog/monitor-website-github-actions-free` — kassen
+  stadig på den (siden har intet værktøjsafsnit), nyeste relaterede;
+  (c) `https://mahope.tools/da/blog/bugrapporter-i-ci-pipeline` — ingen
+  engelsk kasse, ingen `/blog/`-links;
+  (d) `python3 tools/check_tool_sections.py --list` → «GRØN — 190 værktøjsafsnit»;
+  (e) `python3 tools/quality_gate.py` → GRØN 103 steps.
+  `routes_sha256` forventes uændret (ingen ny rute), `sitemap_count` uændret.
 
 ## Åbne opgaver
 
@@ -57,13 +77,9 @@
 23. ~~**14 formularfelter uden navn.**~~ **FÆRDIG 30/9, `ceo/formularer-med-navn`.** 14 → 0, målt på de rigtige filer. Ny port `tools/check_form_labels.py` dømmer hvert felt og læser inline-`<script>` med. Se STATE.
 24. ~~**Ingen port dømmer `h1`→`h3`-spring.**~~ **FÆRDIG 30/9, `ceo/overskrifts-spring`.** 12 sider → 0, ny port `tools/check_heading_levels.py` med 13 kontroller. Se STATE.
 
-25. **44 blogartikler lister deres værktøjer to gange.** Hvorfor: `site/blog/*.html`
-    har to `<h2>` lige efter hinanden, «Tools and guides» og «Related Guides»,
-    med hver sin liste. `check_duplicate_headings` er korrekt grøn — teksterne er
-    forskellige, så det er ikke en dublet, det er to afsnit om det samme. Målt 30/9
-    ved grep: 44 filer under `site/blog/`. Samme fejl som opgave 16, kun med anden
-    tekst. Accept: kun ét afsnit pr. artikel, og porten dømmer det — en læser der
-    scroller forbi «Tools and guides» må ikke møde det samme igen ti linjer længere nede.
+25. ~~**44 blogartikler lister deres værktøjer to gange.**~~ **FÆRDIG 30/9,
+    `ceo/vaerktojer-en-gang`.** Målt rigtigt var det 62 (44 EN + 18 DA), og de
+    to lister overlappede i 36 links. Se STATE.
 
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.

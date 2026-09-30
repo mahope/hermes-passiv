@@ -87,6 +87,11 @@ on:
       # Uden portens egen fil og ratchetfil i filteret kunne en push, der kun
       # bytter to `href` i en hero, springe netop den port over som afgør om
       # ombytningen må slå. Samme grund som de linjer ovenfor.
+      # Gatestrækket `tool-sections` dømmer, om en side lister sine værktøjer to
+      # gange. Uden portens egen fil i filteret kunne en push, der kun tilføjer
+      # en ny form for dobbeltlisten, springe netop den port over som afgør om
+      # den må slå. Samme grund som de linjer ovenfor.
+      - 'tools/check_tool_sections.py'
       - 'tools/check_form_labels.py'
       - 'tools/check_first_action.py'
       - 'tools/first_action.json'

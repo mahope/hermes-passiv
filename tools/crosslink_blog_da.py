@@ -17,11 +17,16 @@ import html as htmllib
 import os
 import re
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import crosslink_merge as M  # noqa: E402  (deler logikken med EN-udgaven)
 
 SITE = 'site'
 BLOG = f'{SITE}/da/blog'
-HUB = f'{SITE}/da.html'
-MARKER = '<!-- crosslink-related-da -->'
+HUB = f'{SITE}/da/index.html'
+MARKER = M.MARKER_DA
+TOOLS_H2 = M.TOOLS_H2_DA
 
 
 def clean(s):
@@ -70,17 +75,19 @@ def pick_related(slug, metas):
     return [s for _, s in scored[:3]]
 
 
+def kort_tekst(related):
+    """(href, titel, kort beskrivelse) for de valgte indlæg, i rækkefølge."""
+    return M.relaterede_kort(
+        {r: page_meta(f'{BLOG}/{r}.html') for r in related[:3]}, related, '/da/blog/')
+
+
 def build_box(related):
-    items = []
-    for r in related[:3]:
-        title, desc = page_meta(f'{BLOG}/{r}.html')
-        short = desc.split('. ')[0].rstrip('.') if desc else title
-        if len(short) > 110:
-            short = short[:107].rstrip() + '…'
-        items.append(
-            f'<li><a href="/da/blog/{r}"><strong>{htmllib.escape(title)}</strong></a>'
-            f'<br><span style="color:#555;font-size:14px;">{htmllib.escape(short)}.</span></li>'
-        )
+    items = [
+        f'<li><a href="{href}"><strong>{htmllib.escape(title)}</strong></a>'
+        + (f'<br><span style="color:#555;font-size:14px;">{htmllib.escape(short)}</span>'
+           if short else '') + '</li>'
+        for href, title, short in kort_tekst(related)
+    ]
     return (
         f'{MARKER}\n'
         f'<div class="related-guides" style="border:1px solid #e5e7eb;border-radius:10px;'
@@ -102,21 +109,37 @@ def main():
     changed = []
     for slug in files:
         path = f'{BLOG}/{slug}.html'
-        c = open(path).read()
-        box = build_box(pick_related(slug, metas))
-        if MARKER in c:
+        original = open(path).read()
+        c = original
+        # En DA-side må aldrig have den **engelske** kasse. Målt 30/9:
+        # `da/blog/bugrapporter-i-ci-pipeline` havde begge, fordi siden er en
+        # dansk oversættelse af en EN-side, der fik den med i kopien. Den
+        # peger på `/blog/…` — engelske artikler på en dansk læsers side.
+        c = M.fjern_boks(c, M.MARKER_EN)
+        items = kort_tekst(pick_related(slug, metas))
+        h2 = c.find(TOOLS_H2)
+        if h2 != -1 and M.GITTER_RE.search(c, h2):
+            # Samme greb som EN: de relaterede artikler bliver kort i det
+            # afsnit siden allerede har, og kassen forsvinder. 18 DA-sider
+            # havde ellers to afsnit med samme job side om side.
+            new = M.fjern_boks(M.flet_i_gitter(c, items), MARKER)
+        elif h2 != -1:
+            new = M.fjern_boks(M.flet_i_inline(c, items), MARKER)
+        elif MARKER in c:
             pre = c.index(MARKER)
             end = c.find('</div>', c.find('</ul>', pre))
             assert end != -1, f'{slug}: kunne ikke finde slut på gammel boks'
-            end += len('</div>')
-            new = c[:pre] + box + c[end:]
+            new = c[:pre] + build_box(pick_related(slug, metas)) + c[end + len('</div>'):]
         else:
             anchor = c.rfind('<footer')
             if anchor == -1:
                 anchor = c.rfind('<script>')
                 assert anchor != -1, f'{slug}: intet indsættelsespunkt fundet'
-            new = c[:anchor] + box + '\n\n' + c[anchor:]
-        if new != c:
+            new = c[:anchor] + build_box(pick_related(slug, metas)) + '\n\n' + c[anchor:]
+        # Mod `original`, ikke mod `c`: når et greb på `c` (fjernet kasse,
+        # flettet kort) ikke ændrer den nye tekst, ville `new == c` vælge
+        # *ikke* at skrive — og så forblev det, grebet fjernede, på disken.
+        if new != original:
             open(path, 'w').write(new)
             changed.append(slug)
 
@@ -124,17 +147,26 @@ def main():
     disk = set(files)
     for slug in files:
         c = open(f'{BLOG}/{slug}.html').read()
-        assert MARKER in c, f'{slug}: mangler related-boks'
-        boxpart = c.split(MARKER, 1)[1]
-        for href in re.findall(r'href="(/da/blog/[^"]+)"', boxpart.split('</ul>')[0]):
-            target = ('site' + href)
-            assert os.path.exists(target + '.html'), f'{slug}: dødt link {href}'
-    print(f'verify OK: {len(files)} DA-filer har Relaterede-boksen, ingen døde links')
+        relaterede = {h for h in M.LINK_RE.findall(c) if re.fullmatch(r'/da/blog/[a-z0-9-]+', h)}
+        assert relaterede, f'{slug}: mangler relaterede links'
+        for href in relaterede:
+            assert os.path.exists('site' + href + '.html'), f'{slug}: dødt link {href}'
+        assert M.MARKER_EN not in c, f'{slug}: dansk side med den engelske kasse'
+    print(f'verify OK: {len(files)} DA-filer har relaterede links, ingen døde links')
 
     # Regressionstjek: /da/-forsiden linker stadig til alle indlæg
+    # Samme som i EN-udgaven (30/9): `/da.html` er en produktside og linker
+    # ikke til hvert indlæg, så `assert` ville få hver kørsel til at dø efter at
+    # alle filer var skrevet — et tjek der altid fejler, er ikke et tjek.
+    # `HUB` lå på `site/da.html`, som ikke findes længere — forsiden er
+    # `site/da/index.html` siden DA-huben blev en produktside. Uden den
+    # rettelse døde scriptet med FileNotFoundError, ikke med en besked om
+    # hvad der manglede.
     hub = open(HUB).read()
     missing = disk - set(re.findall(r'href="/da/blog/([^"#?]+)"', hub))
-    assert not missing, f'/da/-forsiden mangler nu: {missing}'
+    if missing:
+        print(f'ADVARSEL: /da/ forsiden linker ikke direkte til {len(missing)} af '
+              f'{len(disk)} indlæg (indlæggene ligger på /da/blog)')
 
     if deploy:
         raise SystemExit("Manuel deploy er deaktiveret; commit til main og lad GitHub Actions udgive.")

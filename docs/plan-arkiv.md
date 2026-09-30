@@ -2215,3 +2215,17 @@ rød gate lå foran denne iteration.
 - `GATE`: **GRØN — `python3 tools/quality_gate.py`, 97 steps.** Porten mutation-testet mod FØR-fix-filen: «3 btn-primary i foldregionen (#how, /scan, /compliance-ai)» + «den primære handling er #how, ikke /text-on-image-checker». Selftest 9/9.
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
 - `VERIFICÉR DEPLOY: vaerktojet-foerst-over-folden ceo/vaerktojet-foerst-over-folden 2026-09-30 15:35`: rører to `site/`-filer (EN+DA blog), to nye `tools/`-filer og to filer i gaten. **Indholdskrav:** (a) `https://mahope.tools/blog/text-on-image-contrast-check` — første `<a>` i `.hero` er `/text-on-image-checker` med `btn-primary`, og de to `blog-tool-cta` ligger **efter** `<section id="how">`; (b) `https://mahope.tools/da/blog/tekst-paa-billede-kontrasttjek` — samme med `/text-on-image-checker-da`; (c) `python3 tools/check_first_action.py` → «4 sider dømt, 0 problemer» og tallet 180; (d) `python3 tools/check_first_action.py --self-test` → OK. `routes_sha256` forventes **uændret** (ingen ny rute), `sitemap_count` uændret.
+
+
+## 30/9 — opgaver 1-24 lukket (udført før dette punkt)
+
+Rækkefølgen er opgaverne i `IMPLEMENTATION_PLAN.md` 30/9 morges. Kort fortalt:
+en fælles næste-vej til betalt på de øvrige gratis tjek (66172a0), ærlige
+lagringsløfter på tre sider, en port der finder næste side selv, de 5 blinde
+værktøjssider + 94 dømte sider med betalt vej (2b1fceb), selvklik kan ikke være
+et besøg, ratchet per destination *og* per anker, PRO- OG-totaltal (201 → 239
+dømte løfter), selvtest der ikke navngiver en side, bygget sletter CSS på 22
+sider, `check_ui_constants`, `check_built_css`, dublet `<h2>` på 63 sider,
+CI-layout (4a0fc12), generator der skrev en løgn, port der dæmpede sin egen rute,
+sjakalen på antalsløfter (7 → 14 dømte), værktøjet først over folden, formularer
+med navn (14 → 0) og overskrifts-spring (12 sider → 0).

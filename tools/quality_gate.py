@@ -463,6 +463,28 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_duplicate_headings.py", "--self-test"),
         inputs=("tools/check_duplicate_headings.py", "site/**"),
     ),
+    # To afsnit med samme job (30/9). Målt først: 62 sider — 44 EN og 18 DA —
+    # havde både «Tools and guides» med et kortgitter og «Related Guides» med
+    # en liste, to steder på samme side der begge lover «her er hvor du kan gå
+    # hen». 36 af de relaterede links pegede på en destination siden allerede
+    # viste i sit eget gitter, så `/blog/text-on-image-contrast-check` — den
+    # mest besøgte artikel på mahope.tools — gav læseren
+    # `/blog/wcag-contrast-checker` to gange under to navne. `duplicate-headings`
+    # er korrekt grøn på dem, for overskrifterne er forskellige. Porten dømmer
+    # både de to overskrifter på én side og én destination to gange i ét afsnit,
+    # for det er to fejl. Generatoren er `crosslink_blog.py` +
+    # `crosslink_blog_da.py`, som nu fletter ind i stedet for at stable en kasse
+    # mere oveni.
+    Step(
+        id="tool-sections",
+        argv=("python3", "tools/check_tool_sections.py"),
+        inputs=("tools/check_tool_sections.py", "site/**"),
+    ),
+    Step(
+        id="tool-sections-selftest",
+        argv=("python3", "tools/check_tool_sections.py", "--self-test"),
+        inputs=("tools/check_tool_sections.py", "site/**"),
+    ),
     # Formularfelter uden navn (30/9). Målt først: 14 felter på 13 sider havde
     # overhverket navn — 6 e-mail-felter var nyhedsbrevstilmeldingen på
     # NIS2-værktøjerne, 4 URL-felter var indgangen i et værktøj. `placeholder`
