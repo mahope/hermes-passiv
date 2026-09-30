@@ -381,10 +381,18 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="generator-claims",
         argv=("python3", "tools/check_generator_claims.py"),
+        # Præcis hvad porten læser: `TOOLS.glob("*.py")` (generatorerne,
+        # `check_storage_claims.py` som modul og porten selv), `site/*.html`
+        # for slugeksistens og `_worker.js` for ruterne. Erklæringen var `tools/**`,
+        # og den læser otte filer porten aldrig åbner — dem faldt
+        # `test_deploy_workflow` over som uhævede, så gaten var rød i CI.
+        # Bemærk at `tools/*.py` *er* i filteret, så en ny generator i `tools/`
+        # udløser gaten alligevel; den "kendte blind plet" var en følge af
+        # over-erklæringen, ikke af filteret.
         inputs=(
             "tools/check_generator_claims.py",
             "tools/check_storage_claims.py",
-            "tools/**",
+            "tools/*.py",
             "site/_worker.js",
             "site/**",
         ),
@@ -392,7 +400,16 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="generator-claims-selftest",
         argv=("python3", "tools/check_generator_claims.py", "--self-test"),
-        inputs=("tools/check_generator_claims.py", "tools/**", "site/**"),
+        # Selvtesten bygger sine mutationer i `tools/iter465_tool_faqs.py`
+        # (og gendanner den i en `finally`) og læser ruterne fra `_worker.js`
+        # gennem `fetching_routes()`.
+        inputs=(
+            "tools/check_generator_claims.py",
+            "tools/check_storage_claims.py",
+            "tools/*.py",
+            "site/_worker.js",
+            "site/**",
+        ),
     ),
     # Ordtal i brødteksten (30/9). Review fandt `nis2-gap-assessment-da.html`
     # kalde "sikkerhed ved anskaffelse, udvikling og vedligeholdelse" det

@@ -58,8 +58,9 @@ on:
       - 'tools/check_generator_claims.py'
       # De tre generatorer porten `generator-claims` dømmer. De står her, så en
       # rettelse i en af dem udløser gaten — ellers ville kun rettelsen i
-      # portens egen kode blive dømt. Kendt blind plet: en *ny* generator i
-      # `tools/` udløser ikke workflowet alene, fordi filteret er en navneliste.
+      # portens egen kode blive dømt. En *ny* generator i `tools/` udløser også
+      # gaten, via `tools/*.py` længere nede: porten erklærer præcis de filer
+      # den læser, og `test_deploy_workflow.py` beviser at filteret dækker dem.
       - 'tools/iter464_tool_faqs.py'
       - 'tools/iter465_tool_faqs.py'
       - 'tools/iter466_da_faqs.py'
