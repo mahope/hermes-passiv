@@ -794,11 +794,32 @@ def _self_test() -> int:
     table = tool_rows(SITE, catalog)
 
     # 1. Porten læser filerne, ikke en kopi af dem. Uden denne kontrol kunne
-    #    en mutation af `site/` være grøn.
-    probe = ROOT / "site" / "contrast-checker.html"
+    #    en mutation af `site/` være grøn. Eksemplet vælges blandt de sider
+    #    der *har* en vej, og formen bygges syntetisk når ingen har: da
+    #    kontrol 5 i 30/9 skrev `contrast-checker.html` som sit eksempel, faldt
+    #    den af en opgave der *lykkedes* — siden fik sin vej, porten var urørt.
+    dømt_med_vej = [r for r in table if judged(r) and r["file"] and r["paid"]]
+    læst = (len(A.paid_links(SITE, SITE / dømt_med_vej[0]["file"], offers))
+            if dømt_med_vej else 0)
     check("læser en værktøjside med betalt vej i egen tekst",
-          bool(A.paid_links(SITE, probe, offers)),
-          f"{len(A.paid_links(SITE, probe, offers))} vej(er)")
+          læst == len(dømt_med_vej[0]["paid"]) if dømt_med_vej else False,
+          f"{læst} vej(er) i {dømt_med_vej[0]['file'] if dømt_med_vej else '—'}")
+    with tempfile.TemporaryDirectory() as tmp:
+        kunst = Path(tmp) / "syntetisk.html"
+        kunst.write_text(
+            '<html><body><header><a href="/blog/x">x</a></header><div>'
+            '<a href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03">køb</a>'
+            "</div><footer>x</footer></body></html>", encoding="utf-8")
+        tom = Path(tmp) / "tom.html"
+        tom.write_text(
+            '<html><body><header><a href="/blog/x">x</a></header>'
+            "<div>intet at købe</div><footer>x</footer></body></html>",
+            encoding="utf-8")
+        check("læseren dømmer filen den får, ikke en kopi",
+              len(A.paid_links(SITE, kunst, offers)) == 1
+              and A.paid_links(SITE, tom, offers) == [],
+              f"{len(A.paid_links(SITE, kunst, offers))} / "
+              f"{len(A.paid_links(SITE, tom, offers))}")
 
     # 2. Den såkaldte forbigående fejl: et købslink i *footer* tæller ikke.
     footer_only = (
@@ -982,9 +1003,29 @@ def _self_test() -> int:
           any("MODSIGELSE" in p for p in
               judge([dict(without_vej, erklaret="intet", paid=["x"])],
                     {"blind": []})), "")
-    check("erklæringen læses kun fra dens egen meta",
-          no_paid_declaration(SITE / "json-formatter.html") is None
-          and bool(no_paid_declaration(SITE / "site-icons.html")), "")
+    # Formerne bygges syntetisk: 30/9-punden var `json-formatter.html` som
+    # eksempel på en side *uden* erklæring, og da den fik sin, faldt
+    # kontrollen af en opgave der lykkedes. Porten skal kunne skelne mellem
+    # de tre former uanset hvilke sider der ligger i `site/`.
+    with tempfile.TemporaryDirectory() as tmp:
+        med = Path(tmp) / "med-erklaring.html"
+        med.write_text(
+            f'<html><head><meta name="{DECL_NAME}" content="siden sælger intet">'
+            "</head><body>x</body></html>", encoding="utf-8")
+        uden = Path(tmp) / "uden-erklaring.html"
+        uden.write_text(
+            '<html><head><title>x</title></head><body>x</body></html>',
+            encoding="utf-8")
+        grundløs = Path(tmp) / "erklaring-uden-grund.html"
+        grundløs.write_text(
+            f'<html><head><meta name="{DECL_NAME}" content="   ">'
+            "</head><body>x</body></html>", encoding="utf-8")
+        check("erklæringen læses kun fra sidens egen meta",
+              no_paid_declaration(med) == "siden sælger intet"
+              and no_paid_declaration(uden) is None
+              and no_paid_declaration(grundløs) == "",
+              f"{no_paid_declaration(med)!r} / {no_paid_declaration(uden)!r} / "
+              f"{no_paid_declaration(grundløs)!r}")
 
     # De undtagne ruter findes rigtigt i korpus, så klasserne er ikke tomme
     # af en fejl i `judged()`. Sættet er de målte — ikke tilfældige — fordi det

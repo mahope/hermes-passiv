@@ -464,124 +464,156 @@ def collect_problems() -> tuple[list[str], dict[str, list[str]], dict[str, str]]
     return problems, reaching, routes
 
 
+# Den løgn mutationen sætter ind, i **sidens eget sprog**. Begge ordlyd er
+# målt mod `RE_DENIAL` og `RE_IMPLIED_DENIAL` — en mutation der indsatte en
+# sætning porten ikke genkender, ville være grøn af den forkerte grund at den
+# ikke ligner en løgn.
+LO_GN = {
+    "en": "No logs, no storage, no cookies.",
+    "da": "Ingen logs, ingen lagring, ingen cookies.",
+}
+RE_DANSK = re.compile(r"\b(?:af|og|er|vi|gemmer|hverken|intet)\b", re.I)
+
+
+def _sprog(relative: str, raw: str) -> str:
+    """`da` eller `en` — fra sidens egen `lang`, ellers fra dens egen tekst.
+
+    Mutationen skal læses som en løgn *på den side den er sat ind i*, så
+    spørgsmålet ikke kan være det halve. Rækkefølgen er derfor: `lang` er
+    erklæret, alt andet er gæt.
+    """
+    match = re.search(r"<html[^>]*\blang\s*=\s*[\"']?([a-zA-Z-]+)", raw)
+    if match:
+        return "da" if match.group(1).lower().startswith("da") else "en"
+    return "da" if RE_DANSK.search(raw[:4000]) else "en"
+
+
+def _med_tekst(raw: str, tekst: str) -> str:
+    """Sæt `tekst` i stedet for blokkens egen løbende tekst — tags bevares.
+
+    Tagsene er ikke kosmetik: et `<a href>` i blokken er det, der gør siden
+    til en *sælgende* side, og `selling_block()` dømmer netop det. Uden dem
+    ville mutationen fjerne salget og aldrig kunne blive rød.
+    """
+    if "<" not in raw:
+        return tekst
+    ud: list[str] = []
+    sat = False
+    for styk in re.split(r"(<[^>]+>)", raw):
+        if styk.startswith("<"):
+            ud.append(styk)
+        elif styk.strip() and not sat:
+            ud.append(tekst)
+            sat = True
+    if not sat:
+        ud.append(tekst)
+    return "".join(ud)
+
+
 def self_test() -> int:
     """Bevis at porten kan rødme på de rigtige filer, og at den lader ærlige sider grønne.
 
-    Scenarierne er de publicerede tekster, målt 30/9 — ikke syntetiske strenge.
-    En fejlform der kun findes i en streng porten selv har fundet, er ingen
-    fejlform.
+    Scenarierne er de publicerede tekster — ikke syntetiske strenge. En fejlform
+    der kun findes i en streng porten selv har fundet, er ingen fejlform.
+
+    **Ingen fil og ingen sætning er navngivet.** 30/9-punden var tretten sider
+    og syv frosne mutationsankere: den dag en af siderne fik sin tekst rettet
+    eller omformuleret, faldt kontrollen af en opgave der *lykkedes*, og det sås
+    som en rød port. Nu findes siderne ved deres **egenskab** — de kalder en
+    gemmende rute eller sælger en, og de afslører IP-hashet i det svar der
+    gør det — og mutationen bygges af sidens egen blok med portens egne
+    mønstre, så den hverken bliver forældet eller afhænger af en enkelt side.
+    Målt 30/9 på denne korpus: 13 ærlige sider (7 EN, 6 DA), 1 ren
+    klient-side-side, 6 sider der kun kalder `/scan-proxy`.
     """
     pages = site_pages()
     routes = storing_routes()
     reached = route_pages(pages, routes)
-    real = {f"site/{relative}": pages[relative] for relative in (
-        "scan.html",
-        "scan-da.html",
-        "cookie-check.html",
-        "cookie-check-da.html",
-        "security-headers-check.html",
-        "url-to-markdown.html",
-        "da/url-til-markdown.html",
-        "compliance-ai.html",
-        "da/compliance-ai.html",
-        "compliance-report.html",
-        "da/compliance-report.html",
-        "dpa-generator.html",
-        "blog/http-headers-reference.html",
-    ) if relative in pages}
     failures: list[str] = []
 
-    def expect_red(label: str, relative: str, old: str, new_text: str) -> None:
-        if relative not in real:
-            failures.append(f"{label}: {relative} findes ikke")
-            return
-        if old not in real[relative]:
-            failures.append(f"{label}: mutation anchor not found in {relative}: {old[:70]!r}")
-            return
-        mutated = real[relative].replace(old, new_text, 1)
-        problems = check_page(relative.removeprefix("site/"), mutated, routes, reached)
-        if not problems:
-            failures.append(f"{label}: porten er grøn på den løgn den siger at fange")
+    def ringer(relative: str, raw: str) -> bool:
+        """Sælger siden noget gemmende, og afslører den det i et svar?
 
-    def expect_green(label: str, relative: str) -> None:
-        if relative not in real:
-            failures.append(f"{label}: {relative} findes ikke")
-            return
-        problems = check_page(relative.removeprefix("site/"), real[relative], routes, reached)
+        Det er *kun* disse sider porten skal kunne dømme, så det er også dem
+        selve formen findes ved.
+        """
+        if not (called_storing_routes(raw, routes) or selling_block(relative, raw, reached)):
+            return False
+        return any(RE_DISCLOSURE.search(text) for _s, _q, text, _r in claim_blocks(raw))
+
+    ærlige = sorted(rel for rel, raw in pages.items() if ringer(rel, raw))
+    if not ærlige:
+        failures.append("målingen: ingen side sælger noget gemmende og afslører IP-hashet")
+
+    # 1. Rettelsen: en side der afslører IP-hashet i sit eget svar er ærlig,
+    #    og porten skal være grøn på den — uanset hvilken fil det er.
+    for relative in ærlige:
+        problems = check_page(relative, pages[relative], routes, reached)
         if problems:
-            failures.append(f"{label}: porten er rød på en ærlig side — {problems[0]}")
+            failures.append(f"{relative}: porten er rød på en side der afslører IP-hashet — {problems[0]}")
 
-    # 1. Den gamle JSON-LD-løgn i security-headers-check.html: den synlige
-    #    brødtekst blev rettet i en tidligere iteration, JSON-LD'en ikke.
-    expect_red(
-        "JSON-LD-løgnen i /security-headers-check",
-        "site/security-headers-check.html",
-        '"@type": "Answer", "text": "No. The lookup goes through our server',
-        '"@type": "Answer", "text": "No. Nothing is stored. This page has no backend that records what you scan."',
-    )
-    # 2. Samme løfte på /scan: "no logs, no storage, no cookies" i JSON-LD,
-    #    med afsløringen klippet væk. Det er den publicerede tekst fra før
-    #    rettelsen, kun sat ind i den nuværende sætning.
-    expect_red(
-        "JSON-LD-løgnen i /scan",
-        "site/scan.html",
-        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and discarded. We store nothing about the page itself and set no cookies. The one thing we keep is a salted hash of your IP address, so a single script cannot use up the check for everyone else; it expires after two hours.",
-        "No. The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies.",
-    )
-    # 3. Samme løfte på dansk, /scan-da.
-    expect_red(
-        "det danske løfte i /scan-da",
-        "site/scan-da.html",
-        "Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres. Vi gemmer intet om selve siden og sætter ingen cookies. Det eneste vi beholder, er et salt-hash af din IP-adresse, så ét script ikke kan bruge tjekket op for alle andre; det udløber efter to timer.",
-        "Nej. Siden hentes server-side gennem vores Cloudflare-proxy, analyseres i din browser og kasseres straks. Ingen logs, ingen lagring, ingen cookies.",
-    )
-    # 4. Det danske løfte på /url-til-markdown.
-    expect_red(
-        "det danske løfte i /url-til-markdown",
-        "site/da/url-til-markdown.html",
-        "Sidens HTML hentes, konverteres og smides væk. Vi gemmer intet om selve siden og sætter ingen cookies. Det eneste vi beholder, er et salt-hash af din IP-adresse, så ét script ikke kan bruge tjekket op for alle andre; det udløber efter to timer.",
-        "Nej. Sidens HTML hentes, konverteres og smides væk med det samme. Intet logges eller gemmes.",
-    )
-    # 5. cookie-check: et "Nej." der læser som "intet overhovedet" uden
-    #    afsløringen — den anden form af samme løgn, målt på den publicerede
-    #    side før rettelsen.
-    expect_red(
-        "løgnen i /cookie-check",
-        "site/cookie-check.html",
-        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and discarded. We store nothing about the page itself and set no cookies. The one thing we keep is a salted hash of your IP address, so a single script cannot use up the check for everyone else; it expires after two hours.",
-        "No. The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded.",
-    )
-    # 6. compliance-ai: brødteksten sælger scanneren med det gamle løfte.
-    expect_red(
-        "løgnen i /compliance-ai",
-        "site/compliance-ai.html",
-        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and discarded. We store nothing about the page itself and set no cookies; the one thing we keep is a salted hash of your IP address, which expires after two hours.",
-        "The page is fetched server-side through our Cloudflare proxy, analysed in your browser, and immediately discarded. No logs, no storage, no cookies.",
-    )
-    # 7. Blog-artiklen, der sælger URL Inspector i sit eget `<p>`.
-    expect_red(
-        "løgnen i /blog/http-headers-reference",
-        "site/blog/http-headers-reference.html",
-        "There's no account, and no cookies.",
-        "Nothing is stored and there's no account.",
-    )
+    # 2. Løgnen: fjern **kun afsløringen** fra svarene, og læg løgnen ind i
+    #    stedet. Det er den mutation de gamle håndskrevede cases gjorde — de
+    #    indsatte en kompliment løgn, hvilket gjorde dem afhængige af to
+    #    ting på én gang: sidens filnavn *og* dens ordlyd.
+    for relative in ærlige:
+        raw = pages[relative]
+        løgn = LO_GN[_sprog(relative, raw)]
+        beviset = False
+        for _source, _q, _text, blok in claim_blocks(raw):
+            if not RE_DISCLOSURE.search(blok):
+                continue
+            ny = _med_tekst(blok, løgn)
+            if not called_storing_routes(raw, routes) and not selling_block(relative, ny, reached):
+                # Siden sælger uden selv at kalde: mutationen skal også bære
+                # det link, ellers er den ikke en sælgende blok, og porten har
+                # ingen grund til at dømme den.
+                ny += ' <a href="/scan">free scanner</a>'
+            start = raw.find(blok)
+            if start < 0:
+                continue
+            mutated = raw[:start] + ny + raw[start + len(blok):]
+            if check_page(relative, mutated, routes, reached):
+                beviset = True
+                break
+        if not beviset:
+            failures.append(
+                f"{relative}: porten er grøn når afsløringen er fjernet fra svaret "
+                f"og løgnen {løgn!r} står i stedet"
+            )
 
-    # Grønne: de to sider der gør det rigtigt — en på hvert sprog.
-    for relative, label in (
-        ("site/compliance-report.html", "modellen /compliance-report"),
-        ("site/da/compliance-report.html", "den danske /da/compliance-report"),
-    ):
-        expect_green(label, relative)
+    # 3. En side der *ikke* kalder nogen gemmende rute må ikke røres, selv om
+    #    den siger den samme sætning. Den siger "intet gemmes" om sig selv og
+    #    har `/scan` i navigationen på hver side; det er den skelnen, der
+    #    adskiller en løgn fra en sandhed. Findes ved egenskab: et svar med en
+    #    afvisning, men hverken et kald eller et link til en gemmende rute.
+    rene = sorted(
+        relative for relative, raw in pages.items()
+        if not called_storing_routes(raw, routes)
+        and not selling_block(relative, raw, reached)
+        and any(RE_DENIAL.search(t) or _implied_denial(t)
+                for _s, _q, t, _r in claim_blocks(raw))
+    )
+    if not rene:
+        failures.append("målingen: ingen ren klient-side-side med en afvisning at holde grøn")
+    for relative in rene:
+        problems = check_page(relative, pages[relative], routes, reached)
+        if problems:
+            failures.append(
+                f"{relative}: porten er rød på en side der hverken kalder eller "
+                f"linker til noget gemmende — {problems[0]}"
+            )
 
-    # 8. En side der *ikke* kalder nogen gemmende rute må ikke røres, selv om
-    #    den siger den samme sætning. `dpa-generator.html` siger "nothing is
-    #    stored" om sig selv og har `/scan` i navigationen på hver side; det er
-    #    den skelnen, der adskiller en løgn fra en sandhed.
-    expect_green("et rent klient-side-værktøj", "site/dpa-generator.html")
-
-    # 8. Ruten kommer fra koden: en `rateLimitIp(…, 'scan-proxy', …)` der
-    #    forsvinder fra `handleScanProxy` skal gøre /scan grøn igen. Beviser
-    #    at porten ikke har en håndskrevet ruteliste.
+    # 4. Ruten kommer fra koden: en `rateLimitIp(…, 'scan-proxy', …)` der
+    #    forsvinder fra `handleScanProxy` skal gøre siderne grønne igen.
+    #    Beviser at porten ikke har en håndskrevet ruteliste. Siderne vælges
+    #    blandt dem der *kun* kalder den rute, så mutationen ikke efterlader
+    #    dem med en anden gemmende kald — ellers ville de blive røde af en
+    #    grund der ikke var mutationen.
+    kun = sorted(rel for rel, raw in pages.items()
+                 if called_storing_routes(raw, routes) == ["/scan-proxy"])
+    if not kun:
+        failures.append("målingen: ingen side kalder kun /scan-proxy")
     worker = worker_text()
     mutated_worker = worker.replace(
         "rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT)", "null", 1
@@ -592,10 +624,14 @@ def self_test() -> int:
         without = storing_routes(mutated_worker)
         if "/scan-proxy" in without:
             failures.append("porten læser en håndskrevet ruteliste: /scan-proxy er stadig gemmende")
-        if check_page("scan.html", real["site/scan.html"], without, reached):
-            failures.append("uden rateLimitIp er /scan stadig rød — afsløringen mangler altså ikke")
+        for relative in kun:
+            if check_page(relative, pages[relative], without, reached):
+                failures.append(
+                    f"uden rateLimitIp er {relative} stadig rød — afsløringen mangler altså ikke"
+                )
 
-    print(f"self-test: {len(failures)} fejl")
+    print(f"self-test: {len(failures)} fejl — {len(ærlige)} ærlige sider, "
+          f"{len(rene)} rene klient-sider, {len(kun)} sider der kun kalder /scan-proxy")
     for failure in failures:
         print(f"  FAIL {failure}")
     return 1 if failures else 0

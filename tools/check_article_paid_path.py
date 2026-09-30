@@ -139,6 +139,7 @@ import argparse
 import json
 import re
 import sys
+import tempfile
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -1355,14 +1356,34 @@ def _self_test() -> int:
 
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     offers = offer_routes(catalog)
+    tabel = rows(SITE, catalog)
 
-    # 1. Porten læser filen, ikke en kopi af den. Uden denne kontrol kunne
+    # 1. Porten læser filerne, ikke en kopi af dem. Uden denne kontrol kunne
     #    `_trackers`-læsningen fra de tre forrige iterationer have været grøn
-    #    på en mutation af `site/`.
-    probe = ROOT / "site" / "blog" / "text-on-image-contrast-check.html"
-    real = paid_links(SITE, probe, offers)
-    check("læser en artikel med købslink i egen tekst", bool(real),
-          f"{len(real)} link(s)")
+    #    på en mutation af `site/`. Eksemplet vælges blandt de artikler der
+    #    *har* en købsvej, og formen bygges syntetisk når ingen har: 30/9-punden
+    #    var `text-on-image-contrast-check.html` som målt eksempel, og da den
+    #    fik en bedre vej, faldt kontrollen af en opgave der *lykkedes*.
+    med_vej = [r for r in tabel if r["paid"]]
+    læst = (len(paid_links(SITE, SITE / med_vej[0]["file"], offers))
+            if med_vej else 0)
+    check("læser en artikel med købslink i egen tekst",
+          læst == len(med_vej[0]["paid"]) if med_vej else False,
+          f"{læst} link(s) i {med_vej[0]['file'] if med_vej else '—'}")
+    with tempfile.TemporaryDirectory() as tmp:
+        kunst = Path(tmp) / "syntetisk.html"
+        kunst.write_text(
+            '<html><body><div><a href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03">'
+            "køb</a></div><footer>x</footer></body></html>", encoding="utf-8")
+        tom = Path(tmp) / "tom.html"
+        tom.write_text(
+            '<html><body><div>intet at købe</div><footer>x</footer></body></html>',
+            encoding="utf-8")
+        check("læseren dømmer filen den får, ikke en kopi",
+              len(paid_links(SITE, kunst, offers)) == 1
+              and paid_links(SITE, tom, offers) == [],
+              f"{len(paid_links(SITE, kunst, offers))} / "
+              f"{len(paid_links(SITE, tom, offers))}")
 
     # 2. Den såkaldte forbigående fejl: et købslink i *footer* tæller ikke.
     #    Det er punkt 1 i docstringen, og det er målt (69 artikler linker til
@@ -1406,16 +1427,31 @@ def _self_test() -> int:
     #     fire iterationer i træk har rapporteret "N artikler fik en betalt vej",
     #     hvilket er den forkerte påstand.
     #
-    #     Den rigtige artikel måles på disk (den har begge dele: egen knap *og*
-    #     et klik til webværktøjet). Formen " klik uden knap" findes ikke i
-    #     `site/` lige nu, så den bygges syntetisk — ellers ville kontrollen
-    #     være grøn af den simple grund at den ingenting kunne se.
-    notion = ROOT / "site" / "blog" / "copy-table-website-to-notion.html"
-    paid_notion = paid_links(SITE, notion, offers)
-    knap_notion = knap_links(SITE, notion)
-    check("artikel med egen knap har knap (og tæller kliket til webværktøjet)",
-          len(knap_notion) == 1 and "/clean-copy-tool" in paid_notion,
-          f"klik={len(paid_notion)} knap={len(knap_notion)}")
+    #     Den rigtige artikel måles på disk, og den vælges blandt artiklerne
+    #     der har **begge** dele: egen knap *og* et klik til webværktøjet.
+    #     30/9-punden var `copy-table-website-to-notion.html` med et krav om
+    #     præcis én knap, så portens egen selftest faldt, hver gang en
+    #     artikel fik en knap mere — af en opgave der *lykkedes*. Formen
+    #     findes ikke i `site/` lige nu, så den bygges syntetisk — ellers
+    #     ville kontrollen være grøn af den simple grund at den ingenting
+    #     kunne se.
+    begge = [r for r in tabel if r["knapper"] >= 1
+             and any(not RE_BUY.match(h) for h in r["paid"])]
+    if begge:
+        række = begge[0]
+        sti = SITE / række["file"]
+        egne_knapper = knap_links(SITE, sti)
+        klik = [h for h in paid_links(SITE, sti, offers) if not RE_BUY.match(h)]
+        check("artikel med egen knap har knap (og tæller kliket til webværktøjet)",
+              len(egne_knapper) == række["knapper"] >= 1
+              and all(RE_BUY.match(h) for h in egne_knapper) and bool(klik),
+              f"{række['file']} knap={len(egne_knapper)} klik={len(klik)}")
+    else:
+        række = dict(tabel[0], file="blog/syntetisk.html", knapper=1,
+                      paid=["/clean-copy-tool"])
+        check("artikel med egen knap har knap (og tæller kliket til webværktøjet)",
+              len(knap_links(SITE, SITE / række["file"])) == 1,
+              "formen bygges syntetisk: ingen artikel har begge dele")
 
     only_click = (
         '<html><body><div>'
@@ -1730,7 +1766,6 @@ def _self_test() -> int:
     #     fordi `/api/stats` svarer 401. Ti iterationer skrev "målte besøg" uden
     #     alder. Formen *er* målt i dag, så syntetiske rapporter bruges kun til
     #     at dømme evnen — de fire årsager, en kilde kan have, skal kunne skelnes.
-    import tempfile
 
     # Målt 30/9: fixtures med ruten `/blog/x` holdt op at være gyldige, da
     # regel 5 (se `traffic_source`) gør en rapport med en rute vi ikke udgiver
