@@ -1654,3 +1654,7 @@ REGEL-linjer flyttet ud af arbejdskøen, uændrede:
 - `REGEL BEKRÆFTET`: **en side uden et betalt produkt skal have sin løgn rettet, ikke en note.** Målt 30/9 på `/site-icons`: katalogen har intet ikonværktøj, scriptet er MIT og komplet på gratisniveau (`--pro` kræver intet licensfil, `:363`), så en pro-note ville være opgave 11's fejltype. Den rigtige fejl var en anden: FAQ'en og JSON-LD'en var kopieret fra en scanner og løj om et lokalt værktøj. At måle "kan den sælge noget?" først afslørede en reel løgn, som var dyrere end den manglende købsknap.
 - `REGEL BEKRÆFTET`: **HTML og JSON-LD skal være maskinelt identiske, ikke blot enslydende.** Målt 30/9 på `/site-icons`: efter at have skrevet de fire kort så de lød ens, viste en normaliseret sammenligning to reelle divergenser — `licence` i HTML mod `license` i JSON-LD, og `1200×630` (fra `&times;`) mod `1200x630`. Det er præcis de fejl en læser på Google-resultatet ville se og en maskine ville pars'e.
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed, så `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret.
+## 30/9 — sluttet på de 5 blinde værktøjssider (opgave 4) og porten fra artikel- til værktøjsside
+
+- `ITERATION_ID`: `vej-til-betalt-farver-ropa-2026-09-30`
+- `ITERATION_ID`: `vej-til-betalt-fire-2026-09-30`

@@ -76,6 +76,14 @@
 
   .empty-state{text-align:center;padding:40px;color:var(--muted)}
 
+  /* Fallback i parentes: bygget fjerner sidens egen `:root`-blok, så
+     `var(--accent)` er udefineret i den publicerede side. Fallback-værdien er
+     præcis den farve `:root` erklærer, så noten ser ens ud begge steder. */
+  .pro-note{max-width:720px;margin:0 auto 40px;padding:18px 22px;border:1px solid var(--accent, #2868d0);border-radius:10px;background:var(--soft, #f5f7fa)}
+  .pro-note h2{font-size:17px;margin:0 0 8px;padding:0;border:0;color:var(--ink, #0b1a2a)}
+  .pro-note p{margin:0;font-size:15px}
+  .pro-note a{color:var(--accent, #2868d0);font-weight:600}
+
   footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted);margin-top:48px}
   footer a{color:var(--accent);text-decoration:none}
   footer a:hover{text-decoration:underline}
@@ -164,6 +172,18 @@
     </div>
   </div>
 </div>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">One URL at a time is the limit here. Not on a whole site.</h2>
+  <p>The inspector stays free, and the redirect chain, the headers and the SSL
+  details do not change with a licence. What it cannot do is look at more than
+  one address: it takes a single URL, so it cannot tell you that the
+  <em>/img/</em> folder is the only place on your site still on HTTP.
+  <a href="/page-profile">Page Profile Pro</a> walks the same redirect chain and
+  the same security headers across a whole site, and writes the result as an
+  HTML report you can send to a client — which is what you need the moment the
+  site is bigger than one page. $19/year.</p>
+</section>
 
 <footer>
 <div class="wrap">
