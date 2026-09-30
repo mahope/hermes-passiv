@@ -74,7 +74,7 @@
     @media (max-width: 640px) { #url-form button[type="submit"] { width: 100%; } }
   </style>
 <script defer src="/track.js"></script><script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What gets converted?", "acceptedAnswer": {"@type": "Answer", "text": "The readable content of the page: headings, paragraphs, lists, links, images and code blocks become Markdown. Navigation bars, ads, cookie banners and other boilerplate are stripped where possible."}}, {"@type": "Question", "name": "Do internal links stay clickable?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Links are preserved as [text](url) with absolute URLs, so the output navigates the same way the original page did."}}, {"@type": "Question", "name": "Is anything sent to a server?", "acceptedAnswer": {"@type": "Answer", "text": "Fetching and conversion happen in your browser. Pages that block cross-origin requests may fail because of CORS rules enforced by your browser — those pages simply cannot be fetched client-side, through no fault of the tool."}}, {"@type": "Question", "name": "Can I convert pages I have to log in to?", "acceptedAnswer": {"@type": "Answer", "text": "Only if your browser already has access and CORS allows reading the response. For paywalled or private pages, copy the visible text instead and convert it manually — respect copyright and access terms either way."}}]}
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What gets converted?", "acceptedAnswer": {"@type": "Answer", "text": "The readable content of the page: headings, paragraphs, lists, links, images and code blocks become Markdown. Navigation bars, ads, cookie banners and other boilerplate are stripped where possible."}}, {"@type": "Question", "name": "Do internal links stay clickable?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Links are preserved as [text](url) with absolute URLs, so the output navigates the same way the original page did."}}, {"@type": "Question", "name": "Is anything sent to a server?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — the URL is sent to our server, which fetches the page for you. That is what gets around your browser's CORS rules, and it is why a page behind a login cannot be converted. The conversion itself then runs in your browser, on the HTML our server hands back."}}, {"@type": "Question", "name": "Can I convert pages I have to log in to?", "acceptedAnswer": {"@type": "Answer", "text": "No. Our server fetches the URL without any session of yours, so a page behind a login or a paywall comes back empty or as an error. Copy the visible text and convert that instead — respect copyright and access terms either way."}}]}
 </script>
 </head>
 <body>
@@ -160,15 +160,16 @@
     </details>
     <details class="faq">
       <summary>Why does it fail on some sites?</summary>
-      <p>Fetching and conversion happen in your browser, so pages that block cross-origin requests
-      fail on the browser's CORS rules — nothing is sent to a server. Those pages cannot be fetched
-      client-side; copy the text over and convert that instead.</p>
+      <p>Your browser sends the URL to our server, and our server fetches the page from
+      there. That is how the conversion gets around your browser's CORS rules, and it is
+      also why a page behind a login fails — the fetch has no session of yours. Conversion
+      itself runs in your browser, on the HTML our server hands back.</p>
     </details>
     <details class="faq">
       <summary>Can I convert pages I have to log in to?</summary>
-      <p>Only if your browser already has access and CORS allows reading the response. For paywalled
-      or private pages, copy the visible text instead and convert it manually — respect copyright and
-      access terms either way.</p>
+      <p>No. The URL is sent to our server, which fetches the page — that is what gets around
+      your browser's CORS rules. For paywalled or private pages, copy the visible text and
+      convert that instead; respect copyright and access terms either way.</p>
     </details>
 
     <footer style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted);font-size:0.85rem;">

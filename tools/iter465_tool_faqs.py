@@ -93,12 +93,12 @@ FAQS = {
   'Yes. Links are preserved as [text](url) with absolute URLs, so the output navigates '
   'the same way the original page did.'),
  ('Is anything sent to a server?',
-  'Fetching and conversion happen in your browser. Pages that block cross-origin requests '
-  'may fail because of CORS rules enforced by your browser — those pages simply cannot be '
-  'fetched client-side, through no fault of the tool.'),
+  'Yes — the URL is sent to our server, which fetches the page for you. That is what gets '
+  'around your browser\'s CORS rules, and it is why a page behind a login cannot be converted. '
+  'The conversion itself then runs in your browser, on the HTML our server hands back.'),
  ('Can I convert pages I have to log in to?',
-  'Only if your browser already has access and CORS allows reading the response. For '
-  'paywalled or private pages, copy the visible text instead and convert it manually — '
+  'No. Our server fetches the URL without any session of yours, so a page behind a login or '
+  'a paywall comes back empty or as an error. Copy the visible text and convert that instead — '
   'respect copyright and access terms either way.'),
 ],
 'contrast-checker': [

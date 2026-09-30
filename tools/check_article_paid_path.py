@@ -330,16 +330,60 @@ def paid_links(root: Path, path: Path, offer_routes: set[str]) -> list[str]:
     page.feed(content_region(html))
     mirrors = {_route_of_href(h) for h in RE_ALTERNATE.findall(html)}
     chrome = frontpage_routes()
-    found = []
-    for href in page.all_links:
-        if href.startswith(("mailto:", "tel:", "javascript:", "#")):
+    return [t for t in (_paid_target(h, offer_routes, mirrors, chrome)
+                        for h in page.all_links) if t is not None]
+
+
+def _paid_target(href: str, offer_routes: set[str],
+                 mirrors: set[str], chrome: frozenset[str]) -> str | None:
+    """Én links destination hvis den er en betalt vej, ellers `None`.
+
+    Uddelagt fra `paid_links()` så de to læsere **ikke** kan glide fra
+    hinanden. De måtte det aldrig: `paid_links()` dømmer *om* en side har en
+    vej, og `paid_anchors()` dømmer *hvilken* vej hvilket anker har. En
+    forskel i filteret ville gøre den anden grøn på en side den første
+    kalder sort — præcis den fejlform ratcheten blev bygget for at fange.
+    """
+    if href.startswith(("mailto:", "tel:", "javascript:", "#")):
+        return None
+    if RE_BUY.match(href):
+        return href
+    route = _route_of_href(href)
+    if route in offer_routes and route not in chrome and route not in mirrors:
+        return route
+    return None
+
+
+def paid_anchors(root: Path, path: Path, offer_routes: set[str]) -> list[tuple[str, str]]:
+    """(`anker`, `destination`) for hvert betalt link — *samme* filtre som
+    `paid_links()`, men destinationen hænger ved det anker den tilhører.
+
+    `paid_links()` giver et sæt. Det er nok til at se en destination
+    *forsvinde*, men ikke til at se to destinationer **bytte plads** — og det
+    er det dyreste af de to fejl, fordi læseren ser det rigtige navn og det
+    rigtige pris-tal og så bliver trukket for den anden vare. Målt 30/9 på
+    `/clean-copy-tool`: de to anker `pro-buy` ("$19/year") og
+    `pro-buy-lifetime` ("$39 once") kunne byttes om, og ratcheten blev grøn
+    begge veje, fordi sættet af destinationer var uændret.
+
+    Ankerets identitet er `id`-attributten når den er der, ellers den synlige
+    ankertekst, ellers `#<n>` for det n-te link uden identitet. Rækkefølgen
+    er målt på den side der gav fundet: begde anker har `id`. Identiteten
+    skal være *stabil*, ikke unik — to anker med samme tekst er to linjer
+    med samme nøgle, og ratcheten dømmer dem som én, hvilket er strengere end
+    at lade dem slippe.
+    """
+    html = path.read_text(encoding="utf-8", errors="ignore")
+    page = Page()
+    page.feed(content_region(html))
+    mirrors = {_route_of_href(h) for h in RE_ALTERNATE.findall(html)}
+    chrome = frontpage_routes()
+    found: list[tuple[str, str]] = []
+    for num, (href, ident, text) in enumerate(page.links_with_id):
+        target = _paid_target(href, offer_routes, mirrors, chrome)
+        if target is None:
             continue
-        if RE_BUY.match(href):
-            found.append(href)
-            continue
-        route = _route_of_href(href)
-        if route in offer_routes and route not in chrome and route not in mirrors:
-            found.append(route)
+        found.append((ident or text or f"#{num}", target))
     return found
 
 

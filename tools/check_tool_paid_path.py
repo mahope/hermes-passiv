@@ -371,6 +371,13 @@ def tool_rows(root: Path = SITE, catalog: dict | None = None,
             "visits": seen.get(route),
             "links": len(inbound.get(route, ())),
             "paid": A.paid_links(root, path, offers) if path else [],
+            # Samme måling som `paid`, men **parvis**: hvilket anker der
+            # peger hvor. Ratcheten dømmer på denne og ikke på `paid`, fordi
+            # et sæt destinationer ikke kan se to links der bytter plads.
+            # Den bæres på rækken — ligesom `paid` — så `measured_anchors()`
+            # ikke skal læse filen igen, og så selftestens syntetiske rækker
+            # kan dømmes mod par de selv siger (regel 1).
+            "ankere": (dict(A.paid_anchors(root, path, offers)) if path else {}),
             "knapper": len(A.knap_links(root, path)) if path else None,
             "domains": sorted(domains),
             "domain": A.domain_label(domains),
@@ -460,20 +467,67 @@ def measured_paths(rows: list[dict] | None = None) -> dict[str, list[str]]:
     rutestrenge for katalogruter og fuld URL for Stripe-links, så de to former
     kan ikke sammenlignes uden en ny læsning af filen — og regel 1 i
     docstringen forbyder netop den.
+
+    **Denne funktion dømmer ikke længere alene.** Den ser et *sæt* per rute,
+    så to destinationer der bytter plads er usynlige. `measured_anchors()`
+    ser parvis og det er den, `path_problems()` dømmer; denne er beholdt for
+    selftestens syntetiske rækker og for blindlistens `len()`-tællinger, der
+    skal blive ved med at tælle veje og ikke anker.
     """
     table = rows if rows is not None else tool_rows()
     return {r["route"]: sorted(set(r["paid"])) for r in table
             if judged(r) and r["paid"]}
 
 
+def measured_anchors(rows: list[dict] | None = None) -> dict[str, dict[str, str]]:
+    """(`rute` → {anker: destination}) for de dømte sider.
+
+    Det er herfra `path_problems()` dømmer, fordi et sæt ikke kan se en
+    ombytning. Fundet 30/9: på `/clean-copy-tool` peger `pro-buy`
+    ("Buy Clean Copy Pro — $19/year") på `…/6oU4gy…` (19 USD pr. år) og
+    `pro-buy-lifetime` ("$39 once") på `…/aFadR81…` (39 USD engang). Byt de
+    to href'er om, så læseren ser det rigtige navn og det rigtige pris-tal,
+    klikker på det rigtige navn og bliver trukket for den anden vare — og
+    ratcheten på destinationer var grøn, fordi *sættet* var uændret. Det er
+    samme fejl som den docstringen ovenfor siger, porten blev skrevet for at
+    fange: «en revert der ramte `All books →` i stedet for pro-note-linket».
+
+    Samme filtre som `A.paid_links()` og derfor samme destinationsform —
+    `_paid_target()` ligger i `check_article_paid_path.py` og bruges af begge
+    læsere, så de kan ikke glide fra hinanden (regel 1).
+
+    Parene læses fra rækken (`tool_rows()` måler dem), ikke fra filen her.
+    Ellers ville selftestens syntetiske rækker blive dømt mod de 94 rigtige
+    linjers filer i stedet for mod det de selv siger — og så ville porten
+    kunne være `lambda *_: []` og alle kontrollerne grønne af den forkerte
+    grund.
+    """
+    table = rows if rows is not None else tool_rows()
+    out: dict[str, dict[str, str]] = {}
+    for r in table:
+        anker = r.get("ankere") or {}
+        if judged(r) and r["paid"] and anker:
+            out[r["route"]] = dict(anker)
+    return out
+
+
 def read_ratchet(path: Path = RATCHET) -> dict[str, list[str]]:
     """Ratchetfilens `paths`, med fejl der ikke kan læses som svar.
 
-    En fil der ikke kan læses, eller en værdi der ikke er en liste af
-    strenge, er **ikke** det samme som "ingen linjer": det første er en fejl
-    porten skal råbe om, for ellers ville en slettet fil gøre porten grøn
-    (regel 5 i reglerne ovenfor: en port der ikke kan måle, må ikke sige
-    "ok"). Derfor hænger `path_problems()` på en `RatchetFejl`.
+    En fil der ikke kan læses, eller en værdi der ikke er et `{anker:
+    destination}`-objekt, er **ikke** det samme som "ingen linjer": det
+    første er en fejl porten skal råbe om, for ellers ville en slettet fil
+    gøre porten grøn (regel 5 i reglerne ovenfor: en port der ikke kan
+    måle, må ikke sige "ok"). Derfor hænger `path_problems()` på en
+    `RatchetFejl`.
+
+    **Formatet er `{rute: {anker: destination}}`, ikke `{rute: [destination]}`.**
+    En liste kan ikke se en ombytning, fordi den kun ved *hvilke*
+    destinationer siden har — ikke hvilket anker der peger hvor. Den gamle
+    form læses ikke og konverteres ikke: en konvertering ville opfinde
+    paringer porten ikke har belæg for, altså rydde en ratchet ud med data
+    den ikke har. Den gamle form er derfor en fejl med en besked, der siger
+    hvad der skal ske.
     """
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -485,19 +539,29 @@ def read_ratchet(path: Path = RATCHET) -> dict[str, list[str]]:
             f"{path.name} har ingen `paths`-objekt (fandt "
             f"{type(paths).__name__}); porten kan ikke vide hvilke veje der "
             f"blev målt, så den må ikke sige at de stadig er der")
-    out: dict[str, list[str]] = {}
+    out: dict[str, dict[str, str]] = {}
     for rute, veje in paths.items():
-        if not isinstance(rute, str) or not isinstance(veje, list) or not all(
-                isinstance(v, str) for v in veje):
+        if not isinstance(rute, str):
+            raise RatchetFejl(f"{path.name}: ruten {rute!r} er ikke en streng")
+        if isinstance(veje, list):
             raise RatchetFejl(
-                f"{path.name}: linjen {rute!r} skal være en liste af "
-                f"strenge, fandt {veje!r}")
-        out[rute] = list(veje)
+                f"{path.name}: linjen {rute!r} er en liste af destinationer. "
+                f"Ratchetfilen måler nu *hvilket anker* der peger hvor, så en "
+                f"liste kan ikke se to links der bytter plads. Kør "
+                f"`--write --force` for at måle parene — det skriverkun den "
+                f"destination der stod, nu med sit anker ved siden af."
+            )
+        if not isinstance(veje, dict) or not all(
+                isinstance(k, str) and isinstance(v, str) for k, v in veje.items()):
+            raise RatchetFejl(
+                f"{path.name}: linjen {rute!r} skal være et objekt der "
+                f"parrer hvert anker med sin destination, fandt {veje!r}")
+        out[rute] = dict(veje)
     return out
 
 
-def path_problems(rows: list[dict], ratchet: dict[str, list[str]]) -> list[str]:
-    """Røde domme for betalte veje der er **forsvundet** siden de blev målt.
+def path_problems(rows: list[dict], ratchet: dict[str, dict[str, str]]) -> list[str]:
+    """Røde domme for betalte veje der er **forsvundet** — eller **ombyttet**.
 
     Baggrund (opgave 8, 30. september 2026): porten dømte *om* en side havde
     en betalt vej, ikke *hvilken*. Beviset stod i målingen: en revert der ramte
@@ -506,26 +570,47 @@ def path_problems(rows: list[dict], ratchet: dict[str, list[str]]) -> list[str]:
     måles på "har den en vej", er en side der står på listen og mister sin vej
     igen præcis den tilstand porten forventer af den.
 
-    Derfor bærer hver linje her den vej den målte ved skrivningen, og porten
-    dømmer tre ting der alle kan være røde:
+    **Ratcheten måler par, ikke sæt** (rettelse 30/9 efter review-fund).
+    `{rute: {anker: destination}}` ser *hvilket* anker der peger *hvor*, så
+    dommen kan skelne de to fejl der ligner hinanden: en destination der
+    forsvinder, og to destinationer der **bytter plads**. Den anden var usynlig
+    i den gamle form, fordi sættet var uændret — og den er den dyreste, fordi
+    læseren ser det rigtige navn og det rigtige pris-tal, klikker på det
+    rigtige navn og bliver trukket for den anden vare. Målt på mutationen:
+    byttet om de to Stripe-href'er på `/clean-copy-tool` var den gamle port
+    grøn; den nye er rød med de to anker ved navn.
+
+    Derfor bærer hver linje parene den målte ved skrivningen, og porten dømmer
+    fire ting der alle kan være røde:
 
     - **Mistet vej.** En destination der stod på linjen og ikke står i
       målingen mere. Det dækker både "linket blev slettet" og "linket blev
       byttet ud med et andet", fordi det er den *konkrete* destination der
       forsvinder, ikke et tal.
+    - **Ombyttet par.** Et anker der stod på linjen peger i dag på en anden
+      destination end den det blev målt med. Destinationen kan være den
+      samme, som den var — det er *ankeret* der flyttede, og det er præcis
+      det tilfælde den gamle form ikke kunne se. Fejlmeddelelsen siger begge
+      destinationer, så en læser kan se hvilken vare der nu ligger under
+      hvilket navn.
     - **Død linje.** En rute der ikke længere er en dømt værktøjsside. Så
       står der intet mere at passe på, og linjen ville leve for evigt.
-    - **Tom linje.** En linje uden en eneste vej er den samme fejl som en
+    - **Tom linje.** En linje uden et eneste par er den samme fejl som en
       slettet fil: den kan kun ske ved at skrive den, så den er rød.
 
     Tilføjelser er **ikke** røde. En ny betalt vej er fremskridt, og den må
     kunne skrives uden `--force`; kun en forsvunden vej kræver at nogen
     bevidst frigiver ratcheten.
+
+    Dømningen læser `measured_anchors()` og ikke `measured_paths()`. Den
+    sidste bruges kun til at sige *hvilke* destinationer siden har i dag, så
+    fejlmeddelelsen kan nævne dem — ikke til at afgøre om noget er rødt.
     """
     problems: list[str] = []
-    measured = measured_paths(rows)
+    measured = measured_anchors(rows)
+    veje = measured_paths(rows)
     for rute in sorted(ratchet):
-        registreret = list(ratchet[rute] or [])
+        registreret = dict(ratchet[rute] or {})
         if rute not in measured:
             problems.append(
                 f"DØD VEJ-LINJE i {RATCHET.name}: {rute} er ikke længere en "
@@ -540,15 +625,40 @@ def path_problems(rows: list[dict], ratchet: dict[str, list[str]]) -> list[str]:
                 f"--write, eller fjern linjen."
             )
             continue
-        mistet = sorted(set(registreret) - set(measured[rute]))
-        if mistet:
+        i_dag = measured[rute]
+        bygget = sorted(set(registreret.values()) - set(i_dag.values()))
+        if bygget:
             problems.append(
                 f"MISTET BETALT VEJ: {rute} havde {len(registreret)} "
-                f"destination(er) målt, og {', '.join(mistet)} er ikke blandt "
-                f"dem længere — nu har den {len(measured[rute])}: "
-                f"{', '.join(measured[rute]) or '(ingen)'}. En side der mister "
-                f"den betalte vej den lå på er en tilbagefaldet side, også når "
-                f"der stadig står en anden vej på den."
+                f"destination(er) målt, og {', '.join(bygget)} er ikke blandt "
+                f"dem længere — nu har den {len(i_dag)}: "
+                f"{', '.join(sorted(set(i_dag.values()))) or '(ingen)'}. En side "
+                f"der mister den betalte vej den lå på er en tilbagefaldet "
+                f"side, også når der stadig står en anden vej på den."
+            )
+        flyttet = sorted(
+            (anker, gammel, i_dag[anker])
+            for anker, gammel in registreret.items()
+            if anker in i_dag and i_dag[anker] != gammel
+        )
+        for anker, gammel, ny in flyttet:
+            problems.append(
+                f"OMBYTTET BETALT VEJ: {rute} — ankeret {anker!r} blev målt "
+                f"til {gammel} og peger nu på {ny}. Begge destinationer kan "
+                f"godt være på siden ({', '.join(sorted(set(i_dag.values())))})"
+                f"{'; de er bare byttet om' if gammel in set(i_dag.values()) else ''}"
+                f", så tallene på siden er uændrede og kun ratcheten kan se "
+                f"det. En læser ser navnet og prisen på det anker han klikker "
+                f"på og bliver trukket for den anden vare. Ret href'en, eller "
+                f"kør --write hvis ombytningen er villet."
+            )
+        mistet_anker = sorted(set(registreret) - set(i_dag))
+        if mistet_anker:
+            problems.append(
+                f"MISTET ANKER: {rute} havde {len(mistet_anker)} anker(er) "
+                f"målt der ikke findes på siden længere: "
+                f"{', '.join(mistet_anker[:6])}. Ankeret *er* købsvejen — "
+                f"uden det står navnet på en knap, der intet peger på."
             )
     return problems
 
@@ -634,7 +744,32 @@ def judge(rows: list[dict] | None = None, doc: dict | None = None,
     return problems
 
 
-def _write_ratchet(målt: dict[str, list[str]], force: bool,
+def _read_legacy_ratchet(path: Path) -> dict[str, dict[str, str]] | None:
+    """Læs den gamle listeform som `{rute: {}}` — kun til migrering.
+
+    Destinationerne **tabes bevidst**: listeformen ved ikke hvilket anker der
+    hørte til hvilken destination, så porten opfinder ingen paringer for dem.
+    Den eneste brug er at tjekke at de stadig findes på siderne, så en
+    migrering kan frigive ratcheten ved et uheld. `None` når filen heller
+    ikke er læselig som JSON.
+    """
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    paths = doc.get("paths") if isinstance(doc, dict) else None
+    if not isinstance(paths, dict):
+        return None
+    if not all(isinstance(k, str) and isinstance(v, list)
+               and all(isinstance(x, str) for x in v) for k, v in paths.items()):
+        return None
+    # Nøglen er destinationen: den gamle fil skal kunne svare "findes den
+    # stadig?", ikke "hvilket anker hørte til den?".
+    return {rute: {f"legacy:{v}": v for v in sorted(set(veje))}
+            for rute, veje in paths.items()}
+
+
+def _write_ratchet(målt: dict[str, dict[str, str]], force: bool,
                    sti: Path = RATCHET) -> tuple[str, str]:
     """Skriv ratchetfilen fra målingen. `(retning, fejl)` — en af dem er tom.
 
@@ -643,20 +778,60 @@ def _write_ratchet(målt: dict[str, list[str]], force: bool,
     `force`, og fejlen **navngiver** de destinationer der stod på linjen — så
     beskeden er et spørgsmål ("må de virkelig være væk?") og ikke en
     afvisning, man læser forbi.
+
+    **Migrering fra listeformen.** En fil der skriver hver rute som en *liste*
+    af destinationer læses ikke af `read_ratchet()` — den siger det, og det er
+    med vilje, fordi en liste ikke kan se en ombytning. Den gamle form må dog
+    migreres, og det er **kun** under `--force`, og **kun** når den nye måling
+    stadig indeholder hver destination den gamle fil havde. Det er derfor en
+    skærpelse og ikke en frigivelse: parene *tilføjes*, og intet tabes. Den
+    gamle fil giver ingen anker-identitet, så porten opfinder ingen paringer
+    for den — den måler dem fra siderne, som er den eneste kilde der har
+    belæg for dem.
     """
+    gammel_format_migrering = False
     try:
         gammel = read_ratchet(sti)
     except RatchetFejl as exc:
         # En ratchetfil der ikke findes endnu er ikke en fejl: første
-        # skrivning skaber den. Alt andet er.
+        # skrivning skaber den.
         if not sti.exists():
             gammel = {}
         else:
-            return "", f"kan ikke skrive {sti.name}: {exc}"
+            gammel = _read_legacy_ratchet(sti)
+            if gammel is None:
+                return "", f"kan ikke skrive {sti.name}: {exc}"
+            gammel_format_migrering = True
     tabt: list[str] = []
-    for rute, veje in gammel.items():
-        for vej in sorted(set(veje) - set(målt.get(rute, ()))):
-            tabt.append(f"{rute} mistede {vej}")
+    if gammel_format_migrering:
+        # Kun destinations-sættet kan sammenlignes med den gamle form; den
+        # har ingen anker, så anker-loopen nedenfor ville tælle hver enkelt
+        # destination som "anker væk". Derfor springes den over her.
+        for rute, veje in gammel.items():
+            nu = målt.get(rute, {})
+            for vej in sorted(set(veje.values()) - set(nu.values())):
+                tabt.append(f"{rute} mistede destinationen {vej}")
+        if tabt and not force:
+            return "", (
+                "--write ville fjerne destinationer fra ratcheten:\n  "
+                + "\n  ".join(tabt)
+                + "\nDen gamle listeform kan ikke se ombytninger, så den må "
+                  "kun migreres når intet er tabt. Ret siden, eller kør med "
+                  "--force hvis det er væk med vilje."
+            )
+    else:
+        for rute, veje in gammel.items():
+            nu = målt.get(rute, {})
+            for anker, vej in sorted(veje.items()):
+                if anker not in nu:
+                    tabt.append(f"{rute}: ankeret {anker!r} ({vej}) er væk")
+                elif nu[anker] != vej:
+                    tabt.append(
+                        f"{rute}: ankeret {anker!r} peger nu på {nu[anker]} "
+                        f"i stedet for {vej}")
+            for gammel_vej in sorted(set(veje.values()) - set(nu.values())):
+                if gammel_vej not in nu.values():
+                    tabt.append(f"{rute} mistede destinationen {gammel_vej}")
     if tabt and not force:
         return "", ("--write ville fjerne målte veje fra ratcheten:\n  "
                     + "\n  ".join(tabt)
@@ -664,26 +839,38 @@ def _write_ratchet(målt: dict[str, list[str]], force: bool,
                       "eller kør med --force hvis den er væk med vilje.")
     doc = {
         "note": (
-            "Den betalte vej hver dømt værktøjsside havde, målt af "
-            "check_tool_paid_path.py. Ratchet: en destination der står her "
-            "og ikke længere findes på siden er rød, fordi en side der "
-            "mister den vej den lå på er en tilbagefaldet side — også når "
-            "der stadig står en anden vej på den. `blind` i "
-            "tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE "
-            "ikke har nogen. Begge skrives med `--write --force`."
+            "Hvert betalt anker på hver dømt værktøjsside, målt af "
+            "check_tool_paid_path.py. Ratchet: et par der står her og ikke "
+            "længere findes på siden er rød, fordi en side der mister den "
+            "vej den lå på er en tilbagefaldet side — også når der stadig "
+            "står en anden vej på den. Den dømmer OGSÅ et anker der peger på "
+            "en anden destination end den blev målt med, altså en ombytning: "
+            "en liste destinationer kan ikke se den, fordi sættet er "
+            "uændret. `blind` i tool_paid_path_blind.json er det modsatte: "
+            "sider der MÅLSLIGE ikke har nogen. Begge skrives med "
+            "`--write --force`."
         ),
         "source": (
-            "python3 tools/check_tool_paid_path.py --write  · Destinationerne "
-            "er de rå href'er A.paid_links() målte i sidens egen tekst"
+            "python3 tools/check_tool_paid_path.py --write  · Parrene er de "
+            "rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på "
+            "ankerets `id` (ellers dets synlige tekst)"
         ),
         "measured": date.today().isoformat(),
-        "paths": {rute: sorted(veje) for rute, veje in sorted(målt.items())},
+        "paths": {rute: dict(sorted(veje.items())) for rute, veje in sorted(målt.items())},
     }
     sti.write_text(json.dumps(doc, ensure_ascii=False, indent=1) + "\n",
                    encoding="utf-8")
     tilfojet = sorted(set(målt) - set(gammel))
-    nyt = sum(len(set(målt[r]) - set(gammel.get(r, ()))) for r in målt)
-    if tabt:
+    nyt = sum(len(set(målt[r]) - set(gammel.get(r, {}))) for r in målt)
+    if gammel_format_migrering:
+        # "221 nye destinationer" ville være en løgn her: destinationerne er
+        # de samme som før, de har blot fået et anker ved siden af. Den
+        # ærlige besked siger hvad der skete, så en der læser loggen ikke
+        # tror ratcheten er blevet slettet og genopbygget.
+        antal = sum(len(v) for v in målt.values())
+        retning = (f"migreret fra listeform til par ({antal} anker fordelt på "
+                   f"{len(målt)} linje(r); intet destinationstab)")
+    elif tabt:
         retning = f"{len(tabt)} destination(er) frigivet (krævede --force)"
     elif tilfojet or nyt:
         retning = (f"{len(tilfojet)} nye linje(r), {nyt} nye destination(er)"
@@ -1139,7 +1326,7 @@ def _self_test() -> int:
     # 10. Listen på disk er i synk med målingen, og den er ikke hele korpus.
     #     Uden den første kontrol er portens grønne svar værdiløst; uden den
     #     anden er den en konstant rød port, og en sådan bliver slået fra.
-    ratchet: dict[str, list[str]] = {}
+    ratchet: dict[str, dict[str, str]] = {}
     ratchet_fejl = ""
     try:
         ratchet = read_ratchet()
@@ -1147,8 +1334,15 @@ def _self_test() -> int:
         ratchet_fejl = str(exc)
     check("ratchetfilen kan læses som en måling", not ratchet_fejl,
           ratchet_fejl)
+    # Ratchetfilen på disk skal have de destinationer porten måler i dag. Det
+    # måles på **destination-sættet**, ikke på parene og ikke på lister med
+    # gentagelser: filen er skrevet af en tidligere kørsel, så et anker-id kan
+    # være ændret siden da, og det er ikke det, synk-kontrollen skal fange.
+    # Mængder sammenlignes som sæt, fordi to anker på samme side kan pege på
+    # samme destination — parformen har dem begge, listformen tæller dem to.
     check("ratcheten måler de veje porten målte i dag",
-          ratchet == measured_paths(table),
+          {x: set(v.values()) for x, v in ratchet.items()}
+          == {x: set(v) for x, v in measured_paths(table).items()},
           f"{len(ratchet)} linjer mod {len(measured_paths(table))} målte")
     real_problems = dom(table)
     check("listen er i synk med målingen", not real_problems,
@@ -1185,23 +1379,76 @@ def _self_test() -> int:
     else:
         rute = målt_række["route"]
         veje = sorted(set(målt_række["paid"]))
+        # Ratchetformen er par: hvert anker med sin destination. Nøglerne
+        # vælges blandt sidens **egne** anker, så kontrollen ikke afhænger af
+        # et håndskrevet anker-id (opgave 10: en selvtest må ikke fejle fordi
+        # den side den målte, har fået et nyt id).
+        # Ratchetformen er par: hvert anker med sin destination. Parene er
+        # sidens **egne** — `tool_rows()` målte dem med `A.paid_anchors()` —
+        # så kontrollen ikke afhænger af et håndskrevet anker-id (opgave 10: en
+        # selvtest må ikke fejle fordi den side den målte, har fået et nyt id).
+        hel = {rute: dict(målt_række.get("ankere") or {})}
+        ankerliste = sorted(hel[rute])
+        check("målingen har mindst to anker at bytte om",
+              len(ankerliste) >= 2 and len(set(hel[rute].values())) >= 2,
+              f"{rute} har {len(ankerliste)} anker")
         base = [målt_række]
-        hel = {rute: veje}
         check("ratcheten som ligger på disk gør målingen grøn",
               not path_problems(base, hel), f"{path_problems(base, hel)}")
         # Den konkrete fejl fra målingen: siden beholder *én* vej og mister
         # den anden. Alle gamle porte var grønne, fordi de talte veje.
-        check("en side der mister én af to målte veje er rød",
+        # Mutationen skal fjerne **ankeret** og ikke kun tallet: ratcheten
+        # dømmer par, så en række hvis `ankere` stadig har begge destinationer
+        # har ikke mistet noget, uanset hvad `paid` siger.
+        mistet_række = [dict(
+            målt_række, paid=veje[:1],
+            anker={a: v for a, v in hel[rute].items()
+                   if v in set(veje[:1])})]
+        mistet_række[0]["ankere"] = mistet_række[0]["anker"]
+        check("en side der mister ét målt anker er rød",
               any("MISTET BETALT VEJ" in p
-                  for p in path_problems([dict(målt_række, paid=veje[:1])],
-                                         hel)),
-              f"{path_problems([dict(målt_række, paid=veje[:1])], hel)[:1]}")
-        # Byttet om: destinationerne er de samme to, men på hver sin side.
-        check("en side der bytter destination med en anden er rød",
-              any("MISTET BETALT VEJ" in p
-                  for p in path_problems([dict(målt_række, paid=veje[::-1][:1])],
-                                         hel)),
-              f"{veje}")
+                  for p in path_problems(mistet_række, hel)),
+              f"{path_problems(mistet_række, hel)[:1]}")
+        # **OMBYTNING** — den fejl ratcheten på destinationer ikke kunne se.
+        # Mutationen bygger ombytningen af sidens *egne* par: den beholder
+        # præcis de samme destinationer, kun ankerne bytter plads, så
+        # destinations-sættet er uændret. Det er derfor en gammel ratchet var
+        # grøn på præcis denne side, og det er den dyreste af de to fejl:
+        # læseren ser navnet og prisen på knappen han klikker på og bliver
+        # trukket for den anden vare. Kræver mindst to anker — ellers er der
+        # intet at bytte, og kontrollen ville være grøn af den forkerte grund.
+        if len(ankerliste) >= 2 and len(veje) >= 2:
+            ombyttet = dict(hel[rute])
+            nøgler = sorted(ombyttet)[:2]
+            ombyttet[nøgler[0]], ombyttet[nøgler[1]] = (
+                ombyttet[nøgler[1]], ombyttet[nøgler[0]])
+            # Nøglen på rækken er `ankere` — samme som `tool_rows()` skriver.
+            # Den skal have de ombyttede par, ellers dømmer porten uændrede
+            # anker og mutationen grønnes af den forkerte grund at den aldrig
+            # blev sat ind.
+            række_byttet = [dict(
+                målt_række,
+                paid=sorted(set(ombyttet.values())),  # destinationsmængden er uændret
+                anker=ombyttet)]
+            række_byttet[0]["ankere"] = ombyttet
+            domme = path_problems(række_byttet, hel)
+            check("MUTATION: to anker der bytter destination er rød, selv om "
+                  "sættet af destinationer er uændret",
+                  any("OMBYTTET BETALT VEJ" in p for p in domme)
+                  and not any("MISTET BETALT VEJ" in p for p in domme),
+                  f"{domme[:1]}")
+            # Mutationen skal være en *forskydning*, ikke en tilfældighed:
+            # hvis dommen kun rammer fordi destinationssættet røgede, ville
+            # kontrol 2 ovenfor have fanget den. Derfor kræves OMBYTTET og
+            # forbudt MISTET — og destinationssættet skal være identisk.
+            check("mutation: dommen er ombytningen og ikke en mistet vej",
+                  sorted(set(ombyttet.values())) == sorted(set(veje))
+                  and any("OMBYTTET BETALT VEJ" in p for p in domme)
+                  and not any("MISTET BETALT VEJ" in p for p in domme),
+                  f"{sorted(set(ombyttet.values()))} vs {sorted(set(veje))}")
+        else:
+            check("målingen har to anker at bytte om", False,
+                  f"{rute} har {len(ankerliste)} anker og {len(veje)} veje")
         # Flere veje er **ikke** røde: det er fremskridt, og `--write` skriver
         # dem uden `--force`. Ellers kunne man ikke lappe en side.
         check("en side der får en ekstra vej ikke er rød",
@@ -1224,6 +1471,25 @@ def _self_test() -> int:
               not measured_paths([dict(målt_række, file=None, publiceret=True,
                                        domains=["mahope.tools"],
                                        domain="mahope.tools")]), "")
+        # De to læsere skal være enige om **hvilke** links der er betalte.
+        # `paid` er listen (med gentagelser) og `ankere` er parene; de bruges
+        # i to forskellige domme, så en divergens ville give to sandheder om
+        # samme side. Målt på hele korpus, ikke på én række — en fejl der
+        # kun opstår på sider med to anker til samme destination ville ellers
+        # blive grøn her. Mængderne sammenlignes som sæt, fordi parformen
+        # mister en gentagelse som listen tæller to gange.
+        afvigende = sorted(
+            r["route"] for r in table
+            if set((r.get("ankere") or {}).values()) != set(r["paid"]))
+        check("mutation: de to læsere er enige om sidens betalte links",
+              not afvigende,
+              f"{len(afvigende)} række(r) afviger, fx {afvigende[:3]}")
+        # Og den skal kunne fejle: en række hvor `ankere` er fjernet skal
+        # afvige. Uden denne linje kunne kontrollen ovenfor være
+        # `not True` og grøn af den forkerte grund.
+        check("mutation: en række uden anker afviger fra sin egen liste",
+              set((målt_række.get("ankere") or {}).values()) == set(målt_række["paid"])
+              and (set({}.values()) != set(målt_række["paid"])), "")
         # MUTATION: samme måling uden dommen. Uden denne linje kunne
         # `path_problems()` ignorere sit input og være grøn af den forkerte
         # grund, at porten ingenting kan se.
@@ -1235,30 +1501,60 @@ def _self_test() -> int:
     #     den en afvisning man læser forbi.
     with tempfile.TemporaryDirectory() as tmp:
         sti = Path(tmp) / "ratchet.json"
-        sti.write_text(json.dumps({"paths": {"/a": ["/x", "/y"]}},
+        sti.write_text(json.dumps({"paths": {"/a": {"knap-1": "/x", "knap-2": "/y"}}},
                                   ensure_ascii=False), encoding="utf-8")
-        retning, fejl = _write_ratchet({"/a": ["/x"]}, False, sti)
+        retning, fejl = _write_ratchet({"/a": {"knap-1": "/x"}}, False, sti)
         check("en forsvunden vej kræver --force",
               not retning and "/y" in fejl, f"{retning!r} / {fejl!r}")
         # Én skrivning, ét resultat: `_write_ratchet` skriver, så to kald i
         # samme kontrol ville måle den anden fil og grønne af den forkerte
         # grund. Mutationen er at `--force` faktisk frigiver den samme linje.
-        tvungen, tvungen_fejl = _write_ratchet({"/a": ["/x"]}, True, sti)
+        # Tallet er 2 og ikke 1, fordi frigivelsen tæller *begge* former den
+        # tabte: ankeret der forsvandt, og destinationen der så også er væk.
+        tvungen, tvungen_fejl = _write_ratchet({"/a": {"knap-1": "/x"}}, True, sti)
         check("mutation: samme skrivning med --force frigiver linjen",
-              tvungen.startswith("1 ") and not tvungen_fejl,
+              tvungen.startswith("2 ") and not tvungen_fejl,
               f"{tvungen!r} / {tvungen_fejl!r}")
         check("ratchetfilen efter --write har de fire nøgler",
               set(("note", "source", "measured", "paths"))
               <= set(json.loads(sti.read_text(encoding="utf-8"))), "")
-        # En fil der **ikke** findes er ikke en fejl — den opstår jo første
-        # gang porten køres. En fil der findes men er ubrugelig er en fejl,
-        # fordi ellers ville en ødelagt fil gøre porten grøn.
+        # MIGRATION fra listeformen. Den skal ske uden `--force` når intet er
+        # tabt — den gamle form kan ikke se ombytninger, så hun må ikke bruges
+        # til at frigive noget, men hun må heller ikke låse en korrekt
+        # skærpelse ude. Og hun skal nægtes, når noget *er* tabt.
+        gammel_sti = Path(tmp) / "gammel.json"
+        gammel_sti.write_text(json.dumps({"paths": {"/a": ["/x", "/y"]}},
+                                         ensure_ascii=False), encoding="utf-8")
+        ret, mig_fejl = _write_ratchet({"/a": {"kn1": "/x", "kn2": "/y"}}, False,
+                                       gammel_sti)
+        check("listenform migrerer uden --force når intet destination er tabt",
+              bool(ret) and "migreret" in ret and not mig_fejl,
+              f"{ret!r} / {mig_fejl!r}")
+        check("mutation: listenform med en tabt destination kræver --force",
+              (lambda r, f: (not r) and "/y" in f)(
+                  *_write_ratchet({"/a": {"kn1": "/x"}}, False, gammel_sti)),
+              f"{_write_ratchet({'/a': {'kn1': '/x'}}, False, gammel_sti)}")
+        # `read_ratchet()` skal **nægte** listeformen. Ellers kunne næste
+        # iteration skrive den tilbage ved en fejl, og porten ville grønne på
+        # en måling der ikke kan se en ombytning. Filen må være frisk: de to
+        # migrationskontroller ovenfor skrev den om i par-form.
+        frisk = Path(tmp) / "frisk-gammel.json"
+        frisk.write_text(json.dumps({"paths": {"/a": ["/x", "/y"]}},
+                                    ensure_ascii=False), encoding="utf-8")
+        nægtet = False
+        try:
+            read_ratchet(frisk)
+        except RatchetFejl:
+            nægtet = True
+        check("listeformen nægtes som ratchet (den kan ikke se ombytninger)",
+              nægtet, "read_ratchet() læste listeformen som en måling")
+        # En manglende ratchetfil kan oprettes ved første skrivning
         check("en manglende ratchetfil kan oprettes ved første skrivning",
-              _write_ratchet({"/a": ["/x"]}, True, Path(tmp) / "ny.json")[0],
+              _write_ratchet({"/a": {"kn1": "/x"}}, True, Path(tmp) / "ny.json")[0],
               "")
         sti.write_text("{ikke json", encoding="utf-8")
         check("en ødelagt ratchetfil er en fejl, ikke 'ingen linjer'",
-              "kan ikke læse" in _write_ratchet({"/a": ["/x"]}, True, sti)[1],
+              "kan ikke læse" in _write_ratchet({"/a": {"/x"}}, True, sti)[1],
               f"{_write_ratchet({'/a': ['/x']}, True, sti)}")
         check("mutation: en slettet fil giver aldrig grønt i judge()",
               any("RATCHET KUNNE IKKE LÆSES" in p
@@ -1321,7 +1617,7 @@ def main(argv: list[str] | None = None) -> int:
         # kræver `--force` — ellers ville porten kunne frigives ved at køre
         # `--write`, og så er den ikke en ratchet længere. En *ny* vej er
         # derimod fremskridt og skrives uden samme bevis.
-        sti, fejl = _write_ratchet(measured_paths(table), args.force)
+        sti, fejl = _write_ratchet(measured_anchors(table), args.force)
         if fejl:
             print(f"tool-paid-path: {fejl}", file=sys.stderr)
             return 1

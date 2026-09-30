@@ -189,9 +189,18 @@ class Page(HTMLParser):
         self.hidden = HiddenStack()
         self.visible_parts: list[str] = []
         self.all_links: list[str] = []
+        # Hver href **med** den identitet der hænger ved den: `id`-attributten
+        # og den synlige ankertekst. Det er samme læsning som `all_links` —
+        # kun med to felter mere pr. link — så en port der skal dømme *hvilket*
+        # anker der peger hvor ikke skal finde på en anden parser (regel 1 i
+        # de delte læsere). Uden identiteten kan en ratchet kun se *sættet* af
+        # destinationer, så to links der bytter plads er grønne: læseren ser
+        # det rigtige navn og pris og bliver trukket for den anden vare.
+        self.links_with_id: list[tuple[str, str, str]] = []
         self.in_json_ld = False
         self.current_href: str | None = None
         self.current_anchor_parts: list[str] = []
+        self.current_index: int | None = None
 
     def _is_hidden(self) -> bool:
         return bool(self.hidden)
@@ -201,8 +210,10 @@ class Page(HTMLParser):
         href = attributes.get("href", "")
         if href:
             self.all_links.append(href)
+            self.links_with_id.append((href, attributes.get("id", ""), ""))
             self.current_href = href
             self.current_anchor_parts = []
+            self.current_index = len(self.links_with_id) - 1
         style = attributes.get("style", "")
         hidden = (
             tag in HIDDEN_TAGS
@@ -224,6 +235,7 @@ class Page(HTMLParser):
         if tag == "a":
             self.current_href = None
             self.current_anchor_parts = []
+            self.current_index = None
 
     def handle_data(self, data: str) -> None:
         if self.in_json_ld or self._is_hidden():
@@ -231,6 +243,11 @@ class Page(HTMLParser):
         self.visible_parts.append(data)
         if self.current_href is not None:
             self.current_anchor_parts.append(data)
+            if self.current_index is not None:
+                href, ident, text = self.links_with_id[self.current_index]
+                self.links_with_id[self.current_index] = (
+                    href, ident, normalize(f"{text} {data}")
+                )
 
     @property
     def text(self) -> str:

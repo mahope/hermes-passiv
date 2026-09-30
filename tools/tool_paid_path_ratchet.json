@@ -1,396 +1,416 @@
 {
- "note": "Den betalte vej hver dømt værktøjsside havde, målt af check_tool_paid_path.py. Ratchet: en destination der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
- "source": "python3 tools/check_tool_paid_path.py --write  · Destinationerne er de rå href'er A.paid_links() målte i sidens egen tekst",
+ "note": "Hvert betalt anker på hver dømt værktøjsside, målt af check_tool_paid_path.py. Ratchet: et par der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. Den dømmer OGSÅ et anker der peger på en anden destination end den blev målt med, altså en ombytning: en liste destinationer kan ikke se den, fordi sættet er uændret. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
+ "source": "python3 tools/check_tool_paid_path.py --write  · Parrene er de rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på ankerets `id` (ellers dets synlige tekst)",
  "measured": "2026-09-30",
  "paths": {
-  "/accessibility-statement-generator": [
-   "/compliance-report"
-  ],
-  "/activate": [
-   "/clean-copy-tool",
-   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
-  ],
-  "/base64-encoder-decoder": [
-   "/support"
-  ],
-  "/books": [
-   "/compliance-report"
-  ],
-  "/books/build-your-first-chrome-extension": [
-   "/clean-copy-tool"
-  ],
-  "/books/compliance-bundle": [
-   "/compliance-report"
-  ],
-  "/books/cookie-consent-guide": [
-   "/compliance-report"
-  ],
-  "/books/eaa-checklist": [
-   "/compliance-report"
-  ],
-  "/books/eaa-shopify": [
-   "/compliance-report"
-  ],
-  "/books/gdpr-for-agencies": [
-   "/compliance-report"
-  ],
-  "/books/nis2-for-agencies": [
-   "/compliance-report"
-  ],
-  "/case-converter": [
-   "/support"
-  ],
-  "/clean-copy-api": [
-   "/clean-copy-tool"
-  ],
-  "/clean-copy-bookmarklet": [
-   "/clean-copy-tool"
-  ],
-  "/clean-copy-brew": [
-   "/clean-copy-tool"
-  ],
-  "/clean-copy-cli-ref": [
-   "/clean-copy-tool"
-  ],
-  "/clean-copy-tool": [
-   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
-   "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"
-  ],
-  "/color-blindness-simulator": [
-   "/compliance-report"
-  ],
-  "/color-blindness-simulator-da": [
-   "/da/compliance-report"
-  ],
-  "/compliance-ai": [
-   "/compliance-report"
-  ],
-  "/compliance-guide": [
-   "/blog/cookie-consent-gdpr-compliance",
-   "/blog/eaa-accessibility-checklist",
-   "/blog/gdpr-vs-nis2-overlap",
-   "/blog/nis2-readiness-guide",
-   "/blog/prestashop-eaa-accessibility",
-   "/blog/webflow-vs-squarespace-accessibility",
-   "/blog/wix-eaa-accessibility",
-   "/da/blog/cookie-consent-gdpr-2026",
-   "/da/blog/tilgaengelighedsscanner-cli"
-  ],
-  "/compliance-report": [
-   "/paid-templates",
-   "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
-   "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
-  ],
-  "/compliance-site-check": [
-   "/compliance-report"
-  ],
-  "/contrast-checker": [
-   "/compliance-report"
-  ],
-  "/contrast-checker-da": [
-   "/da/compliance-report"
-  ],
-  "/cookie-check": [
-   "/blog/cookie-consent-gdpr-compliance",
-   "/compliance-report"
-  ],
-  "/cookie-check-da": [
-   "/blog/cookie-consent-gdpr-compliance",
-   "/da/compliance-report"
-  ],
-  "/copy-clean-guide": [
-   "/blog/copy-clean-text-from-website",
-   "/blog/copy-table-website-to-notion",
-   "/da/blog/kopier-tabel-fra-pdf-til-excel"
-  ],
-  "/da/activate": [
-   "/clean-copy-tool",
-   "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00"
-  ],
-  "/da/compliance-ai": [
-   "/da/compliance-report"
-  ],
-  "/da/compliance-report": [
-   "/da/paid-templates",
-   "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
-   "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03"
-  ],
-  "/da/compliance-site-check": [
-   "/da/compliance-report"
-  ],
-  "/da/free-tools": [
-   "/da/blog/compliance-tjek-github-action",
-   "/da/blog/cookie-consent-gdpr-2026",
-   "/da/blog/tilgaengelighedsscanner-cli",
-   "/da/compliance-report",
-   "/da/page-profile",
-   "/da/paid-templates",
-   "/da/support"
-  ],
-  "/da/guides": [
-   "/da/blog/cmp-sammenligning-2026",
-   "/da/blog/compliance-tjek-github-action",
-   "/da/blog/cookie-consent-gdpr-2026",
-   "/da/blog/dbbaftale-webbureau",
-   "/da/blog/eaa-tjekliste-2026",
-   "/da/blog/faa-besked-naar-hjemmeside-er-nede",
-   "/da/blog/gdpr-vs-nis2-overlap-da",
-   "/da/blog/html-til-markdown-cli",
-   "/da/blog/indsaet-som-markdown-i-vscode",
-   "/da/blog/kopier-ren-tekst-fra-hjemmeside",
-   "/da/blog/kopier-tabel-fra-pdf-til-excel",
-   "/da/blog/kopier-tabel-hjemmeside-til-notion",
-   "/da/blog/nis2-beredskabstjek-2026",
-   "/da/blog/open-graph-tjekker-guide",
-   "/da/blog/overvaag-hjemmeside-github-actions-gratis",
-   "/da/blog/prestashop-tilgaengelighed-eaa",
-   "/da/blog/release-integrity-hvad-er-det",
-   "/da/blog/tekst-paa-billede-kontrasttjek",
-   "/da/blog/tilgaengelighedsscanner-cli",
-   "/da/blog/tjek-url-redirect-kaede",
-   "/da/blog/webflow-vs-squarespace-tilgaengelighed",
-   "/da/blog/wix-tilgaengelighed-eaa",
-   "/da/page-profile"
-  ],
-  "/da/page-profile": [
-   "/da/blog/open-graph-tjekker-guide",
-   "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
-   "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
-  ],
-  "/da/paid-templates": [
-   "/da/compliance-report",
-   "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
-   "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
-   "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
-   "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
-   "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
-   "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
-   "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b"
-  ],
-  "/da/url-til-markdown": [
-   "/clean-copy-tool",
-   "/da/page-profile"
-  ],
-  "/downloads": [
-   "/page-profile"
-  ],
-  "/dpa-generator": [
-   "/compliance-report"
-  ],
-  "/dpa-generator-da": [
-   "/da/compliance-report"
-  ],
-  "/free-downloads": [
-   "/page-profile"
-  ],
-  "/free-tools": [
-   "/blog/compliance-check-github-action",
-   "/blog/nis2-readiness-guide",
-   "/clean-copy-tool",
-   "/compliance-report",
-   "/page-profile",
-   "/paid-templates"
-  ],
-  "/guides": [
-   "/blog/bug-reports-in-ci-pipeline",
-   "/blog/check-url-redirect-chain",
-   "/blog/compliance-check-github-action",
-   "/blog/cookie-consent-gdpr-compliance",
-   "/blog/copy-clean-text-from-website",
-   "/blog/copy-table-website-to-notion",
-   "/blog/desktop-website-monitor-cli",
-   "/blog/eaa-accessibility-checklist",
-   "/blog/gdpr-vs-nis2-overlap",
-   "/blog/html-to-markdown-cli",
-   "/blog/html-to-markdown-vscode",
-   "/blog/monitor-website-github-actions-free",
-   "/blog/nis2-readiness-guide",
-   "/blog/open-graph-checker",
-   "/blog/prestashop-eaa-accessibility",
-   "/blog/release-integrity-explained",
-   "/blog/text-on-image-contrast-check",
-   "/blog/webflow-vs-squarespace-accessibility",
-   "/blog/wix-eaa-accessibility",
-   "/da/blog/bugrapporter-i-ci-pipeline",
-   "/page-profile"
-  ],
-  "/guides/comparison": [
-   "/compliance-report"
-  ],
-  "/guides/craftcms-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/drupal-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/ghost-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/joomla-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/magento-accessibility-check": [
-   "/compliance-report"
-  ],
-  "/guides/platforms": [
-   "/blog/prestashop-eaa-accessibility",
-   "/blog/webflow-vs-squarespace-accessibility",
-   "/blog/wix-eaa-accessibility"
-  ],
-  "/guides/prestashop-accessibility-check": [
-   "/blog/cookie-consent-gdpr-compliance",
-   "/blog/prestashop-eaa-accessibility"
-  ],
-  "/guides/shopify-accessibility-check": [
-   "/blog/eaa-accessibility-checklist"
-  ],
-  "/guides/squarespace-accessibility-check": [
-   "/blog/eaa-accessibility-checklist"
-  ],
-  "/guides/typo3-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/umbraco-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/nis2-readiness-guide"
-  ],
-  "/guides/webflow-accessibility-check": [
-   "/blog/eaa-accessibility-checklist"
-  ],
-  "/guides/weebly-accessibility-check": [
-   "/blog/eaa-accessibility-checklist"
-  ],
-  "/guides/wix-accessibility-check": [
-   "/blog/eaa-accessibility-checklist",
-   "/blog/wix-eaa-accessibility"
-  ],
-  "/guides/wordpress-accessibility-check": [
-   "/blog/eaa-accessibility-checklist"
-  ],
-  "/hash-generator": [
-   "/support"
-  ],
-  "/json-formatter": [
-   "/support"
-  ],
-  "/license-lookup": [
-   "/clean-copy-tool"
-  ],
-  "/markdown-table-generator": [
-   "/support"
-  ],
-  "/mcp": [
-   "/clean-copy-tool",
-   "/page-profile"
-  ],
-  "/nis2-check": [
-   "/blog/nis2-readiness-guide",
-   "/compliance-report"
-  ],
-  "/nis2-check-da": [
-   "/da/compliance-report"
-  ],
-  "/nis2-gap-assessment": [
-   "/blog/nis2-readiness-guide"
-  ],
-  "/nis2-gap-assessment-da": [
-   "/da/compliance-report",
-   "/da/paid-templates"
-  ],
-  "/nis2-incident-generator": [
-   "/blog/nis2-readiness-guide"
-  ],
-  "/nis2-incident-generator-da": [
-   "/da/blog/nis2-beredskabstjek-2026"
-  ],
-  "/page-profile": [
-   "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
-   "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
-  ],
-  "/paid-templates": [
-   "/compliance-report",
-   "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
-   "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
-   "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
-   "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
-   "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
-   "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
-   "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b"
-  ],
-  "/palette-generator": [
-   "/compliance-report"
-  ],
-  "/palette-generator-da": [
-   "/da/compliance-report"
-  ],
-  "/privacy-notice-generator": [
-   "/compliance-report"
-  ],
-  "/privacy-notice-generator-da": [
-   "/da/compliance-report"
-  ],
-  "/privacy-policy-template": [
-   "/compliance-report"
-  ],
-  "/privacy-policy-template-da": [
-   "/da/blog/dbbaftale-webbureau"
-  ],
-  "/ropa-generator": [
-   "/compliance-report"
-  ],
-  "/ropa-generator-da": [
-   "/da/compliance-report"
-  ],
-  "/ropa-template": [
-   "/compliance-report"
-  ],
-  "/scan": [
-   "/blog/webflow-vs-squarespace-accessibility",
-   "/compliance-report"
-  ],
-  "/scan-da": [
-   "/blog/webflow-vs-squarespace-accessibility",
-   "/da/compliance-report"
-  ],
-  "/security-headers-check": [
-   "/compliance-report"
-  ],
-  "/text-diff": [
-   "/support"
-  ],
-  "/text-on-image-checker": [
-   "/compliance-report",
-   "/da/blog/tekst-paa-billede-kontrasttjek"
-  ],
-  "/text-on-image-checker-da": [
-   "/da/blog/tekst-paa-billede-kontrasttjek",
-   "/da/compliance-report"
-  ],
-  "/tilgaengelighedserklaering-generator-da": [
-   "/da/compliance-report"
-  ],
-  "/url-encoder-decoder": [
-   "/support"
-  ],
-  "/url-inspector": [
-   "/page-profile"
-  ],
-  "/url-to-markdown": [
-   "/clean-copy-tool"
-  ],
-  "/uuid-generator": [
-   "/support"
-  ],
-  "/word-counter": [
-   "/support"
-  ],
-  "/wordpress-plugin": [
-   "/compliance-report"
-  ]
+  "/accessibility-statement-generator": {
+   "the compliance report": "/compliance-report"
+  },
+  "/activate": {
+   "Buy Clean Copy Pro — $19/year": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+   "Clean Copy web tool": "/clean-copy-tool",
+   "free and Pro side by side": "/clean-copy-tool"
+  },
+  "/base64-encoder-decoder": {
+   "say thanks": "/support"
+  },
+  "/books": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/build-your-first-chrome-extension": {
+   "Clean Copy": "/clean-copy-tool"
+  },
+  "/books/compliance-bundle": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/cookie-consent-guide": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/eaa-checklist": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/eaa-shopify": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/gdpr-for-agencies": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/books/nis2-for-agencies": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/case-converter": {
+   "say thanks": "/support"
+  },
+  "/clean-copy-api": {
+   "Web tool": "/clean-copy-tool",
+   "web tool": "/clean-copy-tool"
+  },
+  "/clean-copy-bookmarklet": {
+   "Clean Copy web tool": "/clean-copy-tool",
+   "Or try the paste-anywhere web tool →": "/clean-copy-tool"
+  },
+  "/clean-copy-brew": {
+   "browser-based tool": "/clean-copy-tool"
+  },
+  "/clean-copy-cli-ref": {
+   "Try the web tool →": "/clean-copy-tool",
+   "Web tool": "/clean-copy-tool"
+  },
+  "/clean-copy-tool": {
+   "pro-buy": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+   "pro-buy-lifetime": "https://buy.stripe.com/aFadR81Mv6UGgNU68vbMQ0d"
+  },
+  "/color-blindness-simulator": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/color-blindness-simulator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/compliance-ai": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/compliance-guide": {
+   "Cookie Consent for Web Agencies Consent banners that actually comply with GDPR.": "/blog/cookie-consent-gdpr-compliance",
+   "Cookie-consent & GDPR (dansk) Reglerne for cookiebannere forklaret på dansk.": "/da/blog/cookie-consent-gdpr-2026",
+   "EAA (10 steps)": "/blog/eaa-accessibility-checklist",
+   "EAA Checklist: 10 Steps A WordPress-focused walkthrough to EAA compliance.": "/blog/eaa-accessibility-checklist",
+   "GDPR vs NIS2: The Overlap Where the two regimes overlap and where they do not.": "/blog/gdpr-vs-nis2-overlap",
+   "NIS2-Ready? A Practical Guide Is your small agency covered, and what to do about it.": "/blog/nis2-readiness-guide",
+   "PrestaShop Accessibility (EAA) EAA compliance for PrestaShop stores.": "/blog/prestashop-eaa-accessibility",
+   "Tilgængelighedsscanning fra kommandolinjen (dansk) Gratis CLI-guide til automatiserede tjek.": "/da/blog/tilgaengelighedsscanner-cli",
+   "Webflow vs Squarespace Accessibility Site builders compared on accessibility.": "/blog/webflow-vs-squarespace-accessibility",
+   "Wix Accessibility (EAA) An EAA compliance guide for Wix.": "/blog/wix-eaa-accessibility"
+  },
+  "/compliance-report": {
+   "Buy EUComply Pro Lifetime — $149 once": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+   "Buy EUComply Pro — $79/year": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "See the seven documents": "/paid-templates"
+  },
+  "/compliance-site-check": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/contrast-checker": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/contrast-checker-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/cookie-check": {
+   "Cookie Consent & GDPR Compliance for Small Websites": "/blog/cookie-consent-gdpr-compliance",
+   "EUComply Pro": "/compliance-report"
+  },
+  "/cookie-check-da": {
+   "Cookie Consent & GDPR Compliance for Small Websites": "/blog/cookie-consent-gdpr-compliance",
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/copy-clean-guide": {
+   "Copy Clean Text From Any Website No formatting, no junk — just the words you pointed at.": "/blog/copy-clean-text-from-website",
+   "Kopiér en tabel fra en PDF (dansk) Samme PDF-guide på dansk.": "/da/blog/kopier-tabel-fra-pdf-til-excel",
+   "Website Table Into Notion Paste real Markdown tables straight into a Notion page.": "/blog/copy-table-website-to-notion"
+  },
+  "/da/activate": {
+   "Clean Copy-webværktøjet": "/clean-copy-tool",
+   "Køb Clean Copy Pro — $19/år": "https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00",
+   "gratis og Pro side om side": "/clean-copy-tool"
+  },
+  "/da/compliance-ai": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/da/compliance-report": {
+   "Køb EUComply Pro Lifetime — $149 én gang": "https://buy.stripe.com/28E5kC3UDcf0btA2WjbMQ0f",
+   "Køb EUComply Pro — $79/år": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "Se de syv dokumenter": "/da/paid-templates"
+  },
+  "/da/compliance-site-check": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/da/free-tools": {
+   "Betalt compliance-rapport": "/da/compliance-report",
+   "Betalt skabeloner og klausulsæt": "/da/paid-templates",
+   "Se de syv dokumenter →": "/da/paid-templates",
+   "Se hvad rapporten dækker →": "/da/compliance-report",
+   "Sådan bruger du den på din egen hjemmeside →": "/da/blog/tilgaengelighedsscanner-cli",
+   "Sådan kører du det i din pipeline →": "/da/blog/compliance-tjek-github-action",
+   "Sådan opbygger du samtykke korrekt →": "/da/blog/cookie-consent-gdpr-2026",
+   "compliance-rapporter": "/da/compliance-report",
+   "dokumentskabeloner": "/da/paid-templates",
+   "donationer": "/da/support",
+   "page-profile": "/da/page-profile"
+  },
+  "/da/guides": {
+   "Automatisér dine EU-compliance-tjek med en GitHub Action": "/da/blog/compliance-tjek-github-action",
+   "CMP-sammenligning 2026: De bedste cookie-samtykkeplatforme til EU": "/da/blog/cmp-sammenligning-2026",
+   "Cookie-consent & GDPR 2026: Reglerne for banners forklaret": "/da/blog/cookie-consent-gdpr-2026",
+   "Databehandleraftale for webbureauer: hvad artikel 28 kræver": "/da/blog/dbbaftale-webbureau",
+   "EAA-tjekliste 2026: Er din hjemmeside klar til Europas tilgængelighedslov?": "/da/blog/eaa-tjekliste-2026",
+   "Faa besked naar din hjemmeside gaar ned (gratis skrivebordsovervaagning)": "/da/blog/faa-besked-naar-hjemmeside-er-nede",
+   "GDPR vs NIS2: hvor de overlapper — og hvor de ikke gør": "/da/blog/gdpr-vs-nis2-overlap-da",
+   "HTML til markdown fra terminalen — komplet guide 2026": "/da/blog/html-til-markdown-cli",
+   "Indsæt som Markdown i VS Code — den komplette guide": "/da/blog/indsaet-som-markdown-i-vscode",
+   "Kopiér en tabel fra PDF til Excel": "/da/blog/kopier-tabel-fra-pdf-til-excel",
+   "Kopiér en tabel fra en hjemmeside ind i Notion (2026-guide)": "/da/blog/kopier-tabel-hjemmeside-til-notion",
+   "Kopiér ren tekst fra enhver hjemmeside (uden formateringsrod)": "/da/blog/kopier-ren-tekst-fra-hjemmeside",
+   "NIS2-beredskab 2026: Er din virksomhed dækket — og klar?": "/da/blog/nis2-beredskabstjek-2026",
+   "Open Graph-tjekker — sådan ser dine links ud når de deles (gratis)": "/da/blog/open-graph-tjekker-guide",
+   "Overvåg hjemmeside fra GitHub Actions: gratis oppetid, SSL og compliance": "/da/blog/overvaag-hjemmeside-github-actions-gratis",
+   "Page Profile Pro — batch-tjek & kundeklare rapporter, $19/år →": "/da/page-profile",
+   "PrestaShop og tilgængelighed: bliv EAA-compliant": "/da/blog/prestashop-tilgaengelighed-eaa",
+   "Release integrity: da vores udvidelse blev udgivet uden sine egne rettelser": "/da/blog/release-integrity-hvad-er-det",
+   "Sådan tjekker du en URL's redirect-kæde": "/da/blog/tjek-url-redirect-kaede",
+   "Tekst-på-billede kontrasttjek — sådan tester du læsbarhed gratis": "/da/blog/tekst-paa-billede-kontrasttjek",
+   "Tilgængelighedsscanning fra kommandolinjen — gratis CLI-guide": "/da/blog/tilgaengelighedsscanner-cli",
+   "Webflow vs Squarespace: tilgængelighed sammenlignet": "/da/blog/webflow-vs-squarespace-tilgaengelighed",
+   "Wix og tilgængelighed: bliv EAA-compliant": "/da/blog/wix-tilgaengelighed-eaa"
+  },
+  "/da/page-profile": {
+   "Open Graph-tjekker": "/da/blog/open-graph-tjekker-guide",
+   "pp-buy-lifetime": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
+   "pp-buy-live": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+  },
+  "/da/paid-templates": {
+   "Køb E-bogpakke, EU-compliance": "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b",
+   "Køb EAA-tilgængelighedserklæring": "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
+   "Køb GDPR-DPA-skabelon": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
+   "Køb Gensidigt NDA-klauselsæt": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
+   "Køb Komplet skabelonpakke": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
+   "Køb Kunderapporteringssæt": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
+   "Køb NIS2 / DORA-leverandørklauselsæt": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
+   "compliance-rapport": "/da/compliance-report"
+  },
+  "/da/url-til-markdown": {
+   "Web-værktøj": "/clean-copy-tool",
+   "Web-værktøjet": "/clean-copy-tool",
+   "page-profile": "/da/page-profile"
+  },
+  "/downloads": {
+   "Full product page →": "/page-profile"
+  },
+  "/dpa-generator": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/dpa-generator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/free-downloads": {
+   "page-profile": "/page-profile"
+  },
+  "/free-tools": {
+   "Blog →": "/blog/compliance-check-github-action",
+   "Clean Copy Web": "/clean-copy-tool",
+   "Clean Copy Web →": "/clean-copy-tool",
+   "Full page →": "/page-profile",
+   "NIS2 Readiness Guide": "/blog/nis2-readiness-guide",
+   "Paid templates & clause sets": "/paid-templates",
+   "Premium Compliance Report": "/compliance-report",
+   "See the seven documents →": "/paid-templates",
+   "See what the report covers →": "/compliance-report",
+   "page-profile": "/page-profile"
+  },
+  "/guides": {
+   "Automate Your EU Compliance Checks with a GitHub Action — 9 checks in v2": "/blog/compliance-check-github-action",
+   "Bugrapporter i din CI-pipeline: Komplet opsætning med 3 GitHub Actions": "/da/blog/bugrapporter-i-ci-pipeline",
+   "Cookie Consent & GDPR Compliance for Web Agencies": "/blog/cookie-consent-gdpr-compliance",
+   "Copy a Table From a Website Into Notion": "/blog/copy-table-website-to-notion",
+   "Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill": "/blog/desktop-website-monitor-cli",
+   "EAA Accessibility Checklist for WordPress Sites — 10 Steps": "/blog/eaa-accessibility-checklist",
+   "GDPR vs NIS2: What Overlaps — and What Doesn’t": "/blog/gdpr-vs-nis2-overlap",
+   "HTML to Markdown from the Terminal — Complete 2026 Guide": "/blog/html-to-markdown-cli",
+   "How to Check a URL Redirect Chain (Free Online Tool)": "/blog/check-url-redirect-chain",
+   "How to Copy Clean Text From Any Website (No Formatting, No Junk)": "/blog/copy-clean-text-from-website",
+   "Is Your Small Web Agency NIS2-Ready? A Practical Guide for 2026": "/blog/nis2-readiness-guide",
+   "Monitor Your Website from GitHub Actions: Free Uptime, SSL & Compliance Checks": "/blog/monitor-website-github-actions-free",
+   "Open Graph Checker — Test How Your Links Look When Shared (Free)": "/blog/open-graph-checker",
+   "Page Profile Pro — batch audits & client-ready reports, $19/year →": "/page-profile",
+   "Paste as Markdown in VS Code: The Complete 2026 Guide": "/blog/html-to-markdown-vscode",
+   "PrestaShop Accessibility: EAA Compliance for Your Store": "/blog/prestashop-eaa-accessibility",
+   "Release Integrity: When Our Extension Shipped Without Its Own Fixes": "/blog/release-integrity-explained",
+   "Run Bug Reports in Your CI Pipeline: Complete Setup with 3 GitHub Actions": "/blog/bug-reports-in-ci-pipeline",
+   "Text-on-Image Contrast Check — How to Test Readability for Free": "/blog/text-on-image-contrast-check",
+   "Webflow vs Squarespace: Accessibility Compared": "/blog/webflow-vs-squarespace-accessibility",
+   "Wix Accessibility: An EAA Compliance Guide": "/blog/wix-eaa-accessibility"
+  },
+  "/guides/comparison": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/guides/craftcms-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/drupal-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/ghost-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/joomla-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/magento-accessibility-check": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/guides/platforms": {
+   "Blog post →": "/blog/prestashop-eaa-accessibility",
+   "PrestaShop & the EAA: e-commerce without exemptions": "/blog/prestashop-eaa-accessibility",
+   "Webflow vs Squarespace: builder accessibility compared": "/blog/webflow-vs-squarespace-accessibility",
+   "Wix & the EAA: Editor fixes for small businesses": "/blog/wix-eaa-accessibility"
+  },
+  "/guides/prestashop-accessibility-check": {
+   "Cookie Consent and GDPR: What's Actually Required": "/blog/cookie-consent-gdpr-compliance",
+   "PrestaShop Accessibility: EAA Compliance for Your Store": "/blog/prestashop-eaa-accessibility"
+  },
+  "/guides/shopify-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/squarespace-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/typo3-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/umbraco-accessibility-check": {
+   "NIS2 Readiness Guide for Web Agencies": "/blog/nis2-readiness-guide",
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/webflow-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/weebly-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/guides/wix-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist",
+   "Wix Accessibility: An EAA Compliance Guide": "/blog/wix-eaa-accessibility"
+  },
+  "/guides/wordpress-accessibility-check": {
+   "The EAA Accessibility Checklist": "/blog/eaa-accessibility-checklist"
+  },
+  "/hash-generator": {
+   "say thanks": "/support"
+  },
+  "/json-formatter": {
+   "say thanks": "/support"
+  },
+  "/license-lookup": {
+   "Activate Clean Copy Pro here →": "/clean-copy-tool"
+  },
+  "/markdown-table-generator": {
+   "say thanks": "/support"
+  },
+  "/mcp": {
+   "Clean Copy": "/clean-copy-tool",
+   "HTML→Markdown": "/clean-copy-tool",
+   "Page Profile": "/page-profile"
+  },
+  "/nis2-check": {
+   "EUComply Pro": "/compliance-report",
+   "NIS2 for Small Agencies: What Changes": "/blog/nis2-readiness-guide",
+   "NIS2 readiness guide": "/blog/nis2-readiness-guide"
+  },
+  "/nis2-check-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/nis2-gap-assessment": {
+   "NIS2 for Small Agencies: What Changes": "/blog/nis2-readiness-guide"
+  },
+  "/nis2-gap-assessment-da": {
+   "EUComply Pro": "/da/compliance-report",
+   "siden med betalte dokumenter": "/da/paid-templates"
+  },
+  "/nis2-incident-generator": {
+   "NIS2 readiness guide": "/blog/nis2-readiness-guide"
+  },
+  "/nis2-incident-generator-da": {
+   "Beredskabstjek 2026": "/da/blog/nis2-beredskabstjek-2026"
+  },
+  "/page-profile": {
+   "pp-buy-lifetime": "https://buy.stripe.com/8x2cN42Qz0wifJQgN9bMQ0e",
+   "pp-buy-live": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
+  },
+  "/paid-templates": {
+   "Buy Client Compliance Report Kit": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
+   "Buy EAA Accessibility Statement": "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
+   "Buy EU Compliance E-book Bundle": "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b",
+   "Buy EUComply Complete Template Bundle": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
+   "Buy GDPR DPA template": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
+   "Buy Mutual NDA Clause Set": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
+   "Buy NIS2 / DORA Vendor Clause Set": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
+   "automated compliance report": "/compliance-report"
+  },
+  "/palette-generator": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/palette-generator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/privacy-notice-generator": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/privacy-notice-generator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/privacy-policy-template": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/privacy-policy-template-da": {
+   "art. 28-databehandleraftalen": "/da/blog/dbbaftale-webbureau"
+  },
+  "/ropa-generator": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/ropa-generator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/ropa-template": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/scan": {
+   "Webflow vs Squarespace": "/blog/webflow-vs-squarespace-accessibility",
+   "compliance report generator": "/compliance-report",
+   "pricing": "/compliance-report"
+  },
+  "/scan-da": {
+   "Webflow vs Squarespace": "/blog/webflow-vs-squarespace-accessibility",
+   "priser": "/da/compliance-report"
+  },
+  "/security-headers-check": {
+   "EUComply Pro": "/compliance-report"
+  },
+  "/text-diff": {
+   "say thanks": "/support"
+  },
+  "/text-on-image-checker": {
+   "EUComply Pro": "/compliance-report",
+   "dansk guide": "/da/blog/tekst-paa-billede-kontrasttjek"
+  },
+  "/text-on-image-checker-da": {
+   "EUComply Pro": "/da/compliance-report",
+   "Guide: sådan tester du tekst på billeder trin for trin": "/da/blog/tekst-paa-billede-kontrasttjek"
+  },
+  "/tilgaengelighedserklaering-generator-da": {
+   "EUComply Pro": "/da/compliance-report"
+  },
+  "/url-encoder-decoder": {
+   "say thanks": "/support"
+  },
+  "/url-inspector": {
+   "Page Profile Pro": "/page-profile"
+  },
+  "/url-to-markdown": {
+   "Web tool": "/clean-copy-tool",
+   "web tool": "/clean-copy-tool"
+  },
+  "/uuid-generator": {
+   "say thanks": "/support"
+  },
+  "/word-counter": {
+   "say thanks": "/support"
+  },
+  "/wordpress-plugin": {
+   "EUComply Pro": "/compliance-report"
+  }
  }
 }

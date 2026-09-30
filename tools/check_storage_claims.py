@@ -59,6 +59,17 @@ de er rettet fordi porten viste hvor de var, ikke fordi porten dømmer dem. En
 fremtidig artikel med samme fejl er derfor stadig ubemandet; det står her,
 fordi en port der ser ud til at dække mere end den gør, er værre end ingen.
 
+**To klasser, fordi der er to løgner.** Første klasse (`check_page`) dømmer
+*lagring*: "nothing is stored" på en side der kalder en rute med
+`rateLimitIp`. Anden klasse (`check_fetch_claim`, tilføjet 30/9 efter
+review-fund) dømmer *hvor siden hentes*: "nothing is sent to a server" og
+"det hele foregår i din browser" på en side hvis egen `fetch` går til en rute
+der læser `?url=` og henter den server-side. De to er ikke overlappede, og
+det er bevidst: en side kan afsløre IP-hashet helt korrekt (og så redde
+første klasse) og samtidig løgne om hvor URL'en hentes, fordi det er to
+forskellige spørgsmål. Fundet var præcis det — `/url-to-markdown` havde den
+(IP-)afsløring og løgnen om browseren i samme side.
+
     python3 tools/check_storage_claims.py
     python3 tools/check_storage_claims.py --self-test
 """
@@ -167,6 +178,86 @@ RE_STORAGE_QUESTION = re.compile(
     r"|gemm(?:er|es|et)?\b|lagr(?:es|ing|t)?\b|logg(?:es|et)?\b)",
     re.IGNORECASE,
 )
+
+# ── Anden løgnes klasse: hvor hentningen sker ────────────────────────────
+#
+# Den første klasse dømmer *lagring* ("nothing is stored"). Den her dømmer
+# *hvor siden hentes* — og den er en løgn for sig selv, uanset at IP-hashet
+# er afsløret korrekt.
+#
+# Fundet 30/9 på `/url-to-markdown`: FAQ'en sagde "Fetching and conversion
+# happen in your browser, so pages that block cross-origin requests fail on
+# the browser's CORS rules — **nothing is sent to a server**", mens sidens
+# egen `fetch('/scan-proxy?url=' + …)` sender URL'en til `_worker.js`, der
+# henter den server-side. CORS var også den forkerte diagnose: CORS er netop
+# det der *ikke* kan slå, fordi hentningen går udenom browseren. Læseren
+# ville sende en intranet-URL eller en kundeportal og få hele adressen
+# returneret i et svar.
+#
+# **Målt, ikke konstrueret.** Ruterne læses fra `site/_worker.js` på samme
+# måde som `storing_routes()`: en rute er *hentende* når dens handler læser
+# `?url=` **og** kalder en fetch-funktion. Målt 30/9: 5 ruter
+# (`/scan-proxy`, `/api/header-check`, `/api/url-inspect`, `/api/profile`,
+# `/api/compliance-scan`), 11 sider kalder dem. Så en ny proxy-rute eller en
+# ny side der kalder en eksisterende bliver dømt automatisk.
+#
+# `scan.html` har to blokke der matcher mønstret og er **ærlige**: de siger
+# "fetched server-side through our Cloudflare proxy", og det er netop
+# afsløringen. Derfor er afsløringen et krav, ikke en undtagelse — en side
+# der kalder en hentende rute skal sige hvor hentningen sker.
+RE_FETCH_DENIAL = re.compile(
+    r"""(?P<claim>
+        nothing\ is\ sent\ to\ a\ server
+      | intet\ sendes\ til\ en\ server
+      | ingenting\ sendes\ til\ en\ server
+      | (?:fetching|conversion)\ and\b[^.]{0,80}\b(?:happen|happens)\ in\ your\ browser
+      | (?:hentning|konvertering)\b[^.]{0,80}\b(?:foregår|sker)\ i\ din\ browser
+      | (?:cannot|can't|can\ not)\ be\ fetched\ client[-\s]?side
+      | cross[-\s]origin\ requests?\b[^.]{0,90}\b(?:fail|blocked|block)
+      | browserens?\s+cors[-\s]regler
+    )""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# Hvor hentningen sker. Fire målte former på de sider der gør det rigtigt:
+# "The page is fetched server-side through our Cloudflare proxy" (EN) og
+# "Siden hentes server-side gennem vores Cloudflare-proxy" (DA), plus
+# `/url-to-markdown`s "our server fetches the page".
+RE_FETCH_DISCLOSURE = re.compile(
+    r"(fetched\s+server[-\s]?side"
+    r"|server[-\s]?side"
+    r"|our\s+server\s+(?:fetches|is\s+sent|will\s+fetch|receives)"
+    r"|sent\s+to\s+our\s+server"
+    r"|hentes?\s+server[-\s]?side)",
+    re.IGNORECASE,
+)
+
+# `fetch(`, `followChecked(` og `cscFetch(` — de tre målte former for
+# "denne handler henter en URL". En ny hjælpefunktion skal tilføjes her, så
+# porten ikke dømmer dens ruter som rene klient-side-sider.
+RE_FETCH_CALL = re.compile(r"\b(?:fetch|followChecked|cscFetch)\s*\(")
+RE_URL_PARAM = re.compile(r"searchParams\.get\(\s*['\"]url['\"]")
+
+
+def fetching_routes(text: str | None = None) -> dict[str, str]:
+    """Ruter hvis handler læser `?url=` og henter den. Målt fra koden.
+
+    Samme måleprincip som `storing_routes()`: ingen navneliste. En rute
+    bliver hentende ved at have to ting i sin handler — den læser kalders
+    URL og den kalder en fetch-funktion. `/scan-proxy` er den åbne dør seks
+    sider deler; `/api/url-inspect` er den betalte.
+    """
+    text = worker_text() if text is None else text
+    bodies = function_bodies(text)
+    dispatch: dict[str, str] = {}
+    dispatch.update(RE_DISPATCH_INLINE.findall(text))
+    dispatch.update(RE_DISPATCH_BLOCK.findall(text))
+    routes: dict[str, str] = {}
+    for path, handler in dispatch.items():
+        body = bodies.get(handler, "")
+        if RE_FETCH_CALL.search(body) and RE_URL_PARAM.search(body):
+            routes[path] = handler
+    return routes
 
 
 def unescape_json(text: str) -> str:
@@ -448,8 +539,45 @@ def check_page(
     return problems
 
 
-def collect_problems() -> tuple[list[str], dict[str, list[str]], dict[str, str]]:
+def check_fetch_claim(relative: str, page: str, routes: dict[str, str]) -> list[str]:
+    """En side der henter server-side må ikke sige at intet sendes til en server.
+
+    Anden klasse end `check_page()`, og den skal ikke blandes sammen med den.
+    `check_page` dømmer *lagring* og kan redde en blok med IP-hash-afsløringen.
+    Her er IP-hashet irrelevant: en side der afslører tælleren korrekt og
+    samtidig siger "nothing is sent to a server" er stadig forkert, fordi
+    løftet er om *hvor URL'en hentes*, ikke om hvad der gemmes. Derfor er
+    afsløringen `RE_FETCH_DISCLOSURE` — "fetched server-side" — og ikke den
+    lagrings-afsløring porten bruger i den anden klasse.
+
+    Samme blok-opløsning som den anden klasse (`claim_blocks`), så en løgn i
+    et JSON-LD-svar, et `<details>`, en privatlivsnote og en meta-description
+    alle dømmes. Det er præcis de fire former `url-to-markdown` havde den
+    falske sætning i.
+    """
+    calling = called_storing_routes(page, routes)
+    if not calling:
+        return []
+    problems: list[str] = []
+    for source, question, text, _raw in claim_blocks(page):
+        denial = RE_FETCH_DENIAL.search(text)
+        if not denial or RE_FETCH_DISCLOSURE.search(text):
+            continue
+        problems.append(
+            f"{relative} ({source}): svarer {denial.group('claim').strip()!r} "
+            f"men kalder {', '.join(calling)} — den rute læser `?url=` og "
+            f"henter den server-side i `site/_worker.js`, så URL'en forlader "
+            f"browseren. CORS er den forkerte diagnose: det er netop det der "
+            f"ikke kan slå, når hentningen går udenom browseren. Svar på "
+            f"det samme spørgsmål med hvor hentningen sker, som scan.html "
+            f"gør: 'fetched server-side through our Cloudflare proxy'."
+        )
+    return problems
+
+
+def collect_problems() -> tuple[list[str], dict[str, list[str]], dict[str, str], dict[str, str]]:
     routes = storing_routes()
+    fetching = fetching_routes()
     pages = site_pages()
     reached = route_pages(pages, routes)
     reaching: dict[str, list[str]] = {}
@@ -461,7 +589,8 @@ def collect_problems() -> tuple[list[str], dict[str, list[str]], dict[str, str]]
     problems: list[str] = []
     for relative, raw in pages.items():
         problems.extend(check_page(relative, raw, routes, reached))
-    return problems, reaching, routes
+        problems.extend(check_fetch_claim(relative, raw, fetching))
+    return problems, reaching, routes, fetching
 
 
 # Den løgn mutationen sætter ind, i **sidens eget sprog**. Begge ordlyd er
@@ -630,8 +759,85 @@ def self_test() -> int:
                     f"uden rateLimitIp er {relative} stadig rød — afsløringen mangler altså ikke"
                 )
 
+    # 5. Anden klasse: hvor hentningen sker. Findes ved **egenskab** — siden
+    #    kalder en hentende rute *og* siger i et svar hvor den henter — så
+    #    ingen filnavn og ingen frosen ordlyd afgør hvilken side der testes.
+    #    Løgnen er den publicerede: "nothing is sent to a server" / "intet
+    #    sendes til en server", i **sidens eget sprog**, bygget af sidens egen
+    #    blok med `_med_tekst` så tagene bevares.
+    fetching = fetching_routes()
+    fetch_ærlige = sorted(
+        rel for rel, raw in pages.items()
+        if called_storing_routes(raw, fetching)
+        and any(RE_FETCH_DISCLOSURE.search(text) for _s, _q, text, _r in claim_blocks(raw))
+    )
+    if not fetch_ærlige:
+        failures.append(
+            "målingen: ingen side kalder en hentende rute og afslører at hentningen "
+            "er server-side — porten har ingen reference til at dømme imod"
+        )
+    # 5a. Rettelsen: en side der afslører server-side hentning er ærlig, og
+    #     porten skal være grøn på den — uanset hvilken fil det er.
+    for relative in fetch_ærlige:
+        problems = check_fetch_claim(relative, pages[relative], fetching)
+        if problems:
+            failures.append(
+                f"{relative}: porten er rød på en side der afslører server-side "
+                f"hentning — {problems[0]}"
+            )
+    # 5b. Løgnen: erstat afsløringen med "hverken URL'en eller siden sendes
+    #     nogen steder". Det er præcis mutationen der gjorde fundet, og den
+    #     skal gøre porten rød på *enhver* af siderne ovenfor.
+    hentning_uden_server = {
+        "en": ("Fetching and conversion happen in your browser, so pages that block "
+               "cross-origin requests fail on the browser's CORS rules — nothing is "
+               "sent to a server."),
+        "da": ("Hentning og konvertering foregår i din browser, så sider der blokerer "
+               "kryds-origin-kald fejler på browserens CORS-regler — intet sendes til "
+               "en server."),
+    }
+    for relative in fetch_ærlige:
+        raw = pages[relative]
+        løgn = hentning_uden_server[_sprog(relative, raw)]
+        beviset = False
+        for _source, _q, _text, blok in claim_blocks(raw):
+            if not RE_FETCH_DISCLOSURE.search(blok):
+                continue
+            start = raw.find(blok)
+            if start < 0:
+                continue
+            mutated = raw[:start] + _med_tekst(blok, løgn) + raw[start + len(blok):]
+            if check_fetch_claim(relative, mutated, fetching):
+                beviset = True
+                break
+        if not beviset:
+            failures.append(
+                f"{relative}: porten er grøn når afsløringen er fjernet fra svaret "
+                f"og løgnen om at intet sendes til en server står i stedet"
+            )
+    # 5c. Ruten kommer fra koden: en `fetch(` der forsvinder fra
+    #     `handleScanProxy` skal gøre de sider grønne igen. Beviser at
+    #     hentende-ruterne ikke er en håndskrevet liste.
+    kun_fetch = sorted(rel for rel, raw in pages.items()
+                       if called_storing_routes(raw, fetching) == ["/scan-proxy"])
+    mutated_worker = worker_text().replace("async function handleScanProxy(", "async function handleScanProxy_DISABLED(", 1)
+    if mutated_worker == worker_text():
+        failures.append("mutationsanker: handleScanProxy blev ikke fundet")
+    else:
+        if "/scan-proxy" in fetching_routes(mutated_worker):
+            failures.append(
+                "porten læser en håndskrevet ruteliste: /scan-proxy er stadig hentende"
+            )
+        for relative in kun_fetch:
+            if check_fetch_claim(relative, pages[relative], fetching_routes(mutated_worker)):
+                failures.append(
+                    f"uden fetch i handleScanProxy er {relative} stadig rød — "
+                    f"porten dømmer altså andet end hentningen"
+                )
+
     print(f"self-test: {len(failures)} fejl — {len(ærlige)} ærlige sider, "
-          f"{len(rene)} rene klient-sider, {len(kun)} sider der kun kalder /scan-proxy")
+          f"{len(rene)} rene klient-sider, {len(kun)} sider der kun kalder /scan-proxy, "
+          f"{len(fetch_ærlige)} sider der afslører server-side hentning")
     for failure in failures:
         print(f"  FAIL {failure}")
     return 1 if failures else 0
@@ -648,13 +854,21 @@ def main() -> int:
     if args.self_test:
         return self_test()
 
-    problems, reaching, routes = collect_problems()
+    problems, reaching, routes, fetching = collect_problems()
     print(f"{len(routes)} ruter gemmer et IP-hash (fra `rateLimitIp` i site/_worker.js)")
     for path, scope in sorted(routes.items()):
         print(f"  {path}  scope={scope}")
     print(f"{len(reaching)} sider kalder en af dem")
     for relative, called in sorted(reaching.items()):
         print(f"  {relative}  ->  {', '.join(called)}")
+    hentende = sorted(rel for rel, raw in site_pages().items()
+                      if called_storing_routes(raw, fetching))
+    print(f"{len(fetching)} ruter henter en kalders URL server-side; "
+          f"{len(hentende)} sider kalder dem")
+    for path, handler in sorted(fetching.items()):
+        print(f"  {path}  handler={handler}")
+    for relative in hentende:
+        print(f"  {relative}")
     print(f"problems: {len(problems)}")
     for problem in problems:
         print(problem)
