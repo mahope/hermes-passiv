@@ -45,8 +45,14 @@
   #agreement ol li, #agreement ul li { margin-bottom: 6px; }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
+  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
+              border: 1px solid var(--color-accent); border-radius: 10px;
+              background: var(--color-accent-soft); }
+  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
+  .pro-note a { color: var(--color-accent); }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
     #agreement { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -162,6 +168,22 @@ Google Ireland Ltd — transactional e-mail — Ireland"></textarea>
     Breach notification duties, sub-processor approval and audit rights are
     agreed before an incident — not during one.</li>
   </ul>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">The agreement says what you promise. The tool checks whether you keep it.</h2>
+  <p>The generator is free, and it walks through every mandatory clause in Article 28 —
+  subject and scope, categories of data, Article 32 measures, sub-processors, assistance
+  after a breach, deletion, transfers and audit rights. That is the whole document. The paid
+  DPA template ($59) covers the same annexes — subject, duration, purpose, categories of
+  data, security measures and sub-processors — in PDF and Markdown, so it adds nothing you
+  do not already have here.
+  <a href="/compliance-report">EUComply Pro</a> does what an agreement cannot: it opens your
+  site and measures whether the measures you promised the client are actually there. Five of
+  the 18 server-side checks are exactly that — HSTS, a content security policy in the response
+  and in the metadata, the privacy link and the consent banner — and together with the
+  15 accessibility rules that makes 33 checks in all. $79/year per website, and the report
+  can be sent on as a PDF.</p>
 </section>
 
 <footer class="site-footer">

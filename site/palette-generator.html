@@ -49,6 +49,10 @@
   .pg-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
   .pg-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
   .pg-dl { display:inline-block; margin-left:auto; }
+  .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
+  .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
+  .pro-note p { margin:0; color:var(--color-text); font-size:.95rem; line-height:1.7; }
+  .pro-note a { color:var(--color-accent); }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
@@ -159,6 +163,21 @@
       <div class="card"><h3>Can I use the palette commercially?</h3><p>Yes. The generated color combinations are yours to use in any project — palettes are derived from your base color mathematically and carry no license restrictions.</p></div>
       <div class="card"><h3>Does it work for dark mode designs?</h3><p>Yes. Generate from a dark base color to get light text pairings, and check the ratios the same way. Dark mode often needs higher contrast than you expect — verify rather than eyeball.</p></div>
   </div>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">The palette calculates the color you chose. The scanner measures the one that shipped.</h2>
+  <p>The generator is free, and it does the whole color job: one base color in, contrast
+  ratios for body text, large headings, borders and surfaces out, calculated with WCAG 2.1's
+  own formula. That does not change with a licence.</p>
+  <p>What no color generator can see is what actually got published. A theme, a plugin or a
+  colleague can change the contrast on a page you never touched. The free scanner already
+  runs the 15 automated checks against a real URL — alt text, form fields, headings, contrast,
+  ARIA, frames and tables. <a href="/compliance-report">EUComply Pro</a> adds the 18
+  server-side checks on top, so it becomes 33 checks in all: whether a privacy link exists,
+  whether a page that really loads tracking is missing a consent banner, and whether HSTS and
+  a content security policy are set in the response. The report can be sent on as a PDF.
+  $79/year per website.</p>
 </section>
 
 </main>

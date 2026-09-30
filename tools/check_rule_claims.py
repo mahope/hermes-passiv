@@ -600,6 +600,14 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # de obligatoriske artikel 28(3)-klausuler, så det er samme licens der
     # sælger det der mangler — om de lovede foranstaltninger er på plads.
     ("dpa-generator-da.html", "web"),
+    # Den engelske DPA-generator (30/9) — 8 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den er den engelske søster til linjen ovenfor
+    # og sælger `/compliance-report`, altså webkernen. Samme måleform: den
+    # betalte $59 DPA-skabelon dækker præcis de bilag `renderHTML()` danner,
+    # så det er samme licens der sælger det dokumentet ikke kan — om de
+    # lovede foranstaltninger er på plads. Pro-note'en lover præcis de 18
+    # server-side tjek, de 15 accessibility rules og de 33 i alt.
+    ("dpa-generator.html", "web"),
     # De to privatlivspolitik-generatorer (30/9) — 9 indgående sider hver, målt
     # af `check_tool_paid_path.py`. De sælger `/compliance-report` og
     # `/da/compliance-report`, altså webkernen, og deres pro-note lover de 15
@@ -618,6 +626,12 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # der gemmer sig i teksten. Det betalte er de 18 server-side tjek og de
     # 33 i alt, og det er samme licens som resten af familien.
     ("palette-generator-da.html", "web"),
+    # Den engelske farvepalet-generator (30/9) — 8 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den er den engelske søster til linjen ovenfor
+    # og sælger `/compliance-report`. Samme måleform: kontrast er den ene af de
+    # 15 tjek den *gratis* scanner `/scan` allerede kører, så det der ikke er
+    # en betalt streng. Det betalte er de 18 server-side tjek og de 33 i alt.
+    ("palette-generator.html", "web"),
     # De to RoPA-generatorer (30/9) — 9 indgående sider hver, målt af
     # `check_tool_paid_path.py`. Samme måleform som de to privatlivs-
     # generatorer ovenfor: ingen af de syv betalte skabelonprodukter er en
