@@ -77,9 +77,25 @@ RE_SCOPED_ROOT = re.compile(
     re.I,
 )
 RE_PROD_ATTR = re.compile(r"""data-product\s*=\s*["']?([\w-]+)""", re.I)
-# En temabundet erklæring (`[data-theme="dark"]`, `:not([data-theme="light"])`)
+# Et temabundet erklæring (`[data-theme="dark"]`, `:not([data-theme="light"])`)
 # dækker ikke et ubetinget `var(--x)`: tokenet er uopløst i det andet tema.
 RE_THEME_ATTR = re.compile(r"""data-theme\s*=\s*["']?[\w-]+""", re.I)
+# Døde regler. Et tagnavn tæller som *brugt* hvis siden har det i markup, eller
+# hvis et af dens scripts laver det med `createElement('td')` — ellers ville
+# porten dømme CSS der kun rammer efter brugerens første klik, hvilket er fire
+# sider i `/palette-generator` og `/color-blindness-simulator`.
+RE_TAG_IN_HTML = re.compile(r"(?i)<\s*/?\s*([a-zA-Z][\w-]*)")
+RE_TAG_CREATED = re.compile(r"""createElement\(\s*['"]([a-zA-Z][\w-]*)['"]""")
+RE_SCRIPT_SRC = re.compile(r"""<script[^>]+src\s*=\s*["']([^"']+)["']""", re.I)
+RE_LOCAL_JS = re.compile(r"\.m?js(\?|$)", re.I)
+# Selektorer uden en *type* — `.a`, `#a`, `[a]`, `:hover` — er ikke døde, fordi
+# porten ikke dømmer klasser (se `dead_tag_selectors`). Kun et rent type-led i
+# en sammensat vælger kan dømmes, fordi et type-led er enten der eller ikke er.
+RE_TYPE_PART = re.compile(r"^[a-zA-Z][\w-]*$")
+# `html` og `body` findes på enhver side og `*` siger intet — de må ikke give
+# fund, for så ville enhver regel med `:root` blive dømt.
+SKIP_TAGS = frozenset({"html", "body", "*"})
+
 
 
 def strip_comments(css: str) -> str:
@@ -246,6 +262,63 @@ def unresolved_tokens(page_html: str, shell_css: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Døde regler. En regel der ikke matcher noget, er ikke en fejl i sig selv —
+# men den er forklædet som om den gjorde noget, og det er præcis fejlen der
+# ramte `/books/`: refaktoren løftede `<h3>` til `<h2 class="sub">` og lod
+# `.book-card h3 a` stå, så de seks bogtitler faldt tilbage på skallens
+# `a { color: var(--color-accent); text-decoration: underline }`.
+# ---------------------------------------------------------------------------
+def page_tag_vocabulary(page: Path, html: str) -> set[str]:
+    """Tagnavne siden *kan* have: markup, inline scripts og egne .js-filer.
+
+    `<style>`-blokkene er fjernet fra søgningen. Uden det ville enhver regel
+    finde sit eget navn i sin egen CSS, og porten ville være grøn på præcis
+    den fejl den er skrevet for.
+    """
+    parts = [RE_STYLE_BLOCK.sub(" ", html)]
+    for src in RE_SCRIPT_SRC.findall(html):
+        if src.startswith(("http://", "https://", "//")) or not RE_LOCAL_JS.search(src):
+            continue
+        target = (page.parent / src.split("?")[0]).resolve()
+        if target.is_file():
+            parts.append(target.read_text(encoding="utf-8", errors="replace"))
+    text = "\n".join(parts)
+    return {t.lower() for t in RE_TAG_IN_HTML.findall(text)} | {
+        t.lower() for t in RE_TAG_CREATED.findall(text)
+    }
+
+
+def dead_tag_selectors(page: Path, html: str) -> list[str]:
+    """Selektorer i sidens egne <style> der nævner en type, siden ikke har.
+
+    Kun **type-led** dømmes. Klasser og id'er dømmes ikke, fordi de fleste af
+    dem sættes på ved kørsel: `.score-badge.A` bygges som
+    ``'score-badge ' + bogstav``, `.sh-grade-${g}` på samme måde, så et
+    navnesøg ville dømme dem døde og slette CSS der virker. Et type-led er
+    derimod enten i markup eller lavet af et script med et bogstaveligt navn,
+    og begge dele er målbare. Første måling fandt præcis de to fejl i
+    `site/books/`: `.book-card h3 a` og `.status-box h3`.
+    """
+    vocabulary = page_tag_vocabulary(page, html)
+    dead: list[str] = []
+    for sel in selectors_of(html):
+        # Pseudo-klasser og -elementer skal væk, ellers er `:hover` et
+        # "type-led" på papiret. `::before` er dog et rigtigt element —
+        # det springs over ved at tage `:root` med i springlisten.
+        bare = re.sub(r"::?[a-zA-Z-]+(\([^()]*\))?", " ", sel)
+        for part in bare.split():
+            m = RE_TYPE_PART.match(part)
+            if not m:
+                continue
+            tag = m.group(0).lower()
+            if tag in SKIP_TAGS or tag in vocabulary:
+                continue
+            dead.append(sel)
+            break
+    return sorted(set(dead))
+
+
+# ---------------------------------------------------------------------------
 # Fund
 # ---------------------------------------------------------------------------
 class Finding:
@@ -316,6 +389,14 @@ def check() -> list[Finding]:
             findings.append(Finding(route, "uopløst token",
                                     f"var({token}) bruges, men ingen regel for "
                                     f"denne side erklærer den"))
+
+        # (3) Døde regler. Måles på den byggede fil og dens egne scripts, så
+        # CSS der først rammer efter et klik ikke dømmes.
+        for sel in dead_tag_selectors(page, html):
+            findings.append(Finding(route, "død regel",
+                                    f"{sel} er i sidens egen CSS, men ingen "
+                                    f"regel i markup eller i sidens scripts "
+                                    f"har noget element med det navn"))
 
         # (1) Tabte regler. Kræver kilden, så det måles på de rigtige filer.
         src = sources.get(route)
@@ -512,6 +593,50 @@ def self_test() -> int:
         # uopløst på de domæner der *ikke* er deskuptime.
         ok(any(f.page.startswith("mahope.tools/") for f in token_finds),
            "tokenfejlen rammer et domæne, ikke bare DeskUptime")
+
+        def check_only_in(work_root: Path) -> list[Finding]:
+            """Kør porten i kopien mod den dist der allerede ligger der.
+
+            Til forskel fra `build_in` bygger den ikke. Det er hele pointen
+            med mutation 3: den genskaber en *publiceret* tilstand, så en
+            ekstra bygge ville være spildt tid og en ekstra fejlmulighed.
+            """
+            code = (
+                "import sys, json;"
+                f"sys.path.insert(0, {str(work_root)!r});"
+                f"sys.path.insert(0, {str(work_root / 'tools')!r});"
+                "import check_built_css as C;"
+                "print('<<<'+json.dumps([[f.page, f.kind, f.detail]"
+                " for f in C.check()])+'>>>')"
+            )
+            proc = subprocess.run(
+                [sys.executable, "-c", code], cwd=work_root, env=env,
+                capture_output=True, text=True, timeout=300)
+            if "<<<" not in proc.stdout:
+                raise AssertionError(
+                    f"portkørslen i kopien fejlede:\n{proc.stdout[-2000:]}\n{proc.stderr[-2000:]}")
+            raw = proc.stdout.rsplit("<<<", 1)[1].split(">>>", 1)[0]
+            return [Finding(row[0], row[1], row[2]) for row in json.loads(raw)]
+
+        # Mutation 3: den publicerede tilstand `/books/` havde da fundet blev
+        # rettet. Reglen stod på `h3`, markup'en på `h2.sub` — præcis
+        # committen der løftede overskriften og glemte den ledsagende regel.
+        # Mutationen rører *dist*, som revieweren målte, så den kræver ikke
+        # et bygge: porten skal dømme den uden at en ny fejl forklæder sig
+        # som bevis.
+        books = work / "dist" / "mahope.tools" / "books" / "index.html"
+        if not books.exists():
+            raise AssertionError("bogen mangler i kopiens dist — mutationen kan ikke måles")
+        text = books.read_text(encoding="utf-8")
+        if ".book-card :is(h3, h2.sub) a {" not in text:
+            raise AssertionError("bogens CSS har ikke længere formen mutationen forventer")
+        books.write_text(text.replace(".book-card :is(h3, h2.sub) a {",
+                                      ".book-card h3 a {"), encoding="utf-8")
+        dead = [f for f in check_only_in(work) if f.kind == "død regel"]
+        ok(any("book-card h3 a" in f.detail for f in dead),
+           f"mutationen gør porten rød med den døde regel ({[f.detail[:60] for f in dead[:2]]})")
+        ok(any(f.page.endswith("/books/") for f in dead),
+           "den døde regel navnginer den side den står på")
 
     for label in failures:
         print(f"  FEJL  {label}")

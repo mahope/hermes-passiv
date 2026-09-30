@@ -1,39 +1,56 @@
 # STATUS
 
-- **Donationen nåede 4 af 161 sider.** Missionen siger «tak, hvor en glad
-  bruger siger tak, fx efter et vellykket resultat» — målt 30/9 var det kun
-  `/scan`, `/scan-da` og de to `/support`. Katalogen, `FUNDING.yml` og
-  kontrakten har haft linket længe; ingen port målte om det nåede nogen.
-- **Linjen er lagt i resultatet på de to mest besøgte værktøjssider**
-  (`/text-on-image-checker` EN + DA), i samme 13px-grå linje som `/scan`s
-  øvrige noter: ikke en knap, fordi en knap deler opmærksomhed med
-  værktøjets egen primære handling. Sætningen siger *kun* at kørslen er
-  gratis og sker i browseren — ingen påstand om hvor den er, kun hvor den
-  ikke er.
-- **Ny port `tools/check_donation_paths.py`:** dømmer de to sider — katalogens
-  URL, aldrig en knap (`class="btn…"` er rødt), præcis én, og **inde i
-  `<script>`** så den først opstår når værktøjet renderer sit svar. Uden det
-  sidste krav kan porten ikke se forskel på «donationen vises, når læseren
-  har spørgsmålet» og «donationen ligger i markup'en og siger tak til en
-  besøgende, der ingenting har bedt om». `--self-test` 13 kontroller,
-  mutationer målt i en klon.
-- **Porten tæller de øvrige 37 værktøjssider** og skriver dem ud i hver
-  kørsel, men dømmer dem ikke: «hvor mange sider» er en samlet beslutning, og
-  en port der lovede at dømme dem, ville være løgnen over det den kan se.
-  `/thanks` er ikke i opgøret — købet er lige sket. Blogartikler heller ikke:
-  en læser der er færdig med en artikel er ikke et *resultat*.
-- **Baseline:** `site/` 161 sider, 4 med donation (2,5 %). Efter denne
-  iteration 6 (3,7 %). De 37 tællede står som den næste batch.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 107 steps** (105 → 107).
+- **Review-fund MIDDEL 29/9 lukket: de seks bogtitler på `/books/` var lilla og
+  understregede.** Refaktoren der løftede `<h3>` → `<h2 class="sub">` havde
+  rettet `.book-card :is(h3, h2.sub)` på linje 31 men **ladt
+  `.book-card h3 a` stå** på linje 32. Reglen overlever bygget, matcher
+  intet, og skallens `a { color:var(--color-accent); text-decoration:underline }`
+  (`#4a3fc4`) tog over — på den ene side der sælger bøgerne.
+- **Ny dømning i `tools/check_built_css.py`: «død regel».** Den måler på de
+  *byggede* filer: en regel i sidens egen `<style>` der nævner en type, siden
+  hverken har i markup eller i sine scripts. Kun **type-led** dømmes, ikke
+  klasser — `.score-badge.A` bygges som `'score-badge ' + bogstav` og
+  `.sh-grade-${g}` ligeså, så et navnesøg ville slette CSS der virker.
+- **Målt først — porten var halvt rød, ikke siderne.** Første kørsel fandt 6 fund; 4 var
+  **fejl i porten**, ikke på siderne: `/palette-generator` og
+  `/color-blindness-simulator` bygger `<tbody>`-rækker i JS
+  (`createElement('td')`), så `td` skulle tælles som brugt. Scripts er derfor
+  med i målingen. Efter den korrektion: **2 fund, begge ægte**, begge i
+  `site/books/`.
+- **Den anden fund var død CSS fra før denne batch:** `.status-box`,
+  `.status-box h3` og `.status-box p` i
+  `books/build-your-first-chrome-extension.html` — `status-box` fandtes aldrig
+  i markup. Nu fjernet.
+- **Selvtesten dækker den nye dømning med en mutation der genskaber den
+  publicerede tilstand** (`.book-card h3 a` + seks `h2.sub`), fordi det er den
+  revieweren målte på det live site. Den kræver ikke et bygge, så selvtesten
+  blev ikke langsommere. 8 → 10 kontroller.
+- **Baseline:** 2 døde regler → 0. `/books/` bogtitler igen `#111`, uden
+  understregning — målt i dist, ikke i `site/`.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 107 steps.**
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
 - **Historie:** de afsluttede iterationsafsnit ligger i
   `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: bogtitlerne på /books/ er igen #111 uden understregning,
+  og porten dømmer død CSS ceo/boegtitler-igen-sort 2026-09-30 20:08` —
+  ingen ændring i layout, så bygget er uændret ud over to CSS-blokke. Mål i
+  dist: `.book-card :is(h3, h2.sub) a { color:#111; text-decoration:none }`
+  ligger i den publicerede CSS og seks `<h2 class="sub"><a>` matcher den.
+  CI's `built-css` og `built-css-selftest` skal være grønne.
+
+
 - ~~`VERIFICÉR DEPLOY: /text-on-image-checker måler teksten mod sig selv`~~
   **DEPLOY OK 2026-09-30** — målt på den live side: 1.00:1 ved 390 og
   1280 px, nul console-errors, `build-info.json` = f36fb6b, sitemaps OK.
+- `VERIFICÉR DEPLOY: donationslinjen i resultatet på /text-on-image-checker
+  ceo/tak-efter-resultat <TIDSPUNK>` — ingen ændring i layout, så bygget er
+  uændret ud over to JS-strenge. Sammenlign `build-info.json` mod lokalt byg
+  og læg mærke til at CI's `donation-paths`-step er grøn.
+  *(Skrevet efter push 30/9 — den ryder med i næste opgaves commit, jf.
+  «én squash-commit pr. opgave».)*
 - `VERIFICÉR DEPLOY: porten kan se bedste og dårligste baggrund i samme
   tekstkasse ceo/gradient-dommer-baggrund <TIDSPUNK>` — ingen UI-ændring,
   så det er bygget uændret. Sammenlign `build-info.json` mod lokalt byg
@@ -101,3 +118,21 @@
     resultatet på de 37, de følger samme sætning som `/scan`, og ratchetfilen
     `tools/donation.json` vokser med dem. Tages i to omgange, fordi det er 37
     sider med hvert sit eget renderingspunkt — ikke én rettelse.
+
+30. **Ni danske blogartikler har mistet deres sammenligningstabel.** Hvorfor:
+    fundet 30/9 under målingen af død CSS: `site/da/blog/` har
+    `.compare th`/`.compare td` (og `.compare { border-collapse:collapse }`) i
+    egen CSS, men **nogen `<table>`/`<th>`/`<td>` i markup**. Sammenlignings-
+    afsnittene står som `<h2>` med prosa under — f.eks. «Ret-workflow
+    sammenlignet» i `wordpress-vs-wix-tilgaengelighed.html`. De ni er
+    `magento-tilgaengelighed-eaa`, `prestashop-vs-shopify-tilgaengelighed`,
+    `squarespace-tilgaengelighed-eaa`, `tilfoej-fejlrapport-formular-hjemmeside`,
+    `tjek-ssl-certifikat-udloeb`, `typo3-tilgaengelighed-bitv`,
+    `webflow-tilgaengelighed-eaa`, `wordpress-vs-wix-tilgaengelighed` og
+    `overvaag-hjemmeside-fra-terminalen`. Accept: hver artikel har den tabel
+    CSS'en allerede beskriver, indholdet er oversat fra den engelske original
+    (flere findes under et andet slug, fx `site/blog/check-ssl-certificate-expiry.html`
+    for `tjek-ssl-certifikat-udloeb`), og `check_built_css.py` dømmer en
+    `.compare`-regel hvis klassen ikke findes i markup. *Porten dømmer kun
+    type-led i denne omgang, så sidste punkt kræver at porten lærer klasser —
+    det kan ikke gøres med et navnesøg, se arkivet om hvorfor.*

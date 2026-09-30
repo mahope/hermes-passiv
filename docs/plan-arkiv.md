@@ -2346,3 +2346,44 @@ med navn (14 → 0) og overskrifts-spring (12 sider → 0).
   rigtig optælling.
 - `GATE`: **GRØN — `python3 tools/quality_gate.py`, 105 steps** (103 → 105).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
+
+## 30/9 — Død CSS og porten der dømmer den (ceo/boegtitler-igen-sort)
+
+**Fundet:** review 29/9 (mahope-tools.md, MIDDEL). På `site/books/index.html`
+havde refaktoren i 39843b2 rettet `.book-card :is(h3, h2.sub)` (linje 31) men
+ladt `.book-card h3 a` (linje 32) stå. Reglen overlever bygget
+(`pagepass.OWNED_SELECTORS` spiser den ikke), matcher intet, og skallens
+`a { color:var(--color-accent); text-decoration:underline }` med
+`--color-accent:#4a3fc4` overtog. Seks lilla, understregede bogtitler på den
+ene side der sælger bøgerne. Commit-bodens egen måling holdt kun for
+overskrifts-*elementet*, ikke for `<a>` inde i det.
+
+**Rettelsen:** `.book-card :is(h3, h2.sub) a` på linje 32, samme form som
+linje 31. Den anden fund var `.status-box`, `.status-box h3` og
+`.status-box p` i `books/build-your-first-chrome-extension.html` — `status-box`
+fandtes aldrig i markup, altså død CSS fra før denne batch. Fjernet.
+
+**Porten:** ny dømning «død regel» i `tools/check_built_css.py`, målt på de
+*byggede* filer. Vigtigste beslutning: kun **type-led** dømmes, ikke klasser.
+`.score-badge.A` bygges som `'score-badge ' + bogstav` i JS, `.sh-grade-${g}`
+ligeså, og `.empty-state`/`.scanbox`/``.sev-notice` lå i eksterne .js-filer.
+Første måling af porten fandt derfor 6 fund, hvor 4 var **fejl i porten**:
+`/palette-generator` og `/color-blindness-simulator` bygger `<tbody>`-rækker
+med `createElement('td')` ved første klik, så `table.pg-table td` så død ud.
+Scripts er derfor med i målingen (`page_tag_vocabulary`). Efter den
+korrektion 2 fund, begge ægte.
+
+**Fælden undgået:** målingen på `site/` i stedet for `dist/` ville have
+dømt `site/terms/index.html`'s `li { color:var(--text) }` som død. Skallen
+injicerer 21 `<li>` i den byggede side, så reglen virker. Derfor måles der på
+dist, som resten af porten gør.
+
+**Selvtest:** ny mutation genskaber den publicerede tilstand, revieweren
+målte (`.book-card h3 a` + seks `h2.sub`) i kopiens dist. Den kræver intet
+bygge, så selvtesten blev ikke langsommere. 8 → 10 kontroller. Verificeret at
+mutationen gør porten rød med rute *og* regelnavn.
+
+**Sidefund, ikke rettet:** ni danske blogartikler har `.compare th`/`.compare
+td` i egen CSS men **nogen tabelmarkup** — sammenlignsafsnittene står som
+`<h2>` med prosa under. Kun tag-dømningen så det, fordi klassen `.compare`
+ stadig optræder i teksten. Se opgave 30.
