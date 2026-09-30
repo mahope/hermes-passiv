@@ -2454,3 +2454,28 @@ artiklen skal have en» — og en `check_built_css.py`-dømning der kan se
 ligeså), men kan gøres med præfiks: `.sh-grade-A` er død kun hvis heller ikke
 `sh-grade-` står bogstaveligt i siden. Uden den dømning kan porten ikke se
 denne fejlform.
+
+---
+
+## 30/9 — donationslinje, runde 1 (ni sider) og runde 2 del 1 (otte generatorer)
+
+**Runde 1** (`ceo/donation-runde-1`, ni sider): valgt på *interne links*, ikke på
+trafik — Plausible har 15 besøgende på mahope.tools og 6 på cleancopy.tools i
+28 dage, så den kan ikke adskille to sider. `clean-copy-tool` 48 indgange,
+`compliance-site-check` 44, `word-counter` 15. To regler: siden skal have ét
+renderingspunkt, og der må ikke stå en købsknap i samme resultat — derfor blev
+`compliance-report` (to `Buy EUComply Pro`) sprunget over.
+
+**Runde 2, del 1** (denne iteration, otte sider): de fire generatorer med ét
+resultatfelt hver, EN+DA. 28 → 20 manglende, ratchetfilen dømmer 19 filer.
+
+**Fund undervejs.** `no-print` er **ikke** i `site/style.css`; den virker kun
+fordi hver generator-side har sin egen `@media print`. Antaget fælles klasse
+havde været død markup på alle otte — akkurat den fejlform revieweren 30/9
+kaldte «en påstand uden dom».
+
+**Verifikation.** `/tmp/smoke.mjs` eval'er hver sides IIFE med DOM-shim og
+dyrker de rigtige listeners (ikke statisk læsning): donation 1× i resultatet,
+også efter to submits, ikke i `renderHTML()`, ikke i kopieret tekst, ikke i
+markup. Mutation A (fjernet `+ DONATION`) → 2 røde domme. `node --check` grøn på
+32 inline blokke. `quality_gate.py` 107 steps grøn.

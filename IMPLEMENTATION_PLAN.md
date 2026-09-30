@@ -20,9 +20,24 @@
 - **Baseline:** 37 sider uden linje → 28. `check_donation_paths.py` dømmer nu
   11 filer (var 2), alle målt i **dist**: præcis én donation pr. side, i et
   `<script>`, aldrig en knap.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 107 steps.** JS-syntaks
-  tjekket med `node --check` på alle ni sider (JSON-LD-blokke undtaget — de
-  er ikke JS).
+- **Donationslinjen nåede otte generatorer mere (28 → 20).** Runde 2, del 1:
+    `dpa-generator`, `ropa-generator`, `privacy-notice-generator`,
+    `nis2-incident-generator` (alle EN+DA). Ratchetfilen dømmer nu 19 filer.
+- **De otte er de fire generatorer med ét resultatfelt hver** — den billigste
+    gruppe i runde 2, og de deler én renderingslinje pr. side. På NIS2 indsættes
+    leadformen *under* `reportWrap`, så taklinjen kommer før den som aftalt.
+- **`no-print` er ikke en død klasse her.** Alle seks generator-sider har deres
+    egen `@media print` med `.no-print` (dpa/ropa/privacy linje 53-55,
+    nis2 linje 51-54) — klassen findes *ikke* i `style.css`, så den ville været
+    død markup, hvis jeg havde antaget den fælles. Taklinjen skal ikke ende i
+    det dokument læseren udskriver eller gemmer som PDF.
+- **Målt i en sand sandkasse, ikke ved læsning.** `/tmp/smoke.mjs` eval'er hver
+    sides IIFE med DOM-shim og dyrker de rigtige listeners: 1× donation i
+    resultatet, **også efter to submits** (dobbelt-Handling), ikke i
+    `renderHTML()` (så den lækker ikke ind i dokumentet), ikke i den kopierede
+    tekst, ikke i markup. Mutation A (fjernet `+ DONATION`) giver 2 røde domme.
+    `node --check` grøn på alle 32 inline blokke.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 107 steps.**
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
 - **Historie:** de afsluttede iterationsafsnit ligger i
   `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
@@ -36,13 +51,23 @@
   `.book-card :is(h3, h2.sub) a { color:#111; text-decoration:none }`,
   `/text-on-image-checker` har donationslinjen i sit script.
 
-- `VERIFICÉR DEPLOY: donationslinjen på ni værktøjssider, hvor den kun
-  opstår når værktøjet renderer sit svar
-  ceo/donation-runde-1 2026-09-30` — ingen ændring i layout: den nye linje er
-  13px i samme grå som de øvrige noter, og på `/hash-generator` og
-  `/url-inspector` ligger den i et tomt `<p hidden>` der først fyldes ved
-  resultat. Mål i dist på de ni ruter (listen i `tools/donation.json`), og
-  læg mærke til at CI's `donation-paths`-step er grøn.
+- **CEO-kø punkt 0 (29/9) er lukket og målt 30/9.** Alle fem delpunkter er
+    rettet og hver er dækket af en test: `handleUrlInspect(request, url, env)`
+    får `env` (`_worker.js:138/2949`) og `tests/stripe-worker.test.mjs:813-924`
+    kalder endpointet, inkl. en mutation der lægger den gamle kode ind og
+    forventer rød. `thanks.html` har `PENDING_OUT` til 202, så den ikke ender i
+    "your payment went through". 429 er endeligt alle syv steder — de fire
+    uden `/net.js` har `err.transient = !data || r.status >= 500`, som holder
+    429 ude, og de viser `data.error`. AI-retry er højst ét ekstra kald.
+    SSRF: `targetIsPublic()` kører på mål og hvert redirect-hop, og
+    værnet afviser IPv4-mapped IPv6 (`:1130-1175`).
+
+- `VERIFICÉR DEPLOY: donationslinjen på otte generatorer, hvor den kun opstår
+  når dokumentet er genereret
+  ceo/donation-runde-2 2026-09-30` — ingen ændring i layout: den nye linje er
+  13px i `var(--color-text-muted)` som de øvrige noter, og den har
+  `class="no-print"`, så den ikke udskrives med dokumentet. Mål i dist på de otte
+  ruter, og læg mærke til at CI's `donation-paths`-step er grøn.
 
 ## Åbne opgaver
 
@@ -110,13 +135,18 @@
     links: `compliance-site-check` (EN+DA), `page-profile` (EN+DA),
     `cookie-check` (EN+DA), `text-diff`, `hash-generator`, `url-inspector`.
     37 → 28. Ratchetfilen dømmer nu 11 filer.
-    **RUNDE 2:** de 28. `word-counter` (15 links) er den næste største, men
-    den tæller løbende og har intet enkelt resultat-`innerHTML` — den kræver
-    et tomt skjult element som på `hash-generator`. `nis2-check` (EN+DA) og
-    `nis2-gap-assessment` (EN+DA) har en leadform i resultatet; de må have
-    donationen **før** leadformen, ikke efter print-knapperne. `dpa-generator`,
-    `ropa-generator`, `privacy-notice-generator` og `nis2-incident-generator`
-    (alle EN+DA) er generatorer med ét resultatfelt hver — den billigste gruppe.
+    **RUNDE 2, DEL 1 FÆRDIG 30/9, `ceo/donation-runde-2`.** Otte generatorer
+    (dpa, ropa, privacy-notice, nis2-incident — EN+DA). 28 → 20.
+    **RUNDE 2, DEL 2:** de 20 tilbage. `word-counter` (15 links) tæller løbende
+    og har intet enkelt resultat-`innerHTML` — den kræver et tomt skjult element
+    som på `hash-generator`. `nis2-check` (EN+DA) og `nis2-gap-assessment`
+    (EN+DA) har en leadform i resultatet; de må have donationen **før**
+    leadformen. `markdown-table-generator`, `uuid-generator`,
+    `accessibility-statement-generator`, `base64-encoder-decoder`,
+    `url-encoder-decoder`, `json-formatter`, `case-converter` er
+    klientværktøjer med ét resultatfelt. `compliance-report` er fortsat
+    undtaget (to `Buy EUComply Pro`-knapper i selve rapporten),
+    `clean-copy-tool` har 48 interne links men sit eget købsflow.
 
 30. ~~**Ni danske blogartikler har mistet deres sammenligningstabel.**~~
     **BEGRUNDELSEN ER FORKERT — målt 30/9.** Der er **23** danske artikler med

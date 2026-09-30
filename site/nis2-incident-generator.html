@@ -285,11 +285,17 @@
 
   var current = null;
 
+  // Tak-linjen ligger i resultatet, altså først når rapporten er genereret,
+  // og ikke i markup'en. Den skal komme *før* den e-mail-leadform der indsættes
+  // underved, så læseren først får sit svar. `no-print`, så den ikke ender i
+  // den rapport læseren udskriver eller gemmer som PDF.
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('nis2-incident-generate');
     current = buildData();
-    $('report').innerHTML = renderHTML(current);
+    $('report').innerHTML = renderHTML(current) + DONATION;
     $('reportWrap').hidden = false;
     $('reportWrap').scrollIntoView({ behavior: 'smooth' });
   });

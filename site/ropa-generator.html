@@ -324,11 +324,17 @@ Hetzner Online GmbH — hosting"></textarea>
 
   var current = null;
 
+  // Tak-linjen ligger i resultatet, altså først når dokumentet er genereret,
+  // og ikke i markup'en. `no-print`, så den ikke ender i det dokument læseren
+  // udskriver eller gemmer som PDF. `renderText()` bygger teksten fra
+  // `renderHTML(current)` alene, så den kommer ikke med i kopieringen.
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate');
     current = buildData();
-    $('agreement').innerHTML = renderHTML(current);
+    $('agreement').innerHTML = renderHTML(current) + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });
