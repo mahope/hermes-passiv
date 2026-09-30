@@ -2061,3 +2061,68 @@ Opgaver lukket i denne iteration:
 - **Selvtesten måtte mig en fejl i min egen mutation.** Første mutation brød Python-syntaksen, så hele filen faldt ud af portens synsfelt og den lød *ren* — synlig kun fordi porten **tæller generatorer** i sin egen statuslinje.
 - `GATE`: **GRØN.** 326 filer, 0 broken; 312 sider, 0 fund; **298/298**; 303 filer, 0. `quality_gate.py`: **93 → 95** steps.
 - **Kendt blind plet, målt:** filteret i `deploy-sites.yml` er en navneliste, så en *ny* generator i `tools/` udløser ikke workflowet alene. *(Modbevist i næste iteration — se arkivet ovenfor: `tools/*.py` er i filteret, og over-erklæringen var hele fejlen.)*
+
+## 2026-09-30 — Deploy fra `ceo/porten-demper-sin-egen-rute` verificeret, opgave 20 arkiveret
+
+**Deploy verificeret på indhold, ét kald pr. domæne.** CI var grøn ved
+iterationens start (`gh run list -L 1` → run `36711323449`, success), så ingen
+rød gate lå foran denne iteration.
+
+- `DEPLOY OK 2026-09-30`: `367e7eb` er live på alle tre domæner. Live
+  `build-info.json` bærer `367e7eb1649e…` på `mahope.tools`,
+  `cleancopy.tools` og `deskuptime.com`, med **`routes_sha256` bit-for-bit
+  uændret** (`8367db4b` / `81ed162d` / `db653dcb`) og **`sitemap_count`**
+  `256 / 34 / 5` — præcis som noteroden krævede, altså ingen ny rute og ingen
+  ændret sitemap.
+- Indholdskrav fra de tre sidste commits, målt på tekst og ikke på HTTP:
+  `https://cleancopy.tools/url-to-markdown` har **0** forekomster af "nothing
+  is sent to a server" og **1** af "scan-proxy". Bemærk domænet: ruten er
+  cleancopy'ens (`build_sites.py:69`), så `mahope.tools/url-to-markdown`
+  svarer 404 — sidste iterations note testede det forkerte domæne.
+- `python3 tools/test_deploy_workflow.py` → `deploy-workflows OK — 2
+  workflows`, så over-erklæringen af portens input ikke kan genopstå.
+- De tre review-fund fra 29/9 var mærket `RETTET 146cab9` og er live.
+
+**Opgave 20 — sjakalen dømmer nu alle syv.** `ceo/dom-de-syv-antalsloefter`.
+
+- `tools/check_area_ordinals.py` skrev i sin egen docstring «et løfte den ikke
+  kan dømme er en fejl, ikke et grønt kort» og udskrev så **syv** af dem som
+  *målt men ikke dømt* — grøn ved præcis den fejlform porten var skrevet imod.
+  Det er det samme mønster planen har målt otte gange.
+- De syv var alle antalsløfter om NIS2's *minimums*sæt ("de ti
+  minimumsområder", "the ten minimum risk-measure areas", "de ti mindste
+  foranstaltningsområder") på sider, der ikke udgiver en liste. De dømmes nu
+  mod `NIS2_AREAS = 10` — art. 21(2)(a)–(j) i direktiv (EU) 2022/2555 — og
+  porten kræver selv at **mindst én publiceret liste i `site/` har præcis ti
+  rækker**, så konstanten ikke kan glide fra det site der understøtter den.
+  Skelningen `MIN_SCOPE` (`minimum*` / `mindste`) er målt: alle syv rammer den,
+  og ingen anden antalspåstand på en side uden liste gør det.
+- Et **ordtal** på en sådan side kan *ikke* dømmes mod rækkefølgen, fordi kun
+  længden er kendt. Porten siger nu "kan ikke dømmes" med stien i stedet for at
+  tie — samme svar som den altid har givet på en side med liste.
+- **Fund undervejs, målt ikke gættet:** `site/free-tools.html` og
+  `site/da/free-tools.html` har **samme filnavn**, og portens fejlmeldinger
+  brugte kun basenavnet. Min første mutationsarm ramte derfor den forkerte fil —
+  selftesten fangede det («står ikke i free-tools.html»), og meldingerne
+  bruger nu stien relativ til `site/`.
+- Selftest: otte arms. (a) «Det femte område» → «tiende» på den danske
+  gapanalyse, (b) det rigtige «fjerde» → «tiende», (c) antallet i overskriften,
+  (d) ordtal uden navn ved siden af sig, (e) engelsk «the tenth area» med navn,
+  (f) engelsk uden navn, (f2) det rigtige engelske «the fifth area» med navn,
+  (g) listen vokser 10 → 11, **(h) tre af de syv nye antalsløfter muteret fra
+  ti til tolv/ni**, (i) positiv kontrol på de to uændrede, (j) ordtal på en
+  side uden liste giver "kan ikke dømmes".
+- Målt på de rigtige filer, ikke på syntetiske eksempler: mutationerne giver
+  `nis2-check-da.html:22: 'de tolv minimumsområder' siger 12, men NIS2's
+  minimumssæt (art. 21(2)(a)-(j)) har 10`,
+  `nis2-check.html:18: 'the twelve minimum risk-measure areas' siger 12, …` og
+  `da/free-tools.html:162: 'de ni mindste foranstaltningsområder' siger 9, …`.
+- Canonical-værnet er målet ved at fjerne den tiende række fra **begge**
+  NIS2-lister i en kopi: `canonical: ingen publiceret liste i site/ har 10
+  rækker (målte længder: [4, 9])`, plus 5 fejl på de sider der ejer listen.
+- **Målt før → efter: 7 → 14 dømte løfter, 4 sider med egen liste + 7
+  forankret, 0 løfter uden dom** (før: 7 dømte, 7 uden dom).
+- `site/_worker.js` urørt, ingen ny rute, intet i `dist/`, ingen ny fil i
+  `tools/` — så ingen ny wiring i `quality_gate.py` eller
+  `deploy-sites.yml` (porten stod allerede i begge).
+- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.

@@ -30,14 +30,29 @@ Denne port gør derfor to ting, begge målt og ikke husket:
   2. **Antal.** "de ti foranstaltningsområder" måles mod længden af den liste
      siden udgiver, så listen og overskriften ikke kan glide fra hinanden.
 
-Kun sider med en publiceret, nummereret liste af hele navne er dømt
-(`<ul class="findings">` med mindst fire `<li><strong>`). Målt 30/9: præcis fire
-sider i `site/` har en sådan liste — de to NIS2-gapanalyser (10 områder) og de
-to cookie-tjek (4). Resten af overfladen læses, men har ingen liste at måle
-imod. Syv af dem har alligevel et antalsløfte ("de ti minimumsområder"), og
-det er hverken dømt eller skjult: de står i `--list` som *målt men ikke dømt*
-og tælles ikke med i OK-tallet, fordi påstanden er om NIS2's ti områder og ikke
-om sidens egen rækkefølge.
+Kun sider med en publiceret, nummereret liste af hele navne kan dømme et
+**ordtal** — porten skal kunne slå navnet op i en liste læseren kan tælle ned
+ad. Målt 30/9: præcis fire sider i `site/` har en sådan liste (`<ul
+class="findings">` med mindst fire `<li><strong>`) — de to NIS2-gapanalyser
+(10 områder) og de to cookie-tjek (4).
+
+Resten af overfladen har syv **antalsløfte** ("de ti minimumsområder"), og de
+blev målt uden at blive dømt. Det var portens egen fejlform: dens docstring
+siger «et løfte den ikke kan dømme er en fejl, ikke et grønt kort», og sådan
+udskrev den dem — grøn. Nu dømmes de:
+
+  3. **Antal uden egen liste.** Et antalsløfte der handler om NIS2's
+     *minimums*-sæt ("de ti minimumsområder", "the ten minimum
+     risk-measure areas") er en påstand om direktivets ti foranstaltningsområder,
+     og den kan dømmes uden sidens egen liste: `NIS2_AREAS` er antallet i
+     NIS2 art. 21(2)(a)–(j), og porten kræver selv at tallet findes i en
+     publiceret liste i repoet, så konstanten ikke kan glide fra det site der
+     understøtter den. Ordtal på en sådan side kan *derimod* ikke dømmes —
+     rækkefølgen findes kun i en liste siden udgiver — og så siger porten
+     "kan ikke dømmes" i stedet for at tie.
+
+Alt, hvad porten stadig ikke dømmer, udskrives i `--list` og tælles **uden** i
+OK-tallet. Målt 30/9 på hele `site/`: nul.
 
     python3 tools/check_area_ordinals.py             # alle ordtal mod den liste
     python3 tools/check_area_ordinals.py --list      # de målte lister
@@ -93,6 +108,43 @@ COUNT_WORDS: dict[str, int] = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
     "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
 }
+
+# Antallet i NIS2's minimumssæt. Kilden er direktivet, ikke denne kode:
+# NIS2 (Directive (EU) 2022/2555) art. 21(2)(a)–(j) opremser **ti**
+# foranstaltningsområder. Tallet bruges kun til at dømme antalsløfter på sider
+# der ikke udgiver deres egen liste, og `check()` kræver at netop så mange
+# rækker findes i en publiceret liste i `site/` — ellers er konstanten ikke
+# længere understøttet af noget, porten kan efterprøve, og den fejler.
+NIS2_AREAS = 10
+
+# Hvad der gør et antalsløfte til et løfte om *minimumssæt*. Ordet "minimum"
+# (dansk "mindste", "minimumsområder") er skelningen, fordi det er den
+# betegnelse NIS2 selv bruger for art. 21(2)-sættet. Målt 30/9: alle syv
+# løfter på sider uden liste rammer denne skelningslinje, og ingen anden
+# antalspåstand på en side uden liste gør det — så porten dømmer hele det
+# overflade den siger den dømmer, og intet mere.
+MIN_SCOPE = re.compile(r"\bminimum\w*|\bmindste\b", re.IGNORECASE)
+
+
+def _rel(path: Path) -> str:
+    """Stien relativ til `site/`, ikke kun filnavnet.
+
+    Målt 30/9: `site/free-tools.html` og `site/da/free-tools.html` findes begge,
+    og kun basenavnet gav to fejlmeldinger der så ens ud. Det er ikke en
+    kosmetisk forskel — en mutation der rammer den forkerte fil ligner
+    fuldstændig en rettelse, fordi porten ikke kan sige hvilken side den
+    dømte.
+    """
+    try:
+        return str(path.relative_to(ROOT / "site"))
+    except ValueError:
+        # Selftesten arbejder i en kopi under /tmp, så stien ligger ikke under
+        # `ROOT`. Alt efter `site/` er den samme side, og det er den der skal
+        # stå i fejlmeldingen.
+        parts = path.parts
+        if "site" in parts:
+            return str(Path(*parts[parts.index("site") + 1:]))
+        return path.name
 
 _ORD_ALT = "|".join(sorted(ORDINALS, key=len, reverse=True))
 RE_ORDINAL = re.compile(
@@ -163,18 +215,68 @@ def _paragraph_of(src: str, pos: int) -> str:
     return _text(src[start:end if end != -1 else start + 600])
 
 
+def _claims(src: str) -> list[re.Match[str]]:
+    """Alle ordtals- og antalsløfter i kilden.
+
+    Scripts er **ikke** klippet væk her, i modsætning til `published_list()`:
+    to af de syv antalsløfter ligger i inline-JS og er tekst læseren ser, fordi
+    siden skriver dem ud. Kilde: `--list` 30/9, målt på hele `site/`.
+    """
+    return [*RE_ORDINAL.finditer(src), *RE_COUNT.finditer(src)]
+
+
+def _count_claims(src: str) -> list[re.Match[str]]:
+    return list(RE_COUNT.finditer(src))
+
+
+def anchored_to_nis2(src: str) -> bool:
+    """Sider uden egen liste, hvis antalsløfte handler om NIS2's minimumssæt."""
+    if published_list(src):
+        return False
+    return any(MIN_SCOPE.search(m.group(0)) for m in _count_claims(src))
+
+
+def unjudged_claims(path: Path) -> list[str]:
+    """Løfter porten stadig ikke dømmer — målt, men uden dom.
+
+    Målt 30/9 på hele `site/`: nul. De syv antalsløfter der stod her i portens
+    første udgave dømmes nu mod `NIS2_AREAS`. Det der kan blive stående er et
+    antalsløfte på en side uden liste der ikke handler om minimumssættet — det
+    porten ikke kan forankre i noget, og derfor heller ikke skal grønne ved at
+    tie om det.
+    """
+    src = path.read_text(encoding="utf-8")
+    if published_list(src) or anchored_to_nis2(src):
+        return []
+    out = []
+    for rx, kind in ((RE_ORDINAL, "ordtal"), (RE_COUNT, "antal")):
+        for m in rx.finditer(src):
+            out.append(f"{_rel(path)}:{src.count(chr(10), 0, m.start()) + 1}: "
+                       f"{kind} {m.group(0)!r}")
+    return out
+
+
 def check_file(path: Path) -> list[str]:
     """Fejlmeldinger for den ene side."""
     src = path.read_text(encoding="utf-8")
-    areas = published_list(src)
+    own = published_list(src)
+    areas = own
+    if not own and anchored_to_nis2(src):
+        areas = [""] * NIS2_AREAS   # antal uden navne: kun længden dømmes
     if not areas:
-        return []          # ingen publiceret, nummereret liste = intet at dømme
-    rel = path.name
+        return []          # ingen publiceret liste og intet at forankre i
+    rel = _rel(path)
     errs: list[str] = []
 
     for m in RE_ORDINAL.finditer(src):
         line = src.count("\n", 0, m.start()) + 1
         claimed = ORDINALS[m.group("ord").lower()]
+        if not own:
+            errs.append(
+                f"{rel}:{line}: {m.group(0)!r} kan ikke dømmes — siden udgiver "
+                f"ingen liste, så rækkefølgen i NIS2's {NIS2_AREAS} områder "
+                f"findes kun et andet sted")
+            continue
         para = _paragraph_of(src, m.start())
         # Alle listerækker hvis navn står i afsnittet. Flere fund er ikke en
         # lighed — det er et løfte porten ikke kan dømme, fordi den ikke ved
@@ -194,57 +296,56 @@ def check_file(path: Path) -> list[str]:
                 f"{rel}:{line}: {m.group(0)!r} er tvetydigt — afsnittet navngiver "
                 + " og ".join(f"nr. {i}" for i in hits))
 
+    # Hvad porten måler løftet imod. Det er ikke det samme på de to veje: en
+    # side med egen liste måles mod den, en side uden måles mod art. 21(2)(a)–(j).
+    # At skrive "sidens liste" på en side uden liste ville sende en læser ud
+    # på en jagt efter noget der ikke findes.
+    source = ("sidens liste" if own
+              else f"NIS2's minimumssæt (art. 21(2)(a)-(j))")
     for m in RE_COUNT.finditer(src):
         line = src.count("\n", 0, m.start()) + 1
         claimed = COUNT_WORDS[m.group("word").lower()]
         if claimed != len(areas):
             errs.append(
-                f"{rel}:{line}: {m.group(0)!r} siger {claimed}, men sidens liste "
+                f"{rel}:{line}: {m.group(0)!r} siger {claimed}, men {source} "
                 f"har {len(areas)}")
     return errs
 
 
-def skipped_claims(path: Path) -> list[str]:
-    """Løfter på en side uden publiceret liste — målt, men ikke dømt.
-
-    Syv sider i `site/` siger "de ti minimumsområder" eller "the ten minimum
-    risk-measure areas" uden selv at publicere en liste. Den påstand er om
-    NIS2's ti foranstaltningsområder, ikke om sidens egen rækkefølge, så den
-    kan ikke dømmes her — og den skal *heller ikke* fejle, for det ville være
-    porten der opdigter en regel den ikke kan håndhæve.
-
-    Men den skal være synlig. En tæller der tæller dem med i sit "OK"-tal uden
-    at dømme dem, er grøn ved præcis den fejl den er skrevet imod — det er det
-    mønster planen har målt syv gange nu (`RE_CLAIM` der tæller 171 og dømmer
-    4, ratcheten der ikke kan se en tilbagefaldet rute, `check_jsonld_types`
-    der tæller `@type` men ikke node-indhold). Derfor udskrives de med navn, og
-    de tælles **uden** i OK-tallet.
-    """
-    src = path.read_text(encoding="utf-8")
-    if published_list(src):
-        return []
-    out = []
-    for rx, kind in ((RE_ORDINAL, "ordtal"), (RE_COUNT, "antal")):
-        for m in rx.finditer(src):
-            out.append(f"{path.name}:{src.count(chr(10), 0, m.start()) + 1}: "
-                       f"{kind} {m.group(0)!r}")
-    return out
+def canonical_ok() -> str | None:
+    """Fejl hvis ingen publiceret liste har `NIS2_AREAS` rækker — ellers er
+    direktiv-citatet i porten ubekræftet, og de forankrede antalsløfter ville
+    være dømt mod et tal intet i repoet understøtter."""
+    lengths = set()
+    for p in sorted((ROOT / "site").rglob("*.html")):
+        areas = published_list(p.read_text(encoding="utf-8"))
+        if areas:
+            lengths.add(len(areas))
+    if NIS2_AREAS in lengths:
+        return None
+    return (f"canonical: ingen publiceret liste i site/ har {NIS2_AREAS} "
+            f"rækker (målte længder: {sorted(lengths)}) — art. 21(2)(a)–(j) "
+            f"siger ti, så portens egen forankring kan ikke efterprøves")
 
 
-def check() -> tuple[list[str], int, int, int]:
-    """Alle fejl, sider med liste, dømte løfter, og løfter der ikke kan dømmes."""
+def check() -> tuple[list[str], int, int, int, int]:
+    """Fejl, sider med liste, sider forankret til NIS2, dømte løfter, udømte."""
     errs: list[str] = []
-    listed = judged = 0
-    skipped: list[str] = []
+    canon = canonical_ok()
+    if canon:
+        errs.append(canon)
+    listed = anchored = judged = unjudged = 0
     for path in sorted((ROOT / "site").rglob("*.html")):
         errs.extend(check_file(path))
         src = path.read_text(encoding="utf-8")
         if published_list(src):
             listed += 1
-            judged += len(RE_ORDINAL.findall(src)) + len(RE_COUNT.findall(src))
-        else:
-            skipped.extend(skipped_claims(path))
-    return errs, listed, judged, len(skipped)
+            judged += len(_claims(src))
+        elif anchored_to_nis2(src):
+            anchored += 1
+            judged += len(_claims(src))
+        unjudged += len(unjudged_claims(path))
+    return errs, listed, anchored, judged, unjudged
 
 
 def show_list() -> str:
@@ -254,16 +355,30 @@ def show_list() -> str:
         areas = published_list(src)
         if not areas:
             continue
-        out.append(f"  {path.name} ({len(areas)}):")
+        out.append(f"  {_rel(path)} ({len(areas)}):")
         for i, name in enumerate(areas, 1):
             out.append(f"    {i:>2}. {name}")
         out.append("")
-    skipped = [s for p in sorted((ROOT / "site").rglob("*.html"))
-               for s in skipped_claims(p)]
-    if skipped:
-        out += ["Målt men ikke dømt — siden udgiver ingen liste, så rækkefølgen "
-                "kan ikke måles her:", ""]
-        out += [f"  {s}" for s in skipped]
+
+    anchored = [p for p in sorted((ROOT / "site").rglob("*.html"))
+                if not published_list(p.read_text(encoding="utf-8"))
+                and anchored_to_nis2(p.read_text(encoding="utf-8"))]
+    if anchored:
+        out += [f"Forankret til NIS2's {NIS2_AREAS} minimumsområder "
+                f"(art. 21(2)(a)–(j)) — siden udgiver ingen liste, så kun "
+                f"antallet dømmes:", ""]
+        for p in anchored:
+            src = p.read_text(encoding="utf-8")
+            claims = ", ".join(repr(m.group(0)) for m in _claims(src))
+            out.append(f"  {_rel(p)}: {claims}")
+        out.append("")
+
+    unjudged = [s for p in sorted((ROOT / "site").rglob("*.html"))
+                for s in unjudged_claims(p)]
+    if unjudged:
+        out += ["Målt men ikke dømt — hverken egen liste eller et løfte om "
+                "NIS2's minimumssæt at forankre i:", ""]
+        out += [f"  {s}" for s in unjudged]
         out.append("")
     return "\n".join(out)
 
@@ -399,6 +514,60 @@ def self_test() -> int:
                          "ingen fejl — porten har låst listen fast ved dagens "
                          "indhold")
 
+        # (h) De syv antalsløfter der FØR var målt men ikke dømt. Armen
+        # muterer tre af dem — to danske og den engelske tvilling — på de
+        # rigtige filer. Uden disse ville portens egen docstring lyve: den siger at et
+        # løfte den ikke kan dømme er en fejl, og netop disse syv var det
+        # undtagelsen den selv havde lavet.
+        for rel, old, new, label in (
+            ("nis2-check-da.html", "de ti minimumsområder",
+             "de tolv minimumsområder", "dansk antalsløfte på /nis2-check-da"),
+            ("nis2-check.html", "the ten minimum risk-measure areas",
+             "the twelve minimum risk-measure areas",
+             "engelsk antalsløfte på /nis2-check"),
+            ("da/free-tools.html", "de ti mindste foranstaltningsområder",
+             "de ni mindste foranstaltningsområder",
+             "dansk antalsløfte på /da/free-tools"),
+        ):
+            errs_h = mutate(rel, old, new, label)
+            if errs_h and not any("siger" in e for e in errs_h):
+                fails.append(f"selftest: {label} gav en fejl uden at sige hvad "
+                             "løftet sagde: " + "; ".join(errs_h[:3]))
+
+        # (i) Positiv kontrol på præcis de mutationer (h) lige dømte: uændrede
+        # skal de være grønne. Uden denne arm er (h) grøn bare fordi porten
+        # afviser *alle* antalsløfter på sider uden liste.
+        for rel, claim in (("nis2-check-da.html", "de ti minimumsområder"),
+                           ("nis2-check.html",
+                            "the ten minimum risk-measure areas")):
+            f = site / rel
+            text = f.read_text(encoding="utf-8")
+            if claim not in text:
+                fails.append(f"selftest: {rel} indeholder ikke {claim!r}, så "
+                             "mutationsarmene ville springe porten over")
+            elif check_file(f):
+                fails.append(f"selftest: det rigtige løfte {claim!r} i {rel} "
+                             "giver fejl: " + "; ".join(check_file(f)[:3]))
+
+        # (j) Et ordtal på en side uden liste kan *ikke* dømmes mod rækkefølgen,
+        # fordi porten kun har længden at gå efter. Den skal sige det frem for
+        # at være grøn ved et løfte den ikke kan slå op.
+        f = site / "nis2-check-da.html"
+        original = f.read_text(encoding="utf-8")
+        f.write_text(original.replace(
+            "de ti minimumsområder",
+            "det tredje område i NIS2's minimumssæt, og de ti minimumsområder", 1),
+            encoding="utf-8")
+        orphan_scope = check_file(f)
+        f.write_text(original, encoding="utf-8")
+        if not any("kan ikke dømmes" in e for e in orphan_scope):
+            fails.append("selftest: et ordtal på en side uden egen liste gav "
+                         "ingen 'kan ikke dømmes'-fejl — porten springer over "
+                         "løfter den ikke kan dømme")
+        elif not any("nis2-check-da.html" in e for e in orphan_scope):
+            fails.append("selftest: 'kan ikke dømmes'-fejlen nævner ikke den "
+                         "muterede side: " + "; ".join(orphan_scope[:3]))
+
     for f in fails:
         print(f)
     if fails:
@@ -420,18 +589,18 @@ def main() -> int:
         print(show_list())
         return 0
 
-    errs, listed, judged, skipped = check()
+    errs, listed, anchored, judged, unjudged = check()
     if errs:
         print(f"check_area_ordinals: {len(errs)} fejl — et ordtal i brødteksten "
               f"stemmer ikke med den liste siden udgiver\n")
         for e in errs:
             print("  " + e)
         return 1
-    tail = (f", {skipped} løfter på sider uden liste er målt men ikke dømt"
-            f" (--list)" if skipped else "")
+    tail = (f", {unjudged} løfter målt men ikke dømt (--list)"
+            if unjudged else ", ingen løfter uden dom")
     print(f"check_area_ordinals OK: {judged} ordtals- og antalsløfter dømt, alle "
-          f"matcher listens rækkefølge ({listed} sider med en publiceret "
-          f"liste){tail}")
+          f"matcher deres mål ({listed} sider med egen publiceret liste, "
+          f"{anchored} forankret til NIS2's {NIS2_AREAS} minimumsområder){tail}")
     return 0
 
 
