@@ -463,6 +463,20 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_duplicate_headings.py", "--self-test"),
         inputs=("tools/check_duplicate_headings.py", "site/**"),
     ),
+    # Opgave 21: den første handling over folden. Ratchetet er per rute *med
+    # forventet destination*, så en ombytning af to `href` bliver rød — en
+    # port der bare tæller `btn-primary` ville være grøn fordi siden stadig har
+    # én, bare den forkert.
+    Step(
+        id="first-action",
+        argv=("python3", "tools/check_first_action.py"),
+        inputs=("tools/check_first_action.py", "tools/first_action.json", "site/**"),
+    ),
+    Step(
+        id="first-action-selftest",
+        argv=("python3", "tools/check_first_action.py", "--self-test"),
+        inputs=("tools/check_first_action.py", "tools/first_action.json", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),

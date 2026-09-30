@@ -1,0 +1,7 @@
+{
+  "_kommentar": "Første handling over folden pr. kildefil. Kun sider med trafik er dømt; se check_first_action.py for hvorfor de øvrige 182 kun tælles. Tilføj en linje pr. side der har fået rettet folden, ellers dømmer porten den ikke.",
+  "site/blog/text-on-image-contrast-check.html": "/text-on-image-checker",
+  "site/da/blog/tekst-paa-billede-kontrasttjek.html": "/text-on-image-checker-da",
+  "site/index.html": "/free-tools",
+  "site/da/index.html": "/da/free-tools"
+}

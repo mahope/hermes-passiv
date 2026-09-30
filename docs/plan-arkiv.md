@@ -2126,3 +2126,41 @@ rød gate lå foran denne iteration.
   `tools/` — så ingen ny wiring i `quality_gate.py` eller
   `deploy-sites.yml` (porten stod allerede i begge).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
+
+## 2026-09-30 — Opgave 21: værktøjet som første handling (ceo/vaerktojet-foerst-over-folden)
+
+- **Målt udløser:** Plausible 28 dage, hentet 30/9 10:12. `/blog/text-on-image-contrast-check`
+  var mahope.tools' mest besøgte side: **8 af 15 besøgende, bounce 100 %**. `/` havde
+  4 besøgende, bounce 100 %.
+- **Årsagen i folden (ikke gættet, læst i kilden):** `site/blog/text-on-image-contrast-check.html`
+  havde `<a href="#how" class="btn-primary">See how it works</a>` som heroens primære
+  handling — altså et anker ned i artiklen — mens selve værktøjet var `btn-secondary`.
+  Lige under `</header>` stod to `btn-primary` mere: scanner-banneren fra
+  `tools/add_top_cta_495.py` og AI-CTA'en fra `tools/add_ai_cta.py`. Tre ens knapper
+  over folden, ingen af dem det værktøj læseren kom for.
+- **Rettelse (EN + DA):** værktøjet (`/text-on-image-checker` hhv.
+  `/text-on-image-checker-da`) er den primære handling, «See how it works» er
+  `btn-secondary`, og de to banneren er flyttet fra lige under `</header>` til efter
+  `#how`-sektionen og demoteret til `btn-secondary`. AI-CTA'en beholder sin
+  `.ai-cta-link`, så sporingen og `check_inline_cta_events` er urørt.
+  `/` og `/da/` blev ikke rørt: de har allerede én `btn-primary` som første link.
+- **Målingen der blev større end opgaven:** over hele `site/` har **180 af de 224
+  sider med en hero** 2–3 `btn-primary` i foldregionen, og på mange af dem er
+  heroens egen primære et anker (`#content`, `#how`, `#checklist`). Det er
+  banner-scriptene, der har skudt to knapper ind under headeren på hele bloggen.
+  17 sider har nul. Tallene er fra `tools/check_first_action.py`, som skriver dem ud
+  i hver kørsel.
+- **Ny port `tools/check_first_action.py` + `tools/first_action.json`:** ratchet per
+  kildefil **med forventet destination** — samme læring som den betalte ratchet
+  (per anker, ikke per rute), så en ombytning af to `href` i heroen bliver rød.
+  Dommer de fire sider med trafik; de 180 øvrige tælles og dømmes ikke, og portens
+  docstring siger det. Foldregionen er heroen **plus** de `blog-tool-cta`-banner der
+  ligger før det første `<section>`, fordi de er over folden selv om de ikke er i
+  headeren. 9/9 selftest, heraf mutation mod FØR-fix-filen: «3 btn-primary i
+  foldregionen (#how, /scan, /compliance-ai)» + «den primære handling er #how, ikke
+  /text-on-image-checker».
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 97 steps** (de to nye steps er
+  lagt i både `quality_gate.py` og `deploy-sites.yml`'s path-filter).
+- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
+- **Åben beslutning (❓):** skal banneren ligge over folden på de 180 sider, eller
+  flyttes/slettes den? Det er en promo Mads har bedt om, så det er hans valg.

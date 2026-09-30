@@ -82,6 +82,13 @@ on:
       # port over som afgør om fejlformen må slå. Samme grund som de linjer
       # ovenfor.
       - 'tools/check_duplicate_headings.py'
+      # Gatestrækket `first-action` dømmer, hvilken handling der er den primære
+      # over folden på de sider der har trafik — og mod hvilken destination.
+      # Uden portens egen fil og ratchetfil i filteret kunne en push, der kun
+      # bytter to `href` i en hero, springe netop den port over som afgør om
+      # ombytningen må slå. Samme grund som de linjer ovenfor.
+      - 'tools/check_first_action.py'
+      - 'tools/first_action.json'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod
