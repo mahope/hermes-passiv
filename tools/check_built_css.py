@@ -433,8 +433,21 @@ def self_test() -> int:
         # `AUDITEDWP_DIR`, og buildet fejler på route inventory uden dem.
         # Sibling-repoet er read-only for os, så der peges på den rigtige
         # mappe i stedet for at kopiere den.
+        #
+        # `AUDITEDWP_DIR` skal *respekteres*, ikke overskrives: CI tjekker
+        # auditedwp ud som `github.workspace/auditedwp-src` og sætter
+        # miljøvariablen, fordi der ikke ligger et `../auditedwp` ved siden af
+        # repoet. Et hårdkodet `ROOT.parent / "auditedwp"` peger der på en mappe
+        # der ikke findes, og selvtesten døde så med "route inventory mismatch"
+        # i CI — altså rød af en fejl i portens egen opsætning, ikke af et fund.
         env = dict(os.environ)
-        env["AUDITEDWP_DIR"] = str(ROOT.parent / "auditedwp")
+        auditedwp = Path(env.get("AUDITEDWP_DIR") or (ROOT.parent / "auditedwp"))
+        if not (auditedwp / "site" / "deskuptime").is_dir():
+            raise AssertionError(
+                f"auditedwp's værktøjssider mangler i {auditedwp} — sæt "
+                f"AUDITEDWP_DIR til auditedwp-checkouten (CI bruger "
+                f"github.workspace/auditedwp-src)")
+        env["AUDITEDWP_DIR"] = str(auditedwp)
 
         def build_in(work_root: Path) -> list[Finding]:
             """Byg i kopien og kør porten *der* — aldrig mod hovedrepoet."""

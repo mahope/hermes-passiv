@@ -1766,3 +1766,112 @@ fil springe netop den over.
 **Sidefund, ikke rettet (opgave 16):** `/blog/macos-menu-bar-website-monitor` har
 to `<h2>` med samme indhold: `Related guides` (:71) og `Related Guides` (:78).
 Set på skærmbillede, ikke af nogen port.
+
+---
+
+## 30/9 — Bygget slettede CSS på 22 sider, og den nye port døde i CI
+
+To iterationer i én, fordi de hører sammen: en fejl i bygget, og en fejl i
+porten der skulle dømme bygget.
+
+**Fejlen i bygget.** `WRAP_SELECTOR_RE` i `tools/pagepass.py:66` spiste *ethvert*
+`*-wrap`, men `style.css` erklærer kun tre af dem (`.jf-wrap`, `.tool-wrap`,
+`.table-wrap`). Målt på de rigtige filer — regel i `site/` væk i `dist/`,
+elementet stadig i markup, skallen kompenserer ikke: **25 tab på 22 sider**. På
+`/url-inspector` kostede `.input-wrap` sin `display:flex`, så inputfeltet blev
+1280px bredt og knappen faldt ud under det.
+
+**Den private palet var værre, og planens egen måling af den var forkert.**
+`site/url-inspector/index.html` erklærede sit eget `:root`, som bygget fjerner.
+Planen havde målt at `style.css:128-136` dækker de ni tokens som aliasser på
+`:root` — **de ligger under `html[data-product="deskuptime"]`**, altså kun på
+DeskUptime. Efterprøvet i browseren: `getPropertyValue('--accent')` → `''` på
+mahope.tools. Følgen var hvid tekst på hvid knap, fordi `.input-wrap button`
+havde `color:#fff` på `background:var(--accent)`. Min egen tokens-skanning havde
+samme fejl: regex over hele filen så deklarationerne, uanset at de lå i et
+produktscopet blok. Samme fejlform igen, i min egen måling.
+
+**Rettelsen er to dele, fordi der var to fejl.** (a) `pagepass.py`: et `*-wrap`
+droppes kun når `style.css` kan dokumentere at det erklærer præcis den klasse.
+Efterprøvet på de tre skalkompenserede: `.jf-wrap`/`.tool-wrap`/`.table-wrap`
+er stadig skallens, så `json-formatter` og de tre `tool-wrap`-sider er
+uændrede. 25 → 0. (b) Siden bruger skallens tokens direkte, præcis som
+`.pro-note`-familien gør, og knappen fik `class="btn btn-primary"`.
+
+**Knappen tabte en kaskadestrid, som en måling forklarede bedre end en gætning.**
+Efter token-rettelsen var `--accent` løst, men knappen var stadig hvid-på-hvid.
+Årsagen er skallens `button:not([class])` — samme specificitet (0,1,1) som
+`.input-wrap button`, og `<link>` indlæses efter sidens egen `<style>`, så skallen
+vandt. Løsningen er ikke en højere specificitet men skallens egen knapkomponent,
+som også giver hover/active/disabled.
+
+**Målt i browseren, ikke i markup.** Playwright mod den byggede `dist` over HTTP
+(`file://` indlæser ikke `/style.css` og så ud som om alt var væk): 1280px før
+`.wrap` 1280px uden max-width, efter 960px; knap 88×45 → 115×51; `--accent` `''`
+→ `#4a3fc4`. 390/768/1280: ingen vandret scroll, knap ≥44px, pro-note
+venstrestillet på samme kolonne som H1 (left 200 ved 1280).
+
+**Den nye port `tools/check_built_css.py` dømmer begge dele på de *byggede*
+filer.** (a) en regel i `site/<side>.html` der ikke findes i
+`dist/<domæne>/<side>.html`, når elementet stadig er i markup og skallen ikke
+erstatter den; (b) ethvert `var(--x)` **uden fallback** er opløst for sidens
+`data-product` — ikke "nævnt et sted i `style.css`", som var den forkerte
+læsning. Første kørsel fandt 9 uopløste tokens på 4 sider, alle rettet i samme
+diff: `--accent` på 3 download-links (`/blog/desktop-website-monitor-cli`),
+`--muted` i 4 regler på to sider (`/blog/macos-menu-bar-website-monitor` + den
+danske spejling), `--text-dim` i 7 afsnit (`/downloads`) — legacy-aliaser
+erklæret kun under `html[data-product="deskuptime"]`. Efterprøvet i browseren:
+`getPropertyValue('--accent')` → `''`, `--color-accent` → `#4a3fc4`.
+
+**5 af de 9 fund var falske, og det var portens skyld, ikke sidernes.**
+`var(--color-muted, var(--color-text-muted))` *er* opløst — med fallback er
+tokenet ligegyldigt. Første version af `tokens_used()` greb alle `var(--x)`;
+den tæller nu kun dem uden fallback. Samme fejlform som de tre andre tællere
+jeg skrev om i forrige iteration, bare fundet i min egen nye kode inden den blev
+grøn.
+
+**To forkerte antagelser i porten, som kun mutationerne afslørede.** (a) Jeg
+behandlede `html[data-theme="dark"]` som dækning, men en token kun i
+mørktemaet er uopløst i lyst — samme fejl som `check_design_tokens` havde, nu i
+en ny fil. (b) Alias-opløsningen trak `--color-accent` ind via
+`--accent: var(--color-accent)` *uden* at respektere scope, altså genindførte
+præcis den fejl porten skal fange. Begge er rettet, og `_mutate_style_css`
+leder efter tokenens **værdi** (ikke en bestemt linje), så mutationen rammer den
+rigtige regel også hvis `style.css` flytter sig.
+
+**Én falsk alarm på min egen whitespace-normalisering.** Bygget skriver en regel
+på én linje, kilden har den ombrudt, så `.ti-canvas-wrap` på
+`/text-on-image-checker` så tabt ud. Elementet *er* i markup og klassen *er* i
+ingen `style.css`-regel — så fundet var næsten ægte, men ikke. En port der
+rødmer på sin egen formatering kan ikke bruges.
+
+**Selvtesten kræver mutationer på de rigtige filer og de rigtige fund.** Den
+kopierer repoet, muterer `tools/pagepass.py` (genindsætter den gamle
+`*-wrap`-påstand) og `site/style.css` (flytter `--color-accent` ud af `:root`
+ind i deskuptimes scope), bygger i kopien, og kræver at porten bliver rød med
+**filnavn og den konkrete regel/token** — 8 kontroller. Uden kravet om
+`ti-canvas-wrap` og `var(--color-accent)` i detaljen ville enhver fejl i samme
+fjerde have tjent som bevis, så det er skrevet eksplicit.
+
+### Porten døde i CI på sin egen opsætning (30/9, senere samme dag)
+
+`be15972` var rød i `deploy-sites.yml`. Årsagen var ikke et fund: `self_test()`
+ satte `env["AUDITEDWP_DIR"] = str(ROOT.parent / "auditedwp")` — altså
+**overskrevet**, ikke respekteret. CI tjekker auditedwp ud som
+`${{ github.workspace }}/auditedwp-src` og sætter `AUDITEDWP_DIR`, fordi der
+ikke ligger et `../auditedwp` ved siden af repoet på runneren. Den hårdkodede
+sti pegede der på en mappe der ikke findes, så *buildet i kopien* døde med
+`deskuptime.com: route inventory mismatch` — selvtesten fejlede altså af sin egen
+opsætning, ikke fordi den fandt noget.
+
+Reproduceret lokalt før rettelsen: et `git worktree` af repoet under
+`/tmp/cisim-*/hermes-passiv` (altså uden `../auditedwp`) med
+`AUDITEDWP_DIR` sat, gav **byte-for-byte** CI's fejl. Efter rettelsen: `OK (8
+kontroller)`. Rettelsen bruger `env.get("AUDITEDWP_DIR") or (ROOT.parent /
+"auditedwp")` og siger klart hvis auditedwp's værktøjssider mangler, så en sådan
+opsætningsfejl ikke længere ligner et fund.
+
+Samme opsætningsfejlform dukkede op i min egen måling igen: tre gange i denne
+opgave skrev jeg en måling, der så på "tokenet er nævnt et sted i `style.css`"
+i stedet for "det er erklæret i en regel der gælder for *denne* side". Samme
+årsag hver gang: et regex-lag uden scope.
