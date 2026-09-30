@@ -368,6 +368,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_storage_claims.py", "--self-test"),
         inputs=("tools/check_storage_claims.py", "site/_worker.js", "site/**"),
     ),
+    # Ordtal i brødteksten (30/9). Review fandt `nis2-gap-assessment-da.html`
+    # kalde "sikkerhed ved anskaffelse, udvikling og vedligeholdelse" det
+    # *tiende* område, mens siden selv udgiver den som nr. 5 — to afsnit ovenfor
+    # stod "det fjerde område" for leverandørsikkerhed, som er nr. 4, så
+    # sidekonventionen afgjorde det. `rule-claims` dømmer tal og priser, ikke
+    # ordtal mod en række, så det her er en egen port. Den læser den *statiske*
+    # `<ul class="findings">` — den liste læseren tæller ned ad — og et løfte
+    # den ikke kan dømme er en fejl, ikke et grønt kort.
+    Step(
+        id="area-ordinals",
+        argv=("python3", "tools/check_area_ordinals.py"),
+        inputs=("tools/check_area_ordinals.py", "site/**"),
+    ),
+    Step(
+        id="area-ordinals-selftest",
+        argv=("python3", "tools/check_area_ordinals.py", "--self-test"),
+        inputs=("tools/check_area_ordinals.py", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),

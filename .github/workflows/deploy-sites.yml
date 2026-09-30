@@ -45,6 +45,12 @@ on:
       # `rateLimitIp(…)` i workeren, springe gaten over — altså netop den push
       # der gør porten meningsløs. Målt ni gange nu, samme krav.
       - 'tools/check_storage_claims.py'
+      # Gatestrækket `area-ordinals` dømmer ordtal i brødteksten mod den
+      # nummererede liste hver side selv udgiver. Uden portens egen fil i
+      # filteret kunne en push, der kun tilføjer en ny fejlform til porten,
+      # springe netop den port over som afgør om fejlformen må slå. Samme
+      # grund som de tre linjer ovenfor, målt for elvte gang.
+      - 'tools/check_area_ordinals.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod
