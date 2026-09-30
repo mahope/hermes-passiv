@@ -568,6 +568,13 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("books/eaa-checklist.html", "web"),
     ("books/nis2-for-agencies.html", "web"),
     ("books/index.html", "web"),
+    # GDPR-bogen for bureauer (30/9) — 14 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den sælger den samme licens og lover de samme
+    # to tal som de tre ovenfor, og grunden er bogens egen opbygning: kapitel
+    # 3 og appendiks B er dokumenterne (DPA, RoPA, hændelsesplan) og den
+    # klar-til-indsæt DPA-klausul, og pro-note'en siger præcis det en bog ikke
+    # kan — åbne det site man leverede og se hvilke af dem der fejer i dag.
+    ("books/gdpr-for-agencies.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )

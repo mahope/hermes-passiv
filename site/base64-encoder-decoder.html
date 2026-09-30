@@ -55,6 +55,12 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
 .breadcrumb a { color: var(--color-accent); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
 .breadcrumb span { color: var(--color-text-muted); }
+.pro-note { max-width: 720px; margin: 2.5rem auto 0; padding: 18px 22px;
+            border: 1px solid var(--color-accent); border-radius: 10px;
+            background: var(--color-accent-soft); }
+.pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
+.pro-note a { color: var(--color-accent); }
 </style>
 <script defer src="/track.js"></script>
 <script type="application/ld+json">
@@ -129,6 +135,17 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
       <div class="card"><h3>Why does my Base64 string fail to decode?</h3><p>The three usual causes are: characters outside the Base64 alphabet (A–Z, a–z, 0–9, +, / and =), a length that is not a multiple of 4 (padding is missing or has been trimmed), or a URL-safe variant using - and _ instead of + and /. Whitespace and line breaks are stripped automatically before decoding.</p></div>
       <div class="card"><h3>What is URL-safe Base64?</h3><p>A variant used in JWTs and URLs where + is replaced by - and / by _, usually without padding. This tool decodes the standard alphabet; for URL-safe input, replace - with + and _ with / first, and append = until the length is a multiple of 4.</p></div>
   </div>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">This one stays free, and there is nothing to unlock.</h2>
+  <p>Encoding and decoding in both directions, with the full Unicode range and nothing
+  uploaded — that will not change. We have no paid version of this tool, because we could not
+  find an honest reason to charge for turning a line of Base64 back into the string it came
+  from. What it
+  costs to keep these tools online is covered by people who found them worth having: if this
+  saved you a trip to a shell while reading a JWT or a data URI, you can
+  <a href="/support">say thanks</a>. It is optional, and it changes nothing on this page.</p>
 </section>
 
 </main>
