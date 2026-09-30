@@ -575,6 +575,14 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # klar-til-indsæt DPA-klausul, og pro-note'en siger præcis det en bog ikke
     # kan — åbne det site man leverede og se hvilke af dem der fejer i dag.
     ("books/gdpr-for-agencies.html", "web"),
+    # Cookie-bogen (30/9) — 11 indgående sider, målt af
+    # `check_tool_paid_path.py`. Samme licens og samme to tal som de tre
+    # ovenfor, og her er motoren den tætteste match endnu: kapitel 2 er
+    # inventaret, kapitel 3 banneret og kapitel 5 privatlivspolitikken, mens
+    # `reportProFindings()` faktisk har seks cookie-fund her — COOKIE_BANNER,
+    # COOKIE_SCRIPTS, GA_NO_CONSENT, FB_NO_CONSENT, PRIVACY_LINK og
+    # NO_ANALYTICS. Målt i `_worker.js:1242-1246`.
+    ("books/cookie-consent-guide.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )

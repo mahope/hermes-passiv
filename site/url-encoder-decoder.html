@@ -71,6 +71,12 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
 .breadcrumb a { color: var(--color-accent); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
 .breadcrumb span { color: var(--color-text-muted); }
+.pro-note { max-width: 720px; margin: 2.5rem auto 0; padding: 18px 22px;
+            border: 1px solid var(--color-accent); border-radius: 10px;
+            background: var(--color-accent-soft); }
+.pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
+.pro-note a { color: var(--color-accent); }
 @media (max-width: 600px) {
   .urld-output { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
 }
@@ -161,8 +167,18 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
       <div class="card"><h3>What is URL encoding?</h3><p>URL encoding (percent-encoding) replaces unsafe ASCII characters with a % followed by two hexadecimal digits. For example, a space becomes %20.</p></div>
       <div class="card"><h3>Why encode URLs?</h3><p>URLs can only contain a limited set of ASCII characters. Characters like spaces, &amp;, ?, and non-ASCII characters must be encoded to be transmitted safely over the internet.</p></div>
       <div class="card"><h3>What's the difference between encodeURI and encodeURIComponent?</h3><p>encodeURI() leaves URL structure characters (/, ?, #) alone, while encodeURIComponent() encodes everything. For query parameter values, always use the "Full" (encodeURIComponent) mode.</p></div>
-      <div class="card"><h3>Does this work with non-ASCII characters like æøå or emoji?</h3><p>Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and encode correctly.</p></div>
+      <div class="card"><h3>Does this work with non-ASCII characters like æøå or emoji?</h3><p>Yes. The browser's built-in encodeURIComponent and decodeURIComponent functions handle UTF-8 encoding natively, so characters like æ, ø, å, 日本語 and 😀 encode correctly.</p></div>
   </div>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">This one stays free, and there is nothing to unlock.</h2>
+  <p>Both modes, all of Unicode, and nothing uploaded — that will not change. We have no paid
+  version of this tool, because we could not find an honest reason to charge for escaping a
+  query parameter. What it costs to keep these tools online is covered by people who found them
+  worth having: if this saved you a trip to the console while reading a tracking link or a
+  redirect, you can <a href="/support">say thanks</a>. It is optional, and it changes nothing
+  on this page.</p>
 </section>
 
 </main>
