@@ -583,6 +583,23 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # COOKIE_SCRIPTS, GA_NO_CONSENT, FB_NO_CONSENT, PRIVACY_LINK og
     # NO_ANALYTICS. Målt i `_worker.js:1242-1246`.
     ("books/cookie-consent-guide.html", "web"),
+    # Shopify-bogen (30/9) — 10 indgående sider, målt af
+    # `check_tool_paid_path.py`. Samme licens og samme tal som de tre ovenfor, og
+    # grunden er målt to steder: `/scan.html`'s egen JSON-LD-FAQ siger at
+    # scanneren virker på "Any website — WordPress, Shopify, Webflow, Wix,
+    # Squarespace, Drupal, Joomla, Next.js, hand-written HTML", og de 15
+    # gratisregler er netop bogens kapitel 3-6 (alt-tekst, formularfelter,
+    # overskrifter, kontrast, ARIA, frames, tabeller) som tjekliste frem for
+    # råd. `books/eaa-checklist.html` står ovenfor med samme begrundelse for
+    # WordPress-siden af samme bog.
+    ("books/eaa-shopify.html", "web"),
+    # Den danske DPA-generator (30/9) — 9 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den sælger `/da/compliance-report`, altså
+    # webkernen, og dens pro-note lover præcis de 18 server-side tjek og de 33
+    # i alt. Det er ikke et valg: generatorens egen `renderHTML()` danner alle
+    # de obligatoriske artikel 28(3)-klausuler, så det er samme licens der
+    # sælger det der mangler — om de lovede foranstaltninger er på plads.
+    ("dpa-generator-da.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )

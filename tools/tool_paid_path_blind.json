@@ -3,12 +3,10 @@
  "source": "python3 tools/check_tool_paid_path.py --write --force",
  "measured": "2026-09-30",
  "blind": [
-  "/books/eaa-shopify",
   "/color-blindness-simulator",
   "/color-blindness-simulator-da",
   "/cookie-consent-banner-demo",
   "/dpa-generator",
-  "/dpa-generator-da",
   "/guides/comparison",
   "/guides/magento-accessibility-check",
   "/nis2-gap-assessment-da",
@@ -25,7 +23,6 @@
   "/terms",
   "/tilgaengelighedserklaering-generator-da",
   "/url-inspector",
-  "/uuid-generator",
   "/wordpress-plugin"
  ]
 }
