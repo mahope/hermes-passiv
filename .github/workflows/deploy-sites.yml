@@ -34,6 +34,11 @@ on:
       - 'tools/check_asset_instructions.py'
       - 'tools/build_clean_copy_archives.py'
       - 'tools/check_product_copy.py'
+      # Gatestrækket `jsonld-types` dømmer strukturerede data på hver udgivet
+      # side. Uden portens egen fil i filteret kunne en push, der kun tilføjer
+      # en ny fejlform til porten, springe netop den port over som afgør om
+      # fejlformen må slå. Samme grund som `storage-claims` ovenfor.
+      - 'tools/check_jsonld_types.py'
       # Gatestrækket `storage-claims` læser `_worker.js` for at finde de ruter
       # der kalder `rateLimitIp`, og hele `site/` for at finde de sider der
       # modsiger dem. Uden linjen her ville en push, der kun tilføjer en

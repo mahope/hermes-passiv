@@ -26,6 +26,17 @@ Gaten fejler ved:
 2. **En udgivet side uden strukturerede data.** Nul blokke er lovlig for
    `404.html` (de er erklæret undtagen, fordi de ikke er sider, Google skalfinde) og
    intet andet.
+3. **En node der står to gange i samme række.** Målt 30/9: `/downloads`
+   erklærede sit gratis-tilbud to gange i samme `offers`-række, identiske
+   bortset fra en `description` — en artefakt af to merge. Det er præcis den
+   fejlform de to første punkter ikke kan se: sættet af `@type` er uændret, så
+   en port der tæller typer er grøn, mens siden siger tilbuddet dobbelt så
+   mange gange som der er. Rækker af `@type`-objekter (`offers`,
+   `itemListElement`, `hasPart`, `breadcrumb`, `@graph`) dømmes derfor på
+   *indhold*, ikke på type.
+4. **En blok der ikke er JSON.** Ellers er alle tre punkter døve for den side,
+   hvis blok en redaktør har knækket — de læser kun `@type` med en regex, og
+   en knækket blok har ingen.
 
 Kun *par på samme route*. Oversatte blog-slugs (`bug-reports-in-ci-pipeline` ↔
 `bugrapporter-i-ci-pipeline`) matcher ikke på route, og det er korrekt: de
@@ -41,6 +52,7 @@ Springes over, når intet er bygget, i samme mønster som de øvrige dist-gates.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -50,6 +62,16 @@ DIST = ROOT / "dist"
 
 RE_LD = re.compile(r"<script[^>]+application/ld\+json[^>]*>(.*?)</script>", re.S | re.I)
 RE_TYPE = re.compile(r'"@type"\s*:\s*"([A-Za-z][A-Za-z0-9]*)"')
+
+# Nøgler der genfortæller en node i prosa uden at være en del af dens identitet.
+# `description` er den eneste her, og det er den der gjorde fundet muligt: de to
+# tilbud på /downloads var ens i `name`, `price` og `priceCurrency`, så uden
+# denne undtagelse ville de set ud til at være to forskellige tilbud.
+FREE_TEXT = ("description",)
+
+# Felter der identificerer en node i en fejlbesked. Rækkefølgen er valgt, så den
+# første eksisterende giver den mest læsbare tekst.
+IDENTITY = ("name", "item", "url", "price", "priceCurrency", "position", "@type")
 
 # Sider der loesligt har nul blokke. 404 er ikke sider — de er svar på en adresse
 # der ikke findes, og de skal ikke beskrives som om de gør.
@@ -74,6 +96,78 @@ def n_blocks(path: Path) -> int:
     return len(RE_LD.findall(text))
 
 
+def _identity(node: dict) -> str:
+    """Kort, læsbar beskrivelse af en node til brug i en fejlbesked."""
+    parts: list[str] = []
+    for key in IDENTITY:
+        value = node.get(key)
+        if value in (None, "", [], {}):
+            continue
+        if isinstance(value, str):
+            parts.append(f"{key}={value[:40]!r}")
+        else:
+            parts.append(f"{key}={json.dumps(value, ensure_ascii=False)[:40]}")
+        if len(parts) == 3:
+            break
+    return ", ".join(parts) or str(node.get("@type", "(uden @type)"))
+
+
+def _fingerprint(node: dict) -> str:
+    """En nodes identitet uden prosa: alt bortset fra FREE_TEXT, sorteret."""
+    trimmed = {k: v for k, v in node.items() if k not in FREE_TEXT}
+    return json.dumps(trimmed, sort_keys=True, ensure_ascii=False)
+
+
+def _typed_lists(node, path: str = ""):
+    """Alle rækker i træet hvis elementer er `@type`-objekter.
+
+    Det er deres *indhold* der skal dømmes. En række af tal eller strenge har
+    ingen `@type` og er ikke strukturerede data — den springes over.
+    """
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if (isinstance(value, list) and len(value) > 1
+                    and all(isinstance(v, dict) and "@type" in v for v in value)):
+                yield path + "/" + key, value
+            yield from _typed_lists(value, path + "/" + key)
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            yield from _typed_lists(item, f"{path}[{i}]")
+
+
+def block_problems(block: str) -> list[str]:
+    """Fejl i én JSON-LD-blok: knækket JSON, eller en node der står to gange."""
+    try:
+        data = json.loads(block)
+    except ValueError as exc:
+        return [f"blokken er ikke gyldig JSON ({exc}), så ingen @type i den tæller: "
+                f"{block.strip()[:80]}"]
+
+    problems: list[str] = []
+    for path, items in _typed_lists(data):
+        seen: dict[str, int] = {}
+        for index, item in enumerate(items):
+            sig = _fingerprint(item)
+            if sig in seen:
+                problems.append(
+                    f"{path}[{index}] er det samme som {path}[{seen[sig]}] "
+                    f"({_identity(item)}) — en node i en række er én ting, ikke "
+                    "den samme ting to gange")
+            else:
+                seen[sig] = index
+    return problems
+
+
+def page_problems(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    problems: list[str] = []
+    for i, match in enumerate(RE_LD.finditer(text)):
+        for problem in block_problems(match.group(1)):
+            problems.append(f"ld+json-blok {i + 1}: {problem}")
+    return problems
+
+
+
 def check(root: Path = ROOT) -> list[str]:
     dist = root / "dist"
     problems: list[str] = []
@@ -93,6 +187,12 @@ def check(root: Path = ROOT) -> list[str]:
                 problems.append(
                     f"{domain}/{rel} har 0 application/ld+json — hverken den danske "
                     f"eller den engelske udgave af en side skal stå uden strukturerede data")
+
+            # Uafhængigt af EN/DA-parrene: hver udgivet sides rækker skal være
+            # rækker af forskellige ting. Det måles pr. side, fordi en dublet er
+            # en fejl i markup'en, ikke en forskel mellem sprogudgaverne.
+            for problem in page_problems(f):
+                problems.append(f"{domain}/{rel} {problem}")
 
         for rel in sorted(set(en) & set(da)):
             a, b = page_types(en[rel]), page_types(da[rel])
@@ -132,6 +232,32 @@ def _fixtures(root: Path, en_types: str = "SoftwareApplication", da_types: str |
         (d / "da" / f"tool-{i}.html").write_text(
             f'<!doctype html><html lang="da"><head><title>T</title></head><body>{blocks}</body></html>',
             encoding="utf-8")
+
+
+def _page_with_block(root: Path, name: str, block: str) -> None:
+    """Skriver én udgivet side med én rå JSON-LD-blok (kan være med vilje ødelagt)."""
+    d = root / "dist" / "mahope.tools"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(
+        '<!doctype html><html lang="en"><head><title>T</title></head><body>'
+        '<script type="application/ld+json">' + block + "</script></body></html>",
+        encoding="utf-8")
+
+
+TWO_IDENTICAL_OFFERS = json.dumps({
+    "@context": "https://schema.org", "@type": "SoftwareApplication", "name": "eaa-scanner",
+    "offers": [
+        {"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD"},
+        {"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD",
+         "description": "Single-page scans, whole-site crawls up to 200 pages"},
+    ]})
+
+TWO_DIFFERENT_OFFERS = json.dumps({
+    "@context": "https://schema.org", "@type": "SoftwareApplication", "name": "eaa-scanner",
+    "offers": [
+        {"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD"},
+        {"@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "USD"},
+    ]})
 
 
 def self_test() -> int:
@@ -179,6 +305,31 @@ def self_test() -> int:
                 print(f"KONTROLFEJL (404 skal være undtagen): {problem}", file=sys.stderr)
             return 1
 
+        # 5 — DET FUND, PORTEN VAR DØV FOR: /downloads erklærede sit gratis-tilbud
+        #     to gange i samme offers-række, ens bortset fra `description`.
+        #     Sættet af @type er uændret, så punkt 1 og 2 er grønne.
+        _fixtures(root, en_types="SoftwareApplication")
+        _page_with_block(root, "downloads.html", TWO_IDENTICAL_OFFERS)
+        scenarios.append(("samme tilbud to gange i én offers-række", check(root)))
+
+        # 6 — positiv kontrol mod fejlretningen: to tilbud der FAKTISK er
+        #     forskellige (gratis og betalt) skal være grønne. Uden denne ville
+        #     punkt 5 være grøn, fordi porten afviser alt.
+        (root / "dist" / "mahope.tools" / "downloads.html").unlink()
+        _page_with_block(root, "two-prices.html", TWO_DIFFERENT_OFFERS)
+        if check(root):
+            for problem in check(root):
+                print(f"KONTROLFEJL (to forskellige tilbud er lovlige): {problem}", file=sys.stderr)
+            return 1
+        (root / "dist" / "mahope.tools" / "two-prices.html").unlink()
+
+        # 7 — en blok der ikke er JSON. En regex læser ingen @type i den, så
+        #     uden dette punkt er siden grøn fordi porten er døv, ikke fordi
+        #     structured data er korrekt.
+        _page_with_block(root, "brudt.html", '{"@type":"WebSite", "offers":[}')
+        scenarios.append(("ld+json-blok der ikke er gyldig JSON", check(root)))
+        (root / "dist" / "mahope.tools" / "brudt.html").unlink()
+
     # 5 — en type i @graph skal tælles, ellers ville porten være døv for den
     #     blokform `pagepass` selv producerer.
     graph = '{"@context":"https://schema.org","@graph":[{"@type":"WebSite"}]}'
@@ -219,8 +370,9 @@ def main() -> int:
     if not DIST.is_dir():
         print("jsonld-types OK — intet bygget, porten springes over")
         return 0
-    print("jsonld-types OK — EN/DA-par har samme @type, og ingen udgivet side "
-          "står uden strukturerede data")
+    print("jsonld-types OK — EN/DA-par har samme @type, ingen udgivet side står "
+          "uden strukturerede data, ingen blok er knækket JSON, og ingen række "
+          "gentager den samme node")
     return 0
 
 
