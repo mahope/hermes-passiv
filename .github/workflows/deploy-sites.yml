@@ -56,6 +56,12 @@ on:
       # springe netop den port over som afgør om fejlformen må slå. Samme
       # grund som de tre linjer ovenfor, målt for elvte gang.
       - 'tools/check_area_ordinals.py'
+      # Samme krav for gatestrækket `ui-constants`: porten dømmer hver pris i
+      # købscopy mod `stripe_catalog.json` og hver `Math.round(x / N)` mod den
+      # hastighed siden lover. Uden portens egen fil i filteret kunne en push,
+      # der kun tilføjer `$78` i en pro-note, springe netop den port over som
+      # afgør om den fejl må slå.
+      - 'tools/check_ui_constants.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod

@@ -386,6 +386,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_area_ordinals.py", "--self-test"),
         inputs=("tools/check_area_ordinals.py", "site/**"),
     ),
+    # Priser i købscopy og konstanter i værktøjers kode (30/9). Målt i en kopi
+    # af repoet før denne port fandtes: `Math.round(wordCount / 238)` → `/ 237`,
+    # copyens `238 wpm` → `239 wpm` og `$79/year` → `$78/year` i to pro-noter var
+    # **alle tre grønne** i `rule-claims`, `stripe-ctas` og `area-ordinals`.
+    # Den eksisterende prisregel spørger om beløbet kan betales *på den side det
+    # står på*, så en pro-note uden købsknap er usynlig for den; den her spørger
+    # om beløbet er en pris katalogen overhovedet sælger. Konstant-armen krydstjekker
+    # `Math.round(x / N)` mod den hastighed siden lover i egen tekst.
+    Step(
+        id="ui-constants",
+        argv=("python3", "tools/check_ui_constants.py"),
+        inputs=("tools/check_ui_constants.py", "tools/stripe_catalog.json", "site/**"),
+    ),
+    Step(
+        id="ui-constants-selftest",
+        argv=("python3", "tools/check_ui_constants.py", "--self-test"),
+        inputs=("tools/check_ui_constants.py", "tools/stripe_catalog.json", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),

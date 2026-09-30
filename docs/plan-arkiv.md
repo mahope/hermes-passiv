@@ -1932,3 +1932,73 @@ Fire nye selftestarme, hver beviset ved at slå sin egen mekanisme fra:
 `RE_PRO` væk → Pro-armen og total-armen falder; art 3 væk → total-armen falder;
 attributværdier væk → meta-attruten falder; `\n` gjort til et tegn der ikke kan
 krydse → linjebruds-armen falder.
+
+---
+
+## 30/9 — Opgave 14(c): `check_ui_constants.py` dømmer priser og konstanter
+
+Opgaven lukker den række der begyndte med opgave 9: først skal porten kunne
+dømme et tal den tæller, så kan den krydstjekke konstanter. (a) og (b) blev
+gjort i opgave 9. (c) er denne.
+
+### Målingen der afgjorde opgaven
+
+Alle tre mutationer var grønne i den udgivne kode, målt i en kopi af repoet under
+`/tmp` — ikke mod mine intentioner:
+
+| Mutation | `check_rule_claims` | `check_stripe_ctas` | `check_area_ordinals` |
+|---|---|---|---|
+| `Math.round(wordCount / 238)` → `/ 237` | OK 239 | problems: 0 | OK 7 |
+| `Reading time (238 wpm)` → `(239 wpm)` | OK 239 | problems: 0 | OK 7 |
+| `$79/year per website` → `$78/…` i to pro-noter | OK 239 | problems: 0 | OK 7 |
+
+Hvorfor de slap igennem:
+
+- **Prisen.** `check_unbuyable_prices` spørger om beløbet kan *betales på den
+  side det står på*. En pro-note uden købsknap er derfor usynlig for den, og
+  på `/` fangedes `$78` kun fordi katalogens `requires_text` tilfældigvis
+  rummer præcis den sætning.
+- **Konstanten.** Ingen eksisterende regel krydstjekker et tal i koden mod
+  samme tal i brødteksten. `grep -E "server-side|wpm"` i portene gav kun
+  kommentarer.
+
+### Rækkevidden, målt og ikke antaget
+
+- 128 beløb på 66 sider dømmes. 292 beløb i de samme prosa-rækker er *ikke*
+  vores — markedskurser (`$144/year` for en konkurrent), bøder (`€900.000`),
+  andre leverandørers plugins (`€59/år`). De er målt-men-ikke-dømt og tæller
+  ikke med i OK-tallet.
+- To filtre bygget af måling: **USD** (også ordet `USD` — `19 USD` på
+  `/deskuptime` er samme $19-pris, så `29 USD` dér ville være en fejl på 19
+  dollars usynlig for en `$`-regel) og **interval** (`$10–30` er et bånd).
+- Vinduet er 110 tegn, målt: smallere mister de 30 pro-note-beløb uden
+  produktnavn i sætningen, bredere trækker `$49` fra accessiBe ind.
+- Konstant-armen leder efter *formen* (`Math.round(x / N)` + en
+  hastighedsangivelse), ikke efter tallet 238, så den kan ikke glemme siden
+  hvis tallet ændres. Målt: `site/word-counter.html` er den eneste side i
+  `site/` der matcher.
+
+### Grænsen, skrevet ned fordi en port der ligner som den dømmer alt
+
+Porten dømmer **at** et beløb er vores, ikke **hvilket**. Ret `19 USD` → `29
+USD` på `/deskuptime`, og porten er grøn — `$29` er en pris vi sælger (NDA
+Clause Set, e-bog-bundlet). Den fejl fanges af `check_stripe_ctas`, som dømmer
+hver købsside mod sit **eget** produkt: "mangler påkrævet tekst 'Buy
+DeskUptime Pro — 19 USD'". Ret til `47 USD` rødmer begge.
+
+### Selvtesten faldt to gange, på min egen fejlretning
+
+1. `prose_blocks` afbrød på hvert tag, så `… <a>EUComply Pro</a> … $79/year`
+   blev to afsnit. Den afskærede hver eneste pro-note-pris på `site/`, og kun
+   pris-boks-armen skjulte det. Rettet: kun blok-elementer afbryder en prosa.
+2. `RE_SCRIPT.sub` på script-teksten *fjerner* den, så der var ingen kode at
+   læse — porten rødmede på den rigtige kode også. Rettet til `findall`.
+
+Begge faldt kun fordi mutationerne dømte den modsatte fejlretning. 14/14 efter
+reparation, heraf to nye arme der låser USD-ordformen og DKK-udeladelsen.
+
+### Gaten
+
+`ui-constants` + `ui-constants-selftest` i `quality_gate.py` (91 steps, var 89)
+og i `deploy-sites.yml`'s path-filter, så en push der kun tilføjer `$78` i en
+pro-note ikke kan springe porten over.
