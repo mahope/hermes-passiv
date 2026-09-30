@@ -1875,3 +1875,60 @@ Samme opsætningsfejlform dukkede op i min egen måling igen: tre gange i denne
 opgave skrev jeg en måling, der så på "tokenet er nævnt et sted i `style.css`"
 i stedet for "det er erklæret i en regel der gælder for *denne* side". Samme
 årsag hver gang: et regex-lag uden scope.
+
+## 30/9 — `ceo/dom-pro-og-totaltal`: opgave 9, de tal porten tællede men ikke dømte
+
+Opgaven var skrevet med fire målte årsager. Her er hvad der faktisk skete.
+
+**Pro-tallet var udømt.** 27 sider skriver "18 server-side checks" / "18
+server-side tjek" — 28 forekomster, alle med 18 — og ingen form i `RE_CLAIM`
+eller `RE_TOTAL` så dem. `grep server-side` i porten gav kun kommentarer.
+`RE_PRO` dømmer dem nu mod `reportProFindings()`.
+
+Formen er ikke det kortere `(\d+)\s+checks`, fordi tallet 18 også står i en
+blogtitel om *artiklens* 18 punkter, og 25 og 20 står i NIS2-tekster. Målt over
+hele korpus: de eneste tal foran `checks|tjek` er 1, 2, 3, 6, 7, 9, 10, 15, 18,
+20, 25 og 33. "18 server-side checks" er den eneste form der entydigt er vores
+Pro-motor.
+
+**Totalerne uden "in all" var udømte.** Den mest almindelige sætning i huset er
+"runs 33 checks — the same 15 accessibility rules, plus 18 server-side checks".
+`RE_TOTAL` krævede "in all" eller den danske tabelrække, så den var usynlig.
+Art 3 lyder: når en sætning både oplyser det frie regeltal og Pro-tallet, er et
+tjek-tal i den sætning summen. Målt: 12 sætninger matcher, alle med 33, og ingen
+af dem er en artikel, en NIS2-tjekliste eller en hero-note. Reglen er ikke
+"33 skal være 33" — det ville være cirkulært.
+
+**`collect()` læste linje for linje.** Nu læses hele filen. `normalize_text()`
+gør hvert tegn i en tag til mellemrum, **uden at længden ændrer sig**, så
+`line_of()` stadig giver det rigtige linjetal i en fejlmeddelelse.
+
+### Fire fejl, alle fundet ved måling
+
+1. **Attributværdier.** Første normalisering blankede hele taggen, og tre af
+   `wordpress-plugin.html`'s løfter lå i `content="…22 WCAG 2.1 AA rules…"` —
+   de forsvandt i stilhed. Samme version skubbed JSON-LD-teksten væk, og det er
+   præcis der review 29/9 fandt fire af de seks publicerede "16 rules".
+2. **Sætningsudjævningen læste hele filen.** Første version kørte
+   `RE_PRO.search(_blank(text, span))`, som returnerer hele teksten med ét
+   interval blanket — så "sætningen" var hele filen. Det gav to falske
+   rødmeldinger på `guides/magento-accessibility-check.html`.
+3. **Blokgrænser var en klynge, der ikke bar.** De blev bygget for at løse (2),
+   og målingen efter at (2) var rettet viste 239 løfter og 0 fejl **med og
+   uden**. De blev fjernet igen i stedet for at stå med en begrundelse der ikke
+   holder.
+4. **Selftestens hero-arm testede sig selv.** Den erstattede hele
+   `m.group(0)` — altså også `class="hero-note">` — og efterlod
+   `<span 16 automated rules …>`. `RE_HERO` fandt så intet, og armen var grøn
+   *fordi* `RE_CLAIM` greb tallet på den ødelagte linje. Rettet til at mutere
+   kun tallet.
+
+### Bevis
+
+Dækningen er målt mod den gamle port, ikke mod intentionen: fil/tal-sættet er
+identisk, 0 mistet, og de eneste nye tal er 18. 201 → 239 dømte løfter.
+
+Fire nye selftestarme, hver beviset ved at slå sin egen mekanisme fra:
+`RE_PRO` væk → Pro-armen og total-armen falder; art 3 væk → total-armen falder;
+attributværdier væk → meta-attruten falder; `\n` gjort til et tegn der ikke kan
+krydse → linjebruds-armen falder.

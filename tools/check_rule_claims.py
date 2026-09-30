@@ -25,26 +25,23 @@ på hvert løfte, der ikke matcher.
     python3 tools/check_rule_claims.py --list      # de målte tal, med kilde
     python3 tools/check_rule_claims.py --self-test # beviser at porten kan rødme
 
-**Målt dækning, 27/9.** Porten læser **alle 299** sider i `site/`
+**Målt dækning, 30/9.** Porten læser **alle 303** sider i `site/`
 (`Layout.site.rglob("*.html")`) — altså hele overfladen, ingen fil-liste som i
 `check_product_copy.py`'s 13 navngivne filer. Dømtekraften er smallere end
 overfladen, og det er værd at skrive ned:
 
-* **31** af 299 sider har mindst ét løfte porten dømmer. De øvrige **268**
+* **79** af 303 sider har mindst ét løfte porten dømmer. De øvrige **224**
   læses, men ingen regel fyrer på dem.
-* `RE_CLAIM` + `RE_HERO` + `RE_TOTAL` giver **162** dømte løfter, alle matcher
-  koden (15 frie + 18 Pro = 33). De tre seneste var den sammensatte danske form
-  "15 tilgængelighedsregler" på tre sider — review 29/9 fandt den skrevet som
-  **11** på den danske købsside, og mønstret kendte kun `regler` som et
-  selvstændigt ord.
+* Alle fem arter giver **239** dømte løfter, og alle matcher koden
+  (15 frie + 18 Pro = 33): 185 frie, **28** `RE_PRO`, 26 totaler. Før denne
+  iteration var det 201, fordi Pro-tallet og de 12 totaler uden "in all" var
+  **udømte** — `grep server-side` gav kun kommentarer. Målt, ikke gættet:
+  alle 28 forekomster i korpus har tallet 18.
 * `RE_HERO` fyrer **15** gange, på **15** sider. Der er **198** sider med et
   `hero-note`-element, så porten dømmer bevidst kun en brøkdel af dem — den
   kræver et regel- eller tjekord, fordi `guides/platforms.html` siger
   "15 platforms" i præcis samme design. Det er målt, ikke valgt; grunden står
   ved `RE_HERO`.
-* De **2** tal i en `hero-note` porten *ikke* dømmer er netop de to ovenfor:
-  `platforms.html` ("15 platforms") og `comparison.html` ("15 automated rules",
-  som allerede fanges af `RE_CLAIM` i brødteksten).
 
     Forsigtig ved at måle denne port med et eget regex. Grene af `RE_CLAIM`
     ser hver især ud som døde — en håndudtrukket optælling fandt 12 af 26 med
@@ -211,6 +208,55 @@ RE_TOTAL = re.compile(
     r"|Alle\s+(?P<n2>\d+)\s+automatiske\s+tjek",
     re.IGNORECASE,
 )
+
+# **Pro-løftet, målt 30/9.** `reportProFindings()` kører 18 checks, og 27 sider
+# skriver dem som "18 server-side checks" / "18 server-side tjek" — men ingen
+# form i `RE_CLAIM` eller `RE_TOTAL` så den, så hele Pro-tallet var et udømt
+# løfte: `grep server-side` gav kun kommentarer. Beviset er målt, ikke læst:
+# alle 28 forekomster i korpus har tallet 18, og porten dømmer ingen af dem.
+#
+# Formen er valgt efter måling, fordi tallet 18 også findes et andet sted: en
+# blogtitel siger "GDPR Website Compliance Checklist: 18 Checks Every Site
+# Should Pass" om *artiklens* 18 punkter. Ordformen "18 server-side checks" er
+# derimod entydig — den kan kun være vores Pro-motor, fordi ingen anden måling i
+# repoet hedder server-side. Derfor er mønstret **ikke** det kortere
+# `(\d+)\s+checks`, som ville have dømt artiklens 18 og NIS2' 25 og 20.
+RE_PRO = re.compile(
+    r"(?P<p>\d+)\s+server-side\s+(?:checks?|tjek)\b",
+    re.IGNORECASE,
+)
+
+# **Et total uden "in all"**, målt 30/9. `RE_TOTAL` krævede enten "in all" eller
+# den danske tabelrække, så den mest almindelige sætning i huset —
+# "runs 33 checks — the same 15 accessibility rules, plus 18 server-side
+# checks" — var usynlig. Der er 30 forekomster af "33 checks/tjek" i korpus,
+# og kun de med både fri- og Pro-tallet i samme sætning er et total: de 11
+# øvrige er en overskrift, en tabelrække eller en linje med kun ét af tallene.
+#
+# Derfor er reglen ikke "33 skal være 33" — det ville være cirkulært og ville
+# heller ikke fange et tal der *bliver* 33. Den lyder: **når en sætning både
+# oplyser det frie regeltal og Pro-tallet, er et tjek-tal i den samme sætning
+# summen.** Det er målt på hele korpus: 12 sætninger matcher, alle med 33, og
+# ingen af dem er en artikel, en NIS2-tjekliste eller en hero-note. Sætningen
+# afgrænses på `.`/`!`/`?`/`;`/`:` — efter `normalize_text()` er markupken
+# mellemrum, så punktummerne er sætningsens egne.
+# Hvor en sætning slutter. `;` og `:` er med, fordi en kortere sætning fyrer
+# art 3 færre gange — målt 30/9 er korpus **ufølsomt** for valget (239 løfter og
+# 0 fejl med begge), så den korte form er bevaret uden begrundelse.
+SENT_SPLIT = re.compile(r"[.!?;:]")
+
+# Det tjek-tal art 3 dømmer på. Kun tal med **to eller tre cifre**: et-cifrede
+# tjek-tal i huset er artiklers egne ("6 checks" i en NIS2-opsummering), og
+# de skal ikke dømmes mod vores motor. To-cifret-grænsen er målt på samme måde
+# som `RE_CLAIM`s egen: de målte motorer kører 15, 18 og 22, så to-cifrede
+# tjek-tal i korpus er 9→9(ni-cifret), 15, 18, 20, 22, 25 og 33 — og art 3
+# fyrer kun når sætningen *selv* oplyser både fri- og Pro-tallet, så 20, 22 og
+# 25 kan ikke nå gennem porten.
+RE_CHECK_NUM = re.compile(r"\b(?P<n>\d{2,3})\s+(?:checks?|tjek)\b", re.IGNORECASE)
+
+# Det frie regeltal i en sætning. Kun `RE_CLAIM` — `RE_HERO` er en hel linje i
+# en hero, ikke en sætning, og `RE_TOTAL` er det tal vi netop er ved at finde.
+FREE_CLAIM = RE_CLAIM
 
 # Hvor `reportProFindings()` slutter i `_worker.js`. Findes ved at læse til den
 # næste topniveau-funktion, så en ny push til sidst i funktionen tælles med.
@@ -720,6 +766,76 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+_TAG = re.compile(r"<[^>]*>", re.DOTALL)
+_ATTR_VALUE = re.compile(r"\"[^\"]*\"|'[^']*'")
+
+
+def normalize_text(path: Path) -> str:
+    """Tags bliver mellemrum — **samme længde** — og attributværdierne bliver.
+
+    Målt 30/9 som svar på opgave 9(b): `collect()` læste linje for linje, så et
+    løfte der ombrydes midt i sætningen var usynligt. Nu læses hele filen, og
+    det er her markupken skal væk: ellers ville "33" i `<h1>33</h1>` og "checks"
+    i næste `<p>` blive ét løfte, fordi der står whitespace imellem dem.
+
+    To ting bevares bevidst, og begge er målt som fund:
+
+    * **Attributværdier.** `content="… scans any URL against 22 WCAG 2.1 AA
+      rules …"` på `wordpress-plugin.html` er tre af sidens løfter, og de lå i
+      `<meta>`- attributter. Første version af normaliseringen blankede hele
+      taggen, og porten mistede dem — samme fejl som da JSON-LD'en forsvandt.
+      Derfor overlever kun indholdet mellem anførselstegn; tagnavne og
+      attributnavne bliver mellemrum, så de ikke kan limme to tal sammen.
+    * **Længden.** Alt andet bliver mellemrum tegn for tegn, og et linjeskift
+      *inde* i en tag bliver ved et linjeskift. Derfor kan `line_of()` regne
+      linjen fra offsetten, og derfor fejler porten aldrig med en forkert linje.
+
+    Og to ting bevares fordi de *er* løfter: tekst inde i `<script>` og
+    `<style>` røres ikke — det er JSON-LD-FAQ'en, hvor review 29/9 fandt fire af
+    de seks publicerede "16 rules". Mønstre der læser en attribut *selv* —
+    `RE_HERO` med `class="hero-note"` — kan ikke bruge denne tekst og læser
+    derfor kilden med `_read()`.
+
+    **Ingen blokgrænser.** Første version satte et punktum hvor hvert blokelement
+    lukker, fordi `guides/magento-accessibility-check.html` så ud til at dømme
+    sin hero-note ("15 checks · No signup") som et total. Målt 30/9: med og uden
+    grænser er resultatet **identisk** — 239 løfter, 0 fejl — fordi fejlen lå et
+    andet sted, i at sætningsudjævningen læste hele filen i stedet for
+    sætningen. Mekanismen er derfor fjernet igen i stedet for at blive stående
+    med en begrundelse der ikke holder.
+    """
+    raw = _read(path)
+
+    def blank(m: re.Match[str]) -> str:
+        tag = m.group(0)
+        out = ["\n" if c == "\n" else " " for c in tag]
+        for v in _ATTR_VALUE.finditer(tag):
+            out[v.start():v.end()] = list(v.group(0))
+        return "".join(out)
+
+    return _TAG.sub(blank, raw)
+
+
+def line_of(text: str, offset: int) -> int:
+    """Linjenheden for en match, målt i den normaliserede tekst."""
+    return text.count("\n", 0, offset) + 1
+
+
+def sentence_span(text: str, start: int, end: int) -> tuple[int, int]:
+    """Sætningen en match ligger i — afgrænset af `SENT_SPLIT`."""
+    beg = 0
+    for m in SENT_SPLIT.finditer(text, 0, start):
+        beg = m.end()
+    fin = SENT_SPLIT.search(text, end)
+    return beg, fin.start() if fin else len(text)
+
+
+def _blank(text: str, span: tuple[int, int]) -> str:
+    """Samme tekst med et interval erstattet af mellemrum."""
+    a, b = span
+    return text[:a] + " " * (b - a) + text[b:]
+
+
 def free_rule_ids(path: Path) -> tuple[str, ...]:
     """Alle frie regel-id'er i én motor, i den rækkefølge de står.
 
@@ -805,38 +921,113 @@ def engine_for(path: Path, lay: Layout) -> Engine:
     return eng[key]
 
 
-def collect(lay: Layout) -> list[tuple[Path, int, int, bool]]:
-    """Alle regel-løfter som `(fil, linje, tal, er_total)`."""
-    claims: list[tuple[Path, int, int, bool]] = []
+# Hvilken art løftet er: `fri`, `pro` eller `total`. Navngivet strenge fordi
+# `collect()`'s returværdi læses af `check()` og af selftestens kontrol — et
+# tal uden art ville være dømt mod summen altid, hvilket var den fejl.
+KIND_FREE = "fri"
+KIND_PRO = "pro"
+KIND_TOTAL = "total"
+
+
+def collect(lay: Layout) -> list[tuple[Path, int, int, str]]:
+    """Alle regel-løfter som `(fil, linje, tal, art)`.
+
+    Hele filen læses ad gangen (opgave 9(b)) — `normalize_text()` gør markup
+    til mellemrum uden at flytte en eneste tegn, så et løfte der står delt over
+    to linjer dømmes, og linjetallet i en fejlmeddelelse stadig er rigtigt.
+
+    Rækkefølgen er målt, ikke valgt, fordi to af arterne deler et tal: en
+    sætning som "33 checks in all — the free 15 accessibility rules, plus 18
+    server-side checks" indeholder **tre** løfter, og kun de to første skal
+    regnes som total. Derfor tages de brede arter først og klippes væk af den
+    tekst, de resterende arter læser:
+
+    1. `RE_TOTAL` ("33 checks in all", "Alle 33 automatiske tjek")
+    2. `RE_PRO` ("18 server-side checks")
+    3. et tjek-tal i en sætning der har både et fri- og et Pro-løfte
+    4. `RE_HERO` (sidens egen hero-linje, på råteksten)
+    5. `RE_CLAIM` (de kvalificerede regelformer + de nøgne "NN rules")
+
+    `RE_HERO` står før `RE_CLAIM` fordi det er den *mere* specifikke match: den
+    kender klassen, så den skal have det tal, ikke det generelle mønster.
+
+    **Overlap.** "33 checks in all" matcher både art 1 og art 3, fordi sætningen
+    også rummer fri- og Pro-tallet. Uden en overlap-udjævning blev det talt som
+    to løfter, og `tælleren i udskriften` sagde 30 totaler for 25 sider. Derfor
+    bruges **første** match: arterne er listet i prioriteret rækkefølge, så den
+    mest specifikke vinder. Samme regel gør at et "18 server-side checks" ikke
+    også regnes som et frit "… checks"-tal.
+    """
+    claims: list[tuple[Path, int, int, str]] = []
     for path in sorted(lay.site.rglob("*.html")):
-        for i, line in enumerate(_read(path).splitlines(), 1):
-            # Totaltallene tages først og klippes væk, så det frie tal i samme
-            # linje ("33 checks in all — the free 15 …") stadig måles som frit.
-            rest, spans = line, []
-            for m in RE_TOTAL.finditer(line):
-                total = m.group("n") or m.group("n2")
-                if total is not None:
-                    claims.append((path, i, int(total), True))
-                spans.append(m.span())
-            for start, end in reversed(spans):
-                rest = rest[:start] + " " * (end - start) + rest[end:]
-            for m in RE_CLAIM.finditer(rest):
-                # To grupper bærer tallet: `n` for de kvalificerede former og
-                # `bare` for de nøgne regelord. Begge er løfter.
-                claimed = m.group("n") or m.group("bare")
-                if claimed is None:      # kan ikke ske, men ikke døm på et gæt
-                    raise SystemExit(
-                        f"check_rule_claims: mønsteret matchede uden tallet: "
-                        f"{m.group(0)!r} i {path.name}:{i}")
-                claims.append((path, i, int(claimed), False))
-            # Sidens egen resumé-linje i heroen. Den er altid et *frit* tal, fordi
-            # den står ved CTA'en der kører den frie motor — "15 checks · No
-            # signup" — så den løftes til et fri-regel-løfte og ikke til et
-            # total. Samme tal kan stå to steder i linjen (undertitel + hero-note),
-            # og begge skal dømmes: det er præcis den dobbelttydighed der gemte
-            # de 14 forkerede 16'ere.
-            for m in RE_HERO.finditer(line):
-                claims.append((path, i, int(m.group("n")), False))
+        text = normalize_text(path)
+        rest = text
+        taken: list[tuple[int, int]] = []
+        found: list[tuple[int, int, int, str]] = []   # (start, end, tal, art)
+
+        def claim(m: re.Match[str], group: str, kind: str) -> None:
+            """Talet i et fund. Mangler det, dør porten — den dømmer ikke på et gæt."""
+            number = m.group(group)
+            if number is None:
+                raise SystemExit(
+                    f"check_rule_claims: mønsteret matchede uden tallet: "
+                    f"{m.group(0)!r} i {path.name}:{line_of(text, m.start())}")
+            found.append((*m.span(), int(number), kind))
+
+        for m in RE_TOTAL.finditer(text):
+            total = m.group("n") or m.group("n2")
+            if total is not None:
+                found.append((*m.span(), int(total), KIND_TOTAL))
+            taken.append(m.span())
+
+        for m in RE_PRO.finditer(text):
+            claim(m, "p", KIND_PRO)
+            taken.append(m.span())
+
+        # Et tjek-tal uden "in all": kun et total hvis **sætningen** også har
+        # både det frie regeltal og Pro-tallet. Se målingen ovenfor i RE_TOTAL.
+        for m in RE_CHECK_NUM.finditer(text):
+            a, b = sentence_span(text, m.start(), m.end())
+            sent = text[a:b]
+            if not (RE_PRO.search(sent) and FREE_CLAIM.search(sent)):
+                continue
+            claim(m, "n", KIND_TOTAL)
+            taken.append(m.span())
+
+        # Sidens egen resumé-linje i heroen. Den er altid et *frit* tal, fordi
+        # den står ved CTA'en der kører den frie motor — "15 checks · No
+        # signup" — så den løftes til et fri-regel-løfte og ikke til et
+        # total. Samme tal kan stå to steder i linjen (undertitel + hero-note),
+        # og begge skal dømmes: det er præcis den dobbelttydighed der gemte
+        # de 14 forkerede 16'ere.
+        #
+        # Den læses på **råteksten**, fordi den skal se attributten
+        # `class="hero-note"`, og dens span klippes væk fra `rest` — ellers
+        # finder `RE_CLAIM` det samme "15 automated rules" lige efter, og
+        # overlap-udjævningen ville beholde det og tabe hero-armen. Målt 30/9:
+        # hero-note-mutationen på `guides/comparison.html` var grøn af den
+        # grund, altså rød af arbejde der lykkedes.
+        for m in RE_HERO.finditer(_read(path)):
+            found.append((m.start(), m.end(), int(m.group("n")), KIND_FREE))
+            taken.append(m.span())
+        for start, end in reversed(taken):
+            rest = _blank(rest, (start, end))
+
+        for m in RE_CLAIM.finditer(rest):
+            # To grupper bærer tallet: `n` for de kvalificerede former og
+            # `bare` for de nøgne regelord. Begge er løfter.
+            claim(m, "n" if m.group("n") is not None else "bare", KIND_FREE)
+
+        # Første match vinder, så en sætning der matcher to arter tælles én
+        # gang. Se overlappet i docstringen. `taken` er de arter der allerede er
+        # klippet væk fra `rest`; `valgt` er dem der tæller — de to må ikke
+        # forveksles, ellers ville arterne 1-3 filtrere sig selv væk.
+        valgt: list[tuple[int, int]] = []
+        for start, end, number, kind in found:
+            if any(start < b and a < end for a, b in valgt):
+                continue
+            valgt.append((start, end))
+            claims.append((path, line_of(text, start), number, kind))
     return claims
 
 
@@ -845,12 +1036,20 @@ def check(lay: Layout) -> list[str]:
     eng = engines(lay)
     pro = len(pro_rule_ids(lay.worker))
     errs: list[str] = list(engine_disagreements(eng))
-    for path, line_no, claimed, is_total in collect(lay):
+    for path, line_no, claimed, kind in collect(lay):
         # Hver side måles mod den motor den sælger, ikke mod én global motor.
         base = engine_for(path, lay).n
-        expected = base + (pro if is_total else 0)
+        if kind == KIND_PRO:
+            # Pro-løftet er ikke sideafhængigt: `reportProFindings()` er én
+            # funktion for hele huset, så der er ingen grund til at spørge
+            # hvilken motor siden sælger. Det er målt — de 28 forekomster
+            # ligger på web-, bog-, guide-, plugin- og DA-sider.
+            expected = pro
+        elif kind == KIND_TOTAL:
+            expected = base + pro
+        else:
+            expected = base
         if claimed != expected:
-            kind = "Pro-total" if is_total else "frie regler"
             errs.append(f"{lay.rel(path)}:{line_no}: {kind} løfter {claimed}, "
                         f"koden kører {expected}")
     # Fund skal kunne få en fix-tekst. Kun de to frie motorer renderer FIX i
@@ -996,7 +1195,15 @@ def self_test() -> int:
                          "`RE_HERO` dømmer så ikke den linje den er skrevet for")
         else:
             hero_note = RE_HERO.search(hero_file.read_text(encoding="utf-8"))
-            wrong_hero = f"{real + 1} {hero_note.group(0).split(None, 1)[1]}"
+            # Kun **tallet** muteres. Før denne rettelse erstattede armen hele
+            # `m.group(0)` — altså også `class="hero-note">` — så den efterlod
+            # `<span 16 automated rules …>` uden klassen. `RE_HERO` fandt så
+            # intet, og armen blev grøn *fordi* `RE_CLAIM` greb tallet på den
+            # ødelagte linje. Den testede altså ikke `RE_HERO` men sig selv.
+            # Målt 30/9, da art 3 og overlap-udjævningen gjorde den forkerte
+            # udgang til den eneste.
+            wrong_hero = hero_note.group(0).replace(
+                str(hero_note.group("n")), str(real + 1), 1)
             original = hero_file.read_text(encoding="utf-8")
             hero_file.write_text(original.replace(hero_note.group(0), wrong_hero, 1),
                                  encoding="utf-8")
@@ -1119,6 +1326,78 @@ def self_test() -> int:
             fails.append("selftest: '2 rules' i brødtekst dømmes som et "
                          "regelløfte — to-cifret-grænsen virker ikke: "
                          + "; ".join(prose_errs[:3]))
+
+        # De tre nye arter (opgave 9). Hver arm finder sit offer på en rigtig
+        # fil, fordi en arm der skriver en syntetisk side ind i `site/` ville
+        # være grøn af en grund der intet siger om porten — det er præcis den
+        # fejl `check_tool_paid_path.py` havde med sit hårdkodede
+        # `json-formatter.html`.
+        def mutate(rel: str, old: str, new: str) -> list[str]:
+            p = lay.site / rel
+            body = p.read_text(encoding="utf-8")
+            if old not in body:
+                fails.append(f"selftest: {rel} har ikke længere {old!r} — "
+                             "mutationen kan ikke genskabe den fejl den er skrevet for")
+                return []
+            p.write_text(body.replace(old, new, 1), encoding="utf-8")
+            errs = check(lay)
+            p.write_text(body, encoding="utf-8")
+            return errs
+
+        def must_red(rel: str, old: str, new: str, label: str) -> None:
+            errs = mutate(rel, old, new)
+            if not errs:
+                fails.append(f"selftest: {label} ({new!r} i {rel}) gav ingen fejl")
+            elif not any(rel.rsplit("/", 1)[-1] in e for e in errs):
+                fails.append(f"selftest: {label} gav en fejl der ikke nævner den "
+                             f"muterede side {rel}: " + "; ".join(errs[:3]))
+
+        # (1) Pro-tallet. 27 sider skriver "18 server-side checks", og ingen
+        # form dømte dem; `grep server-side` gav kun kommentarer. Offeret er
+        # valgt som en af de synlige købssider, fordi det er dér et forkert
+        # Pro-tal koster mest.
+        must_red("compliance-report.html",
+                 f"{pro_count(lay)} server-side checks",
+                 f"{pro_count(lay) + 1} server-side checks",
+                 "Pro-tallet i '18 server-side checks'")
+
+        # (2) Et total uden "in all". Sætningen skal stadig have både fri- og
+        # Pro-tallet, ellers er den ikke et total — derfor muteres kun tallet
+        # foran "checks", ikke sætningen omkring.
+        must_red("books/index.html", "runs 33 checks", "runs 34 checks",
+                 "totaltallet i 'runs 33 checks'")
+
+        # (3) Et løfte der ombrydes over to linjer. Før denne iteration læste
+        # `collect()` linje for linje, så armen ville være grøn. Den skal både
+        # findes *og* dømmes: tal og regelord står hver for sig, som de gør når
+        # en formatter bryder en linje.
+        must_red("books/index.html",
+                 "the same 15 accessibility rules",
+                 "the same 16\n  accessibility rules",
+                 "et løfte der er ombrudt over to linjer")
+
+        # (4) attributværdier. `content="… 22 WCAG 2.1 AA rules …"` er tre af
+        # sidens løfter, og normaliseringen blanker hele taggen hvis den ikke
+        # lader værdierne stå. Uden denne arm ville porten miste dem i stilhed.
+        must_red("wordpress-plugin.html",
+                 "against 22 WCAG 2.1 AA rules",
+                 "against 21 WCAG 2.1 AA rules",
+                 "et løfte i en meta-attribut")
+
+        # Den negative kontrol på art 3, og den er den der adskiller målt fra
+        # antaget: "25 Checks" i NIS2-artiklen er *artiklens* egne 25 punkter,
+        # ikke vores motor. Uden denne arm ville en for brede art 3 være grøn
+        # af en tilfældighed.
+        for rel, old, new in (
+            ("blog/nis2-checklist-pdf.html", "25 Checks", "26 Checks"),
+            ("blog/free-website-compliance-checker.html",
+             "9 Checks on Any Site", "10 Checks on Any Site"),
+        ):
+            errs = mutate(rel, old, new)
+            if errs:
+                fails.append(f"selftest: {new!r} i {rel} dømmes som et løfte om "
+                             "vores motor — art 3 er bredere end sit formål: "
+                             + "; ".join(errs[:3]))
 
         for name, path, old, new in cases:
             original = path.read_text(encoding="utf-8")
