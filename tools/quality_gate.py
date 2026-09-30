@@ -368,6 +368,32 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_storage_claims.py", "--self-test"),
         inputs=("tools/check_storage_claims.py", "site/_worker.js", "site/**"),
     ),
+    # Løfter i FAQ-*generatorer* (30/9). `storage-claims` dømmer publicerede
+    # sider ved at læse deres egne `fetch`-kald, og siger selv i docstringen at
+    # en side som *beskriver* et værktøj uden at kalde det ikke kan dømmes.
+    # `iter465_tool_faqs.py` skriver FAQ-tekst *om* værktøjet ind på værktøjets
+    # egen side og kalder det aldrig, så hele den fejlform lå åben — den blev
+    # kun rettet fordi en person læste filen. Porten finder generatorerne på
+    # deres *form* (dict af slug → (spørgsmål, svar)), måler om slug'en peger på
+    # en side der henter server-side gennem en rute fra `fetching_routes()`, og
+    # afviser et afvisende løfte på præcis den side. Beviset er målt på de tre
+    # rigtige generatorer plus fire mutationer.
+    Step(
+        id="generator-claims",
+        argv=("python3", "tools/check_generator_claims.py"),
+        inputs=(
+            "tools/check_generator_claims.py",
+            "tools/check_storage_claims.py",
+            "tools/**",
+            "site/_worker.js",
+            "site/**",
+        ),
+    ),
+    Step(
+        id="generator-claims-selftest",
+        argv=("python3", "tools/check_generator_claims.py", "--self-test"),
+        inputs=("tools/check_generator_claims.py", "tools/**", "site/**"),
+    ),
     # Ordtal i brødteksten (30/9). Review fandt `nis2-gap-assessment-da.html`
     # kalde "sikkerhed ved anskaffelse, udvikling og vedligeholdelse" det
     # *tiende* område, mens siden selv udgiver den som nr. 5 — to afsnit ovenfor

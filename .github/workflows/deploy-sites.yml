@@ -50,6 +50,19 @@ on:
       # `rateLimitIp(…)` i workeren, springe gaten over — altså netop den push
       # der gør porten meningsløs. Målt ni gange nu, samme krav.
       - 'tools/check_storage_claims.py'
+      # Porten `generator-claims` læser hver `tools/*.py` med en FAQ-formet
+      # dict og dømmer dens afvisende løfter mod den rute de skrives til. Uden
+      # portens egen fil i filteret kunne en push, der kun tilføjer en ny
+      # fejlform til porten, springe netop den port over som afgør om fejlformen
+      # må slå — og en ny generator i `tools/` ville ikke udløse gaten overhovedet.
+      - 'tools/check_generator_claims.py'
+      # De tre generatorer porten `generator-claims` dømmer. De står her, så en
+      # rettelse i en af dem udløser gaten — ellers ville kun rettelsen i
+      # portens egen kode blive dømt. Kendt blind plet: en *ny* generator i
+      # `tools/` udløser ikke workflowet alene, fordi filteret er en navneliste.
+      - 'tools/iter464_tool_faqs.py'
+      - 'tools/iter465_tool_faqs.py'
+      - 'tools/iter466_da_faqs.py'
       # Gatestrækket `area-ordinals` dømmer ordtal i brødteksten mod den
       # nummererede liste hver side selv udgiver. Uden portens egen fil i
       # filteret kunne en push, der kun tilføjer en ny fejlform til porten,
