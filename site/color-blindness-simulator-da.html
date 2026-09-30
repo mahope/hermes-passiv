@@ -20,6 +20,10 @@
 </script>
 <script defer src="/track.js"></script>
 <style>
+  .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
+  .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
+  .pro-note p { margin:0; color:var(--color-text); font-size:.95rem; line-height:1.7; }
+  .pro-note a { color:var(--color-accent); }
   .cb-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
   .cb-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
   .cb-field { display:flex; flex-direction:column; gap:6px; }
@@ -157,6 +161,20 @@
 <a href="/palette-generator-da">Palet-generator</a> ·
 <a href="/contrast-checker-da">Kontrasttjekker</a> ·
 <a href="/color-blindness-simulator">English version</a></p>
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Simulatoren viser de to farver, du valgte. Den ser ikke den side, de kom ud på.</h2>
+  <p>Simulatoren er gratis, og den gør hele farvearbejdet med synstype: du vælger to farver, og
+  Machado-modellen fra 2009 viser dem for protan-, deuteran- og tritanopi. Det ændrer sig ikke
+  med en licens.</p>
+  <p>Det ingen simulator kan se, er hvad der faktisk blev udgivet. Den gratis scanner kører
+  allerede de 15 automatiske tjek på en rigtig URL — alt-tekst, formularfelter, overskrifter,
+  kontrast, ARIA, frames og tabeller — så et tema, der skifter farve på den side, du aldrig rørte
+  ved, bliver målt. <a href="/da/compliance-report">EUComply Pro</a> lægger de 18 server-side tjek
+  oveni, så det bliver 33 tjek i alt: om privatlivslinket findes, om der mangler et
+  samtykkebanner på en side der faktisk indlæser sporing, og om HSTS og indholdssikkerhed er sat i
+  svaret. Rapporten kan sendes videre som pdf. $79/år pr. website.</p>
+</section>
+
 <section style="margin:2.5rem 0;">
   <h2>Ofte stillede spørgsmål</h2>
   <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">

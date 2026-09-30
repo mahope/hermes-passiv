@@ -20,6 +20,10 @@
 </script>
 <script defer src="/track.js"></script>
 <style>
+  .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
+  .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
+  .pro-note p { margin:0; color:var(--color-text); font-size:.95rem; line-height:1.7; }
+  .pro-note a { color:var(--color-accent); }
   .cb-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
   .cb-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
   .cb-field { display:flex; flex-direction:column; gap:6px; }
@@ -158,6 +162,20 @@
 <a href="/palette-generator">Palette generator</a> ·
 <a href="/contrast-checker">Contrast checker</a> ·
 <a href="/color-blindness-simulator-da">Dansk version</a></p>
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">The simulator shows the two colors you picked. It cannot see the page they shipped on.</h2>
+  <p>The simulator is free, and it does the whole color-vision job: you choose two colors and the
+  2009 Machado model renders them for protanopia, deuteranopia and tritanopia. That does not change
+  with a licence.</p>
+  <p>What no simulator can see is what actually got published. The free scanner already runs the
+  15 automated checks against a real URL — alt text, form labels, headings, contrast, ARIA, frames
+  and tables — so a theme that shifts the contrast on a page you never touched still gets measured.
+  <a href="/compliance-report">EUComply Pro</a> adds the 18 server-side checks on top, so it becomes
+  33 checks in all: whether a privacy link exists, whether a page that really loads tracking is
+  missing a consent banner, and whether HSTS and content security are set in the response. The
+  report can be sent on as a PDF. $79/year per website.</p>
+</section>
+
 <section style="margin:2.5rem 0;">
   <h2>Frequently asked questions</h2>
   <div class="problem-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">

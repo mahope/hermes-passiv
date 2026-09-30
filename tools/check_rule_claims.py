@@ -641,6 +641,22 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # "33 tjek i alt", altså webkernen plus `reportProFindings()`'s 18.
     ("ropa-generator.html", "web"),
     ("ropa-generator-da.html", "web"),
+    # RoPA-*skabelonen* (30/9) — 7 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den er ikke en generator men et tomt
+    # dokument, og målingen i `stripe_catalog.json` siger at ingen af de
+    # syv betalte skabelonprodukter er en behandlingsaktivitetsregistrering,
+    # så der er ingen betalt udgave af selve filen at love. Det er den
+    # samme `eucomply-pro` som de to linjer ovenfor, og af samme grund:
+    # note'en sælger det dokumentet *ikke* kan — om sitet stadig indlæser
+    # det, registret siger, at I gør.
+    ("ropa-template.html", "web"),
+    # De to farveblindhedssimulatorer (30/9) — 7 og 5 indgående sider,
+    # målt af samme port. Samme måleform som palet-generatorerne ovenfor:
+    # simulatoren er gratis og komplet, kontrast er den ene af de 15 tjek
+    # den *gratis* scanner `/scan` allerede kører, så det der ikke er en
+    # betalt streng. Det betalte er de 18 server-side tjek og de 33 i alt.
+    ("color-blindness-simulator.html", "web"),
+    ("color-blindness-simulator-da.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )
