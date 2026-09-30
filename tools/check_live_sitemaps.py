@@ -72,6 +72,43 @@ def fetch(url: str, timeout: int = 30) -> tuple[int | None, bytes, HTTPMessage |
         return None, b"", None, str(error)
 
 
+RETRY_ATTEMPTS = 3
+RETRY_DELAY = 2.0
+
+
+def is_transient(status: int | None, error: str | None) -> bool:
+    """Only a network error or a 5xx is worth trying again.
+
+    A 4xx is the site's own answer: a 404 must stay red on the first attempt, and
+    a 429 is final by contract, so neither may be retried. Kørsel `36763842986`
+    døde i alle tre deploys på `<urlopen error [Errno 104] Connection reset by
+    peer>` for a side der svarer 200 tre gange i træk fra denne maskine, så ét
+    reset kunne erklære en sund udgivelse for brudt.
+    """
+    return error is not None or (status is not None and status >= 500)
+
+
+def fetch_resilient(url: str, timeout: int = 30, attempts: int | None = None,
+                    delay: float | None = None) -> tuple[int | None, bytes, HTTPMessage | None, str | None]:
+    """`fetch`, with a bounded retry for transient failures only.
+
+    Koster intet i den normale kørsel: ventetiden betales kun når et kald faktisk
+    fejler, og en fejl der overlever alle forsøg rapporteres stadig som et problem,
+    så porten ikke kan skjule en ægte mangel. `attempts` og `delay` læses fra
+    modulet ved kald, ikke ved definition, så en test kan slå tempoet fra uden at
+    røre `time.sleep` i hele processen.
+    """
+    attempts = RETRY_ATTEMPTS if attempts is None else attempts
+    delay = RETRY_DELAY if delay is None else delay
+    result = fetch(url, timeout=timeout)
+    for attempt in range(1, max(1, attempts)):
+        if not is_transient(result[0], result[3]):
+            break
+        time.sleep(delay * attempt)
+        result = fetch(url, timeout=timeout)
+    return result
+
+
 def has_noindex_header(headers: HTTPMessage) -> bool:
     return any(
         directive in {"noindex", "none"}
@@ -110,7 +147,7 @@ def wait_for_artifacts(domain: str, expected: dict[str, bytes], attempts: int, d
 
 
 def check_page(url: str, require_jsonld: bool = True) -> list[str]:
-    status, body, headers, error = fetch(url)
+    status, body, headers, error = fetch_resilient(url)
     if error:
         return [f"{url}: {error}"]
     if status != 200:
@@ -158,7 +195,7 @@ def check_retired_downloads_live(domain: str) -> list[str]:
     except (OSError, json.JSONDecodeError) as error:
         return [f"cannot read {catalog_path.name}: {error}"]
     for retired, meta in (catalog.get(domain) or {}).items():
-        status, _, headers, error = fetch(f"https://{domain}{retired}")
+        status, _, headers, error = fetch_resilient(f"https://{domain}{retired}")
         if error:
             problems.append(f"https://{domain}{retired}: {error}")
             continue
@@ -192,7 +229,7 @@ def check_advertised_live(domain: str, robots: str) -> list[str]:
     """
     problems: list[str] = []
     for url in advertised_own_urls(robots, domain):
-        status, _, _headers, error = fetch(url)
+        status, _, _headers, error = fetch_resilient(url)
         if error:
             problems.append(f"{url}: {error}")
         elif status != 200:
@@ -354,7 +391,7 @@ def check_route_live(route: str, inventory_path: Path = ROUTE_INVENTORY) -> tupl
     problems: list[str] = []
     for domain in domains:
         url = f"https://{domain}{path}"
-        status, _body, _headers, error = fetch(url, timeout=30)
+        status, _body, _headers, error = fetch_resilient(url, timeout=30)
         checked.append(url)
         if status != 200:
             problems.append(f"{url}: HTTP {status if status is not None else error}")

@@ -1,53 +1,36 @@
 # STATUS
 
-- **Donationslinjen nåede 9 værktøjssider mere (37 → 28).** Rund 1 af opgave
-  29. Ranglisten er målt på **interne links** (hvor mange sider der peger på
-  siden), ikke på trafik: Plausible har 15 besøgende på mahope.tools og 6 på
-  cleancopy.tools i 28 dage, så den kan ikke adskille to sider. `clean-copy-tool`
-  har 48 indgange, `compliance-site-check` 44, `word-counter` 15.
-- **Valgt efter to regler, ikke efter plads.** (1) Siden skal have **ét**
-  renderingspunkt, så linjen kun kan sidde ét sted. (2) Der må ikke stå en
-  købsknap i samme resultat — `compliance-report` (30 links) blev sprunget over,
-  fordi den har to `Buy EUComply Pro`-knapper i selve rapporten. `nis2-check`
-  og `nis2-check-da` er tilsvarende sprunget over: de har en e-mail-leadform
-  («Save my result») i resultatet, og der konkurrerer tre handlinger om pladsen.
-- **Rettet under egen review-runde:** donationslinjen på `/page-profile` lå
-  i den mørke `.cli-demo`-kasse med `var(--color-text-muted)`. I lyst tema er
-  det `#5a5f64` på `#0f172a` = **2,68:1** — under WCAG AA. Nu `#94a3b8`
-  (7,77:1), som er den tone kassen selv bruger. Samme fejl på DA.
-  På `/cookie-check` stod linjen i `#667` som den naboende note; skiftet til
-  tokenet, fordi `#667` er ulæselig i mørktema.
-- **Baseline:** 37 sider uden linje → 28. `check_donation_paths.py` dømmer nu
-  11 filer (var 2), alle målt i **dist**: præcis én donation pr. side, i et
-  `<script>`, aldrig en knap.
-- **Donationslinjen nåede otte generatorer mere (28 → 20).** Runde 2, del 1:
-    `dpa-generator`, `ropa-generator`, `privacy-notice-generator`,
-    `nis2-incident-generator` (alle EN+DA). Ratchetfilen dømmer nu 19 filer.
-- **De otte er de fire generatorer med ét resultatfelt hver** — den billigste
-    gruppe i runde 2, og de deler én renderingslinje pr. side. På NIS2 indsættes
-    leadformen *under* `reportWrap`, så taklinjen kommer før den som aftalt.
-- **`no-print` er ikke en død klasse her.** Alle seks generator-sider har deres
-    egen `@media print` med `.no-print` (dpa/ropa/privacy linje 53-55,
-    nis2 linje 51-54) — klassen findes *ikke* i `style.css`, så den ville været
-    død markup, hvis jeg havde antaget den fælles. Taklinjen skal ikke ende i
-    det dokument læseren udskriver eller gemmer som PDF.
+- **Portene er grønne, og de dømmer flere ting end de læser.** 107 steps i
+  `tools/quality_gate.py`. Senest: `ceo/live-check-flake` lod ét netværksreset
+  erklære en sund udgivelse for brudt. Se opgave 31.
+- **Donationslinjen nåede 37 → 20 værktøjssider** i to runder. Ranglisten er
+  målt på **interne links** (hvor mange sider der peger på siden), ikke på
+  trafik: Plausible har 15 besøgende på mahope.tools og 6 på cleancopy.tools i
+  28 dage, så den kan ikke adskille to sider. `clean-copy-tool` har 48
+  indgange, `compliance-site-check` 44, `word-counter` 15. Undtaget er
+  `compliance-report` (to `Buy EUComply Pro`-knapper i selve rapporten) og
+  `nis2-check` (en leadform i resultatet, der konkurrerer om pladsen).
 - **Målt i en sand sandkasse, ikke ved læsning.** `/tmp/smoke.mjs` eval'er hver
-    sides IIFE med DOM-shim og dyrker de rigtige listeners: 1× donation i
-    resultatet, **også efter to submits** (dobbelt-Handling), ikke i
-    `renderHTML()` (så den lækker ikke ind i dokumentet), ikke i den kopierede
-    tekst, ikke i markup. Mutation A (fjernet `+ DONATION`) giver 2 røde domme.
-    `node --check` grøn på alle 32 inline blokke.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 107 steps.**
-- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
-- **Historie:** de afsluttede iterationsafsnit ligger i
-  `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
+  sides IIFE med DOM-shim: 1× donation i resultatet, også efter to submits,
+  ikke i `renderHTML()`, ikke i den kopierede tekst. `check_donation_paths.py`
+  dømmer nu 19 filer målt i **dist**.
+- **Egen fejlform fundet og rettet to gange i denne uge:** (a) donationslinjen
+  lå i `#5a5f64` på `#0f172a` = 2,68:1 i lyst tema, under WCAG AA → `#94a3b8`
+  (7,77:1); (b) `no-print` antaget fælles, men klassen findes kun i generatorernes
+  egen `@media print` — den ville være død markup.
+- **Åben note:** donationslinjen på otte generatorer (runde 2, del 1) er
+  verificeret live og lukket nedenfor.
+- `❓ Til Mads` nederst: `STATS_TOKEN`, `bugbottle.dev`'s domæne, banner-placering
+  på 180 sider, og de to desktop-apps der stadig ringer til Lemon Squeezy.
+- **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
 
 ## Verificér deploy
 
-- Alle tre åbne noter fra 30/9 er lukket: **`DEPLOY OK 2026-09-30`**. Målt på
-  de live sites: `build-info.json` = `e6137bf` på alle tre domæner (det er
-  den commit der låst alle tre), CI's `gate`-job success, `/books/` har seks
-  `<h2 class="sub"><a>` og den publicerede CSS har
+- **Deploy-status pr. 30/9 21:20.** `build-info.json` på mahope.tools =
+  `5f9c678`, som er det seneste mergede. CI's `gate`-job success på alle
+  committene siden `e6137bf`, men **de tre `deploy`-job står røde på `5f9c678`**
+  pga. netværksreset'en i opgave 31. Indholdet er målt live og i orden:
+  `/books/` har seks `<h2 class="sub"><a>` og den publicerede CSS har
   `.book-card :is(h3, h2.sub) a { color:#111; text-decoration:none }`,
   `/text-on-image-checker` har donationslinjen i sit script.
 
@@ -62,12 +45,22 @@
     SSRF: `targetIsPublic()` kører på mål og hvert redirect-hop, og
     værnet afviser IPv4-mapped IPv6 (`:1130-1175`).
 
-- `VERIFICÉR DEPLOY: donationslinjen på otte generatorer, hvor den kun opstår
-  når dokumentet er genereret
-  ceo/donation-runde-2 2026-09-30` — ingen ændring i layout: den nye linje er
-  13px i `var(--color-text-muted)` som de øvrige noter, og den har
-  `class="no-print"`, så den ikke udskrives med dokumentet. Mål i dist på de otte
-  ruter, og læg mærke til at CI's `donation-paths`-step er grøn.
+- `DEPLOY OK 2026-09-30` — donationslinjen på de otte generatorer er live på
+  alle otte, målt på indhold og ikke på HTTP-status: `dpa-generator`,
+  `ropa-generator`, `privacy-notice-generator`, `nis2-incident-generator` og
+  deres `-da`-varianter har hver præcis ét `donate.stripe.com`-link.
+  (**Bemærk:** de danske sider ligger på samme sti som de engelske, ikke under
+  `/da/` — min første måling læste `mahope.tools/da/dpa-generator-da` og fandt
+  0, hvilket så ud som en manglende linje indtil ruten blev slået op.)
+
+- `VERIFICÉR DEPLOY: forbigående netværksfejl i «Tjek produktion» får 3 forsøg
+  i stedet for 1, så ét reset ikke erklærer en udgivelse brudt
+  ceo/live-check-flake 2026-09-30` — **dette repo deployer ved push til `main`**,
+  så der er ingen batch at vente på. Mål: de tre deploy-jobs er grønne, og
+  `check_live_sitemaps.py --only mahope.tools` er grøn live. Bemærk at
+  `5f9c678` selv står som **rød** i CI: ikke en fejl i den kode, men
+  netværksreset'en ovenfor, som denne commit retter. Den bliver rød igen hvis
+  den kører igen, så grøn herafgør den gamle kørsel ikke retroaktivt.
 
 ## Åbne opgaver
 
@@ -109,6 +102,28 @@
      tekst + en mutation der springer `minC` over, målt rød på begge sider.
      Se STATE.
 
+31. ~~**Ét netværksreset kunne erklære en sund udgivelse for brudt.**~~
+    **FÆRDIG 30/9, `ceo/live-check-flake`.** `main` var rød ved start:
+    kørsel `36763842986` faldt i alle tre deploys på én linje
+    (`[Errno 104] Connection reset by peer` for
+    `/guides/prestashop-accessibility-check`, som svarer 200 tre gange i træk
+    fra samme maskine). `check_live_sitemaps.py` så hver side **én** gang;
+    kun `wait_for_artifacts` havde gentagelse. Nu `fetch_resilient` gentager kun
+    ved netværksfejl eller 5xx — 404 og 429 forbliver røde på første forsøg, så
+    porten kan hverken gøre en fejl grøn eller trække en 429. 26 tests (var 11),
+    10 mutationer alle fanget. Se arkiv.
+
+32. **`_transient` findes to gange, og de er uenige om 429.** Hvorfor:
+    `weekly_report.py:188` løste samme problem 21/9 (uge 39 mistede et helt
+    trafiksnapshot på ét timeout) med sin egen `_transient` + `http_json`.
+    `ceo/live-check-flake` skrev en anden til `check_live_sitemaps.py`, fordi de
+    to scripts ikke deler kode — og de to er **uenige**: `weekly_report` prøver
+    429 igen, kontrakten siger 429 er endelig og skal vises. Kontraktens
+    version anvendes nu, så uge-rapporten kan blive langsommere ved
+    rate-limiting. Accept: én delt `is_transient` i `tools/`, begge scripts
+    bruger den, og 429-afgørelsen er truffet ét sted med en begrundelse. Skal
+    ikke gøres som en del af en anden opgave.
+
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.
   - **🔴 `STATS_TOKEN` på workeren.** Én linje, én secret, og så kan konvertering måles i stedet for gættes. Uden den er `/api/stats` 401, og opgave 5 og 8 bygger på tal, der ikke er besøg.
@@ -148,22 +163,16 @@
     undtaget (to `Buy EUComply Pro`-knapper i selve rapporten),
     `clean-copy-tool` har 48 interne links men sit eget købsflow.
 
-30. ~~**Ni danske blogartikler har mistet deres sammenligningstabel.**~~
-    **BEGRUNDELSEN ER FORKERT — målt 30/9.** Der er **23** danske artikler med
-    `.compare`-CSS og uden `<table class="compare">`, ikke ni. Og ** nul af dem
-    har tabt en tabel ved oversættelse**: for alle 23 er den engelske original
-    også uden tabel (`EN tabel=0` på alle 23). Det er ikke en oversættelsesfejl
-    — det er **død CSS i begge sprog**, fordi generatorerne
-    (`make_blog_da_mirrors_453.py:404` m.fl.) indsætter `.compare`-blokken i
-    enhver artikel uden at se, om artiklen har en tabel.
-    Det rigtige spørgsmål er derfor ikke «skriv en tabel til» men «find ud af om
-    artiklen *skal* have en». 15 engelske blogartikler har rigtige tabeller, så
-    mønstret virker — de 23 er artikler hvor en tabel ville være lavet, hvis
-    generatoren havde vidst at den skrev prosa.
-    **Ny vinkel for en senere iteration:** tilføj til `check_built_css.py` en
-    dømning på **klasser** (`.compare` med ingen `class="compare"` i markup).
-    Det kan *ikke* gøres med et navnesøg — `.score-badge.A` bygges som
-    `'score-badge ' + bogstav` og `.sh-grade-${g}` ligeså — men det kan gøres
-    med præfiks: `.sh-grade-A` er død kun hvis heller ikke `sh-grade-` står
-    bogstaveligt i siden. Uden den dømning kan porten ikke se denne fejlform,
-    og det er præcis den revieweren efterlyste 30/9.
+30. **Død CSS på *klasser* er stadig udømt.** Hvorfor: opgave 30 viste 23 danske
+    artikler med `.compare`-CSS men uden `<table class="compare">` — ikke en
+    oversættelsesfejl, men død CSS i *begge* sprog, fordi
+    `make_blog_da_mirrors_453.py:404` indsætter `.compare`-blokken i enhver
+    artikel uden at se, om artiklen har en tabel (alle 23 har `EN tabel=0`).
+    15 engelske artikler har rigtige tabeller, så mønstret virker. Kan **ikke**
+    løses med et navnesøg — `.score-badge.A` bygges som `'score-badge ' +
+    bogstav` og `.sh-grade-${g}` ligeså. Kan løses med **præfiks**: `.sh-grade-A`
+    er død kun hvis heller ikke `sh-grade-` står bogstaveligt i siden. Samme
+    tredje dømning som `check_built_css.py` fik 30/9 for døde regler. Accept:
+    porten finder mindst de 23 `.compare` og 0 af de scripts, der bygger
+    klasser ved kørsel.
+

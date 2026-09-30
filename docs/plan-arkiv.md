@@ -2479,3 +2479,67 @@ dyrker de rigtige listeners (ikke statisk læsning): donation 1× i resultatet,
 også efter to submits, ikke i `renderHTML()`, ikke i kopieret tekst, ikke i
 markup. Mutation A (fjernet `+ DONATION`) → 2 røde domme. `node --check` grøn på
 32 inline blokke. `quality_gate.py` 107 steps grøn.
+
+---
+
+## 30/9 — `ceo/live-check-flake`: ét netværksreset kunne erklære en sund udgivelse for brudt
+
+**Udgangspunkt.** `main` var rød da iterationen startede: kørsel `36763842986`
+(`5f9c678`) faldt i alle tre deploys med exit 1 på præcis én linje:
+
+    mahope.tools: 1 problem(s)
+    - https://mahope.tools/guides/prestashop-accessibility-check: <urlopen error [Errno 104] Connection reset by peer>
+
+Målt fra denne maskine lige efter: `200 27809` tre gange i træk. Siden er ikke
+brudt — CI-kørslen var.
+
+**Årsagen er ikke tilfældighed, den er et hul.** `check_live_sitemaps.py` så
+`fetch()` én gang pr. side. `wait_for_artifacts` havde altid haft gentagelse
+(6 × 10 s, fordi et deploy kan tage tid), men de fire side-visende kald —
+`check_page`, `check_advertised_live`, `check_retired_downloads_live` og
+`check_route_live` — havde ingen. Ét TCP-reset på ét af de flere hundrede sider i
+et sitemap erklærede derfor hele udgivelsen for brudt, og en port der lyder til
+fældigt er en port man lærer at ignorere.
+
+**Rettelsen.** `is_transient(status, error)` + `fetch_resilient(url)`, som kun
+gentager ved et netværksniveau-fejl eller en 5xx. Alt andet er *sidens eget svar*
+og forbliver rødt på første forsøg: en 404 må ikke gøre en udgivelse grøn ved at
+vente, og en 429 er endelig per kontrakt, så et forsøg mere ville kun forlænge
+den. Standard 3 forsøg, 2 s + 4 s pause, og kun det transversale kald er ændret
+— `wait_for_artifacts` beholder sin egen, længere genindlægning, fordi en
+fejlslop *der* betyder at Pages endnu ikke har skrevet filerne.
+
+**Målt, ikke hævdet.** 26 tests i `test_check_live_sitemaps.py`, op fra 11. Ti
+mutationer, alle fanget:
+
+| Mutation | Dømte |
+|---|---|
+| `check_page` → `fetch` igen | rød (2) |
+| `check_retired_downloads_live` → `fetch` | rød (1) |
+| `check_advertised_live` → `fetch` | rød (1) |
+| `check_route_live` → `fetch` | rød (1) |
+| `is_transient` → altid `False` (intet retry) | rød (12) |
+| `is_transient` → altid `True` (retry på 404/429) | rød (17) |
+| `range(1, 999)` (ubegrænset retry) | rød (2) |
+| `RETRY_DELAY = 0` / `RETRY_ATTEMPTS = 1` / `= 999` | rød (1/9/3) |
+
+**To ting jeg måtte lære undervejs, begge ændret i koden:**
+
+1. **`delay: float = RETRY_DELAY` som standardargument binder ved definition,
+   ikke ved kald.** Testen der sat `RETRY_DELAY = 0.0` var derfor en
+   no-op — bekræftet ved at læse `fetch_resilient.__defaults__` → `(30, 3, 2.0)`.
+   Rytmen læses nu *inde i* funktionen, så tempoet kan slås fra lokalt.
+2. **Min egen mutationstest løj.** Mutationerne har samme filstørrelse, og
+   Python genbrugte en cached `.pyc` med samme mtime-sekund, så «mutation
+   godt fanget» egentlig var den *forrige* mutation kørt igen. Først med
+   `python3 -B` + slettet `__pycache__` gav alle ti den sande dom. Uden den
+   kontrol ville jeg have skrevet «porten dømmer det» om en port der intet dømmer.
+
+**Konsekvens for portene.** De fire mutationsrækker der slap igennem først
+(`check_page`, `check_advertised_live`, `check_retired_downloads_live`,
+`check_route_live`) var præcis den fejlform revieweren 30/9 pegede på igen: en
+påstand uden dom. `fetch_resilient` kunne være perfekt, og hele klassen ville
+stadig være grøn.
+
+`quality_gate.py` GRØN — 107 steps. `--route /scan` og `--only mahope.tools`
+begge grøn live efter rettelsen.
