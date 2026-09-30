@@ -43,7 +43,7 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 .benefits { max-width:720px; margin:0 auto; padding:0 24px 40px; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
 .benefit-card { background:#f8f9fa; border-radius:10px; padding:20px; text-align:center; }
 .benefit-card .icon { font-size:28px; margin-bottom:8px; }
-.benefit-card h3 { margin:0 0 4px; font-size:15px; }
+.benefit-card :is(h3, h2.sub) { margin:0 0 4px; font-size:15px; }
 .benefit-card p { margin:0; color:#555; font-size:13px; line-height:1.5; }
 .book-list { max-width:800px; margin:0 auto; padding:0 24px 40px; }
 .book-list h2 { text-align:center; font-size:22px; margin:0 0 24px; }
@@ -100,22 +100,22 @@ footer a { color:#1a73e8; }
 <div class="benefits">
   <div class="benefit-card">
     <div class="icon">&#128221;</div>
-    <h3>300+ Pages Combined</h3>
+    <h2 class="sub">300+ Pages Combined</h2>
     <p>Over 3,300 lines of practical guidance across six e-books.</p>
   </div>
   <div class="benefit-card">
     <div class="icon">&#128196;</div>
-    <h3>Every Format You Need</h3>
+    <h2 class="sub">Every Format You Need</h2>
     <p>Standard EPUB, so it opens in Apple Books, Calibre, Kobo, Thorium and every e-reader.</p>
   </div>
   <div class="benefit-card">
     <div class="icon">&#9889;</div>
-    <h3>Immediately Actionable</h3>
+    <h2 class="sub">Immediately Actionable</h2>
     <p>Checklists, templates, contract clauses, and day-by-day plans — not abstract theory.</p>
   </div>
   <div class="benefit-card">
     <div class="icon">&#128200;</div>
-    <h3>Updated for 2026</h3>
+    <h2 class="sub">Updated for 2026</h2>
     <p>All guides written for the current legal landscape: NIS2 enforcement, EAA compliance deadline, GDPR enforcement trends.</p>
   </div>
 </div>

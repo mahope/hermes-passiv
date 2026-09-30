@@ -494,6 +494,23 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_first_action.py", "--self-test"),
         inputs=("tools/check_first_action.py", "tools/first_action.json", "site/**"),
     ),
+    # Spring i overskriftsniveau (30/9). Målt først: 12 sider sprang fra `<h1>`
+    # til `<h3>` uden et `<h2>` imellem — `paid-templates` (EN+DA) satte 14
+    # produkternavne i `<h3>` som det første indhold efter titlen, og
+    # `clean-copy-cli-ref` havde ikke ét `<h2>` på hele siden. Skærmlæserens
+    # overskriftsliste sagde "1, 3, 3, 2", altså et niveau der ikke findes
+    # (WCAG 1.3.1). Dommen er i *dokumentrækkefølge* — et `<h3>` før sideens
+    # første `<h2>` er springet, selv om siden har masser af `<h2>` længere nede.
+    Step(
+        id="heading-levels",
+        argv=("python3", "tools/check_heading_levels.py"),
+        inputs=("tools/check_heading_levels.py", "site/**"),
+    ),
+    Step(
+        id="heading-levels-selftest",
+        argv=("python3", "tools/check_heading_levels.py", "--self-test"),
+        inputs=("tools/check_heading_levels.py", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),

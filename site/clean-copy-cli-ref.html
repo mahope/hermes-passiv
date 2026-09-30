@@ -24,7 +24,7 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
   @media (max-width:640px) { .grid-2 { grid-template-columns: 1fr; } }
   .card { border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem 1.2rem; background: var(--color-surface); }
-  .card h3 { margin: 0 0 0.5rem 0; font-size: 0.95rem; }
+  .card :is(h3, h2.sub) { margin: 0 0 0.5rem 0; font-size: 0.95rem; }
   .card code, .card pre { font-family: 'SF Mono', 'Monaco', 'Fira Code', monospace; font-size: 0.82rem; }
   .card pre { background: #0f172a; color: #e2e8f0; padding: 0.7rem; border-radius: 6px; overflow-x: auto; margin: 0.4rem 0; white-space: pre; }
   .flag-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.5rem 0; }
@@ -59,13 +59,13 @@
 
 <div class="grid-2">
   <div class="card">
-    <h3>Basic usage</h3>
+    <h2 class="sub">Basic usage</h2>
     <pre>echo "&lt;h1&gt;Title&lt;/h1&gt;" | clean-copy
 clean-copy -i input.html -o output.md
 cat article.html | clean-copy -m csv</pre>
   </div>
   <div class="card">
-    <h3>Pipe from anywhere</h3>
+    <h2 class="sub">Pipe from anywhere</h2>
     <pre># From a web page (curl + pipe)
 curl -s https://example.com | clean-copy
 # From clipboard (macOS)
@@ -75,7 +75,7 @@ xclip -o | clean-copy | xclip -i</pre>
   </div>
 </div>
 
-<h3 style="margin-top:1.8rem;">Flags</h3>
+<h2 class="sub" style="margin-top:1.8rem;">Flags</h2>
 <table class="flag-table">
   <thead><tr><th>Flag</th><th>Description</th><th>Default</th></tr></thead>
   <tbody>
@@ -90,7 +90,7 @@ xclip -o | clean-copy | xclip -i</pre>
   </tbody>
 </table>
 
-<h3 style="margin-top:1.8rem;">Mode examples</h3>
+<h2 class="sub" style="margin-top:1.8rem;">Mode examples</h2>
 <div class="grid-2">
   <div class="card">
     <h3>Markdown (default)</h3>
@@ -122,7 +122,7 @@ xclip -o | clean-copy | xclip -i</pre>
 
 <div class="grid-2">
   <div class="card">
-    <h3>Real-world pipeline</h3>
+    <h2 class="sub">Real-world pipeline</h2>
     <pre># Grab the main content of a page, clean it, save
 curl -sL https://example.com/article \
   | clean-copy -m text -s \
@@ -134,7 +134,7 @@ curl -sL https://example.com/prices \
   > prices.csv</pre>
   </div>
   <div class="card">
-    <h3>Also available</h3>
+    <h2 class="sub">Also available</h2>
     <p style="font-size:0.85rem;">
       <a href="/clean-copy-tool"><strong>Web tool</strong></a> — same engine in your browser, no install needed.<br>
       <a href="/clean-copy"><strong>Browser extension</strong></a> — right-click → clean copy on any page.<br>

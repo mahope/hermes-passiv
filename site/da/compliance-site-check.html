@@ -95,7 +95,7 @@
   .loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top: 3px solid #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .cta-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; text-align: center; }
-  .cta-box h3 { margin: 0 0 8px; color: #065f46; }
+  .cta-box :is(h3, h2.sub) { margin: 0 0 8px; color: #065f46; }
   .cta-box p { font-size: 14px; color: #4b5563; margin: 0 0 12px; }
   .cta-box a { display: inline-block; padding: 10px 20px; background: #059669; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
   .cta-box a:hover { background: #047857; }
@@ -155,7 +155,7 @@
   <div id="results"></div>
 
   <div class="cta-box" id="ctaBox" style="display:none">
-    <h3>Automatiser tjekket i CI/CD</h3>
+    <h2 class="sub">Automatiser tjekket i CI/CD</h2>
     <p>Tilføj den gratis GitHub Action til dit workflow og fang compliance-huller efter hver deploy.</p>
     <a href="https://github.com/mahope/compliance-site-check">Se på GitHub → mahope/compliance-site-check@v2</a>
   </div>

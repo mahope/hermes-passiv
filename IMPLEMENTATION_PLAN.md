@@ -1,16 +1,33 @@
-- **Opgave 23 færdig.** 14 formularfelter på 13 sider havde overhverket navn — kun `placeholder`. De 6 var nyhedsbrevstilmeldingen på NIS2-værktøjerne, de 4 URL-felter var indgangen i et værktøj (security-headers, url-inspector, compliance-site-check EN+DA), og 4 var en tekstblok eller licensnøgle. Nu har de `sr-only`-label (repoets egen konvention, `site/scan.html:64`) eller `aria-label`. Ny port `tools/check_form_labels.py` + 2 gatestræk; den læser også inline-`<script>`, ellers så den nul felter præcis på NIS2-siderne, der skriver feltet som strengsammensætning.
-- **Fund undervejs: ingen af de 97 gatestræk dømte tilgængelighed.** Målt: 2 `<img>` uden `alt` (begge falske — én inde i et `javascript:`-href, ét `<a><img alt></a>` som *har* navn), 12 knapper/links uden navn (alle falske, samme grund), 14 sider med `h1→h3`-spring (ikke rettet, se opgave 24). Resterende klasse er reelle brud, så den er lukket med en port.
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 99 steps.** `inline-js` fangede min egen fejl undervejs: jeg indsatte et linjeskift i en JS-streng i `compliance-report.html`, så syntaksen brød. Rettet, målt på de rigtige filer.
+# STATUS
+
+- **Opgave 24 færdig.** 12 sider sprang fra `<h1>` til `<h3>` uden et `<h2>`
+  imellem — `paid-templates` (EN+DA) satte 14 produkternavne i `<h3>` som det
+  første indhold, og `clean-copy-cli-ref` havde ikke ét `<h2>` på hele siden.
+  46 overskrifter er løftet til `<h2 class="sub">`. Ny port
+  `tools/check_heading_levels.py` dømmer springet i *dokumentrækkefølge* — et
+  `<h3>` før sideens første `<h2>` er springet, selv om siden har `<h2>` længere
+  nede. `compliance-report` og `stats` var i planen mistænkt, men er grønne.
+- **Målt, at rettelsen ikke flytter et pixel:** gammel HTML + gammel CSS mod ny
+  HTML + ny CSS i Chromium, 10 sider × 390/1280 px, alle overskrifter
+  målt på `fontSize/fontFamily/fontWeight/letterSpacing/lineHeight/margin/color`
+  og på bredde/højde — **IDENTISK**. Første forsøg afveg på to tæller:
+  `books/index` (19px → 18px) og `books/build-your-first-chrome-extension`
+  (16px → 18px), fordi seks sider sætter deres `h3`-størrelse i sidens egen
+  `<style>`. Rettet ved at gøre de lokale vælgere til `:is(h3, h2.sub)`.
+- **Fund undervejs:** `blog/macos-menu-bar-website-monitor` har *to* `<h2>` der
+  begge lister værktøjer (`Tools and guides` og `Related Guides`) — se opgave 25.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 101 steps** (99 → 101).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
-- `VERIFICÉR DEPLOY: formularer-med-navn ceo/formularer-med-navn 2026-09-30 16:20`: rører 13 `site/`-filer, to nye `tools/`-filer og to filer i gaten. **Indholdskrav:** (a) `https://mahope.tools/security-headers-check` har `<label for="urlInput" class="sr-only">` umiddelbart før feltet; (b) `https://mahope.tools/nis2-check` har `aria-label="Your email address"` på `#leadEmail`; (c) `python3 tools/check_form_labels.py` → «GRØN»; (d) `--self-test` → grøn. `routes_sha256` forventes **uændret** (ingen ny rute), `sitemap_count` uændret.
-
-- **Opgave 21 er færdig, og målingen blev større end opgaven.** `/blog/text-on-image-contrast-check` (8 af 15 besøgende, bounce 100 %) havde heroens `btn-primary` som **ankeret `#how`** — «læs videre» — mens selve værktøjet var `btn-secondary`, og lige under `</header>` stod to mere `btn-primary` (scanner- og AI-banneren). Tre ens knapper over folden, ingen af dem det værktøj læseren kom for. Nu er værktøjet den primære handling, «See how it works» er sekundær, og de to banneren er flyttet ned efter «How to do it» og demoteret til `btn-secondary` — på EN og DA. `/` og `/da/` rørte jeg ikke: de har allerede én `btn-primary` som første link.
-- **Fund undervejs: 180 af 224 sider med en hero har 2–3 `btn-primary` over folden** (talt efter rettelsen), og på mange er heroens egen primære et anker (`#content`, `#how`). Det er banner-scriptene `add_top_cta_495.py`/`add_ai_cta.py`, der har skudt to knapper ind under headeren på hele bloggen. Ny port `tools/check_first_action.py` dømmer pr. rute **med forventet destination**, så en ombytning af to `href` bliver rød; de 180 øvrige **tælles kun** og er ikke dømt (se opgave 22 og ❓).
-- `GATE`: **GRØN — `python3 tools/quality_gate.py`, 97 steps.** Porten mutation-testet mod FØR-fix-filen: «3 btn-primary i foldregionen (#how, /scan, /compliance-ai)» + «den primære handling er #how, ikke /text-on-image-checker». Selftest 9/9.
-- `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
-- `VERIFICÉR DEPLOY: vaerktojet-foerst-over-folden ceo/vaerktojet-foerst-over-folden 2026-09-30 15:35`: rører to `site/`-filer (EN+DA blog), to nye `tools/`-filer og to filer i gaten. **Indholdskrav:** (a) `https://mahope.tools/blog/text-on-image-contrast-check` — første `<a>` i `.hero` er `/text-on-image-checker` med `btn-primary`, og de to `blog-tool-cta` ligger **efter** `<section id="how">`; (b) `https://mahope.tools/da/blog/tekst-paa-billede-kontrasttjek` — samme med `/text-on-image-checker-da`; (c) `python3 tools/check_first_action.py` → «4 sider dømt, 0 problemer» og tallet 180; (d) `python3 tools/check_first_action.py --self-test` → OK. `routes_sha256` forventes **uændret** (ingen ny rute), `sitemap_count` uændret.
-
-
+- `VERIFICÉR DEPLOY: overskrifts-spring ceo/overskrifts-spring 2026-09-30 16:35`:
+  rører 12 `site/`-filer, `site/style.css`, to gatefiler og en ny `tools/`-fil.
+  **Indholdskrav:** (a) `https://mahope.tools/paid-templates` — de syv
+  produkternavne er `<h2 class="sub">` og har stadig 1.05rem;
+  (b) `https://mahope.tools/books` — bogtitlerne er `<h2 class="sub">` og har
+  stadig 19px; (c) `https://cleancopy.tools/clean-copy-cli-ref` — de seks
+  afsnit er `<h2 class="sub">` (1.05rem i `.card`), de fire kort under «Mode
+  examples» er stadig `<h3>`; (d) `python3 tools/check_heading_levels.py` →
+  «GRØN — ingen spring …303 sider»; (e) `--self-test` → OK 13/13.
+  `routes_sha256` forventes **uændret** (ingen ny rute), `sitemap_count` uændret.
 
 ## Åbne opgaver
 
@@ -38,7 +55,15 @@
 22. **180 sider har to-tre knapper over folden.** Hvorfor: `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren ind under `</header>` på hele bloggen, så de ligger over folden på 180 af 224 sider med hero — og på mange er heroens egen primære et anker (`#content`, `#how`). Målt 30/9 af `check_first_action.py`. Accept: bannerne er enten flyttet ned i artiklen på de mest besøgte sider (dømt i `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en ligger ét sted pr. side. Kræver beslutning — se ❓.
 
 23. ~~**14 formularfelter uden navn.**~~ **FÆRDIG 30/9, `ceo/formularer-med-navn`.** 14 → 0, målt på de rigtige filer. Ny port `tools/check_form_labels.py` dømmer hvert felt og læser inline-`<script>` med. Se STATE.
-24. **Ingen port dømmer `h1`→`h3`-spring.** Hvorfor: 14 sider går fra `<h1>` til `<h3>` uden et `<h2>` imellem (`markdown-table-generator`, `word-counter`, `stats`, `compliance-report`, `paid-templates` EN+DA, `compliance-site-check` EN+DA, `clean-copy-cli-ref`, `da/blog/overvaag-hjemmeside-mac-menu-bar` m.fl.). Målt 30/9 ved grep. WCAG 1.3.1: skærmlæsere lister niveauerne, så læseren får en liste der springer. Accept: enten er de rettet, eller porten dømmer dem — og da skal den have samme selftest-mutation som `check_form_labels`. Ikke blocking for køb, så lavest prioritet.
+24. ~~**Ingen port dømmer `h1`→`h3`-spring.**~~ **FÆRDIG 30/9, `ceo/overskrifts-spring`.** 12 sider → 0, ny port `tools/check_heading_levels.py` med 13 kontroller. Se STATE.
+
+25. **44 blogartikler lister deres værktøjer to gange.** Hvorfor: `site/blog/*.html`
+    har to `<h2>` lige efter hinanden, «Tools and guides» og «Related Guides»,
+    med hver sin liste. `check_duplicate_headings` er korrekt grøn — teksterne er
+    forskellige, så det er ikke en dublet, det er to afsnit om det samme. Målt 30/9
+    ved grep: 44 filer under `site/blog/`. Samme fejl som opgave 16, kun med anden
+    tekst. Accept: kun ét afsnit pr. artikel, og porten dømmer det — en læser der
+    scroller forbi «Tools and guides» må ikke møde det samme igen ti linjer længere nede.
 
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.

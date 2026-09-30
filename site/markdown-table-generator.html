@@ -46,7 +46,7 @@
 .mtg-btns button { padding: 8px 16px; cursor: pointer; font-size: 0.88rem; }
 .mtg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 760px) { .mtg-grid { grid-template-columns: 1fr; } }
-.mtg-grid h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+.mtg-grid :is(h3, h2.sub) { margin: 0 0 0.4rem; font-size: 0.95rem; }
 .mtg-io { width: 100%; box-sizing: border-box; min-height: 260px; resize: vertical;
   border: 1px solid var(--color-border); border-radius: 10px;
   background: var(--color-bg, #fff); color: var(--color-text);
@@ -117,17 +117,17 @@
   </div>
   <div class="mtg-grid">
     <div>
-      <h3><label for="inputArea">Input (CSV / TSV)</label></h3>
+      <h2 class="sub"><label for="inputArea">Input (CSV / TSV)</label></h2>
       <textarea id="inputArea" class="mtg-io" spellcheck="false" placeholder="Paste your data here, e.g.&#10;&#10;Name,Role,City&#10;Ada,Engineer,London&#10;Grace,Admiral,Arlington"></textarea>
     </div>
     <div>
-      <h3><label for="outputArea">Markdown output</label></h3>
+      <h2 class="sub"><label for="outputArea">Markdown output</label></h2>
       <textarea id="outputArea" class="mtg-io" readonly spellcheck="false" placeholder="The generated Markdown table appears here..."></textarea>
     </div>
   </div>
   <div id="statusBox" class="mtg-status" role="status" aria-live="polite"></div>
   <p class="mtg-meta" id="metaLine"></p>
-  <h3 style="font-size:0.95rem;margin:1rem 0 0.4rem;">Preview</h3>
+  <h2 class="sub" style="font-size:0.95rem;margin:1rem 0 0.4rem;">Preview</h2>
   <div id="previewBox" class="mtg-preview" aria-label="Rendered table preview"></div>
 </div>
 

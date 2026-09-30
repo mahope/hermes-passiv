@@ -77,7 +77,7 @@
   padding: 24px;
   text-align: center;
 }
-.feature-card h3 {
+.feature-card :is(h3, h2.sub) {
   margin: 0 0 8px;
   font-size: 16px;
 }
@@ -191,19 +191,19 @@ footer {
 
 <div class="features">
   <div class="feature-card">
-    <h3>Hands-On</h3>
+    <h2 class="sub">Hands-On</h2>
     <p>Build a real extension from start to finish. Context menu, popup, keyboard shortcuts, options page — every feature is coded step by step.</p>
   </div>
   <div class="feature-card">
-    <h3>Publication Ready</h3>
+    <h2 class="sub">Publication Ready</h2>
     <p>Includes a chapter on the Chrome Web Store submission process with permission justification templates and the pre-publish checklist.</p>
   </div>
   <div class="feature-card">
-    <h3>Cross-Browser</h3>
+    <h2 class="sub">Cross-Browser</h2>
     <p>Covers Firefox porting, MV3 service workers vs event pages, and the offscreen document workaround for clipboard access.</p>
   </div>
   <div class="feature-card">
-    <h3>Open Source Code</h3>
+    <h2 class="sub">Open Source Code</h2>
     <p>Every code example is available on GitHub under MIT license. Fork, modify, and ship without attribution.</p>
   </div>
 </div>

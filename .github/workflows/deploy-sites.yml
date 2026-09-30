@@ -90,6 +90,11 @@ on:
       - 'tools/check_form_labels.py'
       - 'tools/check_first_action.py'
       - 'tools/first_action.json'
+      # Gatestrækket `heading-levels` dømmer dispositionen i dokumentrækkefølge.
+      # Uden portens egen fil i filteret kunne en push, der kun sænker ét
+      # overskriftsniveau på én side, springe netop den port over som afgør om
+      # springet må slå. Samme grund som de linjer ovenfor.
+      - 'tools/check_heading_levels.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod
