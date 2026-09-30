@@ -593,6 +593,38 @@ L10N = {
 BODY_RE = re.compile(r"<body[^>]*>", re.I)
 BODY_END_RE = re.compile(r"</body>", re.I)
 HEAD_END_RE = re.compile(r"</head>", re.I)
+OPAQUE_RE = re.compile(r"<script\b.*?</script\s*>|<style\b.*?</style\s*>|<!--.*?-->", re.S | re.I)
+
+
+def last_end_tag(text: str, tag: str) -> "re.Match[str] | None":
+    """Det sidste `</tag>` der *ikke* ligger i en script-, style- eller kommentarblok.
+
+    Generators bygger en hel HTML-fil som en JS-streng for at kunne downloade
+    den, så `</body>` står på den linje. `re.sub(..., count=1)` tog den første,
+    skrev shell- og BugBottle-tags ind i strengen og fik browseren til at
+    stoppe scriptet der — hele værktøjet var dødt i live. Målt 30/9 før
+    rettelsen: 8 af 320 publicerede sider, alle generatorer.
+    """
+    masked = bytearray(len(text))
+    for m in OPAQUE_RE.finditer(text):
+        masked[m.start():m.end()] = b"\0" * (m.end() - m.start())
+    found = None
+    for m in re.finditer(rf"</{tag}\s*>", text, re.I):
+        if not masked[m.start()]:
+            found = m
+    return found
+
+
+def insert_before_end_tag(text: str, tag: str, payload: str) -> str:
+    """Sæt `payload` foran dokumentets rigtige `</tag>`.
+
+    Falder der ingen uden for script/style findes, skriver vi efter hele
+    dokumentet i stedet for i en streng — det er den fejl vi lige rettede.
+    """
+    m = last_end_tag(text, tag)
+    if m is None:
+        return text + payload
+    return text[: m.start()] + payload + text[m.start():]
 HTML_TAG_RE = re.compile(r"<html([^>]*)>", re.I)
 FIRST_HEADER_RE = re.compile(r"\s*<header\b[^>]*>.*?</header>", re.S | re.I)
 FOOTER_RE = re.compile(r"<footer\b[^>]*>.*?</footer>", re.S | re.I)
@@ -945,7 +977,7 @@ def add_plausible(site: Site, html: str) -> str:
         return html
     tags = (f'<script async src="{PLAUSIBLE_HOST}/js/{script_id}.js"></script>\n'
             f"<script>{PLAUSIBLE_INIT}</script>\n")
-    return HEAD_END_RE.sub(lambda m: tags + "</head>", html, count=1)
+    return insert_before_end_tag(html, "head", tags)
 
 
 def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str], *, title: str = "",
@@ -1093,7 +1125,7 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
     tags = f'<script src="/shell.js?v={pagepass.SHELL_VERSION}" defer></script>'
     if not dest.endswith("bugbottle-demo.html") and not re.search(r'<html[^>]*\bdata-no-bugbottle\b', text[:500], re.I):
         tags += "\n" + bugbottle_tag(site, lang)
-    text = BODY_END_RE.sub(lambda m: tags + "\n</body>", text, count=1)
+    text = insert_before_end_tag(text, "body", tags + "\n")
     site.shelled += 1
     return text, info
 

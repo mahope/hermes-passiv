@@ -2751,3 +2751,48 @@ så låste den alle fremtidige udgivelser, indtil et menneske løb prisen op ige
 porte røde først og fandt begge fejlen: `check_stripe_ctas.py` meldte fire
 «udokumenterede priser» på artiklen, og `check_tool_paid_path.py` meldte
 «MISTET ANKER» i `/guides`, fordi ratcheten på nøgle er ankerteksten.
+
+## Opgave 34 — otte generatorer lå døde i live (30/9, `ceo/generator-script-kom-til-live`)
+
+**Fejlen.** `build_sites.apply_shell` skrev shell- og BugBottle-tags ind med
+`BODY_END_RE.sub(..., count=1)` — det *første* `</body>` i filen. Generatorerne
+bygger den HTML-fil de downloader som en JS-streng, så deres `</body>` står
+midt i et `<script>`. Tagsene landede derfor inde i strengen, browseren
+afsluttede scriptet ved det indsatte `</script>`, og `node --check` på den
+faktiske blok giver `SyntaxError: Invalid or unexpected token`. Samme fejlform i
+`pagepass.normalize_body`, hvor `scrub_css` skrev sit eget linjeskift ind i
+strengene (4 sider).
+
+**Målt før.** Alle otte live-ruter (`dpa-generator`, `dpa-generator-da`,
+`ropa-generator`, `ropa-generator-da`, `privacy-notice-generator`,
+`privacy-notice-generator-da`, `accessibility-statement-generator`,
+`tilgaengelighedserklaering-generator-da`) med én blok hver browseren afviser.
+Tre af dem er hele den betalte DPA/ROPA/privacy-vej ($59, $49, $29).
+
+**Rettelsen.** `build_sites.insert_before_end_tag` maskerer script-, style- og
+kommentarblokke og sætter payload foran det sidste `</tag>` uden for dem.
+`pagepass._skip_scripts` gør det samme for `STYLE_BLOCK_RE`.
+
+**Egen fejlform undervejs — fundet ved diff, ikke ved porten.** Første udkast
+brugte `SCRIPT_SPLIT_RE`, som også dækker `<pre>`/`<textarea>`, og lod også
+`_apply_style_attr` springe scripts over. Det ændrede 62 filer: 61 blogsider fik
+`border-radius:8px` i stedet for `var(--radius)`, og 20 sider fik `#667` og
+`#94a3b8` bogstaveligt i den JS der skriver til DOM'en via `innerHTML` — altså
+lige så hårdkodet som før, bare i den anden retning. Kun `scrub_css` springer
+scripts over nu; `_apply_style_attr` kører overalt igen, fordi den tilføjer
+intet der kan bryde en streng. Målt efter rettelsen: 8 ændrede filer, præcis de
+døde.
+
+**Porten.** `check_inline_js` læste kun `site/` og sagde «problems: 0» — den
+så aldrig det publicerede output. Den dømmer nu begge træer og siger højt hvis
+`dist/` mangler. Selvtesten bygger en klon af repoet to gange med de to
+mutationer der lå i live; målt: mutation 1 → 8 sider døde i `dist` mens
+`site/` stadig er rent (den gamle ports blinde plet), mutation 2 → 4 sider.
+Blokkene tjekkes i tråde (WORKERS=8), så selvtesten faldt fra 5 min 01 s til
+54 s — den skal kunne ligge i en gate der kører fire gange i døgnet.
+
+**Gaten.** `inline-js`-stepet erklærte `site/**` men læser nu `dist/`, så dets
+`inputs` er udvidet med `build_sites.py`, `tools/pagepass.py`, `tools/brand.py`,
+`tools/route_inventory*` og `bugbottle-landing/**` — ellers kunne præcis den
+push, der gør en side død, springe porten over. Nyt `inline-js-selftest`-step.
+Alle filer lå allerede i workflowens path-filter, så ingen CI-trigger ændret.

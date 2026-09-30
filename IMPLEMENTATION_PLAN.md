@@ -1,38 +1,36 @@
 # STATUS
 
-- **To porte var uenige om det samme svar.** `weekly_report.py` prøvede en 429
-  igen, `check_live_sitemaps.py` gjorde ikke — så den samme udgivelse kunne være
-  «brudt» i den ene og «sund» i den anden. Reglen ligger nu i `tools/transient.py`
-  og kaldes med begge former (status, undtagelse). **429 er endelig begge steder**:
-  et forsøg mere læser intet ind og trækker kun kvoten. Se opgave 32.
-- **Efterspørgslen flyttede regel-kilden, og en port blev blind for det samme.**
-  `check_weekly_code_errors.known_kinds()` læser klasenavne fra rapportens
-  kildefiler; da `URLError` flyttede ud af `weekly_report.py`, forsvandt den, og
-  portens **egen selftest** gik rød (16 → 18 kontroller, 2 fejl). Den læser nu
-  begge filer. Dette er den anden gang samme arkitekturfejl rammer: en port der
-  læser *én* fil, mens beslutningen ligger i to.
-- **Portene er grønne, og de dømmer flere ting end de læser.** 108 steps i
-  `tools/quality_gate.py`. Senest: ét netværksreset erklærede en sund udgivelse
-  for brudt (opgave 31), og den delte regel nu forhindrer at det sker forskelligt
-  i to porte.
-- **Donationslinjen er på alle 37 værktøjssider.** 20 → 3, og de tre er
-  undtagelser med en skrevet grund, ikke en rest: `compliance-report` (to
-  `Buy EUComply Pro`-knapper i rapporten), `clean-copy-tool` (eget købsflow)
-  og `site-icons` (CLI-side med et statisk demo-output). Se opgave 29.
-- **Artiklen om $19-produktet løj om priserne på konkurrenterne.** Den skrev
-  «$7-12 i måneden» om UptimeRobot og «$12» om Pingdom, og hovedlinjen «Kill
-  Your $144/year SaaS Uptime Bill» stod på 16 sider. Slået op 30/9: UptimeRobot
-  Solo er €10/måned (€108/år), Better Stack sælger oppetid pr. *responder-plads*
-  til $34/måned ($408/år), og Pingdom har ingen offentlig listepris. Se opgave 33.
-- **Egen fejlform fundet tre gange i denne uge:** donationslinjens kontrast var
-  under AA i lyst tema, `no-print` viste sig at være død markup, og nu en
-  konkurrentpris der aldrig var slået op. Alle tre rettet i kilden.
-- `❓ Til Mads` nederst: `STATS_TOKEN`, `bugbottle.dev`'s domæne, banner-placering
-  på 180 sider, og de to desktop-apps der stadig ringer til Lemon Squeezy.
+- **Otte generatorer var døde i live — inkl. hele den betalte DPA/ROPA/privacy-
+  vej.** `build_sites` skrev shell- og BugBottle-tags ind foran det *første*
+  `</body>`, men generatorerne bygger den fil de downloader som en JS-streng, så
+  `</body>` står midt i et `<script>`. Browseren stoppede scriptet der, og
+  «Generate» gav et tomt felt. Målt 30/9 på de otte live-ruter: alle otte med
+  en blok browseren afviser. Samme fejlform i `pagepass.scrub_css`, som skrev sit
+  eget linjeskift ind i strengene på 4 sider. Se opgave 34.
+- **Den port, der skulle have set det, læste kun kilden.** `check_inline_js`
+  sagde «problems: 0» — filerne i `site/` var i orden, det var *bygget* der brød.
+  Den dømmer nu begge træer, og dens selvtest bygger repoet med de to mutationer
+  der lå i live. Målt før/efter på de otte: 8 brudde → 0.
+- **Selv samme fejlform som porten skal dømme, lå i portens egen rettelse.**
+  Første udkast brugte `SCRIPT_SPLIT_RE`, som også dækker `<pre>`, og lod
+  `_apply_style_attr` springe scripts over. Det gjorde 20 sider *dobbelt så
+  dårlige*: `#667` og `8px` lå bogstaveligt i den JS der skriver til DOM'en.
+  Målt på `dist` før/efter: 62 filer ændret → 8, som er præcis de døde sider.
+- **`❓ Til Mads` nederst:** `STATS_TOKEN`, `bugbottle.dev`'s domæne,
+  banner-placering på 180 sider, og de to desktop-apps der stadig ringer til
+  Lemon Squeezy.
 - **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
 
 
+
 ## Verificér deploy
+
+- `DEPLOY-MISSING: ceo/generator-script-kom-til-live (34) — venter på
+  næste batch-vindue.` Fusionerer automatisk til `main` for dette repo, så
+  udgivningen sker ved push. Målt 30/9 kl. 23:40 UTC på de otte live-ruter:
+  alle otte med en inline-blok browseren afviser. Notér `DEPLOY OK` her når
+  `build-info.json` bærer committen og `/dpa-generator` svarer med en blok
+  `node --check` accepterer.
 
 - `DEPLOY OK 2026-09-30` — reglen for forbigående fejl (`ceo/et-forbigaaende-kal`,
   `250e604`) er live: CI-kørsel `36779886917` grøn i alle jobs, og
@@ -180,4 +178,16 @@
      Pingdom skrives nu navnet uden pris. Alders-tjekket er en **advarsel, ikke
      en dom**: en gammel `checked` må aldrig låse gaten for alle fremtidige
      udgivelser. Se arkiv.
+
+34. ~~**Otte generatorer lå døde i live, og porten der så det læste kilden.**~~
+     **FÆRDIG 30/9, `ceo/generator-script-kom-til-live`.** `insert_before_end_tag`
+     sætter shell- og BugBottle-tags foran det **sidste** `</head>`/`</body>`
+     uden for script-, style- og kommentarblokke, og `pagepass._skip_scripts`
+     lader kun `scrub_css` springe scripts over — ikke `<pre>`, fordi 20 sider
+     bygger markup med `innerHTML` og ellers fik `#667` hårdkodet i stedet for
+     tokenet. `check_inline_js` dømmer nu `site/` **og** `dist/`, med en
+     selvtest der bygger repoet to gange med de to mutationer der lå i live, og
+     gaten fik et `inline-js-selftest`-step. Målt: 8/8 sider døde i live →
+     0/8 i `dist`, og `diff` mod før-rettelsen viser præcis de 8 filer og ingen
+     andre. Se STATE.
 

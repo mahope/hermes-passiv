@@ -248,6 +248,9 @@ def _apply_style_attr(m: re.Match) -> str:
 
 
 SCRIPT_SPLIT_RE = re.compile(r"(<script\b.*?</script>|<pre\b.*?</pre>|<textarea\b.*?</textarea>)", re.S | re.I)
+# Kun script. `_skip_scripts` bruger denne, fordi det er script-*strenge* der
+# må ikke røres; `<pre>` og `<textarea>` er markup og skal stadig gennemgås.
+_SCRIPT_ONLY_RE = re.compile(r"(<script\b.*?</script>)", re.S | re.I)
 
 
 def _wrap_tables(text: str) -> str:
@@ -289,13 +292,41 @@ def _demote_extra_h1(text: str) -> str:
     return head + "".join(parts)
 
 
+def _skip_scripts(text: str, fn) -> str:
+    """Kør `fn` på hver del af `text` der ikke er en script-blok.
+
+    Generatorerne bygger den fil de downloader som en JS-streng, og den
+    indeholder sine egne `<style>`-blokke og `style=`-markeringer. Uden den
+    her gennemgang skrev `scrub_css` sit eget linjeskift ind i strengen og
+    brød scriptet. Målt 30/9 før rettelsen: 4 publicerede sider.
+
+    Kun `<script>` springes over — ikke `<pre>` og `<textarea>` som
+    `SCRIPT_SPLIT_RE` også dækker. De er almindelig markup, og de gennemgår
+    de to stilregler præcis som før: en bredere undtagelse lavede 61 sider om
+    til `border-radius:8px` i stedet for tokenet `var(--radius)`, altså en
+    synlig ændring på hele bloggen for en fejl der kun findes i strenge.
+    """
+    parts = _SCRIPT_ONLY_RE.split(text)
+    for i in range(0, len(parts), 2):
+        parts[i] = fn(parts[i])
+    return "".join(parts)
+
+
 def normalize_body(text: str) -> str:
     # 1. page CSS: drop rules for selectors owned by the design system
     def style_sub(m: re.Match) -> str:
         css = scrub_css(m.group(1))
         return f"<style>\n{css}\n</style>" if css.strip() else ""
-    text = STYLE_BLOCK_RE.sub(style_sub, text)
+    text = _skip_scripts(text, lambda part: STYLE_BLOCK_RE.sub(style_sub, part))
     # 2. inline style attributes
+    #
+    # Bevidst UDEN `_skip_scripts`. `scrub_css` tilføjede et linjeskift, og det
+    # er det der brød strengene; `_apply_style_attr` tilføjer intet og skal
+    # køre overalt. Det er ikke en brugsflade: 20 sider bygger deres markup med
+    # `innerHTML = '<div style="color:#667">'`, og da denne regel holdt op med at
+    # gå ind i scripts, endte `#667` og `8px` bogstaveligt i den JS, der skriver
+    # til DOM'en — altså en farve, der så hårdkodet ud i stedet for tokenet.
+    # Målt 30/9: 20 sider, reverted da mutationen ikke var nødvendig.
     text = STYLE_ATTR_RE.sub(_apply_style_attr, text)
     # 3. tables scroll inside their own box
     text = _wrap_tables(text)

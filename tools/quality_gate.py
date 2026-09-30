@@ -191,11 +191,36 @@ STEPS: tuple[Step, ...] = (
             "site/url-inspector/index.html",
         ),
     ),
+    # 30/9: otte generatorer lå i live med en død inline-script-blok. Kilden
+    # var i orden — *bygget* skrev shell- og BugBottle-tags ind i den JS-streng,
+    # som er den fil siden downloader, så browseren stoppede scriptet ved det
+    # første `</body>`. `check_inline_js` læste kun `site/` og sagde «problems:
+    # 0». Den dømmer nu begge træer, så en fejlform der kun opstår under
+    # buildet kan ikke være usynlig.
+    #
+    # `inputs` lister derfor de filer der bestemmer `dist/`, ikke bare
+    # `site/**`: en rettelse i `build_sites.py` eller `pagepass.py` ændrer det
+    # publicerede output, og uden dem her ville præcis den push der kan gøre
+    # en side død springe den port over der ser det. Samme krav som de andre
+    # `needs_dist`-steps.
     Step(
         id="inline-js",
         argv=("python3", "tools/check_inline_js.py"),
-        inputs=("tools/check_inline_js.py", "site/**", "site/_worker.js"),
+        inputs=("tools/check_inline_js.py", "site/**", "site/_worker.js",
+                "build_sites.py", "tools/pagepass.py", "tools/brand.py",
+                "tools/route_inventory.py", "tools/route_inventory.json",
+                "bugbottle-landing/**"),
         needs_dist=True,
+    ),
+    # Selvtesten bygger repoet to gange med de to mutationer der lå i live og
+    # dømmer på indhold af `dist/`. Den er derfor et selvstændigt step: uden
+    # den er porten grøn på sit eget fejlform. Målt 30/9: 54 sekunder efter at
+    # blokkene blev tjekket i tråde (var 5 min 01).
+    Step(
+        id="inline-js-selftest",
+        argv=("python3", "tools/check_inline_js.py", "--self-test"),
+        inputs=("tools/check_inline_js.py", "site/**", "build_sites.py",
+                "tools/pagepass.py"),
     ),
     Step(
         id="private-content",
