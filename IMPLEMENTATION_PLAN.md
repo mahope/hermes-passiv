@@ -115,6 +115,10 @@
 - ~~`VERIFICÉR DEPLOY: /text-on-image-checker måler teksten mod sig selv`~~
   **DEPLOY OK 2026-09-30** — målt på den live side: 1.00:1 ved 390 og
   1280 px, nul console-errors, `build-info.json` = f36fb6b, sitemaps OK.
+- `VERIFICÉR DEPLOY: porten kan se bedste og dårligste baggrund i samme
+  tekstkasse ceo/gradient-dommer-baggrund <TIDSPUNK>` — ingen UI-ændring,
+  så det er bygget uændret. Sammenlign `build-info.json` mod lokalt byg
+  og læg mærke til at CI's `contrast-sampling`-step er grøn.
 
 ## Åbne opgaver
 
