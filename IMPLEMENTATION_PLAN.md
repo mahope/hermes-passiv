@@ -1,5 +1,22 @@
 # STATUS
 
+- **Nyt topfund: `/text-on-image-checker` svarer ikke på sit eget billede.** Se
+  opgave 26 — reproduktionen er målt, årsagen er endnu ikke fundet, og jeg
+  gætter ikke på en kontrastalgoritme. Dette er den mest besøgte indgang
+  (8 af 15 besøgende på mahope.tools kommer fra `/blog/text-on-image-contrast-check`,
+  derhen herhen).
+- **Opgave 25 deployet og verificeret.** `DEPLOY OK 2026-09-30` — live
+  `build-info.json` bærer `commit 9b82111`, `routes_sha256 8367db4b…` og
+  `sitemap_count 256`, som er byte-identiske med det lokale byg. Indholdskrav
+  (a)–(e) er alle målt opfyldt; (c) målt mod `dist/bugbottle.dev/` fordi den
+  route er bugbottle.dev's, ikke mahope.tools', og bugbottle.dev deployes
+  stadig ikke (❓).
+- **Live-måling af de ti mest besøgte sider: rent.** Alle 10 svarer 200 med
+  **nul console-errors, nul page-errors og nul fejlede requests** i Chromium
+  på 390 px. Døde ankre i hele `dist/`: **0** (de 7 fund er `/scan#url=…`,
+  som er en klient-rute, ikke et anker). Alle 16 Stripe-betalingslinks svarer
+  200. `/api/license/validate` giver 404/400 korrekt. `/api/url-inspect` er
+  bekræftet live med CEO-fiksen. `/pro/` er 404, men **intet** linker til den.
 - **Opgave 25 færdig.** 62 sider — 44 EN, 18 DA — havde to afsnit med samme job
   side om side: «Tools and guides» med et kortgitter og «Related Guides» med en
   liste. 36 af de relaterede links pegede på en destination siden *allerede*
@@ -35,20 +52,6 @@
   tilbud, som er portens egen måde at godkende et tal.
 - `GATE`: **GRØN — `python3 tools/quality_gate.py`, 103 steps** (101 → 103).
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed.
-- `VERIFICÉR DEPLOY: ét værktøjsafsnit ceo/vaerktojer-en-gang 2026-09-30 19:05`:
-  rører 184 `site/blog/`-filer, `site/da/blog/`, to generatorer, den nye
-  delte `tools/crosslink_merge.py`, den nye port, to gate-filer og
-  `stripe_catalog.json`. **Indholdskrav:**
-  (a) `https://mahope.tools/blog/text-on-image-contrast-check` — ét afsnit,
-  `/blog/wcag-contrast-checker` **én** gang, med beskrivelse på kortet;
-  (b) `https://mahope.tools/blog/monitor-website-github-actions-free` — kassen
-  stadig på den (siden har intet værktøjsafsnit), nyeste relaterede;
-  (c) `https://mahope.tools/da/blog/bugrapporter-i-ci-pipeline` — ingen
-  engelsk kasse, ingen `/blog/`-links;
-  (d) `python3 tools/check_tool_sections.py --list` → «GRØN — 190 værktøjsafsnit»;
-  (e) `python3 tools/quality_gate.py` → GRØN 103 steps.
-  `routes_sha256` forventes uændret (ingen ny rute), `sitemap_count` uændret.
-
 ## Åbne opgaver
 
 1. ~~**Samme næste-vej på de øvrige gratis tjek.**~~ **FÆRDIG 30/9, `ceo/vej-til-betalt-otte-tjek` (66172a0).**
@@ -81,13 +84,33 @@
     `ceo/vaerktojer-en-gang`.** Målt rigtigt var det 62 (44 EN + 18 DA), og de
     to lister overlappede i 36 links. Se STATE.
 
+26. **Værktøjet `/text-on-image-checker` svarer ikke på sit eget billede.**
+    Hvorfor: `sampleContrast()` i `site/text-on-image-checker.html:180-216`
+    maler billedet **og teksten** på samme canvas og læser derefter
+    `getImageData` i tekstens bounding box. Den kan ikke skelne tekstegens
+    anti-aliasede kanter fra billedpixels, så de overlever filteret
+    `dr+dg+db < 120` og bliver målt som "baggrund". Bevis, målt i Chromium mod
+    **live** `/text-on-image-checker` 30/9: (a) rent hvidt 400×300-billede +
+    hvid tekst → hele canvaset er 400×300 = 0 ikke-hvide pixels, og WCAG-svaret
+    er 1.00:1 — værktøjet siger **1.47:1**; (b) tallet flytter sig næsten ikke
+    mellem helt forskellige tilstande (1.42 / 1.46 / 1.47), så det følger ikke
+    hverken billedet eller tekstfarven; (c) `getImageData`-kaldene efter upload
+    er `{x:24,y:210,w:58,h:24}` på et 400×300-canvas — korrekt position, men
+    boksen er ren hvid, altså uden de tekstpixels værktøjet siger at det måler.
+    `lum()`/`ratio()` er i sig selv korrekt WCAG-formel (verificeret), så fejlen
+    er i *hvilke* pixels den læser, ikke i regnestykket. **Jeg gætter ikke på en
+    kontrastalgoritme** — næste iteration skal finde årsagen og dømme den med en
+    port, der kører algoritmen mod kendte billeder. Accept: hvid på hvid giver
+    1.00:1, sort på hvid giver 21.00:1, og en mutation der bytter
+    `getImageData`-boksen gør porten rød.
+
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.
   - **🔴 `STATS_TOKEN` på workeren.** Én linje, én secret, og så kan konvertering måles i stedet for gættes. Uden den er `/api/stats` 401, og opgave 5 og 8 bygger på tal, der ikke er besøg.
   - **🔴 `bugbottle.dev` ligger på en server, vi ikke deployer.** `https://bugbottle.dev/build-info.json` svarer **404 fra `nginx`**, ikke Cloudflare, mens de tre andre domæner bærer alle samme sha. To veje: (a) domænet skal på Cloudflare Pages → opsæt `bugbottle-dev`-projektet, så tilføjer jeg domænet til matrixen og fjerner undtagelsen i samme commit; (b) domænet er ikke vores at udgive → det skal ud af `TRACKING_DOMAINS`, så `traffic_status` bliver ærlig `ok` for de tre vi faktisk deployer.
   - **🔴 To betalte desktop-apps kan ikke aktiveres.** Målt i de shippede binære: `mahope/transmute` `v0.2.1` og `mahope/deskuptime` `desktop-v0.2.7` har begge `https://api.lemonsqueezy.com/v1/licenses/activate` indbygget, og binæren sender `license_key` + `instance_name` og læser `activated`, `id`, `product_name`, `customer_email` — mens vores `/api/license/activate` kræver `{ license_key, device_id, product }`. Serveren er tolerant over for `instance_id` som alias for `device_id`; `instance_name` giver jeg ikke. Kilden ligger i private repos, og du laver selv releases.
   - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`). Sitemap og robots er målt korrekte på de fire sites missionen udgiver; kun property-tilføjelsen mangler.
-  - **EUComply Pro-prisen** ($79/år pr. website) er sat i Stripe, men nogen sider nævner tallet. Skal det stå på `/pro/`?
+  - **EUComply Pro-prisen** ($79/år pr. website) er sat i Stripe, men nogen sider nævner tallet. Skal det stå på en `/pro/`-side? **Bemærk: `/pro/` findes ikke** — live er den 404, og intet i `site/` linker til den, så spørgsmålet afgør om vi bygger siden eller dropper den.
   - **Er desktop-appen stadig en del af `deskuptime-pro`?** Et betalt produkt skal kunne det, det lover.
   - **Plugin-version:** kunder på Clean Copy 1.1.0 henter ikke den rettede zip. Kræver en version bump — og det er en release, som er din.
   - **7 betalte produkter** (DPA, NIS2/DORA, NDA, EAA, report kit, template bundle, e-bøg-bundle) sælger endnu ikke, fordi filerne ikke ligger i Cloudflare KV. Uploadskrivet ligger i `mahope/paid-products`.
