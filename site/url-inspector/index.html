@@ -15,83 +15,68 @@
 <meta name="twitter:title" content="URL Inspector — Redirect Checker">
 <meta name="twitter:description" content="Free developer tool: trace redirect chains, inspect HTTP headers, check SSL details.">
 <style>
-  :root{--ink:#0b1a2a;--muted:#4a5a6a;--line:#d0d8e0;--bg:#fff;--soft:#f5f7fa;
-        --accent:#2868d0;--accent-dark:#1a4f9e;--ok:#1a7a44;--warn:#b85a0a;--fail:#b03030;
-        --code:#1e293b;}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
-  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
-
-  header{border-bottom:1px solid var(--line);padding:14px 0}
-  header .wrap{display:flex;align-items:center;justify-content:space-between}
-  .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
-  .logo span{color:var(--accent)}
-  nav a{color:var(--muted);text-decoration:none;margin-left:20px;font-size:14px}
-  nav a:hover{color:var(--ink)}
-
-  .hero{text-align:center;padding:48px 0 32px}
-  .hero h1{font-size:36px;letter-spacing:-.03em;margin-bottom:8px}
-  .hero p{color:var(--muted);max-width:540px;margin:0 auto}
+  /* Målt 30/9: denne side havde sin egen `:root`-palet, og bygget fjerner den —
+     skallen ejer `:root`. Det virkede kun ved et tilfælde: `style.css`
+     erklærer de gamle aliasser (`--color-accent`, `--color-text`, …) under
+     `html[data-product="deskuptime"]`, altså kun på DeskUptime, så på
+     mahope.tools var de *alle* udefinerede. Følgen var målbart: `Inspect`
+     fik `color:var(--color-on-accent)` på `background:var(--color-accent)`, altså hvid tekst på hvid
+     knap, fordi `--color-accent` var tom. Derfor bruges skallens tokens direkte,
+     præcis som `.pro-note` gør på de øvrige værktøjssider. */
+  .wrap{max-width:960px;margin:0 auto;padding:0 var(--gutter)}
 
   .input-section{padding:0 0 40px}
   .input-wrap{display:flex;gap:10px;max-width:640px;margin:0 auto}
-  .input-wrap input{flex:1;padding:14px 18px;border:2px solid var(--line);border-radius:10px;font-size:16px;outline:none;transition:border-color .15s}
-  .input-wrap input:focus{border-color:var(--accent)}
-  .input-wrap input::placeholder{color:#aaa}
-  .input-wrap button{padding:14px 28px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s}
-  .input-wrap button:hover{background:var(--accent-dark)}
-  .input-wrap button:disabled{opacity:.6;cursor:not-allowed}
+  .input-wrap input{flex:1;padding:14px 18px;border:2px solid var(--color-border);border-radius:var(--radius);font-size:16px;outline:none;transition:border-color .15s}
+  .input-wrap input:focus{border-color:var(--color-accent)}
+  .input-wrap input::placeholder{color:var(--color-text-muted)}
+  .input-wrap .btn{white-space:nowrap;padding:14px 28px;font-size:16px}
+  .input-wrap .btn:disabled{opacity:.6;cursor:not-allowed}
 
-  #status-bar{margin-top:14px;text-align:center;font-size:14px;color:var(--muted)}
+  #status-bar{margin-top:14px;text-align:center;font-size:14px;color:var(--color-text-muted)}
 
   #results{display:none}
   #results.show{display:block}
 
-  .summary-card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:24px}
+  .summary-card{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px}
   .summary-card .row{display:flex;align-items:center;gap:12px;padding:6px 0}
-  .summary-card .label{color:var(--muted);min-width:120px;font-size:14px}
+  .summary-card .label{color:var(--color-text-muted);min-width:120px;font-size:14px}
   .summary-card .value{font-weight:600;font-size:15px;word-break:break-all}
-  .summary-card .tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:.03em}
-  .tag-ok{background:#e6f7ee;color:var(--ok)}
-  .tag-warn{background:#fef3c7;color:var(--warn)}
-  .tag-fail{background:#fee2e2;color:var(--fail)}
-  .tag-info{background:#e0edff;color:var(--accent)}
+  .summary-card .tag{display:inline-block;padding:2px 10px;border-radius:var(--radius);font-size:12px;font-weight:700;letter-spacing:.03em}
+  .tag-ok{background:var(--color-green-soft);color:var(--color-green)}
+  .tag-warn{background:var(--color-yellow-soft);color:var(--color-yellow)}
+  .tag-fail{background:var(--color-red-soft);color:var(--color-red)}
+  .tag-info{background:var(--color-accent-soft);color:var(--color-accent)}
 
-  h2{font-size:20px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
-  h3{font-size:16px;color:var(--muted);margin:16px 0 6px}
 
   .redirect-chain{margin-bottom:24px}
-  .redirect-hop{position:relative;padding:12px 16px 12px 36px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--bg)}
-  .redirect-hop .hop-num{position:absolute;left:-10px;top:50%;transform:translateY(-50%);background:var(--accent);color:#fff;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700}
+  .redirect-hop{position:relative;padding:12px 16px 12px 36px;border:1px solid var(--color-border);border-radius:var(--radius);margin-bottom:8px;background:var(--color-surface)}
+  .redirect-hop .hop-num{position:absolute;left:-10px;top:50%;transform:translateY(-50%);background:var(--color-accent);color:var(--color-on-accent);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:700}
   .redirect-hop .hop-url{font-weight:600;font-size:14px;word-break:break-all}
-  .redirect-hop .hop-status{display:inline-block;padding:1px 8px;border-radius:3px;font-size:12px;font-weight:700;margin-top:4px}
-  .redirect-hop .hop-location{font-size:13px;color:var(--muted);margin-top:4px;word-break:break-all}
-  .hop-redirect{background:#e0edff;color:var(--accent)}
-  .hop-final{background:#e6f7ee;color:var(--ok)}
+  .redirect-hop .hop-status{display:inline-block;padding:1px 8px;border-radius:var(--radius);font-size:12px;font-weight:700;margin-top:4px}
+  .redirect-hop .hop-location{font-size:13px;color:var(--color-text-muted);margin-top:4px;word-break:break-all}
+  .hop-redirect{background:var(--color-accent-soft);color:var(--color-accent)}
+  .hop-final{background:var(--color-green-soft);color:var(--color-green)}
 
   .headers-table{width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;line-height:1.5}
-  .headers-table th{background:var(--soft);padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line)}
-  .headers-table td{padding:6px 12px;border:1px solid var(--line);word-break:break-all;max-width:500px}
-  .headers-table td:first-child{font-weight:600;white-space:nowrap;color:var(--accent);max-width:260px}
+  .headers-table th{background:var(--color-surface-2);padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);border:1px solid var(--color-border)}
+  .headers-table td{padding:6px 12px;border:1px solid var(--color-border);word-break:break-all;max-width:500px}
+  .headers-table td:first-child{font-weight:600;white-space:nowrap;color:var(--color-accent);max-width:260px}
 
-  .empty-state{text-align:center;padding:40px;color:var(--muted)}
+  .empty-state{text-align:center;padding:40px;color:var(--color-text-muted)}
 
   /* Fallback i parentes: bygget fjerner sidens egen `:root`-blok, så
-     `var(--accent)` er udefineret i den publicerede side. Fallback-værdien er
+     `var(--color-accent)` er udefineret i den publicerede side. Fallback-værdien er
      præcis den farve `:root` erklærer, så noten ser ens ud begge steder. */
-  .pro-note{max-width:720px;margin:0 auto 40px;padding:18px 22px;border:1px solid var(--accent, #2868d0);border-radius:10px;background:var(--soft, #f5f7fa)}
-  .pro-note h2{font-size:17px;margin:0 0 8px;padding:0;border:0;color:var(--ink, #0b1a2a)}
+  .pro-note{margin:0 0 40px;padding:18px 22px;border:1px solid var(--color-accent);border-radius:var(--radius);background:var(--color-accent-soft)}
+  .pro-note h2{font-size:17px;margin:0 0 8px;padding:0;border:0;color:var(--color-text)}
   .pro-note p{margin:0;font-size:15px}
-  .pro-note a{color:var(--accent, #2868d0);font-weight:600}
+  .pro-note a{color:var(--color-accent);font-weight:600}
 
-  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-size:13px;color:var(--muted);margin-top:48px}
-  footer a{color:var(--accent);text-decoration:none}
-  footer a:hover{text-decoration:underline}
 
   @media(max-width:640px){
-    .hero h1{font-size:28px}
     .input-wrap{flex-direction:column}
-    .input-wrap button{width:100%;text-align:center}
+    .input-wrap .btn{width:100%;justify-content:center}
     .summary-card .row{flex-direction:column;align-items:flex-start;gap:2px}
     .summary-card .label{min-width:auto}
     .redirect-hop{padding-left:32px}
@@ -99,10 +84,10 @@
     .headers-table td{max-width:240px}
   }
 
-  .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+  .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--color-border);border-top-color:var(--color-accent);border-radius:50%;animation:spin .6s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  .error-state{background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:16px 20px;color:var(--fail);margin-bottom:16px}
+  .error-state{background:var(--color-red-soft);border:1px solid var(--color-red);border-radius:var(--radius);padding:16px 20px;color:var(--color-red);margin-bottom:16px}
 </style>
 <script defer src="/track.js"></script>
 </head>
@@ -113,7 +98,7 @@
   <a href="/" class="logo">Passiv</a>
   <nav>
     <a href="/free-tools">Free Tools</a>
-    <a href="/url-inspector/" style="color:var(--accent);font-weight:600">URL Inspector</a>
+    <a href="/url-inspector/" style="color:var(--color-accent);font-weight:600">URL Inspector</a>
     <a href="/blog/">Blog</a>
   </nav>
 </div>
@@ -130,7 +115,7 @@
 <div class="wrap">
   <div class="input-wrap">
     <input type="url" id="url-input" placeholder="https://example.com" value="https://httpbin.org/redirect/3" autofocus>
-    <button id="inspect-btn">Inspect</button>
+    <button id="inspect-btn" class="btn btn-primary">Inspect</button>
   </div>
   <div id="status-bar"></div>
 </div>
@@ -173,6 +158,7 @@
   </div>
 </div>
 
+<div class="wrap">
 <section class="pro-note" aria-labelledby="pro-heading">
   <h2 id="pro-heading">One URL at a time is the limit here. Not on a whole site.</h2>
   <p>The inspector stays free, and the redirect chain, the headers and the SSL
@@ -184,6 +170,7 @@
   HTML report you can send to a client — which is what you need the moment the
   site is bigger than one page. $19/year.</p>
 </section>
+</div>
 
 <footer>
 <div class="wrap">
@@ -300,7 +287,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     rl.innerHTML = '';
     var chain = data.redirectChain || [];
     if (chain.length === 0) {
-      rl.innerHTML = '<p style="color:var(--muted)">No redirects — final URL reached directly.</p>';
+      rl.innerHTML = '<p style="color:var(--color-text-muted)">No redirects — final URL reached directly.</p>';
     } else {
       chain.forEach(function(hop) {
         var el = document.createElement('div');
@@ -316,10 +303,10 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     // Final hop
     var finalEl = document.createElement('div');
     finalEl.className = 'redirect-hop';
-    finalEl.style.borderColor = 'var(--ok)';
+    finalEl.style.borderColor = 'var(--color-green)';
     finalEl.style.background = '#f6fcf8';
     finalEl.innerHTML =
-      '<div class="hop-num" style="background:var(--ok)">✓</div>' +
+      '<div class="hop-num" style="background:var(--color-green)">✓</div>' +
       '<div class="hop-url">' + escapeHtml(data.finalUrl) + '</div>' +
       '<span class="hop-status hop-final">' + data.finalStatus + ' ' + (data.finalStatusText || '') + '</span>' +
       '<div class="hop-location">Final</div>';
@@ -331,7 +318,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     var secHeaders = data.securityHeaders || {};
     var secKeys = Object.keys(secHeaders);
     if (secKeys.length === 0) {
-      sl.innerHTML = '<p style="color:var(--muted)">No common security headers detected.</p>';
+      sl.innerHTML = '<p style="color:var(--color-text-muted)">No common security headers detected.</p>';
     } else {
       var t = document.createElement('table');
       t.className = 'headers-table';
@@ -349,7 +336,7 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     var ssl = data.ssl;
     if (!ssl || !ssl.available) {
       var reason = (ssl && ssl.reason) ? ssl.reason : 'SSL info not available for this URL.';
-      sslEl.innerHTML = '<p style="color:var(--muted)">🔒 ' + escapeHtml(reason) + '</p>';
+      sslEl.innerHTML = '<p style="color:var(--color-text-muted)">🔒 ' + escapeHtml(reason) + '</p>';
     } else {
       // Summary row
       var sum = document.createElement('div');
@@ -381,11 +368,11 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
           var row = document.createElement('div');
           row.className = 'redirect-hop';
           var icon = c.status === 'pass' ? '✓' : c.status === 'warn' ? '⚠️' : '✕';
-          var color = c.status === 'pass' ? 'var(--ok)' : c.status === 'warn' ? 'var(--warn)' : 'var(--fail)';
+          var color = c.status === 'pass' ? 'var(--color-green)' : c.status === 'warn' ? 'var(--color-yellow)' : 'var(--color-red)';
           row.innerHTML =
             '<div class="hop-num" style="background:' + color + '">' + icon + '</div>' +
             '<div class="hop-url">' + escapeHtml(c.label) + '</div>' +
-            '<div class="hop-location" style="color:var(--ink)">' + escapeHtml(c.detail || '') + '</div>';
+            '<div class="hop-location" style="color:var(--color-text)">' + escapeHtml(c.detail || '') + '</div>';
           cl.appendChild(row);
         });
         sslEl.appendChild(cl);

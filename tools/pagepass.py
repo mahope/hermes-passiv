@@ -62,7 +62,26 @@ OWNED_PREFIXES = (".site-header", ".site-footer", ".site-nav", ".lang-switch", "
                   ".crumbs", ".toc", ".prose-layout", ".prose-aside", ".search-", ".btt", ".copy-btn", ".prev-next", ".bb-live",
                   ".layout-wide", ".article-meta", ".header-tools", ".theme-btn")
 # Page-level layout wrappers (main.jf-wrap { max-width: 1100px; … }): the shell owns the width now.
+#
+# Målt 30/9: dette mønster spiste *ethvert* `*-wrap`, ikke kun de tre klasser
+# skallen faktisk erklærer (`.jf-wrap`, `.tool-wrap`, `.table-wrap`). 25 sider
+# mistede derved en regel de stadig har brug for, og elementet stod i markup —
+# `.input-wrap` på /url-inspector tabte `display:flex`, så inputfeltet blev
+# fuld bredde og knappen faldt ned under det. Mønsteret er altså en *påstand*
+# om, hvad skallen ejer, uden at nogen efterprøvede den — samme fejlform som
+# portene der tæller et tal de ikke dømmer. Derfor skal et `*-wrap` kun
+# droppes, når style.css kan dokumentere, at det erklærer præcis den klasse.
+# `OWNED_SELECTORS` er derimod design-systemets bevidste kontrakt og urøres.
 WRAP_SELECTOR_RE = re.compile(r"^(?:main|div)?\.(?:[\w-]+-)?wrap$")
+
+
+def _shell_classes() -> set:
+    """Class names style.css declares. The proof that the shell owns a wrapper."""
+    css = (_ROOT / 'site' / 'style.css').read_text(encoding='utf-8')
+    return {m.group(1) for m in re.finditer(r'\.([A-Za-z][\w-]*)', css)}
+
+
+_SHELL_CLASSES = _shell_classes()
 
 # Exact style="" values -> class names (the value is removed from the element).
 STYLE_TO_CLASS = {
@@ -147,8 +166,11 @@ def _norm_sel(s: str) -> str:
 
 def _owned(selector: str) -> bool:
     s = _norm_sel(selector)
-    if s in OWNED_SELECTORS or s.startswith(OWNED_PREFIXES) or WRAP_SELECTOR_RE.match(s):
+    if s in OWNED_SELECTORS or s.startswith(OWNED_PREFIXES):
         return True
+    # A `*-wrap` is only the shell's if style.css actually declares that class.
+    if WRAP_SELECTOR_RE.match(s):
+        return s.rsplit(".", 1)[1] in _SHELL_CLASSES
     # ".compare th, .compare td" style lists: owned only if every part is owned
     return False
 
