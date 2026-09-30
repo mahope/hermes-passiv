@@ -2002,3 +2002,10 @@ reparation, heraf to nye arme der låser USD-ordformen og DKK-udeladelsen.
 `ui-constants` + `ui-constants-selftest` i `quality_gate.py` (91 steps, var 89)
 og i `deploy-sites.yml`'s path-filter, så en push der kun tilføjer `$78` i en
 pro-note ikke kan springe porten over.
+
+## Arkiveret 30/9 (ceo/relaterede-guides-to-gange)
+
+- Opgave 16 fra planen: "Related guides" stod to gange på `/blog/macos-menu-bar-website-monitor`. Målt på hele `site/`: **63 filer** — 62 blogfiler med `<section class="products">` + genereret crosslink-boks med samme overskrift (median link-overlap 0 af 3, så indholdet var forskelligt), og `site/url-to-markdown.html` med to FAQ-sektioner i to formater.
+- Rettelse: produktssektionens overskrift → "Tools and guides" / "Værktøjer og guides" (én linje pr. fil, links bevaret); `url-to-markdown.html`s fire FAQ-kort lagt ind i den eksisterende `<details>`-liste, de to overlappende svar ikke gentaget.
+- Ny port `tools/check_duplicate_headings.py` (normaliserer casing/entities/tags, skjuler kommentar/script/JSON-LD) + `duplicate-headings` og `duplicate-headings-selftest` i `quality_gate.py` (93 steps) + path-filter i `deploy-sites.yml`. Selvtest 10/10 med tre mutationer.
+- Målt før rettelsen: `duplicate-headings` ville være rød på 63 filer. CEO-kø punkt 0 (url-inspect, thanks-202, 429 endelig, AI-retry, SSRF) gennemgået og fundet færdig i koden.

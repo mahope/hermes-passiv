@@ -62,6 +62,12 @@ on:
       # der kun tilføjer `$78` i en pro-note, springe netop den port over som
       # afgør om den fejl må slå.
       - 'tools/check_ui_constants.py'
+      # Gatestrækket `duplicate-headings` dømmer, om en side har to `<h2>` med
+      # samme normaliserede tekst. Uden portens egen fil i filteret kunne en
+      # push, der kun tilføjer en ny fejlform til porten, springe netop den
+      # port over som afgør om fejlformen må slå. Samme grund som de linjer
+      # ovenfor.
+      - 'tools/check_duplicate_headings.py'
       - 'tools/check_stripe_ctas.py'
       - 'tools/stripe_catalog.json'
       # Gatestrækket `article-paid-path` dømmer listen over blinde artikler mod

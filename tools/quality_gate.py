@@ -404,6 +404,22 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_ui_constants.py", "--self-test"),
         inputs=("tools/check_ui_constants.py", "tools/stripe_catalog.json", "site/**"),
     ),
+    # Dublet `<h2>` (30/9). Målt først: 63 af 190 blogfiler havde to afsnit med
+    # samme navn, så indholdsfortegnelsen på 63 sider lister samme afsnit to
+    # gange. Indholdet var forskelligt (median overlap mellem de to sektioners
+    # links: 0 af 3), så ingen port så det — de dømmer links, priser og
+    # løfter, ikke struktur. Her er det `<h2>`-teksten alene, normaliseret for
+    # casing, entities og tags, for det er den læseren tæller.
+    Step(
+        id="duplicate-headings",
+        argv=("python3", "tools/check_duplicate_headings.py"),
+        inputs=("tools/check_duplicate_headings.py", "site/**"),
+    ),
+    Step(
+        id="duplicate-headings-selftest",
+        argv=("python3", "tools/check_duplicate_headings.py", "--self-test"),
+        inputs=("tools/check_duplicate_headings.py", "site/**"),
+    ),
     Step(
         id="stripe-ctas",
         argv=("python3", "tools/check_stripe_ctas.py"),
