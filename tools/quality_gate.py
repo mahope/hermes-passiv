@@ -1286,6 +1286,26 @@ STEPS: tuple[Step, ...] = (
     # *hvilket* domæne der taber trafik. Selve proben taler med produktion og er
     # bevidst IKKE et gatestep — den skriver én talt sidevisning pr. domæne, så
     # den skal køres manuelt. Her dømmes kun portens logik, offline.
+    # Konkurrenternes priser er en påstand (30/9). Artiklen om DeskUptime skrev
+    # «$7-12 per month» om UptimeRobot og «$12» om Pingdom, og hovedlinjen
+    # «Kill Your $144/year SaaS Uptime Bill» stod på 16 sider. Slået op 30.
+    # september 2026: UptimeRobot Solo er €10/måned (€108/år), Better Stack
+    # sælger oppetid pr. *responder-plads* til $34/måned ($408/år), og Pingdom
+    # har ingen offentlig listepris. Alle tal ligger nu i én fil, og porten
+    # dømmer hvert beløb i `<title>`, `og:description`, JSON-LD, tabeller og
+    # brødtekst mod den — på tværs af alle 303 sider.
+    Step(
+        id="competitor-prices",
+        argv=("python3", "tools/check_competitor_prices.py"),
+        inputs=("tools/check_competitor_prices.py",
+                "tools/competitor_prices.json", "site/**"),
+    ),
+    Step(
+        id="competitor-prices-selftest",
+        argv=("python3", "tools/check_competitor_prices.py", "--self-test"),
+        inputs=("tools/check_competitor_prices.py",
+                "tools/competitor_prices.json", "site/**"),
+    ),
     Step(
         id="shared-visits-namespace-tests",
         argv=("python3", "tools/test_shared_visits_namespace.py"),

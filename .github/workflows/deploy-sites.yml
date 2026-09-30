@@ -127,6 +127,10 @@ on:
       # tilføjer en linje eller sletter en, springe gaten over — netop den
       # push der afgør om porten er værd at have. Samme grund som de tre
       # linjer ovenfor, målt for tiende gang.
+      - 'tools/check_competitor_prices.py'
+      # Priserne på konkurrenterne. Uden kilden i filteret kunne en push, der
+      # kun flytter et beløb i kilden, springe porten over.
+      - 'tools/competitor_prices.json'
       - 'tools/check_tool_paid_path.py'
       - 'tools/tool_paid_path_blind.json'
       # Ratcheten over de betalte veje hver side lå på. Samme grund som

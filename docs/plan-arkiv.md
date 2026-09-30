@@ -2695,3 +2695,59 @@ udgivelsesbillede, så den samme udgivelse kunne være «brudt» i den ene port 
   Rettet til `#94a3b8` = 7,77:1.
 - (b) `no-print` antaget fælles i printreglerne, men klassen findes kun i
   generatorernes egen `@media print` — den ville være død markup. Ikke tilføjet.
+
+## 30/9 — `ceo/konkurrent-priser`: konkurrentpriserne var en løgnagtig påstand
+
+**Fund.** `site/blog/desktop-website-monitor-cli.html` skrev «UptimeRobot Pro
+($7/month). Pingdom Standard ($12/month). Better Stack ($10/month)», en tabel
+med $84/$144/$120 og $252/$432/$360, og hovedlinjen «Kill Your
+$144/year SaaS Uptime Bill» — som stod i `<title>`, `og:title`, `twitter:*`,
+JSON-LD `<h1>` og **16 sider i alt** (blogindeks, guides og seks krydslinks).
+Artiklen er købsvejen til DeskUptime Pro ($19), så den løbende om priser var
+påstanden om, hvor hurtigt $19 er tjent hjem.
+
+**Målt 30/9 mod leverandørenes egne prissider:**
+
+| Leverandør | Påstanden | Kilden |
+|---|---|---|
+| UptimeRobot | $7/måned, $84/år | Solo €10/måned, €9 ved årlig betaling, **€108/år**; gratis 50 monitors @ 5 min |
+| Better Stack | $10/måned, $120/år | Oppetid sælges pr. *responder-plads*: $34/måned, **$408/år**; 10 monitors er i gratis |
+| Pingdom | Standard $12/måned, $144/år | Prissiden er en lommeberegner uden navngive pakker — **intet beløb kan efterprøves** |
+
+En ekstra fejl i samme sætning: brødteksten sammenlignede med «Better Stack»,
+mens blogindekset og de fem krydslinks skrev «Better Uptime» — to forskellige
+produkter. Begge er rettet til Better Stack.
+
+**Rettelsen.** Beløbene ligger nu i `tools/competitor_prices.json` med
+kilde-URL og `checked: 2026-09-30`. Hovedlinjen er «Stop Renting Uptime
+Monitoring» — et tal der *kan* rådne, var i 16 sider, så tallet kom ud af
+overskriften i stedet for at blive opdateret. Teksten nævner nu begges gratis
+niveauer, fordi det er sandt og fordi det gør sammenligningen troværdig.
+
+**Porten.** `tools/check_competitor_prices.py` dømmer hvert beløb ved siden af
+en konkurrent i `<title>`, `og:description`, JSON-LD, tabeller og brødtekst på
+alle 303 sider. Beløbet tilskrives den **nærmest foregående** konkurrent i
+blokken, og springes hvis vores eget produktnavn står imellem — ellers dømmer
+porten sin egen $19. Blokgrænserne er `</tr>`, `</li>`, `</p>`, `</div>`,
+`<br>`, `</h1>`, `</title>` og `", "` (JSON-LD); `</td>` er bevidst *ikke* en
+grænse, ellers stod navnet i én blok og beløbet i den næste og intet blev dømt.
+
+To mutationer var nødvendige for at få porten til at se hele tabellen: en
+3-års-kolonne med `$1.224` blev læst som `$1` af `check_stripe_ctas.py`'s
+`price_tokens`, så kolonnen blev fjernet (ét års tal er hele påstanden), og
+`$19` blev dømt som Better Stack-pris, indtil vores produktnavne blev
+undtaget.
+
+**Selvtest: 9/9 kontroller**, fem mutationer alle fanget — tabelpris byttet om,
+et tal lagt på Pingdom, månedsprisen ændret, årsstallet forvridt, og vores egen
+pris dømt som konkurrentens.
+
+**Alders-tjekket er en advarsel, ikke en dom.** `checked` ældre end 120 dage
+skriver en advarsel men giver exit 0. En gammel dato må aldrig gøre gaten rød:
+så låste den alle fremtidige udgivelser, indtil et menneske løb prisen op igen
+— præcis det, der skete med `$7-12` her.
+
+**Måling:** 110 steps i `tools/quality_gate.py` grøn (var 108). To eksisterende
+porte røde først og fandt begge fejlen: `check_stripe_ctas.py` meldte fire
+«udokumenterede priser» på artiklen, og `check_tool_paid_path.py` meldte
+«MISTET ANKER» i `/guides`, fordi ratcheten på nøgle er ankerteksten.

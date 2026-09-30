@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill</title>
-<meta name="description" content="Pingdom, UptimeRobot, Better Uptime — they all cost $7-12/month for the same thing. DeskUptime is $19 once. Local checks, no monthly fee. CLI included.">
+<title>Desktop Website Monitor: Stop Renting Uptime Monitoring</title>
+<meta name="description" content="UptimeRobot Solo is €108 a year, a single Better Stack responder seat is $408. DeskUptime is $19 once. Local checks, no monthly fee. CLI included.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Hermes Passiv">
-<meta property="og:title" content="Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill">
-<meta property="og:description" content="A one-time $19 purchase replaces $144/year SaaS subscriptions. Runs on your machine. CLI included. Open source engine.">
+<meta property="og:title" content="Desktop Website Monitor: Stop Renting Uptime Monitoring">
+<meta property="og:description" content="A one-time $19 purchase replaces a yearly uptime subscription. Runs on your machine. CLI included. Open source engine.">
 <meta property="og:url" content="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill">
-<meta name="twitter:description" content="A one-time $19 purchase replaces $144/year SaaS subscriptions. Runs on your machine. CLI included. Open source engine.">
+<meta name="twitter:title" content="Desktop Website Monitor: Stop Renting Uptime Monitoring">
+<meta name="twitter:description" content="A one-time $19 purchase replaces a yearly uptime subscription. Runs on your machine. CLI included. Open source engine.">
 <link rel="canonical" href="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli">
 <link rel="alternate" hreflang="da" href="https://hermes-passiv.pages.dev/da/blog/overvaag-hjemmeside-fra-terminalen">
@@ -21,7 +21,7 @@
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 <link rel="stylesheet" href="/style.css">
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "Article", "headline": "Desktop Website Monitor: Kill Your $144/year SaaS Uptime Bill", "description": "A one-time $19 desktop app replaces $144/year SaaS subscriptions. Monitor uptime, SSL and content changes from your own machine.", "url": "https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli", "datePublished": "2026-08-25", "dateModified": "2026-08-25", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
+{"@context": "https://schema.org", "@type": "Article", "headline": "Desktop Website Monitor: Stop Renting Uptime Monitoring", "description": "A one-time $19 desktop app replaces a yearly uptime subscription. Monitor uptime, SSL and content changes from your own machine.", "url": "https://hermes-passiv.pages.dev/blog/desktop-website-monitor-cli", "datePublished": "2026-08-25", "dateModified": "2026-09-30", "author": {"@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk"}, "publisher": {"@type": "Organization", "name": "mahoje.dk", "url": "https://mahoje.dk"}}
 </script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
@@ -38,8 +38,8 @@
 <header class="hero">
   <div class="container">
     <div class="badge">ARTICLE</div>
-    <h1>Desktop Website Monitor:<br>Kill Your $144/year SaaS Uptime Bill</h1>
-    <p class="subtitle">Pingdom, UptimeRobot, Better Uptime — they all charge $7&ndash;12 per month for monitoring HTTP status, SSL expiry, and response time. DeskUptime is <strong>$19 once</strong>, runs on your own machine, and includes a free CLI.</p>
+    <h1>Desktop Website Monitor:<br>Stop Renting Uptime Monitoring</h1>
+    <p class="subtitle">UptimeRobot Solo is &euro;108 a year, a Better Stack responder seat is $408. They all monitor HTTP status, SSL expiry, and response time. DeskUptime is <strong>$19 once</strong>, runs on your own machine, and includes a free CLI.</p>
     <div class="hero-cta">
       <a href="/deskuptime/" class="btn-primary">See DeskUptime &rarr;</a>
       <a href="/" class="btn-secondary">Back to Home</a>
@@ -55,9 +55,11 @@
 
 <p>If you run a small web agency, you probably have accounts on two or three uptime monitoring services:</p>
 
-<p>UptimeRobot Pro ($7/month). Pingdom Standard ($12/month). Better Stack ($10/month). Maybe a dedicated SSL monitor and a separate content-change watcher on top.</p>
+<p>UptimeRobot Solo is &euro;10/month. A single Better Stack responder seat is $34/month, and that is what unlocks uptime there. Pingdom sells synthetic monitoring in quantity bundles behind a calculator, so it has no list price to quote. Maybe a dedicated SSL monitor and a separate content-change watcher on top.</p>
 
-<p>That's $84&ndash;$144 per year. For what? A green dot in a dashboard and an email when your site is down. You're paying for the cloud hosting, the billing system, the user management — features you don't need when you're the only person monitoring your sites.</p>
+<p>Both of the first two have free tiers worth knowing about: UptimeRobot gives you 50 monitors on a 5-minute interval, Better Stack includes 10 monitors and a status page. The bill arrives when you want a shorter interval, more monitors, or status pages you control.</p>
+
+<p>UptimeRobot's cheapest paid tier is &euro;108 a year, and one Better Stack responder seat is $408 a year &mdash; in a range that depends entirely on which service and how many monitors you need. For what? A green dot in a dashboard and an email when your site is down. You're paying for the cloud hosting, the billing system, the user management — features you don't need when you're the only person monitoring your sites.</p>
 
 <h2>What DeskUptime does</h2>
 
@@ -119,14 +121,17 @@
 <p>The case is simple math:</p>
 
 <table style="width:100%;border-collapse:collapse;margin:16px 0">
-<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd">Service</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">1 year</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">3 years</th></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Pro</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$84</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$252</td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">Pingdom Standard</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$144</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$432</td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd">Better Uptime</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$120</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$360</td></tr>
-<tr><td style="padding:10px;border:1px solid #ddd;font-weight:600">DeskUptime Pro</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td></tr>
+<tr><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd">Service</th><th style="background:#f5f7fa;padding:10px;border:1px solid #ddd;text-align:right">1 year</th></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Solo (10 monitors, 60 s)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">&euro;108</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">UptimeRobot Team (100 monitors, 30 s)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">&euro;492</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Better Stack (10 monitors + 1 responder)</td><td style="padding:10px;border:1px solid #ddd;text-align:right">$408</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd">Pingdom</td><td style="padding:10px;border:1px solid #ddd;text-align:right">no list price</td></tr>
+<tr><td style="padding:10px;border:1px solid #ddd;font-weight:600">DeskUptime Pro &mdash; three years included</td><td style="padding:10px;border:1px solid #ddd;text-align:right;font-weight:600">$19</td></tr>
 </table>
 
-<p>A single DeskUptime license pays for itself in two months. After that, every month is savings.</p>
+<p>DeskUptime is $19 once, against &euro;108 or $408 a year for the cheapest paid tiers above. That is the first month&rsquo;s rent either way, and then it keeps being savings.</p>
+
+<p>Every figure in this table was read off the vendors&rsquo; own pricing pages on 30 September 2026. They change their prices, so <a href="https://uptimerobot.com/pricing/">UptimeRobot</a> and <a href="https://betterstack.com/pricing">Better Stack</a> are linked &mdash; go and check them before you take the numbers as gospel.</p>
 
 <h2>Licensing &amp; privacy</h2>
 

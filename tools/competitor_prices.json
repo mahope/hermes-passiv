@@ -1,0 +1,45 @@
+{
+  "_kommentar": "Eneste kilde til konkurrenternes priser. `tools/check_competitor_prices.py` dømmer hvert beløb, der står ved siden af et navn herfra, i alle sider under site/. Opfind aldrig et tal her: slå det op, sæt talfeltet til null hvis prisen ikke er offentlig, og sæt `checked` til i dag.",
+  "checked": "2026-09-30",
+  "sources": {
+    "UptimeRobot": "https://uptimerobot.com/pricing/",
+    "Better Stack": "https://betterstack.com/pricing",
+    "Pingdom": "https://www.pingdom.com/pricing/"
+  },
+  "competitors": {
+    "UptimeRobot": {
+      "plan": "Solo, 10 monitors, 60 s interval",
+      "free_tier": "50 monitors, 5-minutters interval, €0",
+      "source_note": "Priserne er EUR. Solo 10 monitors: €10/måned, €9 ved årlig betaling = €108/år. Team 100 monitors: €41/måned, €35 årlig = €492/år.",
+      "plans": {
+        "Solo": {
+          "per_month": "€10",
+          "per_month_annual": "€9",
+          "per_year": "€108"
+        },
+        "Team": {
+          "per_month": "€41",
+          "per_month_annual": "€35",
+          "per_year": "€492"
+        }
+      }
+    },
+    "Better Stack": {
+      "plan": "Responder, 10 monitors inkluderet, 30 s interval",
+      "free_tier": "10 monitors, 1 statuspage, $0",
+      "source_note": "Oppetid sælges pr. responder-plads, ikke pr. monitor. 34 x 12 = 408.",
+      "plans": {
+        "Responder": {
+          "per_month": "$34",
+          "per_month_annual": "$29",
+          "per_year": "$408"
+        }
+      }
+    },
+    "Pingdom": {
+      "plan": null,
+      "free_tier": "gratis prøveperiode",
+      "source_note": "Pris-siden er en lommeberegner uden navngive pakker eller offentlig listepris, så intet beløb kan efterprøves. Skriv derfor navnet uden et tal."
+    }
+  }
+}

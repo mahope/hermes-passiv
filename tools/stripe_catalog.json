@@ -649,17 +649,11 @@
       "route": "/blog/desktop-website-monitor-cli",
       "product": "deskuptime-pro",
       "prices": [
-        "$7",
-        "$10",
-        "$12",
         "$19",
         "$29.",
-        "$84",
-        "$120",
-        "$144",
-        "$252",
-        "$360",
-        "$432"
+        "$34",
+        "$408",
+        "$408."
       ],
       "requires_text": [
         "Buy DeskUptime Pro for $19"
@@ -756,7 +750,7 @@
         "Køb EUComply Pro Lifetime — $149 én gang"
       ]
     },
-        {
+    {
       "path": "site/blog/compliance-check-github-action.html",
       "domain": "mahope.tools",
       "route": "/blog/compliance-check-github-action",
@@ -780,7 +774,7 @@
         "Køb EUComply Pro — 79 $ pr. år"
       ]
     },
-{
+    {
       "path": "site/da/blog/gdpr-vs-nis2-overlap-da.html",
       "domain": "mahope.tools",
       "route": "/da/blog/gdpr-vs-nis2-overlap-da",
@@ -1489,8 +1483,8 @@
         "$19",
         "$10",
         "$120",
-        "$144",
-        "$7"
+        "$7",
+        "$408."
       ],
       "requires_text": [
         "Buy DeskUptime Pro — $19 once"

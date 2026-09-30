@@ -19,9 +19,14 @@
   undtagelser med en skrevet grund, ikke en rest: `compliance-report` (to
   `Buy EUComply Pro`-knapper i rapporten), `clean-copy-tool` (eget købsflow)
   og `site-icons` (CLI-side med et statisk demo-output). Se opgave 29.
-- **Egen fejlform fundet to gange i denne uge:** donationslinjens kontrast var
-  under AA i lyst tema, og `no-print` viste sig at være død markup. Begge
-  rettet i kilden — se arkiv for målingerne.
+- **Artiklen om $19-produktet løj om priserne på konkurrenterne.** Den skrev
+  «$7-12 i måneden» om UptimeRobot og «$12» om Pingdom, og hovedlinjen «Kill
+  Your $144/year SaaS Uptime Bill» stod på 16 sider. Slået op 30/9: UptimeRobot
+  Solo er €10/måned (€108/år), Better Stack sælger oppetid pr. *responder-plads*
+  til $34/måned ($408/år), og Pingdom har ingen offentlig listepris. Se opgave 33.
+- **Egen fejlform fundet tre gange i denne uge:** donationslinjens kontrast var
+  under AA i lyst tema, `no-print` viste sig at være død markup, og nu en
+  konkurrentpris der aldrig var slået op. Alle tre rettet i kilden.
 - `❓ Til Mads` nederst: `STATS_TOKEN`, `bugbottle.dev`'s domæne, banner-placering
   på 180 sider, og de to desktop-apps der stadig ringer til Lemon Squeezy.
 - **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
@@ -29,13 +34,11 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: én regel for hvad der må prøves igen, så uge-rapporten og
-  «Tjek produktion» ikke længere er uenige om 429
-  ceo/et-forbigaaende-kal 2026-09-30` — dette repo deployer ved push til
-  `main`. Mål: de tre deploy-jobs er grønne, og `build-info.json` på
-  mahope.tools og cleancopy.tools har **uændret** `routes_sha256`
-  (`8367db4b…` / `81ed162d…`) — kun `tools/` er rørt, så intet på sitet skal
-  ændre sig. Er den ændret, er der rørt noget vi ikke mente.
+- `DEPLOY OK 2026-09-30` — reglen for forbigående fejl (`ceo/et-forbigaaende-kal`,
+  `250e604`) er live: CI-kørsel `36779886917` grøn i alle jobs, og
+  `build-info.json` bærer præcis `250e6043…` på begge domæner med
+  **uændret** `routes_sha256` (`8367db4b…` / `81ed162d…`) — kun `tools/` var
+  rørt, så intet på sitet ændrede sig, som det skulle.
 
 - `DEPLOY OK 2026-09-30` — donationslinjen på de 17 sidste værktøjssider er
   live på alle ni målte ruter, hver med **præcis ét** `donate.stripe.com`-link:
@@ -166,4 +169,15 @@
     `ceo/port-kan-doe-klasser`.** Fjerde dømning i `check_built_css.py`
     («død klasse») plus 17 fund ryddet, og **«tabt regel» døde stille i gaten**
     fordi `import build_sites` fandt intet. Se STATE.
+
+33. ~~**Priserne på konkurrenterne er en påstand uden dom.**~~
+     **FÆRDIG 30/9, `ceo/konkurrent-priser`.** Alle beløb ligger i
+     `tools/competitor_prices.json` med kilde-URL og `checked`-dato, og
+     `tools/check_competitor_prices.py` dømmer hvert beløb ved siden af en
+     konkurrent i `<title>`, `og:description`, JSON-LD, tabeller og brødtekst på
+     tværs af 303 sider — 9/9 kontroller, fem mutationer alle fanget. En
+     konkurrent uden offentlig pris må ikke have et tal ved siden af sig, så
+     Pingdom skrives nu navnet uden pris. Alders-tjekket er en **advarsel, ikke
+     en dom**: en gammel `checked` må aldrig låse gaten for alle fremtidige
+     udgivelser. Se arkiv.
 
