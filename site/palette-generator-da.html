@@ -49,6 +49,10 @@
   .pg-tab { padding:8px 14px; border-radius:8px; border:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; font-weight:600; font-size:.88rem; }
   .pg-tab[aria-selected="true"] { background:var(--color-accent); color:#fff; border-color:var(--color-accent); }
   .pg-dl { display:inline-block; margin-left:auto; }
+  .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
+  .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
+  .pro-note p { margin:0; color:var(--color-text); font-size:.95rem; line-height:1.7; }
+  .pro-note a { color:var(--color-accent); }
 </style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
@@ -161,6 +165,20 @@
       <div class="card"><h3>Virker det til dark mode?</h3><p>Ja. Generér fra en mørk basisfarve og få lyse tekstparinger, og tjek tallene på samme måde. Dark mode kræver ofte højere kontrast end man tror — verificér i stedet for at gætte.</p></div>
       <div class="card"><h3>Sendes mine farver nogetsted hen?</h3><p>Nej. Paletter beregnes lokalt i din browser med JavaScript — intet forlader din enhed.</p></div>
   </div>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Paletten beregner den farve, du vælger. Scanneren måler den, der kom ud.</h2>
+  <p>Generatoren er gratis, og den gør hele farvearbejdet: én basisfarve ind, kontrast-ratios for
+  brødtekst, store overskrifter, kanter og overflader ud, regnet med WCAG 2.1's egen formel. Det
+  ændrer sig ikke med en licens.</p>
+  <p>Det ingen farvegenerator kan se, er hvad der faktisk blev udgivet. Et tema, et plugin eller en
+  kollega kan skifte kontrasten på den side, du aldrig rørte ved. Den gratis scanner kører allerede
+  de 15 automatiske tjek på en rigtig URL — alt-tekst, formularfelter, overskrifter, kontrast,
+  ARIA, frames og tabeller. <a href="/da/compliance-report">EUComply Pro</a> lægger de 18
+  server-side tjek oveni, så det bliver 33 tjek i alt: om privatlivslinket findes, om der mangler et
+  samtykkebanner på en side der faktisk indlæser sporing, og om HSTS og indholdssikkerhed er
+  sat i svaret. Rapporten kan sendes videre som pdf. $79/år pr. website.</p>
 </section>
 
 </main>

@@ -600,6 +600,24 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # de obligatoriske artikel 28(3)-klausuler, så det er samme licens der
     # sælger det der mangler — om de lovede foranstaltninger er på plads.
     ("dpa-generator-da.html", "web"),
+    # De to privatlivspolitik-generatorer (30/9) — 9 indgående sider hver, målt
+    # af `check_tool_paid_path.py`. De sælger `/compliance-report` og
+    # `/da/compliance-report`, altså webkernen, og deres pro-note lover de 15
+    # automatiske tjek og "33 tjek i alt". Det er ikke et valg: ingen betalt
+    # vare i katalogen sælger en privatlivspolitik, så den samme licens er
+    # det der sælger det dokumentet *ikke* kan — om det er linket fra sitet,
+    # og om et samtykkebanner mangler. Samme måleform som de tre linjer
+    # ovenfor.
+    ("privacy-notice-generator.html", "web"),
+    ("privacy-notice-generator-da.html", "web"),
+    # Den danske farvepalet-generator (30/9) — 9 indgående sider, målt af
+    # `check_tool_paid_path.py`. Den sælger `/da/compliance-report` og
+    # nævner de 15 automatiske tjek som dem, den *gratis* scanner
+    # `/scan-da` allerede kører — kontrast er den ene af dem
+    # (`site/compliance-report.html:190`), så det er ikke en betalt streng
+    # der gemmer sig i teksten. Det betalte er de 18 server-side tjek og de
+    # 33 i alt, og det er samme licens som resten af familien.
+    ("palette-generator-da.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )
