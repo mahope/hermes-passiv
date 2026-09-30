@@ -43,10 +43,16 @@
   #agreement h2 { color: #12283a; font-size: 18px; }
   #agreement th, #agreement td { text-align: left; vertical-align: top;
                padding: 8px 10px; border-bottom: 1px solid #dde5ea; font-size: 13.5px; }
+  .pro-note { max-width: 720px; margin: 32px auto 0; padding: 18px 22px;
+              border: 1px solid var(--color-accent); border-radius: 10px;
+              background: var(--color-accent-soft); }
+  .pro-note h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  .pro-note p { margin: 0; color: var(--color-text); font-size: 0.95rem; line-height: 1.7; }
+  .pro-note a { color: var(--color-accent); }
   .sr-only { position:absolute; width:1px; height:1px; overflow:hidden;
              clip:rect(0 0 0 0); white-space:nowrap; }
   @media print {
-    header.hero, .gen, .actions, footer.site-footer, .no-print { display: none !important; }
+    header.hero, .gen, .actions, footer.site-footer, .no-print, .pro-note { display: none !important; }
     #agreement { border: none; margin: 0; padding: 0; }
   }
 </style>
@@ -184,6 +190,20 @@ Hetzner Online GmbH — hosting"></textarea>
     enterprise-kunder der vurderer leverandører og certificeringsorganer starter
     alle med "vis os jeres registre".</li>
   </ul>
+</section>
+
+<section class="pro-note" aria-labelledby="pro-heading">
+  <h2 id="pro-heading">Registret siger, hvad I behandler. Det siger ikke, om sitet stadig passer til det.</h2>
+  <p>Generatoren er gratis, og den skriver hele registreringen: jeres rolle, én behandlingsaktivitet
+  med formål og retsgrundlag, kategorierne af registrerede og af data, modtagere og overførsler,
+  opbevaring og sikkerhed. Intet er holdt tilbage til en licens.</p>
+  <p>Men et register kan ikke finde ud af, om sitet stadig holder. Det er især felt 3, modtagere og
+  overførsler, der bliver forældet først. <a href="/da/compliance-report">EUComply Pro</a> åbner
+  jeres rigtige URL og melder tilbage, hvad siden faktisk indlæser: om der overhovedet findes et
+  privatlivslink i footeren, om Google Analytics eller et Meta-pixel indlæses uden samtykkebanner,
+  om en formular sender i klar tekst, og om svaret kommer med HSTS og en CSP-header. Det er 18
+  server-side tjek, og den gratis scanner kører de 15 automatiske tjek — 33 tjek i alt — og
+  rapporten kommer som en pdf, I kan sende videre til kunden. $79/år pr. website.</p>
 </section>
 
 <footer class="site-footer">

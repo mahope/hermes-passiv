@@ -618,6 +618,15 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     # der gemmer sig i teksten. Det betalte er de 18 server-side tjek og de
     # 33 i alt, og det er samme licens som resten af familien.
     ("palette-generator-da.html", "web"),
+    # De to RoPA-generatorer (30/9) — 9 indgående sider hver, målt af
+    # `check_tool_paid_path.py`. Samme måleform som de to privatlivs-
+    # generatorer ovenfor: ingen af de syv betalte skabelonprodukter er en
+    # behandlingsaktivitetsregistrering, så det samme `eucomply-pro` er det
+    # der sælger det dokumentet *ikke* kan — om sitet stadig indlæser det,
+    # registret siger, at I gør. Pro-note'en lover de 15 automatiske tjek og
+    # "33 tjek i alt", altså webkernen plus `reportProFindings()`'s 18.
+    ("ropa-generator.html", "web"),
+    ("ropa-generator-da.html", "web"),
     # Guidesiderne beskriver webscanneren ("nothing to install, no signup").
     ("guides/*", "web"),
 )
