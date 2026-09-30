@@ -1717,3 +1717,52 @@ REGEL-linjer flyttet ud af arbejdskøen, uændrede:
 - `GATE`: **GRØN — `python3 tools/quality_gate.py`: 87 steps** (85 + `area-ordinals` + `area-ordinals-selftest`). `test_deploy_workflow.py` grøn efter at porten fik `tools/check_area_ordinals.py` i path-filteret — ellers kunne en push, der kun tilføjer en fejlform til porten, springe netop den port over der afgør om fejlformen må slå.
 - `OPGRADERINGER`: ingen. Diffen rører ingen afhængighed, så `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret. `site/_worker.js` urørt, ingen ny rute, intet i `dist/`.
 - `DEPLOY OK 2026-09-30` (verificeret ved indhold: live læser "Det femte område", `build-info.json` = `e0db1ad`) — `VERIFICÉR DEPLOY: dom over ordtal i brødteksten ceo/ordinal-omraade-dommet 2026-09-30 10:05`: rører `site/nis2-gap-assessment-da.html`, `tools/check_area_ordinals.py`, `tools/quality_gate.py`, `.github/workflows/deploy-sites.yml`. **Ingen ny rute**, ingen byggekode, `site/_worker.js` urørt. **Indholdskrav:** (a) `https://mahope.tools/nis2-gap-assessment-da` — hent siden og læs pro-note'en; den skal sige "Det femte område", ikke "tiende". HTTP 200 beviser intet, læs teksten; (b) listen over de ti områder skal stadig have "Sikkerhed ved anskaffelse, udvikling og vedligeholdelse" som **femte** `<li>`; (c) `python3 tools/check_area_ordinals.py` → grøn på den publicerede sides kilde.
+
+## 2026-09-30 — Opgave 15: `tools/check_built_css.py` (ceo/port-der-dommer-css)
+
+Porten der dømmer, om en sides CSS og tokens overlever bygget. Måler på de
+byggede filer, ikke på `site/`.
+
+**Første måling, 9 fund — hvoraf 4 ægte:**
+
+| Rute | Token | Kilde |
+|---|---|---|
+| `mahope.tools/blog/desktop-website-monitor-cli` | `--accent` (3 links) | `site/blog/…:145,147,149` |
+| `mahope.tools/blog/macos-menu-bar-website-monitor` | `--muted` (4 regler) | `site/blog/…:24,26,31,35` |
+| `mahope.tools/da/blog/overvaag-hjemmeside-mac-menu-bar` | `--muted` (4 regler) | samme fil spejlet |
+| `mahope.tools/downloads` | `--text-dim` (7 afsnit) | `site/downloads.html:81-126` |
+
+Alle er legacy-aliaser erklæret **kun** under `html[data-product="deskuptime"]`
+(`style.css:127-140`), altså uopløste på mahope.tools. Efterprøvet i browseren
+over den byggede dist: `getPropertyValue('--accent')` → `''`,
+`--color-accent` → `#4a3fc4`. Rettet ved at bruge de tokens `:root` erklærer.
+
+**5 fund var falske** — `var(--color-muted, var(--color-text-muted))` er opløst.
+`tokens_used()` greb i første version alle `var(--x)`; den tæller nu kun dem uden
+fallback. Efter rettelsen: 0 `var(--x)` uden fallback på tværs af alle dists.
+
+**Fejl i porten selv, som kun mutationerne afslørede:**
+
+1. `html[data-theme="dark"]` blev behandlet som dækning. En token kun i
+   mørktemaet er uopløst i lyst — præcis den fejl `check_design_tokens` havde.
+   Rettet med `RE_THEME_ATTR`.
+2. Alias-opløsningen trak `--color-accent` ind via `--accent: var(--color-accent)`
+   uden at respektere scope, altså genindførte den fejl porten skal fange.
+   Rettet: kun aliaser i et scope siden rammer.
+3. Whitespace: bygget skriver regler på én linje, kilden har dem ombrudt, så
+   `.ti-canvas-wrap` på `/text-on-image-checker` så tabt ud. Rettet med
+   normalisering; elementet er i markup, så fundet var næsten ægte.
+
+**Selvtest:** kopierer repoet, muterer `tools/pagepass.py` (genindsætter den
+gamle `*-wrap`-påstand) og `site/style.css` (flytter `--color-accent` ud af
+`:root` ind i deskuptimes scope), bygger i kopien med `AUDITEDWP_DIR` sat mod
+`../auditedwp`, og kræver at porten bliver rød med filnavn **og den konkrete
+regel/token** (`ti-canvas-wrap`, `var(--color-accent)`). 8 kontroller.
+
+`quality_gate.py`: 87 → 89 steps. `deploy-sites.yml` path-filter fik
+`tools/check_built_css.py` — ellers kunne en push der kun rører portens egen
+fil springe netop den over.
+
+**Sidefund, ikke rettet (opgave 16):** `/blog/macos-menu-bar-website-monitor` har
+to `<h2>` med samme indhold: `Related guides` (:71) og `Related Guides` (:78).
+Set på skærmbillede, ikke af nogen port.

@@ -78,23 +78,23 @@
     on this site runs 15 of them; the app adds seven more, including video and audio tracks,
     autoplay media, blinking elements, positive tabindex and image submit buttons.</p>
       <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-arm64.dmg" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">Download DMG (macOS ARM64, ~120 MB)</a></p>
-      <p style="font-size:13px;color:var(--text-dim)">Alternatively, download the
+      <p style="font-size:13px;color:var(--color-text-muted)">Alternatively, download the
       <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-x64.dmg">Intel DMG</a>,
       <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-arm64.zip">ARM64 ZIP</a>, or
       <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-mac-x64.zip">Intel ZIP</a>
       (~120 MB). Build from source:</p>
       <p><a href="/downloads/eaa-scanner-desktop-src-1.3.4.zip" style="font-size:13px">Download Source (68 KB)</a></p>
-      <p style="font-size:13px;color:var(--text-dim)">The source archive is 1.3.4; the installers above are 1.3.3. Building from source gives you the current version, and it removes the $19 price that cannot be paid and a purchase link to a host that no longer exists.</p>
+      <p style="font-size:13px;color:var(--color-text-muted)">The source archive is 1.3.4; the installers above are 1.3.3. Building from source gives you the current version, and it removes the $19 price that cannot be paid and a purchase link to a host that no longer exists.</p>
       <code style="font-size:13px">unzip eaa-scanner-desktop-src-1.3.4.zip<br>npm install<br>npm start</code>
-      <p style="font-size:13px;color:var(--text-dim);margin-top:8px">The app launches as a native macOS window. Enter a URL and scan instantly — or switch to <strong>Whole site</strong> to crawl up to 200 same-site pages with a live progress readout and per-page findings. <em>Not signed with an Apple Developer ID: on first launch, right-click the app and select Open to bypass the unidentified-developer warning.</em></p>
-      <p style="font-size:13px;color:var(--text-dim)"><a href="/blog/eaa-compliance-scanner-desktop">Read the full desktop scanner guide →</a></p>
+      <p style="font-size:13px;color:var(--color-text-muted);margin-top:8px">The app launches as a native macOS window. Enter a URL and scan instantly — or switch to <strong>Whole site</strong> to crawl up to 200 same-site pages with a live progress readout and per-page findings. <em>Not signed with an Apple Developer ID: on first launch, right-click the app and select Open to bypass the unidentified-developer warning.</em></p>
+      <p style="font-size:13px;color:var(--color-text-muted)"><a href="/blog/eaa-compliance-scanner-desktop">Read the full desktop scanner guide →</a></p>
     </section>
 
     <section class="dl-card">
           <h2>Desktop App (Linux) <span class="pro-badge">Pro</span></h2>
           <p>Native Linux build — AppImage (universal) and .deb (Debian/Ubuntu). Same features as macOS. Batch scanning and CSV/JSON export require a Pro license.</p>
           <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-linux-x86_64.AppImage" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">Download AppImage (Linux x64, ~110 MB)</a></p>
-          <p style="font-size:13px;color:var(--text-dim)">Or install the
+          <p style="font-size:13px;color:var(--color-text-muted)">Or install the
           <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-linux-amd64.deb">.deb package</a> (Debian/Ubuntu).</p>
           <code style="font-size:13px">chmod +x EAA*.AppImage<br>./EAA*.AppImage</code>
         </section>
@@ -103,7 +103,7 @@
           <h2>Desktop App (Windows) <span class="pro-badge">Pro</span></h2>
           <p>Native Windows build — installer and portable executable. Same features as macOS and Linux. Batch scanning and CSV/JSON export require a Pro license.</p>
           <p><a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-setup.exe" class="btn-primary" style="display:inline-block;padding:10px 24px;margin:8px 0;text-decoration:none">Download Installer (Windows x64, ~90 MB)</a></p>
-          <p style="font-size:13px;color:var(--text-dim)">Or download the <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-portable.exe">portable .exe</a> (no installation needed).</p>
+          <p style="font-size:13px;color:var(--color-text-muted)">Or download the <a href="https://github.com/mahope/hermes-passiv/releases/download/eaa-scanner-desktop-v1.3.3/EAA.Compliance.Scanner-1.3.3-win-x64-portable.exe">portable .exe</a> (no installation needed).</p>
         </section>
 
   <section class="dl-card" style="border-left:3px solid #38bdf8;">
@@ -123,7 +123,7 @@
     Download the workflow template, drop it into
     <code>.github/workflows/eaa-scan.yml</code>, and edit the page list:</p>
     <code><a href="/downloads/eaa-scan-github-action.yml" download>eaa-scan-github-action.yml</a> &mdash; fails the build on errors or warnings (<code>--fail-on</code>)</code>
-    <p style="font-size:13px;color:var(--text-dim);margin-top:8px">Runs on every push, pull request and a weekly schedule. The template also ships an optional <strong>crawl-audit</strong> job that runs <code>eaa-scan --crawl 25</code> for a whole-site report (average score + most frequent issue types) without failing the build.</p>
+    <p style="font-size:13px;color:var(--color-text-muted);margin-top:8px">Runs on every push, pull request and a weekly schedule. The template also ships an optional <strong>crawl-audit</strong> job that runs <code>eaa-scan --crawl 25</code> for a whole-site report (average score + most frequent issue types) without failing the build.</p>
   </section>
 
   <section class="dl-card">

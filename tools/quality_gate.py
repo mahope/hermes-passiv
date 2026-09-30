@@ -800,6 +800,38 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_design_tokens.py", "--self-test"),
         inputs=("tools/check_design_tokens.py",),
     ),
+    # Opgave 15: bygget slettede CSS på 22 sider i to iterationer, og ingen
+    # port så det. `WRAP_SELECTOR_RE` spiste ethvert `*-wrap`, og da
+    # `check_design_tokens` så på `style.css`, troede den at `style.css:128-136`
+    # dækkede ni tokens — mens de lå under `html[data-product="deskuptime"]`,
+    # altså kun på ét domæne. Samme fejlform som `RE_CLAIM` og
+    # `tool_paid_path_blind`: noget der tæller uden at dømme sit eget tal.
+    #
+    # Denne port stiller begge spørgsmål på de byggede filer: er en regel fra
+    # `site/` væk i `dist/` mens elementet stadig er i markup og skallen ikke
+    # erstatter den, og er ethvert `var(--x)` *opløst* for sidens
+    # `data-product` — ikke "nævnt et sted i style.css", som var den forkerte
+    # læsning. Første kørsel fandt 9 uopløste tokens på 4 domæner.
+    Step(
+        id="built-css",
+        argv=("python3", "tools/check_built_css.py"),
+        # `site/**` og `bugbottle-landing/**` fordi porten måler hver side i
+        # dist mod sin kilde; `tools/pagepass.py` fordi den er den, der
+        # beslutter hvilke regler der overlever; `site/style.css` fordi den er
+        # skallen, der erstatter de tabte.
+        inputs=("tools/check_built_css.py", "tools/pagepass.py", "build_sites.py",
+                "site/style.css", "site/**", "bugbottle-landing/**"),
+        needs_dist=True,
+    ),
+    # Uden `--self-test`-steppet er selvværdierne ubevidnede: porten kunne
+    # være grøn fordi den intet dømmer. Selvtesten muterer `pagepass.py` og
+    # `site/style.css` — de rigtige filer — i en kopi af repoet, bygger der og
+    # kræver at porten bliver rød med filnavn på hver mutation.
+    Step(
+        id="built-css-selftest",
+        argv=("python3", "tools/check_built_css.py", "--self-test"),
+        inputs=("tools/check_built_css.py", "tools/pagepass.py", "site/style.css"),
+    ),
     # Opgave fra planens NEXT_TASK 1: den indlejrede CTA-tracker på site/scan.html
     # og site/scan-da.html byggede sit begivenhedsnavn ud fra den **valgfrie
     # `(da\/)?`-gruppe**, så `/compliance-report` sendte `cta-undefined` og

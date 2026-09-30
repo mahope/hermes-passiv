@@ -39,6 +39,11 @@ on:
       # en ny fejlform til porten, springe netop den port over som afgør om
       # fejlformen må slå. Samme grund som `storage-claims` ovenfor.
       - 'tools/check_jsonld_types.py'
+      # Gatestrækket `built-css` dømmer om en sides CSS og tokens overlever
+      # bygget. Uden portens egen fil i filteret kunne en push, der kun
+      # tilføjer eller sletter én linje i dens række, springe netop den port
+      # over, der afgør om tabte regler må slå — samme krav som de to ovenfor.
+      - 'tools/check_built_css.py'
       # Gatestrækket `storage-claims` læser `_worker.js` for at finde de ruter
       # der kalder `rateLimitIp`, og hele `site/` for at finde de sider der
       # modsiger dem. Uden linjen her ville en push, der kun tilføjer en
