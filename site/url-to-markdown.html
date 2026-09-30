@@ -102,6 +102,8 @@
     <label for="output-box">Markdown result</label>
     <textarea id="output-box" readonly aria-live="polite"></textarea>
 
+    <p id="u2m-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
     <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem;">
       <button type="button" class="btn-primary" id="btn-copy">Copy result</button>
       <button type="button" class="btn-secondary" id="btn-download">Download as .md</button>
@@ -186,6 +188,7 @@
     var form = document.getElementById('url-form');
     var input = document.getElementById('url-input');
     var output = document.getElementById('output-box');
+    var donateLine = document.getElementById('u2m-donate');
     var statusEl = document.getElementById('status');
     var copyStatus = document.getElementById('copy-status');
     var goBtn = document.getElementById('btn-go');
@@ -257,12 +260,15 @@
           var md = CleanCopyCore.htmlToMarkdown(extractReadable(res.j.html));
           if (!md || md.length < 20) throw new Error('No readable content found on that page.');
           output.value = md.trim();
+          donateLine.innerHTML = 'Converting a page to Markdown is free. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+          donateLine.hidden = false;
           setStatus('Converted ' + md.length.toLocaleString() + ' characters.', 'ok');
           trackUse();
         })
         .catch(function (err) {
           setStatus(err.message || 'Something went wrong. Try another URL.', 'err');
           output.value = '';
+          donateLine.hidden = true;
         })
         .finally(function () {
           goBtn.disabled = false;

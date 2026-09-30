@@ -135,6 +135,8 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
   </div>
 </div>
 
+<p id="urld-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
 <section style="margin:2.5rem 0;">
   <h2>About this tool</h2>
   <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
@@ -207,6 +209,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
   var statusBox = document.getElementById('statusBox');
   var outputArea = document.getElementById('outputArea');
   var copyBtn = document.getElementById('copyBtn');
+  var donateLine = document.getElementById('urld-donate');
   if (!input || !outputArea) return;
 
   var modeRadios = document.querySelectorAll('input[name="mode"]');
@@ -251,6 +254,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
     if (text.length === 0) {
       outputArea.textContent = 'Waiting for input…';
       statusBox.style.display = 'none';
+      donateLine.hidden = true;
       return;
     }
 
@@ -274,10 +278,13 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
       }
       outputArea.textContent = result;
       show('✓ ' + label + ' — ' + text.length + ' chars → ' + result.length + ' chars', 'urld-ok');
+      donateLine.innerHTML = 'Encoding and decoding is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+      donateLine.hidden = false;
       track();
     } catch (e) {
       show('✗ Could not ' + mode + ': ' + e.message, 'urld-err');
       outputArea.textContent = 'Error: ' + e.message;
+      donateLine.hidden = true;
     }
   }
 
@@ -302,6 +309,7 @@ textarea.urld-io:focus { outline: none; border-color: var(--color-accent); box-s
     input.value = '';
     outputArea.textContent = 'Waiting for input…';
     statusBox.style.display = 'none';
+    donateLine.hidden = true;
     input.focus();
   });
 

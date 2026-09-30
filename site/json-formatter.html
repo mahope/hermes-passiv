@@ -98,6 +98,8 @@
 
 <div id="statusBox" class="jf-status" role="status" aria-live="polite"></div>
 
+<p id="json-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
 <div class="jf-btns">
   <button id="formatBtn" class="btn-primary">Format (beautify)</button>
   <button id="minifyBtn" class="btn-secondary">Minify</button>
@@ -170,6 +172,7 @@
   var output = document.getElementById('outputArea');
   var statusBox = document.getElementById('statusBox');
   var sizeMeta = document.getElementById('sizeMeta');
+  var donateLine = document.getElementById('json-donate');
   if (!input || !output) return;
 
   var tracked = false;
@@ -200,6 +203,7 @@
     if (text.length === 0) {
       output.value = '';
       statusBox.style.display = 'none';
+      donateLine.hidden = true;
       return true;
     }
 
@@ -215,6 +219,7 @@
       statusBox.textContent = msg;
       statusBox.className = 'jf-status jf-err';
       output.value = '';
+      donateLine.hidden = true;
       return false;
     }
 
@@ -238,6 +243,9 @@
         ? 'Output size: ' + bytes(new Blob([pretty]).size)
         : '';
     }
+
+    donateLine.innerHTML = 'Formatting is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
 
     if (!tracked) {
       tracked = true;

@@ -219,8 +219,14 @@ def self_test() -> int:
     tjek("de rettede sider tælles ikke som manglende",
          not (set(dømt) & set(mangler)),
          str(sorted(set(dømt) & set(mangler))[:4]))
-    tjek("målingen tæller de øvrige værktøjssider", len(mangler) >= 10,
-         f"{len(mangler)} sider: {', '.join(mangler[:4])}")
+    # Når alle rettelige sider er rettet, er de tre der bliver ved et *navngivet*
+    # resultat af opgaven, ikke et tal der falder. Tællingen skal derfor dømme
+    # *hvem* der står tilbage, ellers ville porten grønne over en side den
+    # burde have dømt.
+    tjek("kun de tre navngive undtagelser mangler linjen",
+         set(mangler) == {"site/clean-copy-tool.html", "site/compliance-report.html",
+                          "site/site-icons.html"},
+         f"{len(mangler)} sider: {', '.join(mangler)}")
     tjek("tak-siden tælles ikke med (købet er lige sket)",
          "site/thanks.html" not in mangler)
 

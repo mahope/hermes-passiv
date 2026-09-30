@@ -18,5 +18,22 @@
   "site/text-diff.html": true,
   "site/text-on-image-checker-da.html": true,
   "site/text-on-image-checker.html": true,
-  "site/url-inspector/index.html": true
+  "site/url-inspector/index.html": true,
+  "site/accessibility-statement-generator.html": true,
+  "site/base64-encoder-decoder.html": true,
+  "site/case-converter.html": true,
+  "site/clean-copy-api.html": true,
+  "site/da/url-til-markdown.html": true,
+  "site/json-formatter.html": true,
+  "site/markdown-table-generator.html": true,
+  "site/nis2-check-da.html": true,
+  "site/nis2-check.html": true,
+  "site/nis2-gap-assessment-da.html": true,
+  "site/nis2-gap-assessment.html": true,
+  "site/security-headers-check.html": true,
+  "site/tilgaengelighedserklaering-generator-da.html": true,
+  "site/url-encoder-decoder.html": true,
+  "site/url-to-markdown.html": true,
+  "site/uuid-generator.html": true,
+  "site/word-counter.html": true
 }

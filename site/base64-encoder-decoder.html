@@ -97,6 +97,8 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
 
 <div id="statusBox" class="b64-status" role="status" aria-live="polite"></div>
 
+<p id="b64-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
 <div class="b64-btns">
   <button id="encodeBtn" class="btn-primary">Encode → Base64</button>
   <button id="decodeBtn" class="btn-primary">Decode ← Base64</button>
@@ -174,6 +176,7 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
   var output = document.getElementById('outputArea');
   var statusBox = document.getElementById('statusBox');
   var sizeMeta = document.getElementById('sizeMeta');
+  var donateLine = document.getElementById('b64-donate');
   if (!input || !output) return;
 
   var tracked = false;
@@ -217,6 +220,7 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
     if (text.length === 0) {
       output.value = '';
       statusBox.style.display = 'none';
+      donateLine.hidden = true;
       return true;
     }
 
@@ -230,6 +234,7 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
         if (cleaned.length === 0) {
           output.value = '';
           statusBox.style.display = 'none';
+          donateLine.hidden = true;
           return true;
         }
         if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleaned)) {
@@ -246,12 +251,15 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
       sizeMeta.textContent = mode === 'encode'
         ? 'Input: ' + bytes(new Blob([text]).size) + ' → Base64: ' + bytes(new Blob([result]).size)
         : '';
+      donateLine.innerHTML = 'Encoding and decoding is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+      donateLine.hidden = false;
     } catch (e) {
       var msg = e.name === 'InvalidCharacterError'
         ? '✗ Invalid Base64: unexpected character or broken padding.'
         : '✗ ' + e.message;
       show(msg, 'b64-err');
       output.value = '';
+      donateLine.hidden = true;
       return false;
     }
 
@@ -302,6 +310,7 @@ textarea.b64-io:focus { outline: none; border-color: var(--color-accent); box-sh
     output.value = '';
     statusBox.style.display = 'none';
     sizeMeta.textContent = '';
+    donateLine.hidden = true;
     input.focus();
   });
 

@@ -22,6 +22,14 @@
 - **Portene er grønne, og de dømmer flere ting end de læser.** 107 steps i
   `tools/quality_gate.py`. Senest: `ceo/live-check-flake` lod ét netværksreset
   erklære en sund udgivelse for brudt. Se opgave 31.
+- **Donationslinjen er på alle 37 værktøjssider.** 20 → 3, og de tre er
+  undtagelser med en skrevet grund, ikke en rest: `compliance-report` (to
+  `Buy EUComply Pro`-knapper i rapporten), `clean-copy-tool` (eget købsflow)
+  og `site-icons` (CLI-side med et statisk demo-output — portens egen falske
+  positive). Ratchetfilen dømmer 36 filer, målt i **dist**. Se opgave 29.
+- **Portens egen dødszone lukket.** Selvtestens «tæller de øvrige
+  værktøjssider ≥ 10» blev grøn *præcis da opgaven var færdig*. Den dømmer nu
+  *hvem* der står tilbage mod de tre navngive undtagelser. Se opgave 29.
 - **Donationslinjen nåede 37 → 20 værktøjssider** i to runder. Ranglisten er
   målt på **interne links** (hvor mange sider der peger på siden), ikke på
   trafik: Plausible har 15 besøgende på mahope.tools og 6 på cleancopy.tools i
@@ -80,15 +88,21 @@
   netværksreset'en ovenfor, som denne commit retter. Den bliver rød igen hvis
   den kører igen, så grøn herafgør den gamle kørsel ikke retroaktivt.
 
-- `VERIFICÉR DEPLOY: død CSS på klasser fjernet på otte sider, og dommen der
-  kan se den er lagt i gaten — `ceo/port-kan-doe-klasser` 2026-09-30` — dette
-  repo deployer ved push til `main`. Mål på **indhold**, ikke på HTTP 200:
-  `https://mahope.tools/url-inspector/` skal have `.empty-state` væk fra sin
-  `<style>`, `https://mahope.tools/guides/comparison` skal have de fire
-  `.rating-*`/`.tag-blue` væk, `https://mahope.tools/nis2-check` skal have
-  `@media print { .navbtns, #progress { display:none } }` (`.scanbox` væk), og
-  `https://mahope.tools/compliance-report` skal have de tre `.sev-*`-regler
-  væk. Tænk på `/compliance-report` som den vigtigste: den sælger rapport-kit.
+- `DEPLOY OK 2026-09-30` — død CSS på klasser (`ceo/port-kan-doe-klasser`,
+  `567fb26`), målt på indhold live: `.empty-state` er væk fra
+  `/url-inspector/`, de fire `.rating-*`/`.tag-blue` er væk fra
+  `/guides/comparison`, `.scanbox` er væk fra `/nis2-check`. `.sev-*` er
+  **beholdt** med vilje — de døde kun fordi bogstavel-læseren stoppede ved
+  citationstegnet i `class="sev-`; de er levende, fordi `/scan` og
+  `/compliance-report` skriver dem fra `f.sev`.
+
+- `VERIFICÉR DEPLOY: donationslinjen på de 17 sidste værktøjssider
+  ceo/donation-runde-2-del-2 2026-09-30` — dette repo deployer ved push til
+  `main`. Mål på **indhold**: `https://mahope.tools/json-formatter` skal have
+  præcis ét `donate.stripe.com`-link i sit script, samme for `nis2-check`,
+  `nis2-gap-assessment`, `word-counter`, `uuid-generator`, `json-formatter` og
+  `security-headers-check` på mahope.tools, og `clean-copy-api`,
+  `url-to-markdown` og `da/url-til-markdown` på cleancopy.tools.
 
 ## Åbne opgaver
 
@@ -168,28 +182,15 @@
      resultatet, og `check_donation_paths.py` dømmer den og de 37 øvrige tæller.
      Se STATE.
 
-29. **37 værktøjssider mangler donationslinjen.** Hvorfor: missionen beder om
-    tak *efter et resultat*, og kun `/scan` gjorde det. Målt 30/9 af den nye
-    port, som skriver hele listen ud hver kørsel. Accept: linjen ligger i
-    resultatet på de 37, de følger samme sætning som `/scan`, og ratchetfilen
-    `tools/donation.json` vokser med dem. Tages i to omgange, fordi det er 37
-    sider med hvert sit eget renderingspunkt — ikke én rettelse.
-    **RUNDE 1 FÆRDIG 30/9, `ceo/donation-runde-1`.** Ni sider, valgt på interne
-    links: `compliance-site-check` (EN+DA), `page-profile` (EN+DA),
-    `cookie-check` (EN+DA), `text-diff`, `hash-generator`, `url-inspector`.
-    37 → 28. Ratchetfilen dømmer nu 11 filer.
-    **RUNDE 2, DEL 1 FÆRDIG 30/9, `ceo/donation-runde-2`.** Otte generatorer
-    (dpa, ropa, privacy-notice, nis2-incident — EN+DA). 28 → 20.
-    **RUNDE 2, DEL 2:** de 20 tilbage. `word-counter` (15 links) tæller løbende
-    og har intet enkelt resultat-`innerHTML` — den kræver et tomt skjult element
-    som på `hash-generator`. `nis2-check` (EN+DA) og `nis2-gap-assessment`
-    (EN+DA) har en leadform i resultatet; de må have donationen **før**
-    leadformen. `markdown-table-generator`, `uuid-generator`,
-    `accessibility-statement-generator`, `base64-encoder-decoder`,
-    `url-encoder-decoder`, `json-formatter`, `case-converter` er
-    klientværktøjer med ét resultatfelt. `compliance-report` er fortsat
-    undtaget (to `Buy EUComply Pro`-knapper i selve rapporten),
-    `clean-copy-tool` har 48 interne links men sit eget købsflow.
+29. ~~**37 værktøjssider mangler donationslinjen.**~~ **FÆRDIG 30/9.** Alle tre
+    runder er gjort: `ceo/donation-runde-1` (9 sider, 37 → 28),
+    `ceo/donation-runde-2` (8 generatorer, 28 → 20) og
+    `ceo/donation-runde-2-del-2` (17 sider, 20 → 3). Ratchetfilen dømmer 36
+    filer; de tre sidste er undtagelser med en skrevet grund, ikke en rest:
+    `compliance-report` (to `Buy EUComply Pro`-knapper i selve rapporten),
+    `clean-copy-tool` (eget købsflow) og `site-icons` (CLI-side med et
+    **statisk** demo-output, så `class="output"` matcher portens `RESULT_RE`
+    uden at der er noget resultat). Se arkiv.
 
 30. ~~**Død CSS på *klasser* er stadig udømt.**~~ **FÆRDIG 30/9,
     `ceo/port-kan-doe-klasser`.** Fjerde dømning i `check_built_css.py`

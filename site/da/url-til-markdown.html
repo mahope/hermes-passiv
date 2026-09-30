@@ -94,6 +94,8 @@
     <label for="output-box">Markdown-resultat</label>
     <textarea id="output-box" readonly aria-live="polite"></textarea>
 
+    <p id="u2m-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
     <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.8rem;">
       <button type="button" class="btn-primary" id="btn-copy">Kopiér resultat</button>
       <button type="button" class="btn-secondary" id="btn-download">Download som .md</button>
@@ -156,6 +158,7 @@
     var form = document.getElementById('url-form');
     var input = document.getElementById('url-input');
     var output = document.getElementById('output-box');
+    var donateLine = document.getElementById('u2m-donate');
     var statusEl = document.getElementById('status');
     var copyStatus = document.getElementById('copy-status');
     var goBtn = document.getElementById('btn-go');
@@ -227,12 +230,15 @@
           var md = CleanCopyCore.htmlToMarkdown(extractReadable(res.j.html));
           if (!md || md.length < 20) throw new Error('Fandt ikke læsbart indhold på den side.');
           output.value = md.trim();
+          donateLine.innerHTML = 'At konvertere en side til Markdown er gratis. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.';
+          donateLine.hidden = false;
           setStatus('Konverteret — ' + md.length.toLocaleString('da-DK') + ' tegn.', 'ok');
           trackUse();
         })
         .catch(function (err) {
           setStatus(err.message || 'Noget gik galt. Prøv en anden URL.', 'err');
           output.value = '';
+          donateLine.hidden = true;
         })
         .finally(function () {
           goBtn.disabled = false;

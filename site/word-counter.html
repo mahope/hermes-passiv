@@ -135,6 +135,8 @@
   <div class="desc" id="fleschDesc">Start typing to see readability score.</div>
 </div>
 
+<p id="wc-donate" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0" hidden></p>
+
 <section style="margin:2.5rem 0;">
   <h2>About this tool</h2>
   <p style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:640px;">
@@ -190,7 +192,8 @@
   'use strict';
 
   var textarea = document.getElementById('textInput');
-  if (!textarea) return;
+  var donateLine = document.getElementById('wc-donate');
+  if (!textarea || !donateLine) return;
 
   var tracked = false;
 
@@ -290,9 +293,12 @@
     if (wordCount === 0) {
       fleschEl.textContent = '\u2014';
       fleschDescEl.innerHTML = 'Start typing to see readability score.';
+      donateLine.hidden = true;
     } else {
       fleschEl.textContent = flesch;
       fleschDescEl.innerHTML = '<strong>' + flesch + '</strong> \u2014 ' + fleschDesc;
+      donateLine.innerHTML = 'Counting words and reading time is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+      donateLine.hidden = false;
     }
 
     // Track once on first analysis

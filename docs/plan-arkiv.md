@@ -2612,3 +2612,23 @@ artikler med `.compare`-CSS» er ikke død CSS. `.compare` ligger i
 ikke længere i repoet, og `.compare` har ligget i `style.css` siden `eb9faab`.
 En port der dømte skallens klasser pr. side ville give hundreder af falske fund,
 så den dømmer kun sidens egne klasser — og de 22 fund den fandt, er de reelle.
+
+## 30/9 — ceo/donation-runde-2-del-2: donationslinjen på de 17 sidste
+
+- Ratchetfilen dømmer nu **36** filer (var 19). 20 → 3.
+- Mønsteret er to former, begge allerede i huset fra `hash-generator` og
+  `nis2-incident-generator`: et skjult `<p>` ved svaret der bliver
+  `hidden = false` i den gren der lykkes, eller `DONATION` hægtet på
+  `renderHTML()`-resultatet. Fejl- og nulgrene skjuler den igen.
+- `nis2-check` (EN+DA) og `nis2-gap-assessment` (EN+DA) får den **før**
+  leadformen, som opgaven krævede — ikke efter.
+- `word-counter` tæller løbende, så den følger `wordCount === 0`-grenen
+  (samme som `hash-generator`).
+- Selvtestens `tæller de øvrige værktøjssider >= 10` blev erstattet af en
+  dom på **hvem** der står tilbage. Et taltal ville være grønt, når opgaven
+  var færdig, og rødt hvis en ny side kom til — det er en dødszone.
+- De tre undtagelser har hver en grund, og de er skrevet som undtagelser:
+  `compliance-report` (to `Buy EUComply Pro`-knapper i selve rapporten),
+  `clean-copy-tool` (eget købsflow), `site-icons` (CLI-side med et
+  **statisk** demo-output; `class="output"` matcher portens `RESULT_RE`, men
+  der er intet resultat at takke for — portens egen falske positive).

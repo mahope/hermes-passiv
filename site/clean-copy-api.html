@@ -238,9 +238,12 @@ async function convert(mode) {
 
     output.value = data.markdown;
     status.textContent = data.input_chars + ' chars in → ' + data.output_chars + ' chars out (mode: ' + data.mode + ')';
+    donateLine.innerHTML = 'Converting HTML to Markdown is free and needs no API key. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
   } catch (err) {
     output.value = '';
     status.textContent = 'Network error: ' + err.message;
+    donateLine.hidden = true;
   }
 }
 

@@ -127,6 +127,7 @@
   </div>
   <div id="statusBox" class="mtg-status" role="status" aria-live="polite"></div>
   <p class="mtg-meta" id="metaLine"></p>
+  <p id="mtg-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
   <h2 class="sub" style="font-size:0.95rem;margin:1rem 0 0.4rem;">Preview</h2>
   <div id="previewBox" class="mtg-preview" aria-label="Rendered table preview"></div>
 </div>
@@ -197,6 +198,7 @@
   var statusBox = document.getElementById('statusBox');
   var metaLine = document.getElementById('metaLine');
   var preview = document.getElementById('previewBox');
+  var donateLine = document.getElementById('mtg-donate');
   if (!inA || !out) return;
 
   function escCell(s) {
@@ -291,6 +293,8 @@
       ' × ' + cols + ' columns · delimiter: ' + dName;
     showStatus('✓ Generated a Markdown table with ' + rows.length +
       (rows.length === 1 ? ' row.' : ' rows.'));
+    donateLine.innerHTML = 'Turning rows into a Markdown table is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
 
     try {
       fetch('/api/track', {

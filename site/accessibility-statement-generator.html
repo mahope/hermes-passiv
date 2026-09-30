@@ -264,11 +264,12 @@
   }
 
   var current = null;
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     current = buildData();
-    $('statement').innerHTML = renderHTML(current);
+    $('statement').innerHTML = renderHTML(current) + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

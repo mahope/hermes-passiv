@@ -101,6 +101,7 @@
   <textarea id="outputArea" class="uu-list" readonly spellcheck="false" placeholder="Click Generate to create UUIDs..."></textarea>
   <div id="statusBox" class="uu-status" role="status" aria-live="polite"></div>
   <p class="uu-meta" id="metaLine"></p>
+  <p id="uuid-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
 </div>
 
 <section style="margin:2.5rem 0;">
@@ -165,6 +166,7 @@
   var out = document.getElementById('outputArea');
   var statusBox = document.getElementById('statusBox');
   var metaLine = document.getElementById('metaLine');
+  var donateLine = document.getElementById('uuid-donate');
   if (!out || !window.crypto || !window.crypto.getRandomValues) return;
 
   function uuidv4() {
@@ -200,6 +202,8 @@
     out.value = ids.join('\n');
     metaLine.textContent = count + (count === 1 ? ' UUID' : ' UUIDs') + ' generated · v4 · 128-bit';
     showStatus('✓ Generated ' + count + (count === 1 ? ' UUID.' : ' UUIDs.'));
+    donateLine.innerHTML = 'Generating UUIDs is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
 
     try {
       fetch('/api/track', {

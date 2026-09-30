@@ -98,6 +98,8 @@
     </div>
   </div>
 
+  <p id="shc-donate" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0" hidden></p>
+
   <div class="sh-section">
     <h2>Critical Security Headers</h2>
     <div id="criticalHeaders"></div>
@@ -172,6 +174,7 @@
   var checkBtn = document.getElementById('checkBtn');
   var statusBox = document.getElementById('statusBox');
   var resultsArea = document.getElementById('resultsArea');
+  var donateLine = document.getElementById('shc-donate');
 
   // Header evaluation rules
   var CRITICAL_HEADERS = {
@@ -370,6 +373,8 @@
     responseInfo.innerHTML = 'HTTP ' + resp.status + ' ' + resp.statusText +
       ' &middot; ' + (resp.redirected ? 'Redirected to ' : '') +
       '<a href="' + resp.finalUrl.replace(/&/g,'&amp;') + '" target="_blank" rel="noopener" style="color:var(--color-accent);">' + resp.finalUrl + '</a>';
+    donateLine.innerHTML = 'Checking a site\u2019s security headers is free and needs no account. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
 
     // Critical headers
     var criticalDiv = document.getElementById('criticalHeaders');

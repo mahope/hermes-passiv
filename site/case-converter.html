@@ -96,6 +96,8 @@
 
 <div id="statusBox" class="cc-status" role="status" aria-live="polite"></div>
 
+<p id="case-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
 <div class="cc-btns" role="group" aria-label="Choose a case style">
   <button data-mode="upper">UPPER CASE</button>
   <button data-mode="lower">lower case</button>
@@ -174,6 +176,7 @@
   var output = document.getElementById('outputArea');
   var statusBox = document.getElementById('statusBox');
   var metaLine = document.getElementById('metaLine');
+  var donateLine = document.getElementById('case-donate');
   if (!input || !output) return;
 
   var tracked = false;
@@ -227,6 +230,7 @@
       statusBox.className = 'cc-status';
       statusBox.style.display = 'none';
       metaLine.textContent = '';
+      donateLine.hidden = true;
       return;
     }
     output.value = convert(text, mode);
@@ -240,6 +244,8 @@
     var lines = text.length ? text.split('\n').length : 0;
     metaLine.textContent = ws.length + ' words · ' + text.length + ' characters · ' +
       lines + (lines === 1 ? ' line' : ' lines') + ' in';
+    donateLine.innerHTML = 'Changing letter case is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    donateLine.hidden = false;
 
     if (!tracked) {
       tracked = true;
@@ -282,6 +288,7 @@
     statusBox.className = 'cc-status';
     statusBox.style.display = 'none';
     metaLine.textContent = '';
+    donateLine.hidden = true;
     input.focus();
   });
 

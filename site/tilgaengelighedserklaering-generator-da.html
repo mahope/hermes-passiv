@@ -270,11 +270,12 @@
   }
 
   var current = null;
+  var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne generator er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
 
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     current = buildData();
-    $('statement').innerHTML = renderHTML(current);
+    $('statement').innerHTML = renderHTML(current) + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });
