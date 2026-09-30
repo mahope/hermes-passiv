@@ -120,6 +120,8 @@ textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-s
   <div class="hash-result"><span class="hash-algo">SHA-1</span><span class="hash-digest" id="d-sha-1"></span><button class="hash-copy" data-for="sha-1">Copy</button></div>
 </div>
 
+<p id="hash-donate" style="font-size:13px;color:var(--color-text-muted);margin:12px 0 0" hidden></p>
+
 <section style="margin:2.5rem 0;">
   <h2>About this tool</h2>
   <div style="color:var(--color-text-muted);line-height:1.7;font-size:0.95rem;max-width:720px;">
@@ -186,6 +188,7 @@ textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-s
   var input = document.getElementById('inputArea');
   var statusBox = document.getElementById('statusBox');
   var results = document.getElementById('results');
+  var donateLine = document.getElementById('hash-donate');
   if (!input || !results) return;
 
   var ALGOS = ['SHA-256', 'SHA-512', 'SHA-384', 'SHA-1'];
@@ -241,10 +244,13 @@ textarea.hash-io:focus { outline: none; border-color: var(--color-accent); box-s
       }
       results.hidden = false;
       show('✓ Generated ' + ALGOS.length + ' hashes (' + new Blob([text]).size + ' bytes of input).', 'hash-ok');
+      donateLine.hidden = false;
+      donateLine.innerHTML = 'Hashing is free and runs entirely in your browser. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
       track();
     } catch (e) {
       show('✗ Could not compute hashes: ' + e.message, 'hash-err');
       results.hidden = true;
+      donateLine.hidden = true;
     }
   }
 

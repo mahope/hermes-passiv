@@ -156,6 +156,7 @@
         <tbody id="headers-body"></tbody>
       </table>
     </div>
+    <p id="ui-donate" style="font-size:13px;color:var(--color-text-muted);margin:14px 0 0" hidden></p>
   </div>
 </div>
 
@@ -388,6 +389,12 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     sortedKeys.forEach(function(k) {
       hb.innerHTML += '<tr><td>' + escapeHtml(k) + '</td><td style="font-size:11px">' + escapeHtml(truncate(allHeaders[k], 200)) + '</td></tr>';
     });
+
+    var donate = document.getElementById('ui-donate');
+    if (donate) {
+      donate.hidden = false;
+      donate.innerHTML = 'This inspection is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
+    }
   }
 
   function escapeHtml(s) {

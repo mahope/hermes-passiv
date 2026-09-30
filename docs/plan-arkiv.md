@@ -2387,3 +2387,70 @@ mutationen gør porten rød med rute *og* regelnavn.
 td` i egen CSS men **nogen tabelmarkup** — sammenlignsafsnittene står som
 `<h2>` med prosa under. Kun tag-dømningen så det, fordi klassen `.compare`
  stadig optræder i teksten. Se opgave 30.
+
+## 2026-09-30 — donationslinjen, runde 1 (`ceo/donation-runde-1`)
+
+Ni værktøjssider fik donationslinjen i sit resultat: `compliance-site-check`
+(EN+DA), `page-profile` (EN+DA), `cookie-check` (EN+DA), `text-diff`,
+`hash-generator`, `url-inspector`. 37 → 28 sider uden linjen.
+`tools/donation.json` vokser fra 2 til 11 dømte filer.
+
+**Rangliste på interne links, ikke på trafik.** Plausible måler 15 besøgende på
+mahope.tools og 6 på cleancopy.tools pr. 28 dage — den kan ikke adskille to
+sider. Interne links kan: `clean-copy-tool` 48, `compliance-site-check` 44,
+`compliance-report` 30, `accessibility-statement-generator` 29,
+`page-profile` 28, `da/compliance-site-check` 24, `da/page-profile` 21,
+`word-counter` 15, `text-diff` 15.
+
+**To sider sprunget over med vilje.** `compliance-report` (30 links) har to
+`Buy EUComply Pro`-knapper i selve den genererede rapport; `nis2-check` og
+`nis2-check-da` har en leadform («Save my result») i resultatet. En donation
+der konkurrerer med en købsknap eller en e-mail-form er netop den
+påtrængende donation missionen forbyder.
+
+**Kontrastfejl fanget i egen review.** Donationslinjen på `/page-profile` lå i
+`.cli-demo`, en mørk kasse (`#0f172a`) med `white-space:pre`. første
+udgave brugte `var(--color-text-muted)`, som i lyst tema er `#5a5f64` →
+**2,68:1** mod kassens baggrund. Rettet til `#94a3b8` (7,77:1), som er den tone
+kassen selv bruger i `.cli-demo .output`. Samme fejl på den danske side.
+På `/cookie-check` stod linjen i `#667` som den naboende note; skiftet til
+`var(--color-text-muted)`, fordi `#667` er ulæselig i mørktema.
+
+**Selvtesten kan ikke længere hænge på to filnavne.** Den krævede
+`dømt == [to kontrasværktøjer]`, hvilket brød i samme øjeblik porten blev
+utvidet. Nu: mindst 11 dømte, de to kontrasværktøjer stadig med, og en ny
+kontrol at en ratchetfil ikke kan navngive en side uden linjen — for sådan en
+side ville `uden_laeg` springe den over, og porten ville aldrig se den igen.
+
+**Målt:** `check_donation_paths.py` grøn (11 dømt, 28 talt). Alle ni sider
+kontrolleret i `dist/`: præcis én donation, i et `<script>`, aldrig en knap.
+JS-syntaks tjekket med `node --check` (JSON-LD-blokke undtaget — de er ikke JS).
+`quality_gate.py` grøn, 107 steps.
+
+## 2026-09-30 — tre deploy-noter lukket, og opgave 30s præmis er forkert
+
+**Alle tre åbne VERIFICÉR-noter fra 30/9 er `DEPLOY OK`.** Live bærer
+`e6137bf` på alle tre domæner (`build-info.json`), og det er netop den commit
+der låste alle tre: `e6137bf` (bogtitlerne), `c3aac10` (donationslinjen på
+`/text-on-image-checker`) og `43db3d3` (gradientporten). Målt på de live
+sites, ikke på HTTP 200.
+
+**Opgave 30s præmis holder ikke.** Den siger «ni danske blogartikler har mistet
+deres sammenligningstabel», målt som oversættelsesfejl. Målt rigtigt:
+
+- Der er **23** danske artikler med `.compare`-CSS og uden `<table class="compare">`,
+  ikke ni. (+ `site/style.css`, som er delt.)
+- **Nul** af dem har mistet noget ved oversættelsen. For alle 23 findes den
+  engelske original via `hreflang`, og **alle 23 har heller ingen tabel**
+  (`EN tabel=0`). En gruppe på 15 engelske blogartikler har derimod rigtige
+  tabeller, så mønstret virker — de 23 er artikler, hvor en generator
+  indsætter `.compare`-blokken uden at se om artiklen har en tabel
+  (`make_blog_da_mirrors_453.py:404`).
+
+Konklusionen er en anden opgave: ikke «skriv tabeller til», men «find ud af om
+artiklen skal have en» — og en `check_built_css.py`-dømning der kan se
+**klasser**, ikke kun type-led. Den kan ikke gøres med et navnesøg
+(`.score-badge.A` bygges som `'score-badge ' + bogstav`, `.sh-grade-${g}`
+ligeså), men kan gøres med præfiks: `.sh-grade-A` er død kun hvis heller ikke
+`sh-grade-` står bogstaveligt i siden. Uden den dømning kan porten ikke se
+denne fejlform.

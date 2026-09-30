@@ -328,6 +328,8 @@ function renderResults(data) {
     html += '</div>';
   }
 
+  html += '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne scanning er gratis og kræver ingen konto. Hvis den sparet dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den kørende.</p>';
+
   resultsEl.innerHTML = html;
   window.scrollTo({ top: document.getElementById('results').offsetTop - 20, behavior: 'smooth' });
 }

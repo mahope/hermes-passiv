@@ -1,5 +1,14 @@
 {
   "_kommentar": "Kildefiler hvor donationslinjen er dømt: den skal være Katalogens URL, aldrig en knap, og den skal sættes ind i <script> så den først opstår når værktøjet renderer sit resultat. Tilføj en linje pr. side der har fået linjen, ellers dømmer porten den ikke.",
+  "site/cookie-check-da.html": true,
+  "site/cookie-check.html": true,
+  "site/compliance-site-check.html": true,
+  "site/da/compliance-site-check.html": true,
+  "site/da/page-profile.html": true,
+  "site/hash-generator.html": true,
+  "site/page-profile.html": true,
+  "site/text-diff.html": true,
   "site/text-on-image-checker-da.html": true,
-  "site/text-on-image-checker.html": true
+  "site/text-on-image-checker.html": true,
+  "site/url-inspector/index.html": true
 }

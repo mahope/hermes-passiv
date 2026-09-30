@@ -205,14 +205,20 @@ def self_test() -> int:
          url == "https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c", url)
 
     # Ratchetfilen skal dømme præcis de sider, der er rettet, og de skal have
-    # en donation — ellers er 1-6 grønne fordi porten intet ser.
+    # en donation — ellers er kontrollerne grønne fordi porten intet ser.
     dømt = ratchet()
-    tjek("ratchetfilen dømmer de to kontrasværktøjer",
-         dømt == ["site/text-on-image-checker-da.html", "site/text-on-image-checker.html"],
-         str(dømt))
+    tjek("ratchetfilen dømmer de rettede sider", len(dømt) >= 11, str(dømt))
+    tjek("de to kontrasværktøjer er stadig i ratchetfilen",
+         "site/text-on-image-checker.html" in dømt
+         and "site/text-on-image-checker-da.html" in dømt, str(dømt))
+    # Ratchetfilen må ikke navngive en side der ikke har linjen: så ville
+    # `uden_laeg` springe den over, og porten ville aldrig se den igen.
     fund, _ = dom()
     tjek("målingen på site/ er grøn", not fund, "; ".join(fund[:3]))
     mangler = uden_laeg()
+    tjek("de rettede sider tælles ikke som manglende",
+         not (set(dømt) & set(mangler)),
+         str(sorted(set(dømt) & set(mangler))[:4]))
     tjek("målingen tæller de øvrige værktøjssider", len(mangler) >= 10,
          f"{len(mangler)} sider: {', '.join(mangler[:4])}")
     tjek("tak-siden tælles ikke med (købet er lige sket)",

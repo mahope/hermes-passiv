@@ -271,6 +271,8 @@
         ' <span class="td-del">removed</span>, ' + ins + ' line' + (ins === 1 ? '' : 's') +
         ' <span class="td-add">added</span>, ' + sames + ' unchanged.';
     }
+    summaryBox.insertAdjacentHTML('beforeend',
+      '<p style="font-size:13px;color:var(--color-text-muted);margin:10px 0 0">This comparison is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>');
 
     resultBox.innerHTML =
       '<div class="td-result">' +
