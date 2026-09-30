@@ -1,57 +1,48 @@
 # STATUS
 
-- **En port, der var blind i gaten uden at sige det.** `check_built_css.py`
-  blev altid startet som `python3 tools/check_built_css.py`, altså med `tools/`
-  som `sys.path[0]` — og `import build_sites` fandt intet. Begge `except
-  Exception: return {}` gjorde det **stille**: `source_map()` blev tom, så dommen
-  «tabt regel» aldrig kørte i gaten. Rettelsen er `import_build()`, der lægger
-  roden på stien. Se opgave 30.
-- **Død CSS på klasser er nu dømt.** Fjerde dømning i `check_built_css.py`: en
-  vælger er død, når ingen klasse i dens **venstreste** sammensatte vælger kan
-  nås. Ét navn nok — `.score-badge.A` er levende, fordi `score-badge` står i
-  markup. 17 fund på 8 sider, alle slettet i kilden: 6 `bb-*` på demosiden,
-  `.code-inline`, `.report-badge`, 4 på `/guides/comparison`, `.scanbox` på
-  nis2-check EN+DA, `.sh-results`, `.empty-state`.
-- **Egen diff-gennemgang stoppede fem af dem som falske.** De `.sev-*`-regler
-  porten først meldte døde, var levende: `notice` er en rigtig sværhedsgrad på
-  `/compliance-report` (`SEV_LABELS`) og på `/scan` (`scan.html:288` tæller
-  `f.sev==='notice'`, `:334` skriver `class="sev-'+f.sev+'"`). De var døde kun
-  fordi bogstavel-læseren stoppede ved citationstegnet inde i `class="sev-`; den
-  deler nu på `["'\s=+.]+`. Fem af otte fund var altså portens egen fejl, ikke
-  sidernes. Se opgave 30.
-- **Portene er grønne, og de dømmer flere ting end de læser.** 107 steps i
-  `tools/quality_gate.py`. Senest: `ceo/live-check-flake` lod ét netværksreset
-  erklære en sund udgivelse for brudt. Se opgave 31.
+- **To porte var uenige om det samme svar.** `weekly_report.py` prøvede en 429
+  igen, `check_live_sitemaps.py` gjorde ikke — så den samme udgivelse kunne være
+  «brudt» i den ene og «sund» i den anden. Reglen ligger nu i `tools/transient.py`
+  og kaldes med begge former (status, undtagelse). **429 er endelig begge steder**:
+  et forsøg mere læser intet ind og trækker kun kvoten. Se opgave 32.
+- **Efterspørgslen flyttede regel-kilden, og en port blev blind for det samme.**
+  `check_weekly_code_errors.known_kinds()` læser klasenavne fra rapportens
+  kildefiler; da `URLError` flyttede ud af `weekly_report.py`, forsvandt den, og
+  portens **egen selftest** gik rød (16 → 18 kontroller, 2 fejl). Den læser nu
+  begge filer. Dette er den anden gang samme arkitekturfejl rammer: en port der
+  læser *én* fil, mens beslutningen ligger i to.
+- **Portene er grønne, og de dømmer flere ting end de læser.** 108 steps i
+  `tools/quality_gate.py`. Senest: ét netværksreset erklærede en sund udgivelse
+  for brudt (opgave 31), og den delte regel nu forhindrer at det sker forskelligt
+  i to porte.
 - **Donationslinjen er på alle 37 værktøjssider.** 20 → 3, og de tre er
   undtagelser med en skrevet grund, ikke en rest: `compliance-report` (to
   `Buy EUComply Pro`-knapper i rapporten), `clean-copy-tool` (eget købsflow)
-  og `site-icons` (CLI-side med et statisk demo-output — portens egen falske
-  positive). Ratchetfilen dømmer 36 filer, målt i **dist**. Se opgave 29.
-- **Portens egen dødszone lukket.** Selvtestens «tæller de øvrige
-  værktøjssider ≥ 10» blev grøn *præcis da opgaven var færdig*. Den dømmer nu
-  *hvem* der står tilbage mod de tre navngive undtagelser. Se opgave 29.
-- **Donationslinjen nåede 37 → 20 værktøjssider** i to runder. Ranglisten er
-  målt på **interne links** (hvor mange sider der peger på siden), ikke på
-  trafik: Plausible har 15 besøgende på mahope.tools og 6 på cleancopy.tools i
-  28 dage, så den kan ikke adskille to sider. `clean-copy-tool` har 48
-  indgange, `compliance-site-check` 44, `word-counter` 15. Undtaget er
-  `compliance-report` (to `Buy EUComply Pro`-knapper i selve rapporten) og
-  `nis2-check` (en leadform i resultatet, der konkurrerer om pladsen).
-- **Målt i en sand sandkasse, ikke ved læsning.** `/tmp/smoke.mjs` eval'er hver
-  sides IIFE med DOM-shim: 1× donation i resultatet, også efter to submits,
-  ikke i `renderHTML()`, ikke i den kopierede tekst. `check_donation_paths.py`
-  dømmer nu 19 filer målt i **dist**.
-- **Egen fejlform fundet og rettet to gange i denne uge:** (a) donationslinjen
-  lå i `#5a5f64` på `#0f172a` = 2,68:1 i lyst tema, under WCAG AA → `#94a3b8`
-  (7,77:1); (b) `no-print` antaget fælles, men klassen findes kun i generatorernes
-  egen `@media print` — den ville være død markup.
-- **Åben note:** donationslinjen på otte generatorer (runde 2, del 1) er
-  verificeret live og lukket nedenfor.
+  og `site-icons` (CLI-side med et statisk demo-output). Se opgave 29.
+- **Egen fejlform fundet to gange i denne uge:** donationslinjens kontrast var
+  under AA i lyst tema, og `no-print` viste sig at være død markup. Begge
+  rettet i kilden — se arkiv for målingerne.
 - `❓ Til Mads` nederst: `STATS_TOKEN`, `bugbottle.dev`'s domæne, banner-placering
   på 180 sider, og de to desktop-apps der stadig ringer til Lemon Squeezy.
 - **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
 
+
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: én regel for hvad der må prøves igen, så uge-rapporten og
+  «Tjek produktion» ikke længere er uenige om 429
+  ceo/et-forbigaaende-kal 2026-09-30` — dette repo deployer ved push til
+  `main`. Mål: de tre deploy-jobs er grønne, og `build-info.json` på
+  mahope.tools og cleancopy.tools har **uændret** `routes_sha256`
+  (`8367db4b…` / `81ed162d…`) — kun `tools/` er rørt, så intet på sitet skal
+  ændre sig. Er den ændret, er der rørt noget vi ikke mente.
+
+- `DEPLOY OK 2026-09-30` — donationslinjen på de 17 sidste værktøjssider er
+  live på alle ni målte ruter, hver med **præcis ét** `donate.stripe.com`-link:
+  `json-formatter`, `nis2-check`, `nis2-gap-assessment`, `word-counter`,
+  `uuid-generator` og `security-headers-check` på mahope.tools, og
+  `clean-copy-api`, `url-to-markdown` og `da/url-til-markdown` på
+  cleancopy.tools. Målt på indhold, ikke på HTTP-status; live bærer `df3799f`.
 
 - `DEPLOY OK 2026-09-30` — `ceo/live-check-flake` (`a97616f`): CI's kørsel
   `36769685936` er grøn i alle jobs, og `build-info.json` på mahope.tools bærer
@@ -79,15 +70,6 @@
   `/da/` — min første måling læste `mahope.tools/da/dpa-generator-da` og fandt
   0, hvilket så ud som en manglende linje indtil ruten blev slået op.)
 
-- `VERIFICÉR DEPLOY: forbigående netværksfejl i «Tjek produktion» får 3 forsøg
-  i stedet for 1, så ét reset ikke erklærer en udgivelse brudt
-  ceo/live-check-flake 2026-09-30` — **dette repo deployer ved push til `main`**,
-  så der er ingen batch at vente på. Mål: de tre deploy-jobs er grønne, og
-  `check_live_sitemaps.py --only mahope.tools` er grøn live. Bemærk at
-  `5f9c678` selv står som **rød** i CI: ikke en fejl i den kode, men
-  netværksreset'en ovenfor, som denne commit retter. Den bliver rød igen hvis
-  den kører igen, så grøn herafgør den gamle kørsel ikke retroaktivt.
-
 - `DEPLOY OK 2026-09-30` — død CSS på klasser (`ceo/port-kan-doe-klasser`,
   `567fb26`), målt på indhold live: `.empty-state` er væk fra
   `/url-inspector/`, de fire `.rating-*`/`.tag-blue` er væk fra
@@ -95,14 +77,6 @@
   **beholdt** med vilje — de døde kun fordi bogstavel-læseren stoppede ved
   citationstegnet i `class="sev-`; de er levende, fordi `/scan` og
   `/compliance-report` skriver dem fra `f.sev`.
-
-- `VERIFICÉR DEPLOY: donationslinjen på de 17 sidste værktøjssider
-  ceo/donation-runde-2-del-2 2026-09-30` — dette repo deployer ved push til
-  `main`. Mål på **indhold**: `https://mahope.tools/json-formatter` skal have
-  præcis ét `donate.stripe.com`-link i sit script, samme for `nis2-check`,
-  `nis2-gap-assessment`, `word-counter`, `uuid-generator`, `json-formatter` og
-  `security-headers-check` på mahope.tools, og `clean-copy-api`,
-  `url-to-markdown` og `da/url-til-markdown` på cleancopy.tools.
 
 ## Åbne opgaver
 
@@ -155,16 +129,12 @@
     porten kan hverken gøre en fejl grøn eller trække en 429. 26 tests (var 11),
     10 mutationer alle fanget. Se arkiv.
 
-32. **`_transient` findes to gange, og de er uenige om 429.** Hvorfor:
-    `weekly_report.py:188` løste samme problem 21/9 (uge 39 mistede et helt
-    trafiksnapshot på ét timeout) med sin egen `_transient` + `http_json`.
-    `ceo/live-check-flake` skrev en anden til `check_live_sitemaps.py`, fordi de
-    to scripts ikke deler kode — og de to er **uenige**: `weekly_report` prøver
-    429 igen, kontrakten siger 429 er endelig og skal vises. Kontraktens
-    version anvendes nu, så uge-rapporten kan blive langsommere ved
-    rate-limiting. Accept: én delt `is_transient` i `tools/`, begge scripts
-    bruger den, og 429-afgørelsen er truffet ét sted med en begrundelse. Skal
-    ikke gøres som en del af en anden opgave.
+32. ~~**`_transient` findes to gange, og de er uenige om 429.**~~
+    **FÆRDIG 30/9, `ceo/et-forbigaaende-kal`.** Reglen ligger i
+    `tools/transient.py` og tager begge kaldsformer (status, undtagelse);
+    `check_live_sitemaps.is_transient` *er* den funktion, så en lokal
+    `def` igen ville være rød. 18 kontroller i `tools/test_transient.py`,
+    hvoraf fire er røde mod den gamle kode (målt i klon). Se STATE.
 
 - `❓ Til Mads`:
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.

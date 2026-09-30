@@ -2632,3 +2632,66 @@ så den dømmer kun sidens egne klasser — og de 22 fund den fandt, er de reell
   `clean-copy-tool` (eget købsflow), `site-icons` (CLI-side med et
   **statisk** demo-output; `class="output"` matcher portens `RESULT_RE`, men
   der er intet resultat at takke for — portens egen falske positive).
+
+## 30/9 — ceo/et-forbigaaende-kal: én regel for hvad der må prøves igen
+
+Opgave 32. `weekly_report.py:188` fik sin egen `_transient` 21/9 (uge 39 tabte
+hele trafikblokken på ét read-timeout), og `ceo/live-check-flake` skrev 30/9 en
+anden til `check_live_sitemaps.py` fordi de to scripts ikke delte kode. De to var
+**uenige om 429** — og det er ikke en skønhedsfejl: de to porte dømmer hver sit
+udgivelsesbillede, så den samme udgivelse kunne være «brudt» i den ene port og
+«sund» i den anden.
+
+- **Reglen ligger i `tools/transient.py`** og tager begge kaldsformer: `(status)`
+  som `check_live_sitemaps.fetch_resilient` kalder det, og `(error=exc)` som
+  `weekly_report.http_json` kalder det. Ét svar vinder altid over en fejltekst,
+  så en 429 aldrig kan blive forbigående igen ved en fejl ved siden af.
+- **429 er endelig begge steder.** Kontraktens begrundelse: et forsøg mere læser
+  intet ind og koster kun kvoten for den der spørger. Konsekvens for
+  `weekly_report` er bevidst: en 429 fra `/api/stats` giver «ukendt» i stedet
+  for et forsøg til. Det er den ærlige afløsning, ikke en fejl — og det skal
+  ikke rettes tilbage.
+- **`check_live_sitemaps.is_transient` *er* den delte funktion** (dømt med
+  `assertIs`, ikke lighed), så en lokal `def` igen er rød med det samme navn.
+- **Ingen af de to scripts må dømme 429 selv.** Porten læser begge kilder og
+  fejler på en linje uden `#`-kommentar der indeholder tallet. Det er den dom,
+  der gør at opgaven ikke bare er flyttet.
+- **18 kontroller i `tools/test_transient.py`.** Fire af dem er røde mod den
+  gamle kode, målt i en klon af `HEAD` før rettelsen: de to scripts' egen
+  429-afgørelse, dobbeltdeften i porten, og `http_json`'s to kald til en 429.
+- **Efterspørgslen flyttede en regel-kilde, og en anden port blev blind for
+  præcis det.** `check_weekly_code_errors.known_kinds()` læser undtagelsesklasser
+  fra rapportens kildefiler; da `URLError` flyttede ud af `weekly_report.py`,
+  forsvandt den fra sættet, og **portens egen selftest** gik rød (16 kontroller,
+  2 fejl) fordi den dømte arkiverede `errors`-linjer med `URLError` som
+  «manglende klassenavn`. `KIND_SOURCES` læser nu begge filer → 18/18. Samme
+  arkitekturfejl som `check_built_css.py`, der døde stille i gaten fordi den
+  læste én fil mens beslutningen lå i to (`import build_sites` fandt intet, se
+  opgave 30). Mønsteret er værd at kigge efter: **en port der læser én fil er
+  sårbar for at filen flytter en beslutning væk.**
+- Samme dødszone i portenes selvtest: en mutation, der lægger den gamle kode ind,
+  skal give **rød** på den nye port. Det er den eneste måde at bevise at en
+  dømning overhovedet kan fejle.
+
+## 30/9 — lukkede deploy-noter (målt 30/9 23:2x)
+
+- **donationslinjen på de 17 sidste værktøjssider** (`ceo/donation-runde-2-del-2`):
+  alle ni målte ruter har **præcis ét** `donate.stripe.com`-link —
+  `json-formatter`, `nis2-check`, `nis2-gap-assessment`, `word-counter`,
+  `uuid-generator`, `security-headers-check` på mahope.tools, og
+  `clean-copy-api`, `url-to-markdown`, `da/url-til-markdown` på cleancopy.tools.
+  Målt på indhold; live bærer `df3799f`.
+- **forbigående netværksfejl i «Tjek produktion»** (`ceo/live-check-flake`,
+  `a97616f`): CI-kørsel `36769685936` grøn i alle jobs, `build-info.json` bærer
+  præcis `a97616fc06b4affe31a98600e5b731f19da3f533`. Noten lå åben ved siden af
+  sin egen `DEPLOY OK` for samme commit; lukket her, da det er samme måling.
+  Bemærk at `5f9c678` står som **rød** i CI: ikke en fejl i den kode, men
+  netværksreset'en som `a97616f` retter. Den gamle kørsel bliver ikke grøn
+  retroaktivt.
+
+## 30/9 — donationslinjens to egen-fejl (målt, arkiveret fra STATUS)
+
+- (a) Linjen lå i `#5a5f64` på `#0f172a` = 2,68:1 i lyst tema, under WCAG AA.
+  Rettet til `#94a3b8` = 7,77:1.
+- (b) `no-print` antaget fælles i printreglerne, men klassen findes kun i
+  generatorernes egen `@media print` — den ville være død markup. Ikke tilføjet.

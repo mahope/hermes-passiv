@@ -114,6 +114,27 @@ STEPS: tuple[Step, ...] = (
             "tools/test_check_live_sitemaps.py",
             "tools/check_live_sitemaps.py",
             "tools/check_sitemaps.py",
+            # Opgave 32: porten fik sin egen `is_transient` 30/9, fordi den ikke
+            # delte kode med `weekly_report.py` — og de to var uenige om 429.
+            # Beslutningen ligger nu ét sted, så dens fil er input her.
+            "tools/transient.py",
+        ),
+    ),
+    # Opgave 32: `weekly_report.py` og `check_live_sitemaps.py` havde hver sin
+    # `_transient` og var uenige om 429, så den samme udgivelse kunne være «brudt»
+    # i den ene port og «sund» i den anden. Reglen ligger nu i `tools/transient.py`
+    # og dømmes i sit eget step, der desuden beviser at ingen af de to scripts
+    # dømmer 429 selv. Uden denne fil i filteret kunne en push kun tilføje et tredje
+    # sted med sin egen regel og springe prøven over — samme krav som portenes
+    # egne filer ovenfor.
+    Step(
+        id="transient-tests",
+        argv=("python3", "tools/test_transient.py"),
+        inputs=(
+            "tools/test_transient.py",
+            "tools/transient.py",
+            "tools/check_live_sitemaps.py",
+            "tools/weekly_report.py",
         ),
     ),
     Step(
@@ -728,7 +749,10 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="weekly-report-tests",
         argv=("python3", "tools/test_weekly_report.py"),
-        inputs=("tools/test_weekly_report.py", "tools/weekly_report.py"),
+        # `tools/transient.py` er input, fordi `http_json` nu dømmer med den i stedet
+        # for sin egen `_transient` (opgave 32), og en ændring af reglen skal køre
+        # uge-rapportens egne tests.
+        inputs=("tools/test_weekly_report.py", "tools/weekly_report.py", "tools/transient.py"),
     ),
     # Opgave 35: `reports/weekly/*.json` er det eneste sted i repoet hvor et
     # dokumenteret tal ligger gemt uden at nogen port læser filen.
@@ -775,6 +799,12 @@ STEPS: tuple[Step, ...] = (
         inputs=(
             "tools/check_weekly_code_errors.py",
             "tools/weekly_report.py",
+            # `tools/transient.py` er input, fordi portens `known_kinds()` læser
+            # klassenavnene derfra: opgave 32 flyttede `_transient` ud af
+            # `weekly_report.py`, og da forsvandt `URLError` fra sættet — nøjagtig
+            # den fejl `soft()` oftest fanger. Uden filen i filteret ville en push
+            # kun tilføje en ny fejlklasse i modulet og springe porten over.
+            "tools/transient.py",
             "reports/weekly/*.json",
         ),
     ),
@@ -784,6 +814,7 @@ STEPS: tuple[Step, ...] = (
         inputs=(
             "tools/check_weekly_code_errors.py",
             "tools/weekly_report.py",
+            "tools/transient.py",
             "reports/weekly/*.json",
         ),
     ),

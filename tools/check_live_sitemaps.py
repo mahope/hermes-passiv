@@ -18,6 +18,7 @@ from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 from check_sitemaps import DIST, ROOT, SITES, advertised_own_urls, check_domain, parse_head, parse_sitemap
 from route_inventory import load_inventory
+from transient import is_transient
 
 ROUTE_INVENTORY = ROOT / "tools" / "route_inventory.json"
 
@@ -76,18 +77,6 @@ RETRY_ATTEMPTS = 3
 RETRY_DELAY = 2.0
 
 
-def is_transient(status: int | None, error: str | None) -> bool:
-    """Only a network error or a 5xx is worth trying again.
-
-    A 4xx is the site's own answer: a 404 must stay red on the first attempt, and
-    a 429 is final by contract, so neither may be retried. Kørsel `36763842986`
-    døde i alle tre deploys på `<urlopen error [Errno 104] Connection reset by
-    peer>` for a side der svarer 200 tre gange i træk fra denne maskine, så ét
-    reset kunne erklære en sund udgivelse for brudt.
-    """
-    return error is not None or (status is not None and status >= 500)
-
-
 def fetch_resilient(url: str, timeout: int = 30, attempts: int | None = None,
                     delay: float | None = None) -> tuple[int | None, bytes, HTTPMessage | None, str | None]:
     """`fetch`, with a bounded retry for transient failures only.
@@ -97,6 +86,10 @@ def fetch_resilient(url: str, timeout: int = 30, attempts: int | None = None,
     så porten ikke kan skjule en ægte mangel. `attempts` og `delay` læses fra
     modulet ved kald, ikke ved definition, så en test kan slå tempoet fra uden at
     røre `time.sleep` i hele processen.
+
+    Hvad der overhovedet må prøves igen afgøres ét sted for hele repoet, i
+    `tools/transient.py` — `weekly_report.py` bruger den samme regel, så de to
+    porte ikke længre kan være uenige om det samme svar.
     """
     attempts = RETRY_ATTEMPTS if attempts is None else attempts
     delay = RETRY_DELAY if delay is None else delay

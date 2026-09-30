@@ -32,6 +32,9 @@ import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from transient import is_transient  # noqa: E402 — efter sys.path, som de andre værktøjer
+
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
 OFFER_CATALOG = ROOT / "tools/stripe_catalog.json"
@@ -185,28 +188,26 @@ def soft(source: str, fn, default=None):
         return default
 
 
-def _transient(exc: BaseException) -> bool:
-    # HTTPError er en subclass af URLError, så den skal dømmes først: 4xx er et
-    # svar og ikke en fejl, der går over, mens 5xx og 429 er forbigående.
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code >= 500 or exc.code == 429
-    return isinstance(exc, (urllib.error.URLError, TimeoutError, ConnectionError))
-
-
 def http_json(url: str, timeout: int = 30, headers: dict | None = None, attempts: int = 2):
     # Ét read-fejl må ikke tage en hel uges trafiktal med sig. Uge 39 (2026-09-21)
     # endte med `traffic: {}` og "api/stats: The read operation timed out", fordi
     # ét 120 s-læs slog timeout — så de 706 og 593 besøg fra ugerne 38 og 37 fik
     # ingen afløser, og missionens "find siderne med flest besøg" havde ingen tal.
-    # Alle kald her er GET, så et forsøg til er sikkert. 4xx prøves ikke igen: et
-    # 404 eller en 403 bliver ikke bedre af et forsøg, og vil bare trække 2 min.
+    # Alle kald her er GET, så et forsøg til er sikkert.
+    #
+    # Hvad der prøves igen afgøres i `tools/transient.py`, som `check_live_sitemaps`
+    # også bruger. Før 30/9 havde de to hver sin regel og de var uenige om 429:
+    # denne prøvede den igen, porten gjorde ikke. Nu er den **endelig** her også —
+    # et forsøg mere ville ikke læse noget ind, kun trække kvoten. Se modulet for
+    # hele begrundelsen. 4xx var altid endelige: et 404 eller en 403 bliver ikke
+    # bedre af et forsøg, og vil bare trække 2 min.
     req = urllib.request.Request(url, headers={"User-Agent": "mahope-weekly-report/1", **(headers or {})})
     for attempt in range(1, max(1, attempts) + 1):
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except Exception as exc:  # noqa: BLE001 — kun de forbigående prøves igen
-            if attempt >= max(1, attempts) or not _transient(exc):
+            if attempt >= max(1, attempts) or not is_transient(error=exc):
                 raise
     raise RuntimeError("http_json nåede ikke sit sidste forsøg")
 

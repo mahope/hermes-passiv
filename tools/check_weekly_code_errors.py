@@ -94,6 +94,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
 WRITER = ROOT / "tools" / "weekly_report.py"
+# Opgave 32: `weekly_report.py` flyttede sin egen `_transient` til
+# `tools/transient.py`, fordi `check_live_sitemaps.py` havde en anden. Det gjorde
+# `known_kinds()` blind for `URLError` igen — portens egen selftest fangede det
+# med det samme, fordi de to filer læses, ikke én. `NETWORK_ERRORS` i modulet er
+# netop de klasser `soft()` oftest fanger, så de skal læses herfra.
+KIND_SOURCES = (WRITER, ROOT / "tools" / "transient.py")
 
 # Undtagelser der betyder "vi skrev noget forkert". En `SyntaxError` er ikke et
 # `Exception` (den arver fra `BaseException`), men den skal dømmes med de andre,
@@ -133,7 +139,11 @@ def known_kinds() -> frozenset[str]:
     Derfor læses sættet fra koden: undtagelserne i `weekly_report.py`'s egne
     `except`-klausuler — de er præcis de klasser `note_error` kan få — plus
     indbyggede undtagelser, plus `CODE_ERRORS` (som ikke alle står i en
-    `except`-klausule, fordi de aldrig er blevet kastet) og `Note`.
+    `except`-klausule, fordi de aldrig er blevet kastet) og `Note`. Ligeså læses
+    `tools/transient.py`, hvor klasserne der afgør om noget prøves igen nu står:
+    læses der kun `weekly_report.py`, forsvinder `URLError` fra sættet den dag
+    reglen flytter, og porten bliver blind for præcis den fejl `soft()` oftest
+    fanger.
     """
     kinds = {
         name
@@ -143,8 +153,10 @@ def known_kinds() -> frozenset[str]:
     }
     kinds.add(TEXT_ERROR_KIND)
     kinds.update(CODE_ERRORS)
-    if WRITER.is_file():
-        source = WRITER.read_text(encoding="utf-8")
+    for source_path in KIND_SOURCES:
+        if not source_path.is_file():
+            continue
+        source = source_path.read_text(encoding="utf-8")
         # Kvalificerede navne (`urllib.error.URLError`) står både i
         # `except`-klausuler og i `isinstance(...)`-kald, så en regex kun på
         # `except` missede `URLError` — den klasse `soft()` oftest fanger.
