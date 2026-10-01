@@ -1,5 +1,11 @@
 # STATUS
 
+- **Gaten er `python3 tools/quality_gate.py` — 113 steps — ikke de fire
+  kommandoer missionen navngiver.** De fire (`build_sites.py`, `seo_check.py`,
+  `stripe-worker.test.mjs`, `check_inline_js.py`) dømmer ikke
+  `tests/thanks-page.test.mjs`, så opgave 35 kunne merge *rødt* med dem kørende.
+  Det skete 1/10. Mål: `gh run list -L 1` er grønnest i starten af hver
+  iteration; kør hele porten, ikke missionens afsnit. Se opgave 36.
 - **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
   nøgle.** Tak-siden genkaldte `/api/stripe/fulfillment` på 429, og den rute
   tæller selv sine forsøg — så hvert genkald gjorde det værre. Rettet, og
@@ -28,11 +34,18 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: ceo/429-er-sendeloeende-paa-tak-siden 2026-10-01` — tak-siden
-  skal svare 429 med serverens egen sætning og **ikke** genkalde
-  `/api/stripe/fulfillment`. Mål på indhold: `/thanks` skal have præcis ét
-  `x.code === 429`-kald, det skal stå **alene** på sin egen linje (ikke
-  `429 || x.code >= 500`), og det skal kalde `fail(` med `x.d.error`.
+- `VERIFICÉR DEPLOY: ceo/429-er-sendeloeende-paa-tak-siden + ceo/429-gate-tak-siden
+  2026-10-01` — **begge slås sammen i én udgivelse.** `4829488` blev aldrig
+  deployet, fordi CI var rød, så `build-info.json` bærer stadig `8c61191`
+  (målt 1/10 kl. 00:3x UTC). Mål på indhold, ikke på HTTP-status:
+  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
+  2. `/thanks` har **ét** `x.code === 429`-kald, på **sin egen linje** — ikke
+     `429 || x.code >= 500`.
+  3. Det kalder `fail(` med `x.d.error`, altså serverens egen sætning
+     (`Too many attempts.`), og teksten siger at et reload virker.
+  4. **Ingen** `/api/stripe/fulfillment`-genkald efter et 429 — mål på at
+     `setTimeout(poll` ikke kan nås fra den gren (det er `check_status_finality`
+     og `thanks-page` der dømmer det; live skal bare have den nye linje).
 
 - `DEPLOY OK 2026-10-01` — otte generatorer (`ceo/generator-script-kom-til-live`,
   `8c61191`). Målt 1/10 kl. 00:0x UTC: CI-kørsel `36793625580` grøn i alle jobs,
@@ -226,3 +239,14 @@
      status >= 500`, som holder 429 ude, og viser `data.error`. Det er altså et
      navneproblem, ikke et adfærdsproblem — målt i portens egen måling. Se arkiv.
 
+
+36. ~~**To test dømte det modsatte af rettelsen, så CI var rød på `main`.~~
+    **FÆRDIG 1/10, `ceo/429-gate-tak-siden`.** Kørsel `36796052854` faldt i
+    `thanks-page` med to domme fra 29/9, der hævdede at et 429 *skal* gentages.
+    Opgave 35 gjorde 429 endeligt i `site/thanks.html`, så de to lå i konflikt —
+    og de to var de forkerte, fordi CEO-kø punkt 0 og regel 8 begge siger at 429
+    er endelig, og opgave 35 målte at gentagelsen var skadelig (hvert genkald
+    tæller i den tæller der gav 429). Erstattet af syv domme der dømmer den
+    låste adfærd og har tænder: den gamle kode i en klon giver 5 røde af 7,
+    blandt andet `fetches=13` skal være 1. `thanks-page` 109/109, hele porten
+    grøn (113 steps). Accept opfyldt. Se arkiv.

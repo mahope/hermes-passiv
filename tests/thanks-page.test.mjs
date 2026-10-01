@@ -308,9 +308,22 @@ ok('503 der går over: siden viser nøglen alligevel', helbredt503.thrown === nu
 ok('503 der går over: den prøver igen frem for at give op', helbredt503.fetches === 3, 'fetches=' + helbredt503.fetches);
 ok('503 der går over: kunden ser at siden arbejder på det', helbredt503.seen.some((t) => /trying again/i.test(t)), JSON.stringify(helbredt503.seen));
 
+// Et 429 er **endeligt**, så denne test dømmer modsat af 503: serveren siger
+// «for mange forsøg» og næste kald ville have svaret 200 med nøglen — men det
+// kald tæller i den samme tæller, der lige har sagt stop. Målt 1/10 på den
+// gamle kode: tolv genkald á fire sekunder, og den der ventede længst fik
+// *færrest* forsøg tilbage. Så her venter vi ikke på det andet svar; vi
+// fortæller kunden at et reload virker, og viser ingen nøgle vi ikke har læst.
 const helbredt429 = await render(null, [{ status: 429, body: body429 }, { status: 200, body: lic.payload }]);
-ok('429 der går over: siden viser nøglen, og kaldene er to ikke én', helbredt429.fetches === 2 && /<code id="key">[0-9a-f]{32}<\/code>/.test(helbredt429.result.innerHTML),
-  'fetches=' + helbredt429.fetches + ' html=' + JSON.stringify(helbredt429.result.innerHTML.slice(0, 80)));
+ok('429: ingen nyt kald ind i den tæller der sagde stop', helbredt429.fetches === 1, 'fetches=' + helbredt429.fetches);
+ok('429: serverens egen sætning står i stedet for vores egen',
+  // Uden denne dom er `startsWith` under den næste vacuous: en tom `error`
+  // ville være præfiks for alt. Så den skal først findes.
+  typeof body429.error === 'string' && body429.error.length > 0
+  && helbredt429.status.textContent.startsWith(body429.error), JSON.stringify(body429) + ' | ' + helbredt429.status.textContent);
+ok('429: kunden får at vide at et reload virker', /reload will work/i.test(helbredt429.status.textContent), helbredt429.status.textContent);
+ok('429: ingen nøgle der ligner en levering, men som vi ikke har læst',
+  helbredt429.result.hidden === true, JSON.stringify(helbredt429.result.innerHTML.slice(0, 80)));
 
 const netvaerk = await render(null, [{ throw: true }, { throw: true }, { status: 200, body: lic.payload }]);
 ok('netværksfejl der går over: siden viser nøglen', netvaerk.fetches === 3 && /<code id="key">[0-9a-f]{32}<\/code>/.test(netvaerk.result.innerHTML), 'fetches=' + netvaerk.fetches);
@@ -327,8 +340,13 @@ ok('503 hele vejen: gentagelserne er begrænset af et budget, ikke uendelige',
 ok('503 hele vejen: ingen licence-kasse der ligner en levering', vedlige503.result.hidden === true, JSON.stringify(vedlige503.result.innerHTML.slice(0, 80)));
 
 const vedlige429 = await render(null, [{ status: 429, body: body429 }]);
-ok('429 hele vejen: samke ærlige slutning som ved 503', /payment went through/i.test(vedlige429.status.textContent), vedlige429.status.textContent);
-ok('429 hele vejen: budgettet gælder, så kaldene er 13 og ikke flere', vedlige429.fetches === 13, 'fetches=' + vedlige429.fetches);
+ok('429 hele vejen: samme ærlige slutning som ved 503', /payment went through/i.test(vedlige429.status.textContent), vedlige429.status.textContent);
+ok('429 hele vejen: den siger ikke at ordren mangler', !/could not find this order/i.test(vedlige429.status.textContent), vedlige429.status.textContent);
+// Ratcheten mod den selvforstærkende løkke fra opgave 35. Den gamle kode
+// svarede 13 gange på 13 ens 429 — ét kald mere end budgettet på 5xx, fordi
+// 429 lå i samme gren. Det er præcis den egenskab der lå i live.
+ok('429 hele vejen: ét kald, ikke tretten', vedlige429.fetches === 1, 'fetches=' + vedlige429.fetches);
+ok('429 hele vejen: ingen licenskasse der ligner en levering', vedlige429.result.hidden === true, JSON.stringify(vedlige429.result.innerHTML.slice(0, 80)));
 
 // Negativ kontrol: 404 *er* et reelt svar — ordren findes ikke. Det må dømmes
 // med det samme, ellers ville rettelsen have gjort alle fejl forbigående.

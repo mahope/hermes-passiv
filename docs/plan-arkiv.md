@@ -2854,3 +2854,39 @@ status >= 500`, som holder 429 ude, og viser `data.error`. Det er altså et
 navneproblem, ikke et adfærdsproblem — og en port der dømmer navne uden adfærd
 ville være rød på 287 sider uden grund. Mutationen «ny klient der tier om 429»
 blev derfor fjernet fra selvtesten i stedet for at blive grøn af en svag dom.
+
+## Opgave 36 (1/10) — `ceo/429-gate-tak-siden`: CI var rød på `main`, fordi to test dømte det modsatte af rettelsen
+
+- **Fund:** `main` var rød ved iterationens start. Kørsel `36796052854` faldt i
+  `thanks-page`: to domme. De var skrevet i en tidligere opgave (29/9) og
+  hævdede at et 429 **skal** gentages — `429 der går over: siden viser nøglen,
+  og kaldene er to ikke én` og `429 hele vejen: budgettet gælder, så kaldene er
+  13 og ikke flere`. Opgave 35 (1/10) gjorde 429 endeligt i `site/thanks.html`,
+  så de to og siden lå i direkte konflikt, og de to var de forkerte: CEO-kø
+  punkt 0 (29/9) og regel 8 i kontrakten siger begge at 429 er endelig, og
+  opgave 35 målte at gentagelsen var **skadelig** — tolv genkald á fire sekunder,
+  hvor hvert kald tæller i `/api/stripe/fulfillment`s egen tæller
+  (`hits >= 30`), så den der ventede længst fik færrest forsøg tilbage.
+- **Rettelse:** de to domme er erstattet af syv, der dømmer den låste adfærd
+  *og* har tænder: ét kald, serverens egen `error` som første sætning, en
+  besked om at et reload virker, ingen licenskasse der ligner en levering, og
+  at siden ikke siger at ordren mangler. Bevis på tænderne — den gamle kode
+  (`4829488^:site/thanks.html`, linjen `if (x.code === 429 || x.code >= 500)`)
+  lagt ind i en klon under `/tmp` giver **5 røde af de 7**, blandt andet
+  `fetches=2` (skal være 1) og `fetches=13` (skal være 1). De to der stadig er
+  grønne mod den gamle kode er ærlighedsdommene, som RAN_OUT også opfyldte;
+  de er beholdt fordi de måler noget andet end antal kald.
+- **Det egentlige hul:** de fire mission-navngivne kommandoer
+  (`build_sites.py`, `seo_check.py`, `stripe-worker.test.mjs`,
+  `check_inline_js.py`) dømmer **ikke** `tests/thanks-page.test.mjs`. Den
+  opgave der rettede 429-klienten kørte dem og mente de var nok, så et køb-flow
+  kunne merges rødt. Hele gaten er `python3 tools/quality_gate.py` — 113 steps,
+  og den er den eneste kontrol før merge. Skrevet i STATUS, fordi det er den
+  linje næste iteration læser først.
+- `GATE`: **GRØN — `python3 tools/quality_gate.py`: GRØN — 113 steps**
+  (5:12 lokalt). `thanks-page` **109/109** (var 102/104 rød). De fire
+  mission-navngivne kommandoer kører alle i porten. **`site/_worker.js` er
+  urørt** — `git diff --stat main -- site/_worker.js` er tom, så licens-,
+  webhook-, fulfillment- og downloadvejen er bit-for-bit uændret. Ingen fil i
+  `site/` og ingen i `dist/` i diffen: rettelsen er udelukkende i testfilen,
+  fordi siden allerede gjorde det rigtige.
