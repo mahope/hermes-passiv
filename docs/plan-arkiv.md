@@ -4034,3 +4034,19 @@ Playwright på den byggede side ved 390 og 1280 px, lys og mørk: kortet afslør
 Optaget efter en måling af kildefilerne. Målt på live samme dag: både EN og DA
 har `dlReport` to gange og `function downloadReport` én gang. Ikke et problem —
 den `onclick`-binding, der sås som manglende, sad i begge filer.
+
+## 1/10 18:22 — Rettelse af en fejl målt i min egen deploy-note
+
+Noten for `ceo/pro-knaeb-i-resultatet` sagde at købslinket `eVq00i4…` «må ikke
+stå i siden endnu». Begge dele var forkert, målt mod live `209baa0` 18:22:
+
+- `eVq00i4YH6UG69g0ObbMQ03` er **EUComply Pros** link. Clean Copy Pro hedder
+  `6oU4gy76PgvgdBIdAXbMQ00` — det stod allerede i noten som «katalogens».
+- Knappen stod **allerede** i den statiske HTML, i det Pro-afsnit siden havde
+  længe haft. Den gamle kode har derfor 1 forekomst, ikke 0, så «ikke stå i
+  siden» ville have givet et grønt svar på den gamle side.
+
+Den rigtige dom er tællingen: 2 forekomster af Clean Copy Pros link (1 statisk +
+1 i scriptet), plus `#pro-nudge` og `proCard`, som begge er 0 i den gamle kode.
+Noten er rettet med baseline-tallene, så næste iteration kan måle i stedet for at
+lede efter en streng, der aldrig kunne være væk.

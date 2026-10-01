@@ -13,11 +13,17 @@
 ## Verificér deploy
 
 - `VERIFICÉR DEPLOY: Pro-kort i resultatet af Clean Copy-webværktøjet
-  ceo/pro-knaeb-i-resultatet 2026-10-01 18:20` — måles på **indhold**: live
-  `GET /clean-copy-tool` skal have `<div id="pro-nudge" hidden>` og
-  `eVq00i4…` må **ikke** stå i siden endnu (kortet skrives af `convert()`),
-  mens katalogens `6oU4gy76PgvgdBIdAXbMQ00` skal stå i scriptet. Dommen er
-  `tests/scan-clients.test.mjs` (213/213), som kører værktøjet rigtigt
+  ceo/pro-knaeb-i-resultatet 2026-10-01 18:20` — måles på **indhold** på
+  `https://cleancopy.tools/clean-copy-tool`. Baseline målt 1/10 18:22 på live
+  `209baa0` (endnu ikke deployet): `id="pro-nudge"` **0** gange,
+  `function proCard` **0** gange. Dommen er derfor:
+  1. `id="pro-nudge"` står **1** gang,
+  2. `function proCard` står **1** gang,
+  3. `6oU4gy76PgvgdBIdAXbMQ00` (Clean Copy Pro) står **2** gange: 1 i den
+     statiske HTML fra det Pro-afsnit, der lå der i forvejen, og 1 i scriptet fra
+     det nye kort. ~~Kun 1~~ ville være den gamle kode — *ikke* 0, fordi den
+     gamle side allerede havde knappen i sit afsnit.
+  Dommen er `tests/scan-clients.test.mjs` (213/213), som kører værktøjet rigtigt
   igennem: den fyrede rødt på `showProCard()`-mutationen (206/213) og på en
   `proActive()` der altid er falsk (212/213), så porten kan fejle.
   Målt i Playwright på den byggede side: kortet afsløres ved 390 og 1280 px,
