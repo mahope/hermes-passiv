@@ -4158,3 +4158,33 @@ læst, og en dom i `tests/scan-clients.test.mjs` læser den rendererede markup
 forsiden endte på (`sideUrl`) frem mod den indsendte URL. Ellers gættede et
 site, der omdirigerer `example.dk` → `www.example.dk`, stier på apex mens
 linksene resolvinger mod www.
+
+## 1/10 2026 — Bogene læses online, kapitel for kapitel
+
+Feature-kø punkt 2. De seks bogside-ruter (`site/books/<slug>.html`) var
+132–153 linjer: en salgsside med en liste over kapitler og en downloadknap. Den
+eneste måde at læse en bog på var at hente EPUB'en og åbne den i en læser.
+
+Målt først 1/10: `read-online` 0 gange i alle otte bogsider under
+`dist/mahope.tools/books/`; kapitel-1-sætningen «The most common misconception
+among small agencies» 0 gange i nogen af dem.
+
+Leveret: `tools/book_reader.py` bygger en `<section id="read-online">` med
+kapitel 1 og 2 i fuld tekst, og `build_sites.py` skriver den ind i hver
+`books/<slug>.html` der har en EPUB i `ebook/`. Kilden er EPUB'en — den fil
+kunden henter — ikke `ebook/*.md`, så læsevisningen kan ikke vise en udgave der
+ikke findes i downloadet. Rækkefølgen læses af OPF-spine'en, ikke filnavne.
+
+Bugs fundet undervejs, alle med en mutation der beviser dommen:
+- «2 chapter2 in full» — samme `{n}` brugt til tallet og til flertal.
+- Læsevisningen startede på «Front Matter» (alle seks EPUB'er gør).
+- Loftet på 9000 tegn skjulte `eaa-checklist`s kapitel 2 — bogens 10-punkts-
+  tjekliste på 9,8 KB, altså præcis den del en læser vil se. Hævet til 20000.
+- En dom på `chapters()` var grøn uanset hvad der blev vist, fordi loftet først
+  anvendes i `section()`. Flyttet til at tælle på den *renderede* sektion.
+- Injektionen kunne køre to gange og give to sektioner (contract-punkt 3).
+
+Boganbefalingen «én købsknap til sit bundle-link» blev **ikke** fulgt: syv
+publicerede sider siger at bøgerne er gratis og «nothing is reserved for a paid
+edition», mens Stripe har et betalt `$29`-produkt `eu-compliance-ebook-bundle`.
+Se ❓ under «Til Mads» i planen.

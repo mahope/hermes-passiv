@@ -152,6 +152,20 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/seo_check.py", "--self-test"),
         inputs=("tools/seo_check.py", "build_sites.py"),
     ),
+    # Bogenes læsevisning. `build_sites.py` skriver de første kapitler ind i
+    # hver bogsides HTML, bygget ud af `ebook/<slug>.epub` — altså den fil
+    # kunden faktisk henter. Uden dette step kunne en EPUB blive ulæselig, en
+    # kapiteltitel forsvinde, eller markup fra bogen blive levende tags på siden,
+    # og buildet ville stadig være grønt: ingen anden port læser `ebook/`.
+    Step(
+        id="book-reader",
+        argv=("python3", "tools/book_reader.py", "--self-test"),
+        inputs=(
+            "tools/book_reader.py",
+            "build_sites.py",
+            "ebook/**",
+        ),
+    ),
     # Licensserveren. `_worker.js` leverer nøgler og downloads for rigtige
     # Stripe-køb, så dette step må aldrig droppes fra en kortere liste.
     Step(

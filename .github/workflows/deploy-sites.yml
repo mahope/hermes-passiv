@@ -27,6 +27,11 @@ on:
       - 'tools/test_check_sitemaps.py'
       - 'tools/test_check_live_sitemaps.py'
       - 'tools/seo_check.py'
+      # `quality_gate.py` har et `book-reader`-step der læser `ebook/`, så
+      # uden disse to linjer ville en ændring i en EPUB aldrig blive gaten
+      # afkontrolleret — selvom læsevisningen på bog siderne er bygget af den.
+      - 'tools/book_reader.py'
+      - 'ebook/**'
       - 'tools/check_inline_js.py'
       - 'tools/check_private_content.py'
       - 'tools/check_page_profile_distribution.py'

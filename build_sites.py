@@ -26,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "tools"))
 from brand import BRANDS, BRAND_DIR  # noqa: E402
+import book_reader  # noqa: E402
 import pagepass  # noqa: E402
 from route_inventory import load_inventory  # noqa: E402
 SITE = ROOT / "site"
@@ -167,6 +168,14 @@ SHARED = ["style.css", "track.js", "shell.js", "_worker.js"]
 SKIP_NAMES = {"sitemap.xml", "robots.txt"}
 SKIP_SUFFIXES = (".orig", ".bak")
 SKIP_DIRS = ("_partials/", "_brand/")
+
+# `books/<slug>.html` — bogsiderne der får en læsevisning fra EPUB'en.
+BOOK_PAGE_SLUG_RE = re.compile(r"^books/([a-z0-9][a-z0-9-]*)\.html$", re.I)
+# Teksten under læsevisningen. Den skal ikke være en knap: downloadknappen står
+# lige under den, og to knapper der siger det samme er ikke to valg — det er én
+# handling forklædt som to.
+BOOK_READER_NOTE = ("The rest of the book is free — the download button below has every "
+                    "chapter and every appendix, in EPUB for any e-reader.")
 # Root-relative refs to these extensions are auto-pulled into a dist if the
 # file exists in site/ (og:image, icons, extra css/js…).
 ASSET_EXT = {".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".ico", ".css", ".js", ".woff", ".woff2"}
@@ -1413,6 +1422,18 @@ def write_site(site: Site, local: dict, global_idx: dict, kv_id: str, pairs: dic
                               description=info["description"], lastmod=(d[1] if d else build_date()),
                               section=shell_info["section"], body=main_txt[:400].strip(), tags=tags,
                               indexable=meta_robots_allows_index(text)))
+        # Bogsiderne får en læsevisning med de første kapitler, bygget ud af den
+        # EPUB kunden henter — ikke en opsummering skrevet til siden. Kilden er
+        # `ebook/<slug>.epub`, så læsevisningen kan ikke blive ældre end bogen.
+        # Værnet på `.exists()` er ikke valgfrit: `books/index.html` og
+        # `books/compliance-bundle.html` er også bogside-ruter, men de er ikke en
+        # bog og har ingen EPUB. `books/<slug>.html` med en EPUB er derfor præcis
+        # de sider der får læsevisningen — og `book_reader.py --self-test`
+        # dømmer, at en EPUB i `ebook/` faktisk ender på sin side.
+        book_match = BOOK_PAGE_SLUG_RE.match(dest)
+        book_slug = book_match.group(1) if book_match else None
+        if is_html and book_slug and (book_reader.EBOOK / (book_slug + ".epub")).exists():
+            text = book_reader.inject(text, book_slug, BOOK_READER_NOTE)
         if is_html:
             text = add_plausible(site, text)
         text = rewrite_text(site, text, is_html, local, global_idx)
