@@ -44,35 +44,31 @@
   katalogen ($79)»; `.pro-card` fjernet fra print-listen → 249/252 med «print:
   pro-kortet skjuler sig i den trykte rapport». Grøn er kun den uændrede kode.
 
-- `VERIFICÉR DEPLOY: læsevisning på alle bogside-ruter
-  ceo/boeger-laeses-online 2026-10-01 20:25` — måles på **indhold** på
-  `https://mahope.tools/books/<slug>` for alle seks slugs.
-  Baseline målt 1/10 på live `8d8cdb5` (før ændringen): `read-online` **0**
-  gange i alle otte bogsider, og kapitel-1-teksten «The most common
-  misconception among small agencies» **0** gange. Domden bliver derfor:
-  1. `read-online` **1** gang i hver af `gdpr-for-agencies`,
-     `nis2-for-agencies`, `cookie-consent-guide`, `eaa-checklist`, `eaa-shopify`,
-     `build-your-first-chrome-extension` — og **0** i `books/index` og
-     `books/compliance-bundle`.
-  2. `reader-chapter-title` **2** gange i hver af de seks.
-  3. Første `reader-chapter-title` skal være en rigtig kapitel — aldrig
-     `Front Matter` eller `Foreword`.
-  4. Bogen skal vise kapitel 2 også på `eaa-checklist`, hvor kapitel 2 er
-     10-punkters-tjeklisten på 9,8 KB. Det var præcis den kapitel et loft på
-     9000 tegn fjernede.
-  5. `&lt;script` må forekomme i bogsektionen, og ingen `<script>`/`onerror`/
-     `javascript:` må gå ud i den.
-  6. Ingen vandret scroll ved 390 px; `<details>`+`<summary>` skal være der, så
-     kapitlerne kan lukkes.
-  Domden er `python3 tools/book_reader.py --self-test` (45/45) + gaten.
-  Mutationer målt på den nye kode: escapen i `handle_data` fjernet → 43/45
-  (script-tag og `javascript:`-href slipper igennem); `EXISTING.sub` fjernet →
-  44/45 (anden injektion duplikerer sektionen); front-matter-filteret fjernet →
-  43/45 (læsevisningen starter på omslagssiden); loftet tilbage på 9000 → 44/45
-  (`eaa-checklist viser to kapitler — 1`); dommen «får læsevisning == har en
-  EPUB» gjort til en ren existence-tjek → 43/45; EPUB-værnet i `build_sites.py`
-  fjernet → 40/45 (alle seks EPUB'er forsvinder fra deres side). Grøn er kun
-  den uændrede kode.
+- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
+  lukket på **indhold** på live `c4fd730`. Alle seks domme målt 1/10:
+  `read-online` **1** gang i hver af `gdpr-for-agencies` (`Chapter 1 — Why This
+  Applies to You (Yes, You)`), `nis2-for-agencies` (`Chapter 1: Does NIS2 Apply
+  to Your Agency?`), `cookie-consent-guide` (`Chapter 1: What the Law Actually
+  Requires`), `eaa-checklist` (`Chapter 1: Is Your Site in Scope?`),
+  `eaa-shopify` (`Chapter 1: What the EAA Means for Your Shopify Store`) og
+  `build-your-first-chrome-extension` (`Preface: Why This Book Exists` er
+  indhold, filteret dropper kun `Front Matter`/`Foreword`) — **0** i `books/index`
+  og `books/compliance-bundle`; `reader-chapter-title` **2** gange i hver;
+  `eaa-checklist` viser kapitel 2 som `Chapter 2: The 10-Point EAA Compliance
+  Checklist`; `<details>`+`<summary>` 1 og 1 i hver bogsektion.
+
+  Punkt 5 målt på den afgrænsede bogsektion (fra `id="read-online"` til første
+  `</section>` efter den), fordi et 40 000-tegns vindue løber ind i sidens
+  footer og ville tælle sidernes egne scripts: **0** rå `<script>`, **0**
+  `onerror`, **0** `javascript:` på `gdpr-for-agencies` (8 705 tegn) og
+  `eaa-checklist` (14 213 tegn). Bogen har heller ingen `<script>` at vise, så
+  kravet om at `&lt;script` skal forekomme kan ikke måles live: det escapede
+  markup ligger i `build-your-first-chrome-extension` kapitel 6, og læsevisningen
+  viser kun kapitel 1 og 2. Escapen er derfor dømt på koden i stedet —
+  `book_reader.py:133` (`self.out.append(escape(data))`), og
+  `--self-test` 45/45. Mutation: escapen fjernet → **43/45** med «script-tags
+  er væk» og «tekst escape-stadig». Det er altså ikke en from regel, men den
+  konkrete linje der gør den.
 
 - `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
   lukket på **indhold** på live `c4fd730`, alle seks domme målt: `read-online`
