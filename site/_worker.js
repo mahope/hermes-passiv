@@ -2679,11 +2679,6 @@ function cscDetectText(html, hints) {
   return hints.some(h => lower.includes(h));
 }
 
-function cscHasHomepageLink(html, paths) {
-  const lower = html.toLowerCase();
-  return paths.some(p => lower.includes('href="' + p + '"') || lower.includes("href='" + p + "'"));
-}
-
 // Links forsiden peger på, som *kun er sitets egne*. Før dette gik scanneren
 // ud fra, at en juridisk side hedder `/privacy`, `/terms` eller `/impressum` —
 // men på dansk, norsk og tysk hedder de lige så ofte `/privatlivspolitik`,
@@ -2887,25 +2882,58 @@ function cscCheckHreflang(html) {
 // plus de ni tjek. Og **fetch-budgettet er delt pr. kald, ikke pr. URL** —
 // ellers kunne ét kald bruge 5 × 12 = 60 ude-kald, og det er flere
 // subrequests end en Worker har på det billige niveau. Ét kald koster derfor
-// højst CSC_MAX_PAGES, uanset hvor mange URL'er der står i.
+// højst CSC_MAX_PAGES, uanset hvor mange URL'er der står i — og det er delt
+// **retfærdigt** mellem dem, se `cscBudgetAndele`.
 const CSC_MAX_URLS = 5;
 const CSC_MAX_PAGES = 12; // samlet budget for hele kaldet
 
-// En delt tæller. `spend()` svarer fals når budgettet er brugt, så den
-// enkelte URL's tjek-løkke kan springe resten over i stedet for at hente videre.
+// En delt tæller med **to** lofter: ét for hele kaldet (CSC_MAX_PAGES, så ét
+// kald aldrig bliver dyrere end før multi-URL) og ét pr. URL (`urlLeft`), så
+// rapport nummer fire ikke får en fuld rapport, mens rapport nummer fem får en
+// der kun består af fund på sider, der aldrig blev læst.
+//
+// `spend(hoved)` med `hoved: true` er forsiden. Den låses ikke af et brugt
+// loft, fordi uden den er der ingen rapport at skrive — men den tæller stadig
+// mod begge, så fem URL'er aldrig kan sende mere end 12 kald. Det er den
+// forskel på «delte budget» og «ikke noget budget»: målt 30/9 skrev den gamle
+// kode fund på sider den aldrig hentede, fordi `spend()`s svar var ignoreret.
 function cscBudget(limit) {
-  return { left: limit, spend() { if (this.left <= 0) return false; this.left--; return true; } };
+  return {
+    left: limit,
+    urlLeft: limit,
+    spend(hoved) {
+      if (!hoved && (this.left <= 0 || this.urlLeft <= 0)) return false;
+      this.left--; this.urlLeft--;
+      return true;
+    },
+  };
+}
+
+// Hver URL's andel af kaldets budget, summen er præcis CSC_MAX_PAGES og ingen
+// andel er under 2 (forsiden + ét kandidat), fordi en rapport uden kandidater
+// er det samme som ingen rapport. Resten fordeles til de første, så intet
+// går til spilde: 3 URL'er giver 4+4+4, 5 URL'er giver 3+3+2+2+2.
+//
+// Det her er rettelsen på den målte fejl: med ét kald og fem URL'er lå hele
+// budgettet i den første rapport, og de fire andre fik «Not found. Add a …
+// page and link it from your footer» om sider, de aldrig havde set.
+function cscBudgetAndele(antal) {
+  const base = Math.floor(CSC_MAX_PAGES / antal);
+  const rest = CSC_MAX_PAGES - base * antal;
+  // `min` sikrer summen mod CSC_MAX_PAGES, også hvis CSC_MAX_URLS en gang
+  // hæves — beløbet skal ikke kunne vokse med den.
+  return Array.from({ length: antal }, (_, i) => Math.min(CSC_MAX_PAGES, Math.max(2, base + (i < rest ? 1 : 0))));
 }
 
 function cscNormalizeUrl(raw) {
   return raw.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
 }
 
-async function cscScanOne(targetUrl, budget, timeoutMs) {
+async function cscScanOne(targetUrl, budget, timeoutMs, deltMed = 1) {
   // Hjemmesiden er det første fetch i kaldets budget. Den tælles med, ellers
   // kostede ét kald CSC_MAX_PAGES + 1 ude-kald — og det er præcis det tal
   // kommentaren over CSC_MAX_PAGES lover.
-  budget.spend();
+  budget.spend(true);
   const home = await cscFetch(targetUrl.toString(), timeoutMs);
   if (!home.ok) return { ok: false, error: 'Cannot reach ' + targetUrl.host + ': ' + home.error };
   // Et kald på `https://site.dk/kontakt` læser den side, ikke forsiden — men
@@ -2932,6 +2960,10 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
 
   const passed = [];
   const failed = [];
+  const notChecked = [];
+  // De juridiske sider er **ikke** tjekket i denne løkke. De samles her og
+  // læses forneden, én kandidat pr. tjek pr. runde — se kommentaren der.
+  const sideChecks = [];
 
   for (const key of Object.keys(CSC_CHECKS)) {
     const check = CSC_CHECKS[key];
@@ -2977,32 +3009,100 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
     //
     // De gættede stier er ikke væk: en footer kan linke «Cookie policy» uden at
     // linke nogen af de juridiske sider, og så er gættet det eneste bud.
-    let found = false, foundUrl = '';
-    const laesKandidater = new Set();
-    const kandidater = cscFindLinkCandidates(links, check).map(l => l.url);
-    for (const path of check.paths) kandidater.push(new URL(path, sideUrl).toString());
-    for (const kandidat of kandidater) {
-      // Den samme side tæller én gang. Tre links til samme cookie-side i
-      // footeren ville ellers brænde tre kald af budgettet og skrive tre
-      // linjer i `laeste`.
+    //
+    // Den samme side tæller én gang. Tre links til samme cookie-side i footeren
+    // ville ellers brænde tre kald af budgettet og skrive tre linjer i `laeste`.
+    const laesteKandidater = new Set();
+    const kandidater = [];
+    for (const kandidat of cscFindLinkCandidates(links, check).map(l => l.url)
+      .concat(check.paths.map(p => new URL(p, sideUrl).toString()))) {
       const nøgle = cscNormalizeUrl(kandidat);
-      if (laesKandidater.has(nøgle)) continue;
-      laesKandidater.add(nøgle);
-      if (!budget.spend()) break;
+      if (laesteKandidater.has(nøgle)) continue;
+      laesteKandidater.add(nøgle);
+      kandidater.push(kandidat);
+    }
+    sideChecks.push({ check, result, kandidater, næste: 0, fundet: false, fundetUrl: '', fraLink: false, udenBudget: false });
+  }
+
+  // **Tur for tur, ikke slange for slange.** Før dette blev kandidatlisten for
+  // ét tjek læst helt igennem før det næste tjek fik lov at prøve: et site uden
+  // juridiske sider (kun 404 på gætterne) brugte hele budgettet på privatliv og
+  // vilkår, og de tre andre juridiske tjek skrev «Not found. Add a … page and
+  // link it from your footer» uden at have set en eneste side. Målt 30/9 på tre
+  // sites i ét kald: rapport tre var bygget på forsiden alene og havde fire
+  // røde fund om sider, wordpress.org både har og linker til.
+  //
+  // Nu får hvert tjek én kandidat pr. runde, og et tjek der ikke har fundet
+  // noget endnu, men har kandidater tilbage, får dem i næste runde. Budgettet
+  // bliver brugt som en tur, og hvert tjek får mindst to kandidater.
+  let tomt = false;
+  let igang = true;
+  while (igang && !tomt) {
+    igang = false;
+    for (const s of sideChecks) {
+      if (s.fundet || s.næste >= s.kandidater.length) continue;
+      igang = true;
+      if (!budget.spend()) { tomt = true; break; }
+      const kandidat = s.kandidater[s.næste++];
       const pr = await cscFetch(kandidat, timeoutMs);
       sider++;
       if (!pr.ok || pr.status >= 400) continue;
       const laesNøgle = cscNormalizeUrl(pr.url || kandidat);
       if (!laesteSaet.has(laesNøgle)) { laesteSaet.add(laesNøgle); laeste.push(pr.url || kandidat); }
-      if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url || kandidat; break; }
-      if (pr.status < 300) { found = true; foundUrl = pr.url || kandidat; break; }
+      if (cscDetectText(pr.html, s.check.hints) || pr.status < 300) {
+        s.fundet = true; s.fundetUrl = pr.url || kandidat;
+      }
     }
-    if (!found) found = cscHasHomepageLink(home.html, check.paths);
+  }
 
-    result.status = found ? 'pass' : 'fail';
-    result.details = found ? (foundUrl ? 'Found at ' + foundUrl : 'Link found on homepage')
-      : 'Not found. Add a ' + check.label + ' page and link it from your footer.';
-    (found ? passed : failed).push(result);
+  for (const s of sideChecks) {
+    // **Et fund er et fund, og «ikke læst» er ikke et fund.** Der er to slags
+    // ulæste, og de skal ikke blandes:
+    //
+    // 1. Tjekket fik **ingen** kandidat læst, fordi kaldets budget var brugt op.
+    //    Så er det slet ikke dømt, og det skal stå som sit eget. Før dette skrev
+    //    den gamle kode «Not found. Add a … page and link it from your footer» om
+    //    sådan et tjek — altså om en side den aldrig havde set. Målt 30/9 på den
+    //    levende rute: rapport tre af tre sites var bygget på forsiden alene og
+    //    havde fire sådanne fund, bl.a. om privatlivspolitikken hos
+    //    wordpress.org, som både har den og linker den.
+    // 2. Tjekket læste kandidater, men nåede ikke hele listen. Det er et fund —
+    //    «vi læste 2 af 7 sandsynlige sider, ingen af dem var vilkårene» — og det
+    //    skal siges i samme sætning, ellers er dommen stærkere end beviserne.
+    if (tomt && !s.fundet && s.næste === 0) s.udenBudget = true;
+    // Bevis uden et kald: forsiden *linker* siden. Den gamle kode troede det kun,
+    // når footeren skrev præcis `href="/privacy"` — altså ikke
+    // `href="https://wordpress.org/about/privacy/"`, som er den sti tusinder af
+    // sites bruger. Nu er det den samme link-treffelse, som læsekandidaterne
+    // ovenfor allerede bruger, så beviset er det samme bevis.
+    if (!s.fundet) {
+      const linket = cscFindLinkCandidates(links, s.check)[0];
+      if (linket) { s.fundet = true; s.fundetUrl = linket.url; s.fraLink = true; }
+    }
+
+    const result = s.result;
+    result.status = s.fundet ? 'pass' : (s.udenBudget ? 'unknown' : 'fail');
+    if (s.fundet) {
+      result.details = s.fraLink ? 'Linked from the homepage: ' + s.fundetUrl : 'Found at ' + s.fundetUrl;
+    } else if (s.udenBudget) {
+      // Formuleringen skal være sand i begge kald: et kald med ét URL er ikke
+      // «scan den alene»-løsningen, så den må ikke love det.
+      result.details = 'Not checked. This call reads '
+        + (deltMed > 1
+          ? CSC_MAX_PAGES + ' pages in total, shared across the sites you sent'
+          : 'at most ' + CSC_MAX_PAGES + ' pages')
+        + ', and this check got no page read within that. No finding was made'
+        + (deltMed > 1 ? ' — send one site per call for a deeper check.' : '.');
+    } else {
+      result.details = 'Not found. Add a ' + s.check.label + ' page and link it from your footer.'
+        + (s.næste < s.kandidater.length
+          ? ' We checked ' + s.næste + ' of the ' + s.kandidater.length + ' pages we expected here'
+            + (deltMed > 1
+              ? ' — this call shares ' + CSC_MAX_PAGES + ' pages between ' + deltMed + ' sites.'
+              : '. Check the rest by hand.')
+          : '');
+    }
+    (s.fundet ? passed : s.udenBudget ? notChecked : failed).push(result);
   }
 
   const total = Object.keys(CSC_CHECKS).length;
@@ -3023,12 +3123,18 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
     // længere end budgettet gør det muligt, og hvert kald kan følge redirects,
     // så listen er kortere end `sider`.
     pages_read: laeste,
+    // Hvor mange juridiske sider der **ikke** blev dømt, fordi kaldets budget
+    // løb ud før tjekket nåede igennem sine kandidater. De står ikke i
+    // `failed`, fordi «Not found» er en dom og «ikke dømt» ingen dom er.
+    // Klienten skal kunne skelne, ellers sender den en kunde en liste over
+    // manglende sider, som scanneren aldrig har set.
+    not_checked: notChecked.length,
     score,
     grade: cscScoreLabel(score),
     passed: passed.length,
     failed: failed.length,
     total,
-    results: { passed, failed },
+    results: { passed, failed, notChecked },
     checks: CSC_CHECKS,
     version: '2.0',
   };
@@ -3087,11 +3193,18 @@ async function handleComplianceScan(request, url, env) {
   // Basic rate limit: one origin per IP per 10 seconds via KV if available, else allow.
   const TIMEOUT_MS = 10000;
   const budget = cscBudget(CSC_MAX_PAGES);
+  // Hver rapport får sin egen andel, og det er den del af budgettet der er
+  // brugt op, der afgør om et tjek er **dømt** eller **ikke dømt**. Målt 30/9
+  // på tre sites i ét kald: de to første fik fulde rapporter, og den tredje —
+  // wordpress.org, som både har og linker sin privatlivspolitik — fik fire
+  // røde fund om sider, der aldrig var læst.
+  const andele = cscBudgetAndele(targetUrls.length);
 
   try {
     const rapporter = [];
-    for (const targetUrl of targetUrls) {
-      rapporter.push(await cscScanOne(targetUrl, budget, TIMEOUT_MS));
+    for (let i = 0; i < targetUrls.length; i++) {
+      budget.urlLeft = andele[i];
+      rapporter.push(await cscScanOne(targetUrls[i], budget, TIMEOUT_MS, targetUrls.length));
     }
 
     // Ét URL svarer i den gamle form. GitHub Action'en, alt hvad der har kaldt

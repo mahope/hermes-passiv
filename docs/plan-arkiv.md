@@ -4389,3 +4389,39 @@ knap 46–85 px høj, 0 pagefejl, og i print-media er kortet `display:none` mens
 dokumentet selv er `block`. Dommen: `tests/scan-clients.test.mjs` 354/354, fem
 mutationer gjort røde ($59→$99, `no-print` fjernet, link byttet, indrømmelsen
 fjernet, den modsigende sætning tilbage på EAA-siden).
+
+---
+
+- `ITERATION_ID`: `delt-postjson-budget-2026-10-02`
+- `STATE`: Fund fra review 30/9 rettet i `ceo/deling-pr-url`: **batch-scanneren
+  skrev fund om sider den aldrig læste**, da kaldets sidelimit nåede. Målt på
+  den levende rute før rettelsen (3 sites i ét kald): rapport 3 var
+  wordpress.org med `pages_checked: 1`, `score: 22` og alle fem juridiske tjek
+  på «Not found. Add a … page and link it from your footer» — om et site der
+  både har og linker sin privatlivspolitik. Årsagen var to ting: budgettet lå
+  i den første rapport, og et tjek der ikke nåede sin liste skrev alligevel
+  «Not found».
+- `GJORDE`: (1) `cscBudget` fik et loft pr. URL (`urlLeft`) ved siden af
+  kaldets eget loft, og `cscBudgetAndele` fordeler de 12 kald retfærdigt
+  (12 / 4+4+4 / 3+3+2+2+2) så intet går til spade; forsiden låses ikke af et
+  brugt loft, så hvert URL stadig får en rapport. (2) Budgettet bruges **tur
+  for tur**: hvert juridisk tjek får én kandidat pr. runde, så de tre sidste
+  tjek ikke længere skriver fund uden at have set en side. (3) Bevis uden et
+  kald: `cscHasHomepageLink` (ordret `href="/privacy"`) er væk og erstattet af
+  den samme link-treffelse som læsekandidaterne bruger, så
+  `href="https://wordpress.org/about/privacy/"` tæller. (4) Et tjek med **nul**
+  læste kandidater får `status: "unknown"` i `results.notChecked` + `not_checked`
+  og **ikke** i `failed`; et tjek der nåede en del af listen beholder «Not
+  found» og får «We checked 3 of the 7 pages we expected here» i samme
+  sætning. (5) UI: `unknown` er et gult bindestreg ikke et rødt kryds, begge
+  sprog, + «N not checked» i scoren og i `.md`-rapporten.
+- `MALET`: 6 af de nye domme fejler på `main`s worker — bl.a. «et site der
+  linker sin privatlivspolitik hører ikke ‘Not found’» med den gamle
+  besked, `pages_checked=1`, og «delingen gør ikke ét kald dyrere end de 12
+  kald» (den gamle kode brugte 13). Grøn på den nye: 352/352 +
+  `scan-clients` 392/392 + `quality_gate.py` 125 steps + missionens gate.
+- `FUNDET UNDERVEJS`: `TEXTAREA` i URL-feltet havde `box-sizing: content-box`,
+  så den stod 12 px ud over kanten på 390 px — vandret scroll på den side,
+  kunden indsender sit site fra. Målt før/efter i browseren: `overflowX 12 → 0`
+  på EN og DA ved 390 px, 0 ved 1280 px.
+

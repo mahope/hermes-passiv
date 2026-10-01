@@ -162,6 +162,17 @@ globalThis.fetch = async (url, opts = {}) => {
     if (p !== '/' && p !== '') return new Response('Not found', { status: 404 });
     return new Response('<html lang="en"><head><title>Tung</title></head><body><h1>No legal pages here</h1></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
   }
+  // Et site der **har** privatlivspolitikken og **linker** den, på en sti ingen
+  // gæt rammer — og hvor alle de gættede stier er 404, så et kald bruger hele
+  // sit budget på at lede forgæves. Det er parret der afslører, om kaldets
+  // budget er delt retfærdigt: skal to tunge sites stå foran den i samme kald,
+  // før den kommer ud som en rapport bygget på forsiden alene.
+  if (url.startsWith('https://dela.example/') || url.startsWith('https://dela2.example/')) {
+    const p = new URL(url).pathname;
+    if (p === '/om/privatlivspolitik') return new Response('<html lang="da"><head><title>Privatlivspolitik</title></head><body><h1>Privatlivspolitik</h1><p>Vi behandler personoplysninger efter GDPR.</p></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+    if (p !== '/' && p !== '') return new Response('Not found', { status: 404 });
+    return new Response('<html lang="da"><head><title>Et site med privatlivspolitik</title></head><body><h1>Virksomheden</h1><footer><a href="/om/privatlivspolitik">Privatlivspolitik</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  }
   // ── URL Inspector og header-tjekker ─────────────────────────────────
   // Begge er åbne ruter der henter en kaldersstyret URL, så stubben skal kunne
   // svare på dem — ellers ville porten være grøn fordi den afviser alt, hvilket
@@ -1128,6 +1139,81 @@ await call('/api/compliance-scan?url=' + encodeURIComponent('tung.example\ntung2
 const toKald = tungFetches - tungFør - ettKald;
 ok('ét kald med to URL\'er koster ikke to gange ét kald med ét URL',
   ettKald > 8 && toKald <= ettKald + 2, `1 URL: ${ettKald} fetch, 2 URL: ${toKald} fetch`);
+
+// ── Budgettet skal være delt retfærdigt, og et fund skal være et fund ──
+// Fund fra review 30/9, målt på den levende rute: `GET /api/compliance-scan`
+// med tre URL'er gav to fulde rapporter og en tredje bygget på forsiden alene.
+// Den tredje var wordpress.org, som både har og linker sin privatlivspolitik —
+// og rapporten sagde «Not found. Add a Privacy Policy page and link it from
+// your footer» om den. Fire sådanne fund og en score, der sendes videre til en
+// kunde, er præcis det værktøjet sælger.
+//
+// Årsagen er to ting, og porten skal dømme begge:
+// 1. Budgettet lå i den første rapport. Nu har hvert URL sin egen andel.
+// 2. Et tjek, der ikke nåede igennem sine kandidater, blev skrevet som «Not
+//    found». Nu står det som sit eget: `status: "unknown"` i `results.notChecked`
+//    og uden for `failed`, fordi «Not found» er en dom og «ikke læst» ingen.
+const tungFoer = tungFetches;
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('tung.example\ntung2.example\ndela.example'), ip(29));
+const delt = await r.json().catch(() => ({}));
+const delRapporter = delt.reports || [];
+const tungRep = delRapporter.find(x => x.url === 'https://tung.example') || {};
+const delaRep = delRapporter.find(x => x.url === 'https://dela.example') || {};
+const delaAlle = [...(delaRep.results?.passed || []), ...(delaRep.results?.failed || []), ...(delaRep.results?.notChecked || [])];
+const delaPrivatliv = delaAlle.find(x => x.key === 'privacy');
+// Kun de juridiske sider sætter «Not found» — cookie, meta-tags og header er
+// læst på forsiden alene og skal dømmes begge veje. De skal ikke gå i flok.
+const CSC_SIDE_TJEK = ['privacy', 'terms', 'imprint', 'accessibility', 'dpa'];
+ok('tre URL\'er i ét kald giver tre rapporter, også når de to første er tunge',
+  r.status === 200 && delRapporter.length === 3 && !!tungRep.ok && !!delaRep.ok,
+  `${r.status} ${JSON.stringify(delt).slice(0, 160)}`);
+ok('det tredje site bliver scannet for alvor, ikke kun forsiden',
+  delaRep.pages_checked >= 2, `pages_checked=${delaRep.pages_checked}`);
+ok('et site der linker sin privatlivspolitik hører ikke «Not found. Add a Privacy Policy page»',
+  delaPrivatliv?.status === 'pass' && /\/om\/privatlivspolitik/.test(delaPrivatliv?.details || ''),
+  delaPrivatliv ? delaPrivatliv.status + ' ' + delaPrivatliv.details : 'sagt ikke');
+ok('et tjek der ikke blev læst, står ikke som et fund',
+  Array.isArray(tungRep.results?.notChecked) && tungRep.not_checked === tungRep.results.notChecked.length
+  && tungRep.failed === tungRep.results.failed.length
+  && !tungRep.results.failed.some(x => /Not checked/i.test(x.details || '')),
+  `not_checked=${tungRep.not_checked} failed=${tungRep.failed}`);
+ok('«ikke læst» får sin egen status, så klienten kan skelne det fra et fund',
+  (tungRep.results.notChecked || []).length > 0 && tungRep.results.notChecked.every(x => x.status === 'unknown'
+    && /Not checked/.test(x.details || '')),
+  JSON.stringify((tungRep.results?.notChecked || []).map(x => [x.key, x.status])));
+ok('alle ni tjek er med i rapporten — fund og ulæste tjek tilsammen',
+  delRapporter.every(x => x.results
+    && x.results.passed.length + x.results.failed.length + (x.results.notChecked || []).length === x.total),
+  JSON.stringify(delRapporter.map(x => [x.url, x.passed, x.failed, x.not_checked, x.total])));
+// Koster et kald med tre URL'er stadig højst 12 ude-kald i alt? Det var hele
+// pointen med det delte budget, og en retfærdig deling må ikke gøre et kald
+// dyrere end det var før.
+ok('delingen gør ikke ét kald dyrere end de 12 kald det må koste',
+  tungFetches - tungFoer <= 12 && delRapporter.every(x => x.pages_checked <= 6),
+  `i alt ${tungFetches - tungFoer} kald til tung.example/tung2.example, pr. rapport ${delRapporter.map(x => x.pages_checked)}`);
+ok('«ikke læst» står ikke i listen over fund, klienten sender videre til kunden',
+  (tungRep.results.notChecked || []).every(x => !tungRep.results.failed.includes(x))
+  && tungRep.results.failed.every(x => x.status !== 'unknown'),
+  `failed=${tungRep.failed} notChecked=${tungRep.not_checked}`);
+// Samme site i et kald for sig selv. Det har **mere** budget, så her får alle
+// ni tjek en chance — men 12 kald er 12 kald, og de gættede stier er der flere
+// end det. Så er svaret ikke «ikke læst», men et fund der **siger fra hvor**: «vi
+// læste 2 af 7 sandsynlige sider». Det er den anden halvdel af rettelsen —
+// dommen skal være så stærk som beviserne, ikke stærkere.
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('dela.example'), ip(30));
+const delaEn = await r.json().catch(() => ({}));
+const delaEnAlle = [...(delaEn.results?.passed || []), ...(delaEn.results?.failed || []), ...(delaEn.results?.notChecked || [])];
+const delaEnFund = (delaEn.results?.failed || []).filter(x => CSC_SIDE_TJEK.includes(x.key));
+ok('et kald for sig selv finder stadig privatlivspolitikken på den linkede sti',
+  r.status === 200 && delaEnAlle.find(x => x.key === 'privacy')?.status === 'pass',
+  JSON.stringify(delaEnAlle.filter(x => x.status !== 'pass').map(x => [x.key, x.status])));
+ok('«Not found» om en juridisk side siger fra hvor mange kandidater der faktisk blev læst',
+  delaEnFund.length > 0 && delaEnFund.every(x => /^Not found\. Add a .+ We checked \d+ of the \d+ pages we expected here\. Check the rest by hand\.$/.test(x.details || '')),
+  JSON.stringify(delaEnFund.map(x => [x.key, x.details])));
+ok('sædningen er sand i begge kald: ét URL lover ikke, at scan alene løser det',
+  delaEnAlle.filter(x => x.status === 'unknown').every(x => !/on its own/.test(x.details || ''))
+  && delRapporter.every(x => (x.results.notChecked || []).every(y => /send one site per call/.test(y.details || ''))),
+  JSON.stringify([...delaEnAlle, ...(tungRep.results.notChecked || [])].filter(x => x.status === 'unknown').map(x => x.details).slice(0, 2)));
 
 // Ingen rute må overlade kæden til runtime'en: så ser måleværnet kun første
 // hop, og et offentligt mål der 302er ind i 169.254.169.254 er igen præcis det

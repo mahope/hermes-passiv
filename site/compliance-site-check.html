@@ -67,7 +67,10 @@
 <style>
   .tool-container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
   .input-group { display: flex; gap: 8px; margin: 24px 0; }
-  .input-group input, .input-group textarea { flex: 1; min-width: 0; padding: 12px 16px; font-size: 16px; font-family: inherit; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; resize: vertical; }
+  /* `border-box` er ikke kosmetik: feltet har 32 px padding og 4 px ramme,
+     så uden den står det 12 px ud over kanten på en 390 px telefon —
+     altså vandret scroll på den side, kunden indsender sit site fra. */
+  .input-group input, .input-group textarea { box-sizing: border-box; flex: 1; min-width: 0; padding: 12px 16px; font-size: 16px; font-family: inherit; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; resize: vertical; }
   .input-group input:focus, .input-group textarea:focus { border-color: #2563eb; }
   .input-group textarea { line-height: 1.4; }
   .input-group button { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
@@ -221,6 +224,11 @@ function esc(s) { var d = document.createElement('div'); d.appendChild(document.
 function getStatusIcon(status) {
   if (status === 'pass') return '<span class="check-status pass">&#10003;</span>';
   if (status === 'warn' || status === 'info') return '<span class="check-status warn">&#9888;</span>';
+  // Et tjek der ikke blev læst, er ikke et rødt kryds. Den gamle kode skrev
+  // «Not found. Add a … page» om sider, scanneren aldrig hentede, fordi kaldets
+  // sidelimit nåede. Nu kommer de som sit eget, og et rødt kryds ville bare
+  // flytte løgnen.
+  if (status === 'unknown') return '<span class="check-status warn">&#8211;</span>';
   return '<span class="check-status fail">&#10005;</span>';
 }
 
@@ -350,7 +358,7 @@ function scan() {
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
     var all = [];
     if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
-    var icons = { pass: 'PASS', warn: 'WARN', info: 'INFO', fail: 'FAIL' };
+    var icons = { pass: 'PASS', warn: 'WARN', info: 'INFO', fail: 'FAIL', unknown: 'NOT CHECKED' };
     all.forEach(function(r) {
       lines.push('- [' + (icons[r.status] || r.status.toUpperCase()) + '] ' + (r.label || r.key) + ' — ' + (r.details || ''));
     });
@@ -475,7 +483,14 @@ function renderResults(rapporter, fejl) {
   html2 += '<div class="score-row">';
   html2 += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
   html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(scannetSide(data))
-    + (data.pages_checked > 1 ? ' &middot; ' + data.pages_checked + ' pages read' : '') + '</div>';
+    + (data.pages_checked > 1 ? ' &middot; ' + data.pages_checked + ' pages read' : '')
+    + (data.not_checked ? ' &middot; ' + data.not_checked + ' not checked' : '') + '</div>';
+  // «2/9 checks passed» uden denne linje læses som «7 fejl». Når scanneren
+  // ikke nåede at læse alle de juridiske sider, skal det stå som sit eget.
+  if (data.not_checked) {
+    html2 += '<p class="check-detail" style="margin:0 0 12px">' + data.not_checked + ' of ' + data.total
+      + ' checks were not completed: this call reads a limited number of pages, and it ran out before every legal page was read. No finding was made about them.</p>';
+  }
   html2 += '</div>';
   if (rapporter.length === 1) {
     html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
@@ -484,7 +499,7 @@ function renderResults(rapporter, fejl) {
 
   // Group results — passed first, then warnings, then failures
   var order = [];
-  var statusOrder = { pass: 0, warn: 1, info: 1, fail: 2 };
+  var statusOrder = { pass: 0, warn: 1, info: 1, unknown: 1, fail: 2 };
   for (var key in data.results) {
     data.results[key].forEach(function(r) { order.push(r); });
   }

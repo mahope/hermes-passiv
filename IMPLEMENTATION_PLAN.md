@@ -1,5 +1,19 @@
 # STATUS
 
+- **Scanneren siger ikke længere «Not found» om sider den aldrig læste.**
+  Fund fra review 30/9 var målt på den levende rute: ét kald med tre sites gav
+  to fulde rapporter og en tredje bygget på forsiden alene — wordpress.org, som
+  både har og linker sin privatlivspolitik, fik «Not found. Add a Privacy
+  Policy page and link it from your footer» og score 22. Rettelsen er tre ting:
+  budgettet er **delt retfærdigt** pr. URL (12 pr. kald, delt 4+4+4 ved tre
+  sites), det bruges **tur for tur** så hvert tjek får mindst to kandidater,
+  og et tjek der ikke nåede igennem sin liste **siger fra hvor**: «We checked 3
+  of the 7 pages we expected here» — eller `status: "unknown"` og
+  `not_checked`, hvis det ikke fik læst en eneste side. Bevis: 6 af portens
+  domme fejler på den gamle kode (dokumenteret i commit-body), 352/352 på den
+  nye. Dertil et fund undervejs: URL-feltet havde `content-box` og stod 12 px
+  ud over kanten på 390 px — altså vandret scroll på indsendelsessiden, målt
+  før/efter i browseren på begge sprog.
 - **Kontrasttjekkeren kører nu inde i den artikel der får hele trafikken.**
   `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside
   med 8 af 18 besøgende (28 d) og **100 % bounce** — alle otte forlod den igen,
@@ -27,6 +41,27 @@
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: ret budgettet på de rapporter, kunden sender videre
+  ceo/deling-pr-url 2026-10-02` — måles på **indhold** på den levende rute, ikke
+  på HTTP 200. Dom 1: `GET /api/compliance-scan?url=` med `mahope.dk\n` +
+  `www.cookiebot.com\n` + `wordpress.org\n` (tre linjer, ét kald) → 200 og
+  `scanned: 3`, og **alle tre** rapporter har `pages_checked` ≥ 2 — den tredje
+  havde `pages_checked: 1` før. Dom 2: wordpress.org's privatlivstjek er `pass`
+  med `https://wordpress.org/about/privacy/` i `details` — før var det
+  `Not found. Add a Privacy Policy page and link it from your footer`. Dom 3:
+  summen af `pages_checked` for de tre rapporter er ≤ 12, og hver rapport har
+  højst sin andel (4). Dom 4: hvert tjek med `status: "unknown"` ligger i
+  `results.notChecked` og **ikke** i `results.failed`, og `passed + failed +
+  not_checked === total` for alle tre. Dom 5: `not_checked` findes i svaret,
+  og ingen `details` med «Not found» mangler «We checked N of the M pages we
+  expected here», når listen ikke gennemgik alle kandidater. Dom 6: UI'en på
+  `/compliance-site-check` og `/da/compliance-site-check` viser «N not checked»
+  / «N ikke tjeket» i scoren, og et `unknown`-punkt er **gult** (–), ikke rødt
+  (✗). Dom 7: `getStatusIcon` og `statusOrder` er på plads i begge filer, og
+  `pageerror` er 0. Dommen er `node tests/stripe-worker.test.mjs` (352/352,
+  heraf 6 domme der fejler på `main`s worker) + `node
+  tests/scan-clients.test.mjs` (392/392) + `python3 tools/quality_gate.py` +
+  missionens gate.
 - `VERIFICÉR DEPLOY: kontrasttjekkeren indeni de to artikler
   ceo/kontrast-tjekker-i-artiklen 2026-10-02` — måles på **indhold**, ikke på
   HTTP 200. Dom 1: `/blog/text-on-image-contrast-check` og
@@ -298,7 +333,11 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    Dertil fundet undervejs: felterne var 192 px høje på telefon, fordi en delt
    `.ti-field > *`-regel gav kolonnebørnene en *højde* på 12 rem. WCAG-formlen
    lå i fire kopier; den ligger nu i `site/text-on-image-core.js`.
-8. **Free mod Pro på ét sted.** Hvem: alle der køber. Tal: købsknapper pr.
+8. ~~Rettfærdigt budget pr. rapport, og et fund der siger fra.~~
+   **Leveret 2/10** — se fundet fra review 30/9 i STATUS. Datagrund: målt på
+   den levende rute, 3 sites i ét kald → rapport 3 med `pages_checked: 1`,
+   `score: 22` og fem «Not found»-fund om sider wordpress.org har.
+9. **Free mod Pro på ét sted.** Hvem: alle der køber. Tal: købsknapper pr.
    Pro-side (baseline: målt af `check_tool_sections.py`). Accept: hver Pro-side
    har den samme to-rækkers-tabel, og beløbet er læst fra
    `tools/stripe_catalog.json` som på `/scan`. Datagrund: 19 af 84 købsknapper
