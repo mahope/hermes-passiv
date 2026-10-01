@@ -1,9 +1,13 @@
 # STATUS
 
+- **Page Profile Pro kunne ikke aktiveres overhovedet.** `page-profile --activate`
+  fik **403 Cloudflare Error 1010** på alle fire felter, fordi `urllib` sender
+  `Python-urllib/3.x` som User-Agent. Rettet 1/10: vi udgiver `1.2.1`, og 1.2.0
+  lå stadig i CDN'en med 200 og får en 301.
 - **AI-siden er død for alle besøgende.** Målt 1/10: `POST /api/compliance-ai`
   svarer **503** «AI service not configured», fordi `OPENROUTER_API_KEY` mangler
-  på workeren (`_worker.js:733`). Klienten håndterer 503 pænt, så intet fejler
-  hårdt — men funktionen er publiceret og gør intet. Én secret, se ❓.
+  på workeren (`_worker.js:733`). Klienten håndterer 503 pænt, men funktionen er
+  publiceret og gør intet. Én secret, se ❓.
 - **Købsvejen havde 2 huller, begge rettet 1/10:** en tabt licensnøgle krævede
   en mail til Mads (nu `ceo/selvbetjent-noegleopslag`), og `/api/checkout`
   svarede med Clean Copy Pro's link for ethvert produkt den ikke genkendte
@@ -11,21 +15,31 @@
 - **Det der lå i live, var *bygget*, ikke skrevet** — 3 gange samme uge: 8
   generatorer døde i browseren, 37 sider uden donationslinje, 44 artikler med
   dobbelt værktøjsliste. `check_inline_js` sagde «problems: 0» fordi den kun
-  læste `site/`; den dømmer nu begge træer.
+  læste `site/`. **Målt 1/10 i rigtig browser:** 0 konsolfejl på 14 sider, 197
+  anker-referencer dømt, værktøjerne virker på sit eget input.
 - **En regel skrevet ned uden en dom der kan fejle, er den dyre fejlform:** CEO-kø
   punkt 0 rettede *sisyv* klienter og den tiende lå ved siden af, og opgave 42s
-  eget acceptkriterium gav 0 linjer for enhver plan (arkivet). Næste batch skal
-  spørge, om en opgave nævner et **antal** uden at liste filerne.
-- **Rygraden er grøn:** `python3 tools/quality_gate.py` — 120 steps, hvoraf
-  `check_plan_status` er ny. Vores egne priser er målt rene 1/10: alle 15
-  `buy.stripe.com`-links matcher kontrakten, alle 84 købsknapper er dømt mod
-  `tools/stripe_catalog.json`, nul afviger (`ceo/egen-pris-port`).
+  eget acceptkriterium gav 0 linjer for enhver plan. Næste batch skal spørge, om
+  en opgave nævner et **antal** uden at liste filerne. Gaten: 120 steps.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. **Historie:** `docs/plan-arkiv.md` (append-only —
   grep i stedet for at læse hel).
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: urllib blokeret af Cloudflare, page-profile 1.2.1 ceo/urllib-blokeres-af-cloudflare 2026-10-01 09:52`
+  — live `build-info.json` skal bære merge-sha'en på de 3 deployede domæner, og
+  **indhold**: live `/downloads/page-profile/page_profile.py` skal have
+  `LICENSE_USER_AGENT = f"page-profile/1.2.1 (mahope.tools)"` og en
+  `"User-Agent": LICENSE_USER_AGENT`-header i `_license_request` (i dag er den
+  1.2.0 uden header); `/downloads/page-profile/page-profile-1.2.1.tar.gz` skal
+  svare 200 med de 4 kildefiler fra den kanoniske kode; den gamle
+  `page-profile-1.2.0.tar.gz` skal svare **301** til 1.2.1 (målt 1/10 kl. 07:26
+  UTC som 200 med 13588 byte, altså stadig hentbar med fejlen); `/page-profile` og
+  `/da/page-profile` skal linke på 1.2.1. *Efterprøves ikke:* et rigtigt køb —
+  404 fra licensserveren er det næste svar efter Cloudflare-laget, og det kan
+  ikke fremstilles uden en gyldig Stripe-nøgle.
 
 - `DEPLOY OK 2026-10-01` — `ceo/perioden-ved-prisen` (`00817f5`), målt på
   **indhold** mod live der bærer præcis `00817f5` på alle 3 deployede domæner
@@ -320,3 +334,10 @@
     selvtesten, alle syntetiske mutationer. Gaten 118 → 120 steps, og
     `IMPLEMENTATION_PLAN.md` kom i path-filteret — `test_deploy_workflow`
     fangede præcis den udeladelse, før den blev rettet. Se arkiv.
+
+43. ~~**En betalt kunde kunne ikke aktivere sin licens.**~~ **FÆRDIG 1/10,
+    `ceo/urllib-blokeres-af-cloudflare`.** `page-profile --activate` fik 403
+    Cloudflare Error 1010 `browser_signature_banned` på **alle fire** felter,
+    fordi `urllib` sender `Python-urllib/3.x`. Beviset: samme krop med
+    `User-Agent: page-profile/1.2.0` giver 404 fra licensserveren, så
+    serversiden nås fint. To tests målte røde mod den gamle kode først. Se arkiv.

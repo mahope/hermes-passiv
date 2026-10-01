@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "page-profile"
-version = "1.2.0"
+version = "1.2.1"
 description = "Zero-dependency web page profiler — HTTP status, meta tags, OG, JSON-LD, headings, alt text, security headers in one command"
 readme = "README.md"
 requires-python = ">=3.8"

@@ -28,6 +28,18 @@ CANON = ROOT / "tools/clean_copy_license.js"
 # frem for i git-historikken, fordi et vidne fra HEAD er grønt kun før commit.
 WITNESS = ROOT / "tools/fixtures/compliance-report-pre51-licens.html"
 
+# Opgave 43: den rigtige `page_profile.py` **før** Cloudflare-rettelsen. Beviset
+# på den fejlklasse der næsten slap igennem: filen havde allerede en
+# `User-Agent` — på sin GET af en side — så en regel der ledte efter strengen i
+# hele filen var grøn på præcis den kode den skulle fange. Kun derfor skal
+# selftesten dømme det *rigtige* gamle kode, ikke en konstrueret fejlform.
+#
+# Læses fra en fil i træet, aldrig fra `git show HEAD:` — samme regel som
+# opgave 52: et vidne ud af bevægelig tilstand er grønt før commit og rødt
+# bagefter, og dræber deployen i stedet for at advare om porten.
+UA_WITNESS_PATH = ROOT / "tools/fixtures/page-profile-pre-cloudflare.py"
+UA_WITNESS = UA_WITNESS_PATH.read_text(encoding="utf-8") if UA_WITNESS_PATH.is_file() else ""
+
 # `HEAD:` er bygget, så hverken reglen eller dens egen kode matcher dens mønster.
 HISTORY_REF = "HEAD" + ":"
 
@@ -167,6 +179,10 @@ NOT_CLIENTS = {
     # publiceret tekst — men kalder den ikke. Gaten nævner API'en fordi den
     # afslører løgner, hvilket er modsatningen af at være klient.
     "tools/check_product_copy.py",
+    # Opgave 43: vidnet til Cloudflare-reglen. Det er den rigtige gamle
+    # `page_profile.py`, som `find_callers` ellers ville dømme som en ny
+    # licensklient — den er netop den kode porten skal finde fejlen i.
+    "tools/fixtures/page-profile-pre-cloudflare.py",
     # Opgave 37: porten over nøgleopslagssiden. Den læser den publicerede
     # klient for at dømme at den kalder `/api/license/lookup` — den *er* den
     # klients kode, ikke en kunde indlæser den.
@@ -411,12 +427,88 @@ def check_seat_release(callers: dict[str, str]) -> list[str]:
     return problems
 
 
+def script_license_clients() -> list[str]:
+    """Licensklienter der *ikke* kører i en browser og derfor skal sige hvem de er.
+
+    Afledt af CLIENTS, ikke en navneliste — samme regel som
+    `browser_license_clients()`. En `.py`-klient kalder licensserveren fra
+    en terminal, og Python's `urllib` sender `Python-urllib/3.x`, som
+    Cloudflares browser-tjek afviser med **403 Error 1010
+    «browser_signature_banned»**. Målt 1/10: `page-profile --activate` fik
+    403 på alle fire felter, så en betalt kunde aldrig kunne aktivere sin
+    nøgle. En `.js`-klient i en side eller udvidelse har browserens egen
+    User-Agent og kan ikke rammes, så kun ikke-browser-klienter dømmes.
+    """
+    return sorted(
+        rel for rel in CLIENTS
+        if rel not in EXCEPTIONS and rel not in NOT_CLIENTS
+        and rel.endswith(".py")
+    )
+
+
+def _request_blocks(body: str) -> list[str]:
+    """Teksten for hvert `Request(`-kald, balanceringen afsluttet.
+
+    Nødvendigt fordi en User-Agent på *et andet* kald ikke tæller:
+    `page_profile.py` havde allerede `User-Agent` på sin GET af en side, så en
+    port der bare ledte efter strengen i hele filen var grøn på præcis den kode
+    den skulle have fanget. Målt 1/10 mod `origin/main`.
+    """
+    blocks = []
+    for match in re.finditer(r"\bRequest\s*\(", body):
+        depth, i = 1, match.end()
+        while i < len(body) and depth:
+            if body[i] == "(":
+                depth += 1
+            elif body[i] == ")":
+                depth -= 1
+            i += 1
+        blocks.append(body[match.end():i - 1])
+    return blocks
+
+
+def check_user_agent(overrides: dict[str, str] | None = None) -> list[str]:
+    """En terminalklient skal sende en User-Agent, ellers stopper Cloudflare den."""
+    problems: list[str] = []
+    for rel in script_license_clients():
+        text = (overrides or {}).get(rel) or (ROOT / rel).read_text(encoding="utf-8")
+        body = strip_comments(text)
+        if "/api/license" not in body:
+            continue
+        # Kun et rigtigt netværkskald. `site-icons/site_icons.py` nævner
+        # `/api/license/validate` i sin egen docstring og siger at en
+        # implementation engang skal bruge API'en — den kalder det ikke, den
+        # tjekker en lokal nøglefil, så den har hverken brug for en
+        # User-Agent eller et kald. Uden denne betingelse gjorde porten den
+        # fil rød på en omtale, hvilket er den fejlklasse opgave 20, 23, 26,
+        # 38, 51 og 52 netop handlede om.
+        if not re.search(r"\burlopen\b|\bRequest\s*\(|\bhttpx\b|\brequests\.|"
+                         r"\burlretrieve\b|\bhttp\.client\b", body):
+            continue
+        # Kun det kald der *rammer licensserveren*. En User-Agent et andet sted
+        # i filen er ikke nok — Cloudflare afviser præcis det kald der mangler.
+        license_calls = [block for block in _request_blocks(body)
+                         if "/api/license" in block or "LICENSE_API" in block]
+        if not license_calls:
+            continue  # kaldet bygges et andet sted end i et Request-literal
+        if any(re.search(r'["\']User-Agent["\']\s*:', block) for block in license_calls):
+            continue
+        problems.append(
+            f"{rel}: kalder /api/license fra en terminal uden User-Agent. "
+            "urllib sender 'Python-urllib/3.x', som Cloudflare afviser med "
+            "403 Error 1010 — kunden kan ikke aktivere sin licens. "
+            "Sæt en User-Agent med dit eget produktnavn."
+        )
+    return problems
+
+
 def run() -> list[str]:
     canon = CANON.read_text(encoding="utf-8")
     if "clean-copy-pro" not in canon or "7 * 24 * 60 * 60 * 1000" not in canon:
         return ["tools/clean_copy_license.js: den kanoniske regel mangler product eller syvdagesregel"]
     return (check_callers(find_callers()) + check_exceptions()
             + check_copies(canon) + check_cache_rule()
+            + check_user_agent()
             + check_seat_release(find_callers()))
 
 
@@ -453,7 +545,49 @@ def self_test() -> int:
         # fejlform eller afhænge af hvordan den rette kode ser ud i dag.
         ("en betalt klient uden syvdagesregel",
          check_cache_rule({"site/compliance-report.html": witness_text})),
+        # Cloudflare Error 1010: `page-profile --activate` fik 403 på alle fire
+        # felter, så en betalt kunde kunne ikke aktivere sin nøgle. Beviset er
+        # den RIGTIGE kode før rettelsen — den kalder `_license_request` med
+        # kun to headers — ikke en konstrueret fejlform.
+        ("en terminalklient uden User-Agent",
+         check_user_agent({"page-profile/page_profile.py":
+                           "LICENSE_API = 'https://mahope.tools/api/license/'\n"
+                           "req = Request(f'{LICENSE_API}activate',\n"
+                           "    headers={'Content-Type': 'application/json'})\n"
+                           "urlopen(req)\n"})),
+        # Beviset på den RIGTIGE kode før rettelsen, ikke en konstrueret
+        # fejlform. Det er den eneste indpakning der kan fange den falske grøn
+        # fra den første version af denne regel: `page_profile.py` havde
+        # allerede `User-Agent` på sin GET af en side, så en port der ledte
+        # efter strengen i hele filen var grøn på præcis den kode den skulle
+        # fange. Derfor dømmes kun det `Request(`-kald der rammer
+        # licensserveren. Kilden læses fra `origin/main` af selftesten.
+        ("den rigtige kode før Cloudflare-rettelsen (User-Agent kun på GET'en)",
+         check_user_agent({"page-profile/page_profile.py": UA_WITNESS})),
     ]
+
+    # Samme negative kontrol for User-Agent-reglen: en klient der kun *nævner*
+    # API'en i en docstring skal ikke fejles. Det er præcis den rigtige kode i
+    # `site-icons/site_icons.py`, som siger at en implementation engang skal
+    # bruge licensserveren — porten ville ellers straffe den for at forklare
+    # sig selv.
+    for name, probe in [
+        ("en klient der kun nævner API'en i en docstring",
+         "def _has_pro_license():\n"
+         '    """Tjek nøglefilen lokalt.\n'
+         '    Den rigtige implementation bruger\n'
+         '    the mahope.tools license API (/api/license/validate)."""\n'),
+        ("en terminalklient der har en User-Agent",
+         "req = Request('https://mahope.tools/api/license/activate',\n"
+         '    headers={"User-Agent": "site-icons/1.0"})\n'
+         "urlopen(req)\n"),
+    ]:
+        got = check_user_agent({"page-icons/site_icons.py": probe})
+        if got:
+            print(f"FELO {name} blev fejlet: {got[0]}")
+            failures += 1
+        else:
+            print(f"OK   {name}: ikke fejlet")
 
     failures = 0
     for name, problems in scenarios:

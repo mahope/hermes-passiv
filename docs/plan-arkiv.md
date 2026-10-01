@@ -3418,3 +3418,49 @@ på syntetiske planer (11 kontroller), så de kan fejle.
   `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
   desktop-apps der stadig ringer til Lemon Squeezy.
 - **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
+
+## 2026-10-01 — opgave 43: en betalt kunde kunne ikke aktivere sin licens
+
+**Fejlen.** `page-profile --activate` svarede **403 Cloudflare Error 1010
+«browser_signature_banned»** på alle fire felter, og klienten sagde
+«License service returned HTTP 403.» — altså læst som om køberens egen nøgle
+var ugyldig. Årsagen er ikke licensen: `urllib` sender `Python-urllib/3.x` som
+User-Agent, og Cloudflares browser-tjek afviser den signatur *før* requestet
+når workeren. Beviset er målt i samme time:
+
+    uden User-Agent  -> 403 Error 1010 browser_signature_banned
+    User-Agent: page-profile/1.2.0 -> 404 «License key not found»
+
+altså serversiden nås fint, og det er udelukkende klientens signatur der
+stoppes. Konsekvensen er den værste slags: kunden har betalt $19, og den eneste
+vej til Pro-funktionerne (`--compare`, `--batch`, `--html-report`) kræver en
+licensserver der svarer. Den lå også stadig som 200 i CDN'en (`curl -sI` 1/10
+kl. 07:26 UTC, 13588 byte), altså kunne en kunde hente den brudte udgave.
+
+**Rettelsen.** `LICENSE_USER_AGENT = f"page-profile/{__version__} (mahope.tools)"`
+på licenskaldet, og `_browser_ban_message()` giver Cloudflares 1010/1020 en egen
+sætning der siger at nøglen *ikke* blev tjekket, og at det er klienten der er
+for gammel — ikke at nøglen er ugyldig. Uversioneret til 1.2.1, fordi
+1.2.0-arkivet ikke må genudgives med andre bytes: det ville få checksummer til
+at lyve. Den gamle sti får en 301 i `RETIRED_DOWNLOADS` og en linje i
+`tools/retired_downloads.json`, præcis som `eaa-scanner-desktop-src-1.3.3.zip`
+gjorde, da den lå med en løgn.
+
+**Dommen.** To tests i `page-profile/test_page_profile.py`, begge målt røde mod
+den gamle kode før rettelsen: den ene dømmer at `activate` *og* `validate`
+sender en User-Agent der ikke er `Python-urllib`, den anden at et 1010-svar
+ikke læses som en licensfejl. Ny dom i `tools/check_license_clients.py`
+(`check_user_agent`), afledt fra `CLIENTS` og ikke en navneliste: kun `.py`-klienter
+dømmes, fordi en `.js`-klient i en side eller udvidelse har browserens egen
+User-Agent og ikke kan rammes. Selvtesten fik **tre** tilfælde — reglen fangede
+først `site_icons.py` på sin *docstring*, der nævner `/api/license/validate` og
+siger at en implementation engang skal bruge API'en, men ikke kalder den. Det er
+den fejlklasse opgave 20, 23, 26, 38, 51 og 52 netop handlede om, så reglen kræver
+nu et rigtigt netværkskald (`urlopen`, `Request(`, `httpx`, `requests.`, …) før
+den dømmer noget. To negative kontroller beviser at en docstring og en klient med
+User-Agent begge er grønne. 21/21 selvtest, porten grøn, gaten 120 steps,
+`stripe-worker` 298/298, `page-profile` 13/13.
+
+**Målt i browser 1/10** (inden fundet, som kontekst for at resten virker): 0
+konsolfejl på 14 sider, 197 anker-referencer dømt i dist, og
+`/text-on-image-checker` gav et rigtigt PASS-svar på sit eget uploadede billede.

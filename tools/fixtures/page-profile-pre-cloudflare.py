@@ -29,17 +29,13 @@ from urllib.error import URLError, HTTPError
 from urllib.parse import urlparse, urljoin
 from collections import OrderedDict
 
-__version__ = "1.2.1"
+__version__ = "1.2.0"
 
 LICENSE_API = "https://mahope.tools/api/license/"
 LICENSE_PRODUCT = "page-profile-pro"
 LICENSE_BUY_URL = "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04"
 LICENSE_FILE = os.path.join(os.path.expanduser("~"), ".page-profile-license")
 LICENSE_CACHE_SECONDS = 7 * 24 * 60 * 60
-# Cloudflare afviser urllib's `Python-urllib/3.x` med 403 Error 1010, så
-# klienten skal sige hvem den er. Defineret her, ikke inline i kaldet, så
-# `_license_request` og `require_pro` ikke kan glide fra hinanden.
-LICENSE_USER_AGENT = f"page-profile/{__version__} (mahope.tools)"
 _LICENSE_KEY_PATTERN = re.compile(r"^[a-f0-9]{32}$")
 
 
@@ -93,29 +89,6 @@ def _license_error_message(payload, fallback: str) -> str:
     return fallback
 
 
-def _browser_ban_message(payload, status: int):
-    """Cloudflare Error 1010 er en klientfejl, ikke en licensfejl.
-
-    Cloudflares afvisning har hverken `error` eller `reason`, så uden den her
-    blev den læst som «License service returned HTTP 403.» — altså at køberens
-    egen nøgle var ugyldig, når det i virkeligheden var deres klient der blev
-    stoppet ved kanten. Målt 1/10. Den skal pege på den der kan fjerne
-    forhindringen: den User-Agent der mangler.
-    """
-    if not isinstance(payload, dict):
-        return None
-    code = payload.get("error_code")
-    if status != 403 or code not in (1010, 1020):
-        return None
-    return (
-        f"Cloudflare blocked this request (error {code}) before it reached the "
-        f"license service — your license key was not checked. This is a "
-        f"page-profile client problem, not a problem with your key. Update to "
-        f"page-profile {__version__} or newer, which sends a "
-        f"User-Agent: {LICENSE_USER_AGENT}."
-    )
-
-
 def _license_request(action: str, key: str, device_id: str) -> dict:
     body = json.dumps({
         "license_key": key,
@@ -125,18 +98,7 @@ def _license_request(action: str, key: str, device_id: str) -> dict:
     request = Request(
         f"{LICENSE_API}{action}",
         data=body,
-        headers={
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            # Cloudflare's browser check afviser urllib's egen
-            # `Python-urllib/3.x` med **403 Error 1010
-            # «browser_signature_banned»** — målt 1/10 på alle fire felter,
-            # så `page-profile --activate` aldrig kom ud over kallet og Pro var
-            # ubrugeligt for en køber. Samme krop med en User-Agent her giver
-            # 404 fra licensserveren, altså serversiden nås fint. Cloudflare
-            # har intet imod at vide hvem der spørger.
-            "User-Agent": LICENSE_USER_AGENT,
-        },
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
         method="POST",
     )
     try:
@@ -147,8 +109,7 @@ def _license_request(action: str, key: str, device_id: str) -> dict:
             payload = json.loads(exc.read().decode("utf-8"))
         except (OSError, ValueError, TypeError):
             payload = {}
-        message = _browser_ban_message(payload, exc.code) or _license_error_message(
-            payload, f"License service returned HTTP {exc.code}.")
+        message = _license_error_message(payload, f"License service returned HTTP {exc.code}.")
         if exc.code >= 500:
             raise LicenseServiceUnavailable(message) from exc
         raise LicenseError(message) from exc

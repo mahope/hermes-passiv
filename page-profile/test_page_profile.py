@@ -187,6 +187,56 @@ class PageProfileLicenseTests(unittest.TestCase):
                 self.assertIn("mahope.tools", text)
                 self.assertTrue("seven days" in text or "syv dage" in text)
 
+    def test_every_license_call_identifies_itself(self):
+        """Cloudflare's browser check bans the stdlib default User-Agent.
+
+        Målt 1/10: `urllib` sender `Python-urllib/3.x`, og Cloudflare svarer
+        **403 Error 1010 «browser_signature_banned»** på *alle* fire felter, så
+        `page-profile --activate` aldrig kom ud over kallet. Samme nøgle med
+        `User-Agent: page-profile/1.2.0` giver 404 fra licensserveren, altså
+        serversiden nås fint. Uden denne header er Pro ubrugeligt for en køber.
+        """
+        for action, call in (("activate", page_profile.activate), ("validate", None)):
+            with self.subTest(action=action):
+                if action == "validate":
+                    self.write_state(validated_at=time.time())
+                    with patch.object(page_profile, "urlopen", return_value=success(
+                            {"ok": True, "valid": True, "expires_at": None})) as urlopen:
+                        page_profile.require_pro("batch mode")
+                else:
+                    with patch.object(page_profile, "urlopen", return_value=success(
+                            {"ok": True, "activated": True})) as urlopen:
+                        call(VALID_KEY)
+                request = urlopen.call_args.args[0]
+                agent = request.get_header("User-agent") or ""
+                self.assertTrue(agent, f"{action} sender ingen User-Agent")
+                self.assertNotIn("Python-urllib", agent)
+                self.assertIn("page-profile/", agent)
+
+    def test_browser_ban_is_not_reported_as_a_license_problem(self):
+        """403 Error 1010 er Cloudflare, ikke licensen — den skal sige det.
+
+        Cloudflares svar har ingen `error`-nøgle, så `_license_error_message`
+        førhen endte på «License service returned HTTP 403.», som læser som
+        «din nøgle er ugyldig». Kunden skal få at vide at det er klienten.
+        """
+        banned = HTTPError(
+            "https://mahope.tools/api/license/activate", 403, "Forbidden", {},
+            io.BytesIO(json.dumps({
+                "error_code": 1010,
+                "error_name": "browser_signature_banned",
+                "error_category": "access_denied",
+                "detail": "The site owner has blocked access based on your browser's signature.",
+            }).encode()),
+        )
+        with patch.object(page_profile, "urlopen", side_effect=banned), redirect_stderr(
+            io.StringIO()
+        ) as stderr, self.assertRaises(SystemExit):
+            page_profile.activate(VALID_KEY)
+        message = stderr.getvalue()
+        self.assertIn("1010", message)
+        self.assertIn("page-profile/", message)
+
     def test_legacy_key_format_and_generator_are_removed(self):
         source = MODULE_PATH.read_text(encoding="utf-8")
         self.assertNotIn("PPRO-", source)

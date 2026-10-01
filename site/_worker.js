@@ -82,9 +82,16 @@ export default {
     //
     // 1.3.3 er den anden slettede fil, der stadig svarede 200: dens index.html
     // lovede "$19/year" for et produkt uden product_key (opgave 37/38).
+    //
+    // 1.2.0 er den tredje, og den var værre: `page-profile --activate` blev
+    // stoppet af Cloudflare med 403 Error 1010, fordi klienten sende
+    // `Python-urllib/3.x` som User-Agent. Målt 1/10 kl. 07:26 UTC — stadig 200
+    // med 13588 byte, altså en køber kunne hente den udgave og aldrig aktivere
+    // sin nøgle. 1.2.1 sender en User-Agent, så den gamle fil skal pege på den.
     const RETIRED_DOWNLOADS = {
     '/downloads/clean-copy-firefox-v1.5.3.zip': '/downloads/clean-copy-firefox-v1.5.4.zip',
     '/downloads/eaa-scanner-desktop-src-1.3.3.zip': '/downloads/eaa-scanner-desktop-src-1.3.4.zip',
+    '/downloads/page-profile/page-profile-1.2.0.tar.gz': '/downloads/page-profile/page-profile-1.2.1.tar.gz',
     };
     if (RETIRED_DOWNLOADS[path]) {
       return Response.redirect(new URL(RETIRED_DOWNLOADS[path], request.url).toString(), 301);
