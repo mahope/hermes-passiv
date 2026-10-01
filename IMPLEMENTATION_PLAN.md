@@ -1,5 +1,20 @@
 # STATUS
 
+- **`/api/compliance-ai` er død for alle besøgende.** Målt 1/10 på live:
+  `POST https://mahope.tools/api/compliance-ai` svarer **503** `AI service not
+  configured`, fordi `env.OPENROUTER_API_KEY` ikke er sat på workeren
+  (`_worker.js:733`). Siden håndterer 503 ordentligt («The server is
+  temporarily unavailable»), så ingen klient fejler hårdt — men den AI-side
+  artiklerne linker til sælger intet, og det er en funktion der er *mentioned*,
+  ikke betalt. En secret på workeren, se ❓.
+- **Næste samme fejlform lå i købsruten** og er rettet 1/10: `/api/checkout`
+  svarede med Clean Copy Pro's betalingslink for *ethvert* produkt den ikke
+  genkendte, også `?product=deskuptime-pro` — den `product_key` Stripe selv
+  bruger. Se opgave 38.
+- **De øvrige 20 API-ruter er målt levende** 1/10 (se opgave 38 og arkivet):
+  ingen 5xx. `/api/url-inspect`, `/api/header-check`, `/api/compliance-scan`
+  og `/api/profile` læser alle `?url=` i *query-stringen*, ikke i JSON-kroppen —
+  det er konsistent med klienterne, målt på live med 200.
 - **En køber der mistede sin licensnøgle skulle skrive til Mads.** Målt 1/10:
   `/api/license/lookup` er fuldt implementeret, ratelimited og testet (5 af 5
   opslag grønne i `stripe-worker.test.mjs`), og **ingen side kaldte den** —
@@ -13,8 +28,8 @@
   knap, og `check_buyable` at et købsklart produkt sælges. Ingen dømmer at et
   *support*-endpoint har en klient — og support er præcis den udgift missionen
   forbyder. Samme fejlform som de fund, de lukker: en påstand uden dom.
-- **Ryggraden er grøn:** `python3 tools/quality_gate.py` — 113 steps (nu 114
-  med `license-lookup-page`). De fire kommandoer missionen navngiver er en
+- **Ryggraden er grøn:** `python3 tools/quality_gate.py` — 115 steps (var 114
+  før `checkout-route`). De fire kommandoer missionen navngiver er en
   delmængde; se opgave 36 for hvorfor kun de er for få. Mål: `gh run list -L 1`
   grønnest i starten af hver iteration.
 - **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
@@ -36,14 +51,24 @@
   rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
   batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
   filerne — antallet er ikke listen.
-- **`❓ Til Mads` nederst:** `STATS_TOKEN`, `bugbottle.dev`'s domæne,
-  banner-placering på 180 sider, og de to desktop-apps der stadig ringer til
-  Lemon Squeezy.
+- **`❓ Til Mads` nederst:** `OPENROUTER_API_KEY`, `STATS_TOKEN`,
+  `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
+  desktop-apps der stadig ringer til Lemon Squeezy.
 - **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
 
 
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: ceo/checkout-ruten-kan-vaere-forskrevet 2026-10-01` — mål på
+  indhold, ikke på HTTP-status:
+  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
+  2. `GET https://mahope.tools/api/checkout?product=deskuptime-pro` svarer 200
+     med `"product":"deskuptime-pro"` og **DeskUptimes** link
+     `https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` — før rettelsen svarede den
+     200 med `clean-copy-pro` og Clean Copys link.
+  3. `GET /api/checkout?product=eucomply-pro` og `?product=` (tom) svarer **400**
+     med `Unknown or missing product`, ikke 200 med Clean Copy.
 
 - `DEPLOY OK 2026-10-01` — begge 429-rettelser (`ceo/429-er-sendeloeende-paa-tak-siden`
   + `ceo/429-gate-tak-siden`, `70ec8c4`). Målt på indhold: `build-info.json` bærer
@@ -181,6 +206,13 @@
     hvoraf fire er røde mod den gamle kode (målt i klon). Se STATE.
 
 - `❓ Til Mads`:
+  - **🔴 `OPENROUTER_API_KEY` mangler på workeren — AI-siden er død for alle.**
+    Målt 1/10: `POST /api/compliance-ai` svarer **503** «AI service not
+    configured» (`_worker.js:733` læser `env.OPENROUTER_API_KEY`). Klienten
+    håndterer det pænt, så intet er brudt — men `/compliance-ai` er en
+    publiceret funktion, som artikler på både EN og DA linker til, og den gør
+    intet. En secret på workeren. **Alternativ:** hvis AI'en ikke skal være
+    permanent, skal siden sige at funktionen er i beta og ikke lover et svar.
   - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** De blev skudt ind under overskriften på hele bloggen i en tidligere iteration. Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har bedt om — jeg gør ikke det ene frem for det andet i det større format.
   - **🔴 `STATS_TOKEN` på workeren.** Én linje, én secret, og så kan konvertering måles i stedet for gættes. Uden den er `/api/stats` 401, og opgave 5 og 8 bygger på tal, der ikke er besøg.
   - **🔴 `bugbottle.dev` ligger på en server, vi ikke deployer.** `https://bugbottle.dev/build-info.json` svarer **404 fra `nginx`**, ikke Cloudflare, mens de tre andre domæner bærer alle samme sha. To veje: (a) domænet skal på Cloudflare Pages → opsæt `bugbottle-dev`-projektet, så tilføjer jeg domænet til matrixen og fjerner undtagelsen i samme commit; (b) domænet er ikke vores at udgive → det skal ud af `TRACKING_DOMAINS`, så `traffic_status` bliver ærlig `ok` for de tre vi faktisk deployer.
@@ -317,3 +349,35 @@
     aldrig blev 44 px. Begge rettet før commit; 429-teksten «the limit resets
     when the hour changes» er ikke antaget — `_worker.js:3617` tømmer tælleren på
     `Math.floor(Date.now()/3600000)`, altså hver time.
+
+38. ~~**Købsruten svarede med et andet produkt end det spurgte på.**~~ **FÆRDIG
+    1/10, `ceo/checkout-ruten-kan-vaere-forskrevet`.** `/api/checkout` er den
+    eneste rute der udsteder et betalingslink, og dens ene linje var
+    `which = … ? 'pp' : … ? 'du' : 'cc'`. Den forstod **kun** de korte former, så
+    `?product=deskuptime-pro` — den `product_key` Stripe selv bruger — faldt
+    gennem til `'cc'` og svarede med **Clean Copy Pro's** link, pris og
+    produktnavn. Samme fejl for ethvert ukendt produkt: ruten svarede aldrig
+    «det kender jeg ikke», kun et andet produkt. Målt 1/10 på den gamle kode:
+    20 røde domme, bl.a. `deskuptime-pro svarer med sit eget produktnavn — fik
+    clean-copy-pro`. Ruten har ingen klient og ingen test, så ingen port kunne
+    se det.
+    Rettet: `?product=` tager nu den `product_key` fra kontrakten
+    (`clean-copy-pro` / `deskuptime-pro` / `page-profile-pro`) plus de gamle
+    korte former; ukendt eller manglende produkt er **400** med listen af
+    gyldige nøgler. Svaret fik `price_usd` + `billing` (`yearly`/`once`), så en
+    kalder ikke skal gætte om «$19/year» er et abonnement — de to var håndskrevne
+    i workeren uden at være dømt mod `tools/stripe_catalog.json`. Et `OPTIONS`
+    får 204 (ruten lovede det i `Access-Control-Allow-Methods`), og 400-svaret
+    gengiver ikke længere kalderens egen tekst på en rute med CORS `*`.
+    Ny port `tests/checkout-route.test.mjs` (43 kontroller) dømmer produktnavn,
+    link, beløb og periode pr. produkt mod kontrakten, at de tre svarer med tre
+    forskellige links, at ni uvedkommende produkter + en manglende parameter får
+    400 uden købslink, at KV-overstyringen stadig virker og kun rammer sit eget
+    produkt, og at CORS er åben. Fire mutationer målt røde: den gamle kode (20),
+    $19→$29 (2), engangspris meldt som årlig (1) og to links byttet om (2).
+    Egen-diff-review fandt de to ting jeg rettede bagefter: det reflekterede
+    input og det manglende preflight. Gaten `deploy-workflow` fandt selv den
+    tredje: den nye testfil manglede i `deploy-sites.yml`'s path-filter.
+    *Bemærk:* `?product=CC` (store bogstaver) er **ikke** en fejl — det er det
+    samme produkt skrevet en anden måde, så porten skelner bevidst mellem «ukendt
+    produkt» og «andet skrivemåde». Se arkiv.

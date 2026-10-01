@@ -262,6 +262,7 @@ on:
       - 'tests/license-lookup.test.mjs'
       - 'tests/scan-clients.test.mjs'
       - 'tests/tracking-worker.test.mjs'
+      - 'tests/checkout-route.test.mjs'
       - 'test.js'
       # Licenskatalogen og kontrakten definerer priserne; `products/` er de
       # betalte filer `check_private_content.py` holder ude af dist.

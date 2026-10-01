@@ -2936,3 +2936,73 @@ Selvtesten 19/19.
 lifetime, 404, 429, 503, og en nøgle på `<img src=x onerror=alert(1)>`):
 vandret overflow 0, ingen JS-fejl, ingen `<img>` i DOM'en, og href bliver `/`
 ved `javascript:`. Skærmbilleder i `/tmp/ui-lookup/`.
+
+## Opgave 38 — købsruten kunne svare med et andet produkt (1/10)
+
+**Fundet.** `/api/checkout` er den eneste rute i `_worker.js` der udsteder et
+Stripe-betalingslink, og den havde to problemer på samme linje:
+
+```js
+const which = url.searchParams.get('product') === 'pp' ? 'pp'
+  : url.searchParams.get('product') === 'du' ? 'du' : 'cc';
+```
+
+Den forstod kun de korte former. Den `product_key` Stripe selv bruger —
+`deskuptime-pro` — var ukendt, så den faldt gennem til `'cc'` og svarede med
+**Clean Copy Pro's** betalingslink, pris (`$19/year` for et engangskøb) og
+produktnavn. Det samme gjaldt for *ethvert* produkt ud over de tre: ruten
+kunne ikke svare «det kender jeg ikke», kun et andet produkt.
+
+Ruten havde **ingen klient og ingen test** — `grep -rn "api/checkout" site/`
+giver 0 træffere, og ingen af de fem `.test.mjs` nævner den. Derfor ingen port
+kunne se det. (`tools/check_stripe_ctas.py` dømmer købsknapper på *sider*;
+`check_buyable.py` dømmer at et produkt sælges. Ingen af dem kalder ruten.)
+
+**Rettelsen.** `?product=` tager nu `product_key` fra kontrakten
+(`clean-copy-pro` / `deskuptime-pro` / `page-profile-pro`) plus de gamle korte
+former. Ukendt eller manglende parameter er **400** med listen af gyldige nøgler.
+Svaret fik `price_usd` og `billing: 'yearly' | 'once'`, så en kalder ikke skal
+gætte om «$19/year» er abonnement eller engangspris. Ét `OPTIONS` får nu 204 —
+ruten lovede det i `Access-Control-Allow-Methods` men besvarede et preflight med
+det samme produktsvar som et GET. 400-svaret gengiver ikke længere kalderens egen
+tekst, fordi ruten er åben med CORS `*`.
+
+**Ny port.** `tests/checkout-route.test.mjs`, 43 kontroller, lagt i gaten som
+step `checkout-route` og tilføjet til `deploy-sites.yml`'s path-filter.
+
+**Målinger.**
+
+| Mutation | Røde domme |
+|---|---|
+| gammel kode (`… : 'cc'`) | 20 |
+| `$19` → `$29` på ét produkt | 2 |
+| engangspris meldt som `yearly` | 1 |
+| to betalingslinks byttet om | 2 |
+
+Den gamle kodes domme, der *er* fundet: `deskuptime-pro svarer med sit eget
+produktnavn — fik clean-copy-pro` og `deskuptime-pro svarer med sit eget
+betalingslink — fik https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00`.
+
+**To forventninger i porten viste sig forkerte** og blev rettet, fordi de var
+forkerte og ikke fordi de var irriterende:
+
+- `?product=CC` blev dømt som «ukendt produkt». Det er det samme produkt
+  skrevet en anden måde, så ruten svarer korrekt. Porten skelner nu bevidst
+  mellem «ukendt produkt» (400) og «andet skrivemåde» (200, eget produkt).
+- Prisen blev sammenlignet tegn for tegn med `tools/stripe_catalog.json`, hvor
+  den står på **dansk** (`$19/år`) mens ruten svarer på **engelsk**
+  (`$19/year`). Det gjorde porten rød på en rigtig sprogforskel. Nu sammenlignes
+  `price_usd` og `billing` mod katalogens `price_usd` og `subscription` — de
+  maskinværdier, en kopiering kan glide af på.
+
+**Egen-diff-review** fandt to ting før commit (det reflekterede input og det
+manglende preflight). **Gaten `deploy-workflow`** fandt selv den tredje: den nye
+testfil manglede i `deploy-sites.yml`'s path-filter, så en push der kun rørte
+den ville springe gaten over.
+
+**Live-måling 1/10 før rettelsen**, til sammenligning: de øvrige 20 ruter gav
+ingen 5xx. `/api/url-inspect`, `/api/header-check`, `/api/compliance-scan` og
+`/api/profile` læser alle `?url=` i query-stringen, ikke i JSON-kroppen — det er
+konsistent med klienterne (`site/url-inspector/index.html:207` m.fl.) og målt på
+live med 200. `/api/compliance-ai` svarer **503**: `env.OPENROUTER_API_KEY` er
+ikke sat på workeren.

@@ -187,6 +187,21 @@ STEPS: tuple[Step, ...] = (
         argv=("node", "tests/tracking-worker.test.mjs"),
         inputs=("tests/tracking-worker.test.mjs", "site/_worker.js"),
     ),
+    # /api/checkout er den eneste rute der udsteder et købslink. Den lå med
+    # `which = … : 'cc'`, så `?product=deskuptime-pro` — den product_key Stripe
+    # selv bruger — svarede med Clean Copys link, pris og navn, og et produkt
+    # ruten ikke kendte gav Clean Copy i stedet for at sige "kan ikke".
+    # Beløb, periode og link lå desuden håndskrevet i workeren uden at være
+    # dømt mod `tools/stripe_catalog.json`.
+    Step(
+        id="checkout-route",
+        argv=("node", "tests/checkout-route.test.mjs"),
+        inputs=(
+            "tests/checkout-route.test.mjs",
+            "site/_worker.js",
+            "tools/stripe_catalog.json",
+        ),
+    ),
     # De to gratis scanningsværktøjer. De kalder vores egen worker, og en 5xx
     # fra den er ikke et netværksproblem — det var den gamle tekst, og den gav
     # op ved det første blip. Uden dette step var der ingen test, der viste at

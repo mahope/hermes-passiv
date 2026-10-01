@@ -132,7 +132,7 @@ export default {
     }
 
     // === Route: Clean Copy Pro checkout URL (dynamic embed) ===
-    if (path === '/api/checkout') return handleCheckout(url, env);
+    if (path === '/api/checkout') return handleCheckout(request, url, env);
 
     // === Route: URL Inspector (redirect chain + security headers) ===
     if (path === '/api/url-inspect') return handleUrlInspect(request, url, env);
@@ -2767,38 +2767,83 @@ async function handleComplianceScan(request, url, env) {
   }
 }
 
-/* ── Clean Copy Pro Checkout — GET /api/checkout ────────────────
- * Returns the Stripe Payment Link and whether Pro is available.
+/* ── Pro Checkout — GET /api/checkout ────────────────────────────
+ * Returns the Stripe Payment Link and price for one Pro product.
  * KV keys: cc-pro-checkout (Clean Copy Pro), pp-pro-checkout (Page Profile
  * Pro), du-pro-checkout (DeskUptime Pro) — set via tools/set-checkout-url.sh.
- * ?product=pp / ?product=du select those entries; default is clean-copy-pro.
+ *
+ * `?product=` takes the product_key from `docs/stripe-kontrakt.md` —
+ * clean-copy-pro / deskuptime-pro / page-profile-pro — plus the older
+ * shorthands cc / du / pp.
+ *
+ * An unknown or missing product is a 400 that names the valid keys. It was
+ * `which = … : 'cc'` before (1/10): every unrecognised value silently fell
+ * through to Clean Copy Pro, so `?product=deskuptime-pro` — the product_key
+ * Stripe itself uses — returned Clean Copy's payment link, its price and its
+ * product name. A buyer following that link pays for a different product than
+ * the one the caller asked for, and the response says nothing is wrong. On the
+ * one route that hands out a buy link, "I don't know that product" has to be an
+ * answer.
  */
-async function handleCheckout(url, env) {
+async function handleCheckout(request, url, env) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
+  // `Access-Control-Allow-Methods` loved at sige OPTIONS, men ruten besvarede
+  // et preflight med det samme produkt-svar som et GET. 204 nu, så en indlejring
+  // der spørger først får det svar den bad om.
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
-  const which = url.searchParams.get('product') === 'pp' ? 'pp'
-    : url.searchParams.get('product') === 'du' ? 'du' : 'cc';
+  // product_key først, så den kan læses som den hedder i kontrakten og i
+  // `tools/stripe_catalog.json`; de korte former er beholdt, fordi de er det
+  // ruten har svaret på hele sit liv.
+  const asked = url.searchParams.get('product');
+  const ALIASES = {
+    'clean-copy-pro': 'cc', cc: 'cc',
+    'deskuptime-pro': 'du', du: 'du',
+    'page-profile-pro': 'pp', pp: 'pp',
+  };
+  const which = asked === null ? null : ALIASES[asked.trim().toLowerCase()];
+  if (!which) {
+    const VALID = 'Use one of: clean-copy-pro, deskuptime-pro, page-profile-pro.';
+    // Kalderens egen tekst gengives ikke: det er en åben rute med CORS `*`, og
+    // en fejl behøver ikke at vise et afkortet af strengen der kom uden om.
+    return new Response(JSON.stringify({
+      ok: false,
+      error: `Unknown or missing product. ${VALID}`,
+    }), { status: 400, headers: corsHeaders });
+  }
+
   const kvKey = { pp: 'pp-pro-checkout', du: 'du-pro-checkout', cc: 'cc-pro-checkout' }[which];
+  // `price` er til at vise, `price_usd` + `billing` er til at regne på. En
+  // kalder må ikke skulle gætte om "$19/year" er et abonnement eller en
+  // engangspris, og de to tal er hentet fra `tools/stripe_catalog.json`, der
+  // spejler `docs/stripe-kontrakt.md` — så en pris der glide af, bliver rød i
+  // `tests/checkout-route.test.mjs` i stedet for på en købsside.
   const meta = which === 'pp'
     ? {
         product: 'page-profile-pro',
         price: '$19/year',
+        price_usd: 19,
+        billing: 'yearly',
         note: 'Pro adds comparison mode, batch mode and client-ready HTML reports to the page-profile CLI.',
       }
     : which === 'du'
     ? {
         product: 'deskuptime-pro',
         price: '$19 one-time',
+        price_usd: 19,
+        billing: 'once',
         note: 'One-time license: desktop tray app, unlimited sites, webhook alerts and a client-ready report. Up to 3 machines, all v1.x updates.',
       }
     : {
         product: 'clean-copy-pro',
         price: '$19/year',
+        price_usd: 19,
+        billing: 'yearly',
         note: 'One license covers all 7 surfaces: Chrome, Firefox, Edge, CLI, VS Code, Obsidian, GitHub Action.',
       };
 
