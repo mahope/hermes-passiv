@@ -10,7 +10,7 @@
     "UptimeRobot": {
       "plan": "Solo, 10 monitors, 60 s interval",
       "free_tier": "50 monitors, 5-minutters interval, €0",
-      "source_note": "Priserne er EUR. Solo 10 monitors: €10/måned, €9 ved årlig betaling = €108/år. Team 100 monitors: €41/måned, €35 årlig = €492/år.",
+      "source_note": "Priserne er EUR. Solo 10 monitors: €10/måned, €9 ved årlig betaling = €108/år. Team 100 monitors: €41/måned, €35 årlig = €492/år. Begge årstal er altså årlig betaling.",
       "plans": {
         "Solo": {
           "per_month": "€10",
@@ -27,12 +27,12 @@
     "Better Stack": {
       "plan": "Responder, 10 monitors inkluderet, 30 s interval",
       "free_tier": "10 monitors, 1 statuspage, $0",
-      "source_note": "Oppetid sælges pr. responder-plads, ikke pr. monitor. 34 x 12 = 408.",
+      "source_note": "Oppetid sælges pr. responder-plads, ikke pr. monitor. Begge betalingsgrundlag er sande og forskellige: $34/måned, hvis man betaler måned for måned (12 x 34 = $408/år), og $29/måned ved årlig betaling (12 x 29 = $348/år). `per_year` er her $348, fordi UptimeRobots €108 også er årlig betaling — de to skal kunne sammenlignes i en \"1 year\"-kolonne. Skal en side nævne $408, skal den sige at det er månedlig betaling.",
       "plans": {
         "Responder": {
           "per_month": "$34",
           "per_month_annual": "$29",
-          "per_year": "$408"
+          "per_year": "$348"
         }
       }
     },

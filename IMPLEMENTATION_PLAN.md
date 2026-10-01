@@ -51,6 +51,15 @@
   `x.code === 429` på sin egen linje (ikke `429 || x.code >= 500`), som kalder
   `fail((x.d && x.d.error ? x.d.error : 'Too many attempts.') + LIMITED_OUT)`.
 
+- `VERIFICÉR DEPLOY: ceo/konkurrent-pris-grundlag 2026-10-01` — mål på indhold:
+  `/blog/desktop-website-monitor-cli` har «1 year, billed annually» i
+  kolonneoverskriften, `$348` i Better Stack-cellen og **ikke** `$408` nogen
+  steder på de seks sider, der linkede til artiklen.
+
+- `VERIFICÉR DEPLOY: ceo/429-kommentar-siger-modsaet 2026-10-01` — kommentar
+  i `site/thanks.html`, intet kørtid. Verificér at live `/thanks` svarer 200 og
+  stadig kun har ét `x.code === 429`.
+
 - `VERIFICÉR DEPLOY: ceo/selvbetjent-noegleopslag 2026-10-01` — mål på indhold:
   1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
   2. `/license-lookup` har præcis ét `fetch('/api/license/lookup'` med
@@ -211,7 +220,28 @@
      konkurrent uden offentlig pris må ikke have et tal ved siden af sig, så
      Pingdom skrives nu navnet uden pris. Alders-tjekket er en **advarsel, ikke
      en dom**: en gammel `checked` må aldrig låse gaten for alle fremtidige
-     udgivelser. Se arkiv.
+      udgivelser. Se arkiv.
+
+    33b. ~~**«1 year»-kolonnen regnede de to konkurrenter på hver sit
+      grundlag.**~~ **RETTET 1/10, `ceo/konkurrent-pris-grundlag`.**
+      Review-fund 29/9 (LAV): UptimeRobot Solo stod til €108, som er *årlig*
+      betaling (€9 × 12), mens Better Stack stod til $408, som er *månedlig*
+      betaling ($34 × 12) — årlig betaling er $29, altså $348. Begge tal var
+      sande, så `check_competitor_prices` dømte dem grønne; de overdriver
+      konkurrenten med $60 i en tabel der skal være troværdig netop fordi den
+      er kildeført. Fejlen lå i kilden selv (`"34 x 12 = 408"`), så den var
+      læst igen fra fem relaterede artikler plus `og:description`. Nu er
+      `per_year` $348 — samme grundlag som €108 — og hver celle siger hvilket
+      («1 year, billed annually», €9/month, $29/month). Brødteksten siger
+      udtrykkeligt at €10/$34 er månedspriserne, som begge firmaer rabatterer
+      ved årlig binding. Kilden må nu kun give ét årstal pr. plan, så
+      `$408` kan ikke genindsættes som et år uden en bevidst kildeændring:
+      to nye domme i selvtesten + en ny mutation der lægger den gamle fejl
+      tilbage i kolonnen (12/12 kontroller grøn). *Følge:* de samme beløb stod
+      også i `tools/stripe_catalog.json` som tilladte pris-tokens pr. købsside,
+      så de to porte var uenige om, hvad der måtte stå på siden — opdateret i
+      samme commit, ellers går `stripe-ctas` rød på sit eget hvidestregede
+      hvidlisteproblem.
 
 34. ~~**Otte generatorer lå døde i live, og porten der så det læste kilden.**~~
      **FÆRDIG 30/9, `ceo/generator-script-kom-til-live`.** `insert_before_end_tag`

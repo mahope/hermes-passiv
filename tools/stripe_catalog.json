@@ -650,10 +650,10 @@
       "product": "deskuptime-pro",
       "prices": [
         "$19",
-        "$29.",
+        "$29",
         "$34",
-        "$408",
-        "$408."
+        "$348",
+        "$348."
       ],
       "requires_text": [
         "Buy DeskUptime Pro for $19"
@@ -1484,7 +1484,7 @@
         "$10",
         "$120",
         "$7",
-        "$408."
+        "$348."
       ],
       "requires_text": [
         "Buy DeskUptime Pro — $19 once"

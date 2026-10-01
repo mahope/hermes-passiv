@@ -167,7 +167,8 @@ MUTATIONER = [
     # (navn, fil der ændres, gammel tekst, ny tekst)
     ("tabelpris byttet om",
      "site/blog/desktop-website-monitor-cli.html",
-     "&euro;108</td>", "$84</td>"),
+     "&euro;108 <small style=\"color:#666\">&euro;9/month",
+     "$84 <small style=\"color:#666\">$9/month"),
     ("Pingdom får et tal",
      "site/blog/desktop-website-monitor-cli.html",
      "<td style=\"padding:10px;border:1px solid #ddd\">Pingdom</td>",
@@ -177,11 +178,19 @@ MUTATIONER = [
      "Solo is &euro;10/month", "Solo is &euro;11/month"),
     ("vores egen pris dømt som konkurrentens",
      "site/blog/index.html",
-     "a single Better Stack responder seat is $408. DeskUptime is $19 once.",
+     "a single Better Stack responder seat is $348. DeskUptime is $19 once.",
      "a single Better Stack responder seat is $19."),
     ("aarstal forvridt",
      "site/blog/desktop-website-monitor-cli.html",
-     "&euro;492</td>", "&euro;900</td>"),
+     "&euro;492 <small style=\"color:#666\">&euro;35/month",
+     "&euro;900 <small style=\"color:#666\">&euro;35/month"),
+    # Review-fund 1/10: $408 var månedlig betaling sat ind som et årstal, fordi
+    # den gamle kilde skrev "34 x 12 = 408". Mutationen lægger den fejl tilbage i
+    # "1 year"-kolonnen, og porten skal sige nej — det er den dom, der manglede.
+    ("maanedlig aarstal i aarskolonnen",
+     "site/blog/desktop-website-monitor-cli.html",
+     "$348 <small style=\"color:#666\">$29/month",
+     "$408 <small style=\"color:#666\">$34/month"),
 ]
 
 
@@ -226,6 +235,17 @@ def self_test() -> int:
        f"Solo/Team-tallene er med ({len(solo)} tilladte beløb)")
     ok(84.0 not in solo and 144.0 not in solo,
        "de gamle $84/$144-tal er ikke tilladt")
+
+    # Review-fund 1/10: €108 var årlig betaling (€9 × 12) og $408 månedlig
+    # betaling ($34 × 12) — begge sande, men de beskriver ikke det samme, så
+    # kolonnen overdriv konkurrenten. Kilden må derfor kun give ÉT årstal pr.
+    # plan, på det grundlag artiklen sammenligner på, og det andet grundlags
+    # årstal skal være umuligt at genindsætte uden en bevidst kildeændring.
+    bs = plans_allowed(source["competitors"]["Better Stack"])
+    ok(348.0 in bs and 29.0 in bs and 34.0 in bs,
+       "Better Stack har årlig, årlig-månedspris og månedspris i kilden")
+    ok(408.0 not in bs,
+       "408 er månedlig betaling, ikke årlig — må ikke kunne stå som \"et år\"")
 
     print(f"selvtest: {checks - failures}/{checks} kontroller")
     return 0 if failures == 0 else 1
