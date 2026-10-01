@@ -76,17 +76,58 @@ def amount_prefixed(raw: str, text: str, start: int) -> str:
     return text[max(0, start - 8):start]
 
 
+YEAR_TOLERANCE = 0.01
+
+
+def year_matches_monthly_annual(data: dict) -> bool | None:
+    """Er `per_year` det samme som `per_month_annual` x 12?
+
+    None når vi ikke kan dømme det, fordi kun ét af felterne findes. False når
+    kilden modsiger sig selv: 1/10 stod UptimeRobot Team til €492, som er
+    €41 x 12 — u**r**abatteret månedspris ganget med tolv — mens Solo i samme
+    kolonne var €9 x 12 = €108, altså rabatteret. Målt 1/10 på UptimeRobots egen
+    sammenligningstabel: «Team € 420 /y» (= €35 x 12), «Scale € 780 /y»
+    (= €65 x 12). Den gamle værdi forsvarer sig selv med 35 x 12 = 420, altså
+    var regnestykket i kilden forkert fra starten.
+    """
+    annual = data.get("per_month_annual")
+    year = data.get("per_year")
+    if not annual or not year:
+        return None
+    return abs(amount_value(year.lstrip("$€"))
+               - amount_value(annual.lstrip("$€")) * 12) <= YEAR_TOLERANCE
+
+
+def source_contradictions(source: dict) -> list[str]:
+    """Kildefelter der siger to ting om det samme årstal."""
+    out: list[str] = []
+    for name, entry in (source.get("competitors") or {}).items():
+        for plan, data in ((entry.get("plans") or {}).items()):
+            if year_matches_monthly_annual(data) is False:
+                want = amount_value(data["per_month_annual"].lstrip("$€")) * 12
+                out.append(
+                    f"{name} {plan}: per_year {data['per_year']} er ikke "
+                    f"{data['per_month_annual']} x 12 = {want:g}"
+                )
+    return out
+
+
 def plans_allowed(entry: dict) -> dict[float, str]:
     """Alle beløb der må stå ved siden af konkurrenten, som tal -> forklaring."""
     out: dict[float, str] = {}
     for plan, data in (entry.get("plans") or {}).items():
+        # Et årstal kilden selv modsiger, må ikke stå tilladt: porten skal
+        # dømme beløbet på siden som forkert, ikke som tilladt.
+        year_ok = year_matches_monthly_annual(data)
         pairs = [("per_month", 1), ("per_month_annual", 1), ("per_year", 1)]
         for field, _ in pairs:
+            if field == "per_year" and year_ok is False:
+                continue
             val = data.get(field)
             if val:
                 out[amount_value(val.lstrip("$€"))] = f"{plan} {field}"
         year = data.get("per_year")
-        if year:
+        if year and year_ok is not False:
             v = amount_value(year.lstrip("$€"))
             out[v * 3] = f"{plan} per_year x 3"
     return out
@@ -182,8 +223,15 @@ MUTATIONER = [
      "a single Better Stack responder seat is $19."),
     ("aarstal forvridt",
      "site/blog/desktop-website-monitor-cli.html",
-     "&euro;492 <small style=\"color:#666\">&euro;35/month",
+     "&euro;420 <small style=\"color:#666\">&euro;35/month",
      "&euro;900 <small style=\"color:#666\">&euro;35/month"),
+    # Review-fund 1/10: €492 (€41 x 12, u rabatteret månedspris) lå i både
+    # kilden og cellen, mens Solo i samme kolonne var €9 x 12. Mutationen lægger
+    # præcis det gamle tal tilbage, og porten skal sige nej.
+    ("det gamle 492 laegges tilbage",
+     "site/blog/desktop-website-monitor-cli.html",
+     "&euro;420 <small style=\"color:#666\">&euro;35/month",
+     "&euro;492 <small style=\"color:#666\">&euro;35/month"),
     # Review-fund 1/10: $408 var månedlig betaling sat ind som et årstal, fordi
     # den gamle kilde skrev "34 x 12 = 408". Mutationen lægger den fejl tilbage i
     # "1 year"-kolonnen, og porten skal sige nej — det er den dom, der manglede.
@@ -231,10 +279,26 @@ def self_test() -> int:
     ok(plans_allowed(source["competitors"]["Pingdom"]) == {},
        "Pingdom har ingen planer at dømme mod")
     solo = plans_allowed(source["competitors"]["UptimeRobot"])
-    ok(108.0 in solo and 324.0 in solo and 492.0 in solo and 1476.0 in solo,
+    ok(108.0 in solo and 324.0 in solo and 420.0 in solo and 1260.0 in solo,
        f"Solo/Team-tallene er med ({len(solo)} tilladte beløb)")
     ok(84.0 not in solo and 144.0 not in solo,
        "de gamle $84/$144-tal er ikke tilladt")
+
+    # Review-fund 1/10: €492 var €41 x 12 — u rabatteret månedspris ganget med
+    # tolv — mens Solo i samme kolonne var €9 x 12. Målt 1/10 på UptimeRobots
+    # egen sammenligningstabel står der «Team € 420 /y» (= €35 x 12). Kilden må
+    # derfor både melde et årstal der ikke er x12 af den årlige månedspris, og
+    # lade det forsvinde fra de tilladte beløb — ellers forsvarer porten det
+    # forkerte tal, fordi den kun *tillader* beløb.
+    ok(not source_contradictions(source),
+       "kildens årstal er x12 af den årlige månedspris")
+    broken = json.loads(json.dumps(source))
+    broken["competitors"]["UptimeRobot"]["plans"]["Team"]["per_year"] = "€492"
+    ok(bool(source_contradictions(broken)),
+       "et årstal der ikke er x12 meldes i kilden")
+    ok(492.0 not in plans_allowed(broken["competitors"]["UptimeRobot"]),
+       "€492 kan ikke stå når €35 x 12 = €420 er grunden")
+    ok(492.0 not in solo, "€492 er ikke et tilladt beløb i den rå kilde")
 
     # Review-fund 1/10: €108 var årlig betaling (€9 × 12) og $408 månedlig
     # betaling ($34 × 12) — begge sande, men de beskriver ikke det samme, så
@@ -263,6 +327,11 @@ def main() -> int:
     source = load_source()
     findings = check_tree(source=source)
     notes = warnings(source)
+    # Kun kildefelter der modsiger sig selv er en fejl, ikke en advarsel: en
+    # gammel kilde er en advarsel, et årstal uden grund er en løgn.
+    contradictions = source_contradictions(source)
+    notes += [f"KILDEFEJL: {msg} — et årstal skal være den årlige månedspris x 12."
+              for msg in contradictions]
     if args.json:
         print(json.dumps({"findings": findings, "warnings": notes}, ensure_ascii=False, indent=2))
     else:
@@ -274,7 +343,7 @@ def main() -> int:
         print(f"{pages} sider, {len(findings)} fund, "
               f"{len(source.get('competitors', {}))} konkurrenter "
               f"(kilde tjekket {source.get('checked')})")
-    return 1 if findings else 0
+    return 1 if (findings or contradictions) else 0
 
 
 if __name__ == "__main__":

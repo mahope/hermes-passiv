@@ -9,64 +9,57 @@
 - **Ingen fejl blev nogensinde meldt.** Målt 1/10: 0 forekomster af «sentry»
   i hele repoet. Workerens fetch er nu pakket, så en uventet fejl er en ren 500
   *og* en rapport — 316/316 worker-tests, 5 mutationer røde mod ældre kode.
-- **Det der lå i live, var *bygget*, ikke skrevet** — 3 gange samme uge: 8
-  generatorer døde i browseren, 37 sider uden donationslinje, 44 artikler med
-  dobbelt værktøjsliste. Målt 1/10 i rigtig browser: 0 konsolfejl på 14 sider,
-  197 anker-referencer dømt.
-- **En regel skrevet ned uden en dom der kan fejle, er den dyre fejlform:** CEO-kø
-  punkt 0 rettede *sisyv* klienter og den tiende lå ved siden af. En opgave skal
-  nævne et **antal** *og* liste filerne.
-- **Seks gratisværktøjer sluttede med en donation på 10 kr.** Målt 1/10 på live:
-  **0** `buy.stripe.com` i resultatet på `/cookie-check`,
-  `/security-headers-check`, `/contrast-checker`, `/text-on-image-checker` og
-  `/url-inspector`. Rettet 1/10: alle **6** skannere har nu købsknappen i den
-  markup et gennemført tjek renderer (baseline 1 → 6). `/url-inspector` sælger
-  Page Profile Pro ($19/år), de andre EUComply Pro ($79/år pr. website).
+- **Artiklen om Desktop-website-monitoren solgte €492 for et UptimeRobot-team.**
+  Fund fra review 1/10: €492 er €41 × 12, altså månedsprisen *uden* rabat,
+  mens Solo i samme kolonne var €9 × 12 = €108, altså *med* rabat — to
+  betalingsgrundlag i én «1 year»-kolonne. Målt 1/10 på deres egen prisside:
+  «Team € 420 /y» (og «Scale € 780 /y» = €65 × 12). Rettet 1/10, og porten
+  dømmer nu at et årstal er den årlige månedspris × 12 (17/17 kontroller).
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: købsknappen på $79/år pr. website i resultatet af
-  /compliance-site-check (EN + DA) ceo/pro-handoff-efter-scan 2026-10-01` —
-  skal måles på **indhold**, ikke på HTTP 200: live `/compliance-site-check`
-  skal have `pro-card` og `eVq00i4YH6UG69g0ObbMQ03` i sit inline-script, og det
-  samme på `/da/compliance-site-check` med `/da/compliance-report`. Kun en
-  statisk knap er ikke nok: dommen i `tests/scan-clients.test.mjs` sektion 11
-  kræver, at linket *kun* findes i scriptet. Kan ikke efterprøves: et rigtigt
-  køb kræver en gyldig Stripe-nøgle.
+- `DEPLOY OK 2026-10-01` for de tre noter under «Verificér deploy» 1/10 (købsknap
+  i scannerens resultat, workerens Sentry-guard, samme købsvej i de fem øvrige
+  skannere). Målt på live `21acd2f`: `/compliance-site-check` +
+  `/da/compliance-site-check` har `pro-card` og `eVq00i4YH6UG69g0ObbMQ03` i
+  scriptet (DA linker til `/da/compliance-report`); `/cookie-check`,
+  `/contrast-checker`, `/text-on-image-checker`, `/security-headers-check`
+  (med `getElementById('shc-pro').hidden = false`) og `/url-inspector/`
+  (med `9B6eVcgHp7YK69ggN9bMQ04`) har hver sit `*-pro`-element i scriptet, og
+  **0** sider har `.pro-card`-regler i egen `<style>` længere; workeren svarer
+  200 på `/api/url-inspect`, 400 på `validate` med `ZZZ`, 404 på
+  `/api/ukendt-rute` og på en ukendt `/downloads/`-sti, og
+  `{"ok":true,"kv_ok":true}` på `/api/paid-files`. *To noter havde forkerte
+  URL'er:* de danske skannere ligger på `/cookie-check-da` og
+  `/contrast-checker-da`, ikke under `/da/` — `/da/cookie-check` er 404.
 
-- `VERIFICÉR DEPLOY: workeren melder sine egne fejl ceo/workeren-melder-sentry 2026-10-01`
-  — live `build-info.json` skal bære merge-sha'en på de 3 deployede domæner,
-  og **indhold**: `GET /api/url-inspect?url=https://example.com` skal svare
-  **200** (ikke 500/1101 — guarden pakkede hele rutedispatcheren, så ruten er
-  den vigtigste at efterprøve), `GET /api/license/validate` med `ZZZ` skal
-  svare **400**, `GET /api/ukendt-rute` skal svare **404**, en ukendt
-  `/downloads/`-sti skal svare **404**, og `GET /api/paid-files` skal svare
-  med `kv_ok: true`. *Efterprøves ikke:* en rigtig rapport i Sentry — den
-  kræver at en fejl faktisk sker i prod, og man slår ikke fejl til for at lave
-  en rapport. Beviset ligger i stedet i `tests/stripe-worker.test.mjs`:
-  12 kontroller hvoraf 5 er målt røde mod `54fcc7e`-koden.
-
-- `VERIFICÉR DEPLOY: samme købsvej i resultatet på de fem øvrige skannere
-  ceo/pro-handoff-fem-skantere 2026-10-01` — måles på **indhold**: live
-  `/cookie-check` og `/da/cookie-check` skal have `eVq00i4YH6UG69g0ObbMQ03`
-  inde i deres inline-script (den lå slet ikke i filen før), live
-  `/security-headers-check` skal have `<div id="shc-pro"` **og**
-  `getElementById('shc-pro').hidden = false`, live `/contrast-checker` +
-  `/da/contrast-checker` skal have `<div id="cc-pro"` med samme afsløring,
-  live `/text-on-image-checker` + `-da` skal have `var PRO_CARD`, og live
-  `/url-inspector/` skal have `<div id="ui-pro"` med `9B6eVcgHp7YK69ggN9bMQ04`
-  (Page Profile Pro). Sidstnævnte må ikke have `.pro-card`-regler i sin egen
-  `<style>` mere — de ligger i `site/style.css`. *Efterprøves ikke:* et rigtigt
-  køb kræver en gyldig Stripe-nøgle. Dommen er `tests/scan-clients.test.mjs`
-  sektion 11b, som kører hvert værktøj rigtigt igennem i sandkassen.
+- `VERIFICÉR DEPLOY: UptimeRobot Team-prisen er €420, ikke €492
+  ceo/uptimerobot-team-pris 2026-10-01` — måles på **indhold**: live
+  `/blog/desktop-website-monitor-cli` skal have `&euro;420` i samme celle som
+  `&euro;35/month`, og `492` skal være **0** gange i hele siden. Dommen er
+  `tools/check_competitor_prices.py` (grøn på 303 sider) med den nye regel at
+  `per_year` er `per_month_annual` × 12 — målt **rød** mod de gamle tal, både
+  som `KILDEFEJL` i kilden og som `forkert pris` i cellen, mens porten fra
+  `origin/main` var grøn med dem.
 
 ## Åbne opgaver
 
-1. ~~**Samme købsvej på de øvrige gratis tjek.**~~ **FÆRDIG 30/9,
-   `ceo/vej-til-betalt-otte-tjek` (66172a0).**
+Køen er udtømt for ufærdigt arbejde: **opgave 1 er den eneste der ikke
+blokerer på Mads**, så den er næste iteration. 2–5 ligger fast på en
+beslutning eller en secret (❓ nedenfor) og skal ikke genoptages, før de
+er besvaret.
+
+1. **Pro-løftet «crawls the site» er ikke indholdet i scanningen.** Hvorfor:
+   `/compliance-site-check` tager én URL og scanner den, mens produktsiden for
+   EUComply Pro lover at Pro «crawls the site» — så det betalte ikke er noget,
+   kunden kan se forskel på. Feature-kø #1. Accept: feltet tager linjeskift,
+   serveren svarer én rapport pr. URL, og knappen i resultatet siger ærligt at
+   Pro gør det samme for hele sitet. Dømt af `tests/scan-clients.test.mjs`
+   (mutation på den nye klientdel skal være rød). Baseline: betalinger pr.
+   uge 0 målt 1/10. **Dette er den næste opgave.**
 2. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
    `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
    trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
@@ -88,19 +81,7 @@
    flyttet ned i artiklen på de mest besøgte sider (dømt i
    `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en
    ligger ét sted pr. side. Kræver beslutning — se ❓.
-5. **UptimeRobots Team-pris er et regnestykke, der ikke holder.** Fund fra
-   review 1/10: `tools/competitor_prices.json` siger `per_year: €492` med en
-   `source_note` der regner €35 × 12 = 420, altså €492 er **u**rabatteret
-   listepris × 12, mens Solo (`€108` = €9 × 12) er rabatteret — altså er den
-   ene række i samme kolonne rabatteret og den anden er det ikke. Målt 1/10 på
-   UptimeRobots egen prisside: **«Team € 420 /y»**. Rettelse: `per_year` → €420
-   med opdateret `checked`, cellen på
-   `/blog/desktop-website-monitor-cli` skal sige €420, og `plans_allowed()` skal
-   få en dom på at `per_year == per_month_annual × 12`, ellers forsvarer porten
-   det forkerte tal fordi den kun *tillader* beløb. Accept: `python3
-   tools/check_competitor_prices.py` grøn, €492 nul gange i `dist/`, og en
-   mutation der lægger €492 tilbage er rød.
-6. **Review-fund: `/api/compliance-ai` er publiceret og dør med 503.** Fund fra
+5. **Review-fund: `/api/compliance-ai` er publiceret og dør med 503.** Fund fra
    review 1/10: `POST /api/compliance-ai` svarer **503** «AI service not
    configured. Contact the site owner.», fordi `OPENROUTER_API_KEY` mangler —
    og `/compliance-ai` + `/da/compliance-ai` står begge i `sitemap.xml`. Den nye

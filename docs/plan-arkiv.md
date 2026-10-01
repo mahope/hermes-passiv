@@ -3891,3 +3891,27 @@ deploy-noter og de afkrydsede opgaver ligger her fra nu af. Find med grep.
     rigtigt igennem og læser den markup `#results` får, læser købslink, pris og
     periode *fra katalogen* og kræver at linket ikke findes i den statiske
     HTML. Mutationen kører de samme domme på `da3999e`-koden og er rød.
+
+46. ~~**Artiklen solgte €492 for et UptimeRobot-team.**~~ **FÆRDIG 1/10,
+    `ceo/uptimerobot-team-pris`.** Fund fra review 1/10: `per_year: €492` i
+    `tools/competitor_prices.json` var €41 × 12 — den **u**rabatterede
+    månedspris ganget med tolv — mens Solo i samme «1 year»-kolonne var
+    €9 × 12 = €108, altså den **r**abatterede. To betalingsgrundlag i én
+    kolonne, og `source_note` skrev «€35 årlig = €492/år», altså et
+    regnestykke der ikke holdt. Slået op 1/10 på UptimeRobots egen
+    sammenligningstabel: «Solo Starts at € 108 /y», «**Team € 420 /y**»,
+    «Scale Starts at € 780 /y» (= €65 × 12) — kun Team var forkert.
+    Rettet: `per_year` → €420, `checked` → 2026-10-01, `source_note`
+    omskrevet med alle tre målte årstal, cellen på
+    `/blog/desktop-website-monitor-cli` siger €420, og artiklens
+    afsnit om hvor tallene kommer fra siger «UptimeRobot 1 October 2026,
+    Better Stack 30 September 2026» i stedet for én dato for begge.
+    **Den egentlige fejl var porten:** `plans_allowed()` *tillod* beløb, så
+    €492 var grønt med det forkerte tal — «303 sider, 0 fund» mod de gamle
+    tal, målt med porten fra `origin/main`. Nu dømmer porten kilden selv:
+    `year_matches_monthly_annual()` siger, at `per_year` skal være
+    `per_month_annual` × 12, `source_contradictions()` melder et brud som
+    `KILDEFEJL` (gaten returnerer 1), og et årstal kilden modsiger sig selv
+    forsvinder fra de tilladte beløb, så cellen dømmes som `forkert pris`.
+    Bevis: samme kode mod €492 → 1 fund **og** 1 kildefejl, selvtest 12/17;
+    mod €420 → 0 fund, 17/17.
