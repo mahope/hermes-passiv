@@ -1396,6 +1396,27 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_competitor_prices.py",
                 "tools/competitor_prices.json", "site/**"),
     ),
+    # Vores *egne* priser (1/10). Samme fejlform som konkurrentpriserne, både
+    # fordi ingen port dømte dem, og fordi de lå i præcis samme fil som de
+    # konkurrerende tal: `check_stripe_ctas` spørger om der *er* en købsknap og
+    # hvilket produkt den sælger, `check_competitor_prices` dømmer kun de tal
+    # der står ved siden af en konkurrent. Beløbet i vores egen knap var en
+    # påstand uden dom. Målt 1/10 på alle 84 købsknapper: 70 har beløbet i
+    # knappens tekst, 14 har det i en `pt-price` i samme `.pt-foot`
+    # (`/paid-templates` EN + DA), og nul afviger fra katalogen — så det er
+    # dommen der mangler, ikke en fejl at rette lige nu.
+    Step(
+        id="own-prices",
+        argv=("python3", "tools/check_own_prices.py"),
+        inputs=("tools/check_own_prices.py", "tools/stripe_catalog.json",
+                "docs/stripe-kontrakt.md", "site/_worker.js", "site/**"),
+    ),
+    Step(
+        id="own-prices-selftest",
+        argv=("python3", "tools/check_own_prices.py", "--self-test"),
+        inputs=("tools/check_own_prices.py", "tools/stripe_catalog.json",
+                "docs/stripe-kontrakt.md", "site/_worker.js", "site/**"),
+    ),
     Step(
         id="shared-visits-namespace-tests",
         argv=("python3", "tools/test_shared_visits_namespace.py"),

@@ -51,12 +51,14 @@
   rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
   batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
   filerne — antallet er ikke listen.
-- **Vores egne betalingspriser er målt rene 1/10.** Alle **15** `buy.stripe.com`-
-  links i repoet svarer 200, og de matcher kontraktens tabel én til én — ingen
-  mangler, ingen er ukendte. Alle **84** købsknapper i `site/` er dømt mod
+- **Vores egne betalingspriser er målt rene 1/10 — og bliver det fremover.**
+  Alle **15** `buy.stripe.com`-links i repoet svarer 200, og de matcher
+  kontraktens tabel én til én. Alle **84** købsknapper i `site/` er dømt mod
   `tools/stripe_catalog.json`: 70 har prisen i knippeteksten, de 14 øvrige har
   den i `<p class="pt-price">` lige ovenfor knappen (alle på `/paid-templates`),
-  og **nul** har et andet tal end katalogens. Se opgave 40.
+  og **nul** har et andet tal end katalogens. Ny port
+  `tools/check_own_prices.py` gør det til en dom frem for en måling, og
+  dømmer linket pr. række i kontrakten og pr. nøgle i workeren. Se opgave 40.
 - **`❓ Til Mads` nederst:** `OPENROUTER_API_KEY`, `STATS_TOKEN`,
   `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
   desktop-apps der stadig ringer til Lemon Squeezy.
@@ -65,6 +67,8 @@
 
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: ny port check_own_prices (kun tools/, intet på sitet) ceo/egen-pris-port 2026-10-01`
 
 - `DEPLOY OK 2026-10-01` — fem ventende noter målt på indhold mod live `04288fc`
   (`build-info.json` bærer præcis merge-sha'en, så *alle* fem er på én gang):
@@ -422,20 +426,45 @@
       rettelsen**. Se arkiv.
 
 
-    40. **Ingen port dømmer vores egne priser, kun konkurrenternes.** Hvorfor:
-      `check_stripe_ctas.py` dømmer *hvilke* produkter en side sælger og at der
-      er en købsknap; `check_competitor_prices.py` dømmer **konkurrenternes**
-      beløb mod `tools/competitor_prices.json`. **Ingen dømmer vores egne.**
-      Målt 1/10 på alle 84 købsknapper: de 70 med pris i teksten har alle
-      katalogens beløb, de 14 uden har `pt-price` over knappen, og nul afviger —
-      så der er ingen fejl at rette lige nu. Det er opgave 33s pointe anvendt på
-      vores egen omsætning: en gammel `$19/år` for et produkt Stripe nu sælger
-      engangs, eller en knap der siger `$149` om et `$59`-produkt, er en
-      **påstand uden dom** og falder lige så stille som konkurrentens gjorde.
-      Accept: ny port `tools/check_own_prices.py` dømmer hver købsknap i `site/`
-      mod `tools/stripe_catalog.json` på tre ting — beløbet i knippeteksten (eller
-      i `pt-price` i samme `.pt-foot`) er katalogens, **intet andet** beløb står
-      i knippeteksten, og hvert `payment_link` i katalogen peger på det produkt
-      det er sat på. Selvtest med tre mutationer: en gammel pris ind i knappen,
-      to byttede om, og et `payment_link` der peger på et andet produkts nøgle.
-      *Målt 1/10, ingen kode:* porten er ikke skrevet endnu.
+    40. ~~**Ingen port dømmer vores egne priser, kun konkurrenternes.**~~ **FÆRDIG
+    1/10, `ceo/egen-pris-port`.** Hvorfor: `check_stripe_ctas` dømmer *hvilke*
+    produkter en side sælger og at der er en købsknap; `check_competitor_prices`
+    dømmer **konkurrenternes** beløb. Ingen dømte vores egne — så opgave 33s
+    pointe anvendt på vores egen omsætning. Ny port `tools/check_own_prices.py`
+    dømmer hver købsknap i `site/` mod `tools/stripe_catalog.json` på tre ting:
+    (1) knappen skal nævne sit beløb — i knappens egen tekst eller i en
+    `pt-price` i samme `.pt-foot`; (2) ethvert beløb i knappens tekst skal være
+    `price_usd` for den variant linket peger på, så både en gammel pris og et
+    *ekstra* beløb ved siden af det rigtige er fund; (3) katalogens
+    `payment_link` læses **pr. række** i kontrakten og pr. nøgle i `_worker.js`,
+    så to produkter der har byttet link er et fund — `check_stripe_ctas` spørger
+    kun om linket *findes et sted i* kontrakten, så et byttet link var stadig
+    grønt der. Målt 1/10 på alle 84 købsknapper: 70 har beløbet i teksten, 14 i
+    en `pt-price` på `/paid-templates` (EN + DA), **nul** afviger — så det var
+    dommen der manglede, ikke en fejl at rette. Selvtest 13/13: seks mutationer
+    i `site/` (gammel årspris på et engangskøb, lifetime-pris på
+    abonnementslinket, pristag med et andet produkts beløb, pris fjernet fra
+    knappen, ekstra beløb i knappen) er alle fanget, og to byttede
+    `payment_link`s er fanget i begge retninger. Gaten 118 steps.
+    *Målt undervejs:* beløbene står i to sprogformer («$79» og «79 $») og med
+    `&nbsp;` mellem tal og tegn, så en extractor der kun læser `$79` fandt 38 af
+    84 knapper «uden pris». Den skal læse begge retninger og opløse entities.
+    *Målt som min egen fejl:* `.pt-foot`-faldet læste først **alle** pristag i
+    dokumentet, så hver knap på `/paid-templates` blev dømt mod de andre
+    produkter — 40 falske fund. Kun den nærmeste forudgående `.pt-foot` tæller.
+    *Målet og ikke dømt:* porten dømmer **beløbet**, ikke periode-ordet.
+    «DeskUptime Pro — 19 USD/year» om et produkt Stripe sælger *engang* er en
+    reel påstand uden dom, men den kræver en ordliste for to sprog (år/year,
+    engang/once/one-time, lifetime), og de 84 knapper skal måles før den
+    skrives — ellers bliver den `$144/year` med en ny regexp. Ny opgave 41.
+
+41. **Perioden ved siden af prisen er en påstand uden dom.** Hvorfor:
+    `check_own_prices` dømmer *beløbet*, så «Buy DeskUptime Pro — 19 USD/year»
+    om et produkt Stripe sælger **engang** er grønt, selv om den er samme
+    fejlform som `$144/year` om UptimeRobot. Katalogen har sandheden:
+    `subscription: true/false` og `price_note` pr. produkt. Accept: porten
+    dømmer perioden i knappens egen tekst mod `subscription` + `price_note` for
+    alle 84 knapper på EN og DA (år/year/annuel, engang/once/one-time,
+    lifetime), med en mutation der sætter «/year» ind på et engangskøb. Først
+    skal de 84 knappers faktiske ord *måles* og skrevet ned — ellers bliver
+    porten en ny `$144/year`.

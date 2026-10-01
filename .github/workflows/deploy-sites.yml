@@ -137,6 +137,11 @@ on:
       # Priserne på konkurrenterne. Uden kilden i filteret kunne en push, der
       # kun flytter et beløb i kilden, springe porten over.
       - 'tools/competitor_prices.json'
+      # Vores egne priser. Samme fejlform som de to linjer ovenfor: porten
+      # dømmer hver købsknaps beløb mod `stripe_catalog.json`, så en push der
+      # kun flytter et beløb i katalogen eller i kontrakten skal springe den
+      # port over, der afgør om den flytning er lovlig.
+      - 'tools/check_own_prices.py'
       - 'tools/check_tool_paid_path.py'
       - 'tools/tool_paid_path_blind.json'
       # Ratcheten over de betalte veje hver side lå på. Samme grund som

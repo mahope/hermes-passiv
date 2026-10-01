@@ -3107,3 +3107,16 @@ er forsvundet, fordi ingen skal bygge den.
 **Ny opgave 40** skriver ned, at *vores egne* priser er den ene påstand uden dom
 i denne familie. Målingen siger at der ingen fejl er nu; opgaven er porten, så
 den næste fejl ikke kan være stille.
+
+## Opgave 40 — vores egne priser fik en dom (1/10, `ceo/egen-pris-port`)
+
+`tools/check_own_prices.py`: hver købsknap i `site/` mod `stripe_catalog.json` på
+tre ting — beløbet skal stå (i knappens tekst eller i `pt-price` i samme
+`.pt-foot`), det skal være katalogens, og `payment_link` skal være det linket
+kontraktrækken og `_worker.js` peger på. Målt 1/10: 84 knapper, 0 fund.
+Selvtest 13/13, seks mutationer + to byttede links fanget. Gaten 118 steps.
+
+To fejl målt undervejs, begge mine: en extractor der kun læste `$79` (ikke
+«79 $», «19 USD», «79&nbsp;$») fandt 38 af 84 knapper «uden pris»; og
+`.pt-foot`-faldet læste alle pristag i dokumentet i stedet for det i knappens egen
+kort, hvilket gav 40 falske fund på `/paid-templates`.
