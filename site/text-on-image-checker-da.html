@@ -19,24 +19,6 @@
 {"@context":"https://schema.org","@type":"WebApplication","name":"Tekst-på-billede kontrasttjek","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/text-on-image-checker-da","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Gratis browserværktøj der måler WCAG-kontrasten mellem tekst på et billede og de faktiske pixels bag teksten."}
 </script>
 <script defer src="/track.js"></script>
-<style>
-  .ti-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
-  .ti-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
-  .ti-field { display:flex; flex-direction:column; gap:6px; }
-  .ti-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
-  .ti-canvas-wrap { margin-top:18px; border:1px dashed var(--color-border); border-radius:12px; overflow:hidden; background:
-    repeating-conic-gradient(rgba(128,128,128,.15) 0% 25%, transparent 0% 50%) 50%/16px 16px; }
-  .ti-canvas-wrap canvas { display:block; width:100%; height:auto; cursor:text; }
-  .ti-result { margin-top:16px; padding:14px 16px; border-radius:10px; font-size:.95rem; line-height:1.5; }
-  .ti-pass { background:rgba(22,163,74,.12); border:1px solid rgba(22,163,74,.45); }
-  .ti-fail { background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.45); }
-  .ti-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; color:#fff; }
-  .ti-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
-  input[type=color].ti-color { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
-  .ti-input { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); }
-  select.ti-input { max-width:200px; }
-  .ti-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
-</style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
@@ -68,7 +50,7 @@
     </div>
     <div class="ti-field">
       <label for="text">2. Tekst på billedet</label>
-      <input type="text" id="text" class="ti-input" value="Din overskrift her" style="width:220px">
+      <input type="text" id="text" class="ti-input" value="Din overskrift her">
     </div>
     <div class="ti-field">
       <label for="fg">3. Tekstfarve</label>
@@ -139,219 +121,42 @@
   mahoje.dk · Gratis GDPR- &amp; tilgængelighedsværktøjer der kører i din browser
 </footer>
 
+<script src="/text-on-image-core.js"></script>
 <script>
+/* Kort: kernen ligger i `/text-on-image-core.js`, og denne side giver den sin
+   egen tekst og sit eget pro-kort. Prisen og perioden står her i HTML, fordi
+   `check_own_prices` dømmer pr. fil — en pris i en `.js` er en pris ingen port
+   kan se. */
 (function () {
-  'use strict';
-  var $ = function (id) { return document.getElementById(id); };
-  var cv = $('cv'), ctx = cv.getContext('2d', { willReadFrequently: true });
-  var img = null, tx = 0, ty = 0, dragging = false;
-
-  function hexToRgb(h) {
-    h = h.replace('#', '');
-    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
-  }
-  function lum(rgb) {
-    var c = rgb.map(function (v) {
-      v /= 255;
-      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-  }
-  function ratio(a, b) {
-    var l1 = lum(a), l2 = lum(b);
-    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
-    return (l1 + 0.05) / (l2 + 0.05);
-  }
-
-  // Den betalte vej, skrevet ind i resultatet: hullet bliver først synligt,
-  // når du har set at ét billede blev målt og de 400 andre ikke blev.
-  // En pris over lærredet ville være en salgstale i stedet.
   var PRO_CARD =
       '<div class="pro-card">'
-    +'<h3>Du tjekkede ét billede. Et website er alle billeder.</h3>'
+    +'<h3>Du har tjekket ét billede. Et website er alle billeder.</h3>'
     +'<p class="pro-lead">Det her kunne ikke se på:</p>'
     +'<ul class="pro-list">'
-    +'<li><strong>Alle de andre billeder.</strong> Indbakket tekst i et foto er ulæselig på én baggrund og fin på den næste; det er 400 domme på et rigtigt site.</li>'
-    +'<li><strong>Reglerne omkring billedet.</strong> Manglende alt-tekst, formularfelter uden label, rækkefølge i overskrifter, ARIA og frames — 15 tilgængelighedstjek på tværs af alle sider.</li>'
-    +'<li><strong>En rapport du kan give en kunde.</strong> Fundene som PDF, med de server-side tjek oveni.</li>'
+    +'<li><strong>Alle de andre billeder.</strong> tekst bagt ind i et foto er ulæselig på én baggrund og fin på den næste; det er 400 vurderinger på et rigtigt website.</li>'
+    +'<li><strong>Reglerne omkring billedet.</strong> Manglende alt-tekst, formlabels, rækkefølge på overskrifter, ARIA og frames — 15 tilgængelighedstjek på hver side.</li>'
+    +'<li><strong>En rapport du kan aflevere til en kunde.</strong> Fundene som PDF, med de server-side tjek oveni.</li>'
     +'</ul>'
     +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
     +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
     +'</div>';
-
-  function fontSizePx() {
-    return Math.max(18, Math.round(cv.width * 0.06));
-  }
-  // `measureText()` reads whatever font is currently set, so every caller
-  // that measures has to set it first — otherwise the first box after page
-  // load is measured in the canvas default of 10px sans-serif.
-  function applyFont() {
-    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
-    ctx.textBaseline = 'top';
-  }
-  function draw() {
-    if (!img) return;
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    applyFont();
-    ctx.fillStyle = $('fg').value;
-    ctx.fillText($('text').value || ' ', tx, ty);
-  }
-  // The letters on their own, on a cleared canvas. Alpha is then exactly how
-  // much of each pixel the glyph covers, which is the one thing a colour
-  // distance can never tell you.
-  function drawTextLayer() {
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    applyFont();
-    ctx.fillStyle = $('fg').value;
-    ctx.fillText($('text').value || ' ', tx, ty);
-  }
-
-  // A pixel with more than this much glyph on it is text, not background.
-  // Measured 30/9: the old filter threw away anything within dr+dg+db < 120
-  // of the text colour, but an anti-aliased glyph edge at 16% coverage
-  // already scores 126 — so the edges survived, the tool measured white
-  // text against its own grey fringe, and answered 1.47:1 for white text
-  // on a white photo.
-  var COVER_MAX = 8;
-  // The box is clipped to the canvas, never nudged back inside it:
-  // getImageData() outside the canvas returns transparent black, which
-  // reads as a black background and invents contrast that is not there.
-  function textBox() {
-    applyFont();
-    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));
-    var w = Math.min(Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width)),
-                     cv.width - x);
-    var h = Math.min(fontSizePx(), cv.height - y);
-    if (w < 2 || h < 2) return null;
-    return { x: x, y: y, w: w, h: h };
-  }
-  function sampleContrast() {
-    if (!img) return null;
-    var box = textBox();
-    if (!box) return null;
-    // Pass 1 — the photo alone, read back as the background.
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;
-    // Pass 2 — the letters alone, so alpha is the glyph coverage.
-    drawTextLayer();
-    var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;
-
-    var bgCandidates = [];
-    for (var i = 0; i < photo.length; i += 4) {
-      if (glyph[i + 3] > COVER_MAX) continue; // this pixel is a letter
-      bgCandidates.push([photo[i], photo[i + 1], photo[i + 2]]);
+  window.TiContrast.mount({
+    prefix: '',
+    strings: {
+      dec: ',',
+      pass: 'BESTÅET', fail: 'IKKE BESTÅET',
+      worstCase: '(værste tilfælde bag din tekst)',
+      needs: 'kræver', forAA: 'for WCAG AA',
+      largeText: '(stor tekst)', normalText: '(normal tekst)',
+      aaNotAAA: 'Består AA men ikke AAA', alsoAAA: 'Består også AAA.',
+      tryFix: 'Prøv en mørkere/lysere tekstfarve, eller læg en translucent skærm bag teksten.',
+      measured: 'Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.',
+      errNotImage: 'Vælg venligst en billedfil.',
+      errUnreadable: 'Kunne ikke læse den billedfil.',
+      proCard: PRO_CARD,
+      note: 'Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.'
     }
-    // Every pixel under the box is more than a letter thick, so there is no
-    // visible background left to read. Fall back to the photo under the box
-    // rather than reporting no number at all.
-    if (!bgCandidates.length) {
-      for (var j = 0; j < photo.length; j += 4) {
-        bgCandidates.push([photo[j], photo[j + 1], photo[j + 2]]);
-      }
-    }
-    // Worst case: the foreground against the lightest and the darkest
-    // background pixel a reader can actually see behind the letters.
-    var minL = Infinity, maxL = -Infinity, minC = null, maxC = null;
-    bgCandidates.forEach(function (c) {
-      var L = lum(c);
-      if (L < minL) { minL = L; minC = c; }
-      if (L > maxL) { maxL = L; maxC = c; }
-    });
-    var fgRgb = hexToRgb($('fg').value);
-    var worst = Infinity;
-    [minC, maxC].forEach(function (c) {
-      if (!c) return;
-      var r = ratio(fgRgb, c);
-      if (r < worst) worst = r;
-    });
-    return { ratio: worst === Infinity ? null : worst };
-  }
-
-  function updateResult() {
-    var res = $('result'), errEl = $('err');
-    errEl.textContent = '';
-    var s = sampleContrast();
-    if (!s || s.ratio === null) { res.hidden = true; return; }
-    var large = $('fontsize').value === 'large';
-    var need = large ? 3 : 4.5;
-    var r = s.ratio;
-    var passAA = r >= need;
-    var passAAA = r >= (large ? 4.5 : 7);
-    res.hidden = false;
-    res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
-    res.innerHTML =
-      '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
-      (passAA ? 'BESTÅET' : 'IKKE BESTÅET') + '</span>&nbsp; <strong>' + r.toFixed(2).replace('.', ',') + ':1</strong> ' +
-      '(værste tilfælde bag din tekst) — kræver ' + String(need).replace('.', ',') + ':1 for WCAG AA ' +
-      (large ? '(stor tekst)' : '(normal tekst)') +
-      (passAA && !passAAA ? '<br>Består AA men ikke AAA (' + (large ? '4,5' : '7') + ':1).' :
-       passAAA ? '<br>Består også AAA.' :
-       '<br>Prøv en mørkere/lysere tekstfarve, eller læg en translucent skærm bag teksten.') +
-      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.</span>'
-      + PRO_CARD +
-      '<br><span style="font-size:13px;color:var(--color-text-muted)">Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.</span>';
-  }
-
-  function loadFile(file) {
-    var errEl = $('err');
-    errEl.textContent = '';
-    if (!file || !/^image\//.test(file.type)) { errEl.textContent = 'Vælg venligst en billedfil.'; return; }
-    var url = URL.createObjectURL(file);
-    var im = new Image();
-    im.onload = function () {
-      img = im;
-      var maxW = 900;
-      var scale = Math.min(1, maxW / im.naturalWidth);
-      cv.width = Math.round(im.naturalWidth * scale);
-      cv.height = Math.round(im.naturalHeight * scale);
-      tx = Math.round(cv.width * 0.06);
-      ty = Math.round(cv.height * 0.70);
-      URL.revokeObjectURL(url);
-      updateAll();
-    };
-    im.onerror = function () { errEl.textContent = 'Kunne ikke læse den billedfil.'; };
-    im.src = url;
-  }
-
-  function pos(e) {
-    var rect = cv.getBoundingClientRect();
-    var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    tx = cx * cv.width / rect.width - fontSizePx() / 2;
-    ty = cy * cv.height / rect.height - fontSizePx() / 2;
-  }
-  function onMove(e) {
-    if (!img) return;
-    e.preventDefault();
-    pos(e);
-    updateAll();
-  }
-  // `sampleContrast()` ends on a cleared canvas holding only the letters, so
-  // the visible drawing is the last thing that happens, not the first.
-  function updateAll() { updateResult(); draw(); }
-
-  $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
-  $('text').addEventListener('input', updateAll);
-  $('fg').addEventListener('input', updateAll);
-  $('fontsize').addEventListener('change', updateAll);
-  cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
-  window.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
-  window.addEventListener('mouseup', function () { dragging = false; });
-  cv.addEventListener('touchstart', onMove, { passive: false });
-
-  var demo = document.createElement('canvas');
-  demo.width = 900; demo.height = 420;
-  var dctx = demo.getContext('2d');
-  var grad = dctx.createLinearGradient(0, 0, 900, 420);
-  grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
-  dctx.fillStyle = grad; dctx.fillRect(0, 0, 900, 420);
-  dctx.fillStyle = 'rgba(255,255,255,0.35)';
-  dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
-  img = demo;
-  cv.width = demo.width; cv.height = demo.height;
-  tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.62);
-  updateAll();
+  });
 })();
 </script>
 <script>

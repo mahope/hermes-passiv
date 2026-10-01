@@ -19,24 +19,6 @@
 {"@context":"https://schema.org","@type":"WebApplication","name":"Text on Image Contrast Checker","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/text-on-image-checker","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free browser-based tool that measures WCAG contrast between text placed on an image and the actual image pixels behind the text."}
 </script>
 <script defer src="/track.js"></script>
-<style>
-  .ti-card { border:1px solid var(--color-border); border-radius:var(--radius); padding:24px; background:var(--color-surface); margin-top:20px; }
-  .ti-row { display:flex; flex-wrap:wrap; gap:16px; align-items:end; }
-  .ti-field { display:flex; flex-direction:column; gap:6px; }
-  .ti-field label { font-size:.85rem; color:var(--color-text-muted); font-weight:600; }
-  .ti-canvas-wrap { margin-top:18px; border:1px dashed var(--color-border); border-radius:12px; overflow:hidden; background:
-    repeating-conic-gradient(rgba(128,128,128,.15) 0% 25%, transparent 0% 50%) 50%/16px 16px; }
-  .ti-canvas-wrap canvas { display:block; width:100%; height:auto; cursor:text; }
-  .ti-result { margin-top:16px; padding:14px 16px; border-radius:10px; font-size:.95rem; line-height:1.5; }
-  .ti-pass { background:rgba(22,163,74,.12); border:1px solid rgba(22,163,74,.45); }
-  .ti-fail { background:rgba(220,38,38,.10); border:1px solid rgba(220,38,38,.45); }
-  .ti-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:.8rem; color:#fff; }
-  .ti-error { color:var(--color-red); font-size:.9rem; margin-top:10px; min-height:1.2em; }
-  input[type=color].ti-color { width:52px; height:44px; border:1px solid var(--color-border); border-radius:8px; background:none; padding:2px; cursor:pointer; }
-  .ti-input { padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface-2); color:var(--color-text); }
-  select.ti-input { max-width:180px; }
-  .ti-note { margin-top:18px; font-size:.88rem; color:var(--color-text-muted); }
-</style>
   <meta property="og:image" content="https://hermes-passiv.pages.dev/cover.jpg">
   <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
@@ -68,7 +50,7 @@
     </div>
     <div class="ti-field">
       <label for="text">2. Overlay text</label>
-      <input type="text" id="text" class="ti-input" value="Your headline here" style="width:220px">
+      <input type="text" id="text" class="ti-input" value="Your headline here">
     </div>
     <div class="ti-field">
       <label for="fg">3. Text color</label>
@@ -138,35 +120,13 @@
   mahoje.dk · Free GDPR &amp; accessibility tools that run in your browser
 </footer>
 
+<script src="/text-on-image-core.js"></script>
 <script>
+/* Kort: kernen ligger i `/text-on-image-core.js`, og denne side giver den sin
+   egen tekst og sit eget pro-kort. Prisen og perioden står her i HTML, fordi
+   `check_own_prices` dømmer pr. fil — en pris i en `.js` er en pris ingen port
+   kan se. */
 (function () {
-  'use strict';
-  var $ = function (id) { return document.getElementById(id); };
-  var cv = $('cv'), ctx = cv.getContext('2d', { willReadFrequently: true });
-  var img = null, tx = 0, ty = 0, dragging = false;
-
-  // ---- color helpers -------------------------------------------------
-  function hexToRgb(h) {
-    h = h.replace('#', '');
-    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
-  }
-  function lum(rgb) {
-    var c = rgb.map(function (v) {
-      v /= 255;
-      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-  }
-  function ratio(a, b) {
-    var l1 = lum(a), l2 = lum(b);
-    if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
-    return (l1 + 0.05) / (l2 + 0.05);
-  }
-
-  // ---- result ----------------------------------------------------------
-  // The paid path, written into the result markup: the gap is only visible
-  // once you have seen that one image was measured and the other 400 were
-  // not. A price above the canvas would be a sales pitch instead.
   var PRO_CARD =
       '<div class="pro-card">'
     +'<h3>You checked one image. A site is every image.</h3>'
@@ -179,187 +139,22 @@
     +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>'
     +'<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>'
     +'</div>';
-
-  // ---- drawing --------------------------------------------------------
-  function fontSizePx() {
-    return Math.max(18, Math.round(cv.width * 0.06));
-  }
-  // `measureText()` reads whatever font is currently set, so every caller
-  // that measures has to set it first — otherwise the first box after page
-  // load is measured in the canvas default of 10px sans-serif.
-  function applyFont() {
-    ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
-    ctx.textBaseline = 'top';
-  }
-  function draw() {
-    if (!img) return;
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    applyFont();
-    ctx.fillStyle = $('fg').value;
-    ctx.fillText($('text').value || ' ', tx, ty);
-  }
-  // The letters on their own, on a cleared canvas. Alpha is then exactly how
-  // much of each pixel the glyph covers, which is the one thing a colour
-  // distance can never tell you.
-  function drawTextLayer() {
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    applyFont();
-    ctx.fillStyle = $('fg').value;
-    ctx.fillText($('text').value || ' ', tx, ty);
-  }
-
-  // ---- sampling -------------------------------------------------------
-  // A pixel with more than this much glyph on it is text, not background.
-  // Measured 30/9: the old filter threw away anything within dr+dg+db < 120
-  // of the text colour, but an anti-aliased glyph edge at 16% coverage
-  // already scores 126 — so the edges survived, the tool measured white
-  // text against its own grey fringe, and answered 1.47:1 for white text
-  // on a white photo.
-  var COVER_MAX = 8;
-  // The box is clipped to the canvas, never nudged back inside it:
-  // getImageData() outside the canvas returns transparent black, which
-  // reads as a black background and invents contrast that is not there.
-  function textBox() {
-    applyFont();
-    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));
-    var w = Math.min(Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width)),
-                     cv.width - x);
-    var h = Math.min(fontSizePx(), cv.height - y);
-    if (w < 2 || h < 2) return null;
-    return { x: x, y: y, w: w, h: h };
-  }
-  function sampleContrast() {
-    if (!img) return null;
-    var box = textBox();
-    if (!box) return null;
-    // Pass 1 — the photo alone, read back as the background.
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;
-    // Pass 2 — the letters alone, so alpha is the glyph coverage.
-    drawTextLayer();
-    var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;
-
-    var bgCandidates = [];
-    for (var i = 0; i < photo.length; i += 4) {
-      if (glyph[i + 3] > COVER_MAX) continue; // this pixel is a letter
-      bgCandidates.push([photo[i], photo[i + 1], photo[i + 2]]);
+  window.TiContrast.mount({
+    prefix: '',
+    strings: {
+      pass: 'PASS', fail: 'FAIL',
+      worstCase: '(worst-case behind your text)',
+      needs: 'needs', forAA: 'for WCAG AA',
+      largeText: '(large text)', normalText: '(normal text)',
+      aaNotAAA: 'Passes AA but not AAA', alsoAAA: 'Also passes AAA.',
+      tryFix: 'Try a darker/lighter text color, or add a translucent scrim behind the text.',
+      measured: 'Measured against the lightest and darkest image pixels under your letters.',
+      errNotImage: 'Please choose an image file.',
+      errUnreadable: 'Could not read that image file.',
+      proCard: PRO_CARD,
+      note: 'This check is free and runs entirely in your browser. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.'
     }
-    // Every pixel under the box is more than a letter thick, so there is no
-    // visible background left to read. Fall back to the photo under the box
-    // rather than reporting no number at all.
-    if (!bgCandidates.length) {
-      for (var j = 0; j < photo.length; j += 4) {
-        bgCandidates.push([photo[j], photo[j + 1], photo[j + 2]]);
-      }
-    }
-    // Worst case: the foreground against the lightest and the darkest
-    // background pixel a reader can actually see behind the letters.
-    var minL = Infinity, maxL = -Infinity, minC = null, maxC = null;
-    bgCandidates.forEach(function (c) {
-      var L = lum(c);
-      if (L < minL) { minL = L; minC = c; }
-      if (L > maxL) { maxL = L; maxC = c; }
-    });
-    var fgRgb = hexToRgb($('fg').value);
-    var worst = Infinity;
-    [minC, maxC].forEach(function (c) {
-      if (!c) return;
-      var r = ratio(fgRgb, c);
-      if (r < worst) worst = r;
-    });
-    return { ratio: worst === Infinity ? null : worst };
-  }
-
-  function updateResult() {
-    var res = $('result'), errEl = $('err');
-    errEl.textContent = '';
-    var s = sampleContrast();
-    if (!s || s.ratio === null) { res.hidden = true; return; }
-    var large = $('fontsize').value === 'large';
-    var need = large ? 3 : 4.5;
-    var r = s.ratio;
-    var passAA = r >= need;
-    var passAAA = r >= (large ? 4.5 : 7);
-    res.hidden = false;
-    res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
-    res.innerHTML =
-      '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
-      (passAA ? 'PASS' : 'FAIL') + '</span>&nbsp; <strong>' + r.toFixed(2) + ':1</strong> ' +
-      '(worst-case behind your text) — needs ' + need + ':1 for WCAG AA ' +
-      (large ? '(large text)' : '(normal text)') +
-      (passAA && !passAAA ? '<br>Passes AA but not AAA (' + (large ? '4.5' : '7') + ':1).' :
-       passAAA ? '<br>Also passes AAA.' :
-       '<br>Try a darker/lighter text color, or add a translucent scrim behind the text.') +
-      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>'
-      + PRO_CARD +
-      '<br><span style="font-size:13px;color:var(--color-text-muted)">This check is free and runs entirely in your browser. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</span>';
-  }
-
-  // ---- events ----------------------------------------------------------
-  function loadFile(file) {
-    var errEl = $('err');
-    errEl.textContent = '';
-    if (!file || !/^image\//.test(file.type)) { errEl.textContent = 'Please choose an image file.'; return; }
-    var url = URL.createObjectURL(file);
-    var im = new Image();
-    im.onload = function () {
-      img = im;
-      var maxW = 900;
-      var scale = Math.min(1, maxW / im.naturalWidth);
-      cv.width = Math.round(im.naturalWidth * scale);
-      cv.height = Math.round(im.naturalHeight * scale);
-      tx = Math.round(cv.width * 0.06);
-      ty = Math.round(cv.height * 0.70);
-      URL.revokeObjectURL(url);
-      updateAll();
-    };
-    im.onerror = function () { errEl.textContent = 'Could not read that image file.'; };
-    im.src = url;
-  }
-
-  function pos(e) {
-    var rect = cv.getBoundingClientRect();
-    var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    tx = cx * cv.width / rect.width - fontSizePx() / 2;
-    ty = cy * cv.height / rect.height - fontSizePx() / 2;
-  }
-  function onMove(e) {
-    if (!img) return;
-    e.preventDefault();
-    pos(e);
-    updateAll();
-  }
-  // `sampleContrast()` ends on a cleared canvas holding only the letters, so
-  // the visible drawing is the last thing that happens, not the first.
-  function updateAll() { updateResult(); draw(); }
-
-  $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
-  $('text').addEventListener('input', updateAll);
-  $('fg').addEventListener('input', updateAll);
-  $('fontsize').addEventListener('change', updateAll);
-  cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
-  window.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
-  window.addEventListener('mouseup', function () { dragging = false; });
-  cv.addEventListener('touchstart', onMove, { passive: false });
-
-  // Default demo background so the tool works before uploading anything.
-  var demo = document.createElement('canvas');
-  demo.width = 900; demo.height = 420;
-  var dctx = demo.getContext('2d');
-  var grad = dctx.createLinearGradient(0, 0, 900, 420);
-  grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
-  dctx.fillStyle = grad; dctx.fillRect(0, 0, 900, 420);
-  dctx.fillStyle = 'rgba(255,255,255,0.35)';
-  dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
-  loadDemo();
-  function loadDemo() {
-    img = demo;
-    cv.width = demo.width; cv.height = demo.height;
-    tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.62);
-    updateAll();
-  }
+  });
 })();
 </script>
 <script>

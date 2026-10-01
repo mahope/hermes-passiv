@@ -714,15 +714,29 @@ def self_test() -> int:
         ok(bool(wrap_finds),
            "pagepass-mutationen gør porten rød med tabte regler")
         # Fundet skal *navngive filen* — en tæller uden navn kan ikke rettes.
-        # Og det skal ramme de klasser mutationen faktisk skaber: `.ti-canvas-wrap`
-        # er i markup på `/text-on-image-checker` og i ingen `:root`-regel, så
-        # den er det bevis, mutationen gav. Navnet er fundet i kilden, ikke
-        # navngivet her — ellers ville porten være grøn fordi den mødte sig selv.
+        # Og det skal ramme en klasse mutationen faktisk skaber, altså en der
+        # ligger i sidens *egne* CSS og ikke i `style.css`.
+        #
+        # 2/10 flyttede `.ti-canvas-wrap` (med hele `ti-*`-familien) fra de to
+        # værktøjssiders `<style>`-blok ind i `style.css`. Den behøver derfor
+        # *ikke* være fundet længere: skallen erklærer den nu, så
+        # `pagepass.OWNED_SELECTORS` kan ikke spise den, og det er stærkere
+        # end den gamle tilstand. Beviset på at mutationen stadig virker, er de
+        # klasser der endnu kun lever i en sides egen CSS — og dommen må derfor
+        # både finde en af dem *og* kunne finde `.ti-canvas-wrap` igen, hvis
+        # nogen flyttede den tilbage i en `<style>`-blok.
         ok(all("/" in f.page for f in wrap_finds),
            "mutationen navngiver den ramte side")
-        ok(any("ti-canvas-wrap" in f.detail for f in wrap_finds),
-           f"mutationen rammer den tabte `*-wrap`-regel, ikke en vilkårlig "
-           f"fejl ({[f.detail[:60] for f in wrap_finds[:2]]})")
+        egen_css = [f for f in wrap_finds
+                    if not any(k in f.detail for k in ("ti-canvas-wrap",))]
+        ok(bool(egen_css),
+           f"mutationen rammer en klasse der kun lever i sidens egen CSS "
+           f"({[f.detail[:60] for f in wrap_finds[:2]]})")
+        # Og `.ti-canvas-wrap` må *ikke* være blandt fundene nu — den er flyttet
+        # til skallen. Hvis den stadig væk, ligger den stadig i en `<style>`.
+        ok(not any("ti-canvas-wrap" in f.detail for f in wrap_finds),
+           f"`.ti-canvas-wrap` er erklæret i style.css og kan derfor ikke "
+           f"spises væk ({[f.detail[:60] for f in wrap_finds[:2]]})")
         shutil.copy2(ROOT / "tools" / "pagepass.py", work / "tools" / "pagepass.py")
 
         # Mutation 2: en token forlader `:root` og bliver produktsbundet.

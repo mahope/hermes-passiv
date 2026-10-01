@@ -1,25 +1,24 @@
 # STATUS
 
-- **AI-banneren på 187 artikler lovede et svar, der ikke kunne gives.** Rettelsen
-  1/10 gjorde `/compliance-ai` ærlig, men knapperne blev stående: målt 1/10
-  svarer `GET /api/compliance-ai` `available: false`, og alle 187 sagde «a
-  practical answer in seconds» / «Spørg Compliance-AI'en» lige over folden —
-  hver knap førte til en side, der siger, at assistenten ikke er slået til.
-  Sandheden ligger nu i `tools/ai_cta.json`, banneren siger «See what we
-  publish free» / «Se hvad vi udgiver gratis», og
-  `tools/check_ai_cta_honesty.py` dømmer alle 187 mod den. Målt først: porten
-  **750 fund** på den gamle kode; tre mutationer gjort røde — selftest 4/4.
-- **Alle otte compliance-generatorer har nu en købsvej til den betalte vare
-  der svarer til præcis deres output.** RoPA, privacy-notice og
-  EAA-erklæringen (EN + DA) hænger et kort på resultatet, med pris og periode
-  læst fra `tools/stripe_catalog.json`. Baseline før: **0 af 6** sider havde
-  et `buy.stripe.com`-link. Kortene siger det ærligt, de sælger *ikke* en
-  betalt udgave af gratis-værktøjet. Målt i browseren på 390 og 1280 px × 6
-  sider: `overflowX=0`, knap 46–85 px høj, og i print-medie er kortet
-  `display:none`. Dommen: `tests/scan-clients.test.mjs` 354/354, fem
-  mutationer gjort røde.
-- **Deploy-noterne er lukket på indhold 2/10.** `ceo/generator-kobsvej` (DPA +
-  NIS2) er målt på live `08ccd12`: alle fire domme grønne, CI grøn.
+- **Kontrasttjekkeren kører nu inde i den artikel der får hele trafikken.**
+  `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside
+  med 8 af 18 besøgende (28 d) og **100 % bounce** — alle otte forlod den igen,
+  og værktøjet de blev sendt videre til fik 1. Begge artikler (EN + DA) har nu
+  `#try-it` / `#prov-dit-billede` med selve værktøjet, og heroens primære
+  handling er det anker i stedet for et hop ud af siden. Baseline før: **0**
+  `ti-card` på artiklerne. Målt i browseren på 390 og 1280 px × 5 sider:
+  `overflowX=0`, resultatet skriver 3,86:1 på EN og 4,20:1 på DA, ingen
+  `pageerror`. WCAG-formlen lå før som **fire** kopier; den ligger nu i
+  `site/text-on-image-core.js`, og dommen «kernen definerer `sampleContrast`
+  præcis én gang» er grøn.
+- **En rigtig fejl faldt ud af designkontrollen:** `.ti-field` er en kolonne,
+  så den delte regel `.ti-field > * { flex: 1 1 12rem }` blev til en **højde**
+  på 12 rem — alle fire felter stod 192 px høje på en telefon, og
+  farvevælgeren blev et 30 px bredt højt bjerg. Det lå på værktøjssiderne
+  længe før denne iteration. Målt før/efter i browseren: 192 px → 44–48 px.
+- **Deploy-noterne er lukket på indhold 2/10.** `ceo/generator-kobsvej-2` er målt
+  på live `0adc322`: alle fire domme grønne på seks sider. `ceo/ai-cta-uden-loefte`
+  afventer sit deploy-vindue.
 - **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
   ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
@@ -27,6 +26,24 @@
   Squeezy, Search Console, og **bogenes betalte udgave** (se ❓).
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: kontrasttjekkeren indeni de to artikler
+  ceo/kontrast-tjekker-i-artiklen 2026-10-02` — måles på **indhold**, ikke på
+  HTTP 200. Dom 1: `/blog/text-on-image-contrast-check` og
+  `/da/blog/tekst-paa-billede-kontrasttjek` har `ti-card` 1 gang, `ti-canvas-wrap`
+  1 gang, `art-cv` 1 gang og `TiContrast.mount` 1 gang hver — altså er værktøjet
+  faktisk der, ikke kun en omtale af det. Dom 2: heroens `btn-primary` er
+  `href="#try-it"` (EN) og `href="#prov-dit-billede"` (DA), og begge anker findes
+  som `id` i markup'en — læseren bliver på siden. Dom 3:
+  `/text-on-image-core.js` svarer **200** og `text-on-image-core.js` ligger i
+  `dist/mahope.tools/`, og **alle fire** sider indlæser den (0 kopier af
+  `function sampleContrast` i nogen af dem). Dom 4: resultatet renderes i live —
+  `/text-on-image-checker` måler 3,86:1 på EN og 4,20:1 på DA (dansk komma),
+  og artiklens `#try-it`-kort har samme mål. Dom 5: `art-result` har
+  `role="status"` + `aria-live="polite"`, `art-err` har `role="alert"`, og alle
+  fire felter har `<label for>` (dommen er `tools/check_form_labels.py`).
+  Dommen er `node tests/scan-clients.test.mjs` (392/392) +
+  `python3 tools/check_contrast_sampling.py` (22/22) + gaten.
 
 - `VERIFICÉR DEPLOY: AI-banneren uden et løfte den ikke kan holde
   ceo/ai-cta-uden-loefte 2026-10-02` — måles på **indhold**, ikke på HTTP 200.
@@ -41,31 +58,16 @@
   `/api/track`-tællingen virker uændret. Dom 5: `GET /api/compliance-ai` svarer
   stadig `{"ok":true,"available":false}` — banneren siger det samme, og det er
   hele pointen. Dommen er `python3 tools/check_ai_cta_honesty.py` + gaten.
-
-- `VERIFICÉR DEPLOY: købsvej på RoPA, privacy notice og EAA-erklæring
-  ceo/generator-kobsvej-2 2026-10-02` — måles på **indhold** på
-  `https://mahope.tools/{ropa-generator,ropa-generator-da,
-  privacy-notice-generator,privacy-notice-generator-da,
-  accessibility-statement-generator,tilgaengelighedserklaering-generator-da}`.
-  Domden er `node tests/scan-clients.test.mjs` (354/354) + gaten. Dom 1: alle
-  seks sider har `upsell-card` 1 gang **og** `renderHTML(current) + UPSELL +
-  DONATION`. Dom 2: pris og periode er katalogens — RoPA `$59` + `engang`/`once`
-  med `bJe7sK8aT4My7dk7czbMQ05`, privacy notice `$149` + `engang`/`once` med
-  `eVqaEW0Iren855c68vbMQ0a`, EAA `$39` + `engang`/`once` med
-  `3cI7sK2Qz3IugNUgN9bMQ08`. Dom 3: kortet har `no-print`, så salgsteksten ikke
-  ender i det dokument brugeren udskriver eller kopierer. Dom 4: ingen af
-  siderne linker til e-book-bundlet, og ingen af dem siger «du behøver aldrig at
-  betale for noget» — den sætning på EAA-siden var en direkte modsigelse af
-  det nye kort og er erstattet.
-
-- `DEPLOY OK 2026-10-02` — DPA- og NIS2-generatorens købsvej. Note lukket på
-  **indhold** på live `08ccd12` (build-info.json → `08ccd12104fabb210…`), alle
-  fire domme målt: `upsell-card` 1 gang i hver af `dpa-generator`,
-  `dpa-generator-da`, `nis2-incident-generator` og `nis2-incident-generator-da`;
-  katalogens betalingslink 1 gang i hver; `$59` 2 gange og `$49` 1 gang pr. side;
-  perioden som sit eget ord — `once` 2/1 gange i EN, `engang` 1 gang i hver DA;
-  `renderHTML(current) + UPSELL + DONATION` 1 gang i alle fire; e-book-bundlet 0
-  gange i alle fire. CI for `08ccd12` er grøn.
+- `DEPLOY OK 2026-10-02` — købsvej på RoPA, privacy notice og EAA-erklæring.
+  Note lukket på **indhold** på live `0adc322` (`build-info.json` →
+  `0adc3224ef8756e5…`), alle fire domme målt på de seks sider: `upsell-card`
+  **1** gang i hver, `renderHTML(current) + UPSELL + DONATION` **1** gang i
+  hver, katalogens betalingslink **1** gang i hver (`bJe7sK8aT4My7dk7czbMQ05`
+  på de to RoPA-sider, `eVqaEW0Iren855c68vbMQ0a` på de to privacy-sider,
+  `3cI7sK2Qz3IugNUgN9bMQ08` på de to EAA-sider), beløbet fra katalogen pr. side
+  (`$59` / `$149` / `$39`) og perioden som sit egot ord — `once` i EN,
+  `engang` i DA. `no-print` findes på alle seks, e-book-bundlet **0** gange i
+  alle seks, og «behøver aldrig at betale for noget» **0** gange.
 
 - `DEPLOY OK 2026-10-02` — pro-kortet på `/scan` og `/scan-da`. Note lukket på
   **indhold** på live `919280b`. Alle fem domme målt: `class="result-card
@@ -289,15 +291,13 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    blev trykt med i brugerens egen rapport, fordi `@media print` skjuler `.btn`
    men ikke `.pro-card` — så PDF'en havde salgstext uden den eneste handling.
    Nu skjuler print-listen begge, målt i browseren (`display: none`).
-7. **Kontrast-tjekkeren indeni artiklen, der får hele trafikken.** Hvem: de 8
-   af 16 besøgende (28 d) der lander på `/blog/text-on-image-contrast-check` og
-   100 % forlader den igen; de skal ikke skulle klikke videre for at tjekke
-   deres eget billede. Tal: bounce på siden (baseline **100 %**) og kald til
-   `/text-on-image-checker` (baseline **1** pr. 28 d mod 8 indgange på
-   artiklen). Accept: artiklen har selve tjekkeren, så et billede kan læses uden
-   at forlade siden, og kernen ligger ét sted frem for i to kopier. Datagrund:
-   Plausible 28 d hentet 1/10 — artiklen er største indgangsside, mens
-   værktøjet den peger på fik 1 besøgende.
+7. ~~Kontrast-tjekkeren indeni artiklen, der får hele trafikken.~~
+   **Leveret 2/10** — begge artikler har selve værktøjet, og heroens primære
+   handling er et anker ned til det i stedet for et hop ud af siden. Målt først:
+   8 af 18 besøgende landede på artiklen, 100 % forlod den, og værktøjet fik 1.
+   Dertil fundet undervejs: felterne var 192 px høje på telefon, fordi en delt
+   `.ti-field > *`-regel gav kolonnebørnene en *højde* på 12 rem. WCAG-formlen
+   lå i fire kopier; den ligger nu i `site/text-on-image-core.js`.
 8. **Free mod Pro på ét sted.** Hvem: alle der køber. Tal: købsknapper pr.
    Pro-side (baseline: målt af `check_tool_sections.py`). Accept: hver Pro-side
    har den samme to-rækkers-tabel, og beløbet er læst fra

@@ -31,7 +31,7 @@
     <h1>Tekst-på-Billede Kontrasttjek<br>Sådan Tester Du Læsbarhed Gratis</h1>
     <p class="subtitle">Hero-billeder med tekst ovenpå er en af de mest almindelige tilgængelighedsfehler. Her ser du hvordan du tjekker den faktiske kontrast mellem teksten og pixels bagved — og hvad du gør, hvis den ikke består.</p>
     <div class="hero-cta">
-      <a href="/text-on-image-checker-da" class="btn-primary">Tjek dit billede nu &rarr;</a>
+      <a href="#prov-dit-billede" class="btn-primary">Tjek dit billede nu &rarr;</a>
       <a href="#hvordan" class="btn-secondary">Sådan virker det</a>
     </div>
     <p class="hero-note">Opdateret august 2026 &middot; 4 minutters læsning</p>
@@ -55,12 +55,48 @@
   <div class="container">
     <h2>Sådan gør du (under et minut)</h2>
     <ol>
-      <li>Åbn det <a href="/text-on-image-checker-da" style="color:var(--color-accent);">gratis tekst-på-billede kontrasttjek</a>.</li>
-      <li>Træk dit billede ind — eller indsæt et screenshot fra dit design direkte fra udklipsholderen.</li>
-      <li>Markér området hvor teksten står, og angiv tekstens farve.</li>
-      <li>Læs resultatet: værste og gennemsnitlig kontrast i området, plus bestået/dumpet for AA og AAA. Juster designet, indtil alt er grønt.</li>
+      <li>Indlæs dit billede i tjekkeren nedenfor — den starter med en demo-baggrund, så du kan se hvordan den virker, før du tilføjer noget.</li>
+      <li>Klik hvor teksten skal stå på billedet, eller træk den derhen. Skriv teksten, og vælg dens farve.</li>
+      <li>Læs forholdet. Det er målt mod de lyseste og mørkeste pixels lige bag dine bogstaver — det værste tilfælde, ikke gennemsnittet.</li>
+      <li>Justér designet, indtil det består: en semi-transparent skærm, en mørkere udskæring, eller en fast bjælke under teksten.</li>
     </ol>
-    <p>Værktøjet læser pixels via canvas-API'en og beregner relativ luminans pr. WCAG-specifikationen — samme formel som kommercielle værktøjer bruger. Du får altså samme tal, som en auditor vil måle.</p>
+    <p>Værktøjet læser pixels via canvas-API'en og beregner relativ luminans pr. WCAG-specifikationen — samme formel som kommercielle værktøjer bruger. Du får altså samme tal, som en auditor vil måle. Dit billede uploades aldrig.</p>
+  </div>
+</section>
+
+<section class="products" id="prov-dit-billede">
+  <div class="container">
+    <h2>Prøv det på dit eget billede</h2>
+    <p style="margin-top:0">Det her er samme værktøj som det <a href="/text-on-image-checker-da" style="color:var(--color-accent);">separate kontrasttjek</a>, bare kørt lige her. Intet skal installeres, ingen konto, og billedet bliver i din browser.</p>
+    <div class="ti-card" style="margin-top:18px">
+      <div class="ti-row">
+        <div class="ti-field">
+          <label for="art-file">1. Vælg et billede</label>
+          <input type="file" id="art-file" accept="image/*" class="ti-input">
+        </div>
+        <div class="ti-field">
+          <label for="art-text">2. Tekst på billedet</label>
+          <input type="text" id="art-text" class="ti-input" value="Din overskrift her">
+        </div>
+        <div class="ti-field">
+          <label for="art-fg">3. Tekstfarve</label>
+          <input type="color" class="ti-color" id="art-fg" value="#ffffff">
+        </div>
+        <div class="ti-field">
+          <label for="art-fontsize">Skriftstørrelse</label>
+          <select id="art-fontsize" class="ti-input">
+            <option value="small">&lt; 24 px (normal)</option>
+            <option value="large" selected>&ge; 24 px (stor)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ti-canvas-wrap">
+        <canvas id="art-cv" role="img" aria-label="Dit billede med flytbar tekst. Klik på billedet for at flytte teksten."></canvas>
+      </div>
+      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Klik hvor som helst på billedet (eller træk) for at placere teksten.</p>
+      <p class="ti-error" id="art-err" role="alert"></p>
+      <div id="art-result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+    </div>
   </div>
 </section>
 <div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> <a href="/scan-da" class="btn-secondary">Prøv den gratis scanner →</a></div>
@@ -136,6 +172,46 @@
   <p><a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a> — alle seks samlet, hver som gratis EPUB.</p>
 </div>
 </footer>
+<script src="/text-on-image-core.js"></script>
+<script>
+/* Tjekkeren i artiklen. Samme kern som `/text-on-image-checker-da` og den
+   engelske udgave, så en rettelse i WCAG-formlen slår alle steder igennem på
+   én gang.
+
+   Pro-kortet peger på artiklens egen `#rapport`-sektion, ligesom på den
+   engelske: artiklen har allerede sin købsvej med hele tabellen, og to
+   købsknapper til det samme produkt på én side er to valg uden at vælge. */
+(function () {
+  var PRO_CARD =
+      '<div class="pro-card">'
+    +'<h3>Du har tjekket ét billede. Et website er alle billeder.</h3>'
+    +'<p class="pro-lead">Det her kunne ikke se på:</p>'
+    +'<ul class="pro-list">'
+    +'<li><strong>Alle de andre billeder.</strong> tekst bagt ind i et foto er ulæselig på én baggrund og fin på den næste.</li>'
+    +'<li><strong>Reglerne omkring billedet.</strong> Manglende alt-tekst, formlabels, rækkefølge på overskrifter, ARIA og frames.</li>'
+    +'<li><strong>En rapport du kan aflevere til en kunde.</strong> Fundene som en fil du kan vedlægge.</li>'
+    +'</ul>'
+    +'<p><a class="btn" href="#rapport">Se hvad et tjek af hele sitet tilføjer</a></p>'
+    +'</div>';
+  window.TiContrast.mount({
+    prefix: 'art-',
+    strings: {
+      dec: ',',
+      pass: 'BESTÅET', fail: 'IKKE BESTÅET',
+      worstCase: '(værste tilfælde bag din tekst)',
+      needs: 'kræver', forAA: 'for WCAG AA',
+      largeText: '(stor tekst)', normalText: '(normal tekst)',
+      aaNotAAA: 'Består AA men ikke AAA', alsoAAA: 'Består også AAA.',
+      tryFix: 'Prøv en mørkere/lysere tekstfarve, eller læg en translucent skærm bag teksten.',
+      measured: 'Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.',
+      errNotImage: 'Vælg venligst en billedfil.',
+      errUnreadable: 'Kunne ikke læse den billedfil.',
+      proCard: PRO_CARD,
+      note: 'Tjekket er gratis og kører i din browser — dit billede forlader aldrig siden. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.'
+    }
+  });
+})();
+</script>
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
 </script>

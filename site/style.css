@@ -590,8 +590,37 @@ a.ext::after { content: ""; display: inline-block; width: 0.65em; height: 0.65em
 .gen fieldset { margin: 0; }
 .gen textarea { min-height: 6rem; }
 .gen input[type="text"], .gen input[type="email"], .gen input[type="url"], .gen select { width: 100%; }
+/* Tekst-på-billede-tjekkeren ------------------------------------------------
+   Flyttet fra `<style>` på de to værktøjssider 2/10. De ligger her, fordi
+   værktøjet nu også kører *inde i* de to artikler om tekster på billeder —
+   og en `.ti-result`-regel der kun findes på værktøjssiden, giver en artikel
+   hvor resultatboksen mangler al farve, ramme og badge. */
+.ti-card { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 24px; background: var(--color-surface); margin-top: 20px; }
+.ti-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; }
+.ti-field { display: flex; flex-direction: column; gap: 6px; }
+.ti-field label { font-size: .85rem; color: var(--color-text-muted); font-weight: 600; }
+.ti-canvas-wrap { margin-top: 18px; border: 1px dashed var(--color-border); border-radius: 12px; overflow: hidden; background: repeating-conic-gradient(rgba(128,128,128,.15) 0% 25%, transparent 0% 50%) 50%/16px 16px; }
+.ti-canvas-wrap canvas { display: block; width: 100%; height: auto; cursor: text; }
+.ti-result { margin-top: 16px; padding: 14px 16px; border-radius: 10px; font-size: .95rem; line-height: 1.5; }
+.ti-pass { background: rgba(22,163,74,.12); border: 1px solid rgba(22,163,74,.45); }
+.ti-fail { background: rgba(220,38,38,.10); border: 1px solid rgba(220,38,38,.45); }
+.ti-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: .8rem; color: #fff; }
+.ti-error { color: var(--color-red); font-size: .9rem; margin-top: 10px; min-height: 1.2em; }
+input[type="color"].ti-color { width: 52px; height: 44px; border: 1px solid var(--color-border); border-radius: 8px; background: none; padding: 2px; cursor: pointer; }
+.ti-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); }
+select.ti-input { max-width: 180px; }
+.ti-note { margin-top: 18px; font-size: .88rem; color: var(--color-text-muted); }
+
+/* `.ti-field` er en *kolonne* (`flex-direction: column`), så `flex: 1 1 12rem`
+   på børnene ville blive til en **højde** på 12 rem: målt 2/10 stod alle fire
+   felter i tjekkeren 192 px høje på en 390 px telefon, og farvevælgeren blev
+   et 30 px bredt højt bjerg. Derfor har `.ti-field` sit eget regelpar.
+   `.row` er bevidst *ikke* ændret — den bruges kun på `/url-inspector`, hvor
+   børnene er `<span class="label">` i en række, ikke felter. */
 .cb-field, .ti-field, .row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
-.cb-field > *, .ti-field > * { flex: 1 1 12rem; min-width: 0; max-width: 100%; }
+.cb-field > * { flex: 1 1 12rem; min-width: 0; max-width: 100%; }
+.ti-field > * { flex: 0 0 auto; min-width: 0; max-width: 100%; }
+.ti-field input[type="text"] { width: 100%; }
 input[type="file"] { max-width: 100%; min-width: 0; width: 100%; }
 .input-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .input-group input { flex: 1 1 14rem; }

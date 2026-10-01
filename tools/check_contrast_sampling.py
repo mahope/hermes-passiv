@@ -98,25 +98,51 @@ GRADIENT_TEKST = "Sort tekst hen over et gradientbillede"
 TOLERANS = 0.02
 
 # --------------------------------------------------------------------------
-# Udtrækningen. Kun den første inline-<script> der definerer `sampleContrast`
-# — den er sideens egen kode, ikke en kopi i porten.
+# Udtrækningen. WCAG-formlen ligger i `site/text-on-image-core.js` siden 2/10 —
+# fire sider bruger den, og fire kopier er fire steder hvor en rettelse kan
+# glemmes. Porten læser derfor *kernen* plus sidens eget `mount()`-kald, som er
+# den kode der faktisk ships. En side der definerer `sampleContrast` selv er
+# en fejl, ikke en fejl-fravær: så ville porten dømme kernen mens læseren
+# kørte kopien.
 # --------------------------------------------------------------------------
 IIFE_RE = re.compile(
-    r"<script(?![^>]*\bsrc=)[^>]*>\s*(\(function\s*\(\)\s*\{.*?\}\)\(\);)\s*</script>",
+    # `(?:/\*.*?\*/\s*)*` springer en *ledende* kommentar over — mount()-kallet
+    # har en. Det gøres her og ikke med en global kommentar-stripper, fordi den
+    # slugte `accept="image/*"` i markup'en og slugte dermed hele mount()-blokken
+    # med, da næste `*/` lå i kommentaren.
+    r"<script(?![^>]*\bsrc=)[^>]*>\s*(?:/\*.*?\*/\s*)*(\(function\s*\(\)\s*\{.*?\}\)\(\);)\s*</script>",
     re.S | re.I,
 )
+KERNE = SITE / "text-on-image-core.js"
 
 
 def hent_kode(fil: str) -> str:
-    """Sideens egen sampling-kode, eller en fejl der siger hvorfor ikke."""
+    """Kernen + sidens egen `mount()`-kald, eller en fejl der siger hvorfor ikke."""
+    if not KERNE.is_file():
+        raise SystemExit(
+            f"FEJL: {KERNE.name} mangler. Uden den har de fire sider der bruger "
+            "tjekkeren ingen sampling-kode at dømme.")
+    kerne = KERNE.read_text(encoding="utf-8")
+    if "function sampleContrast" not in kerne:
+        raise SystemExit(
+            f"FEJL: {KERNE.name} definerer ikke sampleContrast(). Porten dømmer "
+            "formlen; hvis den flytter et andet sted, skal denne pege med.")
     html = (SITE / fil).read_text(encoding="utf-8")
+    if re.search(r"function\s+sampleContrast\s*\(", html):
+        raise SystemExit(
+            f"FEJL: {fil} definerer sin egen sampleContrast() ude i markup'en. "
+            "Så dømmer porten kernen, mens læseren kører kopien — to formler, "
+            "en dømt.")
+    if '/text-on-image-core.js' not in html:
+        raise SystemExit(
+            f"FEJL: {fil} indlæser ikke /text-on-image-core.js. Uden den kalder "
+            "siden mount() på en global der aldrig findes.")
     for m in IIFE_RE.finditer(html):
-        if "sampleContrast" in m.group(1):
-            return m.group(1)
+        if "TiContrast.mount" in m.group(1):
+            return kerne + "\n\n" + m.group(1)
     raise SystemExit(
-        f"FEJL: {fil} har ingen inline-<script> der definerer sampleContrast(). "
-        "Er samplingslogikken flyttet ud i site/*.js? Så skal denne port "
-        "læse den fil i stedet for HTML'en.")
+        f"FEJL: {fil} har ingen inline-<script> der kalder TiContrast.mount(). "
+        "Er værktøjet flyttet, eller kalder siden kernen på en anden måde?")
 
 
 # --------------------------------------------------------------------------
@@ -322,7 +348,12 @@ globalThis.document = {
   getElementById: function (id) { return nodes[id] || new El(id); },
   createElement: function (t) { return t === 'canvas' ? new Canvas(1, 1) : new El(t); },
 };
-globalThis.window = { addEventListener: function () {} };
+// I en browser *er* `window` `globalThis`. Det er ikke en bivirkende detalje:
+// kernen lægger `TiContrast` på `globalThis`, og siden kalder den gennem
+// `window.` — så et lokalt `window`-objekt ville gøre `mount()` til en
+// ReferenceError, og porten ville dømme en side uden værktøj.
+globalThis.addEventListener = function () {};
+globalThis.window = globalThis;
 globalThis.Image = Img;
 globalThis.URL = { createObjectURL: function () { return 'blob:stub'; }, revokeObjectURL: function () {} };
 
@@ -387,23 +418,23 @@ MUTATIONER = (
     # hen over en mørk flæk, siger værktøjet det samme som da den stod over
     # den lyse. Fanges af de to todelte domme, der forventer hhv. 21:1 og 1:1.
     ("måler i hjørnet i stedet for hvor teksten står",
-     "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
-     "    var x = 0, y = Math.max(0, Math.round(ty));"),
+     "      var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
+     "      var x = 0, y = Math.max(0, Math.round(ty));"),
     # Den gamle kode i dens egen, kortere form: ét lag med billede *og* tekst,
     # brugt som både baggrund og dækningskort, uden filter. Det er præcis
     # fejlen der gav 1,47:1 for hvid tekst på hvid, og for hvid tekst over
     # den mørke halvdel tæller de hvide bogstaver som den lyseste baggrund:
     # 1:1 i stedet for 21:1.
     ("læser farverne fra det lag der indeholder teksten",
-     "    ctx.clearRect(0, 0, cv.width, cv.height);\n"
-     "    ctx.drawImage(img, 0, 0, cv.width, cv.height);\n"
-     "    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
-     "    // Pass 2 — the letters alone, so alpha is the glyph coverage.\n"
-     "    drawTextLayer();",
-     "    draw();\n"
-     "    var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
-     "    var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
-     "    if (false) drawTextLayer();"),
+     "      ctx.clearRect(0, 0, cv.width, cv.height);\n"
+     "      ctx.drawImage(img, 0, 0, cv.width, cv.height);\n"
+     "      var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
+     "      // Pass 2 — the letters alone, so alpha is the glyph coverage.\n"
+     "      drawTextLayer();",
+     "      draw();\n"
+     "      var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
+     "      var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
+     "      if (false) drawTextLayer();"),
     # Bemærk hvad porten tidligere IKKE dømte: at `worst` springer den
     # mørkeste baggrund over og svarer på den bedste. Det var umærkeligt
     # på de ensfarvede og todelte billeder, fordi de andre domme har hvid
@@ -414,13 +445,13 @@ MUTATIONER = (
     # over, svarer værktøjet 21:1 oveni en baggrund der indeholder rent
     # sort. Det er den fejl en læser aldrig ville få at vide.
     ("springer den mørkeste baggrund over og svarer på den bedste",
-     "    [minC, maxC].forEach(function (c) {",
-     "    [maxC].forEach(function (c) {"),
+     "      [minC, maxC].forEach(function (c) {",
+     "      [maxC].forEach(function (c) {"),
     # Flytter tekstkassen opad i stedet for at klippe den. Det er den fejl
     # der læseren mærker først på et fladt billede: kassen løber op i det
     # hvide og svaret falder fra 21:1 til 1:1.
     ("flytter tekstkassen opad i stedet for at klippe den",
-     "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
+     "      var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
      "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.min(cv.height - fontSizePx() - 1, Math.round(ty)));"),
 )
 

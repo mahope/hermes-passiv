@@ -12,7 +12,7 @@
 // Testen indlæser sidernes egne scripts i en vm-sandkasse med en minimal DOM og
 // kører dem mod et programmeret svarforløb, så "genkalder den?" og "hvad står der
 // i fejlkassen?" dømmes på den kode der faktisk ships — ikke på en kopi.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -194,6 +194,13 @@ function loadPage(path, fetchImpl, opts = {}) {
   // kan klikke. Sandkassen gør det samme — ellers ville de tre klienter der læser
   // den delte hjælper blive dømt mod en global der aldrig findes.
   vm.runInContext(netOverride ?? readFileSync(join(root, 'site/net.js'), 'utf8'), sandbox, { filename: 'site/net.js' });
+  // `opts.preload` er de `src`-scripts browseren ville have kørt *før* siden
+  // egen inline-kode. Uden dem kunne ingen dom lade en side kalde `TiContrast`:
+  // sandkassen læser kun de inline blokke, og så ville artiklens `mount()` bare
+  // være en ReferenceError — altså en grøn dom på en side med intet værktøj.
+  for (const fil of opts.preload || []) {
+    vm.runInContext(readFileSync(join(root, fil), 'utf8'), sandbox, { filename: fil });
+  }
   vm.runInContext(main, sandbox, { filename: path });
   return { sandbox, nodes };
 }
@@ -1021,11 +1028,27 @@ function mutated(path, from, to) {
       path: 'site/text-on-image-checker.html', label: 'text-on-image EN', product: 'eucomply-pro',
       report: /href="\/compliance-report"/, form: 'script',
       // Værktøjet indlæser en demo-baggrund ved sidevisning, så resultatet
-      // skrives uden et netværkskald. Sandkassen får et læse-canvas, så
-      // `sampleContrast()` faktisk måler noget og skriver sin markup.
+      // skrives uden et netværkskald. Sandkassen får et læse-canvas og kernen
+      // fra `/text-on-image-core.js`, fordi 2/10 flyttede WCAG-formlen dér —
+      // uden `preload` ville `mount()` være en ReferenceError, og dommen ville
+      // være grøn på en side uden værktøj.
       async kør() {
         const { nodes } = loadPage('site/text-on-image-checker.html', responses([OK_COOKIE]).fetchImpl,
-          { match: /sampleContrast/, canvas: true });
+          { match: /TiContrast\.mount/, canvas: true, preload: ['site/text-on-image-core.js'] });
+        await sleep(30);
+        return { markup: (nodes.get('result') || {}).innerHTML || '', afsløret: true,
+                 donation: (nodes.get('result') || {}).innerHTML || '' };
+      },
+    },
+    {
+      path: 'site/text-on-image-checker-da.html', label: 'text-on-image DA', product: 'eucomply-pro',
+      report: /href="\/da\/compliance-report"/, form: 'script',
+      // Samme kern som den engelske. Uden denne linje ville en fejl i den
+      // danske sides egen tekst (fx et tal med punktum i stedet for komma)
+      // være usynlig, fordi dommen kun læste den engelske.
+      async kør() {
+        const { nodes } = loadPage('site/text-on-image-checker-da.html', responses([OK_COOKIE]).fetchImpl,
+          { match: /TiContrast\.mount/, canvas: true, preload: ['site/text-on-image-core.js'] });
         await sleep(30);
         return { markup: (nodes.get('result') || {}).innerHTML || '', afsløret: true,
                  donation: (nodes.get('result') || {}).innerHTML || '' };
@@ -1544,6 +1567,107 @@ function mutated(path, from, to) {
       /There is no paid version of this notice/.test(html)
       || /Der er ingen betalt udgave af denne erklæring/.test(html),
       'kortet skal indrømme at denne erklæring ikke sælges');
+  }
+}
+
+// --------------------------------------------------------------------------
+// 15. Kontrasttjekkeren *inde i* de to artikler, og kernen ét sted.
+//     Målt 2/10 (Plausible 28 d): `/blog/text-on-image-contrast-check` var
+//     mahope.tools' største indgangsside med 8 af 18 besøgende og **100 %
+//     bounce** — alle otte forlod den igen, og 7 af dem nåede aldrig
+//     `/text-on-image-checker`, som artiklen sendte dem videre til. Den
+//     billigste retning på den trafik er at lade dem tjekke deres billede
+//     uden at forlade siden.
+//
+//     Fire domme, alle falsifiable på den gamle kode:
+//
+//     1. Kernen ligger i ÉN fil, og ingen af de fire sider har en egen kopi
+//        af `sampleContrast` — fire kopier af WCAG-formlen er fire steder,
+//        hvor en rettelse kan glemmes.
+//     2. Begge artikler *renderer et resultat*: `art-result` skriver en
+//        ratio, en dom (PASS/FAIL) og et pro-kort, målt på den kode der
+//        faktisk kører, ikke på markup'en.
+//     3. Artiklens egen `href` i heroen peger på det indlejrede værktøj, så
+//        læseren ikke sendes ud af siden for at gøre det han kom for.
+//     4. Pro-kortet i artiklen peger på artiklens *egen* `#report`, ikke på
+//        endnu et Stripe-link — artiklen har allerede sin købsvej med hele
+//        tabellen, og to knapper til samme produkt er to valg uden et valg.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  const ARTIKLER = [
+    { side: 'site/blog/text-on-image-contrast-check.html', sprog: 'EN', anker: '#try-it',
+      dom: 'Try it on your own image', set: 'PASS', fejl: 'FAIL', stoer: 'Try a darker/lighter text color' },
+    { side: 'site/da/blog/tekst-paa-billede-kontrasttjek.html', sprog: 'DA', anker: '#prov-dit-billede',
+      dom: 'Prøv det på dit eget billede', set: 'BESTÅET', fejl: 'IKKE BESTÅET', stoer: 'Prøv en mørkere/lysere tekstfarve' },
+  ];
+  const VAEKTOJER = ['site/text-on-image-checker.html', 'site/text-on-image-checker-da.html'];
+
+  ok('kernen ligger i sin egen fil', existsSync(join(root, KERNE)), KERNE + ' mangler');
+  // Dom 1. `sampleContrast` defineres i kernen og *kun* dér.
+  const defineret = readFileSync(join(root, KERNE), 'utf8').match(/function sampleContrast\s*\(/g) || [];
+  ok('kernen definerer sampleContrast præcis én gang', defineret.length === 1, `fandt ${defineret.length}`);
+  for (const f of [...VAEKTOJER, ...ARTIKLER.map((a) => a.side)]) {
+    const src = readFileSync(join(root, f), 'utf8');
+    ok(`${f}: indlæser den delte kerne i stedet for at kopiere den`,
+      /<script[^>]+src="\/text-on-image-core\.js"/.test(src), 'mangler <script src="/text-on-image-core.js">');
+    ok(`${f}: har ingen egen kopi af WCAG-formlen`,
+      !/function sampleContrast\s*\(/.test(src) && !/function lum\s*\(/.test(src),
+      'siden definerer stadig lum/sampleContrast selv');
+  }
+
+  for (const a of ARTIKLER) {
+    const src = readFileSync(join(root, a.side), 'utf8');
+    // Dom 3. Ratcheten i `tools/first_action.json` dømmer denne forbindelse
+    // også, men kun på *folden*. Her dømmes den anker, heroen faktisk peger på,
+    // fordi en ratchet der er grøn mens artiklen sender læseren ud af siden
+    // ville være en port der måler det forkerte.
+    const hero = /<div class="hero-cta">([\s\S]*?)<\/div>/.exec(src);
+    ok(`${a.sprog}: heroens primære handling er det indlejrede værktøj`,
+      hero !== null && new RegExp(`<a href="${a.anker.replace('#', '\\#')}" class="btn-primary">`).test(hero[1]),
+      hero === null ? 'ingen hero-cta' : hero[1].slice(0, 160));
+    ok(`${a.sprog}: ankeret findes i artiklen`,
+      new RegExp(`id="${a.anker.slice(1)}"`).test(src), `mangler id="${a.anker.slice(1)}"`);
+    ok(`${a.sprog}: afsnittet har en overskrift læseren kan finde`,
+      src.includes(a.dom), `mangler «${a.dom}»`);
+
+    // Dom 2. Kører kernen og sidens egen `mount()` i sandkassen med et
+    // læse-canvas, så `art-result` skriver det den ville skrive i en browser.
+    const { nodes } = loadPage(a.side, responses([OK_SCAN]).fetchImpl,
+      { match: /var PRO_CARD/, canvas: true, preload: [KERNE] });
+    await sleep(30);
+    const res = (nodes.get('art-result') || {});
+    const markup = res.innerHTML || '';
+    ok(`${a.sprog}: tjekkeren renderer et målt resultat`, res.hidden === false && /:\d|:1/.test(markup),
+      `hidden=${res.hidden} markup=${markup.slice(0, 160)}`);
+    ok(`${a.sprog}: resultatet dømmer i læserens eget sprog`,
+      markup.includes(a.set) || markup.includes(a.fejl), 'ingen PASS/FAIL-bage i sit sprog');
+    ok(`${a.sprog}: resultatet forklarer hvad der skal gøres ved et kravbrud`,
+      markup.includes(a.stoer), 'ingen fejlvejledning');
+    // Uden `<script>`-blokene — ellers er PRO_CARD's JS-streng i mount()-kallet
+    // nok til at lyde som et kort der lå i sidens krop, og dommen ville være
+    // grøn på den fejl den er skrevet imod.
+    const krop = src.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    ok(`${a.sprog}: pro-kortet hænger på resultatet, ikke i markup'en`,
+      markup.includes('pro-card') && !/class="pro-card"/.test(krop),
+      'kortet skal først opstå når der er et resultat');
+    // Dom 4. Artiklen har sin egen købsvej med tabellen; kortet skal pege på den.
+    ok(`${a.sprog}: pro-kortet peger på artiklens egen købsvej, ikke på Stripe`,
+      /href="#(report|rapport)"/.test(markup) && !/buy\.stripe\.com/.test(markup),
+      'to købsknapper til samme produkt er to valg uden at vælge');
+    ok(`${a.sprog}: donationslinjen er med, og er ikke en knap`,
+      /donate\.stripe\.com/.test(markup) && !/<a[^>]*donate\.stripe\.com[^>]*class="btn/.test(markup),
+      'donationen skal være en 13px-linje, ikke en knap');
+
+    // Mutation: artiklen uden `mount()`-kaldet skal rødme. Uden denne linje
+    // ville dom 2 være grøn på en side hvor `preload` alene nok fik kernen
+    // indlæst — altså ville den ikke kunne se præcis den fejl den er skrevet
+    // imod: et indlejret værktøj der ikke virker.
+    const { nodes: d } = loadPage(a.side, responses([OK_SCAN]).fetchImpl,
+      { match: /var PRO_CARD/, canvas: true, preload: [KERNE], source: src.replace("prefix: 'art-'", "prefix: 'skjult-'") });
+    await sleep(20);
+    ok(`mutation: ${a.sprog} artikel uden mount() fanges`,
+      (d.get('art-result') || {}).hidden !== false, 'mutationen gav stadig et resultat');
   }
 }
 

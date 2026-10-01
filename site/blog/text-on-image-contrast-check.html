@@ -31,7 +31,7 @@
     <h1>Text-on-Image Contrast Check<br>Test Readability for Free</h1>
     <p class="subtitle">Hero images with text on top are one of the most common accessibility failures. Here is how to check the actual contrast between your text and the pixels behind it — and what to do if it doesn't pass.</p>
     <div class="hero-cta">
-      <a href="/text-on-image-checker" class="btn-primary">Check your image now &rarr;</a>
+      <a href="#try-it" class="btn-primary">Check your image now &rarr;</a>
       <a href="#how" class="btn-secondary">See how it works</a>
     </div>
     <p class="hero-note">Updated August 2026 &middot; 4 minute read</p>
@@ -54,12 +54,48 @@
   <div class="container">
     <h2>How to do it (under a minute)</h2>
     <ol>
-      <li>Open the <a href="/text-on-image-checker" style="color:var(--color-accent);">free text-on-image contrast check</a>.</li>
-      <li>Drag in your image — or paste a screenshot of your design straight from the clipboard.</li>
-      <li>Mark the area where the text sits and enter the text color.</li>
-      <li>Read the result: worst-case and average contrast in the area, plus pass/fail for AA and AAA. Adjust the design until everything is green.</li>
+      <li>Load your image in the checker below — it starts with a demo background so you can see how it works before you add anything.</li>
+      <li>Click where your text sits on the image, or drag it there. Type the text and pick its colour.</li>
+      <li>Read the ratio. It is measured against the lightest and darkest pixels right behind your letters — the worst case, not the average.</li>
+      <li>Adjust the design until it passes: a translucent scrim, a darker crop, or a solid caption bar.</li>
     </ol>
-    <p>The tool reads pixels via the canvas API and computes relative luminance per the WCAG specification — the same formula commercial tools use. You get the same number an auditor will measure.</p>
+    <p>The tool reads pixels via the canvas API and computes relative luminance per the WCAG specification — the same formula commercial tools use. You get the same number an auditor will measure. Your image is never uploaded.</p>
+  </div>
+</section>
+
+<section class="products" id="try-it">
+  <div class="container">
+    <h2>Try it on your own image</h2>
+    <p style="margin-top:0">This is the same tool as the <a href="/text-on-image-checker" style="color:var(--color-accent);">standalone contrast checker</a>, running right here. Nothing to install, no account, and the image stays in your browser.</p>
+    <div class="ti-card" style="margin-top:18px">
+      <div class="ti-row">
+        <div class="ti-field">
+          <label for="art-file">1. Choose an image</label>
+          <input type="file" id="art-file" accept="image/*" class="ti-input">
+        </div>
+        <div class="ti-field">
+          <label for="art-text">2. Overlay text</label>
+          <input type="text" id="art-text" class="ti-input" value="Your headline here">
+        </div>
+        <div class="ti-field">
+          <label for="art-fg">3. Text colour</label>
+          <input type="color" class="ti-color" id="art-fg" value="#ffffff">
+        </div>
+        <div class="ti-field">
+          <label for="art-fontsize">Font size</label>
+          <select id="art-fontsize" class="ti-input">
+            <option value="small">&lt; 24 px (normal)</option>
+            <option value="large" selected>&ge; 24 px (large)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ti-canvas-wrap">
+        <canvas id="art-cv" role="img" aria-label="Your image with draggable text. Click on the image to move the text."></canvas>
+      </div>
+      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Click anywhere on the image (or drag) to position the text.</p>
+      <p class="ti-error" id="art-err" role="alert"></p>
+      <div id="art-result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+    </div>
   </div>
 </section>
 <div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> <a href="/scan" class="btn-secondary">Run the Free Scanner →</a></div>
@@ -137,6 +173,45 @@
   <p style="margin:12px 0 0;font-size:13px;color:#555;">Want all six guides? <a href="/books/compliance-bundle"><strong>Complete EU Compliance Bundle</strong></a> — all six listed together, each a free EPUB.</p>
 </div>
 </footer>
+<script src="/text-on-image-core.js"></script>
+<script>
+/* Tjekkeren i artiklen. Samme kern som `/text-on-image-checker` og `-da`, så en
+   rettelse i WCAG-formlen slår alle tre steder igennem på én gang.
+
+   Pro-kortet er bevidst *ikke* det samme som på værktøjssiden: artiklen har
+   allerede sin egen købsvej i `#report` lige under, med hele tabellen. To
+   købsknapper til det samme produkt på én side er to valg, ikke to valg der
+   hjælper — så her peger kortet på den sektion, der svarer på spørgsmålet. */
+(function () {
+  var PRO_CARD =
+      '<div class="pro-card">'
+    +'<h3>You checked one image. A site is every image.</h3>'
+    +'<p class="pro-lead">What this could not look at:</p>'
+    +'<ul class="pro-list">'
+    +'<li><strong>Every other image.</strong> Text baked into a photo is unreadable on one background and fine on the next.</li>'
+    +'<li><strong>The rules around the image.</strong> Missing alt text, form labels, heading order, ARIA and frames.</li>'
+    +'<li><strong>A report you can hand a client.</strong> The findings as a file you can attach.</li>'
+    +'</ul>'
+    +'<p><a class="btn" href="#report">See what a site-wide check adds</a></p>'
+    +'</div>';
+  window.TiContrast.mount({
+    prefix: 'art-',
+    strings: {
+      pass: 'PASS', fail: 'FAIL',
+      worstCase: '(worst-case behind your text)',
+      needs: 'needs', forAA: 'for WCAG AA',
+      largeText: '(large text)', normalText: '(normal text)',
+      aaNotAAA: 'Passes AA but not AAA', alsoAAA: 'Also passes AAA.',
+      tryFix: 'Try a darker/lighter text color, or add a translucent scrim behind the text.',
+      measured: 'Measured against the lightest and darkest image pixels under your letters.',
+      errNotImage: 'Please choose an image file.',
+      errUnreadable: 'Could not read that image file.',
+      proCard: PRO_CARD,
+      note: 'This check is free and runs entirely in your browser — your image never leaves this page. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.'
+    }
+  });
+})();
+</script>
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:p}),keepalive:true}).catch(function(){});}catch(e){}})();
 </script>
