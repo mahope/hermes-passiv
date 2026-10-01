@@ -47,7 +47,7 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
   } } };
 
 const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0; let privFetches = 0;
-let inspectFetches = 0; let headerFetches = 0; let tungFetches = 0;
+let inspectFetches = 0; let headerFetches = 0; let tungFetches = 0; let fodeFetches = 0; let andetFetches = 0;
 const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
 const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
@@ -121,6 +121,41 @@ globalThis.fetch = async (url, opts = {}) => {
   // 404 på alt andet — så hvert af de ni tjek bruger hele sit fetch-budget,
   // hvilket er det eneste tilfælde hvor et delt budget kan måles.
   if (url.startsWith('https://to.example/')) return new Response('<html lang="en"><head><title>To</title></head><body><footer><a href="/privacy">Privacy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  // `fode.example` er det tilfælde, der skiller gætten fra linket: en side der
+  // *har* privatlivspolitikken og *linker* den i footeren, men på en sti ingen
+  // gæt rammer. Gætteren læser kun `/privacy`, `/privacy-policy`, `/privacy/`,
+  // `/datenschutz` og `/legal/privacy` — alle 404 her — så den gamle kode svarer
+  // «Privacy Policy: Not found» om et site der lige har vist den. Det er den
+  // fejl der gør et værktøj ubrugeligt for en bureau-chef, fordi fundet er
+  // rigtigt nok til at ligne en brugers fejl.
+  if (url.startsWith('https://andet.example/')) { andetFetches++; return new Response('<html><body>Privacy policy — et helt andet website</body></html>', { status: 200, headers: { 'content-type': 'text/html' } }); }
+  if (url.startsWith('https://fode.example/')) {
+    fodeFetches++;
+    const p = new URL(url).pathname;
+    if (p === '/da/juridisk/privatlivspolitik') {
+      return new Response('<html lang="da"><head><title>Privatlivspolitik</title></head><body><h1>Privatlivspolitik</h1><p>Vi behandler personoplysninger efter GDPR.</p></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+    }
+    if (p === '/betingelser') {
+      return new Response('<html lang="da"><head><title>Vilkår og betingelser</title></head><body><h1>Vilkår</h1></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+    }
+    // Alt andet er en 404, også de gættede juridiske stier. Footer-links er
+    // relative, så de skal læses mod den side de står på.
+    if (p !== '/' && p !== '') return new Response('Ikke fundet', { status: 404 });
+    return new Response('<html lang="da"><head><title>Virksomheden</title></head><body><h1>Virksomheden</h1>'
+      + '<nav><a href="/">Forside</a><a href="/om-os">Om os</a></nav>'
+      + '<footer>'
+      // Et privacy-link på et ANDET domæne, og det står FØR sitets egen. Uden
+      // værnet ville scanneren hente det, finde «pass» og skrive et fund til en
+      // kundes rapport, der handler om en side på et helt andet website — og
+      // da ville den efterfølgende dom om «den linkede side» også fejle, fordi
+      // fundet ville pege ud af sitet. Derfor står det først.
+      + '<a href="https://andet.example/privacy">Privacy policy</a>'
+      + '<a href="/da/juridisk/privatlivspolitik">Privatlivspolitik</a>'
+      + '<a href="/betingelser">Vilkår og betingelser</a>'
+      + '<a href="https://facebook.com/virksomheden">Facebook</a>'
+      + '<a href="/privatlivspolitik.pdf">Privatlivspolitik (PDF)</a></footer></body></html>',
+      { status: 200, headers: { 'content-type': 'text/html' } });
+  }
   if (url.startsWith('https://tung.example/') || url.startsWith('https://tung2.example/')) {
     tungFetches++;
     const p = new URL(url).pathname;
@@ -1037,6 +1072,50 @@ ok('flere end fem URL\'er er et 400 med et tal, ikke en stille afskæring',
 r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example\n::::'), ip(24));
 ok('en ugyldig linje blandt gyldige er et 400 med Invalid URL',
   r.status === 400 && /invalid url/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
+// ── Følg links fra forsiden, før du gætter stier ──────────────────────
+// Dommen er på det, kunden får at se. Før dette gik scanneren ud fra, at en
+// juridisk side hedder `/privacy` — og et site med privatlivspolitikken på
+// `/da/juridisk/privatlivspolitik`, som footeren linker, fik «Not found».
+// Fundet var rigtigt, det lignede bare en kundes egen fejl.
+//
+// Derfor skal linket slå gættet, listen skal kunne efterprøves, og værnet skal
+// gælde: et link til et andet domæne er ikke en side i det indsendte site.
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('fode.example'), ip(28));
+const foede = await r.json().catch(() => ({}));
+const foedeFund = [...(foede.results?.failed || []), ...(foede.results?.passed || [])];
+const privatliv = foedeFund.find(x => x.key === 'privacy');
+ok('scanneren finder en privatlivspolitik, forsiden linker til',
+  r.status === 200 && privatliv && privatliv.status === 'pass',
+  `${r.status} privacy=${privatliv ? privatliv.status + ' ' + privatliv.details : 'sagt ikke'}`);
+ok('fundet er den linkede side, ikke en gæt',
+  privatliv?.status === 'pass' && /\/da\/juridisk\/privatlivspolitik/.test(privatliv.details || ''),
+  privatliv?.details || '');
+const vilkaar = foedeFund.find(x => x.key === 'terms');
+ok('samme for vilkår, der også kun findes via et link',
+  vilkaar?.status === 'pass' && /\/betingelser/.test(vilkaar.details || ''),
+  vilkaar ? vilkaar.status + ' ' + vilkaar.details : 'sagt ikke');
+ok('rapporten siger hvilke sider der blev læst, så kunden kan efterprøve det',
+  Array.isArray(foede.pages_read) && foede.pages_read.length >= 3
+  && foede.pages_read.some(u => /\/da\/juridisk\/privatlivspolitik/.test(u))
+  && foede.pages_read.some(u => /\/betingelser/.test(u)),
+  JSON.stringify(foede.pages_read || []).slice(0, 200));
+ok('listen over læste sider er kortere end antallet af kald, fordi et 404 ikke er læst',
+  Array.isArray(foede.pages_read) && Array.isArray(foede.pages_checked)
+  ? true : typeof foede.pages_checked === 'number',
+  `read=${(foede.pages_read || []).length} checked=${foede.pages_checked}`);
+ok('scanneren læser kun sider på det indsendte website — ikke Facebook, PDF\'en eller et andet domæne',
+  Array.isArray(foede.pages_read) && foede.pages_read.every(u => /^https:\/\/(www\.)?fode\.example\//.test(u)),
+  JSON.stringify(foede.pages_read || []).slice(0, 220));
+// Tælleren, ikke listen: et domæne der aldrig svarede ville ikke stå i
+// `pages_read` alligevel, så dommen ovenfor kan ikke alene bevise at værnet
+// holder. Denne dom kan.
+ok('der går overhovedet intet kald til et domæne uden for det indsendte',
+  andetFetches === 0, `${andetFetches} kald til andet.example`);
+// Budgettet skal stadig være delt og uændret. Link-følgning må ikke gøre ét
+// kald dyrere end før, fordi det så er en ny måde at brænde subrequests af.
+ok('link-følgning koster ikke mere end det delte budget',
+  fodeFetches <= 12, `${fodeFetches} fetch til fode.example`);
 
 // Budgettet skal være delt. `tung.example` svarer 200 på forsiden og 404 på
 // alt andet, så hvert af de ni tjek bruger hele sin del af budgettet — det er

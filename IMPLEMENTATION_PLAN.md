@@ -1,94 +1,71 @@
 # STATUS
 
-- **Scannen siger nu hvilken side den læste.** Rettet 1/10: indsender du
-  `example.dk/kontakt`, står der `Checked: /kontakt`, og et resultat med dyb
-  sti tæller de sider kaldet hentede. Før stod «the score is the homepage»
-  overalt, også når netop ikke forsiden var tjekket — rapporten løgnede, og den
-  samme tekst lå i den rapport, kunden sender videre. Baseline 1/10: 4 kald til
-  `/api/compliance-scan` i testene på 213/213, klienten sagde «the score is the
-  homepage» på EN og «scoren er forsiden» på DA.
-- **«Check Site»-knappen var hvid i den publicerede scanner.** Fund fra samme
-  iteration: `pagepass.OWNED_SELECTORS` påstod at designsystemet ejer
-  `.input-group button`, `style.css` erklærede den aldrig, så bygget strippede
-  sidens regel og knappen faldt tilbage på `button:not([class])` — hvid med
-  mørk tekst, 2,52:1 mod blå baggrund ved hover. Målt på live `e69baa6` 1/10
-  (`.input-group button {` 0 gange i den publicerede CSS). Rettet i
-  `style.css`; ny dom i `check_design_tokens.py` fanger påstanden fremover.
+- **Scanneren følger nu de links, siden selv peger på.** Rettet 1/10: den læser
+  den indsendte side og derefter de juridiske sider forsiden *linker til* — kun
+  på sitets eget domæne — før den gætter stier. Før dette gættede den kun, så et
+  site med privatlivspolitikken på `/da/juridisk/privatlivspolitik` fik «Privacy
+  Policy: Not found» om en side, footeren peger på lige dér. Samme fejl ramte
+  vilkår på dansk: hintlisten kendte `vilkar`, dansk skriver «Vilkår og
+  betingelser». Baseline 1/10 før rettelsen: 341 domme, hvoraf 3 nye var røde
+  på den gamle kode (336/341 ved gæt-først, 337/341 uden same-host-værnet).
+- **Rapporterne lister hvilke sider der blev læst.** Ny `pages_read` i svaret,
+  vist i resultatkortet som en fold-liste og skrevet i den downloadede `.md`, så
+  et fund kan efterprøves. «9 pages read» kunne ingen kontrollere. Pro-kortet er
+  samtidig rettet: det sagde «checked one page» om et kald der læser mere, og
+  det er præcis den løgn kortet sælger på at undgå.
+- **PR-TJEK 2026-10-01:** `gh pr list --state open` → ingen åbne PR'er.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: scanneren siger hvilken side den læste
-  ceo/scanner-siger-hvilken-side 2026-10-01 19:40` — måles på **indhold** på
+- `VERIFICÉR DEPLOY: scanneren følger links fra forsiden
+  ceo/scanneren-foelger-links 2026-10-01 19:55` — måles på **indhold** på
   `https://mahope.tools/compliance-site-check` og `/da/compliance-site-check`.
-  Baseline målt 1/10 på live `e69baa6` (endnu ikke deployet):
-  `scanned_url` **0** gange i begge scripts, `site-page` **0** gange,
-  og den publicerede `/style.css` har `.input-group button` **0** gange.
-  Dommen bliver derfor:
-  1. `scanned_url` står **1** gang i hvert script,
-  2. `class="site-page"` står **1** gang i hvert script,
-  3. `scannetSide` **1** gang i hvert script,
-  4. `pages_checked` **1** gang i hvert script,
-  5. `the score is the homepage` og `scoren er forsiden` **0** gange,
-  6. `https://mahope.tools/style.css` har `.input-group button` **1** gang,
-  7. `GET /api/compliance-scan?url=example.dk/kontakt` svarer 200 med
-     `scanned_url` der indeholder `/kontakt` og `pages_checked` > 1.
-  Dommen er `tests/scan-clients.test.mjs` (221/221) + `tests/stripe-worker.test.mjs`
-  (333/333): begge røde på den gamle kode (215/221 hhv. 330/333), grønne på den
-  nye. `check_design_tokens.py --self-test` fanger fejlen i punkt 6.
+  Baseline målt 1/10 på live `bfd4a9e`: `pages_read` **0** gange i begge scripts,
+  `pages-read` **0** gange, `Pages read (` **0** gange, `cscExtractLinks` **0**
+  gange i den publicerede worker. Domden bliver derfor:
+  1. `GET /api/compliance-scan?url=<host>` hvor sitets privatlivs- og
+     vilkårsside kun findes via footeren: begge fund skal være `pass`, og
+     `details` skal pege på den linkede sti — ikke på `/privacy`.
+  2. `pages_read` skal kun indeholde URLs på **samme vært** som `scanned_url`.
+  3. `pages_read` skal være et sæt: ingen sti to gange.
+  4. Begge sider har `class="pages-read"` og `<summary>` i hvert script.
+  5. Begge sider har `Pages read (` hhv. `Sider læst (` i rapport-generatoren.
+  6. Pro-kortet skal **ikke** sige `checked one page` / `One page per site` /
+     `tjekkede én side` / `Én side pr. website`.
+  Dommen er `tests/stripe-worker.test.mjs` (341/341) + `tests/scan-clients.test.mjs`
+  (233/233). Mutationer på den nye kode, målt: gæt-stier før links → 336/341;
+  `pages_read` fjernet fra svaret → 338/341; same-host-værnet fjernet →
+  337/341 (og `andet.example` får 1 kald); `laesteSider()` fjernet fra EN-
+     markup'en → 227/229; gammel DA-pro-h3 tilbage → 231/233. Grøn er kun den
+  uændrede kode.
 
-- `DEPLOY OK 2026-10-01` — Pro-kort i resultatet af Clean Copy-webværktøjet.
-  Målt på **indhold** på live `e69baa6` (`build-info.json` → `e69baa688c73`):
-  `id="pro-nudge"` **1** gang, `function proCard` **1** gang,
-  `6oU4gy76PgvgdBIdAXbMQ00` **2** gange (1 i den statiske HTML fra det
-  eksisterende Pro-afsnit, 1 i scriptet fra det nye kort) — altså præcis de tre
-  domme noten krævede.
-
-- `DEPLOY OK 2026-10-01` — compliance-scanneren tager flere URL'er pr. kald.
-  Målt på live `209baa0`: `GET /api/compliance-scan?url=scan.example%0Aexample.org`
-  → 200 med `multi: true` og to entries i `reports`; ét URL svarer i den gamle
-  form uden `multi`; `/compliance-site-check` + `/da/compliance-site-check` har
-  `<textarea id="urlInput"` og `SCAN_MAX_SITES = 5`.
-
-- `DEPLOY OK 2026-10-01` for de tre noter under «Verificér deploy» 1/10 (købsknap
-  i scannerens resultat, workerens Sentry-guard, samme købsvej i de fem øvrige
-  skannere). Målt på live `21acd2f`: `/compliance-site-check` +
-  `/da/compliance-site-check` har `pro-card` og `eVq00i4YH6UG69g0ObbMQ03` i
-  scriptet (DA linker til `/da/compliance-report`); `/cookie-check`,
-  `/contrast-checker`, `/text-on-image-checker`, `/security-headers-check`
-  (med `getElementById('shc-pro').hidden = false`) og `/url-inspector/`
-  (med `9B6eVcgHp7YK69ggN9bMQ04`) har hver sit `*-pro`-element i scriptet, og
-  **0** sider har `.pro-card`-regler i egen `<style>` længere; workeren svarer
-  200 på `/api/url-inspect`, 400 på `validate` med `ZZZ`, 404 på
-  `/api/ukendt-rute` og på en ukendt `/downloads/`-sti, og
-  `{"ok":true,"kv_ok":true}` på `/api/paid-files`. *To noter havde forkerte
-  URL'er:* de danske skannere ligger på `/cookie-check-da` og
-  `/contrast-checker-da`, ikke under `/da/` — `/da/cookie-check` er 404.
-
-- `DEPLOY OK 2026-10-01` — UptimeRobot Team-prisen er €420, ikke €492.
-  Målt på **indhold** i live `0f64110`: `/blog/desktop-website-monitor-cli` har
-  `&euro;420` 1 gang i samme celle som `&euro;35/month`, og `492` er **0**
-  gange i hele siden. `build-info.json` bærer `0f64110a09a9`.
-
-- `DEPLOY OK 2026-10-01` — `/compliance-ai` siger at assistenten er slukket, og
-  de to ruter er ude af sitemap + llms.txt. Målt på live `bda70e2`: `GET
-  /api/compliance-ai` → 200 `{"ok":true,"available":false}`, begge sider har
-  `aiUnavailable` ×2 og `noindex,follow`, og `compliance-ai` er **0** gange i
-  `sitemap.xml` og `llms.txt`.
-
+- `DEPLOY OK 2026-10-01` — scanneren siger hvilken side den læste, og den hvide
+  knap fik sin farve. Målt på **indhold** på live `bfd4a9e` (alle syv domme er
+  grønne, se tallene nedenfor — de afviger fra opskriften, der var skrevet uden
+  at være målt). `class="site-page"` **1** gang i hvert script, `scannetSide`
+  **3** gange i hvert script (variablen bruges tre steder — opskriftens «1 gang»
+  var for stram), `pages_checked` **3** gange, `scanned_url` **3** gange. Den
+  publicerede `/style.css` har `.input-group button` **6** gange: regel plus
+  `:hover`, `:active`, `:disabled`, `@media (max-width: 480px)` og portens
+  kommentar. Punkt 5 er ikke «0 gange» men «0 gange i det viste output»: EN
+  har «the score is the homepage» **1** gang i en dansk kildekommentar
+  (`site/compliance-site-check.html:450`), DA har den tilsvarende **1** gang,
+  begge steder uden for DOM. Punkt 7 var en **umulig** opskrift:
+  `example.dk` findes ikke i DNS, så kaldet svarer 502. Målt i stedet med et
+  domæne der findes: `GET /api/compliance-scan?url=example.com/some/deep/path`
+  → 200 med `scanned_url` `https://example.com/some/deep/path` og
+  `pages_checked` 12.
 
 ## Åbne opgaver
 
-1. ~~Flere sider end forsiden pr. URL.~~ **Halvdelen leveret 1/10.** Et URL med
-   en dyb sti scannes på *den* side, og overblikket, det enkelte resultat og den
-   downloadede rapport siger hvilken side og hvor mange sider der blev læst —
-   det var planens acceptkriterium, og det er grønt. **Resten:** kaldet læser
-   stadig kun den indsendte side plus de juridiske stier den gætter på
-   (`/privacy`, `/terms`, …), ikke hele sitet; det er det Pro gør. Accept:
-   scanneren følger links fra forsiden og tjekker de sider den finder, med det
-   delte `CSC_MAX_PAGES`-budget uændret.
+1. ~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
+   indsendte side og de juridiske sider forsiden *linker til* — kun på sitets
+   eget domæne — før det gætter stier, og svaret lister dem i `pages_read`.
+   Accept nået: `pages_checked` overstiger de gættede stier, og fundet peger på
+   den linkede side. Flyttet til `docs/plan-arkiv.md`.
 2. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
    `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
    trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
@@ -173,9 +150,8 @@ Prioriteret efter hvor tæt den er på penge, ikke efter hvor let den er at kode
 Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
 
 1. ~~Flere URL'er pr. scanning.~~ **Leveret 1/10** — feltet tager linjeskift,
-   serveren svarer én rapport pr. URL, og Pro-boksen siger ærligt at Pro gør
-   det samme for hver side den finder. Næste skridt er punkt 1 under «Åbne
-   opgaver»: flere sider end forsiden pr. URL.
+   serveren svarer én rapport pr. URL, og Pro-boksen siger ærligt hvad den
+   *ikke* ser. Næste skridt var punkt 1 under «Åbne opgaver»: det er gjort.
 2. **E-bøgerne læses online, kapitel for kapitel.** Hvem: den der læser en
    GDPR- eller NIS2-bog før han køber bundlet. Tal: køb fra `/books`
    (baseline 0). Accept: hver bogside har en læsevisning med de første kapitler
@@ -193,8 +169,8 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    egne rense regler og knappen «Buy Clean Copy Pro — $19/year», skjult for
    aktiverede Pro-kunder. Målt først: 0 købsknapper i resultatet. Næste skridt
    er punkt 2 — bøgerne læses online.
-5. ~~Scanneren siger hvilken side den læste.~~ **Leveret 1/10** — overblikket,
-   det enkelte resultat og den downloadede rapport siger det, og et dybt URL
+5. ~~Scanneren siger hvilken side den læste, og følger de links siden har.~~
+   **Leveret 1/10** — overblikket, det enkelte resultat og den downloadede
+   rapport siger hvilken side og hvilke sider der blev læst, og et dybt URL
    scannes på den side det angiver. Målt først: «the score is the homepage»
-   stod på siden uanset input. Ny accept for resten af opgaven: scanneren
-   følger links fra forsiden, så `pages_checked` kan overstige de gættede stier.
+   stod på siden uanset input, og kun de gættede stier blev læst.

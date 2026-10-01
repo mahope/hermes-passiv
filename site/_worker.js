@@ -2567,7 +2567,12 @@ const CSC_CHECKS = {
     label: 'Terms of Service',
     type: 'page',
     paths: ['/terms', '/terms-of-service', '/terms-and-conditions', '/tos', '/conditions', '/vilkar', '/agb'],
-    hints: ['terms', 'conditions', 'vilkar', 'agb', 'nutzungsbedingungen'],
+    // `vilkar` uden å og `betingelser` er ikke dobbelt sådan. Den danske
+    // overskrift er «Vilkår og betingelser», og tjekket skal genkende både
+    // `href="/betingelser"` og anchor-teksten — ellers får et dansk site
+    // «Not found» om en vilkårside, der ligger i dets egen footer. Målt 1/10 på
+    // `fode.example`, der kun har `/betingelser` og intet andet.
+    hints: ['terms', 'conditions', 'betingelser', 'vilkar', 'vilkaar', 'agb', 'nutzungsbedingungen'],
     importance: 'Required for any commercial website, especially SaaS and e-commerce.',
   },
   cookie: {
@@ -2677,6 +2682,71 @@ function cscDetectText(html, hints) {
 function cscHasHomepageLink(html, paths) {
   const lower = html.toLowerCase();
   return paths.some(p => lower.includes('href="' + p + '"') || lower.includes("href='" + p + "'"));
+}
+
+// Links forsiden peger på, som *kun er sitets egne*. Før dette gik scanneren
+// ud fra, at en juridisk side hedder `/privacy`, `/terms` eller `/impressum` —
+// men på dansk, norsk og tysk hedder de lige så ofte `/privatlivspolitik`,
+// `/vilkar`, `/ansvarlig` eller `/da/legal-notice`. Så fik et site, der har
+// privatlivspolitikken liggende og linker den i footeren, «Not found. Add a
+// Privacy Policy page» — og det er det værste svar værktøjet kan give en kunde,
+// fordi det er rigtigt og skræmmende på samme tid.
+//
+// Kun samme vært. Et link til et andet domæne er ikke en side i det site der
+// blev indsendt, og at hente vilkårlig adresse på en kundes vegne er ikke
+// noget et gratis værktøj skal gøre. `www.` tælles som samme vært, fordi
+// `example.dk` og `www.example.dk` er det samme website.
+const CSC_MAX_LINKS = 40;       // hvor mange links der læses ad gangen
+const CSC_MAX_KANDIDATER = 3;   // hvor mange link-treffere pr. tjek der læses
+const CSC_LINK_SPRING = /\.(pdf|zip|gz|tar|rar|7z|docx?|xlsx?|pptx?|csv|rtf|epub|jpg|jpeg|png|gif|svg|webp|ico|bmp|avif|css|js|mjs|json|xml|rss|atom|mp3|mp4|webm|ogg|wav|woff2?|ttf|eot|exe|dmg|apk)$/i;
+
+function cscExtractLinks(html, baseUrl) {
+  const base = new URL(baseUrl);
+  const baseVært = base.host.toLowerCase().replace(/^www\./, '');
+  const set = [];
+  const setVærdier = new Set();
+  // `<a …>` med op til 200 tegn indhold. Anchor-teksten er nødvendig, fordi
+  // en footer meget ofte skriver «Privatlivspolitik» mens href'en er
+  // `/da/legal-2` — kun href'en ville gå glip af den side, som er det hele
+  // formålet med at følge links.
+  for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]{0,200}?)<\/a>/gi)) {
+    const attrs = m[1];
+    const href = (attrs.match(/\bhref\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i) || []);
+    const rå = (href[2] ?? href[3] ?? href[4] ?? '').trim();
+    if (!rå || rå.startsWith('#') || /^(mailto:|tel:|sms:|javascript:|data:|blob:|file:)/i.test(rå)) continue;
+    let u;
+    try { u = new URL(rå, base); } catch { continue; }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') continue;
+    if (u.host.toLowerCase().replace(/^www\./, '') !== baseVært) continue;
+    if (CSC_LINK_SPRING.test(u.pathname)) continue;
+    u.hash = '';
+    const nøgle = u.toString();
+    if (setVærdier.has(nøgle)) continue;
+    // Forsiden selv er allerede læst, og gentagne links til den er spildt
+    // budget — en footer har ofte tre «Privatlivspolitik» i sig.
+    if (nøgle === base.toString() || nøgle.replace(/\/$/, '') === base.toString().replace(/\/$/, '')) continue;
+    setVærdier.add(nøgle);
+    set.push({ url: nøgle, text: m[2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160) });
+    if (set.length >= CSC_MAX_LINKS) break;
+  }
+  return set;
+}
+
+// De link-treffere der ligner svaret på ét tjek. Rækkefølgen er dokumentets
+// egen: et link i `<nav>` kommer før et i footeren, og et link der bærer
+// checkets eget ord i teksten («Privatlivspolitik») er stærkere end et der
+// kun har det i href'en (`/page-12`).
+function cscFindLinkCandidates(links, check) {
+  const stærke = [], svage = [];
+  for (const l of links) {
+    const href = l.url.toLowerCase();
+    const text = l.text.toLowerCase();
+    const iTekst = check.hints.find(h => text.includes(h));
+    const iHref = check.hints.find(h => href.includes(h));
+    if (iTekst) stærke.push(l);
+    else if (iHref) svage.push(l);
+  }
+  return stærke.concat(svage).slice(0, CSC_MAX_KANDIDATER);
 }
 
 function cscCheckSecurityHeaders(headers) {
@@ -2844,6 +2914,21 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
   // at have undersøgt noget andet. Vi tæller siderne og siger hvilken der blev
   // læst; `scanned_url` er den URL fetch'en endte på, så et redirect vises også.
   let sider = 1;
+  // Siderne der faktisk blev læst, i den rækkefølge de blev læst. Før dette
+  // var tallet nok: kunden fik at vide «12 sider», men ikke hvilke — og en
+  // rapport der sendes videre til en kunde skal kunne efterprøves.
+  const laeste = [home.url || targetUrl.toString()];
+  // Samme side kan nås fra to forskellige tjek (`/legal` er både imprint-sti og
+  // et link), og så bliver den læst to gange. Det er rigtigt at den blev læst,
+  // men «Pages read (7)» må ikke optælle fem sider to gange — listen er det
+  // kunden efterprøver, så den skal være et sæt. Dedup'en sker *uden om*
+  // budgettet: en side læst to gange koster to kald, som før.
+  const laesteSaet = new Set([cscNormalizeUrl(laeste[0])]);
+  // Den side der faktisk blev læst, bruges som base for links: en footer der
+  // peger på `/privatlivspolitik` skal læses som `https://www.site.dk/…`, ikke
+  // som `https://site.dk/…`, hvis forsiden blev omdirigeret dertil.
+  const sideUrl = new URL(home.url || targetUrl.toString());
+  const links = home.html ? cscExtractLinks(home.html, sideUrl) : [];
 
   const passed = [];
   const failed = [];
@@ -2883,15 +2968,34 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
     }
 
     // type: page
+    //
+    // Rækkefølgen er hele rettelsen: **de sider forsiden selv peger på først**,
+    // og de gættede stier bagefter. Før dette blev der kun gættet, så et site
+    // med privatlivspolitikken på `/da/juridisk/privatlivspolitik` fik «Not
+    // found» — ikke fordi siden manglede, men fordi ingen gæt ramte den. Et
+    // link er bevis på, at siden findes; en gæt er ikke.
+    //
+    // De gættede stier er ikke væk: en footer kan linke «Cookie policy» uden at
+    // linke nogen af de juridiske sider, og så er gættet det eneste bud.
     let found = false, foundUrl = '';
-    for (const path of check.paths) {
+    const laesKandidater = new Set();
+    const kandidater = cscFindLinkCandidates(links, check).map(l => l.url);
+    for (const path of check.paths) kandidater.push(new URL(path, sideUrl).toString());
+    for (const kandidat of kandidater) {
+      // Den samme side tæller én gang. Tre links til samme cookie-side i
+      // footeren ville ellers brænde tre kald af budgettet og skrive tre
+      // linjer i `laeste`.
+      const nøgle = cscNormalizeUrl(kandidat);
+      if (laesKandidater.has(nøgle)) continue;
+      laesKandidater.add(nøgle);
       if (!budget.spend()) break;
-      const pageUrl = new URL(path, targetUrl.toString()).toString();
-      const pr = await cscFetch(pageUrl, timeoutMs);
+      const pr = await cscFetch(kandidat, timeoutMs);
       sider++;
       if (!pr.ok || pr.status >= 400) continue;
-      if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url; break; }
-      if (pr.status < 300) { found = true; foundUrl = pr.url; break; }
+      const laesNøgle = cscNormalizeUrl(pr.url || kandidat);
+      if (!laesteSaet.has(laesNøgle)) { laesteSaet.add(laesNøgle); laeste.push(pr.url || kandidat); }
+      if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url || kandidat; break; }
+      if (pr.status < 300) { found = true; foundUrl = pr.url || kandidat; break; }
     }
     if (!found) found = cscHasHomepageLink(home.html, check.paths);
 
@@ -2912,6 +3016,13 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
     // sider kaldet hentede — forsiden plus de juridiske sider den ledte efter.
     scanned_url: home.url || targetUrl.toString(),
     pages_checked: sider,
+    // Hvilke sider der faktisk blev læst. `pages_checked` siger hvor mange
+    // kald der gik, og det tal medtager 404'er, fordi et kald der svarer 404
+    // også er et kald. Denne liste er den kunden skal kunne efterprøve, så den
+    // indeholder kun sider der svarede med indhold. `laeste` kan ikke blive
+    // længere end budgettet gør det muligt, og hvert kald kan følge redirects,
+    // så listen er kortere end `sider`.
+    pages_read: laeste,
     score,
     grade: cscScoreLabel(score),
     passed: passed.length,

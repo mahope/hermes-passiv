@@ -1276,6 +1276,69 @@ function mutated(path, from, to) {
     ok(`${lang}: den downloadede rapport siger den læste side`,
       /example\.com\/kontakt/.test(fanget), fanget.slice(0, 300));
   }
+
+  // Hvilke sider blev læst — ikke hvor mange. «12 pages read» kan ingen
+  // efterprøve, og det er præcis den slags linje en kunde spørger ind til,
+  // når et fund er for godt. Serveren sender `pages_read`, så resultatet og
+  // rapporten skal vise de konkrete stier.
+  const OK_SCAN_LAESTE = {
+    status: 200,
+    body: {
+      ok: true, url: 'https://example.com', scanned_url: 'https://example.com/',
+      pages_checked: 9,
+      pages_read: [
+        'https://example.com/',
+        'https://example.com/da/juridisk/privatlivspolitik',
+        'https://example.com/betingelser',
+      ],
+      score: 88, grade: 'B', passed: 8, total: 9, results: {},
+    },
+  };
+  for (const [path, lang] of PAGES) {
+    const { fetchImpl } = responses([OK_SCAN_LAESTE]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    let fanget = '';
+    const rigtigBlob = sandbox.Blob;
+    sandbox.Blob = class extends rigtigBlob {
+      constructor(parts, opts) { super(parts, opts); fanget = parts.join(''); }
+    };
+    nodes.get('urlInput').value = 'example.com';
+    await sandbox.scan();
+    await sleep(30);
+    const html = (nodes.get('results') || {}).innerHTML || '';
+    sandbox.downloadReport();
+    sandbox.Blob = rigtigBlob;
+    ok(`${lang}: resultatet lister de sider der blev læst`,
+      /\/da\/juridisk\/privatlivspolitik/.test(html) && /\/betingelser/.test(html),
+      html.slice(0, 300));
+    ok(`${lang}: listen er foldet sammen, så den ikke skubber fundene ned`,
+      /class="pages-read"/.test(html) && /<summary>/.test(html), html.slice(0, 300));
+    ok(`${lang}: listen tæller kun sites egne sider`,
+      !/andet\.example/.test(html), html.slice(0, 300));
+    ok(`${lang}: rapporten lister de samme sider`,
+      /\/da\/juridisk\/privatlivspolitik/.test(fanget) && /\/betingelser/.test(fanget),
+      fanget.slice(0, 400));
+  }
+
+  // Pro-kortet skal kunne sælge på forskellen. Det kan det ikke, hvis det
+  // siger «one page» om et kald der nu læser siden PLUS de juridiske sider den
+  // peger på — så er forskellen mindre end den lyder, og det er præcis den
+  // løgn, kortet blev bygget for at undgå. Dommen læser den rendererede
+  // markup, ikke kildekoden, fordi kun den første er noget en kunde ser.
+  for (const [path, lang] of PAGES) {
+    const { fetchImpl } = responses([OK_SCAN_LAESTE]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    nodes.get('urlInput').value = 'example.com';
+    await sandbox.scan();
+    await sleep(30);
+    const html = (nodes.get('results') || {}).innerHTML || '';
+    const pro = html.slice(html.indexOf('pro-card'));
+    ok(`${lang}: pro-kortet påstår ikke længere at kaldet kun læste én side`,
+      pro.length > 0 && !/(checked one page|One page per site|tjekkede én side|Én side pr\. website)/.test(pro),
+      pro.slice(0, 160) || 'pro-kortet blev ikke renderet');
+    ok(`${lang}: pro-kortet siger hvad der *blev* læst, så forskellen er målbar`,
+      /legal pages|juridiske sider, den peger/i.test(pro), pro.slice(0, 220));
+  }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

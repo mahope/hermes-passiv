@@ -4091,3 +4091,70 @@ En fejl i min egen kode blev rettet før commit: EN viste stien uden
 foranledende skråstreg (`kontakt`) mens DA viste `/kontakt`, fordi mit første
 regex krævede et `/` efter værten og derfor slap `https://example.com` (uden
 sti) igennem som stien. Nu er formatet ens og begge taler til testen.
+
+## Flere sider end forsiden pr. URL — færdig 1/10 (`bfd4a9e` + denne iteration)
+
+Opgaven stod i to halve. Første halvdel leverede 1/10: et URL med en dyb sti
+scannes på den side, og rapporten siger hvilken side og hvor mange sider der
+blev læst. Anden halvdel var den her.
+
+**Hvad der var galt.** `cscScanOne` gættede. For hvert af de ni tjek læste den
+`check.paths` i rækkefølge — `/privacy`, `/privacy-policy`, `/privacy/`,
+`/datenschutz`, `/legal/privacy` — og stoppede ved det første svar under 300.
+Ingen gæt rammer `/da/juridisk/privatlivspolitik`, som er en fuldstændig
+almindelig sti på en dansk WordPress-side. Sådan fik et site, der *har*
+privatlivspolitikken og *linker* den i footeren, «Privacy Policy: Not found.
+Add a Privacy Policy page and link it from your footer.» — et fund der er
+rigtigt nok til at ligne en kundes egen fejl.
+
+**Rettelsen.** `cscExtractLinks()` læser forsiden og samler de links den har,
+kun på **samme vært** (`www.` tælles med), kun `http(s)`, kun uden
+`.pdf`/`.css`/`.js`/billeder, maks 40. `cscFindLinkCandidates()` vælger op til 3
+links pr. tjek, stærkest når checkets eget ord står i anchor-teksten («Privatliv-
+spolitik») frem for kun i href'en. De prøves **før** de gættede stier, som ikke
+er væk: en footer kan linke cookie-siden og intet andet.
+
+**En fejl fundet undervejs.** Terms-tjekket kendte `vilkar`, og dansk skriver
+«Vilkår og betingelser». Samme fejlform som den ovenfor, bare i hintlisten i
+stedet i stierne — så dommen «samme for vilkår» var rød selv med link-følgning
+på plads. Rettet ved at tilføje `betingelser` og `vilkaar`.
+
+**Målt.** Ny fixture `fode.example`: privatlivspolitik på
+`/da/juridisk/privatlivspolitik`, vilkår på `/betingelser`, alle gættede stier
+404. Syv nye domme i `tests/stripe-worker.test.mjs` (340→341 efter at ét
+dommepunkt viste sig at være dødt) og otte i `tests/scan-clients.test.mjs`
+(225→233). Mutationer, så det er dokumenteret at porten kan fejle:
+
+| Mutation | Resultat |
+|---|---|
+| Gæt-stier før links (= den gamle kode) | 336/341 |
+| `pages_read` fjernet fra svaret | 338/341 |
+| Same-host-værnet fjernet | 337/341, og `andet.example` får 1 kald |
+| `laesteSider()` fjernet fra EN-markup'en | 227/229 |
+| Gammel DA-pro-h3 tilbage | 231/233 |
+
+Den tredje mutation afslørede en **død dom**: mit «Facebook og PDF»-punkt var
+grønt også uden værnet, fordi Facebook-linket aldrig ville blive hentet uanset.
+Udskiftet med et eksternt `/privacy`-link der *står før* sitets eget, så det
+være hentet og fundet ville slå den følgende dom om «den linkede side» ihjel
+samtidigt, og en tæller (`andetFetches`) der ikke kan være grøn på en lækage.
+
+**Kunden kan se det.** Ny `pages_read` i svaret, vist i resultatkortet som en
+fold-liste (`<details>`) under download-knappen og skrevet i den downloadede
+`.md` som en egen sektion. «9 pages read» var et tal ingen kunne efterprøve, og
+et fund i en rapport der sendes videre skal kunne efterprøves. Listen er et sæt
+— fundet under review: `/legal` nås fra to tjek, så den samme side blev læst to
+gange og ville stå to gange i «Pages read (7)».
+
+**Pro-kortet måtte også rettes.** Det sagde «This checked one page. A site is
+every page.» og «Every other page.» — begge dele var sandt, da kaldet læste én
+side pr. URL, og begge dele blev løgne i samme øjeblik det begyndte at følge
+links. Det er den ulykke et købskort har ved at beskrive produktet: forskellen
+skal være målbar, ellers er den ikke en forskel. Ny tekst siger hvad der *blev*
+læst, og en dom i `tests/scan-clients.test.mjs` læser den rendererede markup
+(ikke kildekoden) og fejler på «one page»-påstanden.
+
+**Ubevidet rettelse under samme opgave:** gættede stier læses nu mod den side
+forsiden endte på (`sideUrl`) frem mod den indsendte URL. Ellers gættede et
+site, der omdirigerer `example.dk` → `www.example.dk`, stier på apex mens
+linksene resolvinger mod www.

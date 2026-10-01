@@ -120,6 +120,16 @@
   /* Hvilken side der blev læst. Egen linje, så den ikke konkurrerer med
      domænet på 390 px, hvor de to ellers bryder i to halve linjer. */
   .site-row .site-page { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; word-break: break-word; }
+  /* Hvilke sider der blev læst. `<details>` bruges, fordi listen skal kunne
+     foldes sammen: en kunde med et stort site får ellers otte linjer mellem
+     scoren og det første fund. Native element, så tastatur og skærmlæser
+     får det gratis. */
+  .pages-read { margin: 12px 0 0; }
+  .pages-read > summary { cursor: pointer; font-size: 13px; color: #374151; padding: 4px 0; }
+  .pages-read > summary:hover { color: #111827; }
+  .pages-read > summary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 4px; }
+  .pages-read ul { margin: 6px 0 0; padding: 0 0 0 18px; }
+  .pages-read li { font-size: 13px; color: #6b7280; word-break: break-all; padding: 1px 0; }
   .site-row .score-badge { width: 40px; height: 40px; font-size: 18px; }
   .site-row .site-score { font-size: 13px; color: #6b7280; }
   @media (max-width: 480px) { .site-row .site-name { flex-basis: 100%; } }
@@ -179,9 +189,10 @@
 </div>
 
 <div class="container">
-  <h2>Ni punkter er én side. Et site er alle sider.</h2>
-  <p>Dette scan fortæller, om en forside er sat rigtigt op. Det kan ikke fortælle, at side tre
-  mangler et privatlivslink, eller at kurven lækker et tredjeparts-embed.
+  <h2>Ni punkter er en forside og dens juridiske sider. Et site er alle sider.</h2>
+  <p>Dette scan læser den side du indsender og følger de links, der peger på privatlivs-,
+  vilkår- og imprint-siderne. Det kan ikke fortælle, at side tre mangler et privatlivslink,
+  eller at kurven lækker et tredjeparts-embed.
   <a href="/da/compliance-report">EUComply Pro</a> gennemgår sitet og kører 33 tjek — de 15
   tilgængelighedsregler plus 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata — og
   giver dig fundene som en PDF du kan sende til en kunde.</p>
@@ -327,6 +338,14 @@ function scan() {
     // side der blev læst — ellers læser modtageren «site.dk» og tror hele
     // sitet er tjekket.
     lines.push('Side tjekket: ' + (data.scanned_url || data.url));
+    // Hvilke sider der faktisk blev læst. Uden denne linje kan modtageren
+    // ikke se om «Privatlivspolitik: fundet» stammer fra en side der virkelig
+    // findes — og fundet er det eneste i rapporten, kunden sender videre.
+    if (Array.isArray(data.pages_read) && data.pages_read.length) {
+      lines.push('');
+      lines.push('Sider læst (' + data.pages_read.length + '):');
+      data.pages_read.forEach(function(u) { lines.push('- ' + u); });
+    }
     lines.push('');
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
     var all = [];
@@ -371,13 +390,17 @@ function scan() {
     var flere = antal > 1;
     var html = '<div class="result-card pro-card">';
     html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
-      ? 'Én side pr. website. Et website er alle sider.'
-      : 'Denne scanning tjekkede én side. Et website er alle sider.') + '</h3>';
+      ? 'Den fandt de juridiske sider og stoppede. Et website er alle sider.'
+      : 'Den læste én side og de juridiske sider, den peger på. Et website er alle sider.') + '</h3>';
     html += '<p class="pro-lead">Det her kunne ikke se:</p>';
     html += '<ul class="pro-list">';
-    html += '<li><strong>Alle de andre sider.</strong> ' + (flere
-      ? 'Du tjekkede ' + antal + ' websites, én side hver. EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, ikke kun den du indsætter.'
-      : 'EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, ikke kun den URL du indsatte.') + '</li>';
+    // Ærligt, efter at scanneren begyndte at følge links. Før dette læste
+    // kaldet én side pr. URL, så «Alle de andre sider» var sandt. Nu læser det
+    // siden plus de juridiske sider den selv peger på, så «én side» ville være
+    // en ny løgn i en boks der i forvejen sælger på at være sand.
+    html += '<li><strong>Alle sider der ikke er juridiske.</strong> ' + (flere
+      ? 'Du tjekkede ' + antal + ' websites. For hvert af dem fulgte den de links, der peger på privatlivs-, vilkår- og imprint-siderne. EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, produktsider og blogindlæg med.'
+      : 'Den fulgde de links på din side, der peger på privatlivs-, vilkår- og imprint-siderne. EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, produktsider og blogindlæg med.') + '</li>';
     html += '<li><strong>18 server-side tjek.</strong> GDPR-, cookie-, sikkerheds- og metaregler, som kun en server kan svare på, oveni de tilgængelighedsregler ovenfor.</li>';
     html += '<li><strong>En PDF du kan sende til din kunde.</strong> Rapporten indeholder de server-side fund, og PDF\'en kræver din licensnøgle.</li>';
     html += '</ul>';
@@ -406,9 +429,29 @@ function renderResults(rapporter, fejl) {
     return sti ? '/' + sti : 'forsiden';
   }
 
+  // Hvilke sider scanneren faktisk læste. Før dette stod der et tal — «12
+  // sider læst» — som var umuligt at efterprøve, og en rapport der sendes videre
+  // til en kunde skal kunne det. Serveren sender `pages_read` med de sider der
+  // svarede med indhold, så listen er dem, og ikke 404'erne der blev forsøgt.
+  function laesteSider(data) {
+    var liste = (data && data.pages_read) || [];
+    if (!liste.length) return '';
+    var vaert = String(data.scanned_url || data.url || '').replace(/^https?:\/\//i, '').split('/')[0];
+    var stier = liste.map(function(u) {
+      var s = String(u).replace(/^https?:\/\//i, '');
+      var vaertHer = s.split('/')[0];
+      var sti = s.replace(/^[^/]*\/?/, '').replace(/\/$/, '');
+      // Et cross-domæne-link ville aldrig være nået, men hvis serveren en dag
+      // læser videre, skal stien ikke lægge et andet website ind i listen.
+      return (sti ? '/' + sti : '/') + (vaertHer !== vaert ? ' (' + vaertHer + ')' : '');
+    });
+    return '<details class="pages-read"><summary>Sider læst (' + liste.length + ')</summary><ul>'
+      + stier.map(function(s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></details>';
+  }
+
   if (rapporter.length > 1) {
     html += '<div class="result-card"><h3 style="margin:0 0 4px;font-size:16px">' + rapporter.length + ' websites tjekket</h3>';
-    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">Én side pr. website &mdash; den side du indsendte, ikke hele sitet.</p>';
+    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">Én side pr. website plus de juridiske sider den peger på &mdash; ikke hele sitet.</p>';
     html += '<div class="site-list">';
     rapporter.forEach(function(data, i) {
       html += '<div class="site-row">';
@@ -437,6 +480,7 @@ function renderResults(rapporter, fejl) {
   if (rapporter.length === 1) {
     html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download rapport (.md)</button></div>';
   }
+  html2 += laesteSider(data);
 
   var order = [];
   var statusOrder = { pass: 0, warn: 1, info: 1, fail: 2 };

@@ -119,6 +119,16 @@
   /* Hvilken side der blev læst. Egen linje, så den ikke konkurrerer med
      domænet på 390 px, hvor de to ellers bryder i to halve linjer. */
   .site-row .site-page { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; word-break: break-word; }
+  /* Hvilke sider der blev læst. `<details>` bruges, fordi listen skal kunne
+     foldes sammen: en kunde med et stort site får ellers otte linjer mellem
+     scoren og det første fund. Native element, så tastatur og skærmlæser
+     får det gratis. */
+  .pages-read { margin: 12px 0 0; }
+  .pages-read > summary { cursor: pointer; font-size: 13px; color: #374151; padding: 4px 0; }
+  .pages-read > summary:hover { color: #111827; }
+  .pages-read > summary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 4px; }
+  .pages-read ul { margin: 6px 0 0; padding: 0 0 0 18px; }
+  .pages-read li { font-size: 13px; color: #6b7280; word-break: break-all; padding: 1px 0; }
   .site-row .score-badge { width: 40px; height: 40px; font-size: 18px; }
   .site-row .site-score { font-size: 13px; color: #6b7280; }
   @media (max-width: 480px) { .site-row .site-name { flex-basis: 100%; } }
@@ -178,9 +188,10 @@
 </div>
 
 <div class="container">
-  <h2>Nine points is one page. A site is every page.</h2>
-  <p>This scan tells you whether a homepage is set up correctly. It cannot tell you that page
-  three has no privacy link, or that the checkout leaks a third-party embed.
+  <h2>Nine points is a homepage and its legal pages. A site is every page.</h2>
+  <p>This scan reads the page you submit and follows its links to the privacy, terms and
+  imprint pages. It cannot tell you that page three has no privacy link, or that the
+  checkout leaks a third-party embed.
   <a href="/compliance-report">EUComply Pro</a> crawls the site and runs 33 checks — the 15
   accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks — and
   hands you the findings as a PDF you can send to a client.</p>
@@ -327,6 +338,14 @@ function scan() {
     // side der blev læst — ellers læser modtageren «site.dk» og tror hele
     // sitet er tjekket.
     lines.push('Page checked: ' + (data.scanned_url || data.url));
+    // Hvilke sider der faktisk blev læst. Uden denne linje kan modtageren
+    // ikke se om «Privacy Policy: found» stammer fra en side der virkelig
+    // findes — og fundet er det eneste i rapporten, kunden sender videre.
+    if (Array.isArray(data.pages_read) && data.pages_read.length) {
+      lines.push('');
+      lines.push('Pages read (' + data.pages_read.length + '):');
+      data.pages_read.forEach(function(u) { lines.push('- ' + u); });
+    }
     lines.push('');
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
     var all = [];
@@ -371,13 +390,17 @@ function scan() {
     var flere = antal > 1;
     var html = '<div class="result-card pro-card">';
     html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
-      ? 'One page per site. A site is every page.'
-      : 'This checked one page. A site is every page.') + '</h3>';
+      ? 'It found the legal pages and stopped. A site is every page.'
+      : 'It read one page and the legal pages it links to. A site is every page.') + '</h3>';
     html += '<p class="pro-lead">What this scan could not look at:</p>';
     html += '<ul class="pro-list">';
-    html += '<li><strong>Every other page.</strong> ' + (flere
-      ? 'You checked ' + antal + ' sites, one page each. EUComply Pro crawls the whole site — the same check on every page it finds, not the ones you paste.'
-      : 'EUComply Pro crawls the whole site — the same check on every page it finds, not the one URL you pasted.') + '</li>';
+    // Ærligt, efter at scanneren begyndte at følge links. Før dette læste
+    // kaldet én side pr. URL, så «Every other page» var sandt. Nu læser det
+    // siden plus de juridiske sider den selv peger på, så «one page» ville være
+    // en ny løgn i en boks der i forvejen sælger på at være sand.
+    html += '<li><strong>Every page that is not a legal page.</strong> ' + (flere
+      ? 'You checked ' + antal + ' sites. For each one this followed the links to the privacy, terms and imprint pages. EUComply Pro crawls the whole site — the same check on every page it finds, product pages and blog posts included.'
+      : 'This followed the links on your page to the privacy, terms and imprint pages. EUComply Pro crawls the whole site — the same check on every page it finds, product pages and blog posts included.') + '</li>';
     html += '<li><strong>18 server-side checks.</strong> GDPR, cookie, security and metadata rules that only a server can answer, on top of the accessibility rules above.</li>';
     html += '<li><strong>A PDF you can send a client.</strong> The report holds the server-side findings; the PDF needs your licence key.</li>';
     html += '</ul>';
@@ -406,9 +429,29 @@ function renderResults(rapporter, fejl) {
     return sti ? '/' + sti : 'the homepage';
   }
 
+  // Hvilke sider scanneren faktisk læste. Før dette stod der et tal — «12
+  // pages read» — som var umuligt at efterprøve, og en rapport der sendes videre
+  // til en kunde skal kunne det. Serveren sender `pages_read` med de sider der
+  // svarede med indhold, så listen er dem, og ikke 404'erne der blev forsøgt.
+  function laesteSider(data) {
+    var liste = (data && data.pages_read) || [];
+    if (!liste.length) return '';
+    var vaert = String(data.scanned_url || data.url || '').replace(/^https?:\/\//i, '').split('/')[0];
+    var stier = liste.map(function(u) {
+      var s = String(u).replace(/^https?:\/\//i, '');
+      var vaertHer = s.split('/')[0];
+      var sti = s.replace(/^[^/]*\/?/, '').replace(/\/$/, '');
+      // Et cross-domæne-link ville aldrig være nået, men hvis serveren en dag
+      // læser videre, skal stien ikke lægge et andet website ind i listen.
+      return (sti ? '/' + sti : '/') + (vaertHer !== vaert ? ' (' + vaertHer + ')' : '');
+    });
+    return '<details class="pages-read"><summary>Pages read (' + liste.length + ')</summary><ul>'
+      + stier.map(function(s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></details>';
+  }
+
   if (rapporter.length > 1) {
     html += '<div class="result-card"><h3 style="margin:0 0 4px;font-size:16px">' + rapporter.length + ' sites checked</h3>';
-    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site &mdash; the page you pasted, not the whole site.</p>';
+    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site, plus the legal pages it links to &mdash; not the whole site.</p>';
     html += '<div class="site-list">';
     rapporter.forEach(function(data, i) {
       html += '<div class="site-row">';
@@ -437,6 +480,7 @@ function renderResults(rapporter, fejl) {
   if (rapporter.length === 1) {
     html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
   }
+  html2 += laesteSider(data);
 
   // Group results — passed first, then warnings, then failures
   var order = [];
