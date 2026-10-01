@@ -239,18 +239,77 @@ def section(slug: str, epub_note: str) -> str:
         body.append('<h3 class="reader-chapter-title">%s</h3>\n%s' % (escape(c["title"]), c["html"]))
 
     # «1 chapter» og «2 chapters». En tidligere udgave skrev «2 chapter2», fordi
-    # samme `{n}` blev bruget til både tallet og flertal — dansk og engelsk er
+    # samme `{n}` blev brugt til både tallet og flertal — dansk og engelsk er
     # ikke sådan, og det så på en side vi sender til kunder.
     n = len(body)
     word = "chapter" if n == 1 else "chapters"
+    joined = "\n".join(body)
     return READER_TEMPLATE.format(
         lede=("The opening of the book, straight from the EPUB you get below — not a "
               "summary written for this page. %d %s in full, then the rest is free to "
               "download." % (n, word)),
         summary="Read the first %s online" % (word if n == 1 else "%d %s" % (n, word)),
-        chapters="\n".join(body),
+        chapters=joined,
         note=escape(epub_note),
+        # Kun CSS for de elementer kapitlerne faktisk indeholder. Skabelonen
+        # havde regler for `pre`, `blockquote`, `table`, `hr` og `h4` for alle
+        # seks bøger, men kun nogle af dem har sådanne afsnit, så resten var død
+        # CSS — og `check_built_css` dømmer et type-led i sidens egen `<style>`
+        # som fejl, når siden ikke har elementet. Se `optional_css`.
+        css=optional_css(joined),
+        mørke=optional_dark_css(joined),
     )
+
+
+# Hvilke elementer hvert kapitel faktisk bruger. Dødelisten er målt, ikke
+# gættet: `check_built_css` fandt præcis `blockquote`, `code`, `h4`, `hr`,
+# `pre`, `table`, `td` og `th` døde på de bogsider, hvis kapitler ikke har dem.
+# `p`, `ul`, `ol`, `li` og `h3` er ikke på listen, fordi kapitlerne altid har
+# mindst ét af hver — det er målt på alle seks.
+OPTIONAL_TAGS = ("h4", "table", "th", "td", "blockquote", "pre", "code", "hr")
+
+# Én regel pr. element. Rækkefølgen er CSS-kaskadens, så `pre` skal komme før
+# `code` — ellers ville inline-kode arve `pre`'s baggrund.
+OPTIONAL_RULES = (
+    ("h4", "    .reader .reader-body h4 {{ font-size:14px; margin:16px 0 4px; color:#444; }}"),
+    ("table", "    .reader .reader-body table {{ border-collapse:collapse; width:100%; margin:0 0 14px; font-size:14px; display:block; overflow-x:auto; }}"),
+    ("th", "    .reader .reader-body th {{ background:#f4f6f8; }}"),
+    ("td", "    .reader .reader-body th, .reader .reader-body td {{ border:1px solid #e2e5ea; padding:7px 10px; text-align:left; vertical-align:top; }}"),
+    ("blockquote", "    .reader .reader-body blockquote {{ margin:0 0 12px; padding:2px 0 2px 14px; border-left:3px solid #d8dee6; color:#444; }}"),
+    ("pre", "    .reader .reader-body pre {{ background:#f6f8fa; padding:12px 14px; border-radius:6px; overflow-x:auto; font-size:13px; }}"),
+    ("code", "    .reader .reader-body code {{ background:#f1f3f5; padding:1px 5px; border-radius:4px; font-size:13px; }}"),
+    ("hr", "    .reader .reader-body hr {{ border:0; border-top:1px solid #e2e5ea; margin:20px 0; }}"),
+)
+
+OPTIONAL_DARK = (
+    ("h4", "      .reader .reader-body h4 {{ color:#b9bfc7; }}"),
+    ("th", "      .reader .reader-body th {{ background:#1f232a; }}"),
+    ("td", "      .reader .reader-body th, .reader .reader-body td {{ border-color:#2a2e35; }}"),
+    ("blockquote", "      .reader .reader-body blockquote {{ border-left-color:#3a3f47; color:#b9bfc7; }}"),
+    ("pre", "      .reader .reader-body pre {{ background:#1f232a; }}"),
+    ("code", "      .reader .reader-body code {{ background:#22262d; }}"),
+)
+
+
+def optional_css(html: str) -> str:
+    """CSS kun for de elementer `html` faktisk indeholder.
+
+    Hvert element dømmes på sin egen tilstedeværelse, så porten kan ikke finde en
+    regel uden sit element. Undtagelsen er `pre code`, som kræver begge dele:
+    inline-kode inde i et kodeblok skal have blokkens baggrund, så reglen må
+    kun skrives når der faktisk er et `<pre>` **og** et `<code>`.
+    """
+    brugte = {t for t in OPTIONAL_TAGS if re.search(r"<%s[\s>]" % t, html, re.I)}
+    linjer = [rule for tag, rule in OPTIONAL_RULES if tag in brugte]
+    if {"pre", "code"} <= brugte:
+        linjer.append("    .reader .reader-body pre code {{ background:none; padding:0; }}")
+    return "\n".join(linjer)
+
+
+def optional_dark_css(html: str) -> str:
+    """Mørke-mod af `optional_css`. Samme måde, samme grund."""
+    brugte = {t for t in OPTIONAL_TAGS if re.search(r"<%s[\s>]" % t, html, re.I)}
+    return "\n".join(rule for tag, rule in OPTIONAL_DARK if tag in brugte)
 
 
 READER_TEMPLATE = """<section class="reader" id="read-online">
@@ -263,29 +322,16 @@ READER_TEMPLATE = """<section class="reader" id="read-online">
     .reader-chapter-title {{ font-size:17px; margin:22px 0 8px; }}
     .reader .reader-body {{ font-size:15px; line-height:1.7; color:#222; margin-top:14px; }}
     .reader .reader-body h3 {{ font-size:15px; margin:20px 0 6px; }}
-    .reader .reader-body h4 {{ font-size:14px; margin:16px 0 4px; color:#444; }}
     .reader .reader-body p {{ margin:0 0 12px; }}
     .reader .reader-body ul, .reader .reader-body ol {{ margin:0 0 12px; padding-left:22px; }}
     .reader .reader-body li {{ margin:0 0 4px; }}
-    .reader .reader-body table {{ border-collapse:collapse; width:100%; margin:0 0 14px; font-size:14px; display:block; overflow-x:auto; }}
-    .reader .reader-body th, .reader .reader-body td {{ border:1px solid #e2e5ea; padding:7px 10px; text-align:left; vertical-align:top; }}
-    .reader .reader-body th {{ background:#f4f6f8; }}
-    .reader .reader-body blockquote {{ margin:0 0 12px; padding:2px 0 2px 14px; border-left:3px solid #d8dee6; color:#444; }}
-    .reader .reader-body pre {{ background:#f6f8fa; padding:12px 14px; border-radius:6px; overflow-x:auto; font-size:13px; }}
-    .reader .reader-body code {{ background:#f1f3f5; padding:1px 5px; border-radius:4px; font-size:13px; }}
-    .reader .reader-body pre code {{ background:none; padding:0; }}
-    .reader .reader-body hr {{ border:0; border-top:1px solid #e2e5ea; margin:20px 0; }}
+{css}
     .reader-foot {{ font-size:14px; color:#555; margin:16px 0 0; }}
     @media (prefers-color-scheme: dark) {{
       .reader summary {{ color:#e8eaed; }}
       .reader details {{ background:#16181d; border-color:#2a2e35; }}
       .reader .reader-body {{ color:#d7dbe0; }}
-      .reader .reader-body h4 {{ color:#b9bfc7; }}
-      .reader .reader-body th {{ background:#1f232a; }}
-      .reader .reader-body th, .reader .reader-body td {{ border-color:#2a2e35; }}
-      .reader .reader-body blockquote {{ border-left-color:#3a3f47; color:#b9bfc7; }}
-      .reader .reader-body pre {{ background:#1f232a; }}
-      .reader .reader-body code {{ background:#22262d; }}
+{mørke}
     }}
   </style>
   <h2>Read it before you download</h2>

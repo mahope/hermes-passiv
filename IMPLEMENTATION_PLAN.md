@@ -7,6 +7,21 @@
   6 bogside-ruter viste 0 tegn bogtekst og en kapitel-liste, og den eneste måde
   at læse en bog på var at hente EPUB'en. Målt efter: `id="read-online"` 1 gang
   på hver af de seks, 0 på `index` og `compliance-bundle` (de er ikke en bog).
+- **Gaten kørte 16 domme i CI uden at køre dem.** Rettet 1/10: `quality_gate.py`
+  tog beslutningen om `dist/` *før* build-steppet, så en frisk checkout uden
+  `dist/` sprang `sitemaps, seo, inline-js, links, design-tokens, jsonld-types,
+  hreflang-pairs, built-css …` over og meldte grøn. Bevis fra den grønne
+  kørsel af `c4fd730`: loggen siger «intet i dist/ — springer 16 dist-steps
+  over», mens samme kode lokalt var **rød** i `built-css` med 35 fund. Derfor
+  gaten lokalt: `python3 tools/quality_gate.py` → GRØN 123 steps, og de otte
+  ovenfor kører alle med `--- grøn`.
+- **Bogside-ruterne sendte død CSS.** Samme rodårsag: `book_reader.py` skrev
+  regler for `pre`, `code`, `blockquote`, `table`, `th`, `td`, `hr` og `h4` til
+  alle seks bøger, men kun nogle kapitler har sådanne afsnit. Nu skrives kun det
+  kapitlerne faktisk bruger; `pre code` kræver begge dele. Målt: `cookie-consent`
+  → `code, pre, table, td, th`; `eaa-checklist` → `blockquote, code, hr, table,
+  td, th`; `eaa-shopify` og `build-your-first-chrome-extension` → ingen. Døde
+  regler tilbage i skabelonen → `check_built_css` RØD 30 fund; uændret → GRØN.
 - **Scannerens læsevisning er verificeret live.** `DEPLOY OK 2026-10-01` — alle
   seks domme fra sidste deploy-note er målt på live `8d8cdb5`, se nedenfor.
 - **CEO-kø punkt 0 er leveret og efterprøvet 1/10.** Alle fem delpunkter er
@@ -55,6 +70,18 @@
   EPUB» gjort til en ren existence-tjek → 43/45; EPUB-værnet i `build_sites.py`
   fjernet → 40/45 (alle seks EPUB'er forsvinder fra deres side). Grøn er kun
   den uændrede kode.
+
+- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
+  lukket på **indhold** på live `c4fd730`, alle seks domme målt: `read-online`
+  1 gang i hver af `gdpr-for-agencies`, `nis2-for-agencies`,
+  `cookie-consent-guide`, `eaa-checklist`, `eaa-shopify`,
+  `build-your-first-chrome-extension` og 0 i `books/index` +
+  `books/compliance-bundle`; `class="reader-chapter-title"` 2 gange i hver;
+  første kapitel er et rigtigt kapitel på alle seks (`Preface: Why This Book
+  Exists` er indhold, filteret dropper kun `Front Matter`/`Foreword`); `eaa-checklist`
+  viser kapitel 2 som 10-punkters-tjeklisten; 0 `script`/`onerror`/`javascript:`
+  lækker ud af læsevisningen; `scrollWidth == clientWidth == 390` ved 390 px på
+  tre sider med `<details>`+`<summary>`.
 
 - `DEPLOY OK 2026-10-01` — scanneren siger hvilken side den læste, og den hvide
   knap fik sin farve. Målt på **indhold** på live `8d8cdb5`: `pages_read`

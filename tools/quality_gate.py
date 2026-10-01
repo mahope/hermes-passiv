@@ -1503,29 +1503,49 @@ def run(only: str | None = None) -> int:
         return 2
 
     have_dist = dist_built()
-    if not have_dist:
+    # `build` er gaten første step, og en frisk checkout har intet `dist/`.
+    # Beslutningen skal derfor tages **igen** efter build — ellers springer CI
+    # alle 16 dist-steps over på hver kørsel og melder grøn uden at have kørt
+    # dem. Det var målt 1/10 på den grønne kørsel af `c4fd730`:
+    # «intet i dist/ — springer 16 dist-steps over: … built-css …», mens den
+    # samme kode lokalt var rød i `built-css` med 35 fund.
+    bygger = any(s.id == "build" for s in steps)
+    if not have_dist and not bygger:
         skipped = [s for s in steps if s.needs_dist]
         if skipped:
             print(f"quality_gate: intet i dist/ — springer {len(skipped)} "
                   f"dist-steps over: {', '.join(s.id for s in skipped)}")
-    elif only is not None and only != "build":
+    elif only is not None and only != "build" and have_dist:
         print(f"quality_gate: kører step {only} (dist er bygget)")
 
-    for step in steps:
-        if step.needs_dist and not have_dist:
-            continue
+    def kør(step: Step) -> tuple[int, float]:
         started = time.monotonic()
         print(f"\n=== {step.id}: {step.command}", flush=True)
         proc = subprocess.run(step.argv, cwd=ROOT)
         elapsed = time.monotonic() - started
-        if proc.returncode != 0:
+        if proc.returncode == 0:
+            print(f"--- {step.id}: grøn ({elapsed:.1f}s)", flush=True)
+        return proc.returncode, elapsed
+
+    for step in steps:
+        if step.needs_dist and not have_dist:
+            continue
+        returncode, elapsed = kør(step)
+        if returncode != 0:
             print(f"\nquality_gate: RØD i step `{step.id}` "
-                  f"(`{step.command}`, exit {proc.returncode}, {elapsed:.1f}s)",
+                  f"(`{step.command}`, exit {returncode}, {elapsed:.1f}s)",
                   file=sys.stderr)
             print("quality_gate: de foregående steps var grønne, så fejlen "
                   "er her og ikke i en af dem.", file=sys.stderr)
-            return proc.returncode
-        print(f"--- {step.id}: grøn ({elapsed:.1f}s)", flush=True)
+            return returncode
+        # Efter build er `dist/` der, så de 16 dist-steps skal køre i stedet for
+        # at blive sprunget over.
+        if step.id == "build" and not have_dist:
+            have_dist = dist_built()
+            if not have_dist:
+                print("quality_gate: build kørte grønt, men dist/ er stadig tomt — "
+                      "de dist-steps der kræver et bygget site bliver sprunget over.",
+                      file=sys.stderr)
 
     print(f"\nquality_gate: GRØN — {len(steps)} steps")
     return 0
