@@ -330,11 +330,30 @@ Hetzner Online GmbH — hosting"></textarea>
   // `renderHTML(current)` alene, så den kommer ikke med i kopieringen.
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne generator er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
 
+  // Købsvejen til den betalte vare der svarer til præcis det output, denne
+  // generator laver. Registret er gratis og fuldt — det er *kontraktversionen*
+  // af de samme oplysninger der sælges, så kortet siger det og påstår ikke at
+  // registret mangler noget. `no-print`, så det ikke ender i det dokument
+  // læseren udskriver eller kopierer: `renderText()` bygger fra
+  // `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Registret er skrevet. Kontrakten for den samme behandling er en fil.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Det her er det, du ellers skriver fra bunden for hver kunde:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>En art. 28-behandleraftale.</strong> Sagsgenstand, varighed, behandlingens art og formål, personoplysningstyper, sikkerhedsforanstaltninger og regler for underbehandlere &mdash; kontrakten, ikke kun registreringen af den.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Reglerne for underbehandling.</strong> Hvem der må behandle på kundens vegne, og mod hvilket samtykke. Afsnit 3 ovenfor lister, hvem de er; kontrakten siger, hvad de må.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>En kopi du selv styrer.</strong> Markdown-filen lægger du i dit eget repo ved siden af den aftale, den hører til; PDF-filen sendes til modparten.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Også den næste kunde.</strong> Det er en fil, ikke en licens. Intet forhindrer dig i at bruge den på den næste DPA.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05" rel="nofollow noopener">Køb GDPR DPA-skabelonen &mdash; $59 engang</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">To filer, leveret lige efter betalingen. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate-da');
     current = buildData();
-    $('agreement').innerHTML = renderHTML(current) + DONATION;
+    $('agreement').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

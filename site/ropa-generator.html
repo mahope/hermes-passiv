@@ -330,11 +330,30 @@ Hetzner Online GmbH — hosting"></textarea>
   // `renderHTML(current)` alene, så den kommer ikke med i kopieringen.
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 
+  // Købsvejen til den betalte vare der svarer til præcis det output, denne
+  // generator laver. Registret er gratis og fuldt — det er *kontraktversionen*
+  // af de samme oplysninger der sælges, så kortet siger det og påstår ikke at
+  // registret mangler noget. `no-print`, så det ikke ender i det dokument
+  // læseren udskriver eller kopierer: `renderText()` bygger fra
+  // `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The record is written. The contract for the same processing is a file.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What you would otherwise write from scratch for each client:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>An Article 28 processor agreement.</strong> Subject matter, duration, nature and purpose, types of personal data, security measures and sub-processor rules &mdash; the contract, not only the record of it.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>The sub-processor rules.</strong> Who may process on your client\'s behalf, and on what approval. Section 3 above lists who they are; the contract says what they are allowed to do.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>A copy you control.</strong> The Markdown goes in your own repository next to the agreement it belongs to; the PDF goes to the counterparty.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>The next client too.</strong> It is a file, not a licence. Nothing stops you using it on the next DPA.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05" rel="nofollow noopener">Buy the GDPR DPA template &mdash; $59 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Two files, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate');
     current = buildData();
-    $('agreement').innerHTML = renderHTML(current) + DONATION;
+    $('agreement').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

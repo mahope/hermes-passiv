@@ -289,11 +289,29 @@ Hetzner Online GmbH — hosting"></textarea>
   // `renderHTML(current)` alene, så den kommer ikke med i kopieringen.
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne generator er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
 
+  // Der er ingen betalt udgave af *denne* erklæring — den er gratis og
+  // færdig, og `/da/paid-templates` siger det samme. Kortet sælger derfor de
+  // dokumenter, du ellers skriver pr. kunde, og siger det i første linje.
+  // `no-print`, så det ikke ender i det dokument læseren udskriver eller
+  // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Erklæringen er færdig. De fire andre dokumenter, en kunde spørger til, er ikke.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Der er ingen betalt udgave af denne erklæring, og der behøver ikke at være det. Den betalte del er det, du ellers skriver fra bunden pr. kunde:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>En behandleraftale med bilag.</strong> Sagsgenstand, varighed, formål, oplysningstyper, sikkerhed og regler for underbehandlere &mdash; kontrakten bag den erklæring, du lige har offentliggjort.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>NIS2 / DORA-leverandørklausuler.</strong> Frister for hændelsesmelding, revisionsret, godkendelse af underleverandører og exitbetingelser, klar til at sætte ind i en leverandørkontrakt.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Et gensidigt NDA-sæt og en EAA-tilgængelighedserklæring.</strong> NDA\'et findes i gensidig, ensidig og projektspecifik udgave; erklæringen er struktureret efter EN 301 549 og WCAG 2.1 AA.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Seks rapporteringsfiler.</strong> En månedsrapport, en kvartalsberetning og en specifikation af ændringsloggen &mdash; fjorten filer i alt, PDF og Markdown, intet at skrive om.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a" rel="nofollow noopener">Køb det fulde skabelonsæt &mdash; $149 engang</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Leveres som 14 filer lige efter betalingen. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate-da');
     current = buildData();
-    $('notice').innerHTML = renderHTML(current) + DONATION;
+    $('notice').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

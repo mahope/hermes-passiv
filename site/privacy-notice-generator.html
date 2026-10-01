@@ -292,11 +292,29 @@ Hetzner Online GmbH — hosting"></textarea>
   // `renderHTML(current)` alene, så den kommer ikke med i kopieringen.
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 
+  // Der er ingen betalt udgave af *denne* erklæring — den er gratis og
+  // færdig, og `paid-templates` siger det samme. Kortet sælger derfor de
+  // dokumenter, du ellers skriver pr. kunde, og siger det i første linje.
+  // `no-print`, så det ikke ender i det dokument læseren udskriver eller
+  // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The notice is done. The other four documents a client asks for are not.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">There is no paid version of this notice, and there does not need to be. The paid set is the part you would write from scratch per client:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>A processor agreement with its annexes.</strong> Subject matter, duration, purpose, data types, security and sub-processor rules &mdash; the contract behind the notice you just published.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>NIS2 / DORA vendor clauses.</strong> Incident notification deadlines, audit rights, subcontractor approval and exit terms, ready to paste into a supplier contract.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>A mutual NDA set and an EAA accessibility statement.</strong> The NDA comes in mutual, one-way and project-specific variants; the statement is structured to EN 301 549 and WCAG 2.1 AA.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Six reporting files.</strong> A monthly report, a quarterly narrative and a change-log specification &mdash; fourteen files in all, PDF and Markdown, nothing to retype.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a" rel="nofollow noopener">Buy the complete template bundle &mdash; $149 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Delivered as 14 files right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate');
     current = buildData();
-    $('notice').innerHTML = renderHTML(current) + DONATION;
+    $('notice').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

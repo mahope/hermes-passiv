@@ -1442,10 +1442,21 @@ function mutated(path, from, to) {
 // --------------------------------------------------------------------------
 {
   const UP = [
-    { f: 'dpa-generator.html', link: 'bJe7sK8aT4My7dk7czbMQ05', pris: '$59', da: false },
-    { f: 'dpa-generator-da.html', link: 'bJe7sK8aT4My7dk7czbMQ05', pris: '$59', da: true },
-    { f: 'nis2-incident-generator.html', link: '4gM4gydvd92OapwgN9bMQ06', pris: '$49', da: false },
-    { f: 'nis2-incident-generator-da.html', link: '4gM4gydvd92OapwgN9bMQ06', pris: '$49', da: true },
+    { f: 'dpa-generator.html', key: 'eucomply-dpa', pris: '$59', da: false },
+    { f: 'dpa-generator-da.html', key: 'eucomply-dpa', pris: '$59', da: true },
+    { f: 'nis2-incident-generator.html', key: 'eucomply-nis2-clauses', pris: '$49', da: false },
+    { f: 'nis2-incident-generator-da.html', key: 'eucomply-nis2-clauses', pris: '$49', da: true },
+    // 2/10: de tre generatorer der manglede resten. RoPA og
+    // tilgængelighedserklæringen sælger den betalte udgave af præcis det de
+    // selv skriver (DPA'en med bilag hhv. erklæringen som filer); privacy
+    // notice har *ikke* en betalt udgave, så kortet sælger de dokumenter man
+    // ellers skriver pr. kunde og siger det i første linje.
+    { f: 'ropa-generator.html', key: 'eucomply-dpa', pris: '$59', da: false },
+    { f: 'ropa-generator-da.html', key: 'eucomply-dpa', pris: '$59', da: true },
+    { f: 'privacy-notice-generator.html', key: 'eucomply-template-bundle', pris: '$149', da: false },
+    { f: 'privacy-notice-generator-da.html', key: 'eucomply-template-bundle', pris: '$149', da: true },
+    { f: 'accessibility-statement-generator.html', key: 'eucomply-eaa-statement', pris: '$39', da: false },
+    { f: 'tilgaengelighedserklaering-generator-da.html', key: 'eucomply-eaa-statement', pris: '$39', da: true },
   ];
   // Kortet skal *rendere*, ikke bare være en streng i filen: vi trækker de
   // `UPSELL +=`-linjer ud og kører dem i en vm, så en forkert quote eller en
@@ -1471,7 +1482,7 @@ function mutated(path, from, to) {
     // Prisen kommer fra katalogen, ikke fra hukommelsen — samme regel som
     // `tools/check_own_prices.py`, så de to porte ikke kan blive uenige.
     const cat = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'));
-    const key = u.f.includes('dpa') ? 'eucomply-dpa' : 'eucomply-nis2-clauses';
+    const key = u.key;
     ok(`${u.f}: pris og periode er katalogens`,
       html.includes(u.pris) && html.includes(u.da ? 'engang' : 'once'),
       `katalog: ${cat.products[key].price} (${cat.products[key].price_note})`);
@@ -1506,9 +1517,34 @@ function mutated(path, from, to) {
   // Copy-gate: kortet må ikke love noget, de andre sider modsiger. Bogen er
   // gratis og siger det syv gange; en købsvej til *bogen* ville være modsigende.
   // Vi sælger skabeloner og klausursæt, og de filer ligger i et separat repo.
-  const dpa = readFileSync(join(root, 'site/dpa-generator.html'), 'utf8');
-  ok('købsvejen sælger skabelonen, ikke bogen',
-    !/fZu9AScr9a6SbtA68vbMQ0b/.test(dpa), 'skal ikke pege på e-book-bundlet');
+  for (const f of UP.map((u) => u.f)) {
+    const src = readFileSync(join(root, 'site', f), 'utf8');
+    ok(`${f}: købsvejen sælger en skabelon, ikke bogen`,
+      !/fZu9AScr9a6SbtA68vbMQ0b/.test(src), 'skal ikke pege på e-book-bundlet');
+  }
+  // Copy-gate 2: siden må ikke sige det modsatte af det kort den nu hænger.
+  // `accessibility-statement-generator.html` sagde «If you only need the
+  // statement, you never need to pay for anything», mens den samme side nu
+  // sælger erklæringen som fil. Sætningen er erstattet; porten dømmer at den
+  // ikke kan komme tilbage på nogen af siderne.
+  for (const f of UP.map((u) => u.f)) {
+    const src = readFileSync(join(root, 'site', f), 'utf8');
+    ok(`${f}: siden modsiger ikke sit eget købskort`,
+      !/never need to pay for anything/.test(src)
+      && !/aldrig behøver at betale for noget/.test(src),
+      'skal ikke love gratis, når siden sælger den samme vare');
+  }
+  // Og privacy notice har *ikke* en betalt udgave. Kortet skal sige det, ellers
+  // er det en købsknap til noget siden siger er gratis.
+  for (const f of ['privacy-notice-generator.html', 'privacy-notice-generator-da.html']) {
+    const src = readFileSync(join(root, 'site', f), 'utf8');
+    const start = src.indexOf('var UPSELL =');
+    const html = render(src.slice(start, src.indexOf("UPSELL += '</div>';", start) + 20));
+    ok(`${f}: kortet siger at der ingen betalt udgave af erklæringen findes`,
+      /There is no paid version of this notice/.test(html)
+      || /Der er ingen betalt udgave af denne erklæring/.test(html),
+      'kortet skal indrømme at denne erklæring ikke sælges');
+  }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

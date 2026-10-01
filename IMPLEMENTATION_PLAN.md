@@ -1,25 +1,20 @@
 # STATUS
 
-- **Compliance-generatorerne har nu en købsvej.** DPA-generatoren og
-  NIS2-hændelsesgeneratoren (EN + DA) hænger et kort på resultatet med den
-  betalte skabelon der svarer til præcis deres output: DPA-skabelonen ($59) og
-  NIS2/DORA-klausursættet ($49), begne fra `tools/stripe_catalog.json`.
-  Baseline før: **0 af 8** generator-sider linkede til `/paid-templates`; den
-  eneste undtagelse (`nis2-gap-assessment-da`) gik bare videre til siden.
-  Målt i browseren på 390 og 1280 px: kortet synligt, `overflowX=0`, knap 46–85
-  px høj, `print=false` (salgstexten kommer ikke i brugerens eget dokument), 0
-  pagefejl. Dommen læser pris og periode fra katalogen, ikke fra hukommelsen:
-  285/285, og tre mutationer gjort røde — `$59`→`$99` på knappen, `no-print`
-  fjernet, `UPSELL` fjernet fra resultatet.
-- **Deploy-noten for `/scan` er lukket på indhold 2/10** — alle fem domme målt
-  på live `919280b`. Den havde en fejl: ruten hedder `/scan-da`, ikke
-  `/da/scan` (som gav 404).
-- **Gaten kørte 16 dist-domme i CI uden at køre dem.** Bevis: den grønne
-  kørsel af `c4fd730` sagde «springer 16 dist-steps over». Målt efter: GRØN 123
-  steps fra en `dist/` der ikke fandtes. **Bøgerne læses online** på alle seks
-  bogside-ruter, målt på live `c4fd730`. **`/scan` og `/scan-da` sælger nu, og
-  deres trykte rapport gør ikke.** **CEO-kø punkt 0 er leveret og efterprøvet
-  1/10.** Målingerne står i `docs/plan-arkiv.md`.
+- **Alle otte compliance-generatorer har nu en købsvej til den betalte vare
+  der svarer til præcis deres output.** RoPA, privacy-notice og
+  EAA-erklæringen (EN + DA) hænger et kort på resultatet, med pris og periode
+  læst fra `tools/stripe_catalog.json`. Baseline før: **0 af 6** sider havde
+  et `buy.stripe.com`-link. Kortene siger det ærligt, de sælger *ikke* en
+  betalt udgave af gratis-værktøjet: privacy notice indrømmer i første linje at
+  der ingen findes, og RoPA/EAA sælger *kontraktversionen* hhv. *filudgaven*.
+  Målt i browseren på 390 og 1280 px × 6 sider: kortet synligt, `overflowX=0`,
+  knap 46–85 px høj, 0 pagefejl, og i print-medie er kortet `display:none`
+  mens dokumentet selv er `block`. Dommen: `tests/scan-clients.test.mjs`
+  354/354, fem mutationer gjort røde ($59→$99, `no-print` fjernet, link byttet,
+  indrømmelsen fjernet, den modsigende sætning tilbage på EAA-siden).
+- **Deploy-noterne er lukket på indhold 2/10.** `ceo/generator-kobsvej` (DPA +
+  NIS2) er målt på live `08ccd12`: alle fire domme grønne. CI for den kørsel
+  er grøn.
 - **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
   ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
@@ -28,17 +23,30 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: købsvej på DPA- og NIS2-generatoren
-  ceo/generator-kobsvej 2026-10-01 23:55` — måles på **indhold** på
-  `https://mahope.tools/dpa-generator`, `/dpa-generator-da`,
-  `/nis2-incident-generator` og `/nis2-incident-generator-da`. Domden er
-  `node tests/scan-clients.test.mjs` (285/285) + gaten. Dom 1: alle fire sider
-  har `upsell-card` 1 gang **og** `renderHTML(current) + UPSELL + DONATION`.
-  Dom 2: DPA-siderne har `bJe7sK8aT4My7dk7czbMQ05` og `$59` + `engang`/`once`,
-  NIS2-siderne `4gM4gydvd92OapwgN9bMQ06` og `$49` — begge læst fra
-  `tools/stripe_catalog.json`. Dom 3: kortet har `no-print`, så salgstexten
-  ikke ender i det dokument brugeren udskriver eller kopierer. Dom 4: ingen af
-  siderne linker til e-book-bundlet, for syv bogsider siger det er gratis.
+- `VERIFICÉR DEPLOY: købsvej på RoPA, privacy notice og EAA-erklæring
+  ceo/generator-kobsvej-2 2026-10-02` — måles på **indhold** på
+  `https://mahope.tools/{ropa-generator,ropa-generator-da,
+  privacy-notice-generator,privacy-notice-generator-da,
+  accessibility-statement-generator,tilgaengelighedserklaering-generator-da}`.
+  Domden er `node tests/scan-clients.test.mjs` (354/354) + gaten. Dom 1: alle
+  seks sider har `upsell-card` 1 gang **og** `renderHTML(current) + UPSELL +
+  DONATION`. Dom 2: pris og periode er katalogens — RoPA `$59` + `engang`/`once`
+  med `bJe7sK8aT4My7dk7czbMQ05`, privacy notice `$149` + `engang`/`once` med
+  `eVqaEW0Iren855c68vbMQ0a`, EAA `$39` + `engang`/`once` med
+  `3cI7sK2Qz3IugNUgN9bMQ08`. Dom 3: kortet har `no-print`, så salgsteksten ikke
+  ender i det dokument brugeren udskriver eller kopierer. Dom 4: ingen af
+  siderne linker til e-book-bundlet, og ingen af dem siger «du behøver aldrig at
+  betale for noget» — den sætning på EAA-siden var en direkte modsigelse af
+  det nye kort og er erstattet.
+
+- `DEPLOY OK 2026-10-02` — DPA- og NIS2-generatorens købsvej. Note lukket på
+  **indhold** på live `08ccd12` (build-info.json → `08ccd12104fabb210…`), alle
+  fire domme målt: `upsell-card` 1 gang i hver af `dpa-generator`,
+  `dpa-generator-da`, `nis2-incident-generator` og `nis2-incident-generator-da`;
+  katalogens betalingslink 1 gang i hver; `$59` 2 gange og `$49` 1 gang pr. side;
+  perioden som sit eget ord — `once` 2/1 gange i EN, `engang` 1 gang i hver DA;
+  `renderHTML(current) + UPSELL + DONATION` 1 gang i alle fire; e-book-bundlet 0
+  gange i alle fire. CI for `08ccd12` er grøn.
 
 - `DEPLOY OK 2026-10-02` — pro-kortet på `/scan` og `/scan-da`. Note lukket på
   **indhold** på live `919280b`. Alle fem domme målt: `class="result-card
@@ -117,10 +125,10 @@
    Accept nået: `pages_checked` overstiger de gættede stier, og fundet peger på
    den linkede side. Flyttet til `docs/plan-arkiv.md`.
 2. ~~Generatorerne lavede dokumentet, men ikke vejen videre.~~ **Færdig 2/10.**
-    DPA- og NIS2-hændelsesgeneratoren (EN + DA) har nu et kort på resultatet med
-    den betalte skabelon der svarer til deres eget output, pris og periode læst
-    fra `tools/stripe_catalog.json`. Næste skridt er de fire generatorer der
-    stadig mangler det: RoPA, privacy-notice og EAA-erklæring.
+    Alle otte generatorer (DPA, NIS2, RoPA, privacy notice, EAA-erklæring —
+    EN + DA) har nu et kort på resultatet med den betalte vare der svarer til
+   deres eget output, pris og periode læst fra `tools/stripe_catalog.json`.
+   Flyttet til `docs/plan-arkiv.md`.
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
     `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
     trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme

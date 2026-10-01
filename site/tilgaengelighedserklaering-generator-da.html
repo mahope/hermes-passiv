@@ -272,10 +272,28 @@
   var current = null;
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">Denne generator er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
 
+  // Købsvejen til den betalte vare der svarer til præcis det output, denne
+  // generator laver. Generatoren ovenfor skriver hele erklæringen og er
+  // gratis; den betalte udgave er den *samme* erklæring som to filer, så
+  // kortet siger det og påstår ikke at generatoren mangler noget.
+  // `no-print`, så det ikke ender i det dokument læseren udskriver eller
+  // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Erklæringen er skrevet. Filudgaven er den, du offentliggør og gemmer.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Erklæringen ovenfor er færdig og bliver gratis. Den betalte udgave er den samme erklæring som filer:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Struktureret efter EN 301 549 og WCAG 2.1 AA.</strong> Hvad der blev testet, hvad der blev fundet, hvad der bliver rettet, og hvordan man klager &mdash; de fire afsnit, loven forventer at finde.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>To filer, ikke en formular.</strong> En PDF du offentliggør eller afleverer, og en Markdown-fil du gemmer i dit eget repo ved siden af det site, den beskriver.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Også den næste kunde.</strong> Det er en fil, ikke en licens. Intet forhindrer dig i at bruge den på den næste erklæring.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08" rel="nofollow noopener">Køb EAA-tilgængelighedserklæringen &mdash; $39 engang</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">To filer, leveret lige efter betalingen. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     current = buildData();
-    $('statement').innerHTML = renderHTML(current) + DONATION;
+    $('statement').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

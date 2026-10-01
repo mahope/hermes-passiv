@@ -165,8 +165,9 @@
   <strong>EUComply Pro</strong> is the same report for people who have to hand it to
   someone else: 33 checks — the same 15 accessibility rules, plus 18 server-side checks for
   GDPR and cookies, NIS2 and security headers — and a PDF you can send to a client and
-  attach to the statement. $79/year, per website. If you only need the statement, you
-  never need to pay for anything.</p>
+  attach to the statement. $79/year, per website. If you only need the statement for
+  one site, the free generator above is enough &mdash; nothing on this page is held
+  back for a licence.</p>
 </section>
 </main>
 
@@ -266,10 +267,28 @@
   var current = null;
   var DONATION = '<p class="no-print" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This generator is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 
+  // Købsvejen til den betalte vare der svarer til præcis det output, denne
+  // generator laver. Generatoren ovenfor skriver hele erklæringen og er
+  // gratis; den betalte udgave er den *samme* erklæring som to filer, så
+  // kortet siger det og påstår ikke at generatoren mangler noget.
+  // `no-print`, så det ikke ender i det dokument læseren udskriver eller
+  // kopierer: `renderText()` bygger fra `renderHTML(current)` alene.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">The statement is written. The file version is what you publish and keep.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">The statement above is complete and stays free. What the paid version adds is the same document as files:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Structured to the EN 301 549 and WCAG 2.1 AA axes.</strong> What was tested, what was found, what is being fixed and how to complain &mdash; the four sections the Act expects to find.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Two files, not a form to fill in.</strong> A PDF to publish or hand over, and a Markdown file to keep in your own repository next to the site it describes.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>The next client too.</strong> It is a file, not a licence. Nothing stops you using it on the next statement.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08" rel="nofollow noopener">Buy the EAA accessibility statement &mdash; $39 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Two files, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
   $('genForm').addEventListener('submit', function (e) {
     e.preventDefault();
     current = buildData();
-    $('statement').innerHTML = renderHTML(current) + DONATION;
+    $('statement').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

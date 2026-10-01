@@ -4326,3 +4326,52 @@ indhold mod alle fem domme: `class="result-card pro-card"` 1 gang i hver,
 katalogens `eVq00i4YH6UG69g0ObbMQ03` 1 gang i hver, `$79/year per website` (EN)
 og `$79/år pr. website` (DA), `donate.stripe.com` 1 gang pr. side, og
 `style.css` skjuler `.pro-card` i den samme `@media print`-regel som `.btn`.
+
+## 2/10 — Købsvej på de tre sidste generatorer (ceo/generator-kobsvej-2)
+
+**Målt før:** `buy.stripe.com` 0 gange i alle seks sider
+(`ropa-generator`, `ropa-generator-da`, `privacy-notice-generator`,
+`privacy-notice-generator-da`, `accessibility-statement-generator`,
+`tilgaengelighedserklaering-generator-da`). DPA- og NIS2-generatorerne havde
+fået deres kort i `ceo/generator-kobsvej` (08ccd12), så de otte generator-sider
+nu er lige.
+
+**Målet fordelte sig ikke 1:1.** Der findes syv betalte produkter, men ingen
+betalt udgave af *registret* eller af *privatlivserklæringen* — `paid-templates`
+siger selv at gratis-udgaverne er «genuinely complete». Kortene blev derfor
+lagt på den ærlige vare, ikke på en opdiget:
+
+| Generator | Betalt vare | Hvorfor |
+|---|---|---|
+| RoPA (EN+DA) | `eucomply-dpa` $59 | Registret er gratis og fuldt; bilaget til DPA'en er de samme oplysninger som en *kontrakt*, inkl. underbehandlerregler som afsnit 3 ikke dækker |
+| Privacy notice (EN+DA) | `eucomply-template-bundle` $149 | Der **er** ingen betalt udgave af erklæringen, og kortet siger det i første linje; den betalte del er de dokumenter man skriver pr. kunde |
+| EAA-erklæring (EN+DA) | `eucomply-eaa-statement` $39 | Præcis samme dokument som to filer (PDF + Markdown) i stedet for en formular |
+
+**En fundet modsigelse, rettet samme iteration.** EAA-siden sagde «If you only
+need the statement, you never need to pay for anything» i sit `pro-note` — mens
+den nu sælger erklæringen som fil. Sætningen er erstattet af «If you only
+need the statement for one site, the free generator above is enough — nothing on
+this page is held back for a licence», og porten dømmer nu at ingen af de ti
+sider kan få den modsigende sætning tilbage.
+
+**Porten.** `tests/scan-clients.test.mjs` dom 14 blev generalize fra fire til ti
+sider: katalog-nøglen ligger nu på hver linje i stedet for at blive gættet ud
+fra filnavnet. Døverne læser pris, periode og betalingslink fra
+`tools/stripe_catalog.json`, renderer kortet i en `vm` (så en uafsluttet streng
+er rød i stedet for død markup), og kræver `no-print` + at kortet hænger på
+`renderHTML(current) + UPSELL + DONATION`. To nye copy-domme: ingen af de ti
+sider linker til e-book-bundlet, og ingen af dem lover gratis, når de sælger
+den samme vare.
+
+**Målt.** 354/354 (fra 285/285). Fem mutationer gjort røde: `$59`→`$99` på den
+danske RoPA-knap, `no-print` fjernet fra privacy-kortet, EAA-linket byttet til
+bundlets, indrømmelsen «There is no paid version of this notice» fjernet, og
+den modsigende sætning sat tilbage på EAA-siden. Browseren på 390 og 1280 px ×
+6 sider: `upsell-card` 1 gang, synlig, `overflowX=0`, knap 46–85 px høj, 0
+pagefejl. I print-medie: kort `display:none`, donation `display:none`,
+dokumentet selv `block`.
+
+**Fælde noteret til næste iteration.** En mutation blev lavet med
+`perl -0pi -e` og rettet med `git checkout -- <fil>` **før** arbejdet var
+committet — hvilket kassérede rettelsen til de to muterede filer. Rettelserne
+blev lavet igen. Kør mutationer på et committet arbejde, eller på en kopi.
