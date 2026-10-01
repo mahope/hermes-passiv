@@ -1,16 +1,33 @@
 # STATUS
 
-- **Scanningen tager nu flere URL'er, så Pro-løftet holder.** Rettet 1/10:
-  `/compliance-site-check` (EN+DA) har et tekstfelt med én URL pr. linje, op til
-  5 pr. kald, og serveren svarer én rapport pr. URL med et overblik først.
-  Førhen tog feltet én URL, mens produktsiden lovede at Pro «crawls the site».
-- **Fetch-budgettet er delt pr. kald, ikke pr. URL** — ét kald koster højst 12
-  ude-kald uanset hvor mange URL'er der står i, ellers ville 5 URL'er være 60.
+- **Den gratis indgang på `/clean-copy-tool` slutter nu med en købsvej.** Rettet
+  1/10: efter en konvertering ligger der ét Pro-kort med batch-konvertering,
+  egne rense regler og knappen «Buy Clean Copy Pro — $19/year». Kortet skjules
+  for en kunde der har aktiveret Pro. Baseline 1/10: `/clean-copy-tool` er den
+  eneste indgang på cleancopy.tools med **0 % bounce** (2 af 7 besøgende, 28 d)
+  og Google som kilde — og før dette havde den 0 købsknapper i sit resultat.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: Pro-kort i resultatet af Clean Copy-webværktøjet
+  ceo/pro-knaeb-i-resultatet 2026-10-01 18:20` — måles på **indhold**: live
+  `GET /clean-copy-tool` skal have `<div id="pro-nudge" hidden>` og
+  `eVq00i4…` må **ikke** stå i siden endnu (kortet skrives af `convert()`),
+  mens katalogens `6oU4gy76PgvgdBIdAXbMQ00` skal stå i scriptet. Dommen er
+  `tests/scan-clients.test.mjs` (213/213), som kører værktøjet rigtigt
+  igennem: den fyrede rødt på `showProCard()`-mutationen (206/213) og på en
+  `proActive()` der altid er falsk (212/213), så porten kan fejle.
+  Målt i Playwright på den byggede side: kortet afsløres ved 390 og 1280 px,
+  lys og mørk, uden vandret scroll og uden page-fejl.
+
+- `DEPLOY OK 2026-10-01` — compliance-scanneren tager flere URL'er pr. kald.
+  Målt på live `209baa0`: `GET /api/compliance-scan?url=scan.example%0Aexample.org`
+  → 200 med `multi: true` og to entries i `reports`; ét URL svarer i den gamle
+  form uden `multi`; `/compliance-site-check` + `/da/compliance-site-check` har
+  `<textarea id="urlInput"` og `SCAN_MAX_SITES = 5`.
 
 - `DEPLOY OK 2026-10-01` for de tre noter under «Verificér deploy» 1/10 (købsknap
   i scannerens resultat, workerens Sentry-guard, samme købsvej i de fem øvrige
@@ -37,16 +54,6 @@
   /api/compliance-ai` → 200 `{"ok":true,"available":false}`, begge sider har
   `aiUnavailable` ×2 og `noindex,follow`, og `compliance-ai` er **0** gange i
   `sitemap.xml` og `llms.txt`.
-
-- `VERIFICÉR DEPLOY: compliance-scanneren tager flere URL'er pr. kald
-  ceo/flere-urler-i-scanning 2026-10-01` — måles på **indhold**: live
-  `GET /api/compliance-scan?url=scan.example%0Aexample.org` skal svare 200 med
-  `multi:true` og to entries i `reports`, ét URL skal svare i den gamle form
-  (intet `multi`), og `/compliance-site-check` + `/da/compliance-site-check`
-  skal have `<textarea id="urlInput"` og `SCAN_MAX_SITES = 5`. Dommen er
-  `tests/stripe-worker.test.mjs` (330/330) og `tests/scan-clients.test.mjs`
-  (204/204) — begge kan fejle: mutationen på EN's genkaldskæde kører den gamle
-  kode, og budget-dommen tæller ude-kald mod to tunge værter.
 
 
 ## Åbne opgaver
@@ -76,10 +83,10 @@
    flyttet ned i artiklen på de mest besøgte sider (dømt i
    `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en
    ligger ét sted pr. side. Kræver beslutning — se ❓.
-5. **DA-siden mangler download-knappen på rapporten.** Hvorfor:
-   `downloadReport()` findes på `/da/compliance-site-check`, men ingen knap
-   kalder den — kun EN har den. Målt 1/10 ved at læse begge filers markup.
-   Accept: knappen er på DA også, eller funktionen er væk.
+5. ~~DA-siden mangler download-knappen på rapporten.~~ **Ikke et problem.**
+   Optaget på en måling af kildefilerne 1/10, men målt på live: både EN og DA
+   har `dlReport` to gange og `function downloadReport` én gang. Flyttet til
+   `docs/plan-arkiv.md`.
 6. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor:
    Fund fra review 1/10 blev rettet for `/compliance-ai`, men porten dømmer kun
    de to ruter, der er skrevet i `tools/unavailable_routes.json` — en ny AI-
@@ -154,9 +161,8 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    genererede lister, så den ikke længere skader nogen. Resten kræver
    `OPENROUTER_API_KEY` — se ❓. Datagrund: målt 1/10 — 503 «AI service not
    configured», `cf-cache-status: DYNAMIC`.
-4. **En købsvej til Clean Copy Pro i værktøjet på cleancopy.tools.** Hvem: de 7
-   besøgende i 28 dage, hvor `/clean-copy-tool` er indgangen. Tal: betalinger pr.
-   uge (baseline 0 målt). Accept: efter et renset resultat ligger der én knap
-   med pris **og** periode fra `stripe_catalog.json`, dømt af samme sektion 11b.
-   Datagrund: 22 skriver `/year`, 10 `once`, 15 `lifetime` i katalogen, så
-   `$19` alene afslører intet; de to ruter har hver sit eget købsflow i dag.
+4. ~~En købsvej til Clean Copy Pro i værktøjet på cleancopy.tools.~~
+   **Leveret 1/10** — efter en konvertering ligger der ét Pro-kort med batch,
+   egne rense regler og knappen «Buy Clean Copy Pro — $19/year», skjult for
+   aktiverede Pro-kunder. Målt først: 0 købsknapper i resultatet. Næste skridt
+   er punkt 2 — bøgerne læses online.

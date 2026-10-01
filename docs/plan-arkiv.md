@@ -3994,3 +3994,43 @@ overblik, fejltilstand og resultat.
 
 Ikke løst: hvert site tjekkes stadig kun på **forsiden**. Pro gør det samme for
 hver side den finder, og det er den næste opgave.
+
+---
+
+## 1/10 18:20 — Pro-kort i resultatet af Clean Copy-webværktøjet
+
+**Opgaven.** `/clean-copy-tool` er den eneste indgang på cleancopy.tools med 0 %
+bounce (2 af 7 besøgende, 28 dage, Plausible 1/10) og den eneste med Google som
+kilde. Købsknappen lå alligevel kun i det statiske Pro-afsnit under hele værktøjet,
+så den gratis indgang sluttede med «Download as .md» og ingen købsvej — målt 0
+`buy.stripe.com` i den markup et resultat renderer.
+
+**Løsningen.** Samme form som på skannerne (21acd2f): `convert()` skriver et
+`.pro-card` ind i `#pro-nudge`, som er `hidden` indtil der er et resultat. Kortet
+siger de to Pro-funktioner fra `tools/stripe_catalog.json` (batch-konvertering,
+egne rense regler), siger ærligt at intet fjernes fra den gratis udgave, og har
+knappen med katalogens link og pris **og** periode. Det spørger om
+`batch-details.hidden` — præcis det flag `enableBatch()` sætter — så en kunde med
+aktiv Pro ikke får en købsknap for det samme.
+
+**En fejl fundet undervejen.** Første version af `showProCard()` sprang ud med
+`!nudge.hidden`. I en browser er `hidden` et boolesk flag, så det virkede der,
+men sandkassens element-stub har `undefined`, og dommen så aldrig kortet. Rettet
+til et `nudgeRendered`-flag, der ikke afhænger af attributten.
+
+**Verificeret.** `tests/scan-clients.test.mjs` 213/213, sektion 11b kører
+værktøjet rigtigt igennem gennem den `input`-lytter, en besøgende faktisk
+binder. To mutationer, begge målte røde: `showProCard()` fjernet → 206/213;
+`proActive()` gjort altid falsk → 212/213. To domme mere: et tomt felt viser ingen
+købsvej, og en aktiv Pro-licens skjuler den. `quality_gate.py` 122 steps grøn,
+`check_own_prices.py` 16 betalingslinks / 0 fund, `check_tool_paid_path.py` grøn.
+Playwright på den byggede side ved 390 og 1280 px, lys og mørk: kortet afsløres,
+`scrollWidth` = viewport, ingen page-fejl.
+
+**Næste skridt.** Feature-kø punkt 2: bøgerne læses online.
+
+## 1/10 — Lukket opgave: DA manglede download-knappen på rapporten
+
+Optaget efter en måling af kildefilerne. Målt på live samme dag: både EN og DA
+har `dlReport` to gange og `function downloadReport` én gang. Ikke et problem —
+den `onclick`-binding, der sås som manglende, sad i begge filer.

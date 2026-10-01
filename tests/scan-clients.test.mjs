@@ -55,6 +55,12 @@ function el() {
     removeChild() {}, setAttribute() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
+    // `fire()` lader en test gøre det en bruger gør: sætte værdien og udløse
+    // lytteren. `/clean-copy-tool` binder `convert()` på `input` og holder den
+    // i en IIFE, så der er ingen anden vej ind — sandkassen skal kunne trykke
+    // på tastaturet, ellers kan kortet kun dømmes ved at kalde kode den ikke
+    // eksponerer.
+    fire(t) { (this._ls[t] || []).forEach((fn) => fn({ target: this, preventDefault() {} })); },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
     submit() { (this._ls.submit || []).forEach((fn) => fn({ preventDefault() {} })); },
     querySelectorAll: () => [],
@@ -1036,6 +1042,26 @@ function mutated(path, from, to) {
                  donation: '', afsløret: (nodes.get('cc-pro') || {}).hidden === false };
       },
     },
+    {
+      path: 'site/clean-copy-tool.html', label: 'clean-copy-tool', product: 'clean-copy-pro',
+      // Tabellen med gratis-vs-Pro ligger på siden selv, så kortet peger på
+      // den med et anker — de andre værktøjer peger på en produktside i stedet.
+      report: /href="#free-vs-pro"/, form: 'script',
+      async kør() {
+        const { fetchImpl } = responses([{ status: 200, body: { ok: true } }], { skip: [/api\/track/] });
+        // `match` vælger den IIFE der både konverterer og holder Pro-logikken.
+        const { nodes } = loadPage('site/clean-copy-tool.html', fetchImpl, { match: /batch-details/ });
+        await sleep(30);
+        // Ren tekst uden markup: konverteringen så den virker i en rigtig browser
+        // tager den `raw.replace`-gren, som hverken skal bruge DOMParser eller
+        // CleanCopyCore — de to er `src`-scripts sandkassen ikke indlæser.
+        nodes.get('input-box').value = 'Revenue grew 34% — see  the  full report.';
+        nodes.get('input-box').fire('input');
+        await sleep(20);
+        return { markup: (nodes.get('pro-nudge') || {}).innerHTML || '',
+                 afsløret: (nodes.get('pro-nudge') || {}).hidden === false };
+      },
+    },
   ];
 
   for (const t of TOOLS) {
@@ -1068,6 +1094,39 @@ function mutated(path, from, to) {
         'ellers står prisen i markup uden at nogen ser den');
     } else {
       ok(`${t.label}: købslinket findes kun i den markup resultatet renderer`, markup.includes(pro.payment_link));
+    }
+    if (t.form === 'script' && t.path === 'site/clean-copy-tool.html') {
+      // Uden en konvertering er der intet resultat, så kortet skal være væk.
+      // Det er den dom der gør resten værd at tro: en port der kun læser
+      // `proCard()`s streng ville være grøn på en side der aldrig viser den.
+      const { nodes } = loadPage('site/clean-copy-tool.html',
+        responses([{ status: 200, body: { ok: true } }], { skip: [/api\/track/] }).fetchImpl,
+        { match: /batch-details/ });
+      await sleep(30);
+      nodes.get('input-box').value = '   ';
+      nodes.get('input-box').fire('input');
+      await sleep(20);
+      ok(`${t.label}: et tomt felt viser ingen købsvej`, !((nodes.get('pro-nudge') || {}).innerHTML || '').trim(),
+        'kortet må først vise sig, når der er noget resultat');
+    }
+    if (t.path === 'site/clean-copy-tool.html') {
+      // En kunde der har aktiveret Pro skal ikke få en købsknap for det samme.
+      const { sandbox, nodes } = loadPage('site/clean-copy-tool.html',
+        responses([{ status: 200, body: { ok: true } }], { skip: [/api\/track/] }).fetchImpl,
+        { match: /batch-details/ });
+      await sleep(30);
+      // `enableBatch(false)` skjuler præcis dette panel, når licensen ikke
+      // holder — det er derfor kortet spørger om samme attribut. Panelet opstår
+      // normalt i licens-initialiseringen, som ikke kører i sandkassen
+      // (`CleanCopyLicense` ligger i et andet inline-script), så den hentes
+      // her igennem `getElementById` præcis som koden gør.
+      sandbox.document.getElementById('batch-details').hidden = false;
+      nodes.get('input-box').value = 'Revenue grew 34%.';
+      nodes.get('input-box').fire('input');
+      await sleep(20);
+      ok(`${t.label}: en aktiveret Pro-licens skjuler købsknappen`,
+        ((nodes.get('pro-nudge') || {}).innerHTML || '') === '',
+        `markup=${JSON.stringify(((nodes.get('pro-nudge') || {}).innerHTML || '').slice(0, 80))}`);
     }
   }
 

@@ -169,6 +169,12 @@
       <span id="copy-status" role="status"></span>
     </div>
 
+    <!-- Betalt vej i selve resultatet. 1/10: købsknappen lå kun i det
+         statiske Pro-afsnit under hele værktøjet, så den gratis indgang sluttede
+         med «Download as .md» og ingen købsvej. `convert()` skriver kortet ud,
+         så pris og periode kommer fra samme katalog som resten af siderne. -->
+    <div id="pro-nudge" hidden></div>
+
     <h2>Why clean copied text?</h2>
     <p>Text you copy from the web arrives stuffed with invisible junk: smart quotes that break
     code, non-breaking spaces that break search, nested spans and styles that break your CMS.
@@ -460,9 +466,46 @@
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    // Betalt vej, samme form som på skannerne: skrevet i den markup
+    // resultatet renderer, ikke i den statiske HTML. En Pro-kunde må ikke
+    // få den, så den spørger om det samme flag Pro-panelet bruger.
+    // `nudgeRendered` og ikke `nudge.hidden` styrer, om kortet bygges igen:
+    // `hidden`-attributten er ikke altid et boolesk flag (den er sand i en
+    // browser, men `undefined` i en stub), og en afhængighed af den gjorde
+    // kortet aldrig komme frem.
+    var nudge = document.getElementById('pro-nudge');
+    var nudgeRendered = false;
+
+    function proActive() {
+      return document.getElementById('batch-details').hidden === false;
+    }
+
+    function proCard() {
+      var html = '<div class="pro-card">';
+      html += '<h3>Cleaning one snippet at a time?</h3>';
+      html += '<p class="pro-lead">What Pro adds on top of this tool:</p>';
+      html += '<ul class="pro-list">';
+      html += '<li><strong>Batch conversion.</strong> One click cleans many snippets — one per line — instead of one paste at a time.</li>';
+      html += '<li><strong>Custom cleanup rules.</strong> In the browser extension: define your own rules once and reuse them on every site.</li>';
+      html += '<li><strong>Nothing here is taken away.</strong> Every conversion mode on this page, and no limit on how much text you paste, stay free.</li>';
+      html += '</ul>';
+      html += '<a class="btn-primary" style="display:inline-block;text-decoration:none" href="https://buy.stripe.com/6oU4gy76PgvgdBIdAXbMQ00" rel="nofollow noopener">Buy Clean Copy Pro — $19/year</a>';
+      html += '<p class="pro-card-note">One licence covers 5 devices. <a href="#free-vs-pro">See what Pro adds before you buy</a>.</p>';
+      html += '</div>';
+      return html;
+    }
+
+    function showProCard() {
+      if (proActive()) return;
+      if (!nudgeRendered) { nudge.innerHTML = proCard(); nudgeRendered = true; }
+      nudge.hidden = false;
+    }
+
+    function hideProCard() { nudge.hidden = true; }
+
     function convert() {
       var raw = input.value;
-      if (!raw.trim()) { output.value = ''; statsEl.textContent = ''; setStatus(''); return; }
+      if (!raw.trim()) { output.value = ''; statsEl.textContent = ''; setStatus(''); hideProCard(); return; }
       var looksLikeHtml = /<\/?(?:p|div|span|h[1-6]|ul|ol|li|a|b|strong|i|em|br|code|pre|table)\b/i.test(raw)
                           || /&(?:amp|lt|gt|quot|nbsp);/.test(raw);
       try {
@@ -484,6 +527,7 @@
         var words = result.split(/\s+/).filter(Boolean).length;
         statsEl.textContent = result.length + ' chars · ' + words + ' words';
         setStatus('');
+        showProCard();
         if (!convert._tracked) { convert._tracked = true; trackUse(); }
       } catch (err) {
         output.value = '';
@@ -544,6 +588,7 @@
 
     document.getElementById('btn-clear').addEventListener('click', function () {
       input.value = ''; output.value = ''; statsEl.textContent = ''; setStatus('');
+      hideProCard();
       input.focus();
     });
 
