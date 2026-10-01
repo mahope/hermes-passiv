@@ -750,10 +750,35 @@ def self_test() -> int:
     # Antallet af regler skal også gates, ikke bare løftet. `16` i stedet for
     # `15` er den fejl de fire sider faktisk havde, og den fanges kun fordi
     # det rigtige antal står som *krævet* sætning.
+    #
+    # Mutationen rammer *alle* forekomster, ikke kun den første. Målt 1/10:
+    # sætningen stod én gang, og da 98e5491 lagde den samme sætning ind i
+    # erstatningsfeltet (den nye «assistents slukket»-boks), blev der to — så
+    # `replace(..., 1)`` muterede den nye, og den dømte afsnit beholdt det
+    # rigtige antal. Selftesten sagde så «fejlen blev ikke fanget», altså rød
+    # på *grøn* kode: porten havde mistet evnen til at se netop den fejl, den
+    # var skrevet til at se. Derfor skal porten tælle forekomsterne og kræve
+    # dem alle, så et tal der står ét sted og ikke et andet ikke kan glide igennem.
+    da_scanner = scanner_real["site/da/compliance-ai.html"]
+    da_before = da_scanner.count("15 WCAG-regler")
+    if da_before < 1:
+        raise AssertionError("site/da/compliance-ai.html: mutationsanker mangler helt")
     scenarios.append((
         "scanneren der lover et forkert antal WCAG-regler",
-        check_text("scanner-da", scanner_real["site/da/compliance-ai.html"].replace(
-            "15 WCAG-regler", "16 WCAG-regler", 1), *scanner_cases["site/da/compliance-ai.html"]),
+        check_text("scanner-da", da_scanner.replace(
+            "15 WCAG-regler", "16 WCAG-regler"), *scanner_cases["site/da/compliance-ai.html"]),
+    ))
+    # Og den modsatte fejl: et tal der kun står nogle steder. Kræver porten bare
+    # *én* forekomster, så en side der skriver 16 i erstatningsfeltet og 15 i
+    # afsnittet er grøn — og det er præcis den uoverensstemmelse læseren ser.
+    en_scanner = scanner_real["site/compliance-ai.html"]
+    en_before = en_scanner.count("15 WCAG compliance rules")
+    if en_before < 1:
+        raise AssertionError("site/compliance-ai.html: mutationsanker mangler helt")
+    scenarios.append((
+        "scanneren der kun nogen steder lover det rigtige antal",
+        check_text("scanner", en_scanner.replace(
+            "15 WCAG compliance rules", "16 WCAG compliance rules"), *scanner_cases["site/compliance-ai.html"]),
     ))
     scenarios.append((
         "scanneren uden nogen afsløring af proxy-kaldet",

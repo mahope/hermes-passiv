@@ -150,10 +150,10 @@ def check_source_sitemap_gone(root: Path) -> list[str]:
     return problems
 
 
-# Scripts der har lov til at nævne `llms.txt` overhovedet. Alle tre er
+# Scripts der har lov til at nævne `llms.txt` overhovedet. Alle er
 # dokumenteret af *hvorfor*, ikke af en navne-liste som fraviges andetsteds:
 #
-#   build_sites.py            — ejer filen; skriver `dist/<domaene>/llms.txt`
+#   build_sites.py            — ejer filen; skriver `dist/<domæne>/llms.txt`
 #   tools/check_links.py      — fører `/llms.txt` på listen over genererede
 #                               dist-filer den ikke skal dømme som brudte
 #   tools/make_blog_index.py  — skriver `<link rel="alternate" href="/llms.txt">`
@@ -165,8 +165,14 @@ def check_source_sitemap_gone(root: Path) -> list[str]:
 #                               reklamerer for `llms.txt`
 #   tools/check_live_sitemaps.py — dømmer de samme filer i produktion
 #   tools/test_check_live_sitemaps.py — fixture med en realistisk robots.txt
+#   tools/check_unavailable_routes.py — dømmer at en rute der er slukket også
+#                               er ude af llms.txt, altså netop den genererede
+#                               fil. Målt 1/10: porten blev skrevet som
+#                               undtagelsesliste for de to compliance-ai-ruter
+#                               og var rød i samme øjeblik den blev lagt på
+#                               main, fordi den navngiver filen den dømmer.
 #
-# De fire sidste er ikke en generel undtagelse: de er de filer der skal
+# De sidste er ikke en generel undtagelse: de er de filer der skal
 # *navngive* den genererede fil for at kunne dømme den. `_prose_lines` fjerner
 # den anden slags omtale — kommentarer og docstrings — så listen kun rummer
 # scripts der må sige navnet i kode.
@@ -178,6 +184,7 @@ ALLOWED_LLMS_FILES = {
     "tools/test_check_sitemaps.py",
     "tools/check_live_sitemaps.py",
     "tools/test_check_live_sitemaps.py",
+    "tools/check_unavailable_routes.py",
 }
 
 

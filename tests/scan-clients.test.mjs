@@ -39,8 +39,15 @@ function el() {
     get innerHTML() { return this._h !== undefined ? this._h : this._t; },
     set innerHTML(v) { this._h = v; },
     style: {}, dataset: {}, children: [], _ls: {},
+    // `remove()` sætter et flag i stedet for at være en no-op: kapabilitets-
+    // sonden på `/compliance-ai` skjuler chatten ved at fjerne `#askArea`, og
+    // uden flaget kunne dommen ikke se forskel på «chatten er væk» og «der var
+    // aldrig en chat» — den ville være grøn på en side der fjerner den hele
+    // tidligere end den skjuler den.
+    _removed: false,
+    remove() { this._removed = true; },
     classList: { _s: new Set(), add(c) { this._s.add(c); }, remove(c) { this._s.delete(c); }, contains(c) { return this._s.has(c); } },
-    appendChild() {}, removeChild() {}, setAttribute() {}, remove() {}, focus() {},
+    appendChild() {}, removeChild() {}, setAttribute() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
@@ -171,12 +178,22 @@ function loadPage(path, fetchImpl, opts = {}) {
 // undtagelse spiste en beacon et programmeret svar, og et tjek der *skal*
 // genkalde efter en 502 så enten ikke gjorde det eller fik svaret to gange —
 // altså blev dommen om prøv-igen grøn på en fejl.
+//
+// En post må være `{ test, body }` i stedet for et regex, fordi nogle sider
+// *inden* de gør noget læser kapabilitet fra den samme rute som værktøjet
+// bruger: `/compliance-ai` spørger ved sidevisning «er assistenten tændt?» med
+// et GET, og stiller bagefter det samme spørgsmål med et POST. Kun regexet kunne
+// ikke skelne de to, så sonden spiste det første programmerede svar — og så blev
+// dommen om både prøv-igen og kvoten grøn på det forkerte svar. `test` får derfor
+// både url og `init`, så metoden kan være en del af dommen, og `body` er det
+// svar klienten læser i stedet for et tomt objekt.
 function responses(list, opts = {}) {
   const state = { calls: 0, urls: [] };
-  const fetchImpl = async (url) => {
+  const skips = (opts.skip || []).map((s) => (s instanceof RegExp ? { test: (u) => s.test(u) } : s));
+  const fetchImpl = async (url, init) => {
     state.urls.push(String(url));
-    if (opts.skip && opts.skip.some((re) => re.test(String(url)))) {
-      return { ok: true, status: 200, json: async () => ({}) };
+    for (const s of skips) {
+      if (s.test(String(url), init)) return { ok: true, status: 200, json: async () => s.body || {} };
     }
     const i = state.calls++;
     const step = list[Math.min(i, list.length - 1)];
@@ -344,6 +361,16 @@ for (const [path, lang] of [['site/page-profile.html', 'EN'], ['site/da/page-pro
 const OK_ASK = { status: 200, body: { ok: true, answer: 'NIS2 applies from 10 employees or €2m turnover.' } };
 const OK_WAIT = { status: 200, body: { ok: true } };
 
+// Sonden ved sidevisning er et GET på samme rute som spørgsmålet. Den skal
+// svare «tændt», for det er den tilstand dommene ovenfor måler — og den må ikke
+// tælles som et værktøjskald, fordi den ikke er et. Målt 1/10: den lå i rækken
+// og spiste det første svar, så «503 hele vejen» så 3 kald i stedet for 2 og
+// dommen om to forsøg døde på et svar, der aldrig blev brugt.
+const probeSkipped = {
+  test: (url, init) => /\/api\/compliance-ai\b/.test(String(url)) && (init?.method || 'GET') === 'GET',
+  body: { ok: true, available: true },
+};
+
 async function runBook(list, { ask = true, wait = true } = {}) {
   const { fetchImpl, state } = responses(list);
   const { nodes } = loadPage('site/book-ai.js', fetchImpl, { absent: ['baiLead'] });
@@ -410,7 +437,7 @@ async function runBook(list, { ask = true, wait = true } = {}) {
 // kendetegn — målt, ikke antaget: `loadPage`s standardfinder ville ellers ramme
 // track-scriptet, der ikke kender `sendQuestion`.
 async function runAsk(path, list) {
-  const { fetchImpl, state } = responses(list);
+  const { fetchImpl, state } = responses(list, { skip: [probeSkipped] });
   const { sandbox, nodes } = loadPage(path, fetchImpl, { match: /ASK_MAX_TRIES/ });
   nodes.get('questionInput').value = 'Does NIS2 apply to a 5-person agency?';
   sandbox.sendQuestion();
@@ -418,9 +445,27 @@ async function runAsk(path, list) {
   return { calls: state.calls, status: nodes.get('chatStatus').textContent || '', btn: nodes.get('sendBtn').disabled };
 }
 
+// Kapabilitets-sonden, som kører ved sidevisning og før alt andet. Den er den
+// eneste handling på siden når nøglen mangler, så den måles på sit eget:
+// `step` er hvad serveren svarer på GET'et, og dommen er hvad der så sker med
+// chatten. Uden den var «assistenten er slukket» kun dømt af en grep i
+// `tools/check_unavailable_routes.py`, som ikke kan se om sonden *gør* noget.
+async function runProbe(path, step) {
+  const { fetchImpl } = responses([step]);
+  const { sandbox } = loadPage(path, fetchImpl, { match: /ASK_MAX_TRIES/ });
+  await sleep(40);
+  // Læs elementerne gennem DOM'en, ikke gennem `nodes`: kortet får kun en
+  // stub for det siden *selv* nåede at slå op. `#askArea` forsvinder netop i
+  // den tilstand dommen måler, så den skal læses som «findes den stadig?».
+  const doc = sandbox.document;
+  const area = doc.getElementById('askArea');
+  const note = doc.getElementById('aiUnavailable');
+  return { chatGone: area._removed === true, notice: note.hidden === false };
+}
+
 // Ventelisten ligger bag et vellykket svar, så den måles på den samme kørsel.
 async function runAskLead(path, list) {
-  const { fetchImpl, state } = responses(list);
+  const { fetchImpl, state } = responses(list, { skip: [probeSkipped] });
   const { sandbox, nodes } = loadPage(path, fetchImpl, { match: /ASK_MAX_TRIES/ });
   nodes.get('questionInput').value = 'Does NIS2 apply to a 5-person agency?';
   sandbox.sendQuestion();
@@ -432,6 +477,26 @@ async function runAskLead(path, list) {
 }
 
 for (const [path, lang] of [['site/compliance-ai.html', 'EN'], ['site/da/compliance-ai.html', 'DA']]) {
+  // Kapabilitets-sonden først, fordi den afgør om resten af siden overhovedet
+  // kan bruges. Målt 1/10: med nøglen væk var den eneste handling en besøgende
+  // fik, og spørgsmålstasten skrev et 503 «AI service not configured» — altså
+  // «Contact the site owner» til en kunde på en publiceret side.
+  const on = await runProbe(path, { status: 200, body: { ok: true, available: true } });
+  ok(`${lang} compliance-ai: en tændt assistent beholder chatten`, on.chatGone === false && on.notice === false,
+    `chatGone=${on.chatGone} notice=${on.notice}`);
+
+  const off = await runProbe(path, { status: 200, body: { ok: true, available: false } });
+  ok(`${lang} compliance-ai: en slukket assistent fjerner chatten og viser erstatningen`,
+    off.chatGone === true && off.notice === true, `chatGone=${off.chatGone} notice=${off.notice}`);
+
+  // Et tjek der fejler er ikke et «nej» — så bliver chatten stående, og et
+  // spørgsmål får sit normale svar. Ellers ville en kort netværdsfejl tage
+  // siden fra en besøgende hver gang den indlæses.
+  const probeBroken = await runProbe(path, { reject: 'Failed to fetch' });
+  ok(`${lang} compliance-ai: et tjek der fejler skjuler ikke chatten`,
+    probeBroken.chatGone === false && probeBroken.notice === false,
+    `chatGone=${probeBroken.chatGone} notice=${probeBroken.notice}`);
+
   const good = await runAsk(path, [OK_ASK]);
   ok(`${lang} compliance-ai: et godt svar på ét kald og ingen fejltekst`, good.calls === 1 && good.status === '', `calls=${good.calls} status=${good.status}`);
 

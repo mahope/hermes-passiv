@@ -1,18 +1,26 @@
 # STATUS
 
-- **Page Profile Pro kunne ikke aktiveres overhovedet.** `page-profile --activate`
-  fik **403 Cloudflare Error 1010** på alle fire felter, fordi `urllib` sender
-  `Python-urllib/3.x` som User-Agent. Rettet 1/10: vi udgiver `1.2.1`.
-- **AI-siden siger nu det sande i stedet for at bede kunden kontakte os.**
-  Rettet 1/10: `GET /api/compliance-ai` svarer `{available}`, siden skjuler
-  chatten og byder på scanner, erklæringsgenerator og de tre bøger, og begge
-  ruter er taget ud af sitemap + `llms.txt`. Nøglen mangler stadig — se ❓.
-- **Artiklen om Desktop-website-monitoren solgte €492 for et UptimeRobot-team.**
-  Fund fra review 1/10: €492 er €41 × 12, altså månedsprisen *uden* rabat,
-  mens Solo i samme kolonne var €9 × 12 = €108, altså *med* rabat — to
-  betalingsgrundlag i én «1 year»-kolonne. Målt 1/10 på deres egen prisside:
-  «Team € 420 /y» (og «Scale € 780 /y» = €65 × 12). Rettet 1/10, og porten
-  dømmer nu at et årstal er den årlige månedspris × 12 (17/17 kontroller).
+- **CI var rød på `main`, og fire fejl lå skjult bag den første.** Rettet 1/10,
+  alle grønne (`quality_gate.py`: 122 steps). De kom alle fra `98e5491`, som
+  aldrig nåede live (live stod stadig på `0f64110`):
+  1. **Sandkassen spiste sondens svar.** Kapabilitets-tjekket på `/compliance-ai`
+     er et GET på *samme rute* som spørgsmålets POST, så sonden blev talt som et
+     værktøjskald og spiste det første programmerede svar. Dommen om to forsøg
+     så 3 kald, og ventelistedommen døde på en stub der ikke fandtes. Rækken
+     kan nu skelne på **metoden**, så et GET ikke tæller som et kald.
+  2. **Sonden var aldrig dømt på sin adfærd.** Kun en grep i
+     `check_unavailable_routes.py`. Nu måler sandkassen den: tændt ⇒ chatten
+     bliver, slukket ⇒ chatten væk + erstatningen vises, tjek der fejler ⇒
+     chatten bliver (EN + DA).
+  3. **`check_product_copy.py` havde mistet evnen til at se sin egen fejl.**
+     Sætningen «15 WCAG-regler» stod én gang; `98e5491` lagde den samme sætning
+     ind i erstatningsfeltet, så mutationen ramte den nye og den dømte afsnit
+     beholdt det rigtige tal. Mutationen rammer nu alle forekomster, og porten
+     kræver den rigtige sætning i begge sider (27 fejlformer, 0 slap ud).
+  4. **To døde ratchet-linjer + en ulovt nævnt fil.** `check_unavailable_routes.py`
+     læser `dist/<domæne>/llms.txt` — den skal *nævne* filen den dømmer, så den
+     står nu i listen med sin begrundelse. De to `/compliance-ai`-linjer i
+     ratchetten er frigivet, fordi ruterne korrekt er taget ud af sitemap.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
@@ -47,7 +55,11 @@
   `/da/compliance-ai` skal have `aiUnavailable` og `noindex,follow`, og
   `compliance-ai` skal være **0** gange i live `sitemap.xml` og `llms.txt`.
   Dommen er `tools/check_unavailable_routes.py` (16 kontroller grønne mod
-  dist; 8 mutationer røde) og `tools/check_sitemaps.py` (4 domæner OK).
+  dist; 8 mutationer røde) og `tools/check_sitemaps.py` (4 domæner OK), og
+  sondens *adfærd* dømmes nu i `tests/scan-clients.test.mjs` (190/190).
+  **Bemærk: denne ændring har aldrig været live** — CI var rød, så deployen
+  af `98e5491` aldrig kørte. Den måles derfor mod live `0f64110`, ikke mod
+  `98e5491`.
 
 
 ## Åbne opgaver
