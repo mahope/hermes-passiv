@@ -551,6 +551,86 @@
       "payment_link": "https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c"
     }
   },
+  "billing_periods": {
+    "_note": "Dom 4 i `tools/check_own_prices.py`: hvilke ord en købsknap må bruge om den periode, den sælger. Målt 1/10 på alle 84 købsknapper i `site/`: 22 skriver `/year`, 15 `pr. år` og 8 `/år` på de tre årssubskriptioner, 10 `once`/`én gang` på engangskøb, og 15 `lifetime` på de tre lifetime-varianter. «per website» / «pr. website» er ikke en periode, men et omfang, og porten dømmer det derfor ikke. Et ord tilføjes her, og porten genkender det automatisk, fordi den bygger sin detektor af denne tabel.",
+    "words": {
+      "yearly": [
+        "/year",
+        "per year",
+        "yearly",
+        "annually",
+        "/år",
+        "pr. år",
+        "per år",
+        "om året",
+        "årligt"
+      ],
+      "one_time": [
+        "once",
+        "one-time",
+        "one time",
+        "engang",
+        "én gang",
+        "en gang"
+      ],
+      "lifetime": [
+        "lifetime",
+        "livstid"
+      ]
+    },
+    "products": {
+      "clean-copy-pro": [
+        "yearly"
+      ],
+      "page-profile-pro": [
+        "yearly"
+      ],
+      "eucomply-pro": [
+        "yearly"
+      ],
+      "deskuptime-pro": [
+        "one_time"
+      ],
+      "transmute-desktop": [
+        "one_time"
+      ],
+      "eucomply-dpa": [
+        "one_time"
+      ],
+      "eucomply-nis2-clauses": [
+        "one_time"
+      ],
+      "eucomply-nda-clauses": [
+        "one_time"
+      ],
+      "eucomply-eaa-statement": [
+        "one_time"
+      ],
+      "eucomply-report-kit": [
+        "one_time"
+      ],
+      "eucomply-template-bundle": [
+        "one_time"
+      ],
+      "eu-compliance-ebook-bundle": [
+        "one_time"
+      ]
+    },
+    "lifetime": {
+      "clean-copy-pro": [
+        "lifetime",
+        "one_time"
+      ],
+      "page-profile-pro": [
+        "lifetime",
+        "one_time"
+      ],
+      "eucomply-pro": [
+        "lifetime",
+        "one_time"
+      ]
+    }
+  },
   "offers": [
     {
       "path": "site/clean-copy.html",

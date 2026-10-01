@@ -12,7 +12,7 @@ påstand uden dom. Den faldt lige så stille for *vores egen* omsætning. En gam
 om et `$59`-produkt, er præcis lige så stille som `$144/year` var på
 UptimeRobot-siden.
 
-Tre domme:
+Fire domme:
 
 1. **Prisen skal stå.** En købsknap skal have sit beløb i knappens egen tekst,
    eller i en `pt-price` i samme `.pt-foot` — målt 1/10 har 70 af 84 knapper
@@ -28,6 +28,15 @@ Tre domme:
    produkter der har byttet link er et fund. `check_stripe_ctas` spørger kun om
    linket *findes et sted i* kontrakten — et byttet link er derfor stadig
    grønt der.
+4. **Perioden skal være katalogens, og den skal stå.** Dom 1 dømmer beløbet,
+   så «Buy DeskUptime Pro — 19 USD» om et produkt Stripe sælger **engang** var
+   grønt, selv om teksten slet ikke siger det — og `$19` er det samme tal som
+   Clean Copy Pro *tilbage* i dag, så læseren kan ikke gætte sig til forskellen.
+   Omvendt er «$39 once» på et engangskøb en påstand uden dom. Katalogens
+   `billing_periods` siger hvilke ord der må bruges (`yearly`, `one_time`,
+   `lifetime`) for hvert produkt, og porten bygger sin detektor af den ordliste,
+   så et nyt ord i katalogen genkendes uden at porten ændres. Et produkt uden
+   `periods` i katalogen kan ikke dømmes, og det er selv et fund.
 
 Selvtesten bygger hver mutation ind i en kopi af `site/`, så porten skal kunne
 fejle. Brug: `python3 tools/check_own_prices.py [--json] [--self-test]`
@@ -95,7 +104,9 @@ def amounts(text: str) -> list[tuple[float, str]]:
 
 
 def catalog_prices(catalog: dict) -> dict[str, dict]:
-    """`{payment_link: {product, variant, price, name}}` for hvert købslink."""
+    """`{payment_link: {product, variant, price, name, periods}}` pr. købslink."""
+    periods = catalog.get("billing_periods", {}).get("products", {})
+    lifetimes = catalog.get("billing_periods", {}).get("lifetime", {})
     out: dict[str, dict] = {}
     for key, product in catalog["products"].items():
         link = product.get("payment_link")
@@ -103,17 +114,65 @@ def catalog_prices(catalog: dict) -> dict[str, dict]:
             out[link] = {"product": key, "variant": "abonnement"
                          if product.get("subscription") else "engang",
                          "price": product.get("price_usd"),
+                         "periods": periods.get(key),
                          "name": product.get("name", key)}
         life = product.get("lifetime") or {}
         if isinstance(life.get("payment_link"), str):
             out[life["payment_link"]] = {
                 "product": key, "variant": "lifetime",
                 "price": life.get("price_usd"),
+                "periods": lifetimes.get(key),
                 "name": f"{product.get('name', key)} Lifetime"}
     return out
 
 
-def check_buttons(site: Path, prices: dict[str, dict]) -> list[dict]:
+def period_detector(catalog: dict) -> tuple[re.Pattern, dict[str, str]] | None:
+    """Byg en detektor af `billing_periods.words` — ét sted for perioderne.
+
+    Ordlisten er *målt* (se `_note` i katalogen), så porten skal ikke have sin
+    egen: et ord der står i katalogen, men som porten ikke genkender, ville give
+    en stille grøn. Derfor bygges regexp'en her af katalogens egne strenge, og
+    selvtesten dømmer at hvert af dem kan findes igen.
+
+    Venstre- og højregrænse: et ord skal stå som sit eget token. `$19/år` er
+    derfor gyldigt (ordet begynder med `/`) mens `engangskøb` ikke er det — det er
+    et substantiv, ikke en prisperiode, og en knap der skriver det skal have den
+    rigtige periode skrevet ud.
+    """
+    words = catalog.get("billing_periods", {}).get("words") or {}
+    if not words:
+        return None
+    tokens: list[tuple[str, str]] = []
+    for klass, entries in words.items():
+        for word in entries:
+            tokens.append((word, klass))
+    if not tokens:
+        return None
+    # Længste først: skrives «pr. år» og «år» senere ind i katalogen, skal
+    # den længste skrivning vinde, ellers ville klassen høre til det korte ord.
+    tokens.sort(key=lambda pair: len(pair[0]), reverse=True)
+    parts, owner = [], {}
+    for word, klass in tokens:
+        # Ordet må ikke optræde som en del af et længere ord. `/(?=\w)` ville
+        # slå «/år» ihjel, fordi `$` er et ordtegn — så en ord der selv starter
+        # med `/` får ingen venstregrænse.
+        left = "" if word.startswith("/") else r"(?<!\w)"
+        parts.append(f"{left}{re.escape(word)}(?!\w)")
+        owner[word] = klass
+    return re.compile("|".join(parts), re.I), owner
+
+
+def period_words(text: str, detector) -> list[tuple[str, str]]:
+    """`(ord, klasse)` for hver periode skrevet i `text`."""
+    if detector is None:
+        return []
+    match, owner = detector
+    return [(m.group(0).lower(), owner.get(m.group(0).lower(), "?"))
+            for m in match.finditer(text)]
+
+
+def check_buttons(site: Path, prices: dict[str, dict],
+                  detector=None) -> list[dict]:
     findings: list[dict] = []
     base = ROOT if site is SITE else site
     for page in sorted(site.rglob("*.html")):
@@ -133,15 +192,17 @@ def check_buttons(site: Path, prices: dict[str, dict]) -> list[dict]:
                     "detail": f"{href} står ikke i stripe_catalog.json."})
                 continue
             expected = offer["price"]
+            price_text = label
             if not found:
                 # Beløbet må stå i et pristag i samme `.pt-foot`. Den nærmeste
                 # *forudgående* `.pt-foot` — ikke alle i dokumentet: en regex der
                 # læser hele sideforsiden tog alle syv priser på /paid-templates,
-                # så hver knapp blev dømt mod de andre produkter.
+                # så hver knap blev dømt mod de andre produkter.
                 opens = list(PT_FOOT.finditer(text, 0, match.start()))
                 foot = text[opens[-1].end():match.start()] if opens else ""
-                found = [a for tag in PRICE_TAG.findall(foot)
-                         for a in amounts(plain(tag))]
+                tags = PRICE_TAG.findall(foot)
+                found = [a for tag in tags for a in amounts(plain(tag))]
+                price_text = label + " " + plain(" ".join(tags))
                 if not found:
                     findings.append({
                         "kind": "købsknap uden pris", "where": where,
@@ -158,6 +219,37 @@ def check_buttons(site: Path, prices: dict[str, dict]) -> list[dict]:
                                    f"til {offer['variant']}, og kataloget siger "
                                    f"{expected} USD — men knappen siger "
                                    f"{value:g} {cur}.")})
+
+            # Dom 4: perioden. Den søges i knappens tekst *og* i det pristag,
+            # beløbet kom fra, fordi en periode må stå begge steder — men den
+            # skal stå et af stederne.
+            allowed = offer.get("periods")
+            said = period_words(price_text, detector)
+            if allowed is None:
+                findings.append({
+                    "kind": "produkt uden periode i katalogen", "where": where,
+                    "detail": (f"{offer['product']} har ingen `periods` i "
+                               "stripe_catalog.json, så perioden ved prisen kan "
+                               "ikke dømmes mod sandheden.")})
+                continue
+            for word, klass in said:
+                if klass not in allowed:
+                    findings.append({
+                        "kind": "periode modsiger katalogen", "where": where,
+                        "detail": (f"Knappen sælger {offer['name']} via linket "
+                                   f"til {offer['variant']}, som er "
+                                   f"{'/'.join(allowed)} — men den skriver «{word}» "
+                                   f"ved prisen.")})
+            if not said:
+                findings.append({
+                    "kind": "købsknap uden periode", "where": where,
+                    "detail": (f"Knappen sælger {offer['name']} for {expected} USD "
+                               f"({offer['variant']}, {'/'.join(allowed)}) men siger "
+                               "det ikke — hverken i knappens tekst eller i det "
+                               "pristag beløbet står i. Katalogen har både et "
+                               "19-USD-årsabonnement (Clean Copy Pro) og et "
+                               "19-USD-engangskøb (DeskUptime Pro), så beløbet "
+                               "alene siger ikke hvad man får.")})
     return findings
 
 
@@ -222,25 +314,40 @@ MUTATIONER = [
      "Buy Clean Copy Pro — $19/year", "Buy Clean Copy Pro — $14/year"),
     ("pris der passer til et andet produkt",
      "site/paid-templates.html",
-     '<p class="pt-price">$59</p>', '<p class="pt-price">$149</p>'),
+     '<p class="pt-price">$59 once</p>', '<p class="pt-price">$149 once</p>'),
     ("ekstra belob ved siden af det rigtige",
      "site/clean-copy.html",
      "Buy Clean Copy Pro — $19/year",
      "Buy Clean Copy Pro — $19/year ($39 lifetime)"),
     ("pris fjernet fra knappen",
      "site/deskuptime/index.html",
-     "Buy DeskUptime Pro — 19 USD", "Buy DeskUptime Pro"),
-    # Bemærk: porten dømmer *beløbet*, ikke periode-ordet. «19 USD/year» om et
-    # engangskøb er en reel påstand uden dom, men den kræver en ordliste for to
-    # sprog (år/year/annuel, engang/once/one-time, lifetime), og de 84 knapper
-    # skal måles før den skrives — ellers bliver den en gammel `$144/year`
-    # med en ny regexp. Det er en opgave, ikke en mutation her.
+     "Buy DeskUptime Pro — 19 USD once", "Buy DeskUptime Pro"),
+    # Bemærk: porten dømmer *beløbet* og perioden. Mutations der kun ændrer
+    # beløbet fanger dom 1; perioden har sine egne, se dom 4 i docstringen.
     ("belob der passer til et andet produkt i samme fod",
      "site/paid-templates.html",
-     '<p class="pt-price">$29</p>', '<p class="pt-price">$39</p>'),
+     '<p class="pt-price">$29 once</p>', '<p class="pt-price">$39 once</p>'),
     ("lifetime-pris paa abonnementslinket",
      "site/clean-copy.html",
      "Buy Clean Copy Pro — $19/year", "Buy Clean Copy Pro — $39/year"),
+    # Dom 4. `/year` på et engangskøb er præcis den fejl, dommen er skrevet til:
+    # samme form som `$144/year` om UptimeRobot i opgave 33.
+    ("aarstal paa et engangskob",
+     "site/deskuptime/index.html",
+     "Buy DeskUptime Pro — 19 USD once",
+     "Buy DeskUptime Pro — 19 USD/year"),
+    ("engangskob skrevet som et aarsabonnement",
+     "site/clean-copy.html",
+     "Buy Clean Copy Pro — $19/year", "Buy Clean Copy Pro — $19 once"),
+    ("perioden fjernet fra knappen",
+     "site/blog/desktop-website-monitor-cli.html",
+     "Buy DeskUptime Pro for $19 once", "Buy DeskUptime Pro for $19"),
+    ("engang skrevet som et substantiv uden periode",
+     "site/deskuptime/index.html",
+     "Buy DeskUptime Pro — 19 USD once", "Buy DeskUptime Pro — 19 USD engangskøb"),
+    ("perioden fjernet fra et pristag",
+     "site/paid-templates.html",
+     '<p class="pt-price">$59 once</p>', '<p class="pt-price">$59</p>'),
 ]
 
 
@@ -262,11 +369,22 @@ def self_test() -> int:
 
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     prices = catalog_prices(catalog)
+    detector = period_detector(catalog)
 
-    baseline = check_buttons(SITE, prices)
+    baseline = check_buttons(SITE, prices, detector)
     ok(not baseline, f"knapperne er grønne ({len(baseline)} fund)")
     link_findings = check_links(catalog, prices)
     ok(not link_findings, f"linkene er grønne ({len(link_findings)} fund)")
+
+    # Dom 4s egen forudsætning: detektoren skal kunne finde hvert ord katalogen
+    # tillader. Ellers ville et nyt ord i `billing_periods.words` give en stille
+    # grøn — præcis den fejlform dommen er skrevet imod.
+    words = catalog["billing_periods"]["words"]
+    for klass, entries in sorted(words.items()):
+        for word in entries:
+            found = period_words(f"Køb noget — 19 USD {word}", detector)
+            ok(found == [(word, klass)],
+               f"ordet {word!r} i klassen {klass} genkendes ({found})")
 
     for name, rel, old, new in MUTATIONER:
         with tempfile.TemporaryDirectory() as tmp:
@@ -278,7 +396,7 @@ def self_test() -> int:
                 ok(False, f"mutation {name!r}: mønsteret findes ikke mere")
                 continue
             target.write_text(body.replace(old, new, 1), encoding="utf-8")
-            found = check_buttons(work, prices)
+            found = check_buttons(work, prices, detector)
         ok(bool(found), f"mutation {name!r} fanges ({len(found)} fund)")
 
     # To produkter der bytter link: katalogen skal dømme det, fordi kontrakten
@@ -301,6 +419,22 @@ def self_test() -> int:
     ok(sum(1 for o in prices.values() if o["variant"] == "lifetime") == 3,
        "tre lifetime-varianter")
 
+    # Dom 4 mod katalogen selv: et produkt uden `periods` kan ikke dømmes, og
+    # en forkert `periods` dømmer den røde side grøn. Begge skal være fund.
+    blind = copy.deepcopy(catalog)
+    del blind["billing_periods"]["products"]["clean-copy-pro"]
+    found = check_buttons(SITE, catalog_prices(blind), period_detector(blind))
+    ok([f for f in found if f["kind"] == "produkt uden periode i katalogen"],
+       "produkt uden `periods` er et fund")
+
+    swapped = copy.deepcopy(catalog)
+    swapped["billing_periods"]["products"]["clean-copy-pro"] = ["one_time"]
+    found = check_buttons(SITE, catalog_prices(swapped),
+                          period_detector(swapped))
+    mismatched = [f for f in found if f["kind"] == "periode modsiger katalogen"]
+    ok(mismatched, f"forkert `periods` i katalogen dømmer siderne røde "
+                   f"({len(mismatched)} fund)")
+
     print(f"selvtest: {checks - failures}/{checks} kontroller")
     return 0 if failures == 0 else 1
 
@@ -316,7 +450,8 @@ def main() -> int:
 
     catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
     prices = catalog_prices(catalog)
-    findings = check_buttons(SITE, prices) + check_links(catalog, prices)
+    findings = (check_buttons(SITE, prices, period_detector(catalog))
+                + check_links(catalog, prices))
     if args.json:
         print(json.dumps({"findings": findings}, ensure_ascii=False, indent=2))
     else:

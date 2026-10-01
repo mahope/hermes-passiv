@@ -68,7 +68,16 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: ny port check_own_prices (kun tools/, intet på sitet) ceo/egen-pris-port 2026-10-01`
+- `VERIFICÉR DEPLOY: perioden ved købsknapper (19 sider + port) ceo/perioden-ved-prisen 2026-10-01`
+  — mål på **indhold**: live `/paid-templates` og `/da/paid-templates` skal have
+  præcis 14 `pt-price` med «once»/«én gang», `/` og `/da/` på deskuptime.com
+  skal sige «19 USD once»/«19 USD én gang» i knappen, og
+  `/blog/desktop-website-monitor-cli` skal have «Buy DeskUptime Pro for $19 once».
+  `build-info.json` skal bære merge-sha'en på alle fire domæner.
+
+- `DEPLOY OK 2026-10-01` — `ceo/egen-pris-port` (kun `tools/`, intet på sitet):
+  live `build-info.json` bærer præcis `fb8b7b5` med uændret `routes_sha256`
+  (`8367db4b…`), altså den udgivelse der indeholder porten, og ingen rute ændrede sig.
 
 - `DEPLOY OK 2026-10-01` — fem ventende noter målt på indhold mod live `04288fc`
   (`build-info.json` bærer præcis merge-sha'en, så *alle* fem er på én gang):
@@ -306,165 +315,30 @@
       samme commit, ellers går `stripe-ctas` rød på sit eget hvidestregede
       hvidlisteproblem.
 
-34. ~~**Otte generatorer lå døde i live, og porten der så det læste kilden.**~~
-     **FÆRDIG 30/9, `ceo/generator-script-kom-til-live`.** `insert_before_end_tag`
-     sætter shell- og BugBottle-tags foran det **sidste** `</head>`/`</body>`
-     uden for script-, style- og kommentarblokke, og `pagepass._skip_scripts`
-     lader kun `scrub_css` springe scripts over — ikke `<pre>`, fordi 20 sider
-     bygger markup med `innerHTML` og ellers fik `#667` hårdkodet i stedet for
-     tokenet. `check_inline_js` dømmer nu `site/` **og** `dist/`, med en
-     selvtest der bygger repoet to gange med de to mutationer der lå i live, og
-     gaten fik et `inline-js-selftest`-step. Målt: 8/8 sider døde i live →
-     0/8 i `dist`, og `diff` mod før-rettelsen viser præcis de 8 filer og ingen
-     andre. Se STATE.
+34. ~~**Otte generatorer lå døde i live.**~~ **FÆRDIG 30/9, `ceo/generator-script-kom-til-live`.**
+35. ~~**Tak-siden genkaldte et endeligt 429 tolv gange.**~~ **FÆRDIG 1/10, `ceo/429-er-sendeloeende-paa-tak-siden`.**
+36. ~~**To test dømte det modsatte af rettelsen.**~~ **FÆRDIG 1/10, `ceo/429-gate-tak-siden`.**
+37. ~~**En køber der mistede sin nøgle skulle skrive til Mads.**~~ **FÆRDIG 1/10, `ceo/selvbetjent-noegleopslag`.**
+38. ~~**Købsruten svarede med et andet produkt end det spurgte på.**~~ **FÆRDIG 1/10, `ceo/checkout-ruten-kan-vaere-forskrevet`.**
+39. ~~**AI-svaret kunne køre script på mahope.tools.**~~ **FÆRDIG 1/10, `ceo/ai-svaret-kan-koere-script`.**
+40. ~~**Ingen port dømmer vores egne priser, kun konkurrenternes.**~~ **FÆRDIG 1/10, `ceo/egen-pris-port`.**
 
-35. ~~**Tak-siden genkaldte et endeligt 429 tolv gange.**~~ **FÆRDIG 1/10,
-     `ceo/429-er-sendeloeende-paa-tak-siden`.** CEO-kø punkt 0 (29/9) sagde at 429
-     er endelig og skal vise serverens besked, og rettede de syv klienter der
-     stod i køen — `site/thanks.html` stod ikke i den. Dens ene linje var
-     `if (x.code === 429 || x.code >= 500) return again(…)`, og
-     `/api/stripe/fulfillment` tæller selv sine forsøg (`hits >= 30`,
-     `_worker.js:3933`): tolv genkald á fire sekunder, og hvert af dem tæller i
-     den tæller der gav 429. Den der ventede længst fik *færrest* forsøg
-     tilbage, og serverens "Too many attempts. Try again later." blev kastet
-     bort for "trying again", der ikke siger hvornår man kommer tilbage.
-     Ny port `tools/check_status_finality.py` måler de **11** 429-ruter i
-     `_worker.js` (dispatch → handler → 429) og dømmer hver klient der
-     sammenligner med 429 på tre ting: ingen nyt kald (også via en
-     mellemligende reference som `setTimeout(poll, …)`, som kun `navn(` ville
-     have set som grøn), et tidspunkt eller serverens egen sætning, og 5xx
-     stadig forbigående — ellers kunne dom 1 og 2 opfyldes ved at gøre alt
-     endeligt. 3/3 mutationer fanget. Bevis: gaten kørt mod `8c61191:site/thanks.html`
-     er **rød med netop de to domme** tak-siden bryder.
-     *Målt og bevidst ikke dømt:* dommen «kalder en 429-rute uden at nævne 429».
-     **287** sider kalder `/api/track` som beacon (`fetch(…).catch(…)`, intet
-     svar læst) og skal *ikke* nævne 429; de fire klienter der faktisk **venter**
-     på et 429-svar (`/api/report`, `/api/profile` ×2, `/api/header-check`,
-     `/api/url-inspect`, `/api/clean-copy`) gør alle `err.transient = !data ||
-     status >= 500`, som holder 429 ude, og viser `data.error`. Det er altså et
-     navneproblem, ikke et adfærdsproblem — målt i portens egen måling. Se arkiv.
+41. ~~**Perioden ved siden af prisen er en påstand uden dom.**~~ **FÆRDIG 1/10,
+    `ceo/perioden-ved-prisen`.** Ordlisten blev målt på alle 84 købsknapper *før*
+    porten blev skrevet: 22 skriver `/year`, 15 `pr. år`, 8 `/år` på de tre
+    årssubskriptioner, 10 `once`/`én gang` på engangskøb, 15 `lifetime` på de
+    lifetime-varianter. **Ingen knap skrev en forkert periode** — men 19 skrev
+    *ingen*: `Buy DeskUptime Pro — 19 USD` og `Køb GDPR-DPA-skabelon — 59 $` er
+    grønne fordi de tier stilt, og `$19` står både for Clean Copy Pro
+    *tilbage* i dag og for et engangskøb, så beløbet alene afslører intet.
+    Rettet på alle 19 (5 knapper + 14 pristag på `/paid-templates` EN+DA).
+    Ordlisten ligger i `tools/stripe_catalog.json` (`billing_periods`) og porten
+    bygger sin detektor af den, så et nyt ord i katalogen kan ikke give en stille
+    grøn — selvtesten dømmer at hvert af de 17 ord kan findes igen. Se arkiv.
 
-
-36. ~~**To test dømte det modsatte af rettelsen, så CI var rød på `main`.~~
-    **FÆRDIG 1/10, `ceo/429-gate-tak-siden`.** Kørsel `36796052854` faldt i
-    `thanks-page` med to domme fra 29/9, der hævdede at et 429 *skal* gentages.
-    Opgave 35 gjorde 429 endeligt i `site/thanks.html`, så de to lå i konflikt —
-    og de to var de forkerte, fordi CEO-kø punkt 0 og regel 8 begge siger at 429
-    er endelig, og opgave 35 målte at gentagelsen var skadelig (hvert genkald
-    tæller i den tæller der gav 429). Erstattet af syv domme der dømmer den
-    låste adfærd og har tænder: den gamle kode i en klon giver 5 røde af 7,
-    blandt andet `fetches=13` skal være 1. `thanks-page` 109/109, hele porten
-    grøn (113 steps). Accept opfyldt. Se arkiv.
-
-37. ~~**En køber der mistede sin nøgle skulle skrive til Mads.**~~ **FÆRDIG
-    1/10, `ceo/selvbetjent-noegleopslag`.** Hvorfor:
-    `/api/license/lookup` (`_worker.js:1365`) er fuldt bygget, ratelimited
-    (10/IP/time) og dækket af 5 opslag i `stripe-worker.test.mjs`, men **nogen
-    klient kaldte den**. `/license-lookup` — hvis H1 er «Find your license key» —
-    havde ingen formular, kun «write to support@mahope.tools … usually the same
-    day». Det er præcis den menneskelige indsats missionen kasserer, placeret
-    lige i den betalte indtægt. Accept: siden har en formular der POST'er de to
-    felter serveren kræver, viser nøglen + udløb + aktiveringssted, og
-    `tests/license-lookup.test.mjs` (17 kontroller) dømmer at et licens-endpoint
-    har en indgang — målt **15 røde mod den gamle kode** (genmålt 1/10 efter
-    review af egen diff), grøn mod den nye.
-    Siden blev også dømt af to eksisterende porte undervejs, begge korrekt:
-    `check_license_clients` krævede den opført (den kalder `/api/license`),
-    `check_donation_paths` krævede donationslinjen i resultatet.
-    Målt i Chromium ved 390 og 1280 px: overflow 0, ingen JS-fejl, og de seks
-    svarsformer (200, lifetime, 404, 429, 503, `<img onerror>` som nøgle) er
-    hver dømt visuelt; href afvises hvis den ikke er http/https. Egen-diff-review
-    1/10 fandt to CSS-fejl i den nye side — `border: 1px solid --color-border`
-    (var() var tabt, så ingen ramme) og `.lookup-form .btn`, en regel der aldrig
-    kunne ramme de `btn-primary`/`btn-secondary` den skrev sig til, så knappen
-    aldrig blev 44 px. Begge rettet før commit; 429-teksten «the limit resets
-    when the hour changes» er ikke antaget — `_worker.js:3617` tømmer tælleren på
-    `Math.floor(Date.now()/3600000)`, altså hver time.
-
-38. ~~**Købsruten svarede med et andet produkt end det spurgte på.**~~ **FÆRDIG
-    1/10, `ceo/checkout-ruten-kan-vaere-forskrevet`.** `/api/checkout` er den
-    eneste rute der udsteder et betalingslink, og dens ene linje var
-    `which = … ? 'pp' : … ? 'du' : 'cc'`. Den forstod **kun** de korte former, så
-    `?product=deskuptime-pro` — den `product_key` Stripe selv bruger — faldt
-    gennem til `'cc'` og svarede med **Clean Copy Pro's** link, pris og
-    produktnavn. Samme fejl for ethvert ukendt produkt: ruten svarede aldrig
-    «det kender jeg ikke», kun et andet produkt. Målt 1/10 på den gamle kode:
-    20 røde domme, bl.a. `deskuptime-pro svarer med sit eget produktnavn — fik
-    clean-copy-pro`. Ruten har ingen klient og ingen test, så ingen port kunne
-    se det.
-    Rettet: `?product=` tager nu den `product_key` fra kontrakten
-    (`clean-copy-pro` / `deskuptime-pro` / `page-profile-pro`) plus de gamle
-    korte former; ukendt eller manglende produkt er **400** med listen af
-    gyldige nøgler. Svaret fik `price_usd` + `billing` (`yearly`/`once`), så en
-    kalder ikke skal gætte om «$19/year» er et abonnement — de to var håndskrevne
-    i workeren uden at være dømt mod `tools/stripe_catalog.json`. Et `OPTIONS`
-    får 204 (ruten lovede det i `Access-Control-Allow-Methods`), og 400-svaret
-    gengiver ikke længere kalderens egen tekst på en rute med CORS `*`.
-    Ny port `tests/checkout-route.test.mjs` (43 kontroller) dømmer produktnavn,
-    link, beløb og periode pr. produkt mod kontrakten, at de tre svarer med tre
-    forskellige links, at ni uvedkommende produkter + en manglende parameter får
-    400 uden købslink, at KV-overstyringen stadig virker og kun rammer sit eget
-    produkt, og at CORS er åben. Fire mutationer målt røde: den gamle kode (20),
-    $19→$29 (2), engangspris meldt som årlig (1) og to links byttet om (2).
-    Egen-diff-review fandt de to ting jeg rettede bagefter: det reflekterede
-    input og det manglende preflight. Gaten `deploy-workflow` fandt selv den
-    tredje: den nye testfil manglede i `deploy-sites.yml`'s path-filter.
-    *Bemærk:* `?product=CC` (store bogstaver) er **ikke** en fejl — det er det
-    samme produkt skrevet en anden måde, så porten skelner bevidst mellem «ukendt
-    produkt» og «andet skrivemåde». Se arkiv.
-
-    39. ~~**AI-svaret kunne køre script på mahope.tools.**~~ **FÆRDIG 1/10,
-      `ceo/ai-svaret-kan-koere-script`.** `formatAnswer()` på `/compliance-ai`
-      (EN + DA) skrev modellens svar direkte i `innerHTML` med kun
-      markdown-udskiftninger. Svaret er bygget af det besøgende skrev i feltet,
-      så markup i et spørgsmål kunne komme tilbage som levende tags — samme
-      origin som `cc_pro_license` i localStorage. `fmt()` i `book-ai.js` escaped
-      allerede før markdown på *samme* endpoint, så mønsteret fandtes i repoet og
-      var glemt de to steder. Ny test `tests/markdown-escape.test.mjs` (42
-      kontroller) trækker funktionen ud af de shippede bytes og kører den i en vm
-      mod 9 fjendtlige strenge pr. sprog; målt **24 røde mod koden fra før
-      rettelsen**. Se arkiv.
-
-
-    40. ~~**Ingen port dømmer vores egne priser, kun konkurrenternes.**~~ **FÆRDIG
-    1/10, `ceo/egen-pris-port`.** Hvorfor: `check_stripe_ctas` dømmer *hvilke*
-    produkter en side sælger og at der er en købsknap; `check_competitor_prices`
-    dømmer **konkurrenternes** beløb. Ingen dømte vores egne — så opgave 33s
-    pointe anvendt på vores egen omsætning. Ny port `tools/check_own_prices.py`
-    dømmer hver købsknap i `site/` mod `tools/stripe_catalog.json` på tre ting:
-    (1) knappen skal nævne sit beløb — i knappens egen tekst eller i en
-    `pt-price` i samme `.pt-foot`; (2) ethvert beløb i knappens tekst skal være
-    `price_usd` for den variant linket peger på, så både en gammel pris og et
-    *ekstra* beløb ved siden af det rigtige er fund; (3) katalogens
-    `payment_link` læses **pr. række** i kontrakten og pr. nøgle i `_worker.js`,
-    så to produkter der har byttet link er et fund — `check_stripe_ctas` spørger
-    kun om linket *findes et sted i* kontrakten, så et byttet link var stadig
-    grønt der. Målt 1/10 på alle 84 købsknapper: 70 har beløbet i teksten, 14 i
-    en `pt-price` på `/paid-templates` (EN + DA), **nul** afviger — så det var
-    dommen der manglede, ikke en fejl at rette. Selvtest 13/13: seks mutationer
-    i `site/` (gammel årspris på et engangskøb, lifetime-pris på
-    abonnementslinket, pristag med et andet produkts beløb, pris fjernet fra
-    knappen, ekstra beløb i knappen) er alle fanget, og to byttede
-    `payment_link`s er fanget i begge retninger. Gaten 118 steps.
-    *Målt undervejs:* beløbene står i to sprogformer («$79» og «79 $») og med
-    `&nbsp;` mellem tal og tegn, så en extractor der kun læser `$79` fandt 38 af
-    84 knapper «uden pris». Den skal læse begge retninger og opløse entities.
-    *Målt som min egen fejl:* `.pt-foot`-faldet læste først **alle** pristag i
-    dokumentet, så hver knap på `/paid-templates` blev dømt mod de andre
-    produkter — 40 falske fund. Kun den nærmeste forudgående `.pt-foot` tæller.
-    *Målet og ikke dømt:* porten dømmer **beløbet**, ikke periode-ordet.
-    «DeskUptime Pro — 19 USD/year» om et produkt Stripe sælger *engang* er en
-    reel påstand uden dom, men den kræver en ordliste for to sprog (år/year,
-    engang/once/one-time, lifetime), og de 84 knapper skal måles før den
-    skrives — ellers bliver den `$144/year` med en ny regexp. Ny opgave 41.
-
-41. **Perioden ved siden af prisen er en påstand uden dom.** Hvorfor:
-    `check_own_prices` dømmer *beløbet*, så «Buy DeskUptime Pro — 19 USD/year»
-    om et produkt Stripe sælger **engang** er grønt, selv om den er samme
-    fejlform som `$144/year` om UptimeRobot. Katalogen har sandheden:
-    `subscription: true/false` og `price_note` pr. produkt. Accept: porten
-    dømmer perioden i knappens egen tekst mod `subscription` + `price_note` for
-    alle 84 knapper på EN og DA (år/year/annuel, engang/once/one-time,
-    lifetime), med en mutation der sætter «/year» ind på et engangskøb. Først
-    skal de 84 knappers faktiske ord *måles* og skrevet ned — ellers bliver
-    porten en ny `$144/year`.
+42. **STATUS er 66 linjer, ikke 25.** Hvorfor: kontrakten siger højst 25, og de
+    otte nyeste afsnit er alle *målinger* af den slags fejl, der siden er
+    rettet. Hver af dem har sin fuldformede tekst i `docs/plan-arkiv.md`, så
+    intet går tabt ved at koge dem til fem linjer med ét tal hver. Accept:
+    `awk '/^## STATUS/{f=1;next}/^## /{f=0}f' IMPLEMENTATION_PLAN.md` giver ≤25,
+    og de syv afsnit der bliver stående har hver et tal og en commit-ref.
