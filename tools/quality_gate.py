@@ -216,6 +216,26 @@ STEPS: tuple[Step, ...] = (
             "site/url-inspector/index.html",
         ),
     ),
+    # 1/10: `formatAnswer()` på `/compliance-ai` (EN + DA) skrev modellens svar
+    # direkte i `innerHTML` med kun markdown-udskiftninger. Svaret er bygget af
+    # det besøgende skrev i feltet, så `<img src=x onerror=…>` kunne blive til
+    # levende markup på mahope.tools — samme origin som licensnøglerne i
+    # localStorage. `fmt()` i book-ai.js escaped allerede før markdown, så mønsteret
+    # fandtes i repoet og var blot glemt de to steder.
+    #
+    # Testen dømmer adfærd: den trækker `formatAnswer` ud af de shippede bytes og
+    # kører den i en vm med fjendtlige strenge, så den kan ikke reddes ved at
+    # omdøbe funktionen. Den har desuden en mutation mod koden fra før
+    # rettelsen, så den ikke kan være grøn uden at have dømt noget.
+    Step(
+        id="markdown-escape",
+        argv=("node", "tests/markdown-escape.test.mjs"),
+        inputs=(
+            "tests/markdown-escape.test.mjs",
+            "site/compliance-ai.html",
+            "site/da/compliance-ai.html",
+        ),
+    ),
     # 30/9: otte generatorer lå i live med en død inline-script-blok. Kilden
     # var i orden — *bygget* skrev shell- og BugBottle-tags ind i den JS-streng,
     # som er den fil siden downloader, så browseren stoppede scriptet ved det

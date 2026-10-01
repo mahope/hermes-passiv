@@ -3006,3 +3006,65 @@ ingen 5xx. `/api/url-inspect`, `/api/header-check`, `/api/compliance-scan` og
 konsistent med klienterne (`site/url-inspector/index.html:207` m.fl.) og målt på
 live med 200. `/api/compliance-ai` svarer **503**: `env.OPENROUTER_API_KEY` er
 ikke sat på workeren.
+
+## Opgave 39 — AI-svaret kunne køre script på mahope.tools (1/10)
+
+**Fejlen.** `formatAnswer()` i `site/compliance-ai.html` (og `site/da/compliance-ai.html`)
+skrev modellens svar direkte i `innerHTML`:
+
+    var html = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      …
+
+Ingen escaping. Kaldet er `addMessage(data.answer, 'assistant')`
+(`compliance-ai.html:463`), og `addMessage` sætter `msg.innerHTML = formatAnswer(text)`
+(`:485`). Svaret er modeloutput bygget af det besøgende skrev i chatfeltet, så en
+`<img src=x onerror=…>` i et spørgsmål kunne komme tilbage som levende markup på
+mahope.tools — samme origin som `cc_pro_license` og `cc_pro_expires` i localStorage
+(`clean-copy-tool.html:603-611`).
+
+**Hvorfor den lå der hele tiden.** `fmt()` i `site/book-ai.js:65-70` kalder *samme*
+endpoint (`book-ai.js:1` og `:160`) og escaped allerede **før** markdown:
+
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+
+Rækkefølgen var altså kendt i repoet; de to sider var blot glemt. Rækkefølgen er
+også den eneste der virker: escape bagefter ville æde de `<strong>`/`<li>` vi vil
+have stående.
+
+**Rettelsen.** De tre `.replace()`-linjer fra `book-ai.js` sat ind som den første
+kæde i begge filers `formatAnswer`. Ingen anden kode rørt — `book-ai.js` var
+allerede korrekt, og ingen anden fil har `formatAnswer` (`git grep` → kun de to
+kilder plus deres byggede `dist/`).
+
+**Ny port: `tests/markdown-escape.test.mjs`, 42 kontroller.** Den dømmer *adfærd*,
+ikke tekst: `formatAnswer` hives ud af de shippede bytes med klammeroptælling og
+køres i en `vm`, så den kan ikke reddes ved at omdøbe funktionen eller flytte
+escapen. Ni fjendtlige strenge pr. sprog (img/onerror, script, svg/onload, iframe,
+bold-wrapping, listepunkt, nummereret punkt, afsluttende tag alene, store
+bogstaver).
+
+Dommen er «levende tag», ikke substring: `VORES_TAGS` fjerner de tags vi selv
+tilføjer, og resten skal være tom. En substring-søgning på `onerror` ville være
+rød på helt korrekt output, fordi `onerror=alert(1)` godt må stå som escaped
+tekst — det første skrev gav præcis 16 falske røde, som blev rettet væk.
+
+Der er også domme på at rettelsen ikke må slå markdown ihjel (fed, kursive,
+punktlister, nummererede lister, afsnit), at `&` escapes til netop én enhed, at
+almindelig tekst står uændret, og at ansvarsfraskrivelsen stadig følger med og
+ikke sættes på to gange når svaret selv har den.
+
+**Mutation.** Testen henter koden fra før rettelsen med
+`git show 22a6d02:site/compliance-ai.html` og kræver at *alle* 18 domme (9
+strenge × 2 sprog) giver levende markup dér. Målt: 18/18. Mod den gamle kode i
+arbejstræet er hele filen **24 røde**, så porten kan fejle.
+
+**CI.** Nye filer i `tests/` skal stå i `deploy-sites.yml`'s path-filter — ellers
+skalmer pushen springe gaten over (samme fælde som opgave 38). Listen er afledt af
+`quality_gate.py --inputs`, og `tools/test_deploy_workflow.py` (et step i gaten
+selv) beviser bagefter at de to er ens; begge dele grønne.
+
+**Verificeret.** `python3 tools/quality_gate.py` grøn med **116 steps** (var 115).
+Ingen markup eller CSS ændrer sig, så der er ingen layout at måle ved 390/1280 px;
+det ændrede output er dømt på sine exact bytes af testens markdown-domme.

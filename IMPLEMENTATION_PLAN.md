@@ -60,6 +60,14 @@
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: ceo/ai-svaret-kan-koere-script 2026-10-01` — intet kørtid,
+  kun to statiske sider. Mål på indhold:
+  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
+  2. Live `/compliance-ai` har `.replace(/&/g, '&amp;')` som **første** kæde i
+     `formatAnswer` — altså før `.replace(/\*\*(.*?)\*\*/g, …)` — og det samme på
+     `/da/compliance-ai`. Skærmbilleder er bevidst ikke taget: ingen markup eller
+     CSS ændrer sig, så et billede ville dømme layout og ikke escaping.
+
 - `VERIFICÉR DEPLOY: ceo/checkout-ruten-kan-vaere-forskrevet 2026-10-01` — mål på
   indhold, ikke på HTTP-status:
   1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
@@ -221,7 +229,7 @@
   - **EUComply Pro-prisen** ($79/år pr. website) er sat i Stripe, men nogen sider nævner tallet. Skal det stå på en `/pro/`-side? **Bemærk: `/pro/` findes ikke** — live er den 404, og intet i `site/` linker til den, så spørgsmålet afgør om vi bygger siden eller dropper den.
   - **Er desktop-appen stadig en del af `deskuptime-pro`?** Et betalt produkt skal kunne det, det lover.
   - **Plugin-version:** kunder på Clean Copy 1.1.0 henter ikke den rettede zip. Kræver en version bump — og det er en release, som er din.
-  - **7 betalte produkter** (DPA, NIS2/DORA, NDA, EAA, report kit, template bundle, e-bøg-bundle) sælger endnu ikke, fordi filerne ikke ligger i Cloudflare KV. Uploadskrivet ligger i `mahope/paid-products`.
+  - ~~**7 betalte produkter** (DPA, NIS2/DORA, NDA, EAA, report kit, template bundle, e-bøg-bundle) lå som «sælger ikke, filerne mangler i KV».~~ **FORÆLDET 1/10.** Målt på live: `GET /api/paid-files` svarer `kv_ok: true` og **alle svy** produkter med `ready: files`, `missing: 0`, `available: true` og deres betalingslink. `site/paid-templates.html` (EN + DA) har knapperne i HTML'en og `/api/paid-files` fjerner dem kun når serveren kan *bevise* at leveringen ikke kan ske — så de sælger i live. Denne note skal ikke læses som «endnu ikke lagt ind».
 
 28. ~~**Donationen nåede kun 4 af 161 sider.**~~ **FÆRDIG 30/9,
      `ceo/tak-efter-resultat`.** De to mest besøgte værktøjssider har linjen i
@@ -381,3 +389,16 @@
     *Bemærk:* `?product=CC` (store bogstaver) er **ikke** en fejl — det er det
     samme produkt skrevet en anden måde, så porten skelner bevidst mellem «ukendt
     produkt» og «andet skrivemåde». Se arkiv.
+
+    39. ~~**AI-svaret kunne køre script på mahope.tools.**~~ **FÆRDIG 1/10,
+      `ceo/ai-svaret-kan-koere-script`.** `formatAnswer()` på `/compliance-ai`
+      (EN + DA) skrev modellens svar direkte i `innerHTML` med kun
+      markdown-udskiftninger. Svaret er bygget af det besøgende skrev i feltet,
+      så markup i et spørgsmål kunne komme tilbage som levende tags — samme
+      origin som `cc_pro_license` i localStorage. `fmt()` i `book-ai.js` escaped
+      allerede før markdown på *samme* endpoint, så mønsteret fandtes i repoet og
+      var glemt de to steder. Ny test `tests/markdown-escape.test.mjs` (42
+      kontroller) trækker funktionen ud af de shippede bytes og kører den i en vm
+      mod 9 fjendtlige strenge pr. sprog; målt **24 røde mod koden fra før
+      rettelsen**. Se arkiv.
+

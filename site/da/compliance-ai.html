@@ -492,8 +492,16 @@
   }
 
   function formatAnswer(text) {
-    // Simple markdown-to-HTML conversion for the assistant's response
+    // Markdown-to-HTML for the assistant's response. The answer is model
+    // output built from whatever the visitor asked, and the question is
+    // theirs to write: anything they paste can come back inside the answer.
+    // So escape FIRST and only then add our own tags — the order `fmt()` in
+    // book-ai.js already uses for this same endpoint. Escaping afterwards
+    // would eat the <strong>/<li> we add here.
     var html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
       // Bold
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       // Italic
