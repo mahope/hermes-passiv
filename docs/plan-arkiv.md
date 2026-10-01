@@ -2890,3 +2890,49 @@ blev derfor fjernet fra selvtesten i stedet for at blive grøn af en svag dom.
   webhook-, fulfillment- og downloadvejen er bit-for-bit uændret. Ingen fil i
   `site/` og ingen i `dist/` i diffen: rettelsen er udelukkende i testfilen,
   fordi siden allerede gjorde det rigtige.
+
+## Opgave 37 — selvbetjent nøgleopslag (1/10, `ceo/selvbetjent-noegleopslag`)
+
+**Fund.** `/api/license/lookup` (`site/_worker.js:1365`) var fuldt bygget,
+ratelimited (10 opslag pr. IP pr. time) og dækket af fem opslag i
+`tests/stripe-worker.test.mjs` — men **ingen side kaldte den**. Den rute
+`/license-lookup`, hvis `<h1>` er «Find your license key», bestod af tre
+`<ol>`-punkter og sluttede med «write to support@mahope.tools … We send the key
+again, usually the same day». Den henvisning ligger i to andre sider
+(`site/activate/index.html:86` på EN og DA), så den var den vej en kunde med en
+mistet nøgle faktisk landede på.
+
+**Hvorfor ingen port så det.** `check_stripe_ctas.py` dømmer at *salg* har en
+knap, `check_buyable.py` at et købsklart produkt sælges, og
+`check_license_clients.py` at en klient der kalder licens-API'en overholder
+kontrakten. Ingen af dem spørger om et *support*-endpoint har en klient — og
+support er præcis den udgift missionen kasserer. Samme fejlform som de fund de
+lukker: en påstand uden dom.
+
+**Rettelse.** Formular på `/license-lookup` der POST'er `{ order_id, email }`,
+viser nøglen i en `esc()`-escapet `<code>`, udløbsdato (livetid siges aldrig at
+udløbe), `activate_hint` når serveren sender en, og et link til
+`activate_url`. 429 er endeligt og viser serverens egen sætning (time-noten
+hænges kun på når den mangler, ellers læser kunden «Try again later. Try again
+later»); 5xx giver «reload in a minute» og intet nyt kald; netværksfejl
+samme. `activate_url` afvises hvis den ikke er http/https, så en fremtidig
+`javascript:`-værdi ikke kan blive klikbar.
+
+**Ny port.** `tests/license-lookup.test.mjs`, 14 kontroller, lagt ind i
+`quality_gate.py` som `license-lookup-page`. Den dømmer at siden *kalder*
+endpointet med de to felter serveren kræver, at felterne har labels, at 429 er
+endeligt og 5xx ikke er, at nøglen escapes, og at siden ikke længere siger at
+man skal skrive til support. Målt: **12 røde mod `main:site/license-lookup.html`**,
+14 grønne mod den nye.
+
+**Tilfældigt fund undervejs.** `check_license_clients.py` blev rød på den nye
+side — korrekt, den kalder `/api/license`. Den fik en `CLIENTS`-linje med tom
+`product_key` (opslag er ikke en Pro-status, ingen `device_id`), en
+`NOT_CLIENTS`-linje for den nye test, og en `CACHE_RULE_SKIP`-linje med
+begrundelse: siden cachelagrer ingen Pro-status, så der er intet at låse ud.
+Selvtesten 19/19.
+
+**Målt i browseren.** Chromium, 390 og 1280 px, seks svarsformer hver (200,
+lifetime, 404, 429, 503, og en nøgle på `<img src=x onerror=alert(1)>`):
+vandret overflow 0, ingen JS-fejl, ingen `<img>` i DOM'en, og href bliver `/`
+ved `javascript:`. Skærmbilleder i `/tmp/ui-lookup/`.

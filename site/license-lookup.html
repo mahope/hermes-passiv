@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find your license key | Mahope tools</title>
-  <meta name="description" content="Lost the license key for Clean Copy Pro, DeskUptime Pro or another Mahope tool? It is in your order email and on the thank-you page. Here is how to find it.">
+  <meta name="description" content="Lost the license key for Clean Copy Pro, DeskUptime Pro or another Mahope tool? Look it up yourself with your order reference and email address — no waiting for support.">
   <meta property="og:title" content="Find your license key">
-  <meta property="og:description" content="Where your Mahope tools license key lives, and how to get it back if the email is gone.">
+  <meta property="og:description" content="Look up your Mahope tools license key yourself, with your order reference and the email you paid with.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mahope.tools/license-lookup">
   <link rel="canonical" href="https://mahope.tools/license-lookup">
@@ -24,6 +24,24 @@
     .lookup-card ol { padding-left: 1.2rem; margin: 0; }
     .lookup-card li { margin: 0.6rem 0; }
     .hint { color: var(--color-text-muted); font-size: 0.9rem; }
+    .lookup-form { display: grid; gap: 0.9rem; margin-top: 1.4rem; }
+    .lookup-form label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
+    .lookup-form input {
+      width: 100%; padding: 0.65rem 0.75rem; font-size: 1rem;
+      border: 1px solid var(--color-border); border-radius: 8px;
+      background: var(--color-surface); color: var(--color-text);
+      min-height: 44px;
+    }
+    .lookup-form input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .lookup-form .btn-primary, .lookup-form .btn-secondary { justify-self: start; min-height: 44px; }
+    .lookup-status { margin: 1rem 0 0; }
+    .lookup-status[data-state="error"] { color: #b42318; }
+    .key-box {
+      font: 1rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: 8px; padding: 0.8rem 0.9rem; overflow-wrap: anywhere;
+    }
+    .key-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
   </style>
 </head>
 <body>
@@ -33,28 +51,168 @@
     Transmute Desktop, EUComply Pro) comes with a license key. You get it in two places
     right after checkout:</p>
 
+    <h2>Look it up yourself</h2>
+    <p>Your key is stored against your order. Enter the order reference from your Stripe
+    receipt and the email address you paid with, and the key comes back straight away —
+    there is nothing to wait for and nobody to write to.</p>
+    <form class="lookup-form" id="lookupForm" novalidate>
+      <div>
+        <label for="orderId">Order reference</label>
+        <input id="orderId" name="order_id" type="text" inputmode="text"
+               autocomplete="off" spellcheck="false" required
+               placeholder="cs_live_a1B2c3D4e5F6g7H8"
+               aria-describedby="orderIdHelp">
+        <p class="hint" id="orderIdHelp">Starts with <code>cs_</code>. It is on the
+        <em>Order reference</em> line of your Mahope receipt email, and in the link of your
+        thank-you page. Copy the whole thing, including the <code>cs_</code> part.</p>
+      </div>
+      <div>
+        <label for="lookupEmail">Email you paid with</label>
+        <input id="lookupEmail" name="email" type="email" autocomplete="email"
+               spellcheck="false" required placeholder="you@company.dk">
+      </div>
+      <button type="submit" class="btn-primary" id="lookupBtn">Show my license key</button>
+      <p class="lookup-status hint" id="lookupStatus" role="status" aria-live="polite"></p>
+    </form>
+    <div id="lookupResult" hidden></div>
+
     <div class="lookup-card">
+      <h2>Where the key usually is</h2>
       <ol>
         <li><strong>Your order email.</strong> Search your inbox for mail from
         <code>orders@mahoje.dk</code>. It holds the key and a link to the activation guide.
         Nothing there? Check the spam or promotions folder.</li>
         <li><strong>The thank-you page.</strong> After paying you land on a page that shows
         the key. If you kept that tab or bookmarked it, the key is still there.</li>
-        <li><strong>Still can't find it?</strong> Write to
+        <li><strong>The Stripe receipt.</strong> The email Stripe sends has your order
+        reference at the top — that is the first field above.</li>
+        <li><strong>Still nothing?</strong> Write to
         <a href="mailto:support@mahope.tools"><strong>support@mahope.tools</strong></a>
-        with the email address you paid with (and the Stripe receipt if you have it).
-        We send the key again, usually the same day.</li>
+        with the email address you paid with (and the Stripe receipt if you have it).</li>
       </ol>
     </div>
 
     <p class="hint" style="margin-top:1.2rem;">Moving to a new computer? Deactivate the key
-    in the old install first, or write to
+    in the old install first — it is one click in the app — or write to
     <a href="mailto:support@mahope.tools">support@mahope.tools</a> and we free up the seat.</p>
 
     <p style="margin-top:1.5rem;">
       Have your key already? <a href="/clean-copy-tool#pro-activate-details">Activate Clean Copy Pro here →</a>
     </p>
   </main>
+<script>
+(function () {
+  var form = document.getElementById('lookupForm');
+  var btn = document.getElementById('lookupBtn');
+  var statusEl = document.getElementById('lookupStatus');
+  var out = document.getElementById('lookupResult');
+  if (!form) return;
+  // Nøglen kommer fra KV og er aldrig brugerinput, men den skrives ind i DOM'en,
+  // så den escapes som alle andre værdier. copy-lytteren bruger textContent, så
+  // der er ingen anden vej data kommer ind på.
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function say(msg, state) {
+    statusEl.textContent = msg;
+    statusEl.setAttribute('data-state', state);
+    out.hidden = true;
+    out.innerHTML = '';
+  }
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var orderId = document.getElementById('orderId').value.trim();
+    var email = document.getElementById('lookupEmail').value.trim();
+    if (!orderId || !email) {
+      say('Fill in both fields.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    statusEl.removeAttribute('data-state');
+    statusEl.textContent = 'Looking up your order…';
+    fetch('/api/license/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId, email: email }),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        return { status: r.status, data: d };
+      });
+    }).then(function (x) {
+      btn.disabled = false;
+      // 429 er endeligt (CEO-kø punkt 0, 29/9): serverens egen sætning, intet nyt
+      // kald. 5xx er forbigående og må gerne prøves igen. Alt andet er et svar,
+      // ikke en fejl i koden, så det vises som det er.
+      if (x.status === 429) {
+        // Serverens egen sætning. Den siger altid "Try again later.", så
+        // hænges time-noten kun på når den mangler — ellers læser kunden
+        // "Try again later. Try again later — …".
+        var limited = (x.data && x.data.error) ? x.data.error : 'Too many attempts.';
+        say(/try again later/i.test(limited)
+          ? limited + ' The limit resets when the hour changes.'
+          : limited + ' Try again later — the limit resets when the hour changes.', 'error');
+        return;
+      }
+      if (x.status >= 500) {
+        say('We could not reach the license server. Reload the page in a minute.', 'error');
+        return;
+      }
+      if (!x.data || x.data.ok !== true || !x.data.license_key) {
+        say((x.data && x.data.error)
+          ? x.data.error
+          : 'No license found for that order reference and email.', 'error');
+        return;
+      }
+      var lifetime = x.data.lifetime === true;
+      var expiry = lifetime
+        ? 'Lifetime license — it never expires.'
+        : (x.data.expires_at
+          ? 'Valid until ' + String(x.data.expires_at).slice(0, 10) + '.'
+          : 'No expiry date on this license.');
+      // `activate_url` kommer fra serverens STRIPE_PRODUCTS, ikke fra brugeren,
+      // men den havner i et href — så kun http/https slipper igennem. Uden
+      // tjekket ville en fremtidig værdi som `javascript:…` være klikbar.
+      var activate = String(x.data.activate_url || '');
+      if (!/^https?:\/\//i.test(activate)) activate = '/';
+      out.innerHTML =
+        '<h2>Your license key</h2>'
+        + '<p class="key-box"><code id="foundKey">' + esc(x.data.license_key) + '</code></p>'
+        + '<p class="hint">' + esc(expiry) + '</p>'
+        + '<p class="hint">Looking up your key is free. If it saved you a reply to '
+        + 'support, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" '
+        + 'rel="nofollow noopener">donation</a> keeps the free tools running.</p>'
+        + '<div class="key-actions">'
+        + '<button type="button" class="btn-secondary" id="copyKey">Copy key</button>'
+        + '<a class="btn-primary" href="' + esc(activate)
+        + '" rel="noopener">Where to activate it</a></div>'
+        + (x.data.activate_hint
+          ? '<p class="hint">' + esc(x.data.activate_hint) + '</p>' : '')
+        + '<p class="hint">Keep this page, or write the key down. You can run the lookup '
+        + 'again with the same order reference and email whenever you need it.</p>';
+      out.hidden = false;
+      statusEl.textContent = '';
+      statusEl.removeAttribute('data-state');
+      var copy = document.getElementById('copyKey');
+      if (copy) {
+        copy.addEventListener('click', function () {
+          var k = document.getElementById('foundKey').textContent;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(k).then(function () { copy.textContent = 'Copied'; },
+              function () { copy.textContent = 'Select the key and copy it'; });
+          } else {
+            copy.textContent = 'Select the key and copy it';
+          }
+        });
+      }
+    }).catch(function () {
+      btn.disabled = false;
+      say('No connection. Reload the page in a minute and try again.', 'error');
+    });
+  });
+})();
+</script>
 <script>
 (function(){try{if(navigator.doNotTrack==='1')return;var p=location.pathname.replace(/\.html$/,'')||'/';document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;if(!a)return;var h=a.getAttribute('href')||'';var m=h.match(/^\/(?:da\/)?(scan|clean-copy-tool|page-profile|site-icons|text-diff|url-to-markdown|free-tools|compliance-report)(\.html)?(#[^#]*)?$/);if(!m)return;try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({path:p,event:'cta-'+m[1]})],{type:'application/json'}));}catch(e){}},true);}catch(e){}})();
 </script>

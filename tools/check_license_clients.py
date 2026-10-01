@@ -112,6 +112,12 @@ CLIENTS: dict[str, str] = {
     "tools/clean_copy_license.js": "clean-copy-pro",
     "site/clean-copy-tool.html": "clean-copy-pro",
     "site/compliance-report.html": "eucomply-pro",
+    # Opgave 37: nøgleopslaget. Kalder `/api/license/lookup`, som er
+    # *opslag* på en nøgle kunden allerede ejer — den kalder hverken
+    # `activate` eller `validate` og sender ingen `device_id`, så
+    # syvdagesreglen har intet at sige om den. Tom streng = intet product
+    # forventet, kun tilladt når begrundelsen står her.
+    "site/license-lookup.html": "",
     "page-profile/page_profile.py": "page-profile-pro",
     "site/downloads/page-profile/page_profile.py": "page-profile-pro",
     "site-icons/site_icons.py": "",
@@ -161,12 +167,22 @@ NOT_CLIENTS = {
     # publiceret tekst — men kalder den ikke. Gaten nævner API'en fordi den
     # afslører løgner, hvilket er modsatningen af at være klient.
     "tools/check_product_copy.py",
+    # Opgave 37: porten over nøgleopslagssiden. Den læser den publicerede
+    # klient for at dømme at den kalder `/api/license/lookup` — den *er* den
+    # klients kode, ikke en kunde indlæser den.
+    "tests/license-lookup.test.mjs",
 }
 
 # Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er
 # den kanoniske regel selv og de to byte-identiske kopier af den. Uden en linje
 # her er en afvigelse en fejl, så listen kan ikke vokse ved et uheld.
 CACHE_RULE_SKIP = {
+    # Opgave 37: nøgleopslaget holder ingen Pro-status, så der er intet at
+    # låse ud. Reglen beskytter en kunde der *er* logget ind som Pro mod en
+    # 503; siden her beder om et nummer, den endnu ikke har, og et 503 giver
+    # "reload in a minute" uden at fjerne noget. Skriver den en cache, skal
+    # den have reglen — det er derfor den står her med sin grund.
+    "site/license-lookup.html": "opslagsside uden cachelagret Pro-status — intet at låse ud",
     "tools/clean_copy_license.js": "den kanoniske kilde — filen ER reglen",
     "extension-clean-copy/license.js": "byte-identisk kopi af den kanoniske kilde",
     "extension-clean-copy-firefox/license.js": "byte-identisk kopi af den kanoniske kilde",

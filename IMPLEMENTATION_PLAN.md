@@ -1,11 +1,22 @@
 # STATUS
 
-- **Gaten er `python3 tools/quality_gate.py` — 113 steps — ikke de fire
-  kommandoer missionen navngiver.** De fire (`build_sites.py`, `seo_check.py`,
-  `stripe-worker.test.mjs`, `check_inline_js.py`) dømmer ikke
-  `tests/thanks-page.test.mjs`, så opgave 35 kunne merge *rødt* med dem kørende.
-  Det skete 1/10. Mål: `gh run list -L 1` er grønnest i starten af hver
-  iteration; kør hele porten, ikke missionens afsnit. Se opgave 36.
+- **En køber der mistede sin licensnøgle skulle skrive til Mads.** Målt 1/10:
+  `/api/license/lookup` er fuldt implementeret, ratelimited og testet (5 af 5
+  opslag grønne i `stripe-worker.test.mjs`), og **ingen side kaldte den** —
+  `/license-lookup`, sidens hele formål, var ren tekst med «write to
+  support@mahope.tools … we send the key again, usually the same day».
+  Det er menneskelig support i en indtægt der skal klare sig uden. Siden har nu
+  en formular der kalder endpointen, og ny port `tests/license-lookup.test.mjs`
+  (14 kontroller) dømmer at et licens-endpoint har en indgang — målt rød med 12
+  mod den gamle kode. Se opgave 37.
+- **Hvorfor ingen port så det:** `check_stripe_ctas` dømmer at *salg* har en
+  knap, og `check_buyable` at et købsklart produkt sælges. Ingen dømmer at et
+  *support*-endpoint har en klient — og support er præcis den udgift missionen
+  forbyder. Samme fejlform som de fund, de lukker: en påstand uden dom.
+- **Ryggraden er grøn:** `python3 tools/quality_gate.py` — 113 steps (nu 114
+  med `license-lookup-page`). De fire kommandoer missionen navngiver er en
+  delmængde; se opgave 36 for hvorfor kun de er for få. Mål: `gh run list -L 1`
+  grønnest i starten af hver iteration.
 - **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
   nøgle.** Tak-siden genkaldte `/api/stripe/fulfillment` på 429, og den rute
   tæller selv sine forsøg — så hvert genkald gjorde det værre. Rettet, og
@@ -34,18 +45,19 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: ceo/429-er-sendeloeende-paa-tak-siden + ceo/429-gate-tak-siden
-  2026-10-01` — **begge slås sammen i én udgivelse.** `4829488` blev aldrig
-  deployet, fordi CI var rød, så `build-info.json` bærer stadig `8c61191`
-  (målt 1/10 kl. 00:3x UTC). Mål på indhold, ikke på HTTP-status:
+- `DEPLOY OK 2026-10-01` — begge 429-rettelser (`ceo/429-er-sendeloeende-paa-tak-siden`
+  + `ceo/429-gate-tak-siden`, `70ec8c4`). Målt på indhold: `build-info.json` bærer
+  præcis `70ec8c49cd52dc27a020f752d33fa0e6708292ff`, og live `/thanks` har **én**
+  `x.code === 429` på sin egen linje (ikke `429 || x.code >= 500`), som kalder
+  `fail((x.d && x.d.error ? x.d.error : 'Too many attempts.') + LIMITED_OUT)`.
+
+- `VERIFICÉR DEPLOY: ceo/selvbetjent-noegleopslag 2026-10-01` — mål på indhold:
   1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
-  2. `/thanks` har **ét** `x.code === 429`-kald, på **sin egen linje** — ikke
-     `429 || x.code >= 500`.
-  3. Det kalder `fail(` med `x.d.error`, altså serverens egen sætning
-     (`Too many attempts.`), og teksten siger at et reload virker.
-  4. **Ingen** `/api/stripe/fulfillment`-genkald efter et 429 — mål på at
-     `setTimeout(poll` ikke kan nås fra den gren (det er `check_status_finality`
-     og `thanks-page` der dømmer det; live skal bare have den nye linje).
+  2. `/license-lookup` har præcis ét `fetch('/api/license/lookup'` med
+     `{ order_id, email }`, to `<label for>`, og **ikke** sætningen «We send the
+     key again, usually the same day».
+  3. Et rigtigt 200-svar på endpointet med et kvittér mails `cs_`-reference
+     og den betalte adresse gengiver nøglen i browseren.
 
 - `DEPLOY OK 2026-10-01` — otte generatorer (`ceo/generator-script-kom-til-live`,
   `8c61191`). Målt 1/10 kl. 00:0x UTC: CI-kørsel `36793625580` grøn i alle jobs,
@@ -250,3 +262,28 @@
     låste adfærd og har tænder: den gamle kode i en klon giver 5 røde af 7,
     blandt andet `fetches=13` skal være 1. `thanks-page` 109/109, hele porten
     grøn (113 steps). Accept opfyldt. Se arkiv.
+
+37. ~~**En køber der mistede sin nøgle skulle skrive til Mads.**~~ **FÆRDIG
+    1/10, `ceo/selvbetjent-noegleopslag`.** Hvorfor:
+    `/api/license/lookup` (`_worker.js:1365`) er fuldt bygget, ratelimited
+    (10/IP/time) og dækket af 5 opslag i `stripe-worker.test.mjs`, men **nogen
+    klient kaldte den**. `/license-lookup` — hvis H1 er «Find your license key» —
+    havde ingen formular, kun «write to support@mahope.tools … usually the same
+    day». Det er præcis den menneskelige indsats missionen kasserer, placeret
+    lige i den betalte indtægt. Accept: siden har en formular der POST'er de to
+    felter serveren kræver, viser nøglen + udløb + aktiveringssted, og
+    `tests/license-lookup.test.mjs` (17 kontroller) dømmer at et licens-endpoint
+    har en indgang — målt **15 røde mod den gamle kode** (genmålt 1/10 efter
+    review af egen diff), grøn mod den nye.
+    Siden blev også dømt af to eksisterende porte undervejs, begge korrekt:
+    `check_license_clients` krævede den opført (den kalder `/api/license`),
+    `check_donation_paths` krævede donationslinjen i resultatet.
+    Målt i Chromium ved 390 og 1280 px: overflow 0, ingen JS-fejl, og de seks
+    svarsformer (200, lifetime, 404, 429, 503, `<img onerror>` som nøgle) er
+    hver dømt visuelt; href afvises hvis den ikke er http/https. Egen-diff-review
+    1/10 fandt to CSS-fejl i den nye side — `border: 1px solid --color-border`
+    (var() var tabt, så ingen ramme) og `.lookup-form .btn`, en regel der aldrig
+    kunne ramme de `btn-primary`/`btn-secondary` den skrev sig til, så knappen
+    aldrig blev 44 px. Begge rettet før commit; 429-teksten «the limit resets
+    when the hour changes» er ikke antaget — `_worker.js:3617` tømmer tælleren på
+    `Math.floor(Date.now()/3600000)`, altså hver time.

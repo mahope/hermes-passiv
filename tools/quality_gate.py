@@ -172,6 +172,16 @@ STEPS: tuple[Step, ...] = (
         argv=("node", "tests/thanks-page.test.mjs"),
         inputs=("tests/thanks-page.test.mjs", "site/thanks.html", "site/_worker.js"),
     ),
+    # Nøgleopslaget. `/api/license/lookup` var fuldt implementeret og testet,
+    # men ingen side kaldte den: `/license-lookup` — sidens hele formål — sagde
+    # "skriv til support@mahope.tools". Det er menneskelig support i en indtægt,
+    # der skal klare sig uden. Uden dette step kan en sådan klient forsvinde
+    # igen, fordi ingen port måler om et endpoint har en indgang.
+    Step(
+        id="license-lookup-page",
+        argv=("node", "tests/license-lookup.test.mjs", "site/license-lookup.html"),
+        inputs=("tests/license-lookup.test.mjs", "site/license-lookup.html"),
+    ),
     Step(
         id="tracking-worker",
         argv=("node", "tests/tracking-worker.test.mjs"),
