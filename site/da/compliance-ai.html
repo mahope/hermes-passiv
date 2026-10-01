@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gratis AI compliance-assistent — EAA-, NIS2- &amp; GDPR-svar på sekunder</title>
 <meta name="description" content="Gratis AI-drevet assistent til spørgsmål om EU digital compliance. Spørg om EAA/WCAG-tilgængelighed, NIS2-cybersikkerhed eller GDPR — få praktiske svar til små webbureauer.">
+<!-- noindex,follow: målt 1/10 svarer POST /api/compliance-ai 503 «AI service not
+     configured», fordi OPENROUTER_API_KEY mangler på workeren. Siden er hele
+     sidens eksistensberettigelse, så at lade Google finde den som «svar på
+     EAA-spørgsmål» er værre end ikke at finde den. `follow` beholder linkværdien
+     fra artiklerne. Når nøglen er sat: fjern denne linje igen — kapabilitets-
+     tjekket i bunden tænder chatten af sig selv, så der er intet andet at rette.
+     Porten `tools/check_unavailable_routes.py` holder de to ruter ude af
+     sitemap, så den ikke kan komme tilbage ved et uhell. -->
+<meta name="robots" content="noindex,follow">
 <meta name="keywords" content="AI compliance assistant, EU compliance chat, EAA questions, NIS2 help, GDPR assistant, web agency compliance, free compliance Q&A">
 <meta property="og:type" content="website">
 <meta property="og:title" content="AI compliance-assistent — gratis spørgsmål og svar om EU-compliance">
@@ -172,6 +181,37 @@
 .chat-status.error {
   color: var(--color-red);
 }
+.chat-unavailable {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-2);
+  padding: 24px;
+  text-align: left;
+}
+.chat-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+.chat-unavailable p {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.chat-unavailable ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+.chat-unavailable li {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.chat-unavailable-note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
 .suggestions {
   display: flex;
   flex-wrap: wrap;
@@ -326,16 +366,37 @@
 <section class="ai-chat">
   <div class="chat-container">
     <div class="chat-box" id="chatBox" role="log" aria-live="polite" aria-label="Compliance-chat"></div>
-    <div class="chat-input-area">
-      <textarea id="questionInput" rows="1" placeholder="Spørg om EAA, NIS2, GDPR eller compliance..." aria-label="Dit compliance-spørgsmål"></textarea>
-      <button id="sendBtn" class="btn-primary" onclick="sendQuestion()" aria-label="Send spørgsmål">Spørg</button>
+    <div id="askArea">
+      <div class="chat-input-area">
+        <textarea id="questionInput" rows="1" placeholder="Spørg om EAA, NIS2, GDPR eller compliance..." aria-label="Dit compliance-spørgsmål"></textarea>
+        <button id="sendBtn" class="btn-primary" onclick="sendQuestion()" aria-label="Send spørgsmål">Spørg</button>
+      </div>
+      <div class="chat-status" id="chatStatus"></div>
+      <div class="suggestions" id="suggestions">
+        <span class="suggestion-chip" onclick="ask('Hvad betyder EAA for mit webbureau?')">Hvad betyder EAA for mit webbureau?</span>
+        <span class="suggestion-chip" onclick="ask('Skal jeg have en databehandleraftale med alle kunder?')">Databehandleraftale med alle kunder?</span>
+        <span class="suggestion-chip" onclick="ask('Hvad er NIS2-fristerne for hændelsesrapportering?')">NIS2-frister for hændelsesrapportering?</span>
+        <span class="suggestion-chip" onclick="ask('Hvordan skriver jeg en tilgængelighedserklæring?')">Sådan skriver du en tilgængelighedserklæring</span>
+      </div>
     </div>
-    <div class="chat-status" id="chatStatus"></div>
-    <div class="suggestions" id="suggestions">
-      <span class="suggestion-chip" onclick="ask('Hvad betyder EAA for mit webbureau?')">Hvad betyder EAA for mit webbureau?</span>
-      <span class="suggestion-chip" onclick="ask('Skal jeg have en databehandleraftale med alle kunder?')">Databehandleraftale med alle kunder?</span>
-      <span class="suggestion-chip" onclick="ask('Hvad er NIS2-fristerne for hændelsesrapportering?')">NIS2-frister for hændelsesrapportering?</span>
-      <span class="suggestion-chip" onclick="ask('Hvordan skriver jeg en tilgængelighedserklæring?')">Sådan skriver du en tilgængelighedserklæring</span>
+    <!-- Udskiftes for chatten, hvis assistentens nøgle mangler på workeren.
+         Målt 1/10: uden den skrev siden «Contact the site owner» til en
+         besøgende der ellers ikke vidste om der var noget galt. -->
+    <div class="chat-unavailable" id="aiUnavailable" hidden>
+      <h2>Assistenten er ikke tændt</h2>
+      <p>Vi har ikke tændt assistenten for dette site, så den kan ikke svare på
+      spørgsmål lige nu. Resten af siden virker, og det her besvarer de samme tre
+      emner i dag:</p>
+      <ul>
+        <li><a href="/books/eaa-checklist">EAA-tjeklisten</a> — den gratis EPUB gennemgår, hvad EAA betyder for et webbureau.</li>
+        <li><a href="/books/nis2-for-agencies">NIS2 for bureauer</a> — den gratis EPUB gennemgår forpligtelserne og fristerne.</li>
+        <li><a href="/books/gdpr-for-agencies">GDPR for bureauer</a> — den gratis EPUB gennemgår de aftaler du faktisk skal have.</li>
+      </ul>
+      <p class="chat-unavailable-note">Til en kundes egne sider tjekker
+      <a href="/scan">den gratis EAA-scanner</a> en hvilken som helst offentlig URL
+      mod 15 WCAG-regler, og
+      <a href="/accessibility-statement-generator">erklæringsgeneratoren</a> skriver
+      den erklæring, dine kunder skal offentliggøre.</p>
     </div>
   </div>
 </section>
@@ -411,6 +472,30 @@
 
   // Focus input
   input.focus();
+
+  // Har workeren en nøgle til assistenten? Ét GET, intet betalt kald, ingen
+  // tilstand — serveren svarer bare på om OPENROUTER_API_KEY findes.
+  //
+  // Målt 1/10: uden den er hvert spørgsmål et 503 «AI service not configured.
+  // Contact the site owner.» på en publiceret side, så en besøgende kunne
+  // skrive en hel afsnit og blive bedt om at kontakte ejeren. Spørgsmålet er det
+  // eneste siden tilbyder, så der er intet at falde tilbage på — den skal sige
+  // det med det samme i stedet.
+  //
+  // Chatten kommer tilbage af sig selv, når nøglen er sat: intet her skal
+  // ændres, og intet skal huske, at den nogensinde har været skjult.
+  fetch('/api/compliance-ai', { headers: { 'Accept': 'application/json' } })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.available) return;
+      var omraade = document.getElementById('askArea');
+      var note = document.getElementById('aiUnavailable');
+      if (!omraade || !note) return;
+      omraade.remove();
+      note.hidden = false;
+      try { if (window.trackEvent) window.trackEvent('ai-unavailable'); } catch (e) {}
+    })
+    .catch(function() { /* Offline eller tjekket fejlede: lad chatten være som den er. */ });
 
   // The retry rule itself lives in /net.js, next to the two other callers and
   // judged there by the sandbox. This only decides how many attempts we make

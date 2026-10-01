@@ -3,12 +3,10 @@
 - **Page Profile Pro kunne ikke aktiveres overhovedet.** `page-profile --activate`
   fik **403 Cloudflare Error 1010** på alle fire felter, fordi `urllib` sender
   `Python-urllib/3.x` som User-Agent. Rettet 1/10: vi udgiver `1.2.1`.
-- **AI-siden er død for alle besøgende.** Målt 1/10: `POST /api/compliance-ai`
-  svarer **503** «AI service not configured» (`OPENROUTER_API_KEY` mangler). Den
-  er publiceret og gør intet. Se ❓.
-- **Ingen fejl blev nogensinde meldt.** Målt 1/10: 0 forekomster af «sentry»
-  i hele repoet. Workerens fetch er nu pakket, så en uventet fejl er en ren 500
-  *og* en rapport — 316/316 worker-tests, 5 mutationer røde mod ældre kode.
+- **AI-siden siger nu det sande i stedet for at bede kunden kontakte os.**
+  Rettet 1/10: `GET /api/compliance-ai` svarer `{available}`, siden skjuler
+  chatten og byder på scanner, erklæringsgenerator og de tre bøger, og begge
+  ruter er taget ud af sitemap + `llms.txt`. Nøglen mangler stadig — se ❓.
 - **Artiklen om Desktop-website-monitoren solgte €492 for et UptimeRobot-team.**
   Fund fra review 1/10: €492 er €41 × 12, altså månedsprisen *uden* rabat,
   mens Solo i samme kolonne var €9 × 12 = €108, altså *med* rabat — to
@@ -36,21 +34,27 @@
   URL'er:* de danske skannere ligger på `/cookie-check-da` og
   `/contrast-checker-da`, ikke under `/da/` — `/da/cookie-check` er 404.
 
-- `VERIFICÉR DEPLOY: UptimeRobot Team-prisen er €420, ikke €492
-  ceo/uptimerobot-team-pris 2026-10-01` — måles på **indhold**: live
-  `/blog/desktop-website-monitor-cli` skal have `&euro;420` i samme celle som
-  `&euro;35/month`, og `492` skal være **0** gange i hele siden. Dommen er
-  `tools/check_competitor_prices.py` (grøn på 303 sider) med den nye regel at
-  `per_year` er `per_month_annual` × 12 — målt **rød** mod de gamle tal, både
-  som `KILDEFEJL` i kilden og som `forkert pris` i cellen, mens porten fra
-  `origin/main` var grøn med dem.
+- `DEPLOY OK 2026-10-01` — UptimeRobot Team-prisen er €420, ikke €492.
+  Målt på **indhold** i live `0f64110`: `/blog/desktop-website-monitor-cli` har
+  `&euro;420` 1 gang i samme celle som `&euro;35/month`, og `492` er **0**
+  gange i hele siden. `build-info.json` bærer `0f64110a09a9`.
+
+- `VERIFICÉR DEPLOY: /compliance-ai siger at assistenten er slukket, og de to
+  ruter er ude af sitemap + llms.txt
+  ceo/compliance-ai-uden-svar 2026-10-01` — måles på **indhold**: live
+  `GET /api/compliance-ai` skal svare 200 `{"ok":true,"available":false}`
+  (nøglen mangler stadig, så det skal være `false`), `/compliance-ai` og
+  `/da/compliance-ai` skal have `aiUnavailable` og `noindex,follow`, og
+  `compliance-ai` skal være **0** gange i live `sitemap.xml` og `llms.txt`.
+  Dommen er `tools/check_unavailable_routes.py` (16 kontroller grønne mod
+  dist; 8 mutationer røde) og `tools/check_sitemaps.py` (4 domæner OK).
+
 
 ## Åbne opgaver
 
-Køen er udtømt for ufærdigt arbejde: **opgave 1 er den eneste der ikke
-blokerer på Mads**, så den er næste iteration. 2–5 ligger fast på en
-beslutning eller en secret (❓ nedenfor) og skal ikke genoptages, før de
-er besvaret.
+**Opgave 1 er næste iteration** — den eneste der ikke blokerer på Mads. 2–4
+ligger fast på en beslutning eller en secret (❓ nedenfor) og skal ikke genoptages,
+før de er besvaret.
 
 1. **Pro-løftet «crawls the site» er ikke indholdet i scanningen.** Hvorfor:
    `/compliance-site-check` tager én URL og scanner den, mens produktsiden for
@@ -81,25 +85,25 @@ er besvaret.
    flyttet ned i artiklen på de mest besøgte sider (dømt i
    `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en
    ligger ét sted pr. side. Kræver beslutning — se ❓.
-5. **Review-fund: `/api/compliance-ai` er publiceret og dør med 503.** Fund fra
-   review 1/10: `POST /api/compliance-ai` svarer **503** «AI service not
-   configured. Contact the site owner.», fordi `OPENROUTER_API_KEY` mangler —
-   og `/compliance-ai` + `/da/compliance-ai` står begge i `sitemap.xml`. Den nye
-   Sentry-guard fanger den ikke, fordi 503 er en håndteret tilstand. Rettelse:
-   enten sæt nøglen, eller tag de to sider ud af sitemap og `build_sites.py` til
-   den er sat. Accept: ingen sitemap-rute uden en funktion der svarer. *(Se
-   ❓.)*
+5. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor:
+   Fund fra review 1/10 blev rettet for `/compliance-ai`, men porten dømmer kun
+   de to ruter, der er skrevet i `tools/unavailable_routes.json` — en ny AI-
+   eller beta-side kan stadig publiceres med en handling, der altid fejler.
+   Accept: porten finder den, hvis den skrives i manifestet. *(Kun relevant når
+   vi tilføjer flere sådanne sider — ikke en opgave i sig selv.)*
 
 ## ❓ Til Mads
 
-- **🔴 `OPENROUTER_API_KEY` mangler på workeren — AI-siden er død for alle.**
-  Målt 1/10: `POST /api/compliance-ai` svarer **503** «AI service not
-  configured» (`_worker.js:733` læser `env.OPENROUTER_API_KEY`). Klienten
-  håndterer det pænt, så intet er brudt — men `/compliance-ai` er en publiceret
-  funktion, som artikler på både EN og DA linker til, og den gør intet. En
-  secret på workeren. **Alternativ:** hvis AI'en ikke skal være permanent, skal
-  siden sige at funktionen er i beta og ikke lover et svar, og de to ruter skal
-  ud af sitemap (opgave 6).
+- **🔴 `OPENROUTER_API_KEY` mangler på workeren — assistenten er stadig slukket.**
+  Rettet 1/10, så ingen kunde længere skriver et spørgsmål og bliver bedt om at
+  kontakte os: siden siger nu at assistenten er slukket og byder på scanner,
+  erklæringsgenerator og de tre bøger, og begge ruter er ude af sitemap og
+  `llms.txt`. **Når du sætter nøglen:** fjern `<meta name="robots"
+  content="noindex,follow">` fra `site/compliance-ai.html` og
+  `site/da/compliance-ai.html`, så slutter de i sitemap igen. Chatten tænder
+  selv — kapabilitets-tjekket læser nøglen direkte, så der er ingen anden kode
+  at rette. `tools/check_unavailable_routes.py` fortæller dig hvis du glemmer
+  den ene halv.
 - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** Målt 30/9
   giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er
   knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om
@@ -153,9 +157,10 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    største indhold vi har og ligger uden for målingen.
 3. **`/compliance-ai` som ikke gør ingenting.** Hvem: alle der lander på siden
    fra artiklerne. Tal: kald pr. uge (baseline: **0**, siden secret'en mangler).
-   Accept: enten secret på workeren, eller siden siger at funktionen er i beta
-   og ikke lover et svar — og begge ruter tages ud af sitemap. Datagrund: målt
-   1/10 — 503 «AI service not configured» (`_worker.js:733`). Se ❓.
+   **Delvis leveret 1/10:** siden siger det ærligt og ruterne er ude af de
+   genererede lister, så den ikke længere skader nogen. Resten kræver
+   `OPENROUTER_API_KEY` — se ❓. Datagrund: målt 1/10 — 503 «AI service not
+   configured», `cf-cache-status: DYNAMIC`.
 4. **En købsvej til Clean Copy Pro i værktøjet på cleancopy.tools.** Hvem: de 7
    besøgende i 28 dage, hvor `/clean-copy-tool` er indgangen. Tal: betalinger pr.
    uge (baseline 0 målt). Accept: efter et renset resultat ligger der én knap

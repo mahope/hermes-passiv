@@ -1137,6 +1137,46 @@ for (let i = 0; i < 25; i++) lastAi = await aiPost();
 const limitBody = await lastAi.json().catch(() => ({}));
 ok('AI: kvoten består stadig, og siger hvornår den nulstilles',
   lastAi.status === 429 && /resets at midnight UTC/i.test(limitBody.error || ''), lastAi.status + ' ' + JSON.stringify(limitBody).slice(0, 120));
+
+// ── Kapabilitets-tjekket: er assistenten tændt overhovedet? ─────────
+// Målt 1/10: `POST /api/compliance-ai` svarede 503 «AI service not
+// configured. Contact the site owner.» på en publiceret side, fordi
+// `OPENROUTER_API_KEY` mangler på workeren. En besøgende skrev et helt spørgsmål
+// og blev bedt om at kontakte os — og der er intet andet på siden at bruge.
+// Siden skal derfor kunne finde ud af det *inden* spørgsmålstasten, og det er
+// et GET der kun læser én env-var.
+//
+// Fire ting skal være sande samtidig, og hver især er et krav fra en tidligere
+// fejl i den samme rute:
+//   - det koster **intet**: ingen OpenRouter-kald, ingen dagskvote. Ellers
+//     bruger selve tjekket den kvote, spørgsmålet skulle have brugt;
+//   - det er **kun et læs**: GET ændrer ingen tilstand (link-scannere åbner
+//     GET-links, så en GET der skriver er en fejl i sig selv);
+//   - det **lyver ikke**: `available` skal være sandt, når der ER en nøgle —
+//     ellers tænder siden en chat, der fejler, og vi er tilbage ved ordet fra
+//     1/10;
+//   - det **er et svar, ikke en fejl**: 503 ville få klienten til at genkalde
+//     en tillstand, der aldrig ændrer sig.
+const quotaBeforeProbe = await aiCount();
+const probeNoKey = await worker.fetch(new Request('https://mahope.tools/api/compliance-ai'), env, {});
+const probeBody = await probeNoKey.json();
+ok('GET /api/compliance-ai svarer 200 uden nøgle', probeNoKey.status === 200, probeNoKey.status);
+ok('GET /api/compliance-ai melder available:false uden nøgle', probeBody.available === false, JSON.stringify(probeBody));
+ok('GET /api/compliance-ai uden nøgle tæller ingen dagskvote', await aiCount() === quotaBeforeProbe, `kvote ${quotaBeforeProbe} -> ${await aiCount()}`);
+r = await worker.fetch(new Request('https://mahope.tools/api/compliance-ai'), aiEnv, {});
+ok('GET /api/compliance-ai melder available:true med nøgle', (await r.json()).available === true);
+let upstreamCalls = 0;
+globalThis.fetch = async (u, o) => {
+  if (String(u).startsWith('https://openrouter.ai/')) { upstreamCalls++; return new Response('{}', { status: 500 }); }
+  return realFetch(u, o);
+};
+const kvBeforeProbe = kv.size;
+await worker.fetch(new Request('https://mahope.tools/api/compliance-ai'), aiEnv, {});
+ok('GET /api/compliance-ai kalder ikke OpenRouter', upstreamCalls === 0, 'opkald=' + upstreamCalls);
+ok('GET /api/compliance-ai skriver ingen tilstand', kv.size === kvBeforeProbe, `${kvBeforeProbe} -> ${kv.size}`);
+globalThis.fetch = realFetch;
+r = await worker.fetch(new Request('https://mahope.tools/api/compliance-ai', { method: 'PUT' }), aiEnv, {});
+ok('andre metoder end GET/POST er stadig afvist', r.status === 405, r.status);
 globalThis.fetch = realFetch;
 
 // Licens- og leveringsvejen er urørt af alt dette — bevist med en rigtig

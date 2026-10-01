@@ -1,0 +1,25 @@
+{
+  "_readme": "Ruter hvis eneste handling ikke virker, og som derfor ikke må tilbyde Google, LLM-crawlere eller en besøgende at regne med. Målt 1/10: `POST /api/compliance-ai` svarede 503 «AI service not configured. Contact the site owner.», fordi `OPENROUTER_API_KEY` mangler på workeren — og både `/compliance-ai` og `/da/compliance-ai` stod i `sitemap.xml` og `llms.txt`. En publiceret AI-side der siger «kontakt ejeren» til en kunde er værre end ingen side. Ruterne bliver *kun* taget ud af de genererede lister (via `noindex,follow`, som `build_sites.py` altid har honouret) — selve siden bliver liggende, fordi artikler på begge sprog linker til den, og fordi den nu siger det ærligt og byder på det der virker. `tools/check_unavailable_routes.py` dømmer at ingen af ruterne står i nogen dist-liste, at kilden har `noindex`, at siden fortæller besøgende hvorfor chatten er væk, og at workerens kapabilitets-tjek findes. Når nøglen er sat: fjern `noindex`-linjen fra begge kilder og slet linjerne herfra. Chatten tænder selv af, så der er intet andet at rette.",
+  "routes": [
+    {
+      "domain": "mahope.tools",
+      "route": "/compliance-ai",
+      "page": "site/compliance-ai.html",
+      "probe": "/api/compliance-ai",
+      "handler": "handleComplianceAI",
+      "until": "OPENROUTER_API_KEY er sat som secret på workeren",
+      "restore": "Fjern <meta name=\"robots\" content=\"noindex,follow\"> fra site/compliance-ai.html, og slet denne linje. GET-svaret så melder available:true, og siden tænder chatten selv.",
+      "reason": "Målt 1/10 13:00 UTC: curl mod live gav 503 {\"ok\":false,\"error\":\"AI service not configured. Contact the site owner.\"} med cf-cache-status DYNAMIC, altså ikke en cached 503. Ruten er hele sidens handling — der er intet andet at bruge, hvis den fejler."
+    },
+    {
+      "domain": "mahope.tools",
+      "route": "/da/compliance-ai",
+      "page": "site/da/compliance-ai.html",
+      "probe": "/api/compliance-ai",
+      "handler": "handleComplianceAI",
+      "until": "OPENROUTER_API_KEY er sat som secret på workeren",
+      "restore": "Fjern <meta name=\"robots\" content=\"noindex,follow\"> fra site/da/compliance-ai.html, og slet denne linje. GET-svaret så melder available:true, og siden tænder chatten selv.",
+      "reason": "Samme rute som på engelsk, så det er samme fejl og samme grund til at den ikke må stå i en genereret liste."
+    }
+  ]
+}

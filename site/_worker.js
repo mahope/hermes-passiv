@@ -838,13 +838,30 @@ function scoreProfile(r) {
 async function handleComplianceAI(request, env) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
+  }
+
+  // GET = capability probe. It reads one env var, spends no OpenRouter call,
+  // takes no rate-limit slot and writes nothing, so the page can find out
+  // whether the assistant is switched on *before* the visitor writes a
+  // question — instead of letting them type one and then telling them to
+  // contact the site owner. Measured 1/10: with no key, every POST is a 503
+  // saying exactly that, on a page that is in the sitemap.
+  //
+  // It is a read, so GET changing nothing here is deliberate, and `available`
+  // separates "not switched on" from "broken right now": the second keeps the
+  // retry, the first must not send the visitor round in circles.
+  if (request.method === 'GET') {
+    return new Response(
+      JSON.stringify({ ok: true, available: Boolean(env.OPENROUTER_API_KEY) }),
+      { status: 200, headers }
+    );
   }
 
   if (request.method !== 'POST') {

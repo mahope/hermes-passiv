@@ -3915,3 +3915,41 @@ deploy-noter og de afkrydsede opgaver ligger her fra nu af. Find med grep.
     forsvinder fra de tilladte beløb, så cellen dømmes som `forkert pris`.
     Bevis: samme kode mod €492 → 1 fund **og** 1 kildefejl, selvtest 12/17;
     mod €420 → 0 fund, 17/17.
+
+## 1/10 — `/compliance-ai`: publiceret AI-side, der altid svarede 503
+
+Review-fund (lav): `POST /api/compliance-ai` svarede **503** «AI service not
+configured. Contact the site owner.», fordi `OPENROUTER_API_KEY` mangler på
+workeren. Målt 1/10 13:00 UTC med curl mod live — `cf-cache-status: DYNAMIC`,
+altså ikke en cached 503. Begge sider (`/compliance-ai`, `/da/compliance-ai`)
+stod i `sitemap.xml` og `llms.txt`, og artikler på begge sprog linker til dem.
+
+Det værste ved fejlen: siden *lover* et svar, spørgsmålstasten er dens eneste
+handling, og den fejlskyldige er en besøgende der har skrevet et helt spørgsmål.
+Den nye Sentry-guard kan ikke fange den, fordi 503 her er en håndteret tilstand
+og ikke kaster.
+
+Rettelse i to halve, kun den ene var min:
+
+- **Worker:** `GET /api/compliance-ai` svarer nu `{ok:true, available:bool}`.
+  Ét læs af én env-var — ingen OpenRouter-kald, ingen dagskvote, ingen tilstand.
+  Bevist i `tests/stripe-worker.test.mjs` (323/323): en mutation på
+  `available: Boolean(...)` → `available: true` giver rød, og en mutation der
+  fjerner GET-grenen giver 3 røde domme.
+- **Sider:** kapabilitets-tjekket på load. Er nøglen væk, skjules chatten og en
+  ærlig erstatning med scanner, erklæringsgenerator og de tre bøger (alle tre
+  verificeret til at have en gratis EPUB i kilden) kommer i stedet. `noindex,
+  —follow` fjerner ruterne fra sitemap, `llms.txt` og `llms-full.txt` — den
+  mekanisme `build_sites.py` altid har honouret — mens artiklernes links
+  stadig virker. Når nøglen sættes, tænder chatten af sig selv.
+
+Porten `tools/check_unavailable_routes.py` (16 kontroller, grøn mod dist) med
+manifestet `tools/unavailable_routes.json` dømmer seks ting pr. rute, og
+selvtesten muterer dem i kilden, i manifestet *og* i dist: 8/8 røde. Den første
+kørsel afslørede tre af mine egne for svage domme (siden læste «available» som
+fritekst, mutationsen ramte en anden handler, og selvtesten dømte den
+oprindelige tekst) — alle tre rettet, og derfor er porten grøn *fordi* den er
+korrekt.
+
+Ikke løst: selve assistenten er stadig slukket. Det er én secret på workeren
+(❓ i planen), og når den sættes er rettelsen to `noindex`-linjer.

@@ -20,6 +20,8 @@ on:
       - 'tools/route_inventory.py'
       - 'tools/route_inventory.json'
       - 'tools/check_sitemaps.py'
+      - 'tools/check_unavailable_routes.py'
+      - 'tools/unavailable_routes.json'
       - 'tools/check_hreflang_pairs.py'
       - 'tools/check_live_sitemaps.py'
       - 'tools/test_check_sitemaps.py'
