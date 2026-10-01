@@ -1148,5 +1148,170 @@ const dl = await call('/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf');
 ok('/api/download/ leverer stadig filen', dl.status === 200 && await dl.text() === 'PDF', dl.status);
 ok('/api/download/ sætter stadig attachment', (dl.headers.get('content-disposition') || '').includes('dpa-template.pdf'), dl.headers.get('content-disposition'));
 
+// ── Workeren melder sine egne uventede fejl til Sentry ───────────────
+// 1/10-prompten siger «Ingen uløste fejl de seneste 14 dage» og spørger så om
+// SDK'en overhovedet er sat op. Den var ikke: nul forekomster af "sentry" i
+// hele repoet. Det er ikke en kosmetisk mangel — `/api/url-inspect` lå på
+// 500/1101 på hvert kald 30/9, og `/api/compliance-ai` har svaret 503
+// «AI service not configured» i dagevis, fordi ingen overvågning så det.
+//
+// Scenariet her er det realistiske: Pages-bindingen er død, så *alle*
+// statiske sider fejler. Før blev det Cloudflares rå 1101. Nu skal det være en
+// ren 500 *og* en rapport — og rapporten må ikke indeholde persondata,
+// `/api/license/lookup` tager `{ order_id, email }` i kroppen.
+//
+// En del af hver test her er beviset på at den kan fejle: mutationen til sidst
+// lægger den gamle kode ind (rapporten fjernet) og forventer nul rapporter.
+const SENTRY_HOST = 'o1087332.ingest.us.sentry.io';
+let sentryEnvelopes = [];
+const outerFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const u = typeof input === 'string' ? input : input && input.url;
+  if (typeof u === 'string' && u.includes(SENTRY_HOST)) {
+    sentryEnvelopes.push({ url: u, headers: (init && init.headers) || {}, body: String((init && init.body) || '') });
+    return new Response('', { status: 200 });
+  }
+  return outerFetch(input, init);
+};
+// Død binding: 404-fallbacken kaster, og det er præcis den fejl der tager
+// alle fire domæner ned. Den første ASSETS-kald er pakket i en catch, så det
+// er den anden der løber ud — dvs. fejlen kommer uden om rutedispatcheren,
+// som er præcis den egenskab guarden skal fange.
+// `deadTag' giver hvert scenario sin egen fejltekst. Det er ikke pynt: alle
+// statiske 404'er falder igennem på `/404.html`, så uden tag ville hver test
+// have samme nøgle i tælleren, den første ville æde hele budgetten, og
+// løkketesten ville måle 0 rapporter og se ud til at virke.
+let deadTag = 'findes-ikke';
+const deadEnv = { ...env, ASSETS: { fetch: async () => { throw new Error('binding nede: ' + deadTag); } } };
+const deadCall = (path, init) => worker.fetch(new Request('https://mahope.tools' + path, init), deadEnv, {});
+const lastEnvelope = () => sentryEnvelopes[sentryEnvelopes.length - 1] || { url: '', headers: {}, body: '' };
+
+// 1. En uventet fejl giver en ren 500 og en rapport.
+sentryEnvelopes = [];
+const deadRes = await deadCall('/findes-ikke?license_key=SECRETLIGNOEGLE', {
+  headers: { authorization: 'Bearer HEMLIGHED', cookie: 'session=SMUL' },
+});
+const deadEnv0 = lastEnvelope();
+ok('uventet fejl giver en ren 500 i stedet for Cloudflares 1101', deadRes.status === 500, deadRes.status);
+ok('uventet fejl meldes til Sentry', sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
+ok('rapporten går til det rigtige projekt med den offentlige nøgle',
+  deadEnv0.url === 'https://o1087332.ingest.us.sentry.io/api/4512180032045056/envelope/' &&
+  /sentry_key=14c098aa6fcbb129d9fa4467f7e2dad6/.test(String(deadEnv0.headers['x-sentry-auth'] || '')),
+  deadEnv0.url + ' | ' + String(deadEnv0.headers['x-sentry-auth'] || ''));
+ok('rapporten er en envelope med en fejl, ikke en tekststreng',
+  deadEnv0.body.startsWith('{') && /"exception"/.test(deadEnv0.body) &&
+  /binding nede:/.test(deadEnv0.body), deadEnv0.body.slice(0, 120));
+ok('rapporten ved hvilken rute der fejlede', /"route":"\/findes-ikke"/.test(deadEnv0.body), deadEnv0.body.slice(0, 300));
+
+// 2. Ingen persondata. Det er den regel der gør det trygt at sende en fejl
+//    der stammer fra en rute med licensnøgler og ordrer i kroppen.
+const dBody = deadEnv0.body;
+ok('rapporten indeholder ingen authorization-header',
+  !/HEMLIGHED/.test(dBody) && !/"authorization"/i.test(dBody), 'lækket header');
+ok('rapporten indeholder ingen cookie', !/SMUL/.test(dBody) && !/"cookie"/i.test(dBody), 'lækket cookie');
+ok('rapporten indeholder ikke query-strengen', !/SECRETLIGNOEGLE/.test(dBody) && !/\?license_key/.test(dBody), 'lækket query');
+ok('rapporten sender hverken krop eller user-agent',
+  !/"body"/i.test(dBody) && !/"headers"/i.test(dBody) && !/python-requests|User-Agent/i.test(dBody), 'lækket krop/UA');
+
+// 3. Håndterede tilstande er ikke fejl. En 404 på en ukendt licensnøgle og en
+//    429 fra kvoten er det, brugeren skal se en sætning om — de er ikke
+//    exceptions, og de må ikke fylde Sentry.
+sentryEnvelopes = [];
+await call('/api/license/lookup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ order_id: 'cs_live_intet', email: 'a@b.dk' }) });
+await call('/api/ukendt-rute');
+ok('håndterede fejl (404/ukendt nøgle) melder ikke til Sentry', sentryEnvelopes.length === 0, 'enveloper=' + sentryEnvelopes.length);
+
+// 4. Kun i produktion. En lokal kørsel må ikke fylde projektet med rapporter.
+//    Egen `deadTag' igen: ellers springer rapporten over på tælleren fra
+//    test 1, og kontrollen er grøn uden at localhost-værnet har været i spil —
+//    altså grøn af den grund at den ikke kan fejle.
+sentryEnvelopes = [];
+deadTag = 'lokal-korsel';
+const localRes = await worker.fetch(new Request('https://localhost/findes-ikke'), deadEnv, {});
+ok('localhost sender ikke rapporter', sentryEnvelopes.length === 0 && localRes.status === 500,
+  'enveloper=' + sentryEnvelopes.length + ' status=' + localRes.status);
+// Beviset på at værnet er det der holder: samme fejl på et rigtigt domæne
+// sender netop én rapport (delt ovenfor), så forskellen er værnet og ikke
+// en død kodevej. Derfor testes domænet lige her igen med en ny nøgle.
+sentryEnvelopes = [];
+deadTag = 'rigtigt-domaene';
+await deadCall('/findes-ikke-paa-domaene');
+ok('samme fejl på et rigtigt domæne sender derimod en rapport',
+  sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
+
+// 5. En fejl i en løkke må ikke brænde kvoten væk. Den samme kvota betalende
+//    kunder bruger til /api/license/validate, så en ubegrænset rapport er
+//    en reel risiko, ikke en bagatel.
+sentryEnvelopes = [];
+deadTag = 'loekke';
+for (let i = 0; i < 12; i++) await deadCall('/loekke');
+ok('en fejl i en løkke sendes højst SENTRY_MAX_PER_MINUTE gange',
+  sentryEnvelopes.length > 0 && sentryEnvelopes.length <= 5, 'enveloper=' + sentryEnvelopes.length);
+ok('tælleren lader den første fejl komme ud, så den ikke er død',
+  sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
+
+// 6. Overvågningen må aldrig tage ruten ned. Hvis Sentry svarer 500 eller
+//    afbryder forbindelsen, skal brugeren stadig få sit 500.
+sentryEnvelopes = [];
+deadTag = 'sentry-er-nede';
+globalThis.fetch = async (input, init) => {
+  const u = typeof input === 'string' ? input : input && input.url;
+  if (typeof u === 'string' && u.includes(SENTRY_HOST)) return Promise.reject(new Error('sentry nede'));
+  return outerFetch(input, init);
+};
+let stillRes = null, stillThrew = null;
+try { stillRes = await deadCall('/sentry-er-nede'); } catch (e) { stillThrew = e; }
+ok('en nede Sentry giver stadig et svar til brugeren',
+  stillThrew === null && stillRes && stillRes.status === 500,
+  'threw=' + (stillThrew && stillThrew.message) + ' status=' + (stillRes && stillRes.status));
+globalThis.fetch = async (input, init) => {
+  const u = typeof input === 'string' ? input : input && input.url;
+  if (typeof u === 'string' && u.includes(SENTRY_HOST)) {
+    sentryEnvelopes.push({ url: u, headers: (init && init.headers) || {}, body: String((init && init.body) || '') });
+    return new Response('', { status: 200 });
+  }
+  return outerFetch(input, init);
+};
+
+// 7. Mutationen: den kode der var her *før* opgaven skal give nul rapporter i
+//    samme scenario. Uden denne kontrol er de tolv kontroller ovenfor grønne
+//    af den grund at de ikke kan fejle — præcis den fejlform `awk`-kriteriet i
+//    opgave 42 var. Sha'en er låst til den commit lige før denne ændring, så
+//    mutationen er den virkelige gamle kode og ikke "main plus et hack".
+//    Git er valgfrit: mangler historikken, springes mutationen over med en
+//    note, og alle øvrige kontroller kører stadig.
+const PRE_SENTRY_SHA = '54fcc7e';
+let preSentryWorker = null, preNote = '';
+try {
+  const oldSrcText = execFileSync('git', ['show', `${PRE_SENTRY_SHA}:site/_worker.js`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  ok('mutationen finder den gamle kode (ellers dommer den intet)', !/SENTRY_DSN_FALLBACK/.test(oldSrcText));
+  const oldTmp = join(tmpdir(), `worker-presentry-${process.pid}.mjs`);
+  writeFileSync(oldTmp, oldSrcText);
+  preSentryWorker = (await import(pathToFileURL(oldTmp).href)).default;
+} catch (e) {
+  preNote = 'git-historikken er ikke tilgængelig her: ' + (e.code || e.message);
+}
+if (preSentryWorker) {
+  sentryEnvelopes = [];
+  deadTag = 'gammel-kode';
+  let oldStatus = 0, oldThrew = null;
+  try { oldStatus = (await preSentryWorker.fetch(new Request('https://mahope.tools/findes-ikke'), deadEnv, {})).status; } catch (e) { oldThrew = e; }
+  ok('mutation: den gamle kode melder ingenting og giver den rå 1101',
+    sentryEnvelopes.length === 0 && (oldThrew !== null || oldStatus !== 500),
+    'enveloper=' + sentryEnvelopes.length + ' threw=' + (oldThrew && oldThrew.message) + ' status=' + oldStatus);
+  // Og at den *kun* fejler dér: mutationen skal ramme præcis fangsten, ikke
+  // gøre licensvejen urørt-ligegyldig.
+  sentryEnvelopes = [];
+  const oldLicense = await preSentryWorker.fetch(new Request('https://mahope.tools/api/license/validate', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ license_key: 'ZZZ' }) }), env, {});
+  ok('mutation: den gamle kode svarer normalt på licensvejen',
+    oldLicense.status === 400 && sentryEnvelopes.length === 0, oldLicense.status);
+} else {
+  console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + preNote);
+}
+
+globalThis.fetch = outerFetch;
+
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);

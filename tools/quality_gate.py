@@ -1443,6 +1443,22 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_plan_status.py", "--self-test"),
         inputs=("tools/check_plan_status.py", "IMPLEMENTATION_PLAN.md"),
     ),
+    # Workeren skal kunne sige "jeg er død" selv (1/10). Målt først: nul
+    # forekomster af "sentry" i hele repoet, mens `/api/url-inspect` lå på
+    # 500/1101 på hvert kald og `/api/compliance-ai` svarede 503 i dagevis —
+    # begge usynlige. Porten dømmer de otte regler, der gør det trygt: kun
+    # produktion, ingen persondata, ingen traces, ingen replay, ingen token,
+    # en dæmpning af løkker, og at rapporteringen ikke selv kan kaste.
+    Step(
+        id="sentry-setup",
+        argv=("python3", "tools/check_sentry_setup.py"),
+        inputs=("tools/check_sentry_setup.py", "site/_worker.js"),
+    ),
+    Step(
+        id="sentry-setup-selftest",
+        argv=("python3", "tools/check_sentry_setup.py", "--self-test"),
+        inputs=("tools/check_sentry_setup.py", "site/_worker.js"),
+    ),
 )
 
 

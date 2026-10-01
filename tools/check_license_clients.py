@@ -163,6 +163,12 @@ NOT_CLIENTS = {
     # opgave 20 (check_license_clients fangede sin egen docstring): en gate der
     # leder efter en sti i al tekst, træffer alt der vil forklare stien.
     "tools/check_repo_readme.py",
+    # Samme fejlform, tredje gang: `check_sentry_setup.py` nævner
+    # `/api/license/lookup` i portens egen docstring, fordi dom 3 begrunder
+    # hvorfor rapporten ikke må sende kroppen — den rute tager `{ order_id,
+    # email }`. Porten kalder den ikke; den siger hvorfor et datalæk ville se
+    # ud. Rækken her er portenes måde at være ærlige om det på.
+    "tools/check_sentry_setup.py",
     # Opgave 28: samme fejlform igen. `check_retired_downloads.py` nævner
     # licens-API'en i portens egen docstring og i en begrundelse om hvorfor 1.5.3
     # blev trukket tilbage, og `retired_downloads.json` har samme begrundelse som

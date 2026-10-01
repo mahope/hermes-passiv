@@ -3464,3 +3464,72 @@ User-Agent begge er grønne. 21/21 selvtest, porten grøn, gaten 120 steps,
 **Målt i browser 1/10** (inden fundet, som kontekst for at resten virker): 0
 konsolfejl på 14 sider, 197 anker-referencer dømt i dist, og
 `/text-on-image-checker` gav et rigtigt PASS-svar på sit eget uploadede billede.
+
+## 1/10 — `ceo/workeren-melder-sentry`: workeren melder sine egne uventede fejl
+
+**Hvorfor.** 1/10-prompten sagde «Ingen uløste fejl de seneste 14 dage» og spørgsmålte
+om SDK'en overhovedet var sat op. Målt: nul forekomster af «sentry» i hele repoet.
+Det er ikke kosmetisk — to fejl i denne uge var usynlige af den grund:
+
+- `/api/compliance-ai` har svaret **503 «AI service not configured»** i dagevis,
+  fordi `OPENROUTER_API_KEY` mangler på workeren (`_worker.js:733`). Klienten
+  håndterer 503 pænt, så intet så det.
+- `/api/url-inspect` lå på **500/1101 på hvert eneste kald** 30/9, fordi
+  handleren tog `(request, url)` men kaldte `rateLimitIp(request, env, …)`.
+  Den var fundet af en port, ikke af overvågning.
+
+En udgivelse der ligger på fire domæner og leverer licenser og betalte downloads
+skal kunne sige «jeg er død» selv.
+
+**Hvad der blev lavet.** `export default.fetch` er pakket i `guard()`, som fanger
+uventede fejl, sender **én** rapport til Sentrys envelope-endpoint og returnerer
+en ren 500 i stedet for Cloudflares rå 1101. Kroppen på de 215 linjer rutedispatch
+står uændret — `guard` er en wrapper, ikke et try/catch rundt i ruten, fordi en
+hvidflytning skjuler den ene linje der betyder noget.
+
+Reglerne er ikke valgfrie, og `tools/check_sentry_setup.py` dømmer dem (13 kontroller,
+10 mutationer alle fanget):
+
+1. DSN'en er offentlig og hel; endpoint og projekt-id er **udledt** af den, så et
+   forkert projekt-id ikke kan overleve som død konstant ved siden af.
+2. Kun i produktion: `localhost`, `127.0.0.1`, `0.0.0.0`, `[::1]` sender ikke.
+3. Ingen persondata. Begivenhedens `request`-objekt må have præcis `url` og
+   `method`, og `url` er `origin` + `pathname` — aldrig query-streng. Ruten
+   `/api/license/lookup` tager `{ order_id, email }` i kroppen, så krop, headers
+   og query i en rapport er et datalæk, ikke en fejl.
+4. Ingen traces. 5. intet Session Replay (kræver samtykke).
+6. Intet auth-token og ingen source maps — begge kræver en hemmelighed.
+7. Rapporteringen kan ikke kaste: egen try/catch, så en fejl i overvågningen
+   aldrig tager ruten ned med.
+8. Højst 5 rapporter pr. minut pr. fejltekst. Den samme worker-kvota betalende
+   kunder bruger til `/api/license/validate`.
+
+**Hvorfor ikke `@sentry/cloudflare`.** Denne worker er en `_worker.js` i Pages
+*advanced mode* og bundles ikke: alt den bruger skal ligge i selve filen, ellers
+fejler den ved deploy. En npm-import ville være en deploy-fejl. Det der sendes er
+den offentlige envelope-protokol, som SDK'en selv taler. Skal vi hellere have den
+officielle SDK, er det en beslutning om at flytte workeren til en bundlet build —
+ikke en lille ændring.
+
+**Målt.** 316/316 i `tests/stripe-worker.test.mjs` (var 314 før de otte nye). De otte
+nye kontroller dømmer: ren 500, rapport til det rigtige projekt med den rigtige
+nøgle, envelope med fejl, rute-tag, ingen authorization/cookie/query/krop,
+håndterede 404 melder intet, localhost melder intet **mens samme fejl på et rigtigt
+domæne melder én**, løkken dæmpes til 1, og en nede Sentry giver stadig et svar.
+Der er to mutationer mod den ældre kode i selve testen (`54fcc7e`) og fire
+mutationer lokalt målt røde: tælleren slået fra, forkert nøgle, PII lækket,
+localhost-værnet fjernet.
+
+**To falske grønne fundet undervejen** — begge ville være grønne af den grund at
+de ikke kunne fejle:
+
+- *localhost-kontrollen var grøn fordi tælleren var brugt op.* Alle statiske 404'er
+  falder igennem på `/404.html`, så hvert scenario havde samme nøgle i
+  `sentrySeen`, og test 1 havde ædet hele budgetten. Løkketesten målte derfor 0
+  rapporter og så ud til at virke. Rettet: hvert scenario har nu sin egen
+  `deadTag`, og localhost-kontrollen efterprøves mod *samme* fejl på et rigtigt
+  domæne, så forskellen er værnet og ikke en død kodevej.
+- *dom 5 i porten erklærede min egen kommentar.* Ordet «Replay» stod i
+  beskrivelsen af hvad der ikke må være slået til. Rettet med `strip_comments()`
+  før der dommes — blokerede kommentarer og kommentarer på egen linje, aldrig
+  `//` inde i en streng som `https://mahope.tools`.

@@ -43,8 +43,151 @@ const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
 
+// === Sentry: uventede fejl fra workeren ===
+// Målt 1/10: `POST /api/compliance-ai` har svaret 503 «AI service not
+// configured» i dagevis, fordi `OPENROUTER_API_KEY` manglede på workeren —
+// ingen så det, før nogen kaldede ruten i hånden. Og 30/9 lå
+// `/api/url-inspect` på 500/1101 på *hvert* kald, fordi handleren manglede
+// `env`; porten fandt det, overvågningen gjorde ikke. En udgivelse der er
+// ude på fire domæner og leverer licenser og betalte downloads skal kunne
+// sige "jeg er død" selv.
+//
+// Derfor melder workerens fetch nu **kun** uventede fejl til Sentry: alt der
+// er en håndteret tilstand (429, 404 på en ukendt nøgle, "forbindelsen er
+// udløbet") er et Response og kaster ikke, så det når aldrig her.
+// Reglerne er ikke valgfrie, og `tools/check_sentry_setup.py` dømmer dem:
+//   - kun i produktion (localhost/127.0.0.1 sender ikke),
+//   - ingen persondata: ingen headers, ingen cookies, ingen krop, ingen
+//     query-streng. `/api/license/lookup` tager `{ order_id, email }` i
+//     kroppen, så en rapport med kroppen ville være et datalæk,
+//   - ingen traces, ingen Session Replay (det kræver samtykke),
+//   - ingen auth-token og ingen source maps: begge kræver en hemmelighed,
+//   - højst 5 rapporter pr. minut pr. fejl, så en fejl i en løkke ikke kan
+//     brænde worker's egen kvota væk — den samme kvota betalende kunder
+//     bruger til `/api/license/validate`,
+//   - rapporteringen må aldrig kaste: den er pakket i sin egen try/catch,
+//     så en fejl i overvågningen aldrig kan tage ruten ned med.
+const SENTRY_DSN_FALLBACK = 'https://14c098aa6fcbb129d9fa4467f7e2dad6@o1087332.ingest.us.sentry.io/4512180032045056';
+const SENTRY_CLIENT = 'mahope-worker/1.0';
+const SENTRY_MAX_PER_MINUTE = 5;
+const SENTRY_LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1']);
+const SENTRY_DSN_RE = /^https:\/\/([a-f0-9]{32})@([a-z0-9.-]+)\/(\d+)$/;
+// Nøgle → tidspunkt. Pr. isolate, som de andre tællere i denne fil.
+const sentrySeen = new Map();
+
+function sentryTarget(env) {
+  const raw = (env && typeof env.SENTRY_DSN === 'string' && env.SENTRY_DSN) || SENTRY_DSN_FALLBACK;
+  const m = raw.match(SENTRY_DSN_RE);
+  if (!m) return null;
+  return {
+    publicKey: m[1],
+    dsn: raw,
+    endpoint: `https://${m[2]}/api/${m[3]}/envelope/`,
+  };
+}
+
+function sentryRateLimited(key) {
+  const now = Date.now();
+  // Skaleringen tømmer nøgler, der ikke er brugt for nylig, så et kortlivt
+  // worker-isolate ikke kan vokse i en time. Ved 60 nøgler er der langt mere
+  // end nok; de ældste ryttes væk.
+  for (const [k, t] of sentrySeen) if (now - t > 60_000) sentrySeen.delete(k);
+  const last = sentrySeen.get(key) || 0;
+  if (now - last < 60_000 / SENTRY_MAX_PER_MINUTE) return true;
+  sentrySeen.set(key, now);
+  if (sentrySeen.size > 60) {
+    for (const [k, t] of [...sentrySeen].sort((a, b) => a[1] - b[1]).slice(0, 20)) sentrySeen.delete(k);
+  }
+  return false;
+}
+
+function sentryFrames(error) {
+  const stack = String((error && error.stack) || '');
+  if (!stack) return undefined;
+  // Kun filnavn og linje. Absolutte stier fra byggemaskinen er værdiløse og
+  // kan røbe strukturen af maskinen.
+  const frames = [];
+  for (const line of stack.split('\n').slice(1, 51)) {
+    const m = line.match(/\(?([^()\s]+):(\d+):(\d+)\)?\s*$/);
+    if (!m) continue;
+    frames.push({ filename: m[1].split('/').slice(-2).join('/'), lineno: Number(m[2]), colno: Number(m[3]) });
+  }
+  return frames.length ? { frames } : undefined;
+}
+
+async function reportWorkerError(request, url, error, env, ctx, route) {
+  try {
+    if (!url || SENTRY_LOCAL_HOSTS.has(url.hostname)) return;
+    const target = sentryTarget(env);
+    if (!target) return;
+    const name = String((error && error.name) || 'Error').slice(0, 200);
+    const message = String((error && error.message) || error || 'ukendt fejl').slice(0, 1000);
+    if (sentryRateLimited(`${name}:${message}`)) return;
+
+    const eventId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+    const sentAt = new Date().toISOString();
+    const event = {
+      event_id: eventId,
+      timestamp: sentAt,
+      platform: 'javascript',
+      level: 'error',
+      logger: 'worker',
+      // Ingen persondata: hverken IP, user-agent, headers, cookies eller krop.
+      // Path er ok — den er ruten, ikke den der spurgte om den.
+      request: { url: `${url.origin}${url.pathname}`, method: String(request.method || 'GET') },
+      exception: { values: [{
+        type: name,
+        value: message,
+        ...(sentryFrames(error) ? { stacktrace: sentryFrames(error) } : {}),
+      }] },
+      tags: { route: String(route || 'ukendt').slice(0, 60) },
+    };
+    const envelope =
+      `${JSON.stringify({ event_id: eventId, sent_at: sentAt, dsn: target.dsn })}\n` +
+      `${JSON.stringify({ type: 'event', length: 0 })}\n` +
+      `${JSON.stringify({ ...event, sdk: { name: 'sentry.javascript.worker', version: '1.0.0' } })}\n`;
+    const post = fetch(target.endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-sentry-envelope',
+        'x-sentry-auth': `Sentry sentry_version=7, sentry_client=${SENTRY_CLIENT}, sentry_key=${target.publicKey}`,
+      },
+      body: envelope,
+    }).catch(() => {});
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(post);
+    else await post;
+  } catch {
+    // Overvågning må aldrig tage ruten ned. Denne tomme catch er hele
+    // pointen med at rapporteringen er sin egen funktion.
+  }
+}
+
+// Pakker rutedispatcheren, så en uventet fejl bliver en ren 500 *og* en
+// Sentry-rapport i stedet for Cloudflares 1101. Skrevet som en wrapper og ikke
+// som et try/catch rundt i ruten, fordi kroppen så kan stå uændret — 215
+// linjer af hvidflytning i en diff skjuler den ene linje der betyder noget.
+function guard(handler) {
+  return async function guardedFetch(request, env, ctx) {
+    try {
+      return await handler(request, env, ctx);
+    } catch (err) {
+      // Først her fanges en fejl. Alt andet i filen er håndterede tilstande
+      // med deres egen status, så det er kun *uventede* fejl der lander her —
+      // og mutationen i testen kører `54fcc7e`-koden igennem for at bevise at.
+      let url = null;
+      try { url = new URL(request.url); } catch { /* ugyldig URL: intet at vedhænte */ }
+      await reportWorkerError(request, url, err, env, ctx, url ? url.pathname : 'ukendt-url');
+      return new Response('Internal error', {
+        status: 500,
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+      });
+    }
+  };
+}
+
 export default {
-  async fetch(request, env) {
+  fetch: guard(async (request, env, ctx) => {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -259,7 +402,7 @@ export default {
     const nfPath = path.startsWith('/da/') ? '/da/404.html' : '/404.html';
     const nf = await env.ASSETS.fetch(new Request(new URL(nfPath, request.url), { headers: request.headers }));
     return new Response(nf.body, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
-  },
+  }),
 };
 
 async function handleDownload(request, url, env) {

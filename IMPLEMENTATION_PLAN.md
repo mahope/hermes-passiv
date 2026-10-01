@@ -8,10 +8,10 @@
   svarer **503** «AI service not configured», fordi `OPENROUTER_API_KEY` mangler
   på workeren (`_worker.js:733`). Klienten håndterer 503 pænt, men funktionen er
   publiceret og gør intet. Én secret, se ❓.
-- **Købsvejen havde 2 huller, begge rettet 1/10:** en tabt licensnøgle krævede
-  en mail til Mads (nu `ceo/selvbetjent-noegleopslag`), og `/api/checkout`
-  svarede med Clean Copy Pro's link for ethvert produkt den ikke genkendte
-  (`ceo/checkout-ruten-kan-vaere-forskrevet`).
+- **Ingen fejl blev nogensinde meldt.** Målt 1/10: 0 forekomster af
+  «sentry» i hele repoet, så «Ingen uløste fejl» i 14 dage betød intet.
+  Workerens fetch er nu pakket, så en uventet fejl er en ren 500 *og* en
+  rapport — 316/316 worker-tests, 5 mutationer røde mod ældre kode.
 - **Det der lå i live, var *bygget*, ikke skrevet** — 3 gange samme uge: 8
   generatorer døde i browseren, 37 sider uden donationslinje, 44 artikler med
   dobbelt værktøjsliste. `check_inline_js` sagde «problems: 0» fordi den kun
@@ -28,7 +28,20 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: urllib blokeret af Cloudflare, page-profile 1.2.1 ceo/urllib-blokeres-af-cloudflare 2026-10-01 09:52`
+- `DEPLOY OK 2026-10-01` — `ceo/urllib-blokeres-af-cloudflare` (`54fcc7e`),
+  målt på **indhold**: live `build-info.json` bærer præcis `54fcc7e` på alle 3
+  deployede domæner (`mahope.tools` `54fcc7e`, `cleancopy.tools` `54fcc7e`,
+  `deskuptime.com` `54fcc7e`), og live `/downloads/page-profile/page_profile.py`
+  har `__version__ = "1.2.1"`, `LICENSE_USER_AGENT = f"page-profile/{__version__} (mahope.tools)"`
+  (linje 42) og `"User-Agent": {LICENSE_USER_AGENT}` i `_license_request`
+  (linje 138). `/downloads/page-profile/page-profile-1.2.1.tar.gz` svarer **200**
+  med 14407 byte, og den gamle `page-profile-1.2.0.tar.gz` svarer **301** til
+  1.2.1 (målt 1/10 var den 200 med 13588 byte). `/page-profile` linker på 1.2.1.
+  **Præcisering:** `/da/page-profile` har *intet* versioneret tarball-link — kun
+  `/downloads/page-profile/page_profile.py`. Det er ikke en mangel: den danske
+  side er browser-først («Prøv det nu»), og CLI-delen er bevidst den
+  nul-dependencies én-fil. Den serveres fra samme kanoniske kode og bærer
+  1.2.1, så den følger automatisk.
   — live `build-info.json` skal bære merge-sha'en på de 3 deployede domæner, og
   **indhold**: live `/downloads/page-profile/page_profile.py` skal have
   `LICENSE_USER_AGENT = f"page-profile/1.2.1 (mahope.tools)"` og en
@@ -53,11 +66,13 @@
   greptælling, som også rammer CSS-vælgeren og JS-skabelonen på hver side;
   de 14 *viste* pristag er der 7 pr. side, hvilket er de 7 produkter.
 
-- `VERIFICÉR DEPLOY: planen som arbejdskø (ny port + path-filter) ceo/plan-status-port 2026-10-01`
-  — kun `tools/`, `.github/` og planen, intet på sitet. Live `build-info.json`
-  skal bære merge-sha'en på de 3 deployede domæner med **uændret**
-  `routes_sha256` (`8367db4b` / `81ed162d` / `db653dcb`), og
-  `tools/quality_gate.py` skal have 120 steps.
+- `DEPLOY OK 2026-10-01` — `ceo/plan-status-port` (`d0cc8c6`), målt på
+  **indhold**: kun `tools/`, `.github/` og planen var rørt, så intet på sitet
+  ændrede sig. Live `build-info.json` bærer `54fcc7e` på alle 3 domæner med
+  **uændret** `routes_sha256` (`8367db4b` / `81ed162d` / `db653dcb`) — præcis
+  de hashes de to tidligere noter målte på, altså ingen rute rørt. Og
+  `tools/quality_gate.py` har **122** steps (120 + de to nye Sentry-steps),
+  målt ved at tælle `Step(` i `STEPS`-tuplet.
 
 - `DEPLOY OK 2026-10-01` — `ceo/egen-pris-port` (kun `tools/`, intet på sitet):
   live `build-info.json` bærer præcis `fb8b7b5` med uændret `routes_sha256`
@@ -160,6 +175,18 @@
   **beholdt** med vilje — de døde kun fordi bogstavel-læseren stoppede ved
   citationstegnet i `class="sev-`; de er levende, fordi `/scan` og
   `/compliance-report` skriver dem fra `f.sev`.
+
+- `VERIFICÉR DEPLOY: workeren melder sine egne fejl ceo/workeren-melder-sentry 2026-10-01`
+  — live `build-info.json` skal bære merge-sha'en på de 3 deployede domæner,
+  og **indhold**: `GET /api/url-inspect?url=https://example.com` skal svare
+  **200** (ikke 500/1101 — guarden pakkede hele rutedispatcheren, så ruten er
+  den vigtigste at efterprøve), `GET /api/license/validate` med `ZZZ` skal
+  svare **400**, `GET /api/ukendt-rute` skal svare **404**, en ukendt
+  `/downloads/`-sti skal svare **404**, og `GET /api/paid-files` skal svare
+  med `kv_ok: true`. *Efterprøves ikke:* en rigtig rapport i Sentry — den
+  kræver at en fejl faktisk sker i prod, og man slår ikke fejl til for at lave
+  en rapport. Beviset ligger i stedet i `tests/stripe-worker.test.mjs`:
+  12 kontroller hvoraf 5 er målt røde mod `54fcc7e`-koden.
 
 ## Åbne opgaver
 
@@ -341,3 +368,6 @@
     fordi `urllib` sender `Python-urllib/3.x`. Beviset: samme krop med
     `User-Agent: page-profile/1.2.0` giver 404 fra licensserveren, så
     serversiden nås fint. To tests målte røde mod den gamle kode først. Se arkiv.
+
+44. ~~**Ingen overvågning af en worker der leverer licenser.**~~ **FÆRDIG 1/10,
+    `ceo/workeren-melder-sentry`.** Se arkiv.
