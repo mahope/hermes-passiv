@@ -1,20 +1,25 @@
 # STATUS
 
+- **AI-banneren på 187 artikler lovede et svar, der ikke kunne gives.** Rettelsen
+  1/10 gjorde `/compliance-ai` ærlig, men knapperne blev stående: målt 1/10
+  svarer `GET /api/compliance-ai` `available: false`, og alle 187 sagde «a
+  practical answer in seconds» / «Spørg Compliance-AI'en» lige over folden —
+  hver knap førte til en side, der siger, at assistenten ikke er slået til.
+  Sandheden ligger nu i `tools/ai_cta.json`, banneren siger «See what we
+  publish free» / «Se hvad vi udgiver gratis», og
+  `tools/check_ai_cta_honesty.py` dømmer alle 187 mod den. Målt først: porten
+  **750 fund** på den gamle kode; tre mutationer gjort røde — selftest 4/4.
 - **Alle otte compliance-generatorer har nu en købsvej til den betalte vare
   der svarer til præcis deres output.** RoPA, privacy-notice og
   EAA-erklæringen (EN + DA) hænger et kort på resultatet, med pris og periode
   læst fra `tools/stripe_catalog.json`. Baseline før: **0 af 6** sider havde
   et `buy.stripe.com`-link. Kortene siger det ærligt, de sælger *ikke* en
-  betalt udgave af gratis-værktøjet: privacy notice indrømmer i første linje at
-  der ingen findes, og RoPA/EAA sælger *kontraktversionen* hhv. *filudgaven*.
-  Målt i browseren på 390 og 1280 px × 6 sider: kortet synligt, `overflowX=0`,
-  knap 46–85 px høj, 0 pagefejl, og i print-medie er kortet `display:none`
-  mens dokumentet selv er `block`. Dommen: `tests/scan-clients.test.mjs`
-  354/354, fem mutationer gjort røde ($59→$99, `no-print` fjernet, link byttet,
-  indrømmelsen fjernet, den modsigende sætning tilbage på EAA-siden).
+  betalt udgave af gratis-værktøjet. Målt i browseren på 390 og 1280 px × 6
+  sider: `overflowX=0`, knap 46–85 px høj, og i print-medie er kortet
+  `display:none`. Dommen: `tests/scan-clients.test.mjs` 354/354, fem
+  mutationer gjort røde.
 - **Deploy-noterne er lukket på indhold 2/10.** `ceo/generator-kobsvej` (DPA +
-  NIS2) er målt på live `08ccd12`: alle fire domme grønne. CI for den kørsel
-  er grøn.
+  NIS2) er målt på live `08ccd12`: alle fire domme grønne, CI grøn.
 - **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
   ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
@@ -22,6 +27,20 @@
   Squeezy, Search Console, og **bogenes betalte udgave** (se ❓).
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: AI-banneren uden et løfte den ikke kan holde
+  ceo/ai-cta-uden-loefte 2026-10-02` — måles på **indhold**, ikke på HTTP 200.
+  Dom 1: `See what we publish free` 91 gange og `Se hvad vi udgiver gratis` 96
+  gange i live EN/DA, og **0** gange `practical answer in seconds`,
+  `få et praktisk svar på få sekunder`, `Ask the Compliance AI` eller
+  `Spørg Compliance-AI` i noget publiceret HTML. Dom 2: hver AI-banners `href`
+  er `/compliance-ai` (EN) eller `/da/compliance-ai`, altså den side der
+  fortænger sandheden — ikke en død `/books`-rute. Dom 3: bannerens knapstørrelse
+  (`btn-secondary`/`btn-primary`) er uændret, så intet rykker sig på folden.
+  Dom 4: `ai-cta-link` ligger stadig 1 gang pr. artikel, så `data-track` og
+  `/api/track`-tællingen virker uændret. Dom 5: `GET /api/compliance-ai` svarer
+  stadig `{"ok":true,"available":false}` — banneren siger det samme, og det er
+  hele pointen. Dommen er `python3 tools/check_ai_cta_honesty.py` + gaten.
 
 - `VERIFICÉR DEPLOY: købsvej på RoPA, privacy notice og EAA-erklæring
   ceo/generator-kobsvej-2 2026-10-02` — måles på **indhold** på
@@ -180,8 +199,12 @@
   content="noindex,follow">` fra `site/compliance-ai.html` og
   `site/da/compliance-ai.html`, så slutter de i sitemap igen. Chatten tænder
   selv — kapabilitets-tjekket læser nøglen direkte, så der er ingen anden kode
-  at rette. `tools/check_unavailable_routes.py` fortæller dig hvis du glemmer
-  den ene halv.
+  at rette.   `tools/check_unavailable_routes.py` fortæller dig hvis du glemmer
+  den ene halv. **Banneren på de 187 artikler følger samme nøgle:** sæt
+  `"available": true` i `tools/ai_cta.json`, kør
+  `python3 tools/check_ai_cta_honesty.py --apply`, og de gamle
+  «Ask the Compliance AI»-tekster kommer tilbage på alle 187 sider. Gaten er
+  rød, indtil det er gjort.
 - **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** Målt 30/9
   giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er
   knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om
@@ -266,3 +289,17 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    blev trykt med i brugerens egen rapport, fordi `@media print` skjuler `.btn`
    men ikke `.pro-card` — så PDF'en havde salgstext uden den eneste handling.
    Nu skjuler print-listen begge, målt i browseren (`display: none`).
+7. **Kontrast-tjekkeren indeni artiklen, der får hele trafikken.** Hvem: de 8
+   af 16 besøgende (28 d) der lander på `/blog/text-on-image-contrast-check` og
+   100 % forlader den igen; de skal ikke skulle klikke videre for at tjekke
+   deres eget billede. Tal: bounce på siden (baseline **100 %**) og kald til
+   `/text-on-image-checker` (baseline **1** pr. 28 d mod 8 indgange på
+   artiklen). Accept: artiklen har selve tjekkeren, så et billede kan læses uden
+   at forlade siden, og kernen ligger ét sted frem for i to kopier. Datagrund:
+   Plausible 28 d hentet 1/10 — artiklen er største indgangsside, mens
+   værktøjet den peger på fik 1 besøgende.
+8. **Free mod Pro på ét sted.** Hvem: alle der køber. Tal: købsknapper pr.
+   Pro-side (baseline: målt af `check_tool_sections.py`). Accept: hver Pro-side
+   har den samme to-rækkers-tabel, og beløbet er læst fra
+   `tools/stripe_catalog.json` som på `/scan`. Datagrund: 19 af 84 købsknapper
+   sagde ingen periode før 1/10; samme fejlform kan ligge i sammenligningerne.

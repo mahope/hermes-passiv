@@ -1,0 +1,34 @@
+{
+  "note": "Sandheden om AI-banneren på bloggen. `available` skal være false, indtil OPENROUTER_API_KEY er sat på workeren: målt 1/10 svarer GET /api/compliance-ai available=false, og /compliance-ai siger da til den besøgende, at assistenten ikke er slået til. Banneren ligger på 188 sider, så et løfte der ikke kan holdes gentages 188 gange. `tools/check_ai_cta_honesty.py` dømmer hver side mod denne fil.",
+  "available": false,
+  "target": {
+    "en": "/compliance-ai",
+    "da": "/da/compliance-ai"
+  },
+  "off": {
+    "en": {
+      "label": "EAA, NIS2 and GDPR — three free guides that answer it, and a scanner for any public URL:",
+      "button": "See what we publish free →"
+    },
+    "da": {
+      "label": "EAA, NIS2 og GDPR — tre gratis guider med svaret, og en scanner til enhver offentlig URL:",
+      "button": "Se hvad vi udgiver gratis →"
+    }
+  },
+  "on": {
+    "en": {
+      "label": "Ask any EU compliance question — EAA, NIS2 or GDPR — and get a practical answer in seconds:",
+      "button": "Ask the Compliance AI →"
+    },
+    "da": {
+      "label": "Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et praktisk svar på få sekunder:",
+      "button": "Spørg Compliance-AI’en →"
+    }
+  },
+  "forbidden_while_off": [
+    "practical answer in seconds",
+    "få et praktisk svar på få sekunder",
+    "Ask the Compliance AI",
+    "Spørg Compliance-AI"
+  ]
+}

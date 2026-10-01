@@ -1473,6 +1473,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_sentry_setup.py", "--self-test"),
         inputs=("tools/check_sentry_setup.py", "site/_worker.js"),
     ),
+    # Opgave: AI-banneren lovede et svar, der ikke kunne gives. Målt først:
+    # 187 artikler sagde «a practical answer in seconds» og «Spørg
+    # Compliance-AI'en», mens `GET /api/compliance-ai` svarede
+    # `available: false` og målsiden siger, at assistenten ikke er slået til.
+    # Rettelsen 1/10 gjorde målsiden ærlig, men ikke de 187 knapper. Nu er
+    # sandheden i `tools/ai_cta.json`, banneren er tegnet af den, og porten
+    # dømmer hver side — ellers kan 188 sider glide fra hinanden igen, og
+    # løftet kommer tilbage, så snart nogen kører et gammelt script igen.
+    Step(
+        id="ai-cta-honesty",
+        argv=("python3", "tools/check_ai_cta_honesty.py"),
+        inputs=("tools/check_ai_cta_honesty.py", "tools/ai_cta.json", "site/**/*.html"),
+    ),
+    Step(
+        id="ai-cta-honesty-selftest",
+        argv=("python3", "tools/check_ai_cta_honesty.py", "--self-test"),
+        inputs=("tools/check_ai_cta_honesty.py", "tools/ai_cta.json"),
+    ),
 )
 
 

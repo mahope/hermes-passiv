@@ -237,6 +237,14 @@ on:
       - 'tools/*.py'
       - 'tools/*.sh'
       - 'tools/check_legacy_seo_paths.py'
+      # Opgave: AI-banneren på 187 artikler lovede et svar, assistenten ikke
+      # kunne give. Sandheden ligger i `tools/ai_cta.json`, og porten læser
+      # hver artikels markup — så manifestet og hele `site/` skal være input,
+      # ellers kan en ny artikel eller en gammel generator skrive løftet ind
+      # igen uden at nogen dommer det.
+      - 'tools/ai_cta.json'
+      - 'tools/check_ai_cta_honesty.py'
+      - 'site/**/*.html'
       # Kvitteringerne for `tools/check_health_status.py`. Uden dem kan en
       # undtagelse fra `bugbottle.dev` blive tilføjet eller slettet uden at
       # nogen kørte porten, der afviser en undtagelse uden begrundelse.

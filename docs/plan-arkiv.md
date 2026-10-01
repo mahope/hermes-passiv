@@ -4375,3 +4375,17 @@ dokumentet selv `block`.
 `perl -0pi -e` og rettet med `git checkout -- <fil>` **før** arbejdet var
 committet — hvilket kassérede rettelsen til de to muterede filer. Rettelserne
 blev lavet igen. Kør mutationer på et committet arbejde, eller på en kopi.
+
+## 2/10 — Alle otte compliance-generatorer fik en købsvej (0adc322)
+
+RoPA, privacy-notice og EAA-erklæringen (EN + DA) hænger nu et kort på
+resultatet med den betalte vare der svarer til præcis deres output, pris og
+periode læst fra `tools/stripe_catalog.json`. Baseline før: 0 af 6 sider havde
+et `buy.stripe.com`-link. Kortene siger det ærligt, de sælger *ikke* en betalt
+udgave af gratis-værktøjet: privacy notice indrømmer i første linje at der
+ingen findes, og RoPA/EAA sælger *kontraktversionen* hhv. *filudgaven*.
+Målt i browseren på 390 og 1280 px × 6 sider: kortet synligt, `overflowX=0`,
+knap 46–85 px høj, 0 pagefejl, og i print-media er kortet `display:none` mens
+dokumentet selv er `block`. Dommen: `tests/scan-clients.test.mjs` 354/354, fem
+mutationer gjort røde ($59→$99, `no-print` fjernet, link byttet, indrømmelsen
+fjernet, den modsigende sætning tilbage på EAA-siden).
