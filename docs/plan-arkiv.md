@@ -4287,3 +4287,42 @@ porten kræver at hvert punkt i STATUS har et tal.
   lokalt var rød i `built-css`. Bevis fra den grønne kørsel af `c4fd730`: den
   siger «intet i dist/ — springer 16 dist-steps over». Målt efter: GRØN 123
   steps fra en `dist/` der ikke fandtes.
+
+## 2/10 — Generatorernes købsvej (ceo/generator-kobsvej)
+
+**Målt.** `paid-templates.html` sælger DPA-skabelonen ($59),
+NIS2/DORA-klausursættet ($49), EAA-erklæringen ($39) og rapport-kit'et ($69).
+DPA-generatoren og NIS2-hændelsesgeneratoren laver præcis det output, de to
+første svarer til — men ingen af dem linkede nogen vegne hen til den betalte
+vare. Talt på `site/`: **0 af 8** generator-sider havde et `/paid-templates`-link,
+og den eneste undtagelse (`nis2-gap-assessment-da`) linkede til siden, ikke til
+den betalte vare. Fire sider fik nu `UPSELL` hængt på
+`renderHTML(current) + UPSELL + DONATION`, altså i resultatet og ikke i
+markup'en. `renderText()` bygger fra `renderHTML(current)` alene, så kortet
+kommer ikke med i det brugeren kopierer eller udskriver — og `no-print` dækker
+den anden vej.
+
+**Dom.** `node tests/scan-clients.test.mjs` 285/285. Dommen renderer
+`UPSELL`-blokken i en vm og læser pris, periode og betalingslink fra
+`tools/stripe_catalog.json`, så en knap der siger noget andet end det Stripe
+sælger er rød. Tre mutationer målt til røde: `$59`→`$99` på den danske knap,
+`no-print` fjernet fra `<div>`, og `UPSELL` fjernet fra resultatudtrykket.
+
+**Browseren.** 390 og 1280 px på alle fire sider: kortet synligt,
+`scrollWidth == clientWidth` (ingen vandret scroll), knappen 46 px høj på
+1280 px og 66–85 px på 390 px, `emulateMedia('print')` giver
+`display: none`, og 0 pagefejl. Skærmbilleder i `/tmp/ui-upsell/`.
+
+**Fund under vejen.** (1) Min egen generator-linje havde en forkert quote
+(`'>"`), så alle fire sider var syntaksfejl — fanget af `node --check` på den
+udsatte blok, ikke af porten. (2) Første indsættelsesforsøg lagde UPSELL
+*mellem* DONATION's kommentarblok og `var DONATION`, så kommentaren
+beskrev den forkerte kode. (3) Mit `perl`-substitutionsforsøg til mutationen
+ramte ikke (escaping), og mutationen så grøn ud uden at have ændret noget.
+
+**Ruten for `/scan` er `/scan-da`, ikke `/da/scan`.** Den gamle
+VERIFICÉR-note brugte `/da/scan`, som svarer 404 på live. Note lukket på
+indhold mod alle fem domme: `class="result-card pro-card"` 1 gang i hver,
+katalogens `eVq00i4YH6UG69g0ObbMQ03` 1 gang i hver, `$79/year per website` (EN)
+og `$79/år pr. website` (DA), `donate.stripe.com` 1 gang pr. side, og
+`style.css` skjuler `.pro-card` i den samme `@media print`-regel som `.btn`.

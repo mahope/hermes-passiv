@@ -304,6 +304,23 @@ Google Ireland Ltd — transactional e-mail — Ireland"></textarea>
   }
 
   var current = null;
+  // Købsvejen til den betalte skabelon, der svarer til præcis det output,
+  // denne generator laver. `no-print`, så den ikke ender i det dokument
+  // læseren udskriver eller kopierer: `renderText()` bygger teksten fra
+  // `renderHTML(current)` alene, så den kommer ikke med i kopieringen, kun
+  // på skærmen.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">This generator fills in the agreement. The template ships the annexes.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What the free version cannot hand you:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>The annexes.</strong> Subject matter, duration, nature and purpose, types of personal data, security measures and sub-processor rules &mdash; as two files, PDF and Markdown.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>A copy you control.</strong> The Markdown goes in your own repository next to the agreement it belongs to; the PDF goes to the counterparty.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>The next client too.</strong> It is a file, not a licence. Nothing stops you using it on the next DPA.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05" rel="nofollow noopener">Buy the GDPR DPA template &mdash; $59 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Two files, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
 
   // Tak-linjen ligger i resultatet, altså først når dokumentet er genereret,
   // og ikke i markup'en. `no-print`, så den ikke ender i det dokument læseren
@@ -315,7 +332,7 @@ Google Ireland Ltd — transactional e-mail — Ireland"></textarea>
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('generate');
     current = buildData();
-    $('agreement').innerHTML = renderHTML(current) + DONATION;
+    $('agreement').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('outputWrap').hidden = false;
     $('outputWrap').scrollIntoView({ behavior: 'smooth' });
   });

@@ -1428,5 +1428,88 @@ function mutated(path, from, to) {
     'altså kan dommen blive rød på den gamle kode');
 }
 
+// --------------------------------------------------------------------------
+// 14. Compliance-generatorernes købsvej til den betalte skabelon.
+//     `paid-templates.html` sælger DPA-skabelonen ($59), NIS2/DORA-klausursættet
+//     ($49), EAA-erklæringen ($39) og rapport-kit'et ($69). Fire generatorer
+//     laver præcis det output, to af de betalte filer svarer til — men de linkede
+//     ingen vegne hen til dem: målt 1/10 linker pr. generator var 0 af 8 til
+//     `/paid-templates`, og den eneste undtagelse (`nis2-gap-assessment-da`) så
+//     *ikke* ud i den betalte vare, bare videre til siden.
+//     Kortet hænger på `renderHTML(current) + UPSELL + DONATION`, altså i
+//     resultatet og ikke i markup'en, og `renderText()` bygger kun fra
+//     `renderHTML(current)` — så det kommer ikke med i det, brugeren kopierer.
+// --------------------------------------------------------------------------
+{
+  const UP = [
+    { f: 'dpa-generator.html', link: 'bJe7sK8aT4My7dk7czbMQ05', pris: '$59', da: false },
+    { f: 'dpa-generator-da.html', link: 'bJe7sK8aT4My7dk7czbMQ05', pris: '$59', da: true },
+    { f: 'nis2-incident-generator.html', link: '4gM4gydvd92OapwgN9bMQ06', pris: '$49', da: false },
+    { f: 'nis2-incident-generator-da.html', link: '4gM4gydvd92OapwgN9bMQ06', pris: '$49', da: true },
+  ];
+  // Kortet skal *rendere*, ikke bare være en streng i filen: vi trækker de
+  // `UPSELL +=`-linjer ud og kører dem i en vm, så en forkert quote eller en
+  // uafsluttet streng gør dommen rød i stedet for at ligge død i markup'en.
+  const render = (js) => {
+    const sandbox = {};
+    vm.createContext(sandbox);
+    vm.runInContext(js.replace(/^var UPSELL/m, 'var UPSELL'), sandbox);
+    return sandbox.UPSELL;
+  };
+  for (const u of UP) {
+    const src = readFileSync(join(root, 'site', u.f), 'utf8');
+    const start = src.indexOf('var UPSELL =');
+    const end = src.indexOf("UPSELL += '</div>';", start);
+    ok(`${u.f}: UPSELL-blokken findes og er afsluttet`, start > 0 && end > start,
+      `start=${start} end=${end}`);
+    if (start < 1 || end < start) continue;
+    const js = src.slice(start, end + "UPSELL += '</div>';".length);
+    let html = '';
+    try { html = render(js); } catch (e) { html = 'RENDERFEJL: ' + e.message; }
+    ok(`${u.f}: kortet renderer`, html.startsWith('<div') && html.endsWith('</div>'), html.slice(0, 120));
+
+    // Prisen kommer fra katalogen, ikke fra hukommelsen — samme regel som
+    // `tools/check_own_prices.py`, så de to porte ikke kan blive uenige.
+    const cat = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'));
+    const key = u.f.includes('dpa') ? 'eucomply-dpa' : 'eucomply-nis2-clauses';
+    ok(`${u.f}: pris og periode er katalogens`,
+      html.includes(u.pris) && html.includes(u.da ? 'engang' : 'once'),
+      `katalog: ${cat.products[key].price} (${cat.products[key].price_note})`);
+    ok(`${u.f}: betalingslinket er katalogets`,
+      html.includes(cat.products[key].payment_link)
+      && html.includes(cat.products[key].payment_link.slice(cat.products[key].payment_link.indexOf('/') + 1)),
+      `katalog: ${cat.products[key].payment_link}`);
+
+    // `no-print` er hele pointen: uden den trykker brugeren salgsteksten med i
+    // sit eget dokument, præcis som fejlen på `/scan` i forrige iteration.
+    ok(`${u.f}: kortet skjuler sig i den trykte rapport`,
+      html.includes('no-print'), 'upsell-kortet mangler no-print');
+    // Og det skal hænge på resultatet, ikke i markup'en — ellers står det der
+    // altid, også før brugeren har lavet noget.
+    ok(`${u.f}: kortet hænger på resultatet, ikke i markup'en`,
+      src.includes('renderHTML(current) + UPSELL + DONATION'),
+      'skal være UPSELL mellem renderHTML(current) og DONATION');
+
+    // Mutation: prisen og perioden på knappen skal kunne findes, ellers dømmer
+    // dommen ingenting. Samme mønster som dom 13.
+    const ord = u.da ? 'engang' : 'once';
+    ok(`${u.f}: perioden står som sit eget ord i knappen`,
+      new RegExp(`(^|[^a-zA-Z])${ord}([^a-zA-Z]|$)`).test(html.replace(/<[^>]+>/g, ' ')),
+      `knappeteksten skal indeholde ordet «${ord}»`);
+    const forkert = js.replace(u.pris, '$99').replace(ord, 'engangskob-uden-periode');
+    const rForkert = render(forkert);
+    ok(`mutation: ${u.f} forkeret pris/periode fanges`,
+      !rForkert.includes(u.pris)
+      && !new RegExp(`(^|[^a-zA-Z])${ord}([^a-zA-Z]|$)`).test(rForkert.replace(/<[^>]+>/g, ' ')),
+      `mutationen gav stadig $59 eller perioden «${ord}»`);
+  }
+  // Copy-gate: kortet må ikke love noget, de andre sider modsiger. Bogen er
+  // gratis og siger det syv gange; en købsvej til *bogen* ville være modsigende.
+  // Vi sælger skabeloner og klausursæt, og de filer ligger i et separat repo.
+  const dpa = readFileSync(join(root, 'site/dpa-generator.html'), 'utf8');
+  ok('købsvejen sælger skabelonen, ikke bogen',
+    !/fZu9AScr9a6SbtA68vbMQ0b/.test(dpa), 'skal ikke pege på e-book-bundlet');
+}
+
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
 process.exit(fail ? 1 : 0);

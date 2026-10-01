@@ -279,6 +279,23 @@
   }
 
   var current = null;
+  // Købsvejen til den betalte skabelon, der svarer til præcis det output,
+  // denne generator laver. `no-print`, så den ikke ender i det dokument
+  // læseren udskriver eller kopierer: `renderText()` bygger teksten fra
+  // `renderHTML(current)` alene, så den kommer ikke med i kopieringen, kun
+  // på skærmen.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">Denne generator skriver rapporten. Klausulerne er det, du underskriver.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">Det gratis ikke kan give dig:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Varselsfrister du kan h&aelig;ndh&aelig;ve.</strong> Det tidsrum din leverand&oslash;r har til at fort&aelig;lle dig, skrevet som klausul i stedet for et felt.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Godkendelse af underleverand&oslash;rer.</strong> Hvad din leverand&oslash;r skal bede dig om, f&oslash;r den sender arbejdet videre i k&aelig;den.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Udgangsklausuler.</strong> Hvad DORA forventer af en kritisk leverand&oslash;r, n&aring;r kontrakten oph&oslash;rer.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06" rel="nofollow noopener">K&oslash;b NIS2 / DORA-leverand&oslash;rklausulerne &mdash; $49 engang</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">Klausulgrupperne, leveret lige efter betaling. <a href="/da/paid-templates">Se hvad skabelonerne indeholder</a>.</p>';
+  UPSELL += '</div>';
+
 
   // Tak-linjen ligger i resultatet, altså først når rapporten er genereret,
   // og ikke i markup'en. Den skal komme *før* den e-mail-leadform der indsættes
@@ -290,7 +307,7 @@
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('nis2-incident-generate-da');
     current = buildData();
-    $('report').innerHTML = renderHTML(current) + DONATION;
+    $('report').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('reportWrap').hidden = false;
     $('reportWrap').scrollIntoView({ behavior: 'smooth' });
   });

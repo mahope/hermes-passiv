@@ -1,48 +1,56 @@
 # STATUS
 
-- **Bøgerne læses online.** Alle seks bogside-ruter viser kapitel 1 og 2 i fuld
-  tekst. Baseline før: 0 tegn bogtekst på alle otte ruter. Målt efter:
-  `read-online` 1 gang på hver af de seks, 0 på `books/index` og
-  `books/compliance-bundle`. De sender heller ikke længere død CSS (mutation:
-  alle regler igen → RØD 30 fund).
-- **Gaten kørte 16 domme i CI uden at køre dem.** `quality_gate.py` tog
-  beslutningen om `dist/` *før* build-steppet, så en frisk checkout sprang dem
-  over og meldte grøn, mens samme kode lokalt var rød i `built-css`. Bevis: den
-  grønne kørsel af `c4fd730` siger «springer 16 dist-steps over». Målt efter:
-  GRØN 123 steps fra en `dist/` der ikke fandtes. Scannerens læsevisning er
-  `DEPLOY OK 2026-10-01` — seks domme målt på live `8d8cdb5`.
-- **`/scan` og `/scan-da` sælger nu, og deres trykte rapport gør ikke.**
-  Begge renderer det samme pro-kort som de otte søskendeværktøjer. Fundet under
-  vejen: `@media print` skjulte `.btn` men ikke `.pro-card`, så «Udskriv / gem
-  som PDF» gav en lilla salgstext uden knap. Nu skjuler print-listen begge.
-  Målt: `$79`→`$19`-mutation rød (248/249), `.pro-card` fjernet fra print-
-  listen rød (249/252), uændret 252/252; browseren viser `display: none`.
-- **CEO-kø punkt 0 er leveret og efterprøvet 1/10** — alle fem delpunkter
-  verificeret på koden, ikke bare lukket; detaljerne i `docs/plan-arkiv.md`.
+- **Compliance-generatorerne har nu en købsvej.** DPA-generatoren og
+  NIS2-hændelsesgeneratoren (EN + DA) hænger et kort på resultatet med den
+  betalte skabelon der svarer til præcis deres output: DPA-skabelonen ($59) og
+  NIS2/DORA-klausursættet ($49), begne fra `tools/stripe_catalog.json`.
+  Baseline før: **0 af 8** generator-sider linkede til `/paid-templates`; den
+  eneste undtagelse (`nis2-gap-assessment-da`) gik bare videre til siden.
+  Målt i browseren på 390 og 1280 px: kortet synligt, `overflowX=0`, knap 46–85
+  px høj, `print=false` (salgstexten kommer ikke i brugerens eget dokument), 0
+  pagefejl. Dommen læser pris og periode fra katalogen, ikke fra hukommelsen:
+  285/285, og tre mutationer gjort røde — `$59`→`$99` på knappen, `no-print`
+  fjernet, `UPSELL` fjernet fra resultatet.
+- **Deploy-noten for `/scan` er lukket på indhold 2/10** — alle fem domme målt
+  på live `919280b`. Den havde en fejl: ruten hedder `/scan-da`, ikke
+  `/da/scan` (som gav 404).
+- **Gaten kørte 16 dist-domme i CI uden at køre dem.** Bevis: den grønne
+  kørsel af `c4fd730` sagde «springer 16 dist-steps over». Målt efter: GRØN 123
+  steps fra en `dist/` der ikke fandtes. **Bøgerne læses online** på alle seks
+  bogside-ruter, målt på live `c4fd730`. **`/scan` og `/scan-da` sælger nu, og
+  deres trykte rapport gør ikke.** **CEO-kø punkt 0 er leveret og efterprøvet
+  1/10.** Målingerne står i `docs/plan-arkiv.md`.
 - **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
   ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
-  Squeezy, Search Console, og **bogenes betalte udgave** (ny, se ❓).
+  Squeezy, Search Console, og **bogenes betalte udgave** (se ❓).
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: pro-kort på /scan og /scan-da
-  ceo/scan-saelger 2026-10-01 19:55` — måles på **indhold** på
-  `https://mahope.tools/scan` og `https://mahope.tools/da/scan`.
-  Baseline målt 1/10 på `site/`: 0 `buy.stripe.com` på begge sider. Domden:
-  1. Begge sider har `class="result-card pro-card"` 1 gang.
-  2. Katalogens betalingslink `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03` står i
-     `proCard()` på begge, og knappen siger `$79` + en periode (`/year`, `/år`).
-  3. Donationslinjen overlever: `donate.stripe.com` stadig 1 gang pr. side.
-  4. `https://mahope.tools/style.css` har `.pro-card` i den `@media print`
-     regel der også skjuler `.btn` — ellers trykkes salgstexten uden knap.
-  5. Pro-kortet på EN og DA skal være hvert sit sprog, og ingen af dem må
-     påstå at kun én side blev læst (det gør `/compliance-site-check`'s).
-  Domden er `node tests/scan-clients.test.mjs` (252/252) + gaten. Mutationer
-  målt: `$79`→`$19` i knappen → 248/249 med «knappen viser prisen fra
-  katalogen ($79)»; `.pro-card` fjernet fra print-listen → 249/252 med «print:
-  pro-kortet skjuler sig i den trykte rapport». Grøn er kun den uændrede kode.
+- `VERIFICÉR DEPLOY: købsvej på DPA- og NIS2-generatoren
+  ceo/generator-kobsvej 2026-10-01 23:55` — måles på **indhold** på
+  `https://mahope.tools/dpa-generator`, `/dpa-generator-da`,
+  `/nis2-incident-generator` og `/nis2-incident-generator-da`. Domden er
+  `node tests/scan-clients.test.mjs` (285/285) + gaten. Dom 1: alle fire sider
+  har `upsell-card` 1 gang **og** `renderHTML(current) + UPSELL + DONATION`.
+  Dom 2: DPA-siderne har `bJe7sK8aT4My7dk7czbMQ05` og `$59` + `engang`/`once`,
+  NIS2-siderne `4gM4gydvd92OapwgN9bMQ06` og `$49` — begge læst fra
+  `tools/stripe_catalog.json`. Dom 3: kortet har `no-print`, så salgstexten
+  ikke ender i det dokument brugeren udskriver eller kopierer. Dom 4: ingen af
+  siderne linker til e-book-bundlet, for syv bogsider siger det er gratis.
+
+- `DEPLOY OK 2026-10-02` — pro-kortet på `/scan` og `/scan-da`. Note lukket på
+  **indhold** på live `919280b`. Alle fem domme målt: `class="result-card
+  pro-card"` 1 gang i hver, katalogens betalingslink `eVq00i4YH6UG69g0ObbMQ03`
+  1 gang i hver, knappen siger `$79/year per website` (EN) og `$79/år pr.
+  website` (DA), `donate.stripe.com` stadig 1 gang pr. side, og `style.css`
+  skjuler `.pro-card` i den **samme** `@media print`-regel som `.btn`. Punkt 5
+  målt på det udskrevne pro-kort: EN siger «It read the one page you pasted. A
+  site is every page.», DA siger «Den læste den ene side, du indsatte. Et
+  website er alle sider.» — hvert sit sprog, ingen af dem påstår kun én side
+  blev læst. **Ruten hedder `/scan-da`, ikke `/da/scan`** — den gamle note
+  havde den forkerte adresse, som gav 404. Den er rettet her.
 
 - `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
   lukket på **indhold** på live `c4fd730`. Alle seks domme målt 1/10:
@@ -108,11 +116,16 @@
    eget domæne — før det gætter stier, og svaret lister dem i `pages_read`.
    Accept nået: `pages_checked` overstiger de gættede stier, og fundet peger på
    den linkede side. Flyttet til `docs/plan-arkiv.md`.
-2. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
-   `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
-   trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
-   problem og siger det i hver kørsel. Accept: `GET /api/stats` med token
-   svarer 200. *(Blokeret på Mads — se ❓.)*
+2. ~~Generatorerne lavede dokumentet, men ikke vejen videre.~~ **Færdig 2/10.**
+    DPA- og NIS2-hændelsesgeneratoren (EN + DA) har nu et kort på resultatet med
+    den betalte skabelon der svarer til deres eget output, pris og periode læst
+    fra `tools/stripe_catalog.json`. Næste skridt er de fire generatorer der
+    stadig mangler det: RoPA, privacy-notice og EAA-erklæring.
+3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
+    `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
+    trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
+    problem og siger det i hver kørsel. Accept: `GET /api/stats` med token
+    svarer 200. *(Blokeret på Mads — se ❓.)*
 3. **`bugbottle.dev` deployes ikke.** Hvorfor: `deploy-sites.yml`-matrixen
    deployer kun tre domæner, så `dist/bugbottle.dev/` bygges hver kørsel og
    lægges ingen steder; live er 61 ruter fra en anden udgivelse. Det er derfor

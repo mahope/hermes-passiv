@@ -284,6 +284,23 @@
   }
 
   var current = null;
+  // Købsvejen til den betalte skabelon, der svarer til præcis det output,
+  // denne generator laver. `no-print`, så den ikke ender i det dokument
+  // læseren udskriver eller kopierer: `renderText()` bygger teksten fra
+  // `renderHTML(current)` alene, så den kommer ikke med i kopieringen, kun
+  // på skærmen.
+  var UPSELL = '<div class="upsell-card no-print" style="margin:16px 0 0;padding:16px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">';
+  UPSELL += '<h2 class="sub" style="margin:0 0 4px;font-size:16px">This generator writes the report. The clauses are what you sign.</h2>';
+  UPSELL += '<p style="margin:0 0 8px;font-size:13px;color:var(--color-text-muted)">What the free version cannot hand you:</p>';
+  UPSELL += '<ul style="margin:0;padding-left:18px;font-size:13px">';
+  UPSELL += '<li style="margin:4px 0"><strong>Notification deadlines you can enforce.</strong> The window your supplier has to tell you, written as a clause instead of a template field.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Subcontractor approval.</strong> What your supplier must ask you for before it passes work further down the chain.</li>';
+  UPSELL += '<li style="margin:4px 0"><strong>Exit terms.</strong> What DORA expects of a critical provider when the contract ends.</li>';
+  UPSELL += '</ul>';
+  UPSELL += '<p style="margin:12px 0 0"><a class="btn" style="display:inline-block;padding:12px 24px;text-decoration:none" href="https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06" rel="nofollow noopener">Buy the NIS2 / DORA Vendor Clause Set &mdash; $49 once</a></p>';
+  UPSELL += '<p style="margin:8px 0 0;font-size:13px;color:var(--color-text-muted)">The clause groups, delivered right after payment. <a href="/paid-templates">See what the templates include</a>.</p>';
+  UPSELL += '</div>';
+
 
   // Tak-linjen ligger i resultatet, altså først når rapporten er genereret,
   // og ikke i markup'en. Den skal komme *før* den e-mail-leadform der indsættes
@@ -295,7 +312,7 @@
     e.preventDefault();
     if (window.trackEvent) window.trackEvent('nis2-incident-generate');
     current = buildData();
-    $('report').innerHTML = renderHTML(current) + DONATION;
+    $('report').innerHTML = renderHTML(current) + UPSELL + DONATION;
     $('reportWrap').hidden = false;
     $('reportWrap').scrollIntoView({ behavior: 'smooth' });
   });
