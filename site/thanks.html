@@ -61,12 +61,14 @@
       if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail('No order reference in the link. Check your email for your license key or downloads.'); return; }
       var tries = 0;
       // Målt 29/9: kun `202` blev gentaget. `503` ("Service temporarily
-      // unavailable." / "Could not look up the payment.") og `429` ("Too many
-      // attempts.") gav op med det samme, så en kunde der lige havde betalt
-      // for EUComply Pro kunne stå på en permanent fejlside efter ét KV-blip
-      // eller én Stripe-503. Begge er forbigående — de betyder at vi ikke
-      // kunne svare, ikke at ordren ikke findes — så de genkaldes på samme
-      // budget som `202`, og bruger står på de nøgletal der bruges her.
+      // unavailable." / "Could not look up the payment.") gav op med det
+      // samme, så en kunde der lige havde betalt for EUComply Pro kunne stå
+      // på en permanent fejlside efter ét KV-blip eller én Stripe-503. Den er
+      // forbigående — den betyder at vi ikke kunne svare, ikke at ordren ikke
+      // findes — så den genkaldes på samme budget som `202`, og bruger står på
+      // de nøgletal der bruges her. `429` er derimod **endeligt** og har sin
+      // egen udgang nedenfor; den skal ikke lægges tilbage i denne kæde, for
+      // hvert genkald tæller i den tæller der gav 429.
       var MAX_TRIES = 12;
       // Når budgettet er brugt, er svaret stadig ikke "ordren findes ikke".
       // Kunden kommer fra Stripe lige efter en betaling, så betalingen er
