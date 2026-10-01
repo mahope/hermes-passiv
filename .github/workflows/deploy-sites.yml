@@ -50,6 +50,12 @@ on:
       # `rateLimitIp(…)` i workeren, springe gaten over — altså netop den push
       # der gør porten meningsløs. Målt ni gange nu, samme krav.
       - 'tools/check_storage_claims.py'
+      # Gatestrækket `status-finality` måler de ruter der kan svare 429 ved at
+      # læse dispatchen og `rateLimitIp`-kaldene i `site/_worker.js`. Uden
+      # portens egen fil i filteret kunne en push, der kun tilføjer en ny
+      # 429-rute eller en ny fejlform til porten, springe netop den port over,
+      # der afgør om et endeligt svar bliver genkaldt — samme krav som ovenfor.
+      - 'tools/check_status_finality.py'
       # Porten `generator-claims` læser hver `tools/*.py` med en FAQ-formet
       # dict og dømmer dens afvisende løfter mod den rute de skrives til. Uden
       # portens egen fil i filteret kunne en push, der kun tilføjer en ny

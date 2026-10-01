@@ -409,6 +409,26 @@ STEPS: tuple[Step, ...] = (
             "site/**",
         ),
     ),
+    # 429 i browseren (1/10). CEO-kø punkt 0 sagde 29/9 at 429 er endelig og
+    # skal vise serverens besked, og rettede de syv klienter der stod i køen.
+    # `site/thanks.html` stod ikke i den, og dens ene linje
+    # `if (x.code === 429 || x.code >= 500) return again(…)` genkaldte en rute
+    # der selv tæller sine forsøg — tolv gange, fire sekunder i mellemrum,
+    # hver gang tællende i den tæller der gav 429. Reglen lå i `net.js`s egen
+    # kommentar, og ingen port spurg om tak-siden fulgte den.
+    #
+    # Ruterne med 429 måles i `site/_worker.js` (dispatch → handler → 429), så
+    # en ny rate-limiteret rute bliver dømt uden at nogen redigerer porten.
+    Step(
+        id="status-finality",
+        argv=("python3", "tools/check_status_finality.py"),
+        inputs=("tools/check_status_finality.py", "site/**"),
+    ),
+    Step(
+        id="status-finality-selftest",
+        argv=("python3", "tools/check_status_finality.py", "--self-test"),
+        inputs=("tools/check_status_finality.py", "site/**"),
+    ),
     Step(
         id="storage-claims-selftest",
         argv=("python3", "tools/check_storage_claims.py", "--self-test"),

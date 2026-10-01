@@ -2796,3 +2796,61 @@ Blokkene tjekkes i tråde (WORKERS=8), så selvtesten faldt fra 5 min 01 s til
 `tools/route_inventory*` og `bugbottle-landing/**` — ellers kunne præcis den
 push, der gør en side død, springe porten over. Nyt `inline-js-selftest`-step.
 Alle filer lå allerede i workflowens path-filter, så ingen CI-trigger ændret.
+
+## Opgave 35 — 429 er endelig (1. oktober 2026, `ceo/429-er-sendeloeende-paa-tak-siden`)
+
+**Fejlen.** `site/thanks.html` havde `if (x.code === 429 || x.code >= 500)
+return again('We are having trouble loading your order — trying again…', 4000,
+false);`. `/api/stripe/fulfillment` tæller selv sine forsøg (`if (hits >= 30)
+… 429`, `_worker.js:3933`), så de tolv genkald á fire sekunder tæller hver især i
+den tæller der gav 429. Kunden der ventede længst fik *færrest* forsøg tilbage,
+og serverens "Too many attempts. Try try again later." blev kastet bort for en
+streng der ikke siger hvornår man kommer tilbage.
+
+**Hvorfor den lå der.** CEO-kø punkt 0 (29/9) sagde «429 er endelig, ikke
+forbigående — vis serverens besked» og rettede de **syv** klienter der stod i
+køen. `thanks.html` stod ikke i den. `net.js` fik en hel kommentar om
+formentlig ræson: *"three client retries on one question burned three of the
+twenty daily slots"*. Reglen var skrevet ned; ingen port spurg om den gjaldt
+også her.
+
+**Rettelsen.** 429 får sin egen udgang foran 5xx: serverens egen sætning først
+(`x.d.error`), og `LIMITED_OUT` bagefter, fordi «for mange forsøg» uden «din
+betaling gik igennem» efterlader kunden med troen på tabt køb — præcis det
+supportmail produkterne ikke må kræve.
+
+**Porten.** `tools/check_status_finality.py`. Måler de **11** ruter der kan
+svare 429 i `site/_worker.js` (dispatch → handler → 429) og dømmer hver klient
+der sammenligner med 429 på tre domme:
+
+1. ingen nyt kald, heller ikke via en mellemligende *reference* — `again()` i
+   tak-siden skriver `setTimeout(poll, delay)`, ikke `poll()`. Kun `navn(` ville
+   have set den som grøn; det var den første fælde i porten.
+2. et tidspunkt eller serverens egen sætning.
+3. 5xx bliver forbigående — ellers kunne 1 og 2 opfyldes ved at gøre alt
+   endeligt, hvilket er den modsatte rettelse.
+
+**Selvtestens to fund.** Den reddede porten to gange den selv:
+
+* `client_routes()` gav `/api/stripe/fulfillment?session_id=` og mødte ikke
+  dispatchens `/api/stripe/fulfillment`. Dom 3 og dommen «sig intet om 429»
+  faldt derfor **stille** på den mest udsatte klient. Fandet af mutationen der
+  ville fange en ny klient, ikke af nogen måling af portens egne fund.
+* `strip_js_comments()` ignorerede regex-literaler, så `replace(/[&<>"]/g, …)`
+  åbnede et uafsluttet streng og resten af filen blev læst som én tekst. Bemærket
+  ved at `compliance-report.html` pludselig fik to domme på en linje den ikke har.
+* En tredje fejl lå i `branch_body()`: parentes-tællingen læste kun den kappede
+  linje, så afsluttende `)` lå uden for. Den returnerede `429)` som «kroppen».
+
+**Bevis.** Porten kørt mod `8c61191:site/thanks.html` er **rød med netop de to
+domme** tak-siden bryder, mod den rettede kode **grøn**. Selvtest: 3/3
+mutationer fanget (genkaldsgren, manglende oplysning, 5xx gjort endelig).
+
+**Målt og bevidst ikke dømt.** Dommen «kalder en 429-rute uden at nævne 429»
+blev skrevet og så **fjernet igen**: **287** sider kalder `/api/track` som
+beacon (`fetch(…).catch(…)`, intet svar læst) og skal ikke nævne 429. De fire
+klienter der faktisk *venter* på et 429-svar gør alle `err.transient = !data ||
+status >= 500`, som holder 429 ude, og viser `data.error`. Det er altså et
+navneproblem, ikke et adfærdsproblem — og en port der dømmer navne uden adfærd
+ville være rød på 287 sider uden grund. Mutationen «ny klient der tier om 429»
+blev derfor fjernet fra selvtesten i stedet for at blive grøn af en svag dom.

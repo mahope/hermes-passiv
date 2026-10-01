@@ -1,5 +1,9 @@
 # STATUS
 
+- **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
+  nøgle.** Tak-siden genkaldte `/api/stripe/fulfillment` på 429, og den rute
+  tæller selv sine forsøg — så hvert genkald gjorde det værre. Rettet, og
+  `check_status_finality.py` dømmer det fra nu af. Se opgave 35.
 - **Otte generatorer var døde i live — inkl. hele den betalte DPA/ROPA/privacy-
   vej.** `build_sites` skrev shell- og BugBottle-tags ind foran det *første*
   `</body>`, men generatorerne bygger den fil de downloader som en JS-streng, så
@@ -11,11 +15,10 @@
   sagde «problems: 0» — filerne i `site/` var i orden, det var *bygget* der brød.
   Den dømmer nu begge træer, og dens selvtest bygger repoet med de to mutationer
   der lå i live. Målt før/efter på de otte: 8 brudde → 0.
-- **Selv samme fejlform som porten skal dømme, lå i portens egen rettelse.**
-  Første udkast brugte `SCRIPT_SPLIT_RE`, som også dækker `<pre>`, og lod
-  `_apply_style_attr` springe scripts over. Det gjorde 20 sider *dobbelt så
-  dårlige*: `#667` og `8px` lå bogstaveligt i den JS der skriver til DOM'en.
-  Målt på `dist` før/efter: 62 filer ændret → 8, som er præcis de døde sider.
+- **Samme fejlform i ny form: en regel skrevet ned, ingen dom.** CEO-kø punkt 0
+  rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
+  batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
+  filerne — antallet er ikke listen.
 - **`❓ Til Mads` nederst:** `STATS_TOKEN`, `bugbottle.dev`'s domæne,
   banner-placering på 180 sider, og de to desktop-apps der stadig ringer til
   Lemon Squeezy.
@@ -25,12 +28,18 @@
 
 ## Verificér deploy
 
-- `DEPLOY-MISSING: ceo/generator-script-kom-til-live (34) — venter på
-  næste batch-vindue.` Fusionerer automatisk til `main` for dette repo, så
-  udgivningen sker ved push. Målt 30/9 kl. 23:40 UTC på de otte live-ruter:
-  alle otte med en inline-blok browseren afviser. Notér `DEPLOY OK` her når
-  `build-info.json` bærer committen og `/dpa-generator` svarer med en blok
-  `node --check` accepterer.
+- `VERIFICÉR DEPLOY: ceo/429-er-sendeloeende-paa-tak-siden 2026-10-01` — tak-siden
+  skal svare 429 med serverens egen sætning og **ikke** genkalde
+  `/api/stripe/fulfillment`. Mål på indhold: `/thanks` skal have præcis ét
+  `x.code === 429`-kald, det skal stå **alene** på sin egen linje (ikke
+  `429 || x.code >= 500`), og det skal kalde `fail(` med `x.d.error`.
+
+- `DEPLOY OK 2026-10-01` — otte generatorer (`ceo/generator-script-kom-til-live`,
+  `8c61191`). Målt 1/10 kl. 00:0x UTC: CI-kørsel `36793625580` grøn i alle jobs,
+  `build-info.json` bærer præcis `8c61191`, og alle otte live-ruter
+  (`dpa-generator`, `ropa-generator`, `privacy-notice-generator`,
+  `nis2-incident-generator` + de fire `-da`) svarer 200 med en inline-blok
+  `node --check` accepterer. Målt på indhold, ikke på HTTP-status.
 
 - `DEPLOY OK 2026-09-30` — reglen for forbigående fejl (`ceo/et-forbigaaende-kal`,
   `250e604`) er live: CI-kørsel `36779886917` grøn i alle jobs, og
@@ -190,4 +199,30 @@
      gaten fik et `inline-js-selftest`-step. Målt: 8/8 sider døde i live →
      0/8 i `dist`, og `diff` mod før-rettelsen viser præcis de 8 filer og ingen
      andre. Se STATE.
+
+35. ~~**Tak-siden genkaldte et endeligt 429 tolv gange.**~~ **FÆRDIG 1/10,
+     `ceo/429-er-sendeloeende-paa-tak-siden`.** CEO-kø punkt 0 (29/9) sagde at 429
+     er endelig og skal vise serverens besked, og rettede de syv klienter der
+     stod i køen — `site/thanks.html` stod ikke i den. Dens ene linje var
+     `if (x.code === 429 || x.code >= 500) return again(…)`, og
+     `/api/stripe/fulfillment` tæller selv sine forsøg (`hits >= 30`,
+     `_worker.js:3933`): tolv genkald á fire sekunder, og hvert af dem tæller i
+     den tæller der gav 429. Den der ventede længst fik *færrest* forsøg
+     tilbage, og serverens "Too many attempts. Try again later." blev kastet
+     bort for "trying again", der ikke siger hvornår man kommer tilbage.
+     Ny port `tools/check_status_finality.py` måler de **11** 429-ruter i
+     `_worker.js` (dispatch → handler → 429) og dømmer hver klient der
+     sammenligner med 429 på tre ting: ingen nyt kald (også via en
+     mellemligende reference som `setTimeout(poll, …)`, som kun `navn(` ville
+     have set som grøn), et tidspunkt eller serverens egen sætning, og 5xx
+     stadig forbigående — ellers kunne dom 1 og 2 opfyldes ved at gøre alt
+     endeligt. 3/3 mutationer fanget. Bevis: gaten kørt mod `8c61191:site/thanks.html`
+     er **rød med netop de to domme** tak-siden bryder.
+     *Målt og bevidst ikke dømt:* dommen «kalder en 429-rute uden at nævne 429».
+     **287** sider kalder `/api/track` som beacon (`fetch(…).catch(…)`, intet
+     svar læst) og skal *ikke* nævne 429; de fire klienter der faktisk **venter**
+     på et 429-svar (`/api/report`, `/api/profile` ×2, `/api/header-check`,
+     `/api/url-inspect`, `/api/clean-copy`) gør alle `err.transient = !data ||
+     status >= 500`, som holder 429 ude, og viser `data.error`. Det er altså et
+     navneproblem, ikke et adfærdsproblem — målt i portens egen måling. Se arkiv.
 

@@ -84,6 +84,29 @@
       var PENDING_OUT = 'Your payment is not confirmed yet. Stripe is still processing it. '
         + 'Your license key arrives by email as soon as it clears — if it has been more than an hour, '
         + 'reply to your Stripe receipt and Mads will sort it out.';
+      // `429` er endeligt, og det er den eneste grund til at den har sin egen
+      // udgang. Målt 1/10: linjen var `if (x.code === 429 || x.code >= 500)
+      // return again(…)`, så en kunde der ramte `/api/stripe/fulfillment`s egen
+      // tæller (`hits >= 30` i workeren) fik tolv genkald med fire sekunders
+      // mellemrum — og hvert af dem tæller i den samme tæller, der gav 429.
+      // Det gjorde kun det værre: den, der ventede længst, fik *færrest* forsøg
+      // tilbage. Det er samme regel som `net.js` skriver ned, og samme som CEO-kø
+      // punkt 0 pålagde de syv andre klienter; denne ene blev ikke med.
+      //
+      // Serverens egen sætning står først, fordi den er den eneste der siger
+      // hvornår det er værd at komme tilbage, og RAN_OUT-lignende beroligelse
+      // bagefter, fordi "for mange forsøg" uden den efterlader kunden med det
+      // indtryk at købet gik tabt — hvilket er præcis det supportmail vi ikke
+      // må have. Betalingen er gennemført uanset hvad tælleren siger.
+      //
+      // Tallet i LIMITED_OUT er **målt**, ikke gættet: tælleren ligger på
+      // `rl:ful:<ip>:<Math.floor(Date.now() / 3600000)>`, altså det igangværende
+      // klokke-time, og den nulstilles, når timen slår. Derfor «inden for en
+      // time» og ikke «om et par minutter» — det sidste ville være en løgn
+      // 49 minutter før timeskiftet. Samme formulering som rapport-PDF'en.
+      var LIMITED_OUT = ' The limit resets when the hour changes, so a reload '
+        + 'will work. Your payment went through either way: your Stripe receipt '
+        + 'is the record of it — reply to that email and Mads will send what you bought.';
       function again(msg, delay, pending) {
         if (tries++ < MAX_TRIES) { status.textContent = msg; return setTimeout(poll, delay); }
         fail(pending ? PENDING_OUT : RAN_OUT);
@@ -163,7 +186,9 @@
           .then(function (x) {
             if (x.code === 200 && x.d.ok) return show(x.d);
             if (x.code === 202) return again('Confirming your payment…', 2500, true);
-            if (x.code === 429 || x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000, false);
+            // 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
+            if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : 'Too many attempts.') + LIMITED_OUT);
+            if (x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000, false);
             fail(x.d.error || 'We could not find this order. Check your email, or reply to your receipt.');
           })
           .catch(function () { again('Network problem — trying again…', 3000, false); });
