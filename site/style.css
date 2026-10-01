@@ -681,7 +681,7 @@ main.layout-wide > .crumbs + .container { padding-top: 0; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 @media print {
-  .family-bar, .site-header, .site-footer, .blog-tool-cta, .nav-toggle, .btt, .copy-btn, .search-dialog, .prose-aside, .prev-next, .hero-cta, .btn, .btn-primary, .btn-secondary, [data-bugbottle] { display: none !important; }
+  .family-bar, .site-header, .site-footer, .blog-tool-cta, .nav-toggle, .btt, .copy-btn, .search-dialog, .prose-aside, .prev-next, .hero-cta, .btn, .btn-primary, .btn-secondary, .pro-card, [data-bugbottle] { display: none !important; }
   body { background: #fff; color: #000; }
   main { padding: 0; }
   .prose-layout { display: block; }

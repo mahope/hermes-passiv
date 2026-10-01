@@ -4188,3 +4188,102 @@ Boganbefalingen «én købsknap til sit bundle-link» blev **ikke** fulgt: syv
 publicerede sider siger at bøgerne er gratis og «nothing is reserved for a paid
 edition», mens Stripe har et betalt `$29`-produkt `eu-compliance-ebook-bundle`.
 Se ❓ under «Til Mads» i planen.
+
+## 1/10 — bogside-ruterne læses online (STATUS-detaljer flyttet herhen)
+
+Læsevisningen er bygget af `ebook/<slug>.epub` — altså af den fil kunden
+henter — så den ikke kan blive ældre end bogen. Rækkefølgen læses af
+OPF-spine'en. `Preface` og `Introduction` er rigtigt indhold og bliver stående;
+filteret dropper kun `Front Matter`, `Foreword` og `Table of Contents`.
+
+Målt på indhold på live `c4fd730`, alle seks domme fra deploy-noten:
+`read-online` 1 gang i hver af `gdpr-for-agencies`, `nis2-for-agencies`,
+`cookie-consent-guide`, `eaa-checklist`, `eaa-shopify` og
+`build-your-first-chrome-extension`, 0 i `books/index` og
+`books/compliance-bundle`; `class="reader-chapter-title"` 2 gange i hver;
+første kapitel er et rigtigt kapitel på alle seks; `eaa-checklist` viser
+kapitel 2 som 10-punkters-tjeklisten (det var præcis den kapitel et loft på
+9000 tegn fjernede); 0 `script`/`onerror`/`javascript:` lækker ud af
+læsevisningen; `scrollWidth == clientWidth == 390` ved 390 px.
+
+## 1/10 — CEO-kø punkt 0, de fem delpunkter (STATUS-detaljer flyttet herhen)
+
+Alle fem er verificeret på koden, ikke bare lukket:
+
+- `handleUrlInspect(request, url, env)` kalder `rateLimitIp(request, env, …)`
+  med `env` (`_worker.js:288`, `3367`); begge ruter svarer 200.
+- `thanks.html` har egen `PENDING_OUT`-sætning til 202, så en betaling der
+  ikke er bekræftet ikke ender i «your payment went through».
+- 429 er endelig i `site/net.js:43` med `err.limited`, så ingen af de otte
+  klienter genkalder den; 5xx er transient med højst ét ekstra kald.
+- `targetIsPublic()` sidder på `/api/header-check` og `/api/url-inspect` **og
+  på hvert redirect-hop** (`_worker.js:2659`, `3440`). Der findes ingen
+  `ceo/net-js` længere — reglen ligger i `net.js` på `main`.
+
+## 1/10 — død CSS i bogside-ruterne
+
+`book_reader.py` skrev regler for `pre`, `code`, `blockquote`, `table`, `th`,
+`td`, `hr` og `h4` til alle seks bøger, men kun nogle kapitler har sådanne
+afsnit, så resten var død CSS. `check_built_css` dømmer et type-led i sidens
+egen `<style>` som fejl, når siden ikke har elementet.
+
+Målt efter rettelsen pr. bog: `cookie-consent-guide` → `code, pre, table, td,
+th`; `eaa-checklist` → `blockquote, code, hr, table, td, th`; `nis2-for-agencies`
+→ `hr, table, td, th`; `gdpr-for-agencies` → `table, td, th`; `eaa-shopify` og
+`build-your-first-chrome-extension` → ingen. `pre code` kræver begge dele.
+
+Mutation: alle reglerne skrevet igen → `check_built_css` RØD 30 fund; uændret
+GRØN. Bogsiderne tjekket ved 390 og 1280 px, `scrollWidth == clientWidth`.
+
+## 1/10 — pro-kort på `/scan` og `/scan-da`, og den trykte rapport
+
+Feature-kø punkt 6: `/scan` var det mest indgående værktøj på sitet (290
+indgående links målt 1/10) og det eneste gratis EAA-tjek, hvis resultat ikke
+solgte. Begge sider endte i en donationslinje, selv om samme produktrappe sælger
+i resultatet på de otte søskendeværktøjer. Baseline: 0 `buy.stripe.com` på
+`site/scan.html` og `site/scan-da.html`.
+
+Begge renderer nu `proCard()` med katalogens betalingslink, pris og periode.
+Kortet siger *hvad scanningen ikke kunne se* — de andre sider, de 18
+server-side tjek, PDF'en til kunden — og overskriften er forskellig på de to
+sprog, fordi «læste én side» er sandt for `/scan` mens «læste siden og de
+juridiske sider» er sandt for `/compliance-site-check`.
+
+**Fundet undervejen:** `@media print` i `site/style.css` skjuler `.btn`, men
+ikke `.pro-card`. Siden tilbyder «Udskriv / gem som PDF», så brugerens egen
+rapport fik en lilla salgstext med den eneste handling fjernet. Målt i
+browseren før rettelsen: `display: block` på `.pro-card`, `display: none` på
+knappen inden i den. Rettelsen er én vælger i print-listen, som dækker alle de
+otte værktøjer der deler kortet. Målt efter: `display: none` på begge sprog.
+
+Dom: `node tests/scan-clients.test.mjs` 252/252. Sektion 11 dommer
+`/scan` og `/scan-da` på den markup resultatet faktisk renderer (dommen kræver
+en minimal `DOMParser`, fordi siden selv parserer det hentede HTML). Sektion 13
+dommer print-listen. Begge kan fejle: `$79`→`$19` i knappen → 248/249 med
+«knappen viser prisen fra katalogen ($79)»; `.pro-card` fjernet fra print-
+listen → 249/252 med «print: pro-kortet skjuler sig i den trykte rapport».
+
+Design tjekket i browseren ved 390 og 1280 px på begge sprog:
+`scrollWidth == clientWidth`, knappen 66×316 px ved 390 px (≥44 px), kortet
+arver `--color-accent` som de otte søskende.
+
+## 1/10 — de tre bog-punkter flyttet fra STATUS til arkivet
+
+STATUS holdt tre afsluttede bogerunderopgaver, der alle har en dom der kan
+fejle, og de fyldte mere end halvdelen af de 25 tilladte linjer. De er
+registreret her i stedet; `tools/check_plan_status.py` tæller dem ikke, og
+porten kræver at hvert punkt i STATUS har et tal.
+
+- Bogside-ruterne læser kapitel 1 og 2 i fuld tekst, bygget af den EPUB kunden
+  henter, så visningen ikke kan blive ældre end bogen. Baseline før: 0 tegn
+  bogtekst på alle otte ruter. Målt efter: `read-online` 1 gang på hver af de
+  seks, 0 på `books/index` og `books/compliance-bundle`.
+- `book_reader.py` skrev CSS for otte elementtyper til alle seks bøger, men kun
+  nogle kapitler har dem, så resten var død CSS. Nu skriver den kun det
+  kapitlerne bruger; `pre code` kræver begge dele. Mutation: alle reglerne
+  skrevet igen → `check_built_css` RØD 30 fund.
+- `quality_gate.py` tog beslutningen om `dist/` *før* build-steppet, så hver
+  frisk checkout sprang 16 dist-steps over og meldte grøn, mens samme kode
+  lokalt var rød i `built-css`. Bevis fra den grønne kørsel af `c4fd730`: den
+  siger «intet i dist/ — springer 16 dist-steps over». Målt efter: GRØN 123
+  steps fra en `dist/` der ikke fandtes.

@@ -166,7 +166,24 @@ function loadPage(path, fetchImpl, opts = {}) {
       querySelectorAll: () => [],
       addEventListener() {}, createElement: () => make(), createTextNode: (t) => ({ textContent: t }),
       body: make(), documentElement: make(), head: make(),
+      // `/scan` går selv igennem det hentede HTML med `DOMParser` og løber så
+      // reglerne over `querySelectorAll`. Sandkassen skal derfor kunne gennemføre
+      // et gennemført tjek, så dommen om pro-kortet måles på den markup siden
+      // faktisk skriver. Der er ingen elementer at finde, så tjekket finder ingen
+      // fejl — det er fund-kortet og dets købsvej, dommen handler om.
+      createTreeWalker: () => ({ nextNode: () => null }),
     },
+    // Samme grund. En tom `doc` med det `#scan` læser, så kaldet kører hele vejen
+    // igennem og skriver sit resultat.
+    DOMParser: class {
+      parseFromString() {
+        return {
+          images: [], title: 'Example', body: make(), documentElement: make(),
+          querySelectorAll: () => [], querySelector: () => null,
+        };
+      }
+    },
+    NodeFilter: { SHOW_TEXT: 4 },
     navigator: { doNotTrack: '0' },
     location: { pathname: '/' + path.split('/').pop(), href: 'https://mahope.tools/', hash: '' },
   };
@@ -953,6 +970,9 @@ function mutated(path, from, to) {
 
   // Cookie-tjekket læser kildedokumentet, så svaret skal have `html`.
   const OK_COOKIE = { status: 200, body: { ok: true, url: 'https://example.com', html: '<html><body>gtag("consent","default")</body></html>' } };
+  // `/scan` henter gennem `/scan-proxy`, som svarer med `{ ok, html }` — ikke
+  // med en rapport som `/compliance-site-check` gør.
+  const OK_SCAN_PROXY = { status: 200, body: { ok: true, url: 'https://example.com', html: '<html lang="en"><head><title>Example</title></head><body><h1>Example</h1></body></html>' } };
 
   // Siderne har to forskellige former for den samme boks. Nogle bygger den i
   // `innerHTML` som en del af resultat-markuppen — den findes kun i scriptet.
@@ -1060,6 +1080,36 @@ function mutated(path, from, to) {
         await sleep(20);
         return { markup: (nodes.get('pro-nudge') || {}).innerHTML || '',
                  afsløret: (nodes.get('pro-nudge') || {}).hidden === false };
+      },
+    },
+    {
+      // `/scan` (EN + DA) er det mest linkede værktøj på sitet — 290 indgående
+      // links målt 1/10 — og det var det eneste gratis EAA-tjek, hvis resultat
+      // ikke solgte. Det endte i en donationslinje, selv om samme produktrappe
+      // sælger i resultatet på de seks søskendeværktøjer ovenfor. Sandkassen
+      // får en minimal `DOMParser`, fordi siden selv parserer det hentede HTML
+      // og derefter skriver hele resultat-markuppen i én `innerHTML`.
+      path: 'site/scan.html', label: 'scan EN', product: 'eucomply-pro',
+      report: /href="\/compliance-report"/, form: 'script',
+      async kør() {
+        const { fetchImpl } = responses([OK_SCAN_PROXY]);
+        const { sandbox, nodes } = loadPage('site/scan.html', fetchImpl, { match: /scan-proxy/ });
+        await sandbox.scan('https://example.com');
+        await sleep(30);
+        const html = (nodes.get('result') || {}).innerHTML || '';
+        return { markup: html, donation: html, afsløret: true };
+      },
+    },
+    {
+      path: 'site/scan-da.html', label: 'scan DA', product: 'eucomply-pro',
+      report: /href="\/da\/compliance-report"/, form: 'script',
+      async kør() {
+        const { fetchImpl } = responses([OK_SCAN_PROXY]);
+        const { sandbox, nodes } = loadPage('site/scan-da.html', fetchImpl, { match: /scan-proxy/ });
+        await sandbox.scan('https://example.com');
+        await sleep(30);
+        const html = (nodes.get('result') || {}).innerHTML || '';
+        return { markup: html, donation: html, afsløret: true };
       },
     },
   ];
@@ -1339,6 +1389,43 @@ function mutated(path, from, to) {
     ok(`${lang}: pro-kortet siger hvad der *blev* læst, så forskellen er målbar`,
       /legal pages|juridiske sider, den peger/i.test(pro), pro.slice(0, 220));
   }
+}
+
+// 13. Pro-kortet i trykt form. `/scan` og `/compliance-site-check` tilbyder begge
+//     «Udskriv / gem som PDF», og `@media print` i `site/style.css` skjuler
+//     `.btn` — så uden en linje mere fik brugeren en lilla salgst tekst i sin
+//     rapport med den eneste handling fjernet. Målt i browseren før rettelsen:
+//     `display: block` på `.pro-card`, `display: none` på knappen inden i den.
+//     Domden her læser den rigtige fil, fordi det er den browseren får.
+{
+  const css = readFileSync(join(root, 'site/style.css'), 'utf8');
+  const printBlock = css.slice(css.indexOf('@media print'));
+  // `@media print` skjuler med ÉN lang vælgerliste, så domden skal læse
+  // hvilke vælgere der står i den regel — ikke søge efter en regel pr. vælger.
+  // En regel der skjuler `.btn` men ikke `.pro-card` er præcis fejlen.
+  const skjuler = (block, klasse) => {
+    for (const m of block.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      if (!m[2].includes('display: none')) continue;
+      if (m[1].split(',').some((s) => s.trim() === klasse)) return true;
+    }
+    return false;
+  };
+  ok('print: pro-kortet skjuler sig i den trykte rapport',
+    skjuler(printBlock, '.pro-card'),
+    `@media print skal skjule .pro-card, som den skjuler .btn`);
+  // Og de otte værktøjer der deler kortet, må ikke stå med en tom regel der
+  // ligner som om den gør noget: `.pro-card` skal være i den samme skjul-liste
+  // som knappen, ikke i en regel for sig.
+  const sammeRegel = printBlock.match(/([^{}]+)\{[^{}]*display: none[^{}]*\}/g) || [];
+  ok('print: pro-kortet skjules i samme regel som knappen',
+    sammeRegel.some((r) => r.includes('.pro-card') && r.includes('.btn')),
+    `regler med display:none: ${sammeRegel.length}, pro-card i egen regel: ${sammeRegel.some((r) => r.includes('.pro-card') && !r.includes('.btn'))}`);
+  // Mutation: `.pro-card` fjernet fra print-listen skal gøre dommen rød, så den
+  // ikke kan være grøn fordi den slet ikke dømmer.
+  const uden = printBlock.replace(/\.pro-card, /, '');
+  ok('mutation: pro-kortet fjernet fra print-listen fanges',
+    skjuler(printBlock, '.pro-card') && !skjuler(uden, '.pro-card'),
+    'altså kan dommen blive rød på den gamle kode');
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

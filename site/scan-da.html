@@ -180,6 +180,25 @@ async function shareResult(){
   alert('Link kopieret: '+url);
 }
 window.shareResult=shareResult;
+// Betalt vej. Samme produktrappe og samme ærlige tre punkter som den danske
+// `/compliance-site-check`, fordi de to er det samme tjek på hver sin måde:
+// dette læser den ene side brugeren indsatte, den anden følger links til de
+// juridiske sider. Forskellen står i overskriften.
+function proCard(){
+  var html = '<div class="result-card pro-card">';
+  html += '<h3 style="margin:0 0 4px;font-size:16px">Den læste den ene side, du indsatte. Et website er alle sider.</h3>';
+  html += '<p class="pro-lead">Det her kunne ikke se:</p>';
+  html += '<ul class="pro-list">';
+  html += '<li><strong>Alle de andre sider.</strong> EUComply Pro gennemgår hele sitet — samme tilgængelighedstjek på produktsider og blogindlæg med.</li>';
+  html += '<li><strong>18 server-side tjek.</strong> GDPR-, cookie-, sikkerheds- og metaregler, som kun en server kan svare på, oveni de tilgængelighedsregler ovenfor.</li>';
+  html += '<li><strong>En PDF du kan sende til din kunde.</strong> Rapporten indeholder de server-side fund, og PDF\'en kræver din licensnøgle.</li>';
+  html += '</ul>';
+  html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a>';
+  html += '<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>';
+  html += '</div>';
+  return html;
+}
+window.proCard=proCard;
 async function scan(url){
     if (window.trackEvent) window.trackEvent('scan');
   const out = document.getElementById('result');
@@ -335,6 +354,7 @@ async function scan(url){
     '<p style="text-align:center;margin-top:18px"><button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '+
     '<button onclick="shareResult()" class="btn btn-secondary">Kopiér delelink</button></p>'+
     '<p style="font-size:13px;color:#667">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>'+
+    proCard()+
     '<p style="font-size:13px;color:#667">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{

@@ -1,45 +1,48 @@
 # STATUS
 
-- **Bøgerne kan læses online, kapitel for kapitel.** Rettet 1/10: alle seks
-  bogside-ruter har nu en læsevisning med kapitel 1 og 2 i fulde kapitler —
-  bygget af `ebook/<slug>.epub`, altså af den fil kunden henter, så den ikke kan
-  blive ældre end bogen. Rækkefølgen læses af OPF-spine'en. Baseline før: 6 af
-  6 bogside-ruter viste 0 tegn bogtekst og en kapitel-liste, og den eneste måde
-  at læse en bog på var at hente EPUB'en. Målt efter: `id="read-online"` 1 gang
-  på hver af de seks, 0 på `index` og `compliance-bundle` (de er ikke en bog).
-- **Gaten kørte 16 domme i CI uden at køre dem.** Rettet 1/10: `quality_gate.py`
-  tog beslutningen om `dist/` *før* build-steppet, så en frisk checkout uden
-  `dist/` sprang `sitemaps, seo, inline-js, links, design-tokens, jsonld-types,
-  hreflang-pairs, built-css …` over og meldte grøn. Bevis fra den grønne
-  kørsel af `c4fd730`: loggen siger «intet i dist/ — springer 16 dist-steps
-  over», mens samme kode lokalt var **rød** i `built-css` med 35 fund. Derfor
-  gaten lokalt: `python3 tools/quality_gate.py` → GRØN 123 steps, og de otte
-  ovenfor kører alle med `--- grøn`.
-- **Bogside-ruterne sendte død CSS.** Samme rodårsag: `book_reader.py` skrev
-  regler for `pre`, `code`, `blockquote`, `table`, `th`, `td`, `hr` og `h4` til
-  alle seks bøger, men kun nogle kapitler har sådanne afsnit. Nu skrives kun det
-  kapitlerne faktisk bruger; `pre code` kræver begge dele. Målt: `cookie-consent`
-  → `code, pre, table, td, th`; `eaa-checklist` → `blockquote, code, hr, table,
-  td, th`; `eaa-shopify` og `build-your-first-chrome-extension` → ingen. Døde
-  regler tilbage i skabelonen → `check_built_css` RØD 30 fund; uændret → GRØN.
-- **Scannerens læsevisning er verificeret live.** `DEPLOY OK 2026-10-01` — alle
-  seks domme fra sidste deploy-note er målt på live `8d8cdb5`, se nedenfor.
-- **CEO-kø punkt 0 er leveret og efterprøvet 1/10.** Alle fem delpunkter er
-  verificeret, ikke bare lukket: `handleUrlInspect(request, url, env)` kalder
-  `rateLimitIp(request, env, …)` med `env` (`_worker.js:288/3367`), begge ruter
-  svarer 200; `thanks.html` har egen `PENDING_OUT`-sætning til 202; 429 er
-  endelig i `site/net.js:43` med `err.limited`, så ingen af de otte klienter
-  genkalder den; 5xx er transient med højst ét ekstra kald; `targetIsPublic()`
-  sidder på `/api/header-check` og `/api/url-inspect` **og på hvert
-  redirect-hop** (`_worker.js:2659`, `3440`). Der findes ingen `ceo/net-js`
-  længere — reglen ligger i `net.js` på `main`.
-- **PR-TJEK 2026-10-01:** `gh pr list --state open` → ingen åbne PR'er.
+- **Bøgerne læses online.** Alle seks bogside-ruter viser kapitel 1 og 2 i fuld
+  tekst. Baseline før: 0 tegn bogtekst på alle otte ruter. Målt efter:
+  `read-online` 1 gang på hver af de seks, 0 på `books/index` og
+  `books/compliance-bundle`. De sender heller ikke længere død CSS (mutation:
+  alle regler igen → RØD 30 fund).
+- **Gaten kørte 16 domme i CI uden at køre dem.** `quality_gate.py` tog
+  beslutningen om `dist/` *før* build-steppet, så en frisk checkout sprang dem
+  over og meldte grøn, mens samme kode lokalt var rød i `built-css`. Bevis: den
+  grønne kørsel af `c4fd730` siger «springer 16 dist-steps over». Målt efter:
+  GRØN 123 steps fra en `dist/` der ikke fandtes. Scannerens læsevisning er
+  `DEPLOY OK 2026-10-01` — seks domme målt på live `8d8cdb5`.
+- **`/scan` og `/scan-da` sælger nu, og deres trykte rapport gør ikke.**
+  Begge renderer det samme pro-kort som de otte søskendeværktøjer. Fundet under
+  vejen: `@media print` skjulte `.btn` men ikke `.pro-card`, så «Udskriv / gem
+  som PDF» gav en lilla salgstext uden knap. Nu skjuler print-listen begge.
+  Målt: `$79`→`$19`-mutation rød (248/249), `.pro-card` fjernet fra print-
+  listen rød (249/252), uændret 252/252; browseren viser `display: none`.
+- **CEO-kø punkt 0 er leveret og efterprøvet 1/10** — alle fem delpunkter
+  verificeret på koden, ikke bare lukket; detaljerne i `docs/plan-arkiv.md`.
+- **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
+  ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
-  Squeezy, Search Console, og **bogenes betalte udgave** (ny, se ❓). Historie:
-  `docs/plan-arkiv.md`.
+  Squeezy, Search Console, og **bogenes betalte udgave** (ny, se ❓).
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: pro-kort på /scan og /scan-da
+  ceo/scan-saelger 2026-10-01 19:55` — måles på **indhold** på
+  `https://mahope.tools/scan` og `https://mahope.tools/da/scan`.
+  Baseline målt 1/10 på `site/`: 0 `buy.stripe.com` på begge sider. Domden:
+  1. Begge sider har `class="result-card pro-card"` 1 gang.
+  2. Katalogens betalingslink `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03` står i
+     `proCard()` på begge, og knappen siger `$79` + en periode (`/year`, `/år`).
+  3. Donationslinjen overlever: `donate.stripe.com` stadig 1 gang pr. side.
+  4. `https://mahope.tools/style.css` har `.pro-card` i den `@media print`
+     regel der også skjuler `.btn` — ellers trykkes salgstexten uden knap.
+  5. Pro-kortet på EN og DA skal være hvert sit sprog, og ingen af dem må
+     påstå at kun én side blev læst (det gør `/compliance-site-check`'s).
+  Domden er `node tests/scan-clients.test.mjs` (252/252) + gaten. Mutationer
+  målt: `$79`→`$19` i knappen → 248/249 med «knappen viser prisen fra
+  katalogen ($79)»; `.pro-card` fjernet fra print-listen → 249/252 med «print:
+  pro-kortet skjuler sig i den trykte rapport». Grøn er kun den uændrede kode.
 
 - `VERIFICÉR DEPLOY: læsevisning på alle bogside-ruter
   ceo/boeger-laeses-online 2026-10-01 20:25` — måles på **indhold** på
@@ -239,3 +242,10 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    rapport siger hvilken side og hvilke sider der blev læst, og et dybt URL
    scannes på den side det angiver. Målt først: «the score is the homepage»
    stod på siden uanset input, og kun de gættede stier blev læst.
+6. ~~Det mest linkede værktøj solgte ikke.~~ **Leveret 1/10** — `/scan` og
+   `/scan-da` renderer nu det samme pro-kort som de otte søskendeværktøjer,
+   med katalogens betalingslink, pris og periode, og donationslinjen overlever.
+   Målt først: 0 `buy.stripe.com` på begge sider. Dertil en fundet fejl: kortet
+   blev trykt med i brugerens egen rapport, fordi `@media print` skjuler `.btn`
+   men ikke `.pro-card` — så PDF'en havde salgstext uden den eneste handling.
+   Nu skjuler print-listen begge, målt i browseren (`display: none`).
