@@ -163,6 +163,22 @@
     return (l1 + 0.05) / (l2 + 0.05);
   }
 
+  // Den betalte vej, skrevet ind i resultatet: hullet bliver først synligt,
+  // når du har set at ét billede blev målt og de 400 andre ikke blev.
+  // En pris over lærredet ville være en salgstale i stedet.
+  var PRO_CARD =
+      '<div class="pro-card">'
+    +'<h3>Du tjekkede ét billede. Et website er alle billeder.</h3>'
+    +'<p class="pro-lead">Det her kunne ikke se på:</p>'
+    +'<ul class="pro-list">'
+    +'<li><strong>Alle de andre billeder.</strong> Indbakket tekst i et foto er ulæselig på én baggrund og fin på den næste; det er 400 domme på et rigtigt site.</li>'
+    +'<li><strong>Reglerne omkring billedet.</strong> Manglende alt-tekst, formularfelter uden label, rækkefølge i overskrifter, ARIA og frames — 15 tilgængelighedstjek på tværs af alle sider.</li>'
+    +'<li><strong>En rapport du kan give en kunde.</strong> Fundene som PDF, med de server-side tjek oveni.</li>'
+    +'</ul>'
+    +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
+    +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
+    +'</div>';
+
   function fontSizePx() {
     return Math.max(18, Math.round(cv.width * 0.06));
   }
@@ -272,7 +288,8 @@
       (passAA && !passAAA ? '<br>Består AA men ikke AAA (' + (large ? '4,5' : '7') + ':1).' :
        passAAA ? '<br>Består også AAA.' :
        '<br>Prøv en mørkere/lysere tekstfarve, eller læg en translucent skærm bag teksten.') +
-      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.</span>' +
+      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.</span>'
+      + PRO_CARD +
       '<br><span style="font-size:13px;color:var(--color-text-muted)">Tjekket er gratis og kører i din browser. Hvis det sparede dig en ombygning, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.</span>';
   }
 

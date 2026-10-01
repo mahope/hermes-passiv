@@ -1,7 +1,7 @@
 {
  "note": "Hvert betalt anker på hver dømt værktøjsside, målt af check_tool_paid_path.py. Ratchet: et par der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. Den dømmer OGSÅ et anker der peger på en anden destination end den blev målt med, altså en ombytning: en liste destinationer kan ikke se den, fordi sættet er uændret. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
  "source": "python3 tools/check_tool_paid_path.py --write  · Parrene er de rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på ankerets `id` (ellers dets synlige tekst)",
- "measured": "2026-09-30",
+ "measured": "2026-10-01",
  "paths": {
   "/accessibility-statement-generator": {
    "the compliance report": "/compliance-report"
@@ -90,9 +90,13 @@
    "EUComply Pro": "/compliance-report"
   },
   "/contrast-checker": {
+   "#4": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "#5": "/compliance-report",
    "EUComply Pro": "/compliance-report"
   },
   "/contrast-checker-da": {
+   "#4": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "#5": "/da/compliance-report",
    "EUComply Pro": "/da/compliance-report"
   },
   "/cookie-check": {
@@ -377,6 +381,8 @@
    "priser": "/da/compliance-report"
   },
   "/security-headers-check": {
+   "#0": "https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03",
+   "#1": "/compliance-report",
    "EUComply Pro": "/compliance-report"
   },
   "/text-diff": {
@@ -397,6 +403,8 @@
    "say thanks": "/support"
   },
   "/url-inspector": {
+   "#0": "https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04",
+   "#1": "/page-profile",
    "Page Profile Pro": "/page-profile"
   },
   "/url-to-markdown": {

@@ -156,6 +156,17 @@
       </table>
     </div>
     <p id="ui-donate" style="font-size:13px;color:var(--color-text-muted);margin:14px 0 0" hidden></p>
+    <div id="ui-pro" class="pro-card" hidden>
+      <h3>This read one URL. A site is every URL.</h3>
+      <p class="pro-lead">What a single inspection cannot do:</p>
+      <ul class="pro-list">
+        <li><strong>Every other address on the site.</strong> The /img/ folder can still be on HTTP while this one page is not.</li>
+        <li><strong>Two URLs side by side.</strong> Comparison mode shows what changed between them, which is how you prove a fix worked.</li>
+        <li><strong>A report you can send to a client.</strong> The same headers, redirects and SSL result written as one HTML file.</li>
+      </ul>
+      <p><a class="btn" href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" rel="nofollow noopener">Buy Page Profile Pro — $19/year</a></p>
+      <p class="pro-card-note">Three machines per licence. <a href="/page-profile">See what Pro adds before you buy</a>.</p>
+    </div>
   </div>
 </div>
 
@@ -394,6 +405,13 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
       donate.hidden = false;
       donate.innerHTML = 'This inspection is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
     }
+
+    // The paid path, revealed only once a result exists — the same moment the
+    // donation line appears. Stating it as a section above would put a price
+    // in front of someone who has not used the tool yet, and the box is
+    // markup here precisely so it can be read out of the result.
+    var pro = document.getElementById('ui-pro');
+    if (pro) pro.hidden = false;
   }
 
   function escapeHtml(s) {

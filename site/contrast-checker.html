@@ -107,6 +107,18 @@
   <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html" rel="noopener">1.4.6 (Contrast Enhanced)</a> and
   <a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">1.4.11 (Non-text Contrast)</a>.
   Fixing failures site-wide? The free <a href="/scan">Accessibility Scanner</a> finds low-contrast text on a whole page.</p>
+
+  <div id="cc-pro" class="pro-card" hidden>
+    <h3>You tested one pair of colors. A site is every pair.</h3>
+    <p class="pro-lead">What this cannot check:</p>
+    <ul class="pro-list">
+      <li><strong>Every other color combination.</strong> Contrast is one of the 15 accessibility rules EUComply Pro runs across every page of the site.</li>
+      <li><strong>18 server-side checks.</strong> GDPR, cookie, security and metadata rules only a server can answer, on top of the accessibility rules.</li>
+      <li><strong>A report you can hand a client.</strong> 33 checks in a PDF, not a color picker.</li>
+    </ul>
+    <p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>
+    <p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>
+  </div>
 </section>
 
 <section class="cc-card">
@@ -194,6 +206,9 @@
       errEl.textContent = 'Enter valid hex colors, e.g. #1a1e21 or fff.';
       return;
     }
+    // The paid path appears with the first real result, not on page load: a
+    // price above a checker nobody has run yet is a sales pitch, not a handoff.
+    $('cc-pro').hidden = false;
     fgColor.value = toHex(fg);
     bgColor.value = toHex(bg);
 

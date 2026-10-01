@@ -592,6 +592,17 @@ PRODUCT_ENGINE: tuple[tuple[str, str], ...] = (
     ("cookie-check-da.html", "web"),
     ("contrast-checker.html", "web"),
     ("contrast-checker-da.html", "web"),
+    # Sidens danske tvilling. Den lå ikke i kortet fordi den *kun* omtalte
+    # Pro i brødteksten uden et regeltal — den skrev «ét af de 15
+    # tilgængelighedsregler» i sit eget afsnit, altså et løfte på den frie
+    # motor, men i en form `RE_CLAIM` ikke greb. 1/10 fik den en boks i
+    # resultatet der skriver «15 tilgængelighedstjek», og så blev løftet
+    # dømmeligt — og da kom den rød med «står ikke i PRODUCT_ENGINE». Det er
+    # porten der virker: et løfte uden motor kan ikke dømmes, så motoren skal
+    # ind, ikke løftet væk. Samme fejl som `blog/accessibility-scanner-cli`
+    # ovenfor, en linje længere nede i korpus.
+    ("text-on-image-checker.html", "web"),
+    ("text-on-image-checker-da.html", "web"),
     ("security-headers-check.html", "web"),
     ("compliance-site-check.html", "web"),
     ("da/compliance-site-check.html", "web"),

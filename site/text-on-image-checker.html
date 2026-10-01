@@ -163,6 +163,23 @@
     return (l1 + 0.05) / (l2 + 0.05);
   }
 
+  // ---- result ----------------------------------------------------------
+  // The paid path, written into the result markup: the gap is only visible
+  // once you have seen that one image was measured and the other 400 were
+  // not. A price above the canvas would be a sales pitch instead.
+  var PRO_CARD =
+      '<div class="pro-card">'
+    +'<h3>You checked one image. A site is every image.</h3>'
+    +'<p class="pro-lead">What this could not look at:</p>'
+    +'<ul class="pro-list">'
+    +'<li><strong>Every other image.</strong> Text baked into a photo is unreadable on one background and fine on the next; that is 400 judgements on a real site.</li>'
+    +'<li><strong>The rules around the image.</strong> Missing alt text, form labels, heading order, ARIA and frames — 15 accessibility checks across every page.</li>'
+    +'<li><strong>A report you can hand a client.</strong> The findings as a PDF, with the server-side checks on top.</li>'
+    +'</ul>'
+    +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>'
+    +'<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>'
+    +'</div>';
+
   // ---- drawing --------------------------------------------------------
   function fontSizePx() {
     return Math.max(18, Math.round(cv.width * 0.06));
@@ -274,7 +291,8 @@
       (passAA && !passAAA ? '<br>Passes AA but not AAA (' + (large ? '4.5' : '7') + ':1).' :
        passAAA ? '<br>Also passes AAA.' :
        '<br>Try a darker/lighter text color, or add a translucent scrim behind the text.') +
-      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>' +
+      '<br><span style="font-size:.85rem;color:var(--color-text-muted)">Measured against the lightest and darkest image pixels under your letters.</span>'
+      + PRO_CARD +
       '<br><span style="font-size:13px;color:var(--color-text-muted)">This check is free and runs entirely in your browser. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</span>';
   }
 

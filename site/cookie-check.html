@@ -166,6 +166,23 @@ const CMPS=[
 
 function countMatches(re, html){ const m = html.match(new RegExp(re,'gi')); return m ? m.length : 0; }
 
+// The paid path, written into the result markup rather than a section above
+// the tool: a banner asking for money before the visitor has seen a single
+// finding is the one thing that makes a free tool feel like a funnel. It lands
+// here, after the findings, where the gap is — this page read one page.
+const PRO_CARD =
+    '<div class="pro-card">'
+  +'<h3>This looked at one page. A site is every page.</h3>'
+  +'<p class="pro-lead">What this check could not see:</p>'
+  +'<ul class="pro-list">'
+  +'<li><strong>Every other page.</strong> EUComply Pro crawls the whole site, not the one URL you pasted.</li>'
+  +'<li><strong>Whether the consent signal is stored.</strong> Consent banners, tracking scripts, consent signals, privacy policy links and third-party embeds, on every page.</li>'
+  +'<li><strong>A report you can hand a client.</strong> The findings as a PDF, not a screenshot.</li>'
+  +'</ul>'
+  +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>'
+  +'<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>'
+  +'</div>';
+
 async function scan(url){
     if (window.trackEvent) window.trackEvent('scan');
   const out = document.getElementById('result');
@@ -259,6 +276,7 @@ async function scan(url){
     +'The full requirements and fixes are in the '
     +'<a href="/blog/cookie-consent-gdpr-compliance">cookie consent guide</a> and the '
     +'<a href="/#products">Cookie Consent &amp; Privacy e-book</a>.</p>'
+    +PRO_CARD
     +'<p style="font-size:13px;color:var(--color-text-muted)">This check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>'
     +'<p style="text-align:center;margin-top:18px">'
     +'<button onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '

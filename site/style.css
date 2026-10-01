@@ -477,6 +477,17 @@ a.card:hover, .hubcard:hover, .plat-card:hover, .dl-card:hover, .book-card:hover
 .book-card-meta, .book-meta { font-size: 0.8rem; }
 @media (max-width: 560px) { .book-card { grid-template-columns: 1fr; } .book-card img { max-width: 160px; } }
 
+/* Pro card: den betalte vej, vist i værktøjets eget resultat --------------
+   Sæt i skallen, så alle sider der renderer den ligner hinanden. Før den lå
+   i hver sides egen `<style>` med hårdkodede blå farver; på de mørke temaer
+   var det en lys blå kasse i mørk tekst. Kun tokens her, ingen egne farver. */
+.pro-card { border: 1px solid var(--color-accent); border-radius: var(--radius); background: var(--color-accent-soft); padding: 1.1rem 1.25rem; margin: 1.25rem 0 0; }
+.pro-card h3 { font-size: 1.05rem; margin: 0 0 0.6rem; }
+.pro-lead { font-size: 0.9rem; color: var(--color-text-muted); margin: 0 0 0.5rem; }
+.pro-list { margin: 0 0 0.75rem; padding-left: 1.15rem; font-size: 0.95rem; line-height: 1.5; }
+.pro-list li { margin: 0.25rem 0; }
+.pro-card-note { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.75rem 0 0; }
+
 /* Callouts: related links, tool CTAs, notes ----------------------------- */
 .related-guides, .related-books, .book-cta, .cta-scan, .notice, .note, .callout, .cta-section {
   border: 1px solid var(--color-border); border-left: 3px solid var(--color-accent); border-radius: var(--radius);

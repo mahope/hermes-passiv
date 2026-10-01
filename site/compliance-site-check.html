@@ -74,12 +74,6 @@
   .input-group button:disabled { background: #93c5fd; cursor: not-allowed; }
   .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; color: #dc2626; margin: 16px 0; }
   .result-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin: 16px 0; }
-  .pro-card { background: #eff6ff; border: 1px solid #bfdbfe; }
-  .pro-card h3 { color: #1e40af; }
-  .pro-lead { font-size: 13px; color: #4b5563; margin: 0 0 8px; }
-  .pro-list { margin: 0 0 12px; padding-left: 20px; font-size: 14px; color: #374151; line-height: 1.5; }
-  .pro-list li { margin: 4px 0; }
-  .pro-note { font-size: 13px; color: #4b5563; margin: 12px 0 0; }
   .score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
   .score-badge { font-size: 28px; font-weight: 800; padding: 8px 16px; border-radius: 8px; }
   .score-badge.A { background: #d1fae5; color: #065f46; }
@@ -351,7 +345,7 @@ function renderResults(data) {
   html += '<li><strong>A PDF you can send a client.</strong> The report holds the server-side findings; the PDF needs your licence key.</li>';
   html += '</ul>';
   html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
-  html += '<p class="pro-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
+  html += '<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
   html += '</div>';
 
   html += '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';

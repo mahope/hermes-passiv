@@ -107,6 +107,18 @@
   <a href="https://www.w3.org/WAI/WCAG21/Understanding/contrast-enhanced.html" rel="noopener">1.4.6 (Contrast Enhanced)</a> and
   <a href="https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html" rel="noopener">1.4.11 (Non-text Contrast)</a>.
   Skal fejl rettes på hele sitet? Den gratis <a href="/scan-da">Accessibility Scanner</a> finder lavkontrast-tekst på en hel side.</p>
+
+  <div id="cc-pro" class="pro-card" hidden>
+    <h3>Du testede ét farvepar. Et website er alle par.</h3>
+    <p class="pro-lead">Det her kan ikke tjekke:</p>
+    <ul class="pro-list">
+      <li><strong>Alle andre farvekombinationer.</strong> Kontrast er ét af de 15 tilgængelighedsregler, EUComply Pro kører på tværs af alle sider i sitet.</li>
+      <li><strong>18 server-side tjek.</strong> GDPR-, cookie-, sikkerheds- og metaregler, som kun en server kan svare på, oveni tilgængelighedsreglerne.</li>
+      <li><strong>En rapport du kan give en kunde.</strong> 33 tjek i en PDF, ikke en farvevælger.</li>
+    </ul>
+    <p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>
+    <p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>
+  </div>
 </section>
 
 <section class="cc-card">
@@ -195,6 +207,9 @@
       errEl.textContent = 'Indtast gyldige hex-farver, fx #1a1e21 eller fff.';
       return;
     }
+    // Den betalte vej dukker op sammen med det første rigtige resultat, ikke ved
+    // sidevisning: en pris over et tjek, ingen har kørt endnu, er salgstale.
+    $('cc-pro').hidden = false;
     fgColor.value = toHex(fg);
     bgColor.value = toHex(bg);
 

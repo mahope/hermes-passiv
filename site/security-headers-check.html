@@ -100,6 +100,22 @@
 
   <p id="shc-donate" style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0" hidden></p>
 
+  <!-- `h2`, ikke `h3`: denne boks sidder over sidens første `h2`, så et `h3`
+       her ville være et spring. På de sider hvor boksen ligger under et
+       afsnit, er niveauet `h3` — niveauet følger placeringen, ikke en
+       skabelon. -->
+  <div id="shc-pro" class="pro-card" hidden>
+    <h2>This read one response. A site's security is every response.</h2>
+    <p class="pro-lead">What this check could not look at:</p>
+    <ul class="pro-list">
+      <li><strong>The other pages.</strong> Headers are set per response, so a template that hardens <code>/</code> can leave everything else open.</li>
+      <li><strong>HTTPS enforcement, mixed content and form security.</strong> Three of the server-side checks Pro adds on top of the 15 accessibility rules.</li>
+      <li><strong>A report you can hand over.</strong> The findings as a PDF for a client or a compliance officer, not a screenshot.</li>
+    </ul>
+    <p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a></p>
+    <p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>
+  </div>
+
   <div class="sh-section">
     <h2>Critical Security Headers</h2>
     <div id="criticalHeaders"></div>
@@ -375,6 +391,7 @@
       '<a href="' + resp.finalUrl.replace(/&/g,'&amp;') + '" target="_blank" rel="noopener" style="color:var(--color-accent);">' + resp.finalUrl + '</a>';
     donateLine.innerHTML = 'Checking a site\u2019s security headers is free and needs no account. If it saved you a rebuild, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.';
     donateLine.hidden = false;
+    document.getElementById('shc-pro').hidden = false;
 
     // Critical headers
     var criticalDiv = document.getElementById('criticalHeaders');

@@ -45,10 +45,40 @@ function el() {
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
     submit() { (this._ls.submit || []).forEach((fn) => fn({ preventDefault() {} })); },
-    querySelectorAll: () => [], querySelector: () => null,
+    querySelectorAll: () => [],
+    // Et elements `querySelector` giver et element i en rigtig browser. Det
+    // `/contrast-checker` er afhængig af: den maler på `preview.querySelector
+    // ('.large')`, så en `null` her døde siden ved sidevisning.
+    querySelector: () => el(),
   };
   return e;
 }
+
+// Et 2D-canvas der svarer, så `/text-on-image-checker` kan køre rigtigt igennem
+// i sandkassen. Det er kun et læse-skab: `getImageData` giver et ensfarvet
+// billede, så værktøjet har noget at måle på og skriver sit resultat —
+// dommen skal ikke dømme et tal, men at købsvejen lander i den markup der
+// kommer ud af et gennemført tjek. Uden denne ville siden fejle på
+// `getContext` og dommen ville aldrig nå sin påstand.
+function ctx2d() {
+  const grad = { addColorStop() {} };
+  return {
+    canvas: null, font: '', textBaseline: '', fillStyle: '',
+    measureText: (t) => ({ width: Math.max(8, String(t || '').length * 9) }),
+    getImageData: (x, y, w, h) => {
+      const n = Math.max(1, Math.round(w) * Math.max(1, Math.round(h)));
+      // Baggrund lys, bogstaver dækker intet: så er «ingen pixels dækket af
+      // tekst» den sande svar, og værktøjet falder tilbage på fotoet under
+      // boksen — den sti, der findes ved måling på en rigtig side.
+      return { data: new Uint8ClampedArray(n * 4).fill(200) };
+    },
+    putImageData() {}, drawImage() {}, clearRect() {}, fillRect() {},
+    fillText() {}, beginPath() {}, arc() {}, fill() {}, save() {}, restore() {},
+    createLinearGradient: () => grad, createRadialGradient: () => grad,
+    translate() {}, scale() {}, rect() {},
+  };
+}
+const withCanvas = (e) => { e.getContext = () => ctx2d(); e.width = 900; e.height = 420; return e; };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Genkalderne står i produktionskoden med 1200 ms mellemrum. Sandkassen klemmer
@@ -76,14 +106,34 @@ function loadPage(path, fetchImpl, opts = {}) {
       : scripts.find((s) => /fetch\(|inspect|scan/.test(s) && !/api\/track/.test(s));
   if (!main) throw new Error(`ingen brugbar <script> i ${path}`);
   const nodes = new Map();
+  // Felternes startværdier læses *af siden selv*, ellers kører værktøjet med
+  // tomme felter hvor browseren ville have `#ffffff` og „Your headline here“.
+  // `/text-on-image-checker` regner på den værdi: uden den er forholdet NaN,
+  // og dommen ville måle en side der aldrig viser et resultat.
+  const seeds = {};
+  for (const m of html.matchAll(/<(?:input|select|textarea)\b[^>]*\bid="([^"]+)"[^>]*>/g)) {
+    const v = /\bvalue="([^"]*)"/.exec(m[0]);
+    if (v) seeds[m[1]] = v[1];
+  }
+  // `opts.canvas` giver hver stub et læse-canvas. Kun `/text-on-image-checker`
+  // har brug for det; de andre sider kalder aldrig `getContext`.
+  const make = (id) => {
+    const n = el();
+    if (id in seeds) n.value = seeds[id];
+    if (opts.canvas) withCanvas(n);
+    return n;
+  };
   // `book-ai.js` bygger sin egen sektion og hænger den før <footer>, så
   // sandkassen skal have et footer-element med en forælder.
-  const footer = el();
+  const footer = make();
   footer.parentNode = { insertBefore() {} };
   const sandbox = {
     console, setTimeout: fastTimeout, clearTimeout, URL, URLSearchParams, Promise, Error, JSON, Date, Math,
     encodeURIComponent, Object, Array, String, Number, Boolean, RegExp, Map, Set, Blob,
     scrollTo() {}, print() {}, alert() {}, confirm: () => true,
+    // `window` *er* sandkassen, så værktøjer der binder på `window` (dragging
+    // på canvas) skal kunne gøre det. Ingen lytter skal dog fyre i en test.
+    addEventListener() {}, removeEventListener() {},
     fetch: fetchImpl,
     document: {
       getElementById(id) {
@@ -91,16 +141,16 @@ function loadPage(path, fetchImpl, opts = {}) {
         // stubben skabe dem, og en vagt som `if (getElementById('x')) return;`
         // ville altid tro at elementet allerede var der.
         if (opts.absent && opts.absent.includes(id)) return null;
-        if (!nodes.has(id)) nodes.set(id, el());
+        if (!nodes.has(id)) nodes.set(id, make(id));
         return nodes.get(id);
       },
       querySelector(sel) { return sel === 'footer' && !opts.noFooter ? footer : null; },
       querySelectorAll: () => [],
-      addEventListener() {}, createElement: () => el(), createTextNode: (t) => ({ textContent: t }),
-      body: el(), documentElement: el(), head: el(),
+      addEventListener() {}, createElement: () => make(), createTextNode: (t) => ({ textContent: t }),
+      body: make(), documentElement: make(), head: make(),
     },
     navigator: { doNotTrack: '0' },
-    location: { pathname: '/' + path.split('/').pop(), href: 'https://mahope.tools/' },
+    location: { pathname: '/' + path.split('/').pop(), href: 'https://mahope.tools/', hash: '' },
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
@@ -115,10 +165,19 @@ function loadPage(path, fetchImpl, opts = {}) {
 
 // Svarene kommer som en række, og der tælles kald, så "prøver den igen?" kan
 // måles i stedet for at læses.
-function responses(list) {
+//
+// `opts.skip` tager kald ud af rækken uden at tælle dem: `/api/track`-beacons
+// fra analytics er en bivirkning, ikke en del af det værktøjet gør. Uden den
+// undtagelse spiste en beacon et programmeret svar, og et tjek der *skal*
+// genkalde efter en 502 så enten ikke gjorde det eller fik svaret to gange —
+// altså blev dommen om prøv-igen grøn på en fejl.
+function responses(list, opts = {}) {
   const state = { calls: 0, urls: [] };
   const fetchImpl = async (url) => {
     state.urls.push(String(url));
+    if (opts.skip && opts.skip.some((re) => re.test(String(url)))) {
+      return { ok: true, status: 200, json: async () => ({}) };
+    }
     const i = state.calls++;
     const step = list[Math.min(i, list.length - 1)];
     if (step.reject) throw new Error(step.reject);
@@ -145,10 +204,13 @@ async function runScan(path, list) {
 }
 
 // `/url-inspector` kører en eksempel-URL ved sidevisning (`setTimeout(..., 300)`).
-// Den tælles ikke med: målingen starter efter at den er faldet, og klikket på
-// knappen er den vej en besøger faktisk tager.
+// Den tælles ikke med: målingen starter efter at den er faldt, og klikket på
+// knappen er den vej en besøger faktisk tager. Men siden har et `value=` i
+// markup, så den kørte URL'en *kun* fordi sandkassens felt var tomt før —
+// altså bruger det første svar i listen på den og klikket får det anden.
+// Derfor præfiksér listen med ét svar, der kun den auto-kørsel kan nå.
 async function runInspect(list) {
-  const { fetchImpl, state } = responses(list);
+  const { fetchImpl, state } = responses([OK_INSPECT, ...list], { skip: [/api\/track/] });
   const { sandbox, nodes } = loadPage('site/url-inspector/index.html', fetchImpl);
   await sleep(30);
   const base = state.calls;
@@ -439,8 +501,11 @@ for (const [path, lang] of [['site/compliance-ai.html', 'EN'], ['site/da/complia
 // --------------------------------------------------------------------------
 const OK_HEADERS = { status: 200, body: { ok: true, status: 200, statusText: 'OK', finalUrl: 'https://example.com', redirected: false, headers: { 'strict-transport-security': 'max-age=63072000', 'content-security-policy': "default-src 'self'", 'x-frame-options': 'DENY', 'x-content-type-options': 'nosniff' } } };
 
+// Samme grund som `runInspect`: siden kører sit `value=`-URL ved sidevisning
+// (`setTimeout(check, 300)`), så det første svar er til den og klikket får det
+// næste.
 async function runHeaders(list) {
-  const { fetchImpl, state } = responses(list);
+  const { fetchImpl, state } = responses([OK_HEADERS, ...list], { skip: [/api\/track/] });
   const { nodes } = loadPage('site/security-headers-check.html', fetchImpl, { match: /HEADERS_MAX_TRIES/ });
   await sleep(30);
   const base = state.urls.length;
@@ -781,6 +846,203 @@ function mutated(path, from, to) {
     const gammelHtml = (gammel.nodes.get('results') || {}).innerHTML || '';
     ok(`${label}: mutation: den gamle kode har ingen købsvej i resultatet`,
       !gammelHtml.includes(pro.payment_link), 'dommen kan altså blive rød');
+  }
+}
+
+// --------------------------------------------------------------------------
+// 11b. Samme betalte vej på de fem øvrige værktøjer, der sælger EUComply Pro
+//      eller Page Profile Pro. Målt 1/10 på live: de otte sider havde 0
+//      `buy.stripe.com` hver, altså ingen købsvej i resultatet overhovedet —
+//      kun et statisk afsnit under værktøjet og en donation på 10 kr.
+//
+//      Dommen kører hvert værktøj *rigtigt* igennem i sandkassen og læser den
+//      markup resultatet renderer, ligesom sektion 11 gør for scanneren. Den
+//      bruger den konkrete købsknap til sit værktøj, fordi de to ikke sælger
+//      det samme: `/url-inspector` sælger Page Profile Pro ($19/år — det er
+//      også den produktrappe dens eget afsnit peger på), de fire andre sælger
+//      EUComply Pro ($79/år pr. website).
+//
+//      Hver købsknap skal have pris **og** periode fra katalogen, ellers kan en
+//      knap med `$19` på sigende sælge et årssubscription.
+// --------------------------------------------------------------------------
+{
+  const catalog = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'));
+  const priceOf = (key) => catalog.products[key].price_usd;
+  const periodWordsOf = (key) => catalog.billing_periods.products[key]
+    .flatMap((k) => catalog.billing_periods.words[k]);
+
+  const outsideScripts = (src) => src
+    .replace(/<style[\s\S]*?<\/style>/g, ' ')
+    .replace(/<script[\s\S]*?<\/script>/g, ' ');
+
+  // Cookie-tjekket læser kildedokumentet, så svaret skal have `html`.
+  const OK_COOKIE = { status: 200, body: { ok: true, url: 'https://example.com', html: '<html><body>gtag("consent","default")</body></html>' } };
+
+  // Siderne har to forskellige former for den samme boks. Nogle bygger den i
+  // `innerHTML` som en del af resultat-markuppen — den findes kun i scriptet.
+  // Andre har den som statisk markup med `hidden`, som scriptet fjerner i det
+  // øjeblik et resultat skrives; den ligger altså i *filen*, og dommen læser
+  // den derfra og dømmer synligheden for sig selv. En tredje form ville være en
+  // boks der findes i markup uden at nogen kode nogensinde afslører den, og
+  // `afsløret` er derfor en del af dommen, ikke en kommentar.
+  const statisk = (src, id) => {
+    const m = src.match(new RegExp(`<div id="${id}"[\\s\\S]*?</div>\\s*</div>`));
+    return m ? m[0] : '';
+  };
+
+  // Hvert værktøj: fil, label, produktrappe, rapport-side og en `kør`-funktion
+  // der returnerer `{ markup, donation, afsløret }` — den markup købsknappen
+  // ligger i, den donationslinje der står ved siden af den, og om koden rent
+  // faktisk viste boksen. Donationslinjen er sit eget felt, fordi den ligger
+  // uden for boksen på nogle sider (`#shc-donate`) og inde i den på andre.
+  const TOOLS = [
+    {
+      path: 'site/cookie-check.html', label: 'cookie-check EN', product: 'eucomply-pro',
+      report: /href="\/compliance-report"/, form: 'script',
+      async kør() {
+        const { fetchImpl } = responses([OK_COOKIE]);
+        const { sandbox, nodes } = loadPage('site/cookie-check.html', fetchImpl, { match: /scan-proxy/ });
+        await sandbox.scan('https://example.com');
+        await sleep(30);
+        const html = (nodes.get('result') || {}).innerHTML || '';
+        const m = /donate\.stripe\.com/.exec(html);
+        return { markup: m ? html.slice(0, m.index) : html, donation: html, afsløret: true };
+      },
+    },
+    {
+      path: 'site/cookie-check-da.html', label: 'cookie-check DA', product: 'eucomply-pro',
+      report: /href="\/da\/compliance-report"/, form: 'script',
+      async kør() {
+        const { fetchImpl } = responses([OK_COOKIE]);
+        const { sandbox, nodes } = loadPage('site/cookie-check-da.html', fetchImpl, { match: /scan-proxy/ });
+        await sandbox.scan('https://example.com');
+        await sleep(30);
+        return { markup: (nodes.get('result') || {}).innerHTML || '', afsløret: true,
+                 donation: (nodes.get('result') || {}).innerHTML || '' };
+      },
+    },
+    {
+      path: 'site/text-on-image-checker.html', label: 'text-on-image EN', product: 'eucomply-pro',
+      report: /href="\/compliance-report"/, form: 'script',
+      // Værktøjet indlæser en demo-baggrund ved sidevisning, så resultatet
+      // skrives uden et netværkskald. Sandkassen får et læse-canvas, så
+      // `sampleContrast()` faktisk måler noget og skriver sin markup.
+      async kør() {
+        const { nodes } = loadPage('site/text-on-image-checker.html', responses([OK_COOKIE]).fetchImpl,
+          { match: /sampleContrast/, canvas: true });
+        await sleep(30);
+        return { markup: (nodes.get('result') || {}).innerHTML || '', afsløret: true,
+                 donation: (nodes.get('result') || {}).innerHTML || '' };
+      },
+    },
+    {
+      path: 'site/security-headers-check.html', label: 'security-headers-check', product: 'eucomply-pro',
+      report: /href="\/compliance-report"/, form: 'statisk', id: 'shc-pro',
+      async kør() {
+        const { nodes } = loadPage('site/security-headers-check.html', responses([OK_HEADERS]).fetchImpl,
+          { match: /HEADERS_MAX_TRIES/ });
+        await sleep(30);
+        nodes.get('checkBtn').click();
+        await sleep(40);
+        // `|| {}` overalt: et element koden aldrig rørte skal give en *rød dom*,
+        // ikke et `TypeError`. En mutation der crasher er ikke en dom — den er
+        // en fejl, og en port der dør med en undtagelse dømmer ingen fejl.
+        return { markup: statisk(readFileSync(join(root, 'site/security-headers-check.html'), 'utf8'), 'shc-pro'),
+                 donation: (nodes.get('shc-donate') || {}).innerHTML || '',
+                 afsløret: (nodes.get('shc-pro') || {}).hidden === false };
+      },
+    },
+    {
+      path: 'site/contrast-checker.html', label: 'contrast-checker EN', product: 'eucomply-pro',
+      report: /href="\/compliance-report"/, form: 'statisk', id: 'cc-pro',
+      async kør() {
+        const { nodes } = loadPage('site/contrast-checker.html', responses([OK_COOKIE]).fetchImpl, { match: /parseHex/ });
+        await sleep(30);
+        return { markup: statisk(readFileSync(join(root, 'site/contrast-checker.html'), 'utf8'), 'cc-pro'),
+                 // Værktøjet kører udelukkende i browseren og beder ikke om
+                 // penge, så den har aldrig haft en donationslinje. Dommen
+                 // kræver derfor kun at den *kunne* være der — en ny boks må
+                 // ikke have fjernet en linje der fandtes før.
+                 donation: '', afsløret: (nodes.get('cc-pro') || {}).hidden === false };
+      },
+    },
+  ];
+
+  for (const t of TOOLS) {
+    const pro = catalog.products[t.product];
+    const words = periodWordsOf(t.product);
+    const { markup, donation, afsløret } = await t.kør();
+    // Donationslinjen skal overleve den nye boks. En side der ikke havde en,
+    // skal heller ikke have fået en påstand om at have mistet en.
+    const havdeDonation = readFileSync(join(root, t.path), 'utf8').includes('donate.stripe.com');
+
+    ok(`${t.label}: et gennemført tjek renderer resultat-markup`, markup.length > 0);
+    ok(`${t.label}: købsknappen bruger katalogens betalingslink`,
+      markup.includes(pro.payment_link), `forventet ${pro.payment_link}`);
+    ok(`${t.label}: knappen viser prisen fra katalogen ($${priceOf(t.product)})`,
+      markup.includes(`$${priceOf(t.product)}`));
+    ok(`${t.label}: knappen siger hvilken periode den sælger`,
+      words.some((w) => markup.includes(w)), words.join(', '));
+    ok(`${t.label}: knappen sælger den rigtige produktrappe`,
+      new RegExp(pro.name.split(' ')[0]).test(markup), pro.name);
+    ok(`${t.label}: boksen linker videre til produktsiden med gratis-vs-Pro-tabellen`,
+      t.report.test(markup), String(t.report));
+    if (havdeDonation) {
+      ok(`${t.label}: donationslinjen overlevede den nye boks`, /donate\.stripe\.com/.test(donation));
+    }
+    // En boks der aldrig bliver vist, er ikke en købsvej. For den byggede form
+    // er det resultat-markuppen selv der *er* beviset; for den statiske form er
+    // det `hidden`-attributten, koden fjerner.
+    if (t.form === 'statisk') {
+      ok(`${t.label}: koden afslører boksen i samme øjeblik resultatet skrives`, afsløret,
+        'ellers står prisen i markup uden at nogen ser den');
+    } else {
+      ok(`${t.label}: købslinket findes kun i den markup resultatet renderer`, markup.includes(pro.payment_link));
+    }
+  }
+
+  // `/url-inspector` sælger den anden produktrappe, så den får sin egen dom.
+  {
+    const pro = catalog.products['page-profile-pro'];
+    const words = periodWordsOf('page-profile-pro');
+    const { nodes } = loadPage('site/url-inspector/index.html', responses([OK_INSPECT]).fetchImpl);
+    await sleep(30);
+    nodes.get('url-input').value = 'https://example.com';
+    nodes.get('inspect-btn').click();
+    await sleep(30);
+    const src = readFileSync(join(root, 'site/url-inspector/index.html'), 'utf8');
+    const markup = statisk(src, 'ui-pro');
+    ok('url-inspector: købsknappen bruger Page Profile Pros betalingslink',
+      markup.includes(pro.payment_link), `forventet ${pro.payment_link}`);
+    ok(`url-inspector: knappen viser prisen fra katalogen ($${pro.price_usd})`,
+      markup.includes(`$${pro.price_usd}`));
+    ok('url-inspector: knappen siger hvilken periode den sælger',
+      words.some((w) => markup.includes(w)), words.join(', '));
+    ok('url-inspector: knappen sælger Page Profile Pro', /Page Profile Pro/.test(markup));
+    ok('url-inspector: koden afslører boksen i samme øjeblik resultatet skrives',
+      (nodes.get('ui-pro') || {}).hidden === false, `hidden=${(nodes.get('ui-pro') || {}).hidden}`);
+  }
+
+  // Mutation: den kode fra før denne opgave skal være rød på dommen. Den læses
+  // fra git, så dommen måles på de bytes der faktisk var i live.
+  {
+    const before = '6cdabdc';
+    for (const [path, product] of [
+      ['site/cookie-check.html', 'eucomply-pro'],
+      ['site/security-headers-check.html', 'eucomply-pro'],
+      ['site/contrast-checker.html', 'eucomply-pro'],
+    ]) {
+      const old = execFileSync('git', ['show', `${before}:${path}`], { cwd: root, maxBuffer: 1 << 26 }).toString('utf8');
+      ok(`mutation: ${path} fra før opgaven kan hentes`, old.length > 0);
+      ok(`mutation: ${path} havde ingen købsvej i resultatet`,
+        !old.includes(catalog.products[product].payment_link) || !outsideScripts(old).length,
+        'dommen kan altså blive rød');
+    }
+    // Og den konkrete fejl: en knap uden periode skal være rød på ordlisten.
+    const words = periodWordsOf('eucomply-pro');
+    ok('mutation: en knap uden periode ville være rød',
+      !words.some((w) => `Buy EUComply Pro — $79</a>`.includes(w)),
+      'dommen kan altså se en knap uden periode');
   }
 }
 

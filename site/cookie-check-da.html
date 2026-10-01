@@ -164,6 +164,23 @@ const CMPS=[
 
 function countMatches(re, html){ const m = html.match(new RegExp(re,'gi')); return m ? m.length : 0; }
 
+// Den betalte vej, skrevet *ind i* resultatet og ikke som et afsnit over
+// værktøjet: en banner der beder om penge, før besøgeren har set ét fund, er
+// præcis det der gør et gratisværktøj til en trakt. Den lander her, efter
+// fundene, hvor hullet er — denne side læste én side.
+const PRO_CARD =
+    '<div class="pro-card">'
+  +'<h3>Her blev der set på én side. Et website er alle sider.</h3>'
+  +'<p class="pro-lead">Det her kunne ikke se:</p>'
+  +'<ul class="pro-list">'
+  +'<li><strong>Alle de andre sider.</strong> EUComply Pro gennemgår hele sitet, ikke kun den URL du indsatte.</li>'
+  +'<li><strong>Om samtykkesignalet faktisk gemmes.</strong> Cookie-bannere, tracking scripts, samtykkesignaler, links til privatlivspolitik og tredjeparts-embeds, på hver side.</li>'
+  +'<li><strong>En rapport du kan give en kunde.</strong> Fundene som PDF, ikke som et skærmbillede.</li>'
+  +'</ul>'
+  +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
+  +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
+  +'</div>';
+
 async function scan(url){
     if (window.trackEvent) window.trackEvent('scan');
   const out = document.getElementById('result');
@@ -252,6 +269,7 @@ async function scan(url){
     +'De fulde krav og rettelser ligger i '
     +'<a href="/blog/cookie-consent-gdpr-compliance">cookie-guiden</a> og '
     +'<a href="/#products">Cookie Consent &amp; Privacy e-bogen</a>.</p>'
+    +PRO_CARD
     +'<p style="font-size:13px;color:var(--color-text-muted)">Tjekket er gratis og kræver ingen konto. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det kørende.</p>'
     +'<p style="text-align:center;margin-top:18px">'
     +'<button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '
