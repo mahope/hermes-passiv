@@ -51,6 +51,12 @@
   rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
   batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
   filerne — antallet er ikke listen.
+- **Vores egne betalingspriser er målt rene 1/10.** Alle **15** `buy.stripe.com`-
+  links i repoet svarer 200, og de matcher kontraktens tabel én til én — ingen
+  mangler, ingen er ukendte. Alle **84** købsknapper i `site/` er dømt mod
+  `tools/stripe_catalog.json`: 70 har prisen i knippeteksten, de 14 øvrige har
+  den i `<p class="pt-price">` lige ovenfor knappen (alle på `/paid-templates`),
+  og **nul** har et andet tal end katalogens. Se opgave 40.
 - **`❓ Til Mads` nederst:** `OPENROUTER_API_KEY`, `STATS_TOKEN`,
   `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
   desktop-apps der stadig ringer til Lemon Squeezy.
@@ -60,23 +66,35 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: ceo/ai-svaret-kan-koere-script 2026-10-01` — intet kørtid,
-  kun to statiske sider. Mål på indhold:
-  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
-  2. Live `/compliance-ai` har `.replace(/&/g, '&amp;')` som **første** kæde i
-     `formatAnswer` — altså før `.replace(/\*\*(.*?)\*\*/g, …)` — og det samme på
-     `/da/compliance-ai`. Skærmbilleder er bevidst ikke taget: ingen markup eller
+- `DEPLOY OK 2026-10-01` — fem ventende noter målt på indhold mod live `04288fc`
+  (`build-info.json` bærer præcis merge-sha'en, så *alle* fem er på én gang):
+  1. **`ceo/ai-svaret-kan-koere-script` (`04288fc`)** — live `/compliance-ai` og
+     `/da/compliance-ai` har begge `.replace(/&/g, '&amp;')` som **første** kæde
+     i `formatAnswer` (tegn 458 i den udskrevne streng, og der er ingen bold-
+     udskiftning før den). Skærmbilleder bevidst ikke taget: ingen markup eller
      CSS ændrer sig, så et billede ville dømme layout og ikke escaping.
-
-- `VERIFICÉR DEPLOY: ceo/checkout-ruten-kan-vaere-forskrevet 2026-10-01` — mål på
-  indhold, ikke på HTTP-status:
-  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
-  2. `GET https://mahope.tools/api/checkout?product=deskuptime-pro` svarer 200
-     med `"product":"deskuptime-pro"` og **DeskUptimes** link
-     `https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` — før rettelsen svarede den
-     200 med `clean-copy-pro` og Clean Copys link.
-  3. `GET /api/checkout?product=eucomply-pro` og `?product=` (tom) svarer **400**
-     med `Unknown or missing product`, ikke 200 med Clean Copy.
+  2. **`ceo/checkout-ruten-kan-vaere-forskrevet` (`22a6d02`)** —
+     `GET /api/checkout?product=deskuptime-pro` svarer 200 med
+     `"product":"deskuptime-pro"`, `price_usd: 19`, `billing: "once"` og
+     DeskUptimes link `https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`.
+     `?product=eucomply-pro` og `?product=` svarer begge **400** med
+     «Unknown or missing product. Use one of: clean-copy-pro, deskuptime-pro,
+     page-profile-pro.» — ingen af dem har et købslink i kroppen.
+  3. **`ceo/konkurrent-pris-grundlag` (`a4985b0`)** — live
+     `/blog/desktop-website-monitor-cli` har «1 year, billed annually» to gange,
+     `$348` syv gange og **`$408` nul gange**. Begge tal står i
+     `tools/competitor_prices.json` med kilde-URL og `checked`-dato.
+  4. **`ceo/429-kommentar-siger-modsaet` (`3ed3b1e`)** — live `/thanks` svarer
+     200 og har **én** `x.code === 429` i *kode*, på sin egen linje og uden for
+     `again()`. De to øvrige forekomster er kommentarer: linje 90 **citerer**
+     den gamle linje ordret, som dokumentation af rettelsen, og linje 251 er
+     forklaringen til begrænsningen. Den gamle form
+     `429 || x.code >= 500` findes kun i den citerende kommentar.
+  5. **`ceo/selvbetjent-noegleopslag`** — live `/license-lookup` har præcis ét
+     `fetch('/api/license/lookup` med `{ order_id, email }`, to `<label for>`
+     og **ikke** sætningen «We send the key again, usually the same day».
+     *Ikke efterprøvet:* punkt 3 i noten kræver et rigtigt 200-svar med en
+     kvitters `cs_`-reference, og det kan ikke fremstilles uden et køb.
 
 - `DEPLOY OK 2026-10-01` — begge 429-rettelser (`ceo/429-er-sendeloeende-paa-tak-siden`
   + `ceo/429-gate-tak-siden`, `70ec8c4`). Målt på indhold: `build-info.json` bærer
@@ -84,22 +102,13 @@
   `x.code === 429` på sin egen linje (ikke `429 || x.code >= 500`), som kalder
   `fail((x.d && x.d.error ? x.d.error : 'Too many attempts.') + LIMITED_OUT)`.
 
-- `VERIFICÉR DEPLOY: ceo/konkurrent-pris-grundlag 2026-10-01` — mål på indhold:
-  `/blog/desktop-website-monitor-cli` har «1 year, billed annually» i
-  kolonneoverskriften, `$348` i Better Stack-cellen og **ikke** `$408` nogen
-  steder på de seks sider, der linkede til artiklen.
+- `DEPLOY OK 2026-10-01` — `ceo/konkurrent-pris-grundlag` og
+  `ceo/429-kommentar-siger-modsaet` er begge dømt ovenfor i samme måling mod
+  live `04288fc`.
 
-- `VERIFICÉR DEPLOY: ceo/429-kommentar-siger-modsaet 2026-10-01` — kommentar
-  i `site/thanks.html`, intet kørtid. Verificér at live `/thanks` svarer 200 og
-  stadig kun har ét `x.code === 429`.
-
-- `VERIFICÉR DEPLOY: ceo/selvbetjent-noegleopslag 2026-10-01` — mål på indhold:
-  1. `https://mahope.tools/build-info.json` bærer præcis merge-sha'en.
-  2. `/license-lookup` har præcis ét `fetch('/api/license/lookup'` med
-     `{ order_id, email }`, to `<label for>`, og **ikke** sætningen «We send the
-     key again, usually the same day».
-  3. Et rigtigt 200-svar på endpointet med et kvittér mails `cs_`-reference
-     og den betalte adresse gengiver nøglen i browseren.
+- `DEPLOY OK 2026-10-01` — `ceo/selvbetjent-noegleopslag` er dømt ovenfor i
+  samme måling mod live `04288fc` (indhold: ét `fetch`, to labels, ingen
+  support-sætning; ikke efterprøvet: et rigtigt købs-svar).
 
 - `DEPLOY OK 2026-10-01` — otte generatorer (`ceo/generator-script-kom-til-live`,
   `8c61191`). Målt 1/10 kl. 00:0x UTC: CI-kørsel `36793625580` grøn i alle jobs,
@@ -226,7 +235,17 @@
   - **🔴 `bugbottle.dev` ligger på en server, vi ikke deployer.** `https://bugbottle.dev/build-info.json` svarer **404 fra `nginx`**, ikke Cloudflare, mens de tre andre domæner bærer alle samme sha. To veje: (a) domænet skal på Cloudflare Pages → opsæt `bugbottle-dev`-projektet, så tilføjer jeg domænet til matrixen og fjerner undtagelsen i samme commit; (b) domænet er ikke vores at udgive → det skal ud af `TRACKING_DOMAINS`, så `traffic_status` bliver ærlig `ok` for de tre vi faktisk deployer.
   - **🔴 To betalte desktop-apps kan ikke aktiveres.** Målt i de shippede binære: `mahope/transmute` `v0.2.1` og `mahope/deskuptime` `desktop-v0.2.7` har begge `https://api.lemonsqueezy.com/v1/licenses/activate` indbygget, og binæren sender `license_key` + `instance_name` og læser `activated`, `id`, `product_name`, `customer_email` — mens vores `/api/license/activate` kræver `{ license_key, device_id, product }`. Serveren er tolerant over for `instance_id` som alias for `device_id`; `instance_name` giver jeg ikke. Kilden ligger i private repos, og du laver selv releases.
   - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`, `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`). Sitemap og robots er målt korrekte på de fire sites missionen udgiver; kun property-tilføjelsen mangler.
-  - **EUComply Pro-prisen** ($79/år pr. website) er sat i Stripe, men nogen sider nævner tallet. Skal det stå på en `/pro/`-side? **Bemærk: `/pro/` findes ikke** — live er den 404, og intet i `site/` linker til den, så spørgsmålet afgør om vi bygger siden eller dropper den.
+  - ~~**EUComply Pro-prisen** ($79/år pr. website) er sat i Stripe, men nogen
+    sider nævner tallet.~~ **FORÆLDET 1/10 ved måling.** Den er nævnt 35+ steder:
+    forside-knappen siger «Buy EUComply Pro — $79/year per website» (EN + DA),
+    `/compliance-report` har pris-tagg, købsknap **og** en «Free vs Pro»-tabel med
+    «$79/year per website» (EN + DA), og 38 sider skriver det i brødteksten eller
+    i en knap (55 forekomster i alt). Alle **84** købsknapper i `site/` er dømt
+    mod `tools/stripe_catalog.json`: 70 af dem har prisen i knippeteksten og
+    **nul** har et andet tal end katalogens. De 14 der ikke har den i teksten, er
+    alle på `/paid-templates` (EN + DA), og de har `<p class="pt-price">` lige
+    ovenfor knappen i samme `.pt-foot` — så salgssiden viser alle syv priser uden
+    at man skal åbne Stripe.
   - **Er desktop-appen stadig en del af `deskuptime-pro`?** Et betalt produkt skal kunne det, det lover.
   - **Plugin-version:** kunder på Clean Copy 1.1.0 henter ikke den rettede zip. Kræver en version bump — og det er en release, som er din.
   - ~~**7 betalte produkter** (DPA, NIS2/DORA, NDA, EAA, report kit, template bundle, e-bøg-bundle) lå som «sælger ikke, filerne mangler i KV».~~ **FORÆLDET 1/10.** Målt på live: `GET /api/paid-files` svarer `kv_ok: true` og **alle svy** produkter med `ready: files`, `missing: 0`, `available: true` og deres betalingslink. `site/paid-templates.html` (EN + DA) har knapperne i HTML'en og `/api/paid-files` fjerner dem kun når serveren kan *bevise* at leveringen ikke kan ske — så de sælger i live. Denne note skal ikke læses som «endnu ikke lagt ind».
@@ -402,3 +421,21 @@
       mod 9 fjendtlige strenge pr. sprog; målt **24 røde mod koden fra før
       rettelsen**. Se arkiv.
 
+
+    40. **Ingen port dømmer vores egne priser, kun konkurrenternes.** Hvorfor:
+      `check_stripe_ctas.py` dømmer *hvilke* produkter en side sælger og at der
+      er en købsknap; `check_competitor_prices.py` dømmer **konkurrenternes**
+      beløb mod `tools/competitor_prices.json`. **Ingen dømmer vores egne.**
+      Målt 1/10 på alle 84 købsknapper: de 70 med pris i teksten har alle
+      katalogens beløb, de 14 uden har `pt-price` over knappen, og nul afviger —
+      så der er ingen fejl at rette lige nu. Det er opgave 33s pointe anvendt på
+      vores egen omsætning: en gammel `$19/år` for et produkt Stripe nu sælger
+      engangs, eller en knap der siger `$149` om et `$59`-produkt, er en
+      **påstand uden dom** og falder lige så stille som konkurrentens gjorde.
+      Accept: ny port `tools/check_own_prices.py` dømmer hver købsknap i `site/`
+      mod `tools/stripe_catalog.json` på tre ting — beløbet i knippeteksten (eller
+      i `pt-price` i samme `.pt-foot`) er katalogens, **intet andet** beløb står
+      i knippeteksten, og hvert `payment_link` i katalogen peger på det produkt
+      det er sat på. Selvtest med tre mutationer: en gammel pris ind i knappen,
+      to byttede om, og et `payment_link` der peger på et andet produkts nøgle.
+      *Målt 1/10, ingen kode:* porten er ikke skrevet endnu.

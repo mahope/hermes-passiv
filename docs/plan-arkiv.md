@@ -3068,3 +3068,42 @@ selv) beviser bagefter at de to er ens; begge dele grønne.
 **Verificeret.** `python3 tools/quality_gate.py` grøn med **116 steps** (var 115).
 Ingen markup eller CSS ændrer sig, så der er ingen layout at måle ved 390/1280 px;
 det ændrede output er dømt på sine exact bytes af testens markdown-domme.
+
+## 2026-10-01 — 16:0x, måle-iteration (ingen kode)
+
+Ingen opgave leverede kode, så dette er den ene tilladte plan-commit.
+Årsagen er ærlig: CEO-køens punkt 0 var lukket, de tre åbne opgaver (5, 6, 22)
+er blokerede på Mads, og de to mutationer jeg brugte tiden på (**egne priser**,
+**betalingslinks**) kom begge ud som *rene målinger* — ingen fejl at rette.
+
+**Fem `VERIFICÉR DEPLOY`-noter lukket.** Live bærer `04288fc`, så alle fem er
+dømt i én måling mod samme sha:
+
+| Note | Målt på indhold | Resultat |
+|---|---|---|
+| `ceo/ai-svaret-kan-koere-script` (`04288fc`) | `formatAnswer` på `/compliance-ai` + `/da/compliance-ai` | `&`-escaping først, ingen bold-kæde foran |
+| `ceo/checkout-ruten-kan-vaere-forskrevet` (`22a6d02`) | `GET /api/checkout?product=…` | `deskuptime-pro` → eget navn + eget link; `eucomply-pro` og tom → **400** uden købslink |
+| `ceo/konkurrent-pris-grundlag` (`a4985b0`) | `/blog/desktop-website-monitor-cli` | «billed annually» ×2, `$348` ×7, `$408` **0** |
+| `ceo/429-kommentar-siger-modsaet` (`3ed3b1e`) | `/thanks` | én `x.code === 429` i kode; `429 \|\| x.code >= 500` findes kun i den kommentar, der **citerer** den gamle linje |
+| `ceo/selvbetjent-noegleopslag` | `/license-lookup` | ét `fetch`, to `<label for>`, ingen «We send the key again». *Punkt 3 ikke efterprøvet* — kræver et rigtigt køb |
+
+**Vores egne priser: rent.** Alle 15 `buy.stripe.com`-links svarer 200 og matcher
+kontrakten én til én. Alle 84 købsknapper dømt mod `stripe_catalog.json`: 70 har
+katalogens beløb i knippeteksten, 14 har det i `pt-price` lige over knappen (alle
+på `/paid-templates`), **0 afviger**.
+
+*Min egen måling var fejlagtig to gange undervejs, og begge gange sagde porten
+i sidste ende sandheden:* (1) jeg led kun efter beløbet **inde i** `<a>`-teksten
+og fandt 14 pris-løse købsknapper på `/paid-templates` — men siden har dem i
+`<p class="pt-price">` i samme `.pt-foot`; (2) jeg troede `NIS2` inde i «Køb NIS2
+/ DORA…» var en fejlpris, fordi regex'en trak `2` ud som et tal. Begge er fund i
+en ad hoc-måling, ikke i en port — portene ville ikke have haft dem.
+
+**En ❓ er død og er lukket:** «EUComply Pro-prisen … nogen sider nævner tallet».
+Den er nævnt 55 gange på 38 sider, de 70 prissatte købsknapper er dømt mod
+katalogen, og det eneste åbne spørgsmål — om den skal stå på en `/pro/`-side —
+er forsvundet, fordi ingen skal bygge den.
+
+**Ny opgave 40** skriver ned, at *vores egne* priser er den ene påstand uden dom
+i denne familie. Målingen siger at der ingen fejl er nu; opgaven er porten, så
+den næste fejl ikke kan være stille.
