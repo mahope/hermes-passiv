@@ -3321,3 +3321,100 @@ Porten målt **rød med 19 fund** mod den gamle kode. Gaten 118 steps.
 0 JS-fejl, knapperne 290-312 x 41 px på én linje — undtagen
 `Køb Client Compliance Report Kit — 69 $ én gang`, der bryder på to linjer
 ved 390 px (61 px høj, altså stadig langt over 44 px trykflade).
+
+
+---
+
+## Opgave 42 (1/10): STATUS koget fra 63 til 24 linjer — hele teksten her
+
+STATUS blev målt til 63 linjer i kroppen (65 med de tomme kantlinjer), mens
+kontrakten tillader 25. Hvert afsnit herunder har sin fulde form i arkivet, så
+intet går tabt ved at koge det: de otte nyeste afsnit var alle *målinger* af
+den slags fejl, der siden er rettet, og de er hver især dokumenteret i arkivet
+under den opgave der rettede dem.
+
+**Opgave 42s eget acceptkriterium var en falsk grøn.** Den skrev:
+
+    awk '/^## STATUS/{f=1;next}/^## /{f=0}f' IMPLEMENTATION_PLAN.md
+
+Overskriften hedder `# STATUS`, så mønsteret matcher aldrig, `f` bliver
+aldrig 1, og awk skriver nul linjer ud — for enhver plan, også den gamle med
+63 linjer. Kriteriet var grønt før rettelsen og efter. Det er samme fejlform
+som de fund de seneste runder har lukket fire gange: en regel skrevet ned uden
+en dom der kan fejle. Den anden awk-form man kan skrive på samme opgave,
+`awk '/^# STATUS/{f=1;next}/^# /{f=0}f'`, er ALSO død: `^# ` matcher ikke
+`## Verificér deploy`, så den læser resten af filen med og giver 343 linjer.
+Begge former er grønne for det modsatte af det, de skal dømme.
+
+Rettelsen er derfor ikke kun at koge: `tools/check_plan_status.py` dømmer fire
+ting, og den første er «afsnittet skal findes», for uden den er de tre ande
+lige så døde som awk'en var, bare i Python. Dommene er afprøvet med mutationer
+på syntetiske planer (11 kontroller), så de kan fejle.
+
+### Den fulde STATUS før kogningen (1/10)
+
+# STATUS
+
+- **`/api/compliance-ai` er død for alle besøgende.** Målt 1/10 på live:
+  `POST https://mahope.tools/api/compliance-ai` svarer **503** `AI service not
+  configured`, fordi `env.OPENROUTER_API_KEY` ikke er sat på workeren
+  (`_worker.js:733`). Siden håndterer 503 ordentligt («The server is
+  temporarily unavailable»), så ingen klient fejler hårdt — men den AI-side
+  artiklerne linker til sælger intet, og det er en funktion der er *mentioned*,
+  ikke betalt. En secret på workeren, se ❓.
+- **Næste samme fejlform lå i købsruten** og er rettet 1/10: `/api/checkout`
+  svarede med Clean Copy Pro's betalingslink for *ethvert* produkt den ikke
+  genkendte, også `?product=deskuptime-pro` — den `product_key` Stripe selv
+  bruger. Se opgave 38.
+- **De øvrige 20 API-ruter er målt levende** 1/10 (se opgave 38 og arkivet):
+  ingen 5xx. `/api/url-inspect`, `/api/header-check`, `/api/compliance-scan`
+  og `/api/profile` læser alle `?url=` i *query-stringen*, ikke i JSON-kroppen —
+  det er konsistent med klienterne, målt på live med 200.
+- **En køber der mistede sin licensnøgle skulle skrive til Mads.** Målt 1/10:
+  `/api/license/lookup` er fuldt implementeret, ratelimited og testet (5 af 5
+  opslag grønne i `stripe-worker.test.mjs`), og **ingen side kaldte den** —
+  `/license-lookup`, sidens hele formål, var ren tekst med «write to
+  support@mahope.tools … we send the key again, usually the same day».
+  Det er menneskelig support i en indtægt der skal klare sig uden. Siden har nu
+  en formular der kalder endpointen, og ny port `tests/license-lookup.test.mjs`
+  (14 kontroller) dømmer at et licens-endpoint har en indgang — målt rød med 12
+  mod den gamle kode. Se opgave 37.
+- **Hvorfor ingen port så det:** `check_stripe_ctas` dømmer at *salg* har en
+  knap, og `check_buyable` at et købsklart produkt sælges. Ingen dømmer at et
+  *support*-endpoint har en klient — og support er præcis den udgift missionen
+  forbyder. Samme fejlform som de fund, de lukker: en påstand uden dom.
+- **Ryggraden er grøn:** `python3 tools/quality_gate.py` — 115 steps (var 114
+  før `checkout-route`). De fire kommandoer missionen navngiver er en
+  delmængde; se opgave 36 for hvorfor kun de er for få. Mål: `gh run list -L 1`
+  grønnest i starten af hver iteration.
+- **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
+  nøgle.** Tak-siden genkaldte `/api/stripe/fulfillment` på 429, og den rute
+  tæller selv sine forsøg — så hvert genkald gjorde det værre. Rettet, og
+  `check_status_finality.py` dømmer det fra nu af. Se opgave 35.
+- **Otte generatorer var døde i live — inkl. hele den betalte DPA/ROPA/privacy-
+  vej.** `build_sites` skrev shell- og BugBottle-tags ind foran det *første*
+  `</body>`, men generatorerne bygger den fil de downloader som en JS-streng, så
+  `</body>` står midt i et `<script>`. Browseren stoppede scriptet der, og
+  «Generate» gav et tomt felt. Målt 30/9 på de otte live-ruter: alle otte med
+  en blok browseren afviser. Samme fejlform i `pagepass.scrub_css`, som skrev sit
+  eget linjeskift ind i strengene på 4 sider. Se opgave 34.
+- **Den port, der skulle have set det, læste kun kilden.** `check_inline_js`
+  sagde «problems: 0» — filerne i `site/` var i orden, det var *bygget* der brød.
+  Den dømmer nu begge træer, og dens selvtest bygger repoet med de to mutationer
+  der lå i live. Målt før/efter på de otte: 8 brudde → 0.
+- **Samme fejlform i ny form: en regel skrevet ned, ingen dom.** CEO-kø punkt 0
+  rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
+  batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
+  filerne — antallet er ikke listen.
+- **Vores egne betalingspriser er målt rene 1/10 — og bliver det fremover.**
+  Alle **15** `buy.stripe.com`-links i repoet svarer 200, og de matcher
+  kontraktens tabel én til én. Alle **84** købsknapper i `site/` er dømt mod
+  `tools/stripe_catalog.json`: 70 har prisen i knippeteksten, de 14 øvrige har
+  den i `<p class="pt-price">` lige ovenfor knappen (alle på `/paid-templates`),
+  og **nul** har et andet tal end katalogens. Ny port
+  `tools/check_own_prices.py` gør det til en dom frem for en måling, og
+  dømmer linket pr. række i kontrakten og pr. nøgle i workeren. Se opgave 40.
+- **`❓ Til Mads` nederst:** `OPENROUTER_API_KEY`, `STATS_TOKEN`,
+  `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
+  desktop-apps der stadig ringer til Lemon Squeezy.
+- **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).

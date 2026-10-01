@@ -1,79 +1,49 @@
 # STATUS
 
-- **`/api/compliance-ai` er død for alle besøgende.** Målt 1/10 på live:
-  `POST https://mahope.tools/api/compliance-ai` svarer **503** `AI service not
-  configured`, fordi `env.OPENROUTER_API_KEY` ikke er sat på workeren
-  (`_worker.js:733`). Siden håndterer 503 ordentligt («The server is
-  temporarily unavailable»), så ingen klient fejler hårdt — men den AI-side
-  artiklerne linker til sælger intet, og det er en funktion der er *mentioned*,
-  ikke betalt. En secret på workeren, se ❓.
-- **Næste samme fejlform lå i købsruten** og er rettet 1/10: `/api/checkout`
-  svarede med Clean Copy Pro's betalingslink for *ethvert* produkt den ikke
-  genkendte, også `?product=deskuptime-pro` — den `product_key` Stripe selv
-  bruger. Se opgave 38.
-- **De øvrige 20 API-ruter er målt levende** 1/10 (se opgave 38 og arkivet):
-  ingen 5xx. `/api/url-inspect`, `/api/header-check`, `/api/compliance-scan`
-  og `/api/profile` læser alle `?url=` i *query-stringen*, ikke i JSON-kroppen —
-  det er konsistent med klienterne, målt på live med 200.
-- **En køber der mistede sin licensnøgle skulle skrive til Mads.** Målt 1/10:
-  `/api/license/lookup` er fuldt implementeret, ratelimited og testet (5 af 5
-  opslag grønne i `stripe-worker.test.mjs`), og **ingen side kaldte den** —
-  `/license-lookup`, sidens hele formål, var ren tekst med «write to
-  support@mahope.tools … we send the key again, usually the same day».
-  Det er menneskelig support i en indtægt der skal klare sig uden. Siden har nu
-  en formular der kalder endpointen, og ny port `tests/license-lookup.test.mjs`
-  (14 kontroller) dømmer at et licens-endpoint har en indgang — målt rød med 12
-  mod den gamle kode. Se opgave 37.
-- **Hvorfor ingen port så det:** `check_stripe_ctas` dømmer at *salg* har en
-  knap, og `check_buyable` at et købsklart produkt sælges. Ingen dømmer at et
-  *support*-endpoint har en klient — og support er præcis den udgift missionen
-  forbyder. Samme fejlform som de fund, de lukker: en påstand uden dom.
-- **Ryggraden er grøn:** `python3 tools/quality_gate.py` — 115 steps (var 114
-  før `checkout-route`). De fire kommandoer missionen navngiver er en
-  delmængde; se opgave 36 for hvorfor kun de er for få. Mål: `gh run list -L 1`
-  grønnest i starten af hver iteration.
-- **Et køb kunne få tolv afvisninger og en kunde der stadig ikke har sin
-  nøgle.** Tak-siden genkaldte `/api/stripe/fulfillment` på 429, og den rute
-  tæller selv sine forsøg — så hvert genkald gjorde det værre. Rettet, og
-  `check_status_finality.py` dømmer det fra nu af. Se opgave 35.
-- **Otte generatorer var døde i live — inkl. hele den betalte DPA/ROPA/privacy-
-  vej.** `build_sites` skrev shell- og BugBottle-tags ind foran det *første*
-  `</body>`, men generatorerne bygger den fil de downloader som en JS-streng, så
-  `</body>` står midt i et `<script>`. Browseren stoppede scriptet der, og
-  «Generate» gav et tomt felt. Målt 30/9 på de otte live-ruter: alle otte med
-  en blok browseren afviser. Samme fejlform i `pagepass.scrub_css`, som skrev sit
-  eget linjeskift ind i strengene på 4 sider. Se opgave 34.
-- **Den port, der skulle have set det, læste kun kilden.** `check_inline_js`
-  sagde «problems: 0» — filerne i `site/` var i orden, det var *bygget* der brød.
-  Den dømmer nu begge træer, og dens selvtest bygger repoet med de to mutationer
-  der lå i live. Målt før/efter på de otte: 8 brudde → 0.
-- **Samme fejlform i ny form: en regel skrevet ned, ingen dom.** CEO-kø punkt 0
-  rettede *de syv klienter der stod i køen*. Den tiende lå ved siden af. Næste
-  batch skal derfor spørge, om en opgave nævnte et **antal** uden at liste
-  filerne — antallet er ikke listen.
-- **Vores egne betalingspriser er målt rene 1/10 — og bliver det fremover.**
-  Alle **15** `buy.stripe.com`-links i repoet svarer 200, og de matcher
-  kontraktens tabel én til én. Alle **84** købsknapper i `site/` er dømt mod
-  `tools/stripe_catalog.json`: 70 har prisen i knippeteksten, de 14 øvrige har
-  den i `<p class="pt-price">` lige ovenfor knappen (alle på `/paid-templates`),
-  og **nul** har et andet tal end katalogens. Ny port
-  `tools/check_own_prices.py` gør det til en dom frem for en måling, og
-  dømmer linket pr. række i kontrakten og pr. nøgle i workeren. Se opgave 40.
-- **`❓ Til Mads` nederst:** `OPENROUTER_API_KEY`, `STATS_TOKEN`,
-  `bugbottle.dev`'s domæne, banner-placering på 180 sider, og de to
-  desktop-apps der stadig ringer til Lemon Squeezy.
-- **Historie:** `docs/plan-arkiv.md` (append-only; grep i stedet for at læse hel).
-
-
+- **AI-siden er død for alle besøgende.** Målt 1/10: `POST /api/compliance-ai`
+  svarer **503** «AI service not configured», fordi `OPENROUTER_API_KEY` mangler
+  på workeren (`_worker.js:733`). Klienten håndterer 503 pænt, så intet fejler
+  hårdt — men funktionen er publiceret og gør intet. Én secret, se ❓.
+- **Købsvejen havde 2 huller, begge rettet 1/10:** en tabt licensnøgle krævede
+  en mail til Mads (nu `ceo/selvbetjent-noegleopslag`), og `/api/checkout`
+  svarede med Clean Copy Pro's link for ethvert produkt den ikke genkendte
+  (`ceo/checkout-ruten-kan-vaere-forskrevet`).
+- **Det der lå i live, var *bygget*, ikke skrevet** — 3 gange samme uge: 8
+  generatorer døde i browseren, 37 sider uden donationslinje, 44 artikler med
+  dobbelt værktøjsliste. `check_inline_js` sagde «problems: 0» fordi den kun
+  læste `site/`; den dømmer nu begge træer.
+- **En regel skrevet ned uden en dom der kan fejle, er den dyre fejlform:** CEO-kø
+  punkt 0 rettede *sisyv* klienter og den tiende lå ved siden af, og opgave 42s
+  eget acceptkriterium gav 0 linjer for enhver plan (arkivet). Næste batch skal
+  spørge, om en opgave nævner et **antal** uden at liste filerne.
+- **Rygraden er grøn:** `python3 tools/quality_gate.py` — 120 steps, hvoraf
+  `check_plan_status` er ny. Vores egne priser er målt rene 1/10: alle 15
+  `buy.stripe.com`-links matcher kontrakten, alle 84 købsknapper er dømt mod
+  `tools/stripe_catalog.json`, nul afviger (`ceo/egen-pris-port`).
+- **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
+  banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
+  Squeezy, Search Console. **Historie:** `docs/plan-arkiv.md` (append-only —
+  grep i stedet for at læse hel).
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: perioden ved købsknapper (19 sider + port) ceo/perioden-ved-prisen 2026-10-01`
-  — mål på **indhold**: live `/paid-templates` og `/da/paid-templates` skal have
-  præcis 14 `pt-price` med «once»/«én gang», `/` og `/da/` på deskuptime.com
-  skal sige «19 USD once»/«19 USD én gang» i knappen, og
-  `/blog/desktop-website-monitor-cli` skal have «Buy DeskUptime Pro for $19 once».
-  `build-info.json` skal bære merge-sha'en på alle fire domæner.
+- `DEPLOY OK 2026-10-01` — `ceo/perioden-ved-prisen` (`00817f5`), målt på
+  **indhold** mod live der bærer præcis `00817f5` på alle 3 deployede domæner
+  (`mahope.tools` `8367db4b`, `cleancopy.tools` `81ed162d`, `deskuptime.com`
+  `db653dcb`): `/paid-templates` og `/da/paid-templates` har hver **7**
+  `<p class="pt-price">` med «once»/«én gang» ($59, $49, $29, $39, $69, $149,
+  $29 — alle 7 betalte produkter), `/` og `/da/` på deskuptime.com siger «Buy
+  DeskUptime Pro — 19 USD once»/«Køb DeskUptime Pro — 19 USD én gang», og
+  `/blog/desktop-website-monitor-cli` siger «Buy DeskUptime Pro — 19 USD once».
+  *Ikke* efterprøvet: punkt om 14 `pt-price` i noten var talt på den rå
+  greptælling, som også rammer CSS-vælgeren og JS-skabelonen på hver side;
+  de 14 *viste* pristag er der 7 pr. side, hvilket er de 7 produkter.
+
+- `VERIFICÉR DEPLOY: planen som arbejdskø (ny port + path-filter) ceo/plan-status-port 2026-10-01`
+  — kun `tools/`, `.github/` og planen, intet på sitet. Live `build-info.json`
+  skal bære merge-sha'en på de 3 deployede domæner med **uændret**
+  `routes_sha256` (`8367db4b` / `81ed162d` / `db653dcb`), og
+  `tools/quality_gate.py` skal have 120 steps.
 
 - `DEPLOY OK 2026-10-01` — `ceo/egen-pris-port` (kun `tools/`, intet på sitet):
   live `build-info.json` bærer præcis `fb8b7b5` med uændret `routes_sha256`
@@ -336,9 +306,17 @@
     bygger sin detektor af den, så et nyt ord i katalogen kan ikke give en stille
     grøn — selvtesten dømmer at hvert af de 17 ord kan findes igen. Se arkiv.
 
-42. **STATUS er 66 linjer, ikke 25.** Hvorfor: kontrakten siger højst 25, og de
-    otte nyeste afsnit er alle *målinger* af den slags fejl, der siden er
-    rettet. Hver af dem har sin fuldformede tekst i `docs/plan-arkiv.md`, så
-    intet går tabt ved at koge dem til fem linjer med ét tal hver. Accept:
-    `awk '/^## STATUS/{f=1;next}/^## /{f=0}f' IMPLEMENTATION_PLAN.md` giver ≤25,
-    og de syv afsnit der bliver stående har hver et tal og en commit-ref.
+42. ~~**STATUS er 63 linjer, ikke 25.**~~ **FÆRDIG 1/10, `ceo/plan-status-port`.**
+    Koget til 24 linjer i 6 punkter med et tal hver, og hele den gamle tekst
+    ligger i `docs/plan-arkiv.md`. *Men opgavens eget acceptkriterium var en
+    falsk grøn* — det var `awk '/^## STATUS/{f=1;next}/^## /{f=0}f'`, mens
+    overskriften hedder `# STATUS`, så mønsteret matcher aldrig og awk skriver
+    0 linjer ud for enhver plan. Kriteriet var grønt før rettelsen og efter.
+    Den anden awk-form er også død: `^# ` matcher ikke `##`, så den læser
+    resten af filen med (343 linjer). Ny port `tools/check_plan_status.py`
+    dømmer 4 ting, hvoraf dom 1 er «afsnittet skal findes» — uden den er de 3
+    ande lige så døde som awk'en. Målt **rød mod den gamle plan** (63 linjer,
+    2 punkter uden tal) og grøn mod den nye (24 af 25). 11 kontroller i
+    selvtesten, alle syntetiske mutationer. Gaten 118 → 120 steps, og
+    `IMPLEMENTATION_PLAN.md` kom i path-filteret — `test_deploy_workflow`
+    fangede præcis den udeladelse, før den blev rettet. Se arkiv.

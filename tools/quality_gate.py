@@ -1426,6 +1426,23 @@ STEPS: tuple[Step, ...] = (
             "site/_worker.js",
         ),
     ),
+    # Planen som arbejdskø (opgave 42, 1/10). Opgavens eget acceptkriterium
+    # var `awk '/^## STATUS/{f=1;next}…'`, mens overskriften hedder `# STATUS`:
+    # mønsteret matcher aldrig, så awk skrev 0 linjer ud for enhver plan og
+    # kriteriet var grønt før rettelsen og efter. Denne port dømmer i stedet
+    # fire ting — afsnittet skal *findes* (overskrift på alle niveauer), kroppen
+    # højst 25 linjer, planen under 40.000 tegn, og hvert punkt skal have et
+    # tal et sted i sig. Uden dom 1 er de tre ande lige så døde som awk'en var.
+    Step(
+        id="plan-status",
+        argv=("python3", "tools/check_plan_status.py"),
+        inputs=("tools/check_plan_status.py", "IMPLEMENTATION_PLAN.md"),
+    ),
+    Step(
+        id="plan-status-selftest",
+        argv=("python3", "tools/check_plan_status.py", "--self-test"),
+        inputs=("tools/check_plan_status.py", "IMPLEMENTATION_PLAN.md"),
+    ),
 )
 
 

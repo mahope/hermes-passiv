@@ -171,6 +171,11 @@ on:
       - 'tools/check_article_paid_path.py'
       - 'tools/make_blog_da_mirrors_461.py'
       - 'tools/quality_gate.py'
+      # Gatestrækket `plan-status` læser planen. Uden denne linje springer en
+      # push, der kun ændrer `IMPLEMENTATION_PLAN.md`, hele gaten over — og det
+      # er præcis den push, der skal kunne finde en STATUS der igen er vokset
+      # til en dagbog. Samme grund som linjerne ovenfor.
+      - 'IMPLEMENTATION_PLAN.md'
       # Gatestrækket `plugin-engine-rules` kører PHP-motoren fra det publicerede
       # arkiv på en fixture. Uden disse to springer en push, der kun retter
       # motoren eller kun dens fixture, gaten over — og det er præcis den
