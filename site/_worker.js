@@ -2838,6 +2838,12 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
   budget.spend();
   const home = await cscFetch(targetUrl.toString(), timeoutMs);
   if (!home.ok) return { ok: false, error: 'Cannot reach ' + targetUrl.host + ': ' + home.error };
+  // Et kald på `https://site.dk/kontakt` læser den side, ikke forsiden — men
+  // rapporten skrev kun værten og klienten skrev «the score is the homepage».
+  // Så fik en kunde der bevidst ville tjekke kontaktsiden en rapport, der lævede
+  // at have undersøgt noget andet. Vi tæller siderne og siger hvilken der blev
+  // læst; `scanned_url` er den URL fetch'en endte på, så et redirect vises også.
+  let sider = 1;
 
   const passed = [];
   const failed = [];
@@ -2882,6 +2888,7 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
       if (!budget.spend()) break;
       const pageUrl = new URL(path, targetUrl.toString()).toString();
       const pr = await cscFetch(pageUrl, timeoutMs);
+      sider++;
       if (!pr.ok || pr.status >= 400) continue;
       if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url; break; }
       if (pr.status < 300) { found = true; foundUrl = pr.url; break; }
@@ -2899,6 +2906,12 @@ async function cscScanOne(targetUrl, budget, timeoutMs) {
   return {
     ok: true,
     url: 'https://' + targetUrl.host,
+    // Den side der faktisk blev læst. `home.url` er den endelige URL efter
+    // redirects, så en kunde der klistrede `http://` ind og blev sendt til
+    // `https://www.` ser den rigtige adresse. `pages_checked` er hvor mange
+    // sider kaldet hentede — forsiden plus de juridiske sider den ledte efter.
+    scanned_url: home.url || targetUrl.toString(),
+    pages_checked: sider,
     score,
     grade: cscScoreLabel(score),
     passed: passed.length,

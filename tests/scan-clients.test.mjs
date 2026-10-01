@@ -1234,6 +1234,48 @@ function mutated(path, from, to) {
     const r = await runScan(path, [OK_SCAN]);
     ok(`${lang}: én linje er stadig ét kald og ét resultat`, r.calls === 1 && r.err === '', `calls=${r.calls} err=${r.err}`);
   }
+
+  // Hvilken side blev læst? Sætningen «the score is the homepage» lå på
+  // overblikket og i rapporten, også når kunden havde indsendt `/kontakt` —
+  // så var det ikke værktøjet der var unævnt, men rapporten. Dommen er på
+  // den konkrete sti: den skal stå i overblikket, i det enkelte resultat og i
+  // den downloadede rapport, og den gamle løgn-sætning skal være væk.
+  const OK_SCAN_DYB = {
+    status: 200,
+    body: {
+      ok: true, url: 'https://example.com', scanned_url: 'https://example.com/kontakt',
+      pages_checked: 6, score: 90, grade: 'A', passed: 9, total: 10, results: {},
+    },
+  };
+  for (const [path, lang] of PAGES) {
+    const { fetchImpl } = responses([OK_SCAN_DYB]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    // `downloadReport()` pakker rapporten i en `Blob` og giver den videre til et
+    // `<a download>`. For at dommen kan læse den, fanges blobben her — den
+    // udskiftes *efter* at siden er kørt ind, fordi `new Blob(...)` slås op i
+    // det øjeblik rapporten downloades, ikke da scriptet blev læst.
+    let fanget = '';
+    const rigtigBlob = sandbox.Blob;
+    sandbox.Blob = class extends rigtigBlob {
+      constructor(parts, opts) { super(parts, opts); fanget = parts.join(''); }
+    };
+    nodes.get('urlInput').value = 'example.com/kontakt';
+    await sandbox.scan();
+    await sleep(30);
+    const html = (nodes.get('results') || {}).innerHTML || '';
+    sandbox.downloadReport();
+    sandbox.Blob = rigtigBlob;
+    ok(`${lang}: resultatet siger hvilken side der blev læst`,
+      /kontakt/.test(html), html.slice(0, 300));
+    ok(`${lang}: resultatet tæller de sider der blev læst`,
+      new RegExp(`6 ${lang === 'EN' ? 'pages read' : 'sider læst'}`).test(html),
+      html.slice(0, 300));
+    ok(`${lang}: siden påstår ikke længere at have læst forsiden`,
+      !/the score is the homepage/i.test(html) && !/scoren er forsiden/i.test(html),
+      html.slice(0, 300));
+    ok(`${lang}: den downloadede rapport siger den læste side`,
+      /example\.com\/kontakt/.test(fanget), fanget.slice(0, 300));
+  }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

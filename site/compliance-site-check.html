@@ -97,8 +97,11 @@
   .cta-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px 24px; margin: 24px 0; text-align: center; }
   .cta-box :is(h3, h2.sub) { margin: 0 0 8px; color: #065f46; }
   .cta-box p { font-size: 14px; color: #4b5563; margin: 0 0 12px; }
-  .cta-box a { display: inline-block; padding: 10px 20px; background: #059669; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
-  .cta-box a:hover { background: #047857; }
+  /* #059669 med hvid tekst er 3,77:1 — under WCAG AA's 4,5:1 for denne
+     knapstørrelse, så axe fandt den på begge sider. #047857 er samme grønne
+     familie, 5,48:1. Ikke en ny farve, men den samme farve mørkere. */
+  .cta-box a { display: inline-block; padding: 10px 20px; background: #047857; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  .cta-box a:hover { background: #065f46; }
   .sub-results { margin-top: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 6px; }
   .sub-results .sub-item { font-size: 12px; color: #6b7280; padding: 3px 0; }
   .checks-legend { margin: 16px 0; display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #6b7280; }
@@ -113,6 +116,9 @@
   .site-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
   .site-row:last-child { border-bottom: none; }
   .site-row .site-name { flex: 1; min-width: 0; font-size: 14px; word-break: break-all; }
+  /* Hvilken side der blev læst. Egen linje, så den ikke konkurrerer med
+     domænet på 390 px, hvor de to ellers bryder i to halve linjer. */
+  .site-row .site-page { display: block; font-size: 12px; color: #6b7280; margin-top: 2px; word-break: break-word; }
   .site-row .score-badge { width: 40px; height: 40px; font-size: 18px; }
   .site-row .site-score { font-size: 13px; color: #6b7280; }
   @media (max-width: 480px) { .site-row .site-name { flex-basis: 100%; } }
@@ -317,6 +323,11 @@ function scan() {
     var lines = [];
     lines.push('## ' + data.url);
     lines.push('');
+    // Rapporten kan sendes videre til en kunde, så den skal sige præcis hvilken
+    // side der blev læst — ellers læser modtageren «site.dk» og tror hele
+    // sitet er tjekket.
+    lines.push('Page checked: ' + (data.scanned_url || data.url));
+    lines.push('');
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
     var all = [];
     if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
@@ -383,14 +394,27 @@ function renderResults(rapporter, fejl) {
   // Én rapport: præcis som før, så en enkeltvis kunde ser det samme. Flere
   // rapporter får et overblik først, fordi det er det, han spørger om: hvilken
   // af kunders sites mangler noget.
+  //
+  // Hvad blev der egentlig læst? Før dette stod «the score is the homepage»
+  // overalt, også når kunden havde indsendt `example.dk/kontakt` — så var
+  // rapporten løgnen, ikke værktøjet. Serveren svarer nu med `scanned_url` og
+  // `pages_checked`, og vi siger begge dele. Sidestien er kort nok til et
+  // site-navn på 390 px, så den bruges i overblikket.
+  function scannetSide(data) {
+    var u = data.scanned_url || data.url || '';
+    var sti = u.replace(/^https?:\/\//i, '').replace(/^[^/]*\/?/, '').replace(/\/$/, '');
+    return sti ? '/' + sti : 'the homepage';
+  }
+
   if (rapporter.length > 1) {
     html += '<div class="result-card"><h3 style="margin:0 0 4px;font-size:16px">' + rapporter.length + ' sites checked</h3>';
-    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site — the score is the homepage, not the whole site.</p>';
+    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site &mdash; the page you pasted, not the whole site.</p>';
     html += '<div class="site-list">';
     rapporter.forEach(function(data, i) {
       html += '<div class="site-row">';
       html += '<span class="score-badge ' + esc(data.grade) + '">' + esc(data.grade) + '</span>';
-      html += '<span class="site-name"><a href="#site-' + (i + 1) + '">' + esc(data.url) + '</a></span>';
+      html += '<span class="site-name"><a href="#site-' + (i + 1) + '">' + esc(data.url) + '</a>'
+        + '<span class="site-page">Checked: ' + esc(scannetSide(data)) + '</span></span>';
       html += '<span class="site-score">' + data.score + '/100 &middot; ' + data.passed + '/' + data.total + ' passed</span>';
       html += '</div>';
     });
@@ -407,7 +431,8 @@ function renderResults(rapporter, fejl) {
   var html2 = '<div class="result-card" id="site-' + (i + 1) + '">';
   html2 += '<div class="score-row">';
   html2 += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
-  html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(data.url) + '</div>';
+  html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(scannetSide(data))
+    + (data.pages_checked > 1 ? ' &middot; ' + data.pages_checked + ' pages read' : '') + '</div>';
   html2 += '</div>';
   if (rapporter.length === 1) {
     html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';

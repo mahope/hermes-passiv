@@ -1,33 +1,50 @@
 # STATUS
 
-- **Den gratis indgang på `/clean-copy-tool` slutter nu med en købsvej.** Rettet
-  1/10: efter en konvertering ligger der ét Pro-kort med batch-konvertering,
-  egne rense regler og knappen «Buy Clean Copy Pro — $19/year». Kortet skjules
-  for en kunde der har aktiveret Pro. Baseline 1/10: `/clean-copy-tool` er den
-  eneste indgang på cleancopy.tools med **0 % bounce** (2 af 7 besøgende, 28 d)
-  og Google som kilde — og før dette havde den 0 købsknapper i sit resultat.
+- **Scannen siger nu hvilken side den læste.** Rettet 1/10: indsender du
+  `example.dk/kontakt`, står der `Checked: /kontakt`, og et resultat med dyb
+  sti tæller de sider kaldet hentede. Før stod «the score is the homepage»
+  overalt, også når netop ikke forsiden var tjekket — rapporten løgnede, og den
+  samme tekst lå i den rapport, kunden sender videre. Baseline 1/10: 4 kald til
+  `/api/compliance-scan` i testene på 213/213, klienten sagde «the score is the
+  homepage» på EN og «scoren er forsiden» på DA.
+- **«Check Site»-knappen var hvid i den publicerede scanner.** Fund fra samme
+  iteration: `pagepass.OWNED_SELECTORS` påstod at designsystemet ejer
+  `.input-group button`, `style.css` erklærede den aldrig, så bygget strippede
+  sidens regel og knappen faldt tilbage på `button:not([class])` — hvid med
+  mørk tekst, 2,52:1 mod blå baggrund ved hover. Målt på live `e69baa6` 1/10
+  (`.input-group button {` 0 gange i den publicerede CSS). Rettet i
+  `style.css`; ny dom i `check_design_tokens.py` fanger påstanden fremover.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: Pro-kort i resultatet af Clean Copy-webværktøjet
-  ceo/pro-knaeb-i-resultatet 2026-10-01 18:20` — måles på **indhold** på
-  `https://cleancopy.tools/clean-copy-tool`. Baseline målt 1/10 18:22 på live
-  `209baa0` (endnu ikke deployet): `id="pro-nudge"` **0** gange,
-  `function proCard` **0** gange. Dommen er derfor:
-  1. `id="pro-nudge"` står **1** gang,
-  2. `function proCard` står **1** gang,
-  3. `6oU4gy76PgvgdBIdAXbMQ00` (Clean Copy Pro) står **2** gange: 1 i den
-     statiske HTML fra det Pro-afsnit, der lå der i forvejen, og 1 i scriptet fra
-     det nye kort. ~~Kun 1~~ ville være den gamle kode — *ikke* 0, fordi den
-     gamle side allerede havde knappen i sit afsnit.
-  Dommen er `tests/scan-clients.test.mjs` (213/213), som kører værktøjet rigtigt
-  igennem: den fyrede rødt på `showProCard()`-mutationen (206/213) og på en
-  `proActive()` der altid er falsk (212/213), så porten kan fejle.
-  Målt i Playwright på den byggede side: kortet afsløres ved 390 og 1280 px,
-  lys og mørk, uden vandret scroll og uden page-fejl.
+- `VERIFICÉR DEPLOY: scanneren siger hvilken side den læste
+  ceo/scanner-siger-hvilken-side 2026-10-01 19:40` — måles på **indhold** på
+  `https://mahope.tools/compliance-site-check` og `/da/compliance-site-check`.
+  Baseline målt 1/10 på live `e69baa6` (endnu ikke deployet):
+  `scanned_url` **0** gange i begge scripts, `site-page` **0** gange,
+  og den publicerede `/style.css` har `.input-group button` **0** gange.
+  Dommen bliver derfor:
+  1. `scanned_url` står **1** gang i hvert script,
+  2. `class="site-page"` står **1** gang i hvert script,
+  3. `scannetSide` **1** gang i hvert script,
+  4. `pages_checked` **1** gang i hvert script,
+  5. `the score is the homepage` og `scoren er forsiden` **0** gange,
+  6. `https://mahope.tools/style.css` har `.input-group button` **1** gang,
+  7. `GET /api/compliance-scan?url=example.dk/kontakt` svarer 200 med
+     `scanned_url` der indeholder `/kontakt` og `pages_checked` > 1.
+  Dommen er `tests/scan-clients.test.mjs` (221/221) + `tests/stripe-worker.test.mjs`
+  (333/333): begge røde på den gamle kode (215/221 hhv. 330/333), grønne på den
+  nye. `check_design_tokens.py --self-test` fanger fejlen i punkt 6.
+
+- `DEPLOY OK 2026-10-01` — Pro-kort i resultatet af Clean Copy-webværktøjet.
+  Målt på **indhold** på live `e69baa6` (`build-info.json` → `e69baa688c73`):
+  `id="pro-nudge"` **1** gang, `function proCard` **1** gang,
+  `6oU4gy76PgvgdBIdAXbMQ00` **2** gange (1 i den statiske HTML fra det
+  eksisterende Pro-afsnit, 1 i scriptet fra det nye kort) — altså præcis de tre
+  domme noten krævede.
 
 - `DEPLOY OK 2026-10-01` — compliance-scanneren tager flere URL'er pr. kald.
   Målt på live `209baa0`: `GET /api/compliance-scan?url=scan.example%0Aexample.org`
@@ -64,10 +81,14 @@
 
 ## Åbne opgaver
 
-1. **Flere sider end forsiden pr. URL — det er stadig den store forskel.** Hvorfor:
-   feltet tager nu 5 sites, men hvert site tjekkes kun på forsiden; Pro gør det
-   samme for hver side den finder. Accept: et URL med en dyb sti (`/kontakt`)
-   scannes på den side, og overblikket siger hvilken side der blev tjekket.
+1. ~~Flere sider end forsiden pr. URL.~~ **Halvdelen leveret 1/10.** Et URL med
+   en dyb sti scannes på *den* side, og overblikket, det enkelte resultat og den
+   downloadede rapport siger hvilken side og hvor mange sider der blev læst —
+   det var planens acceptkriterium, og det er grønt. **Resten:** kaldet læser
+   stadig kun den indsendte side plus de juridiske stier den gætter på
+   (`/privacy`, `/terms`, …), ikke hele sitet; det er det Pro gør. Accept:
+   scanneren følger links fra forsiden og tjekker de sider den finder, med det
+   delte `CSC_MAX_PAGES`-budget uændret.
 2. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
    `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
    trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
@@ -172,3 +193,8 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    egne rense regler og knappen «Buy Clean Copy Pro — $19/year», skjult for
    aktiverede Pro-kunder. Målt først: 0 købsknapper i resultatet. Næste skridt
    er punkt 2 — bøgerne læses online.
+5. ~~Scanneren siger hvilken side den læste.~~ **Leveret 1/10** — overblikket,
+   det enkelte resultat og den downloadede rapport siger det, og et dybt URL
+   scannes på den side det angiver. Målt først: «the score is the homepage»
+   stod på siden uanset input. Ny accept for resten af opgaven: scanneren
+   følger links fra forsiden, så `pages_checked` kan overstige de gættede stier.

@@ -1003,6 +1003,21 @@ ok('compliance-scan med én URL har stadig det gamle svar',
   r.status === 200 && en.ok === true && en.multi === undefined && !Array.isArray(en.reports)
   && typeof en.score === 'number' && en.results && typeof en.results.passed === 'object',
   `${r.status} ${JSON.stringify(en).slice(0, 140)}`);
+// Rapporten skal sige hvilken side der blev læst. Før dette kendte svaret
+// kun værten, så en kunde der indsendte `scan.example/kontakt` fik en rapport
+// der lævede at have undersøgt forsiden — og klienten skrev «the score is the
+// homepage» ved siden af den. Dommen er derfor på den konkrete sti.
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example/kontakt'), ip(24));
+const dyb = await r.json().catch(() => ({}));
+ok('compliance-scan med en dyb sti svarer den sti, der blev læst',
+  r.status === 200 && dyb.scanned_url === 'https://scan.example/kontakt',
+  `${r.status} scanned_url=${dyb.scanned_url}`);
+ok('compliance-scan tæller siderne det læste, ikke kun domænet',
+  r.status === 200 && typeof dyb.pages_checked === 'number' && dyb.pages_checked > 1,
+  `${r.status} pages_checked=${dyb.pages_checked}`);
+ok('compliance-scan på forsiden siger forsiden, ikke en tom sti',
+  en.scanned_url === 'https://scan.example/' && en.pages_checked >= 1,
+  `scanned_url=${en.scanned_url} pages_checked=${en.pages_checked}`);
 r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example\nto.example'), ip(22));
 const multi = await r.json().catch(() => ({}));
 ok('compliance-scan med to linjer svarer én rapport pr. URL',

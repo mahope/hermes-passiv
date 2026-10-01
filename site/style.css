@@ -595,6 +595,17 @@ a.ext::after { content: ""; display: inline-block; width: 0.65em; height: 0.65em
 input[type="file"] { max-width: 100%; min-width: 0; width: 100%; }
 .input-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .input-group input { flex: 1 1 14rem; }
+/* `pagepass.OWNED_SELECTORS` erklærer `.input-group button` som designsystemets,
+   så `scrub_css()` fjerner sidens egen regel — og da erklærede style.css den
+   ikke, stod «Check Site» tilbage som `button:not([class])`: hvid baggrund med
+   mørk tekst på blå baggrund ved hover, 2,5:1 ifølge axe. Målt 1/10 på den
+   publicerede side. Derfor ligger knappen her, med de tokens resten af knapperne
+   bruger, så påstanden holder. */
+.input-group button { flex: 0 0 auto; padding: 0.6rem 1.1rem; background: var(--color-accent); color: var(--color-on-accent); border: 1px solid transparent; border-radius: var(--radius); font-size: 0.95rem; font-weight: 600; line-height: 1.3; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, color .15s, transform .15s var(--ease); }
+.input-group button:hover { background: var(--color-accent-hover); }
+.input-group button:active { transform: translateY(1px); }
+.input-group button:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 480px) { .input-group button { width: 100%; } }
 .jf-wrap, .tool-wrap { width: 100%; }
 main.layout-wide > .container { padding-top: var(--space-main); }
 main.layout-wide > .crumbs + .container { padding-top: 0; }

@@ -4050,3 +4050,44 @@ Den rigtige dom er tællingen: 2 forekomster af Clean Copy Pros link (1 statisk 
 1 i scriptet), plus `#pro-nudge` og `proCard`, som begge er 0 i den gamle kode.
 Noten er rettet med baseline-tallene, så næste iteration kan måle i stedet for at
 lede efter en streng, der aldrig kunne være væk.
+
+## 1/10 19:40 — Fund fra min egen diff-gennemgang
+
+Da `.input-group button` flyttedes ind i `style.css`, afslørede en måling af
+`OWNED_SELECTORS` mod `style.css` at påstanden «designsystemet ejer» aldrig
+er efterprøvet. Elleve klasser stod på listen uden at være erklaret. kun
+`.input-group button` gav et **synligt** brud — de andre tabte regler for
+`.gen label`, `pre.cmd code` og `footer a`, som skallen erklærer delvist gennem
+`.gen`, `label`, `pre.cmd`, `code` hver for sig. Dommen blev derfor afgrænset til
+formkontroller: den ene gruppe hvor skallen *altid* har en default, så et tab er
+altid synligt. At dømme hele listen ville give ti røde linjer uden ét brud, og så
+en port man lærer at ignorere.
+
+Forskellen på `https://mahope.tools/compliance-site-check` (offentlig) og den
+publicerede `/style.css` lå i `.input-group button {` — 1 mod 0 forekomster.
+Knappen var hvid med mørk tekst, 2,52:1 mod blå ved hover, målt i Playwright på
+den byggede side før rettelsen.
+
+## 1/10 19:40 — Hvilken side blev læst
+
+Opgaven i planen havde to halvdele. Den første var ikke lavet: rapporten skrev
+kun værten (`url: 'https://' + targetUrl.host`), og begge sider skrev «the score
+is the homepage» / «scoren er forsiden» — også når kunden havde indsendt
+`/kontakt`. Det er punkt 11 i kvalitetsreglerne: en påstand i teksten er kode,
+og den var kode, der var forkert.
+
+Rettelsen er ikke en ny knap men en sand sætning: serveren svarer
+`scanned_url` (den URL fetch'en endte på, så redirects vises) og `pages_checked`.
+Begge står i overblikket, i det enkelte resultat og i den downloadede `.md` — den
+sidste fordi rapporten sendes videre til en kunde, der skal kunne se præcis hvad
+der blev undersøgt.
+
+**Målt:** `scan-clients.test.mjs` 215/221 på den gamle kode, 221/221 på den nye
+(6 nye domme × 2 sprog er delvist overlappende). `stripe-worker.test.mjs`
+330/333 → 333/333 ved at fjerne de to nye felter fra `_worker.js`. Playwright
+ved 390 og 1280 px i begge sprog: 0 axe-fund, 0 vandret scroll, 0 page-fejl.
+
+En fejl i min egen kode blev rettet før commit: EN viste stien uden
+foranledende skråstreg (`kontakt`) mens DA viste `/kontakt`, fordi mit første
+regex krævede et `/` efter værten og derfor slap `https://example.com` (uden
+sti) igennem som stien. Nu er formatet ens og begge taler til testen.

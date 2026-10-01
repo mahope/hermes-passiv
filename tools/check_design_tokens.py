@@ -71,6 +71,10 @@ RE_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
 RE_RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")
 RE_DECL = re.compile(r"(--[A-Za-z0-9_-]+)\s*:\s*([^;}]+)")
 
+# Elementer hvor skallen erklærer en default, så en strippet sidelinje altid
+# efterlader noget synligt. Se `check_owned_selectors_exist`.
+FORM_CONTROL_TAGS = {"button", "input", "select", "textarea"}
+
 
 def _rules(css: str):
     """(selector-dele, krop) for hver regel, med kommentarer fjernet."""
@@ -208,6 +212,89 @@ def check_dist_has_one_design_system(root: Path) -> list[str]:
     return problems
 
 
+def check_owned_selectors_exist(root: Path) -> list[str]:
+    """Ingen formkontrol må være påstået ejet af designsystemet uden at være deklareret.
+
+    `pagepass.OWNED_SELECTORS` er skallens kontrakt: en side må ikke selv style de
+    klasser, fordi style.css ejer dem. Men kontrakten er en *påstand* — den
+    efterprøves ikke, og da `.input-group button` stod på listen uden at være
+    deklaret i style.css, fjernede `scrub_css()` sidens regel. Knappen faldt så
+    tilbage på `button:not([class])`: hvid baggrund med mørk tekst, og 2,5:1 mod
+    blå baggrund ved hover. Målt 1/10 på den publicerede
+    `/compliance-site-check` — en synlig fejl på den mest besøgte scanner, som
+    ingen port meldte.
+
+    Kun **formkontroller** dømmes (`button`, `input`, `select`, `textarea`).
+    De er den ene gruppe hvor tabet *altid* er synligt: skallen erklærer en
+    default for hver af dem, så en strippet sidelinje efterlader et element med
+    et udseende ingen har bedt om. For `.gen label` eller `pre.cmd code` er
+    påstanden derimod ofte korrekt — skallen erklærer `.gen`, `label`,
+    `pre.cmd` og `code` hver for sig, og det er ikke denne ports opgave at
+    dømme om delene tilsammen giver det samme udseende. At dømme hele listen
+    ville give en port, der rødmer på ti kodelinjer uden ét synligt brud, og
+    så en port man lærer at ignorere.
+
+    Kun basis-selectoren tælles, så `.input-group button:hover` ikke kræver en
+    egen erklæring uden `:hover`.
+    """
+    sys.path.insert(0, str(root / "tools"))
+    try:
+        import pagepass  # noqa: E402
+    except ImportError:
+        return []
+
+    style = root / "site" / "style.css"
+    if not style.is_file():
+        return []
+
+    def base(selector: str) -> str:
+        # Samme normalisering som `pagepass._norm_sel` — ellers er
+        # `input[type="text"]` i style.css et andet navn end
+        # `input[type=text]` på siden, og porten melder en fejl der ikke er der.
+        s = re.sub(r"\s+", " ", re.sub(r"""["']""", "", selector.strip()))
+        return re.sub(r":(?:hover|focus|focus-visible|active|disabled|not\(\[class\]\))", "", s).strip()
+
+    declared = {base(sel) for group, _ in _rules(style.read_text(encoding="utf-8", errors="replace"))
+                for sel in group}
+
+    used: dict[str, set[str]] = {}
+    for page in sorted((root / "site").rglob("*.html")):
+        text = page.read_text(encoding="utf-8", errors="replace")
+        for style_body in re.findall(r"<style[^>]*>(.*?)</style>", text, re.DOTALL | re.IGNORECASE):
+            for group, _ in _rules(RE_COMMENT.sub("", style_body)):
+                for sel in group:
+                    name = base(pagepass._norm_sel(sel))
+                    # Selectorens *sidste* del skal være formkontrollen:
+                    # `.input-group button` og `button:not([class])` begge.
+                    parts = name.split()
+                    if parts and parts[-1] in FORM_CONTROL_TAGS and pagepass._owned(name):
+                        used.setdefault(name, set()).add(str(page.relative_to(root / "site")))
+
+    return [f"{sel} er på OWNED_SELECTORS-listen, men style.css erklærer den ikke — "
+            f"brugt på {len(paths)} side(r), fx {sorted(paths)[0]}, så bygget "
+            f"stripper reglen og knappen falder tilbage på skallens default"
+            for sel, paths in sorted(used.items()) if sel not in declared]
+
+
+def _owned_selectors_fixture(root: Path, *, drop: bool) -> None:
+    """(site, site/style.css) med en side der styler `.input-group button`.
+
+    `drop=False` efterlader style.css med den erklæring, siden kræver. `drop=True`
+    fjerner den — mutationen der skal give en rød port.
+    """
+    (root / "site").mkdir(parents=True, exist_ok=True)
+    (root / "site" / "style.css").write_text(
+        ".btn { background: #4a3fc4; color: #fff; }\n"
+        + ("" if drop else ".input-group button { background: #4a3fc4; color: #fff; }\n"),
+        encoding="utf-8")
+    (root / "site" / "værktøj.html").write_text(
+        "<html lang=\"da\"><head><style>\n"
+        ".input-group { display: flex; }\n"
+        ".input-group button { background: #2563eb; color: #fff; }\n"
+        "</style></head><body><div class=\"input-group\"><button>Tjek</button></div></body></html>\n",
+        encoding="utf-8")
+
+
 def _fixtures(root: Path, *, bridge: bool = True, order: bool = True,
               product: str = "deskuptime", bridge_product: str = "deskuptime") -> None:
     """Skriver et minimalt, sundt (dist, site/style.css) par."""
@@ -316,6 +403,19 @@ def self_test() -> int:
         scenarios.append(("broen findes kun under et andet produkt",
                           check_dist_has_one_design_system(root)))
 
+        # 9 — `pagepass.OWNED_SELECTORS` påstår at designsystemet ejer en
+        # formkontrol, style.css erklærer den ikke. Det er fejlen der gjorde
+        # «Check Site» hvid på den publicerede scanner.
+        _owned_selectors_fixture(root, drop=True)
+        scenarios.append(("en OWNED_SELECTOR uden erklæring i style.css",
+                          check_owned_selectors_exist(root)))
+
+        # 10 — samme sag uden fejlen må ikke rødme porten.
+        _owned_selectors_fixture(root, drop=False)
+        if check_owned_selectors_exist(root):
+            print("FALSK POSITIV: en korrekt OWNED_SELECTOR blev meldt som fejl", file=sys.stderr)
+            return 1
+
     failed = 0
     for name, problems in scenarios:
         if problems:
@@ -340,7 +440,7 @@ def main() -> int:
     if args.self_test:
         return self_test()
 
-    problems = check_dist_has_one_design_system(ROOT)
+    problems = check_dist_has_one_design_system(ROOT) + check_owned_selectors_exist(ROOT)
     for problem in problems:
         print(f"FEJL: {problem}", file=sys.stderr)
     if problems:
