@@ -2,31 +2,40 @@
 
 - **Page Profile Pro kunne ikke aktiveres overhovedet.** `page-profile --activate`
   fik **403 Cloudflare Error 1010** på alle fire felter, fordi `urllib` sender
-  `Python-urllib/3.x` som User-Agent. Rettet 1/10: vi udgiver `1.2.1`, og 1.2.0
-  lå stadig i CDN'en med 200 og får en 301.
+  `Python-urllib/3.x` som User-Agent. Rettet 1/10: vi udgiver `1.2.1`.
 - **AI-siden er død for alle besøgende.** Målt 1/10: `POST /api/compliance-ai`
-  svarer **503** «AI service not configured», fordi `OPENROUTER_API_KEY` mangler
-  på workeren (`_worker.js:733`). Klienten håndterer 503 pænt, men funktionen er
-  publiceret og gør intet. Én secret, se ❓.
-- **Ingen fejl blev nogensinde meldt.** Målt 1/10: 0 forekomster af
-  «sentry» i hele repoet, så «Ingen uløste fejl» i 14 dage betød intet.
-  Workerens fetch er nu pakket, så en uventet fejl er en ren 500 *og* en
-  rapport — 316/316 worker-tests, 5 mutationer røde mod ældre kode.
+  svarer **503** «AI service not configured» (`OPENROUTER_API_KEY` mangler,
+  `_worker.js:733`). Klienten håndterer det pænt, men funktionen er publiceret
+  og gør intet. Se ❓.
+- **Ingen fejl blev nogensinde meldt.** Målt 1/10: 0 forekomster af «sentry»
+  i hele repoet. Workerens fetch er nu pakket, så en uventet fejl er en ren 500
+  *og* en rapport — 316/316 worker-tests, 5 mutationer røde mod ældre kode.
 - **Det der lå i live, var *bygget*, ikke skrevet** — 3 gange samme uge: 8
   generatorer døde i browseren, 37 sider uden donationslinje, 44 artikler med
-  dobbelt værktøjsliste. `check_inline_js` sagde «problems: 0» fordi den kun
-  læste `site/`. **Målt 1/10 i rigtig browser:** 0 konsolfejl på 14 sider, 197
-  anker-referencer dømt, værktøjerne virker på sit eget input.
+  dobbelt værktøjsliste. Målt 1/10 i rigtig browser: 0 konsolfejl på 14 sider,
+  197 anker-referencer dømt, værktøjerne virker på sit eget input.
 - **En regel skrevet ned uden en dom der kan fejle, er den dyre fejlform:** CEO-kø
-  punkt 0 rettede *sisyv* klienter og den tiende lå ved siden af, og opgave 42s
-  eget acceptkriterium gav 0 linjer for enhver plan. Næste batch skal spørge, om
-  en opgave nævner et **antal** uden at liste filerne. Gaten: 120 steps.
+  punkt 0 rettede *sisyv* klienter og den tiende lå ved siden af. En opgave skal
+  derfor nævne et **antal** *og* liste filerne.
+- **Den gratis indgang til det dyreste produkt havde ingen købsvej i sit
+  resultat.** Målt 1/10 på live: 0 `buy.stripe.com` på
+  `/compliance-site-check`, og det eneste økonomiske opfordring efter en
+  scanning var en donation på 10 kr. Rettet 1/10: købsknappen på $79/år pr.
+  website ligger nu i resultatet (EN + DA). Baseline: 1 af 6 skannere.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
-  Squeezy, Search Console. **Historie:** `docs/plan-arkiv.md` (append-only —
-  grep i stedet for at læse hel).
+  Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: købsknappen på $79/år pr. website i resultatet af
+  /compliance-site-check (EN + DA) ceo/pro-handoff-efter-scan 2026-10-01` —
+  skal måles på **indhold**, ikke på HTTP 200: live `/compliance-site-check`
+  skal have `pro-card` og `eVq00i4YH6UG69g0ObbMQ03` i sit inline-script, og det
+  samme på `/da/compliance-site-check` med `/da/compliance-report`. Kun en
+  statisk knap er ikke nok: dommen i `tests/scan-clients.test.mjs` sektion 11
+  kræver, at linket *kun* findes i scriptet. Kan ikke efterprøves: et rigtigt
+  køb kræver en gyldig Stripe-nøgle.
 
 - `DEPLOY OK 2026-10-01` — `ceo/urllib-blokeres-af-cloudflare` (`54fcc7e`),
   målt på **indhold**: live `build-info.json` bærer præcis `54fcc7e` på alle 3
@@ -371,3 +380,49 @@
 
 44. ~~**Ingen overvågning af en worker der leverer licenser.**~~ **FÆRDIG 1/10,
     `ceo/workeren-melder-sentry`.** Se arkiv.
+
+45. ~~**Den gratis scanner til det dyreste produkt havde ingen købsvej i sit
+    resultat.**~~ **FÆRDIG 1/10, `ceo/pro-handoff-efter-scan`.**
+    `/compliance-site-check` er den gratis indgang til EUComply Pro ($79/år pr.
+    website — dyreste linje i katalogen). Målt 1/10 på live: **0**
+    `buy.stripe.com` på hele siden, og den eneste økonomiske opfordring efter
+    en gennemført scanning var en donation på 10 kr.; betalt vej lå kun som et
+    statisk afsnit under værktøjet. Nu ligger købsknappen i selve resultatet
+    på EN + DA, med de tre ting scanningen *ikke* kunne se (alle sider, de 18
+    server-side tjek, PDF til kunden — samme påstand som `stripe_catalog.json`
+    `pro_features` og som siden allerede skrev), og donationen er bevaret.
+    Dømt af `tests/scan-clients.test.mjs` sektion 11, som kører et scan
+    rigtigt igennem og læser den markup `#results` får, læser købslink, pris og
+    periode *fra katalogen* og kræver at linket ikke findes i den statiske
+    HTML. Mutationen kører de samme domme på `da3999e`-koden og er rød.
+
+## Feature-kø
+
+Prioriteret efter hvor tæt den er på penge, ikke efter hvor let den er at kode.
+Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
+
+1. **Samme købsvej i resultatet på de fem øvrige skannere.** Hvem: bureauer og
+   udviklere der bruger gratisværktøjet og så rammer en mur. Tal: 1 → 6 sider
+   med købsknap i resultatstien (baseline 1/6). Accept: `url-inspector`,
+   `security-headers-check`, `cookie-check`, `text-on-image-checker` og
+   `contrast-checker` har hver den boks, dømt af samme sektion 11.
+   Datagrund: målt 1/10 — de fem har **0** `buy.stripe.com`; de to
+   kontrastværktøjer er vores mest besøgte (`/text-on-image-checker` +
+   `/blog/text-on-image-contrast-check`).
+2. **Flere URL'er pr. scanning.** Hvem: bureauet der scanner fem kunders sites
+   og så må købe fem gange. Tal: betalinger pr. uge (baseline 0 målt).
+   Accept: feltet tager linjeskift, serveren svarer én rapport pr. URL, og
+   knappen siger ærligt at Pro gør det samme for hele sitet. Datagrund:
+   scanningen kan i dag kun tage én URL, selv om produktsiden siger at Pro
+   «crawls the site».
+3. **E-bøgerne læses online, kapitel for kapitel.** Hvem: den der læser en
+   GDPR- eller NIS2-bog før han køber bundlet. Tal: køb fra `/books`
+   (baseline 0). Accept: hver bogside har en læsevisning med de første kapitler
+   og én købsknap til sit bundle-link. Datagrund: Cloudflare tæller 90011
+   sidevisninger på mahope.tools i 28 dage mod Plausibles 17, så bøgerne er det
+   største indhold vi har og ligger uden for målingen.
+4. **`/compliance-ai` som ikke gør ingenting.** Hvem: alle der lander på siden
+   fra artiklerne. Tal: kald pr. uge (baseline: **0**, siden secret'en mangler).
+   Accept: enten secret på workeren, eller siden siger at funktionen er i beta
+   og ikke lover et svar. Datagrund: målt 1/10 — 503 «AI service not
+   configured» (`_worker.js:733`). Kræver beslutning, se ❓.

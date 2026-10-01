@@ -63,7 +63,9 @@ function loadPage(path, fetchImpl, opts = {}) {
   // En `.js`-fil (som `book-ai.js`) køres som den er; en `.html` får sine egne
   // inline scripts. `match` vælger det rigtige script på de sider hvor et andet
   // end klientens også rører `fetch` (fx analytics der poster på /api/track).
-  const html = readFileSync(join(root, path), 'utf8');
+  // `opts.source` gør at mutationen kan køre den *gamle* sides bytes gennem
+  // samme sandkasse, så en dom er målt på kode der faktisk har kørt.
+  const html = opts.source ?? readFileSync(join(root, path), 'utf8');
   const scripts = path.endsWith('.js')
     ? [html]
     : [...html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
@@ -704,6 +706,82 @@ function mutated(path, from, to) {
       ok(`mutation: ${p} læser /net.js, så den følger med ned`, r.calls === 1, `calls=${r.calls} (forventet 3)`);
     }
   } finally { netOverride = null; }
+}
+
+// --------------------------------------------------------------------------
+// 11. Den betalte vej i *resultatet* (EN + DA).
+//
+//     `/compliance-site-check` er den gratis indgang til EUComply Pro — det
+//     dyreste produkt i katalogen ($79/år pr. website). Målt 1/10 på live:
+//     0 `buy.stripe.com` på hele siden, og det eneste økonomiske opfordring
+//     efter et resultat var en donation på 10 kr. Betalt vej fandtes kun som et
+//     statisk afsnit *under* værktøjet, altså uden for rækkevidde for den der
+//     lige har brugt scanneren. Sådan så det ud, og det er det her dommen er
+//     skrevet til: den kører et scan rigtigt igennem og læser den markup der
+//     lander i `#results`.
+//
+//     Dommen læser katalogen for købslink, pris og periode, så den kan ikke
+//     grønne en knap der peger på en anden produktrappe eller en pris uden
+//     periode. Mutationen kører den samme dom på den kode fra før rettelsen.
+// --------------------------------------------------------------------------
+{
+  const catalog = JSON.parse(readFileSync(join(root, 'tools/stripe_catalog.json'), 'utf8'));
+  const pro = catalog.products['eucomply-pro'];
+  const periodWords = catalog.billing_periods.products['eucomply-pro']
+    .flatMap((k) => catalog.billing_periods.words[k]);
+
+  // Købsknappen skal findes i den markup resultatet renderer — ikke i filens
+  // statiske HTML. Derfor strippes `<style>` og `<script>` væk, og det dømmes
+  // at linket *kun* findes i scriptet: ellers ville et statisk afsnit kunne
+  // bestå dommen, og det er præcis den fejlform der var i live.
+  const outsideScripts = (src) => src
+    .replace(/<style[\s\S]*?<\/style>/g, ' ')
+    .replace(/<script[\s\S]*?<\/script>/g, ' ');
+
+  const døm = (html, label, reportHref) => {
+    ok(`${label}: købsknappen i resultatet bruger katalogens betalingslink`,
+      html.includes(pro.payment_link), `ledger ${pro.payment_link} i ${html.includes(pro.payment_link) ? '' : 'resultatet'}`);
+    ok(`${label}: knappen viser prisen fra katalogen ($${pro.price_usd})`,
+      html.includes(`$${pro.price_usd}`));
+    ok(`${label}: knappen siger hvilken periode den sælger`,
+      periodWords.some((w) => html.includes(w)), periodWords.join(', '));
+    ok(`${label}: knappen sælger den rigtige produktrappe`,
+      /EUComply Pro/.test(html));
+    ok(`${label}: resultatet linker videre til produktsiden med gratis-vs-Pro-tabellen`,
+      reportHref.test(html), `${reportHref}`);
+  };
+
+  for (const [path, label, reportHref] of [
+    ['site/compliance-site-check.html', 'EN', /href="\/compliance-report"/],
+    ['site/da/compliance-site-check.html', 'DA', /href="\/da\/compliance-report"/],
+  ]) {
+    const { fetchImpl } = responses([OK_SCAN]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    nodes.get('urlInput').value = 'example.com';
+    await sandbox.scan();
+    await sleep(30);
+    const html = (nodes.get('results') || {}).innerHTML || '';
+    ok(`${label}: et gennemført scan renderer resultat-markup`, html.length > 0);
+    døm(html, `${label} live`, reportHref);
+    // Donationslinjen skal stadig være der — den nye boks er en tilføjelse.
+    ok(`${label}: donationslinjen overlevede den nye boks`, /donate\.stripe\.com/.test(html));
+
+    const src = readFileSync(join(root, path), 'utf8');
+    ok(`${label}: købslinket står ikke i den statiske HTML — kun i resultatstien`,
+      !outsideScripts(src).includes(pro.payment_link));
+
+    // Mutation: den kode fra før rettelsen skal være rød på dommen.
+    const old = execFileSync('git', ['show', `da3999e:${path}`], { cwd: root, maxBuffer: 1 << 26 }).toString('utf8');
+    ok(`${label}: den gamle side kan hentes fra git`, old.length > 0);
+    const { fetchImpl: oldFetch } = responses([OK_SCAN]);
+    const gammel = loadPage(path, oldFetch, { source: old });
+    gammel.nodes.get('urlInput').value = 'example.com';
+    await gammel.sandbox.scan();
+    await sleep(30);
+    const gammelHtml = (gammel.nodes.get('results') || {}).innerHTML || '';
+    ok(`${label}: mutation: den gamle kode har ingen købsvej i resultatet`,
+      !gammelHtml.includes(pro.payment_link), 'dommen kan altså blive rød');
+  }
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
