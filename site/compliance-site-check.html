@@ -67,8 +67,9 @@
 <style>
   .tool-container { max-width: 720px; margin: 0 auto; padding: 24px 16px; }
   .input-group { display: flex; gap: 8px; margin: 24px 0; }
-  .input-group input { flex: 1; padding: 12px 16px; font-size: 16px; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; }
-  .input-group input:focus { border-color: #2563eb; }
+  .input-group input, .input-group textarea { flex: 1; min-width: 0; padding: 12px 16px; font-size: 16px; font-family: inherit; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s; resize: vertical; }
+  .input-group input:focus, .input-group textarea:focus { border-color: #2563eb; }
+  .input-group textarea { line-height: 1.4; }
   .input-group button { padding: 12px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
   .input-group button:hover { background: #1d4ed8; }
   .input-group button:disabled { background: #93c5fd; cursor: not-allowed; }
@@ -107,11 +108,19 @@
   .dot.red { background: #ef4444; }
   .dot.yellow { background: #f59e0b; }
   .examples { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .field-hint { font-size: 13px; color: #6b7280; margin: -12px 0 0; }
+  .site-list { margin: 0 0 12px; }
+  .site-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
+  .site-row:last-child { border-bottom: none; }
+  .site-row .site-name { flex: 1; min-width: 0; font-size: 14px; word-break: break-all; }
+  .site-row .score-badge { width: 40px; height: 40px; font-size: 18px; }
+  .site-row .site-score { font-size: 13px; color: #6b7280; }
+  @media (max-width: 480px) { .site-row .site-name { flex-basis: 100%; } }
   .examples a { color: #2563eb; text-decoration: none; }
   .examples a:hover { text-decoration: underline; }
   @media (max-width: 480px) {
     .input-group { flex-direction: column; }
-    .input-group input { width: 100%; }
+    .input-group input, .input-group textarea { width: 100%; }
     .input-group button { width: 100%; }
   }
 </style>
@@ -136,10 +145,12 @@
   </div>
 
   <div class="input-group" id="scanForm">
-    <label for="urlInput" class="sr-only">Website URL to check</label>
-      <input type="url" id="urlInput" placeholder="https://example.com" value="" autocomplete="url" spellcheck="false">
+    <label for="urlInput" class="sr-only">Website URL to check — one per line to scan several</label>
+      <textarea id="urlInput" rows="2" placeholder="https://example.com" spellcheck="false" autocomplete="url"></textarea>
     <button id="scanBtn" onclick="scan()">Check Site</button>
   </div>
+
+  <p class="field-hint">Paste one URL per line to check up to 5 sites in one go — handy when you are auditing several client sites.</p>
 
   <div class="examples">
     Try: <a href="javascript:scanExample()">mahope.tools</a> &middot;
@@ -205,6 +216,9 @@ function getStatusIcon(status) {
 var SCAN_MAX_TRIES = 3;
 var SERVER_BUSY = 'Our scan server is temporarily unavailable. Please try again in a moment.';
 var OFFLINE = 'We could not reach the scan server. Check your connection and try again.';
+// Samme fem som serveren, så de to steder ikke kan komme i uoverens. Se
+// CSC_MAX_URLS i site/_worker.js.
+var SCAN_MAX_SITES = 5;
 
 function fetchScan(endpoint) {
   return fetch(endpoint).catch(function(e) {
@@ -227,49 +241,103 @@ function fetchScan(endpoint) {
   });
 }
 
+// Én URL pr. linje, samme site to gange kun én gang. Rækkefølgen bevares, så
+// rapport nummer to stadig er den anden linje kunden skrev.
+function readSites() {
+  var linjer = String(urlInput.value || '').split(/[\r\n]+/);
+  var set = [], setNøgler = {};
+  linjer.forEach(function(r) {
+    var rå = r.trim();
+    if (!rå) return;
+    var nøgle = rå.replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+    if (setNøgler[nøgle]) return;
+    setNøgler[nøgle] = true;
+    set.push(rå);
+  });
+  return set;
+}
+
 function scan() {
-  var raw = urlInput.value.trim();
-  if (!raw) { showError('Enter a URL first.'); return; }
-  // Auto-add https://
-  if (!raw.startsWith('http://') && !raw.startsWith('https://')) raw = 'https://' + raw;
-  try { new URL(raw); } catch (e) { showError('Invalid URL. Make sure it starts with http:// or https://'); return; }
+  var sites = readSites();
+  if (!sites.length) { showError('Enter a URL first.'); return; }
+  if (sites.length > SCAN_MAX_SITES) {
+    showError('Scan up to ' + SCAN_MAX_SITES + ' sites at a time — you pasted ' + sites.length + '. Run them in batches.');
+    return;
+  }
+  var urls = [];
+  for (var i = 0; i < sites.length; i++) {
+    var u = /^https?:\/\//i.test(sites[i]) ? sites[i] : 'https://' + sites[i];
+    try { new URL(u); } catch (e) { showError('Invalid URL: ' + sites[i]); return; }
+    urls.push(u);
+  }
+
   showLoading();
-  var tries = 0;
-  function attempt() {
-    fetchScan('/api/compliance-scan?url=' + encodeURIComponent(raw))
+  var rapporter = [], fejl = [], k = 0, tries = 0;
+  function naeste() {
+    if (k >= urls.length) {
+      hideLoading();
+      if (!rapporter.length) { showError(fejl.length ? fejl[0].error : 'Scan failed'); return; }
+      ctaBox.style.display = '';
+      if (window.trackEvent) window.trackEvent('scan');
+      renderResults(rapporter, fejl);
+      return;
+    }
+    var target = urls[k];
+    fetchScan('/api/compliance-scan?url=' + encodeURIComponent(target))
       .then(function(data) {
-        hideLoading();
-        if (!data.ok) { showError(data.error || 'Scan failed'); return; }
-        ctaBox.style.display = '';
-        if (window.trackEvent) window.trackEvent('scan');
-        renderResults(data);
+        if (!data.ok) {
+          fejl.push({ url: target, error: data.error || 'Scan failed' });
+        } else if (data.multi && data.reports) {
+          data.reports.forEach(function(r) {
+            if (r.ok) rapporter.push(r); else fejl.push({ url: r.url, error: r.error });
+          });
+        } else {
+          rapporter.push(data);
+        }
+        k++; tries = 0;
+        naeste();
       })
       .catch(function(err) {
         if (err.transient && ++tries < SCAN_MAX_TRIES) {
-          setTimeout(attempt, 1200 * tries);
+          setTimeout(naeste, 1200 * tries);
           return;
         }
-        showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')));
+        fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')) });
+        k++; tries = 0;
+        naeste();
       });
   }
-  attempt();
+  naeste();
 }
 
 
   // iter313: download report as Markdown (client-side, no server)
-  var lastScan = null;
-  function downloadReport(data) {
+  var lastScan = [];
+  function reportLines(data) {
     var lines = [];
-    lines.push('# Compliance Report — ' + data.url);
+    lines.push('## ' + data.url);
     lines.push('');
     lines.push('Score: **' + data.score + '/100** (' + data.grade + ') · ' + data.passed + '/' + data.total + ' checks passed');
-    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via mahope.tools/compliance-site-check');
-    lines.push('');
     var all = [];
     if (data.results) { for (var k in data.results) { data.results[k].forEach(function(r){ all.push(r); }); } }
     var icons = { pass: 'PASS', warn: 'WARN', info: 'INFO', fail: 'FAIL' };
     all.forEach(function(r) {
       lines.push('- [' + (icons[r.status] || r.status.toUpperCase()) + '] ' + (r.label || r.key) + ' — ' + (r.details || ''));
+    });
+    return lines;
+  }
+
+  function downloadReport() {
+    var rapporter = lastScan;
+    if (!rapporter || !rapporter.length) return;
+    var lines = [];
+    lines.push('# Compliance Report — ' + (rapporter.length === 1 ? rapporter[0].url : rapporter.length + ' websites'));
+    lines.push('');
+    lines.push('Scanned: ' + new Date().toISOString().slice(0, 10) + ' · via mahope.tools/compliance-site-check');
+    lines.push('');
+    rapporter.forEach(function(data, i) {
+      if (i) lines.push('');
+      lines = lines.concat(reportLines(data));
     });
     lines.push('');
     lines.push('Fix each FAIL above, then re-scan. Free GitHub Action for CI: https://github.com/mahope/compliance-site-check');
@@ -277,19 +345,73 @@ function scan() {
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     if (window.trackEvent) window.trackEvent('report-dl');
-    a.download = 'compliance-report-' + (data.url || '').replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]/gi, '') + '.md';
+    a.download = 'compliance-report-' + (rapporter.length === 1
+      ? (rapporter[0].url || '').replace(/^https?:\/\//, '').replace(/[^a-z0-9.-]/gi, '')
+      : rapporter.length + '-websites') + '.md';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
   }
 
-function renderResults(data) {
-  var html = '<div class="result-card">';
-  html += '<div class="score-row">';
-  html += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
-  lastScan = data;
-  html += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(data.url) + '</div>';
-  html += '</div>';
-  html += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport(lastScan)" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
+  // Betalt vej. Den skal kunne sige sandheden både for ét site og for flere, så
+  // den får antallet: «this checked one page» var ikke længere hele sandheden,
+  // da feltet tog fem URL'er — og en løfte-boks der kun passer for den ene
+  // udgave, er den fejl hele opgaven handler om.
+  function proCard(antal) {
+    var flere = antal > 1;
+    var html = '<div class="result-card pro-card">';
+    html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
+      ? 'One page per site. A site is every page.'
+      : 'This checked one page. A site is every page.') + '</h3>';
+    html += '<p class="pro-lead">What this scan could not look at:</p>';
+    html += '<ul class="pro-list">';
+    html += '<li><strong>Every other page.</strong> ' + (flere
+      ? 'You checked ' + antal + ' sites, one page each. EUComply Pro crawls the whole site — the same check on every page it finds, not the ones you paste.'
+      : 'EUComply Pro crawls the whole site — the same check on every page it finds, not the one URL you pasted.') + '</li>';
+    html += '<li><strong>18 server-side checks.</strong> GDPR, cookie, security and metadata rules that only a server can answer, on top of the accessibility rules above.</li>';
+    html += '<li><strong>A PDF you can send a client.</strong> The report holds the server-side findings; the PDF needs your licence key.</li>';
+    html += '</ul>';
+    html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
+    html += '<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
+    html += '</div>';
+    return html;
+  }
+
+function renderResults(rapporter, fejl) {
+  lastScan = rapporter;
+  var html = '';
+
+  // Én rapport: præcis som før, så en enkeltvis kunde ser det samme. Flere
+  // rapporter får et overblik først, fordi det er det, han spørger om: hvilken
+  // af kunders sites mangler noget.
+  if (rapporter.length > 1) {
+    html += '<div class="result-card"><h3 style="margin:0 0 4px;font-size:16px">' + rapporter.length + ' sites checked</h3>';
+    html += '<p style="font-size:13px;color:#6b7280;margin:0 0 8px">One page per site — the score is the homepage, not the whole site.</p>';
+    html += '<div class="site-list">';
+    rapporter.forEach(function(data, i) {
+      html += '<div class="site-row">';
+      html += '<span class="score-badge ' + esc(data.grade) + '">' + esc(data.grade) + '</span>';
+      html += '<span class="site-name"><a href="#site-' + (i + 1) + '">' + esc(data.url) + '</a></span>';
+      html += '<span class="site-score">' + data.score + '/100 &middot; ' + data.passed + '/' + data.total + ' passed</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    if (fejl && fejl.length) {
+      html += '<p style="font-size:13px;color:#b91c1c;margin:12px 0 0">' + fejl.length + ' of ' + (rapporter.length + fejl.length)
+        + ' could not be checked: ' + fejl.map(function(f) { return esc(f.url); }).join(', ') + '</p>';
+    }
+    html += '<div style="margin:16px 0 0"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
+    html += '</div>';
+  }
+
+  rapporter.forEach(function(data, i) {
+  var html2 = '<div class="result-card" id="site-' + (i + 1) + '">';
+  html2 += '<div class="score-row">';
+  html2 += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
+  html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(data.url) + '</div>';
+  html2 += '</div>';
+  if (rapporter.length === 1) {
+    html2 += '<div style="margin:0 0 16px"><button id="dlReport" onclick="downloadReport()" style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:13px;cursor:pointer">⬇ Download report (.md)</button></div>';
+  }
 
   // Group results — passed first, then warnings, then failures
   var order = [];
@@ -305,48 +427,41 @@ function renderResults(data) {
   });
 
   order.forEach(function(r) {
-    html += '<div class="check-item">';
-    html += getStatusIcon(r.status);
-    html += '<div><div class="check-label">' + esc(r.label || r.check || r.key) + '</div>';
-    html += '<div class="check-detail">' + esc(r.details) + '</div>';
-    if (r.importance) html += '<div class="check-hint">' + esc(r.importance) + '</div>';
+    html2 += '<div class="check-item">';
+    html2 += getStatusIcon(r.status);
+    html2 += '<div><div class="check-label">' + esc(r.label || r.check || r.key) + '</div>';
+    html2 += '<div class="check-detail">' + esc(r.details) + '</div>';
+    if (r.importance) html2 += '<div class="check-hint">' + esc(r.importance) + '</div>';
     if (r.subResults && r.subResults.length) {
-      html += '<div class="sub-results">';
+      html2 += '<div class="sub-results">';
       r.subResults.forEach(function(s) {
-        html += '<div class="sub-item">' + getStatusIcon(s.status) + ' <strong>' + esc(s.check) + '</strong> — ' + esc(s.detail) + '</div>';
+        html2 += '<div class="sub-item">' + getStatusIcon(s.status) + ' <strong>' + esc(s.check) + '</strong> — ' + esc(s.detail) + '</div>';
       });
-      html += '</div>';
+      html2 += '</div>';
     }
-    html += '</div></div>';
+    html2 += '</div></div>';
   });
 
-  html += '</div>';
+  html2 += '</div>';
 
-  // What each check means
-  if (data.checks) {
-    html += '<div class="result-card"><h3 style="margin:0 0 12px;font-size:16px">About each check</h3>';
+  // What each check means. De ni tjek er de samme for hvert site, så listen
+  // står kun ved det første — ellers ville den læses N gange for ingenting.
+  if (data.checks && i === 0) {
+    html2 += '<div class="result-card"><h3 style="margin:0 0 12px;font-size:16px">About each check</h3>';
     for (var key in data.checks) {
       var c = data.checks[key];
-      html += '<p style="font-size:13px;color:#4b5563;margin:2px 0"><strong>' + esc(c.label) + '</strong> — ' + esc(c.importance) + '</p>';
+      html2 += '<p style="font-size:13px;color:#4b5563;margin:2px 0"><strong>' + esc(c.label) + '</strong> — ' + esc(c.importance) + '</p>';
     }
-    html += '</div>';
+    html2 += '</div>';
   }
+  html += html2;
+  });
 
   // Betalt vej, pr. samme oplysninger som nedenstående afsnit, men hvor
   // besøgeren står: lige efter sit eget resultat. Uden den var det eneste
   // økonomiske opfordring efter et resultat en donation på 10 kr., selv om
   // det er en bureauopgave der mangler — og det er den der koster 79 USD.
-  html += '<div class="result-card pro-card">';
-  html += '<h3 style="margin:0 0 4px;font-size:16px">This checked one page. A site is every page.</h3>';
-  html += '<p class="pro-lead">What this scan could not look at:</p>';
-  html += '<ul class="pro-list">';
-  html += '<li><strong>Every other page.</strong> EUComply Pro crawls the whole site, not the one URL you pasted.</li>';
-  html += '<li><strong>18 server-side checks.</strong> GDPR, cookie, security and metadata rules that only a server can answer, on top of the accessibility rules above.</li>';
-  html += '<li><strong>A PDF you can send a client.</strong> The report holds the server-side findings; the PDF needs your licence key.</li>';
-  html += '</ul>';
-  html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
-  html += '<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
-  html += '</div>';
+  html += proCard(rapporter.length);
 
   html += '<p style="font-size:13px;color:var(--color-text-muted);margin:16px 0 0">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
 
@@ -354,8 +469,12 @@ function renderResults(data) {
   window.scrollTo({ top: document.getElementById('results').offsetTop - 20, behavior: 'smooth' });
 }
 
-// Enter key
-urlInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') scan(); });
+// Enter key. I et felt der tager flere linjer er Enter et linjeskift, så
+// scanningen skal have Ctrl/Cmd+Enter — ellers kunne en kunde ikke skrive to
+// URL'er uden at den første scannede med det samme.
+urlInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) scan();
+});
 
 function scanExample() {
   document.getElementById('urlInput').value = 'https://mahope.tools';

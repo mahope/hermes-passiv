@@ -3953,3 +3953,44 @@ korrekt.
 
 Ikke løst: selve assistenten er stadig slukket. Det er én secret på workeren
 (❓ i planen), og når den sættes er rettelsen to `noindex`-linjer.
+
+## 1/10 — Flere URL'er pr. scanning (Opgave 1 + Feature-kø #1)
+
+`/compliance-site-check` (EN + DA) tog én URL, mens produktsiden lovede at Pro
+«crawls the site» — så det betalte var præcis den del, kunden ikke kunne se
+forskel på. Nu er feltet et `<textarea>` med én URL pr. linje, op til 5 pr.
+kald, og serveren svarer én rapport pr. URL med et overblik først
+(grade, score, anker ned i hvert site).
+
+Serveren: `cscScanOne()` blev trukket ud af `handleComplianceScan`, og
+`cscBudget(CSC_MAX_PAGES)` er **delt pr. kald** — hjemmesiden tæller med i
+budgettet, så ét kald koster højst 12 ude-kald uanset antallet af URL'er. Uden
+delt budget kunne fem URL'er blive 60 subrequests. Gentagne linjer tælles én
+gang (samme site, samme svar), en ugyldig linje blandt gyldige er et 400 med den
+rå linje, og mere end fem er et 400 med et tal — ikke en stille afskæring. **Ét
+URL svarer i den gamle form**, så GitHub Action'en og alt hvad der har kaldt
+ruten siden den blev skrevet, bliver ved med at virke.
+
+Klienten: linjerne læses i rækkefølge og scannes én ad gangen, så en 502
+genkaldes pr. linje og ikke hele bunken. Ét site der fejler, taber ikke de
+andre. Pro-boksen får antallet, så «denne scanning tjekkede én side» ikke står
+alene, når der er tjekket fem: «Du tjekkede 5 websites, én side hver. EUComply
+Pro gennemgår hele sitet — samme tjek på hver side den finder, ikke kun den du
+indsætter.» Enter er nu linjeskift i et flerlinjefelt, så scanningen sidder på
+Ctrl/Cmd+Enter.
+
+To domme, begge falsifiable på den gamle kode: `tests/stripe-worker.test.mjs`
+330/330 (multi-formen, dedupe, 400 ved >5, og budgettet målt på to tunge værter
+der svarer 404 på alt andet — 12 ude-kald for to sites mod 12 for ét) og
+`tests/scan-clients.test.mjs` 204/204 (to linjer → to kald → begge sites i
+markuppen, seks linjer → fejl uden et kald, og den konkrete Pro-sætning i begge
+sprog). Sandkassen fik desuden en virkelig `appendChild`, for `esc()` gav tomme
+strenge for alt gennem den — så dommen «begge sites står i resultatet» kunne ikke
+se de URLs, den krævede.
+
+Verificeret: `quality_gate.py` 122 steps grøn, og skærmbilleder af begge sider
+ved 390 og 1280 px (`scrollWidth` = viewport, ingen vandret scroll) med
+overblik, fejltilstand og resultat.
+
+Ikke løst: hvert site tjekkes stadig kun på **forsiden**. Pro gør det samme for
+hver side den finder, og det er den næste opgave.

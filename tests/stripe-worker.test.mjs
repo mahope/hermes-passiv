@@ -47,7 +47,7 @@ const env = { VISITS, STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: WHS
   } } };
 
 const mails = []; let stripeCalls = 0; let resendNede = false; let scanFetches = 0; let privFetches = 0;
-let inspectFetches = 0; let headerFetches = 0;
+let inspectFetches = 0; let headerFetches = 0; let tungFetches = 0;
 const statsToken = createHash('sha256').update('stats-auth-v1:re_x').digest('hex');
 const statsCall = () => call('/api/stats?days=30', { headers: { authorization: `Bearer ${statsToken}` } });
 const sessions = {
@@ -115,6 +115,18 @@ globalThis.fetch = async (url, opts = {}) => {
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
   if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+  // To værter til multi-URL-testen af `/api/compliance-scan`. `to.example` er
+  // bare et andet site end scan.example, så to linjer er to sites og ikke den
+  // samme to gange. `tung.example`/`tung2.example` svarer 200 på forsiden og
+  // 404 på alt andet — så hvert af de ni tjek bruger hele sit fetch-budget,
+  // hvilket er det eneste tilfælde hvor et delt budget kan måles.
+  if (url.startsWith('https://to.example/')) return new Response('<html lang="en"><head><title>To</title></head><body><footer><a href="/privacy">Privacy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  if (url.startsWith('https://tung.example/') || url.startsWith('https://tung2.example/')) {
+    tungFetches++;
+    const p = new URL(url).pathname;
+    if (p !== '/' && p !== '') return new Response('Not found', { status: 404 });
+    return new Response('<html lang="en"><head><title>Tung</title></head><body><h1>No legal pages here</h1></body></html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  }
   // ── URL Inspector og header-tjekker ─────────────────────────────────
   // Begge er åbne ruter der henter en kaldersstyret URL, så stubben skal kunne
   // svare på dem — ellers ville porten være grøn fordi den afviser alt, hvilket
@@ -971,6 +983,57 @@ r = await call('/api/profile?url=' + encodeURIComponent('https://headers.example
 const profOk = await r.json().catch(() => ({}));
 ok('profile følger en offentlig redirect og melder den',
   r.status === 200 && profOk.final_url === 'https://headers.example/final', `${r.status} ${JSON.stringify(profOk).slice(0, 120)}`);
+
+// ── Flere URL'er pr. kald: ruten skal svare én rapport pr. URL ────────
+// Opgaven i planen: `/compliance-site-check` tog én URL, mens produktsiden
+// lovede at Pro «crawls the site» — så det betalte ikke var noget kunden kunne
+// se forskel på. Ruten skal derfor tage flere linjer og svare med én rapport
+// pr. URL. Fire ting skal dømmes, og alle fire skal kunne fejle:
+//
+// 1. Formen på **ét** URL er uændret. Ellers brød vi den GitHub Action og
+//    alt hvad der har kaldt ruten siden den blev skrevet.
+// 2. To URL'er giver to rapporter — ikke den første, og ikke én blandet.
+// 3. En gentaget URL tælles én gang, så den ikke spiser budget to gange.
+// 4. Fetch-budgettet er **delt** pr. kald, ikke pr. URL. Uden det kan én
+//    besøgende få 5 × 12 = 60 ude-kald i ét kald, og det er flere
+//    subrequests end en Worker har på det billige niveau.
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example'), ip(22));
+const en = await r.json().catch(() => ({}));
+ok('compliance-scan med én URL har stadig det gamle svar',
+  r.status === 200 && en.ok === true && en.multi === undefined && !Array.isArray(en.reports)
+  && typeof en.score === 'number' && en.results && typeof en.results.passed === 'object',
+  `${r.status} ${JSON.stringify(en).slice(0, 140)}`);
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example\nto.example'), ip(22));
+const multi = await r.json().catch(() => ({}));
+ok('compliance-scan med to linjer svarer én rapport pr. URL',
+  r.status === 200 && multi.ok === true && Array.isArray(multi.reports) && multi.reports.length === 2
+  && multi.reports[0].url === 'https://scan.example' && multi.reports[1].url === 'https://to.example',  `${r.status} ${JSON.stringify(multi).slice(0, 200)}`);
+ok('hver rapport har sin egen score og sine egne fund',
+  Array.isArray(multi.reports) && multi.reports.every(x => typeof x.score === 'number' && x.results && Object.keys(x.results).length > 0),
+  JSON.stringify((multi.reports || []).map(x => [x.url, x.score])));
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example\nto.example\nscan.example'), ip(22));
+const gentaget = await r.json().catch(() => ({}));
+ok('en gentaget URL tælles én gang', r.status === 200 && gentaget.reports?.length === 2,
+  r.status + ' ' + JSON.stringify(gentaget).slice(0, 160));
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('a.example\nb.example\nc.example\nd.example\ne.example\nf.example'), ip(23));
+const forMange = await r.json().catch(() => ({}));
+ok('flere end fem URL\'er er et 400 med et tal, ikke en stille afskæring',
+  r.status === 400 && /5/.test(forMange.error || ''), r.status + ' ' + JSON.stringify(forMange));
+r = await call('/api/compliance-scan?url=' + encodeURIComponent('scan.example\n::::'), ip(24));
+ok('en ugyldig linje blandt gyldige er et 400 med Invalid URL',
+  r.status === 400 && /invalid url/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
+
+// Budgettet skal være delt. `tung.example` svarer 200 på forsiden og 404 på
+// alt andet, så hvert af de ni tjek bruger hele sin del af budgettet — det er
+// det værste tilfælde, og det er derfor porten måler det dér. Ét kald med begge
+// skal ikke koste dobbelt så mange ude-kald som to kald.
+const tungFør = tungFetches;
+await call('/api/compliance-scan?url=' + encodeURIComponent('tung.example'), ip(25));
+const ettKald = tungFetches - tungFør;
+await call('/api/compliance-scan?url=' + encodeURIComponent('tung.example\ntung2.example'), ip(26));
+const toKald = tungFetches - tungFør - ettKald;
+ok('ét kald med to URL\'er koster ikke to gange ét kald med ét URL',
+  ettKald > 8 && toKald <= ettKald + 2, `1 URL: ${ettKald} fetch, 2 URL: ${toKald} fetch`);
 
 // Ingen rute må overlade kæden til runtime'en: så ser måleværnet kun første
 // hop, og et offentligt mål der 302er ind i 169.254.169.254 er igen præcis det

@@ -2807,6 +2807,109 @@ function cscCheckHreflang(html) {
   };
 }
 
+// Én URL pr. kald holdt ruten fast i praksis: et bureau med fem kunders sites
+// skulle trykke «Check» fem gange, og produktsiden lovede at Pro «crawls the
+// site» — altså var det betalte den del, kunden ikke kunne se forskel på.
+// Derfor tager `?url=` nu flere linjer, og svaret er én rapport pr. URL.
+//
+// To grænser er ikke valgt af udflugt. `CSC_MAX_URLS` er 5, fordi et bureau
+// med flere kunder endnu er et bureau, og fordi hvert URL koster en hjemmeside
+// plus de ni tjek. Og **fetch-budgettet er delt pr. kald, ikke pr. URL** —
+// ellers kunne ét kald bruge 5 × 12 = 60 ude-kald, og det er flere
+// subrequests end en Worker har på det billige niveau. Ét kald koster derfor
+// højst CSC_MAX_PAGES, uanset hvor mange URL'er der står i.
+const CSC_MAX_URLS = 5;
+const CSC_MAX_PAGES = 12; // samlet budget for hele kaldet
+
+// En delt tæller. `spend()` svarer fals når budgettet er brugt, så den
+// enkelte URL's tjek-løkke kan springe resten over i stedet for at hente videre.
+function cscBudget(limit) {
+  return { left: limit, spend() { if (this.left <= 0) return false; this.left--; return true; } };
+}
+
+function cscNormalizeUrl(raw) {
+  return raw.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+}
+
+async function cscScanOne(targetUrl, budget, timeoutMs) {
+  // Hjemmesiden er det første fetch i kaldets budget. Den tælles med, ellers
+  // kostede ét kald CSC_MAX_PAGES + 1 ude-kald — og det er præcis det tal
+  // kommentaren over CSC_MAX_PAGES lover.
+  budget.spend();
+  const home = await cscFetch(targetUrl.toString(), timeoutMs);
+  if (!home.ok) return { ok: false, error: 'Cannot reach ' + targetUrl.host + ': ' + home.error };
+
+  const passed = [];
+  const failed = [];
+
+  for (const key of Object.keys(CSC_CHECKS)) {
+    const check = CSC_CHECKS[key];
+    const result = { key, label: check.label, status: 'unknown', details: '' };
+
+    if (key === 'cookie') {
+      const found = cscDetectText(home.html, check.hints);
+      result.status = found ? 'pass' : 'fail';
+      result.details = found ? 'Cookie consent banner detected on homepage.'
+        : 'No cookie consent banner detected. Some banners load via JS — verify manually.';
+      (found ? passed : failed).push(result);
+      continue;
+    }
+    if (key === 'meta-tags') {
+      const r = cscCheckMetaTags(home.html);
+      result.status = r.status === 'pass' ? 'pass' : 'fail';
+      result.details = r.details; result.subResults = r.subResults;
+      (result.status === 'pass' ? passed : failed).push(result);
+      continue;
+    }
+    if (key === 'hreflang') {
+      const r = cscCheckHreflang(home.html);
+      result.status = r.status === 'pass' ? 'pass' : 'fail';
+      result.details = r.details; result.subResults = r.subResults;
+      (result.status === 'pass' ? passed : failed).push(result);
+      continue;
+    }
+    if (key === 'security-headers') {
+      const r = cscCheckSecurityHeaders(home.headers);
+      result.status = r.status;
+      result.details = r.details; result.subResults = r.subResults;
+      (result.status === 'pass' ? passed : failed).push(result);
+      continue;
+    }
+
+    // type: page
+    let found = false, foundUrl = '';
+    for (const path of check.paths) {
+      if (!budget.spend()) break;
+      const pageUrl = new URL(path, targetUrl.toString()).toString();
+      const pr = await cscFetch(pageUrl, timeoutMs);
+      if (!pr.ok || pr.status >= 400) continue;
+      if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url; break; }
+      if (pr.status < 300) { found = true; foundUrl = pr.url; break; }
+    }
+    if (!found) found = cscHasHomepageLink(home.html, check.paths);
+
+    result.status = found ? 'pass' : 'fail';
+    result.details = found ? (foundUrl ? 'Found at ' + foundUrl : 'Link found on homepage')
+      : 'Not found. Add a ' + check.label + ' page and link it from your footer.';
+    (found ? passed : failed).push(result);
+  }
+
+  const total = Object.keys(CSC_CHECKS).length;
+  const score = Math.round((passed.length / total) * 100);
+  return {
+    ok: true,
+    url: 'https://' + targetUrl.host,
+    score,
+    grade: cscScoreLabel(score),
+    passed: passed.length,
+    failed: failed.length,
+    total,
+    results: { passed, failed },
+    checks: CSC_CHECKS,
+    version: '2.0',
+  };
+}
+
 async function handleComplianceScan(request, url, env) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -2827,111 +2930,90 @@ async function handleComplianceScan(request, url, env) {
     return new Response(JSON.stringify({ ok: false, error: 'Missing ?url= parameter' }), { status: 400, headers: corsHeaders });
   }
 
-  let targetUrl;
-  try {
-    targetUrl = new URL(targetParam.startsWith('http') ? targetParam : 'https://' + targetParam);
-    if (!['http:', 'https:'].includes(targetUrl.protocol)) throw new Error('bad protocol');
-  } catch {
-    return new Response(JSON.stringify({ ok: false, error: 'Invalid URL' }), { status: 400, headers: corsHeaders });
+  // Én URL pr. linje. Gentagne linjer tælles én gang — samme site to gange er
+  // samme svar, og den skal ikke spise budget to gange.
+  const rå = targetParam.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
+  const settes = [];
+  for (const r of rå) {
+    const nøgle = cscNormalizeUrl(r);
+    if (nøgle && !settes.some(x => cscNormalizeUrl(x) === nøgle)) settes.push(r);
+  }
+  if (settes.length > CSC_MAX_URLS) {
+    return new Response(JSON.stringify({ ok: false,
+      error: 'Scan up to ' + CSC_MAX_URLS + ' sites at a time — you sent ' + settes.length + '. Run them in batches.' }),
+      { status: 400, headers: corsHeaders });
+  }
+
+  // En ugyldig linje er et 400 med hele linjen, også når de andre er gyldige:
+  // en bureau der har indsat en tegnsfej ville ellers få to rapporter og en
+  // stille skuffelse for den tredje.
+  const targetUrls = [];
+  for (const raw of settes) {
+    let parsed;
+    try {
+      parsed = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('bad protocol');
+    } catch {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid URL: ' + raw }),
+        { status: 400, headers: corsHeaders });
+    }
+    targetUrls.push(parsed);
   }
 
   // Basic rate limit: one origin per IP per 10 seconds via KV if available, else allow.
   const TIMEOUT_MS = 10000;
-  const MAX_PAGES = 12; // safety cap on total fetches
+  const budget = cscBudget(CSC_MAX_PAGES);
 
   try {
-    const home = await cscFetch(targetUrl.toString(), TIMEOUT_MS);
-    if (!home.ok) {
-      return new Response(JSON.stringify({ ok: false, error: 'Cannot reach ' + targetUrl.host + ': ' + home.error }),
+    const rapporter = [];
+    for (const targetUrl of targetUrls) {
+      rapporter.push(await cscScanOne(targetUrl, budget, TIMEOUT_MS));
+    }
+
+    // Ét URL svarer i den gamle form. GitHub Action'en, alt hvad der har kaldt
+    // ruten siden den blev skrevet, og enhver klient der læser `results` skal
+    // blive ved med at virke — så skiftet sker først når der faktisk er flere.
+    if (rapporter.length === 1) {
+      const en = rapporter[0];
+      if (!en.ok) {
+        return new Response(JSON.stringify({ ok: false, error: en.error }),
+          { status: 502, headers: corsHeaders });
+      }
+      await cscCountScan(env);
+      return new Response(JSON.stringify(en), { status: 200, headers: corsHeaders });
+    }
+
+    const okRap = rapporter.filter(r => r.ok);
+    // Hvis ingen af dem kom igennem, er det et fejlsvar — ikke to rækker
+    // fejltekster, som om kunden havde fået sine sites scannet.
+    if (okRap.length === 0) {
+      return new Response(JSON.stringify({ ok: false, error: rapporter[0].error }),
         { status: 502, headers: corsHeaders });
     }
-
-    let fetchBudget = MAX_PAGES - 1;
-    const passed = [];
-    const failed = [];
-
-    for (const key of Object.keys(CSC_CHECKS)) {
-      const check = CSC_CHECKS[key];
-      const result = { key, label: check.label, status: 'unknown', details: '' };
-
-      if (key === 'cookie') {
-        const found = cscDetectText(home.html, check.hints);
-        result.status = found ? 'pass' : 'fail';
-        result.details = found ? 'Cookie consent banner detected on homepage.'
-          : 'No cookie consent banner detected. Some banners load via JS — verify manually.';
-        (found ? passed : failed).push(result);
-        continue;
-      }
-      if (key === 'meta-tags') {
-        const r = cscCheckMetaTags(home.html);
-        result.status = r.status === 'pass' ? 'pass' : 'fail';
-        result.details = r.details; result.subResults = r.subResults;
-        (result.status === 'pass' ? passed : failed).push(result);
-        continue;
-      }
-      if (key === 'hreflang') {
-        const r = cscCheckHreflang(home.html);
-        result.status = r.status === 'pass' ? 'pass' : 'fail';
-        result.details = r.details; result.subResults = r.subResults;
-        (result.status === 'pass' ? passed : failed).push(result);
-        continue;
-      }
-      if (key === 'security-headers') {
-        const r = cscCheckSecurityHeaders(home.headers);
-        result.status = r.status;
-        result.details = r.details; result.subResults = r.subResults;
-        (result.status === 'pass' ? passed : failed).push(result);
-        continue;
-      }
-
-      // type: page
-      let found = false, foundUrl = '';
-      for (const path of check.paths) {
-        if (fetchBudget <= 0) break;
-        fetchBudget--;
-        const pageUrl = new URL(path, targetUrl.toString()).toString();
-        const pr = await cscFetch(pageUrl, TIMEOUT_MS);
-        if (!pr.ok || pr.status >= 400) continue;
-        if (cscDetectText(pr.html, check.hints)) { found = true; foundUrl = pr.url; break; }
-        if (pr.status < 300) { found = true; foundUrl = pr.url; break; }
-      }
-      if (!found) found = cscHasHomepageLink(home.html, check.paths);
-
-      result.status = found ? 'pass' : 'fail';
-      result.details = found ? (foundUrl ? 'Found at ' + foundUrl : 'Link found on homepage')
-        : 'Not found. Add a ' + check.label + ' page and link it from your footer.';
-      (found ? passed : failed).push(result);
-    }
-
-    const total = Object.keys(CSC_CHECKS).length;
-    const score = Math.round((passed.length / total) * 100);
-    const grade = cscScoreLabel(score);
-
-    // Anonymous scan counter (no URL stored) for /api/stats visibility.
-    if (env && env.VISITS) {
-      try {
-        const cKey = 'csc-count';
-        const prev = parseInt((await env.VISITS.get(cKey)) || '0', 10);
-        await env.VISITS.put(cKey, String(prev + 1), { expirationTtl: 365 * 86400 });
-      } catch { /* best-effort */ }
-    }
+    await cscCountScan(env);
 
     return new Response(JSON.stringify({
       ok: true,
-      url: 'https://' + targetUrl.host,
-      score,
-      grade,
-      passed: passed.length,
-      failed: failed.length,
-      total,
-      results: { passed, failed },
-      checks: CSC_CHECKS,
+      multi: true,
+      requested: targetUrls.length,
+      scanned: okRap.length,
+      failed: rapporter.length - okRap.length,
+      reports: rapporter,
       version: '2.0',
     }), { status: 200, headers: corsHeaders });
   } catch (err) {
     return new Response(JSON.stringify({ ok: false, error: 'Scan failed: ' + (err.message || 'unknown') }),
       { status: 500, headers: corsHeaders });
   }
+}
+
+// Anonymous scan counter (no URL stored) for /api/stats visibility.
+async function cscCountScan(env) {
+  if (!env || !env.VISITS) return;
+  try {
+    const prev = parseInt((await env.VISITS.get('csc-count')) || '0', 10);
+    await env.VISITS.put('csc-count', String(prev + 1), { expirationTtl: 365 * 86400 });
+  } catch { /* best-effort */ }
 }
 
 /* ── Pro Checkout — GET /api/checkout ────────────────────────────

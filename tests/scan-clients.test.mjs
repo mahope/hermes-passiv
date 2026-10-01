@@ -47,7 +47,12 @@ function el() {
     _removed: false,
     remove() { this._removed = true; },
     classList: { _s: new Set(), add(c) { this._s.add(c); }, remove(c) { this._s.delete(c); }, contains(c) { return this._s.has(c); } },
-    appendChild() {}, removeChild() {}, setAttribute() {}, focus() {},
+    // `esc()` på siderne hænger en text-node på et midlertidigt element og
+    // læser `innerHTML` tilbage. Uden at `appendChild` gjorde noget, gav den
+    // tomme strenge for *alt* gennem esc — også de URLs, resultatet viser, så
+    // dommen «begge sites står i resultatet» kunne ikke se dem.
+    appendChild(child) { if (child && typeof child.textContent === 'string') { this._t += child.textContent; this._h = undefined; } },
+    removeChild() {}, setAttribute() {}, focus() {},
     getAttribute: () => null,
     addEventListener(t, fn) { (this._ls[t] = this._ls[t] || []).push(fn); },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
@@ -721,8 +726,8 @@ function mutated(path, from, to) {
   // genkaldskontrollen og tekstkontrollen blive røde.
   let m = readFileSync(join(root, 'site/compliance-site-check.html'), 'utf8');
   m = m.replace('err.transient = !data || r.status >= 500;', 'err.transient = false;')
-       .replace("showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')));",
-                "showError('Network error: ' + (err.message || 'unknown'));");
+       .replace("fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')) });",
+                "fejl.push({ url: target, error: 'Network error: ' + (err.message || 'unknown') });");
   ok('mutation: den gamle behandling kan fremstilles', /Network error: ' \+ \(err\.message/.test(m) && /err\.transient = false;/.test(m));
   if (m) {
     const { fetchImpl, state } = responses([{ status: 502, html: true }]);
@@ -1108,6 +1113,67 @@ function mutated(path, from, to) {
     ok('mutation: en knap uden periode ville være rød',
       !words.some((w) => `Buy EUComply Pro — $79</a>`.includes(w)),
       'dommen kan altså se en knap uden periode');
+  }
+}
+
+// --------------------------------------------------------------------------
+// 12. Flere URL'er pr. kald. Opgaven i planen: feltet tog én URL, mens
+//     produktsiden lovede at Pro «crawls the site» — så det betalte var den
+//     del, kunden ikke kunne se forskel på. Fire domme, alle falsifiable på
+//     den gamle kode:
+//
+//     1. Feltet tager linjeskift, og hver linje giver sit eget kald.
+//     2. Begge sites står i resultatet, hver med sin score.
+//     3. Seks linjer er en fejl med et tal — ikke en stille afskæring til 5.
+//     4. Pro-boksen siger ærligt, at Pro gør det samme for *hele* sitet, så
+//        den nye mulighed ikke får den gamme løfte-sætning til at se forkert ud.
+// --------------------------------------------------------------------------
+{
+  const OK_SCAN2 = { status: 200, body: { ok: true, url: 'https://example.org', score: 40, grade: 'D', passed: 4, total: 9, results: { passed: [], failed: [] } } };
+
+  for (const [path, lang] of PAGES) {
+    const { fetchImpl, state } = responses([OK_SCAN, OK_SCAN2]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    nodes.get('urlInput').value = 'example.com\nexample.org';
+    await sandbox.scan();
+    await sleep(60);
+    const html = (nodes.get('results') || {}).innerHTML || '';
+    const fejl = (nodes.get('errorBox') || {}).textContent || '';
+    ok(`${lang}: to linjer giver to kald`, state.calls === 2, `calls=${state.calls} fejl=${fejl}`);
+    ok(`${lang}: begge sites står i resultatet med hver sin score`,
+      /example\.com/.test(html) && /example\.org/.test(html) && /90/.test(html) && /40/.test(html),
+      fejl ? 'fejl=' + fejl : html.slice(0, 300));
+    ok(`${lang}: ingen af linjerne blev afskåret tavst`,
+      !/only the first|only scans the first/i.test(html), html.slice(0, 200));
+    // Dommen er den *konkrete* sætning, ikke et ord: «crawls the whole site —
+    // the same check on every page it finds». Den skal være der i begge sprog,
+    // ellers kunne en side sige hele løftet og så alligevel skjule, at den
+    // kun så den ene side.
+    const heleSitet = lang === 'EN'
+      ? /crawls the whole site[\s\S]{0,60}every page it finds/i
+      : /gennemgår hele sitet[\s\S]{0,60}hver side den finder/i;
+    ok(`${lang}: Pro-boksen siger at Pro gør det samme for hele sitet`,
+      heleSitet.test(html), 'ingen ærlig crawls-sætning');
+    ok(`${lang}: købsknappen overleverede flere sites`,
+      /buy\.stripe\.com/.test(html), 'knap mangler');
+  }
+
+  for (const [path, lang] of PAGES) {
+    const { fetchImpl, state } = responses([OK_SCAN]);
+    const { sandbox, nodes } = loadPage(path, fetchImpl);
+    nodes.get('urlInput').value = 'a.dk\nb.dk\nc.dk\nd.dk\ne.dk\nf.dk';
+    await sandbox.scan();
+    await sleep(30);
+    const fejl = (nodes.get('errorBox') || {}).textContent || '';
+    ok(`${lang}: seks linjer er en fejl med et tal, ikke fem scanninger`,
+      state.calls === 0 && /5/.test(fejl), `calls=${state.calls} fejl=${fejl}`);
+  }
+
+  // Ét URL skal stadig gøre præcis ét kald og se ud som i dag. Ellers ville
+  // den nye vej have brudt alt, der bruger scanneren.
+  for (const [path, lang] of PAGES) {
+    const r = await runScan(path, [OK_SCAN]);
+    ok(`${lang}: én linje er stadig ét kald og ét resultat`, r.calls === 1 && r.err === '', `calls=${r.calls} err=${r.err}`);
   }
 }
 

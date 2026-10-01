@@ -1,26 +1,11 @@
 # STATUS
 
-- **CI var rød på `main`, og fire fejl lå skjult bag den første.** Rettet 1/10,
-  alle grønne (`quality_gate.py`: 122 steps). De kom alle fra `98e5491`, som
-  aldrig nåede live (live stod stadig på `0f64110`):
-  1. **Sandkassen spiste sondens svar.** Kapabilitets-tjekket på `/compliance-ai`
-     er et GET på *samme rute* som spørgsmålets POST, så sonden blev talt som et
-     værktøjskald og spiste det første programmerede svar. Dommen om to forsøg
-     så 3 kald, og ventelistedommen døde på en stub der ikke fandtes. Rækken
-     kan nu skelne på **metoden**, så et GET ikke tæller som et kald.
-  2. **Sonden var aldrig dømt på sin adfærd.** Kun en grep i
-     `check_unavailable_routes.py`. Nu måler sandkassen den: tændt ⇒ chatten
-     bliver, slukket ⇒ chatten væk + erstatningen vises, tjek der fejler ⇒
-     chatten bliver (EN + DA).
-  3. **`check_product_copy.py` havde mistet evnen til at se sin egen fejl.**
-     Sætningen «15 WCAG-regler» stod én gang; `98e5491` lagde den samme sætning
-     ind i erstatningsfeltet, så mutationen ramte den nye og den dømte afsnit
-     beholdt det rigtige tal. Mutationen rammer nu alle forekomster, og porten
-     kræver den rigtige sætning i begge sider (27 fejlformer, 0 slap ud).
-  4. **To døde ratchet-linjer + en ulovt nævnt fil.** `check_unavailable_routes.py`
-     læser `dist/<domæne>/llms.txt` — den skal *nævne* filen den dømmer, så den
-     står nu i listen med sin begrundelse. De to `/compliance-ai`-linjer i
-     ratchetten er frigivet, fordi ruterne korrekt er taget ud af sitemap.
+- **Scanningen tager nu flere URL'er, så Pro-løftet holder.** Rettet 1/10:
+  `/compliance-site-check` (EN+DA) har et tekstfelt med én URL pr. linje, op til
+  5 pr. kald, og serveren svarer én rapport pr. URL med et overblik først.
+  Førhen tog feltet én URL, mens produktsiden lovede at Pro «crawls the site».
+- **Fetch-budgettet er delt pr. kald, ikke pr. URL** — ét kald koster højst 12
+  ude-kald uanset hvor mange URL'er der står i, ellers ville 5 URL'er være 60.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
   Squeezy, Search Console. Historie: `docs/plan-arkiv.md`.
@@ -47,35 +32,29 @@
   `&euro;420` 1 gang i samme celle som `&euro;35/month`, og `492` er **0**
   gange i hele siden. `build-info.json` bærer `0f64110a09a9`.
 
-- `VERIFICÉR DEPLOY: /compliance-ai siger at assistenten er slukket, og de to
-  ruter er ude af sitemap + llms.txt
-  ceo/compliance-ai-uden-svar 2026-10-01` — måles på **indhold**: live
-  `GET /api/compliance-ai` skal svare 200 `{"ok":true,"available":false}`
-  (nøglen mangler stadig, så det skal være `false`), `/compliance-ai` og
-  `/da/compliance-ai` skal have `aiUnavailable` og `noindex,follow`, og
-  `compliance-ai` skal være **0** gange i live `sitemap.xml` og `llms.txt`.
-  Dommen er `tools/check_unavailable_routes.py` (16 kontroller grønne mod
-  dist; 8 mutationer røde) og `tools/check_sitemaps.py` (4 domæner OK), og
-  sondens *adfærd* dømmes nu i `tests/scan-clients.test.mjs` (190/190).
-  **Bemærk: denne ændring har aldrig været live** — CI var rød, så deployen
-  af `98e5491` aldrig kørte. Den måles derfor mod live `0f64110`, ikke mod
-  `98e5491`.
+- `DEPLOY OK 2026-10-01` — `/compliance-ai` siger at assistenten er slukket, og
+  de to ruter er ude af sitemap + llms.txt. Målt på live `bda70e2`: `GET
+  /api/compliance-ai` → 200 `{"ok":true,"available":false}`, begge sider har
+  `aiUnavailable` ×2 og `noindex,follow`, og `compliance-ai` er **0** gange i
+  `sitemap.xml` og `llms.txt`.
+
+- `VERIFICÉR DEPLOY: compliance-scanneren tager flere URL'er pr. kald
+  ceo/flere-urler-i-scanning 2026-10-01` — måles på **indhold**: live
+  `GET /api/compliance-scan?url=scan.example%0Aexample.org` skal svare 200 med
+  `multi:true` og to entries i `reports`, ét URL skal svare i den gamle form
+  (intet `multi`), og `/compliance-site-check` + `/da/compliance-site-check`
+  skal have `<textarea id="urlInput"` og `SCAN_MAX_SITES = 5`. Dommen er
+  `tests/stripe-worker.test.mjs` (330/330) og `tests/scan-clients.test.mjs`
+  (204/204) — begge kan fejle: mutationen på EN's genkaldskæde kører den gamle
+  kode, og budget-dommen tæller ude-kald mod to tunge værter.
 
 
 ## Åbne opgaver
 
-**Opgave 1 er næste iteration** — den eneste der ikke blokerer på Mads. 2–4
-ligger fast på en beslutning eller en secret (❓ nedenfor) og skal ikke genoptages,
-før de er besvaret.
-
-1. **Pro-løftet «crawls the site» er ikke indholdet i scanningen.** Hvorfor:
-   `/compliance-site-check` tager én URL og scanner den, mens produktsiden for
-   EUComply Pro lover at Pro «crawls the site» — så det betalte ikke er noget,
-   kunden kan se forskel på. Feature-kø #1. Accept: feltet tager linjeskift,
-   serveren svarer én rapport pr. URL, og knappen i resultatet siger ærligt at
-   Pro gør det samme for hele sitet. Dømt af `tests/scan-clients.test.mjs`
-   (mutation på den nye klientdel skal være rød). Baseline: betalinger pr.
-   uge 0 målt 1/10. **Dette er den næste opgave.**
+1. **Flere sider end forsiden pr. URL — det er stadig den store forskel.** Hvorfor:
+   feltet tager nu 5 sites, men hvert site tjekkes kun på forsiden; Pro gør det
+   samme for hver side den finder. Accept: et URL med en dyb sti (`/kontakt`)
+   scannes på den side, og overblikket siger hvilken side der blev tjekket.
 2. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor:
    `/api/stats` svarer 401 siden uge 37, så næsten hver linje i enhver
    trafikrangering er vor egen links-tælling, ikke besøg. Den nye port har samme
@@ -97,7 +76,11 @@ før de er besvaret.
    flyttet ned i artiklen på de mest besøgte sider (dømt i
    `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en
    ligger ét sted pr. side. Kræver beslutning — se ❓.
-5. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor:
+5. **DA-siden mangler download-knappen på rapporten.** Hvorfor:
+   `downloadReport()` findes på `/da/compliance-site-check`, men ingen knap
+   kalder den — kun EN har den. Målt 1/10 ved at læse begge filers markup.
+   Accept: knappen er på DA også, eller funktionen er væk.
+6. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor:
    Fund fra review 1/10 blev rettet for `/compliance-ai`, men porten dømmer kun
    de to ruter, der er skrevet i `tools/unavailable_routes.json` — en ny AI-
    eller beta-side kan stadig publiceres med en handling, der altid fejler.
@@ -155,12 +138,10 @@ før de er besvaret.
 Prioriteret efter hvor tæt den er på penge, ikke efter hvor let den er at kode.
 Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
 
-1. **Flere URL'er pr. scanning.** Hvem: bureauet der scanner fem kunders sites
-   og så må købe fem gange. Tal: betalinger pr. uge (baseline 0 målt).
-   Accept: feltet tager linjeskift, serveren svarer én rapport pr. URL, og
-   knappen siger ærligt at Pro gør det samme for hele sitet. Datagrund:
-   scanningen kan i dag kun tage én URL, selv om produktsiden siger at Pro
-   «crawls the site».
+1. ~~Flere URL'er pr. scanning.~~ **Leveret 1/10** — feltet tager linjeskift,
+   serveren svarer én rapport pr. URL, og Pro-boksen siger ærligt at Pro gør
+   det samme for hver side den finder. Næste skridt er punkt 1 under «Åbne
+   opgaver»: flere sider end forsiden pr. URL.
 2. **E-bøgerne læses online, kapitel for kapitel.** Hvem: den der læser en
    GDPR- eller NIS2-bog før han køber bundlet. Tal: køb fra `/books`
    (baseline 0). Accept: hver bogside har en læsevisning med de første kapitler
