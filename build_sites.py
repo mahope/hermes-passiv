@@ -163,7 +163,12 @@ SITES: dict[str, dict] = {
 }
 
 # Copied into every dist (never "claimed" by a single site).
-SHARED = ["style.css", "track.js", "shell.js", "_worker.js"]
+# `one-off-check.js` is the front-door check every site's <h1> can answer with —
+# it used to live in `site/deskuptime/`, so it only reached `/` on deskuptime.com
+# through that site's `remap`, and mahope.tools' `rest: True` would have put it
+# on `/deskuptime/` instead of the root the page's `src="/one-off-check.js"`
+# asks for.
+SHARED = ["style.css", "track.js", "shell.js", "_worker.js", "one-off-check.js"]
 # Never copied (regenerated per site, or junk).
 SKIP_NAMES = {"sitemap.xml", "robots.txt"}
 SKIP_SUFFIXES = (".orig", ".bak")

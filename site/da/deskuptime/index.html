@@ -25,35 +25,6 @@
   .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
   .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
   table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
-  .du-form { margin: 1.5rem 0 0; }
-  .du-form label { display: block; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.35rem; }
-  .du-row-wrap { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-  .du-row-wrap input { flex: 1 1 16rem; min-height: 2.75rem; }
-  .du-row-wrap button { flex: 0 0 auto; min-height: 2.75rem; }
-  .du-hint { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.5rem 0 0; max-width: 58ch; }
-  .du-status { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); }
-  .du-card { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: 1.1rem 1.2rem; margin: 0.6rem 0 0; box-shadow: var(--shadow); }
-  .du-verdict { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
-  .du-verdict strong { font-size: 1.15rem; font-family: var(--font-display); }
-  .du-verdict.is-ok strong { color: var(--color-green); }
-  .du-verdict.is-warn strong { color: var(--color-yellow); }
-  .du-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
-  .du-rows { margin: 0; display: grid; gap: 0.1rem; }
-  .du-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
-  @media (min-width: 40rem) { .du-rows > div { grid-template-columns: 11rem 1fr; } }
-  .du-rows dt { font-size: 0.85rem; color: var(--color-text-muted); }
-  .du-rows dd { margin: 0; overflow-wrap: anywhere; }
-  .du-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-  .du-chip { display: inline-flex; align-items: baseline; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.2rem 0.5rem; font-size: 0.8rem; }
-  .du-chip.is-ok { border-color: var(--color-green); background: var(--color-green-soft); }
-  .du-chip.is-missing { border-color: var(--color-border); }
-  .du-chip-name { font-family: var(--mono); }
-  .du-chip-state { color: var(--color-text-muted); }
-  .du-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
-  .du-error { margin: 0; color: var(--color-red); }
-  .du-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
-  .du-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
-  .du-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
 </style>
 </head>
 <body>
@@ -79,19 +50,19 @@
     den fra vores egen server: det status den svarer med, hvor mange omdirigeringer den tog,
     det levende TLS-certifikat med dagene tilbage, og hvilke af de otte sikkerhedsoverskrifter
     der kom med. Ét tjek, cirka et sekund, og intet om URL'en gemmes.</p>
-    <form class="du-form" id="du-check-form" method="get" action="/api/url-inspect">
-      <label for="du-check-url">Webadresse</label>
-      <div class="du-row-wrap">
-        <input id="du-check-url" name="url" type="text" inputmode="url" autocomplete="url"
-               spellcheck="false" placeholder="https://dit-site.dk" aria-describedby="du-check-hint" required>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Webadresse</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://dit-site.dk" aria-describedby="oc-check-hint" required>
         <button type="submit" class="btn-primary">Tjek nu</button>
       </div>
-      <p class="du-hint" id="du-check-hint">Én URL, for eksempel <code>dit-site.dk</code> — vi sætter
+      <p class="oc-hint" id="oc-check-hint">Én URL, for eksempel <code>dit-site.dk</code> — vi sætter
       <code>https://</code> foran, hvis du udelader den. Anmodningen går til vores server, så den ser
       sitet sådan som resten af verden gør det, ikke sådan som din browser gør det.</p>
     </form>
-    <p class="du-status" id="du-check-status" role="status" aria-live="polite"></p>
-    <div id="du-check-result" hidden></div>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
   </div>
 </section>
 
@@ -235,9 +206,15 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
 </section>
 
 </main>
+<script>/* Se kommentaren på den engelske forside: teksten og det næste skridt er sidens
+  egne ord, fordi /one-off-check.js er delt af alle forsider. */
+window.ONE_OFF_CHECK = {
+  then: 'Det var ét tjek lige nu. Det siger intet om, om sitet var nede for fem minutter siden eller bliver nede i morgen, og det kan ikke se, om indholdet har ændret sig. Det kan CLI’en og desktop-appen.',
+  next: [{label: "Installér CLI'en", href: '#install'}, {label: 'Se desktop-appen', href: '#desktop'}]
+};</script>
 <script>/* Samme linje som på den engelske forside — se kommentaren dér. Ordene er danske,
   ankeret er katalogens, og den er en sætning og ikke en knap. */
-window.DU_DONATE = '<p class="du-donate">Tjekket er gratis og kræver ingen konto. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det i gang.</p>';</script>
+window.OC_DONATE = '<p class="oc-donate">Tjekket er gratis og kræver ingen konto. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det i gang.</p>';</script>
 <script defer src="/net.js"></script>
 <script defer src="/one-off-check.js"></script>
 </body>

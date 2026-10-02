@@ -728,6 +728,42 @@ main.layout-wide > .crumbs + .container { padding-top: 0; }
 .bb-live .arrow { margin-left: auto; font-family: var(--font-display); color: var(--color-accent-hover); white-space: nowrap; }
 .bb-live a { color: var(--color-accent-hover); }
 
+/* One-off site check (/one-off-check.js) — deskuptime.com, mahope.tools -----
+ * Was a 29-line <style> copied into every page that renders a check, which is
+ * how two pages end up answering the same question with different spacing.
+ * The markup is declared per page (oc-form, oc-check-result, OC_DONATE); only
+ * the presentation lives here, once.
+ */
+.oc-form { margin: 1.5rem 0 0; }
+.oc-form label { display: block; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.35rem; }
+.oc-row-wrap { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.oc-row-wrap input { flex: 1 1 16rem; min-height: 2.75rem; }
+.oc-row-wrap button { flex: 0 0 auto; min-height: 2.75rem; }
+.oc-hint { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.5rem 0 0; max-width: 58ch; }
+.oc-status { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); }
+.oc-card { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: 1.1rem 1.2rem; margin: 0.6rem 0 0; box-shadow: var(--shadow); }
+.oc-verdict { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+.oc-verdict strong { font-size: 1.15rem; font-family: var(--font-display); }
+.oc-verdict.is-ok strong { color: var(--color-green); }
+.oc-verdict.is-warn strong { color: var(--color-yellow); }
+.oc-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.oc-rows { margin: 0; display: grid; gap: 0.1rem; }
+.oc-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
+@media (min-width: 40rem) { .oc-rows > div { grid-template-columns: 11rem 1fr; } }
+.oc-rows dt { font-size: 0.85rem; color: var(--color-text-muted); }
+.oc-rows dd { margin: 0; overflow-wrap: anywhere; }
+.oc-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.oc-chip { display: inline-flex; align-items: baseline; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+.oc-chip.is-ok { border-color: var(--color-green); background: var(--color-green-soft); }
+.oc-chip.is-missing { border-color: var(--color-border); }
+.oc-chip-name { font-family: var(--mono); }
+.oc-chip-state { color: var(--color-text-muted); }
+.oc-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
+.oc-error { margin: 0; color: var(--color-red); }
+.oc-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
+.oc-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
+.oc-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
+
 /* Prose helpers ---------------------------------------------------------- */
 .two-col { display: grid; gap: 2rem; }
 @media (min-width: 720px) { .two-col { grid-template-columns: 1fr 1fr; } }

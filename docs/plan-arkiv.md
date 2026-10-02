@@ -4863,3 +4863,15 @@ får nu tabellen fra `tools/pro_table.py` / `tools/stripe_catalog.json`, så
 `check_pro_table.py` dømmer 8 produktsider + 13 værktøjssider mod samme kilde.
 Deployet og målt på indhold: `build-info.json` står i `7e74d3b` på begge
 domæner, `pro-table:start` står én gang pr. side, og «19 USD per year» er væk.
+
+## 2/10 — Review-fund 15:05 lukket som modbevist (cd24a15)
+
+Fundet sagde, at `why` for `site/url-inspector/index.html` i
+`tools/stripe_catalog.json` påstår pro-kortet «linker til `#free-vs-pro`».
+`git diff 7e74d3b HEAD -- tools/stripe_catalog.json` er **tom** — posten er
+uændret siden revieweren læste den, og lyder «den pegede blot på
+/page-profile», hvilket er præcis `site/url-inspector/index.html:184`. Den
+citerede sætning tilhører `site/clean-copy-tool.html`, hvor `#free-vs-pro` findes
+(`:494` linker, `:241` er `<h2 id="free-vs-pro">`). Nøglen hedder
+`pro_table_pages`, ikke `pro_table_posts`. Skrevet i fundets egen linje i
+`~/.local/oxloop/review/mahope-tools.md`.

@@ -51,6 +51,32 @@
   </div>
 </div>
 
+<section id="check">
+  <div class="container">
+    <h2>Check a site right now</h2>
+    <p>Four of the tools here need a URL before they can do anything, so the
+    front door takes one. Type an address and we fetch it from our own server:
+    the status it answers with, how many redirects it took, the live TLS
+    certificate with the days left on it, and which of the eight security
+    headers came back. One check, about a second, and the URL is not stored.
+    For the rest — contrast, headings, cookie banners, the full WCAG pass — the
+    scanners below do more.</p>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Website address</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://your-site.com" aria-describedby="oc-check-hint" required>
+        <button type="submit" class="btn-primary">Check it now</button>
+      </div>
+      <p class="oc-hint" id="oc-check-hint">One URL, for example <code>example.com</code> — we add
+      <code>https://</code> if you leave it out. The request goes to our server, so it sees the
+      site the way the rest of the world does, not the way your browser does.</p>
+    </form>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
+  </div>
+</section>
+
 <section>
   <div class="container wide">
     <h2>Tools</h2>
@@ -184,5 +210,19 @@
 </section>
 
 </main>
+<script>/* What this check cannot do, and where the visitor goes next, are this page's
+  own words — /one-off-check.js is shared by every site's front door, so it
+  hard-codes no product. The links point at the scanners that go deeper than
+  one HTTP request. */
+window.ONE_OFF_CHECK = {
+  then: 'That was one request, just now. It says nothing about whether the site was down five minutes ago, and it does not look at a single thing on the page — no contrast, no headings, no cookies. Those are the scanners.',
+  next: [{label: 'Full WCAG scan', href: '/scan'}, {label: 'Compliance check', href: '/compliance-site-check'}]
+};
+/* The donation line lives in the page, not in the script: it has to reach
+  tools/check_donation_paths.py, and it must not appear before there is a
+  result. A sentence, never a button, and the href is the catalog's. */
+window.OC_DONATE = '<p class="oc-donate">The check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
 </body>
 </html>

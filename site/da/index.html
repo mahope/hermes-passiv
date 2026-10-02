@@ -52,6 +52,32 @@
   </div>
 </div>
 
+<section id="check">
+  <div class="container">
+    <h2>Tjek et site med det samme</h2>
+    <p>Fire af værktøjerne her skal have en URL, før de kan gøre noget, så
+    forsiden tager imod én. Skriv en adresse, så henter vi den fra vores egen
+    server: det svar den giver, hvor mange omdirigeringer den tog, det gyldige
+    TLS-certifikat med dagene tilbage på, og hvilke af de otte
+    sikkerhedsoverskrifter der kom med. Ét tjek, cirka et sekund, og URL'en
+    gemmes ikke. Resten — kontrast, overskrifter, cookie-banners, hele
+    WCAG-gennemgangen — klarer scannerne nedenfor bedre.</p>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Webadresse</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://dit-site.dk" aria-describedby="oc-check-hint" required>
+        <button type="submit" class="btn-primary">Tjek det nu</button>
+      </div>
+      <p class="oc-hint" id="oc-check-hint">Én URL, for eksempel <code>dit-site.dk</code> — vi sætter
+      <code>https://</code> på, hvis du lader den være. Forespørgslen går gennem vores server, så den ser
+      sitet, som resten af verden ser det, ikke som din browser ser det.</p>
+    </form>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
+  </div>
+</section>
+
 <section>
   <div class="container wide">
     <h2>Værktøjer</h2>
@@ -185,5 +211,17 @@
 </section>
 
 </main>
+<script>/* Se kommentaren på den engelske forside: teksten og det næste skridt er sidens
+  egne ord, fordi /one-off-check.js er delt af alle forsider. Linkene peger på
+  de scannere, der går dybere end ét HTTP-kald. */
+window.ONE_OFF_CHECK = {
+  then: 'Det var ét kald lige nu. Det siger intet om, om sitet var nede for fem minutter siden, og det ser ikke på én eneste ting på siden — hverken kontrast, overskrifter eller cookies. Det gør scannerne.',
+  next: [{label: 'Fuld WCAG-scanning', href: '/scan-da'}, {label: 'Compliance-tjek', href: '/da/compliance-site-check'}]
+};
+/* Samme linje som på den engelske forside: en sætning, ikke en knap, og
+  ankeret er katalogens. */
+window.OC_DONATE = '<p class="oc-donate">Tjekket er gratis og kræver ingen konto. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det i gang.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
 </body>
 </html>

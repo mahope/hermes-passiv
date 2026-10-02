@@ -28,35 +28,6 @@
   .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
   .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
   table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
-  .du-form { margin: 1.5rem 0 0; }
-  .du-form label { display: block; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.35rem; }
-  .du-row-wrap { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-  .du-row-wrap input { flex: 1 1 16rem; min-height: 2.75rem; }
-  .du-row-wrap button { flex: 0 0 auto; min-height: 2.75rem; }
-  .du-hint { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.5rem 0 0; max-width: 58ch; }
-  .du-status { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); }
-  .du-card { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: 1.1rem 1.2rem; margin: 0.6rem 0 0; box-shadow: var(--shadow); }
-  .du-verdict { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
-  .du-verdict strong { font-size: 1.15rem; font-family: var(--font-display); }
-  .du-verdict.is-ok strong { color: var(--color-green); }
-  .du-verdict.is-warn strong { color: var(--color-yellow); }
-  .du-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
-  .du-rows { margin: 0; display: grid; gap: 0.1rem; }
-  .du-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
-  @media (min-width: 40rem) { .du-rows > div { grid-template-columns: 11rem 1fr; } }
-  .du-rows dt { font-size: 0.85rem; color: var(--color-text-muted); }
-  .du-rows dd { margin: 0; overflow-wrap: anywhere; }
-  .du-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-  .du-chip { display: inline-flex; align-items: baseline; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.2rem 0.5rem; font-size: 0.8rem; }
-  .du-chip.is-ok { border-color: var(--color-green); background: var(--color-green-soft); }
-  .du-chip.is-missing { border-color: var(--color-border); }
-  .du-chip-name { font-family: var(--mono); }
-  .du-chip-state { color: var(--color-text-muted); }
-  .du-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
-  .du-error { margin: 0; color: var(--color-red); }
-  .du-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
-  .du-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
-  .du-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
 </style>
 </head>
 <body>
@@ -82,19 +53,19 @@
     fetch it from our own server: the status it answers with, how many redirects it took,
     the live TLS certificate with the days left on it, and which of the eight security
     headers came back. One check, about a second, and nothing about the URL is stored.</p>
-    <form class="du-form" id="du-check-form" method="get" action="/api/url-inspect">
-      <label for="du-check-url">Website address</label>
-      <div class="du-row-wrap">
-        <input id="du-check-url" name="url" type="text" inputmode="url" autocomplete="url"
-               spellcheck="false" placeholder="https://your-site.com" aria-describedby="du-check-hint" required>
+    <form class="oc-form" id="oc-check-form" method="get" action="/api/url-inspect">
+      <label for="oc-check-url">Website address</label>
+      <div class="oc-row-wrap">
+        <input id="oc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://your-site.com" aria-describedby="oc-check-hint" required>
         <button type="submit" class="btn-primary">Check it now</button>
       </div>
-      <p class="du-hint" id="du-check-hint">One URL, for example <code>example.com</code> — we add
+      <p class="oc-hint" id="oc-check-hint">One URL, for example <code>example.com</code> — we add
       <code>https://</code> if you leave it out. The request goes to our server, so it sees the
       site the way the rest of the world does, not the way your browser does.</p>
     </form>
-    <p class="du-status" id="du-check-status" role="status" aria-live="polite"></p>
-    <div id="du-check-result" hidden></div>
+    <p class="oc-status" id="oc-check-status" role="status" aria-live="polite"></p>
+    <div id="oc-check-result" hidden></div>
   </div>
 </section>
 
@@ -253,11 +224,18 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
 </section>
 
 </main>
+<script>/* What this check cannot do, and where the visitor goes next, are the page's
+  own words — /one-off-check.js is shared by every site's front door, so it
+  hard-codes no product. */
+window.ONE_OFF_CHECK = {
+  then: 'That was one check, just now. It says nothing about whether the site was down five minutes ago or will be down tomorrow, and it cannot tell that the page content changed. The CLI and the desktop app can.',
+  next: [{label: 'Install the CLI', href: '#install'}, {label: 'See the desktop app', href: '#desktop'}]
+};</script>
 <script>/* The donation line lives in the page, not in one-off-check.js: it has to reach
   tools/check_donation_paths.py, which judges the page file, and it must not appear before
   the visitor has an answer. Same shape as /scan and /url-inspector: a sentence, never a
   button, and the href is the one in tools/stripe_catalog.json. */
-window.DU_DONATE = '<p class="du-donate">This check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+window.OC_DONATE = '<p class="oc-donate">This check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
 <script defer src="/net.js"></script>
 <script defer src="/one-off-check.js"></script>
 </body>

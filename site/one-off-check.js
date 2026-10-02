@@ -1,24 +1,25 @@
-/* one-off-check.js — the check on deskuptime.com's front page.
+/* one-off-check.js — the front-door check, shared by every site's <h1>.
  *
- * The page's <h1> asks three questions — is the site up, is the certificate
- * still valid, did the page change — and until now it answered none of them. It
- * asked the visitor to install a CLI to get the first two, and the two free
- * web checkers sat ~120 lines of prose further down the page, below "Install
- * the CLI" and "Desktop app". Measured 2/10: 4 visitors to deskuptime.com in
- * 28 days, 100 % bounce, 0 s average visit.
+ * It started on deskuptime.com, whose <h1> asks three questions — is the site
+ * up, is the certificate still valid, did the page change — and answered none
+ * of them: it asked the visitor to install a CLI to get the first two, and the
+ * two free web checkers sat ~120 lines of prose further down the page.
+ * Measured 2/10: 4 visitors to deskuptime.com in 28 days, 100 % bounce, 0 s.
  *
- * So the front door now answers what it can: one check, from our own server,
- * in about a second. `/api/url-inspect` already returned status, redirect
- * chain, security headers and a live TLS handshake — it was just never called
- * from here. Which headers we look for is the *worker's* list, read from
+ * So the front door answers what it can: one check, from our own server, in
+ * about a second. `/api/url-inspect` already returned status, redirect chain,
+ * security headers and a live TLS handshake — it was just never called from
+ * here. Which headers we look for is the *worker's* list, read from
  * `securityHeadersChecked` in the answer, because hard-coding the eight names
  * in a second place is how a list silently rots.
  *
- * What this cannot do, and says so: it does not watch anything. It cannot tell
- * you whether the site was down five minutes ago or will be tomorrow, and it
- * cannot hash the page against the previous run. That is the CLI and the
- * desktop app, and the result says so — the check is the top of the funnel,
- * not a free replacement for the product.
+ * The page owns its own words. What this check cannot do, and where the visitor
+ * goes next, differ per site — DeskUptime's answer ends in "that is the CLI and
+ * the desktop app", mahope.tools' in "here is the scanner that goes deeper" —
+ * so both live in `window.ONE_OFF_CHECK = { then, next: [{label, href}] }` on
+ * the page itself, next to the form they belong to. Nothing about a single
+ * product is hard-coded here; a page that declares neither still renders the
+ * verdict, cert and header chips, and simply has no follow-up.
  *
  * The form is a real GET to /api/url-inspect, so without JavaScript it still
  * checks the site and shows the raw answer. Retry policy, and the rule that a
@@ -28,11 +29,11 @@
 (function () {
   'use strict';
   var d = document;
-  var form = d.getElementById('du-check-form');
+  var form = d.getElementById('oc-check-form');
   if (!form || !window.NET) return;
-  var input = d.getElementById('du-check-url');
-  var status = d.getElementById('du-check-status');
-  var out = d.getElementById('du-check-result');
+  var input = d.getElementById('oc-check-url');
+  var status = d.getElementById('oc-check-status');
+  var out = d.getElementById('oc-check-result');
   var btn = form.querySelector('button[type=submit]');
   var da = (d.documentElement.lang || 'en').slice(0, 2) === 'da';
   var MAX_TRIES = 3;
@@ -43,7 +44,6 @@
     busy: 'Vores tjek-server svarer ikke lige nu. Prøv igen om et øjeblik.',
     offline: 'Vi kunne ikke nå tjek-serveren. Tjek din forbindelse og prøv igen.',
     failed: 'Tjekket mislykkedes',
-    up: 'Oppetid',
     reachable: 'Sitet svarede',
     viaRedirects: 'Sitet svarede efter',
     unreachable: 'Serveren fik ikke et svar fra sitet',
@@ -63,10 +63,6 @@
     present: 'findes',
     missing: 'mangler',
     none: 'Ingen af de otte er med i svaret.',
-    then: 'Det var ét tjek lige nu. Det siger intet om, om sitet var nede for fem minutter siden eller bliver nede i morgen, og det kan ikke se, om indholdet har ændret sig. Det kan CLI’en og desktop-appen.',
-    install: 'Installér CLI’en',
-    desktop: 'Se desktop-appen',
-    again: 'Tjek et andet site',
     // De tre grunde serveren kan give for et certifikat, den ikke fik læst.
     sslNoHttps: 'Slutadressen er ikke HTTPS',
     sslUnavailable: 'Certifikat-opslaget var ikke tilgængeligt',
@@ -77,7 +73,6 @@
     busy: 'Our check server is not answering right now. Try again in a moment.',
     offline: 'We could not reach the check server. Check your connection and try again.',
     failed: 'The check failed',
-    up: 'Uptime',
     reachable: 'The site answered',
     viaRedirects: 'The site answered after',
     unreachable: 'The server got no answer from the site',
@@ -97,10 +92,6 @@
     present: 'present',
     missing: 'missing',
     none: 'None of the eight came back.',
-    then: 'That was one check, just now. It says nothing about whether the site was down five minutes ago or will be down tomorrow, and it cannot tell that the page content changed. The CLI and the desktop app can.',
-    install: 'Install the CLI',
-    desktop: 'See the desktop app',
-    again: 'Check another site',
     sslNoHttps: 'The final address is not HTTPS',
     sslUnavailable: 'The certificate lookup was unavailable',
     sslFailed: 'The certificate lookup failed or timed out'
@@ -141,7 +132,7 @@
   }
 
   function row(dl, term, value) {
-    var wrap = el('div', 'du-row');
+    var wrap = el('div', 'oc-row');
     wrap.appendChild(el('dt', null, term));
     var dd = el('dd');
     if (value instanceof Node) dd.appendChild(value); else dd.textContent = String(value);
@@ -172,18 +163,18 @@
     var code = Number(data.finalStatus) || 0;
     var ok = code >= 200 && code < 300;
 
-    var card = el('div', 'du-card');
-    var head = el('p', 'du-verdict ' + (ok ? 'is-ok' : 'is-warn'));
+    var card = el('div', 'oc-card');
+    var head = el('p', 'oc-verdict ' + (ok ? 'is-ok' : 'is-warn'));
     // `createElement('strong')` stavet ud, så `check_built_css.py` kan se at
     // siden faktisk har et `strong` — porten læser kun bogstavelige
     // `createElement('…')`-kald, ikke et navn der kommer som argument til `el`.
     var lead = document.createElement('strong');
     lead.textContent = verdict(data);
     head.appendChild(lead);
-    head.appendChild(el('span', 'du-verdict-url', data.finalUrl || data.inspectUrl || ''));
+    head.appendChild(el('span', 'oc-verdict-url', data.finalUrl || data.inspectUrl || ''));
     card.appendChild(head);
 
-    var dl = el('dl', 'du-rows');
+    var dl = el('dl', 'oc-rows');
     row(dl, T.finalUrl, data.finalUrl || '—');
 
     var ssl = data.ssl || {};
@@ -210,40 +201,57 @@
     var checked = Array.isArray(data.securityHeadersChecked) && data.securityHeadersChecked.length
       ? data.securityHeadersChecked : FALLBACK_HEADERS;
     var found = data.securityHeaders || {};
-    var chips = el('ul', 'du-chips');
+    var chips = el('ul', 'oc-chips');
     var presentCount = 0;
     checked.forEach(function (h) {
       var has = Object.prototype.hasOwnProperty.call(found, h);
       if (has) presentCount++;
-      var li = el('li', 'du-chip ' + (has ? 'is-ok' : 'is-missing'));
-      li.appendChild(el('span', 'du-chip-name', h));
-      li.appendChild(el('span', 'du-chip-state', has ? T.present : T.missing));
+      var li = el('li', 'oc-chip ' + (has ? 'is-ok' : 'is-missing'));
+      li.appendChild(el('span', 'oc-chip-name', h));
+      li.appendChild(el('span', 'oc-chip-state', has ? T.present : T.missing));
       chips.appendChild(li);
     });
     var headersCell = el('span');
     headersCell.appendChild(chips);
-    if (!presentCount) headersCell.appendChild(el('span', 'du-note', T.none));
+    if (!presentCount) headersCell.appendChild(el('span', 'oc-note', T.none));
     row(dl, T.headers, headersCell);
 
     card.appendChild(dl);
 
-    var next = el('p', 'du-next', T.then);
-    var links = el('p', 'du-next-links');
-    var l1 = el('a', 'btn-secondary', T.install); l1.href = '#install';
-    var l2 = el('a', 'btn-secondary', T.desktop); l2.href = '#desktop';
-    links.appendChild(l1); links.appendChild(l2);
-    card.appendChild(next);
-    card.appendChild(links);
+    // The page declares its own closing sentence and its own way onward, because
+    // what this check cannot do is a property of the site, not of the check:
+    // DeskUptime's next step is the CLI, mahope.tools' is the deeper scanner.
+    // A page that declares neither still gets the verdict, cert and chips.
+    var cfg = window.ONE_OFF_CHECK || {};
+    if (typeof cfg.then === 'string' && cfg.then) {
+      card.appendChild(el('p', 'oc-next', cfg.then));
+    }
+    var links = Array.isArray(cfg.next) ? cfg.next : [];
+    if (links.length) {
+      var row2 = el('p', 'oc-next-links');
+      links.forEach(function (item) {
+        // Only a label and a same-document link are used. A page is our own
+        // markup, so this is not an injection path, but the label is still set
+        // as text and the href is still read from the page, never from the
+        // answer — a URL we fetched must never be able to become a link here.
+        if (!item || typeof item.href !== 'string' || !item.href) return;
+        var a = el('a', 'btn-secondary', item.label || item.href);
+        a.href = item.href;
+        a.rel = 'noopener';
+        row2.appendChild(a);
+      });
+      if (row2.childNodes.length) card.appendChild(row2);
+    }
 
-    // The donation line is declared by the page itself (see `DU_DONATE` in the
+    // The donation line is declared by the page itself (see `OC_DONATE` in the
     // HTML) because `tools/check_donation_paths.py` judges the page file: the
     // href must be the one in the catalog, it must sit in a `<script>` so it
     // cannot show before there is a result, and it must never be a button. The
     // markup is ours, not the visitor's, so appending it is not an injection
     // path — same shape as `/scan` and `/url-inspector`.
-    if (window.DU_DONATE) {
+    if (window.OC_DONATE) {
       var holder = document.createElement('div');
-      holder.innerHTML = window.DU_DONATE;
+      holder.innerHTML = window.OC_DONATE;
       while (holder.firstChild) card.appendChild(holder.firstChild);
     }
 
@@ -253,8 +261,8 @@
 
   function fail(message) {
     out.textContent = '';
-    var box = el('div', 'du-card du-card-error');
-    box.appendChild(el('p', 'du-error', message));
+    var box = el('div', 'oc-card oc-card-error');
+    box.appendChild(el('p', 'oc-error', message));
     out.appendChild(box);
     out.hidden = false;
   }
