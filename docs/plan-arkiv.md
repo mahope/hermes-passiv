@@ -5363,3 +5363,60 @@ igen frem for at tro på dem:
   guider var lige flyttet til mahope.tools, så den kørte mod den gamle udgivelse.
   Live svarer **200** i dag, så det var et udgivelsesvindue, ikke en død reference.
   `b55e036` faldt i gaten på `plan-status` (den her opgave).
+
+## Færdig 2/10 — `ceo/site-icons-h1`: fire sider havde produktets filnavn som `<h1>`
+
+Opgaven kom fra målingen på den byggede side: `/site-icons` havde
+`<h1>site-icons</h1>`, mens `<title>` sagde «Generate favicons, OG images & PWA
+icons from one». Planens baseline skrev «1 af 268 sider» — **målingen var for
+lille**. En måling over hele `site/` fandt **4 af 322** byggede sider:
+
+| Side | Før | Efter |
+|---|---|---|
+| `/site-icons` | `site-icons` | Every icon your site needs, from one SVG |
+| `/page-profile` | `page-profile` | Profile any web page from your terminal |
+| `/da/page-profile` | `page-profile` | Tjek enhver websides tekniske sundhed |
+| `/bugbottle-demo` | `bugbottle` | Report a bug and see exactly what gets sent |
+
+Hver ny overskrift er den linje siden selv havde stående i `tagline`, så der
+er ingen ny tekst at finde på. Den blev fjernet fra `tagline` i samme stræk,
+så læseren ikke læser den samme sætning to gade.
+
+Ingen port så fejlen. `seo_check.py` kræver præcis ét `<h1>` — det dømmer
+*antallet*, ikke indholdet. `check_heading_levels.py` dømmer rækkefølgen i
+niveauer, og `check_duplicate_headings.py` kun gentagelser på `<h2>`. Alle tre
+er grønne på `<h1>site-icons</h1>`, fordi det er ét `h1` på niveau 1.
+
+Ny port `tools/check_page_h1.py`, to domme:
+
+- `SLUG_H1` — overskriften matcher `^[a-z0-9]+(?:-[a-z0-9]+)*$`, altså kun
+  små bogstaver, tal og bindestreger og **intet mellemrum**. Fanger de tre
+  fundne.
+- `ROUTE_H1` — overskriften er sidens egen rute udskrevet, sammenlignet **råt**
+  uden at normalisere skilletegn. Fanger det dom 1 lader igennem, fordi der
+  står store bogstaver i (`Site-Icons`).
+
+**Ingen separator-normalisering** i dom 2 er den vigtigste beslutning i porten.
+«Color Blindness Simulator» *er* sluget `color-blindness-simulator` skrevet med
+mellemrum og store bogstaver, og 32 sider skriver overskriften sådan.
+Sammenligner man skilletegn, får man 32 røde sider der alle er korrekte — og så
+skriver nogen dommen fra. Dom 2 lader derfor alle 32 være i fred; de er dømt
+individuelt i selvtesten.
+
+Porten dømmer **ikke** om overskriften er *god*. Den kan se at
+`<h1>site-icons</h1>` er et filnavn; den kan ikke se om «Every icon your site
+needs, from one SVG» er den bedste sætning. Den del er lavet i samme opgave,
+og `tools/check_repo_readme.py`s egen historie — `wrong_repo` blev kasseret fordi
+en port der kræver en liste opdateret før en rigtig reference bliver grøn, er en
+port folk slår fra — er skrevet i docstringen, så det ikke bliver gentaget.
+
+Selvtest **40/40**. Polaritet målt på den gamle kode: `git archive HEAD site`
+gennem `dom()` giver **4 fund**; på den nye **0**. Genskabt fejl i en kopi af
+den rigtige `site/site-icons.html` er rød, og de to efterfølgende kontroller
+kræver at dommen både peger på filen og siger hvad der skal stå.
+
+Chromium, 4 sider × 390/1280 px × lys og mørk: h1 **32 px** (sidens største
+tekst på alle otte), kontrast **21:1**, og h1 har præcis den forventede tekst.
+`/page-profile` (EN + DA) har **230 px vandret scroll ved 390 px** — målt
+identisk på den gamle kode, så det er ikke denne rettelse. Årsagen er
+`pagepass.py`s `OWNED_SELECTORS` og er opgave 8 i planen.

@@ -4,12 +4,11 @@
   i produktionstjekket. 2/10: kogt til **25**, 7 afsnit med historie flyttet til
   `docs/plan-arkiv.md` i samme commit. Dom 2 grøn, `--self-test` **11/11**. Den anden
   røde kørsel var **404** på 1 blogguide — gammelt udgivelsesvindue, live **200**.
-- **Forhåndsvisningen i simulatoren var sort på sort.** `fillSelect` kasserte den hvide
-  standard (paletten rummer intet hvidt) og satte palettens sidste farve i stedet:
-  **1.00:1** mod WCAG's 4.5:1 i det øjeblik siden indlæses. Samme linje kastede
-  `TypeError` på den sidste farve, så «slet alle» dræbte knappen, og et delt link
-  tabte sin baggrund. Nu **17.89:1**. Ny `cb-preview.test.mjs` **24/24**, målt **RØD
-  med 18 fejl** på den gamle kode.
+- **Byggetagen sletter CSS som designsystemet ikke ejer.** Målt 2/10 i Chromium:
+  `/page-profile` (EN **og** DA) har **230 px vandret scroll ved 390 px** — også
+  på den gamle kode. `pagepass.py` sletter sidelinjer for 154 `OWNED_SELECTORS`,
+  men style.css erklærer kun 126, så `.cli-demo` taber `overflow-x: auto` og
+  `white-space: pre`. Samme fælde som `*-wrap` fik 30/9, uden samme guard.
 - **`/blog/` havde fire døde links, og porten vidste det.** De 4 BugBottle-guider lå i
   `bugbottle.dev`s `include` og blev lagt ingen steder: målt **404 på alle 4** mod
   live, **15** links døde i alt. Nu 189 guides, **0** mangler mod `site/blog/`. Ny dom
@@ -26,6 +25,8 @@
   Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: de fire filnavn-overskrifter er se med vilje ceo/site-icons-h1 2026-10-02 23:33`
 
 - **`DEPLOY OK 2026-10-02` — alle tre næster er live, målt på indhold.**
   `build-info.json` står på **`4c41d9e`** (squash-sha'en) på **mahope.tools**,
@@ -111,12 +112,19 @@
    (hverken i `dist/` eller i sitemap), så de 6 bogsiders hreflang har intet
    dansk par — det er derfor værktøjsbanneret fra i dag kun findes på de
    engelske sider.
-8. **`/site-icons` har `<h1>site-icons</h1>`.** Hvorfor: målt 2/10 på den
-   byggede side — overskriften er produktets filnavn, ikke det spørgsmål
-   siden svarer på, mens `<title>` siger «Generate favicons, OG images & PWA
-   icons». Siden er i sitemap og linkes fra bogen om Chrome-udvidelser.
-   Accept: `<h1>` der siger hvad den gør, plus en port-påstand så den ikke
-   rådner tilbage. Baseline: 1 af 268 sider.
+8. **Byggetagen sletter sidelinje for 28 selectors designsystemet ikke ejer.**
+   Hvorfor: `tools/pagepass.py:s40` erklærer 154 `OWNED_SELECTORS`, og
+   `site/style.css` erklærer kun 126 af dem — de 28 sidste regler bliver
+   slettet alligevel, fordi påstanden *ikke* efterprøves mod style.css. Målt
+   2/10 i Chromium: `.cli-demo` mangler i style.css, så `/page-profile` (EN +
+   DA) mister `overflow-x: auto` og `white-space: pre` og får **230 px
+   vandret scroll ved 390 px** (identisk på gammel kode). `check_built_css.py`
+   er grøn — den dømmer at *det der er med* overlever, ikke at *det der er
+   slettet* skulle være med. Accept: `OWNED_SELECTORS` er dokumenteret af
+   style.css, eller style.css erklærer resten; og en port der dømmer at ingen
+   sidelinje er slettet for en klasse skallen ikke ejer — polaritet målt ved at
+   fjerne én erklæring. Samme guard som `WRAP_SELECTOR_RE` fik 30/9.
+   Baseline 2/10: 28 ubeviste påstande, 2 sider med vandret scroll.
 
 ## ❓ Til Mads
 

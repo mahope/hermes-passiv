@@ -847,6 +847,25 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_heading_levels.py", "--self-test"),
         inputs=("tools/check_heading_levels.py", "site/**"),
     ),
+    # Hvad `<h1>` *siger* (2/10). Målt først: `/site-icons` havde
+    # `<h1>site-icons</h1>` — produktets filnavn som sidens største
+    # skrifttype, mens `<title>` sagde «Generate favicons, OG images & PWA
+    # icons from one». En måling i samme aflevering fandt to mere: `/page-profile`
+    # (EN og DA) og `/bugbottle-demo`, så 4 af 322 byggede sider. De tre
+    # overskriftsporte ovenfor er alle grønne på den slags fejl: `seo_check`
+    # tæller `<h1>`, `heading-levels` dømmer rækkefølgen, `duplicate-headings`
+    # kun `<h2>`. To domme, fordi de fanger hver sit tilfælde — dom 1 et slug,
+    # dom 2 routen udskrevet med store bogstaver, som dom 1 lader igennem.
+    Step(
+        id="page-h1",
+        argv=("python3", "tools/check_page_h1.py"),
+        inputs=("tools/check_page_h1.py", "site/**"),
+    ),
+    Step(
+        id="page-h1-selftest",
+        argv=("python3", "tools/check_page_h1.py", "--self-test"),
+        inputs=("tools/check_page_h1.py", "site/**"),
+    ),
     # Sampleringen under teksten på et billede (30/9). Målt i Chromium mod den
     # live side: hvid tekst på et rent hvidt billede gav **1.47:1**, og tallet
     # flyttede sig næsten ikke mellem forskellige tilstande (1.42/1.46/1.47) —
