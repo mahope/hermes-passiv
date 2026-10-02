@@ -31,6 +31,12 @@ knap. Det er modellen her.
 4. **Der er præcis én.** To donationer på én side er to chances for at den
    føles påtrængende, og den anden er næsten altid et kopieringsfejl.
 
+**Hvad porten dømmer på donationssiderne selv.** `/support` og `/da/support`
+er ikke i `donation.json` — dommene ovenfor handler om en linje der opstår
+*efter et resultat*, og der er intet resultat på donationssiden. De dømmes i
+stedet for den anden ting: de skal sige katalogens `price_min`, så ingen side
+lover et beløb Stripe afviser under.
+
 **Hvad porten kun tæller.** Sider der renderer et målt resultat og endnu
 ikke har linjen. De dømmes ikke, fordi de er en samlet beslutning om hvor
 mange sider der skal have den (se `❓` i `IMPLEMENTATION_PLAN.md`), og en
@@ -76,12 +82,65 @@ RESULT_RE = re.compile(
 # må ikke få en donation som konkurrent lige under sig.
 ALDRIG = ("site/thanks.html", "site/support.html", "site/da/support.html")
 
+# De to donationssider selv. De er **ikke** i `donation.json`, fordi dommen
+# ovenfor handler om en linje der opstår *efter et resultat* — på `/support`
+# er der intet resultat. De dømmes i stedet for den anden ting, de skal være
+# ærlige om: hvor meget man mindst kan give.
+DONATIONS_SIDER = ("site/support.html", "site/da/support.html")
+
+
+def donation_produkt(rod: Path = ROOT) -> dict:
+    """Donationsvaren i katalogen. Læst, ikke skrevet."""
+    produkter = json.loads((rod / "tools" / "stripe_catalog.json").read_text(
+        encoding="utf-8"))["products"]
+    return produkter["support-mahope-oss"]
+
 
 def donation_url(rod: Path = ROOT) -> str:
     """Katalogets donations-URL. Læst, ikke skrevet, så prisen kan ændre sig."""
-    produkter = json.loads((rod / "tools" / "stripe_catalog.json").read_text(
-        encoding="utf-8"))["products"]
-    return produkter["support-mahope-oss"]["payment_link"]
+    return donation_produkt(rod)["payment_link"]
+
+
+def min_mangler(rod: Path = ROOT) -> list[str]:
+    """`/support` skal sige katalogens minimum — ellers lover den for meget.
+
+    Baggrund (målt 2/10 af review): katalogen siger «fra 10 kr.» for præcis den
+    vare, og `/pricing` lovede håndskrevet «Any amount», fordi den ene pris der
+    ikke læses fra katalogen lå i prosa i generatoren. `/support` — den side
+    donationen faktisk sker på — sagde «You choose the amount» / «Du vælger
+    beløbet». Sådan skrev en læser, der ville give 5 kr., sig selv ind i en
+    Stripe-fejl uden at nogen side havde fortalt, at der var en grænse.
+
+    Dommen læser **katalogens** `price_min` for sidens sprog, så ændrer
+    minimumsbeløbet sig, bliver begge sider røde i stedet for at lyve stille.
+    Sproget afgøres af ruten, fordi `donation.json` ikke dømmer disse to sider
+    og der derfor ikke er andet sted at finde det.
+    """
+    produkt = donation_produkt(rod)
+    minimum = produkt.get("price_min")
+    fund: list[str] = []
+    if not isinstance(minimum, dict) or not minimum:
+        return ["katalog: support-mahope-oss mangler `price_min` — minimumsbeløbet "
+                "for en donation skal kunne læses ét sted, så ingen side kan love "
+                "«hvad som helst»"]
+    for kilde in DONATIONS_SIDER:
+        fil = rod / kilde
+        if not fil.exists():
+            fund.append(f"{kilde}: filen findes ikke")
+            continue
+        lang = "da" if "/da/" in kilde else "en"
+        tekst = minimum.get(lang)
+        if not isinstance(tekst, str) or not tekst.strip():
+            fund.append(f"katalog: `price_min.{lang}` mangler, så {kilde} ikke "
+                        f"kan sige hvad læseren mindst kan give")
+            continue
+        html = fil.read_text(encoding="utf-8", errors="replace")
+        # Uden `re.I` ville den danske minimumstreng «fra 10 kr.» være umulig at
+        # skrive ind i en dansk sætning uden also at ændre katalogen.
+        if not re.search(re.escape(tekst), html, re.I):
+            fund.append(f"{kilde}: siger ikke katalogens minimum «{tekst}» — "
+                        f"ellers lover siden et beløb Stripe afviser under")
+    return fund
 
 
 def i_script(html: str, pos: int) -> bool:
@@ -152,6 +211,7 @@ def dom(rod: Path = ROOT) -> tuple[list[str], dict[str, list[str]]]:
         problemer = fejl_for(fil.read_text(encoding="utf-8", errors="replace"), url)
         detaljer[kilde] = problemer
         fund.extend(f"{kilde}: {p}" for p in problemer)
+    fund.extend(min_mangler(rod))
     return fund, detaljer
 
 
@@ -254,6 +314,55 @@ def self_test() -> int:
         fund, _ = dom(rod)
         tjek("mutation: linjen i markup'en er rød",
              any("markup" in f for f in fund), "; ".join(fund))
+
+    # Minimumsbeløbet på donationssiderne. Tre kontroller i træk, fordi dommen
+    # skal kunne både se en side der lyver og **bevise** at den dømmer mod
+    # katalogen og ikke mod en fast sætning: ændres minimumsbeløbet i
+    # katalogen, skal den lyvende side blive grøn, fordi den så siger det
+    # rigtige. Uden den polaritet ville mutationen bare have gjort porten rød
+    # for alt.
+    tjek("de rigtige donationssider er grønne", not min_mangler(),
+         "; ".join(min_mangler()[:2]))
+
+    def donations_rod(tmp: str, dansk: str) -> Path:
+        rod = Path(tmp)
+        (rod / "site" / "da").mkdir(parents=True)
+        (rod / "tools").mkdir()
+        (rod / "site" / "support.html").write_text(
+            "<p class='hint'>" + dansk + "</p>", encoding="utf-8")
+        (rod / "site" / "da" / "support.html").write_text(
+            "<p class='hint'>Valgfrit beløb fra 10 kr.</p>", encoding="utf-8")
+        (rod / "tools" / "donation.json").write_text("{}", encoding="utf-8")
+        skriv_katalog(rod)
+        return rod
+
+    with tempfile.TemporaryDirectory() as tmp:
+        fund = min_mangler(donations_rod(tmp, "You choose the amount."))
+        tjek("mutation: donationsside uden minimum er rød",
+             any("minimum" in f for f in fund), "; ".join(fund))
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = donations_rod(tmp, "Any amount from 10 kr.")
+        tjek("polaritet: donationssiden med minimum er grøn",
+             not min_mangler(rod), "; ".join(min_mangler(rod)))
+        # Og når **katalogen** hæver minimum, skal den samme side blive rød.
+        katalog = json.loads((rod / "tools" / "stripe_catalog.json").read_text(
+            encoding="utf-8"))
+        katalog["products"]["support-mahope-oss"]["price_min"]["en"] = "From 25 kr."
+        (rod / "tools" / "stripe_catalog.json").write_text(
+            json.dumps(katalog, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        fund = min_mangler(rod)
+        tjek("mutation: hævet minimum gør den gamle side rød",
+             any("25 kr." in f for f in fund), "; ".join(fund))
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = donations_rod(tmp, "Any amount from 10 kr.")
+        katalog = json.loads((rod / "tools" / "stripe_catalog.json").read_text(
+            encoding="utf-8"))
+        del katalog["products"]["support-mahope-oss"]["price_min"]
+        (rod / "tools" / "stripe_catalog.json").write_text(
+            json.dumps(katalog, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        fund = min_mangler(rod)
+        tjek("mutation: katalog uden price_min er rød",
+             any("mangler `price_min`" in f for f in fund), "; ".join(fund))
 
     for linje in fejl:
         print("  rød:", linje)

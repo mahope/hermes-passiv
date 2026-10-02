@@ -1,23 +1,23 @@
 # STATUS
 
+- **Donationsprisen læses nu af katalogen på alle fire sider** — `/pricing`,
+  `/da/pricing`, `/support` og `/da/support` siger «fra 10 kr.». Målt 2/10:
+  `/pricing` lovede håndskrevet «Any amount» om en donation, katalogen siger
+  «fra 10 kr.» for præcis den vare, og `/support` sagde «You choose the
+  amount». Fundet fra review 2/10 var rigtigt: ingen port så det. Ny dom 5 i
+  `check_pricing_page.py` dømmer hvert beløb i den **byggede** priscelle mod
+  den vares egen katalogpost, og `check_donation_paths.py` dømmer at
+  donationssiderne siger `price_min`. Selftest 11/11 og 4 nye mutationer.
 - **`/pricing` er bygget — den ene side med alle 12 priser** fra
   `tools/stripe_catalog.json`, EN + DA, med gratis-mod-Pro pr. række. Siden
   **sælger ikke**: den linker til hver vares egen købsside, så «én købsvej pr.
-  produkt» holder. Målt først 2/10: 0 af de 102 ruter havde to produkter i
-  `<title>`/`<h1>`. Ny port `check_pricing_page.py` (4 dom + 7 mutationer).
-- **`clock_jump.mjs` er grøn i CI 2/10 kl. 06:32** (352/352) efter at hopet blev
-  én time pr. `Request`-konstruktion i stedet for pr. 30 ms — et krydsende ur kan
-  da ikke ramme en webhook-signering. Sentry-sløjfens tolv kald har nu eget ur.
-- **Livstidsprisens købsvej er prøvet af og forkastet — to porte siger nej.**
-  Målt 2/10: de 17 pro-table-sider viste «$149 once per website — lifetime»
-  uden at linke til `lifetime.payment_link`. Lagt ind som prislink gjorde
-  `check_stripe_ctas.py` rød («2 synlige lifetime-CTA'er for eucomply-pro,
-  forventet præcis 1») og som «Buy …» også `pro_card.py` («2 købsknapper i ét
-  pro-kort»). Begge dele siger det samme: **én købsvej pr. produkt**, og den
-  findes allerede på de seks produktsider. Se punkt 10 i feature-kø.
+  produkt» holder. Ny port `check_pricing_page.py` (5 dom + 9 mutationer).
 - **Alle 19 sider har gratis mod Pro i samme tabel** fra `tools/stripe_catalog.json`.
   `check_pro_table.py` + `check_catalog_where.py` (112 belæg, målt 2/10: 13 lå
   2–10 linjer væk) kører i gaten.
+- **Livstidsprisens købsvej er prøvet af og forkastet — to porte siger nej.**
+  Målt 2/10: de 17 pro-table-sider viste «$149 once per website — lifetime»
+  uden at linke til `lifetime.payment_link`. Se punkt 10 i feature-kø.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 2/10:** 0 åbne PR'er. **Branch-tjek 2/10:** ingen 14 dage gamle.
@@ -34,15 +34,21 @@
   og ventede, fordi den gik rødt i CI. Målt på indhold: `/compliance-report`
   serverer `$149 once per website — lifetime, first 100 purchases` og den danske
   `$149 én gang pr. website, for altid.`, og `build-info.json` står i `182af57`.
+- **DEPLOY OK 2/10 (kl. 12:30).** `ceo/pris-side` (`b0da8ad`) er ute. Målt på
+  **indhold**, ikke på HTTP 200: `/pricing` og `/da/pricing` serverer hver 14
+  `data-product`-rækker, 3 `data-lifetime`-rækker, **0** `buy.stripe.com` og
+  `pricing:start` 1 gang pr. fil; `build-info.json` står i `b0da8ad`.
 
-- `VERIFICÉR DEPLOY: /pricing med alle 12 priser, EN + DA, EN/DA-free-tools
-   linker til den ceo/pris-side 2026-10-02` — måles på **indhold**: på `/pricing`
-   og `/da/pricing` en række pr. produkt med `data-product`, livstidsafsnittet med
-   tre `data-lifetime`-rækker, **0** `buy.stripe.com` på siden, og
-   `pricing:start` 1 gang pr. fil. Dom 1: `check_pricing_page.py` grøn (12
-   produkter, 2 sider). Dom 2: `--self-test` 7/7. Dom 3/4: mutationen i
-   generatorens skabelon er rød, et Stripe-link i blokken er rødt. Dom 5:
-   `quality_gate.py` grøn med 136 steps.
+- `VERIFICÉR DEPLOY: donationsprisen fra katalogen på /pricing, /da/pricing,
+   /support og /da/support 2026-10-02 ceo/donation-pris-fra-katalog` — måles på
+   **indhold**: `/pricing` har `<td>From 10 kr.</td>` i rækken
+   `support-mahope-oss`, `/da/pricing` har `<td>fra 10 kr.</td>`, `/support` har
+   «Any amount from 10 kr.» og `/da/support» «Valgfrit beløb fra 10 kr.», og
+   «Any amount» / «Valgfrit beløb» står **ikke** på nogen af dem. Dom 1:
+   `check_pricing_page.py` grøn (12 produkter, 2 sider). Dom 2:
+   `--self-test` 11/11. Dom 3: `check_donation_paths.py` grøn, `--self-test`
+   alle kontroller bestået. Dom 4: `build_sites.py`, `seo_check.py`,
+   `stripe-worker.test.mjs` og `check_inline_js.py` grønne.
 
 ## Åbne opgaver
 

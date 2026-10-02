@@ -4722,3 +4722,59 @@ faldt ud ligger her i stedet for at gå tabt:
 
 Målt efter kogningen: STATUS er 24 af 25 linjer, 6 punkter med tal hver, og
 planen er 15099 af 40000 tegn.
+
+## 2/10 — donationsprisen lå i prosa i generatoren (review-fund, punkt 0)
+
+Review 2/10 fandt at `tools/pricing_page.py` skrev donationens pris i hånden:
+`prislinje()` returnerede `TEKST[lang]["donation_price"]` = «Any amount» /
+«Valgfrit beløb», mens `tools/stripe_catalog.json` siger `price: "fra 10 kr."`
+for præcis den vare. Det var den eneste af de tolv priser der ikke læstes fra
+katalogen, så /pricing lovede noget Stripe afviser under — på den ene side af
+hele sitet der skriver sig «bygget af katalogen». Samme fejlform som de otte
+forgangne revisioner i denne familie, og ingen port så den: dom 1 dømmer at
+siden er generatorens output, så en generator der skriver en pris selv er
+grøn.
+
+**Målt før rettelsen:** `python3 tools/pricing_page.py` skriver
+`support-mahope-oss | fra 10 kr. | donation`, mens den byggede celle på
+`/pricing` læser `Any amount` og på `/da/pricing` `Valgfrit beløb`.
+`/support` sagde «You choose the amount» og `/da/support` «Du vælger beløbet».
+Katalogens egen `price_note` («optional donation, any amount») modsagde også
+sin egen `price`.
+
+**Rettelsen.** Katalogen fik `price_min: {en, da}` — lokaliseret, samme mønster
+som `scope` — og `price_note` der ikke modsiger den. `prislinje()` læser den,
+og `TEKST["donation_price"]` er **slettet**, så der ikke er stedet tilbage at
+skrive en håndskrevet pris i. `/support` og `/da/support` siger nu
+«Any amount from 10 kr.» / «Valgfrit beløb fra 10 kr.».
+
+**De to nye domme, og hvorfor de er bygget sådan de er.** `dom 5` i
+`check_pricing_page.py` læser den **byggede** priscelle og kræver at hvert
+`$`-beløb er `price_usd` eller `lifetime.price_usd` for den vare, og at en
+donation viser katalogens `price_min` ord til ord. Læser den byggede fil, ikke
+generatorens returværdi — ellers dømmer porten generatoren mod sig selv, og det
+var præcis der fejlen lå. `min_mangler()` i `check_donation_paths.py` dømmer de
+to donationssider mod samme `price_min`, så et hævet minimumsbeløb gør dem røde
+i stedet for at lyve stille.
+
+**Verificeret ved mutation, ikke ved inspektion.** Generatoren fra `b0da8ad`
+(genindført med `git show HEAD:tools/pricing_page.py`) giver porten RØD med præcis
+fundets fejl på begge sprog. Reviewens egen mutation — katalogens pris sat til
+«fra 500 kr.», siderne genbygget — gav før rettelsen porten **grøn** og siden
+uændret; nu er den rød. Polaritetskontrollen: når *katalogen* siger «Any amount»,
+skal den samme mutation være grøn, ellers var dommen bare en streng der altid
+er rød. Selftest: `check_pricing_page.py --self-test` 11/11 (9 mutationer),
+`check_donation_paths.py --self-test` alle kontroller bestået (4 nye).
+
+**Fund nummer to (LAV) lå i samme fil.** `købs_knap()`s docblock beskrev et
+katalogfelt `pricing_link_da`, der ikke findes (`grep -c pricing_link_da
+tools/stripe_catalog.json` → 0), og påstod at en dansk side ellers ville skrive
+et engelsk link. Den sætning er væk; `købs_rute()` — som faktisk er den der
+gør arbejdet — dokumenterer reglen i stedet.
+
+**En fejl fundet i egen diff.** Efter negativkontrollen var katalogen gendannet
+uden `price_min`, og `--apply` havde skrevet den danske fallback «fra 10 kr.» ind
+på den **engelske** `/pricing`. Dobbelt gennemgang af diff'en fandt den før
+commit; porten havde været rød hele tiden, men var ikke kørt igen efter
+genskabelsen. Lært op i commit-bodyen, fordi det er den fejlform de otte
+forgangne revisioner her har fundet.

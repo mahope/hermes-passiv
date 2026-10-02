@@ -585,7 +585,11 @@
       "kind": "donation",
       "price_usd": null,
       "price": "fra 10 kr.",
-      "price_note": "optional donation, any amount",
+      "price_min": {
+        "en": "From 10 kr.",
+        "da": "fra 10 kr."
+      },
+      "price_note": "optional donation, from 10 kr.",
       "payment_link": "https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c",
       "pricing_link": "/support"
     }

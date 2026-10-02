@@ -28,8 +28,18 @@ har en `pricing_page`-rute, en pris og en købsside — men ikke står på
 prislisten, er en vare læseren ikke kan finde. Den er rød, fordi det er præcis
 den mangel siden er lavet for at lukke.
 
+Dom 5 er svaret på det dom 1–4 ikke kan se: en generator der **selv** skriver
+en pris. Dom 1 dømmer at siden er generatorens output, så en håndskrevet pris
+oveni den er rød — men målt 2/10 af review skrev `tools/pricing_page.py` selv
+donationens pris i hånden («Any amount»), mens katalogen for præcis den vare
+siger «fra 10 kr.». Siden var grøn hele vejen, og den lovede noget Stripe
+afviser under. Dom 5 dømmer derfor **beløbene i den byggede celle mod den
+vares egen katalogpost**, så håndskriven prosa ikke kan overleve: et `$`-beløb
+skal være `price_usd` eller `lifetime.price_usd` for den vare, og en donation
+skal vise katalogens `price_min` for sit sprog, ord til ord.
+
     python3 tools/check_pricing_page.py             # dom
-    python3 tools/check_pricing_page.py --self-test # 6 mutationer
+    python3 tools/check_pricing_page.py --self-test # 9 mutationer
 """
 from __future__ import annotations
 
@@ -47,6 +57,48 @@ import pricing_page  # noqa: E402
 CATALOG = ROOT / "tools" / "stripe_catalog.json"
 DIST = ROOT / "dist" / "mahope.tools"
 ROUTE_TIL_FIL = {"/pricing": "pricing.html", "/da/pricing": "da/pricing.html"}
+
+BELØB_RE = re.compile(r"\$\s?(\d+)")
+
+
+def dom5_pris(produkt: dict, celle: str, lang: str) -> list[str]:
+    """Dom 5: intet beløb i priscellen må være skrevet uden for katalogen.
+
+    Håndværket er at **læse den byggede celle**, ikke at spørge generatoren
+    hvad den ville lave — ellers dømmer porten generatoren mod sig selv, og
+    det var præcis der fejlen lå. Derfor fanges kun beløb med `$` foran, som er
+    den skriveform hele familien bruger; `kr.`-beløb fanges af dom 5b, der
+    kræver katalogens egen minimum for en donation.
+    """
+    fund: list[str] = []
+    nøgle = produkt["_nøgle"]
+    tilladt: set[str] = set()
+    if isinstance(produkt.get("price_usd"), (int, float)):
+        tilladt.add(str(produkt["price_usd"]))
+    livstid = produkt.get("lifetime")
+    if isinstance(livstid, dict) and isinstance(livstid.get("price_usd"), (int, float)):
+        tilladt.add(str(livstid["price_usd"]))
+    minimum = (produkt.get("price_min") or {}).get(lang)
+    if isinstance(minimum, str):
+        tilladt |= set(BELØB_RE.findall(minimum.replace("kr.", "$")))
+
+    for beløb in BELØB_RE.findall(celle):
+        if beløb not in tilladt:
+            fund.append(f"{nøgle}: beløbet ${beløb} i priscollen står ikke i "
+                        f"katalogens post ({'/'.join(sorted(tilladt)) or 'ingen beløb'})")
+
+    # Dom 5b: en donation skal vise katalogens minimum. Uden `price_min` er det
+    # ikke «ubehageligt at læse et tomt felt» — det er at siden så ikke ved,
+    # hvad Stripe afviser under, fordi ingen har skrevet det ned.
+    if produkt.get("kind") == "donation":
+        if not isinstance(minimum, str) or not minimum.strip():
+            fund.append(f"{nøgle}: katalogen skal oplyse `price_min.{lang}` — "
+                        f"minimumsbeløbet for en donation må ikke stå i prosa i "
+                        f"generatoren")
+        elif minimum not in celle:
+            fund.append(f"{nøgle}: donationsprisen er «{celle}», men katalogens "
+                        f"`price_min.{lang}` siger «{minimum}»")
+    return fund
 
 
 def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
@@ -95,6 +147,17 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                 fund.append(f"{rel}: rækken {nøgle} linker til {rute}, som ikke "
                             f"findes i det byggede site")
 
+        # Dom 5: hvert beløb i hver priscelle skal stå i **den vares** egen
+        # katalogpost. Læser den byggede fil, så en generator der selv skriver
+        # en pris er rød her — se domstringen.
+        for nøgle, celle in re.findall(
+                r'data-product="([^"]+)">\s*<th[^>]*>.*?</th>\s*<td>(.*?)</td>',
+                kilde, re.S):
+            if nøgle not in cat["products"]:
+                continue  # den syntetiske `free`-række: $0 er ikke en katalogvare
+            fund.extend(f"{rel}: " + f for f in dom5_pris(
+                {**cat["products"][nøgle], "_nøgle": nøgle}, celle, lang))
+
     # Dom 4: et produkt der er på vej frem, men ikke står på listen.
     på_liste = {nøgle for nøgle, _ in pricing_page.produkter(cat, "en")}
     for nøgle, produkt in sorted(cat["products"].items()):
@@ -112,12 +175,14 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
 
 
 def self_test() -> int:
-    """Syv mutationer, der hver skal give præcis ét rødt fund.
+    """Elleve kontroller, hvoraf ni er mutationer, der hver skal give sit fund.
 
     Mutationerne lægger sig på de **filer** porten læser — en midlertidig kopi
     af hele `site/` og `dist/` — ikke på et katalogobjekt. Det er pointen med
     dom 1: porten skal kunne se en håndskrevet pris på siden, og det kan den
-    kun, hvis den læser den samme fil en mutation har ændret.
+    kun, hvis den læser den samme fil en mutation har ændret. Dom 5's mutationer
+    følger samme regel for den modsatte grund: de skal ramme den **byggede**
+    celle, ellers dømmer porten generatoren mod sig selv.
     """
     fejl: list[str] = []
     talt = [0]
@@ -225,6 +290,38 @@ def self_test() -> int:
     fund = med_filer([], kat_ok)
     tjek("begrundet undtagelse er grøn",
          not any("et-helt-nyt-produkt" in f for f in fund), "; ".join(fund[:1]))
+
+    # Dom 5: et beløb der ikke står i katalogens post. Dette er den mutation
+    # review 2/10 selv lavede i hånden og opdagede, at porten ikke så: katalogens
+    # pris sat til «fra 500 kr.», siderne genbygget, porten grøn, siden uændret.
+    # Nu rammer den dommen, fordi dommen læser den byggede celle.
+    fund = med_filer([("site/pricing.html", ("$19/year", "$419/year"))])
+    tjek("beløb uden for katalogen er rødt",
+         any("står ikke i katalogens post" in f for f in fund), "; ".join(fund[:1]))
+
+    # Dom 5b: «Any amount» i stedet for katalogens minimum. Det var den
+    # håndskrevne sætning der lå i generatoren indtil 2/10.
+    fund = med_filer([("site/pricing.html",
+                       ("From 10 kr.", "Any amount"))])
+    tjek("håndskrevet donationspris er rød",
+         any("price_min" in f for f in fund), "; ".join(fund[:1]))
+
+    # Polaritet for dom 5b: når **katalogen** siger «Any amount», skal den
+    # samme streng være grøn. Uden den kontrol ville dommen bare have været en
+    # streng der altid er rød, og de to mutationer ovenfor intet bevare.
+    kat_any = json.loads(json.dumps(cat))
+    kat_any["products"]["support-mahope-oss"]["price_min"]["en"] = "Any amount"
+    fund = med_filer([], kat_any)
+    tjek("katalogens egen donationspris er grøn",
+         not any("support-mahope-oss" in f for f in fund), "; ".join(fund[:1]))
+
+    # Og polaritet for dom 5b modsat: katalogen uden `price_min` er rød, for så
+    # står minimumsbeløbet ingen steder — hverken i katalogen eller på siden.
+    kat_uden = json.loads(json.dumps(cat))
+    del kat_uden["products"]["support-mahope-oss"]["price_min"]
+    fund = med_filer([], kat_uden)
+    tjek("donation uden price_min er rød",
+         any("skal oplyse `price_min" in f for f in fund), "; ".join(fund[:1]))
 
     for linje in fejl:
         print(f"  FEJL  {linje}")

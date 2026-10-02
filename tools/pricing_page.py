@@ -103,7 +103,6 @@ TEKST = {
         "download_note": "Delivered as files right after payment.",
         "donation_note": ("Optional, and it changes nothing about the tools. Every tool here "
                           "stays free whether you give or not."),
-        "donation_price": "Any amount",
     },
     "da": {
         "title": "Priser — alle Mahope-værktøjer og -skabeloner samlet",
@@ -135,7 +134,6 @@ TEKST = {
         "download_note": "Leveres som filer lige efter betaling.",
         "donation_note": ("Valgfrit, og det ændrer intet ved værktøjerne. Alle værktøjer her er "
                           "gratis, uanset om du giver."),
-        "donation_price": "Valgfrit beløb",
     },
 }
 
@@ -227,15 +225,27 @@ def prislinje(nøgle: str, produkt: dict, lang: str, cat: dict) -> str:
     """Pris, periode, omfang og enheder.
 
     Katalogens `price` er dansk («$19/år»), så den kan ikke bruges på en
-    engelsk side. Derfor læses beløb og periode gennem `pro_table.beløb()` —
+    engelsk side. Derfor læses beløb og periode gennom `pro_table.beløb()` —
     samme læser som produktsidernes egen tabel, bygget på samme
     `billing_periods.words` som `check_own_prices.py` dømmer. To læsere af det
     samme beløb er præcis den fejlform de otte forgangne revisioner i denne
     familie fandt.
+
+    **Ingen pris skrives i hånden her** — også ikke donationens. Målt 2/10 af
+    review: `donation_price` stod håndskrevet som «Any amount» / «Valgfrit
+    beløb», mens katalogen for præcis den vare siger «fra 10 kr.». Sådan lovede
+    siden noget Stripe afviser under, på den ene side af hele sitet der
+    skriver sig «bygget af katalogen». Minimumsbeløbet læses derfor fra
+    `price_min[lang]`, og `check_pricing_page.py` dom 5 dømmer at det også er
+    sådan det *bliver* — så håndskriven prosa har ingen plads at komme
+    tilbage til.
     """
     t = TEKST[lang]
     if produkt.get("kind") == "donation":
-        return t["donation_price"]
+        minimum = (produkt.get("price_min") or {}).get(lang)
+        # `price` er kun en sikkerhed mod en tom celle. En donation uden
+        # `price_min` er rød i dom 5b, så den grønne tilstand bruger den ikke.
+        return minimum or produkt.get("price") or ""
     dele = [beløb(nøgle, produkt, lang, cat.get("billing_periods") or {})]
     enhed = enheder(produkt, lang)
     if enhed:
@@ -326,13 +336,9 @@ def købs_knap(nøgle: str, produkt: dict, lang: str) -> str:
 
     `pricing_link` er eksplicit i katalogen pr. produkt, så en ny vare uden en
     købsside er **rød** i `check_pricing_page.py` frem for at få en knap der
-    ingen vegne hen går."""
-    # Katalogens `pricing_link` er den engelske rute. Kun de få produkter der
-    # har en dansk udgave får `pricing_link_da`; resten har samme rute på begge
-    # sprog, målt 2/10 i dist-sitemap. Uden den skelnen skrev den danske side
-    # et engelsk link, og check_hreflang_pairs.py gjorde den rød.
-    rute = købs_rute(produkt, lang)
+    ingen vegne hen går. Ruten i begge sprog kommer fra `købs_rute()`."""
     t = TEKST[lang]
+    rute = købs_rute(produkt, lang)
     if not rute:
         return t["buy_missing"]
     return f"{t['buy_label']} {produkt['name']}" if produkt.get("kind") != "donation" \
