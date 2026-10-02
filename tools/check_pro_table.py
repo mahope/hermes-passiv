@@ -27,7 +27,7 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      det er det, der gjorde fire sider til fire svar.
 
     python3 tools/check_pro_table.py             # dom
-    python3 tools/check_pro_table.py --self-test # 11 kontroller
+    python3 tools/check_pro_table.py --self-test # 16 kontroller
 """
 from __future__ import annotations
 
@@ -42,7 +42,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pro_table  # noqa: E402  — generatoren er den ene sandhed
 
 ROOT = Path(__file__).resolve().parent.parent
-SIDER = 8
+# Målt 2/10 på den niende side: produktets feature-liste passer ikke overalt.
+# `page-profile-pro`s frie funktioner er alle sange i `page_profile.py` —
+# historik, terminalrapport, score og karakter — mens `/url-inspector` er
+# browseren, der hverken gemmer historik eller kører i en terminal. Havde
+# listen bare været tegnet ind, ville den have løjet på 12 værktøjssider.
+# Derfor er der to slags sider, og dom 6 holder dem ude af hinanden.
+PRODUKTSIDE = 8
 
 
 def synlig_pris(tekst: str) -> set[str]:
@@ -56,9 +62,9 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
     perioder = catalog.get("billing_periods") or {}
     produkter = catalog.get("products") or {}
     sider = catalog.get("pro_table_pages")
-    if not isinstance(sider, list) or len(sider) != SIDER:
-        fund.append(f"katalog: pro_table_pages skal være præcis {SIDER} sider, "
-                    f"fandt {len(sider) if isinstance(sider, list) else sider!r}")
+    if not isinstance(sider, list) or len(sider) != PRODUKTSIDE:
+        fund.append(f"katalog: pro_table_pages skal være præcis {PRODUKTSIDE} "
+                    f"sider, fandt {len(sider) if isinstance(sider, list) else sider!r}")
         return fund
     for post in sider:
         if not isinstance(post, dict):
@@ -76,6 +82,38 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         if lang not in pro_table.TEKST:
             fund.append(f"{rel}: ukendt sprog {lang!r}")
             continue
+        # 6. En side der ikke *er* produktets egen side må ikke låne
+        #    produktets funktionsliste. Målt 2/10: `page-profile-pro`s fem frie
+        #    funktioner peger alle på `page_profile.py` — `--history`, en
+        #    terminalrapport, score og karakter — mens `/url-inspector` er en
+        #    browser, der hverken gemmer historik eller skriver til en
+        #    terminal. Tegnet der ville den have løjet om browseren. Samme
+        #    fælde for `eucomply-pro`: listen er `compliance-report.html`s
+        #    egen tjekrække, ikke hvad `/cookie-check` gør.
+        #    Sådan må en sådan side se ud: `kind: "tool"` og en `free_features`
+        #    hvis `where` peger på sidens **egen** fil.
+        egen_side = rel.lstrip("./") in (produkt.get("own_pages") or [])
+        if not egen_side:
+            if post.get("kind") != "tool":
+                fund.append(f"{rel}: er ikke {nøgle}s egen side, så den skal "
+                            f"mærkes kind=tool med sine egne free_features "
+                            f"(nu låner den {nøgle}s liste, der er skrevet "
+                            f"til en anden side)")
+            egne = post.get("free_features")
+            if not isinstance(egne, list) or not egne:
+                fund.append(f"{rel}: mangler egne free_features")
+            else:
+                for feature in egne:
+                    hvor = str(feature.get("where") or "")
+                    labels = (feature.get("labels") or {}).get(lang) or []
+                    if not labels:
+                        fund.append(f"{rel}: egne free_features "
+                                    f"{feature.get('id')!r} har ingen {lang}-labels")
+                    if not hvor.startswith(rel):
+                        fund.append(f"{rel}: egne free_features "
+                                    f"{feature.get('id')!r} peger på {hvor[:60]!r} "
+                                    f"og ikke på siden selv — så funktionen er "
+                                    f"ikke dokumenteret her")
         fil = root / rel
         if not fil.exists():
             fund.append(f"{rel}: filen findes ikke")
@@ -90,7 +128,8 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
             continue
         blok = områder[0]
         forventet = pro_table.blok(nøgle, produkt, lang, perioder,
-                                   str(post.get("anchor") or "")).strip()
+                                   str(post.get("anchor") or ""),
+                                   post.get("free_features")).strip()
         if blok.strip() != forventet:
             fund.append(f"{rel}: tabellen er ikke tegnet af katalogen "
                         f"(kør `python3 tools/pro_table.py --apply`)")
@@ -131,7 +170,9 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
 
         # 4. Alle katalogens funktioner skal stå i tabellen.
         for nøgle_fil in ("free_features", "pro_features"):
-            for feature in produkt.get(nøgle_fil) or []:
+            kilder = (post.get("free_features") if nøgle_fil == "free_features"
+                      else None) or produkt.get(nøgle_fil) or []
+            for feature in kilder:
                 varianter = (feature.get("labels") or {}).get(lang) or []
                 if not varianter:
                     fund.append(f"{rel}: {nøgle} {feature.get('id')!r} har "
@@ -147,6 +188,7 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         for ekstra in re.findall(r'<table class="compare"[^>]*>', udenfor):
             fund.append(f"{rel}: en håndskrevet {ekstra} står ved siden af "
                         f"den genererede tabel")
+
     return fund
 
 
@@ -167,7 +209,10 @@ def json_sider() -> list[str]:
 def self_test() -> int:
     fejl: list[str] = []
 
+    talt = [0]
+
     def tjek(navn: str, sand: bool, detalje: str = "") -> None:
+        talt[0] += 1
         if not sand:
             fejl.append(f"{navn}{': ' + detalje if detalje else ''}")
 
@@ -275,7 +320,41 @@ def self_test() -> int:
     tjek("for få sider i katalogen er røde",
          bool(dom({**catalog, "pro_table_pages": catalog["pro_table_pages"][:3]})))
 
-    # 10. Mutation: en ny funktion i katalogen uden label på den side, den
+    # 10. En værktøjsside, der låner produktets liste. Det er den fejl, dom 6
+    #     blev skrevet for: `page-profile-pro`s frie funktioner er alle sange
+    #     i `page_profile.py` — historik, terminalrapport, score og karakter
+    #     — mens browseren på `/url-inspector` ingen af delene har. Uden dom
+    #     6 ville løjet stå på 12 værktøjssider, og ingen anden dom så den.
+    værktøj = {**catalog, "pro_table_pages": [
+        {**post, "path": "site/url-inspector/index.html"} if post["path"] ==
+        "site/page-profile.html" else post
+        for post in catalog["pro_table_pages"]]}
+    fund = dom(værktøj)
+    tjek("værktøjsside der låner produktets liste er rød",
+         any("egne free_features" in f for f in fund), str(fund))
+    # Og den skal kun blive grøn med sin egen liste, der peger på siden selv.
+    med_egne = {**værktøj, "pro_table_pages": [
+        {**post, "kind": "tool", "free_features": [
+            {"id": "redirect-chain",
+             "where": "site/url-inspector/index.html:275 hopHeaders -> redirectChain",
+             "labels": {"en": ["redirect chain trace"], "da": ["redirect-kæde"]}}]}
+        if post["path"] == "site/url-inspector/index.html" else post
+        for post in værktøj["pro_table_pages"]]}
+    fund = dom(med_egne, ROOT)
+    tjek("værktøjsside med sin egen liste er ikke rød på dom 6",
+         not any("egne free_features" in f or "kind=tool" in f for f in fund),
+         str(fund))
+    # Mutation: egen liste der peger et andet sted end siden selv.
+    fremmed = {**med_egne, "pro_table_pages": [
+        {**post, "free_features": [
+            {**post["free_features"][0],
+             "where": "page-profile/page_profile.py:1040 --history"}]}
+        if post["path"] == "site/url-inspector/index.html" else post
+        for post in med_egne["pro_table_pages"]]}
+    tjek("egne funktioner der peger på en anden fil er røde",
+         any("ikke dokumenteret her" in f for f in dom(fremmed, ROOT)))
+
+    # 11. Mutation: en ny funktion i katalogen uden label på den side, den
     #     sælger på, skal være rød — så katalogen ikke kan vokse i det stille.
     vokset = {**catalog, "products": {**catalog["products"], "clean-copy-pro": {
         **catalog["products"]["clean-copy-pro"],
@@ -288,7 +367,7 @@ def self_test() -> int:
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-pro-table-selftest: {'OK' if not fejl else 'RØD'}"
-          f" ({11 - len(fejl)}/11 kontroller)")
+          f" ({talt[0] - len(fejl)}/{talt[0]} kontroller)")
     return 1 if fejl else 0
 
 
@@ -305,7 +384,7 @@ def main(argv: list[str] | None = None) -> int:
     if fund:
         print(f"\npro-table: RØD — {len(fund)} fund")
         return 1
-    print(f"pro-table: GRØN — {SIDER} produktsider har den samme "
+    print(f"pro-table: GRØN — {PRODUKTSIDE} produktsider har den samme "
           f"to-rækkers-tabel, tegnet af katalogen")
     return 0
 

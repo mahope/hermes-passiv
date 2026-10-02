@@ -80,6 +80,10 @@
             ]
           }
         }
+      ],
+      "own_pages": [
+        "site/clean-copy.html",
+        "site/da/clean-copy.html"
       ]
     },
     "deskuptime-pro": {
@@ -219,7 +223,11 @@
       "devices_word": {
         "en": "machines",
         "da": "maskiner"
-      }
+      },
+      "own_pages": [
+        "site/deskuptime/index.html",
+        "site/da/deskuptime/index.html"
+      ]
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
@@ -373,7 +381,11 @@
       "scope": {
         "en": "per website",
         "da": "pr. website"
-      }
+      },
+      "own_pages": [
+        "site/compliance-report.html",
+        "site/da/compliance-report.html"
+      ]
     },
     "page-profile-pro": {
       "name": "Page Profile Pro",
@@ -494,6 +506,10 @@
             ]
           }
         }
+      ],
+      "own_pages": [
+        "site/page-profile.html",
+        "site/da/page-profile.html"
       ]
     },
     "eucomply-dpa": {

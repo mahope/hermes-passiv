@@ -147,7 +147,8 @@ def beløb(nøgle: str, produkt: dict, lang: str, perioder: dict) -> str:
     return pris
 
 
-def celler(nøgle: str, produkt: dict, lang: str, perioder: dict) -> tuple[str, str, str, str, str]:
+def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
+           side_free: list | None = None) -> tuple[str, str, str, str, list]:
     """`(gratis-funktioner, pro-funktioner, gratis-pris, pro-pris, noter)`.
 
     Kolonnerne er gratis og Pro, fordi det er den form `check_stripe_ctas.py`
@@ -155,15 +156,23 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict) -> tuple[str, 
     Funktionerne er katalogens, så en kunde ikke kan betale for noget der
     ikke står her.
 
+    `side_free` er sidens **egne** frie funktioner, og den bruges kun af en
+    side der ikke er produktets egen (dom 6 i `check_pro_table.py`). Grunden
+    er målt 2/10: `page-profile-pro`s liste er skrevet til `page_profile.py`
+    — historik, terminalrapport, score og karakter — mens browseren på
+    `/url-inspector` ingen af delene har. Uden dette argument ville den have
+    tegnet CLI-funktioner ind på en side der ikke kører CLI'en.
+
     Noterne (livstidspris og antal maskiner) ligger i **én** linje under
     tabellen. Målt 2/10 i browseren: inde i den smalle prismødre blev cellen
     260-330 px høj på telefon, fordi hver note skulle brydes i 120 px.
     """
     t = TEKST[lang]
 
-    def punkter(nøgle_fil: str) -> str:
+    def punkter(nøgle_fil: str, kilder: list | None = None) -> str:
         ud = []
-        for feature in produkt.get(nøgle_fil) or []:
+        for feature in (kilder if kilder is not None
+                        else (produkt.get(nøgle_fil) or [])):
             labels = (feature.get("labels") or {})
             # Katalogens `labels` er en ordliste over *alternative*
             # skrivemåder af den samme funktion — `check_stripe_ctas.py`
@@ -193,7 +202,7 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict) -> tuple[str, 
             ord_ = "devices" if lang == "en" else "enheder"
         noter.append(t["devices"].format(n=maskiner, word=ord_))
 
-    return (f"<ul>{punkter('free_features')}</ul>",
+    return (f"<ul>{punkter('free_features', side_free)}</ul>",
             f"<ul>{punkter('pro_features')}</ul>",
             f'<span class="pro-price">{t["free_price"]}</span>'
             f'<span class="pro-note">{h(t["free_note"])}</span>',
@@ -202,12 +211,12 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict) -> tuple[str, 
 
 
 def blok(nøgle: str, produkt: dict, lang: str, perioder: dict,
-         anker_id: str = "") -> str:
+         anker_id: str = "", side_free: list | None = None) -> str:
     """Den færdige blok. Determinisme er kravet: porten sammenligner bytes."""
     t = TEKST[lang]
     id_attr = f' id="{h(anker_id)}"' if anker_id else ""
     gratis, pro, gratis_pris, pro_pris, noter = celler(
-        nøgle, produkt, lang, perioder)
+        nøgle, produkt, lang, perioder, side_free)
     linjer = [
         START,
         '<div class="table-wrap">',
@@ -251,7 +260,8 @@ def dom(catalog: dict) -> list[str]:
             continue
         nøgle = side["product"]
         forventet = blok(nøgle, side["product_obj"], side["lang"], perioder,
-                         side.get("anchor") or "").strip()
+                         side.get("anchor") or "",
+                         side.get("free_features")).strip()
         if områder[0].strip() != forventet:
             fund.append(f"{rel}: blokken er ikke tegnet af katalogen "
                         f"(kør `python3 tools/pro_table.py --apply`)")
@@ -275,7 +285,7 @@ def anvend(catalog: dict) -> int:
         if antal > 1:
             raise SystemExit(f"pro-table: {rel} har {antal} pro-table-områder")
         ny = blok(side["product"], side["product_obj"], side["lang"], perioder,
-                  side.get("anchor") or "")
+                  side.get("anchor") or "", side.get("free_features"))
         ny_html = EJER_RE.sub(lambda _m: ny, html, count=1)
         if ny_html != html:
             fil.write_text(ny_html, encoding="utf-8")

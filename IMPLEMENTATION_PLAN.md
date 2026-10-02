@@ -1,25 +1,23 @@
 # STATUS
 
-- **Næste opgave: 13 værktøjssider sælger kun efter et resultat.** Alle 13 har
-  et pro-kort med katalogens købslink, men ingen af dem har den to-rækkers
-  gratis-mod-Pro-tabel fra `/scan` — læseren skal købe uden at have set hvad
-  Pro gør. Ratchet: hver side ind i `pro_table_pages` i
-  `tools/stripe_catalog.json`, dømt af `tools/check_pro_table.py`.
-- **Gratis mod Pro står nu ét sted på alle fire produktsider** (EN + DA).
-  Baseline 2/10 før: `page-profile` havde et ni-rækkers gitter med
-  «$0 forever / $19/year / $39 once», `deskuptime` et andet med «19 USD once»,
-  `clean-copy` to prosa-afsnit, `compliance-report` én linje. Nu er tabellen
-  tegnet af `tools/pro_table.py` fra `tools/stripe_catalog.json`, så beløb,
-  periode og funktioner ikke kan glide fra Stripe, og `check_pro_table.py`
-  dømmer hver blok mod samme kilde (11/11 selvtest).
-- **Tre fund undervejs, samme opgave.** (a) `check_stripe_ctas.py` dømte kun
-  **kolonne**-tabeller, så page-profile så ud til slet ikke at sammenligne
-  gratis og Pro da gitteret blev erstattet. (b) To selftest-mutationer lå på
-  de håndskrevne tabeller i `page-profile` og `da/compliance-report` — de får
-  nu deres egen syntetiske kryds-tabel, så reglen ikke er afhængig af hvilken
-  markup produktsiderne lige nu har. (c) `interval`-labelen «30-second polling
-  interval» gav en falsk alarm på `/blog/desktop-website-monitor-cli` («minimum
-  60-second interval»); den hedder nu «Poll every 30 seconds».
+- **Næste opgave: 13 værktøjssider, og de må ikke låne produktets liste.**
+  Målt 2/10: `page-profile-pro`s fem frie funktioner peger alle på
+  `page_profile.py` (historik, terminalrapport, score), mens browseren på
+  `/url-inspector` ingen af delene har; `eucomply-pro`s liste er
+  `compliance-report.html`s egen tjekrække. Dom 6 i `check_pro_table.py`
+  (selftest 16/16) kræver `kind: "tool"` + egne `free_features` med `where`
+  på sidens egen fil. Ratchet: `own_pages` pr. produkt i katalogen.
+- **CEO-kø punkt 0 er færdigt** — rettet i `5693853`, målt på den levende rute:
+  `GET /api/url-inspect?url=` → 200, 202 på `/thanks` siger «not confirmed
+  yet», `net.js:47` gør 429 endelig, og et 502 fra OpenRouter giver kvoten
+  tilbage (`_worker.js:911-916`), så genkaldet er gratis. SSRF-værnet dækker
+  mål og hvert hop.
+- **Gratis mod Pro står ét sted på alle fire produktsider** (EN + DA),
+  tegnet af `tools/pro_table.py` fra `tools/stripe_catalog.json` — så beløb og
+  periode ikke kan glide fra Stripe. Baseline 2/10 før: fire sider, fire
+  svar (håndskrevet gitter, «19 USD once», prosa, én linje). Undervejs:
+  `check_stripe_ctas.py` dømte kun kolonne-tabeller, så den så slet ingen
+  sammenligning da gitteret blev erstattet.
 - **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
