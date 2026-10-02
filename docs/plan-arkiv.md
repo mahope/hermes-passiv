@@ -5477,3 +5477,20 @@ fund, `stripe-worker` 354/354, `check_inline_js` 0). `check_built_css`,
 `check_heading_levels`, `check_contrast_sampling` grønne. Chromium 390/1280 px
 lys+mørk på 8 sider: 0 px vandret scroll, og de seks rettede regler matcher de
 værdier siderne havde bedt om.
+
+## 3/10 — bogbanneret (flyttet fra STATUS, dækket af DEPLOY OK 3/10)
+
+- **Bogbanneret lovede en betalt vare gratis, og ingen port så det.** Fund 3/10:
+  gdpr-banneret skrev «asks for the roles **and the annexes**», mens
+  `/dpa-generator` siger **to steder** at annexerne er det den betalte template
+  *har*. Nu siger teksten hvad værktøjet faktisk gør. Ny ratchet `paid_only_terms`
+  læser den betalte liste fra den linkede sides **kilde**: målt **1 fund på 6
+  bøger**, præcis gdpr-banneret, ingen falske fund på de andre fem.
+- **Bannerknappen var 120 × 42 px, to pixel under kravet.** Nu `min-height:44px`:
+  målt **124 × 44 px** i lys og mørk ved 390 og 1280 px, 0 px vandret scroll. Min
+  første måling gav 120 × 62 og var **min egen fejl** — `style.css` loader ikke
+  over `file://`, så `box-sizing: border-box` (style.css:143) ikke var med og
+  min-height lagde oveni padding. Målt igen over HTTP. Bemærk fra reviewen:
+  `_design.md` findes ikke i repoet, så 44 px-kravets kilde i fundet peger på en
+  fraværende fil — valgt `min-height` over `padding` netop fordi `line-height`
+  er arvet og derfor kan glide.

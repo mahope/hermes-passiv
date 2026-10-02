@@ -1458,6 +1458,12 @@ function mutated(path, from, to) {
     body: {
       ok: true, url: 'https://example.com', scanned_url: 'https://example.com/kontakt',
       pages_checked: 6, score: 90, grade: 'A', passed: 9, total: 10, results: {},
+      // Svarformen sender begge tal (site/_worker.js:3118 og :3125), så et
+      // svar uden `pages_read` findes ikke i virkeligheden. Her læses alle seks
+      // kald — så de to tal er lige, og dommen på «6 … læst» kan slås.
+      pages_read: ['https://example.com/kontakt', 'https://example.com/privatliv',
+        'https://example.com/terms', 'https://example.com/cookie',
+        'https://example.com/imprint', 'https://example.com/om-os'],
     },
   };
   for (const [path, lang] of PAGES) {
@@ -1809,6 +1815,48 @@ function mutated(path, from, to) {
     ok(`mutation: ${a.sprog} artikel uden mount() fanges`,
       (d.get('art-result') || {}).hidden !== false, 'mutationen gav stadig et resultat');
   }
+}
+
+// --------------------------------------------------------------------------
+// «Sider læst» skal være det tal listen kan efterprøve — ikke antallet kald.
+// --------------------------------------------------------------------------
+// `pages_checked` er antallet *kald* og medtager 404'er, fordi et kald der
+// svarer 404 også er et kald (site/_worker.js:3119-3124). `pages_read` er
+// listen kunden kan se. Overblikket skrev før dette det første tal under
+// ordene «pages read» / «sider læst», mens `<details>` lige under viste det
+// andet — så samme ord med to tal i en rapport der sendes videre til en kunde.
+const MISMATCH = {
+  ok: true, url: 'https://example.com', scanned_url: 'https://example.com/',
+  score: 90, grade: 'A', passed: 9, total: 10, results: {},
+  // 9 kald, hvor 4 svarede 404: kun 5 sider blev læst.
+  pages_checked: 9,
+  pages_read: ['https://example.com/', 'https://example.com/privatliv',
+    'https://example.com/terms', 'https://example.com/cookie', 'https://example.com/imprint'],
+};
+
+async function scanResultsHtml(path, source) {
+  const { fetchImpl } = responses([{ status: 200, body: MISMATCH }]);
+  const { sandbox, nodes } = loadPage(path, fetchImpl, source ? { source } : {});
+  nodes.get('urlInput').value = 'example.com';
+  await sandbox.scan();
+  await sleep(30);
+  return (nodes.get('results') || {}).innerHTML || '';
+}
+
+for (const [path, ord] of [['site/compliance-site-check.html', 'pages read'], ['site/da/compliance-site-check.html', 'sider læst']]) {
+  const html = await scanResultsHtml(path);
+  ok(`${path.includes("/da/") ? "DA" : "EN"}: «sider læst» er de 5 læste sider, ikke de 9 kald`,
+    new RegExp(`5 ${ord}`).test(html) && !new RegExp(`9 ${ord}`).test(html),
+    ` fandt: ${(html.match(new RegExp(`[^·]{0,24}${ord}[^<]{0,12}`, 'g')) || []).join(' | ') || '—'}`);
+
+  // Polaritet: samme dom på den gamle kode. Mutationen genskaber præcis det
+  // felt den gamle linje læste, i den rigtige fil — ikke en håndskrevet kopi.
+  const egen = readFileSync(join(root, path), 'utf8');
+  const gammel = egen.replace('var laeste = (data && data.pages_read) || [];',
+    'var laeste = { length: data.pages_checked };');
+  ok(`${path.includes("/da/") ? "DA" : "EN"}: mutationen (pages_checked) er fanget`,
+    gammel !== egen && new RegExp(`9 ${ord}`).test(await scanResultsHtml(path, gammel)),
+    'mutationen gav ikke det gamle tal, så dommen kan ikke se forskellen');
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

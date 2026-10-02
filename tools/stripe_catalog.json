@@ -2147,7 +2147,7 @@
       "free_features": [
         {
           "id": "nine-checks",
-          "where": "site/compliance-site-check.html:512-517 «About each check» lister præcis de ni tjek der kom tilbage i data.checks, og :299 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
+          "where": "site/compliance-site-check.html:518-523 «About each check» lister præcis de ni tjek der kom tilbage i data.checks, og :299 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
           "labels": {
             "en": [
               "The 9 compliance checks on the page you submit"
@@ -2165,7 +2165,7 @@
         },
         {
           "id": "score-grade",
-          "where": "site/compliance-site-check.html:469-471 scoren og karakteren skrives i DOM'en uden licens",
+          "where": "site/compliance-site-check.html:463-472 scoren og karakteren skrives i DOM'en uden licens",
           "labels": {
             "en": [
               "A score and a grade for every site you paste"
@@ -2222,7 +2222,7 @@
       "free_features": [
         {
           "id": "nine-checks",
-          "where": "site/da/compliance-site-check.html:510-515 «Om hvert tjek» lister præcis de ni tjek der kom tilbage i data.checks, og :298 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
+          "where": "site/da/compliance-site-check.html:516-521 «Om hvert tjek» lister præcis de ni tjek der kom tilbage i data.checks, og :298 fetchScan('/api/compliance-scan') er det ene kald hele rapporten kommer fra",
           "labels": {
             "da": [
               "De 9 compliance-tjek på den side du indsætter"
@@ -2240,7 +2240,7 @@
         },
         {
           "id": "score-grade",
-          "where": "site/da/compliance-site-check.html:468-470 scoren og karakteren skrives i DOM'en uden licens",
+          "where": "site/da/compliance-site-check.html:462-471 scoren og karakteren skrives i DOM'en uden licens",
           "labels": {
             "da": [
               "En score og en karakter for hvert website du indsætter"

@@ -1,15 +1,14 @@
 # STATUS
-- **Bogbanneret lovede en betalt vare gratis, og ingen port så det.** Fund 3/10:
-  gdpr-banneret skrev «asks for the roles **and the annexes**», mens
-  `/dpa-generator` siger **to steder** at annexerne er det den betalte template
-  *har*. Nu siger teksten hvad værktøjet faktisk gør. Ny ratchet `paid_only_terms`
-  læser den betalte liste fra den linkede sides **kilde**: målt **1 fund på 6
-  bøger**, præcis gdpr-banneret, ingen falske fund på de andre fem.
-- **Bannerknappen var 120 × 42 px, to pixel under kravet.** Nu `min-height:44px`:
-  målt **124 × 44 px** i lys og mørk ved 390 og 1280 px, 0 px vandret scroll. Min
-  første måling gav 120 × 62 og var **min egen fejl** — `style.css` loader ikke
-  over `file://`, så `box-sizing: border-box` (style.css:143) ikke var med og
-  min-height lagde oveni padding. Målt igen over HTTP.
+- **Scanneren skrev «9 sider læst» over en liste på 5 sider.** Fund 3/10:
+  overblikket skrev `pages_checked` under ordene «pages read» / «sider læst»,
+  men `pages_checked` er antallet *kald* og medtager 404'er — `pages_read` er
+  den kunden kan efterprøve, og `<details>` lige under viste den. Samme ord,
+  to tal, i en rapport der sendes videre til en kunde. `_worker.js:3119-3124`
+  siger udtrykkeligt at de to ikke må forveksles. Nu begge sprog + 4 nye domme
+  i `scan-clients.test.mjs` (**433/433**) med polaritet målt ved mutation af
+  den rigtige fil. Fund undervejs: den eksisterende dom på samme tal havde et
+  svar **uden** `pages_read`, som serveren aldrig sender — fikset, ellers
+  dømmer den intet.
 - **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` + mutation
   kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er endeligt,
   `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
@@ -22,9 +21,21 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: bogbanneret lover ikke den betalte template, knap 124x44 ceo/book-cta-ansvar 2026-10-03 00:55`
+- `VERIFICÉR DEPLOY: scanneren siger «5 sider læst» og ikke «9 kald» ceo/scan-sider-laest-tal 2026-10-03 01:14`
 
-- `VERIFICÉR DEPLOY: byggetagen erklærer alle 154 sidede selectors ceo/pagepass-owned-css 2026-10-03 00:05`
+- **`DEPLOY OK 2026-10-03` — begge forrige noter er live, målt på indhold.**
+  `build-info.json` står på **`34e9c2d`** på alle tre domæner.
+  - Bogbanneret (34e9c2d): `/books/gdpr-for-agencies/` har **0** forekomster af
+    «annex», og banneret siger nu præcis «the free DPA generator asks who is
+    controller and who is processor». Siden er byte-identisk med `dist/`.
+  - Byggetagen (158715e): live `style.css` er **byte-identisk** med
+    `dist/mahope.tools/style.css`, og `details.faq summary { cursor: pointer }`,
+    `.gen legend { font-weight: 700 }`, `.gen label`, `.book-card-body
+    { min-width: 0 }` og `.book-header .tagline` står der. `.plat-links a` er en
+    grupperet regel (linje 511), ikke en egen — pillen er der.
+  - Målt undervejs, ikke et fund: 6 af 7 bogsider er byte-identiske med
+    `dist/`; `nis2-for-agencies` afviger kun fordi **Cloudflare** har
+    obfuskeret en mailadresse til `data-cfemail`. Ikke en gammel udgivelse.
 
 - **`DEPLOY OK 2026-10-02` — `ceo/site-icons-h1` er live, målt på indhold.**
   `build-info.json` står på **`692d7b2`** (squash-sha'en). De tre sider der ligger
@@ -157,6 +168,18 @@
   på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en
   ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har
   bedt om.
+- **🟡 Skal det frie flerstedes-tjek få en kundeklar rapport? Det er den
+  betalte linje.** Målt 3/10 på `/compliance-site-check`: feltet tager fem
+  URL'er («handy when you are auditing several client sites»), og
+  `downloadReport()` giver **én** `.md` med alle fem sider i. Et bureau kan
+  altså ikke sende hver kunde sin side — kun samlet. Men pro-tabellen på
+  samme side siger at Pro giver «The findings as a PDF report you can hand a
+  client», og `/compliance-report` sælger præcis det. En gratis
+  kundeklar rapport ville derfor tage en betalt vare, så jeg har **ikke** bygget
+  den. Tre veje: (a) behold som nu — gratis er de ni tjek, betalt er leverancen;
+  (b) giv gratisværktøjet én `.md` pr. side i ét klik, og flyt Pro-teksten til
+  «hele sitet + de 18 server-tjek»; (c) gør det til det Pro-produkt, det er.
+  Din beslutning — den flytter en $79-årslinje.
 - **🟡 `indexnow_ping.sh` kaldes aldrig.** Målt 2/10: `grep -rn indexnow
   .github/workflows/ build_sites.py` giver **0 træffere** — skripten er skrevet,
   nøgle-filen serveres korrekt, men intet udløser den. Bing og Google er de to
@@ -389,3 +412,12 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    `/site-icons`' egen `<h1>` er «site-icons» — ny opgave 8. Bevidst valgt **ikke**
    at lægge banneret i heroen: bogsiden har allerede bogens download-CTA, og
    bannerets plads i kapitlerne er der, hvor læseren lige er færdig.
+20. **Én rapport pr. kunde i stedet for én fil med alle kunder i.** Hvem: bureauer
+    og webbureauer, der er målgruppen for `/compliance-site-check`’s egen
+    teksthint («auditing several client sites»). Tal: rapporter pr. kørsel med
+    flere sider (baseline **0** separate — kun samlet `.md`; målt på koden 3/10).
+    Accept: én `.md` pr. side i ét klik, hver med sit eget filnavn på kundens
+    domæne. Datagrund: feltet er bygget til fem sider og rapporten skriver alle
+    fem i én fil, så det er en funktion der mangler, ikke en der skal opfindes.
+    **Åbent:** se ❓ — pro-tabellen på samme side lover kundeklar rapport som
+    den betalte vare, så jeg kan ikke bygge den gratis uden dit valg.

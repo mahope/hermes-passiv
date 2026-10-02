@@ -461,8 +461,14 @@ function renderResults(rapporter, fejl) {
   var html2 = '<div class="result-card" id="site-' + (i + 1) + '">';
   html2 += '<div class="score-row">';
   html2 += '<div class="score-badge ' + data.grade + '">' + esc(data.grade) + '</div>';
+  // «N pages read» skal være det tal listen lige under kan efterprøve. Før dette
+  // stod her `pages_checked`, som er antallet *kald* — og det medtager 404'er,
+  // fordi et kald der svarer 404 også er et kald (site/_worker.js:3119-3124).
+  // Så skrev siden «9 pages read» over en liste på 5, i en rapport der sendes
+  // videre til en kunde. Samme ord, to tal, og det forkerte af de to.
+  var laeste = (data && data.pages_read) || [];
   html2 += '<div class="score-detail"><strong>' + data.score + '/100</strong> &middot; ' + data.passed + '/' + data.total + ' checks passed &middot; ' + esc(scannetSide(data))
-    + (data.pages_checked > 1 ? ' &middot; ' + data.pages_checked + ' pages read' : '')
+    + (laeste.length > 1 ? ' &middot; ' + laeste.length + ' pages read' : '')
     + (data.not_checked ? ' &middot; ' + data.not_checked + ' not checked' : '') + '</div>';
   // «2/9 checks passed» uden denne linje læses som «7 fejl». Når scanneren
   // ikke nåede at læse alle de juridiske sider, skal det stå som sit eget.
