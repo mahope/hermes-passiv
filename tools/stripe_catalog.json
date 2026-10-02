@@ -714,6 +714,7 @@
       "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
+        "$0",
         "$19",
         "$39"
       ],
@@ -1745,6 +1746,54 @@
       "why": "hovedsiden: første skridt i købsrejsen, og den eneste sted en læser kan se gratis mod Pro før knappen"
     },
     {
+      "path": "site/clean-copy-tool.html",
+      "product": "clean-copy-pro",
+      "lang": "en",
+      "why": "Webværktøjet er den eneste måde at bruge Clean Copy uden installation, og dets pro-kort siger «See what Pro adds before you buy» og linker til #free-vs-pro. Målt 2/10: tabellen under det anker var den ENESTE gratis-mod-Pro-tabel i familien der lå uden for pro_table_pages — skrevet i hånden i markup med «19 USD per year», så ingen port dømte den og prisen var ikke katalogens.",
+      "kind": "tool",
+      "layout": "block",
+      "free_features": [
+        {
+          "id": "modes",
+          "where": "site/clean-copy-tool.html:526-528 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
+          "labels": {
+            "en": [
+              "The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text"
+            ]
+          }
+        },
+        {
+          "id": "unlimited",
+          "where": "site/clean-copy-tool.html:156 input-box er en hel textarea; serveren læser den ikke, den sender ingen tekst nogen steder",
+          "labels": {
+            "en": [
+              "No limit on how much text you paste"
+            ]
+          }
+        }
+      ],
+      "pro_features": [
+        {
+          "id": "batch",
+          "where": "site/clean-copy-tool.html:282 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
+          "labels": {
+            "en": [
+              "Batch conversion — many snippets at once, one per line"
+            ]
+          }
+        },
+        {
+          "id": "rules",
+          "where": "site/clean-copy-tool.html:490 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
+          "labels": {
+            "en": [
+              "Custom cleanup rules you define once, in the browser extension"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "path": "site/da/clean-copy.html",
       "product": "clean-copy-pro",
       "lang": "da",
@@ -2590,6 +2639,54 @@
             ],
             "da": [
               "Fundene som PDF-rapport, du kan give en kunde"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "site/url-inspector/index.html",
+      "product": "page-profile-pro",
+      "lang": "en",
+      "why": "Kortet dukker op efter ét URL-svar og siger «See what Pro adds before you buy», men siden havde ingen sammenligning — den pegede blot på /page-profile. Målt 2/10: 15 sider har et pro-card, 11 havde tabellen, og denne var en af de fire. Svaret skal komme fra samme katalogpost som /page-profile, ellers giver de to sider to svar om det samme produkt (dom 6).",
+      "kind": "tool",
+      "layout": "block",
+      "free_features": [
+        {
+          "id": "one-url",
+          "where": "site/url-inspector/index.html:161 pro-kortets h3 «This read one URL. A site is every URL.» — hele siden læser én adresse pr. kald",
+          "labels": {
+            "en": [
+              "One URL at a time — the redirect chain, response headers and SSL result"
+            ]
+          }
+        },
+        {
+          "id": "headers",
+          "where": "site/url-inspector/index.html:154-156 headers-table med tbody#headers-body fylder hvert svarshoved",
+          "labels": {
+            "en": [
+              "Every response header, plus the raw response"
+            ]
+          }
+        }
+      ],
+      "pro_features": [
+        {
+          "id": "whole-site",
+          "where": "site/url-inspector/index.html:196-197 «walks the same redirect chain and the same security headers across a whole site»",
+          "labels": {
+            "en": [
+              "The same checks across a whole site, not one address"
+            ]
+          }
+        },
+        {
+          "id": "report",
+          "where": "site/url-inspector/index.html:181 pro-kort «A report you can send to a client. The same headers, redirects and SSL result written as one HTML file.»",
+          "labels": {
+            "en": [
+              "The same findings as an HTML report you can hand to a client"
             ]
           }
         }

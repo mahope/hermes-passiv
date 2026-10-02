@@ -4778,3 +4778,37 @@ på den **engelske** `/pricing`. Dobbelt gennemgang af diff'en fandt den før
 commit; porten havde været rød hele tiden, men var ikke kørt igen efter
 genskabelsen. Lært op i commit-bodyen, fordi det er den fejlform de otte
 forgangne revisioner her har fundet.
+
+## STATUS 2/10 — de to poster der blev kondenseret (kl. ~12)
+
+**Donationsprisen læses af katalogen på alle fire sider** (`19e59b2`, DEPLOY OK
+2/10 kl. 11). `/pricing`, `/da/pricing`, `/support` og `/da/support` siger «fra
+10 kr.». Fundet fra review 2/10 var rigtigt: `/pricing` lovede håndskrevet
+«Any amount» om en donation, katalogen siger «fra 10 kr.» for præcis den vare,
+og `/support` sagde «You choose the amount» — ingen port så det. Ny dom 5 i
+`check_pricing_page.py` dømmer hvert beløb i den **byggede** priscelle mod den
+vares egen katalogpost, og `check_donation_paths.py` dømmer at donationssiderne
+siger `price_min`. Selftest 11/11 og 4 nye mutationer.
+
+**`/pricing` er bygget — den ene side med alle 12 priser** (`b0da8ad`) fra
+`tools/stripe_catalog.json`, EN + DA, med gratis-mod-Pro pr. række. Siden
+**sælger ikke**: den linker til hver vares egen købsside, så «én købsvej pr.
+produkt» holder. Ny port `check_pricing_page.py` (5 dom + 9 mutationer),
+`check_pro_table.py --self-test` 24/24.
+
+**Omgransning af pro-table-porten ved denne opgave.** `/clean-copy-tool` havde den
+eneste **håndskrevne** gratis-mod-Pro-tabel i hele familien — otte rækker i markup
+med «19 USD per year», altså uden for `pro_table_pages` og uden port. Ratcheten
+på værktøjssider steg derfor 11 → 13, og de to nye poster i katalogen har hver
+to frie og to Pro-funktioner med et `where`-belæg, der `check_catalog_where.py`
+kan slå op (112 belæg i alt). `/url-inspector` havde **ingen** tabel, kun «See
+what Pro adds before you buy» og et link til `/page-profile`; den læser nu
+`page-profile-pro`-posten (3 maskiner, `$19/år`), så de to sider ikke kan svare
+forskelligt om samme produkt. Ingen danske tvillinger findes for de to sider, så
+begge poster er EN-only med vilje.
+
+Den håndskrevne danske historikkommentar, der forklarede skiftet, blev fjernet fra
+`site/clean-copy-tool.html` igen — den ville blive **serveret** til læsere, og
+den gjorde planens egen VERIFICÉR-påstand («0 «19 USD per year»») falsk: den
+blev målt til 1 forekomst i den byggede side. Begrundelsen bliver i
+`tools/check_pro_table.py`, hvor den hører hjemme.

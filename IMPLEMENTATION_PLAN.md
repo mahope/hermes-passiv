@@ -1,23 +1,14 @@
 # STATUS
 
-- **Donationsprisen læses nu af katalogen på alle fire sider** — `/pricing`,
-  `/da/pricing`, `/support` og `/da/support` siger «fra 10 kr.». Målt 2/10:
-  `/pricing` lovede håndskrevet «Any amount» om en donation, katalogen siger
-  «fra 10 kr.» for præcis den vare, og `/support` sagde «You choose the
-  amount». Fundet fra review 2/10 var rigtigt: ingen port så det. Ny dom 5 i
-  `check_pricing_page.py` dømmer hvert beløb i den **byggede** priscelle mod
-  den vares egen katalogpost, og `check_donation_paths.py` dømmer at
-  donationssiderne siger `price_min`. Selftest 11/11 og 4 nye mutationer.
-- **`/pricing` er bygget — den ene side med alle 12 priser** fra
-  `tools/stripe_catalog.json`, EN + DA, med gratis-mod-Pro pr. række. Siden
-  **sælger ikke**: den linker til hver vares egen købsside, så «én købsvej pr.
-  produkt» holder. Ny port `check_pricing_page.py` (5 dom + 9 mutationer).
-- **Alle 19 sider har gratis mod Pro i samme tabel** fra `tools/stripe_catalog.json`.
-  `check_pro_table.py` + `check_catalog_where.py` (112 belæg, målt 2/10: 13 lå
-  2–10 linjer væk) kører i gaten.
-- **Livstidsprisens købsvej er prøvet af og forkastet — to porte siger nej.**
-  Målt 2/10: de 17 pro-table-sider viste «$149 once per website — lifetime»
-  uden at linke til `lifetime.payment_link`. Se punkt 10 i feature-kø.
+- **To værktøjssiders gratis-mod-Pro-tabel kommer fra katalogen** (`ceo/pro-tabel-webtool`).
+  `/clean-copy-tool` havde den eneste **håndskrevne** tabel i familien («19 USD per
+  year», uden port), `/url-inspector` havde ingen. Målt 2/10: 11 → 13 sider.
+- **Donationsprisen læses af katalogen på alle fire sider** (`19e59b2`, DEPLOY OK
+  kl. 11) — «fra 10 kr.» i stedet for «Any amount». Dom 5 + `check_donation_paths.py`.
+- **`/pricing` er bygget** (`b0da8ad`) — alle 12 priser fra katalogen, EN + DA.
+- **Alle 21 sider har gratis mod Pro i samme tabel.** `check_pro_table.py`
+  (8 produktsider + 13 værktøjssider) + `check_catalog_where.py` (112 belæg).
+- **Livstidsprisens købsvej er prøvet af og forkastet** — 17 sider, to porte siger nej.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 2/10:** 0 åbne PR'er. **Branch-tjek 2/10:** ingen 14 dage gamle.
@@ -38,17 +29,24 @@
   **indhold**, ikke på HTTP 200: `/pricing` og `/da/pricing` serverer hver 14
   `data-product`-rækker, 3 `data-lifetime`-rækker, **0** `buy.stripe.com` og
   `pricing:start` 1 gang pr. fil; `build-info.json` står i `b0da8ad`.
+- **DEPLOY OK 2/10 (kl. 11).** `ceo/donation-pris-fra-katalog` (`19e59b2`) er ude,
+  målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
+  `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
+  `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
 
-- `VERIFICÉR DEPLOY: donationsprisen fra katalogen på /pricing, /da/pricing,
-   /support og /da/support 2026-10-02 ceo/donation-pris-fra-katalog` — måles på
-   **indhold**: `/pricing` har `<td>From 10 kr.</td>` i rækken
-   `support-mahope-oss`, `/da/pricing` har `<td>fra 10 kr.</td>`, `/support` har
-   «Any amount from 10 kr.» og `/da/support» «Valgfrit beløb fra 10 kr.», og
-   «Any amount» / «Valgfrit beløb» står **ikke** på nogen af dem. Dom 1:
-   `check_pricing_page.py` grøn (12 produkter, 2 sider). Dom 2:
-   `--self-test` 11/11. Dom 3: `check_donation_paths.py` grøn, `--self-test`
-   alle kontroller bestået. Dom 4: `build_sites.py`, `seo_check.py`,
-   `stripe-worker.test.mjs` og `check_inline_js.py` grønne.
+- `VERIFICÉR DEPLOY: gratis-mod-Pro-tabellen på /clean-copy-tool og /url-inspector
+   2026-10-02 ceo/pro-tabel-webtool` — måles på **indhold**: `/clean-copy-tool`
+   har `pro-table:start` 1 gang, **0** «19 USD per year» og `$19/year` i
+   prisrækken; `/url-inspector` har `pro-table:start` 1 gang og `$19/year` +
+   `Three machines per licence` i noten. Dom 1: `check_pro_table.py` grøn
+   (8 produktsider + 13 værktøjssider). Dom 2: `--self-test` 24/24. Dom 3:
+   `build_sites.py` (329 filer, 264 html, 0 brudte), `seo_check.py` (314 sider,
+   0 fund), `stripe-worker.test.mjs` (352/352) og `check_inline_js.py` grønne.
+   Dom 4: hele `quality_gate.py` **136 steps grøn** — den fandt to fejl i det
+   ubrugte arbejde, begge rettet her: `$0` stod i den nye fri kolonne uden at
+   `offers[].prices` for `clean-copy-tool` erklærede det (delt med `clean-copy`
+   og `deskuptime`, som erklærer `$0` af samme grund), og fire nye katalog-`where`
+   havde ingen `fil:linje`. Dom 5: `check_catalog_where` 120 funktioner grøn.
 
 ## Åbne opgaver
 

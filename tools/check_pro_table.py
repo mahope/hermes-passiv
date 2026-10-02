@@ -63,7 +63,17 @@ PRODUKTSIDE = 8
 # `/contrast-checker` og `/security-headers-check` i begge sprog. Ratchet'en er
 # derfor på elleve, så en side der mister sin tabel eller kommer i katalogen uden
 # den skal være rød.
-VÆRKTØJSSIDE = 11
+#
+# Målt 2/10, siddende på de to værktøjssider der lå udenfor ratchet'en helt:
+# `/clean-copy-tool` havde en gratis-mod-Pro-tabel, men en **håndskrevet** —
+# otte rækker i markup med «19 USD per year» — altså to filer i katalogen
+# ville have svaret forskelligt, og ingen af dem blev dømt. Den er nu tegnet af
+# `pro_table.py` fra katalogens egen `clean-copy-pro`-post, ligesom
+# `/clean-copy` og `/da/clean-copy`, så de tre sider giver ét svar.
+# `/url-inspector` havde **ingen** tabel, kun «See what Pro adds before you
+# buy» og et link til `/page-profile`; den læser nu `page-profile-pro`-posten,
+# så de to sider heller ikke kan svare forskelligt.
+VÆRKTØJSSIDE = 13
 
 
 def _scripts(rel: str) -> set[str]:
