@@ -4659,3 +4659,66 @@ hopper en time hvert 30. ms. Rettelsen er to ting: sløjferne i
 et ur. Målt ved mutation: med pinnet ur fjernet bliver det nye strak rødt med CI's
 egen fejltekst, 352/352 med det pinne. Konsekvens af det røde run: `543a734` er
 seneste commit på live, så de to seneste commits er ikke deployet.
+
+## 2/10 — Livstidsprisen tabte sit omfang (fund fra review, `ceo/livstid-scope`)
+
+**Fejlen.** `tools/stripe_catalog.json` sælger `eucomply-pro`s livstidsudgave som
+`"$149 engang pr. website"` med `price_note: "one-time lifetime license per
+website"`. `pro_table.celler()` kaldte livstids-skabelonen med `amount` og
+`limit` alene, så noten under tabellen skrev `$149 once — lifetime, first 100
+purchases` — uden omfang. `beløb()` læste derimod `produkt["scope"]` til
+årsprisen, så den samme tabel sagde `$79/year per website`.
+
+**Målt.** 13 sider skrev noten, og de er præcis de 13 `eucomply-pro`-sider
+(2 produktsider + 11 værktøjssider). På `/compliance-report` (EN og DA) stod den
+håndskrevne tekst lige over den genererede note: `$149 once per website` i
+`.price-tag` og «$149 én gang pr. website, for altid.» i brødteksten — den
+genererede note modsag altså sin egen side. Scenariet: en køber vælger
+livstidsprisen fordi den ser ud til at dække mere end årsprisen og får en licens
+der kun gælder for ét website.
+
+**Rettelsen.** `pro_table.scope_tekst(produkt, lang)` læser katalogens omfang ét
+sted og bruges af både `beløb()` og livstidsnoten. Skabelonen fik `{scope}`, så
+den er `$149 once per website — lifetime` / `$149 én gang pr. website — livstid`.
+Produkter uden scope (`clean-copy-pro`, `page-profile-pro`) er byte-identiske
+før og efter — målt: 13 filer ændret, 13 indsættelser, 13 sletninger, præcis én
+linje pr. fil (noten).
+
+**Ny dom 3b** i `check_pro_table.py`: en livstidspris på en side der viser en
+scope-pris skal selv bære samme scope. Den læser omfanget i **priscellen** og
+ikke i katalogen, så den fanger også det tilfælde hvor nogen tager `{scope}` ud
+af skabelonen og kører `--apply` bagefter.
+
+**Selftest 24/24.** Mutationen ligger i generatorens skabelon, ikke på siden —
+lå den på siden, ville dom 1 (byte mod `pro_table.blok()`) være rød af sig selv,
+og porten ville være grøn ved konstruktion, præcis som fundet klagede over. Den
+sætter skabelonen tilbage til 2/10-versionen, kører `pro_table.anvend` på en
+kopi (ny `tools/check_pro_table.py::_tegn`, som flytter `pro_table.ROOT`) og
+kræver at dommen så bliver rød. Plus en negativ kontrol på den ægte side og en
+positiv på de genoptegnede sider.
+
+**Målt før rettelsen:** dom 3b var rød på præcis de 13 sider review målte.
+
+**Ikke et fund, men noteret:** livstidsprisen har sin egen `payment_link`
+(`28E5kC…`) som kun de to produktsider linker til. Knappen siger «$149 once»
+uden omfang, men ved siden af står der «pr. website» to gange, og den peger på
+et link hvor antal websites vælges ved betalingen.
+
+## 2/10 — STATUS kogt fra 33 til 24 linjer
+
+`tools/check_plan_status.py` (dom 2, højst 25 linjer) blev rød midt i
+opgaven om livstidsprisen, fordi min egen tilføjelse tog STATUS fra 25 til 33.
+To afsluttede bullets blev kogt sammen med den nye, og de to detaljer der
+faldt ud ligger her i stedet for at gå tabt:
+
+- **Ærligheden overlevede — målt 2/10.** Den genererede tabel skrev «Every page
+  of the site, not just the one you pasted», altså præcis den sætning
+  `scan-clients` holder i live («crawls the whole site … every page it finds»).
+  Rettelsen ligger i katalogen, så alle ni sider får den ærlige formulering.
+- **Hvilke ni sider** den nye tabel kom til: `/scan`, `/compliance-site-check`,
+  `/cookie-check`, `/contrast-checker` og `/security-headers-check` i begge
+  sprog — de havde en håndskrevet `.pro-list` der kun talte om Pro. Dom:
+  `check_pro_table.py` (8 produktsider + 11 værktøjssider).
+
+Målt efter kogningen: STATUS er 24 af 25 linjer, 6 punkter med tal hver, og
+planen er 15099 af 40000 tegn.

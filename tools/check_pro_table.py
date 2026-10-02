@@ -15,10 +15,14 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      side er alle røde, fordi de afviger fra `pro_table.blok()`.
   2. **To rækker**: en gratis og en Pro. Tabellen må ikke vokse til et andet
      gitter, for så er den igen en af fire måder at vise det samme på.
-  3. **Prisen skal være katalogens** — beløb fra `price_usd` og et ord fra
-     `billing_periods.words`, altså samme ordliste dom 4 i `check_own_prices.py`
-     bruger på købsknapper. Så kan «$19» ikke være årssubscription på den ene
-     side og engangskøb på den anden.
+3. **Prisen skal være katalogens** — beløb fra `price_usd` og et ord fra
+      `billing_periods.words`, altså samme ordliste dom 4 i `check_own_prices.py`
+      bruger på købsknapper. Så kan «$19» ikke være årssubscription på den ene
+      side og engangskøb på den anden.
+   3b. **Livstidsprisen skal have samme omfang som årsprisen i samme tabel.**
+      Fund fra review 2/10: priscellen skrev «$79/year per website» over en
+      note der sagde «$149 once — lifetime», altså «149 engang for alle
+      websites» — en licens der kun gælder for ét.
   4. **Hver funktion i katalogen skal stå i tabellen.** Ellers sælger siden
      noget den ikke viser, og det er præcis den fejl `check_stripe_ctas.py`
      målte på `/clean-copy-tool` og `/activate/`.
@@ -27,11 +31,13 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      det er det, der gjorde fire sider til fire svar.
 
     python3 tools/check_pro_table.py             # dom
-    python3 tools/check_pro_table.py --self-test # 21 kontroller
+    python3 tools/check_pro_table.py --self-test # 24 kontroller
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import re
 import shutil
 import sys
@@ -217,6 +223,35 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
             fund.append(f"{rel}: Pro-prisen nævner ingen af katalogens "
                         f"periodeord {sorted(set(tilladt_ord))[:4]}")
 
+        # 3b. Livstidsprisen skal have **samme omfang** som årsprisen i samme
+        #     tabel. Målt 2/10 af review: katalogen sælger `eucomply-pro`s
+        #     livstidspris som «$149 engang pr. website», og priscellen skrev
+        #     «$79/year per website» — men noten under tabellen skrev «$149 once
+        #     — lifetime», altså uden omfang, på 13 sider. Den naturlige læsning
+        #     af et par hvor den ene pris er afgrænset til ét website og den
+        #     anden ikke er afgrænset til noget er «149 engang for alle
+        #     websites», og så får køberen en licens der kun gælder for ét.
+        #     Dommen læser omfanget i **priscellen** og ikke i katalogen, så den
+        #     fanger også det tilfælde hvor nogen tager `{scope}` ud af
+        #     generatorens livstidsskabelon og kører `--apply` bagefter: dom 1
+        #     er grøn ved konstruktion, fordi den sammenligner katalog →
+        #     markup med den samme skabelon.
+        scope = produkt.get("scope")
+        omfang = (scope.get(lang) or "").strip() if isinstance(scope, dict) else ""
+        if omfang and isinstance(livstid, dict) and livstid.get("price_usd"):
+            noter = re.findall(r'<p class="pro-note">(.*?)</p>', blok, re.S)
+            livstidsnote = next((n for n in noter
+                                 if f"${livstid['price_usd']}" in n), "")
+            if omfang not in priscelle:
+                fund.append(f"{rel}: priscellen skriver ikke katalogens omfang "
+                            f"{omfang!r} for {nøgle}")
+            elif omfang not in livstidsnote:
+                fund.append(f"{rel}: livstidsprisen ${livstid['price_usd']} "
+                            f"står i en note uden omfang, mens priscellen over "
+                            f"den siger {omfang!r} — katalogen sælger også "
+                            f"livstidsprisen {omfang}, så noten læses som om "
+                            f"den gjaldt alle")
+
         # 4. Alle katalogens funktioner skal stå i tabellen.
         for nøgle_fil in ("free_features", "pro_features"):
             kilder = post.get(nøgle_fil) or produkt.get(nøgle_fil) or []
@@ -263,6 +298,23 @@ def _kopi(root: Path, muter) -> Path:
 
 def json_sider() -> list[str]:
     return [post["path"] for post in pro_table.load()["pro_table_pages"]]
+
+
+def _tegn(root: Path, catalog: dict) -> None:
+    """Kør `pro_table.anvend` på en kopi, med generatorens rod flyttet.
+
+    Mutationerne skal ramme **generatoren** og ikke siden, ellers ville dom 1
+    (byte for byte mod `pro_table.blok()`) være rød af sig selv, og selftesten
+    ville grønne uden at teste den dom den er skrevet for. Derfor kaldes den
+    samme `--apply` som en redaktør ville, og rodens `ROOT` peger på kopien.
+    """
+    gammel = pro_table.ROOT
+    pro_table.ROOT = root
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            pro_table.anvend(catalog)
+    finally:
+        pro_table.ROOT = gammel
 
 
 def self_test() -> int:
@@ -455,6 +507,35 @@ def self_test() -> int:
         if post["path"] != "site/text-on-image-checker.html"]}
     tjek("tabt værktøjsside er rød",
          any("værktøjssider" in f for f in dom(færre)), str(dom(færre)[:1]))
+
+    # 14. Livstidsprisen må ikke tabe omfanget (dom 3b). Mutationen ligger i
+    #     **generatorens skabelon**, ikke på siden: lå den på siden, ville dom 1
+    #     være rød af sig selv, og porten ville være grøn ved konstruktion —
+    #     præcis den fejl dommen er skrevet for. Så her sætter vi skabelonen
+    #     tilbage til den fra 2/10, tegner alle nitten sider forfra og spørger
+    #     så dommen.
+    ægte = (ROOT / "site/compliance-report.html").read_text(encoding="utf-8")
+    ægte_blok = pro_table.EJER_RE.search(ægte).group(0)
+    tjek("livstidsnoten på /compliance-report har omfanget med",
+         "$149 once per website" in ægte_blok, "negativ kontrol")
+    gemt = {lang: pro_table.TEKST[lang]["lifetime"] for lang in ("en", "da")}
+    try:
+        for lang, skabelon in gemt.items():
+            pro_table.TEKST[lang]["lifetime"] = skabelon.replace("{scope}", "")
+        with tempfile.TemporaryDirectory() as tmp:
+            rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
+            fund = dom(catalog, rod)
+            tjek("livstidspris uden omfang er rød",
+                 any("livstidsprisen" in f for f in fund), str(fund[:2]))
+    finally:
+        for lang, skabelon in gemt.items():
+            pro_table.TEKST[lang]["lifetime"] = skabelon
+    # Og porten skal være grøn igen med den rigtige skabelon — ellers ville
+    # mutationen bare have gjort den rød for alt.
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
+        fund = dom(catalog, rod)
+        tjek("genoptegnede sider er grønne", not fund, "; ".join(fund[:2]))
 
     for linje in fejl:
         print(f"  FEJL  {linje}")

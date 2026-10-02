@@ -3,49 +3,45 @@
 - **Rødt CI 2/10 var uret, ikke licensserveren.** `rateLimitIp` tæller i hele
   time-bøtter, og «rapporten over grænsen»-sløjfen lå da grænsen krydsede (push
   04:59:41, dømt 05:00:00): 200 i stedet for 429. Sløjferne har nu et fast ur, og
-  gatestrækket `stripe-worker-ur` kører suiten under et ur der hopper en time
-  hvert 30. ms. Målt ved mutation: uden pinnet ur rød med CI's egen fejltekst.
-- **Alle 19 sider har gratis mod Pro i samme tabel.** De ni øvrige værktøjssider
-  (`/scan`, `/compliance-site-check`, `/cookie-check`, `/contrast-checker`,
-  `/security-headers-check` i begge sprog) har katalogens tabel i stedet for en
-  håndskrevet `.pro-list` der kun talte om Pro. Dom: `check_pro_table.py`
-  (8 produktsider + 11 værktøjssider), `pro_table.py --check` på dist.
-- **Ny port `check_catalog_where.py` kører i gaten.** Dom 6 og dom 4 i
-  `check_pro_table` dømmer *hvad* tabellen siger mod katalogen, men ingen port
-  læste de 112 `where` der skal sige *hvor* koden findes: målt 2/10 lå 13 af dem
-  2–10 linjer væk fra den sætning de citerede. Alle 13 rettet i katalogen.
-- **Ærligheden overlevede — målt 2/10.** Den genererede tabel skrev «Every page
-  of the site, not just the one you pasted», altså præcis den sætning
-  `scan-clients` holder i live («crawls the whole site … every page it finds»).
-  Rettelsen ligger i katalogen, så alle ni sider får den ærlige formulering.
+  gatestrækket `stripe-worker-ur` kører under et ur der hopper en time hvert
+  30. ms. Målt ved mutation: uden pinnet ur rød med CI's egen fejltekst.
+- **Alle 19 sider har gratis mod Pro i samme tabel**, tegnet af
+  `tools/stripe_catalog.json`. Dom: `check_pro_table.py` (8 produktsider +
+  11 værktøjssider). **Ny port `check_catalog_where.py` kører i gaten** og
+  dømmer belægget i katalogens 112 `where`: målt 2/10 lå 13 af dem 2–10 linjer
+  væk fra den sætning de citerede. Alle 13 rettet.
+- **Livstidsprisen tabte sit omfang — rettet 2/10.** Katalogen sælger
+  `eucomply-pro` «$149 engang pr. website», men noten under tabellen skrev
+  «$149 once — lifetime» på 13 sider, i samme tabel hvor årsprisen skrev
+  «$79/year per website». På `/compliance-report` stod den håndskrevne tekst
+  lige over den endda «$149 once per website», så noten modsag sin egen side.
+  Ny dom 3b dømmer at en livstidspris på en side der viser en scope-pris selv
+  bærer samme scope — mutationen ligger i **generatorens skabelon**, for dom 1
+  er grøn ved konstruktion.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
-- **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
+- **PR-tjek 2/10:** 0 åbne PR'er. **Branch-tjek 2/10:** ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
   Search Console, og **bogenes betalte udgave** (se ❓).
 
 ## Verificér deploy
 
-- Alle fem noter fra 1.–2. oktober er **målt på indhold** og lukket 2/10
-  (`DEPLOY OK 2/10`): gratis-mod-Pro-tabellen, `/net.js`, det delte
-  rapport-budget, kontrasttjekkeren i artiklerne og AI-banneren.
-  Detaljerne står i `docs/plan-arkiv.md`.
+- **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
+  værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni
+  live (`/scan`, `/text-on-image-checker`, `/cookie-check`,
+  `/compliance-site-check`, `/contrast-checker`, `/security-headers-check` og
+  de danske), og `build-info.json` på alle tre deployede domæner står i `ce438ba`
+  — de to sidste commits blev altså rullet ud, da CI blev grøn. Noten er lukket.
 
-- `VERIFICÉR DEPLOY: gratis mod Pro i kortet på de ni øvrige værktøjssider
-  ceo/pro-kort-tabel-alle 2026-10-02` — måles på **indhold**. Målt 2/10 kl. 08:
-  `build-info.json` på live står stadig i `543a734`, altså de 2 sidste commits
-  blev **aldrig deployet** — CI var rød, så Actions rullede dem ikke ud. Derfor
-  står `pro-table:start` 0 gange på alle ni live-sider. Den her rettelse gør CI
-  grøn igen, så samme note gælder den næste deploy. Dom 1: `python3
-  tools/quality_gate.py` er grøn med 134 steps. Dom 2: `python3
-  tools/pro_table.py --check` på dist siger «19 sider». Dom 3:
-  `check_catalog_where.py` er grøn på 112 funktioner og dømmer **belægget** i
-  katalogens `where`; dens 11 mutationer ligger i `--self-test` i samme gate.
-  Dom 4: `node tests/scan-clients.test.mjs` 417/417, altså den ærlige
-  crawls-sætning står stadig i kortet. Dom 5: `check_pro_table.py --self-test`
-  21/21 og `pro_card.py --self-test` 8/8. Dom 6: `node tests/clock_jump.mjs`
-  352/352 — CI's røde fejl kan ikke komme tilbage.
+- `VERIFICÉR DEPLOY: livstidsprisen med sit omfang på de 13 eucomply-sider
+  ceo/livstid-scope 2026-10-02` — måles på **indhold**: `$149 once per website —
+  lifetime, first 100 purchases` på EN og `$149 én gang pr. website — livstid,
+  første 100 køb` på DA, og **ikke** den gamle tekst uden omfang. Dom 1:
+  `check_pro_table.py` er grøn på 19 sider. Dom 2: `--self-test` 24/24. Dom 3:
+  mutationen i generatorens skabelon er rød, og de genoptegnede sider er grønne
+  igen — ellers ville porten være grøn ved konstruktion. Dom 4:
+  `python3 tools/quality_gate.py` er grøn med 134 steps.
 
 ## Åbne opgaver
 

@@ -49,8 +49,8 @@ EJER_RE = re.compile(
 # Tekst der ikke findes i katalogen. Kun det, der er **det samme** på tværs af
 # produkter: gratisprisen er 0 for alle fire, og «ingen nøgle» er sandt for alle
 # fire, fordi de frie værktøjer ikke kan tage imod en nøgle. Alt andet — beløb,
-# periode, funktioner, maskiner — læses fra katalogen, så en ny pris ikke kan
-# kræve en kodeændring.
+# periode, funktioner, maskiner, omfang — læses fra katalogen, så en ny pris
+# ikke kan kræve en kodeændring.
 TEKST = {
     "en": {
         "col_plan": "Plan",
@@ -61,7 +61,7 @@ TEKST = {
         "free_price": "$0",
         "free_note": "no licence key needed",
         "caption": "Free and {product}, side by side",
-        "lifetime": "{amount} once — lifetime, first {limit} purchases",
+        "lifetime": "{amount} once{scope} — lifetime, first {limit} purchases",
         "devices": "One licence covers {n} {word}.",
         # Den ordvariant vi vil vise for hver periode. Ordlisten i katalogen
         # rummer både engelsk og dansk i samme række (`yearly` er «/year»,
@@ -79,7 +79,7 @@ TEKST = {
         "free_price": "$0",
         "free_note": "ingen licensnøgle nødvendig",
         "caption": "Gratis og {product}, side mod side",
-        "lifetime": "{amount} én gang — livstid, første {limit} køb",
+        "lifetime": "{amount} én gang{scope} — livstid, første {limit} køb",
         "devices": "Én licens dækker {n} {word}.",
         "period": {"yearly": "/år", "one_time": "én gang", "lifetime": "livstid"},
     },
@@ -114,6 +114,21 @@ def sider(catalog: dict) -> list[dict]:
     return ud
 
 
+def scope_tekst(produkt: dict, lang: str) -> str:
+    """Katalogens omfang med et foranstående mellemrum — eller tomt.
+
+    `eucomply-pro` sælger pr. website, så **begge** priser skal sige det. Fund fra
+    review 2/10: livstidsnoten skrev «$149 once — lifetime» lige under en
+    priscelle der sagde «$79/year per website», altså «149 engang for alle
+    websites» — en licens der kun gælder for ét. Derfor læses omfanget ét sted,
+    og det bruges af både `beløb()` og livstidsnoten.
+    """
+    scope = produkt.get("scope")
+    if isinstance(scope, dict) and scope.get(lang):
+        return " " + str(scope[lang])
+    return ""
+
+
 def beløb(nøgle: str, produkt: dict, lang: str, perioder: dict) -> str:
     """Prisen som læseren ser den: beløb, periode og dets omfang.
 
@@ -140,11 +155,7 @@ def beløb(nøgle: str, produkt: dict, lang: str, perioder: dict) -> str:
     # have et mellemrum. Mellemrum er derfor ikke noget katalogen afgør, men
     # portens sprogtabel ved det — ellers stod der «$19once».
     mellemrum = "" if ord.startswith(("/", "$")) else " "
-    pris = f"${produkt['price_usd']}{mellemrum}{ord}"
-    scope = produkt.get("scope")
-    if isinstance(scope, dict) and scope.get(lang):
-        pris += f" {scope[lang]}"
-    return pris
+    return f"${produkt['price_usd']}{mellemrum}{ord}{scope_tekst(produkt, lang)}"
 
 
 def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
@@ -198,7 +209,8 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
     livstid = produkt.get("lifetime")
     if isinstance(livstid, dict) and livstid.get("price_usd"):
         noter.append(t["lifetime"].format(amount=f"${livstid['price_usd']}",
-                                         limit=livstid.get("limit", 100)))
+                                         limit=livstid.get("limit", 100),
+                                         scope=scope_tekst(produkt, lang)))
     maskiner = produkt.get("max_devices")
     # `max_devices: 1` betyder for EUComply «ét website pr. licens», ikke én
     # maskine — det står i `scope`. Så under to siger tal ikke noget, og
