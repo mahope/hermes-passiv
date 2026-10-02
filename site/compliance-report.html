@@ -721,11 +721,15 @@ document.getElementById('reportForm').addEventListener('submit', function(e) {
   generateReport(url);
 });
 
-// Hash param auto-scan
+// Hash param auto-scan. `decodeURIComponent` kaster `URIError` på `#url=%` —
+// fragmentet kan skrives i hånden — og kaster den dør denne IIFE, så
+// `generateReport(u)` springes over og læseren får en tom rapport side og en
+// rød konsolfejl. Derfor `try`. Samme tre linjer som `/url-to-markdown`.
 (function() {
   const m = location.hash.match(/#url=(.+)$/);
   if (m) {
-    const u = decodeURIComponent(m[1]);
+    let u = '';
+    try { u = decodeURIComponent(m[1]); } catch (e) { return; }
     if (/^https?:\/\//i.test(u)) {
       document.getElementById('url').value = u;
       generateReport(u);

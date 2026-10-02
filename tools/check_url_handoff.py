@@ -29,8 +29,13 @@ stille:
    på en side der ignorerer den — linket *ser* ud til at virke.
 3. **Motoren bruger flaget ikke.** Så er `takesUrl: true` en død egenskab, og
    dom 1 og 2 er begge grønne.
+4. **Siden læser fragmentet, men dør på det.** `location.hash` kan skrives i
+   hånden, og `decodeURIComponent('%')` kaster `URIError` — målt 2/10 i node.
+   Kaster den, dør den IIFE der læser fragmentet, så både selve scanningen og
+   `urlInput.focus()` springes over, og læseren får en tom side og en rød
+   konsolfejl i stedet for den scanning han blev lovet.
 
-Derfor dømmer porten **de tre ender mod hinanden** frem for at læse prosa:
+Derfor dømmer porten **de fire ender mod hinanden** frem for at læse prosa:
 
 - Hver `next`-post på en forside læses, og den rute den peger på slås op i
   `site/`. Læser den `#url=`, skal posten være `takesUrl: true` (dom 1).
@@ -38,14 +43,19 @@ Derfor dømmer porten **de tre ender mod hinanden** frem for at læse prosa:
 - Motoren skal bygge fragmentet af flaget (dom 3).
 - Og der skal være mindst én handoff i familien (dom 4), så porten ikke kan være
   grøn ved at der ingen er.
+- Dom 5 fejer **hele `site/`** for punkt 4, ikke kun de otte ruter forsiderne
+  peger på — ellers kunne den danske kopi af en side blive ved med at dø, mens
+  den engelske var rettet. Det var præcis fejlen: 2/10 stod try/catch i
+  `/url-to-markdown` og `/da/url-til-markdown` og manglede det i syv andre
+  sider, der var kopier af *samme* kode.
 
 Forsiderne kommer fra **build-manifestet** (`frontpage_sources_or_empty()` i
 `tools/check_article_paid_path.py`), ikke fra en håndlavet liste — samme kilde
 som `tools/check_front_door.py`. Derfor kan svaret ikke blive nyt på en måde
 porten ikke ser.
 
-Kør:  python3 tools/check_url_handoff.py            # dom alle forsider
-      python3 tools/check_url_handoff.py --self-test # 8 kontroller
+Kør:  python3 tools/check_url_handoff.py            # dom alle forsider + site/
+      python3 tools/check_url_handoff.py --self-test # 18 kontroller
 """
 from __future__ import annotations
 
@@ -69,6 +79,17 @@ MOTORER: dict[str, str] = {
 
 FRAGMENT = "#url="
 TAKES_URL = re.compile(r"\btakesUrl\s*:\s*true\b")
+DECODE = re.compile(r"\bdecodeURIComponent\s*\(")
+# Kommentarer skal væk, ellers dømmer porten sin egen forklaring. Det er ikke
+# hypotetisk: første kørsel fandt «`decodeURIComponent('%')`» i den kommentar
+# der beskriver præcis denne fejl, og meldte den som et fund på linjen over.
+# Målt 2/10, og det er grunden til at linjen er erstattet med mellemrum i stedet
+# for at blive slettet — så linjetallene ikke flytter sig.
+RAA = re.compile(r"/\*.*?\*/", re.DOTALL)
+# Kun kommentarer der **begynder en linje** (eventuelt med indrykning). En
+# bredere `/[^\n]*` ville æde scheme-delen i `https://` og alt efter den, fordi
+# porten ikke kan se om den er i en streng — så `//` må stå alene på linjen.
+LINJEKOM = re.compile(r"(?m)^[ \t]*//[^\n]*")
 VINDUE = re.compile(r"window\.(?P<navn>[A-Z_]+)\s*=\s*\{")
 # `window.X = { … \n};` — blokke er flade, så den næste `\n};` lukker den.
 BLOK_SLUT = re.compile(r"\n\};")
@@ -105,6 +126,63 @@ def dom_handoff(kode: str, rute: str, tag: str) -> list[str]:
             f"{rute}: `next`-linket er `takesUrl: true`, men siden læser ikke "
             f"`{FRAGMENT}` med `location.hash` — adressen lander i "
             f"adresselinjen og ignoreres")
+    return fund
+
+
+def uden_kommentarer(kode: str) -> str:
+    """Samme tegn, men kommentar-teksterne er mellemrum — linjetallene holder.
+
+    Porten skal dømme **kode**, ikke prosa. Første kørsel 2/10 fandt
+    «`decodeURIComponent('%')`» i den kommentar der beskriver præcis denne
+    fejl, og meldte den som et fund på linjen over. Derfor blandes kommentarer
+    ud med mellemrum i stedet for at slettes, så `line_of()` stadig regner rigtigt.
+    """
+    for rx in (RAA, LINJEKOM):
+        kode = rx.sub(lambda m: "".join("\n" if c == "\n" else " "
+                                        for c in m.group(0)), kode)
+    return kode
+
+
+def dom_uridekoder(kode: str, fil: str) -> list[str]:
+    """Dom 5: et læst `#url=`-fragment skal dekodes **inden i en `try`**.
+
+    `location.hash` er det eneste input i huset læseren kan skrive i hånden,
+    og `decodeURIComponent('%')` kaster `URIError` (målt 2/10 i node). Kaster
+    det, dør den blok der læser fragmentet, så selve scanningen springes over —
+    læseren får en tom side og en rød konsolfejl i stedet for det han blev
+    lovet, og intet på siden siger hvorfor.
+
+    Reglen er **én linje**: et `decodeURIComponent(` skal have et `try` foran
+    sig og et `catch` bagved på *samme linje*. Alle ni sider i huset der læser
+    `#url=` er skrevet sådan, så en flere linjers guard ville være en
+    hypotetisk fare: kasten den for brede og porten redder intet, kasten den for
+    stramme og en korrekt omskrevet side røder uden grund. Det er et synligt,
+    billigt fejlsignal — ikke en stille.
+
+    Scopet er hele filen, og kun for sider der læser `#url=` **og** kalder
+    `decodeURIComponent`. Det er målt: de øvrige kald i huset
+    (`/url-encoder-decoder.html`, `shell.js`, `_worker.js`) er enten brugerens
+    egen tekst i et værktøj, et DOM-anchor der ikke læses fra URL'en, eller
+    serverkode med sin egen `try` — ingen af dem læser `#url=`, og de skal
+    heller ikke dømmes af denne port.
+    """
+    fund: list[str] = []
+    ren = uden_kommentarer(kode)
+    if "location.hash" not in ren or FRAGMENT not in ren:
+        return fund
+    for kald in DECODE.finditer(ren):
+        linje_start = ren.rfind("\n", 0, kald.start()) + 1
+        linje = ren.count("\n", 0, kald.start()) + 1
+        linje_slut = ren.find("\n", kald.end())
+        tekst = ren[linje_start:linje_slut if linje_slut >= 0 else len(ren)]
+        foer = tekst[:kald.start() - linje_start]
+        efter = tekst[kald.end() - linje_start:]
+        if "try" not in foer or "catch" not in efter:
+            fund.append(
+                f"{fil}:{linje}: læser `{FRAGMENT}` og kalder "
+                "`decodeURIComponent` på værdien uden `try`/`catch` på linjen — "
+                "`#url=%` kaster `URIError`, blokken dør, og læseren "
+                f"får en tom side i stedet for den scanning han blev lovet")
     return fund
 
 
@@ -181,6 +259,15 @@ def dom_alle() -> list[str]:
     fund: list[str] = []
     handoffs = 0
     maalt = 0
+    # Dom 5 fejer hele `site/`, ikke kun de ruter forsiderne peger på.
+    hash_sider = 0
+    for sti in sorted(SITE.rglob("*.html")):
+        kode = sti.read_text(encoding="utf-8", errors="replace")
+        if "location.hash" not in kode or FRAGMENT not in kode:
+            continue
+        hash_sider += 1
+        fund.extend(dom_uridekoder(kode, str(sti.relative_to(ROOT))))
+
     for domaene, per_rute in forsider.items():
         for rute, kilde in sorted(per_rute.items()):
             if kilde is None:
@@ -207,7 +294,8 @@ def dom_alle() -> list[str]:
             f"`{FRAGMENT}` — porten dømmer intet, og det er netop den "
             "tilstand opgaven skal lukke")
     print(f"note: {maalt} forside(r) dømt, {handoffs} handoff(s) "
-          f"på ruter der læser `{FRAGMENT}`, {len(MOTORER)} motor(er) erklæret")
+          f"på ruter der læser `{FRAGMENT}`, {len(MOTORER)} motor(er) erklæret, "
+          f"{hash_sider} side(r) dekoder fragmentet")
     return fund
 
 
@@ -270,6 +358,43 @@ GRON_MOTOR = ("function medUrl(item, data) {\n"
               "  return item.href + '#url=' + encodeURIComponent(data.finalUrl);\n"
               "}\n")
 
+# Dom 5. Den første arm er fundet fra virkeligheden: præcis den kode, de syv
+# sider havde. Den anden er den samme kode med den tre-linjers guard
+# `/url-to-markdown` allerede havde — samme side, samme kald, modsat svar.
+URIDECODER = [
+    ("#url= dekodes uden try (fundet 2/10, 7 sider)",
+     "<script>(function(){\n"
+     "  const m=location.hash.match(/#url=(.+)$/);\n"
+     "  if(m){const u=decodeURIComponent(m[1]);\n"
+     "    if(/^https?:\\/\\//i.test(u)){scan(u);}}\n"
+     "})();</script>", 1),
+    ("#url= dekodes inden i en try/catch (rettelsen)",
+     "<script>(function(){\n"
+     "  const m=location.hash.match(/#url=(.+)$/);\n"
+     "  if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}\n"
+     "    if(/^https?:\\/\\//i.test(u)){scan(u);}}\n"
+     "})();</script>", 0),
+    ("kommentaren der beskriver fejlen er ikke et fund",
+     "<script>\n"
+     "// `decodeURIComponent('%')` kaster `URIError`, så den skal i en try.\n"
+     "(function(){\n"
+     "  const m=location.hash.match(/#url=(.+)$/);\n"
+     "  if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}}\n"
+     "})();</script>", 0),
+    ("try uden catch på linjen er stadig et fund",
+     "<script>(function(){\n"
+     "  const m=location.hash.match(/#url=(.+)$/);\n"
+     "  if(m){let u='';try{u=decodeURIComponent(m[1]);}\n"
+     "})();</script>", 1),
+    ("en side der ikke læser #url= dømmes ikke",
+     "<script>function decode(text){\n"
+     "  result.value = decodeURIComponent(text);\n"
+     "}</script>", 0),
+    ("en side der kun bruger location.hash til #install dømmes ikke",
+     "<script>if (location.hash === '#install') scrollTo();\n"
+     "decodeURIComponent('x');</script>", 0),
+]
+
 
 def selvtest() -> int:
     fejl = 0
@@ -292,9 +417,18 @@ def selvtest() -> int:
         if not ok:
             for f in fund:
                 print("        ", f)
+    for navn, kode, forventet in URIDECODER:
+        fund = dom_uridekoder(kode, "_selftest_fragment.html")
+        ok = len(fund) == forventet
+        fejl += 0 if ok else 1
+        print(f"{'ok   ' if ok else 'FEJL '} {navn} "
+              f"({len(fund)} fund, forventede {forventet})")
+        if not ok:
+            for f in fund:
+                print("        ", f)
+    total = len(SELFTEST) + len(MOTORTEST) + len(URIDECODER)
     print(f"check-url-handoff-selftest: {'OK' if fejl == 0 else 'RØD'} "
-          f"({len(SELFTEST) + len(MOTORTEST) - fejl}/"
-          f"{len(SELFTEST) + len(MOTORTEST)} kontroller)")
+          f"({total - fejl}/{total} kontroller)")
     return 1 if fejl else 0
 
 

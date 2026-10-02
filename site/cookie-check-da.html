@@ -275,9 +275,14 @@ document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();
   scan(document.getElementById('url').value.trim());
 });
+// `#url=` — fragmentet kan skrives i hånden, og `decodeURIComponent('%')`
+// kaster `URIError`. Uden `try` dør hele denne IIFE, så en note, et gammelt
+// bookmark eller et dobbeltkodet link giver læseren en tom side og en rød
+// konsolfejl i stedet for den scanning de blev lovet. Samme tre linjer som
+// `/url-to-markdown` allerede havde.
 (function(){
   const m=location.hash.match(/#url=(.+)$/);
-  if(m){const u=decodeURIComponent(m[1]);
+  if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}
     if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
 })();
 </script>

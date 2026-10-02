@@ -552,10 +552,16 @@ function scanExample() {
 // øvrige tolv sider læser; feltet tager flere linjer, så værdien sættes i den
 // som én linje. Kun `http(s)` slipper igennem — fragmentet kan skrives i
 // hånden, og serveren verner sig selv (`targetIsPublic`) mod private mål.
+//
+// `decodeURIComponent` kaster `URIError` på `#url=%`, og kaster den dør
+// denne IIFE — så både `scan()` og `urlInput.focus()` springes over, og
+// læseren får en tom side og en rød konsolfejl. Derfor `try`. Samme tre
+// linjer som `/url-to-markdown` allerede havde.
 (function () {
   var m = location.hash.match(/#url=([^&]+)$/);
   if (!m) return;
-  var u = decodeURIComponent(m[1]);
+  var u = '';
+  try { u = decodeURIComponent(m[1]); } catch (e) { return; }
   if (!/^https?:\/\//i.test(u)) return;
   urlInput.value = u;
   scan();

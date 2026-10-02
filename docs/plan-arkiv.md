@@ -5133,3 +5133,90 @@ Dom 2: `stripe-worker.test.mjs` **354/354** (uændret — ingen Worker-kode rør
 Dom 3: `build_sites.py` 330 + 73 + 35 + 37 filer, 0 brudte; `seo_check.py`
 314 sider 0 fund; `check_inline_js.py` 0 problemer. Dom 4: hele
 `quality_gate.py` **144 steps** grønne.
+
+---
+
+## 2/10 — `#url=%` dræbte fragment-læseren på syv sider
+
+**Fundet.** Review 2/10 (`LAV`) pegede på to sider: `compliance-site-check.html`
+og `da/compliance-site-check.html`, der kalder `decodeURIComponent` på
+`location.hash` uden `try`. Det viste sig at være **syv**.
+
+**Målt, ikke antaget.** `grep -rn decodeURIComponent site/` giver ni sider der
+læser `#url=`. To af dem — `/url-to-markdown` og `/da/url-til-markdown` — har
+try/catch og blev skrevet først. De syv andre er kopier af *samme* kode, fordi
+konventionen `#url=` er ældre end nogen port: `/scan`, `/scan-da`,
+`/cookie-check`, `/cookie-check-da`, `/compliance-report`,
+`/compliance-site-check`, `/da/compliance-site-check`. Alle syv havde den
+præcis samme linje:
+
+```js
+if(m){const u=decodeURIComponent(m[1]);
+```
+
+**Hvorfor det er en fejl, ikke en skønhedsfejl.** `location.hash` er det eneste
+input i hele huset læseren kan skrive i hånden. Målt 2/10 i node:
+`decodeURIComponent('%')` → `URIError: URI malformed`. Kaster den, dør hele
+IIFE'en, fordi der ikke er nogen `try`:
+
+* på `/scan`, `/scan-da`, `/cookie-check`, `/cookie-check-da` springer selve
+  `scan(u)` over, så læseren får et tomt felt;
+* på begge `compliance-site-check` springer `urlInput.focus()` **også** over,
+  fordi det står efter IIFE'en i samme `<script>` — så feltet er hverken udfyldt
+  eller fokuseret. **Målt**, ikke antaget: en ikke-fanget fejl afbryder hele
+  scriptet, ikke kun den funktion den sker i. Kørt 2/10 i node med
+  `#url=%` på de præcise linjer fra siden: `URIError` kommer ud, og hverken
+  `scan()` eller `urlInput.focus()` eller den sidste sætning i scriptet nåede
+  at køre;
+* på `/compliance-report` springer `generateReport(u)` over, så læseren får
+  en tom rapportside.
+
+Scenariet er ikke hypotetisk: en guide, et gammelt bookmark eller et værktøj
+der koder fragmentet dobbelt. Formularen virker stadig — `submit`-lytteren er
+monteret længere oppe i samme `<script>` — så intet på siden siger at noget
+gik galt. Rettelsen er de samme tre linjer som `/url-to-markdown` allerede
+havde, så koden er ens på ni sider i stedet for syv kopier med to former.
+
+**Porten fik en ny dom, dom 5.** `check_url_handoff.py` dømte dom 1 og 2 — en
+side skal *læse* `#url=` — men ikke om den *overlever* at læse det. Dom 5
+fejer hele `site/` og ikke kun de otte ruter forsiderne peger på; det er
+præcis derfor den danske kopi af en side ellers kunne blive ved med at dø,
+mens den engelske var rettet.
+
+Målt, at `rglob("*.html")` dækker det hele: **ni** filer under `site/` læser
+både `location.hash` og `#url=`, og alle ni er `.html` — ingen `.js` under
+`site/` læser fragmentet, så dommen fejer ikke blindt fordi den kun kigger på
+HTML.
+
+Reglen er **én linje**: et `decodeURIComponent(` skal have `try` foran sig og
+`catch` bagved på samme linje. Alle ni sider er skrevet sådan. En flere
+linjers guard ville være en hypotetisk fare: for bred, og porten redder intet;
+for stram, og en korrekt omskrevet side røder uden grund. Scopet er kun sider
+der læser `#url=` **og** kalder `decodeURIComponent` — de øvrige kald i huset
+(`/url-encoder-decoder.html`, `shell.js`, `_worker.js`) er brugerens egen tekst i
+et værktøj, et DOM-anchor der ikke læses fra URL'en, eller serverkode med sin
+egen `try`, og ingen af dem læser `#url=`.
+
+**Fund undervejs i porten selv.** Første kørsel af dom 5 dømte sin *egen*
+kommentar. Den forklaring, der beskriver præcis denne fejl, indeholder
+«`decodeURIComponent('%')`» — og porten læste den som et kald, og meldte et
+fund på linjen over. Kommentarer blandes derfor nu ud med **mellemrum** i stedet
+for at slettes, så linjetallene ikke flytter sig. Det er arm 3 i selvtesten.
+
+**Seks nye selftestarme, polaritet målt i begge retninger.**
+1. Præcis den kode de syv sider havde → 1 fund.
+2. Samme kode med den tre-linjers guard → 0 fund.
+3. Kommentaren der beskriver fejlen → 0 fund (den fejl porten faktisk lavede).
+4. `try` uden `catch` på linjen → 1 fund.
+5. En side med `decodeURIComponent` der ikke læser `#url=` → 0 fund.
+6. En side der bruger `location.hash` til `#install` → 0 fund.
+Polaritet målt på **rigtig fil**: fjernet `try` fra `site/scan.html` → RØD med
+fund på linje 370; filen genskabt byte-for-byte → GRØN.
+
+**Verifikation.** Dom 1: `check_url_handoff.py` GRØN — 8 forsider dømt,
+6 handoff, **9** sider dekoder fragmentet; `--self-test` **18/18**. Dom 2:
+`stripe-worker.test.mjs` 354/354 (ingen Worker-kode rørt). Dom 3:
+`build_sites.py` 330 + 73 + 35 + 37 filer, 0 brudte; `seo_check.py` 314 sider
+0 fund; `check_inline_js.py` **663** inline-blokke, 0 problemer — den måler at
+de ni ændrede scripts stadig er gyldig JavaScript. Dom 4: hele
+`quality_gate.py` 144 steps grønne.

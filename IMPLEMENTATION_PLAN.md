@@ -1,31 +1,44 @@
 # STATUS
-- **Rød CI 2/10 var porten `check_rule_claims.py`, og fejlen var portens egen.**
-  `make_blog_index.py` skriver hvert punkt på `/blog/` som artiklens `og:title` og
-  `meta description` **ordret**, så da `da/blog/eaa-compliance-scanner-desktop-
-  download` kom med, blev *dets* «Kør alle 22 WCAG 2.1 AA-regler» dømt som
-  *indeksets* løfte, og `/blog/` sælger ingen motor, så porten døde med «står
-  ikke i PRODUCT_ENGINE». Løftet var rigtigt — den side står i kortet.
-- **Rettelsen er at dømme citatet på den side det stammer fra** — den side læser
-  porten allerede. `quoted_spans()` springer kun fra det det kan **måle** som en
-  anden sides ord: **1313** intervaller på **150** sider, som fjerner **1** løfte
-  fra korpus (`blog/index.html:152`). Korpus **240** løfter, alle matcher koden
-  (15 + 18 = 33); `quality_gate.py` **144 steps**.
-- **De 2 dele bedømmes uafhængigt** — den koblede version døde på
-  `blog/compare-two-web-pages-seo.html`, der har «Open `page-profile` and paste in
-  URL #1», hvor anchor-teksten *er* et forled af den linkede sides `og:title`.
-  Uafhængigt springes anchoren fra, brødteksten **beholdes** og dømmes.
-- **3 nye selftestarme, polaritet målt i begge retninger.** Ret artiklens
-  description + citatet → fejl der nævner *artiklen*; med attributværdier **og**
-  JSON-LD blindet fejlede armen. Ret **kun** `/blog/`s citat → porten dør; for
-  bred definition: «undtagelse for hub-sider, ikke et målt citat». Løft i
-  **halen** af et listepunkt hvis anchor matcher → dømmes; samme mutation: «for
-  bred». Find undervegs: en arm muterede netop den `/blog/`-citerede description,
-  så den retter nu begge steder: ret artiklen, kør `make_blog_index.py`.
+- **Rød CI 2/10 var portens egen fejl: `check_rule_claims` dømte et *citat* på
+  `/blog/`.** Generatoren skriver hvert punkt som artiklens `og:title` og `meta
+  description` ordret, så da den danske EAA-desktop-guide kom med, blev *dets* «22
+  WCAG 2.1 AA-regler» dømt som *indeksets* løfte — og `/blog/` sælger ingen motor,
+  så porten døde med «står ikke i PRODUCT_ENGINE». Løftet var rigtigt. `quoted_spans()`
+  springer nu kun fra det det kan **måle** som en anden sides ord — **1313**
+  intervaller på **150** sider, som fjerner **1** løfte fra korpus på **240** (alle
+  matcher koden, 15 + 18 = 33). `quality_gate.py` **144 steps**.
+- **Review-fundet 2/10 viste sig at være 7 sider, ikke 2.** `decodeURIComponent`
+  uden `try` på `#url=`-fragmentet — det eneste input læseren kan skrive i hånden.
+  `node -e 'decodeURIComponent("%")'` kaster `URIError`, og en ikke-fanget fejl
+  afbryder **hele scriptet** (begge målt), så både scanningen og `urlInput.focus()`
+  springes over. `/url-to-markdown` og `/da/url-til-markdown` havde try/catch;
+  **syv** sider var kopier af samme kode uden: `scan`, `scan-da`, `cookie-check`,
+  `cookie-check-da`, `compliance-report`, `compliance-site-check` og
+  `da/compliance-site-check`. Alle syv rettet med de samme **3** linjer.
+- **Ny dom 5 i `check_url_handoff.py` fejer hele `site/`** — kun de **8** ruter
+  forsiderne peger på ville ladet de danske kopier blive ved med at dø. Målt: de
+  **9** filer der læser `#url=` er alle `.html`. Selvtest **18/18**; polaritet på
+  rigtig fil: fjernet `try` fra `site/scan.html` → RØD på linje 370, genskabt → GRØN.
+  Find undervejs: første kørsel dømte sin *egen* kommentar, så **2** kommentarformer
+  blandes nu ud med mellemrum og linjetallene holder.
 - **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
   til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: at et håndskrevet #url=% ikke dræber fragment-læseren
+   2026-10-02 ceo/hash-decode-urierror` — syv sider ændret, så måles på **indhold**
+   pr. side, ikke på HTTP 200: `mahope.tools/scan`, `/scan-da`, `/cookie-check`,
+   `/cookie-check-da`, `/compliance-report`, `/compliance-site-check` og
+   `/da/compliance-site-check` skal hver have `try{…decodeURIComponent(…)}catch`
+   på den linje der læser `#url=`, og `url-to-markdown` +
+   `da/url-til-markdown` skal fortsat være grønne. Dom 1: `check_url_handoff.py`
+   **GRØN** (8 forsider dømt, 6 handoff, 9 sider dekoder fragmentet) +
+   `--self-test` **18/18**. Dom 2: `stripe-worker.test.mjs` **354/354**. Dom 3:
+   `build_sites.py` 330+35+73+37 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
+   `check_inline_js.py` 663 inline-blokke 0 problemer. Dom 4: hele
+   `quality_gate.py` **144 steps** grønne.
 
 - `VERIFICÉR DEPLOY: citat-rettelsen i check_rule_claims 2026-10-02
    ceo/blogindeks-citerede-lofter` — måles på **indhold** og på at CI går grøn:
