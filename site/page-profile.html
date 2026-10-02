@@ -134,6 +134,7 @@
   ]
 }
 </script>
+<script defer src="/net.js"></script>
 </head>
 <body>
   <header class="hero" style="padding:3rem 1rem 2rem;text-align:center;">
@@ -393,33 +394,22 @@
 
     // Vores egen 5xx er ikke brugerens wifi: Cloudflare svarer en worker der er
     // faldet ned med sin egen HTML-side, så et blindt `r.json()` kastede, og
-    // brugeren fik "Could not reach the profiling service". Status læses derfor
-    // først, forbigående svar genkaldes, og kun et rigtigt 4xx er endeligt.
+    // brugeren fik "Could not reach the profiling service". Status læses først,
+    // forbigående svar genkaldes, og kun et rigtigt 4xx er endeligt — det ligger
+    // i /net.js sammen med de andre klienter, og `tools/check_net_copies.py`
+    // holder det som den eneste kopi. Her står kun antallet genkald.
     var PROFILE_MAX_TRIES = 3;
     function fetchProfile(target) {
-      var tries = 0;
-      function attempt() {
-        return fetch('/api/profile?url=' + encodeURIComponent(target)).catch(function (e) {
-          var err = new Error((e && e.message) || 'connection failed');
-          err.transport = true;
-          err.transient = true;
-          throw err;
-        }).then(function (r) {
-          return r.json().catch(function () { return null; }).then(function (j) {
-            if (r.ok && j && j.ok) return j;
-            var err = new Error((j && j.error) || ('Server replied with ' + r.status));
-            err.status = r.status;
-            err.transient = !j || r.status >= 500;
-            throw err;
-          });
-        }).catch(function (err) {
-          if (err.transient && ++tries < PROFILE_MAX_TRIES) {
-            return new Promise(function (res) { setTimeout(res, 1200 * tries); }).then(attempt);
-          }
-          throw err;
+      // `ok:false` i et 200-svar er et rigtigt svar, ikke et blip: serveren kunne
+      // ikke hente sitet. NET lader den fejl gå igennem som et vellykket svar,
+      // så den dømmes her — efter genkalderne, aldrig før.
+      return NET.askGet('/api/profile?url=' + encodeURIComponent(target), PROFILE_MAX_TRIES)
+        .then(function (j) {
+          if (j && j.ok) return j;
+          // Uden `transient` er den endelig, så NET ikke prøver igen. Det er
+          // et svar serveren mente, ikke et blip.
+          throw new Error((j && j.error) || 'Request failed.');
         });
-      }
-      return attempt();
     }
 
     form.addEventListener('submit', function (e) {

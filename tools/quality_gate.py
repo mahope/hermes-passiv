@@ -225,8 +225,12 @@ STEPS: tuple[Step, ...] = (
         argv=("node", "tests/scan-clients.test.mjs"),
         inputs=(
             "tests/scan-clients.test.mjs",
+            "site/net.js",
             "site/compliance-site-check.html",
             "site/da/compliance-site-check.html",
+            "site/page-profile.html",
+            "site/da/page-profile.html",
+            "site/security-headers-check.html",
             "site/url-inspector/index.html",
         ),
     ),
@@ -662,6 +666,23 @@ STEPS: tuple[Step, ...] = (
         id="first-action-selftest",
         argv=("python3", "tools/check_first_action.py", "--self-test"),
         inputs=("tools/check_first_action.py", "tools/first_action.json", "site/**"),
+    ),
+    # Én kopi af reglen for «hvad en besøgende ser, når vi har en dårlig dag».
+    # `site/net.js` blev skrevet, fordi samme fejlform lå i klienterne; de seks
+    # GET-klienter (`/compliance-site-check` EN+DA, `/page-profile` EN+DA,
+    # `/security-headers-check`, `/url-inspector`) havde hver deres. Uden dette
+    # step kunne nogen inline reglen igen, og næste rettelse bliver lavet ét
+    # sted. Selvtesten kører med, fordi porten ellers kunne være grøn ved at slette
+    # kernen i stedet for at bruge den.
+    Step(
+        id="net-copies",
+        argv=("python3", "tools/check_net_copies.py"),
+        inputs=("tools/check_net_copies.py", "site/**"),
+    ),
+    Step(
+        id="net-copies-selftest",
+        argv=("python3", "tools/check_net_copies.py", "--self-test"),
+        inputs=("tools/check_net_copies.py", "site/**"),
     ),
     # Spring i overskriftsniveau (30/9). Målt først: 12 sider sprang fra `<h1>`
     # til `<h3>` uden et `<h2>` imellem — `paid-templates` (EN+DA) satte 14

@@ -1,33 +1,51 @@
 # STATUS
 
-- **Næste opgave: samle net-kopierne.** Seks klienter har hver sin kopi af de to
-  linjer, hvor `site/net.js` skriver reglen for «hvad en besøgende ser, når vi har
-  en dårlig dag» (EN+DA `compliance-site-check`, EN+DA `page-profile`,
-  `security-headers-check`, `url-inspector`). Alle seks er rigtige i dag — netop
-  derfor er næste rettelse en fare, og `net.js` har selv en docstring om en
-  DA-kopi, der var dræbet et par tegn. Målt: 6 fund med
-  `tools/check_net_copies.py` (skrevet 2/10, ikke i gaten endnu). **Fælden målt i
-  dag:** to mutationstests (746/776) skal have `net.js` forudindlæst, ellers
-  dømmer de en `ReferenceError` i stedet for reglen.
-- **Rød CI rettet:** STATUS havde 38 linjer mod de 25 tilladte; de 6 lukkede
-  `DEPLOY OK`-noter ligger nu i `docs/plan-arkiv.md`.
+- **Næste opgave: Free mod Pro på ét sted** (feature-kø 9). Baseline målt af
+  `tools/check_tool_sections.py`: 19 af 84 købsknapper sagde ingen periode, så
+  en læser ikke kunne se hvad et år koster mod en engangskøb. Samme to-rækkers
+  tabel som `/scan`, beløb læst fra `tools/stripe_catalog.json`.
+- **Reglen for «hvad en besøgende ser, når vi har en dårlig dag» ligger nu ét
+  sted.** Seks GET-klienter havde hver sin kopi af `err.transient = !data ||
+  status >= 500` — alle seks rigtige, netop derfor var næste rettelse en fare.
+  `net.js` har nu `getJSON`/`askGet`, de seks læser den, og
+  `tools/check_net_copies.py` er i gaten med selvtest.
+- **Rettet undervejs, samme opgave:** (a) `compliance-site-check` genkaldte
+  503 op til **ni** gange, fordi løkken og kaldet begge genkaldte — nu tre.
+  (b) `check_storage_claims.py` genkendte kun bogstaveligt `fetch('/api/…`, så
+  da de seks flyttede kaldet i `net.js`, holdt de op at være *dømt* af porten
+  (11 sider kalder nu hentende ruter, før 10). Porten lærer `NET.askGet()`.
+  (c) To mutationstests dømte en `ReferenceError` i stedet for reglen, fordi de
+  kørte klientens kode uden `net.js` — de indlæser den nu som browseren gør.
 - **Kontrasttjekkeren kører nu inde i den artikel der får hele trafikken.**
   `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside med
   8 af 18 besøgende (28 d) og **100 % bounce**; begge artikler har nu `#try-it`
-  med værktøjet, og heroens primære handling er det anker. Fundet undervejs:
-  `.ti-field > *` gav kolonnebørnene 12 rem *højde* — 192 px felter.
-- **Scanneren siger ikke længere «Not found» om sider den aldrig læste.** Fund fra
-  review 30/9 målt på den levende rute (wordpress.org fik «Not found. Add a
-  Privacy Policy page» og score 22): budgettet er nu delt pr. URL, bruges tur for
-  tur, og et tjek der ikke nåede igennem listen **siger fra hvor**.
-- **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** 3 branches, ingen 14 dage
-  gamle.
+  med værktøjet, og heroens primære handling er det anker.
+- **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
   Search Console, og **bogenes betalte udgave** (se ❓).
 
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: net-kopierne samlet i /net.js
+  ceo/net-kopier-ind-i-netjs 2026-10-02` — måles på **indhold**, ikke på HTTP
+  200. Dom 1: alle seks sider har `<script defer src="/net.js">` i head *og*
+  kalder `NET.askGet(` — `/net.js` svarer 200 og ligger i `dist/mahope.tools/`,
+  så ingen af dem kan stå med en `NET is not defined` i browseren. Dom 2: 0
+  fund fra `python3 tools/check_net_copies.py` (og selvtest 9/9), altså ingen
+  `.transient =` uden for kernen i hele `site/`. Dom 3: `node
+  tests/scan-clients.test.mjs` er **417/417**, heraf 10 kontroller der dømmer de
+  seks GET-klienters mutation af `net.js` — brydes kernen (`err.transient =
+  false`), skal alle seks give ét kald i stedet for tre. Dom 4:
+  `/compliance-site-check` giver **3** kald på en 503 hele vejen, ikke 9 (loop +
+  kald genkaldte begge); målt før rettelsen i samme sandkasse. Dom 5:
+  `/url-inspector` skriver «Server busy — retrying…» i statuslinjen i det øjeblik
+  det genkaldte kald går ud (dommen læser elementet under et kald, ikke bagefter).
+  Dom 6: `python3 tools/check_storage_claims.py` er grøn og `--self-test`
+  melder **7** sider der afslører server-side hentning (var 6) — de seks kalder
+  hentende ruter gennem `net.js` nu, så porten skal kunne se dem. Dommen er
+  `python3 tools/quality_gate.py` (127 steps) + missionens gate.
 
 - `VERIFICÉR DEPLOY: ret budgettet på de rapporter, kunden sender videre
   ceo/deling-pr-url 2026-10-02` — måles på **indhold** på den levende rute, ikke

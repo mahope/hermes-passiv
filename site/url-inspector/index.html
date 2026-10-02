@@ -88,6 +88,7 @@
 
   .error-state{background:var(--color-red-soft);border:1px solid var(--color-red);border-radius:var(--radius);padding:16px 20px;color:var(--color-red);margin-bottom:16px}
 </style>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 </head>
 <body>
@@ -206,33 +207,13 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
   // Cloudflare replies to a crashed worker with an HTML error page — so the old
   // `res.json()` threw and the catch reported "Network error: Unexpected token
   // '<'", blaming the visitor's Wi-Fi and giving up on the first blip. The
-  // status is read first, a 5xx is retried, and only a real 4xx is
-  // final.
+  // status is read first, a 5xx is retried, and only a real 4xx is final. All
+  // of it lives in /net.js next to the other callers, and
+  // `tools/check_net_copies.py` keeps it the only copy — so this page keeps the
+  // retry budget and the sentences it shows, nothing else.
   const INSPECT_MAX_TRIES = 3;
   const SERVER_BUSY = 'Our inspection server is temporarily unavailable. Please try again in a moment.';
   const OFFLINE = 'We could not reach the inspection server. Check your connection and try again.';
-
-  async function inspectOnce(url) {
-    let res;
-    try {
-      res = await fetch('/api/url-inspect?url=' + encodeURIComponent(url));
-    } catch (e) {
-      // The request never arrived, so it is not our server's fault — but a
-      // dropped connection is still worth one more try.
-      const down = new Error((e && e.message) || 'connection failed');
-      down.transport = true;
-      down.transient = true;
-      throw down;
-    }
-    const data = await res.json().catch(() => null);
-    if (res.ok && data) return data;
-    const err = new Error((data && data.error) || ('Server replied with ' + res.status));
-    err.status = res.status;
-    // A missing body was not written by us, so it is transient whatever
-    // status the edge reported.
-    err.transient = !data || res.status >= 500;
-    throw err;
-  }
 
   async function inspect(url) {
     // Reset
@@ -242,21 +223,18 @@ Built by <a href="https://github.com/mahope">Mahope</a> &middot;
     statusBar.innerHTML = '<span class="loading-spinner"></span> Inspecting…';
 
     try {
-      let tries = 0, data;
-      while (true) {
-        try {
-          data = await inspectOnce(url);
-          break;
-        } catch (err) {
-          if (err.transient && ++tries < INSPECT_MAX_TRIES) {
-            statusBar.innerHTML = '<span class="loading-spinner"></span> Server busy — retrying…';
-            await new Promise((r) => setTimeout(r, 1200 * tries));
-            continue;
-          }
+      // Genkalderne og beskeden mens de foregår, ligger i /net.js. Rides den af
+      // en fejl der ikke er forbigående, er den endelig, og vi viser den — så
+      // den skal ikke videre til den ydre "Network error"-gren nedenfor, der
+      // kun er til for et kald der aldrig kom frem.
+      const data = await NET.askGet('/api/url-inspect?url=' + encodeURIComponent(url), INSPECT_MAX_TRIES,
+        function () {
+          statusBar.innerHTML = '<span class="loading-spinner"></span> Server busy — retrying…';
+        }).then(function (d) { return d; }, function (err) {
           showError(err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Inspection failed')));
-          return;
-        }
-      }
+          return null;
+        });
+      if (!data) return;
       // The worker answers 200 with an `error` on a redirect loop it cannot
       // follow, so a body that names its own error is still a real error.
       if (data.error) {

@@ -223,10 +223,15 @@ function loadPage(path, fetchImpl, opts = {}) {
 // både url og `init`, så metoden kan være en del af dommen, og `body` er det
 // svar klienten læser i stedet for et tomt objekt.
 function responses(list, opts = {}) {
-  const state = { calls: 0, urls: [] };
+  const state = { calls: 0, urls: [], saga: [] };
   const skips = (opts.skip || []).map((s) => (s instanceof RegExp ? { test: (u) => s.test(u) } : s));
   const fetchImpl = async (url, init) => {
     state.urls.push(String(url));
+    // `opts.onCall` læser side-elementer i det øjeblik kaldet går ud. Det er
+    // den eneste måde at se, hvad siden *sagde* undervejs: en dom på teksten
+    // bagefter ville være grøn, fordi resultatet eller fejlen har overskrevet
+    // den. Bruges af `/url-inspector`, der fortæller at den prøver igen.
+    if (opts.onCall) state.saga.push(opts.onCall(String(url)));
     for (const s of skips) {
       if (s.test(String(url), init)) return { ok: true, status: 200, json: async () => s.body || {} };
     }
@@ -262,14 +267,27 @@ async function runScan(path, list) {
 // altså bruger det første svar i listen på den og klikket får det anden.
 // Derfor præfiksér listen med ét svar, der kun den auto-kørsel kan nå.
 async function runInspect(list) {
-  const { fetchImpl, state } = responses([OK_INSPECT, ...list], { skip: [/api\/track/] });
-  const { sandbox, nodes } = loadPage('site/url-inspector/index.html', fetchImpl);
+  // `onCall` sættes *efter* loadPage, fordi den skal kunne læse sidens egne
+  // elementer. Indtil da er den null, og intet kald er sendt endnu: siden kører
+  // først sin egen URL ved sidevisning, og det første klik sker bagefter.
+  const opts = { skip: [/api\/track/], onCall: null };
+  const { fetchImpl, state } = responses([OK_INSPECT, ...list], opts);
+  const { nodes } = loadPage('site/url-inspector/index.html', fetchImpl);
+  opts.onCall = () => (nodes.get('status-bar') || {}).innerHTML || '';
   await sleep(30);
   const base = state.calls;
   nodes.get('url-input').value = 'https://example.com';
   nodes.get('inspect-btn').click();
   await sleep(30);
-  return { calls: state.calls - base, err: (nodes.get('error-placeholder') || {}).innerHTML || '' };
+  return {
+    calls: state.calls - base,
+    err: (nodes.get('error-placeholder') || {}).innerHTML || '',
+    // Statuslinjen i det øjeblik hvert kald går ud. Det er det eneste
+    // tidspunkt, hvor siden skal have fortalt brugeren at den prøver igen:
+    // bagefter står der kun resultat eller en fejl, så en dom på slutværdien
+    // ville være grøn uden at sige noget.
+    saga: state.saga,
+  };
 }
 
 const PAGES = [
@@ -327,6 +345,11 @@ for (const [path, lang] of PAGES) {
 {
   const r = await runInspect([{ status: 500, html: true }, OK_INSPECT]);
   ok('url-inspector: 500 med HTML genkaldes og lykkes', r.calls === 2 && !/temporarily unavailable/.test(r.err), `calls=${r.calls} err=${r.err}`);
+  // Genkalderne ligger i /net.js nu. Siden skal stadig fortælle at den prøver
+  // igen — ellers står brugeren og kigger på en spinder der ser ud til at være
+  // hængt, i to og et halvt sekund. Målt i det øjeblik det andet kald går ud.
+  const under = r.saga[r.saga.length - 1];
+  ok('url-inspector: siden siger at den prøver igen undervejs', /retrying/i.test(under), under);
 }
 {
   const r = await runInspect([{ status: 503, html: true }]);
@@ -683,7 +706,9 @@ async function runHeaders(list) {
   ok('mutation: ingen klient i site/ genkaller en 429', retried429.length === 0, retried429.join(', '));
   for (const p of ['site/page-profile.html', 'site/da/page-profile.html']) {
     const src = readFileSync(join(root, p), 'utf8');
-    ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /err\.transient = !j \|\| r\.status >= 500/.test(src));
+    // Regelens to linjer ligger i /net.js, så her dømmes *at siden læser den*:
+    // en kopi ville være grøn, fordi den ikke kan se ud over sin egen fil.
+    ok(`mutation: ${p} har samme regel`, /PROFILE_MAX_TRIES = 3/.test(src) && /NET\.askGet\(/.test(src));
   }
   // Ingen site-fil må have sin egen postJSON igen — de deler /net.js.
   for (const p of ['site/book-ai.js', 'site/compliance-ai.html', 'site/da/compliance-ai.html',
@@ -723,11 +748,20 @@ function mutated(path, from, to) {
   return html.replace(from, to);
 }
 {
+  // Regelens linjer lå seks steder; de ligger nu i /net.js. Ratcheten skal derfor
+  // finde *kernen*, og de seks klienter skal læse den — en kopi ville være grøn
+  // her, fordi den kan se ud over sin egen fil.
   const src = readFileSync(join(root, 'site/compliance-site-check.html'), 'utf8');
-  ok('mutation: en klient uden status-first findes i korpus', /r\.json\(\)\.catch/.test(src), 'genkaldskæden er væk');
+  ok('mutation: kernen læser status før kroppen', /res\.json\(\)\.catch/.test(readFileSync(join(root, 'site/net.js'), 'utf8')));
   ok('mutation: 503-grænsen er en konstant, ikke et hærdet tal', /SCAN_MAX_TRIES = 3/.test(src));
   ok('mutation: url-inspector har samme regel', /INSPECT_MAX_TRIES = 3/.test(readFileSync(join(root, 'site/url-inspector/index.html'), 'utf8')));
   ok('mutation: DA-siden har samme regel', /SCAN_MAX_TRIES = 3/.test(readFileSync(join(root, 'site/da/compliance-site-check.html'), 'utf8')));
+  for (const p of ['site/compliance-site-check.html', 'site/da/compliance-site-check.html',
+                   'site/page-profile.html', 'site/da/page-profile.html',
+                   'site/security-headers-check.html', 'site/url-inspector/index.html']) {
+    const klient = readFileSync(join(root, p), 'utf8');
+    ok(`mutation: ${p} læser den delte regel`, /NET\.askGet\(/.test(klient), 'egen regel');
+  }
 }
 {
   // Retter vi genkaldet væk, skal "503 hele vejen giver tre forsøg" blive rød.
@@ -743,7 +777,12 @@ function mutated(path, from, to) {
       document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); } },
       navigator: { doNotTrack: '0' }, location: { pathname: '/x.html' } };
     sandbox.window = sandbox; sandbox.globalThis = sandbox;
-    vm.createContext(sandbox); vm.runInContext(main, sandbox);
+    vm.createContext(sandbox);
+    // Siden læser reglen i /net.js nu, så mutationen ville dømme en
+    // ReferenceError i stedet for genkaldsregelen. Den skal være indlæst først,
+    // som browseren gør med `defer` i head.
+    vm.runInContext(readFileSync(join(root, 'site/net.js'), 'utf8'), sandbox, { filename: 'site/net.js' });
+    vm.runInContext(main, sandbox);
     nodes.get('urlInput').value = 'example.com';
     await sandbox.scan();
     await new Promise((r) => setTimeout(r, 20));
@@ -754,14 +793,20 @@ function mutated(path, from, to) {
   // Den anden halvdel af den gamle fejl: at et forbigående svar blev meldt som
   // "Network error". Sætter vi beskeden tilbage og gør 5xx endeligt, skal både
   // genkaldskontrollen og tekstkontrollen blive røde.
-  let m = readFileSync(join(root, 'site/compliance-site-check.html'), 'utf8');
-  m = m.replace('err.transient = !data || r.status >= 500;', 'err.transient = false;')
-       .replace("fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')) });",
-                "fejl.push({ url: target, error: 'Network error: ' + (err.message || 'unknown') });");
-  ok('mutation: den gamle behandling kan fremstilles', /Network error: ' \+ \(err\.message/.test(m) && /err\.transient = false;/.test(m));
-  if (m) {
+  //
+  // De to halvdele bor nu i hver sin fil — reglen i `/net.js`, beskeden på siden
+  // — så mutationen rører dem hver for sig, ligesom den gamle kode gjorde. En
+  // mutation der kun ramte den ene ville være grøn på den anden.
+  const gammelKode = readFileSync(join(root, 'site/compliance-site-check.html'), 'utf8')
+    .replace("fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scan failed')) });",
+             "fejl.push({ url: target, error: 'Network error: ' + (err.message || 'unknown') });");
+  const gammelRegel = readFileSync(join(root, 'site/net.js'), 'utf8')
+    .replace('err.transient = !data || res.status >= 500;', 'err.transient = false;');
+  ok('mutation: den gamle behandling kan fremstilles',
+    /Network error: ' \+ \(err\.message/.test(gammelKode) && /err\.transient = false;/.test(gammelRegel));
+  {
     const { fetchImpl, state } = responses([{ status: 502, html: true }]);
-    const scripts = [...m.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((x) => x[1]);
+    const scripts = [...gammelKode.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((x) => x[1]);
     const main = scripts.find((s) => /fetchScan/.test(s));
     const nodes = new Map();
     const sandbox = { console, setTimeout: fastTimeout, URL, Promise, Error, JSON, encodeURIComponent, scrollTo() {},
@@ -769,7 +814,9 @@ function mutated(path, from, to) {
       document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
         createElement: () => el(), createTextNode: (t) => ({ textContent: t }), body: el(), addEventListener() {} } };
     sandbox.window = sandbox; sandbox.globalThis = sandbox;
-    vm.createContext(sandbox); vm.runInContext(main, sandbox);
+    vm.createContext(sandbox);
+    vm.runInContext(gammelRegel, sandbox, { filename: 'site/net.js' });
+    vm.runInContext(main, sandbox);
     nodes.get('urlInput').value = 'example.com';
     await sandbox.scan();
     await sleep(30);
@@ -852,6 +899,18 @@ function mutated(path, from, to) {
     const src = readFileSync(join(root, p), 'utf8');
     ok(`net.js: ${p} indlæser den`, /<script defer src="\/net\.js"><\/script>/.test(src));
   }
+  // De seks GET-klienter læste hver sin kopi af reglen. Nu skal de læse den
+  // her, og de skal *indlæse* den — en side der bruger `NET.askGet()` uden at
+  // hente filen ville være grøn på regexet og dø i browseren.
+  for (const p of ['site/compliance-site-check.html', 'site/da/compliance-site-check.html',
+    'site/page-profile.html', 'site/da/page-profile.html',
+    'site/security-headers-check.html', 'site/url-inspector/index.html']) {
+    const src = readFileSync(join(root, p), 'utf8');
+    ok(`net.js: ${p} indlæser den`, /<script defer src="\/net\.js"><\/script>/.test(src));
+    ok(`net.js: ${p} læser den delte regel i stedet for at kopiere den`,
+      /NET\.askGet\(/.test(src) && !/function postJSON/.test(src) && !/\.transient\s*=/.test(src),
+      'egen kopi af reglen');
+  }
 }
 {
   // 5xx endeligt i den delte hjælper: alle tre klienter mister genkaldet paa én
@@ -869,6 +928,28 @@ function mutated(path, from, to) {
     for (const p of ['site/compliance-ai.html', 'site/da/compliance-ai.html']) {
       const r = await runAsk(p, [{ status: 503, html: true }]);
       ok(`mutation: ${p} læser /net.js, så den følger med ned`, r.calls === 1, `calls=${r.calls} (forventet 3)`);
+    }
+  } finally { netOverride = null; }
+  // De seks GET-klienter skal følge med ned på *samme* mutation. Havde de
+  // hver haft en kopi af reglen, ville de være grønne her — det er præcis den
+  // fejlform der gjorde det nødvendigt at samle dem.
+  netOverride = broken;
+  try {
+    for (const [p, lang] of PAGES) {
+      const r = await runScan(p, [{ status: 503, html: true }]);
+      ok(`mutation: ${lang} compliance-site-check læser /net.js, så den følger med ned`, r.calls === 1, `calls=${r.calls} (forventet 3)`);
+    }
+    for (const [p, lang] of [['site/page-profile.html', 'EN'], ['site/da/page-profile.html', 'DA']]) {
+      const r = await runProfile(p, [{ status: 503, html: true }]);
+      ok(`mutation: ${lang} page-profile læser /net.js, så den følger med ned`, r.calls === 1, `calls=${r.calls} (forventet 3)`);
+    }
+    {
+      const r = await runHeaders([{ status: 503, html: true }]);
+      ok('mutation: security-headers-check læser /net.js, så den følger med ned', r.calls === 1, `calls=${r.calls} (forventet 3)`);
+    }
+    {
+      const r = await runInspect([{ status: 503, html: true }]);
+      ok('mutation: url-inspector læser /net.js, så den følger med ned', r.calls === 1, `calls=${r.calls} (forventet 3)`);
     }
   } finally { netOverride = null; }
 }

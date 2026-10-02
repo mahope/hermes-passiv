@@ -144,6 +144,7 @@
     .input-group button { width: 100%; }
   }
 </style>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <!-- iter313 report-dl -->
 </head>
@@ -237,7 +238,9 @@ function getStatusIcon(status) {
 // svarer en worker der er faldet ned med en HTML-side — så det gamle
 // `r.json()` kastede, og catch'en sagde "Netværksfejl: Unexpected token '<'".
 // Den bekyldte besøgerens wifi og gav op ved det første blip. Status læses først,
-// et 5xx prøves igen et par gange, og kun et rigtigt 4xx er endeligt.
+// et 5xx prøves igen, og kun et rigtigt 4xx er endeligt. Det ligger i /net.js
+// nu, sammen med de andre klienter, og `tools/check_net_copies.py` holder det som
+// den eneste kopi. Her står kun antallet genkald og de sætninger siden viser.
 var SCAN_MAX_TRIES = 3;
 var SERVER_BUSY = 'Vores scanningsserver er midlertidigt utilgængelig. Prøv igen om et øjeblik.';
 var OFFLINE = 'Vi kunne ikke nå scanningsserveren. Tjek din forbindelse og prøv igen.';
@@ -246,24 +249,7 @@ var OFFLINE = 'Vi kunne ikke nå scanningsserveren. Tjek din forbindelse og prø
 var SCAN_MAX_SITES = 5;
 
 function fetchScan(endpoint) {
-  return fetch(endpoint).catch(function(e) {
-    // Kaldet kom aldrig frem. Det er ikke vores servers skyld, men et brudt
-    // forbindelse er stadig værd ét forsøg mere.
-    var err = new Error((e && e.message) || 'forbindelsen brød');
-    err.transport = true;
-    err.transient = true;
-    throw err;
-  }).then(function(r) {
-    return r.json().catch(function() { return null; }).then(function(data) {
-      if (r.ok && data) return data;
-      var err = new Error((data && data.error) || ('Serveren svarede med ' + r.status));
-      err.status = r.status;
-      // Mangler svaret, var det ikke os der skrev det, så det er forbigående
-      // uanset hvilken status kanten meldte.
-      err.transient = !data || r.status >= 500;
-      throw err;
-    });
-  });
+  return NET.askGet(endpoint, SCAN_MAX_TRIES);
 }
 
 // Én URL pr. linje, samme website to gange kun én gang. Rækkefølgen bevares, så
@@ -297,7 +283,10 @@ function scan() {
   }
 
   showLoading();
-  var rapporter = [], fejl = [], k = 0, tries = 0;
+  // Én URL ad gangen, og `NET.askGet` står for genkalderne — ikke denne løkke.
+  // Før delte de ansvaret, så en 503 blev genkaldt op til ni gange: tre her og
+  // tre i hvert forsøg.
+  var rapporter = [], fejl = [], k = 0;
   function naeste() {
     if (k >= urls.length) {
       hideLoading();
@@ -319,16 +308,12 @@ function scan() {
         } else {
           rapporter.push(data);
         }
-        k++; tries = 0;
+        k++;
         naeste();
       })
       .catch(function(err) {
-        if (err.transient && ++tries < SCAN_MAX_TRIES) {
-          setTimeout(naeste, 1200 * tries);
-          return;
-        }
         fejl.push({ url: target, error: err.transport ? OFFLINE : (err.transient ? SERVER_BUSY : (err.message || 'Scanen kunne ikke gennemføres')) });
-        k++; tries = 0;
+        k++;
         naeste();
       });
   }

@@ -60,6 +60,7 @@
 .sh-raw { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
 .sh-privacy { font-size: 0.85rem; color: var(--color-text-muted); padding: 0.6rem 0 0.2rem; text-align: center; }
 </style>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What are security headers?", "acceptedAnswer": {"@type": "Answer", "text": "They are HTTP response headers a server sends to harden the browser: Content-Security-Policy limits what scripts can run, Strict-Transport-Security forces HTTPS, X-Content-Type-Options stops MIME sniffing, and others control framing and referrer leakage. They cost nothing to add and block whole attack classes."}}, {"@type": "Question", "name": "Is my URL logged or stored?", "acceptedAnswer": {"@type": "Answer", "text": "No. The lookup goes through our server, which fetches the headers and sends them back. We do not store the URL you entered or the result, and we set no cookies. What we do keep is a salted hash of your IP address for the current hour, so that one script cannot use up the check for everyone else; it expires after two hours."}}, {"@type": "Question", "name": "Why does my site score badly even though it works fine?", "acceptedAnswer": {"@type": "Answer", "text": "Headers do not affect how a page looks, only how browsers treat it. Most sites ship without CSP or HSTS because frameworks do not add them by default. The fix is usually a few lines in your web server or hosting configuration."}}, {"@type": "Question", "name": "Can I copy the recommended headers directly?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Each missing header comes with a suggested value you can paste into nginx, Apache, Netlify, Vercel or Cloudflare settings. Test after deploying — an overly strict CSP can break inline scripts until tuned."}}]}
@@ -286,42 +287,15 @@
     // `r.json()` threw and the catch printed "Network error: Unexpected token '<'",
     // which blamed the visitor's Wi-Fi for our own 5xx, showed them a raw JavaScript
     // error, and gave up on the first blip. The status is read first, a 5xx
-    // is retried, and only a real 4xx is final.
+    // is retried, and only a real 4xx is final — all of it lives in /net.js next
+    // to the other callers, and `tools/check_net_copies.py` keeps it the only
+    // copy. Only the retry budget and the sentences this page shows are ours.
     var HEADERS_MAX_TRIES = 3;
     var HEADERS_SERVER_BUSY = 'Our header server is temporarily unavailable. Please try again in a moment.';
     var HEADERS_OFFLINE = 'We could not reach the header server. Check your connection and try again.';
 
     function checkHeaders(target) {
-      var tries = 0;
-      function attempt() {
-        return fetch('/api/header-check?url=' + encodeURIComponent(target))
-          .catch(function(e) {
-            // The request never left. Not our server's fault, but a broken
-            // connection is still worth one more try.
-            var err = new Error((e && e.message) || 'connection failed');
-            err.transport = true;
-            err.transient = true;
-            throw err;
-          })
-          .then(function(r) {
-            return r.json().catch(function() { return null; }).then(function(data) {
-              if (r.ok && data) return data;
-              var err = new Error((data && data.error) || ('Server replied with ' + r.status));
-              err.status = r.status;
-              // No body means the answer was not ours to read, so it is transient
-              // by definition whatever status the edge reported.
-              err.transient = !data || r.status >= 500;
-              throw err;
-            });
-          })
-          .catch(function(err) {
-            if (err.transient && ++tries < HEADERS_MAX_TRIES) {
-              return new Promise(function(res) { setTimeout(res, 1200 * tries); }).then(attempt);
-            }
-            throw err;
-          });
-      }
-      return attempt();
+      return NET.askGet('/api/header-check?url=' + encodeURIComponent(target), HEADERS_MAX_TRIES);
     }
 
     checkHeaders(url)

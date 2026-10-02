@@ -84,10 +84,18 @@ ROOT = Path(__file__).resolve().parent.parent
 WORKER = ROOT / "site" / "_worker.js"
 SITE = ROOT / "site"
 
-# `fetch('/scan-proxy?url=' …` og `fetch("/api/header-check?url=" …`. Kun
-# streng-literaler: en URL bygget med variabel kan ikke slås op på statisk
-# grund, og porten skal ikke gætte.
-RE_FETCH = re.compile(r"""fetch\(\s*['"]([^'"?]+)""")
+# `fetch('/scan-proxy?url=' …`, `fetch("/api/header-check?url=" …` og
+# `NET.askGet('/api/header-check?url=' …`. Kun streng-literaler: en URL bygget
+# med variabel kan ikke slås op på statisk grund, og porten skal ikke gætte.
+#
+# `NET.askGet()`/`NET.ask()` tærer med, fordi de kalder `fetch` i `/net.js` i
+# stedet for i siden. Uden dem holdt de seks GET-klienter op med at være fundet
+# som klienter af hentende ruter — altså holdt de op med at være *dømt* af
+# porten, fordi de flyttede kaldet ind i den delte hjælper. Det er den fejlform
+# denne port helst skal finde, så den må ikke selv have den.
+RE_FETCH = re.compile(
+    r"""(?:fetch|NET\.(?:ask|askGet|getJSON|postJSON))\(\s*['"]([^'"?]+)"""
+)
 
 # `href="scan"` er rodrelativt og `href="/scan"` er absolutt; begge former
 # bruges i `site/`. Uden den relative form får `compliance-ai.html` ingen
