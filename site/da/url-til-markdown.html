@@ -187,8 +187,8 @@
       } catch (e) { return 'side'; }
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    function start(e) {
+      if (e) e.preventDefault();
       var target = input.value.trim();
       if (!target) return;
       setStatus('');
@@ -217,7 +217,26 @@
           goBtn.disabled = false;
           goBtn.textContent = 'Konvertér til Markdown';
         });
-    });
+    }
+    form.addEventListener('submit', start);
+
+    // Den adresse læseren allerede har givet os, fra to retninger. Målt 2/10:
+    // siden havde ingen vej at modtage den på. Forsidens formular er en rigtig
+    // GET til `/da/url-til-markdown`, så en læser uden JavaScript landede her
+    // med `?url=…` i adresselinjen og et tomt felt — og forsidens eget
+    // resultatkort sendte `?url=` ingen steder. `#url=` er den konvention de
+    // øvrige sider læser, så begge læses her og fragmentet vinder. Kun
+    // `http(s)` bruges: query og fragment kan skrives i hånden, og
+    // `/scan-proxy` verner målet server-side.
+    (function () {
+      var q = (location.search.match(/[?&]url=([^&#]+)/) || [])[1];
+      var h = (location.hash.match(/#url=([^&]+)/) || [])[1];
+      var u = '';
+      try { u = decodeURIComponent(h || q || ''); } catch (e) { u = ''; }
+      if (!/^https?:\/\//i.test(u)) return;
+      input.value = u;
+      start();
+    })();
 
     document.getElementById('btn-copy').addEventListener('click', function () {
       if (!output.value) { copyStatus.textContent = 'Intet at kopiere endnu.'; return; }

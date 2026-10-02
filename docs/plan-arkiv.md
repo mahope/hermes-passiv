@@ -4979,3 +4979,68 @@ siden 12:42, og `deploy` har `needs: gate` — så cleancopy.tools' konvertering
 `cleancopy.tools/` og `/da/` har **0** forekomster af `cc-check-form`, mens
 mahope.tools og deskuptime.com har 1 hver, og `build-info.json` på alle tre
 domæner står i `d0e55bf`.
+
+---
+
+## 2/10 kl. 17 — handoff fra forsidens tjek til værktøjet (afsluttet)
+
+Opgave: `ceo/url-med-til-udpakke`. Målt 2/10 på den levende udgivelse:
+`mahope.tools/` og `/da/` erklærede hver to `next`-links, `/scan` læste `#url=`,
+og `grep -c 'takesUrl' site/*.html` gav **0** — fordi motoren ikke havde nogen
+vej at sætte den på. Den dybeste handling på forsiden («Full WCAG scan», den
+scanner der sælger EUComply Pro til $79/år) endte altså på en side med et tomt
+felt.
+
+Leveret:
+- `one-off-check.js` og `convert-check.js` får `medUrl(item, data)`, som bygger
+  `#url=` af `takesUrl`. Siden erklærer selv hvilke af *dens* links der vil have
+  den med, så der står intet produkt-specifikt i delt kode.
+- `compliance-site-check.html` (EN + DA) læser `#url=` og scanner med det, så
+  «Compliance-tjek» ud fra forsiden ikke spørger om den samme adresse igen.
+- `url-to-markdown.html` (EN + DA) læser både `?url=` og `#url=` (fragmentet
+  vinder), fordi forsidens formular er en rigtig GET — så en læser uden
+  JavaScript lander med `?url=` og et tomt felt.
+- Ny port `tools/check_url_handoff.py`, kablet som trin 141–142.
+
+Fund undervejs, som alle tre rettede i samme opgave:
+1. **`check_inline_js.py` RØD: `SyntaxError: Unexpected token '}'` i begge
+   `url-til-markdown`-sider.** Den forrige iteration havde gjort submit-handleren
+   om til en navngiven `start()` og fjernet den forældede `});` i den engelske
+   fil, men ikke i den danske. Porten fangede det; den danske side ville have
+   kastet ved første tryk.
+2. **`scan-clients.test.mjs` døde med `location.hash` undefined.** Fem
+   sandkasser modellerede `location` som `{ pathname }` uden `search`/`hash`.
+   Modellen er nu fuldstændig — en browser har begge som strenge.
+3. **Selvtesten havde en forventning, der ikke holdt:** «motoren læser ikke
+   flaget»Fixturet gav **2** fund, ikke 1, fordi det også manglede `#url=`.
+   Fixtet ved at gøre de to manglende ting til hver sin mutation, så porten
+   dømmer dem uafhængigt.
+4. **Død kode:** `laes_maal()` returnerede `{}` og blev aldrig kaldt.
+5. **To påstande i prosa var forkerte.** Kommentarerne sagde «tolv sider læser
+   `#url=`» og «seks platform-guides»; målt er det **fem** sider og **syv**
+   guides. Rettet — portens docstring var endda selvmodsigende, fordi den
+   opremsede præcis de fem ruter den nævnte.
+6. **Porten var aldrig kørt mod cleancopy.tools' forside** og var derfor RØD med
+   4 fund ved første kørsel: `CONVERT_CHECK` manglede i `MOTORER`, og de to
+   cleancopy-forsider erklærede ikke `takesUrl`.
+
+Dom 5: `scan-clients.test.mjs` **429/429** (417 + 12 nye). De 12 nye domme er
+adfærdsdomme, ikke tekstdomme: de kører siden i en sandkasse med
+`location.hash` sat og siger om et `fetch`-kald gik ud. Polaritet målt ved to
+mutationer af rigtige filer:
+- IIFE'en fjernet → **425/429 RØD**.
+- `if (!m) return;` → `if (true) return;` → `check_url_handoff.py` **stadig
+  GRØN** (den dømmer at siden læser `location.hash`), `scan-clients`
+  **423/429 RØD** (den dømmer at der går et kald ud).
+
+Dom 1: `check_url_handoff.py` **GRØN**, 8 forsider dømt, 6 handoff, 2 motorer
+erklæret; `--self-test` **12/12**. Dom 2: `stripe-worker.test.mjs` **354/354**.
+Dom 3: `build_sites.py` 330 + 73 + 35 + 37 filer, 0 brudte; `seo_check.py`
+314 sider 0 fund; `check_inline_js.py` 0 problemer. Dom 4: hele
+`quality_gate.py` **142 steps** grønne (140 før).
+
+Deploy-noter lukket i samme kørsel: `ceo/cleancopy-konverteringstjek` (`22a2753`)
+er **ude** — dens blokering var rød CI, som `db3c537` rettede 15:01. Målt på
+indhold: `cleancopy.tools/build-info.json` står i `db3c537` (main HEAD),
+forsiden har `cc-check-form` og 3 referencer til `/readable.js` +
+`/convert-check.js`.

@@ -728,7 +728,7 @@ async function runHeaders(list) {
   const footer = el();
   footer.parentNode = { insertBefore() {} };
   const sandbox = { console, setTimeout: fastTimeout, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent,
-    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/x.html' },
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/x.html', search: '', hash: '' },
     document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
       querySelector: () => footer, createElement: () => el(), head: el(), body: el(), addEventListener() {} } };
   sandbox.window = sandbox; sandbox.globalThis = sandbox;
@@ -775,7 +775,7 @@ function mutated(path, from, to) {
     const nodes = new Map();
     const sandbox = { console, setTimeout, URL, Promise, Error, JSON, encodeURIComponent, fetch: fetchImpl,
       document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); } },
-      navigator: { doNotTrack: '0' }, location: { pathname: '/x.html' } };
+      navigator: { doNotTrack: '0' }, location: { pathname: '/x.html', search: '', hash: '' } };
     sandbox.window = sandbox; sandbox.globalThis = sandbox;
     vm.createContext(sandbox);
     // Siden læser reglen i /net.js nu, så mutationen ville dømme en
@@ -787,6 +787,65 @@ function mutated(path, from, to) {
     await sandbox.scan();
     await new Promise((r) => setTimeout(r, 20));
     ok('mutation: uden genkald bliver kontrollen rød', state.calls === 1, `calls=${state.calls} (forventet 3)`);
+  }
+}
+{
+  // `#url=`-fragmentet skal *gøre* noget, ikke bare være læst.
+  //
+  // `check_url_handoff.py` dømmer, at forsiden erklærer `takesUrl` og at
+  // målruten læser `#url=` med `location.hash`. Den dømmer ikke, at siden
+  // *bruger* den — og det er den tredje ende, hvor de kan være forskudt fra
+  // hinanden helt stille. Her scanner compliance-siden sig selv, fordi
+  // fragmentet siger det, så læseren der trykkede «Compliance-tjek» ud fra
+  // forsidens tjek ikke skal skrive den samme adresse ind en gang til.
+  //
+  // Mutationen her er bevidst den stille: `if (!m) return;` → `if (true)
+  // return;`. Siden læser stadig `#url=` (porten er grøn), `#url=` i
+  // adresselinjen ser stadig ud som om den gør noget — men intet kald går ud.
+  // En test der blot greb efter teksten ville være grøn på den mutation.
+  const HANDOFF_URL = 'https://hvor-dette-er.example/';
+  const MUTATION = "if (!m) return;";
+  for (const p of ['site/compliance-site-check.html', 'site/da/compliance-site-check.html']) {
+    const html = readFileSync(join(root, p), 'utf8');
+    const main = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
+      .map((x) => x[1]).find((s) => /function fetchScan/.test(s));
+    ok(`handoff: ${p} har et script med fetchScan`, !!main);
+    ok(`mutation: ${p} har den kode der læser fragmentet`, html.includes(MUTATION));
+    ok(`mutation: ${p} kan gøres tavs`, html.includes('if (true) return;') === false);
+
+    async function kørMed(tekst, hash) {
+      const { fetchImpl, state } = responses([OK_SCAN]);
+      const nodes = new Map();
+      const sandbox = { console, setTimeout, URL, Promise, Error, JSON, Object, Array, String,
+        Number, Boolean, RegExp, encodeURIComponent, decodeURIComponent,
+        fetch: fetchImpl, navigator: { doNotTrack: '0' },
+        location: { pathname: '/' + p.split('/').pop(), search: '', hash },
+        document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
+          querySelector: () => el(), createElement: () => el(), head: el(), body: el(),
+          createTextNode: (t) => ({ textContent: String(t) }), addEventListener() {} } };
+      sandbox.window = sandbox; sandbox.globalThis = sandbox;
+      sandbox.scrollTo = () => {};
+      vm.createContext(sandbox);
+      vm.runInContext(readFileSync(join(root, 'site/net.js'), 'utf8'), sandbox, { filename: 'site/net.js' });
+      vm.runInContext(tekst, sandbox, { filename: p });
+      await new Promise((r) => setTimeout(r, 25));
+      return state;
+    }
+
+    const hash = '#url=' + encodeURIComponent(HANDOFF_URL);
+    const rigtig = await kørMed(main, hash);
+    ok(`handoff: ${p} scanner den adresse fragmentet indeholder`,
+      rigtig.calls === 1 && rigtig.urls.some((u) => u.includes('hvor-dette-er.example')),
+      `calls=${rigtig.calls} urls=${JSON.stringify(rigtig.urls)}`);
+
+    const tavs = await kørMed(main.replace(MUTATION, 'if (true) return;'), hash);
+    ok(`mutation: ${p} uden fragment-læsningen går rød`,
+      tavs.calls === 0,
+      `calls=${tavs.calls} (forventede 0 — porten er stadig grøn, den dømmer teksten)`);
+
+    const anden = await kørMed(main, '#url=' + encodeURIComponent('javascript:alert(1)'));
+    ok(`handoff: ${p} lader ikke en ikke-http adresse gå i scan`,
+      anden.calls === 0, `calls=${anden.calls} (forventede 0)`);
   }
 }
 {
@@ -810,7 +869,7 @@ function mutated(path, from, to) {
     const main = scripts.find((s) => /fetchScan/.test(s));
     const nodes = new Map();
     const sandbox = { console, setTimeout: fastTimeout, URL, Promise, Error, JSON, encodeURIComponent, scrollTo() {},
-      fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/x.html' },
+      fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/x.html', search: '', hash: '' },
       document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
         createElement: () => el(), createTextNode: (t) => ({ textContent: t }), body: el(), addEventListener() {} } };
     sandbox.window = sandbox; sandbox.globalThis = sandbox;
@@ -837,7 +896,7 @@ function mutated(path, from, to) {
   const { fetchImpl, state } = responses([{ status: 503, html: true }]);
   const nodes = new Map();
   const sandbox = { console, setTimeout: fastTimeout, clearTimeout, URL, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent, Blob,
-    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/compliance-ai.html' },
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/compliance-ai.html', search: '', hash: '' },
     document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
       createElement: () => el(), createTextNode: (t) => ({ textContent: t }), querySelectorAll: () => [], addEventListener() {}, body: el() } };
   sandbox.window = sandbox; sandbox.globalThis = sandbox;
@@ -856,7 +915,7 @@ function mutated(path, from, to) {
   const { fetchImpl, state } = responses([{ status: 503, html: true }]);
   const nodes = new Map();
   const sandbox = { console, setTimeout: fastTimeout, clearTimeout, URL, Promise, Error, JSON, Object, Array, String, Number, Boolean, RegExp, encodeURIComponent,
-    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/security-headers-check.html' },
+    fetch: fetchImpl, navigator: { doNotTrack: '0' }, location: { pathname: '/security-headers-check.html', search: '', hash: '' },
     document: { getElementById(id) { if (!nodes.has(id)) nodes.set(id, el()); return nodes.get(id); },
       createElement: () => el(), querySelectorAll: () => [], addEventListener() {}, body: el() } };
   sandbox.window = sandbox; sandbox.globalThis = sandbox;

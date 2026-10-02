@@ -104,6 +104,20 @@
     return el('span', 'cc-stat', value.toLocaleString() + ' ' + (value === 1 ? en : fa));
   }
 
+  // Same contract as `one-off-check.js`'s `medUrl`, and for the same measured
+  // reason: the address the visitor just converted travels with them, so the
+  // tool they are sent to opens on it instead of asking again. The page says
+  // which of its own links want it (`takesUrl: true`); nothing about a product
+  // is hard-coded here. An existing `#` in the href would swallow the fragment,
+  // so then nothing is added, and a value that is not http(s) is never passed
+  // on — the fragment is visitor-editable.
+  function medUrl(item, u) {
+    if (!item.takesUrl) return item.href;
+    var v = String(u || '');
+    if (/#/.test(item.href) || !/^https?:\/\//i.test(v)) return item.href;
+    return item.href + '#url=' + encodeURIComponent(v);
+  }
+
   function render(md, url) {
     out.textContent = '';
     var trimmed = md.trim();
@@ -152,7 +166,7 @@
       links.forEach(function (item) {
         if (!item || typeof item.href !== 'string' || !item.href) return;
         var a = el('a', 'btn-secondary', item.label || item.href);
-        a.href = item.href;
+        a.href = medUrl(item, url);
         a.rel = 'noopener';
         row.appendChild(a);
       });

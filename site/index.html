@@ -216,7 +216,7 @@
   one HTTP request. */
 window.ONE_OFF_CHECK = {
   then: 'That was one request, just now. It says nothing about whether the site was down five minutes ago, and it does not look at a single thing on the page — no contrast, no headings, no cookies. Those are the scanners.',
-  next: [{label: 'Full WCAG scan', href: '/scan'}, {label: 'Compliance check', href: '/compliance-site-check'}]
+  next: [{label: 'Full WCAG scan', href: '/scan', takesUrl: true}, {label: 'Compliance check', href: '/compliance-site-check', takesUrl: true}]
 };
 /* The donation line lives in the page, not in the script: it has to reach
   tools/check_donation_paths.py, and it must not appear before there is a

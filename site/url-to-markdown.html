@@ -217,8 +217,8 @@
       } catch (e) { return 'page'; }
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    function start(e) {
+      if (e) e.preventDefault();
       var target = input.value.trim();
       if (!target) return;
       setStatus('');
@@ -247,7 +247,27 @@
           goBtn.disabled = false;
           goBtn.textContent = 'Convert to Markdown';
         });
-    });
+    }
+    form.addEventListener('submit', start);
+
+    // The address the visitor already gave us, from two directions.
+    //
+    // Measured 2/10: this page had no way to receive it. The front door's form
+    // is a real GET to `/url-to-markdown`, so a reader without JavaScript landed
+    // here with `?url=…` in the address bar and an empty field — and the
+    // front door's own result card sent `?url=` nowhere. `#url=` is the
+    // convention the other pages read, so both are read here and the
+    // fragment wins. Only `http(s)` is used: the query and the fragment are
+    // visitor-editable, and `/scan-proxy` guards the target server-side.
+    (function () {
+      var q = (location.search.match(/[?&]url=([^&#]+)/) || [])[1];
+      var h = (location.hash.match(/#url=([^&]+)/) || [])[1];
+      var u = '';
+      try { u = decodeURIComponent(h || q || ''); } catch (e) { u = ''; }
+      if (!/^https?:\/\//i.test(u)) return;
+      input.value = u;
+      start();
+    })();
 
     document.getElementById('btn-copy').addEventListener('click', function () {
       if (!output.value) { copyStatus.textContent = 'Nothing to copy yet.'; return; }

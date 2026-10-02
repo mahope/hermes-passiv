@@ -222,7 +222,7 @@ npx github:mahope/clean-copy-cli page.html   # run without installing</code></pr
   links point at the two ways onward that this short preview is not. */
 window.CONVERT_CHECK = {
   then: 'That is the real converter, running on your page — the same one the extension, the CLI and the plugins use. It reads what is in the page’s HTML, so text a script adds after the page loads comes out incomplete, and it cannot open anything behind a login.',
-  next: [{label: 'Convert and copy the full text', href: '/url-to-markdown'}, {label: 'Paste HTML instead of a URL', href: '/clean-copy-tool'}]
+  next: [{label: 'Convert and copy the full text', href: '/url-to-markdown', takesUrl: true}, {label: 'Paste HTML instead of a URL', href: '/clean-copy-tool'}]
 };
 /* The donation line lives in the page, not in the engine: it has to reach
   tools/check_donation_paths.py, and it must not appear before there is a

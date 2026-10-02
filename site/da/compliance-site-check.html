@@ -542,6 +542,22 @@ function scanExample() {
   scan();
 }
 
+// `#url=` — den adresse forsiden lige tjekkede, klistret på `next`-linket.
+// Målt 2/10: `/scan-da` læste denne fragment altid, men den danske
+// compliance-side gjorde ikke, så «Compliance-tjek» ud fra forsidens tjek endte
+// i et tomt felt. Konventionen er `#url=` og ikke `?url=`, fordi det er den de
+// øvrige tolv sider læser; feltet tager flere linjer, så værdien sættes i den
+// som én linje. Kun `http(s)` slipper igennem — fragmentet kan skrives i
+// hånden, og serveren verner sig selv (`targetIsPublic`) mod private mål.
+(function () {
+  var m = location.hash.match(/#url=([^&]+)$/);
+  if (!m) return;
+  var u = decodeURIComponent(m[1]);
+  if (!/^https?:\/\//i.test(u)) return;
+  urlInput.value = u;
+  scan();
+})();
+
 urlInput.focus();
 </script>
 </body>

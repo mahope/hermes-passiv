@@ -158,6 +158,30 @@
     return T.reachable + ' with ' + code + ' ' + (data.finalStatusText || '');
   }
 
+  // Den adresse læseren lige har tjekket rejser med videre.
+  //
+  // Målt 2/10: `#url=` er ikke en ny idé her — fem sider læser den allerede og
+  // kører på den (`/scan`, `/scan-da`, `/cookie-check`, `/cookie-check-da`,
+  // `/compliance-report`), og syv platform-guides linker til `/scan#url=…`.
+  // Men **ingen side i familien producerede den**: den der tjekkede sit site på
+  // forsiden og trykkede «Fuld WCAG-scanning» landede på `/scan` med et tomt
+  // felt og skulle skrive den samme adresse ind en gang til. Den dybeste
+  // handling på den side — den scanner der sælger EUComply Pro til $79 pr. år —
+  // startede altså med at spørge om noget læseren allerede havde svaret på.
+  //
+  // Siden erklærer selv hvilke af *dens* links der vil have den med
+  // (`takesUrl: true` i `ONE_OFF_CHECK.next`), så der står intet om et
+  // produkt i denne fil. Adressen er den vi *fandt ved at svare* — altså den
+  // endelige adresse efter redirects — fordi det er den læseren vil se igen.
+  // `#` i en eksisterende href ville slå fragmentet sammen, så da bruges der
+  // intet; en adresse der ikke er http(s) sendes aldrig videre.
+  function medUrl(item, data) {
+    if (!item.takesUrl) return item.href;
+    var u = String((data && (data.finalUrl || data.inspectUrl)) || '');
+    if (/#/.test(item.href) || !/^https?:\/\//i.test(u)) return item.href;
+    return item.href + '#url=' + encodeURIComponent(u);
+  }
+
   function render(data) {
     out.textContent = '';
     var code = Number(data.finalStatus) || 0;
@@ -236,7 +260,7 @@
         // answer — a URL we fetched must never be able to become a link here.
         if (!item || typeof item.href !== 'string' || !item.href) return;
         var a = el('a', 'btn-secondary', item.label || item.href);
-        a.href = item.href;
+        a.href = medUrl(item, data);
         a.rel = 'noopener';
         row2.appendChild(a);
       });

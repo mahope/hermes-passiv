@@ -1,24 +1,30 @@
 # STATUS
-- **CI var rød siden 12:42 på `plan-status`, og `deploy` har `needs: gate`** —
-  så cleancopy.tools' konverteringstjek lå i `22a2753` og blev aldrig udgivet.
-  STATUS er kogt fra 34 til under 25 linjer her; resten står i
-  `docs/plan-arkiv.md`.
-- **mahope.tools' forside-tjek er live og målt på indhold**: `/` og `/da/` har
-  hver præcis 1 `#oc-check-form` med `action="/api/url-inspect"`, og
-  `build-info.json` står i `d0e55bf`.
-- **Nyt gatestræk `front-door`** (`tools/check_front_door.py`): hver forside med et
-  `#check` skal have præcis 1 tjek, sin erklærede motor indlæst, `/net.js` med, og
-  motoren skal lede præcis det form-id op og ikke kalde `/api/*` uden om `NET`.
-  Dømmer **8** forsider afledt af build-manifestet, ikke en håndlavet liste.
-  Selvtest **16/16**; polaritet målt ved **5** mutationer af rigtige filer
-  (motor-script væk, `/net.js` væk, form-id omdøbt, motor leder forkert id,
-  `fetch(` i stedet for `NET.askGet`) — alle **RØD**.
-- **Fejlformen porten lukker er den stille**: begge frontdørsmotorer starter med
-  `if (!form || !window.NET) return;`, så en omdøbt form-id eller en manglende
-  `/net.js` på de **6** forsider der har et tjek lader dem *ligne* et tjek der
-  bare intet gør. Ingen undtagelse, ingen konsolfejl, kun bounce.
-- **`extractReadable` lå i 2 inline kopier** — nu 1 delt `site/readable.js`, og
-  `tools/check_script_deps.py` er gråd på den mutation der fjerner script-tagget.
+- **Forsidens tjek tager nu den indtastede adresse med videre.** Hvem: alle der
+  trykker «Full WCAG scan» eller «Compliance check» på mahope.tools' forside, og
+  alle der konverterer på cleancopy.tools'. Før: de to tjek på forsiden skrev
+  aldrig `#url=`, så den dybeste handling — scanneren der sælger EUComply Pro til
+  $79/år — endte på en side med et tomt felt, der spurgte om den adresse
+  læseren lige havde svaret på. Nu følger den med som `#url=`.
+- **Konventionen var ældre end porten, men ingen producerede den.** Fem sider læste
+  `#url=` allerede (`/scan`, `/scan-da`, `/cookie-check`, `/cookie-check-da`,
+  `/compliance-report`) og syv platform-guides i `/guides` linkede til
+  `/scan#url=…` — men ingen side i familien *satte* den på. `/scan` læste
+  fragmentet, forsidenProducerede det ikke.
+- **Nyt gatestræk `url-handoff`** (`tools/check_url_handoff.py`, trin 141–142):
+  dømmer de **tre ender mod hinanden** — siden erklærer `takesUrl: true`, mål-
+  ruten læser `#url=` med `location.hash`, motoren bygger fragmentet af flaget.
+  Alle tre kan være forskudt fra hinanden helt stille. Dømmer **8** forsider fra
+  build-manifestet, **6** handoffs. Selvtest **12/12**.
+- **Selv porten kan være grøn på en død handoff** — den dømmer teksten. Derfor
+  dømmer `scan-clients.test.mjs` adfærden: de 12 nye kontroller kører siden i en
+  sandkasse med `location.hash` sat og siger om et `fetch`-kald gik ud. Målt ved
+  to mutationer: IIFE'en fjernet → **425/429** RØD; `if (!m) return;` →
+  `if (true) return;` → porten ** stadig GRØN**, testen **423/429 RØD**.
+- **Den røde port viste en fejl i testen, ikke i siden.** Da den nye kode blev
+  kørt, døde `scan-clients`: fem `location`-modeller i sandkassen havde kun
+  `pathname`, så `location.hash.match` var `TypeError`. En browser har altid
+  `search` og `hash` som strenge; modellen har dem nu. Samme fejl fandtes i
+  **0 af 417** målinger før, fordi ingen kode læste fragmentet.
 - **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
   til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen på
@@ -75,21 +81,25 @@
   `check_first_action` 14 dømte 0 problemer, `check_form_labels`, `check_net_copies`
   og `check_built_css` grønne.
 
-- `VERIFICÉR DEPLOY: konverteringstjekket på cleancopy.tools' forside 2026-10-02
-   ceo/cleancopy-konverteringstjek` — **liger i `22a2753` og er ikke live**: CI var
-   rød på `plan-status` fra 12:42, og `deploy` har `needs: gate`, så den blev
-   aldrig udgivet. Måles på **indhold**, ikke på HTTP 200: `cleancopy.tools/` og
-   `/da/` har hver præcis 1 `.oc-form` med `id="cc-check-form"`, `action` på det
-   brugbare værktøj (`/url-to-markdown` + `/da/url-til-markdown`), `<label for>`,
-   `#cc-check-status` med `role="status"`, `#cc-check-result`, `CC_DONATE`, og de
-   indlæser `/net.js` + `/clean-copy-core.js` + `/readable.js` +
-   `/convert-check.js`. `/readable.js` og `/convert-check.js` ligger i roden af
-   `dist/cleancopy.tools/` og kun der. Dom 1: `GET /scan-proxy?url=…` svarer 200
-   med `ok:true` + `html`. Dom 2: `stripe-worker.test.mjs` 354/354. Dom 3:
-   `build_sites.py` 0 brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py`
-   grøn. Dom 4: hele `quality_gate.py` grøn. Dom 5: Chromium 28 kontroller ved
-   390+1280 px grønne (billeder i `/tmp/ui-cleancopy-konverteringstjek/`),
-   `check_donation_paths` 45 dømte, `check_first_action` 16 dømte.
+- **DEPLOY OK 2/10 (kl. 17).** `ceo/cleancopy-konverteringstjek` (`22a2753`) er
+  ude alligevel — dens blokering var rød CI, som `db3c537` rettede 15:01. Målt på
+  **indhold**: `cleancopy.tools/build-info.json` står i `db3c537` (main HEAD),
+  forsiden har `cc-check-form` og 3 referencer til `/readable.js` +
+  `/convert-check.js`.
+
+- `VERIFICÉR DEPLOY: at forsidens tjek tager den indtastede adresse med videre
+   2026-10-02 ceo/url-med-til-udpakke` — måles på **indhold**, ikke på HTTP 200:
+   `mahope.tools/`, `/da/`, `cleancopy.tools/` og `/da/` skal hver have præcis
+   **1** `takesUrl: true` pr. `#url`-læsende `next`-link, og `build-info.json` på
+   alle tre domæner skal stå i squash-sha'en. `/scan`, `/scan-da`,
+   `/cookie-check`, `/cookie-check-da`, `/compliance-report`,
+   `/compliance-site-check`, `/da/compliance-site-check` og de to
+   `url-to-markdown`-sider læser `#url=`. Dom 1: `check_url_handoff.py` **GRØN**
+   (8 forsider dømt, 6 handoff) + `--self-test` **12/12**. Dom 2:
+   `stripe-worker.test.mjs` **354/354**. Dom 3: `scan-clients.test.mjs` **429/429**
+   med de 12 nye handoff-domme. Dom 4: `build_sites.py` 0 brudte,
+   `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer. Dom 5: hele
+   `quality_gate.py` **142 steps** grønne.
 
 - `VERIFICÉR DEPLOY: frontdør-gaten i gaten 2026-10-02 ceo/frontdoors-gate` —
    intet sideindhold ændres, så dette er en gate-ændring: efter push skal
@@ -358,3 +368,12 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     siderne er enige, eller den nye side har en købsvej der betaler sig. Kræver
     Mads' beslutning — se ❓. Datagrund: målt 2/10 i review-fundet, portene er
     grønne fordi ingen dommer den modsigende tekst.
+16. ~~Forsidens tjek smed den adresse læseren lige havde indtastet.~~ **Leveret
+    2/10.** Alle fire forsiders `next`-links bærer nu `#url=`, og de otte
+    modtagelsessider læser den. Hvem: alle der trykker den dybeste handling på
+    forsiden. Tal: felter der skal fyldes to gange pr. session (baseline: **2 →
+    1** på både `mahope.tools` og `cleancopy.tools` — målt på kode, ikke på
+    trafik). Accept: `check_url_handoff.py` grøn + **12** nye adfærdsdomme i
+    `scan-clients.test.mjs`. Datagrund: bounce på mahope.tools' forside er 100 %
+    (4 af 4 besøgende) og på cleancopy.tools' 71 % (7 af 9); de toforsider er de
+    eneste steder, hvor vi *kan* fjerne et spørgsmål læseren netop har svaret på.

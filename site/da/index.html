@@ -216,7 +216,7 @@
   de scannere, der går dybere end ét HTTP-kald. */
 window.ONE_OFF_CHECK = {
   then: 'Det var ét kald lige nu. Det siger intet om, om sitet var nede for fem minutter siden, og det ser ikke på én eneste ting på siden — hverken kontrast, overskrifter eller cookies. Det gør scannerne.',
-  next: [{label: 'Fuld WCAG-scanning', href: '/scan-da'}, {label: 'Compliance-tjek', href: '/da/compliance-site-check'}]
+  next: [{label: 'Fuld WCAG-scanning', href: '/scan-da', takesUrl: true}, {label: 'Compliance-tjek', href: '/da/compliance-site-check', takesUrl: true}]
 };
 /* Samme linje som på den engelske forside: en sætning, ikke en knap, og
   ankeret er katalogens. */

@@ -745,6 +745,29 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
                 "build_sites.py", "site/**"),
     ),
+    # At forsidens tjek tager den indtastede adresse med til værktøjet. Målt
+    # 2/10: tolv sider læser `#url=` og seks platform-guides linker til
+    # `/scan#url=…`, men **ingen side producerede den** — den der tjekkede sit
+    # site på forsiden og trykkede «Full WCAG scan» (den scanner der sælger
+    # EUComply Pro) landede på `/scan` med et tomt felt. Den dybeste handling
+    # på forsiden startede med at spørge om noget læseren lige havde svaret på.
+    # Porten dømmer de tre ender mod hinanden — siden erklærer `takesUrl`,
+    # målruten læser `#url=` med `location.hash`, og motoren bygger
+    # fragmentet af flaget — fordi alle tre kan være forskudt fra hinanden
+    # helt stille. Forsiderne er afledt af build-manifestet. Selvtesten kører
+    # med, fordi porten ellers kunne være grøn ved at finde ingen handoff.
+    Step(
+        id="url-handoff",
+        argv=("python3", "tools/check_url_handoff.py"),
+        inputs=("tools/check_url_handoff.py", "tools/check_article_paid_path.py",
+                "build_sites.py", "site/**"),
+    ),
+    Step(
+        id="url-handoff-selftest",
+        argv=("python3", "tools/check_url_handoff.py", "--self-test"),
+        inputs=("tools/check_url_handoff.py", "tools/check_article_paid_path.py",
+                "build_sites.py", "site/**"),
+    ),
     # Købsknappen i hvert pro-kort, dømt mod `tools/stripe_catalog.json`.
     # Målt 2/10: de tretten værktøjssider skrev **pris og købslink i hånden**
     # inde i en inline `<script>`, og `check_own_prices.py` læser beløb i
