@@ -1,31 +1,39 @@
 # STATUS
-- **20 af 189 guides lå uden for enhver liste på `/blog/`.** Hvem: enhver der
-  leder efter en guide på den side, hvis egen meta description siger «Every
-  guide on this site», og enhver søgemaskine der rankerede artikler efter de
-  links der peger på dem. Før: `site/` rummede 93 engelske og 96 danske guides,
-  siden linkede 86 og 83 — de 20 skrevne efter sidste kørsel af generatoren.
-  Nu linker den alle 189, og de 96 danske guides har fået samme emneopdeling og
-  samme beskrivelser som de engelske (før: én flad liste på 83 linjer).
-- **Årsagen var ikke artiklerne, men at siden var blev redigeret i hånden.**
-  `make_blog_index.py` ejede kun heroen og listerne; bogs-CTA'en og det
-  afsluttende track-script var lagt ind ved siden af. Enhver regenerering ville
-  have slettet de 2 blokke, så ingen turde køre den — og da nye artikler kom,
-  fulgte de ikke med. Generatoren ejer nu hele filen. Fund undervejs: da jeg flyttede
-  track-script ind i generatoren, skrev jeg `catch(e)}})();` i stedet for
-  `catch(e){}})();` — `check_inline_js.py` fangede det på den første kørsel.
-- **Nyt gatestræk `blog-index`** (`tools/check_blog_index.py`, trin 143–144):
-  dømmer at hver guidefil har præcis ét link fra `/blog/`, at heroens «93 English
-  guides … plus 96 Danish guides» er de rigtige tal, og at den committede side er
-  **byte-identisk** med `make_blog_index.py --out`. Selvtest **9/9**. Polaritet
-  målt ved to mutationer af den rigtige side: et link fjernet → RØD med
-  «`broken-link-checker-free` har intet link fra /blog/»; én håndskrevet kommentar
-  tilføjet → RØD på generator-egenskaben. Begge filer genskabt byte-for-byte.
+- **Rød CI 2/10 var porten `check_rule_claims.py`, og fejlen var portens egen.**
+  `make_blog_index.py` skriver hvert punkt på `/blog/` som artiklens `og:title` og
+  `meta description` **ordret**, så da `da/blog/eaa-compliance-scanner-desktop-
+  download` kom med, blev *dets* «Kør alle 22 WCAG 2.1 AA-regler» dømt som
+  *indeksets* løfte, og `/blog/` sælger ingen motor, så porten døde med «står
+  ikke i PRODUCT_ENGINE». Løftet var rigtigt — den side står i kortet.
+- **Rettelsen er at dømme citatet på den side det stammer fra** — den side læser
+  porten allerede. `quoted_spans()` springer kun fra det det kan **måle** som en
+  anden sides ord: **1313** intervaller på **150** sider, som fjerner **1** løfte
+  fra korpus (`blog/index.html:152`). Korpus **240** løfter, alle matcher koden
+  (15 + 18 = 33); `quality_gate.py` **144 steps**.
+- **De 2 dele bedømmes uafhængigt** — den koblede version døde på
+  `blog/compare-two-web-pages-seo.html`, der har «Open `page-profile` and paste in
+  URL #1», hvor anchor-teksten *er* et forled af den linkede sides `og:title`.
+  Uafhængigt springes anchoren fra, brødteksten **beholdes** og dømmes.
+- **3 nye selftestarme, polaritet målt i begge retninger.** Ret artiklens
+  description + citatet → fejl der nævner *artiklen*; med attributværdier **og**
+  JSON-LD blindet fejlede armen. Ret **kun** `/blog/`s citat → porten dør; for
+  bred definition: «undtagelse for hub-sider, ikke et målt citat». Løft i
+  **halen** af et listepunkt hvis anchor matcher → dømmes; samme mutation: «for
+  bred». Find undervegs: en arm muterede netop den `/blog/`-citerede description,
+  så den retter nu begge steder: ret artiklen, kør `make_blog_index.py`.
 - **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
-  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen på
-  værktøjssiderne. Resten under `❓ Til Mads`.
+  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: citat-rettelsen i check_rule_claims 2026-10-02
+   ceo/blogindeks-citerede-lofter` — måles på **indhold** og på at CI går grøn:
+  `gh run list -L 1` skal være `success` på `main` (den var `failure` med
+  «quality_gate: RØD i step `rule-claims`»), og `build-info.json` på de tre
+  deployede domæner skal stå i squash-sha'en. Dom: `python3 tools/
+  check_rule_claims.py` → «240 regel-løfter, alle matcher koden (15 frie + 18
+  Pro = 33)», og `--self-test` → «selftest OK».
 
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
   værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni

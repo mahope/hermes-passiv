@@ -25,18 +25,26 @@ på hvert løfte, der ikke matcher.
     python3 tools/check_rule_claims.py --list      # de målte tal, med kilde
     python3 tools/check_rule_claims.py --self-test # beviser at porten kan rødme
 
-**Målt dækning, 30/9.** Porten læser **alle 303** sider i `site/`
+**Målt dækning, 2/10.** Porten læser **alle 305** sider i `site/`
 (`Layout.site.rglob("*.html")`) — altså hele overfladen, ingen fil-liste som i
 `check_product_copy.py`'s 13 navngivne filer. Dømtekraften er smallere end
 overfladen, og det er værd at skrive ned:
 
-* **79** af 303 sider har mindst ét løfte porten dømmer. De øvrige **224**
+* **79** af 305 sider har mindst ét løfte porten dømmer. De øvrige **226**
   læses, men ingen regel fyrer på dem.
-* Alle fem arter giver **239** dømte løfter, og alle matcher koden
-  (15 frie + 18 Pro = 33): 185 frie, **28** `RE_PRO`, 26 totaler. Før denne
+* Alle fem arter giver **240** dømte løfter, og alle matcher koden
+  (15 frie + 18 Pro = 33): 187 frie, **28** `RE_PRO`, 25 totaler. Før denne
   iteration var det 201, fordi Pro-tallet og de 12 totaler uden "in all" var
   **udømte** — `grep server-side` gav kun kommentarer. Målt, ikke gættet:
   alle 28 forekomster i korpus har tallet 18.
+* **Citeret tekst, målt 2/10.** `quoted_spans()` springer fra **1313**
+  intervaller på **150** sider, fordi de er en anden sides egen titel eller
+  description ordret. Det fjerner **ét** løfte fra korpus — `blog/index.html`
+  linje 152, der citerer `da/blog/eaa-compliance-scanner-desktop-download`'s
+  «Kør alle 22 WCAG 2.1 AA-regler». Det løfte dømmes stadig, på den side det
+  stammer fra, som har **6** af dem. De øvrige 1312 intervaller indeholdt
+  ingen løfter overhovedet, så de fjerner ingenting — de er målt, fordi en
+  port der springer fra uden at tælle, ikke kan efterprøves.
 * `RE_HERO` fyrer **15** gange, på **15** sider. Der er **198** sider med et
   `hero-note`-element, så porten dømmer bevidst kun en brøkdel af dem — den
   kræver et regel- eller tjekord, fordi `guides/platforms.html` siger
@@ -54,6 +62,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import html
 import re
 import shutil
 import sys
@@ -61,6 +70,7 @@ import tempfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -257,6 +267,60 @@ RE_CHECK_NUM = re.compile(r"\b(?P<n>\d{2,3})\s+(?:checks?|tjek)\b", re.IGNORECAS
 # Det frie regeltal i en sætning. Kun `RE_CLAIM` — `RE_HERO` er en hel linje i
 # en hero, ikke en sætning, og `RE_TOTAL` er det tal vi netop er ved at finde.
 FREE_CLAIM = RE_CLAIM
+
+# --- Citeret tekst på en indeksside ----------------------------------------
+#
+# Den niende fejlform, målt 2/10 da `make_blog_index.py` lagde alle 189 guides
+# på `/blog/`: **en indeksside citerer andre siders egen tekst**. Hvert
+# listepunkt er den linkede artikels `og:title` og `meta description` ordret,
+# så da en dansk artikel med «Kør alle 22 WCAG 2.1 AA-regler lokalt på din
+# maskine» kom med på listen, blev *dens* løfte dømt som *indeksets* — og
+# indekset sælger ingen motor, så porten døde med «står ikke i
+# PRODUCT_ENGINE». Det er en fejl i porten, ikke på siden: det løfte er
+# rigtigt, det står på den rigtige side, og den side er i kortet
+# (`da/blog/eaa-compliance-scanner-desktop-download` → `desktop`).
+#
+# Derfor er den korrekte reparation at **dømme citatet på den side det er
+# citeret fra** — og det gør porten allerede, fordi den læser hele `site/`.
+# Denne blok gør det synligt: er anchor-teksten et forled af den linkede sides
+# egen titel, er *den* et citat; er teksten efter anchoren et forled af dens
+# egen description, er *den* et citat. De to betingelser er uafhængige — se
+# `quoted_spans()` for hvorfor den koblede version døde på en rigtig side.
+#
+# De to fejlformer er målt på den rigtige side: `/blog/` har **189 af 189**
+# listepunkter der er ordret citater, og på hele korpus er **507** listepunkter
+# fulde citater — **208** af dem afkortet med `…` — mens 299 kun citerer
+# artiklens titel. Bevis på at definitionen kan fejle, ligger i selftestens tre
+# arme — en citeret streng der **ændres** på indekset holder ikke længere
+# præcis, så den dømmes som indeksets eget løfte, og porten dør rød fordi
+# indekset ikke sælger en motor. En bred undtagelse for "hub-sider" ville
+# derimod have gjort præcis den fejl usynlig, porten findes for.
+RE_LIST_ITEM = re.compile(r"<li\b[^>]*>(.*?)</li>", re.DOTALL | re.IGNORECASE)
+RE_LIST_ANCHOR = re.compile(
+    r"<a\b[^>]*?href=\"([^\"]+)\"[^>]*>(.*?)</a>", re.DOTALL | re.IGNORECASE)
+
+# Den linkede sides egne felter, i den rækkefølge `make_blog_index.py` læser
+# dem: `og:title` → `h1` → `title`, og `meta description`. Generatorens egen
+# `extract()` bruger præcis den rækkefølge, så porten matcher den.
+RE_LINKED_TITLE = (
+    re.compile(r"<meta property=\"og:title\" content=\"(.*?)\"\s*/?>",
+               re.DOTALL),
+    re.compile(r"<h1[^>]*>(.*?)</h1>", re.DOTALL | re.IGNORECASE),
+    re.compile(r"<title>(.*?)</title>", re.DOTALL),
+)
+RE_LINKED_DESC = re.compile(
+    r"<meta name=\"description\" content=\"(.*?)\"\s*/?>", re.DOTALL)
+
+# Et afkortet citat er stadig et citat. Der er **to** generatorer i huset, og
+# de afkorter forskelligt: `make_blog_index.py` tager `desc[:180]` (2/10),
+# mens `tools/fix_en_hub.py`/`fix_da_hub.py` tager `title[:67].rstrip() + '…'`
+# og `desc[:137].rstrip() + '…'`. Målt 2/10: **208** af korpus' 507 fulde
+# citater ender med `…`, så uden denne linje ville de 208 alle være dømt som
+# den citerende sides egen tekst — blandt dem
+# `blog/bug-reports-in-ci-pipeline.html`, der citerer helt korrekt.
+_TRAILING_ELLIPSIS = re.compile(r"(?:\.{3}|…)\s*$")
+
+_WS = re.compile(r"\s+")
 
 # Hvor `reportProFindings()` slutter i `_worker.js`. Findes ved at læse til den
 # næste topniveau-funktion, så en ny push til sidst i funktionen tælles med.
@@ -847,6 +911,127 @@ def _blank(text: str, span: tuple[int, int]) -> str:
     return text[:a] + " " * (b - a) + text[b:]
 
 
+def _blank_keep_lines(text: str, span: tuple[int, int]) -> str:
+    """Som `_blank`, men **linjeskiftene bliver**.
+
+    Et citeret interval kan godt rumme et `<br>`-ombrudt stykke, og
+    `normalize_text()` bevarer længden tegn for tegn præcis fordi
+    `line_of()` kan regne linjen fra offsetten. `_blank` ville spise et
+    linjeskift og flytte alle efterfølgende linjetal — altså gøre
+    fejlmeddelelserne i porten til skrald. Derfor denne variant.
+    """
+    a, b = span
+    return text[:a] + "".join("\n" if c == "\n" else " " for c in text[a:b]) + text[b:]
+
+
+def _visible(fragment: str) -> str:
+    """Markupken væk, entities læst, mellemrum foldet — kun til at sammenligne."""
+    s = _TAG.sub(" ", fragment)
+    s = html.unescape(s)
+    return _WS.sub(" ", s).strip()
+
+
+def _untruncated(text: str) -> str:
+    """Fjern en afkortnings-`…`, så et afkortet citat kan måles som et forled."""
+    return _TRAILING_ELLIPSIS.sub("", text).rstrip()
+
+
+def _linked_file(href: str, lay: Layout) -> Path | None:
+    """Filen et internt link peger på, eller `None` hvis det ikke er en.
+
+    Kun **egne** sider. Et eksternt link (`https://…`, `//cdn…`) kan ikke
+    være et citat fra et arkiv vi dømmer, så det tages ikke som et — porten
+    skal dømme det som denne sides egen tekst.
+    """
+    if not href.startswith("/") or href.startswith("//"):
+        return None
+    route = urlsplit(href).path
+    if not route or ".." in route:
+        return None
+    seg = route.rstrip("/").rsplit("/", 1)[-1]
+    if "." in seg:
+        # Kun sider. `/llms.txt` og `/cover.jpg` er filer, og porten skal
+        # ikke læse dem som markup — `_read()` ville kaste på dem.
+        if not seg.endswith(".html"):
+            return None
+        cand = lay.site / route.lstrip("/")
+    else:
+        # `make_blog_index.py` skriver rutene uden endelse, som de er i `site/`.
+        # `with_suffix` ville ødelægge et slug med et punktum i sig, så der
+        # sættes bare `.html` på.
+        cand = lay.site / (route.strip("/") + ".html")
+    if not cand.is_file():
+        return None
+    try:
+        cand.resolve().relative_to(lay.site.resolve())
+    except ValueError:
+        return None
+    return cand
+
+
+def quoted_spans(path: Path, lay: Layout) -> list[tuple[int, int]]:
+    """Intervaller i `path` der er **en anden sides egen tekst**, ordret.
+
+    Se blokkommentaren ved `RE_LIST_ITEM` for målingen og for hvorfor citatet
+    skal dømmes på den side det stammer fra — den side læser porten
+    allerede, så det eneste der manglede var at *lade være med at dømme
+    citatet to gange*, en gang på den forkerte side.
+
+    Offsets er i **råteksten**, og de er gyldige i `normalize_text()`-udgangen
+    også, fordi den bevarer længden tegn for tegn.
+
+    De to dele bedømmes **uafhængigt**, og det er ikke en detalje. Den første
+    version krævede at *begge* dele var citater, før den sprang fra — og
+    døde så på `blog/compare-two-web-pages-seo.html`, der har listenummeret
+    «Open **page-profile** and paste in URL #1». Anchor-teksten «page-profile»
+    *er* et forled af `page-profile.html`s `og:title`, så betingelsen holdt,
+    mens resten af punktet er artiklens egen brødtekst. Med uafhængige
+    betingelser springes anchoren fra (den er virkelig den anden sides titel)
+    og brødteksten **beholdes** og dømmes — hvilket er hele pointen: kun det
+    der er målt som en anden sides ord, usynliggøres.
+
+    Funktionen **fejler aldrig**. Den springer fra, når den kan bevise at
+    teksten er en anden sides egen, og lader alt andet være at dømme. En
+    bredere undtagelse — "hub-sider", "relaterede artikler" — ville have
+    gjort præcis de løfter usynlige som porten er bygget til at fange.
+    """
+    raw = _read(path)
+    spans: list[tuple[int, int]] = []
+    for li in RE_LIST_ITEM.finditer(raw):
+        inner = li.group(1)
+        a = RE_LIST_ANCHOR.search(inner)
+        if a is None:
+            continue
+        linked = _linked_file(html.unescape(a.group(1)), lay)
+        if linked is None:
+            continue
+        title_txt = _visible(a.group(2))
+        after_txt = _visible(inner[a.end():])
+        if not title_txt:
+            continue
+        other = _read(linked)
+        titles: list[str] = []
+        for rx in RE_LINKED_TITLE:
+            m = rx.search(other)
+            if m is not None:
+                titles.append(_untruncated(_visible(m.group(1))))
+        m = RE_LINKED_DESC.search(other)
+        own_desc = _untruncated(_visible(m.group(1))) if m else ""
+        # Begge afkortningsformer er et **forled** af kilden, så sammenligningen
+        # er forled, ikke lighed. Titlen læses fra *alle* tre felter og ikke
+        # kun det første der findes, fordi generatorerne er uenige om
+        # rækkefølgen: `make_blog_index.py` tager `og:title` først,
+        # `fix_en_hub.py` tager `h1`.
+        cite_title = _untruncated(title_txt)
+        li_start = li.start(1)
+        if any(t.startswith(cite_title) for t in titles):
+            spans.append((li_start + a.start(2), li_start + a.end(2)))
+        cite_after = _untruncated(after_txt)
+        if cite_after and own_desc.startswith(cite_after):
+            spans.append((li_start + a.end(), li.end(1)))
+    return spans
+
+
 def free_rule_ids(path: Path) -> tuple[str, ...]:
     """Alle frie regel-id'er i én motor, i den rækkefølge de står.
 
@@ -972,6 +1157,12 @@ def collect(lay: Layout) -> list[tuple[Path, int, int, str]]:
     claims: list[tuple[Path, int, int, str]] = []
     for path in sorted(lay.site.rglob("*.html")):
         text = normalize_text(path)
+        # Citeret tekst springes fra **før** nogen art læser, og det er hele
+        # pointen: artiklens eget løfte skal dømmes på artiklen, hvor den er i
+        # produkt→motor-kortet, og ikke på indekset der kun gentager den. Se
+        # blokkommentaren ved `RE_LIST_ITEM`.
+        for span in quoted_spans(path, lay):
+            text = _blank_keep_lines(text, span)
         rest = text
         taken: list[tuple[int, int]] = []
         found: list[tuple[int, int, int, str]] = []   # (start, end, tal, art)
@@ -1090,6 +1281,12 @@ def show_list(lay: Layout) -> str:
     lines += ["", "Produkt → motor (hvert løfte måles mod den motor siden sælger):"]
     for pattern, key in PRODUCT_ENGINE:
         lines.append(f"  {pattern:<42} → {key} ({eng[key].n})")
+    lines += ["",
+              "En side der citerer en anden sides egen titel eller description",
+              "ordret (indekssider, «relaterede artikler») dømmer *ikke* citatet —",
+              "det dømmes på den side det stammer fra, og den side læses også.",
+              "Se `quoted_spans()`; kun det der er målt som en anden sides ord",
+              "springes fra."]
     return "\n".join(lines)
 
 
@@ -1231,17 +1428,33 @@ def self_test() -> int:
             # AA-regler lokalt" i en fælles CTA-blok. Mutér den til 21 — så skal
             # *webkernens* rigtige tal stadig være grønt på de andre sider, så
             # fejlen kun kan komme fra den danske sides egen motor.
+            #
+            # Den samme streng skal også rettes i `/blog/`, fordi den side
+            # **citerer** artiklens description ordret (se `RE_LIST_ITEM`).
+            # Gør man kun artiklen, står indekset med en tale der ikke længere
+            # findes nogen steder, og så dør porten med «står ikke i
+            # PRODUCT_ENGINE» om `/blog/` — en side der sælger ingen motor. Det
+            # er rødt og altså ikke farligt, men det er heller ikke denne arms
+            # påstand. At rette begge er desuden det ægte arbejdsgang: ret
+            # artiklen, og kør så `make_blog_index.py`.
             da_dl = tmp / "site" / "da" / "blog" / "eaa-compliance-scanner-desktop-download.html"
             da_line = "Kør alle 22 WCAG 2.1 AA-regler"
+            hub_idx = tmp / "site" / "blog" / "index.html"
             if da_line in da_dl.read_text(encoding="utf-8"):
                 original = da_dl.read_text(encoding="utf-8")
-                da_dl.write_text(original.replace(da_line, da_line.replace("22", "21")),
+                hub_original = hub_idx.read_text(encoding="utf-8")
+                wrong_line = da_line.replace("22", "21")
+                da_dl.write_text(original.replace(da_line, wrong_line),
                                  encoding="utf-8")
+                hub_idx.write_text(hub_original.replace(da_line, wrong_line),
+                                   encoding="utf-8")
                 da_errs = check(lay)
                 da_dl.write_text(original, encoding="utf-8")
+                hub_idx.write_text(hub_original, encoding="utf-8")
                 if not any("eaa-compliance-scanner-desktop-download" in e for e in da_errs):
                     fails.append("selftest: den danske sides '22 WCAG 2.1 AA-regler' "
-                                 "dømmes ikke — `regler`-formen fanger ikke dansk")
+                                 "dømmes ikke — `regler`-formen fanger ikke dansk "
+                                 f"({da_errs[:2]})")
             else:
                 fails.append("selftest: den danske desktop-side har ikke længere "
                              "CTA-teksten med 22 regler — den danske arm er død")
@@ -1394,6 +1607,119 @@ def self_test() -> int:
                  "against 22 WCAG 2.1 AA rules",
                  "against 21 WCAG 2.1 AA rules",
                  "et løfte i en meta-attribut")
+
+        # (5) Den niende fejlform: en indeksside der **citerer** en anden sides
+        # egen tekst. `/blog/` gengiver hver artikels `og:title` og
+        # `meta description` ordret, så da `da/blog/eaa-compliance-scanner-
+        # desktop-download` kom med på listen, blev *dets* «Kør alle 22 WCAG
+        # 2.1 AA-regler» dømt som *indeksets* løfte — og indekset sælger ingen
+        # motor, så porten døde med «står ikke i PRODUCT_ENGINE». Det var den
+        # røde CI 2/10.
+        #
+        # De tre arme skal tilsammen bevise at løsningen kun springer fra det
+        # den kan **måle** som en anden sides ord:
+        #
+        #   a) Citatet dømmes stadig på sin egen side. Ret artiklens egen
+        #      `meta description` **og** den streng `/blog/` citerer fra den, så
+        #      citatet stadig er et citat — og porten skal så rødme med en fejl
+        #      der nævner *artiklen*. Uden denne arm kunne spring-fra'et have
+        #      fjernet løftet fra korpus i stilhed, i stedet for at flytte det
+        #      til den side det stammer fra. At indekset skal rettes med er det
+        #      ægte arbejdsgang: ret artiklen, kør `make_blog_index.py`.
+        #   b) Polaritet på indekssiden. Ret **kun** tallet i den citerede
+        #      tekst, så citatet ikke længere er et forled af kilden. Nu er det
+        #      indeksets eget løfte — og porten skal dø, fordi indekset ikke
+        #      står i produkt→motor-kortet. Det er beviset for, at spring-fra'et
+        #      ikke er en undtagelse for "hub-sider" (den fejl porten findes
+        #      for).
+        #   c) Den negative kontrol: brødtekst i et listepunkt er **ikke** et
+        #      citat og skal dømmes. `blog/compare-two-web-pages-seo.html` har
+        #      «Open <a href="/page-profile">page-profile</a> and paste in URL
+        #      #1» — anchor-teksten er et forled af sidens `og:title`, så en
+        #      for brede definition ville have springet hele punktet fra.
+        hub = "blog/index.html"
+        art = "da/blog/eaa-compliance-scanner-desktop-download.html"
+        quote = "Kør alle 22 WCAG 2.1 AA-regler"
+
+        art_p = tmp / "site" / art
+        hub_p = tmp / "site" / hub
+        art_body = art_p.read_text(encoding="utf-8")
+        hub_body = hub_p.read_text(encoding="utf-8")
+        if quote not in art_body or quote not in hub_body:
+            fails.append(f"selftest: {quote!r} mangler i "
+                         f"{art if quote not in art_body else hub} — "
+                         "citat-armene er døde, fordi det rigtige tal er væk")
+        else:
+            wrong_quote = "Kør alle 23 WCAG 2.1 AA-regler"
+            art_p.write_text(art_body.replace(quote, wrong_quote),
+                             encoding="utf-8")
+            hub_p.write_text(hub_body.replace(quote, wrong_quote),
+                             encoding="utf-8")
+            art_errs = check(lay)
+            art_p.write_text(art_body, encoding="utf-8")
+            hub_p.write_text(hub_body, encoding="utf-8")
+            if not art_errs:
+                fails.append(f"selftest: {art} med et forkert tal i sin egen "
+                             "meta description gav ingen fejl — citatet dømmes "
+                             "ikke længere på den side det stammer fra")
+            elif not any(Path(art).name in e for e in art_errs):
+                fails.append("selftest: citat-armen gav en fejl der ikke nævner "
+                             f"{art}: " + "; ".join(art_errs[:3]))
+
+        if quote not in hub_body:
+            fails.append(f"selftest: {hub} citerer ikke længere {quote!r} — "
+                         "polaritets-armen er død")
+        else:
+            hub_p.write_text(hub_body.replace(quote, "Kør alle 23 WCAG 2.1 "
+                                                    "AA-regler", 1),
+                             encoding="utf-8")
+            try:
+                hub_errs = check(lay)
+            except SystemExit as exc:
+                if hub not in str(exc):
+                    fails.append("selftest: et rettet citat på indekset døde med "
+                                 f"en anden fejl end den forventede: {exc}")
+            else:
+                if not hub_errs:
+                    fails.append("selftest: en citeret streng der blev ændret på "
+                                 f"{hub} gav ingen fejl — spring-fra'et er en "
+                                 "undtagelse for hub-sider, ikke et målt citat")
+                elif not any(hub in e for e in hub_errs):
+                    fails.append("selftest: polaritets-armen gav en fejl der ikke "
+                                 f"nævner {hub}: " + "; ".join(hub_errs[:3]))
+            hub_p.write_text(hub_body, encoding="utf-8")
+
+        prose_rel = "blog/compare-two-web-pages-seo.html"
+        prose_p = tmp / "site" / prose_rel
+        prose_body = prose_p.read_text(encoding="utf-8")
+        prose_anchor = '<a href="/page-profile">page-profile</a>'
+        if prose_anchor not in prose_body:
+            fails.append(f"selftest: {prose_rel} har ikke længere {prose_anchor!r} "
+                         "— den negative kontrol er død")
+        else:
+            # Løftet sættes i **halen** af punktet, ikke i anchoren, for det er
+            # der definitionen kan gå galt: en for bred regel ville springe hele
+            # listepunktet fra, fordi anchor-teksten er et forled af den linkede
+            # sides titel. Siden står ikke i produkt→motor-kortet — den sælger
+            # intet — så porten **dør** med «står ikke i PRODUCT_ENGINE», og
+            # det er et gyldigt svar på spørgsmålet: blev løftet dømt, eller
+            # blev det springet fra?
+            prose_p.write_text(prose_body.replace(
+                prose_anchor,
+                f'<a href="/page-profile">page-profile</a> '
+                f'and it runs 16 automated rules', 1), encoding="utf-8")
+            try:
+                prose_errs = check(lay)
+            except SystemExit as exc:
+                prose_errs = [str(exc)]
+            prose_p.write_text(prose_body, encoding="utf-8")
+            if not prose_errs:
+                fails.append("selftest: brødtekst i et listepunkt springes fra som "
+                             "var det en anden sides titel — citat-målingen er "
+                             "for bred")
+            elif not any(Path(prose_rel).name in e for e in prose_errs):
+                fails.append("selftest: den negative kontrol gav en fejl der ikke "
+                             f"nævner {prose_rel}: " + "; ".join(prose_errs[:3]))
 
         # Den negative kontrol på art 3, og den er den der adskiller målt fra
         # antaget: "25 Checks" i NIS2-artiklen er *artiklens* egne 25 punkter,

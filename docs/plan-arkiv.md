@@ -5044,3 +5044,92 @@ er **ude** — dens blokering var rød CI, som `db3c537` rettede 15:01. Målt p�
 indhold: `cleancopy.tools/build-info.json` står i `db3c537` (main HEAD),
 forsiden har `cc-check-form` og 3 referencer til `/readable.js` +
 `/convert-check.js`.
+
+---
+
+## 2/10 — Rød CI: `check_rule_claims` dømte et **citat** på `/blog/`
+
+**Hvad var rødt.** `gh run list -L 1` gav `failure` på `caea80f` med
+«quality_gate: RØD i step `rule-claims`»: `blog/index.html har et regel-løfte
+men står ikke i PRODUCT_ENGINE — mål den mod den motor siden sælger, eller
+fjern løftet».
+
+**Årsagen.** `tools/make_blog_index.py` (lagt ind i `caea80f`, 189 guides) skriver
+hvert listepunkt som den linkede artikels `og:title` og `meta description` ordret:
+
+```html
+<li style="margin-bottom:20px"><a href="/da/blog/eaa-compliance-scanner-desktop-download" …>EAA Compliance Scanner Desktop — download gratis</a><br><span …>Kør alle 22 WCAG 2.1 AA-regler lokalt på din maskine — …</span></li>
+```
+
+Så da den danske artikels egen løfte kom med på listen, blev det dømt som
+*indeksets*. `/blog/` sælger ingen motor, så `engine_for()` — som med vilje
+ikke har noget fallback — døde. Løftet var rigtigt, det stod på den rigtige
+side, og den side står i `PRODUCT_ENGINE` (`desktop`, 22). Det var en fejl i
+porten.
+
+**Rettelsen.** `quoted_spans(path, lay)` i `tools/check_rule_claims.py` giver de
+intervaller i en side, der er **en anden sides egen tekst**, ordret:
+- anchor-teksten er et *forled* af den linkede sides `og:title`, `<h1>` **eller**
+  `<title>` (alle tre læses, fordi generatorerne er uenige om rækkefølgen:
+  `make_blog_index.py` tager `og:title` først, `tools/fix_en_hub.py` tager `h1`);
+- teksten efter anchoren er et *forled* af den linkede sides `meta description`.
+
+Begge betingelser er **forled**, ikke lighed, fordi huset har to afkortningsformer:
+`desc[:180]` i `make_blog_index.py` og `title[:67].rstrip() + '…'` /
+`desc[:137].rstrip() + '…'` i `tools/fix_en_hub.py` + `fix_da_hub.py`. Kun egne
+sider (`site/**/*.html`) tæller; et eksternt link kan ikke være et citat fra et
+arkiv vi dømmer.
+
+Funktionen **fejler aldrig**. Den springer fra, når den kan bevise at teksten er
+en anden sides ord, og lader alt andet være at dømme. `_blank_keep_lines()`
+beholder linjeskiftene, så `line_of()` stadig regner rigtigt.
+
+**Målt.** 1313 intervaller på 150 sider springes fra. De fjerner **ét** løfte fra
+korpus: `blog/index.html:152`. Det løfte dømmes stadig, på
+`da/blog/eaa-compliance-scanner-desktop-download.html`, som har 6 af dem — alle
+22 mod `desktop`s 22. Korpus går 241 → **240 løfter**, alle matcher koden
+(15 frie + 18 Pro = 33). 79 af 305 sider har et dømt løfte.
+
+**Find undervejs — koblede betingelser døde på en rigtig side.** Første version
+krævede at *begge* dele var citater, før den sprang fra, og døde så på
+`blog/compare-two-web-pages-seo.html`, der har listenummeret «Open
+`<a href="/page-profile">page-profile</a>` and paste in URL #1». Anchor-teksten
+«page-profile» *er* et forled af `page-profile.html`s `og:title`
+(«page-profile — Web Page Profiler CLI»), mens resten af punktet er artiklens
+egen brødtekst. Uafhængige betingelser springer anchoren fra og **beholder**
+brødtekken, som dømmes.
+
+**Et forældet-citat-signal blev bygget og fjernet igen.** Første version døde
+med «citerer X, men teksten er ikke længere et forled af sidens egen
+description», fordi koblingen havde fejlet på brødteksten. Samme kobling gav også
+en *ægte* alarm på `blog/bug-reports-in-ci-pipeline.html`, der citerer korrekt
+men afkortet med `…`. At rette artiklen uden at regenerere `/blog/` giver i dag
+portens almindelige fejl om `/blog/` — rød, altså ikke farligt, og
+`check_blog_index.py` siger det præcist med «er ikke lig den genererede side».
+Derfor ingen ekstra alarm.
+
+**Tre nye selftestarme, polaritet målt i begge retninger.**
+1. Ret artiklens egen `meta description` **og** `/blog/`s citat → porten rødmer
+   med en fejl der nævner *artiklen*. Polaritet: med attributværdier **og**
+   JSON-LD blindet i `normalize_text()` fejlede armen som «citatet dømmes ikke
+   længere på den side det stammer fra».
+2. Ret **kun** `/blog/`s citat → porten **dør** med PRODUCT_ENGINE-fejlen.
+   Polaritet: gjorde `quoted_spans()` for bred (spring fra alt i et listepunkt med
+   internt link) fejlede armen som «undtagelse for hub-sider, ikke et målt
+   citat».
+3. Den negative kontrol: sæt «and it runs 16 automated rules» i **halen** af
+   `blog/compare-two-web-pages-seo.html`s listepunkt, hvis anchor matcher →
+   porten dømmer det og dør med «står ikke i PRODUCT_ENGINE». Samme for brede
+   mutation som arm 2 → «citat-målingen er for bred».
+
+**Find undervejs i en eksisterende arm.** Den negative kontrol for den danske
+`22 WCAG 2.1 AA-regler`-form muterede netop den `meta description` som `/blog/`
+citerer, så porten døde med en fejl om `/blog/`. Armen retter nu begge steder —
+hvilket også er det ægte arbejdsgang: ret artiklen, kør `make_blog_index.py`.
+
+**Verifikation.** Dom 1: `check_rule_claims.py` «240 regel-løfter, alle matcher
+koden (15 frie + 18 Pro = 33)»; `--self-test` grøn med de tre nye arme.
+Dom 2: `stripe-worker.test.mjs` **354/354** (uændret — ingen Worker-kode rørt).
+Dom 3: `build_sites.py` 330 + 73 + 35 + 37 filer, 0 brudte; `seo_check.py`
+314 sider 0 fund; `check_inline_js.py` 0 problemer. Dom 4: hele
+`quality_gate.py` **144 steps** grønne.
