@@ -206,6 +206,7 @@ pre, .cmd, pre.cmd, .term, .cli-demo {
 }
 pre { position: relative; }
 pre code { background: none; padding: 0; font-size: inherit; color: inherit; font-family: inherit; }
+pre.cmd code, .term code { font-family: var(--mono); }
 pre.cmd, .cmd { margin: 0.8rem 0 1rem; }
 .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; font: 500 0.75rem/1 var(--font); color: var(--color-code-text); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; padding: 0.3rem 0.5rem; cursor: pointer; opacity: 0; transition: opacity .15s, background .15s; }
 pre:hover .copy-btn, pre:focus-within .copy-btn, .copy-btn:focus-visible, .copy-btn.is-done { opacity: 1; }
@@ -220,6 +221,7 @@ thead th { border-bottom-width: 2px; background: var(--color-bg); position: stic
 tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-surface-2) 55%, transparent); }
 .compare { margin: 1.25rem 0; }
 .compare th, .compare td { padding: 0.6rem 0.75rem; }
+tr, .compare tr { vertical-align: top; }
 /* Gratis-mod-Pro-tabellen fra `tools/pro_table.py`. Priscellen er bevidst
    smal: den skal kunne læses på én linje på telefon, ellers skubber den
    funktionslisten ud af skærmen. Resten er de eksisterende `table`-regler, så
@@ -268,6 +270,17 @@ fieldset { border: 1px solid var(--color-border); border-radius: var(--radius); 
 legend { font-weight: 650; padding: 0 0.4rem; }
 label { display: block; font-size: 0.9rem; font-weight: 500; margin: 0.6rem 0 0.25rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Structural elements the shell renders. Pages used to write plain `header`,
+   `footer` and `nav` rules for markup that is now the shell's, and pagepass
+   drops exactly those rules because the shell owns that markup — so the shell
+   states the baseline itself, and `tools/check_owned_selectors.py` can prove
+   the claim instead of taking it on faith. Inert under `.site-header`,
+   `.site-footer` and `.site-nav`, which win on specificity. */
+header, nav { margin: 0; }
+footer { border-top: 1px solid var(--color-border); padding: 2.5rem 0 2rem; font-size: 0.9rem; color: var(--color-text-muted); }
+footer a { color: inherit; }
+footer p { margin: 0 0 0.6rem; }
 
 /* Container: header, main and footer share it -------------------------------- */
 .container { max-width: var(--w-page); margin-inline: auto; padding-inline: var(--gutter); width: 100%; }
@@ -420,6 +433,7 @@ html:not([data-theme]) .theme-btn .icon-auto, html[data-theme="light"] .theme-bt
 .hero, .book-header { padding: clamp(2rem, 5vw, 3.5rem) 0 2.25rem; }
 .hero h1, .book-header h1 { margin-bottom: 0.6rem; max-width: 24ch; }
 .hero p, .subtitle, .tagline, .lead { font-size: 1.15rem; color: var(--color-text-muted); max-width: 58ch; margin: 0 0 1.4rem; line-height: 1.5; }
+.book-header .tagline { font-size: 1.125rem; color: var(--color-text-muted); margin-bottom: 0.75rem; }
 .hero-cta { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
 .hero-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem; }
 .hero-meta, .meta, .author { display: flex; gap: 0.5rem 1.25rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 1rem; }
@@ -494,10 +508,13 @@ a.card:hover, .hubcard:hover, .plat-card:hover, .dl-card:hover, .book-card:hover
 .card > a:first-child, .hubcard > a:first-child { text-decoration: none; color: inherit; }
 .install-grid pre { margin: 0.5rem 0 0; font-size: 0.8rem; }
 .plat-links, .card-links { display: flex; gap: 0.5rem 1rem; flex-wrap: wrap; font-size: 0.9rem; margin-top: 0.5rem; }
+.plat-links a, .card-links a { font-size: 0.8125rem; font-weight: 600; padding: 0.44rem 0.75rem; border-radius: var(--radius); border: 1px solid var(--color-border); color: var(--color-accent); text-decoration: none; }
+.plat-links a:hover, .card-links a:hover { border-color: var(--color-accent); }
 .plat-icon, .platform-icon { display: none; }
 .who, .templates, .problem, .quiz, .ebooks, .products { background: transparent; }
 .book-card { display: grid; grid-template-columns: 140px 1fr; gap: 1.25rem; align-items: start; }
 .book-card img { width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--color-border); display: block; }
+.book-card-body { min-width: 0; }
 .book-card-body h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
 .book-card-body p { color: var(--color-text-muted); font-size: 0.95rem; }
 .book-card-body .btn-primary, .book-card-body .btn-secondary { margin: 0.25rem 0.4rem 0 0; }
@@ -566,6 +583,7 @@ a.card:hover, .hubcard:hover, .plat-card:hover, .dl-card:hover, .book-card:hover
 .faq-item h3 { font-size: 1rem; margin-bottom: 0.3rem; }
 .faq-item p { color: var(--color-text-muted); margin: 0; font-size: 0.95rem; }
 details.faq { padding: 0.75rem 0; }
+details.faq summary { cursor: pointer; font-weight: 650; }
 details.faq p { color: var(--color-text-muted); font-size: 0.95rem; }
 
 /* Blog / guide article layout: prose + sidebar --------------------------- */
@@ -615,6 +633,8 @@ a.ext::after { content: ""; display: inline-block; width: 0.65em; height: 0.65em
 /* Tool pages: generator forms --------------------------------------------- */
 .gen { display: grid; gap: 1rem; }
 .gen fieldset { margin: 0; }
+.gen legend { font-weight: 700; padding: 0 0.5rem; }
+.gen label { display: block; margin: 0.75rem 0 0.25rem; font-size: 0.875rem; font-weight: 600; }
 .gen textarea { min-height: 6rem; }
 .gen input[type="text"], .gen input[type="email"], .gen input[type="url"], .gen select { width: 100%; }
 /* Tekst-på-billede-tjekkeren ------------------------------------------------

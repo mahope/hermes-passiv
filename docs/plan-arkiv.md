@@ -5420,3 +5420,47 @@ tekst på alle otte), kontrast **21:1**, og h1 har præcis den forventede tekst.
 `/page-profile` (EN + DA) har **230 px vandret scroll ved 390 px** — målt
 identisk på den gamle kode, så det er ikke denne rettelse. Årsagen er
 `pagepass.py`s `OWNED_SELECTORS` og er opgave 8 i planen.
+
+## 3/10 — ceo/pagepass-owned-css: byggetagen erklærer alle 154 sidede selectors
+
+**Opgaven.** `tools/pagepass.py` sletter hver sideregel hvis selector står i
+`OWNED_SELECTORS`, fordi designsystemet skal eje den udtryk. Påstanden blev
+aldrig efterprøvet mod `site/style.css`.
+
+**Målingen.** En normaliseret sammenligning af de 154 entries mod de erklærede
+selector-lister i style.css: **14 udokumenterede**. Før normaliseringen så det
+ud som 23, fordi attribut-citation (`input[type=text]` vs `input[type="text"]`)
+og CSS-kommentarer med `{` i sig flyttede klasser ind og ud af listen. Begge er
+nu normaliseret i porten, så den ikke er rød på en skrivefejl.
+
+**Hvad siderne mistede.** 10 generator-sider mistede `.gen label` (600/14px/12px)
+og `.gen legend` (700/8px); 6 bogside-r mistede `.book-header .tagline`
+(18px/12px luft); 4 FAQ-sider mistede `details.faq summary { cursor: pointer }`;
+`platforms` mistede `.plat-links a`'s pille; 2 sider mistede `.book-card-body`'s
+`min-width: 0`. De otte sidste var bare elementer skallen renderer selv
+(`header`, `footer`, `footer a`, `footer p`, `nav`, `tr`, `.compare tr`,
+`pre.cmd code`) — deres sideregler var enten ubrugte eller ville have brudt
+skallens egen styling, så skallen erklærer nu baselineværdierne i stedet.
+
+**Rettelsen.** 14 erklæringer i `site/style.css`, skrevet i skallens tokens
+(`var(--radius)`, `var(--color-accent)`, `var(--color-text-muted)`), ikke
+kopieret fra siderne. Plus `tools/check_owned_selectors.py` med `--self-test`
+**11/11** og to gatestræk i `quality_gate.py`.
+
+**Polaritet.** `style.css` fra før rettelsen: **14 røde**. Den nye: **0**.
+
+**Planens egen påstand var forkert.** Den skrev 230 px vandret scroll på
+`/page-profile` ved 390 px, som følge af at `.cli-demo` manglede i style.css.
+Chromium på den byggede side giver **0 px** ved 390 og 1280 px, på gammel og på
+ny kode. `.cli-demo` er erklæret i style.css:195 (delt regel med `pre`, `.cmd`,
+`.term`) og `.gen` i 616. Det, der manglede, var `white-space: pre` — og uden
+den bliver et kodeblok *smallere*, ikke bredere. Den egen påstand er
+rettet i planen, fordi en fejl i arbejdskøen koster den næste iteration
+hele sin måling.
+
+**Verifieret.** Missionens fire gatekommandoer grønne (`seo_check` 314 sider 0
+fund, `stripe-worker` 354/354, `check_inline_js` 0). `check_built_css`,
+`check_design_tokens`, `check_ui_constants`, `check_first_action`,
+`check_heading_levels`, `check_contrast_sampling` grønne. Chromium 390/1280 px
+lys+mørk på 8 sider: 0 px vandret scroll, og de seks rettede regler matcher de
+værdier siderne havde bedt om.

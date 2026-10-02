@@ -852,6 +852,22 @@ STEPS: tuple[Step, ...] = (
     # skrifttype, mens `<title>` sagde «Generate favicons, OG images & PWA
     # icons from one». En måling i samme aflevering fandt to mere: `/page-profile`
     # (EN og DA) og `/bugbottle-demo`, så 4 af 322 byggede sider. De tre
+    # Byggetagens kontrakt med designsystemet (2/10). `pagepass.OWNED_SELECTORS`
+    # påstår at skallen ejer 154 selectors og sletter hver sidesregel for dem —
+    # men 14 af dem havde ingen erklæring i style.css, så 10 generator-sider,
+    # 6 bogside-r og 4 FAQ-sider mistede formatering uden erstatning. Dommen er
+    # én påstand, målt: findes erstatningen? `check_built_css` dømmer at det der
+    # *er* med overlever, altså ikke at det der *er slettet* skulle være med.
+    Step(
+        id="owned-selectors",
+        argv=("python3", "tools/check_owned_selectors.py"),
+        inputs=("tools/check_owned_selectors.py", "tools/pagepass.py", "site/style.css"),
+    ),
+    Step(
+        id="owned-selectors-selftest",
+        argv=("python3", "tools/check_owned_selectors.py", "--self-test"),
+        inputs=("tools/check_owned_selectors.py", "tools/pagepass.py", "site/style.css"),
+    ),
     # overskriftsporte ovenfor er alle grønne på den slags fejl: `seo_check`
     # tæller `<h1>`, `heading-levels` dømmer rækkefølgen, `duplicate-headings`
     # kun `<h2>`. To domme, fordi de fanger hver sit tilfælde — dom 1 et slug,

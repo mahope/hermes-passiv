@@ -1,14 +1,15 @@
 # STATUS
+- **Byggetagen slettede sidelinjer for 14 selectors skallen ikke erklærede.**
+  Målt 2/10: `OWNED_SELECTORS` siger 154, `style.css` erklærede 140. **Planens egen
+  påstand om 230 px vandret scroll på `/page-profile` holder ikke**: Chromium på
+  den byggede side giver **0 px** ved 390 og 1280 px, før og efter. `.cli-demo` er
+  erklæret (style.css:195) og `.gen` ligeså (616) — kun `white-space: pre`
+  manglede, hvilket ikke giver scroll. Den ægte skade: 10 generator-sider, 6
+  bogside-r, 4 FAQ-sider og `platforms` mistede formatering **uden erstatning**.
+  Alle 154 er nu erklærede; ny port `check_owned_selectors` (14 røde på gammel CSS).
 - **Porten holdt 2 døgns deploys tilbage.** `check_plan_status.py` kræver højst 25
   STATUS-linjer; afsnittet stod på **41**, så `b55e036` faldt i gaten og `27f8aa2`
-  i produktionstjekket. 2/10: kogt til **25**, 7 afsnit med historie flyttet til
-  `docs/plan-arkiv.md` i samme commit. Dom 2 grøn, `--self-test` **11/11**. Den anden
-  røde kørsel var **404** på 1 blogguide — gammelt udgivelsesvindue, live **200**.
-- **Byggetagen sletter CSS som designsystemet ikke ejer.** Målt 2/10 i Chromium:
-  `/page-profile` (EN **og** DA) har **230 px vandret scroll ved 390 px** — også
-  på den gamle kode. `pagepass.py` sletter sidelinjer for 154 `OWNED_SELECTORS`,
-  men style.css erklærer kun 126, så `.cli-demo` taber `overflow-x: auto` og
-  `white-space: pre`. Samme fælde som `*-wrap` fik 30/9, uden samme guard.
+  i produktionstjekket. 2/10: kogt til **25**. Dom 2 grøn, `--self-test` **11/11**.
 - **`/blog/` havde fire døde links, og porten vidste det.** De 4 BugBottle-guider lå i
   `bugbottle.dev`s `include` og blev lagt ingen steder: målt **404 på alle 4** mod
   live, **15** links døde i alt. Nu 189 guides, **0** mangler mod `site/blog/`. Ny dom
@@ -26,7 +27,15 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: de fire filnavn-overskrifter er se med vilje ceo/site-icons-h1 2026-10-02 23:33`
+- `VERIFICÉR DEPLOY: byggetagen erklærer alle 154 sidede selectors ceo/pagepass-owned-css 2026-10-03 00:05`
+
+- **`DEPLOY OK 2026-10-02` — `ceo/site-icons-h1` er live, målt på indhold.**
+  `build-info.json` står på **`692d7b2`** (squash-sha'en). De tre sider der ligger
+  på mahope.tools har den nye overskrift i markupken: `/site-icons` «Every icon
+  your site needs, from one SVG», `/page-profile` «Profile any web page from
+  your terminal», `/da/page-profile` «Tjek enhver websides tekniske sundhed».
+  Den fjerde, `/bugbottle-demo`, svarer 404 fordi siden kun findes i
+  `dist/bugbottle.dev/`, som ikke deployes — det er ❓ om domænet, ikke en fejl.
 
 - **`DEPLOY OK 2026-10-02` — alle tre næster er live, målt på indhold.**
   `build-info.json` står på **`4c41d9e`** (squash-sha'en) på **mahope.tools**,
@@ -112,19 +121,19 @@
    (hverken i `dist/` eller i sitemap), så de 6 bogsiders hreflang har intet
    dansk par — det er derfor værktøjsbanneret fra i dag kun findes på de
    engelske sider.
-8. **Byggetagen sletter sidelinje for 28 selectors designsystemet ikke ejer.**
-   Hvorfor: `tools/pagepass.py:s40` erklærer 154 `OWNED_SELECTORS`, og
-   `site/style.css` erklærer kun 126 af dem — de 28 sidste regler bliver
-   slettet alligevel, fordi påstanden *ikke* efterprøves mod style.css. Målt
-   2/10 i Chromium: `.cli-demo` mangler i style.css, så `/page-profile` (EN +
-   DA) mister `overflow-x: auto` og `white-space: pre` og får **230 px
-   vandret scroll ved 390 px** (identisk på gammel kode). `check_built_css.py`
-   er grøn — den dømmer at *det der er med* overlever, ikke at *det der er
-   slettet* skulle være med. Accept: `OWNED_SELECTORS` er dokumenteret af
-   style.css, eller style.css erklærer resten; og en port der dømmer at ingen
-   sidelinje er slettet for en klasse skallen ikke ejer — polaritet målt ved at
-   fjerne én erklæring. Samme guard som `WRAP_SELECTOR_RE` fik 30/9.
-   Baseline 2/10: 28 ubeviste påstande, 2 sider med vandret scroll.
+8. ~~**Byggetagen sletter sidelinje for 28 selectors designsystemet ikke ejer.**~~
+    **Færdig 3/10.** Alle 154 `OWNED_SELECTORS` er nu erklæret i `style.css`, så
+    påstanden er sand og målbar. De 14 manglende fik skallens egne værdier, ikke
+    sidens: `.plat-links a` (1 side) fik pillen tilbage i tokens, `details.faq
+    summary` (4) fik `cursor: pointer`, `.book-card-body` (2) fik `min-width: 0`,
+    `.book-header .tagline` (6) fik 18px + 12px luft, `.gen label`/`.gen legend`
+    (10 generator-sider) fik 600/700 og luften. Ny port `check_owned_selectors`
+    + `--self-test` **11/11**, to gatestræk. Polaritet: **14 røde** på
+    style.css fra før rettelsen mod **0** på den nye. Flyttet til
+    `docs/plan-arkiv.md`.
+    **Rettet i samme opgave:** planens påstand om 230 px vandret scroll på
+    `/page-profile` holdt ikke — Chromium giver **0 px** ved 390 og 1280 px, på
+    både gammel og ny kode.
 
 ## ❓ Til Mads
 
