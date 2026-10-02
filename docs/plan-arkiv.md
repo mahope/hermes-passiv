@@ -5220,3 +5220,146 @@ fund på linje 370; filen genskabt byte-for-byte → GRØN.
 0 fund; `check_inline_js.py` **663** inline-blokke, 0 problemer — den måler at
 de ni ændrede scripts stadig er gyldig JavaScript. Dom 4: hele
 `quality_gate.py` 144 steps grønne.
+
+---
+
+## Arkiveret 2/10 — planen skåret fra 66 til 25 STATUS-linjer
+
+`tools/check_plan_status.py` (dom 2) var **RØD** på `main` med 41 linjer mod
+25 tilladt, og det lå som eneste røde step i hele gaten. Det er den fejlform
+porten blev skrevet for at lukke: en regel skrevet ned uden en dom der kan
+fejle gav 0 linjer og var grøn altid. Nu er der 4 domme, og dom 2 er den der
+stoppede deploys to commits i træk.
+
+Det her er det, der blev flyttet ud af `# STATUS`. Historikken er ikke slettet,
+kun taget ud af en arbejdskø.
+
+### Hvad STATUS indeholdt, og hvorfor det ikke passede
+
+STATUS var vokset til 41 linjer, fordi den havde taget to roller: den skulle
+fortælle hvor vi står (det giver kontrakten tilladt) *og* være logbog for
+iterationerne (det gør den ikke tilladt). Konkret:
+
+1. **Del-linket i farveblindhedssimulatoren** (`ceo/cb-simulator-del-link`,
+   `b55e036`). Tilstanden ligger i fragmentet (`#pal=…;s=…;f=…;b=…`), læses før
+   der tegnes, og `replaceState` skriver den i adresselinjen hele tiden. Ny fælles
+   kerme `site/cb-share-core.js`, som EN + DA deler. Målt: 58/58 i
+   `tests/cb-share.test.mjs`, porten **RØD på den gamle kode — 8 fejl**.
+   Fund undervejs: `addColor()` og slette-knappen kaldte aldrig `renderExport()`,
+   så en tilføjet farve stod i tabellen men ikke i CSS/JSON-eksporten.
+
+2. **Forhåndsvisningen var sort på sort** (`ceo/plan-gate-og-502-kvote`).
+   Målt i Chromium: `#111827` på `#111827` = **1.00:1** mod WCAG's 4.5:1.
+   Rettet til **17.89:1**. Se afsnittet nedenfor.
+
+3. **De fire døde BugBottle-links** (`ceo/blog-indeks-dode-links`, `27f8aa2`).
+   Målt **404 på alle fire** 2/10 mod live, og 15 links døde i alt. Nu 189
+   guides, 189 relative links, 0 mangler mod `site/blog/`.
+
+4. **Dom 4b `dark_link_problems()`** — porten spurgte om *domænet* havde en
+   begrundelse, når en læser trykker et link. Genskabt gammel `include` →
+   **RØD — 4 problem(er)**; tre nye selftestarme grønne.
+
+5. **To forældede kataloger** — de fire ruter lå under `bugbottle.dev` i
+   `route_inventory.json` og `stripe_catalog.json`s `offers`. Flyttet røde
+   `check_stripe_ctas` med 6 fund.
+
+6. **`check_article_paid_path.py --self-test` var allerede rød på HEAD**
+   (`IndexError` i `andre[0]`, fordi de 4 rapporter er tomme uden `STATS_TOKEN`).
+
+7. **`BRANCH-TJEK 2/10` / `PR-TJEK 2/10`** — to fuldt landede branches slettet på
+   origin (`lifetime-founding`, `ceo/porten-kan-skelne-vilkaar`);
+   `ceo/hub-readme-note` har kun en gammel plan-note, se ❓. Ingen åbne PR'er.
+
+### Forhåndsvisningen i farveblindhedssimulatoren — fund og rettelse
+
+`fillSelect(sel, def)` fik en farve den ikke kendte, og kasserte den stille:
+
+```js
+if (def && !hasColor(def)) def = colors[colors.length-1].hex;
+```
+
+Standardpaletten er `#dc2626 #16a34a #2563eb #f59e0b #7c3aed #111827` — den
+rummer **intet hvidt**. `renderSelects()` beder om `'#ffffff'` i tre steder, og
+linjen kasserte præcis dét. Tre målte følger:
+
+1. **Sort på sort.** `colors[colors.length-1].hex` er `#111827`, som er den
+   samme farve tekst-feltet lige forinden fik. `updatePreview()` maler så
+   `#pv-bar` og `#pv-body` med `background = color = #111827`. Sidens egen «Live
+   text preview» er usynlig i det øjeblik siden indlæses. Målt forhold **1.00:1**.
+2. **Et delt link tabte sin baggrund.** `#pal=…;f=111827;b=fffdf0` gav
+   `bg-select2 = '#2563eb'` — palettens sidste farve. Kollegaen så en anden
+   simulering end afsenderen havde lavet, i et link der var sendt netop for at
+   vise den rigtige.
+3. **Sidste ✕ dræbte knappen.** `colors.splice()` på den sidste række efterlader
+   `colors = []`, så `colors[colors.length-1]` er `colors[-1]` → `undefined` →
+   `.hex` kaster `TypeError`. Kastet *før* `updateAll()`, så gridet aldrig blev
+   tegnet igen: rækken bliver stående med et levende ✕ mens `colors` er tomt, og
+   hvert senere klik kaster igen. «Slet alle og start forfra» efterlod værktøjet
+   dødt indtil en genindlæsning.
+
+**Rettelsen** er at *tilbyde* den bedte farve som en mulighed i stedet for at
+erstatte den, og `renderSelects()` giver den videre som den er i stedet for at
+gøre `hasColor(...) ? bg : '#ffffff'`:
+
+```js
+if (def && !hasColor(def)) {
+  var o = document.createElement('option');
+  o.value = def;
+  o.textContent = def.toUpperCase() + ' (not in the list)';
+  sel.appendChild(o);
+}
+if (def) sel.value = def;
+```
+
+**Dom.** Ny `tests/cb-preview.test.mjs`, **24/24**. Den læser begge *rigtige*
+sider i en sandkasse — den danske er en håndhævede kopi, så en dom på den
+engelske alene ville være en dom på intet. **Polaritet målt:** 18 fejl på den
+gamle kode mod 0 på den nye; de 18 dækker alle tre fejlformer. WCAG-formlen er
+kopieret *ind i* testen, så dommen ikke måles med netop den kode den dømmer.
+Serveret efter `cb-share` i `quality_gate.py` og i CI's path-filter.
+
+**Verifikation.** Dom 1: `cb-preview.test.mjs` **24/24**, RØD med 18 fejl på den
+gamle kode. Dom 2: `stripe-worker.test.mjs` **354/354** (worker urørt).
+Dom 3: `build_sites.py` 335 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
+`check_inline_js.py` 0 problemer. Dom 5: Chromium på **360/390/768/1280 px** på
+begge ruter — **0 px vandret scroll**, alle 6 rækker slettet uden én
+`pageerror`, forhåndsvisningen **17.89:1** (EN og DA) og **17.37:1** for et
+delt link med `#fffdf0`. Skærmbilleder i `/tmp/ui-cb-preview/`.
+
+### CEO-kø punkt 0 — målt færdig 2/10
+
+De fem punkter var allerede rettede i kode og test; denne iteration målte dem
+igen frem for at tro på dem:
+
+- `handleUrlInspect(request, url)` manglede `env` → **har nu `env`** på både
+  kaldet (`_worker.js:288`) og signaturen (`:3480`). `stripe-worker.test.mjs`
+  har 4 kontroller der fejler på den gamle kode plus en mutationstest på linje
+  947/952 der **fejler kun på url-inspect**, licensvejen urørt.
+- `thanks.html` 202 → egen `PENDING_OUT` («not confirmed yet»), målt i kode
+  linje 78–89 og 190; `429` har egen udgang **uden for** `again()`.
+- `net.js` `readResponse()`: `err.limited = res.status === 429`, og 429 er
+  endeligt. `check_net_copies.py` GRØN — reglen findes kun i `net.js`.
+- `releaseAiSlot()` giver dagens slot tilbage på `!orResponse.ok` og på
+  netværksfejlen, så klientens ene genkald er kvote-fri. Den gemmer den værdi
+  den selv skrev og refunderer kun ned til den — KV har ingen atomisk
+  decrement, så en blind decrement ville kvote *mod* at blive delt ud.
+- SSRF: `targetIsPublic()` på målet **og hvert redirect-hop** i begge ruter
+  (`:3508`, `:3553`, `:2144`), og IPv4-mapped IPv6 (`::ffff:7f00:1`) plus
+  NAT64 (`64:ff9b::/96`) afvises efter at være udpakket til IPv4 og kørt gennem
+  samme rækkeregler som den dotted-quad.
+
+### Deploy-noter lukket 2/10
+
+- **DEPLOY OK (kl. 09, 11 ×2, 12:30, 16, 17, 21)** målt på **indhold**:
+  `build-info.json` står i henholdsvis `ce438ba`, `182af57`, `b0da8ad`,
+  `19e59b2`, `d0e55bf`, `db3c537` og `c2891ac` på alle tre deployede domæner.
+  `ceo/livstid-scope` (`45b31df`): `/compliance-report` serverer «$149 once per
+  website — lifetime, first 100 purchases» / «$149 én gang pr. website, for
+  altid.». `ceo/donation-pris-fra-katalog` (`19e59b2`): `/pricing` har «From 10
+  kr.» i rækken `support-mahope-oss`.
+- **Rød CI 2/10 aften, målt:** to kørsrør. `27f8aa2` faldt i «Tjek produktion»
+  med **404** på `/blog/add-bug-report-form-to-any-website` — de fire BugBottle-
+  guider var lige flyttet til mahope.tools, så den kørte mod den gamle udgivelse.
+  Live svarer **200** i dag, så det var et udgivelsesvindue, ikke en død reference.
+  `b55e036` faldt i gaten på `plan-status` (den her opgave).

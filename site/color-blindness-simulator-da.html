@@ -417,15 +417,43 @@
       o.value = c.hex; o.textContent = c.hex.toUpperCase();
       sel.appendChild(o);
     });
-    if (def && !hasColor(def)) def = colors[colors.length-1].hex;
+    // `def` er den farve værktøjet *beder om* — standarden hvid baggrund, eller
+    // den baggrund der stod i et delt link. Den ligger ikke altid i tabellen:
+    // standardpaletten har intet hvidt, så `hasColor('#ffffff')` er false. Den
+    // gamle kode kasserte da `def` og satte `colors[colors.length-1].hex` i
+    // stedet. Det gav tre målte følger, alle for en læser:
+    //
+    //   - baggrunden blev `#111827` — samme farve som teksten, så sidens egen
+    //     forhåndsvisning var sort på sort (1.00:1, WCAG kræver 4.5:1) i det
+    //     øjeblik siden indlæses;
+    //   - et delt link med en baggrund uden for tabellen mistede den, så en
+    //     kollega så en anden simulering end afsenderen havde lavet;
+    //   - på den *sidste* række er `colors` tom, så `colors[colors.length-1]`
+    //     er `undefined` og `.hex` kastede. Kastet før `updateAll()`, så
+    //     gridet aldrig blev tegnet igen og knappen var død for resten af
+    //     sidens levetid.
+    //
+    // Rettelsen er at *tilbyde* den bedte farve som en mulighed i stedet for at
+    // erstatte den. Den beholder både betydningen og den fejlfrihed, og den
+    // sletter de to andre fejl med. Denne side er den håndhævede danske kopi af
+    // `color-blindness-simulator.html` og skal gøre præcis det samme.
+    if (def && !hasColor(def)) {
+      var o = document.createElement('option');
+      o.value = def;
+      o.textContent = def.toUpperCase() + ' (ikke på listen)';
+      sel.appendChild(o);
+    }
     if (def) sel.value = def;
   }
 
   function renderSelects() {
     var fg = $('fg-select').value || share.fg || '#111827';
     var bg = $('bg-select2').value || share.bg || '#ffffff';
-    fillSelect($('fg-select'), hasColor(fg) ? fg : '#111827');
-    fillSelect($('bg-select2'), hasColor(bg) ? bg : '#ffffff');
+    // Den bedte farve gives videre som den er. `fillSelect` tilbyder den, hvis
+    // den ikke står i tabellen — her lå den gamle `hasColor(...) ? ... : '#…'`,
+    // som kasserte præcis den baggrund et delt link havde bedt om.
+    fillSelect($('fg-select'), fg);
+    fillSelect($('bg-select2'), bg);
   }
 
   function updatePreview() {

@@ -270,6 +270,23 @@ STEPS: tuple[Step, ...] = (
         "site/color-blindness-simulator-da.html",
     ),
     ),
+    # Forhåndsvisningen i farveblindhedssimulatoren (EN + DA). Den lå sort på
+    # sort i det øjeblik siden indlæses, fordi `fillSelect` kasserte den hvide
+    # standard og satte palettens sidste farve i stedet — samme farve som
+    # teksten, altså 1.00:1 mod WCAG's 4.5:1. Samme linje kastede desuden
+    # `TypeError`, når den sidste farve blev slettet, så «slet alle» dræbte
+    # knappen. Dommen læser begge *rigtige* sider, som `cb-share` gør, fordi den
+    # danske er en håndhævede kopi.
+    Step(
+        id="cb-preview",
+        argv=("node", "tests/cb-preview.test.mjs"),
+        inputs=(
+            "tests/cb-preview.test.mjs",
+            "site/cb-share-core.js",
+            "site/color-blindness-simulator.html",
+            "site/color-blindness-simulator-da.html",
+        ),
+    ),
     # 1/10: `formatAnswer()` på `/compliance-ai` (EN + DA) skrev modellens svar
     # direkte i `innerHTML` med kun markdown-udskiftninger. Svaret er bygget af
     # det besøgende skrev i feltet, så `<img src=x onerror=…>` kunne blive til

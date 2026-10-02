@@ -295,6 +295,7 @@ on:
       - 'tests/checkout-route.test.mjs'
       - 'tests/markdown-escape.test.mjs'
       - 'tests/cb-share.test.mjs'
+      - 'tests/cb-preview.test.mjs'
       - 'site/cb-share-core.js'
       - 'test.js'
       # Licenskatalogen og kontrakten definerer priserne; `products/` er de

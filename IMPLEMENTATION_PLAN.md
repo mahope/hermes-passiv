@@ -1,132 +1,66 @@
 # STATUS
-- **En farvesimulering kan nu videresendes som et link.** Simulatoren kører helt
-  i browseren og intet blev sendt nogen steder, så det eneste en designer
-  egentlig vil have — «se præcis den her simulering» — døde med fanebladet.
-  Tilstanden ligger nu i fragmentet (`#pal=…;s=…;f=…;b=…`), læses før der tegnes,
-  og `replaceState` skriver den i adresselinjen hele tiden, så knappen
-  «Copy link to this simulation» bare kopierer den adresse brugeren allerede
-  har. Ny fælles kernе `site/cb-share-core.js` (EN + DA deler den, så en dansk
-  kopi ikke kan falde fra). Målt: 58/58 i ny `tests/cb-share.test.mjs`; porten
-  er **RØD på den gamle kode — 8 fejl**, bl.a. fordi gridet stadig viser
-  standardpaletten på `#pal=2563eb,e91e63;s=42`. Fund undervejs: `addColor()` og
-  slette-knappen kaldte aldrig `renderExport()`, så en tilføjet farve stod i
-  tabellen men ikke i CSS/JSON-eksporten — rettet i samme opgave.
-- **`BRANCH-TJEK 2/10`:** to branches var fuldt landede og er slettet på origin
-  (`lifetime-founding`, `ceo/porten-kan-skelne-vilkaar`). `ceo/hub-readme-note`
-  har kun en gammel plan-note fra 26/9 og intet kode — se ❓. **`PR-TJEK 2/10`:**
-  ingen åbne PR'er.
-- **`/blog/` havde fire døde links, og porten vidste det.** De fire
-  BugBottle-guider lå i `bugbottle.dev`s `include`, blev bygget hver kørsel og
-  **lagt ingen steder** — domænet står ikke i deploy-matricen — så
-  `build_sites.py` skrev deres `href` om til `https://bugbottle.dev/…`. Målt
-  **404 på alle fire** 2/10, og **15** links døde i alt, fordi fire artikler
-  mere peger på dem. De ligger nu på `mahope.tools`: 189 guides, 189 relative
-  links, 0 mangler mod `site/blog/`.
-- **Porten skrev «ikke udgivet: 4 artikler» med filnavnene og gaven GRØN**, fordi
-  dom 4 spørger om *domænet* har en begrundelse — og `bugbottle.dev` har en.
-  Det er ikke det spørgsmål, en læser stiller, når han trykker et link. Ny
-  **dom 4b** `dark_link_problems()` dømmer linket. Polaritet på rigtige filer:
-  genskabt gammel `include` → **RØD — 4 problem(er)**; tre nye selftestarme
-  grønne (den tredje med en matrix på ét domæne → 21 døde links).
-- **To kataloger var forældede på samme måde** — de fire ruter lå under
-  `bugbottle.dev` i `route_inventory.json` og i `stripe_catalog.json`s `offers`.
-  Flyttet dem røde `check_stripe_ctas` med 6 fund: igen et tal der beregnes og
-  ikke siges. De to artikler har 9 målte besøg og ingen købsknap, så dom 5 blev
-  rød; BugBottle har **ingen** betalt udgave i katalogen, så det står nu som
-  linje med grund i `tools/article_click_no_button.json`.
-- **Målt undervejs:** `--self-test` i `check_article_paid_path.py` var **allerede
-  rød på HEAD** (`IndexError` i `andre[0]`, fordi de 4 rapporter er tomme
-  uden `STATS_TOKEN`).
-- **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
-  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
-  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
+- **Porten holdt 2 døgns deploys tilbage.** `check_plan_status.py` kræver højst 25
+  STATUS-linjer; afsnittet stod på **41**, så `b55e036` faldt i gaten og `27f8aa2`
+  i produktionstjekket. 2/10: kogt til **25**, 7 afsnit med historie flyttet til
+  `docs/plan-arkiv.md` i samme commit. Dom 2 grøn, `--self-test` **11/11**. Den anden
+  røde kørsel var **404** på 1 blogguide — gammelt udgivelsesvindue, live **200**.
+- **Forhåndsvisningen i simulatoren var sort på sort.** `fillSelect` kasserte den hvide
+  standard (paletten rummer intet hvidt) og satte palettens sidste farve i stedet:
+  **1.00:1** mod WCAG's 4.5:1 i det øjeblik siden indlæses. Samme linje kastede
+  `TypeError` på den sidste farve, så «slet alle» dræbte knappen, og et delt link
+  tabte sin baggrund. Nu **17.89:1**. Ny `cb-preview.test.mjs` **24/24**, målt **RØD
+  med 18 fejl** på den gamle kode.
+- **`/blog/` havde fire døde links, og porten vidste det.** De 4 BugBottle-guider lå i
+  `bugbottle.dev`s `include` og blev lagt ingen steder: målt **404 på alle 4** mod
+  live, **15** links døde i alt. Nu 189 guides, **0** mangler mod `site/blog/`. Ny dom
+  4b dømmer linket i stedet for domænet: genskabt gammel `include` → **RØD — 4**.
+- **CEO-kø punkt 0 er færdig, målt 2/10 frem for troet.** `handleUrlInspect` har `env`
+  (`:288`/`:3480`) + mutation der fejler **kun** på url-inspect, **354/354**. 202 har
+  egen `PENDING_OUT`; 429 er endeligt i `net.js` og uden for `again()`;
+  `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev; `targetIsPublic()`
+  kører på hvert hop og afviser IPv4-mapped IPv6 og NAT64.
+- **`BRANCH-TJEK`/`PR-TJEK 2/10`:** 2 fuldt landede branches slettet på origin;
+  `ceo/hub-readme-note` har kun 1 plan-note fra 26/9, intet kode — se ❓. 0 PR'er.
+- **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
+  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer til
+  Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: sort-på-sort-forhåndsvisning + porten tilbage grøn
+   2026-10-02 ceo/plan-gate-og-502-kvote` — måles på **indhold** pr. side, ikke
+   på HTTP 200: `mahope.tools/color-blindness-simulator` og
+   `-simulator-da` skal hver have **én**
+   `o.textContent = def.toUpperCase() + ' (not in the list)'` (DA: «ikke på
+   listen»), **nul** `colors[colors.length-1].hex` i `fillSelect`, og
+   `renderSelects()` skal kalde `fillSelect(..., bg)` uden `hasColor(...) ? ...
+   : '#ffffff'`. Dom 1: `cb-preview.test.mjs` **24/24** + porten målt **RØD med 18
+   fejl** på de gamle sider. Dom 2: `stripe-worker.test.mjs` **354/354** (worker
+   urørt). Dom 3: `build_sites.py` 335 filer 0 brudte, `seo_check.py` 314 sider
+   0 fund, `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn.
+   Dom 5: Chromium på **360/390/768/1280 px** på begge ruter — **0 px** vandret
+   scroll, 6 rækker slettet uden `pageerror`, forhåndsvisningen **17.89:1**
+   (EN + DA) og **17.37:1** for et delt link med `#fffdf0`.
+   `build-info.json` på alle tre domæner skal stå i squash-sha'en.
+
 - `VERIFICÉR DEPLOY: del-link i farveblindhedssimulatoren 2026-10-02
-   ceo/cb-simulator-del-link` — måles på **indhold** pr. side, ikke på HTTP 200:
-   `/color-blindness-simulator` og `/color-blindness-simulator-da` skal hver
-   have præcis **én** `<script src="/cb-share-core.js">`, `CBSHARE.decode(
-   location.hash)` på den linje der læser fragmentet, **én** `id="copy-share"`
-   og **én** `addEventListener('click', copyShare)`. `mahope.tools/cb-share-core.js`
-   skal serveres **200** og have `CBSHARE.encode` + `CBSHARE.decode`. Dom 1:
-   `cb-share.test.mjs` **58/58** + porten målt **RØD — 8 fejl** på de gamle
-   sider. Dom 2: `stripe-worker.test.mjs` **354/354** (worker urørt). Dom 3:
-   `build_sites.py` 335 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
-   `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn
-   (**145** steps, fra 144). Dom 5: `tools/shots.py` **ingen vandret scroll**
-   ved 360 + 768 + 1280 px på begge ruter.
+   ceo/cb-simulator-del-link` — måles på **indhold** pr. side: hver af
+   `/color-blindness-simulator` og `-simulator-da` skal have præcis **én**
+   `<script src="/cb-share-core.js">`, `CBSHARE.decode(location.hash)` på den
+   linje der læser fragmentet, **én** `id="copy-share"` og **én**
+   `addEventListener('click', copyShare)`. `/cb-share-core.js` skal serveres
+   **200** og have `CBSHARE.encode` + `CBSHARE.decode`. Dom 1:
+   `cb-share.test.mjs` **58/58** + porten målt **RØD — 8 fejl** på de gamle sider.
 
 - `VERIFICÉR DEPLOY: fire døde links fra /blog/ 2026-10-02
-   ceo/blog-indeks-dode-links` — måles på **indhold**, ikke på HTTP 200:
-   `mahope.tools/blog/` skal have **189** unikke `href` på guides (93 EN +
-   96 DA, dvs. 0 mangler mod `site/blog/`), de fire BugBottle-guider skal være
+   ceo/blog-indeks-dode-links` — måles på **indhold**: `mahope.tools/blog/` skal
+   have **189** unikke `href` på guides, de fire BugBottle-guider skal være
    **relative** (`href="/blog/bug-reports-in-ci-pipeline"`) og **ikke**
-   `https://bugbottle.dev/…`, og `dist/mahope.tools/blog/` skal have de fire
-   filer. `build-info.json` på alle tre domæner skal stå i squash-sha'en. Dom 1:
-   `check_article_paid_path.py` **GRØN** + de tre nye selftestarme grønne
-   (polaritet målt ved at genskabe den gamle `include`: **RØD — 4 problem(er)**,
-   «DØDTE LINK … 5 side(r) i site/ linker til den»). Dom 2:
-   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` 334 + 33 filer 0
-   brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer.
-   Dom 4: hele `quality_gate.py` grøn.
-
-- **DEPLOY OK 2/10 (kl. 21).** Alle fem åbne noter fra 2/10 er lukket her, målt på
-  **indhold**: `build-info.json` står i `c2891ac` (= main HEAD) på alle tre
-  deployede domæner, og CI er `success`. `ceo/hash-decode-urierror` (`c2891ac`):
-  de **ni** sider der læser `#url=` serverer hver `try{…decodeURIComponent(…)}
-  catch` på den linje der læser fragmentet — de to `url-to-markdown`-sider
-  ligger på `cleancopy.tools`, ikke mahope.tools, så mit første tjek så 404 og
-  var min egen fejlsøgning, ikke en død reference. `ceo/blog-indeks` (`caea80f`)
-  og `ceo/url-med-til-udpakke` (`9f07a09`): `/blog/` serverer 189 unikke
-  guide-links og heroens «93 English guides … plus 96 Danish guides»;
-  `ceo/frontdoors-gate` og `ceo/blogindeks-citerede-lofter` (`df1cd60`) er dækket
-  af de samme to målinger plus CI.
-
-- ~~`VERIFICÉR DEPLOY: at et håndskrevet #url=% ikke dræber fragment-læseren~~
-   2026-10-02 ceo/hash-decode-urierror` — syv sider ændret, så måles på **indhold**
-   pr. side, ikke på HTTP 200: `mahope.tools/scan`, `/scan-da`, `/cookie-check`,
-   `/cookie-check-da`, `/compliance-report`, `/compliance-site-check` og
-   `/da/compliance-site-check` skal hver have `try{…decodeURIComponent(…)}catch`
-   på den linje der læser `#url=`, og `url-to-markdown` +
-   `da/url-til-markdown` skal fortsat være grønne. Dom 1: `check_url_handoff.py`
-   **GRØN** (8 forsider dømt, 6 handoff, 9 sider dekoder fragmentet) +
-   `--self-test` **18/18**. Dom 2: `stripe-worker.test.mjs` **354/354**. Dom 3:
-   `build_sites.py` 330+35+73+37 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
-   `check_inline_js.py` 663 inline-blokke 0 problemer. Dom 4: hele
-   `quality_gate.py` **144 steps** grønne.
-
-- **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
-  værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni
-  live, og `build-info.json` på alle tre deployede domæner står i `ce438ba`.
-- **DEPLOY OK 2/10 (kl. 11).** `ceo/livstid-scope` (`45b31df`) er ude — den lå
-  og ventede, fordi den gik rødt i CI. Målt på indhold: `/compliance-report`
-  serverer `$149 once per website — lifetime, first 100 purchases` og den danske
-  `$149 én gang pr. website, for altid.`, og `build-info.json` står i `182af57`.
-- **DEPLOY OK 2/10 (kl. 12:30).** `ceo/pris-side` (`b0da8ad`) er ute. Målt på
-  **indhold**, ikke på HTTP 200: `/pricing` og `/da/pricing` serverer hver 14
-  `data-product`-rækker, 3 `data-lifetime`-rækker, **0** `buy.stripe.com` og
-  `pricing:start` 1 gang pr. fil; `build-info.json` står i `b0da8ad`.
-- **DEPLOY OK 2/10 (kl. 11).** `ceo/donation-pris-fra-katalog` (`19e59b2`) er ude,
-  målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
-  `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
-  `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
-
-- **DEPLOY OK 2/10 (kl. 16).** `ceo/tjek-paa-mahope-forside` (`d0e55bf`) er ude,
-  målt på indhold: `mahope.tools/` og `/da/` har hver præcis 1 `#oc-check-form`,
-  og `build-info.json` står i `d0e55bf` på alle tre deployede domæner. Dom 1:
-  `GET /api/url-inspect?url=…` svarer 200 med `securityHeadersChecked` på 8 navne.
-  Dom 2: `stripe-worker.test.mjs` 354/354. Dom 3: `build_sites.py` 330+35+70+37
-  filer 0 brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py` grøn.
-  Dom 4: hele `quality_gate.py` 130 steps. Dom 5: `check_donation_paths` 43 sider,
-  `check_first_action` 14 dømte 0 problemer, `check_form_labels`, `check_net_copies`
-  og `check_built_css` grønne.
-
-- **DEPLOY OK 2/10 (kl. 17).** `ceo/cleancopy-konverteringstjek` (`22a2753`) er
-  ude alligevel — dens blokering var rød CI, som `db3c537` rettede 15:01. Målt på
-  **indhold**: `cleancopy.tools/build-info.json` står i `db3c537` (main HEAD),
-  forsiden har `cc-check-form` og 3 referencer til `/readable.js` +
-  `/convert-check.js`.
+   `https://bugbottle.dev/…`. Dom 1: `check_article_paid_path.py` **GRØN** +
+   de tre nye selftestarme grønne (polaritet målt ved at genskabe den gamle
+   `include`: **RØD — 4 problem(er)**). Dom 2: `stripe-worker.test.mjs`
+   **354/354**. Dom 3: `build_sites.py` 0 brudte, `seo_check.py` 0 fund,
+   `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn.
 
 ## Åbne opgaver
 
