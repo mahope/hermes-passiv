@@ -1,10 +1,18 @@
 # STATUS
 
-- **Rødt CI 2/10 var uret, ikke licensserveren.** `rateLimitIp` tæller i hele
-  time-bøtter, og «rapporten over grænsen»-sløjfen lå da grænsen krydsede (push
-  04:59:41, dømt 05:00:00): 200 i stedet for 429. Sløjferne har nu et fast ur, og
-  gatestrækket `stripe-worker-ur` kører under et ur der hopper en time hvert
-  30. ms. Målt ved mutation: uden pinnet ur rød med CI's egen fejltekst.
+- **Rødt CI 2/10 var `clock_jump.mjs` selv, to gange.** Først kl. 05:00
+  (timegrænsen midt i en sløjfe), så kl. 06:03 med en **livetids-webhook**: uret
+  sprang en time hvert 30. ms, så det sprang mellem signering og verifikation,
+  hvor `verifyStripeSignature` har 300 s tolerance — og workeren afviste
+  korrekt. Hoptrinnet er nu **én time pr. `Request`-konstruktion**, så uret står
+  stille gennem et kald: `stripe-worker-ur` er grøn 5/5 køringer i træk. Tænder
+  er målt begge vegne: uden Sentry-løkkens pin → 350/352, og et krydsende ur i
+  timegrænse-afsnittet → 347/352.
+- **Den anden fejl var ægte og lå i testen.** `sentryRateLimited` slipper én
+  rapport pr. 12. sekund, så de tolv kald i Sentry-sløjfen skal ligge i samme
+  vindue — de lå i op til 12 forskellige. Sløjken har nu sit eget fast ur.
+- **Tre af de fire seneste runs var røde** (`4cc8359`, `45b31df`), alle af samme
+  port. Derfor er `45b31df`s livstidsnote stadig ikke deployet.
 - **Alle 19 sider har gratis mod Pro i samme tabel**, tegnet af
   `tools/stripe_catalog.json`. Dom: `check_pro_table.py` (8 produktsider +
   11 værktøjssider). **Ny port `check_catalog_where.py` kører i gaten** og
@@ -41,7 +49,8 @@
   `check_pro_table.py` er grøn på 19 sider. Dom 2: `--self-test` 24/24. Dom 3:
   mutationen i generatorens skabelon er rød, og de genoptegnede sider er grønne
   igen — ellers ville porten være grøn ved konstruktion. Dom 4:
-  `python3 tools/quality_gate.py` er grøn med 134 steps.
+  `python3 tools/quality_gate.py` er grøn med 134 steps. **Noten er forsinket,
+  ikke lukket:** `45b31df` gik rødt i CI, så den er aldrig rullet ud.
 
 ## Åbne opgaver
 

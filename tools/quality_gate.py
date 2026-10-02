@@ -178,13 +178,19 @@ STEPS: tuple[Step, ...] = (
             "tools/paid_content.json",
         ),
     ),
-    # Samme suite igen, men med et ur der hopper en time hvert 30. ms.
-    # `rateLimitIp` tæller i hele time-bøtter, så «over grænsen»-sløjferne var
-    # afhængige af hvornår de kørte: CI-push 2/10 kl. 04:59:41 ramte timegrænsen
-    # 05:00:00 midt i rapport-sløjfen og fik 200 i stedet for 429. Rødt CI-run,
-    # der så ud som en fejl i licensserveren. Dette step gør den afhængighed til
-    # en målt egenskab: en ny tællertest uden fast ur går rød her, ikke tilfældigt
-    # i en natlig kørsel.
+    # Samme suite igen, men med et ur der springer én time for hvert kald.
+    # `rateLimitIp` tæller i hele time-bøtter, og `sentryRateLimited` har et
+    # glidende vindue på 12 sekunder, så «over grænsen»-sløjferne var
+    # afhængige af hvornår de kørte: CI-push 2/10 kl. 04:59:41 ramte
+    # timegrænsen 05:00:00 midt i rapport-sløjfen og fik 200 i stedet for 429.
+    # Rødt CI-run, der så ud som en fejl i licenserveren. Dette step gør den
+    # afhængighed til en målt egenskab: en ny tællertest uden fast ur går rød
+    # her, ikke tilfældigt i en nattlig kørsel.
+    #
+    # Hoptrinnet er pr. kald og ikke pr. millisekund, så porten er
+    # deterministisk: et ur der sprang en time hvert 30. ms ramte 2/10 kl.
+    # 06:03 desuden en webhook-signatur mellem signering og verifikation
+    # (300 s tolerance i `verifyStripeSignature`) og lavede et andet rødt run.
     Step(
         id="stripe-worker-ur",
         argv=("node", "tests/clock_jump.mjs"),
