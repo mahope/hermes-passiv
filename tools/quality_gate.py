@@ -684,6 +684,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_net_copies.py", "--self-test"),
         inputs=("tools/check_net_copies.py", "site/**"),
     ),
+    # Købsknappen i hvert pro-kort, dømt mod `tools/stripe_catalog.json`.
+    # Målt 2/10: de tretten værktøjssider skrev **pris og købslink i hånden**
+    # inde i en inline `<script>`, og `check_own_prices.py` læser beløb i
+    # markup — så de tretten var priser ingen kørsel kunne se. Uden dette step
+    # kunne de stå på $79 mens Stripe sagde $89. Selvtesten kører med, fordi
+    # porten ellers kunne være grøn ved ikke at finde nogen knap.
+    Step(
+        id="pro-card",
+        argv=("python3", "tools/pro_card.py"),
+        inputs=("tools/pro_card.py", "tools/pro_table.py",
+                "tools/stripe_catalog.json", "site/**"),
+    ),
+    Step(
+        id="pro-card-selftest",
+        argv=("python3", "tools/pro_card.py", "--self-test"),
+        inputs=("tools/pro_card.py", "tools/pro_table.py",
+                "tools/stripe_catalog.json", "site/**"),
+    ),
     # Spring i overskriftsniveau (30/9). Målt først: 12 sider sprang fra `<h1>`
     # til `<h3>` uden et `<h2>` imellem — `paid-templates` (EN+DA) satte 14
     # produkternavne i `<h3>` som det første indhold efter titlen, og

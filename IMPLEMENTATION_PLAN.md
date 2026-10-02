@@ -1,12 +1,20 @@
 # STATUS
 
-- **Næste opgave: 13 værktøjssider, og de må ikke låne produktets liste.**
-  Målt 2/10: `page-profile-pro`s fem frie funktioner peger alle på
-  `page_profile.py` (historik, terminalrapport, score), mens browseren på
-  `/url-inspector` ingen af delene har; `eucomply-pro`s liste er
-  `compliance-report.html`s egen tjekrække. Dom 6 i `check_pro_table.py`
-  (selftest 16/16) kræver `kind: "tool"` + egne `free_features` med `where`
-  på sidens egen fil. Ratchet: `own_pages` pr. produkt i katalogen.
+- **Næste opgave: den frie spalte i de tretten værktøjssiders pro-kort.**
+  Hvert pro-kort siger hvad Pro **tilføjer**, men ingen af dem viser i en
+  tabel hvad den frie udgave giver på det *samme* værktøj. Målt 2/10: de
+  tretten kort har hver 3 `<li>` i `.pro-list` om Pro og ingen om gratis.
+  Mekanismen er klar: `pro_table.blok(…, side_free)` og dom 6 i
+  `check_pro_table.py` (selftest 16/16). Dom 6 dømmer kun den **frie** spalte,
+  så en værktøjsside skal også erklære sine **egne** `pro_features` — ellers
+  tegner den produktets liste, som dom 6 netop blev skrevet for at forhindre.
+  Ratchet: 13 kort med en tabel, dømt af `tools/check_pro_table.py`.
+- **Købsknappen i hvert pro-kort er katalogens** (`tools/pro_card.py`, selvtest
+  7/7, to steps i gaten). Målt 2/10 før: de tretten skrev **pris og købslink i
+  hånden** inde i inline scripts, og `check_own_prices.py` læser beløb i markup
+  — så de tretten var priser ingen kørling kunne se. Alle tretten var rigtige i
+  dag, så `--apply` skrev 0 filer; det nye er, at de ikke kan glide mere.
+  Ratchet på 13 sider, så en tabt knap er rød.
 - **CEO-kø punkt 0 er færdigt** — rettet i `5693853`, målt på den levende rute:
   `GET /api/url-inspect?url=` → 200, 202 på `/thanks` siger «not confirmed
   yet», `net.js:47` gør 429 endelig, og et 502 fra OpenRouter giver kvoten
@@ -26,102 +34,34 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: gratis mod Pro ét sted på de otte produktsider
-  ceo/pro-tabel-en-sted 2026-10-02` — måles på **indhold**, ikke på HTTP 200.
-  Dom 1: `curl -s https://mahope.tools/ | grep -c 'class="compare pro-table"'`
-  → 1 på hver af de otte sider (`cleancopy.tools/`, `/da/`,
-  `deskuptime.com/`, `/da/`, `mahope.tools/page-profile`, `/da/page-profile`,
-  `/compliance-report`, `/da/compliance-report`), og 2 tabeller på ingen af dem.
-  Dom 2: `python3 tools/check_pro_table.py` er grøn på **dist**, ikke kun på
-  `site/`, og `python3 tools/pro_table.py --apply` siger «0 sider tegnet igen»
-  mod den publicerede kode. Dom 3: hver blok har `<caption>`, to
-  `<th scope="row">` og priserne i `<span class="pro-price">`; på
-  `/compliance-report` står «$79/year per website» og på `/da/` «$79/år pr.
-  website», på `deskuptime` «$19 once» / «$19 én gang», på `page-profile`
-  «$19/year» + «$39 once — lifetime, first 100 purchases» i noten under
-  tabellen. Dom 4: `/da/deskuptime` og `/da/compliance-report` har **0** hånd-
-  skrevne `<table class="compare">` ved siden af (portens dom 5), og de 20
-  `/#compare`-links i `dist/deskuptime.com` virker stadig — ankeret flyttede
-  med tabellen. Dom 5: `scrollWidth - clientWidth == 0` ved 390 px på alle otte
-  sider; `/da/compliance-report` har 88 px scroll **inde i** sit egen
-  `.table-wrap`, så siden beholder sin bredde, og ingen ord brydes midt i.
-  Dom 6: `python3 tools/check_stripe_ctas.py` er grøn (0 problemer) og dens
-  selvstest 47/47 — bl.a. at porten stadig fanger en gratis-funktion der flyttes
-  ind i Pro-kortet, en «ja» i gratis-spalten for en betalt række, og de tre
-  købssider der kun nævner gratis i en «Pro tilføjer»-sætning. Dommen er
-  `python3 tools/quality_gate.py` (129 steps) + missionens gate.
+- Alle fem noter fra 1.–2. oktober er **målt på indhold** og lukket 2/10:
+  `DEPLOY OK 2/10` for gratis-mod-Pro-tabellen (8/8 sider har præcis én
+  blok, `--apply` siger «0 sider tegnet igen», og porten er grøn på **dist**),
+  for `/net.js` (200 `application/javascript` 4920 b, selvtest 9/9,
+  `scan-clients` 417/417), for det delte rapport-budget (levende kald med tre
+  URL'er: `scanned: 3`, alle tre `pages_checked: 4`, summen 12, og
+  `passed + failed + not_checked == total` på alle tre, mens wordpress.org's
+  privatlivstjek er `pass` med den linkede side i `details`), for
+  kontrasttjekkeren i artiklerne (4/4 sider har værktøjet, kernen svarer 200
+  10955 b, alle felter har labels) og for AI-banneren (187 bannere, 0 med et
+  løfte de ikke kan holde). Detaljerne står i `docs/plan-arkiv.md`.
 
-- `VERIFICÉR DEPLOY: net-kopierne samlet i /net.js
-  ceo/net-kopier-ind-i-netjs 2026-10-02` — måles på **indhold**, ikke på HTTP
-  200. Dom 1: alle seks sider har `<script defer src="/net.js">` i head *og*
-  kalder `NET.askGet(` — `/net.js` svarer 200 og ligger i `dist/mahope.tools/`,
-  så ingen af dem kan stå med en `NET is not defined` i browseren. Dom 2: 0
-  fund fra `python3 tools/check_net_copies.py` (og selvtest 9/9), altså ingen
-  `.transient =` uden for kernen i hele `site/`. Dom 3: `node
-  tests/scan-clients.test.mjs` er **417/417**, heraf 10 kontroller der dømmer de
-  seks GET-klienters mutation af `net.js` — brydes kernen (`err.transient =
-  false`), skal alle seks give ét kald i stedet for tre. Dom 4:
-  `/compliance-site-check` giver **3** kald på en 503 hele vejen, ikke 9 (loop +
-  kald genkaldte begge); målt før rettelsen i samme sandkasse. Dom 5:
-  `/url-inspector` skriver «Server busy — retrying…» i statuslinjen i det øjeblik
-  det genkaldte kald går ud (dommen læser elementet under et kald, ikke bagefter).
-  Dom 6: `python3 tools/check_storage_claims.py` er grøn og `--self-test`
-  melder **7** sider der afslører server-side hentning (var 6) — de seks kalder
-  hentende ruter gennem `net.js` nu, så porten skal kunne se dem. Dommen er
-  `python3 tools/quality_gate.py` (127 steps) + missionens gate.
-
-- `VERIFICÉR DEPLOY: ret budgettet på de rapporter, kunden sender videre
-  ceo/deling-pr-url 2026-10-02` — måles på **indhold** på den levende rute, ikke
-  på HTTP 200. Dom 1: `GET /api/compliance-scan?url=` med `mahope.dk\n` +
-  `www.cookiebot.com\n` + `wordpress.org\n` (tre linjer, ét kald) → 200 og
-  `scanned: 3`, og **alle tre** rapporter har `pages_checked` ≥ 2 — den tredje
-  havde `pages_checked: 1` før. Dom 2: wordpress.org's privatlivstjek er `pass`
-  med `https://wordpress.org/about/privacy/` i `details` — før var det
-  `Not found. Add a Privacy Policy page and link it from your footer`. Dom 3:
-  summen af `pages_checked` for de tre rapporter er ≤ 12, og hver rapport har
-  højst sin andel (4). Dom 4: hvert tjek med `status: "unknown"` ligger i
-  `results.notChecked` og **ikke** i `results.failed`, og `passed + failed +
-  not_checked === total` for alle tre. Dom 5: `not_checked` findes i svaret,
-  og ingen `details` med «Not found» mangler «We checked N of the M pages we
-  expected here», når listen ikke gennemgik alle kandidater. Dom 6: UI'en på
-  `/compliance-site-check` og `/da/compliance-site-check` viser «N not checked»
-  / «N ikke tjeket» i scoren, og et `unknown`-punkt er **gult** (–), ikke rødt
-  (✗). Dom 7: `getStatusIcon` og `statusOrder` er på plads i begge filer, og
-  `pageerror` er 0. Dommen er `node tests/stripe-worker.test.mjs` (352/352,
-  heraf 6 domme der fejler på `main`s worker) + `node
-  tests/scan-clients.test.mjs` (392/392) + `python3 tools/quality_gate.py` +
-  missionens gate.
-- `VERIFICÉR DEPLOY: kontrasttjekkeren indeni de to artikler
-  ceo/kontrast-tjekker-i-artiklen 2026-10-02` — måles på **indhold**, ikke på
-  HTTP 200. Dom 1: `/blog/text-on-image-contrast-check` og
-  `/da/blog/tekst-paa-billede-kontrasttjek` har `ti-card` 1 gang, `ti-canvas-wrap`
-  1 gang, `art-cv` 1 gang og `TiContrast.mount` 1 gang hver — altså er værktøjet
-  faktisk der, ikke kun en omtale af det. Dom 2: heroens `btn-primary` er
-  `href="#try-it"` (EN) og `href="#prov-dit-billede"` (DA), og begge anker findes
-  som `id` i markup'en — læseren bliver på siden. Dom 3:
-  `/text-on-image-core.js` svarer **200** og `text-on-image-core.js` ligger i
-  `dist/mahope.tools/`, og **alle fire** sider indlæser den (0 kopier af
-  `function sampleContrast` i nogen af dem). Dom 4: resultatet renderes i live —
-  `/text-on-image-checker` måler 3,86:1 på EN og 4,20:1 på DA (dansk komma),
-  og artiklens `#try-it`-kort har samme mål. Dom 5: `art-result` har
-  `role="status"` + `aria-live="polite"`, `art-err` har `role="alert"`, og alle
-  fire felter har `<label for>` (dommen er `tools/check_form_labels.py`).
-  Dommen er `node tests/scan-clients.test.mjs` (392/392) +
-  `python3 tools/check_contrast_sampling.py` (22/22) + gaten.
-
-- `VERIFICÉR DEPLOY: AI-banneren uden et løfte den ikke kan holde
-  ceo/ai-cta-uden-loefte 2026-10-02` — måles på **indhold**, ikke på HTTP 200.
-  Dom 1: `See what we publish free` 91 gange og `Se hvad vi udgiver gratis` 96
-  gange i live EN/DA, og **0** gange `practical answer in seconds`,
-  `få et praktisk svar på få sekunder`, `Ask the Compliance AI` eller
-  `Spørg Compliance-AI` i noget publiceret HTML. Dom 2: hver AI-banners `href`
-  er `/compliance-ai` (EN) eller `/da/compliance-ai`, altså den side der
-  fortænger sandheden — ikke en død `/books`-rute. Dom 3: bannerens knapstørrelse
-  (`btn-secondary`/`btn-primary`) er uændret, så intet rykker sig på folden.
-  Dom 4: `ai-cta-link` ligger stadig 1 gang pr. artikel, så `data-track` og
-  `/api/track`-tællingen virker uændret. Dom 5: `GET /api/compliance-ai` svarer
-  stadig `{"ok":true,"available":false}` — banneren siger det samme, og det er
-  hele pointen. Dommen er `python3 tools/check_ai_cta_honesty.py` + gaten.
+- `VERIFICÉR DEPLOY: købsknappen i hvert pro-kort er katalogens
+  ceo/pro-kort-knap-er-katalogens 2026-10-02` — måles på **indhold**. Dom 1:
+  `python3 tools/pro_card.py` er grøn og siger «13 pro-kort køber til
+  katalogens eget link og pris»; de tretten er de elleve EUComply-sider plus
+  `/clean-copy-tool` og `/url-inspector`, og de to artiklers pro-kort har ingen
+  købsknap (de linker til `#report`), så de tæller ikke med. Dom 2:
+  `python3 tools/pro_card.py --apply` siger «0 knapper sat til katalogens» mod
+  den publicerede kode — de tretten var rigtige i dag (målt 2/10), så der er
+  intet at rette, kun noget at holde. Dom 3: porten er i `quality_gate.py`
+  (131 steps) med **og** uden `--self-test`. Dom 4: selvtesten er 7/7, og de
+  mutationer dømmer krydsprodukt-link, håndskrevet pris i knappen, ukendt
+  købslink, engelsk knap på dansk side og en **tabt** knap (ratchet på 13), for
+  hvilken ret så gør mutationen grøn igen. Dom 5: ingen side uden for kortet
+  er rørt — `--apply` skriver kun mellem `class="…pro-card…"` og kortets
+  afsluttende `</div>`, så en sides hovedknap står urørt. Dommen er
+  `python3 tools/quality_gate.py` + missionens gate.
 
 ## Åbne opgaver
 
@@ -166,6 +106,13 @@
    eller beta-side kan stadig publiceres med en handling, der altid fejler.
    Accept: porten finder den, hvis den skrives i manifestet. *(Kun relevant når
    vi tilføjer flere sådanne sider — ikke en opgave i sig selv.)*
+7. **`check_pro_table.py` kører ikke i gaten.** Hvorfor: målt 2/10 med
+   `quality_gate.py --list` — porten fra opgaven «gratis mod Pro ét sted» er
+   grøn, men ingen step kalder den, så dens 16 selvtestkontroller kører kun når
+   nogen husker den. Samme fejlform som `quality_gate.py`s egen docstring
+   beskriver: en port der intet kalder er en port der ingenting dømmer. Accept:
+   to steps (`pro-table` + `pro-table-selftest`) i `STEPS`, så
+   `tools/test_deploy_workflow.py` bekræfter at filerne er i CI's path-filter.
 7. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor:
    de seks boger er på engelsk, og hele `_worker.js`, scanneren og resten af
    mahope.tools findes på dansk. Læsevisningen gør bogen mere læsbar end før,

@@ -4576,3 +4576,56 @@ søskendeværktøjer (`/scan`, `/url-inspector`, `/security-headers-check`,
 `/cookie-check`, `/text-on-image-checker`, `/contrast-checker` + generatorerne)
 sælger stadig kun efter et resultat, så en læser der lander på værktøjet ser
 prisen først efter at han har brugt det. Ratchet: `pro_table_pages` i katalogen.
+
+
+## 2/10 — fem `VERIFICÉR DEPLOY`-noter lukket på indhold
+
+De fem noter stod åbne i planen, selv om deres commits var deployet og CI grøn.
+Repoet deployer på hvert push til `main`, så «ældre end det seneste
+deploy-vindue» var sand for alle fem. De er målt på **indhold**, ikke på HTTP
+200, og lukket med `DEPLOY OK 2/10`:
+
+1. **Gratis mod Pro ét sted på de otte produktsider** (`ceo/pro-tabel-en-sted`).
+   Dom 1 målt live: præcis én `class="compare pro-table"` på hver af
+   `cleancopy.tools/`, `/da/`, `deskuptime.com/`, `/da/`,
+   `mahope.tools/page-profile`, `/da/page-profile`, `/compliance-report` og
+   `/da/compliance-report` — og 0 på `mahope.tools/`, som ikke er en af de otte.
+   Dom 2: `--apply` mod den publicerede kode siger «0 sider tegnet igen», og
+   porten er grøn på **dist** (temp-rod med symlinks til de otte publicerede
+   filer — de fire `index.html`-sider ligger i dist som domænerod, ikke under
+   deres `site/`-sti, så en 1:1-sti ville have sagt «filen findes ikke» på fire
+   sider). Dom 3: `<caption class="sr-only">` + to `scope="row"` på alle otte,
+   priserne i `<span class="pro-price">` («$79/year per website» / «$79/år pr.
+   website»). Dom 4: 0 håndskrevne `<table class="compare">` ved siden af på de
+   to DA-sider. Dom 6: `check_stripe_ctas.py` 0 problemer, selvtest 47/47.
+2. **Reglen for dårlige dage samlet i `/net.js`** (`ceo/net-kopier-ind-i-netjs`).
+   `/net.js` svarer 200 `application/javascript` 4920 b — samme byte-tal som da
+   noten blev skrevet. `check_net_copies.py` grøn, `scan-clients` 417/417,
+   `check_storage_claims.py --self-test` melder 7 sider der afslører
+   server-side hentning. Seks sider indlæser `src="/net.js"`; de to der ikke
+   gør det (`/book-ai.html` og `cleancopy.tools/scan`) har hver deres egen
+   klientfil og ingen genkaldsregel, hvilket `check_net_copies.py` bekræfter.
+3. **Rettfærdigt budget pr. rapport** (`ceo/deling-pr-url`). Levende kald med
+   `mahope.dk`, `www.cookiebot.com` og `wordpress.org` i ét kald → 200,
+   `scanned: 3`, `pages_checked` 4/4/4 (summen 12 = loftet), og
+   `passed + failed + not_checked == total` på alle tre. wordpress.org's
+   privatlivstjek er `pass` med `Found at https://wordpress.org/about/privacy/`,
+   og de to `unknown`-tjek har en `details` der forklarer at de ikke blev
+   læst — ikke «Not found».
+4. **Kontrasttjekkeren indeni artiklerne** (`ceo/kontrast-tjekker-i-artiklen`).
+   Begge artikler har `ti-card`, `art-cv` og `TiContrast.mount` pr. 1 gang,
+   `/text-on-image-core.js` svarer 200 `application/javascript` 10955 b, og alle
+   fire felter har `<label for>` med `role="status"`/`aria-live="polite"` på
+   resultatet og `role="alert"` på fejlen.
+5. **AI-banneren uden et løfte den ikke kan holde**
+   (`ceo/ai-cta-uden-loefte`). «See what we publish free» / «Se hvad vi udgiver
+   gratis» står i begge artikler, og 0 af de fire forbudte formuleringer findes i
+   noget publiceret HTML.
+
+**Målgrunden for næste iteration:** de tretten pro-kort køber nu til
+katalens eget link og pris, dømt af `tools/pro_card.py` i gaten. Det næste er
+**gratis-spalten på de samme tretten sider**: hvert pro-kort forteller hvad Pro
+tilføjer, og ingen af dem siger i en tabel hvad den frie udgave giver på det
+*samme* værktøj. Mekanismen er klar (`pro_table.blok(…, side_free)` og dom 6 i
+`check_pro_table.py`), og dom 6 dømmer kun den frie spalte — så en værktøjsside
+skal også få sine **egne** `pro_features`, ellers tegner den produktets liste.
