@@ -1770,6 +1770,174 @@
       "product": "eucomply-pro",
       "lang": "da",
       "why": "samme sammenligning på dansk"
+    },
+    {
+      "path": "site/text-on-image-checker.html",
+      "product": "eucomply-pro",
+      "lang": "en",
+      "kind": "tool",
+      "layout": "inline",
+      "why": "Andet mest besøgte værktøj (2/10 Plausible: 2 af 18 besøgende efter artiklen). Kortet lovede de tre ting Pro tilføjer, men sagde ikke hvad det gratis tjek gør.",
+      "free_features": [
+        {
+          "id": "ratio",
+          "where": "site/text-on-image-core.js:120-141 updateAll() — sample.ratio -> res.innerHTML, alt i browseren",
+          "labels": {
+            "en": [
+              "WCAG contrast ratio of the sampled text"
+            ],
+            "da": [
+              "WCAG-kontrastforhold for den samplede tekst"
+            ]
+          }
+        },
+        {
+          "id": "aaa",
+          "where": "site/text-on-image-core.js:124-141 — aaaNeed og alsoAAA giver AAA-framærgningen",
+          "labels": {
+            "en": [
+              "AA and AAA verdict, large-text threshold"
+            ],
+            "da": [
+              "AA- og AAA-dom, tærskel for stor tekst"
+            ]
+          }
+        },
+        {
+          "id": "image-local",
+          "where": "site/text-on-image-core.js:186-201 loadFile() — FileReader-objektet læses i browseren, der er ingen upload",
+          "labels": {
+            "en": [
+              "Image read in your browser — nothing uploaded"
+            ],
+            "da": [
+              "Billedet læses i din browser — intet uploades"
+            ]
+          }
+        }
+      ],
+      "pro_features": [
+        {
+          "id": "whole-site",
+          "where": "site/text-on-image-checker.html PRO_CARD — «Every other image»: 400 vurderinger på et rigtigt site kræver et crawl af alle sider",
+          "labels": {
+            "en": [
+              "Every image on every page of the site"
+            ],
+            "da": [
+              "Alle billeder på alle sider af websitet"
+            ]
+          }
+        },
+        {
+          "id": "fifteen-checks",
+          "where": "site/text-on-image-checker.html PRO_CARD — «The rules around the image»: alt-tekst, formlabels, overskriftsrækkefølge, ARIA og frames",
+          "labels": {
+            "en": [
+              "The 15 accessibility rules around each image"
+            ],
+            "da": [
+              "De 15 tilgængelighedsregler omkring hvert billede"
+            ]
+          }
+        },
+        {
+          "id": "pdf",
+          "where": "site/text-on-image-checker.html PRO_CARD — «A report you can hand a client»: fundene som PDF",
+          "labels": {
+            "en": [
+              "A PDF report you can hand a client"
+            ],
+            "da": [
+              "En PDF-rapport du kan give en kunde"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "site/text-on-image-checker-da.html",
+      "product": "eucomply-pro",
+      "lang": "da",
+      "kind": "tool",
+      "layout": "inline",
+      "why": "Samme værktøj på dansk. Uden tabellen svarede de to sprog på to måder, og det er præcis fejlformen dom 6 blev skrevet for.",
+      "free_features": [
+        {
+          "id": "ratio",
+          "where": "site/text-on-image-core.js:120-141 updateAll() — sample.ratio -> res.innerHTML, alt i browseren",
+          "labels": {
+            "en": [
+              "WCAG contrast ratio of the sampled text"
+            ],
+            "da": [
+              "WCAG-kontrastforhold for den samplede tekst"
+            ]
+          }
+        },
+        {
+          "id": "aaa",
+          "where": "site/text-on-image-core.js:124-141 — aaaNeed og alsoAAA giver AAA-framærgningen",
+          "labels": {
+            "en": [
+              "AA and AAA verdict, large-text threshold"
+            ],
+            "da": [
+              "AA- og AAA-dom, tærskel for stor tekst"
+            ]
+          }
+        },
+        {
+          "id": "image-local",
+          "where": "site/text-on-image-core.js:186-201 loadFile() — FileReader-objektet læses i browseren, der er ingen upload",
+          "labels": {
+            "en": [
+              "Image read in your browser — nothing uploaded"
+            ],
+            "da": [
+              "Billedet læses i din browser — intet uploades"
+            ]
+          }
+        }
+      ],
+      "pro_features": [
+        {
+          "id": "whole-site",
+          "where": "site/text-on-image-checker-da.html PRO_CARD — «Alle de andre billeder»: 400 vurderinger på et rigtigt website kræver et gennemløb af alle sider",
+          "labels": {
+            "en": [
+              "Every image on every page of the site"
+            ],
+            "da": [
+              "Alle billeder på alle sider af websitet"
+            ]
+          }
+        },
+        {
+          "id": "fifteen-checks",
+          "where": "site/text-on-image-checker-da.html PRO_CARD — «Reglerne omkring billedet»: alt-tekst, formlabels, overskriftsrækkefølge, ARIA og frames",
+          "labels": {
+            "en": [
+              "The 15 accessibility rules around each image"
+            ],
+            "da": [
+              "De 15 tilgængelighedsregler omkring hvert billede"
+            ]
+          }
+        },
+        {
+          "id": "pdf",
+          "where": "site/text-on-image-checker-da.html PRO_CARD — «En rapport du kan aflevere til en kunde»: fundene som PDF",
+          "labels": {
+            "en": [
+              "A PDF report you can hand a client"
+            ],
+            "da": [
+              "En PDF-rapport du kan give en kunde"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

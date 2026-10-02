@@ -18,7 +18,7 @@ Derfor er knappen her **generatorens**, ikke sidens:
     python3 tools/pro_card.py             # vis siderne og deres knap
     python3 tools/pro_card.py --check     # dom, exit 1 ved afvigelse
     python3 tools/pro_card.py --apply     # ret knappen, så den bliver katalogens
-    python3 tools/pro_card.py --self-test # 7 kontroller
+    python3 tools/pro_card.py --self-test # 8 kontroller
 
 Dommen er tre ting, fordi hver især kan være grøn mens den anden er rød:
 
@@ -62,11 +62,38 @@ SITE = ROOT / "site"
 # købsknap — de linker til `#report` — så de tæller ikke med.
 VÆRKTØJSSIDER = 13
 
-# Hele det pro-kort, knappen ligger i. Kortene ligger i inline scripts, så der
-# er ingen tag at finde uden om; grænsen er derfor kortets åbning og dets
-# afsluttende `</div>` — den første `</div>` efter `class="pro-card"` er kortets
-# egen, fordi kortene kun har én niveau.
-KORT_RE = re.compile(r'class="[^"]*\bpro-card\b[^"]*".*?</div>', re.S)
+# Åbningen af et pro-kort: den `<div …>` hvis attributter indeholder `pro-card`.
+KORT_RE = re.compile(r'<div\b[^>]*\bclass="[^"]*\bpro-card\b[^"]*"[^>]*>', re.S)
+
+DIV_ÅBN = re.compile(r"<div\b[^>]*>", re.I)
+DIV_LUK = re.compile(r"</div\s*>", re.I)
+
+
+def kort(hl: str) -> tuple[int, int] | None:
+    """Hele pro-kortet, målt med balancerede `<div>`-er — ikke med et mønster.
+
+    Målt 2/10, og det er en fejl denne port selv havde: kortene lå i inline
+    scripts, så grænsen var «den første `</div>` efter `class="pro-card"`», og
+    det holdt kun for kort med **ét** niveau. Da to værktøjssider fik den
+    genererede gratis-mod-Pro-tabel, kom der et `.table-wrap`-`<div>` ind i kortet,
+    og den første `</div>` blev så tabelens indpakning. Følgen var ikke en rød
+    port men en **grøn** én: knappen lå stadig på de to sider, men uden for det
+    fundne kort, så ratchet'en på 13 sagde 11, og en knap der flyttes *ud* af
+    kortet ville være usynlig for dom 1-3.
+
+    Derfor tælles nu åbne og lukkede tags fra kortets egen `<div>`, og kortet er
+    det hele. Uden en afsluttende `</div>` returneres `None`, så kalderen kan
+    sige det.
+    """
+    åb = KORT_RE.search(hl)
+    if not åb:
+        return None
+    dybde = 0
+    for m in re.finditer(r"<div\b[^>]*>|</div\s*>", hl[åb.start():], re.I):
+        dybde += 1 if not m.group(0).startswith("</") else -1
+        if dybde == 0:
+            return åb.start(), åb.start() + m.end()
+    return None
 
 # En købsknap i et pro-kort: `<a … href="https://buy.stripe.com/…" …>Buy …</a>`.
 # `href` og teksten er de to grupper, generatoren ejer.
@@ -125,12 +152,12 @@ def dom(kat: dict | None = None, rod: Path = SITE) -> list[str]:
     for fil in sider(rod):
         rel = fil.relative_to(rod).as_posix()
         html = fil.read_text(encoding="utf-8")
-        kort = KORT_RE.search(html)
-        if not kort:
+        sted = kort(html)
+        if not sted:
             fund.append(f"{rel}: pro-kort uden afsluttende </div> — porten kan "
                         f"ikke finde ud hvor knappen hører hjemme")
             continue
-        knapper = KNAP_RE.findall(kort.group(0))
+        knapper = KNAP_RE.findall(html[sted[0]:sted[1]])
         if not knapper:
             # De to artikler har ingen købsknap, og det er et valg, ikke en fejl.
             continue
@@ -171,8 +198,8 @@ def ret(kat: dict, rod: Path = SITE) -> int:
         # Kun **inde i kortet**. En sides hovedknap ligger uden for pro-kortet
         # og er skrevet med vilje pr. side, så en erstatning over hele filen
         # ville slå den i stykker.
-        kort = KORT_RE.search(html)
-        if not kort:
+        sted = kort(html)
+        if not sted:
             continue
 
         def ny(m: re.Match) -> str:
@@ -182,8 +209,8 @@ def ret(kat: dict, rod: Path = SITE) -> int:
             nøgle, produkt = links[link]
             return før + link + mellem + knaptekst(nøgle, produkt, lang, perioder) + luk
 
-        ny_kort = KNAP_RE.sub(ny, kort.group(0))
-        ny_html = html[:kort.start()] + ny_kort + html[kort.end():]
+        ny_kort = KNAP_RE.sub(ny, html[sted[0]:sted[1]])
+        ny_html = html[:sted[0]] + ny_kort + html[sted[1]:]
         if ny_html != html:
             fil.write_text(ny_html, encoding="utf-8")
             ændret += 1
@@ -270,7 +297,24 @@ def self_test() -> int:
         tjek("tabt købsknap er rød",
              any("købsknap i sit pro-kort" in f for f in fund), str(fund[:2]))
 
-    # 6. Ret skal gøre det røde grønt igen — ellers er `--apply` død kode.
+    # 6. Et pro-kort med et **niveau mere** — som en genereret tabel i en
+    #    `.table-wrap`. Det er den fejlform denne port havde: grænsen var «den
+    #    første `</div>`», så indpakningen om tabellen blev kortets afslutning,
+    #    og knappen lå uden for det fundne kort. Porten var da **grøn** med 11
+    #    sider i stedet for 13. Uden denne tjek ville `--apply` bare have slået
+    #    ratchet'en ned, og tabet af en købsknap ville være usynligt.
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = _kopi(Path(tmp), lambda rod: skriv(
+            rod, "cookie-check.html",
+            '<p class="pro-lead">What this check could not see:</p>',
+            '<div class="table-wrap"><table class="compare"><tr>'
+            '<td>free</td></tr></table></div>'
+            '<p class="pro-lead">What this check could not see:</p>'))
+        fund = dom(kat, rod)
+        tjek("kort med et indlejret div taber ikke knappen",
+             not any("købsknap i sit pro-kort" in f for f in fund), str(fund[:2]))
+
+    # 7. Ret skal gøre det røde grønt igen — ellers er `--apply` død kode.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
             rod, "cookie-check.html", "$79/year per website", "$29/year per website"))

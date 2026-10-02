@@ -1,67 +1,49 @@
 # STATUS
 
-- **Næste opgave: den frie spalte i de tretten værktøjssiders pro-kort.**
-  Hvert pro-kort siger hvad Pro **tilføjer**, men ingen af dem viser i en
-  tabel hvad den frie udgave giver på det *samme* værktøj. Målt 2/10: de
-  tretten kort har hver 3 `<li>` i `.pro-list` om Pro og ingen om gratis.
-  Mekanismen er klar: `pro_table.blok(…, side_free)` og dom 6 i
-  `check_pro_table.py` (selftest 16/16). Dom 6 dømmer kun den **frie** spalte,
-  så en værktøjsside skal også erklære sine **egne** `pro_features` — ellers
-  tegner den produktets liste, som dom 6 netop blev skrevet for at forhindre.
-  Ratchet: 13 kort med en tabel, dømt af `tools/check_pro_table.py`.
-- **Købsknappen i hvert pro-kort er katalogens** (`tools/pro_card.py`, selvtest
-  7/7, to steps i gaten). Målt 2/10 før: de tretten skrev **pris og købslink i
-  hånden** inde i inline scripts, og `check_own_prices.py` læser beløb i markup
-  — så de tretten var priser ingen kørling kunne se. Alle tretten var rigtige i
-  dag, så `--apply` skrev 0 filer; det nye er, at de ikke kan glide mere.
-  Ratchet på 13 sider, så en tabt knap er rød.
-- **CEO-kø punkt 0 er færdigt** — rettet i `5693853`, målt på den levende rute:
-  `GET /api/url-inspect?url=` → 200, 202 på `/thanks` siger «not confirmed
-  yet», `net.js:47` gør 429 endelig, og et 502 fra OpenRouter giver kvoten
-  tilbage (`_worker.js:911-916`), så genkaldet er gratis. SSRF-værnet dækker
-  mål og hvert hop.
-- **Gratis mod Pro står ét sted på alle fire produktsider** (EN + DA),
-  tegnet af `tools/pro_table.py` fra `tools/stripe_catalog.json` — så beløb og
-  periode ikke kan glide fra Stripe. Baseline 2/10 før: fire sider, fire
-  svar (håndskrevet gitter, «19 USD once», prosa, én linje). Undervejs:
-  `check_stripe_ctas.py` dømte kun kolonne-tabeller, så den så slet ingen
-  sammenligning da gitteret blev erstattet.
+- **Næste opgave: de ni andre værktøjssiders pro-kort.** Målt 2/10: elleve af de
+  tretten pro-kort ligger i et inline script. `pro_table.py` kan nu tegne **én
+  linje** (`layout: "inline"`), og `pro_card.py` balancerer kortets `div`-er, så
+  de ni kan følge `/text-on-image-checker` uden at kopiere kernen ind i sig selv.
+- **Gratis mod Pro står i kortet på de 2 mest besøgte værktøjssider.** EN + DA på
+  `/text-on-image-checker` (2 af 18 Plausible-besøgende) — den håndskrevne
+  `.pro-list` er erstattet af katalogens tabel, så kortet siger hvad det **gratis**
+  tjek gør ved siden af hvad Pro tilføjer. Målt før: 3 `<li>` om Pro, 0 om gratis.
+  Dom: `tools/check_pro_table.py`, 8 produktsider + 2 værktøjssider.
+- **To fejl fundet undervejs.** (1) `pro_card.py` fandt kortet som «den første
+  `</div>`», altså kort med ét niveau; den nye `.table-wrap` snød den, så porten
+  blev **grøn med 11 i stedet for 13** og en tabt købsknap var usynlig. Nu
+  balancerer `kort()` åbne/lukkede `div`, og mutation 6 dømmer det. (2) Dom 6
+  krævede `where` på sidens egen fil, men de 3 frie funktioner ligger i
+  krævede `where` på sidens egen fil, men de 3 frie funktioner ligger i
+  `text-on-image-core.js`; undtagelsen kræver at filen står i siden `<script src>`.
+  **gratis mod Pro står ét sted på alle 4 produktsider** (EN + DA), tegnet af
+  `tools/pro_table.py` fra `tools/stripe_catalog.json`.
+- **CEO-kø punkt 0 er færdigt** — `5693853`: `GET /api/url-inspect?url=` → 200,
+  202 på `/thanks` siger «not confirmed yet», `net.js:47` gør 429 endelig, et 502
+  fra OpenRouter giver kvoten tilbage. SSRF-værnet dækker mål og hvert hop.
 - **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
   Search Console, og **bogenes betalte udgave** (se ❓).
 
-
 ## Verificér deploy
 
-- Alle fem noter fra 1.–2. oktober er **målt på indhold** og lukket 2/10:
-  `DEPLOY OK 2/10` for gratis-mod-Pro-tabellen (8/8 sider har præcis én
-  blok, `--apply` siger «0 sider tegnet igen», og porten er grøn på **dist**),
-  for `/net.js` (200 `application/javascript` 4920 b, selvtest 9/9,
-  `scan-clients` 417/417), for det delte rapport-budget (levende kald med tre
-  URL'er: `scanned: 3`, alle tre `pages_checked: 4`, summen 12, og
-  `passed + failed + not_checked == total` på alle tre, mens wordpress.org's
-  privatlivstjek er `pass` med den linkede side i `details`), for
-  kontrasttjekkeren i artiklerne (4/4 sider har værktøjet, kernen svarer 200
-  10955 b, alle felter har labels) og for AI-banneren (187 bannere, 0 med et
-  løfte de ikke kan holde). Detaljerne står i `docs/plan-arkiv.md`.
+- Alle fem noter fra 1.–2. oktober er **målt på indhold** og lukket 2/10
+  (`DEPLOY OK 2/10`): gratis-mod-Pro-tabellen, `/net.js`, det delte
+  rapport-budget, kontrasttjekkeren i artiklerne og AI-banneren.
+  Detaljerne står i `docs/plan-arkiv.md`.
 
-- `VERIFICÉR DEPLOY: købsknappen i hvert pro-kort er katalogens
-  ceo/pro-kort-knap-er-katalogens 2026-10-02` — måles på **indhold**. Dom 1:
-  `python3 tools/pro_card.py` er grøn og siger «13 pro-kort køber til
-  katalogens eget link og pris»; de tretten er de elleve EUComply-sider plus
-  `/clean-copy-tool` og `/url-inspector`, og de to artiklers pro-kort har ingen
-  købsknap (de linker til `#report`), så de tæller ikke med. Dom 2:
-  `python3 tools/pro_card.py --apply` siger «0 knapper sat til katalogens» mod
-  den publicerede kode — de tretten var rigtige i dag (målt 2/10), så der er
-  intet at rette, kun noget at holde. Dom 3: porten er i `quality_gate.py`
-  (131 steps) med **og** uden `--self-test`. Dom 4: selvtesten er 7/7, og de
-  mutationer dømmer krydsprodukt-link, håndskrevet pris i knappen, ukendt
-  købslink, engelsk knap på dansk side og en **tabt** knap (ratchet på 13), for
-  hvilken ret så gør mutationen grøn igen. Dom 5: ingen side uden for kortet
-  er rørt — `--apply` skriver kun mellem `class="…pro-card…"` og kortets
-  afsluttende `</div>`, så en sides hovedknap står urørt. Dommen er
-  `python3 tools/quality_gate.py` + missionens gate.
+- `VERIFICÉR DEPLOY: gratis-mod-Pro står i pro-kortet på de to mest besøgte
+  værktøjssider ceo/pro-kort-fri-spalte 2026-10-02` — måles på **indhold**.
+  Dom 1: `python3 tools/check_pro_table.py` er grøn og siger «8 produktsider og
+  2 værktøjssider». Dom 2: `python3 tools/pro_table.py --apply` mod den
+  publicerede kode siger «0 sider tegnet igen». Dom 3: porten kører i
+  `quality_gate.py` med **og** uden `--self-test`. Dom 4: dom 4b dømmer en blok
+  med linjeskift eller apostrof i `layout=inline`, og `kompakt_blok()` kaster
+  i stedet for at skrive en blok der ikke kan indlæses. Dom 5: mutationen i
+  `pro_card.py` lægger en `.table-wrap` ind i et pro-kort og tjekker at knappen
+  stadig findes. Dom 6: `pro_table.py --check` er grøn på **dist** efter
+  `build_sites.py`. Dommen er `python3 tools/quality_gate.py` + missionens gate.
 
 ## Åbne opgaver
 

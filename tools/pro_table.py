@@ -148,7 +148,8 @@ def beløb(nøgle: str, produkt: dict, lang: str, perioder: dict) -> str:
 
 
 def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
-           side_free: list | None = None) -> tuple[str, str, str, str, list]:
+           side_free: list | None = None,
+           side_pro: list | None = None) -> tuple[str, str, str, str, list]:
     """`(gratis-funktioner, pro-funktioner, gratis-pris, pro-pris, noter)`.
 
     Kolonnerne er gratis og Pro, fordi det er den form `check_stripe_ctas.py`
@@ -163,7 +164,13 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
     `/url-inspector` ingen af delene har. Uden dette argument ville den have
     tegnet CLI-funktioner ind på en side der ikke kører CLI'en.
 
-    Noterne (livstidspris og antal maskiner) ligger i **én** linje under
+    `side_pro` er sidens **egne** Pro-funktioner, og den bruges af samme slags
+    sider. Målt 2/10 på `/text-on-image-checker`: kortet lovede «alle de andre
+    billeder», og det er **crawl af hele sitet** — en tredje ting, der hverken er
+    i `pdf-download` eller i `server-checks`. Uden denne liste ville den have tegnet
+    to af tre løfter ind og tabt det tredje, og tabellen ville have sagt mindre
+    end det håndskrevne kort den erstatter.
+
     tabellen. Målt 2/10 i browseren: inde i den smalle prismødre blev cellen
     260-330 px høj på telefon, fordi hver note skulle brydes i 120 px.
     """
@@ -203,20 +210,54 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
         noter.append(t["devices"].format(n=maskiner, word=ord_))
 
     return (f"<ul>{punkter('free_features', side_free)}</ul>",
-            f"<ul>{punkter('pro_features')}</ul>",
+            f"<ul>{punkter('pro_features', side_pro)}</ul>",
             f'<span class="pro-price">{t["free_price"]}</span>'
             f'<span class="pro-note">{h(t["free_note"])}</span>',
             f'<span class="pro-price">{h(beløb(nøgle, produkt, lang, perioder))}</span>',
             noter)
 
 
+def kompakt_blok(blok_tekst: str, rel: str) -> str:
+    """Én linje, så blokken også kan stå **inde i en JavaScript-streng**.
+
+    Målt 2/10: elleve af de tretten pro-kort ligger i et inline script, som en
+    streng med `+`-sammensætning (`var PRO_CARD = '<div class="pro-card">' …`).
+    Den normale blok har linjeskift, og en rå linjeskift i en enkelt- eller
+    dobbeltanførselst streng er en **syntaxfejl** — så den ville have slået
+    værktøjssiden ihjel ved den første indlæsning, ikke ved porten.
+
+    Derfor er der to former, og katalogen vælger med `layout: "inline"`.formen
+    må ikke indholde noget der kan lukke strengen eller blokere HTML-parsingen:
+
+      - intet linjeskift (det er hele pointen),
+      - ingen `'`, fordi den er strengens afslutning,
+      - ingen `\\`, fordi en backslash ville ændre betydningen af det der står
+        efter den,
+      - intet `</script`, fordi blokken ligger inde i et inline `<script>`.
+
+    Ét `raise` i stedet for en stille fejl: en katalogtekst med et apostrof
+    eller et linjeskift ville ellers give en værktøjsside der ikke indlæser, og
+    ingen port læser en syntaksfejl i en streng den bare sammenligner bytes i.
+    """
+    tekst = " ".join(blok_tekst.split())
+    for forbudt, hvad in (("'", "apostrof"), ("\\", "backslash"),
+                          ("</script", "</script")):
+        if forbudt in tekst:
+            raise SystemExit(
+                f"pro-table: {rel} er layout=inline, og blokken indeholder en "
+                f"{hvad} ({forbudt!r}) — den ville lukke JavaScript-strengen. "
+                f"Skriv teksten uden den, eller giv siden layout=block.")
+    return tekst
+
+
 def blok(nøgle: str, produkt: dict, lang: str, perioder: dict,
-         anker_id: str = "", side_free: list | None = None) -> str:
+         anker_id: str = "", side_free: list | None = None,
+         side_pro: list | None = None, layout: str = "block") -> str:
     """Den færdige blok. Determinisme er kravet: porten sammenligner bytes."""
     t = TEKST[lang]
     id_attr = f' id="{h(anker_id)}"' if anker_id else ""
     gratis, pro, gratis_pris, pro_pris, noter = celler(
-        nøgle, produkt, lang, perioder, side_free)
+        nøgle, produkt, lang, perioder, side_free, side_pro)
     linjer = [
         START,
         '<div class="table-wrap">',
@@ -261,7 +302,10 @@ def dom(catalog: dict) -> list[str]:
         nøgle = side["product"]
         forventet = blok(nøgle, side["product_obj"], side["lang"], perioder,
                          side.get("anchor") or "",
-                         side.get("free_features")).strip()
+                         side.get("free_features"), side.get("pro_features"),
+                         side.get("layout") or "block").strip()
+        if (side.get("layout") or "block") == "inline":
+            forventet = kompakt_blok(forventet, rel)
         if områder[0].strip() != forventet:
             fund.append(f"{rel}: blokken er ikke tegnet af katalogen "
                         f"(kør `python3 tools/pro_table.py --apply`)")
@@ -285,7 +329,10 @@ def anvend(catalog: dict) -> int:
         if antal > 1:
             raise SystemExit(f"pro-table: {rel} har {antal} pro-table-områder")
         ny = blok(side["product"], side["product_obj"], side["lang"], perioder,
-                  side.get("anchor") or "", side.get("free_features"))
+                  side.get("anchor") or "", side.get("free_features"),
+                  side.get("pro_features"), side.get("layout") or "block")
+        if (side.get("layout") or "block") == "inline":
+            ny = kompakt_blok(ny, rel)
         ny_html = EJER_RE.sub(lambda _m: ny, html, count=1)
         if ny_html != html:
             fil.write_text(ny_html, encoding="utf-8")

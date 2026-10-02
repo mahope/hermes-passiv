@@ -27,7 +27,7 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      det er det, der gjorde fire sider til fire svar.
 
     python3 tools/check_pro_table.py             # dom
-    python3 tools/check_pro_table.py --self-test # 16 kontroller
+    python3 tools/check_pro_table.py --self-test # 21 kontroller
 """
 from __future__ import annotations
 
@@ -50,6 +50,22 @@ ROOT = Path(__file__).resolve().parent.parent
 # Derfor er der to slags sider, og dom 6 holder dem ude af hinanden.
 PRODUKTSIDE = 8
 
+# Målt 2/10: elleve af de tretten værktøjssider har et pro-kort, men ingen af dem
+# viste i en tabel hvad den **frie** udgave gør på netop det værktøj. De to første
+# er tegnet (EN + DA på `/text-on-image-checker`) — de to mest besøgte værktøjs-
+# sider efter artiklen — så ratchet'en tæller dem og de ni næste.
+VÆRKTØJSSIDE = 2
+
+
+def _scripts(rel: str) -> set[str]:
+    """De filer siden selv indlæser med `<script src>`, som `site/`-stier."""
+    fil = ROOT / rel
+    if not fil.exists():
+        return set()
+    html = fil.read_text(encoding="utf-8")
+    return {f"site/{s.lstrip('./')}" for s in
+            re.findall(r'<script[^>]+src="([^"]+\.js)"', html)}
+
 
 def synlig_pris(tekst: str) -> set[str]:
     """Beløb i en priscelle. Kun tal med `$` foran: «første 100 køb» og
@@ -62,9 +78,11 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
     perioder = catalog.get("billing_periods") or {}
     produkter = catalog.get("products") or {}
     sider = catalog.get("pro_table_pages")
-    if not isinstance(sider, list) or len(sider) != PRODUKTSIDE:
-        fund.append(f"katalog: pro_table_pages skal være præcis {PRODUKTSIDE} "
-                    f"sider, fandt {len(sider) if isinstance(sider, list) else sider!r}")
+    if not isinstance(sider, list) or len(sider) != PRODUKTSIDE + VÆRKTØJSSIDE:
+        fund.append(f"katalog: pro_table_pages skal være præcis "
+                    f"{PRODUKTSIDE} produktsider + {VÆRKTØJSSIDE} værktøjssider "
+                    f"= {PRODUKTSIDE + VÆRKTØJSSIDE}, fandt "
+                    f"{len(sider) if isinstance(sider, list) else sider!r}")
         return fund
     for post in sider:
         if not isinstance(post, dict):
@@ -93,27 +111,51 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         #    Sådan må en sådan side se ud: `kind: "tool"` og en `free_features`
         #    hvis `where` peger på sidens **egen** fil.
         egen_side = rel.lstrip("./") in (produkt.get("own_pages") or [])
+        if post.get("layout") not in (None, "block", "inline"):
+            fund.append(f"{rel}: ukendt layout {post.get('layout')!r}")
         if not egen_side:
             if post.get("kind") != "tool":
                 fund.append(f"{rel}: er ikke {nøgle}s egen side, så den skal "
                             f"mærkes kind=tool med sine egne free_features "
                             f"(nu låner den {nøgle}s liste, der er skrevet "
                             f"til en anden side)")
+            # `where` skal pege på siden selv **eller** på et script siden
+            # indlæser. Målt 2/10 på `/text-on-image-checker`: de tre frie
+            # funktioner ligger ikke i HTML'en, men i `text-on-image-core.js`,
+            # som siden indlæser og kalder med sine egne tekster. Uden den
+            # undtagelse ville dommen kræve at siden **havde** koden liggende
+            # selv — altså at den kopierede kernen ind i to filer, så ét sted
+            # kunne rettes. Undtagelsen er derfor ikke «et andet navn»: den
+            # kræver at filen faktisk står i sidens egen `<script src>`.
+            egne_script = _scripts(rel)
+            for felt, hvad in (("free_features", "free"), ("pro_features", "Pro")):
+                egne = post.get(felt)
+                if not isinstance(egne, list) or not egne:
+                    fund.append(f"{rel}: mangler egne {felt}")
+                    continue
+                for feature in egne:
+                    if not ((feature.get("labels") or {}).get(lang) or []):
+                        fund.append(f"{rel}: egne {felt} "
+                                    f"{feature.get('id')!r} har ingen "
+                                    f"{lang}-labels")
+                    hvor = str(feature.get("where") or "")
+                    fil = hvor.split(":")[0].split(" ")[0].strip()
+                    if hvor.startswith(rel) or fil in egne_script:
+                        continue
+                    fund.append(f"{rel}: egne {felt} {feature.get('id')!r} "
+                                f"peger på {hvor[:60]!r}, som hverken er siden "
+                                f"selv eller et script den indlæser "
+                                f"({sorted(egne_script)[:2]}) — så "
+                                f"{hvad}-funktionen er ikke dokumenteret her")
             egne = post.get("free_features")
             if not isinstance(egne, list) or not egne:
                 fund.append(f"{rel}: mangler egne free_features")
             else:
                 for feature in egne:
-                    hvor = str(feature.get("where") or "")
                     labels = (feature.get("labels") or {}).get(lang) or []
                     if not labels:
                         fund.append(f"{rel}: egne free_features "
                                     f"{feature.get('id')!r} har ingen {lang}-labels")
-                    if not hvor.startswith(rel):
-                        fund.append(f"{rel}: egne free_features "
-                                    f"{feature.get('id')!r} peger på {hvor[:60]!r} "
-                                    f"og ikke på siden selv — så funktionen er "
-                                    f"ikke dokumenteret her")
         fil = root / rel
         if not fil.exists():
             fund.append(f"{rel}: filen findes ikke")
@@ -129,7 +171,11 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         blok = områder[0]
         forventet = pro_table.blok(nøgle, produkt, lang, perioder,
                                    str(post.get("anchor") or ""),
-                                   post.get("free_features")).strip()
+                                   post.get("free_features"),
+                                   post.get("pro_features"),
+                                   str(post.get("layout") or "block")).strip()
+        if (post.get("layout") or "block") == "inline":
+            forventet = pro_table.kompakt_blok(forventet, rel)
         if blok.strip() != forventet:
             fund.append(f"{rel}: tabellen er ikke tegnet af katalogen "
                         f"(kør `python3 tools/pro_table.py --apply`)")
@@ -170,8 +216,7 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
 
         # 4. Alle katalogens funktioner skal stå i tabellen.
         for nøgle_fil in ("free_features", "pro_features"):
-            kilder = (post.get("free_features") if nøgle_fil == "free_features"
-                      else None) or produkt.get(nøgle_fil) or []
+            kilder = post.get(nøgle_fil) or produkt.get(nøgle_fil) or []
             for feature in kilder:
                 varianter = (feature.get("labels") or {}).get(lang) or []
                 if not varianter:
@@ -182,6 +227,17 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
                     fund.append(f"{rel}: tabellen nævner ikke "
                                 f"{nøgle_fil} {feature.get('id')!r} "
                         f"(første label: {varianter[0]!r})")
+
+        # 4b. `layout=inline` ligger inde i en JavaScript-streng, så blokken må
+        #     ikke have et linjeskift og må ikke lukke strengen. Uden denne dom
+        #     ville `--apply` skrive en blok der ikke kan indlæses, og porten
+        #     ville være grøn fordi den bare sammenligner de samme bytes.
+        if (post.get("layout") or "block") == "inline":
+            for tegn, hvad in (("\n", "linjeskift"), ("'", "apostrof"),
+                               ("\\", "backslash"), ("</script", "</script")):
+                if tegn in blok:
+                    fund.append(f"{rel}: layout=inline, men blokken har en "
+                                f"{hvad} — den ville lukke JavaScript-strengen")
 
         # 5. Ingen håndskrevet sammenligning ved siden af.
         udenfor = pro_table.EJER_RE.sub("", html)
@@ -364,6 +420,39 @@ def self_test() -> int:
     tjek("funktion uden label på siden er rød",
          any("pro_features" in f for f in fund), str(fund[:2]))
 
+    # 12. `layout=inline`: en blok med et linjeskift eller en apostrof kan ikke
+    #     ligge i en JavaScript-streng. Uden dom 4b ville porten være grøn, fordi
+    #     den sammenligner de samme bytes `pro_table.py` skrev — og siden ville
+    #     ikke indlæse. Kortene ligger i inline scripts på elleve af de tretten
+    #     værktøjssider, så det er en syntaksfejl i *browseren*, ikke en skærv.
+    for tegn, navn in (("\n", "linjeskift"), ("'", "apostrof")):
+        med = tempfile.TemporaryDirectory()
+        rod = _kopi(Path(med.name), lambda rod: skriv_i_tabel(
+            rod, "site/text-on-image-checker.html", "</table>",
+            "</table>" + tegn))
+        fund = dom(catalog, rod)
+        tjek(f"layout=inline med {navn} er rød",
+             any("layout=inline" in f for f in fund), str(fund[:2]))
+        med.cleanup()
+    # Og `kompakt_blok` skal sige fra i stedet for at skrive en død blok.
+    blok = pro_table.blok("eucomply-pro", catalog["products"]["eucomply-pro"],
+                          "en", catalog["billing_periods"], "",
+                          catalog["products"]["eucomply-pro"]["free_features"])
+    try:
+        pro_table.kompakt_blok(blok.replace("</table>", "</table>'"), "test.html")
+        tjek("kompakt_blok afviser en apostrof", False, "ingen fejl kastet")
+    except SystemExit:
+        tjek("kompakt_blok afviser en apostrof", True)
+    tjek("kompakt_blok er én linje",
+         "\n" not in pro_table.kompakt_blok(blok, "test.html"))
+
+    # 13. Ratchet'en: en værktøjsside forsvinder fra katalogen.
+    færre = {**catalog, "pro_table_pages": [
+        post for post in catalog["pro_table_pages"]
+        if post["path"] != "site/text-on-image-checker.html"]}
+    tjek("tabt værktøjsside er rød",
+         any("værktøjssider" in f for f in dom(færre)), str(dom(færre)[:1]))
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-pro-table-selftest: {'OK' if not fejl else 'RØD'}"
@@ -384,8 +473,8 @@ def main(argv: list[str] | None = None) -> int:
     if fund:
         print(f"\npro-table: RØD — {len(fund)} fund")
         return 1
-    print(f"pro-table: GRØN — {PRODUKTSIDE} produktsider har den samme "
-          f"to-rækkers-tabel, tegnet af katalogen")
+    print(f"pro-table: GRØN — {PRODUKTSIDE} produktsider og {VÆRKTØJSSIDE} "
+          f"værktøjssider har den samme to-rækkers-tabel, tegnet af katalogen")
     return 0
 
 
