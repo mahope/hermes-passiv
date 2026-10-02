@@ -1,30 +1,25 @@
 # STATUS
-- **Forsidens tjek tager nu den indtastede adresse med videre.** Hvem: alle der
-  trykker «Full WCAG scan» eller «Compliance check» på mahope.tools' forside, og
-  alle der konverterer på cleancopy.tools'. Før: de to tjek på forsiden skrev
-  aldrig `#url=`, så den dybeste handling — scanneren der sælger EUComply Pro til
-  $79/år — endte på en side med et tomt felt, der spurgte om den adresse
-  læseren lige havde svaret på. Nu følger den med som `#url=`.
-- **Konventionen var ældre end porten, men ingen producerede den.** Fem sider læste
-  `#url=` allerede (`/scan`, `/scan-da`, `/cookie-check`, `/cookie-check-da`,
-  `/compliance-report`) og syv platform-guides i `/guides` linkede til
-  `/scan#url=…` — men ingen side i familien *satte* den på. `/scan` læste
-  fragmentet, forsidenProducerede det ikke.
-- **Nyt gatestræk `url-handoff`** (`tools/check_url_handoff.py`, trin 141–142):
-  dømmer de **tre ender mod hinanden** — siden erklærer `takesUrl: true`, mål-
-  ruten læser `#url=` med `location.hash`, motoren bygger fragmentet af flaget.
-  Alle tre kan være forskudt fra hinanden helt stille. Dømmer **8** forsider fra
-  build-manifestet, **6** handoffs. Selvtest **12/12**.
-- **Selv porten kan være grøn på en død handoff** — den dømmer teksten. Derfor
-  dømmer `scan-clients.test.mjs` adfærden: de 12 nye kontroller kører siden i en
-  sandkasse med `location.hash` sat og siger om et `fetch`-kald gik ud. Målt ved
-  to mutationer: IIFE'en fjernet → **425/429** RØD; `if (!m) return;` →
-  `if (true) return;` → porten ** stadig GRØN**, testen **423/429 RØD**.
-- **Den røde port viste en fejl i testen, ikke i siden.** Da den nye kode blev
-  kørt, døde `scan-clients`: fem `location`-modeller i sandkassen havde kun
-  `pathname`, så `location.hash.match` var `TypeError`. En browser har altid
-  `search` og `hash` som strenge; modellen har dem nu. Samme fejl fandtes i
-  **0 af 417** målinger før, fordi ingen kode læste fragmentet.
+- **20 af 189 guides lå uden for enhver liste på `/blog/`.** Hvem: enhver der
+  leder efter en guide på den side, hvis egen meta description siger «Every
+  guide on this site», og enhver søgemaskine der rankerede artikler efter de
+  links der peger på dem. Før: `site/` rummede 93 engelske og 96 danske guides,
+  siden linkede 86 og 83 — de 20 skrevne efter sidste kørsel af generatoren.
+  Nu linker den alle 189, og de 96 danske guides har fået samme emneopdeling og
+  samme beskrivelser som de engelske (før: én flad liste på 83 linjer).
+- **Årsagen var ikke artiklerne, men at siden var blev redigeret i hånden.**
+  `make_blog_index.py` ejede kun heroen og listerne; bogs-CTA'en og det
+  afsluttende track-script var lagt ind ved siden af. Enhver regenerering ville
+  have slettet de 2 blokke, så ingen turde køre den — og da nye artikler kom,
+  fulgte de ikke med. Generatoren ejer nu hele filen. Fund undervejs: da jeg flyttede
+  track-script ind i generatoren, skrev jeg `catch(e)}})();` i stedet for
+  `catch(e){}})();` — `check_inline_js.py` fangede det på den første kørsel.
+- **Nyt gatestræk `blog-index`** (`tools/check_blog_index.py`, trin 143–144):
+  dømmer at hver guidefil har præcis ét link fra `/blog/`, at heroens «93 English
+  guides … plus 96 Danish guides» er de rigtige tal, og at den committede side er
+  **byte-identisk** med `make_blog_index.py --out`. Selvtest **9/9**. Polaritet
+  målt ved to mutationer af den rigtige side: et link fjernet → RØD med
+  «`broken-link-checker-free` har intet link fra /blog/»; én håndskrevet kommentar
+  tilføjet → RØD på generator-egenskaben. Begge filer genskabt byte-for-byte.
 - **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
   til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen på
@@ -88,7 +83,8 @@
   `/convert-check.js`.
 
 - `VERIFICÉR DEPLOY: at forsidens tjek tager den indtastede adresse med videre
-   2026-10-02 ceo/url-med-til-udpakke` — måles på **indhold**, ikke på HTTP 200:
+   2026-10-02 ceo/url-med-til-udpakke` (stadig åben: CI var `in_progress` da
+   denne iteration startede; måles på `build-info.json` = squash-sha) — måles på **indhold**, ikke på HTTP 200:
    `mahope.tools/`, `/da/`, `cleancopy.tools/` og `/da/` skal hver have præcis
    **1** `takesUrl: true` pr. `#url`-læsende `next`-link, og `build-info.json` på
    alle tre domæner skal stå i squash-sha'en. `/scan`, `/scan-da`,
@@ -105,6 +101,18 @@
    intet sideindhold ændres, så dette er en gate-ændring: efter push skal
    `quality_gate`-loggen vise `front-door` **og** `front-door-selftest` grønne
    (`16/16`), og de tre domæner skal stadig få deres sha i `build-info.json`.
+
+- `VERIFICÉR DEPLOY: alle 189 guides linket fra /blog/ 2026-10-02
+   ceo/blog-indeks` — måles på **indhold**: `mahope.tools/blog/` skal have præcis
+   **93** `href="/blog/…"` og **96** `href="/da/blog/…"`, heroens «93 English
+   guides … plus 96 Danish guides», og `build-info.json` skal stå i squash-sha'en.
+   Dom 1: `check_blog_index.py` GRØN (93 + 96) + `--self-test` **9/9**. Dom 2:
+   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` 0 brudte,
+   `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer. Dom 4:
+   `check_duplicate_headings`, `check_heading_levels`, `check_design_tokens`,
+   `check_links`, `check_hreflang_pairs`, `check_article_paid_path`,
+   `check_tool_paid_path`, `check_cta_coverage_dist`, `audit_unmeasured_routes`
+   og `check_donation_paths` grønne.
 
 ## Åbne opgaver
 
@@ -377,3 +385,13 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     `scan-clients.test.mjs`. Datagrund: bounce på mahope.tools' forside er 100 %
     (4 af 4 besøgende) og på cleancopy.tools' 71 % (7 af 9); de toforsider er de
     eneste steder, hvor vi *kan* fjerne et spørgsmål læseren netop har svaret på.
+17. ~~**Blogindekset holdt op at dække alle guides.**~~ **Leveret 2/10.** Alle
+    189 guides (93 EN + 96 DA) har nu præcis ét link fra `/blog/`, de danske er
+    grupperet i de samme fem emner med beskrivelser, og `check_blog_index.py`
+    dømmer både dækningen og at siden er lig sin egen generator. Hvem: læsere
+    der leder efter en guide, og de 20 artikler der lå uden indgående links fra
+    en indeksside. Tal: guides uden link (baseline: **20** — 7 EN, 13 DA).
+    Accept: `check_blog_index.py` grøn + 9/9 selvtest, polaritet målt ved to
+    mutationer af den rigtige side. Datagrund: målt 2/10 på kildefilerne mod
+    `site/blog/index.html`; bounce på mahope.tools er 94 % (18 besøgende), så
+    her er tale om fund og interne links, ikke om besøg.

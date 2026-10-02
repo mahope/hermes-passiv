@@ -689,6 +689,19 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_first_action.py", "--self-test"),
         inputs=("tools/check_first_action.py", "tools/first_action.json", "site/**"),
     ),
+    # Blogindekset skal dække alle 189 guides og være lig sin egen generator.
+    # Målt 2/10: 20 guides lå i `site/` uden et eneste link fra den side, hvis
+    # meta description siger «Every guide on this site».
+    Step(
+        id="blog-index",
+        argv=("python3", "tools/check_blog_index.py"),
+        inputs=("tools/check_blog_index.py", "tools/make_blog_index.py", "site/blog/**", "site/da/blog/**"),
+    ),
+    Step(
+        id="blog-index-selftest",
+        argv=("python3", "tools/check_blog_index.py", "--self-test"),
+        inputs=("tools/check_blog_index.py", "tools/make_blog_index.py", "site/blog/**", "site/da/blog/**"),
+    ),
     # Én kopi af reglen for «hvad en besøgende ser, når vi har en dårlig dag».
     # `site/net.js` blev skrevet, fordi samme fejlform lå i klienterne; de seks
     # GET-klienter (`/compliance-site-check` EN+DA, `/page-profile` EN+DA,
