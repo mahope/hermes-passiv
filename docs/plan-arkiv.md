@@ -4425,3 +4425,87 @@ fjernet, den modsigende sætning tilbage på EAA-siden).
   kunden indsender sit site fra. Målt før/efter i browseren: `overflowX 12 → 0`
   på EN og DA ved 390 px, 0 ved 1280 px.
 
+
+
+---
+
+## Lukkede deploy-noter (2/10)
+
+- `DEPLOY OK 2026-10-02` — købsvej på RoPA, privacy notice og EAA-erklæring.
+  Note lukket på **indhold** på live `0adc322` (`build-info.json` →
+  `0adc3224ef8756e5…`), alle fire domme målt på de seks sider: `upsell-card`
+  **1** gang i hver, `renderHTML(current) + UPSELL + DONATION` **1** gang i
+  hver, katalogens betalingslink **1** gang i hver (`bJe7sK8aT4My7dk7czbMQ05`
+  på de to RoPA-sider, `eVqaEW0Iren855c68vbMQ0a` på de to privacy-sider,
+  `3cI7sK2Qz3IugNUgN9bMQ08` på de to EAA-sider), beløbet fra katalogen pr. side
+  (`$59` / `$149` / `$39`) og perioden som sit egot ord — `once` i EN,
+  `engang` i DA. `no-print` findes på alle seks, e-book-bundlet **0** gange i
+  alle seks, og «behøver aldrig at betale for noget» **0** gange.
+
+- `DEPLOY OK 2026-10-02` — pro-kortet på `/scan` og `/scan-da`. Note lukket på
+  **indhold** på live `919280b`. Alle fem domme målt: `class="result-card
+  pro-card"` 1 gang i hver, katalogens betalingslink `eVq00i4YH6UG69g0ObbMQ03`
+  1 gang i hver, knappen siger `$79/year per website` (EN) og `$79/år pr.
+  website` (DA), `donate.stripe.com` stadig 1 gang pr. side, og `style.css`
+  skjuler `.pro-card` i den **samme** `@media print`-regel som `.btn`. Punkt 5
+  målt på det udskrevne pro-kort: EN siger «It read the one page you pasted. A
+  site is every page.», DA siger «Den læste den ene side, du indsatte. Et
+  website er alle sider.» — hvert sit sprog, ingen af dem påstår kun én side
+  blev læst. **Ruten hedder `/scan-da`, ikke `/da/scan`** — den gamle note
+  havde den forkerte adresse, som gav 404. Den er rettet her.
+
+- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
+  lukket på **indhold** på live `c4fd730`. Alle seks domme målt 1/10:
+  `read-online` **1** gang i hver af `gdpr-for-agencies` (`Chapter 1 — Why This
+  Applies to You (Yes, You)`), `nis2-for-agencies` (`Chapter 1: Does NIS2 Apply
+  to Your Agency?`), `cookie-consent-guide` (`Chapter 1: What the Law Actually
+  Requires`), `eaa-checklist` (`Chapter 1: Is Your Site in Scope?`),
+  `eaa-shopify` (`Chapter 1: What the EAA Means for Your Shopify Store`) og
+  `build-your-first-chrome-extension` (`Preface: Why This Book Exists` er
+  indhold, filteret dropper kun `Front Matter`/`Foreword`) — **0** i `books/index`
+  og `books/compliance-bundle`; `reader-chapter-title` **2** gange i hver;
+  `eaa-checklist` viser kapitel 2 som `Chapter 2: The 10-Point EAA Compliance
+  Checklist`; `<details>`+`<summary>` 1 og 1 i hver bogsektion.
+
+  Punkt 5 målt på den afgrænsede bogsektion (fra `id="read-online"` til første
+  `</section>` efter den), fordi et 40 000-tegns vindue løber ind i sidens
+  footer og ville tælle sidernes egne scripts: **0** rå `<script>`, **0**
+  `onerror`, **0** `javascript:` på `gdpr-for-agencies` (8 705 tegn) og
+  `eaa-checklist` (14 213 tegn). Bogen har heller ingen `<script>` at vise, så
+  kravet om at `&lt;script` skal forekomme kan ikke måles live: det escapede
+  markup ligger i `build-your-first-chrome-extension` kapitel 6, og læsevisningen
+  viser kun kapitel 1 og 2. Escapen er derfor dømt på koden i stedet —
+  `book_reader.py:133` (`self.out.append(escape(data))`), og
+  `--self-test` 45/45. Mutation: escapen fjernet → **43/45** med «script-tags
+  er væk» og «tekst escape-stadig». Det er altså ikke en from regel, men den
+  konkrete linje der gør den.
+
+- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
+  lukket på **indhold** på live `c4fd730`, alle seks domme målt: `read-online`
+  1 gang i hver af `gdpr-for-agencies`, `nis2-for-agencies`,
+  `cookie-consent-guide`, `eaa-checklist`, `eaa-shopify`,
+  `build-your-first-chrome-extension` og 0 i `books/index` +
+  `books/compliance-bundle`; `class="reader-chapter-title"` 2 gange i hver;
+  første kapitel er et rigtigt kapitel på alle seks (`Preface: Why This Book
+  Exists` er indhold, filteret dropper kun `Front Matter`/`Foreword`); `eaa-checklist`
+  viser kapitel 2 som 10-punkters-tjeklisten; 0 `script`/`onerror`/`javascript:`
+  lækker ud af læsevisningen; `scrollWidth == clientWidth == 390` ved 390 px på
+  tre sider med `<details>`+`<summary>`.
+
+- `DEPLOY OK 2026-10-01` — scanneren siger hvilken side den læste, og den hvide
+  knap fik sin farve. Målt på **indhold** på live `8d8cdb5`: `pages_read`
+  **5** gange i live EN (variablen bruges flere steder), `class="pages-read"`
+  **1** gang i hvert af EN og DA, `<summary>` **1** gang i hvert,
+  `Pages read (` **2** gange i EN og **0** i DA, `Sider læst (` **2** gange i
+  DA og **0** i EN. Punkt 6 i den gamle note var **umuligt** at måle sådan den
+  var skrevet: de fire forbudte formuleringer findes stadig i filen, men som
+  ting der ikke er i pro-kortet — «One page per site» er indledningen til den
+  *nye* ærlige sætning «One page per site, plus the legal pages it links to» i
+  flersteds-kortet, og «checked one page» står i en dansk kildekommentar. Domden
+  skal derfor læse det *renderede* pro-kort, hvilket er hvad
+  `tests/scan-clients.test.mjs` gør (233/233). Punkterne 1–3 er målt på den
+  levende rute: `GET /api/compliance-scan?url=forbrug.dk` → 200,
+  `pages_read` 2 entries, ingen dubletter, ingen anden vært, og fundet for vilkår
+  peger på `https://forbrug.dk/emner/aftaler-og-abonnementer/abonnementsvilkaar`
+  — en sti scanneren aldrig ville gætte, hvilket er hele pointen. Samme for
+  `mahope.tools`: privatliv på `/privacy-notice-generator`, vilkår på `/terms/`.

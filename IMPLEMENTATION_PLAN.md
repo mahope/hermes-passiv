@@ -1,43 +1,31 @@
 # STATUS
 
-- **Scanneren siger ikke længere «Not found» om sider den aldrig læste.**
-  Fund fra review 30/9 var målt på den levende rute: ét kald med tre sites gav
-  to fulde rapporter og en tredje bygget på forsiden alene — wordpress.org, som
-  både har og linker sin privatlivspolitik, fik «Not found. Add a Privacy
-  Policy page and link it from your footer» og score 22. Rettelsen er tre ting:
-  budgettet er **delt retfærdigt** pr. URL (12 pr. kald, delt 4+4+4 ved tre
-  sites), det bruges **tur for tur** så hvert tjek får mindst to kandidater,
-  og et tjek der ikke nåede igennem sin liste **siger fra hvor**: «We checked 3
-  of the 7 pages we expected here» — eller `status: "unknown"` og
-  `not_checked`, hvis det ikke fik læst en eneste side. Bevis: 6 af portens
-  domme fejler på den gamle kode (dokumenteret i commit-body), 352/352 på den
-  nye. Dertil et fund undervejs: URL-feltet havde `content-box` og stod 12 px
-  ud over kanten på 390 px — altså vandret scroll på indsendelsessiden, målt
-  før/efter i browseren på begge sprog.
+- **Næste opgave: samle net-kopierne.** Seks klienter har hver sin kopi af de to
+  linjer, hvor `site/net.js` skriver reglen for «hvad en besøgende ser, når vi har
+  en dårlig dag» (EN+DA `compliance-site-check`, EN+DA `page-profile`,
+  `security-headers-check`, `url-inspector`). Alle seks er rigtige i dag — netop
+  derfor er næste rettelse en fare, og `net.js` har selv en docstring om en
+  DA-kopi, der var dræbet et par tegn. Målt: 6 fund med
+  `tools/check_net_copies.py` (skrevet 2/10, ikke i gaten endnu). **Fælden målt i
+  dag:** to mutationstests (746/776) skal have `net.js` forudindlæst, ellers
+  dømmer de en `ReferenceError` i stedet for reglen.
+- **Rød CI rettet:** STATUS havde 38 linjer mod de 25 tilladte; de 6 lukkede
+  `DEPLOY OK`-noter ligger nu i `docs/plan-arkiv.md`.
 - **Kontrasttjekkeren kører nu inde i den artikel der får hele trafikken.**
-  `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside
-  med 8 af 18 besøgende (28 d) og **100 % bounce** — alle otte forlod den igen,
-  og værktøjet de blev sendt videre til fik 1. Begge artikler (EN + DA) har nu
-  `#try-it` / `#prov-dit-billede` med selve værktøjet, og heroens primære
-  handling er det anker i stedet for et hop ud af siden. Baseline før: **0**
-  `ti-card` på artiklerne. Målt i browseren på 390 og 1280 px × 5 sider:
-  `overflowX=0`, resultatet skriver 3,86:1 på EN og 4,20:1 på DA, ingen
-  `pageerror`. WCAG-formlen lå før som **fire** kopier; den ligger nu i
-  `site/text-on-image-core.js`, og dommen «kernen definerer `sampleContrast`
-  præcis én gang» er grøn.
-- **En rigtig fejl faldt ud af designkontrollen:** `.ti-field` er en kolonne,
-  så den delte regel `.ti-field > * { flex: 1 1 12rem }` blev til en **højde**
-  på 12 rem — alle fire felter stod 192 px høje på en telefon, og
-  farvevælgeren blev et 30 px bredt højt bjerg. Det lå på værktøjssiderne
-  længe før denne iteration. Målt før/efter i browseren: 192 px → 44–48 px.
-- **Deploy-noterne er lukket på indhold 2/10.** `ceo/generator-kobsvej-2` er målt
-  på live `0adc322`: alle fire domme grønne på seks sider. `ceo/ai-cta-uden-loefte`
-  afventer sit deploy-vindue.
-- **PR-TJEK 2026-10-01:** ingen åbne PR'er. **BRANCH-TJEK:** 3 remote-branches,
-  ingen 14 dage gamle.
+  `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside med
+  8 af 18 besøgende (28 d) og **100 % bounce**; begge artikler har nu `#try-it`
+  med værktøjet, og heroens primære handling er det anker. Fundet undervejs:
+  `.ti-field > *` gav kolonnebørnene 12 rem *højde* — 192 px felter.
+- **Scanneren siger ikke længere «Not found» om sider den aldrig læste.** Fund fra
+  review 30/9 målt på den levende rute (wordpress.org fik «Not found. Add a
+  Privacy Policy page» og score 22): budgettet er nu delt pr. URL, bruges tur for
+  tur, og et tjek der ikke nåede igennem listen **siger fra hvor**.
+- **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** 3 branches, ingen 14 dage
+  gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
-  banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon
-  Squeezy, Search Console, og **bogenes betalte udgave** (se ❓).
+  banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
+  Search Console, og **bogenes betalte udgave** (se ❓).
+
 
 ## Verificér deploy
 
@@ -93,85 +81,6 @@
   `/api/track`-tællingen virker uændret. Dom 5: `GET /api/compliance-ai` svarer
   stadig `{"ok":true,"available":false}` — banneren siger det samme, og det er
   hele pointen. Dommen er `python3 tools/check_ai_cta_honesty.py` + gaten.
-- `DEPLOY OK 2026-10-02` — købsvej på RoPA, privacy notice og EAA-erklæring.
-  Note lukket på **indhold** på live `0adc322` (`build-info.json` →
-  `0adc3224ef8756e5…`), alle fire domme målt på de seks sider: `upsell-card`
-  **1** gang i hver, `renderHTML(current) + UPSELL + DONATION` **1** gang i
-  hver, katalogens betalingslink **1** gang i hver (`bJe7sK8aT4My7dk7czbMQ05`
-  på de to RoPA-sider, `eVqaEW0Iren855c68vbMQ0a` på de to privacy-sider,
-  `3cI7sK2Qz3IugNUgN9bMQ08` på de to EAA-sider), beløbet fra katalogen pr. side
-  (`$59` / `$149` / `$39`) og perioden som sit egot ord — `once` i EN,
-  `engang` i DA. `no-print` findes på alle seks, e-book-bundlet **0** gange i
-  alle seks, og «behøver aldrig at betale for noget» **0** gange.
-
-- `DEPLOY OK 2026-10-02` — pro-kortet på `/scan` og `/scan-da`. Note lukket på
-  **indhold** på live `919280b`. Alle fem domme målt: `class="result-card
-  pro-card"` 1 gang i hver, katalogens betalingslink `eVq00i4YH6UG69g0ObbMQ03`
-  1 gang i hver, knappen siger `$79/year per website` (EN) og `$79/år pr.
-  website` (DA), `donate.stripe.com` stadig 1 gang pr. side, og `style.css`
-  skjuler `.pro-card` i den **samme** `@media print`-regel som `.btn`. Punkt 5
-  målt på det udskrevne pro-kort: EN siger «It read the one page you pasted. A
-  site is every page.», DA siger «Den læste den ene side, du indsatte. Et
-  website er alle sider.» — hvert sit sprog, ingen af dem påstår kun én side
-  blev læst. **Ruten hedder `/scan-da`, ikke `/da/scan`** — den gamle note
-  havde den forkerte adresse, som gav 404. Den er rettet her.
-
-- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
-  lukket på **indhold** på live `c4fd730`. Alle seks domme målt 1/10:
-  `read-online` **1** gang i hver af `gdpr-for-agencies` (`Chapter 1 — Why This
-  Applies to You (Yes, You)`), `nis2-for-agencies` (`Chapter 1: Does NIS2 Apply
-  to Your Agency?`), `cookie-consent-guide` (`Chapter 1: What the Law Actually
-  Requires`), `eaa-checklist` (`Chapter 1: Is Your Site in Scope?`),
-  `eaa-shopify` (`Chapter 1: What the EAA Means for Your Shopify Store`) og
-  `build-your-first-chrome-extension` (`Preface: Why This Book Exists` er
-  indhold, filteret dropper kun `Front Matter`/`Foreword`) — **0** i `books/index`
-  og `books/compliance-bundle`; `reader-chapter-title` **2** gange i hver;
-  `eaa-checklist` viser kapitel 2 som `Chapter 2: The 10-Point EAA Compliance
-  Checklist`; `<details>`+`<summary>` 1 og 1 i hver bogsektion.
-
-  Punkt 5 målt på den afgrænsede bogsektion (fra `id="read-online"` til første
-  `</section>` efter den), fordi et 40 000-tegns vindue løber ind i sidens
-  footer og ville tælle sidernes egne scripts: **0** rå `<script>`, **0**
-  `onerror`, **0** `javascript:` på `gdpr-for-agencies` (8 705 tegn) og
-  `eaa-checklist` (14 213 tegn). Bogen har heller ingen `<script>` at vise, så
-  kravet om at `&lt;script` skal forekomme kan ikke måles live: det escapede
-  markup ligger i `build-your-first-chrome-extension` kapitel 6, og læsevisningen
-  viser kun kapitel 1 og 2. Escapen er derfor dømt på koden i stedet —
-  `book_reader.py:133` (`self.out.append(escape(data))`), og
-  `--self-test` 45/45. Mutation: escapen fjernet → **43/45** med «script-tags
-  er væk» og «tekst escape-stadig». Det er altså ikke en from regel, men den
-  konkrete linje der gør den.
-
-- `DEPLOY OK 2026-10-01` — bogen læses online på alle seks bogside-ruter. Note
-  lukket på **indhold** på live `c4fd730`, alle seks domme målt: `read-online`
-  1 gang i hver af `gdpr-for-agencies`, `nis2-for-agencies`,
-  `cookie-consent-guide`, `eaa-checklist`, `eaa-shopify`,
-  `build-your-first-chrome-extension` og 0 i `books/index` +
-  `books/compliance-bundle`; `class="reader-chapter-title"` 2 gange i hver;
-  første kapitel er et rigtigt kapitel på alle seks (`Preface: Why This Book
-  Exists` er indhold, filteret dropper kun `Front Matter`/`Foreword`); `eaa-checklist`
-  viser kapitel 2 som 10-punkters-tjeklisten; 0 `script`/`onerror`/`javascript:`
-  lækker ud af læsevisningen; `scrollWidth == clientWidth == 390` ved 390 px på
-  tre sider med `<details>`+`<summary>`.
-
-- `DEPLOY OK 2026-10-01` — scanneren siger hvilken side den læste, og den hvide
-  knap fik sin farve. Målt på **indhold** på live `8d8cdb5`: `pages_read`
-  **5** gange i live EN (variablen bruges flere steder), `class="pages-read"`
-  **1** gang i hvert af EN og DA, `<summary>` **1** gang i hvert,
-  `Pages read (` **2** gange i EN og **0** i DA, `Sider læst (` **2** gange i
-  DA og **0** i EN. Punkt 6 i den gamle note var **umuligt** at måle sådan den
-  var skrevet: de fire forbudte formuleringer findes stadig i filen, men som
-  ting der ikke er i pro-kortet — «One page per site» er indledningen til den
-  *nye* ærlige sætning «One page per site, plus the legal pages it links to» i
-  flersteds-kortet, og «checked one page» står i en dansk kildekommentar. Domden
-  skal derfor læse det *renderede* pro-kort, hvilket er hvad
-  `tests/scan-clients.test.mjs` gør (233/233). Punkterne 1–3 er målt på den
-  levende rute: `GET /api/compliance-scan?url=forbrug.dk` → 200,
-  `pages_read` 2 entries, ingen dubletter, ingen anden vært, og fundet for vilkår
-  peger på `https://forbrug.dk/emner/aftaler-og-abonnementer/abonnementsvilkaar`
-  — en sti scanneren aldrig ville gætte, hvilket er hele pointen. Samme for
-  `mahope.tools`: privatliv på `/privacy-notice-generator`, vilkår på `/terms/`.
-
 
 ## Åbne opgaver
 
