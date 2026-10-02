@@ -723,6 +723,28 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_script_deps.py", "--self-test"),
         inputs=("tools/check_script_deps.py", "site/**"),
     ),
+    # Frontdørens tjek, dømt på de to ender af den samme ledning. Målt 2/10:
+    # begge frontdørsmotorer begynder med `if (!form || !window.NET) return;`,
+    # så en forside der omdøber sit form-id eller glemmer `/net.js` **ligner
+    # stadig et tjek** og gør bare intet — ingen fejl, ingen konsolundtagelse,
+    # og den eneste målebare effekt er stigende bounce. Porten dømmer derfor at
+    # hver forside med et `#check` har præcis ét tjek, at motoren er erklæret og
+    # indlæst, at den leder præcis det form-id op, og at ingen rute kaldes uden
+    # om `NET` (429 skal være endelig). Forsiderne er afledt af
+    # build-manifestet, ikke en håndlavet liste. Selvtesten kører med, fordi
+    # porten ellers kunne være grøn ved ikke at finde nogen forside.
+    Step(
+        id="front-door",
+        argv=("python3", "tools/check_front_door.py"),
+        inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
+                "build_sites.py", "site/**"),
+    ),
+    Step(
+        id="front-door-selftest",
+        argv=("python3", "tools/check_front_door.py", "--self-test"),
+        inputs=("tools/check_front_door.py", "tools/check_article_paid_path.py",
+                "build_sites.py", "site/**"),
+    ),
     # Købsknappen i hvert pro-kort, dømt mod `tools/stripe_catalog.json`.
     # Målt 2/10: de tretten værktøjssider skrev **pris og købslink i hånden**
     # inde i en inline `<script>`, og `check_own_prices.py` læser beløb i

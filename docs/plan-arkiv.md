@@ -4923,3 +4923,59 @@ Undervejs fundet og rettet: `du-*` hed `oc-*`, fordi `du-` stod i delt kode på
 to sites der ikke er DeskUptime; de 29 CSS-linjer lå kopieret i to `<style>`-
 blokker og ligger nu i `style.css`; `OC_DONATE` lå hårdkodet i motoren, så de to
 forsider kom i `tools/donation.json` og dømmes nu (41 → **43** sider).
+
+## 2/10 — frontdør-gaten, og den stille fejlform den dømmer
+
+`tools/check_front_door.py` dømmer de to ender af den samme ledning frem for at
+læse prosa. Fejlformen er målt 2/10 og er **stille**: begge frontdørsmotorer
+(`/one-off-check.js`, `/convert-check.js`) begynder med
+`if (!form || !window.NET) return;`. Dvs. en forside der omdøber sit `<form id>`,
+glemmer `<script src="/net.js">` eller skriver en fejl i en `src` **ligner stadig
+et tjek** — `<form>`, knap, statuslinje og `#…-result` er alle i markup — men
+motoren returnerer, intet sker, og der kommer ingen undtagelse og ingen
+konsolfejl. Den eneste målebare effekt er stigende bounce.
+
+Den foregående iteration fandt den beslægtede *høje* variant: `extractReadable`
+blev flyttet ud i `/readable.js`, og de to sider der allerede kaldte den fik ikke
+script-tagget, så Clean Copies eget værktøj ville kaste med `ReferenceError`.
+`tools/check_script_deps.py` (fra den iteration) dømmer den. Denne port dømmer
+den stille variant, som ingen port dømmer.
+
+Regler, og hvorfor de ikke kan være grønne ved intet:
+
+1. Formens `id` skal stå i `MOTORER` i porten — så et nyt frontdørstjek ikke kan
+   udgives uden at erklære hvilken motor der hører til.
+2. Siden skal indlæse `<motor>` **og** `/net.js`.
+3. Motoren skal lede præcis *det* form-id op — krydsreferencen der fanger en
+   omdøbet form. En motor der kigger efter `cc-check-form` på en side der har
+   `cc-check-form-2` er grøn for enhver anden læsning.
+4. Motoren må ikke kalde `fetch(` eller en rute selv; 429-reglen og retry'en
+   ligger i `/net.js`, samme krav som `check_net_copies.py` stiller de andre
+   klienter.
+5. Formen skal være `method="get"` med et `action`, så den der har slået JS fra
+   ikke møder en død knap.
+
+Forsiderne kommer fra `frontpage_sources()` i `tools/check_article_paid_path.py`,
+altså fra `build_sites.SITES` + `select_files()` — samme funktion der afgør hvad
+der lander i `dist/<domæne>/index.html`. Derfor kan svaret ikke blive nyt på en
+måde porten ikke ser: en ny `index_from`, et nyt `remap` eller et nyt domæne
+giver automatisk en ny forside at dømme.
+
+**Målt:** grøn på de 8 forsider (6 har et `#check`, bugbottle.dev har ingen
+endnu), selvtest **16/16**. **Polaritet målt ved fem mutationer af rigtige
+filer**, hver genoprettet byte-for-byte bagefter:
+
+| mutation | hvad porten sagde |
+|---|---|
+| `<script defer src="/one-off-check.js">` fjernet fra `site/index.html` | `mahope.tools/: #oc-check-form er motor for /one-off-check.js, men siden indlæser den ikke` |
+| `<script defer src="/net.js">` fjernet fra `site/da/index.html` | `mahope.tools/da/: /net.js mangler — uden window.NET returnerer /one-off-check.js stille` |
+| `oc-check-form` → `du-check-form` i `site/deskuptime/index.html` | `form-id du-check-form, som ingen motor er erklæret for` |
+| `getElementById('oc-check-form')` → `…-legacy` i `site/one-off-check.js` | `/one-off-check.js leder ikke #oc-check-form op` |
+| `NET.askGet('/scan-proxy…` → `fetch('/scan-proxy…` i `site/convert-check.js` | `kalder fetch( selv — gå gennem NET, så 429 er endelig` |
+
+Samme commit kogte STATUS fra 34 til 24 linjer. `plan-status` har været rød
+siden 12:42, og `deploy` har `needs: gate` — så cleancopy.tools' konverteringstjek
+(`22a2753`) lå og ventede i stedet for at være ude. Målt på live kl. 16:
+`cleancopy.tools/` og `/da/` har **0** forekomster af `cc-check-form`, mens
+mahope.tools og deskuptime.com har 1 hver, og `build-info.json` på alle tre
+domæner står i `d0e55bf`.

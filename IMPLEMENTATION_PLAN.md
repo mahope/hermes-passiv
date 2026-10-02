@@ -1,38 +1,29 @@
 # STATUS
-- **cleancopy.tools' forside konverterer nu en side i stedet for at fortide om
-  at den kan.** EN + DA har ét tjek i `#check` under heroen: adresse ind, rigtig
-  Markdown ud. Målt før: **0** kodeveje til et tjek fra forsiden, 7 af 9 besøgende
-  landede på `/` med 71 % bounce. Samme motor som `/url-to-markdown`:
-  `convert-check.js` kalder `CleanCopyCore.htmlToMarkdown` over
-  `CleanCopyReadable.extract`; hentningen går gennem `/scan-proxy`, konverteringen
-  sker i fanen. Målt i browseren: **28** kontroller grønne ved 390 + 1280 px (felt
-  kan fokuseres, knap 44 px, ingen vandret scroll, ingen JS-fejl, serverens egen
-  sætning i fejltilstanden). Fundet *ved* billedet: linjen læste «365 characters
-  characters» — rettet, og «1 link» har nu egen ental.
-- **`extractReadable` lå i 2 inline kopier** (`/url-to-markdown` +
-  `/url-til-markdown`, byte for byte ens) — nu **1** delt `site/readable.js`. Ikke
-  i `clean-copy-core.js`: den genereres fra `mahope/clean-copy` og deles af 7
-  overflader. **Ratcheterne grew** med sider der nu renderer et målt resultat:
-  `donation.json` 43 → **45**, `first_action.json` 14 → **16**; polaritet målt ved
-  3 mutationer (donation som knap / linjen fjernet / primær handling ompeget → RØD).
-- **Fundet ved review af egen diff: `/url-to-markdown` og `/da/url-til-markdown`
-  ville kaste ved det første tryk.** `extractReadable` blev flyttet ud i
-  `/readable.js`, men de to sider der *allerede* kaldte den fik ikke
-  `<script src="/readable.js">` — altså Clean Copies egen konverteringsværktøj,
-  og hele gaten var grøn, fordi ingen port kørte klientkoden. Rettet, og målt:
-  porten `tools/check_script_deps.py` er **gråd** på den mutation (script-tagget
-  fjernet) og grøn på den rættede kode. Porten ser kun i det der kører —
-  inline scripts og de lokale scripts siden indlæser — så prosa og
-  `href="javascript:…"` ikke dømmes med; selvtest **10/10**.
-- **CI var RØD siden 12:42** på `plan-status` (STATUS 52 mod 25), kogt ned her.
-  **CEO-kø punkt 0 er helt færdig**, verificeret nu: `env` på `handleUrlInspect`
-  (`:288`), lemon-ruten væk, `targetIsPublic` afviser IPv4-mapped IPv6 + NAT64 pr.
-  redirect-hop, 202/429 i `net.js` + `thanks.html`, AI-kvoten refunderet ved 502.
-- **❓ Til Mads (ufravigeligt blokerende):** `STATS_TOKEN` (uden den er
-  `/api/stats` 401), `OPENROUTER_API_KEY` (assistenten slukket, 187 artiklers banner
-  følger samme nøgle), `bugbottle.dev`s domæne, bogens betalte udgave, 2
-  desktop-apps der ringer til Lemon Squeezy, Search Console, **IndexNow pinges
-  aldrig**. Resten under `❓ Til Mads`.
+- **CI var rød siden 12:42 på `plan-status`, og `deploy` har `needs: gate`** —
+  så cleancopy.tools' konverteringstjek lå i `22a2753` og blev aldrig udgivet.
+  STATUS er kogt fra 34 til under 25 linjer her; resten står i
+  `docs/plan-arkiv.md`.
+- **mahope.tools' forside-tjek er live og målt på indhold**: `/` og `/da/` har
+  hver præcis 1 `#oc-check-form` med `action="/api/url-inspect"`, og
+  `build-info.json` står i `d0e55bf`.
+- **Nyt gatestræk `front-door`** (`tools/check_front_door.py`): hver forside med et
+  `#check` skal have præcis 1 tjek, sin erklærede motor indlæst, `/net.js` med, og
+  motoren skal lede præcis det form-id op og ikke kalde `/api/*` uden om `NET`.
+  Dømmer **8** forsider afledt af build-manifestet, ikke en håndlavet liste.
+  Selvtest **16/16**; polaritet målt ved **5** mutationer af rigtige filer
+  (motor-script væk, `/net.js` væk, form-id omdøbt, motor leder forkert id,
+  `fetch(` i stedet for `NET.askGet`) — alle **RØD**.
+- **Fejlformen porten lukker er den stille**: begge frontdørsmotorer starter med
+  `if (!form || !window.NET) return;`, så en omdøbt form-id eller en manglende
+  `/net.js` på de **6** forsider der har et tjek lader dem *ligne* et tjek der
+  bare intet gør. Ingen undtagelse, ingen konsolfejl, kun bounce.
+- **`extractReadable` lå i 2 inline kopier** — nu 1 delt `site/readable.js`, og
+  `tools/check_script_deps.py` er gråd på den mutation der fjerner script-tagget.
+- **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
+  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
+  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen på
+  værktøjssiderne. Resten under `❓ Til Mads`.
+
 ## Verificér deploy
 
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
@@ -74,22 +65,36 @@
    `check_first_action` **16** dømte, `check_net_copies`, `check_built_css`,
    `check_form_labels`, `check_ui_constants` grønne.
 
-- `VERIFICÉR DEPLOY: tjekket på mahope.tools' forside 2026-10-02
-   ceo/tjek-paa-mahope-forside` — måles på **indhold**, ikke på HTTP 200:
-   `mahope.tools/` og `/da/` har hver præcis **1** `.oc-form` med
-   `id="oc-check-form"`, `action="/api/url-inspect"`, `<label for="oc-check-url">`,
-   `#oc-check-status` med `role="status"`, `#oc-check-result`, `OC_DONATE` og
-   indlæser `/net.js` **og** `/one-off-check.js`; `/one-off-check.js` ligger i
-   roden af alle tre dist'er (13.436 bytes hver, identiske), og `style.css` har
-   `.oc-form`/`.oc-card` på alle tre. Dom 1: `GET /api/url-inspect?url=…` svarer
-   **200** med `securityHeadersChecked` på 8 navne. Dom 2: `stripe-worker.test.mjs`
-   **354/354**. Dom 3: `build_sites.py` (330 + 35 + 70 + 37 filer, 0 brudte),
-   `seo_check.py` (314 sider, 0 fund), `check_inline_js.py` grønne. Dom 4: hele
-   `quality_gate.py` 130 steps grønne. Dom 5: `check_donation_paths` grøn på **43**
-   sider (de to nye forsider kom i ratchetfilen, fordi de nu renderer et målt
-   resultat), `check_first_action` grøn (14 dømte, 0 problemer — forsidens primære
-   handling er stadig `/free-tools`), `check_form_labels`, `check_net_copies` og
-   `check_built_css` grønne.
+- **DEPLOY OK 2/10 (kl. 16).** `ceo/tjek-paa-mahope-forside` (`d0e55bf`) er ude,
+  målt på indhold: `mahope.tools/` og `/da/` har hver præcis 1 `#oc-check-form`,
+  og `build-info.json` står i `d0e55bf` på alle tre deployede domæner. Dom 1:
+  `GET /api/url-inspect?url=…` svarer 200 med `securityHeadersChecked` på 8 navne.
+  Dom 2: `stripe-worker.test.mjs` 354/354. Dom 3: `build_sites.py` 330+35+70+37
+  filer 0 brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py` grøn.
+  Dom 4: hele `quality_gate.py` 130 steps. Dom 5: `check_donation_paths` 43 sider,
+  `check_first_action` 14 dømte 0 problemer, `check_form_labels`, `check_net_copies`
+  og `check_built_css` grønne.
+
+- `VERIFICÉR DEPLOY: konverteringstjekket på cleancopy.tools' forside 2026-10-02
+   ceo/cleancopy-konverteringstjek` — **liger i `22a2753` og er ikke live**: CI var
+   rød på `plan-status` fra 12:42, og `deploy` har `needs: gate`, så den blev
+   aldrig udgivet. Måles på **indhold**, ikke på HTTP 200: `cleancopy.tools/` og
+   `/da/` har hver præcis 1 `.oc-form` med `id="cc-check-form"`, `action` på det
+   brugbare værktøj (`/url-to-markdown` + `/da/url-til-markdown`), `<label for>`,
+   `#cc-check-status` med `role="status"`, `#cc-check-result`, `CC_DONATE`, og de
+   indlæser `/net.js` + `/clean-copy-core.js` + `/readable.js` +
+   `/convert-check.js`. `/readable.js` og `/convert-check.js` ligger i roden af
+   `dist/cleancopy.tools/` og kun der. Dom 1: `GET /scan-proxy?url=…` svarer 200
+   med `ok:true` + `html`. Dom 2: `stripe-worker.test.mjs` 354/354. Dom 3:
+   `build_sites.py` 0 brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py`
+   grøn. Dom 4: hele `quality_gate.py` grøn. Dom 5: Chromium 28 kontroller ved
+   390+1280 px grønne (billeder i `/tmp/ui-cleancopy-konverteringstjek/`),
+   `check_donation_paths` 45 dømte, `check_first_action` 16 dømte.
+
+- `VERIFICÉR DEPLOY: frontdør-gaten i gaten 2026-10-02 ceo/frontdoors-gate` —
+   intet sideindhold ændres, så dette er en gate-ændring: efter push skal
+   `quality_gate`-loggen vise `front-door` **og** `front-door-selftest` grønne
+   (`16/16`), og de tre domæner skal stadig få deres sha i `build-info.json`.
 
 ## Åbne opgaver
 
@@ -339,12 +344,14 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     Målt før: 7 af 9 besøgende på `/`, 71 % bounce. Efter: adresse ind, rigtig
     Markdown ud i browseren, samme motor som `/url-to-markdown`. Datagrund:
     Chromium 28/28 kontroller ved 390 + 1280 px.
-14. **En gate for frontdørs-tjekkene.** Hvem: de næste der bygger en. Tal:
-    dækkede forsider (baseline **3**). Accept: `tools/` dømmer at hver forside med
-    et `#check`-afsnit har præcis ét tjek, at det indlæser motoren, og at motoren
-    ikke kalder `/api/*` uden `NET`. Datagrund: målt i denne iteration — de 28
-    Chromium-kontroller lå i to midlertidige scripts, der ikke blev committet,
-    fordi portene dømmer kode og ikke en browser.
+14. ~~En gate for frontdørs-tjekkene.~~ **Leveret 2/10** — `front-door` og
+    `front-door-selftest` kører i gaten. Dømmer **8** forsider fra
+    build-manifestet: præcis ét tjek pr. `#check`, erklæret motor + `/net.js`
+    indlæst, motoren leder præcis det form-id op, ingen rute uden `NET`, og formen
+    virker uden JavaScript. Selvtest **16/16**, polaritet målt ved **5**
+    mutationer af rigtige filer. Hvorfor: de 28 Chromium-kontroller lå i to
+    midlertidige scripts, og motorernes `if (!form) return;` gør den stille
+    fejlform umulig at se.
 15. **Bundlen, der hedder gratis på syv sider og $29 på `/pricing`.** Hvem:
     læsere af `books/*` og købere på `/pricing`. Tal: katalogrækker pr. destination
     (baseline: 1 modsigelse, synlig på 3 sider). Accept: enten kontrakten og
