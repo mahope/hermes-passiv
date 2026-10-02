@@ -1,4 +1,20 @@
 # STATUS
+- **En farvesimulering kan nu videresendes som et link.** Simulatoren kører helt
+  i browseren og intet blev sendt nogen steder, så det eneste en designer
+  egentlig vil have — «se præcis den her simulering» — døde med fanebladet.
+  Tilstanden ligger nu i fragmentet (`#pal=…;s=…;f=…;b=…`), læses før der tegnes,
+  og `replaceState` skriver den i adresselinjen hele tiden, så knappen
+  «Copy link to this simulation» bare kopierer den adresse brugeren allerede
+  har. Ny fælles kernе `site/cb-share-core.js` (EN + DA deler den, så en dansk
+  kopi ikke kan falde fra). Målt: 58/58 i ny `tests/cb-share.test.mjs`; porten
+  er **RØD på den gamle kode — 8 fejl**, bl.a. fordi gridet stadig viser
+  standardpaletten på `#pal=2563eb,e91e63;s=42`. Fund undervejs: `addColor()` og
+  slette-knappen kaldte aldrig `renderExport()`, så en tilføjet farve stod i
+  tabellen men ikke i CSS/JSON-eksporten — rettet i samme opgave.
+- **`BRANCH-TJEK 2/10`:** to branches var fuldt landede og er slettet på origin
+  (`lifetime-founding`, `ceo/porten-kan-skelne-vilkaar`). `ceo/hub-readme-note`
+  har kun en gammel plan-note fra 26/9 og intet kode — se ❓. **`PR-TJEK 2/10`:**
+  ingen åbne PR'er.
 - **`/blog/` havde fire døde links, og porten vidste det.** De fire
   BugBottle-guider lå i `bugbottle.dev`s `include`, blev bygget hver kørsel og
   **lagt ingen steder** — domænet står ikke i deploy-matricen — så
@@ -26,6 +42,20 @@
   til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: del-link i farveblindhedssimulatoren 2026-10-02
+   ceo/cb-simulator-del-link` — måles på **indhold** pr. side, ikke på HTTP 200:
+   `/color-blindness-simulator` og `/color-blindness-simulator-da` skal hver
+   have præcis **én** `<script src="/cb-share-core.js">`, `CBSHARE.decode(
+   location.hash)` på den linje der læser fragmentet, **én** `id="copy-share"`
+   og **én** `addEventListener('click', copyShare)`. `mahope.tools/cb-share-core.js`
+   skal serveres **200** og have `CBSHARE.encode` + `CBSHARE.decode`. Dom 1:
+   `cb-share.test.mjs` **58/58** + porten målt **RØD — 8 fejl** på de gamle
+   sider. Dom 2: `stripe-worker.test.mjs` **354/354** (worker urørt). Dom 3:
+   `build_sites.py` 335 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
+   `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn
+   (**145** steps, fra 144). Dom 5: `tools/shots.py` **ingen vandret scroll**
+   ved 360 + 768 + 1280 px på begge ruter.
 
 - `VERIFICÉR DEPLOY: fire døde links fra /blog/ 2026-10-02
    ceo/blog-indeks-dode-links` — måles på **indhold**, ikke på HTTP 200:
@@ -237,6 +267,10 @@
   inde i kortet. Købsvejen findes allerede på de seks produktsider, så det er ikke
   en mistet indtægt, men det er en pris læseren ikke kan købe. Enten beholder vi
   den som ren tekst, eller jeg flytter den til en fane under kortet. Din beslutning.
+- **🟡 `ceo/hub-readme-note` på origin er forældet.** Branchen har ingen kode —
+  kun en plan-note fra 26/9 om en README der siden er blevet dømt af
+  `check_repo_readme.py`. Jeg har ikke slettet den, fordi en note *er* unikt
+  arbejde i den forstand. Siger du til, tager jeg den ned; ellers bliver den.
 - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`,
   `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`).
   Sitemap og robots er målt korrekte på de fire sites missionen udgiver; kun
@@ -371,6 +405,15 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     `scan-clients.test.mjs`. Datagrund: bounce på mahope.tools' forside er 100 %
     (4 af 4 besøgende) og på cleancopy.tools' 71 % (7 af 9); de toforsider er de
     eneste steder, hvor vi *kan* fjerne et spørgsmål læseren netop har svaret på.
+18. ~~**En simulering kunne ikke videresendes.**~~ **Leveret 2/10.** Se STATUS.
+    Hvem: designere der skal have en kollega til at se præcis den samme
+    simulering. Tal: delinger pr. uge mod simulatoren (baseline **0** — der var
+    ingen vej, kun Copy code og Download, som begge kræver modtageren sidder
+    med i samme værktøj). Accept: `cb-share.test.mjs` grøn og **RØD på den gamle
+    kode**. Datagrund: 1 besøgende på `/color-blindness-simulator` og 100 %
+    bounce; værktøjet er det eneste på sitet der producerer noget, en anden
+    gerne vil se — og det døde i fanebladet. Fund undervejs: eksporten holdt
+    ikke nye farver, så et link ville have løjet om indholdet.
 17. ~~**Blogindekset holdt op at dække alle guides.**~~ **Leveret 2/10.** Alle
     189 guides (93 EN + 96 DA) har nu præcis ét link fra `/blog/`, de danske er
     grupperet i de samme fem emner med beskrivelser, og `check_blog_index.py`

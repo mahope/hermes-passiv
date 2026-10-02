@@ -256,6 +256,20 @@ STEPS: tuple[Step, ...] = (
             "site/url-inspector/index.html",
         ),
     ),
+    # Del-linket i farveblindhedssimulatoren (EN + DA). Siderne deler én codec i
+    # `site/cb-share-core.js`, så dommen læser den kode der faktisk ships og
+    # begge siders eget script — en dansk kopi der falder fra ville ellers bare
+    # se ud til at virke på den engelske.
+    Step(
+        id="cb-share",
+    argv=("node", "tests/cb-share.test.mjs"),
+    inputs=(
+        "tests/cb-share.test.mjs",
+        "site/cb-share-core.js",
+        "site/color-blindness-simulator.html",
+        "site/color-blindness-simulator-da.html",
+    ),
+    ),
     # 1/10: `formatAnswer()` på `/compliance-ai` (EN + DA) skrev modellens svar
     # direkte i `innerHTML` med kun markdown-udskiftninger. Svaret er bygget af
     # det besøgende skrev i feltet, så `<img src=x onerror=…>` kunne blive til

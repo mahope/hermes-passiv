@@ -19,6 +19,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","name":"Color Blindness Simulator","applicationCategory":"DeveloperApplication","operatingSystem":"Any","url":"https://hermes-passiv.pages.dev/color-blindness-simulator","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"description":"Free browser-based simulator that shows how colors appear to people with protanopia, deuteranopia and tritanopia."}
 </script>
 <script defer src="/track.js"></script>
+<script src="/cb-share-core.js"></script>
 <style>
   .pro-note { max-width:720px; margin:32px auto 0; padding:18px 22px; border:1px solid var(--color-accent); border-radius:10px; background:var(--color-accent-soft); }
   .pro-note h2 { font-size:1.05rem; margin:0 0 8px; }
@@ -111,6 +112,7 @@
     <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <button type="button" class="cb-add" id="copy-export">Copy code</button>
       <button type="button" class="cb-add" id="download-export">Download file</button>
+      <button type="button" class="cb-add" id="copy-share">Copy link to this simulation</button>
       <span style="font-size:.85rem;color:var(--color-green);margin-left:8px;min-height:1.2em" id="export-msg" aria-live="polite"></span>
     </div>
   </div>
@@ -360,6 +362,14 @@
     {hex:'#dc2626'}, {hex:'#16a34a'}, {hex:'#2563eb'},
     {hex:'#f59e0b'}, {hex:'#7c3aed'}, {hex:'#111827'}
   ];
+
+  // The share link. The fragment is read before anything is drawn, so a reader
+  // who opens a link from a colleague sees their palette, severity and preview
+  // colors — not the defaults with the link sitting uselessly in the bar.
+  var share = (globalThis.CBSHARE || {}).decode(location.hash);
+  if (share.colors) colors = share.colors.map(function (hex) { return { hex: hex }; });
+  if (share.severity !== null && share.severity !== undefined) $('severity').value = share.severity;
+
   function hasColor(hex) {
     return colors.some(function (c) { return c.hex.toLowerCase() === hex.toLowerCase(); });
   }
@@ -395,7 +405,7 @@
       rm.textContent = '✕';
       rm.setAttribute('aria-label', 'Remove color ' + orig);
       rm.addEventListener('click', function () {
-        colors.splice(idx, 1); renderGrid(); renderSelects();
+        colors.splice(idx, 1); renderSelects(); updateAll();
       });
       rmTd.appendChild(rm);
       tr.appendChild(rmTd);
@@ -416,8 +426,8 @@
   }
 
   function renderSelects() {
-    var fg = $('fg-select').value || '#111827';
-    var bg = $('bg-select2').value || '#ffffff';
+    var fg = $('fg-select').value || share.fg || '#111827';
+    var bg = $('bg-select2').value || share.bg || '#ffffff';
     fillSelect($('fg-select'), hasColor(fg) ? fg : '#111827');
     fillSelect($('bg-select2'), hasColor(bg) ? bg : '#ffffff');
   }
@@ -491,6 +501,38 @@
     renderGrid();
     updatePreview();
     renderExport();
+    writeHash();
+  }
+
+  // The address bar is the share link, always — not just after the button.
+  // `replaceState` writes no history entry, so the back button still leaves the
+  // page instead of walking through every colour the reader dragged through.
+  function shareState() {
+    var sel = $('fg-select'), sel2 = $('bg-select2');
+    return {
+      colors: colors.map(function (c) { return c.hex; }),
+      severity: $('severity').value,
+      fg: sel && sel.value,
+      bg: sel2 && sel2.value
+    };
+  }
+  function shareLink() {
+    // Kernen er et eget script; hvis den ikke kom, skal knappen sige det
+    // frem for at kaste. `writeHash` er tilsvarende vagt.
+    if (!globalThis.CBSHARE) return '';
+    return location.origin + location.pathname + globalThis.CBSHARE.encode(shareState());
+  }
+  function writeHash() {
+    if (!globalThis.CBSHARE || !history.replaceState) return;
+    try { history.replaceState(null, '', globalThis.CBSHARE.encode(shareState())); } catch (e) { /* older browser */ }
+  }
+  function copyShare() {
+    var link = shareLink();
+    if (!link) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link).then(function () { flashExport('Link copied — it opens this exact simulation.'); },
+        function () { flashExport('Could not copy — copy the address bar, it holds the same link.'); });
+    } else { flashExport('Could not copy — copy the address bar, it holds the same link.'); }
   }
 
   function addColor() {
@@ -503,7 +545,7 @@
     if (colors.length >= 10) { errEl.textContent = 'Maximum 10 colors.'; return; }
     colors.push({hex: hex});
     $('new-color').value = hex;
-    renderGrid(); renderSelects();
+    renderSelects(); updateAll();
   }
 
   $('add-btn').addEventListener('click', addColor);
@@ -516,6 +558,7 @@
     $(id).addEventListener('click', function () { exportFmt = id.slice(4); renderExport(); });
   });
   $('copy-export').addEventListener('click', copyExport);
+  $('copy-share').addEventListener('click', copyShare);
   $('download-export').addEventListener('click', downloadExport);
 
   renderGrid();

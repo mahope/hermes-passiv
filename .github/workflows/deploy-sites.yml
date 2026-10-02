@@ -294,6 +294,8 @@ on:
       - 'tests/tracking-worker.test.mjs'
       - 'tests/checkout-route.test.mjs'
       - 'tests/markdown-escape.test.mjs'
+      - 'tests/cb-share.test.mjs'
+      - 'site/cb-share-core.js'
       - 'test.js'
       # Licenskatalogen og kontrakten definerer priserne; `products/` er de
       # betalte filer `check_private_content.py` holder ude af dist.
