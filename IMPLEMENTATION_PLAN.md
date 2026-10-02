@@ -1,26 +1,26 @@
 # STATUS
 
-- **Næste opgave: de ni andre værktøjssiders pro-kort.** Målt 2/10: elleve af de
-  tretten pro-kort ligger i et inline script. `pro_table.py` kan nu tegne **én
-  linje** (`layout: "inline"`), og `pro_card.py` balancerer kortets `div`-er, så
-  de ni kan følge `/text-on-image-checker` uden at kopiere kernen ind i sig selv.
-- **Gratis mod Pro står i kortet på de 2 mest besøgte værktøjssider.** EN + DA på
-  `/text-on-image-checker` (2 af 18 Plausible-besøgende) — den håndskrevne
-  `.pro-list` er erstattet af katalogens tabel, så kortet siger hvad det **gratis**
-  tjek gør ved siden af hvad Pro tilføjer. Målt før: 3 `<li>` om Pro, 0 om gratis.
-  Dom: `tools/check_pro_table.py`, 8 produktsider + 2 værktøjssider.
+- **Alle 19 sider har gratis mod Pro i samme tabel.** De ni øvrige værktøjssider
+  (`/scan`, `/compliance-site-check`, `/cookie-check`, `/contrast-checker`,
+  `/security-headers-check` i begge sprog) har katalogens tabel i stedet for en
+  håndskrevet `.pro-list` der kun talte om Pro. Dom: `check_pro_table.py`
+  (8 produktsider + 11 værktøjssider), `pro_table.py --check` på dist.
+- **Ny port `check_catalog_where.py` kører i gaten.** Dom 6 og dom 4 i
+  `check_pro_table` dømmer *hvad* tabellen siger mod katalogen, men ingen port
+  læste de 112 `where` der skal sige *hvor* koden findes: målt 2/10 lå 13 af dem
+  2–10 linjer væk fra den sætning de citerede. Alle 13 rettet i katalogen.
+- **Ærligheden overlevede — målt 2/10.** Den genererede tabel skrev «Every page
+  of the site, not just the one you pasted», altså præcis den sætning
+  `scan-clients` holder i live («crawls the whole site … every page it finds»).
+  Rettelsen ligger i katalogen, så alle ni sider får den ærlige formulering.
 - **To fejl fundet undervejs.** (1) `pro_card.py` fandt kortet som «den første
-  `</div>`», altså kort med ét niveau; den nye `.table-wrap` snød den, så porten
-  blev **grøn med 11 i stedet for 13** og en tabt købsknap var usynlig. Nu
-  balancerer `kort()` åbne/lukkede `div`, og mutation 6 dømmer det. (2) Dom 6
-  krævede `where` på sidens egen fil, men de 3 frie funktioner ligger i
-  krævede `where` på sidens egen fil, men de 3 frie funktioner ligger i
-  `text-on-image-core.js`; undtagelsen kræver at filen står i siden `<script src>`.
-  **gratis mod Pro står ét sted på alle 4 produktsider** (EN + DA), tegnet af
-  `tools/pro_table.py` fra `tools/stripe_catalog.json`.
-- **CEO-kø punkt 0 er færdigt** — `5693853`: `GET /api/url-inspect?url=` → 200,
-  202 på `/thanks` siger «not confirmed yet», `net.js:47` gør 429 endelig, et 502
-  fra OpenRouter giver kvoten tilbage. SSRF-værnet dækker mål og hvert hop.
+  `</div>`»; den nye `.table-wrap` snød den, så porten blev **grøn med 11 i
+  stedet for 13** og en tabt købsknap var usynlig. Nu balancerer `kort()`
+  åbne/lukkede `div`, og mutation 6 dømmer det. (2) `check_stripe_ctas.py`s
+  skjult-stak talte navne, ikke dybde, så tabellen i et skjult pro-kort fik hele
+  kortet dømt synligt og tre købssider faldt ud af inventoryet.
+- **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
+  `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
@@ -33,17 +33,15 @@
   rapport-budget, kontrasttjekkeren i artiklerne og AI-banneren.
   Detaljerne står i `docs/plan-arkiv.md`.
 
-- `VERIFICÉR DEPLOY: gratis-mod-Pro står i pro-kortet på de to mest besøgte
-  værktøjssider ceo/pro-kort-fri-spalte 2026-10-02` — måles på **indhold**.
-  Dom 1: `python3 tools/check_pro_table.py` er grøn og siger «8 produktsider og
-  2 værktøjssider». Dom 2: `python3 tools/pro_table.py --apply` mod den
-  publicerede kode siger «0 sider tegnet igen». Dom 3: porten kører i
-  `quality_gate.py` med **og** uden `--self-test`. Dom 4: dom 4b dømmer en blok
-  med linjeskift eller apostrof i `layout=inline`, og `kompakt_blok()` kaster
-  i stedet for at skrive en blok der ikke kan indlæses. Dom 5: mutationen i
-  `pro_card.py` lægger en `.table-wrap` ind i et pro-kort og tjekker at knappen
-  stadig findes. Dom 6: `pro_table.py --check` er grøn på **dist** efter
-  `build_sites.py`. Dommen er `python3 tools/quality_gate.py` + missionens gate.
+- `VERIFICÉR DEPLOY: gratis mod Pro i kortet på de ni øvrige værktøjssider
+  ceo/pro-kort-tabel-alle 2026-10-02` — måles på **indhold**. Dom 1:
+  `python3 tools/quality_gate.py` er grøn med 133 steps. Dom 2:
+  `python3 tools/pro_table.py --check` på dist siger «19 sider». Dom 3:
+  `check_catalog_where.py` er grøn på 112 funktioner og dømmer **belægget** i
+  katalogens `where`; dens 11 mutationer ligger i `--self-test` i samme gate.
+  Dom 4: `node tests/scan-clients.test.mjs` 417/417, altså den ærlige
+  crawls-sætning står stadig i kortet. Dom 5: `check_pro_table.py --self-test`
+  21/21 og `pro_card.py --self-test` 8/8.
 
 ## Åbne opgaver
 
@@ -88,12 +86,10 @@
    eller beta-side kan stadig publiceres med en handling, der altid fejler.
    Accept: porten finder den, hvis den skrives i manifestet. *(Kun relevant når
    vi tilføjer flere sådanne sider — ikke en opgave i sig selv.)*
-7. **`check_pro_table.py` kører ikke i gaten.** Hvorfor: målt 2/10 med
-   `quality_gate.py --list` — porten fra opgaven «gratis mod Pro ét sted» er
-   grøn, men ingen step kalder den, så dens 16 selvtestkontroller kører kun når
-   nogen husker den. Samme fejlform som `quality_gate.py`s egen docstring
-   beskriver: en port der intet kalder er en port der ingenting dømmer. Accept:
-   to steps (`pro-table` + `pro-table-selftest`) i `STEPS`, så
+7. ~~`check_pro_table.py` kører ikke i gaten.~~ **Færdig, målt 2/10** med
+   `quality_gate.py --list` — `pro-table` og `pro-table-selftest` står i
+   `STEPS`, så opgavens egen beskrivelse var forældet. De to nye steps
+   `catalog-where` og `catalog-where-selftest` er kablet på samme måde, og
    `tools/test_deploy_workflow.py` bekræfter at filerne er i CI's path-filter.
 7. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor:
    de seks boger er på engelsk, og hele `_worker.js`, scanneren og resten af
@@ -221,5 +217,8 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    `tools/stripe_catalog.json`, og `check_pro_table.py` dømmer hver blok mod
    samme kilde. Målt først: `page-profile` skrev «$0 forever / $19/year /
    $39 once» i hånden, `deskuptime` «19 USD once», de to andre havde ingen
-   tabel — fire svar om det samme produkt, ingen port dømte dem. Næste skridt er
-   de otte søskendeværktøjer, der kun sælger efter et resultat.
+   tabel — fire svar om det samme produkt, ingen port dømte dem. **Næste skridt
+   er gjort 2/10:** de ni øvrige værktøjssiders pro-kort har nu samme tabel, så
+   en besøgende på `/scan` ser «gratis gør dette, Pro gør hele sitet» i samme
+   øjeblik han har set sit resultat. Ny port `check_catalog_where.py` dømmer
+   belægget i katalogens `where`, så «hvor»-påstandene ikke kan rådne igen.

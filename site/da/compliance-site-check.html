@@ -385,18 +385,11 @@ function scan() {
     html += '<h3 style="margin:0 0 4px;font-size:16px">' + (flere
       ? 'Den fandt de juridiske sider og stoppede. Et website er alle sider.'
       : 'Den læste én side og de juridiske sider, den peger på. Et website er alle sider.') + '</h3>';
-    html += '<p class="pro-lead">Det her kunne ikke se:</p>';
-    html += '<ul class="pro-list">';
-    // Ærligt, efter at scanneren begyndte at følge links. Før dette læste
-    // kaldet én side pr. URL, så «Alle de andre sider» var sandt. Nu læser det
-    // siden plus de juridiske sider den selv peger på, så «én side» ville være
-    // en ny løgn i en boks der i forvejen sælger på at være sand.
-    html += '<li><strong>Alle sider der ikke er juridiske.</strong> ' + (flere
-      ? 'Du tjekkede ' + antal + ' websites. For hvert af dem fulgte den de links, der peger på privatlivs-, vilkår- og imprint-siderne. EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, produktsider og blogindlæg med.'
-      : 'Den fulgde de links på din side, der peger på privatlivs-, vilkår- og imprint-siderne. EUComply Pro gennemgår hele sitet — samme tjek på hver side den finder, produktsider og blogindlæg med.') + '</li>';
-    html += '<li><strong>18 server-side tjek.</strong> GDPR-, cookie-, sikkerheds- og metaregler, som kun en server kan svare på, oveni de tilgængelighedsregler ovenfor.</li>';
-    html += '<li><strong>En PDF du kan sende til din kunde.</strong> Rapporten indeholder de server-side fund, og PDF\'en kræver din licensnøgle.</li>';
-    html += '</ul>';
+    // Den håndskrevne liste var «hvad tjekket ikke ser» — altså kun Pro-siden.
+    // Målt 2/10: den nævnte ikke de ni tjek kaldet faktisk svarer på, og den
+    // havde en egen fortælling for hvert antal URL'er. Tabellen fra katalogen
+    // siger begge dele uden at siden skal holde dem i live.
+    html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>De 9 compliance-tjek på den side du indsætter</li><li>De privatlivs-, vilkår- og imprint-sider, siden peger på</li><li>En score og en karakter for hvert website du indsætter</li></ul></td><td><ul><li>Den gennemgår hele sitet — samme tjek på hver side den finder</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang — livstid, første 100 køb</p> <!-- pro-table:end -->';
     html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a>';
     html += '<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>';
     html += '</div>';

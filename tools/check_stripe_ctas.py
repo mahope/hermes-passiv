@@ -96,23 +96,37 @@ class HiddenStack:
     En stak kan ingen af delene. En `</tag>` lukker hele den region den
     afslutter, også de tællere der lå indeni, og en tag der ikke åbnede en
     region kan ikke lukke en. Det er præcis en browsers egen model.
+
+    **Dybde, ikke navn.** Målt 2/10, da ni værktøjssiders pro-kort fik den
+    genererede gratis-mod-Pro-tabel: kortene ligger i `<div class="pro-card"
+    hidden>`, og tabellen kommer i sin egen `<div class="table-wrap">`. Den
+    indre `div` åbner ingen skjult region, så `</div>` lukkede den **ydre** —
+    for parseren hed den ydre og den indre samme navn. Følgen var at hele kortet
+    blev dømt synligt, også dets købsknap, og `contrast-checker`,
+    `contrast-checker-da` og `security-headers-check` faldt ud af inventoryet
+    med «synlig købsknap mangler i inventoryet». Så en korrekt markup-ændring
+    fik tre købssider til at se ud som om de havde en knap, læseren aldrig ser.
+    Derfor tæller stakken **åbne elementer** — også synlige — så en `</div>`
+    lukker præcis den `div` den lukker, og spørgsmålet «er vi stadig inde i en
+    skjult region» stilles af, om nogen i kæden har `hidden`.
     """
 
     def __init__(self) -> None:
-        self.tags: list[str] = []
+        # `(tag, skjult)` pr. **åbent element**, synlige som skjulte.
+        self.tags: list[tuple[str, bool]] = []
         self.in_body = False
 
     def __bool__(self) -> bool:
-        return bool(self.tags)
+        return any(skjult for _, skjult in self.tags)
 
-    def open(self, tag: str) -> None:
+    def open(self, tag: str, skjult: bool = False) -> None:
         if tag in HEAD_LEVEL_TAGS and self.in_body:
             return  # Bogstavelig tekst i brødteksten, ikke en beholder.
-        self.tags.append(tag)
+        self.tags.append((tag, skjult))
 
     def close(self, tag: str) -> None:
         for index in range(len(self.tags) - 1, -1, -1):
-            if self.tags[index] == tag:
+            if self.tags[index][0] == tag:
                 del self.tags[index:]
                 return
 
@@ -225,8 +239,8 @@ class Page(HTMLParser):
             self.in_json_ld = True
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "script" and self.in_json_ld:
@@ -277,8 +291,8 @@ class AnchorCollector(HTMLParser):
         )
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
         if tag == "a" and not self._hidden():
             self.open.append((attributes.get("href", ""), []))
 
@@ -467,8 +481,8 @@ class ProseBlocks(HTMLParser):
             self.in_json_ld = True
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
         if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
             self.in_code += 1
         # Et nyt blokelement afslutter det foregående afsnit. Uden det ville
@@ -548,8 +562,8 @@ class VisibleBlocks(HTMLParser):
             self.in_json_ld = True
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
         if self._is_hidden():
             return
         if tag == "table":
@@ -945,8 +959,8 @@ class PriceLabels(HTMLParser):
             self.in_json_ld = True
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
         if tag in CODE_TAGS and tag not in VOID_TAGS and not self._is_hidden():
             self.in_code += 1
         if self.depth:
@@ -1704,8 +1718,8 @@ class TierBlocks(HTMLParser):
             self.in_json_ld = True
         if tag == "body":
             self.hidden.enter_body()
-        if hidden and tag not in VOID_TAGS:
-            self.hidden.open(tag)
+        if tag not in VOID_TAGS:
+            self.hidden.open(tag, hidden)
         if self._is_hidden():
             self.open_tags.append((tag, False))
             return
@@ -3486,6 +3500,7 @@ def self_test() -> int:
     # 6: en Pro-side skal vise hvad den gratis udgave giver. Scenarierne er
     # syntetiske, så selftesten ikke skriver den fejl ind i de rigtige sider.
     clean_copy_link = good["products"]["clean-copy-pro"]["payment_link"]
+    eu_link = good["products"]["eucomply-pro"]["payment_link"]
     donate_link = good["products"]["support-mahope-oss"]["payment_link"]
     buys_only = f'<html><body><h1>Tool</h1><p>Convert text.</p><a href="{clean_copy_link}">Buy</a></body></html>'
     says_free = (f'<html><body><p>The free version is the complete tool, not a trial.</p>'
@@ -4218,6 +4233,42 @@ def self_test() -> int:
         f'<html><body><p>Public URLs only.</p>'
         f'<script>/* analysed in your browser */ fetch("/api/report")</script></body></html>')
     hidden_should_pass = check_analysis_location([("site/compliance-report.html", hidden_only)])
+    # **Dybde, ikke navn.** Målt 2/10: de ni værktøjssiders pro-kort ligger i
+    # `<div class="pro-card" hidden>`, og den genererede gratis-mod-Pro-tabel
+    # kommer i sin egen `<div class="table-wrap">`. Da den indre `div` ikke åbnede
+    # en skjult region, lukkede dens `</div>` den ydre — så hele kortet blev dømt
+    # synligt, også købsknappen, og tre købssider faldt ud af inventoryet med
+    # «synlig købsknap mangler i inventoryet». Det er en fejl i **læseren**, så
+    # den dømmes her og ikke gennem en købsside-arm: to syntetiske sider, en med
+    # `hidden` på kortet og en uden, med præcis den samme indlejrede div.
+    nested_hidden = (
+        '<html><body><div class="pro-card" hidden>'
+        '<div class="table-wrap"><table class="compare"><tr>'
+        '<td>Free</td><td>Pro</td></tr></table></div>'
+        f'<p><a class="btn" href="{eu_link}">Buy EUComply Pro</a></p>'
+        '</div><p>Tekst efter kortet.</p></body></html>')
+    nested_visible = nested_hidden.replace(' class="pro-card" hidden',
+                                           ' class="pro-card"')
+    skjult_tekst, skjult_ankere = parse_page(nested_hidden)
+    _, synlige_ankere = parse_page(nested_visible)
+    dybde_fund: list[str] = []
+    if any(href == eu_link for href, _ in skjult_ankere):
+        dybde_fund.append(
+            "et skjult pro-kort med en indlejret div af samme navn afslører "
+            "købsknappen — HiddenStack lukker den ydre region ved den indres "
+            "</div>")
+    # Knappen er skjult, men teksten *uden for* kortet skal stadig være læst —
+    # ellers ville en for bred rettelse gøre hele siden usynlig, og det er den
+    # anden halvdel af samme fejl.
+    if "Tekst efter kortet" not in skjult_tekst:
+        dybde_fund.append(
+            "en skjult region sluger teksten efter sit kort — HiddenStack lukker "
+            "for tidligt")
+    if not any(href == eu_link for href, _ in synlige_ankere):
+        dybde_fund.append(
+            "et synligt pro-kort med en indlejret div skjuler købsknappen igen — "
+            "dybderettelsen er gået for langt")
+
     # Og på den flade ingen HTML-port så: /checkout-noten i workeren.
     old_note = ("One-time license: desktop tray app, email & webhook alerts, unlimited URLs. "
                 "Up to 3 machines, all v1.x updates.")
@@ -4972,6 +5023,8 @@ def self_test() -> int:
                             ("en sand print-dialog-påstand på en /api/report-side",
                              print_should_pass),
                             ("en skjult browser-påstand i en kommentar", hidden_should_pass),
+                            ("en skjult region der lukker på navn og ikke dybde",
+                             dybde_fund),
                             ("en købsside med en indgang fra en bygget side", reachable),
                             ("en købsside der linkes krydsdomæne fra en bygget side", cross_real),
                             ("en købsknap på en side med tracker", tracked_click),

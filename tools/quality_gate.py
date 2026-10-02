@@ -1495,6 +1495,25 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_pro_table.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json"),
     ),
+    # Belæget i katalogens `where` (2/10). Dom 6 og dom 4 i `check_pro_table`
+    # dømmer **hvad** der står i tabellen mod katalogen. Men hver funktion
+    # bærer også et `where`, der skal sige *hvor* den virkelige kode er, og
+    # målt 2/10 læste ingen port de: ni af nitten sider havde `where`-henvisninger,
+    # der var flyttet op til ni linjer væk fra den sætning de citerede — så en
+    # påstand om hvor kode findes var grøn, selv om den var forkert. Denne port
+    # kræver filen, intervallet og citatet, og springer kun submoduler over.
+    Step(
+        id="catalog-where",
+        argv=("python3", "tools/check_catalog_where.py"),
+        inputs=("tools/check_catalog_where.py", "tools/stripe_catalog.json",
+                "site/**", "extension-clean-copy/**", "page-profile/**"),
+    ),
+    Step(
+        id="catalog-where-selftest",
+        argv=("python3", "tools/check_catalog_where.py", "--self-test"),
+        inputs=("tools/check_catalog_where.py", "tools/stripe_catalog.json",
+                "site/**", "extension-clean-copy/**", "page-profile/**"),
+    ),
     # Planen som arbejdskø (opgave 42, 1/10). Opgavens eget acceptkriterium
     # var `awk '/^## STATUS/{f=1;next}…'`, mens overskriften hedder `# STATUS`:
     # mønsteret matcher aldrig, så awk skrev 0 linjer ud for enhver plan og

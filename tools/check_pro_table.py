@@ -51,10 +51,13 @@ ROOT = Path(__file__).resolve().parent.parent
 PRODUKTSIDE = 8
 
 # Målt 2/10: elleve af de tretten værktøjssider har et pro-kort, men ingen af dem
-# viste i en tabel hvad den **frie** udgave gør på netop det værktøj. De to første
-# er tegnet (EN + DA på `/text-on-image-checker`) — de to mest besøgte værktøjs-
-# sider efter artiklen — så ratchet'en tæller dem og de ni næste.
-VÆRKTØJSSIDE = 2
+# viste i en tabel hvad den **frie** udgave gør på netop det værktøj. Nu er alle
+# elleve tegnet — først de to mest besøgte (EN + DA på `/text-on-image-checker`),
+# så de ni øvrige: `/scan`, `/compliance-site-check`, `/cookie-check`,
+# `/contrast-checker` og `/security-headers-check` i begge sprog. Ratchet'en er
+# derfor på elleve, så en side der mister sin tabel eller kommer i katalogen uden
+# den skal være rød.
+VÆRKTØJSSIDE = 11
 
 
 def _scripts(rel: str) -> set[str]:

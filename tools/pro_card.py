@@ -261,9 +261,15 @@ def self_test() -> int:
     # 2. En håndskrevet pris i knappen. Det er præcis fejlen der lå i de
     #    produktsider, og den lå i markup, hvor `check_own_prices.py` så den.
     #    Her ligger den i et inline script, hvor ingen port så den.
+    #    Mutationen rammer **knappens egen tekst** og ikke den første `$79` på
+    #    siden: siden har nu også en genereret tabel med samme beløb, så en
+    #    almindelig erstatning ville ramt tabellen og ladt knappen urørt — og
+    #    porten ville være grøn uden at have dømt det den er skrevet for.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html", "$79/year per website", "$29/year per website"))
+            rod, "cookie-check.html",
+            "Buy EUComply Pro — $79/year per website",
+            "Buy EUComply Pro — $29/year per website"))
         fund = dom(kat, rod)
         tjek("håndskrevet pris i knappen er rød",
              any("katalogen siger" in f for f in fund), str(fund[:2]))
@@ -297,19 +303,20 @@ def self_test() -> int:
         tjek("tabt købsknap er rød",
              any("købsknap i sit pro-kort" in f for f in fund), str(fund[:2]))
 
-    # 6. Et pro-kort med et **niveau mere** — som en genereret tabel i en
-    #    `.table-wrap`. Det er den fejlform denne port havde: grænsen var «den
-    #    første `</div>`», så indpakningen om tabellen blev kortets afslutning,
-    #    og knappen lå uden for det fundne kort. Porten var da **grøn** med 11
-    #    sider i stedet for 13. Uden denne tjek ville `--apply` bare have slået
-    #    ratchet'en ned, og tabet af en købsknap ville være usynligt.
+    # 6. Et pro-kort med et **niveau mere** — som den genererede gratis-mod-
+    #    Pro-tabel i sin `.table-wrap`. Det er den fejlform denne port havde:
+    #    grænsen var «den første `</div>`», så indpakningen om tabellen blev
+    #    kortets afslutning, og knappen lå uden for det fundne kort. Målt 2/10 igen,
+    #    da de ni øvrige værktøjssider fik tabellen: porten var da grøn på 11 af
+    #    13. Uden denne tjek ville `--apply` bare have slået ratchet'en ned, og
+    #    tabet af en købsknap ville være usynligt.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
             rod, "cookie-check.html",
-            '<p class="pro-lead">What this check could not see:</p>',
-            '<div class="table-wrap"><table class="compare"><tr>'
-            '<td>free</td></tr></table></div>'
-            '<p class="pro-lead">What this check could not see:</p>'))
+            "<!-- pro-table:start -->",
+            "<div class=\"table-wrap\"><table class=\"compare\"><tr>"
+            "<td>free</td></tr></table></div>"
+            "<!-- pro-table:start -->"))
         fund = dom(kat, rod)
         tjek("kort med et indlejret div taber ikke knappen",
              not any("købsknap i sit pro-kort" in f for f in fund), str(fund[:2]))
@@ -317,7 +324,9 @@ def self_test() -> int:
     # 7. Ret skal gøre det røde grønt igen — ellers er `--apply` død kode.
     with tempfile.TemporaryDirectory() as tmp:
         rod = _kopi(Path(tmp), lambda rod: skriv(
-            rod, "cookie-check.html", "$79/year per website", "$29/year per website"))
+            rod, "cookie-check.html",
+            "Buy EUComply Pro — $79/year per website",
+            "Buy EUComply Pro — $29/year per website"))
         ret(kat, rod)
         tjek("ret gør en håndskrevet pris grøn igen", not dom(kat, rod),
              "; ".join(dom(kat, rod)[:2]))
