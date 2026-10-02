@@ -106,20 +106,21 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
 <section id="pro">
   <div class="container">
     <h2>Gratis og Pro</h2>
-    <table class="compare" id="compare">
-      <thead><tr><th></th><th>Gratis CLI</th><th>Desktop Pro</th></tr></thead>
-      <tbody>
-        <tr><td>Oppetid, SSL og indholdstjek</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Enkeltstående <code>check</code> af vilkårligt mange URL'er</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Løbende watch / baggrundstjek</td><td>ja</td><td>ja</td></tr>
-        <tr><td>Desktop-appen til macOS og Windows</td><td>—</td><td>ja</td></tr>
-        <tr><td>System tray og notifikationer</td><td>—</td><td>ja</td></tr>
-        <tr><td>Sites i watch mode</td><td>3</td><td>ubegrænset</td></tr>
-        <tr><td>Webhook-alarmer fra CLI'en</td><td>—</td><td>ja</td></tr>
-        <tr><td>Kunderapport fra CLI'en (Markdown og JSON)</td><td>—</td><td>ja</td></tr>
-        <tr><td>Pris</td><td>gratis</td><td>19 USD én gang</td></tr>
-      </tbody>
-    </table>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table" id="compare">
+  <caption class="sr-only">Gratis og DeskUptime Pro, side mod side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">DeskUptime Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Hvad du får</th><td><ul><li>Enkelttjek</li><li>SSL- og content-tjek</li><li>JSON-output</li></ul></td><td><ul><li>Desktop-app</li><li>Ubegrænsede sites</li><li>Poll hvert 30. sekund</li><li>Webhook-alarmer</li><li>Kunderapport</li></ul></td></tr>
+    <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$19 én gang</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">Én licens dækker 3 maskiner.</p>
+<!-- pro-table:end -->
     <div class="pricing">
       <div>
         <h3>CLI</h3>

@@ -609,6 +609,8 @@ def free_pro_tables(text: str) -> list[tuple[list[list[str]], int]]:
     blocks.close()
     tables: list[tuple[list[list[str]], int]] = []
     for rows in blocks.comparisons:
+        if not rows:
+            continue
         header = rows[0]
         if not any(FREE_LABEL.search(cell) for cell in header):
             continue
@@ -1899,6 +1901,27 @@ def free_features_by_product(catalog: dict) -> dict[str, list[dict]]:
     return out
 
 
+def _frie_spalt(text: str) -> list[int]:
+    """Gratis-spalternes index i hver sammenligningstabel, i sidens rækkefølge.
+
+    `free_pro_tables` giver betalingsspalten; den her giver den modsatte, så
+    en mutation kan slette en gratis-funktion fra præcis den spalte der
+    lover den. Uden den fandt selftesten intet at slette i de tabeller
+    `tools/pro_table.py` tegner, og porten var grøn uden en fejl.
+    """
+    blocks = VisibleBlocks()
+    blocks.feed(text)
+    blocks.close()
+    ud: list[int] = []
+    for rows in blocks.comparisons:
+        header = rows[0] if rows else []
+        fri = next((index for index, cell in enumerate(header)
+                    if FREE_LABEL.search(cell) and not PAID_LABEL.search(cell)),
+                   None)
+        ud.append(fri if fri is not None else -1)
+    return ud
+
+
 def check_free_features(catalog: dict, pages: list[tuple[str, str]]) -> list[str]:
     """Pro-kortet må ikke sælge en funktion koden giver gratis.
 
@@ -2374,6 +2397,35 @@ def route_file(domain: str, route: str) -> Path | None:
             if candidate.is_file():
                 return candidate
     return None
+
+
+# Selftestens kryds-tabeller. De er skrevet her, ikke hentet fra `site/`, fordi
+# de skal overleve at en generator overtager produktsiderne: det er *reglen om
+# kryds-tabeller* der skal bevises, ikke at en bestemt fil lige nu har den
+# form. Målt 2/10, da `tools/pro_table.py` skrev sine otte sider.
+KRYDS_TABEL_EN = """<!doctype html><html lang="en"><body>
+<h1>Page Profile</h1>
+<table class="compare">
+<thead><tr><th>Feature</th><th>Free</th><th>Pro</th></tr></thead>
+<tbody>
+<tr><td>Compare two URLs side by side</td><td>—</td><td>yes</td></tr>
+<tr><td>JSON output</td><td>yes</td><td>yes</td></tr>
+</tbody>
+</table>
+<a href="https://buy.stripe.com/9B6eVcgHp7YK69ggN9bMQ04" rel="nofollow noopener">Buy Pro — $19/year</a>
+</body></html>"""
+
+KRYDS_TABEL_DA = """<!doctype html><html lang="da"><body>
+<h1>EUComply Pro</h1>
+<table class="compare">
+<thead><tr><th>Funktion</th><th>Gratis</th><th>Pro</th></tr></thead>
+<tbody>
+<tr><td>NIS2 / sikkerhedsheadere (HSTS, CSP, XFO)</td><td>—</td><td>ja</td></tr>
+<tr><td>Samlet karakter og fund</td><td>ja</td><td>ja</td></tr>
+</tbody>
+</table>
+<a href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — 79 $ pr. år</a>
+</body></html>"""
 
 
 def check_routes(offers: list[dict], core_pages: object) -> list[str]:
@@ -3641,13 +3693,31 @@ def self_test() -> int:
         # den ikke måtte være grøn af. Målt på `site/page-profile.html`: den
         # engelske historik-sætning findes i tabellen, så kun et kort-klip
         # slap alle otte mutationer igennem.
-        for cell in re.finditer(r"<td[^>]*>((?:(?!</td>).)*?)</td>", trimmed, re.S):
-            body = cell.group(1)
-            if label.casefold() not in body.casefold():
+        # Den gratis spalte findes på **position**, ikke på ordet «gratis» i
+        # cellen: `tools/pro_table.py` (2/10) skriver gratis-funktionerne i
+        # en celle der siger «History tracking», «JSON output» og intet
+        # andet — overskriften «Free» står i tabellens header. Den gamle
+        # vagt (`FREE_LABEL` i cellen) sprang så den over, mutationen slettede
+        # intet, og porten var grøn af en grund den ikke måtte være grøn af.
+        spalter = _frie_spalt(real)
+        hvis_er = 0
+        for tabel in re.finditer(r"<table\b.*?</table>", trimmed, re.S):
+            fri = spalter[hvis_er] if hvis_er < len(spalter) else None
+            hvis_er += 1
+            if fri is None:
                 continue
-            if PAID_LABEL.search(body) or not FREE_LABEL.search(body):
-                continue  # Den betalte spalte er en anden fejlform.
-            trimmed = (trimmed[:cell.start(1)] + "—" + trimmed[cell.end(1):])
+            rækker = list(re.finditer(r"<tr\b.*?</tr>", tabel.group(0), re.S))
+            for række in rækker[1:]:
+                celler = list(re.finditer(r"<t[dh][^>]*>((?:(?!</t[dh]>).)*?)</t[dh]>",
+                                          række.group(0), re.S))
+                if len(celler) <= fri:
+                    continue
+                celle = celler[fri]
+                if label.casefold() not in celle.group(1).casefold():
+                    continue
+                start = tabel.start() + række.start() + celle.start(1)
+                trimmed = (trimmed[:start] + "—"
+                           + trimmed[start + len(celle.group(1)):])
         return trimmed
 
     unsaid: list[str] = []
@@ -3861,11 +3931,18 @@ def self_test() -> int:
     # glemt reglen giver nul på (a) — ellers er der ingen forskel at bevise,
     # og en mutation der ikke biter er ingen bevis.
     real_catalog = load_catalog(CATALOG)
-    tick_relative = "site/page-profile.html"
+    # Mutationen bygger sin egen kryds-tabel, ikke `site/page-profile.html`.
+    # `tools/pro_table.py` (2/10) tegner de otte produktsiders sammenligning,
+    # og den skriver funktionerne i lister i stedet for `✓`/`—`, så en mutation
+    # der lå på den rigtige fil ville enten ramme den nye tabel (hvor
+    # rækkens navn ikke følger spalten, fordi der ingen spalter er) eller
+    # intet. Reglen under test er kryds-tabellen, så den skal have en
+    # kryds-tabel — uanset hvilken markup produktsiderne lige nu bruger.
+    tick_relative = "selftest: kryds-tabel"
     tick_id = "compare two urls side by side"
     tick_key = "page-profile-pro"
-    tick_text = (ROOT / tick_relative).read_text(encoding="utf-8")
-    tick_lang = page_lang(tick_relative, tick_text)
+    tick_text = KRYDS_TABEL_EN
+    tick_lang = "en"
     tick_entry = {"id": tick_id, "where": "selftest: mutation", "labels": {tick_lang: [tick_id]}}
     tick_one = {
         **real_catalog,
@@ -3929,10 +4006,14 @@ def self_test() -> int:
     # hver købsside rød, (d) isolationen gør genkendelsen blind, og da skal
     # mutationen holde op med at fejle mens de rigtige sider er grønne. Uden
     # (d) er de grønne rækker i (c) lige så velbeviste som reglen.
-    paid_cell_relative = "site/da/compliance-report.html"
+    # Samme grund som kryds-tabellen ovenfor: mutationen får sin egen side,
+    # fordi `site/da/compliance-report.html` nu tegnes af `tools/pro_table.py`
+    # og ikke længere har en håndskrevet `✓`/`—`-tabel at mutere. Rækken er
+    # den rigtige fejl fra opgave 80, kun sin egen fil.
+    paid_cell_relative = "selftest: ja-i-gratis-spalten"
     paid_row = "<tr><td>NIS2 / sikkerhedsheadere (HSTS, CSP, XFO)</td><td>—</td><td>ja</td></tr>"
     paid_row_yes = paid_row.replace("<td>—</td>", "<td>ja</td>")
-    paid_cell_text = (ROOT / paid_cell_relative).read_text(encoding="utf-8")
+    paid_cell_text = KRYDS_TABEL_DA
     paid_cell_key = "eucomply-pro"
     if paid_row not in paid_cell_text:
         print(f"SELFTEST FEJLER: mutationen passer ikke længere på {paid_cell_relative} — "
@@ -4021,9 +4102,12 @@ def self_test() -> int:
     # i en streng porten selv har fundet, er ingen fejlform — derfor læses
     # hver fil fra `site/`, og påstanden der testes muteres alene.
     superseded_promises = {
+        # Den rettede tekst er den sammenligningstabel `tools/pro_table.py`
+        # nu tegner (2/10) — den håndskrevne række «Webhook alerts from the
+        # CLI» blev erstattet af katalogens egen label.
         "site/deskuptime/index.html": (
             "Email and webhook alerts",
-            "Webhook alerts from the CLI",
+            "Webhook alerts",
         ),
         "site/deskuptime/index.html#prose": (
             "adds email and webhook alerts",
@@ -4031,7 +4115,7 @@ def self_test() -> int:
         ),
         "site/da/deskuptime/index.html": (
             "E-mail- og webhook-alarmer",
-            "Webhook-alarmer fra CLI'en",
+            "Webhook-alarmer",
         ),
         "site/da/deskuptime/index.html#prose": (
             "tilføjer e-mail- og webhook-alarmer",

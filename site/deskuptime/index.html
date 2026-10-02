@@ -124,20 +124,21 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
 <section id="pro">
   <div class="container">
     <h2>Free and Pro</h2>
-    <table class="compare" id="compare">
-        <thead><tr><th></th><th>Free CLI</th><th>Desktop Pro</th></tr></thead>
-      <tbody>
-        <tr><td>Uptime, SSL and content checks</td><td>yes</td><td>yes</td></tr>
-        <tr><td>One-off <code>check</code> of any number of URLs</td><td>yes</td><td>yes</td></tr>
-        <tr><td>Continuous watch / background checks</td><td>yes</td><td>yes</td></tr>
-        <tr><td>The desktop app for macOS and Windows</td><td>—</td><td>yes</td></tr>
-        <tr><td>System tray and notifications</td><td>—</td><td>yes</td></tr>
-        <tr><td>Sites in watch mode</td><td>3</td><td>unlimited</td></tr>
-        <tr><td>Webhook alerts from the CLI</td><td>—</td><td>yes</td></tr>
-        <tr><td>Client-ready report from the CLI (Markdown and JSON)</td><td>—</td><td>yes</td></tr>
-        <tr><td>Price</td><td>free</td><td>19 USD once</td></tr>
-      </tbody>
-    </table>
+<!-- pro-table:start -->
+<div class="table-wrap">
+<table class="compare pro-table" id="compare">
+  <caption class="sr-only">Free and DeskUptime Pro, side by side</caption>
+  <thead>
+    <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">DeskUptime Pro</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">What you get</th><td><ul><li>One-off checks</li><li>SSL and content checks</li><li>JSON output</li></ul></td><td><ul><li>Desktop app</li><li>Unlimited sites</li><li>Poll every 30 seconds</li><li>Webhook alerts</li><li>Client-ready report</li></ul></td></tr>
+    <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$19 once</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="pro-note">One licence covers 3 machines.</p>
+<!-- pro-table:end -->
     <div class="pricing">
       <div>
         <h3>CLI</h3>

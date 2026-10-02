@@ -220,6 +220,33 @@ thead th { border-bottom-width: 2px; background: var(--color-bg); position: stic
 tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-surface-2) 55%, transparent); }
 .compare { margin: 1.25rem 0; }
 .compare th, .compare td { padding: 0.6rem 0.75rem; }
+/* Gratis-mod-Pro-tabellen fra `tools/pro_table.py`. Priscellen er bevidst
+   smal: den skal kunne læses på én linje på telefon, ellers skubber den
+   funktionslisten ud af skærmen. Resten er de eksisterende `table`-regler, så
+   tabellen ligner resten af siden. */
+.pro-table th[scope="row"] { width: 32%; padding-right: 0.5rem; }
+/* `thead th` er klæbrig på tværs af sitet, fordi de lange tabeller på
+   /free-tools skal have kolonneoverskrifter med. En to-rækkers-tabel er ikke
+   scrollet væk fra sin egen overskrift — målt 2/10 i browseren klæbede den
+   overskriften oven på den øverste række ved 390 px. */
+.pro-table thead th { position: static; }
+/* Tre spalter med danske ord på telefon: den længste er 161 px, så på 390 px
+   kan tabellen ikke være smallere end sit indhold. Målt 2/10 gav
+   `overflow-wrap: anywhere` 16-46 px *vandret scroll på hele siden* og
+   `break-word` ord som «Tilgængeli|ghedstjekk|ene». Derfor ligger tabellen i
+   sit egen `.table-wrap`-felt — den findes allerede på /free-tools — så den
+   kan scrolles i sig selv, og siden beholder sin bredde. */
+.pro-table, .pro-table td, .pro-table li { overflow-wrap: break-word; }
+.pro-table .pro-price { display: block; font-size: 1.6rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; }
+.pro-table .pro-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.15rem; }
+.pro-table ul { margin: 0; padding-left: 1.05em; }
+.pro-table li + li { margin-top: 0.15rem; }
+@media (max-width: 480px) {
+  .pro-table th, .pro-table td { padding: 0.5rem 0.4rem; }
+  .pro-table th[scope="row"] { width: 38%; }
+  .pro-table .pro-price { font-size: 1.4rem; }
+  .pro-table ul { padding-left: 0.9em; }
+}
 html[data-product="deskuptime"] td, html[data-product="deskuptime"] th, html[data-product="deskuptime"] .price { font-variant-numeric: tabular-nums; }
 blockquote { border-left: 3px solid var(--color-border); padding-left: 1rem; color: var(--color-text-muted); }
 details { border-top: 1px solid var(--color-border); padding: 0.75rem 0; }

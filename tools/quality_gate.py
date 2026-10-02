@@ -1461,6 +1461,22 @@ STEPS: tuple[Step, ...] = (
             "site/_worker.js",
         ),
     ),
+    # Gratis mod Pro ét sted (2/10). De fire produktsider viste sammenligningen
+    # på fire måder, og tre af dem skrev prisen i hånden — ingen port dømte den,
+    # fordi `check_own_prices` kun læser købsknapper. Nu er tabellen tegnet af
+    # katalogen, og porten dømmer hver blok mod samme kilde.
+    Step(
+        id="pro-table",
+        argv=("python3", "tools/check_pro_table.py"),
+        inputs=("tools/check_pro_table.py", "tools/pro_table.py",
+                "tools/stripe_catalog.json", "site/**"),
+    ),
+    Step(
+        id="pro-table-selftest",
+        argv=("python3", "tools/check_pro_table.py", "--self-test"),
+        inputs=("tools/check_pro_table.py", "tools/pro_table.py",
+                "tools/stripe_catalog.json"),
+    ),
     # Planen som arbejdskø (opgave 42, 1/10). Opgavens eget acceptkriterium
     # var `awk '/^## STATUS/{f=1;next}…'`, mens overskriften hedder `# STATUS`:
     # mønsteret matcher aldrig, så awk skrev 0 linjer ud for enhver plan og

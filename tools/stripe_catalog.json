@@ -122,10 +122,12 @@
           "where": "deskuptime/src/features.js:34 (PRO.minIntervalSeconds 30), håndhævet i src/watch.js:590-591",
           "labels": {
             "en": [
+              "Poll every 30 seconds",
               "30 second",
               "30 s"
             ],
             "da": [
+              "Poll hvert 30. sekund",
               "30. sekund",
               "30 sekunder"
             ]
@@ -213,7 +215,11 @@
             ]
           }
         }
-      ]
+      ],
+      "devices_word": {
+        "en": "machines",
+        "da": "maskiner"
+      }
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
@@ -363,7 +369,11 @@
             ]
           }
         }
-      ]
+      ],
+      "scope": {
+        "en": "per website",
+        "da": "pr. website"
+      }
     },
     "page-profile-pro": {
       "name": "Page Profile Pro",
@@ -639,6 +649,7 @@
       "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
+        "$0",
         "$19",
         "$39"
       ],
@@ -654,6 +665,7 @@
       "lifetime": true,
       "product": "clean-copy-pro",
       "prices": [
+        "$0",
         "$19",
         "$39"
       ],
@@ -706,7 +718,10 @@
       "domain": "deskuptime.com",
       "route": "/",
       "product": "deskuptime-pro",
-      "prices": [],
+      "prices": [
+        "$0",
+        "$19"
+      ],
       "requires_text": [
         "Buy DeskUptime Pro — 19 USD",
         "one-time, 3 machines"
@@ -717,7 +732,10 @@
       "domain": "deskuptime.com",
       "route": "/da/",
       "product": "deskuptime-pro",
-      "prices": [],
+      "prices": [
+        "$0",
+        "$19"
+      ],
       "requires_text": [
         "Køb DeskUptime Pro — 19 USD",
         "én gang, 3 maskiner"
@@ -806,6 +824,7 @@
       "lifetime": true,
       "product": "eucomply-pro",
       "prices": [
+        "$0",
         "$69",
         "$79",
         "$149"
@@ -822,6 +841,7 @@
       "lifetime": true,
       "product": "eucomply-pro",
       "prices": [
+        "$0",
         "$79",
         "$149"
       ],
@@ -1682,6 +1702,58 @@
       "route": "/compliance-report",
       "path": "site/compliance-report.html",
       "why": "eneste side med EUComply Pro-årsabonnementet"
+    }
+  ],
+  "pro_table_pages": [
+    {
+      "path": "site/clean-copy.html",
+      "product": "clean-copy-pro",
+      "lang": "en",
+      "why": "hovedsiden: første skridt i købsrejsen, og den eneste sted en læser kan se gratis mod Pro før knappen"
+    },
+    {
+      "path": "site/da/clean-copy.html",
+      "product": "clean-copy-pro",
+      "lang": "da",
+      "why": "samme sammenligning på dansk — danske læsere er de der køber Clean Copy Pro"
+    },
+    {
+      "path": "site/deskuptime/index.html",
+      "product": "deskuptime-pro",
+      "lang": "en",
+      "why": "hjemmesiden: lokal gratis CLI mod online Pro-licens",
+      "anchor": "compare"
+    },
+    {
+      "path": "site/da/deskuptime/index.html",
+      "product": "deskuptime-pro",
+      "lang": "da",
+      "why": "samme sammenligning på dansk",
+      "anchor": "compare"
+    },
+    {
+      "path": "site/page-profile.html",
+      "product": "page-profile-pro",
+      "lang": "en",
+      "why": "den eneste produktside med gratis/Pro-sammenligning i dag"
+    },
+    {
+      "path": "site/da/page-profile.html",
+      "product": "page-profile-pro",
+      "lang": "da",
+      "why": "samme sammenligning på dansk"
+    },
+    {
+      "path": "site/compliance-report.html",
+      "product": "eucomply-pro",
+      "lang": "en",
+      "why": "eneste side med EUComply Pro-årssubscriptionet"
+    },
+    {
+      "path": "site/da/compliance-report.html",
+      "product": "eucomply-pro",
+      "lang": "da",
+      "why": "samme sammenligning på dansk"
     }
   ]
 }

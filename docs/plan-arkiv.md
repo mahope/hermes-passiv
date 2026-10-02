@@ -4509,3 +4509,70 @@ fjernet, den modsigende sætning tilbage på EAA-siden).
   peger på `https://forbrug.dk/emner/aftaler-og-abonnementer/abonnementsvilkaar`
   — en sti scanneren aldrig ville gætte, hvilket er hele pointen. Samme for
   `mahope.tools`: privatliv på `/privacy-notice-generator`, vilkår på `/terms/`.
+
+## Opgave 45 — gratis mod Pro ét sted (2/10, `ceo/pro-tabel-en-sted`)
+
+Målt 2/10 før rettelsen, på de fire produktsider: `site/page-profile.html` havde
+et ni-rækkers `ja`/`—`-gitter med **håndskreven** pris («$0 forever»,
+«$19/year», «$39 once (lifetime, first 100)»), `site/deskuptime/index.html`
+et andet gitter med «19 USD once», `site/clean-copy.html` to prosa-afsnit, og
+`site/compliance-report.html` én linje. Ingen port dømte priserne: `check_own_prices.py`
+læser kun beløb i **købsknapper**, og ingen af sammenligningerne lå i en knap.
+Samme fejlform som opgave 40 (konkurrenternes priser), bare for vores egen omsætning.
+
+**Løsningen er en generator, ikke en kopiering.** `tools/pro_table.py` tegner
+tabellen af `tools/stripe_catalog.json`: beløb fra `price_usd`, periodeord fra
+`billing_periods.words` (samme ordliste `check_own_prices.py` dom 4 bruger, så
+porten afbryder hvis et ord ikke står der), funktionerne fra `free_features`/
+`pro_features`, antal maskiner fra `max_devices`. Siderne har kun en markør
+`<!-- pro-table -->`, og alt mellem `<!-- pro-table:start -->` og
+`<!-- pro-table:end -->` er generatorens.
+
+**`tools/check_pro_table.py`** (i gaten med `--self-test`, 11/11) dømmer fem ting:
+ét område pr. side og byte-identisk med generatorens output; to rækker med hver
+tre celler; priserne fra katalogen plus et periodeord; hver katalogfunktion
+nævnt i tabellen; og ingen håndskrevet `compare`-tabel ved siden af. De otte
+siders liste ligger i katalogen (`pro_table_pages`), så næste værktøjside er én
+linje.
+
+**Målt i browseren** (Playwright, `add_style_tag` med `site/style.css`, fordi
+`/style.css` ikke findes under `file://`), otte sider ved 390 og 1280 px:
+
+| Find | Målt | Rettelse |
+|---|---|---|
+| `thead th` er klæbrig på hele sitet | klæbede kolonneoverskriften oven på den øverste række ved 390 px | `.pro-table thead th { position: static }` |
+| et dansk ord på 161 px i en 3-spalters tabel | 16-46 px vandret scroll på hele siden | `.table-wrap` om tabellen, `overflow-wrap: break-word` |
+| `overflow-wrap: anywhere` | ord som «Tilgængeli\|ghedstjekk\|ene» brækkedes midt i ordet | kun `break-word`; bruddet sker i stedet *inde i* feltet |
+| noter (livstid, maskiner) i prismødren | cellen 260-330 px høj på telefon | én `p.pro-note` under tabellen |
+
+Slutresultat: `scrollWidth - clientWidth == 0` på alle otte sider ved 390 px, og
+`/da/compliance-report` har 88 px scroll inde i sit egen `.table-wrap`.
+
+**Tre fund undervejs, alle ændret i samme opgave:**
+
+1. `check_stripe_ctas.py:free_pro_tables` genkendte kun tabeller hvor planerne
+   står i **kolonner**. Da `page-profile` fik tabellen, sagde porten «sælger
+   page-profile-pro men siger aldrig, hvad den gratis udgave giver» — altså at
+   siden slet ikke sammenligner gratis og Pro, hvilket var det modsatte af
+   sandheden. Tabellen kom derfor tilbage i kolonneform; målingen af hvorfor
+   (priscellen 300 px høj på telefon) står i portens kommentar.
+2. To selftest-mutationer i samme fil lå på de håndskrevne tabeller i
+   `site/page-profile.html` og `site/da/compliance-report.html`. De får nu en
+   syntetisk kryds-tabel som konstant (`KRYDS_TABEL_EN`/`_DA`), fordi det er
+   *reglen om kryds-tabeller* der skal bevises — ikke at en bestemt fil lige nu
+   har den form. Samtidig læser `out_of_free_card` den gratis spalte på
+   **position** (`_frie_spalt`) i stedet for på ordet «gratis» i cellen: den nye
+   tabel skriver «History tracking», «JSON output» og intet andet i den spalte,
+   så den gamle vagt sprang over den og mutationen slettede intet.
+3. Katalogens `deskuptime-pro/interval` fik labelen «30-second polling
+   interval», fordi «30 second» læst dårligt i en punktliste. Det gav en falsk
+   alarm i `free_claim_blocks_in_prose`: på `/blog/desktop-website-monitor-cli`
+   matcher «minimum **60-second interval**». Målt ved at fjerne den ene label:
+   fundene gik 1 → 0. Den hedder nu «Poll every 30 seconds», de gamle skrivemåder
+   er stadig alternative labels, og prosa-fundet er 0 igen.
+
+**Målgrunden for næste iteration:** de otte produktsider har tabellen; de otte
+søskendeværktøjer (`/scan`, `/url-inspector`, `/security-headers-check`,
+`/cookie-check`, `/text-on-image-checker`, `/contrast-checker` + generatorerne)
+sælger stadig kun efter et resultat, så en læser der lander på værktøjet ser
+prisen først efter at han har brugt det. Ratchet: `pro_table_pages` i katalogen.

@@ -1,25 +1,25 @@
 # STATUS
 
-- **Næste opgave: Free mod Pro på ét sted** (feature-kø 9). Baseline målt af
-  `tools/check_tool_sections.py`: 19 af 84 købsknapper sagde ingen periode, så
-  en læser ikke kunne se hvad et år koster mod en engangskøb. Samme to-rækkers
-  tabel som `/scan`, beløb læst fra `tools/stripe_catalog.json`.
-- **Reglen for «hvad en besøgende ser, når vi har en dårlig dag» ligger nu ét
-  sted.** Seks GET-klienter havde hver sin kopi af `err.transient = !data ||
-  status >= 500` — alle seks rigtige, netop derfor var næste rettelse en fare.
-  `net.js` har nu `getJSON`/`askGet`, de seks læser den, og
-  `tools/check_net_copies.py` er i gaten med selvtest.
-- **Rettet undervejs, samme opgave:** (a) `compliance-site-check` genkaldte
-  503 op til **ni** gange, fordi løkken og kaldet begge genkaldte — nu tre.
-  (b) `check_storage_claims.py` genkendte kun bogstaveligt `fetch('/api/…`, så
-  da de seks flyttede kaldet i `net.js`, holdt de op at være *dømt* af porten
-  (11 sider kalder nu hentende ruter, før 10). Porten lærer `NET.askGet()`.
-  (c) To mutationstests dømte en `ReferenceError` i stedet for reglen, fordi de
-  kørte klientens kode uden `net.js` — de indlæser den nu som browseren gør.
-- **Kontrasttjekkeren kører nu inde i den artikel der får hele trafikken.**
-  `/blog/text-on-image-contrast-check` var mahope.tools' største indgangsside med
-  8 af 18 besøgende (28 d) og **100 % bounce**; begge artikler har nu `#try-it`
-  med værktøjet, og heroens primære handling er det anker.
+- **Næste opgave: 13 værktøjssider sælger kun efter et resultat.** Alle 13 har
+  et pro-kort med katalogens købslink, men ingen af dem har den to-rækkers
+  gratis-mod-Pro-tabel fra `/scan` — læseren skal købe uden at have set hvad
+  Pro gør. Ratchet: hver side ind i `pro_table_pages` i
+  `tools/stripe_catalog.json`, dømt af `tools/check_pro_table.py`.
+- **Gratis mod Pro står nu ét sted på alle fire produktsider** (EN + DA).
+  Baseline 2/10 før: `page-profile` havde et ni-rækkers gitter med
+  «$0 forever / $19/year / $39 once», `deskuptime` et andet med «19 USD once»,
+  `clean-copy` to prosa-afsnit, `compliance-report` én linje. Nu er tabellen
+  tegnet af `tools/pro_table.py` fra `tools/stripe_catalog.json`, så beløb,
+  periode og funktioner ikke kan glide fra Stripe, og `check_pro_table.py`
+  dømmer hver blok mod samme kilde (11/11 selvtest).
+- **Tre fund undervejs, samme opgave.** (a) `check_stripe_ctas.py` dømte kun
+  **kolonne**-tabeller, så page-profile så ud til slet ikke at sammenligne
+  gratis og Pro da gitteret blev erstattet. (b) To selftest-mutationer lå på
+  de håndskrevne tabeller i `page-profile` og `da/compliance-report` — de får
+  nu deres egen syntetiske kryds-tabel, så reglen ikke er afhængig af hvilken
+  markup produktsiderne lige nu har. (c) `interval`-labelen «30-second polling
+  interval» gav en falsk alarm på `/blog/desktop-website-monitor-cli` («minimum
+  60-second interval»); den hedder nu «Poll every 30 seconds».
 - **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
@@ -27,6 +27,31 @@
 
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: gratis mod Pro ét sted på de otte produktsider
+  ceo/pro-tabel-en-sted 2026-10-02` — måles på **indhold**, ikke på HTTP 200.
+  Dom 1: `curl -s https://mahope.tools/ | grep -c 'class="compare pro-table"'`
+  → 1 på hver af de otte sider (`cleancopy.tools/`, `/da/`,
+  `deskuptime.com/`, `/da/`, `mahope.tools/page-profile`, `/da/page-profile`,
+  `/compliance-report`, `/da/compliance-report`), og 2 tabeller på ingen af dem.
+  Dom 2: `python3 tools/check_pro_table.py` er grøn på **dist**, ikke kun på
+  `site/`, og `python3 tools/pro_table.py --apply` siger «0 sider tegnet igen»
+  mod den publicerede kode. Dom 3: hver blok har `<caption>`, to
+  `<th scope="row">` og priserne i `<span class="pro-price">`; på
+  `/compliance-report` står «$79/year per website» og på `/da/` «$79/år pr.
+  website», på `deskuptime` «$19 once» / «$19 én gang», på `page-profile`
+  «$19/year» + «$39 once — lifetime, first 100 purchases» i noten under
+  tabellen. Dom 4: `/da/deskuptime` og `/da/compliance-report` har **0** hånd-
+  skrevne `<table class="compare">` ved siden af (portens dom 5), og de 20
+  `/#compare`-links i `dist/deskuptime.com` virker stadig — ankeret flyttede
+  med tabellen. Dom 5: `scrollWidth - clientWidth == 0` ved 390 px på alle otte
+  sider; `/da/compliance-report` har 88 px scroll **inde i** sit egen
+  `.table-wrap`, så siden beholder sin bredde, og ingen ord brydes midt i.
+  Dom 6: `python3 tools/check_stripe_ctas.py` er grøn (0 problemer) og dens
+  selvstest 47/47 — bl.a. at porten stadig fanger en gratis-funktion der flyttes
+  ind i Pro-kortet, en «ja» i gratis-spalten for en betalt række, og de tre
+  købssider der kun nævner gratis i en «Pro tilføjer»-sætning. Dommen er
+  `python3 tools/quality_gate.py` (129 steps) + missionens gate.
 
 - `VERIFICÉR DEPLOY: net-kopierne samlet i /net.js
   ceo/net-kopier-ind-i-netjs 2026-10-02` — måles på **indhold**, ikke på HTTP
@@ -264,8 +289,10 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    **Leveret 2/10** — se fundet fra review 30/9 i STATUS. Datagrund: målt på
    den levende rute, 3 sites i ét kald → rapport 3 med `pages_checked: 1`,
    `score: 22` og fem «Not found»-fund om sider wordpress.org har.
-9. **Free mod Pro på ét sted.** Hvem: alle der køber. Tal: købsknapper pr.
-   Pro-side (baseline: målt af `check_tool_sections.py`). Accept: hver Pro-side
-   har den samme to-rækkers-tabel, og beløbet er læst fra
-   `tools/stripe_catalog.json` som på `/scan`. Datagrund: 19 af 84 købsknapper
-   sagde ingen periode før 1/10; samme fejlform kan ligge i sammenligningerne.
+9. ~~Free mod Pro på ét sted.~~ **Leveret 2/10** — de otte produktsider har nu
+   samme to-rækkers-tabel, tegnet af `tools/pro_table.py` fra
+   `tools/stripe_catalog.json`, og `check_pro_table.py` dømmer hver blok mod
+   samme kilde. Målt først: `page-profile` skrev «$0 forever / $19/year /
+   $39 once» i hånden, `deskuptime` «19 USD once», de to andre havde ingen
+   tabel — fire svar om det samme produkt, ingen port dømte dem. Næste skridt er
+   de otte søskendeværktøjer, der kun sælger efter et resultat.
