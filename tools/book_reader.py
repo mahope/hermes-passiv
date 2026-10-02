@@ -198,6 +198,57 @@ def _is_front_matter(title: str) -> bool:
     return t in FRONT_MATTER
 
 
+# Den frie værktøjsbane, der manglede i hver læsevisning. Målt 2/10: **0** af de
+# seks bogsider linkede til et eneste af vores egne værktøjer, så en læser der
+# lige har læst to kapitler om cookies eller NIS2 skulle selv finde ud af, at der
+# står et gratis værktøj der gør det samme på sit eget site. Blokken sidder
+# **sidst i kapitlerne** — efter folden, hvor læseren netop er færdig — så den
+# ikke er endnu en knap i heroen oven på bogens egen download-CTA.
+#
+# Teksten er bogen emnet, ikke en påstand om værktøjet: hver linje er hentet fra
+# den route den peger på, så den ikke kan rådne, hvis værktøjet ændrer sig. Den
+# bruger `btc` med læsevisningens **egne** regler, fordi `.reader .reader-body p`
+# og `a` er mere specifikke end sitets `blog-tool-cta`-komponent: målt i
+# browseren 2/10, hvor komponenten renderede som brødtekst med et blåt
+# understrevet link. Ingen ny farve og ingen ny afstand i sitets eget design.
+TOOL_CTA = {
+    "cookie-consent-guide": (
+        "The same three checks, on your own site: the free cookie consent checker "
+        "reads the banner, the script tags and the privacy link.",
+        "/cookie-check", "Check my cookies"),
+    "gdpr-for-agencies": (
+        "The agreement from chapter 2, as a form: the free DPA generator asks for "
+        "the roles and the annexes and gives you the document to send.",
+        "/dpa-generator", "Write my DPA"),
+    "nis2-for-agencies": (
+        "Answer the chapter 1 questions about your own company: the free NIS2 "
+        "self-assessment asks about your sector, your headcount and your services.",
+        "/nis2-check", "Am I covered by NIS2?"),
+    "eaa-checklist": (
+        "Run the ten-point checklist on a real site: the free scanner checks "
+        "contrast, alt text, headings and form labels, and hands you the findings.",
+        "/scan", "Scan my site"),
+    "eaa-shopify": (
+        "The same checks on a real storefront — paste any Shopify URL into the free "
+        "scanner, no plugin and no theme access needed.",
+        "/scan", "Scan my store"),
+    "build-your-first-chrome-extension": (
+        "The icon sizes your manifest needs, generated from one SVG: favicons, "
+        "PWA icons and the web app manifest, free and MIT-licensed.",
+        "/site-icons", "Generate the icons"),
+}
+
+
+def tool_cta(slug: str) -> str:
+    """Værktøjsbanneret til sidst i læsevisningen, eller tomt hvis bogen ingen har."""
+    row = TOOL_CTA.get(slug)
+    if not row:
+        return ""
+    label, href, button = row
+    return ('\n<div class="btc"><p>%s</p>'
+            '<a class="cta" href="%s">%s</a></div>' % (label, href, button))
+
+
 def chapters(slug: str) -> list[dict]:
     """(titel, html) for de første kapitler i bogen med denne slug."""
     path = EBOOK / (slug + ".epub")
@@ -243,7 +294,7 @@ def section(slug: str, epub_note: str) -> str:
     # ikke sådan, og det så på en side vi sender til kunder.
     n = len(body)
     word = "chapter" if n == 1 else "chapters"
-    joined = "\n".join(body)
+    joined = "\n".join(body) + tool_cta(slug)
     return READER_TEMPLATE.format(
         lede=("The opening of the book, straight from the EPUB you get below — not a "
               "summary written for this page. %d %s in full, then the rest is free to "
@@ -271,23 +322,46 @@ OPTIONAL_TAGS = ("h4", "table", "th", "td", "blockquote", "pre", "code", "hr")
 # Én regel pr. element. Rækkefølgen er CSS-kaskadens, så `pre` skal komme før
 # `code` — ellers ville inline-kode arve `pre`'s baggrund.
 OPTIONAL_RULES = (
-    ("h4", "    .reader .reader-body h4 {{ font-size:14px; margin:16px 0 4px; color:#444; }}"),
-    ("table", "    .reader .reader-body table {{ border-collapse:collapse; width:100%; margin:0 0 14px; font-size:14px; display:block; overflow-x:auto; }}"),
-    ("th", "    .reader .reader-body th {{ background:#f4f6f8; }}"),
-    ("td", "    .reader .reader-body th, .reader .reader-body td {{ border:1px solid #e2e5ea; padding:7px 10px; text-align:left; vertical-align:top; }}"),
-    ("blockquote", "    .reader .reader-body blockquote {{ margin:0 0 12px; padding:2px 0 2px 14px; border-left:3px solid #d8dee6; color:#444; }}"),
-    ("pre", "    .reader .reader-body pre {{ background:#f6f8fa; padding:12px 14px; border-radius:6px; overflow-x:auto; font-size:13px; }}"),
-    ("code", "    .reader .reader-body code {{ background:#f1f3f5; padding:1px 5px; border-radius:4px; font-size:13px; }}"),
-    ("hr", "    .reader .reader-body hr {{ border:0; border-top:1px solid #e2e5ea; margin:20px 0; }}"),
+    ("h4", "    .reader .reader-body h4 { font-size:14px; margin:16px 0 4px; color:#444; }"),
+    ("table", "    .reader .reader-body table { border-collapse:collapse; width:100%; margin:0 0 14px; font-size:14px; display:block; overflow-x:auto; }"),
+    ("th", "    .reader .reader-body th { background:#f4f6f8; }"),
+    ("td", "    .reader .reader-body th, .reader .reader-body td { border:1px solid #e2e5ea; padding:7px 10px; text-align:left; vertical-align:top; }"),
+    ("blockquote", "    .reader .reader-body blockquote { margin:0 0 12px; padding:2px 0 2px 14px; border-left:3px solid #d8dee6; color:#444; }"),
+    ("pre", "    .reader .reader-body pre { background:#f6f8fa; padding:12px 14px; border-radius:6px; overflow-x:auto; font-size:13px; }"),
+    ("code", "    .reader .reader-body code { background:#f1f3f5; padding:1px 5px; border-radius:4px; font-size:13px; }"),
+    ("hr", "    .reader .reader-body hr { border:0; border-top:1px solid #e2e5ea; margin:20px 0; }"),
 )
 
 OPTIONAL_DARK = (
-    ("h4", "      .reader .reader-body h4 {{ color:#b9bfc7; }}"),
-    ("th", "      .reader .reader-body th {{ background:#1f232a; }}"),
-    ("td", "      .reader .reader-body th, .reader .reader-body td {{ border-color:#2a2e35; }}"),
-    ("blockquote", "      .reader .reader-body blockquote {{ border-left-color:#3a3f47; color:#b9bfc7; }}"),
-    ("pre", "      .reader .reader-body pre {{ background:#1f232a; }}"),
-    ("code", "      .reader .reader-body code {{ background:#22262d; }}"),
+    ("h4", "      .reader .reader-body h4 { color:#b9bfc7; }"),
+    ("th", "      .reader .reader-body th { background:#1f232a; }"),
+    ("td", "      .reader .reader-body th, .reader .reader-body td { border-color:#2a2e35; }"),
+    ("blockquote", "      .reader .reader-body blockquote { border-left-color:#3a3f47; color:#b9bfc7; }"),
+    ("pre", "      .reader .reader-body pre { background:#1f232a; }"),
+    ("code", "      .reader .reader-body code { background:#22262d; }"),
+)
+
+
+# Værktøjsbanneret i læsevisningen. Reglerne ligger i læsevisningens eget
+# `<style>` og ikke i `style.css`, fordi `.reader .reader-body p` og
+# `.reader .reader-body a` er mere specifikke end sitets egen `blog-tool-cta`:
+# målt i browseren 2/10, hvor komponenten uden disse regler renderede som
+# brødtekst med et blåt understreget link. Farverne er læsevisningens egne, så
+# banneret ligner det, det står i — også i mørk tilstand.
+CTA_RULES = (
+    '    .reader .reader-body .btc { margin:22px 0 6px; padding:14px 16px;'
+    ' border:1px solid #d8dee6; border-radius:10px; background:#f6f8fa;'
+    ' display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; }',
+    '    .reader .reader-body .btc p { margin:0; flex:1 1 16rem; font-size:14px;'
+    ' line-height:1.5; color:#444; }',
+    '    .reader .reader-body .btc a.cta { flex:0 0 auto; display:inline-block;'
+    ' padding:9px 16px; border-radius:8px; background:#0b6e8f; color:#fff;'
+    ' font-weight:600; font-size:14px; text-decoration:none; }',
+)
+
+CTA_DARK = (
+    '      .reader .reader-body .btc { background:#16181d; border-color:#2a2e35; }',
+    '      .reader .reader-body .btc p { color:#d7dbe0; }',
 )
 
 
@@ -302,14 +376,19 @@ def optional_css(html: str) -> str:
     brugte = {t for t in OPTIONAL_TAGS if re.search(r"<%s[\s>]" % t, html, re.I)}
     linjer = [rule for tag, rule in OPTIONAL_RULES if tag in brugte]
     if {"pre", "code"} <= brugte:
-        linjer.append("    .reader .reader-body pre code {{ background:none; padding:0; }}")
+        linjer.append("    .reader .reader-body pre code { background:none; padding:0; }")
+    if re.search(r'class="[^"]*\bbtc\b', html):
+        linjer.extend(CTA_RULES)
     return "\n".join(linjer)
 
 
 def optional_dark_css(html: str) -> str:
     """Mørke-mod af `optional_css`. Samme måde, samme grund."""
     brugte = {t for t in OPTIONAL_TAGS if re.search(r"<%s[\s>]" % t, html, re.I)}
-    return "\n".join(rule for tag, rule in OPTIONAL_DARK if tag in brugte)
+    linjer = [rule for tag, rule in OPTIONAL_DARK if tag in brugte]
+    if re.search(r'class="[^"]*\bbtc\b', html):
+        linjer.extend(CTA_DARK)
+    return "\n".join(linjer)
 
 
 READER_TEMPLATE = """<section class="reader" id="read-online">
@@ -402,6 +481,20 @@ def self_test() -> int:
     ok("flertal hedder chapters", "2 chapters in full" in html, html[:0] or "felt")
     ok("ingen 'chapter2'", "chapter2" not in html, "")
     ok("overskriften tæller korrekt", "Read the first 2 chapters online" in html, "")
+
+    # 0b. CSS'en i læsevisningen skal nå browseren. Reglerne kommer fra
+    # `OPTIONAL_RULES`/`CTA_RULES` som **værdier** til `READER_TEMPLATE.format`,
+    # og `str.format` genbehandler ikke indsatte værdier — så de skal have
+    # enkeltklammer. Målt 2/10 på den byggede side: skrevet med `{{ }}` kom
+    # `{{` bogstaveligt ud i `<style>` på alle seks bogsider, browseren kassede
+    # hver regel, og læsevisningens tabeller, kodeblokke, citater og overskrifter
+    # har været uden styling lige siden den blev skrevet. Målt i browseren:
+    # `.btc a.cta` havde `background: transparent` og `text-decoration: underline`.
+    ok("CSS'en har ingen dobbeltklammer", "{{" not in html and "}}" not in html,
+       repr([m for m in re.findall(r".{0,30}\{\{.{0,30}", html)][:2]))
+    ok("værktøjsbannerets regel er med", ".reader .reader-body .btc a.cta {" in html, "")
+    ok("banneret har knap og rute", 'class="cta" href="/dpa-generator"' in html
+       or "btc" not in html, "gdpr-bogen skal pege på /dpa-generator")
 
     # 1. Markup i bogen må aldrig blive levende tags.
     p = _Body()

@@ -27,40 +27,24 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: sort-på-sort-forhåndsvisning + porten tilbage grøn
-   2026-10-02 ceo/plan-gate-og-502-kvote` — måles på **indhold** pr. side, ikke
-   på HTTP 200: `mahope.tools/color-blindness-simulator` og
-   `-simulator-da` skal hver have **én**
-   `o.textContent = def.toUpperCase() + ' (not in the list)'` (DA: «ikke på
-   listen»), **nul** `colors[colors.length-1].hex` i `fillSelect`, og
-   `renderSelects()` skal kalde `fillSelect(..., bg)` uden `hasColor(...) ? ...
-   : '#ffffff'`. Dom 1: `cb-preview.test.mjs` **24/24** + porten målt **RØD med 18
-   fejl** på de gamle sider. Dom 2: `stripe-worker.test.mjs` **354/354** (worker
-   urørt). Dom 3: `build_sites.py` 335 filer 0 brudte, `seo_check.py` 314 sider
-   0 fund, `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn.
-   Dom 5: Chromium på **360/390/768/1280 px** på begge ruter — **0 px** vandret
-   scroll, 6 rækker slettet uden `pageerror`, forhåndsvisningen **17.89:1**
-   (EN + DA) og **17.37:1** for et delt link med `#fffdf0`.
-   `build-info.json` på alle tre domæner skal stå i squash-sha'en.
-
-- `VERIFICÉR DEPLOY: del-link i farveblindhedssimulatoren 2026-10-02
-   ceo/cb-simulator-del-link` — måles på **indhold** pr. side: hver af
-   `/color-blindness-simulator` og `-simulator-da` skal have præcis **én**
-   `<script src="/cb-share-core.js">`, `CBSHARE.decode(location.hash)` på den
-   linje der læser fragmentet, **én** `id="copy-share"` og **én**
-   `addEventListener('click', copyShare)`. `/cb-share-core.js` skal serveres
-   **200** og have `CBSHARE.encode` + `CBSHARE.decode`. Dom 1:
-   `cb-share.test.mjs` **58/58** + porten målt **RØD — 8 fejl** på de gamle sider.
-
-- `VERIFICÉR DEPLOY: fire døde links fra /blog/ 2026-10-02
-   ceo/blog-indeks-dode-links` — måles på **indhold**: `mahope.tools/blog/` skal
-   have **189** unikke `href` på guides, de fire BugBottle-guider skal være
-   **relative** (`href="/blog/bug-reports-in-ci-pipeline"`) og **ikke**
-   `https://bugbottle.dev/…`. Dom 1: `check_article_paid_path.py` **GRØN** +
-   de tre nye selftestarme grønne (polaritet målt ved at genskabe den gamle
-   `include`: **RØD — 4 problem(er)**). Dom 2: `stripe-worker.test.mjs`
-   **354/354**. Dom 3: `build_sites.py` 0 brudte, `seo_check.py` 0 fund,
-   `check_inline_js.py` 0 problemer. Dom 4: hele `quality_gate.py` grøn.
+- **`DEPLOY OK 2026-10-02` — alle tre næster er live, målt på indhold.**
+  `build-info.json` står på **`4c41d9e`** (squash-sha'en) på **mahope.tools**,
+  **cleancopy.tools** og **deskuptime.com**. Domænernes sider er
+  **byte-identiske med `dist/`** (`diff` på simulatoren og `/blog/`), så det er
+  *denne* kode der er live og ikke en senere.
+  - `ceo/plan-gate-og-502-kvote` (4c41d9e): begge simulatorer har præcis **én**
+    `(globalThis.CBSHARE || {}).decode(location.hash)`-læser, **én**
+    `id="copy-share"`, **én** `addEventListener('click', copyShare)` og **én**
+    `<script src="/cb-share-core.js">`; `/cb-share-core.js` svarer **200** med
+    `encode`+`decode`. `colors[colors.length-1]` findes kun i de to forklarende
+    kommentarer, der fortæller hvorfor den gamle kode lå sort på sort.
+  - `ceo/cb-simulator-del-link` (b55e036): samme to sider, samme greb.
+  - `ceo/blog-indeks-dode-links` (27f8aa2): `mahope.tools/blog/` svarer 200,
+    de fire BugBottle-guider står **relative**
+    (`/blog/bug-reports-in-ci-pipeline`) og **0** `https://bugbottle.dev/…`
+    på siden. Dom 1: `check_blog_index.py` **93 EN + 96 DA, 0 problemer**,
+    `stripe-worker.test.mjs` **354/354**, `seo_check.py` **314 sider, 0 fund**,
+    `check_inline_js.py` **0**, hele `quality_gate.py` **146 steps GRØN**.
 
 ## Åbne opgaver
 
@@ -123,7 +107,16 @@
    (`gdpr-for-agencies`, `nis2-for-agencies`) som EPUB i `ebook/`, eller en
    synlig dansk note på bogside-ruterne om at bogen findes på engelsk. Kræver
    beslutning — se ❓. Baseline 1/10: 0 danske EPUB'er, og 6 bogsider uden
-   dansk sætning.
+   dansk sætning. Målt 2/10: der findes **ingen** `/da/books/*`-ruter overhovedet
+   (hverken i `dist/` eller i sitemap), så de 6 bogsiders hreflang har intet
+   dansk par — det er derfor værktøjsbanneret fra i dag kun findes på de
+   engelske sider.
+8. **`/site-icons` har `<h1>site-icons</h1>`.** Hvorfor: målt 2/10 på den
+   byggede side — overskriften er produktets filnavn, ikke det spørgsmål
+   siden svarer på, mens `<title>` siger «Generate favicons, OG images & PWA
+   icons». Siden er i sitemap og linkes fra bogen om Chrome-udvidelser.
+   Accept: `<h1>` der siger hvad den gør, plus en port-påstand så den ikke
+   rådner tilbage. Baseline: 1 af 268 sider.
 
 ## ❓ Til Mads
 
@@ -358,3 +351,27 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     mutationer af den rigtige side. Datagrund: målt 2/10 på kildefilerne mod
     `site/blog/index.html`; bounce på mahope.tools er 94 % (18 besøgende), så
     her er tale om fund og interne links, ikke om besøg.
+19. ~~**Læsevisningen sluttede i et tomrum.**~~ **Leveret 2/10.** Hvem: en
+   læser der lige har læst to kapitler om cookies, DPA, NIS2 eller EAA — den
+   højeste vilje til at gøre noget på sit eget site. Tal: bogsider der linker
+   til et af vores egne værktøjer (baseline: **0 af 6**; målt på kildefilerne
+   mod `dist/`, hvor `/free-tools` og `/compliance-report` var de eneste interne
+   nævn). Accept: **6 af 6** bogsider har præcis ét `blog-tool-cta` **sidst i
+   `reader-body`**, hver med ét `btn-primary` på en route der findes
+   (`/cookie-check`, `/dpa-generator`, `/nis2-check`, `/scan`, `/site-icons`) —
+   målt på den byggede side, ikke på kildekoden. **Fund undervejs, målt i
+   browseren:** banneret renderede som **brødtekst med et blåt understrevet
+   link** — læsevisningens egen CSS var **død** på alle seks bogsider, fordi
+   `OPTIONAL_RULES`/`CTA_RULES` er *værdier* til `str.format`, der ikke
+   genbehandles, så `{{ }}` kom bogstaveligt ud i `<style>`: browseren kassede
+   hver regel, og læsevisningens tabeller, kodeblokke, citater og `h4` har
+   været uden styling lige siden den blev skrevet. Nu: `.btc a.cta` har
+   `background: rgb(11,110,143)`, `text-decoration: none`, i lys **og** mørk;
+   **0 px** vandret scroll ved **390** og **1280**. `book_reader --self-test`
+   **48/48** med to nye domme, polaritet målt ved at genskabe `{{` → **RØD**.
+   Datagrund: bogen er fri, så
+   læsevisningen er hele værdien; en læser der læser videre og så rammer en
+   mur har mistet hele familien af gratis værktøjer. Fund undervejs:
+   `/site-icons`' egen `<h1>` er «site-icons» — ny opgave 8. Bevidst valgt **ikke**
+   at lægge banneret i heroen: bogsiden har allerede bogens download-CTA, og
+   bannerets plads i kapitlerne er der, hvor læseren lige er færdig.
