@@ -1,31 +1,28 @@
 # STATUS
-- **Byggetagen slettede sidelinjer for 14 selectors skallen ikke erklærede.**
-  Målt 2/10: `OWNED_SELECTORS` siger 154, `style.css` erklærede 140. **Planens egen
-  påstand om 230 px vandret scroll på `/page-profile` holder ikke**: Chromium på
-  den byggede side giver **0 px** ved 390 og 1280 px, før og efter. `.cli-demo` er
-  erklæret (style.css:195) og `.gen` ligeså (616) — kun `white-space: pre`
-  manglede, hvilket ikke giver scroll. Den ægte skade: 10 generator-sider, 6
-  bogside-r, 4 FAQ-sider og `platforms` mistede formatering **uden erstatning**.
-  Alle 154 er nu erklærede; ny port `check_owned_selectors` (14 røde på gammel CSS).
-- **Porten holdt 2 døgns deploys tilbage.** `check_plan_status.py` kræver højst 25
-  STATUS-linjer; afsnittet stod på **41**, så `b55e036` faldt i gaten og `27f8aa2`
-  i produktionstjekket. 2/10: kogt til **25**. Dom 2 grøn, `--self-test` **11/11**.
-- **`/blog/` havde fire døde links, og porten vidste det.** De 4 BugBottle-guider lå i
-  `bugbottle.dev`s `include` og blev lagt ingen steder: målt **404 på alle 4** mod
-  live, **15** links døde i alt. Nu 189 guides, **0** mangler mod `site/blog/`. Ny dom
-  4b dømmer linket i stedet for domænet: genskabt gammel `include` → **RØD — 4**.
-- **CEO-kø punkt 0 er færdig, målt 2/10 frem for troet.** `handleUrlInspect` har `env`
-  (`:288`/`:3480`) + mutation der fejler **kun** på url-inspect, **354/354**. 202 har
-  egen `PENDING_OUT`; 429 er endeligt i `net.js` og uden for `again()`;
-  `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev; `targetIsPublic()`
-  kører på hvert hop og afviser IPv4-mapped IPv6 og NAT64.
-- **`BRANCH-TJEK`/`PR-TJEK 2/10`:** 2 fuldt landede branches slettet på origin;
-  `ceo/hub-readme-note` har kun 1 plan-note fra 26/9, intet kode — se ❓. 0 PR'er.
+- **Bogbanneret lovede en betalt vare gratis, og ingen port så det.** Fund 3/10:
+  gdpr-banneret skrev «asks for the roles **and the annexes**», mens
+  `/dpa-generator` siger **to steder** at annexerne er det den betalte template
+  *har*. Nu siger teksten hvad værktøjet faktisk gør. Ny ratchet `paid_only_terms`
+  læser den betalte liste fra den linkede sides **kilde**: målt **1 fund på 6
+  bøger**, præcis gdpr-banneret, ingen falske fund på de andre fem.
+- **Bannerknappen var 120 × 42 px, to pixel under kravet.** Nu `min-height:44px`:
+  målt **124 × 44 px** i lys og mørk ved 390 og 1280 px, 0 px vandret scroll. Min
+  første måling gav 120 × 62 og var **min egen fejl** — `style.css` loader ikke
+  over `file://`, så `box-sizing: border-box` (style.css:143) ikke var med og
+  min-height lagde oveni padding. Målt igen over HTTP.
+- **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` + mutation
+  kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er endeligt,
+  `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
+  `targetIsPublic()` kører på hvert hop og afviser IPv4-mapped IPv6 og NAT64.
+- **PR-TJEK 2/10: 0 PR'er. BRANCH-TJEK 2/10:** 2 fuldt landede slettet på origin;
+  `ceo/hub-readme-note` har kun 1 plan-note fra 26/9, intet kode — se ❓.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer til
   Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: bogbanneret lover ikke den betalte template, knap 124x44 ceo/book-cta-ansvar 2026-10-03 00:55`
 
 - `VERIFICÉR DEPLOY: byggetagen erklærer alle 154 sidede selectors ceo/pagepass-owned-css 2026-10-03 00:05`
 

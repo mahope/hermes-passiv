@@ -205,20 +205,23 @@ def _is_front_matter(title: str) -> bool:
 # **sidst i kapitlerne** — efter folden, hvor læseren netop er færdig — så den
 # ikke er endnu en knap i heroen oven på bogens egen download-CTA.
 #
-# Teksten er bogen emnet, ikke en påstand om værktøjet: hver linje er hentet fra
-# den route den peger på, så den ikke kan rådne, hvis værktøjet ændrer sig. Den
-# bruger `btc` med læsevisningens **egne** regler, fordi `.reader .reader-body p`
-# og `a` er mere specifikke end sitets `blog-tool-cta`-komponent: målt i
-# browseren 2/10, hvor komponenten renderede som brødtekst med et blåt
-# understrevet link. Ingen ny farve og ingen ny afstand i sitets eget design.
+# Teksten er bogen emnet og en påstand om værktøjet, og påstanden skal være
+# ærlig — en tidligere note her sagde «ikke en påstand om værktøjet», og det
+# var netop derfor banneret kom til at love en betalt vare gratis (se
+# `paid_only_terms`). Den bruger `btc` med læsevisningens **egne** regler,
+# fordi `.reader .reader-body p` og `a` er mere specifikke end sitets
+# `blog-tool-cta`-komponent: målt i browseren 2/10, hvor komponenten renderede
+# som brødtekst med et blåt understrevet link. Ingen ny farve og ingen ny
+# afstand i sitets eget design.
 TOOL_CTA = {
     "cookie-consent-guide": (
         "The same three checks, on your own site: the free cookie consent checker "
         "reads the banner, the script tags and the privacy link.",
         "/cookie-check", "Check my cookies"),
     "gdpr-for-agencies": (
-        "The agreement from chapter 2, as a form: the free DPA generator asks for "
-        "the roles and the annexes and gives you the document to send.",
+        "The two roles from chapter 2, as a form: the free DPA generator asks "
+        "who is controller and who is processor, and writes the clause language "
+        "to send with it.",
         "/dpa-generator", "Write my DPA"),
     "nis2-for-agencies": (
         "Answer the chapter 1 questions about your own company: the free NIS2 "
@@ -247,6 +250,44 @@ def tool_cta(slug: str) -> str:
     label, href, button = row
     return ('\n<div class="btc"><p>%s</p>'
             '<a class="cta" href="%s">%s</a></div>' % (label, href, button))
+
+
+# Det banneret IKKE må love. Den rute banneret peger på, har nogle gange en
+# betalt del, der siger hvad den **ikke** kan levere: «What the free version
+# cannot hand you:» efterfulgt af en liste hvor hvert punkt begynder med det
+# betalte i `<strong>`. De ord er præcis dem en læser skal tro han får gratis,
+# hvis banneret bruger dem — og det gjorde det.
+#
+# Fund 3/10: `gdpr-for-agencies`-banneret lovede «asks for the roles **and the
+# annexes**», mens `/dpa-generator` siger to steder at annexerne er præcis det
+# den betalte template *har* («The template ships the annexes.», og «The paid
+# DPA template ($59) covers the same annexes»). En læser der læst kapitlet og
+# trykkede «Write my DPA» ville have ventet et bilagsdokument. Se `self_test` 0c.
+PAID_ONLY_LEADIN = re.compile(r"<li[^>]*>\s*<strong>(.*?)</strong>", re.S | re.I)
+FREE_NOT_ENOUGH = re.compile(
+    r"free (?:version|tool|scanner|generator|checker|self-assessment)\s+"
+    r"(?:cannot|can not|does not|will not)\s+\w+", re.I)
+
+
+def paid_only_terms(slug: str) -> list[str]:
+    """Hvad den betalte del af bannerets egen rute siger, at gratis ikke har.
+
+    Kun den del af siden der står **efter** markøren tælles, så en gratis vare
+    der nævnes tidligere på samme side ikke regnes med. Sider uden en sådan
+    markør har ingen betalt liste, og så er svaret tomt — de fem andre bøger.
+    """
+    row = TOOL_CTA.get(slug)
+    if not row:
+        return []
+    side = ROOT / "site" / (row[1].lstrip("/") + ".html")
+    if not side.exists():
+        return []
+    src = side.read_text(encoding="utf-8")
+    marker = FREE_NOT_ENOUGH.search(src)
+    if not marker:
+        return []
+    return [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m)).strip()
+            for m in PAID_ONLY_LEADIN.findall(src[marker.start():])]
 
 
 def chapters(slug: str) -> list[dict]:
@@ -346,15 +387,23 @@ OPTIONAL_DARK = (
 # `<style>` og ikke i `style.css`, fordi `.reader .reader-body p` og
 # `.reader .reader-body a` er mere specifikke end sitets egen `blog-tool-cta`:
 # målt i browseren 2/10, hvor komponenten uden disse regler renderede som
-# brødtekst med et blåt understreget link. Farverne er læsevisningens egne, så
+# brødtekst med et blåt understrevet link. Farverne er læsevisningens egne, så
 # banneret ligner det, det står i — også i mørk tilstand.
+#
+# `min-height:44px` på knappen er målt, ikke antaget: `display:inline-block`
+# med `padding:9px` gav **120 × 42 px** ved 390 og 1280 px, fordi
+# `line-height:23.8px` arves fra `.reader-body`'s 1.7. To pixel under kravet er
+# nok til at en finger rammer teksten ved siden af, så knappen er høj nok på
+# egen højde og centrerer sin tekst med `inline-flex` — ellers ville teksten
+# ligge i toppen af den højere boks.
 CTA_RULES = (
     '    .reader .reader-body .btc { margin:22px 0 6px; padding:14px 16px;'
     ' border:1px solid #d8dee6; border-radius:10px; background:#f6f8fa;'
     ' display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; }',
     '    .reader .reader-body .btc p { margin:0; flex:1 1 16rem; font-size:14px;'
     ' line-height:1.5; color:#444; }',
-    '    .reader .reader-body .btc a.cta { flex:0 0 auto; display:inline-block;'
+    '    .reader .reader-body .btc a.cta { flex:0 0 auto; display:inline-flex;'
+    ' align-items:center; justify-content:center; min-height:44px;'
     ' padding:9px 16px; border-radius:8px; background:#0b6e8f; color:#fff;'
     ' font-weight:600; font-size:14px; text-decoration:none; }',
 )
@@ -495,6 +544,34 @@ def self_test() -> int:
     ok("værktøjsbannerets regel er med", ".reader .reader-body .btc a.cta {" in html, "")
     ok("banneret har knap og rute", 'class="cta" href="/dpa-generator"' in html
        or "btc" not in html, "gdpr-bogen skal pege på /dpa-generator")
+
+    # 0c. Banneret må ikke love det, bannerets egen rute siger er betalt. Fund
+    #     3/10: gdpr-banneret skrev «asks for the roles **and the annexes**»,
+    #     mens `/dpa-generator` siger at annexerne er det den betalte template
+    #     *har*. Selvtesten dømte kun `href`, aldrig påstanden, så ingen port
+    #     kunne se den. Ratcheten læser den betalte liste fra den linkede sides
+    #     **kilde** — ikke en håndskrevet liste her — så den bliver rød igen
+    #     når en generator får en ny betalt vare, og banneret glemmer den.
+    def _ord(tekst: str) -> str:
+        return " ".join(re.sub(r"[^a-z0-9 ]", " ", tekst.lower()).split())
+
+    for slug, (label, _href, _knap) in sorted(TOOL_CTA.items()):
+        for term in paid_only_terms(slug):
+            if _ord(term) and _ord(term) in _ord(label):
+                ok("banneret på %s lover ikke «%s»" % (slug, term), False, label)
+    # Ratcheten må ikke være død: uden en betalt liste ville den være grøn
+    # altid, og så fanger den heller ikke den næste gang.
+    ok("ratcheten ser en betalt liste", bool(paid_only_terms("gdpr-for-agencies")),
+       "dpa-generator skal stadig liste hvad gratis ikke har")
+
+    # 0d. Knappen skal være mindst 44×44 px. Fund 3/10: `.btc a.cta` var
+    #     120×42, to pixel under kravet, målt i rigtig Chromium ved 390 og
+    #     1280 px. `line-height:23.8px` arves fra `.reader-body`'s 1.7, så
+    #     padding 9+9 giver 41.8 — derfor er kravet `min-height` og ikke bare
+    #     lidt mere padding, der så kan glide igen når brødteksten ændrer sig.
+    cta_rule = next((r for r in CTA_RULES if ".btc a.cta {" in r), "")
+    ok("bannerknappen er mindst 44 px høj", "min-height:44px" in cta_rule, cta_rule)
+    ok("bannerknappen centrerer sin tekst", "align-items:center" in cta_rule, cta_rule)
 
     # 1. Markup i bogen må aldrig blive levende tags.
     p = _Body()
