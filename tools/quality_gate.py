@@ -178,6 +178,22 @@ STEPS: tuple[Step, ...] = (
             "tools/paid_content.json",
         ),
     ),
+    # Samme suite igen, men med et ur der hopper en time hvert 30. ms.
+    # `rateLimitIp` tæller i hele time-bøtter, så «over grænsen»-sløjferne var
+    # afhængige af hvornår de kørte: CI-push 2/10 kl. 04:59:41 ramte timegrænsen
+    # 05:00:00 midt i rapport-sløjfen og fik 200 i stedet for 429. Rødt CI-run,
+    # der så ud som en fejl i licensserveren. Dette step gør den afhængighed til
+    # en målt egenskab: en ny tællertest uden fast ur går rød her, ikke tilfældigt
+    # i en natlig kørsel.
+    Step(
+        id="stripe-worker-ur",
+        argv=("node", "tests/clock_jump.mjs"),
+        inputs=(
+            "tests/clock_jump.mjs",
+            "tests/stripe-worker.test.mjs",
+            "site/_worker.js",
+        ),
+    ),
     # Tak-siden. Den er den eneste bekræftelse en donator får, og den renderer
     # worker's leveringssvar. Uden dette step var der ingen test, der viste at
     # den overhovedet kan vise et svar (opgave 33).

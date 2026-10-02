@@ -283,6 +283,10 @@ on:
       - 'tools/test_weekly_report.py'
       - 'tools/test_deploy_workflow.py'
       - 'tests/stripe-worker.test.mjs'
+      # Gatestrækket `stripe-worker-ur` kører samme suite under et ur der hopper
+      # en time, så tællertestene ikke kan blive afhængige af klokken igen. Uden
+      # denne linje ville kun rettelsen i `clock_jump.mjs` springe den port over.
+      - 'tests/clock_jump.mjs'
       - 'tests/thanks-page.test.mjs'
       - 'tests/license-lookup.test.mjs'
       - 'tests/scan-clients.test.mjs'

@@ -1,5 +1,10 @@
 # STATUS
 
+- **Rødt CI 2/10 var uret, ikke licensserveren.** `rateLimitIp` tæller i hele
+  time-bøtter, og «rapporten over grænsen»-sløjfen lå da grænsen krydsede (push
+  04:59:41, dømt 05:00:00): 200 i stedet for 429. Sløjferne har nu et fast ur, og
+  gatestrækket `stripe-worker-ur` kører suiten under et ur der hopper en time
+  hvert 30. ms. Målt ved mutation: uden pinnet ur rød med CI's egen fejltekst.
 - **Alle 19 sider har gratis mod Pro i samme tabel.** De ni øvrige værktøjssider
   (`/scan`, `/compliance-site-check`, `/cookie-check`, `/contrast-checker`,
   `/security-headers-check` i begge sprog) har katalogens tabel i stedet for en
@@ -13,12 +18,6 @@
   of the site, not just the one you pasted», altså præcis den sætning
   `scan-clients` holder i live («crawls the whole site … every page it finds»).
   Rettelsen ligger i katalogen, så alle ni sider får den ærlige formulering.
-- **To fejl fundet undervejs.** (1) `pro_card.py` fandt kortet som «den første
-  `</div>`»; den nye `.table-wrap` snød den, så porten blev **grøn med 11 i
-  stedet for 13** og en tabt købsknap var usynlig. Nu balancerer `kort()`
-  åbne/lukkede `div`, og mutation 6 dømmer det. (2) `check_stripe_ctas.py`s
-  skjult-stak talte navne, ikke dybde, så tabellen i et skjult pro-kort fik hele
-  kortet dømt synligt og tre købssider faldt ud af inventoryet.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 1/10:** 0 åbne PR'er. **Branch-tjek:** ingen 14 dage gamle branches.
@@ -34,14 +33,19 @@
   Detaljerne står i `docs/plan-arkiv.md`.
 
 - `VERIFICÉR DEPLOY: gratis mod Pro i kortet på de ni øvrige værktøjssider
-  ceo/pro-kort-tabel-alle 2026-10-02` — måles på **indhold**. Dom 1:
-  `python3 tools/quality_gate.py` er grøn med 133 steps. Dom 2:
-  `python3 tools/pro_table.py --check` på dist siger «19 sider». Dom 3:
+  ceo/pro-kort-tabel-alle 2026-10-02` — måles på **indhold**. Målt 2/10 kl. 08:
+  `build-info.json` på live står stadig i `543a734`, altså de 2 sidste commits
+  blev **aldrig deployet** — CI var rød, så Actions rullede dem ikke ud. Derfor
+  står `pro-table:start` 0 gange på alle ni live-sider. Den her rettelse gør CI
+  grøn igen, så samme note gælder den næste deploy. Dom 1: `python3
+  tools/quality_gate.py` er grøn med 134 steps. Dom 2: `python3
+  tools/pro_table.py --check` på dist siger «19 sider». Dom 3:
   `check_catalog_where.py` er grøn på 112 funktioner og dømmer **belægget** i
   katalogens `where`; dens 11 mutationer ligger i `--self-test` i samme gate.
   Dom 4: `node tests/scan-clients.test.mjs` 417/417, altså den ærlige
   crawls-sætning står stadig i kortet. Dom 5: `check_pro_table.py --self-test`
-  21/21 og `pro_card.py --self-test` 8/8.
+  21/21 og `pro_card.py --self-test` 8/8. Dom 6: `node tests/clock_jump.mjs`
+  352/352 — CI's røde fejl kan ikke komme tilbage.
 
 ## Åbne opgaver
 

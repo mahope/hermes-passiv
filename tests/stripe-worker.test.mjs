@@ -779,6 +779,21 @@ ok('print uden licens er mærket som gratis', /print-only/.test(reportHtml));
 const ip = (n) => ({ headers: { 'cf-connecting-ip': `203.0.113.${n}` } });
 const scanGet = (init) => call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', init);
 
+// Fast ur gennem hele timegrænses-afsnittet. `rateLimitIp` i _worker.js tæller
+// i hele time-bøtter (`Math.floor(Date.now() / 3600000)`), så en kørsel der
+// krydser en timegrænse *midt i* en af sløjferne her nulstiller tælleren, og
+// «over grænsen»-svaret udebliver. Målt 2/10 i CI kl. 05:00:00 — reproducerbart
+// med et ur der hopper en time hvert 30. ms. Sløjferne skal måle kvoten, ikke
+// klokken, så hele afsnittet får et ur der står stille. Gaten kører desuden
+// hele suiten under et hoppende ur (`quality_gate.py`-step `stripe-worker-ur`),
+// så denne pin kan ikke komme ud af fatninges gen.
+const stopFastUr = (() => {
+  const virkeligNow = Date.now;
+  const fast = Math.floor(virkeligNow() / 3600000) * 3600000 + 60000;
+  Date.now = () => fast;
+  return () => { Date.now = virkeligNow; };
+})();
+
 // Under grænsen: kaldet går igennem og henter stadig. Beviser at tælleren
 // ikke har brudt scanneren, som er den offentlige indgang.
 r = await scanGet(ip(1));
@@ -982,6 +997,7 @@ r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.exa
 ok('url-inspect over grænsen giver 429 med timegrænsen', r.status === 429 && /hour/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(8));
 ok('en låst url-inspect låser ikke header-check', r.status === 200, r.status);
+stopFastUr();
 
 // ── Målingen fandt to ruter til, som ingen port dømte ─────────────────
 // Review 30/9 fandt at guard-arbejdet kun dækkede de to ruter, CEO-køet havde

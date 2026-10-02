@@ -4629,3 +4629,33 @@ tilføjer, og ingen af dem siger i en tabel hvad den frie udgave giver på det
 *samme* værktøj. Mekanismen er klar (`pro_table.blok(…, side_free)` og dom 6 i
 `check_pro_table.py`), og dom 6 dømmer kun den frie spalte — så en værktøjsside
 skal også få sine **egne** `pro_features`, ellers tegner den produktets liste.
+
+---
+
+## 2. oktober 2026 — gratis-spalten på de ni værktøjssider, og et ur i gaten
+
+**1. Gratis mod Pro i kortet på de ni øvrige værktøjssider**
+(`ceo/pro-kort-tabel-alle`). De ni sider — `/scan`, `/cookie-check`,
+`/contrast-checker`, `/security-headers-check`, `/compliance-site-check` og
+`/da/compliance-site-check` — har nu katalogens to-rækkers-tabel i stedet for en
+håndskrevet `.pro-list` der kun talte om Pro. Porten `check_pro_table.py` dømmer
+alle 19 sider, `pro_card.py --self-test` 8/8.
+
+**To fejl fundet undervejs i samme opgave.** (1) `pro_card.py` fandt kortet som
+«den første `</div>`»; den nye `.table-wrap` snød den, så porten blev **grøn med
+11 i stedet for 13** og en tabt købsknap var usynlig. Nu balancerer `kort()`
+åbne/lukkede `div`, og mutation 6 dømmer det. (2) `check_stripe_ctas.py`s
+skjult-stak talte navne, ikke dybde, så tabellen i et skjult pro-kort fik hele
+kortet dømt synligt og tre købssider faldt ud af inventoryet.
+
+**2. Rødt CI var uret, ikke licensserveren** (`ceo/ur-tidsgraense`). CI-run
+36966958129 dømte `rapporten over grænsen giver 429 med timegrænsen` → 200. Årsagen
+er ikke workeren: `rateLimitIp` tæller i hele time-bøtter
+(`Math.floor(Date.now() / 3600000)`), og pushen kl. 04:59:41 blev afprøvet 05:00:00,
+altså lige da timegrænsen krydsede midt i sløjfen. Reproducerbart med et ur der
+hopper en time hvert 30. ms. Rettelsen er to ting: sløjferne i
+`tests/stripe-worker.test.mjs` får et fast ur, og det nye gatestrak
+`stripe-worker-ur` (`node tests/clock_jump.mjs`) kører hele suiten under netop sådan
+et ur. Målt ved mutation: med pinnet ur fjernet bliver det nye strak rødt med CI's
+egen fejltekst, 352/352 med det pinne. Konsekvens af det røde run: `543a734` er
+seneste commit på live, så de to seneste commits er ikke deployet.
