@@ -1,5 +1,35 @@
 # STATUS
 
+- **Review-fundet fra 2/10 kl. 15:05 er en fejl — målt, ikke gættet.** Fundet siger
+  at `why` for `site/url-inspector/index.html` i `tools/stripe_catalog.json`
+  påstår pro-kortet «linker til `#free-vs-pro`». **Den påstand er ikke i filen.**
+  `git diff 7e74d3b HEAD -- tools/stripe_catalog.json` er **tom**, så siden
+  revieweren læste er uændret, og posten lyder: «Kortet dukker op efter ét
+  URL-svar og siger «See what Pro adds before you buy», men siden havde ingen
+  sammenligning — den pegede blot på /page-profile» — hvilket er præcis
+  `site/url-inspector/index.html:184` (`<a href="/page-profile">`). Den citerede
+  sætning tilhører `site/clean-copy-tool.html`, hvor den er **sand**: `:494`
+  linker til `#free-vs-pro`, og `:241` er `<h2 id="free-vs-pro">`. Revieweren
+  skrev nøglen som `pro_table_posts`; den hedder `pro_table_pages`. Fundet er
+  altså lukket som **modbevist** — der er intet at rette. Skrevet i fundets egen
+  linje i `~/.local/oxloop/review/mahope-tools.md`.
+- **Ingen kode leveret 2/10 (efter ca. 35 min).** Der lå ingen rød port at rette:
+  CI grøn, `check_donation_paths` / `check_first_action` / `check_form_labels` /
+  `check_net_copies` / `check_pro_table` alle **GRØN** 2/10, Sentry er sat op
+  (håndrullet i `_worker.js` + `tools/check_sentry_setup.py`, DSN'en matcher
+  snapshottet), så «0 uløste fejl i 14 dage» er et rigtigt tal. **Kun planen er
+  ændret** — tilladt herfor, fordi iterationen ikke leverede kode.
+- **Feature-kø 13 er målt ned til to sites og en kendt hindring.** `deskuptime.com`
+  **og** `/da/` har begge tjekket allerede (2/10), så 13 er `mahope.tools/` +
+  `/da/` og `cleancopy.tools/` (+ `/da/`). Målt undervejs, første hindring:
+  `one-off-check.js` ligger i `site/deskuptime/` og bliver kun til `/` på
+  deskuptime.com via sit `remap`; `rest: True` på mahope.tools ville lægge den
+  på `/deskuptime/`. Og `du-form`/`du-card`/`du-chips` **findes ikke i nogen
+  ekstern CSS** — de er en 35 linjers `<style>` i hver deskuptime-side. Begge
+  dele er løselige (filen til `SHARED`, config via `data-` på formen, stylen
+  med), men det er **~120 linjer på 5 filer og 5 porte** — for stort til at
+  gøre ordentligt i én iteration. Næste iteration starter derfor målt, ikke
+  efterladt til opdagelse.
 - **deskuptime.com svarer nu på sit eget h1.** Tjekket i `#check` lige under heroen
   kalder `/api/url-inspect` og svarer på «er sitet oppe» og «er certifikatet
   gyldigt» i browseren (`ceo/deskuptime-live-check`). Målt 2/10 før: 4 besøgende i
@@ -36,11 +66,6 @@
   **indhold**, ikke på HTTP 200: `/pricing` og `/da/pricing` serverer hver 14
   `data-product`-rækker, 3 `data-lifetime`-rækker, **0** `buy.stripe.com` og
   `pricing:start` 1 gang pr. fil; `build-info.json` står i `b0da8ad`.
-- **DEPLOY OK 2/10 (kl. 11).** `ceo/donation-pris-fra-katalog` (`19e59b2`) er ude,
-  målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
-  `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
-  `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
-
 - **DEPLOY OK 2/10 (kl. 11).** `ceo/donation-pris-fra-katalog` (`19e59b2`) er ude,
   målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
   `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
@@ -325,8 +350,27 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     gaten: `check_donation_paths.py --self-test` blev rød, fordi den nye `#check`
     gør forsiden til en side der renderer et målt resultat — så den skal have
     donationslinjen, som `DU_DONATE` i siden nu sætter ind i resultatkortet.
-13. **Samme tjek på de tre andre forsider.** Hvem: alle der lander på `mahope.tools`
-    (4 besøgende, 100 % bounce), `cleancopy.tools` (7, 71 %) og `deskuptime.com/da/`.
-    Tal: brug pr. uge pr. forside. Accept: hver forside har ét tjek der svarer på
-    spørgsmålet i sin egen `<h1>`, og ingen har to primære handlinger over folden.
-    Datagrund: målt 2/10 — alle tre forsider er kataloger, ikke værktøjer.
+13. **Samme tjek på de to andre forsider.** Hvem: alle der lander på `mahope.tools`
+    (4 besøgende, 100 % bounce) og `cleancopy.tools` (7, 71 %), EN + DA.
+    Tal: brug pr. uge pr. forside (baseline **0** — ingen kodevej til den).
+    Accept: hver forside har ét tjek der svarer på spørgsmålet i sin egen `<h1>`,
+    ingen har to primære handlinger over folden, og `deskuptime.com` er urørt.
+    Datagrund: målt 2/10 — `deskuptime.com` **og** `/da/` har begge `#check` med
+    præcis én `.du-form`, så de er allerede leveret (punkt 12); 13 er de to
+    resterende. **Målt 2/10, klar til implementering:** (1) motoren ligger i
+    `site/deskuptime/one-off-check.js` og lander på `/` kun via deskuptimes
+    `remap`, mens mahope.tools har `rest: True` → flyt filen til `site/` og læg
+    den i `SHARED`; (2) `du-form`/`du-card`/`du-chips` findes i **ingen** CSS-fil
+    — de er en 35 linjers `<style>` i hver deskuptime-side, så den skal med;
+    (3) `#install`/`#desktop` er hardkodede i motorens resultatkort og findes
+    ikke på de andre forsider → konkrete efterfølgende links skal kunne
+    deklareres pr. side, ellers får mahope.tools **to døde anker**. Omfang
+    ~120 linjer på 5 filer; porte: `check_first_action` (ratchet),
+    `check_form_labels`, `check_donation_paths` (`DU_DONATE`),
+    `check_net_copies` (genkaldsreglen kun i `/net.js`), `check_built_css`.
+14. **Bundlen, der hedder gratis på syv sider og $29 på `/pricing`.** Hvem:
+    læsere af `books/*` og købere på `/pricing`. Tal: katalogrækker pr. destination
+    (baseline: 1 modsigelse, synlig på 3 sider). Accept: enten kontrakten og
+    siderne er enige, eller den nye side har en købsvej der betaler sig. Kræver
+    Mads' beslutning — se ❓. Datagrund: målt 2/10 i review-fundet, portene er
+    grønne fordi ingen dommer den modsigende tekst.
