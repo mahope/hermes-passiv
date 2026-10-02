@@ -1,31 +1,20 @@
 # STATUS
 
-- **Rødt CI 2/10 var `clock_jump.mjs` selv, to gange.** Først kl. 05:00
-  (timegrænsen midt i en sløjfe), så kl. 06:03 med en **livetids-webhook**: uret
-  sprang en time hvert 30. ms, så det sprang mellem signering og verifikation,
-  hvor `verifyStripeSignature` har 300 s tolerance — og workeren afviste
-  korrekt. Hoptrinnet er nu **én time pr. `Request`-konstruktion**, så uret står
-  stille gennem et kald: `stripe-worker-ur` er grøn 5/5 køringer i træk. Tænder
-  er målt begge vegne: uden Sentry-løkkens pin → 350/352, og et krydsende ur i
-  timegrænse-afsnittet → 347/352.
-- **Den anden fejl var ægte og lå i testen.** `sentryRateLimited` slipper én
-  rapport pr. 12. sekund, så de tolv kald i Sentry-sløjfen skal ligge i samme
-  vindue — de lå i op til 12 forskellige. Sløjken har nu sit eget fast ur.
-- **Tre af de fire seneste runs var røde** (`4cc8359`, `45b31df`), alle af samme
-  port. Derfor er `45b31df`s livstidsnote stadig ikke deployet.
-- **Alle 19 sider har gratis mod Pro i samme tabel**, tegnet af
-  `tools/stripe_catalog.json`. Dom: `check_pro_table.py` (8 produktsider +
-  11 værktøjssider). **Ny port `check_catalog_where.py` kører i gaten** og
-  dømmer belægget i katalogens 112 `where`: målt 2/10 lå 13 af dem 2–10 linjer
-  væk fra den sætning de citerede. Alle 13 rettet.
-- **Livstidsprisen tabte sit omfang — rettet 2/10.** Katalogen sælger
-  `eucomply-pro` «$149 engang pr. website», men noten under tabellen skrev
-  «$149 once — lifetime» på 13 sider, i samme tabel hvor årsprisen skrev
-  «$79/year per website». På `/compliance-report` stod den håndskrevne tekst
-  lige over den endda «$149 once per website», så noten modsag sin egen side.
-  Ny dom 3b dømmer at en livstidspris på en side der viser en scope-pris selv
-  bærer samme scope — mutationen ligger i **generatorens skabelon**, for dom 1
-  er grøn ved konstruktion.
+- **Rødt CI var `plan-status` — denne STATUS, 32 linjer mod 25 tilladt.**
+  Skært ned heri; porten grænser den for at planen ikke bliver en dagbog.
+- **`clock_jump.mjs` er grøn i CI 2/10 kl. 06:32** (352/352) efter at hopet blev
+  én time pr. `Request`-konstruktion i stedet for pr. 30 ms — et krydsende ur kan
+  da ikke ramme en webhook-signering. Sentry-sløjfens tolv kald har nu eget ur.
+- **Livstidsprisens købsvej er prøvet af og forkastet — to porte siger nej.**
+  Målt 2/10: de 17 pro-table-sider viste «$149 once per website — lifetime»
+  uden at linke til `lifetime.payment_link`. Lagt ind som prislink gjorde
+  `check_stripe_ctas.py` rød («2 synlige lifetime-CTA'er for eucomply-pro,
+  forventet præcis 1») og som «Buy …» også `pro_card.py` («2 købsknapper i ét
+  pro-kort»). Begge dele siger det samme: **én købsvej pr. produkt**, og den
+  findes allerede på de seks produktsider. Se punkt 10 i feature-kø.
+- **Alle 19 sider har gratis mod Pro i samme tabel** fra `tools/stripe_catalog.json`.
+  `check_pro_table.py` + `check_catalog_where.py` (112 belæg, målt 2/10: 13 lå
+  2–10 linjer væk) kører i gaten.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 2/10:** 0 åbne PR'er. **Branch-tjek 2/10:** ingen 14 dage gamle.
@@ -37,20 +26,16 @@
 
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
   værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni
-  live (`/scan`, `/text-on-image-checker`, `/cookie-check`,
-  `/compliance-site-check`, `/contrast-checker`, `/security-headers-check` og
-  de danske), og `build-info.json` på alle tre deployede domæner står i `ce438ba`
-  — de to sidste commits blev altså rullet ud, da CI blev grøn. Noten er lukket.
+  live, og `build-info.json` på alle tre deployede domæner står i `ce438ba`.
 
 - `VERIFICÉR DEPLOY: livstidsprisen med sit omfang på de 13 eucomply-sider
-  ceo/livstid-scope 2026-10-02` — måles på **indhold**: `$149 once per website —
-  lifetime, first 100 purchases` på EN og `$149 én gang pr. website — livstid,
-  første 100 køb` på DA, og **ikke** den gamle tekst uden omfang. Dom 1:
-  `check_pro_table.py` er grøn på 19 sider. Dom 2: `--self-test` 24/24. Dom 3:
-  mutationen i generatorens skabelon er rød, og de genoptegnede sider er grønne
-  igen — ellers ville porten være grøn ved konstruktion. Dom 4:
-  `python3 tools/quality_gate.py` er grøn med 134 steps. **Noten er forsinket,
-  ikke lukket:** `45b31df` gik rødt i CI, så den er aldrig rullet ud.
+   ceo/livstid-scope 2026-10-02` — måles på **indhold**: `$149 once per website —
+   lifetime, first 100 purchases` på EN og `$149 én gang pr. website — livstid,
+   første 100 køb` på DA, og **ikke** den gamle tekst uden omfang. Dom 1:
+   `check_pro_table.py` er grøn på 19 sider. Dom 2: `--self-test` 24/24. Dom 3:
+   mutationen i generatorens skabelon er rød. Dom 4: `quality_gate.py` er grøn med
+   134 steps. **Noten er forsinket:** `45b31df` gik rødt i CI, så den er aldrig
+   rullet ud.
 
 ## Åbne opgaver
 
@@ -165,6 +150,14 @@
   faktisk betaler sig — fx de samme bøger i PDF + Word + de opdaterede
   revisioner, eller en 2027-udgave — og skriver dens ærlige beskrivelse. Det er
   din beslutning, fordi det er dit navn på kvitteringen.
+- **🟡 Skal værktøjssiderne vise livstidsprisen overhovedet?** De elleve pro-kort
+  på `/scan`, `/cookie-check`, `/contrast-checker` m.fl. har en gratis-mod-Pro-tabel
+  med «$79/year per website». Jeg lagde livstidsprisen ind som et prislink dér, og
+  to porte sagde nej: `check_stripe_ctas` dømmer «præcis 1 synlig lifetime-CTA pr.
+  produkt», og `pro_card` dømmer «ét købsknap i ét pro-kort» — fordi tabellen ligger
+  inde i kortet. Købsvejen findes allerede på de seks produktsider, så det er ikke
+  en mistet indtægt, men det er en pris læseren ikke kan købe. Enten beholder vi
+  den som ren tekst, eller jeg flytter den til en fane under kortet. Din beslutning.
 - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`,
   `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`).
   Sitemap og robots er målt korrekte på de fire sites missionen udgiver; kun
@@ -231,3 +224,14 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    en besøgende på `/scan` ser «gratis gør dette, Pro gør hele sitet» i samme
    øjeblik han har set sit resultat. Ny port `check_catalog_where.py` dømmer
    belægget i katalogens `where`, så «hvor»-påstandene ikke kan rådne igen.
+10. **Livstidsprisen lå på 17 sider uden købsvej — løsningen er fundet, og
+    den er: ingen.** Hvem: alle der hellere betaler engang end pr. år; de tre
+    livstidsudgaver er Stripe-varer med `limit: 100`. Tal: målt 2/10 — de 17
+    sider viste beløbet, 0 af dem linkede til `lifetime.payment_link`, men de
+    **seks produktsider** har den købsvej, og `check_stripe_ctas.py` dømmer
+    «præcis 1 synlig lifetime-CTA pr. produkt». Accept: den er nået på den side
+    hvor købet sker; de elleve værktøjssiders tabel skal fortsat vise prisen
+    som tekst, fordi tabellen ligger **inde i** pro-kortet, og `pro_card.py`
+    dømmer «ét købsknap i ét pro-kort». Datagrund: begge fund er målt i gaten
+    efter en færdig implementering, ikke gættet. **Åbent:** om værktøjssiderne
+   overhovedet skal vise livstidsprisen — se ❓.
