@@ -1,33 +1,59 @@
 # STATUS
-- **Rød CI 2/10 var portens egen fejl: `check_rule_claims` dømte et *citat* på
-  `/blog/`.** Generatoren skriver hvert punkt som artiklens `og:title` og `meta
-  description` ordret, så da den danske EAA-desktop-guide kom med, blev *dets* «22
-  WCAG 2.1 AA-regler» dømt som *indeksets* løfte — og `/blog/` sælger ingen motor,
-  så porten døde med «står ikke i PRODUCT_ENGINE». Løftet var rigtigt. `quoted_spans()`
-  springer nu kun fra det det kan **måle** som en anden sides ord — **1313**
-  intervaller på **150** sider, som fjerner **1** løfte fra korpus på **240** (alle
-  matcher koden, 15 + 18 = 33). `quality_gate.py` **144 steps**.
-- **Review-fundet 2/10 viste sig at være 7 sider, ikke 2.** `decodeURIComponent`
-  uden `try` på `#url=`-fragmentet — det eneste input læseren kan skrive i hånden.
-  `node -e 'decodeURIComponent("%")'` kaster `URIError`, og en ikke-fanget fejl
-  afbryder **hele scriptet** (begge målt), så både scanningen og `urlInput.focus()`
-  springes over. `/url-to-markdown` og `/da/url-til-markdown` havde try/catch;
-  **syv** sider var kopier af samme kode uden: `scan`, `scan-da`, `cookie-check`,
-  `cookie-check-da`, `compliance-report`, `compliance-site-check` og
-  `da/compliance-site-check`. Alle syv rettet med de samme **3** linjer.
-- **Ny dom 5 i `check_url_handoff.py` fejer hele `site/`** — kun de **8** ruter
-  forsiderne peger på ville ladet de danske kopier blive ved med at dø. Målt: de
-  **9** filer der læser `#url=` er alle `.html`. Selvtest **18/18**; polaritet på
-  rigtig fil: fjernet `try` fra `site/scan.html` → RØD på linje 370, genskabt → GRØN.
-  Find undervejs: første kørsel dømte sin *egen* kommentar, så **2** kommentarformer
-  blandes nu ud med mellemrum og linjetallene holder.
+- **`/blog/` havde fire døde links, og porten vidste det.** De fire
+  BugBottle-guider lå i `bugbottle.dev`s `include`, blev bygget hver kørsel og
+  **lagt ingen steder** — domænet står ikke i deploy-matricen — så
+  `build_sites.py` skrev deres `href` om til `https://bugbottle.dev/…`. Målt
+  **404 på alle fire** 2/10, og **15** links døde i alt, fordi fire artikler
+  mere peger på dem. De ligger nu på `mahope.tools`: 189 guides, 189 relative
+  links, 0 mangler mod `site/blog/`.
+- **Porten skrev «ikke udgivet: 4 artikler» med filnavnene og gaven GRØN**, fordi
+  dom 4 spørger om *domænet* har en begrundelse — og `bugbottle.dev` har en.
+  Det er ikke det spørgsmål, en læser stiller, når han trykker et link. Ny
+  **dom 4b** `dark_link_problems()` dømmer linket. Polaritet på rigtige filer:
+  genskabt gammel `include` → **RØD — 4 problem(er)**; tre nye selftestarme
+  grønne (den tredje med en matrix på ét domæne → 21 døde links).
+- **To kataloger var forældede på samme måde** — de fire ruter lå under
+  `bugbottle.dev` i `route_inventory.json` og i `stripe_catalog.json`s `offers`.
+  Flyttet dem røde `check_stripe_ctas` med 6 fund: igen et tal der beregnes og
+  ikke siges. De to artikler har 9 målte besøg og ingen købsknap, så dom 5 blev
+  rød; BugBottle har **ingen** betalt udgave i katalogen, så det står nu som
+  linje med grund i `tools/article_click_no_button.json`.
+- **Målt undervejs:** `--self-test` i `check_article_paid_path.py` var **allerede
+  rød på HEAD** (`IndexError` i `andre[0]`, fordi de 4 rapporter er tomme
+  uden `STATS_TOKEN`).
 - **❓ Til Mads:** `STATS_TOKEN`, `OPENROUTER_API_KEY`, `bugbottle.dev`s domæne,
   bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
   til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: at et håndskrevet #url=% ikke dræber fragment-læseren
+- `VERIFICÉR DEPLOY: fire døde links fra /blog/ 2026-10-02
+   ceo/blog-indeks-dode-links` — måles på **indhold**, ikke på HTTP 200:
+   `mahope.tools/blog/` skal have **189** unikke `href` på guides (93 EN +
+   96 DA, dvs. 0 mangler mod `site/blog/`), de fire BugBottle-guider skal være
+   **relative** (`href="/blog/bug-reports-in-ci-pipeline"`) og **ikke**
+   `https://bugbottle.dev/…`, og `dist/mahope.tools/blog/` skal have de fire
+   filer. `build-info.json` på alle tre domæner skal stå i squash-sha'en. Dom 1:
+   `check_article_paid_path.py` **GRØN** + de tre nye selftestarme grønne
+   (polaritet målt ved at genskabe den gamle `include`: **RØD — 4 problem(er)**,
+   «DØDTE LINK … 5 side(r) i site/ linker til den»). Dom 2:
+   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` 334 + 33 filer 0
+   brudte, `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer.
+   Dom 4: hele `quality_gate.py` grøn.
+
+- **DEPLOY OK 2/10 (kl. 21).** Alle fem åbne noter fra 2/10 er lukket her, målt på
+  **indhold**: `build-info.json` står i `c2891ac` (= main HEAD) på alle tre
+  deployede domæner, og CI er `success`. `ceo/hash-decode-urierror` (`c2891ac`):
+  de **ni** sider der læser `#url=` serverer hver `try{…decodeURIComponent(…)}
+  catch` på den linje der læser fragmentet — de to `url-to-markdown`-sider
+  ligger på `cleancopy.tools`, ikke mahope.tools, så mit første tjek så 404 og
+  var min egen fejlsøgning, ikke en død reference. `ceo/blog-indeks` (`caea80f`)
+  og `ceo/url-med-til-udpakke` (`9f07a09`): `/blog/` serverer 189 unikke
+  guide-links og heroens «93 English guides … plus 96 Danish guides»;
+  `ceo/frontdoors-gate` og `ceo/blogindeks-citerede-lofter` (`df1cd60`) er dækket
+  af de samme to målinger plus CI.
+
+- ~~`VERIFICÉR DEPLOY: at et håndskrevet #url=% ikke dræber fragment-læseren~~
    2026-10-02 ceo/hash-decode-urierror` — syv sider ændret, så måles på **indhold**
    pr. side, ikke på HTTP 200: `mahope.tools/scan`, `/scan-da`, `/cookie-check`,
    `/cookie-check-da`, `/compliance-report`, `/compliance-site-check` og
@@ -39,14 +65,6 @@
    `build_sites.py` 330+35+73+37 filer 0 brudte, `seo_check.py` 314 sider 0 fund,
    `check_inline_js.py` 663 inline-blokke 0 problemer. Dom 4: hele
    `quality_gate.py` **144 steps** grønne.
-
-- `VERIFICÉR DEPLOY: citat-rettelsen i check_rule_claims 2026-10-02
-   ceo/blogindeks-citerede-lofter` — måles på **indhold** og på at CI går grøn:
-  `gh run list -L 1` skal være `success` på `main` (den var `failure` med
-  «quality_gate: RØD i step `rule-claims`»), og `build-info.json` på de tre
-  deployede domæner skal stå i squash-sha'en. Dom: `python3 tools/
-  check_rule_claims.py` → «240 regel-løfter, alle matcher koden (15 frie + 18
-  Pro = 33)», og `--self-test` → «selftest OK».
 
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
   værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni
@@ -64,29 +82,6 @@
   `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
   `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
 
-- `VERIFICÉR DEPLOY: konverteringstjekket på cleancopy.tools' forside 2026-10-02
-   ceo/cleancopy-konverteringstjek` — måles på **indhold**, ikke på HTTP 200:
-   `cleancopy.tools/` og `/da/` har hver præcis **1** `.oc-form` med
-   `id="cc-check-form"`, `action="/scan-proxy"`, `<label for="cc-check-url">`,
-   `#cc-check-status` med `role="status"`, `#cc-check-result` og `CC_DONATE`, og
-   indlæser `/net.js` + `/clean-copy-core.js` + `/readable.js` + `/convert-check.js`.
-`/readable.js` og `/convert-check.js` ligger i roden af `dist/cleancopy.tools/`
-    og **kun** der (de 3 andre sites har Clean Copy ikke på forsiden), og
-    `/url-to-markdown` + `/da/url-til-markdown` indlæser dem begge — målt på den
-    mutation der gjorde porten rød. Formens
-   `action` er **værktøjet** (`/url-to-markdown` + `/da/url-til-markdown`), ikke
-   `/scan-proxy`: en læser uden JavaScript skal lande på det brugbare værktøj, ikke
-   på rå JSON med hele målsidens HTML. Målt i Chromium med JS slået fra: begge
-   forsider lander på det rigtige værktøj med `?url=` med i adressen. Dom 1:
-   `GET /scan-proxy?url=…` svarer 200 med `ok:true` + `html`. Dom 2:
-   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` (73 + 35 + 37 + 330
-   filer, 0 brudte), `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0
-   problemer. Dom 4: hele `quality_gate.py` **136** steps grønne. Dom 5: Chromium
-   **28** kontroller grønne ved 390 + 1280 px (billeder i
-   `/tmp/ui-cleancopy-konverteringstjek/`); `check_donation_paths` **45** dømte,
-   `check_first_action` **16** dømte, `check_net_copies`, `check_built_css`,
-   `check_form_labels`, `check_ui_constants` grønne.
-
 - **DEPLOY OK 2/10 (kl. 16).** `ceo/tjek-paa-mahope-forside` (`d0e55bf`) er ude,
   målt på indhold: `mahope.tools/` og `/da/` har hver præcis 1 `#oc-check-form`,
   og `build-info.json` står i `d0e55bf` på alle tre deployede domæner. Dom 1:
@@ -102,38 +97,6 @@
   **indhold**: `cleancopy.tools/build-info.json` står i `db3c537` (main HEAD),
   forsiden har `cc-check-form` og 3 referencer til `/readable.js` +
   `/convert-check.js`.
-
-- `VERIFICÉR DEPLOY: at forsidens tjek tager den indtastede adresse med videre
-   2026-10-02 ceo/url-med-til-udpakke` (stadig åben: CI var `in_progress` da
-   denne iteration startede; måles på `build-info.json` = squash-sha) — måles på **indhold**, ikke på HTTP 200:
-   `mahope.tools/`, `/da/`, `cleancopy.tools/` og `/da/` skal hver have præcis
-   **1** `takesUrl: true` pr. `#url`-læsende `next`-link, og `build-info.json` på
-   alle tre domæner skal stå i squash-sha'en. `/scan`, `/scan-da`,
-   `/cookie-check`, `/cookie-check-da`, `/compliance-report`,
-   `/compliance-site-check`, `/da/compliance-site-check` og de to
-   `url-to-markdown`-sider læser `#url=`. Dom 1: `check_url_handoff.py` **GRØN**
-   (8 forsider dømt, 6 handoff) + `--self-test` **12/12**. Dom 2:
-   `stripe-worker.test.mjs` **354/354**. Dom 3: `scan-clients.test.mjs` **429/429**
-   med de 12 nye handoff-domme. Dom 4: `build_sites.py` 0 brudte,
-   `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer. Dom 5: hele
-   `quality_gate.py` **142 steps** grønne.
-
-- `VERIFICÉR DEPLOY: frontdør-gaten i gaten 2026-10-02 ceo/frontdoors-gate` —
-   intet sideindhold ændres, så dette er en gate-ændring: efter push skal
-   `quality_gate`-loggen vise `front-door` **og** `front-door-selftest` grønne
-   (`16/16`), og de tre domæner skal stadig få deres sha i `build-info.json`.
-
-- `VERIFICÉR DEPLOY: alle 189 guides linket fra /blog/ 2026-10-02
-   ceo/blog-indeks` — måles på **indhold**: `mahope.tools/blog/` skal have præcis
-   **93** `href="/blog/…"` og **96** `href="/da/blog/…"`, heroens «93 English
-   guides … plus 96 Danish guides», og `build-info.json` skal stå i squash-sha'en.
-   Dom 1: `check_blog_index.py` GRØN (93 + 96) + `--self-test` **9/9**. Dom 2:
-   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` 0 brudte,
-   `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0 problemer. Dom 4:
-   `check_duplicate_headings`, `check_heading_levels`, `check_design_tokens`,
-   `check_links`, `check_hreflang_pairs`, `check_article_paid_path`,
-   `check_tool_paid_path`, `check_cta_coverage_dist`, `audit_unmeasured_routes`
-   og `check_donation_paths` grønne.
 
 ## Åbne opgaver
 
@@ -154,12 +117,14 @@
     svarer 200. *(Blokeret på Mads — se ❓.)*
 3. **`bugbottle.dev` deployes ikke.** Hvorfor: `deploy-sites.yml`-matrixen
    deployer kun tre domæner, så `dist/bugbottle.dev/` bygges hver kørsel og
-   lægges ingen steder; live er 61 ruter fra en anden udgivelse. Det er derfor
-   `traffic_status` er `partial` hver time og `reports/weekly/` mangler et helt
-   domæne. Den nye port måler `/bugbottle-demo` og dømmer den ikke, fordi samme
-   grund gør dom 4/7 i artikelporten umulige at dømme. Accept: enten domænet på
-   Pages og fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`
-   så status bliver ærlig. *(Beslutning — se ❓.)*
+   lægges ingen steder. Det er derfor `traffic_status` er `partial` hver time og
+   `reports/weekly/` mangler et helt domæne. **2/10 er følgen målt og lukket:**
+   de fire BugBottle-guider lå der og gav fire døde links fra `/blog/`, så de er
+   flyttet til `mahope.tools`, og dom 4b i artikelporten dømmer det fra nu af.
+   Domænets egen forside og demo ligger stadig i `UNMANAGED_DOMAINS`, fordi det
+   er *domænet* der mangler, ikke artiklerne. Accept: enten domænet på Pages og
+   fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS` så
+   status bliver ærlig. *(Beslutning — se ❓.)*
 4. **172 sider har to-tre knapper over folden.** Hvorfor:
    `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren
    ind under `</header>` på hele bloggen, så de lå over folden på 180 af 224

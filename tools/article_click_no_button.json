@@ -1,6 +1,15 @@
 {
   "note": "Artikler der er MÅLT til at have en indirekte købsvej, nul købsknap, målt trafik og en publiceret rute. Uden de to sidste krav er klassen 148 røde linjer, altså ingenting (se check_article_paid_path.py, dom 5). Listen er en ratchet: hver linje er en artikels begrundelse for at have læsere uden en købsknap, og den skal fjernes når artiklen får en knap — listen må kun krympe. Filen skrives med en begrundelse pr. artikel, aldrig af --write.",
   "source": "python3 tools/check_article_paid_path.py",
-  "measured": "2026-09-30",
-  "acknowledged": []
+  "measured": "2026-10-02",
+  "acknowledged": [
+    {
+      "file": "blog/add-bug-report-form-to-any-website.html",
+      "reason": "BugBottle har ingen betalt udgave: `tools/stripe_catalog.json` har ingen `bugbottle`-product_key, så der er ingen købsknap at sætte. Artiklen er dokumentation for et gratis open source-værktøj (npm + GitHub), og dens indirekte vej er den eneste ærlige konvertering den har. Rødt fra 2/10, da artiklen lå på `bugbottle.dev` — et domæne deploy-matricen ikke udgiver — og derfor var undtaget af dom 5. Den ligger nu på mahope.tools, så reglen gælder igen; se `dark_link_problems()` i tools/check_article_paid_path.py."
+    },
+    {
+      "file": "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
+      "reason": "Samme grund på dansk: BugBottle har ingen betalt udgave i `tools/stripe_catalog.json`, så der er ingen købsknap at sætte på en gratis-værktøjs-guide. Rødt fra 2/10, da artiklen lå på det udpublicerede `bugbottle.dev`."
+    }
+  ]
 }

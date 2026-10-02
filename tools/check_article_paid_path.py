@@ -1097,6 +1097,10 @@ def judge(root: Path, catalog: dict) -> list[str]:
     # "find den fejl der er opstået"; den her er "find den der *kunne* opstå",
     # og den må ikke gøre de tre røde af sig selv.
     problems.extend(published_problems(root))
+    # Dom 4b. Samme måling, et andet spørgsmål: dom 4 spørger om domænet har en
+    # begrundelse, den her om et link i `site/` en læser kan trykke. Målt 2/10
+    # var de fire BugBottle-guider døde links fra `/blog/`, mens dom 4 var grøn.
+    problems.extend(dark_link_problems(root))
     # Dom 5, klik uden knap. Samme grund: målingen er nu 0, så porten skal være
     # grøn på en *begrundet* måling, ikke på en tør.
     problems.extend(click_no_button_problems(rows(root, catalog)))
@@ -1176,6 +1180,55 @@ def published_problems(root: Path = SITE, inventory: dict | None = None,
             )
     if len(acknowledged) != len(doc.get("acknowledged", [])):
         problems.append("bekræftelseslisten har dubletter.")
+    return problems
+
+
+def dark_link_problems(root: Path = SITE, inventory: dict | None = None,
+                       workflow: Path = WORKFLOW) -> list[str]:
+    """Dom 4b: en artikel på et udpubliceret domæne må ikke have indgående links.
+
+    Dom 4 (`published_problems`) spørger om et **udpubliceret domæne har en
+    begrundelse**, og det har `bugbottle.dev` godt. Det er et andet spørgsmål end
+    det en læser stiller, da han trykker et link: *ender jeg på en side der
+    findes?*
+
+    **Målt 2/10: de to svar var ikke ens.** `bugbottle.dev` var bekræftet som
+    udpubliceret, porten skrev «ikke udgivet: 4 artikler» med de fire filnavne,
+    og gaven **GRØN**. De fire var `blog/bug-reports-in-ci-pipeline.html`,
+    `blog/add-bug-report-form-to-any-website.html` og de to danske — de lå i
+    `bugbottle.dev`s `include`, blev bygget hver kørsel og lagt ingen steder, og
+    `build_sites.py` skrev deres `href` i `/blog/` om til
+    `https://bugbottle.dev/…`. Målt på live 2/10 kl. 20: alle fire **404**. Så
+    blogindekset, hvis egen meta description siger «Every guide on this site»,
+    havde fire links til sider der ikke findes.
+
+    Derfor dømmes **linket**, ikke domænet: en artikel hvis domæne ikke er i
+    matricen, og som en side i `site/` linker til, er en død sti. Beviset for at
+    porten kan dømme ligger i `--self-test`: en syntetisk matrix med ét domæne
+    gør `cleancopy.tools` mørkt, og porten skal blive rød med de artikler
+    `/blog/` linker til.
+    """
+    dark = unpublished_routes(root, inventory, workflow)
+    if not dark:
+        return []
+    inbound = inbound_counts(root)
+    problems: list[str] = []
+    for path in sorted(article_files(root)):
+        route = route_of(root, path)
+        domains = dark.get(route)
+        if not domains:
+            continue
+        kilder = sorted(inbound.get(route, ()))
+        if not kilder:
+            continue
+        problems.append(
+            f"DØDTE LINK: {path.relative_to(root).as_posix()} ligger på {domains}, "
+            f"som deploy-matricen ikke udgiver, men {len(kilder)} side(r) i "
+            f"site/ linker til den ({', '.join(kilder[:3])}"
+            f"{' …' if len(kilder) > 3 else ''}). En læser der trykker den får "
+            f"404. Udgiv domænet, flyt artiklen til et udgivet domæne, eller "
+            f"fjern linket."
+        )
     return problems
 
 
@@ -1641,16 +1694,38 @@ def _self_test() -> int:
     check("bekræftelse uden begrundelse giver rødt",
           any("UDPUBLICERET DOMÆNE" in p for p in hit), f"{len(hit)} problem(er)")
 
-    # 10d. Rankingen skal sige det, ellers er flåsen en fil ingen læser. Målt
-    #      på `blog/bug-reports-in-ci-pipeline.html`, den artikel der gav 404
-    #      på alle fire domæner da flåsen blev skrevet.
+    # 10d. Rækken skal sige det, ellers er flåsen en fil ingen læser. Målt 2/10:
+    #      `blog/bug-reports-in-ci-pipeline.html` lå på `bugbottle.dev` og gav
+    #      404 på alle fire domæner. Den lå i `bugbottle.dev`s `include`, blev
+    #      bygget hver kørsel og lagt ingen steder. Artiklen ligger nu på
+    #      `mahope.tools` — se 10e, der dømmer selve linket.
     bb = next((r for r in table if r["file"] == "blog/bug-reports-in-ci-pipeline.html"), None)
-    check("rækken ved domænet og siger at det ikke er udgivet",
-          bb is not None and bb["domain"] == "bugbottle.dev" and not bb["publiceret"],
+    check("rækken ved domænet og siger at det er udgivet",
+          bb is not None and bb["domain"] == "mahope.tools" and bb["publiceret"],
           f"domæne={bb['domain'] if bb else '?'} "
           f"udgivet={bb['publiceret'] if bb else '?'}")
     check("rækken har trafik — flåsen skal kunne ramme præcis dem der har den",
           bb is not None and bb["visits"], f"visits={bb['visits'] if bb else '?'}")
+
+    # 10e. Dom 4b: et link til en artikel på et udpubliceret domæne er en død
+    #      sti. Grønt på det målte tilstand — de fire guider ligger på
+    #      mahope.tools, så der er ingen mørk artikel med indgående links.
+    hit = dark_link_problems(SITE)
+    check("ingen døde links fra site/ til udpublicerede artikler",
+          not hit, f"{len(hit)} problem(er): {hit[:1]}")
+    # Polaritet: en matrix med ét domæne gør cleancopy.tools mørkt, og de 21
+    # markdown-guider `/blog/` linker til, så porten **skal** blive rød. Beviser
+    # at dommen læser linket og ikke bare læser en tom liste.
+    dark_wf = Path("/tmp/oxloop-one-domain-deploy.yml")
+    dark_wf.parent.mkdir(parents=True, exist_ok=True)
+    dark_wf.write_text("        include:\n          - domain: mahope.tools\n",
+                       encoding="utf-8")
+    try:
+        hit = dark_link_problems(SITE, None, dark_wf)
+        check("en artiklen på et udpubliceret domæne som /blog/ linker til giver rødt",
+              any("DØDTE LINK" in p for p in hit), f"{len(hit)} problem(er)")
+    finally:
+        dark_wf.unlink(missing_ok=True)
 
     # 11. `route_of` på `index.html`. Før rettelsen (30/9) gav
     #     `site/blog/index.html` ruten `/blog/index`, som ikke findes: live er

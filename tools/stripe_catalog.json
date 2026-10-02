@@ -1638,8 +1638,8 @@
     },
     {
       "path": "site/blog/bug-reports-in-ci-pipeline.html",
-      "domain": "bugbottle.dev",
-      "domain_note": "Målt i tools/route_inventory.json: de to CI-artikler ligger på bugbottle.dev, ikke mahope.tools. At skrive mahope.tools her fik porten til at lede efter filen i dist/mahope.tools/, hvor den ikke findes.",
+      "domain": "mahope.tools",
+      "domain_note": "Målt 3/10: de to CI-artikler lå på bugbottle.dev, som deploy-matricen ikke udgiver, så de blev bygget hver kørsel og lagt ingen steder — og deres href i /blog/ var fire døde links. De ligger nu på mahope.tools, så nøglen skal følge med, ellers leder porten efter filen i dist/bugbottle.dev/, hvor den ikke findes længere.",
       "route": "/blog/bug-reports-in-ci-pipeline",
       "product": "deskuptime-pro",
       "prices": [
@@ -1654,7 +1654,7 @@
     },
     {
       "path": "site/da/blog/bugrapporter-i-ci-pipeline.html",
-      "domain": "bugbottle.dev",
+      "domain": "mahope.tools",
       "route": "/da/blog/bugrapporter-i-ci-pipeline",
       "product": "deskuptime-pro",
       "prices": [

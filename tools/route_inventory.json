@@ -44,12 +44,8 @@
   ],
   "bugbottle.dev": [
     "/",
-    "/blog/add-bug-report-form-to-any-website",
-    "/blog/bug-reports-in-ci-pipeline",
     "/bugbottle-demo",
-    "/da/",
-    "/da/blog/bugrapporter-i-ci-pipeline",
-    "/da/blog/tilfoej-fejlrapport-formular-hjemmeside"
+    "/da/"
   ],
   "mahope.tools": [
     "/",
@@ -58,6 +54,10 @@
     "/blog/",
     "/blog/accessibility-audit-cost",
     "/blog/accessibility-overlays-eaa",
+    "/blog/add-bug-report-form-to-any-website",
+    "/blog/bug-reports-in-ci-pipeline",
+    "/da/blog/bugrapporter-i-ci-pipeline",
+    "/da/blog/tilfoej-fejlrapport-formular-hjemmeside",
     "/blog/accessibility-scanner-cli",
     "/blog/broken-link-checker-free",
     "/blog/canonical-url-guide",

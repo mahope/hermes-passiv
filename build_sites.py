@@ -137,15 +137,26 @@ SITES: dict[str, dict] = {
             "da": [("Demo", "/bugbottle-demo"), ("Docs", "https://github.com/mahope/bugbottle#readme"),
                    ("npm", "https://www.npmjs.com/package/bugbottle"), ("GitHub", "https://github.com/mahope/bugbottle")],
         },
+        # Målt 2/10: de fire BugBottle-guider lå her, og `bugbottle.dev` står
+        # ikke i deploy-matricen (se ❓ i IMPLEMENTATION_PLAN.md), så de blev
+        # bygget hver kørsel og **aldrig lagt noget sted**. Følgen var fire døde
+        # links på mahope.tools' eget blogindeks: `make_blog_index.py` skriver
+        # alle 189 guides, og `build_sites.py` skrev de fire om til
+        # `https://bugbottle.dev/…` — målt 404 på alle fire, fordi det domæne ikke
+        # serveres fra noget dist vi bygger (målt med curl: `/` svarer 200 fra
+        # Cloudflare, `/blog/…` og `/bugbottle-demo` svarer 404). De ligger derfor på
+        # `mahope.tools` (rest: True) fra og med nu, som de fire `href` i
+        # `dist/mahope.tools/blog/index.html` er relative i.
+        #
+        # Domænet beholder sin egen forside og demo. Giver Mads `bugbottle.dev`
+        # en Pages-konto, kan guidernes `include`-linjer komme tilbage — men
+        # da med et canonical på mahope.tools, ellers er de to domæner det
+        # samme indhold to steder.
         "include": [
             "bugbottle-demo.html",
             "bugbottle-demo.js",
             "hti-shim.js",
             "worker-bugbottle-demo.js",
-            "blog/add-bug-report-form-to-any-website.html",
-            "blog/bug-reports-in-ci-pipeline.html",
-            "da/blog/bugrapporter-i-ci-pipeline.html",
-            "da/blog/tilfoej-fejlrapport-formular-hjemmeside.html",
         ],
         "extra": [
             (ROOT / "bugbottle-landing" / "index.html", "bugbottle-landing/index.html", "index.html"),
