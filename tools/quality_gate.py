@@ -1517,6 +1517,27 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_pro_table.py", "tools/pro_table.py",
                 "tools/stripe_catalog.json"),
     ),
+    # Prislisten (2/10). De 12 salgbare produkter lå spredt på otte sider, og
+    # ingen side viste to produkter på én gang, så spørgsmålet «hvad koster
+    # hele pakken» krævede at gætte. `/pricing` er bygget af
+    # `tools/pricing_page.py` fra samme katalog og **sælger ikke**: den
+    # linker til hver vares egen købsside, så «én købsvej pr. produkt» holder
+    # og de tre porte der bygger på den regel kan blive ved med at være
+    # strenge. Dom 3 i porten holder siden fra at få et Stripe-link oveni.
+    Step(
+        id="pricing-page",
+        argv=("python3", "tools/check_pricing_page.py"),
+        inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
+                "tools/stripe_catalog.json", "site/pricing.html",
+                "site/da/pricing.html"),
+    ),
+    Step(
+        id="pricing-page-selftest",
+        argv=("python3", "tools/check_pricing_page.py", "--self-test"),
+        inputs=("tools/check_pricing_page.py", "tools/pricing_page.py",
+                "tools/stripe_catalog.json", "site/pricing.html",
+                "site/da/pricing.html"),
+    ),
     # Belæget i katalogens `where` (2/10). Dom 6 og dom 4 i `check_pro_table`
     # dømmer **hvad** der står i tabellen mod katalogen. Men hver funktion
     # bærer også et `where`, der skal sige *hvor* den virkelige kode er, og

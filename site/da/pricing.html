@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priser — alle Mahope-værktøjer og -skabeloner samlet</title>
+<meta name="description" content="Alle betalte Mahope-produkter med den rigtige pris: Clean Copy Pro, DeskUptime Pro, EUComply Pro og Page Profile Pro, plus de betalte compliance-skabeloner. Gratisværktøjerne bliver gratis.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Priser — alle Mahope-værktøjer og -skabeloner samlet">
+<meta property="og:description" content="Alle betalte Mahope-produkter med den rigtige pris. Gratisværktøjerne bliver gratis.">
+<meta property="og:url" content="https://hermes-passiv.pages.dev/da/pricing">
+<meta property="og:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<meta property="og:image:alt" content="Priser for Mahope-værktøjerne og compliance-skabelonerne">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hermes-passiv.pages.dev/eaa-cover.jpg">
+<link rel="canonical" href="https://hermes-passiv.pages.dev/da/pricing">
+<link rel="alternate" hreflang="x-default" href="https://hermes-passiv.pages.dev/pricing">
+<link rel="alternate" hreflang="en" href="https://hermes-passiv.pages.dev/pricing">
+<link rel="stylesheet" href="/style.css">
+<script defer src="/track.js"></script>
+<style>
+  .pc-table { width: 100%; border-collapse: collapse; margin: 22px 0 0; font-size: .95rem; }
+  .pc-table th, .pc-table td { text-align: left; vertical-align: top; padding: 14px 12px; border-bottom: 1px solid var(--color-border); }
+  .pc-table thead th { font-size: .8rem; letter-spacing: .04em; color: var(--color-text-muted); font-weight: 700; }
+  .pc-table tbody th { font-weight: 700; }
+  .pc-table td:nth-child(2) { font-variant-numeric: tabular-nums; }
+  .pc-buy { display: inline-block; padding: .55rem 1rem; border-radius: 10px; background: var(--color-accent); color: #fff; font-weight: 600; text-decoration: none; font-size: .92rem; }
+  .pc-buy:hover { background: var(--color-accent-hover); }
+  .pc-note { display: block; margin-top: .45rem; font-size: .82rem; color: var(--color-text-muted); max-width: 30ch; }
+  .pc-foot { margin: 2rem 0 0; font-size: .95rem; }
+  /* Mobil først: fire kolonner bliver fire smalle kolonner, så tabellen brydes
+     til en blok pr. række. Prisen og knappen bliver den øverste linje, fordi
+     det er dem læseren kommer for. `.pc-lbl` er den kolonneoverskrift, der
+     ellers forsvinder med `thead` på mobil — uden den kan en læser på telefon
+     ikke se hvilken af de to tekster der er gratis og hvilken der er betalt. */
+  .pc-lbl { display: none; }
+  @media (max-width: 720px) {
+    .pc-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+    .pc-table tr { display: block; border-bottom: 1px solid var(--color-border); padding: 4px 0; }
+    .pc-table tbody th, .pc-table td { display: block; border: 0; padding: 4px 0; }
+    .pc-table tbody th { font-size: 1.02rem; }
+    .pc-table td:nth-child(2) { margin: .2rem 0 .5rem; color: var(--color-text-muted); }
+    .pc-lbl { display: block; margin-top: .35rem; font-size: .78rem; letter-spacing: .04em; color: var(--color-text-muted); }
+    .pc-note { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<main class="container">
+  <nav style="margin-bottom:1.5rem"><a href="/da/">&larr; Alle værktøjer</a></nav>
+
+  <header>
+    <h1>Hvad alt koster</h1>
+    <p>Gratis først: scannerne, generatorerne og konverterne på denne side er gratis,
+    kører i din browser og kræver ingen konto. Intet nedenfor er nødvendigt for at
+    bruge dem. Det er de betalte opgraderinger, med den pris de faktisk har og et
+    link til den side der sælger dem.</p>
+  </header>
+
+<!-- pricing:start -->
+    <table class="pc-table">
+      <caption class="sr-only">Produkt, Pris, Hvad du får gratis, Hvad den betalte version tilføjer</caption>
+      <thead><tr><th scope="col">Produkt</th><th scope="col">Pris</th><th scope="col">Hvad du får gratis</th><th scope="col">Hvad den betalte version tilføjer</th><th scope="col">Hvor du køber</th></tr></thead>
+      <tbody>
+      <tr data-product="free">
+        <th scope="row">Gratis</th>
+        <td>$0</td>
+        <td class="pc-free">Alle værktøjer på denne side, uden konto og uden grænse for hvor mange sider du kører dem på.</td>
+        <td>Intet — denne række er det du får uden at betale.</td>
+        <td class="pc-nobuy">Intet at købe</td>
+      </tr>
+      <tr data-product="clean-copy-pro">
+        <th scope="row">Clean Copy Pro</th>
+        <td>$19/år · 5 maskiner · Livstid: $39</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>alle konverteringsmoduler i udvidelsen og på webværktøjet, ingen grænse på hvor meget tekst du indsætter</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Batch-konvertering, dine egne rense regler og JSON-output — til de sider du skal lave om hver uge.</td>
+        <td><a class="pc-buy" href="https://cleancopy.tools/">Køb Clean Copy Pro</a><span class="pc-note">Livstid er en engangspris for samme produkt, uden fornyelse og uden udløb. Stiftelsespris, første 100 køb.</span></td>
+      </tr>
+      <tr data-product="deskuptime-pro">
+        <th scope="row">DeskUptime Pro</th>
+        <td>$19 én gang · 3 maskiner</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>enkelttjek, SSL- og content-tjek, JSON-output</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Overvågning der kører på en tidsplan i stedet for på din bærbar: webhooks, ubegrænsede sites og en kunderapport.</td>
+        <td><a class="pc-buy" href="https://deskuptime.com/">Køb DeskUptime Pro</a><span class="pc-note">En licensnøgle på din mail efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-pro">
+        <th scope="row">EUComply Pro</th>
+        <td>$79/år pr. website · Livstid: $149 pr. website</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>tilgængelighedstjekkene, scoren og karakteren, hele rapporten på siden</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Et scan bliver en rapport du kan sende en kunde: EAA, GDPR-cookieconsent og NIS2-fund i én PDF.</td>
+        <td><a class="pc-buy" href="/da/compliance-report">Køb EUComply Pro</a><span class="pc-note">Livstid er en engangspris for samme produkt, uden fornyelse og uden udløb. Stiftelsespris, første 100 køb.</span></td>
+      </tr>
+      <tr data-product="page-profile-pro">
+        <th scope="row">Page Profile Pro</th>
+        <td>$19/år · 3 maskiner · Livstid: $39</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>historik, Alle tjek, Rapport i terminalen med score og karakter, JSON-output, Redirect-kæde</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Ubegrænsede redirect-kæde- og Open Graph-tjek, med resultater du kan sætte ind i en rapport.</td>
+        <td><a class="pc-buy" href="/da/page-profile">Køb Page Profile Pro</a><span class="pc-note">Livstid er en engangspris for samme produkt, uden fornyelse og uden udløb. Stiftelsespris, første 100 køb.</span></td>
+      </tr>
+      <tr data-product="eu-compliance-ebook-bundle">
+        <th scope="row">EU Compliance E-book Bundle</th>
+        <td>$29 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb EU Compliance E-book Bundle</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-dpa">
+        <th scope="row">GDPR DPA template</th>
+        <td>$59 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb GDPR DPA template</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-eaa-statement">
+        <th scope="row">EAA Accessibility Statement</th>
+        <td>$39 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb EAA Accessibility Statement</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-nda-clauses">
+        <th scope="row">Mutual NDA Clause Set</th>
+        <td>$29 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb Mutual NDA Clause Set</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-nis2-clauses">
+        <th scope="row">NIS2 / DORA Vendor Clause Set</th>
+        <td>$49 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb NIS2 / DORA Vendor Clause Set</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-report-kit">
+        <th scope="row">Client Compliance Report Kit</th>
+        <td>$69 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb Client Compliance Report Kit</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="eucomply-template-bundle">
+        <th scope="row">EUComply Complete Template Bundle</th>
+        <td>$149 én gang</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Dokumentet, skrevet og klar til at sende.</td>
+        <td><a class="pc-buy" href="/da/paid-templates">Køb EUComply Complete Template Bundle</a><span class="pc-note">Leveres som filer lige efter betaling.</span></td>
+      </tr>
+      <tr data-product="support-mahope-oss">
+        <th scope="row">Support for Mahope open source</th>
+        <td>Valgfrit beløb</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>Ingen gratis udgave — dette er det betalte produkt.</td>
+        <td><span class="pc-lbl">Hvad den betalte version tilføjer</span>Holder gratisværktøjerne gratis. Ingen funktion er holdt tilbage.</td>
+        <td><a class="pc-buy" href="/da/support">Donér</a><span class="pc-note">Valgfrit, og det ændrer intet ved værktøjerne. Alle værktøjer her er gratis, uanset om du giver.</span></td>
+      </tr>
+      </tbody>
+    </table>
+    <h2 id="lifetime">Livstid</h2>
+    <table class="pc-table">
+      <caption class="sr-only">Produkt, Pris, Betal én gang. Ingen fornyelse, intet udløb.</caption>
+      <thead><tr><th scope="col">Produkt</th><th scope="col">Pris</th><th scope="col">Hvad du får gratis</th><th scope="col">Hvad den betalte version tilføjer</th><th scope="col">Hvor du køber</th></tr></thead>
+      <tbody>
+      <tr data-lifetime="clean-copy-pro">
+        <th scope="row">Clean Copy Pro — Livstid</th>
+        <td>$39</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>alle konverteringsmoduler i udvidelsen og på webværktøjet, ingen grænse på hvor meget tekst du indsætter</td>
+        <td>Betal én gang. Ingen fornyelse, intet udløb.</td>
+        <td><a class="pc-buy" href="https://cleancopy.tools/">Køb Clean Copy Pro — $39</a></td>
+      </tr>
+      <tr data-lifetime="eucomply-pro">
+        <th scope="row">EUComply Pro — Livstid</th>
+        <td>$149 pr. website</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>tilgængelighedstjekkene, scoren og karakteren, hele rapporten på siden</td>
+        <td>Betal én gang. Ingen fornyelse, intet udløb.</td>
+        <td><a class="pc-buy" href="/da/compliance-report">Køb EUComply Pro — $149</a></td>
+      </tr>
+      <tr data-lifetime="page-profile-pro">
+        <th scope="row">Page Profile Pro — Livstid</th>
+        <td>$39</td>
+        <td class="pc-free"><span class="pc-lbl">Hvad du får gratis</span>historik, Alle tjek, Rapport i terminalen med score og karakter, JSON-output, Redirect-kæde</td>
+        <td>Betal én gang. Ingen fornyelse, intet udløb.</td>
+        <td><a class="pc-buy" href="/da/page-profile">Køb Page Profile Pro — $39</a></td>
+      </tr>
+      </tbody>
+    </table>
+<!-- pricing:end -->
+
+  <h2 id="not-sure">Ved du ikke hvilken du har brug for?</h2>
+  <p class="pc-foot">Hver produktside har den samme tabel som denne, ved siden af den
+  gratisudgave den opgraderer: <a href="/scan">scanneren</a>,
+  <a href="/da/compliance-site-check">compliance-tjekket</a>,
+  <a href="/text-on-image-checker">kontrast-tjekkeren</a> og
+  <a href="/da/page-profile">Page Profile</a>. Er du stadig i tvivl, så start med det
+  gratis værktøj &mdash; det fortæller dig, hvad der er galt, før du betaler for noget.</p>
+
+  <p class="pc-foot">Priserne er i amerikanske dollar. Stripe viser dem i din egen
+  valuta og lægger moms på, hvor det gælder. En licens dækker det antal maskiner der
+  står ovenfor, og du kan selv flytte den til en ny maskine fra
+  <a href="/license-lookup">licenssiden</a>.</p>
+
+  <p class="pc-foot">Denne side tager ikke imod betaling. Hvert produkt har sin egen
+  side med én kasseknap, så du kan læse hvad det gør før du betaler &mdash; og så
+  tælles et klik her aldrig to gange.</p>
+</main>
+</body>
+</html>

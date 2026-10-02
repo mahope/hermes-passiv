@@ -84,7 +84,8 @@
       "own_pages": [
         "site/clean-copy.html",
         "site/da/clean-copy.html"
-      ]
+      ],
+      "pricing_link": "https://cleancopy.tools/"
     },
     "deskuptime-pro": {
       "name": "DeskUptime Pro",
@@ -227,7 +228,8 @@
       "own_pages": [
         "site/deskuptime/index.html",
         "site/da/deskuptime/index.html"
-      ]
+      ],
+      "pricing_link": "https://deskuptime.com/"
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
@@ -237,7 +239,8 @@
       "price_note": "one-time, 3 machines",
       "max_devices": 3,
       "payment_link": "https://buy.stripe.com/eVqbJ0dvdbaW55cgN9bMQ02",
-      "note": "Ingen købsside i dette repo: linket ligger på transmute.run, som er et separat site i transmute/. Derfor ingen pro_features her — porten ville ikke have nogen side at gate."
+      "pricing_page": false,
+      "note": "Ingen købsside i dette repo: linket ligger på transmute.run, som er et separat site i transmute/. Derfor ingen pro_features her — porten ville ikke have nogen side at gate. `pricing_page: false` er samme sandhed maskinlæsbart: /pricing må ikke vise en pris læseren ikke kan købe der, fordi købet sker på transmute.run (målt 2/10: transmute.run svarer 200 og linker til netop dette Payment Link)."
     },
     "eucomply-pro": {
       "name": "EUComply Pro",
@@ -385,7 +388,8 @@
       "own_pages": [
         "site/compliance-report.html",
         "site/da/compliance-report.html"
-      ]
+      ],
+      "pricing_link": "/compliance-report"
     },
     "page-profile-pro": {
       "name": "Page Profile Pro",
@@ -510,7 +514,8 @@
       "own_pages": [
         "site/page-profile.html",
         "site/da/page-profile.html"
-      ]
+      ],
+      "pricing_link": "/page-profile"
     },
     "eucomply-dpa": {
       "name": "GDPR DPA template",
@@ -518,7 +523,8 @@
       "price_usd": 59,
       "price": "$59",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05"
+      "payment_link": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
+      "pricing_link": "/paid-templates"
     },
     "eucomply-nis2-clauses": {
       "name": "NIS2 / DORA Vendor Clause Set",
@@ -526,7 +532,8 @@
       "price_usd": 49,
       "price": "$49",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06"
+      "payment_link": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
+      "pricing_link": "/paid-templates"
     },
     "eucomply-nda-clauses": {
       "name": "Mutual NDA Clause Set",
@@ -534,7 +541,8 @@
       "price_usd": 29,
       "price": "$29",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07"
+      "payment_link": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
+      "pricing_link": "/paid-templates"
     },
     "eucomply-eaa-statement": {
       "name": "EAA Accessibility Statement",
@@ -542,7 +550,8 @@
       "price_usd": 39,
       "price": "$39",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08"
+      "payment_link": "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
+      "pricing_link": "/paid-templates"
     },
     "eucomply-report-kit": {
       "name": "Client Compliance Report Kit",
@@ -550,7 +559,8 @@
       "price_usd": 69,
       "price": "$69",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09"
+      "payment_link": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
+      "pricing_link": "/paid-templates"
     },
     "eucomply-template-bundle": {
       "name": "EUComply Complete Template Bundle",
@@ -558,7 +568,8 @@
       "price_usd": 149,
       "price": "$149",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a"
+      "payment_link": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
+      "pricing_link": "/paid-templates"
     },
     "eu-compliance-ebook-bundle": {
       "name": "EU Compliance E-book Bundle",
@@ -566,7 +577,8 @@
       "price_usd": 29,
       "price": "$29",
       "price_note": "one-time",
-      "payment_link": "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b"
+      "payment_link": "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b",
+      "pricing_link": "/paid-templates"
     },
     "support-mahope-oss": {
       "name": "Support for Mahope open source",
@@ -574,7 +586,8 @@
       "price_usd": null,
       "price": "fra 10 kr.",
       "price_note": "optional donation, any amount",
-      "payment_link": "https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c"
+      "payment_link": "https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c",
+      "pricing_link": "/support"
     }
   },
   "billing_periods": {
@@ -2577,6 +2590,16 @@
           }
         }
       ]
+    }
+  ],
+  "pricing_pages": [
+    {
+      "path": "site/pricing.html",
+      "lang": "en"
+    },
+    {
+      "path": "site/da/pricing.html",
+      "lang": "da"
     }
   ]
 }

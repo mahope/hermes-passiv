@@ -1,7 +1,10 @@
 # STATUS
 
-- **Rødt CI var `plan-status` — denne STATUS, 32 linjer mod 25 tilladt.**
-  Skært ned heri; porten grænser den for at planen ikke bliver en dagbog.
+- **`/pricing` er bygget — den ene side med alle 12 priser** fra
+  `tools/stripe_catalog.json`, EN + DA, med gratis-mod-Pro pr. række. Siden
+  **sælger ikke**: den linker til hver vares egen købsside, så «én købsvej pr.
+  produkt» holder. Målt først 2/10: 0 af de 102 ruter havde to produkter i
+  `<title>`/`<h1>`. Ny port `check_pricing_page.py` (4 dom + 7 mutationer).
 - **`clock_jump.mjs` er grøn i CI 2/10 kl. 06:32** (352/352) efter at hopet blev
   én time pr. `Request`-konstruktion i stedet for pr. 30 ms — et krydsende ur kan
   da ikke ramme en webhook-signering. Sentry-sløjfens tolv kald har nu eget ur.
@@ -27,15 +30,19 @@
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
   værktøjssider er målt på **indhold**: `pro-table:start` står 1 gang på alle ni
   live, og `build-info.json` på alle tre deployede domæner står i `ce438ba`.
+- **DEPLOY OK 2/10 (kl. 11).** `ceo/livstid-scope` (`45b31df`) er ude — den lå
+  og ventede, fordi den gik rødt i CI. Målt på indhold: `/compliance-report`
+  serverer `$149 once per website — lifetime, first 100 purchases` og den danske
+  `$149 én gang pr. website, for altid.`, og `build-info.json` står i `182af57`.
 
-- `VERIFICÉR DEPLOY: livstidsprisen med sit omfang på de 13 eucomply-sider
-   ceo/livstid-scope 2026-10-02` — måles på **indhold**: `$149 once per website —
-   lifetime, first 100 purchases` på EN og `$149 én gang pr. website — livstid,
-   første 100 køb` på DA, og **ikke** den gamle tekst uden omfang. Dom 1:
-   `check_pro_table.py` er grøn på 19 sider. Dom 2: `--self-test` 24/24. Dom 3:
-   mutationen i generatorens skabelon er rød. Dom 4: `quality_gate.py` er grøn med
-   134 steps. **Noten er forsinket:** `45b31df` gik rødt i CI, så den er aldrig
-   rullet ud.
+- `VERIFICÉR DEPLOY: /pricing med alle 12 priser, EN + DA, EN/DA-free-tools
+   linker til den ceo/pris-side 2026-10-02` — måles på **indhold**: på `/pricing`
+   og `/da/pricing` en række pr. produkt med `data-product`, livstidsafsnittet med
+   tre `data-lifetime`-rækker, **0** `buy.stripe.com` på siden, og
+   `pricing:start` 1 gang pr. fil. Dom 1: `check_pricing_page.py` grøn (12
+   produkter, 2 sider). Dom 2: `--self-test` 7/7. Dom 3/4: mutationen i
+   generatorens skabelon er rød, et Stripe-link i blokken er rødt. Dom 5:
+   `quality_gate.py` grøn med 136 steps.
 
 ## Åbne opgaver
 
@@ -150,6 +157,10 @@
   faktisk betaler sig — fx de samme bøger i PDF + Word + de opdaterede
   revisioner, eller en 2027-udgave — og skriver dens ærlige beskrivelse. Det er
   din beslutning, fordi det er dit navn på kvitteringen.
+  **Haster lidt mere 2/10:** `/pricing` viser nu også `$29 once` for
+  `eu-compliance-ebook-bundle`, så modsætningen med de syv bogside-ruter er synlig
+  på **tre** sider i stedet for to. Den nye side tager dog ikke selv imod betaling
+  — den sender læseren videre til `/paid-templates`, som gjorde det i forvejen.
 - **🟡 Skal værktøjssiderne vise livstidsprisen overhovedet?** De elleve pro-kort
   på `/scan`, `/cookie-check`, `/contrast-checker` m.fl. har en gratis-mod-Pro-tabel
   med «$79/year per website». Jeg lagde livstidsprisen ind som et prislink dér, og
@@ -235,3 +246,12 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     dømmer «ét købsknap i ét pro-kort». Datagrund: begge fund er målt i gaten
     efter en færdig implementering, ikke gættet. **Åbent:** om værktøjssiderne
    overhovedet skal vise livstidsprisen — se ❓.
+11. ~~Én side med alle priser.~~ **Leveret 2/10** — `/pricing` (EN + DA) lister
+    alle 12 katalogvarer med beløb, periode, omfang, gratis-mod-Pro og en
+    købsvej, bygget af `tools/pricing_page.py` fra katalogen. Den **tager ikke
+    imod betaling** — hver række linker til produktets egen købsside — så de tre
+    porte bygget på «én købsvej pr. produkt» kan blive ved med at være strenge.
+    Målt først: 0 af de 102 ruter nævnte to produkter i `<title>`/`<h1>`, så
+    spørgsmålet «hvad koster hele pakken» krævede at gætte hvilken af otte
+    sider der har svaret. Fund undervejs: `check_tool_paid_path.py`s ratchet dømte
+    de to nye ruter som ubefalede, så `--write` skrev dem ind — 92 → 94 linjer.

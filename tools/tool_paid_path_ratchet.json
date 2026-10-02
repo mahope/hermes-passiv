@@ -1,7 +1,7 @@
 {
  "note": "Hvert betalt anker på hver dømt værktøjsside, målt af check_tool_paid_path.py. Ratchet: et par der står her og ikke længere findes på siden er rød, fordi en side der mister den vej den lå på er en tilbagefaldet side — også når der stadig står en anden vej på den. Den dømmer OGSÅ et anker der peger på en anden destination end den blev målt med, altså en ombytning: en liste destinationer kan ikke se den, fordi sættet er uændret. `blind` i tool_paid_path_blind.json er det modsatte: sider der MÅLSLIGE ikke har nogen. Begge skrives med `--write --force`.",
  "source": "python3 tools/check_tool_paid_path.py --write  · Parrene er de rå href'er A.paid_anchors() målte i sidens egen tekst, nøglet på ankerets `id` (ellers dets synlige tekst)",
- "measured": "2026-10-01",
+ "measured": "2026-10-02",
  "paths": {
   "/accessibility-statement-generator": {
    "the compliance report": "/compliance-report"
@@ -175,6 +175,21 @@
    "Køb NIS2 / DORA-leverandørklauselsæt": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
    "compliance-rapport": "/da/compliance-report"
   },
+  "/da/pricing": {
+   "Donér": "/da/support",
+   "Køb Client Compliance Report Kit": "/da/paid-templates",
+   "Køb EAA Accessibility Statement": "/da/paid-templates",
+   "Køb EU Compliance E-book Bundle": "/da/paid-templates",
+   "Køb EUComply Complete Template Bundle": "/da/paid-templates",
+   "Køb EUComply Pro": "/da/compliance-report",
+   "Køb EUComply Pro — $149": "/da/compliance-report",
+   "Køb GDPR DPA template": "/da/paid-templates",
+   "Køb Mutual NDA Clause Set": "/da/paid-templates",
+   "Køb NIS2 / DORA Vendor Clause Set": "/da/paid-templates",
+   "Køb Page Profile Pro": "/da/page-profile",
+   "Køb Page Profile Pro — $39": "/da/page-profile",
+   "Page Profile": "/da/page-profile"
+  },
   "/da/url-til-markdown": {
    "Web-værktøj": "/clean-copy-tool",
    "Web-værktøjet": "/clean-copy-tool",
@@ -343,6 +358,21 @@
   },
   "/palette-generator-da": {
    "EUComply Pro": "/da/compliance-report"
+  },
+  "/pricing": {
+   "Buy Client Compliance Report Kit": "/paid-templates",
+   "Buy EAA Accessibility Statement": "/paid-templates",
+   "Buy EU Compliance E-book Bundle": "/paid-templates",
+   "Buy EUComply Complete Template Bundle": "/paid-templates",
+   "Buy EUComply Pro": "/compliance-report",
+   "Buy EUComply Pro — $149": "/compliance-report",
+   "Buy GDPR DPA template": "/paid-templates",
+   "Buy Mutual NDA Clause Set": "/paid-templates",
+   "Buy NIS2 / DORA Vendor Clause Set": "/paid-templates",
+   "Buy Page Profile Pro": "/page-profile",
+   "Buy Page Profile Pro — $39": "/page-profile",
+   "Donate": "/support",
+   "Page Profile": "/page-profile"
   },
   "/privacy-notice-generator": {
    "EUComply Pro": "/compliance-report"
