@@ -1,14 +1,18 @@
 # STATUS
 
+- **deskuptime.com svarer nu på sit eget h1.** Tjekket i `#check` lige under heroen
+  kalder `/api/url-inspect` og svarer på «er sitet oppe» og «er certifikatet
+  gyldigt» i browseren (`ceo/deskuptime-live-check`). Målt 2/10 før: 4 besøgende i
+  28 dage, 100 % bounce, 0 s besøgstid — og de to gratis webværktøjer lå 120
+  linjer prosa længere nede. Tredje spørgsmål (indholdsændring) kan svaret ikke,
+  og det siger det.
 - **Én handling over folden på de otte næst mest besøgte artikler** (EN+DA).
   Målt 2/10: alle otte havde **3** `btn-primary` i folden (heroens anker +
   `/scan` + `/compliance-ai` under `</header>`). Nu **1** pr. side. 12 sider dømt.
 - **To værktøjssiders gratis-mod-Pro-tabel kommer fra katalogen** (`ceo/pro-tabel-webtool`).
   `/clean-copy-tool` havde den eneste **håndskrevne** tabel i familien («19 USD per
   year», uden port), `/url-inspector` havde ingen. Målt 2/10: 11 → 13 sider.
-- **Donationsprisen læses af katalogen på alle fire sider** (`19e59b2`, DEPLOY OK
-  kl. 11) — «fra 10 kr.» i stedet for «Any amount». Dom 5 + `check_donation_paths.py`.
-- **`/pricing` er bygget** (`b0da8ad`) — alle 12 priser fra katalogen, EN + DA.
+- **Donationsprisen læses af katalogen på alle fire sider** (`19e59b2`) — «fra 10 kr.»
 - **Alle 21 sider har gratis mod Pro i samme tabel.** `check_pro_table.py`
   (8 produktsider + 13 værktøjssider) + `check_catalog_where.py` (112 belæg).
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
@@ -37,33 +41,49 @@
   `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
   `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
 
+- **DEPLOY OK 2/10 (kl. 11).** `ceo/donation-pris-fra-katalog` (`19e59b2`) er ude,
+  målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
+  `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
+  `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
+
 - `VERIFICÉR DEPLOY: gratis-mod-Pro-tabellen på /clean-copy-tool og /url-inspector
-   2026-10-02 ceo/pro-tabel-webtool` — måles på **indhold**: `/clean-copy-tool`
-   har `pro-table:start` 1 gang, **0** «19 USD per year» og `$19/year` i
-   prisrækken; `/url-inspector` har `pro-table:start` 1 gang og `$19/year` +
-   `Three machines per licence` i noten. Dom 1: `check_pro_table.py` grøn
-   (8 produktsider + 13 værktøjssider). Dom 2: `--self-test` 24/24. Dom 3:
-   `build_sites.py` (329 filer, 264 html, 0 brudte), `seo_check.py` (314 sider,
-   0 fund), `stripe-worker.test.mjs` (352/352) og `check_inline_js.py` grønne.
-   Dom 4: hele `quality_gate.py` **136 steps grøn** — den fandt to fejl i det
-   ubrugte arbejde, begge rettet her: `$0` stod i den nye fri kolonne uden at
-   `offers[].prices` for `clean-copy-tool` erklærede det (delt med `clean-copy`
-   og `deskuptime`, som erklærer `$0` af samme grund), og fire nye katalog-`where`
-   havde ingen `fil:linje`. Dom 5: `check_catalog_where` 120 funktioner grøn.
+   2026-10-02 ceo/pro-tabel-webtool` — måler på **indhold**:
+   `build-info.json` står i `7e74d3b` på `mahope.tools` og `cleancopy.tools`;
+   `cleancopy.tools/clean-copy-tool` har `pro-table:start` 1 gang og **0**
+   «19 USD per year» og `$19/year` i prisrækken; `mahope.tools/url-inspector/`
+   har `pro-table:start` 1 gang, `$19/year` og `Three machines per licence` i noten.
+   Dom 1: `check_pro_table.py` grøn (8 produktsider + 13 værktøjssider). Dom 2:
+   `--self-test` 24/24. Dom 3: `build_sites.py` (329 filer, 264 html, 0 brudte),
+   `seo_check.py`, `stripe-worker.test.mjs` (352/352) og `check_inline_js.py` grønne.
+   Dom 4: hele `quality_gate.py` 136 steps grøn (målt i den iteration der lavede
+   ændringen). Dom 5: `check_catalog_where` grøn.
 
 - `VERIFICÉR DEPLOY: én handling over folden på de otte næst mest besøgte
    artikler 2026-10-02 ceo/fold-fire-besogte-artikler` — måles på **indhold**:
    hver af de otte artikler (4 EN + 4 DA) har **1** `btn-primary` i foldregionen
-   i stedet for 3, og **0** `btn-primary` i `blog-tool-cta`-bannerne; begge
-   bannere står nu efter det afsnit, der leverer artiklens løfte. Dom 1:
-   `check_first_action.py` grøn (12 sider dømt). Dom 2: `--self-test` **12/12**,
-   og den nye mutation mod de rigtige filer er målt: porten bliver rød på 10/10
-   sider når bannerne flyttes op igen (kontrolleret ved at slå portens
-   banner-genkendelse fra: 10/12). Dom 3: `build_sites.py` (329 filer, 264 html,
-   0 brudte), `seo_check.py` (314 sider, 0 fund), `stripe-worker.test.mjs`
-   (352/352), `check_inline_js.py` grønne. Dom 4: hele `quality_gate.py`
-   **136 steps grøn**. Dom 5: `ai-cta-honesty` grøn (187 bannere), fordi porten
-   dømmer label/knap/mål og ikke placering.
+   i stedet for 3, og **0** `btn-primary` i `blog-tool-cta`-bannerne. Dom 1:
+   `check_first_action.py` grøn (12 sider dømt). Dom 2: `--self-test` 12/12.
+   Dom 3: `build_sites.py`, `seo_check.py`, `stripe-worker.test.mjs`,
+   `check_inline_js.py` grønne. Dom 4: hele `quality_gate.py` grøn (målt i den
+   iteration der lavede ændringen). Dom 5: `ai-cta-honesty` grøn.
+
+- `VERIFICÉR DEPLOY: tjekket på deskuptime.com's forside 2026-10-02
+   ceo/deskuptime-live-check` — måles på **indhold**, ikke på HTTP 200:
+   `https://deskuptime.com/` og `https://deskuptime.com/da/` har hver præcis
+   **1** `.du-form` med `id="du-check-form"`, `action="/api/url-inspect"`,
+   `<label for="du-check-url">`, `#du-check-status` med `role="status"` og
+   `#du-check-result`, `DU_DONATE`, og indlæser `/net.js` **og** `/one-off-check.js`;
+   `build-info.json` står i squash-sha'en for denne note. Dom 1: `GET
+   /api/url-inspect?url=https://example.com` på deskuptime.com svarer **200**
+   med `securityHeadersChecked` på **8** navne (nyt felt i `_worker.js`, så
+   widgetten ikke hardkoder listen). Dom 2: `stripe-worker.test.mjs` **354/354**,
+   og de to nye kontroller fejler på koden før ændringen. Dom 3: `build_sites.py`
+   (329 + 35 filer, 0 brudte), `seo_check.py`, `check_inline_js.py` grønne.
+   Dom 4: hele `quality_gate.py` grøn. Dom 5: `check_first_action.py` dømer nu
+   begge forsider mod `#check` (14 ratchetede sider), `check_form_labels.py`
+   grøn på det nye felt, `check_net_copies.py` grøn (genkaldsreglen kun i
+   `net.js`), `check_donation_paths.py` **GRØN på 41 sider** + `--self-test`
+   grøn (de to forsider kom i ratchetfilen, fordi de nu renderer et resultat).
 
 ## Åbne opgaver
 
@@ -288,3 +308,25 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     spørgsmålet «hvad koster hele pakken» krævede at gætte hvilken af otte
     sider der har svaret. Fund undervejs: `check_tool_paid_path.py`s ratchet dømte
     de to nye ruter som ubefalede, så `--write` skrev dem ind — 92 → 94 linjer.
+12. ~~**Tjekket lå på mahope.tools, ikke på det site, der sælger det.**~~ **Leveret
+    2/10** — `deskuptime.com` og `/da/` har nu ét tjek i `#check` lige under
+    heroen, der kalder `/api/url-inspect` og svarer på de to første af de tre
+    spørgsmål i sit eget h1. Hvem: alle der lander på forsiden (4 besøgende,
+    100 % bounce, 0 s). Tal: checks pr. uge mod forsiden (baseline **0** — der var
+    ingen kodevej til den). Accept: heroens primære handling er tjekket, formen er
+    en rigtig GET så den virker uden JavaScript, og svaret siger ærligt at det
+    *ikke* overvåger noget og ikke kan se indholdsændringer — det er CLI'ens og
+    appens job. Datagrund: målt 2/10 på live — `/api/url-inspect` svarede 200
+    med status, kæde, certifikat og headere, men blev aldrig kalt herfra; de to
+    gratis webværktøjer lå 120 linjer prosa længere nede. Fund undervejs: listen
+    af de otte headere lå i workeren og skulle hardkodes igen i klienten, så
+    `securityHeadersChecked` kom i svaret, og `stripe-worker.test.mjs` fik to
+    kontroller der fejler på den gamle kode (354/354). Fund undervejs, fundet af
+    gaten: `check_donation_paths.py --self-test` blev rød, fordi den nye `#check`
+    gør forsiden til en side der renderer et målt resultat — så den skal have
+    donationslinjen, som `DU_DONATE` i siden nu sætter ind i resultatkortet.
+13. **Samme tjek på de tre andre forsider.** Hvem: alle der lander på `mahope.tools`
+    (4 besøgende, 100 % bounce), `cleancopy.tools` (7, 71 %) og `deskuptime.com/da/`.
+    Tal: brug pr. uge pr. forside. Accept: hver forside har ét tjek der svarer på
+    spørgsmålet i sin egen `<h1>`, og ingen har to primære handlinger over folden.
+    Datagrund: målt 2/10 — alle tre forsider er kataloger, ikke værktøjer.

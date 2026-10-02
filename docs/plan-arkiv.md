@@ -4844,3 +4844,22 @@ Målt på de otte kilder efter rettelsen: 1 `btn-primary` i foldregionen hver,
 `btn-primary` 0 gange i `blog-tool-cta`-bannerne. `quality_gate.py` **136 steps
 grøn**, `build_sites.py` 329 filer / 0 brudte, `seo_check.py` 314 sider / 0 fund,
 `stripe-worker.test.mjs` 352/352, `check_inline_js.py` grøn.
+
+## 2/10 — `ceo/fold-fire-besogte-artikler` (f059214)
+
+De otte næst mest besøgte artikler (Plausible: 1–2 besøgende hver, mahope.tools
+og cleancopy.tools) havde hver TRE `btn-primary` over folden: heroens eget anker
+plus scanner- og AI-bannerne under `</header>`. Bannerne er flyttet ned til efter
+det afsnit, der leverer artiklens løfte, og demoteret til `btn-secondary`.
+`check_first_action.py`s ratchet voksede 4 → 12 dømte sider, og dens nye mutation
+mod de rigtige filer er målt: porten bliver rød på 10/10 sider når bannerne
+flyttes op igen (kontrolleret ved at slå portens banner-genkendelse fra: 10/12).
+
+## 2/10 — `ceo/pro-tabel-webtool` (7e74d3b)
+
+`/clean-copy-tool` havde den eneste **håndskrevne** gratis-mod-Pro-tabel i
+familien («19 USD per year», uden port), og `/url-inspector` havde ingen. Begge
+får nu tabellen fra `tools/pro_table.py` / `tools/stripe_catalog.json`, så
+`check_pro_table.py` dømmer 8 produktsider + 13 værktøjssider mod samme kilde.
+Deployet og målt på indhold: `build-info.json` står i `7e74d3b` på begge
+domæner, `pro-table:start` står én gang pr. side, og «19 USD per year» er væk.

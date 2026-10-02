@@ -3595,6 +3595,10 @@ async function handleUrlInspect(request, url, env) {
     finalStatus: finalResponse.status,
     finalStatusText: finalResponse.statusText,
     securityHeaders: presentSecurity,
+    // The list we looked for, so a client can name what is *missing* instead of
+    // only what is there. Without it the eight names live in every caller, and
+    // the next change to `secHeaders` silently leaves them all behind.
+    securityHeadersChecked: secHeaders,
     allHeaders: finalResponse.headers,
     ssl: await fetchSslInfo(finalResponse.url),
     message: redirects.length > 0

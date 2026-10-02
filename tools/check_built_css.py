@@ -338,13 +338,34 @@ def dead_tag_selectors(page: Path, html: str) -> list[str]:
 # præfiks som `sh-grade-` — gør hele vælgeren levende, fordi så *kan* den
 # matche, og det er alt porten kan bevise.
 # ---------------------------------------------------------------------------
+def site_root(page: Path) -> Path:
+    """Den mappe under `dist/` som siden ligger i — altså domænets rod.
+
+    Rod-relative `src="/x.js"` skal opløses mod *domænets* dist-rod, ikke mod
+    sidens egen mappe (`/da/`), fordi bygget skriver `/net.js` i roden af hvert
+    site. `page_text` gjorde først `page.parent / "/x.js"`, og `Path` lader en
+    absolut sti vinde: resultatet var `/x.js` i filsystemets rod, `is_file()`
+    var False, og porten læste **intet** eksternt. Den var altså blind for
+    præcis de sider, der flytter deres CSS-brugende kode ud i en fil — og sagde
+    det ikke. Målt 2/10, da `ceo/deskuptime-live-check` satte 19 klasser i
+    `/one-off-check.js` og porten dømte dem alle døde.
+    """
+    node = page.parent.resolve()
+    while node != node.parent and node.parent.name.lower() != "dist":
+        node = node.parent
+    return node
+
+
 def page_text(page: Path, html: str) -> str:
     """Markup og scripts, altså alt hvad der kan sætte en klasse — minus CSS."""
     parts = [RE_STYLE_BLOCK.sub(" ", html)]
+    root = site_root(page)
     for src in RE_SCRIPT_SRC.findall(html):
         if src.startswith(("http://", "https://", "//")) or not RE_LOCAL_JS.search(src):
             continue
-        target = (page.parent / src.split("?")[0]).resolve()
+        path = src.split("?")[0].split("#")[0]
+        target = (root / path.lstrip("/")).resolve() if path.startswith("/") \
+            else (page.parent / path).resolve()
         if target.is_file():
             parts.append(target.read_text(encoding="utf-8", errors="replace"))
     return "\n".join(parts)
@@ -802,6 +823,15 @@ def self_test() -> int:
         # lægger præcis den publicerede fejl fra 30/9 i den anden ende: en
         # markupændring der glemmer den ledsagende regel. Rører *dist*, som
         # revieweren målte, så den kræver ikke et bygge.
+        #
+        # Mutationen rammer **begge** steder klassen sættes fra. Det gjorde den
+        # ikke før 2/10, og det var ikke et valg: porten læste slet ingen
+        # eksterne scripts (se `site_root`), så `.bb-status` så ud til at kun
+        # markup'en satte den. Med rettelsen læses `/bugbottle-demo.js`, og en
+        # mutation der kun omdøber i markup'en lader klassen være levende — så
+        # porten ville være grønnet *uden* at have fundet fejlen, hvilket er
+        # værre end rød. Mutationen skal derfor gøre klassen uopnåelig
+        # overalt, ellers beviser den ingenting.
         demo = work / "dist" / "bugbottle.dev" / "bugbottle-demo.html"
         if not demo.exists():
             raise AssertionError("demoside mangler i kopiens dist — mutationen kan ikke måles")
@@ -810,12 +840,45 @@ def self_test() -> int:
             raise AssertionError("demoside har ikke længere formen mutationen forventer")
         demo.write_text(text.replace('class="bb-status"', 'class="bb-status-x"',
                                      1), encoding="utf-8")
+        demo_js = work / "dist" / "bugbottle.dev" / "bugbottle-demo.js"
+        if not demo_js.exists():
+            raise AssertionError("demosidens script mangler — mutationen kan ikke måles")
+        js = demo_js.read_text(encoding="utf-8")
+        if "bb-status" not in js:
+            raise AssertionError(
+                "demosidens script sætter ikke længere bb-status — mutationen "
+                "ville være grøn uden at finde fejlen")
+        demo_js.write_text(js.replace("bb-status", "bb-status-x"), encoding="utf-8")
         class_dead = [f for f in check_only_in(work) if f.kind == "død klasse"]
         ok(any(".bb-status" in f.detail for f in class_dead),
            f"mutationen gør porten rød med den døde klasse "
            f"({[f.detail[:60] for f in class_dead[:2]]})")
         ok(any("bugbottle-demo" in f.page for f in class_dead),
            "den døde klasse navngiver den side den står på")
+
+        # Mutation 4b: den modsatte retning, som beviser at rettelsen i
+        # `site_root` ikke bare har slået portens egne fejl fra. Siden her har
+        # *kun* `.a-b` i sin CSS, og klassen sættes udelukkende fra et
+        # rod-relativt script. Før rettelsen læste porten slet intet eksternt,
+        # så den ville have været grøn på præcis den fejl den er skrevet for.
+        # Kontrollen går på `page_text` — det er den del rettelsen rørte — så den
+        # ikke afhænger af de andre dommes rækkefølge.
+        with tempfile.TemporaryDirectory() as tmp:
+            rod = Path(tmp)
+            (rod / "dist" / "x.dev").mkdir(parents=True)
+            side = rod / "dist" / "x.dev" / "index.html"
+            markup = ('<html><head><style>.a-b { color: red }</style></head>'
+                      '<body><script src="/a.js"></script></body></html>')
+            side.write_text(markup, encoding="utf-8")
+            script = rod / "dist" / "x.dev" / "a.js"
+            script.write_text("el.className = 'a-b';", encoding="utf-8")
+            ok("a-b" in class_vocabulary(page_text(side, markup))[0],
+               "en klasse der kun sættes fra et rod-relativt script er levende")
+            # Og den modsatte fejl: slås scriptet fra, skal samme klasse forsvinde
+            # fra ordbogen — ellers var den grønne kontrol ovenfor vælgte.
+            script.unlink()
+            ok("a-b" not in class_vocabulary(page_text(side, markup))[0],
+               "uden scriptet er klassen død")
 
         # Mutation 5: porten må ikke dømme CSS der *bygges* ved kørsel. `.sev-error
         # .sev-tag` på `/compliance-report` sættes som `'finding-item sev-' +

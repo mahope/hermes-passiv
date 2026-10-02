@@ -28,6 +28,35 @@
   .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
   .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
   table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
+  .du-form { margin: 1.5rem 0 0; }
+  .du-form label { display: block; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.35rem; }
+  .du-row-wrap { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .du-row-wrap input { flex: 1 1 16rem; min-height: 2.75rem; }
+  .du-row-wrap button { flex: 0 0 auto; min-height: 2.75rem; }
+  .du-hint { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.5rem 0 0; max-width: 58ch; }
+  .du-status { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); }
+  .du-card { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: 1.1rem 1.2rem; margin: 0.6rem 0 0; box-shadow: var(--shadow); }
+  .du-verdict { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+  .du-verdict strong { font-size: 1.15rem; font-family: var(--font-display); }
+  .du-verdict.is-ok strong { color: var(--color-green); }
+  .du-verdict.is-warn strong { color: var(--color-yellow); }
+  .du-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+  .du-rows { margin: 0; display: grid; gap: 0.1rem; }
+  .du-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
+  @media (min-width: 40rem) { .du-rows > div { grid-template-columns: 11rem 1fr; } }
+  .du-rows dt { font-size: 0.85rem; color: var(--color-text-muted); }
+  .du-rows dd { margin: 0; overflow-wrap: anywhere; }
+  .du-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .du-chip { display: inline-flex; align-items: baseline; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+  .du-chip.is-ok { border-color: var(--color-green); background: var(--color-green-soft); }
+  .du-chip.is-missing { border-color: var(--color-border); }
+  .du-chip-name { font-family: var(--mono); }
+  .du-chip-state { color: var(--color-text-muted); }
+  .du-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
+  .du-error { margin: 0; color: var(--color-red); }
+  .du-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
+  .du-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
+  .du-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
 </style>
 </head>
 <body>
@@ -38,13 +67,36 @@
     <h1>Is the site up, is the certificate still valid, did the page change?</h1>
     <p>DeskUptime answers those three questions from your own computer. A free command-line tool for one-off checks and CI, and a small desktop app that keeps checking in the background. No hosted dashboard, no monthly fee, nothing about your sites stored on someone else's server.</p>
     <div class="hero-cta">
-      <a href="#install" class="btn-primary">Install the CLI</a>
+      <a href="#check" class="btn-primary">Check a site now</a>
+      <a href="#install" class="btn-secondary">Install the CLI</a>
       <a href="#desktop" class="btn-secondary">Desktop app — with Pro</a>
-      <a href="https://github.com/mahope/deskuptime" class="btn-secondary">Source on GitHub</a>
     </div>
-    <span class="hero-note">The CLI is free and MIT-licensed. The desktop app is part of Pro: 19 USD one-time, 3 machines.</span>
+    <span class="hero-note">The check below needs nothing installed. To keep watching a site, that is the CLI and the desktop app. The CLI is free and MIT-licensed; the desktop app is part of Pro: 19 USD one-time, 3 machines.</span>
   </div>
 </div>
+
+<section id="check">
+  <div class="container">
+    <h2>Check one site right now</h2>
+    <p>The first two questions, answered without installing anything. Type a URL and we
+    fetch it from our own server: the status it answers with, how many redirects it took,
+    the live TLS certificate with the days left on it, and which of the eight security
+    headers came back. One check, about a second, and nothing about the URL is stored.</p>
+    <form class="du-form" id="du-check-form" method="get" action="/api/url-inspect">
+      <label for="du-check-url">Website address</label>
+      <div class="du-row-wrap">
+        <input id="du-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://your-site.com" aria-describedby="du-check-hint" required>
+        <button type="submit" class="btn-primary">Check it now</button>
+      </div>
+      <p class="du-hint" id="du-check-hint">One URL, for example <code>example.com</code> — we add
+      <code>https://</code> if you leave it out. The request goes to our server, so it sees the
+      site the way the rest of the world does, not the way your browser does.</p>
+    </form>
+    <p class="du-status" id="du-check-status" role="status" aria-live="polite"></p>
+    <div id="du-check-result" hidden></div>
+  </div>
+</section>
 
 <section>
   <div class="container">
@@ -117,7 +169,8 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
       <li><a href="/security-headers-checker">Security headers checker</a> — grade any
       site's HTTP security headers and see what to fix.</li>
     </ul>
-    <p class="muted">More in <a href="/tools/">all tools</a>.</p>
+    <p class="muted">The <a href="#check">check at the top of this page</a> answers the same two
+    questions for a single URL. More in <a href="/tools/">all tools</a>.</p>
   </div>
 </section>
 
@@ -161,6 +214,14 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
   <div class="container">
     <h2>Questions</h2>
     <details>
+      <summary>Can I check a site without installing anything?</summary>
+      <p>Yes — the <a href="#check">check at the top of this page</a> fetches the URL from our
+      server and shows the status, the redirect count, the live certificate and the security
+      headers. That is one check at one moment. It cannot tell you whether the site was down
+      earlier, or will be later, and it cannot compare the page against the previous run, so
+      it is not a monitoring service. Watching is what the CLI and the desktop app do.</p>
+    </details>
+    <details>
       <summary>What happens when my computer is off or asleep?</summary>
       <p>Nothing is checked until it wakes up. DeskUptime runs where you run it. If you need checks that continue while your laptop is closed, run the CLI on a server or in a scheduled GitHub Actions workflow — both are free.</p>
     </details>
@@ -192,5 +253,12 @@ npx github:mahope/deskuptime check https://your-site.com   # no install, needs N
 </section>
 
 </main>
+<script>/* The donation line lives in the page, not in one-off-check.js: it has to reach
+  tools/check_donation_paths.py, which judges the page file, and it must not appear before
+  the visitor has an answer. Same shape as /scan and /url-inspector: a sentence, never a
+  button, and the href is the one in tools/stripe_catalog.json. */
+window.DU_DONATE = '<p class="du-donate">This check is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
 </body>
 </html>

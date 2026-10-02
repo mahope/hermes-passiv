@@ -903,6 +903,22 @@ ok('url-inspect fortæller hvor den endte, og at der ingen omdirigering var',
   JSON.stringify(inspectBody).slice(0, 140));
 ok('url-inspect læser security-headere, som er hele pointen',
   /max-age/.test(JSON.stringify(inspectBody.securityHeaders || {})), JSON.stringify(inspectBody.securityHeaders));
+// Listen af *opslagte* headere. Uden den kan en klient kun vise hvad der er, og
+// de otte navne skal så ligge i hver klient — hvorfra næste ændring i
+// `secHeaders` forsvinder stille. Denne kontrol fejler på koden fra før.
+const checkedList = inspectBody.securityHeadersChecked;
+ok('url-inspect fortæller hvilke headere den ledte efter, ikke kun hvilke den fandt',
+  Array.isArray(checkedList) && checkedList.length === 8 &&
+  checkedList.includes('strict-transport-security') && checkedList.includes('content-security-policy'),
+  JSON.stringify(checkedList));
+// Negativ kontrol: listen skal være de otte vi faktisk slår efter, ikke bare otte
+// — ellers ville porten være grøn ved at fylde den med vilkårlige navne.
+ok('listen er præcis de otte headere der slås efter',
+  Array.isArray(checkedList) && checkedList.every((h) => typeof h === 'string' && /^[a-z-]+$/.test(h)) &&
+  new Set(checkedList).size === 8 &&
+  ['x-content-type-options', 'x-frame-options', 'referrer-policy', 'permissions-policy',
+    'x-xss-protection', 'access-control-allow-origin'].every((h) => checkedList.includes(h)),
+  JSON.stringify(checkedList));
 
 // Beviset på at kravet kan fange den gamle kode: kør den fra git, hvor `env`
 // ikke var med, gennem den samme port. Uden den ville første kontrol være

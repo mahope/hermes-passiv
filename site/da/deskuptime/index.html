@@ -25,6 +25,35 @@
   .downloads li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--color-border); padding: 0.55rem 0; margin: 0; }
   .downloads span { color: var(--color-text-muted); font-size: 0.9rem; }
   table.compare td:nth-child(n+2), table.compare th:nth-child(n+2) { text-align: center; width: 6.5rem; }
+  .du-form { margin: 1.5rem 0 0; }
+  .du-form label { display: block; font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 0.35rem; }
+  .du-row-wrap { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .du-row-wrap input { flex: 1 1 16rem; min-height: 2.75rem; }
+  .du-row-wrap button { flex: 0 0 auto; min-height: 2.75rem; }
+  .du-hint { font-size: 0.85rem; color: var(--color-text-muted); margin: 0.5rem 0 0; max-width: 58ch; }
+  .du-status { min-height: 1.4rem; margin: 0.9rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); }
+  .du-card { border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); padding: 1.1rem 1.2rem; margin: 0.6rem 0 0; box-shadow: var(--shadow); }
+  .du-verdict { margin: 0 0 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+  .du-verdict strong { font-size: 1.15rem; font-family: var(--font-display); }
+  .du-verdict.is-ok strong { color: var(--color-green); }
+  .du-verdict.is-warn strong { color: var(--color-yellow); }
+  .du-verdict-url { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+  .du-rows { margin: 0; display: grid; gap: 0.1rem; }
+  .du-rows > div { display: grid; grid-template-columns: 1fr; gap: 0.1rem 1rem; padding: 0.5rem 0; border-top: 1px solid var(--color-border); }
+  @media (min-width: 40rem) { .du-rows > div { grid-template-columns: 11rem 1fr; } }
+  .du-rows dt { font-size: 0.85rem; color: var(--color-text-muted); }
+  .du-rows dd { margin: 0; overflow-wrap: anywhere; }
+  .du-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .du-chip { display: inline-flex; align-items: baseline; gap: 0.35rem; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+  .du-chip.is-ok { border-color: var(--color-green); background: var(--color-green-soft); }
+  .du-chip.is-missing { border-color: var(--color-border); }
+  .du-chip-name { font-family: var(--mono); }
+  .du-chip-state { color: var(--color-text-muted); }
+  .du-note { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4rem; }
+  .du-error { margin: 0; color: var(--color-red); }
+  .du-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
+  .du-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
+  .du-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
 </style>
 </head>
 <body>
@@ -35,13 +64,36 @@
     <h1>Er sitet oppe, er certifikatet stadig gyldigt, har siden ændret sig?</h1>
     <p>DeskUptime svarer på de tre spørgsmål fra din egen computer. Et gratis kommandolinjeværktøj til enkelttjek og CI, og en lille desktop-app, der bliver ved med at tjekke i baggrunden. Intet hosted dashboard, ingen månedlig betaling, intet om dine sites gemt på andres servere.</p>
     <div class="hero-cta">
-      <a href="#install" class="btn-primary">Installér CLI'en</a>
+      <a href="#check" class="btn-primary">Tjek et site nu</a>
+      <a href="#install" class="btn-secondary">Installér CLI'en</a>
       <a href="#desktop" class="btn-secondary">Desktop-app — med Pro</a>
-      <a href="https://github.com/mahope/deskuptime" class="btn-secondary">Kildekode på GitHub</a>
     </div>
-    <span class="hero-note">CLI'en er gratis og MIT-licenseret. Desktop-appen er en del af Pro: 19 USD én gang, 3 maskiner.</span>
+    <span class="hero-note">Tjekket nedenfor kræver ingen installation. For at holde øje med et site er det CLI'en og desktop-appen. CLI'en er gratis og MIT-licenseret; desktop-appen er en del af Pro: 19 USD én gang, 3 maskiner.</span>
   </div>
 </div>
+
+<section id="check">
+  <div class="container">
+    <h2>Tjek ét site lige nu</h2>
+    <p>De to første spørgsmål, besvaret uden at installere noget. Skriv en URL, så henter vi
+    den fra vores egen server: det status den svarer med, hvor mange omdirigeringer den tog,
+    det levende TLS-certifikat med dagene tilbage, og hvilke af de otte sikkerhedsoverskrifter
+    der kom med. Ét tjek, cirka et sekund, og intet om URL'en gemmes.</p>
+    <form class="du-form" id="du-check-form" method="get" action="/api/url-inspect">
+      <label for="du-check-url">Webadresse</label>
+      <div class="du-row-wrap">
+        <input id="du-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://dit-site.dk" aria-describedby="du-check-hint" required>
+        <button type="submit" class="btn-primary">Tjek nu</button>
+      </div>
+      <p class="du-hint" id="du-check-hint">Én URL, for eksempel <code>dit-site.dk</code> — vi sætter
+      <code>https://</code> foran, hvis du udelader den. Anmodningen går til vores server, så den ser
+      sitet sådan som resten af verden gør det, ikke sådan som din browser gør det.</p>
+    </form>
+    <p class="du-status" id="du-check-status" role="status" aria-live="polite"></p>
+    <div id="du-check-result" hidden></div>
+  </div>
+</section>
 
 <section>
   <div class="container">
@@ -143,6 +195,15 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
   <div class="container">
     <h2>Spørgsmål</h2>
     <details>
+      <summary>Kan jeg tjekke et site uden at installere noget?</summary>
+      <p>Ja — <a href="#check">tjekket øverst på denne side</a> henter URL'en fra vores server
+      og viser status, antallet af omdirigeringer, det levende certifikat og
+      sikkerhedsoverskrifterne. Det er ét tjek på ét tidspunkt. Det kan ikke se, om sitet var
+      nede tidligere eller bliver nede senere, og det kan ikke sammenligne siden med forrige
+      kørsel, så det er ikke en overvågningstjeneste. Det er CLI'en og desktop-appen, der
+      holder øje.</p>
+    </details>
+    <details>
       <summary>Hvad sker der, når min computer er slukket eller sover?</summary>
       <p>Der tjekkes ikke, før den vågner. DeskUptime kører dér, hvor du kører det. Har du brug for tjek, der fortsætter med lukket laptop, så kør CLI'en på en server eller i et scheduleret GitHub Actions-workflow — begge dele er gratis.</p>
     </details>
@@ -174,5 +235,10 @@ npx github:mahope/deskuptime check https://dit-site.dk   # uden installation, kr
 </section>
 
 </main>
+<script>/* Samme linje som på den engelske forside — se kommentaren dér. Ordene er danske,
+  ankeret er katalogens, og den er en sætning og ikke en knap. */
+window.DU_DONATE = '<p class="du-donate">Tjekket er gratis og kræver ingen konto. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> det i gang.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/one-off-check.js"></script>
 </body>
 </html>
