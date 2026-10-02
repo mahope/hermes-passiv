@@ -1,8 +1,17 @@
 {
-  "_kommentar": "Første handling over folden pr. kildefil. Kun sider med trafik er dømt; se check_first_action.py for hvorfor de øvrige 182 kun tælles. Tilføj en linje pr. side der har fået rettet folden, ellers dømmer porten den ikke.",
+  "_kommentar": "Første handling over folden pr. kildefil. Kun sider med trafik er dømt; se check_first_action.py for hvorfor de øvrige kun tælles (tallet står i hver kørsel, fordi det falder). Tilføj en linje pr. side der har fået rettet folden, ellers dømmer porten den ikke.",
   "_2oktober_kontrastartikler": "Begge artikler peger nu på `#try-it` — ankeret ned til det indlejrede værktøj — fordi værktøjet *er* på siden. Før pegede de på `/text-on-image-checker`, altså en side de slap læseren ud af for at gøre det de kom for. Ratcheten følger handlingen, ikke destinationsformen, så et anker er gyldigt her.",
+  "_2oktober_de_naeste_otte": "De otte næst mest besøgte artikler (Plausible 2/10: 1-2 besøgende hver, mahope.tools og cleancopy.tools). Hver havde TRE `btn-primary` over folden: heroens eget anker plus de to banner-knapper (`/scan` og `/compliance-ai`), der lå lige under `</header>`. Bannerne er nu flyttet ned til efter det afsnit, der leverer artiklens løfte, og demoteret til `btn-secondary` — samme rettelse som 93f591a gjorde på kontrastartiklerne. `cmp-sammenligning-2026` (DA) og `html-til-markdown-cli` (DA) har et *udgående* link som primær handling, fordi artiklens pointe er selve værktøjet; ratcheten følger den handling, porten kræver at den er den ENESTE primære.",
   "site/blog/text-on-image-contrast-check.html": "#try-it",
   "site/da/blog/tekst-paa-billede-kontrasttjek.html": "#prov-dit-billede",
+  "site/blog/copy-table-from-website-to-excel.html": "#fixes",
+  "site/da/blog/kopier-tabel-til-excel.html": "#loesninger",
+  "site/blog/cmp-comparison-2026.html": "#content",
+  "site/da/blog/cmp-sammenligning-2026.html": "/cookie-check",
+  "site/blog/html-to-markdown-cli.html": "#how",
+  "site/da/blog/html-til-markdown-cli.html": "/clean-copy-cli-ref",
+  "site/blog/html-to-markdown-vscode.html": "#fix",
+  "site/da/blog/indsaet-som-markdown-i-vscode.html": "#loesning",
   "site/index.html": "/free-tools",
   "site/da/index.html": "/da/free-tools"
 }

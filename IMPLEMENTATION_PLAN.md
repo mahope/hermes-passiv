@@ -1,5 +1,8 @@
 # STATUS
 
+- **Én handling over folden på de otte næst mest besøgte artikler** (EN+DA).
+  Målt 2/10: alle otte havde **3** `btn-primary` i folden (heroens anker +
+  `/scan` + `/compliance-ai` under `</header>`). Nu **1** pr. side. 12 sider dømt.
 - **To værktøjssiders gratis-mod-Pro-tabel kommer fra katalogen** (`ceo/pro-tabel-webtool`).
   `/clean-copy-tool` havde den eneste **håndskrevne** tabel i familien («19 USD per
   year», uden port), `/url-inspector` havde ingen. Målt 2/10: 11 → 13 sider.
@@ -8,13 +11,13 @@
 - **`/pricing` er bygget** (`b0da8ad`) — alle 12 priser fra katalogen, EN + DA.
 - **Alle 21 sider har gratis mod Pro i samme tabel.** `check_pro_table.py`
   (8 produktsider + 13 værktøjssider) + `check_catalog_where.py` (112 belæg).
-- **Livstidsprisens købsvej er prøvet af og forkastet** — 17 sider, to porte siger nej.
 - **CEO-kø punkt 0 er færdigt** — `5693853`: `/api/url-inspect` → 200, 202 på
   `/thanks` siger «not confirmed yet», 429 er endelig, SSRF-værnet dækker hvert hop.
 - **PR-tjek 2/10:** 0 åbne PR'er. **Branch-tjek 2/10:** ingen 14 dage gamle.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
-  banner-placering på 180 sider, de 2 desktop-apps der ringer til Lemon Squeezy,
-  Search Console, og **bogenes betalte udgave** (se ❓).
+  banner-placering på de 172 øvrige sider, de 2 desktop-apps der ringer til Lemon
+  Squeezy, Search Console, **IndexNow pinges aldrig** (skripten kaldes ikke), og
+  **bogenes betalte udgave** (se ❓).
 
 ## Verificér deploy
 
@@ -48,6 +51,20 @@
    og `deskuptime`, som erklærer `$0` af samme grund), og fire nye katalog-`where`
    havde ingen `fil:linje`. Dom 5: `check_catalog_where` 120 funktioner grøn.
 
+- `VERIFICÉR DEPLOY: én handling over folden på de otte næst mest besøgte
+   artikler 2026-10-02 ceo/fold-fire-besogte-artikler` — måles på **indhold**:
+   hver af de otte artikler (4 EN + 4 DA) har **1** `btn-primary` i foldregionen
+   i stedet for 3, og **0** `btn-primary` i `blog-tool-cta`-bannerne; begge
+   bannere står nu efter det afsnit, der leverer artiklens løfte. Dom 1:
+   `check_first_action.py` grøn (12 sider dømt). Dom 2: `--self-test` **12/12**,
+   og den nye mutation mod de rigtige filer er målt: porten bliver rød på 10/10
+   sider når bannerne flyttes op igen (kontrolleret ved at slå portens
+   banner-genkendelse fra: 10/12). Dom 3: `build_sites.py` (329 filer, 264 html,
+   0 brudte), `seo_check.py` (314 sider, 0 fund), `stripe-worker.test.mjs`
+   (352/352), `check_inline_js.py` grønne. Dom 4: hele `quality_gate.py`
+   **136 steps grøn**. Dom 5: `ai-cta-honesty` grøn (187 bannere), fordi porten
+   dømmer label/knap/mål og ikke placering.
+
 ## Åbne opgaver
 
 1. ~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
@@ -73,14 +90,17 @@
    grund gør dom 4/7 i artikelporten umulige at dømme. Accept: enten domænet på
    Pages og fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`
    så status bliver ærlig. *(Beslutning — se ❓.)*
-4. **180 sider har to-tre knapper over folden.** Hvorfor:
+4. **172 sider har to-tre knapper over folden.** Hvorfor:
    `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren
-   ind under `</header>` på hele bloggen, så de ligger over folden på 180 af 224
+   ind under `</header>` på hele bloggen, så de lå over folden på 180 af 224
    sider med hero — og på mange er heroens egen primære et anker (`#content`,
-   `#how`). Målt 30/9 af `check_first_action.py`. Accept: bannerne er enten
-   flyttet ned i artiklen på de mest besøgte sider (dømt i
-   `tools/first_action.json`), eller slettet fra hele bloggen så AI-CTA'en
-   ligger ét sted pr. side. Kræver beslutning — se ❓.
+   `#how`). Målt 30/9 af `check_first_action.py`; **2/10 er de 10 mest besøgte
+   rettet** (kontrastartiklerne + otte artikler med 1–2 besøgende, EN+DA), så
+   172 står tilbage. Accept: bannerne er enten flyttet ned i artiklen på de mest
+   besøgte sider (dømt i `tools/first_action.json`), eller slettet fra hele
+   bloggen så AI-CTA'en ligger ét sted pr. side. Kræver beslutning — se ❓.
+   **Målt i denne iteration:** de otte nyrettede havde 3 → 1 `btn-primary` i
+   folden; portens ratchet voksede 4 → 12 dømte sider.
 5. ~~DA-siden mangler download-knappen på rapporten.~~ **Ikke et problem.**
    Optaget på en måling af kildefilerne 1/10, men målt på live: både EN og DA
    har `dlReport` to gange og `function downloadReport` én gang. Flyttet til
@@ -122,13 +142,22 @@
   `python3 tools/check_ai_cta_honesty.py --apply`, og de gamle
   «Ask the Compliance AI»-tekster kommer tilbage på alle 187 sider. Gaten er
   rød, indtil det er gjort.
-- **🟡 Skal scanner- og AI-banneren ligge over folden på 180 sider?** Målt 30/9
-  giver det **tre knapper oven på folden** pr. artikel, og på 30 af dem er
-  knappen *oveni* et anker som «læs videre», så det værktøj artiklen handler om
-  ikke er den primære handling. Jeg har rettet de to mest besøgte artikler. Enten
-  flytter jeg banneren ned i artiklen på de næste mest besøgte, eller jeg sletter
-  den fra hele bloggen, så AI-CTA'en ligger ét sted pr. side. Det er din beslutning,
-  fordi det er en promo du har bedt om.
+- **🟡 Skal scanner- og AI-banneren ligge over folden på de 172 resterende
+  sider?** Målt 30/9 giver det **tre knapper oven på folden** pr. artikel, og på
+  30 af dem er knappen *oveni* et anker som «læs videre», så det værktøj artiklen
+  handler om ikke er den primære handling. **2/10 er de 10 mest besøgte rettet**
+  (kontrastartiklerne + otte med 1–2 besøgende, EN+DA), målt 3 → 1 knap i folden
+  og dømt i `tools/first_action.json`. Enten flytter jeg banneren ned i artiklen
+  på de næste mest besøgte, eller jeg sletter den fra hele bloggen, så AI-CTA'en
+  ligger ét sted pr. side. Det er din beslutning, fordi det er en promo du har
+  bedt om.
+- **🟡 `indexnow_ping.sh` kaldes aldrig.** Målt 2/10: `grep -rn indexnow
+  .github/workflows/ build_sites.py` giver **0 træffere** — skripten er skrevet,
+  nøgle-filen serveres korrekt, men intet udløser den. Bing og Google er de to
+  eneste søgemaskinereferencer (2 + 2 besøgende), så det er den billigste
+  distribution vi ikke bruger. Jeg har ikke lagt den i CI, fordi et IndexNow-ping
+  er et udadvendt kald til et eksternt API, og det er din beslutning. Sig til det,
+  så lægger jeg ét step i `deploy-sites.yml` efter en vellykket udgivelse.
 - **🔴 `STATS_TOKEN` på workeren.** Én linje, én secret, og så kan konvertering
   måles i stedet for gættes. Uden den er `/api/stats` 401, og opgave 2 bygger på
   tal, der ikke er besøg.

@@ -4812,3 +4812,35 @@ Den håndskrevne danske historikkommentar, der forklarede skiftet, blev fjernet 
 den gjorde planens egen VERIFICÉR-påstand («0 «19 USD per year»») falsk: den
 blev målt til 1 forekomst i den byggede side. Begrundelsen bliver i
 `tools/check_pro_table.py`, hvor den hører hjemme.
+
+## 2/10 — `ceo/fold-fire-besogte-artikler`: folden på de otte næst mest besøgte artikler
+
+Plausible 2/10 gav otte artikler med 1–2 besøgende hver (fire på mahope.tools,
+fire på cleancopy.tools — `copy-table-from-website-to-excel`,
+`cmp-comparison-2026`, `html-to-markdown-cli`, `html-to-markdown-vscode` og deres
+DA-søskende). Målt med `check_first_action.py`: **alle otte havde tre
+`btn-primary` i foldregionen** — heroens eget anker (`#fixes`, `#content`,
+`#how`, `#fix`) plus de to bannerknapper under `</header>` (`/scan` og
+`/compliance-ai`). Det er samme fejlform som 93f591a fandt på kontrastartiklerne,
+bare på de næste otte sider i stedet for de to første.
+
+Rettelsen er den fra 93f591a: bannerne flyttes ned til efter det afsnit, der
+leverer artiklens eget løfte, og demoteres til `btn-secondary`. Efter
+rettelsen har hver side **én** primær handling i folden. To af siderne har et
+*udgående* link som primær — `cmp-sammenligning-2026` (DA) peger på
+`/cookie-check`, `html-til-markdown-cli` (DA) på `/clean-copy-cli-ref` — fordi
+artiklens pointe er selve værktøjet; ratcheten følger den handling.
+
+Portens ratchet voksede fra fire til tolv dømte sider, og `check 7` i selftesten
+(«ratchetfilen har de fire dømte sider») var blevet en tælling der lå om formen, så
+den blev erstattet af en mutation mod de **rigtige** filer: bannerne flyttes op
+under `</header>` igen og demoteres, og porten skal blive rød på alle ti sider
+med bannere og grøn igen på de uændrede. Målt ved at slå portens
+bannergenkendelse fra: selftesten går 12/12 → 10/12, så mutationen har tænder.
+Selftesten er samtidig blevet ærlig om sin egen længde: den tæller nu
+`tjek`-kaldene selv (12 i dag), hvor den før hardcoded `/9` mens den havde 11.
+
+Målt på de otte kilder efter rettelsen: 1 `btn-primary` i foldregionen hver,
+`btn-primary` 0 gange i `blog-tool-cta`-bannerne. `quality_gate.py` **136 steps
+grøn**, `build_sites.py` 329 filer / 0 brudte, `seo_check.py` 314 sider / 0 fund,
+`stripe-worker.test.mjs` 352/352, `check_inline_js.py` grøn.

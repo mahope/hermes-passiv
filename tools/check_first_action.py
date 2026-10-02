@@ -141,8 +141,11 @@ def maalt_uden_domslutning() -> tuple[int, int, int]:
 
 def self_test() -> int:
     fejl: list[str] = []
+    antal = 0
 
     def tjek(navn: str, sand: bool, detalje: str = "") -> None:
+        nonlocal antal
+        antal += 1
         if not sand:
             fejl.append(f"{navn}{': ' + detalje if detalje else ''}")
 
@@ -178,18 +181,47 @@ def self_test() -> int:
          any("/scan" in f and "/tool" in f for f in fejl_for(permutation, "/tool")))
     # 6. En side uden hero kan ikke dømmes, og porten skal sige det.
     tjek("manglende hero er rød", bool(fejl_for("<p>ingen hero</p>", "/tool")))
-    # 7. Ratchetfilen skal dømme de fire sider, der står i den.
+    # 7. Ratchetfilen skal dømme hver kildefil, der står i den, og ingen anden.
     dømt = ratchet()
-    tjek("ratchetfilen har de fire dømte sider", len(dømt) == 4, str(sorted(dømt)))
     tjek("ratchetets nøgler er kildefiler",
          all(k.startswith("site/") and (ROOT / k).exists() for k in dømt),
          str(sorted(dømt)))
-    # 8. Målingen på den virkelige `site/` skal være grøn, ellers er 1-6 grønne
+    # 8. Målingen på den virkelige `site/` skal være grøn, ellers er 1-7 grønne
     #    fordi porten intet ser.
     fund, _ = dom()
     tjek("målingen på site/ er grøn", not fund, "; ".join(fund[:3]))
-    # 9. Mutation: en syntetisk `site/` med den fundne fejlform skal være rød,
-    #    også når porten kører fra en anden rod.
+    # 9. Mutation mod de RIGTIGTE filer: bannerne flyttes op under `</header>`
+    #    igen og demoteres, altså præcis den fejlform de otte artikler havde.
+    #    Porten skal blive rød på den og grøn igen på den uændrede — ellers
+    #    dømmer den ikke de sider, den påstår at dømme.
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = Path(tmp)
+        (rod / "tools").mkdir()
+        (rod / "site").mkdir()
+        for kilde in dømt:
+            (rod / kilde).parent.mkdir(parents=True, exist_ok=True)
+            (rod / kilde).write_text((ROOT / kilde).read_text(encoding="utf-8"), encoding="utf-8")
+        (rod / "tools" / "first_action.json").write_text(
+            json.dumps(dømt, ensure_ascii=False), encoding="utf-8")
+        tjek("de rigtige filer er grønne i et rent udtræk", dom_med_rod(rod)[0] == [])
+
+        muteret = 0
+        for kilde in dømt:
+            fil = rod / kilde
+            src = fil.read_text(encoding="utf-8")
+            banners = re.findall(r'<div class="blog-tool-cta(?: ai-cta)?">.*?</div>', src, re.S)
+            if not banners:
+                continue
+            hoved, rest = src.split("</header>", 1)
+            oppe = "".join(b.replace("btn-secondary", "btn-primary") for b in banners)
+            fil.write_text(hoved + "</header>\n" + oppe + rest, encoding="utf-8")
+            muteret += 1
+        fejl_mut, _ = dom_med_rod(rod)
+        tjek(f"bannerne oppe igen er rødt på alle {muteret} sider",
+             muteret > 0 and len(fejl_mut) == muteret,
+             f"{muteret} muteret, {len(fejl_mut)} fund: {'; '.join(fejl_mut[:2])}")
+    # 10. Mutation: en syntetisk `site/` med den fundne fejlform skal være rød,
+    #     også når porten kører fra en anden rod.
     with tempfile.TemporaryDirectory() as tmp:
         rod = Path(tmp)
         (rod / "site").mkdir()
@@ -205,7 +237,7 @@ def self_test() -> int:
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-first-action-selftest: {'OK' if not fejl else 'RØD'}"
-          f" ({9 - len(fejl)}/9 kontroller)")
+          f" ({antal - len(fejl)}/{antal} kontroller)")
     return 1 if fejl else 0
 
 
