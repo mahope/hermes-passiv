@@ -48,6 +48,30 @@
   </div>
 </div>
 
+<section id="check">
+  <div class="container">
+    <h2>See it convert a page</h2>
+    <p>Clean Copy is a converter, so here it is — on our own front page. Type an
+    address, and we fetch that page once from our server, convert it to Markdown
+    here in your browser, and show you the result. No account, nothing stored,
+    and the conversion never leaves this tab.</p>
+    <form class="oc-form" id="cc-check-form" method="get" action="/url-to-markdown">
+      <label for="cc-check-url">Address of the page to convert</label>
+      <div class="oc-row-wrap">
+        <input id="cc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://example.com/article" aria-describedby="cc-check-hint" required>
+        <button type="submit" class="btn-primary">Convert it now</button>
+      </div>
+      <p class="oc-hint" id="cc-check-hint">One address — an article or a documentation page
+      works best. We add <code>https://</code> if you leave it out. The fetch goes through our
+      server, which is also why a page behind a login or a paywall comes back empty. The
+      conversion then runs in this tab.</p>
+    </form>
+    <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
+    <div id="cc-check-result" hidden></div>
+  </div>
+</section>
+
 <section>
   <div class="container">
     <h2>What it does</h2>
@@ -165,7 +189,7 @@ npx github:mahope/clean-copy-cli page.html   # run without installing</code></pr
     </details>
     <details>
       <summary>Does it send my text anywhere?</summary>
-      <p>The text you convert does not. The extension has no background server, and while you copy, it makes no network request at all. The CLI only makes a request when you ask it to fetch a URL. This site runs an anonymous page-view counter and nothing else.</p>
+      <p>The text you convert does not. The extension has no background server, and while you copy, it makes no network request at all. The CLI only makes a request when you ask it to fetch a URL. The converter at the top of this page is the one exception on this site: it sends the address you type to our server once so it can fetch that page, because a browser cannot fetch a third-party page itself. The HTML comes back and is converted here, in your tab — we do not store the address or the page.</p>
       <p><strong>One exception:</strong> if you activate a Clean Copy Pro license key, the key and a random device id are sent to <code>mahope.tools</code> so the license can be validated. The pages you visit and the text you copy are never sent. Without a Pro key, nothing is sent at all.</p>
     </details>
     <details>
@@ -192,5 +216,21 @@ npx github:mahope/clean-copy-cli page.html   # run without installing</code></pr
 </section>
 
 </main>
+<script>/* What this check cannot do, and where the visitor goes next, are this page's
+  own words — /convert-check.js is a front-door engine and hard-codes no
+  product, the same contract as /one-off-check.js on the other two sites. The
+  links point at the two ways onward that this short preview is not. */
+window.CONVERT_CHECK = {
+  then: 'That is the real converter, running on your page — the same one the extension, the CLI and the plugins use. It reads what is in the page’s HTML, so text a script adds after the page loads comes out incomplete, and it cannot open anything behind a login.',
+  next: [{label: 'Convert and copy the full text', href: '/url-to-markdown'}, {label: 'Paste HTML instead of a URL', href: '/clean-copy-tool'}]
+};
+/* The donation line lives in the page, not in the engine: it has to reach
+  tools/check_donation_paths.py, and it must not appear before there is a
+  result. A sentence, never a button, and the href is the catalog's. */
+window.CC_DONATE = '<p class="oc-donate">Converting a page is free. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/clean-copy-core.js"></script>
+<script defer src="/readable.js"></script>
+<script defer src="/convert-check.js"></script>
 </body>
 </html>

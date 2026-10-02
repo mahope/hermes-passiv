@@ -48,6 +48,30 @@
   </div>
 </div>
 
+<section id="check">
+  <div class="container">
+    <h2>Se den konvertere en side</h2>
+    <p>Clean Copy er en konverter, så her er den — på vores egen forside. Skriv en
+    adresse, så henter vi siden én gang fra vores server, konverterer den til
+    Markdown her i din browser og viser resultatet. Ingen konto, intet gemt, og
+    konverteringen forlader aldrig denne fane.</p>
+    <form class="oc-form" id="cc-check-form" method="get" action="/da/url-til-markdown">
+      <label for="cc-check-url">Adresse på den side, der skal konverteres</label>
+      <div class="oc-row-wrap">
+        <input id="cc-check-url" name="url" type="text" inputmode="url" autocomplete="url"
+               spellcheck="false" placeholder="https://example.com/artikel" aria-describedby="cc-check-hint" required>
+        <button type="submit" class="btn-primary">Konvertér den nu</button>
+      </div>
+      <p class="oc-hint" id="cc-check-hint">Én adresse — en artikel eller en dokumentationsside
+      virker bedst. Vi sætter <code>https://</code> foran, hvis du lader den være. Hentningen går
+      gennem vores server, og det er også derfor en side bag en login eller en betalingsmur
+      kommer tom tilbage. Konverteringen sker så i denne fane.</p>
+    </form>
+    <p class="oc-status" id="cc-check-status" role="status" aria-live="polite"></p>
+    <div id="cc-check-result" hidden></div>
+  </div>
+</section>
+
 <section>
   <div class="container">
     <h2>Hvad det gør</h2>
@@ -165,7 +189,7 @@ npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></p
     </details>
     <details>
       <summary>Sender den min tekst nogen steder hen?</summary>
-      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. Denne side kører en anonym sidevisningtæller og intet andet.</p>
+      <p>Den tekst, du konverterer, gør ikke. Extensionen har ingen server, og mens du kopierer, laver den overhovedet ingen netværkskald. CLI'en laver kun en request, når du beder den hente en URL. Konvertereren øverst på denne side er den ene undtagelse på sitet: den sender den adresse, du skriver, til vores server én gang, så den kan hente siden — en browser kan ikke selv hente en side på et andet domæne. HTML'en kommer tilbage og konverteres her i din fane, og vi gemmer hverken adressen eller siden.</p>
       <p><strong>Én undtagelse:</strong> hvis du aktiverer en Clean Copy Pro-licensnøgle, sendes nøglen og et tilfældigt enheds-id til <code>mahope.tools</code>, så licensen kan valideres. De sider du besøger og den tekst du kopierer sendes aldrig. Uden en Pro-nøgle sendes intet overhovedet.</p>
     </details>
     <details>
@@ -192,5 +216,21 @@ npx github:mahope/clean-copy-cli side.html   # kør uden at installere</code></p
 </section>
 
 </main>
+<script>/* Hvad tjekket ikke kan, og hvor læseren går hen, er denne sides egne ord —
+  /convert-check.js er en frontdørs-motor og hardkoder intet produkt, samme
+  kontrakt som /one-off-check.js på de to andre sites. Links peger på de to
+  veje videre, som dette korte uddrag ikke er. */
+window.CONVERT_CHECK = {
+  then: 'Det er den rigtige konverter, kørt på din side — den samme som extensionen, CLI’en og plugins bruger. Den læser det, der står i sidens HTML, så tekst et script indsætter efter indlæsningen kommer ud ufuldstændig, og den kan ikke åbne noget bag en login.',
+  next: [{label: 'Konvertér og kopiér hele teksten', href: '/da/url-til-markdown'}, {label: 'Sæt HTML ind i stedet for en URL', href: '/clean-copy-tool'}]
+};
+/* Donationslinjen ligger i siden, ikke i motoren: den skal nå
+  tools/check_donation_paths.py, og den må ikke kunne vise sig før der er et
+  resultat. En sætning, aldrig en knap, og href er katalogens. */
+window.CC_DONATE = '<p class="oc-donate">Det er gratis at konvertere en side. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den kørende.</p>';</script>
+<script defer src="/net.js"></script>
+<script defer src="/clean-copy-core.js"></script>
+<script defer src="/readable.js"></script>
+<script defer src="/convert-check.js"></script>
 </body>
 </html>

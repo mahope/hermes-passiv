@@ -74,6 +74,13 @@ SITES: dict[str, dict] = {
             "da/activate/**",
             "extension-zips/**",
             "clean-copy-core.js",
+            # Both belong next to the core: /readable.js is the article-finding
+            # heuristic that used to be inline on /url-to-markdown and
+            # /url-til-markdown, and /convert-check.js is the homepage's
+            # front-door check, which needs the core and the heuristic. Product
+            # specific, so they are not in SHARED with the other three sites.
+            "readable.js",
+            "convert-check.js",
             "clean-copy-bookmarklet.js",
             "api-readme.md",
             "openapi.yaml",

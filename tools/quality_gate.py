@@ -706,6 +706,23 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_net_copies.py", "--self-test"),
         inputs=("tools/check_net_copies.py", "site/**"),
     ),
+    # En side der kalder en motor uden at indlæse den. Målt 2/10:
+    # `/url-to-markdown` og `/da/url-til-markdown` flyttede `extractReadable` ud
+    # i `/readable.js` for at forsidekonverteringen kunne dele den, men lagde
+    # ikke script-tagget på de to sider der *allerede* kaldte den — Clean Copies
+    # eget konverteringsværktøj ville kaste ved det første tryk, og hele gaten
+    # var grøn, fordi ingen port kørte koden. Selvtesten kører med, fordi porten
+    # ellers kunne være grøn ved ikke at finde nogen motor.
+    Step(
+        id="script-deps",
+        argv=("python3", "tools/check_script_deps.py"),
+        inputs=("tools/check_script_deps.py", "site/**"),
+    ),
+    Step(
+        id="script-deps-selftest",
+        argv=("python3", "tools/check_script_deps.py", "--self-test"),
+        inputs=("tools/check_script_deps.py", "site/**"),
+    ),
     # Købsknappen i hvert pro-kort, dømt mod `tools/stripe_catalog.json`.
     # Målt 2/10: de tretten værktøjssider skrev **pris og købslink i hånden**
     # inde i en inline `<script>`, og `check_own_prices.py` læser beløb i

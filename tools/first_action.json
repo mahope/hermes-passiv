@@ -13,8 +13,10 @@
   "site/da/blog/html-til-markdown-cli.html": "/clean-copy-cli-ref",
   "site/blog/html-to-markdown-vscode.html": "#fix",
   "site/da/blog/indsaet-som-markdown-i-vscode.html": "#loesning",
-"site/index.html": "/free-tools",
-"site/da/index.html": "/da/free-tools",
-"site/deskuptime/index.html": "#check",
-"site/da/deskuptime/index.html": "#check"
+  "site/index.html": "/free-tools",
+  "site/da/index.html": "/da/free-tools",
+  "site/deskuptime/index.html": "#check",
+  "site/da/deskuptime/index.html": "#check",
+  "site/clean-copy.html": "#install",
+  "site/da/clean-copy.html": "#install"
 }

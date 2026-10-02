@@ -152,6 +152,7 @@
   </main>
 
   <script src="/clean-copy-core.js"></script>
+  <script src="/readable.js"></script>
   <script>
   (function () {
     'use strict';
@@ -162,7 +163,6 @@
     var statusEl = document.getElementById('status');
     var copyStatus = document.getElementById('copy-status');
     var goBtn = document.getElementById('btn-go');
-
     function trackUse() {
       try {
         if (navigator.doNotTrack === '1') return;
@@ -178,33 +178,6 @@
     function setStatus(msg, cls) {
       statusEl.textContent = msg;
       statusEl.className = cls || '';
-    }
-
-    /* Samme readability-heuristik som clean-copy CLI'en: strip
-       script/style/nav/footer/aside/form/svg/iframe/kommentarer, behold
-       derefter den største article/main/div-blok med >200 synlige tegn. */
-    function extractReadable(html) {
-      var doc = html
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
-        .replace(/<(script|style|noscript|link|meta)\b[^>]*\/?>/gi, '');
-      doc = doc.replace(/<(nav|footer|header|aside|form|svg|iframe)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
-      var candidates = [];
-      var re = /<(article|main|div)\b[^>]*>/gi;
-      var m;
-      while ((m = re.exec(doc)) !== null) candidates.push(m.index);
-      var best = null, bestLen = 0;
-      for (var i = 0; i < candidates.length; i++) {
-        var start = candidates[i];
-        var openTagEnd = doc.indexOf('>', start);
-        var tag = doc.slice(start + 1, openTagEnd).split(/\s/)[0];
-        var closeIdx = doc.lastIndexOf('</' + tag + '>');
-        if (closeIdx <= openTagEnd) continue;
-        var inner = doc.slice(openTagEnd + 1, closeIdx);
-        var len = inner.replace(/<[^>]*>/g, '').length;
-        if (len > bestLen && len > 200) { best = inner; bestLen = len; }
-      }
-      return best || doc;
     }
 
     function slugFromUrl(u) {
@@ -227,7 +200,7 @@
           if (!res.ok || !res.j.ok) {
             throw new Error(res.j && res.j.error ? res.j.error : 'Kunne ikke hente den side.');
           }
-          var md = CleanCopyCore.htmlToMarkdown(extractReadable(res.j.html));
+          var md = CleanCopyCore.htmlToMarkdown(CleanCopyReadable.extract(res.j.html));
           if (!md || md.length < 20) throw new Error('Fandt ikke læsbart indhold på den side.');
           output.value = md.trim();
           donateLine.innerHTML = 'At konvertere en side til Markdown er gratis. Hvis det sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.';

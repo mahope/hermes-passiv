@@ -763,6 +763,12 @@ main.layout-wide > .crumbs + .container { padding-top: 0; }
 .oc-next { margin: 1rem 0 0; font-size: 0.95rem; color: var(--color-text-muted); max-width: 60ch; }
 .oc-next-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.7rem 0 0; }
 .oc-donate { font-size: 0.8rem; color: var(--color-text-muted); margin: 0.9rem 0 0; max-width: 60ch; }
+/* cleancopy.tools' front door converts instead of inspecting, so it needs a
+   place to put the Markdown. Same card, same tokens, same border as the
+   verdict above it — a reader who has seen one front door recognises the other. */
+.cc-stats { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; margin: 0; font-size: 0.85rem; color: var(--color-text-muted); }
+.cc-preview { margin: 0.9rem 0 0; max-height: 22rem; overflow: auto; font-size: 0.85rem; line-height: 1.55; }
+.cc-preview code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* Prose helpers ---------------------------------------------------------- */
 .two-col { display: grid; gap: 2rem; }

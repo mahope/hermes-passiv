@@ -1,31 +1,38 @@
 # STATUS
-
-- **mahope.tools' forside tjekker nu sitet, som den lover.** Tjekket fra
-  deskuptime.com (`/one-off-check.js`) ligger nu i roden af alle tre sites og
-  bruges på `mahope.tools/` + `/da/`. Baseline før: 0 kodeveje til et tjek fra
-  forsiden, 4 besøgende med 100 % bounce. Efter svaret er «Ét tjek, lige nu» +
-  to links til de scannere, der går dybere — **sidens egne ord**, ikke
-  deskuptimes.
-- **Samme motor, tre sites, én stylesheet.** `du-*` hedder nu `oc-*`, de 29
-  linjer CSS der lå kopieret i to `<style>`-blokke ligger i `style.css`, og
-  `ONE_OFF_CHECK = {then, next}` erklæres pr. side, så ingen produktspecifik
-  tekst ligger i delt kode længere.
-- **Review-fundet fra 2/10 kl. 15:05 er modbevist — målt, ikke gættet.**
-  `git diff 7e74d3b HEAD -- tools/stripe_catalog.json` er tom, og `#free-vs-pro`
-  findes kun på `/clean-copy-tool`, hvor påstanden er sand. Lukket i
-  `~/.local/oxloop/review/mahope-tools.md`.
-- **Målt 2/10 undervejs:** `cleancopy.tools` får **ikke** samme tjek. Sidens egen
-  `<h1>` er «Copy any web page as clean Markdown», og et HTTP-svar svarer ikke på
-  den — der skal et værktøj til. Feature-kø 13 er derfor delt, se punkt 13.
-- **CI grøn 2/10** på de tre seneste kode-commits. Deployet 2/10 kl. ~14:40:
-  alle tre domæner bærer `06849df` i `build-info.json`.
+- **cleancopy.tools' forside konverterer nu en side i stedet for at fortide om
+  at den kan.** EN + DA har ét tjek i `#check` under heroen: adresse ind, rigtig
+  Markdown ud. Målt før: **0** kodeveje til et tjek fra forsiden, 7 af 9 besøgende
+  landede på `/` med 71 % bounce. Samme motor som `/url-to-markdown`:
+  `convert-check.js` kalder `CleanCopyCore.htmlToMarkdown` over
+  `CleanCopyReadable.extract`; hentningen går gennem `/scan-proxy`, konverteringen
+  sker i fanen. Målt i browseren: **28** kontroller grønne ved 390 + 1280 px (felt
+  kan fokuseres, knap 44 px, ingen vandret scroll, ingen JS-fejl, serverens egen
+  sætning i fejltilstanden). Fundet *ved* billedet: linjen læste «365 characters
+  characters» — rettet, og «1 link» har nu egen ental.
+- **`extractReadable` lå i 2 inline kopier** (`/url-to-markdown` +
+  `/url-til-markdown`, byte for byte ens) — nu **1** delt `site/readable.js`. Ikke
+  i `clean-copy-core.js`: den genereres fra `mahope/clean-copy` og deles af 7
+  overflader. **Ratcheterne grew** med sider der nu renderer et målt resultat:
+  `donation.json` 43 → **45**, `first_action.json` 14 → **16**; polaritet målt ved
+  3 mutationer (donation som knap / linjen fjernet / primær handling ompeget → RØD).
+- **Fundet ved review af egen diff: `/url-to-markdown` og `/da/url-til-markdown`
+  ville kaste ved det første tryk.** `extractReadable` blev flyttet ud i
+  `/readable.js`, men de to sider der *allerede* kaldte den fik ikke
+  `<script src="/readable.js">` — altså Clean Copies egen konverteringsværktøj,
+  og hele gaten var grøn, fordi ingen port kørte klientkoden. Rettet, og målt:
+  porten `tools/check_script_deps.py` er **gråd** på den mutation (script-tagget
+  fjernet) og grøn på den rættede kode. Porten ser kun i det der kører —
+  inline scripts og de lokale scripts siden indlæser — så prosa og
+  `href="javascript:…"` ikke dømmes med; selvtest **10/10**.
+- **CI var RØD siden 12:42** på `plan-status` (STATUS 52 mod 25), kogt ned her.
+  **CEO-kø punkt 0 er helt færdig**, verificeret nu: `env` på `handleUrlInspect`
+  (`:288`), lemon-ruten væk, `targetIsPublic` afviser IPv4-mapped IPv6 + NAT64 pr.
+  redirect-hop, 202/429 i `net.js` + `thanks.html`, AI-kvoten refunderet ved 502.
 - **❓ Til Mads (ufravigeligt blokerende):** `STATS_TOKEN` (uden den er
-  `/api/stats` 401, så konvertering ikke kan måles), `OPENROUTER_API_KEY`
-  (assistanten er slukket, og 187 artiklers banner følger samme nøgle),
-  `bugbottle.dev`s domæne (ligger på en server vi ikke deployer), bogens
-  betalte udgave, de 2 desktop-apps der ringer til Lemon Squeezy, Search
-  Console, og **IndexNow pinges aldrig**. Resten står under `❓ Til Mads`.
-
+  `/api/stats` 401), `OPENROUTER_API_KEY` (assistenten slukket, 187 artiklers banner
+  følger samme nøgle), `bugbottle.dev`s domæne, bogens betalte udgave, 2
+  desktop-apps der ringer til Lemon Squeezy, Search Console, **IndexNow pinges
+  aldrig**. Resten under `❓ Til Mads`.
 ## Verificér deploy
 
 - **DEPLOY OK 2/10 (kl. 09).** Noten om gratis-mod-Pro i kortet på de ni øvrige
@@ -43,6 +50,29 @@
   målt på indhold: `build-info.json` står i `19e59b2`, `/pricing` har
   `From 10 kr.` i rækken `support-mahope-oss`, `/da/pricing` `fra 10 kr.`,
   `/support` «Any amount from 10 kr.» og `/da/support` «Valgfrit beløb fra 10 kr.».
+
+- `VERIFICÉR DEPLOY: konverteringstjekket på cleancopy.tools' forside 2026-10-02
+   ceo/cleancopy-konverteringstjek` — måles på **indhold**, ikke på HTTP 200:
+   `cleancopy.tools/` og `/da/` har hver præcis **1** `.oc-form` med
+   `id="cc-check-form"`, `action="/scan-proxy"`, `<label for="cc-check-url">`,
+   `#cc-check-status` med `role="status"`, `#cc-check-result` og `CC_DONATE`, og
+   indlæser `/net.js` + `/clean-copy-core.js` + `/readable.js` + `/convert-check.js`.
+`/readable.js` og `/convert-check.js` ligger i roden af `dist/cleancopy.tools/`
+    og **kun** der (de 3 andre sites har Clean Copy ikke på forsiden), og
+    `/url-to-markdown` + `/da/url-til-markdown` indlæser dem begge — målt på den
+    mutation der gjorde porten rød. Formens
+   `action` er **værktøjet** (`/url-to-markdown` + `/da/url-til-markdown`), ikke
+   `/scan-proxy`: en læser uden JavaScript skal lande på det brugbare værktøj, ikke
+   på rå JSON med hele målsidens HTML. Målt i Chromium med JS slået fra: begge
+   forsider lander på det rigtige værktøj med `?url=` med i adressen. Dom 1:
+   `GET /scan-proxy?url=…` svarer 200 med `ok:true` + `html`. Dom 2:
+   `stripe-worker.test.mjs` **354/354**. Dom 3: `build_sites.py` (73 + 35 + 37 + 330
+   filer, 0 brudte), `seo_check.py` 314 sider 0 fund, `check_inline_js.py` 0
+   problemer. Dom 4: hele `quality_gate.py` **136** steps grønne. Dom 5: Chromium
+   **28** kontroller grønne ved 390 + 1280 px (billeder i
+   `/tmp/ui-cleancopy-konverteringstjek/`); `check_donation_paths` **45** dømte,
+   `check_first_action` **16** dømte, `check_net_copies`, `check_built_css`,
+   `check_form_labels`, `check_ui_constants` grønne.
 
 - `VERIFICÉR DEPLOY: tjekket på mahope.tools' forside 2026-10-02
    ceo/tjek-paa-mahope-forside` — måles på **indhold**, ikke på HTTP 200:
@@ -121,23 +151,6 @@
    synlig dansk note på bogside-ruterne om at bogen findes på engelsk. Kræver
    beslutning — se ❓. Baseline 1/10: 0 danske EPUB'er, og 6 bogsider uden
    dansk sætning.
-
-### Leveret 2/10 — `ceo/tjek-paa-mahope-forside`
-
-`mahope.tools/` og `/da/` har nu det samme front-dørs-tjek som deskuptime.com,
-fordi fire af værktøjerne på siden ikke kan gøre noget uden en URL. Målt før:
-**0** kodeveje til et tjek fra forsiden. Forsidens egen primære handling er
-stadig `/free-tools` — `check_first_action` dømmer de to forsider og er grøn med
-0 problemer, så tjekket kom ikke som en knap oveni folden. Efter et svar siger
-kortet ærligt, at ét HTTP-kald hverken ser på kontrast, overskrifter eller
-cookies, og linker videre til de to scannere der gør det. De ord er **sidens
-egne** (`window.ONE_OFF_CHECK`), fordi motoren er delt af tre sites og ikke må
-indeholde ét produkts tekst.
-
-Undervejs fundet og rettet: `du-*` hed `oc-*`, fordi `du-` stod i delt kode på
-to sites der ikke er DeskUptime; de 29 CSS-linjer lå kopieret i to `<style>`-
-blokker og ligger nu i `style.css`; `OC_DONATE` lå hårdkodet i motoren, så de to
-forsider kom i `tools/donation.json` og dømmes nu (41 → **43** sider).
 
 ## ❓ Til Mads
 
@@ -318,22 +331,21 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     gaten: `check_donation_paths.py --self-test` blev rød, fordi den nye `#check`
     gør forsiden til en side der renderer et målt resultat — så den skal have
     donationslinjen, som `DU_DONATE` i siden nu sætter ind i resultatkortet.
-13. **Samme tjek på de to andre forsider.** Hvem: alle der lander på
-    `mahope.tools` (4 besøgende, 100 % bounce) og `cleancopy.tools` (7, 71 %), EN + DA.
-    Tal: brug pr. uge pr. forside (baseline **0** — ingen kodevej til den).
-    Accept: hver forside har ét tjek der svarer på spørgsmålet i sin egen `<h1>`,
-    ingen har to primære handlinger over folden, og `deskuptime.com` er urørt.
-    Datagrund: målt 2/10 — `deskuptime.com` **og** `/da/` har begge `#check` med
-    præcis én `.du-form`, så de er allerede leveret (punkt 12).
-    **Leveret for `mahope.tools` (EN + DA) 2/10** — se afsnittet «Leveret 2/10»
-    nedenfor. **`cleancopy.tools` er bevidst ikke leveret, og grunden er målt:**
-    sidens egen `<h1>` er «Copy any web page as clean Markdown or plain text», og
-    et HTTP-svar fra `/api/url-inspect` svarer ikke på det spørgsmål — det ville
-    være et værktøj, der ikke besvarer sin egen overskrift. Den forside skal have
-    et **konverteringstjek** (findes siden, konverter den, se resultatet), og det
-    er en anden motor end den her. Motoren, CSS'en og den pr. side erklærede tekst
-    er gjort genbrugelige præcis, så den nye motor kun skal skrives.
-14. **Bundlen, der hedder gratis på syv sider og $29 på `/pricing`.** Hvem:
+13. ~~Samme tjek på de to andre forsider.~~ **Leveret — de tre er dækket nu.**
+    `deskuptime.com` (12/9) og `mahope.tools` (2/10) fik et HTTP-tjek, fordi deres
+    `<h1>` handler om *sitet*. `cleancopy.tools` fik i denne iteration et
+    **konverteringstjek** i stedet, fordi dens `<h1>` er «Copy any web page as
+    clean Markdown or plain text» — et HTTP-svar svarer ikke på det spørgsmål.
+    Målt før: 7 af 9 besøgende på `/`, 71 % bounce. Efter: adresse ind, rigtig
+    Markdown ud i browseren, samme motor som `/url-to-markdown`. Datagrund:
+    Chromium 28/28 kontroller ved 390 + 1280 px.
+14. **En gate for frontdørs-tjekkene.** Hvem: de næste der bygger en. Tal:
+    dækkede forsider (baseline **3**). Accept: `tools/` dømmer at hver forside med
+    et `#check`-afsnit har præcis ét tjek, at det indlæser motoren, og at motoren
+    ikke kalder `/api/*` uden `NET`. Datagrund: målt i denne iteration — de 28
+    Chromium-kontroller lå i to midlertidige scripts, der ikke blev committet,
+    fordi portene dømmer kode og ikke en browser.
+15. **Bundlen, der hedder gratis på syv sider og $29 på `/pricing`.** Hvem:
     læsere af `books/*` og købere på `/pricing`. Tal: katalogrækker pr. destination
     (baseline: 1 modsigelse, synlig på 3 sider). Accept: enten kontrakten og
     siderne er enige, eller den nye side har en købsvej der betaler sig. Kræver

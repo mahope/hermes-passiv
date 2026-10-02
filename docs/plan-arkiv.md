@@ -4875,3 +4875,51 @@ citerede sætning tilhører `site/clean-copy-tool.html`, hvor `#free-vs-pro` fin
 (`:494` linker, `:241` er `<h2 id="free-vs-pro">`). Nøglen hedder
 `pro_table_pages`, ikke `pro_table_posts`. Skrevet i fundets egen linje i
 `~/.local/oxloop/review/mahope-tools.md`.
+
+
+## 2/10 — STATUS før `ceo/cleancopy-konverteringstjek`
+
+# STATUS
+
+- **mahope.tools' forside tjekker nu sitet, som den lover.** Tjekket fra
+  deskuptime.com (`/one-off-check.js`) ligger nu i roden af alle tre sites og
+  bruges på `mahope.tools/` + `/da/`. Baseline før: 0 kodeveje til et tjek fra
+  forsiden, 4 besøgende med 100 % bounce. Efter svaret er «Ét tjek, lige nu» +
+  to links til de scannere, der går dybere — **sidens egne ord**, ikke
+  deskuptimes.
+- **Samme motor, tre sites, én stylesheet.** `du-*` hedder nu `oc-*`, de 29
+  linjer CSS der lå kopieret i to `<style>`-blokke ligger i `style.css`, og
+  `ONE_OFF_CHECK = {then, next}` erklæres pr. side, så ingen produktspecifik
+  tekst ligger i delt kode længere.
+- **Review-fundet fra 2/10 kl. 15:05 er modbevist — målt, ikke gættet.**
+  `git diff 7e74d3b HEAD -- tools/stripe_catalog.json` er tom, og `#free-vs-pro`
+  findes kun på `/clean-copy-tool`, hvor påstanden er sand. Lukket i
+  `~/.local/oxloop/review/mahope-tools.md`.
+- **Målt 2/10 undervejs:** `cleancopy.tools` får **ikke** samme tjek. Sidens egen
+  `<h1>` er «Copy any web page as clean Markdown», og et HTTP-svar svarer ikke på
+  den — der skal et værktøj til. Feature-kø 13 er derfor delt, se punkt 13.
+- **CI grøn 2/10** på de tre seneste kode-commits. Deployet 2/10 kl. ~14:40:
+  alle tre domæner bærer `06849df` i `build-info.json`.
+- **❓ Til Mads (ufravigeligt blokerende):** `STATS_TOKEN` (uden den er
+  `/api/stats` 401, så konvertering ikke kan måles), `OPENROUTER_API_KEY`
+  (assistanten er slukket, og 187 artiklers banner følger samme nøgle),
+  `bugbottle.dev`s domæne (ligger på en server vi ikke deployer), bogens
+  betalte udgave, de 2 desktop-apps der ringer til Lemon Squeezy, Search
+  Console, og **IndexNow pinges aldrig**. Resten står under `❓ Til Mads`.
+
+### Leveret 2/10 — `ceo/tjek-paa-mahope-forside`
+
+`mahope.tools/` og `/da/` har nu det samme front-dørs-tjek som deskuptime.com,
+fordi fire af værktøjerne på siden ikke kan gøre noget uden en URL. Målt før:
+**0** kodeveje til et tjek fra forsiden. Forsidens egen primære handling er
+stadig `/free-tools` — `check_first_action` dømmer de to forsider og er grøn med
+0 problemer, så tjekket kom ikke som en knap oveni folden. Efter et svar siger
+kortet ærligt, at ét HTTP-kald hverken ser på kontrast, overskrifter eller
+cookies, og linker videre til de to scannere der gør det. De ord er **sidens
+egne** (`window.ONE_OFF_CHECK`), fordi motoren er delt af tre sites og ikke må
+indeholde ét produkts tekst.
+
+Undervejs fundet og rettet: `du-*` hed `oc-*`, fordi `du-` stod i delt kode på
+to sites der ikke er DeskUptime; de 29 CSS-linjer lå kopieret i to `<style>`-
+blokker og ligger nu i `style.css`; `OC_DONATE` lå hårdkodet i motoren, så de to
+forsider kom i `tools/donation.json` og dømmes nu (41 → **43** sider).
