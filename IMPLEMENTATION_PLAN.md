@@ -1,14 +1,13 @@
 # STATUS
-- **Scanneren skrev «9 sider læst» over en liste på 5 sider.** Fund 3/10:
-  overblikket skrev `pages_checked` under ordene «pages read» / «sider læst»,
-  men `pages_checked` er antallet *kald* og medtager 404'er — `pages_read` er
-  den kunden kan efterprøve, og `<details>` lige under viste den. Samme ord,
-  to tal, i en rapport der sendes videre til en kunde. `_worker.js:3119-3124`
-  siger udtrykkeligt at de to ikke må forveksles. Nu begge sprog + 4 nye domme
-  i `scan-clients.test.mjs` (**433/433**) med polaritet målt ved mutation af
-  den rigtige fil. Fund undervejs: den eksisterende dom på samme tal havde et
-  svar **uden** `pages_read`, som serveren aldrig sender — fikset, ellers
-  dømmer den intet.
+- **Tak-siden lovede hjælp på en side der giver donations.** `/thanks` skrev
+  «Something wrong with your key? Support», men `/support` er donationssiden
+  (målt live: `<h1>Support the tools</h1>` og én Stripe-knap). Nu peger linjen på
+  `/license-lookup`, og `<h1>` siger først «Thanks for your purchase!» når Stripe
+  har bekræftet ordren. Ny port `support-link-text` **21/21**, **1 rød** mod den
+  gamle `thanks.html` i `dist/`. Se punkt 19 i Feature-kø.
+- **Scannerens «sider læst» viste et kald-tal.** Rettet i 55ea279 og målt live
+  3/10: `/compliance-site-check` (EN + DA) har 4 × «pages read» og 0 × «pages
+  checked».
 - **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` + mutation
   kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er endeligt,
   `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
@@ -21,7 +20,13 @@
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: scanneren siger «5 sider læst» og ikke «9 kald» ceo/scan-sider-laest-tal 2026-10-03 01:14`
+- `VERIFICÉR DEPLOY: tak-siden peger på /license-lookup, ikke på donationssiden ceo/support-koen-er-donation 2026-10-03 01:47`
+
+- **`DEPLOY OK 2026-10-03` — `ceo/scan-sider-laest-tal` er live, målt på indhold.**
+  `build-info.json` står på **`55ea279`** på alle tre domæner. `/compliance-site-check`
+  (EN og DA) har **4** forekomster af «pages read» / «sider læst» og **0** af
+  «pages checked» / «kald udført». `/thanks` har stadig den gamle linje her,
+  fordi den først deployes med noten ovenfor.
 
 - **`DEPLOY OK 2026-10-03` — begge forrige noter er live, målt på indhold.**
   `build-info.json` står på **`34e9c2d`** på alle tre domæner.
@@ -66,7 +71,18 @@
 
 ## Åbne opgaver
 
-1. ~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
+1. **En nøgle der ikke aktiverer, har ingen selvbetjening.** Hvorfor: målt
+   3/10 — `grep -rn "license/deactivate"` uden for `_worker.js` giver **én**
+   træffer, og den er i `tests/stripe-worker.test.mjs`. Ruten virker og er
+   testet, men ingen side, klient eller dokument kalder den. En kunde der rammer
+   409 (enhedsgrænsen nået — tre maskiner på `$19`-produkterne) kan derfor
+   kun skrive til Mads, og det er den menneskelige indsats missionen forbyder.
+   Accept: en side på `/license-lookup` hvor kunden indtaster nøgle og
+   maskinnavn, frigiver én plads og siger hvor mange der er tilbage — plus en
+   port der dømmer at den kalder `deactivate` og ikke siger det virker uden
+   serverens svar. Kræver en ny worker-rute, så den kræver test i
+   `stripe-worker.test.mjs`.
+2. ~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
    indsendte side og de juridiske sider forsiden *linker til* — kun på sitets
    eget domæne — før det gætter stier, og svaret lister dem i `pages_read`.
    Accept nået: `pages_checked` overstiger de gættede stier, og fundet peger på
@@ -388,7 +404,16 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     mutationer af den rigtige side. Datagrund: målt 2/10 på kildefilerne mod
     `site/blog/index.html`; bounce på mahope.tools er 94 % (18 besøgende), så
     her er tale om fund og interne links, ikke om besøg.
-19. ~~**Læsevisningen sluttede i et tomrum.**~~ **Leveret 2/10.** Hvem: en
+19. ~~**Tak-siden lovede hjælp på en donationsside.**~~ **Leveret 3/10.** Se
+    STATUS. Hvem: kunder der lige har betalt og så møder en nøgle der ikke
+    virker. Tal: links til `/support` der lover hjælp (baseline **1 af 274** i
+    den byggede side — kun `/thanks`; de 273 øvrige er fodnote, «say thanks» og
+    fire `hreflang`). Accept: ny port `support-link-text` grøn med **21/21**
+    selvtest, **1 rød** mod den gamle `thanks.html` i `dist/`, og browseren
+    målt ved 390 og 1280 px (0 px vandret scroll, `<h1>` skifter kun på den
+    bekræftede vej). Datagrund: `/support` er målt live — donationsside, ingen
+    licensindhold. Næste skridt er punkt 1 under «Åbne opgaver».
+20. ~~**Læsevisningen sluttede i et tomrum.**~~ **Leveret 2/10.** Hvem: en
    læser der lige har læst to kapitler om cookies, DPA, NIS2 eller EAA — den
    højeste vilje til at gøre noget på sit eget site. Tal: bogsider der linker
    til et af vores egne værktøjer (baseline: **0 af 6**; målt på kildefilerne
@@ -412,7 +437,7 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    `/site-icons`' egen `<h1>` er «site-icons» — ny opgave 8. Bevidst valgt **ikke**
    at lægge banneret i heroen: bogsiden har allerede bogens download-CTA, og
    bannerets plads i kapitlerne er der, hvor læseren lige er færdig.
-20. **Én rapport pr. kunde i stedet for én fil med alle kunder i.** Hvem: bureauer
+21. **Én rapport pr. kunde i stedet for én fil med alle kunder i.** Hvem: bureauer
     og webbureauer, der er målgruppen for `/compliance-site-check`’s egen
     teksthint («auditing several client sites»). Tal: rapporter pr. kørsel med
     flere sider (baseline **0** separate — kun samlet `.md`; målt på koden 3/10).

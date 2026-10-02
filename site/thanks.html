@@ -43,8 +43,9 @@
     <div class="thanks-card" id="result" hidden></div>
     <p class="hint" id="mail"></p>
     <nav class="thanks-foot" aria-label="Continue">
-      <a href="/support">Something wrong with your key? Support</a>
+      <a href="/license-lookup">Lost your key? Look it up again</a>
       <a href="/free-tools">Back to the free tools</a>
+      <a href="/support">Support the free tools</a>
     </nav>
     <p class="hint next">One key buys one product. If you need a different one, they are separate:
       <a href="/page-profile">Page Profile</a> finds slow pages and missing metadata,
@@ -57,7 +58,20 @@
       var box = document.getElementById('result');
       var sid = new URLSearchParams(location.search).get('session_id') || '';
       function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-      function fail(msg) { status.textContent = msg; status.className = 'hint err'; }
+      // `<h1>` siger «Thanks for your purchase!» i markupken, fordi det er det
+      // enhvert køb ender med. Men det er en *påstand*, og den skal kun stå
+      // når Stripe har bekræftet ordren. Målt 3/10: `?session_id=cs_test_x`
+      // giver 400 fra `/api/stripe/fulfillment`, og siden endte med
+      // «Thanks for your purchase!» over «We could not find this order» —
+      // to sætninger der modsiger hinanden, på den ene side hvor det er
+      // dyrest at tage fejl. `fail()` er den eneste vej til den fejl, så
+      // overskriften flyttes her, og `show()` skriver den rigtige bagefter.
+      var bekræftet = false;
+      function titel(t) { document.getElementById('title').textContent = t; }
+      function fail(msg) {
+        status.textContent = msg; status.className = 'hint err';
+        if (!bekræftet) titel('We could not confirm your order');
+      }
       if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail('No order reference in the link. Check your email for your license key or downloads.'); return; }
       var tries = 0;
       // Målt 29/9: kun `202` blev gentaget. `503` ("Service temporarily
@@ -119,6 +133,7 @@
         // "Thanks for buying Support for Mahope open source" til en donator,
         // mens kortet under sagde "there is nothing to activate". Hilsenen er
         // derfor afledt af `kind`, altså det samme som kvitteringsmailen gør.
+        bekræftet = true;
         document.getElementById('title').textContent = d.kind === 'donation'
           ? 'Thank you for supporting ' + d.product_name + '!'
           : 'Thanks for buying ' + d.product_name + '!';

@@ -689,6 +689,31 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_donation_paths.py", "tools/donation.json",
                 "tools/stripe_catalog.json"),
     ),
+    # Donationssiden skal ikke fremstå som en hjælpeside (3/10). Målt først på
+    # den **byggede** side: 274 anker til `/support`, og 1 lovede hjælp —
+    # `thanks.html`, der skrev «Something wrong with your key? Support» på den
+    # side en kunde lander i sekundet efter betaling, mens `/support` er
+    # donationssiden (`<h1>Support the tools</h1>` og en Stripe-knap, intet om
+    # licenser). `donation-paths` dømmer det modsatte — at linket ikke er en
+    # knap og ligger i et `<script>` — men ingen port så på **linkteksten**.
+    # Dom 1 fanger løftet om hjælp, dom 2 nøgne «Support». Fodnotens to
+    # `support_link=` dømmes med, for de bygges ind i hver side og findes ikke i
+    # nogen kildefil; de fire `hreflang`-ankere mellem de to donationssider er
+    # sproglige alternativer og lades være. `needs_dist` fordi porten dømmer
+    # `dist/`: `pagepass` erstatter hele `<footer>`, så en håndskreven
+    # breadcrumb i kilden aldrig publiceres.
+    Step(
+        id="support-link-text",
+        argv=("python3", "tools/check_support_link_text.py"),
+        inputs=("tools/check_support_link_text.py", "site/**",
+                "build_sites.py"),
+        needs_dist=True,
+    ),
+    Step(
+        id="support-link-text-selftest",
+        argv=("python3", "tools/check_support_link_text.py", "--self-test"),
+        inputs=("tools/check_support_link_text.py",),
+    ),
     # Formularfelter uden navn (30/9). Målt først: 14 felter på 13 sider havde
     # overhverket navn — 6 e-mail-felter var nyhedsbrevstilmeldingen på
     # NIS2-værktøjerne, 4 URL-felter var indgangen i et værktøj. `placeholder`
