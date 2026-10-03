@@ -5880,3 +5880,61 @@ mutationer: `esc()` væk → 1 rød, del-stien slået fra → 8 røde, gammelt
 `#url=`-link dødt → 2 røde. Dommen tæller `fetch`, så «et delt resultat
 scanner ikke» er et *målt* tal og ikke en løfte. `check_catalog_where` **120**
 funktioner, `--self-test` **11/11**. Hele `quality_gate` grøn.
+
+---
+
+## 3/10 — «Fiks det» på tekst-på-billede slog på det næste foto (review-fund HØJ)
+
+**Fundet.** `site/text-on-image-core.js` `loadFile()` satte `img`, `cv.width/height`
+og `tx/ty` og kaldte `updateAll()` — men nulstillede hverken `scrim` eller
+`lastFix`. De to blev kun nulstillet i farve- og fontsize-handlerne, altså i to af
+de fire veje ind i `updateAll()`. Sløret blev tegnet på det nye billede, selv om
+det var fundet ved at binærsøge på *sidste* billedes endepunkter, og
+`.ti-fixed`-teksten beskrev et lag brugeren ikke kunne se i tallet.
+
+**Målt i rigtig Chromium** mod `dist/mahope.tools` over HTTP, 1280 px, krav 4,5:1,
+to fotos i træk med «Fix it» imellem. A: sort→hvid gradient. B: et smallere
+spredt område.
+
+```
+Foto A                        : 1,16:1  FAIL  «Fix it»
+Foto A efter «Fix it»         : 4,52:1  PASS  «I put a 37 % light layer …»
+→ foto B uploadet, UDEN fix   : 7,94:1  PASS  «I put a 37 % light layer …»  ← fejl
+→ foto B uploadet, MED fix    : 3,70:1  FAIL  (ingen beskrivelse, «Fix it» tilbage)
+```
+
+Uden rettelsen siger værktøjet altså **PASS og «Also passes AAA» om et billede
+det aldrig har målt**, og beder brugeren rydde et lag der ikke står i tallet —
+men som står tegnet på billedet, synligt i skærmbilledet. Det er værre end det
+fundet beskrev (1,52:1): her *består* et billede, der ikke består.
+
+**Rettelsen.** To linjer i `im.onload` lige før `updateAll()`: `scrim = null;
+lastFix = null;` — samme nulstilling og samme begrundelse som farvefeltet og
+`fontsize` gør. Tekstfarven *beholdes*, fordi den er brugerens eget felt.
+
+**Porten er sekventiel**, fordi `check_contrast_sampling.py` kører uden browser og
+dømmer ét billede pr. kald — den kan ikke se det. `tests/scan-clients.test.mjs`
+sek. 17 kører to fotos gennem den *samme* `mount()`: et levende canvas i
+sandkassen (`opts.levendeBilleder`) læser det billede `drawImage()` netop har
+tegnet, `clearRect` husker at næste læsning er bogstavelaget, `querySelector`
+cacher pr. vælger og nullstilles ved `innerHTML` — ellers trykker testen på en
+gammel måling. Fire domme: B's tal skal være kernens egen `ratio()` på B's pixel,
+`.ti-fixed` skal være væk, «Fix it» skal være tilbage, og B skal måles identisk
+med og uden en tidligere rettelse.
+
+**504/504**, polaritet målt ved at fjerne de to linjer igen: **4 røde**, som
+genkender præcis fundets tre ting plus tallet. `check_contrast_sampling`
+`--self-test` **24/24** + porten GRØN (38 løfter). Portene i gaten: build rent
+(337 filer, 0 brudte links), `seo_check` 315 sider **0 fund**, `stripe-worker`
+**375/375**, `check_inline_js` **0**.
+
+**Målt i browseren:** 1280 px og 390 px, samme forløb på begge; `scrollWidth` 390
+ved 390 px viewport, altså ingen vandret scroll. Skærmbilleder i `/tmp/ui-ti/`.
+
+**Metode-notits.** (1) Sidens `#fontsize` står som udfyldt på «large» (krav 3:1),
+så et billede der kun fejler 4,5:1 består og *ikke* får nogen knap — vælg «normal»
+for at ramme fundets krav. (2) Et Python-script i `/tmp` kan ikke tage
+screenshots: en `/tmp/queue.py` skygger stdlib `queue`. Kør scriptet fra stdin
+eller et andet katalog. (3) Kernen vælger det *hvide* slør på A, fordi det dækker
+mindst (41 %) — det sorte kræver 79 %. Beskrivelsen følger retningen, så en dom på
+«mørkt lag» alene ville være grøn fordi den kun læser den ene.

@@ -1,31 +1,34 @@
 # STATUS
-- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10.
-  «Copy shareable link» på EAA/WCAG-scanneren kopierede kun URL'en, så den der
-  modtog linket så en tom formular og skulle trykke Scan selv — og brugte sin
-  *egen* kvote på en side, der måske var ændret siden. Det er præcis den viste,
-  en bureau-audit skal kunne sendes videre på. Fundene ligger nu i fragmentet
-  og gengives **uden et eneste netværkskald** (målt: `fetch` tælles, del-stien
-  kalder nul gange). Kun id, alvor og antal rejser med; teksten slås op i
-  sidens egen `MSG`-tabel, så et håndredigeret link aldrig kan skrive sine egne
-  ord på mahope.tools. Codecen ligger i `site/scan-share-core.js`, som begge
-  sprog deler, fordi den danske side ellers får sin egen kopi. To fejl fundet
-  undervejs: fund-teksten escapes nu — «page has no <title>» slugtes forhen som
-  et tag — og fundene kan ikke reddes ud af tabellen. Porte:
-  `tests/scan-share.test.mjs` **75/75**, polaritet på tre mutationer (esc()
-  væk → rød, del-stien fra → 8 røde, gammelt `#url=` dødt → 2 røde);
-  `check_catalog_where` **120** funktioner, **11/11**; `quality_gate` **154 steps**.
-- **Scan-knappen var usynlig:** `style.css` har `button:not([class])` med samme
-  specificitet som sidens egen `.scanbox button`, men stylesheetet kommer *efter*
-  siden's `<style>` — så «Scan now» stod hvidt på hvidt i den byggede side
-  (Chromium, `/scan` + `/scan-da`, 390 og 1280 px). Nu med `class="btn"`.
-- **Deploy:** `build-info.json` står på **`01b5e2f`** på alle tre domæner, så
-  `ceo/license-tal-og-tæller` er målt `DEPLOY OK`; `ceo/afkortede-tekster` er
-  ikke live, fordi CI var rød. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
+- **«Fiks det» slog på det næste foto.** 3/10, review-fund HØJ. `loadFile()`
+  nulstillede hverken `scrim` eller `lastFix`, så et slør beregnet på *sidste*
+  bildes endepunkter blev tegnet på det næste, og `.ti-fixed` beskrev det under
+  et tal der ikke stammer fra det. Målt i rigtig Chromium mod den byggede side,
+  1280 og 390 px, to fotos i træk med «Fix it» imellem: **uden** fix stod foto B
+  på **7,94:1 PASS og «Also passes AAA»** med «I put a 37 % light layer …» —
+  altså et billede værktøjet aldrig målte, erklæret bestående. **Med** fix:
+  **3,70:1 FAIL**, ingen beskrivelse, «Fix it» tilbage. Nu to linjer i
+  `im.onload`. Rettelsen, porten og hele målingen i `docs/plan-arkiv.md`.
+- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10. Se
+  `docs/plan-arkiv.md`. Porte: `scan-share` 75/75 med polaritet på tre
+  mutationer, `check_catalog_where` 120 funktioner, `quality_gate` 154 steps.
+- **Scan-knappen var usynlig** (hvidt på hvidt, målt i Chromium) — rettet, se
+  `docs/plan-arkiv.md`.
+- **Deploy:** seneste CI grøn. `ceo/scan-delresultat`, `ceo/contrast-fix-knap` og
+  `ceo/afkortede-tekster` ligger under måling. PR-TJEK 3/10: 0 PR'er.
+  BRANCH-TJEK 2/10: 2 slettet.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: «Fix it» nulstiller sløret ved billedskift
+  ceo/fix-gaar-ikke-paa-naeste-foto 2026-10-03 07:35` — på
+  `/text-on-image-checker` (EN+DA) og de to artikler: upload to fotos i træk med
+  «Fix it» på det første. Det andet skal vise **sine egne** tal, **uden**
+  `.ti-fixed`-tekst, og «Fix it» skal være tilbage. Tjek især at tallet ikke er
+  *bedre* end det var uden en tidligere rettelse — det var 7,94:1 PASS mod
+  3,70:1 FAIL før.
 
 - `VERIFICÉR DEPLOY: et delt scanelink viser fundene, og Scan-knappen er
   synlig igen ceo/scan-delresultat 2026-10-03 06:50` — på `/scan` og
@@ -43,74 +46,8 @@
 - `VERIFICÉR DEPLOY: afkortede titler og beskrivelser får en afslutning
   ceo/afkortede-tekster 2026-10-03 04:05`
 
-- **`DEPLOY OK 2026-10-03` — `ceo/license-tal-og-tæller` er live, målt på
-  indhold.** `build-info.json` står på **`01b5e2f`** på alle tre domæner.
-  Live `/license-lookup` har ét «Free up a machine», **5** `<span
-  data-seat-product>` med tallene 5/3/3/3/1, og `/thanks` har både `#title` og
-  `document.title` sat i `titel()`.
-
-- `VERIFICÉR DEPLOY: antal fra katalogen + faneblad på tak-siden + tæller på
-  /api/license/devices ceo/license-tal-og-tæller 2026-10-03 03:20`
-
-- **`DEPLOY OK 2026-10-03` — `ceo/license-selvbetjening` er live, målt på
-  indhold.** `build-info.json` står på **`2f91b61`** på alle tre domæner.
-  Live `/license-lookup` har præcis **én** «Free up a machine», to
-  `/api/license/devices` og ét `/api/license/deactivate`, `seatForm` 6 gange.
-  Samme commit-slug dækker den forrige note: `/thanks` har 1
-  `href="/license-lookup"` + «Lost your key?» og 2 `href="/support"`.
-
-- **`DEPLOY OK 2026-10-03` — `ceo/da-guides-indeks` (`cd48b18`) er live, målt på
-  indhold.** Den holdt i 3 døgn og døde i `rule-claims-selftest`; årsagen er
-  rettet i `01b5e2f`. Live `/da/blog/` svarer **200**, `<h1>` er «Alle danske
-  guider», og siden linker **87** artikler — resten af de 96 ligger på
-  `cleancopy.tools` som cross-domain, præcis som buildet skriver dem.
-
-- **`DEPLOY OK 2026-10-03` — `ceo/scan-sider-laest-tal` er live, målt på indhold.**
-  `build-info.json` står på **`55ea279`** på alle tre domæner. `/compliance-site-check`
-  (EN og DA) har **4** forekomster af «pages read» / «sider læst» og **0** af
-  «pages checked» / «kald udført». `/thanks` har stadig den gamle linje her,
-  fordi den først deployes med noten ovenfor.
-
-- **`DEPLOY OK 2026-10-03` — begge forrige noter er live, målt på indhold.**
-  `build-info.json` står på **`34e9c2d`** på alle tre domæner.
-  - Bogbanneret (34e9c2d): `/books/gdpr-for-agencies/` har **0** forekomster af
-    «annex», og banneret siger nu præcis «the free DPA generator asks who is
-    controller and who is processor». Siden er byte-identisk med `dist/`.
-  - Byggetagen (158715e): live `style.css` er **byte-identisk** med
-    `dist/mahope.tools/style.css`, og `details.faq summary { cursor: pointer }`,
-    `.gen legend { font-weight: 700 }`, `.gen label`, `.book-card-body
-    { min-width: 0 }` og `.book-header .tagline` står der. `.plat-links a` er en
-    grupperet regel (linje 511), ikke en egen — pillen er der.
-  - Målt undervejs, ikke et fund: 6 af 7 bogsider er byte-identiske med
-    `dist/`; `nis2-for-agencies` afviger kun fordi **Cloudflare** har
-    obfuskeret en mailadresse til `data-cfemail`. Ikke en gammel udgivelse.
-
-- **`DEPLOY OK 2026-10-02` — `ceo/site-icons-h1` er live, målt på indhold.**
-  `build-info.json` står på **`692d7b2`** (squash-sha'en). De tre sider der ligger
-  på mahope.tools har den nye overskrift i markupken: `/site-icons` «Every icon
-  your site needs, from one SVG», `/page-profile` «Profile any web page from
-  your terminal», `/da/page-profile` «Tjek enhver websides tekniske sundhed».
-  Den fjerde, `/bugbottle-demo`, svarer 404 fordi siden kun findes i
-  `dist/bugbottle.dev/`, som ikke deployes — det er ❓ om domænet, ikke en fejl.
-
-- **`DEPLOY OK 2026-10-02` — alle tre næster er live, målt på indhold.**
-  `build-info.json` står på **`4c41d9e`** (squash-sha'en) på **mahope.tools**,
-  **cleancopy.tools** og **deskuptime.com**. Domænernes sider er
-  **byte-identiske med `dist/`** (`diff` på simulatoren og `/blog/`), så det er
-  *denne* kode der er live og ikke en senere.
-  - `ceo/plan-gate-og-502-kvote` (4c41d9e): begge simulatorer har præcis **én**
-    `(globalThis.CBSHARE || {}).decode(location.hash)`-læser, **én**
-    `id="copy-share"`, **én** `addEventListener('click', copyShare)` og **én**
-    `<script src="/cb-share-core.js">`; `/cb-share-core.js` svarer **200** med
-    `encode`+`decode`. `colors[colors.length-1]` findes kun i de to forklarende
-    kommentarer, der fortæller hvorfor den gamle kode lå sort på sort.
-  - `ceo/cb-simulator-del-link` (b55e036): samme to sider, samme greb.
-  - `ceo/blog-indeks-dode-links` (27f8aa2): `mahope.tools/blog/` svarer 200,
-    de fire BugBottle-guider står **relative**
-    (`/blog/bug-reports-in-ci-pipeline`) og **0** `https://bugbottle.dev/…`
-    på siden. Dom 1: `check_blog_index.py` **93 EN + 96 DA, 0 problemer**,
-    `stripe-worker.test.mjs` **354/354**, `seo_check.py` **314 sider, 0 fund**,
-    `check_inline_js.py` **0**, hele `quality_gate.py` **146 steps GRØN**.
+- Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
+  `docs/plan-arkiv.md`.
 
 ## Åbne opgaver
 

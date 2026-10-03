@@ -98,6 +98,66 @@ function ctx2d() {
 }
 const withCanvas = (e) => { e.getContext = () => ctx2d(); e.width = 900; e.height = 420; return e; };
 
+// Det billede næste `new Image()` læser. En læsende sandkasse måler ellers alle
+// billeder ens, og så er en fejl der *kun* rammer det andet billede i en træk-
+// række usynlig — hvilket er præcis den fejl der lå i «Fiks det»-knappen.
+let naesteBillede = { a: [200, 200, 200], b: [200, 200, 200] };
+const saetBillede = (b) => { naesteBillede = b; return b; };
+
+// En *levende* udgave af læse-canvassen ovenfor: `getImageData` læser det billede
+// `drawImage()` netop har tegnet, og `clearRect` husker at næste læsning er
+// bogstavelaget — så alpha er præcis dækningen, som er det eneste en farveafstand
+// aldrig kan fortælle. Kun `opts.levendeBilleder` tænder den, så de andre domme
+// fortsat kører mod den flade.
+function ctx2dLevende(st) {
+  const grad = { addColorStop() {} };
+  return {
+    canvas: null, font: '', textBaseline: '', fillStyle: '',
+    measureText: (t) => ({ width: Math.max(8, String(t || '').length * 9) }),
+    getImageData: (x, y, w, h) => {
+      const W = Math.max(1, Math.round(w)), H = Math.max(1, Math.round(h));
+      const d = new Uint8ClampedArray(W * H * 4);
+      // Bogstaverne ligger på en ryddet flade, så hver pixel er baggrund.
+      if (st.ryddet) return { data: d };
+      // Venstre halvdel i den ene farve, højre i den anden. Baggrunden *spænder*
+      // altså, så kernen må finde både sin mørkeste og sin lyseste pixel — uden
+      // det ville en slør-rettelse aldrig blive foreslået, og dommen ville dømme
+      // en veje kernen ikke kan tage.
+      const p = st.px || naesteBillede;
+      for (let r = 0; r < H; r++) {
+        for (let c = 0; c < W; c++) {
+          const i = (r * W + c) * 4;
+          const k = c * 2 < W ? p.a : p.b;
+          d[i] = k[0]; d[i + 1] = k[1]; d[i + 2] = k[2]; d[i + 3] = 255;
+        }
+      }
+      return { data: d };
+    },
+    putImageData() {},
+    drawImage(img) { st.px = (img && img.pixel) || st.px; st.ryddet = false; },
+    clearRect() { st.ryddet = true; },
+    fillRect() {}, fillText() {}, beginPath() {}, arc() {}, fill() {},
+    save() {}, restore() {}, createLinearGradient: () => grad,
+    createRadialGradient: () => grad, translate() {}, scale() {}, rect() {},
+  };
+}
+
+// `loadFile()` i kernen laver et `<img>` fra et objekt-URL, så sandkassen skal
+// kunne både URL'et og billedet. `src`-sætteren kalder `onload` — en browser
+// gør det også, og kernen forventer at være inde i `onload` når den måler.
+class SandkasseBillede {
+  set src(v) {
+    this._src = v;
+    this.pixel = naesteBillede;
+    this.naturalWidth = 900;
+    this.naturalHeight = 420;
+    if (this.onload) this.onload();
+  }
+}
+class SandkasseURL extends URL {}
+SandkasseURL.createObjectURL = () => 'blob:sandkasse';
+SandkasseURL.revokeObjectURL = () => {};
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Genkalderne står i produktionskoden med 1200 ms mellemrum. Sandkassen klemmer
 // dem til 0, så en test ikke skal vente minutter — antallet forsøg måles i stedet.
@@ -138,15 +198,44 @@ function loadPage(path, fetchImpl, opts = {}) {
   const make = (id) => {
     const n = el();
     if (id in seeds) n.value = seeds[id];
-    if (opts.canvas) withCanvas(n);
+    if (opts.canvas) (opts.levendeBilleder ? withLevendeCanvas(n) : withCanvas(n));
     return n;
+  };
+  // `opts.levendeBilleder` giver hver stub et canvas der *læser det billede der
+  // lige blev tegnet*, så to fotos i træk kan måles hver for sig gennem den
+  // samme `mount()`. Demoscenen er en `<canvas>`-stub, så den får også et billede.
+  const st = { px: null, ryddet: true };
+  const withLevendeCanvas = (e) => {
+    e.getContext = () => ctx2dLevende(st);
+    e.pixel = naesteBillede;
+    e.width = 900; e.height = 420;
+    // En rigtig DOM giver det *samme* element ved to `querySelector` med samme
+    // vælger, og et nyt element efter en `innerHTML`. Uden det kunne en test
+    // hverken finde den knap kernen lige skrev eller ramme den rigtige lytter —
+    // den ville trykke på en gammel måling. Det er hele pointen med en sekvens.
+    e._qs = {};
+    e.querySelector = (sel) => (e._qs[sel] = e._qs[sel] || el());
+    let _h;
+    Object.defineProperty(e, 'innerHTML', {
+      get() { return _h !== undefined ? _h : e._t; },
+      set(v) { _h = v; e._qs = {}; },
+      configurable: true,
+    });
+    Object.defineProperty(e, 'textContent', {
+      get() { return e._t; },
+      set(v) { e._t = v; _h = undefined; },
+      configurable: true,
+    });
+    return e;
   };
   // `book-ai.js` bygger sin egen sektion og hænger den før <footer>, så
   // sandkassen skal have et footer-element med en forælder.
   const footer = make();
   footer.parentNode = { insertBefore() {} };
   const sandbox = {
-    console, setTimeout: fastTimeout, clearTimeout, URL, URLSearchParams, Promise, Error, JSON, Date, Math,
+    console, setTimeout: fastTimeout, clearTimeout, URL: SandkasseURL,
+    URLSearchParams, Promise, Error, JSON, Date, Math,
+    Image: SandkasseBillede,
     encodeURIComponent, Object, Array, String, Number, Boolean, RegExp, Map, Set, Blob,
     scrollTo() {}, print() {}, alert() {}, confirm: () => true,
     // `window` *er* sandkassen, så værktøjer der binder på `window` (dragging
@@ -2042,6 +2131,136 @@ function mutated(path, from, to) {
       /\.ti-fix\s*\{[^}]*align-items:\s*center/.test(css),
       '.ti-fix mangler min-height:44px eller align-items:center');
   }
+}
+
+// --------------------------------------------------------------------------
+// 17. «Fiks det» må ikke slå på det næste foto.
+//
+// Målt 3/10 i rigtig Chromium: en bruger lægger tre fotos i træk (det er præcis
+// hvad værktøjet er til), trykker «Fix it» på det første og ser på det tredje at
+// tallet står på 1,52:1 med en forklaring om et 13 % mørkt lag — et lag der
+// var beregnet til et *andet* billedes endepunkter. Tre ting var sande på én
+// gang og ingen af dem rigtige: sløret lå stadig tegnet på foto B, så tallet var
+// ikke en måling af det brugeren havde lavet; `.ti-fixed`-teksten beskrev et lag
+// brugeren ikke kunne se i tallet; og den sagde «ryd det med farvefeltet
+// ovenfor» — som er præcis den handling der *sletter* sløret og nulstiller
+// målingen til 1,13:1, altså den rettelse den beder om gør billedet dårligere.
+//
+// Kernen nulstillede `scrim` og `lastFix` i *farve*- og *fontsize*-handlerne,
+// altså i to af de fire veje ind i `updateAll()`. Billedskiftet var den tredje.
+//
+// Dommen er *sekventiel* gennem den samme `mount()`: `check_contrast_sampling.py`
+// kører uden browser og dømmer ét billede pr. kald, så den kan ikke se det.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  const SIDE = 'site/text-on-image-checker.html';
+  // Foto A: baggrunden spænder fra næsten sort til næsten hvid, så ingen
+  // tekstfarve kan klare begge ende og rettelsen *er* et slør — den vej der så
+  // tegnes. Kernels søgning vælger det *hvide* lag her, fordi det dækker mindst,
+  // og det sætter tekstfarven til sort. Foto B: et smallere, men stadig
+  // spredt område der fejler med både sort og hvid tekst, så der igen *er* en
+  // rettelse at tilbyde — altså skal knappen dukke op igen, og tallet skal være
+  // B's egen måling. En jævnmidtone kan ikke bruges: en sådan består altid med
+  // enten sort eller hvid ved 4,5:1, så den ville aldrig nå at vise et tal der
+  // afhænger af om sløret fra A stadig lå over den.
+  const A = { a: [20, 22, 28], b: [235, 238, 242] };
+  const B = { a: [96, 100, 108], b: [150, 152, 156] };
+
+  // Én `mount()`, trin for trin: et tal i rækken er et billede, `'fix'` er et
+  // tryk på den knap kernen lige skrev, `farve:#…` er bruterens eget farvevalg.
+  // `loadPage` kører sidens egen `mount()`-kald, så der er ingen anden vej ind —
+  // testen gør præcis det en bruger gør, og rettelsen skal ske *mellem* to fotos,
+  // som i fundet.
+  async function foer(steps) {
+    const { nodes } = loadPage(SIDE, responses([]).fetchImpl,
+      { match: /TiContrast\.mount/, canvas: true, levendeBilleder: true, preload: [KERNE] });
+    await sleep(20);
+    for (const step of steps) {
+      if (step === 'fix') { nodes.get('result').querySelector('[data-ti-fix]').click(); continue; }
+      if (typeof step === 'string' && step.startsWith('farve:')) {
+        const felt = nodes.get('fg');
+        felt.value = step.slice(6);
+        felt.fire('input');
+        continue;
+      }
+      saetBillede(step);
+      const input = nodes.get('file');
+      input.files = [{ type: 'image/png' }];
+      input.fire('change');
+    }
+    return nodes;
+  }
+  const resultat = (nodes) => (nodes.get('result') || {}).innerHTML || '';
+  const tallet = (markup) => {
+    const m = /<strong>(\d+(?:[.,]\d+)?):1<\/strong>/.exec(markup);
+    return m ? m[1] : null;
+  };
+  // Kernens egen formel på B's *egen* pixel, med den tekstfarve rettelsen på A
+  // efterlod — så forventningen er ikke en håndskrevet optimum, og dommen er
+  // ikke afhængig af hvilken retning sløret vandt i.
+  const forventet = (hex, px) => {
+    const lum = (rgb) => {
+      const c = rgb.map((v) => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const h = hexToRgb(hex);
+    // Worst case: mod både ender, præcis som `sampleContrast()` gør.
+    return Math.min(...[px.a, px.b].map((p) => {
+      const l1 = lum(h), l2 = lum(p);
+      const [a, z] = l1 < l2 ? [l2, l1] : [l1, l2];
+      return (a + 0.05) / (z + 0.05);
+    }));
+  };
+  const hexToRgb = (h) => {
+    const s = String(h).replace('#', '');
+    return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16));
+  };
+
+  // (1) Foto A alene, så tryk. Rettelsen skal *være* et slør, ellers måler dommen
+  //     en veje kernen ikke kan slå fra. Og den skal flytte tallet, så en fejl der
+  //     nulsiller sløret uden at røre billedet ikke kan være grøn her.
+  const a = await foer([A]);
+  const markupA = resultat(a);
+  ok('foto A fejler 4,5:1 og får en «Fix it»-knap',
+    /data-ti-fix/.test(markupA), `markup=${markupA.slice(0, 120)}`);
+  const foerFix = tallet(markupA);
+  a.get('result').querySelector('[data-ti-fix]').click();
+  const markupEfterFix = resultat(a);
+  ok('«Fix it» på foto A flytter målingen og fortæller hvad den gjorde',
+    tallet(markupEfterFix) !== foerFix && /class="ti-fixed"/.test(markupEfterFix) &&
+    /\d+ % (dark|light) layer/.test(markupEfterFix),
+    `før=${foerFix} efter=${tallet(markupEfterFix)} fixed=${/class="ti-fixed"/.test(markupEfterFix)}`);
+
+  // (2) Foto B i samme mount, efter rettelsen på A. Alt tre ting fra fundet skal
+  //     være væk: sløret må ikke tegnes på B, beskrivelsen af rettelsen må ikke stå
+  //     under et tal der ikke stammer fra den, og knappen skal dukke op igen fordi
+  //     B igen fejler. Tallet måles mod kernens egen formel på *B's* pixel, så
+  //     dommen kan ikke være grøn fordi den læser et hvilket som helst tal.
+  const b = await foer([A, 'fix', B]);
+  const markupB = resultat(b);
+  const renB = tallet(markupB);
+  const rigtigB = forventet(b.get('fg').value, B).toFixed(2);
+  ok('foto B måles på sit *eget* billede, ikke på sløret fra foto A',
+    renB === rigtigB,
+    `viste ${renB}:1, kernen siger ${rigtigB}:1 for ${b.get('fg').value} på rgb(${B.a})/rgb(${B.b})`);
+  ok('beskrivelsen af rettelsen på foto A er væk, da foto B er målt',
+    !/class="ti-fixed"/.test(markupB), `stadig: ${(markupB.match(/class="ti-fixed">[^<]*/) || [''])[0]}`);
+  ok('«Fix it» dukker op igen på foto B',
+    /data-ti-fix/.test(markupB), `markup=${markupB.slice(0, 120)}`);
+
+  // (3) Samme foto B med *samme* tekstfarve i en frisk mount, uden nogen rettelse.
+  //     Tallet skal være præcis det fra (2) — det er den direkte dom på at
+  //     rettelsen på A ikke har sat spor i B's måling. Uden denne linje kunne
+  //     dommen være grøn på en kjerne der maler et andet tal end forventet, blot
+  //     et fast, så længe (2) havde noget at være forkert med.
+  const kunB = await foer(['farve:#000000', B]);
+  ok('foto B måles identisk med og uden en tidligere rettelse i samme mount',
+    tallet(resultat(kunB)) === renB,
+    `ren=${tallet(resultat(kunB))} efter A=${renB}`);
 }
 
 // --------------------------------------------------------------------------

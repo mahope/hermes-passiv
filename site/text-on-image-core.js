@@ -399,6 +399,15 @@
       var im = new Image();
       im.onload = function () {
         img = im;
+        // Et nyt billede er et nyt spørgsmål. Sløret var beregnet på *sidste*
+        // billedes endepunkter, så hvis det blev liggende ville tallet på det nye
+        // billede være en måling af en rettelse, brugeren ikke har lavet — og
+        // `.ti-fixed`-teksten ville stå under et tal der ikke stammer fra den.
+        // Samme nulstilling som farvefeltet og `fontsize` gør, og af samme
+        // grund: en beskrivelse af kernens egen indgreb må aldrig overleve det
+        // input den beskriver.
+        scrim = null;
+        lastFix = null;
         var maxW = 900;
         var scale = Math.min(1, maxW / im.naturalWidth);
         cv.width = Math.round(im.naturalWidth * scale);
