@@ -1,34 +1,49 @@
 # STATUS
-- **Kontrasttjekkeren endte ved et tal. Nu afleverer den billedet.** 3/10.
-  Efter «Fix it» kan bruteren hente den rettede grafik som PNG — med sløret og
-  den nye tekstfarve i, fordi `downloadPng()` tegner igen før den eksporterer.
-  Fire sider (2 værktøjssider + 2 artikler) med egen tekst på knap og filnavn.
-  Ny dom på **den fil** der kommer ud: knap, PNG + `.png`-navn, og pixelvis at
-  den er billedet med rettelsen (alle pixels uopaque og forskellige fra det rå
-  foto). `check_contrast_sampling` **50 løfter**, `--self-test` **44/44**.
-  Fund undervejs: harnessens `cv` er et `El`, ikke en `Canvas`, så før
-  `toDataURL`-videre-sendelsen fik porten `undefined` — grøn af den grund at
-  den aldrig nåede kaldet.
-- **To fund fra 3/10 er lukket og ligger i `docs/plan-arkiv.md`:** den
-  sekventielle dom på to billeder i træk (nuværende 50 løfter) og «fix» der
-  slog på det næste foto (`im.onload` nulstiller `scrim` og `lastFix`).
+- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal.** 3/10.
+  «Find det bedste sted» måler 20 steder på bruterens eget billede med den
+  samme `sampleContrast()` som tallet på skærmen kommer fra, og flytter
+  teksten til det bedste. Fire sider (2 værktøjssider + 2 artikler), EN+DA.
+  Ny dom på **pladseringen**: knap, et *bedre* tal end før (3:1 opfyldt),
+  en beskrivelse der nævner præcis det tal der står, og at beskrivelsen
+  forsvinder når bruteren selv trækker. `check_contrast_sampling` **58 løfter**,
+  `--self-test` **63/63**.
+  Fund undervejs i min egen kode: `rykket` blev sammenlignet med proberne i
+  stedet for med pladseringen den startede fra, så kernen skrev «det er
+  allerede det bedste sted» under et billede den selv lige havde flyttet
+  teksten på. Dømt af `data-ti-moved`, og polariteten er målt med mutationen
+  `rykket: false`.
+- **Tre fund fra 3/10 er lukket og ligger i `docs/plan-arkiv.md`:** den
+  sekventielle dom på to billeder i træk, «fix» der slog på det næste foto
+  (`im.onload` nulstiller `scrim` og `lastFix`) og det rettede billede som fil.
 - **Deploy:** målt 3/10 mod live `39ff715`: `ceo/kontrast-tjek-to-fotos` og
-  `ceo/fix-gaar-ikke-paa-naeste-foto` er **DEPLOY OK**. PR-TJEK 3/10: 0 PR'er.
-  BRANCH-TJEK 2/10: 2 slettet.
+  `ceo/fix-gaar-ikke-paa-naeste-foto` er **DEPLOY OK**. `ceo/download-det-
+  rettede-billede` er målt på **alle fire** sider over HTTP 3/10 08:55.
+  PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: hent det rettede billede ceo/download-det-rettede-billede
-  2026-10-03 09:10` — på `/text-on-image-checker`, `/text-on-image-checker-da`
-  og de to artikler: upload et foto, tryk «Fix it», tryk «Download the image» /
-  «Hent billedet». Filen skal hedde `text-on-image-contrast.png` /
-  `tekst-paa-billede-kontrast.png` og vise **billedet med sløret og den nye
-  tekstfarve** — ikke en gennemsigtig flade med bogstaver. Resten af ændringen
-  ligger i porten og er målt i gaten: `python3 tools/check_contrast_sampling.py`
-  skal sige **50 løfter** og `--self-test` **44/44**.
+- `VERIFICÉR DEPLOY: find det bedste sted i kontrasttjekkeren
+  ceo/find-bedste-sted 2026-10-03 12:00` — på `/text-on-image-checker` og
+  `/text-on-image-checker-da`: upload et todelt foto (mørkt til venstre, lyst
+  til højre), læg teksten på den lyse halvdel — den skal **fejle** — tryk
+  «Find det bedste sted» / «Find det bedste sted». Tallet skal blive bedre og
+  nå 3:1, og under det skal der stå at kernen flyttede teksten, med præcis
+  det tal der står over den. Træk så teksten selv et andet sted: den
+  forklaring skal væk, fordi den beskriver *kernens* flytning. Samme på de to
+  artikler. Resten ligger i porten og er målt i gaten:
+  `python3 tools/check_contrast_sampling.py` skal sige **58 løfter** og
+  `--self-test` **63/63**.
+
+- `DEPLOY OK 3/10` `ceo/download-det-rettede-billede` — hentet over HTTP:
+  `/text-on-image-checker`, `/text-on-image-checker-da` og **begge** artikler
+  (`/blog/text-on-image-contrast-check` og `/da/blog/tekst-paa-billede-
+  kontrasttjek`) har knappen i markup'en, og live `text-on-image-core.js`
+  (200) har `downloadPng`. Filnavnet på de fire sider er målt i gaten: 2 ×
+  `text-on-image-contrast.png` og 2 × `tekst-paa-billede-kontrast.png`.
+  Tidligere note:
 
 - `DEPLOY OK 3/10` `ceo/kontrast-tjek-to-fotos` — live `39ff715`: porten tæller
   **50 løfter** og `--self-test` **44/44** på ren HEAD, og `ceo/contrast-fix-knap`
@@ -466,6 +481,15 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     fem i én fil, så det er en funktion der mangler, ikke en der skal opfindes.
     **Åbent:** se ❓ — pro-tabellen på samme side lover kundeklar rapport som
     den betalte vare, så jeg kan ikke bygge den gratis uden dit valg.
+26. **Stedet, ikke kun tallet.** Hvem: alle der lægger en overskrift på et
+    foto med både en lys og en mørk flade — artiklen er 8 af 18 besøgende på
+    mahope.tools. Tal: billeder der består efter «find det bedste sted» (baseline
+    **0** — der var ingen vej; bruteren måtte trække teksten rundt for selv at
+    finde ud af, om den kunne ligge andet sted). Accept: ét klik flytter
+    teksten til det bedste af 20 målte steder, og porten dømmer pladseringen —
+    knap, bedre tal, beskrivelsen, og at den forsvinder ved bruterens egen
+    flytning. Datagrund: artiklens egen regel siger «mål det dårligste, ikke
+    gennemsnittet», og det var netop dét værktøjet ikke kunne.
 25. **Den rettede grafik som en fil.** Hvem: designere der lægger tekst på et
     foto og har brugt værktøjet til at få den til at bestå. Tal: downloads pr.
     uge (baseline **0** — der var ingen vej; værktøjet endte ved et tal, og så

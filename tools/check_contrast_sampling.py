@@ -696,6 +696,58 @@ function downloadMaal() {
 fixEfter(sekA, sekFarve, sekTekst, 20, 140);
 const dlMaal = downloadMaal();
 
+/* ---- «Find where it reads best»: den tredje handling i resultatet -----
+ *
+ * Et foto består under den ene halvdel af bogstaverne og fejler under den
+ * anden, så bruterens spørgsmål er ikke «hvad er tallet her?» men «hvor kan
+ * den ligge?». Før 3/10 var svaret «træk selv rundt» — og det er præcis det
+ * arbejde værktøjet er lavet for at fjerne.
+ *
+ * Kæden er den bruteren går: upload → læg teksten på den dårlige halvdel →
+ * «Find where it reads best». Billedet er mørkt til venstre og lyst til
+ * højre, og hvid tekst på den lyse halvdel kan ikke bestå noget krav, så
+ * dommen har både en fejlsituation og et rigtigt svar at kræve. */
+function spotLaes() {
+  const res = nodes['result'];
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+  // `[^>]*` fremfor intet: kernen skriver ogsa et `data-ti-moved`-attribut,
+  // og en regex der kræver `class="ti-fixed">` holder op at finde en beskrivelse
+  // der står der — sa dommen ville vaere gron af den grund at den kenne noget.
+  const fast = /<span class="ti-fixed"[^>]*>([\s\S]*?)<\/span>/.exec(res.innerHTML);
+  const flyttet = /data-ti-moved="([01])"/.exec(res.innerHTML);
+  return {
+    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+    harFast: !!fast,
+    fast: fast ? fast[1].replace(/<[^>]*>/g, '') : '',
+    // Hvorvidt kernen faktisk flyttede teksten, læst som et tal. Sætningen
+    // under tallet afhænger af det, så dommen kan ikke læse det ud af teksten
+    // på to sprog — den skal kunne se *sandheden*, ikke ordene.
+    flyttet: flyttet ? flyttet[1] : null,
+    harSpot: !!res.querySelector('[data-ti-spot]'),
+  };
+}
+function spotMaal() {
+  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
+  nodes['text'].value = 'Dark'; nodes['text'].fire('input');
+  nodes['fontsize'].value = 'large'; nodes['fontsize'].fire('change');
+  // Den lyse halvdel: hvid tekst på #ebeef2 er ca. 1,1:1 mod kravet 3:1.
+  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  const foer = spotLaes();
+  const knap = nodes['result'].querySelector('[data-ti-spot]');
+  if (!knap) return { harKnap: false, foer: foer };
+  knap.click();
+  const efter = spotLaes();
+  // Og så bruteren selv: han trækker teksten tilbage. Kimens egen beskrivelse
+  // af *sin* flytning skal væk, ellers står der «jeg satte den på det bedste
+  // sted» under et tal fra et helt andet sted — præcis den fejl reviewen
+  // fandt med sløret ved billedskift.
+  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  const rykket = spotLaes();
+  return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
+}
+const spotMaalt = spotMaal();
+
 console.log(JSON.stringify({
   svar: svar, fix: fixSvar,
   sekventiel: {
@@ -704,6 +756,7 @@ console.log(JSON.stringify({
     fixA: fixA,
   },
   download: dlMaal,
+  spot: spotMaalt,
 }));
 """
 
@@ -960,6 +1013,70 @@ def dom_download(d: dict | None) -> list[str]:
     return fund
 
 
+def dom_spot(sp: dict | None) -> list[str]:
+    """Døm at værktøjet finder *stedet*, ikke kun tallet.
+
+    Et foto består under den ene halvdel af bogstaverne og fejler under den
+    anden. Før 3/10 var svaret på «hvad er tallet her?» det eneste svar, og
+    bruteren måtte selv trække teksten rundt for at finde ud af, om den
+    overhovedet *kunne* ligge et andet sted. Det er hele det arbejde, værktøjet
+    er lavet for at fjerne — «Fix it» og «Download» løser og afleverer, men
+    ingen af dem vidste, hvor teksten skulle stå.
+
+    Fire løfter, fire forskellige fejlformer:
+
+    1. **Der står en knap.** Ellers har kernen skrevet et løfte uden en vej.
+    2. **Efter trykket står der et bedre tal.** Ikke bare et andet tal: et
+       dårligere tal ville være en rettelse der ødelægger billedet, og et uændret
+       tal en knap der gør ingenting. Derfor kræves en *streng* forbedring.
+    3. **Beskrivelsen er der, og den taler om det samme.** `.ti-fixed` skal
+       findes, og skal indeholde præcis det tal der står på skærmen — ellers er
+       den en påstand om en måling af noget andet (punkt 11).
+    4. **Beskrivelsen forsvinder, når bruteren selv flytter teksten.** Ellers står
+       «jeg satte den på det bedste sted» under et tal fra en pladsering
+       bruteren selv har valgt. Samme fejl som sløret ved billedskift.
+    """
+    fund: list[str] = []
+    if not sp or not sp.get("harKnap"):
+        return ["find-spot: der står ingen «find det bedste sted»-knap, så "
+                "bruteren skal selv trække teksten rundt for at finde ud af, "
+                "om den overhovedet kan ligge et andet sted"]
+    foer, efter = sp.get("foer") or {}, sp.get("efter") or {}
+    rykket = sp.get("rykket") or {}
+    a, b = foer.get("fik"), efter.get("fik")
+    if a is None or b is None:
+        fund.append("find-spot: der står intet forholdstal på skærmen hverken "
+                    "før eller efter trykket")
+        return fund
+    if b <= a:
+        fund.append(f"find-spot: efter trykket står der {b:.2f}:1, som ikke er "
+                    f"bedre end de {a:.2f}:1 den stod med før. Knappen flyttede "
+                    "teksten til et sted der ikke læses bedre")
+    if b < 3.0:
+        fund.append(f"find-spot: efter trykket står der {b:.2f}:1, så det bedste "
+                    "sted på billedet fejler stadig kravet på 3:1 for stor tekst")
+    if not efter.get("harFast"):
+        fund.append("find-spot: kernen flyttede teksten uden at sige det, så "
+                    "bruteren står med et nyt tal og ingen forklaring")
+    elif efter.get("flyttet") != "1":
+        fund.append("find-spot: tallet blev bedre, men kernen skriver at den "
+                    "ikke flyttede noget. Enten står teksten et andet sted end "
+                    "bruteren tror, eller han får at vide at han selv har fundet "
+                    "det bedste sted — og det er kun det ene af dem der er sandt")
+    else:
+        # Tallet i beskrivelsen skal være *samme* måling som den på skærmen.
+        # Både komma og punktum accepteres, fordi den danske side bruger komma.
+        to = f"{b:.2f}"
+        if to not in efter.get("fast", "") and to.replace(".", ",") not in efter.get("fast", ""):
+            fund.append(f"find-spot: beskrivelsen nævner ikke det tal der står på "
+                        f"skærmen ({to}:1), så den beskriver en anden måling")
+    if rykket.get("harFast"):
+        fund.append("find-spot: beskrivelsen står stadig under et tal, efter at "
+                    "bruteren selv har flyttet teksten — den taler om kernens "
+                    "egen flytning og ikke om det han nu ser")
+    return fund
+
+
 def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     fund: list[str] = []
     for r in (r if r is not None else koer(kode)):
@@ -1167,6 +1284,104 @@ def self_test() -> int:
          any("rå foto" in f for f in dom_download(dict(dl_rigtig(), afvigelser=0))),
          "fil uden rettelse blev dømt grønt")
 
+    # 11: «Find det bedste sted». Fire løfter, og de skal hver især kunne
+    # gå rød — ellers er de fire bare fire tællere.
+    spot_ok = (koer(kode, hele=True) or {}).get("spot")
+    tjek("find-spot-kæden leverer alle tre læsninger",
+         bool(spot_ok) and all(k in spot_ok for k in ("foer", "efter", "rykket")),
+         str(spot_ok))
+    tjek("find-spot-dommen er grøn på den kode der kører",
+         not dom_spot(spot_ok), "; ".join(dom_spot(spot_ok)))
+    # Billedet skal **fejle** i udgangspunktet. Ellers er «find det bedste
+    # sted» en knap uden opgave, og løftet om et bedre tal ville være grønt
+    # fordi porten aldrig kan se den fejl, den er skrevet til.
+    tjek("teksten fejler på den halvdel den er lagt på, så dommen har noget at dømme",
+         bool(spot_ok) and (spot_ok.get("foer") or {}).get("fik") is not None
+         and spot_ok["foer"]["fik"] < 3.0, str(spot_ok))
+    tjek("«find det bedste sted» flytter til et sted der består kravet",
+         bool(spot_ok) and (spot_ok.get("efter") or {}).get("fik", 0) >= 3.0,
+         str(spot_ok))
+    # Mutation 1: knappen forsvinder af markup'en.
+    tjek("mutationen findes i koden: data-ti-spot", " data-ti-spot>" in kode)
+    spot_uden_knap = dom_spot(
+        (koer(kode.replace(" data-ti-spot>", " data-ti-spotx>", 1), hele=True)
+         or {}).get("spot"))
+    tjek("find-spot-dommen kan se en knap der ikke står i markup'en",
+         any("ingen «find det bedste sted»-knap" in f for f in spot_uden_knap),
+         str(spot_uden_knap))
+    # Mutation 2: kernen søger aldrig efter et bedre sted — den knap der gør
+    # ingenting, som er den mutation der ligner mest en rigtig fejl.
+    tjek("mutationen findes i koden: spot-vurderingen",
+         "if (v > best) { best = v; bx = x; by = y; }" in kode)
+    spot_uden_spot = dom_spot(
+        (koer(kode.replace("if (v > best) { best = v; bx = x; by = y; }",
+                           "if (v > best + 99) { best = v; bx = x; by = y; }", 1),
+              hele=True) or {}).get("spot"))
+    tjek("find-spot-dommen kan se en knap der ikke flytter teksten",
+         any("ikke er bedre" in f for f in spot_uden_spot), str(spot_uden_spot))
+    # Mutation 3: kernen skriver «det er allerede det bedste sted», selv om
+    # den lige flyttede teksten. Det var ikke en hypotese — det var den fejl
+    # første kørsel af dommen afslørede i min egen kode, fordi `rykket` blev
+    # sammenlignet med proberne i stedet for med pladseringen den startede fra.
+    tjek("mutationen findes i koden: rykket måles mod startstedet",
+         "rykket: tx !== startX || ty !== startY" in kode)
+    spot_løgn = dom_spot(
+        (koer(kode.replace("rykket: tx !== startX || ty !== startY",
+                           "rykket: false", 1), hele=True) or {}).get("spot"))
+    tjek("find-spot-dommen kan se en kern der lyver om sin egen flytning",
+         any("ikke flyttede noget" in f for f in spot_løgn), str(spot_løgn))
+    # Mutation 4: beskrivelsen overlever bruterens egen flytning — den fejl
+    # reviewen fandt med sløret ved billedskift, i en ny form.
+    gammelt_drag = ("      lastFix = null;\n      updateAll();\n    }\n"
+                    "    // `sampleContrast()` ends on a cleared canvas")
+    tjek("mutationen findes i koden: onMove nulstiller beskrivelsen",
+         gammelt_drag in kode, repr(gammelt_drag))
+    spot_drag = dom_spot(
+        (koer(kode.replace(gammelt_drag,
+                           "      updateAll();\n    }\n"
+                           "    // `sampleContrast()` ends on a cleared canvas", 1),
+              hele=True) or {}).get("spot"))
+    tjek("find-spot-dommen kan se en beskrivelse der overlever bruterens egen flytning",
+         any("efter at bruteren selv har flyttet" in f for f in spot_drag),
+         str(spot_drag))
+    # Og de fire løfter hver for sig, så ingen af dem er grøn kun fordi et andet
+    # fejler.
+    def spot_rigtig():
+        return {"harKnap": True,
+                "foer": {"fik": 1.12},
+                "efter": {"fik": 18.0, "harFast": True, "flyttet": "1",
+                          "fast": "18.00:1"},
+                "rykket": {"fik": 1.12, "harFast": False}}
+
+    tjek("find-spot-dommen er grøn på et rigtigt mål",
+         dom_spot(spot_rigtig()) == [], str(dom_spot(spot_rigtig())))
+    tjek("find-spot-dommen kan se en pladsering der ikke er bedre",
+         any("ikke er bedre" in f for f in dom_spot(
+             dict(spot_rigtig(), efter={"fik": 1.12, "harFast": True,
+                                         "flyttet": "1", "fast": "1.12:1"}))),
+         "en kern der gør intet blev dømt grønt")
+    tjek("find-spot-dommen kan se en pladsering der stadig fejler",
+         any("fejler stadig" in f for f in dom_spot(
+             dict(spot_rigtig(), efter={"fik": 2.4, "harFast": True,
+                                         "flyttet": "1", "fast": "2.40:1"}))),
+         "en kern der flytter til et stadig fejlende sted blev dømt grønt")
+    tjek("find-spot-dommen kan se en beskrivelse uden flytning",
+         any("uden at sige det" in f for f in dom_spot(
+             dict(spot_rigtig(), efter={"fik": 18.0}))),
+         "en tavs flytning blev dømt grønt")
+    tjek("find-spot-dommen kan se en kern der skriver at den ikke flyttede noget",
+         any("ikke flyttede noget" in f for f in dom_spot(
+             dict(spot_rigtig(), efter={"fik": 18.0, "harFast": True,
+                                         "flyttet": "0", "fast": "18.00:1"}))),
+         "en kern der løj om sin egen flytning blev dømt grønt")
+    tjek("find-spot-dommen kan se en beskrivelse om en anden måling",
+         any("anden måling" in f for f in dom_spot(
+             dict(spot_rigtig(), efter={"fik": 18.0, "harFast": True,
+                                         "flyttet": "1", "fast": "4.52:1"}))),
+         "en beskrivelse med et forkert tal blev dømt grønt")
+    tjek("find-spot-dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_spot(None)), "harnessen gav intet")
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
@@ -1220,6 +1435,15 @@ def main(argv: list[str] | None = None) -> int:
         if dl:
             antal += 3
         for linje in dom_download(dl):
+            fund.append(f"{fil}: {linje}")
+        # «Find det bedste sted»: fire løfter på den pladsering kernen vælger
+        # — knap, bedre tal, beskrivelse der taler om samme måling, og
+        # beskrivelsen væk igen når bruteren selv flytter teksten. Tælles kun
+        # når dommen fik en kæde at dømme, samme regel som de to andre.
+        spot = svar.get("spot")
+        if spot:
+            antal += 4
+        for linje in dom_spot(spot):
             fund.append(f"{fil}: {linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`

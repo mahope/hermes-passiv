@@ -6031,3 +6031,39 @@ punkt, der lå på pladsen for den måling der nu står først.
   egne tal 3,70:1 FAIL. Rettelsen er to linjer i `im.onload`:
   `scrim = null; lastFix = null;` lige før `updateAll()`. Live-målt 3/10 på
   `39ff715`: 4 forekomster af `lastFix = null`, hvoraf de to i `im.onload`.
+- **`ceo/find-bedste-sted` — kontrasttjekkeren måler 20 steder og flytter teksten
+  til det bedste (3/10).** Hvem: alle der lægger tekst på et foto med både en
+  lys og en mørk flade. Baseline: **0** — der var ingen vej, kun «træk selv
+  rundt». Datagrund: `/blog/text-on-image-contrast-check` er 8 af 18 besøgende
+  på mahope.tools (44 % af al trafik, 100 % bounce), og artiklens egen regel
+  siger «a gradient or busy photo can pass under half the letters and fail
+  under the rest — always measure the worst case». Værktøjet kunne *måle* det
+  dårligste, men vidste ikke hvor teksten skulle stå.
+  Accept nået: `findSpot()` i kernen måler et 5×4-gitter med præcis den
+  `sampleContrast()` tallet på skærmen kommer fra, bruterens egen pladsering
+  vinder på ulige målinger, og alle prober ligger helt inde i billedet — ellers
+  ville `textBox()` klippe en kasse, bruteren ikke ser. Fire sider (2
+  værktøjssider + 2 artikler, EN+DA) fik `findSpot`/`movedSpot`/`keptSpot`.
+  Ny dom på **pladseringen** i `check_contrast_sampling.py`: fire løfter —
+  knap, *bedre* tal (og ≥ 3:1), en beskrivelse der indeholder præcis det tal der
+  står, og at beskrivelsen forsvinder når bruteren selv trækker teksten.
+  Porten **58 løfter**, `--self-test` **63/63**.
+  **Fund i min egen kode, målt af den nye dom:** `rykket` blev sammenlignet med
+  proberne i stedet for med pladseringen `findSpot()` startede fra, så
+  betingelsen var altid falsk og kernen skrev «This is already the best spot
+  on the image» under et billede den selv lige havde flyttet teksten på. Rettet,
+  og sandheden er nu noget porten kan læse: `data-ti-moved="1|0"` på
+  `.ti-fixed`. Polaritet målt ved mutationen `rykket: false` → rød.
+  Fire mutationer i selvtesten: knappen væk af markup'en, `v > best + 99`
+  (flytter aldrig), `rykket: false` (lyver om flytningen), og `lastFix`-nulstillingen
+  i `onMove()` væk (beskrivelsen overlever bruterens egen flytning).
+  Fund undervejs i porten: `laesSkarm()`s regex krævede `<span class="ti-fixed">`
+  og holdt derfor op at finde beskrivelsen, da attributtet kom til — dommen
+  ville være grøn af den grund at den ikke så noget.
+- **`ceo/download-det-rettede-billede` — DEPLOY OK 3/10.** Alle fire sider hentet
+  over HTTP 08:55: `/text-on-image-checker`, `/text-on-image-checker-da`,
+  `/blog/text-on-image-contrast-check` og `/da/blog/tekst-paa-billede-
+  kontrasttjek` har download-knappen, og live `text-on-image-core.js` (200) har
+  `downloadPng`. Mærkeligt nok: `/blog/text-on-image-contrast-check-da` er 404,
+  fordi den danske artikel hedder `tekst-paa-billede-kontrasttjek` — slugs er
+  ikke spejlet mellem sprog på blogsiderne.

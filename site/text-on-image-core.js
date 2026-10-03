@@ -233,11 +233,14 @@
     // The box is clipped to the canvas, never nudged back inside it:
     // getImageData() outside the canvas returns transparent black, which
     // reads as a black background and invents contrast that is not there.
+    function textWidth() {
+      applyFont();
+      return Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width));
+    }
     function textBox() {
       applyFont();
       var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));
-      var w = Math.min(Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width)),
-                       cv.width - x);
+      var w = Math.min(textWidth(), cv.width - x);
       var h = Math.min(fontSizePx(), cv.height - y);
       if (w < 2 || h < 2) return null;
       return { x: x, y: y, w: w, h: h };
@@ -322,11 +325,60 @@
       return true;
     }
 
-    // Hvad kernen gjorde, i lærerens sprog. `scrimPct` og `hex` er tal og
+    // Hvor teksten læses bedst. Et foto kan bestå under den ene halvdel af
+    // bogstaverne og fejle under den anden, så det ærlige svar på «kan min
+    // overskrift ligge her?» er et *sted* og ikke ét tal ét sted — og det er
+    // langsomst at finde ved at trække rundt med musen. Hvert sted måles med
+    // `sampleContrast()`, altså præcis den måling tallet på skærmen kommer fra,
+    // så det værktøjet flytter teksten til, er et sted hvor *dette* tal gælder.
+    //
+    // To ting er bevidste: bruterens egen pladsering vinder på *ulige* målinger,
+    // så der er ingen grund til at rykke en tekst der allerede står bedst, og
+    // alle prober ligger helt inde i billedet — `textBox()` klipper en kasse
+    // der går ud over kanten, og så ville dommen måle en tekst der ikke er den
+    // bruteren ser.
+    function findSpot() {
+      if (!img) return null;
+      var w = textWidth(), h = fontSizePx();
+      var maxX = Math.max(0, cv.width - w), maxY = Math.max(0, cv.height - h);
+      if (maxX < 1 || maxY < 1) return null;
+      // Hvor teksten *lå* da knappen blev tryktk. Uden denne var `rykket`
+      // altid falsk: `bx`/`by` er prober inden i billedet, så de kan ikke
+      // fortælle om de er flyttet — og kernen skrev «det er allerede det bedste
+      // sted» under et billede den selv lige havde flyttet teksten på.
+      var startX = tx, startY = ty;
+      var bx = tx, by = ty;
+      var bedst = sampleContrast();
+      var best = bedst && bedst.ratio !== null ? bedst.ratio : -1;
+      var cols = 5, rows = 4, c, r, x, y, s, v;
+      for (r = 0; r < rows; r++) {
+        for (c = 0; c < cols; c++) {
+          x = Math.round(maxX * c / (cols - 1));
+          y = Math.round(maxY * r / (rows - 1));
+          tx = x; ty = y;
+          s = sampleContrast();
+          v = s && s.ratio !== null ? s.ratio : -1;
+          if (v > best) { best = v; bx = x; by = y; }
+        }
+      }
+      tx = Math.max(0, Math.min(bx, maxX));
+      ty = Math.max(0, Math.min(by, maxY));
+      if (best < 0) return null;
+      return { x: tx, y: ty, ratio: best, rykket: tx !== startX || ty !== startY };
+    }
+
+    // Hvad kernen gjorde, i læserens sprog. `scrimPct` og `hex` er tal og
     // farver fra kernens egen måling — aldrig noget en besøgende har skrevet —
     // og hele strengen kommer fra siden, så en dansk læser ikke møder en
     // engelsk beskrivelse af sin egen rettelse.
     function fixBeskrivelse(f) {
+      if (f.kind === 'spot') {
+        // Samme regel som for sløret: siger kernen at den har flyttet noget,
+        // skal den sige *hvorhen* og hvad der blev målt dér. «%s» er kernens
+        // egen måling på den nye pladsering.
+        return ((f.rykket ? s.movedSpot : s.keptSpot) || '')
+          .replace('%s', fmt(f.ratio.toFixed(2)) + ':1');
+      }
       if (f.kind === 'scrim') {
         // Sløret er prøvet i begge retninger — sort baggrund med lys tekst,
         // hvid baggrund med mørk tekst — og den med mindst dækning vinder.
@@ -378,8 +430,17 @@
          passAAA ? '<br>' + (s.alsoAAA || '') :
           '<br>' + (s.tryFix || '')) +
         (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
-        (lastFix ? '<br><span class="ti-fixed">' + fixBeskrivelse(lastFix) + '</span>' : '') +
+        // `data-ti-moved` er ikke pynt: det er den ene ting porten skal kunne
+        // dømme om flytningen, fordi *hvilken* sætning kernen vælger afhænger
+        // af den. Ordene er sidens egen tekst på to sprog, så de kan ikke være
+        // et fastslået tal i porten.
+        (lastFix ? '<br><span class="ti-fixed" data-ti-moved="' + (lastFix.rykket ? '1' : '0') + '">' + fixBeskrivelse(lastFix) + '</span>' : '') +
         (s.downloadBtn ? '<br><button type="button" class="btn-secondary ti-dl" data-ti-dl>' + s.downloadBtn + '</button>' : '') +
+        // Sidst i rækken: det er den tredje handling i resultatet, og den
+        // udfylder de to andre — «Fix it» farver teksten, den her flytter den.
+        // Den ligger *uden* for `fix`-betingelsen, fordi den også har en
+        // opgave når teksten allerede består: der kan være et bedre sted.
+        (s.findSpot ? '<br><button type="button" class="btn-secondary ti-spot" data-ti-spot>' + s.findSpot + '</button>' : '') +
         '<br><span style="font-size:.85rem;color:var(--color-text-muted)">' + (s.measured || '') + '</span>'
         + (s.proCard || '') +
         '<br><span style="font-size:13px;color:var(--color-text-muted)">' + (s.note || '') + '</span>';
@@ -392,6 +453,16 @@
       if (btn) btn.addEventListener('click', function () { applyFix(fix); });
       var dl = res.querySelector('[data-ti-dl]');
       if (dl) dl.addEventListener('click', downloadPng);
+      var spot = res.querySelector('[data-ti-spot]');
+      if (spot) spot.addEventListener('click', function () {
+        var spot2 = findSpot();
+        if (!spot2) return;
+        // Samme slags som `applyFix()`: beskrivelsen af kernens egen indgreb
+        // hører til den pladsering den lagde, så `onMove()` nulstiller den igen
+        // så snart bruteren selv rører teksten.
+        lastFix = { kind: 'spot', ratio: spot2.ratio, rykket: spot2.rykket };
+        updateAll();
+      });
     }
 
     // Den rettede grafik som en fil. Før 3/10 endte værktøjet ved et tal: bruteren
@@ -471,6 +542,11 @@
       if (!img) return;
       e.preventDefault();
       pos(e);
+      // Bruteren flyttede teksten selv. En beskrivelse af kernens egen
+      // flytning («jeg satte den på det bedste sted») må ikke blive stående
+      // under et tal der nu stammer fra en helt anden pladsering — samme
+      // grund som farvefeltet og `fontsize` nulstiller den.
+      lastFix = null;
       updateAll();
     }
     // `sampleContrast()` ends on a cleared canvas holding only the letters, so
@@ -507,7 +583,7 @@
     // kode i en sandkasse i stedet for at tro på markup. `suggestFix` er med,
     // fordi rettelsens *matematik* skal kunne dømmes uden en browser: et tal
     // påstanden ikke kan efterprøve på er en påstand.
-    return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix };
+    return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix, findSpot: findSpot };
   }
 
   global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb,
