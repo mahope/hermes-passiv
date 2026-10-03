@@ -90,12 +90,23 @@
           </select>
         </div>
       </div>
+      <div class="ti-row" style="margin-top:14px">
+          <div class="ti-field">
+            <label for="art-text2">4. Anden tekst (valgfri)</label>
+            <input type="text" id="art-text2" class="ti-input" value="Din undertekst her">
+          </div>
+          <div class="ti-field">
+            <label for="art-fg2">5. Farve på den anden tekst</label>
+            <input type="color" class="ti-color" id="art-fg2" value="#ffffff">
+          </div>
+        </div>
       <div class="ti-canvas-wrap">
-        <canvas id="art-cv" role="img" aria-label="Dit billede med flytbar tekst. Klik på billedet for at flytte teksten."></canvas>
+        <canvas id="art-cv" role="img" aria-label="Dit billede med flytbar tekst. Klik på billedet for at flytte den valgte tekst."></canvas>
       </div>
-      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Klik hvor som helst på billedet (eller træk) for at placere teksten.</p>
+      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Klik hvor som helst på billedet (eller træk) for at placere den valgte tekst. Vælg hvilken med <em>Flyt denne tekst</em> i et resultat.</p>
       <p class="ti-error" id="art-err" role="alert"></p>
       <div id="art-result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+      <div id="art-result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
     </div>
   </div>
 </section>
@@ -212,6 +223,7 @@
       fixedScrimLight: 'Jeg lagde et %s % lyst lag bag teksten og målte igen. Du fjerner det med farvefeltet ovenfor.',
       downloadBtn: 'Hent billedet',
       findSpot: 'Find det bedste sted',
+      pick: 'Flyt denne tekst',
       movedSpot: 'Jeg flyttede din tekst til det sted der læses bedst, hvor den måles til %s. Træk den et andet sted for at prøve en anden placering.',
       delta: 'Før dette målte den %s. Nu måler den %s.',
       keptSpot: 'Det her er allerede det bedste sted på billedet: %s. Træk teksten for at sammenligne en anden placering.',

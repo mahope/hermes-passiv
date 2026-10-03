@@ -92,6 +92,13 @@ function ctx2d() {
     },
     putImageData() {}, drawImage() {}, clearRect() {}, fillRect() {},
     fillText() {}, beginPath() {}, arc() {}, fill() {}, save() {}, restore() {},
+    // Den stiplede ramme om den tekstblok et klik flytter. Den tegner
+    // *intet* ind i bufferen — en stiplet strege er ikke en baggrund, og
+    // måle den som fyld ville give porten en kant bruteren ikke ser. Den
+    // findes her fordi kernen kalder den på enhver canvas-stub; en stub
+    // der mangler den dør med en TypeError ved sidevisning, og så dømmer
+    // hele dommen ingenting — grøn fordi den aldrig kom så langt.
+    setLineDash() {}, strokeRect() {},
     createLinearGradient: () => grad, createRadialGradient: () => grad,
     translate() {}, scale() {}, rect() {},
   };
@@ -138,6 +145,7 @@ function ctx2dLevende(st) {
     clearRect() { st.ryddet = true; },
     fillRect() {}, fillText() {}, beginPath() {}, arc() {}, fill() {},
     save() {}, restore() {}, createLinearGradient: () => grad,
+    setLineDash() {}, strokeRect() {},
     createRadialGradient: () => grad, translate() {}, scale() {}, rect() {},
   };
 }

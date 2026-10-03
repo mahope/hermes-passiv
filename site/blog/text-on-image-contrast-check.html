@@ -89,12 +89,23 @@
           </select>
         </div>
       </div>
-      <div class="ti-canvas-wrap">
-        <canvas id="art-cv" role="img" aria-label="Your image with draggable text. Click on the image to move the text."></canvas>
+      <div class="ti-row" style="margin-top:14px">
+        <div class="ti-field">
+          <label for="art-text2">4. Second text (optional)</label>
+          <input type="text" id="art-text2" class="ti-input" value="Your subtitle here">
+        </div>
+        <div class="ti-field">
+          <label for="art-fg2">5. Second text colour</label>
+          <input type="color" class="ti-color" id="art-fg2" value="#ffffff">
+        </div>
       </div>
-      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Click anywhere on the image (or drag) to position the text.</p>
+      <div class="ti-canvas-wrap">
+        <canvas id="art-cv" role="img" aria-label="Your image with draggable text. Click on the image to move the selected text."></canvas>
+      </div>
+      <p style="font-size:.82rem;color:var(--color-text-muted);margin-top:8px">Click anywhere on the image (or drag) to position the selected text. Use <em>Move this text</em> in a result to choose which one the click moves.</p>
       <p class="ti-error" id="art-err" role="alert"></p>
       <div id="art-result" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
+      <div id="art-result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
     </div>
   </div>
 </section>
@@ -212,6 +223,7 @@
       fixedScrimLight: 'I put a %s % light layer behind the text and measured again. Clear it with the color picker above.',
       downloadBtn: 'Download the image',
       findSpot: 'Find where it reads best',
+      pick: 'Move this text',
       movedSpot: 'I moved your text to the spot that reads best, where it measures %s. Drag it anywhere to try another place.',
       delta: 'Before this it measured %s. It measures %s now.',
       keptSpot: 'This is already the best spot on the image: %s. Drag the text to compare another place.',

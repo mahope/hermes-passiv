@@ -172,6 +172,40 @@
     // `draw()` og regnet på i `effectiveBg()`, så tallet og det læseren ser
     // kommer fra samme blanding.
     var scrim = null;
+    // **To tekstblokke.** Den anden er den mest almindelige reelle case — en
+    // designér med to overlejrende tekster på ét foto får i dag kun tallet for
+    // den *sidste*, og det er det tal han så stoler på. Blok 2 findes kun når
+    // siden har givet den egne felter (`#text2`/`#fg2`), så de sider der ikke
+    // har dem, kører præcis som før: én blok, ét tal, én måling.
+    var t2 = { x: 0, y: 0, scrim: null, lastFix: null };
+    // Hvilken blok et klik på billedet flytter. Der er præcis én cursor, og
+    // bruteren skal kunne se hvilken blok den griber — derfor tegner `draw()`
+    // en stiplet ramme om den aktive.
+    var aktiv = 0;
+
+    // Én tekstbloks tilstand læses gennem disse, så al resten af kernen er
+    // skrevet ét sted for to blokke i stedet for to gange. Blok 0 er den
+    // værktøjet altid har haft, så dens felter er de oprindelige id'er.
+    function txtFelt(i) { return $(i ? 'text2' : 'text'); }
+    function farveFelt(i) { return $(i ? 'fg2' : 'fg'); }
+    function laegX(i) { return i ? t2.x : tx; }
+    function laegY(i) { return i ? t2.y : ty; }
+    function laegScrim(i) { return i ? t2.scrim : scrim; }
+    function laegFix(i) { return i ? t2.lastFix : lastFix; }
+    function saetX(i, v) { if (i) { t2.x = v; } else { tx = v; } }
+    function saetY(i, v) { if (i) { t2.y = v; } else { ty = v; } }
+    function saetScrim(i, v) { if (i) { t2.scrim = v; } else { scrim = v; } }
+    function saetFix(i, v) { if (i) { t2.lastFix = v; } else { lastFix = v; } }
+    // Blok 2 tæller kun, når siden faktisk har givet den felter — ellers ville
+    // kernen tegne en tekst, bruteren ikke kan se eller ændre, og måle den.
+    function blok2Findes() { return !!(txtFelt(1) && farveFelt(1)); }
+    function blokAntal() { return blok2Findes() ? 2 : 1; }
+    // Aktivér en blok og mål igen, så stregen på billedet og tallet på skærmen
+    // altid beskriver den samme blok.
+    function aktivere(i) {
+      aktiv = i;
+      updateAll();
+    }
     // Sandt når bruteren ikke har valgt et billede, og det vi viser er det
     // eksempel kernen selv tegner. Uden denne tilstand står et *målt tal* under
     // et billede læseren aldrig har set — og «målt mod de lyseste og mørkeste
@@ -203,72 +237,105 @@
       ctx.font = '700 ' + fontSizePx() + 'px system-ui, sans-serif';
       ctx.textBaseline = 'top';
     }
+    // Billedet, og så *alle* blokke oveni det i rækkefølge. Sløret tegnes på
+    // *canvas*, ikke kun i regningen — ellers ville værktøjet vise et bedre tal
+    // end det læseren kan se, og det er den værste slags løfte: et tal der kun
+    // er rigtigt i koden. Blok 2 tegnes oveni blok 1, så en tekst der lapper
+    // over den anden ser ud som den gør i designværktøjet.
     function draw() {
       if (!img) return;
       ctx.drawImage(img, 0, 0, cv.width, cv.height);
-      // Sløret tegnes på *canvas*, ikke kun i regningen. Ellers ville værktøjet
-      // vise et bedre tal end det læseren kan se, og det er den værste slags
-      // løfte: et tal der kun er rigtigt i koden.
-      if (scrim) drawScrim();
-      applyFont();
-      ctx.fillStyle = $('fg').value;
-      ctx.fillText($('text').value || ' ', tx, ty);
+      var n = blokAntal();
+      for (var i = 0; i < n; i++) {
+        if (laegScrim(i)) drawScrim(i);
+        applyFont();
+        ctx.fillStyle = farveFelt(i).value;
+        ctx.fillText(txtFelt(i).value || ' ', laegX(i), laegY(i));
+      }
+      drawActive();
     }
     // Sløret dækker præcis den boks, teksten står i — og lidt uden om, så
     // kanten af sløret ikke ligger i bogstavernes egen baggrund, hvor en
     // læser ville se en skarp stribe.
-    function drawScrim() {
-      var box = textBox();
-      if (!box) return;
+    function drawScrim(i) {
+      var s = laegScrim(i);
+      var box = textBox(i);
+      if (!box || !s) return;
       var pad = Math.round(fontSizePx() * 0.35);
       ctx.save();
-      ctx.fillStyle = scrim.hex + Math.round(scrim.alpha * 255).toString(16).padStart(2, '0');
+      ctx.fillStyle = s.hex + Math.round(s.alpha * 255).toString(16).padStart(2, '0');
       ctx.fillRect(Math.max(0, box.x - pad), Math.max(0, box.y - pad),
                    Math.min(cv.width, box.w + pad * 2), Math.min(cv.height, box.h + pad * 2));
       ctx.restore();
     }
-    // The letters on their own, on a cleared canvas. Alpha is then exactly how
+    // Stiplet ramme om den blok et klik vil flytte. Uden den er der to tekster
+    // og ingen anelse om hvilken man trækker — så bruteren ville måle den ene og
+    // flytte den anden og tro at værktøjet er i ulave.
+    function drawActive() {
+      if (blokAntal() < 2) return;
+      var box = textBox(aktiv);
+      if (!box) return;
+      var pad = Math.round(fontSizePx() * 0.22);
+      ctx.save();
+      ctx.strokeStyle = s.activeRing || 'rgba(255,255,255,.85)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.strokeRect(Math.max(1, box.x - pad), Math.max(1, box.y - pad),
+                     Math.min(cv.width - 2, box.w + pad * 2), Math.min(cv.height - 2, box.h + pad * 2));
+      ctx.restore();
+    }
+    // The letters of *one* block on a cleared canvas. Alpha is then exactly how
     // much of each pixel the glyph covers, which is the one thing a colour
-    // distance can never tell you.
-    function drawTextLayer() {
+    // distance can never tell you. Only this block's letters are drawn: the
+    // other block is not part of the background being measured here, and
+    // drawing it would put its glyphs into the alpha mask and delete real
+    // background pixels from under this one.
+    function drawTextLayer(i) {
       ctx.clearRect(0, 0, cv.width, cv.height);
       applyFont();
-      ctx.fillStyle = $('fg').value;
-      ctx.fillText($('text').value || ' ', tx, ty);
+      ctx.fillStyle = farveFelt(i).value;
+      ctx.fillText(txtFelt(i).value || ' ', laegX(i), laegY(i));
     }
 
     // The box is clipped to the canvas, never nudged back inside it:
     // getImageData() outside the canvas returns transparent black, which
     // reads as a black background and invents contrast that is not there.
-    function textWidth() {
+    function textWidth(i) {
       applyFont();
-      return Math.max(2, Math.ceil(ctx.measureText($('text').value || '').width));
+      return Math.max(2, Math.ceil(ctx.measureText(txtFelt(i).value || '').width));
     }
-    function textBox() {
+    function textBox(i) {
       applyFont();
-      var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));
-      var w = Math.min(textWidth(), cv.width - x);
+      var x = Math.max(0, Math.round(laegX(i))), y = Math.max(0, Math.round(laegY(i)));
+      var w = Math.min(textWidth(i), cv.width - x);
       var h = Math.min(fontSizePx(), cv.height - y);
       if (w < 2 || h < 2) return null;
       return { x: x, y: y, w: w, h: h };
     }
 
-    function sampleContrast() {
+    // Målingen for én blok. Samme to pass og samme kloge som før — de er
+    // flyttet fra den ene tekst til *en* tekst, så formlen og portens tal er
+    // uændrede, og blok 2 måles af præcis den samme kode.
+    function sampleContrast(i) {
       if (!img) return null;
-      var box = textBox();
+      var box = textBox(i);
       if (!box) return null;
       // Pass 1 — the photo alone, read back as the background.
       ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.drawImage(img, 0, 0, cv.width, cv.height);
       var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;
       // Pass 2 — the letters alone, so alpha is the glyph coverage.
-      drawTextLayer();
+      drawTextLayer(i);
       var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;
 
       var bgCandidates = [];
-      for (var i = 0; i < photo.length; i += 4) {
-        if (glyph[i + 3] > COVER_MAX) continue; // this pixel is a letter
-        bgCandidates.push([photo[i], photo[i + 1], photo[i + 2]]);
+      // Sløjfevariablen hedder `p` og ikke `i`: `i` er *blokkens* nummer her,
+      // og en pixel-tæller der overskriver den ville læse blok 2's felter under
+      // blok 0's måling — to tekstblokke, to tal, og porten ville dømme det
+      // falske tal. Samme navn bruges i `drawTextLayer`.
+      for (var p = 0; p < photo.length; p += 4) {
+        if (glyph[p + 3] > COVER_MAX) continue; // this pixel is a letter
+        bgCandidates.push([photo[p], photo[p + 1], photo[p + 2]]);
       }
       // Every pixel under the box is more than a letter thick, so there is no
       // visible background left to read. Fall back to the photo under the box
@@ -291,8 +358,8 @@
       // den måde `drawScrim()` maler den, med samme farve og samme dækning.
       // Uden dette viste værktøjet et bedre tal end det læseren kan se, fordi
       // dommen ville regne på det rå billede mens sløret lå tegnet oveni.
-      var visMin = effectiveBg(minC), visMax = effectiveBg(maxC);
-      var fgRgb = hexToRgb($('fg').value);
+      var visMin = effectiveBg(minC, i), visMax = effectiveBg(maxC, i);
+      var fgRgb = hexToRgb(farveFelt(i).value);
       var worst = Infinity;
       [visMin, visMax].forEach(function (c) {
         if (!c) return;
@@ -309,16 +376,16 @@
     // Det bruteren ser bag bogstaverne: billedet, og sløret oveni hvis der er
     // ét. Denne blanding er både det `drawScrim()` maler og det tallet bliver
     // regnet på — de to kan derfor ikke komme i ukig.
-    function effectiveBg(c) {
+    function effectiveBg(c, i) {
       if (!c) return null;
-      return scrim ? over(c, scrim.hex, scrim.alpha) : c;
+      return laegScrim(i) ? over(c, laegScrim(i).hex, laegScrim(i).alpha) : c;
     }
 
     // Den ene knap, der manglede: «Fix it». Den sætter enten tekstfarven eller
     // sløret til det, der passerer, og lader så `updateAll()` genmåle — så det
     // der vises bagefter er en *ny måling* af det samme billede, ikke et løfte
     // om at et bedre tal ville komme.
-    function applyFix(fix, foer) {
+    function applyFix(i, fix, foer) {
       if (!fix) return false;
       // `foer` er tallet `updateResult()` **lige målte** og skrev på skærmen —
       // ikke en ny måling her. Det er den ene værdi der er rigtig: bruteren
@@ -326,14 +393,14 @@
       // anden gang ville være en anden værdi, hvis bare canvas imellem de to
       // kald er blevet ryddet — `sampleContrast()` efterlader den præcis sådan,
       // med bogstaverne på en tom flade.
-      lastFix = fix;
-      lastFix.before = typeof foer === 'number' ? foer : null;
+      saetFix(i, fix);
+      fix.before = typeof foer === 'number' ? foer : null;
       if (fix.kind === 'scrim') {
-        scrim = { hex: fix.scrim, alpha: fix.alpha };
-        $('fg').value = fix.hex;
+        saetScrim(i, { hex: fix.scrim, alpha: fix.alpha });
+        farveFelt(i).value = fix.hex;
       } else {
-        scrim = null;
-        $('fg').value = fix.hex;
+        saetScrim(i, null);
+        farveFelt(i).value = fix.hex;
       }
       updateAll();
       return true;
@@ -351,34 +418,34 @@
     // alle prober ligger helt inde i billedet — `textBox()` klipper en kasse
     // der går ud over kanten, og så ville dommen måle en tekst der ikke er den
     // bruteren ser.
-    function findSpot() {
+    function findSpot(i) {
       if (!img) return null;
-      var w = textWidth(), h = fontSizePx();
+      var w = textWidth(i), h = fontSizePx();
       var maxX = Math.max(0, cv.width - w), maxY = Math.max(0, cv.height - h);
       if (maxX < 1 || maxY < 1) return null;
       // Hvor teksten *lå* da knappen blev tryktk. Uden denne var `rykket`
       // altid falsk: `bx`/`by` er prober inden i billedet, så de kan ikke
       // fortælle om de er flyttet — og kernen skrev «det er allerede det bedste
       // sted» under et billede den selv lige havde flyttet teksten på.
-      var startX = tx, startY = ty;
-      var bx = tx, by = ty;
-      var bedst = sampleContrast();
+      var startX = laegX(i), startY = laegY(i);
+      var bx = startX, by = startY;
+      var bedst = sampleContrast(i);
       var best = bedst && bedst.ratio !== null ? bedst.ratio : -1;
       var cols = 5, rows = 4, c, r, x, y, s, v;
       for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {
           x = Math.round(maxX * c / (cols - 1));
           y = Math.round(maxY * r / (rows - 1));
-          tx = x; ty = y;
-          s = sampleContrast();
+          saetX(i, x); saetY(i, y);
+          s = sampleContrast(i);
           v = s && s.ratio !== null ? s.ratio : -1;
           if (v > best) { best = v; bx = x; by = y; }
         }
       }
-      tx = Math.max(0, Math.min(bx, maxX));
-      ty = Math.max(0, Math.min(by, maxY));
+      saetX(i, Math.max(0, Math.min(bx, maxX)));
+      saetY(i, Math.max(0, Math.min(by, maxY)));
       if (best < 0) return null;
-      return { x: tx, y: ty, ratio: best, rykket: tx !== startX || ty !== startY };
+      return { x: laegX(i), y: laegY(i), ratio: best, rykket: laegX(i) !== startX || laegY(i) !== startY };
     }
 
     // Marker koden i sig selv, så bruteren kan kopiere den med Ctrl+C. Det er
@@ -422,10 +489,32 @@
       return (s.fixed || '').replace('%s', f.hex);
     }
 
+    // Én måling pr. blok, hver i sin egen boks. Blok 0 beholder alt det den
+    // altid har haft (resultatboks, download, pro-kort, note); blok 2 får
+    // sit eget resultat uden dem — to download-knapper og to pro-kort på én
+    // side er to valg, ikke to valg der hjælper. Download er fælles, fordi
+    // `downloadPng()` kalder `draw()`, og `draw()` tegner begge blokke.
+    // Vælgeren af hvilken blok der flyttes. Den er *knappen* og ikke farve: to
+    // blokke kan have samme farve, så farve kan ikke være den eneste måde at
+    // vælge på. Den lægger sig derfor i resultatboksen, hvor blokkens eget
+    // tal står — så det er tydeligt at den hører til netop den måling.
+    function pickBox(i) {
+      if (blokAntal() < 2) return '';
+      return '<br><button type="button" class="ti-pick" data-ti-pick="' + i + '" aria-pressed="'
+        + (aktiv === i ? 'true' : 'false') + '">' + (s.pick || 'Move this text') + '</button>';
+    }
+
     function updateResult() {
-      var res = $('result'), errEl = $('err');
-      errEl.textContent = '';
-      var sample = sampleContrast();
+      var errEl = $('err');
+      if (errEl) errEl.textContent = '';
+      var n = blokAntal();
+      for (var i = 0; i < n; i++) renderBlock(i);
+    }
+
+    function renderBlock(i) {
+      var res = $(i ? 'result2' : 'result');
+      if (!res) return;
+      var sample = sampleContrast(i);
       if (!sample || sample.ratio === null) { res.hidden = true; return; }
       var large = $('fontsize').value === 'large';
       var need = large ? 3 : 4.5;
@@ -437,7 +526,7 @@
       // allerede ligger, så et nyt forslag ikke oveni et gammelt. Den foreslås
       // kun når der faktisk fejler: på en bestået farve ville «fix»-knappen
       // være en knap uden opgave.
-      var fix = passAA ? null : suggestFix(effectiveBg(sample.bgMin), effectiveBg(sample.bgMax), need, $('fg').value);
+      var fix = passAA ? null : suggestFix(effectiveBg(sample.bgMin, i), effectiveBg(sample.bgMax, i), need, farveFelt(i).value);
       res.hidden = false;
       // Klasserne er *ikke* præfikset: de er `ti-*` i `style.css`, og en
       // forekomst på en artikelside skal se identisk ud med værktøjssiden.
@@ -457,8 +546,9 @@
       //      støjende oplysninger om at tallet er det samme — og det er
       //      præcis tilfældet når «Find det bedste sted» konkluderer at
       //      bruterens egen pladsering allerede var den bedste.
-      var foerTal = lastFix && lastFix.before !== null && lastFix.before !== undefined
-        ? lastFix.before : null;
+      var minFix = laegFix(i);
+      var foerTal = minFix && minFix.before !== null && minFix.before !== undefined
+        ? minFix.before : null;
       var delta = '';
       if (foerTal !== null && Math.abs(r - foerTal) > 0.005 && s.delta) {
         var foerTekst = fmt(foerTal.toFixed(2));
@@ -477,7 +567,7 @@
       // (kopierer) — punkt 2 i husets kvalitetsliste. `s.copyHex` er sidens egen
       // tekst fra den side den ligger på, altså ikke noget en besøgende kan
       // skrive, og det er samme behandling resten af `s.*` får her.
-      var hexNu = String($('fg').value || '').toLowerCase();
+      var hexNu = String(farveFelt(i).value || '').toLowerCase();
       // Alt der kommer fra brugeren (`r`) er et tal, ikke markup, og alt
       // `s.*` er sidens egen tekst fra den side den ligger på. Ingenting her
       // bygger en streng af noget en besøgende kan skrive. Knappen bruges
@@ -505,6 +595,7 @@
           + (s.copyHex || '') + '"><span class="ti-swatch" style="background:' + hexNu
           + '"></span><code>' + hexNu + '</code></button>' : '') +
         (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
+        pickBox(i) +
         // Før → nu står *før* beskrivelsen af hvad kernen gjorde: tallet er
         // beviset, og `.ti-fixed` er så den Grund det står der.
         delta +
@@ -512,15 +603,20 @@
         // dømme om flytningen, fordi *hvilken* sætning kernen vælger afhænger
         // af den. Ordene er sidens egen tekst på to sprog, så de kan ikke være
         // et fastslået tal i porten.
-        (lastFix ? '<br><span class="ti-fixed" data-ti-moved="' + (lastFix.rykket ? '1' : '0') + '">' + fixBeskrivelse(lastFix) + '</span>' : '') +
-        (s.downloadBtn ? '<br><button type="button" class="btn-secondary ti-dl" data-ti-dl>' + s.downloadBtn + '</button>' : '') +
+        (minFix ? '<br><span class="ti-fixed" data-ti-moved="' + (minFix.rykket ? '1' : '0') + '">' + fixBeskrivelse(minFix) + '</span>' : '') +
+        // Download, pro-kort og note ligger kun på blok 0. De handler om
+        // *billedet* og om siden som helhed, ikke om den enkelte tekstblok, og
+        // to download-knapper på én skærm er to valg uden opgave. Download er
+        // desuden fælles: `draw()` maler begge blokke, så den hentede PNG
+        // indeholder dem begge — det er derfor knappen ikke skal gentages.
+        (!i && s.downloadBtn ? '<br><button type="button" class="btn-secondary ti-dl" data-ti-dl>' + s.downloadBtn + '</button>' : '') +
         // Sidst i rækken: det er den tredje handling i resultatet, og den
         // udfylder de to andre — «Fix it» farver teksten, den her flytter den.
         // Den ligger *uden* for `fix`-betingelsen, fordi den også har en
         // opgave når teksten allerede består: der kan være et bedre sted.
         (s.findSpot ? '<br><button type="button" class="btn-secondary ti-spot" data-ti-spot>' + s.findSpot + '</button>' : '') +
         '<br><span style="font-size:.85rem;color:var(--color-text-muted)">' + (s.measured || '') + '</span>'
-        + (s.proCard || '') +
+        + (!i ? (s.proCard || '') : '') +
         '<br><span style="font-size:13px;color:var(--color-text-muted)">' + (s.note || '') + '</span>';
       // Lytteren bindes på den knap `innerHTML` lige nu skrev, ikke på `res`,
       // så en ny måling der skriver en ny knap ikke efterlader to lyttere på
@@ -531,7 +627,13 @@
       // `r` er tallet fra denne måling — det der stod på skærmen da
       // bruteren trykkede. Samme værdi som står i `data-ti-delta`s første
       // halvdel, så de to kan ikke komme i ukig.
-      if (btn) btn.addEventListener('click', function () { applyFix(fix, r); });
+      if (btn) btn.addEventListener('click', function () { applyFix(i, fix, r); });
+      // Vælgeren binder på sit eget `data-ti-pick`, så en ny måling der
+      // genskriver `innerHTML` ikke efterlader to lyttere på den gamle knap.
+      var pick = res.querySelector('[data-ti-pick]');
+      if (pick) pick.addEventListener('click', function () {
+        aktivere(parseInt(pick.getAttribute('data-ti-pick'), 10) || 0);
+      });
       var hexBtn = res.querySelector('[data-ti-hex]');
       // Kopien skal lykkes, ellers må knappen ikke sige at den gjorde det. Et
       // nægtet `clipboard`-løfte er et normalt udfald (ingen tilladelse, ikke
@@ -566,12 +668,12 @@
         // Samme værdi som i `applyFix()`-kaldet: tallet fra denne måling.
         // `findSpot()` flytter `tx`/`ty` undervejs, så måles der efter kaldet
         // står `tx`/`ty` altid ved det bedste sted, og «før» ville være «nu».
-        var spot2 = findSpot();
+        var spot2 = findSpot(i);
         if (!spot2) return;
         // Samme slags som `applyFix()`: beskrivelsen af kernens egen indgreb
         // hører til den pladsering den lagde, så `onMove()` nulstiller den igen
         // så snart bruteren selv rører teksten.
-        lastFix = { kind: 'spot', ratio: spot2.ratio, rykket: spot2.rykket, before: r };
+        saetFix(i, { kind: 'spot', ratio: spot2.ratio, rykket: spot2.rykket, before: r });
         updateAll();
       });
     }
@@ -631,6 +733,11 @@
         // ellers kalder værktøjet deres egen foto et eksempel.
         scrim = null;
         lastFix = null;
+        // Blok 2 nulstilles lige så vel. Ellers ville dens tal og dens
+        // `.ti-fixed`-tekst være en måling af det *sidste* billede stående under
+        // det nye — præcis den fejl sløret og farvefeltet nulstilles for.
+        t2.scrim = null;
+        t2.lastFix = null;
         demoBillede = false;
         var maxW = 900;
         var scale = Math.min(1, maxW / im.naturalWidth);
@@ -638,6 +745,11 @@
         cv.height = Math.round(im.naturalHeight * scale);
         tx = Math.round(cv.width * 0.06);
         ty = Math.round(cv.height * 0.70);
+        // Blok 2 starter i den nederste linje, så den lapper ikke blok 1 oppe
+        // på et nyt billede — to tekster oveni hinanden er svært at læse, og
+        // bruteren skal kunne se begge tal uden at flytte noget først.
+        t2.x = Math.round(cv.width * 0.06);
+        t2.y = Math.round(cv.height * 0.86);
         global.URL.revokeObjectURL(url);
         updateAll();
       };
@@ -649,8 +761,8 @@
       var rect = cv.getBoundingClientRect();
       var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
       var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      tx = cx * cv.width / rect.width - fontSizePx() / 2;
-      ty = cy * cv.height / rect.height - fontSizePx() / 2;
+      saetX(aktiv, cx * cv.width / rect.width - fontSizePx() / 2);
+      saetY(aktiv, cy * cv.height / rect.height - fontSizePx() / 2);
     }
     function onMove(e) {
       if (!img) return;
@@ -659,8 +771,10 @@
       // Bruteren flyttede teksten selv. En beskrivelse af kernens egen
       // flytning («jeg satte den på det bedste sted») må ikke blive stående
       // under et tal der nu stammer fra en helt anden pladsering — samme
-      // grund som farvefeltet og `fontsize` nulstiller den.
-      lastFix = null;
+      // grund som farvefeltet og `fontsize` nulstiller den. Kun den blok der
+      // faktisk blev flyttet: den anden behøver ikke miste sin beskrivelse,
+      // fordi bruteren rørte en anden tekst.
+      saetFix(aktiv, null);
       updateAll();
     }
     // `sampleContrast()` ends on a cleared canvas holding only the letters, so
@@ -674,6 +788,13 @@
     // der ikke længere stammer fra den.
     $('fg').addEventListener('input', function () { lastFix = null; scrim = null; updateAll(); });
     $('fontsize').addEventListener('change', function () { lastFix = null; scrim = null; updateAll(); });
+    // Blok 2 har de samme lyttere på egne felter. `addEventListener` på en
+    // felt-stub der ikke findes ville kaste, så de bindes kun når siden faktisk
+    // har lagt dem ind — det er også sådan `blok2Findes()` ved det.
+    if (blok2Findes()) {
+      $('text2').addEventListener('input', updateAll);
+      $('fg2').addEventListener('input', function () { t2.lastFix = null; t2.scrim = null; updateAll(); });
+    }
     cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
     global.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
     global.addEventListener('mouseup', function () { dragging = false; });
@@ -690,14 +811,17 @@
     dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
     img = demo;
     cv.width = demo.width; cv.height = demo.height;
-    tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.62);
+    tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.52);
+    t2.x = Math.round(cv.width * 0.06); t2.y = Math.round(cv.height * 0.80);
     updateAll();
 
     // Synlig for testene i `tests/scan-clients.test.mjs`, der dømmer den her
     // kode i en sandkasse i stedet for at tro på markup. `suggestFix` er med,
     // fordi rettelsens *matematik* skal kunne dømmes uden en browser: et tal
     // påstanden ikke kan efterprøve på er en påstand.
-    return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix, findSpot: findSpot };
+    return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix, findSpot: findSpot,
+      blokAntal: blokAntal, aktivere: aktivere, blok: function (i) { return { x: laegX(i), y: laegY(i), hex: farveFelt(i).value, text: txtFelt(i).value }; },
+      aktiv: function () { return aktiv; } };
   }
 
   global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb,

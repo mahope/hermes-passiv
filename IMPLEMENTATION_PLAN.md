@@ -5,20 +5,32 @@
   efterprøvet i rigtig Chromium mod **LIVE** (ikke `dist/`): EN giver
   `#ffffff` → «Copied» → `#000000`, DA siger «Kopieret», farveprøve og kode
   følger farvefeltet begge veje, 44 px trykflade, 0 px vandret scroll ved 1280.
-- **Denne iteration: en port, der dømmer farvekoden.** `ceo/port-farvekode` —
-  `check_contrast_sampling` **96 → 112** løfter: fire på de to værktøjssider
-  (koden findes som en knap, den er farvefeltets værdi, den følger «Fix it»,
-  prøven i knappen er den samme kode) og to pr. artikel (knappens to tekster).
-  **Porten kan fejle, målt på den rigtige fil:** `hexNu` frosset → **6 røde** på
-  begge sprog i begge tilstande; farveprøven i en anden farve → **4 røde**;
-  farveprøven fjernet → **4 røde**. Selftest **109/109**.
-  Ved gennemsyn af egen diff fandt jeg i porten selv den fejl porten jager:
-  prøven blev læst i knappens *egne åbningstag* men er en `<span>` *inde i*
-  knappen, så `praem` var altid `null` og det fjerde løfte blev talt uden dom
-  (112 i meldingen, 108 reelt dømt). Rettet, to nye selftest-tjek sikrer det.
-- **Næste opgave: `## Feature-kø` punkt 1** — mål bruterens *egen* tekst, så
-  to tekstblokke på ét foto får to tal. Egne opgaver: punkter 2–3.
-  Alt i «Åbne opgaver» afventer Mads.
+- **Denne iteration: værktøjet måler to tekstblokke.** `ceo/to-tekstblokke` —
+  Feature-kø punkt 2, som bruteren ellers fik ét tal for to tekster om.
+  `check_contrast_sampling` **112 → 124** løfter (seks nye, alle dømt på begge
+  sprog), selftest **122/122**. **Portens polaritet målt på den rigtige fil,
+  tre mutationer med tre forskellige fund:** farven læst i blok 1 → *«læser
+  værktøjet den første blok to gange?»*; klikket flytter altid blok 1 →
+  *«klikket flyttede ikke den blok bruteren valgte»* + *«bruterens eget greb
+  ødelagde den anden måling»*; vælgeren fjernet → *«der er ingen knap der
+  vælger»*.
+- **Egentlig browserkontrol, som sidste review kaldte den største mangel:**
+  Chromium 148, alle otte kombinationer af EN/DA × 390/1280 × lys/mørkt er
+  grønne på et todelt 400×300-billede. Blok 1 hvid på sort = **21,00:1**,
+  blok 2 sort på sort = **1,00:1**; vælgeren trykkes, næste klik flytter blok 2
+  til den lyse halvdel → **21,00:1**, og blok 1 står **uændret** på 21,00:1.
+  0 px vandret scroll ved 390 og 1280, trykflade 44 px.
+  *To fejl i min egen harness, ikke i værktøjet, begge fundet fordi tallene
+  ikke flyttede sig:* Playwrights `set_input_files` fejlede i en ny context, så
+  værktøjet målte sit **eget demobillede** (5,77/2,56); og `bounding_box()`
+  blev læst før `pick.click()`, som **scroller** knappen ind i billedet, så
+  det næste klik ramte ikke canvas. Begge rettet i harnessen, og den strenge
+  dom (kræver at tallet *flytter* sig) er den der fangede dem.
+- **Én fejl i min egen diff fundet ved gennemsyn:** note-`<span>` i
+  `renderBlock()` blev skrevet som `'</span'` uden `>`, så taggen aldrig
+  lukkede. Rettet.
+- **Næste opgave: `## Feature-kø` punkt 3** — vis hvor på billedet fejlen
+  sidder. Egne opgaver: punkt 4. Alt i «Åbne opgaver» afventer Mads.
 - PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
   SDK'en er sat op (3/10), så det er ikke en tom rapport.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
@@ -27,8 +39,7 @@
 
 ## Verificér deploy
 
-Ingen åbne noter. Alle tidligere er `DEPLOY OK` eller dækket af en nyere og
-ligger i `docs/plan-arkiv.md`.
+`VERIFICÉR DEPLOY: to tekstblokke på ét foto ceo/to-tekstblokke 3/10 18:5x`
 
 ## Åbne opgaver
 
@@ -139,13 +150,14 @@ på den **byggede** side; tallene er ikke vores egen trafik.
    `data-ti-hex` fra den rigtige fil og ved at føse `hexNu` — 6 røde. Datagrund: 5 af
    de 6 seneste commits hang på dette ene værktøj, og intet i gaten vidste at
    koden findes.
-2. **Mål bruterens egen tekst, ikke kun billedets.** Hvem: designere med to
-   overlejrende tekstblokke på ét foto — det er det vanligste reelle tilfælde.
-   Tal: målinger pr. session (baseline **1** pr. upload). Accept: bruteren kan
-   lægge to tekster og få to tal, og nedlægningen skriver dem med i PNG'en.
-   Datagrund: kernen kender `sampleContrast()` pr. tekstboks, men der er ingen
-   vej til to; en designér med et billede og to overskrifter får i dag det
-   sidste tal.
+2. ~~**Mål bruterens egen tekst, ikke kun billedets.**~~ **Leveret 3/10.**
+   Se punkt 4 i STATUS. Hvem: designere med to overlejrende tekstblokke på ét
+   foto. Tal: målinger pr. session (baseline **1** → **2** pr. upload).
+   Accept: bruteren kan lægge to tekster og få to tal — nået og målt i rigtig
+   Chromium, se STATUS. Nedlægningen skriver dem begge med i PNG'en, fordi
+   `draw()` maler begge blokke og derfor er download-knappen kun én.
+   Datagrund: kernen kender `sampleContrast()` pr. tekstboks, men var skrevet
+   til én; en designér med et billede og to overskrifter fik det sidste tal.
 3. **Vis hvor på billedet fejlen sidder.** Hvem: bureauer der gennemgår en
    kundes fotos. Tal: downloads med markering (baseline **0**). Accept: den
    hentede PNG får et felt, der rammer det værste område under teksten, og det er

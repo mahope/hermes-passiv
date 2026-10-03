@@ -240,6 +240,13 @@ class Ctx {
     }
   }
   measureText(t) { return { width: String(t).length * this._fontPx * 0.52 }; }
+  // Den stiplede ramme om den tekstblok et klik flytter. Den males *intet* ind
+  // i bufferen — en stiplet strege er ikke en baggrund, og hvis porten malte den
+  // som fyld ville målingen få en kant den bruteren ikke ser. Den findes her
+  // fordi kernen kalder den på enhver canvas-stub; en stub der mangler den
+  // dør med en TypeError og dommen siger intet.
+  setLineDash() {}
+  strokeRect() {}
   // Syntetiske men antialiasede glyfer: en hård kerne med to bløde kantkolonner.
   // Det er præcis den form en rigtig rasteriser giver ved en bogstavkant, og
   // det er den de gamle `dr+dg+db < 120` ikke kunne skelne fra baggrund.
@@ -353,8 +360,22 @@ class El {
     if (this._qHtml !== this.innerHTML) { this._q = {}; this._qHtml = this.innerHTML; }
     const attr = /^\[([a-z][a-z0-9-]*)(?:=["']?[^"'\]]*["']?)?\]$/.exec(sel);
     if (attr && !new RegExp('\\b' + attr[1] + '\\b').test(this.innerHTML || '')) return null;
-    if (!this._q[sel]) this._q[sel] = new El(sel);
+    if (!this._q[sel]) { this._q[sel] = new El(sel); this._q[sel]._ejer = this; }
     return this._q[sel];
+  }
+  // Attributterne læses ud af den markup kernen lige har skrevet — ikke fra en
+  // felt på stubben. Det er hele pointen med at dømme `innerHTML`: en stub der
+  // *svarede* `aria-pressed` ville være grøn på en knap der aldrig fik den.
+  // `data-ti-pick="1"`/`"0"` og `aria-pressed="true"`/`"false"` ligger begge i
+  // resultatets markup, så det er dér sandheden er.
+getAttribute(name) {
+    // Markup'en er *ejerens* — knappen er fundet i den, så dens attributter
+    // står dér og ikke på den lille stub. Uden `_ejer` ville porten se en
+    // knap uden attributter og dømme den rød uden grund.
+    const h = (this._ejer || this).innerHTML || '';
+    const m = new RegExp('\\b' + name + '="([^"]*)"').exec(h);
+    if (m) return m[1];
+    return new RegExp('\\b' + name + '\\b').test(h) ? '' : null;
   }
   click() { this.fire('click', {}); }
 }
@@ -449,6 +470,14 @@ const nodes = {
   'fontsize': new El('fontsize', { value: 'large' }),
   'err': new El('err'),
   'result': new El('result'),
+  // Blok 2 er en *rigtig* del af harnessen, ikke en streng der testes. Uden
+  // disse felter ville `getElementById('fg2')` returnere en ny, tom stub
+  // hver gang kernen spørger — så blok 2 ville måle en tom tekst i ingen
+  // farve, og porten ville dømme en egenskab der ikke virker, som om den
+  // virkede. Det er præcis det en løfte uden dom er.
+  'text2': new El('text2', { value: 'Din undertekst her' }),
+  'fg2': new El('fg2', { value: '#ffffff' }),
+  'result2': new El('result2'),
 };
 globalThis.document = {
   getElementById: function (id) { return nodes[id] || new El(id); },
@@ -910,6 +939,77 @@ function demoEfterUpload() {
   return { tekst: m ? m[1] : null, harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h) };
 }
 
+// ---- To tekstblokke ------------------------------------------------------
+// Den mest almindelige reelle case: to overlejrende tekster på ét foto.
+// Før 3/10 målte værktøjet kun den *sidste*, så bruteren fik ét tal for to
+// tekster og vidste ikke om den anden var ulæselig. Her måles begge, på
+// hver sin del af et todelt billede: blok 1 over den mørke halvdel skal
+// give 21:1, blok 2 over den lyse 1:1. Kan de to tal ikke være forskellige,
+// læser værktøjet den ene blok to gange — eller kun den ene.
+function toBlokke() {
+  function laes(boks) {
+    const m = /<strong>([0-9.,]+):1<\/strong>/.exec(boks.innerHTML || '');
+    return m ? parseFloat(m[1].replace(',', '.')) : null;
+  }
+  Img.next = todeltVandret(400, 300, '#000000', '#ffffff');
+  nodes['file'].files = [{ type: 'image/png' }];
+  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  nodes['fontsize'].value = 'large'; nodes['fontsize'].fire('change');
+  // De to blokke har *forskellige* farver. Det er ikke pynt: en mutation der
+  // læser blok 1s farve i stedet for blok 2s er ækvivalent, når begge er
+  // hvide, så den ville være grøn på det langt meste billeder. Med sort mod
+  // hvid kan de to tal ikke forveksles, og mutationen kan gå rød.
+  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
+  nodes['fg2'].value = '#000000'; nodes['fg2'].fire('input');
+  nodes['text'].value = 'Overskrift'; nodes['text'].fire('input');
+  nodes['text2'].value = 'Undertekst'; nodes['text2'].fire('input');
+  // Blok 1 over den mørke venstre halvdel, blok 2 over den lyse højre.
+  const plac = function (x, y) {
+    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+  };
+  // Blok 0 er den aktive fra start, så *dens* klik flytter den.
+  plac(20, 240);                       // venstre, mørk halvdel
+  const foerste = laes(nodes['result']);
+  // Så vælges blok 2 med dens **egen** vælger, og næste klik flytter *den*.
+  // Den har sort tekst og skal også stå på den mørke halvdel, så de to tal
+  // er 21:1 og 1:1 fra det samme billede. Kan de ikke være forskellige,
+  // læser værktøjet den ene blok to gange: bruteren får ét tal for to
+  // tekster igen, og det er præcis den fejl værktøjet havde.
+  const knap = (nodes['result2'] || { querySelector: function () { return null; } })
+    .querySelector('[data-ti-pick]');
+  if (knap) knap.click();
+  plac(20, 240);
+  const anden = laes(nodes['result2']);
+  // Blok 2 er stadig den valgte, så næste klik flytter den igen — og kun
+  // den. Den skal *helt* ud i den lyse halvdel: tekstkassen er så bred at
+  // den løber ind i den mørke, og værktøjet svarer da korrekt på det værste
+  // par — et scenarie der ikke kan skelne to blokke fra hinanden. Blok 0
+  // skal stå helt uændret: bruterens eget greb må ikke slette den måling han
+  // lige lavede.
+  plac(360, 240);
+  const efterFoerste = laes(nodes['result']);
+  const efterAnden = laes(nodes['result2']);
+  const valgt = nodes['result2'] ? nodes['result2'].querySelector('[data-ti-pick]') : null;
+  const valgt1 = nodes['result'] ? nodes['result'].querySelector('[data-ti-pick]') : null;
+  return {
+    harBokse: blokAntalErTo(),
+    harVaelger: !!knap,
+    foerste: foerste, anden: anden,
+    efterFoerste: efterFoerste, efterAnden: efterAnden,
+    andenTrykket: valgt ? valgt.getAttribute('aria-pressed') : null,
+    foersteTrykket: valgt1 ? valgt1.getAttribute('aria-pressed') : null,
+  };
+}
+function blokAntalErTo() {
+  // `getElementById` giver en ny stub for ukendte id'er, så «feltet findes»
+  // kan ikke dømmes ved at kernens egen tæller er sand — den er alt sand i
+  // harnessen. Det porten kan dømme er *markup'en*: to resultatkasser med et
+  // tal hver. Det er det bruteren ser.
+  return /<strong>[0-9.,]+:1<\/strong>/.test((nodes['result'] || {}).innerHTML || '') &&
+         /<strong>[0-9.,]+:1<\/strong>/.test((nodes['result2'] || {}).innerHTML || '');
+}
+const blokMaalt = toBlokke();
+
 console.log(JSON.stringify({
   svar: svar, fix: fixSvar,
   demo: { start: demoStart, efterUpload: demoEfterUpload() },
@@ -922,6 +1022,7 @@ console.log(JSON.stringify({
   spot: spotMaalt,
   delta: { fix: deltaMaalt },
   hex: { fix: hexMaalt },
+  blok: blokMaalt,
 }));
 """
 
@@ -944,8 +1045,8 @@ MUTATIONER = (
     # hen over en mørk flæk, siger værktøjet det samme som da den stod over
     # den lyse. Fanges af de to todelte domme, der forventer hhv. 21:1 og 1:1.
     ("måler i hjørnet i stedet for hvor teksten står",
-     "      var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
-     "      var x = 0, y = Math.max(0, Math.round(ty));"),
+     "      var x = Math.max(0, Math.round(laegX(i))), y = Math.max(0, Math.round(laegY(i)));",
+     "      var x = 0, y = Math.max(0, Math.round(laegY(i)));"),
     # Den gamle kode i dens egen, kortere form: ét lag med billede *og* tekst,
     # brugt som både baggrund og dækningskort, uden filter. Det er præcis
     # fejlen der gav 1,47:1 for hvid tekst på hvid, og for hvid tekst over
@@ -956,7 +1057,7 @@ MUTATIONER = (
      "      ctx.drawImage(img, 0, 0, cv.width, cv.height);\n"
      "      var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
      "      // Pass 2 — the letters alone, so alpha is the glyph coverage.\n"
-     "      drawTextLayer();",
+     "      drawTextLayer(i);",
      "      draw();\n"
      "      var photo = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
      "      var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;\n"
@@ -977,8 +1078,8 @@ MUTATIONER = (
     # der læseren mærker først på et fladt billede: kassen løber op i det
     # hvide og svaret falder fra 21:1 til 1:1.
     ("flytter tekstkassen opad i stedet for at klippe den",
-     "      var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.round(ty));",
-     "    var x = Math.max(0, Math.round(tx)), y = Math.max(0, Math.min(cv.height - fontSizePx() - 1, Math.round(ty)));"),
+     "      var x = Math.max(0, Math.round(laegX(i))), y = Math.max(0, Math.round(laegY(i)));",
+     "    var x = Math.max(0, Math.round(laegX(i))), y = Math.max(0, Math.min(cv.height - fontSizePx() - 1, Math.round(laegY(i)))); "),
 )
 
 
@@ -1347,6 +1448,79 @@ def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     return fund
 
 
+def dom_blokke(b: dict | None) -> list[str]:
+    """Døm at værktøjet måler *to* tekstblokke, og kun dem.
+
+    Feature-kø punkt 2, 3/10: den mest almindelige reelle case er to
+    overlejrende tekster på ét foto, og værktøjet målte kun den *sidste* —
+    bruteren fik ét tal for to tekster og vidste ikke om den anden var
+    ulæselig. Seks løfter, seks forskellige fejlformer:
+
+    1. **Der står to tal.** Én boks med ét tal er stadig det gamle værktøj.
+    2. **Tallet i den anden boks er rigtigt.** Blok 1 har *hvid* tekst og
+       ligger på den mørke halvdel (21:1); blok 2 har *sort* tekst og
+       ligger på den mørke halvdel (1:1). Kan de to tal ikke være
+       forskellige, læser værktøjet den ene blok to gange. Farverne er
+       forskellige med vilje: var de ens, ville en mutation der læser
+       blok 1s farve i stedet for blok 2s være grøn på næsten alt.
+    3. **Der er en vælger.** To tekster og ét klik uden en måde at vælge
+       betyder at bruteren måler den ene og flytter den anden.
+    4. **Vælgeren flytter den blok der blev valgt.** Tryk på blok 2 og træk
+       i den lyse side: så skal blok 2 skifte fra 21:1 til 1:1, og blok 1
+       stå uændret. Det er hele pointen med vælgeren.
+    5. **Blok 1 røres ikke.** Flytningen må ikke røre den anden blok — ellers
+       ville bruterens egen greb slette den måling han lige lavede.
+    6. **Der står hvilken der er valgt.** `aria-pressed` er ikke pynt: uden
+       det kan bruteren ikke se hvad han har valgt, og uden det kan porten
+       heller ikke se det.
+    """
+    fund: list[str] = []
+    if not b:
+        return ["blok: harnessen leverede ingen måling af to tekstblokke at dømme"]
+    if not b.get("harBokse"):
+        fund.append("blok: der står ikke et tal i begge resultatkasser, så der "
+                    "er stadig kun ét tal for to tekster")
+    if not b.get("harVaelger"):
+        fund.append("blok: der er ingen knap der vælger hvilken tekst et klik "
+                    "flytter, så bruteren måler den ene og flytter den anden")
+        return fund
+    # Blok 1 over den mørke halvdel med hvid tekst er 21:1; blok 2 over den
+    # lyse er 1:1. Begge er tal fra WCAG 2.1, slået op og ikke udregnet her.
+    foerste, anden = b.get("foerste"), b.get("anden")
+    if foerste is None or anden is None:
+        fund.append("blok: der står ikke et tal i begge kasser, så bruteren kan "
+                    "ikke se om den anden tekst fejler")
+    elif abs(foerste - 21.0) > TOLERANS:
+        fund.append(f"blok: den første tekst over den mørke halvdel viser "
+                    f"{foerste:.2f}:1, men hvid på mørk er 21.00:1")
+    elif abs(anden - 1.0) > TOLERANS:
+        fund.append(f"blok: den anden tekst over den mørke halvdel viser "
+                    f"{anden:.2f}:1, men sort på mørk er 1.00:1 — læser "
+                    "værktøjet den første blok to gange?")
+    efterFoerste, efterAnden = b.get("efterFoerste"), b.get("efterAnden")
+    if efterAnden is None:
+        fund.append("blok: efter at blok 2 blev valgt og flyttet står der intet "
+                    "tal i dens boks, så valgeren flyttede ikke den valgte blok")
+    elif anden is not None and abs(efterAnden - anden) < 0.005:
+        fund.append(f"blok: blok 2 blev valgt og flyttet til den lyse halvdel, "
+                    f"men tallet står uændret på {efterAnden:.2f}:1 — klikket "
+                    "flyttede ikke den blok bruteren valgte")
+    if efterFoerste is None or foerste is None:
+        fund.append("blok: efter flytningen af blok 2 står der intet tal i "
+                    "blok 1's boks")
+    elif abs(efterFoerste - foerste) > 0.005:
+        fund.append(f"blok: blok 2 blev flyttet, men blok 1s tal flyttede sig "
+                    f"også ({foerste:.2f} → {efterFoerste:.2f}) — bruterens eget "
+                    "greb ødelagde den anden måling")
+    if b.get("andenTrykket") != "true":
+        fund.append("blok: der står ikke at blok 2 er den valgte, så bruteren "
+                    "kan ikke se hvad et klik vil flytte")
+    if b.get("foersteTrykket") != "false":
+        fund.append("blok: blok 1 står stadig som den valgte efter at blok 2 "
+                    "blev valgt — to blokke, én markering")
+    return fund
+
+
 def dom_demo(fil: str, d: dict | None) -> list[str]:
     """Døm at værktøjet siger *hvad* det måler på, før bruteren har valgt et billede.
 
@@ -1553,25 +1727,108 @@ def self_test() -> int:
         tjek(f"mutationen gør porten rød: {navn}", bool(fund),
              f"mutationen gav stadig grønt: {json.dumps(koer(hvis), ensure_ascii=False)}")
 
-    # 5: de to sider skal dømme ens. Den danske er en oversættelse, ikke en
-    # egen algoritme, så et tal der kun er rigtigt på den ene er en fejl.
+# 5: de to sider skal dømme ens. Den danske er en oversættelse, ikke en
+    # egen algoritma, så et tal der kun er rigtigt på den ene er en fejl.
     en, da = dom(kode), dom(hent_kode(SIDER[1]))
     tjek("EN-siden er grøn", not en, "; ".join(en))
     tjek("DA-siden er grøn", not da, "; ".join(da))
+
+    # 5d: **to tekstblokke**. Mutationerne her er de tre fejlformer der gav
+    # *dette* iterations fejl undervejs, og de er alle fundet i den rigtige
+    # fil — ikke opdigtet til selftesten:
+    #   (a) pixel-løkken hed `i`, som også er blokkens nummer, så blok 2 blev
+    #       målt med blok 1's tekst og farve: 56 røde løfter på de 112 gamle.
+    #   (b) `renderBlock` skrev sin markup i *begge* kasser, så der stod to
+    #       identiske tal, og bruteren fik ét tal for to tekster igen.
+    #   (c) vælgeren flyttede altid blok 0, så et klik efter at blok 2 var
+    #       valgt rørte den anden tekst — og bruteren så ikke sin egen greb.
+    blok_farve = "      var fgRgb = hexToRgb(farveFelt(i).value);"
+    tjek("mutationen findes i koden: hver blok måles med sin egen farve",
+         blok_farve in kode, repr(blok_farve))
+    # Mutationen dømmer præcis den fejl den her iteration gjorde: målingen
+    # læste altid blok 1s felter, uanset hvilken blok den kørte for. Den er
+    # *ækvivalent* mellem blokke, der har samme farve — så det er netop
+    # todeltes billedet med to forskellige placeringer, der fanger den, og
+    # det er derfor dommen bruger to halvdele og ikke ét ensfarvet billede.
+    mut_a = dom_blokke(koer(kode.replace(blok_farve,
+                                         "      var fgRgb = hexToRgb($('fg').value);", 1),
+                            hele=True).get("blok"))
+    tjek("mutationen gør blok-dommen rød: blokke måles med blok 1s farve",
+         bool(mut_a), f"mutationen gav stadig grønt: {json.dumps(mut_a, ensure_ascii=False)}")
+
+    blok_boks = "      var res = $(i ? 'result2' : 'result');"
+    tjek("mutationen findes i koden: hver blok har sin egen boks",
+         blok_boks in kode, repr(blok_boks))
+    mut_b = dom_blokke(koer(kode.replace(blok_boks, "      var res = $('result');", 1),
+                            hele=True).get("blok"))
+    tjek("mutationen gør blok-dommen rød: begge blokke skriver i én boks",
+         bool(mut_b), "mutationen gav stadig grønt")
+
+    blok_aktiv = "      saetX(aktiv, cx * cv.width / rect.width - fontSizePx() / 2);"
+    tjek("mutationen findes i koden: klikket flytter den valgte blok",
+         blok_aktiv in kode, repr(blok_aktiv))
+    mut_c = dom_blokke(koer(kode.replace(
+        blok_aktiv, "      saetX(0, cx * cv.width / rect.width - fontSizePx() / 2);", 1),
+        hele=True).get("blok"))
+    tjek("mutationen gør blok-dommen rød: klikket flytter altid blok 1",
+         bool(mut_c), "mutationen gav stadig grønt")
+
+    # Dommen skal være grøn på den rigtige kode, og de seks løfter skal kunne
+    # gå rød hver for sig — ellers kunne de være grønne kun fordi et andet
+    # fejler, hvilket præcis er det porten her er bygget til at fange.
+    blok_ok = koer(kode, hele=True).get("blok")
+    tjek("blok-dommen er grøn på den rigtige kode", not dom_blokke(blok_ok),
+         "; ".join(dom_blokke(blok_ok)))
+
+    def blok_handlavet(**over):
+        laes = {"harBokse": True, "harVaelger": True, "foerste": 21.0, "anden": 1.0,
+                "efterFoerste": 21.0, "efterAnden": 21.0,
+                "andenTrykket": "true", "foersteTrykket": "false"}
+        laes.update(over)
+        return laes
+
+    tjek("blok-dommen ser en anden blok der læser den første to gange",
+         any("læser værktøjet den første blok to gange" in f for f in
+             dom_blokke(blok_handlavet(anden=21.0))),
+         "to ens tal blev dømt grønne")
+    tjek("blok-dommen ser en vælger der ikke flytter den valgte blok",
+         any("flyttede ikke den blok bruteren valgte" in f for f in
+             dom_blokke(blok_handlavet(anden=21.0, efterAnden=21.0))),
+         "en vælger der ikke flytter blev dømt grøn")
+    tjek("blok-dommen ser bruterens greb ødelægge den anden måling",
+         any("ødelagde den anden måling" in f for f in
+             dom_blokke(blok_handlavet(efterFoerste=1.0))),
+         "en krybende blok 1 blev dømt grøn")
+    tjek("blok-dommen ser to blokke med én markering",
+         any("to blokke, én markering" in f for f in
+             dom_blokke(blok_handlavet(foersteTrykket="true"))),
+         "to trykkede markeringer blev dømt grønne")
+    tjek("blok-dommen ser en manglende vælger",
+         any("der er ingen knap der vælger" in f for f in
+             dom_blokke(blok_handlavet(harVaelger=False))),
+         "en manglende vælger blev dømt grøn")
+    tjek("blok-dommen ser en kasse uden tal",
+         any("står ikke et tal i begge" in f for f in
+             dom_blokke(blok_handlavet(anden=None))),
+         "en tom anden kasse blev dømt grøn")
 
     # 5b: den sekventielle kæde skal finde præcis den fejl, den er skrevet
     # til. Fundet i review 3/10 og målt i rigtig Chromium: `loadFile()`
     # nulstillede hverken `scrim` eller `lastFix`, så sløret fra foto A blev
     # tegnet på foto B. Det er den eneste fejl i denne port der *kun* kan ses
     # i en kæde, så mutationen her er portens vigtigste.
-    # Nulstillingsblokken i `loadFile()`. Den rummer nu tre linjer — sløret,
-    # `lastFix` og demo-flaget — fordi de alle beskriver *sidste* måling, og
-    # mutationen skal fjerne hele blokken, ellers ville den teste en
-    # delmængde af den fejl den er skrevet til.
-    gammel_reset = ("        scrim = null;\n        lastFix = null;\n"
-                    "        demoBillede = false;\n        var maxW = 900;")
+    # Nulstillingsblokkene i `loadFile()`. De står nu i to grupper med en
+    # kommentar imellem — sløret og `lastFix` for blok 1, det samme for blok 2,
+    # og demo-flaget til sidst — fordi de alle beskriver *sidste* måling, og
+    # mutationen skal fjerne hele sættet, ellers ville den teste en
+    # delmængde af den fejl den er skrevet til. Derfor er den et regex og ikke
+    # en lillebrændt streng: en kommentar der flytter sig må ikke slå
+    # mutationen ihjel.
+    reset_re = re.compile(
+        r"^[ \t]*(?:scrim|lastFix|t2\.scrim|t2\.lastFix|demoBillede) = (?:null|false);\n"
+        r"(?:[ \t]*//[^\n]*\n)*", re.M)
     tjek("mutationen findes i koden: loadFile() nulstiller sløret",
-         gammel_reset in kode, repr(gammel_reset))
+         len(reset_re.findall(kode)) == 5, str(len(reset_re.findall(kode))))
     sek_ok = koer(kode, hele=True).get("sekventiel")
     tjek("to-billeders-kæden leverer alle tre læsninger",
          bool(sek_ok) and all(k in sek_ok for k in ("efter", "refer", "fixA")),
@@ -1596,7 +1853,7 @@ def self_test() -> int:
          and fixA["efter"]["fik"] > (fixA.get("foer") or 0),
          str(fixA))
     sek_gammel = dom_sekventiel(
-        koer(kode.replace(gammel_reset, "        var maxW = 900;", 1), hele=True)
+        koer(reset_re.sub("", kode), hele=True)
         .get("sekventiel"))
     # Og den mutation skal give **alle tre** fund. Det er også det bevis der
     # viser at det er et *slør* der lækker: en farve-fix efterlader intet, så
@@ -1797,15 +2054,15 @@ def self_test() -> int:
     # første kørsel af dommen afslørede i min egen kode, fordi `rykket` blev
     # sammenlignet med proberne i stedet for med pladseringen den startede fra.
     tjek("mutationen findes i koden: rykket måles mod startstedet",
-         "rykket: tx !== startX || ty !== startY" in kode)
+         "rykket: laegX(i) !== startX || laegY(i) !== startY" in kode)
     spot_løgn = dom_spot(
-        (koer(kode.replace("rykket: tx !== startX || ty !== startY",
+        (koer(kode.replace("rykket: laegX(i) !== startX || laegY(i) !== startY",
                            "rykket: false", 1), hele=True) or {}).get("spot"))
     tjek("find-spot-dommen kan se en kern der lyver om sin egen flytning",
          any("ikke flyttede noget" in f for f in spot_løgn), str(spot_løgn))
     # Mutation 4: beskrivelsen overlever bruterens egen flytning — den fejl
     # reviewen fandt med sløret ved billedskift, i en ny form.
-    gammelt_drag = ("      lastFix = null;\n      updateAll();\n    }\n"
+    gammelt_drag = ("      saetFix(aktiv, null);\n      updateAll();\n    }\n"
                     "    // `sampleContrast()` ends on a cleared canvas")
     tjek("mutationen findes i koden: onMove nulstiller beskrivelsen",
          gammelt_drag in kode, repr(gammelt_drag))
@@ -2157,6 +2414,14 @@ def main(argv: list[str] | None = None) -> int:
         if hex_kæde:
             antal += 4
         for linje in dom_hex(fil, {"fix": hex_kæde}):
+            fund.append(f"{linje}")
+        # To tekstblokke: seks løfter på den egenskab der gør værktøjet
+        # brugbart på det vanligste reelle tilfælde. Tælles kun når dommen fik
+        # en måling at dømme — samme regel som de andre kæder.
+        blok = svar.get("blok")
+        if blok:
+            antal += 6
+        for linje in dom_blokke(blok):
             fund.append(f"{linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
