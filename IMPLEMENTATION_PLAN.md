@@ -13,6 +13,12 @@
   scroll på 390 px** på `/`, `/text-on-image-checker`, `cleancopy.tools/` —
   CDP-målt; (b) `cleancopy.tools/blog/` **404 er tænkt** (buildet omskriver
   nav-linket); (c) 21 ruter på de fire domæner svarer **200**.
+- **3/10: scanneren siger hvad der er ændret siden sidste gang.** Et nyt
+  resultat starter med «Start her — de 3 fund der betyder mest» og en linje om
+  hvad der forsvandt, faldt eller kom til siden sidste scanning af *samme* adresse.
+  Rækkefølgen er alvor først og flest forekomster først; de ti seneste sider
+  huskes i læserens egen browser, intet sendes. `scan-share.test.mjs`
+  **119/119**, **13 røde** mod koden fra før.
 - **Næste opgave: punkt 4** — 172 sider har stadig to-tre knapper over folden.
 - PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
@@ -20,6 +26,11 @@
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `ceo/scan-hvad-er-aendret` **VERIFICÉR DEPLOY: ceo/scan-hvad-er-aendret2026-10-03 12:15.**
+  Tjek på live: `/scan` og `/scan-da` med to scanninger af samme adresse viser
+  «Since your last scan of this page» / «Siden din sidste scanning af denne
+  side», og en side med fire fund har «Start her» over listen.
 
 - ~~`ceo/scan-score-af-fundene`~~ **DEPLOY OK 3/10.** Live `/scan` med et link
   der siger `s=100`: **«71/100 — Grade C»** + «2 error(s), 1 warning(s)»,
@@ -469,3 +480,14 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     danske ikke kan få sin egen kopi og drive fra den engelske. Datagrund:
     målt på koden, ikke gættet — `shareResult()` kopierede
     `location.origin+'/scan#url='+…` og ingenting else.
+27. ~~**En fund-liste uden «start her» og uden forskel.**~~ **Leveret 3/10.**
+    Se punkt 2 i STATUS. Hvem: bureauer og webbureauer der har rettet fundene
+    siden sidste scanning — de vidste ikke, om det virkede, fordi et nyt tal
+    uden en forskel ikke svarer på det. Tal: resultater der får en forskelslinje
+    (baseline **0** — ingen vej, kun et nyt scorecard; målt på koden 3/10).
+    Accept: `scan-share.test.mjs` **119/119** med **13 røde** mod koden fra før,
+    dommen på at et *delt* resultat aldrig skriver «siden din sidste scanning»,
+    og at forskelsen skrives med læserens sprog og ikke med fund-id'er. Datagrund:
+    15 WCAG-regler giver typisk 8–14 fund pr. side, i den rækkefølge koden kører
+    dem i — så en side med fire billeder uden alt-tekst viste ALT-kravet før den
+    ene knap uden navn.

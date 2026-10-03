@@ -251,6 +251,37 @@ function platformBox(plat){
     +esc(plat)+'\' admin. Trin for trin: <a href="'+PLATFORM_GUIDES[plat]+'">den gratis '
     +esc(plat)+'-tilgængelighedsguide</a>.</div>';
 }
+// «Start her» og «hvad er ændret siden sidste gang». Samme to regler som på den
+// engelske side, og de ligger i `scan-share-core.js`, så de to sider ikke kan få
+// hver sin rækkefølge — kun hver sin tekst.
+function rankBox(state){
+  const ss=window.SCANSHARE;
+  if(!ss||!state.findings.length||state.findings.length<=3)return '';
+  const top=ss.startHere(state.findings,3);
+  if(top.length<3)return '';
+  return '<h3 style="margin:22px 0 8px;font-size:16px">Start her — de 3 fund der betyder mest</h3>'
+    +'<p class="hint">Fejl før advarsler, og den regel der optræder oftest først. '
+    +'Resten står nedenfor i samme rækkefølge.</p>'
+    +'<ol class="findings">'+top.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ol>'
+    +'<h3 style="margin:22px 0 8px;font-size:16px">Alle '+state.findings.length+' fund</h3>';
+}
+function sinceBox(prev,findings){
+  const ss=window.SCANSHARE;
+  if(!ss||!prev)return '';
+  const d=ss.diffFindings(prev.findings,findings);
+  if(!d)return '';
+  const parts=[];
+  if(d.fixed.length)parts.push(d.fixed.length+' fund væk');
+  if(d.reduced.length)parts.push(d.reduced.length+' færre');
+  if(d.grew.length)parts.push(d.grew.length+' flere');
+  if(d.added.length)parts.push(d.added.length+' nye');
+  if(!parts.length)return '';
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
+    +'<strong>Siden din sidste scanning af denne side</strong> — '+parts.join(', ')
+    +', og scoren flyttede '+d.scoreFrom+' → '+d.scoreTo+'. '
+    +'<span class="hint">Gemt kun i denne browser; intet blev sendt til os.</span></div>';
+}
 // Ét sted for kortet, fordi vejen til et delt resultat også er vej til et netop
 // kørt: en læser der åbner et delt link skal se præcis den samme kortstabel som
 // afsenderen, kun mærket som et øjebliksbillede.
@@ -259,14 +290,19 @@ function render(state,opts){
   const out=document.getElementById('result');
   if(!out)return;
   const g=gradeOf(state.score);
+  // En delt rapport er et øjebliksbillede, så den tæller ikke som «sidste
+  // scanning» — ellers ville det være afsenderens fund, ikke modtagerens.
+  const prev=opts.shared?null:(window.SCANSHARE?window.SCANSHARE.recall(state.url):null);
+  const ranked=window.SCANSHARE?window.SCANSHARE.rankFindings(state.findings):state.findings;
   out.innerHTML =
     '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'+
     '<div>'+state.errors+' fejl, '+state.warnings+' warning(s)</div></div>'+
     (opts.shared
       ? '<p class="hint">Delt resultat for <code>'+esc(state.url)+'</code>, sendt fra den gratis scanner. Det er et øjebliksbillede af én scanning, ikke et live tjek af siden. Tryk på <strong>Scan</strong> ovenfor for at se siden som den er nu.</p>'
       : '')+
+    (opts.shared?'':sinceBox(prev,state.findings))+
     platformBox(state.platform)+
-    (state.findings.length?'<ul class="findings">'+state.findings.map(f=>
+    (state.findings.length?(opts.shared?'':rankBox(state))+'<ul class="findings">'+ranked.map(f=>
       '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
      :'<p>Ingen problemer fundet af de automatiske tjek.</p>')+
     '<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '+
@@ -427,6 +463,7 @@ async function scan(url){
     if(new RegExp(p,'i').test(gen)){plat=p;break;}}
   LAST={url:url,score:score,errors:errors,warnings:warnings,findings:findings,platform:plat};
   render(LAST);
+  if(window.SCANSHARE)window.SCANSHARE.remember(url,findings);
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();

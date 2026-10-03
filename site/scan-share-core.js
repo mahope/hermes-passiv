@@ -29,6 +29,14 @@
  * story), and a Danish page that kept its own copy goes red in
  * `tests/scan-share.test.mjs` — a codec-only test would still pass.
  *
+ * Det her er ikke kun et codec mere. Under det ligger de tre ting en læser med
+ * en fund-liste spørger om, og som siden før dette ikke kunne svare på:
+ * `startHere()` (hvilke tre der betyder mest), `diffFindings()` (hvad er ændret
+ * siden sidste scanning) og `remember()`/`recall()` (sidste ti sider, kun i
+ * læserens egen browser). Alle tre er rene funktioner over fund-lister — ingen
+ * af dem kender en pris, en knap eller en markup, så de kan dømmes uden en
+ * browser, og en side der glemmer at kalde dem, kan ikke se en fordel.
+ *
  * Four rules the decoder keeps, because the fragment is attacker-written:
  *   1. Nothing here throws. `location.hash` is whatever a reader, a bookmark or
  *      a truncated message says; `#u=%` must leave the form alone, not empty the
@@ -187,9 +195,165 @@
     return '#' + parts.join(';');
   }
 
+  // ---------------------------------------------------------------- rankering
+  // Fundene kommer ud af `scan()` i den rækkefølge reglerne kører i, så en side
+  // med fire billeder uden alt-tekst og én knap uden navn viser ALT-kravet
+  // først og den ene knap sidst — omvendt af hvad der bliver rettet hurtigst.
+  // Rækkefølgen er derfor eksplisit og målbar: alvor før advarsel, og inden for
+  // samme alvor det fund der optræder oftest. Tallet på fundet *er* alvorgraden
+  // her — fire billeder uden alt er fire brud, ikke ét — så det bruges ikke
+  // til at slå en alvorlig regel med én forekomst.
+  var SEV_RANK = { error: 0, warning: 1, notice: 2 };
+
+  function rankFindings(findings) {
+    if (!Array.isArray(findings)) return [];
+    return findings.map(function (f, i) {
+      return { f: f || {}, i: i };
+    }).sort(function (a, b) {
+      var sa = SEV_RANK[a.f.sev], sb = SEV_RANK[b.f.sev];
+      if (sa === undefined) sa = 3;
+      if (sb === undefined) sb = 3;
+      if (sa !== sb) return sa - sb;
+      var ca = Number(a.f.count) || 0, cb = Number(b.f.count) || 0;
+      if (ca !== cb) return cb - ca;
+      // `sort` er stabil i moderne motorer, men det afhænger af inputrækkefølgen,
+      // som er koderækkefølgen. indekset gør den rækkefølge til en *lov* i stedet
+      // for en egenskab ved motoren.
+      return a.i - b.i;
+    }).map(function (w) { return w.f; });
+  }
+
+  // De tre der betyder mest. `n` er med, fordi «start her» er en påstand om
+  // hvor mange linjer en læser orkeder — ikke en ny grænse på fundene.
+  function startHere(findings, n) {
+    var k = n === undefined ? 3 : n;
+    return rankFindings(findings).slice(0, k < 0 ? 0 : k);
+  }
+
+  // ------------------------------------------------------------- hvad er ændret
+  // Det eneste en læser med en fejl-liste faktisk vil vide efter at have rettet:
+  // om der er blevet færre. Før dette stod der ingen vej til at svare på det —
+  // scan igen gav et nyt tal og ingen forskel, og så måtte læseren selv holde
+  // de to lister ved siden af hinanden og regne.
+  function diffFindings(prev, cur) {
+    if (!Array.isArray(prev) || !Array.isArray(cur)) return null;
+    var before = {}, after = {};
+    var i;
+    for (i = 0; i < prev.length; i++) {
+      if (prev[i] && typeof prev[i].id === 'string') before[prev[i].id] = Number(prev[i].count) || 0;
+    }
+    for (i = 0; i < cur.length; i++) {
+      if (cur[i] && typeof cur[i].id === 'string') after[cur[i].id] = Number(cur[i].count) || 0;
+    }
+    var fixed = [], added = [], reduced = [], grew = [];
+    Object.keys(after).forEach(function (id) {
+      if (!(id in before)) { added.push(id); return; }
+      if (after[id] < before[id]) reduced.push({ id: id, from: before[id], to: after[id] });
+      else if (after[id] > before[id]) grew.push({ id: id, from: before[id], to: after[id] });
+    });
+    Object.keys(before).forEach(function (id) {
+      if (!(id in after)) fixed.push(id);
+    });
+    return {
+      fixed: fixed, added: added, reduced: reduced, grew: grew,
+      scoreFrom: scoreOf(prev), scoreTo: scoreOf(cur)
+    };
+  }
+
+  // ------------------------------------------------------------------- huskeværk
+  // Ti seneste sider i *én* nøgle, så en læser der scanner mange sider ikke
+  // efterlader et grænseløst spor i sin egen browser. Alt sammen klient-side:
+  // intet af det forlader siden, og det er den eneste måde den her forskel kan
+  // findes på uden en konto.
+  var STORE_KEY = 'eaa:last';
+  var STORE_MAX = 10;
+
+  // Nøglen er scheme-strippet vært + sti, så `https://a.dk/x` og
+  // `http://a.dk/x` er samme side, men `/` og `/da/` ikke er. Query og hash
+  // droppes: de er ikke en anden side, og en URL med et sporings-id i sig
+  // må ikke gøre to sider til to forskellige nøgler.
+  function storeKey(url) {
+    var v = normalizeUrl(url);
+    if (!v) return null;
+    // Regex, ikke `new URL()`: `normalizeUrl()` har allerede sikret `http(s)`,
+    // så det eneste der er tilbage er at finde vært og sti — og kernen skal
+    // kunne køres uden `URL` (den testes i en vm, og den skal ikke have en
+    // afhængighed den ikke bruger til noget).
+    var m = /^https?:\/\/([^/?#]+)([^?#]*)/i.exec(v);
+    if (!m) return null;
+    var p = m[2].replace(/\/+$/, '') || '/';
+    return m[1].toLowerCase() + p;
+  }
+
+  function readStore() {
+    try {
+      var ls = global.localStorage;
+      if (!ls) return {};
+      var raw = ls.getItem(STORE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+    } catch (e) { return {}; }   // privat browsertilstand, kvote, korrumperet JSON
+  }
+
+  function writeStore(store) {
+    try {
+      var ls = global.localStorage;
+      if (ls) ls.setItem(STORE_KEY, JSON.stringify(store));
+    } catch (e) { /* privat browsertilstand eller fuld kvota: følelsen er valgfri */ }
+  }
+
+  function recall(url) {
+    var key = storeKey(url);
+    if (!key) return null;
+    var e = readStore()[key];
+    if (!e || !Array.isArray(e.f)) return null;
+    var findings = [];
+    for (var i = 0; i < e.f.length && i < MAX_FINDINGS; i++) {
+      var row = e.f[i];
+      if (!Array.isArray(row) || row.length !== 3) continue;
+      var n = countOf(row[2]);
+      var sev = SEV[String(row[1] || '').toLowerCase()];
+      if (typeof row[0] !== 'string' || !ID_RE.test(row[0]) || !sev || n === null) continue;
+      findings.push({ id: row[0], sev: sev, count: n });
+    }
+    return findings.length ? { findings: findings, at: Number(e.t) || 0 } : null;
+  }
+
+  function remember(url, findings) {
+    var key = storeKey(url);
+    if (!key || !Array.isArray(findings) || !findings.length) return null;
+    var store = readStore();
+    var rows = [];
+    for (var i = 0; i < findings.length && i < MAX_FINDINGS; i++) {
+      var f = findings[i] || {};
+      var sev = SEV_BACK[String(f.sev || '').toLowerCase()];
+      var n = countOf(f.count);
+      if (typeof f.id !== 'string' || !ID_RE.test(f.id) || !sev || n === null) continue;
+      rows.push([f.id, sev, n]);
+    }
+    if (!rows.length) return null;
+    store[key] = { t: Date.now(), f: rows };
+    // Ti nyligste. `Object.keys` uden en eksplicit sortering ville være
+    // afhængig af indsættelsesrækkefølgen, og det er ikke en orden.
+    var keep = Object.keys(store).sort(function (a, b) {
+      return ((store[b] || {}).t || 0) - ((store[a] || {}).t || 0);
+    }).slice(0, STORE_MAX);
+    var next = {};
+    keep.forEach(function (k) { next[k] = store[k]; });
+    writeStore(next);
+    return rows.length;
+  }
+
   global.SCANSHARE = global.SCANSHARE || {};
   global.SCANSHARE.decode = decode;
   global.SCANSHARE.encode = encode;
   global.SCANSHARE.scoreOf = scoreOf;
+  global.SCANSHARE.rankFindings = rankFindings;
+  global.SCANSHARE.startHere = startHere;
+  global.SCANSHARE.diffFindings = diffFindings;
+  global.SCANSHARE.storeKey = storeKey;
+  global.SCANSHARE.recall = recall;
+  global.SCANSHARE.remember = remember;
   global.SCANSHARE.MAX_FINDINGS = MAX_FINDINGS;
 })(typeof window !== 'undefined' ? window : globalThis);

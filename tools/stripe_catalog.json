@@ -2015,7 +2015,7 @@
       "free_features": [
         {
           "id": "a11y",
-          "where": "site/scan.html:345-378 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
+          "where": "site/scan.html:382-415 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "en": [
               "The accessibility checks on the page you paste — alt text, labels, headings, contrast"
@@ -2024,7 +2024,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan.html:367-370 — DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan.html:404-407 — DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "en": [
               "Page title, language attribute, viewport and h1 checked too"
@@ -2035,7 +2035,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan.html:310 proCard() h3 «A site is every page» — hele løftet står i den linje og i site/scan.html:102-104 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
+          "where": "site/scan.html:347 proCard() h3 «A site is every page» — hele løftet står i den linje og i site/scan.html:102-104 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
           "labels": {
             "en": [
               "It crawls the whole site — the same check on every page it finds"
@@ -2047,7 +2047,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan.html:310 proCard() h3 «A site is every page» og site/scan.html:102-104 «A EUComply Pro licence unlocks the PDF download»",
+          "where": "site/scan.html:347 proCard() h3 «A site is every page» og site/scan.html:102-104 «A EUComply Pro licence unlocks the PDF download»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2081,7 +2081,7 @@
       "free_features": [
         {
           "id": "a11y",
-          "where": "site/scan-da.html:341-374 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
+          "where": "site/scan-da.html:377-410 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "da": [
               "Tilgængelighedstjek på den side du indsætter — alt-tekst, mærkater, overskrifter, kontrast"
@@ -2090,7 +2090,7 @@
         },
         {
           "id": "basics",
-          "where": "site/scan-da.html:363-366 — DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 lægges direkte i fundlisten, ingen af dem kræver en nøgle",
+          "where": "site/scan-da.html:399-402 — DOC_TITLE, HTML_LANG, VIEWPORT og HEADING_H1 lægges direkte i fundlisten, ingen af dem kræver en nøgle",
           "labels": {
             "da": [
               "Sides titel, sprogattribut, viewport og h1 tjekket med"
@@ -2101,7 +2101,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan-da.html:306 proCard() h3 «Et website er alle sider» — hele løftet står i den linje og i site/scan-da.html:101-103 «En licens til EUComply Pro låser PDF-download»",
+          "where": "site/scan-da.html:342 proCard() h3 «Et website er alle sider» — hele løftet står i den linje og i site/scan-da.html:101-103 «En licens til EUComply Pro låser PDF-download»",
           "labels": {
             "en": [
               "It crawls the whole site — the same check on every page it finds"
@@ -2113,7 +2113,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/scan-da.html:306 proCard() h3 «Et website er alle sider» og site/scan-da.html:101-103 «En licens til EUComply Pro låser PDF-download»",
+          "where": "site/scan-da.html:342 proCard() h3 «Et website er alle sider» og site/scan-da.html:101-103 «En licens til EUComply Pro låser PDF-download»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"

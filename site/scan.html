@@ -252,6 +252,38 @@ function platformBox(plat){
     +esc(plat)+'\'s admin. Step-by-step: <a href="'+PLATFORM_GUIDES[plat]+'">the free '
     +esc(plat)+' accessibility fix guide</a>.</div>';
 }
+// «Start her» og «hvad er ændret siden sidste gang». Begge regler ligger i
+// `scan-share-core.js`, fordi de er beregninger over fund — ikke markup — og
+// fordi den danske side så ikke kan få sin egen rækkefølge.
+function rankBox(state){
+  const ss=window.SCANSHARE;
+  if(!ss||!state.findings.length||state.findings.length<=3)return '';
+  const top=ss.startHere(state.findings,3);
+  if(top.length<3)return '';
+  return '<h3 style="margin:22px 0 8px;font-size:16px">Start here — the 3 findings that matter most</h3>'
+    +'<p class="hint">Errors before warnings, and the rule that fires most often first. '
+    +'Everything else is below, in the same order.</p>'
+    +'<ol class="findings">'+top.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ol>'
+    +'<h3 style="margin:22px 0 8px;font-size:16px">All '+state.findings.length+' findings</h3>';
+}
+function sinceBox(prev,findings){
+  const ss=window.SCANSHARE;
+  if(!ss||!prev)return '';
+  const d=ss.diffFindings(prev.findings,findings);
+  if(!d)return '';
+  const parts=[];
+  if(d.fixed.length)parts.push(d.fixed.length+' finding(s) gone');
+  if(d.reduced.length)parts.push(d.reduced.length+' fewer');
+  if(d.grew.length)parts.push(d.grew.length+' more');
+  if(d.added.length)parts.push(d.added.length+' new');
+  if(!parts.length)return '';
+  const up=d.scoreTo>d.scoreFrom;
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
+    +'<strong>Since your last scan of this page</strong> — '+parts.join(', ')
+    +', and the score moved '+d.scoreFrom+' → '+d.scoreTo+'. '
+    +'<span class="hint">Kept in this browser only; nothing was sent to us.</span></div>';
+}
 // Ét sted for kortet, fordi vejen til et delt resultat også er vej til et netop
 // kørt: en læser der åbner et delt link skal se præcis den samme kortstabel som
 // afsenderen, kun mærket som et øjebliksbillede.
@@ -260,14 +292,19 @@ function render(state,opts){
   const out=document.getElementById('result');
   if(!out)return;
   const g=gradeOf(state.score);
+  // En delt rapport er et øjebliksbillede, så den tæller ikke som «sidste
+  // scanning» — ellers ville det være den afsenderens fund, ikke modtagerens.
+  const prev=opts.shared?null:(window.SCANSHARE?window.SCANSHARE.recall(state.url):null);
+  const ranked=window.SCANSHARE?window.SCANSHARE.rankFindings(state.findings):state.findings;
   out.innerHTML =
     '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'+
     '<div>'+state.errors+' error(s), '+state.warnings+' warning(s)</div></div>'+
     (opts.shared
       ? '<p class="hint">Shared result for <code>'+esc(state.url)+'</code>, sent from the free scanner. It is a snapshot of one scan, not a live check of the page. Press <strong>Scan</strong> above to see the page as it is now.</p>'
       : '')+
+    (opts.shared?'':sinceBox(prev,state.findings))+
     platformBox(state.platform)+
-    (state.findings.length?'<ul class="findings">'+state.findings.map(f=>
+    (state.findings.length?(opts.shared?'':rankBox(state))+'<ul class="findings">'+ranked.map(f=>
       '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
      :'<p>No issues found by automated checks.</p>')+
     '<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
@@ -432,7 +469,10 @@ async function scan(url){
   for(const p of Object.keys(PLATFORM_GUIDES)){
     if(new RegExp(p,'i').test(gen)){plat=p;break;}}
   LAST={url:url,score:score,errors:errors,warnings:warnings,findings:findings,platform:plat};
+  // Først *efter* `render()`: `render()` læser den forrige scanning for at kunne
+  // sige hvad der er ændret, så skriver denne til efter at den har læst.
   render(LAST);
+  if(window.SCANSHARE)window.SCANSHARE.remember(url,findings);
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();

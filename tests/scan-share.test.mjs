@@ -168,10 +168,138 @@ const RIGTIG_TIL_SEND = {
   url: RIGTIG.url, score: 71, errors: 2, warnings: 1, findings: RIGTIG.findings, platform: 'WordPress'
 };
 
+// ---------------------------------------------------------------------------
+// 1b. «Start her», «hvad er ændret» og huskværket. Rene funktioner over
+//     fund-lister, så påstanden kan læses direkte — ingen DOM, ingen browser.
+//     Polaritet: `startHere` er væk i den gamle kode, og `diffFindings` gav
+//     ingen `reduced`/`grew`, kun fund der forsvandt helt.
+// ---------------------------------------------------------------------------
+const HAR_KERNER = ['rankFindings', 'startHere', 'diffFindings', 'storeKey', 'recall', 'remember']
+  .every((k) => typeof S?.[k] === 'function');
+// Uden denne guard dør hele filen med en TypeError på den kode der kom før, og
+// så er «testen er rød» og «testen gik i stykker» det samme signal.
+ok('kernen eksporterer ranking, forskel og huskværk', HAR_KERNER,
+  'mangler: ' + ['rankFindings', 'startHere', 'diffFindings', 'storeKey', 'recall', 'remember']
+    .filter((k) => typeof S?.[k] !== 'function').join(', '));
+const MANGE = [
+  { id: 'TARGET_BLANK', sev: 'warning', count: 9 },
+  { id: 'IMG_ALT', sev: 'error', count: 2 },
+  { id: 'DOC_TITLE', sev: 'error', count: 1 },
+  { id: 'HEADING_SKIP', sev: 'warning', count: 40 },
+  { id: 'FORM_LABEL', sev: 'error', count: 7 }
+];
+if (HAR_KERNER) {
+  const RANKET = S.rankFindings(MANGE).map((f) => f.id);
+  ok('rangering: fejl før advarsel, og flest forekomster først inden for alvor',
+    JSON.stringify(RANKET) === JSON.stringify(['FORM_LABEL', 'IMG_ALT', 'DOC_TITLE', 'HEADING_SKIP', 'TARGET_BLANK']),
+    JSON.stringify(RANKET));
+  ok('rangering: en advarsel med 40 forekomster overstiger ikke ét fejlfund',
+    RANKET.indexOf('FORM_LABEL') < RANKET.indexOf('HEADING_SKIP'));
+  ok('rangering: kilderækken er ikke muteret',
+    MANGE[0].id === 'TARGET_BLANK' && MANGE.length === 5);
+  ok('startHere: præcis tre, i den rangerede rækkefølge',
+    JSON.stringify(S.startHere(MANGE).map((f) => f.id))
+      === JSON.stringify(['FORM_LABEL', 'IMG_ALT', 'DOC_TITLE']),
+    JSON.stringify(S.startHere(MANGE).map((f) => f.id)));
+  ok('startHere: færre end tre fund giver alle, ikke to',
+    S.startHere(MANGE, 3).length === 3 && S.startHere(MANGE.slice(0, 2)).length === 2);
+  ok('startHere: et ikke-array er tomt, ikke en fejl',
+    Array.isArray(S.startHere(null)) && S.startHere(null).length === 0);
+
+  const FØR = [
+    { id: 'IMG_ALT', sev: 'error', count: 4 },
+    { id: 'DOC_TITLE', sev: 'error', count: 1 },
+    { id: 'TARGET_BLANK', sev: 'warning', count: 6 },
+    { id: 'HEADING_SKIP', sev: 'warning', count: 2 }
+  ];
+  const EFTER = [
+    { id: 'IMG_ALT', sev: 'error', count: 4 },
+    { id: 'CONTRAST', sev: 'error', count: 1 },
+    { id: 'TARGET_BLANK', sev: 'warning', count: 3 }
+  ];
+  const DIFF = S.diffFindings(FØR, EFTER);
+  ok('diff: DOC_TITLE og HEADING_SKIP er væk', JSON.stringify(DIFF.fixed) === JSON.stringify(['DOC_TITLE', 'HEADING_SKIP']),
+    JSON.stringify(DIFF.fixed));
+  ok('diff: CONTRAST er nyt', JSON.stringify(DIFF.added) === JSON.stringify(['CONTRAST']), JSON.stringify(DIFF.added));
+  ok('diff: TARGET_BLANK gik fra 6 til 3 — et fald, ikke en forsvundet regel',
+    DIFF.reduced.length === 1 && DIFF.reduced[0].id === 'TARGET_BLANK'
+    && DIFF.reduced[0].from === 6 && DIFF.reduced[0].to === 3, JSON.stringify(DIFF.reduced));
+  ok('diff: scoren flytter sig med de samme fund', DIFF.scoreFrom === 66 && DIFF.scoreTo === 71,
+    DIFF.scoreFrom + ' -> ' + DIFF.scoreTo);
+  ok('diff: en ulæselig størrelse giver null, ikke en løgn',
+    S.diffFindings(null, EFTER) === null && S.diffFindings(FØR, 'x') === null);
+  ok('diff: ingen forskel giver fire tomme lister, så siden kan tie',
+    S.diffFindings(FØR, FØR).fixed.length === 0 && S.diffFindings(FØR, FØR).added.length === 0);
+
+  ok('nøglen er vært + sti uden query, så to sider ikke blandes',
+    S.storeKey('https://Eksempel.dk/Pris/?utm_source=x#da') === 'eksempel.dk/Pris');
+  ok('nøglen er den samme uden http:// og med rod-slash',
+    S.storeKey('http://eksempel.dk/pris/') === S.storeKey('https://eksempel.dk/pris'));
+  ok('nøglen afviser en adresse der ikke er http(s)', S.storeKey('javascript:alert(1)') === null);
+
+  // Huskeværket med en kvælende localStorage — privat browsertilstand kaster her,
+  // og en fejl der bliver en hvid skærm er værre end en manglende forskel.
+  function medLagring() {
+    const data = {};
+    return {
+      getItem: (k) => (k in data ? data[k] : null),
+      setItem: (k, v) => { data[k] = String(v); },
+      kaster: false
+    };
+  }
+  const lagring = medLagring();
+  const lagrCtx = { localStorage: lagring };
+  lagrCtx.window = lagrCtx;
+  lagrCtx.globalThis = lagrCtx;
+  vm.createContext(lagrCtx);
+  vm.runInContext(readFileSync(new URL('../site/scan-share-core.js', import.meta.url), 'utf8'), lagrCtx);
+  const L = lagrCtx.SCANSHARE;
+
+  L.remember('https://eksempel.dk/pris', MANGE);
+  const HUSKET = L.recall('https://eksempel.dk/pris');
+  ok('husk: fundene kan læses tilbage med id, alvor og antal',
+    HUSKET && HUSKET.findings.length === 5
+    && HUSKET.findings.find((f) => f.id === 'FORM_LABEL').count === 7
+    && HUSKET.findings.find((f) => f.id === 'TARGET_BLANK').sev === 'warning',
+    JSON.stringify(HUSKET));
+  ok('husk: en anden adresse husker intet', L.recall('https://eksempel.dk/anden') === null);
+  ok('husk: en kvotadræbt browser ødelægger ikke siden',
+    (() => {
+      const død = { getItem() { throw new Error('QuotaExceededError'); }, setItem() { throw new Error('nope'); } };
+      const c = { localStorage: død }; c.window = c; c.globalThis = c;
+      vm.createContext(c);
+      vm.runInContext(readFileSync(new URL('../site/scan-share-core.js', import.meta.url), 'utf8'), c);
+      c.SCANSHARE.remember('https://eksempel.dk/pris', MANGE);
+      return c.SCANSHARE.recall('https://eksempel.dk/pris') === null;
+    })());
+  ok('husk: højst ti sider gemmes, så en læser der scanner meget ikke fylder sin egen browser',
+    (() => {
+      for (let i = 0; i < 14; i++) L.remember('https://eksempel.dk/side-' + i, MANGE);
+      const n = Object.keys(JSON.parse(lagring.getItem('eaa:last'))).length;
+      return n === 10;
+    })(), Object.keys(JSON.parse(lagring.getItem('eaa:last'))).length + ' nøgler');
+  ok('husk: en korrumperet lagring giver ingen fund, ikke en fejl',
+    (() => {
+      const død = { getItem: () => '{ikke json', setItem() {} };
+      const c = { localStorage: død }; c.window = c; c.globalThis = c;
+      vm.createContext(c);
+      vm.runInContext(readFileSync(new URL('../site/scan-share-core.js', import.meta.url), 'utf8'), c);
+      return c.SCANSHARE.recall('https://eksempel.dk/pris') === null;
+    })());
+}
+
 const SIDER = [
   { fil: 'site/scan.html', rute: '/scan', del: 'Copy link to this result', note: 'Shared result for',
+    siden: 'Since your last scan of this page', forsvandt: '1 finding(s) gone', nyt: '1 new',
+    faldt: '1 fewer',
+    startHer: 'Start here — the 3 findings that matter most', alleFund: 'All 4 findings',
+    forste: '4 image(s) missing alt text', sidste: '3 link(s) opening in a new window',
     tal: ['4 image(s) missing alt text', '1 text colour combination(s)', '2 heading level skip(s)'] },
   { fil: 'site/scan-da.html', rute: '/scan-da', del: 'Kopiér link til dette resultat', note: 'Delt resultat for',
+    siden: 'Siden din sidste scanning af denne side', forsvandt: '1 fund væk', nyt: '1 ny',
+    faldt: '1 færre',
+    startHer: 'Start her — de 3 fund der betyder mest', alleFund: 'Alle 4 fund',
+    forste: '4 billede(r) mangler alt-tekst', sidste: '3 link(s) der åbner i nyt vindue',
     tal: ['4 billede(r) mangler alt-tekst', '1 tekstfarvekombination(er)', '2 sprunget(t) overskriftsniveau(er)'] }
 ];
 
@@ -284,6 +412,68 @@ async function proevSiden(side) {
     MSG.DOC_TITLE.includes('<title>') && medTitel.includes('&lt;title&gt;') && !/page has no <\/title>/.test(medTitel),
     medTitel.slice(0, 260));
   ok(`${side.fil}: rettelsen under DOC_TITLE er også escaped`, medTitel.includes('&lt;head&gt;'), medTitel.slice(0, 400));
+
+  // Et *nyt* resultat skal kunne fortælle hvad der er ændret siden sidste
+  // scanning, og fundene skal stå i en rækkefølge læseren kan handle i.
+  // Delt resultat tæller ikke: det er afsenderens fund, ikke modtagerens, så
+  // en delt rapport må aldrig skrive «siden din sidste scanning».
+  const lagring = (() => {
+    const data = {};
+    return { getItem: (k) => (k in data ? data[k] : null), setItem: (k, v) => { data[k] = String(v); } };
+  })();
+  ctx.localStorage = lagring;
+  // Kernen genindlæses i *sidens* kontekst, så `recall()`/`remember()` lukker
+  // om den lagring denne side har. Codecen ovenfor blev indlæst uden en, og en
+  // dom der så prøvede at huske gennem den ville være grøn fordi den læste
+  // ingenting — «ingen forskel» og «kan ikke se forskellen» er samme fejl.
+  const S_ET_NU = ctx.SCANSHARE;
+  ok(`${side.fil}: siden kan huske og sammenligne fundene`, ['remember', 'recall', 'diffFindings', 'rankFindings']
+    .every((k) => typeof S_ET_NU?.[k] === 'function'),
+    'kernen mangler: ' + ['remember', 'recall', 'diffFindings', 'rankFindings']
+      .filter((k) => typeof S_ET_NU?.[k] !== 'function').join(', '));
+  // Resten af dommen kan ikke køre på koden fra før: den kalder `remember()`
+  // og `diffFindings()`. Uden denne guard dør filen med en TypeError, og så er
+  // «testen er rød» og «testen gå i stykker» det samme signal.
+  if (typeof S_ET_NU.remember === 'function') {
+  vm.runInContext(readFileSync(new URL('../site/scan-share-core.js', import.meta.url), 'utf8'), ctx);
+    const FØR = [
+      { id: 'IMG_ALT', sev: 'error', count: 4 },
+      { id: 'DOC_TITLE', sev: 'error', count: 1 },
+      { id: 'TARGET_BLANK', sev: 'warning', count: 6 },
+      { id: 'HEADING_SKIP', sev: 'warning', count: 2 }
+    ];
+    const EFTER_FUND = [
+      { id: 'TARGET_BLANK', sev: 'warning', count: 3 },
+      { id: 'CONTRAST', sev: 'error', count: 1 },
+      { id: 'IMG_ALT', sev: 'error', count: 4 },
+      { id: 'DOC_TITLE', sev: 'error', count: 1 }
+    ];
+    ctx.SCANSHARE.remember(RIGTIG.url, FØR);
+    ctx.render({ url: RIGTIG.url, score: 60, errors: 3, warnings: 1,
+                 findings: EFTER_FUND, platform: null });
+    const efter = nodes.result?.innerHTML || '';
+    ok(`${side.fil}: et nyt resultat siger hvad der er ændret siden sidste scanning`,
+      efter.includes(side.siden), efter.slice(0, 300));
+    ok(`${side.fil}: forskellen tæller fund, der forsvandt, nye der kom og et der faldt`,
+      efter.includes(side.forsvandt) && efter.includes(side.nyt) && efter.includes(side.faldt),
+      efter.slice(0, 400));
+    ok(`${side.fil}: forskelsen er skrevet med læserens sprog, ikke med fund-id'er`,
+      !/TARGET_BLANK|HEADING_SKIP|CONTRAST/.test(efter.split(side.siden)[1] || ''),
+      (efter.split(side.siden)[1] || '').slice(0, 300));
+    ok(`${side.fil}: fundene står i den rangerede rækkefølge, ikke i kodens`,
+      efter.indexOf(side.forste) < efter.indexOf(side.sidste), efter.slice(0, 700));
+    ok(`${side.fil}: «start her» står over præcis de tre, og hele listen stadig med`,
+      efter.includes(side.startHer) && efter.includes(side.alleFund), efter.slice(0, 700));
+    ok(`${side.fil}: et delt resultat skriver aldrig «siden din sidste scanning»`,
+      !medTitel.includes(side.siden), medTitel.slice(0, 300));
+  } else {
+    ok(`${side.fil}: et nyt resultat siger hvad der er ændret siden sidste scanning`, false, 'ingen remember()');
+    ok(`${side.fil}: forskellen tæller fund, der forsvandt, nye der kom og et der faldt`, false, 'ingen remember()');
+    ok(`${side.fil}: forskelsen er skrevet med læserens sprog, ikke med fund-id'er`, false, 'ingen remember()');
+    ok(`${side.fil}: fundene står i den rangerede rækkefølge, ikke i kodens`, false, 'ingen remember()');
+    ok(`${side.fil}: «start her» står over præcis de tre, og hele listen stadig med`, false, 'ingen remember()');
+    ok(`${side.fil}: et delt resultat skriver aldrig «siden din sidste scanning»`, !medTitel.includes(side.siden), medTitel.slice(0, 300));
+  }
 
   vm.runInContext('LAST = ' + JSON.stringify(RIGTIG_TIL_SEND), ctx);
   await ctx.shareResult();
