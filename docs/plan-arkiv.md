@@ -6891,3 +6891,37 @@ nu en kø af 5 åbne idéer, og alt leveret ligger her.
     og skrev «Measured against the lightest and darkest image pixels under your
     letters» om et billede brugeren ikke havde uploadet — målt på den byggede
 
+
+~~**En port, der dømmer farvekoden.**~~ **Leveret 3/10.** Se punkt 3 i STATUS.
+    Hvem: alle der bruger værktøjet; artiklen `/blog/text-on-image-contrast-check`
+    er 8 af 18 besøgende (44 %, 100 % bounce) — den største indgangsside på
+    sitet. Tal: resultater der viser den målte kode (baseline **4 af 4** sider
+    målt i browseren, **0** dømt af porten). Accept: `check_contrast_sampling`
+    går **96 → 112** løfter — fire pr. værktøjsside og to pr. artikel — med
+    polaritet målt ved at slette `data-ti-hex` fra den rigtige fil. Datagrund:
+    5 af de 6 seneste commits hang på dette ene værktøj, og intet i gaten vidste
+    at koden overhovedet findes.
+
+    *Efterprøvet uafhængigt, tre veje.* Portens egen selftest muterer den rigtige
+    fil; mine egne mutationer lå i den rigtige kerne. `hexNu` frosset til
+    `#1a1a1a` i stedet for at læse `$('fg').value` ved hver visning gav **6
+    røde** — på begge sprog og i både «før» og «efter rettelsen»: «kopierer en
+    anden farve end den han ser» og «står stadig #1a1a1a efter «Fix it»». Det
+    er præcis de to fejl porten blev skrevet til at finde. Selftest **109/109**.
+
+    *Et fund ved gennemsyn af egen diff, i porten selv.* Farveprøven blev læst
+    med et regex på knappens **egne åbningstag** (`knap[0]`), men prøven er en
+    `<span>` *inde i* knappen. `praem` var derfor altid `null`, hver mærkning på
+    prøven i `dom_hex` sprang over, og det fjerde løfte stod i tælleren uden at
+    dømme en eneste ting — præcis den fejlporten her jager, fundet i portens egen
+    kode. Beviset lå i portens melding: den sagde «112 løfter dømt» mens den
+    reelt dømte 108. Rettet ved at læse prøven i hele resultatet, ved at gøre en
+    *manglende* prøve til et fund i stedet for at springe den over, og ved to nye
+    selftest-tjek der slår rød på en læsning der er `null` (målt: mutationen
+    giver **3** navngivne FEJL og **106/109**).
+
+    *De otte sidste løfter fik et bevis, de manglede.* `copyHex` og `copiedHex`
+    blev dømt på alle fire sider, men ingen mutation havde vist at de to kunne
+    gå rød — de var altså otte tal i tælleren uden dom. Dommen blev derfor
+    flyttet ud i `dom_knapetekst()`, så seltesten dømmer **samme kode** som
+    drift, og får sit bevis ved at omdøbe nøglen i den rigtige kildefil.

@@ -836,6 +836,66 @@ function deltaMaal() {
 }
 const deltaMaalt = deltaMaal();
 
+/* ---- Farvekoden: den målte tekstfarve som noget bruteren kan tage med -----
+ *
+ * Værktøjet målte, rettede og sagde «#1a1a1a» i en sætning, men skrev ingen
+ * kode nogen sted — så bruteren måtte selv finde farvefeltet og skrive koden
+ * af i Figma. Klarer han det, har han gjort værktøjets arbejde for de tre
+ * euro den koster ham. Det er den konkrete uge, 3/10 (9a1c7f7).
+ *
+ * Læst som **tal og attributter**, aldrig som sætninger: dommen skal kunne se
+ * sandheden, og en dansk læser må ikke få den engelske tekst. Farvefeltets
+ * værdi læses her i harnessen, ikke i kernen — ellers ville porten dømme
+ * kernens egen vilje (`hexNu` *er* `$('fg').value`) i stedet for at dømme det
+ * der står på skærmen.
+ *
+ * `praem` læses i hele resultatet og **ikke** i `knap[0]`: farveprøven er en
+ * `<span>` *inde i* knappen, så den står ikke i knappens egen åbningstag. Læst
+ * i `knap[0]` var den altid `null`, og løftet «prøven er den samme kode» blev
+ * da talt uden at dømme noget — præcis det porten her er skrevet til at finde.
+ * Målt 3/10 på denne linje. */
+function hexLaes() {
+  const h = nodes['result'].innerHTML || '';
+  const knap = /<button[^>]*\bdata-ti-hex="([^"]*)"[^>]*>/.exec(h);
+  const synlig = /<code>([^<]*)<\/code>/.exec(h);
+  const praem = /class="ti-swatch"[^>]*background:\s*([^;"']*)/.exec(h);
+  const tal = /<strong>([0-9.,]+):1<\/strong>/.exec(h);
+  return {
+    harKnap: !!knap,
+    // Punkt 2 i husets kvalitetsliste: knappen *gør* noget (kopierer), så
+    // den er en `<button>` — ikke en `<span>` der ligner som en knap.
+    erKnap: knap ? /<button[^>]*\btype="button"/.test(knap[0]) : false,
+    hex: knap ? knap[1] : null,
+    // Præcis det bruteren *læser*: koden i knappen. Attributtet er kun til
+    // for dommen, så en kode der er i attributtet men ikke på skærmen er
+    // en ulovet påstand — punkt 11.
+    synlig: synlig ? synlig[1] : null,
+    praem: praem ? praem[1].trim() : null,
+    // Farvefeltets egen værdi, som bruteren kan se i samme skærmbillede.
+    felt: String(nodes['fg'].value || '').toLowerCase(),
+    fik: tal ? parseFloat(tal[1].replace(',', '.')) : null,
+  };
+}
+function hexMaal() {
+  // Samme todelte foto som de to andre kæder: hvid tekst på den lyse halvdel
+  // fejler, så «Fix it» har noget at rette — og `applyFix()` skriver *altid*
+  // en ny tekstfarve til feltet, også når rettelsen er et slør. Det er derfor
+  // koden kan dømmes for at *følge* rettelsen: ellers ville koden være den
+  // fra før trykket, mens bruteren kopierer en farve der ikke er den han ser.
+  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
+  nodes['text'].value = 'Dette er en overskrift'; nodes['text'].fire('input');
+  nodes['fontsize'].value = 'small'; nodes['fontsize'].fire('change');
+  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  const foer = hexLaes();
+  const knap = nodes['result'].querySelector('[data-ti-fix]');
+  if (!knap) return { harFix: false, foer: foer };
+  knap.click();
+  const efter = hexLaes();
+  return { harFix: true, foer: foer, efter: efter };
+}
+const hexMaalt = hexMaal();
+
 // Demo-noten igen *efter* at bruteren har valgt sit eget billede. Det er den
 // anden halvdel af dommen: noten skal forsvinde, fordi «measured against the
 // lightest and darkest pixels under your letters» først er sandt når der er
@@ -861,6 +921,7 @@ console.log(JSON.stringify({
   download: dlMaal,
   spot: spotMaalt,
   delta: { fix: deltaMaalt },
+  hex: { fix: hexMaalt },
 }));
 """
 
@@ -1339,6 +1400,130 @@ def dom_demo(fil: str, d: dict | None) -> list[str]:
     return fund
 
 
+def dom_hex(fil: str, d: dict | None) -> list[str]:
+    """Døm at den målte tekstfarve står som en kode bruteren kan kopiere.
+
+    Fundet 3/10 ved at læse koden, målt i rigtig Chromium på den **byggede**
+    side: kernen skrev «I changed the text color to #1a1a1a» i en sætning og
+    viste *intet* derfra. Bruteren skulle finde farvefeltet og skrive koden af
+    i Figma — altså gøre værktøjets arbejde selv, på den betalte del af det.
+    Og når kernen så skrev den i sætningen, hang den fast ved den kode den
+    *havde* valgt: ændrede bruteren farven i feltet, stod den gamle kode stadig i
+    teksten. To forskellige sandheder om den samme værdi.
+
+    Fire krav, og de er fire forskellige fejlformer:
+
+    1. **Koden står som en knap.** Ellers er hele dommen grøn fordi den læser
+       en farve der ikke er der — eller fordi den læser attributtet og tror
+       det er det bruteren ser. Den skal være en `<button>`, fordi den
+       *gør* noget: kopierer.
+    2. **Koden er farvefeltets værdi.** Ikke «en farve», ikke «den farve
+       kernen anbefaler»: den værdi bruteren kan se i feltet ovenfor, fordi
+       det er den han skal tage videre. Læses i harnessen, ikke i kernen.
+    3. **Den følger «Fix it».** `applyFix()` skriver altid en ny tekstfarve til
+       feltet, også når rettelsen er et slør. Koden på skærmen skal være den
+       *nye* — ellers kopierer bruteren en farve der ikke er den han ser.
+    4. **Den læses samme sted som den gemmes.** Attributtet er kun for dommen;
+       det bruteren læser er teksten i knappen. De to kan komme i ukig, og
+       så står der en kode på skærmen der ikke er den der kopieres.
+    """
+    fund: list[str] = []
+    if not d:
+        return [f"{fil}: harnessen målte ikke farvekoden, så dommen dømmer "
+                "intet — grønt her betyder ingenting"]
+    kæde = d.get("fix") or {}
+    if not kæde.get("harFix"):
+        fund.append(f"{fil}: ingen «fix»-knap at trykke på, så dommen kan ikke "
+                    "se om koden følger kernens egen rettelse")
+        return fund
+    for hvornår, laes in (("før", kæde.get("foer") or {}),
+                         ("efter", kæde.get("efter") or {})):
+        if not laes.get("harKnap"):
+            fund.append(f"{fil} ({hvornår} rettelsen): der står ingen farvekode "
+                        "under tallet — bruteren skal selv finde farvefeltet og "
+                        "skrive koden af i sit eget værktøj")
+            continue
+        if not laes.get("erKnap"):
+            fund.append(f"{fil} ({hvornår} rettelsen): farvekoden er ikke en "
+                        "`<button>`, så den ser ud som en handling uden at "
+                        "kunne trykkes")
+        # 1 og 2: koden er *farvefeltets* værdi, ikke en farve kernen synes
+        # om. En kode der ikke er et gyldigt `#rrggbb` kan slet ikke sammenlignes
+        # med feltet, så det er samme fejl og dømmes som én.
+        hexk = (laes.get("hex") or "").lower()
+        felt = (laes.get("felt") or "").lower()
+        if not re.fullmatch(r"#[0-9a-f]{6}", hexk):
+            fund.append(f"{fil} ({hvornår} rettelsen): farvekoden er {hexk!r}, som "
+                        "ikke er en `#rrggbb`-kode bruteren kan indsætte i sit "
+                        "værktøj")
+        elif hexk != felt:
+            fund.append(f"{fil} ({hvornår} rettelsen): koden under tallet er "
+                        f"{hexk}, men farvefeltet står med {felt} — bruteren "
+                        "kopierer en anden farve end den han ser")
+    foer, efter = kæde.get("foer") or {}, kæde.get("efter") or {}
+    if foer.get("hex") and efter.get("hex") and foer["hex"].lower() == efter["hex"].lower():
+        fund.append(f"{fil}: koden står stadig {foer['hex']} efter «Fix it», "
+                    "selv om kernen skrev en ny tekstfarve til feltet — bruteren "
+                    "kopierer den farve han havde *før* rettelsen")
+    # 4: attributtet er for dommen, teksten er for læseren.
+    for hvornår, laes in (("før", foer), ("efter", efter)):
+        h, t = laes.get("hex"), laes.get("synlig")
+        if h and t and t.lower() != h.lower():
+            fund.append(f"{fil} ({hvornår} rettelsen): knappen viser {t!r} men "
+                        f"gemmer {h!r} — bruteren læser den ene og kopierer den "
+                        "andere")
+        # Farveprøven i knappen er det bruteren bruger til at kende farven
+        # igen på sit eget billede, så den skal være den samme kode. Uden den
+        # er knappen en farve i hex, hvilket præcis er det den skulle spare ham
+        # for at slå op. En **manglende** prøve dømmes også: ellers ville den
+        # bare springes over, og et løfte der springes over er det samme som
+        # et løfte uden dom (målt 3/10 — prøven blev læst i knappens egen
+        # tag, så den var altid `null` og tælleren løj).
+        if not h:
+            continue
+        if not laes.get("praem"):
+            fund.append(f"{fil} ({hvornår} rettelsen): farveprøven mangler i "
+                        "farveknappen, så bruteren skal selv holde koden op mod "
+                        "sit billede for at kende farven igen")
+        elif laes["praem"].lower() != h.lower():
+            fund.append(f"{fil} ({hvornår} rettelsen): farveprøven i knappen er "
+                        f"{laes['praem']}, men koden er {h} — de to viser to "
+                        "forskellige farver")
+    return fund
+
+
+def dom_knapetekst(fil: str, html: str) -> list[str]:
+    """Døm at farveknappens to tekster findes på *denne* side.
+
+    `dom_hex` kører kernen i rigtig Chromium, men kun på de to værktøjssider.
+    Artiklerne indlejrer *samme* kerne og får derfor samme streng dømt på
+    kildefilen: en tekst der kun findes på værktøjssiden er en halv rettelse —
+    bruteren på artiklen får så en knap uden titel og en bekræftelse med det
+    forkerte sprog.
+
+    To løfter, og de er to forskellige fejl:
+
+    1. `copyHex` er knappens `title`. Uden den ved bruteren ikke hvad knappen
+       gør, før han trykker — en farve i hex med ingen forklaring er præcis
+       det han skulle spare op at slå op.
+    2. `copiedHex` er det der står **efter** tryk. Kernen falder tilbage til
+       koden efter 1,8 s, så en side uden nøglen får enten en knap der siger
+       «Copy the measured text color» igen, eller den engelske «Copied» på
+       en dansk side. Begge er en løgn om at trykket lykkedes.
+
+    Særskilt fra `dom_hex` og ikke en del af den, fordi disse to løfter tælles
+    på **alle fire** sider mens `dom_hex` kun har noget at dømme på to — og en
+    tæller der kun tæller det den dømmer, må ikke få dem blandet sammen.
+    """
+    fund: list[str] = []
+    for noegle, hvad in (("copyHex", "beskriver hvad knappen gør"),
+                         ("copiedHex", "bekræfter trykket på den side den står på")):
+        if re.search(rf"\b{noegle}\s*:\s*'[^']+'", html) is None:
+            fund.append(f"{fil}: der er ingen `{noegle}`-tekst, så "
+                        f"farveknappen {hvad} ikke på denne side")
+    return fund
+
+
 def self_test() -> int:
     fejl: list[str] = []
     # Tælles op, ikke hardkodet: en hardkodet tæller sig selv grøn for
@@ -1763,6 +1948,126 @@ def self_test() -> int:
              for f in SIDER + ARTIKLER),
          "en side mangler den anden %s")
 
+    # 13: farvekoden. Fire løfter, og de skal hver især kunne gå rød — målt
+    # ved at slette `data-ti-hex` fra den rigtige fil, så beviset er en sætning
+    # i koden der forsvinder, ikke et håndlavet mål.
+    hex_k = (koer(kode, hele=True).get("hex") or {}).get("fix")
+    tjek("farvekode-kæden leverer begge læsninger",
+         bool(hex_k) and hex_k.get("harFix") is True
+         and (hex_k.get("foer") or {}).get("harKnap") is True
+         and (hex_k.get("efter") or {}).get("harKnap") is True,
+         str(hex_k)[:300])
+    # Prøven skal **læses** — hver mærkning på hende i `dom_hex` springes
+    # over, når `praem` er `null`, så en læsning der altid er null gør
+    # løftet til en tæller uden dom. Det var netop fejlen her 3/10:
+    # prøven blev læst i knappens egen åbningstag, hvor den ikke står.
+    tjek("harnessen læser farveprøven, ikke kun koden",
+         (hex_k.get("foer") or {}).get("praem") is not None
+         and (hex_k.get("efter") or {}).get("praem") is not None,
+         str(hex_k)[:300])
+    tjek("farveprøven er den samme kode som den der står i knappen",
+         all(((hex_k.get(st) or {}).get("praem") or "").lower()
+             == ((hex_k.get(st) or {}).get("hex") or "").lower()
+             for st in ("foer", "efter")),
+         str(hex_k)[:300])
+    tjek("farvekode-dommen er grøn på den rigtige kode",
+         not dom_hex("text-on-image-checker.html", {"fix": hex_k}),
+         "; ".join(dom_hex("text-on-image-checker.html", {"fix": hex_k})))
+    gammel_hex = ' data-ti-hex="\' + hexNu + \'"'
+    tjek("mutationen findes i koden: data-ti-hex", gammel_hex in kode, repr(gammel_hex))
+    hx_uden = dom_hex("text-on-image-checker.html", {"fix": (
+        koer(kode.replace(gammel_hex, ' data-ti-hex-off="\' + hexNu + \'"', 1),
+             hele=True).get("hex") or {}).get("fix")})
+    tjek("farvekode-dommen kan se at koden forsvandt",
+         any("ingen farvekode" in f for f in hx_uden), str(hx_uden)[:300])
+    tjek("farvekode-dommen kan se en kæde uden rettelsesknap",
+         any("ingen «fix»-knap" in f for f in
+             dom_hex("text-on-image-checker.html", {"fix": {"harFix": False}})),
+         "en kæde uden fix-knap blev dømt grøn")
+    tjek("farvekode-dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_hex("text-on-image-checker.html", None)), "harnessen gav intet")
+
+    # De fire løfter hver for sig, på et håndlavet mål der ligner et rigtigt.
+    # Uden dem kunne et af løfterne være grønt kun fordi et andet fejler.
+    def hex_kaede(**over):
+        laes = {"harKnap": True, "erKnap": True, "hex": "#1a1a1a", "synlig": "#1a1a1a",
+                "praem": "#1a1a1a", "felt": "#1a1a1a", "fik": 21.0}
+        k = {"harFix": True, "foer": dict(laes), "efter": dict(laes, hex="#ffffff",
+                                                              synlig="#ffffff",
+                                                              praem="#ffffff",
+                                                              felt="#ffffff")}
+        k.update(over)
+        return k
+
+    def hex_dom(**over):
+        return dom_hex("text-on-image-checker.html", {"fix": hex_kaede(**over)})
+
+    tjek("farvekode-dommen er grøn på et rigtigt mål", not hex_dom(),
+         "; ".join(hex_dom()))
+    tjek("farvekode-dommen kan se en kode der ikke er farvefeltets",
+         any("anden farve end den han ser" in f for f in
+             hex_dom(foer={"harKnap": True, "erKnap": True, "hex": "#1a1a1a",
+                           "synlig": "#1a1a1a", "praem": "#1a1a1a",
+                           "felt": "#ff0000", "fik": 3.0})),
+         "en fremmed farve blev dømt grøn")
+    tjek("farvekode-dommen kan se en kode der overlever «Fix it»",
+         any("står stadig" in f for f in
+             hex_dom(efter={"harKnap": True, "erKnap": True, "hex": "#1a1a1a",
+                            "synlig": "#1a1a1a", "praem": "#1a1a1a",
+                            "felt": "#1a1a1a", "fik": 3.0})),
+         "en uændret kode efter rettelsen blev dømt grøn")
+    tjek("farvekode-dommen kan se en knap der viser én kode og gemmer en anden",
+         any("læser den ene og kopierer den ande" in f for f in
+             hex_dom(efter={"harKnap": True, "erKnap": True, "hex": "#ffffff",
+                            "synlig": "#000000", "praem": "#ffffff",
+                            "felt": "#ffffff", "fik": 21.0})),
+         "to forskellige koder i én knap blev dømt grøn")
+    tjek("farvekode-dommen kan se en farveprøve i en anden farve",
+         any("farveprøven i knappen" in f for f in
+             hex_dom(efter={"harKnap": True, "erKnap": True, "hex": "#ffffff",
+                            "synlig": "#ffffff", "praem": "#ff0000",
+                            "felt": "#ffffff", "fik": 21.0})),
+         "en forkert farveprøve blev dømt grøn")
+    tjek("farvekode-dommen kan se en kode der ikke kan indsættes i et værktøj",
+         any("ikke er en `#rrggbb`-kode" in f for f in
+             hex_dom(efter={"harKnap": True, "erKnap": True, "hex": "rgb(26,26,26)",
+                            "synlig": "rgb(26,26,26)", "praem": "rgb(26,26,26)",
+                            "felt": "rgb(26,26,26)", "fik": 21.0})),
+         "en css-farve blev dømt grøn")
+    tjek("farvekode-dommen kan se en kode der ikke er en knap",
+         any("ikke en `<button>`" in f for f in
+             hex_dom(efter={"harKnap": True, "erKnap": False, "hex": "#ffffff",
+                            "synlig": "#ffffff", "praem": "#ffffff",
+                            "felt": "#ffffff", "fik": 21.0})),
+         "en span blev dømt grøn")
+    # `copyHex` og `copied` skal findes på alle fire sider — artiklerne kører
+    # ikke i harnessen, så de får den samme streng på kildefilen.
+    tjek("farveknappens to tekster findes på alle fire sider",
+         all(not dom_knapetekst(f, (SITE / f).read_text(encoding="utf-8"))
+             for f in SIDER + ARTIKLER),
+         "en side mangler copyHex eller copiedHex")
+
+    # De otte løfter ovenfor skal kunne gå rød, ellers er de otte tal i
+    # portens tæller løgn. Beviset er en nøgle der er omdøbt i **den rigtige
+    # fil** — så dommen dømmer de samme otte tegn som i drift, og ikke en
+    # håndlavet streng der kun ligner den.
+    rigtig = (SITE / "text-on-image-checker.html").read_text(encoding="utf-8")
+    for noegle, forventet in (("copyHex", "beskriver hvad knappen gør"),
+                              ("copiedHex", "bekræfter trykket på den side den står på")):
+        tjek(f"mutationen fandt `{noegle}` i den rigtige fil",
+             f"{noegle}:" in rigtig, f"`{noegle}` fandtes ikke i kilden")
+        fjernet = rigtig.replace(f"{noegle}:", f"{noegle}X:", 1)
+        tjek(f"knappens dom kan se en side uden `{noegle}`",
+             fjernet != rigtig
+             and any(forventet in f for f in dom_knapetekst("x.html", fjernet)),
+             f"en side uden `{noegle}` blev dømt grøn")
+    # Dommen skal dømme **to** løfter, ikke ét: en side der mangler begge
+    # nøgler skal få to fund. Ellers kunne den miste den ene og stadig tælle
+    # den med, og det er samme fejl som en tæller på et hårdkodet antal.
+    tjek("knappens dom dømmer begge nøgler, ikke kun den ene",
+         len(dom_knapetekst("x.html", "ingen tekst overhovedet")) == 2,
+         str(dom_knapetekst("x.html", "ingen tekst overhovedet")))
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
@@ -1844,6 +2149,15 @@ def main(argv: list[str] | None = None) -> int:
             antal += 5
         for linje in dom_demo(fil, demo):
             fund.append(f"{linje}")
+        # Farvekoden: fire løfter på den værdi bruteren skal kunne kopiere —
+        # den findes som en knap, den er farvefeltets værdi, den følger «Fix
+        # it», og den læses samme sted som den gemmes. Tælles kun når
+        # dommen fik en kæde at dømme, samme regel som de andre.
+        hex_kæde = (svar.get("hex") or {}).get("fix")
+        if hex_kæde:
+            antal += 4
+        for linje in dom_hex(fil, {"fix": hex_kæde}):
+            fund.append(f"{linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
     # prøver slør i begge retninger og vælger den mindste dækning, så på et
@@ -1887,6 +2201,12 @@ def main(argv: list[str] | None = None) -> int:
         elif mdelta.group(1).count("%s") != 2:
             fund.append(f"{fil}: `delta` har {mdelta.group(1).count('%s')} af de to "
                         "`%s` den skal have, så læseren får kun ét af de to tal")
+        # Farveknappens to tekster skal findes på **alle fire** sider. Knapperne
+        # males ikke af `dom_hex` på artiklerne — de kører kernen med andre
+        # billeder — så de får den samme streng dømt på kildefilen, fordi en
+        # tekst der kun findes på værktøjssiden er en halv rettelse.
+        antal += 2
+        fund.extend(dom_knapetekst(fil, html))
 
     if args.list:
         for linje in fund:

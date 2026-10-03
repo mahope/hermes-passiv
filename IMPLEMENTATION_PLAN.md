@@ -1,24 +1,24 @@
 # STATUS
-- **CI er grøn på `main`** siden `0016555` (3/10 15:1x) — de 3 commits porten
-  holdt tilbage ligger nu live; `build-info.json` bærer `0016555` på domænet.
-- **Alle 3 åbne deploy-noter er lukkede, målt i rigtig Chromium 1243 mod LIVE**
-  (ikke `dist/`): `data-ti-demo` står før kappen på **alle 4** sider og forsvinder
-  ved upload; `data-ti-delta` giver `1.10|3.07` på EN og `1,10|3,07` på DA, og på
-  DA flytter «find det bedste sted» den til `3,07|19,64` med `data-ti-moved="1"`;
-  `/thanks?lang=constructor` giver `lang="en"`, engelsk faneblad og **0**
-  «undefined» i DOM'en (den ene forekomst er kernens egen forklaring i en
-  kommentar). 0 px vandret scroll ved 390 og 1280.
-- **Denne iteration: farvekoden.** `ceo/mal-tekstfarven` — resultatet viser den
-  målte tekstfarve som `#rrggbb` i en knap der kopierer den. Baseline **0 af 4**
-  sider: kernen skrev «I changed the text color to #1a1a1a» i en sætning, så
-  bruteren skulle selv finde farvefeltet og skrive koden af i Figma.
-  Målt i Chromium på den **byggede** side, EN + DA × værktøj + artikel:
-  koden følger farvefeltet, udklipsholderen fik `#ffffff` → `#000000` efter «Fix
-  it», knappen melder «Kopieret» på dansk, 44 px trykflade, 0 px vandret scroll.
-  Gaten grøn: missionens 4 kommandoer + `check_contrast_sampling` **96** løfter +
-  `check_owned_selectors` + `check_plan_status`.
-- **Næste opgave: `## Feature-kø` punkt 1** (en port, der dømmer farvekoden).
-  Egne opgaver: punkter 2–4. Alt i «Åbne opgaver» afventer Mads.
+- **CI er grøn på `main`** siden `9a1c7f7` (3/10 13:4x) — de seneste rettelser
+  ligger live, og `build-info.json` bærer `9a1c7f7` på domænet.
+- **Alle deploy-noter er lukkede.** Den sidste, `ceo/mal-tekstfarven`, er
+  efterprøvet i rigtig Chromium mod **LIVE** (ikke `dist/`): EN giver
+  `#ffffff` → «Copied» → `#000000`, DA siger «Kopieret», farveprøve og kode
+  følger farvefeltet begge veje, 44 px trykflade, 0 px vandret scroll ved 1280.
+- **Denne iteration: en port, der dømmer farvekoden.** `ceo/port-farvekode` —
+  `check_contrast_sampling` **96 → 112** løfter: fire på de to værktøjssider
+  (koden findes som en knap, den er farvefeltets værdi, den følger «Fix it»,
+  prøven i knappen er den samme kode) og to pr. artikel (knappens to tekster).
+  **Porten kan fejle, målt på den rigtige fil:** `hexNu` frosset → **6 røde** på
+  begge sprog i begge tilstande; farveprøven i en anden farve → **4 røde**;
+  farveprøven fjernet → **4 røde**. Selftest **109/109**.
+  Ved gennemsyn af egen diff fandt jeg i porten selv den fejl porten jager:
+  prøven blev læst i knappens *egne åbningstag* men er en `<span>` *inde i*
+  knappen, så `praem` var altid `null` og det fjerde løfte blev talt uden dom
+  (112 i meldingen, 108 reelt dømt). Rettet, to nye selftest-tjek sikrer det.
+- **Næste opgave: `## Feature-kø` punkt 1** — mål bruterens *egen* tekst, så
+  to tekstblokke på ét foto får to tal. Egne opgaver: punkter 2–3.
+  Alt i «Åbne opgaver» afventer Mads.
 - PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
   SDK'en er sat op (3/10), så det er ikke en tom rapport.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
@@ -27,30 +27,8 @@
 
 ## Verificér deploy
 
-- `ceo/mal-tekstfarven` **VERIFICÉR DEPLOY: ceo/mal-tekstfarven 2026-10-03
-  16:2x.** Live `https://mahope.tools/text-on-image-checker`: upload et todelt
-  billede → under tallet skal stå en pille med farveprøve og `#ffffff`; tryk på
-  den → den skal sige `Copied`, og `#ffffff` skal ligge i udklipsholderen; tryk
-  «Fix it» → koden skal blive `#000000` og følge farvefeltet. Samme på
-  `/text-on-image-checker-da` (på dansk: «Kopiér den målte tekstfarve» /
-  «Kopieret») og på de to artikler, hvor knappen ligger i `#art-result`.
-
-- ~~`ceo/foer-til-nu`~~ **DEPLOY OK 3/10.** Målt på live: `#result` får præcis ét
-  `data-ti-delta`, hvis **første** tal er det der stod da knappen blev trykket og
-  andet er det på skærmen nu — `1.10|3.07` på EN, `1,10|3,07` på DA. Efter «find
-  det bedste sted» forsvinder linjen på EN (målingen flyttede sig ikke) og skriver
-  `3,07|19,64` med `data-ti-moved="1"` på DA.
-
-- ~~`ceo/demo-billede-er-ikke-dit`~~ **DEPLOY OK 3/10.** Målt på live: præcis ét
-  `data-ti-demo` med «Example image, not yours…» / «Eksempelbillede, ikke dit…»
-  **før** badge'en på alle 4 sider, og det er væk efter upload. Live-kernen
-  (`/text-on-image-core.js`) bærer de 4 nye nøgler.
-
-- ~~`ceo/tak-side-sprognoegle`~~ **DEPLOY OK 3/10.** `?lang=constructor` giver
-  `<html lang="en">` og «Thanks for your purchase | Mahope tools».
-
-- Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
-  `docs/plan-arkiv.md`.
+Ingen åbne noter. Alle tidligere er `DEPLOY OK` eller dækket af en nyere og
+ligger i `docs/plan-arkiv.md`.
 
 ## Åbne opgaver
 
@@ -152,12 +130,13 @@
 Prioriteret efter hvor tæt den er på penge. Baseline for hvert tal er målt 3/10
 på den **byggede** side; tallene er ikke vores egen trafik.
 
-1. **En port, der dømmer farvekoden.** Hvem: alle der bruger værktøjet; artiklen
+1. ~~**En port, der dømmer farvekoden.**~~ **Leveret 3/10.** Se punkt 3 i
+   STATUS. Hvem: alle der bruger værktøjet; artiklen
    `/blog/text-on-image-contrast-check` er 8 af 18 besøgende (44 %, 100 % bounce).
    Tal: resultater der viser den målte kode (baseline **4 af 4** sider målt i
-   browseren, **0** dømt af porten). Accept: `check_contrast_sampling` får 3
-   løfter — koden findes, den er farvefeltets værdi, og den følger «Fix it» — med
-   polaritet målt ved at slette `data-ti-hex` fra den rigtige fil. Datagrund: 5 af
+   browseren, **0** dømt af porten → **16** løfter). Accept: `check_contrast_sampling`
+   får 4 løfter pr. værktøjsside + 2 pr. artikel med polaritet målt ved at slette
+   `data-ti-hex` fra den rigtige fil og ved at føse `hexNu` — 6 røde. Datagrund: 5 af
    de 6 seneste commits hang på dette ene værktøj, og intet i gaten vidste at
    koden findes.
 2. **Mål bruterens egen tekst, ikke kun billedets.** Hvem: designere med to
