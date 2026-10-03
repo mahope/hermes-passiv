@@ -363,6 +363,46 @@ TITLE_SUFFIX_RE = re.compile(r"\s*[|·—–-]\s*(mahoje\.dk|mahope\.tools|Herme
 TITLE_PAREN_RE = re.compile(r"\s*\((?:Guide|Updated)?\s*20\d\d\)\s*$", re.I)
 
 
+def ellipsize(t: str, limit: int) -> str:
+    """Cut `t` at a word boundary and *mark* the cut with `…`.
+
+    A hard cut at exactly `limit` characters lands mid-word about half the
+    time, and a description that stops at «… verificerings-workflow — p» reads
+    as a mistake rather than as a summary. Målt 3/10: 42 af 96 danske
+    artikelbeskrivelser på `/da/blog/` endte sådan, fordi
+    `make_blog_index.py` skar `desc[:180]`. Samme klasse fejl lå i
+    `clamp_title`, som stoppede på et ord uden nogen markering — 11 af 269
+    byggede sider fik en `<title>` *og* en brødkrumme der sluttede midt i en
+    sætning («… om EU-compliance, tilgængelighed **og**»).
+
+    `limit` er et loft for hele resultatet, `…` tæller med, så en kortere
+    grænse her end i `clamp_desc` ikke sender en title over 60 tegn.
+
+Snittet må heller ikke efterlade en åben parentes. Titlen på
+    `dpa-generator.html` er «Free DPA Generator (GDPR Article 28 Data Processing
+    Agreement)», så et ord-grændesnit ved 60 tegn gav «… Data Processing…» — en
+    titel der så ud som om den var redigeret i hånden, hvilket den var.
+    Parentesen lukkes derfor *inden* ellipse-tegnet, så «… Data Processing…)»
+    både er afsluttet og stadig siger hvilken artikel 28-parentes der er tale
+    om. At kassere hele parentesen ville også gøre titlen kortere, men så taber
+    siden de nøgleord titlen ranker på."""
+    t = re.sub(r"\s+", " ", htmllib.unescape(t)).strip()
+    if len(t) <= limit:
+        return t
+    head = t[: limit - 1]
+    if " " in head:
+        head = head[: head.rfind(" ")]
+    head = head.rstrip(" ,;:—–-")
+    # Luk de parenteser der står åbne, i den rækkefølge de blev åbnet.
+    stak = []
+    for tegn in head:
+        if tegn in "([":
+            stak.append(")" if tegn == "(" else "]")
+        elif tegn in ")]" and stak:
+            stak.pop()
+    return head + "".join(reversed(stak)) + "…"
+
+
 def clamp_title(t: str, limit: int = 60) -> str:
     t = htmllib.unescape(re.sub(r"\s+", " ", t)).strip()
     if len(t) <= limit:
@@ -376,10 +416,7 @@ def clamp_title(t: str, limit: int = 60) -> str:
             head = t.split(sep, 1)[0].strip()
             if 40 <= len(head) <= limit:
                 return head
-    cut = t[:limit]
-    if " " in cut:
-        cut = cut[: cut.rfind(" ")]
-    return cut.rstrip(" ,;:—–-")
+    return ellipsize(t, limit)
 
 
 def clamp_desc(d: str, limit: int = 160) -> str:
@@ -390,10 +427,7 @@ def clamp_desc(d: str, limit: int = 160) -> str:
     m = list(re.finditer(r"[.!?](?=\s|$)", head))
     if m and m[-1].end() >= 70:
         return head[: m[-1].end()]
-    cut = head[: limit - 1]
-    if " " in cut:
-        cut = cut[: cut.rfind(" ")]
-    return cut.rstrip(" ,;:—–-") + "…"
+    return ellipsize(d, limit)
 
 
 def esc(s: str) -> str:

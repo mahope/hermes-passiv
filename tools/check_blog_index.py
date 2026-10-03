@@ -48,6 +48,7 @@ fordriver dem igen.
 from __future__ import annotations
 
 import argparse
+import html as html_mod
 import re
 import subprocess
 import sys
@@ -67,6 +68,11 @@ HERO_RE = re.compile(r"(\d+) English guides on .*? plus (\d+) Danish guides", re
 CHROME_RE = re.compile(
     r'<nav class="site-nav".*?</nav>|<footer class="site-footer".*?</footer>', re.S)
 DA_HERO_RE = re.compile(r"(\d+) guider p&aring; dansk.*?(\d+) engelske guider", re.S)
+# Beskrivelsen under hvert artikelnavn. Kun den kedje `<span …>…</span>` med
+# præcis den markør generatoren skriver, så en hvilken som helst anden brødtekst
+# på siden ikke kan få porten til at råbe.
+DESC_RE = re.compile(
+    r'<span style="color:var\(--color-text-muted\);font-size:0\.88rem">(.*?)</span>', re.S)
 
 
 def guide_slugs(folder: Path) -> list[str]:
@@ -163,6 +169,7 @@ def dom_da() -> tuple[list[str], dict[str, str]]:
                  "`python3 tools/make_blog_index.py`"], detaljer)
     tekst = DA_INDEX.read_text(encoding="utf-8")
     fund.extend(fejl_mod_da(tekst, da, en))
+    fund.extend(dom_beskrivelser(DA_INDEX))
     with tempfile.TemporaryDirectory() as tmp:
         ny = genereret_da(Path(tmp))
         if ny is None:
@@ -198,11 +205,39 @@ def dom_da_chrome() -> tuple[list[str], int]:
     return fund, len(sider)
 
 
+def fejl_beskrivelser(tekst: str) -> list[str]:
+    """Hver artikelbeskrivelse skal have en afslutning.
+
+    Målt 3/10: `make_blog_index.py` skar `desc[:180]` — et hårdt snit på 180
+    tegn. 42 af de 96 danske beskrivelser endte midt i et ord på netop 179 eller
+    180 tegn, og de så ud som «… verificerings-workflow — p». Det er arvet: den
+    engelske side gjorde det samme ved 89 af 189 (47 %), så den nye danske kode
+    kopierede en fejl der allerede lå på sitets egen indeks.
+
+    Derfor skriver generatoren nu `pagepass.ellipsize`, som stopper på ordet og
+    sætter `…`. Denne regel er ratchetten: en ny generator, en ny sætning eller
+    en håndredigeret beskrivelse kan ikke komme tilbage uden at porten dømmer det.
+    """
+    fund = []
+    for beskrivelse in DESC_RE.findall(tekst):
+        ren = html_mod.unescape(beskrivelse).strip()
+        if not ren.endswith(("…", ".", "!", "?", "»", "”")):
+            fund.append(f"  artikelbeskrivelse uden afslutning: …{ren[-34:]!r}")
+    return fund
+
+
+def dom_beskrivelser(index: Path) -> list[str]:
+    if not index.exists():
+        return []
+    return fejl_beskrivelser(index.read_text(encoding="utf-8"))
+
+
 def dom(index: Path = INDEX) -> tuple[list[str], dict[str, str]]:
     en = guide_slugs(ROOT / "site" / "blog")
     da = guide_slugs(ROOT / "site" / "da" / "blog")
     tekst = index.read_text(encoding="utf-8")
     fund = fejl_mod(tekst, en, da)
+    fund.extend(dom_beskrivelser(index))
     detaljer = {}
     with tempfile.TemporaryDirectory() as tmp:
         ny = genereret(Path(tmp))
@@ -322,6 +357,20 @@ def self_test() -> int:
     tjek("dansk navigation på den engelske indeks er rød",
          bool(dom_chrome(shell.replace('href="/da/blog/"', 'href="/blog/"'))))
     tjek("dansk navigation på /da/blog/ er grøn", not dom_chrome(shell))
+
+    # 8e. Polaritet: en artikelbeskrivelse uden afslutning er rød. Målt 3/10 —
+    #     `desc[:180]` skar 42 af de 96 danske beskrivelser midt i et ord. Her
+    #     genskabes det gamle snit i den rigtige fil, og porten skal se det.
+    da_midt = None
+    for beskrivelse in DESC_RE.findall(da_rigtig):
+        hvis_ikke = html_mod.unescape(beskrivelse).rstrip("…")
+        tjek_dom = da_rigtig.replace(beskrivelse, hvis_ikke, 1)
+        tjek("dansk beskrivelse uden afslutning er rød",
+             any("uden afslutning" in f for f in fejl_beskrivelser(tjek_dom)))
+        tjek("uændret dansk beskrivelse er grøn", not fejl_beskrivelser(da_rigtig))
+        da_midt = hvis_ikke
+        break
+    tjek("porten fandt en afkortet dansk beskrivelse at genskabe", da_midt is not None)
 
     # 9. Målingen på de rigtige filer skal være grøn — ellers dømmer resten
     #    ingenting, fordi `en`/`da` er tomme.

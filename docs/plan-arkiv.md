@@ -5665,3 +5665,52 @@ frigøre en plads med `deactivate` bagefter, og en nede tæller-KV låser ingen 
 370/370 → **375/375**. Ruten står nu i `docs/stripe-kontrakt.md`.
 
 **Gaten.** `python3 tools/quality_gate.py` grøn (152 steps).
+
+## 3/10 — Afkortede tekster sluttede midt i en sætning (`ceo/afkortede-tekster`)
+
+**Fund 1 (LAV) — 42 af 96 danske artikelbeskrivelser klippet midt i et ord.**
+`tools/make_blog_index.py` skar `desc[:180]` — et hårdt snit på 180 tegn, i både
+den engelske og den danske indeksgenerator. Målt på den *byggede* side gav det
+42 af 96 danske beskrivelser (44 %) der endte på præcis 179 eller 180 tegn, fordi
+snittet faldt midt i et ord: «…admin vs. front-end-ansvar og en
+verificerings-workflow — p». Kilden er hel: 42 artikler har en description på
+*mere* end 180 tegn, så det er snittet der ødelægger den. Fundet er arvet — den
+engelske side gjorde det samme ved 89 af 189 (47 %).
+
+**Fund 2 (LAV) — 11 af 269 sider fik en `<title>` og en brødkrumme uden
+afslutning.** `pagepass.clamp_title` gik først efter en sætningsgrænse, men kun
+hvis første led var 40–60 tegn; «Guider — …» har et første led på 6, så den faldt
+igennem til `cut[: cut.rfind(" ")]` og stoppede på et ord. Den nye `/da/blog/`-side
+viste «Forside › Guider — alle artikler om EU-compliance, tilgængelighed **og**».
+Målt i rigtig Chromium ved 390 og 1280 px var `scrollWidth == clientWidth` på både
+`ol` og `li`, altså kilden der var klippet — ikke CSS.
+
+**Rettelsen er én funktion, `pagepass.ellipsize`.** Den skærer på ordgrænse og
+sætter `…`; `clamp_title` og `clamp_desc` kalder den, og begge indeksgeneratorer
+gør det samme. Den lukker desuden en åben parentes *inden* ellipse-tegnet, fordi
+titlen på `dpa-generator.html` er «Free DPA Generator (GDPR Article 28 Data
+Processing Agreement)» — et ord-grændesnit ved 60 tegn gav ellers «… Data
+Processing…», som lignede en titel redigeret i hånden. Det giver «Free DPA
+Generator (GDPR Article 28 Data Processing)…»: afsluttet *og* stadig med de
+nøgleord siden ranker på. At kassere hele parentesen ville også have være
+balanceret, men så tabte siden 34 tegn keywords — det blev målt og forkastet.
+
+**Fund undervejs — tre kilder med titler afkortet i hånden.** Den nye
+parenregel fandt dem: `site/ropa-generator.html`, `site/ropa-generator-da.html` og
+`site/da/blog/eaa-frister-2026.html` havde alle en *ulukket* parentes, fordi nogen
+havde skåret titlen ved 60 tegn med rå sed og ladt den ligge. Ikke
+`clamp_title`'s skyld — kildefilen var allerede skåret. Rettet i kilden til de
+fulde titler.
+
+**To ratchetten, begge med målt polaritet.** `seo_check.py` fik to domme: en
+`<title>` må ikke slutte på en forbindelse eller artikel, og må ikke have ulukket
+parentes. `check_blog_index.py` fik et: hver artikelbeskrivelse på begge
+indekssider skal have en afslutning. Polaritet målt på rigtige filer ved at
+genskabe den gamle kode — `ellipsize` uden `…` giver **0 → 14** fund i `seo_check`,
+`desc[:180]` giver **0 → 131** i `check_blog_index`. Selvtestene udvidet til
+18/18 og `seo_check --self-test` grøn med otte titel-prober.
+
+**Målt på den byggede side, ikke på koden.** `seo_check` **315 sider, 0 fund**,
+`quality_gate.py` grøn (154 steps), `stripe-worker.test.mjs` 375/375. Brødkrummens
+sidste crumb på `/da/blog/` er nu «Guider — alle artikler om EU-compliance,
+tilgængelighed og…».

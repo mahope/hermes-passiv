@@ -1,31 +1,46 @@
 # STATUS
+- **Afkortede tekster sluttede midt i en sætning — rettet 3/10.** Målt på det
+  byggede site: 42 af 96 danske artikelbeskrivelser på `/da/blog/` endte på
+  «verificerings-workflow — p» (hårdt snit `desc[:180]`), og 11 af 269 sider fik
+  en `<title>` og en brødkrumme der sluttede midt i en sætning («…tilgængelighed
+  **og**»), fordi `clamp_title` stoppede på et ord uden at markere det. Nu skriver
+  begge veje `pagepass.ellipsize`, som stopper på ordet og sætter `…`, og som
+  lukker en parentes *inden* ellipse-tegnet, så «Free DPA Generator (GDPR
+  Article 28 Data Processing…)» stadig siger hvilken art. 28-titel den gav.
+  Fund undervejs: tre kilder havde titler afkortet i hånden med rå sed, så de
+  stod med ulukket parentes («Free RoPA Generator (GDPR Article 30 Records of
+  Processing») — rettet i kilden. To ratchetten, begge med målt polaritet:
+  `seo_check` **0 → 14** fund på mutationen, `check_blog_index` **0 → 131**.
 - **Rød CI på `main` rettet 3/10 (rød siden 02:44).** `rule-claims-selftest`
   døde med «`da/blog/index.html` står ikke i PRODUCT_ENGINE». Ikke sidens fejl: to
   selftest-arme muterer en artikels `meta description` og rettede kun `/blog/`, så
-  den danske hub stod med et **forældet** citat — og et forældet citat er
-  indeksets *eget* løfte, præcis den fejl porten findes for. Nu retter begge arme
-  alle indekser, og polaritets-armen køres på `/blog/` **og** `/da/blog/`. Målt:
-  selftest grøn, `check_rule_claims` 240 løfter 0 fejl. Den danske guides-indeks
-  (`cd48b18`) er færdig i historikken, men kunne ikke deployes fordi gaten var rød.
+  den danske hub stod med et **forældet** citat. Nu retter begge arme alle
+  indekser. Den danske guides-indeks (`cd48b18`) holdt i historikken.
 - **Tre review-fund fra 29/9 lukket 3/10.** (1) `/license-lookup` sagde «two
   websites on EUComply Pro, five elsewhere» — modsagt af tre andre sider. Nu
-  **5/3/3/3/1** som tal, hvert bundet til sin `product_key`, dømt mod
-  `tools/stripe_catalog.json` (25/25 selvtest, rød på tre mutationer). (2)
-  Tak-sidens `<title>` fulgte ikke `<h1>` på en fejl: `titel()` sætter begge
-  steder (128/128; 18 røde på den gamle kode). (3) `POST /api/license/devices`
-  havde ingen tæller — nu 30/time pr. IP på eget scope, målt 429 på det 31. kald,
-  `validate` svarer stadig 200 (375/375; rød på den gamle worker).
+  **5/3/3/3/1** som tal, dømt mod `tools/stripe_catalog.json`. (2) Tak-sidens
+  `<title>` fulgte ikke `<h1>` på en fejl: `titel()` sætter begge steder. (3)
+  `POST /api/license/devices` havde ingen tæller — nu 30/time pr. IP, målt 429 på
+  det 31. kald mens `validate` stadig svarer 200.
 - **Deploy:** `build-info.json` står på **`2f91b61`** på alle tre domæner, så
-  `ceo/license-selvbetjening` og `ceo/support-koen-er-donation` er målt
-  `DEPLOY OK`. `ceo/da-guides-indeks` (`cd48b18`) er **ikke** live: CI var rød, og
-  denne commit retter årsagen. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 fuldt
-  landede slettet; `ceo/hub-readme-note` har kun 1 plan-note, intet kode — se ❓.
+  `ceo/license-selvbetjening` er målt `DEPLOY OK`. `ceo/da-guides-indeks` (`cd48b18`)
+  var **ikke** live fordi CI var rød. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10:
+  2 fuldt landede slettet; `ceo/hub-readme-note` har kun 1 plan-note, intet kode.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der
   ringer til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen,
   `/blog/`s danske-guider-tal. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: afkortede titler og beskrivelser får en afslutning
+  ceo/afkortede-tekster 2026-10-03 04:05`
+
+- **`DEPLOY OK 2026-10-03` — `ceo/license-tal-og-tæller` er live, målt på
+  indhold.** `build-info.json` står på **`01b5e2f`** på alle tre domæner.
+  Live `/license-lookup` har ét «Free up a machine», **5** `<span
+  data-seat-product>` med tallene 5/3/3/3/1, og `/thanks` har både `#title` og
+  `document.title` sat i `titel()`.
 
 - `VERIFICÉR DEPLOY: antal fra katalogen + faneblad på tak-siden + tæller på
   /api/license/devices ceo/license-tal-og-tæller 2026-10-03 03:20`
@@ -37,10 +52,11 @@
   Samme commit-slug dækker den forrige note: `/thanks` har 1
   `href="/license-lookup"` + «Lost your key?» og 2 `href="/support"`.
 
-- **`DEPLOY-MISSING 2026-10-03` — `ceo/da-guides-indeks` (`cd48b18`) er ikke
-  live.** Kørslen 02:44 døde i `rule-claims-selftest` (se STATUS), så
-  deploy-jobbet aldrig kørte. Årsagen er rettet i `ceo/license-tal-og-tæller`;
-  næste iteration verificerer indholdet på `/da/blog/`, ikke bare HTTP 200.
+- **`DEPLOY OK 2026-10-03` — `ceo/da-guides-indeks` (`cd48b18`) er live, målt på
+  indhold.** Den holdt i 3 døgn og døde i `rule-claims-selftest`; årsagen er
+  rettet i `01b5e2f`. Live `/da/blog/` svarer **200**, `<h1>` er «Alle danske
+  guider», og siden linker **87** artikler — resten af de 96 ligger på
+  `cleancopy.tools` som cross-domain, præcis som buildet skriver dem.
 
 - **`DEPLOY OK 2026-10-03` — `ceo/scan-sider-laest-tal` er live, målt på indhold.**
   `build-info.json` står på **`55ea279`** på alle tre domæner. `/compliance-site-check`

@@ -35,6 +35,59 @@ def find(text: str, rx: str, flags=re.I | re.S) -> list[str]:
     return re.findall(rx, text, flags)
 
 
+# Ord der *ikke* kan afslutte en sætning, på begge sprog.
+#
+# Målt 3/10: `pagepass.clamp_title` skar 93 `<title>` ved 60 tegn og stoppede på
+# det næste mellemrum uden at markere snittet, så 11 af 269 byggede sider fik en
+# title og en brødkrumme der sluttede midt i en sætning — «… om EU-compliance,
+# tilgængelighed og». Titlen er det læseren ser i vindueslisten, i historikken og i
+# søgeresultatet, så et snit uden `…` læses som en fejl og ikke som en
+# sammenfatning. Nu skriver `clamp_title` `…`, og den her regel fanger den
+# næste gang nogen glemmer det — også på en side der ikke kommer fra
+# `clamp_title`.
+#
+# Kun titler der er *lige ved* længdegrænsen dømmes. «Skriv til os» er en hel
+# titel der på dansk ender på et præposition; uden længdekravet ville porten
+# finde dusinvis af sådanne og være ligegyldig.
+DANGLING_WORDS = {
+    # dansk
+    "og", "eller", "men", "for", "med", "at", "som", "der", "den", "det", "en", "et",
+    "i", "på", "af", "til", "om", "har", "er", "var", "uden", "over", "under",
+    "mellem", "ved", "hvor", "hvad", "hvilken", "din", "dine", "vores", "deres",
+    # engelsk
+    "a", "an", "the", "of", "for", "with", "and", "or", "in", "on", "to", "at",
+    "by", "from", "as", "is", "are", "was", "that", "this", "your", "our", "its",
+    "any", "every", "no", "not", "via", "than", "but", "if", "so", "into", "your",
+}
+# Under denne længde er en titel ikke klippet af `clamp_title` — medmindre den
+# bærer et `…`, og så skal den ikke fejles uanset længde.
+DANGLING_MIN_LEN = 50
+
+
+def title_ends_mid_sentence(title: str) -> bool:
+    """True hvis titlen er klippet ved en ordgrænse uden nogen afslutning."""
+    t = htmllib.unescape(title).strip()
+    if not t or t.endswith(("…", ".", "!", "?", ":", '"', "”", "»", ")", "0", "%")):
+        return False
+    if len(t) < DANGLING_MIN_LEN:
+        return False
+    sidste = re.split(r"[\s—–|/]+", t)[-1].strip(".,;:!?()[]\"'«»").lower()
+    return bool(sidste) and sidste in DANGLING_WORDS
+
+
+def title_parentheses_unbalanced(title: str) -> bool:
+    """True hvis titlen har en åben parentes der aldrig lukkes.
+
+    Samme fejlklasse som ovenfor, en anden manifestation: en titel der er
+    afkortet i hånden i stedet for af `clamp_title`. Målt 3/10 — tre kilder
+    havde en ulukket parentes, fordi nogen havde skåret titlen ved 60 tegn med
+    rå sed og ladt den ligge der: «Free RoPA Generator (GDPR Article 30 Records
+    of Processing». Porten dømmer *formen*, så den ser den også på en ny side,
+    og de tre er rettet i kilden — ikke ved at slå reglen fra."""
+    t = htmllib.unescape(title).strip()
+    return t.count("(") != t.count(")") or t.count("[") != t.count("]")
+
+
 def check_page(text: str, name: str) -> list[str]:
     errs: list[str] = []
     head_m = re.search(r"<head\b.*?</head>", text, re.S | re.I)
@@ -47,6 +100,10 @@ def check_page(text: str, name: str) -> list[str]:
         errs.append(f"title {len(htmllib.unescape(titles[0]).strip())} chars")
     elif len(titles[0].strip()) < 10:
         errs.append("title too short")
+    elif title_ends_mid_sentence(titles[0]):
+        errs.append(f"title slutter midt i en sætning: {htmllib.unescape(titles[0]).strip()[-28:]!r}")
+    elif title_parentheses_unbalanced(titles[0]):
+        errs.append(f"title har ulukket parentes: {htmllib.unescape(titles[0]).strip()[-40:]!r}")
 
     desc = find(head, r'<meta\s+name="description"\s+content="([^"]*)"')
     if len(desc) != 1:
@@ -194,6 +251,11 @@ def _ids_only_errors(page: str) -> list[str]:
     return [e for e in check_page(page, "probe") if e.startswith("duplicate id")]
 
 
+def _title_only_errors(page: str) -> list[str]:
+    return [e for e in check_page(page, "probe")
+            if e.startswith("title slutter") or e.startswith("title har ulukket")]
+
+
 def self_test() -> int:
     """Prove the duplicate-id rule fires, and that it fires for the right reason.
 
@@ -236,6 +298,28 @@ def self_test() -> int:
         b='<script>var s="<p id=\\"indhold\\">";</script><h3 id="indhold">ok</h3>')), 0)
     expect("unikke id'er", _ids_only_errors(shell.format(
         b='<section id="a"><h2 id="b">t</h2></section><h3 id="c">u</h3>')), 0)
+
+    # Den afkortede titel. `clamp_title` skar ved 60 tegn og stoppede på det næste
+    # mellemrum, så titlen *og* brødkrummen sluttede midt i en sætning.
+    def _side(title: str) -> str:
+        return f"<head><title>{title}</title></head>" + shell.format(b="")
+
+    # Målt 3/10 på det byggede site: 11 af 269 sider.
+    expect("dansk titel klippet på «og»", _title_only_errors(
+        _side("Guider — alle artikler om EU-compliance, tilgængelighed og")), 1)
+    expect("engelsk titel klippet på «with»", _title_only_errors(
+        _side("Copy From ChatGPT Into Word or Google Docs (Without the")), 1)
+    expect("kort titel på «og» er hel", _title_only_errors(_side("Skriv til os")), 0)
+    expect("titel med … er hel", _title_only_errors(
+        _side("Guider — alle artikler om EU-compliance, tilgængelighed og…")), 0)
+    expect("titel med hel sætning er hel", _title_only_errors(
+        _side("7 Free Online Developer Text Tools — No Signup, No Login")), 0)
+
+    # Ulukket parentes: tre kilder var afkortet i hånden med rå sed. Målt 3/10.
+    expect("titel med ulukket parentes er rød", _title_only_errors(
+        _side("Free RoPA Generator (GDPR Article 30 Records of Processing")), 1)
+    expect("titel med lukket parentes er hel", _title_only_errors(
+        _side("Free RoPA Generator (GDPR Article 30 Records of Processing)")), 0)
 
     # The root cause. _toc must start from the ids the article already carries,
     # including ids on non-headings, or it re-issues one that is already taken.

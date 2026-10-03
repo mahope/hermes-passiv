@@ -28,6 +28,9 @@ den danske på dansk med danske emne-overskrifter og kun de danske artikler.
 """
 import glob, html, os, re, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pagepass import ellipsize
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, 'site')
 BASE = 'https://hermes-passiv.pages.dev'
@@ -197,7 +200,7 @@ def main(argv=None):
             out.append(
                 f'<li style="margin-bottom:20px">'
                 f'<a href="{href}" style="color:var(--color-accent);font-weight:600;text-decoration:none;font-size:1.02rem">{html.escape(title)}</a>'
-                + (f'<br><span style="color:var(--color-text-muted);font-size:0.88rem">{html.escape(desc[:180])}</span>' if desc else '')
+                + (f'<br><span style="color:var(--color-text-muted);font-size:0.88rem">{html.escape(ellipsize(desc, 180))}</span>' if desc else '')
                 + '</li>\n')
         out.append('</ul>\n</section>\n')
 
@@ -295,7 +298,7 @@ def dansk_index(da_posts, da_grouped, n_en):
             out.append(
                 f'<li style="margin-bottom:20px">'
                 f'<a href="/da/blog/{slug}" style="color:var(--color-accent);font-weight:600;text-decoration:none;font-size:1.02rem">{html.escape(title)}</a>'
-                + (f'<br><span style="color:var(--color-text-muted);font-size:0.88rem">{html.escape(desc[:180])}</span>' if desc else '')
+                + (f'<br><span style="color:var(--color-text-muted);font-size:0.88rem">{html.escape(ellipsize(desc, 180))}</span>' if desc else '')
                 + '</li>\n')
         out.append('</ul>\n</section>\n')
 
