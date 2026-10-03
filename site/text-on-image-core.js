@@ -381,6 +381,21 @@
       return { x: tx, y: ty, ratio: best, rykket: tx !== startX || ty !== startY };
     }
 
+    // Marker koden i sig selv, så bruteren kan kopiere den med Ctrl+C. Det er
+    // vejen for de browsere der nægter skriveadgang til udklipsholderen, og
+    // derfor skal den *kun* bruges når kopieringen faktisk mislykkedes — ellers
+    // ville den fjerne den markering læseren netop har bedt om.
+    function markText(el) {
+      if (!el || !window.getSelection || !document.createRange) return;
+      try {
+        var rg = document.createRange();
+        rg.selectNodeContents(el);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(rg);
+      } catch (e) { /* en browser der ikke kan markere er ikke en fejl i værktøjet */ }
+    }
+
     // Hvad kernen gjorde, i læserens sprog. `scrimPct` og `hex` er tal og
     // farver fra kernens egen måling — aldrig noget en besøgende har skrevet —
     // og hele strengen kommer fra siden, så en dansk læser ikke møder en
@@ -451,6 +466,18 @@
         delta = '<br><span class="ti-delta" data-ti-delta="' + foerTekst + '|' + nuTekst + '">'
           + s.delta.replace('%s', foerTekst).replace('%s', nuTekst) + '</span>';
       }
+      // Den målte tekstfarve som en kode bruteren kan tage med. `hexNu` er
+      // farvefeltets egen værdi — altså den farve målingen faktisk regnede på,
+      // også efter «Fix it», fordi den handler skriver tilbage i feltet. Uden
+      // denne linje måtte bruteren finde den valgte farve ved at kigge på
+      // farvefeltet og skrive den af i Figma: værktøjet målte, rettede og
+      // sagde «#1a1a1a» i en sætning, men gav ingen værdi at kopiere.
+      //
+      // Det er en `<button>` og ikke et `<span>`, fordi den *gør* noget
+      // (kopierer) — punkt 2 i husets kvalitetsliste. `s.copyHex` er sidens egen
+      // tekst fra den side den ligger på, altså ikke noget en besøgende kan
+      // skrive, og det er samme behandling resten af `s.*` får her.
+      var hexNu = String($('fg').value || '').toLowerCase();
       // Alt der kommer fra brugeren (`r`) er et tal, ikke markup, og alt
       // `s.*` er sidens egen tekst fra den side den ligger på. Ingenting her
       // bygger en streng af noget en besøgende kan skrive. Knappen bruges
@@ -471,6 +498,12 @@
         (passAA && !passAAA ? '<br>' + (s.aaNotAAA || '') + ' (' + fmt(aaaNeed) + ':1).' :
          passAAA ? '<br>' + (s.alsoAAA || '') :
           '<br>' + (s.tryFix || '')) +
+        // Koden ligger lige under tallet og *før* de tre knapper, fordi den
+        // er svaret på målingen — de tre er de næste handlinger. Den skriver
+        // aldrig en værdi den ikke selv har målt: `hexNu` er farvefeltet.
+        (hexNu ? '<br><button type="button" class="ti-hex" data-ti-hex="' + hexNu + '" title="'
+          + (s.copyHex || '') + '"><span class="ti-swatch" style="background:' + hexNu
+          + '"></span><code>' + hexNu + '</code></button>' : '') +
         (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
         // Før → nu står *før* beskrivelsen af hvad kernen gjorde: tallet er
         // beviset, og `.ti-fixed` er så den Grund det står der.
@@ -499,6 +532,33 @@
       // bruteren trykkede. Samme værdi som står i `data-ti-delta`s første
       // halvdel, så de to kan ikke komme i ukig.
       if (btn) btn.addEventListener('click', function () { applyFix(fix, r); });
+      var hexBtn = res.querySelector('[data-ti-hex]');
+      // Kopien skal lykkes, ellers må knappen ikke sige at den gjorde det. Et
+      // nægtet `clipboard`-løfte er et normalt udfald (ingen tilladelse, ikke
+      // et https-domæne), så da markerer vi koden i stedet for at lyve — og
+      // bruteren kan tage den med Ctrl+C. `isConnected` før tilbagestillingen,
+      // fordi `updateAll()` kan have skrevet et nyt resultat imens, og så skal
+      // vi ikke røre en knap der ikke længere findes.
+      if (hexBtn) hexBtn.addEventListener('click', function () {
+        var kode = hexBtn.getAttribute('data-ti-hex');
+        var svin = hexBtn.querySelector('code');
+        var vis = function (tekst) {
+          if (hexBtn.isConnected && svin && svin.isConnected) svin.textContent = tekst;
+        };
+        var ryd = function () { vis(kode); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(kode).then(function () {
+            vis(s.copiedHex || 'Copied');
+            setTimeout(ryd, 1800);
+          }, function () {
+            markText(svin);
+            vis(s.copyManual || kode);
+          });
+          return;
+        }
+        markText(svin);
+        vis(s.copyManual || kode);
+      });
       var dl = res.querySelector('[data-ti-dl]');
       if (dl) dl.addEventListener('click', downloadPng);
       var spot = res.querySelector('[data-ti-spot]');

@@ -652,6 +652,15 @@ a.ext::after { content: ""; display: inline-block; width: 0.65em; height: 0.65em
 .ti-pass { background: rgba(22,163,74,.12); border: 1px solid rgba(22,163,74,.45); }
 .ti-fail { background: rgba(220,38,38,.10); border: 1px solid rgba(220,38,38,.45); }
 .ti-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: .8rem; color: #fff; }
+/* Den målte tekstfarve 3/10. Den ligner `.ti-badge` i form, fordi den står
+   lige under den og er samme slags *svar* — ikke en knap i rækken af dem.
+   44 px højde og synligt fokus, fordi den er en trykflade. Prøvefeltet er
+   16 px, så koden er stadig læsbar på en telefon. */
+.ti-hex { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-2); color: var(--color-text); font-size: .9rem; cursor: pointer; }
+.ti-hex:hover { border-color: var(--color-accent); }
+.ti-hex:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.ti-hex .ti-swatch { display: inline-block; width: 18px; height: 18px; border: 1px solid var(--color-border); border-radius: 999px; }
+.ti-hex code { font-family: var(--mono); font-size: .9rem; }
 .ti-error { color: var(--color-red); font-size: .9rem; margin-top: 10px; min-height: 1.2em; }
 input[type="color"].ti-color { width: 52px; height: 44px; border: 1px solid var(--color-border); border-radius: 8px; background: none; padding: 2px; cursor: pointer; }
 .ti-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); }

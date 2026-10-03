@@ -6707,3 +6707,187 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
 **Nyt flyttekrav opstod i samme iteration:** planen var 37 KB mod et
 loft på 40, fordi `## Feature-kø` holdt 23 leverede punkter. Den er
 nu en kø af 5 åbne idéer, og alt leveret ligger her.
+
+
+## Fra IMPLEMENTATION_PLAN.md — 3/10 16:2x (afkrydsede punkter)
+
+- **CI stod rød på `main` siden 11:21 og holdt 3 commits tilbage.** Eneste
+  fejl var `check_plan_status.py`: STATUS havde **38** linjer mod de **25**
+  tilladelige. Alt andet i gaten var grønt lokalt (**155** steps), så `1890971`,
+  `b96b6bc` og `40f24d0` lå uden at blive deployet — blandt dem «skriv
+  før-tallet ved en kontrast-rettelse» på alle **4** sider. Næste iteration
+  skal domme planen **før** squash: **4** min **35** s gik i CI.
+- **CEO-køens 5 punkter er målt lukkede i koden, 3/10.**
+  `handleUrlInspect` får `env` (`_worker.js:299`), `thanks.html` skelner
+  **202** fra `ranOut`, `net.js` gør **429** endelig og viser serverens egen
+  sætning, `cscFetch` prøver hvert redirect-hop, og værnet pakker IPv4-mapped
+  IPv6 ud. Sentry er sat op, og `/api/url-inspect` + `/api/header-check`
+  svarer **200** på live 3/10.
+- **Artiklens indlejrede måler er målt i paritet med værktøjet.** `delta:`,
+  `findSpot:`, `downloadBtn:`, `demoNote:`, `movedSpot:` og `keptSpot:` står
+  hver **1** gang i hver af de **4** kontrastsider, så kernen er delt og ikke
+  kopieret. Målt på `site/` 3/10; ingen ny kode behøves.
+- **Næste opgave: `## Feature-kø` punkt 1** — en dom på planen før merge.
+  Egne opgaver: punkter 2–5. Alt i «Åbne opgaver» afventer Mads' beslutning.
+- PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. CI grøn på `main` (ét kald,
+  3/10).
+- **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
+  domæne, bogens betalte udgave mod **7** gratis-sider, **2** desktop-apps mod
+  Lemon Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
+
+- ~~`ceo/scan-hvad-er-aendret`~~ **DEPLOY OK 3/10.** Hentet fra live:
+  `mahope.tools/scan` har «Start here — the 3 findings that matter most» og
+  «Since your last scan of this page», `mahope.tools/scan-da` har «Start her —
+  de 3 fund der betyder mest» og «Siden din sidste scanning af denne side».
+  *Ikke* kørt: den to-scaning-interaktion i en rigtig browser (localStorage).
+  Indholdet i de to byggede sider er målt på live, og det er den kode der
+  tegner begge strenge.
+
+- ~~`ceo/scan-score-af-fundene`~~ **DEPLOY OK 3/10.** Live `/scan` med et link
+  der siger `s=100`: **«71/100 — Grade C»** + «2 error(s), 1 warning(s)»,
+  `/scan-da`: «2 fejl, 1 warning(s)», **0** `onerror`-noder i `#result` på begge.
+  Porten `node tests/scan-share.test.mjs` siger **84/84**.
+
+- ~~`ceo/find-bedste-sted`~~ **Delvis DEPLOY OK 3/10.** Siden er live med knappen
+  og kernen (`text-on-image-core.js:328-367`) på EN + DA, og
+  `check_contrast_sampling.py` er grøn med **58** løfter + `--self-test` **63/63**.
+  Den *interaktive* prøve (upload → «find det bedste sted» → bedre tal) er ikke
+  kørt i en rigtig browser i denne iteration — kun kildekoden og den byggede
+  side er målt.
+
+- Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
+  `docs/plan-arkiv.md`.
+
+~~**En nøgle der ikke aktiverer, har ingen selvbetjening.**~~ **Færdig 3/10.**
+
+~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
+
+~~Generatorerne lavede dokumentet, men ikke vejen videre.~~ **Færdig 2/10.**
+
+~~DA-siden mangler download-knappen på rapporten.~~ **Ikke et problem.**
+
+~~`check_pro_table.py` kører ikke i gaten.~~ **Færdig, målt 2/10** med
+
+~~**Byggetagen sletter sidelinje for 28 selectors designsystemet ikke ejer.**~~
+
+~~**Et delt resultats score kommer fra linket, ikke fra fundene.**~~
+
+~~Én side med alle priser.~~ **Leveret 2/10** — `/pricing` (EN + DA) lister
+    alle 12 katalogvarer med beløb, periode, omfang, gratis-mod-Pro og en
+    købsvej, bygget af `tools/pricing_page.py` fra katalogen. Den **tager ikke
+    imod betaling** — hver række linker til produktets egen købsside — så de tre
+    porte bygget på «én købsvej pr. produkt» kan blive ved med at være strenge.
+    Målt først: 0 af de 102 ruter nævnte to produkter i `<title>`/`<h1>`, så
+
+~~**Tjekket lå på mahope.tools, ikke på det site, der sælger det.**~~ **Leveret
+    2/10** — `deskuptime.com` og `/da/` har nu ét tjek i `#check` lige under
+    heroen, der kalder `/api/url-inspect` og svarer på de to første af de tre
+    spørgsmål i sit eget h1. Hvem: alle der lander på forsiden (4 besøgende,
+    100 % bounce, 0 s). Tal: checks pr. uge mod forsiden (baseline **0** — der var
+    ingen kodevej til den). Accept: heroens primære handling er tjekket, formen er
+
+~~Samme tjek på de to andre forsider.~~ **Leveret — de tre er dækket nu.**
+    `deskuptime.com` (12/9) og `mahope.tools` (2/10) fik et HTTP-tjek, fordi deres
+    `<h1>` handler om *sitet*. `cleancopy.tools` fik i denne iteration et
+    **konverteringstjek** i stedet, fordi dens `<h1>` er «Copy any web page as
+    clean Markdown or plain text» — et HTTP-svar svarer ikke på det spørgsmål.
+    Målt før: 7 af 9 besøgende på `/`, 71 % bounce. Efter: adresse ind, rigtig
+
+~~En gate for frontdørs-tjekkene.~~ **Leveret 2/10** — `front-door` og
+    `front-door-selftest` kører i gaten. Dømmer **8** forsider fra
+    build-manifestet: præcis ét tjek pr. `#check`, erklæret motor + `/net.js`
+    indlæst, motoren leder præcis det form-id op, ingen rute uden `NET`, og formen
+    virker uden JavaScript. Selvtest **16/16**, polaritet målt ved **5**
+    mutationer af rigtige filer. Hvorfor: de 28 Chromium-kontroller lå i to
+
+~~Forsidens tjek smed den adresse læseren lige havde indtastet.~~ **Leveret
+    2/10.** Alle fire forsiders `next`-links bærer nu `#url=`, og de otte
+    modtagelsessider læser den. Hvem: alle der trykker den dybeste handling på
+    forsiden. Tal: felter der skal fyldes to gange pr. session (baseline: **2 →
+    1** på både `mahope.tools` og `cleancopy.tools` — målt på kode, ikke på
+    trafik). Accept: `check_url_handoff.py` grøn + **12** nye adfærdsdomme i
+
+~~**En simulering kunne ikke videresendes.**~~ **Leveret 2/10.** Se STATUS.
+    Hvem: designere der skal have en kollega til at se præcis den samme
+    simulering. Tal: delinger pr. uge mod simulatoren (baseline **0** — der var
+    ingen vej, kun Copy code og Download, som begge kræver modtageren sidder
+    med i samme værktøj). Accept: `cb-share.test.mjs` grøn og **RØD på den gamle
+    kode**. Datagrund: 1 besøgende på `/color-blindness-simulator` og 100 %
+
+~~**Blogindekset holdt op at dække alle guides.**~~ **Leveret 2/10.** Alle
+    189 guides (93 EN + 96 DA) har nu præcis ét link fra `/blog/`, de danske er
+    grupperet i de samme fem emner med beskrivelser, og `check_blog_index.py`
+    dømmer både dækningen og at siden er lig sin egen generator. Hvem: læsere
+    der leder efter en guide, og de 20 artikler der lå uden indgående links fra
+    en indeksside. Tal: guides uden link (baseline: **20** — 7 EN, 13 DA).
+
+~~**Tak-siden lovede hjælp på en donationsside.**~~ **Leveret 3/10.** Se
+    STATUS. Hvem: kunder der lige har betalt og så møder en nøgle der ikke
+    virker. Tal: links til `/support` der lover hjælp (baseline **1 af 274** i
+    den byggede side — kun `/thanks`; de 273 øvrige er fodnote, «say thanks» og
+    fire `hreflang`). Accept: ny port `support-link-text` grøn med **21/21**
+    selvtest, **1 rød** mod den gamle `thanks.html` i `dist/`, og browseren
+
+~~**Læsevisningen sluttede i et tomrum.**~~ **Leveret 2/10.** Hvem: en
+   læser der lige har læst to kapitler om cookies, DPA, NIS2 eller EAA — den
+   højeste vilje til at gøre noget på sit eget site. Tal: bogsider der linker
+   til et af vores egne værktøjer (baseline: **0 af 6**; målt på kildefilerne
+   mod `dist/`, hvor `/free-tools` og `/compliance-report` var de eneste interne
+   nævn). Accept: **6 af 6** bogsider har præcis ét `blog-tool-cta` **sidst i
+
+~~**En dansk læser blev sendt på den engelske indeks.**~~ **Leveret 3/10.**
+    `/da/blog/` findes nu, på dansk, med alle 96 danske guider, de fem danske
+    emner og dansk chrome; dansk nav, footer og brødkrumme peger derhen.
+    Hvem: de danske læsere — hele familien er dansk, og `/da/` er den rute
+    Mads' egne kunder kommer ind ad. Tal: danske sider der linker til den
+    engelske indeks i chrome (baseline **97 sider / 282 links**, målt på
+
+~~**Værktøjet sagde «try en mørkere farve» og lod læseren regne det ud.**~~
+    **Leveret 3/10.** Se punkt 1 i STATUS. Hvem: alle der lægger en hvid
+    overskrift på et todelt billede — den største indgangsside på sitet.
+    Tal: resultater der gik fra FAIL til PASS pr. klik (baseline **0**, fordi
+    der ikke var nogen knap; målt i browseren **1,16:1 → 3,04:1**). Accept:
+    `check_contrast_sampling` **38** løfter med 4 nye fix-domme, hvoraf dommen
+
+~~**Stedet, ikke kun tallet.**~~ **Leveret 3/10** (`845808f`). Hvem: alle der lægger en overskrift på et
+    foto med både en lys og en mørk flade — artiklen er 8 af 18 besøgende på
+    mahope.tools. Tal: billeder der består efter «find det bedste sted» (baseline
+    **0** — der var ingen vej; bruteren måtte trække teksten rundt for selv at
+    finde ud af, om den kunne ligge andet sted). Accept: ét klik flytter
+    teksten til det bedste af 20 målte steder, og porten dømmer pladseringen —
+
+~~**Den rettede grafik som en fil.**~~ **Leveret 3/10** (`65eef7f`). Hvem: designere der lægger tekst på et
+    foto og har brugt værktøjet til at få den til at bestå. Tal: downloads pr.
+    uge (baseline **0** — der var ingen vej; værktøjet endte ved et tal, og så
+    måtte bruteren selv finde ud af hvordan han fik sit rettede billede ud igen,
+    målt på koden 3/10). Accept: én klik giver et PNG af *billedet med
+    rettelsen* på alle fire sider, og porten dømmer den hentede fil — knap,
+
+~~**Et delt scanelink, der viste en tom formular.**~~ **Leveret 3/10.**
+    Se punkt 1 i STATUS. Hvem: bureauer og webbureauer, der scanner en kundes
+    side og vil sende fundene videre. Tal: fund delt pr. scanning med et helt
+    resultat (baseline **0** — linket indeholdt kun URL'en, så modtageren så en
+    tom formular og brugte sin egen kvote; målt i testen: `fetch` tælles, del-
+    stien kalder nul gange). Accept: `tests/scan-share.test.mjs` **75/75** med
+
+**~~Rettelsen sagde hvad den rettede.~~** **Leveret 3/10.** Se punkt 2 i
+    STATUS. Hvem: designere der lægger en overskrift på et todelt foto — den
+    største indgangsside på sitet. Tal: resultater der får en målt forskel
+    (baseline **0 af 4** sider; kernen skrev «…and measured again» uden at
+    nævne hvad den målte førhen — målt på koden 3/10). Accept: ét
+    `data-ti-delta` pr. rettelse på begge veje ind i kernen, hvis før-tal er det
+
+~~**En fund-liste uden «start her» og uden forskel.**~~ **Leveret 3/10.**
+    Se punkt 2 i STATUS. Hvem: bureauer og webbureauer der har rettet fundene
+    siden sidste scanning — de vidste ikke, om det virkede, fordi et nyt tal
+    uden en forskel ikke svarer på det. Tal: resultater der får en forskelslinje
+    (baseline **0** — ingen vej, kun et nyt scorecard; målt på koden 3/10).
+    Accept: `scan-share.test.mjs` **119/119** med **13 røde** mod koden fra før,
+
+~~**Tallet på skærmen handlede om et billede læseren aldrig havde set.**~~
+    **Leveret 3/10.** Hvem: alle der lander på `/text-on-image-checker` eller på
+    artiklen — den største indgangsside på sitet. Tal: resultater der siger hvad
+    de måler (baseline **0 af 4** sider; kernen tegnede sit eget eksempelbillede
+    og skrev «Measured against the lightest and darkest image pixels under your
+    letters» om et billede brugeren ikke havde uploadet — målt på den byggede
+
