@@ -1,28 +1,33 @@
 # STATUS
-- **En kunde der rammer «Device limit reached» kun skrive til Mads.** Målt 3/10:
-  `grep -rn "license/deactivate" uden for _worker.js` gav **én** træffer, i
-  `tests/stripe-worker.test.mjs` — ruten virkede, var testet, og ingen side
-  kaldte den. `/license-lookup` lovede desuden «it is one click in the app» (de
-  to betalte apps ringer stadig til Lemon Squeezy) og «we free up the seat».
-  Nu har siden en «Free up a machine»-sektion: `/api/license/devices` lister
-  maskinerne med første og seneste brug, og frigørelsen går gennem den testede
-  rute. **Kan ikke** være en knap der beder om et maskinennavn: `device_id`
-  danner klienten selv (`uuid4().hex`, sitets hostname, `cc-<random>`), så ingen
-  kunde kan gæfte den — det er hele grunden for listeringen. Målt: worker
-  **370/370** (**9 røde** mod gammel worker), `license-lookup` **26/26**
-  (**14 røde** mod gammel side), ny port `license-seat-release` **15/15** med
-  polaritet målt begge veje. `VERIFICÉR DEPLOY` nedenfor.
-- **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` + mutation
-  kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er endeligt,
-  `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
+- **Danske læsere fik en engelsk guides-indeks — færdig 3/10.** Målt: 97 danske
+  sider, 282 links til `/blog/`, 0 links til `/da/blog/`, og `site/da/blog/`
+  havde 85 artikler uden `index.html`. Nu: `make_blog_index.py` skriver den
+  danske side, `build_sites.py` sender dansk nav/footer/brødkrumme derhen.
+  `check_blog_index.py` dømmer den med de samme tre krav plus et fjerde (ingen
+  dansk side må pege på `/blog/` i chrome). 0 problemer, selftest 15/15 med
+  polaritet målt ved at slette siden; `stripe-worker` 370/370, `seo_check` 315
+  sider 0 fund, `check_sitemaps`/`check_hreflang_pairs`/`check_first_action`
+  grønne. Fund: «på dette site» var falsk (11 af 96 ligger på cleancopy.tools).
+- **«Device limit reached» kun skrive til Mads — færdig 3/10.** Kunden lister
+  sine maskiner på `/license-lookup` og frigør selv, via den testede
+  `/api/license/deactivate`; en knap med maskinennavn er umulig, fordi
+  `device_id` danner klienten selv. Målt: worker **370/370**, `license-lookup`
+  **26/26**, port `license-seat-release` **15/15**, polaritet begge veje.
+- **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` +
+  mutation kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er
+  endeligt, `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
   `targetIsPublic()` kører på hvert hop og afviser IPv4-mapped IPv6 og NAT64.
-- **PR-TJEK 2/10: 0 PR'er. BRANCH-TJEK 2/10:** 2 fuldt landede slettet på origin;
-  `ceo/hub-readme-note` har kun 1 plan-note fra 26/9, intet kode — se ❓.
+  Verificeret live 3/10: begge `?url=`-endpoints svarer 200 med status og kæde.
+- **PR-TJEK 2/10: 0 PR'er. BRANCH-TJEK 2/10:** 2 fuldt landede slettet;
+  `ceo/hub-readme-note` har kun 1 plan-note, intet kode — se ❓.
 - **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
-  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer til
-  Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
+  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
+  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen,
+  `/blog/`s danske-guider-tal. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: dansk guides-indeks på /da/blog/ ceo/da-guides-indeks 2026-10-03 03:20`
 
 - `VERIFICÉR DEPLOY: kunden frigør sin egen licensplads på /license-lookup ceo/license-selvbetjening 2026-10-03 02:35`
 
@@ -159,6 +164,14 @@
 
 ## ❓ Til Mads
 
+- **🟡 `/blog/` siger «96 Danish guides», men 11 af dem ligger på
+  cleancopy.tools.** Målt 3/10: `site/da/blog/` har 96 artikler, `dist/` kun
+  85 — de 11 `html-til-markdown`/`clean-copy`-artikler er korsomviseret til
+  cleancopy.tools af buildet, som det er ment. Tallet i heroen er bundet til
+  *kilden* af `check_blog_index.py`, så det er samme opgave at rette begge
+  steder, og det er en beslutning om hvilket tal læseren skal se: 96 på tværs
+  af familien eller 85 her. Jeg har ændret det nye sprog til «Vores 96 danske
+  guider» og ladt `/blog/` være, så de to sider ligner hinanden.
 - **🔴 `OPENROUTER_API_KEY` mangler på workeren — assistenten er stadig slukket.**
   Rettet 1/10, så ingen kunde længere skriver et spørgsmål og bliver bedt om at
   kontakte os: siden siger nu at assistenten er slukket og byder på scanner,
@@ -435,6 +448,17 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
    `/site-icons`' egen `<h1>` er «site-icons» — ny opgave 8. Bevidst valgt **ikke**
    at lægge banneret i heroen: bogsiden har allerede bogens download-CTA, og
    bannerets plads i kapitlerne er der, hvor læseren lige er færdig.
+22. ~~**En dansk læser blev sendt på den engelske indeks.**~~ **Leveret 3/10.**
+    `/da/blog/` findes nu, på dansk, med alle 96 danske guider, de fem danske
+    emner og dansk chrome; dansk nav, footer og brødkrumme peger derhen.
+    Hvem: de danske læsere — hele familien er dansk, og `/da/` er den rute
+    Mads' egne kunder kommer ind ad. Tal: danske sider der linker til den
+    engelske indeks i chrome (baseline **97 sider / 282 links**, målt på
+    `dist/`; nu **0**). Accept: `check_blog_index.py` dømmer den danske sides
+    dækning, generatorens ejerskab og de to tal, **og** at ingen dansk side
+    peger på `/blog/` i nav/footer — 15/15 selvtest med polaritet målt ved at
+    slette siden. Datagrund: målt 3/10 på `dist/`, ikke gættet; de 96 danske
+    artikler lå uden for enhver dansk indeks.
 21. **Én rapport pr. kunde i stedet for én fil med alle kunder i.** Hvem: bureauer
     og webbureauer, der er målgruppen for `/compliance-site-check`’s egen
     teksthint («auditing several client sites»). Tal: rapporter pr. kørsel med

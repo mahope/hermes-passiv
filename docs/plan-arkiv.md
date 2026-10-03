@@ -5566,3 +5566,50 @@ den har sendt en.
 fremtidig tredje form ville blive læst som `String(post)` = `[object Object]`.
 Det kan kun ske ved en ny kodevej, og porten dømmer ikke på feltformen — det er
 et hul, ikke en fejl i det der kører.
+
+## 2026-10-03 — ceo/da-guides-indeks: dansk guides-indeks på /da/blog/
+
+**Målingen.** `dist/mahope.tools/da/**/*.html`: 97 danske sider, **282** links
+til den engelske `/blog/`-indeks, **0** links til `/da/blog/`. `site/da/blog/`
+havde 85 artikler og ingen `index.html`. `/blog/` lister de danske guider under
+en «På dansk»-skiller efter 93 engelske, med emne-overskrifterne
+«Accessibility & EAA (dansk)», «SEO & Website Health (dansk)» o.l. — altså
+engelske overskrifter om danske artikler, i engelsk chrome («All Guides &
+Tutorials», «Browse all free free tools», «← Home»).
+
+**Rettelsen.**
+- `tools/make_blog_index.py`: `DA_CATS` (de fem emne-overskrifter på dansk) og
+  `dansk_index()`, der skriver `site/da/blog/index.html`. En kørsel uden
+  argumenter skriver begge sider; `--out` skriver kun den engelske (portens
+  sammenligning), `--da-out` kun den danske.
+- `build_sites.py:175`: dansk nav «Blog» → `/da/blog/`. Det retter nav **og**
+  footer, fordi `footer_links` bygges af samme `cfg["nav"][lang]`.
+- `site/da/index.html`: heroens «Guides» og sidens brødtekst peger på
+  `/da/blog`.
+- `tools/route_inventory.json`: `https://mahope.tools/da/blog/` tilføjet — uden
+  den afbryder `build_sites.py` med «route inventory mismatch».
+
+**Porten.** `tools/check_blog_index.py` dømmer nu den danske side med de samme
+tre krav (dækning pr. slug, tallene i heroen, generatorens ejerskab) plus to
+nye: ingen **engelsk** guide må stå på den danske side, og ingen dansk side må
+pege på `/blog/` i `<nav class="site-nav">` eller `<footer class="site-footer">`
+(dømt på `dist/`, springes over når `dist/` mangler). Selvtest 9/9 → 15/15.
+
+**Polaritet.** Med `site/da/blog/index.html` fjernet er porten rød
+(«mangler»). Uden `index`-springet i generatorens danske glob tæller siden sig
+selv med: 97 i stedet for 96, og begge indeks lister `/da/blog/index` som en
+artikel — fundet undervejs, rettet i generatoren.
+
+**Fund undervefs, punkt 11.** Den danske `<meta description>` sagde «Alle 96
+danske guides **på dette site**». 11 af de 96 (`html-til-markdown-*`,
+`kopier-som-markdown-udvidelse`, `installer-clean-copy-obsidian` …) er
+korsomviseret til cleancopy.tools af buildet, så `dist/` har 85. Sætningen var
+altså falsk. Den siger nu «Vores 96 danske guides». `/blog/` har samme
+tællingfejl i sin egen hero og description — se ❓ i planen.
+
+**Gaten.** `build_sites.py` (336 filer, 0 broken), `seo_check.py` (315 sider, 0
+fund), `stripe-worker.test.mjs` 370/370, `check_inline_js.py` 0,
+`check_sitemaps.py` OK, `check_hreflang_pairs.py` grøn (selftest 4 fejlformer
+fanget), `check_first_action.py` grøn, `check_product_copy.py` 0 problemer,
+`check_tool_paid_path.py` / `check_article_paid_path.py` grønne,
+`audit_dist_cta_routes.py` grøn.

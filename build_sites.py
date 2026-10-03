@@ -172,7 +172,7 @@ SITES: dict[str, dict] = {
         "nav": {
             "en": [("Tools", "/free-tools"), ("Books", "/books/"), ("Blog", "/blog/"),
                    ("Clean Copy", "https://cleancopy.tools"), ("Compliance", "/compliance-guide")],
-            "da": [("Værktøjer", "/da/free-tools"), ("Bøger", "/books/"), ("Blog", "/blog/"),
+            "da": [("Værktøjer", "/da/free-tools"), ("Bøger", "/books/"), ("Blog", "/da/blog/"),
                    ("Clean Copy", "https://cleancopy.tools/da/"), ("Compliance", "/da/compliance-site-check")],
         },
         "rest": True,

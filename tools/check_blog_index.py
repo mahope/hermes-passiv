@@ -24,11 +24,19 @@ konsolefejl, kun en side der lyver om sig eget indhold.
 2. *Tallet i heroen*: «{n} English guides … plus {nda} Danish guides» skal være
    de rigtige tal. Ellers retter en ny guide ikke antallet, og siden får en ny
    løgnest.
-3. *Generatoren ejer filen*: den committede side skal være **byte-identisk** med
-   `python3 tools/make_blog_index.py --out <tmp>`. Det er det eneste krav der
+3. *Generatoren ejer filen*: den committede side skal være **byte-identisk**
+   med `python3 tools/make_blog_index.py --out <tmp>`. Det er det eneste krav der
    fanger en redigering i hånden — også en *god* en, som bogs-CTA'en og det
    afsluttende track-script var. Derfor skrev `9f07a09`-runden dem ind i
    generatoren i stedet for at lappe siden; porten er grunden til at det holder.
+
+**Den danske indeksside er dømt af de samme tre krav.** Målt 3/10: `site/da/blog/`
+havde 85 artikler og **ingen** `index.html`, så alle 97 danske sider sendte læseren
+til den engelske `/blog/` — 282 links — hvor de danske guider lå under en
+«På dansk»-skiller efter 93 engelske, med engelske emne-overskrifter. Så det fjerde
+krav er nyt: **ingen dansk side må pege på den engelske indeks i sin navigation
+eller sin footer.** Det er den fejl en ny dansk side eller en ny partial kan
+bringe tilbage, og den er usynlig i en diff.
 
 Kør selvtesten, før du stoler på porten: den muterer de rigtige filer og
 fordriver dem igen.
@@ -48,17 +56,24 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / "site" / "blog" / "index.html"
+DA_INDEX = ROOT / "site" / "da" / "blog" / "index.html"
 GENERATOR = ROOT / "tools" / "make_blog_index.py"
 
 HREF_RE = re.compile(r'href="(/(?:da/)?blog/([^"/]+))"')
 HERO_RE = re.compile(r"(\d+) English guides on .*? plus (\d+) Danish guides", re.S)
+# Navigation og footer er de to steder, hvor «Guides»-linket står på alle 97
+# danske sider. Kroppen må gerne linke til den engelske indeks med vilje — den
+# danske indeksside gør det i én linje — så det er kun chrome der dømmes.
+CHROME_RE = re.compile(
+    r'<nav class="site-nav".*?</nav>|<footer class="site-footer".*?</footer>', re.S)
+DA_HERO_RE = re.compile(r"(\d+) guider p&aring; dansk.*?(\d+) engelske guider", re.S)
 
 
 def guide_slugs(folder: Path) -> list[str]:
     return sorted(p.stem for p in folder.glob("*.html") if p.stem != "index")
 
 
-def fejl_mod(html: str, en: list[str], da: list[str]) -> list[str]:
+def fejl_mod(html: str, en: list[str], da: list[str], hero: bool = True) -> list[str]:
     fund: list[str] = []
     links: dict[str, list[str]] = {}
     for href, slug in HREF_RE.findall(html):
@@ -85,6 +100,8 @@ def fejl_mod(html: str, en: list[str], da: list[str]) -> list[str]:
                         f"  linket `{href}` peger på den {'engelske' if dansk_href else 'danske'} "
                         f"fil `{slug}.html`")
 
+    if not hero:
+        return fund
     hero = HERO_RE.search(html)
     if not hero:
         fund.append("  heroen har ingen «N English guides … plus N Danish guides»-sætning "
@@ -106,6 +123,81 @@ def genereret(tmp: Path) -> str | None:
     return out.read_text(encoding="utf-8")
 
 
+def fejl_mod_da(html: str, da: list[str], en: list[str]) -> list[str]:
+    """Samme tre krav som `fejl_mod`, plus heroen med de danske tal."""
+    fund = fejl_mod(html, [], da, hero=False)
+    # `fejl_mod` dømmer, at hver dansk slug har ét `/da/blog/`-link, og at ingen
+    # af dem hænger på en `/blog/`-sti. Det tager dog **ikke** en engelsk guide:
+    # den tjekkes her, så den danske side ikke kan blive en halv indeksside.
+    for slug in en:
+        if f'href="/blog/{slug}"' in html:
+            fund.append(f"  EN-guide `{slug}` står på den danske indeksside")
+    hero = DA_HERO_RE.search(html)
+    if not hero:
+        fund.append("  heroen har ingen «N guider på dansk … N engelske guider»-sætning")
+    else:
+        n_da, n_en = int(hero.group(1)), int(hero.group(2))
+        if (n_da, n_en) != (len(da), len(en)):
+            fund.append(f"  heroen siger {n_da} danske og {n_en} engelske guider, "
+                        f"men `site/` har {len(da)} og {len(en)}")
+    return fund
+
+
+def genereret_da(tmp: Path) -> str | None:
+    out = tmp / "da-blog-index.html"
+    res = subprocess.run([sys.executable, str(GENERATOR), "--da-out", str(out)],
+                         cwd=ROOT, capture_output=True, text=True)
+    if res.returncode != 0 or not out.exists():
+        return None
+    return out.read_text(encoding="utf-8")
+
+
+def dom_da() -> tuple[list[str], dict[str, str]]:
+    """Den danske indeksside: de tre krav plus generatorens ejerskab."""
+    en = guide_slugs(ROOT / "site" / "blog")
+    da = guide_slugs(ROOT / "site" / "da" / "blog")
+    fund: list[str] = []
+    detaljer: dict[str, str] = {}
+    if not DA_INDEX.exists():
+        return (["  `site/da/blog/index.html` mangler — kør "
+                 "`python3 tools/make_blog_index.py`"], detaljer)
+    tekst = DA_INDEX.read_text(encoding="utf-8")
+    fund.extend(fejl_mod_da(tekst, da, en))
+    with tempfile.TemporaryDirectory() as tmp:
+        ny = genereret_da(Path(tmp))
+        if ny is None:
+            fund.append("  `tools/make_blog_index.py --da-out` kørte ikke, så "
+                        "generatorens ejerskab kan ikke dømmes")
+        elif ny != tekst:
+            detaljer["generator-da"] = (
+                "  site/da/blog/index.html er ikke lig den genererede side — "
+                "kør `python3 tools/make_blog_index.py`")
+    return fund, detaljer
+
+
+def dom_chrome(html: str) -> list[str]:
+    """Kun navigation og footer på danske sider må pege på `/blog/`."""
+    fund = []
+    for blok in CHROME_RE.findall(html):
+        if 'href="/blog/"' in blok:
+            fund.append("  navigation/footer peger på den engelske blogindeks "
+                        "— en dansk side skal bruge `/da/blog/`")
+    return fund
+
+
+def dom_da_chrome() -> tuple[list[str], int]:
+    """Døm de **byggede** danske sider. Springes over når `dist/` ikke findes,
+    så porten stadig kan køre alene (selvtesten gør det)."""
+    dist = ROOT / "dist" / "mahope.tools" / "da"
+    if not dist.is_dir():
+        return ([], 0)
+    fund: list[str] = []
+    sider = sorted(dist.rglob("*.html"))
+    for p in sider:
+        fund.extend(f"{p.relative_to(dist)}:{f.strip()}" for f in dom_chrome(p.read_text(encoding="utf-8")))
+    return fund, len(sider)
+
+
 def dom(index: Path = INDEX) -> tuple[list[str], dict[str, str]]:
     en = guide_slugs(ROOT / "site" / "blog")
     da = guide_slugs(ROOT / "site" / "da" / "blog")
@@ -122,6 +214,10 @@ def dom(index: Path = INDEX) -> tuple[list[str], dict[str, str]]:
                 "  site/blog/index.html er ikke lig den genererede side — "
                 "kør `python3 tools/make_blog_index.py` (eller skriv ændringen "
                 "ind i generatoren, så den overlever næste kørsel)")
+    fund_da, detaljer_da = dom_da()
+    fund.extend(fund_da)
+    detaljer.update(detaljer_da)
+    fund.extend(dom_da_chrome()[0])
     return fund, detaljer
 
 
@@ -190,7 +286,44 @@ def self_test() -> int:
         tjek("uændret side er grøn mod generatoren",
              not fund3 and not detalje3, "; ".join(fund3[:3]))
 
-    # 8. Målingen på de rigtige filer skal være grøn — ellers dømmer resten
+    # 8. Den danske indeksside gennemgår de samme krav. Dens egen hero og dens
+    #    egen dækbefordring, så kontrol 2-6 ovenfor ikke kan nå den.
+    da_rigtig = DA_INDEX.read_text(encoding="utf-8")
+    fund_da = fejl_mod_da(da_rigtig, da, en)
+    tjek("committede /da/blog/ er grøn", not fund_da, "; ".join(fund_da[:3]))
+
+    # 8a. Polaritet: en dansk guide uden link på den danske side er rød.
+    da_uden = da_rigtig.replace(f'href="/da/blog/{ny_guide}"', 'href="/da/blog/ukendt-guide"')
+    tjek("DA-guide uden link på den danske side er rød",
+         any(ny_guide in f for f in fejl_mod_da(da_uden, da, en)))
+
+    # 8b. Polaritet: en engelsk guide på den danske side er rød — dækning på
+    #     de danske slugs alene ville overse den halve indeksside.
+    da_med_en = da_rigtig.replace(
+        '<main class="container"', f'<main class="container"><a href="/blog/{ny_en}">x</a>')
+    tjek("EN-guide på den danske side er rød",
+         any(ny_en in f for f in fejl_mod_da(da_med_en, da, en)))
+
+    # 8c. Polaritet: forkert dansk antal i heroen er rødt for sig selv.
+    da_tal = da_rigtig.replace(f"{len(da)} guider p&aring; dansk",
+                               f"{len(da) - 1} guider p&aring; dansk")
+    tjek("forkert antal i den danske hero er rød",
+         any("heroen siger" in f for f in fejl_mod_da(da_tal, da, en)))
+
+    # 8d. Polaritet: den danske navigation må ikke pege på den engelske indeks.
+    #     Dømmes på en rigtig dansk sides markup, fordi det er den fejl en ny
+    #     partial eller en ny dansk side kan bringe tilbage.
+    #     Kilden er den markup bygget skriver, fordi kilden i `site/` ikke har
+    #     navigation endnu — den bliver påsat af `apply_shell` under buildet.
+    shell = ('<nav class="site-nav" id="site-nav" aria-label="Hovednavigation">'
+             '<a href="/da/free-tools">V&aelig;rkt&oslash;jer</a>'
+             '<a href="/da/blog/">Blog</a></nav>'
+             '<footer class="site-footer"><ul><li><a href="/da/blog/">Blog</a></li></ul></footer>')
+    tjek("dansk navigation på den engelske indeks er rød",
+         bool(dom_chrome(shell.replace('href="/da/blog/"', 'href="/blog/"'))))
+    tjek("dansk navigation på /da/blog/ er grøn", not dom_chrome(shell))
+
+    # 9. Målingen på de rigtige filer skal være grøn — ellers dømmer resten
     #    ingenting, fordi `en`/`da` er tomme.
     tjek(f"{len(en)} EN + {len(da)} DA guides målte", len(en) > 80 and len(da) > 80,
          f"en={len(en)} da={len(da)}")
