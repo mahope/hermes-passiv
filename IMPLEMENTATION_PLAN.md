@@ -1,13 +1,17 @@
 # STATUS
-- **Tak-siden lovede hjælp på en side der giver donations.** `/thanks` skrev
-  «Something wrong with your key? Support», men `/support` er donationssiden
-  (målt live: `<h1>Support the tools</h1>` og én Stripe-knap). Nu peger linjen på
-  `/license-lookup`, og `<h1>` siger først «Thanks for your purchase!» når Stripe
-  har bekræftet ordren. Ny port `support-link-text` **21/21**, **1 rød** mod den
-  gamle `thanks.html` i `dist/`. Se punkt 19 i Feature-kø.
-- **Scannerens «sider læst» viste et kald-tal.** Rettet i 55ea279 og målt live
-  3/10: `/compliance-site-check` (EN + DA) har 4 × «pages read» og 0 × «pages
-  checked».
+- **En kunde der rammer «Device limit reached» kun skrive til Mads.** Målt 3/10:
+  `grep -rn "license/deactivate" uden for _worker.js` gav **én** træffer, i
+  `tests/stripe-worker.test.mjs` — ruten virkede, var testet, og ingen side
+  kaldte den. `/license-lookup` lovede desuden «it is one click in the app» (de
+  to betalte apps ringer stadig til Lemon Squeezy) og «we free up the seat».
+  Nu har siden en «Free up a machine»-sektion: `/api/license/devices` lister
+  maskinerne med første og seneste brug, og frigørelsen går gennem den testede
+  rute. **Kan ikke** være en knap der beder om et maskinennavn: `device_id`
+  danner klienten selv (`uuid4().hex`, sitets hostname, `cc-<random>`), så ingen
+  kunde kan gæfte den — det er hele grunden for listeringen. Målt: worker
+  **370/370** (**9 røde** mod gammel worker), `license-lookup` **26/26**
+  (**14 røde** mod gammel side), ny port `license-seat-release` **15/15** med
+  polaritet målt begge veje. `VERIFICÉR DEPLOY` nedenfor.
 - **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` + mutation
   kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er endeligt,
   `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
@@ -19,6 +23,8 @@
   Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen. Resten: ❓.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: kunden frigør sin egen licensplads på /license-lookup ceo/license-selvbetjening 2026-10-03 02:35`
 
 - `VERIFICÉR DEPLOY: tak-siden peger på /license-lookup, ikke på donationssiden ceo/support-koen-er-donation 2026-10-03 01:47`
 
@@ -71,17 +77,9 @@
 
 ## Åbne opgaver
 
-1. **En nøgle der ikke aktiverer, har ingen selvbetjening.** Hvorfor: målt
-   3/10 — `grep -rn "license/deactivate"` uden for `_worker.js` giver **én**
-   træffer, og den er i `tests/stripe-worker.test.mjs`. Ruten virker og er
-   testet, men ingen side, klient eller dokument kalder den. En kunde der rammer
-   409 (enhedsgrænsen nået — tre maskiner på `$19`-produkterne) kan derfor
-   kun skrive til Mads, og det er den menneskelige indsats missionen forbyder.
-   Accept: en side på `/license-lookup` hvor kunden indtaster nøgle og
-   maskinnavn, frigiver én plads og siger hvor mange der er tilbage — plus en
-   port der dømmer at den kalder `deactivate` og ikke siger det virker uden
-   serverens svar. Kræver en ny worker-rute, så den kræver test i
-   `stripe-worker.test.mjs`.
+1. ~~**En nøgle der ikke aktiverer, har ingen selvbetjening.**~~ **Færdig 3/10.**
+   Kunden lister sine maskiner på `/license-lookup` og frigør selv, via den
+   testede `/api/license/deactivate`. `docs/plan-arkiv.md`.
 2. ~~Flere sider end forsiden pr. URL.~~ **Færdig 1/10.** Kaldet læser den
    indsendte side og de juridiske sider forsiden *linker til* — kun på sitets
    eget domæne — før det gætter stier, og svaret lister dem i `pages_read`.

@@ -368,6 +368,53 @@ r = await act({ license_key: key, instance_name: 'd6', product: 'deskuptime-pro'
 ok('instance_name er ikke en enhedsidentitet', r.status === 400 && /Missing device_id/.test((await r.json()).error), r.status);
 r = await lic('deactivate', { license_key: key, instance_id: 'd6' });
 ok('instance_name binder ingen enhed', r.status === 200 && (await r.json()).devices_in_use === 3, r.status);
+// ── /api/license/devices: hvilke maskiner sidder på nøglen ──────────
+// Findes kun fordi kunden ellers ikke kan frigøre en plads: `device_id` er en
+// maskineidentitet klienten selv danner, så ingen kunde kan gætte den, og appen
+// har ingen deaktiveringsknap. Uden listeringen er en kunde der rammer 409 kun
+// skrive til Mads — den menneskelige indsats missionen forbyder.
+r = await call('/api/license/devices', { method: 'POST', body: JSON.stringify({ license_key: key }), headers: { 'content-type': 'application/json' } });
+j = await r.json().catch(() => ({}));
+ok('listeringen svarer 200', r.status === 200, r.status);
+ok('listeringen tæller de bundne maskiner', j.ok === true && j.devices_in_use === 3 && j.devices.length === 3, JSON.stringify(j).slice(0, 200));
+ok('listeringen kender maskinerne ved id', (j.devices || []).map(d => d.device_id).sort().join(',') === 'd1,d2,d5', JSON.stringify(j.devices));
+ok('listeringen giver en tid at vælge på', Array.isArray(j.devices) && j.devices.every(d => typeof d.first_seen === 'string' && typeof d.last_seen === 'string'), JSON.stringify(j.devices && j.devices[0]));
+ok('listeringen siger hvor mange pladser der er', j.max_devices === 3, j.max_devices);
+ok('listeringen røber hverken mail eller ord', !/buyer@example|@example|cs_live_/.test(JSON.stringify(j)), JSON.stringify(j).slice(0, 200));
+// GET må ikke ændre noget, og en listering skal ikke kunne ligge i en
+// link-scanner, så ruten er POST-only.
+r = await call('/api/license/devices', { method: 'GET' });
+ok('listeringen er POST-only', r.status === 405, r.status);
+r = await call('/api/license/devices', { method: 'POST', body: JSON.stringify({ license_key: 'ikke-en-noegle' }), headers: { 'content-type': 'application/json' } });
+ok('listeringen afviser et forkert format', r.status === 400, r.status);
+r = await call('/api/license/devices', { method: 'POST', body: JSON.stringify({ license_key: 'a'.repeat(32) }), headers: { 'content-type': 'application/json' } });
+ok('listeringen afviser en ukendt nøgle', r.status === 404, r.status);
+// Et genaktiveringskald på en allerede bunden maskine må **ikke** tælle en ny
+// plads. Det er præcis den fejl objektformen kunne indføre: `.includes(device)`
+// på `{ id, first_seen }`-poster finder aldrig strengen, så hver genaktivering
+// ville optage en af kundens tre maskiner, indtil tredje kald svarede 409 på
+// en kunde der bare åbnede appen igen.
+r = await act({ license_key: key, device_id: 'd1', product: 'deskuptime-pro' });
+j = await r.json();
+ok('genaktivering tæller ikke en ny plads', r.status === 200 && j.devices_in_use === 3, JSON.stringify(j));
+r = await lic('validate', { license_key: key, device_id: 'd1', product: 'deskuptime-pro' });
+ok('genaktiveret maskine validerer stadig', (await r.json()).valid === true);
+r = await lic('deactivate', { license_key: key, device_id: 'd1' });
+j = await r.json();
+ok('frigør præcis den valgte maskine', r.status === 200 && j.deactivated === true && j.devices_in_use === 2, JSON.stringify(j));
+ok('deaktivering bevarer de andre maskiners dato',
+  JSON.parse(kv.get('lic:' + key)).devices.every(d => d.id !== 'd1' && typeof d.last_seen === 'string'));
+// En nøgle der er skrevet **før** objektformen (rene strenge) skal stadig kunne
+// frigøres, og listeringen skal give den en dato at vise frem for «onbekendt».
+const legacyKey = 'b'.repeat(32);
+kv.set('lic:' + legacyKey, JSON.stringify({ product: 'clean-copy-pro', plan: 'pro-yearly', expires_at: null, max_devices: 5, devices: ['gammel-1', 'gammel-2'] }));
+r = await call('/api/license/devices', { method: 'POST', body: JSON.stringify({ license_key: legacyKey }), headers: { 'content-type': 'application/json' } });
+j = await r.json().catch(() => ({}));
+ok('en nøgle fra før objektformen listes', r.status === 200 && j.devices_in_use === 2 && (j.devices || []).every(d => d.first_seen && d.last_seen), JSON.stringify(j).slice(0, 200));
+r = await lic('deactivate', { license_key: legacyKey, device_id: 'gammel-2' });
+ok('en nøgle fra før objektformen kan frigøres', r.status === 200 && (await r.json()).devices_in_use === 1, r.status);
+r = await act({ license_key: legacyKey, device_id: 'gammel-1', product: 'clean-copy-pro' });
+ok('en nøgle fra før objektformen kan stadig aktiveres', r.status === 200 && (await r.json()).devices_in_use === 1, r.status);
 // Abonnement: antal × grænse, udløb, fornyelse
 r = await call('/api/stripe/fulfillment?session_id=cs_live_subscripBBBBBBBBBB'); j = await r.json();
 ok('eucomply 2 sites', j.max_devices === 2 && j.expires_at && j.expires_at.startsWith('2033'), JSON.stringify(j));

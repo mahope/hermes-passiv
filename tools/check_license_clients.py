@@ -193,6 +193,13 @@ NOT_CLIENTS = {
     # klient for at dømme at den kalder `/api/license/lookup` — den *er* den
     # klients kode, ikke en kunde indlæser den.
     "tests/license-lookup.test.mjs",
+    # Opgave 3/10: porten over selvbetjent frigørelse af en licensplads. Den
+    # læser både `_worker.js` og `/license-lookup` for at dømme at ruten er
+    # POST-only, kræver nøglen, og at siden ikke melder succes uden serverens
+    # `deactivated`. Den nævner både ruten og den lukkede Lemon Squeezy-API som
+    # *vidne* — modsatningen af at være klient, så den skal ikke tvinges ind i
+    # CLIENTS.
+    "tools/check_license_seat_release.py",
 }
 
 # Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er

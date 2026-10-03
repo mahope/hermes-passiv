@@ -250,6 +250,7 @@ export default {
     if (path === '/api/license/lookup') return handleLicenseLookup(request, env);
     if (path === '/api/license/validate') return handleLicenseValidate(request, env);
     if (path === '/api/license/deactivate') return handleLicense(request, env, 'deactivate');
+    if (path === '/api/license/devices') return handleLicenseDevices(request, env);
 
     // === Route: EUComply Pro report (server-side analysis, license-gated) ===
     if (path === '/api/report') return handleReport(request, env);
@@ -1137,6 +1138,103 @@ async function readKvCounter(env, key) {
 
 const LICENSE_MAX_DEVICES = 5;
 
+/**
+ * Normaliser en `rec.devices`-post til `{ device_id, first_seen, last_seen }`.
+ *
+ * Før 3/10 var hver post en ren streng, så en gammel nøgle har **ingen** dato at
+ * vise kunden. Nye aktiveringer gemmer et objekt, så `/license-lookup` kan
+ * fortælle hvilken maskine der sidst var i brug — uden det kan kunden ikke se
+ * hvilken af tre maskiner der skal frigøres. Objektformen er derfor additiv:
+ * `deviceList` læser begge, og intet andet sted i workeren rører feltet direkte.
+ */
+function deviceList(rec) {
+  return (rec.devices || []).map(d => {
+    if (d && typeof d === 'object' && typeof d.id === 'string') {
+      return { device_id: d.id, first_seen: d.first_seen || null, last_seen: d.last_seen || d.first_seen || null };
+    }
+    return { device_id: String(d), first_seen: null, last_seen: null };
+  });
+}
+
+/** Enheds-id'et i en post, uanset om den er streng (før 3/10) eller objekt. */
+function deviceIdOf(post) {
+  return (post && typeof post === 'object') ? post.id : post;
+}
+
+/**
+ * `POST /api/license/devices` — hvilke maskiner sidder på nøglen.
+ *
+ * Findes kun fordi kunden ellers ikke kan frigøre en plads: `device_id` er en
+ * maskineidentitet, klienten danner den selv (uuid, hostname, tilfældig streng),
+ * så **ingen** kunde kan gætte den, og appen har ingen deaktiveringsknap. Uden
+ * denne listering er en kunde der rammer 409 kun skrive til Mads.
+ *
+ * Adgangskravet er selve nøglen, ikke ordreference og mail: nøglen er den
+ * hemmelighed hele licensemodellen bygger på («the key itself is the secret»),
+ * og den er det kunden har. Svaret nævner hverken kunde, mail eller ord, og
+ * røber intet der kan bruges på en anden nøgle.
+ */
+async function handleLicenseDevices(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } });
+  }
+  // GET må ikke ændre noget, og en listering skal ikke kunne ligge i en
+  // link-scanner, såkun POST.
+  if (request.method !== 'POST') {
+    return jsonResp({ ok: false, error: 'POST only' }, 405);
+  }
+  if (!env.VISITS) {
+    return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
+  }
+  let body;
+  try { body = await request.json(); } catch {
+    return jsonResp({ ok: false, error: 'Bad request.' }, 400);
+  }
+  const key = String(body.license_key || '').trim().toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(key)) {
+    return jsonResp({ ok: false, error: 'Invalid license key format.' }, 400);
+  }
+  const recRaw = await env.VISITS.get(`lic:${key}`);
+  if (!recRaw) {
+    return jsonResp({ ok: false, error: 'License key not found. Check for typos.' }, 404);
+  }
+  let rec;
+  try { rec = JSON.parse(recRaw); } catch { rec = { devices: [] }; }
+  const now = new Date().toISOString();
+  if (rec.status === 'revoked') {
+    return jsonResp({ ok: false, error: 'This license has been revoked.' }, 403);
+  }
+  if (rec.expires_at && rec.expires_at < now) {
+    return jsonResp({ ok: false, error: 'This license has expired.' }, 403);
+  }
+  let devices = deviceList(rec);
+  // Gamle nøkler har ingen dato. Skriver vi dem ikke her, vilde en kunde med tre
+  // ældre maskiner se «onbekendt» tre gange og ikke kunne vælge — så brugtidspunktet
+  // skrives, fordi kunden netop har læst siden. `devices` læses igen bagefter,
+  // ellers ville svaret sende de `null` den lige blev skrevet væk fra.
+  if (devices.some(d => !d.last_seen)) {
+    rec.devices = (rec.devices || []).map(post => (typeof post === 'object' && post.id)
+      ? post
+      : { id: String(post), first_seen: now, last_seen: now });
+    await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+    devices = deviceList(rec);
+  }
+  return jsonResp({
+    ok: true,
+    product: rec.product || null,
+    plan: rec.plan || 'pro-yearly',
+    expires_at: rec.expires_at || null,
+    ...lifetimeField(rec),
+    max_devices: rec.max_devices || LICENSE_MAX_DEVICES,
+    devices_in_use: devices.length,
+    devices: devices.map(d => ({
+      device_id: d.device_id,
+      first_seen: d.first_seen,
+      last_seen: d.last_seen,
+    })),
+  });
+}
+
 async function handleLicenseActivate(request, env) {
   return handleLicense(request, env, 'activate');
 }
@@ -1207,35 +1305,59 @@ async function handleLicense(request, env, mode) {
       return jsonResp({ ok: false, error: 'Missing device_id.' }, 400);
     }
 
+    // Alle tre nedenstående modes sammenligner på **id**, aldrig på hele
+    // posten: fra 3/10 er en post `{ id, first_seen, last_seen }`, så en
+    // `.includes(device)` ville aldrig finde en allerede bundet maskine, og
+    // hver aktivering ville tælle som en ny enhed indtil grænsen så den fejle
+    // med 409 på en kunde der bare genaktiverede. `deviceList` læser begge
+    // former, så en nøgle fra før ændringen stadig virker.
+    const bound = deviceList(rec);
+
     // Deactivate mode: frigør enheden, så licensen kan flyttes til en ny maskine.
     if (mode === 'deactivate') {
-      const before = (rec.devices || []).length;
-      rec.devices = (rec.devices || []).filter(d => d !== device);
-      if (rec.devices.length !== before) await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
-      return jsonResp({ ok: true, deactivated: rec.devices.length !== before, devices_in_use: rec.devices.length });
+      const kept = bound.filter(d => d.device_id !== device);
+      if (kept.length !== bound.length) {
+        rec.devices = kept.map(d => {
+          const old = (rec.devices || []).find(x => deviceIdOf(x) === d.device_id);
+          return (old && typeof old === 'object') ? old : { id: d.device_id, first_seen: d.first_seen, last_seen: d.last_seen };
+        });
+        await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+      }
+      return jsonResp({ ok: true, deactivated: kept.length !== bound.length, devices_in_use: kept.length });
     }
 
     // Validate mode: just report status without mutating anything.
     if (mode === 'validate') {
-      const known = (rec.devices || []).includes(device);
+      const known = bound.some(d => d.device_id === device);
       if (!known && stripeKey) {
         // Stripe-nøgler er kun gyldige på enheder, der er aktiveret.
-        return jsonResp({ ok: true, valid: false, reason: 'not_activated', devices_in_use: (rec.devices || []).length });
+        return jsonResp({ ok: true, valid: false, reason: 'not_activated', devices_in_use: bound.length });
       }
-      if (!known && (rec.devices || []).length >= maxDevices) {
-        return jsonResp({ ok: true, valid: false, reason: 'device_limit', devices_in_use: rec.devices.length });
+      if (!known && bound.length >= maxDevices) {
+        return jsonResp({ ok: true, valid: false, reason: 'device_limit', devices_in_use: bound.length });
       }
       return jsonResp({ ok: true, valid: true, plan: rec.plan || 'pro-yearly', expires_at: rec.expires_at || null, ...lifetimeField(rec) });
     }
 
     // Activate mode: bind the device.
     rec.devices = rec.devices || [];
-    if (!rec.devices.includes(device)) {
-      if (rec.devices.length >= maxDevices) {
+    const already = bound.find(d => d.device_id === device);
+    if (!already) {
+      if (bound.length >= maxDevices) {
+        // 409 er **endelig** (missionens fejlkode-tabel): den siger at grænsen
+        // er nået, og kun en deaktivering ændrer det. Rettes den her, ville en
+        // klient der læser koden træffe en anden sti end den, der står i
+        // `docs/stripe-kontrakt.md`, så koden skal blive ved at være 409.
         return jsonResp({ ok: false, error: `Device limit reached (${maxDevices}). Deactivate a device first.` }, 409);
       }
-      rec.devices.push(device);
+      rec.devices.push({ id: device, first_seen: now, last_seen: now });
       await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+    } else {
+      const old = (rec.devices || []).find(x => deviceIdOf(x) === device);
+      if (old && typeof old === 'object' && old.last_seen !== now) {
+        old.last_seen = now;
+        await env.VISITS.put(`lic:${key}`, JSON.stringify(rec));
+      }
     }
 
     return jsonResp({
@@ -1244,7 +1366,7 @@ async function handleLicense(request, env, mode) {
       plan: rec.plan || 'pro-yearly',
       expires_at: rec.expires_at || null,
       ...lifetimeField(rec),
-      devices_in_use: rec.devices.length,
+      devices_in_use: bound.length + (already ? 0 : 1),
     });
   } catch {
     // Licensing must fail safe, never leak stack traces.

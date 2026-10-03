@@ -714,6 +714,28 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_support_link_text.py", "--self-test"),
         inputs=("tools/check_support_link_text.py",),
     ),
+    # En nøgle der ikke aktiverer, havde ingen selvbetjening (3/10). Målt først
+    # på `site/`: `grep -rn "license/deactivate" uden for _worker.js` gav **én**
+    # træffer, i `tests/stripe-worker.test.mjs` — ruten virkede, var testet, og
+    # ingen side kaldte den. `site/license-lookup.html` lovede desuden «it is one
+    # click in the app» (de to betalte apps ringer stadig til Lemon Squeezy, så
+    # de har ingen knap) og «write to support@mahope.tools and **we free up the
+    # seat**» — den menneskelige indsats missionen forbyder. Kan ikke være en
+    # knap der beder om et maskinnavn: `device_id` danner klienten selv
+    # (`uuid4().hex`, `cc-<random>`, sitets hostname), så porten dømmer at siden
+    # **lister** maskinerne og frigør via den testede rute — og at succesteksten
+    # er gateret på serverens `deactivated`, så den ikke lyver om en plads der
+    # ikke blev frigjort.
+    Step(
+        id="license-seat-release",
+        argv=("python3", "tools/check_license_seat_release.py"),
+        inputs=("tools/check_license_seat_release.py", "site/**"),
+    ),
+    Step(
+        id="license-seat-release-selftest",
+        argv=("python3", "tools/check_license_seat_release.py", "--self-test"),
+        inputs=("tools/check_license_seat_release.py",),
+    ),
     # Formularfelter uden navn (30/9). Målt først: 14 felter på 13 sider havde
     # overhverket navn — 6 e-mail-felter var nyhedsbrevstilmeldingen på
     # NIS2-værktøjerne, 4 URL-felter var indgangen i et værktøj. `placeholder`

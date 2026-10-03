@@ -42,6 +42,18 @@
       border-radius: 8px; padding: 0.8rem 0.9rem; overflow-wrap: anywhere;
     }
     .key-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
+    /* Frigør en plads: samme formsprog som opslaget ovenfor, så den ikke ligner
+       et andet produkt. Listen er kort, og hver linje er sin egen handling. */
+    .seat-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.7rem; }
+    .seat-list li {
+      margin: 0; padding: 0.8rem 0.9rem; border: 1px solid var(--color-border);
+      border-radius: 8px; background: var(--color-surface);
+      display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; justify-content: space-between;
+    }
+    .seat-meta { min-width: 0; }
+    .seat-meta code { font-size: 0.85rem; overflow-wrap: anywhere; }
+    .seat-when { display: block; }
+    .seat-list button { min-height: 44px; }
   </style>
 </head>
 <body>
@@ -92,9 +104,29 @@
       </ol>
     </div>
 
-    <p class="hint" style="margin-top:1.2rem;">Moving to a new computer? Deactivate the key
-    in the old install first — it is one click in the app — or write to
-    <a href="mailto:support@mahope.tools">support@mahope.tools</a> and we free up the seat.</p>
+    <h2>Free up a machine</h2>
+    <p>Your key works on a set number of machines — three on DeskUptime Pro and
+    Transmute Desktop, two websites on EUComply Pro, five elsewhere. If you get
+    «Device limit reached» on a new computer, the key has to let go of a machine
+    you no longer use. You can do that here, without waiting for a reply.</p>
+    <form class="lookup-form" id="seatForm" novalidate>
+      <div>
+        <label for="seatKey">License key</label>
+        <input id="seatKey" name="license_key" type="text" inputmode="text"
+               autocomplete="off" spellcheck="false" required
+               placeholder="32 characters, a–f and 0–9"
+               aria-describedby="seatKeyHelp">
+        <p class="hint" id="seatKeyHelp">The 32-character key from your receipt
+        email. It is the whole key — copy all of it.</p>
+      </div>
+      <button type="submit" class="btn-secondary" id="seatListBtn">Show the machines on this key</button>
+      <p class="lookup-status hint" id="seatStatus" role="status" aria-live="polite"></p>
+    </form>
+    <ul class="seat-list" id="seatList" hidden></ul>
+
+    <p class="hint" style="margin-top:1.2rem;">A machine that is still in use keeps working
+    after you free a different one. If you free the machine you are on right now, it
+    activates itself again the next time you open the app.</p>
 
     <p style="margin-top:1.5rem;">
       Have your key already? <a href="/clean-copy-tool#pro-activate-details">Activate Clean Copy Pro here →</a>
@@ -106,7 +138,12 @@
   var btn = document.getElementById('lookupBtn');
   var statusEl = document.getElementById('lookupStatus');
   var out = document.getElementById('lookupResult');
-  if (!form) return;
+  var seatForm = document.getElementById('seatForm');
+  var seatBtn = document.getElementById('seatListBtn');
+  var seatStatus = document.getElementById('seatStatus');
+  var seatList = document.getElementById('seatList');
+  var seatKey = document.getElementById('seatKey');
+  if (!form && !seatForm) return;
   // Nøglen kommer fra KV og er aldrig brugerinput, men den skrives ind i DOM'en,
   // så den escapes som alle andre værdier. copy-lytteren bruger textContent, så
   // der er ingen anden vej data kommer ind på.
@@ -121,6 +158,51 @@
     out.hidden = true;
     out.innerHTML = '';
   }
+  function seatSay(msg, state) {
+    seatStatus.textContent = msg;
+    if (state) seatStatus.setAttribute('data-state', state);
+    else seatStatus.removeAttribute('data-state');
+  }
+  // Én sætning for hvert HTTP-svar, brugt af begge former. 429 er **endelig**
+  // (CEO-kø punkt 0, 29/9): serverens egen sætning, intet nyt kald. 5xx er
+  // forbigående. Alt andet er et svar, ikke en fejl i koden, så det vises som
+  // det er — og serverens egen sætning vinder altid, fordi det er den der ved
+  // om nøglen findes, om den er udløbet, eller om ruten er tæt.
+  function svarSætning(x, fallback) {
+    var e = x.data && typeof x.data.error === 'string' ? x.data.error : '';
+    if (x.status === 429) {
+      if (!e) return 'Too many attempts. Try again later.';
+      return /try again later/i.test(e)
+        ? e + ' The limit resets when the hour changes.'
+        : e + ' Try again later — the limit resets when the hour changes.';
+    }
+    if (x.status >= 500) return 'We could not reach the license server. Reload the page in a minute.';
+    return e || fallback;
+  }
+  function hent(url, payload) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        return { status: r.status, data: d };
+      });
+    });
+  }
+  // Datoer kommer fra serveren som UTC-ISO. De vises i kundens egen tidszone,
+  // fordi det er *hans* maskin og *hans* dato han skal kende — ikke UTC-dagen,
+  // der kan ligge et døgn forskudt kl. 00–02 (CEO-kvalitet punkt 4).
+  var DATO = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' });
+  function dato(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? null : DATO.format(d);
+  }
+  function rydSeat() {
+    seatList.innerHTML = '';
+    seatList.hidden = true;
+  }
   form.addEventListener('submit', function (ev) {
     ev.preventDefault();
     var orderId = document.getElementById('orderId').value.trim();
@@ -132,37 +214,14 @@
     btn.disabled = true;
     statusEl.removeAttribute('data-state');
     statusEl.textContent = 'Looking up your order…';
-    fetch('/api/license/lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: orderId, email: email }),
-    }).then(function (r) {
-      return r.json().catch(function () { return {}; }).then(function (d) {
-        return { status: r.status, data: d };
-      });
-    }).then(function (x) {
+    hent('/api/license/lookup', { order_id: orderId, email: email }).then(function (x) {
       btn.disabled = false;
-      // 429 er endeligt (CEO-kø punkt 0, 29/9): serverens egen sætning, intet nyt
-      // kald. 5xx er forbigående og må gerne prøves igen. Alt andet er et svar,
-      // ikke en fejl i koden, så det vises som det er.
-      if (x.status === 429) {
-        // Serverens egen sætning. Den siger altid "Try again later.", så
-        // hænges time-noten kun på når den mangler — ellers læser kunden
-        // "Try again later. Try again later — …".
-        var limited = (x.data && x.data.error) ? x.data.error : 'Too many attempts.';
-        say(/try again later/i.test(limited)
-          ? limited + ' The limit resets when the hour changes.'
-          : limited + ' Try again later — the limit resets when the hour changes.', 'error');
-        return;
-      }
-      if (x.status >= 500) {
-        say('We could not reach the license server. Reload the page in a minute.', 'error');
+      if (x.status === 429 || x.status >= 500) {
+        say(svarSætning(x, (x.data && x.data.error) || 'No license found for that order reference and email.'), 'error');
         return;
       }
       if (!x.data || x.data.ok !== true || !x.data.license_key) {
-        say((x.data && x.data.error)
-          ? x.data.error
-          : 'No license found for that order reference and email.', 'error');
+        say(svarSætning(x, (x.data && x.data.error) || 'No license found for that order reference and email.'), 'error');
         return;
       }
       var lifetime = x.data.lifetime === true;
@@ -211,6 +270,122 @@
       say('No connection. Reload the page in a minute and try again.', 'error');
     });
   });
+
+  /* ── Frigør en plads ───────────────────────────────────────────────
+   * Findes kun fordi kunden ellers ikke kan det selv: `device_id` er en
+   * maskineidentitet klienten selv danner (uuid, hostname, tilfældig streng), så
+   * ingen kunde kan gætte den, og appen har ingen deaktiveringsknap. En kunde
+   * der rammer «Device limit reached» kunne derfor kun skrive til Mads — den
+   * menneskelige indsats missionen forbyder. Her frigør kunden pladsen selv.
+   */
+  if (!seatForm) return;
+  function normalisér(k) {
+    return String(k || '').trim().toLowerCase();
+  }
+  // `bekræftelse` overlever den genindlæsning efter en frigørelse. Uden den
+  // skrev `tegnMaskiner` sit eget taltjek over «Machine freed» i samme øjeblik,
+  // så kunden aldrig så at der skete noget — kun et tal der faldt fra tre til to.
+  function tegnMaskiner(j, bekræftelse) {
+    var maskiner = Array.isArray(j.devices) ? j.devices : [];
+    var fri = j.max_devices - j.devices_in_use;
+    rydSeat();
+    if (!maskiner.length) {
+      // Tom-tilstand: sig hvad kunden kan gøre nu, ikke bare "ingen data".
+      seatList.innerHTML = '<li><span class="seat-meta">This key is not on any '
+        + 'machine yet. Open the app or plugin and enter the key there — it '
+        + 'activates itself.</span></li>';
+      seatList.hidden = false;
+      return;
+    }
+    seatList.innerHTML = maskiner.map(function (d, i) {
+      var sidste = dato(d.last_seen);
+      var foerste = dato(d.first_seen);
+      var da = sidste ? 'Last used ' + sidste : 'Last use not recorded';
+      if (foerste) da += ' · first activated ' + foerste;
+      // `device_id` er serverens egen værdi, men den skrives ind i DOM'en, så
+      // den escapes som alt andet. Nummeret i knappen er listepladsen, ikke
+      // id'et — ellers ville en kunde skulle tælle hex-tegn.
+      return '<li><span class="seat-meta"><strong>Machine ' + (i + 1) + '</strong>'
+        + '<code class="seat-when">' + esc(da) + '</code>'
+        + '<code>' + esc(d.device_id) + '</code></span>'
+        + '<button type="button" class="btn-secondary" data-device="' + esc(d.device_id) + '">'
+        + 'Free machine ' + (i + 1) + '</button></li>';
+    }).join('');
+    seatList.hidden = false;
+    Array.prototype.forEach.call(seatList.querySelectorAll('button[data-device]'), function (b) {
+      b.addEventListener('click', function () { frigør(b.getAttribute('data-device'), b); });
+    });
+    seatSay((bekræftelse ? bekræftelse + ' ' : '')
+      + maskiner.length + ' of ' + j.max_devices + ' machines in use. '
+      + (fri > 0
+        ? fri + (fri === 1 ? ' place is free.' : ' places are free.')
+        : 'All places are in use — free one to move the key to a new machine.'), null);
+  }
+  function frigør(deviceId, knap) {
+    var nøgle = normalisér(seatKey.value);
+    var bygning = seatList.querySelectorAll('button[data-device]');
+    // Dobbelt handling: to tryk eller et dobbelt netkald må ikke frigøre to
+    // pladser, så hele listen låses mens kallet er i vej (CEO-kvalitet punkt 3).
+    Array.prototype.forEach.call(bygning, function (b) { b.disabled = true; });
+    seatSay('Freeing the machine…', null);
+    hent('/api/license/deactivate', { license_key: nøgle, device_id: deviceId }).then(function (x) {
+      Array.prototype.forEach.call(bygning, function (b) { b.disabled = false; });
+      // Rigtigst her: serveren svarede **ikke** at den frigjorde noget. Så må
+      // siden ikke sige at den gjorde det — den lyver ellers over for en kunde
+      // der prøver igen på den samme maskine og intet sker.
+      if (x.status !== 200 || !x.data || x.data.deactivated !== true) {
+        seatSay(svarSætning(x, 'That machine was not on this key, so nothing was freed.'), 'error');
+        return;
+      }
+      var tilbage = x.data.devices_in_use;
+      var bekræftelse = 'Machine freed. ' + tilbage + ' machine'
+        + (tilbage === 1 ? ' is' : 's are') + ' still on this key.';
+      seatSay(bekræftelse, null);
+      // Genindlæs listen, så kunden ser den nye tilstand frem for at skulle
+      // huske tallet han lige har læst. Bekræftelsen gives med, så den ikke
+      // forsvinder i det samme øjeblik.
+      hent('/api/license/devices', { license_key: nøgle }).then(function (y) {
+        if (y.status === 200 && y.data && y.data.ok === true) tegnMaskiner(y.data, bekræftelse);
+        else seatSay(bekræftelse, null);
+      }).catch(function () {});
+    }).catch(function () {
+      Array.prototype.forEach.call(bygning, function (b) { b.disabled = false; });
+      seatSay('No connection. Reload the page in a minute and try again.', 'error');
+    });
+  }
+  seatForm.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var nøgle = normalisér(seatKey.value);
+    if (!nøgle) {
+      rydSeat();
+      seatSay('Fill in your license key.', 'error');
+      return;
+    }
+    seatBtn.disabled = true;
+    rydSeat();
+    seatSay('Looking up the machines on this key…', null);
+    hent('/api/license/devices', { license_key: nøgle }).then(function (x) {
+      seatBtn.disabled = false;
+      if (x.status === 429 || x.status >= 500 || !x.data || x.data.ok !== true) {
+        seatSay(svarSætning(x, (x.data && x.data.error) || 'No license found for that key.'), 'error');
+        return;
+      }
+      tegnMaskiner(x.data);
+    }).catch(function () {
+      seatBtn.disabled = false;
+      seatSay('No connection. Reload the page in a minute and try again.', 'error');
+    });
+  });
+  // Slå nøglen ind fra opslaget ovenfor, så kunden ikke skal kopiere den samme
+  // 32 tegn to gange på den samme side.
+  if (form) {
+    form.addEventListener('submit', function () {
+      setTimeout(function () {
+        var fundet = document.getElementById('foundKey');
+        if (fundet && seatKey && !normalisér(seatKey.value)) seatKey.value = fundet.textContent.trim();
+      }, 0);
+    });
+  }
 })();
 </script>
 <script>

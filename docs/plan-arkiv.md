@@ -5506,3 +5506,63 @@ værdier siderne havde bedt om.
   - **Selvtest 21/21, polaritet målt begge veje.** Femogtyve mutationer i alt: de to rigtige fejlformularer fanges, de ni ærlige formuleringer fra `site/` lades være, en bred regex ville ikke fange `/terms/`, og to kontroller genskaber fejlen i en midlertidig kopi af den **rigtige** `thanks.html` (den anden som nøgne «Support»). Mod den gamle kode i `dist/` er porten **1 rød**; mod den nye **0**. To gatestræk, så `quality_gate.py` er **152 steps GRØN**.
   - **Browseren målt:** `/thanks` og `/paid-templates` ved 390 og 1280 px — 0 px vandret scroll, ingen console- eller page-fejl. Kun den 400-stien fra en ugyldig session giver en console-fejl, og det er den forventede fetch.
   - **Næste skridt, målt i samme iteration:** `grep -rn "license/deactivate"` uden for `_worker.js` giver **én** træffer, og den er i `tests/stripe-worker.test.mjs`. Ruten virker og er testet, men ingen side, klient eller dokument kalder den — så en kunde der rammer 409 (enhedsgrænsen nået) kan kun skrive til Mads. Det er ny opgave 1 under «Åbne opgaver».
+
+## 3/10 — En nøgle der ikke aktiverer, har ingen selvbetjening
+
+Målt 3/10 på `site/`: `grep -rn "license/deactivate" uden for _worker.js` gav
+**én** træffer, i `tests/stripe-worker.test.mjs`. Ruten virkede, var testet, og
+ingen side, klient eller dokument kaldte den. En kunde der rammer 409
+(«Device limit reached», tre maskiner på `$19`-produkterne) kunne derfor kun
+skrive til Mads — den menneskelige indsats missionen forbyder.
+
+`site/license-lookup.html` lovede desuden to ting der ikke var sande:
+«Deactivate the key in the old install first — it is one click in the app» (de
+to betalte desktop-apps `mahope/transmute` v0.2.1 og `mahope/deskuptime`
+desktop-v0.2.7 ringer stadig til `api.lemonsqueezy.com`, så de har ingen
+deaktiveringsknap) og «or write to support@mahope.tools and **we free up the
+seat**».
+
+**Beslutning: en listering, ikke et maskinennavn.** Planens acceptkriterium sagde
+«kunden indtaster nøgle og maskinnavn». Det kan ikke virke: `device_id` er en
+maskineidentitet **klienten selv danner** — `uuid4().hex`
+(`site/downloads/page-profile/page_profile.py:1040`), `cc-<random>`
+(`site/clean-copy-tool.html:613`), sitets hostname i WordPress-plugin'en. Ingen
+kunde kan gæfte den, og `instance_name` er bevidst afvist som enhedsidentitet
+(`_worker.js`, fordi appens egen deaktivering bruger `instance_id`). Så
+`/api/license/devices` lister maskinerne med første og seneste brug, og
+frigørelsen går gennem den **allerede testede** `/api/license/deactivate`.
+
+**Leveret**
+- `POST /api/license/devices` — POST-only, kræver `license_key` (nøglen er den
+  hemmelighed hele modellen bygger på), svarer `max_devices`, `devices_in_use`
+  og hver maskines `first_seen`/`last_seen`. Røber hverken mail, ord eller
+  session.
+- Enhedsposter er nu `{ id, first_seen, last_seen }` i stedet for rene strenge.
+  `deviceList()` læser begge former, så **en nøgle fra før ændringen stadig
+  virker** — listeringen skriver bare en dato på de gamle, fordi ellers ville
+  kunden se «ukendt» tre gange og ikke kunne vælge. Uden den additive form
+  ville `.includes(device)` aldrig fundet en bunden maskine, og hver
+  genaktivering ville tælle en ny plads indtil 409 på en kunde der bare åbnede
+  appen igen — det er målt som et rødt kontrolpunkt.
+- `/license-lookup` har «Free up a machine»: nøgle ind, maskinerne ud med dato,
+  én knap pr. maskine. Successen er **gateret på serverens `deactivated`** — et
+  200 med `deactivated: false` giver ikke «Machine freed». Listen låses under
+  kallet (to tryk frigør ikke to pladser) og genindlæses bagefter, så kunden ser
+  den nye tilstand. Tom-tilstand, fejltilstand og indlæsningstilstand er der.
+  Datoer vises i `Europe/Copenhagen`, ikke i UTC-dagen.
+- `check_license_clients.py` har fået den nye port i `NOT_CLIENTS`: den nævner
+  ruten og Lemon Squeezy som *vidne*, modsatningen af at være klient.
+
+**Målt.** `tests/stripe-worker.test.mjs` **370/370**, og **9 røde** mod den
+gamle `_worker.js`. `tests/license-lookup.test.mjs` **26/26**, og **14 røde**
+mod den gamle side. Ny port `tools/check_license_seat_release.py` **15/15**;
+polaritet målt på gammel side + gammel worker (**4 fund**) og på ny side +
+gammel worker (**ROUTE_MISSING**). `check_status_finality.py` blev rød undervejs
+og rettede sig selv: 429-grenen læste ingen `.error` selv, fordi sætningen lå i
+`statusFinality()`-funktionen, så fallback'en er nu serverens egen sætning når
+den har sendt en.
+
+**Kendte begrænsninger, ikke fund.** `deviceList()` læser både postformer, så en
+fremtidig tredje form ville blive læst som `String(post)` = `[object Object]`.
+Det kan kun ske ved en ny kodevej, og porten dømmer ikke på feltformen — det er
+et hul, ikke en fejl i det der kører.
