@@ -1812,12 +1812,20 @@ def self_test() -> int:
                              f"der ikke nævner den muterede side: "
                              + "; ".join(errs[:3]))
 
-        # Den anden fejlform: et fund igen uden id, som på `main` gav fire fund
-        # uden fix-tekst. Den skal give en fejl, ikke gå ubemærket.
+        # Den anden fejlform: et fund hvis id motoren ikke kender, som på `main`
+        # gav fire fund uden fix-tekst. Den skal give en fejl, ikke gå ubemærket.
+        # Mutationen læser `add('ID','sev',n)`, fordi `scan()` 3/10 flyttede
+        # fund-teksten ud i en MSG-tabel — et delt resultat skal kunne slå den
+        # samme tekst op uden at have kodet den ind i linket — så den gamle
+        # `findings.push({id:'VIEWPORT',sev:` ikke findes mere. Tænderne er de
+        # samme: en ukendt id tages ikke med i `free_rule_ids`, så løftet «15
+        # WCAG 2.1 AA rules» på siden holder ikke længere, *og* id'en har ingen
+        # nøgle i FIX.
         scan = lay.site / "scan.html"
         original = scan.read_text(encoding="utf-8")
         for name, old, new in (
-            ("fund uden id", "{id:'VIEWPORT',sev:", "{sev:"),
+            ("fund med ukendt id", "add('HEADING_H1','warning',1)",
+             "add('HEADING_ONE','warning',1)"),
             ("fix-tekst væk", "VIEWPORT:'Fix: add <meta name=\"viewport\"",
              "VIEWPORT_UNUSED:'Fix: add <meta name=\"viewport\""),
         ):

@@ -5833,3 +5833,50 @@ ved 390 og 1280 px i lys og mørk, 0 px vandret scroll alle fire, knappen
 
 **Rød CI rettet samme commit.** `plan-status` (`01b5e2f` → `c3bc4c5`) døde på
 at STATUS havde 31 linjer mod de 25 tilladte; kogen til 25.
+
+---
+
+## 3/10 — Et delt scanelink viste en tom formular (ceo/scan-delresultat)
+
+**Hvad.** `shareResult()` på EAA/WCAG-scanneren (`/scan` + `/scan-da`) kopierede
+kun `location.origin+'/scan#url='+encodeURIComponent(url)`. Den der modtog
+linket så altså en **tom formular** og skulle trykke Scan selv — og brugte sin
+*egen* rate limit på en side, der måske var ændret siden afsenderen scannede.
+Det er præcis den viste, en bureau-audit skal kunne sende videre på en kunde.
+
+**Rettelsen.** Fundene ligger nu i fragmentet:
+`#u=<kodeadresse>;s=<0-100>;p=<platform>;f=<ID>:<e|w>:<antal>,…`. Kun id, alvor
+og antal rejser med; teksten og rettelsen slås op i sidens *egen* `MSG`-/`FIX`-
+tabel, så et håndredigeret link kan ændre et tal og aldrig sætte sine egne ord
+på mahope.tools. Codecen ligger i `site/scan-share-core.js`, som begge sprog
+deler — den danske side er ellers en håndhævede kopi, og en codec-only test
+ville være grøn for en danske side der døde.
+
+**Fejl fundet undervejs (tre, alle målt).**
+
+1. **Fund-teksten blev slugt som markup.** `page has no <title>` skrev råt i
+   `innerHTML`, så DOMParser' `<title>` forsvandt og læseren så «page has no».
+   Rettelsen er `esc()` om både `describe(f.id,f.count)` og `FIX[f.id]`.
+2. **Testen døde med `TypeError` i stedet for at melde rød,** da `render()`
+   manglede i scriptet. Så er «testen er rød» og «testen gik i stykker» det
+   samme signal. Rettelsen er `?.` hele vejen og en tidlig return med røde
+   domme. Fundet ved en mutation, ikke ved at læse koden.
+3. **`catalog-where` blev RØD med 10 fund.** `tools/stripe_catalog.json`'s
+   `where`-henvisninger havde linjenumre fra før refactoren. Porten dømmer at
+   citatet faktisk står i det angivne interval, så den lavede præcis det den
+   var skrevet til. Referencerne sat til de rigtige intervaller: add()-kald
+   345-378 (EN) / 341-374 (DA), de fire basistjek 367-370 / 363-366,
+   proCard-h3'en 310 / 306, «rapporten er gratis»-afsnittet 102-104 / 101-103.
+
+**En usynlig knap, målt i Chromium.** `style.css` har `button:not([class])` med
+samme specificitet som sidens egen `.scanbox button`, men stylesheetet kommer
+*efter* siden's `<style>` — så «Scan now» og «Scan nu» stod hvidt på hvidt i
+den byggede side. Målt på `/scan` og `/scan-da`, 390 og 1280 px, lys og mørk.
+Nu med `class="btn"`, så `:not([class])` ikke længere matcher mens
+`.scanbox button` stadig vinder over `.btn`.
+
+**Porte.** `tests/scan-share.test.mjs` **75/75**, med polaritet målt på tre
+mutationer: `esc()` væk → 1 rød, del-stien slået fra → 8 røde, gammelt
+`#url=`-link dødt → 2 røde. Dommen tæller `fetch`, så «et delt resultat
+scanner ikke» er et *målt* tal og ikke en løfte. `check_catalog_where` **120**
+funktioner, `--self-test` **11/11**. Hele `quality_gate` grøn.

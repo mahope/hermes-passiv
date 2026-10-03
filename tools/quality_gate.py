@@ -287,6 +287,24 @@ STEPS: tuple[Step, ...] = (
             "site/color-blindness-simulator-da.html",
         ),
     ),
+    # Del-linket på EAA/WCAG-scanneren (EN + DA). Før dette kopierede
+    # `shareResult()` kun URL'en, så den der modtog linket så en tom formular
+    # og skulle trykke Scan selv — og brugte sin *egen* kvote på en side, der
+    # måske var ændret siden. Fundene ligger nu i fragmentet via
+    # `site/scan-share-core.js`, som begge sprog deler. Dommen læser codecen
+    # og begge *rigtige* sider, fordi den danske er en håndhævede kopi: kun
+    # id, alvor og antal rejser i linket, så teksten slås op i sidens egen
+    # MSG-tabel og et håndredigeret link aldrig kan skrive sine egne ord.
+    Step(
+        id="scan-share",
+        argv=("node", "tests/scan-share.test.mjs"),
+        inputs=(
+            "tests/scan-share.test.mjs",
+            "site/scan-share-core.js",
+            "site/scan.html",
+            "site/scan-da.html",
+        ),
+    ),
     # 1/10: `formatAnswer()` på `/compliance-ai` (EN + DA) skrev modellens svar
     # direkte i `innerHTML` med kun markdown-udskiftninger. Svaret er bygget af
     # det besøgende skrev i feltet, så `<img src=x onerror=…>` kunne blive til

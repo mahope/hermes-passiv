@@ -64,7 +64,14 @@
     <label for="url" class="sr-only">Page URL</label>
     <input id="url" name="url" type="url" required
            placeholder="https://your-site.com" inputmode="url">
-    <button type="submit">Scan now</button>
+    <!-- `class="btn"`: `style.css` har `button:not([class])`, og den har
+         samme specificitet som `.scanbox button` her, men stylesheetet kommer
+         *efter* denne <style> — så den fik hvid baggrund oven i hvid tekst,
+         og sidens primære handling var usynlig på den byggede side (målt i
+         Chromium på /scan og /scan-da, 390 og 1280 px). Med en klasse holder
+         `:not([class])` ikke længere, og `.scanbox button` (0,1,1) vinder
+         stadig over `.btn` (0,1,0), så knappen ser ud som oprindeligt. -->
+    <button type="submit" class="btn">Scan now</button>
   </form>
   <div id="result" role="status" aria-live="polite"></div>
 </section>
@@ -172,13 +179,123 @@
   browser except fetching the page you scan.</p>
 </div></footer>
 
+<script src="/scan-share-core.js"></script>
 <script>
+// De tre fund-tabeller — MSG (teksten), FIX (rettelsen) og PLATFORM_GUIDES
+// (platformens guide) — lå inde i `scan()` og lå derfor væk fra et *delt*
+// resultat, som ikke har noget hentet dokument at slå platformen op i. De er
+// flyttet ud på modulomfang, og `add()` tager ikke længere en tekst: den slår
+// op i MSG. Kun fundets id, alvor og antal rejser i fragmentet, så en
+// håndredigeret deling kan ændre et tal og aldrig skrive sine egne ord på
+// mahope.tools.
+const MSG={
+  IMG_ALT:'{n} image(s) missing alt text',
+  FORM_LABEL:'{n} form field(s) without a label',
+  LINK_TEXT:'{n} link(s) with no accessible text',
+  BUTTON_TEXT:'{n} button(s) with no accessible text',
+  DUP_ID:'{n} duplicate id value(s) (breaks label/aria references)',
+  TARGET_BLANK:'{n} link(s) opening in a new window without warning',
+  HEADING_SKIP:'{n} heading level skip(s)',
+  IFRAME_TITLE:'{n} iframe(s) without a title',
+  TABLE_HEADER:'{n} table(s) without header cells',
+  ARIA_HIDDEN_FOCUS:'{n} aria-hidden element(s) still focusable',
+  CONTRAST:'{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',
+  DOC_TITLE:'page has no <title>',
+  HTML_LANG:'<html> lacks a lang attribute',
+  VIEWPORT:'missing viewport meta tag',
+  HEADING_H1:'no <h1> found'};
+const FIX={
+    IMG_ALT:'Fix: add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
+    FORM_LABEL:'Fix: give every field a <label for="field-id">, or an aria-label attribute.',
+    LINK_TEXT:'Fix: add descriptive text inside the link, or aria-label if it is icon-only.',
+    BUTTON_TEXT:'Fix: add visible text or an aria-label to every button.',
+    DUP_ID:'Fix: make every id value unique on the page.',
+    TARGET_BLANK:'Fix: warn users the link opens in a new window (e.g. "(opens in new tab)") and add rel="noopener".',
+    DOC_TITLE:'Fix: add a descriptive <title> in the <head>.',
+    HTML_LANG:'Fix: add lang to <html>, e.g. <html lang="en">.',
+    VIEWPORT:'Fix: add <meta name="viewport" content="width=device-width, initial-scale=1">.',
+    HEADING_H1:'Fix: add one descriptive <h1> as the main page heading.',
+    HEADING_SKIP:'Fix: do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
+    IFRAME_TITLE:'Fix: add a title attribute describing the iframe content.',
+    TABLE_HEADER:'Fix: use <th> for header cells in data tables.',
+    ARIA_HIDDEN_FOCUS:'Fix: remove aria-hidden from focusable elements, or add tabindex="-1".',
+    CONTRAST:'Fix: darken the text colour or lighten the background until the contrast ratio is at least 4.5:1 (3:1 for large text). Check it at webaim.org/resources/contrastchecker.'};
+const PLATFORM_GUIDES={
+    'WordPress':'/guides/wordpress-accessibility-check',
+    'Shopify':'/guides/shopify-accessibility-check',
+    'Webflow':'/guides/webflow-accessibility-check',
+    'Wix':'/guides/wix-accessibility-check',
+    'Squarespace':'/guides/squarespace-accessibility-check',
+    'Drupal':'/guides/drupal-accessibility-check',
+    'Joomla':'/guides/joomla-accessibility-check',
+    'PrestaShop':'/guides/prestashop-accessibility-check',
+    'Magento':'/guides/magento-accessibility-check',
+    'Ghost':'/guides/ghost-accessibility-check',
+    'TYPO3':'/guides/typo3-accessibility-check',
+    'Craft CMS':'/guides/craftcms-accessibility-check',
+    'Umbraco':'/guides/umbraco-accessibility-check'};
 function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+// Den tilstand resultatet står i, så del-linket skrives *fra* den måling der
+// lige skete. Før dette kopierede knappen kun URL'en, så modtageren så en tom
+// form og skulle trykke Scan selv — og brugte sin egen kvote på en side,
+// der måske var ændret siden.
+let LAST=null;
+// Brugerens adresse og fund-teksten kommer begge udefra, så begge escapes.
+// Uden det forsvandt «page has no <title>» som «page has no», fordi
+// DOMParser'ens `<title>` blev slugt som et tag.
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function describe(id,n){const t=MSG[id];return t?t.replace(/\{n\}/g,n):id;}
+function platformBox(plat){
+  if(!plat||!Object.prototype.hasOwnProperty.call(PLATFORM_GUIDES,plat))return '';
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)"'
+    +'<strong>Detected platform: '+esc(plat)+'</strong> — most fixes are done right in '
+    +esc(plat)+'\'s admin. Step-by-step: <a href="'+PLATFORM_GUIDES[plat]+'">the free '
+    +esc(plat)+' accessibility fix guide</a>.</div>';
+}
+// Ét sted for kortet, fordi vejen til et delt resultat også er vej til et netop
+// kørt: en læser der åbner et delt link skal se præcis den samme kortstabel som
+// afsenderen, kun mærket som et øjebliksbillede.
+function render(state,opts){
+  opts=opts||{};
+  const out=document.getElementById('result');
+  if(!out)return;
+  const g=gradeOf(state.score);
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'+
+    '<div>'+state.errors+' error(s), '+state.warnings+' warning(s)</div></div>'+
+    (opts.shared
+      ? '<p class="hint">Shared result for <code>'+esc(state.url)+'</code>, sent from the free scanner. It is a snapshot of one scan, not a live check of the page. Press <strong>Scan</strong> above to see the page as it is now.</p>'
+      : '')+
+    platformBox(state.platform)+
+    (state.findings.length?'<ul class="findings">'+state.findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
+     :'<p>No issues found by automated checks.</p>')+
+    '<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
+    '<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'+
+    '<p class="hint" id="shareStatus"></p>'+
+    '<input type="text" id="shareLink" readonly hidden aria-label="Link to this result">'+
+    '<p class="hint">The link carries the findings themselves, so whoever opens it reads this list without running a scan of their own. Nothing about the page is sent to us by opening it.</p>'+
+    '<p class="hint">Note: automated checks catch 30–40% of accessibility issues. See our <a href="/#products">EAA Compliance e-book</a> for the full manual process.</p>'+
+    proCard()+
+    '<p class="hint">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+  const box=document.getElementById('shareLink');
+  if(box)box.value=location.origin+'/scan';
+}
+// Samme vej som før, men uden `alert()`: et 300-tegns link i en modal er
+// umuligt at læse, og hvis klippebordet var lukket kunne linket ikke
+// kopieres igen alligevel. Statuslinjen siger hvad der skete, og feltet
+// står med linket så det kan markeres med tastaturet.
 async function shareResult(){
-  const url=location.origin+'/scan#url='+encodeURIComponent(document.getElementById('url').value.trim());
-  try{await navigator.clipboard.writeText(url);}catch(e){
-    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
-  alert('Link copied: '+url);
+  if(!LAST||!window.SCANSHARE)return;
+  const hash=window.SCANSHARE.encode(LAST);
+  if(!hash)return;
+  const url=location.origin+'/scan'+hash;
+  let done=false;
+  try{await navigator.clipboard.writeText(url);done=true;}catch(e){}
+  const st=document.getElementById('shareStatus');
+  const box=document.getElementById('shareLink');
+  if(st)st.textContent=done?'Link copied. Send it to whoever should see the findings.':'Copy the link below and send it to whoever should see the findings.';
+  if(box){box.hidden=false;box.value=url;box.focus();box.select();}
 }
 window.shareResult=shareResult;
 // Betalt vej. Samme produktrappe og samme ærlige tre punkter som
@@ -224,41 +341,41 @@ async function scan(url){
   }
   const doc = new DOMParser().parseFromString(html,'text/html');
   const findings = [];
-  const add=(id,sev,msg,n)=>{if(n>0)findings.push({id,sev,msg:msg.replace('{n}',n),count:n})};
-  add('IMG_ALT','error','{n} image(s) missing alt text',
+  const add=(id,sev,n)=>{if(n>0)findings.push({id,sev,count:n})};
+  add('IMG_ALT','error',
       [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
-  add('FORM_LABEL','error','{n} form field(s) without a label',
+  add('FORM_LABEL','error',
       [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
         const t=(el.type||'').toLowerCase();
         if(['hidden','submit','button','reset','image'].includes(t))return false;
         if(el.labels&&el.labels.length)return false;
         return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
       }).length);
-  add('LINK_TEXT','error','{n} link(s) with no accessible text',
+  add('LINK_TEXT','error',
       [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
-  add('BUTTON_TEXT','error','{n} button(s) with no accessible text',
+  add('BUTTON_TEXT','error',
       [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
-  add('DUP_ID','error','{n} duplicate id value(s) (breaks label/aria references)',
+  add('DUP_ID','error',
       (()=>{const seen=new Set(),dups=new Set();
         doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
         return dups.size;})());
-  add('TARGET_BLANK','warning','{n} link(s) opening in a new window without warning',
+  add('TARGET_BLANK','warning',
       [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
         const t=(a.textContent||'').toLowerCase();
         return t && !t.includes('new window') && !t.includes('new tab');
       }).length);
-  if(!doc.title||!doc.title.trim())findings.push({id:'DOC_TITLE',sev:'error',msg:'page has no <title>'});
-  if(!doc.documentElement.lang)findings.push({id:'HTML_LANG',sev:'error',msg:'<html> lacks a lang attribute'});
-  if(!doc.querySelector('meta[name="viewport"]'))findings.push({id:'VIEWPORT',sev:'warning',msg:'missing viewport meta tag'});
-  if(!doc.querySelector('h1'))findings.push({id:'HEADING_H1',sev:'warning',msg:'no <h1> found'});
+  if(!doc.title||!doc.title.trim())add('DOC_TITLE','error',1);
+  if(!doc.documentElement.lang)add('HTML_LANG','error',1);
+  if(!doc.querySelector('meta[name="viewport"]'))add('VIEWPORT','warning',1);
+  if(!doc.querySelector('h1'))add('HEADING_H1','warning',1);
   let skips=0,prev=0;
   doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
-  add('HEADING_SKIP','warning','{n} heading level skip(s)',skips);
-  add('IFRAME_TITLE','warning','{n} iframe(s) without a title',doc.querySelectorAll('iframe:not([title])').length);
-  add('TABLE_HEADER','warning','{n} table(s) without header cells',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
-  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden element(s) still focusable',
+  add('HEADING_SKIP','warning',skips);
+  add('IFRAME_TITLE','warning',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error',
       [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
-  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',(()=>{
+  add('CONTRAST','error',(()=>{
     function parseCol(s){
       s=(s||'').trim().toLowerCase();
       if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
@@ -303,58 +420,16 @@ async function scan(url){
   const errors=findings.filter(f=>f.sev==='error').length,
         warnings=findings.filter(f=>f.sev==='warning').length,
         notices=findings.filter(f=>f.sev==='notice').length;
-  const score=Math.max(0,100-errors*12-warnings*5-notices*2), g=gradeOf(score);
-  const FIX={
-    IMG_ALT:'Fix: add alt="description" to every meaningful image; use alt="" for purely decorative ones.',
-    FORM_LABEL:'Fix: give every field a <label for="field-id">, or an aria-label attribute.',
-    LINK_TEXT:'Fix: add descriptive text inside the link, or aria-label if it is icon-only.',
-    BUTTON_TEXT:'Fix: add visible text or an aria-label to every button.',
-    DUP_ID:'Fix: make every id value unique on the page.',
-    TARGET_BLANK:'Fix: warn users the link opens in a new window (e.g. "(opens in new tab)") and add rel="noopener".',
-    DOC_TITLE:'Fix: add a descriptive <title> in the <head>.',
-    HTML_LANG:'Fix: add lang to <html>, e.g. <html lang="en">.',
-    VIEWPORT:'Fix: add <meta name="viewport" content="width=device-width, initial-scale=1">.',
-    HEADING_H1:'Fix: add one descriptive <h1> as the main page heading.',
-    HEADING_SKIP:'Fix: do not skip heading levels — nest h2 under h1, h3 under h2, etc.',
-    IFRAME_TITLE:'Fix: add a title attribute describing the iframe content.',
-    TABLE_HEADER:'Fix: use <th> for header cells in data tables.',
-    ARIA_HIDDEN_FOCUS:'Fix: remove aria-hidden from focusable elements, or add tabindex="-1".',
-    CONTRAST:'Fix: darken the text colour or lighten the background until the contrast ratio is at least 4.5:1 (3:1 for large text). Check it at webaim.org/resources/contrastchecker.'};
-  const PLATFORM_GUIDES={
-    'WordPress':'/guides/wordpress-accessibility-check',
-    'Shopify':'/guides/shopify-accessibility-check',
-    'Webflow':'/guides/webflow-accessibility-check',
-    'Wix':'/guides/wix-accessibility-check',
-    'Squarespace':'/guides/squarespace-accessibility-check',
-    'Drupal':'/guides/drupal-accessibility-check',
-    'Joomla':'/guides/joomla-accessibility-check',
-    'PrestaShop':'/guides/prestashop-accessibility-check',
-    'Magento':'/guides/magento-accessibility-check',
-    'Ghost':'/guides/ghost-accessibility-check',
-    'TYPO3':'/guides/typo3-accessibility-check',
-    'Craft CMS':'/guides/craftcms-accessibility-check',
-    'Umbraco':'/guides/umbraco-accessibility-check'};
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+  // Platform-detektionen bliver her, ikke i `platformBox()`: den skal kun slå
+  // platformen op i PLATFORM_GUIDES, og *platformens navn* kommer videre i
+  // del-linket, så modtageren får samme guide-boks som afsenderen.
   const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
   let plat=null;
   for(const p of Object.keys(PLATFORM_GUIDES)){
     if(new RegExp(p,'i').test(gen)){plat=p;break;}}
-  const platHtml = plat
-    ? '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
-      +'<strong>Detected platform: '+plat+'</strong> — most fixes are done right in '
-      +plat+'\'s admin. Step-by-step: <a href="'+PLATFORM_GUIDES[plat]+'">the free '
-      +plat+' accessibility fix guide</a>.</div>'
-    : '';
-  out.innerHTML =
-    '<div class="scorecard"><div class="score grade-'+g+'">'+score+'/100 — Grade '+g+'</div>'+
-    '<div>'+errors+' error(s), '+warnings+' warning(s)</div></div>'+platHtml+
-    (findings.length?'<ul class="findings">'+findings.map(f=>
-      '<li><span class="sev-'+f.sev+'">'+f.msg+'</span><br><small>'+(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
-     :'<p>No issues found by automated checks.</p>')+
-    '<p style="text-align:center;margin-top:18px"><button onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '+
-    '<button onclick="shareResult()" class="btn btn-secondary">Copy shareable link</button></p>'+
-    '<p style="font-size:13px;color:#667">Note: automated checks catch 30–40% of accessibility issues. See our <a href="/#products">EAA Compliance e-book</a> for the full manual process.</p>'+
-    proCard()+
-    '<p style="font-size:13px;color:#667">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>';
+  LAST={url:url,score:score,errors:errors,warnings:warnings,findings:findings,platform:plat};
+  render(LAST);
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();
@@ -365,7 +440,22 @@ document.getElementById('scanForm').addEventListener('submit',e=>{
 // bookmark eller et dobbeltkodet link giver læseren en tom side og en rød
 // konsolfejl i stedet for den scanning de blev lovet. Samme tre linjer som
 // `/url-to-markdown` allerede havde.
+// `#u=` er et delt resultat, `#url=` er en kørsel, og begge kan skrives i
+// hånden. `decode()` kaster aldrig og giver `null` på alt den ikke kan læse,
+// så et gammelt bookmark, et dobbeltkodet link eller en beskåret besked
+// efterlader formularen som den var — aldrig en tom side og en rød konsolfejl.
+// Et delt resultat scanner *ikke*: der gennemgås ingen kald, så det tager hverken
+// afsenderens eller modtagerens kvote.
 (function(){
+  const shared=window.SCANSHARE?window.SCANSHARE.decode(location.hash):null;
+  if(shared){
+    const field=document.getElementById('url');
+    if(field)field.value=shared.url;
+    LAST={url:shared.url,score:shared.score,errors:shared.errors,warnings:shared.warnings,
+          findings:shared.findings,platform:shared.platform};
+    render(LAST,{shared:true});
+    return;
+  }
   const m=location.hash.match(/#url=(.+)$/);
   if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}
     if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}

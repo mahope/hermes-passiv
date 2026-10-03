@@ -1,23 +1,23 @@
 # STATUS
-- **Kontrasttjekkeren sagde «try a darker colour» og standsede. Nu gør den det.**
-  3/10. Den færdige måling sluttede med en ordre, og beslutningen der skulle
-  følge lå hos læseren. Kernen løser nu begge veje fra den *samme* måling: en
-  tekstfarve når baggrunden er smal nok, ellers et slør med den mindste
-  dækning der virker. Målt i rigtig Chromium: **FAIL 1,16:1 → PASS 3,04:1**
-  ved 390 og 1280 px i lys og mørk, 0 px vandret scroll, knappen 269×44 px.
-  Porte: `check_contrast_sampling` **26 → 38** løfter og `--self-test`
-  **24/24**; `scan-clients` **433 → 498**; hele `quality_gate` **154 steps**.
-  Fund undervejs: **fire fejl, målt og rettet** — (1) jeg regnede i *lystyrke*
-  men brugte resultatet som *kanalværdi*, så farven blev dobbelt så mørk som
-  tærsklen; den bestod alle «består den»-domme. (2) Den mørke grene blev løst
-  mod den *lyse* ende og var ikke strammende nok. (3) `sampleContrast()` målte
-  det rå billede mens sløret lå tegnet oveni, så værktøjet viste et bedre tal
-  end læseren kunne se. (4) Fundet i review af min egen diff: sløret prøves i
-  begge retninger, og på et lyst billede **vinder det hvide** (målt: 40 % hvidt
-  med sort tekst) — så «mørkt lag» var en løfte om halvdelen af billederne. Nu
-  to nøgler (`fixedScrimDark`/`Light`) med ratchet på alle fire sider.
-- **Rød CI rettet 3/10:** `plan-status` fandt 31 linjer mod de 25 tilladte.
-  Tre review-fund fra 29/9 lukket i `01b5e2f`, to LAV-fund i `c3bc4c5`.
+- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10.
+  «Copy shareable link» på EAA/WCAG-scanneren kopierede kun URL'en, så den der
+  modtog linket så en tom formular og skulle trykke Scan selv — og brugte sin
+  *egen* kvote på en side, der måske var ændret siden. Det er præcis den viste,
+  en bureau-audit skal kunne sendes videre på. Fundene ligger nu i fragmentet
+  og gengives **uden et eneste netværkskald** (målt: `fetch` tælles, del-stien
+  kalder nul gange). Kun id, alvor og antal rejser med; teksten slås op i
+  sidens egen `MSG`-tabel, så et håndredigeret link aldrig kan skrive sine egne
+  ord på mahope.tools. Codecen ligger i `site/scan-share-core.js`, som begge
+  sprog deler, fordi den danske side ellers får sin egen kopi. To fejl fundet
+  undervejs: fund-teksten escapes nu — «page has no <title>» slugtes forhen som
+  et tag — og fundene kan ikke reddes ud af tabellen. Porte:
+  `tests/scan-share.test.mjs` **75/75**, polaritet på tre mutationer (esc()
+  væk → rød, del-stien fra → 8 røde, gammelt `#url=` dødt → 2 røde);
+  `check_catalog_where` **120** funktioner, **11/11**; `quality_gate` **154 steps**.
+- **Scan-knappen var usynlig:** `style.css` har `button:not([class])` med samme
+  specificitet som sidens egen `.scanbox button`, men stylesheetet kommer *efter*
+  siden's `<style>` — så «Scan now» stod hvidt på hvidt i den byggede side
+  (Chromium, `/scan` + `/scan-da`, 390 og 1280 px). Nu med `class="btn"`.
 - **Deploy:** `build-info.json` står på **`01b5e2f`** på alle tre domæner, så
   `ceo/license-tal-og-tæller` er målt `DEPLOY OK`; `ceo/afkortede-tekster` er
   ikke live, fordi CI var rød. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
@@ -26,6 +26,14 @@
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: et delt scanelink viser fundene, og Scan-knappen er
+  synlig igen ceo/scan-delresultat 2026-10-03 06:50` — på `/scan` og
+  `/scan-da` skal `<script src="/scan-share-core.js">` være indlæst, knappen
+  hedde «Copy link to this result»/«Kopiér link til dette resultat», og
+  `<button type="submit">` skal have en `class`. Et delt link med
+  `#u=…;s=74;f=IMG_ALT:e:4` skal vise «4 image(s) missing alt text» uden at
+  siden scanner noget.
 
 - `VERIFICÉR DEPLOY: «Fix it»-knappen gør den rettelse værktøjet før bad om
   ceo/contrast-fix-knap 2026-10-03 04:55` — både `/text-on-image-checker`
@@ -503,3 +511,13 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     fem i én fil, så det er en funktion der mangler, ikke en der skal opfindes.
     **Åbent:** se ❓ — pro-tabellen på samme side lover kundeklar rapport som
     den betalte vare, så jeg kan ikke bygge den gratis uden dit valg.
+24. ~~**Et delt scanelink, der viste en tom formular.**~~ **Leveret 3/10.**
+    Se punkt 1 i STATUS. Hvem: bureauer og webbureauer, der scanner en kundes
+    side og vil sende fundene videre. Tal: fund delt pr. scanning med et helt
+    resultat (baseline **0** — linket indeholdt kun URL'en, så modtageren så en
+    tom formular og brugte sin egen kvote; målt i testen: `fetch` tælles, del-
+    stien kalder nul gange). Accept: `tests/scan-share.test.mjs` **75/75** med
+    polaritet på tre mutationer, og dommen læser *begge* rigtige sider, så den
+    danske ikke kan få sin egen kopi og drive fra den engelske. Datagrund:
+    målt på koden, ikke gættet — `shareResult()` kopierede
+    `location.origin+'/scan#url='+…` og ingenting else.

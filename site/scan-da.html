@@ -64,7 +64,14 @@
     <label for="url" class="sr-only">Sidens URL</label>
     <input id="url" name="url" type="url" required
            placeholder="https://din-hjemmeside.dk" inputmode="url">
-    <button type="submit">Scan nu</button>
+    <!-- `class="btn"`: `style.css` har `button:not([class])`, og den har
+         samme specificitet som `.scanbox button` her, men stylesheetet kommer
+         *efter* denne <style> — så den fik hvid baggrund oven i hvid tekst,
+         og sidens primære handling var usynlig på den byggede side (målt i
+         Chromium på /scan og /scan-da, 390 og 1280 px). Med en klasse holder
+         `:not([class])` ikke længere, og `.scanbox button` (0,1,1) vinder
+         stadig over `.btn` (0,1,0), så knappen ser ud som oprindeligt. -->
+    <button type="submit" class="btn">Scan nu</button>
   </form>
   <div id="result" role="status" aria-live="polite"></div>
 </section>
@@ -171,13 +178,123 @@
   browser undtagen hentningen af siden du scanner.</p>
 </div></footer>
 
+<script src="/scan-share-core.js"></script>
 <script>
+// De tre fund-tabeller — MSG (teksten), FIX (rettelsen) og PLATFORM_GUIDES
+// (platformens guide) — lå inde i `scan()` og lå derfor væk fra et *delt*
+// resultat, som ikke har noget hentet dokument at slå platformen op i. De er
+// flyttet ud på modulomfang, og `add()` tager ikke længere en tekst: den slår
+// op i MSG. Kun fundets id, alvor og antal rejser i fragmentet, så en
+// håndredigeret deling kan ændre et tal og aldrig skrive sine egne ord på
+// mahope.tools.
+const MSG={
+  IMG_ALT:'{n} billede(r) mangler alt-tekst',
+  FORM_LABEL:'{n} formularfelt(er) uden mærkat',
+  LINK_TEXT:'{n} link(s) uden tilgængelig tekst',
+  BUTTON_TEXT:'{n} knap(p(er)) uden tilgængelig tekst',
+  DUP_ID:'{n} duplikeret(e) id-værdi(er) (bryder label/aria-referencer)',
+  TARGET_BLANK:'{n} link(s) der åbner i nyt vindue uden advarsel',
+  HEADING_SKIP:'{n} sprunget(t) overskriftsniveau(er)',
+  IFRAME_TITLE:'{n} iframe(s) uden titel',
+  TABLE_HEADER:'{n} tabel(ler) uden hovedceller',
+  ARIA_HIDDEN_FOCUS:'{n} aria-hidden-element(er) kan stadig fokuseres',
+  CONTRAST:'{n} tekstfarvekombination(er) under WCAG AA-kontrast (4,5:1 normal, 3:1 stor tekst)',
+  DOC_TITLE:'siden har ingen <title>',
+  HTML_LANG:'<html> mangler en lang-attribut',
+  VIEWPORT:'manglende viewport-meta-tag',
+  HEADING_H1:'ingen <h1> fundet'};
+const FIX={
+    IMG_ALT:'Fix: tilføj alt="beskrivelse" til alle meningsbærende billeder; brug alt="" til rent dekorative.',
+    FORM_LABEL:'Fix: giv hvert felt en <label for="felt-id">, eller en aria-label-attribut.',
+    LINK_TEXT:'Fix: tilføj beskrivende tekst i linket, eller aria-label hvis det kun er et ikon.',
+    BUTTON_TEXT:'Fix: tilføj synlig tekst eller aria-label til hver knap.',
+    DUP_ID:'Fix: gør hver id-værdi unik på siden.',
+    TARGET_BLANK:'Fix: advertér brugerne om at linket åbner i nyt vindue (fx "(åbner i nyt faneblad)") og tilføj rel="noopener".',
+    DOC_TITLE:'Fix: tilføj en beskrivende <title> i <head>.',
+    HTML_LANG:'Fix: tilføj lang til <html>, fx <html lang="da">.',
+    VIEWPORT:'Fix: tilføj <meta name="viewport" content="width=device-width, initial-scale=1">.',
+    HEADING_H1:'Fix: tilføj én beskrivende <h1> som sidens hovedoverskrift.',
+    HEADING_SKIP:'Fix: spring ikke overskriftsniveauer over — h2 under h1, h3 under h2 osv.',
+    IFRAME_TITLE:'Fix: tilføj en title-attribut der beskriver iframens indhold.',
+    TABLE_HEADER:'Fix: brug <th> til hovedceller i datatabeller.',
+    ARIA_HIDDEN_FOCUS:'Fix: fjern aria-hidden fra fokusbare elementer, eller tilføj tabindex="-1".',
+    CONTRAST:'Fix: gør teksten mørkere eller baggrunden lysere til kontrastforholdet er mindst 4,5:1 (3:1 for stor tekst). Tjek det på webaim.org/resources/contrastchecker.'};
+const PLATFORM_GUIDES={
+    'WordPress':'/guides/wordpress-accessibility-check',
+    'Shopify':'/guides/shopify-accessibility-check',
+    'Webflow':'/guides/webflow-accessibility-check',
+    'Wix':'/guides/wix-accessibility-check',
+    'Squarespace':'/guides/squarespace-accessibility-check',
+    'Drupal':'/guides/drupal-accessibility-check',
+    'Joomla':'/guides/joomla-accessibility-check',
+    'PrestaShop':'/guides/prestashop-accessibility-check',
+    'Magento':'/guides/magento-accessibility-check',
+    'Ghost':'/guides/ghost-accessibility-check',
+    'TYPO3':'/guides/typo3-accessibility-check',
+    'Craft CMS':'/guides/craftcms-accessibility-check',
+    'Umbraco':'/guides/umbraco-accessibility-check'};
 function gradeOf(s){return s>=90?'A':s>=75?'B':s>=55?'C':'D'}
+// Den tilstand resultatet står i, så del-linket skrives *fra* den måling der
+// lige skete. Før dette kopierede knappen kun URL'en, så modtageren så en tom
+// form og skulle trykke Scan selv — og brugte sin egen kvote på en side,
+// der måske var ændret siden.
+let LAST=null;
+// Brugerens adresse og fund-teksten kommer begge udefra, så begge escapes.
+// Uden det forsvandt «page has no <title>» som «page has no», fordi
+// DOMParser'ens `<title>` blev slugt som et tag.
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function describe(id,n){const t=MSG[id];return t?t.replace(/\{n\}/g,n):id;}
+function platformBox(plat){
+  if(!plat||!Object.prototype.hasOwnProperty.call(PLATFORM_GUIDES,plat))return '';
+  return '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)"'
+    +'<strong>Registreret platform: '+esc(plat)+'</strong> — de fleste rettelser foretages direkte i '
+    +esc(plat)+'\' admin. Trin for trin: <a href="'+PLATFORM_GUIDES[plat]+'">den gratis '
+    +esc(plat)+'-tilgængelighedsguide</a>.</div>';
+}
+// Ét sted for kortet, fordi vejen til et delt resultat også er vej til et netop
+// kørt: en læser der åbner et delt link skal se præcis den samme kortstabel som
+// afsenderen, kun mærket som et øjebliksbillede.
+function render(state,opts){
+  opts=opts||{};
+  const out=document.getElementById('result');
+  if(!out)return;
+  const g=gradeOf(state.score);
+  out.innerHTML =
+    '<div class="scorecard"><div class="score grade-'+g+'">'+state.score+'/100 — Grade '+g+'</div>'+
+    '<div>'+state.errors+' fejl, '+state.warnings+' warning(s)</div></div>'+
+    (opts.shared
+      ? '<p class="hint">Delt resultat for <code>'+esc(state.url)+'</code>, sendt fra den gratis scanner. Det er et øjebliksbillede af én scanning, ikke et live tjek af siden. Tryk på <strong>Scan</strong> ovenfor for at se siden som den er nu.</p>'
+      : '')+
+    platformBox(state.platform)+
+    (state.findings.length?'<ul class="findings">'+state.findings.map(f=>
+      '<li><span class="sev-'+f.sev+'">'+esc(describe(f.id,f.count))+'</span><br><small>'+esc(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
+     :'<p>Ingen problemer fundet af de automatiske tjek.</p>')+
+    '<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '+
+    '<button type="button" onclick="shareResult()" class="btn btn-secondary">Kopiér link til dette resultat</button></p>'+
+    '<p class="hint" id="shareStatus"></p>'+
+    '<input type="text" id="shareLink" readonly hidden aria-label="Link til dette resultat">'+
+    '<p class="hint">Linket bærer fundene selv, så den der åbner det læser listen uden at køre en scanning selv. Der sendes intet om siden til os ved at åbne det.</p>'+
+    '<p class="hint">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>'+
+    proCard()+
+    '<p class="hint">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
+  const box=document.getElementById('shareLink');
+  if(box)box.value=location.origin+'/scan-da';
+}
+// Samme vej som før, men uden `alert()`: et 300-tegns link i en modal er
+// umuligt at læse, og hvis klippebordet var lukket kunne linket ikke
+// kopieres igen alligevel. Statuslinjen siger hvad der skete, og feltet
+// står med linket så det kan markeres med tastaturet.
 async function shareResult(){
-  const url=location.origin+'/scan-da#url='+encodeURIComponent(document.getElementById('url').value.trim());
-  try{await navigator.clipboard.writeText(url);}catch(e){
-    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
-  alert('Link kopieret: '+url);
+  if(!LAST||!window.SCANSHARE)return;
+  const hash=window.SCANSHARE.encode(LAST);
+  if(!hash)return;
+  const url=location.origin+'/scan-da'+hash;
+  let done=false;
+  try{await navigator.clipboard.writeText(url);done=true;}catch(e){}
+  const st=document.getElementById('shareStatus');
+  const box=document.getElementById('shareLink');
+  if(st)st.textContent=done?'Linket er kopieret. Send det til den, der skal se fundene.':'Kopiér linket nedenfor og send det til den, der skal se fundene.';
+  if(box){box.hidden=false;box.value=url;box.focus();box.select();}
 }
 window.shareResult=shareResult;
 // Betalt vej. Samme produktrappe og samme ærlige tre punkter som den danske
@@ -220,41 +337,41 @@ async function scan(url){
   }
   const doc = new DOMParser().parseFromString(html,'text/html');
   const findings = [];
-  const add=(id,sev,msg,n)=>{if(n>0)findings.push({id,sev,msg:msg.replace('{n}',n),count:n})};
-  add('IMG_ALT','error','{n} billede(r) mangler alt-tekst',
+  const add=(id,sev,n)=>{if(n>0)findings.push({id,sev,count:n})};
+  add('IMG_ALT','error',
       [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
-  add('FORM_LABEL','error','{n} formularfelt(er) uden mærkat',
+  add('FORM_LABEL','error',
       [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
         const t=(el.type||'').toLowerCase();
         if(['hidden','submit','button','reset','image'].includes(t))return false;
         if(el.labels&&el.labels.length)return false;
         return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
       }).length);
-  add('LINK_TEXT','error','{n} link(s) uden tilgængelig tekst',
+  add('LINK_TEXT','error',
       [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
-  add('BUTTON_TEXT','error','{n} knap(p(er)) uden tilgængelig tekst',
+  add('BUTTON_TEXT','error',
       [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
-  add('DUP_ID','error','{n} duplikeret(e) id-værdi(er) (bryder label/aria-referencer)',
+  add('DUP_ID','error',
       (()=>{const seen=new Set(),dups=new Set();
         doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
         return dups.size;})());
-  add('TARGET_BLANK','warning','{n} link(s) der åbner i nyt vindue uden advarsel',
+  add('TARGET_BLANK','warning',
       [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
         const t=(a.textContent||'').toLowerCase();
         return t && !t.includes('new window') && !t.includes('new tab');
       }).length);
-  if(!doc.title||!doc.title.trim())findings.push({id:'DOC_TITLE',sev:'error',msg:'siden har ingen <title>'});
-  if(!doc.documentElement.lang)findings.push({id:'HTML_LANG',sev:'error',msg:'<html> mangler en lang-attribut'});
-  if(!doc.querySelector('meta[name="viewport"]'))findings.push({id:'VIEWPORT',sev:'warning',msg:'manglende viewport-meta-tag'});
-  if(!doc.querySelector('h1'))findings.push({id:'HEADING_H1',sev:'warning',msg:'ingen <h1> fundet'});
+  if(!doc.title||!doc.title.trim())add('DOC_TITLE','error',1);
+  if(!doc.documentElement.lang)add('HTML_LANG','error',1);
+  if(!doc.querySelector('meta[name="viewport"]'))add('VIEWPORT','warning',1);
+  if(!doc.querySelector('h1'))add('HEADING_H1','warning',1);
   let skips=0,prev=0;
   doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
-  add('HEADING_SKIP','warning','{n} sprunget(t) overskriftsniveau(er)',skips);
-  add('IFRAME_TITLE','warning','{n} iframe(s) uden titel',doc.querySelectorAll('iframe:not([title])').length);
-  add('TABLE_HEADER','warning','{n} tabel(ler) uden hovedceller',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
-  add('ARIA_HIDDEN_FOCUS','error','{n} aria-hidden-element(er) kan stadig fokuseres',
+  add('HEADING_SKIP','warning',skips);
+  add('IFRAME_TITLE','warning',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error',
       [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
-  add('CONTRAST','error','{n} text colour combination(s) below WCAG AA contrast (4.5:1 normal, 3:1 large)',(()=>{
+  add('CONTRAST','error',(()=>{
     function parseCol(s){
       s=(s||'').trim().toLowerCase();
       if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
@@ -299,58 +416,16 @@ async function scan(url){
   const errors=findings.filter(f=>f.sev==='error').length,
         warnings=findings.filter(f=>f.sev==='warning').length,
         notices=findings.filter(f=>f.sev==='notice').length;
-  const score=Math.max(0,100-errors*12-warnings*5-notices*2), g=gradeOf(score);
-  const FIX={
-    IMG_ALT:'Fix: tilføj alt="beskrivelse" til alle meningsbærende billeder; brug alt="" til rent dekorative.',
-    FORM_LABEL:'Fix: giv hvert felt en <label for="felt-id">, eller en aria-label-attribut.',
-    LINK_TEXT:'Fix: tilføj beskrivende tekst i linket, eller aria-label hvis det kun er et ikon.',
-    BUTTON_TEXT:'Fix: tilføj synlig tekst eller aria-label til hver knap.',
-    DUP_ID:'Fix: gør hver id-værdi unik på siden.',
-    TARGET_BLANK:'Fix: advertér brugerne om at linket åbner i nyt vindue (fx "(åbner i nyt faneblad)") og tilføj rel="noopener".',
-    DOC_TITLE:'Fix: tilføj en beskrivende <title> i <head>.',
-    HTML_LANG:'Fix: tilføj lang til <html>, fx <html lang="da">.',
-    VIEWPORT:'Fix: tilføj <meta name="viewport" content="width=device-width, initial-scale=1">.',
-    HEADING_H1:'Fix: tilføj én beskrivende <h1> som sidens hovedoverskrift.',
-    HEADING_SKIP:'Fix: spring ikke overskriftsniveauer over — h2 under h1, h3 under h2 osv.',
-    IFRAME_TITLE:'Fix: tilføj en title-attribut der beskriver iframens indhold.',
-    TABLE_HEADER:'Fix: brug <th> til hovedceller i datatabeller.',
-    ARIA_HIDDEN_FOCUS:'Fix: fjern aria-hidden fra fokusbare elementer, eller tilføj tabindex="-1".',
-    CONTRAST:'Fix: gør teksten mørkere eller baggrunden lysere til kontrastforholdet er mindst 4,5:1 (3:1 for stor tekst). Tjek det på webaim.org/resources/contrastchecker.'};
-  const PLATFORM_GUIDES={
-    'WordPress':'/guides/wordpress-accessibility-check',
-    'Shopify':'/guides/shopify-accessibility-check',
-    'Webflow':'/guides/webflow-accessibility-check',
-    'Wix':'/guides/wix-accessibility-check',
-    'Squarespace':'/guides/squarespace-accessibility-check',
-    'Drupal':'/guides/drupal-accessibility-check',
-    'Joomla':'/guides/joomla-accessibility-check',
-    'PrestaShop':'/guides/prestashop-accessibility-check',
-    'Magento':'/guides/magento-accessibility-check',
-    'Ghost':'/guides/ghost-accessibility-check',
-    'TYPO3':'/guides/typo3-accessibility-check',
-    'Craft CMS':'/guides/craftcms-accessibility-check',
-    'Umbraco':'/guides/umbraco-accessibility-check'};
+  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+  // Platform-detektionen bliver her, ikke i `platformBox()`: den skal kun slå
+  // platformen op i PLATFORM_GUIDES, og *platformens navn* kommer videre i
+  // del-linket, så modtageren får samme guide-boks som afsenderen.
   const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
   let plat=null;
   for(const p of Object.keys(PLATFORM_GUIDES)){
     if(new RegExp(p,'i').test(gen)){plat=p;break;}}
-  const platHtml = plat
-    ? '<div style="margin-top:18px;padding:14px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface-2)">'
-      +'<strong>Registreret platform: '+plat+'</strong> — de fleste rettelser foretages direkte i '
-      +plat+'\'s admin. Trin for trin: <a href="'+PLATFORM_GUIDES[plat]+'">den gratis '
-      +plat+'-tilgængelighedsguide</a>.</div>'
-    : '';
-  out.innerHTML =
-    '<div class="scorecard"><div class="score grade-'+g+'">'+score+'/100 — Grade '+g+'</div>'+
-    '<div>'+errors+' fejl, '+warnings+' warning(s)</div></div>'+platHtml+
-    (findings.length?'<ul class="findings">'+findings.map(f=>
-      '<li><span class="sev-'+f.sev+'">'+f.msg+'</span><br><small>'+(FIX[f.id]||'')+'</small></li>').join('')+'</ul>'
-     :'<p>Ingen problemer fundet af de automatiske tjek.</p>')+
-    '<p style="text-align:center;margin-top:18px"><button onclick="window.print()" class="btn btn-secondary">Udskriv / gem som PDF</button> '+
-    '<button onclick="shareResult()" class="btn btn-secondary">Kopiér delelink</button></p>'+
-    '<p style="font-size:13px;color:#667">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>'+
-    proCard()+
-    '<p style="font-size:13px;color:#667">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
+  LAST={url:url,score:score,errors:errors,warnings:warnings,findings:findings,platform:plat};
+  render(LAST);
 }
 document.getElementById('scanForm').addEventListener('submit',e=>{
   e.preventDefault();
@@ -361,7 +436,22 @@ document.getElementById('scanForm').addEventListener('submit',e=>{
 // bookmark eller et dobbeltkodet link giver læseren en tom side og en rød
 // konsolfejl i stedet for den scanning de blev lovet. Samme tre linjer som
 // `/url-to-markdown` allerede havde.
+// `#u=` er et delt resultat, `#url=` er en kørsel, og begge kan skrives i
+// hånden. `decode()` kaster aldrig og giver `null` på alt den ikke kan læse,
+// så et gammelt bookmark, et dobbeltkodet link eller en beskåret besked
+// efterlader formularen som den var — aldrig en tom side og en rød konsolfejl.
+// Et delt resultat scanner *ikke*: der gennemgås ingen kald, så det tager hverken
+// afsenderens eller modtagerens kvote.
 (function(){
+  const shared=window.SCANSHARE?window.SCANSHARE.decode(location.hash):null;
+  if(shared){
+    const field=document.getElementById('url');
+    if(field)field.value=shared.url;
+    LAST={url:shared.url,score:shared.score,errors:shared.errors,warnings:shared.warnings,
+          findings:shared.findings,platform:shared.platform};
+    render(LAST,{shared:true});
+    return;
+  }
   const m=location.hash.match(/#url=(.+)$/);
   if(m){let u='';try{u=decodeURIComponent(m[1]);}catch(e){}
     if(/^https?:\/\//i.test(u)){document.getElementById('url').value=u;scan(u);}}
