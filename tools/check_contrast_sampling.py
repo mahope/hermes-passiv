@@ -480,6 +480,28 @@ globalThis.URL = { createObjectURL: function () { return 'blob:stub'; }, revokeO
 %%SIDENS_KODE%%
 /* ----------------------------------------------------------------------- */
 
+// Kernet har lige monteret værktøjet, og bruteren har endnu ikke valgt et
+// billede. Dette er *pristine*-tilstanden — den eneste i hele harnessen hvor
+// det er sandt at intet er uploadet — så demo-noten skal dømmes her. Alle
+// målinger længere nede uploader et billede, og en dom der læste state dér
+// ville være grøn uden at se den fejl den er skrevet til.
+function demoVedStart() {
+  const h = nodes['result'].innerHTML || '';
+  const m = /data-ti-demo>([\s\S]*?)</.exec(h);
+  return {
+    tekst: m ? m[1] : null,
+    // Står noten *før* badge'en? Ellers læser en læser der kun ser PASS/
+    // FAIL-kappen et målt tal uden at vide hvor det kom fra. Det er den
+    // forskel på «et eksempel med en advarsel» og «en advarsel med et
+    // eksempel».
+    forBadge: m ? h.indexOf('data-ti-demo') < h.indexOf('ti-badge') : false,
+    // Demoen skal stadig *måle* — den er den, der lærer bruteren hvad
+    // værktøjet gør. Uden et tal er den en tom flade.
+    harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h),
+  };
+}
+const demoStart = demoVedStart();
+
 // ==========================================================================
 // Sådan stilles et spørgsmål til værktøjet, som en bruger gør det: upload et
 // billede, sæt tekstfarven, træk teksten hen. Og læs det tal der står på
@@ -748,8 +770,23 @@ function spotMaal() {
 }
 const spotMaalt = spotMaal();
 
+// Demo-noten igen *efter* at bruteren har valgt sit eget billede. Det er den
+// anden halvdel af dommen: noten skal forsvinde, fordi «measured against the
+// lightest and darkest pixels under your letters» først er sandt når der er
+// et billede der er bruterens. Et upload her — også efter at state er flyttet
+// — gør dommen uafhængig af hvilken måling der kørte sidst.
+function demoEfterUpload() {
+  Img.next = ensfarvet(300, 150, '#ffffff');
+  nodes['file'].files = [{ type: 'image/png' }];
+  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  const h = nodes['result'].innerHTML || '';
+  const m = /data-ti-demo>([\s\S]*?)</.exec(h);
+  return { tekst: m ? m[1] : null, harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h) };
+}
+
 console.log(JSON.stringify({
   svar: svar, fix: fixSvar,
+  demo: { start: demoStart, efterUpload: demoEfterUpload() },
   sekventiel: {
     efter: sekB1, refer: renB2,
     farve: sekFarve, farveEfterFix: farveEfterFix,
@@ -1090,6 +1127,59 @@ def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     return fund
 
 
+def dom_demo(fil: str, d: dict | None) -> list[str]:
+    """Døm at værktøjet siger *hvad* det måler på, før bruteren har valgt et billede.
+
+    Fundet 3/10 ved at læse koden, målt på den **byggede** side: kernen
+    tegner sit eget eksempelbillede ved sidevisning og måler på det med det
+    samme, så resultatet stod som «PASS — 5,42:1 … Measured against the
+    lightest and darkest image pixels **under your letters**». Ingen sted
+    sagde at billedet var kernens eget. Det er en påstand om bruterens fil,
+    lavet af et billede bruteren aldrig har set — og den stod på den største
+    indgangsside på sitet (`/blog/text-on-image-contrast-check` er 8 af 18
+    besøgende, 100 % bounce).
+
+    Fem krav, og de er fem forskellige fejlformer:
+
+    1. **Noten findes overhovedet.** Ellers er hele dommen grøn fordi den
+       intet læser.
+    2. **Den er sidens *egen* tekst.** Ellers kunne den danske side vise den
+       engelske, og dommen ville være grøn fordi den matcher *en* streng.
+    3. **Den står før badge'en.** «PASS» er det første en læser ser; en note
+       under tallet er en note de fleste ikke læser.
+    4. **Eksemplet måler stadig.** Uden et tal er demoen en tom flade, og så
+       fjerner vi det læreren faktisk kan lære noget af.
+    5. **Noten væk igen efter upload.** Ellers kalder værktøjet bruterens eget
+       foto et eksempel — samme fejl som sløret og `lastFix` havde ved
+       billedskift, og derfor samme nulstilling.
+    """
+    fund: list[str] = []
+    if not d:
+        return [f"{fil}: harnessen målte ikke demo-tilstanden, så den dømmer ingenting"]
+    start = d.get("start") or {}
+    efter = d.get("efterUpload") or {}
+    egen = re.search(r"demoNote:\s*'([^']*)'", (SITE / fil).read_text(encoding="utf-8"))
+    if not start.get("tekst"):
+        fund.append(f"{fil}: værktøjet måler på sit eget eksempelbillede uden at "
+                    "sige det — tallet læseren ser kommer ikke fra deres fil")
+    elif egen and start["tekst"] != egen.group(1):
+        fund.append(f"{fil}: demo-noten er ikke sidens egen `demoNote`-tekst "
+                    f"(fandt {start['tekst']!r})")
+    if start.get("tekst") and not start.get("forBadge"):
+        fund.append(f"{fil}: demo-noten står *efter* PASS/FAIL-kappen, så en "
+                    "læser der kun ser kappen får et målt tal uden at vide hvorfra")
+    if start.get("tekst") and not start.get("harTal"):
+        fund.append(f"{fil}: eksempelbilledet giver intet forholdstal — så der er "
+                    "intet at lære af, før bruteren har uploadet sit eget")
+    if efter.get("tekst"):
+        fund.append(f"{fil}: demo-noten står stadig efter at bruteren har valgt "
+                    f"sit eget billede ({efter['tekst']!r})")
+    if not efter.get("harTal"):
+        fund.append(f"{fil}: der står intet forholdstal efter upload — værktøjet "
+                    "skal stadig måle det bruterens eget billede")
+    return fund
+
+
 def self_test() -> int:
     fejl: list[str] = []
     # Tælles op, ikke hardkodet: en hardkodet tæller sig selv grøn for
@@ -1130,8 +1220,12 @@ def self_test() -> int:
     # nulstillede hverken `scrim` eller `lastFix`, så sløret fra foto A blev
     # tegnet på foto B. Det er den eneste fejl i denne port der *kun* kan ses
     # i en kæde, så mutationen her er portens vigtigste.
+    # Nulstillingsblokken i `loadFile()`. Den rummer nu tre linjer — sløret,
+    # `lastFix` og demo-flaget — fordi de alle beskriver *sidste* måling, og
+    # mutationen skal fjerne hele blokken, ellers ville den teste en
+    # delmængde af den fejl den er skrevet til.
     gammel_reset = ("        scrim = null;\n        lastFix = null;\n"
-                    "        var maxW = 900;")
+                    "        demoBillede = false;\n        var maxW = 900;")
     tjek("mutationen findes i koden: loadFile() nulstiller sløret",
          gammel_reset in kode, repr(gammel_reset))
     sek_ok = koer(kode, hele=True).get("sekventiel")
@@ -1190,6 +1284,41 @@ def self_test() -> int:
          dom_sekventiel(handlavet(1.85)) == [], str(dom_sekventiel(handlavet(1.85))))
     tjek("dommen kan se en kæde, der slet ikke blev leveret",
          bool(dom_sekventiel(None)), "harnessen gav intet")
+
+    # 5d: demo-dommen skal kunne blive rød. To mutationer af den rigtige kode,
+    # og de er de to fejl der faktisk kan ske: noten er væk, eller den
+    # nulstilles ikke ved billedskift. Den anden er den samme slags fejl som
+    # sløret og `lastFix` havde før 3/10 — en oplysning om målingen der
+    # overlever det input den måler — så den er værd at have en dom på.
+    demo_ok = koer(kode, hele=True).get("demo")
+    tjek("porten er grøn på den rigtige kodes demo-tilstand",
+         not dom_demo(SIDER[0], demo_ok), "; ".join(dom_demo(SIDER[0], demo_ok)))
+    tjek("demo-dommen kan se en note der mangler",
+         any("uden at" in f for f in
+             dom_demo(SIDER[0], {"start": {"tekst": None, "forBadge": False, "harTal": True},
+                                 "efterUpload": {"tekst": None, "harTal": True}})),
+         "dommen sagde ingenting om en manglende note")
+    tjek("demo-dommen kan se en note der ikke forsvinder ved upload",
+         any("efter at bruteren" in f for f in
+             dom_demo(SIDER[0], {"start": {"tekst": "Eksempel", "forBadge": True, "harTal": True},
+                                 "efterUpload": {"tekst": "Eksempel", "harTal": True}})),
+         "dommen sagde ingenting om en note der bliver stående")
+    # Mutationerne skal efterlade *gyldig* kode. Den første udgave slettede
+    # betingelsen i markup'en, og harnessen døde med en SyntaxError — hvilket
+    # er grønt for porten (den tjekker kun at `fund` er ikke tom) på den
+    # måde, at porten aldrig nåede at dømme. Det er præcis det
+    # `koer()`-kald med SystemExit på død kode skjuler: en fejl der ser ud
+    # som en grøn dom, fordi den dør tidligt.
+    DEMO_MUT = (
+        ("demo-noten vises aldrig", "var demoBillede = true;", "var demoBillede = false;"),
+        ("demo-noten nulstilles ikke ved upload", "        demoBillede = false;",
+         "        if (false) demoBillede = false;"),
+    )
+    for navn, gammel, ny in DEMO_MUT:
+        tjek(f"mutationen findes i koden: {navn}", gammel in kode, repr(gammel))
+        fund = dom_demo(SIDER[0], koer(kode.replace(gammel, ny, 1), hele=True).get("demo"))
+        tjek(f"mutationen gør demo-dommen rød: {navn}", bool(fund),
+             f"mutationen gav stadig grønt")
 
     # 6: tallene i tabellen er slået op, ikke regnet ud fra koden. Genregn
     # dem her med WCAG-formlen, så en tastefejl i tabellen bliver rød.
@@ -1445,6 +1574,14 @@ def main(argv: list[str] | None = None) -> int:
             antal += 4
         for linje in dom_spot(spot):
             fund.append(f"{fil}: {linje}")
+        # Demo-tilstanden: fem løfter på den tekst værktøjet skriver, før
+        # bruteren har valgt et billede. Tælles kun når dommen fik noget at
+        # dømme — samme regel som de tre kæder over.
+        demo = svar.get("demo")
+        if demo:
+            antal += 5
+        for linje in dom_demo(fil, demo):
+            fund.append(f"{linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
     # prøver slør i begge retninger og vælger den mindste dækning, så på et
@@ -1466,6 +1603,15 @@ def main(argv: list[str] | None = None) -> int:
         if re.search(r"\bfixedScrim\s*:", html):
             fund.append(f"{fil}: `fixedScrim` med ét ord for begge slørretninger "
                         "— brug `fixedScrimDark` og `fixedScrimLight`")
+        # Artiklerne køres ikke i harnessen, så de får den samme streng dømt
+        # på kildefilen: de to indlejrer *samme* kerne og må derfor ikke stå
+        # med en demo-note på den anden side eller slet ingen. Det er den
+        # fejlform porten her helst dømmer på fire steder og ikke to — en
+        # note der kun findes på værktøjssiden er halv rettet.
+        antal += 1
+        if re.search(r"demoNote:\s*'([^']*)'", html) is None:
+            fund.append(f"{fil}: der er ingen `demoNote`-tekst, så værktøjet på "
+                        "siden måler på sit eget eksempelbillede uden at sige det")
 
     if args.list:
         for linje in fund:

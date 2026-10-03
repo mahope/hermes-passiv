@@ -172,6 +172,13 @@
     // `draw()` og regnet på i `effectiveBg()`, så tallet og det læseren ser
     // kommer fra samme blanding.
     var scrim = null;
+    // Sandt når bruteren ikke har valgt et billede, og det vi viser er det
+    // eksempel kernen selv tegner. Uden denne tilstand står et *målt tal* under
+    // et billede læseren aldrig har set — og «målt mod de lyseste og mørkeste
+    // billedpixels under dine bogstaver» er så en påstand om deres egen fil.
+    // Derfor nulstilles den i `loadFile()` lige så vel som `scrim`/`lastFix`:
+    // en ny fil er et nyt spørgsmål, også for den her oplysning.
+    var demoBillede = true;
 
     // Dansk bruger komma, engelsk punktum — samme tal, to sæt.
     function fmt(n) {
@@ -421,7 +428,13 @@
       // `<button type="button">` og ikke et `<a href="#">`, fordi den gør
       // noget ved siden — ikke en ny side — og en anchor ville blive
       // genindlæst i historikken ved hvert tryk.
+      // Kommer *før* tallet, ikke bagefter: badge'en siger PASS/FAIL, så en
+      // læser der kun læser den første linje skal kunne se at tallet stammer
+      // fra kernens eget eksempel. `data-ti-demo` er ikke pynt — det er den
+      // ene ting porten skal kunne dømme, fordi en note der ikke kan slås fra
+      // er lige så død som ingen note.
       res.innerHTML =
+        (demoBillede && s.demoNote ? '<span class="ti-demo" data-ti-demo>' + s.demoNote + '</span><br>' : '') +
         '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
         (passAA ? s.pass : s.fail) + '</span>&nbsp; <strong>' + fmt(r.toFixed(2)) + ':1</strong> ' +
         (s.worstCase || '') + ' ' + (s.needs || '') + ' ' + fmt(need) + ':1 ' + (s.forAA || '') + ' ' +
@@ -515,9 +528,12 @@
         // `.ti-fixed`-teksten ville stå under et tal der ikke stammer fra den.
         // Samme nulstilling som farvefeltet og `fontsize` gør, og af samme
         // grund: en beskrivelse af kernens egen indgreb må aldrig overleve det
-        // input den beskriver.
+        // input den beskriver. `demoBillede` hører i samme række: «dette er et
+        // eksempel» er kun sandt, indtil der er et billede der er bruterens —
+        // ellers kalder værktøjet deres egen foto et eksempel.
         scrim = null;
         lastFix = null;
+        demoBillede = false;
         var maxW = 900;
         var scale = Math.min(1, maxW / im.naturalWidth);
         cv.width = Math.round(im.naturalWidth * scale);

@@ -670,6 +670,12 @@ select.ti-input { max-width: 180px; }
    to andre, fordi den er lige så meget en fingertryk-handling. */
 .ti-spot { min-height: 44px; display: inline-flex; align-items: center; }
 .ti-fixed { font-size: .85rem; color: var(--color-text-muted); }
+/* Noten der siger at tallet kommer fra kernens eget eksempelbillede. Den
+   ligger *før* PASS/FAIL-kappen, så den skal kunne ses uden at læse resten,
+   og den skal se ud som en advarsel uden at være en: `--color-text` i fuld
+   styrke, kun mindre. Ingen baggrund — en farvet bane her ville ligne en
+   fejl-tilstand, og her er intet galt. */
+.ti-demo { font-size: .9rem; color: var(--color-text); font-weight: 600; }
 
 /* `.ti-field` er en *kolonne* (`flex-direction: column`), så `flex: 1 1 12rem`
    på børnene ville blive til en **højde** på 12 rem: målt 2/10 stod alle fire

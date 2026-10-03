@@ -6244,3 +6244,97 @@ mønster som `/net.js` og `text-on-image-core.js` allerede bruger der.
   begge sprog: `<html lang>`, `<title>`, `<h1>`, statuslinje, nav (inkl.
   aria-label) og «next»-afsnittet med dets tre links er dansk på `da` og
   uændret engelsk på `en`; **0** `undefined` i nogen tekstnode.
+
+## Feature-kø punkt 1–9 (flyttet fra planen 3/10, afsluttet)
+
+Alle ni er **Leveret** og dømt i gaten; de står kun her, fordi planen skal
+være en arbejdskø. Målt i de enkelte opgaver — se de afsnit ovenfor i arkivet.
+
+1. ~~Flere URL'er pr. scanning.~~ **Leveret 1/10** — feltet tager linjeskift,
+   serveren svarer én rapport pr. URL, og Pro-boksen siger ærligt hvad den
+   *ikke* ser. Næste skridt var punkt 1 under «Åbne opgaver»: det er gjort.
+2. ~~E-bøgerne læses online, kapitel for kapitel.~~ **Leveret 1/10** — alle seks
+   bogside-ruter viser kapitel 1 og 2 i fuld tekst, bygget af den EPUB kunden
+   henter. Målt først: `read-online` 0 gange i alle otte bogsider, og den eneste
+   vej til teksten var en download. Næste skridt er punkt 6: måle om nogen læser
+   læsevisningen, hvilket kræver `STATS_TOKEN`.
+3. **`/compliance-ai` som ikke gør ingenting.** Hvem: alle der lander på siden
+   fra artiklerne. Tal: kald pr. uge (baseline: **0**, siden secret'en mangler).
+   **Delvis leveret 1/10:** siden siger det ærligt og ruterne er ude af de
+   genererede lister, så den ikke længere skader nogen. Resten kræver
+   `OPENROUTER_API_KEY` — se ❓. Datagrund: målt 1/10 — 503 «AI service not
+   configured», `cf-cache-status: DYNAMIC`.
+4. ~~En købsvej til Clean Copy Pro i værktøjet på cleancopy.tools.~~
+   **Leveret 1/10** — efter en konvertering ligger der ét Pro-kort med batch,
+   egne rense regler og knappen «Buy Clean Copy Pro — $19/year», skjult for
+   aktiverede Pro-kunder. Målt først: 0 købsknapper i resultatet. Næste skridt
+   er punkt 2 — bøgerne læses online.
+5. ~~Scanneren siger hvilken side den læste, og følger de links siden har.~~
+   **Leveret 1/10** — overblikket, det enkelte resultat og den downloadede
+   rapport siger hvilken side og hvilke sider der blev læst, og et dybt URL
+   scannes på den side det angiver. Målt først: «the score is the homepage»
+   stod på siden uanset input, og kun de gættede stier blev læst.
+6. ~~Det mest linkede værktøj solgte ikke.~~ **Leveret 1/10** — `/scan` og
+   `/scan-da` renderer nu det samme pro-kort som de otte søskendeværktøjer,
+   med katalogens betalingslink, pris og periode, og donationslinjen overlever.
+   Målt først: 0 `buy.stripe.com` på begge sider. Dertil en fundet fejl: kortet
+   blev trykt med i brugerens egen rapport, fordi `@media print` skjuler `.btn`
+   men ikke `.pro-card` — så PDF'en havde salgstext uden den eneste handling.
+   Nu skjuler print-listen begge, målt i browseren (`display: none`).
+7. ~~Kontrast-tjekkeren indeni artiklen, der får hele trafikken.~~
+   **Leveret 2/10** — begge artikler har selve værktøjet, og heroens primære
+   handling er et anker ned til det i stedet for et hop ud af siden. Målt først:
+   8 af 18 besøgende landede på artiklen, 100 % forlod den, og værktøjet fik 1.
+   Dertil fundet undervejs: felterne var 192 px høje på telefon, fordi en delt
+   `.ti-field > *`-regel gav kolonnebørnene en *højde* på 12 rem. WCAG-formlen
+   lå i fire kopier; den ligger nu i `site/text-on-image-core.js`.
+8. ~~Rettfærdigt budget pr. rapport, og et fund der siger fra.~~
+   **Leveret 2/10** — se fundet fra review 30/9 i STATUS. Datagrund: målt på
+   den levende rute, 3 sites i ét kald → rapport 3 med `pages_checked: 1`,
+   `score: 22` og fem «Not found»-fund om sider wordpress.org har.
+9. ~~Free mod Pro på ét sted.~~ **Leveret 2/10** — de otte produktsider har nu
+   samme to-rækkers-tabel, tegnet af `tools/pro_table.py` fra
+   `tools/stripe_catalog.json`, og `check_pro_table.py` dømmer hver blok mod
+   samme kilde. Målt først: `page-profile` skrev «$0 forever / $19/year /
+   $39 once» i hånden, `deskuptime` «19 USD once», de to andre havde ingen
+   tabel — fire svar om det samme produkt, ingen port dømte dem. **Næste skridt
+   er gjort 2/10:** de ni øvrige værktøjssiders pro-kort har nu samme tabel, så
+   en besøgende på `/scan` ser «gratis gør dette, Pro gør hele sitet» i samme
+   øjeblik han har set sit resultat. Ny port `check_catalog_where.py` dømmer
+   belægget i katalogens `where`, så «hvor»-påstandene ikke kan rådne igen.
+
+## STATUS 3/10 før nedskæringen (flyttet, planen skal være en kø)
+
+- **3/10: tak-sidens `?lang=` kan ikke læse prototypen.** Fund fra review 29/9
+  (`review/mahope-tools.md`), rettet som punkt 0. `STRINGS[valgt]` er sandt for
+  `toString`, `constructor`, `__proto__` m.fl., så `T` blev en funktion og
+  *hvert* `T.nøgle`-opslag gav «undefined» i `<html lang>`, fanebladet,
+  nav-arketiketten og bundteksten. Nu egen-ejendoms-prøve — samme idiom som
+  `platformBox()` i `scan.html`. `thanks-page.test.mjs` **196/196** og
+  **8 røde** mod koden fra før. Målt i Chromium 1243 mod den byggede side:
+  prototype-nøgler → `lang="en"`, `?lang=da` → `lang="da"`, 0 «undefined».
+- **3/10: `/thanks` kan nu tale dansk.** Stripe sender alle kunder til samme URL
+  lige efter betalingen, så siden vælger sit sprog selv (`navigator.language`,
+  `?lang=` som håndgreb). Én `STRINGS`-tabel, `en` + `da`, 45 ens nøgler — h1,
+  faneblad, nøglekasse, kundeportal, downloads, donation, alle tre
+  fejlslutninger og den statiske chrome. `thanks-page.test.mjs` **184/184**,
+  **45 røde** mod koden fra før. Målt i Chromium ved 390 og 1280 px.
+- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal. 3/10:**
+  «Find det bedste sted» måler 20 steder med samme `sampleContrast()` som tallet
+  kommer fra. Fire sider, EN+DA. Porten **58** løfter, `--self-test` **63/63**.
+- **Målt 3/10, så næste iteration ikke måler det igen:** (a) **ingen vandret
+  scroll på 390 px** på `/`, `/text-on-image-checker`, `cleancopy.tools/` —
+  CDP-målt; (b) `cleancopy.tools/blog/` **404 er tænkt** (buildet omskriver
+  nav-linket); (c) 21 ruter på de fire domæner svarer **200**.
+- **3/10: scanneren siger hvad der er ændret siden sidste gang.** Et nyt
+  resultat starter med «Start her — de 3 fund der betyder mest» og en linje om
+  hvad der forsvandt, faldt eller kom til siden sidste scanning af *samme* adresse.
+  Rækkefølgen er alvor først og flest forekomster først; de ti seneste sider
+  huskes i læserens egen browser, intet sendes. `scan-share.test.mjs`
+  **119/119**, **13 røde** mod koden fra før.
+- **Næste opgave: punkt 4** — 172 sider har stadig to-tre knapper over folden.
+- PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
+- **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
+  domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
+  Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
+
