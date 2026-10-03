@@ -2501,10 +2501,23 @@ for (const [path, lang] of [['site/scan.html', 'EN'], ['site/scan-da.html', 'DA'
     vedFinger(efter.x, 700) && vedFinger(efter.y, 250),
     `tekst=[${efter.x}, ${efter.y}] log=${efter.log.join(',')}`);
 
-  // Polaritet: den **gamle** kode gennem samme sandkasse. Gemt med `git show`,
-  // altså de bytes der faktisk lå i repoet — ikke en håndskrevet kopi, hvor
-  // en ny fejlform ville blive grøn.
-  const gammelKjerne = execFileSync('git', ['show', 'HEAD:site/text-on-image-core.js'], { cwd: root, encoding: 'utf8' });
+  // Polaritet: den **gamle** kode gennem samme sandkasse. Gemt med `git show` på
+  // en **fast commit** (`34bdbfa`, lige før finger-trækket kom), altså de bytes
+  // der faktisk lå i repoet — ikke en håndskrevet kopi, hvor en ny fejlform
+  // ville blive grøn.
+  //
+  // 4/10: denne reference var `HEAD:`. Det er den *nye* kode, så snart den er
+  // committet, og polaritetsdommen blev rød i CI til sidst — mutationen læste
+  // den kode den skulle modsige. Alle andre `git show` i denne fil står på en
+  // fast sha af samme grund (se `1af9302^`, `fbbd0a7`, `PRE_SENTRY_SHA`), så
+  // dommen her gør også det, plus den tjekker at referencen stadig er den gamle.
+  const FØR_FINGER_TRÆK = '34bdbfa';
+  const gammelKjerne = execFileSync('git', ['show', `${FØR_FINGER_TRÆK}:site/text-on-image-core.js`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 });
+  ok('polaritetsreferencen er stadig kernen uden finger-træk',
+    !gammelKjerne.includes('touchmove')
+    && readFileSync(join(root, KERNE), 'utf8').includes('touchmove'),
+    `mutationen læste ${FØR_FINGER_TRÆK}, som ${gammelKjerne.includes('touchmove') ? 'allerede' : 'ikke'} har touchmove`);
   const mutation = await kørMed((f) => {
     f('touchstart', 100, 120);
     for (let i = 1; i <= 6; i++) f('touchmove', 100 + i * 100, 120);

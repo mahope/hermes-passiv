@@ -1,32 +1,39 @@
 # STATUS
-- **Denne iteration: en finger kan trække teksten.** Målt i Chromium 153 ved
-  390 px: `touchstart` flyttede teksten ét sted, seks `touchmove` ændrede
-  *intet* — så «(or drag)» / «(eller træk)» på alle fire sider var sand på en
-  mus og falsk på en telefon. Samme måling: `touchstart`s `preventDefault()`
-  låste scrolling med fingeren oven på billedet, så man kunne heller ikke bare
-  læse videre som man plejer.
-- **Nu:** tryk flytter teksten som før · **vandret** fingerstræk flytter den med
-  fingeren (og må så gå hvor som helst bagefter) · **lodret** stræk lader siden
-  scroll(e), fordi det er præcis den bevægelse en læser gør for at komme videre.
-  Tre lyttere i kernen; intet markup, ingen ny knap, ingen JS-hængsel.
-- **Verificeret i browseren** på artiklen *og* `/text-on-image-checker` ved
-  390 px: tryk JA, træk JA, scroll fra billedet 0 → 301 px (før låst).
-  `scan-clients` **517/517** med fire nye domme; polaritetsdommen kører kernen
-  fra `HEAD` og bliver rød på den. Gaten grøn: build 315 sider/0 fund, seo 0,
-  stripe 377/377, inline-js 0. Skærmbilleder 390 + 1280 i `/tmp/ui-touch/`.
-- **Deploy fra sidste iteration er verificeret:** CI grøn på `main` 3/10, og den
-  live artikel har gradientruten (`art-bgmode` × 2) → `DEPLOY OK 3/10`.
-- PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
-- **Næste opgave: Feature-kø 6** — mål folden på cleancopy.tools i browseren.
-- **❓ Til Mads:** uændret — alle 12 spørgsmål står i afsnittet nedenfor, 0 nye.
+- **Denne iteration: cleancopy.tools' forside sendte læseren 3,7 skærme ned for
+  at bruge det, der lå lige under folden.** Målt i Chromium 153 ved 390 px: foldens
+  `btn-primary` var «Install» → `#install` på **3 155 px**, mens værktøjet selv
+  (`#check`) lå på **715 px** — 92 px under folden. Den sekundære «Try it in the
+  browser» sendte læseren *ud* til `/clean-copy-tool`, altså ud af den side der
+  allerede kunne det. Nu er primære `#check`, «Install» er sekundær, og det
+  redundante link er væk (3 knapper → 2). Begge sprog, `site/clean-copy.html`
+  + `site/da/clean-copy.html`.
+- **Verificeret i browseren** ved 390 **og** 1280 px på begge sprog: ét tryk på
+  primære lander i `#check` med feltet synligt (**374 px** / **298 px** fra top),
+  trykflade **44 px** (EN) / **45 px** (DA), `<label for>` på plads, 0 px
+  vandret scroll. Skærmbilleder i `/tmp/ui-cleancopy-after/`.
+- **Rød CI på `main` er rettet — den lå der fra sidste iteration.** `scan-clients`
+  var **516/517**: polaritetsdommen læste `git show HEAD:site/text-on-image-core.js`,
+  som efter committen er den *nye* kode, så mutationen flyttede stadig teksten til
+  x=673. Alle 6 andre `git show` i filen står på en fast sha — kun denne stod på
+  `HEAD`. Nu `34bdbfa` + en ny dom på at referencen stadig er kernen uden
+  finger-træk, så den kan ikke blive grøn på løgnen igen. **518/518**. `first_action`
+  ratchetet fra `#install` til `#check`, målt rød på den gamle kode (1 problem),
+  grøn på den nye, selvtest 12/12.
+- **Gaten grøn:** `quality_gate.py` **80 steps** — build 315 sider/0 fund,
+  seo 0, stripe 377/377, inline-js 0, scan-clients 518/518. PR-TJEK 3/10: 0 PR'er.
+  BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
+- **Næste:** Feature-kø 7 (`passiv-mcp`, 21 kloninger mod 2 visninger). ❓ uændret,
+  12 spørgsmål nedenfor, 0 nye.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: finger-træk i kontrastkernen ceo/finger-traek 3/10 23:0x`
-Graden deployer på push. Verificér på *indhold*, ikke på HTTP: hent
-`https://mahope.tools/text-on-image-core.js` og tæl `touchmove`. Skal være 2
-(én definition + ét `addEventListener`) — før var der 0. `DEPLOY OK 3/10` for
-`ceo/artikel-gradient`: CI grøn, live artiklen har `art-bgmode` × 2.
+`VERIFICÉR DEPLOY: cleancopy-forside til værktøjet + rød CI rettet ceo/cleancopy-koeb-handling 4/10 00:0x`
+Graden deployer på push. Verificér på *indhold*: hent `https://cleancopy.tools/` og
+tæl `btn-primary` i folden — skal være **1**, med `href="#check"` og teksten
+«Convert a page». Før var teksten «Install» og `href="#install"». Samme på
+`https://cleancopy.tools/da/` med «Konvertér en side». CI skal være grøn på
+`main` — den var **rød** på `d294324` (scan-clients 516/517).
+
 
 ## Åbne opgaver
 
@@ -147,12 +154,18 @@ i `docs/plan-arkiv.md`.
    vandret finger flytter den med fingeren — målt i Chromium 153 ved 390 px på
    begge sider. Bounce 100 % på én side kan ikke bruges som dom: én sidevisning
    er også en *fuldført* tekstplacering, og det kan vi ikke måle.
-6. **cleancopy.tools' forside er 7 af 9 besøgende, og de går igen.** Hvem: de 7
-   på `/` (78 % bounce, 124 s). Tal: hvor mange har trykket værktøjet på forsiden.
-   Accept: browseren viser én primær handling over folden på 390 px, og
-   `check_first_action`-porten får forsiden i ratchetfilen med den destination.
-   Datagrund: 78 % af sitets besøg er på den ene side, og de er ikke dem der
-   bruger værktøjet — de læser kun forsiden.
+6. ~~**cleancopy.tools' forside er 7 af 9 besøgende, og de går igen.**~~ **Leveret
+   4/10.** Hvem: de 7 på `/` (78 % bounce, 124 s). Tal: hvor mange har trykket
+   værktøjet på forsiden. Accept: browseren viser én primær handling over folden på
+   390 px, og `check_first_action`-porten får forsiden i ratchetfilen med den
+   destination. Datagrund: 78 % af sitets besøg er på den ene side, og de er ikke
+   dem der bruger værktøjet — de læser kun forsiden. **Målt:** foldens primære var
+   `#install` **3 155 px** nede, `#check` lå **715 px** nede, og den sekundære
+   «Try it in the browser» pegede *ud* på `/clean-copy-tool`. Nu peger primære på
+   `#check`; ratchetet, og porten er rød på den gamle kode. Baseline: 9 besøgende,
+   7 på forsiden, 78 % bounce — bounce på **én** side kan ikke bruges som dom,
+   fordi én sidevisning også er en fuldført konvertering.
+
 7. **`passiv-mcp` klones 10 × mere end den ses.** 14 dage: 21 unikke kloninger,
    2 visninger, 0 stjerner. Tal: om en kloning fører til et kald på
    `mahope.tools`. Accept: repoet har en README der siger hvad MCP'en gør, og

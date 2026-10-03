@@ -7066,3 +7066,5 @@ Målt: `check_contrast_sampling` GRØN — 176 løfter dømt på 4 sider, 2 i ke
 `check_inline_js` 0 problemer, `check_plan_status` GRØN (20 af 25 linjer,
 10186 af 40000 tegn). **Ikke kørt:** ingen browser ved 390/1280 — de fire felter er
 samme id'er, type og værdier som på de to værktøjssider, der var målt 3/10.
+- `ITERATION_ID`: `cleancopy-forside-handling-2026-10-03`
+  - **To opgaver i én squash.** (1) Feature-kø 6: cleancopy.tools-forsidens `btn-primary` var `#install` (3 155 px nede) mens `#check` lå 715 px nede, og «Try it in the browser» pegede ud til `/clean-copy-tool`. Nu `#check`, målt i Chromium 153 ved 390/1280 px på begge sprog. (2) Rød CI fra `d294324`: `scan-clients` læste `git show HEAD:` som polaritetsreference — kun den af alle `git show` i filen der ikke stod på en fast sha.
