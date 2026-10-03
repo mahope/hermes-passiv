@@ -1,42 +1,27 @@
 # STATUS
-- **3/10: rettelsen sagde hvad den havde rettet — næppe.** Efter «Fix it»
-  skrev værktøjet «I put a 24 % dark layer behind the text and measured
-  again» og viste **kun** det nye tal. Hvad rettelsen havde vundet, var væk:
-  bruteren så 1,16:1 og så 4,72:1, og intet stod at de to hørte sammen. Der
-  står nu **«Før dette målte den 1,16. Nu måler den 4,72.»** på begge veje —
-  «Fix it» *og* «Find det bedste sted» — på alle fire sider, og den forsvinder
-  i samme øjeblik bruteren selv rører farve, font, pladsering eller billede,
-  samme nulstilling som sløret og `lastFix`.
-  `check_contrast_sampling` **96 løfter** (var 72), `--self-test` **88/88**
-  med tre mutationer af rigtige filer.
-- **Målt 3/10 i browseren:** «1,16:1 → 4,72:1» i `#result` på
-  `/text-on-image-checker` og på artiklen, 0 px vandret scroll ved 390 og
-  1280 px, dansk side giver komma.
-- **3/10: værktøjet sagde «målt på dine bogstaver» om et billede det selv havde
-  tegnet.** Kontrasttjekkeren maler sit eget eksempelbillede ind ved sidevisning
-  og måler på det med det samme, så en læser der ikke har uploadet noget fik
-  «PASS — 5,42:1 … under *your* letters» uden at vide hvor tallet kom fra. Der
-  står nu en note *før* PASS/FAIL-kappen på alle fire sider (EN+DA, værktøj og
-  artikler), og den forsvinder i samme øjeblik bruteren vælger sit eget billede —
-  samme nulstilling som sløret og `lastFix`. `check_contrast_sampling` **72
-  løfter** (var 58), `--self-test` **70/70** med to mutationer af demo-noten.
-- **3/10, øvrige leverancer:** tak-siden kan tale dansk (45 ens nøgler, 184/184
-  med 45 røde mod koden fra før) og kan ikke læse prototypenøgler i `?lang=`
-  (egen-ejendoms-prøve, 196/196 med 8 røde) — begge målt i Chromium ved 390 og
-  1280 px. Scanneren siger hvad der er ændret siden sidste scanning af samme
-  adresse (119/119, 13 røde). Kontrasttjekkerens «Find det bedste sted» måler 20
-  steder med samme `sampleContrast()` som tallet kommer fra (58 løfter, 63/63).
-- **Målt 3/10, så næste iteration ikke måler det igen:** (a) ingen vandret scroll
-  på 390 px på `/`, `/text-on-image-checker`, `cleancopy.tools/` (CDP); (b)
-  `cleancopy.tools/blog/` **404 er tænkt** (buildet omskriver nav-linket);
-  (c) 21 ruter på de fire domæner svarer **200**; (d) alle 16 Stripe-links
-  svarer **200** på HEAD.
-- **Næste opgave: punkt 4** — 172 sider har stadig to-tre knapper over folden
-  (kræver beslutning, se ❓). Egne opgaver: se `## Feature-kø`.
-- PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10. CI grøn på `main` (ét kald, 3/10).
+- **CI stod rød på `main` siden 11:21 og holdt 3 commits tilbage.** Eneste
+  fejl var `check_plan_status.py`: STATUS havde **38** linjer mod de **25**
+  tilladelige. Alt andet i gaten var grønt lokalt (**155** steps), så `1890971`,
+  `b96b6bc` og `40f24d0` lå uden at blive deployet — blandt dem «skriv
+  før-tallet ved en kontrast-rettelse» på alle **4** sider. Næste iteration
+  skal domme planen **før** squash: **4** min **35** s gik i CI.
+- **CEO-køens 5 punkter er målt lukkede i koden, 3/10.**
+  `handleUrlInspect` får `env` (`_worker.js:299`), `thanks.html` skelner
+  **202** fra `ranOut`, `net.js` gør **429** endelig og viser serverens egen
+  sætning, `cscFetch` prøver hvert redirect-hop, og værnet pakker IPv4-mapped
+  IPv6 ud. Sentry er sat op, og `/api/url-inspect` + `/api/header-check`
+  svarer **200** på live 3/10.
+- **Artiklens indlejrede måler er målt i paritet med værktøjet.** `delta:`,
+  `findSpot:`, `downloadBtn:`, `demoNote:`, `movedSpot:` og `keptSpot:` står
+  hver **1** gang i hver af de **4** kontrastsider, så kernen er delt og ikke
+  kopieret. Målt på `site/` 3/10; ingen ny kode behøves.
+- **Næste opgave: `## Feature-kø` punkt 1** — en dom på planen før merge.
+  Egne opgaver: punkter 2–5. Alt i «Åbne opgaver» afventer Mads' beslutning.
+- PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. CI grøn på `main` (ét kald,
+  3/10).
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
-  domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
-  Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
+  domæne, bogens betalte udgave mod **7** gratis-sider, **2** desktop-apps mod
+  Lemon Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
