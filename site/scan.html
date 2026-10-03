@@ -331,7 +331,7 @@ async function scan(url){
       body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
   } catch(e) {
     out.innerHTML = '<p><strong>Scan failed.</strong></p>'
-      +'<p style="color:#667;font-size:14px">'+e.message+'</p>'
+      +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'
       +'Cannot scan this page. Possible reasons: the site blocks automated fetchers, '
       +'the URL is invalid, or the page is too large. Try the '

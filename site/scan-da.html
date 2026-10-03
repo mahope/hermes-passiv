@@ -327,7 +327,7 @@ async function scan(url){
       body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
   } catch(e) {
     out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
-      +'<p style="color:#667;font-size:14px">'+e.message+'</p>'
+      +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'
       +'Kan ikke scanne siden. Mulige årsager: sitet blokerer automatiske hentninger, '
       +'URL\u2019en er ugyldig, eller siden er for stor. Prøv '

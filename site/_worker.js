@@ -429,6 +429,23 @@ async function handleDownload(request, url, env) {
 }
 
 /**
+ * Reduce a response header to a type/subtype we are willing to echo back.
+ *
+ * `handleScanProxy` puts the target's own `Content-Type` in its error text, and
+ * that text lands in `/scan`'s result box. A header is attacker-controlled:
+ * `Content-Type: application/json<img src=x onerror=…>` survives `fetch`, so
+ * without this the scanned site decides what markup our own page writes. Only
+ * the RFC 9110 token characters are kept, and nothing longer than 80 — so the
+ * message can name the type without ever carrying markup.
+ */
+function safeContentType(value) {
+  const clean = String(value || '')
+    .replace(/[^A-Za-z0-9!#$%*+.^_`|~/\-;,= ]/g, '')
+    .slice(0, 80);
+  return clean || 'an unknown content type';
+}
+
+/**
  * Handle the scan-proxy endpoint.
  * Fetches a URL server-side and returns the HTML as JSON.
  */
@@ -501,7 +518,7 @@ async function handleScanProxy(request, url, env) {
       },
     });
 
-    const contentType = response.headers.get('content-type') || '';
+    const contentType = safeContentType(response.headers.get('content-type'));
     if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
       return new Response(
         JSON.stringify({

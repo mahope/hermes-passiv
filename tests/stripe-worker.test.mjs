@@ -115,6 +115,12 @@ globalThis.fetch = async (url, opts = {}) => {
   // /cookie|consent|gdpr|cmp/ -tjek passerede, fordi ordet "cookie" stod i
   // href'en. Se de fire GDPR-fixtures nede for sig selv.
   if (url.startsWith('https://scan.example/')) { scanFetches++; return new Response('<html lang="en"><head><title>Test</title><script async src="https://www.googletagmanager.com/gtag/js?id=G-1"></script></head><body><form action="http://insecure.example/send"></form><footer><a href="/cookie-policy">Cookie policy</a></footer></body></html>', { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } }); }
+  // Et mål der sender sin egen `Content-Type` som markup. `/scan-proxy`
+  // skrev den rå header ind i `error`, og den lander i `/scan`s resultatside —
+  // så et fjendtligt site kunne skrive sit eget tag ind i mahope.tools' origin
+  // uden at gøre noget som helst. Målt i rigtig Chromium før `safeContentType`:
+  // `<title>FIRET</title>` i DOM'en.
+  if (url.startsWith('https://ondt.example/')) return new Response('{}', { status: 200, headers: { 'content-type': 'application/json<img src=x onerror=alert(1)>' } });
   // To værter til multi-URL-testen af `/api/compliance-scan`. `to.example` er
   // bare et andet site end scan.example, så to linjer er to sites og ikke den
   // samme to gange. `tung.example`/`tung2.example` svarer 200 på forsiden og
@@ -922,6 +928,20 @@ ok('ingen privat vært blev hentet overhovedet', privFetches === 0, `${privFetch
 // den afviser alt — det er den fejlretning, der låser et virkende værktøj ude.
 r = await call('/scan-proxy?url=https%3A%2F%2Fscan.example%2F', ip(4));
 ok('en offentlig side scanner stadig', r.status === 200 && (await r.json()).ok === true, r.status);
+
+// Fejlteksten må ikke bære målets markup med videre. `handleScanProxy` lægger
+// målets egen `Content-Type` ind i `error`, og klienten skriver den i
+// `#result`s `innerHTML` — så uden `safeContentType()` bestemmer det scannede
+// site, hvad vores egen side skriver. Målt før rettelsen i rigtig Chromium:
+// et mål med `Content-Type: application/json<img src=x onerror=…>` fik
+// `<title>FIRET</title>` i DOM'en. To domme: markup er væk, og typen er stadig
+// noget læseren kan se (ellers er beskeden tom).
+const ondtBody = await (await call('/scan-proxy?url=' + encodeURIComponent('https://ondt.example/'), ip(4))).json();
+ok('scan-proxy: målets egen Content-Type leverer intet markup videre',
+  !/[<>]/.test(ondtBody.error || ''), JSON.stringify(ondtBody).slice(0, 120));
+ok('scan-proxy: typen er stadig navngivet i fejlen',
+  /application\/json/.test(ondtBody.error || '') && /not an HTML page/i.test(ondtBody.error || ''),
+  JSON.stringify(ondtBody).slice(0, 120));
 
 // Værterne skal heller ikke slippe igennem som ren tekst, f.eks. "127.0.0.1.nip.io".
 // Vi lader den ligge som en kendt begrænsning i stedet for at tro at vi dækker

@@ -2305,5 +2305,58 @@ for (const [path, ord] of [['site/compliance-site-check.html', 'pages read'], ['
     'mutationen gav ikke det gamle tal, så dommen kan ikke se forskellen');
 }
 
+// --------------------------------------------------------------------------
+// En skannet adresse må ikke skrive markup i vores egen resultatside.
+// --------------------------------------------------------------------------
+// Kæden er tre led: `handleScanProxy` lægger målets *egen* `Content-Type` ind
+// i `error`, `scan()` kaster den videre som `new Error(data.error)`, og
+// fejlkassen skriver `e.message` i `#result`'s `innerHTML`. Et mål der svarer
+// `Content-Type: application/json<img src=x onerror=…>` fik derfor sit eget
+// markup til at køre i mahope.tools' origin — og `#url=`-læseren kalder
+// `scan(u)` ved sideindlæsning, så offerret ikke engang trykker på noget.
+// Målt i rigtig Chromium før rettelsen: `<title>FIRET</title>` i DOM'en.
+const FIJLT = 'application/json<img src=x onerror=alert(1)>';
+
+async function scanFejlHtml(path, source) {
+  const { fetchImpl } = responses([{
+    status: 400,
+    // Den *rå* header, ufiltreret. Workerens `safeContentType()` er et lag for
+    // sig, men dommen skal måle at klienten kan klare sig uden det — ellers
+    // ville den være grøn, fordi filteret allerede var slået til.
+    body: { ok: false, error: `Target returned ${FIJLT} — not an HTML page. Only HTML pages can be scanned.` },
+  }]);
+  const { sandbox, nodes } = loadPage(path, fetchImpl, {
+    match: /scan-proxy/, ...(source ? { source } : {}),
+  });
+  await sandbox.scan('https://ondt.example/');
+  await sleep(30);
+  return (nodes.get('result') || {}).innerHTML || '';
+}
+
+for (const [path, lang] of [['site/scan.html', 'EN'], ['site/scan-da.html', 'DA']]) {
+  const html = await scanFejlHtml(path);
+  // Fejlens egen afsnit skal være ren tekst. Det afsnit skriver siden selv med
+  // sin egen `<p …>`, så indholdet imellem må ikke have *et eneste* rått
+  // `<` — så ved vi at målets header ikke har skrevet et element, uanset
+  // hvilket tag det måtte have valgt. Ordet `onerror` står gerne i den escaped
+  // tekst, så det kan ikke være dommen.
+  const afsnit = (html.match(/<p style="color:#667;font-size:14px">([\s\S]*?)<\/p>/) || ['', ''])[1];
+  ok(`scan ${lang}: fejlens egen afsnit er ren tekst, intet rått '<'`,
+    afsnit.length > 0 && !afsnit.includes('<'), ` fandt: ${(afsnit.match(/[^·]{0,30}/) || ['—'])[0]}`);
+  ok(`scan ${lang}: målets egen markup skriver ingen img-tag i hele resultatet`,
+    !/<img/i.test(html), ` fandt: ${(html.match(/<img[^>]*>/i) || ['—'])[0]}`);
+  ok(`scan ${lang}: fejlen står som escaped tekst, så læseren kan se typen`,
+    html.includes('&lt;img') && html.includes('application/json'),
+    ` fandt: ${(html.match(/[^·]{0,30}application\/json[^<]{0,40}/) || ['—'])[0]}`);
+
+  // Polaritet: samme dom på den gamle kode. Mutationen fjerner præcis det `esc`-
+  // kald rettelsen tilføjede, i den rigtige fil — ikke en håndskrevet kopi.
+  const egen = readFileSync(join(root, path), 'utf8');
+  const gammel = egen.replace(`esc(e.message)`, `e.message`);
+  ok(`scan ${lang}: mutationen (uden esc) er fanget`,
+    gammel !== egen && /<img/i.test(await scanFejlHtml(path, gammel)),
+    'mutationen gav ikke den gamle kode, så dommen kan ikke se forskellen');
+}
+
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);
 process.exit(fail ? 1 : 0);

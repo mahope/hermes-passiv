@@ -6067,3 +6067,68 @@ punkt, der lå på pladsen for den måling der nu står først.
   `downloadPng`. Mærkeligt nok: `/blog/text-on-image-contrast-check-da` er 404,
   fordi den danske artikel hedder `tekst-paa-billede-kontrasttjek` — slugs er
   ikke spejlet mellem sprog på blogsiderne.
+
+---
+
+## 3/10 — En skannet adresse kunne skrive markup i mahope.tools' egen resultatside
+
+Review-fund fra 3/10 (find 1, HØJ). Fundet var ældre end blokken det blev fundet
+i — `git blame` peger på monorepo-importen 25/8 — men fundet kom frem, fordi
+blokken lige netop havde flyttet hele resultat-stien ud i `render()` og indført
+`esc()` i de to filer.
+
+**Kæden var tre led, og alle tre var målt:**
+
+1. `site/_worker.js:504` — `handleScanProxy` læste målets *egen*
+   `Content-Type`-header og skrev den rå ind i `error`:
+   `` `Target returned ${contentType} — not an HTML page…` ``
+2. `site/scan.html:327` / `site/scan-da.html:323` — `if (!data.ok) throw new
+   Error(data.error)`. Ingen escaping, ingen whitelist, `r.ok` ses ikke engang.
+3. `site/scan.html:334` / `site/scan-da.html:330` — skrev
+   `'<p style="color:#667;font-size:14px">'+e.message+'</p>'` i `innerHTML`.
+   Den nye `esc()` stod tyve linjer ovenfor og blev brugt på hver anden streng
+   i samme fil.
+
+**Målt før rettelsen:** en lokal server der svarer `Content-Type:
+application/json<img src=x onerror=alert(1)>` giver i klienten
+`content-type = "application/json<img src=x onerror=alert(1)>"` — `<` overlever
+altså fint gennem `fetch`. Den samme streng sat ind i linje 334's markup giver i
+`Google Chrome for Testing 1243` (`--dump-dom`) et `<img src="x"
+onerror="document.title='FIRET'">` i DOM'en og **`<title>FIRET</title>`** —
+altså handleren *kørte*, ikke bare et tag der blev skrevet.
+
+**Scenarie:** offerret lægger `mahope.tools/scan#url=https://ondt.example/` i en
+mail eller chat. `#url=`-læseren kalder `scan(u)` automatisk ved sideindlæsning
+(`scan.html:459-461`), så offerret trykker ikke på noget; proxyen henter
+`ondt.example`, får den udadviklede `Content-Type`, og siden kører offerrets
+markup i mahope.tools' egen origin.
+
+**Rettelsen er to lag, fordi ét lag ikke er et lag:**
+
+- `safeContentType()` i `_worker.js` — beholder kun RFC 9110-token-tegnene plus
+  `/ ; = , ` og afkorter til 80 tegn, så `text/html; charset=utf-8` stadig kan
+  læses, og et mål uden brugbar header får «an unknown content type».
+- `esc(e.message)` i begge klienters fejlkasse, én linje hver.
+
+**Verifikation — nye domme, målt røde mod den gamle kode:**
+
+| Port | Grøn HEAD | Rød på gammel kode |
+|---|---|---|
+| `node tests/scan-clients.test.mjs` | **512/512** | **504/512** |
+| `node tests/stripe-worker.test.mjs` | **377/377** | **376/377** |
+
+Polariteten er målt ved at fjerne hvert lag for sig: `git stash push
+site/scan.html site/scan-da.html` giver 504/512 (og polaritets-mutationen
+inden i testen genskaber præcis det gamle `e.message` i den rigtige fil), og
+`git stash push site/_worker.js` giver 376/377. Klientens domme læser fejlens
+**eget afsnit** og kræver nul rått `<` i det — ikke at ordet `onerror` mangler,
+fordi det ord står korrekt i den escaped tekst. Workeren fik et nyt mål
+(`ondt.example`) der svarer med den fjendtlige header.
+
+Hele gaten `python3 tools/quality_gate.py` er grøn på **155 steps** efter
+rettelsen. Missionens fire steps (`build_sites.py`, `seo_check.py`,
+`stripe-worker.test.mjs`, `check_inline_js.py`) er dækket af den.
+
+**Åbent fund fra samme review (MIDDEL):** se punkt 9 under «Åbne opgaver» i
+`IMPLEMENTATION_PLAN.md` — et delt resultats `score` kommer fra linket, mens
+antallet fejl regnes ud fra fundene.

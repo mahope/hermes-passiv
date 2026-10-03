@@ -1,4 +1,14 @@
 # STATUS
+- **Et skannet site kunne skrive sit eget markup i vores resultatside. Rettet
+  3/10.** Review-fund [HØJ]: `_worker.js` lagde målets *egen* `Content-Type`
+  ind i `error`, `scan()` kastede den videre, og fejlkassen skrev `e.message`
+  i `innerHTML` uden at escape. Et mål med `Content-Type:
+  application/json<img src=x onerror=…>` fik derfor sit tag til at køre i
+  mahope.tools' egen origin — målt i rigtig Chromium som `<title>FIRET</title>`
+  i DOM'en. `#url=`-læseren kalder `scan(u)` ved sideindlæsning, så offerret
+  trykker ikke på noget. To lag: `safeContentType()` i workeren og `esc()` på
+  begge sider. Nye domme er **røde på den gamle kode** — målt ved at fjerne
+  hvert lag for sig (scan-clients 504/512, stripe-worker 376/377).
 - **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal.** 3/10.
   «Find det bedste sted» måler 20 steder på bruterens eget billede med den
   samme `sampleContrast()` som tallet på skærmen kommer fra, og flytter
@@ -7,14 +17,6 @@
   en beskrivelse der nævner præcis det tal der står, og at beskrivelsen
   forsvinder når bruteren selv trækker. `check_contrast_sampling` **58 løfter**,
   `--self-test` **63/63**.
-  Fund undervejs i min egen kode: `rykket` blev sammenlignet med proberne i
-  stedet for med pladseringen den startede fra, så kernen skrev «det er
-  allerede det bedste sted» under et billede den selv lige havde flyttet
-  teksten på. Dømt af `data-ti-moved`, og polariteten er målt med mutationen
-  `rykket: false`.
-- **Tre fund fra 3/10 er lukket og ligger i `docs/plan-arkiv.md`:** den
-  sekventielle dom på to billeder i træk, «fix» der slog på det næste foto
-  (`im.onload` nulstiller `scrim` og `lastFix`) og det rettede billede som fil.
 - **Deploy:** målt 3/10 mod live `39ff715`: `ceo/kontrast-tjek-to-fotos` og
   `ceo/fix-gaar-ikke-paa-naeste-foto` er **DEPLOY OK**. `ceo/download-det-
   rettede-billede` er målt på **alle fire** sider over HTTP 3/10 08:55.
@@ -25,59 +27,21 @@
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: en skannet adresse kan ikke skrive markup i vores
+  resultatside ceo/scan-fejl-esc 2026-10-03 14:00` — på `/scan` og `/scan-da`
+  skal en fejl fra `/scan-proxy` stå som **tekst**. Resten ligger i porten og er
+  målt i gaten: `node tests/scan-clients.test.mjs` skal sige **512/512** og
+  `node tests/stripe-worker.test.mjs` **377/377**, og begge er målt røde mod
+  den gamle kode.
+
 - `VERIFICÉR DEPLOY: find det bedste sted i kontrasttjekkeren
   ceo/find-bedste-sted 2026-10-03 12:00` — på `/text-on-image-checker` og
   `/text-on-image-checker-da`: upload et todelt foto (mørkt til venstre, lyst
   til højre), læg teksten på den lyse halvdel — den skal **fejle** — tryk
-  «Find det bedste sted» / «Find det bedste sted». Tallet skal blive bedre og
-  nå 3:1, og under det skal der stå at kernen flyttede teksten, med præcis
-  det tal der står over den. Træk så teksten selv et andet sted: den
-  forklaring skal væk, fordi den beskriver *kernens* flytning. Samme på de to
-  artikler. Resten ligger i porten og er målt i gaten:
-  `python3 tools/check_contrast_sampling.py` skal sige **58 løfter** og
-  `--self-test` **63/63**.
-
-- `DEPLOY OK 3/10` `ceo/download-det-rettede-billede` — hentet over HTTP:
-  `/text-on-image-checker`, `/text-on-image-checker-da` og **begge** artikler
-  (`/blog/text-on-image-contrast-check` og `/da/blog/tekst-paa-billede-
-  kontrasttjek`) har knappen i markup'en, og live `text-on-image-core.js`
-  (200) har `downloadPng`. Filnavnet på de fire sider er målt i gaten: 2 ×
-  `text-on-image-contrast.png` og 2 × `tekst-paa-billede-kontrast.png`.
-  Tidligere note:
-
-- `DEPLOY OK 3/10` `ceo/kontrast-tjek-to-fotos` — live `39ff715`: porten tæller
-  **50 løfter** og `--self-test` **44/44** på ren HEAD, og `ceo/contrast-fix-knap`
-  ligger i samme live-build. Tidligere note:
-
-- `VERIFICÉR DEPLOY: kontrastporten dømmer to billeder i træk, og Scan-knappen
-  er synlig igen ceo/kontrast-tjek-to-fotos 2026-10-03 11:15` — på `/scan` og
-  `/scan-da` skal «Scan now»/«Scan nu» være hvid på mørk baggrund (ikke hvidt
-  på hvidt) ved 390 og 1280 px, lys og mørk. Resten af noten er kun en port og
-  intet på siderne, så den er målt i gaten: `python3
-  tools/check_contrast_sampling.py` skal sige **44 løfter** og `--self-test`
-  **35/35**. Nulstillingen af `scrim`/`lastFix` er fra `ceo/fix-gaar-ikke-paa-
-  naeste-foto` og stadig ikke live — se næste note.
-
-- `DEPLOY OK 3/10` `ceo/fix-gaar-ikke-paa-naeste-foto` — live `39ff715`:
-  `text-on-image-core.js` har **4** `lastFix = null`, heraf to i `im.onload`
-  lige før `updateAll()`. Tidligere note:
-
-- `VERIFICÉR DEPLOY: «Fix it» nulstiller sløret ved billedskift
-  ceo/fix-gaar-ikke-paa-naeste-foto 2026-10-03 07:35` — på
-  `/text-on-image-checker` (EN+DA) og de to artikler: upload to fotos i træk med
-  «Fix it» på det første. Det andet skal vise **sine egne** tal, **uden**
-  `.ti-fixed`-tekst, og «Fix it» skal være tilbage. Tjek især at tallet ikke er
-  *bedre* end det var uden en tidligere rettelse — på porten er det målt til
-  **5,99:1 PASS mod 1,85:1 FAIL**.
-
-- `DEPLOY OK 3/10` `ceo/scan-delresultat` — live `598665c`: `/scan` indlæser
-  `/scan-share-core.js`, og knappen hedder «Copy link to this result».
-
-- `DEPLOY OK 3/10` `ceo/contrast-fix-knap` — live `598665c`: `/style.css` har
-  `.ti-fix { min-height: 44px }`, og `text-on-image-core.js` skriver
-  `<button … data-ti-fix>`.
-
-- `DEPLOY OK 3/10` `ceo/afkortede-tekster` — forfader til live `598665c`.
+  «Find det bedste sted». Tallet skal blive bedre og nå 3:1, og under det skal
+  der stå at kernen flyttede teksten, med præcis det tal der står over den.
+  Træk så teksten selv et andet sted: forklaringen skal væk, fordi den
+  beskriver *kernens* flytning. Samme på de to artikler.
 
 - Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
   `docs/plan-arkiv.md`.
@@ -163,6 +127,21 @@
     **Rettet i samme opgave:** planens påstand om 230 px vandret scroll på
     `/page-profile` holdt ikke — Chromium giver **0 px** ved 390 og 1280 px, på
     både gammel og ny kode.
+9. **Et delt resultats score kommer fra linket, ikke fra fundene.** Hvorfor:
+    `scan-share-core.js`'s `decode()` læser `s=` og tager tallet som det er,
+    mens `errors`/`warnings` bliver regnet ud fra fundene. Målt 3/10 i Node mod
+    den kode der ships: `decode()` af `#u=…;s=100;p=WordPress;f=IMG_ALT:e:1,
+    CONTRAST:e:2` giver `{score:100, errors:2}`, og sidens **egen** formel
+    (`Math.max(0,100-errors*12-warnings*5)`) giver **88** — altså Grade C, ikke
+    «Grade A, 100/100» ved siden af «2 error(s)». Kommentaren på `:139` siger
+    «the scorecard's numbers cannot contradict its own list»; den er sand for de
+    to tal og forkert for det tredje. `f=` er påkrævet og der er intet
+    informationstab (`grep "'notice'"` giver kun `notices=findings.filter(…)`,
+    så `notices` altid er 0). Accept: `decode()` regner scoren fra fundene og
+    dropper `s=` (eller afviser et `s=` der ikke kan udregnes), og
+    `tests/scan-share.test.mjs` får en nål der **kun** har `roundtrip: score` på
+    74 i dag. Målt: `decode()` af et link med `s=100` og ét error-fund skal give
+    `score === 88`, og porten skal være rød på koden fra før.
 
 ## ❓ Til Mads
 
