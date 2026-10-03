@@ -7022,3 +7022,47 @@ Gate: `build_sites` 337 filer / 0 broken, `seo_check` 315 sider / 0 fund,
 `stripe-worker.test.mjs` 377/377, `check_inline_js` 0 problemer,
 `check_first_action` 16 sider / 0 problemer, `check_form_labels` grøn,
 `check_plan_status` grøn. **Ikke kørt:** rigtig browser ved 390/1280.
+
+---
+
+## 3/10 — Feature-kø punkt 4, del 2: gradientruten i artiklerne (ceo/artikel-gradient)
+
+Feature-kø punkt 4 blev 3/10 leveret som gradientruten på de to *værktøjssider*
+(`b8ca1ba`). Artiklerne indlejrer samme kerne og havde ingen gradientfelt, så de 8
+af 18 besøgende på `/blog/text-on-image-contrast-check` (44 %, bounce 100 %) måtte
+ud af døren for at få den. Denne iteration lagde den i begge artikler (EN/DA):
+`art-bgmode` (An image / A gradient), `art-gfrom`, `art-gto`, `art-gang`, plus
+`art-tigrad`-rækken der skjules i billedtilstand.
+
+**Porten blev udvidet samtidig, og det er den egentlige leverance.**
+`check_contrast_sampling` dømmer nu alle fire sider (176 løfter fra 132), og to ting
+blev læst i stedet for antaget:
+
+- **Felterne fra sidens egen markup** (`felter_i()`), fordi kernen slår præfikset
+  på hvert id. Før la harnessen sig op et fast sæt felter; et `id` med en
+  tastefejl ville få en ny, tom stub hver gang kernen spørger, og dommen så en
+  egenskab, der ikke virker, som om den virkede.
+- **Præfikset fra sidens eget `mount()`-kald** (`præfiks_i(sidekode())`), aldrig
+  fra den sammensatte kode — kernen beskriver selv `mount({ prefix: '' })` i sin
+  dokumentation, så en søgning i hele koden ville finde *kernens* eksempel.
+
+Ny `dom_gradient_markup()` dømmer otte løfter i markup'en: de fem gradientfelter,
+`gradient`-muligheden i selecten, fire `<label for>` og at præfikset i `mount()`
+er det samme som i markup'en. Bevis: tre mutationer i den rigtige markup gør
+porten rød — gradientfeltet forsvinder (både på markup-dommen og på målingen),
+`<option value="gradient">` forsvinder, `<label for>` forsvinder. De to sidste
+dømmes på markup'en alene, og det er korrekt: harnessen sætter `bgmode.value`
+direkte, som det valg bruteren foretager, så den kan ikke se en manglende
+`<option>`, og en manglende `<label>` ændrer intet ved hvad kernen måler.
+
+`præfiks_fra(felter)` læses af markup'en og ikke af koden, fordi det er dem der
+ligger i den side bruteren har — en artikel hvis markup bruger `art-` mens
+`mount()` siger `''` skal have en harness der spørger om `art-bgmode`, ellers
+dømmer porten en side der ikke virker.
+
+Målt: `check_contrast_sampling` GRØN — 176 løfter dømt på 4 sider, 2 i kernen og
+2 på deres egen markup. `--self-test` OK (161/161) på 3m52s. Gaten grøn:
+`build_sites` 315 sider / 0 fund, `stripe-worker.test.mjs` 377/377,
+`check_inline_js` 0 problemer, `check_plan_status` GRØN (20 af 25 linjer,
+10186 af 40000 tegn). **Ikke kørt:** ingen browser ved 390/1280 — de fire felter er
+samme id'er, type og værdier som på de to værktøjssider, der var målt 3/10.

@@ -57,6 +57,27 @@ SIDER = ("text-on-image-checker.html", "text-on-image-checker-da.html")
 # artiklen er den fejl der læseren møder som en dansk læser.
 ARTIKLER = ("blog/text-on-image-contrast-check.html",
             "da/blog/tekst-paa-billede-kontrasttjek.html")
+# Alle fire sider der indlejrer kernen. Navnet bruges i rapporten, fordi
+# porten efter 3/10 dømmer **alle fire** og ikke kun de to værktøjssider —
+# en tæller der siger «2 sider» mens den dømmer fire er en ulovet påstand om
+# sit eget arbejde (punkt 11).
+ALLE = SIDER + ARTIKLER
+
+# Hvilke felter harnessen stiller op, og med hvilken startværdi. **Sættet af
+# felter læses i sidens egen markup** (`felter_i()`), ikke her — kun værdierne
+# står her, fordi de er målevilkår porten har valgt, ikke noget markup'en siger.
+#
+# Rækkefølgen er ikke ligegyldig: `demoEfterUpload()` og resten af kæderne
+# spørger kernen om de samme felter igen og igen, så en side der mangler ét
+# ville få en *ny, tom* stub hver gang — og så ville porten dømme egenskaber,
+# der slet ikke virker, som om de virkede.
+FELTVAERDIER = {
+    "cv": "", "file": "", "text": "Your headline here", "fg": "#ffffff",
+    "fontsize": "large", "err": "", "result": "",
+    "text2": "Din undertekst her", "fg2": "#ffffff", "result2": "",
+    "bgmode": "image", "gfrom": "#1e3a5f", "gto": "#c9d8e4",
+    "gang": "45", "tigrad": "",
+}
 
 # Tallene er WCAG 2.1's egne: L = 0.2126R + 0.7152G + 0.0722B over
 # lineærliserede kanaler, og forholdet er (Llight + 0.05) / (Ldark + 0.05).
@@ -122,8 +143,43 @@ IIFE_RE = re.compile(
 KERNE = SITE / "text-on-image-core.js"
 
 
-def hent_kode(fil: str) -> str:
-    """Kernen + sidens egen `mount()`-kald, eller en fejl der siger hvorfor ikke."""
+ID_RE = re.compile(r'<[^>]*\bid="([^"]+)"')
+
+
+def felter_i(html: str) -> dict:
+    """De felter **denne sides markup** har, som `{"art-gfrom": "#1e3a5f"}`.
+
+    Kernen slår sidens eget præfiks på hvert id (`mount({prefix: 'art-'})`),
+    så artiklerne spørger om `art-gfrom` og værktøjssiderne om `gfrom`. Derfor
+    kan porten ikke bare antage et sæt felter: et id der står med en tastefejl
+    i markup'en ville få en *ny, tom stub* hver gang kernen spørger, og
+    gradienten ville male sort og fejle alle domme — grøn på en side uden
+    gradient, rød på en side med en.
+
+    Derfor læses id'erne i markup'en, og kun startværdierne kommer herfra. De er
+    målevilkår porten har valgt — ikke noget markup'en siger — så de er de
+    samme på alle fire sider, og de domme der er tunet på dem fortsætter med at
+    gælde.
+    """
+    fund: dict = {}
+    for rå in ID_RE.findall(html):
+        rå = rå.strip()
+        # `art-gfrom` → `gfrom`: præfikset er præcis det `mount()` sætter på
+        # hvert id, så det skal væk for at finde startværdien.
+        for navn, værdi in FELTVAERDIER.items():
+            if rå == navn or rå.endswith("-" + navn):
+                fund[rå] = værdi
+                break
+    return fund
+
+
+def hent_kode(fil: str, html: str | None = None) -> str:
+    """Kernen + sidens egen `mount()`-kald, eller en fejl der siger hvorfor ikke.
+
+    `html` giver en mutation mulighed for at køre en *ændret* side (en der
+    mangler et felt) uden at røre filen på disk — ellers kunne selftesten
+    ikke vise, at porten kan se den fejl, den er skrevet til.
+    """
     if not KERNE.is_file():
         raise SystemExit(
             f"FEJL: {KERNE.name} mangler. Uden den har de fire sider der bruger "
@@ -133,7 +189,8 @@ def hent_kode(fil: str) -> str:
         raise SystemExit(
             f"FEJL: {KERNE.name} definerer ikke sampleContrast(). Porten dømmer "
             "formlen; hvis den flytter et andet sted, skal denne pege med.")
-    html = (SITE / fil).read_text(encoding="utf-8")
+    if html is None:
+        html = (SITE / fil).read_text(encoding="utf-8")
     if re.search(r"function\s+sampleContrast\s*\(", html):
         raise SystemExit(
             f"FEJL: {fil} definerer sin egen sampleContrast() ude i markup'en. "
@@ -143,9 +200,24 @@ def hent_kode(fil: str) -> str:
         raise SystemExit(
             f"FEJL: {fil} indlæser ikke /text-on-image-core.js. Uden den kalder "
             "siden mount() på en global der aldrig findes.")
+    return kerne + "\n\n" + sidekode(fil, html)
+
+
+def sidekode(fil: str, html: str | None = None) -> str:
+    """Sidens *egne* `TiContrast.mount()`-kald, uden kernen.
+
+    Adskilt fra `hent_kode()` fordi porten skal læse `prefix` her og **ikke** i
+    kernen: kernens egen dokumentation nævner `mount({ prefix: '' })` i en
+    kommentar, så en søgning i hele den sammensatte kode ville finde *kernens*
+    eksempel og slå alle fire sider til præfiks ''. Så ville artiklens felter
+    blive dømt i værktøjssidens navne, og porten ville være grøn på en artikel,
+    hvis gradientfelt kernen aldrig kan finde.
+    """
+    if html is None:
+        html = (SITE / fil).read_text(encoding="utf-8")
     for m in IIFE_RE.finditer(html):
         if "TiContrast.mount" in m.group(1):
-            return kerne + "\n\n" + m.group(1)
+            return m.group(1)
     raise SystemExit(
         f"FEJL: {fil} har ingen inline-<script> der kalder TiContrast.mount(). "
         "Er værktøjet flyttet, eller kalder siden kernen på en anden måde?")
@@ -507,32 +579,26 @@ const cv = new Canvas(300, 150);
 // den, så det er her porten ser om der kom en fil ud med et navn — ikke om
 // der stod en knap i markup'en.
 const Eksport = { ankre: [], type: null, bredde: 0, hoejde: 0, pixels: null };
-const nodes = {
-  'cv': new El('cv', { canvas: cv }),
-  'file': new El('file'),
-  'text': new El('text', { value: 'Your headline here' }),
-  'fg': new El('fg', { value: '#ffffff' }),
-  'fontsize': new El('fontsize', { value: 'large' }),
-  'err': new El('err'),
-  'result': new El('result'),
-  // Blok 2 er en *rigtig* del af harnessen, ikke en streng der testes. Uden
-  // disse felter ville `getElementById('fg2')` returnere en ny, tom stub
-  // hver gang kernen spørger — så blok 2 ville måle en tom tekst i ingen
-  // farve, og porten ville dømme en egenskab der ikke virker, som om den
-  // virkede. Det er præcis det en løfte uden dom er.
-  'text2': new El('text2', { value: 'Din undertekst her' }),
-  'fg2': new El('fg2', { value: '#ffffff' }),
-  'result2': new El('result2'),
-  // Gradient-baggrunden er en *rigtig* del af harnessen, samme grund som blok
-  // 2: uden felterne ville `getElementById('gfrom')` returnere en ny, tom stub
-  // hver gang kernen spørger, gradienten ville male sort, og porten ville
-  // dømme «værktøjet måler ikke gradienten» på en side der faktisk gør det.
-  'bgmode': new El('bgmode', { value: 'image' }),
-  'gfrom': new El('gfrom', { value: '#1e3a5f' }),
-  'gto': new El('gto', { value: '#c9d8e4' }),
-  'gang': new El('gang', { value: '45' }),
-  'tigrad': new El('tigrad'),
-};
+// Felterne kommer fra **sidens egen markup** (`__FELTER__`), ikke fra et
+// fast sæt her i harnessen. Kernen slår præfikset på hvert id, så en artikel
+// spørger om `art-gfrom` og en værktøjsside om `gfrom` — og en side der
+// mangler et felt ville få en ny, tom stub hver gang kernen spørger, så
+// porten ville dømme en egenskab, der ikke virker, som om den virkede.
+// Gradient-baggrunden og blok 2 er netop sådanne felter: de skal være rigtige
+// dele af harnessen, ellers males gradienten sort og blok 2 måler en tom
+// tekst i ingen farve.
+const FELTER = __FELTER__;
+const nodes = {};
+Object.keys(FELTER).forEach(function (id) {
+  const mulig = /(^|-)cv$/.test(id) ? { canvas: cv } : {};
+  nodes[id] = new El(id, Object.assign({ value: FELTER[id] }, mulig));
+});
+// `N('result')` i stedet for `nodes['result']`: præfikset er ikke altid tomt.
+// Det er `mount({prefix: …})` der afgør det, og det står i **sidens egen kode** —
+// så porten læser det samme sted som kernen gør, i stedet for at gætte på, at
+// artiklerne bruger `art-`.
+const PRÆFIKS = __PRÆFIKS__;
+const N = function (navn) { return nodes[PRÆFIKS + navn]; };
 globalThis.document = {
   getElementById: function (id) { return nodes[id] || new El(id); },
   createElement: function (t) {
@@ -569,7 +635,7 @@ globalThis.URL = { createObjectURL: function () { return 'blob:stub'; }, revokeO
 // målinger længere nede uploader et billede, og en dom der læste state dér
 // ville være grøn uden at se den fejl den er skrevet til.
 function demoVedStart() {
-  const h = nodes['result'].innerHTML || '';
+  const h = N('result').innerHTML || '';
   const m = /data-ti-demo>([\s\S]*?)</.exec(h);
   return {
     tekst: m ? m[1] : null,
@@ -599,16 +665,16 @@ const demoEfter = demoEfterUpload();
 // ==========================================================================
 function spoerg(billede, tekstfarve, tekst, x, y) {
   Img.next = billede;
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
-  nodes['fg'].value = tekstfarve; nodes['fg'].fire('input');
-  if (tekst !== undefined) { nodes['text'].value = tekst; nodes['text'].fire('input'); }
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
+  N('fg').value = tekstfarve; N('fg').fire('input');
+  if (tekst !== undefined) { N('text').value = tekst; N('text').fire('input'); }
   if (x !== undefined) {
-    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+    N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
   }
   // Den danske side skriver 21,00 med komma — korrekt dansk — så porten læser
   // begge former. Den må ikke straffe siden for at tale dansk.
-  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(nodes['result'].innerHTML);
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(N('result').innerHTML);
   return m ? parseFloat(m[1].replace(',', '.')) : null;
 }
 
@@ -623,7 +689,7 @@ function spoerg(billede, tekstfarve, tekst, x, y) {
  * «fjern knappens lytter» giver præcis de samme 22 tal som den rigtige
  * kode, fordi tallene er ændret *inden* knappen skrives. */
 function fixKnap() {
-  const res = nodes['result'];
+  const res = N('result');
   const knap = res.querySelector('[data-ti-fix]');
   if (!knap) return null;
   knap.click();
@@ -632,12 +698,12 @@ function fixKnap() {
 }
 function fixEfter(billede, tekstfarve, tekst, x, y) {
   Img.next = billede;
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
-  nodes['fg'].value = tekstfarve; nodes['fg'].fire('input');
-  if (tekst !== undefined) { nodes['text'].value = tekst; nodes['text'].fire('input'); }
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
+  N('fg').value = tekstfarve; N('fg').fire('input');
+  if (tekst !== undefined) { N('text').value = tekst; N('text').fire('input'); }
   if (x !== undefined) {
-    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+    N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
   }
   const foer = spoerg(billede, tekstfarve, tekst, x, y);
   const efter = fixKnap();
@@ -651,21 +717,29 @@ function fixEfter(billede, tekstfarve, tekst, x, y) {
 // grøn fordi den læser en anden vej end bruteren.
 // ==========================================================================
 function gradientStart(fra, til, vinkel) {
-  nodes['bgmode'].value = 'gradient';
-  nodes['bgmode'].fire('change', {});
-  nodes['gfrom'].value = fra; nodes['gfrom'].fire('input', {});
-  nodes['gto'].value = til; nodes['gto'].fire('input', {});
-  nodes['gang'].value = String(vinkel); nodes['gang'].fire('input', {});
+  // Findes et af felterne ikke i markup'en, kan bruteren ikke vælge en
+  // gradient — og så *sker* der intet, præcis som i en browser hvor
+  // `getElementById` giver `null`. Harnessen må derfor ikke dø med en
+  // TypeError: en død harness er en grøn dom for porten, fordi den aldrig nåede
+  // at dømme noget. Sådan her får dommen i stedet de *to* målinger uden
+  // gradient, og den kan se at 0° og 180° giver det samme svar.
+  if (!N('bgmode') || !N('gfrom') || !N('gto')) return false;
+  N('bgmode').value = 'gradient';
+  N('bgmode').fire('change', {});
+  N('gfrom').value = fra; N('gfrom').fire('input', {});
+  N('gto').value = til; N('gto').fire('input', {});
+  if (N('gang')) { N('gang').value = String(vinkel); N('gang').fire('input', {}); }
+  return true;
 }
 // Tallet og dommen, begge læst i den markup bruteren ser. `ti-pass`/`ti-fail`
 // ligger på `res.className`, så dommen kan skelne «den er grøn» fra «der står
 // et højt tal og den fejler alligevel».
 function laesResultat() {
-  const h = nodes['result'].innerHTML || '';
+  const h = N('result').innerHTML || '';
   const m = /<strong>([0-9.,]+):1<\/strong>/.exec(h);
   return {
     fik: m ? parseFloat(m[1].replace(',', '.')) : null,
-    fejler: /ti-fail/.test(nodes['result'].className || ''),
+    fejler: /ti-fail/.test(N('result').className || ''),
   };
 }
 function spoergGradient(fra, til, vinkel, tekstfarve, tekst, x, y) {
@@ -680,12 +754,12 @@ function spoergGradient(fra, til, vinkel, tekstfarve, tekst, x, y) {
   // stub end `[data-ti-pick]` — uden lytter, og porten ville tro at bruteren
   // ikke kan vælge blok. Blok 0 står i `result`, så dens attribut er den der
   // læses.
-  const valg = nodes['result'].querySelector('[data-ti-pick]');
+  const valg = N('result').querySelector('[data-ti-pick]');
   if (valg) valg.click();
-  nodes['fg'].value = tekstfarve; nodes['fg'].fire('input', {});
-  nodes['text'].value = tekst; nodes['text'].fire('input', {});
+  N('fg').value = tekstfarve; N('fg').fire('input', {});
+  N('text').value = tekst; N('text').fire('input', {});
   if (x !== undefined) {
-    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+    N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
   }
   return laesResultat();
 }
@@ -726,7 +800,7 @@ for (const f of FIX) {
   // `fontsize`-stubben står på `large`, så 4,5:1-casen sættes til `small` —
   // ellers ville alle fire dømme det samme krav, og 3:1-casen ville være
   // en dublet af den første.
-  nodes['fontsize'].value = f.krav === 3 ? 'large' : 'small';
+  N('fontsize').value = f.krav === 3 ? 'large' : 'small';
   const r = fixEfter(d, f.farve, 'Dette er en overskrift over et todelt billede', 20, 140);
   fixSvar.push({ navn: f.navn, krav: f.krav, foer: r.foer, efter: r.efter });
 }
@@ -763,12 +837,12 @@ for (const f of FIX) {
  * tilstand den måler. */
 function uploadBillede(billede) {
   Img.next = billede;
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
 }
 // Læser skærmen, ikke en intern variabel: samme greb som `fixKnap()`.
 function laesSkarm() {
-  const res = nodes['result'];
+  const res = N('result');
   const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
   return {
     fik: m ? parseFloat(m[1].replace(',', '.')) : null,
@@ -788,19 +862,19 @@ function laesSkarm() {
 const sekA = todeltVandret(400, 300, '#161a22', '#ebeef2');
 const sekB = ensfarvet(400, 300, '#3a3a3a');
 const sekTekst = 'Dette er en overskrift over et todelt billede';
-nodes['fontsize'].value = 'small';
+N('fontsize').value = 'small';
 const sekFarve = '#ffffff';
 // 1 — fix på A. `fixEfter()` bruger præcis den geometri som FIX-tabellen
 // bruger til sin **slør**-case, og det er ikke en tilfældighed: på en anden
 // tekstkasse vælger `suggestFix()` en *tekstfarve* i stedet, og så er der intet
 // slør at lække. Kun slør-casen kan finde den fejl, porten er skrevet til.
 const fixA = fixEfter(sekA, sekFarve, sekTekst, 20, 140);
-const farveEfterFix = nodes['fg'].value;
+const farveEfterFix = N('fg').value;
 // 2 — foto B igen. Ingen `fg`, intet `input`, ingen mousedown.
 uploadBillede(sekB);
 const sekB1 = laesSkarm();
 // 3 — referencen for præcis den farve fixen efterlod.
-nodes['fg'].value = farveEfterFix; nodes['fg'].fire('input');
+N('fg').value = farveEfterFix; N('fg').fire('input');
 uploadBillede(sekB);
 const renB2 = laesSkarm();
 
@@ -822,7 +896,7 @@ const renB2 = laesSkarm();
  * `draw()` over giver en fil, der er næsten helt gennemsigtig — og
  * bruteren får noget, der ikke ligner det han lige målte og rettede. */
 function downloadMaal() {
-  const res = nodes['result'];
+  const res = N('result');
   Eksport.ankre.length = 0;
   const knap = res.querySelector('[data-ti-dl]');
   if (!knap) return { harKnap: false };
@@ -920,15 +994,15 @@ function baandet(w, h, hexBaand, x0, x1) {
 }
 function markeringsMaal() {
   Img.next = baandet(400, 300, '#000000', 150, 180);
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
   // Lys tekst: på hvid er den ulæselig (1,1:1) og på sort er den 14,6:1, så
   // det *dårligste* sted er den hvide del — og den er den lette at skelne fra
   // den bedste. Porten kræver feltet over den hvide.
-  nodes['text'].value = 'Hej'; nodes['text'].fire('input');
-  nodes['fg'].value = '#e6e6e6'; nodes['fg'].fire('input');
-  nodes['cv'].fire('mousedown', { clientX: 150, clientY: 150, preventDefault: function () {} });
-  const res = nodes['result'];
+  N('text').value = 'Hej'; N('text').fire('input');
+  N('fg').value = '#e6e6e6'; N('fg').fire('input');
+  N('cv').fire('mousedown', { clientX: 150, clientY: 150, preventDefault: function () {} });
+  const res = N('result');
   const ren = res.querySelector('[data-ti-dl]');
   const mark = res.querySelector('[data-ti-dl-mark]');
   if (!mark) return { harKnap: false, harRen: !!ren };
@@ -948,7 +1022,7 @@ function markeringsMaal() {
     harKnap: true, harRen: !!ren, etiket: (/<button[^>]*data-ti-dl-mark[^>]*>([\s\S]*?)<\/button>/.exec(res.innerHTML) || [])[1] || null,
     renMark: taellFarve(renPx, MARKER), markMark: taellFarve(markPx, MARKER),
     felt: felt, under: under,
-    liveMark: taellFarve(nodes['cv'].getContext().buf.data, MARKER),
+    liveMark: taellFarve(N('cv').getContext().buf.data, MARKER),
   };
 }
 const markMaalt = markeringsMaal();
@@ -965,7 +1039,7 @@ const markMaalt = markeringsMaal();
  * højre, og hvid tekst på den lyse halvdel kan ikke bestå noget krav, så
  * dommen har både en fejlsituation og et rigtigt svar at kræve. */
 function spotLaes() {
-  const res = nodes['result'];
+  const res = N('result');
   const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
   // `[^>]*` fremfor intet: kernen skriver ogsa et `data-ti-moved`-attribut,
   // og en regex der kræver `class="ti-fixed">` holder op at finde en beskrivelse
@@ -988,7 +1062,7 @@ function spotLaes() {
 // variabel i kernen — ellers dømmer porten kernens egen hensigt i stedet for
 // det læseren faktisk ser.
 function deltaAttribut() {
-  const h = nodes['result'].innerHTML || '';
+  const h = N('result').innerHTML || '';
   const d = /data-ti-delta="([^"]*)"/.exec(h);
   const s = /<span class="ti-delta"[^>]*>([\s\S]*?)<\/span>/.exec(h);
   const dele = d ? d[1].split('|') : [];
@@ -1002,13 +1076,13 @@ function deltaAttribut() {
 }
 function spotMaal() {
   uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
-  nodes['text'].value = 'Dark'; nodes['text'].fire('input');
-  nodes['fontsize'].value = 'large'; nodes['fontsize'].fire('change');
+  N('fg').value = '#ffffff'; N('fg').fire('input');
+  N('text').value = 'Dark'; N('text').fire('input');
+  N('fontsize').value = 'large'; N('fontsize').fire('change');
   // Den lyse halvdel: hvid tekst på #ebeef2 er ca. 1,1:1 mod kravet 3:1.
-  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
   const foer = spotLaes();
-  const knap = nodes['result'].querySelector('[data-ti-spot]');
+  const knap = N('result').querySelector('[data-ti-spot]');
   if (!knap) return { harKnap: false, foer: foer };
   knap.click();
   const efter = spotLaes();
@@ -1016,7 +1090,7 @@ function spotMaal() {
   // af *sin* flytning skal væk, ellers står der «jeg satte den på det bedste
   // sted» under et tal fra et helt andet sted — præcis den fejl reviewen
   // fandt med sløret ved billedskift.
-  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
   const rykket = spotLaes();
   return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
 }
@@ -1040,7 +1114,7 @@ const spotMaalt = spotMaal();
  * Læst som tal (`data-ti-delta="a|b"`), ikke som tekst: dommen skal kunne se
  * *sandheden*, og en dansk læser skal ikke kunne få den engelske sætning. */
 function deltaLaes() {
-  const res = nodes['result'];
+  const res = N('result');
   const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
   return {
     fik: m ? parseFloat(m[1].replace(',', '.')) : null,
@@ -1053,19 +1127,19 @@ function deltaMaal() {
   // ca. 1,1:1 mod kravet 4,5:1, og intet tekstfarve består begge ende af et
   // todelt billede — så rettelsen bliver et slør, og tallet flytter sig.
   uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
-  nodes['text'].value = 'Dette er en overskrift'; nodes['text'].fire('input');
-  nodes['fontsize'].value = 'small'; nodes['fontsize'].fire('change');
-  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  N('fg').value = '#ffffff'; N('fg').fire('input');
+  N('text').value = 'Dette er en overskrift'; N('text').fire('input');
+  N('fontsize').value = 'small'; N('fontsize').fire('change');
+  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
   const foer = deltaLaes();
-  const knap = nodes['result'].querySelector('[data-ti-fix]');
+  const knap = N('result').querySelector('[data-ti-fix]');
   if (!knap) return { harKnap: false, foer: foer };
   knap.click();
   const efter = deltaLaes();
   // Bruteren tager over selv: han rører farvefeltet, og både beskrivelsen og
   // før/nu-linjen skal væk — ellers står «før 1,16:1» under et tal der ikke
   // længere stammer fra den pladsering kernen lagde.
-  nodes['fg'].value = '#ffff00'; nodes['fg'].fire('input');
+  N('fg').value = '#ffff00'; N('fg').fire('input');
   const rykket = deltaLaes();
   return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
 }
@@ -1090,7 +1164,7 @@ const deltaMaalt = deltaMaal();
  * da talt uden at dømme noget — præcis det porten her er skrevet til at finde.
  * Målt 3/10 på denne linje. */
 function hexLaes() {
-  const h = nodes['result'].innerHTML || '';
+  const h = N('result').innerHTML || '';
   const knap = /<button[^>]*\bdata-ti-hex="([^"]*)"[^>]*>/.exec(h);
   const synlig = /<code>([^<]*)<\/code>/.exec(h);
   const praem = /class="ti-swatch"[^>]*background:\s*([^;"']*)/.exec(h);
@@ -1107,7 +1181,7 @@ function hexLaes() {
     synlig: synlig ? synlig[1] : null,
     praem: praem ? praem[1].trim() : null,
     // Farvefeltets egen værdi, som bruteren kan se i samme skærmbillede.
-    felt: String(nodes['fg'].value || '').toLowerCase(),
+    felt: String(N('fg').value || '').toLowerCase(),
     fik: tal ? parseFloat(tal[1].replace(',', '.')) : null,
   };
 }
@@ -1118,12 +1192,12 @@ function hexMaal() {
   // koden kan dømmes for at *følge* rettelsen: ellers ville koden være den
   // fra før trykket, mens bruteren kopierer en farve der ikke er den han ser.
   uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
-  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
-  nodes['text'].value = 'Dette er en overskrift'; nodes['text'].fire('input');
-  nodes['fontsize'].value = 'small'; nodes['fontsize'].fire('change');
-  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  N('fg').value = '#ffffff'; N('fg').fire('input');
+  N('text').value = 'Dette er en overskrift'; N('text').fire('input');
+  N('fontsize').value = 'small'; N('fontsize').fire('change');
+  N('cv').fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
   const foer = hexLaes();
-  const knap = nodes['result'].querySelector('[data-ti-fix]');
+  const knap = N('result').querySelector('[data-ti-fix]');
   if (!knap) return { harFix: false, foer: foer };
   knap.click();
   const efter = hexLaes();
@@ -1138,9 +1212,9 @@ const hexMaalt = hexMaal();
 // — gør dommen uafhængig af hvilken måling der kørte sidst.
 function demoEfterUpload() {
   Img.next = ensfarvet(300, 150, '#ffffff');
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
-  const h = nodes['result'].innerHTML || '';
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
+  const h = N('result').innerHTML || '';
   const m = /data-ti-demo>([\s\S]*?)</.exec(h);
   return { tekst: m ? m[1] : null, harTal: /<strong>[0-9.,]+:1<\/strong>/.test(h) };
 }
@@ -1158,34 +1232,34 @@ function toBlokke() {
     return m ? parseFloat(m[1].replace(',', '.')) : null;
   }
   Img.next = todeltVandret(400, 300, '#000000', '#ffffff');
-  nodes['file'].files = [{ type: 'image/png' }];
-  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
-  nodes['fontsize'].value = 'large'; nodes['fontsize'].fire('change');
+  N('file').files = [{ type: 'image/png' }];
+  N('file').fire('change', { target: { files: N('file').files } });
+  N('fontsize').value = 'large'; N('fontsize').fire('change');
   // De to blokke har *forskellige* farver. Det er ikke pynt: en mutation der
   // læser blok 1s farve i stedet for blok 2s er ækvivalent, når begge er
   // hvide, så den ville være grøn på det langt meste billeder. Med sort mod
   // hvid kan de to tal ikke forveksles, og mutationen kan gå rød.
-  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
-  nodes['fg2'].value = '#000000'; nodes['fg2'].fire('input');
-  nodes['text'].value = 'Overskrift'; nodes['text'].fire('input');
-  nodes['text2'].value = 'Undertekst'; nodes['text2'].fire('input');
+  N('fg').value = '#ffffff'; N('fg').fire('input');
+  N('fg2').value = '#000000'; N('fg2').fire('input');
+  N('text').value = 'Overskrift'; N('text').fire('input');
+  N('text2').value = 'Undertekst'; N('text2').fire('input');
   // Blok 1 over den mørke venstre halvdel, blok 2 over den lyse højre.
   const plac = function (x, y) {
-    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+    N('cv').fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
   };
   // Blok 0 er den aktive fra start, så *dens* klik flytter den.
   plac(20, 240);                       // venstre, mørk halvdel
-  const foerste = laes(nodes['result']);
+  const foerste = laes(N('result'));
   // Så vælges blok 2 med dens **egen** vælger, og næste klik flytter *den*.
   // Den har sort tekst og skal også stå på den mørke halvdel, så de to tal
   // er 21:1 og 1:1 fra det samme billede. Kan de ikke være forskellige,
   // læser værktøjet den ene blok to gange: bruteren får ét tal for to
   // tekster igen, og det er præcis den fejl værktøjet havde.
-  const knap = (nodes['result2'] || { querySelector: function () { return null; } })
+  const knap = (N('result2') || { querySelector: function () { return null; } })
     .querySelector('[data-ti-pick]');
   if (knap) knap.click();
   plac(20, 240);
-  const anden = laes(nodes['result2']);
+  const anden = laes(N('result2'));
   // Blok 2 er stadig den valgte, så næste klik flytter den igen — og kun
   // den. Den skal *helt* ud i den lyse halvdel: tekstkassen er så bred at
   // den løber ind i den mørke, og værktøjet svarer da korrekt på det værste
@@ -1193,10 +1267,10 @@ function toBlokke() {
   // skal stå helt uændret: bruterens eget greb må ikke slette den måling han
   // lige lavede.
   plac(360, 240);
-  const efterFoerste = laes(nodes['result']);
-  const efterAnden = laes(nodes['result2']);
-  const valgt = nodes['result2'] ? nodes['result2'].querySelector('[data-ti-pick]') : null;
-  const valgt1 = nodes['result'] ? nodes['result'].querySelector('[data-ti-pick]') : null;
+  const efterFoerste = laes(N('result'));
+  const efterAnden = laes(N('result2'));
+  const valgt = N('result2') ? N('result2').querySelector('[data-ti-pick]') : null;
+  const valgt1 = N('result') ? N('result').querySelector('[data-ti-pick]') : null;
   return {
     harBokse: blokAntalErTo(),
     harVaelger: !!knap,
@@ -1211,8 +1285,8 @@ function blokAntalErTo() {
   // kan ikke dømmes ved at kernens egen tæller er sand — den er alt sand i
   // harnessen. Det porten kan dømme er *markup'en*: to resultatkasser med et
   // tal hver. Det er det bruteren ser.
-  return /<strong>[0-9.,]+:1<\/strong>/.test((nodes['result'] || {}).innerHTML || '') &&
-         /<strong>[0-9.,]+:1<\/strong>/.test((nodes['result2'] || {}).innerHTML || '');
+  return /<strong>[0-9.,]+:1<\/strong>/.test((N('result') || {}).innerHTML || '') &&
+         /<strong>[0-9.,]+:1<\/strong>/.test((N('result2') || {}).innerHTML || '');
 }
 const blokMaalt = toBlokke();
 
@@ -1230,8 +1304,8 @@ const blokMaalt = toBlokke();
 const GRAD_TOP = 2;          // tekstkassen i toppen af en 900×420 flade
 const GRAD_NED = 360;        // …og i bunden
 function læsGradient(fra, til, vinkel, tekst, x, y, stor) {
-  nodes['fontsize'].value = stor ? 'large' : 'small';
-  nodes['fontsize'].fire('change', {});
+  N('fontsize').value = stor ? 'large' : 'small';
+  N('fontsize').fire('change', {});
   return spoergGradient(fra, til, vinkel, '#ffffff', tekst, x, y);
 }
 const gradMaalt = (function () {
@@ -1252,12 +1326,12 @@ const gradMaalt = (function () {
   const mork = læsGradient('#1c2029', '#a8adb5', 90, 'Hej', 10, 200, false);
   const lys = læsGradient('#1c2029', '#a8adb5', 90, 'Hej', 820, 200, false);
   // Og tilbage til fotoet, så skiftet ikke er destruktivt.
-  nodes['bgmode'].value = 'image'; nodes['bgmode'].fire('change', {});
+  N('bgmode').value = 'image'; N('bgmode').fire('change', {});
   const foto = laesResultat();
   return {
     top0: top0, ned0: ned0, top180: top180, ned180: ned180,
     mork: mork, lys: lys, foto: foto,
-    felterSynlige: (nodes['tigrad'].style || {}).display || '',
+    felterSynlige: (N('tigrad') || {}).style ? (N('tigrad').style || {}).display || '' : '',
   };
 })();
 
@@ -1336,8 +1410,40 @@ MUTATIONER = (
 )
 
 
-def byg_kode(kode: str) -> str:
+PREFIX_RE = re.compile(r"prefix:\s*'([^']*)'")
+
+
+def præfiks_i(kode: str) -> str:
+    """Det `prefix` **sidens eget** `mount()`-kald sætter foran hvert id.
+
+    Kaldet med `sidekode()`, aldrig med `hent_kode()`: kernen beskriver selv
+    `mount({ prefix: '' })` i sin dokumentation, og en søgning i hele den
+    sammensatte kode ville derfor finde *kernens* eksempel.
+    """
+    m = PREFIX_RE.search(kode)
+    return m.group(1) if m else ""
+
+
+def præfiks_fra(felter: dict) -> str:
+    """Præfikset som sidens **markup** bruger, fundet på dens canvas-id.
+
+    Harnessen skal præfikse de id'er den slår sammen, og det den skal ramme er
+    dem der *står i markup'en* — fordi det er dem bruteren har. Derfor læses den
+    her af `felter` og ikke af koden: en artikel hvis markup bruger `art-` mens
+    `mount()` siger `''` får en harness, der spørger om felter læseren ikke har,
+    og dommen dømmer så en side der ikke virker.
+    """
+    for id_ in sorted(felter):
+        if id_ == "cv" or id_.endswith("-cv"):
+            return id_[:-2]
+    return ""
+
+
+def byg_kode(kode: str, felter: dict | None = None, præfiks: str = "") -> str:
     return (HARNESS.replace("%%SIDENS_KODE%%", kode)
+            .replace("__FELTER__", json.dumps(felter if felter is not None else
+                                               FELTVAERDIER))
+            .replace("__PRÆFIKS__", json.dumps(præfiks))
             .replace("__FARVEPAR__", json.dumps([list(p) for p in FARVEPAR]))
             .replace("__FLADT__", json.dumps(list(FLADT)))
             .replace("__GRADIENT__", json.dumps(list(GRADIENT)))
@@ -1345,18 +1451,22 @@ def byg_kode(kode: str) -> str:
             .replace("__TODELT__", json.dumps(list(TODELT))))
 
 
-def koer(kode: str, hele: bool = False):
+def koer(kode: str, hele: bool = False, felter: dict | None = None):
     """Kør sidekoden i Node-harnessen og læs de tal den viser.
 
     `hele=True` giver hele svaret (samplings-tallene *og* fix-dommen); ellers
-    kun tallene, fordi det er dem de fleste kald vil have.
+    kun tallene, fordi det er dem de fleste kald vil have. `felter` er sidens
+    egne id'er — læst i markup'en af `felter_i()` — så harnessen kun har de
+    felter læseren har, og præfikset følger dem.
     """
     if shutil.which("node") is None:
         raise SystemExit("FEJL: node mangler. Porten dømmer den kode der "
                          "factisk ships, så den kan ikke springe Node over.")
+    felter = FELTVAERDIER if felter is None else felter
     with tempfile.TemporaryDirectory() as tmp:
         fil = Path(tmp) / "harness.mjs"
-        fil.write_text(byg_kode(kode), encoding="utf-8")
+        fil.write_text(byg_kode(kode, felter, præfiks_fra(felter)),
+                       encoding="utf-8")
         p = subprocess.run(["node", str(fil)], capture_output=True, text=True,
                            timeout=120, cwd=ROOT)
     if p.returncode != 0:
@@ -2062,6 +2172,62 @@ def dom_hex(fil: str, d: dict | None) -> list[str]:
             fund.append(f"{fil} ({hvornår} rettelsen): farveprøven i knappen er "
                         f"{laes['praem']}, men koden er {h} — de to viser to "
                         "forskellige farver")
+    return fund
+
+
+def dom_gradient_markup(fil: str, html: str, præfiks: str) -> list[str]:
+    """Døm at *markup'en* har den gradient-rute bruteren skal kunne vælge.
+
+    `dom_gradient` dømmer at kernen måler en gradient, når den bliver bedt om
+    det. Det er ikke nok alene: bruteren skal også kunne *bede om den*, og det
+    er markup'ens job — en `<select>` uden en `gradient`-værdi, eller et
+    farvefelt uden `<label for>`, er et felt han ikke kan finde eller ikke kan
+    læse. Feature-kø punkt 4 lagde ruten på de to værktøjssider; de to artikler
+    indlejrer samme kerne og skal derfor have den samme rute, ellers er læseren
+    på sitets største indgang sendt ud af døren for at få den.
+
+    Otte løfter — de fem felter ruten består af, gradientmuligheden, de fire
+    labels og præfiksets overensstemmelse. De dømmes på **id-præfikset**
+    fra sidens eget `mount()`-kald, fordi det er præcis det kernen slår på foran
+    hvert id: en `id="gfrom"` på en artikel der kalder `mount({prefix:'art-'})`
+    er et felt kernen aldrig finder, og det er præcis den fejl der er umærkelig
+    for en læser og dødfødt for porten.
+    """
+    fund: list[str] = []
+    # Først: passer sidens *felt-præfiks* sammen med det `mount()` siger?
+    # Kernen slår præfikset på hvert id, så `prefix: ''` på en artikel hvis
+    # markup bruger `art-` efterlader kernen med felter den aldrig spørger om:
+    # dødt for bruteren, og grønt for en dom der læser felterne i sin egen
+    # opskrift. Derfor dømmes de to imod hinanden — og målingen i harnessen
+    # bruger *markup'ens* præfiks, fordi det er dem bruteren har.
+    i_markup = præfiks_fra(felter_i(html))
+    if i_markup != præfiks:
+        fund.append(f"{fil}: `mount()` sætter prefix {præfiks!r}, men felterne i "
+                    f"markup'en hedder {i_markup!r}* — kernen spørger om "
+                    f"{præfiks + 'bgmode'!r} og finder intet, så gradientruten "
+                    "er død for bruteren")
+    for navn in ("bgmode", "gfrom", "gto", "gang", "tigrad"):
+        id_ = præfiks + navn
+        if not re.search(rf'\bid="{re.escape(id_)}"', html):
+            fund.append(f"{fil}: der er intet `{id_}` i markup'en, så kernen "
+                        f"finder ikke gradientfeltet «{navn}» — bruteren kan "
+                        "hverken vælge en gradient eller skrive den ind")
+    # Vælgeren skal have en `gradient`-mulighed. Uden den er `<select>`-feltet
+    # en dekoration, og `gradientAktiv()` kan aldrig blive sand.
+    select = re.search(rf'<select[^>]*\bid="{re.escape(præfiks)}bgmode".*?</select>',
+                       html, re.S)
+    if select and '<option value="gradient"' not in select.group(0):
+        fund.append(f"{fil}: `bgmode` har ingen mulighed med værdien `gradient`, "
+                    " så der er ingen vej fra foto til gradient")
+    # Labels på de fire felter bruteren skal *forstå*. Et farvefelt uden label
+    # er to små felter uden navn — præcis det designreglerne forbyder, og
+    # skærmlæseren siger feltet uden navn.
+    for navn in ("bgmode", "gfrom", "gto", "gang"):
+        id_ = præfiks + navn
+        if re.search(rf'\bid="{re.escape(id_)}"', html) and \
+                not re.search(rf'<label[^>]*\bfor="{re.escape(id_)}"', html):
+            fund.append(f"{fil}: feltet `{id_}` har ingen `<label for=…>`, så "
+                        "feltet står som to navnløse felter for bruteren")
     return fund
 
 
@@ -2841,6 +3007,61 @@ def self_test() -> int:
              "markBtn:" in html and "markTitle:" in html,
              f"`markBtn`/`markTitle` mangler i {fil}")
 
+    # 15: **gradient-ruten på artiklerne.** Feature-kø punkt 4 lagde den på de
+    # to værktøjssider 3/10; artiklerne indlejrer samme kerne og får den derfor
+    # kørt i harnessen *på deres egne felter* (`koer(…, felter=felter_i())`).
+    # Beviset er tre mutationer i den rigtige markup — en for hver fejlform:
+    ART = ARTIKLER[0]
+    art_html = (SITE / ART).read_text(encoding="utf-8")
+    art_kode = hent_kode(ART)
+    tjek("artiklen har gradient-ruten i markup'en",
+         dom_gradient_markup(ART, art_html, præfiks_i(sidekode(ART))) == [],
+         "; ".join(dom_gradient_markup(ART, art_html,
+                                       præfiks_i(sidekode(ART)))))
+    art_grad = koer(art_kode, hele=True, felter=felter_i(art_html)).get("gradient")
+    tjek("gradient-dommen er grøn på artiklen", dom_gradient(art_grad) == [],
+         "; ".join(dom_gradient(art_grad)))
+
+    def artikel_mut(navn: str, gammel: str, ny: str, adfærd: bool = True) -> None:
+        tjek(f"mutationen findes i markup'en: {navn}", gammel in art_html,
+             repr(gammel[:60]))
+        html = art_html.replace(gammel, ny, 1)
+        fund_markup = dom_gradient_markup(ART, html, præfiks_i(sidekode(ART, html)))
+        tjek(f"mutationen gør markup-dommen rød: {navn}", bool(fund_markup),
+             str(fund_markup)[:300])
+        if not adfærd:
+            return
+        # Uden denne del ville porten være grøn på en artikel hvis gradientfelt
+        # står i markup'en, men kernen ikke kan finde — fordi dommen så læste
+        # et *felt den selv har lavet* i stedet for det bruteren har.
+        fund_adfærd = dom_gradient(
+            koer(hent_kode(ART, html), hele=True,
+                 felter=felter_i(html)).get("gradient"))
+        tjek(f"mutationen gør målingen rød: {navn}", bool(fund_adfærd),
+             str(fund_adfærd)[:300])
+
+    artikel_mut("gradientfeltet forsvinder fra markup'en",
+                '<input type="color" class="ti-color" id="art-gfrom" value="#1e3a5f">',
+                "")
+    # De to her dømmes på markup'en alene, og det er ikke en mangel: harnessen
+    # sætter `bgmode.value` direkte, som det valg bruteren foretager, så den kan
+    # ikke se en `<option>` der mangler — og en manglende `<label>` ændrer
+    # intet ved hvad kernen måler. Det er præcis de to fejl en læser mærker og
+    # et tal ikke kan finde.
+    artikel_mut("vælgeren taber gradientmuligheden",
+                '<option value="gradient">A gradient</option>',
+                '<option value="gradient2">A gradient</option>', adfærd=False)
+    artikel_mut("et gradientfelt står uden label",
+                '<label for="art-gang">Gradient angle</label>',
+                '<span>Gradient angle</span>', adfærd=False)
+    # Præfikset: markup'en bruger `art-`, `mount()` skal sige det samme. En
+    # artikel hvor `mount({prefix:''})` er spredt af en refaktorering ville have
+    # felter kernen aldrig spørger om — dødt for bruteren. Denne mutation er
+    # dømt på markup-siden alene: harnessens måling bruger præfikset fra
+    # markup'en (det er dem bruteren har), så den ville være grøn.
+    artikel_mut("mount() taber sidens felt-præfiks",
+                "prefix: 'art-'", "prefix: ''", adfærd=False)
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
@@ -2948,6 +3169,19 @@ def main(argv: list[str] | None = None) -> int:
         for linje in dom_gradient(grad):
             fund.append(f"{linje}")
 
+    # Artiklerne kører **samme** kerne og skal derfor have **samme** gradient-
+    # rute. De får den fulde måling — ikke en tekstligheds-dom — fordi
+    # `koer()` nu bygger harnessen af sidens *egne* felter: en artikel hvor
+    # `art-gfrom` ikke findes i markup'en får en tom stub, gradienten males
+    # sort, og dommen går rød på en side der lover bruteren en gradient.
+    for fil in ARTIKLER:
+        html = (SITE / fil).read_text(encoding="utf-8")
+        kode = hent_kode(fil)
+        grad = koer(kode, hele=True, felter=felter_i(html)).get("gradient")
+        antal += 4
+        for linje in dom_gradient(grad):
+            fund.append(f"{fil}: {linje}")
+
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
     # prøver slør i begge retninger og vælger den mindste dækning, så på et
     # lyst billede vinder det hvide slør med sort tekst. En side med kun én
@@ -2996,18 +3230,25 @@ def main(argv: list[str] | None = None) -> int:
         # tekst der kun findes på værktøjssiden er en halv rettelse.
         antal += 2
         fund.extend(dom_knapetekst(fil, html))
+        # Gradient-rutens *markup* dømmes på alle fire. Kernen slår præfikset fra
+        # sidens eget `mount()`-kald på hvert id, så porten læser præfikset der
+        # — ellers ville den dømme artiklens felter i værktøjssidens navne og være
+        # grøn på en artikel, hvis gradientfelt kernen aldrig finder.
+        antal += 9   # fem felter + gradientmulighed + fire labels + præfiks
+        fund.extend(dom_gradient_markup(fil, html, præfiks_i(sidekode(fil))))
 
     if args.list:
         for linje in fund:
             print(linje)
-        print(f"\ncontrast-sampling: {antal} løfter dømt på {len(SIDER)} sider")
+        print(f"\ncontrast-sampling: {antal} løfter dømt på {len(ALLE)} sider")
         return 1 if fund else 0
     for linje in fund:
         print(linje)
     if fund:
         print(f"\ncontrast-sampling: RØD — {len(fund)} af {antal} løfter er forkerte")
         return 1
-    print(f"contrast-sampling: GRØN — {antal} løfter dømt på {len(SIDER)} sider, "
+    print(f"contrast-sampling: GRØN — {antal} løfter dømt på {len(ALLE)} sider, "
+          f"{len(SIDER)} dømt i kernen og {len(ARTIKLER)} på deres egen markup, "
           "alle matcher WCAG 2.1 for billedets og tekstens farve")
     return 0
 

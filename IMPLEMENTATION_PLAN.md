@@ -1,32 +1,30 @@
 # STATUS
-- **Denne iteration: rød gaten lå og blokerede ethvert deploy.** `deploy: needs:
-  gate`, så gaten rød på `main` betyder **intet deployes**. Målt: live
-  `text-on-image-core.js` har **0** forekomster af `bgmode`, så gradient-ruten
-  fra `b8ca1ba` lå færdig og udgivet-på-vent. Rød CI er her en **sendefrys**.
-- **Årsagen var de seks forældede `where`-pejlinger** i `tools/stripe_catalog.json`
-  på de to `text-on-image-checker`-sider: `0f9dd27` + `b8ca1ba` lagde 37 linjer
-  ind ovenfor dem. Rettet med portens **egen** `ryd()` målt på citaterne, ikke
-  ved at flytte tal: EN `149-151 / 151-152 / 151-152`, DA `150-152 / 152-153 /
-  153`. Revieweren foreslog `150-151 / 151-153` — **det ville være rødt igen**,
-  fordi «Nothing on this» slutter på linje 149 og «…NIS2 findings in» på 151.
-- **Porten slap ikke, og det er pointen.** Reviewens alternativ var at lade porten
-  dømme filen i stedet for intervallet; det ville gjort de 120 henvisninger
-  umærkelige i stille. CI fangede fejlen i den samme kørsel den opstod i.
-  `check_catalog_where` 120 funktioner grønne, selftest 11/11.
-- **Ikke kørt:** ingen browser, ingen UI-ændring — diffen er seks tal i én JSON-fil.
-  PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
-  SDK'en er sat op (3/10).
-- **Næste opgave: Feature-kø punkt 5** — artiklen 44 % af besøgene lander på,
-  bounce 100 %. Baslinen skal måles i browseren, før der røres ved den.
-- **❓ Til Mads:** uændret — `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`,
-  bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon Squeezy,
-  Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
+- **Denne iteration: gradientruten er også i artiklen.** Feature-kø punkt 4 lagde
+  den på de to *værktøjssider* 3/10; `/blog/text-on-image-contrast-check` er 8 af
+  18 besøgende (**44 %**, bounce 100 %) og indlejrer samme kerne — så læseren måtte
+  ud af døren for at få den. Begge artikler (EN/DA) har nu **An image / A
+  gradient** + to stopfarver + vinkel, samme id'er og værdier som værktøjssiderne.
+- **Porten dømmer nu alle fire sider, ikke kun to** (176 løfter fra 132). Felterne
+  læses i **sidens egen markup** og præfikset i **sidens eget `mount()`-kald** —
+  før la porten nogle felter op selv, så et `id` med en tastefejl fik en grøn dom.
+  Tre mutationer i markup'en gør den rød: gradientfeltet forsvinder,
+  `<option value="gradient">` forsvinder, `<label for>` forsvinder.
+- **Målt:** `check_contrast_sampling` GRØN 176/4 sider; `--self-test` OK
+  (161/161) på 3m52s. Gaten grøn (`build_sites` 315 sider/0 fund,
+  `stripe-worker.test.mjs` 377/377, `check_inline_js` 0). **Ikke kørt:** ingen
+  browser ved 390/1280 — de fire felter er samme markup som på værktøjssiderne.
+- **Deploy fra sidste iteration er verificeret:** live `text-on-image-core.js` har
+  **4** forekomster af `bgmode`, så `40654c3` er ude. CI grøn på `main` 3/10.
+- PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
+- **Næste opgave: Feature-kø punkt 5** — artiklen har stadig ingen købsknap over
+  folden. Baslinen måles i browseren, før der røres ved den.
+- **❓ Til Mads:** uændret — alle 12 spørgsmål står i afsnittet nedenfor, 0 nye.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: pejlingerne i katalogen peger på citaterne igen ceo/catalog-where-pejlinger 3/10 20:5x`
-Graden deployer på push (ikke i vinduer), så næste iteration tjekker med ét
-`gh run list -L 1` og ét kald på live `text-on-image-core.js` efter `bgmode`.
+`VERIFICÉR DEPLOY: gradientruten i artiklen og porten på alle fire sider ceo/artikel-gradient 3/10 21:3x`
+Graden deployer på push, så næste iteration tjekker med ét `gh run list -L 1` og
+ét kald på live `/blog/text-on-image-contrast-check/` efter `art-bgmode`.
 
 ## Åbne opgaver
 
@@ -125,45 +123,20 @@ Graden deployer på push (ikke i vinduer), så næste iteration tjekker med ét
 
 ## Feature-kø
 
-Prioriteret efter hvor tæt den er på penge. Baseline for hvert tal er målt 3/10
-på den **byggede** side; tallene er ikke vores egen trafik.
+Prioriteret efter hvor tæt den er på penge. Baseline for hvert tal er målt på den
+**byggede** side; tallene er ikke vores egen trafik. Punkt 1–4 er leveret og står
+i `docs/plan-arkiv.md`.
 
-1. ~~**En port, der dømmer farvekoden.**~~ **Leveret 3/10.** Se punkt 3 i
-   STATUS. Hvem: alle der bruger værktøjet; artiklen
-   `/blog/text-on-image-contrast-check` er 8 af 18 besøgende (44 %, 100 % bounce).
-   Tal: resultater der viser den målte kode (baseline **4 af 4** sider målt i
-   browseren, **0** dømt af porten → **16** løfter). Accept: `check_contrast_sampling`
-   får 4 løfter pr. værktøjsside + 2 pr. artikel med polaritet målt ved at slette
-   `data-ti-hex` fra den rigtige fil og ved at føse `hexNu` — 6 røde. Datagrund: 5 af
-   de 6 seneste commits hang på dette ene værktøj, og intet i gaten vidste at
-   koden findes.
-2. ~~**Mål bruterens egen tekst, ikke kun billedets.**~~ **Leveret 3/10.**
-   Se punkt 4 i STATUS. Hvem: designere med to overlejrende tekstblokke på ét
-   foto. Tal: målinger pr. session (baseline **1** → **2** pr. upload).
-   Accept: bruteren kan lægge to tekster og få to tal — nået og målt i rigtig
-   Chromium, se STATUS. Nedlægningen skriver dem begge med i PNG'en, fordi
-   `draw()` maler begge blokke og derfor er download-knappen kun én.
-   Datagrund: kernen kender `sampleContrast()` pr. tekstboks, men var skrevet
-   til én; en designér med et billede og to overskrifter fik det sidste tal.
-3. ~~**Vis hvor på billedet fejlen sidder.**~~ **Leveret 3/10.** Se punkt 2 i
-   STATUS. Hvem: bureauer der gennemgår en kundes fotos. Tal: downloads med
-   markering (baseline **0**). Accept: den hentede PNG får et felt, der rammer
-   det værste område under teksten, og det er et *andet* valg end den rettede
-   grafik — nålet og målt i portens egen harness, se STATUS.
-   Datagrund: bruteren ser et tal på 1,10:1 og skal selv gætte hvorfor; kernen
-   kender allerede de pixels den målte.
-4. **Et gratis værktøj mere på en side der sælger.** Hvem: læsere af de 189
-   guides, der ikke kan bruge en farvekontrast-måler. Tal: købsknapper pr. artikel
-   (baseline **1** pr. artikel, porten dømmer det). Accept: ét værktøj der løser
-   *tekst på mørk baggrund* (ikke kun tekst på billede) med samme kerne, så der
-   er to ruter ind til den samme måling. Datagrund: porten `check_first_action`
-   måler 172 sider med to-tre knapper i folden, så et nyt værktøj skal komme med
-   ét klik og ikke to. **Leveret 3/10 som gradient-ruten i den eksisterende
-   tjekker** — se punkt 1–2 i STATUS. Ikke en ny side: `/contrast-checker` tager
-   allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
-   dublet. Den reelle revne lå mellem flade farver og foto: en
-   `linear-gradient`, som man ikke kan uploade.
-5. **Artiklen der 44 % af besøgene lander på, sender ingen hjem.** Hvem: de 8 af 18
+1. ~~**En port, der dømmer farvekoden.**~~ Leveret 3/10 — `d051da8`.
+2. ~~**Mål bruterens egen tekst, ikke kun billedets.**~~ Leveret 3/10 — `d4d0266`.
+3. ~~**Vis hvor på billedet fejlen sidder.**~~ Leveret 3/10 — `0f9dd27`.
+4. ~~**Et gratis værktøj mere på en side der sælger.**~~ Leveret 3/10 i to
+   commits: `b8ca1ba` lagde gradientruten på de to værktøjssider, denne
+   iteration lagde den i **artiklerne**. Ikke en ny side: `/contrast-checker`
+   tager allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
+   dublet. Den reelle revne lå mellem flade farver og foto — en `linear-gradient`,
+   som man ikke kan uploade.
+5. **Artiklen der 44 % af besågene lander på, sender ingen hjem.** Hvem: de 8 af 18
    besøgende på `/blog/text-on-image-contrast-check` — de kommer fra søgning efter
    præcis det problem og går alle med 100 % bounce, mens selve værktøjet
    `/text-on-image-checker` kun har 2. Tal: købs- og værktøjsknapper i artiklen

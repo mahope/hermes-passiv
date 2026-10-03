@@ -54,7 +54,7 @@
   <div class="container">
     <h2>How to do it (under a minute)</h2>
     <ol>
-      <li>Load your image in the checker below — it starts with a demo background so you can see how it works before you add anything.</li>
+      <li>Load your image in the checker below — or choose <strong>A gradient</strong> and type in the two stops and the angle from your stylesheet, so a `linear-gradient` can be checked without screenshotting it first. It starts with a demo background so you can see how it works before you add anything.</li>
       <li>Click where your text sits on the image, or drag it there. Type the text and pick its colour.</li>
       <li>Read the ratio. It is measured against the lightest and darkest pixels right behind your letters — the worst case, not the average.</li>
       <li>Adjust the design until it passes: a translucent scrim, a darker crop, or a solid caption bar.</li>
@@ -66,19 +66,26 @@
 <section class="products" id="try-it">
   <div class="container">
     <h2>Try it on your own image</h2>
-    <p style="margin-top:0">This is the same tool as the <a href="/text-on-image-checker" style="color:var(--color-accent);">standalone contrast checker</a>, running right here. Nothing to install, no account, and the image stays in your browser.</p>
+    <p style="margin-top:0">This is the same tool as the <a href="/text-on-image-checker" style="color:var(--color-accent);">standalone contrast checker</a>, running right here — background mode included. Nothing to install, no account, and the image stays in your browser.</p>
     <div class="ti-card" style="margin-top:18px">
       <div class="ti-row">
         <div class="ti-field">
-          <label for="art-file">1. Choose an image</label>
+          <label for="art-bgmode">1. Background</label>
+          <select id="art-bgmode" class="ti-input">
+            <option value="image" selected>An image</option>
+            <option value="gradient">A gradient</option>
+          </select>
+        </div>
+        <div class="ti-field">
+          <label for="art-file">2. Choose an image</label>
           <input type="file" id="art-file" accept="image/*" class="ti-input">
         </div>
         <div class="ti-field">
-          <label for="art-text">2. Overlay text</label>
+          <label for="art-text">3. Overlay text</label>
           <input type="text" id="art-text" class="ti-input" value="Your headline here">
         </div>
         <div class="ti-field">
-          <label for="art-fg">3. Text colour</label>
+          <label for="art-fg">4. Text colour</label>
           <input type="color" class="ti-color" id="art-fg" value="#ffffff">
         </div>
         <div class="ti-field">
@@ -89,13 +96,27 @@
           </select>
         </div>
       </div>
+      <div class="ti-row" id="art-tigrad" style="margin-top:14px">
+        <div class="ti-field">
+          <label for="art-gfrom">Gradient start</label>
+          <input type="color" class="ti-color" id="art-gfrom" value="#1e3a5f">
+        </div>
+        <div class="ti-field">
+          <label for="art-gto">Gradient end</label>
+          <input type="color" class="ti-color" id="art-gto" value="#c9d8e4">
+        </div>
+        <div class="ti-field">
+          <label for="art-gang">Gradient angle</label>
+          <input type="range" id="art-gang" class="ti-input" min="0" max="360" step="15" value="45">
+        </div>
+      </div>
       <div class="ti-row" style="margin-top:14px">
         <div class="ti-field">
-          <label for="art-text2">4. Second text (optional)</label>
+          <label for="art-text2">5. Second text (optional)</label>
           <input type="text" id="art-text2" class="ti-input" value="Your subtitle here">
         </div>
         <div class="ti-field">
-          <label for="art-fg2">5. Second text colour</label>
+          <label for="art-fg2">6. Second text colour</label>
           <input type="color" class="ti-color" id="art-fg2" value="#ffffff">
         </div>
       </div>

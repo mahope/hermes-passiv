@@ -55,7 +55,7 @@
   <div class="container">
     <h2>Sådan gør du (under et minut)</h2>
     <ol>
-      <li>Indlæs dit billede i tjekkeren nedenfor — den starter med en demo-baggrund, så du kan se hvordan den virker, før du tilføjer noget.</li>
+      <li>Indlæs dit billede i tjekkeren nedenfor — eller vælg <strong>Et gradient</strong> og skriv de to stopfarver og vinklen fra dit stylesheet ind, så du kan tjekke en `linear-gradient` uden at tage et skærmbillede først. Den starter med en demo-baggrund, så du kan se hvordan den virker, før du tilføjer noget.</li>
       <li>Klik hvor teksten skal stå på billedet, eller træk den derhen. Skriv teksten, og vælg dens farve.</li>
       <li>Læs forholdet. Det er målt mod de lyseste og mørkeste pixels lige bag dine bogstaver — det værste tilfælde, ikke gennemsnittet.</li>
       <li>Justér designet, indtil det består: en semi-transparent skærm, en mørkere udskæring, eller en fast bjælke under teksten.</li>
@@ -67,19 +67,26 @@
 <section class="products" id="prov-dit-billede">
   <div class="container">
     <h2>Prøv det på dit eget billede</h2>
-    <p style="margin-top:0">Det her er samme værktøj som det <a href="/text-on-image-checker-da" style="color:var(--color-accent);">separate kontrasttjek</a>, bare kørt lige her. Intet skal installeres, ingen konto, og billedet bliver i din browser.</p>
+    <p style="margin-top:0">Det her er samme værktøj som det <a href="/text-on-image-checker-da" style="color:var(--color-accent);">separate kontrasttjek</a>, bare kørt lige her — inklusive gradienttilstanden. Intet skal installeres, ingen konto, og billedet bliver i din browser.</p>
     <div class="ti-card" style="margin-top:18px">
       <div class="ti-row">
         <div class="ti-field">
-          <label for="art-file">1. Vælg et billede</label>
+          <label for="art-bgmode">1. Baggrund</label>
+          <select id="art-bgmode" class="ti-input">
+            <option value="image" selected>Et billede</option>
+            <option value="gradient">Et gradient</option>
+          </select>
+        </div>
+        <div class="ti-field">
+          <label for="art-file">2. Vælg et billede</label>
           <input type="file" id="art-file" accept="image/*" class="ti-input">
         </div>
         <div class="ti-field">
-          <label for="art-text">2. Tekst på billedet</label>
+          <label for="art-text">3. Tekst på billedet</label>
           <input type="text" id="art-text" class="ti-input" value="Din overskrift her">
         </div>
         <div class="ti-field">
-          <label for="art-fg">3. Tekstfarve</label>
+          <label for="art-fg">4. Tekstfarve</label>
           <input type="color" class="ti-color" id="art-fg" value="#ffffff">
         </div>
         <div class="ti-field">
@@ -90,13 +97,27 @@
           </select>
         </div>
       </div>
+      <div class="ti-row" id="art-tigrad" style="margin-top:14px">
+        <div class="ti-field">
+          <label for="art-gfrom">Gradientens start</label>
+          <input type="color" class="ti-color" id="art-gfrom" value="#1e3a5f">
+        </div>
+        <div class="ti-field">
+          <label for="art-gto">Gradientens slutning</label>
+          <input type="color" class="ti-color" id="art-gto" value="#c9d8e4">
+        </div>
+        <div class="ti-field">
+          <label for="art-gang">Gradientens vinkel</label>
+          <input type="range" id="art-gang" class="ti-input" min="0" max="360" step="15" value="45">
+        </div>
+      </div>
       <div class="ti-row" style="margin-top:14px">
           <div class="ti-field">
-            <label for="art-text2">4. Anden tekst (valgfri)</label>
+            <label for="art-text2">5. Anden tekst (valgfri)</label>
             <input type="text" id="art-text2" class="ti-input" value="Din undertekst her">
           </div>
           <div class="ti-field">
-            <label for="art-fg2">5. Farve på den anden tekst</label>
+            <label for="art-fg2">6. Farve på den anden tekst</label>
             <input type="color" class="ti-color" id="art-fg2" value="#ffffff">
           </div>
         </div>
