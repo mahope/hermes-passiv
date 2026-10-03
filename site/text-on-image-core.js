@@ -328,14 +328,18 @@
       drawTextLayer(i);
       var glyph = ctx.getImageData(box.x, box.y, box.w, box.h).data;
 
-      var bgCandidates = [];
+      var bgCandidates = [], bgOff = [];
       // Sløjfevariablen hedder `p` og ikke `i`: `i` er *blokkens* nummer her,
       // og en pixel-tæller der overskriver den ville læse blok 2's felter under
       // blok 0's måling — to tekstblokke, to tal, og porten ville dømme det
-      // falske tal. Samme navn bruges i `drawTextLayer`.
+      // falske tal. Samme navn bruges i `drawTextLayer()`.
       for (var p = 0; p < photo.length; p += 4) {
         if (glyph[p + 3] > COVER_MAX) continue; // this pixel is a letter
         bgCandidates.push([photo[p], photo[p + 1], photo[p + 2]]);
+        // Byte-offsetet i boksen ved siden af farven. Uden det vidste dommen
+        // *hvilken* baggrund der var værst, men ikke hvor den sad — og et tal
+        // uden en plads er præcis det værktøjet allerede gav.
+        bgOff.push(p);
       }
       // Every pixel under the box is more than a letter thick, so there is no
       // visible background left to read. Fall back to the photo under the box
@@ -343,15 +347,17 @@
       if (!bgCandidates.length) {
         for (var j = 0; j < photo.length; j += 4) {
           bgCandidates.push([photo[j], photo[j + 1], photo[j + 2]]);
+          bgOff.push(j);
         }
       }
       // Worst case: the foreground against the lightest and the darkest
       // background pixel a reader can actually see behind the letters.
       var minL = Infinity, maxL = -Infinity, minC = null, maxC = null;
-      bgCandidates.forEach(function (c) {
+      var minOff = -1, maxOff = -1;
+      bgCandidates.forEach(function (c, k) {
         var L = lum(c);
-        if (L < minL) { minL = L; minC = c; }
-        if (L > maxL) { maxL = L; maxC = c; }
+        if (L < minL) { minL = L; minC = c; minOff = bgOff[k]; }
+        if (L > maxL) { maxL = L; maxC = c; maxOff = bgOff[k]; }
       });
       // Sløret er en del af det bruteren ser, så det er en del af det der
       // måles. Pass 1 tegner kun billedet, så blandingen laves her — på præcis
@@ -360,17 +366,57 @@
       // dommen ville regne på det rå billede mens sløret lå tegnet oveni.
       var visMin = effectiveBg(minC, i), visMax = effectiveBg(maxC, i);
       var fgRgb = hexToRgb(farveFelt(i).value);
-      var worst = Infinity;
-      [visMin, visMax].forEach(function (c) {
+      var worst = Infinity, worstOff = minOff;
+      // `k === 0` er `visMin` og `k === 1` er `visMax`, så den baggrund der
+      // *afgør* tallet kan følges tilbage til den pixel den kom fra. Det er
+      // den plads, feltet i den hentede fil tegnes omkring.
+      [visMin, visMax].forEach(function (c, k) {
         if (!c) return;
         var r = ratio(fgRgb, c);
-        if (r < worst) worst = r;
+        if (r < worst) { worst = r; worstOff = k === 0 ? minOff : maxOff; }
       });
+      // Offsetet er i boksen, og boksen kan ligge et sted inde i billedet — så
+      // pladsen regnes om til canvas-koordinater. Uden denne `+ box.x` ville
+      // feltet blive tegnet i billedets øverste venstre hjørne.
+      var punkt = null;
+      if (worstOff >= 0) {
+        punkt = { x: box.x + (worstOff % box.w), y: box.y + Math.floor(worstOff / box.w) };
+      }
       // Endepunkterne gives videre som *rå* billedpixels, uden slør. Pass 1
       // tegner kun billedet, så de er uafhængige af hvad der ligger oveni —
       // og det er dem `suggestFix()` så danner sin *effektive* baggrund af, så
       // dens svar afhænger af det der faktisk er tegnet lige nu.
-      return { ratio: worst === Infinity ? null : worst, bgMin: minC, bgMax: maxC };
+      return { ratio: worst === Infinity ? null : worst, bgMin: minC, bgMax: maxC, punkt: punkt };
+    }
+
+    // Hvor fejlen sidder, tegnet som et felt i den hentede fil. Et tal på
+    // 1,10:1 siger at noget er galt, men ikke hvor — og «hvor» er præcis det
+    // et bureau der gennemgår en kundes fotos har brug for, når det skal give
+    // designeren besked uden at åbne værktøjet igen.
+    //
+    // Fire **fyldte** rektangler og ikke ét `strokeRect()`. En strege er to
+    // pixels bred og forsvinder i en komprimeret PNG, og den er usynlig for
+    // enhver port der læser den hentede fil — altså ville «feltet er med i
+    // filen» være en løfte uden dom. Fyldt er den målbar og synlig. Samme røde
+    // som FAIL-badge'en ovenfor, så feltet og dommen er én familie.
+    function drawMark(punkt) {
+      if (!punkt) return false;
+      var pad = Math.max(6, Math.round(fontSizePx() * 0.45));
+      var tyk = Math.max(2, Math.round(fontSizePx() * 0.14));
+      var x0 = Math.max(0, punkt.x - pad), y0 = Math.max(0, punkt.y - pad);
+      var x1 = Math.min(cv.width, punkt.x + pad + 1), y1 = Math.min(cv.height, punkt.y + pad + 1);
+      var w = x1 - x0, h = y1 - y0;
+      // Et felt der er smallere end sin egen tykkelse ville være en ubrugelig
+      // streg, så da tegnes intet — og bruteren får billedet rent.
+      if (w < tyk * 2 || h < tyk * 2) return false;
+      ctx.save();
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(x0, y0, w, tyk);
+      ctx.fillRect(x0, y1 - tyk, w, tyk);
+      ctx.fillRect(x0, y0, tyk, h);
+      ctx.fillRect(x1 - tyk, y0, tyk, h);
+      ctx.restore();
+      return true;
     }
 
     // Det bruteren ser bag bogstaverne: billedet, og sløret oveni hvis der er
@@ -610,6 +656,13 @@
         // desuden fælles: `draw()` maler begge blokke, så den hentede PNG
         // indeholder dem begge — det er derfor knappen ikke skal gentages.
         (!i && s.downloadBtn ? '<br><button type="button" class="btn-secondary ti-dl" data-ti-dl>' + s.downloadBtn + '</button>' : '') +
+        // Et **andet** valg end den rene grafik, ikke en anden etikette på den.
+        // Bureauet der gennemgår kundens fotos skal kunne få det dårligste sted
+        // udpeget i filen uden selv at åbne værktøjet igen, og den rene fil skal
+        // stadig være den rene fil — så den ligger i sit egen knap, ikke i et
+        // felt der er slået til og fra oveni den anden.
+        (!i && s.markBtn ? '<br><button type="button" class="btn-secondary ti-mark" data-ti-dl-mark title="'
+          + (s.markTitle || '') + '">' + s.markBtn + '</button>' : '') +
         // Sidst i rækken: det er den tredje handling i resultatet, og den
         // udfylder de to andre — «Fix it» farver teksten, den her flytter den.
         // Den ligger *uden* for `fix`-betingelsen, fordi den også har en
@@ -662,7 +715,12 @@
         vis(s.copyManual || kode);
       });
       var dl = res.querySelector('[data-ti-dl]');
-      if (dl) dl.addEventListener('click', downloadPng);
+      // `false`/«uden felt» er **eksplicit** på begge knapper. Uden det ville
+      // lytteren få klik-begivenheden som sit argument, og den er sand — så
+      // den rene download også fik feltet, og de to valg blev ét.
+      if (dl) dl.addEventListener('click', function () { downloadPng(false); });
+      var dlMark = res.querySelector('[data-ti-dl-mark]');
+      if (dlMark) dlMark.addEventListener('click', function () { downloadPng(true); });
       var spot = res.querySelector('[data-ti-spot]');
       if (spot) spot.addEventListener('click', function () {
         // Samme værdi som i `applyFix()`-kaldet: tallet fra denne måling.
@@ -689,18 +747,33 @@
     // bruteren lige har set og målt. Efter «Fix it» er sløret og den nye
     // tekstfarve dermed *med* i filen, hvilket er hele poenget.
     //
+    // `mark` er et **valg**, ikke en tilfældighed: den rene fil er den
+    // rettede grafik, og kun den markerede bæger feltet. Derfor måles feltet
+    // på den pladsering og det billede, tallet på skærmen stammer fra — og
+    // derfor skal den rene knap ikke få feltet med.
+    //
     // Filnavnet er sidens egen streng, aldrig bruterens tekst: et navn bygget på
     // noget en besøgende har skrevet kan indeholde `/`, `..` eller et tegn, der
     // ikke kan bruges i et filnavn.
-    function downloadPng() {
+    function downloadPng(mark) {
       if (!img) return false;
+      // Målingen *før* `draw()`: `sampleContrast()` rydder canvasen, så hvis
+      // feltet blev tegnet før den, ville det blive malet på en tom flade — og
+      // den hentede fil ville være gennemsigtig med en rød ramme i.
+      var sample = mark ? sampleContrast(aktiv) : null;
       draw();
-      var dataUrl;
+      var dataUrl = null;
       try {
+        if (sample) drawMark(sample.punkt);
         dataUrl = cv.toDataURL('image/png');
       } catch (e) {
-        return false;
+        dataUrl = null;
       }
+      // Forhåndsvisningen skal vise billedet *uden* felt bagefter. Bruteren
+      // bad om en fil med et felt — ikke om at hans eget billede fik en, og
+      // et felt der bliver stående ville ligne en del af hans design.
+      draw();
+      if (!dataUrl) return false;
       var doc = global.document;
       var a = doc.createElement('a');
       a.href = dataUrl;

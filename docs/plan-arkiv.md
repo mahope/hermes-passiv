@@ -6925,3 +6925,42 @@ nu en kø af 5 åbne idéer, og alt leveret ligger her.
     gå rød — de var altså otte tal i tælleren uden dom. Dommen blev derfor
     flyttet ud i `dom_knapetekst()`, så seltesten dømmer **samme kode** som
     drift, og får sit bevis ved at omdøbe nøglen i den rigtige kildefil.
+
+## 3/10 19:4x — feltet der viser hvor fejlen sidder (`ceo/foer-fejl`)
+
+Feature-kø punkt 3. Bruteren fik et tal på 1,10:1 og skulle selv gætte hvorfor;
+et bureau der gennemgår en kundes fotos fik ingen mulighed for at pege på det.
+`sampleContrast()` vidste allerede hvilken baggrund der afgjorde tallet — den
+gemte det bare i en farve, ikke i en plads. Kernen følger nu endepunktet tilbage
+til sit pixel-offset og tegner fire **fyldte** rektangler omkring det i den
+hentede PNG, som sit eget valg ved siden af den rene grafik.
+
+    `strokeRect()` blev bevidst undgået: en 2 px strege forsvinder i en
+    komprimeret PNG og er usynlig for enhver port der læser den hentede fil, så
+    «feltet er med i filen» ville være en løfte uden dom. Fyldt er den både
+    synlig og målbar.
+
+    To huller i portens *egen* kode blev fundet undervejen, begge fordi den nye
+    løfte krævede et pixelniveau den ikke havde været ved:
+
+    1. `El.querySelector` brugte `\\b` om attributnavnet, og da `data-ti-dl-mark`
+       kom til, fandt opslaget på `[data-ti-dl]` *også* den markerede knap — så
+       mutationen «fjern den rene download-knap» stod grøn. Rettet med
+       `(?![\w-])`: en bindestreg er ikke et skel i et attributnavn.
+    2. Dommen læste feltets midte i den *hentede* fil, men der er teksten tegnet
+       **på** det pixel, så den svarede med en blanding af bogstav og baggrund
+       (246, 246, 242) i stedet for den baggrund bruteren har mindst kontrast
+       imod. Nu læser den det rå foto — pass 1 i `sampleContrast()` maler
+       billedet og intet andet, så det er den samme baggrund uden at porten
+       spørger kernen.
+
+    Selftest 122 → **144/144**: fire løfter, fire mutationer i den rigtige fil
+    («knappen er ikke i markup'en», «den rene download får feltet med», «feltet
+    peger på det bedste sted», «forhåndsvisningen får ikke sin rene tegning
+    tilbage»), seks enkeltdomme, ét tabelfordoblingstjek på de to baggrunde og
+    fire sidekrav på `markBtn`/`markTitle`. Hovedløbet er uændret 124.
+
+    Én fejl i min egen diff: `var bgCandidates = [], bgOff = [];` stod uden for
+    sin indrykning. Rettet før commit. **Ikke kørt:** rigtig browser ved
+    390/1280 — den hentede fil er dømt pixel for pixel i portens harness, ikke
+    set i pixels på en skærm.

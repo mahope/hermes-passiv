@@ -1,45 +1,33 @@
 # STATUS
-- **CI er grøn på `main`** siden `9a1c7f7` (3/10 13:4x) — de seneste rettelser
-  ligger live, og `build-info.json` bærer `9a1c7f7` på domænet.
-- **Alle deploy-noter er lukkede.** Den sidste, `ceo/mal-tekstfarven`, er
-  efterprøvet i rigtig Chromium mod **LIVE** (ikke `dist/`): EN giver
-  `#ffffff` → «Copied» → `#000000`, DA siger «Kopieret», farveprøve og kode
-  følger farvefeltet begge veje, 44 px trykflade, 0 px vandret scroll ved 1280.
-- **Denne iteration: værktøjet måler to tekstblokke.** `ceo/to-tekstblokke` —
-  Feature-kø punkt 2, som bruteren ellers fik ét tal for to tekster om.
-  `check_contrast_sampling` **112 → 124** løfter (seks nye, alle dømt på begge
-  sprog), selftest **122/122**. **Portens polaritet målt på den rigtige fil,
-  tre mutationer med tre forskellige fund:** farven læst i blok 1 → *«læser
-  værktøjet den første blok to gange?»*; klikket flytter altid blok 1 →
-  *«klikket flyttede ikke den blok bruteren valgte»* + *«bruterens eget greb
-  ødelagde den anden måling»*; vælgeren fjernet → *«der er ingen knap der
-  vælger»*.
-- **Egentlig browserkontrol, som sidste review kaldte den største mangel:**
-  Chromium 148, alle otte kombinationer af EN/DA × 390/1280 × lys/mørkt er
-  grønne på et todelt 400×300-billede. Blok 1 hvid på sort = **21,00:1**,
-  blok 2 sort på sort = **1,00:1**; vælgeren trykkes, næste klik flytter blok 2
-  til den lyse halvdel → **21,00:1**, og blok 1 står **uændret** på 21,00:1.
-  0 px vandret scroll ved 390 og 1280, trykflade 44 px.
-  *To fejl i min egen harness, ikke i værktøjet, begge fundet fordi tallene
-  ikke flyttede sig:* Playwrights `set_input_files` fejlede i en ny context, så
-  værktøjet målte sit **eget demobillede** (5,77/2,56); og `bounding_box()`
-  blev læst før `pick.click()`, som **scroller** knappen ind i billedet, så
-  det næste klik ramte ikke canvas. Begge rettet i harnessen, og den strenge
-  dom (kræver at tallet *flytter* sig) er den der fangede dem.
-- **Én fejl i min egen diff fundet ved gennemsyn:** note-`<span>` i
-  `renderBlock()` blev skrevet som `'</span'` uden `>`, så taggen aldrig
-  lukkede. Rettet.
-- **Næste opgave: `## Feature-kø` punkt 3** — vis hvor på billedet fejlen
-  sidder. Egne opgaver: punkt 4. Alt i «Åbne opgaver» afventer Mads.
+- **CI var rød på `main`** siden `d4d0266` (3/10 18:5x): `plan-status` fandt 37
+  STATUS-linjer mod 25 tilladt og 1 bullet uden tal. Rettet i denne commit.
+- **Denne iteration: feltet der viser hvor fejlen sidder.** `ceo/foer-fejl` —
+  Feature-kø punkt 3. Den hentede PNG får en rød ramme om det billedpixel der
+  koster mest kontrast, som sit **eget** valg ved siden af den rene grafik.
+  Baseline **0** downloads med markering; nu **1** af 2.
+- **`check_contrast_sampling` 122 → 144 selftests** (hovedløb uændret 124):
+  4 løfter, 4 mutationer i den rigtige fil, 6 enkeltdomme, 1 tabelfordoblingstjek,
+  4 sidekrav. Polaritet målt pr. mutation — bl.a. «pegningsstedet er det bedste
+  frem for det dårligste» og «forhåndsvisningen får feltet med».
+- **Porten fandt 2 huller i sig selv undervejen.** `El.querySelector` fandt
+  `data-ti-dl` *inde i* `data-ti-dl-mark`, så mutationen «fjern den rene
+  download-knap» stod grøn; rettet med `(?![\w-])`. Og dommen læste feltets
+  midte i den hentede fil, hvor bogstaverne dækker det pixel den vil se på —
+  nu læser den det rå foto, som er det kernen selv maler på.
+- **Ikke kørt:** rigtig browser ved 390/1280. Den hentede fil er dømt pixel for
+  pixel i portens egen harness, ikke set i pixels på en skærm.
+- **Næste opgave: `## Feature-kø` punkt 4** — et gratis værktøj mere på en side
+  der sælger. **Åbne opgaver 3–7 afventer Mads** undtagen 4, der er målt og
+  lukket 2/10.
 - PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
   SDK'en er sat op (3/10), så det er ikke en tom rapport.
-- **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
-  domæne, bogens betalte udgave mod **7** gratis-sider, **2** desktop-apps mod
-  Lemon Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
+- **❓ Til Mads:** uændret — `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`,
+  bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon Squeezy,
+  Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: to tekstblokke på ét foto ceo/to-tekstblokke 3/10 18:5x`
+`VERIFICÉR DEPLOY: felt der viser hvor fejlen sidder ceo/foer-fejl 3/10 19:4x`
 
 ## Åbne opgaver
 
@@ -158,10 +146,11 @@ på den **byggede** side; tallene er ikke vores egen trafik.
    `draw()` maler begge blokke og derfor er download-knappen kun én.
    Datagrund: kernen kender `sampleContrast()` pr. tekstboks, men var skrevet
    til én; en designér med et billede og to overskrifter fik det sidste tal.
-3. **Vis hvor på billedet fejlen sidder.** Hvem: bureauer der gennemgår en
-   kundes fotos. Tal: downloads med markering (baseline **0**). Accept: den
-   hentede PNG får et felt, der rammer det værste område under teksten, og det er
-   et *andet* valg end den rettede grafik, så de to ikke blandes sammen.
+3. ~~**Vis hvor på billedet fejlen sidder.**~~ **Leveret 3/10.** Se punkt 2 i
+   STATUS. Hvem: bureauer der gennemgår en kundes fotos. Tal: downloads med
+   markering (baseline **0**). Accept: den hentede PNG får et felt, der rammer
+   det værste område under teksten, og det er et *andet* valg end den rettede
+   grafik — nålet og målt i portens egen harness, se STATUS.
    Datagrund: bruteren ser et tal på 1,10:1 og skal selv gætte hvorfor; kernen
    kender allerede de pixels den målte.
 4. **Et gratis værktøj mere på en side der sælger.** Hvem: læsere af de 189

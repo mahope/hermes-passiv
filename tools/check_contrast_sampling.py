@@ -359,7 +359,13 @@ class El {
   querySelector(sel) {
     if (this._qHtml !== this.innerHTML) { this._q = {}; this._qHtml = this.innerHTML; }
     const attr = /^\[([a-z][a-z0-9-]*)(?:=["']?[^"'\]]*["']?)?\]$/.exec(sel);
-    if (attr && !new RegExp('\\b' + attr[1] + '\\b').test(this.innerHTML || '')) return null;
+    // Et attributnavn må indeholde `-`, så en **bindestreg** er ikke et
+    // skel. Uden `(?![\w-])` fandt `[data-ti-dl]`-opslaget også
+    // `data-ti-dl-mark`, fordi `\b` siger "slut her" foran enhver `-` — og
+    // mutationen «fjern den rene download-knap» stod grøn, fordi stubben stadig
+    // fandt den markerede knap. Det er præcis det porten er skrevet imod: en
+    // mutation der giver grønt, er en løfte uden dom.
+    if (attr && !new RegExp('\\b' + attr[1] + '(?![\\w-])').test(this.innerHTML || '')) return null;
     if (!this._q[sel]) { this._q[sel] = new El(sel); this._q[sel]._ejer = this; }
     return this._q[sel];
   }
@@ -747,6 +753,105 @@ function downloadMaal() {
 fixEfter(sekA, sekFarve, sekTekst, 20, 140);
 const dlMaal = downloadMaal();
 
+/* ---- «Download with the worst spot marked»: et *andet* valg ---------
+ *
+ * Et tal på 1,10:1 siger at noget er galt, men ikke hvor. Det er præcis det
+ * et bureau der gennemgår en kundes fotos mangler, når det skal give
+ * designeren besked uden at åbne værktøjet igen — og før dette valg var det
+ * umuligt: bruteren fik filen, men ingen i filen.
+ *
+ * Fire løfter, fordi de er fire forskellige fejlformer:
+ *   a) der står en knap med en tekst, og den er sin egen knap;
+ *   b) den **rene** fil har intet felt i — ellers er de to valg ét valg, og
+ *      bruteren kan ikke få den grafik han rettede;
+ *   c) feltet sidder over det pixel der *koster mest kontrast*. Porten læser
+ *      den rene fils farve under feltets midte og kræver den værste af de to;
+ *      den må altså ikke bare ligge et sted i boksen;
+ *   d) forhåndsvisningen er ren igen bagefter. Et felt der bliver stående på
+ *      skærmen ville ligne en del af bruterens eget design. */
+const MARKER = [220, 38, 38];
+function taellFarve(px, rgb) {
+  if (!px) return 0;
+  let n = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i] === rgb[0] && px[i + 1] === rgb[1] && px[i + 2] === rgb[2]) n++;
+  }
+  return n;
+}
+function farveBBox(px, rgb) {
+  let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1, n = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i] !== rgb[0] || px[i + 1] !== rgb[1] || px[i + 2] !== rgb[2]) continue;
+    const x = (i / 4) % Eksport.bredde, y = Math.floor((i / 4) / Eksport.bredde);
+    if (x < x0) x0 = x; if (x > x1) x1 = x;
+    if (y < y0) y0 = y; if (y > y1) y1 = y;
+    n++;
+  }
+  return n ? { x0: x0, y0: y0, x1: x1, y1: y1, antal: n } : null;
+}
+function pixel(px, x, y) {
+  if (!px) return null;
+  const i = (y * Eksport.bredde + x) * 4;
+  const h = (v) => ('0' + v.toString(16)).slice(-2);
+  return '#' + h(px[i]) + h(px[i + 1]) + h(px[i + 2]);
+}
+// Farven i det **rå foto** under feltets midte. Ikke i den rene hentede fil:
+// den har teksten tegnet *på* det pixel, porten vil se på, så den svarer med
+// en blanding af bogstav og baggrund (246, 246, 242) i stedet for den
+// baggrund bruteren har sin dårligste kontrast imod. Det foto er det kernen
+// selv måler på — pass 1 i `sampleContrast()` maler billedet og intet andet —
+// så denne læsning er den samme baggrund, uden at porten spørger kernen.
+function fotoPixel(foto, x, y) {
+  if (!foto || x < 0 || y < 0 || x >= foto.w || y >= foto.h) return null;
+  const i = (y * foto.w + x) * 4, h = (v) => ('0' + v.toString(16)).slice(-2);
+  return '#' + h(foto.data[i]) + h(foto.data[i + 1]) + h(foto.data[i + 2]);
+}
+// Hvidt billede med et **sort bånd**. Uden båndet er hele boksen samme
+// farve, så «det dårligste pixel» og «et af pixelserne» er det samme sted —
+// og porten ville være grøn på en markering i eller ud af kassen.
+function baandet(w, h, hexBaand, x0, x1) {
+  const p = ensfarvet(w, h, '#ffffff'), rgb = hexToRgb(hexBaand);
+  for (let y = 0; y < h; y++) for (let x = x0; x < x1; x++) {
+    const i = (y * w + x) * 4;
+    p.data[i] = rgb[0]; p.data[i + 1] = rgb[1]; p.data[i + 2] = rgb[2];
+  }
+  return p;
+}
+function markeringsMaal() {
+  Img.next = baandet(400, 300, '#000000', 150, 180);
+  nodes['file'].files = [{ type: 'image/png' }];
+  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  // Lys tekst: på hvid er den ulæselig (1,1:1) og på sort er den 14,6:1, så
+  // det *dårligste* sted er den hvide del — og den er den lette at skelne fra
+  // den bedste. Porten kræver feltet over den hvide.
+  nodes['text'].value = 'Hej'; nodes['text'].fire('input');
+  nodes['fg'].value = '#e6e6e6'; nodes['fg'].fire('input');
+  nodes['cv'].fire('mousedown', { clientX: 150, clientY: 150, preventDefault: function () {} });
+  const res = nodes['result'];
+  const ren = res.querySelector('[data-ti-dl]');
+  const mark = res.querySelector('[data-ti-dl-mark]');
+  if (!mark) return { harKnap: false, harRen: !!ren };
+  Eksport.pixels = null;
+  if (ren) ren.click();
+  const renPx = Eksport.pixels;
+  Eksport.pixels = null;
+  mark.click();
+  const markPx = Eksport.pixels;
+  const felt = farveBBox(markPx, MARKER);
+  // Farven i det rå foto under feltets midte — altså den baggrund bruteren har
+  // mindst kontrast imod, hvis kernen har peget på det rigtige sted. Porten
+  // dømmer den, den spørger ikke kernen hvor den troede det var.
+  const under = felt ? fotoPixel(Img.next, Math.round((felt.x0 + felt.x1) / 2),
+                                        Math.round((felt.y0 + felt.y1) / 2)) : null;
+  return {
+    harKnap: true, harRen: !!ren, etiket: (/<button[^>]*data-ti-dl-mark[^>]*>([\s\S]*?)<\/button>/.exec(res.innerHTML) || [])[1] || null,
+    renMark: taellFarve(renPx, MARKER), markMark: taellFarve(markPx, MARKER),
+    felt: felt, under: under,
+    liveMark: taellFarve(nodes['cv'].getContext().buf.data, MARKER),
+  };
+}
+const markMaalt = markeringsMaal();
+
 /* ---- «Find where it reads best»: den tredje handling i resultatet -----
  *
  * Et foto består under den ene halvdel af bogstaverne og fejler under den
@@ -1019,6 +1124,7 @@ console.log(JSON.stringify({
     fixA: fixA,
   },
   download: dlMaal,
+  mark: markMaalt,
   spot: spotMaalt,
   delta: { fix: deltaMaalt },
   hex: { fix: hexMaalt },
@@ -1072,8 +1178,8 @@ MUTATIONER = (
     # over, svarer værktøjet 21:1 oveni en baggrund der indeholder rent
     # sort. Det er den fejl en læser aldrig ville få at vide.
     ("springer den mørkeste baggrund over og svarer på den bedste",
-     "      [visMin, visMax].forEach(function (c) {",
-     "      [visMax].forEach(function (c) {"),
+     "      [visMin, visMax].forEach(function (c, k) {",
+     "      [visMax].forEach(function (c, k) {"),
     # Flytter tekstkassen opad i stedet for at klippe den. Det er den fejl
     # der læseren mærker først på et fladt billede: kassen løber op i det
     # hvide og svaret falder fra 21:1 til 1:1.
@@ -1276,6 +1382,67 @@ def dom_download(d: dict | None) -> list[str]:
     if not (d.get("afvigelser") or 0):
         fund.append("download: den hentede fil er pixel for pixel det rå foto, "
                     "så hverken den nye tekstfarve eller sløret er med")
+    return fund
+
+
+# Den tekstfarve og de to baggrunde `markeringsMaal()` stiller op: lys tekst på
+# hvid er 1,14:1 og på sort 14,63:1. Den *dårligste* baggrund er altså den
+# hvide, og det er den porten kræver feltet over. Tallene er ikke taget fra
+# kernen — de er regnet med WCAG-formlen i selftestens `ratio()`.
+MARK_TEKST = "#e6e6e6"
+MARK_BEDST = "#000000"   # sort bånd: den bedste baggrund i opstillingen
+MARK_VAERST = "#ffffff"  # hvid: den dårligste
+
+
+def dom_mark(m: dict | None) -> list[str]:
+    """Døm at feltet viser *hvor* fejlen sidder — og at det er et valg for sig.
+
+    Et tal på 1,10:1 siger at noget er galt, men ikke hvor. Det er præcis det
+    et bureau der gennemgår en kundes fotos mangler, når beskeden skal videre
+    til designeren uden at nogen åbner værktøjet igen.
+
+    Fire løfter, fire fejlformer:
+
+    1. **Der står en knap med en tekst.** Ellers er der ingen handling, kun et
+       løfte i teksten.
+    2. **Den rene fil har intet felt.** Dobbeltværdien af det nye valg er, at
+       bruteren stadig kan få den grafik han rettede. Et felt der ligger i
+       begge filer gør de to knapper til én.
+    3. **Feltet sidder over det dårligste sted.** Porten læser den rene fils
+       farve under feltets midte og kræver den dårligste af de to baggrunde —
+       ikke blot «et sted i tekstkassen», for sådan et krav kan en markering
+       i hjørnet af boksen ikke opfylde.
+    4. **Forhåndsvisningen er ren igen.** Ellers står der et felt på bruterens
+       billede resten af tiden, og det ligner en del af hans design.
+    """
+    fund: list[str] = []
+    if not m:
+        return ["markering: harnessen leverede ingen markering at dømme"]
+    if not m.get("harKnap"):
+        fund.append("markering: der står ingen knap, der henter billedet med det "
+                    "dårligste sted markeret")
+        return fund
+    if not m.get("harRen"):
+        fund.append("markering: den rene download-knap er væk, så markeringen "
+                    "har taget dens plads og de to valg er blevet ét")
+    if not str(m.get("etiket") or "").strip():
+        fund.append("markering: knappen står i markup'en uden tekst, så bruteren "
+                    "ser en knap uden at vide hvad den gør")
+    if (m.get("renMark") or 0) > 0:
+        fund.append(f"markering: den rene fil har {m['renMark']} markeringspixel, "
+                    "så den grafik bruteren rettede er ikke længere den han "
+                    "rettede — de to valg er ét")
+    if not (m.get("markMark") or 0):
+        fund.append("markering: den markerede fil har ikke ét eneste felt, så "
+                    "bruteren får det samme billede som uden den knap")
+    elif str(m.get("under") or "").lower() != MARK_VAERST:
+        fund.append(f"markering: feltet ligger over `{m.get('under')}` og ikke "
+                    f"over `{MARK_VAERST}`. Den farve er den baggrund bruteren "
+                    "har mindst kontrast imod — feltet skal pege på den")
+    if (m.get("liveMark") or 0) > 0:
+        fund.append(f"markering: {m['liveMark']} feltpixel står stadig på "
+                    "forhåndsvisningen efter klikket, så bruterens billede har "
+                    "fået en ramme han ikke bad om")
     return fund
 
 
@@ -1961,8 +2128,8 @@ def self_test() -> int:
          naer(svar.get(GRADIENT[0]), GRADIENT[6]), str(svar))
     # Bevis på at casen kan overraske: den mutation der springer den mørkeste
     # baggrund over skal svare 21:1 her, fordi den så kun ser den hvide.
-    spring = kode.replace("      [visMin, visMax].forEach(function (c) {",
-                         "      [visMax].forEach(function (c) {", 1)
+    spring = kode.replace("      [visMin, visMax].forEach(function (c, k) {",
+                         "      [visMax].forEach(function (c, k) {", 1)
     bedste = {r["navn"]: r["fik"] for r in koer(spring)}.get(GRADIENT[0])
     tjek("gradientet kan svare 21:1 når kun den bedste baggrund tælles",
          naer(bedste, 21.00),
@@ -1979,8 +2146,8 @@ def self_test() -> int:
     tjek("download-dommen kan se en knap der ikke står i markup'en",
          any("ingen download-knap" in f for f in dl_glemt), str(dl_glemt))
     dl_rå = dom_download(
-        (koer(kode.replace("      draw();\n      var dataUrl;",
-                           "      drawTextLayer();\n      var dataUrl;", 1),
+        (koer(kode.replace("      draw();\n      var dataUrl = null;",
+                           "      drawTextLayer();\n      var dataUrl = null;", 1),
               hele=True) or {}).get("download"))
     tjek("download-dommen kan se en fil der er bogstaver på en ryddet baggrund",
          any("dækket" in f for f in dl_rå), str(dl_rå))
@@ -2324,6 +2491,86 @@ def self_test() -> int:
     tjek("knappens dom dømmer begge nøgler, ikke kun den ene",
          len(dom_knapetekst("x.html", "ingen tekst overhovedet")) == 2,
          str(dom_knapetekst("x.html", "ingen tekst overhovedet")))
+
+    # 14: markeringsknappen. Fire løfter, og hver skal kunne gå rød for sig —
+    # ellers er de fire tal i `dom_mark` løgn. Beviset er fire mutationer i
+    # **den rigtige fil**, en for hver fejlform:
+    mark_ok = (koer(kode, hele=True) or {}).get("mark")
+    tjek("markerings-dommen er grøn på den kode der kører",
+         dom_mark(mark_ok) == [], str(dom_mark(mark_ok)))
+    MARK_MUT = (
+        # 1) Knappen er ikke i markup'en. Uden den dommen så grøn ud, fordi
+        #    `s.markBtn` er sand på alle fire sider.
+        ("markering: der står ingen knap",
+         " data-ti-dl-mark title=", " data-ti-dlx title="),
+        # 2) Den rene download får feltet med. Det er den mutation der
+        #    *kun* findes fordi den nye knap er der: uden den markerede knap
+        #    ville `downloadPng(true)` aldrig blive kaldt, så løftet «de to
+        #    valg er to» ville være grønt på den mutation der sletter det.
+        ("markering: den rene fil har",
+         "if (dl) dl.addEventListener('click', function () { downloadPng(false); });",
+         "if (dl) dl.addEventListener('click', function () { downloadPng(true); });"),
+        # 3) Feltet peger på det *bedste* sted i stedet for det dårligste. Den
+        #    er umærkelig på et ensfarvet billede — der er alle pixels lige
+        #    gode — og det er derfor `baandet()` findes: den giver et billede,
+        #    hvor det dårligste og det bedste er to *forskellige* steder.
+        ("markering: feltet ligger over",
+         "if (r < worst) { worst = r; worstOff = k === 0 ? minOff : maxOff; }",
+         "if (r < worst) { worst = r; worstOff = minOff; }"),
+        # 4) Forhåndsvisningen får ikke sin rene tegning tilbage, så feltet
+        #    bliver stående på bruterens billede.
+        ("feltpixel står stadig på",
+         "      draw();\n      if (!dataUrl) return false;",
+         "      if (false) draw();\n      if (!dataUrl) return false;"),
+    )
+    for forventet, gammel, ny in MARK_MUT:
+        tjek(f"mutationen findes i koden: {forventet}", gammel in kode, repr(gammel))
+        fund = dom_mark((koer(kode.replace(gammel, ny, 1), hele=True) or {}).get("mark"))
+        tjek(f"mutationen gør markerings-dommen rød: {forventet}",
+             any(forventet in f for f in fund), f"mutationen gav stadig grønt: {fund}")
+    # Og dommen skal kunne dømme hvert løft *individuelt*, så ingen af dem er
+    # grøn kun fordi et andet fejler.
+    def mark_rigtig():
+        return {"harKnap": True, "harRen": True, "etiket": "Hent med felt",
+                "renMark": 0, "markMark": 412,
+                "felt": {"x0": 163, "y0": 150, "x1": 186, "y1": 173, "antal": 412},
+                "under": MARK_VAERST, "liveMark": 0}
+    tjek("markerings-dommen er grøn på et rigtigt mål", dom_mark(mark_rigtig()) == [],
+         str(dom_mark(mark_rigtig())))
+    for beskrivelse, greb in (
+            ("en knap uden tekst", {"etiket": "  "}),
+            ("en ren fil med felt i", {"renMark": 12}),
+            ("en markeret fil uden felt", {"markMark": 0}),
+            ("et felt over den bedste baggrund", {"under": MARK_BEDST}),
+            ("et felt der bliver stående på skærmen", {"liveMark": 12}),
+            ("en markering der har taget den rene knaps plads", {"harRen": False})):
+        fund_mark = dom_mark(dict(mark_rigtig(), **greb))
+        tjek(f"markerings-dommen kan se {beskrivelse}", bool(fund_mark), str(fund_mark))
+    tjek("markerings-dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_mark(None)), "harnessen gav intet")
+    # Tallet i dommen skal være *slået op*, ikke antaget: den dårligste af de to
+    # baggrunde i opstillingen er den hvide, fordi lys tekst på hvid er
+    # 1,14:1 mens den samme tekst på sort er 14,63:1. Genregn begge her med
+    # WCAG-formlen, så en byttet farve i opstillingen bliver rød.
+    def mark_ratio(a, b):
+        def rgb(h):
+            return [int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)]
+        la, lb = lum(rgb(a)), lum(rgb(b))
+        if la < lb:
+            la, lb = lb, la
+        return (la + 0.05) / (lb + 0.05)
+    tjek("markerings-opstillingens dårligste baggrund er den hvide",
+         mark_ratio(MARK_TEKST, MARK_VAERST) < mark_ratio(MARK_TEKST, MARK_BEDST),
+         f"hvid {mark_ratio(MARK_TEKST, MARK_VAERST):.2f}:1 mod sort "
+         f"{mark_ratio(MARK_TEKST, MARK_BEDST):.2f}:1")
+    # Og de to strenge skal findes på alle fire sider — artiklerne kører ikke i
+    # harnessen, så de får den samme dømning på kildefilen. En knap uden tekst
+    # på den danske værktøjsside er en halv rettelse.
+    for fil in SIDER + ARTIKLER:
+        html = (SITE / fil).read_text(encoding="utf-8")
+        tjek(f"markeringsknappen har en tekst på {fil}",
+             "markBtn:" in html and "markTitle:" in html,
+             f"`markBtn`/`markTitle` mangler i {fil}")
 
     for linje in fejl:
         print(f"  FEJL  {linje}")
