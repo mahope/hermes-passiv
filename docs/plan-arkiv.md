@@ -6964,3 +6964,61 @@ hentede PNG, som sit eget valg ved siden af den rene grafik.
     sin indrykning. Rettet før commit. **Ikke kørt:** rigtig browser ved
     390/1280 — den hentede fil er dømt pixel for pixel i portens harness, ikke
     set i pixels på en skærm.
+
+---
+
+## Feature-kø punkt 4 — gradient som baggrund (3/10, `ceo/gradient-baggrund`)
+
+Feature-kø punkt 4 stod som «ét gratis værktøj mere på en side der sælger» med
+accept «ét værktøj der løser *tekst på mørk baggrund* (ikke kun tekst på
+billede) med samme kerne, så der er to ruter ind til den samme måling».
+
+Beslutningen blev at **ikke** lave en ny side. Målt 3/10: `/contrast-checker`
+tager allerede to *flade* farver med fuld AA/AAA-tabel, så en «mørk baggrund»-side
+ville være en tynd dublet — og missionen siger «Ingen tynde sider». Den reelle
+revne lå *mellem* flade farver og foto: en `linear-gradient` i et stylesheet, som
+ikke kan uploades, og som hverken `contrast-checker` (for flad) eller
+tekst-på-billede (kræver et foto) kan måle.
+
+Løsningen er derfor **en ekstra rute ind i den eksisterende måling**:
+`malGradient()` maler de to stop og vinklen ind i et canvas og lægger det i
+præcis den `img`-plads et foto fylder. `draw()`, `sampleContrast()`,
+`findSpot()`, `drawMark()` og `downloadPng()` røres ikke en linje — så det er
+to ruter ind i *én* måling og ikke to måleveje der kan komme i ukig. Vælgeren
+er et `<select>` (`bgmode`), ikke en knap, fordi `check_first_action` dømmer
+knapper i folden.
+
+Retningen er **CSS' egen**: `0deg` peger opad, så startfarven ligger i bunden,
+`180deg` bytter. (Første forventningstabel i porten havde det omvendt; det var
+**kernen** der havde ret, og dommen blev rettet.)
+
+Porten: `check_contrast_sampling` 124 → 132 løfter, selftests 144 → 150.
+Fire løfter på gradienten, hver en anden fejlform, og dommen skriver på
+**WCAG-tærskler** (består/fejler) plus at to placeringer ikke kan give samme
+svar — ikke på hardkodede forventningstal, som ville være min egen håndregning
+af WCAG-formlen.
+
+Tre mutationer, alle målt i den rigtige fil og alle røde:
+1. slutstoppet males som startfarven → næsten ensfarvet flade;
+2. vinklen læses ikke → 0° og 180° bliver samme billede;
+3. «værste ende» initialiseres til 0 → dommen tager ikke den dårligste baggrund.
+
+To huller fundet i porten undervejen (begge rettet i samme commit):
+- `createLinearGradient()` i harnessen var en no-op-stub, der malte grå
+  [128,128,128]. Løftet «gradienten måles» ville være grønt for enhver kode,
+  også en der ignorerede begge stop. Nu males gradienten pixel for pixel.
+- `demoEfterUpload()` blev læst i JSON'en *til sidst*, altså efter at
+  gradient-kæden havde sat `demoBillede = false` — så mutationen «nulstil ikke
+  flaget» stod grøn af en helt anden grund. Målingen tages nu med det samme.
+
+En brugsfejl fundet ved målingen: kæden for tekstblokke slutter med blok 2
+valgt, så et klik på billedet flyttede blok 2, og blok 1s tal blev liggende det
+samme uanset hvor bruteren flyttede hen. Vælgeren trykkes nu som bruteren gør,
+med **kernens egen selector** — stubben cached pr. selector-streng, så
+`[data-ti-pick="0"]` gav en anden stub end `[data-ti-pick]` og knappen havde
+ingen lytter.
+
+Gate: `build_sites` 337 filer / 0 broken, `seo_check` 315 sider / 0 fund,
+`stripe-worker.test.mjs` 377/377, `check_inline_js` 0 problemer,
+`check_first_action` 16 sider / 0 problemer, `check_form_labels` grøn,
+`check_plan_status` grøn. **Ikke kørt:** rigtig browser ved 390/1280.

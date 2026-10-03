@@ -45,15 +45,22 @@
 
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
-      <label for="file">1. Vælg et billede</label>
+      <label for="bgmode">1. Baggrund</label>
+      <select id="bgmode" class="ti-input">
+        <option value="image" selected>Et billede</option>
+        <option value="gradient">Et gradient</option>
+      </select>
+    </div>
+    <div class="ti-field">
+      <label for="file">2. Vælg et billede</label>
       <input type="file" id="file" accept="image/*" class="ti-input">
     </div>
     <div class="ti-field">
-      <label for="text">2. Tekst på billedet</label>
+      <label for="text">3. Tekst på billedet</label>
       <input type="text" id="text" class="ti-input" value="Din overskrift her">
     </div>
     <div class="ti-field">
-      <label for="fg">3. Tekstfarve</label>
+      <label for="fg">4. Tekstfarve</label>
       <input type="color" class="ti-color" id="fg" value="#ffffff">
     </div>
     <div class="ti-field">
@@ -65,13 +72,28 @@
     </div>
   </div>
 
+  <div class="ti-row" id="tigrad" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="gfrom">Gradientens start</label>
+      <input type="color" class="ti-color" id="gfrom" value="#1e3a5f">
+    </div>
+    <div class="ti-field">
+      <label for="gto">Gradientens slutning</label>
+      <input type="color" class="ti-color" id="gto" value="#c9d8e4">
+    </div>
+    <div class="ti-field">
+      <label for="gang">Gradientens vinkel</label>
+      <input type="range" id="gang" class="ti-input" min="0" max="360" step="15" value="45">
+    </div>
+  </div>
+
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
-      <label for="text2">4. Anden tekst (valgfri)</label>
+      <label for="text2">5. Anden tekst (valgfri)</label>
       <input type="text" id="text2" class="ti-input" value="Din undertekst her">
     </div>
     <div class="ti-field">
-      <label for="fg2">5. Farve på den anden tekst</label>
+      <label for="fg2">6. Farve på den anden tekst</label>
       <input type="color" class="ti-color" id="fg2" value="#ffffff">
     </div>
   </div>
@@ -86,9 +108,12 @@
   <div id="result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
 
   <p class="ti-note">Sådan virker det: hvert bogstav samples på sine faktiske pixels —
-  vi aflæser billedfarverne direkte under bogstaverne (tekstens egne pixels udeladt)
+  vi aflæser baggrundens farver direkte under bogstaverne (tekstens egne pixels udeladt)
   og bruger det dårligste par vi finder. Det værst-tænkelige forhold er dét en
   svagtseende læser oplever, og dét er derfor også hvad WCAG måler.
+  Vælg <strong>Et gradient</strong> i stedet for et billede, så kører den samme måling
+  på de to stop og den vinkel du skriver ind — så du kan tjekke gradienten i dit
+  stylesheet uden først at tage et skærmbillede.
   Til rene farvepar: brug <a href="/contrast-checker-da">kontrasttjekkeren</a>;
   se hvordan hele paletten læses af farveblinde med
   <a href="/color-blindness-simulator-da">farveblindhedssimulatoren</a>. Tjek en hel

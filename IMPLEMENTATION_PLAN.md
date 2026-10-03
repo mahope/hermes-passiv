@@ -1,33 +1,33 @@
 # STATUS
-- **CI var rød på `main`** siden `d4d0266` (3/10 18:5x): `plan-status` fandt 37
-  STATUS-linjer mod 25 tilladt og 1 bullet uden tal. Rettet i denne commit.
-- **Denne iteration: feltet der viser hvor fejlen sidder.** `ceo/foer-fejl` —
-  Feature-kø punkt 3. Den hentede PNG får en rød ramme om det billedpixel der
-  koster mest kontrast, som sit **eget** valg ved siden af den rene grafik.
-  Baseline **0** downloads med markering; nu **1** af 2.
-- **`check_contrast_sampling` 122 → 144 selftests** (hovedløb uændret 124):
-  4 løfter, 4 mutationer i den rigtige fil, 6 enkeltdomme, 1 tabelfordoblingstjek,
-  4 sidekrav. Polaritet målt pr. mutation — bl.a. «pegningsstedet er det bedste
-  frem for det dårligste» og «forhåndsvisningen får feltet med».
-- **Porten fandt 2 huller i sig selv undervejen.** `El.querySelector` fandt
-  `data-ti-dl` *inde i* `data-ti-dl-mark`, så mutationen «fjern den rene
-  download-knap» stod grøn; rettet med `(?![\w-])`. Og dommen læste feltets
-  midte i den hentede fil, hvor bogstaverne dækker det pixel den vil se på —
-  nu læser den det rå foto, som er det kernen selv maler på.
-- **Ikke kørt:** rigtig browser ved 390/1280. Den hentede fil er dømt pixel for
-  pixel i portens egen harness, ikke set i pixels på en skærm.
-- **Næste opgave: `## Feature-kø` punkt 4** — et gratis værktøj mere på en side
-  der sælger. **Åbne opgaver 3–7 afventer Mads** undtagen 4, der er målt og
-  lukket 2/10.
-- PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
-  SDK'en er sat op (3/10), så det er ikke en tom rapport.
+- **Denne iteration: mål tekst på en gradient, ikke kun på et billede.**
+  `ceo/gradient-baggrund` — Feature-kø punkt 4. Kernen maler gradienten ind i
+  præcis den `img`-plads et foto fylder, så `draw()`, `sampleContrast()`,
+  `findSpot()` og `downloadPng()` røres ikke en linje: **to ruter ind i 1**
+  måling. Baseline **0** ruter, nu **2** (`bgmode` vælger mellem dem).
+- **Retningen er CSS' egen.** `0deg` peger opad så startfarven ligger i bunden,
+  `180deg` bytter. Dømt på 4 løfter med **3 mutationer målt i den rigtige fil**
+  — slutstop malet som startfarve, vinklen ikke læst, «værste ende» sat til 0.
+  Hver giver rødt. `check_contrast_sampling` 124 → 132 løfter, selftests
+  144 → 150. Harnessen måtte lære at male en gradient **pixel for pixel**: før
+  var `createLinearGradient()` en no-op-stub, så «gradienten måles» havde været
+  grønt for enhver kode, også en der ignorerede begge stop.
+- **Porten fandt 2 huller i sig selv.** `demoEfterUpload()` blev læst i JSON'en
+  *til sidst* — altså efter at gradient-kæden sat `demoBillede = false` — så
+  mutationen «nulstil ikke flaget» stod grøn af en anden grund; målingen
+  tages nu med det samme. Og kæden for tekstblokke slutter med blok 2 valgt, så
+  et klik flyttede blok 2 og blok 1s tal blev liggende det samme: vælgeren
+  trykkes nu, som bruteren gør, med kernens **egne** selector.
+- **Ikke kørt:** rigtig browser ved 390/1280 — dommen skriver på WCAG-tærskler
+  (består/fejler), ikke på hardkodede tal. **Næste opgave: åbne opgave 5**, de
+  172 sider med to-tre knapper i folden. PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK
+  2/10. Sentry: ingen uløste fejl, og SDK'en er sat op (3/10).
 - **❓ Til Mads:** uændret — `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`,
   bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon Squeezy,
   Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: felt der viser hvor fejlen sidder ceo/foer-fejl 3/10 19:4x`
+`VERIFICÉR DEPLOY: mål tekst på en gradient ceo/gradient-baggrund 3/10 21:5x`
 
 ## Åbne opgaver
 
@@ -159,4 +159,8 @@ på den **byggede** side; tallene er ikke vores egen trafik.
    *tekst på mørk baggrund* (ikke kun tekst på billede) med samme kerne, så der
    er to ruter ind til den samme måling. Datagrund: porten `check_first_action`
    måler 172 sider med to-tre knapper i folden, så et nyt værktøj skal komme med
-   ét klik og ikke to.
+   ét klik og ikke to. **Leveret 3/10 som gradient-ruten i den eksisterende
+   tjekker** — se punkt 1–2 i STATUS. Ikke en ny side: `/contrast-checker` tager
+   allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
+   dublet. Den reelle revne lå mellem flade farver og foto: en
+   `linear-gradient`, som man ikke kan uploade.

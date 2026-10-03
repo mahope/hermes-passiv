@@ -206,13 +206,123 @@
       aktiv = i;
       updateAll();
     }
-    // Sandt når bruteren ikke har valgt et billede, og det vi viser er det
+    // Sandt når bruteren ikke har valgt en baggrund, og det vi viser er det
     // eksempel kernen selv tegner. Uden denne tilstand står et *målt tal* under
     // et billede læseren aldrig har set — og «målt mod de lyseste og mørkeste
     // billedpixels under dine bogstaver» er så en påstand om deres egen fil.
-    // Derfor nulstilles den i `loadFile()` lige så vel som `scrim`/`lastFix`:
-    // en ny fil er et nyt spørgsmål, også for den her oplysning.
+    // Derfor nulstilles den i `loadFile()` og i `vaerlGradient()` lige så vel
+    // som `scrim`/`lastFix`: en ny baggrund er et nyt spørgsmål, også for den
+    // her oplysning.
     var demoBillede = true;
+    // Den sidste *opladede* fil, så bruteren kan gå tilbage til den efter at
+    // have valgt en gradient. Uden denne ville skiftet være destruktivt: en
+    // bruger der prøver en gradient og gider tilbage ville have mistet sit foto.
+    var filBillede = null;
+    // Den *skalerede* størrelse af den sidste upload. `img.width` er ikke en
+    // egenskab ved et `HTMLImageElement` — det har `naturalWidth` — så uden
+    // disse to ville skiftet tilbage til fotoet sætte canvas til 0×0, og
+    // `textBox()` ville returnere null og værktøjet ville stå tomt.
+    var filBredde = 0, filHoejde = 0;
+
+    // ------------------------------------------------------------ baggrund
+    // En CSS-gradient er det andet bruteren har stående under sin overskrift,
+    // og den var umulig at måle: værktøjet kendte kun `img`, og en gradient kan
+    // ikke uploades. Derfor males den ind i et canvas og lægges i præcis den
+    // **samme** `img`-plads — så `draw()`, `sampleContrast()`, `findSpot()` og
+    // `downloadPng()` røres ikke en linje, og «tekst på en mørk baggrund»
+    // måles af den samme kode som et foto. To ruter ind i *én* måling, ikke to
+    // måleveje der kan komme i ukig: det er hele fordelen ved at male
+    // gradienten ind i stedet for at skrive en målevej ved siden af.
+    //
+    // Felterne er valgfrie, så de to artikler der kun har et billede kører
+    // præcis som før — samme idiom som `blok2Findes()`.
+    var GRAD_BREDDE = 900, GRAD_HOEJDE = 420;
+    function gradientFindes() {
+      return !!($('bgmode') && $('gfrom') && $('gto'));
+    }
+    function gradientAktiv() {
+      return gradientFindes() && $('bgmode').value === 'gradient';
+    }
+    // CSS-vinklen: 0° peger opad og tæller med uret, så
+    // `linear-gradient(180deg, …)` i et stylesheet er præcis det bruteren har
+    // skrevet. Retningen *regnes*, den er ikke antaget — og det er derfor den
+    // er et løfte porten kan dømme: en mutation der bytter om på fortegnet maler
+    // gradienten modsat, og «0°» og «180°» bytter da plads.
+    function malGradient() {
+      var c = global.document.createElement('canvas');
+      c.width = GRAD_BREDDE; c.height = GRAD_HOEJDE;
+      var g = c.getContext('2d');
+      var rawn = $('gang') ? Number($('gang').value) : 0;
+      var rad = (isFinite(rawn) ? rawn : 0) * Math.PI / 180;
+      var dx = Math.sin(rad), dy = -Math.cos(rad);
+      // Halv længden af den længste projicerede side, så gradienten dækker
+      // hele fladen i *enhver* vinkel — ellers ville 45° kun male et bånd
+      // igennem midten og resten stå som den sidste stops farve.
+      var L = (Math.abs(GRAD_BREDDE * dx) + Math.abs(GRAD_HOEJDE * dy)) / 2;
+      var cx = GRAD_BREDDE / 2, cy = GRAD_HOEJDE / 2;
+      var grad = g.createLinearGradient(cx - dx * L, cy - dy * L, cx + dx * L, cy + dy * L);
+      grad.addColorStop(0, $('gfrom').value);
+      grad.addColorStop(1, $('gto').value);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, GRAD_BREDDE, GRAD_HOEJDE);
+      return c;
+    }
+    // Nulstillingen der hører til *enhver* ny baggrund. Den lå før spredt i to
+    // steder (`loadFile()` og demoen); med gradienten er der tre veje ind, og
+    // en beskrivelse af kernens egen indgreb må aldrig overleve det input den
+    // beskriver — hverken sløret, `lastFix` eller demo-noten.
+    function baggrundNul() {
+      scrim = null;
+      lastFix = null;
+      t2.scrim = null;
+      t2.lastFix = null;
+    }
+    // Baggrunden bliver gradienten. Den er bruterens *egen* baggrund, så
+    // demo-noten væk: den siger «eksempel, ikke dit», og det er ikke længere
+    // rigtigt — han har valgt farverne selv.
+    function vaerlGradient() {
+      img = malGradient();
+      cv.width = GRAD_BREDDE; cv.height = GRAD_HOEJDE;
+      // Samme pladsering som demoen, fordi en gradient *er* demoens
+      // baggrund gjort redigerbar — bruteren skal se den samme scene.
+      tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.52);
+      t2.x = Math.round(cv.width * 0.06); t2.y = Math.round(cv.height * 0.80);
+      baggrundNul();
+      demoBillede = false;
+      var felt = $('tigrad');
+      if (felt) felt.style.display = '';
+      updateAll();
+    }
+    // Tilbage til fotoet: den sidste upload hvis der var en, ellers demoen.
+    // Ikke-destruktivt, fordi det er præcis den bevægelse bruteren har lavet to
+    // gange (gradient → gradient → foto) i sit eget hoved.
+    function vaerlBillede() {
+      img = filBillede || baggrundDemo();
+      demoBillede = !filBillede;
+      cv.width = filBillede ? filBredde : GRAD_BREDDE;
+      cv.height = filBillede ? filHoejde : GRAD_HOEJDE;
+      baggrundNul();
+      // Blokke placeres i folden igen, så en tekst der lå midt i en 900×420
+      // gradient ikke bliver hængende halvt uden for det foto der kommer
+      // tilbage — `textBox()` klipper den, og bruteren ville se en tekst der
+      // var klippet i stedet for den han havde lagt.
+      tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.70);
+      t2.x = Math.round(cv.width * 0.06); t2.y = Math.round(cv.height * 0.86);
+      var felt = $('tigrad');
+      if (felt) felt.style.display = 'none';
+      updateAll();
+    }
+    function baggrundDemo() {
+      var demo = global.document.createElement('canvas');
+      demo.width = GRAD_BREDDE; demo.height = GRAD_HOEJDE;
+      var dctx = demo.getContext('2d');
+      var grad = dctx.createLinearGradient(0, 0, GRAD_BREDDE, GRAD_HOEJDE);
+      grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
+      dctx.fillStyle = grad; dctx.fillRect(0, 0, GRAD_BREDDE, GRAD_HOEJDE);
+      dctx.fillStyle = 'rgba(255,255,255,0.35)';
+      dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
+      return demo;
+    }
 
     // Dansk bruger komma, engelsk punktum — samme tal, to sæt.
     function fmt(n) {
@@ -795,27 +905,34 @@
       var im = new Image();
       im.onload = function () {
         img = im;
+        filBillede = im;
         // Et nyt billede er et nyt spørgsmål. Sløret var beregnet på *sidste*
-        // billedes endepunkter, så hvis det blev liggende ville tallet på det nye
-        // billede være en måling af en rettelse, brugeren ikke har lavet — og
-        // `.ti-fixed`-teksten ville stå under et tal der ikke stammer fra den.
+        // baggrunds endepunkter, så hvis det blev liggende ville tallet på den
+        // nye baggrund være en måling af en rettelse, brugeren ikke har lavet —
+        // og `.ti-fixed`-teksten ville stå under et tal der ikke stammer fra den.
         // Samme nulstilling som farvefeltet og `fontsize` gør, og af samme
         // grund: en beskrivelse af kernens egen indgreb må aldrig overleve det
         // input den beskriver. `demoBillede` hører i samme række: «dette er et
-        // eksempel» er kun sandt, indtil der er et billede der er bruterens —
+        // eksempel» er kun sandt, indtil der er en baggrund der er bruterens —
         // ellers kalder værktøjet deres egen foto et eksempel.
-        scrim = null;
-        lastFix = null;
-        // Blok 2 nulstilles lige så vel. Ellers ville dens tal og dens
-        // `.ti-fixed`-tekst være en måling af det *sidste* billede stående under
-        // det nye — præcis den fejl sløret og farvefeltet nulstilles for.
-        t2.scrim = null;
-        t2.lastFix = null;
+        baggrundNul();
         demoBillede = false;
+        // Vælgeren skal ikke sige «gradient» når der lige kom et foto ind: den
+        // skal vise hvad bruteren faktisk ser. Ellers stod der «Gradient» over
+        // et foto, hvilket er en påstand om et input der ikke fandtes.
+        if (gradientFindes() && gradientAktiv()) {
+          $('bgmode').value = 'image';
+          // Felterne skjules med, ellers stod de tre farvefelter fremme under
+          // et foto — de ville se ud som om de gjorde noget, de ikke gjorde.
+          var gemt = $('tigrad');
+          if (gemt) gemt.style.display = 'none';
+        }
         var maxW = 900;
         var scale = Math.min(1, maxW / im.naturalWidth);
         cv.width = Math.round(im.naturalWidth * scale);
+        filBredde = cv.width;
         cv.height = Math.round(im.naturalHeight * scale);
+        filHoejde = cv.height;
         tx = Math.round(cv.width * 0.06);
         ty = Math.round(cv.height * 0.70);
         // Blok 2 starter i den nederste linje, så den lapper ikke blok 1 oppe
@@ -874,19 +991,26 @@
     cv.addEventListener('touchstart', onMove, { passive: false });
 
     // Default demo background so the tool works before uploading anything.
-    var demo = global.document.createElement('canvas');
-    demo.width = 900; demo.height = 420;
-    var dctx = demo.getContext('2d');
-    var grad = dctx.createLinearGradient(0, 0, 900, 420);
-    grad.addColorStop(0, '#1e3a5f'); grad.addColorStop(0.55, '#4a7ba6'); grad.addColorStop(1, '#c9d8e4');
-    dctx.fillStyle = grad; dctx.fillRect(0, 0, 900, 420);
-    dctx.fillStyle = 'rgba(255,255,255,0.35)';
-    dctx.beginPath(); dctx.arc(650, 130, 90, 0, Math.PI * 2); dctx.fill();
-    img = demo;
-    cv.width = demo.width; cv.height = demo.height;
+    img = baggrundDemo();
+    cv.width = GRAD_BREDDE; cv.height = GRAD_HOEJDE;
     tx = Math.round(cv.width * 0.06); ty = Math.round(cv.height * 0.52);
     t2.x = Math.round(cv.width * 0.06); t2.y = Math.round(cv.height * 0.80);
     updateAll();
+
+    // Baggrunden: foto eller gradient. Vælgeren er et `<select>` og **ikke** en
+    // knap, fordi `check_first_action` dømmer knapper i folden — et nyt værktøj
+    // skal komme med ét klik, ikke to. Gradient-felterne er skjult indtil de
+    // bruges, så bruteren ikke læser tre felter der intet gør.
+    if (gradientFindes()) {
+      var tigrad = $('tigrad');
+      if (tigrad) tigrad.style.display = 'none';
+      $('bgmode').addEventListener('change', function () {
+        if (gradientAktiv()) vaerlGradient(); else vaerlBillede();
+      });
+      $('gfrom').addEventListener('input', vaerlGradient);
+      $('gto').addEventListener('input', vaerlGradient);
+      if ($('gang')) $('gang').addEventListener('input', vaerlGradient);
+    }
 
     // Synlig for testene i `tests/scan-clients.test.mjs`, der dømmer den her
     // kode i en sandkasse i stedet for at tro på markup. `suggestFix` er med,

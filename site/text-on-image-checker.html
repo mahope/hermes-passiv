@@ -45,15 +45,22 @@
 
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
-      <label for="file">1. Choose an image</label>
+      <label for="bgmode">1. Background</label>
+      <select id="bgmode" class="ti-input">
+        <option value="image" selected>An image</option>
+        <option value="gradient">A gradient</option>
+      </select>
+    </div>
+    <div class="ti-field">
+      <label for="file">2. Choose an image</label>
       <input type="file" id="file" accept="image/*" class="ti-input">
     </div>
     <div class="ti-field">
-      <label for="text">2. Overlay text</label>
+      <label for="text">3. Overlay text</label>
       <input type="text" id="text" class="ti-input" value="Your headline here">
     </div>
     <div class="ti-field">
-      <label for="fg">3. Text color</label>
+      <label for="fg">4. Text color</label>
       <input type="color" class="ti-color" id="fg" value="#ffffff">
     </div>
     <div class="ti-field">
@@ -65,13 +72,28 @@
     </div>
   </div>
 
+  <div class="ti-row" id="tigrad" style="margin-top:14px">
+    <div class="ti-field">
+      <label for="gfrom">Gradient start</label>
+      <input type="color" class="ti-color" id="gfrom" value="#1e3a5f">
+    </div>
+    <div class="ti-field">
+      <label for="gto">Gradient end</label>
+      <input type="color" class="ti-color" id="gto" value="#c9d8e4">
+    </div>
+    <div class="ti-field">
+      <label for="gang">Gradient angle</label>
+      <input type="range" id="gang" class="ti-input" min="0" max="360" step="15" value="45">
+    </div>
+  </div>
+
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
-      <label for="text2">4. Second text (optional)</label>
+      <label for="text2">5. Second text (optional)</label>
       <input type="text" id="text2" class="ti-input" value="Your subtitle here">
     </div>
     <div class="ti-field">
-      <label for="fg2">5. Second text color</label>
+      <label for="fg2">6. Second text color</label>
       <input type="color" class="ti-color" id="fg2" value="#ffffff">
     </div>
   </div>
@@ -86,9 +108,12 @@
   <div id="result2" class="ti-result ti-fail" role="status" aria-live="polite" hidden></div>
 
   <p class="ti-note">How it works: every letter of your text is sampled at its actual
-  pixels — we read the image colors directly underneath the glyphs (text pixels
+  pixels — we read the background colors directly underneath the glyphs (text pixels
   excluded) and use the worst-case pair found. That worst-case ratio is what a reader
   with low vision actually experiences, so that is what WCAG measures.
+  Choose <strong>A gradient</strong> instead of an image and the same measurement runs
+  on the two stops and the angle you type in — so you can check the CSS gradient in your
+  stylesheet without screenshotting it first.
   For plain color pairs, use the <a href="/contrast-checker">contrast checker</a>;
   to see how the whole palette reads for color-blind users, try the
   <a href="/color-blindness-simulator">color blindness simulator</a>. To check an

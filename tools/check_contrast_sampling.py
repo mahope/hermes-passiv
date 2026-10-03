@@ -202,14 +202,32 @@ class Ctx {
   // Før 3/10 fandtes ingen alfa her, så det er en tilføjelse — ikke en
   // ændring af noget der virkede.
   set fillStyle(v) {
-    if (v && v.addColorStop) { this._fill = [128, 128, 128]; this._alpha = 1; return; }
+    if (v && v.__grad) { this._grad = v; this._fill = [128, 128, 128]; this._alpha = 1; return; }
+    this._grad = null;
     const m = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(String(v || '#000'));
     if (!m) { this._fill = hexToRgb(v || '#000'); this._alpha = 1; return; }
     this._fill = hexToRgb('#' + m[1]);
     this._alpha = m[2] === undefined ? 1 : parseInt(m[2], 16) / 255;
   }
   get fillStyle() { return '#000000'; }
-  clearRect() { this.buf.data.fill(0); }
+  clearRect() { this._grad = null; this.buf.data.fill(0); }
+  // Én gradientstop ad gangen: `t` er projekteret på aksen, så `s0` og `s1`
+  // blandes efter hvor **langt** fra hver ende pixelen ligger. Den projekterede
+  // værdi klippes til 0–1, fordi en pixel uden for aksens endepunkter ligger
+  // *på* den første eller sidste farve — præcis som i en rigtig browser.
+  _gradientFarve(g, t) {
+    const s = g.stops;
+    if (!s.length) return [128, 128, 128];
+    if (t <= s[0][0]) return hexToRgb(s[0][1]);
+    for (let i = 1; i < s.length; i++) {
+      if (t <= s[i][0]) {
+        const a = s[i - 1], b = s[i], u = (t - a[0]) / (b[0] - a[0]);
+        const ca = hexToRgb(a[1]), cb = hexToRgb(b[1]);
+        return [0, 1, 2].map((k) => Math.round(ca[k] + (cb[k] - ca[k]) * u));
+      }
+    }
+    return hexToRgb(s[s.length - 1][1]);
+  }
   // Sløret males *rigtigt* ind i bufferen, så `getImageData` læser den
   // blanding læseren ser. Uden dette ville porten måle billedet uden slør og
   // «fix»-dommen ville være grøn på et tal værktøjet ikke viser.
@@ -217,9 +235,20 @@ class Ctx {
     const d = this.buf, W = this.cv.width, a = this._alpha === undefined ? 1 : this._alpha;
     const x0 = Math.max(0, Math.round(x)), y0 = Math.max(0, Math.round(y));
     const x1 = Math.min(W, Math.round(x + w)), y1 = Math.min(this.cv.height, Math.round(y + h));
+    // En gradient males i sRGB, som `createLinearGradient()` gør i en browser.
+    // Aksen er projiceret på gradientens egen linje, og `t` er positionen
+    // mellem endepunkterne — så porten måler præcis den blanding læseren ser.
+    const g = this._grad;
+    const dx = g ? g.x1 - g.x0 : 0, dy = g ? g.y1 - g.y0 : 0;
+    const len2 = dx * dx + dy * dy;
     for (let py = y0; py < y1; py++) for (let px = x0; px < x1; px++) {
+      let f = this._fill;
+      if (g) {
+        const t = len2 ? Math.max(0, Math.min(1, ((px - g.x0) * dx + (py - g.y0) * dy) / len2)) : 0;
+        f = this._gradientFarve(g, t);
+      }
       const i = (py * W + px) * 4;
-      for (let k = 0; k < 3; k++) d.data[i + k] = Math.round(this._fill[k] * a + d.data[i + k] * (1 - a));
+      for (let k = 0; k < 3; k++) d.data[i + k] = Math.round(f[k] * a + d.data[i + k] * (1 - a));
       d.data[i + 3] = 255;
     }
   }
@@ -282,9 +311,15 @@ class Ctx {
   }
   // Demo-billedet tegnes med gradient og cirkel; porten dømmer ikke demoen,
   // men koden skal kunne køre igennem den.
-  createLinearGradient() { return { addColorStop() {} }; }
+  createLinearGradient(x0, y0, x1, y1) { return { __grad: true, x0: x0, y0: y0, x1: x1, y1: y1, stops: [], addColorStop(o, c) { this.stops.push([o, c]); } }; }
   beginPath() {} arc() {} fill() {}
 }
+
+// Gradienten males **pixel for pixel** ind i bufferen, så `getImageData`
+// læser den blanding læseren ser. Uden det var `createLinearGradient()` en
+// no-op-stub, der malte fladen i grå [128,128,128] — og så ville løftet «en
+// gradient måles» være grønt for enhver kode, også en der ignorerer begge
+// stops. Det er præcis det porten er bygget imod: et løfte uden dom.
 
 class Canvas {
   constructor(w, h) { this.width = w; this.height = h; this._ctx = null; }
@@ -312,6 +347,10 @@ class El {
     this.id = id; this._v = opts.value || ''; this._l = {};
     this.textContent = ''; this.innerHTML = ''; this.hidden = false; this.className = '';
     this.files = []; this._c = opts.canvas || null;
+    // Kernen skriver `felt.style.display` for at skjule gradientens felter. En
+    // stub uden `style` ville kaste en TypeError *ved sidevisning*, og porten
+    // ville dømme ingen fejl overhovedet — grøn fordi den aldrig kom så langt.
+    this.style = {};
     this._q = {}; this._qHtml = '';
   }
   get value() { return this._v; }
@@ -484,6 +523,15 @@ const nodes = {
   'text2': new El('text2', { value: 'Din undertekst her' }),
   'fg2': new El('fg2', { value: '#ffffff' }),
   'result2': new El('result2'),
+  // Gradient-baggrunden er en *rigtig* del af harnessen, samme grund som blok
+  // 2: uden felterne ville `getElementById('gfrom')` returnere en ny, tom stub
+  // hver gang kernen spørger, gradienten ville male sort, og porten ville
+  // dømme «værktøjet måler ikke gradienten» på en side der faktisk gør det.
+  'bgmode': new El('bgmode', { value: 'image' }),
+  'gfrom': new El('gfrom', { value: '#1e3a5f' }),
+  'gto': new El('gto', { value: '#c9d8e4' }),
+  'gang': new El('gang', { value: '45' }),
+  'tigrad': new El('tigrad'),
 };
 globalThis.document = {
   getElementById: function (id) { return nodes[id] || new El(id); },
@@ -536,6 +584,13 @@ function demoVedStart() {
   };
 }
 const demoStart = demoVedStart();
+// `demoEfterUpload()` måles **med det samme**, ikke i JSON'en til sidst. Den
+// spørger om demo-noten er væk igen *efter* et upload — og da gradient-kæden
+// længere nede har sat `demoBillede = false`, ville den vædd målt på en
+// tilstand bruteren ikke kan være i, og mutationen «nulstil ikke flaget» ville
+// stå grøn fordi noten var væk af en helt anden grund. Det er præcis det en
+// løfte uden dom er: dommen læser et tal hun ikke kan skaffe selv.
+const demoEfter = demoEfterUpload();
 
 // ==========================================================================
 // Sådan stilles et spørgsmål til værktøjet, som en bruger gør det: upload et
@@ -587,6 +642,52 @@ function fixEfter(billede, tekstfarve, tekst, x, y) {
   const foer = spoerg(billede, tekstfarve, tekst, x, y);
   const efter = fixKnap();
   return { foer: foer, efter: efter };
+}
+
+// ==========================================================================
+// Gradient-baggrunden: den anden rute ind i *samme* måling. Bruteren skriver
+// to stop og en vinkel i stedet for at uploade et foto, og læser så tallet på
+// skærmen — nøjagtig som `spoerg()` gør for et foto, så dommen ikke kan være
+// grøn fordi den læser en anden vej end bruteren.
+// ==========================================================================
+function gradientStart(fra, til, vinkel) {
+  nodes['bgmode'].value = 'gradient';
+  nodes['bgmode'].fire('change', {});
+  nodes['gfrom'].value = fra; nodes['gfrom'].fire('input', {});
+  nodes['gto'].value = til; nodes['gto'].fire('input', {});
+  nodes['gang'].value = String(vinkel); nodes['gang'].fire('input', {});
+}
+// Tallet og dommen, begge læst i den markup bruteren ser. `ti-pass`/`ti-fail`
+// ligger på `res.className`, så dommen kan skelne «den er grøn» fra «der står
+// et højt tal og den fejler alligevel».
+function laesResultat() {
+  const h = nodes['result'].innerHTML || '';
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(h);
+  return {
+    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+    fejler: /ti-fail/.test(nodes['result'].className || ''),
+  };
+}
+function spoergGradient(fra, til, vinkel, tekstfarve, tekst, x, y) {
+  gradientStart(fra, til, vinkel);
+  // Blok 1 skal være den valgte. `toBlokke()` slutter med blok 2 valgt, fordi
+  // det er den den dom dømmer — og et klik på billedet flytter da *blok 2*, så
+  // blok 1s tal blev liggende det samme uanset hvor bruteren flyttede hen. Det
+  // er ikke en målefejl men en *brugsfejl*, og den er grå og dummere end de
+  // løfter den forsvandt i. Vælgeren trykkes her — præcis som bruteren gør.
+  // Vælgeren trykkes med præcis den selector kernen selv bruger. El-stubben
+  // cached pr. selector-*streng*, så `[data-ti-pick="0"]` ville give en anden
+  // stub end `[data-ti-pick]` — uden lytter, og porten ville tro at bruteren
+  // ikke kan vælge blok. Blok 0 står i `result`, så dens attribut er den der
+  // læses.
+  const valg = nodes['result'].querySelector('[data-ti-pick]');
+  if (valg) valg.click();
+  nodes['fg'].value = tekstfarve; nodes['fg'].fire('input', {});
+  nodes['text'].value = tekst; nodes['text'].fire('input', {});
+  if (x !== undefined) {
+    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+  }
+  return laesResultat();
 }
 
 const FARVEPAR = __FARVEPAR__;
@@ -1115,9 +1216,54 @@ function blokAntalErTo() {
 }
 const blokMaalt = toBlokke();
 
+// Gradienten måles **sidst**, fordi den skriver `img` — så den efterlader
+// værktøjet i gradienttilstand. Det er i sig selv værd at dømme: en bruter der
+// har brugt gradienten og så uploader et foto, skal se fotoet igen.
+//
+// Dommen er **tærskelbaseret, ikke hardkodet**: to forventede tal ville være
+// min egen håndregning af WCAG-formlen, og den ville være lige så skrøbelig
+// som porten er dømt for alt andet. Her dømmes derimod på *hvad læseren ser* —
+// består den eller fejler den — og på at de to placeringer ikke kan give det
+// samme svar. Det sidste er bæredygtigt: en mutation der maler gradienten
+// flad, eller bytter om på vinklen, eller tager gennemsnittet af endepunkterne,
+// giver enten to ens svar eller to forkerte domme.
+const GRAD_TOP = 2;          // tekstkassen i toppen af en 900×420 flade
+const GRAD_NED = 360;        // …og i bunden
+function læsGradient(fra, til, vinkel, tekst, x, y, stor) {
+  nodes['fontsize'].value = stor ? 'large' : 'small';
+  nodes['fontsize'].fire('change', {});
+  return spoergGradient(fra, til, vinkel, '#ffffff', tekst, x, y);
+}
+const gradMaalt = (function () {
+  // 0° peger opad, så startfarven ligger i *bunden*: hvid tekst i toppen står
+  // på den mørke ende og består, i bunden på den lyse og fejler. Ved 180° er
+  // det omvendt — og det er den forskel, der gør vinklen målbar.
+  const FRA = '#ffffff', TIL = '#000000', TEKST = 'Din overskrift her';
+  const top0 = læsGradient(FRA, TIL, 0, TEKST, 0, GRAD_TOP, true);
+  const ned0 = læsGradient(FRA, TIL, 0, TEKST, 0, GRAD_NED, true);
+  const top180 = læsGradient(FRA, TIL, 180, TEKST, 0, GRAD_TOP, true);
+  const ned180 = læsGradient(FRA, TIL, 180, TEKST, 0, GRAD_NED, true);
+  // **Værste ende, ikke gennemsnit.** Samme gradient i to placeringer langs
+  // aksen med `fontsize` på «normal» (krav 4,5:1): i den mørke ende består
+  // hvid tekst, i den lyse fejler den. En måling der tog gennemsnittet ville
+  // sige «består» begge steder — og det er præcis det løfte værktøjet ikke
+  // må give, siden bruteren skal kunne regne sig frem til hvor teksten er
+  // ulæselig.
+  const mork = læsGradient('#1c2029', '#a8adb5', 90, 'Hej', 10, 200, false);
+  const lys = læsGradient('#1c2029', '#a8adb5', 90, 'Hej', 820, 200, false);
+  // Og tilbage til fotoet, så skiftet ikke er destruktivt.
+  nodes['bgmode'].value = 'image'; nodes['bgmode'].fire('change', {});
+  const foto = laesResultat();
+  return {
+    top0: top0, ned0: ned0, top180: top180, ned180: ned180,
+    mork: mork, lys: lys, foto: foto,
+    felterSynlige: (nodes['tigrad'].style || {}).display || '',
+  };
+})();
+
 console.log(JSON.stringify({
   svar: svar, fix: fixSvar,
-  demo: { start: demoStart, efterUpload: demoEfterUpload() },
+  demo: { start: demoStart, efterUpload: demoEfter },
   sekventiel: {
     efter: sekB1, refer: renB2,
     farve: sekFarve, farveEfterFix: farveEfterFix,
@@ -1129,6 +1275,7 @@ console.log(JSON.stringify({
   delta: { fix: deltaMaalt },
   hex: { fix: hexMaalt },
   blok: blokMaalt,
+  gradient: gradMaalt,
 }));
 """
 
@@ -1615,6 +1762,91 @@ def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     return fund
 
 
+def dom_gradient(g: dict | None) -> list[str]:
+    """Døm at **gradient** måles af samme kode som et foto — og at den gør det.
+
+    Feature-kø punkt 4, 3/10: bruteren med en `linear-gradient` i sit stylesheet
+    kunne ikke måle den overhovedet. `/contrast-checker` tager to *flade* farver,
+    og tjekkeren tog kun et *uploadet billede* — så det eneste vejen var at tage
+    et skærmbillede og regne på komprimeringen. Kernen maler derfor gradienten
+    ind i præcis den `img`-plads et foto fylder, så der er **to ruter ind i én
+    måling** og ikke to måleveje der kan komme i ukig.
+
+    Fire løfter, og de er fire forskellige fejlformer:
+
+    1. **Vælgeren skjuler gradientens felter, når de ikke bruges.** Tre
+       farvefelter i folden er tre ting læseren ikke kan bruge, og
+       `check_first_action` dømmer præcis den slags.
+    2. **Vinklen er målbar, i CSS' egen betydning.** `linear-gradient(0deg, …)`
+       peger *opad*, så startfarven ligger i bunden og slutfarven i toppen —
+       hvid tekst i toppen står altså på sort og består, i bunden på hvid og
+       fejler. `180deg` peger *nedad*, så det er omvendt. Kan de to vinkler ikke
+       bytte om på dommene, læser værktøjet gradienten som én farve. Og fordi
+       vinklen er CSS' egen, er «180°» her præcis det bruteren har skrevet i sit
+       stylesheet — ikke en intern definition kernen har fundet på.
+    3. **Stop og vinkel males begge.** Ved 0° skal hvid tekst i toppen bestå og
+       i bunden fejle; ved 180° omvendt. Kan de to placeringer ikke få hver sin
+       dom, læser værktøjet gradienten som én farve.
+    4. **Det er *værste ende*, ikke gennemsnit.** Samme gradient i to placeringer
+       langs aksen med kravet 4,5:1: den mørke ende består, den lyse fejler. En
+       måling der tog gennemsnittet ville bestå begge steder — og det er præcis
+       det løfte bruteren ikke må få, siden hele pointen er at *finde* hvor
+       teksten er ulæselig.
+
+    Og skiftet tilbage til fotoet skal virke, fordi det er den bevægelse
+    bruteren har lavet mere end én gang i sit eget hoved.
+    """
+    fund: list[str] = []
+    if not g:
+        return ["gradient: harnessen leverede ingen måling af gradienten at dømme"]
+    if g.get("felterSynlige") != "none":
+        fund.append("gradient: gradientens egne felter står fremme selv om "
+                    "værktøjet kører på et billede, så læseren læser tre "
+                    "farvefelter der intet gør")
+    # `0deg` i CSS peger opad → startfarven i bunden. `180deg` peger nedad →
+    # startfarven i toppen. Hvid tekst i toppen består altså **kun** ved 0°.
+    for vinkel in ("0", "180"):
+        top, ned = g.get(f"top{vinkel}"), g.get(f"ned{vinkel}")
+        if not top or top.get("fik") is None or not ned or ned.get("fik") is None:
+            fund.append(f"gradient: ved {vinkel}° står der ikke et tal i begge "
+                        f"placeringer, så værktøjet måler ikke hele gradienten")
+            continue
+        # `0deg` peger opad, så slutfarven (#000000) ligger i toppen og
+        # hvid tekst der består. `180deg` peger nedad, så startfarven
+        # (#ffffff) ligger i toppen og hvid tekst dér fejler. Begge steder
+        # fejler den hvide ende — det er det dommen kræver.
+        topSkalFejle = vinkel == "180"
+        if bool(top.get("fejler")) != topSkalFejle:
+            fund.append(f"gradient: ved {vinkel}° er toppen "
+                        f"{'fejlende' if top.get('fejler') else 'bestående'} "
+                        f"({top['fik']:.2f}:1), men den ende er "
+                        f"{'hvid' if topSkalFejle else 'sort'}")
+        if bool(ned.get("fejler")) == topSkalFejle:
+            fund.append(f"gradient: ved {vinkel}° er bunden "
+                        f"{'fejlende' if ned.get('fejler') else 'bestående'} "
+                        f"({ned['fik']:.2f}:1), men den ende er "
+                        f"{'sort' if topSkalFejle else 'hvid'}")
+    m, l = g.get("mork"), g.get("lys")
+    if not m or not l or m.get("fik") is None or l.get("fik") is None:
+        fund.append("gradient: der står ikke et tal i begge ender af den "
+                    "liggende gradient")
+    else:
+        if m.get("fejler"):
+            fund.append(f"gradient: hvid tekst i den mørke ende af gradienten "
+                        f"fejler ({m['fik']:.2f}:1) — den ende er den mørkeste")
+        if not l.get("fejler"):
+            fund.append(f"gradient: hvid tekst i den lyse ende af gradienten "
+                        f"består ({l['fik']:.2f}:1, krav 4.50:1) — så målingen "
+                        "tager gennemsnittet af endepunkterne i stedet for det "
+                        "værste par under bogstaverne")
+    foto = g.get("foto")
+    if not foto or foto.get("fik") is None:
+        fund.append("gradient: efter at gradienten er valgt og bruteren går "
+                    "tilbage til billede, står der intet tal — skiftet ødelægger "
+                    "værktøjet")
+    return fund
+
+
 def dom_blokke(b: dict | None) -> list[str]:
     """Døm at værktøjet måler *to* tekstblokke, og kun dem.
 
@@ -1894,7 +2126,41 @@ def self_test() -> int:
         tjek(f"mutationen gør porten rød: {navn}", bool(fund),
              f"mutationen gav stadig grønt: {json.dumps(koer(hvis), ensure_ascii=False)}")
 
-# 5: de to sider skal dømme ens. Den danske er en oversættelse, ikke en
+# 5e: **gradient-baggrunden.** Mutationerne er de tre fejlformer der kan
+    # få gradienten til at *se* ud som om den virker, mens den ikke gør det:
+    #   (a) slutstoppet males som startfarven, så fladen bliver næsten ensfarvet
+    #       — «den er der, den bare ikke slår», hvilket er det værste svar.
+    #   (b) vinklen læses ikke, så 0° og 180° bliver det samme billede.
+    #   (c) værste ende findes ikke, så dommen er den *første* baggrund der
+    #       bliver læst i stedet for den dårligste — altså gennemsnittets
+    #       modsætning, og den løfte bruteren ikke må få.
+    grad_stop = "      grad.addColorStop(1, $('gto').value);"
+    tjek("mutationen findes i koden: gradientens slutstop males fra feltet",
+         grad_stop in kode, repr(grad_stop))
+    mut_g1 = dom_gradient(koer(kode.replace(
+        grad_stop, "      grad.addColorStop(1, $('gfrom').value);", 1),
+        hele=True).get("gradient"))
+    tjek("mutationen gør gradient-dommen rød: slutstoppet males som startfarven",
+         bool(mut_g1), f"mutationen gav stadig grønt: {json.dumps(mut_g1, ensure_ascii=False)}")
+
+    grad_vinkel = "      var rad = (isFinite(rawn) ? rawn : 0) * Math.PI / 180;"
+    tjek("mutationen findes i koden: gradientens vinkel læses fra feltet",
+         grad_vinkel in kode, repr(grad_vinkel))
+    mut_g2 = dom_gradient(koer(kode.replace(grad_vinkel, "      var rad = 0;", 1),
+                               hele=True).get("gradient"))
+    tjek("mutationen gør gradient-dommen rød: vinklen læses ikke",
+         bool(mut_g2), f"mutationen gav stadig grønt: {json.dumps(mut_g2, ensure_ascii=False)}")
+
+    grad_vaerst = "      var worst = Infinity, worstOff = minOff;"
+    tjek("mutationen findes i koden: målingen tager den værste ende",
+         grad_vaerst in kode, repr(grad_vaerst))
+    mut_g3 = dom_gradient(koer(kode.replace(grad_vaerst,
+                                            "      var worst = 0, worstOff = minOff;", 1),
+                               hele=True).get("gradient"))
+    tjek("mutationen gør gradient-dommen rød: værste ende findes ikke",
+         bool(mut_g3), f"mutationen gav stadig grønt: {json.dumps(mut_g3, ensure_ascii=False)}")
+
+    # 5: de to sider skal dømme ens. Den danske er en oversættelse, ikke en
     # egen algoritma, så et tal der kun er rigtigt på den ene er en fejl.
     en, da = dom(kode), dom(hent_kode(SIDER[1]))
     tjek("EN-siden er grøn", not en, "; ".join(en))
@@ -1984,18 +2250,21 @@ def self_test() -> int:
     # nulstillede hverken `scrim` eller `lastFix`, så sløret fra foto A blev
     # tegnet på foto B. Det er den eneste fejl i denne port der *kun* kan ses
     # i en kæde, så mutationen her er portens vigtigste.
-    # Nulstillingsblokkene i `loadFile()`. De står nu i to grupper med en
-    # kommentar imellem — sløret og `lastFix` for blok 1, det samme for blok 2,
-    # og demo-flaget til sidst — fordi de alle beskriver *sidste* måling, og
-    # mutationen skal fjerne hele sættet, ellers ville den teste en
-    # delmængde af den fejl den er skrevet til. Derfor er den et regex og ikke
-    # en lillebrændt streng: en kommentar der flytter sig må ikke slå
-    # mutationen ihjel.
+# Nulstillingsblokkene. De lå i `loadFile()` og lå nu i `baggrundNul()`,
+    # som både `loadFile()` og `vaerlGradient()` kalder — samme fejlform som
+    # før (sløret og `lastFix` gjaldt det *sidste* input) med tre veje ind i
+    # stedet for to. Derfor er mutationen et regex: den skal ramme alle
+    # nulstillingerne, også den nye gradient-vej, ellers ville den teste en
+    # delmængde af den fejl den er skrevet til. Tællet er derfor ikke et fast
+    # tal, men «alle veje ind nulstiller»: `baggrundNul()` skal findes, og
+    # begge kaldester skal være med.
     reset_re = re.compile(
         r"^[ \t]*(?:scrim|lastFix|t2\.scrim|t2\.lastFix|demoBillede) = (?:null|false);\n"
         r"(?:[ \t]*//[^\n]*\n)*", re.M)
-    tjek("mutationen findes i koden: loadFile() nulstiller sløret",
-         len(reset_re.findall(kode)) == 5, str(len(reset_re.findall(kode))))
+    tjek("mutationen findes i koden: baggrundNul() nulstiller sløret",
+         "function baggrundNul()" in kode
+         and "baggrundNul();" in kode
+         and len(reset_re.findall(kode)) >= 5, str(len(reset_re.findall(kode))))
     sek_ok = koer(kode, hele=True).get("sekventiel")
     tjek("to-billeders-kæden leverer alle tre læsninger",
          bool(sek_ok) and all(k in sek_ok for k in ("efter", "refer", "fixA")),
@@ -2669,6 +2938,14 @@ def main(argv: list[str] | None = None) -> int:
         if blok:
             antal += 6
         for linje in dom_blokke(blok):
+            fund.append(f"{linje}")
+        # Gradient-baggrunden: fire løfter på den anden rute ind i *samme*
+        # måling. Tælles kun når dommen fik en måling at dømme — samme regel som
+        # de andre kæder.
+        grad = svar.get("gradient")
+        if grad:
+            antal += 4
+        for linje in dom_gradient(grad):
             fund.append(f"{linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
