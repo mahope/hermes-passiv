@@ -988,7 +988,69 @@
     cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
     global.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
     global.addEventListener('mouseup', function () { dragging = false; });
-    cv.addEventListener('touchstart', onMove, { passive: false });
+
+    // **En finger skal kunne trække teksten, ligesom en mus.** Målt 3/10 i
+    // Chromium 153 ved 390 px: `touchstart` flyttede teksten ét sted, og seks
+    // `touchmove` ændrede *intet* — så «(eller træk)» i teksten på alle fire
+    // sider var sand på en mus og en løgn på en telefon, altså på den enhed de
+    // fleste læser artiklen på. Samme måling: `touchstart`'s `preventDefault()`
+    // låste scrollen med fingeren oven på billedet, så man heller ikke kunne
+    // læse videre som man plejer.
+    //
+    // Derfor er et tryk et *tryk* og et træk et *træk*, og de må ikke forveksles:
+    //   - fingeren ned og op uden at flytte sig → tryk → teksten flyttes derhen,
+    //     præcis som 3/10. Bevares, fordi det er den bevægelse de fleste lavør.
+    //   - fingeren ned og **vandret** hen over → træk → teksten følger fingeren.
+    //     Vandret, fordi et lodret træk er præcis det en læser gør for at komme
+    //     videre ned ad siden, og den scroll skal vi ikke tage.
+    //   - først når trækket er i gang må fingeren gå hvor som helst: det er den
+    //     bevægelse der *startede* det, der afgør hvad resten af gesten er.
+    var touchX = 0, touchY = 0, touchMode = '';
+    function touchStart(e) {
+      if (!img) return;
+      var t = e.touches && e.touches[0];
+      if (!t) return;
+      touchX = t.clientX; touchY = t.clientY; touchMode = '';
+      // Bevidst **ikke** `preventDefault()`: så beholder bruteren scrolling med
+      // fingeren oven på billedet. Det var den låste 3/10.
+    }
+    function touchMove(e) {
+      if (!img) return;
+      var t = e.touches && e.touches[0];
+      if (!t) return;
+      var dx = t.clientX - touchX, dy = t.clientY - touchY;
+      if (!touchMode) {
+        // 6 px: lille nok til at en klam finger ikke udløser et træk, stort
+        // nok til at en vilje flytter teksten. Efter grænsen afgør den kraftigste
+        // retning, og kun *én* gang — ellers ville en skæv finger skifte mening
+        // undervejs og tekst flytte mens siden scroller.
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        touchMode = Math.abs(dx) >= Math.abs(dy) ? 'drag' : 'scroll';
+      }
+      if (touchMode !== 'drag') return;
+      // Når scrolling først er begyndt, er `touchmove` ikke længere cancellable:
+      // browseren ruller videre, og vi ville trække teksten under fingeren
+      // *mens* siden flytter sig. Da er vi for sent — giv scrollen fred.
+      if (e.cancelable === false) { touchMode = 'scroll'; return; }
+      // `onMove()` kalder selv `preventDefault()`, altså det er her et træk
+      // fortryder den scroll, vi netop erklærede for vores.
+      onMove(e);
+    }
+    function touchEnd(e) {
+      // Et tryk er et finger-op uden at have flyttet sig. Her flytter vi teksten
+      // — 3/10 gjorde det i `touchstart`, så en berøring stadig virker som klik.
+      // `onMove()` læser `touches[0]`, og et `touchend`s `touches` er *tom*,
+      // så vi giver den den finger der slap.
+      var t = e.changedTouches && e.changedTouches[0];
+      if (!touchMode && t && img) onMove({ clientX: t.clientX, clientY: t.clientY, preventDefault: function () {} });
+      touchMode = '';
+    }
+    cv.addEventListener('touchstart', touchStart, { passive: false });
+    cv.addEventListener('touchmove', touchMove, { passive: false });
+    cv.addEventListener('touchend', touchEnd, { passive: false });
+    // En afbrudt gest (et opkald, en besked, en finger der gik uden for skærmen)
+    // må ikke efterlade kernen i et træk der fortsætter uden finger.
+    cv.addEventListener('touchcancel', function () { touchMode = ''; }, { passive: false });
 
     // Default demo background so the tool works before uploading anything.
     img = baggrundDemo();

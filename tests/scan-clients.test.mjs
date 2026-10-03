@@ -59,8 +59,14 @@ function el() {
     // lytteren. `/clean-copy-tool` binder `convert()` på `input` og holder den
     // i en IIFE, så der er ingen anden vej ind — sandkassen skal kunne trykke
     // på tastaturet, ellers kan kortet kun dømmes ved at kalde kode den ikke
-    // eksponerer.
-    fire(t) { (this._ls[t] || []).forEach((fn) => fn({ target: this, preventDefault() {} })); },
+    // eksponerer. `ev` er til de domme der skal *falske et event* (en finger på
+    // et canvas har `touches` og `clientX`; en tastaturtrykning har ingen af
+    // dele), fordi en `TouchEvent` ikke kan konstrueres i en vm.
+    fire(t, ev) {
+      (this._ls[t] || []).forEach((fn) => fn(ev
+        ? Object.assign({ target: this }, ev)
+        : { target: this, preventDefault() {} }));
+    },
     click() { (this._ls.click || []).forEach((fn) => fn({})); },
     submit() { (this._ls.submit || []).forEach((fn) => fn({ preventDefault() {} })); },
     querySelectorAll: () => [],
@@ -103,7 +109,11 @@ function ctx2d() {
     translate() {}, scale() {}, rect() {},
   };
 }
-const withCanvas = (e) => { e.getContext = () => ctx2d(); e.width = 900; e.height = 420; return e; };
+const withCanvas = (e) => { e.getContext = () => ctx2d(); e.width = 900; e.height = 420; e.getBoundingClientRect = () => rect(e); return e; };
+// `pos()` i kernen placerer teksten efter canvas' **synlige** rektangel, så
+// stubben skal have en. Den er 1:1 i pixel (900x420), altså samme forhold som
+// `width`/`height` — så et tal i dommen kan læses som pixel uden at regne om.
+const rect = (e) => ({ left: 0, top: 0, width: e.width, height: e.height, right: e.width, bottom: e.height });
 
 // Det billede næste `new Image()` læser. En læsende sandkasse måler ellers alle
 // billeder ens, og så er en fejl der *kun* rammer det andet billede i en træk-
@@ -143,7 +153,15 @@ function ctx2dLevende(st) {
     putImageData() {},
     drawImage(img) { st.px = (img && img.pixel) || st.px; st.ryddet = false; },
     clearRect() { st.ryddet = true; },
-    fillRect() {}, fillText() {}, beginPath() {}, arc() {}, fill() {},
+    fillRect() {},
+    // Hver `fillText` huskes med sit sted. Det er den **tegnede** placering, altså
+    // den eneste der kan dømme om en finger flyttede teksten: et tal i en variabel
+    // ville være kernens egen påstand om sig selv, og et tal i et billede
+    // kræver en browser. `st.tekst` vokser med hver tegning, så en dom læser
+    // den *sidste* — og `st.draws` tæller, så den kan se at der overhovedet
+    // blev tegnet noget.
+    fillText(t, x, y) { (st.tekst = st.tekst || []).push([t, x, y]); st.draws = (st.draws || 0) + 1; },
+    beginPath() {}, arc() {}, fill() {},
     save() {}, restore() {}, createLinearGradient: () => grad,
     setLineDash() {}, strokeRect() {},
     createRadialGradient: () => grad, translate() {}, scale() {}, rect() {},
@@ -217,6 +235,7 @@ function loadPage(path, fetchImpl, opts = {}) {
     e.getContext = () => ctx2dLevende(st);
     e.pixel = naesteBillede;
     e.width = 900; e.height = 420;
+    e.getBoundingClientRect = () => rect(e);
     // En rigtig DOM giver det *samme* element ved to `querySelector` med samme
     // vælger, og et nyt element efter en `innerHTML`. Uden det kunne en test
     // hverken finde den knap kernen lige skrev eller ramme den rigtige lytter —
@@ -295,11 +314,19 @@ function loadPage(path, fetchImpl, opts = {}) {
   // egen inline-kode. Uden dem kunne ingen dom lade en side kalde `TiContrast`:
   // sandkassen læser kun de inline blokke, og så ville artiklens `mount()` bare
   // være en ReferenceError — altså en grøn dom på en side med intet værktøj.
+  // `opts.kilder` erstatter enkeltstående `src`-scripts med en given tekst, så
+  // en dom kan køre den *gamle* kode gennem den samme sandkasse. Uden det måtte
+  // en polaritetsdom skrive sin egen kopi af filen fra hukommelsen — og så er
+  // den grøn fordi den dommer sin egen fejlform, ikke den der lå i repoet.
   for (const fil of opts.preload || []) {
-    vm.runInContext(readFileSync(join(root, fil), 'utf8'), sandbox, { filename: fil });
+    const tekst = opts.kilder && fil in opts.kilder ? opts.kilder[fil] : readFileSync(join(root, fil), 'utf8');
+    vm.runInContext(tekst, sandbox, { filename: fil });
   }
   vm.runInContext(main, sandbox, { filename: path });
-  return { sandbox, nodes };
+  // `st` er canvas-stubbens fælles hukommelse. Den skal kunne læses udefra, ellers
+  // kan ingen dom se hvad kernen har tegnet — og det er tegningen, ikke et tal
+  // i en variabel, der svarer på «flyttede fingeren teksten».
+  return { sandbox, nodes, st };
 }
 
 // Svarene kommer som en række, og der tælles kald, så "prøver den igen?" kan
@@ -2366,6 +2393,126 @@ for (const [path, lang] of [['site/scan.html', 'EN'], ['site/scan-da.html', 'DA'
   ok(`scan ${lang}: mutationen (uden esc) er fanget`,
     gammel !== egen && /<img/i.test(await scanFejlHtml(path, gammel)),
     'mutationen gav ikke den gamle kode, så dommen kan ikke se forskellen');
+}
+
+// --------------------------------------------------------------------------
+// Fingeren skal kunne trække teksten.
+//
+// Målt 3/10 i Chromium 153 ved 390 px: `touchstart` flyttede teksten ét sted,
+// og seks `touchmove` ændrede intet. Alle fire sider lover dog «(or drag)» /
+// «(eller træk)» i teksten under billedet — altså sand på en mus, falsk på en
+// telefon, som er den enhed størstedelen af læserne af artiklen bruger. Samme
+// måling fandt at `touchstart`'s `preventDefault()` låste scrolling med fingeren
+// oven på billedet.
+//
+// Dommen her læser den **tegnede** placering (`fillText` i canvas-stubben), fordi
+// det er den eneste der svarer på «flyttede fingeren teksten»: et tal i en
+// variabel er kernens egen påstand om sig selv. Mutationsdommen nedenfor kører
+// den *gamle* kode gennem samme sandkasse, så en port der ikke kan se
+// forskellen på de to, bliver rød i stedet for grøn på løgnen.
+{
+  const KERNE = 'site/text-on-image-core.js';
+  const SIDE = 'site/text-on-image-checker.html';
+
+  // Én `mount()` pr. scenarie, som `loadPage` gør: sidens eget mount-kaldes
+  // strings og markup, ikke en håndfuld funktioner. `st.tekst` er den tegnede
+  // tekst; den sidste indgang er blok 1 (`drawTextLayer(1)` tegner blok 2 bagefter).
+  async function kørMed(gester, kilder) {
+    const { nodes, st } = loadPage(SIDE, responses([]).fetchImpl,
+      { match: /TiContrast\.mount/, canvas: true, levendeBilleder: true, preload: [KERNE], kilder });
+    await sleep(20);
+    const cv = nodes.get('cv');
+    const log = [];
+    const finger = (type, x, y) => {
+      const t = { clientX: x, clientY: y, identifier: 1, target: cv };
+      log.push(type);
+      cv.fire(type, {
+        // `touches` er tomt ved `touchend`, præcis som i en browser — så en dom
+        // der læser `touches[0]` der får `undefined` og dør, ligesom kernen
+        // gør det hvis den glemmer `changedTouches`.
+        touches: type === 'touchend' || type === 'touchcancel' ? [] : [t],
+        changedTouches: [t],
+        cancelable: true,
+        preventDefault() { log.push('preventDefault'); },
+      });
+    };
+    gester(finger, cv);
+    await sleep(10);
+    // Blok 1 og blok 2 tegnes i samme `draw()`, så den *sidste* `fillText` er
+    // blok 2 — og dens y er fast, uanset hvor fingeren har været. Vi vil have
+    // blok 1, så dommen leder den op på **sides egen tekst** i tekstfeltet og
+    // ikke på rækkefølgen af to tegninger.
+    const min = nodes.get('text').value;
+    const eg = (st.tekst || []).filter((t) => t[0] === min).pop() || [];
+    return { nodes, st, log, x: eg[1], y: eg[2], tegnet: st.draws || 0 };
+  }
+  // Den nuværende kode, som alt annet i filen.
+  const kør = (gester) => kørMed(gester, null);
+
+  // `pos()` lægger teksten med sit **øverste venstre** hjørne ved fingeren minus
+  // halve skriftstørrelsen, så den tegnede placering er fingeren minus 27 px i
+  // en 900 px bred flade: `fontSizePx()` er `max(18, 0.06 * bredden)`. Tallet
+  // står her eksplicit, for et tal der *ligner* rigtigt er ikke en dom.
+  const FS = 54;
+  const vedFinger = (v, finger) => Number.isFinite(v) && Math.abs(v - (finger - FS / 2)) <= 2;
+
+  // Fingeren ned og op uden at flytte sig: 3/10 flyttede teksten i `touchstart`,
+  // så et tryk skal stadig gøre det. Bevaringsdom.
+  const tryk = await kør((f) => { f('touchstart', 200, 120); f('touchend', 200, 120); });
+  ok('tryk på billedet flytter teksten (finger ned og op samme sted)',
+    tryk.tegnet > 0 && vedFinger(tryk.x, 200) && vedFinger(tryk.y, 120),
+    `tegnet=${tryk.tegnet} tekst=[${tryk.x}, ${tryk.y}] log=${tryk.log.join(',')}`);
+
+  // Trækket: fingeren ned i venstre side og **vandret** hen i højre side. Den
+  // gamle kode flyttede teksten til nedtrykningsstedet og lod resten ligge —
+  // så dommen er den der dømmer den løgn.
+  const traek = await kør((f) => {
+    f('touchstart', 100, 120);
+    for (let i = 1; i <= 6; i++) f('touchmove', 100 + i * 100, 120);
+    f('touchend', 700, 120);
+  });
+  ok('træk med fingeren flytter teksten med fingeren, ikke kun ved nedtryk',
+    traek.tegnet > 0 && vedFinger(traek.x, 700) && vedFinger(traek.y, 120),
+    `tekst=[${traek.x}, ${traek.y}] log=${traek.log.join(',')}`);
+
+  // Scrolling er bruterens, ikke vores. Et **lodret** fingerstræk over billedet
+  // skal derfor hverken flytte teksten eller tage scrollen: det er præcis den
+  // bevægelse en læser gør for at komme videre ned ad siden, og 3/10 låste den
+  // helt. Dommen på `preventDefault` er derfor den egentlige: at *ikke* flytte
+  // tekst uden at låse scrollen er hele pointen med den lodrede undtagelse.
+  const lodret = await kør((f) => {
+    f('touchstart', 400, 100);
+    for (let i = 1; i <= 6; i++) f('touchmove', 400, 100 + i * 40);
+    f('touchend', 400, 340);
+  });
+  ok('lodret fingerstræk lader siden scroll(e) og flytter ikke teksten',
+    lodret.log.includes('touchstart') && !lodret.log.includes('preventDefault'),
+    `log=${lodret.log.join(',')}`);
+
+  // Et afbrudt træk må ikke efterlade kernen i en tilstand hvor næste tryk
+  // ignoreres — det er den fejl en `touchcancel`-handler uden nulstilling giver.
+  const afbrudt = await kør((f) => {
+    f('touchstart', 300, 100);
+    f('touchmove', 500, 100);
+    f('touchcancel', 500, 100);
+  });
+  const efter = await kør((f) => { f('touchstart', 700, 250); f('touchend', 700, 250); });
+  ok('efter en afbrudt gest virker et tryk igen',
+    vedFinger(efter.x, 700) && vedFinger(efter.y, 250),
+    `tekst=[${efter.x}, ${efter.y}] log=${efter.log.join(',')}`);
+
+  // Polaritet: den **gamle** kode gennem samme sandkasse. Gemt med `git show`,
+  // altså de bytes der faktisk lå i repoet — ikke en håndskrevet kopi, hvor
+  // en ny fejlform ville blive grøn.
+  const gammelKjerne = execFileSync('git', ['show', 'HEAD:site/text-on-image-core.js'], { cwd: root, encoding: 'utf8' });
+  const mutation = await kørMed((f) => {
+    f('touchstart', 100, 120);
+    for (let i = 1; i <= 6; i++) f('touchmove', 100 + i * 100, 120);
+    f('touchend', 700, 120);
+  }, { [KERNE]: gammelKjerne });
+  ok('mutationen (kernen uden finger-træk) er fanget',
+    !(mutation.tegnet > 0 && mutation.x > 600),
+    `mutationen flyttede stadig teksten til x=${mutation.x} — dommen kan ikke se forskellen`);
 }
 
 console.log(`\nscan-clients: ${pass}/${pass + fail}`);

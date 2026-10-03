@@ -1,30 +1,32 @@
 # STATUS
-- **Denne iteration: gradientruten er også i artiklen.** Feature-kø punkt 4 lagde
-  den på de to *værktøjssider* 3/10; `/blog/text-on-image-contrast-check` er 8 af
-  18 besøgende (**44 %**, bounce 100 %) og indlejrer samme kerne — så læseren måtte
-  ud af døren for at få den. Begge artikler (EN/DA) har nu **An image / A
-  gradient** + to stopfarver + vinkel, samme id'er og værdier som værktøjssiderne.
-- **Porten dømmer nu alle fire sider, ikke kun to** (176 løfter fra 132). Felterne
-  læses i **sidens egen markup** og præfikset i **sidens eget `mount()`-kald** —
-  før la porten nogle felter op selv, så et `id` med en tastefejl fik en grøn dom.
-  Tre mutationer i markup'en gør den rød: gradientfeltet forsvinder,
-  `<option value="gradient">` forsvinder, `<label for>` forsvinder.
-- **Målt:** `check_contrast_sampling` GRØN 176/4 sider; `--self-test` OK
-  (161/161) på 3m52s. Gaten grøn (`build_sites` 315 sider/0 fund,
-  `stripe-worker.test.mjs` 377/377, `check_inline_js` 0). **Ikke kørt:** ingen
-  browser ved 390/1280 — de fire felter er samme markup som på værktøjssiderne.
-- **Deploy fra sidste iteration er verificeret:** live `text-on-image-core.js` har
-  **4** forekomster af `bgmode`, så `40654c3` er ude. CI grøn på `main` 3/10.
-- PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
-- **Næste opgave: Feature-kø punkt 5** — artiklen har stadig ingen købsknap over
-  folden. Baslinen måles i browseren, før der røres ved den.
+- **Denne iteration: en finger kan trække teksten.** Målt i Chromium 153 ved
+  390 px: `touchstart` flyttede teksten ét sted, seks `touchmove` ændrede
+  *intet* — så «(or drag)» / «(eller træk)» på alle fire sider var sand på en
+  mus og falsk på en telefon. Samme måling: `touchstart`s `preventDefault()`
+  låste scrolling med fingeren oven på billedet, så man kunne heller ikke bare
+  læse videre som man plejer.
+- **Nu:** tryk flytter teksten som før · **vandret** fingerstræk flytter den med
+  fingeren (og må så gå hvor som helst bagefter) · **lodret** stræk lader siden
+  scroll(e), fordi det er præcis den bevægelse en læser gør for at komme videre.
+  Tre lyttere i kernen; intet markup, ingen ny knap, ingen JS-hængsel.
+- **Verificeret i browseren** på artiklen *og* `/text-on-image-checker` ved
+  390 px: tryk JA, træk JA, scroll fra billedet 0 → 301 px (før låst).
+  `scan-clients` **517/517** med fire nye domme; polaritetsdommen kører kernen
+  fra `HEAD` og bliver rød på den. Gaten grøn: build 315 sider/0 fund, seo 0,
+  stripe 377/377, inline-js 0. Skærmbilleder 390 + 1280 i `/tmp/ui-touch/`.
+- **Deploy fra sidste iteration er verificeret:** CI grøn på `main` 3/10, og den
+  live artikel har gradientruten (`art-bgmode` × 2) → `DEPLOY OK 3/10`.
+- PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
+- **Næste opgave: Feature-kø 6** — mål folden på cleancopy.tools i browseren.
 - **❓ Til Mads:** uændret — alle 12 spørgsmål står i afsnittet nedenfor, 0 nye.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: gradientruten i artiklen og porten på alle fire sider ceo/artikel-gradient 3/10 21:3x`
-Graden deployer på push, så næste iteration tjekker med ét `gh run list -L 1` og
-ét kald på live `/blog/text-on-image-contrast-check/` efter `art-bgmode`.
+`VERIFICÉR DEPLOY: finger-træk i kontrastkernen ceo/finger-traek 3/10 23:0x`
+Graden deployer på push. Verificér på *indhold*, ikke på HTTP: hent
+`https://mahope.tools/text-on-image-core.js` og tæl `touchmove`. Skal være 2
+(én definition + ét `addEventListener`) — før var der 0. `DEPLOY OK 3/10` for
+`ceo/artikel-gradient`: CI grøn, live artiklen har `art-bgmode` × 2.
 
 ## Åbne opgaver
 
@@ -136,12 +138,23 @@ i `docs/plan-arkiv.md`.
    tager allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
    dublet. Den reelle revne lå mellem flade farver og foto — en `linear-gradient`,
    som man ikke kan uploade.
-5. **Artiklen der 44 % af besågene lander på, sender ingen hjem.** Hvem: de 8 af 18
-   besøgende på `/blog/text-on-image-contrast-check` — de kommer fra søgning efter
-   præcis det problem og går alle med 100 % bounce, mens selve værktøjet
-   `/text-on-image-checker` kun har 2. Tal: købs- og værktøjsknapper i artiklen
-   (baseline måles i browseren først). Accept: artiklen har **én** primær handling
-   over folden, der åbner tjekkeren med læserens eget eksempel, og porten
-   `check_first_action` dømmer pr. artikel (den dømmer i dag 172 sider for to-tre
-   knapper i folden). Datagrund: største enkelt indgang på sitet, højeste bounce,
-   og 44 % af alle besøg på én URL.
+5. ~~**Artiklen der 44 % af besøgene lander på, sender ingen hjem.**~~ **Leveret
+   3/10, men en anden fejl end den antaget.** Premissen holdt ikke: foldens
+   primære handling har været `#try-it` siden 2/10, kernen måler sit
+   eksempelbillede ved sidevisning (`b96b6bc`), og `#report` har købsknappen.
+   Den **målebare** fejl var en anden: på en telefon kunne læseren ikke flytte
+   teksten, kun trykke. Baseline: 0 af 6 `touchmove` flyttede noget. Nu: træk på
+   vandret finger flytter den med fingeren — målt i Chromium 153 ved 390 px på
+   begge sider. Bounce 100 % på én side kan ikke bruges som dom: én sidevisning
+   er også en *fuldført* tekstplacering, og det kan vi ikke måle.
+6. **cleancopy.tools' forside er 7 af 9 besøgende, og de går igen.** Hvem: de 7
+   på `/` (78 % bounce, 124 s). Tal: hvor mange har trykket værktøjet på forsiden.
+   Accept: browseren viser én primær handling over folden på 390 px, og
+   `check_first_action`-porten får forsiden i ratchetfilen med den destination.
+   Datagrund: 78 % af sitets besøg er på den ene side, og de er ikke dem der
+   bruger værktøjet — de læser kun forsiden.
+7. **`passiv-mcp` klones 10 × mere end den ses.** 14 dage: 21 unikke kloninger,
+   2 visninger, 0 stjerner. Tal: om en kloning fører til et kald på
+   `mahope.tools`. Accept: repoet har en README der siger hvad MCP'en gør, og
+   en side på mahope.tools der linker til den — så en kloning kan finde vej
+   hjem. Datagrund: det er det mest klonede repo i familien.
