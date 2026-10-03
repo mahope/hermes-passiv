@@ -418,9 +418,12 @@ async function scan(url){
     }
     return low;})());
   const errors=findings.filter(f=>f.sev==='error').length,
-        warnings=findings.filter(f=>f.sev==='warning').length,
-        notices=findings.filter(f=>f.sev==='notice').length;
-  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+        warnings=findings.filter(f=>f.sev==='warning').length;
+  // Scoren kommer fra den delte codec, ikke fra en kopi af formlen her. Før dette
+  // stod formlen tre steder (den her, den danske og et delt resultats), og et
+  // delt resultat fik desuden sit `s=` med fra linket — så et kort kunde sige
+  // «Grade A, 100/100» over en liste med fund i. Én udregning, ét tal.
+  const score=window.SCANSHARE.scoreOf(findings);
   // Platform-detektionen bliver her, ikke i `platformBox()`: den skal kun slå
   // platformen op i PLATFORM_GUIDES, og *platformens navn* kommer videre i
   // del-linket, så modtageren får samme guide-boks som afsenderen.

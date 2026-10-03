@@ -6132,3 +6132,42 @@ rettelsen. Missionens fire steps (`build_sites.py`, `seo_check.py`,
 **Åbent fund fra samme review (MIDDEL):** se punkt 9 under «Åbne opgaver» i
 `IMPLEMENTATION_PLAN.md` — et delt resultats `score` kommer fra linket, mens
 antallet fejl regnes ud fra fundene.
+
+## 3/10 — Et delt resultats score kom fra linket (review-fund [MIDDEL], lukket samme dag som HØJ'en ovenfor)
+
+`scan-share-core.js` skrev scoren i del-linket (`s=`) og `decode()` tog den som
+det den var, mens `errors`/`warnings` blev regnet ud fra fundene. Kortet malede
+derfor `state.score+'/100 — Grade '+g` og `state.errors+' error(s)'` ved siden
+af hinanden, og det eneste tal nogen kunne ændre var afsenderens. Målt før: et
+håndredigeret link `#u=…;s=100;f=A:e:1` gav `score: 100, errors: 1`, og
+DOM-kortet skrev **«100/100 — Grade A»** over **«1 error(s)»** på begge sider.
+Review-fundet målte desuden at sidens egen formel giver **88** for samme fund.
+
+Rettelsen er to dele, fordi «læs et tal fra et link» ikke er det samme som
+«udregn det»:
+
+- **`s=` er væk fra formatet.** `encode()` skriver kun `u=`, `f=` og `p=`, og
+  `decode()` afviser intet når det gamle `s=` møder — den er bare et ukendt felt
+  nu og droppes som alt andet. Gamle bogmærker dør altså ikke, de viser et ærligt
+  tal. `clampInt()` blev derved død kode og er væk.
+- **Én formel, tre kaldere.** `scoreOf(findings)` ligger i `scan-share-core.js`
+  og bruges af `decode()` *og* af `scan()` i `site/scan.html` og
+  `site/scan-da.html`, som begge lagde deres egen `Math.max(0,100-…)` i den
+  indlejrede kode. Før var der tre kopier af et tal, der står over listen af
+  fund; det var præcis sådan fundet opstod. (`notice: 2` er taget med, fordi
+  `scan()` havde den i sin egen formel, selv om ingen regel sætter den alvor.)
+
+Porten: `tests/scan-share.test.mjs` **84/84**. Nye domme på tre niveauer —
+codecen (`s=100` over ét error-fund giver **88**, `s=0` giver også 88, og
+`encode()`-output har intet `s=`), begge rigtige sider (scriptet skal kalde
+`SCANSHARE.scoreOf` og må ikke have sin egen formel), og DOM'en (renderet på
+begge sprog skal sige **71/100 — Grade C** og må ikke sige 100/100).
+**Polaritet: 11 fejl** på de tre filer fra før rettelsen, målt med
+`git stash push site/scan-share-core.js site/scan.html site/scan-da.html`.
+Fixture-værdien i porten var 74 — et tal formlen ikke giver — så nålen «roundtrip:
+score» konstaterede kun, at tal blev kopieret; den er nu 71 = fundene.
+
+`tests/scan-clients.test.mjs` havde tre steder der kørte `scan()` i en sandkasse
+uden codecen indlæst, så de fik `preload: ['site/scan-share-core.js']` — samme
+mønster som `/net.js` og `text-on-image-core.js` allerede bruger der.
+`quality_gate.py` grøn.

@@ -1,38 +1,37 @@
 # STATUS
+- **Et delt scanelink kunne sige «Grade A, 100/100» over en liste med fund i.
+  Rettet 3/10** (review-fund [MIDDEL]): `s=` blev taget som det var, mens
+  fejl/advarsler blev regnet ud fra fundene. `encode()` skriver ingen score
+  længere, `decode()` regner den med **samme** `scoreOf()` som begge sider
+  bruger til en netop kørt scanning — én formel, tre kaldere. Gamle links med
+  `s=` åbner stadig. Målt i rigtig Chromium på begge sprog: **71/100 — Grade C**
+  over «2 error(s)», hvor linket siger 100. **11 røde** domme på den gamle kode.
 - **Et skannet site kunne skrive sit eget markup i vores resultatside. Rettet
-  3/10.** Review-fund [HØJ]: `_worker.js` lagde målets *egen* `Content-Type`
-  ind i `error`, `scan()` kastede den videre, og fejlkassen skrev `e.message`
-  i `innerHTML` uden at escape. Et mål med `Content-Type:
-  application/json<img src=x onerror=…>` fik derfor sit tag til at køre i
-  mahope.tools' egen origin — målt i rigtig Chromium som `<title>FIRET</title>`
-  i DOM'en. `#url=`-læseren kalder `scan(u)` ved sideindlæsning, så offerret
-  trykker ikke på noget. To lag: `safeContentType()` i workeren og `esc()` på
-  begge sider. Nye domme er **røde på den gamle kode** — målt ved at fjerne
-  hvert lag for sig (scan-clients 504/512, stripe-worker 376/377).
-- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal.** 3/10.
-  «Find det bedste sted» måler 20 steder på bruterens eget billede med den
-  samme `sampleContrast()` som tallet på skærmen kommer fra, og flytter
-  teksten til det bedste. Fire sider (2 værktøjssider + 2 artikler), EN+DA.
-  Ny dom på **pladseringen**: knap, et *bedre* tal end før (3:1 opfyldt),
-  en beskrivelse der nævner præcis det tal der står, og at beskrivelsen
-  forsvinder når bruteren selv trækker. `check_contrast_sampling` **58 løfter**,
-  `--self-test` **63/63**.
-- **Deploy:** målt 3/10 mod live `39ff715`: `ceo/kontrast-tjek-to-fotos` og
-  `ceo/fix-gaar-ikke-paa-naeste-foto` er **DEPLOY OK**. `ceo/download-det-
-  rettede-billede` er målt på **alle fire** sider over HTTP 3/10 08:55.
-  PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
+  3/10** (review-fund [HØJ]): målets egen `Content-Type` kom ud i `error` og
+  blev skrevet i `innerHTML` uden escape — målt i Chromium som `<title>FIRET</title>`.
+  To lag: `safeContentType()` i workeren + `esc()` på begge sider. Domme målt
+  røde ved at fjerne hvert lag for sig (504/512, 376/377).
+- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal.** 3/10:
+  «Find det bedste sted» måler 20 steder på bruterens eget billede med den samme
+  `sampleContrast()` som tallet kommer fra, og flytter teksten. Fire sider,
+  EN+DA. `check_contrast_sampling` **58 løfter**, `--self-test` **63/63**.
+- **Deploy:** målt 3/10 mod live `d55264b` (`build-info.json` + kilderne på
+  `/scan` og `/scan-da`): `ceo/kontrast-tjek-to-fotos`,
+  `ceo/fix-gaar-ikke-paa-naeste-foto`, `ceo/download-det-rettede-billede` og
+  `ceo/scan-fejl-esc` er **DEPLOY OK**. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: en skannet adresse kan ikke skrive markup i vores
-  resultatside ceo/scan-fejl-esc 2026-10-03 14:00` — på `/scan` og `/scan-da`
-  skal en fejl fra `/scan-proxy` stå som **tekst**. Resten ligger i porten og er
-  målt i gaten: `node tests/scan-clients.test.mjs` skal sige **512/512** og
-  `node tests/stripe-worker.test.mjs` **377/377**, og begge er målt røde mod
-  den gamle kode.
+- `VERIFICÉR DEPLOY: et delt resultat kan ikke få et bedre tal end sine fund
+  ceo/scan-score-af-fundene 2026-10-03 12:00` — åbn på `/scan`
+  `#u=https%3A%2F%2Fexample.com%2Fpris;s=100;f=IMG_ALT:e:4,CONTRAST:e:1,HEADING_SKIP:w:2;p=WordPress`:
+  kortet skal sige **71/100 — Grade C** og «2 error(s), 1 warning(s)», aldrig
+  100/100. Samme på `/scan-da`. Resten ligger i porten:
+  `node tests/scan-share.test.mjs` skal sige **84/84**, og porten er målt
+  **11 rød** på koden fra før.
 
 - `VERIFICÉR DEPLOY: find det bedste sted i kontrasttjekkeren
   ceo/find-bedste-sted 2026-10-03 12:00` — på `/text-on-image-checker` og
@@ -127,21 +126,14 @@
     **Rettet i samme opgave:** planens påstand om 230 px vandret scroll på
     `/page-profile` holdt ikke — Chromium giver **0 px** ved 390 og 1280 px, på
     både gammel og ny kode.
-9. **Et delt resultats score kommer fra linket, ikke fra fundene.** Hvorfor:
-    `scan-share-core.js`'s `decode()` læser `s=` og tager tallet som det er,
-    mens `errors`/`warnings` bliver regnet ud fra fundene. Målt 3/10 i Node mod
-    den kode der ships: `decode()` af `#u=…;s=100;p=WordPress;f=IMG_ALT:e:1,
-    CONTRAST:e:2` giver `{score:100, errors:2}`, og sidens **egen** formel
-    (`Math.max(0,100-errors*12-warnings*5)`) giver **88** — altså Grade C, ikke
-    «Grade A, 100/100» ved siden af «2 error(s)». Kommentaren på `:139` siger
-    «the scorecard's numbers cannot contradict its own list»; den er sand for de
-    to tal og forkert for det tredje. `f=` er påkrævet og der er intet
-    informationstab (`grep "'notice'"` giver kun `notices=findings.filter(…)`,
-    så `notices` altid er 0). Accept: `decode()` regner scoren fra fundene og
-    dropper `s=` (eller afviser et `s=` der ikke kan udregnes), og
-    `tests/scan-share.test.mjs` får en nål der **kun** har `roundtrip: score` på
-    74 i dag. Målt: `decode()` af et link med `s=100` og ét error-fund skal give
-    `score === 88`, og porten skal være rød på koden fra før.
+9. ~~**Et delt resultats score kommer fra linket, ikke fra fundene.**~~
+   **Færdig 3/10.** `encode()` skriver ikke længere nogen score, og `decode()`
+   regner den fra fundene med `scoreOf()` — den samme funktion begge sider nu
+   bruger til en netop kørt scanning, så der er én formel og ikke tre.
+   Gamle links med `s=` åbner stadig. Målt: `decode()` af et link med `s=100` og
+   ét error-fund giver **88**, DOM-kortet siger **71/100 — Grade C** over «2
+   error(s)», og porten er **11 rød** på koden fra før.
+   `tests/scan-share.test.mjs` **84/84**. Flyttet til `docs/plan-arkiv.md`.
 
 ## ❓ Til Mads
 

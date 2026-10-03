@@ -414,9 +414,10 @@ async function scan(url){
     }
     return low;})());
   const errors=findings.filter(f=>f.sev==='error').length,
-        warnings=findings.filter(f=>f.sev==='warning').length,
-        notices=findings.filter(f=>f.sev==='notice').length;
-  const score=Math.max(0,100-errors*12-warnings*5-notices*2);
+        warnings=findings.filter(f=>f.sev==='warning').length;
+  // Samme codec som den engelske side, så et tal her og et tal i et delt resultat
+  // ikke kan komme fra to formler. Se `scan-share-core.js`.
+  const score=window.SCANSHARE.scoreOf(findings);
   // Platform-detektionen bliver her, ikke i `platformBox()`: den skal kun slå
   // platformen op i PLATFORM_GUIDES, og *platformens navn* kommer videre i
   // del-linket, så modtageren får samme guide-boks som afsenderen.

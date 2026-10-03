@@ -45,7 +45,12 @@ ok('kernen eksporterer decode/encode', typeof S?.decode === 'function' && typeof
 
 const RIGTIG = {
   url: 'https://example.com/pris',
-  score: 74,
+  // 71 er ikke en tilfældig værdi: den er pr. side egen formel for de tre fund
+  // nedenunder (100 − 2×12 − 1×5). Før dette skrev testen 74 og «roundtrip:
+  // score» bare konstaterede, at encode() skrev det samme tal ud igen — altså at
+  // tallet overlevede en kopiering, ikke at det var det rigtige tal. Derfor
+  // regnes den her, og den er i dag fundene — ikke en håndredigeret s= i et link.
+  score: 71,
   findings: [
     { id: 'IMG_ALT', sev: 'error', count: 4 },
     { id: 'CONTRAST', sev: 'error', count: 1 },
@@ -57,11 +62,31 @@ const hash = S.encode(RIGTIG);
 ok('encode skriver et fragment', /^#u=https%3A%2F%2F/.test(hash), hash);
 const tilbage = S.decode(hash);
 ok('roundtrip: url', tilbage?.url === RIGTIG.url, JSON.stringify(tilbage));
-ok('roundtrip: score', tilbage?.score === 74);
+ok('roundtrip: score', tilbage?.score === 71, JSON.stringify(tilbage));
 ok('roundtrip: fundene i rækkefølge', JSON.stringify(tilbage?.findings) === JSON.stringify(RIGTIG.findings));
 ok('roundtrip: platform', tilbage?.platform === 'WordPress');
 ok('tællerne regnes fra fundene, ikke fra linket',
   tilbage?.errors === 2 && tilbage?.warnings === 1, JSON.stringify(tilbage));
+
+// Scoren skrives ikke i linket. Den *kunne* skrives — den var der før — men så
+// er den et tal afsenderen kan rette, og det er præcis det tal kortet hænger
+// sin overskrift på. Den udregnes i stedet af fundene, så formatet ikke kan
+// indeholde et tal der modsiger den liste der står under det.
+ok('encode skriver ingen score i linket', !/[;&]s=/.test(hash), hash);
+
+// Polaritet på selve fundet: et link der *påstår* 100/100 over ét error-fund må
+// ikke vise 100. Den gamle kode tog `s=` som det den var.
+const ljulet = S.decode('#u=https%3A%2F%2Fex.com;s=100;f=A:e:1');
+ok('et s= der lover 100/100 giver ikke 100', ljulet?.score === 88, JSON.stringify(ljulet));
+const nedtraet = S.decode('#u=https%3A%2F%2Fex.com;s=0;f=A:e:1');
+ok('et s= der siger 0 kan heller ikke sænke scoren', nedtraet?.score === 88, JSON.stringify(nedtraet));
+// `s=` er ikke længere et felt, så et link der stadig har et — de fleste links
+// i verden lige nu — giver et resultat, ikke en afvisning. Bogmærker må ikke dø
+// fordi vi flyttede et tal ud af dem.
+const gammeltFormat = S.decode('#u=https%3A%2F%2Fex.com;s=100;f=A:e:1;p=WordPress');
+ok('et gammelt link med s= giver stadig sit resultat',
+  gammeltFormat?.findings?.length === 1 && gammeltFormat?.errors === 1 && gammeltFormat?.score === 88,
+  JSON.stringify(gammeltFormat));
 
 // Et `;` i URL'en overlever. `encodeURIComponent` escaper det, så en codec der
 // afkoder hele fragmentet før den deler på `;` ville skære adressen i halv.
@@ -83,7 +108,6 @@ const DAARE = [
   ['#u=https%3A%2F%2Fexample.com;s=74;f=<img src=x>:e:1', 'markup som fund-id'],
   ['#u=javascript:alert(1);s=1;f=A:e:1', 'javascript-adresse'],
   ['#u=/scan-da;s=50;f=A:e:1', 'relativ adresse'],
-  ['#u=https%3A%2F%2Fex.com;s=abc;f=A:e:1', 'score der ikke er et tal'],
   ['#u=https%3A%2F%2Fex.com;s=74;f=' + Array.from({ length: 20 }, (_, i) => `A${i}:e:1`).join(','), 'for mange fund'],
   ['#u=https%3A%2F%2Fex.com%0AX-Injected:%201;s=74;f=A:e:1', 'linjeskift i adressen'],
   ['#u=https%3A%2F%2Fex.com;s=74;f=%3Cscript%3Ealert(1)%3C%2Fscript%3E:e:1', 'script som fund-id']
@@ -102,8 +126,9 @@ ok('markup som platform ødelægger ikke fundene', dumPlatform?.findings?.length
 
 // Encode må ikke producere noget den ikke selv kan læse.
 ok('encode af en url uden protokol giver intet', S.encode({ ...RIGTIG, url: 'example.com' }) === '');
-ok('encode uden fund giver intet', S.encode({ url: RIGTIG.url, score: 74, findings: [] }) === '');
-ok('encode uden score giver intet', S.encode({ ...RIGTIG, score: null }) === '');
+ok('encode uden fund giver intet', S.encode({ url: RIGTIG.url, score: 71, findings: [] }) === '');
+ok('encode uden score giver stadig et link, fordi scoren ikke rejser med',
+  /^#u=https%3A%2F%2F/.test(S.encode({ ...RIGTIG, score: null })), S.encode({ ...RIGTIG, score: null }));
 
 // ---------------------------------------------------------------------------
 // 2+3. Begge rigtige sider. En håndlavet DOM, så deres egen `render()` og
@@ -140,7 +165,7 @@ function udtraek(html) {
 
 // Det afsendte resultat: samme fund, så det kopierede link kan læses tilbage.
 const RIGTIG_TIL_SEND = {
-  url: RIGTIG.url, score: 74, errors: 2, warnings: 1, findings: RIGTIG.findings, platform: 'WordPress'
+  url: RIGTIG.url, score: 71, errors: 2, warnings: 1, findings: RIGTIG.findings, platform: 'WordPress'
 };
 
 const SIDER = [
@@ -163,13 +188,25 @@ async function proevSiden(side) {
   // Den gamle kode skrev «page has no <title>» direkte i innerHTML, så DOMParser
   // slugte `<title>` som et tag, og læseren så «page has no ». Punkt 2.
   ok(`${side.fil}: fund-teksten escapes`, /esc\(describe\(f\.id,f\.count\)\)/.test(blok));
+  // Scoren skal komme fra den delte codec. Før dette stod formlen i begge sider
+  // *og* i et `s=` i linket, så tre kopier af et tal, der på kortet står over
+  // listen af fund. Dommen dømmer begge: at siden bruger `SCANSHARE.scoreOf`,
+  // og at den ikke har sin egen formel mere.
+  ok(`${side.fil}: scoren kommer fra den delte codec`,
+    /window\.SCANSHARE\.scoreOf\(findings\)/.test(blok), 'ingen scoreOf i scriptet');
+  ok(`${side.fil}: siden har ikke sin egen scoreformel mere`,
+    !/Math\.max\(0,\s*100\s*-\s*errors\s*\*\s*12/.test(blok),
+    'formlen står stadig i scriptet');
 
   // Kør sidens egen render() og shareResult() på de bytes der faktisk ships.
   // Et *delt* resultat skal gengives uden et eneste netværkskald: modtageren
   // har ingen kvote at brænde, og siden kan være ændret siden. Dommen måler
   // adfærd — `fetch` tælles — fordi en regex over kilden ville være grøn for
   // en render-sti der alligevel kaldte scan().
-  const delt = dom('#u=' + encodeURIComponent(RIGTIG.url) + ';s=74;f='
+  // Et link i det gamle format, der *påstår* 100/100. Det er linket der kommer
+  // fra en håndredigeret besked — og før rettelsen malede kortet «100/100 —
+  // Grade A» over fundene nedenunder. Nu er der kun `f=` at regne på.
+  const delt = dom('#u=' + encodeURIComponent(RIGTIG.url) + ';s=100;f='
     + RIGTIG.findings.map((f) => `${f.id}:${f.sev === 'error' ? 'e' : 'w'}:${f.count}`).join(',')
     + ';p=WordPress');
   let kaldte = 0;
@@ -200,6 +237,7 @@ async function proevSiden(side) {
     ok(`${side.fil}: et delt resultat kalder ingen scanning`, false, 'ingen render() — ikke målt');
     ok(`${side.fil}: et delt resultat viser scannets adresse`, false, 'ingen render() — ikke målt');
     ok(`${side.fil}: et delt resultat siger det er et øjebliksbillede`, false, 'ingen render() — ikke målt');
+    ok(`${side.fil}: et delt resultat scorer fundene, ikke linkets s=`, false, 'ingen render() — ikke målt');
     ok(`${side.fil}: fundene gengives med antal`, false, 'ingen render() — ikke målt');
     ok(`${side.fil}: rettelsesteksten er med`, false, 'ingen render() — ikke målt');
     ok(`${side.fil}: platformens guide er med`, false, 'ingen render() — ikke målt');
@@ -219,6 +257,11 @@ async function proevSiden(side) {
   const ud = nodes.result?.innerHTML || '';
   ok(`${side.fil}: et delt resultat viser scannets adresse`, ud.includes('https://example.com/pris'), ud.slice(0, 300));
   ok(`${side.fil}: et delt resultat siger det er et øjebliksbillede`, ud.includes(side.note));
+  // 2 errors + 1 warning er pr. side egen formel 100 − 24 − 5 = 71, altså
+  // Grade C. Linket siger 100/100. Kortet skal vise 71 — ellers står der
+  // «Grade A» over en liste med fund i, og det er det review-fundet fandt.
+  ok(`${side.fil}: et delt resultat scorer fundene, ikke linkets s=`,
+    ud.includes('71/100 — Grade C') && !ud.includes('100/100'), ud.slice(0, 220));
   ok(`${side.fil}: fundene gengives med antal`, side.tal.every((t) => ud.includes(t)), side.tal.join(' | '));
   ok(`${side.fil}: rettelsesteksten er med`, ud.includes('alt='), ud.slice(0, 300));
   ok(`${side.fil}: platformens guide er med`, ud.includes('/guides/wordpress-accessibility-check'));

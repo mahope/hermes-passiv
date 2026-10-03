@@ -1345,7 +1345,8 @@ function mutated(path, from, to) {
       report: /href="\/compliance-report"/, form: 'script',
       async kør() {
         const { fetchImpl } = responses([OK_SCAN_PROXY]);
-        const { sandbox, nodes } = loadPage('site/scan.html', fetchImpl, { match: /scan-proxy/ });
+        const { sandbox, nodes } = loadPage('site/scan.html', fetchImpl,
+          { match: /scan-proxy/, preload: ['site/scan-share-core.js'] });
         await sandbox.scan('https://example.com');
         await sleep(30);
         const html = (nodes.get('result') || {}).innerHTML || '';
@@ -1357,7 +1358,8 @@ function mutated(path, from, to) {
       report: /href="\/da\/compliance-report"/, form: 'script',
       async kør() {
         const { fetchImpl } = responses([OK_SCAN_PROXY]);
-        const { sandbox, nodes } = loadPage('site/scan-da.html', fetchImpl, { match: /scan-proxy/ });
+        const { sandbox, nodes } = loadPage('site/scan-da.html', fetchImpl,
+          { match: /scan-proxy/, preload: ['site/scan-share-core.js'] });
         await sandbox.scan('https://example.com');
         await sleep(30);
         const html = (nodes.get('result') || {}).innerHTML || '';
@@ -2326,7 +2328,7 @@ async function scanFejlHtml(path, source) {
     body: { ok: false, error: `Target returned ${FIJLT} — not an HTML page. Only HTML pages can be scanned.` },
   }]);
   const { sandbox, nodes } = loadPage(path, fetchImpl, {
-    match: /scan-proxy/, ...(source ? { source } : {}),
+    match: /scan-proxy/, preload: ['site/scan-share-core.js'], ...(source ? { source } : {}),
   });
   await sandbox.scan('https://ondt.example/');
   await sleep(30);

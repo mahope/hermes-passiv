@@ -8,11 +8,21 @@
  * re-running the scan spends the *recipient's* rate limit rather than the
  * sender's, on a page that may well have changed since.
  *
- * Format: `#u=<encoded url>;s=<0-100>;p=<platform>;f=<ID>:<sev>:<count>,…`
- * e.g. `#u=https%3A%2F%2Fexample.com;s=74;p=WordPress;f=IMG_ALT:e:4,CONTRAST:e:1`
+ * Format: `#u=<encoded url>;p=<platform>;f=<ID>:<sev>:<count>,…`
+ * e.g. `#u=https%3A%2F%2Fexample.com;p=WordPress;f=IMG_ALT:e:4,CONTRAST:e:1`
  * The severity letter and the count are all that travel per finding: the prose
  * and the fix are looked up in the page's own `FIX` table, so a hand-edited link
  * can change a number but can never put its own words on mahope.tools.
+ *
+ * The score does *not* travel in the link, and that is the whole point of it.
+ * It used to: `#u=…;s=100;f=IMG_ALT:e:1` painted «100/100 — Grade A» directly
+ * above a list with an error in it, because `decode()` took `s=` at face value
+ * while the two counts next to it were recomputed from the findings. So the
+ * scorecard could contradict its own list, and the only thing that could change
+ * it was the sender's typing. The score is fully derivable from `f=` — nothing
+ * else travels — so it is derived here, by the same `scoreOf()` the two pages
+ * call for a fresh scan. Old links with `s=` still open: the key is unknown
+ * now, so it is dropped like any other, and the score comes out honest.
  *
  * Both language versions of the page read and write it from here, so the two
  * copies cannot drift the way the inline /net.js copies did (see net.js for that
@@ -29,8 +39,8 @@
  *      the address in half.
  *   3. Only the known fields, each validated: a finding id is `[A-Z][A-Z0-9_]*`
  *      up to 24 characters, severity is one of two letters, a count is 1–9999,
- *      the score is 0–100, at most 16 findings. Unknown keys are dropped, so a
- *      link from a future version degrades to the part it shares.
+ *      at most 16 findings. Unknown keys are dropped, so a link from a future
+ *      version degrades to the part it shares.
  *   4. It never invents a result. A fragment with no readable `f=` is not an
  *      audit with zero findings — the page can honestly say "no issues found",
  *      but only about a scan it actually ran — so `f=` is required and an
@@ -45,13 +55,21 @@
   var SEV = { e: 'error', w: 'warning' };
   var SEV_BACK = { error: 'e', warning: 'w' };
 
-  function clampInt(raw, lo, hi) {
-    if (typeof raw !== 'string' && typeof raw !== 'number') return null;
-    var s = String(raw).trim();
-    if (!/^\d{1,6}$/.test(s)) return null;
-    var n = parseInt(s, 10);
-    if (isNaN(n)) return null;
-    return Math.max(lo, Math.min(hi, n));
+  // The page's own scoring formula, in one place, because it has three callers:
+  // `/scan` and `/scan-da` both print the number for a fresh scan, and this file
+  // prints the number for a shared one. Three copies of a scoring formula is how
+  // a scorecard ends up saying «100/100 — Grade A» above a list of findings —
+  // before this, each copy was free to disagree with the other two.
+  var WEIGHT = { error: 12, warning: 5, notice: 2 };
+
+  function scoreOf(findings) {
+    if (!Array.isArray(findings)) return 0;
+    var score = 100;
+    for (var i = 0; i < findings.length; i++) {
+      var sev = String((findings[i] || {}).sev || '').toLowerCase();
+      score -= WEIGHT[sev] || 0;
+    }
+    return Math.max(0, Math.min(100, score));
   }
 
   // Et antal *fund* er 1–9999. Nul er ikke et fund, det er en mangel på et, så
@@ -129,15 +147,17 @@
     if (!url) return null;
     var findings = parseFindings(kv.f);
     if (!findings) return null;
-    var score = clampInt(kv.s, 0, 100);
-    if (score === null) return null;
 
+    // The score is computed, never read. `s=` is not a field any more: a
+    // hand-edited link can no longer claim «Grade A» above findings it did not
+    // earn, and an old link that still carries one is not rejected for it.
     return {
       url: url,
-      score: score,
+      score: scoreOf(findings),
       findings: findings,
-      // The two counts are recomputed from the findings themselves, not read from
-      // the link, so the scorecard's numbers cannot contradict its own list.
+      // The counts come out of the findings too, for the same reason: the two
+      // numbers on the card, the score above them and the list under them are
+      // now all one calculation, so they cannot contradict each other.
       errors: findings.filter(function (f) { return f.sev === 'error'; }).length,
       warnings: findings.filter(function (f) { return f.sev === 'warning'; }).length,
       platform: normalizePlatform(kv.p)
@@ -148,8 +168,7 @@
     if (!state) return '';
     var url = normalizeUrl(state.url);
     var findings = Array.isArray(state.findings) ? state.findings : [];
-    var score = clampInt(state && state.score, 0, 100);
-    if (!url || !findings.length || score === null) return '';
+    if (!url || !findings.length) return '';
 
     var list = [];
     for (var i = 0; i < findings.length && i < MAX_FINDINGS; i++) {
@@ -162,7 +181,7 @@
     }
     if (!list.length) return '';
 
-    var parts = ['u=' + encodeURIComponent(url), 's=' + score, 'f=' + list.join(',')];
+    var parts = ['u=' + encodeURIComponent(url), 'f=' + list.join(',')];
     var p = normalizePlatform(state.platform);
     if (p) parts.push('p=' + p);
     return '#' + parts.join(';');
@@ -171,5 +190,6 @@
   global.SCANSHARE = global.SCANSHARE || {};
   global.SCANSHARE.decode = decode;
   global.SCANSHARE.encode = encode;
+  global.SCANSHARE.scoreOf = scoreOf;
   global.SCANSHARE.MAX_FINDINGS = MAX_FINDINGS;
 })(typeof window !== 'undefined' ? window : globalThis);
