@@ -1,5 +1,13 @@
 # STATUS
 # STATUS
+- **3/10: tak-sidens `?lang=` kan ikke læse prototypen.** Fund fra review 29/9
+  (`review/mahope-tools.md`), rettet som punkt 0. `STRINGS[valgt]` er sandt for
+  `toString`, `constructor`, `__proto__` m.fl., så `T` blev en funktion og
+  *hvert* `T.nøgle`-opslag gav «undefined» i `<html lang>`, fanebladet,
+  nav-arketiketten og bundteksten. Nu egen-ejendoms-prøve — samme idiom som
+  `platformBox()` i `scan.html`. `thanks-page.test.mjs` **196/196** og
+  **8 røde** mod koden fra før. Målt i Chromium 1243 mod den byggede side:
+  prototype-nøgler → `lang="en"`, `?lang=da` → `lang="da"`, 0 «undefined».
 - **3/10: `/thanks` kan nu tale dansk.** Stripe sender alle kunder til samme URL
   lige efter betalingen, så siden vælger sit sprog selv (`navigator.language`,
   `?lang=` som håndgreb). Én `STRINGS`-tabel, `en` + `da`, 45 ens nøgler — h1,
@@ -27,10 +35,18 @@
 
 ## Verificér deploy
 
-- `ceo/scan-hvad-er-aendret` **VERIFICÉR DEPLOY: ceo/scan-hvad-er-aendret2026-10-03 12:15.**
-  Tjek på live: `/scan` og `/scan-da` med to scanninger af samme adresse viser
-  «Since your last scan of this page» / «Siden din sidste scanning af denne
-  side», og en side med fire fund har «Start her» over listen.
+- `ceo/tak-side-sprognoegle` **VERIFICÉR DEPLOY: ceo/tak-side-sprognoegle 2026-10-03 12:55.**
+  Tjek på live: `/thanks?session_id=…&lang=constructor` (eller `toString`,
+  `__proto__`) skal give **engelsk** og 0 «undefined» i DOM'en — altså samme
+  som URL'en uden `?lang=`. `?lang=da` skal stadig give dansk.
+
+- ~~`ceo/scan-hvad-er-aendret`~~ **DEPLOY OK 3/10.** Hentet fra live:
+  `mahope.tools/scan` har «Start here — the 3 findings that matter most» og
+  «Since your last scan of this page», `mahope.tools/scan-da` har «Start her —
+  de 3 fund der betyder mest» og «Siden din sidste scanning af denne side».
+  *Ikke* kørt: den to-scaning-interaktion i en rigtig browser (localStorage).
+  Indholdet i de to byggede sider er målt på live, og det er den kode der
+  tegner begge strenge.
 
 - ~~`ceo/scan-score-af-fundene`~~ **DEPLOY OK 3/10.** Live `/scan` med et link
   der siger `s=100`: **«71/100 — Grade C»** + «2 error(s), 1 warning(s)»,

@@ -200,9 +200,16 @@
       // dato og tal, så det er den ærlige kilde; `?lang=` er kun en håndgreb
       // til den kunde der vil se den anden sprogversion, og den slår aldrig en
       // streng uden for tabellen — den læses som nøgle, ikke som markup.
+      // Egen-ejendoms-prøven er ikke pedanteri: `STRINGS` er et objektliteral,
+      // så prototypen ligger i opslaget selv om den ikke står i tabellen, og
+      // `?lang=constructor` (eller `toString`, `__proto__` …) gav derfor `T` som
+      // en funktion — hvorefter *hvert* `T.nøgle`-opslag på siden gav
+      // «undefined» i `<html lang>`, fanebladet, nav-arketiketten og bundteksten.
+      // Målt 3/10 i Chromium mod den byggede side. Det er samme idiom som
+      // `platformBox()` to hundrede linjer længere nede i `scan.html`.
       function sprog() {
         var valgt = new URLSearchParams(location.search).get('lang');
-        if (valgt && STRINGS[valgt]) return valgt;
+        if (valgt && Object.prototype.hasOwnProperty.call(STRINGS, valgt)) return valgt;
         var lang = String(navigator.language || 'en');
         return /^da\b/i.test(lang) ? 'da' : 'en';
       }

@@ -89,7 +89,9 @@ const STATISK_TITLE = (/<title>([^<]*)<\/title>/.exec(pageHtml) || [null, ''])[1
 // `lang` er `navigator.language` i den falske browser — `da-DK` er den
 // danske kunde, `en-US` er alle andre. Det er hele pointen med opgaven:
 // Stripe sender dem begge til den *samme* URL.
-async function render(payload, steps, lang = 'en-US') {
+// `hængt` lægges på query-strengen, så dommen kan sætte `?lang=` — det er den
+// håndgreb, porten skal dømme, og den skal kunne sætte den *på rigtige filer*.
+async function render(payload, steps, lang = 'en-US', hængt = '') {
   const seen = [];
   const els = {
     title: { textContent: '' }, status: { _v: '', className: 'hint' },
@@ -147,7 +149,7 @@ async function render(payload, steps, lang = 'en-US') {
         : sel === '[data-t-html]' ? medNøgle : []),
       querySelector: (sel) => (sel === '[data-t-aria]' ? find(ariaNøgle) : null),
     },
-    location: { search: '?session_id=cs_live_abcdefghij1234567890' },
+    location: { search: '?session_id=cs_live_abcdefghij1234567890' + hængt },
     navigator: { language: lang, clipboard: { writeText: () => Promise.resolve() } },
     URLSearchParams,
     setTimeout: (fn) => setTimeout(fn, 0),
@@ -566,6 +568,38 @@ ok('dansk browser får dansk h1 og kvitteringstekst',
   ok('sproghåndgrebet kan ikke finde en sprogstreng uden for tabellen',
     (await render(null, [{ status: 400, body: { error: 'x' } }], 'xx-YY')).docLang === 'en',
     'navigator.language=xx-YY');
+  // Positive kontrol først: `?lang=` skal *kunne* vælge sprog, ellers er de
+  // domme under den grønne fordi siden ignorerer query'en helt. Den virker, så
+  // de skal dømmes på den adrætte greb — ikke på et kryds af hændgrebet.
+  for (const [q, browser, vil] of [['&lang=da', 'en-US', 'da'], ['&lang=en', 'da-DK', 'en']]) {
+    const p = await render(null, [{ status: 400, body: { error: 'x' } }], browser, q);
+    ok(`?lang=${q.slice(5)} vælger sprog på en ${browser}-browser`, p.docLang === vil,
+      `${q} browser=${browser} → ${p.docLang}, vil ${vil}`);
+  }
+  // `STRINGS` er et objektliteral, så prototypen ligger i opslaget selv om den
+  // ikke står i tabellen: `STRINGS['toString']`, `['constructor']`, `['__proto__']`
+  // er alle sande. Så blev `T` en funktion, og *hvert* `T.nøgle`-opslag på
+  // siden gav `undefined` — i `<html lang>`, fanebladet, nav-arketiketten og
+  // bundteksten. Målt 3/10 i Chromium mod den byggede side: `?lang=toString`
+  // gav `<html lang="undefined">` og fire «undefined» i DOM'en. Dommen kører på
+  // den *danske* browser, så prototype-adgangen er målbar: en håndgreb der
+  // lækkede ville sætte docLang til `undefined` og ikke `da`.
+  for (const nøgle of ['toString', 'constructor', '__proto__', 'valueOf',
+    'hasOwnProperty', 'toLocaleString', 'isPrototypeOf', 'propertyIsEnumerable']) {
+    const p = await render(null, [{ status: 400, body: { error: 'x' } }], 'da-DK', '&lang=' + nøgle);
+    const h1 = p.title.textContent;
+    const bund = p.find('next').innerHTML;
+    ok(`?lang=${nøgle} er ikke en sprogstreng, så siden falder tilbage på browseren`,
+      p.docLang === 'da' && !/undefined/.test(p.docTitle + h1 + bund),
+      `docLang=${p.docLang} title=${JSON.stringify(p.docTitle)} h1=${JSON.stringify(h1)} `
+      + `next=${JSON.stringify(String(bund).slice(0, 60))}`);
+  }
+  // Samme krav for de nøgler der *er* i tabellen, så en efterfølgende rettelse
+  // ikke kan lukke porten ved at lade håndgrebet ignorere alt.
+  for (const [nøgle, vil] of [['da', 'da'], ['en', 'en']]) {
+    const p = await render(null, [{ status: 400, body: { error: 'x' } }], 'xx-YY', '&lang=' + nøgle);
+    ok(`?lang=${nøgle} giver stadig ${vil}`, p.docLang === vil, `docLang=${p.docLang}`);
+  }
 }
 ok('engelsk browser får engelsk h1 og kvitteringstekst',
   engelsk.title.textContent === 'Thanks for buying EUComply Pro!' && /Your license key/.test(engelsk.result.innerHTML),
