@@ -6338,3 +6338,9 @@ være en arbejdskø. Målt i de enkelte opgaver — se de afsnit ovenfor i arkiv
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
+
+- **3/10 — `ceo/foer-til-nu`.** Kontrasttjekkerens to rettelsesveje skrev
+  «…and measured again» uden at nævne hvad de målte *før*. Nu står
+  «Før dette målte den X. Nu måler den Y.» på alle fire sider, målt med samme
+  `sampleContrast()` som tallet på skærmen. `check_contrast_sampling` 96 løfter
+  (var 72), `--self-test` 88/88 med tre mutationer.

@@ -318,9 +318,16 @@
     // sløret til det, der passerer, og lader så `updateAll()` genmåle — så det
     // der vises bagefter er en *ny måling* af det samme billede, ikke et løfte
     // om at et bedre tal ville komme.
-    function applyFix(fix) {
+    function applyFix(fix, foer) {
       if (!fix) return false;
+      // `foer` er tallet `updateResult()` **lige målte** og skrev på skærmen —
+      // ikke en ny måling her. Det er den ene værdi der er rigtig: bruteren
+      // trykkede på et tal, og «før» skal være præcis det tal. En måling for
+      // anden gang ville være en anden værdi, hvis bare canvas imellem de to
+      // kald er blevet ryddet — `sampleContrast()` efterlader den præcis sådan,
+      // med bogstaverne på en tom flade.
       lastFix = fix;
+      lastFix.before = typeof foer === 'number' ? foer : null;
       if (fix.kind === 'scrim') {
         scrim = { hex: fix.scrim, alpha: fix.alpha };
         $('fg').value = fix.hex;
@@ -422,6 +429,28 @@
       // Præfikset gælder kun id'erne — dem skal to forekomster på samme side
       // kunne have hver sin.
       res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
+      // Før → nu. Kappen ovenfor siger hvad tallet *er*; dette siger hvad det
+      // *var*, målt med den samme `sampleContrast()`. Det er det tal en læser
+      // skal kunne tage med: uden det er «PASS 3,04:1» en påstand uden
+      // bevis, og bruteren ved ikke om rettelsen gjorde forskel.
+      //
+      // To regler, begge nødvendige for at linjen ikke lyver:
+      //   1. kun når der *er* målt før — uden før-tal er der intet at sammenligne
+      //      med, og en mangel på `before` betyder at kernen ikke kan svare på
+      //      spørgsmålet, ikke at svaret er «0:1 → 3,04:1».
+      //   2. kun når tallet faktisk flyttede sig. «3,04:1 før, 3,04:1 nu» er
+      //      støjende oplysninger om at tallet er det samme — og det er
+      //      præcis tilfældet når «Find det bedste sted» konkluderer at
+      //      bruterens egen pladsering allerede var den bedste.
+      var foerTal = lastFix && lastFix.before !== null && lastFix.before !== undefined
+        ? lastFix.before : null;
+      var delta = '';
+      if (foerTal !== null && Math.abs(r - foerTal) > 0.005 && s.delta) {
+        var foerTekst = fmt(foerTal.toFixed(2));
+        var nuTekst = fmt(r.toFixed(2));
+        delta = '<br><span class="ti-delta" data-ti-delta="' + foerTekst + '|' + nuTekst + '">'
+          + s.delta.replace('%s', foerTekst).replace('%s', nuTekst) + '</span>';
+      }
       // Alt der kommer fra brugeren (`r`) er et tal, ikke markup, og alt
       // `s.*` er sidens egen tekst fra den side den ligger på. Ingenting her
       // bygger en streng af noget en besøgende kan skrive. Knappen bruges
@@ -443,6 +472,9 @@
          passAAA ? '<br>' + (s.alsoAAA || '') :
           '<br>' + (s.tryFix || '')) +
         (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
+        // Før → nu står *før* beskrivelsen af hvad kernen gjorde: tallet er
+        // beviset, og `.ti-fixed` er så den Grund det står der.
+        delta +
         // `data-ti-moved` er ikke pynt: det er den ene ting porten skal kunne
         // dømme om flytningen, fordi *hvilken* sætning kernen vælger afhænger
         // af den. Ordene er sidens egen tekst på to sprog, så de kan ikke være
@@ -463,17 +495,23 @@
       // `innerHTML` — og den her knap forsvinder, fordi den nye måling
       // består, så der ikke kan opstå et uendeligt klik-loop.
       var btn = res.querySelector('[data-ti-fix]');
-      if (btn) btn.addEventListener('click', function () { applyFix(fix); });
+      // `r` er tallet fra denne måling — det der stod på skærmen da
+      // bruteren trykkede. Samme værdi som står i `data-ti-delta`s første
+      // halvdel, så de to kan ikke komme i ukig.
+      if (btn) btn.addEventListener('click', function () { applyFix(fix, r); });
       var dl = res.querySelector('[data-ti-dl]');
       if (dl) dl.addEventListener('click', downloadPng);
       var spot = res.querySelector('[data-ti-spot]');
       if (spot) spot.addEventListener('click', function () {
+        // Samme værdi som i `applyFix()`-kaldet: tallet fra denne måling.
+        // `findSpot()` flytter `tx`/`ty` undervejs, så måles der efter kaldet
+        // står `tx`/`ty` altid ved det bedste sted, og «før» ville være «nu».
         var spot2 = findSpot();
         if (!spot2) return;
         // Samme slags som `applyFix()`: beskrivelsen af kernens egen indgreb
         // hører til den pladsering den lagde, så `onMove()` nulstiller den igen
         // så snart bruteren selv rører teksten.
-        lastFix = { kind: 'spot', ratio: spot2.ratio, rykket: spot2.rykket };
+        lastFix = { kind: 'spot', ratio: spot2.ratio, rykket: spot2.rykket, before: r };
         updateAll();
       });
     }

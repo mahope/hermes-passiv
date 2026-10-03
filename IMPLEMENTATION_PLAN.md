@@ -1,4 +1,17 @@
 # STATUS
+- **3/10: rettelsen sagde hvad den havde rettet — næppe.** Efter «Fix it»
+  skrev værktøjet «I put a 24 % dark layer behind the text and measured
+  again» og viste **kun** det nye tal. Hvad rettelsen havde vundet, var væk:
+  bruteren så 1,16:1 og så 4,72:1, og intet stod at de to hørte sammen. Der
+  står nu **«Før dette målte den 1,16. Nu måler den 4,72.»** på begge veje —
+  «Fix it» *og* «Find det bedste sted» — på alle fire sider, og den forsvinder
+  i samme øjeblik bruteren selv rører farve, font, pladsering eller billede,
+  samme nulstilling som sløret og `lastFix`.
+  `check_contrast_sampling` **96 løfter** (var 72), `--self-test` **88/88**
+  med tre mutationer af rigtige filer.
+- **Målt 3/10 i browseren:** «1,16:1 → 4,72:1» i `#result` på
+  `/text-on-image-checker` og på artiklen, 0 px vandret scroll ved 390 og
+  1280 px, dansk side giver komma.
 - **3/10: værktøjet sagde «målt på dine bogstaver» om et billede det selv havde
   tegnet.** Kontrasttjekkeren maler sit eget eksempelbillede ind ved sidevisning
   og måler på det med det samme, så en læser der ikke har uploadet noget fik
@@ -26,6 +39,14 @@
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `ceo/foer-til-nu` **VERIFICÉR DEPLOY: ceo/foer-til-nu 2026-10-03 15:0x.**
+  Live `https://mahope.tools/text-on-image-checker`: upload et todelt billede,
+  læg hvid tekst på den lyse halvdel, tryk «Fix it» → `#result` skal have præcis
+  ét `data-ti-delta="…|…"` hvor **første** tal er det der stod *før* trykket og
+  andet er det på skærmen nu, på **begge** sprog (dansk med komma). Efter at
+  bruteren selv rører farvefeltet skal attributtet væk. Samme på
+  `/text-on-image-checker-da` og de to artikler.
 
 - `ceo/demo-billede-er-ikke-dit` **VERIFICÉR DEPLOY: ceo/demo-billede-er-ikke-dit
   2026-10-03 13:2x.** Live `https://mahope.tools/text-on-image-checker` skal
@@ -446,6 +467,16 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     danske ikke kan få sin egen kopi og drive fra den engelske. Datagrund:
     målt på koden, ikke gættet — `shareResult()` kopierede
     `location.origin+'/scan#url='+…` og ingenting else.
+29. **~~Rettelsen sagde hvad den rettede.~~** **Leveret 3/10.** Se punkt 2 i
+    STATUS. Hvem: designere der lægger en overskrift på et todelt foto — den
+    største indgangsside på sitet. Tal: resultater der får en målt forskel
+    (baseline **0 af 4** sider; kernen skrev «…and measured again» uden at
+    nævne hvad den målte førhen — målt på koden 3/10). Accept: ét
+    `data-ti-delta` pr. rettelse på begge veje ind i kernen, hvis før-tal er det
+    der stod på skærmen da knappen blev trykket, og linjen væk når bruteren selv
+    griber ind. Datagrund: Plausible 28 d — artiklen er 8 af 18 besøgende med
+    100 % bounce, og bruterens spørgsmål efter en rettelse er «virker det?», som
+    et nyt tal uden en forskel ikke svarer på.
 27. ~~**En fund-liste uden «start her» og uden forskel.**~~ **Leveret 3/10.**
     Se punkt 2 i STATUS. Hvem: bureauer og webbureauer der har rettet fundene
     siden sidste scanning — de vidste ikke, om det virkede, fordi et nyt tal

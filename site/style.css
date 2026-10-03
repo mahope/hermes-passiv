@@ -669,6 +669,11 @@ select.ti-input { max-width: 180px; }
 /* Tredje handling i resultatet («Find det bedste sted»): samme 44 px som de
    to andre, fordi den er lige så meget en fingertryk-handling. */
 .ti-spot { min-height: 44px; display: inline-flex; align-items: center; }
+/* «Før dette målte den … nu måler den …». Den er beviset på at kernens egen
+   rettelse gjorde forskel, så den skal kunne ses som et tal og ikke læses som
+   en fodnote — derfor fuld styrke i stedet for den muted `.ti-fixed` har, og
+   kun `tabular-nums` så tallene ikke flytter sig når de opdateres. */
+.ti-delta { font-size: .9rem; color: var(--color-text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ti-fixed { font-size: .85rem; color: var(--color-text-muted); }
 /* Noten der siger at tallet kommer fra kernens eget eksempelbillede. Den
    ligger *før* PASS/FAIL-kappen, så den skal kunne ses uden at læse resten,

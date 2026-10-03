@@ -746,6 +746,23 @@ function spotLaes() {
     // på to sprog — den skal kunne se *sandheden*, ikke ordene.
     flyttet: flyttet ? flyttet[1] : null,
     harSpot: !!res.querySelector('[data-ti-spot]'),
+    delta: deltaAttribut(),
+  };
+}
+// Før/nu-linjen læses samme sted som resten: fra `innerHTML`, aldrig fra en
+// variabel i kernen — ellers dømmer porten kernens egen hensigt i stedet for
+// det læseren faktisk ser.
+function deltaAttribut() {
+  const h = nodes['result'].innerHTML || '';
+  const d = /data-ti-delta="([^"]*)"/.exec(h);
+  const s = /<span class="ti-delta"[^>]*>([\s\S]*?)<\/span>/.exec(h);
+  const dele = d ? d[1].split('|') : [];
+  const num = (v) => parseFloat(String(v).replace(',', '.'));
+  return {
+    harDelta: !!d,
+    foer: dele.length === 2 && !isNaN(num(dele[0])) ? num(dele[0]) : null,
+    nu: dele.length === 2 && !isNaN(num(dele[1])) ? num(dele[1]) : null,
+    tekst: s ? s[1].replace(/<[^>]*>/g, '') : '',
   };
 }
 function spotMaal() {
@@ -769,6 +786,55 @@ function spotMaal() {
   return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
 }
 const spotMaalt = spotMaal();
+
+/* ---- Før → nu: beviset på at kernens egen rettelse gjorde forskel -----
+ *
+ * Efter «Fix it» sagde værktøjet «I put a 24 % dark layer behind the text and
+ * measured again» og så **kun** det nye tal. Hvad rettelsen havde vundet, var
+ * væk — bruteren havde set 1,16:1 og så 3,04:1, men intet sted stod at de to
+ * hørte sammen. Det er præcis den fejlform scannerens «siden din sidste
+ * scanning» blev bygget for (40f24d0): et nyt tal uden en forskel svarer ikke på
+ * «virkede det?». Og for en læser der skal tage tallet videre til sin kunde er
+ * *forskellen* det interessante tal, ikke det nye.
+ *
+ * To kæder, fordi de to veje ind i kernen er to forskellige indgreb:
+ *   1. «Fix it» — kernen lægger et slør eller skifter tekstfarven
+ *   2. «Find det bedste sted» — kernen flytter teksten
+ * Begge skal skrive begge tal, og begge skal tie når bruteren selv griber ind.
+ *
+ * Læst som tal (`data-ti-delta="a|b"`), ikke som tekst: dommen skal kunne se
+ * *sandheden*, og en dansk læser skal ikke kunne få den engelske sætning. */
+function deltaLaes() {
+  const res = nodes['result'];
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+  return {
+    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+    delta: deltaAttribut(),
+  };
+}
+function deltaMaal() {
+  // Samme foto som spot-kæden bruger (todelt mørk→lys), fordi det er den
+  // eneste der både fejler *og* kan rettes: hvid tekst på den lyse halvdel er
+  // ca. 1,1:1 mod kravet 4,5:1, og intet tekstfarve består begge ende af et
+  // todelt billede — så rettelsen bliver et slør, og tallet flytter sig.
+  uploadBillede(todeltVandret(400, 300, '#161a22', '#ebeef2'));
+  nodes['fg'].value = '#ffffff'; nodes['fg'].fire('input');
+  nodes['text'].value = 'Dette er en overskrift'; nodes['text'].fire('input');
+  nodes['fontsize'].value = 'small'; nodes['fontsize'].fire('change');
+  nodes['cv'].fire('mousedown', { clientX: 340, clientY: 260, preventDefault: function () {} });
+  const foer = deltaLaes();
+  const knap = nodes['result'].querySelector('[data-ti-fix]');
+  if (!knap) return { harKnap: false, foer: foer };
+  knap.click();
+  const efter = deltaLaes();
+  // Bruteren tager over selv: han rører farvefeltet, og både beskrivelsen og
+  // før/nu-linjen skal væk — ellers står «før 1,16:1» under et tal der ikke
+  // længere stammer fra den pladsering kernen lagde.
+  nodes['fg'].value = '#ffff00'; nodes['fg'].fire('input');
+  const rykket = deltaLaes();
+  return { harKnap: true, foer: foer, efter: efter, rykket: rykket };
+}
+const deltaMaalt = deltaMaal();
 
 // Demo-noten igen *efter* at bruteren har valgt sit eget billede. Det er den
 // anden halvdel af dommen: noten skal forsvinde, fordi «measured against the
@@ -794,6 +860,7 @@ console.log(JSON.stringify({
   },
   download: dlMaal,
   spot: spotMaalt,
+  delta: { fix: deltaMaalt },
 }));
 """
 
@@ -1111,6 +1178,98 @@ def dom_spot(sp: dict | None) -> list[str]:
         fund.append("find-spot: beskrivelsen står stadig under et tal, efter at "
                     "bruteren selv har flyttet teksten — den taler om kernens "
                     "egen flytning og ikke om det han nu ser")
+    return fund
+
+
+def dom_delta(fil: str, d: dict | None) -> list[str]:
+    """Døm at rettelsen siger *hvad den rettede*.
+
+    Efter «Fix it» sagde værktøjet «I put a 24 % dark layer behind the text and
+    measured again» og viste **kun** det nye tal. Hvad rettelsen havde vundet,
+    var væk: bruteren så 1,16:1 og så 3,04:1, men intet stod at de to hørte
+    sammen. Det er samme fejlform som scannerens «siden din sidste scanning» var
+    løst med 3/10 (`40f24d0`) — et nyt tal uden en forskel svarer ikke på
+    «virkede det?». Og for en læser der skal tage tallet videre til sin kunde er
+    *forskellen* det interessante tal, ikke det nye.
+
+    To kæder, fordi kernen har to forskellige indgreb — «Fix it» lægger et slør
+    eller skifter farven, «Find det bedste sted» flytter teksten — og de to kan
+    glemme hver deres. Fire løfter pr. kæde, og de er fire *forskellige*
+    fejlformer:
+
+    1. **Der står en linje.** Ellers er hele dommen grøn fordi den intet læser.
+    2. **Før-tallet er tallet der stod.** Ellers er linjen en dif på to målinger
+       af to forskellige ting — punkt 11.
+    3. **Nu-tallet er tallet på skærmen.** Ellers lover linjen et tal bruteren
+       ikke kan finde, og de to støder sammen når han læser dem.
+    4. **Linjen væk, når bruteren selv griber ind.** Ellers står «før 1,16:1»
+       under et tal der stammer fra en pladsering kernen ikke valgte — samme
+       fejl som `.ti-fixed` havde ved billedskift.
+    5. **Sætningen er sidens *egen* og nævner begge tal.** Attributtet er kun
+       til for dommen; det læseren læser er `tekst`. En dansk læser må ikke få
+       den engelske sætning, og en sætning der kun har ét af de to tal er en
+       halv påstand (punkt 11).
+    """
+    egen = re.search(r"delta:\s*'([^']*)'", (SITE / fil).read_text(encoding="utf-8"))
+    fund: list[str] = []
+    if not d:
+        return ["foer-nu: harnessen leverede ingen rettelseskæde at dømme"]
+    for navn, k in (("fix", d.get("fix") or {}), ("find-spot", d.get("spot") or {})):
+        if not k.get("harKnap"):
+            fund.append(f"foer-nu/{navn}: ingen knap at trykke på, så dommen "
+                        "kan ikke se om kernen skriver hvad den rettede")
+            continue
+        foer = k.get("foer") or {}
+        efter = k.get("efter") or {}
+        rykket = k.get("rykket") or {}
+        dlt = efter.get("delta") or {}
+        if not dlt.get("harDelta"):
+            fund.append(f"foer-nu/{navn}: kernens rettelse giver intet nyt tal at "
+                        "sammenligne med — bruteren ser kun resultatet og kan "
+                        "aldrig vide om rettelsen overhovedet hjalp")
+            continue
+        a, b = foer.get("fik"), dlt.get("foer")
+        if a is None or b is None:
+            fund.append(f"foer-nu/{navn}: der står intet forholdstal hverken før "
+                        "trykket eller i før/nu-linjen, så de to kan ikke sammenlignes")
+        elif abs(a - b) > TOLERANS:
+            fund.append(f"foer-nu/{navn}: linjen siger at tallet var {b:.2f}:1 "
+                        f"før, men skærmen stod med {a:.2f}:1 — den beskriver en "
+                        "anden måling end den bruteren så")
+        c = dlt.get("nu")
+        if c is None or efter.get("fik") is None:
+            fund.append(f"foer-nu/{navn}: før/nu-linjen mangler tallet for «nu», "
+                        "så den ikke kan læses sammen med kappen over sig")
+        elif abs(c - efter["fik"]) > TOLERANS:
+            fund.append(f"foer-nu/{navn}: linjen siger at tallet nu er {c:.2f}:1, "
+                        f"men skærmen viser {efter['fik']:.2f}:1")
+        if rykket.get("delta", {}).get("harDelta"):
+            fund.append(f"foer-nu/{navn}: før/nu-linjen står stadig under et tal, "
+                        "efter at bruteren selv har rørt farve eller pladsering — "
+                        "den taler om kernens indgreb og ikke om det han nu ser")
+        # Sætningen læseren læser, ikke attributtet dommen læser. Begge tal skal
+        # stå i den — ellers er den kun halv så lang som det den fortæller.
+        # Både punktum og komma accepteres, fordi den danske side bruger komma —
+        # samme greb som resten af porten. Det dømmes er *hvilken sætning* der
+        # står, ikke hvilken decimaltegn den bruger.
+        sæt = dlt.get("tekst") or ""
+        # De to domme er uafhængige, så en sætning der kun nævner ét tal kan
+        # findes uden at den samtidig er en fremmed sætning — ellers lå den
+        # anden fejl som en skygge under den første og var aldrig målbar.
+        for tal, hvilket in ((b, "før"), (c, "nu")):
+            if not sæt or tal is None:
+                continue
+            hvis = f"{tal:.2f}"
+            if hvis not in sæt and hvis.replace(".", ",") not in sæt:
+                fund.append(f"foer-nu/{navn}: sætningen nævner ikke tallet for "
+                            f"«{hvilket}» ({hvis}:1), så læseren skal regne det "
+                            "selv sammen")
+        varianter = [egen.group(1) % tuple(x.replace(".", s)
+                                          for x in (f"{b:.2f}", f"{c:.2f}"))
+                     for s in (".", ",")] if (egen and b is not None and c is not None) else []
+        if sæt and varianter and sæt not in varianter:
+            fund.append(f"foer-nu/{navn}: før/nu-linjen er ikke sidens egen "
+                        f"`delta`-tekst ({sæt!r})")
     return fund
 
 
@@ -1511,6 +1670,99 @@ def self_test() -> int:
     tjek("find-spot-dommen kan se en kæde, der slet ikke blev leveret",
          bool(dom_spot(None)), "harnessen gav intet")
 
+    # 12: «før → nu». Fem løfter pr. indgreb, og de skal hver især kunne gå rød.
+    def delta_kæder(k: str):
+        s = koer(k, hele=True) or {}
+        return {"fix": (s.get("delta") or {}).get("fix"), "spot": s.get("spot")}
+
+    dk = delta_kæder(kode)
+    tjek("før/nu-kæden leverer begge indgreb",
+         bool(dk.get("fix")) and bool(dk.get("spot")), str(dk)[:200])
+    for navn in ("fix", "find-spot"):
+        tjek(f"før/nu-dommen er grøn på {navn}-indgrebet",
+             not dom_delta("text-on-image-checker.html", dk), "; ".join(dom_delta("text-on-image-checker.html", dk)))
+    # Mutation 1: attributtet forsvinder — linjen er skrevet, men uden den
+    # ene ting porten kan læse sandheden af.
+    tjek("mutationen findes i koden: data-ti-delta", " data-ti-delta=\\\"" in kode or "data-ti-delta" in kode)
+    d_uden = dom_delta("text-on-image-checker.html",
+                       delta_kæder(kode.replace(" data-ti-delta=", " data-ti-deltax=", 1)))
+    tjek("før/nu-dommen kan se en linje uden de to tal",
+         any("intet nyt tal at sammenligne" in f for f in d_uden), str(d_uden)[:300])
+    # Mutation 2: kernen skriver *efter*-tallet i begge halvdele. Den ser
+    # plausibel ud — «3,04:1 før, 3,04:1 nu» — men «før» er så et tal bruteren
+    # aldrig har set, og det er præcis punkt 11.
+    d_dobbelt = dom_delta("text-on-image-checker.html", delta_kæder(
+        kode.replace("var foerTekst = fmt(foerTal.toFixed(2));",
+                     "var foerTekst = fmt(r.toFixed(2));", 1)))
+    tjek("før/nu-dommen kan se en linje der gentager tallet",
+         any("linjen siger at tallet var" in f for f in d_dobbelt), str(d_dobbelt)[:300])
+    # Mutation 3: linjen overlever at bruteren selv griber ind i farvefeltet.
+    gammel_fg = "function () { lastFix = null; scrim = null; updateAll(); });"
+    tjek("mutationen findes i koden: farvefeltet nulstiller beskrivelsen",
+         gammel_fg in kode, repr(gammel_fg))
+    d_farve = dom_delta("text-on-image-checker.html", delta_kæder(
+        kode.replace(gammel_fg, "function () { scrim = null; updateAll(); });", 1)))
+    tjek("før/nu-dommen kan se en linje der overlever bruterens eget indgreb",
+         any("efter at bruteren selv har rørt" in f for f in d_farve), str(d_farve)[:300])
+    # Og de fem løfter hver for sig, så ingen af dem er grøn kun fordi et andet
+    # fejler — samme greb som de fire over. `delta_kaede()` er *én* kæde;
+    # dommen dømmer begge indgreb, så den får dem begge — det er den fejl jeg
+    # selv lavede først, da et håndlavet mål kun havde den ene nøgle.
+    def delta_kaede(**over):
+        k = {"harKnap": True,
+             "foer": {"fik": 1.16},
+             "efter": {"fik": 4.72,
+                       "delta": {"harDelta": True, "foer": 1.16, "nu": 4.72,
+                                 "tekst": "Before this it measured 1.16. It measures 4.72 now."}},
+             "rykket": {"fik": 1.16, "delta": {"harDelta": False, "foer": None, "nu": None}}}
+        k.update(over)
+        return k
+
+    def delta_dom(**over):
+        k = delta_kaede(**over)
+        return dom_delta("text-on-image-checker.html", {"fix": k, "spot": k})
+
+    tjek("før/nu-dommen er grøn på et rigtigt mål", not delta_dom(),
+         "; ".join(delta_dom()))
+    tjek("før/nu-dommen kan se en kæde uden linje",
+         any("intet nyt tal" in f for f in delta_dom(efter={"fik": 4.72, "delta": {"harDelta": False}})),
+         "en kæde uden delta blev dømt grønt")
+    tjek("før/nu-dommen kan se et før-tal der ikke var på skærmen",
+         any("linjen siger at tallet var" in f for f in
+             delta_dom(efter={"fik": 4.72, "delta": {"harDelta": True, "foer": 19.19, "nu": 4.72}})),
+         "et opdigtet før-tal blev dømt grønt")
+    tjek("før/nu-dommen kan se et nu-tal der ikke står på skærmen",
+         any("men skærmen viser" in f for f in
+             delta_dom(efter={"fik": 4.72, "delta": {"harDelta": True, "foer": 1.16, "nu": 9.99}})),
+         "et nu-tal der ikke stod på skærmen blev dømt grønt")
+    tjek("før/nu-dommen kan se en linje der overlever bruterens indgreb",
+         any("efter at bruteren selv har rørt" in f for f in
+             delta_dom(rykket={"fik": 1.16, "delta": {"harDelta": True, "foer": 1.16, "nu": 4.72}})),
+         "en linje der overlevede blev dømt grøn")
+    tjek("før/nu-dommen kan se en sætning der ikke er sidens egen",
+         any("ikke sidens egen" in f for f in
+             delta_dom(efter={"fik": 4.72, "delta": {"harDelta": True, "foer": 1.16, "nu": 4.72,
+                                                     "tekst": "Before: 9.99. Now: 9.99."}})),
+         "en fremmed sætning blev dømt grøn")
+    tjek("før/nu-dommen kan se en sætning der kun nævner ét tal",
+         any("sætningen nævner ikke tallet" in f for f in
+             delta_dom(efter={"fik": 4.72, "delta": {"harDelta": True, "foer": 1.16, "nu": 4.72,
+                                                     "tekst": "Before this it measured 1.16. It measures 9.99 now."}})),
+         "en halv sætning blev dømt grøn")
+    tjek("før/nu-dommen kan se en kæde uden knap",
+         any("ingen knap at trykke" in f for f in
+             delta_dom(harKnap=False)),
+         "en kæde uden knap blev dømt grøn")
+    tjek("før/nu-dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_delta("text-on-image-checker.html", None)), "harnessen gav intet")
+    # `delta`-strengen skal have to `%s` på alle fire sider — kernen sætter
+    # dem ind med to `.replace('%s', …)` i træk, så én ville miste et tal.
+    tjek("`delta`-teksten har to `%s` på alle fire sider",
+         all((re.search(r"delta:\s*'([^']*)'", (SITE / f).read_text(encoding="utf-8")) or
+              re.match(r"$", "")).group(1).count("%s") == 2
+             for f in SIDER + ARTIKLER),
+         "en side mangler den anden %s")
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
@@ -1574,6 +1826,16 @@ def main(argv: list[str] | None = None) -> int:
             antal += 4
         for linje in dom_spot(spot):
             fund.append(f"{fil}: {linje}")
+        # Før → nu: fire løfter pr. indgreb — linjen findes, før-tallet er det
+        # der stod, nu-tallet er det på skærmen, og linjen væk når bruteren selv
+        # griber ind. Begge kæder dømmes, fordi de er to forskellige indgreb i
+        # kernen og kan glemme hver deres. Tælles pr. kæde der har noget at
+        # dømme — samme regel som de tre kæder over, og derfor ikke ét fast
+        # tal for dommen som helhed.
+        delta_kæder = {"fix": (svar.get("delta") or {}).get("fix"), "spot": spot}
+        antal += 5 * sum(1 for k in delta_kæder.values() if k)
+        for linje in dom_delta(fil, delta_kæder):
+            fund.append(f"{fil}: {linje}")
         # Demo-tilstanden: fem løfter på den tekst værktøjet skriver, før
         # bruteren har valgt et billede. Tælles kun når dommen fik noget at
         # dømme — samme regel som de tre kæder over.
@@ -1612,6 +1874,19 @@ def main(argv: list[str] | None = None) -> int:
         if re.search(r"demoNote:\s*'([^']*)'", html) is None:
             fund.append(f"{fil}: der er ingen `demoNote`-tekst, så værktøjet på "
                         "siden måler på sit eget eksempelbillede uden at sige det")
+        # `delta`-strengen skal have **to** `%s`. Kernen sætter det første tal
+        # ind og derefter det andet med to `.replace('%s', …)` i træk, så en
+        # streng med kun ét `%s` viser «før 1,16:1» og lader «nu» mangle — og
+        # dommen på attributtet ville aldrig kunne se det, fordi den læser
+        # `data-ti-delta` og ikke den sætning læseren læser.
+        antal += 1
+        mdelta = re.search(r"delta:\s*'([^']*)'", html)
+        if mdelta is None:
+            fund.append(f"{fil}: der er ingen `delta`-tekst, så værktøjet ikke kan "
+                        "sige hvad kernens egen rettelse rettede")
+        elif mdelta.group(1).count("%s") != 2:
+            fund.append(f"{fil}: `delta` har {mdelta.group(1).count('%s')} af de to "
+                        "`%s` den skal have, så læseren får kun ét af de to tal")
 
     if args.list:
         for linje in fund:
