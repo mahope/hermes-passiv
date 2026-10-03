@@ -37,6 +37,121 @@
     if (l1 < l2) { var t = l1; l1 = l2; l2 = t; }
     return (l1 + 0.05) / (l2 + 0.05);
   }
+  function rgbToHex(rgb) {
+    return '#' + rgb.map(function (v) {
+      var n = Math.max(0, Math.min(255, Math.round(v))).toString(16);
+      return n.length < 2 ? '0' + n : n;
+    }).join('');
+  }
+  // Den *inverse* af `lum()`s sRGB-kurve: hvilken kanalværdi giver den relative
+  // lysstyrke `L`? De to er ikke det samme tal — `lum([128,128,128])` er 0.216,
+  // ikke 0.502 — så at regne i `L` og så bruge det som kanalværdi giver en farve
+  // der er dobbelt så mørk som den man bad om. Uden denne funktion ville den
+  // foreslåede tekstfarve være *mørkere* end den tærskel den skal klare, og
+  // dommen ville være grøn fordi den måler `ratio()` i `lum()`-rum.
+  function lumToChannel(L) {
+    var v = (Math.pow(Math.max(0, Math.min(1, L)), 1 / 2.4) * 1.055 - 0.055) * 255;
+    return Math.max(0, Math.min(255, v));
+  }
+  function grey(L) { var v = lumToChannel(L); return [v, v, v]; }
+  // Bland baggrundspixelen med et slør af dækning `a`. Det er præcis det
+  // browseren gør med `rgba(0,0,0,.62)` over et billede, og det er den
+  // blanding læseren ser — så dommen skal regne på *den*, ikke på billedet.
+  function over(bg, hex, a) {
+    var sc = hexToRgb(hex);
+    return bg.map(function (v, i) { return sc[i] * a + v * (1 - a); });
+  }
+  // Den mindste dækning der får **begge** endepunkter over tærsklen. Begge
+  // par (sort slør + hvid tekst, lys slør + sort tekst) bliver bedre monotont
+  // med stigende dækning, så binærsøgningen er gyldig for dem begge — og
+  // svaret tjekkes bagefter med `ratio()`. Løsningen af en formel er en
+  // påstand; målingen er dommen.
+  function minScrimAlpha(bgMin, bgMax, need, scrim, textHex) {
+    var text = hexToRgb(textHex);
+    function ok(a) {
+      return ratio(text, over(bgMax, scrim, a)) >= need &&
+             ratio(text, over(bgMin, scrim, a)) >= need;
+    }
+    if (!ok(1)) return null;
+    var lo = 0, hi = 1, mid = 0;
+    for (var i = 0; i < 30; i++) {
+      mid = (lo + hi) / 2;
+      if (ok(mid)) hi = mid; else lo = mid;
+    }
+    // Op til hele procent, og *opad*. En dækning der rundes ned ville se
+    // pænere ud i tallet og så fejle igen, og det er præcis den løfte der ikke
+    // må gå herfra.
+    var pct = Math.min(1, Math.ceil(hi * 100) / 100);
+    return ok(pct) ? pct : null;
+  }
+  // Den rettelse værktøjet før *bad om* i stedet for at give: læseren skulle
+  // selv finde på både en tekstfarve og et slør, og det er to tal der skal
+  // slås sammen på én gang. Kernen løser dem begge, i den rækkefølge der
+  // ødelægger mindst.
+  //
+  // 1. **Én tekstfarve alene**, når baggrunden er smal nok til at én farve kan
+  //    klare begge ende. Det er det mindst indgribende fix, så det prøves
+  //    først, og den grå der findes er den *mørkeste* der stadig passerer —
+  //    så farven beholder så meget af billedets tone som muligt.
+  // 2. **Et slør**, når baggrunden spænder for meget til at én farve kan
+  //    klare den. Det er præcis det råd værktøjet selv gav («add a
+  //    translucent scrim») — nu med den mindste dækning der virker i stedet
+  //    for «prøv lidt mørkere».
+  //
+  //   `bgMin`/`bgMax` er endepunkterne fra `sampleContrast()`: den lyseste og
+  //   den mørkeste pixel under bogstaverne, altså det værktøjet *allerede*
+  //   har målt. Rettelsen er derfor aldrig baseret på et billede, der er læst
+  //   endnu en gang og måske målt et andet sted i.
+  function suggestFix(bgMin, bgMax, need, currentHex) {
+    if (!bgMin || !bgMax) return null;
+
+    // 1. Én tekstfarve mod begge ende. Hvert endepunkt stiller sit eget krav,
+    //    og det er det *strammeste* af de to, der bestemmer:
+    //      mørkere tekst: (L_ende+0.05)/(L+0.05) >= need  =>  L <= (L_ende+0.05)/need-0.05
+    //                     strammest for den DØRKESTE baggrund, fordi en mørk
+    //                     tekst mod en mørk baggrund er den korte afstand.
+    //      lysere tekst : (L+0.05)/(L_ende+0.05) >= need  =>  L >= need*(L_ende+0.05)-0.05
+    //                     strammest for den LYSE baggrund.
+    //    De to intervaller er disjunkte: en L imellem dem *fejler* — så en løsning
+    //    der kun tager den ene ende ville give en farve, der fejler den anden.
+    //    Derfor løses de to grene hver for sig, og kravet tjekkes bagefter med
+    //    `ratio()` mod begge.
+    var m = Math.min(lum(bgMin), lum(bgMax)); // den mørkeste baggrund
+    var l = Math.max(lum(bgMin), lum(bgMax)); // den lyseste baggrund
+    var kandidat = [];
+    var morkMax = (m + 0.05) / need - 0.05;            // mørkere tekst: højst denne L
+    var lysMin = need * (l + 0.05) - 0.05;              // lysere tekst: mindst denne L
+    if (morkMax >= 0) kandidat.push(morkMax * 0.94);    // marginen *ind* mod den mørke ende
+    if (lysMin <= 1) kandidat.push(Math.min(1, lysMin * 1.06)); // ad den lyse ende
+    // Den kandidat der faktisk *består begge* ende tages, og den der ligger
+    // tættest på den nuværende tekstfarve foretrækkes — en rettelse der
+    // flytter farven mindst, er den bruteren genkender som sin egen.
+    var nu = currentHex ? lum(hexToRgb(currentHex)) : 1;
+    var bedst = null;
+    kandidat.forEach(function (L) {
+      var rgb = grey(L);
+      var ra = Math.min(ratio(rgb, bgMin), ratio(rgb, bgMax));
+      if (ra < need) return;                 // kravet er *målt*, ikke antaget
+      if (!bedst || Math.abs(L - nu) < Math.abs(bedst.L - nu)) bedst = { L: L, rgb: rgb, r: ra };
+    });
+    if (bedst) {
+      return { kind: 'color', hex: rgbToHex(bedst.rgb), scrim: null, alpha: 0, ratio: bedst.r };
+    }
+
+    // 2. Slør. Begge kandidater prøves, og den med mindst dækning vinder —
+    //    en mindre sløring ligger tættere på det billede, bruteren sendte ind.
+    bedst = null;
+    [{ s: '#000000', t: '#ffffff' }, { s: '#ffffff', t: '#000000' }].forEach(function (k) {
+      var a = minScrimAlpha(bgMin, bgMax, need, k.s, k.t);
+      if (a !== null && (!bedst || a < bedst.alpha)) bedst = { kind: 'scrim', scrim: k.s, alpha: a, hex: k.t };
+    });
+    if (!bedst) return null;
+    bedst.ratio = Math.min(
+      ratio(hexToRgb(bedst.hex), over(bgMax, bedst.scrim, bedst.alpha)),
+      ratio(hexToRgb(bedst.hex), over(bgMin, bedst.scrim, bedst.alpha))
+    );
+    return bedst;
+  }
 
   function mount(opts) {
     var o = opts || {};
@@ -47,6 +162,16 @@
     if (!cv) return null;
     var ctx = cv.getContext('2d', { willReadFrequently: true });
     var img = null, tx = 0, ty = 0, dragging = false;
+    // Den rettelse kernen selv lavede, så siden kan fortælle *hvad* der skete —
+    // uden den er der kun et tal, og et tal uden årsag er det samme som det
+    // problem værktøjet havde før. Nulstilles når bruteren selv rører
+    // farvefeltet, ellers ville en gammel beskrivelse stå under et tal de selv
+    // har lavet.
+    var lastFix = null;
+    // Sløret der ligger over billedet lige nu, eller null. Det er *tegnet* i
+    // `draw()` og regnet på i `effectiveBg()`, så tallet og det læseren ser
+    // kommer fra samme blanding.
+    var scrim = null;
 
     // Dansk bruger komma, engelsk punktum — samme tal, to sæt.
     function fmt(n) {
@@ -74,9 +199,26 @@
     function draw() {
       if (!img) return;
       ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      // Sløret tegnes på *canvas*, ikke kun i regningen. Ellers ville værktøjet
+      // vise et bedre tal end det læseren kan se, og det er den værste slags
+      // løfte: et tal der kun er rigtigt i koden.
+      if (scrim) drawScrim();
       applyFont();
       ctx.fillStyle = $('fg').value;
       ctx.fillText($('text').value || ' ', tx, ty);
+    }
+    // Sløret dækker præcis den boks, teksten står i — og lidt uden om, så
+    // kanten af sløret ikke ligger i bogstavernes egen baggrund, hvor en
+    // læser ville se en skarp stribe.
+    function drawScrim() {
+      var box = textBox();
+      if (!box) return;
+      var pad = Math.round(fontSizePx() * 0.35);
+      ctx.save();
+      ctx.fillStyle = scrim.hex + Math.round(scrim.alpha * 255).toString(16).padStart(2, '0');
+      ctx.fillRect(Math.max(0, box.x - pad), Math.max(0, box.y - pad),
+                   Math.min(cv.width, box.w + pad * 2), Math.min(cv.height, box.h + pad * 2));
+      ctx.restore();
     }
     // The letters on their own, on a cleared canvas. Alpha is then exactly how
     // much of each pixel the glyph covers, which is the one thing a colour
@@ -134,14 +276,69 @@
         if (L < minL) { minL = L; minC = c; }
         if (L > maxL) { maxL = L; maxC = c; }
       });
+      // Sløret er en del af det bruteren ser, så det er en del af det der
+      // måles. Pass 1 tegner kun billedet, så blandingen laves her — på præcis
+      // den måde `drawScrim()` maler den, med samme farve og samme dækning.
+      // Uden dette viste værktøjet et bedre tal end det læseren kan se, fordi
+      // dommen ville regne på det rå billede mens sløret lå tegnet oveni.
+      var visMin = effectiveBg(minC), visMax = effectiveBg(maxC);
       var fgRgb = hexToRgb($('fg').value);
       var worst = Infinity;
-      [minC, maxC].forEach(function (c) {
+      [visMin, visMax].forEach(function (c) {
         if (!c) return;
         var r = ratio(fgRgb, c);
         if (r < worst) worst = r;
       });
-      return { ratio: worst === Infinity ? null : worst };
+      // Endepunkterne gives videre som *rå* billedpixels, uden slør. Pass 1
+      // tegner kun billedet, så de er uafhængige af hvad der ligger oveni —
+      // og det er dem `suggestFix()` så danner sin *effektive* baggrund af, så
+      // dens svar afhænger af det der faktisk er tegnet lige nu.
+      return { ratio: worst === Infinity ? null : worst, bgMin: minC, bgMax: maxC };
+    }
+
+    // Det bruteren ser bag bogstaverne: billedet, og sløret oveni hvis der er
+    // ét. Denne blanding er både det `drawScrim()` maler og det tallet bliver
+    // regnet på — de to kan derfor ikke komme i ukig.
+    function effectiveBg(c) {
+      if (!c) return null;
+      return scrim ? over(c, scrim.hex, scrim.alpha) : c;
+    }
+
+    // Den ene knap, der manglede: «Fix it». Den sætter enten tekstfarven eller
+    // sløret til det, der passerer, og lader så `updateAll()` genmåle — så det
+    // der vises bagefter er en *ny måling* af det samme billede, ikke et løfte
+    // om at et bedre tal ville komme.
+    function applyFix(fix) {
+      if (!fix) return false;
+      lastFix = fix;
+      if (fix.kind === 'scrim') {
+        scrim = { hex: fix.scrim, alpha: fix.alpha };
+        $('fg').value = fix.hex;
+      } else {
+        scrim = null;
+        $('fg').value = fix.hex;
+      }
+      updateAll();
+      return true;
+    }
+
+    // Hvad kernen gjorde, i lærerens sprog. `scrimPct` og `hex` er tal og
+    // farver fra kernens egen måling — aldrig noget en besøgende har skrevet —
+    // og hele strengen kommer fra siden, så en dansk læser ikke møder en
+    // engelsk beskrivelse af sin egen rettelse.
+    function fixBeskrivelse(f) {
+      if (f.kind === 'scrim') {
+        // Sløret er prøvet i begge retninger — sort baggrund med lys tekst,
+        // hvid baggrund med mørk tekst — og den med mindst dækning vinder.
+        // På et lyst billede er det den *hvide* der slår, så en beskrivelse
+        // der altid sagde «mørkt lag» ville være en løfte der kun holder for
+        // den ene. Kernen ved hvilken retning der vandt; ordene kommer fra
+        // siden, så en dansk læser ikke møder en engelsk beskrivelse.
+        var morkt = lum(hexToRgb(f.scrim)) < 0.5;
+        return ((morkt ? s.fixedScrimDark : s.fixedScrimLight) || '')
+          .replace('%s', Math.round(f.alpha * 100));
+      }
+      return (s.fixed || '').replace('%s', f.hex);
     }
 
     function updateResult() {
@@ -155,6 +352,11 @@
       var r = sample.ratio;
       var passAA = r >= need;
       var passAAA = r >= aaaNeed;
+      // Rettelsen regnes på den måling vi lige lavede — og på det slør der
+      // allerede ligger, så et nyt forslag ikke oveni et gammelt. Den foreslås
+      // kun når der faktisk fejler: på en bestået farve ville «fix»-knappen
+      // være en knap uden opgave.
+      var fix = passAA ? null : suggestFix(effectiveBg(sample.bgMin), effectiveBg(sample.bgMax), need, $('fg').value);
       res.hidden = false;
       // Klasserne er *ikke* præfikset: de er `ti-*` i `style.css`, og en
       // forekomst på en artikelside skal se identisk ud med værktøjssiden.
@@ -163,7 +365,10 @@
       res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
       // Alt der kommer fra brugeren (`r`) er et tal, ikke markup, og alt
       // `s.*` er sidens egen tekst fra den side den ligger på. Ingenting her
-      // bygger en streng af noget en besøgende kan skrive.
+      // bygger en streng af noget en besøgende kan skrive. Knappen bruges
+      // `<button type="button">` og ikke et `<a href="#">`, fordi den gør
+      // noget ved siden — ikke en ny side — og en anchor ville blive
+      // genindlæst i historikken ved hvert tryk.
       res.innerHTML =
         '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">' +
         (passAA ? s.pass : s.fail) + '</span>&nbsp; <strong>' + fmt(r.toFixed(2)) + ':1</strong> ' +
@@ -171,10 +376,19 @@
         (large ? (s.largeText || '') : (s.normalText || '')) +
         (passAA && !passAAA ? '<br>' + (s.aaNotAAA || '') + ' (' + fmt(aaaNeed) + ':1).' :
          passAAA ? '<br>' + (s.alsoAAA || '') :
-         '<br>' + (s.tryFix || '')) +
+          '<br>' + (s.tryFix || '')) +
+        (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
+        (lastFix ? '<br><span class="ti-fixed">' + fixBeskrivelse(lastFix) + '</span>' : '') +
         '<br><span style="font-size:.85rem;color:var(--color-text-muted)">' + (s.measured || '') + '</span>'
         + (s.proCard || '') +
         '<br><span style="font-size:13px;color:var(--color-text-muted)">' + (s.note || '') + '</span>';
+      // Lytteren bindes på den knap `innerHTML` lige nu skrev, ikke på `res`,
+      // så en ny måling der skriver en ny knap ikke efterlader to lyttere på
+      // den gamle. `updateAll()` kaldes inde i handleren, som genskriver
+      // `innerHTML` — og den her knap forsvinder, fordi den nye måling
+      // består, så der ikke kan opstå et uendeligt klik-loop.
+      var btn = res.querySelector('[data-ti-fix]');
+      if (btn) btn.addEventListener('click', function () { applyFix(fix); });
     }
 
     function loadFile(file) {
@@ -217,8 +431,11 @@
 
     $('file').addEventListener('change', function (e) { loadFile(e.target.files[0]); });
     $('text').addEventListener('input', updateAll);
-    $('fg').addEventListener('input', updateAll);
-    $('fontsize').addEventListener('change', updateAll);
+    // Egen farvevalg = bruterens beslutning. Kernels rettelse gælder kun
+    // indtil da, så en beskrivelse af den skal ikke blive stående under et tal
+    // der ikke længere stammer fra den.
+    $('fg').addEventListener('input', function () { lastFix = null; scrim = null; updateAll(); });
+    $('fontsize').addEventListener('change', function () { lastFix = null; scrim = null; updateAll(); });
     cv.addEventListener('mousedown', function (e) { dragging = true; onMove(e); });
     global.addEventListener('mousemove', function (e) { if (dragging) onMove(e); });
     global.addEventListener('mouseup', function () { dragging = false; });
@@ -239,9 +456,12 @@
     updateAll();
 
     // Synlig for testene i `tests/scan-clients.test.mjs`, der dømmer den her
-    // kode i en sandkasse i stedet for at tro på markup.
-    return { sampleContrast: sampleContrast, updateAll: updateAll };
+    // kode i en sandkasse i stedet for at tro på markup. `suggestFix` er med,
+    // fordi rettelsens *matematik* skal kunne dømmes uden en browser: et tal
+    // påstanden ikke kan efterprøve på er en påstand.
+    return { sampleContrast: sampleContrast, updateAll: updateAll, applyFix: applyFix, suggestFix: suggestFix };
   }
 
-  global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb };
+  global.TiContrast = { mount: mount, lum: lum, ratio: ratio, hexToRgb: hexToRgb,
+                      lumToChannel: lumToChannel, suggestFix: suggestFix };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

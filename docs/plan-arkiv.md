@@ -5714,3 +5714,122 @@ genskabe den gamle kode — `ellipsize` uden `…` giver **0 → 14** fund i `se
 `quality_gate.py` grøn (154 steps), `stripe-worker.test.mjs` 375/375. Brødkrummens
 sidste crumb på `/da/blog/` er nu «Guider — alle artikler om EU-compliance,
 tilgængelighed og…».
+
+## 2026-10-03 — ceo/contrast-fix-knap: værktøjet gør den rettelse det bad om
+
+**Hvad.** `/text-on-image-checker` (EN+DA) og de to artikler, der har samme
+værktøj indlejret, målte WCAG-kravet korrekt og skrev så «Try a darker/lighter
+text color, or add a translucent scrim behind the text.» Den beslutning var
+læserens. Kernen (`site/text-on-image-core.js`) løser den nu fra *den samme
+måling* `sampleContrast()` allerede har lavet:
+
+- `suggestFix(bgMin, bgMax, need, currentHex)` løser de to disjunkte grene af
+  «find en L der består begge ende» hver for sig. Findes ingen, prøves et slør:
+  sort slør + hvid tekst og lys slør + sort tekst, og den med **mindst dækning**
+  vinder. Dækningen tjekkes bagefter med `ratio()` og rundes *opad* til hel
+  procent, så tallet på skærmen ikke kan fejle pga. afrunding.
+- `applyFix()` sætter farven eller sløret og kalder `updateAll()`, så det der
+  vises bagefter er en **ny måling af det samme billede**.
+- Sløret tegnes i `draw()` *og* regnes på i `sampleContrast()` — samme farve,
+  samme dækning. Kun det gør tallet og det læseren ser det samme.
+
+**Målt.** Chromium (Playwright) på den byggede side over HTTP: todelt billede,
+hvid tekst → **FAIL 1,16:1 → PASS 3,04:1** ved 390 og 1280 px i lys og mørk,
+0 px vandret scroll, knappen 269×44 px (61 px på 390). Samme i dansk
+(«BESTÅET 3,04:1»). Axe: ingen nye alvorlige fund; `.table-wrap` og `.badge`
+var der før.
+
+**Tre fejl i min egen rettelse, alle målt før commit.**
+
+1. `grey(L)` brugte `L*255` som kanalværdi. `lum([128,128,128])` er 0.216,
+   ikke 0.502 — så farven blev dobbelt så mørk som tærsklen. Alle «består
+   den»-domme var grønne. Rettet med `lumToChannel(L)`, den inverse af `lum()`,
+   og dømt af en dom på «maks 1,5× kravet» plus en rundtursdom (6 lysstyrker,
+   1e-3).
+2. Den mørke farve-grene blev løst mod den *lyse* ende. Det strammeste krav
+   kommer fra den *mørkeste* baggrund (mørk tekst mod mørk grund er den korte
+   afstand), så løsningen var ikke strammende nok.
+3. **Den alvorlige:** `sampleContrast()` regnede på det rå billede, mens
+   `draw()` tegnede sløret oveni. Værktøjet viste altså et bedre tal end
+   læseren kunne se. Fanges kun fordi porten *trykker på knappen* og læser den
+   nye måling i `innerHTML` — en dom på koden alene ville være grøn.
+
+**Porte.** `check_contrast_sampling` **26 → 30** løfter: fire fix-cases der
+trykker knappen og kræver at den fejler i udgangspunktet, at der står en knap,
+at den nye måling består kravet, og at den ikke lander mere end dobbelt op mod
+kravet (den mutation der «løser» billedet ved at gøre alt sort). Harnessen
+fik samtidig en virkelig `fillRect` med `#rrggbbaa`-alfa, `save`/`restore` og
+et `querySelector` der cacher pr. selector — en stub der gav et nyt objekt
+hver gang ville have klikket på en knap uden lyttere og dømt en virkende
+kern som ødelagt. `--self-test` **24/24**; de to mutationer der pegede på
+`samples`-linjen er opdateret til de nye, og selvtesten fanger at de så gør.
+`scan-clients.test.mjs` **433 → 490**: 12 nye domme for `suggestFix`
+(polaritet målt ved to mutationer af den kørende kode — den der mangler
+funktionen giver 449/450, den der regner i kanalværdi 488/490, den der sletter
+slør-grenen 472/475), plus krav om at alle fire sider har knappens egen tekst
+på hvert sprog.
+
+**Rød CI rettet samme commit.** `plan-status` (`01b5e2f` → `c3bc4c5`) døde på
+at STATUS havde 31 linjer mod de 25 tilladte; kogen til 25.
+
+## 3/10 — «Fix it»-knappen på `/text-on-image-checker` (ceo/contrast-fix-knap)
+
+**Fejlen.** Værktøjet målte kontrasten under bogstaverne korrekt og sluttede så
+med «Prøv en mørkere/lysere tekstfarve, eller læg en halvtransparent skærm bag
+teksten.» To tal skal slås sammen på én gang, og læseren fik ingen af dem. Det
+er samme fejlform som de øvrige fund i denne blok: et råd uden en vej.
+
+**Rettelsen.** `suggestFix(bgMin, bgMax, need, currentHex)` løser begge veje fra
+*den måling værktøjet allerede har lavet* — ikke fra et billede der læses igen:
+
+1. **Én tekstfarve**, når baggrunden er smal nok til at én farve kan klare begge
+   ende. De to krav er disjunkte intervaller i lystyrke (`mørkere tekst:
+   L <= (L_dørkeste+0.05)/need-0.05`, `lysere tekst: L >= need*(L_lyseste+0.05)
+   -0.05`), så en løsning der kun tager den ene ende ville fejle den anden. Den
+   grå der vælges er den der ligger tættest på den nuværende farve, så
+   rettelsen flytter billedet mindst.
+2. **Et slør**, når intet gør. `minScrimAlpha()` binærsøger den mindste
+   dækning der får *begge* ende over kravet, og resultatet *rundes op* til hel
+   procent — en dækning der rundes ned ser pænere ud i tallet og fejler igen.
+
+Sløret tegnes på canvas (`drawScrim()`), regnes i `sampleContrast()` gennem
+`effectiveBg()`, og nulstilles når bruteren selv rører farvefeltet. Så tallet
+og det læseren ser kommer fra samme blanding.
+
+**Fire fejl fundet undervejs, alle målt:**
+
+1. Jeg regnede i *lystyrke* men brugte resultatet som *kanalværdi*. `lum()` er
+   sRGB-kurven, ikke kanalen: `lum([128,128,128])` er 0.216, ikke 0.502. Den
+   foreslåede farve blev dobbelt så mørk som den tærskel den skulle klare. Alle
+   «består den»-domme var grønne; kun dommen på «højst 1,5× kravet» fangede
+   den. `lumToChannel()` er den inverse kurve.
+2. Den mørke grene blev løst mod den *lyse* ende og var ikke strammende nok.
+3. `sampleContrast()` målte det rå billede mens sløret lå tegnet oveni, så
+   værktøjet viste et bedre tal end læseren kunne se. Fanges kun fordi porten
+   *trykker på knappen* og læser den nye måling i `innerHTML`.
+4. Fundet i review af min egen diff: sløret prøves i begge retninger, og på et
+   lyst billede **vinder det hvide** — målt i Node mod portens egen case:
+   `#161a22`→`#ebeef2` giver `scrim=#ffffff alpha=0.40 → 4.59:1`. Teksten sagde
+   «I put a 40 % **dark** layer» om et hvidt lag med sort tekst. Nu vælger
+   kernen mellem `fixedScrimDark` og `fixedScrimLight` på lagets lystyrke, og
+   `check_contrast_sampling` dømmer at begge nøgler findes med `%s` på alle
+   fire sider (polaritet målt: at slette `fixedScrimLight` fra artiklen giver
+   1 fund).
+
+**Porte.** `check_contrast_sampling` **26 → 38** løfter (fire nye fix-cases der
+trykker knappen: den skal fejle i udgangspunktet, der skal stå en knap, den nye
+måling skal bestå kravet, og den må ikke lande mere end dobbelt op mod kravet
+— den mutation der «løser» billedet ved at gøre alt sort). Harnessen fik en
+virkelig `fillRect` med `#rrggbbaa`-alfa, `save`/`restore` og et
+`querySelector` der cacher pr. selector — en stub der gav et nyt objekt hver
+gang ville have klikket på en knap uden lyttere og dømt en virkende kern som
+ødelagt. `--self-test` **24/24**. `scan-clients.test.mjs` **433 → 498**:
+domme for `suggestFix` (polaritet målt ved mutationer af den kørende kode) plus
+krav om at alle fire sider har knappens egen tekst på hvert sprog.
+
+**Målt i rigtig Chromium** på den byggede side: **FAIL 1,16:1 → PASS 3,04:1**
+ved 390 og 1280 px i lys og mørk, 0 px vandret scroll alle fire, knappen
+269×44 px. Skærmbilleder i `/tmp/ui-mt-fix/`.
+
+**Rød CI rettet samme commit.** `plan-status` (`01b5e2f` → `c3bc4c5`) døde på
+at STATUS havde 31 linjer mod de 25 tilladte; kogen til 25.

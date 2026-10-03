@@ -657,6 +657,13 @@ input[type="color"].ti-color { width: 52px; height: 44px; border: 1px solid var(
 .ti-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); }
 select.ti-input { max-width: 180px; }
 .ti-note { margin-top: 18px; font-size: .88rem; color: var(--color-text-muted); }
+/* «Fix it»-knappen 3/10. 44 px er ikke en detalje: `.btn-secondary` har kun
+   padding, så på en 390 px telefon blev den 42 px høj — under WCAG 2.5.8s
+   minimum på 24×24 med trykflade, og under de 44 px resten af sitet bruger.
+   `inline-flex` + `align-items:center` er samme ordning som bogbanneret fik
+   2/10, fordi `.btn` er `display:inline-block` i shallen. */
+.ti-fix { min-height: 44px; display: inline-flex; align-items: center; }
+.ti-fixed { font-size: .85rem; color: var(--color-text-muted); }
 
 /* `.ti-field` er en *kolonne* (`flex-direction: column`), så `flex: 1 1 12rem`
    på børnene ville blive til en **højde** på 12 rem: målt 2/10 stod alle fire

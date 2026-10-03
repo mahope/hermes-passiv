@@ -1818,6 +1818,233 @@ function mutated(path, from, to) {
 }
 
 // --------------------------------------------------------------------------
+// 16. Værktøjet sagde «try a darker colour» og lod læseren regne det ud.
+//     Samme trafikgrund som sektion 15: `/blog/text-on-image-contrast-check` er
+//     mahope.tools' største indgangsside (8 af 18 besøgende, 100 % bounce), og
+//     den færdige måling *sluttede* med en ordre. WCAG-tallet stod der, men
+//     den beslutning der skal følge — hvilken farve — lå hos læseren, og den
+//     kræver at læse to tal samtidig (den lyseste og den mørkeste pixel).
+//
+//     Fire domme, alle falsifiable på den gamle kode:
+//
+//     1. `suggestFix()` returnerer en farve, der faktisk passerer mod **begge**
+//        endepunkter — målt med kernens egen `ratio()`, ikke med en løsning
+//        af en formel. Dømmes på ren JavaScript, så tallet kan efterprøves.
+//     2. Den foreslåede farve er *bedre end rent sort eller hvid* på den
+//        mellemlyseste baggrund: en designer skal kunne bruge den, og det er
+//        præcis den fordel der gør knappen værd at trykke.
+//     3. Den **gamle kode** fanger dømningen: samme domme mod den kørende
+//        `text-on-image-core.js` fra før rettelsen skal være røde, ellers er
+//        de grønne fordi de intet ser.
+//     4. Alle fire sider har knappens tekst, og den er på **begge** sprog —
+//        en dansk læser må ikke møde en engelsk knap i sit eget værktøj.
+// --------------------------------------------------------------------------
+{
+  const KERNE = 'site/text-on-image-core.js';
+  // Kør kernen i en tom kontekst: den skal kunne *regne* uden et canvas, så
+  // dommen over matematikken ikke afhænger af en browser.
+  const kern = readFileSync(join(root, KERNE), 'utf8');
+  const sandkasse = { module: undefined, exports: undefined, Uint8ClampedArray };
+  vm.createContext(sandkasse);
+  vm.runInContext(kern, sandkasse);
+  const Ti = sandkasse.TiContrast;
+
+  ok('kernen eksporterer suggestFix()', !!(Ti && typeof Ti.suggestFix === 'function'),
+    'TkContrast.suggestFix mangler — rettelsen kan ikke dømmes');
+  if (Ti && typeof Ti.suggestFix === 'function') {
+    // Den blanding læseren reelt ser efter en rettelse: et slør af farven `sc`
+    // med dækning `a` over pixel `bg`. Samme formel som kernens `over()`.
+    const over = (bg, sc, a) => bg.map((v, i) => [sc[0], sc[1], sc[2]][i] * a + v * (1 - a));
+
+    // Dom 1 + 2. To *realistiske* billeder, fordi de to fejltyper er forskellige:
+    //
+    //   a) **Jævnt mellemlys baggrund** — en farve kan klare den alene, så
+    //      rettelsen skal være en tekstfarve. Gråsort ville give 21:1 mod det
+    //      mørke og 1,1:1 mod det lyse; hvid omvendt. Den foreslåede grå skal
+    //      ligge *mellem* — hverken sort eller hvid, men den mindste mætning
+    //      der stadig holder. Det er den fordel, der gør knappen værd at trykke.
+    //   b) **Helt spredt baggrund** — en himmel der går fra næsten hvid til
+    //      næsten sort. Her kan *ingen* tekstfarve bestå begge ende, så den
+    //      eneste rigtige svar er det slør, værktøjet selv før bad om uden at
+    //      finde dækningen: «prøv lidt mørkere». Det er den almindelige
+    //      solopgang med en overskrift i bunden, altså ikke et hjørne.
+    // Bemærk rækkefølgen: `bgMin` er det **mørkeste** og `bgMax` det **lyseste**
+    // endepunkt, fordi det er `sampleContrast()`s `minC`/`maxC` der gives videre,
+    // og de er navngivet efter *lystyrke*, ikke efter rækkefølge i billedet.
+    const baggrunde = [
+      // En baggrund der *ikke* spænder: her kan én tekstfarve klare begge ende,
+      // så rettelsen skal være en farve. Gråsort giver 21:1 mod det mørke og
+      // 1,1:1 mod det lyse, hvid omvendt — den foreslåede grå skal ligge
+      // imellem, hverken sort eller hvid. Det er den fordel, der gør knappen
+      // værd at trykke over «brug bare sort».
+      { navn: 'jævnt mellemlys', bgMin: [180, 190, 205], bgMax: [235, 238, 242], forventer: 'color' },
+      // En himmel der går fra næsten hvid til næsten sort. Her kan *ingen*
+      // tekstfarve bestå begge ende, så det eneste rigtige svar er det slør,
+      // værktøjet selv før bad om uden at finde dækningen: «prøv lidt mørkere».
+      // Det er den almindelige solopgang med en overskrift i bunden.
+      { navn: 'spredt (hvid mod sort)', bgMin: [22, 26, 34], bgMax: [235, 238, 242], forventer: 'scrim' },
+      // Et *midtone*-billede — den type der er sværest at sætte tekst på, fordi
+      // hverken sort eller hvid har nok kontrast. Ved 4,5:1 kan ingen tekstfarve
+      // klare det, så svaret er et slør. Ved 3:1 (stor tekst) kan en grå det, så
+      // rettelsen skal være en farve og ikke et slør, der ville skjule præcis det
+      // billede bruteren ville beholde. Samme billede, to krav, to forskellige
+      // svar — så en port der altid svarer «slør» eller altid «farve» er rød.
+      { navn: 'midtone ved 4,5:1', bgMin: [96, 100, 108], bgMax: [120, 124, 130], forventer: 'scrim', kunVed: 4.5 },
+      { navn: 'midtone ved 3:1 (stor tekst)', bgMin: [96, 100, 108], bgMax: [120, 124, 130], forventer: 'color', kunVed: 3 },
+    ];
+    for (const b of baggrunde) {
+      for (const [navn, need] of [['4,5:1 normal tekst', 4.5], ['3:1 stor tekst', 3]]) {
+        if (b.kunVed && b.kunVed !== need) continue;
+        const fix = Ti.suggestFix(b.bgMin, b.bgMax, need, '#ffffff');
+        ok(`suggestFix() finder en rettelse på ${b.navn} ved ${navn}`,
+          fix && /^#[0-9a-f]{6}$/.test(fix.hex) && typeof fix.alpha === 'number',
+          `fandt ${JSON.stringify(fix)}`);
+        if (!fix || !/^#[0-9a-f]{6}$/.test(fix.hex)) continue;
+        const rgb = Ti.hexToRgb(fix.hex);
+        const sc = fix.scrim ? Ti.hexToRgb(fix.scrim) : null;
+        // Dom 1: kravet er mod **begge** endepunkter. Kun den mørkeste var det,
+        // den gamle kode og dens læsere så — og det er den der svætter mest.
+        const modDunkelst = Ti.ratio(rgb, sc ? over(b.bgMax, sc, fix.alpha) : b.bgMax);
+        const modLysest = Ti.ratio(rgb, sc ? over(b.bgMin, sc, fix.alpha) : b.bgMin);
+        ok(`rettelsen passerer mod den mørkeste pixel på ${b.navn} ved ${navn}`,
+          modDunkelst >= need, `${modDunkelst.toFixed(2)} < ${need} for ${JSON.stringify(fix)}`);
+        ok(`rettelsen passerer mod den lyseste pixel på ${b.navn} ved ${navn}`,
+          modLysest >= need, `${modLysest.toFixed(2)} < ${need} for ${JSON.stringify(fix)}`);
+        // Dom 2. På den jævne baggrund skal svaret være en *tekstfarve*: et
+        // slør dér ville skjule præcis det billede bruteren ville beholde, og
+        // det er en dyrere rettelse end den kræver. Kun når ingen farve
+        // består begge ende, er sløret det rigtige svar.
+        ok(`${b.navn} rettes med ${b.forventer === 'color' ? 'en tekstfarve' : 'et slør'}, ` +
+           `fordi ${b.forventer === 'color' ? 'én farve kan klare begge ende' : 'ingen farve kan det'}`,
+          fix.kind === b.forventer, `foreslog ${JSON.stringify(fix)}`);
+        if (fix.kind === 'color') {
+          ok('den foreslåede farve er hverken sort eller hvid',
+            fix.hex !== '#000000' && fix.hex !== '#ffffff',
+            `foreslog ${fix.hex} — så er der ingen fordel ved knappen over «brug sort»`);
+          // Dom 2b. Den skal være den *mindste* indgrebne rettelse, ikke bare
+          // en der består. En tekstfarve der er meget mørkere end nødvendigt
+          // består alle «består den»-domme og er stadig en dårlig rettelse: den
+          // ser ud som om bruteren har fået sort skrift, og det er præcis den
+          // fordel knappen skal fjerne — at man slipper for at gætte.
+          //
+          //   Målt 3/10: mutationen der regner i kanalværdi i stedet for
+          //   lystyrke gav #121212 med 9.98:1 ved et krav på 4.5 — den består
+          //   *alle* de andre domme her, fordi den bare er for mørk. Uden
+          //   denne dom ville porten være grøn på en kern der fjerner hele
+          //   pointen med knappen.
+          const margin = Math.min(modDunkelst, modLysest) / need;
+          ok('den foreslåede farve ligger tæt på kravet (maks 1,5×)',
+            margin <= 1.5,
+            `${fix.hex} giver ${Math.min(modDunkelst, modLysest).toFixed(2)}:1 = ${margin.toFixed(2)}× kravet ved ${need}:1`);
+        }
+        // Den dækning der foreslås skal være den *mindste* der virker, ikke en
+        // tilfældig: 1 % mindre skal fejle igen. Ellers lå knappen bare kunne
+        // have gjort sløret mørkere, og det er den beslutning den skulle tage.
+        //
+        // Minimum tages over **begge** ende, ikke over ét. Det er den fælde der
+        // lå i mit første forsøg: et hvidt slør over en *lys* baggrund gør den
+        // lysere, så sort tekst får *bedre* kontrast med dækningen — og sløret
+        // begrænses i stedet af den mørke ende. En dom der kun testede den lyse
+        // ville have erklæret den mindste dækning for ikke at være minimal,
+        // fordi den lyse ende netop ikke er den der binder.
+        if (fix.kind === 'scrim' && fix.alpha > 0.01) {
+          const a = fix.alpha - 0.01;
+          const mindre = Math.min(Ti.ratio(rgb, over(b.bgMin, sc, a)), Ti.ratio(rgb, over(b.bgMax, sc, a)));
+          ok('den foreslåede dækning er den mindste der virker (1 % mindre fejler)',
+            mindre < need, `${Math.round(fix.alpha * 100)} % er ikke minimal — ${mindre.toFixed(2)} ved minus 1 %`);
+          // Og modsat: den skal også *virkelig* holde, med al den afrunding en
+          // hel procent indebærer. En dækning der rundes ned ville se pænere
+          // ud i tallet og så fejle igen.
+          const ved = Math.min(Ti.ratio(rgb, over(b.bgMin, sc, fix.alpha)), Ti.ratio(rgb, over(b.bgMax, sc, fix.alpha)));
+          ok('den foreslåede dækning holder efter afrunding til hel procent',
+            ved >= need, `${ved.toFixed(2)} < ${need} for ${Math.round(fix.alpha * 100)} %`);
+        }
+      }
+    }
+
+    // `lumToChannel(L)` er den inverse af `lum()`. De to er *ikke* det samme
+    // tal: `lum([128,128,128])` er 0.216, ikke 0.502. Uden inversen regner
+    // kernen i lystyrke og bruger resultatet som kanalværdi, så den foreslåede
+    // farve bliver dobbelt så mørk som den tærskel den skal klare — og
+    // dommen ville være grøn, fordi den måler `ratio()` i lystyrke-rum.
+    ok('kernen eksporterer lumToChannel() som den inverse af lum()',
+      typeof Ti.lumToChannel === 'function', 'lumToChannel mangler');
+    if (typeof Ti.lumToChannel === 'function') {
+      let rundt = true;
+      for (const L of [0.02, 0.1, 0.216, 0.5, 0.85, 1]) {
+        const c = Ti.lumToChannel(L);
+        if (Math.abs(Ti.lum([c, c, c]) - L) > 1e-3) rundt = false;
+      }
+      ok('lumToChannel() og lum() er hinandens inverse (6 lysstyrker, 1e-3 tolerance)',
+        rundt, 'rundturen holder ikke — kernen regner i to forskellige rum');
+    }
+
+    // Dom 3. Den gamle kode, målt gennem samme sandkasse. `suggestFix` blev
+    // tilføjet 3/10, så på `fbbd0a7` er den enten fraværende eller ubrugt;
+    // begge dele skal give røde domme, ikke en grøn der skyldes en fejl.
+    const gammel = execFileSync('git', ['show', 'fbbd0a7:site/text-on-image-core.js'],
+      { cwd: root, encoding: 'utf8' });
+    const gammelSandkasse = { module: undefined, exports: undefined, Uint8ClampedArray };
+    vm.createContext(gammelSandkasse);
+    vm.runInContext(gammel, gammelSandkasse);
+    const gammelTi = gammelSandkasse.TiContrast;
+    ok('mutation: den gamle kode har ingen suggestFix() at dømme',
+      !(gammelTi && typeof gammelTi.suggestFix === 'function'),
+      'mutationen gav stadig en funktion — dommen kan ikke se forskel');
+    // Og den skal heller ikke have knappen: det er den del bruteren ser.
+    const gammelEN = execFileSync('git', ['show', 'fbbd0a7:site/text-on-image-checker.html'],
+      { cwd: root, encoding: 'utf8' });
+    ok('mutation: den gamle side tilbød ingen «fix»-knap',
+      !/fixBtn:/.test(gammelEN), 'mutationen havde allerede knappen');
+  }
+
+  // Dom 4. Knappens tekst ligger på *siden*, i hvert sprog — fordi kernen er
+  // delt, og en knap der stod i kernen ville være engelsk på den danske side.
+  for (const [f, forventet] of [
+    ['site/text-on-image-checker.html', 'Fix it — set the text color for me'],
+    ['site/blog/text-on-image-contrast-check.html', 'Fix it — set the text color for me'],
+    ['site/text-on-image-checker-da.html', 'Fiks det — sæt tekstfarven for mig'],
+    ['site/da/blog/tekst-paa-billede-kontrasttjek.html', 'Fiks det — sæt tekstfarven for mig'],
+  ]) {
+    const src = readFileSync(join(root, f), 'utf8');
+    ok(`${f}: har knappens tekst i sit eget sprog`,
+      src.includes(`fixBtn: '${forventet}'`), `mangler fixBtn: '${forventet}'`);
+    // Slør-rettelsen har sin egen sætning. Uden den ville en spredt baggrund
+    // vise den *engelske* `fixed`-linje under et tal, der blev målt med et
+    // slør, den danske læser ikke kan se forklaret.
+    //
+    // To nøgler, ikke én: kernen prøver slør i begge retninger (sort baggrund
+    // med lys tekst, hvid baggrund med mørk tekst) og vælger den mindste
+    // dækning, så på et lyst billede vinder det *hvide*. Én nøgle med ordet
+    // «mørkt» i sig ville være en løfte der kun holder for halvdelen af
+    // billederne — målt 3/10 i review af den første udgave af denne diff.
+    for (const noegle of ['fixedScrimDark', 'fixedScrimLight']) {
+      ok(`${f}: har også teksten til slør-rettelsen (${noegle})`,
+        new RegExp(`${noegle}: '[^']*%s[^']*'`).test(src), `mangler ${noegle} med %s`);
+    }
+    // Kernen skal *vælge* mellem dem, ellers er den anden nøgle død tekst,
+    // og dommen ovenfor ville være grøn fordi den kun tæller tilstedeværelse.
+    ok(`${f}: kernen vælger slør-retning efter lagets lyshed`,
+      kern.includes('s.fixedScrimDark') && kern.includes('s.fixedScrimLight') &&
+      kern.includes('lum(hexToRgb(f.scrim)) < 0.5'),
+      'kernen bruger ikke begge nøgler');
+    // Knappen skal kunne virke: kernen binder den på `[data-ti-fix]`, så
+    // uden den attribut er der en knap der intet gør.
+    ok(`${f}: kerne og knap hænger sammen på data-ti-fix`,
+      kern.includes('data-ti-fix') && kern.includes("res.querySelector('[data-ti-fix]')"),
+      'kernen binder ikke den knap den skriver');
+    // 44 px: målt 3/10 i Chromium ved 390 px. `.btn-secondary` har kun
+    // padding, så uden `min-height` er knappen 42 px — under de 44 px resten
+    // af sitet bruger, og målt på en telefon.
+    const css = readFileSync(join(root, 'site/style.css'), 'utf8');
+    ok('knappen er mindst 44 px høj (min-height:44px + centreret indhold)',
+      /\.ti-fix\s*\{[^}]*min-height:\s*44px[^}]*\}/.test(css) &&
+      /\.ti-fix\s*\{[^}]*align-items:\s*center/.test(css),
+      '.ti-fix mangler min-height:44px eller align-items:center');
+  }
+}
+
+// --------------------------------------------------------------------------
 // «Sider læst» skal være det tal listen kan efterprøve — ikke antallet kald.
 // --------------------------------------------------------------------------
 // `pages_checked` er antallet *kald* og medtager 404'er, fordi et kald der

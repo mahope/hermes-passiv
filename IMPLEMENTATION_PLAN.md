@@ -1,37 +1,36 @@
 # STATUS
-- **Afkortede tekster sluttede midt i en sætning — rettet 3/10.** Målt på det
-  byggede site: 42 af 96 danske artikelbeskrivelser på `/da/blog/` endte på
-  «verificerings-workflow — p» (hårdt snit `desc[:180]`), og 11 af 269 sider fik
-  en `<title>` og en brødkrumme der sluttede midt i en sætning («…tilgængelighed
-  **og**»), fordi `clamp_title` stoppede på et ord uden at markere det. Nu skriver
-  begge veje `pagepass.ellipsize`, som stopper på ordet og sætter `…`, og som
-  lukker en parentes *inden* ellipse-tegnet, så «Free DPA Generator (GDPR
-  Article 28 Data Processing…)» stadig siger hvilken art. 28-titel den gav.
-  Fund undervejs: tre kilder havde titler afkortet i hånden med rå sed, så de
-  stod med ulukket parentes («Free RoPA Generator (GDPR Article 30 Records of
-  Processing») — rettet i kilden. To ratchetten, begge med målt polaritet:
-  `seo_check` **0 → 14** fund på mutationen, `check_blog_index` **0 → 131**.
-- **Rød CI på `main` rettet 3/10 (rød siden 02:44).** `rule-claims-selftest`
-  døde med «`da/blog/index.html` står ikke i PRODUCT_ENGINE». Ikke sidens fejl: to
-  selftest-arme muterer en artikels `meta description` og rettede kun `/blog/`, så
-  den danske hub stod med et **forældet** citat. Nu retter begge arme alle
-  indekser. Den danske guides-indeks (`cd48b18`) holdt i historikken.
-- **Tre review-fund fra 29/9 lukket 3/10.** (1) `/license-lookup` sagde «two
-  websites on EUComply Pro, five elsewhere» — modsagt af tre andre sider. Nu
-  **5/3/3/3/1** som tal, dømt mod `tools/stripe_catalog.json`. (2) Tak-sidens
-  `<title>` fulgte ikke `<h1>` på en fejl: `titel()` sætter begge steder. (3)
-  `POST /api/license/devices` havde ingen tæller — nu 30/time pr. IP, målt 429 på
-  det 31. kald mens `validate` stadig svarer 200.
-- **Deploy:** `build-info.json` står på **`2f91b61`** på alle tre domæner, så
-  `ceo/license-selvbetjening` er målt `DEPLOY OK`. `ceo/da-guides-indeks` (`cd48b18`)
-  var **ikke** live fordi CI var rød. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10:
-  2 fuldt landede slettet; `ceo/hub-readme-note` har kun 1 plan-note, intet kode.
+- **Kontrasttjekkeren sagde «try a darker colour» og standsede. Nu gør den det.**
+  3/10. Den færdige måling sluttede med en ordre, og beslutningen der skulle
+  følge lå hos læseren. Kernen løser nu begge veje fra den *samme* måling: en
+  tekstfarve når baggrunden er smal nok, ellers et slør med den mindste
+  dækning der virker. Målt i rigtig Chromium: **FAIL 1,16:1 → PASS 3,04:1**
+  ved 390 og 1280 px i lys og mørk, 0 px vandret scroll, knappen 269×44 px.
+  Porte: `check_contrast_sampling` **26 → 38** løfter og `--self-test`
+  **24/24**; `scan-clients` **433 → 498**; hele `quality_gate` **154 steps**.
+  Fund undervejs: **fire fejl, målt og rettet** — (1) jeg regnede i *lystyrke*
+  men brugte resultatet som *kanalværdi*, så farven blev dobbelt så mørk som
+  tærsklen; den bestod alle «består den»-domme. (2) Den mørke grene blev løst
+  mod den *lyse* ende og var ikke strammende nok. (3) `sampleContrast()` målte
+  det rå billede mens sløret lå tegnet oveni, så værktøjet viste et bedre tal
+  end læseren kunne se. (4) Fundet i review af min egen diff: sløret prøves i
+  begge retninger, og på et lyst billede **vinder det hvide** (målt: 40 % hvidt
+  med sort tekst) — så «mørkt lag» var en løfte om halvdelen af billederne. Nu
+  to nøgler (`fixedScrimDark`/`Light`) med ratchet på alle fire sider.
+- **Rød CI rettet 3/10:** `plan-status` fandt 31 linjer mod de 25 tilladte.
+  Tre review-fund fra 29/9 lukket i `01b5e2f`, to LAV-fund i `c3bc4c5`.
+- **Deploy:** `build-info.json` står på **`01b5e2f`** på alle tre domæner, så
+  `ceo/license-tal-og-tæller` er målt `DEPLOY OK`; `ceo/afkortede-tekster` er
+  ikke live, fordi CI var rød. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
-  domæne, bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der
-  ringer til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen,
-  `/blog/`s danske-guider-tal. Resten: ❓.
+  domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
+  Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: «Fix it»-knappen gør den rettelse værktøjet før bad om
+  ceo/contrast-fix-knap 2026-10-03 04:55` — både `/text-on-image-checker`
+  (EN+DA) og de to artikler skal have knappen, og `/style.css` skal have
+  `.ti-fix { min-height:44px }`. Se målingen i browseren i STATUS.
 
 - `VERIFICÉR DEPLOY: afkortede titler og beskrivelser får en afslutning
   ceo/afkortede-tekster 2026-10-03 04:05`
@@ -484,6 +483,17 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     peger på `/blog/` i nav/footer — 15/15 selvtest med polaritet målt ved at
     slette siden. Datagrund: målt 3/10 på `dist/`, ikke gættet; de 96 danske
     artikler lå uden for enhver dansk indeks.
+23. ~~**Værktøjet sagde «try en mørkere farve» og lod læseren regne det ud.**~~
+    **Leveret 3/10.** Se punkt 1 i STATUS. Hvem: alle der lægger en hvid
+    overskrift på et todelt billede — den største indgangsside på sitet.
+    Tal: resultater der gik fra FAIL til PASS pr. klik (baseline **0**, fordi
+    der ikke var nogen knap; målt i browseren **1,16:1 → 3,04:1**). Accept:
+    `check_contrast_sampling` **38** løfter med 4 nye fix-domme, hvoraf dommen
+    på «maks 1,5× kravet» fanger den mutation der regner i kanalværdi, og
+    ratchet på at begge slør-retninger har hver sin tekst på alle fire sider;
+    `--self-test` **24/24**. Datagrund: Plausible 28 d — artiklen er 8 af 18
+    besøgende på mahope.tools med 100 % bounce, og dens egen `<h1>`-sætning
+    omhandlede præcis den fejl værktøjet nu retter for læseren.
 21. **Én rapport pr. kunde i stedet for én fil med alle kunder i.** Hvem: bureauer
     og webbureauer, der er målgruppen for `/compliance-site-check`’s egen
     teksthint («auditing several client sites»). Tal: rapporter pr. kørsel med

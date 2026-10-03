@@ -51,6 +51,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 SIDER = ("text-on-image-checker.html", "text-on-image-checker-da.html")
+# De to artikler der indlejrer samme værktøj. De males ikke af `dom()` — de
+# kører kernen med andre billeder og deres egne tekster — men de bærer de
+# *samme* strenge, så en rettelse på værktøjssiden uden tilsvarende på
+# artiklen er den fejl der læseren møder som en dansk læser.
+ARTIKLER = ("blog/text-on-image-contrast-check.html",
+            "da/blog/tekst-paa-billede-kontrasttjek.html")
 
 # Tallene er WCAG 2.1's egne: L = 0.2126R + 0.7152G + 0.0722B over
 # lineærliserede kanaler, og forholdet er (Llight + 0.05) / (Ldark + 0.05).
@@ -189,9 +195,38 @@ class Ctx {
   }
   set font(v) { this._font = v; const m = /(\d+(?:\.\d+)?)px/.exec(v); this._fontPx = m ? +m[1] : 10; }
   get font() { return this._font; }
-  set fillStyle(v) { this._fill = (v && v.addColorStop) ? [128, 128, 128] : hexToRgb(v || '#000'); }
+  // `#rrggbbaa` skal læses *rigtigt*. `drawScrim()` sætter netop den form
+  // (`scrim.hex + alpha-hex`), fordi canvas kun kan blande én farve med én
+  // alfa. En stub der kaster de otte tegn væk ville male sløret i *fuld
+  // uopaque* sort, og porten ville så måle en baggrund læseren aldrig ser.
+  // Før 3/10 fandtes ingen alfa her, så det er en tilføjelse — ikke en
+  // ændring af noget der virkede.
+  set fillStyle(v) {
+    if (v && v.addColorStop) { this._fill = [128, 128, 128]; this._alpha = 1; return; }
+    const m = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(String(v || '#000'));
+    if (!m) { this._fill = hexToRgb(v || '#000'); this._alpha = 1; return; }
+    this._fill = hexToRgb('#' + m[1]);
+    this._alpha = m[2] === undefined ? 1 : parseInt(m[2], 16) / 255;
+  }
   get fillStyle() { return '#000000'; }
   clearRect() { this.buf.data.fill(0); }
+  // Sløret males *rigtigt* ind i bufferen, så `getImageData` læser den
+  // blanding læseren ser. Uden dette ville porten måle billedet uden slør og
+  // «fix»-dommen ville være grøn på et tal værktøjet ikke viser.
+  fillRect(x, y, w, h) {
+    const d = this.buf, W = this.cv.width, a = this._alpha === undefined ? 1 : this._alpha;
+    const x0 = Math.max(0, Math.round(x)), y0 = Math.max(0, Math.round(y));
+    const x1 = Math.min(W, Math.round(x + w)), y1 = Math.min(this.cv.height, Math.round(y + h));
+    for (let py = y0; py < y1; py++) for (let px = x0; px < x1; px++) {
+      const i = (py * W + px) * 4;
+      for (let k = 0; k < 3; k++) d.data[i + k] = Math.round(this._fill[k] * a + d.data[i + k] * (1 - a));
+      d.data[i + 3] = 255;
+    }
+  }
+  // `drawScrim()` gemmer og gendanner tilstanden omkring sit `fillRect`, så
+  // sløret ikke smitter videre på bogstaverne der tegnes bagefter.
+  save() { this._saved = { fill: this._fill.slice(), alpha: this._alpha, font: this._font }; }
+  restore() { if (this._saved) { this._fill = this._saved.fill; this._alpha = this._saved.alpha; this._font = this._saved.font; } }
   drawImage(img, _dx, _dy, dw, dh) {
     const s = img._pix, d = this.buf, W = this.cv.width;
     for (let y = 0; y < dh; y++) {
@@ -241,7 +276,7 @@ class Ctx {
   // Demo-billedet tegnes med gradient og cirkel; porten dømmer ikke demoen,
   // men koden skal kunne køre igennem den.
   createLinearGradient() { return { addColorStop() {} }; }
-  beginPath() {} arc() {} fill() {} fillRect() {}
+  beginPath() {} arc() {} fill() {}
 }
 
 class Canvas {
@@ -271,6 +306,23 @@ class El {
   getBoundingClientRect() { return this._c.getBoundingClientRect(); }
   addEventListener(t, fn) { (this._l[t] = this._l[t] || []).push(fn); }
   fire(t, ev) { (this._l[t] || []).forEach(function (f) { f(ev || {}); }); }
+  // `updateResult()` binder «fix»-knappen den lige har skrevet ved at slå den
+  // op med `res.querySelector('[data-ti-fix]')`. En stub uden `querySelector`
+  // fik porten til at dø med en TypeError *ved sidevisning*, så den dømmede
+  // ingen fejl overhovedet — grøn fordi den aldrig kom så langt.
+  //
+  // Den skal dog give det **samme** element hver gang den spørgs for samme
+  // selector. Et nyt objekt hver gang ville være en knap uden lyttere: et
+  // klik på den ville ikke gøre noget, og porten ville se uændrede tal og
+  // dømme «rettelsen virker ikke» om en kern der virker fint. Derfor caches
+  // den pr. selector — præcis som en rigtig browser gør, fordi der kun er én
+  // knap i markup'en.
+  querySelector(sel) {
+    if (!this._q) this._q = {};
+    if (!this._q[sel]) this._q[sel] = new El(sel);
+    return this._q[sel];
+  }
+  click() { this.fire('click', {}); }
 }
 
 // Image-stubben: `loadFile()` sætter onload og derefter src, så src-setteren
@@ -331,6 +383,22 @@ function lodret(w, h, hexOeverst, hexNederst) {
   return a;
 }
 
+// Et todelt billede hvor den *venstre* halvdel er én farve og den højre en
+// anden. Det er den form «fix»-knappen er skrevet til: tekstkassen dækker
+// begge sider, så værktøjet måler det dårligste par, og rettelsen skal løse
+// begge ende på én gang. `lodret()` kan ikke bruges — den deler kun de
+// nederste 10 rækker, så kassen ville ligge i én halvdel, og rettelsen ville
+// aldrig blive prøvet af på den svære del.
+function todeltVandret(w, h, hexVenstre, hexHoejre) {
+  const d = ensfarvet(w, h, hexVenstre), e = ensfarvet(w, h, hexHoejre);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const p = x < w / 2 ? d : e, i = (y * w + x) * 4;
+    d.data[i] = p.data[i]; d.data[i + 1] = p.data[i + 1];
+    d.data[i + 2] = p.data[i + 2]; d.data[i + 3] = 255;
+  }
+  return d;
+}
+
 // ==========================================================================
 // DOM'en sidekoden får, og så kører den.
 // ==========================================================================
@@ -381,6 +449,38 @@ function spoerg(billede, tekstfarve, tekst, x, y) {
   return m ? parseFloat(m[1].replace(',', '.')) : null;
 }
 
+/* ---- «Fix it»-knappen: den ende-til-ende-dom ----------------------
+ * `klikFix()` gør præcis det bruteren gør — trykker på den knap, kernen
+ * lige har skrevet — og læser det tal der så står på skærmen. Den læser
+ * *markup'en*, ikke et tal ud af en intern variabel, så den er målt på
+ * den kode der faktisk ships.
+ *
+ * Før 3/10 skrev værktøjet «try a darker/lighter text color» og standsede.
+ * Uden denne funktion dømmer ingen port at rettelsen virker: mutationen
+ * «fjern knappens lytter» giver præcis de samme 22 tal som den rigtige
+ * kode, fordi tallene er ændret *inden* knappen skrives. */
+function fixKnap() {
+  const res = nodes['result'];
+  const knap = res.querySelector('[data-ti-fix]');
+  if (!knap) return null;
+  knap.click();
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+  return { fik: m ? parseFloat(m[1].replace(',', '.')) : null, harKnap: true };
+}
+function fixEfter(billede, tekstfarve, tekst, x, y) {
+  Img.next = billede;
+  nodes['file'].files = [{ type: 'image/png' }];
+  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+  nodes['fg'].value = tekstfarve; nodes['fg'].fire('input');
+  if (tekst !== undefined) { nodes['text'].value = tekst; nodes['text'].fire('input'); }
+  if (x !== undefined) {
+    nodes['cv'].fire('mousedown', { clientX: x, clientY: y, preventDefault: function () {} });
+  }
+  const foer = spoerg(billede, tekstfarve, tekst, x, y);
+  const efter = fixKnap();
+  return { foer: foer, efter: efter };
+}
+
 const FARVEPAR = __FARVEPAR__;
 const FLADT = __FLADT__;
 const TODELT = __TODELT__;
@@ -396,7 +496,32 @@ for (const t of TODELT) {
 // Den ene case hvor bedste og dårligste baggrund kan ligge i samme kasse.
 svar.push({ navn: GRADIENT[0], forventet: GRADIENT[6],
             fik: spoerg(gradient(GRADIENT[1], GRADIENT[2], '#ffffff', '#000000', 120), GRADIENT[5], __GRADIENT_TEKST__, GRADIENT[3], GRADIENT[4]) });
-console.log(JSON.stringify(svar));
+// De to billeder rettelsen er skrevet til: det ene kan klares med én
+// tekstfarve, det andet kræver et slør fordi ingen farve består begge
+// ende. Begge er **fejlende** i udgangspunktet, så tallet efter et tryk
+// på knappen kan dømmes mod det krav, siden viser.
+const FIX = [
+  // Alle fire er billeder hvor den **venstre** halvdel er mørkere end den
+  // højre, og teksten står midt i overgangen — så kassen dækker begge ende
+  // og værktøjet måler det dårligste par. Det er den situation «fix» er
+  // skrevet til; på et ensfarvet billede ville den altid bestå med hvid
+  // tekst, og knappen ville aldrig blive prøvet af.
+  { navn: 'jævnt baggrund (tekstfarve)', bg: ['#60646c', '#787c84'], farve: '#ffffff', krav: 4.5 },
+  { navn: 'midtone baggrund (tekstfarve)', bg: ['#6e727a', '#82868e'], farve: '#ffffff', krav: 4.5 },
+  { navn: 'spredt baggrund (slør)', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 4.5 },
+  { navn: 'spredt baggrund, stor tekst', bg: ['#161a22', '#ebeef2'], farve: '#ffffff', krav: 3 },
+];
+const fixSvar = [];
+for (const f of FIX) {
+  const d = todeltVandret(400, 300, f.bg[0], f.bg[1]);
+  // `fontsize`-stubben står på `large`, så 4,5:1-casen sættes til `small` —
+  // ellers ville alle fire dømme det samme krav, og 3:1-casen ville være
+  // en dublet af den første.
+  nodes['fontsize'].value = f.krav === 3 ? 'large' : 'small';
+  const r = fixEfter(d, f.farve, 'Dette er en overskrift over et todelt billede', 20, 140);
+  fixSvar.push({ navn: f.navn, krav: f.krav, foer: r.foer, efter: r.efter });
+}
+console.log(JSON.stringify({ svar: svar, fix: fixSvar }));
 """
 
 # Tre mutationer. Hver især en reel fejl i samplingslogikken, og porten
@@ -445,8 +570,8 @@ MUTATIONER = (
     # over, svarer værktøjet 21:1 oveni en baggrund der indeholder rent
     # sort. Det er den fejl en læser aldrig ville få at vide.
     ("springer den mørkeste baggrund over og svarer på den bedste",
-     "      [minC, maxC].forEach(function (c) {",
-     "      [maxC].forEach(function (c) {"),
+     "      [visMin, visMax].forEach(function (c) {",
+     "      [visMax].forEach(function (c) {"),
     # Flytter tekstkassen opad i stedet for at klippe den. Det er den fejl
     # der læseren mærker først på et fladt billede: kassen løber op i det
     # hvide og svaret falder fra 21:1 til 1:1.
@@ -465,8 +590,12 @@ def byg_kode(kode: str) -> str:
             .replace("__TODELT__", json.dumps(list(TODELT))))
 
 
-def koer(kode: str) -> list[dict]:
-    """Kør sidekoden i Node-harnessen og læs de tal den viser."""
+def koer(kode: str, hele: bool = False):
+    """Kør sidekoden i Node-harnessen og læs de tal den viser.
+
+    `hele=True` giver hele svaret (samplings-tallene *og* fix-dommen); ellers
+    kun tallene, fordi det er dem de fleste kald vil have.
+    """
     if shutil.which("node") is None:
         raise SystemExit("FEJL: node mangler. Porten dømmer den kode der "
                          "factisk ships, så den kan ikke springe Node over.")
@@ -477,10 +606,64 @@ def koer(kode: str) -> list[dict]:
                            timeout=120, cwd=ROOT)
     if p.returncode != 0:
         raise SystemExit("FEJL: Node-harnessen døde:\n" + (p.stderr or p.stdout)[:2000])
-    linje = [l for l in p.stdout.splitlines() if l.startswith("[")]
+    linje = [l for l in p.stdout.splitlines() if l.startswith("{")]
     if not linje:
         raise SystemExit("FEJL: harnessen skrev intet resultat:\n" + p.stdout[:2000])
-    return json.loads(linje[-1])
+    # Harnessen skriver både samplings-tallene og fix-dommen i ét objekt, så
+    # ét kørsel giver dem begge. Uden `hele` får kald kun tallene — dem er
+    # `dom()` bygget til, og dem de mutationer i `self_test()` sammenligner.
+    r = json.loads(linje[-1])
+    return r if hele else r["svar"]
+
+
+def dom_fix(fix: list[dict]) -> list[str]:
+    """Døm «Fix it»-knappen på den kode der faktisk kører.
+
+    Fire krav, og de er fire forskellige fejlformer:
+
+    1. **Den fejler i udgangspunktet.** Ellers ville «rettelsen» være en knap
+       der trykkes på et billede, der allerede består, og dommen ville være
+       grøn af den grund alene.
+    2. **Der står en knap at trykke på.** Ellers har kernen skrevet en
+       beskrivelse uden en handling, og det er den fejl værktøjet havde
+       før 3/10 i en anden form: et råd uden en vej.
+    3. **Efter trykket består kravet.** Dommen læser tallet i `innerHTML` —
+       altså det der står på skærmen — ikke en intern variabel. Det er den
+       *ny måling af det samme billede*, ikke et løfte om at et bedre tal
+       ville komme, og det er præcis forskellen på disse to.
+    4. **Forbedringen er reel.** Et krav på 4,5:1 der en mutation løser ved at
+       sætte farven til rent sort, ville også bestå (3). Derfor skal den nye
+       måling ligge *mellem* kravet og den gamle — altså tæt på grænsen, som
+       er det en god rettelse er, og ikke langt over den. En mutation der
+       "løser" billedet ved at gøre alt sort ville landet over 10:1 og være
+       dømt rød; en mutation der intet gør, lander under kravet og er dømt
+       rød af (3).
+    """
+    fund: list[str] = []
+    for f in fix:
+        krav = f["krav"]
+        foer, efter = f.get("foer"), (f.get("efter") or {})
+        if foer is None:
+            fund.append(f"{f['navn']}: værktøjet viser intet forholdstal før rettelsen")
+            continue
+        if foer >= krav:
+            fund.append(f"{f['navn']}: billedet består allerede {foer:.2f}:1 "
+                        f"(krav {krav}:1), så «fix»-knappen dømmer ingenting")
+            continue
+        if not efter.get("harKnap"):
+            fund.append(f"{f['navn']}: der står ingen «fix»-knap at trykke på")
+            continue
+        ny = efter.get("fik")
+        if ny is None:
+            fund.append(f"{f['navn']}: knappen blev trykket, men der står intet tal bagefter")
+        elif ny < krav:
+            fund.append(f"{f['navn']}: efter «fix» står der {ny:.2f}:1, "
+                        f"men kravet er {krav}:1")
+        elif ny > krav * 2:
+            fund.append(f"{f['navn']}: «fix» landede på {ny:.2f}:1 — mere end "
+                        f"dobbelt op mod kravet {krav}:1. Det er ikke en god "
+                        f"rettelse, det er en der ødelægger billedet")
+    return fund
 
 
 def dom(kode: str, r: list[dict] | None = None) -> list[str]:
@@ -571,8 +754,8 @@ def self_test() -> int:
          naer(svar.get(GRADIENT[0]), GRADIENT[6]), str(svar))
     # Bevis på at casen kan overraske: den mutation der springer den mørkeste
     # baggrund over skal svare 21:1 her, fordi den så kun ser den hvide.
-    spring = kode.replace("    [minC, maxC].forEach(function (c) {",
-                         "    [maxC].forEach(function (c) {", 1)
+    spring = kode.replace("      [visMin, visMax].forEach(function (c) {",
+                         "      [visMax].forEach(function (c) {", 1)
     bedste = {r["navn"]: r["fik"] for r in koer(spring)}.get(GRADIENT[0])
     tjek("gradientet kan svare 21:1 når kun den bedste baggrund tælles",
          naer(bedste, 21.00),
@@ -604,10 +787,40 @@ def main(argv: list[str] | None = None) -> int:
         # side mens porten faktisk udførte 10 — den dømte altså 22 løfter
         # og kørte 20, to af dem uden dom. Samme fejlform som de fund
         # porten er bygget til at dømme: et løfte uden dom.
-        r = koer(kode)
+        svar = koer(kode, hele=True)
+        r = svar["svar"]
         antal += len(r)
         for linje in dom(kode, r):
             fund.append(f"{fil}: {linje}")
+        # «Fix it»-knappen dømmes på samme måde, og hver af de fire fix-cases
+        # tæller som sit eget løfte — samme regel om at tælle på de rigtige
+        # resultater i stedet for et hårdkodet antal.
+        fixfund = dom_fix(svar.get("fix", []))
+        antal += len(svar.get("fix", []))
+        for linje in fixfund:
+            fund.append(f"{fil}: {linje}")
+
+    # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`
+    # prøver slør i begge retninger og vælger den mindste dækning, så på et
+    # lyst billede vinder det hvide slør med sort tekst. En side med kun én
+    # nøgle — eller med «mørkt» i den — ville fortælde læseren at have lagt
+    # et mørkt lag, når der ligger et lyst. Det er en påstand i brødteksten,
+    # og den skal kunne gå rød: derfor dømmes nøglerne, ikke et tegn.
+    for fil in SIDER + ARTIKLER:
+        html = (SITE / fil).read_text(encoding="utf-8")
+        antal += 2
+        for noegle in ("fixedScrimDark", "fixedScrimLight"):
+            m = re.search(rf"{noegle}:\s*'([^']*)'", html)
+            if m is None:
+                fund.append(f"{fil}: der er ingen `{noegle}`-tekst, så det lag "
+                            "kernen faktisk lagde bliver ikke beskrevet")
+            elif "%s" not in m.group(1):
+                fund.append(f"{fil}: `{noegle}` indeholder ikke `%s`, så "
+                            "dækningen står ikke i den beskrivelse læseren læser")
+        if re.search(r"\bfixedScrim\s*:", html):
+            fund.append(f"{fil}: `fixedScrim` med ét ord for begge slørretninger "
+                        "— brug `fixedScrimDark` og `fixedScrimLight`")
+
     if args.list:
         for linje in fund:
             print(linje)
