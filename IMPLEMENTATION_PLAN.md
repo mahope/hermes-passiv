@@ -1,28 +1,38 @@
 # STATUS
-- **Porten kunne ikke se den fejl den var skrevet til — og et af dens løfter var
-  død.** 3/10. `check_contrast_sampling` dømte ét billede pr. kald, og hvert
-  kald satte `fg` og affyrer `input` — den handler nulstiller sløret, så
-  porten ryddede netop den tilstand, fundet lå i. Ny **sekventiel** dom: foto A +
-  «fix», så foto B **kun uploadet**, så B målt igen ved den farve fixen
-  efterlod. Målt på den gamle kode: B **5,99:1 PASS** mod sine egne
-  **1,85:1 FAIL**, `.ti-fixed` under et urørt billede, ingen «fix»-knap.
-  Dødsårsagen fandt sig selv undervejs: `El.querySelector()` svarede altid et
-  element, så «der står ingen knap» var grøn fordi stubben ikke *kunne* se den.
-  Nu 44 løfter, `--self-test` **35/35**. `docs/plan-arkiv.md`.
-- **«Fix it» slog på det næste foto.** 3/10, review-fund HØJ. Målt før: foto B
-  7,94:1 PASS og «Also passes AAA» med «I put a 37 % light layer …» fra et andet
-  foto; egne tal 3,70:1 FAIL. Nu to linjer i `im.onload`. `docs/plan-arkiv.md`.
-- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10.
-  `scan-share` 75/75 med polaritet på tre mutationer. `docs/plan-arkiv.md`.
-- **Deploy:** målt 3/10 mod live `598665c`. `ceo/scan-delresultat`,
-  `ceo/contrast-fix-knap` og `ceo/afkortede-tekster` er **DEPLOY OK**. Kun
-  `ceo/fix-gaar-ikke-paa-naeste-foto` mangler: CI var rød, så deploy-jobbet blev
-  sprunget over. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
+- **Kontrasttjekkeren endte ved et tal. Nu afleverer den billedet.** 3/10.
+  Efter «Fix it» kan bruteren hente den rettede grafik som PNG — med sløret og
+  den nye tekstfarve i, fordi `downloadPng()` tegner igen før den eksporterer.
+  Fire sider (2 værktøjssider + 2 artikler) med egen tekst på knap og filnavn.
+  Ny dom på **den fil** der kommer ud: knap, PNG + `.png`-navn, og pixelvis at
+  den er billedet med rettelsen (alle pixels uopaque og forskellige fra det rå
+  foto). `check_contrast_sampling` **50 løfter**, `--self-test` **44/44**.
+  Fund undervejs: harnessens `cv` er et `El`, ikke en `Canvas`, så før
+  `toDataURL`-videre-sendelsen fik porten `undefined` — grøn af den grund at
+  den aldrig nåede kaldet.
+- **To fund fra 3/10 er lukket og ligger i `docs/plan-arkiv.md`:** den
+  sekventielle dom på to billeder i træk (nuværende 50 løfter) og «fix» der
+  slog på det næste foto (`im.onload` nulstiller `scrim` og `lastFix`).
+- **Deploy:** målt 3/10 mod live `39ff715`: `ceo/kontrast-tjek-to-fotos` og
+  `ceo/fix-gaar-ikke-paa-naeste-foto` er **DEPLOY OK**. PR-TJEK 3/10: 0 PR'er.
+  BRANCH-TJEK 2/10: 2 slettet.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
+
+- `VERIFICÉR DEPLOY: hent det rettede billede ceo/download-det-rettede-billede
+  2026-10-03 09:10` — på `/text-on-image-checker`, `/text-on-image-checker-da`
+  og de to artikler: upload et foto, tryk «Fix it», tryk «Download the image» /
+  «Hent billedet». Filen skal hedde `text-on-image-contrast.png` /
+  `tekst-paa-billede-kontrast.png` og vise **billedet med sløret og den nye
+  tekstfarve** — ikke en gennemsigtig flade med bogstaver. Resten af ændringen
+  ligger i porten og er målt i gaten: `python3 tools/check_contrast_sampling.py`
+  skal sige **50 løfter** og `--self-test` **44/44**.
+
+- `DEPLOY OK 3/10` `ceo/kontrast-tjek-to-fotos` — live `39ff715`: porten tæller
+  **50 løfter** og `--self-test` **44/44** på ren HEAD, og `ceo/contrast-fix-knap`
+  ligger i samme live-build. Tidligere note:
 
 - `VERIFICÉR DEPLOY: kontrastporten dømmer to billeder i træk, og Scan-knappen
   er synlig igen ceo/kontrast-tjek-to-fotos 2026-10-03 11:15` — på `/scan` og
@@ -32,6 +42,10 @@
   tools/check_contrast_sampling.py` skal sige **44 løfter** og `--self-test`
   **35/35**. Nulstillingen af `scrim`/`lastFix` er fra `ceo/fix-gaar-ikke-paa-
   naeste-foto` og stadig ikke live — se næste note.
+
+- `DEPLOY OK 3/10` `ceo/fix-gaar-ikke-paa-naeste-foto` — live `39ff715`:
+  `text-on-image-core.js` har **4** `lastFix = null`, heraf to i `im.onload`
+  lige før `updateAll()`. Tidligere note:
 
 - `VERIFICÉR DEPLOY: «Fix it» nulstiller sløret ved billedskift
   ceo/fix-gaar-ikke-paa-naeste-foto 2026-10-03 07:35` — på
@@ -452,6 +466,15 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     fem i én fil, så det er en funktion der mangler, ikke en der skal opfindes.
     **Åbent:** se ❓ — pro-tabellen på samme side lover kundeklar rapport som
     den betalte vare, så jeg kan ikke bygge den gratis uden dit valg.
+25. **Den rettede grafik som en fil.** Hvem: designere der lægger tekst på et
+    foto og har brugt værktøjet til at få den til at bestå. Tal: downloads pr.
+    uge (baseline **0** — der var ingen vej; værktøjet endte ved et tal, og så
+    måtte bruteren selv finde ud af hvordan han fik sit rettede billede ud igen,
+    målt på koden 3/10). Accept: én klik giver et PNG af *billedet med
+    rettelsen* på alle fire sider, og porten dømmer den hentede fil — knap,
+    format, navn og pixels — ikke bare at knappen findes. Datagrund: artiklen
+    `/blog/text-on-image-contrast-check` er 8 af 18 besøgende på mahope.tools
+    (44 % af al trafik, 100 % bounce), og værktøjet er præcis der inde.
 24. ~~**Et delt scanelink, der viste en tom formular.**~~ **Leveret 3/10.**
     Se punkt 1 i STATUS. Hvem: bureauer og webbureauer, der scanner en kundes
     side og vil sende fundene videre. Tal: fund delt pr. scanning med et helt

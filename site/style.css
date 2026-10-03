@@ -663,6 +663,9 @@ select.ti-input { max-width: 180px; }
    `inline-flex` + `align-items:center` er samme ordning som bogbanneret fik
    2/10, fordi `.btn` er `display:inline-block` i shallen. */
 .ti-fix { min-height: 44px; display: inline-flex; align-items: center; }
+/* Samme 44 px som «fix»-knappen: det er den anden handling i resultatet, og
+   en knap der er smallere end to fingre på en telefon er ikke en knap. */
+.ti-dl { min-height: 44px; display: inline-flex; align-items: center; }
 .ti-fixed { font-size: .85rem; color: var(--color-text-muted); }
 
 /* `.ti-field` er en *kolonne* (`flex-direction: column`), så `flex: 1 1 12rem`

@@ -284,6 +284,19 @@ class Canvas {
   getContext() { if (!this._ctx) this._ctx = new Ctx(this); return this._ctx; }
   getBoundingClientRect() { return { left: 0, top: 0, width: this.width, height: this.height }; }
   get _pix() { return { w: this.width, h: this.height, data: this.getContext().buf.data }; }
+  // `downloadPng()` kalder `toDataURL('image/png')`. En stub uden den døde med
+  // en TypeError *ved klikket* — altså først når bruteren trykker, hvilket er
+  // netop den fejl porten skal se. Den gemmer bufferen **som den ser ud i det
+  // øjeblik** kaldet kommer, så dommen kan spørge om den hentede fil er det
+  // bruteren så (billedet med tekst og slør) eller kun bogstaverne på en
+  // gennemsigtig baggrund — `sampleContrast()` efterlader præcis den sidste.
+  toDataURL(type) {
+    Eksport.type = type || 'image/png';
+    Eksport.bredde = this.width;
+    Eksport.hoejde = this.height;
+    Eksport.pixels = Uint8ClampedArray.from(this.getContext().buf.data);
+    return 'data:' + Eksport.type + ';base64,iVBORw0KGgo=';
+  }
 }
 
 class El {
@@ -304,6 +317,11 @@ class El {
   get height() { return this._c ? this._c.height : 0; }
   set height(v) { if (this._c) this._c.height = v; }
   getContext() { return this._c.getContext(); }
+  // `cv` er i kernen `document.getElementById('cv')` — altså *elementet*, ikke
+  // konteksten. I browseren er elementet en canvas og har selv `toDataURL()`.
+  // Uden videre-sendelsen her ville `downloadPng()` få `undefined` og stå med
+  // en TypeError, og porten ville dømme en kern der virker.
+  toDataURL(t) { return this._c.toDataURL(t); }
   getBoundingClientRect() { return this._c.getBoundingClientRect(); }
   addEventListener(t, fn) { (this._l[t] = this._l[t] || []).push(fn); }
   fire(t, ev) { (this._l[t] || []).forEach(function (f) { f(ev || {}); }); }
@@ -419,6 +437,10 @@ function todeltVandret(w, h, hexVenstre, hexHoejre) {
 // DOM'en sidekoden får, og så kører den.
 // ==========================================================================
 const cv = new Canvas(300, 150);
+// Hvad eksporten faktisk gjorde. Anchoren oprettes af kernen og klikkes af
+// den, så det er her porten ser om der kom en fil ud med et navn — ikke om
+// der stod en knap i markup'en.
+const Eksport = { ankre: [], type: null, bredde: 0, hoejde: 0, pixels: null };
 const nodes = {
   'cv': new El('cv', { canvas: cv }),
   'file': new El('file'),
@@ -430,7 +452,20 @@ const nodes = {
 };
 globalThis.document = {
   getElementById: function (id) { return nodes[id] || new El(id); },
-  createElement: function (t) { return t === 'canvas' ? new Canvas(1, 1) : new El(t); },
+  createElement: function (t) {
+    if (t === 'canvas') return new Canvas(1, 1);
+    const el = new El(t);
+    // `downloadPng()` sætter `href`/`download` og kalder `click()`. Her
+    // registreres resultatet, så dommen kan dømme filen og ikke knappen.
+    if (t === 'a') {
+      const raa = el.click.bind(el);
+      el.click = function () {
+        Eksport.ankre.push({ href: el.href || '', download: el.download || '' });
+        raa();
+      };
+    }
+    return el;
+  },
 };
 // I en browser *er* `window` `globalThis`. Det er ikke en bivirkende detalje:
 // kernen lægger `TiContrast` på `globalThis`, og siden kalder den gennem
@@ -611,6 +646,56 @@ nodes['fg'].value = farveEfterFix; nodes['fg'].fire('input');
 uploadBillede(sekB);
 const renB2 = laesSkarm();
 
+/* ---- Download-knappen: den ende-til-ende-dom ----------------------
+ * Kæden er den bruteren går: upload → «Fix it» → «Download». Den sidste
+ * handling er den nye, og den er den der *afleverer* noget — før 3/10 endte
+ * værktøjet ved et tal, og bruteren måtte selv finde ud af, hvordan han fik
+ * sit rettede billede ud igen.
+ *
+ * Der dømmes tre løfter, fordi de er tre forskellige fejlformer:
+ *   a) der står en download-knap at trykke på;
+ *   b) et klik afleverer en PNG med et filnavn der ender på `.png` — ellers
+ *      hedder filen noget uden udvidelse, og den kan ikke bruges andet steder;
+ *   c) den hentede fil er **billedet med rettelsen**: hver pixel dækket, og
+ *      den afviger fra det rå foto, altså teksten og sløret er med.
+ *
+ * (c) er den dom, der kan se resten af `sampleContrast()`: den efterlader
+ * bogstaverne på en *ryddet* baggrund, så en eksport der springer
+ * `draw()` over giver en fil, der er næsten helt gennemsigtig — og
+ * bruteren får noget, der ikke ligner det han lige målte og rettede. */
+function downloadMaal() {
+  const res = nodes['result'];
+  Eksport.ankre.length = 0;
+  const knap = res.querySelector('[data-ti-dl]');
+  if (!knap) return { harKnap: false };
+  knap.click();
+  const a = Eksport.ankre[Eksport.ankre.length - 1] || null;
+  const px = Eksport.pixels, s = Img.next;
+  let uopaque = 0, afvigelser = 0;
+  if (px && s) {
+    const W = Eksport.bredde, H = Eksport.hoejde;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const di = (y * W + x) * 4;
+      const sy = Math.min(s.h - 1, Math.floor(y * s.h / H));
+      const sx = Math.min(s.w - 1, Math.floor(x * s.w / W));
+      const si = (sy * s.w + sx) * 4;
+      if (px[di + 3] === 255) uopaque++;
+      if (px[di] !== s.data[si] || px[di + 1] !== s.data[si + 1]
+          || px[di + 2] !== s.data[si + 2]) afvigelser++;
+    }
+  }
+  return {
+    harKnap: true,
+    anker: a ? { href: a.href, download: a.download } : null,
+    uopaque: uopaque, total: Eksport.bredde * Eksport.hoejde,
+    afvigelser: afvigelser,
+  };
+}
+// Efter «fix» på A: sløret ligger på canvas, og netop den rettelse skal være
+// med i filen bruteren henter.
+fixEfter(sekA, sekFarve, sekTekst, 20, 140);
+const dlMaal = downloadMaal();
+
 console.log(JSON.stringify({
   svar: svar, fix: fixSvar,
   sekventiel: {
@@ -618,6 +703,7 @@ console.log(JSON.stringify({
     farve: sekFarve, farveEfterFix: farveEfterFix,
     fixA: fixA,
   },
+  download: dlMaal,
 }));
 """
 
@@ -819,6 +905,61 @@ def dom_sekventiel(s: dict | None) -> list[str]:
     return fund
 
 
+def dom_download(d: dict | None) -> list[str]:
+    """Døm at den rettede grafik også *kommer ud* som en fil.
+
+    Før 3/10 endte værktøjet ved et tal. Bruteren rettede teksten, fik et grønt
+    tal — og skulle bagefter selv finde ud af, hvordan han fik sit billede *med
+    sin egen rettelse* ud af værktøjet igen. Det er hele vejen fra et problem
+    til et billede, og det var det sidste stykke.
+
+    Tre løfter, tre forskellige fejlformer:
+
+    1. **Der står en knap.** Ellers har kernen skrevet en mulighed uden en
+       vej, som en råd uden en handling.
+    2. **Der kommer en fil ved tryk.** Ikke bare en knap: klikket skal sætte
+       `href` på et anchor med et `download`-navn der ender på `.png`. En
+       `data:image/jpeg` ville hedde `.png` og være en JPEG, og det er den
+       slags løfte filnavnet alene ikke kan holde.
+    3. **Filen er det bruteren så.** Dommen tæller pixelne i den hentede
+       buffer: de skal alle være uopaque (et billede med tekst og slør), og
+       de skal afvige fra det rå foto (teksten er med). `sampleContrast()`
+       efterlader bogstaverne på en *ryddet* baggrund, så en eksport der
+       springer `draw()` over er næsten helt gennemsigtig — filen ville hedde
+       «din rettede grafik» og vise en næsten tom baggrund med hvid tekst.
+    """
+    fund: list[str] = []
+    if not d:
+        return ["download: harnessen leverede ingen download at dømme"]
+    if not d.get("harKnap"):
+        fund.append("download: der står ingen download-knap, så den rettede "
+                    "grafik kan ikke hentes ud af værktøjet")
+        return fund
+    a = d.get("anker")
+    if not a:
+        fund.append("download: knappen blev trykket, men ingen fil blev afleveret "
+                    "— intet anchor fik et `href`")
+        return fund
+    if not str(a.get("href", "")).startswith("data:image/png"):
+        fund.append(f"download: filen kommer som `{str(a.get('href'))[:22]}` "
+                    "og ikke som PNG, så et filnavn der ender på .png ville være "
+                    "en løgnavn")
+    navn = str(a.get("download") or "")
+    if not navn.endswith(".png") or navn == ".png":
+        fund.append(f"download: filen hedder `{navn}`, så den kan ikke bruges "
+                    "andre steder — et download-navn skal ende på .png")
+    total = d.get("total") or 0
+    uopaque = d.get("uopaque") or 0
+    if total and uopaque < total:
+        fund.append(f"download: kun {uopaque} af {total} pixel i den hentede fil "
+                    "er dækket. Det er bogstaverne på en ryddet baggrund, ikke "
+                    "billedet med rettelsen — bruteren får en næsten tom fil")
+    if not (d.get("afvigelser") or 0):
+        fund.append("download: den hentede fil er pixel for pixel det rå foto, "
+                    "så hverken den nye tekstfarve eller sløret er med")
+    return fund
+
+
 def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     fund: list[str] = []
     for r in (r if r is not None else koer(kode)):
@@ -980,6 +1121,52 @@ def self_test() -> int:
          naer(bedste, 21.00),
          f"mutationen svarede {bedste}, så casen kan ikke se forskellen")
 
+    # 9: download-dommen skal være grøn på den rigtige kode og rød på to
+    # mutationer der hver især er en reel fejl i den nye handling. Uden dem er
+    # de tre løfter bare en tæller.
+    dl_ok = dom_download((koer(kode, hele=True) or {}).get("download"))
+    tjek("download-dommen er grøn på den kode der kører", dl_ok == [], str(dl_ok))
+    dl_glemt = dom_download(
+        (koer(kode.replace(" data-ti-dl>", " data-ti-dlx>", 1), hele=True)
+         or {}).get("download"))
+    tjek("download-dommen kan se en knap der ikke står i markup'en",
+         any("ingen download-knap" in f for f in dl_glemt), str(dl_glemt))
+    dl_rå = dom_download(
+        (koer(kode.replace("      draw();\n      var dataUrl;",
+                           "      drawTextLayer();\n      var dataUrl;", 1),
+              hele=True) or {}).get("download"))
+    tjek("download-dommen kan se en fil der er bogstaver på en ryddet baggrund",
+         any("dækket" in f for f in dl_rå), str(dl_rå))
+    dl_jpeg = dom_download(
+        (koer(kode.replace("cv.toDataURL('image/png')", "cv.toDataURL('image/jpeg')", 1),
+              hele=True) or {}).get("download"))
+    tjek("download-dommen kan se en fil der ikke er en PNG",
+         any("ikke som PNG" in f for f in dl_jpeg), str(dl_jpeg))
+
+    # 10: dommen skal kunne dømme hvert løft *individuelt*, så ingen af dem er
+    # grøn kun fordi et andet fejler.
+    def dl_rigtig():
+        return {"harKnap": True,
+                "anker": {"href": "data:image/png;base64,iVBORw0KGgo=",
+                          "download": "text-on-image-contrast.png"},
+                "uopaque": 120000, "total": 120000, "afvigelser": 412}
+
+    tjek("download-dommen er grøn på et rigtigt mål",
+         dom_download(dl_rigtig()) == [], str(dom_download(dl_rigtig())))
+    tjek("download-dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_download(None)), "harnessen gav intet")
+    tjek("download-dommen kan se et knap-tryk uden fil",
+         any("ingen fil blev afleveret" in f
+             for f in dom_download({"harKnap": True})),
+         "tomt mål blev dømt grønt")
+    tjek("download-dommen kan se et filnavn uden .png",
+         any(".png" in f for f in dom_download(dict(dl_rigtig(), anker={
+             "href": "data:image/png;base64,iVBORw0KGgo=", "download": "billede"}))),
+         "forkert filnavn blev dømt grønt")
+    tjek("download-dommen kan se en fil uden teksten",
+         any("rå foto" in f for f in dom_download(dict(dl_rigtig(), afvigelser=0))),
+         "fil uden rettelse blev dømt grønt")
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-contrast-sampling-selftest: {'OK' if not fejl else 'RØD'} "
@@ -1026,6 +1213,13 @@ def main(argv: list[str] | None = None) -> int:
         if sek:
             antal += 3
         for linje in dom_sekventiel(sek):
+            fund.append(f"{fil}: {linje}")
+        # Download: tre løfter på den fil værktøjet afleverer. Tælles kun når
+        # dommen har noget at dømme — samme regel som den sekventielle kæde.
+        dl = svar.get("download")
+        if dl:
+            antal += 3
+        for linje in dom_download(dl):
             fund.append(f"{fil}: {linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`

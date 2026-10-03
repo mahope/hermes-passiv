@@ -6014,3 +6014,20 @@ commits grønne CI.
 fandt **1 fund** — STATUS-punktet «Scan-knappen var usynlig» havde **intet tal**,
 og porten dømmer at hvert punkt har et. Rettelsen er ikke kosmetisk: det er det
 punkt, der lå på pladsen for den måling der nu står først.
+
+## 3/10 — lukket i `ceo/kontrast-tjek-to-fotos` og `ceo/fix-gaar-ikke-paa-naeste-foto`
+
+- **Porten kunne ikke se den fejl den var skrevet til — og et af dens løfter var
+  død.** `check_contrast_sampling` dømte ét billede pr. kald, og hvert kald satte
+  `fg` og affyrer `input` — den handler nulstiller sløret, så porten ryddede
+  netop den tilstand, fundet lå i. Ny **sekventiel** dom: foto A + «fix», så foto
+  B **kun uploadet**, så B målt igen ved den farve fixen efterlod. Målt på den
+  gamle kode: B **5,99:1 PASS** mod sine egne **1,85:1 FAIL**, `.ti-fixed` under
+  et urørt billede, ingen «fix»-knap. Dødsårsagen fandt sig selv undervejs:
+  `El.querySelector()` svarede altid et element, så «der står ingen knap» var grøn
+  fordi stubben ikke *kunne* se den. Nu 50 løfter, `--self-test` **44/44**.
+- **«Fix it» slog på det næste foto.** Review-fund HØJ. Målt før: foto B 7,94:1
+  PASS og «Also passes AAA» med «I put a 37 % light layer …» fra et andet foto;
+  egne tal 3,70:1 FAIL. Rettelsen er to linjer i `im.onload`:
+  `scrim = null; lastFix = null;` lige før `updateAll()`. Live-målt 3/10 på
+  `39ff715`: 4 forekomster af `lastFix = null`, hvoraf de to i `im.onload`.

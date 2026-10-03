@@ -379,6 +379,7 @@
           '<br>' + (s.tryFix || '')) +
         (fix && s.fixBtn ? '<br><button type="button" class="btn-secondary ti-fix" data-ti-fix>' + s.fixBtn + '</button>' : '') +
         (lastFix ? '<br><span class="ti-fixed">' + fixBeskrivelse(lastFix) + '</span>' : '') +
+        (s.downloadBtn ? '<br><button type="button" class="btn-secondary ti-dl" data-ti-dl>' + s.downloadBtn + '</button>' : '') +
         '<br><span style="font-size:.85rem;color:var(--color-text-muted)">' + (s.measured || '') + '</span>'
         + (s.proCard || '') +
         '<br><span style="font-size:13px;color:var(--color-text-muted)">' + (s.note || '') + '</span>';
@@ -389,6 +390,44 @@
       // består, så der ikke kan opstå et uendeligt klik-loop.
       var btn = res.querySelector('[data-ti-fix]');
       if (btn) btn.addEventListener('click', function () { applyFix(fix); });
+      var dl = res.querySelector('[data-ti-dl]');
+      if (dl) dl.addEventListener('click', downloadPng);
+    }
+
+    // Den rettede grafik som en fil. Før 3/10 endte værktøjet ved et tal: bruteren
+    // rettede teksten, fik et grønt tal — og skulle selv finde ud af hvordan han
+    // fik sit billede med sin egen rettelse ud af værktøjet igen. Det er hele
+    // grunden til at han er her.
+    //
+    // `draw()` kaldes igen **før** eksporten, fordi `sampleContrast()` efterlader
+    // canvas med *kun bogstaverne* på et ryddet billede. Uden den ville den
+    // hentede fil være en transparent baggrund med hvid tekst — altså ikke det
+    // bruteren lige har set og målt. Efter «Fix it» er sløret og den nye
+    // tekstfarve dermed *med* i filen, hvilket er hele poenget.
+    //
+    // Filnavnet er sidens egen streng, aldrig bruterens tekst: et navn bygget på
+    // noget en besøgende har skrevet kan indeholde `/`, `..` eller et tegn, der
+    // ikke kan bruges i et filnavn.
+    function downloadPng() {
+      if (!img) return false;
+      draw();
+      var dataUrl;
+      try {
+        dataUrl = cv.toDataURL('image/png');
+      } catch (e) {
+        return false;
+      }
+      var doc = global.document;
+      var a = doc.createElement('a');
+      a.href = dataUrl;
+      a.download = (s.fileStem || 'text-on-image') + '.png';
+      // Chrome og Firefox udløser et download på et anchor der ikke sidder i
+      // dokumentet, men hænger det op i DOM'en mens klikket varer, gør det også
+      // det i Safari — og fjernes igen bagefter, så der ikke bliver liggende.
+      if (doc.body && doc.body.appendChild) doc.body.appendChild(a);
+      if (a.click) a.click();
+      if (a.remove) a.remove();
+      return true;
     }
 
     function loadFile(file) {
