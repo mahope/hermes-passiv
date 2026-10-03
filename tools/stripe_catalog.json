@@ -1885,7 +1885,7 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker.html:124-126 «Nothing on this page says whether the rest of the site passes — that takes a crawl of every page, and it is what EUComply Pro does»",
+          "where": "site/text-on-image-checker.html:149-151 «Nothing on this page says whether the rest of the site passes — that takes a crawl of every page, and it is what EUComply Pro does»",
           "labels": {
             "en": [
               "Every image on every page of the site"
@@ -1897,7 +1897,7 @@
         },
         {
           "id": "fifteen-checks",
-          "where": "site/text-on-image-checker.html:126-127 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:151-152 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
           "labels": {
             "en": [
               "The 15 accessibility rules around each image"
@@ -1909,7 +1909,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/text-on-image-checker.html:126-127 «in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:151-152 «in one report you can hand to a client»",
           "labels": {
             "en": [
               "A PDF report you can hand a client"
@@ -1969,7 +1969,7 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker-da.html:125-127 «Intet på denne side fortæller, om resten af websitet består — det kræver et gennemløb af alle sider, og det er det EUComply Pro gør»",
+          "where": "site/text-on-image-checker-da.html:150-152 «Intet på denne side fortæller, om resten af websitet består — det kræver et gennemløb af alle sider, og det er det EUComply Pro gør»",
           "labels": {
             "en": [
               "Every image on every page of the site"
@@ -1981,7 +1981,7 @@
         },
         {
           "id": "fifteen-checks",
-          "where": "site/text-on-image-checker-da.html:127-128 «EAA/WCAG, cookie-samtykke og NIS2-fund i én rapport, du kan give videre til en kunde»",
+          "where": "site/text-on-image-checker-da.html:152-153 «EAA/WCAG, cookie-samtykke og NIS2-fund i én rapport, du kan give videre til en kunde»",
           "labels": {
             "en": [
               "The 15 accessibility rules around each image"
@@ -1993,7 +1993,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/text-on-image-checker-da.html:128 «rapport, du kan give videre til en kunde»",
+          "where": "site/text-on-image-checker-da.html:153 «rapport, du kan give videre til en kunde»",
           "labels": {
             "en": [
               "A PDF report you can hand a client"

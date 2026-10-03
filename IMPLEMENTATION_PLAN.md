@@ -1,33 +1,32 @@
 # STATUS
-- **Denne iteration: mål tekst på en gradient, ikke kun på et billede.**
-  `ceo/gradient-baggrund` — Feature-kø punkt 4. Kernen maler gradienten ind i
-  præcis den `img`-plads et foto fylder, så `draw()`, `sampleContrast()`,
-  `findSpot()` og `downloadPng()` røres ikke en linje: **to ruter ind i 1**
-  måling. Baseline **0** ruter, nu **2** (`bgmode` vælger mellem dem).
-- **Retningen er CSS' egen.** `0deg` peger opad så startfarven ligger i bunden,
-  `180deg` bytter. Dømt på 4 løfter med **3 mutationer målt i den rigtige fil**
-  — slutstop malet som startfarve, vinklen ikke læst, «værste ende» sat til 0.
-  Hver giver rødt. `check_contrast_sampling` 124 → 132 løfter, selftests
-  144 → 150. Harnessen måtte lære at male en gradient **pixel for pixel**: før
-  var `createLinearGradient()` en no-op-stub, så «gradienten måles» havde været
-  grønt for enhver kode, også en der ignorerede begge stop.
-- **Porten fandt 2 huller i sig selv.** `demoEfterUpload()` blev læst i JSON'en
-  *til sidst* — altså efter at gradient-kæden sat `demoBillede = false` — så
-  mutationen «nulstil ikke flaget» stod grøn af en anden grund; målingen
-  tages nu med det samme. Og kæden for tekstblokke slutter med blok 2 valgt, så
-  et klik flyttede blok 2 og blok 1s tal blev liggende det samme: vælgeren
-  trykkes nu, som bruteren gør, med kernens **egne** selector.
-- **Ikke kørt:** rigtig browser ved 390/1280 — dommen skriver på WCAG-tærskler
-  (består/fejler), ikke på hardkodede tal. **Næste opgave: åbne opgave 5**, de
-  172 sider med to-tre knapper i folden. PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK
-  2/10. Sentry: ingen uløste fejl, og SDK'en er sat op (3/10).
+- **Denne iteration: rød gaten lå og blokerede ethvert deploy.** `deploy: needs:
+  gate`, så gaten rød på `main` betyder **intet deployes**. Målt: live
+  `text-on-image-core.js` har **0** forekomster af `bgmode`, så gradient-ruten
+  fra `b8ca1ba` lå færdig og udgivet-på-vent. Rød CI er her en **sendefrys**.
+- **Årsagen var de seks forældede `where`-pejlinger** i `tools/stripe_catalog.json`
+  på de to `text-on-image-checker`-sider: `0f9dd27` + `b8ca1ba` lagde 37 linjer
+  ind ovenfor dem. Rettet med portens **egen** `ryd()` målt på citaterne, ikke
+  ved at flytte tal: EN `149-151 / 151-152 / 151-152`, DA `150-152 / 152-153 /
+  153`. Revieweren foreslog `150-151 / 151-153` — **det ville være rødt igen**,
+  fordi «Nothing on this» slutter på linje 149 og «…NIS2 findings in» på 151.
+- **Porten slap ikke, og det er pointen.** Reviewens alternativ var at lade porten
+  dømme filen i stedet for intervallet; det ville gjort de 120 henvisninger
+  umærkelige i stille. CI fangede fejlen i den samme kørsel den opstod i.
+  `check_catalog_where` 120 funktioner grønne, selftest 11/11.
+- **Ikke kørt:** ingen browser, ingen UI-ændring — diffen er seks tal i én JSON-fil.
+  PR-TJEK 3/10: **0** PR'er. BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, og
+  SDK'en er sat op (3/10).
+- **Næste opgave: Feature-kø punkt 5** — artiklen 44 % af besøgene lander på,
+  bounce 100 %. Baslinen skal måles i browseren, før der røres ved den.
 - **❓ Til Mads:** uændret — `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`,
   bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon Squeezy,
   Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: mål tekst på en gradient ceo/gradient-baggrund 3/10 21:5x`
+`VERIFICÉR DEPLOY: pejlingerne i katalogen peger på citaterne igen ceo/catalog-where-pejlinger 3/10 20:5x`
+Graden deployer på push (ikke i vinduer), så næste iteration tjekker med ét
+`gh run list -L 1` og ét kald på live `text-on-image-core.js` efter `bgmode`.
 
 ## Åbne opgaver
 
@@ -164,3 +163,12 @@ på den **byggede** side; tallene er ikke vores egen trafik.
    allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
    dublet. Den reelle revne lå mellem flade farver og foto: en
    `linear-gradient`, som man ikke kan uploade.
+5. **Artiklen der 44 % af besøgene lander på, sender ingen hjem.** Hvem: de 8 af 18
+   besøgende på `/blog/text-on-image-contrast-check` — de kommer fra søgning efter
+   præcis det problem og går alle med 100 % bounce, mens selve værktøjet
+   `/text-on-image-checker` kun har 2. Tal: købs- og værktøjsknapper i artiklen
+   (baseline måles i browseren først). Accept: artiklen har **én** primær handling
+   over folden, der åbner tjekkeren med læserens eget eksempel, og porten
+   `check_first_action` dømmer pr. artikel (den dømmer i dag 172 sider for to-tre
+   knapper i folden). Datagrund: største enkelt indgang på sitet, højeste bounce,
+   og 44 % af alle besøg på én URL.
