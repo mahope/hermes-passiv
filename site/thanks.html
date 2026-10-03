@@ -39,15 +39,15 @@
 <body>
   <main class="thanks-wrap">
     <h1 id="title">Thanks for your purchase!</h1>
-    <p id="status" class="hint" role="status">Looking up your order…</p>
+    <p id="status" class="hint" role="status" data-t="looking">Looking up your order…</p>
     <div class="thanks-card" id="result" hidden></div>
     <p class="hint" id="mail"></p>
-    <nav class="thanks-foot" aria-label="Continue">
-      <a href="/license-lookup">Lost your key? Look it up again</a>
-      <a href="/free-tools">Back to the free tools</a>
-      <a href="/support">Support the free tools</a>
+    <nav class="thanks-foot" aria-label="Continue" data-t-aria="navLabel">
+      <a href="/license-lookup" data-t="navLookup">Lost your key? Look it up again</a>
+      <a href="/free-tools" data-t="navFree">Back to the free tools</a>
+      <a href="/support" data-t="navSupport">Support the free tools</a>
     </nav>
-    <p class="hint next">One key buys one product. If you need a different one, they are separate:
+    <p class="hint next" id="next" data-t-html="next">One key buys one product. If you need a different one, they are separate:
       <a href="/page-profile">Page Profile</a> finds slow pages and missing metadata,
       <a href="https://eucomplypro.com/pro/">EUComply Pro</a> keeps GDPR, NIS2 and accessibility
       checks running inside WordPress, and <a href="/free-tools">the free tools</a> stay free without a key.</p>
@@ -58,6 +58,175 @@
       var box = document.getElementById('result');
       var sid = new URLSearchParams(location.search).get('session_id') || '';
       function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+      // ------------------------------------------------------------------
+      // Sprog. Målt 3/10: `/thanks` var `lang="en"` med nul sprogdetektering,
+      // og `/da/thanks` er 404. Stripe sender *alle* kunder til `/thanks` lige
+      // efter betalingen, og den `success_url` kan ikke ændres — så det er den
+      // ene side en dansk kunde ser i købsøjeblikket. Siden vælger derfor sit
+      // eget sprog, samme URL, dansk tekst for dansk browser. Resten af familien
+      // ligger på dansk, så det er den mindre mærkelige halvdel.
+      //
+      // Én tabel, to sprog, samme nøgler. Det er derfor `tests/thanks-page.test.mjs`
+      // kan dømme at nøglepartiet er identisk: en dansk streng der mangler i
+      // `en` — eller omvendt — ville vise kunden en tom tekst.
+      //
+      // Kun vores egne strenge står her. De to steder der indsætter data fra
+      // serveren (`d.license_key`, filnavne, produktnavn) går gennem `esc()`
+      // lige som før, på begge sprog.
+      // ------------------------------------------------------------------
+      var STRINGS = {
+        en: {
+          lang: 'en',
+          h1: 'Thanks for your purchase!',
+          looking: 'Looking up your order…',
+          navLabel: 'Continue',
+          navLookup: 'Lost your key? Look it up again',
+          navFree: 'Back to the free tools',
+          navSupport: 'Support the free tools',
+          next: 'One key buys one product. If you need a different one, they are separate:'
+            + ' <a href="/page-profile">Page Profile</a> finds slow pages and missing metadata,'
+            + ' <a href="https://eucomplypro.com/pro/">EUComply Pro</a> keeps GDPR, NIS2 and accessibility'
+            + ' checks running inside WordPress, and <a href="/free-tools">the free tools</a> stay free without a key.',
+          notConfirmed: 'We could not confirm your order',
+          suffix: 'Mahope tools',
+          thanksBuy: 'Thanks for buying ',
+          thanksDonate: 'Thank you for supporting ',
+          noRef: 'No order reference in the link. Check your email for your license key or downloads.',
+          confirming: 'Confirming your payment…',
+          trouble: 'We are having trouble loading your order — trying again…',
+          network: 'Network problem — trying again…',
+          tooMany: 'Too many attempts.',
+          notFound: 'We could not find this order. Check your email, or reply to your receipt.',
+          ranOut: 'We could not load your order just now, but your payment went through. '
+            + 'Your Stripe receipt is the record of it — reply to that email and Mads will send what you bought.',
+          pendingOut: 'Your payment is not confirmed yet. Stripe is still processing it. '
+            + 'Your license key arrives by email as soon as it clears — if it has been more than an hour, '
+            + 'reply to your Stripe receipt and Mads will sort it out.',
+          limitedOut: ' The limit resets when the hour changes, so a reload '
+            + 'will work. Your payment went through either way: your Stripe receipt '
+            + 'is the record of it — reply to that email and Mads will send what you bought.',
+          keyHead: 'Your license key',
+          copy: 'Copy',
+          copied: 'Copied',
+          worksOn: 'Works on up to ',
+          worksOnTail: ' device(s)',
+          lifetimeHead: 'Lifetime license:',
+          lifetimeTail: ' one payment, no renewal and no expiry',
+          renews: ', renews with your subscription',
+          noExpiry: ', no expiry',
+          howTo: 'How to activate',
+          portal: '<strong>Your subscription renews yearly.</strong> You can cancel any time, '
+            + 'download your invoices and update your card or VAT ID yourself here: ',
+          portalLink: 'Manage your subscription',
+          donationHead: '<strong>Thank you — there is nothing to activate.</strong>',
+          donationHint: 'Your donation keeps the free tools free, and Stripe has emailed your receipt. '
+            + 'Questions? Just reply to that email.',
+          dlHead: '<strong>Your downloads</strong> (links work for 60 days)',
+          dlNone: '<strong>Your files are not available for download yet.</strong>',
+          missingSome: ' of your files are',
+          missingAll: 'The files you bought are',
+          missingRest: ' not available for download right now: ',
+          missingTail: '. Your payment went through, and your receipt email is the record of it'
+            + ' — reply to that email and we will sort it out.',
+          unreadable: 'We could not read your order. Your payment went through — reply to your Stripe receipt '
+            + 'and Mads will send what you bought.',
+          mailDonation: 'Stripe has emailed your receipt. There is nothing else to activate.',
+          mailSent: 'We have also emailed this to you. Nothing arrived? Check spam, or reply to your Stripe receipt and Mads will sort it out.',
+          mailNotSent: 'We could not email this to you, so save what is on this page now. Reply to your Stripe receipt and Mads will resend it.'
+        },
+        da: {
+          lang: 'da',
+          h1: 'Tak for dit køb!',
+          looking: 'Vi finder din ordre…',
+          navLabel: 'Fortsæt',
+          navLookup: 'Mistet din nøgle? Find den igen',
+          navFree: 'Tilbage til de gratis værktøjer',
+          navSupport: 'Støt de gratis værktøjer',
+          next: 'En nøgle køber ét produkt. Skal du bruge et andet, er de køb separat:'
+            + ' <a href="/page-profile">Page Profile</a> finder langsomme sider og manglende metadata,'
+            + ' <a href="https://eucomplypro.com/pro/">EUComply Pro</a> holder GDPR-, NIS2- og'
+            + ' tilgængelighedskontrol kørende inde i WordPress, og'
+            + ' <a href="/free-tools">de gratis værktøjer</a> er gratis uden nøgle.',
+          notConfirmed: 'Vi kunne ikke bekræfte din ordre',
+          suffix: 'Mahope tools',
+          thanksBuy: 'Tak for dit køb af ',
+          thanksDonate: 'Tak for din støtte til ',
+          noRef: 'Der står ingen ordrereference i linket. Se din mail — der står din licensnøgle eller dine filer.',
+          confirming: 'Vi bekræfter din betaling…',
+          trouble: 'Vi har svært ved at hente din ordre — prøver igen…',
+          network: 'Netværksproblem — prøver igen…',
+          tooMany: 'For mange forsøg.',
+          notFound: 'Vi fandt ikke denne ordre. Se din mail, eller svar på kvitteringen.',
+          ranOut: 'Vi kunne ikke hente din ordre lige nu, men din betaling er gået igennem. '
+            + 'Din kvittering fra Stripe er beviset — svar på den mail, så sender Mads det, du har købt.',
+          pendingOut: 'Din betaling er endnu ikke bekræftet — Stripe bearbejder den stadig. '
+            + 'Din licensnøgle kommer med mail, så snart betalingen er gået igennem. '
+            + 'Er der gået mere end en time, så svar på kvitteringen fra Stripe, så finder Mads ud af det.',
+          limitedOut: ' Grænsen nulstilles, når timen skifter, så et reload virker. '
+            + 'Din betaling er gået igennem uanset hvad: din kvittering fra Stripe er beviset'
+            + ' — svar på den mail, så sender Mads det, du har købt.',
+          keyHead: 'Din licensnøgle',
+          copy: 'Kopiér',
+          copied: 'Kopieret',
+          worksOn: 'Virker på op til ',
+          worksOnTail: ' enhed(er)',
+          lifetimeHead: 'Livstidslicens:',
+          lifetimeTail: ' én betaling, ingen fornyelse og intet udløb',
+          renews: ', fornyes med dit abonnement',
+          noExpiry: ', udløber aldrig',
+          howTo: 'Sådan aktiverer du',
+          portal: '<strong>Dit abonnement fornyes årligt.</strong> Du kan altid opsige det, '
+            + 'hente dine fakturaer og selv ændre dit kort eller momsnummer her: ',
+          portalLink: 'Administrér dit abonnement',
+          donationHead: '<strong>Tak — der er intet at aktivere.</strong>',
+          donationHint: 'Din donation holder de gratis værktøjer gratis, og Stripe har sendt kvitteringen med mail. '
+            + 'Spørgsmål? Svar bare på den mail.',
+          dlHead: '<strong>Dine filer</strong> (links virker i 60 dage)',
+          dlNone: '<strong>Dine filer er endnu ikke tilgængelige at hente.</strong>',
+          missingSome: ' af dine filer er',
+          missingAll: 'De filer, du har købt, er',
+          missingRest: ' ikke tilgængelige at hente lige nu: ',
+          missingTail: '. Din betaling er gået igennem, og kvitteringsmailen er beviset'
+            + ' — svar på den mail, så ordner vi det.',
+          unreadable: 'Vi kunne ikke læse din ordre. Din betaling er gået igennem — svar på kvitteringen'
+            + ' fra Stripe, så sender Mads det, du har købt.',
+          mailDonation: 'Stripe har sendt kvitteringen med mail. Der er intet andet at aktivere.',
+          mailSent: 'Vi har også sendt det til dig. Kom der ikke noget? Se spam, eller svar på kvitteringen fra Stripe, så finder Mads ud af det.',
+          mailNotSent: 'Vi kunne ikke sende det til dig, så gem det, der står på denne side, nu. Svar på kvitteringen fra Stripe, så sender Mads det igen.'
+        }
+      };
+      // Heltalsnøglen. `navigator.language` er det browseren selv bruger til
+      // dato og tal, så det er den ærlige kilde; `?lang=` er kun en håndgreb
+      // til den kunde der vil se den anden sprogversion, og den slår aldrig en
+      // streng uden for tabellen — den læses som nøgle, ikke som markup.
+      function sprog() {
+        var valgt = new URLSearchParams(location.search).get('lang');
+        if (valgt && STRINGS[valgt]) return valgt;
+        var lang = String(navigator.language || 'en');
+        return /^da\b/i.test(lang) ? 'da' : 'en';
+      }
+      var T = STRINGS[sprog()];
+      // Den statiske markup er engelsk, så den er den, en browser uden
+      // JavaScript (og den første maling) ser. Så snart scriptet kører,
+      // overtaler `data-t` den: `textContent` til tekst, `data-t-html` til de
+      // to afsnit med links. `<title>` og `<h1>` går gennem `titel()`, så de
+      // to ikke kan glide fra hinanden.
+      (function sprogMarkup() {
+        document.documentElement.lang = T.lang;
+        // `<title>` og `<h1>` går gennem `titel()` — de to må ikke kunne glide
+        // fra hinanden, og ratchetten i testen dømmer at ingen anden sted i
+        // scriptet rører dem. Målt 3/10 i Chromium: da denne linje manglede,
+        // stod «Thanks for your purchase!» i fanebladet på den danske side,
+        // mens nav, status og hele kortet var dansk.
+        titel(T.h1);
+        var t = document.querySelectorAll('[data-t]');
+        for (var i = 0; i < t.length; i++) t[i].textContent = T[t[i].getAttribute('data-t')];
+        var h = document.querySelectorAll('[data-t-html]');
+        for (var j = 0; j < h.length; j++) h[j].innerHTML = T[h[j].getAttribute('data-t-html')];
+        var nav = document.querySelector('[data-t-aria]');
+        if (nav) nav.setAttribute('aria-label', T[nav.getAttribute('data-t-aria')]);
+      })();
       // `<h1>` siger «Thanks for your purchase!» i markupken, fordi det er det
       // enhvert køb ender med. Men det er en *påstand*, og den skal kun stå
       // når Stripe har bekræftet ordren. Målt 3/10: `?session_id=cs_test_x`
@@ -77,13 +246,13 @@
       var bekræftet = false;
       function titel(t) {
         document.getElementById('title').textContent = t;
-        document.title = t + ' | Mahope tools';
+        document.title = t + ' | ' + T.suffix;
       }
       function fail(msg) {
         status.textContent = msg; status.className = 'hint err';
-        if (!bekræftet) titel('We could not confirm your order');
+        if (!bekræftet) titel(T.notConfirmed);
       }
-      if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail('No order reference in the link. Check your email for your license key or downloads.'); return; }
+      if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid)) { fail(T.noRef); return; }
       var tries = 0;
       // Målt 29/9: kun `202` blev gentaget. `503` ("Service temporarily
       // unavailable." / "Could not look up the payment.") gav op med det
@@ -100,17 +269,14 @@
       // gennemført, og det skal siden sige. Ellers ender de i en supportmail,
       // som er præcis den menneskelige indsats produkterne ikke må kræve.
       // Det gælder dog kun de fejl, der betyder *vi* ikke kunne svare.
-      var RAN_OUT = 'We could not load your order just now, but your payment went through. '
-        + 'Your Stripe receipt is the record of it — reply to that email and Mads will send what you bought.';
+      var RAN_OUT = T.ranOut;
       // `202` er en anden slags svar: Stripe har endnu ikke bekræftet betalingen,
       // så vi ved det modsatte af RAN_OUT. At lade den 202-strengen ende i "your
       // payment went through" hævder en bekræftelse vi ikke har — og det er den
       // eneste besked, kunden ville tro på og så vente på. Målt 30/9: de to
       // slutninger var ens, så en kunde med en langsom bankoverførsel blev
       // lovet en nøgle, der aldrig kommer. Her siger siden det den kan stå for.
-      var PENDING_OUT = 'Your payment is not confirmed yet. Stripe is still processing it. '
-        + 'Your license key arrives by email as soon as it clears — if it has been more than an hour, '
-        + 'reply to your Stripe receipt and Mads will sort it out.';
+      var PENDING_OUT = T.pendingOut;
       // `429` er endeligt, og det er den eneste grund til at den har sin egen
       // udgang. Målt 1/10: linjen var `if (x.code === 429 || x.code >= 500)
       // return again(…)`, så en kunde der ramte `/api/stripe/fulfillment`s egen
@@ -131,9 +297,7 @@
       // klokke-time, og den nulstilles, når timen slår. Derfor «inden for en
       // time» og ikke «om et par minutter» — det sidste ville være en løgn
       // 49 minutter før timeskiftet. Samme formulering som rapport-PDF'en.
-      var LIMITED_OUT = ' The limit resets when the hour changes, so a reload '
-        + 'will work. Your payment went through either way: your Stripe receipt '
-        + 'is the record of it — reply to that email and Mads will send what you bought.';
+      var LIMITED_OUT = T.limitedOut;
       function again(msg, delay, pending) {
         if (tries++ < MAX_TRIES) { status.textContent = msg; return setTimeout(poll, delay); }
         fail(pending ? PENDING_OUT : RAN_OUT);
@@ -146,33 +310,31 @@
         // derfor afledt af `kind`, altså det samme som kvitteringsmailen gør.
         bekræftet = true;
         titel(d.kind === 'donation'
-          ? 'Thank you for supporting ' + d.product_name + '!'
-          : 'Thanks for buying ' + d.product_name + '!');
+          ? T.thanksDonate + d.product_name + '!'
+          : T.thanksBuy + d.product_name + '!');
         var html;
         // Hver `kind` i worker's STRIPE_PRODUCTS skal have en egen gren. En
         // donation har hverken nøgle eller downloads, så den må ikke falde
         // igennem til download-grenen: det kaster en TypeError, og kunden
         // ender med at se "Network problem" på en betaling der lykkedes.
         if (d.kind === 'license') {
-          html = '<p><strong>Your license key</strong></p><div class="key-box"><code id="key">' + esc(d.license_key) + '</code>'
-            + '<button type="button" class="btn" id="copy">Copy</button></div>'
-            + '<p class="hint">Works on up to ' + esc(d.max_devices) + ' device(s)'
-            + (d.lifetime ? '. <strong>Lifetime license:</strong> one payment, no renewal and no expiry' : d.expires_at ? ', renews with your subscription' : ', no expiry') + '.</p>'
-            + (d.activate_url ? '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">How to activate</a></p>' : '')
+          html = '<p><strong>' + T.keyHead + '</strong></p><div class="key-box"><code id="key">' + esc(d.license_key) + '</code>'
+            + '<button type="button" class="btn" id="copy">' + T.copy + '</button></div>'
+            + '<p class="hint">' + T.worksOn + esc(d.max_devices) + T.worksOnTail
+            + (d.lifetime ? '. <strong>' + T.lifetimeHead + '</strong>' + T.lifetimeTail : d.expires_at ? T.renews : T.noExpiry) + '.</p>'
+            + (d.activate_url ? '<p><a class="btn btn-primary" href="' + esc(d.activate_url) + '">' + T.howTo + '</a></p>' : '')
             // Et link med navnet "How to activate" er ikke en instruktion.
             // `activate_hint` er det samme felt kvitteringsmailen bruger, og det
             // findes kun på produkter med en målt aktivering — så den kan ikke
             // være en standardsætning, der står på hvert køb.
             + (d.activate_hint ? '<p class="hint">' + esc(d.activate_hint) + '</p>' : '')
             + (d.billing_portal
-              ? '<div class="portal-row"><p><strong>Your subscription renews yearly.</strong> You can cancel any time, '
-                + 'download your invoices and update your card or VAT ID yourself here: '
-                + '<a href="' + esc(d.billing_portal) + '" rel="nofollow noopener">Manage your subscription</a>.</p></div>'
+              ? '<div class="portal-row"><p>' + T.portal
+                + '<a href="' + esc(d.billing_portal) + '" rel="nofollow noopener">' + T.portalLink + '</a>.</p></div>'
               : '');
         } else if (d.kind === 'donation') {
-          html = '<p><strong>Thank you — there is nothing to activate.</strong></p>'
-            + '<p class="hint">Your donation keeps the free tools free, and Stripe has emailed your receipt. '
-            + 'Questions? Just reply to that email.</p>';
+          html = '<p>' + T.donationHead + '</p>'
+            + '<p class="hint">' + T.donationHint + '</p>';
         } else if (Array.isArray(d.downloads)) {
           // `downloads` indeholder kun filer der ligger i KV lige nu, så et link
           // her er et link der virker. `downloads_missing` er filer kunden har
@@ -180,16 +342,15 @@
           // adresse, fordi `/api/download` svarer 503 på dem.
           var missing = Array.isArray(d.downloads_missing) ? d.downloads_missing : [];
           html = (d.downloads.length
-            ? '<p><strong>Your downloads</strong> (links work for 60 days)</p><ul>'
+            ? '<p>' + T.dlHead + '</p><ul>'
               + d.downloads.map(function (f) { return '<li><a href="' + esc(f.url) + '">' + esc(f.file) + '</a></li>'; }).join('') + '</ul>'
-            : '<p><strong>Your files are not available for download yet.</strong></p>')
+            : '<p>' + T.dlNone + '</p>')
             + (missing.length
-              ? '<p class="hint">' + (d.downloads.length ? esc(missing.length) + ' of your files are' : 'The files you bought are')
-                + ' not available for download right now: ' + esc(missing.join(', ')) + '. Your payment went through, and your receipt email is the record of it — reply to that email and we will sort it out.</p>'
+              ? '<p class="hint">' + (d.downloads.length ? esc(missing.length) + T.missingSome : T.missingAll)
+                + T.missingRest + esc(missing.join(', ')) + T.missingTail + '</p>'
               : '');
         } else {
-          html = '<p>We could not read your order. Your payment went through — reply to your Stripe receipt '
-            + 'and Mads will send what you bought.</p>';
+          html = '<p>' + T.unreadable + '</p>';
         }
         box.innerHTML = html;
         box.hidden = false;
@@ -198,14 +359,12 @@
         var mail = document.getElementById('mail');
         if (mail) {
           mail.textContent = d.kind === 'donation'
-            ? 'Stripe has emailed your receipt. There is nothing else to activate.'
-            : (d.emailed
-              ? 'We have also emailed this to you. Nothing arrived? Check spam, or reply to your Stripe receipt and Mads will sort it out.'
-              : 'We could not email this to you, so save what is on this page now. Reply to your Stripe receipt and Mads will resend it.');
+            ? T.mailDonation
+            : (d.emailed ? T.mailSent : T.mailNotSent);
         }
         var copy = document.getElementById('copy');
         if (copy) copy.addEventListener('click', function () {
-          navigator.clipboard.writeText(d.license_key).then(function () { copy.textContent = 'Copied'; });
+          navigator.clipboard.writeText(d.license_key).then(function () { copy.textContent = T.copied; });
         });
       }
       function poll() {
@@ -213,13 +372,13 @@
           .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
           .then(function (x) {
             if (x.code === 200 && x.d.ok) return show(x.d);
-            if (x.code === 202) return again('Confirming your payment…', 2500, true);
+            if (x.code === 202) return again(T.confirming, 2500, true);
             // 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
-            if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : 'Too many attempts.') + LIMITED_OUT);
-            if (x.code >= 500) return again('We are having trouble loading your order — trying again…', 4000, false);
-            fail(x.d.error || 'We could not find this order. Check your email, or reply to your receipt.');
+            if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : T.tooMany) + LIMITED_OUT);
+            if (x.code >= 500) return again(T.trouble, 4000, false);
+            fail(x.d.error || T.notFound);
           })
-          .catch(function () { again('Network problem — trying again…', 3000, false); });
+          .catch(function () { again(T.network, 3000, false); });
       }
       poll();
     })();

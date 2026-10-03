@@ -86,12 +86,41 @@ const STATISK_TITLE = (/<title>([^<]*)<\/title>/.exec(pageHtml) || [null, ''])[1
 // `steps` giver rækken af svar siden modtager i stedet for ét. Det er sådan
 // et forbigående svar (503, 429, et kastende netværkskald) kan testes på den
 // rigtige side: kunden skal prøve igen, og det skal kunne måles i `fetches`.
-async function render(payload, steps) {
+// `lang` er `navigator.language` i den falske browser — `da-DK` er den
+// danske kunde, `en-US` er alle andre. Det er hele pointen med opgaven:
+// Stripe sender dem begge til den *samme* URL.
+async function render(payload, steps, lang = 'en-US') {
   const seen = [];
   const els = {
     title: { textContent: '' }, status: { _v: '', className: 'hint' },
     result: { innerHTML: '', hidden: true }, mail: { textContent: '' },
   };
+  // Sidesprog: `data-t` (ren tekst) og `data-t-html` (to afsnit med links)
+  // læses af siden lige efter indlæsning. Den falske DOM skal derfor kende de
+  // attributter, ellers ville sprogdelen være grøn fordi den aldrig blev kørt.
+  // Nøglerne læses *af markupken*, så porten ikke kan blive grøn på en nøgle
+  // siden ikke bruger — og den kan heller ikke glemme at dømme en.
+  const nøgler = [...new Set([...pageHtml.matchAll(/data-t(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]))];
+  const lav = (nøgle) => {
+    const e = {
+      nøgle, textContent: '', _aria: null, _html: '',
+      get innerHTML() { return this._html; }, set innerHTML(v) { this._html = v; },
+      getAttribute: (a) => (a === 'data-t' || a === 'data-t-html' || a === 'data-t-aria' ? nøgle : null),
+    };
+    e.setAttribute = (a, v) => { e._aria = v; };
+    return e;
+  };
+  // `#status` skal være det *samme* objekt i begge opslag: i en rigtig browser
+  // giver `querySelectorAll('[data-t]')` og `getElementById('status')` det
+  // samme element, og hvis den falske DOM giver to, ville sprogdelen og
+  // fejlene hænge på hver sin — og porten være grøn på en side der aldrig
+  // viste den danske statuslinje.
+  els.status.nøgle = 'looking';
+  els.status.getAttribute = (a) => (a === 'data-t' ? 'looking' : null);
+  els.status.setAttribute = () => {};
+  const medNøgle = nøgler.map((k) => (k === 'looking' ? els.status : lav(k)));
+  const find = (nøgle) => medNøgle.find((e) => e.nøgle === nøgle);
+  const ariaNøgle = (/<[^>]*\bdata-t-aria="([^"]+)"/.exec(pageHtml) || [null, null])[1];
   // Hver skrivning til status'en gemmes, så en test kan se hvad kunden så
   // *mens* siden arbejdede. `show()` tømmer teksten igen ved succes, så den
   // endelige tekst alene kan ikke bevise at der stod noget undervejs.
@@ -100,6 +129,10 @@ async function render(payload, steps) {
     set(v) { seen.push(String(v)); this._v = String(v); },
   });
   let fetches = 0;
+  // Det kunden så *før* serveren svarede. Det er den eneste måde at dømme
+  // indlæsningen på: et svar med fejl eller netværksproblem overskriver titlen
+  // bagefter, og så ser et rendt resultat ud til at have været dansk hele vejen.
+  let første = null;
   const sandbox = {
     console,
     // `document.title` er med, fordi fanebladet er det kunden ser i
@@ -107,13 +140,21 @@ async function render(payload, steps) {
     // byggede side med et 400-svar: `<h1>` sagde «We could not confirm your
     // order», `<title>` stadig «Thanks for her purchase» — to elementer der
     // var lige ved at glide fra hinanden. Denne test dømmer, at de ikke gør.
-    document: { title: STATISK_TITLE, getElementById: (id) => els[id] || null },
+    document: {
+      title: STATISK_TITLE, documentElement: { lang: 'en' },
+      getElementById: (id) => els[id] || null,
+      querySelectorAll: (sel) => (sel === '[data-t]' ? medNøgle
+        : sel === '[data-t-html]' ? medNøgle : []),
+      querySelector: (sel) => (sel === '[data-t-aria]' ? find(ariaNøgle) : null),
+    },
     location: { search: '?session_id=cs_live_abcdefghij1234567890' },
-    navigator: { clipboard: { writeText: () => Promise.resolve() } },
+    navigator: { language: lang, clipboard: { writeText: () => Promise.resolve() } },
     URLSearchParams,
     setTimeout: (fn) => setTimeout(fn, 0),
     fetch: async (url) => {
       if (!String(url).includes('/api/stripe/fulfillment')) throw new Error('uventet kald: ' + url);
+      if (fetches === 0) første = { docTitle: sandbox.document.title, h1: els.title.textContent,
+        lang: sandbox.document.documentElement.lang, status: els.status._v };
       const i = fetches++;
       const step = steps ? steps[Math.min(i, steps.length - 1)] : { status: 200, body: payload };
       if (step.throw) throw new Error('netværksfejl');
@@ -128,7 +169,11 @@ async function render(payload, steps) {
   // 40 runder: det er nok til et helt retry-budget (12 kald gennem to led) og
   // koster stadig under 200 ms.
   for (let i = 0; i < 40; i++) await new Promise((r) => setTimeout(r, 4));
-  return { ...els, fetches, thrown, seen, docTitle: sandbox.document.title };
+  return { ...els, fetches, thrown, seen, første, docTitle: sandbox.document.title,
+    docLang: sandbox.document.documentElement.lang, nøgler, medNøgle,
+    // En nøgle siden ikke har, giver et tomt element i stedet for at kaste:
+    // porten skal *finde* fejlen på den gamle kode, ikke dø af den.
+    find: (k) => find(k) || { nøgle: k, textContent: '', innerHTML: '', _aria: null, mangler: true } };
 }
 
 // --------------------------------------------------------------------------
@@ -211,17 +256,19 @@ ok('download: linket er workerens /api/download-adresse', dl.page.result.innerHT
 
 // En fil kunden har betalt for, men som ikke kan hentes, må ikke blive et link.
 // `/api/download` svarer 503 på den, så et link ville være et dødt løfte.
-const blandet = await render({ ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
+const blandetPayload = { ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
   downloads: [{ file: 'dpa-template.pdf', url: 'https://mahope.tools/api/download/' + 'a'.repeat(32) + '/dpa-template.pdf' }],
-  downloads_missing: ['dpa-template.md'] });
+  downloads_missing: ['dpa-template.md'] };
+const blandet = await render(blandetPayload);
 ok('delvist manglende: den virkende fil er stadig et link', blandet.result.innerHTML.includes('/api/download/'), blandet.result.innerHTML);
 ok('delvist manglende: den manglende fil er nævnt uden adresse',
   blandet.result.innerHTML.includes('dpa-template.md') && !blandet.result.innerHTML.includes('dpa-template.md</a>'), blandet.result.innerHTML);
 ok('delvist manglende: siden beder kunden svare på kvitteringen',
   /reply to that email/i.test(blandet.result.innerHTML), blandet.result.innerHTML);
 
-const alleMangler = await render({ ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
-  downloads: [], downloads_missing: ['dpa-template.pdf', 'dpa-template.md'] });
+const alleManglerPayload = { ok: true, product: 'eucomply-dpa', product_name: 'GDPR DPA template', kind: 'download', emailed: true,
+  downloads: [], downloads_missing: ['dpa-template.pdf', 'dpa-template.md'] };
+const alleMangler = await render(alleManglerPayload);
 ok('intet hentbart: ingen downloadlinks overhovedet', !/\/api\/download\//.test(alleMangler.result.innerHTML), alleMangler.result.innerHTML);
 ok('intet hentbart: siger det rent ud, uden en tom "Your downloads"-liste',
   /not available for download yet/i.test(alleMangler.result.innerHTML) && !/Your downloads/.test(alleMangler.result.innerHTML), alleMangler.result.innerHTML);
@@ -261,7 +308,8 @@ ok('donation: hilsenen er afledt af kind, ikke en standardsætning',
   /d\.kind === 'donation'/.test(script) && !/title'\)\.textContent = 'Thanks for buying/.test(script));
 
 // Et kvarterprodukt må ikke hvidvaske siden, hvis det nogensinde tilføjes.
-const future = await render({ ok: true, product: 'ny', product_name: 'Nyt produkt', kind: 'seat', emailed: true });
+const futurePayload = { ok: true, product: 'ny', product_name: 'Nyt produkt', kind: 'seat', emailed: true };
+const future = await render(futurePayload);
 ok('ukendt kind giver en læsbar besked, ikke en hvid side',
   future.thrown === null && future.result.hidden === false && /could not read your order/i.test(future.result.innerHTML),
   `thrown=${future.thrown && future.thrown.message} html=${JSON.stringify(future.result.innerHTML.slice(0, 80))}`);
@@ -445,6 +493,175 @@ if (/Array\.isArray\(d\.downloads\)/.test(script)) branched.add('download');
 for (const kind of kinds) {
   ok(`siden har en egen gren for kind="${kind}"`, branched.has(kind), `grenet: ${[...branched].join(',') || '(ingen)'}`);
 }
+
+// --------------------------------------------------------------------------
+// 5. Sprog. Målt 3/10: `/thanks` var `lang="en"` med nul sprogdetektering, og
+//    `/da/thanks` er 404. Stripe sender *alle* kunder til samme URL lige efter
+//    betalingen, og `success_url` kan ikke ændres — så hele familien er dansk,
+//    og det er den ene side en dansk kunde ser i købsøjeblikket. Den skal derfor
+//    kunne tale dansk på sin egen adresse.
+//
+//    Porten dømmer fire ting, og de fire er valgt, fordi hver især kan være
+//    grøn mens de tre andre er røde:
+//      a. de to sprog har præcis samme nøgler (en manglende nøgle ville vise
+//         kunden `undefined` — det er den fejl der ikke klager),
+//      b. hver af de fire strenge opgaven navngiver findes på begge sprog,
+//      c. den danske side renderer *hele* købsvejen — nøglekasse, kvittering,
+//         downloads, donation — ikke kun overskriften,
+//      d. de statiske nøgler fra markupken (`data-t`) er oversat, og `<html
+//         lang>` følger med.
+// --------------------------------------------------------------------------
+const tabel = /var STRINGS = \{\n([\s\S]*?)\n {6}\};\n/.exec(script);
+ok('siden har en STRINGS-tabel med begge sprog', !!tabel && /\ben: \{/.test(tabel[1]) && /\n {8}da: \{/.test(tabel[1]));
+const sprogNøgler = (blok) => [...new Set([...blok.matchAll(/^\s{10}(\w+):/gm)].map((m) => m[1]))].sort();
+const enBlok = /\ben: \{([\s\S]*?)\n {8}\},\n/.exec(tabel ? tabel[1] : '');
+const daBlok = /\n {8}da: \{([\s\S]*?)\n {8}\}/.exec(tabel ? tabel[1] : '');
+const nøgleEn = enBlok ? sprogNøgler(enBlok[1]) : [];
+const nøgleDa = daBlok ? sprogNøgler(daBlok[1]) : [];
+ok('begge sprog har de samme nøgler', nøgleEn.length > 30 && nøgleEn.join(',') === nøgleDa.join(','),
+  `en=${nøgleEn.length} da=${nøgleDa.length} kun-en=${nøgleEn.filter((k) => !nøgleDa.includes(k)).join(',')} kun-da=${nøgleDa.filter((k) => !nøgleEn.includes(k)).join(',')}`);
+
+// (b) De fire opgaven peger på, hver som et helt sætning der kun kan findes
+// i tabellen — ikke som et nøglenavn, for det ville være grønt på en tabel der
+// indeholder nøglen men en tom streng.
+for (const [nøgle, mønster] of [
+  ['notConfirmed', /^Vi kunne ikke bekræfte din ordre$/m],
+  ['noRef', /^Der står ingen ordrereference i linket\./m],
+  ['ranOut', /^Vi kunne ikke hente din ordre lige nu, men din betaling er gået igennem\./m],
+  ['pendingOut', /^Din betaling er endnu ikke bekræftet/],
+  ['keyHead', /^Din licensnøgle$/m],
+  ['mailSent', /^Vi har også sendt det til dig\./m],
+]) {
+  const værdi = daBlok && new RegExp(`^\\s{10}${nøgle}: '([^']*)'`, 'm').exec(daBlok[1]);
+  const rå = daBlok ? new RegExp(`^\\s{10}${nøgle}:([\\s\\S]*?)(?=^\\s{10}\\w+:|\\Z)`, 'm').exec(daBlok[1]) : null;
+  const samlet = (værdi ? værdi[1] : rå ? rå[1] : '');
+  ok(`dansk "${nøgle}" findes og siger det den skal`, mønster.test(samlet.replace(/\\?\s*\+\s*/g, ' ').replace(/^'|'$/g, '')),
+    JSON.stringify(samlet.slice(0, 110)));
+}
+
+// (d) Sprogvalget. `navigator.language` er kilden; `?lang=` er kun en
+// håndgreb, og den må aldrig finde en sprogstreng uden for tabellen — den læses
+// som nøgle, så en kunde der sender `?lang=<script>` får engelsk, ikke markup.
+const dansk = await render(lic.payload, null, 'da-DK');
+const engelsk = await render(lic.payload, null, 'en-US');
+ok('dansk browser får dansk sidesprog', dansk.docLang === 'da' && engelsk.docLang === 'en',
+  `da=${dansk.docLang} en=${engelsk.docLang}`);
+ok('dansk browser får dansk h1 og kvitteringstekst',
+  dansk.title.textContent === 'Tak for dit køb af EUComply Pro!' && /Din licensnøgle/.test(dansk.result.innerHTML),
+  `h1=${JSON.stringify(dansk.title.textContent)} html=${JSON.stringify(dansk.result.innerHTML.slice(0, 90))}`);
+// Ratchet på *indlæsningen*: h1 og faneblad skal være danske **før** serveren
+// svarer. Målt 3/10 i Chromium — `sprogMarkup()` oversatte alt andet, men
+// skrev h1/title gennem en linje der ikke fandtes, så den danske kunde læste
+// «Thanks for her purchase!» i vindueslisten over et dansk kort.
+{
+  const s = await render(null, [{ throw: true }], 'da-DK');
+  ok('dansk h1 og faneblad er danske fra første maling',
+    s.første.h1 === 'Tak for dit køb!' && s.første.docTitle === 'Tak for dit køb! | Mahope tools'
+    && s.første.lang === 'da' && s.første.status === 'Vi finder din ordre…',
+    JSON.stringify(s.første));
+  const e = await render(null, [{ throw: true }], 'en-US');
+  ok('engelsk h1 og faneblad er stadig engelske',
+    e.første.h1 === 'Thanks for your purchase!' && e.første.docTitle === 'Thanks for your purchase! | Mahope tools'
+    && e.første.status === 'Looking up your order…', JSON.stringify(e.første));
+  ok('sproghåndgrebet kan ikke finde en sprogstreng uden for tabellen',
+    (await render(null, [{ status: 400, body: { error: 'x' } }], 'xx-YY')).docLang === 'en',
+    'navigator.language=xx-YY');
+}
+ok('engelsk browser får engelsk h1 og kvitteringstekst',
+  engelsk.title.textContent === 'Thanks for buying EUComply Pro!' && /Your license key/.test(engelsk.result.innerHTML),
+  `h1=${JSON.stringify(engelsk.title.textContent)}`);
+// Negativ kontrol: de to sprog må ikke vise den samme tekst. Uden denne dom
+// kunne `sprog()` være grøn fordi den altid returnerer 'en'.
+ok('de to sprog er to forskellige sider, ikke én',
+  dansk.title.textContent !== engelsk.title.textContent
+  && dansk.result.innerHTML !== engelsk.result.innerHTML
+  && dansk.docTitle !== engelsk.docTitle);
+
+// Ratchet: hver `data-t`-nøgle i markupken skal stå i *begge* sprog, ellers
+// får den danske kunde den engelske sætning lige under sin egen.
+for (const nøgle of dansk.nøgler) {
+  // `looking` dømmes et andet sted: `show()` tømmer statuslinjen med vilje, når
+  // kortet kommer, så dens *endelige* tekst er tom for et gennemført køb. Den
+  // er dømt i «dansk h1 og faneblad er danske fra første maling» i stedet.
+  if (nøgle === 'looking') continue;
+  const stæt = dansk.find(nøgle);
+  const rigtig = nøgleEn.includes(nøgle);
+  ok(`statisk nøgle "${nøgle}" er oversat`, rigtig && stæt && stæt.textContent.length > 0
+    && stæt.textContent !== (engelsk.find(nøgle) || {}).textContent,
+    `da=${JSON.stringify(stæt && stæt.textContent)} nøgle-i-en=${rigtig}`);
+}
+// `next`-afsnittet og nav-mærkaten er de to steder med markup/attribut, så de
+// dømmes på den værdi de får — ikke på `textContent`.
+const nextDa = dansk.find('next'), nextEn = engelsk.find('next');
+ok('dansk «next»-afsnit har links og dansk tekst',
+  /<a href="\/page-profile">/.test(nextDa.innerHTML) && /<a href="\/free-tools">de gratis værktøjer<\/a>/.test(nextDa.innerHTML)
+  && !/stay free without a key/.test(nextDa.innerHTML), JSON.stringify(nextDa.innerHTML.slice(0, 140)));
+ok('engelsk «next»-afsnit er stadig det engelske afsnit',
+  /the free tools<\/a> stay free without a key/.test(nextEn.innerHTML), JSON.stringify(nextEn.innerHTML.slice(0, 140)));
+ok('nav-mærkaten er oversat', dansk.find('navLabel')._aria === 'Fortsæt' && engelsk.find('navLabel')._aria === 'Continue',
+  JSON.stringify([dansk.find('navLabel')._aria, engelsk.find('navLabel')._aria]));
+
+// (c) Hele købsvejen på dansk — de grene der ikke kører i licens-grenen.
+for (const [label, payload, skal] of [
+  ['download', dl.payload, /<strong>Dine filer<\/strong> \(links virker i 60 dage\)/],
+  ['donation', don.payload, /Tak — der er intet at aktivere\./],
+  ['delvist manglende', blandetPayload, /af dine filer er ikke tilgængelige at hente lige nu/],
+  ['intet hentbart', alleManglerPayload, /Dine filer er endnu ikke tilgængelige at hente\./],
+  ['ukendt kind', futurePayload, /Vi kunne ikke læse din ordre\./],
+  ['lifetime', life.payload, /Livstidslicens:<\/strong> én betaling, ingen fornyelse og intet udløb/],
+  ['abonnement', lic.payload, /Administrér dit abonnement/],
+  ['engangskøb', engang.payload, /Virker på op til 3 enhed\(er\), udløber aldrig\./],
+]) {
+  const s = await render(payload, null, 'da-DK');
+  ok(`dansk ${label}: kortet er på dansk`, s.thrown === null && skal.test(s.result.innerHTML),
+    `thrown=${s.thrown && s.thrown.message} html=${JSON.stringify(s.result.innerHTML.slice(0, 120))}`);
+  ok(`dansk ${label}: ingen engelsk sætning tilbage i kortet`,
+    !/Your license key|Your downloads|nothing to activate|We could not read your order|device\(s\)|Manage your subscription|Lifetime license/.test(s.result.innerHTML),
+    JSON.stringify(s.result.innerHTML.slice(0, 160)));
+  ok(`dansk ${label}: kvitteringsmailen følger emailed=${payload.emailed}`,
+    payload.kind === 'donation'
+      ? /Stripe har sendt kvitteringen/.test(s.mail.textContent)
+      : (/Vi har også sendt det/.test(s.mail.textContent) === (payload.emailed === true)),
+    JSON.stringify(s.mail.textContent.slice(0, 80)));
+}
+
+// De danske fejlveje skal også være danske — en dansk kunde der rammer 503
+// hele vejen skal ikke læse «Vi har svært ved at hente din ordre».
+const da503 = await render(null, [{ status: 503, body: body503 }], 'da-DK');
+ok('dansk 503 hele vejen: slutningen er dansk', /din betaling er gået igennem/.test(da503.status.textContent)
+  && !/payment went through/.test(da503.status.textContent), da503.status.textContent);
+ok('dansk 503 hele vejen: overskriften er dansk', /Vi kunne ikke bekræfte din ordre/.test(da503.docTitle), da503.docTitle);
+const da429 = await render(null, [{ status: 429, body: body429 }], 'da-DK');
+ok('dansk 429: serverens egen sætning står først, og genkaldes ikke',
+  da429.fetches === 1 && da429.status.textContent.startsWith(body429.error), JSON.stringify(da429.status.textContent.slice(0, 80)));
+ok('dansk 429: den danske beroligelse følger med', /Grænsen nulstilles/.test(da429.status.textContent), da429.status.textContent);
+const da202 = await render(null, [{ status: 202, body: { ok: false, pending: true } }], 'da-DK');
+ok('dansk 202: gentages stadig, og siger at betalingen bekræftes',
+  da202.fetches === 13 && /Vi bekræfter din betaling/.test(da202.seen.join(' ')), 'fetches=' + da202.fetches);
+ok('dansk 202 udløbet: siger «ikke bekræftet endnu», ikke «betalingen gik igennem»',
+  /^Din betaling er endnu ikke bekræftet/.test(da202.status.textContent) && !/din betaling er gået igennem/i.test(da202.status.textContent),
+  da202.status.textContent);
+// En dansk kunde uden ordrereference må få den danske tekst, ikke den engelske.
+{
+  const s = await render(null, [{ status: 400, body: { ok: false, error: 'Invalid session.' } }], 'da-DK');
+  ok('dansk 400: h1 og faneblad er danske',
+    /Vi kunne ikke bekræfte din ordre/.test(s.title.textContent) && /Vi kunne ikke bekræfte din ordre/.test(s.docTitle),
+    `h1=${JSON.stringify(s.title.textContent)} title=${JSON.stringify(s.docTitle)}`);
+}
+
+// Ratchet på escape-reglen: alt der kommer fra serveren skal gå gennem
+// `esc()`, på begge sprog. En dansk streng i `innerHTML` er ikke i sig selv
+// farlig — de er vores egne — men det er *interpolationerne* der er det, så
+// dommen tæller `T.` inde i en `esc(...)`-kontekst.
+const escKontekster = [...script.matchAll(/esc\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g)].map((m) => m[1]);
+ok('hvert serverfelt der sættes i markupket går gennem esc()',
+  escKontekster.some((k) => /license_key/.test(k)) && escKontekster.some((k) => /max_devices/.test(k))
+  && escKontekster.some((k) => /f\.url/.test(k)) && escKontekster.some((k) => /f\.file/.test(k))
+  && escKontekster.some((k) => /missing\.join/.test(k)) && escKontekster.some((k) => /billing_portal/.test(k))
+  && escKontekster.some((k) => /activate_url/.test(k)) && escKontekster.some((k) => /activate_hint/.test(k)),
+  JSON.stringify(escKontekster.filter((k) => /license_key|max_devices|f\.|missing|billing_portal|activate/.test(k))));
+ok('ingen rå serverstreng i en dansk tekstblok',
+  !/[^.]esc\(d\.(license_key|max_devices|activate_hint)\)/.test(daBlok ? daBlok[1] : ''));
 
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);

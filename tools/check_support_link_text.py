@@ -234,16 +234,21 @@ def self_test() -> int:
         tjek("porten er grøn på den rettede fil", not dom(rod, byg=rod / "x.py"))
         # 6. Mutation: genskab fejlen i den rigtige fil, kun i en midlertidig
         #    kopi. Polaritet, målt på den kode der faktisk deployes.
-        (rod / "thanks.html").write_text(med.replace(
-            '<a href="/support">Support the free tools</a>', ny), encoding="utf-8")
+        #    Ankeret findes i markupken, ikke hardkodet: `/thanks`-linket har
+        #    fået `data-t="navSupport"` (siden oversætter sig selv, se
+        #    `STRINGS` i `site/thanks.html`), så en hardkodet streng ville
+        #    være en no-op og de to domme ville være grønne på *enhver* kode.
+        anker = (re.search(r'<a\s[^>]*href="/support"[^>]*>.*?</a>', med, re.S) or [None])
+        anker = anker.group(0) if hasattr(anker, "group") else ""
+        tjek("det rigtige /support-anker er fundet i markupken", bool(anker), med[:0])
+        (rod / "thanks.html").write_text(med.replace(anker, ny), encoding="utf-8")
         rød = dom(rod, byg=rod / "x.py")
         tjek("mutation i den rigtige fil bliver rød",
              any("HELP_PROMISE" in f for f in rød), "; ".join(rød))
         # 6b. Og den anden fejlform, genskabt i samme rigtige fil: den gamle
         #     breadcrumb fra `paid-templates.html`.
         (rod / "thanks.html").write_text(
-            med.replace('<a href="/support">Support the free tools</a>',
-                        '<a href="/support">Support</a>'), encoding="utf-8")
+            med.replace(anker, '<a href="/support">Support</a>'), encoding="utf-8")
         rød2 = dom(rod, byg=rod / "x.py")
         tjek("mutation af den nøgne 'Support' bliver rød",
              any("UNQUALIFIED" in f for f in rød2), "; ".join(rød2))

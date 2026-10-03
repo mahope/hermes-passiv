@@ -6197,3 +6197,50 @@ mønster som `/net.js` og `text-on-image-core.js` allerede bruger der.
   sprogdetektering, og `https://mahope.tools/da/thanks` er 404. Det er den ene
   side en dansk kunde ser i købsøjeblikket. Stripe's `success_url` kan ikke
   ændres herfra, så sprogdetektering i siden er vejen.
+
+
+## 3/10 — opgave 10: tak-siden lærer dansk (`ceo/thanks-pa-dansk`)
+
+10. ~~**Kunden der lige har betalt lander på en engelsk takside.**~~
+  **Færdig 3/10** (`ceo/thanks-pa-dansk`). Én `STRINGS`-tabel med `en` og
+  `da` og **ens nøgler** (45), valgt af `sprog()` på `navigator.language`
+  (`?lang=` som håndgreb, læses som nøgle så den aldrig kan finde markup).
+  Oversættet er hele siden: h1, faneblad, `<html lang>`, statuslinjen, nav,
+  nøglekasse, opsummering, kundeportal, downloads, donation, mail-noten og
+  alle tre fejlslutninger (503 / 202 / 429) — den danske 202-grene siger
+  stadig «endnu ikke bekræftet», aldrig «betalingen gået iggnem».
+  `tests/thanks-page.test.mjs` **184/184** og **45 røde** mod koden fra før
+  (`git show main:site/thanks.html`). Målt i Chromium ved **390** og
+  **1280** px, begge sprog: 0 px vandret scroll, ingen `undefined` i DOM'en.
+  `esc()`-ratchet: alle otte serverfelter går gennem `esc()` på begge sprog.
+  **Fund undervejs:** `check_support_link_text.py --self-test` mutationerede
+  det `/support`-anker med en hardkodet streng, som efter `data-t` blev en
+  no-op — selvtesten lå altså grøn på *enhver* kode. Den finder nu ankeret i
+  markupken: **22/22**. `quality_gate.py` grøn på 155 steps.
+  **VERIFICÉR DEPLOY: tak-siden kan dansk ceo/thanks-pa-dansk 2026-10-03 11:20**
+
+### Fund undervejs, målt i browseren
+- **`sprogMarkup()` skrev h1 og faneblad aldrig.** Da den første Chromium-kørsel
+  efter rettelsen dumpede DOM'en, stod `<title>` og `<h1>` stadig «Thanks for
+  your purchase!» på den danske side, mens `<html lang>`, nav, status og hele
+  kortet var dansk. Årsagen var en linje, der aldrig blev skrevet: sprogskiftet
+  havde mistet sit kald til `titel()`. Rettet, og porten dømmer nu det den
+  kunde så *før* serveren svarede (falsk DOM giver `querySelectorAll` og
+  `getElementById` det samme `#status`-objekt — ellers hang sprogdelen og
+  fejlene på hver sin).
+- **`check_support_link_text.py --self-test` mutationerede et anker, der ikke
+  længere fandtes.** Den hardcodede `'<a href="/support">Support the free
+  tools</a>'`, som efter `data-t` blev en no-op, så selvtesten lå grøn på
+  *enhver* kode. Den læser nu ankeret i markupken: **22/22**.
+
+### Målt
+- `node tests/thanks-page.test.mjs` **184/184** på ren HEAD, **45 røde** mod
+  `git show main:site/thanks.html` (porten kaster ikke på den gamle kode, den
+  melder fundene).
+- `python3 tools/quality_gate.py` grøn på **155 steps**; missionens egen gate
+  (`build_sites` → `seo_check` 315 sider 0 fund → `stripe-worker` 377/377 →
+  `check_inline_js` 0 problemer) grøn.
+- Chromium 1243 `--dump-dom` mod den byggede side ved **390** og 1280 px,
+  begge sprog: `<html lang>`, `<title>`, `<h1>`, statuslinje, nav (inkl.
+  aria-label) og «next»-afsnittet med dets tre links er dansk på `da` og
+  uændret engelsk på `en`; **0** `undefined` i nogen tekstnode.

@@ -1,25 +1,19 @@
 # STATUS
-- **3/10: ingen kode landet — iterationen var måling og deploy-verifikation.**
-  To åbne noter lukket på indhold (se «Verificér deploy»), målt i rigtig Chromium.
-- **Et delt scanelink kunne sige «Grade A, 100/100» over en liste med fund i.
-  Rettet 3/10** (review-fund [MIDDEL]): `decode()` regner nu scoren med samme
-  `scoreOf()` som begge sider bruger — én formel, tre kaldere. **11 røde** domme
-  på den gamle kode.
-- **Et skannet site kunne skrive sit eget markup i vores resultatside. Rettet
-  3/10** (review-fund [HØJ]): `safeContentType()` i workeren + `esc()` på begge
-  sider. Domme målt røde ved at fjerne hvert lag for sig (504/512, 376/377).
+# STATUS
+- **3/10: `/thanks` kan nu tale dansk.** Stripe sender alle kunder til samme URL
+  lige efter betalingen, så siden vælger sit sprog selv (`navigator.language`,
+  `?lang=` som håndgreb). Én `STRINGS`-tabel, `en` + `da`, 45 ens nøgler — h1,
+  faneblad, nøglekasse, kundeportal, downloads, donation, alle tre
+  fejlslutninger og den statiske chrome. `thanks-page.test.mjs` **184/184**,
+  **45 røde** mod koden fra før. Målt i Chromium ved 390 og 1280 px.
 - **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal. 3/10:**
   «Find det bedste sted» måler 20 steder med samme `sampleContrast()` som tallet
   kommer fra. Fire sider, EN+DA. Porten **58** løfter, `--self-test` **63/63**.
 - **Målt 3/10, så næste iteration ikke måler det igen:** (a) **ingen vandret
   scroll på 390 px** på `/`, `/text-on-image-checker`, `cleancopy.tools/` —
-  CDP-målt, `scrollWidth 390 == clientWidth 390`; den gamle headless-screenshot
-  *ser* ud til at skære, men det er artefakten. (b) `cleancopy.tools/blog/`
-  **404 er tænkt** — `build_sites.py:1247-1252` omskriver nav-linket, og
-  `grep 'href="/blog/"' dist/cleancopy.tools` giver **0**. (c) 21 ruter på de
-  fire domæner svarer **200**.
-- **Næste opgave: punkt 10 under «Åbne opgaver»** — kunden der lige har betalt
-  lander på en **engelsk** takside (`/thanks` er `lang="en"`, `/da/thanks` 404).
+  CDP-målt; (b) `cleancopy.tools/blog/` **404 er tænkt** (buildet omskriver
+  nav-linket); (c) 21 ruter på de fire domæner svarer **200**.
+- **Næste opgave: punkt 4** — 172 sider har stadig to-tre knapper over folden.
 - PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
@@ -130,19 +124,6 @@
    ét error-fund giver **88**, DOM-kortet siger **71/100 — Grade C** over «2
    error(s)», og porten er **11 rød** på koden fra før.
    `tests/scan-share.test.mjs` **84/84**. Flyttet til `docs/plan-arkiv.md`.
-10. **Kunden der lige har betalt lander på en engelsk takside.** Hvorfor:
-    målt 3/10 — `/thanks` er `lang="en"` med **0** sprogdetektering, og
-    `https://mahope.tools/da/thanks` er **404**. Hele familien er dansk, og
-    `/thanks` nåes *kun* som redirect fra Stripe lige efter betaling, så det er
-    den ene side en dansk kunde ser i købsøjeblikket. Stripe's `success_url` kan
-    jeg ikke ændre, men siden kan vælge sprog på `navigator.language` /
-    `Accept-Language` — samme URL, dansk tekst for dansk browser. Accept:
-    `node tests/thanks-page.test.mjs` dømmer **begge** sprog og **fejler på den
-    kode der kun kender ENG**; nøglekassen, kvitteringsteksten og
-    `RAN_OUT`-teksten findes i begge sprog med ens nøgler, og ingen dansk streng
-    må havne i `innerHTML` uden `esc()`. Baseline 3/10: 0 danske strenge på
-    `/thanks`.
-
 ## ❓ Til Mads
 
 - **🟡 `/blog/` siger «96 Danish guides», men 11 af dem ligger på
