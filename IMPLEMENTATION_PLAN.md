@@ -1,46 +1,42 @@
 # STATUS
+- **3/10: ingen kode landet — iterationen var måling og deploy-verifikation.**
+  To åbne noter lukket på indhold (se «Verificér deploy»), målt i rigtig Chromium.
 - **Et delt scanelink kunne sige «Grade A, 100/100» over en liste med fund i.
-  Rettet 3/10** (review-fund [MIDDEL]): `s=` blev taget som det var, mens
-  fejl/advarsler blev regnet ud fra fundene. `encode()` skriver ingen score
-  længere, `decode()` regner den med **samme** `scoreOf()` som begge sider
-  bruger til en netop kørt scanning — én formel, tre kaldere. Gamle links med
-  `s=` åbner stadig. Målt i rigtig Chromium på begge sprog: **71/100 — Grade C**
-  over «2 error(s)», hvor linket siger 100. **11 røde** domme på den gamle kode.
+  Rettet 3/10** (review-fund [MIDDEL]): `decode()` regner nu scoren med samme
+  `scoreOf()` som begge sider bruger — én formel, tre kaldere. **11 røde** domme
+  på den gamle kode.
 - **Et skannet site kunne skrive sit eget markup i vores resultatside. Rettet
-  3/10** (review-fund [HØJ]): målets egen `Content-Type` kom ud i `error` og
-  blev skrevet i `innerHTML` uden escape — målt i Chromium som `<title>FIRET</title>`.
-  To lag: `safeContentType()` i workeren + `esc()` på begge sider. Domme målt
-  røde ved at fjerne hvert lag for sig (504/512, 376/377).
-- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal.** 3/10:
-  «Find det bedste sted» måler 20 steder på bruterens eget billede med den samme
-  `sampleContrast()` som tallet kommer fra, og flytter teksten. Fire sider,
-  EN+DA. `check_contrast_sampling` **58 løfter**, `--self-test` **63/63**.
-- **Deploy:** målt 3/10 mod live `d55264b` (`build-info.json` + kilderne på
-  `/scan` og `/scan-da`): `ceo/kontrast-tjek-to-fotos`,
-  `ceo/fix-gaar-ikke-paa-naeste-foto`, `ceo/download-det-rettede-billede` og
-  `ceo/scan-fejl-esc` er **DEPLOY OK**. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
+  3/10** (review-fund [HØJ]): `safeContentType()` i workeren + `esc()` på begge
+  sider. Domme målt røde ved at fjerne hvert lag for sig (504/512, 376/377).
+- **Kontrasttjekkeren fandt en pladsering, før den endte ved et tal. 3/10:**
+  «Find det bedste sted» måler 20 steder med samme `sampleContrast()` som tallet
+  kommer fra. Fire sider, EN+DA. Porten **58** løfter, `--self-test` **63/63**.
+- **Målt 3/10, så næste iteration ikke måler det igen:** (a) **ingen vandret
+  scroll på 390 px** på `/`, `/text-on-image-checker`, `cleancopy.tools/` —
+  CDP-målt, `scrollWidth 390 == clientWidth 390`; den gamle headless-screenshot
+  *ser* ud til at skære, men det er artefakten. (b) `cleancopy.tools/blog/`
+  **404 er tænkt** — `build_sites.py:1247-1252` omskriver nav-linket, og
+  `grep 'href="/blog/"' dist/cleancopy.tools` giver **0**. (c) 21 ruter på de
+  fire domæner svarer **200**.
+- **Næste opgave: punkt 10 under «Åbne opgaver»** — kunden der lige har betalt
+  lander på en **engelsk** takside (`/thanks` er `lang="en"`, `/da/thanks` 404).
+- PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: et delt resultat kan ikke få et bedre tal end sine fund
-  ceo/scan-score-af-fundene 2026-10-03 12:00` — åbn på `/scan`
-  `#u=https%3A%2F%2Fexample.com%2Fpris;s=100;f=IMG_ALT:e:4,CONTRAST:e:1,HEADING_SKIP:w:2;p=WordPress`:
-  kortet skal sige **71/100 — Grade C** og «2 error(s), 1 warning(s)», aldrig
-  100/100. Samme på `/scan-da`. Resten ligger i porten:
-  `node tests/scan-share.test.mjs` skal sige **84/84**, og porten er målt
-  **11 rød** på koden fra før.
-
-- `VERIFICÉR DEPLOY: find det bedste sted i kontrasttjekkeren
-  ceo/find-bedste-sted 2026-10-03 12:00` — på `/text-on-image-checker` og
-  `/text-on-image-checker-da`: upload et todelt foto (mørkt til venstre, lyst
-  til højre), læg teksten på den lyse halvdel — den skal **fejle** — tryk
-  «Find det bedste sted». Tallet skal blive bedre og nå 3:1, og under det skal
-  der stå at kernen flyttede teksten, med præcis det tal der står over den.
-  Træk så teksten selv et andet sted: forklaringen skal væk, fordi den
-  beskriver *kernens* flytning. Samme på de to artikler.
+- ~~`ceo/scan-score-af-fundene`~~ **DEPLOY OK 3/10.** Live `/scan` med et link
+  der siger `s=100`: **«71/100 — Grade C»** + «2 error(s), 1 warning(s)»,
+  `/scan-da`: «2 fejl, 1 warning(s)», **0** `onerror`-noder i `#result` på begge.
+  Porten `node tests/scan-share.test.mjs` siger **84/84**.
+- ~~`ceo/find-bedste-sted`~~ **Delvis DEPLOY OK 3/10.** Siden er live med knappen
+  og kernen (`text-on-image-core.js:328-367`) på EN + DA, og
+  `check_contrast_sampling.py` er grøn med **58** løfter + `--self-test` **63/63**.
+  Den *interaktive* prøve (upload → «find det bedste sted» → bedre tal) er ikke
+  kørt i en rigtig browser i denne iteration — kun kildekoden og den byggede
+  side er målt.
 
 - Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
   `docs/plan-arkiv.md`.
@@ -134,6 +130,18 @@
    ét error-fund giver **88**, DOM-kortet siger **71/100 — Grade C** over «2
    error(s)», og porten er **11 rød** på koden fra før.
    `tests/scan-share.test.mjs` **84/84**. Flyttet til `docs/plan-arkiv.md`.
+10. **Kunden der lige har betalt lander på en engelsk takside.** Hvorfor:
+    målt 3/10 — `/thanks` er `lang="en"` med **0** sprogdetektering, og
+    `https://mahope.tools/da/thanks` er **404**. Hele familien er dansk, og
+    `/thanks` nåes *kun* som redirect fra Stripe lige efter betaling, så det er
+    den ene side en dansk kunde ser i købsøjeblikket. Stripe's `success_url` kan
+    jeg ikke ændre, men siden kan vælge sprog på `navigator.language` /
+    `Accept-Language` — samme URL, dansk tekst for dansk browser. Accept:
+    `node tests/thanks-page.test.mjs` dømmer **begge** sprog og **fejler på den
+    kode der kun kender ENG**; nøglekassen, kvitteringsteksten og
+    `RAN_OUT`-teksten findes i begge sprog med ens nøgler, og ingen dansk streng
+    må havne i `innerHTML` uden `esc()`. Baseline 3/10: 0 danske strenge på
+    `/thanks`.
 
 ## ❓ Til Mads
 
@@ -452,7 +460,7 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     fem i én fil, så det er en funktion der mangler, ikke en der skal opfindes.
     **Åbent:** se ❓ — pro-tabellen på samme side lover kundeklar rapport som
     den betalte vare, så jeg kan ikke bygge den gratis uden dit valg.
-26. **Stedet, ikke kun tallet.** Hvem: alle der lægger en overskrift på et
+26. ~~**Stedet, ikke kun tallet.**~~ **Leveret 3/10** (`845808f`). Hvem: alle der lægger en overskrift på et
     foto med både en lys og en mørk flade — artiklen er 8 af 18 besøgende på
     mahope.tools. Tal: billeder der består efter «find det bedste sted» (baseline
     **0** — der var ingen vej; bruteren måtte trække teksten rundt for selv at
@@ -461,7 +469,7 @@ Baseline for hvert tal er målt 1/10; tallene er ikke vores egen trafik.
     knap, bedre tal, beskrivelsen, og at den forsvinder ved bruterens egen
     flytning. Datagrund: artiklens egen regel siger «mål det dårligste, ikke
     gennemsnittet», og det var netop dét værktøjet ikke kunne.
-25. **Den rettede grafik som en fil.** Hvem: designere der lægger tekst på et
+25. ~~**Den rettede grafik som en fil.**~~ **Leveret 3/10** (`65eef7f`). Hvem: designere der lægger tekst på et
     foto og har brugt værktøjet til at få den til at bestå. Tal: downloads pr.
     uge (baseline **0** — der var ingen vej; værktøjet endte ved et tal, og så
     måtte bruteren selv finde ud af hvordan han fik sit rettede billede ud igen,

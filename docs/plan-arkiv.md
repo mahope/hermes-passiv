@@ -6171,3 +6171,29 @@ score» konstaterede kun, at tal blev kopieret; den er nu 71 = fundene.
 uden codecen indlæst, så de fik `preload: ['site/scan-share-core.js']` — samme
 mønster som `/net.js` og `text-on-image-core.js` allerede bruger der.
 `quality_gate.py` grøn.
+
+## 2026-10-03 — deploy-verifikation og målinger (ingen kode)
+
+- **To åbne `VERIFICÉR DEPLOY`-noter lukket på indhold, målt i rigtig Chromium**
+  (Playwright-cache-Chrome via `--remote-debugging-port` + `Runtime.evaluate`):
+  live `build-info.json` bærer `57a054d02274`. `/scan` med et delt link der
+  siger `s=100` maler **«71/100 — Grade C»** + «2 error(s), 1 warning(s)»,
+  `/scan-da` «2 fejl, 1 warning(s)», og `querySelectorAll('#result [onerror]')`
+  giver **0** på begge. `ceo/find-bedste-sted` er live på
+  `/text-on-image-checker` (knap + `text-on-image-core.js:328-367`); den
+  interaktive prøve er ikke kørt.
+- **Tre målinger der lukker hele klasser af formodninger:**
+  (1) **Ingen vandret scroll på 390 px** på `/`, `/text-on-image-checker` og
+  `cleancopy.tools/` — CDP med `Emulation.setDeviceMetricsOverride` giver
+  `scrollWidth == clientWidth == 390`. Den gamle headless-**screenshot** viser
+  afskåret tekst og ligner en fejl, men er artefakten; en port der dømmer
+  vandret scroll på billeder skal måle `scrollWidth`, ikke se på et billede.
+  (2) `https://cleancopy.tools/blog/` **404 er tænkt**: `build_sites.py:1247-1252`
+  omskriver nav-linket til mahope.tools' indeks, `grep 'href="/blog/"'
+  dist/cleancopy.tools` giver 0, og de 10 artikler er korsomviseret i
+  `dist/mahope.tools/sitemap.xml` + linket fra familiens indeks (21 links).
+  (3) 21 ruter på tværs af de fire domæner svarer **200**.
+- **Næste opgave fundet undervejs:** `/thanks` er `lang="en"` med 0
+  sprogdetektering, og `https://mahope.tools/da/thanks` er 404. Det er den ene
+  side en dansk kunde ser i købsøjeblikket. Stripe's `success_url` kan ikke
+  ændres herfra, så sprogdetektering i siden er vejen.
