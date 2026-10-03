@@ -7,7 +7,7 @@
 <meta name="description" content="Give Claude, Cursor or any MCP client free web tools: HTML to Markdown conversion, 9-point EU compliance scan, page profiling and security header checks. Zero auth, zero dependencies, listed in the official MCP Registry.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="passiv-mcp — Free Web Tools for AI Agents">
-<meta property="og:description" content="MCP server with HTML→Markdown, EU compliance scan, page profile and security header check. Run it with npx github:mahope/passiv-mcp.">
+<meta property="og:description" content="MCP server with HTML→Markdown, EU compliance scan, page profile and security header check. Run it with npx @mahope/passiv-mcp.">
 <meta property="og:url" content="https://hermes-passiv.pages.dev/mcp">
 <link rel="canonical" href="https://hermes-passiv.pages.dev/mcp">
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -33,6 +33,7 @@
   .mcp-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:20px; }
   .mcp-card h3 { margin-top:0; }
   .mcp-card p { color:#4b5563; font-size:15px; }
+  .mcp-note { color:#4b5563; font-size:14px; margin:0.6rem 0 0; }
   pre { background:#0f172a; color:#e2e8f0; padding:16px; border-radius:10px; overflow-x:auto; font-size:14px; line-height:1.6; }
   code.inline { background:#f1f5f9; padding:2px 6px; border-radius:5px; font-size:14px; }
   h2 { margin-top:40px; }
@@ -51,7 +52,10 @@
      Windsurf or any other MCP client four practical web tools. No API key, no signup,
      zero npm dependencies — one file of plain Node.js.</p>
 
-  <pre><code>npx github:mahope/passiv-mcp</code></pre>
+  <pre><code>npx @mahope/passiv-mcp</code></pre>
+  <p class="mcp-note">Published on npm, so <code>npx</code> fetches it from the registry cache
+  instead of cloning the repository on every start. Same package the MCP Registry lists as
+  <code class="inline">io.github.mahope/passiv-mcp</code>.</p>
 
   <h2>The four tools</h2>
   <div class="mcp-grid">
@@ -72,13 +76,13 @@
 
   <h2>Install in 30 seconds</h2>
   <p><strong>Claude Code:</strong></p>
-  <pre><code>claude mcp add passiv -- npx github:mahope/passiv-mcp</code></pre>
+  <pre><code>claude mcp add passiv -- npx @mahope/passiv-mcp</code></pre>
   <p><strong>Claude Desktop</strong> — add to <code class="inline">claude_desktop_config.json</code>:</p>
   <pre><code>{
   "mcpServers": {
     "passiv": {
       "command": "npx",
-      "args": ["github:mahope/passiv-mcp"]
+      "args": ["@mahope/passiv-mcp"]
     }
   }
 }</code></pre>

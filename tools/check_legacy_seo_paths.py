@@ -93,6 +93,13 @@ ALLOWED_DEAD_HOST_FILES = {
 # en ny fil med samme fejl stadig fanges.
 GATE_SELF = "tools/check_legacy_seo_paths.py"
 
+# En `llms.txt` der hænger på en kilde-sti. Kun op til fire tegn mellem, så
+# `f'{SITE}/llms.txt'` (`SITE` + `}/`) rammes, mens en linje der *nævner*
+# filnavnet uden sti — en fejlbesked, en kommentar om filen — ikke gør.
+# Delt mellem `check_no_script_touches_source_sitemap` og portens selftest,
+# så mutationerne og dommen ikke kan glide fra hinanden.
+KILDE_LLMS_RE = re.compile(r"(?:site|SITE)[^A-Za-z0-9\n]{0,4}llms\.txt")
+
 # Filer der springes over ved skanning af scripts. Samme regelprincip som
 # `check_license_clients.py`: en mappe med sin egen `.git` er ikke vores kode.
 # `auditedwp-src` står her til forsikring, fordi CI's side-checkout hedder
@@ -231,6 +238,13 @@ def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]
         if name == GATE_SELF or name in ALLOWED_LLMS_FILES:
             continue
         prose = _prose_lines(text)
+        alle_linjer = text.splitlines()
+
+        def kodelinjer(needle: str) -> list[int]:
+            """Linjer der nævner `needle` i kode — ikke i kommentar eller docstring."""
+            return [i for i, l in enumerate(alle_linjer, 1)
+                    if needle in l and i not in prose]
+
         for relative, _reason in DEAD_SOURCE_FILES:
             if relative == DEAD_SOURCE_LLMS:
                 # Søg på `llms.txt` uden `site/`: `make_blog_site_health_472.py`
@@ -238,21 +252,38 @@ def check_no_script_touches_source_sitemap(scripts: dict[str, str]) -> list[str]
                 # `site/llms.txt`-søgning dømte 3 af de 4 generatorer. Samme
                 # fejlklasse som opgave 88 — porten så den rigtige overflade
                 # med den forkerte metode.
-                needle = "llms.txt"
+                #
+                # Men kun **én** klasse af fund var ægte: `dist/<d>/llms.txt` er
+                # den publicerede fil, og builden ejer den — det er den samme
+                # besked porten selv skriver i sin fejltekst. En port der dømmer
+                # læsningen af den ud fra at nævne filnavnet, kan ikke adskille
+                # «skriver i den døde kildefil» fra «læser den udgivne», og så
+                # må enhver port der dømmer publicering (som
+                # `check_developers_page.py` gør med sin LISTED-dom) enten
+                # undtages i en navne-liste eller droppes. Målt 4/10: det var
+                # netop det, porten standsede på.
+                #
+                # Skillelinjen er derfor **udtrykket**, ikke nøgleordet: fundet
+                # er en `llms.txt` der hænger på en *kilde*-sti — `site/`,
+                # `SITE/`, `{ROOT}/site/` — fordi det er den fil, der dør. En
+                # linje der læser `dist / "llms.txt"` er den publicerede fil, og
+                # en linje der nævner filnavnet i en fejlbesked er ikke en sti
+                # overhovedet. Mutation 2d er den modsigelse der låser det fast:
+                # en tekststreng med **begge** stier i skal stadig dømmes, så
+                # «linjen nævner bare llms.txt» kan ikke være svaret.
+                fund = [i for i in kodelinjer("llms.txt")
+                        if KILDE_LLMS_RE.search(alle_linjer[i - 1])]
             else:
-                needle = relative
-            if needle not in text:
-                continue
-            number = next((i for i, l in enumerate(text.splitlines(), 1)
-                           if needle in l and i not in prose), 0)
-            if not number:
-                # Nævner den døde sti, men kun i kommentarer og docstrings.
+                fund = kodelinjer(relative)
+            if not fund:
+                # Nævner den døde sti kun i kommentarer og docstrings — eller
+                # slet ikke. Eller kun den publicerede udgave af llms.txt.
                 continue
             owner = ("build_sites.py ejer sitemapperne (dist/<domaene>/sitemap.xml)"
                      if relative == DEAD_SOURCE_SITEMAP
                      else "build_sites.py ejer llms.txt (dist/<domaene>/llms.txt, "
                           "bygget ud fra sidernes pages)")
-            problems.append(f"{name}:{number} refererer til {relative} — {owner}")
+            problems.append(f"{name}:{fund[0]} refererer til {relative} — {owner}")
     return problems
 
 

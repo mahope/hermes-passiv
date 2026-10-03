@@ -88,6 +88,20 @@ OWN_HOSTS = ("mahope.tools", "hermes-passiv.pages.dev")
 # *efter* `npm install -g <vores tgz>` — det er ikke et navn på npm.
 OUR_NPM_BINS = {"eaa-scan", "deskuptime", "passiv-mcp", "clean-copy"}
 
+# Pakker vi selv har publiceret på npm, så `npx @mahope/<pakke>` er gyldigt
+# uden en `npm install` først. verificeret 3/10 med
+# `curl -s https://registry.npmjs.org/@mahope%2Fpassiv-mcp` → 200 og
+# `npm pack @mahope/passiv-mcp` → 4 filer; `dist-tags.latest` = 1.2.1.
+#
+# Skilt fra `OUR_NPM_BINS` fordi de er to forskellige ting: en *bin* her er et
+# navn vi leverer inde i en tarball, der skal installeres først, mens en
+# *pakke* her er noget npx henter direkte. Skilt også fra `GITHUB_REPOS`,
+# fordi `npx github:…` henter fra git hver gang, mens denne kommer fra
+# npm'ens cache — hurtigere, og uden at klonere.
+OUR_NPM_PACKAGES = {
+    "@mahope/passiv-mcp": "publiceret, latest 1.2.1, verificeret 3/10",
+}
+
 
 # npm/github-genveje. `github:owner/repo` verificeret med `gh api repos/...`
 # (exists + public) 27/9-2026.
@@ -112,7 +126,12 @@ TAPS = {
 BREW = {"librsvg", "xz", "snapcraft", "dotenvx"}
 
 URL = r"(?:https?://[^\s<>\"'`]+)"
-NAME = r"(?!-)(?:@?[a-z0-9@][\w.\-]*(?::[\w.\-/]+)*)"
+# Et npm-navn er `@scope/name` eller `name`. Uden scope-leddet fanger mønsteret
+# kun `@mahope` i `npx @mahope/passiv-mcp`, og porten så en pakke der hed
+# «@mahope» — som ikke findes. Målt 3/10: skiftet til den publicerede pakke
+# gjorde den port rød med præcis denne fejl, så mønsteret er rettet her
+# frem for at skrive `github:` ind i siden for at gå uden om porten.
+NAME = r"(?!-)(?:@[a-z0-9][\w.\-]*/[\w.\-]+|@?[a-z0-9][\w.\-]*(?::[\w.\-/]+)*)"
 
 # Kommando-former. Hver gruppe: (regex, gruppe-indeks for navnet).
 CMD_PATTERNS = [
@@ -246,6 +265,8 @@ def check_line(cmd: str, context: str, tap: str | None) -> list[str]:
             return problems
         if cmd.lstrip().startswith("npx") and target in OUR_NPM_BINS:
             return problems  # bin fra en af vores egne npm-pakker
+        if target in OUR_NPM_PACKAGES:
+            return problems  # pakke vi selv har publiceret under vores scope
         problems.append(
             f"npm-pakken {target} er ikke i kataloget — npm har ingen {target} "
             "(verificér med registry.npmjs.org/<navn>)"

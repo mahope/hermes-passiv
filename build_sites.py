@@ -177,6 +177,14 @@ SITES: dict[str, dict] = {
         },
         "rest": True,
         "required_routes": ["/free-tools"],
+        # Ikke i `nav`: de fire frie API'er er en agent-udgang, ikke et sted en
+        # besøgende navigerer hen. Men footeren bygges af `nav`, så uden denne
+        # linje står `/developers` i llms.txt og sitemap og ingen andre steder —
+        # og så er den 21 kloninger værd på papiret og nul i praksis.
+        "footer_extra": {
+            "en": [("Developers", "/developers")],
+            "da": [("Udviklere", "/developers")],
+        },
     },
 }
 
@@ -1034,6 +1042,7 @@ def apply_shell(site: Site, key: str, dest: str, text: str, alts: dict[str, str]
         href = url if url == own_url else url + ("/da/" if lang == "da" and url.split("//")[1] in SITES else "")
         fam.append(f'<a href="{href}"{cur}{cls}>{short}</a>')
     footer_links = [(label, href) for label, href in cfg["nav"][lang] if not href.startswith("http")]
+    footer_links += cfg.get("footer_extra", {}).get(lang, [])
     footer_links += [("GitHub", cfg["github"]), ("Releases" if lang == "en" else "Udgivelser", cfg["github"] + "/releases")] if cfg["product"] != "mahope" else []
     ctx = dict(t, brand=cfg["brand"], home=home, nav=_nav_links(cfg["nav"][lang], current), lang_switch=sw,
                family_links="\n".join(fam), search_url=search_url,

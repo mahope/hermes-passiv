@@ -1,38 +1,47 @@
 # STATUS
-- **Denne iteration: cleancopy.tools' forside sendte læseren 3,7 skærme ned for
-  at bruge det, der lå lige under folden.** Målt i Chromium 153 ved 390 px: foldens
-  `btn-primary` var «Install» → `#install` på **3 155 px**, mens værktøjet selv
-  (`#check`) lå på **715 px** — 92 px under folden. Den sekundære «Try it in the
-  browser» sendte læseren *ud* til `/clean-copy-tool`, altså ud af den side der
-  allerede kunne det. Nu er primære `#check`, «Install» er sekundær, og det
-  redundante link er væk (3 knapper → 2). Begge sprog, `site/clean-copy.html`
-  + `site/da/clean-copy.html`.
-- **Verificeret i browseren** ved 390 **og** 1280 px på begge sprog: ét tryk på
-  primære lander i `#check` med feltet synligt (**374 px** / **298 px** fra top),
-  trykflade **44 px** (EN) / **45 px** (DA), `<label for>` på plads, 0 px
-  vandret scroll. Skærmbilleder i `/tmp/ui-cleancopy-after/`.
-- **Rød CI på `main` er rettet — den lå der fra sidste iteration.** `scan-clients`
-  var **516/517**: polaritetsdommen læste `git show HEAD:site/text-on-image-core.js`,
-  som efter committen er den *nye* kode, så mutationen flyttede stadig teksten til
-  x=673. Alle 6 andre `git show` i filen står på en fast sha — kun denne stod på
-  `HEAD`. Nu `34bdbfa` + en ny dom på at referencen stadig er kernen uden
-  finger-træk, så den kan ikke blive grøn på løgnen igen. **518/518**. `first_action`
-  ratchetet fra `#install` til `#check`, målt rød på den gamle kode (1 problem),
-  grøn på den nye, selvtest 12/12.
-- **Gaten grøn:** `quality_gate.py` **80 steps** — build 315 sider/0 fund,
-  seo 0, stripe 377/377, inline-js 0, scan-clients 518/518. PR-TJEK 3/10: 0 PR'er.
-  BRANCH-TJEK 2/10. Sentry: ingen uløste fejl, SDK op.
-- **Næste:** Feature-kø 7 (`passiv-mcp`, 21 kloninger mod 2 visninger). ❓ uændret,
-  12 spørgsmål nedenfor, 0 nye.
+- **Denne iteration gav de fire frie API'er en adresse.** De svarer alle 4 med
+  rigtigt JSON, men ingen side på mahope.tools nævnte dem, og MCP'en der kalder
+  præcis de fire lå som `/mcp` på cleancopy.tools og 404'ede på mahope.tools.
+  Ny side `/developers`, i footeren på alle 28 sprogvarianter, i sitemap og
+  llms.txt. Datagrund: `passiv-mcp` er det mest klonede repo (14 d: 21 unikke
+  kloninger, 2 visninger, 0 stjerner).
+- **Siden løgnede om sig selv, og den farligste løgn var den jeg ikke troede.**
+  3 påstande var forkerte mod `_worker.js`: den sendte `format:"text"` mens
+  handleren læser `mode:'plain'`, og den skrev `passed/failed/notChecked` som
+  tællere mens tællingerne hedder `passed`/`failed`/`not_checked`.
+- **Den 4. viste sig at være sand 3 steder og falsk i det 4.** Mod kilden har
+  `CSC_CHECKS` **7** nøgler, og det har den haft i *hvert* commit siden 25/8.
+  Mod live er der **9**: `security-headers` og `meta-tags` findes i ingen
+  commit, men live har også 2/10's `not_checked`/`pages_read`. Siden siger
+  **9**, målt med curl 4/10 — fordi det er den læseren kalder. Se ❓.
+- **Porten `check_developers_page` (5 domme, selftest 15/15) dømmer at hvert
+  felt siden beder læseren sende, læses af den handler ruten peger på.** Målt
+  rød på den gamle payload, grøn på den nye. Min egen krop-udtrækker brød
+  undervejs; grænsen er nu næste topniveau-deklaration.
+- **Review-fund 4/10 rettet (punkt 0):** noten i `first_action.json` sagde at
+  `/clean-copy-tool` «ligger stadig i hovednavnen». Målt 4/10: 0 `<nav>` og 0
+  forekomster i `<header>` på begge sprog — noteret de 4 rigtige steder.
+- **Gaten grøn:** 84 steps. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10. Sentry:
+  0 uløste fejl, SDK op. **Næste:** CEO-kø punkt 2 — DeskUptime lover «no
+  phone-home», men licensen aktiveres online mod mahope.tools. ❓ uændret.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: cleancopy-forside til værktøjet + rød CI rettet ceo/cleancopy-koeb-handling 4/10 00:0x`
-Graden deployer på push. Verificér på *indhold*: hent `https://cleancopy.tools/` og
-tæl `btn-primary` i folden — skal være **1**, med `href="#check"` og teksten
-«Convert a page». Før var teksten «Install» og `href="#install"». Samme på
-`https://cleancopy.tools/da/` med «Konvertér en side». CI skal være grøn på
-`main` — den var **rød** på `d294324` (scan-clients 516/517).
+`DEPLOY OK 4/10` for `ceo/cleancopy-koeb-handling` — hentet live: foldens
+primære er `href="#check"` med teksten «Convert a page», CI grøn på `main`.
+
+`VERIFICÉR DEPLOY: /developers + de tre løgnede påstande rettet ceo/developers-side 4/10 00:4x`
+Graden deployer på push. Verificér på *indhold*: hent
+`https://mahope.tools/developers` og tæl. Skal være **fire** endpoint-blokke,
+og clean-copy-kommandoen skal sende `{"html":"…","mode":"markdown"}` — før
+stod der `"format":"markdown"`. Siden skal sige **ni** compliance-tjek, fordi
+det er dem live svarer (`checks` har 9 nøgler) — kilden siger syv, se ❓.
+Linket skal også stå i mahope.tools' footer på en af de andre 27
+sprogvarianter, `https://mahope.tools/llms.txt` skal have linjen, og
+`https://mahope.tools/mcp` skal have **0** `npx github:mahope/passiv-mcp` og
+**2** `npx @mahope/passiv-mcp` (den findes på npm: registry svarer 200,
+`dist-tags.latest` 1.2.1, målt 4/10).
+
 
 
 ## Åbne opgaver
@@ -122,6 +131,17 @@ tæl `btn-primary` i folden — skal være **1**, med `href="#check"` og teksten
   («ét købsknap i ét pro-kort») siger nej til et prislink dér. Købsvejen findes på
   de seks produktsider. Enten beholder vi den som ren tekst, eller jeg flytter den
   til en fane under kortet.
+- **🔴 `site/_worker.js` er ikke hele workeren bag mahope.tools.** Målt 4/10 med
+  curl: `/api/compliance-scan` svarer **9** tjek (`privacy, terms, cookie,
+  imprint, accessibility, dpa, security-headers, meta-tags, hreflang`), men
+  `CSC_CHECKS` i repoet har **7** nøgler — og har haft 7 siden 25/8. Live har
+  også 2/10's `not_checked` og `pages_read`, så live er *nyere* end de 2 af
+  de 9 vi aldrig har haft i noget commit. `/api/profile` svarer `max_score: 21`
+  og de øvrige 3 felter er identiske med kilden. **Hvad jeg skal bruge fra
+  dig:** en afklaring af hvad der svarer på `mahope.tools/api/*` — en Worker
+  route der overskriver Pages, eller en udgivelse uden om repoet. Uden den kan
+  jeg ikke vedligeholde dokumentation om API'et mod sandheden, og `_worker.js`
+  i repoet er så ubrugt en kilde til at skrive om de ruter.
 - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`,
   `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`).
   Sitemap og robots er målt korrekte på de fire sites missionen udgiver.
@@ -166,8 +186,14 @@ i `docs/plan-arkiv.md`.
    7 på forsiden, 78 % bounce — bounce på **én** side kan ikke bruges som dom,
    fordi én sidevisning også er en fuldført konvertering.
 
-7. **`passiv-mcp` klones 10 × mere end den ses.** 14 dage: 21 unikke kloninger,
-   2 visninger, 0 stjerner. Tal: om en kloning fører til et kald på
-   `mahope.tools`. Accept: repoet har en README der siger hvad MCP'en gør, og
-   en side på mahope.tools der linker til den — så en kloning kan finde vej
-   hjem. Datagrund: det er det mest klonede repo i familien.
+7. ~~**`passiv-mcp` klones 10 × mere end den ses.**~~ **Leveret 4/10.** Hvem:
+   de 21 der klonaede den i 14 dage plus enhver agent der leder efter en gratis
+   rute. Tal: om en kloning kan finde de fire API'er den kalder. Accept: en side
+   på mahope.tools der finder alle fire med rute, metode og svarfelter — og som
+   står i llms.txt, fordi det er den fil en agent faktisk læser. Datagrund: det
+   er det mest klonede repo i familien (21 kloninger, 2 visninger, 0 stjerner).
+   **Målt:** før stod `/mcp` kun på cleancopy.tools og 404'ede på mahope.tools;
+   nu er `/developers` på mahope.tools med alle fire ruter, og porten
+   `check_developers_page` er rød hvis nogen af dem forsvinder, ændrer metode
+   eller får et sendt felt der ikke læses. Samtidig rettet de tre løgnede
+   påstande siden startede med (se STATUS).

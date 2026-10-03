@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free HTTP API for agents and scripts | Mahope tools</title>
+  <meta name="description" content="Four free HTTP endpoints — compliance scan, page profile, security headers and HTML to Markdown. No API key, no signup. Same tools over MCP, curl or your own code.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Free HTTP API for agents and scripts">
+  <meta property="og:description" content="Four free HTTP endpoints — compliance scan, page profile, security headers and HTML to Markdown. No API key, no signup.">
+  <meta property="og:url" content="https://mahope.tools/developers">
+  <link rel="canonical" href="https://mahope.tools/developers">
+  <link rel="alternate" hreflang="x-default" href="https://mahope.tools/developers">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .dev-wrap { max-width: 780px; margin: 0 auto; }
+    .dev-intro { font-size: 1.05rem; color: var(--color-text-muted); max-width: 62ch; }
+    /* Ét endpoint pr. blok: metoden og ruten er det, en udvikler scanner efter,
+       så de står i monospace på samme linje som navnet i stedet for i et badge
+       der ligner en knap. */
+    .endpoint {
+      border: 1px solid var(--color-border); border-radius: 12px;
+      background: var(--color-surface); padding: 1.2rem 1.3rem; margin: 1.1rem 0;
+    }
+    .endpoint h3 { margin: 0 0 .35rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; }
+    .endpoint code { font-size: .92em; overflow-wrap: anywhere; }
+    .method {
+      font: 600 .78rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .04em; color: var(--color-text-muted);
+      border: 1px solid var(--color-border); border-radius: 5px; padding: .28rem .45rem;
+      flex: none;
+    }
+    .endpoint p { margin: .5rem 0 0; }
+    .endpoint .returns { color: var(--color-text-muted); font-size: .93rem; }
+    pre {
+      background: var(--color-surface-2); border: 1px solid var(--color-border);
+      border-radius: 10px; padding: .9rem 1rem; overflow-x: auto;
+      font: .88rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+      margin: .8rem 0 0;
+    }
+    pre code { background: none; padding: 0; font-size: inherit; }
+    .dev-note { color: var(--color-text-muted); font-size: .93rem; }
+    .dev-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .dev-table th, .dev-table td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+    .dev-table th { font-size: .88rem; color: var(--color-text-muted); }
+    .dev-table code { font-size: .88em; }
+    /* Én-taste skift mellem de to måder at kalde det samme. Ikke faner: de er
+       ikke jævnbyrdige — HTTP'en kræver nul opsætning, MCP'en kræver en agent. */
+    .dev-paths { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin: 1.2rem 0; }
+    .dev-path { border: 1px solid var(--color-border); border-radius: 12px; padding: 1.1rem 1.2rem; background: var(--color-surface); }
+    .dev-path h3 { margin: 0 0 .4rem; }
+    .dev-path p { margin: .4rem 0 0; font-size: .95rem; }
+    @media (max-width: 420px) {
+      .dev-table { display: block; overflow-x: auto; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Free HTTP API for agents and scripts",
+    "description": "Four free HTTP endpoints on mahope.tools: compliance scan, page profile, security header check and HTML to Markdown. No API key, no signup.",
+    "url": "https://mahope.tools/developers",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "license": "https://opensource.org/licenses/MIT",
+    "author": { "@type": "Person", "name": "Mads Holst Jensen", "url": "https://mahoje.dk" },
+    "publisher": { "@type": "Organization", "name": "Mahope tools", "url": "https://mahope.tools" }
+  }
+  </script>
+</head>
+<body>
+  <main class="dev-wrap">
+    <h1>Free HTTP API for agents and scripts</h1>
+    <p class="dev-intro">Four endpoints that answer a question about a web page, with no API key,
+    no signup and no account. They are the same engines that run the tools on this site, so a
+    script and a visitor get the same answer. Use them over HTTP directly, or let an AI agent
+    call them over MCP.</p>
+
+    <h2>Endpoints</h2>
+
+    <div class="endpoint">
+      <h3><code>/api/compliance-scan</code> <span class="method">GET</span></h3>
+      <p>Scans a website for nine essentials: privacy policy, terms, cookie consent, imprint,
+      accessibility statement, data processing agreement, security headers, meta tags and hreflang. It
+      follows the site's own links to find the legal pages, so one call covers the pages it can
+      reach. Up to five sites per call, and twelve page fetches for the whole call.</p>
+      <pre><code>curl "https://mahope.tools/api/compliance-scan?url=https://example.com"</code></pre>
+      <p class="returns">Returns <code>score</code> out of 100, a letter <code>grade</code>, and
+      <code>passed</code>/<code>failed</code>/<code>not_checked</code> counts out of
+      <code>total</code>. <code>results</code> holds the same checks in three lists —
+      <code>passed</code>, <code>failed</code>, <code>notChecked</code> — where each entry has a
+      <code>label</code> and a <code>details</code> sentence, so the fix is written out for each one
+      that failed. <code>pages_read</code> lists the pages it actually read.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><code>/api/profile</code> <span class="method">GET</span></h3>
+      <p>Profiles one page: title and meta description, Open Graph and Twitter tags, JSON-LD types,
+      heading structure, image alt coverage, hreflang count and security headers. Returns a weighted
+      score out of 21 with a letter grade.</p>
+      <pre><code>curl "https://mahope.tools/api/profile?url=https://example.com"</code></pre>
+      <p class="returns">Returns <code>score</code>, <code>grade</code>, and the raw
+      <code>headings</code>, <code>og</code> and <code>security</code> blocks.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><code>/api/header-check</code> <span class="method">GET</span></h3>
+      <p>Fetches a URL and returns its response headers, following redirects and reporting where it
+      ended up.</p>
+      <pre><code>curl "https://mahope.tools/api/header-check?url=https://example.com"</code></pre>
+      <p class="returns">Returns every response <code>headers</code> object plus <code>status</code>,
+      <code>finalUrl</code> and <code>redirected</code>.</p>
+    </div>
+
+    <div class="endpoint">
+      <h3><code>/api/clean-copy</code> <span class="method">POST</span></h3>
+      <p>Converts HTML to clean Markdown or plain text. Send the HTML as <code>html</code>, and
+      <code>mode</code> as <code>plain</code> if you want text instead of Markdown — the same engine
+      as the Clean Copy extension. 50 000 characters per call.</p>
+      <pre><code>curl -X POST https://mahope.tools/api/clean-copy \
+  -H 'Content-Type: application/json' \
+  -d '{"html":"&lt;h1&gt;Hej&lt;/h1&gt;","mode":"markdown"}'</code></pre>
+      <p class="returns">Returns <code>markdown</code> — the converted text, also when
+      <code>mode</code> is <code>plain</code> — plus the <code>mode</code> you asked for,
+      <code>input_chars</code> and <code>output_chars</code>. Send 50 001 characters and you get
+      413, not a truncated answer.</p>
+    </div>
+
+    <h2>Two ways to call it</h2>
+    <div class="dev-paths">
+      <div class="dev-path">
+        <h3>HTTP, from anything</h3>
+        <p>The four endpoints above are plain <code>GET</code>/<code>POST</code> calls. They work from
+        a shell script, a CI job, a spreadsheet formula or an agent that speaks HTTP. Nothing to
+        install.</p>
+      </div>
+      <div class="dev-path">
+        <h3>MCP, from an AI agent</h3>
+        <p><a href="https://cleancopy.tools/mcp">passiv-mcp</a> exposes the same four tools to Claude
+        Desktop, Claude Code, Cursor and any other MCP client. One command, then your agent picks
+        the tool itself.</p>
+        <pre><code>npx @mahope/passiv-mcp</code></pre>
+      </div>
+    </div>
+
+    <h2>Limits</h2>
+    <table class="dev-table">
+      <tr><th>Endpoint</th><th>Limit</th><th>What happens at the limit</th></tr>
+      <tr><td><code>/api/clean-copy</code></td><td>120 per hour, 50 000 characters per call</td><td>HTTP 429 with the server's own sentence, or 413 for oversized input</td></tr>
+      <tr><td><code>/api/compliance-scan</code></td><td>30 per hour, 5 sites and 12 pages per call</td><td>HTTP 429, or 400 if you send more than five sites</td></tr>
+      <tr><td><code>/api/header-check</code></td><td>60 per hour</td><td>HTTP 429</td></tr>
+      <tr><td><code>/api/profile</code></td><td>30 per day, 500 000 characters per page</td><td>HTTP 429, resets at midnight UTC</td></tr>
+    </table>
+    <p class="dev-note">Limits are counted per IP address — except <code>/api/profile</code>, which
+    counts per visitor. A shared office network can therefore reach the first three faster than one
+    developer. A 429 is final — the server has already said how long it lasts, so retrying only
+    spends more of your own budget. Treat it as the answer.</p>
+
+    <h2>Good to know</h2>
+    <ul>
+      <li>Only public addresses. Local and private network addresses are refused with HTTP 400, on the
+      first request and on every redirect hop.</li>
+      <li>Responses are JSON. Errors carry <code>{"ok":false,"error":"…"}</code> with a real status
+      code — 400 for a bad URL or a private target, 413 for oversized input, 429 for a limit, 502 when
+      the target site itself failed.</li>
+      <li>A target that is slow or unreachable gives you a 502, which is worth one retry. A 400, a 413
+      or a 429 is not.</li>
+      <li>URLs you scan are fetched server-side and not stored.</li>
+    </ul>
+
+    <h2>The same tools in a browser</h2>
+    <p>If you would rather click than call: <a href="/compliance-site-check">compliance checker</a>,
+    <a href="/page-profile">page profile</a> and
+    <a href="/security-headers-check">security headers</a> run three of the four same engines. Every
+    answer the API gives, you can get by hand on this site.</p>
+  </main>
+</body>
+</html>

@@ -947,6 +947,35 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_page_h1.py", "--self-test"),
         inputs=("tools/check_page_h1.py", "site/**"),
     ),
+    # `/developers` (3/10). De fire frie API'er virkede alle fire — målt med
+    # curl mod den live udgivelse — men ingen side på mahope.tools nævnte dem,
+    # og MCP'en der kalder præcis de fire lå på cleancopy.tools og 404'ede på
+    # mahope.tools. `seo_check` dømmer en sides head og links, `check_links`
+    # dømmer at de links der *er* går ned, og `route_inventory` kræver at en
+    # side i manifestet er bygget — ingen af dem dømmer at en API mangler en
+    # adresse. Fire domme: ruten i manifestet, hver nævnt rute findes i
+    # `_worker.js`, metoden er den CORS-headeren erklærer, og siden står i den
+    # *byggede* sitemap + llms.txt.
+    Step(
+        id="developers-page",
+        argv=("python3", "tools/check_developers_page.py"),
+        # Kilderne der bestemmer `dist/` — ikke `dist/` selv, som er
+        # gitignored og derfor ikke kan stå i workflowens path-filter. Samme
+        # krav som `inline-js` ovenfor: sitemap.xml og llms.txt genereres af
+        # `build_sites.py` ud fra disse, så en push der kun rører en af dem
+        # ændrer det dom 4 dømmer og skal gaten afkontrollere.
+        inputs=("tools/check_developers_page.py", "site/developers.html",
+                "site/_worker.js", "tools/route_inventory.json",
+                "build_sites.py", "tools/pagepass.py", "tools/brand.py",
+                "tools/route_inventory.py"),
+        needs_dist=True,
+    ),
+    Step(
+        id="developers-page-selftest",
+        argv=("python3", "tools/check_developers_page.py", "--self-test"),
+        inputs=("tools/check_developers_page.py", "site/developers.html",
+                "site/_worker.js", "tools/route_inventory.json"),
+    ),
     # Sampleringen under teksten på et billede (30/9). Målt i Chromium mod den
     # live side: hvid tekst på et rent hvidt billede gav **1.47:1**, og tallet
     # flyttede sig næsten ikke mellem forskellige tilstande (1.42/1.46/1.47) —
