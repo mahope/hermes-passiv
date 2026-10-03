@@ -292,6 +292,7 @@ class El {
     this.id = id; this._v = opts.value || ''; this._l = {};
     this.textContent = ''; this.innerHTML = ''; this.hidden = false; this.className = '';
     this.files = []; this._c = opts.canvas || null;
+    this._q = {}; this._qHtml = '';
   }
   get value() { return this._v; }
   set value(v) { this._v = v; }
@@ -311,14 +312,29 @@ class El {
   // fik porten til at dø med en TypeError *ved sidevisning*, så den dømmede
   // ingen fejl overhovedet — grøn fordi den aldrig kom så langt.
   //
-  // Den skal dog give det **samme** element hver gang den spørgs for samme
+  // Den skal give det **samme** element hver gang den spørgs for samme
   // selector. Et nyt objekt hver gang ville være en knap uden lyttere: et
   // klik på den ville ikke gøre noget, og porten ville se uændrede tal og
   // dømme «rettelsen virker ikke» om en kern der virker fint. Derfor caches
   // den pr. selector — præcis som en rigtig browser gør, fordi der kun er én
   // knap i markup'en.
+  //
+  // Cachen skal dog **dø med markup'en**: `updateResult()` skriver en ny
+  // `innerHTML` og binder så den knap den lige har skrevet. Uden den
+  // nulstilling ville en knap fra et tidligere billede blive fundet igen, og
+  // `if (!knap) return null` i `fixKnap()` ville aldrig være sand — altså et
+  // løfte uden dom. Det var ikke en hypotese: med en cache der levede for evig
+  // gav mutationen «fjern knappen af markup'en» **grønt**, fordi stubben stadig
+  // fandt en knap i et gammelt element.
+  //
+  // Og den skal svare **null** når markup'en ikke har knappen. Det er hele
+  // pointen med at have en selector overfor en streng: `updateResult()`
+  // skriver knappen *ind i* `innerHTML`, så det er dér, sandheden om hvor der
+  // står en knap, ligger.
   querySelector(sel) {
-    if (!this._q) this._q = {};
+    if (this._qHtml !== this.innerHTML) { this._q = {}; this._qHtml = this.innerHTML; }
+    const attr = /^\[([a-z][a-z0-9-]*)(?:=["']?[^"'\]]*["']?)?\]$/.exec(sel);
+    if (attr && !new RegExp('\\b' + attr[1] + '\\b').test(this.innerHTML || '')) return null;
     if (!this._q[sel]) this._q[sel] = new El(sel);
     return this._q[sel];
   }
@@ -521,7 +537,88 @@ for (const f of FIX) {
   const r = fixEfter(d, f.farve, 'Dette er en overskrift over et todelt billede', 20, 140);
   fixSvar.push({ navn: f.navn, krav: f.krav, foer: r.foer, efter: r.efter });
 }
-console.log(JSON.stringify({ svar: svar, fix: fixSvar }));
+
+/* ---- To billeder i træk med «fix» imellem -------------------------------
+ *
+ * Alt ovenfor dømmer **ét** billede pr. måling. Det er den fejlform reviewen
+ * 3/10 målte i rigtig Chromium på den byggede side: `loadFile()` satte hverken
+ * `scrim` eller `lastFix` null, så et slør beregnet på *første* bildes
+ * endepunkter blev tegnet på det næste, og `.ti-fixed`-teksten stod under et
+ * tal der ikke stammer fra det bruteren havde lavet. Målt: foto A efter fix
+ * 4,52:1, og det næste foto **1,52:1** med «Jeg lagde et 13 % mørkt lag bag
+ * teksten» under sig — en påstand målt på et andet input end den den
+ * udtaler sig om.
+ *
+* `spoerg()` og `fixEfter()` kan ikke finde den: begge sætter `fg` og affyrer
+ * `input`, og **den** handler nulstiller sløret. Så hvert eneste kald i
+ * porten ryddede netop den tilstand, fejlen ligger i. Derfor er der her en
+ * egen kæde, der *kun* uploader: `uploadBillede()` rører hverken farvefelt,
+ * tekstfelt eller mus — det er præcis hvad en bruger gør ved sit tredje foto
+ * i træk.
+ *
+ * Rækkefølgen er hele pointen, og den er kun to målinger:
+ *   1. foto A + «fix»     → kernen får et slør, der hører til A
+ *   2. foto B, intet rørt → `efter` er hvad bruteren faktisk ser
+ *   3. foto B, farve=F    → `refer` er B's eget tal *ved den farve fixen
+ *                           efterlod*, altså B målt uden slør
+ *
+ * Step 3 er ikke en småting. `applyFix()` sætter **også** tekstfarven, fordi
+ * et hvidt slør kræver sort tekst — så efter en rettelse står der `#000000` i
+ * feltet, og B's eget tal er sort-tekst-på-B, ikke hvid-på-B. Uden step 3
+ * ville dommen sammenligne to forskellige farver og dømme en kern der gør
+ * helt rigtigt. Den kommer *efter* step 2, så den nulstiller ikke den
+ * tilstand den måler. */
+function uploadBillede(billede) {
+  Img.next = billede;
+  nodes['file'].files = [{ type: 'image/png' }];
+  nodes['file'].fire('change', { target: { files: nodes['file'].files } });
+}
+// Læser skærmen, ikke en intern variabel: samme greb som `fixKnap()`.
+function laesSkarm() {
+  const res = nodes['result'];
+  const m = /<strong>([0-9.,]+):1<\/strong>/.exec(res.innerHTML);
+  return {
+    fik: m ? parseFloat(m[1].replace(',', '.')) : null,
+    harFast: /\bti-fixed\b/.test(res.innerHTML),
+    harKnap: !!res.querySelector('[data-ti-fix]'),
+  };
+}
+// A er todelt mørk→lys med hvid tekst: ingen tekstfarve består begge ende, så
+// rettelsen *må* lægge et slør. Det er den eneste form hvor sløret overlever
+// til næste foto, så den er den eneste der kan finde fejlen.
+// B er derimod **mørk**, fordi det er den farve fixen efterlader: `applyFix()`
+// sætter tekstfarven til sort ved et hvidt slør, og sort tekst på et lyst
+// billede består altid. Et B der så består ville få dommen til at gråde over
+// en «fix»-knap der med vilje mangler, og løfter (b) og (c) ville være grønne
+// fordi de aldrig kan se den fejl, de er skrevet til. B skal altså fejle —
+// sort på #3a3a3a er ca. 1,9:1 mod kravet 4,5:1.
+const sekA = todeltVandret(400, 300, '#161a22', '#ebeef2');
+const sekB = ensfarvet(400, 300, '#3a3a3a');
+const sekTekst = 'Dette er en overskrift over et todelt billede';
+nodes['fontsize'].value = 'small';
+const sekFarve = '#ffffff';
+// 1 — fix på A. `fixEfter()` bruger præcis den geometri som FIX-tabellen
+// bruger til sin **slør**-case, og det er ikke en tilfældighed: på en anden
+// tekstkasse vælger `suggestFix()` en *tekstfarve* i stedet, og så er der intet
+// slør at lække. Kun slør-casen kan finde den fejl, porten er skrevet til.
+const fixA = fixEfter(sekA, sekFarve, sekTekst, 20, 140);
+const farveEfterFix = nodes['fg'].value;
+// 2 — foto B igen. Ingen `fg`, intet `input`, ingen mousedown.
+uploadBillede(sekB);
+const sekB1 = laesSkarm();
+// 3 — referencen for præcis den farve fixen efterlod.
+nodes['fg'].value = farveEfterFix; nodes['fg'].fire('input');
+uploadBillede(sekB);
+const renB2 = laesSkarm();
+
+console.log(JSON.stringify({
+  svar: svar, fix: fixSvar,
+  sekventiel: {
+    efter: sekB1, refer: renB2,
+    farve: sekFarve, farveEfterFix: farveEfterFix,
+    fixA: fixA,
+  },
+}));
 """
 
 # Tre mutationer. Hver især en reel fejl i samplingslogikken, og porten
@@ -666,6 +763,62 @@ def dom_fix(fix: list[dict]) -> list[str]:
     return fund
 
 
+def dom_sekventiel(s: dict | None) -> list[str]:
+    """Døm at et nyt billede måles på *egne* betingelser.
+
+    Fundet i review 3/10 og målt i rigtig Chromium på den byggede side:
+    `loadFile()` nulstillede hverken `scrim` eller `lastFix`, så sløret fra foto A
+    blev tegnet på foto B og `.ti-fixed`-teksten beskrev det under et tal der
+    ikke stammer fra B. Målt i browseren: foto A efter fix 4,52:1, foto B
+    **1,52:1** med «13 % mørkt lag» under sig. Målt i *denne* port, der bruger
+    andre billeder end browseren: **5,99:1 mod egne 1,85:1**. Begge tal er
+    rigtige for deres egen måling, og de skal ikke sammenlignes.
+
+    Tre krav, og de er tre forskellige fejlformer:
+
+    1. **Tallet på B er B's eget.** Ikke «bedre», ikke «værre» — det samme
+       tal B viser uden en tidligere rettelse. En tærskel ville være en svag
+       dom: en mutation der lagde sløret *tyndere* kunne nødes ned under den,
+       og en der lagde det tykkere ville nødes op over den, uden at nogen af
+       dem er den fejl læseren mærker.
+    2. **Beskrivelsen er væk.** `.ti-fixed` er kernens egen forklaring på
+       *dens* indgreb. Står den på et billede den ikke har rørt, er den en
+       påstand om et input der ikke fandtes — punkt 11 i kontrakten.
+    3. **Knappen er tilbage.** Ellers har bruteren trykket på «fix» på ét
+       billede og kan ikke trykke på det næste, fordi kernen tror den
+       allerede har gjort arbejdet.
+
+    Der dømmes **tre** løfter, og de tælles på rigtige resultater som altid i
+    denne port.
+    """
+    fund: list[str] = []
+    if not s:
+        return ["sekventiel: harnessen leverede ingen to-billeders-kæde at dømme"]
+    efter, refer = s.get("efter") or {}, s.get("refer") or {}
+    if efter.get("fik") is None:
+        fund.append("sekventiel: efter et nyt billede står der intet forholdstal "
+                    "på skærmen — læseren kan ikke se om B består")
+    if refer.get("fik") is None:
+        fund.append("sekventiel: referencemålingen af B gav intet tal, så de to "
+                    "målinger kan ikke sammenlignes")
+    if efter.get("fik") is not None and refer.get("fik") is not None:
+        afvigelse = abs(efter["fik"] - refer["fik"])
+        if afvigelse > TOLERANS:
+            fund.append(f"sekventiel: foto B viser {efter['fik']:.2f}:1 når det "
+                        f"uploades efter et fix på foto A, men {refer['fik']:.2f}:1 "
+                        f"når det måles for sig selv. Sløret fra A ligger stadig "
+                        f"tegnet på B, så tallet er ikke en måling af det "
+                        f"bruteren har lavet")
+    if efter.get("harFast"):
+        fund.append("sekventiel: der står en `.ti-fixed`-tekst under foto B, men "
+                    "kernen har ikke lagt et lag på B — beskrivelsen hører til "
+                    "et tidligere billede")
+    if not efter.get("harKnap"):
+        fund.append("sekventiel: der står ingen «fix»-knap på foto B, så bruteren "
+                    "kan ikke rette det næste billede")
+    return fund
+
+
 def dom(kode: str, r: list[dict] | None = None) -> list[str]:
     fund: list[str] = []
     for r in (r if r is not None else koer(kode)):
@@ -713,6 +866,72 @@ def self_test() -> int:
     en, da = dom(kode), dom(hent_kode(SIDER[1]))
     tjek("EN-siden er grøn", not en, "; ".join(en))
     tjek("DA-siden er grøn", not da, "; ".join(da))
+
+    # 5b: den sekventielle kæde skal finde præcis den fejl, den er skrevet
+    # til. Fundet i review 3/10 og målt i rigtig Chromium: `loadFile()`
+    # nulstillede hverken `scrim` eller `lastFix`, så sløret fra foto A blev
+    # tegnet på foto B. Det er den eneste fejl i denne port der *kun* kan ses
+    # i en kæde, så mutationen her er portens vigtigste.
+    gammel_reset = ("        scrim = null;\n        lastFix = null;\n"
+                    "        var maxW = 900;")
+    tjek("mutationen findes i koden: loadFile() nulstiller sløret",
+         gammel_reset in kode, repr(gammel_reset))
+    sek_ok = koer(kode, hele=True).get("sekventiel")
+    tjek("to-billeders-kæden leverer alle tre læsninger",
+         bool(sek_ok) and all(k in sek_ok for k in ("efter", "refer", "fixA")),
+         str(sek_ok))
+    tjek("porten er grøn på den rigtige kode",
+         not dom_sekventiel(sek_ok), "; ".join(dom_sekventiel(sek_ok)))
+    # B skal **fejle** i referencen. Ellers er der ingen «fix»-knap at kræve
+    # tilbage, og løfterne (b) og (c) er grønne fordi porten aldrig kan se
+    # den fejl, de er skrevet til. Dømt på `harKnap`, fordi det er knappens
+    # tilstedeværelse i markup'en — ikke et beregnet krav.
+    tjek("foto B fejler i udgangspunktet, så løfterne (b) og (c) har noget at dømme",
+         bool(sek_ok) and (sek_ok.get("refer") or {}).get("harKnap") is True,
+         str(sek_ok))
+    # Og «fix» på A skal *virke*. Hvis rettelsen holdt op at løse A, ville
+    # `suggestFix()` falde tilbage på en tekstfarve, der så ikke er noget slør
+    # at lække — og hele kæden ville være grøn fordi den intet længere kan
+    # finde. Det er den stille død, en port kan gå ind i uden at ændre et
+    # eneste tal.
+    fixA = (sek_ok or {}).get("fixA") or {}
+    tjek("«fix» på foto A løser A, så kæden har et slør at lække",
+         (fixA.get("efter") or {}).get("fik") is not None
+         and fixA["efter"]["fik"] > (fixA.get("foer") or 0),
+         str(fixA))
+    sek_gammel = dom_sekventiel(
+        koer(kode.replace(gammel_reset, "        var maxW = 900;", 1), hele=True)
+        .get("sekventiel"))
+    # Og den mutation skal give **alle tre** fund. Det er også det bevis der
+    # viser at det er et *slør* der lækker: en farve-fix efterlader intet, så
+    # mutationen ville give 0 fund hvis `suggestFix()` holdt op med at vælge
+    # slør. Færre end tre fund er derfor ikke et svagere bevis — det er et
+    # tabt.
+    tjek("mutationen gør den sekventielle dom rød i alle tre løfter",
+         len(sek_gammel) == 3,
+         f"forventede 3 fund, fik {len(sek_gammel)}: " +
+         "; ".join(sek_gammel))
+
+    # 5c: dommen skal kunne dømme hvert af de tre løfter *individuelt*. En
+    # samlet mutation kan ramme alle tre på én gang og så se ud som om de
+    # hver især har polaritet, mens en af dem i virkeligheden kun fanges
+    # fordi de andre fejler. Derfor fanges de hver for sig.
+    def handlavet(tal, har_fast=False, har_knap=True):
+        return {"efter": {"fik": tal, "harFast": har_fast, "harKnap": har_knap},
+                "refer": {"fik": 1.85, "harFast": False, "harKnap": True}}
+    tjek("dommen kan se et tal der ikke er B's eget",
+         bool(dom_sekventiel(handlavet(5.99))),
+         str(dom_sekventiel(handlavet(5.99))))
+    tjek("dommen kan se en .ti-fixed-tekst der ikke hører til B",
+         any("ti-fixed" in f for f in dom_sekventiel(handlavet(1.85, har_fast=True))),
+         str(dom_sekventiel(handlavet(1.85, har_fast=True))))
+    tjek("dommen kan se en manglende «fix»-knap",
+         any("knap" in f for f in dom_sekventiel(handlavet(1.85, har_knap=False))),
+         str(dom_sekventiel(handlavet(1.85, har_knap=False))))
+    tjek("dommen er grøn på to ens målinger",
+         dom_sekventiel(handlavet(1.85)) == [], str(dom_sekventiel(handlavet(1.85))))
+    tjek("dommen kan se en kæde, der slet ikke blev leveret",
+         bool(dom_sekventiel(None)), "harnessen gav intet")
 
     # 6: tallene i tabellen er slået op, ikke regnet ud fra koden. Genregn
     # dem her med WCAG-formlen, så en tastefejl i tabellen bliver rød.
@@ -798,6 +1017,15 @@ def main(argv: list[str] | None = None) -> int:
         fixfund = dom_fix(svar.get("fix", []))
         antal += len(svar.get("fix", []))
         for linje in fixfund:
+            fund.append(f"{fil}: {linje}")
+        # To billeder i træk med «fix» imellem. De tre løfter tælles **kun**
+        # når dommen faktisk har noget at dømme: ellers kunne en harness der
+        # taber kæden stadig fremstille sig som «44 løfter dømt», og det er
+        # præcis det en tæller på et hårdkodet antal gør.
+        sek = svar.get("sekventiel")
+        if sek:
+            antal += 3
+        for linje in dom_sekventiel(sek):
             fund.append(f"{fil}: {linje}")
 
     # Ratchet på den tekst kernen *skriver til læseren*. `suggestFix()`

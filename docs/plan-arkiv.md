@@ -5938,3 +5938,79 @@ screenshots: en `/tmp/queue.py` skygger stdlib `queue`. Kør scriptet fra stdin
 eller et andet katalog. (3) Kernen vælger det *hvide* slør på A, fordi det dækker
 mindst (41 %) — det sorte kræver 79 %. Beskrivelsen følger retningen, så en dom på
 «mørkt lag» alene ville være grøn fordi den kun læser den ene.
+
+---
+
+## 3/10 — Kontrastporten dømte ét billede pr. kald, så den kunne ikke se sit eget fund
+
+**Fundet.** Reviewen af `3a972fc` (HØJ) konkluderede at rettelsen var rigtig,
+men at *porten* ikke kunne se den: `check_contrast_sampling` dømte ét billede pr.
+kald, så et *sekventielt* kald gennem den samme `mount()` var ikke dømt nogen
+steder. Det er præcis den fejl, porten er skrevet til at finde — et løfte uden
+dom.
+
+**Årsagen var ikke bare porten, men portens egen målevej.** `spoerg()` og
+`fixEfter()` sætter begge `fg` og affyrer `input`, og **den** handler i kernen nulstiller `scrim` og `lastFix`. Hvert eneste kald ryddede altså netop den
+tilstand, fundet lå i: porten var grøn fordi den aldrig efterlod en slør liggende.
+
+**Rettelsen.** En egen kæde der *kun* uploader — `uploadBillede()` rører hverken
+farvefelt, tekstfelt eller mus, præcis som et tredje foto i træk:
+
+1. foto A + «fix» — `fixEfter()` med præcis den geometri FIX-tabellen bruger til
+   sin **slør**-case. Det er ikke en tilfældighed: på en anden tekstkasse vælger
+   `suggestFix()` en *tekstfarve* i stedet, og så er der intet slør at lække.
+2. foto B, intet rørt → `efter` er hvad bruteren ser.
+3. foto B ved den farve fixen efterlod → `refer` er B's eget tal.
+
+**Step 3 er nødvendig og ikke en småting.** `applyFix()` sætter *også*
+tekstfarven, fordi et hvidt slør kræver sort tekst. Efter en rettelse står der
+altså `#000000` i feltet, og B's eget tal er sort-på-B, ikke hvid-på-B. Uden
+step 3 sammenlignede dommen to forskellige farver og ville dømme en kern der
+gør helt rigtigt. Den kommer *efter* step 2, så den nulstiller ikke den
+tilstand den måler.
+
+**Målt på den gamle kode** (de to linjer fjernet fra `loadFile()`): foto B
+viser **5,99:1 PASS** mod sine egne **1,85:1 FAIL** — altså et billede der
+fejler, erklæret bestående — `.ti-fixed`-teksten står under det urørte billede,
+og der er ingen «fix»-knap, så bruteren ikke kan rette det næste. Det er præcis
+de tre ting fundet beskriver, målt i samme rækkefølge.
+
+**Dødsårsagen fandt sig selv undervejs.** Da `querySelector()` blev ærlig, gik
+porten **rød på den rigtige kode**: «der står ingen «fix»-knap på foto B».
+Årsagen var B-valget — et *lyst* B består med den sorte tekst fixen efterlod, og
+en bestående tekst skal ikke have en knap. Løftet var altså skrevet, men kunne
+aldrig fejle. To rettelser fulgte: B blev **mørkt** (`#3a3a3a`, sort ≈ 1,9:1 mod
+4,5:1), så det fejler og har en knap at kræve tilbage; og `El.querySelector()`
+svarede før *altid* et element, så både den nye løft (c) og den gamle
+`dom_fix`-lovte «der står ingen knap» var grøn fordi stubben ikke *kunne* se
+fejlen. Den svarer nu `null` når markup'en ikke har knappen, og cachen dø med
+`innerHTML` — ellers ville `updateResult()` finde en knap fra et tidligere
+billede.
+
+**Selftestens egen polaritet.** `El.querySelector()`-mutationen giver
+**33/34**, altså rød: «mutationen gør den sekventielle dom rød — forventede 3
+fund, fik 2». Uden den kontrol ville stubben kunne synes ærlig igen uden at
+nogen mærkede det.
+
+**Resultat.** `check_contrast_sampling` **GRØN — 44 løfter dømt på 2 sider**
+(38 før), `--self-test` **35/35** (24 før). De tre nye løfter fanges hver for
+sig i selvtesten, så en samlet mutation der rammer alle tre på én gang ikke kan
+lade som om de hver især har polaritet.
+
+**Portene i gaten:** `check_plan_status` **GRØN — STATUS 22 af 25 linjer**,
+`--self-test` 11/11, `check_contrast_sampling` 44 løfter + 35/35, hele
+`quality_gate` 154 steps grøn.
+
+**Målt på live 3/10** (`build-info.json` → `598665c`): `ceo/scan-delresultat`
+DEPLOY OK (`/scan` indlæser `/scan-share-core.js`, knappen «Copy link to this
+result»), `ceo/contrast-fix-knap` DEPLOY OK (`/style.css` har
+`.ti-fix { min-height: 44px }`), `ceo/afkortede-tekster` DEPLOY OK (forfader).
+`ceo/fix-gaar-ikke-paa-naeste-foto` er **ikke** live: kørslen
+`37099411101` fik rød CI, og deploy-jobbet står som *sprunget over* i kørslens
+job-liste — altså ingen udgivelse, ikke en mislykket. Den kommer live med denne
+commits grønne CI.
+
+**CI-fejlen der lå under alt dette** var ikke produktrelateret: `plan-status`
+fandt **1 fund** — STATUS-punktet «Scan-knappen var usynlig» havde **intet tal**,
+og porten dømmer at hvert punkt har et. Rettelsen er ikke kosmetisk: det er det
+punkt, der lå på pladsen for den måling der nu står først.

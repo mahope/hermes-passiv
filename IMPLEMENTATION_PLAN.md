@@ -1,50 +1,54 @@
 # STATUS
-- **«Fiks det» slog på det næste foto.** 3/10, review-fund HØJ. `loadFile()`
-  nulstillede hverken `scrim` eller `lastFix`, så et slør beregnet på *sidste*
-  bildes endepunkter blev tegnet på det næste, og `.ti-fixed` beskrev det under
-  et tal der ikke stammer fra det. Målt i rigtig Chromium mod den byggede side,
-  1280 og 390 px, to fotos i træk med «Fix it» imellem: **uden** fix stod foto B
-  på **7,94:1 PASS og «Also passes AAA»** med «I put a 37 % light layer …» —
-  altså et billede værktøjet aldrig målte, erklæret bestående. **Med** fix:
-  **3,70:1 FAIL**, ingen beskrivelse, «Fix it» tilbage. Nu to linjer i
-  `im.onload`. Rettelsen, porten og hele målingen i `docs/plan-arkiv.md`.
-- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10. Se
-  `docs/plan-arkiv.md`. Porte: `scan-share` 75/75 med polaritet på tre
-  mutationer, `check_catalog_where` 120 funktioner, `quality_gate` 154 steps.
-- **Scan-knappen var usynlig** (hvidt på hvidt, målt i Chromium) — rettet, se
-  `docs/plan-arkiv.md`.
-- **Deploy:** seneste CI grøn. `ceo/scan-delresultat`, `ceo/contrast-fix-knap` og
-  `ceo/afkortede-tekster` ligger under måling. PR-TJEK 3/10: 0 PR'er.
-  BRANCH-TJEK 2/10: 2 slettet.
+- **Porten kunne ikke se den fejl den var skrevet til — og et af dens løfter var
+  død.** 3/10. `check_contrast_sampling` dømte ét billede pr. kald, og hvert
+  kald satte `fg` og affyrer `input` — den handler nulstiller sløret, så
+  porten ryddede netop den tilstand, fundet lå i. Ny **sekventiel** dom: foto A +
+  «fix», så foto B **kun uploadet**, så B målt igen ved den farve fixen
+  efterlod. Målt på den gamle kode: B **5,99:1 PASS** mod sine egne
+  **1,85:1 FAIL**, `.ti-fixed` under et urørt billede, ingen «fix»-knap.
+  Dødsårsagen fandt sig selv undervejs: `El.querySelector()` svarede altid et
+  element, så «der står ingen knap» var grøn fordi stubben ikke *kunne* se den.
+  Nu 44 løfter, `--self-test` **35/35**. `docs/plan-arkiv.md`.
+- **«Fix it» slog på det næste foto.** 3/10, review-fund HØJ. Målt før: foto B
+  7,94:1 PASS og «Also passes AAA» med «I put a 37 % light layer …» fra et andet
+  foto; egne tal 3,70:1 FAIL. Nu to linjer i `im.onload`. `docs/plan-arkiv.md`.
+- **Et delt scanelink viste en tom formular. Nu viser det fundene.** 3/10.
+  `scan-share` 75/75 med polaritet på tre mutationer. `docs/plan-arkiv.md`.
+- **Deploy:** målt 3/10 mod live `598665c`. `ceo/scan-delresultat`,
+  `ceo/contrast-fix-knap` og `ceo/afkortede-tekster` er **DEPLOY OK**. Kun
+  `ceo/fix-gaar-ikke-paa-naeste-foto` mangler: CI var rød, så deploy-jobbet blev
+  sprunget over. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 slettet.
 - **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
   domæne, bogens betalte udgave mod 7 gratis-sider, 2 desktop-apps mod Lemon
   Squeezy, Search Console, IndexNow, livstidsprisen, `/blog/`s danske-tal.
 
 ## Verificér deploy
 
+- `VERIFICÉR DEPLOY: kontrastporten dømmer to billeder i træk, og Scan-knappen
+  er synlig igen ceo/kontrast-tjek-to-fotos 2026-10-03 11:15` — på `/scan` og
+  `/scan-da` skal «Scan now»/«Scan nu» være hvid på mørk baggrund (ikke hvidt
+  på hvidt) ved 390 og 1280 px, lys og mørk. Resten af noten er kun en port og
+  intet på siderne, så den er målt i gaten: `python3
+  tools/check_contrast_sampling.py` skal sige **44 løfter** og `--self-test`
+  **35/35**. Nulstillingen af `scrim`/`lastFix` er fra `ceo/fix-gaar-ikke-paa-
+  naeste-foto` og stadig ikke live — se næste note.
+
 - `VERIFICÉR DEPLOY: «Fix it» nulstiller sløret ved billedskift
   ceo/fix-gaar-ikke-paa-naeste-foto 2026-10-03 07:35` — på
   `/text-on-image-checker` (EN+DA) og de to artikler: upload to fotos i træk med
   «Fix it» på det første. Det andet skal vise **sine egne** tal, **uden**
   `.ti-fixed`-tekst, og «Fix it» skal være tilbage. Tjek især at tallet ikke er
-  *bedre* end det var uden en tidligere rettelse — det var 7,94:1 PASS mod
-  3,70:1 FAIL før.
+  *bedre* end det var uden en tidligere rettelse — på porten er det målt til
+  **5,99:1 PASS mod 1,85:1 FAIL**.
 
-- `VERIFICÉR DEPLOY: et delt scanelink viser fundene, og Scan-knappen er
-  synlig igen ceo/scan-delresultat 2026-10-03 06:50` — på `/scan` og
-  `/scan-da` skal `<script src="/scan-share-core.js">` være indlæst, knappen
-  hedde «Copy link to this result»/«Kopiér link til dette resultat», og
-  `<button type="submit">` skal have en `class`. Et delt link med
-  `#u=…;s=74;f=IMG_ALT:e:4` skal vise «4 image(s) missing alt text» uden at
-  siden scanner noget.
+- `DEPLOY OK 3/10` `ceo/scan-delresultat` — live `598665c`: `/scan` indlæser
+  `/scan-share-core.js`, og knappen hedder «Copy link to this result».
 
-- `VERIFICÉR DEPLOY: «Fix it»-knappen gør den rettelse værktøjet før bad om
-  ceo/contrast-fix-knap 2026-10-03 04:55` — både `/text-on-image-checker`
-  (EN+DA) og de to artikler skal have knappen, og `/style.css` skal have
-  `.ti-fix { min-height:44px }`. Se målingen i browseren i STATUS.
+- `DEPLOY OK 3/10` `ceo/contrast-fix-knap` — live `598665c`: `/style.css` har
+  `.ti-fix { min-height: 44px }`, og `text-on-image-core.js` skriver
+  `<button … data-ti-fix>`.
 
-- `VERIFICÉR DEPLOY: afkortede titler og beskrivelser får en afslutning
-  ceo/afkortede-tekster 2026-10-03 04:05`
+- `DEPLOY OK 3/10` `ceo/afkortede-tekster` — forfader til live `598665c`.
 
 - Alle tidligere noter er `DEPLOY OK` eller dækket af en nyere og ligger i
   `docs/plan-arkiv.md`.
