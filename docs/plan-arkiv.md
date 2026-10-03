@@ -5613,3 +5613,55 @@ fund), `stripe-worker.test.mjs` 370/370, `check_inline_js.py` 0,
 fanget), `check_first_action.py` grøn, `check_product_copy.py` 0 problemer,
 `check_tool_paid_path.py` / `check_article_paid_path.py` grønne,
 `audit_dist_cta_routes.py` grøn.
+
+## 2026-10-03 — ceo/license-tal-og-tæller: rød CI rettet + tre review-fund fra 29/9
+
+**Rød CI (`main`, rød siden 02:44).** `tools/check_rule_claims.py --self-test`
+døde med «`da/blog/index.html` har et regel-løfte men står ikke i
+PRODUCT_ENGINE». Siden var ikke skyldig: to selftest-arme muterer
+`da/blog/eaa-compliance-scanner-desktop-download.html`s `meta description` for
+at bevise at et citeret løfte dømmes på *kilden* — men rettede kun `/blog/`, og
+ikke `/da/blog/`, der kom 3/10 og citerer præcis samme streng. Den danske hub stod
+så med et **forældet** citat, og et forældet citat er præcis den fejl porten
+findes for (den dør med «står ikke i PRODUCT_ENGINE», fordi et indeks ikke sælger
+en motor). Målt: `collect()` giver 0 løfter på `da/blog/index.html`, og
+`quoted_spans()` dækker netop det listepunkt der lå i strengen. Rettelsen er, at
+begge arme retter **alle** indekser der citerer artiklen, og at polaritets-armen
+køres på `/blog/` og `/da/blog/` hver for sig. Det er det ægte arbejdsgang: ret
+artiklen og kør `make_blog_index.py`.
+
+**Review-fund 29/9, fund 1 (HØJ) — antallet på `/license-lookup`.** Sætningen sagde
+«three on DeskUptime Pro and Transmute Desktop, **two websites on EUComply Pro,
+five elsewhere**» mod `max_devices` i `STRIPE_PRODUCTS` (5/3/3/1/3), altså
+modsagt af `/compliance-report` («Licence covers 1 machine»), `/pricing`
+(«$79/year per website») og `/page-profile` («One licence covers 3 devices») —
+på den side kunden åbner fordi de har ramt «Device limit reached». Nu står
+tallene som **tal**, hvert bundet til sin `product_key` med
+`data-seat-product`, så dommen ikke kan være en håndskrevet liste: `SEAT_COUNT`
+og `SEAT_COUNTS_MISSING` i `tools/check_license_seat_release.py` læser
+`tools/stripe_catalog.json`. «per website» er ikke en undtagelse i porten, men
+følger katalogens egen `price_note`, og for det produkt er den krævet — «1 on
+EUComply Pro» er ikke samme oplysning, fordi to købte websites giver to pladser.
+Selvtest 15/15 → **25/25**; polaritet målt ved tre mutationer af den rigtige side
+(«two websites on EUComply Pro», «5 on Page Profile Pro», en fjernet enhed).
+
+**Review-fund 29/9, fund 2 (HØJ) — tak-sidens `<title>`.** `fbbd0a7` flyttede
+`<h1>` ved fejl, men `<title>` er statisk i `<head>`: ved 400 viste fanebladet
+stadig «Thanks for your purchase | Mahope tools» over «We could not find this
+order» — og det er det kunden ser i vindueslisten, bogmærket og historikken.
+`titel()` sætter nu begge steder, og `show()` går gennem den, så de to elementer
+ikke kan glide fra hinanden igen. `tests/thanks-page.test.mjs` dømmer det på
+alle terminale veje (400/404/429/202/503) og på alle seks bekræftede, plus en
+formratchet på at kun `titel()` rører `#title`/`document.title`. 110/128 på den
+gamle kode.
+
+**Review-fund 29/9, fund 3 (MIDDEL) — `POST /api/license/devices` uden tæller.**
+Den var den eneste offentlige licensrute uden tæller, på samme flade som
+`/api/license/lookup` (10/time pr. IP). Nu `rateLimitIp(…, 'license-devices', 30)`
+før nøglen læses, så en løbet kvote ikke tager `/api/license/validate` med. Målt
+i `tests/stripe-worker.test.mjs` under fast ur: 200 på de 30 første, 429 med
+timegrænsen i sætningen på det 31., en anden IP låses ikke ud, kunden kan stadig
+frigøre en plads med `deactivate` bagefter, og en nede tæller-KV låser ingen ude.
+370/370 → **375/375**. Ruten står nu i `docs/stripe-kontrakt.md`.
+
+**Gaten.** `python3 tools/quality_gate.py` grøn (152 steps).

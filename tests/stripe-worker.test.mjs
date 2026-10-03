@@ -1060,7 +1060,35 @@ for (let i = 0; i < 80; i++) await call('/api/url-inspect?url=' + encodeURICompo
 r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(7));
 ok('url-inspect over grænsen giver 429 med timegrænsen', r.status === 429 && /hour/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 r = await call('/api/url-inspect?url=' + encodeURIComponent('https://inspect.example/'), ip(8));
-ok('en låst url-inspect låser ikke header-check', r.status === 200, r.status);
+ok('en låst url-inspect låster ikke header-check', r.status === 200, r.status);
+
+// `/api/license/devices` kom 3/10 som den eneste offentlige licensrute uden
+// tæller, på samme flade som `/api/license/lookup` der har 10/time pr. IP. Det er
+// præcis den rute en browser skal kunne finde, så den skal dømmes på samme måde
+// som de andre: under grænsen virker den, over grænsen svarer den 429 med
+// timegrænsen i sætningen, en anden IP låses ikke ud af den, og en nede
+// tæller-KV låser *ikke* kunden ude.
+const devIp = (n) => ({ method: 'POST', body: JSON.stringify({ license_key: key }), headers: { 'content-type': 'application/json', 'cf-connecting-ip': `203.0.113.${n}` } });
+const devGet = (n) => call('/api/license/devices', devIp(n));
+r = await devGet(20);
+ok('listeringen under grænsen svarer stadig 200', r.status === 200, r.status);
+for (let i = 1; i < 30; i++) await devGet(20);
+const dev429 = await devGet(20);
+const devBody = await dev429.json().catch(() => ({}));
+ok('listeringen over grænsen giver 429 med timegrænsen',
+  dev429.status === 429 && /hour/i.test(devBody.error || ''), dev429.status + ' ' + JSON.stringify(devBody).slice(0, 120));
+r = await devGet(21);
+ok('en låst listering låser ikke den næste IP', r.status === 200, r.status);
+// Ruten må ikke ændre nøglens state, så en kunde der løber tør for kvoten stadig
+// kan frigøre en plads bagefter — det er den bevægelse ruten findes for.
+r = await lic('deactivate', { license_key: key, device_id: 'd5' });
+ok('en kunde med låst listering kan stadig frigøre en plads',
+  r.status === 200 && (await r.json()).deactivated === true, r.status);
+const rlGet2 = VISITS.get;
+VISITS.get = async (k) => { if (String(k).startsWith('rl:license-devices')) throw new Error('rate-KV nede'); return rlGet2(k); };
+r = await devGet(22);
+ok('en nede tæller-KV låser ikke listeringen ude', r.status === 200, r.status);
+VISITS.get = rlGet2;
 stopFastUr();
 
 // ── Målingen fandt to ruter til, som ingen port dømte ─────────────────

@@ -66,8 +66,19 @@
       // to sætninger der modsiger hinanden, på den ene side hvor det er
       // dyrest at tage fejl. `fail()` er den eneste vej til den fejl, så
       // overskriften flyttes her, og `show()` skriver den rigtige bagefter.
+      //
+      // Fanebladet følger med. Målt 3/10 i Chromium mod den byggede side med
+      // 400: `<h1>` sagde «We could not confirm your order», mens `<title>`
+      // stadig sagde «Thanks for your purchase» — og `<title>` er det kunden ser
+      // i vindueslisten, i bogmærket og i historikken, altså det der bliver
+      // liggende hvis kunden lukker fanen og kommer tilbage. Derfor skriver
+      // `titel()` begge steder, og ingen anden sted i filen rører `document.title`
+      // direkte (dømt i `tests/thanks-page.test.mjs`).
       var bekræftet = false;
-      function titel(t) { document.getElementById('title').textContent = t; }
+      function titel(t) {
+        document.getElementById('title').textContent = t;
+        document.title = t + ' | Mahope tools';
+      }
       function fail(msg) {
         status.textContent = msg; status.className = 'hint err';
         if (!bekræftet) titel('We could not confirm your order');
@@ -134,9 +145,9 @@
         // mens kortet under sagde "there is nothing to activate". Hilsenen er
         // derfor afledt af `kind`, altså det samme som kvitteringsmailen gør.
         bekræftet = true;
-        document.getElementById('title').textContent = d.kind === 'donation'
+        titel(d.kind === 'donation'
           ? 'Thank you for supporting ' + d.product_name + '!'
-          : 'Thanks for buying ' + d.product_name + '!';
+          : 'Thanks for buying ' + d.product_name + '!');
         var html;
         // Hver `kind` i worker's STRIPE_PRODUCTS skal have en egen gren. En
         // donation har hverken nøgle eller downloads, så den må ikke falde

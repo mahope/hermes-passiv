@@ -1429,28 +1429,34 @@ def self_test() -> int:
             # *webkernens* rigtige tal stadig være grønt på de andre sider, så
             # fejlen kun kan komme fra den danske sides egen motor.
             #
-            # Den samme streng skal også rettes i `/blog/`, fordi den side
-            # **citerer** artiklens description ordret (se `RE_LIST_ITEM`).
-            # Gør man kun artiklen, står indekset med en tale der ikke længere
-            # findes nogen steder, og så dør porten med «står ikke i
-            # PRODUCT_ENGINE» om `/blog/` — en side der sælger ingen motor. Det
-            # er rødt og altså ikke farligt, men det er heller ikke denne arms
-            # påstand. At rette begge er desuden det ægte arbejdsgang: ret
-            # artiklen, og kør så `make_blog_index.py`.
+            # Den samme streng skal rettes i **alle** indekser der citerer den, fordi de
+            # **citerer** artiklens description ordret (se `RE_LIST_ITEM`). Gør
+            # man kun artiklen og `/blog/`, står `/da/blog/` med en tale der ikke
+            # længere findes nogen steder, og så dør porten med «står ikke i
+            # PRODUCT_ENGINE» om `/da/blog/` — en side der sælger ingen motor.
+            # Det var den røde CI 3/10 02:44, og det er samme fejlform som den
+            # arm ovenfor: en mutation der kun kender den ene hub. At rette alle
+            # er desuden det ægte arbejdsgang: ret artiklen, og kør så
+            # `make_blog_index.py`.
             da_dl = tmp / "site" / "da" / "blog" / "eaa-compliance-scanner-desktop-download.html"
             da_line = "Kør alle 22 WCAG 2.1 AA-regler"
-            hub_idx = tmp / "site" / "blog" / "index.html"
+            hub_indekser = [tmp / "site" / "blog" / "index.html",
+                            tmp / "site" / "da" / "blog" / "index.html"]
             if da_line in da_dl.read_text(encoding="utf-8"):
                 original = da_dl.read_text(encoding="utf-8")
-                hub_original = hub_idx.read_text(encoding="utf-8")
+                hub_originaler = [p.read_text(encoding="utf-8") for p in hub_indekser]
                 wrong_line = da_line.replace("22", "21")
                 da_dl.write_text(original.replace(da_line, wrong_line),
                                  encoding="utf-8")
-                hub_idx.write_text(hub_original.replace(da_line, wrong_line),
-                                   encoding="utf-8")
-                da_errs = check(lay)
+                for p, b in zip(hub_indekser, hub_originaler):
+                    p.write_text(b.replace(da_line, wrong_line), encoding="utf-8")
+                try:
+                    da_errs = check(lay)
+                except SystemExit as exc:
+                    da_errs = [str(exc)]
                 da_dl.write_text(original, encoding="utf-8")
-                hub_idx.write_text(hub_original, encoding="utf-8")
+                for p, b in zip(hub_indekser, hub_originaler):
+                    p.write_text(b, encoding="utf-8")
                 if not any("eaa-compliance-scanner-desktop-download" in e for e in da_errs):
                     fails.append("selftest: den danske sides '22 WCAG 2.1 AA-regler' "
                                  "dømmes ikke — `regler`-formen fanger ikke dansk "
@@ -1643,21 +1649,30 @@ def self_test() -> int:
 
         art_p = tmp / "site" / art
         hub_p = tmp / "site" / hub
+        # **Begge** indekser citerer samme artikels `meta description` — den
+        # engelske `/blog/` og den danske `/da/blog/`, der kom 3/10. Armen
+        # nedenfor retter artiklen, så alle indekser der citerer den skal rettes
+        # med: ellers står den danske med et **forældet** citat, og så er dens
+        # egen løfte ikke længere et citat — porten dør med «da/blog/index.html
+        # står ikke i PRODUCT_ENGINE». Det var den røde CI 3/10 02:44.
+        hub_paths = [hub_p, tmp / "site" / "da" / hub]
         art_body = art_p.read_text(encoding="utf-8")
-        hub_body = hub_p.read_text(encoding="utf-8")
-        if quote not in art_body or quote not in hub_body:
+        hub_bodies = [p.read_text(encoding="utf-8") for p in hub_paths]
+        if quote not in art_body or any(quote not in b for b in hub_bodies):
+            mangler = [str(p.relative_to(tmp / "site")) for p, b in zip(hub_paths, hub_bodies) if quote not in b]
             fails.append(f"selftest: {quote!r} mangler i "
-                         f"{art if quote not in art_body else hub} — "
+                         f"{art if quote not in art_body else ', '.join(mangler)} — "
                          "citat-armene er døde, fordi det rigtige tal er væk")
         else:
             wrong_quote = "Kør alle 23 WCAG 2.1 AA-regler"
             art_p.write_text(art_body.replace(quote, wrong_quote),
                              encoding="utf-8")
-            hub_p.write_text(hub_body.replace(quote, wrong_quote),
-                             encoding="utf-8")
+            for p, b in zip(hub_paths, hub_bodies):
+                p.write_text(b.replace(quote, wrong_quote), encoding="utf-8")
             art_errs = check(lay)
             art_p.write_text(art_body, encoding="utf-8")
-            hub_p.write_text(hub_body, encoding="utf-8")
+            for p, b in zip(hub_paths, hub_bodies):
+                p.write_text(b, encoding="utf-8")
             if not art_errs:
                 fails.append(f"selftest: {art} med et forkert tal i sin egen "
                              "meta description gav ingen fejl — citatet dømmes "
@@ -1666,28 +1681,35 @@ def self_test() -> int:
                 fails.append("selftest: citat-armen gav en fejl der ikke nævner "
                              f"{art}: " + "; ".join(art_errs[:3]))
 
-        if quote not in hub_body:
-            fails.append(f"selftest: {hub} citerer ikke længere {quote!r} — "
-                         "polaritets-armen er død")
-        else:
-            hub_p.write_text(hub_body.replace(quote, "Kør alle 23 WCAG 2.1 "
-                                                    "AA-regler", 1),
-                             encoding="utf-8")
+        # Polaritets-armen køres på **hvert** indeks, ét ad gangen: et rettet citat
+        # på `/blog/` skal dømmes som indeksets eget løfte, og det samme på
+        # `/da/blog/`. Før den danske hub fandtes var der kun ét indeks at dømme,
+        # og det er præcis derfor armen ikke så at den skal gøres på begge.
+        for hub_i, hub_body in enumerate(hub_bodies):
+            hub_path = hub_paths[hub_i]
+            hub_rel = str(hub_path.relative_to(tmp / "site"))
+            if quote not in hub_body:
+                fails.append(f"selftest: {hub_rel} citerer ikke længere "
+                             f"{quote!r} — polaritets-armen er død")
+                continue
+            hub_path.write_text(hub_body.replace(quote, "Kør alle 23 WCAG 2.1 "
+                                                        "AA-regler", 1),
+                                encoding="utf-8")
             try:
                 hub_errs = check(lay)
             except SystemExit as exc:
-                if hub not in str(exc):
-                    fails.append("selftest: et rettet citat på indekset døde med "
+                if hub_rel not in str(exc):
+                    fails.append(f"selftest: et rettet citat på {hub_rel} døde med "
                                  f"en anden fejl end den forventede: {exc}")
             else:
                 if not hub_errs:
                     fails.append("selftest: en citeret streng der blev ændret på "
-                                 f"{hub} gav ingen fejl — spring-fra'et er en "
+                                 f"{hub_rel} gav ingen fejl — spring-fra'et er en "
                                  "undtagelse for hub-sider, ikke et målt citat")
-                elif not any(hub in e for e in hub_errs):
+                elif not any(hub_rel in e for e in hub_errs):
                     fails.append("selftest: polaritets-armen gav en fejl der ikke "
-                                 f"nævner {hub}: " + "; ".join(hub_errs[:3]))
-            hub_p.write_text(hub_body, encoding="utf-8")
+                                 f"nævner {hub_rel}: " + "; ".join(hub_errs[:3]))
+            hub_path.write_text(hub_body, encoding="utf-8")
 
         prose_rel = "blog/compare-two-web-pages-seo.html"
         prose_p = tmp / "site" / prose_rel

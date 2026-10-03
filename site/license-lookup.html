@@ -105,10 +105,23 @@
     </div>
 
     <h2>Free up a machine</h2>
-    <p>Your key works on a set number of machines — three on DeskUptime Pro and
-    Transmute Desktop, two websites on EUComply Pro, five elsewhere. If you get
-    «Device limit reached» on a new computer, the key has to let go of a machine
-    you no longer use. You can do that here, without waiting for a reply.</p>
+    <!-- Antallene kommer fra `max_devices` i `tools/stripe_catalog.json`, og hver
+         enhed er bundet til sin product_key med `data-seat-product`, så
+         `tools/check_license_seat_release.py` kan dømme hvert tal mod katalogen.
+         Målt 3/10 (review): sætningen sagde «three on DeskUptime Pro and
+         Transmute Desktop, two websites on EUComply Pro, five elsewhere» — rigtigt
+         for to produkter, forkert for EUComply Pro (`max_devices: 1` ganges med
+         antal købte websites) og for Page Profile Pro (`max_devices: 3`, ikke
+         «five elsewhere»). Den er modsagt af `/compliance-report`, `/pricing` og
+         `/page-profile`, altså af tre andre sider i samme familie. -->
+    <p>Your key works on a set number of machines —
+    <span class="seat-limit" data-seat-product="clean-copy-pro">5 on Clean Copy Pro</span>,
+    <span class="seat-limit" data-seat-product="deskuptime-pro">3 on DeskUptime Pro</span>,
+    <span class="seat-limit" data-seat-product="transmute-desktop">3 on Transmute Desktop</span>,
+    <span class="seat-limit" data-seat-product="page-profile-pro">3 on Page Profile Pro</span>,
+    and <span class="seat-limit" data-seat-product="eucomply-pro">1 per website on EUComply Pro</span>.
+    If you get «Device limit reached» on a new computer, the key has to let go of a
+    machine you no longer use. You can do that here, without waiting for a reply.</p>
     <form class="lookup-form" id="seatForm" novalidate>
       <div>
         <label for="seatKey">License key</label>

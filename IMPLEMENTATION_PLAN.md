@@ -1,37 +1,46 @@
 # STATUS
-- **Danske læsere fik en engelsk guides-indeks — færdig 3/10.** Målt: 97 danske
-  sider, 282 links til `/blog/`, 0 links til `/da/blog/`, og `site/da/blog/`
-  havde 85 artikler uden `index.html`. Nu: `make_blog_index.py` skriver den
-  danske side, `build_sites.py` sender dansk nav/footer/brødkrumme derhen.
-  `check_blog_index.py` dømmer den med de samme tre krav plus et fjerde (ingen
-  dansk side må pege på `/blog/` i chrome). 0 problemer, selftest 15/15 med
-  polaritet målt ved at slette siden; `stripe-worker` 370/370, `seo_check` 315
-  sider 0 fund, `check_sitemaps`/`check_hreflang_pairs`/`check_first_action`
-  grønne. Fund: «på dette site» var falsk (11 af 96 ligger på cleancopy.tools).
-- **«Device limit reached» kun skrive til Mads — færdig 3/10.** Kunden lister
-  sine maskiner på `/license-lookup` og frigør selv, via den testede
-  `/api/license/deactivate`; en knap med maskinennavn er umulig, fordi
-  `device_id` danner klienten selv. Målt: worker **370/370**, `license-lookup`
-  **26/26**, port `license-seat-release` **15/15**, polaritet begge veje.
-- **CEO-kø punkt 0 er færdig, målt 2/10:** `handleUrlInspect` har `env` +
-  mutation kun på url-inspect (**354/354**), 202 har egen `PENDING_OUT`, 429 er
-  endeligt, `releaseAiSlot()` refunderer kun ned til den værdi den selv skrev, og
-  `targetIsPublic()` kører på hvert hop og afviser IPv4-mapped IPv6 og NAT64.
-  Verificeret live 3/10: begge `?url=`-endpoints svarer 200 med status og kæde.
-- **PR-TJEK 2/10: 0 PR'er. BRANCH-TJEK 2/10:** 2 fuldt landede slettet;
-  `ceo/hub-readme-note` har kun 1 plan-note, intet kode — se ❓.
-- **❓ Til Mads:** `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s domæne,
-  bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der ringer
-  til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen,
+- **Rød CI på `main` rettet 3/10 (rød siden 02:44).** `rule-claims-selftest`
+  døde med «`da/blog/index.html` står ikke i PRODUCT_ENGINE». Ikke sidens fejl: to
+  selftest-arme muterer en artikels `meta description` og rettede kun `/blog/`, så
+  den danske hub stod med et **forældet** citat — og et forældet citat er
+  indeksets *eget* løfte, præcis den fejl porten findes for. Nu retter begge arme
+  alle indekser, og polaritets-armen køres på `/blog/` **og** `/da/blog/`. Målt:
+  selftest grøn, `check_rule_claims` 240 løfter 0 fejl. Den danske guides-indeks
+  (`cd48b18`) er færdig i historikken, men kunne ikke deployes fordi gaten var rød.
+- **Tre review-fund fra 29/9 lukket 3/10.** (1) `/license-lookup` sagde «two
+  websites on EUComply Pro, five elsewhere» — modsagt af tre andre sider. Nu
+  **5/3/3/3/1** som tal, hvert bundet til sin `product_key`, dømt mod
+  `tools/stripe_catalog.json` (25/25 selvtest, rød på tre mutationer). (2)
+  Tak-sidens `<title>` fulgte ikke `<h1>` på en fejl: `titel()` sætter begge
+  steder (128/128; 18 røde på den gamle kode). (3) `POST /api/license/devices`
+  havde ingen tæller — nu 30/time pr. IP på eget scope, målt 429 på det 31. kald,
+  `validate` svarer stadig 200 (375/375; rød på den gamle worker).
+- **Deploy:** `build-info.json` står på **`2f91b61`** på alle tre domæner, så
+  `ceo/license-selvbetjening` og `ceo/support-koen-er-donation` er målt
+  `DEPLOY OK`. `ceo/da-guides-indeks` (`cd48b18`) er **ikke** live: CI var rød, og
+  denne commit retter årsagen. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10: 2 fuldt
+  landede slettet; `ceo/hub-readme-note` har kun 1 plan-note, intet kode — se ❓.
+- **❓ Til Mads:** uændret: `OPENROUTER_API_KEY`, `STATS_TOKEN`, `bugbottle.dev`s
+  domæne, bogens betalte udgave mod 7 sider der siger gratis, 2 desktop-apps der
+  ringer til Lemon Squeezy, Search Console, IndexNow-ping, livstidsprisen,
   `/blog/`s danske-guider-tal. Resten: ❓.
 
 ## Verificér deploy
 
-- `VERIFICÉR DEPLOY: dansk guides-indeks på /da/blog/ ceo/da-guides-indeks 2026-10-03 03:20`
+- `VERIFICÉR DEPLOY: antal fra katalogen + faneblad på tak-siden + tæller på
+  /api/license/devices ceo/license-tal-og-tæller 2026-10-03 03:20`
 
-- `VERIFICÉR DEPLOY: kunden frigør sin egen licensplads på /license-lookup ceo/license-selvbetjening 2026-10-03 02:35`
+- **`DEPLOY OK 2026-10-03` — `ceo/license-selvbetjening` er live, målt på
+  indhold.** `build-info.json` står på **`2f91b61`** på alle tre domæner.
+  Live `/license-lookup` har præcis **én** «Free up a machine», to
+  `/api/license/devices` og ét `/api/license/deactivate`, `seatForm` 6 gange.
+  Samme commit-slug dækker den forrige note: `/thanks` har 1
+  `href="/license-lookup"` + «Lost your key?» og 2 `href="/support"`.
 
-- `VERIFICÉR DEPLOY: tak-siden peger på /license-lookup, ikke på donationssiden ceo/support-koen-er-donation 2026-10-03 01:47`
+- **`DEPLOY-MISSING 2026-10-03` — `ceo/da-guides-indeks` (`cd48b18`) er ikke
+  live.** Kørslen 02:44 døde i `rule-claims-selftest` (se STATUS), så
+  deploy-jobbet aldrig kørte. Årsagen er rettet i `ceo/license-tal-og-tæller`;
+  næste iteration verificerer indholdet på `/da/blog/`, ikke bare HTTP 200.
 
 - **`DEPLOY OK 2026-10-03` — `ceo/scan-sider-laest-tal` er live, målt på indhold.**
   `build-info.json` står på **`55ea279`** på alle tre domæner. `/compliance-site-check`

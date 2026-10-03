@@ -39,6 +39,16 @@ const URL_INSPECT_RATE_LIMIT = 60;
 const HEADER_CHECK_RATE_LIMIT = 60;
 const CLEAN_COPY_API_RATE_LIMIT = 120;
 const REPORT_RATE_LIMIT = 120;
+// `/api/license/devices` er den niende licensrute, og den kom 3/10 uden
+// tæller — altså den rute der netop skal findes i en browser, på samme flade som
+// `/api/license/lookup`, der har 10/time pr. IP. Nøglen er 128 bit og kan ikke
+// brute-forces, så dette er ikke et datalæk: det er en ubremse forstærker af vores
+// egen worker-kvota, som alle fire domæner deler. 30 i timen er langt over hvad
+// en kunde bruger — én listering pr. besøg plus én efter hver frigjort plads —
+// og tallet er målt, ikke gættet: `tests/stripe-worker.test.mjs` kalder ruten 31
+// gange og dømmer 429 på det 31., 200 på de 30 første, og at
+// `/api/license/validate` stadig svarer 200 bagefter med sin egen tæller.
+const LICENSE_DEVICES_RATE_LIMIT = 30;
 const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
@@ -1173,6 +1183,9 @@ function deviceIdOf(post) {
  * hemmelighed hele licensemodellen bygger på («the key itself is the secret»),
  * og den er det kunden har. Svaret nævner hverken kunde, mail eller ord, og
  * røber intet der kan bruges på en anden nøgle.
+ *
+ * Ruten har sin egen time-tæller pr. IP, som de otte andre licens- og
+ * scanningsruter har. Se `LICENSE_DEVICES_RATE_LIMIT`.
  */
 async function handleLicenseDevices(request, env) {
   if (request.method === 'OPTIONS') {
@@ -1185,6 +1198,14 @@ async function handleLicenseDevices(request, env) {
   }
   if (!env.VISITS) {
     return jsonResp({ ok: false, error: 'Service temporarily unavailable.' }, 503);
+  }
+  // Før nøglen læses: en løbet kvote tager også `/api/license/validate` med,
+  // altså den rute betalende kunder skal bruge. Sætningen er skrevet til
+  // `/license-lookup`s egen 429-gren, der lægger «Try again later» på, fordi
+  // tælleren er pr. igangværende klokketime — det samme som resten af siden.
+  const limited = await rateLimitIp(request, env, 'license-devices', LICENSE_DEVICES_RATE_LIMIT);
+  if (limited) {
+    return jsonResp({ ok: false, error: 'Too many machine lookups this hour.' }, 429);
   }
   let body;
   try { body = await request.json(); } catch {

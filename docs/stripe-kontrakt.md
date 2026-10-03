@@ -86,6 +86,7 @@ CORS `*`.
 | `activate` | `{ license_key, device_id, product }` | `200 { ok: true, activated: true, plan, expires_at, lifetime?, devices_in_use }` |
 | `validate` | `{ license_key, device_id, product }` | `200 { ok: true, valid: true\|false, plan, expires_at, lifetime?, reason? }` |
 | `deactivate` | `{ license_key, device_id }` | `200 { ok: true, deactivated, devices_in_use }` |
+| `devices` | `{ license_key }` | `200 { ok: true, product, plan, expires_at, lifetime?, max_devices, devices_in_use, devices: [{ device_id, first_seen, last_seen }] }` |
 
 - `license_key` er 32 hex-tegn (`/^[a-f0-9]{32}$/`). Trim og brug små bogstaver
   før afsendelse.
@@ -93,6 +94,13 @@ CORS `*`.
   WordPress bruger sitets hostname.
 - `product` er product_key fra tabellen. En nøgle til et andet produkt giver
   `403`.
+- `devices` er den rute `/license-lookup` bruger til at vise kunden hvilke
+  maskiner nøglen sidder på, så en der rammer `409` kan frigøre en plads selv.
+  Den kræver kun nøglen — ikke ordreference og mail, fordi `device_id` er en
+  maskinneidentitet klienten selv danner. Svaret nævner hverken kunde, mail
+  eller ord. Tæller: 30 kald pr. time pr. IP, så `429` med «Too many machine
+  lookups this hour.» — samme som de andre ruter, og den tæller på sit eget
+  scope, så den ikke tager `/api/license/validate` med.
 
 Fejlkoder: `400` forkert format, `404` ukendt nøgle, `403` udløbet/tilbagekaldt/
 forkert produkt, `409` enhedsgrænsen nået, `503` midlertidig fejl. Klienter skal

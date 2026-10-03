@@ -39,13 +39,33 @@ så i `site/license-lookup.html` og `site/_worker.js` for mekanikken:
                        en `.then()` der antager at et 200 er en succes, så
                        kunden får besked om en frigjort plads, der ikke blev
                        frigjort, og prøver igen på den samme maskine.
-  5. `ROUTE_MISSING` / `ROUTE_NOT_POST` / `ROUTE_UNAUTHED`  workerens rute
-                       mangler, svarer på GET, eller læser ikke nøglen.
+5. `ROUTE_MISSING` / `ROUTE_NOT_POST` / `ROUTE_UNAUTHED`  workerens rute
+                        mangler, svarer på GET, eller læser ikke nøglen.
+  6. `SEAT_COUNT` / `SEAT_COUNTS_MISSING`  antallet i «Free up a machine» er
+                        ikke katalogens `max_devices` for det produkt, eller et
+                        licensprodukt mangler i listen.
+  7. `ROUTE_UNLIMITED`  ruten `/api/license/devices` har ingen tæller.
 
 Dom 4 er skrevet som en ** kontrol på strukturen**, ikke på en sætning: den
 leder efter `deactivated` i den funktion der frigør, og en `return` der afbryder
 inden succesteksten. Så kan copy'en skrives om, men dommen kan ikke gå grøn
 på en side der lyver.
+
+Dom 6 er målt på den sætning porten lå på 3/10: «three on DeskUptime Pro and
+Transmute Desktop, **two websites on EUComply Pro, five elsewhere**». Den var
+rigtig for to produkter og **forkert for to** — EUComply Pro har
+`max_devices: 1` (ganges med antal købte websites ved checkout) og Page Profile
+Pro har 3, ikke «five elsewhere». `/compliance-report`, `/pricing` og
+`/page-profile` sagde alle tre modsatte af den, på den side kunden netop åbner
+fordi de har ramt «Device limit reached». Derfor skriver siden nu **tal**, ikke
+ord, og hvert tal er bundet til sin `product_key` med `data-seat-product`, så
+dommen læser katalogen og den synlige tekst — ikke en håndskrevet liste.
+
+Dom 7 er målt på review 3/10: de otte øvrige licens- og scanningsruter kalder
+`rateLimitIp`, og `/api/license/lookup` har sin egen tæller på 10/time pr. IP —
+mens `/api/license/devices`, den rute der netop skal findes i en browser, lå på
+samme flade uden. Det er ikke et datalæk (nøglen er 128 bit), men en ubremse
+forstærker af vores egen worker-kvota, som alle fire domæner deler.
 
     python3 tools/check_license_seat_release.py
     python3 tools/check_license_seat_release.py --list
@@ -54,6 +74,7 @@ på en side der lyver.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 import tempfile
@@ -63,6 +84,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 SIDE = SITE / "license-lookup.html"
 WORKER = SITE / "_worker.js"
+CATALOG = ROOT / "tools" / "stripe_catalog.json"
 
 # Dom 1. Løfter om at et menneske eller en knap i appen gør arbejdet for
 # kunden. `we free|free up|release … the seat` er den sætning der lå, og
@@ -84,6 +106,15 @@ DEACTIVATE_KALD_RE = re.compile(r"/api/license/deactivate")
 # serverens svar.
 DEACTIVATED_LÆST_RE = re.compile(r"\bdeactivated\b")
 AFBRYD_RE = re.compile(r"\breturn\b")
+# Dom 6. Hvert antal på siden er en `<span data-seat-product="…">` med **tal**
+# i teksten. Ord-formen («three on …») lå i den gamle sætning, og den er
+# umulig at dømme uden en ord-tabel; tallene kan dømmes mod katalogen, og det er
+# det samme tal `max_devices` ganges med i workerens egen nøgletabel.
+SEAT_SPAN_RE = re.compile(
+    r"""<span[^>]*data-seat-product=["']([^"']+)["'][^>]*>([\s\S]*?)</span>""", re.I)
+# Dom 7. Egen `rl:`-tæller i handleren (som `handleLicenseLookup` har) eller et
+# `rateLimitIp`-kald med sit eget scope.
+TÆLLER_RE = re.compile(r"rateLimitIp\s*\(\s*request\s*,\s*env\s*,|rl:")
 
 
 def funktion_der_frigør(js: str) -> str:
@@ -128,6 +159,119 @@ def funktion_der_frigør(js: str) -> str:
                 break
     f = js.rfind("function", 0, åbne)
     return js[f if f >= 0 else åbne : luk]
+
+
+def krop_rundt_om(js: str, navn: str) -> str:
+    """Kroppen af `async function <navn>(…)` i workeren.
+
+    Adskiller fra `funktion_der_frigør`, der leder efter et *kald* — her skal
+    dommen gælde hele handleren, også den kode der står før det kald den leder
+    efter. Signaturen findes sidst (`rfind`), fordi routeren ovenfor også
+    nævner handlerens navn, og kroppen åbnes ved den første `{` efter den.
+    """
+    i = js.rfind(f"async function {navn}")
+    if i < 0:
+        return ""
+    åbne = js.find("{", i)
+    if åbne < 0:
+        return ""
+    dybde = 0
+    for p in range(åbne, len(js)):
+        c = js[p]
+        if c == "{":
+            dybde += 1
+        elif c == "}":
+            dybde -= 1
+            if dybde == 0:
+                return js[åbne : p + 1]
+    return js[åbne:]
+
+
+def licensprodukter(katalog: Path = CATALOG) -> dict[str, dict]:
+    """Produkterne med `kind: license` og deres `max_devices`.
+
+    Katalogen er den ene kilde alle nøgleformler skriver ud fra
+    (`max_devices: product.maxDevices * qty`), så et tal på siden skal kunne
+    læses derfra — ellers er dommen en håndskrevet liste, der bliver grøn for
+    sig selv.
+    """
+    data = json.loads(katalog.read_text(encoding="utf-8"))
+    produkter = data.get("products", {})
+    return {
+        nøgle: v for nøgle, v in produkter.items()
+        if isinstance(v, dict) and v.get("kind") == "license" and isinstance(v.get("max_devices"), int)
+    }
+
+
+def dom_antal(side: Path, katalog: Path = CATALOG) -> list[str]:
+    """Dom 6: antallet i «Free up a machine» er katalogens egne."""
+    where = sti(side, SITE)
+    if not katalog.is_file():
+        return [f"KATALOG_MISSING i {sti(katalog, ROOT)}: dommen kan ikke læse "
+                f"`max_devices`, så antallet på {where} er udokumenteret."]
+    produkter = licensprodukter(katalog)
+    html = side.read_text(encoding="utf-8", errors="replace") if side.is_file() else ""
+    fund: list[str] = []
+    sette: dict[str, str] = {}
+    for nøgle, indhold in SEAT_SPAN_RE.findall(html):
+        sette[nøgle] = " ".join(indhold.split())
+
+    for nøgle, tekst in sorted(sette.items()):
+        produkt = produkter.get(nøgle)
+        antal = produkter[nøgle]["max_devices"] if produkt is not None else None
+        navn = (produkt or {}).get("name", nøgle)
+        if produkt is None:
+            fund.append(
+                f"SEAT_COUNT i {where}: «{tekst}» er skrevet for produktet "
+                f"`{nøgle}`, som ikke findes i katalogen som licensprodukt. "
+                f"Tallet kan så ikke måles mod `max_devices`."
+            )
+            continue
+        # EUComply Pro sælges pr. website, så «1 per website on EUComply Pro» er
+        # den ærlige sætning — ordet kommer fra katalogens egen `price_note`, så
+        # det ikke er en undtagelse, der kan miste mellem den og siden. Og for
+        # det produkt er «1 on EUComply Pro» **ikke** samme oplysning: kunden har
+        # købt websites, og to købte websites giver to pladser, så «per website»
+        # skal med. Derfor er der kun én tilladt form pr. website-produkt.
+        pr_side = bool(re.search(r"per website", str(produkt.get("price_note", "")), re.I))
+        Former = [f"{antal} per website on {navn}"] if pr_side else [f"{antal} on {navn}"]
+        if tekst not in Former:
+            fund.append(
+                f"SEAT_COUNT i {where}: «{tekst}» skal være en af "
+                f"{' / '.join(repr(f) for f in Former)} — `max_devices` for "
+                f"`{nøgle}` er {antal} i {sti(katalog, ROOT)}"
+                + (" og sælges pr. website, så «per website» hører med."
+                   if pr_side else ".")
+            )
+    mangler = [f"{n} ({p['name']}: {p['max_devices']})" for n, p in sorted(produkter.items()) if n not in sette]
+    if mangler:
+        fund.append(
+            f"SEAT_COUNTS_MISSING i {where}: «Free up a machine» nævner ikke "
+            f"{len(mangler)} af de {len(produkter)} licensprodukter: "
+            f"{', '.join(mangler)}. Kunden skal kunne regne ud hvor mange pladser "
+            f"deres eget produkt har — ellers står de med «five elsewhere»."
+        )
+    return fund
+
+
+def dom_tæller(side: Path, worker: Path) -> list[str]:
+    """Dom 7: ruten har en time-tæller pr. IP med sit eget scope."""
+    js = worker.read_text(encoding="utf-8", errors="replace") if worker.is_file() else ""
+    krop = krop_rundt_om(js, "handleLicenseDevices")
+    if not krop:
+        return []  # ROUTE_MISSING dømmer den manglende rute.
+    if not TÆLLER_RE.search(krop):
+        fund = [
+            "ROUTE_UNLIMITED i site/_worker.js: handleLicenseDevices kalder hverken "
+            "`rateLimitIp` eller sin egen `rl:`-tæller, så ruten er ubremset for "
+            "et script. Målt 3/10: de otte øvrige licens- og scanningsruter har "
+            "alle en tæller, og `/api/license/lookup` — samme nøgle-flade, samme "
+            "menneskelige bruger — har sin egen på 10/time pr. IP. Alle fire "
+            "domæner deler samme worker, så en løbet kvote tager også "
+            "/api/license/validate med, altså den rute betalende kunder bruger."
+        ]
+        return fund
+    return []
 
 
 def dom_loefter(mappe: Path) -> list[str]:
@@ -230,10 +374,11 @@ def sti(fil: Path, root: Path) -> str:
 
 def dom(mappe: Path | None = None, side: Path | None = None, worker: Path | None = None) -> list[str]:
     fund = dom_loefter(mappe if mappe is not None else SITE)
-    fund += dom_mekanik(
-        side if side is not None else SIDE,
-        worker if worker is not None else WORKER,
-    )
+    s = side if side is not None else SIDE
+    w = worker if worker is not None else WORKER
+    fund += dom_mekanik(s, w)
+    fund += dom_antal(s)
+    fund += dom_tæller(s, w)
     return fund
 
 
@@ -272,6 +417,33 @@ function frigør(deviceId, knap) {
             (rod / "license-lookup.html").write_text(side_html, encoding="utf-8")
             (rod / "_worker.js").write_text(worker_src, encoding="utf-8")
             return dom_loefter(rod) + dom_mekanik(rod / "license-lookup.html", rod / "_worker.js")
+
+    def døm_antal(side_html: str) -> list[str]:
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "license-lookup.html"
+            f.write_text(side_html, encoding="utf-8")
+            return dom_antal(f)
+
+    def døm_tæller(worker_src: str) -> list[str]:
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "_worker.js"
+            f.write_text(worker_src, encoding="utf-8")
+            return dom_tæller(Path(tmp) / "license-lookup.html", f)
+
+    # Dom 6. Den gode antalsætning bygges **af katalogen**, så selvtesten ikke
+    # kan have et håndskrevet tal, der bliver grøn for sig selv. Den er lavet på
+    # samme måde som den rigtige side: `<span data-seat-product>` med tallet i
+    # teksten, og «per website» kun for det produkt katalogens `price_note` siger
+    # sælges pr. website.
+    def spans_fra_katalog() -> str:
+        dele = []
+        for nøgle, produkt in sorted(licensprodukter().items()):
+            pr_side = bool(re.search(r"per website", str(produkt.get("price_note", "")), re.I))
+            mellem = f"{produkt['max_devices']}{' per website' if pr_side else ''} on {produkt['name']}"
+            dele.append(f'<span class="seat-limit" data-seat-product="{nøgle}">{mellem}</span>')
+        return "<p>Your key works on a set number of machines — " + ", ".join(dele) + ".</p>"
+
+    GOD_ANTAL = spans_fra_katalog()
 
     # 1. Dom 1 fanger præcis de to løfter der lå i `site/`, ordret som de stod.
     tjek("dom 1 fanger «we free up the seat»",
@@ -315,6 +487,33 @@ function frigør(deviceId, knap) {
          any("ROUTE_UNAUTHED" in f for f in døm(
              GOD_SIDE, GOD_WORKER.replace("/^[a-f0-9]{32}$/", "/^.*$/"))))
 
+    # 5. Dom 6 og 7. Den gode antalsætning er bygget af katalogen ovenfor, så
+    #    dommen kan kun være grøn fordi den læser den rigtige kilde.
+    tjek("dom 6: antallet fra katalogen er grønt", not døm_antal(GOD_ANTAL), " | ".join(døm_antal(GOD_ANTAL)))
+    tjek("dom 6: EUComply Pro skal sige 1 pr. website, ikke 2",
+         "eucomply-pro\">1 per website on EUComply Pro" in GOD_ANTAL, GOD_ANTAL)
+    tjek("SEAT_COUNT er rød på «two websites on EUComply Pro» — den gamle tekst",
+         any("SEAT_COUNT" in f for f in døm_antal(
+             GOD_ANTAL.replace("1 per website on EUComply Pro", "two websites on EUComply Pro"))))
+    tjek("SEAT_COUNT er rød på «five elsewhere» for Page Profile Pro",
+         any("SEAT_COUNT" in f for f in døm_antal(
+             GOD_ANTAL.replace(">3 on Page Profile Pro", ">5 on Page Profile Pro"))))
+    tjek("SEAT_COUNT er rød når «per website» mangler på det pr. website-produkt",
+         any("SEAT_COUNT" in f for f in døm_antal(
+             GOD_ANTAL.replace("1 per website on EUComply Pro", "1 on EUComply Pro"))))
+    tjek("SEAT_COUNT er rød på et produkt der ikke findes i katalogen",
+         any("SEAT_COUNT" in f for f in døm_antal(
+             GOD_ANTAL.replace('data-seat-product="deskuptime-pro"', 'data-seat-product="opfindet-produkt"'))))
+    tjek("SEAT_COUNTS_MISSING er rød når et produkt mangler i listen",
+         any("SEAT_COUNTS_MISSING" in f for f in døm_antal(
+             re.sub(r'<span class="seat-limit" data-seat-product="transmute-desktop">[\s\S]*?</span>', '', GOD_ANTAL))))
+    tjek("dom 7: handleren med tæller er grøn", not døm_tæller(GOD_WORKER), " | ".join(døm_tæller(GOD_WORKER)))
+    tjek("ROUTE_UNLIMITED er rød uden tæller — den gamle handler",
+         any("ROUTE_UNLIMITED" in f for f in døm_tæller(GOD_WORKER_UDEN_TÆLLER)))
+    tjek("ROUTE_UNLIMITED er rød når kun routerens egen tæller findes i filen",
+         any("ROUTE_UNLIMITED" in f for f in døm_tæller(
+             GOD_WORKER_UDEN_TÆLLER + "\nasync function handleAndet(request, env) { return rateLimitIp(request, env, 'x', 5); }")))
+
     print(f"self-test: {talt[0] - len(fejl)}/{talt[0]}")
     for f in fejl:
         print(f"FEJL: {f}")
@@ -322,6 +521,18 @@ function frigør(deviceId, knap) {
 
 
 GOD_WORKER = """if (path === '/api/license/devices') return handleLicenseDevices(request, env);
+async function handleLicenseDevices(request, env) {
+  if (request.method !== 'POST') { return jsonResp({ ok: false, error: 'POST only' }, 405); }
+  const limited = await rateLimitIp(request, env, 'license-devices', 30);
+  if (limited) { return jsonResp({ ok: false, error: 'Too many machine lookups this hour.' }, 429); }
+  const key = String(body.license_key || '').trim().toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(key)) { return jsonResp({ ok: false, error: 'Invalid license key format.' }, 400); }
+}"""
+
+# Den handler som lå i `site/_worker.js` 3/10, ordret som den lå: POST-only,
+# nøgletjek, ingen tæller. Den er nævnt i docstringens dom 7 og bruges som
+# mutation — porten skal være rød på den.
+GOD_WORKER_UDEN_TÆLLER = """if (path === '/api/license/devices') return handleLicenseDevices(request, env);
 async function handleLicenseDevices(request, env) {
   if (request.method !== 'POST') { return jsonResp({ ok: false, error: 'POST only' }, 405); }
   const key = String(body.license_key || '').trim().toLowerCase();

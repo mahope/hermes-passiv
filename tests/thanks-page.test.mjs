@@ -78,6 +78,10 @@ const call = (path) => worker.fetch(new Request('https://mahope.tools' + path), 
 // --------------------------------------------------------------------------
 const pageHtml = readFileSync(pagePath, 'utf8');
 const script = pageHtml.split('<script>')[1].split('</script>')[0];
+// Det `<title>` der står i markupken — altså den påstand kunden har set indtil
+// svidet svar. `render()` lægger den ind i den falske DOM, så dommene nedenfor
+// kan se både udgangspunktet og den tekst, siden efterlod.
+const STATISK_TITLE = (/<title>([^<]*)<\/title>/.exec(pageHtml) || [null, ''])[1];
 
 // `steps` giver rækken af svar siden modtager i stedet for ét. Det er sådan
 // et forbigående svar (503, 429, et kastende netværkskald) kan testes på den
@@ -98,7 +102,12 @@ async function render(payload, steps) {
   let fetches = 0;
   const sandbox = {
     console,
-    document: { getElementById: (id) => els[id] || null },
+    // `document.title` er med, fordi fanebladet er det kunden ser i
+    // vindueslisten, i bogmærket og i historikken. Målt 3/10 i Chromium mod den
+    // byggede side med et 400-svar: `<h1>` sagde «We could not confirm your
+    // order», `<title>` stadig «Thanks for her purchase» — to elementer der
+    // var lige ved at glide fra hinanden. Denne test dømmer, at de ikke gør.
+    document: { title: STATISK_TITLE, getElementById: (id) => els[id] || null },
     location: { search: '?session_id=cs_live_abcdefghij1234567890' },
     navigator: { clipboard: { writeText: () => Promise.resolve() } },
     URLSearchParams,
@@ -119,7 +128,7 @@ async function render(payload, steps) {
   // 40 runder: det er nok til et helt retry-budget (12 kald gennem to led) og
   // koster stadig under 200 ms.
   for (let i = 0; i < 40; i++) await new Promise((r) => setTimeout(r, 4));
-  return { ...els, fetches, thrown, seen };
+  return { ...els, fetches, thrown, seen, docTitle: sandbox.document.title };
 }
 
 // --------------------------------------------------------------------------
@@ -365,6 +374,53 @@ ok('404: siden siger at ordren ikke blev fundet, og påstår ikke at betalingen 
 // siden, så workeren nås aldrig — låst her så det bliver ved med at være sådan.
 const ugyldigt = await render(null, [{ status: 400, body: { ok: false, error: 'Invalid session.' } }]);
 ok('400: heller ikke gentaget', ugyldigt.fetches === 1, 'fetches=' + ugyldigt.fetches);
+
+// --------------------------------------------------------------------------
+// 3c. Fanebladet skal sige det samme som overskriften. Målt 3/10 i Chromium mod
+//     den byggede side med `/api/stripe/fulfillment` svarende 400:
+//
+//       Faneblad  : Thanks for your purchase | Mahope tools
+//       <h1>     : We could not confirm your order
+//       status   : We could not find this order.
+//
+//     `fbbd0a7`s pointe er at en påstand kun må stå når Stripe har bekræftet
+//     ordren, og den gør det rigtigt for `<h1>`. Men `<title>` er statisk i
+//     `<head>` og blev ikke rørt af noget — og det er præcis det kunden ser i
+//     vindueslisten, i bogmærket og i skærmbilledet af fejlen, altså det der
+//     bliver liggende hvis kunden taber fanen og kommer tilbage. Samme måling på
+//     429 gav sammeMismatch.
+// --------------------------------------------------------------------------
+ok('udgangspunktet er en påstand om et køb (testens egen forudsætning)',
+  /^Thanks for your purchase/.test(STATISK_TITLE), JSON.stringify(STATISK_TITLE));
+
+for (const [label, side] of [['400', ugyldigt], ['404', ukendt], ['429', vedlige429],
+  ['202 udløbet', uigjort], ['503 hele vejen', vedlige503]]) {
+  ok(`${label}: fanebladet siger at købet ikke er bekræftet, ikke at det er købt`,
+    /^We could not confirm your order/.test(side.docTitle) && !/purchase/i.test(side.docTitle),
+    JSON.stringify(side.docTitle));
+  ok(`${label}: fanebladet og <h1> er det samme`, side.docTitle === side.title.textContent + ' | Mahope tools',
+    `title=${JSON.stringify(side.docTitle)} h1=${JSON.stringify(side.title.textContent)}`);
+}
+for (const [label, side] of Object.entries(rendered)) {
+  ok(`${label}: fanebladet følger den bekræftede overskrift, ikke markupkens`,
+    side.page.docTitle === side.page.title.textContent + ' | Mahope tools' && side.page.docTitle !== STATISK_TITLE,
+    `title=${JSON.stringify(side.page.docTitle)} h1=${JSON.stringify(side.page.title.textContent)}`);
+}
+// Ratchet på *formen*: kun `titel()` må røre `<title>`, så de to elementer
+// ikke kan glide fra hinanden igen ved en ny tekst der skriver h1 direkte. Der
+//for tages `titel()`s egen krop ud af scriptet før der søges — ellers ville
+// dommen være rød på den rette kode, fordi `titel()` jo netop skriver `#title`.
+// Kommentarer fjernes også: de skal kunne *beskrive* feltet uden at tælle som
+// en skrivning, og de skal ikke kunne skjule en reel skrivning bag sig.
+const titelKrop = /function titel\(t\) \{[\s\S]*?\n {6}\}/.exec(script);
+ok('titel() findes og sætter begge steder',
+  !!titelKrop && /document\.title = t/.test(titelKrop[0]) && /getElementById\('title'\)\.textContent/.test(titelKrop[0]),
+  JSON.stringify(titelKrop && titelKrop[0].slice(0, 120)));
+const kode = script.replace(/\/\/[^\n]*/g, '');
+const udenTitrel = kode.replace(titelKrop ? titelKrop[0] : 'function titel', '');
+ok('kun titel() sætter h1 og faneblad — ingen anden sted i scriptet',
+  !/getElementById\('title'\)/.test(udenTitrel) && !/document\.title/.test(udenTitrel),
+  JSON.stringify((udenTitrel.match(/.{0,60}(getElementById\('title'\)|document\.title).{0,40}/) || [''])[0]));
 
 // Den gamle 202-sti skal stadig fungere, og med sit eget budget.
 
