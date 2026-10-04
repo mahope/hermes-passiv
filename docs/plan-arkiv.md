@@ -8093,3 +8093,77 @@ klienten kører det samme DOM-tjek på hver side.
     fejl. Ingen test for den nye ruteform: `tests/stripe-worker.test.mjs` har 461
     eksisterende checks og alle er urørte, men `multi`-formen er **ikke** dømt
     af en test endnu — én opgave for næste iteration.
+
+## 6/10 — Opgave 26: `/scan-proxy` svarede 500 på en tegnsfejl
+
+**Fundet (review 5/10, HØJ).** `handleScanProxy` deduplikerede indsendte linjer
+på `cscNormalizeUrl`, og den returnerer tom streng for præcis de tegnsfejl der er
+skrevet at blivefanget i 400'en: `https://`, `http://`, `https:///`, `///`, `//`.
+Adgangsbetingelsen `if (nøgle && …)` smed dem derfor stille væk. Rækkefølgen på
+en åben, uautentificeret rute var sådan:
+
+- alle linjer ugyldige → `sider` tom → `sider.length === 1` er falsk for en tom
+  liste → `sider[0].error` er en `TypeError` → Cloudflare svarer **500 uden
+  krop**. Før `a4277574` svarede den samme kald 400 med «Invalid URL».
+- én gyldig linje først → **200** med den ene side og intet nævnt om den anden —
+  præcis den bureau-bevidelse («to rapporter og en stille skuffelse for den
+  tredje»), som kommentaren ovenfor siger at koden forhindrer.
+
+**Rettelsen.** To linjer i `site/_worker.js`:
+
+1. Dedup'en bruger ikke længere nøglen som adgangsbetingelse. En linje med tom
+   nøgle identificeres på sin egen rå tekst, så den kan ikke dedupes på
+   normaliseringen — den har ingen — men den kan heller ikke forsvinde:
+   `if (!settes.some(x => (cscNormalizeUrl(x) || x) === (nøgle || r))) settes.push(r);`
+2. `sider[0]?.error || 'No pages were scanned.'`, så en fremtidig afvigelse i
+   løkken over `targetUrls` ikke kan blive en ny TypeError. Kan ikke slås ned i
+   en test (enhver `targetUrls`-indgang skriver præcis én side i try *eller*
+   catch), så det er forsikring og ikke dækning — sagt her, så ingen regner det
+   som en målt egenskab.
+
+**Målt.** `tests/stripe-worker.test.mjs` har nu 12 nye domme, som alle dømmer
+indholdet i kroppen og ikke bare statuskoden. Rød på den gamle kode
+(`-> 500 {}` med tom krop på alle fem tegnsfejl), grøn på den nye:
+
+| kald | før | efter |
+|---|---|---|
+| `?url=https://` | 500, tom krop | **400** med `(https://)` |
+| `?url=http://` | 500, tom krop | **400** med `(http://)` |
+| `?url=///` | 500, tom krop | **400** med `(///)` |
+| `?url=//` | 500, tom krop | **400** med `(//)` |
+| `?url=https:///` | 500, tom krop | **400** med `(https:///)` |
+| `?url=https://to.example/\nhttps://` | 200, én side, intet om linje 2 | **400** med `(https://)`, intet `multi` |
+| `?url=https://scan.example/\nhttps://SCAN.example/` | én side | **én** side, uændret |
+| `?url=https://scan.example/` | 200 | **200** uændret |
+
+`stripe-worker` **474/474** mod **462/474** på den gamle kode. Hele gaten grøn:
+`build_sites` 316 sider 0 findings, `seo_check` 0, `check_inline_js` 0,
+`scan-clients` 518/518, `check_catalog_where` GRØN.
+
+**Noget at tage med til senere revisioner.** `/api/compliance-scan` har det
+samme dedup-mønster på `_worker.js:3943-3948` («Gentagne linjer tælles én
+gang — samme *site* to gange er …»), og det har samme blindgyde: er værnet der
+kun et `cscNormalizeUrl` uden tom-nøgle-gren, kan en tegnsfejl forsvinde dér
+på samme måde. Det var der før `a4277574` (grep på `91e5da0a` = 1), så det er
+ikke dette fund, men det bør rettes i samme tur som næste `/scan-proxy`-rør.
+
+## 6/10 — Arkiveret fra planen: `analyseDoc`-retningen (fra `ceb7ce6c`)
+
+- **Feature-kø 9 rettet:** `analyseDoc(doc)` findes nu i begge sprog som en
+  1:1-transskribering af de 15 tjek fra den gamle `visEn` (diff mod
+  `91e5da0a:site/scan.html`: kun kommentar og `return`-linje afviger).
+  `HINTTAIL` er den fejlhale der lå i catch'en, og `S['shareNoteN']` er
+  erstattet af literal tekst i begge sprog (den skrev bogstaveligt `undefined`).
+- **`tools/check_links.py`:** `reads_hash` kommer fra samme parser som `ids`
+  i stedet for altid `False`; ellers råbte porten eksempel-kortets to `#url=`-
+  links som døde. Selftest har nu en mutation for egen-side-formen.
+- **`tools/check_scan_events.py`:** mutationen kræver at ankret
+  `window.trackEvent('scan')` findes, ellers er selftesten rød. Før pegede den
+  på `html = data.html;`, som `a4277574` slettede, så `.replace()` var en no-op
+  og selftesten skrev `ok` uden at have testet noget.
+- **Målt:** `scan-clients` **518/518**, `stripe-worker` **461/461**,
+  `build_sites` 316 sider 0 findings, `seo_check` 0, `check_inline_js` 0,
+  `check_links` 0 + selftest OK, `check_catalog_where` GRØN + 11/11,
+  `check_scan_events` 18/18, `check_scan_fold` 5/5,
+  `check_lifetime_counters` 17/17, `check_storage_claims` 13 sider 0,
+  `check_pro_table` GRØN, `check_plan_status` GRØN.

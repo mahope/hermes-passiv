@@ -758,8 +758,16 @@ async function handleScanProxy(request, url, env) {
   const rå = targetUrlParam.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
   const settes = [];
   for (const r of rå) {
+    // En tom nøgle betyder «kun scheme og/eller skråstreger» — 'https://',
+    // 'http://', '///'. Den er præcis den tegnsfejl 400'en herunder er skrevet
+    // til at fange, så den må ALDRIG bruges som adgangsbetingelse: før denne
+    // rettelse forsvandt sådanne linjer stille, og gik de alle tabt, blev
+    // `sider` tom og `sider[0].error` kastede en TypeError, så denne åbne rute
+    // svarede 500 uden en eneste sætning. En linje med tom nøgle identificeres
+    // derfor på sin egen rå tekst — den kan ikke dedupes på normaliseringen,
+    // fordi den ikke har nogen.
     const nøgle = cscNormalizeUrl(r);
-    if (nøgle && !settes.some(x => cscNormalizeUrl(x) === nøgle)) settes.push(r);
+    if (!settes.some(x => (cscNormalizeUrl(x) || x) === (nøgle || r))) settes.push(r);
   }
   if (settes.length > SCAN_PROXY_MAX_URLS) {
     return new Response(JSON.stringify({ ok: false,
@@ -868,7 +876,11 @@ async function handleScanProxy(request, url, env) {
   // Hvis ingen af dem kom igennem, er det et fejlsvar — ikke to rækker fejltekster,
   // som om kunden havde fået sine sider læst.
   if (okSider.length === 0) {
-    return new Response(JSON.stringify({ ok: false, error: sider[0].error }),
+    // `sider[0]` kan ikke være undefined, så længe hver `targetUrls`-indgang
+    // skriver præcis én side (try *eller* catch). Skulle en fremtidig afvigelse
+    // bryde det, skal svaret stadig være en læsbar 502 og ikke en TypeError fra
+    // en åben rute.
+    return new Response(JSON.stringify({ ok: false, error: sider[0]?.error || 'No pages were scanned.' }),
       { status: 502, headers });
   }
 

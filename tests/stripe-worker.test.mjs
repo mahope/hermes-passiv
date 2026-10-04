@@ -951,6 +951,51 @@ ok('scan-proxy: typen er stadig navngivet i fejlen',
 r = await call('/scan-proxy?url=' + encodeURIComponent('file:///etc/passwd'), ip(4));
 ok('file:// er afvist med protokol-teksten', r.status === 400 && /http/i.test((await r.json().catch(() => ({}))).error || ''), r.status);
 
+// ── En linje der normaliserer til tom streng må ikke forsvinde ─────────
+// Målt 5/10 på a4277574, fundet af reviewer: dedup'en i handleScanProxy
+// droppede stille enhver linje hvis `cscNormalizeUrl` gav tom streng — præcis
+// de tegnsfejl 400'en er skrevet til at fange ('https://', 'http://', '///',
+// '//'), fordi de kun er scheme og/eller skråstreger. Gik alle linjer tabt, blev
+// `sider` tom, `sider[0].error` kastede en TypeError, og den åbne rute svarede
+// 500 med ingen sætning. Med én gyldig linje ved siden af svarede den 200 med
+// den ene side og intet om den anden — præcis den stille skuffelse committen
+// siger at den forhindrer. Dommen her er på indholdet i fejlen, fordi en 500
+// uden krop er det hele fundet.
+const TØM_NØGLE = [
+  ['https://', 'scheme uden vært'],
+  ['http://', 'scheme uden vært'],
+  ['///', 'kun skråstreger'],
+  ['//', 'to skråstreger'],
+  ['https:///', 'scheme og skråstreger'],
+];
+for (const [tegnfejl, why] of TØM_NØGLE) {
+  r = await call('/scan-proxy?url=' + encodeURIComponent(tegnfejl), ip(31));
+  const tømBody = await r.json().catch(() => ({}));
+  ok(`scan-proxy: ${why} er et 400, ikke en 500`, r.status === 400, `${tegnfejl} -> ${r.status} ${JSON.stringify(tømBody).slice(0, 90)}`);
+  ok(`scan-proxy: ${why} giver hele linjen i fejlen`,
+    (tømBody.error || '').includes(tegnfejl) && typeof tømBody.error === 'string' && tømBody.error.length > 0,
+    JSON.stringify(tømBody).slice(0, 120));
+}
+// Den anden halvdel af fundet: linjen forsvandt stille, fordi den var *ved
+// siden af* en gyldig. Før rettelsen svarede denne 200 med den ene side.
+r = await call('/scan-proxy?url=' + encodeURIComponent('https://to.example/\nhttps://'), ip(31));
+const sideVedTegnfejl = await r.json().catch(() => ({}));
+ok('scan-proxy: en tegnsfejl ved siden af en gyldig side er et 400 med DEN linje',
+  r.status === 400 && (sideVedTegnfejl.error || '').includes('https://')
+  && !/multi/.test(JSON.stringify(sideVedTegnfejl)),
+  `${r.status} ${JSON.stringify(sideVedTegnfejl).slice(0, 140)}`);
+// Beviset på at rettelsen ikke har slået dedup'en i stykker: de fem linjer skal
+// stadig give én side, ellers er fem sider pr. kald blevet til én pr. gentaget.
+r = await call('/scan-proxy?url=' + encodeURIComponent('https://scan.example/\nhttps://SCAN.example/'), ip(31));
+const dedupet = await r.json().catch(() => ({}));
+ok('scan-proxy: to skrivelser af samme side er stadig én side',
+  r.status === 200 && dedupet.ok === true && !('multi' in dedupet), `${r.status} ${JSON.stringify(dedupet).slice(0, 120)}`);
+// Og ingen 400 må bære `undefined` eller tom tekst — det var den anden fejlmode.
+const tømFejle = TØM_NØGLE.map(([t]) => call('/scan-proxy?url=' + encodeURIComponent(t), ip(31)).then(x => x.json().catch(() => ({}))));
+ok('scan-proxy: ingen af fejlene er tom eller "undefined"',
+  (await Promise.all(tømFejle)).every(b => typeof b.error === 'string' && b.error.trim() && !/undefined/.test(b.error)),
+  JSON.stringify(await Promise.all(tømFejle)).slice(0, 160));
+
 // ── /api/url-inspect var død på hvert eneste kald ────────────────────
 // Målt 30/9 på den live udgivelse: GET /api/url-inspect svarede 500 med
 // Cloudflares "error code: 1101" på alle kald, fordi handleren tog (request,

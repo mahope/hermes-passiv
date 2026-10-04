@@ -1,22 +1,31 @@
 # STATUS
+- **`/scan-proxy` svarede 500 på `?url=https://`.** Dedup'en droppede stille
+  enhver linje hvis `cscNormalizeUrl` gav tom streng, så `sider` blev tom og
+  `sider[0].error` kastede en `TypeError` på en **åben** rute. Rettet 6/10.
+- **Samme fejl gav 200 med én side og intet om den anden**, når den gyldige linje
+  stod først — præcis den stille skuffelse committen siger at den forhindrer.
 - **`/scan` og `/scan-da` scanner igen, 6/10.** `a4277574` trak de 15 DOM-tjek
   ud som et kald til `analyseDoc(doc)` og oprettede funktionen aldrig, så
-  **hver** kørsel på begge sider døde med `ReferenceError` og efterlod
-  «Scanning …». Målt: `scan-clients` **518/518** mod rød på `a4277574`.
+  **hver** kørsel på begge sider døde med `ReferenceError`. Målt: `scan-clients`
+  **518/518** mod rød på `a4277574`.
 - **`site/stats.html` læste et nøglenavn ruten ikke har** (`waitlist` mod
-  `waitlist_lifetime`). `JSON.stringify` springer `undefined`-nøgler over, så
-  «Raw JSON» viste **0** af ventelistens tal uden en fejl. Porten dømmer nu
-  **2** konsumenter-kontroller i `site/`.
-- **Portene læste den nye kode forældet:** `check_links` kaldte **2** `#url=`-
-  links døde på egen side, og `check_scan_events`' mutation anchor var en
-  slettet linje, så selftesten skrev `ok` uden at teste noget.
-- **Rød CI på `main` siden 5/10 var denne fejl**, ikke en ny: `scan-clients`
-  kastede `analyseDoc is not defined` på `a4277574`.
-- **Næste:** opgaver 26–28 nederst — `_worker-proxy` kan svare 500 på
-  `?url=https://`, «Scan now» har ingen lås (et dobbeltklik brænder 10 slots),
-  og «fem er samme tal som `/api/compliance-scan` tager» er usandt (den tager 12).
+  `waitlist_lifetime`), så «Raw JSON» viste **0** af ventelistens tal uden en
+  fejl. Porten dømmer nu **2** konsumenter-kontroller i `site/`.
+- **Næste:** opgaver 27–28 nederst — «Scan now» har ingen lås (et dobbeltklik
+  brænder **10** kvoteslots), og «fem er samme tal som `/api/compliance-scan`
+  tager» er usandt (den tager **12**).
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: scan-proxy svarer 400 paa tegnsfejl 6/10 01:5x
+ceo/scan-proxy-ugyldig-linje` — måles på **indhold og status**, ikke bare 200:
+`GET https://mahope.tools/scan-proxy?url=https%3A%2F%2F` skal svare **400** med
+kroppen `{"ok":false,"error":"Invalid URL — must start with http:// or
+https:// (https://)"}` — altså **hele linjen** i fejlen og ingen `multi`.
+Samme for `?url=%2F%2F%2F`. `?url=https%3A%2F%2Fwww.mahope.dk%2F%0Ahttps%3A%2F%2F`
+skal svare **400** med `(https://)` og **ikke** `multi`. Og
+`?url=https%3A%2F%2Fwww.mahope.dk%2F` skal stadig svare **200** med `ok:true` og
+`html`, og to linjer med samme side skal stadig give **én** side uden `multi`.
 
 `VERIFICÉR DEPLOY: /scan scanner igen 6/10 01:1x ceo/scan-analyse-doc` — måles
 på **indhold**: live `https://mahope.tools/scan` skal **indeholde**
@@ -134,16 +143,23 @@ HTTP 200 blev ikke brugt som bevis.
    tools/quality_gate.py | grep -i lint` er tom.)*
 
 
-26. **`/scan-proxy` kan svare 500 på `?url=https://`.** Hvorfor: dedup'en i
-   `handleScanProxy` dropper stille enhver linje hvis `cscNormalizeUrl` giver
-   tom streng (`https://`, `http://`, `///` …), så `sider` bliver tom og
-   `sider[0].error` er en `TypeError` på en åben rute. Accept: `?url=https://`
-   svarer **400** med hele linjen; to linjer hvor den ene er ugyldig svarer 400
-   med *den* linje; en test der kalder handleren direkte.
+26. ~~**`/scan-proxy` kan svare 500 på `?url=https://`.**~~ **LUKKET 6/10.**
+    Hvorfor: dedup'en i `handleScanProxy` droppede stille enhver linje hvis
+    `cscNormalizeUrl` gav tom streng (`https://`, `http://`, `///`, `//` …), så
+    `sider` blev tom og `sider[0].error` var en `TypeError` på en åben rute.
+    Accept: `?url=https://` svarer **400** med hele linjen; to linjer hvor den
+    ene er ugyldig svarer 400 med *den* linje; en test der kalder handleren
+    direkte. **Målt:** 5 tegnsfejl (`https://`, `http://`, `///`, `//`,
+    `https:///`) svarer alle 400 med hele linjen i `error`; en tegnsfejl ved
+    siden af en gyldig side er 400 med *den* linje; to skrivelser af samme side
+    er stadig én side; ingen fejl er tom eller `undefined`. `stripe-worker`
+    **474/474** mod **462/474** (12 fejl, alle med `-> 500 {}`) på den gamle kode.
+    Rettelsen: tom nøgle identificeres på sin egen rå tekst i stedet for at
+    være en adgangsbetingelse, og `sider[0]?.error` kan ikke kaste mere.
 27. **Punkt 3 på «Scan now»:** knappen har ingen lås, og et dobbeltklik brænder
-   **ti** kvoteslots (`rateLimitIp` tæller én pr. side). Accept: knappen
-   `disabled` mens et kald er i luften, og en mutation i
-   `tests/scan-clients.test.mjs` der gør det rødt.
+    **ti** kvoteslots (`rateLimitIp` tæller én pr. side). Accept: knappen
+    `disabled` mens et kald er i luften, og en mutation i
+    `tests/scan-clients.test.mjs` der gør det rødt.
 28. **«Fem er samme tal som `/api/compliance-scan` tager» er usandt** — den tager
    12 (`CSC_MAX_PAGES = 12`, summen pr. kald). Accept: kommentaren i
    `_worker.js:681` og pro-kortet på `/scan` siger 5 mod 12.
@@ -245,23 +261,3 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     der kommer fra en guide kan ikke se, hvad et resultat overhovedet er. Målt
     afvigelse: et eksempel med et fast tal går stale, så det skal genereres
     eller mærkes som et eksempel — ikke skrives som et målt resultat.
-
-## Arkiv-tilføjelse 6/10
-- **Feature-kø 9 rettet:** `analyseDoc(doc)` findes nu i begge sprog som en
-  1:1-transskribering af de 15 tjek fra den gamle `visEn` (diff mod
-  `91e5da0a:site/scan.html`: kun kommentar og `return`-linje afviger).
-  `HINTTAIL` er den fejlhale der lå i catch'en, og `S['shareNoteN']` er
-  erstattet af literal tekst i begge sprog (den skrev bogstaveligt `undefined`).
-- **`tools/check_links.py`:** `reads_hash` kommer fra samme parser som `ids`
-  i stedet for altid `False`; ellers råbte porten eksempel-kortets to `#url=`-
-  links som døde. Selftest har nu en mutation for egen-side-formen.
-- **`tools/check_scan_events.py`:** mutationen kræver at ankret
-  `window.trackEvent('scan')` findes, ellers er selftesten rød. Før pegede den
-  på `html = data.html;`, som `a4277574` slettede, så `.replace()` var en no-op
-  og selftesten skrev `ok` uden at have testet noget.
-- **Målt:** `scan-clients` **518/518**, `stripe-worker` **461/461**,
-  `build_sites` 316 sider 0 findings, `seo_check` 0, `check_inline_js` 0,
-  `check_links` 0 + selftest OK, `check_catalog_where` GRØN + 11/11,
-  `check_scan_events` 18/18, `check_scan_fold` 5/5,
-  `check_lifetime_counters` 17/17, `check_storage_claims` 13 sider 0,
-  `check_pro_table` GRØN, `check_plan_status` GRØN.
