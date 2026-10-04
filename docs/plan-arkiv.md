@@ -8023,3 +8023,31 @@ kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
    dage på den side der fører 559 links. Målt: ny port `check_scan_fold.py` er
    GRØN på ny kode og **RØD** med **8** fund på den gamle, selftest **5/5**
    mutationer, fuld gate **169 steps** grøn.
+
+## 5/10 00:35 — STATUS kogt fra 32 til 24 linjer, og hvorfor CI var rød
+
+`488728f1` («Omdøb livslange tællere») **fejlede i CI**: `plan-status` dømte
+`STATUS: 26 linjer, højst 25 tilladt (1 for mange)`. De 167 øvrige steps var
+grønne, så hele rettelsen — `scans` → `scans_lifetime` i alle 7 ruter — har
+ligget uudgivet siden 4/10 23:32, og live `/api/health` svarer stadig
+`"scans": 50` ved siden af `recentVisits: 12`. Læren er den samme som den fra
+`check_plan_status.py`s egen docblock: en grænse, der ikke er dømt, er ikke en
+grænse. Kontrakten siger «højst 25 linjer», og porten siger det samme — men
+porten kørte først i CI, efter at dagen var committet.
+
+Det her flytter det kogede fra STATUS til arkivet:
+
+- **Eksempel-resultatet på `/scan`.** wordpress.org målt 66/100, 2 fejl,
+  2 advarsler. Målt med `tools/scan_example.py`, som kører `site/scan.html`s
+  egne scripts i headless Chromium med `/scan-proxy` stubbet — så tallene er
+  scannerens egne, og ingen hændelse skrives til `/api/results`.
+- **Målt datofejl i planen, rettet 4/10:** noterne var dateret «5/10» og «6/10»,
+  men hele dagens arbejde ligger på 4/10 (`git log origin/main` — seneste otte
+  commits er 4/10 16:40–22:05). Datoerne lå i fremtiden, så en deploy-note aldrig
+  kunne blive «ældre end det seneste deploy-vindue».
+- **Kommentar-strippingen i porten.** En løs `/\*.*?\*/`-strip startede ved
+  `'/*', ` inde i en streng i `_worker.js:750` og slugte 3.200 linjer kode med
+  sig, så `csc-count`s skrivning forsvandt. Den er nu forankret i linjens start.
+- **Begge åbne review-fund fra 6/10 er lukket** i `488728f1`: dobbelt `;;` i
+  `CHECKOUT_SESSION_RE` (punkt 13 — `;;` er *gyldig* JavaScript, så ingen tsc,
+  build eller port så den) og `scans` som vinduestal.

@@ -1,38 +1,28 @@
 # STATUS
-- **`/scan` viser et eksempel-resultat uden at købe en kørsel.** 5/10: kortet
-  ligger lige under folden på EN og DA og er målt med `tools/scan_example.py`
-  (nyt værktøj), der kører sidens *egne* scripts i headless Chromium mod en
-  lokal stub — så tallene er scannerens egne, og målingen tæller **ikke** som
-  et scan. wordpress.org målt 66/100, 2 fejl, 2 advarsler, 4/10. Datoen står på
-  kortet, fordi tallene er et øjebliksbillede, og «scan det selv» er en rigtig
-  `#url=`-link, så læseren kan efterprøve det. Baseline: `/api/results` 0 runs,
-  `/api/conversion` 2 buy-clicks, 0 pro-card-clicks.
-- **Ingen livslang tæller kan læses som et tal for et vindue.** 6/10: `csc-count`,
-  `wl-count` og `ai-ask-count` skrives alle med `expirationTtl: 365 * 86400` og
-  genoplades ved hvert skriv, så de kan kun stå stille eller stige. De hed
-  `scans`, `waitlist` og `ai_asks` i `/api/stats` og `scans` + `waitlist` i
-  **`/api/health`, som er offentlig** og læser *to dages* besøg i samme objekt.
-  Målt med to `curl`: `{"recentVisits":12, …, "scans":50}` mod
-  `served_scans_lifetime 50` — samme tæller. Alle **3** hedder nu `*_lifetime`
-  i alle ruter, og `weekly_report.py` læser præfikset uden en reserve, så en
-  ældre worker giver `None` («ukendt») frem for et vinduestal.
+- **Eksempel-resultat på `/scan` (EN + DA), 5/10.** wordpress.org målt
+  **66/100**, 2 fejl, 2 advarsler med `tools/scan_example.py` — sidens egne
+  scripts i headless Chromium mod lokal stub, så tallene er scannerens og
+  målingen ikke tæller i `/api/results` (**0** runs, **2** buy-clicks,
+  **0** pro-card-clicks). Datoen står på kortet, «scan det selv» er en
+  `#url=`-link.
+- **Rød CI fundet 5/10 og rettet i samme commit:** `488728f1` fejlede i
+  `plan-status` — STATUS var **26** linjer mod højst 25 — så
+  livslang-tæller-rettelsen er **ikke** live (live `/api/health` har stadig
+  `scans: 50`). Deploy-forsøg #1 efter denne commit.
+- **Ingen livslang tæller kan læses som et vinduestal.** `csc-count`,
+  `wl-count` og `ai-ask-count` har `expirationTtl: 365 * 86400` og genoplades
+  ved hvert skriv, så de kan kun stige. De hed `scans`/`waitlist` i
+  **`/api/health`, som er offentlig**, ved siden af `recentVisits: 12`
+  (to dage). Målt: samme **50** i `/api/health` og `served_scans_lifetime`.
+  Alle **3** hedder nu `*_lifetime` i **7** ruter, og `weekly_report.py`
+  læser præfikset uden reserve.
 - **Målt fejl i porten, samme opgave:** en løs `/\*.*?\*/`-strip startede ved
-  `'/*', ` inde i en streng i `_worker.js:750` og slugte 3.200 linjer kode med
-  sig, så `csc-count`s skrivning forsvandt. Kommentar-strippingen er derfor
-  forankret i linjens start, og det står skrevet hvorfor.
-- **Begge åbne review-fund fra 6/10 er lukket:** dobbelt `;;` i
-  `CHECKOUT_SESSION_RE` (punkt 13 i ren kultur — `;;` er *gyldig* JavaScript, så
-  ingen tsc, build eller port så den) og `scans` som vinduestal.
-- **Rigtige tal fra `/api/results` og `/api/conversion` (28 dage):** **0**
-  resultater, **0** `pro-card-clicks`, **2** `buy-clicks**. Nul er det rigtige
-  svar på «er nogen ved at bruge scanneren lige nu», ikke en fejl.
-- **Næste:** feature-kø 2 (`deskuptime.com` — 7 besøgende, 100 % bounce, 0 s) er
-  målt og kan ikke dømmes på 7 besøgende. `/scan` er rettet, så næste måling er
-  dens `scan`-events og `pro-card-clicks` — ikke dens markup.
-- **Målt datofejl i planen, rettet 4/10:** noterne var dateret «5/10» og «6/10»,
-  men hele dagens arbede ligger på **4/10** (`git log origin/main` — seneste otte
-  commits er 4/10 16:40–22:05). Datoerne lå i fremtiden, så en deploy-note aldrig
-  kunne blive «ældre end det seneste deploy-vindue». De er rettet til sand tid.
+  `'/*', ` i `_worker.js:750` og slugte **3.200** linjer kode, så
+  `csc-count`s skrivning forsvandt. Kommentar-strippingen er forankret i
+  linjens start.
+- **Næste:** feature-kø 9 (`/scan` tager kun 1 URL mod pro-kortets «crawls the
+  whole site») er den næste pengeopgave; feature-kø 2 (`deskuptime.com` —
+  **7** besøgende, 100 % bounce, **0** s) kan ikke dømmes på 7 besøgende.
 
 ## Verificér deploy
 
