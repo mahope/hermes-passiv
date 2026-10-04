@@ -33,11 +33,13 @@
   "site/free-tools.html": "#gdpr-heading",
   "site/da/free-tools.html": "#gdpr-heading",
   "site/free-downloads.html": "#tpl-heading",
+  "site/downloads.html": "#desktop-app",
   "site/blog/index.html": "#accessibility-eaa",
   "site/da/blog/index.html": "#tilg-ngelighed-eaa",
   "site/blog/developer-text-tools.html": "#content",
   "site/blog/free-website-compliance-checker.html": "#content",
   "site/blog/site-health-github-actions.html": "#content",
   "site/da/blog/gratis-compliance-tjek-hjemmeside.html": "#indhold",
-  "site/da/blog/site-health-github-actions-stak.html": "#indhold"
+  "site/da/blog/site-health-github-actions-stak.html": "#indhold",
+  "_4oktober_downloads": "`/downloads` er søster-siden til `/free-downloads`, der fik en fold-CTA 4/10, og den stod stadig uden nogen handling i folden: helten har badge, `<h1>` og tagline, men første `<section class=\"dl-card\">` (`pip install`) ligger under folden, så læseren læser hele taglinen og intet kan trykkes på. Nu er foldens primære et anker ned til `#desktop-app`, den sektion der holder de tre rigtige `btn-primary`-downloads (DMG, AppImage, Windows-setup). Ankeret er gyldigt, fordi de downloads *er* på siden. Der findes ingen DA-udgave af siden, så det er **1** fil og **1** sprog."
 }

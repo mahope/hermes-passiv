@@ -29,6 +29,19 @@
 
 ## Verificér deploy
 
+`VERIFICÉR DEPLOY: /downloads får en handling over folden ceo/downloads-fold
+4/10 10:3x` — mål på **indhold**, ikke HTTP 200: hent
+`https://mahope.tools/downloads` og tæl `btn-primary` i
+`<header class="hero">`. Kriteriet er præcis **1**, etiketten **«Get the desktop
+app»**, og `href="#desktop-app"` skal findes **præcis 1** gang på siden.
+Deploy sker ved push til `main`.
+
+`VERIFICÉR DEPLOY: den danske foldknap på /da/blog/ ceo/review-fund-oktober
+4/10 10:2x` — mål på **indhold**: hent `https://mahope.tools/da/blog/` og
+kræv **0** forekomster af `Browse efter emne` og **1** af `Se efter emne` i
+`<header class="hero">`, med `href="#tilg-ngelighed-eaa"` uændret. Noten er
+ikke skrevet i squash-committet, kun her, fordi den var en plan-rettelse.
+
 `DEPLOY OK 4/10` for `ceo/banner-secondary` — målt på **indhold** 10:1x, ikke
 HTTP 200: de fem artikler har **1** `btn-primary` i `<header class="hero">`
 (`Start Reading` ×3, `Læs guiden` ×2), **0** i hvert
@@ -160,6 +173,11 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      mutation greber på **ankeret** i stedet for på etiketten, så en
      sprogretning ikke kan låse porten: **23/23** med den nye sætning (var
      **22/23** med den gamle regex), og et dødt foldanker giver stadig **RØD**.
+13. ~~**`/downloads` stod uden handling i folden.**~~ **Færdig 4/10**,
+     `ceo/downloads-fold`. Søster-siden til `/free-downloads`, der fik en
+     fold-CTA samme dag, havde badge, `<h1>` og tagline men intet at trykke på.
+     Nu `#desktop-app`, sektionen med de tre rigtige downloads, og ratcheted.
+     Målt: sider med nul primær **6 → 5**, porten **RØD** når `hero-cta` fjernes.
 
 
 ## ❓ Til Mads
@@ -239,14 +257,14 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-1. **De 4 af de 6 sider med nul handling over folden, der ikke er undtaget med
-   en grund.** Hvem: læseren på `books/index`, `downloads`,
-   `books/compliance-bundle` og `url-inspector`. Tal: hvor mange læser folden og
-   går videre. Accept: ratchetede `hero-cta` på de fire + selftest rød på den
-   gamle kode. Datagrund: `/downloads` og `/books/*` er de eneste sider i
-   familien hvor læseren skal *finde* filen i stedet for at trykke på den. De
-   øvrige **2** af de **6** er `compliance-ai` ×2, som noindexede og har
-   assistenten slukket (se ❓), så de er ikke dømt her — målt i STATUS.
+1. **De 3 af de 5 sider med nul handling over folden, der ikke er undtaget med
+   en grund.** Hvem: læseren på `books/index`, `books/compliance-bundle` og
+   `url-inspector`. Tal: hvor mange læser folden og går videre. Accept:
+   ratchetede `hero-cta` på de tre + selftest rød på den gamle kode.
+   Datagrund: `/downloads` og `/books/*` er de eneste sider i familien hvor
+   læseren skal *finde* filen i stedet for at trykke på den. De øvrige **2** af
+   de **5** er `compliance-ai` ×2, som noindexede og har assistenten slukket
+   (se ❓), så de er ikke dømt her — målt i STATUS.
 2. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
    Hvem: de 8 på `/blog/text-on-image-contrast-check` (100 % bounce, 28 d).
    Tal: hvor mange går fra artiklen til `/text-on-image-checker` og videre til
