@@ -237,4 +237,84 @@
     } catch (err) { /* analytics must never break the page */ }
   }, true);
   } catch (e) { /* analytics must never break the page */ }
+
+  // ── Uventede JS-fejl fra denne side ──────────────────────────────────
+  // Målt 5/10: 300 af de 324 byggede sider indlæser denne fil, og *ingen* af
+  // dem meldte en fejl nogen steder. `reportWorkerError` i `_worker.js` dækker
+  // kun workerens egen fetch, så en knap der stoppede med at virke efterlade
+  // hverken en 500, en log eller en Sentry-hændelse — og det er præcis der en
+  // købsvej dør. Sentry sagde «ingen uløste fejl» i 14 dage, fordi der ikke
+  // var noget at se.
+  //
+  // Hvad der sendes er bevidst *minimalt*: fejlens navn, besked, filnavn,
+  // linje og kolonne. Ikke `location.href`, ikke query-strengen — det er den,
+  // en besøger skriver sin URL ind i på `/compliance-site-check` og
+  // `/scan` — og ikke værdien af noget felt. Ruten på serveren afviser
+  // desuden alt andet end disse seks nøgler med 400, så feltet ikke kan vokse
+  // ind i et læk ved en senere tilføjelse.
+  //
+  // DNT og GPC gælder også her. Det er et fejlrapport-ikke-analitikke-argument
+  // at sende dem, og det er bevidst valgt *fra* på en offentlig side: retten
+  // til at sige "jeg vil ikke have noget sendt" skal gælde alle vegne, ellers
+  // er den kun sand for den del af siden man har læst.
+  //
+  // Kun på de fire familiedomæner, så en fork eller en `*.pages.dev`-
+  // forhåndsvisning ikke fylder produktionsprojektet med fejl fra et gammelt
+  // snapshot. Samme fire domæner som `CTA_HOSTS` ovenfor, af samme grund.
+  var ERROR_HOSTS = /^(mahope\.tools|cleancopy\.tools|deskuptime\.com|bugbottle\.dev)$/;
+  if (!ERROR_HOSTS.test(location.hostname)) return;
+  // Dæmpning i klienten, fordi sendBeacon ikke kan fejle stille: en løkke der
+  // kaster hvert tik ville sende i det uvedkommende. Højst tre pr. side, og
+  // samme fejltekst kun én gang — de to hyppigste mønstre er «ResizeObserver
+  // loop» og et billede der ikke findes, og den tredje forekomst af en af dem
+  // fortæller intet nyt.
+  var sent = 0;
+  var seen = {};
+  function reportError(kind, message, name, file, line, col) {
+    try {
+      if (sent >= 3) return;
+      var text = String(message == null ? 'ukendt fejl' : message).replace(/\s+/g, ' ').trim().slice(0, 300);
+      if (!text) return;
+      var key = kind + '|' + text;
+      if (seen[key]) return;
+      seen[key] = true;
+      sent += 1;
+      var payload = JSON.stringify({
+        kind: kind,
+        name: String(name || 'Error').slice(0, 80),
+        message: text,
+        // Filnavnet, ikke hele stien: et script-URL er aldrig brugerens, men
+        // filnavnet er også det eneste Sentry har brug for.
+        file: String(file || '').split('?')[0].split('/').pop().slice(0, 120),
+        line: typeof line === 'number' && line >= 0 ? Math.floor(line) : null,
+        col: typeof col === 'number' && col >= 0 ? Math.floor(col) : null,
+      });
+      // `page` sendes ikke. Serveren udleder ruten af `referer`, og en
+      // beacon sætter den automatisk til den side den bliver sendt fra — så
+      // klienten ikke *kan* sende en forkert eller en brugerdefineret side.
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/client-error', new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch('/api/client-error', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        }).catch(function () {});
+      }
+    } catch (e) { /* overvågning må aldrig tage siden ned med */ }
+  }
+  window.addEventListener('error', function (e) {
+    reportError('error', e.message, e.error && e.error.name, e.filename, e.lineno, e.colno);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = e.reason;
+    // Et afvist fetch med en Response er en håndteret tilstand, ikke en fejl:
+    // `throw response.json()` i en `async`-handler lander her, og det er
+    // «forbindelsen er udløbet»-tilstanden, ikke et crash.
+    var message = reason && reason.name === 'Error' ? reason.message
+      : reason && reason.status ? 'HTTP ' + reason.status
+        : String(reason);
+    reportError('unhandledrejection', message, reason && reason.name);
+  });
 })();

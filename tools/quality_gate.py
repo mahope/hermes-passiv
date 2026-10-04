@@ -1865,6 +1865,24 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_sentry_setup.py", "--self-test"),
         inputs=("tools/check_sentry_setup.py", "site/_worker.js"),
     ),
+    # Feature-kø punkt 4 i `IMPLEMENTATION_PLAN.md`: `reportWorkerError` dækker
+    # kun workerens egen fetch, så alt der går galt i `site/track.js` eller i en
+    # af de 300 sider der indlæser den, efterlod hverken en 500, en log eller en
+    # Sentry-hændelse. Sentry sagde «ingen uløste fejl», fordi intet blev sendt.
+    # Porten dømmer de elleve regler: at klienten lytter på begge hændelser,
+    # sender præcis seks felter, ikke sender siden (den udledes af `referer`
+    # server-side), at ruten afviser alt andet med 400, kun kører i produktion,
+    # er dæmpet på sin egen tæller og kræver samme origin.
+    Step(
+        id="client-errors",
+        argv=("python3", "tools/check_client_errors.py"),
+        inputs=("tools/check_client_errors.py", "site/_worker.js", "site/track.js"),
+    ),
+    Step(
+        id="client-errors-selftest",
+        argv=("python3", "tools/check_client_errors.py", "--self-test"),
+        inputs=("tools/check_client_errors.py", "site/_worker.js", "site/track.js"),
+    ),
     # Opgave 20 i `IMPLEMENTATION_PLAN.md`: scanneren på `/scan` er den eneste
     # vej ind til den dyreste linje i huset (EUComply Pro, $79/år pr. website),
     # og målingen af den var hverken dobbelt eller færdig. Målt 5/10: `scan()`

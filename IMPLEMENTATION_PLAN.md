@@ -1,40 +1,45 @@
 # STATUS
+- **Browseren melder nu sine egne fejl.** 5/10: `reportWorkerError` dækker kun
+  workerens egen fetch, så fejl i `track.js` eller i en af de **300** sider der
+  indlæser den, efterlod hverken 500, log eller Sentry. Nu `error` +
+  `unhandledrejection` → `POST /api/client-error` → Sentry med `logger: browser`.
+  **Målt i Chromium:** 3 kastede fejl gav **2** beacons (gentagelsen dæmpes),
+  **0** tegn af brugerens URL; porten 22 kontroller, **13/13** mutationer røde.
 - **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` sendte
   `scan` både ved starten og igen efter svaret (**én scanning = to
-  begivenheder**), og der kom intet ved resultatet eller ved pro-kortets knap.
-  Nu `scan`, `scan-findings`/`scan-clean`, `scan-failed`, `pro-card-click` på
-  begge sprog; delte rapporter tæller ikke. Port `check_scan_events.py` er
-  grøn på ny kode, **5 fund pr. sprog** på den gamle, selftest **18/18**.
-- **Deploy-noterne for `ceo/clean-copy-tool-fold` er lukket på indhold 5/10.**
-  `/clean-copy-tool` har **1** `<header class="hero">` med **1**
-  `.hero-cta a[href="#input-box"]` («Paste your text»), **1** `.hero-note
-  a[href="#free-vs-pro"]`, og begge id'er **1** gang. Hero-noten er målt i
-  rigtig Chromium ved **390 og 1280**: **13,6 px** (0,85 rem) på
-  `cleancopy.tools/`, `/da/` og en `/da/blog/`-side — ikke 20,8/18,4.
-- **Sentry er sat op for workeren** — det var feature-kø punkt 3, og det lå
-  allerede gjort: `check_sentry_setup.py` dømmer de otte regler (kun
-  produktion, ingen persondata, ingen traces, ingen replay, intet token, ingen
-  source maps, kan ikke kaste, dæmpet). ✅ Slået i portene 1/10. **Den
-  blinde plet er klientsiden:** ingen JS-fejl fra en besøgendes browser er
-  sendt nogen sinde. ❓ se feature-kø.
+  begivenheder**), og intet kom ved resultatet eller pro-kortets knap. Nu `scan`,
+  `scan-findings`/`scan-clean`, `scan-failed`, `pro-card-click` på begge sprog;
+  porten **5 fund pr. sprog** på den gamle kode, selftest **18/18**.
 - **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect`
   får `env` (`5693853`) og live `/api/url-inspect` svarer **200** med rigtig
-  redirect-kæde; SSRF er lukket på **4** ruter; `net.js:42,47` gør 429 endelig;
-  ét 502-kald koster højst ét ekstra betalt kald; `thanks.html:103` har egen
-  202-tekst. **PR-TJEK 5/10:** 0 PR'er. **BRANCH-TJEK 5/10:** ingen remote-grene
-  over 14 dage; de fire lokale dubletter er slettet (opgave 16).
+  redirect-kæde; SSRF lukket på **4** ruter; `net.js:42,47` gør 429 endelig; ét
+  502-kald koster højst ét ekstra betalt kald; `thanks.html:103` har egen
+  202-tekst. **PR-TJEK 5/10:** 0 PR'er. **BRANCH-TJEK 5/10:** ingen grene over
+  14 dage; fire lokale dubletter slettet (opgave 16).
 - **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
   `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
-  hvor handlingen er `<input>` + `Inspect`-knap. Alle **3** har grund i
-  `first_action.json`. **38** sider ratchetede; alle fire Pro-forsider kan nå
-  pristabellen fra folden, målt på indhold 5/10.
+  hvor handlingen er `<input>` + knap; alle **3** har grund i `first_action.json`.
 - **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
-  **RØD med 330 fund** på den uændrede kode. ❓ om deres placering står uændret.
-  Ingen løbende side-tal i portenes tekst: de 4 forkerte optællinger er rettet
-  til daterede målinger plus portens egen afregning.
-- **CI:** kørslen for `3755b96f` (den ændring der udgiver siderne) er grøn.
+  **RØD med 330 fund** på den uændrede kode; ❓ om deres placering står uændret.
+  De 4 forkerte optællinger i portenes tekst er rettet til daterede målinger.
+- **CI:** `a305fa72` lå rød på `main` 4/10 — `plan-status` (STATUS 34 mod 25)
+  og `clock_jump.mjs` på de to nye tællertests. Begge rettet her (opgave 22).
 
 ## Verificér deploy
+
+`DEPLOY OK 5/10` for `ceo/clean-copy-tool-fold` — målt på **indhold**:
+`https://cleancopy.tools/clean-copy-tool` har **1** `<header class="hero">` med
+**1** `.hero-cta a[href="#input-box"]` («Paste your text») og **1** `.hero-note
+a[href="#free-vs-pro"]`, og begge id'er **1** gang. Hero-noten er målt i rigtig
+Chromium ved **390 og 1280**: **13,6 px** (0,85 rem) på `cleancopy.tools/`,
+`/da/` og en `/da/blog/`-side — ikke 20,8/18,4. HTTP 200 blev ikke brugt.
+
+`VERIFICÉR DEPLOY: browseren melder sine egne fejl 5/10 ceo/klientfejl-til-sentry` —
+måles på **indhold**, ikke på HTTP 200: live `https://mahope.tools/track.js`
+skal have præcis **1** `addEventListener('error'` og **1** på
+`'unhandledrejection'`, **1** `'/api/client-error'`, **0** `location.href` og
+**0** `page:`. Findes de ikke i den *udgivne* JS, er portens øvrige domme
+ligegyldige, fordi de kun læser kilden.
 
 `VERIFICÉR DEPLOY: scannerens købsvej måler hele tragten 5/10 ceo/scan-events` —
 måles på **indhold** i næste iteration, ikke på HTTP 200: `scan.html` og
@@ -285,6 +290,22 @@ kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
     `3755b96f` + `158715e9`. Accept: før en gren nævnes i planen skal
     `git cherry main <gren>` være læst, og dens rørte filer sammenlignet fil-for-fil
     med `main`. En `+` er ikke nok, fordi patch-id skjuler at main er ældre.
+22. ~~**Ingen JS-fejl fra en besøgendes browser nåede Sentry.**~~ **Færdig
+    5/10**, `ceo/klientfejl-til-sentry`. Se STATUS. Ruten er ny og har derfor
+    **26** nye kontroller i `tests/stripe-worker.test.mjs` — bl.a. at den URL
+    brugeren indtaster i `/compliance-site-check` ikke kan komme med, at et
+    syvende felt giver 400, at GET giver 405, at localhost tier, og at både
+    løkkedæmpning (3/min pr. fejl) og timekvoten (20/t pr. besøgende) svarer
+    429. `check_net_copies.py` krævede en grund for ruten, og den har fået
+    en: en fejlrapport må ikke vise en fejlmeddelelse i et værktøj.
+    **Målt fund i samme opgave:** de to nye tællertests var grønne på uren
+    kode og **røde i `clock_jump.mjs`**, som hopper én time pr. kald — de
+    målte klokken, ikke tælleren (6 rapporter i stedet for 1, 26 i stedet for
+    20), fordi `browserSentryRateLimited` er et 20-sekunders glidende vindue,
+    timekvoten er `Math.floor(Date.now() / 3600000)`, og `visitorHash` salter
+    med dagens dato. Rettet som i den ældre worker-test: uret pinnes til
+    minut/timets begyndelse i selve løkken, så det aldrig springer baglænes.
+    Samme fælde som den 2/10, der gav to røde CI-kørsler.
 
 
 ## ❓ Til Mads
@@ -382,15 +403,10 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    kun produktion, ingen persondata (`url`+`method` kun), ingen traces, ingen
    replay, intet auth-token, ingen source maps, rapporteringen kan ikke kaste,
    og løkker er dæmpet. Begge steps hængt i portene.
-4. **Ingen JS-fejl fra en besøgendes browser når Sentry.** Hvem: alle brugere
-   på de 270 sider. Tal: hvor mange købsveje dør i klienten, som `/api/track`
-   aldrig ser. Accept: klientsiden sender `window.onerror` og `unhandledrejection`
-   til workerens egen indsamling, porten rød hvis den mangler, og en hændelse
-   må ikke indeholde URL'en brugeren indtastede. Datagrund: de **21** besøgende
-   på mahope.tools og **13** på cleancopy.tools er for få til at fejlfinde i
-   hånden; Sentry har ingen uløste fejl, fordi intet bliver sendt. **❓ Kræver
-   Mads:** replay er forbudt, så fejlene bliver uden skærmbillede — og det er
-   en afvejning, der bør være din, ikke min.
+4. ~~**Ingen JS-fejl fra en besøgendes browser når Sentry.**~~ **Færdig 5/10**,
+   `ceo/klientfejl-til-sentry`. Se opgave 22. Replay er stadig slået fra, så
+   fejlene kommer uden skærmbillede — det er ikke længere en afvejning til dig,
+   men en permanent regel.
 5. **`/blog/text-on-image-contrast-check` er 8 af 21 besøgende på mahope.tools,
    og alle 8 bouncede.** Hvem: de der lander på artiklen. Tal: hvor mange af dem
    kører selve tjekket. Accept: artiklen sender læseren ind i

@@ -1673,8 +1673,163 @@ ok('en fejl i en løkke sendes højst SENTRY_MAX_PER_MINUTE gange',
 ok('tælleren lader den første fejl komme ud, så den ikke er død',
   sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
 
-// 6. Overvågningen må aldrig tage ruten ned. Hvis Sentry svarer 500 eller
-//    afbryder forbindelsen, skal brugeren stadig få sit 500.
+// ── En besøgendes browser melder sine egne uventede fejl ──────────────
+// Fejlen her er synlig i ruten over: `reportWorkerError` dækker kun
+// workerens egen fetch, så alt der går galt i `site/track.js` eller i en af de
+// 300 sider der indlæser den, efterlod hverken en 500, en log eller en
+// Sentry-hændelse. Det er dér en købsvej dør. Sentry sagde «ingen uløste fejl
+// i 14 dage» — fordi intet blev sendt.
+//
+// Ruten tager imod data fra klienten, så de interessante tests er ikke «virker
+// den», men «hvad kan den ikke sende videre». `/compliance-site-check` tager
+// fem URL'er i query-strengen, så en rapport med `location.href` ville lægge
+// de besøgendes sider i et offentligt fejlspor.
+const CE = '/api/client-error';
+// En rigtig browser-UA er ikke pynt: `isAutomatedRequest` siger ja til et kald
+// uden en, og ruten svarer så 200 uden at skrive noget. Uden den ville hver
+// kontrol nedenfor være grøn af den grund at den ikke kan fejle — præcis den
+// fejlform de andre mutationer i denne fil er bygget til at finde.
+const CE_UA = 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0';
+const ceBody = (extra) => JSON.stringify(Object.assign({
+  kind: 'error', name: 'TypeError', message: 'x is not a function',
+  file: 'https://mahope.tools/track.js', line: 42, col: 7,
+}, extra || {}));
+// Refereret er den side fejlen skete på. Query-strengen i en *rigtig* URL er
+// præcis der brugeren skriver sin adresse ind, så den bruges her som den
+// fælde, ruten skal lukke.
+const ceCall = (body, init = {}, host = 'mahope.tools') => worker.fetch(new Request(
+  `https://${host}${CE}`,
+  Object.assign({ method: 'POST', body }, init),
+), env, {});
+const ceHeaders = (host = 'mahope.tools') => ({
+  'content-type': 'application/json', 'user-agent': CE_UA,
+  origin: `https://${host}`, referer: `https://${host}/compliance-site-check?url=https://kunde.dk`,
+});
+
+// 1. Grundscenariet: en uventet fejl bliver præcis én rapport.
+sentryEnvelopes = [];
+const ceOk = await ceCall(ceBody(), { headers: ceHeaders() });
+const ce0 = lastEnvelope();
+ok('en uventet browserfejl meldes til Sentry', sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
+ok('klienten får et svar den ikke kan fejle i', ceOk.status === 202, ceOk.status);
+ok('rapporten er en envelope med en fejl', ce0.body.startsWith('{') && /"exception"/.test(ce0.body)
+  && /x is not a function/.test(ce0.body), ce0.body.slice(0, 120));
+ok('rapporten er mærket som browser, ikke worker', /"logger":"browser"/.test(ce0.body)
+  && /"source":"browser"/.test(ce0.body), ce0.body.slice(0, 300));
+
+// 2. Den regel der er hele pointen: den URL brugeren indtastede må ikke med.
+//    `referer` bærer den, fordi det er sådan et beacon ser ud, så testen er
+//    ikke hypotetisk — den er den normale anmodning.
+ok('rapporten indeholder ikke den indtastede URL',
+  !/kunde\.dk/.test(ce0.body) && !/url=/.test(ce0.body), 'lækket query: ' + ce0.body.slice(0, 300));
+ok('rapport-URL\'en er origin + rute, som workerens egen',
+  /"url":"https:\/\/mahope\.tools\/compliance-site-check"/.test(ce0.body)
+  && !/\?/.test((ce0.body.match(/"url":"[^"]*"/) || [''])[0]), ce0.body.slice(0, 300));
+ok('rapporten sender hverken krop, headers, cookie eller user-agent',
+  !/"headers"/i.test(ce0.body) && !/"cookie"/i.test(ce0.body) && !/"user_agent"/i.test(ce0.body)
+  && !/Firefox|Mozilla/i.test(ce0.body), 'lækket ' + ce0.body.slice(0, 300));
+ok('klienten sender hverken side eller egen filsti',
+  !/"page"/.test(ce0.body) && !/mahope\.tools\/track\.js/.test(ce0.body), ce0.body.slice(0, 400));
+ok('filnavnet står i stacktrace, ikke i hele stien',
+  /"filename":"track\.js"/.test(ce0.body) && /"lineno":42/.test(ce0.body), ce0.body.slice(0, 400));
+
+// 3. Et felt der ikke er på listen er 400, ikke en rapport. Det er det, der
+//    gør «send ikke noget brugeren har skrevet» håndhævet: en ny feltnavn i
+//    `track.js` kan ikke lække noget, fordi ruten siger fra før den læses.
+for (const felt of ['href', 'page', 'search', 'value', 'cookie']) {
+  sentryEnvelopes = [];
+  const bad = await ceCall(ceBody({ [felt]: 'https://kunde.dk/hemmeligt' }), { headers: ceHeaders() });
+  ok(`et uventet felt (${felt}) giver 400 og ingen rapport`,
+    bad.status === 400 && sentryEnvelopes.length === 0, bad.status + ' enveloper=' + sentryEnvelopes.length);
+}
+// Og de tilladte felter virker stadig — ellers ville punkt 3 være løst ved at
+// afvise alt. Egen fejltekst, fordi tælleren pr. fejl pr. minut (punkt 6) har
+// brugt nøglen til test 1 ovenfor.
+sentryEnvelopes = [];
+const ceOk2 = await ceCall(ceBody({ message: 'feltlisten er hel' }), { headers: ceHeaders('cleancopy.tools') }, 'cleancopy.tools');
+ok('de seks tilladde felter giver stadig en rapport',
+  ceOk2.status === 202 && sentryEnvelopes.length === 1, ceOk2.status + ' enveloper=' + sentryEnvelopes.length);
+
+// 4. Adgangskontrol. En rapport må ikke kunne sendes fra en fremmed side —
+//    ellers er Sentry-projektet en åben skraldespand.
+sentryEnvelopes = [];
+const ceNoOrigin = await ceCall(ceBody(), { headers: { 'content-type': 'application/json', 'user-agent': CE_UA, referer: 'https://mahope.tools/' } });
+ok('uden origin giver 403 og ingen rapport', ceNoOrigin.status === 403 && sentryEnvelopes.length === 0, ceNoOrigin.status);
+const ceForeign = await ceCall(ceBody(), { headers: { ...ceHeaders(), origin: 'https://evil.tld' } });
+ok('fremmed origin giver 403 og ingen rapport', ceForeign.status === 403 && sentryEnvelopes.length === 0, ceForeign.status);
+const ceGet = await worker.fetch(new Request('https://mahope.tools' + CE), env, {});
+ok('GET giver 405 (link-scannere må ikke kunne skaffe sig en rapport)', ceGet.status === 405, ceGet.status);
+const ceUnknown = await ceCall(ceBody(), { headers: { ...ceHeaders(), origin: 'https://example.tld', referer: 'https://example.tld/' } }, 'example.tld');
+ok('et domæne uden tracking giver 404 og ingen rapport', ceUnknown.status === 404 && sentryEnvelopes.length === 0, ceUnknown.status);
+
+// 5. Kun i produktion, og kun de fire familiedomæner.
+sentryEnvelopes = [];
+const ceLocal = await worker.fetch(new Request('https://localhost' + CE, {
+  method: 'POST', headers: { 'content-type': 'application/json', 'user-agent': CE_UA, origin: 'https://localhost', referer: 'https://localhost/' },
+  body: ceBody(), }), env, {});
+ok('localhost sender ingen rapporter', sentryEnvelopes.length === 0, 'enveloper=' + sentryEnvelopes.length);
+
+// 6. En cyklisk fejl må ikke fylde kvoten. Tælleren er pr. fejl pr. minut,
+//    så seks *ens* fejl giver én rapport — og det er den rapport, der tæller.
+//    Fast ur, som i afsnittet ovenfor og af samme grund: `browserSentryRateLimited`
+//    slipper kun én rapport pr. 20. sekund, så de seks kald skal ligge i samme
+//    vindue. Uden pin målte `clock_jump.mjs` 6 rapporter i stedet for 1 — dvs.
+//    påstanden testede klokken og ikke tælleren. Måleværdi er minuttes
+//    begyndelse, så uret aldrig springer baglænes.
+sentryEnvelopes = [];
+let ce429 = 0;
+const stopMinutUr2 = (() => {
+  const forrige = Date.now;
+  const fast = Math.floor(forrige() / 60000) * 60000;
+  Date.now = () => fast;
+  return () => { Date.now = forrige; };
+})();
+for (let i = 0; i < 6; i++) {
+  const res = await ceCall(ceBody({ message: 'ResizeObserver loop limit exceeded' }), { headers: ceHeaders() });
+  if (res.status === 429) ce429 += 1;
+}
+stopMinutUr2();
+ok('en fejl i en løkke sendes højst CLIENT_ERROR_MAX_PER_MINUTE gange',
+  sentryEnvelopes.length === 1, 'enveloper=' + sentryEnvelopes.length);
+ok('de overskudende kald får 429 — endelig, ikke forbigående', ce429 === 5, '429=' + ce429);
+
+// 7. Timekvoten pr. besøgende. Nøglen pr. fejl dæmper kun gentagelser af *den
+//    samme* fejl, så en løkke der kaster en ny tekst hvert tik slap igennem.
+//    Fast ur igen, og af endnu en grund: timekvotens nøgle er
+//    `Math.floor(Date.now() / 3600000)` og `visitorHash` salter med dagens dato,
+//    så under `clock_jump.mjs` fik hvert eneste kald sin egen timebøtte og sin
+//    egen besøgende — og målingen testede igen klokken. Pin til timebøttens
+//    begyndelse, så hoppet sker aldrig baglænes.
+sentryEnvelopes = [];
+let hourly429 = 0, hourly202 = 0;
+const stopTimeUr = (() => {
+  const forrige = Date.now;
+  const fast = Math.floor(forrige() / 3600000) * 3600000;
+  Date.now = () => fast;
+  return () => { Date.now = forrige; };
+})();
+for (let i = 0; i < 26; i++) {
+  const res = await ceCall(ceBody({ message: 'fejl nummer ' + i }), { headers: ceHeaders('deskuptime.com') }, 'deskuptime.com');
+  if (res.status === 429) hourly429 += 1; else if (res.status === 202) hourly202 += 1;
+}
+stopTimeUr();
+ok('timekvoten pr. besøgende stopper en fejl med ny tekst hvert tik',
+  hourly429 === 6 && hourly202 === 20, '202=' + hourly202 + ' 429=' + hourly429);
+
+// 9. Overvågningen må aldrig give en besøgende en fejl i stedet for sit
+//    resultat. En krop der ikke er JSON, og en krop der er JSON men ikke et
+//    objekt, er begge håndterede tilstande.
+sentryEnvelopes = [];
+const ceJunk = await ceCall('ikke json', { headers: ceHeaders() });
+const ceArr = await ceCall('[]', { headers: ceHeaders() });
+const ceEmpty = await ceCall(ceBody({ message: '   ' }), { headers: ceHeaders() });
+ok('en beskyldt krop giver 400, ikke en fejl',
+  ceJunk.status === 400 && ceArr.status === 400 && ceEmpty.status === 400,
+  [ceJunk.status, ceArr.status, ceEmpty.status].join('/'));
+ok('og ingen af dem skriver til Sentry', sentryEnvelopes.length === 0, 'enveloper=' + sentryEnvelopes.length);
+
+// 6b. Overvågningen må aldrig tage ruten ned, selv når Sentry er nede.
+
 sentryEnvelopes = [];
 deadTag = 'sentry-er-nede';
 globalThis.fetch = async (input, init) => {
@@ -1732,6 +1887,20 @@ if (preSentryWorker) {
     oldLicense.status === 400 && sentryEnvelopes.length === 0, oldLicense.status);
 } else {
   console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + preNote);
+}
+
+// 8. Samme mutation for `/api/client-error`: den gamle kode kender ikke ruten.
+//    Uden denne kontrol er de ni kontroller ovenfor grønne af den grund at de
+//    ikke kan fejle.
+if (preSentryWorker) {
+  sentryEnvelopes = [];
+  const oldCe = await preSentryWorker.fetch(new Request('https://bugbottle.dev' + CE, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'user-agent': CE_UA, origin: 'https://bugbottle.dev', referer: 'https://bugbottle.dev/' },
+    body: ceBody({ message: 'gammel kode skal tie' }) }), env, {});
+  ok('mutation: den gamle kode kender ikke /api/client-error og melder intet',
+    sentryEnvelopes.length === 0 && oldCe.status !== 202,
+    'enveloper=' + sentryEnvelopes.length + ' status=' + oldCe.status);
 }
 
 globalThis.fetch = outerFetch;

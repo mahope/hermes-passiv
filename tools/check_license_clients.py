@@ -200,6 +200,13 @@ NOT_CLIENTS = {
     # *vidne* — modsatningen af at være klient, så den skal ikke tvinges ind i
     # CLIENTS.
     "tools/check_license_seat_release.py",
+    # Opgave 22 (5/10): samme fejlform igen, syvende gang. `check_client_errors.py`
+    # nævner `/api/license/validate` i dom 9 og dens egen docstring, fordi reglen
+    # er at **browserens** fejltæller skal være en anden end workerens — den
+    # deler kvota med præcis den rute. Det er modsatningen af at være klient:
+    # porten kalder den ikke, den siger hvorfor en løkke i `track.js` ellers
+    # kunne brænde kvoten væk for betalende kunder.
+    "tools/check_client_errors.py",
     # Opgave 4/10: samme fejlform igen, sjette gang. `check_net_copies.py` har
     # `compliance-report.html` med `/api/license/validate` i sin undtagelsesliste,
     # fordi dom 3 skal kunne *kræve* at siden enten bruger NET.ask eller står

@@ -162,6 +162,15 @@ UNDTAGELSER: dict[str, tuple[frozenset[str], str]] = {
                     "eget interval — en 429 her betyder «vent endnu», ikke «stop»"),
     "bugbottle-demo.js": (frozenset({"/api/bugbottle-demo"}),
                           "demoens tre opkald uden fejlvisning"),
+    "track.js": (frozenset({"/api/client-error"}),
+                 "en fejlrapport må ikke vise brugeren en fejlmeddelelse, og den "
+                 "må ikke genkaldes ved 429 — den skal bare forsvinde. Den "
+                 "går gennem `sendBeacon` i 99 % af kaldene, fordi det er det "
+                 "eneste der kan sendes fra en side der lige er gået i styker, "
+                 "og kernen ville desuden vise serverens egen sætning midt i "
+                 "et værktøj. Dæmpningen ligger i stedet i klienten (højst tre "
+                 "pr. side, samme fejltekst én gang) og i ruten, der svarer 429 "
+                 "uden at skrive til Sentry."),
 }
 
 # Kald der ikke findes i dispatchen er **ikke** vores ruter, så de kan heller

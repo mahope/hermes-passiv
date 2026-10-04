@@ -80,6 +80,34 @@ const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
 const SENTRY_DSN_FALLBACK = 'https://14c098aa6fcbb129d9fa4467f7e2dad6@o1087332.ingest.us.sentry.io/4512180032045056';
 const SENTRY_CLIENT = 'mahope-worker/1.0';
 const SENTRY_MAX_PER_MINUTE = 5;
+// === Sentry: uventede fejl fra en *besøgendes browser* ===
+// Målt 5/10: `reportWorkerError` dækker kun fejl i workerens egen fetch. Alt
+// der går galt i `site/track.js`, `text-on-image-core.js` eller en af de 300
+// sider der indlæser dem, er usynligt — og det er præcis der, en købsvej dør:
+// en knap der ikke reagerer efterlader ingen 500, ingen log og ingen Sentry.
+// Sentry sagde «ingen uløste fejl», fordi intet blev sendt.
+//
+// Reglerne er de samme otte som for workerens egen fejl, plus to der kun
+// giver mening for en browser. `tools/check_client_errors.py` dømmer dem:
+//   - **Kun i produktion**, og kun på de fire familiedomæner — en fork eller en
+//     `*.pages.dev`-forhåndsvisning må ikke fylde produktionsprojektet.
+//   - **Ingen persondata, og det er håndhævet, ikke håbet.** Ruten læser *kun*
+//     seks felter, og `page` udledes af `referer` server-side, aldrig af
+//     klienten. Den URL en bruger indtaster ligger i query-strengen — og
+//     `/compliance-site-check` tager præcis fem af dem. Derfor afvises en krop
+//     med nogen anden nøgle med 400, så en ny feltnavn i `track.js` ikke kan
+//     lække noget som en senere tilføjelse har tænkt på at sende.
+//   - **Dæmpet to steder.** En egen tæller pr. fejl pr. minut, så en løkke
+//     der kaster den *samme* fejl hvert tik ikke kan brænde kvoten væk; og en
+//     egen timekvota pr. besøgende, så en der kaster en ny fejltekst hvert tik
+//     heller ikke kan. Begge er adskilt fra workerens tæller, fordi den deler
+//     kvota med `/api/license/validate`.
+const CLIENT_ERROR_MAX_PER_MINUTE = 3;
+const CLIENT_ERROR_MAX_PER_HOUR = 20;
+const CLIENT_ERROR_FIELDS = new Set(['message', 'name', 'file', 'line', 'col', 'kind']);
+const CLIENT_ERROR_KINDS = new Set(['error', 'unhandledrejection']);
+const browserSentrySeen = new Map();
+
 const SENTRY_LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1']);
 const SENTRY_DSN_RE = /^https:\/\/([a-f0-9]{32})@([a-z0-9.-]+)\/(\d+)$/;
 // Nøgle → tidspunkt. Pr. isolate, som de andre tællere i denne fil.
@@ -125,6 +153,29 @@ function sentryFrames(error) {
   return frames.length ? { frames } : undefined;
 }
 
+// Den faktiske afsendelse. Uddelt af workerens egne fejl og af
+// `/api/client-error`, så der kun er én sted der taler envelope-protokollen —
+// og så en ændring i formatet ikke kan ramme den ene og ikke den anden.
+// `sdk_name` er en hjælpeparameter for denne funktion, ikke en del af
+// begivenheden, så den pakkes ud i stedet for at blive sendt som felt.
+async function sendSentryEnvelope(target, event, ctx) {
+  const { sdk_name: sdkName, ...payload } = event;
+  const envelope =
+    `${JSON.stringify({ event_id: payload.event_id, sent_at: payload.timestamp, dsn: target.dsn })}\n` +
+    `${JSON.stringify({ type: 'event', length: 0 })}\n` +
+    `${JSON.stringify({ ...payload, sdk: { name: sdkName, version: '1.0.0' } })}\n`;
+  const post = fetch(target.endpoint, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/x-sentry-envelope',
+      'x-sentry-auth': `Sentry sentry_version=7, sentry_client=${SENTRY_CLIENT}, sentry_key=${target.publicKey}`,
+    },
+    body: envelope,
+  }).catch(() => {});
+  if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(post);
+  else await post;
+}
+
 async function reportWorkerError(request, url, error, env, ctx, route) {
   try {
     if (!url || SENTRY_LOCAL_HOSTS.has(url.hostname)) return;
@@ -152,24 +203,134 @@ async function reportWorkerError(request, url, error, env, ctx, route) {
         ...(sentryFrames(error) ? { stacktrace: sentryFrames(error) } : {}),
       }] },
       tags: { route: String(route || 'ukendt').slice(0, 60) },
+      sdk_name: 'sentry.javascript.worker',
     };
-    const envelope =
-      `${JSON.stringify({ event_id: eventId, sent_at: sentAt, dsn: target.dsn })}\n` +
-      `${JSON.stringify({ type: 'event', length: 0 })}\n` +
-      `${JSON.stringify({ ...event, sdk: { name: 'sentry.javascript.worker', version: '1.0.0' } })}\n`;
-    const post = fetch(target.endpoint, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/x-sentry-envelope',
-        'x-sentry-auth': `Sentry sentry_version=7, sentry_client=${SENTRY_CLIENT}, sentry_key=${target.publicKey}`,
-      },
-      body: envelope,
-    }).catch(() => {});
-    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(post);
-    else await post;
+    await sendSentryEnvelope(target, event, ctx);
   } catch {
     // Overvågning må aldrig tage ruten ned. Denne tomme catch er hele
     // pointen med at rapporteringen er sin egen funktion.
+  }
+}
+
+// Egen tæller til browserfejl. Adskilt fra `sentrySeen` på vilje: den
+// workerens tæller deler kvota med `/api/license/validate`, så en besøgendes
+// løkke må ikke kunne æde den. Samme opbygning, samme 60 sekunders vindue.
+function browserSentryRateLimited(key) {
+  const now = Date.now();
+  for (const [k, t] of browserSentrySeen) if (now - t > 60_000) browserSentrySeen.delete(k);
+  const last = browserSentrySeen.get(key) || 0;
+  if (now - last < 60_000 / CLIENT_ERROR_MAX_PER_MINUTE) return true;
+  browserSentrySeen.set(key, now);
+  if (browserSentrySeen.size > 60) {
+    for (const [k, t] of [...browserSentrySeen].sort((a, b) => a[1] - b[1]).slice(0, 20)) browserSentrySeen.delete(k);
+  }
+  return false;
+}
+
+// `/api/client-error` — en uventet fejl i en besøgendes browser.
+//
+// Ruten er bevidst *ikke* en spejling af `/api/track`: den tager imod data fra
+// klienten, så den eneste trygge måde at løse «send ikke noget brugeren har
+// skrevet» på er slet ikke at læse det. Derfor:
+//   - `page` kommer fra `referer`, server-side. `track.js` sender den slet ikke.
+//   - `file` skæres ned til filnavnet. Et script-URL med query-streng er
+//     sjældent, men det er derfor reglen skærer i stedet for at stole.
+//   - Alt andet end de seks felter giver 400, så feltet kan ikke vokse ind i
+//     et læk uden at ruten siger fra.
+// Kroppen læses aldrig ind i andre felter, og der lægges ingen headers,
+// cookies eller user-agent i rapporten — kun routen, som er en rute.
+async function handleClientError(request, url, env, ctx) {
+  try {
+    if (request.method !== 'POST') {
+      return privateJsonResp({ ok: false, error: 'POST only' }, 405);
+    }
+    const domain = trackingDomain(url);
+    if (!domain) return privateJsonResp({ ok: false, error: 'Unknown site.' }, 404);
+    // Samme krav som `/api/track`: en fejlrapport må ikke kunne sendes fra en
+    // fremmed side, ellers er Sentry-projektet en åben skraldespand for alle
+    // der vil fylde det med støj.
+    if (request.headers.get('origin') !== url.origin || isCrossSiteRequest(request, url)) {
+      return privateJsonResp({ ok: false, error: 'Same-origin requests only.' }, 403);
+    }
+    const referer = request.headers.get('referer');
+    if (!referer) return privateJsonResp({ ok: false, error: 'Same-origin referer required.' }, 403);
+    let refererUrl;
+    try { refererUrl = new URL(referer); } catch { return privateJsonResp({ ok: false, error: 'Invalid referer.' }, 400); }
+    if (refererUrl.origin !== url.origin) {
+      return privateJsonResp({ ok: false, error: 'Same-origin referer required.' }, 403);
+    }
+    if (isAutomatedRequest(request)) return privateJsonResp({ ok: true });
+    if (SENTRY_LOCAL_HOSTS.has(url.hostname)) return privateJsonResp({ ok: true });
+    const target = sentryTarget(env);
+    if (!target) return privateJsonResp({ ok: false }, 503);
+
+    let body;
+    try { body = await request.json(); } catch { return privateJsonResp({ ok: false, error: 'Invalid JSON.' }, 400); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return privateJsonResp({ ok: false, error: 'Invalid payload.' }, 400);
+    }
+    for (const key of Object.keys(body)) {
+      if (!CLIENT_ERROR_FIELDS.has(key)) {
+        return privateJsonResp({ ok: false, error: 'Unexpected field.' }, 400);
+      }
+    }
+    const kind = CLIENT_ERROR_KINDS.has(body.kind) ? body.kind : 'error';
+    // `error.name` er kort og kontrolleret af browseren (`TypeError` og
+    // søskende). `error.message` er ikke: `throw new Error(tekst)` med
+    // brugerens egen tekst kan ende her, så den klemmes og ryddes for
+    // linjeskift — det er den eneste vej ind i rapporten hvor noget
+    // brugeren har skrevet *kan* komme, og den er derfor kortest mulig.
+    const name = String(body.name || 'Error').replace(/[^\w .()<>[\]]/g, '').slice(0, 80) || 'Error';
+    const message = String(body.message || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (!message) return privateJsonResp({ ok: false, error: 'No message.' }, 400);
+    const file = String(body.file || '').split('?')[0].split('#')[0].split('/').pop().slice(0, 120);
+    const line = Number.isInteger(body.line) && body.line >= 0 && body.line < 1e7 ? body.line : null;
+    const col = Number.isInteger(body.col) && body.col >= 0 && body.col < 1e7 ? body.col : null;
+
+    const route = normalizeTrackedPath(refererUrl.pathname);
+    if (browserSentryRateLimited(`${name}:${message}`)) {
+      return privateJsonResp({ ok: false, error: 'Too many reports.' }, 429);
+    }
+    // Timekvota pr. besøgende i KV, som `handleTrack` gør. Uden den kan én
+    // besøgende med en beskyldig cyklus sende tusindvis af forskellige fejl,
+    // fordi nøglen pr. fejl kun dæmper gentagelser af *den samme*.
+    const visitor = await visitorHash(request, domain);
+    const hourKey = `ce:v1:${domain}:${Math.floor(Date.now() / 3600000)}:${visitor}`;
+    const hourHits = parseInt((await env.VISITS.get(hourKey)) || '0', 10);
+    if (hourHits >= CLIENT_ERROR_MAX_PER_HOUR) {
+      return privateJsonResp({ ok: false, error: 'Too many reports.' }, 429);
+    }
+    await env.VISITS.put(hourKey, String(hourHits + 1), { expirationTtl: 7200 });
+
+    const eventId = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((b) => b.toString(16).padStart(2, '0')).join('');
+    const event = {
+      event_id: eventId,
+      timestamp: new Date().toISOString(),
+      platform: 'javascript',
+      level: 'error',
+      logger: 'browser',
+      // Ingen persondata: ingen IP, ingen user-agent, ingen headers, ingen
+      // cookies, ingen krop. `url` er origin + den normaliserede rute, og
+      // ruten kommer fra `referer` — aldrig fra klienten.
+      request: { url: `${url.origin}${route}`, method: 'POST' },
+      exception: { values: [{
+        type: name,
+        value: message,
+        ...(file || line !== null
+          ? { stacktrace: { frames: [{ filename: file || 'ukendt', ...(line !== null ? { lineno: line } : {}), ...(col !== null ? { colno: col } : {}) }] } }
+          : {}),
+      }] },
+      tags: { route, source: 'browser', kind },
+      sdk_name: 'sentry.javascript.browser',
+    };
+    await sendSentryEnvelope(target, event, ctx);
+    return privateJsonResp({ ok: true }, 202);
+  } catch {
+    // Samme regel som `reportWorkerError`: overvågningen må aldrig give en
+    // besøgende en fejl i stedet for sit resultat. Klienten læser aldrig
+    // svaret — den bruger sendBeacon — så 202 her er det mest præcise.
+    return privateJsonResp({ ok: true }, 202);
   }
 }
 
@@ -218,6 +379,9 @@ export default {
     // === Route: cookieless visit tracking ===
     if (path === '/api/track') return handleTrack(request, url, env);
     if (path === '/api/stats') return handleStats(request, url, env);
+
+    // === Route: uventede JS-fejl fra besøgerens browser ===
+    if (path === '/api/client-error') return handleClientError(request, url, env, ctx);
 
     // === Route: self-monitoring health check ===
     if (path === '/api/health') return handleHealth(url, env);
