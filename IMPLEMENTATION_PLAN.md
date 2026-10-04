@@ -1,46 +1,49 @@
 # STATUS
-- **De fire "uafgivne" grene var dubletter.** Målt 5/10 med `git cherry main
-  <gren>` + fil-for-fil: to var allerede på `main` (`22a6d027`, `ab4b7574`),
-  de to andres filer var **ældre** end main og ville have **reverteret**
-  `3755b96f` + `158715e9`. Alle fire slettet; se opgave 16.
-- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
-  `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
-  hvor handlingen er `<input>` + `Inspect`-knap. Alle **3** har grund i
-  `first_action.json`.
-- **Alle fire Pro-forsider kan nå pristabellen fra folden**, målt på indhold 5/10:
-  `cleancopy.tools/` (11 af 13), `/clean-copy-tool` (2, 0 % bounce),
-  `deskuptime.com/` (7), `/da/`. **38** ratchetede sider. **BRANCH-TJEK 5/10:**
-  ingen remote-grene over 14 dage; de fire lokale er slettet (opgave 16).
+- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` sendte
+  `scan` både ved starten og igen efter svaret (**én scanning = to
+  begivenheder**), og der kom intet ved resultatet eller ved pro-kortets knap.
+  Nu `scan`, `scan-findings`/`scan-clean`, `scan-failed`, `pro-card-click` på
+  begge sprog; delte rapporter tæller ikke. Port `check_scan_events.py` er
+  grøn på ny kode, **5 fund pr. sprog** på den gamle, selftest **18/18**.
+- **Deploy-noterne for `ceo/clean-copy-tool-fold` er lukket på indhold 5/10.**
+  `/clean-copy-tool` har **1** `<header class="hero">` med **1**
+  `.hero-cta a[href="#input-box"]` («Paste your text»), **1** `.hero-note
+  a[href="#free-vs-pro"]`, og begge id'er **1** gang. Hero-noten er målt i
+  rigtig Chromium ved **390 og 1280**: **13,6 px** (0,85 rem) på
+  `cleancopy.tools/`, `/da/` og en `/da/blog/`-side — ikke 20,8/18,4.
+- **Sentry er sat op for workeren** — det var feature-kø punkt 3, og det lå
+  allerede gjort: `check_sentry_setup.py` dømmer de otte regler (kun
+  produktion, ingen persondata, ingen traces, ingen replay, intet token, ingen
+  source maps, kan ikke kaste, dæmpet). ✅ Slået i portene 1/10. **Den
+  blinde plet er klientsiden:** ingen JS-fejl fra en besøgendes browser er
+  sendt nogen sinde. ❓ se feature-kø.
 - **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect`
   får `env` (`5693853`) og live `/api/url-inspect` svarer **200** med rigtig
   redirect-kæde; SSRF er lukket på **4** ruter; `net.js:42,47` gør 429 endelig;
   ét 502-kald koster højst ét ekstra betalt kald; `thanks.html:103` har egen
-  202-tekst. **PR-TJEK 5/10:** 0 PR'er.
+  202-tekst. **PR-TJEK 5/10:** 0 PR'er. **BRANCH-TJEK 5/10:** ingen remote-grene
+  over 14 dage; de fire lokale dubletter er slettet (opgave 16).
+- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
+  `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
+  hvor handlingen er `<input>` + `Inspect`-knap. Alle **3** har grund i
+  `first_action.json`. **38** sider ratchetede; alle fire Pro-forsider kan nå
+  pristabellen fra folden, målt på indhold 5/10.
 - **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
   **RØD med 330 fund** på den uændrede kode. ❓ om deres placering står uændret.
   Ingen løbende side-tal i portenes tekst: de 4 forkerte optællinger er rettet
   til daterede målinger plus portens egen afregning.
-- **Review-fund 5/10 (MIDDEL) er lukket, og det var **179** sider, ikke to.**
-  `.hero p` (0,1,1) vandt over `.hero-note` (0,1,0): før **20,8 px** på
-  cleancopy og **18,4 px** på **179** sider, efter **13,6 / 13,6 / 13,6**. Ny
-  port `check_hero_note_scale.py` er rød på den gamle kode.
+- **CI:** kørslen for `3755b96f` (den ændring der udgiver siderne) er grøn.
 
-## Verificér deploy## Verificér deploy
+## Verificér deploy
 
-`VERIFICÉR DEPLOY: webværktøjet fik en dømt fold 5/10 ceo/clean-copy-tool-fold` —
-måles på **indhold** i næste iteration: `https://cleancopy.tools/clean-copy-tool`
-har **1** `<header class="hero">` med præcis **1** `.hero-cta a[href="#input-box"]`
-med teksten «Paste your text», **1** `.hero-note a[href="#free-vs-pro"]`, og
-`id="input-box"` + `id="free-vs-pro"` findes **1** gang hver. HTTP 200 bruges
-ikke som bevis.
-
-`VERIFICÉR DEPLOY: hero-noten er mindre end brødteksten igen 5/10
-ceo/clean-copy-tool-fold` — måles på **beregnet skriftstørrelse** i rigtig
-Chromium mod den hentede CSS, HTTP 200 bruges ikke som bevis: på
-`https://cleancopy.tools/` og `/da/` skal fold-noten med linket til `#price` /
-`#priser` være **0,85 rem = 13,6 px** og ikke **1,3 rem = 20,8 px**, og på en
-`/blog/`-side med `<p class="hero-note">` skal den være **13,6 px**, ikke
-18,4 px.
+`VERIFICÉR DEPLOY: scannerens købsvej måler hele tragten 5/10 ceo/scan-events` —
+måles på **indhold** i næste iteration, ikke på HTTP 200: `scan.html` og
+`scan-da.html` skal hver have præcis **1** `trackEvent('scan')`, **0**
+`event:'scan'`-fetch, **1** `scan-findings`/`scan-clean` med `!opts.shared` på
+samme linje, **1** `scan-failed`, og `onclick` med `pro-card-click` på den
+linje der har `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`. Runtime-krav: et klik på
+den renders knap skal kalde `trackEvent('pro-card-click')` **én** gang — den
+indeholder `\'`-sekvenser i kilden, så det skal måles i browseren, ikke i filen.
 
 `DEPLOY OK 4/10 13:1x` for `ceo/fold-pris` — målt på **indhold**:
 `https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]`, `id="price"`
@@ -263,13 +266,20 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      dømmer at ingen `.hero p`-regel må overrule noten; **GRØN** på den nye
 kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
       giver **RØD** når `:not()` fjernes fra enten den ene eller den anden.
-20. **Pro-kortet på `/scan` kan ikke måles, så dets effekt er ukendt.** Hvorfor:
-    `site/scan.html:356` sender **én** begivenhed (`scan`) ved *start* af
-    scanningen og ingen ved resultatet, så 290 indgående links målt 1/10 ikke kan
-    adskilles fra køb. `track.js:235` har automatisk `buy-click`, men kun for den
-    *synlige* knap. Accept: resultatet sender én begivenhed pr. udfald
-    (fund/sammenligning), og pro-kortets knap sender `pro-card-click` — dømt af
-    en port der kræver begge og som er rød på den gamle kode.
+20. ~~**Pro-kortet på `/scan` kan ikke måles, så dets effekt er ukendt.**~~
+    **Færdig 5/10**, `ceo/scan-events`. Målt i koden: `scan()` sendte `scan`
+    ved starten *og* igen med en rå fetch efter svaret — **én scanning = to
+    begivenheder** — og der kom intet ved resultatet eller ved pro-kortets knap,
+    så 290 indgående links (1/10) ikke kunne skelnes fra køb. Nu hele tragten:
+    `scan` → `scan-findings`/`scan-clean` → `pro-card-click`, plus
+    `scan-failed` så en fejl ikke ser ud som et resultat. Delt rapport tæller
+    ikke (`!opts.shared`) — den er afsenderens resultat. `pro-card-click` er et
+    målepunkt *ved siden af* `buy-click`, ikke en erstatning. Ny port
+    `check_scan_events.py`: grøn på ny kode, **5 fund pr. sprog** på den gamle,
+    selftest **18/18** (6 mutationer + 4 polariteter), og katalogens otte
+    `where`-henvisninger på de to sider er flyttet med koden. Runtime målt i
+    Chromium mod den byggede `dist/`: 0 sidefejl, og et klik på den renders
+    knap kalder `trackEvent('pro-card-click')` **én** gang.
 21. **En `ceo/*`-gren er ikke arbejde, fordi den ligger uden for `main`.** Hvorfor:
     målt 5/10 — alle fire var dubletter, og to ville have reverteret
     `3755b96f` + `158715e9`. Accept: før en gren nævnes i planen skal
@@ -365,9 +375,27 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    `scrollWidth == viewport` ved 390 og 1280, og den primære handling
    («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
-3. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
-   Accept: SDK kun i produktion, `sendDefaultPii: false`,
-   `tracesSampleRate` 0.1, ingen Replay, ingen auth-token, porten rød hvis
-   nogen af det mangler. Datagrund: snapshottet siger «ingen uløste fejl», og
-   det kan også betyde at intet sendes — det er målt ved at søge efter
-   `Sentry.init`.
+3. ~~**Sentry for workeren.**~~ **Færdig 1/10**, `ceo/sentry-ogensynlig`.
+   `site/_worker.js` sender hændelser med den offentlige envelope-protokol
+   (ikke `@sentry/cloudflare`, fordi en `_worker.js` i Pages *advanced mode*
+   ikke bundles), og `tools/check_sentry_setup.py` dømmer de otte regler:
+   kun produktion, ingen persondata (`url`+`method` kun), ingen traces, ingen
+   replay, intet auth-token, ingen source maps, rapporteringen kan ikke kaste,
+   og løkker er dæmpet. Begge steps hængt i portene.
+4. **Ingen JS-fejl fra en besøgendes browser når Sentry.** Hvem: alle brugere
+   på de 270 sider. Tal: hvor mange købsveje dør i klienten, som `/api/track`
+   aldrig ser. Accept: klientsiden sender `window.onerror` og `unhandledrejection`
+   til workerens egen indsamling, porten rød hvis den mangler, og en hændelse
+   må ikke indeholde URL'en brugeren indtastede. Datagrund: de **21** besøgende
+   på mahope.tools og **13** på cleancopy.tools er for få til at fejlfinde i
+   hånden; Sentry har ingen uløste fejl, fordi intet bliver sendt. **❓ Kræver
+   Mads:** replay er forbudt, så fejlene bliver uden skærmbillede — og det er
+   en afvejning, der bør være din, ikke min.
+5. **`/blog/text-on-image-contrast-check` er 8 af 21 besøgende på mahope.tools,
+   og alle 8 bouncede.** Hvem: de der lander på artiklen. Tal: hvor mange af dem
+   kører selve tjekket. Accept: artiklen sender læseren ind i
+   `/text-on-image-checker` med det samme problem de lige har læst om — egen
+   handling i teksten, ikke banner, og porten dømmer at artiklen har den.
+   Datagrund: Plausible 4/10 viser **8** besøgende på bloggen mod **2** på
+   værktøjet, og **100 %** mod **50 %** bounce. Baseline: `text-on-image-checker`
+   har **2** besøgende.

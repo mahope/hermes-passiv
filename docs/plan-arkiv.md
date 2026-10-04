@@ -7512,3 +7512,21 @@ nyere udgave.
   begivenhed (`scan`) ved starten og ingen ved resultatet. `track.js:235` har
   automatisk `buy-click` på Stripe-links, så køb *er* talt, men intet skiller
   «290 indgående links» fra «scannet». Ny opgave 20.
+
+## 5/10 — deploy-noter lukket på indhold (målt af denne iteration)
+
+`DEPLOY OK 5/10` for `ceo/clean-copy-tool-fold` — målt på **indhold**, ikke HTTP:
+`https://cleancopy.tools/clean-copy-tool` har præcis **1** `<header
+class="hero">` med **1** `.hero-cta a[href="#input-box"]` med teksten «Paste your
+text», **1** `.hero-note a[href="#free-vs-pro"]`, og `id="input-box"` +
+`id="free-vs-pro"` findes **1** gang hver.
+
+`DEPLOY OK 5/10` for `ceo/clean-copy-tool-fold` (foldnotens skala) — målt på
+**beregnet skriftstørrelse** i rigtig Chromium ved **390 og 1280**: fold-noten med
+linket til `#price` / `#priser` er **13,6 px** (0,85 rem) på
+`https://cleancopy.tools/` og `/da/`, og **13,6 px** på
+`/da/blog/kopier-ren-tekst-fra-hjemmeside/` med `<p class="hero-note">` — ikke
+20,8 og 18,4 px. 0 JS-fejl ved begge bredder. **Målt afvigelse:** de 179
+blog- og guidesider blev dømt på **én** af dem (den første med `<p
+class="hero-note">` i rækkefølge); porten `check_hero_note_scale.py` dømmer
+resten på kilden.
