@@ -75,6 +75,30 @@
 </header>
 
 <main class="container">
+<!-- Et eksempel-resultat, så en læser ser hvad et resultat overhovedet er
+     uden at bruge en kørsel på sin egen side. Alle tal er målt med den kode der
+     står ovenfor — `python3 tools/scan_example.py https://wordpress.org/` — og
+     er mærket med datoen, fordi et site ændrer sig. Derfor står datoen på
+     kortet, og derfor er «scan det selv» en rigtig link: den kører den samme
+     måling igen. Kortet sender ingen hændelse. -->
+<section aria-labelledby="example-heading">
+  <h2 id="example-heading">Eksempel på et resultat</h2>
+  <p class="hint">Et rigtigt scan af <code>wordpress.org</code>, målt 4. oktober 2026
+  med tjekket nedenfor. Sites ændrer sig, så scan det selv for at se det, som det er nu.</p>
+  <div class="scorecard">
+    <div class="score grade-C">66/100 — Klasse C</div>
+    <div>2 fejl, 2 advarsler</div>
+  </div>
+  <ul class="findings">
+    <li><span class="sev-error">9 billeder uden alt-tekst</span></li>
+    <li><span class="sev-error">1 dublet id-værdi (bryder label- og aria-referencer)</span></li>
+    <li><span class="sev-warning">1 link der åbner i et nyt vindue uden advarsel</span></li>
+    <li><span class="sev-warning">1 iframe uden titel</span></li>
+  </ul>
+  <p><a href="#url=https%3A%2F%2Fwordpress.org%2F">Scan wordpress.org selv</a>,
+  eller indsæt en hvilken som helst URL i feltet ovenfor.</p>
+</section>
+
 <section aria-labelledby="scan-heading">
   <h2 id="scan-heading">Dit resultat</h2>
   <div id="result" role="status" aria-live="polite"></div>

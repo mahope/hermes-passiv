@@ -1,4 +1,12 @@
 # STATUS
+- **`/scan` viser et eksempel-resultat uden at købe en kørsel.** 5/10: kortet
+  ligger lige under folden på EN og DA og er målt med `tools/scan_example.py`
+  (nyt værktøj), der kører sidens *egne* scripts i headless Chromium mod en
+  lokal stub — så tallene er scannerens egne, og målingen tæller **ikke** som
+  et scan. wordpress.org målt 66/100, 2 fejl, 2 advarsler, 4/10. Datoen står på
+  kortet, fordi tallene er et øjebliksbillede, og «scan det selv» er en rigtig
+  `#url=`-link, så læseren kan efterprøve det. Baseline: `/api/results` 0 runs,
+  `/api/conversion` 2 buy-clicks, 0 pro-card-clicks.
 - **Ingen livslang tæller kan læses som et tal for et vindue.** 6/10: `csc-count`,
   `wl-count` og `ai-ask-count` skrives alle med `expirationTtl: 365 * 86400` og
   genoplades ved hvert skriv, så de kan kun stå stille eller stige. De hed
@@ -28,7 +36,15 @@
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: kumulative taellere praefikses 4/10 23:5x
+`VERIFICÉR DEPLOY: eksempel-resultat paa /scan 5/10 00:3x
+ceo/scan-eksempel-resultat` — måles på **indhold**: live `https://mahope.tools/scan`
+skal have `<h2 id="example-heading">Example result</h2>` **og** `<div
+class="scorecard">` med `66/100 — Grade C` **før** `<h2 id="scan-heading">`, og
+`/scan-da` skal have `Eksempel på et resultat` + `66/100 — Klasse C`. Begge sider
+skal have linken `href="#url=https%3A%2F%2Fwordpress.org%2F"`. HTTP 200 bruges
+ikke som bevis.
+
+`VERIFICÉR DEPLOY: kumulative taellere praefikses 4/10 23:3x
 ceo/livslangt-tal-navn` — måles på **indhold**: live `https://mahope.tools/api/health`
 (uden nøgle) skal have `stats.scans_lifetime` og `stats.waitlist_lifetime` og
 **ikke** `stats.scans` / `stats.waitlist`, og `stats.recentVisits` skal stadig
