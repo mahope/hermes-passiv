@@ -7358,3 +7358,43 @@ at løse; de fik en begrundelse i `tools/first_action.json`.
   `url-inspector` er løsbare uden beslutning. (4) `check_inline_js` og
   `check_first_action` dømmer begge klassen nu, så en ny artikel arver reglen
   uden at nogen skal huske at føje den ind.
+
+## Leveret 5/10 — `ceo/fold-pris`: folden kan nå pristabellen
+
+To punkters **første** fejlform var den samme som artiklens: siden *har* en
+købsvej, men vejen til den er den, læseren skal finde.
+
+- **`site/clean-copy.html` + `site/da/clean-copy.html`:** prissektionen havde intet
+  `id`, så den kunne hverken linkes til eller ratchetedes. Nu `id="price"` /
+  `id="priser"`, og heroen har én linje: «The free version is complete, not a
+  trial. **See what Clean Copy Pro — $19/year adds, side by side**.» Den sidste
+  sætning med «adds» er ikke valgt for design — `check_stripe_ctas.py`s
+  helsides-regel dømmer betalte funktioner i prosa, og porten blev RØD på min
+  første sætning («adds batch conversion and cleanup rules you define
+  yourself»): målt **0 / 1 / 9** mod forventet **0 / 1 / 7**. Samme fejlform som
+  de otte blokke porten *ikke* vil have i prosa — de skal stå i tabellen.
+- **`site/deskuptime/index.html` + `site/da/deskuptime/index.html`:** `#pro`
+  fandtes allerede, men intet i folden pegede på det. Nu én klausul i den
+  eksisterende `hero-note`: «See what Pro adds, side by side».
+- **Ny dom 4 i `check_first_action.py`** (`pristabel()`, `fejl_pris()`,
+  `dom_pris()`): en side i ratchetfilen med en **synlig** `.pro-table` skal have
+  et `id` på sin sektion og et `href="#id"` i foldregionen. Synlig = ikke i en
+  `<script>`-streng og ikke i en `hidden` beholder, hvilket er præcis de fire
+  værktøjssiders pro-kort (`PRO_CARD`, `#cc-pro`): de dukker op når læseren får
+  et resultat, og det er den rigtige tid at vise Pro.
+- **MÅLING:** selftest **25/25** (6 nye kontroller: tabel uden id er rød, id
+  uden foldlink er rød, rettet er grøn, skjult pro-kort er ikke dømt, pro-kort i
+  script-streng er ikke dømt). To mutationer på den rigtige fil, begge **RØD** og
+  gendannet: foldlinket væk → «pristabellen ligger i #price, men ingen handling i
+  foldregionen peger på den»; `id="price"` væk → «dens sektion har intet id».
+- **Browser:** Chromium 390 + 1280 mod den lokale server: linket i folden på alle
+  fire sider (top 381–649 px), `scrollWidth == viewport` på alle fire, **0**
+  JS-fejl. Et klik på `#price` lander på «Price» 125 px under toppen.
+- **Mål (baseline, før):** `cleancopy.tools/` 11 af 13 besøgende, 73 % bounce,
+  86 s; `deskuptime.com/` 7 besøgende, 100 % bounce, 0 s. Begge tabeller lå
+  4–11 tusind tegn under `<header class="hero">`.
+- **Målt og lukket undervejs:** feature-kø 1 (`/blog/text-on-image-contrast-check`
+  «har ingen købsknap») holdt ikke — artiklen har **1** `buy.stripe.com`
+  («Buy EUComply Pro — $79/year») og **2** frie værktøjslinks.
+- **NEXT_TASK:** `/clean-copy-tool` har ingen `<div class="hero">`, så porten
+  kan ikke dømme dens fold — den er nu feature-kø punkt 1.

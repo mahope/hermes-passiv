@@ -161,6 +161,73 @@ def fejl_for(html: str, forventet: str) -> list[str]:
     return fund
 
 
+PRO_TABEL_RE = re.compile(r'class="[^"]*\bpro-table\b')
+SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S)
+ID_RE = re.compile(r'id="([^"]*)"')
+
+
+def pristabel(html: str) -> str | None:
+    """Sektionens `id` for den gratis-mod-Pro-tabel, en læser kan se.
+
+    `None` når siden ikke har en synlig sådan tabel. To slags tabeller er
+    *ikke* i folden og skal derfor ikke dømmes af `dom_pris`:
+
+    - en i en `<script>`-streng (`PRO_CARD` på værktøjssiderne), som bygges ind
+      når læseren har fået et resultat, og
+    - en i en `hidden` beholder (`#cc-pro` på `/contrast-checker`), der samme
+      sted bliver vist.
+
+    Det er præcis den tid missionen vil vise Pro på: «vis det der, hvor
+    brugeren mangler det». At linke til den fra folden ville være at flytte
+    den hen til det sted, hvor læseren endnu ikke har fået noget.
+
+    Ellers er svaret sektionens `id`, og en tom streng når tabellen ligger i
+    en sektion uden id — så kan folden ikke pege på den.
+    """
+    markup = SCRIPT_RE.sub("", html)
+    for match in PRO_TABEL_RE.finditer(markup):
+        sektion = markup.rfind("<section", 0, match.start())
+        if sektion == -1:
+            continue
+        åbning = markup.find(">", sektion)
+        if "hidden" in markup[åbning + 1:match.start()]:
+            continue
+        mål = ID_RE.search(markup[sektion:åbning])
+        return mål.group(1) if mål else ""
+    return None
+
+
+def fejl_pris(html: str, kilde: str) -> list[str]:
+    """En synlig pristabel skal kunne nås fra folden, ellers er den 4 000
+    tegn nede og læseren med 86 sekunder på forsiden finder den aldrig."""
+    mål = pristabel(html)
+    if mål is None:
+        return []
+    if not mål:
+        return [f"{kilde}: siden viser en gratis-mod-Pro-tabel, men dens sektion "
+                "har intet id, så ingen handling i folden kan nå den"]
+    if f'href="#{mål}"' not in fold_region(html):
+        return [f"{kilde}: pristabellen ligger i #{mål}, men ingen handling i "
+                "foldregionen peger på den"]
+    return []
+
+
+def dom_pris() -> list[str]:
+    """Prisreglen dømmer de ratchetede sider, der viser pristabellen synligt.
+
+    Ratchetfilen er portens egen liste over *sider med trafik*, så kravet rammer
+    de forsider, der faktisk bliver læst, og ikke alle 21 sider med en
+    `.pro-table` i korpuset.
+    """
+    fund: list[str] = []
+    for kilde in ratchet():
+        fil = ROOT / kilde
+        if not fil.exists():
+            continue
+        fund.extend(fejl_pris(fil.read_text(encoding="utf-8", errors="replace"), kilde))
+    return fund
+
+
 def ratchet() -> dict[str, str]:
     data = json.loads(RATCHET.read_text(encoding="utf-8"))
     return {k: v for k, v in data.items() if not k.startswith("_")}
@@ -326,6 +393,7 @@ def self_test() -> int:
     #    skal med her — ellers ville porten være grøn på dem alle.
     fund, _ = dom()
     fund += dom_bannere()
+    fund += dom_pris()
     tjek("målingen på site/ er grøn", not fund, "; ".join(fund[:3]))
     # 9. Mutation mod de RIGTIGTE filer: bannerne flyttes op under `</header>`
     #    igen og demoteres, altså præcis den fejlform de otte artikler havde.
@@ -411,6 +479,37 @@ def self_test() -> int:
              and str(mål.relative_to(rod)) in fund_her[0] and "promo" in fund_her[0],
              f"mål={mål}, fund={fund_her[:2]}")
 
+    # 12. Prisreglen: en synlig pristabel skal kunne nås fra folden. Tre fejlformer
+    #     ad gangen — tabellen uden id, tabellen med id men uden link, og den
+    #     rettede side — så reglen kan ikke være grøn fordi den intet ser.
+    tabel = ('<table class="compare pro-table"><tr><td>Free</td>'
+             "<td>Pro</td></tr></table>")
+    uden_id = (hero.format(a="/tool") +
+               "<section>" + tabel + "</section>")
+    tjek("pristabel uden id er rød",
+         any("intet id" in f for f in fejl_pris(uden_id, "site/test.html")),
+         str(fejl_pris(uden_id, "site/test.html")))
+    uden_link = hero.format(a="/tool") + '<section id="price">' + tabel + "</section>"
+    tjek("pristabel med id men uden foldlink er rød",
+         any("ingen handling i foldregionen" in f
+             for f in fejl_pris(uden_link, "site/test.html")),
+         str(fejl_pris(uden_link, "site/test.html")))
+    med_id = (hero.format(a="/tool").replace("</header>",
+                 '<a href="#price">Se hvad Pro tilføjer</a></header>') +
+              '<section id="price">' + tabel + "</section>")
+    tjek("pristabel nået fra folden er grøn", not fejl_pris(med_id, "site/test.html"),
+         str(fejl_pris(med_id, "site/test.html")))
+    # 12b. En pristabel i en `hidden` beholder eller i en script-streng er ikke
+    #      i folden — den dukker op når læseren får et resultat — så reglen må
+    #      ikke kræve et link til den. Det er de fire værktøjssiders pro-kort.
+    skjult = (hero.format(a="/tool") +
+              '<div id="pro" class="pro-card" hidden>' + tabel + "</div>")
+    tjek("skjult pro-kort er ikke dømt", not fejl_pris(skjult, "site/test.html"),
+         str(fejl_pris(skjult, "site/test.html")))
+    tjek("pro-kort i en script-streng er ikke dømt",
+         not fejl_pris(hero.format(a="/tool") + "<script>var C = '" + tabel
+                       + "';</script>", "site/test.html"))
+
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-first-action-selftest: {'OK' if not fejl else 'RØD'}"
@@ -429,6 +528,7 @@ def dom_med_rod(rod: Path) -> tuple[list[str], dict[str, list[str]]]:
             continue
         fund.extend(f"{kilde}: {p}" for p in
                     fejl_for(fil.read_text(encoding="utf-8"), forventet))
+        fund.extend(fejl_pris(fil.read_text(encoding="utf-8"), kilde))
     return fund, {}
 
 
@@ -447,6 +547,7 @@ def main(argv: list[str] | None = None) -> int:
         return demotér()
     fund, detaljer = dom()
     fund += dom_bannere()
+    fund += dom_pris()
     med_hero, flere, nul = maalt_uden_domslutning()
     if args.list:
         for kilde, forventet in sorted(ratchet().items()):

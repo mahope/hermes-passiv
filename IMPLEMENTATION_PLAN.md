@@ -1,13 +1,14 @@
 # STATUS
-- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** Bogsiderne fik deres
-  fold-CTA 5/10, fordi de er de eneste sider i familien hvor læseren skal
-  *finde* filen i stedet for at trykke på den: `books/index` peger på `#books`
-  (den `<nav>` med `Download EPUB`-links) og `books/compliance-bundle` på
-  `#download` (`.price-area` med den grønne `btn-free`) — samme mønster som
-  `/downloads` → `#desktop-app`. De **3** tilbage er `compliance-ai` ×2 (noindex,
-  assistenten er slukket — se ❓) og `url-inspector`, hvor handlingen er et
-  `<input>` + `Inspect`-knap, mens porten kun tæller `<a>`. Alle **3** har grund
-  i `first_action.json`.
+- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
+  `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
+  hvor handlingen er et `<input>` + `Inspect`-knap. Alle **3** har grund i
+  `first_action.json`.
+- **Folden på de to mest besøgte forsider kan nu nå pristabellen.** Målt 4/10 i
+  Plausible 28 dage: `cleancopy.tools/` 11 af 13 besøgende (73 % bounce, 86 s)
+  og `deskuptime.com/` 7 (100 %, 0 s). Begge havde tabellen 4–11 tusind tegn
+  nede og ingen handling til den — kun brødtekst der nævner prisen. Ny dom 4 i
+  `check_first_action.py` dømmer det på de ratchetede sider hvor tabellen er
+  **synlig**; de fire værktøjssiders pro-kort er skjult til resultatet.
 - **CEO-kø punkt 0 er målt færdig, ikke åben.** Alle fem dele holder:
   `handleUrlInspect` får `env` (`5693853`), og live `POST /api/url-inspect?url=`
   svarer **200** med rigtig redirect-kæde; SSRF er lukket på fire ruter i samme
@@ -24,6 +25,14 @@
 - **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: folden kan nå pristabellen 4/10 ceo/fold-pris` — måles på
+**indhold** i næste iteration, HTTP 200 bruges ikke som bevis:
+`https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]` med teksten
+«See what Clean Copy Pro — $19/year adds, side by side», og `id="price"` findes
+**1** gang. `https://deskuptime.com/` og `/da/` har **1** `.hero-note
+a[href="#pro"]` hver, og `id="pro"` findes **1** gang på hver side. Danske
+forside peger på `#priser`, der findes **1** gang.
 
 `VERIFICÉR DEPLOY: bogsiderne fik fold-CTA 5/10 ceo/bogsfold-handling` — måles på
 **indhold** i næste iteration: `/books/` skal have **1** `btn-primary` i folden med
@@ -284,25 +293,23 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-1. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
-   Hvem: de 8 på `/blog/text-on-image-contrast-check` (100 % bounce, 28 d).
-   Tal: hvor mange går fra artiklen til `/text-on-image-checker` og videre til
-   et køb. Accept: ét købslink i artiklen derhen, dømt af `check_stripe_ctas`.
-   Datagrund: den er destinationen for 8 af 21 besøgende på mahope.tools, og
-   `/pricing` ligger nu i footeren på alle 270 sider — vejen findes, men der er
-   ingen grund til at gå den.
-2. **`cleancopy.tools` er 11 af 13 besøgende på én side.** Hvem: de 11 på `/`
-   (73 % bounce, 86 s). Tal: hvor mange bruger selve værktøjet i stedet for at
-   læse om det. Accept: en ærlig forskel gratis/Pro i folden på 390 px.
-   Datagrund: 85 % af sitets besøg er på forsiden, og `/clean-copy-tool` får
-   2. Baseline efter `ceo/forsidens-handling`: forsideens primære peger på
-   `#check`. Bounce på én side kan ikke bruges som dom.
-3. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
+1. **`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.** Hvem:
+   de 2 på `/clean-copy-tool` (0 % bounce) og alle der kommer fra artiklerne.
+   Tal: hvor mange køber $19/år. Accept: siden har en `<div class="hero">` med
+   præcis én `btn-primary` og en post i `first_action.json`.
+   Datagrund: `site/clean-copy-tool.html` har **ingen** `<div class="hero">` eller
+   `<header class="hero">`, så `fold_region()` giver **0 tegn** og porten dømmer
+   slet ikke siden — dens pristabel ligger 12 417 tegn nede i markup. Det er
+   det samme hul som `url-inspector` har med sin `<input>`.
+2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
    besøger der gik med det samme — på den eneste udgivne side der kun er én.
-   Skal måles i browseren før der skrives kode.
-4. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
+   Målt i Chromium 4/10 mod live: **0** JS-fejl, **0** fejlede requests,
+   `scrollWidth == viewport` ved 390 og 1280, og den primære handling
+   («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
+   var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
+3. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
    Accept: SDK kun i produktion, `sendDefaultPii: false`,
    `tracesSampleRate` 0.1, ingen Replay, ingen auth-token, porten rød hvis
    nogen af det mangler. Datagrund: snapshottet siger «ingen uløste fejl», og
