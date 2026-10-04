@@ -46,11 +46,21 @@ Porten dømmer derfor tre ting:
 
    Dommen måles på **kald**, ikke på nævn: `fetch('/api/…')` og
    `NET.postJSON('/api/…')` i `<script>`-kode. Ruterne læses fra `_worker.js`es
-   egen dispatch, så porten ikke kan holde en liste ved siden af den, der
-   rister — samme fejl som de fem håndskrevne tal i kvotetabellen. To ruter er
-   undtaget af selve dommen, hver med sin grund: `/api/track` er en beacon der
-   skal aldrig kaste, og `/api/stripe-webhook` er Stripe *til* os, ikke en
-   klient der kan kalde den.
+   egen dispatch — **begge** former, fordi den har to: `path === '/api/…'` og
+   `path.startsWith('/api/download/')` — så porten ikke kan holde en liste ved
+   siden af den, der rister. Samme fejl som de fem håndskrevne tal i
+   kvotetabellen, og som fundet 4/10: kun den lig form blev læst, så den 23. rute
+   var usynlig for porten.
+
+   Et kald der **ikke** findes i dispatchen er også et fund. En relativ
+   `/api/…` i vores egen side er enten vores rute eller en 404 — der er ingen
+   tredjepart på vores domæne — så det er en død vej, ikke en fremmed rute.
+   Undtagelseslisten dømmes også: en rute i den der ikke længere findes i
+   dispatchen er et fund, fordi den ellers lukker et kald porten burde dømme.
+
+   To ruter er undtaget af selve dommen, hver med sin grund: `/api/track` er en
+   beacon der skal aldrig kaste, og `/api/stripe-webhook` er Stripe *til* os,
+   ikke en klient der kan kalde den.
 
    `<pre>` er fjernet før kaldene søges. Det er ikke en håndrækning: to
    artikler om API'et (`/blog/html-to-markdown-api` + den danske) viser et
@@ -62,7 +72,7 @@ Den dømmer *kun* koden, ikke prose. En artikel der viser et `curl`-kald i et
 klient, så «nævner ruten» kan ikke være dommen — kun den brugbare kode.
 
     python3 tools/check_net_copies.py            # dom alle klienter
-    python3 tools/check_net_copies.py --self-test # 15 kontroller
+    python3 tools/check_net_copies.py --self-test # 30 kontroller
 """
 from __future__ import annotations
 
@@ -89,8 +99,21 @@ KOPI_NAVN = re.compile(r"\.transient\s*=\s*\w+\.status\s*>=\s*500\b")
 # === Dom 3: klienter der kalder vores egne ruter uden omkring kernen ===
 
 # Ruterne læses fra `_worker.js`es egen dispatch, så de kan ikke komme i
-# drift fra portens side. 22 ruter, målt 4/10.
-DISPATCH_RE = re.compile(r"path === '(/api/[a-z/-]+)'")
+# drift fra portens side. 23 ruter, målt 5/10.
+#
+# Dispatchen har to former, og kun den første blev læst: 22 ruter med
+# `path === '/api/…'` og **én** med `path.startsWith('/api/download/')`
+# (`site/_worker.js:286`). Den 23. er `GET /api/download/<token>/<fil>` — en rigtig,
+# klient-rækbar rute der leverer betalte filer — og intet `path ===`-mønster kan
+# se den. Fund 4/10: en `fetch('/api/download/tok/x.pdf')` i en vilkårlig side var
+# **GRØN**, fordi porten kun kendte de 22. Samme fejlklasse som
+# `stripe_catalog.json` og som de otte ratchet-ankre: en afledt liste der er
+# præcis så komplet som sit mønster.
+#
+# Præfiks-mønsteret kræver et navn efter `/api/`, så catch-allen
+# `path.startsWith('/api/')` (der svarer 404) ikke kan blive en rute.
+ROUTE_LIG_RE = re.compile(r"path === '(/api/[a-z/-]+)'")
+ROUTE_PRAEFIX_RE = re.compile(r"path\.startsWith\('(/api/[a-z][a-z/-]*/)'\)")
 # Kun `<script>`-kode. `<pre>` er fjernet først, så et **eksempel** i en artikel
 # ikke dømmes som et kald — målt 4/10: de to artikler om `/api/clean-copy`
 # skriver et `fetch('/api/clean-copy')` i en `<pre>`.
@@ -141,11 +164,31 @@ UNDTAGELSER: dict[str, tuple[frozenset[str], str]] = {
                           "demoens tre opkald uden fejlvisning"),
 }
 
+# Kald der ikke findes i dispatchen er **ikke** vores ruter, så de kan heller
+# ikke gå gennem kernen. Målt 5/10 er der præcis ét af dem i `site/`, og det er
+# et dynamisk bygget præfiks: `clean-copy-tool.html` skriver
+# `'/api/license/' + endpoint`, fordi den kalder fem licensendepunkter med samme
+# krop. Det er den eneste grund den står her — alt andet er en 404 for læseren,
+# og en 404 der ser ud som et kald er præcis den fejl porten skal finde.
+UKENDTE_UNDTAGELSER: dict[str, str] = {
+    "clean-copy-tool.html": (
+        "dynamisk rute: `'/api/license/' + endpoint` kaler de fem "
+        "licensendepunkter med samme krop, så porten kan ikke læse dem fra "
+        "kilden. Licensemodulets egen `decide()` holder den 7-dages cache og "
+        "viser serverens egen sætning, så kaldet skal ikke gå gennem kernen"
+    ),
+}
+
 
 def arbejdende_ruter() -> set[str]:
-    """Vores egne API-ruter, læst i `_worker.js`es dispatch."""
+    """Vores egne API-ruter, læst i `_worker.js`es dispatch — begge former."""
     tekst = (SITE / "_worker.js").read_text(encoding="utf-8")
-    return set(DISPATCH_RE.findall(tekst))
+    return set(ROUTE_LIG_RE.findall(tekst)) | set(ROUTE_PRAEFIX_RE.findall(tekst))
+
+
+def route_daekker(kald: str, ruter: set[str]) -> bool:
+    """Kalder et kald en af vores ruter? Præfiks-ruter dækker deres underruter."""
+    return any(kald == rute or kald.startswith(rute) for rute in ruter)
 
 
 def scriptkode(tekst: str, er_html: bool) -> str:
@@ -159,23 +202,40 @@ def scriptkode(tekst: str, er_html: bool) -> str:
 def dom_kaldere(tekst: str, sti: str, ruter: set[str], er_html: bool) -> list[str]:
     """Fund i én fil for dom 3. `er_html` afgør om script-blokke skal findes."""
     kode = scriptkode(tekst, er_html)
-    kaldte = {m.group(1) for m in RA_KALD_RE.finditer(kode)
-              if m.group(1) in ruter and m.group(1) not in IKKE_ET_KLIENTKALD}
+    fund: list[str] = []
+    kaldte: set[str] = set()
+    ukendte_grund = UKENDTE_UNDTAGELSER.get(sti)
+    for m in RA_KALD_RE.finditer(kode):
+        kald = m.group(1)
+        if kald in IKKE_ET_KLIENTKALD:
+            continue
+        if not route_daekker(kald, ruter):
+            # En relativ `/api/…` i vores egen side er enten vores rute eller en
+            # 404 — der er ingen tredjepart på vores domæne. Så et kald der ikke
+            # findes i dispatchen er en død vej, ikke en undtagelse.
+            if ukendte_grund is None:
+                fund.append(f"{sti}: kalder {kald} som ikke findes i "
+                            f"{SITE.name}/_worker.js — kaldet svarer 404 for "
+                            f"læseren (kræver en grund i UKENDTE_UNDTAGELSER)")
+            continue
+        if kald not in kaldte:
+            kaldte.add(kald)
     if not kaldte:
-        return []
+        return fund
     tilladte, grund = UNDTAGELSER.get(sti, (frozenset(), ""))
     ubrugte = sorted(kaldte - tilladte)
     if not ubrugte:
-        return []
+        return fund
     # Filen bruger kernen et andet sted, så det her er ikke en klient der
     # reglen aldrig nåede — den skal bare gå gennem kernen som alle andre.
     if NET_BRUG_RE.search(kode):
-        return [f"{sti}: kalder {', '.join(ubrugte)} med egen fetch() "
-                f"selv om filen bruger NET andetsteds — brug NET.ask() også her"]
-    fund = [f"{sti}: kalder {', '.join(ubrugte)} uden NET.ask() — en 429 fra "
-            f"serveren bliver genkaldt og koster den besøgendes kvote"]
-    if grund:
-        fund[0] += f" (filen står i undtagelseslisten: {grund})"
+        fund.append(f"{sti}: kalder {', '.join(ubrugte)} med egen fetch() "
+                    f"selv om filen bruger NET andetsteds — brug NET.ask() også her")
+    else:
+        fund.append(f"{sti}: kalder {', '.join(ubrugte)} uden NET.ask() — en 429 "
+                    f"fra serveren bliver genkaldt og koster den besøgendes kvote")
+        if grund:
+            fund[-1] += f" (filen står i undtagelseslisten: {grund})"
     return fund
 
 
@@ -211,6 +271,25 @@ def dom_fil(fil: Path, sti: str | None = None) -> list[str]:
     return fund
 
 
+def dom_undtagelser(undtagelser: dict[str, tuple[frozenset[str], str]],
+                    ruter: set[str]) -> list[str]:
+    """Undtagelser der døjer: en rute der ikke længere findes i dispatchen.
+
+    Undtagelseslisten er håndskrevet, så den kan komme i drift fra portens side
+    — i hver sin retning. Ruten forsvinder (en handler bliver omdøbt), så læseren
+    bliver rød uden at have kaldet noget; eller ruten hedder noget andet, så den
+    døj undtagelse lukker et kald porten burde have dømt. Før var det kun en note
+    i grøn-udskriften, og fund-kravet om at listen er synlig gjorde den *mere*
+    troværdig uden at gøre den rød. Derfor er det et fund nu.
+    """
+    return [
+        f"{sti}: undtagelsen {rute} findes ikke i _worker.js — reglen døjer, "
+        f"eller ruten hedder noget andet"
+        for sti, (tilladte, _) in sorted(undtagelser.items())
+        for rute in sorted(tilladte - ruter)
+    ]
+
+
 def dom_alle() -> list[str]:
     fund: list[str] = []
     for fil in sorted(SITE.rglob("*.html")) + sorted(SITE.rglob("*.js")):
@@ -218,6 +297,7 @@ def dom_alle() -> list[str]:
             continue
         fund.extend(dom_fil(fil, str(fil.relative_to(SITE))))
     fund.extend(dom_kaldere_alle())
+    fund.extend(dom_undtagelser(UNDTAGELSER, arbejdende_ruter()))
     # Punkt 2: kernen skal stadig være hel.
     tekst = (SITE / KERNE).read_text(encoding="utf-8")
     mangler: list[str] = []
@@ -287,8 +367,41 @@ SELFTEST_KALD = [
      "<script>NET.ask('/api/waitlist', {email:e});"
      "fetch('/api/compliance-ai');</script>",
      "selv.html", 1),
-    ("et rute-navn der ikke er i dispatchen er ikke vores",
-     "<script>fetch('/api/ukendte-rute');</script>", "selv.html", 0),
+    ("et rute-navn der ikke findes i dispatchen er en død vej",
+     "<script>fetch('/api/ukendte-rute');</script>", "selv.html", 1),
+    # Fundet 4/10, målt ved mutation: en `fetch('/api/download/tok/x.pdf')` i en
+    # vilkårlig side var GRØN, fordi portens rute-mønster kun kendte `path ===`
+    # og `/api/download/` dispatches med `startsWith`. Den her kontrol er den
+    # mutation som gør det umuligt at gentage.
+    ("en præfiks-dispatchet rute dømmes også",
+     "<script>fetch('/api/download/tok/x.pdf');</script>", "selv.html", 1),
+    # Undtagelsen for det dynamiske licenspræfiks er navngiven, så den er ikke
+    # bare grøn af den forkerte grund: i en anden fil er det samme kald et fund.
+    ("et dynamisk rute-præfiks må stå med sin grund",
+     "<script>fetch('/api/license/' + e);</script>", "clean-copy-tool.html", 0),
+    ("et dynamisk rute-præfiks i en anden fil er et fund",
+     "<script>fetch('/api/license/' + e);</script>", "selv.html", 1),
+]
+
+# Dom 3b: selve undtagelseslisten må ikke døje. Den er håndskrevet, så den kan
+# komme i drift fra portens side, og det var en note før det blev et fund.
+SELFTEST_UNDTAGELSER = [
+    ("en undtagelse med en rute der ikke findes er et fund",
+     {"selv.html": (frozenset({"/api/compliance-scan", "/api/flyt-et-sted-hen"}),
+                    "grund")}, 1),
+    ("en undtagelse hvis ruter alle findes er grøn",
+     {"selv.html": (frozenset({"/api/compliance-scan"}), "grund")}, 0),
+]
+
+# Ruterne læses fra kilden, så selvtesten skal kunne bevise at BEGGE
+# dispatch-former er læst — ellers ville den grønne præfiks-kontrol ovenfor være
+# grøn af den forkerte grund, præcis som fundet 4/10 var.
+SELFTEST_ROUTE = [
+    ("en lig rute dækkes", "/api/compliance-scan", True),
+    ("en præfiks-rute dækker sin underrute", "/api/download/tok/x.pdf", True),
+    ("en præfiks-rute dækker sig selv", "/api/download/", True),
+    ("et kald der ikke findes dækkes ikke", "/api/ukendte-rute", False),
+    ("catch-allen '/api/' er ikke en rute", "/api/", False),
 ]
 
 
@@ -324,7 +437,21 @@ def selvtest() -> int:
         print(f"{'ok   ' if ok else 'FEJL '} {navn} "
               f"({len(fund)} fund, forventede {forventet})")
 
-    total = len(SELFTEST) + len(SELFTEST_KALD)
+    for navn, undtagelser, forventet in SELFTEST_UNDTAGELSER:
+        fund = dom_undtagelser(undtagelser, ruter)
+        ok = len(fund) == forventet
+        fejl += 0 if ok else 1
+        print(f"{'ok   ' if ok else 'FEJL '} {navn} "
+              f"({len(fund)} fund, forventede {forventet})")
+
+    for navn, kald, forventet in SELFTEST_ROUTE:
+        fund = 1 if route_daekker(kald, ruter) else 0
+        ok = fund == forventet
+        fejl += 0 if ok else 1
+        print(f"{'ok   ' if ok else 'FEJL '} {navn} ({fund}, forventede {forventet})")
+
+    total = (len(SELFTEST) + len(SELFTEST_KALD) + len(SELFTEST_UNDTAGELSER)
+             + len(SELFTEST_ROUTE))
     print(f"selvtest: {total - fejl}/{total} kontroller")
     return 1 if fejl else 0
 
@@ -347,11 +474,14 @@ def main() -> int:
     if UNDTAGELSER:
         ruter = arbejdende_ruter()
         print(f"  {len(UNDTAGELSER)} filer kalder en rute uden kernen, hver med "
-              f"sin grund ({len(ruter)} ruter dømt):")
+              f"sin grund ({len(ruter)} ruter dømt, begge dispatch-former):")
         for sti, (tilladte, grund) in sorted(UNDTAGELSER.items()):
-            ubrugte = sorted(tilladte - ruter)
-            note = f" — {len(ubrugte)} af dem findes ikke i dispatchen" if ubrugte else ""
-            print(f"  - {sti}: {', '.join(sorted(tilladte))} — {grund}{note}")
+            print(f"  - {sti}: {', '.join(sorted(tilladte))} — {grund}")
+    if UKENDTE_UNDTAGELSER:
+        print(f"  {len(UKENDTE_UNDTAGELSER)} filer kalder en rute der ikke findes "
+              f"i dispatchen, hver med sin grund:")
+        for sti, grund in sorted(UKENDTE_UNDTAGELSER.items()):
+            print(f"  - {sti}: {grund}")
     return 0
 
 
