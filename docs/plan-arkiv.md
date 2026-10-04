@@ -7151,3 +7151,58 @@ håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.
 - **Port `check_deskuptime_claims`** (3 domme, selftest 7/7) dømmer hver side
   der linker til en udleveret binær: den skal kunne købes, må ikke love at intet
   forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner.
+
+## vaerktoj-fold (4/10, ceo/vaerktoj-fold)
+
+- `STATE`: **De otte farve- og tekstværktøjer manglede en handling over folden, og
+  de var de eneste værktøjssider i familien der gjorde det.** Målt med
+  `check_first_action.py` på hele `site/`: **19** sider har nul `btn-primary` i
+  foldregionen — otte af dem er `contrast-checker`, `color-blindness-simulator`,
+  `palette-generator` og `text-on-image-checker`, hver på EN og DA.
+- `MÅLING (før → efter)`: sider med **nul** primær over folden **19 → 11**;
+  ratchetede sider **16 → 24**; portens fund på den gamle kode **8** (én pr. fil,
+  alle med `ingen btn-primary i foldregionen`). Datagrund (Plausible 28 d,
+  hentet 4/10): `/text-on-image-checker` **2** besøgende,
+  `/color-blindness-simulator` **1**, `/blog/text-on-image-contrast-check` **8 af
+  21** på mahope.tools — den artikel er den mest besøgte indgang på domænet, og
+  dens destination er `/text-on-image-checker`.
+- `RINGERE FIND`: **porten dømmer *handlingen*, ikke formen.** Ratcheten følger
+  `href`, og de otte er ratchetede til **ankere** (`#tool-heading`,
+  `#checker-heading`, `#sim-heading`, `#gen-heading`) fordi værktøjet *er* på siden.
+  Samme afgørelse som `_2oktober_kontrastartikler` og `_2oktober_deskuptime`. Der
+  var 0 banner-CTAs mellem `</header>` og første `<section>` på alle otte, så der
+  kom ingen ny konkurrence om den primære plads.
+- `FALDGRUP`: **en generator er selv en ratchet.** De 18 `where`-henvisninger i
+  `tools/stripe_catalog.json` på de otte filer flyttede sig +3 linjer, og
+  `check_catalog_where.py` blev rød med **12 fund** — citaterne lå uden for deres
+  egne intervaller. Skiftet er gjort i samme diff. Målt efter: GRØN, 120
+  funktioner. Samme fejlform som arkivet allerede havde to gange
+  (`product-copy`, `deploy-workflow`).
+- `MÅLT I DIST`: alle otte byggede sider har præcis **1** `hero-cta` med **1**
+  `btn-primary`, og ankerets mål findes på samme side. `html` har
+  `scroll-padding-top: calc(var(--header-h) + 1rem)` (`style.css:144`), så et
+  anker ikke lander bag den sticky `.site-header` (`:322`). **Ingen browser
+  gengivet:** repoet har ingen Playwright, så folden er dømt på markup og CSS,
+  ikke på et skærmbillede.
+- **RUTE-NAVN, målt ikke antaget:** de danske sider hedder `/palette-generator-da`,
+  `/contrast-checker-da` osv. — de ligger i sitemap'en som suffiks, ikke under
+  `/da/`. Første skrivning af ratchet noterne antog `/da/…` og var forkert.
+- **BEMÆRK:** `site/contrast-checker-da.html` havde `<div class="badge">FREE
+  TOOL</div>` på en dansk side, mens de tre andre DA-værktøjer siger `GRATIS
+  VÆRKTØJ`. Rettet i samme diff — det lå i den blok, diffen rørte.
+- `FEJLMÅLING, LUKKET`: ❓ «`_worker.js` er ikke hele workeren bag mahope.tools»
+  sagde at live `/api/compliance-scan` svarer med 9 tjek mens `CSC_CHECKS` «har
+  7». `CSC_CHECKS` har **9**: `security-headers` (`:2765`) og `meta-tags` (`:2771`)
+  står med **citationattegn**, så den måling der fandt «7» ignorerede dem. Live
+  svarer præcis de samme ni i samme rækkefølge, og `/api/profile`'s `max_score:
+  21` er identisk med kilden. **Live-kilden er `site/_worker.js`** — ingen
+  afklæring fra Mads nødvendig. Fejlen lå i målingen, ikke i workeren.
+- `VERIFICÉR DEPLOY`: se `IMPLEMENTATION_PLAN.md`. Graden deployer på push; de otte
+  ruter kræver hver **1** `hero-cta` + **1** `btn-primary` med det ratchetede
+  anker, **0** `FREE TOOL` på `/contrast-checker-da`, og at `sitemap.xml` stadig
+  har alle otte.
+- `SLIP`: ~43 min mod et loft på 45. Den tidlige måling af de 19 nulsider kostede
+  mere end nødvendigt, fordi jeg først ledte efter en port der allerede dømte det.
+  `check_first_action.py` skrev «(19 har nul)» i hver kørsel hele tiden.
+- `Opgraderinger`: ingen nye; diffen rører ingen afhængighed, så
+  `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret.

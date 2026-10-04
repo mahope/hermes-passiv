@@ -1900,7 +1900,7 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker.html:149-151 «Nothing on this page says whether the rest of the site passes — that takes a crawl of every page, and it is what EUComply Pro does»",
+          "where": "site/text-on-image-checker.html:152-154 «Nothing on this page says whether the rest of the site passes — that takes a crawl of every page, and it is what EUComply Pro does»",
           "labels": {
             "en": [
               "Every image on every page of the site"
@@ -1912,7 +1912,7 @@
         },
         {
           "id": "fifteen-checks",
-          "where": "site/text-on-image-checker.html:151-152 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:154-155 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
           "labels": {
             "en": [
               "The 15 accessibility rules around each image"
@@ -1924,7 +1924,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/text-on-image-checker.html:151-152 «in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:154-155 «in one report you can hand to a client»",
           "labels": {
             "en": [
               "A PDF report you can hand a client"
@@ -1984,7 +1984,7 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker-da.html:150-152 «Intet på denne side fortæller, om resten af websitet består — det kræver et gennemløb af alle sider, og det er det EUComply Pro gør»",
+          "where": "site/text-on-image-checker-da.html:153-155 «Intet på denne side fortæller, om resten af websitet består — det kræver et gennemløb af alle sider, og det er det EUComply Pro gør»",
           "labels": {
             "en": [
               "Every image on every page of the site"
@@ -1996,7 +1996,7 @@
         },
         {
           "id": "fifteen-checks",
-          "where": "site/text-on-image-checker-da.html:152-153 «EAA/WCAG, cookie-samtykke og NIS2-fund i én rapport, du kan give videre til en kunde»",
+          "where": "site/text-on-image-checker-da.html:155-156 «EAA/WCAG, cookie-samtykke og NIS2-fund i én rapport, du kan give videre til en kunde»",
           "labels": {
             "en": [
               "The 15 accessibility rules around each image"
@@ -2008,7 +2008,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/text-on-image-checker-da.html:153 «rapport, du kan give videre til en kunde»",
+          "where": "site/text-on-image-checker-da.html:156 «rapport, du kan give videre til en kunde»",
           "labels": {
             "en": [
               "A PDF report you can hand a client"
@@ -2444,7 +2444,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker.html:183-196 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker.html:186-199 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "en": [
               "The WCAG ratio for any pair of colors you type in"
@@ -2453,7 +2453,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker.html:198-211 dommen sættes ud fra forholdet, og :211 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker.html:201-214 dommen sættes ud fra forholdet, og :4 gør kortet synligt efter første beregning",
           "labels": {
             "en": [
               "AA and AAA verdict, large-text threshold included"
@@ -2462,7 +2462,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker.html:249-255 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker.html:252-258 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "en": [
               "Runs entirely in your browser — nothing uploaded"
@@ -2473,7 +2473,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker.html:155-158 «This checker is free. Checking the whole site is not.» … «that needs a crawl of every page, and it is what EUComply Pro does»",
+          "where": "site/contrast-checker.html:158-161 «This checker is free. Checking the whole site is not.» … «that needs a crawl of every page, and it is what EUComply Pro does»",
           "labels": {
             "en": [
               "It crawls the whole site — the same check on every page it finds"
@@ -2485,7 +2485,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker.html:156-160 «contrast is one of the 15 accessibility checks it runs, and Pro adds 18 server-side GDPR, cookie, security and metadata checks on top»",
+          "where": "site/contrast-checker.html:159-163 «contrast is one of the 15 accessibility checks it runs, and Pro adds 18 server-side GDPR, cookie, security and metadata checks on top»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2497,7 +2497,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker.html:157-160 «33 in all, in a PDF report you can hand to a client»",
+          "where": "site/contrast-checker.html:160-163 «33 in all, in a PDF report you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2519,7 +2519,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker-da.html:184-197 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker-da.html:187-200 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "da": [
               "WCAG-forholdet for ethvert farvepar du indtaster"
@@ -2528,7 +2528,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker-da.html:199-212 dommen sættes ud fra forholdet, og :212 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker-da.html:202-215 dommen sættes ud fra forholdet, og :5 gør kortet synligt efter første beregning",
           "labels": {
             "da": [
               "AA- og AAA-dom, tærskel for stor tekst med"
@@ -2537,7 +2537,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker-da.html:250-256 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker-da.html:253-259 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "da": [
               "Kører helt i din browser — intet uploades"
@@ -2548,7 +2548,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker-da.html:156-159 «Dette tjek er gratis. At tjekke hele sitet er ikke.» … «det kræver en gennemgang af alle sider, og det er præcis det EUComply Pro gør»",
+          "where": "site/contrast-checker-da.html:159-162 «Dette tjek er gratis. At tjekke hele sitet er ikke.» … «det kræver en gennemgang af alle sider, og det er præcis det EUComply Pro gør»",
           "labels": {
             "en": [
               "It crawls the whole site — the same check on every page it finds"
@@ -2560,7 +2560,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker-da.html:157-161 «kontrast er ét af de 15 tilgængelighedstjek, og Pro lægger 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni»",
+          "where": "site/contrast-checker-da.html:160-164 «kontrast er ét af de 15 tilgængelighedstjek, og Pro lægger 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2572,7 +2572,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker-da.html:158-161 «i alt 33, i en PDF-rapport du kan give en kunde»",
+          "where": "site/contrast-checker-da.html:161-164 «i alt 33, i en PDF-rapport du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"

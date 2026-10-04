@@ -1,29 +1,35 @@
 # STATUS
-- **Review-fundet fra 4/10 er lukket: `/api/profile`-kvoten løj om 2,4 %, og ingen
-  port dømte den.** Siden lovede «500 000 characters per page», mens
-  `handleProfile` afviser over `const MAX_SIZE = 500 * 1024` = **512 000**.
-  Rettet — og `check_developers_page.py` har nu dom 6 `LIMITS`: alle otte tal i
-  kvotetabellen **udregnes af `site/_worker.js`** i stedet for at stå i to filer.
-- **Tidsenheden er også kode nu.** `rateLimitIp` spærrer i
-  `Math.floor(Date.now() / 3600000)` = pr. time, og `dailySalt()` er
-  `toISOString().slice(0, 10)` = UTC-dagen. Dommen dømmer «per hour» og «midnight
-  UTC» mod de to, så «30 per week» ikke kan stå — netop den mutation fundet gjorde,
-  med 30 et rigtigt tal i en løgn enhed.
-- **Fire nye mutationer, alle røde, alle grønne på den rigtige kode:** de fem tal
-  gjort absurde på én gang → 6 fund; en kvota der flytter sig i workeren → rød
-  (altså: tallene kan ikke længer stå to steder); «30 per week» → rød; præcis
-  500 000 for 512 000 → rød med 512000 i fundet. 22/22 kontroller grønne.
-- **Mutationerne rører kun hukommelsen.** 3/10s selftest skrev sin mutation ind i
-  den **tracked** `_worker.js`; `dom_med` får derfor et `worker_src` i RAM.
-- **De otte tal er efterprøvet mod kilden, ikke mod siden.** `kvoter_fra_worker`
-  læser 120, 50 000, 30, 5, 12, 60, 30 og 512 000 udelukkende af konstanterne og
-  handlerkropperne. Før dommen fandt den ene fejl og ingen anden, så de syv var
-  rigtige.
-- **CI er grøn igen, og de to forsinkede deploys er landet.** `f8dbdb9` rettede
-  gatens egen selftest, der havde efterladt sin mutation i repoet; kørsel
-  37172364367 blev grøn og deployede cleancopy.tools, mahope.tools og
-  deskuptime.com. Begge åbne VERIFICÉR-noter er målt på indhold → `DEPLOY OK`.
-- **Gaten grøn:** 159 steps. PR-TJEK 4/10: 0 PR'er.
+- **Fire værktøjssider på to sprog havde ingen handling over folden.** Målt med
+  `check_first_action.py`: 19 sider i `site/` har nul `btn-primary` i folden, og
+  otte af dem er `contrast-checker`, `color-blindness-simulator`,
+  `palette-generator` og `text-on-image-checker` (EN+DA). Værktøjet ligger på dem
+  lige under folden, så læseren læser hele taglinen og kan ikke gøre noget.
+  `/text-on-image-checker` er destinationen for `/blog/text-on-image-contrast-check`,
+  der alene er 8 af 21 besøgende på mahope.tools. Nu har hver fold ét anker ned
+  til værktøjets egen overskrift — samme rettelse som `ceo/deskuptime-en-kob` gjorde
+  på deskuptime.com. Tallet er 19 → **11**.
+- **Porten dømmer dem nu, og den er målt rød på den gamle kode.** De otte ruter
+  står i `tools/first_action.json` med deres destination; `git stash` på kun
+  `site/` giver **8 fund** med præcis `ingen btn-primary i foldregionen`, og den
+  er grøn på den nye kode. 24 sider dømt.
+- **Rettelsen rørte katalogens linjenumre, og porten fangede det.** De 18
+  `where`-henvisninger i `tools/stripe_catalog.json` på de otte filer er flyttet
+  +3 linjer; `check_catalog_where.py` blev rød med 12 fund *inden* skiftet, fordi
+  citaterne lå uden for deres interval. Samme fejlform som «en generator er selv
+  en ratchet».
+- **Den danske `contrast-checker` sagde `FREE TOOL` i badgen.** Rettet til
+  `GRATIS VÆRKTØJ` som på de tre andre DA-sider.
+- **Målt i `dist/`, ikke i kilden:** alle otte byggede sider har præcis **1**
+  `hero-cta` med **1** `btn-primary`, og målet (`#tool-heading`, `#checker-heading`,
+  `#sim-heading`, `#gen-heading`) findes på samme side. `html` har
+  `scroll-padding-top: calc(var(--header-h) + 1rem)`, så ankeret ikke lander bag
+  den sticky header.
+- **En 🔴 i planen var en fejlmåling.** ❓ «`_worker.js` er ikke hele workeren»
+  byggede på at live `/api/compliance-scan` svarede med **9** tjek mens `CSC_CHECKS`
+  «havde 7». Målt 4/10: `CSC_CHECKS` har **9** nøgler — de to manglende
+  (`security-headers`, `meta-tags`) er skrevet med **citattegn**, så den måling der
+  fandt «7» ignorerede dem. Live og repo er samme worker.
+- **Gaten grøn:** 159 steps. CI 37174453450 grøn. PR-TJEK 4/10: 0 PR'er.
 
 ## Verificér deploy
 
@@ -59,6 +65,18 @@ Graden deployer på push. Verificér på *indhold*: hent
 characters per call`, `30 per hour, 5 sites and 12 pages per call`, `60 per hour`
 og `resets at midnight UTC`. Sidens `sitemap.xml` skal fortsat have routen.
 
+`VERIFICÉR DEPLOY: folden på de otte farve- og tekstværktøjer ceo/vaerktoj-fold 4/10`
+Graden deployer på push. Verificér på *indhold*, én side pr. sprog: hent
+`https://mahope.tools/contrast-checker`, `/contrast-checker-da`,
+`/color-blindness-simulator`, `/color-blindness-simulator-da`, `/palette-generator`,
+`/palette-generator-da`, `/text-on-image-checker` og `/text-on-image-checker-da`.
+Kræv på hver: **1** `class="hero-cta"` i `<header class="hero">` med **1**
+`btn-primary` hvis `href` er `#checker-heading` / `#sim-heading` / `#gen-heading` /
+`#tool-heading` i hvert sit sprog, og at det anker findes på samme side. Kræv
+**0** `FREE TOOL` på `contrast-checker-da`. `check_first_action.py` skal være
+grøn mod de **otte kildefiler** (ikke mod `dist/`). Sitemap skal fortsat have alle
+otte ruter.
+
 
 ## Åbne opgaver
 
@@ -78,9 +96,10 @@ og `resets at midnight UTC`. Sidens `sitemap.xml` skal fortsat have routen.
 5. **172 sider har to-tre knapper over folden.** Hvorfor:
    `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren ind
    under `</header>`. **2/10 er de 10 mest besøgte rettet** (3 → 1 `btn-primary` i
-   folden, ratchet 4 → 12 dømte sider), så 172 står tilbage. Accept: bannerne er
-   flyttet ned i artiklen på de mest besøgte sider, eller slettet fra hele bloggen.
-   Kræver beslutning — se ❓.
+   folden, ratchet 4 → 12 dømte sider), så 172 står tilbage. **4/10 er de otte
+   værktøjssider med *nul* knapper rettet**, så sidelisten er nu 171 med for mange
+   og **11** med ingen. Accept: bannerne er flyttet ned i artiklen på de mest
+   besøgte sider, eller slettet fra hele bloggen. Kræver beslutning — se ❓.
 6. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor: de
    seks bøger er på engelsk. Målt 2/10: der findes **ingen** `/da/books/*`-ruter,
    så bogsiders hreflang har intet dansk par. Accept: enten en DA-udgave af de to
@@ -164,17 +183,13 @@ og `resets at midnight UTC`. Sidens `sitemap.xml` skal fortsat have routen.
   («ét købsknap i ét pro-kort») siger nej til et prislink dér. Købsvejen findes på
   de seks produktsider. Enten beholder vi den som ren tekst, eller jeg flytter den
   til en fane under kortet.
-- **🔴 `site/_worker.js` er ikke hele workeren bag mahope.tools.** Målt 4/10 med
-  curl: `/api/compliance-scan` svarer **9** tjek (`privacy, terms, cookie,
-  imprint, accessibility, dpa, security-headers, meta-tags, hreflang`), men
-  `CSC_CHECKS` i repoet har **7** nøgler — og har haft 7 siden 25/8. Live har
-  også 2/10's `not_checked` og `pages_read`, så live er *nyere* end de 2 af
-  de 9 vi aldrig har haft i noget commit. `/api/profile` svarer `max_score: 21`
-  og de øvrige 3 felter er identiske med kilden. **Hvad jeg skal bruge fra
-  dig:** en afklaring af hvad der svarer på `mahope.tools/api/*` — en Worker
-  route der overskriver Pages, eller en udgivelse uden om repoet. Uden den kan
-  jeg ikke vedligeholde dokumentation om API'et mod sandheden, og `_worker.js`
-  i repoet er så ubrugt en kilde til at skrive om de ruter.
+- ~~**🔴 `site/_worker.js` er ikke hele workeren bag mahope.tools.**~~ **Fejlmålt
+  4/10, lukket.** Noten byggede på at live `/api/compliance-scan` svarer med **9**
+  tjek mens `CSC_CHECKS` «havde 7» — målt med et regex der kun greb u citationattegn,
+  så de to nøgler med citation (`security-headers`, `meta-tags`) blev set borte.
+  `CSC_CHECKS` har **9**, og live svarer præcis de samme ni i samme rækkefølge.
+  `/api/profile`'s `max_score: 21` er ligeledes identisk med kilden. **Live-kilden
+  er `site/_worker.js`**, og ingen afgave afklæring fra dig.
 - **Search Console:** tilføj de fem domæner som properties (`mahope.tools`,
   `cleancopy.tools`, `deskuptime.com`, `bugbottle.dev`, `transmute.run`).
   Sitemap og robots er målt korrekte på de fire sites missionen udgiver.
@@ -230,3 +245,18 @@ i `docs/plan-arkiv.md`.
    `check_developers_page` er rød hvis nogen af dem forsvinder, ændrer metode
    eller får et sendt felt der ikke læses. Samtidig rettet de tre løgnede
    påstande siden startede med (se STATUS).
+
+8. ~~**Giv de otte værktøjssider én handling over folden.**~~ **Leveret 4/10.**
+   Hvem: læseren der lander på `/text-on-image-checker` (2 besøgende, 28 d),
+   `/color-blindness-simulator` (1), `/contrast-checker` og `/palette-generator` —
+   fire værktøjer på to sprog. Tal: hvor mange der går fra folden til værktøjet.
+   Accept: én `btn-primary` i folden pr. side, ratchetede destinationer, porten rød
+   på den gamle kode. Datagrund: `/text-on-image-checker` er destinationen for
+   `/blog/text-on-image-contrast-check`, der alene er 8 af 21 besøgende på
+   mahope.tools — de otte var de eneste værktøjssider hvor folden ikke kunne
+   starte værktøjet. **Målt:** `check_first_action.py` tællede 19 sider med nul
+   `btn-primary` i folden; nu er der **11**, og de otte er grønne mod ratcheten.
+   Mutation målt: `git stash` på `site/` → 8 fund med præcis
+   `ingen btn-primary i foldregionen`. **Bemærk:** de otte byggede DA-ruter hedder
+   `/palette-generator-da` osv., ikke `/da/palette-generator` — målt i
+   `dist/mahope.tools/sitemap.xml`, ikke antaget.
