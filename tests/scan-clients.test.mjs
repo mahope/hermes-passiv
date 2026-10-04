@@ -259,6 +259,13 @@ function loadPage(path, fetchImpl, opts = {}) {
   // sandkassen skal have et footer-element med en forælder.
   const footer = make();
   footer.parentNode = { insertBefore() {} };
+  // `DOMContentLoaded`-lyttere samles og fyres *efter* sidens egen inline-kode,
+  // i den rækkefølge browseren gør det i: inline scripts under parsing, så
+  // deferred scripts (`/net.js`), så DOMContentLoaded. Uden det døde dommen om
+  // kapabilitets-sonden i `/compliance-ai` stætigt på sandkassens no-op-stub,
+  // fordi siden spørger på DOMContentLoaded — netop fordi `NET` endnu ikke findes
+  // under parsing. Sonden var altså usynlig, ikke grøn.
+  const domReady = [];
   const sandbox = {
     console, setTimeout: fastTimeout, clearTimeout, URL: SandkasseURL,
     URLSearchParams, Promise, Error, JSON, Date, Math,
@@ -280,7 +287,8 @@ function loadPage(path, fetchImpl, opts = {}) {
       },
       querySelector(sel) { return sel === 'footer' && !opts.noFooter ? footer : null; },
       querySelectorAll: () => [],
-      addEventListener() {}, createElement: () => make(), createTextNode: (t) => ({ textContent: t }),
+      addEventListener(type, fn) { if (type === 'DOMContentLoaded') domReady.push(fn); },
+      createElement: () => make(), createTextNode: (t) => ({ textContent: t }),
       body: make(), documentElement: make(), head: make(),
       // `/scan` går selv igennem det hentede HTML med `DOMParser` og løber så
       // reglerne over `querySelectorAll`. Sandkassen skal derfor kunne gennemføre
@@ -323,6 +331,9 @@ function loadPage(path, fetchImpl, opts = {}) {
     vm.runInContext(tekst, sandbox, { filename: fil });
   }
   vm.runInContext(main, sandbox, { filename: path });
+  // Se række forklaringen over `domReady`. En lytter der kaster stopper de
+  // øvrige, som i en browser.
+  for (const fn of domReady) fn.call(sandbox.document);
   // `st` er canvas-stubbens fælles hukommelse. Den skal kunne læses udefra, ellers
   // kan ingen dom se hvad kernen har tegnet — og det er tegningen, ikke et tal
   // i en variabel, der svarer på «flyttede fingeren teksten».

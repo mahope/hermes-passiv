@@ -1,27 +1,40 @@
 # STATUS
-- **Den røde gate på `main` er rettet — den lå i `2b2c34a`s egen nye port.**
-  Kørsel `37177832505` døde i `license-clients`: `check_net_copies.py` har
-  `/api/license/validate` i sin undtagelsesliste, så `check_license_clients.py`
-  regnede porten som licensklient. Filen står nu i `NOT_CLIENTS` med sin grund —
-  sjette gang den samme fejlform. Målt: 17 kilder læst, 0 problemer, 21/21
-  selftests. Deployen af `ceo/net-kaldere` lå bag den.
-- **Porten dømmer nu kalder, ikke kun kopier.** Dom 3 læser de 22 ruter i
-  `_worker.js` og dømmer rå `fetch` på dem: **15 filer** kalder en rute uden
-  kernen, hver med sin grund. `<pre>` er fjernet før søgningen. Selvtest 19/19.
+- **Review-funde 4/10 er lukket i porten, ikke i klienten.** Fundet var at
+  `check_net_copies.py` læste 22 ruter med `path === '/api/…'` mens den 23. er
+  `path.startsWith('/api/download/')` (`site/_worker.js:286`) — så en
+  `fetch('/api/download/tok/x.pdf')` i en vilkårlig side var **GRØN**. Målt: porten
+  læser nu **23** ruter, og selvtesten er **30/30** med fire nye kontroller.
+- **Den nye dom er de to veje rundt om den afledte liste.** Et kald der *ikke*
+  findes i dispatchen er et fund (en relativ `/api/…` i vores egen side er
+  enten vores rute eller en 404), og en undtagelsesliste med en rute der er
+  væk er også et fund — det var en note. Målt ved mutation: fundets egen
+  `/api/download/`-indsats i `stats.html` → **RØD**; `fetch('/api/ukendte-rute')`
+  → **RØD**; en død undtagelse → **RØD**. Ny undtagelse: **1** fil
+  (`clean-copy-tool.html`, det dynamiske `'/api/license/' + endpoint`).
+- **Den røde gate efter `10babe5` var sandkassens, ikke sidens.** CI-kørsel
+  `37178999410` døde i `scan-clients` på begge `compliance-ai`: «en slukket
+  assistent fjerner chatten», `chatGone=false`. `10babe5` flyttede sondéringen til
+  `DOMContentLoaded` (korrekt: `/net.js` er `defer`, så `NET` findes ikke under
+  parsing), men sandkassen havde `document.addEventListener(){}` som no-op. Nu
+  fyres lytterne i browserens rækkefølge. Målt: **518/518**; mutationen «fyr
+  ikke DOMContentLoaded» giver 516/518 med præcis de to fejl.
 - **Resten af CEO-kø punkt 0 er målt leveret.** `/api/url-inspect` svarer 200
   live, `thanks.html` skelner 202 fra bekræftet, de 6 klienter viser `data.error`,
   og `targetIsPublic()` afviser IPv4-mapped IPv6 på hvert redirect-hop. Sentry
   sidder i workeren (`SENTRY_DSN_FALLBACK`, kun uventede fejl).
-- **Portens undtagelsesliste er 15 → 7 filer.** De seks `nis2-*` kalder nu
-  `NET.ask('/api/waitlist', …, 2)` med låst knap, så et dobbelttryk ikke kan sende
-  den samme adresse to gange, og `compliance-ai` spørger med `NET.getJSON`.
-  Målt: porten er **RØD med 8 fund** på den gamle `site/` og grøn på den nye;
-  selvtest **20/20** med et nyt krav om at en flyttet fil ikke får sit gamle rå
-  kald tilbage. Syv bliver, fordi de kræver et token i en header, poller på 202
-  eller viser kundens egen nøgle.
 - **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
+
+`DEPLOY OK 4/10` for `ceo/vaerktoj-fold` — målt på indhold 07:0x: alle **otte**
+svarer 200 og har præcis **1** `btn-primary` i `<header class="hero">`, hver med
+sit eget anker (`#checker-heading` ×2, `#sim-heading` ×2, `#gen-heading` ×2,
+`#tool-heading` ×2), og hvert anker findes **præcis 1** gang på sin egen side.
+`contrast-checker-da` har **0** `FREE TOOL`. HTTP 200 blev ikke brugt som bevis.
+
+`DEPLOY OK 4/10` for `ceo/net-ruter` — ikke en note, men en måling fra samme
+kørsel: ændringen ligger i `tools/check_net_copies.py` og rører **0** filer i
+`site/`, så der er intet nyt at hente. Porten måles i næste iteration.
 
 `DEPLOY OK 4/10` for `ceo/developers-side` — hentet på indhold: `/developers`
 200 med fire endpoint-blokke, clean-copy-kommandoen sender `{"mode":"markdown"}`,
@@ -52,18 +65,6 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
 `https://mahope.tools/developers` har **1** `512 000 characters per page` og **0**
 `500 000`. Kriteriet var rigtigt; resten af rækkerne er dømt af
 `tools/check_developers_page.py`, som læser dem fra `_worker.js`.
-
-`VERIFICÉR DEPLOY: folden på de otte farve- og tekstværktøjer ceo/vaerktoj-fold 4/10`
-Graden deployer på push. Verificér på *indhold*, én side pr. sprog: hent
-`https://mahope.tools/contrast-checker`, `/contrast-checker-da`,
-`/color-blindness-simulator`, `/color-blindness-simulator-da`, `/palette-generator`,
-`/palette-generator-da`, `/text-on-image-checker` og `/text-on-image-checker-da`.
-Kræv på hver: **1** `class="hero-cta"` i `<header class="hero">` med **1**
-`btn-primary` hvis `href` er `#checker-heading` / `#sim-heading` / `#gen-heading` /
-`#tool-heading` i hvert sit sprog, og at det anker findes på samme side. Kræv
-**0** `FREE TOOL` på `contrast-checker-da`. `check_first_action.py` skal være
-grøn mod de **otte kildefiler** (ikke mod `dist/`). Sitemap skal fortsat have alle
-otte ruter.
 
 
 ## Åbne opgaver
@@ -105,12 +106,19 @@ otte ruter.
    finder den, hvis den skrives i manifestet. *(Kun relevant når vi tilføjer flere
    sådanne sider — ikke en opgave i sig selv.)*
 9. ~~**Porten dømmer kopier af reglen, ikke klienter der mangler den.**~~
-   **Færdig 4/10**, `ceo/net-kaldere`. Dom 3 læser de **22** ruter i
-   `_worker.js`s egen dispatch og dømmer rå `fetch` på dem. Målt: **15 filer**
-   kalder en rute uden kernen. `<pre>` er fjernet før søgningen. Selvtest 19/19.
-   **Næste:** ~~de 6 `nis2-*`~~ og ~~`compliance-ai` 486/487~~ er begge flyttet
-   4/10, `ceo/net-waitlist-klienter` — portens liste er nu **7 filer**, og alle
-   syv har en grund der *ikke* er «ikke flyttet endnu».
+   **Færdig 4/10**, `ceo/net-kaldere`. Dom 3 læser ruterne i `_worker.js`s egen
+   dispatch og dømmer rå `fetch` på dem. `<pre>` er fjernet før søgningen.
+   ~~de 6 `nis2-*`~~ og ~~`compliance-ai` 486/487~~ er begge flyttet 4/10,
+   `ceo/net-waitlist-klienter` — portens liste er **7 filer**, og alle syv har en
+   grund der *ikke* er «ikke flyttet endnu».
+10. ~~**Review-fund 4/10: porten dømmer 22 af 23 ruter, og den 23. er usynlig af
+    konstruktion.**~~ **Færdig 5/10**, `ceo/net-ruter`. `_worker.js:286`
+    dispatcher `/api/download/` med `startsWith`, som et `path ===`-mønster ikke
+    kan se — så fundets egen mutation var grøn. Målt: **23** ruter, selvtest
+    **30/30**, fire mutationer røde (fundets egen `/api/download/`-indsats i
+    `stats.html`, `fetch('/api/ukendte-rute')`, en død undtagelsesrute, og en
+    præfiks-rute læst med kun den gamle liste). Ny liste med **1** grund:
+    `clean-copy-tool.html`s dynamiske `'/api/license/' + endpoint`.
 
 ## ❓ Til Mads
 
