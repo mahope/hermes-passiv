@@ -19,11 +19,25 @@
   knap; alle **3** har grund i `first_action.json`.
 - **Rød CI 5/10 17:36 var `plan-status`:** STATUS havde **28** linjer mod de **25** porten
   tillader. Rettet i samme diff som dens egen årsag.
-- **Næste:** opgave 3 er delvist lukket — resultater og købsforsøg er begge læsbare uden token, så
-  kun *beløb og licenser* mangler, og det står i Stripe. Næste opgave må derfor være en feature:
-  `deskuptime.com` har **7** besøgende og **0 s** opholdt tid.
+- **Næste:** opgave 3 er delvist lukket — resultater og købsforsøg er begge læsbare
+  uden token, så kun *beløb og licenser* mangler, og det står i Stripe. Næste
+  opgave er derfor feature-kø **7**: `/text-on-image-checker` beder om upload før
+  den viser noget, og det er vejen med **8** læsere forude.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: resultat-koerende-taeller 5/10 21:0x
+ceo/resultat-koerende-taeller` — måles på **indhold**: live
+`https://mahope.tools/api/results?days=7` skal have feltet
+`served_scans_lifetime` (ikke `served_scans`), `note` skal indeholde
+`NOT a count for this window`, og svaret må stadig have `totals.runs`.
+
+`DEPLOY OK 5/10 21:0x` for `ceo/tokenfri-konvertering` — målt på **indhold**:
+live `/api/conversion?days=7` svarer **200** med `"status":"ok"` og `totals` med
+`buy_clicks`, `visitor_days` og `pro_card_clicks`; svaret rummer **0** `@`, **0**
+32-hex-t og **0** `$`+tal, `POST` svarer **405**, og `/api/results` svarer **200**
+uden at tælle `buy-click`. Rigtige tal fra den: **1** købsklik på
+`/compliance-report` 29/9 og **0** resultater i 7 dage.
 
 `DEPLOY OK 5/10` for `ceo/clean-copy-tool-fold` — målt på **indhold**:
 `https://cleancopy.tools/clean-copy-tool` har **1** `<header class="hero">` med
@@ -342,6 +356,19 @@ kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
    svaret er dømt på at det hverken rummer `@`, 32 hex-tegn eller `$`+tal — en
    offentlig rute må ikke afsløre hvem, hvor meget eller med hvilken nøgle.
    **22** nye kontroller, **453/453**; mutation mod `97ef0b68` giver 404.
+24. ~~**`/api/results` læser en kumulativ tæller som et vinduestal.**~~ **Færdig
+    5/10**, `ceo/resultat-koerende-taeller`. `csc-count` skrives med
+    `expirationTtl: 365 * 86400` (`_worker.js:3899`), så `served_scans` var
+    scanninger *siden tælleren blev nulstillet* — mens `totals.runs` kun dækker
+    `days`. Kommentaren på linjen sagde at et større tal end `runs` betyder at
+    «klienten ikke skriver alle sine resultater». Målt live 5/10 21:0x:
+    `served_scans: 50` mod `runs: 0` i 7 dage, og det er **ikke** et spor af en
+    fejl — `/scan` har nul besøgende, og `/api/conversion` beviser at
+    `/api/track` stadig skriver (`buy_clicks: 1` 29/9). Feltet hedder nu
+    `served_scans_lifetime`, `note` siger at det ikke må sammenlignes med
+    `runs`, og **2** nye kontroller (**454/454**) dømmer præcis det: røde mod
+    gammel kode (**452/454**). Målt i samme kørsel: `POST /api/track` svarer
+    **200** på alle **tre** domæner, så tragten er ikke død noget sted.
 
 
 ## ❓ Til Mads
@@ -471,3 +498,17 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    mutationer røde (navnelisten, stidommen, nøglegrænsen), mutation mod den
    gamle kode giver 404. Bevidst *uden* salg, købsforsøg og sidevisninger — de
    er ikke resultater, og opgave 3 (konvertering) står derfor stadig åben.
+7. **NÆSTE OPGAVE — `/text-on-image-checker` beder om upload, før den viser
+   noget.** Hvem: de 8 der læser artiklen, og de 2 der går videre. Tal: hvor
+   mange af dem får et resultat. Accept: det *første* skærmbillede på 390 px
+   viser et målt forholdstal, ikke en tom fil-vælger. Datagrund og måling 5/10
+   21:0x i Chromium mod den byggede `dist/`: **0** JS-fejl og `scrollWidth ==
+   innerWidth` ved **390** og **1280**, og resultatet renderer automatisk fra
+   demoen — men heroen siger «Upload an image», og felt 2 står «Choose File /
+   No file chosen». Betalingen **PASS 4.07:1** ligger 1,5 skærme under en
+   6-felts formular. Baseline: `/text-on-image-checker` **2** besøgende,
+   `/blog/text-on-image-contrast-check` **8**. **Målt afvigelse:** resultatet må
+   **ikke** flyttes *over* formularen — pro-kortet `$79/år` følger resultatet, så
+   en betalingsvæg ville stå over selve værktøjet. Retningen er den anden vej:
+   få de **6** nummererede felter ud af det første skærmbillede, og behold
+   dækningen på prøvebilledet.

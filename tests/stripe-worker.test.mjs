@@ -1971,7 +1971,16 @@ ok('hverken forsøg, købsklik, fejl eller CTA tælles som resultat',
   JSON.stringify(rsBody.results));
 ok('status er ok, fordi dagen var komplet', rsBody.status === 'ok', rsBody.status);
 ok('den server-side scancounter kommer med som et andet vidnesbyrd',
-  rsBody.served_scans === 41, String(rsBody.served_scans));
+  rsBody.served_scans_lifetime === 41, String(rsBody.served_scans_lifetime));
+// 5/10: feltet hed `served_scans` og blev læst som et tal for vinduet. Det er en
+//    *kumulativ* tæller (`expirationTtl: 365 * 86400`), så 41 livslang mod 0 i
+//    vinduet siger intet om klientens tracking — kun at værktøjet ingen besøgende
+//    har. Præfikset er derfor en del af svarets kontrakt, ikke en omdøbning.
+ok('den kumulative tæller kan ikke læses som et vinduestal',
+  rsBody.served_scans === undefined && 'served_scans_lifetime' in rsBody
+  && /NOT a count\s+for this window/.test(rsBody.note),
+  JSON.stringify(Object.keys(rsBody).filter((k) => k.includes('scans')))
+  + ' note=' + String(rsBody.note).slice(0, 40));
 
 // 2. En forfalsket `referer` er et emne, der kan skrives af enhver. Den må ikke
 //    spejles tilbage i et offentligt svar, og den må ikke tælle som et værktøj.

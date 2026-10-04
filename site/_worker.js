@@ -2496,10 +2496,18 @@ async function handleResults(request, url, env) {
     totals.runs += bucket.runs;
     totals.visitor_days += bucket.visitor_days;
   }
-  // `csc-count` er en livslang, server-side tæller for compliance-scans. Den
-  // kommer ikke fra klienten, så de to tal kan ikke begge være rigtige uden at
-  // det er målt: er `served_scans` større end `totals.runs` for `/scan`, så
-  // skriver klienten ikke alle sine resultater, og det er det tallene siger.
+  // `csc-count` er en **kumulativ** server-side tæller for compliance-scans, ikke
+  // en dags-tæller. Den skrives med `expirationTtl: 365 * 86400`, så den tæller
+  // siden den blev nulstillet, og den genoplades ved hver skrivning. Den kan
+  // derfor **ikke** læses mod `totals.runs`, som kun dækker `days`.
+  //
+  // 5/10 målte live præcis den fælde denne kommentar førhen inviterede til:
+  // `served_scans: 50` mod `runs: 0` i et 7-dagesvindue læses som «klienten
+  // skriver ikke alle sine resultater», men er blot 50 scanninger *nogensinde*
+  // mod nul scanninger *i vinduet* — `/scan` har ingen besøgende. Det er ikke et
+  // spor af en fejl, så feltet hedder nu `served_scans_lifetime`, så det ikke kan
+  // forveksles med et vinduestal. For at rette det, så må nogen fjerne præfikset
+  // `lifetime` igen — og da dør dommen her på den nøjagtige nye regel.
   const servedScans = await readKvCounter(env, 'csc-count');
 
   return jsonResp({
@@ -2511,10 +2519,14 @@ async function handleResults(request, url, env) {
     by_day: byDay,
     totals,
     dropped,
-    served_scans: servedScans,
+    served_scans_lifetime: servedScans,
     note: 'runs = client events recorded by /api/track, one per finished run. '
       + 'visitor_days = unique visitors per day, summed, so the same person on '
-      + 'three days counts three. Sales are not here; they are in Stripe.',
+      + 'three days counts three. served_scans_lifetime is a cumulative '
+      + 'server-side counter of compliance scans since it was reset, NOT a count '
+      + 'for this window, so do not compare it with runs: a small lifetime total '
+      + 'beside zero runs means the tool has no visitors, not that tracking is '
+      + 'broken. Sales are not here; they are in Stripe.',
   });
 }
 
