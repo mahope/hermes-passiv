@@ -1,23 +1,18 @@
 # STATUS
-- **Deployen af de otte værktøjssider lå bag en rød gaten.** Målt 06:2x: live
-  `build-info.json` stod på `fec5ba6`, `/contrast-checker` havde 0 `hero-cta`, og
-  `check_live_sitemaps` meldte `artifact mismatch` på både `sitemap.xml` og
-  `build-info.json`. Kørsel `37176619481` døde i `plan-status`: STATUS var 31
-  linjer mod højst 25, og ét punkt havde intet tal. Gaten er grøn igen her.
-- **`ceo/developers-kvoter` er live og målt på indhold.** `/developers` har 1
-  `512 000 characters per page` og 0 `500 000`.
-- **Porten dømmer nu kalder, ikke kun kopier.** `check_net_copies.py` var grøn med
-  `book-lead.js`s blinde `res.json()`, fordi den ledte efter en *kopi* af reglen.
-  Dom 3 læser de 22 ruter i `_worker.js` og dømmer rå `fetch` på dem: **15 filer**
-  kalder en rute uden kernen, hver med sin grund i listen. `<pre>` er fjernet
-  før søgningen — ellers dømmer de 2 API-artikler deres eget eksempel.
-  Selvtest 19/19, de 10 nye kontroller kan fejle.
+- **Den røde gate på `main` er rettet — den lå i `2b2c34a`s egen nye port.**
+  Kørsel `37177832505` døde i `license-clients`: `check_net_copies.py` har
+  `/api/license/validate` i sin undtagelsesliste, så `check_license_clients.py`
+  regnede porten som licensklient. Filen står nu i `NOT_CLIENTS` med sin grund —
+  sjette gang den samme fejlform. Målt: 17 kilder læst, 0 problemer, 21/21
+  selftests. Deployen af `ceo/net-kaldere` lå bag den.
+- **Porten dømmer nu kalder, ikke kun kopier.** Dom 3 læser de 22 ruter i
+  `_worker.js` og dømmer rå `fetch` på dem: **15 filer** kalder en rute uden
+  kernen, hver med sin grund. `<pre>` er fjernet før søgningen. Selvtest 19/19.
 - **Resten af CEO-kø punkt 0 er målt leveret.** `/api/url-inspect` svarer 200
   live, `thanks.html` skelner 202 fra bekræftet, de 6 klienter viser `data.error`,
   og `targetIsPublic()` afviser IPv4-mapped IPv6 på hvert redirect-hop. Sentry
   sidder i workeren (`SENTRY_DSN_FALLBACK`, kun uventede fejl).
-- **Gaten grøn.** PR-TJEK 4/10: 0 PR'er. BRANCH-TJEK 4/10: ingen remote-grene
-  over 14 dage.
+- **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
 

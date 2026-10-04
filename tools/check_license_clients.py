@@ -200,6 +200,14 @@ NOT_CLIENTS = {
     # *vidne* — modsatningen af at være klient, så den skal ikke tvinges ind i
     # CLIENTS.
     "tools/check_license_seat_release.py",
+    # Opgave 4/10: samme fejlform igen, sjette gang. `check_net_copies.py` har
+    # `compliance-report.html` med `/api/license/validate` i sin undtagelsesliste,
+    # fordi dom 3 skal kunne *kræve* at siden enten bruger NET.ask eller står
+    # opført med en grund. Det er den undtagelsesgrund, der holder API'en i
+    # filen — porten kalder den ikke, den læser sider der gør. Samme som de fem
+    # forrige: en port der leder efter en sti i al tekst, træffer alt der vil
+    # forklare stien.
+    "tools/check_net_copies.py",
 }
 
 # Filer der *er* licensklienter, men hvor syvdagesreglen ikke kan søges: det er
