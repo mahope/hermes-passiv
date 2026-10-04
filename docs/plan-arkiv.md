@@ -7467,3 +7467,48 @@ tre afslutende linjer i stedet for de fire konverteringsmoder, `:243`/`:253-256`
 tabel-kanterne. Syv af otte er rettet til deres sande linjer og hver er læst efter
 i filen; den åttende (`proCard()`-citatet) var korrekt og flyttedes kun med
 forskydningen. Resten ligger som opgave 16.
+
+## 5/10 — De fire "uafgivne" grene var dubletter (ceo/stale-grene)
+
+Opgaven i planen var at lande fire lokale `ceo/*`-grene med 7 uafgivne commits,
+fundet af revieweren 05/10 01:1x ved at læse `refs/heads` frem for `origin/main`.
+De skulle **ikke** landes. Målt med `git cherry main <gren>` og derefter
+fil-for-fil mod `main`:
+
+| Gren | `git cherry` | Fund |
+|---|---|---|
+| `ceo/checkout-ruten-kan-vare-forskrevet` | `- f4de41a0` | Allerede på `main` som `22a6d027`, samme emne |
+| `ceo/gate-dist-steps` | `- d06e070e` | Allerede på `main` som `ab4b7574`, samme emne |
+| `ceo/pagepass-owned-css` | `+ dbada7b0`, `+ 98fc4a58` | Filene er **ældre** end `main`: mangles `:not()`-håndteringen fra `158715e9` og `:not(.hero-note)` fra `3755b96f` |
+| `ceo/scan-pro-kort` | `+ f75aa520`, `+ d2eb8af1`, `+ a19ab019` | Pro-kortet ligger på `main` som genereret `pro-table` + købsknap; testens `DOMParser`-sandkasse og `OK_SCAN_PROXY` er også allerede der |
+
+`git cherry` alene ville have godkendt `pagepass-owned-css` og `scan-pro-kort` som
+nyt arbejde, fordi patch-id skjuler at `main` rykker **frem** for grenen. Derfor
+er opgave 21 skrevet ind i planen: læs filerne, ikke kun patch-id.
+
+En 3-ways `git apply` af `scan-pro-kort`s diff mod `main` gav konflikt i præcis
+de to områder, hvor `main` er ældre-korrekt: `proCard()`'s løfteboks (main har
+`pro-table`) og `scan()`'k `out.innerHTML` (main har `LAST`/`render()`). Konflikten
+er altså ikke tilfældig — den er præcis beskeden om, at grenen er forældet.
+
+Ingen filer i `site/` er rørt, så der er ingen deploy-note. De fire grene er
+slettet lokalt; intet unikt arbejde gik tabt, fordi alt findes på `main` i en
+nyere udgave.
+
+### Også målt og fundet lukket i samme kørsel
+
+- **Opgave 17 (katalogens `where`)** behøvede ingen kode: `check_catalog_where.py:176-180`
+  dømmer allerede `y > len(linjer)`, så en vilkærlig `:900`-henvisning giver RØD.
+- **Pro-kortet på `/scan`** er på `main` med genereret `pro-table`, `$79/year per
+  website` + `$149 once per website — lifetime` + købsknappen på
+  `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03` — tegn for tegn katalogens.
+- **Døde hero-ankere: 0** målt over alle `dist/**/*.html` med et eget script, der
+  læser hvert `<header class="hero">`s `href="#…"` og slår op i sidens `id`-er.
+- **`/blog/text-on-image-contrast-check`** (8 af 21 besøgende, 100 % bounce) har en
+  brugbar fold: `Check your image now → #try-it`, og `#try-it` er **den indbyggede
+  fungerende demo** (`ti-card` med `art-bgmode`), ikke et afsnit mere ned. Ikke en
+  fejl, og derfor ikke rettet.
+- **`/scan`s pro-kort mangler et målbart udfald**: `site/scan.html:356` sender én
+  begivenhed (`scan`) ved starten og ingen ved resultatet. `track.js:235` har
+  automatisk `buy-click` på Stripe-links, så køb *er* talt, men intet skiller
+  «290 indgående links» fra «scannet». Ny opgave 20.

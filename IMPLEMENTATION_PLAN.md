@@ -1,31 +1,31 @@
 # STATUS
+- **De fire "uafgivne" grene var dubletter.** Målt 5/10 med `git cherry main
+  <gren>` + fil-for-fil: to var allerede på `main` (`22a6d027`, `ab4b7574`),
+  de to andres filer var **ældre** end main og ville have **reverteret**
+  `3755b96f` + `158715e9`. Alle fire slettet; se opgave 16.
 - **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
   `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
-  hvor handlingen er et `<input>` + `Inspect`-knap. Alle **3** har grund i
+  hvor handlingen er `<input>` + `Inspect`-knap. Alle **3** har grund i
   `first_action.json`.
 - **Alle fire Pro-forsider kan nå pristabellen fra folden**, målt på indhold 5/10:
   `cleancopy.tools/` (11 af 13), `/clean-copy-tool` (2, 0 % bounce),
-  `deskuptime.com/` (7) og `/da/`. **38** ratchetede sider.
-- **CEO-kø punkt 0 er målt færdig, ikke åben.** Alle **5** dele holder:
-  `handleUrlInspect` får `env` (`5693853`) og live `/api/url-inspect` svarer
-  **200** med rigtig redirect-kæde; SSRF er lukket på **4** ruter; `net.js:42,47`
-  gør 429 endelig; ét 502-kald koster højst ét ekstra betalt kald
-  (`ASK_MAX_TRIES = BOOK_MAX_TRIES = 2`); `thanks.html:103` har egen 202-tekst.
+  `deskuptime.com/` (7), `/da/`. **38** ratchetede sider. **BRANCH-TJEK 5/10:**
+  ingen remote-grene over 14 dage; de fire lokale er slettet (opgave 16).
+- **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect`
+  får `env` (`5693853`) og live `/api/url-inspect` svarer **200** med rigtig
+  redirect-kæde; SSRF er lukket på **4** ruter; `net.js:42,47` gør 429 endelig;
+  ét 502-kald koster højst ét ekstra betalt kald; `thanks.html:103` har egen
+  202-tekst. **PR-TJEK 5/10:** 0 PR'er.
 - **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
-  **RØD med 330 fund** på den uændrede kode, så en ny artikel arver reglen uden at
-  nogen skal huske den ind. ❓ om deres placering står uændret.
-- **Ingen løbende side-tal i portenes tekst.** De 4 forkerte optællinger er rettet
-  til daterede målinger plus portens egen afregning med bannerknap-antallet.
-- **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
+  **RØD med 330 fund** på den uændrede kode. ❓ om deres placering står uændret.
+  Ingen løbende side-tal i portenes tekst: de 4 forkerte optællinger er rettet
+  til daterede målinger plus portens egen afregning.
 - **Review-fund 5/10 (MIDDEL) er lukket, og det var **179** sider, ikke to.**
-  Årsagen er kaskaden: `.hero p` (0,1,1) vandt over `.hero-note` (0,1,0), så
-  enhver note der var et `<p>` blev så stor som brødteksten. Målt i Chromium
-  390/1280 før rettelsen: **20,8 px** på cleancopy (mod **13,6**) og **18,4 px**
-  på **179** blog- og guidesider. Rettet med `:not(.hero-note)` på begge
-  `.hero p`-regler; efter: **13,6 / 13,6 / 13,6**. Ny port
-  `check_hero_note_scale.py` dømmer kaskaden og er rød på den gamle kode.
+  `.hero p` (0,1,1) vandt over `.hero-note` (0,1,0): før **20,8 px** på
+  cleancopy og **18,4 px** på **179** sider, efter **13,6 / 13,6 / 13,6**. Ny
+  port `check_hero_note_scale.py` er rød på den gamle kode.
 
-## Verificér deploy
+## Verificér deploy## Verificér deploy
 
 `VERIFICÉR DEPLOY: webværktøjet fik en dømt fold 5/10 ceo/clean-copy-tool-fold` —
 måles på **indhold** i næste iteration: `https://cleancopy.tools/clean-copy-tool`
@@ -229,36 +229,17 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
     begge **1** gang. `books/index`' knap er **37 px** høj — sidens egen
 `.btn-primary`-token, som de seks downloadknapper under den også bruger, så
      den er gjort større forskel uden at skille sig fra dem.
-16. **Fire lokale grene har 7 uafgivne commits** de skal landes fra.**
-    Hvorfor: revieweren 05/10 01:1x fandt dem ved at læse `refs/heads` — de lå
-    uden for alle tidligere gennemgange, der kun læste `origin/main`. Reviewen
-    har **0 åbne fund** på dem, så de er målt gode og mangler kun en grøn gate.
-    Rækkefølge efter værdi: (1) `ceo/scan-pro-kort` (`f75aa520` + `d2eb8af1`) —
-    **salg**: EUComply Pro i scannerens resultat, `site/scan.html` +23 og
-    `tests/scan-clients.test.mjs` +50; (2)
-    `ceo/checkout-ruten-kan-vare-forskrevet` (`f4de41a0`) — købsruten med 43
-    grønne kontroltests, `_worker.js`-kritisk; (3)
-    `ceo/pagepass-owned-css` (`dbada7b0`) — byggetagen skal erklære de 154
-    selectors den sletter; (4) `ceo/gate-dist-steps` (`d06e070e`) — kør de 16
-    dist-domme i CI.
-    Accept: hver grene gennemgået, fuld gate grøn, **én** squash-commit pr. gren
-    på `main`, og den lokale gren slettet bagefter. Brug
-    `git for-each-ref refs/heads` — ikke `origin/<default>` — i alle reviewe.
-
-
-16. **Katalogens `where` har linjenumre, der ikke peger på det de siger.**
-    Hvorfor: `check_catalog_where.py` dommer kun de `«…»`-citat — de otte
-    pro-teksters egne linjesnit i `tools/stripe_catalog.json` er ukontrollerede,
-    og de fleste var **forkerte før** denne iteration. Målt 5/10 på
-    `clean-copy-tool.html`: gamle `:282` pegede på `</div>` (det rigtige var
-    `:273`), `:615` på `try {` (licenskaldet er `:665`), `:442` på en
-    `/* clean-copy-license */`-kommentar (sporingen er `:453`), `:526-528` på tre
-    afsluttende linjer i stedet for de fire konverteringsmoder, `:243`/`:253-256`
-    på tabel-kanterne. Syv er rettet til deres sande linjer i samme diff.
-    Accept: porten verificerer **hver** `fil:linje` i en `where` findes i den
-    fil, så en vilkårlig `:900`-henvisning bliver rød.
-    *(Fundet som følge af `ceo/clean-copy-tool-fold`.)*
-17. ~~**`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.**~~
+16. ~~**Fire lokale grene har 7 uafgivne commits** de skal landes fra.~~
+    **Færdig 5/10**, `ceo/stale-grene` — de skulle **ikke** landes. Se
+    målingen i STATUS: to var allerede på `main` (`git cherry` giver `-`), og de
+    to andenordens filer var **ældre** end main, så en landing ville have
+    reverteret to rettelser. Alle fire slettet, intet tabt.
+17. ~~**Katalogens `where` har linjenumre, der ikke peger på det de siger.**~~
+    **Færdig 5/10**, målt i samme kørsel: `check_catalog_where.py:176-180` dømmer
+    `y > len(linjer)`, så en vilkårlig `:900`-henvisning giver **RØD** — accepten
+    holdt uden ny kode. De otte pro-teksters egne linjesnit er rettet i samme
+    diff som målingen fandt dem forkerte.
+18. ~~**`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.**~~
     **Færdig 5/10**, `ceo/clean-copy-tool-fold`. Målt 4/10: **2** besøgende,
     **0 % bounce** — de eneste to af 19 der læste videre. Nu `<header
     class="hero">` med `#input-box` som primær (siden *er* værktøjet) og
@@ -268,7 +249,7 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
     **28/28**, porten **RØD** når `hero-cta` fjernes, **GRØN** når ankerets
     *etikette* ændres. Chromium 390/1280: CTA i folden, ingen vandret scroll,
     `.hero-note` **13,6 px**, `#0f7b6c`/hvid = **5,16:1**, 0 JS-fejl.
-18. ~~**Review-fund 5/10 (MIDDEL): hero-noten på de to cleancopy-sider var
+19. ~~**Review-fund 5/10 (MIDDEL): hero-noten på de to cleancopy-sider var
      20,8 px.**~~ **Færdig 5/10**, `ceo/clean-copy-tool-fold` — samme squash som
      opgave 17, fordi de to rettelser deler portene. Fundet var rigtigt,
      men **årsagen var bredere end de to filer**: `.hero p` (0,1,1) vandt over
@@ -280,8 +261,20 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      på cleancopy og **13,6** på bloggen ved begge bredder, `scrollWidth ==
      innerWidth` overalt. Ny port `check_hero_note_scale.py` (10/10 selftest)
      dømmer at ingen `.hero p`-regel må overrule noten; **GRØN** på den nye
-     kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
-     giver **RØD** når `:not()` fjernes fra enten den ene eller den anden.
+kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
+      giver **RØD** når `:not()` fjernes fra enten den ene eller den anden.
+20. **Pro-kortet på `/scan` kan ikke måles, så dets effekt er ukendt.** Hvorfor:
+    `site/scan.html:356` sender **én** begivenhed (`scan`) ved *start* af
+    scanningen og ingen ved resultatet, så 290 indgående links målt 1/10 ikke kan
+    adskilles fra køb. `track.js:235` har automatisk `buy-click`, men kun for den
+    *synlige* knap. Accept: resultatet sender én begivenhed pr. udfald
+    (fund/sammenligning), og pro-kortets knap sender `pro-card-click` — dømt af
+    en port der kræver begge og som er rød på den gamle kode.
+21. **En `ceo/*`-gren er ikke arbejde, fordi den ligger uden for `main`.** Hvorfor:
+    målt 5/10 — alle fire var dubletter, og to ville have reverteret
+    `3755b96f` + `158715e9`. Accept: før en gren nævnes i planen skal
+    `git cherry main <gren>` være læst, og dens rørte filer sammenlignet fil-for-fil
+    med `main`. En `+` er ikke nok, fordi patch-id skjuler at main er ældre.
 
 
 ## ❓ Til Mads
@@ -363,7 +356,7 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
 1. ~~**`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.**~~
-   **Færdig 5/10**, `ceo/clean-copy-tool-fold`. Se opgave 17.
+   **Færdig 5/10**, `ceo/clean-copy-tool-fold`. Se opgave 18.
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
