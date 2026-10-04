@@ -7,30 +7,43 @@ right after the existing .blog-tool-cta (if present) or right after
 the existing cta-click listener? No — that listener only matches tool paths,
 so we also inject a tiny inline beacon for clicks on this link.
 
+The strip is `btn-secondary`, never `btn-primary`: it is a promo, and
+`tools/check_first_action.py` judges every one of the 189 banner pages on it
+(measured 4/10: this script and `add_top_cta_495.py` together made 330 banner
+buttons outrank the article's own action). Label and button come from
+`tools/ai_cta.json` so the generator cannot promise a working assistant while
+`available` is false — the strings below used to hardcode "practical answer in
+seconds" and 🤖, which `check_ai_cta_honesty.py` forbids on all 188 pages.
+
 Usage: python3 tools/add_ai_cta.py            # EN + DA blog dirs
 """
 import glob
+import json
 import os
 import re
 import sys
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-EN = ('Ask any EU compliance question — EAA, NIS2 or GDPR — '
-      'and get a practical answer in seconds:')
-DA = ('Stil et spørgsmål om EU-compliance — EAA, NIS2 eller GDPR — og få et '
-      'praktisk svar på få sekunder:')
+SANDHED = json.loads(
+    (Path(ROOT) / "tools" / "ai_cta.json").read_text(encoding="utf-8"))
+_VARIANT = "on" if SANDHED["available"] else "off"
+EN = SANDHED[_VARIANT]["en"]["label"]
+DA = SANDHED[_VARIANT]["da"]["label"]
+KNAP_EN = SANDHED[_VARIANT]["en"]["button"]
+KNAP_DA = SANDHED[_VARIANT]["da"]["button"]
 
 CTA_EN = (
     '<div class="blog-tool-cta ai-cta">'
     '<span class="btc-label">{label}</span> '
-    '<a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Ask the Compliance AI →</a>'
+    '<a href="/compliance-ai" class="btn-secondary ai-cta-link" data-track="ai-cta">{knap}</a>'
     '</div>'
 )
 CTA_DA = (
     '<div class="blog-tool-cta ai-cta">'
     '<span class="btc-label">{label}</span> '
-    '<a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">🤖 Spørg Compliance-AI’en →</a>'
+    '<a href="/da/compliance-ai" class="btn-secondary ai-cta-link" data-track="ai-cta">{knap}</a>'
     '</div>'
 )
 
@@ -82,10 +95,10 @@ def process(path, cta_html):
 def main():
     n = 0
     for path in sorted(glob.glob(os.path.join(ROOT, 'site/blog/*.html'))):
-        if process(path, CTA_EN.format(label=EN)):
+        if process(path, CTA_EN.format(label=EN, knap=KNAP_EN)):
             n += 1
     for path in sorted(glob.glob(os.path.join(ROOT, 'site/da/blog/*.html'))):
-        if process(path, CTA_DA.format(label=DA)):
+        if process(path, CTA_DA.format(label=DA, knap=KNAP_DA)):
             n += 1
     print(f'Updated {n} pages.')
 

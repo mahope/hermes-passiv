@@ -34,5 +34,10 @@
   "site/da/free-tools.html": "#gdpr-heading",
   "site/free-downloads.html": "#tpl-heading",
   "site/blog/index.html": "#accessibility-eaa",
-  "site/da/blog/index.html": "#tilg-ngelighed-eaa"
+  "site/da/blog/index.html": "#tilg-ngelighed-eaa",
+  "site/blog/developer-text-tools.html": "#content",
+  "site/blog/free-website-compliance-checker.html": "#content",
+  "site/blog/site-health-github-actions.html": "#content",
+  "site/da/blog/gratis-compliance-tjek-hjemmeside.html": "#indhold",
+  "site/da/blog/site-health-github-actions-stak.html": "#indhold"
 }

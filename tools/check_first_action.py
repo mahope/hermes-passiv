@@ -17,15 +17,24 @@ per *rute med forventet destination* og ikke per rute, så en ombytning af to
 `href` bliver rød — ellers ville porten være grøn fordi siden stadig har en
 primær handling, bare den forkert.
 
-**Hvad porten dømmer, og hvad den kun tæller.** Den dømmer de sider, der står i
-`tools/first_action.json`: præcis én `btn-primary` i foldregionen, den skal være
-regionens første link, og den skal pege på den ratchetede rute. De øvrige 182
-sider **tælles** og skrives ud i hver kørsel, men dømmes ikke — de er en samlet
-beslutning (se ❓ i `IMPLEMENTATION_PLAN.md`), ikke 182 små rettelser. En port der
-lovede at dømme dem, ville være løgnen over det den faktisk kan se.
+**Hvad porten dømmer, og hvad den kun tæller.** Den dømmer to ting. (1) De
+sider, der står i `tools/first_action.json`: præcis én `btn-primary` i
+foldregionen, den skal være regionens første link, og den skal pege på den
+ratchetede rute. (2) **Alle 189 sider med et `blog-tool-cta`-banner**, uanset
+om de står i ratchetfilen: et banner må aldrig være primært. Målt 4/10 var det
+330 knapper på 187 artikler, fordi `add_top_cta_495.py`, `add_ai_cta.py` og
+`add_hero_cta.py` alle skrev en `btn-primary` ind i bannerne. Bannerne bliver
+liggende — det er Mads' beslutning om promen (se ❓) — men de taler kun en gang,
+som det sekundære de er.
+
+De øvrige sider **tælles** og skrives ud i hver kørsel: de 6 med nul `btn-primary`
+i folden er enten `noindex`-sider, en side der kræver en nøgle, eller en side
+hvor den primære ligger 2 px under folden. Hver af dem er målt enkeltvis i
+`IMPLEMENTATION_PLAN.md`.
 
     python3 tools/check_first_action.py            # dom de ratchetede sider
-    python3 tools/check_first_action.py --list     # hvad er dømt, og hvorfor
+    python3 tools/check_first_action.py --apply    # demotér bannerne i site/
+    python3 tools/check_first_action.py --list     # hvad der er dømt, og hvorfor
     python3 tools/check_first_action.py --self-test
 """
 from __future__ import annotations
@@ -80,15 +89,49 @@ def handlinger(region: str) -> list[tuple[str, str]]:
     return fund
 
 
+def banner_fund(html: str) -> list[str]:
+    """Fund i *alle* `blog-tool-cta`-bannerne på siden, folden eller ikke.
+
+    Målt 4/10: `tools/add_top_cta_495.py`, `tools/add_ai_cta.py` og
+    `tools/add_hero_cta.py` skrev hver især en `btn-primary` ind i bannerne, så
+    **330 bannerknapper på 187 artikler** råbte lige så højt som sidens egen
+    handling — og de tre generatorer skrev igen, så en retning i `site/` alene
+    var holdbar til næste kørsel. Reglen er derfor ikke «banneret ligger for
+    højt» (det er enpromo Mads skal have sagt ja til, se ❓) men **«en banner er
+    aldrig primær»**: bannerne bliver liggende, de taler bare kun en gang, som
+    det sekundære de er.
+    """
+    fund: list[str] = []
+    for banner in BANNER_RE.findall(html):
+        for href, klasser in handlinger(banner):
+            if "btn-primary" in klasser.split():
+                fund.append(f"CTA-banneret har en btn-primary ({href}) — banneret "
+                            f"er en promo, sidens egen handling skal være den "
+                            f"eneste primære")
+    return fund
+
+
+def demotér_bannere(html: str) -> str:
+    """Gør hver `btn-primary` i et banner til `btn-secondary`.
+
+    Kun klassen ændres: `href`, `data-track`, teksten og rækkefølgen er
+    uændrede, så bannerne er præcis de samme to tilbud som i dag.
+    """
+    def ret(banner: re.Match[str]) -> str:
+        return banner.group(0).replace('class="btn-primary', 'class="btn-secondary'
+                                       ).replace(' btn-primary', ' btn-secondary')
+    return BANNER_RE.sub(ret, html)
+
+
 def fejl_for(html: str, forventet: str) -> list[str]:
     """Alt der gør siden's første skærm uforståelig, som lister."""
+    fund = banner_fund(html)
     region = fold_region(html)
     if not region:
-        return ["foldregionen findes ikke (ingen `<div class=\"hero\">` eller "
-                "`<header class=\"hero\">`)"]
+        return fund + ["foldregionen findes ikke (ingen `<div class=\"hero\">` eller "
+                       "`<header class=\"hero\">`)"]
     links = handlinger(region)
     primære = [href for href, klasser in links if "btn-primary" in klasser.split()]
-    fund: list[str] = []
     if len(primære) == 0:
         fund.append("ingen btn-primary i foldregionen")
     elif len(primære) > 1:
@@ -113,6 +156,38 @@ def fejl_for(html: str, forventet: str) -> list[str]:
 def ratchet() -> dict[str, str]:
     data = json.loads(RATCHET.read_text(encoding="utf-8"))
     return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def dom_bannere(site: Path | None = None) -> list[str]:
+    """Bannerreglen dømmer *alle* sider med et banner, ikke kun de ratchetede.
+
+    De 187 artikler med banner er ingen port holdt i en håndfærdet liste: de er
+    fundet ved at læse `site/`, så en ny artikel arver reglen uden at nogen
+    skulle huske at føje den ind. Det er hele pointen — de tre generatorer gav
+    alle sammen 330 primære bannerknapper, og en port der kun dømmer 29 sider
+    ville have været grøn hele vejen.
+    """
+    rod = (site or SITE).resolve()
+    fund: list[str] = []
+    for fil in sorted(rod.rglob("*.html")):
+        kilde = fil.relative_to(rod.parent)
+        for p in banner_fund(fil.read_text(encoding="utf-8", errors="replace")):
+            fund.append(f"{kilde}: {p}")
+    return fund
+
+
+def demotér() -> int:
+    """Sæt `btn-primary` → `btn-secondary` i hvert banner, og fortæl hvor mange."""
+    rørte = 0
+    for fil in sorted(SITE.rglob("*.html")):
+        src = fil.read_text(encoding="utf-8", errors="replace")
+        dst = demotér_bannere(src)
+        if dst == src:
+            continue
+        fil.write_text(dst, encoding="utf-8")
+        rørte += 1
+    print(f"first-action: demoterede bannerne på {rørte} sider")
+    return 0
 
 
 def dom() -> tuple[list[str], dict[str, list[str]]]:
@@ -177,11 +252,43 @@ def self_test() -> int:
                   '<section><h2>Brødtekst</h2></section>')
     fund = fejl_for(med_banner, "/tool")
     tjek("banner over folden tæller med", any("2 btn-primary" in f for f in fund), str(fund))
-    # 4. Samme banner *nede* i artiklen er ikke over folden og må ikke gøre rød.
+    # 3b. Samme banner som *sekundær* er grøn, og bannerreglen skal kun se
+    #     klassen: destination, `data-track` og rækkefølge er ikke hendes.
+    banner_sekundær = med_banner.replace('class="btn-primary">Scanner',
+                                         'class="btn-secondary">Scanner')
+    fund = fejl_for(banner_sekundær, "/tool")
+    tjek("banner som sekundær er grøn",
+         not fund and not banner_fund(banner_sekundær), str(fund))
+    # 3c. Bannerreglen gælder hele siden, ikke kun folden. En banner der er
+    #     flyttet ned i artiklen skal stadig ikke råbe højest — ellers ville
+    #     svaret på ❓ «skal banneren ligge over folden» være «ja, gør som
+    #     porten siger», og så lå fixet i porten.
+    nede_primær = (hero.format(a="/tool") + "<section><h2>Brødtekst</h2></section>"
+                   '<div class="blog-tool-cta"><span class="btc-label">Tjek en side:</span>'
+                   ' <a href="/scan" class="btn-primary">Scanner</a></div>')
+    tjek("banner nede i artiklen er også rød",
+         any("banneret er en promo" in f for f in banner_fund(nede_primær)),
+         str(banner_fund(nede_primær)))
+    # 3d. `demotér_bannere` skal fjerne fundet og intet andet: samme href,
+    #     samme `data-track`, samme rækkefølge, og knappen *uden* banner
+    #     må blive primær igen.
+    ai_banner = ('<div class="blog-tool-cta ai-cta">'
+                 '<a href="/compliance-ai" class="btn-primary ai-cta-link" '
+                 'data-track="ai-cta">Se hvad vi udgiver gratis →</a></div>')
+    demoteret = demotér_bannere(ai_banner)
+    tjek("demoteringen rammer bannerens klasse og ikke mere",
+         demoteret == ai_banner.replace('class="btn-primary',
+                                        'class="btn-secondary')
+         and not banner_fund(demoteret), demoteret)
+    tjek("demoteringen rører ikke knapper uden for banner",
+         demotér_bannere(hero.format(a="/tool")) == hero.format(a="/tool"))
+    # 4. Samme banner *nede* i artiklen er ikke over folden og tæller ikke med i
+    #    foldens tæller. (Den skal dog stadig være sekundær — det er kontrol 3c.)
     nede = (hero.format(a="/tool") + "<section><h2>Brødtekst</h2></section>"
             '<div class="blog-tool-cta"><span class="btc-label">Tjek en side:</span>'
-            ' <a href="/scan" class="btn-primary">Scanner</a></div>')
-    tjek("banner under artiklen er grøn", not fejl_for(nede, "/tool"))
+            ' <a href="/scan" class="btn-secondary">Scanner</a></div>')
+    tjek("banner under artiklen er grøn", not fejl_for(nede, "/tool"),
+         str(fejl_for(nede, "/tool")))
     # 5. En ombytning af destinationerne skal være rød, også når der stadig
     #    er én primær handling — det er den fejl ratchet-per-rute ikke så.
     permutation = hero.format(a="/scan")
@@ -207,8 +314,10 @@ def self_test() -> int:
          all(k.startswith("site/") and (ROOT / k).exists() for k in dømt),
          str(sorted(dømt)))
     # 8. Målingen på den virkelige `site/` skal være grøn, ellers er 1-7 grønne
-    #    fordi porten intet ser.
+    #    fordi porten intet ser. Bannerreglen dømmer alle 187 artikler, så den
+    #    skal med her — ellers ville porten være grøn på dem alle.
     fund, _ = dom()
+    fund += dom_bannere()
     tjek("målingen på site/ er grøn", not fund, "; ".join(fund[:3]))
     # 9. Mutation mod de RIGTIGTE filer: bannerne flyttes op under `</header>`
     #    igen og demoteres, altså præcis den fejlform de otte artikler havde.
@@ -225,7 +334,7 @@ def self_test() -> int:
             json.dumps(dømt, ensure_ascii=False), encoding="utf-8")
         tjek("de rigtige filer er grønne i et rent udtræk", dom_med_rod(rod)[0] == [])
 
-        muteret = 0
+        muteret: list[str] = []
         for kilde in dømt:
             fil = rod / kilde
             src = fil.read_text(encoding="utf-8")
@@ -235,11 +344,14 @@ def self_test() -> int:
             hoved, rest = src.split("</header>", 1)
             oppe = "".join(b.replace("btn-secondary", "btn-primary") for b in banners)
             fil.write_text(hoved + "</header>\n" + oppe + rest, encoding="utf-8")
-            muteret += 1
+            muteret.append(kilde)
         fejl_mut, _ = dom_med_rod(rod)
-        tjek(f"bannerne oppe igen er rødt på alle {muteret} sider",
-             muteret > 0 and len(fejl_mut) == muteret,
-             f"{muteret} muteret, {len(fejl_mut)} fund: {'; '.join(fejl_mut[:2])}")
+        mangler = [k for k in muteret
+                   if not any(f.startswith(k + ":") for f in fejl_mut)]
+        tjek(f"bannerne oppe igen er rødt på alle {len(muteret)} sider",
+             muteret and not mangler,
+             f"{len(muteret)} muteret, mangler: {mangler[:2]}, "
+             f"fund: {'; '.join(fejl_mut[:2])}")
     # 10. Mutation: en syntetisk `site/` med den fundne fejlform skal være rød,
     #     også når porten kører fra en anden rod.
     with tempfile.TemporaryDirectory() as tmp:
@@ -253,6 +365,43 @@ def self_test() -> int:
         tjek("syntetisk side er rød", bool(fejl_her), str(fejl_her))
         (rod / "site" / "test.html").write_text(hero.format(a="/tool"), encoding="utf-8")
         tjek("rettet syntetisk side er grøn", dom_med_rod(rod)[0] == [])
+
+    # 11. Bannerreglen skal dømme de 187 artikler, ikke kun de 29 ratchetede. Derfor
+    #     skal den være målt på et *rigtigt* udtræk af `site/` med én banner skudt
+    #     tilbage til `btn-primary` — den mutation de tre generatorer gjorde 330
+    #     gange, og som porten skal kunne se.
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = Path(tmp) / "site"
+        rod.mkdir(parents=True)
+        med_banner = 0
+        for fil in sorted(SITE.rglob("*.html")):
+            src = fil.read_text(encoding="utf-8", errors="replace")
+            if not BANNER_RE.search(src):
+                continue
+            dst = rod / fil.relative_to(SITE)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(src, encoding="utf-8")
+            med_banner += 1
+        tjek(f"udtrækket af de {med_banner} articlesider er grønt",
+             med_banner > 100 and not dom_bannere(rod),
+             f"{med_banner} filer, {len(dom_bannere(rod))} fund")
+        # Mutation: skyd den første bannerknap i udtrækket op til primær igen.
+        mål = None
+        for fil in sorted(rod.rglob("*.html")):
+            src = fil.read_text(encoding="utf-8")
+            banner = BANNER_RE.search(src)
+            if banner and "btn-secondary" in banner.group(0):
+                mål = fil
+                src = src.replace(banner.group(0),
+                                  banner.group(0).replace("btn-secondary", "btn-primary", 1),
+                                  1)
+                fil.write_text(src, encoding="utf-8")
+                break
+        fund_her = dom_bannere(rod)
+        tjek("én primær banner i et rent udtræk er rød",
+             mål is not None and len(fund_her) == 1
+             and str(mål.relative_to(rod)) in fund_her[0] and "promo" in fund_her[0],
+             f"mål={mål}, fund={fund_her[:2]}")
 
     for linje in fejl:
         print(f"  FEJL  {linje}")
@@ -281,10 +430,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="vis hvad der er dømt, og hvorfor det er rødt")
     parser.add_argument("--self-test", action="store_true",
                         help="kør portens egen kontrol af sig selv")
+    parser.add_argument("--apply", action="store_true",
+                        help="demotér bannerne i `site/` (btn-primary → btn-secondary)")
     args = parser.parse_args(argv)
     if args.self_test:
         return self_test()
+    if args.apply:
+        return demotér()
     fund, detaljer = dom()
+    fund += dom_bannere()
     med_hero, flere, nul = maalt_uden_domslutning()
     if args.list:
         for kilde, forventet in sorted(ratchet().items()):
@@ -297,9 +451,13 @@ def main(argv: list[str] | None = None) -> int:
     for linje in fund:
         print(linje)
     dømt = len(ratchet())
-    print(f"\nfirst-action: {dømt} sider dømt, {len(fund)} problemer")
-    print(f"  kun talt, ikke dømt: {flere} af {med_hero} sider med en hero har "
-          f"mere end én btn-primary over folden ({nul} har nul)")
+    banner_filer = sum(1 for fil in SITE.rglob("*.html")
+                       if BANNER_RE.search(fil.read_text(encoding="utf-8", errors="replace")))
+    print(f"\nfirst-action: {dømt} sider ratchetede + {banner_filer} sider med "
+          f"banner dømt, {len(fund)} problemer")
+    if flere or nul:
+        print(f"  kun talt, ikke dømt: {flere} af {med_hero} sider med en hero har "
+              f"mere end én btn-primary over folden ({nul} har nul)")
     if fund:
         print("\nfirst-action: RØD")
         return 1

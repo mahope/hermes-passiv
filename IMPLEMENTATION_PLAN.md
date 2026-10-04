@@ -1,21 +1,19 @@
 # STATUS
-- **De 11 sider uden én handling over folden er nu 6.** `check_first_action.py`
-  skrev dem begge veje: **11** sider med nul `btn-primary` → **6**. De **fem**
-  her er dem, hvor folden er hele sidens løfte: `/free-tools` (EN+DA — står i
-  **alle 270** byggede footers), `/blog/` + `/da/blog/` (**93 + 96** guider) og
-  `/free-downloads`. Mutation målt: `hero-cta` fjernet fra `free-tools.html` →
-  **RØD** med præcis «ingen btn-primary i foldregionen».
-- **Blog-indeksets anker er udledt, ikke skrevet.** `make_blog_index.py`s nye
-  `foerste_anker()` tager den første kategori *der har artikler* og danner `id`
-  med **samme** regex som `sektion()` — så en omrokering kan ikke efterlade en
-  knap på en død `#`. Ratchet: EN `#accessibility-eaa`, DA `#tilg-ngelighed-eaa`,
-  begge på **1** `id`. Selftest **23/23** + **14/14**; negativ kontrol med
-  dommen fjernet gør **3** hhv. **1** kontrol rød.
-- **Et dødt `#`-anker var grønt i porten** — ratchetets formkontrol så at
-  handlingen var den samme som sidste gang, ikke at `#værktøjet` stadig fantes.
-  Dømt nu i alle **29** ratchetede sider + begge indekssider.
-- **Playwright 390/1280:** de **5** nye knapper ligger i folden på alle **5**
-  sider, **0** px vandret scroll. Fuld gate: **159 steps grøn**.
+- **171 sider med to-tre knapper over folden er nu 0.** `check_first_action.py`
+  målte dem sig selv, og de tre generatorer — `add_top_cta_495.py`,
+  `add_ai_cta.py`, `add_hero_cta.py` — skrev hver især en `btn-primary` ind i
+  CTA-bannerne: **330** knapper på **187** artikler. Porten har nu et dom for
+  **alle 189** sider med et banner, ikke kun de 29 ratchetede, så en ny artikel
+  arver reglen uden at nogen skal huske den ind. Porten var **RØD med 330 fund**
+  på den uændrede kode.
+- **Bannerne ligger stadig.** De taler bare kun en gang, som det sekundære de
+  er — forenligt med alle tre svar i ❓, så Mads' beslutning er ikke brugt op.
+  Bygget `dist/`: `btn-primary` i banner **315 → 0**.
+- **Fem artikler havde ingen egen handling** — banneren var deres eneste
+  primære. De har nu `#content`/`#indhold` som `hero-cta` (185 søskendesiders
+  mønster, `id` på artiklens første sektion) og er ratchetede. Sider med nul
+  primær: **6 → 11 → 6**. Playwright 390 + 1280 på de fem: **0 px** scroll.
+  Selftest **20/20**, fuld gate **159 steps grøn**.
 - **De 6 tilbage er målt, ikke gættet:** `compliance-ai` ×2 (noindex,
   assistanten er slukket — se ❓), `books/compliance-bundle` (`btn-free` lige
   under folden), `downloads` (`pip install` er første `<section>` lige under),
@@ -25,13 +23,23 @@
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: /pricing i footeren på alle 270 byggede sider ceo/pricing-i-footer 4/10 07:55` —
-mål på **indhold**, ikke HTTP 200: hent `https://mahope.tools/` og
-`https://mahope.tools/da/` og tæl i `<footer class="site-footer">`. Kriteriet er
-**1** link til `/pricing` (EN) hhv. `/da/pricing` (DA), præcis som
-`tools/check_pricing_page.py` dom 6 dømmer lokalt. Tjek også en DA-side i
-roden, fx `/text-on-image-checker-da`, for den har dansk footer. Deploy sker
-ved push til `main` for dette repo (ikke batch).
+`DEPLOY OK 4/10` for `ceo/pricing-i-footer` — målt på **indhold** 09:2x:
+`https://mahope.tools/` har **23** links i `<footer class="site-footer">` og
+præcis **1** `/pricing`; `https://mahope.tools/da/` har **23** og præcis **1**
+`/da/pricing`. Det er dom 6 i `tools/check_pricing_page.py`, som allerede læste
+samme adresse i den byggede footer. HTTP 200 blev ikke brugt som bevis.
+
+`VERIFICÉR DEPLOY: bannerne på alle 189 artikler er sekundære, og de fem
+artikler uden egen handling har fået en ceo/banner-secondary 4/10 09:5x` — mål
+på **indhold**, ikke HTTP 200: hent `https://mahope.tools/blog/developer-text-tools`,
+`/blog/free-website-compliance-checker`, `/blog/site-health-github-actions`,
+`/da/blog/gratis-compliance-tjek-hjemmeside` og
+`/da/blog/site-health-github-actions-stak`. Kriteriet er: **1** `btn-primary` i
+`<header class="hero">` pr. side (`Start Reading` ×3, `Læs guiden` ×2), **0**
+`btn-primary` i hvert `<div class="blog-tool-cta">`, og **1** matchende `id`
+(`content`/`indhold`) på hver side. Tæll også `dist/mahope.tools/blog/*.html`:
+summen af `btn-primary` i bannerne skal være **0**. Deploy sker ved push til
+`main`.
 
 `VERIFICÉR DEPLOY: /free-tools, /blog/ og /da/blog/ får én handling over folden
 ceo/hub-fold-handling 4/10 08:40` — mål på **indhold**: hent `/free-tools`,
@@ -96,14 +104,15 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
    domænets egen forside ligger stadig i `UNMANAGED_DOMAINS`. Accept: domænet på
    Pages og fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`.
    *(Beslutning — se ❓.)*
-5. **171 sider har to-tre knapper over folden.** Hvorfor:
-   `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren ind
-   under `</header>`. **2/10 er de 10 mest besøgte rettet** (3 → 1 `btn-primary` i
-   folden, ratchet 4 → 12 dømte sider), så 172 står tilbage. **4/10 er de otte
-   værktøjssider og de fem hubs rettet**, så sidelisten er nu 171 med for mange
-   og **6** med ingen (de 6 er målt én for én i STATUS). Accept: bannerne er
-   flyttet ned i artiklen på de mest besøgte sider, eller slettet fra hele
-   bloggen. Kræver beslutning — se ❓.
+5. ~~**171 sider har to-tre knapper over folden.**~~ **Færdig 4/10**,
+    `ceo/banner-secondary`. `add_top_cta_495.py`, `add_ai_cta.py` og
+    `add_hero_cta.py` skrev hver især en `btn-primary` ind i CTA-bannerne —
+    **330** knapper på **187** artikler. Nu er de `btn-secondary`, alle tre
+    generatorer er rettet i samme diff, og `check_first_action.py` dømmer
+    bannerreglen på **alle 189** sider med banner. Målt **171 → 0**. Fem
+    artikler der kun *havde* banneren som handling har fået deres egen. ❓ om
+    bannerens placering står uændret — reglen er skrevet, så den er forenlig
+    med alle tre svar.
 6. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor: de
    seks bøger er på engelsk. Målt 2/10: der findes **ingen** `/da/books/*`-ruter,
    så bogsiders hreflang har intet dansk par. Accept: enten en DA-udgave af de to
@@ -215,90 +224,38 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
 
 ## Feature-kø
 
-Prioriteret efter hvor tæt den er på penge. Baseline for hvert tal er målt på den
-**byggede** side; tallene er ikke vores egen trafik. Punkt 1–4 er leveret og står
-i `docs/plan-arkiv.md`.
+Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **byggede**
+side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
+`docs/plan-arkiv.md`.
 
-1. ~~**En port, der dømmer farvekoden.**~~ Leveret 3/10 — `d051da8`.
-2. ~~**Mål bruterens egen tekst, ikke kun billedets.**~~ Leveret 3/10 — `d4d0266`.
-3. ~~**Vis hvor på billedet fejlen sidder.**~~ Leveret 3/10 — `0f9dd27`.
-4. ~~**Et gratis værktøj mere på en side der sælger.**~~ Leveret 3/10 i to
-   commits: `b8ca1ba` lagde gradientruten på de to værktøjssider, denne
-   iteration lagde den i **artiklerne**. Ikke en ny side: `/contrast-checker`
-   tager allerede to flade farver, så en «mørk baggrund»-side ville været en tynd
-   dublet. Den reelle revne lå mellem flade farver og foto — en `linear-gradient`,
-   som man ikke kan uploade.
-5. ~~**Artiklen der 44 % af besøgene lander på, sender ingen hjem.**~~ **Leveret
-   3/10, men en anden fejl end den antaget.** Premissen holdt ikke: foldens
-   primære handling har været `#try-it` siden 2/10, kernen måler sit
-   eksempelbillede ved sidevisning (`b96b6bc`), og `#report` har købsknappen.
-   Den **målebare** fejl var en anden: på en telefon kunne læseren ikke flytte
-   teksten, kun trykke. Baseline: 0 af 6 `touchmove` flyttede noget. Nu: træk på
-   vandret finger flytter den med fingeren — målt i Chromium 153 ved 390 px på
-   begge sider. Bounce 100 % på én side kan ikke bruges som dom: én sidevisning
-   er også en *fuldført* tekstplacering, og det kan vi ikke måle.
-6. ~~**cleancopy.tools' forside er 7 af 9 besøgende, og de går igen.**~~ **Leveret
-   4/10.** Hvem: de 7 på `/` (78 % bounce, 124 s). Tal: hvor mange har trykket
-   værktøjet på forsiden. Accept: browseren viser én primær handling over folden på
-   390 px, og `check_first_action`-porten får forsiden i ratchetfilen med den
-   destination. Datagrund: 78 % af sitets besøg er på den ene side, og de er ikke
-   dem der bruger værktøjet — de læser kun forsiden. **Målt:** foldens primære var
-   `#install` **3 155 px** nede, `#check` lå **715 px** nede, og den sekundære
-   «Try it in the browser» pegede *ud* på `/clean-copy-tool`. Nu peger primære på
-   `#check`; ratchetet, og porten er rød på den gamle kode. Baseline: 9 besøgende,
-   7 på forsiden, 78 % bounce — bounce på **én** side kan ikke bruges som dom,
-   fordi én sidevisning også er en fuldført konvertering.
-
-7. ~~**`passiv-mcp` klones 10 × mere end den ses.**~~ **Leveret 4/10.** Hvem:
-   de 21 der klonaede den i 14 dage plus enhver agent der leder efter en gratis
-   rute. Tal: om en kloning kan finde de fire API'er den kalder. Accept: en side
-   på mahope.tools der finder alle fire med rute, metode og svarfelter — og som
-   står i llms.txt, fordi det er den fil en agent faktisk læser. Datagrund: det
-   er det mest klonede repo i familien (21 kloninger, 2 visninger, 0 stjerner).
-   **Målt:** før stod `/mcp` kun på cleancopy.tools og 404'ede på mahope.tools;
-   nu er `/developers` på mahope.tools med alle fire ruter, og porten
-   `check_developers_page` er rød hvis nogen af dem forsvinder, ændrer metode
-   eller får et sendt felt der ikke læses. Samtidig rettet de tre løgnede
-   påstande siden startede med (se STATUS).
-
-8. ~~**Giv de otte værktøjssider én handling over folden.**~~ **Leveret 4/10.**
-   Hvem: læseren der lander på `/text-on-image-checker` (2 besøgende, 28 d),
-   `/color-blindness-simulator` (1), `/contrast-checker` og `/palette-generator` —
-   fire værktøjer på to sprog. Tal: hvor mange der går fra folden til værktøjet.
-   Accept: én `btn-primary` i folden pr. side, ratchetede destinationer, porten rød
-   på den gamle kode. Datagrund: `/text-on-image-checker` er destinationen for
-   `/blog/text-on-image-contrast-check`, der alene er 8 af 21 besøgende på
-   mahope.tools — de otte var de eneste værktøjssider hvor folden ikke kunne
-   starte værktøjet. **Målt:** `check_first_action.py` tællede 19 sider med nul
-   `btn-primary` i folden; nu er der **11**, og de otte er grønne mod ratcheten.
-   Mutation målt: `git stash` på `site/` → 8 fund med præcis
-   `ingen btn-primary i foldregionen`. **Bemærk:** de otte byggede DA-ruter hedder
-   `/palette-generator-da` osv., ikke `/da/palette-generator` — målt i
-   `dist/mahope.tools/sitemap.xml`, ikke antaget.
-
-10. ~~**Giv de fem hubs én handling over folden.**~~ **Leveret 4/10.** Hvem:
-    enhver der lander på `/free-tools` (EN+DA — linket står i alle 270
-    footere), `/blog/` (93 + 96 guider) eller `/free-downloads`. Tal: hvor mange
-    læser folden og går videre til en værktøjguide, en guide eller en fil.
-    Accept: én `btn-primary` i folden pr. side med ratchetede destinationer,
-    porten rød på den gamle kode. Datagrund: `/free-tools` er det mest
-    linkede siden i familien, og de 11 sider med nul `btn-primary` var de
-    eneste hvor læseren ikke kunne starte noget. **Målt:** nul-siden faldt
-    11 → 6, mutation rød med «ingen btn-primary i foldregionen», ankerne er
-    udledt af kategorierne (ikke håndskrevet), 0 px scroll ved 390/1280.
-
-11. **De 171 sider med for mange `btn-primary` mangler en dom.** Hvorfor:
-    `check_first_action.py` siger det selv i hver kørsel: «kun talt, ikke
-    dømt». Uden en dom kan de ikke rådne ned, og de er den største gruppe.
-    Accept: porten dømmer *den mest besøgte* af dem (Plausible 28 d, ikke
-    Cloudflare — den tæller bots), så arbejdet bliver gradvist i stedet for
-    171 små rettelser på én gang. Kræver beslutning om banneren — se ❓.
-
-9. ~~**Gør prislisten findbar fra alle 270 sider.**~~ **Leveret 4/10.**
-   Hvem: enhver der bruger et gratis værktøj og så vil vide hvad Pro koster.
-   Tal: hvor mange der går fra et værktøj til `/pricing`. Accept: linket i hver
-   bygget footer på sit eget sprog, og en dom der dømmer det. Datagrund: den
-   eneste side med alle **12** priser lå i sitemap og **0** af **270** footere,
-   så spørgsmålet «hvad koster Pro?» havde intet svar at finde. **Målt:** grøn på
-   ny kode, **270** fund på gammel kode, selftest **13/13**; `site/track.js`s
-   `CTA_PATHS` indeholdt allerede `pricing`, så klikket kan tælles uden ny kode.
+1. **De 6 sider med nul handling over folden.** Hvem: læseren på
+   `books/index`, `books/compliance-bundle`, `downloads` og `url-inspector` —
+   de fire er målt enkeltvis i STATUS, og deres primære ligger 2 px under
+   folden eller i et kort. Tal: hvor mange læser folden og går videre.
+   Accept: ratchetede `hero-cta` på de fire + selftest rød på den gamle kode.
+   Datagrund: `/downloads` og `/books/*` er de eneste sider i familien hvor
+   læseren skal *finde* filen i stedet for at trykke på den.
+2. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
+   Hvem: de 8 på `/blog/text-on-image-contrast-check` (100 % bounce, 28 d).
+   Tal: hvor mange går fra artiklen til `/text-on-image-checker` og videre til
+   et køb. Accept: ét købslink i artiklen derhen, dømt af `check_stripe_ctas`.
+   Datagrund: den er destinationen for 8 af 21 besøgende på mahope.tools, og
+   `/pricing` ligger nu i footeren på alle 270 sider — vejen findes, men der er
+   ingen grund til at gå den.
+3. **`cleancopy.tools` er 11 af 13 besøgende på én side.** Hvem: de 11 på `/`
+   (73 % bounce, 86 s). Tal: hvor mange bruger selve værktøjet i stedet for at
+   læse om det. Accept: en ærlig forskel gratis/Pro i folden på 390 px.
+   Datagrund: 85 % af sitets besøg er på forsiden, og `/clean-copy-tool` får
+   2. Baseline efter `ceo/forsidens-handling`: forsideens primære peger på
+   `#check`. Bounce på én side kan ikke bruges som dom.
+4. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
+   alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
+   at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
+   besøger der gik med det samme — på den eneste udgivne side der kun er én.
+   Skal måles i browseren før der skrives kode.
+5. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
+   Accept: SDK kun i produktion, `sendDefaultPii: false`,
+   `tracesSampleRate` 0.1, ingen Replay, ingen auth-token, porten rød hvis
+   nogen af det mangler. Datagrund: snapshottet siger «ingen uløste fejl», og
+   det kan også betyde at intet sendes — det er målt ved at søge efter
+   `Sentry.init`.

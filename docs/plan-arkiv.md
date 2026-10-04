@@ -7311,3 +7311,50 @@ index` (bundle-kortet «See all six » under folden) og `url-inspector`
 (`.input-section` med `#url-input` ligger 2 px under folden — læseren kan
 allerede skrive en URL). Ingen af dem fik en knap, fordi de ikke har et problem
 at løse; de fik en begrundelse i `tools/first_action.json`.
+
+## Leveret 4/10 — `ceo/banner-secondary`: hver artikel har én handling, og porten dømmer det
+
+- **ITERATION_ID**: `banner-secondary-2026-10-04`
+- **STATE**: Feature-kø punkt 11 leveret. **171 af 225** sider med en hero havde
+  mere end én `btn-primary` over folden — nu **0**. `check_first_action.py` fik
+  et nyt dom, der dømmer alle **189** sider med et `blog-tool-cta`-banner, ikke
+  kun de 29 ratchetede.
+- **Fejlen, målt i de rigtige filer:** `tools/add_top_cta_495.py`,
+  `tools/add_ai_cta.py` og `tools/add_hero_cta.py` skrev hver især en
+  `btn-primary` ind i bannerne. Målt før rettelsen: **330** primære
+  bannerknapper (**154** scanner + **176** AI) på **187** artikler — de tre
+  generatorer skrev dem igen, så en retning i `site/` alene var holdbar til
+  næste kørsel. De tre filer er rettet i samme diff, og en tørkør på et
+  udtræk af `site/` gav **0** fund efter de kørte.
+- **Rettelsen er ikke «fjern banneren».** Bannerne bliver liggende; de taler
+  bare kun en gang, som det sekundære de er. Det er forenligt med alle tre
+  svar i ❓ (flyt ned / slette / beholde), så beslutningen er ikke brugt op.
+- **Porten dømmer hele siden, ikke kun folden:** `banner_fund()` gør rød på
+  en `btn-primary` i et banner nede i artiklen også. Ellers ville svaret på ❓
+  være «ja, gør som porten siger», og fixet lå i porten.
+- **Fem artikler havde *ingen* egen handling** — banneren var deres eneste
+  primære. De fik `#content` / `#indhold` som `hero-cta` (185 søskendesiders
+  mønster, `id` på artiklens første sektion) og står nu i ratchetfilen:
+  `developer-text-tools`, `free-website-compliance-checker`,
+  `site-health-github-actions` + de to DA. Uden dem ville «demotér bannerne»
+  have gjort fem artikler dødfødt.
+- **MÅLING (før → efter)**: sider med >1 primær over folden **171 → 0**.
+  Sider med nul primær **6 → 11 → 6** (de 5 nyopdagede fik en handling).
+  Bannerknapper `btn-primary` i bygget `dist/` **315 → 0**.
+  Selftest **20/20** (nye: bannerreglen gælder nede i artiklen, `demotér_bannere`
+  rører kun bannerens klasse, mutation på et rigtigt udtræk af de 187).
+  Porten var **RØD med 330 fund** på den uændrede kode — målt før `--apply`.
+  Playwright 390 + 1280 på de fem: **0 px** vandret scroll, og skærmbilledet
+  viser præcis én fyldt primær knap og to konturerede.
+- **En landmine fundet undervejs:** `add_top_cta_495.py` havde AI-bannerens
+  tekst hardkodet til «practical answer in seconds» + 🤖 — to af de fire
+  `forbidden_while_off`-strenge i `tools/ai_cta.json`. Havde nogen kørt den,
+  havde 187 artikler lovet en assistent der er slukket. Begge generatorer læser
+  nu teksten fra manifestet, så de ikke kan glide fra ærlighedsporten.
+- **NEXT_TASK**: (1) ❓ uændret: `OPENROUTER_API_KEY` slår assistenten til, og
+  så sættes `"available": true` + `check_ai_cta_honesty.py --apply`.
+  (2) ❓ uændret: `STATS_TOKEN`. (3) De 6 med nul primær er målt én for én i
+  planens STATUS; `books/compliance-bundle`, `downloads`, `books/index` og
+  `url-inspector` er løsbare uden beslutning. (4) `check_inline_js` og
+  `check_first_action` dømmer begge klassen nu, så en ny artikel arver reglen
+  uden at nogen skal huske at føje den ind.

@@ -1,26 +1,59 @@
+"""Sæt scanner- og AI-banneren over folden på blogartikler.
 
-import re, glob
+Målt 4/10: bannerne er *sekundære*. `tools/add_top_cta_495.py` (dette script),
+`tools/add_ai_cta.py` og `tools/add_hero_cta.py` skrev alle tre en `btn-primary`
+ind i dem, så 330 bannerknapper på 187 artikler råbte lige så højt som sidens
+egen handling — og tre generatorer skrev det igen, så en retning i `site/` alene
+var holdbar til næste kørsel. `tools/check_first_action.py` dommer nu «en banner
+er aldrig primær» på alle 189 sider med banner, så klassen her skal være
+`btn-secondary` eller porten går rød med det samme.
 
-EN_CTA = ('<div class="blog-tool-cta"><span class="btc-label">Check any page for GDPR &amp; cookie issues:</span>'
-          ' <a href="/scan" class="btn-primary">Run the Free Scanner \u2192</a></div>\n'
-          '<div class="blog-tool-cta ai-cta"><span class="btc-label">Ask any EU compliance question \u2014 EAA, NIS2 or GDPR \u2014 and get a practical answer in seconds:</span>'
-          ' <a href="/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">\U0001F916 Ask the Compliance AI \u2192</a></div>\n')
-DA_CTA = ('<div class="blog-tool-cta"><span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span>'
-          ' <a href="/scan-da" class="btn-primary">Pr\u00f8v den gratis scanner \u2192</a></div>\n'
-          '<div class="blog-tool-cta ai-cta"><span class="btc-label">Stil et sp\u00f8rgsm\u00e5l om EU-compliance \u2014 EAA, NIS2 eller GDPR \u2014 og f\u00e5 et praktisk svar p\u00e5 f\u00e5 sekunder:</span>'
-          ' <a href="/da/compliance-ai" class="btn-primary ai-cta-link" data-track="ai-cta">\U0001F916 Sp\u00f8rg Compliance-AI\u2019en \u2192</a></div>\n')
+AI-bannerens tekst læses fra `tools/ai_cta.json`, fordi den skal være den
+**ærlige** variant mens assistenten er slukket (`available: false`): en generator
+med sit eget «practical answer in seconds» ville skrive et løfte, 187 artikler
+ikke kan holde, og `check_ai_cta_honesty.py` ville fange det bagefter.
+"""
+import glob
+import json
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SANDHED = json.loads((ROOT / "tools" / "ai_cta.json").read_text(encoding="utf-8"))
+
+SCANNER = {
+    "en": ('<div class="blog-tool-cta"><span class="btc-label">Check any page '
+           'for GDPR &amp; cookie issues:</span>'
+           ' <a href="/scan" class="btn-secondary">Run the Free Scanner →</a></div>\n'),
+    "da": ('<div class="blog-tool-cta"><span class="btc-label">Tjek enhver side '
+           'for GDPR- og cookie-problemer:</span>'
+           ' <a href="/scan-da" class="btn-secondary">Prøv den gratis scanner →</a></div>\n'),
+}
+
+
+def ai_banner(lang: str) -> str:
+    tekst = SANDHED["off" if not SANDHED["available"] else "on"][lang]
+    return ('<div class="blog-tool-cta ai-cta">'
+            f'<span class="btc-label">{tekst["label"]}</span>'
+            f' <a href="{SANDHED["target"][lang]}" class="btn-secondary ai-cta-link" '
+            f'data-track="ai-cta">{tekst["button"]}</a></div>\n')
+
+
+def cta_for(lang: str) -> str:
+    return SCANNER[lang] + ai_banner(lang)
+
 
 changed = 0
-for path in glob.glob('site/blog/*.html') + glob.glob('site/da/blog/*.html'):
-    src = open(path, encoding='utf-8').read()
-    if 'blog-tool-cta' in src or '/header' not in src:
+for path in sorted(glob.glob("site/blog/*.html") + glob.glob("site/da/blog/*.html")):
+    src = open(path, encoding="utf-8").read()
+    if "blog-tool-cta" in src or "/header" not in src:
         continue
-    cta = DA_CTA if '/da/' in path else EN_CTA
-    new = src.replace('</header>\n', '</header>\n' + cta, 1)
+    cta = cta_for("da" if "/da/" in path else "en")
+    new = src.replace("</header>\n", "</header>\n" + cta, 1)
     if new == src:
         # try without trailing newline strictness
-        new = re.sub(r'</header>\s*\n', lambda m: m.group(0) + cta, src, count=1)
+        new = re.sub(r"</header>\s*\n", lambda m: m.group(0) + cta, src, count=1)
     if new != src:
-        open(path, 'w', encoding='utf-8').write(new)
+        open(path, "w", encoding="utf-8").write(new)
         changed += 1
-print('files updated:', changed)
+print("files updated:", changed)

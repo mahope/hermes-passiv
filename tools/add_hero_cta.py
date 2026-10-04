@@ -19,14 +19,14 @@ SITE = ROOT / "site"
 CTA = (
     '<div class="blog-tool-cta">'
     '<span class="btc-label">Check any page for GDPR &amp; cookie issues:</span> '
-    '<a href="/scan" class="btn-primary">Run the Free Scanner →</a>'
+    '<a href="/scan" class="btn-secondary">Run the Free Scanner →</a>'
     "</div>"
 )
 
 DA_CTA = (
     '<div class="blog-tool-cta">'
     '<span class="btc-label">Tjek enhver side for GDPR- og cookie-problemer:</span> '
-    '<a href="/scan-da" class="btn-primary">Prøv den gratis scanner →</a>'
+    '<a href="/scan-da" class="btn-secondary">Prøv den gratis scanner →</a>'
     "</div>"
 )
 
@@ -47,7 +47,7 @@ CSS = """
   text-align: center;
 }
 .blog-tool-cta .btc-label { font-size: 0.95rem; color: var(--color-text, #1a202c); }
-.blog-tool-cta .btn-primary { padding: 9px 22px; font-size: 0.92rem; }
+.blog-tool-cta .btn-primary, .blog-tool-cta .btn-secondary { padding: 9px 22px; font-size: 0.92rem; }
 @media (max-width: 480px) {
   .blog-tool-cta { flex-direction: column; gap: 8px; }
 }
