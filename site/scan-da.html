@@ -315,6 +315,10 @@ function render(state,opts){
     '<p class="hint">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
   const box=document.getElementById('shareLink');
   if(box)box.value=location.origin+'/scan-da';
+  // Udfaldet, ikke forsøget. `scan` siger at nogen trykkede Scan; uden denne
+  // vidste vi ikke om de fik et svar, og de 290 indgående links kunne ikke
+  // skelnes fra køb. En delt rapport er ikke et udfald — den er afsenderens.
+  if(!opts.shared&&window.trackEvent)window.trackEvent(state.findings.length?'scan-findings':'scan-clean');
 }
 // Samme vej som før, men uden `alert()`: et 300-tegns link i en modal er
 // umuligt at læse, og hvis klippebordet var lukket kunne linket ikke
@@ -341,7 +345,7 @@ function proCard(){
   var html = '<div class="result-card pro-card">';
   html += '<h3 style="margin:0 0 4px;font-size:16px">Den læste den ene side, du indsatte. Et website er alle sider.</h3>';
   html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Tilgængelighedstjek på den side du indsætter — alt-tekst, mærkater, overskrifter, kontrast</li><li>Sides titel, sprogattribut, viewport og h1 tjekket med</li></ul></td><td><ul><li>Den gennemgår hele sitet — samme tjek på hver side den finder</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <!-- pro-table:end -->';
-  html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a>';
+  html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Køb EUComply Pro — $79/år pr. website</a>';
   html += '<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>';
   html += '</div>';
   return html;
@@ -358,10 +362,8 @@ async function scan(url){
     const data = await r.json();
     if (!data.ok) throw new Error(data.error || 'Proxy returnerede en fejl');
     html = data.html;
-
-    try { fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}
   } catch(e) {
+    if (window.trackEvent) window.trackEvent('scan-failed');
     out.innerHTML = '<p><strong>Scan fejlede.</strong></p>'
       +'<p style="color:#667;font-size:14px">'+esc(e.message)+'</p>'
       +'<p style="font-size:13px;color:#667;margin-top:16px">'

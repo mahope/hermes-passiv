@@ -1865,6 +1865,27 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_sentry_setup.py", "--self-test"),
         inputs=("tools/check_sentry_setup.py", "site/_worker.js"),
     ),
+    # Opgave 20 i `IMPLEMENTATION_PLAN.md`: scanneren på `/scan` er den eneste
+    # vej ind til den dyreste linje i huset (EUComply Pro, $79/år pr. website),
+    # og målingen af den var hverken dobbelt eller færdig. Målt 5/10: `scan()`
+    # sendte `scan` ved starten *og* igen med en rå fetch efter svaret, så én
+    # scanning var to begivenheder, og der var ingen begivenhed ved resultatet
+    # eller ved pro-kortets knap. Nu måles hele tragten — `scan`,
+    # `scan-findings`/`scan-clean`, `scan-failed`, `pro-card-click` — og
+    # porten dømmer begge sprog, fordi en dansk side med sit eget navn deler
+    # tragten i to.
+    Step(
+        id="scan-events",
+        argv=("python3", "tools/check_scan_events.py"),
+        inputs=("tools/check_scan_events.py", "site/scan.html", "site/scan-da.html",
+                "site/_worker.js"),
+    ),
+    Step(
+        id="scan-events-selftest",
+        argv=("python3", "tools/check_scan_events.py", "--self-test"),
+        inputs=("tools/check_scan_events.py", "site/scan.html", "site/scan-da.html",
+                "site/_worker.js"),
+    ),
     # Opgave: AI-banneren lovede et svar, der ikke kunne gives. Målt først:
     # hver AI-banner på bloggen sagde «a practical answer in seconds» og «Spørg
     # Compliance-AI'en», mens `GET /api/compliance-ai` svarede
