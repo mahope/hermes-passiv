@@ -99,6 +99,14 @@ def fejl_for(html: str, forventet: str) -> list[str]:
             fund.append(f"første link er {links[0][0]}, ikke {forventet}")
     elif primære and forventet not in primære:
         fund.append(f"den primære handling er {primære[0]}, ikke {forventet}")
+    # Målet skal også findes. Ratchetets formkontrol siger at handlingen er den
+    # samme som sidste gang; den siger intet om at `#ankeret` stadig findes, og
+    # et anker uden mål er en knap der flytter læseren ingen steder. Kun
+    # `#`-destinationer — en rute (`/free-tools`) kan ikke dømmes her, fordi den
+    # er en fil i `dist/`, ikke i kilden.
+    if forventet.startswith("#") and f'id="{forventet[1:]}"' not in html:
+        fund.append(f"handlingen peger på {forventet}, men siden har ingen "
+                    f'`id="{forventet[1:]}"` — ankeret er dødt')
     return fund
 
 
@@ -179,6 +187,18 @@ def self_test() -> int:
     permutation = hero.format(a="/scan")
     tjek("forkert destination er rød",
          any("/scan" in f and "/tool" in f for f in fejl_for(permutation, "/tool")))
+    # 5b. Handlingen skal pege på et `id`, der findes. Ratchetets formkontrol
+    #     kan ikke se det: `#tool-heading` kan forsvinde fra siden ved en
+    #     omdøbning, og så er knappen stadig grøn hos porten og død for
+    #     læseren. Kun `#`-destinationer dømmes — en rute `/free-tools` er en
+    #     fil i `dist/`, ikke i kilden.
+    med_anker = hero.format(a="#tool-heading")
+    fund = fejl_for(med_anker, "#tool-heading")
+    tjek("dødt anker er rødt", any("ankeret er dødt" in f for f in fund), str(fund))
+    med_mål = med_anker.replace("</header>",
+                                '<h2 id="tool-heading">Værktøjet</h2></header>')
+    tjek("levende anker er grønt", not fejl_for(med_mål, "#tool-heading"),
+         str(fejl_for(med_mål, "#tool-heading")))
     # 6. En side uden hero kan ikke dømmes, og porten skal sige det.
     tjek("manglende hero er rød", bool(fejl_for("<p>ingen hero</p>", "/tool")))
     # 7. Ratchetfilen skal dømme hver kildefil, der står i den, og ingen anden.

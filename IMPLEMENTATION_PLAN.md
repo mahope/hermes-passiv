@@ -1,24 +1,27 @@
 # STATUS
-- **Prislisten lå i sitemap og ingen andre steder.** `/pricing` er den eneste
-  side med alle **12** varers priser og en gratis-mod-betalt-tabel pr. vare.
-  Målt: `href="/pricing"` stod i **1** af **224** kildesider (forsidens egen
-  hub) og i **0** af **270** byggede footere. Nu: **1** link i hver af de **270**.
-- **Ny dom 6 gør det permanent, målt på begge veje.** `check_pricing_page.py`s
-  dom 6 læser de byggede footere. Gammel kode → **RØD, 270 fund**; ny kode →
-  **GRØN**, selftest **13/13** (2 nye mutationer: manglende link, dansk side med
-  engelsk prisliste). Fuld gate: **159 steps grøn**.
-- **Sproget læses af `<html lang>`, ikke af ruten.** **14** af dist's **270**
-  sider er `-da` i **roden** (`/text-on-image-checker-da`), ikke under `/da/`. En
-  rutebaseret `startswith("da/")` krævede den engelske prisliste på 14 danske
-  sider — målt, fund var præcis disse **14**, rettet i samme iteration.
-- **Tallet i fejlteksten er udledt, ikke skrevet.** Katalogen har **13**
-  produkter og **12** står på `/pricing`, så «alle 13 varer» i mit eget første
-  udkast var løgn (tjekliste punkt 11). Porten siger nu `alle 12 varers priser`.
-- **Playwright ER i repoet** — `tools/shots.py` med Chromium **1.63.0**. Seks
-  review-iterationer har kaldt det fraværende. Målt ved **360/390/1280**:
-  `scrollWidth` **390** på en **374** px bred footer = ingen vandret scroll,
-  præcis **1** prislink pr. footer, `Priser` på DA og `Pricing` på EN.
-- **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
+- **De 11 sider uden én handling over folden er nu 6.** `check_first_action.py`
+  skrev dem begge veje: **11** sider med nul `btn-primary` → **6**. De **fem**
+  her er dem, hvor folden er hele sidens løfte: `/free-tools` (EN+DA — står i
+  **alle 270** byggede footers), `/blog/` + `/da/blog/` (**93 + 96** guider) og
+  `/free-downloads`. Mutation målt: `hero-cta` fjernet fra `free-tools.html` →
+  **RØD** med præcis «ingen btn-primary i foldregionen».
+- **Blog-indeksets anker er udledt, ikke skrevet.** `make_blog_index.py`s nye
+  `foerste_anker()` tager den første kategori *der har artikler* og danner `id`
+  med **samme** regex som `sektion()` — så en omrokering kan ikke efterlade en
+  knap på en død `#`. Ratchet: EN `#accessibility-eaa`, DA `#tilg-ngelighed-eaa`,
+  begge på **1** `id`. Selftest **23/23** + **14/14**; negativ kontrol med
+  dommen fjernet gør **3** hhv. **1** kontrol rød.
+- **Et dødt `#`-anker var grønt i porten** — ratchetets formkontrol så at
+  handlingen var den samme som sidste gang, ikke at `#værktøjet` stadig fantes.
+  Dømt nu i alle **29** ratchetede sider + begge indekssider.
+- **Playwright 390/1280:** de **5** nye knapper ligger i folden på alle **5**
+  sider, **0** px vandret scroll. Fuld gate: **159 steps grøn**.
+- **De 6 tilbage er målt, ikke gættet:** `compliance-ai` ×2 (noindex,
+  assistanten er slukket — se ❓), `books/compliance-bundle` (`btn-free` lige
+  under folden), `downloads` (`pip install` er første `<section>` lige under),
+  `books/index` (bundle-kortet under folden), `url-inspector` (`#url-input`
+  ligger 2 px under folden). **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:**
+  ingen remote-grene over 14 dage.
 
 ## Verificér deploy
 
@@ -29,6 +32,13 @@ mål på **indhold**, ikke HTTP 200: hent `https://mahope.tools/` og
 `tools/check_pricing_page.py` dom 6 dømmer lokalt. Tjek også en DA-side i
 roden, fx `/text-on-image-checker-da`, for den har dansk footer. Deploy sker
 ved push til `main` for dette repo (ikke batch).
+
+`VERIFICÉR DEPLOY: /free-tools, /blog/ og /da/blog/ får én handling over folden
+ceo/hub-fold-handling 4/10 08:40` — mål på **indhold**: hent `/free-tools`,
+`/da/free-tools`, `/blog/`, `/da/blog/` og `/free-downloads` og tæl
+`btn-primary` i `<header class="hero">`. Kriteriet er **1** pr. side, og `href`
+skal være `#gdpr-heading` ×2, `#accessibility-eaa`, `#tilg-ngelighed-eaa` og
+`#tpl-heading`. Deploy sker ved push til `main`.
 
 `DEPLOY OK 4/10` for `ceo/vaerktoj-fold` — målt på indhold 07:0x: alle **otte**
 svarer 200 og har præcis **1** `btn-primary` i `<header class="hero">`, hver med
@@ -86,13 +96,14 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
    domænets egen forside ligger stadig i `UNMANAGED_DOMAINS`. Accept: domænet på
    Pages og fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`.
    *(Beslutning — se ❓.)*
-5. **172 sider har to-tre knapper over folden.** Hvorfor:
+5. **171 sider har to-tre knapper over folden.** Hvorfor:
    `add_top_cta_495.py` og `add_ai_cta.py` har skudt scanner- og AI-banneren ind
    under `</header>`. **2/10 er de 10 mest besøgte rettet** (3 → 1 `btn-primary` i
    folden, ratchet 4 → 12 dømte sider), så 172 står tilbage. **4/10 er de otte
-   værktøjssider med *nul* knapper rettet**, så sidelisten er nu 171 med for mange
-   og **11** med ingen. Accept: bannerne er flyttet ned i artiklen på de mest
-   besøgte sider, eller slettet fra hele bloggen. Kræver beslutning — se ❓.
+   værktøjssider og de fem hubs rettet**, så sidelisten er nu 171 med for mange
+   og **6** med ingen (de 6 er målt én for én i STATUS). Accept: bannerne er
+   flyttet ned i artiklen på de mest besøgte sider, eller slettet fra hele
+   bloggen. Kræver beslutning — se ❓.
 6. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor: de
    seks bøger er på engelsk. Målt 2/10: der findes **ingen** `/da/books/*`-ruter,
    så bogsiders hreflang har intet dansk par. Accept: enten en DA-udgave af de to
@@ -264,6 +275,24 @@ i `docs/plan-arkiv.md`.
    `ingen btn-primary i foldregionen`. **Bemærk:** de otte byggede DA-ruter hedder
    `/palette-generator-da` osv., ikke `/da/palette-generator` — målt i
    `dist/mahope.tools/sitemap.xml`, ikke antaget.
+
+10. ~~**Giv de fem hubs én handling over folden.**~~ **Leveret 4/10.** Hvem:
+    enhver der lander på `/free-tools` (EN+DA — linket står i alle 270
+    footere), `/blog/` (93 + 96 guider) eller `/free-downloads`. Tal: hvor mange
+    læser folden og går videre til en værktøjguide, en guide eller en fil.
+    Accept: én `btn-primary` i folden pr. side med ratchetede destinationer,
+    porten rød på den gamle kode. Datagrund: `/free-tools` er det mest
+    linkede siden i familien, og de 11 sider med nul `btn-primary` var de
+    eneste hvor læseren ikke kunne starte noget. **Målt:** nul-siden faldt
+    11 → 6, mutation rød med «ingen btn-primary i foldregionen», ankerne er
+    udledt af kategorierne (ikke håndskrevet), 0 px scroll ved 390/1280.
+
+11. **De 171 sider med for mange `btn-primary` mangler en dom.** Hvorfor:
+    `check_first_action.py` siger det selv i hver kørsel: «kun talt, ikke
+    dømt». Uden en dom kan de ikke rådne ned, og de er den største gruppe.
+    Accept: porten dømmer *den mest besøgte* af dem (Plausible 28 d, ikke
+    Cloudflare — den tæller bots), så arbejdet bliver gradvist i stedet for
+    171 små rettelser på én gang. Kræver beslutning om banneren — se ❓.
 
 9. ~~**Gør prislisten findbar fra alle 270 sider.**~~ **Leveret 4/10.**
    Hvem: enhver der bruger et gratis værktøj og så vil vide hvad Pro koster.

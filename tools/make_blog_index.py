@@ -93,6 +93,21 @@ def categorize(slug):
             return name
     return 'Dev Tools & Guides'
 
+
+def foerste_anker(grupperet, dansk=False):
+    """Ankeret til den første emne-sektion — foldens primære handling.
+
+    Udledt af den første kategori der faktisk har artikler, og med **samme**
+    regex som `sektion()`/`sektion_tal()` bruger til afsnittets `id`. Skrevet i
+    hånden ville den blive en løgn, den dag en kategori omrokeres eller en ny
+    tilføjes foran: knappen ville pege på en `id` der ikke findes, og en død
+    `#-indsats` er værre end ingen knap (punkt 11).
+    """
+    for (navn, _keys), da_navn in zip(CATS, DA_CATS):
+        if grupperet.get(navn):
+            return re.sub(r'[^a-z0-9]+', '-', (da_navn if dansk else navn).lower()).strip('-')
+    return ''
+
 def extract(path):
     s = open(path, encoding='utf-8', errors='ignore').read()
     t = re.search(r'<title>(.*?)</title>', s, re.S)
@@ -154,6 +169,11 @@ def main(argv=None):
     for p in da_posts:
         da_grouped.setdefault(p[3], []).append(p)
 
+    # Foldens primære handling er et anker ned til den første emne-sektion, og
+    # ankeret er *udledt* af den første kategori der har artikler — ikke skrevet
+    # i hånden. `sektion()` danner den afsnittets `tittel`/`name` med samme
+    # regex, så en ny kategori eller en omrokering kan ikke efterlade en knap
+    # der peger på en `id` der ikke findes (punkt 11).
     out = ["""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,10 +198,13 @@ def main(argv=None):
     <div class="badge">BLOG</div>
     <h1>All Guides &amp;<br>Tutorials</h1>
     <p class="subtitle">{n} English guides on EU compliance, accessibility, copy-paste workflows, SEO checks and free developer tools — plus {nda} Danish guides.</p>
+    <div class="hero-cta">
+      <a href="#{foerste}" class="btn-primary">Browse by topic</a>
+    </div>
   </div>
 </header>
 <main class="container" style="max-width:900px;padding-top:32px">
-""".format(base=BASE, n=len(posts), nda=len(da_posts))]
+""".format(base=BASE, n=len(posts), nda=len(da_posts), foerste=foerste_anker(grouped, False))]
 
     def sektion(name, praefiks, items, dansk=False):
         """Én emne-sektion. Samme markering for begge sprog, så en dansk læser
@@ -286,10 +309,13 @@ def dansk_index(da_posts, da_grouped, n_en):
     <div class="badge">GUIDER</div>
     <h1>Alle danske guider</h1>
     <p class="subtitle">{n} guider p&aring; dansk om EU-compliance, tilg&aelig;ngelighed, arbejdsgange med tekst og tabeller, SEO-tjek og udviklerv&aelig;rkt&oslash;j. De {n_en} engelske guider ligger p&aring; <a href="/blog/">den engelske indeksside</a>.</p>
+    <div class="hero-cta">
+      <a href="#{foerste}" class="btn-primary">Browse efter emne</a>
+    </div>
   </div>
 </header>
 <main class="container" style="max-width:900px;padding-top:32px">
-""".format(base=BASE, n=n, n_en=n_en)]
+""".format(base=BASE, n=n, n_en=n_en, foerste=foerste_anker(da_grouped, True))]
 
     def sektion_tal(items, tittel):
         anchor = re.sub(r'[^a-z0-9]+', '-', tittel.lower()).strip('-')

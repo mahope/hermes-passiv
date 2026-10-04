@@ -79,6 +79,35 @@ def guide_slugs(folder: Path) -> list[str]:
     return sorted(p.stem for p in folder.glob("*.html") if p.stem != "index")
 
 
+# Foldens primære handling er et anker ned til den første emne-sektion. Den er
+# *udledt* af kategorierne i `make_blog_index.py` (`foerste_anker`), fordi et
+# håndskrevet `#anker` holder op med at være sandt, den dag en kategori hedder
+# noget andet. Derfor dømmer porten her **målet**: `#`-ankeret skal findes
+# præcis én gang på den side den står på. Uden denne dom ville et dødt anker
+# være grønt — en knap der flytter læseren ingen steder.
+FOLD_CTA_RE = re.compile(
+    r'<div class="hero-cta">\s*<a href="([^"]*)" class="btn-primary">')
+
+
+def fejl_fold_anker(html: str) -> list[str]:
+    fund: list[str] = []
+    fundet = FOLD_CTA_RE.search(html)
+    if fundet is None:
+        return ["  folden har ingen `btn-primary` i `.hero-cta` — læseren skal "
+                "finde listerne selv (`check_first_action.py` dømmer den "
+                "samme mangel på ratchet-siderne)"]
+    href = fundet.group(1)
+    if not href.startswith("#"):
+        fund.append(f"  foldens primære handling er `{href}`, ikke et anker ned "
+                    f"til listerne på siden")
+        return fund
+    antal = len(re.findall(r'id="%s"' % re.escape(href[1:]), html))
+    if antal != 1:
+        fund.append(f"  foldens primære handling peger på `{href}`, som findes "
+                    f"{antal} gange på siden (skal være præcis 1)")
+    return fund
+
+
 def fejl_mod(html: str, en: list[str], da: list[str], hero: bool = True) -> list[str]:
     fund: list[str] = []
     links: dict[str, list[str]] = {}
@@ -117,6 +146,7 @@ def fejl_mod(html: str, en: list[str], da: list[str], hero: bool = True) -> list
         if (n_en, n_da) != (len(en), len(da)):
             fund.append(f"  heroen siger {n_en} engelske og {n_da} danske guides, "
                         f"men `site/` har {len(en)} og {len(da)}")
+    fund.extend(fejl_fold_anker(html))
     return fund
 
 
@@ -146,6 +176,7 @@ def fejl_mod_da(html: str, da: list[str], en: list[str]) -> list[str]:
         if (n_da, n_en) != (len(da), len(en)):
             fund.append(f"  heroen siger {n_da} danske og {n_en} engelske guider, "
                         f"men `site/` har {len(da)} og {len(en)}")
+    fund.extend(fejl_fold_anker(html))
     return fund
 
 
@@ -301,6 +332,30 @@ def self_test() -> int:
                              f'href="/blog/{ny_en}"><!--x--><a href="/blog/{ny_en}"')
     tjek("dobbeltlink er rød",
          any("linkes 2 gange" in f for f in fejl_mod(dobbelt, en, da)))
+
+    # 6b. Foldens primære handling skal pege på en `id` der findes. Et anker
+    #     uden mål er en knap der flytter læseren ingen steder — grøn hos
+    #     `check_first_action` (den dømmer formen, ikke målet), så her skal
+    #     dommen ligge. Dømt på begge sprog, fordi `foerste_anker` kører for
+    #     begge.
+    for label, side, dom_fn in (
+            ("EN", rigtig, lambda h: fejl_mod(h, en, da)),
+            ("DA", DA_INDEX.read_text(encoding="utf-8"),
+             lambda h: fejl_mod_da(h, da, en))):
+        død = re.sub(r'<a href="#[^"]*" class="btn-primary">Browse (by topic|efter emne)',
+                     '<a href="#emne-der-ikke-findes" class="btn-primary">Browse', side)
+        fund_død = dom_fn(død)
+        tjek(f"dødt foldanker i {label} er rødt",
+             any("#emne-der-ikke-findes" in f for f in fund_død),
+             "; ".join(fund_død[:2]))
+        tjek(f"rigtig {label}-side er grøn for foldankeret",
+             not any("foldens primære" in f or "hero-cta" in f for f in dom_fn(side)))
+
+    # 6c. Samme fejlform som 6b, den anden vej: `.hero-cta` fjernet helt.
+    uden_cta = re.sub(r'<div class="hero-cta">\s*<a href="#[^"]*" class="btn-primary">'
+                      r'Browse by topic</a>\s*</div>\n', '', rigtig)
+    tjek("manglende foldhandling i EN er rød",
+         any("hero-cta" in f for f in fejl_mod(uden_cta, en, da)))
 
     # 7. Generatoren skal eje filen: en håndredigering af den rigtige side skal
     #    give rødt, uanset at links og tal stadig er i orden.

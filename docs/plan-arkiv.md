@@ -7270,3 +7270,44 @@ prislink pr. footer, `Priser` på dansk og `Pricing` på engelsk.
 
 **Målebarhed.** `site/track.js`s `CTA_PATHS` indeholdt allerede `pricing`, så
 klik på den nye footer-link tælles som `cta-pricing` uden at røre trackeren.
+
+## Iteration 2026-10-04 03:5x — ceo/hub-fold-handling: de 11 sider uden handling blev 6
+
+**Opgaven.** `check_first_action.py` skrev i hver kørsel: «kun talt, ikke dømt:
+171 af 225 sider med en hero har mere end én btn-primary over folden (11 har
+nul)». De otte farveværktøjer var taget dagen før; de **11** med *nul* lå til.
+
+**De fem her.** `/free-tools` (EN+DA), `/blog/`, `/da/blog/`, `/free-downloads`.
+Valgt fordi folden på dem *er* hele sidens løfte, og fordi `/free-tools` står i
+alle **270** byggede footers — det mest linkede siden i familien.
+
+**Ankeret er udledt.** `make_blog_index.py` ejer begge indekssider, så en
+håndskrevet `#accessibility-eaa` i `site/blog/index.html` ville være dødt
+inden næste generator-kørsel. Ny `foerste_anker(grupperet, dansk)` tager den
+første kategori *der har artikler* og danner `id` med **samme** regex som
+`sektion()`/`sektion_tal()`. Mutation: `foerste_anker` returneret en konstant
+ville give en knap på en `id` der ikke findes — og det er præcis det
+`check_blog_index.py`s nye `fejl_fold_anker()` nu dømmer.
+
+**Et dødt `#`-anker var grønt i porten.** `fejl_for()` sammenlignede `href` med
+ratchetets forventning, men ikke om `#ankeret` stadig fantes på siden. En
+omdøbning af `#tool-heading` ville have efterladt en grøn knap, der flytter
+læseren ingen steder. Dømt nu for alle **29** ratchetede sider (kun
+`#`-destinationer — en rute `/free-tools` er en fil i `dist/`, ikke i kilden).
+
+**Målt.** Nul-siden **11 → 6**; mutation (CTA fjernet fra `free-tools.html`)
+**RØD** med «site/free-tools.html: ingen btn-primary i foldregionen».
+`check_blog_index.py --self-test` **23/23**, `check_first_action.py
+--self-test` **14/14**. Negativ kontrol med dommen fjernet i hukommunden:
+**3** hhv. **1** kontrol bliver røde, så de nye tests kan fejle. Playwright
+`tools/shots.py` ved **390** og **1280** på alle **5** sider: **0** px vandret
+scroll, knappen i folden. Fuld gate **159 steps grøn**.
+
+**De 6 der blev tilbage, målt én for én.** `compliance-ai` ×2 (noindex,
+assistenten er slukket fordi `OPENROUTER_API_KEY` mangler), `books/
+compliance-bundle` (`btn-free` «Download the EPUBs» i `price-area` lige under
+folden), `downloads` (`pip install` er første `<section>` lige under), `books/
+index` (bundle-kortet «See all six » under folden) og `url-inspector`
+(`.input-section` med `#url-input` ligger 2 px under folden — læseren kan
+allerede skrive en URL). Ingen af dem fik en knap, fordi de ikke har et problem
+at løse; de fik en begrundelse i `tools/first_action.json`.
