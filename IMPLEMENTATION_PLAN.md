@@ -227,8 +227,23 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
     Chromium ved **390/1280**: begge knapper i folden, `scrollWidth == viewport`,
     blå #1a73e8 med hvid tekst (**4.51:1**, AA), og `#books`/`#download` findes
     begge **1** gang. `books/index`' knap er **37 px** høj — sidens egen
-    `.btn-primary`-token, som de seks downloadknapper under den også bruger, så
-    den er gjort større forskel uden at skille sig fra dem.
+`.btn-primary`-token, som de seks downloadknapper under den også bruger, så
+     den er gjort større forskel uden at skille sig fra dem.
+16. **Fire lokale grene har 7 uafgivne commits** de skal landes fra.**
+    Hvorfor: revieweren 05/10 01:1x fandt dem ved at læse `refs/heads` — de lå
+    uden for alle tidligere gennemgange, der kun læste `origin/main`. Reviewen
+    har **0 åbne fund** på dem, så de er målt gode og mangler kun en grøn gate.
+    Rækkefølge efter værdi: (1) `ceo/scan-pro-kort` (`f75aa520` + `d2eb8af1`) —
+    **salg**: EUComply Pro i scannerens resultat, `site/scan.html` +23 og
+    `tests/scan-clients.test.mjs` +50; (2)
+    `ceo/checkout-ruten-kan-vare-forskrevet` (`f4de41a0`) — købsruten med 43
+    grønne kontroltests, `_worker.js`-kritisk; (3)
+    `ceo/pagepass-owned-css` (`dbada7b0`) — byggetagen skal erklære de 154
+    selectors den sletter; (4) `ceo/gate-dist-steps` (`d06e070e`) — kør de 16
+    dist-domme i CI.
+    Accept: hver grene gennemgået, fuld gate grøn, **én** squash-commit pr. gren
+    på `main`, og den lokale gren slettet bagefter. Brug
+    `git for-each-ref refs/heads` — ikke `origin/<default>` — i alle reviewe.
 
 
 16. **Katalogens `where` har linjenumre, der ikke peger på det de siger.**
