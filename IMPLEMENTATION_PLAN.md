@@ -1,4 +1,14 @@
 # STATUS
+- **Tilmeldingsformularen på de seks bogsider skyldte brugeren sin egen wifi.**
+  CEO-kø punkt 0 var målt lukket (alle fem fund rettet: `env` i
+  `handleUrlInspect` = `5693853`, tak-sidens 202 = `0d49ac9`/`1/10`, 429 er
+  endeligt i `/net.js`, `ASK_MAX_TRIES = 2`, SSRF på fire ruter). Så gik jeg
+  efter den samme fejlform i de klienter porten **ikke** dømmer: `book-lead.js`
+  gjorde `res.json()` på ethvert svar, så Cloudflares HTML-side for en krasjet
+  worker kastede i parsen og catch'en skrev *Network error. Please try again.*
+  — brugerens adresse var væk, og vi skyldte dem deres eget netværk for vores
+  driftstop. Samme port dømmer kun *kopier af reglen*, aldrig en klient der
+  mangler den; det er næste opgave.
 - **Den engelske artikel der uddeler den betalte app havde ingen købsvej.**
   CEO-kø punkt 2 og 4 lukket samlet. Målt før rettelsen: 9 sider rørte
   DeskUptime, 8 havde købsknappen, og den eneste undtagelse var
@@ -35,6 +45,19 @@ while the app runs» skal stå med rækken `webhook` + `unlimited sites` +
 `client-ready report`. Samme forekomsttællinger skal give 1 / 0 / rækken på
 `https://mahope.tools/da/blog/faa-besked-naar-hjemmeside-er-nede`, hvor kun
 det absolutte løfte var ændret. Sidens `sitemap.xml` skal fortsat have ruten.
+**Målt 4/10 02:4x, før deployen:** DA sider 1 / 1 / rækken, men EN stadig
+0 / 1 / 0 — kun fordi `deploy-sites` for e860bad stadig var i gang, ikke fordi
+koden er forkert (`grep -rn "uploaded anywhere, ever" site/` = 0 træffere).
+
+`VERIFICÉR DEPLOY: tilmeldingsformularen på de seks bogsider læser reglen fra /net.js ceo/waitlist-egen-fejl 4/10`
+Graden deployer på push. Verificér på indhold: hent
+`https://mahope.tools/books/nis2-for-agencies` og kræv **1**
+`src="/net.js"` **før** `src="/book-lead.js"` i markup-rækkefølge, og hent det
+**samme** for de fem andre bogsider der indlæser `book-lead.js`. Live
+`/books/build-your-first-chrome-extension` skal have **2** `defer`-tags hvor den
+før havde 1 — den manglede `/net.js` helt. `/net.js` skal have **1**
+`function ask(` og `book-lead.js` **0** `fetch('/api/waitlist'` og **0**
+`Network error`.
 
 
 ## Åbne opgaver
@@ -74,6 +97,16 @@ det absolutte løfte var ændret. Sidens `sitemap.xml` skal fortsat have ruten.
    dømmer kun de to ruter i `tools/unavailable_routes.json`. Accept: porten
    finder den, hvis den skrives i manifestet. *(Kun relevant når vi tilføjer flere
    sådanne sider — ikke en opgave i sig selv.)*
+9. **Porten dømmer kopier af reglen, ikke klienter der mangler den.** Hvorfor:
+   `check_net_copies.py` finder kun en inline `.transient`/`.limited`-linje, så
+   `book-lead.js` var grøn med et blindt `res.json()`. Målt 4/10 efter rettelsen:
+   de **otte** andre steder i `site/` der kalder vores egen worker — `nis2-check`
+   EN+DA, `nis2-gap-assessment` EN+DA, `nis2-incident-generator` EN+DA,
+   `clean-copy-api.html` (og `compliance-ai.html` + DA's `fetch` på linje
+   486/487, som ikke går gennem `NET.ask`). Accept: porten dømmer *kaldere* —
+   en fil i `site/` må ikke nå en worker-rute uden `NET.ask`/`NET.postJSON` —
+   med en navngiven undtagelsesliste for de, der endnu ikke er flyttet, så
+   gætningen ikke kan gemme sig.
 
 ## ❓ Til Mads
 

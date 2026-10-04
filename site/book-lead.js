@@ -26,12 +26,16 @@
     }
     var btn = document.getElementById('blBtn');
     btn.disabled = true;
-    fetch('/api/waitlist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, source: source })
-    })
-      .then(function (res) { return res.json(); })
+    // What a visitor is shown when we have a bad day is decided in /net.js,
+    // which every book page already loads before this file. A 5xx, a body we
+    // cannot read and a broken connection are retried and counted as ours;
+    // only a real 4xx is final, and it carries the server's own sentence.
+    // This used to call res.json() on any answer, so Cloudflare's HTML page for
+    // a crashed worker threw in the parse and the catch blamed the visitor's
+    // Wi-Fi — after their address had already been thrown away. A 429 from the
+    // signup rate limit is likewise final: retrying spends the visitor's own
+    // remaining allowance on an answer the server has already refused to give.
+    NET.ask('/api/waitlist', { email: email, source: source }, 2)
       .then(function (data) {
         if (data.ok) track('book-lead');
         st.textContent = data.ok
@@ -39,9 +43,11 @@
           : (data.error || 'Something went wrong. Please try again.');
         st.className = 'bl-status' + (data.ok ? '' : ' bl-error');
       })
-      .catch(function () {
+      .catch(function (err) {
         btn.disabled = false;
-        st.textContent = 'Network error. Please try again.';
+        st.textContent = (err && err.transport)
+          ? 'We could not reach the server. Check your connection and try again — your address is still here.'
+          : ((err && err.message) || 'Something went wrong. Please try again.');
         st.className = 'bl-status bl-error';
       });
   }

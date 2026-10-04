@@ -7096,3 +7096,37 @@ forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner. Kun synlig
 tekst (scripts, CSS og kommentarer er fjernet før dommen). Selftest 7/7 med
 mutationer; porten var målt rød på den gamle kode med præcis de 4 fund der var
 håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.
+
+## Iteration 2026-10-04 02:4x — ceo/waitlist-egen-fejl
+
+- **Målt først, som CEO-køen kræver:** de fem fund i CEO-kø punkt 0 er alle
+  rettet og lukket — `handleUrlInspect(request, url, env)` = `5693853`, tak-sidens
+  202-tekst = `0d49ac9`, 429 er endeligt i `site/net.js`, `ASK_MAX_TRIES = 2`
+  (`compliance-ai.html:509`), `targetIsPublic()` på mål **og** hvert
+  redirect-hop med IPv4-mapped IPv6 og NAT64 lukket (`_worker.js:1457-1520`).
+  Søgte efter fundene på ny i planen og fandt dem kun i CEO-køen, ikke i
+  `IMPLEMENTATION_PLAN.md` — planen sagde intet om dem.
+- **Fejlen, målt i koden:** `site/book-lead.js` (delt af seks bogsider) gjorde
+  `fetch(...).then(function (res) { return res.json(); })` uden at læse
+  `res.status`. Cloudflare svarer en krasjet worker med en HTML-side (repoets egen
+  kommentar, `_worker.js:3762`), så parsen kastede, og `.catch` skrev
+  *"Network error. Please try again."* — brugerens adresse var samtidig kasseret,
+  fordi catch'en også sprang over den. Det er den samme fejlform de to forrige
+  iterationer rettede på otte andre klienter.
+- **Rettelsen læser reglen fra det sted den ligger.** Alle seks bogsider indlæser
+  allerede `/net.js` med `defer` — **den sjette gjorde ikke**:
+  `build-your-first-chrome-extension.html` havde 1 tag, de andre 2, så rettelsen
+  ville have kastet `ReferenceError: NET is not defined` og ladet knappen stå
+  deaktiveret for altid. Fundet ved at tælle `src="/net.js"` pr. vært, ikke ved at
+  læse koden. Tilføjet tagget, så `NET.ask(..., 2)` genkalder én gang på 5xx og
+  ulæselig krop, behandler 429 som endeligt med serverens egen sætning, og
+  skelner `err.transport` (kaldet kom aldrig frem → *check your connection*) fra
+  vores egen 5xx (→ serverens sætning).
+- **Målt efter:** `node --check site/book-lead.js` OK; `build_sites.py` — 338
+  filer, 0 brudde; `check_inline_js.py` — 0 problemer i `site/` **og** `dist/`;
+  `check_net_copies.py` — GRØN, reglen findes stadig kun i `net.js` (den nye kode
+  kopierer den ikke, den læser den).
+- **Ikke gjort, og det er den næste opgave:** `check_net_copies.py` dømmer kun
+  *kopier* af reglen, aldrig en klient der mangler den — så `book-lead.js` var
+  grøn med sit blinde `res.json()`. Efter rettelsen er der otte andre klienter i
+  samme klasse (se opgave 9 i planen). De bliver dømt, indtil det er sket.
