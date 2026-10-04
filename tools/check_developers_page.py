@@ -39,17 +39,27 @@ nogen skal skrive en ny port til det:
                  Det er de to filer en agent og en søgemaskine faktisk læser;
                  en side der kun ligger i `site/` er ikke publiceret, den er
                  gemt.
+  6. `LIMITS`    Hvert tal i kvotetabellen er **udregnet af `site/_worker.js`**,
+                 ikke læst af portens forfatter. Målt 4/10 på den første
+                 udgave: siden lovede «500 000 characters per page» for
+                 `/api/profile`, mens handleren afviser over
+                 `const MAX_SIZE = 500 * 1024` — altså **512 000**. De fire
+                 øvrige tal holdt, efterprøvet mod konstanten og ikke mod
+                 siden. Samme fejlklasse som et håndskrevet tal med en port,
+                 der kun dømmer strukturen omkring det: fem tal i et offentligt
+                 API-dokumentationskort, ingen port der dømmer dem, og ét af
+                 dem 2,4 % for lavt. Med mutation — alle fem tal gjort absurde
+                 på én gang — var porten stadig grøn, før denne dom.
 
-**Hvad porten *ikke* dømmer:** felterne i **svaret**, og tallene på siden.
-Rentegrænserne, `max_score` og de 50 000 tegn er sandt, men de er verificeret
-mod `site/_worker.js` og hører hjemme i `tests/stripe-worker.test.mjs`-familien,
-ikke her. Et *sendt* felt kan afgøres af porten, fordi det står i koden; et
-*returneret* felt kan ikke, uden at porten kørte handleren. Denne port dømmer
-derfor struktur: at det, siden *navngiver* og *beder om*, findes.
+**Hvad porten *ikke* dømmer:** felterne i **svaret**, og de øvrige tal på siden
+(`max_score` og hvad en 413 *betyder*). Et *sendt* felt og et *nævnt* tal kan
+begge afgøres af porten, fordi de står i koden; et *returneret* felt kan ikke,
+uden at porten kørte handleren. Denne port dømmer derfor struktur: at det,
+siden *navngiver*, *beder om* og *tæller*, findes.
 
     python3 tools/check_developers_page.py            # dom
     python3 tools/check_developers_page.py --list     # kun fund, til rapport
-    python3 tools/check_developers_page.py --self-test # 15 kontroller
+    python3 tools/check_developers_page.py --self-test # 22 kontroller
 """
 from __future__ import annotations
 
@@ -67,6 +77,16 @@ WORKER = SITE / "_worker.js"
 SIDE = "developers.html"
 ROUTE = "/developers"
 DOMAENE = "mahope.tools"
+
+# Kvotetallene på siden er **udregnet af `site/_worker.js`**, ikke skrevet i
+# porten. Derfor står der ingen tal her — kun hvor i workeren de står, så den
+# 4/10-mutation (alle fem tal gjort absurde på én gang, porten stadig grøn)
+# ikke kan findes igen: retter man et tal i workeren, og siden ikke følger med,
+# bliver dommen rød med det rigtige tal i fundet.
+TOP_CONST_RE = re.compile(r"(?m)^\s*const\s+(\w+)\s*=\s*(\d+)\s*;")
+# `const MAX_SIZE = 500 * 1024;` — kun heltal og `*`, så porten aldrig kører
+# vilkårlig kode fra en fil den ellers kun læser.
+MULT_CONST_RE = re.compile(r"const\s+\w*MAX\w*\s*=\s*([\d\s*]+);")
 
 # `/api/…` som står i sidens brødtekst. Kun i `main` — en `/api/track`-kald i
 # det inline track-script skal ikke tælle som en dokumenteret rute, og det er
@@ -201,6 +221,142 @@ def tilladte_metoder(src: str) -> dict[str, str]:
     return ud
 
 
+def tal_udtryk(udtryk: str) -> int | None:
+    """`500 * 1024` → 512000, `30` → 30, alt andet → None.
+
+    Kun heltal adskilt af `*`. Porten læser en fil den kører, så den må ikke
+    evaluere vilkårligt: `eval` ville være den korte vej til det samme tal og
+    ville også åbne `_worker.js` for hvad som helst.
+    """
+    dele = [d.strip() for d in udtryk.split("*")]
+    if not dele or not all(d.isdigit() for d in dele):
+        return None
+    total = 1
+    for d in dele:
+        total *= int(d)
+    return total
+
+
+def kvoter_fra_worker(src: str) -> tuple[dict[str, list[tuple[str, str, int | str]]], list[str]]:
+    """Rute → hvad kvoterækken skal love, hver forventning med sit sted i kilden.
+
+    En forventning er `(mærke, art, værdi)`, hvor `art` er `"tal"` (et heltal i
+    cellen) eller `"ord"` (et ord der skal stå der — «per hour», «UTC»).
+
+    Anden veje-liste er de forventninger porten **kunne** læse. Den er ikke tom
+    ved en navneændring, fordi en kilde der forsvinder må gøre dommen rød med
+    «kan ikke afgøre» — aldrig grøn ved stilhed. Et dokumentationskort uden en
+    port der dømmer tallene er præcis den fejl 4/10 rettede.
+    """
+    # Første fund vinder, ikke det sidste: konstanterne står i toppen af filen,
+    # og en lokal `const` med samme navn længere nede ville ellers skyde den
+    # ægte værdi ud — så ville porten dømme et tal der ikke afgør noget.
+    konstanter: dict[str, str] = {}
+    for navn, værdi in TOP_CONST_RE.findall(src):
+        konstanter.setdefault(navn, værdi)
+    kropper = handler_kropper(src)
+    forventet: dict[str, list[tuple[str, str, int | str]]] = {}
+    uafgjort: list[str] = []
+
+    def tilfoej(rute: str, navn: str, udtryk: str | None, maerke: str) -> None:
+        v = tal_udtryk(udtryk) if udtryk else None
+        if v is None:
+            uafgjort.append(f"{rute} — {maerke} ({navn}) kan ikke læses i site/_worker.js")
+        else:
+            forventet.setdefault(rute, []).append((maerke, "tal", v))
+
+    def krav(rute: str, maerke: str, ord: str | None, kilde: str) -> None:
+        if ord:
+            forventet.setdefault(rute, []).append((maerke, "ord", ord))
+        else:
+            uafgjort.append(f"{rute} — {maerke} kan ikke læses i {kilde}")
+
+    tilfoej("/api/clean-copy", "CLEAN_COPY_API_RATE_LIMIT",
+            konstanter.get("CLEAN_COPY_API_RATE_LIMIT"), "kald i timen")
+    tilfoej("/api/compliance-scan", "COMPLIANCE_SCAN_RATE_LIMIT",
+            konstanter.get("COMPLIANCE_SCAN_RATE_LIMIT"), "kald i timen")
+    tilfoej("/api/compliance-scan", "CSC_MAX_URLS",
+            konstanter.get("CSC_MAX_URLS"), "sites pr. kald")
+    tilfoej("/api/compliance-scan", "CSC_MAX_PAGES",
+            konstanter.get("CSC_MAX_PAGES"), "sider pr. kald")
+    tilfoej("/api/header-check", "HEADER_CHECK_RATE_LIMIT",
+            konstanter.get("HEADER_CHECK_RATE_LIMIT"), "kald i timen")
+
+    # De to grænser der **ikke** er navngivne konstanter, så de læses der hvor
+    # de faktisk afgør: i handlerens egen krop.
+    cc = kropper.get("/api/clean-copy", "")
+    m = re.search(r"\.length\s*>\s*(\d+)", cc)
+    tilfoej("/api/clean-copy", "html.length", m.group(1) if m else None, "tegn pr. kald")
+
+    pr = kropper.get("/api/profile", "")
+    m = re.search(r"used\s*>=\s*(\d+)", pr)
+    tilfoej("/api/profile", "used", m.group(1) if m else None, "kald pr. døgn")
+    m = MULT_CONST_RE.search(pr)
+    tilfoej("/api/profile", "MAX_SIZE", m.group(1) if m else None, "tegn pr. side")
+
+    # Tidsenheden er også kode, ikke en redaktionel aftale: `rateLimitIp`
+    # spærrer i `Math.floor(Date.now() / 3600000)`, altså pr. time, og
+    # `dailySalt()` er `toISOString().slice(0, 10)` — UTC-dagen. Skrev siden
+    # «30 per week» var derfor en påstand om en tæller der ikke findes, selv om
+    # tallet 30 var rigtigt.
+    timevindue = ENHED_ORD.get(timevindue_i_ms(src) or 0)
+    for rute in ("/api/clean-copy", "/api/compliance-scan", "/api/header-check"):
+        krav(rute, "tidsenheden i rateLimitIp", timevindue, "rateLimitIp")
+    krav("/api/profile", "døgnets ophør", "UTC" if "toISOString" in src else None, "dailySalt")
+
+    return forventet, uafgjort
+
+
+# Millisekunder → det ord siden bruger. Kun de tre vi faktisk bruger; et
+# vindue porten ikke kender giver ingen dom, fordi «du gjorde det for
+# mærkeligt» ikke er et fund en læser kan rette.
+ENHED_ORD = {60_000: "minute", 3_600_000: "hour", 86_400_000: "day"}
+
+
+def timevindue_i_ms(src: str) -> int | None:
+    """`rateLimitIp`s tællevindue i millisekunder, læst af den tæller den kører med."""
+    m = re.search(
+        r"function rateLimitIp\(.*?Math\.floor\(Date\.now\(\)\s*/\s*(\d+)\)", src, re.S)
+    return int(m.group(1)) if m else None
+
+
+# Hele tal med tusindtalsskiller, så «512 000», «512,000» og «512000» er ét tal
+# og ikke tre. Skilleren er kun tegn der skiller tusinder — `1.1.1` bliver
+# 1 / 1 / 1, hvilket er korrekt: det er ikke et tal i en kvotecelle.
+TAL_RE = re.compile(r"\d{1,3}(?:[.,\s]\d{3})+|\d+")
+
+
+def tal_i_celle(celle: str) -> set[int]:
+    alle: set[int] = set()
+    for rå in TAL_RE.findall(celle):
+        alle.add(int(re.sub(r"[.,\s]", "", rå)))
+    return alle
+
+
+def kvoterækker(html: str) -> dict[str, tuple[str, str]]:
+    """Rute → (kvotecellens tekst, hele rækkens tekst) for hver kvarterække.
+
+    Læser kun den række der **navngiver** routen i første celle. En port der
+    læste hele tabellen ville finde alle tallene på ét sted og være grøn, selv
+    om `/api/profile`s egen celle lavede et tomrum — det er den mutation
+    dommen er skrevet imod.
+
+    Hele rækken tages med, fordi et par påstande ikke *kan* stå i
+    kvotecellen: «resets at midnight UTC» er tredje kolonne, fordi det er der
+    en læser finder det. Derfor dømmes ordene i rækken og tallene i cellen.
+    """
+    ud: dict[str, tuple[str, str]] = {}
+    for række in re.findall(r"<tr\b.*?</tr\s*>", side_tekster(html), re.S | re.I):
+        celler = re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]\s*>", række, re.S | re.I)
+        if len(celler) < 2:
+            continue
+        rute = next(iter(API_RE.findall(celler[0])), None)
+        if rute:
+            rå = re.sub(r"<[^>]+>", " ", række)
+            ud[rute] = (re.sub(r"<[^>]+>", " ", celler[1]), rå)
+    return ud
+
+
 def dom(root: Path = ROOT) -> list[str]:
     fund: list[str] = []
     inventory = json.loads((root / "tools" / "route_inventory.json").read_text(encoding="utf-8"))
@@ -276,7 +432,39 @@ def dom(root: Path = ROOT) -> list[str]:
                         f"rigtigt ud, og læseren får aldrig det de bad om."
                     )
 
-    # Dom 4 — siden er publiceret, altså den ligger i de to lister en agent og
+    # Dom 6 — kvotetabellens tal er udregnet af workerens egen kode. Uden denne
+    # dom var porten grøn på et kort, der lovede «500 000 characters per page»
+    # for en handler der afviser over 512 000.
+    forventet, uafgjort = kvoter_fra_worker(worker)
+    rækker = kvoterækker(html)
+    for rute, uventninger in forventet.items():
+        if rute not in rækker:
+            fund.append(
+                f"LIMITS: {rute} står i kortet uden en kvote, så en læser ikke kan "
+                f"tage sig på hvad et kald koster."
+            )
+            continue
+        celle = (rækker[rute][0] or "").lower()
+        hel_række = (rækker[rute][1] or "").lower()
+        tal = tal_i_celle(celle)
+        for maerke, art, værdi in uventninger:
+            if art == "tal" and værdi not in tal:
+                fund.append(
+                    f"LIMITS: kvoterækken for {rute} siger "
+                    f"{', '.join(str(t) for t in sorted(tal)) or 'intet tal'}, men "
+                    f"workerens egen kode siger {værdi} for {maerke}. Et dokumenteret "
+                    f"tal skal være det målte."
+                )
+            elif art == "ord" and str(værdi).lower() not in hel_række:
+                fund.append(
+                    f"LIMITS: kvoterækken for {rute} siger ikke '{værdi}', men det er "
+                    f"hvad {maerke} er i site/_worker.js. Rigtige tal i en forkert "
+                    f"tidsenhed er stadig en løgn."
+                )
+    for u in uafgjort:
+        fund.append(f"LIMITS: {u}. Skriv kvoten i site/_worker.js som et tal, porten kan dømme.")
+
+    # Dom 5 — siden er publiceret, altså den ligger i de to lister en agent og
     # en søgemaskine læser. Det dømmes på **dist**, fordi det er den udgivne
     # fil der tæller; `site/` er kilde, ikke publicering.
     dist = root / "dist" / DOMAENE
@@ -363,12 +551,19 @@ def self_test() -> int:
     # på det vi faktisk udgiver — ikke på noget de har skrevet.
     rigtig_main = side_tekster((SITE / SIDE).read_text(encoding="utf-8", errors="replace"))
 
-    def dom_med(main: str, *, i_manifestet: bool = True, i_listerne: bool = True) -> list[str]:
+    def dom_med(main: str, *, i_manifestet: bool = True, i_listerne: bool = True,
+                worker_src: str | None = None) -> list[str]:
         """Døm et repo hvor kun `site/developers.html` er udskiftet.
 
         Alt andet er ægte: den rigtige worker, det rigtige manifest, de rigtige
         dist-lister. Så en rød fund kan kun komme fra den side, kontrollen
         skrev — altså af den fejl den er skrevet til at finde.
+
+        `worker_src` findes kun i hukommelsen. 3/10 skrev selftesten sin egen
+        mutation ind i den **tracked** `_worker.js` og gendannede den i en
+        `finally`; en dræbt proces mellem de to efterlod den, og næste
+        iteration tog den med i `git add -A`. Derfor rører ingen mutation her
+        filer på disken — de to fejl var samme fejl.
         """
         import tempfile
 
@@ -380,7 +575,7 @@ def self_test() -> int:
             ruter = ([ROUTE] if i_manifestet else []) + alle_ruter
             (rod / "tools" / "route_inventory.json").write_text(
                 json.dumps({DOMAENE: ruter}), encoding="utf-8")
-            (rod / "site" / "_worker.js").write_text(worker, encoding="utf-8")
+            (rod / "site" / "_worker.js").write_text(worker_src or worker, encoding="utf-8")
             sitemap = f"<urlset>{fuld_url}</urlset>" if i_listerne else "<urlset></urlset>"
             llms = f"- [Free HTTP API]({fuld_url})" if i_listerne else "# nothing"
             (rod / "dist" / DOMAENE / "sitemap.xml").write_text(sitemap, encoding="utf-8")
@@ -493,6 +688,52 @@ def self_test() -> int:
              '<pre><code>curl -X POST https://mahope.tools/api/clean-copy</code></pre>'),
              "FIELDS"))
 
+    # 11. Mutation: kvoterækkerne er det fund dom 6 blev skrevet til. Målt 4/10:
+    #     siden lovede «500 000 characters per page» mens handleren afviser over
+    #     `500 * 1024` = 512 000, og med alle fem tal gjort absurde på én gang
+    #     var porten stadig grøn. Hver mutation skal gøre dommen rød, og
+    #     mutationen skal *ramme* — ellers er kontrollerne grønne på ingenting.
+    absurde = rigtig_main
+    rammet = 0
+    for gammel, ny in (("120 per hour", "1200 per hour"),
+                       ("30 per hour", "3 per hour"),
+                       ("60 per hour", "600 per hour"),
+                       ("50 000 characters per call", "500 000 000 characters per call"),
+                       ("5 sites and 12 pages per call", "1 site and 1 page")):
+        if gammel in absurde:
+            rammet += 1
+        absurde = absurde.replace(gammel, ny)
+    fund11 = [f for f in dom_med(absurde) if "LIMITS" in f]
+    tjek("mutationerne rammer alle kvoterækker", rammet == 5, str(rammet))
+    tjek("dom 6 fanger alle fem tal gjort absurde", len(fund11) == 6, str(fund11))
+    tjek("dom 6 lader den rigtige side være grøn på tal",
+         not [f for f in dom_med(rigtig_main) if "LIMITS" in f])
+
+    # 12. Mutation: det fund der lå i **to** steder. Skriver nogen
+    #     `CLEAN_COPY_API_RATE_LIMIT = 120` om til 200, og glemmer siden, så
+    #     skal porten være rød — ellers står tallene stadig to steder.
+    hævet = worker.replace(
+        "const CLEAN_COPY_API_RATE_LIMIT = 120;", "const CLEAN_COPY_API_RATE_LIMIT = 200;")
+    tjek("mutationen rammer workerens konstant", hævet != worker)
+    fund12 = dom_med(rigtig_main, worker_src=hævet)
+    tjek("dom 6 fanger en kvota der flytter sig i workeren",
+         har(fund12, "LIMITS", "/api/clean-copy"), str(fund12))
+
+    # 13. Mutation: rigtige tal i en forkert tidsenhed. `rateLimitIp` spærrer i
+    #     `Math.floor(Date.now() / 3600000)`, altså pr. time — så «30 per
+    #     week» er en påstand om en tæller der ikke findes, selv om 30 er
+    #     rigtigt. Det var netop sådan fundet fra 4/10 skrev det.
+    fund13 = dom_med(rigtig_main.replace("30 per hour", "30 per week"))
+    tjek("dom 6 fanger en forkert tidsenhed", har(fund13, "LIMITS", "hour"), str(fund13))
+
+    # 14. Mutation: præcis den fejl fundet fra 4/10 navngavne — 500 000 for
+    #     512 000. Fundet skal pege på det rigtige tal, elgens en læser der
+    #     rettede siden til 500 000 i stedet for 512 000.
+    fund14 = dom_med(rigtig_main.replace("512 000 characters per page",
+                                         "500 000 characters per page"))
+    tjek("dom 6 fanger 500 000 for 512 000",
+         har(fund14, "LIMITS", "512000"), str(fund14))
+
     print(f"selftest: {'OK' if not fejl else 'RØD'} ({talt[0] - len(fejl)}/{talt[0]} kontroller)")
     for f in fejl:
         print(f"  - {f}")
@@ -519,7 +760,8 @@ def main() -> int:
     antal = len(ruter_i_main((SITE / SIDE).read_text(encoding="utf-8", errors="replace")))
     print(f"check-developers-page: GRØN — {ROUTE} dokumenterer {antal} "
           f"API-ruter, alle findes i workeren med den rigtige metode, hvert sendt "
-          f"felt læses af handleren, og siden står i sitemap + llms.txt")
+          f"felt læses af handleren, hver kvote er udregnet af samme kode, og "
+          f"siden står i sitemap + llms.txt")
     return 0
 
 

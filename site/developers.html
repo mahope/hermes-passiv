@@ -150,7 +150,7 @@
       <tr><td><code>/api/clean-copy</code></td><td>120 per hour, 50 000 characters per call</td><td>HTTP 429 with the server's own sentence, or 413 for oversized input</td></tr>
       <tr><td><code>/api/compliance-scan</code></td><td>30 per hour, 5 sites and 12 pages per call</td><td>HTTP 429, or 400 if you send more than five sites</td></tr>
       <tr><td><code>/api/header-check</code></td><td>60 per hour</td><td>HTTP 429</td></tr>
-      <tr><td><code>/api/profile</code></td><td>30 per day, 500 000 characters per page</td><td>HTTP 429, resets at midnight UTC</td></tr>
+      <tr><td><code>/api/profile</code></td><td>30 per day, 512 000 characters per page</td><td>HTTP 429, resets at midnight UTC</td></tr>
     </table>
     <p class="dev-note">Limits are counted per IP address — except <code>/api/profile</code>, which
     counts per visitor. A shared office network can therefore reach the first three faster than one

@@ -955,7 +955,10 @@ STEPS: tuple[Step, ...] = (
     # side i manifestet er bygget — ingen af dem dømmer at en API mangler en
     # adresse. Fire domme: ruten i manifestet, hver nævnt rute findes i
     # `_worker.js`, metoden er den CORS-headeren erklærer, og siden står i den
-    # *byggede* sitemap + llms.txt.
+    # *byggede* sitemap + llms.txt. Plus to fra 4/10, da kvotetabellen lovede
+    # «500 000 characters per page» mens handleren afviser over `500 * 1024`,
+    # og alle fem tal gjort absurde gav en grøn port: et sendt felt og et nævnt
+    # tal kan begge dømmes mod koden, et returneret felt ikke.
     Step(
         id="developers-page",
         argv=("python3", "tools/check_developers_page.py"),

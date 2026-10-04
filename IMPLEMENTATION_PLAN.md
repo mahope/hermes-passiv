@@ -1,27 +1,28 @@
 # STATUS
-- **Gatens egen selvtest lagde sin egen mutation i repoet, og den blev
-  squaset ind som kode.** To røde CI-kørsel på `main` (`e860bad`, `6783c64`)
-  havde samme årsag: `6783c64` committede `tools/iter465_tool_faqs.py` som en
-  5-liners stub — **byte-identisk** med det anonyme mutationsobjekt i
-  `check_generator_claims.py:268-273`. Selvtesten skrev den mutation ind i den
-  **tracked** fil og gendannede den i en `finally`; en dræbt proces mellem
-  skrivning og gendannelse efterlod den, og næste iteration tog den med i
-  `git add -A`. Stubben rummer præcis den løgn porten findes for at dømme
-  («Nej. Intet sendes til en server» på `/url-to-markdown`, der henter
-  gennem `/scan-proxy`), så porten blev rød på sin egen fejlform.
-- **Målt, ikke antaget.** Deterministisk på den gamle kode: med `chmod 444` på
-  offerfilen dør den gamle selvtest med `PermissionError` — den *kræver*
-  skrivetilgang. Den nye kører grønt på samme read-only fil, fordi
-  mutationerne nu ligger i hukommelsen (`source_for` + `overrides`). Alle 4
-  scenarier er stadig grønne. Bevis for at ingen anden port har samme fejl:
-  sha256 over **alle** tracked filer før og efter hele gaten (159 steps,
-  14m20s) er **identisk**, så ingen port skriver i repoet mere.
-- **Den betalte ratchet målte 94 veje, siden mens siden har 95.** `e860bad`
-  lagde en købsknap på `/blog/get-notified-when-website-goes-down`, men
-  ratchetfilen blev ikke skrevet op. Portens `--write` lagde **1** linje til
-  og **0** fjernede — ingen tabt vej, kun en vundet.
-- **3 fund fra de to forrige iterationer er målt lukket og arkiveret** — se
-  `docs/plan-arkiv.md`. De to løgnede artikelsætninger er rettet.
+- **Review-fundet fra 4/10 er lukket: `/api/profile`-kvoten løj om 2,4 %, og ingen
+  port dømte den.** Siden lovede «500 000 characters per page», mens
+  `handleProfile` afviser over `const MAX_SIZE = 500 * 1024` = **512 000**.
+  Rettet — og `check_developers_page.py` har nu dom 6 `LIMITS`: alle otte tal i
+  kvotetabellen **udregnes af `site/_worker.js`** i stedet for at stå i to filer.
+- **Tidsenheden er også kode nu.** `rateLimitIp` spærrer i
+  `Math.floor(Date.now() / 3600000)` = pr. time, og `dailySalt()` er
+  `toISOString().slice(0, 10)` = UTC-dagen. Dommen dømmer «per hour» og «midnight
+  UTC» mod de to, så «30 per week» ikke kan stå — netop den mutation fundet gjorde,
+  med 30 et rigtigt tal i en løgn enhed.
+- **Fire nye mutationer, alle røde, alle grønne på den rigtige kode:** de fem tal
+  gjort absurde på én gang → 6 fund; en kvota der flytter sig i workeren → rød
+  (altså: tallene kan ikke længer stå to steder); «30 per week» → rød; præcis
+  500 000 for 512 000 → rød med 512000 i fundet. 22/22 kontroller grønne.
+- **Mutationerne rører kun hukommelsen.** 3/10s selftest skrev sin mutation ind i
+  den **tracked** `_worker.js`; `dom_med` får derfor et `worker_src` i RAM.
+- **De otte tal er efterprøvet mod kilden, ikke mod siden.** `kvoter_fra_worker`
+  læser 120, 50 000, 30, 5, 12, 60, 30 og 512 000 udelukkende af konstanterne og
+  handlerkropperne. Før dommen fandt den ene fejl og ingen anden, så de syv var
+  rigtige.
+- **CI er grøn igen, og de to forsinkede deploys er landet.** `f8dbdb9` rettede
+  gatens egen selftest, der havde efterladt sin mutation i repoet; kørsel
+  37172364367 blev grøn og deployede cleancopy.tools, mahope.tools og
+  deskuptime.com. Begge åbne VERIFICÉR-noter er målt på indhold → `DEPLOY OK`.
 - **Gaten grøn:** 159 steps. PR-TJEK 4/10: 0 PR'er.
 
 ## Verificér deploy
@@ -34,28 +35,29 @@ har linket, `llms.txt` har linjen, og `cleancopy.tools/mcp` har 2 `npx
 skrevet `mahope.tools/mcp`, som 404'er — `/mcp` er kun på cleancopy.tools,
 fordi den side ligger i det domænes kilde. Noten er rettet her.
 
-`VERIFICÉR DEPLOY: artiklen om desktop-appen får købsvej og sand Privatlivstext ceo/deskuptime-en-kob 4/10`
-Graden deployer på push. Verificér på *indhold*: hent
-`https://mahope.tools/blog/get-notified-when-website-goes-down` og tæl —
-skal være **1** `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`, **0** forekomster
-af «uploaded anywhere, ever», og afsnittet «The notification only arrives
-while the app runs» skal stå med rækken `webhook` + `unlimited sites` +
-`client-ready report`. Samme forekomsttællinger skal give 1 / 0 / rækken på
-`https://mahope.tools/da/blog/faa-besked-naar-hjemmeside-er-nede`, hvor kun
-det absolutte løfte var ændret. Sidens `sitemap.xml` skal fortsat have ruten.
-**Målt 4/10 02:4x, før deployen:** DA sider 1 / 1 / rækken, men EN stadig
-0 / 1 / 0 — kun fordi `deploy-sites` for e860bad stadig var i gang, ikke fordi
-koden er forkert (`grep -rn "uploaded anywhere, ever" site/` = 0 træffere).
+`DEPLOY OK 4/10` for `ceo/deskuptime-en-kob` — målt på indhold 05:2x, efter at
+gaten blev grøn: EN 200 med **1** `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`,
+**0** «uploaded anywhere, ever», og afsnittet «The notification only arrives
+while the app runs» har `webhook` + `unlimited sites` + `client-ready report`.
+DA-siden giver 1 købslink, 0 «uploaded anywhere, ever» og 0 «Intet uploades
+nogensinde». Deployen var forsinket, fordi `deploy` har `needs: gate`, og begge
+røde kørsler lå på gatens egen selftest.
 
-`VERIFICÉR DEPLOY: tilmeldingsformularen på de seks bogsider læser reglen fra /net.js ceo/waitlist-egen-fejl 4/10`
-Graden deployer på push. Verificér på indhold: hent
-`https://mahope.tools/books/nis2-for-agencies` og kræv **1**
-`src="/net.js"` **før** `src="/book-lead.js"` i markup-rækkefølge, og hent det
-**samme** for de fem andre bogsider der indlæser `book-lead.js`. Live
-`/books/build-your-first-chrome-extension` skal have **2** `defer`-tags hvor den
-før havde 1 — den manglede `/net.js` helt. `/net.js` skal have **1**
-`function ask(` og `book-lead.js` **0** `fetch('/api/waitlist'` og **0**
-`Network error`.
+`DEPLOY OK 4/10` for `ceo/waitlist-egen-fejl` — målt på indhold 05:2x: alle
+**seks** bogsider der indlæser `book-lead.js` har præcis **1** `src="/net.js"`
+**før** `src="/book-lead.js"` i markup-rækkefølge, inklusive
+`/books/build-your-first-chrome-extension` der før manglede `/net.js` helt. Live
+`/net.js` har **1** `function ask(`, `book-lead.js` har **0** `fetch('/api/waitlist'`
+og **0** `Network error`. **Målt afvigelse:** noten lovede «2 defer-tags» på den
+side; live har **5** linjer med `defer`, fordi siden også indlæser `track.js`.
+Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
+
+`VERIFICÉR DEPLOY: kvotetabellen på /developers lover 512 000 tegn pr. side ceo/developers-kvoter 4/10`
+Graden deployer på push. Verificér på *indhold*: hent
+`https://mahope.tools/developers`, kræv **1** `512 000 characters per page` og
+**0** `500 000`, og at de fire rækker stadig siger `120 per hour`, `50 000
+characters per call`, `30 per hour, 5 sites and 12 pages per call`, `60 per hour`
+og `resets at midnight UTC`. Sidens `sitemap.xml` skal fortsat have routen.
 
 
 ## Åbne opgaver
