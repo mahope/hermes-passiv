@@ -1,10 +1,10 @@
 # STATUS
-- **Browseren melder nu sine egne fejl.** 5/10: `reportWorkerError` dækker kun
-  workerens egen fetch, så fejl i `track.js` eller i en af de **300** sider der
-  indlæser den, efterlod hverken 500, log eller Sentry. Nu `error` +
-  `unhandledrejection` → `POST /api/client-error` → Sentry med `logger: browser`.
-  **Målt i Chromium:** 3 kastede fejl gav **2** beacons (gentagelsen dæmpes),
-  **0** tegn af brugerens URL; porten 22 kontroller, **13/13** mutationer røde.
+- **Artiklen har nu en handling i sin egen tekst.** 5/10: første afsnit af
+  `/blog/text-on-image-contrast-check` (+ den danske spejling) havde **0** links
+  til værktøjet; den eneste in-text sti lå i `#try-it`. Nu **1** pr. sprog i
+  første `<section>`, på **hele ruten** så `cta-`-beaconen tæller klikket.
+  **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret*
+  tjekker ikke skelne brug fra flugt — det står i feature-kø punkt 6.
 - **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` sendte
   `scan` både ved starten og igen efter svaret (**én scanning = to
   begivenheder**), og intet kom ved resultatet eller pro-kortets knap. Nu `scan`,
@@ -19,11 +19,8 @@
 - **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
   `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
   hvor handlingen er `<input>` + knap; alle **3** har grund i `first_action.json`.
-- **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
-  **RØD med 330 fund** på den uændrede kode; ❓ om deres placering står uændret.
-  De 4 forkerte optællinger i portenes tekst er rettet til daterede målinger.
-- **CI:** `a305fa72` lå rød på `main` 4/10 — `plan-status` (STATUS 34 mod 25)
-  og `clock_jump.mjs` på de to nye tællertests. Begge rettet her (opgave 22).
+  Bannerne er demoteret, og porten dømmer *alle* sider med banner — den var
+  **RØD med 330 fund** på den uændrede kode.
 
 ## Verificér deploy
 
@@ -34,21 +31,32 @@ a[href="#free-vs-pro"]`, og begge id'er **1** gang. Hero-noten er målt i rigtig
 Chromium ved **390 og 1280**: **13,6 px** (0,85 rem) på `cleancopy.tools/`,
 `/da/` og en `/da/blog/`-side — ikke 20,8/18,4. HTTP 200 blev ikke brugt.
 
-`VERIFICÉR DEPLOY: browseren melder sine egne fejl 5/10 ceo/klientfejl-til-sentry` —
-måles på **indhold**, ikke på HTTP 200: live `https://mahope.tools/track.js`
-skal have præcis **1** `addEventListener('error'` og **1** på
-`'unhandledrejection'`, **1** `'/api/client-error'`, **0** `location.href` og
-**0** `page:`. Findes de ikke i den *udgivne* JS, er portens øvrige domme
-ligegyldige, fordi de kun læser kilden.
+`DEPLOY OK 5/10` for `ceo/klientfejl-til-sentry` — målt på **indhold**: live
+`https://mahope.tools/track.js` (200) har præcis **1** `addEventListener('error'`,
+**1** på `'unhandledrejection'`, **2** `'/api/client-error'` (beacon + fallback) og
+**0** felter med brugerens URL. **Målt afvigelse:** noten krævede **0**
+`location.href` og **0** `page:`; live står hver **1** gang, men begge er i
+*kommentarer* (linje 250 og 46), ikke i payload'en — de sådan fund er
+meningsløse, så dommen er præciseret til at dømme payload-felterne.
 
-`VERIFICÉR DEPLOY: scannerens købsvej måler hele tragten 5/10 ceo/scan-events` —
-måles på **indhold** i næste iteration, ikke på HTTP 200: `scan.html` og
-`scan-da.html` skal hver have præcis **1** `trackEvent('scan')`, **0**
-`event:'scan'`-fetch, **1** `scan-findings`/`scan-clean` med `!opts.shared` på
-samme linje, **1** `scan-failed`, og `onclick` med `pro-card-click` på den
-linje der har `buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`. Runtime-krav: et klik på
-den renders knap skal kalde `trackEvent('pro-card-click')` **én** gang — den
-indeholder `\'`-sekvenser i kilden, så det skal måles i browseren, ikke i filen.
+`DEPLOY OK 5/10` for `ceo/scan-events` — målt på **indhold**: `/scan` og `/scan-da`
+(308 → `/scan`, `/scan-da`, 200) har hver præcis **1** `trackEvent('scan')`, **0**
+`event:'scan'`-fetch, **1** `scan-findings`, **1** `scan-clean`, **1**
+`scan-failed`, **1** `pro-card-click` på **samme linje** som
+`buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03`, og **1** `!opts.shared`. Runtime-kravet
+(klik på den renders knap → **én** `trackEvent('pro-card-click')`) var målt i
+Chromium mod den byggede `dist/` i opgavens iteration; den udgivne fil er
+tegn for tegn lig den.
+
+`VERIFICÉR DEPLOY: artiklen får en handling i sin egen tekst 5/10
+ceo/tekstartens-egen-handling` — måles på **indhold**: live
+`https://mahope.tools/blog/text-on-image-contrast-check` skal have **1** `p` med
+«check it free in the browser» i **første** `<section class="problem">` (før
+`problem-cards`), med `href="/text-on-image-checker"`; live
+`/da/blog/tekst-paa-billede-kontrasttjek` skal have **1** «tjek det gratis i
+browseren» med `href="/text-on-image-checker-da"` på samme plads. Begge sider
+skal stadig have **1** `hero-cta` med `btn-primary` → `#try-it`/`#prov-dit-billede`,
+og `0` `btn-primary` i `.blog-tool-cta`.
 
 `DEPLOY OK 4/10 13:1x` for `ceo/fold-pris` — målt på **indhold**:
 `https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]`, `id="price"`
@@ -407,11 +415,29 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    `ceo/klientfejl-til-sentry`. Se opgave 22. Replay er stadig slået fra, så
    fejlene kommer uden skærmbillede — det er ikke længere en afvejning til dig,
    men en permanent regel.
-5. **`/blog/text-on-image-contrast-check` er 8 af 21 besøgende på mahope.tools,
-   og alle 8 bouncede.** Hvem: de der lander på artiklen. Tal: hvor mange af dem
-   kører selve tjekket. Accept: artiklen sender læseren ind i
-   `/text-on-image-checker` med det samme problem de lige har læst om — egen
-   handling i teksten, ikke banner, og porten dømmer at artiklen har den.
-   Datagrund: Plausible 4/10 viser **8** besøgende på bloggen mod **2** på
-   værktøjet, og **100 %** mod **50 %** bounce. Baseline: `text-on-image-checker`
-   har **2** besøgende.
+5. ~~**`/blog/text-on-image-contrast-check` er 8 af 21 besøgende på mahope.tools,
+   og alle 8 bouncede.**~~ **Færdig 5/10**, `ceo/tekstartens-egen-handling`.
+   Hvem: de der lander på artiklen. Tal: hvor mange af dem kører selve
+   tjekket. Accept: artiklen sender læseren ind i `/text-on-image-checker` med
+   det samme problem de lige har læst om — egen handling i teksten, ikke
+   banner. Datagrund: Plausible 4/10 viser **8** besøgende på bloggen mod **2**
+   på værktøjet, og **100 %** mod **50 %** bounce. Baseline: `text-on-image-checker`
+   har **2** besøgende. Målt i koden: artiklens **første** afsnit (grunden til at
+   teksten fejler) havde **0** links til værktøjet — den eneste in-text sti lå i
+   `#try-it`, altså *efter* at læseren var nået halve vejen. Nu én handling i
+   begge sprog, i **første** `<section>`, på **hele ruten** (ikke `#try-it`),
+   fordi den `cta-`-beacon nederst i filen kun måler klik på hele ruter.
+   **Målt fejl i opgavens egen begrundelse:** «alle 8 bouncede» er ikke
+   bevis for at handlingen manglede. Siden har tjekkeren *indlejret*, så en
+   læser der bruger den bliver på ét sidevisning — Plausible tæller det som
+   bounce, præcis som en læser der lukkede fanen. Bounce 100 % kan her altså
+   ikke skelne brug fra flugt; det erfarede den næste opgave.
+6. **Ingen måling kan skelne «brugte værktøjet» fra «lukkede fanen».** Hvem:
+   alle brugere af de gratis værktøjer. Tal: hvor mange rent faktisk får et
+   resultat. Accept: ét resultat pr. kørsel tælles ét sted, der kan læses *uden*
+   `STATS_TOKEN`. Datagrund: Plausible sidder allerede på alle **270** sider
+   (`build_sites.py:add_plausible`), så `plausible('scan-result')` fra klienten
+   kræver **ingen** nøgle og ingen ny konto — kun at «custom events» er slået
+   til i Plausible-instrumentet (et dashboard-valg, jeg ikke kan lave).
+   `/api/track` skriver i dag, men `/api/stats` svarer **401**, så hele tragten
+   fra opgave 20 er skrevet, men ulæselig.

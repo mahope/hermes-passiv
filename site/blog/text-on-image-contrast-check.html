@@ -42,6 +42,12 @@
   <div class="container">
     <h2>Why does text on images fail so often?</h2>
     <p>A photo rarely has uniform brightness under the whole text block. White text can be perfectly readable over the sky and completely disappear over the snow two centimeters further down. WCAG measures the contrast against the actual pixels behind each letter — not against the image average.</p>
+    <!-- Egen handling i teksten, ikke i banneret: den der læser om fejlen i
+         afsnittet lige ovenfor skal kunne trykke én gang og komme i værktøjet.
+         Stien er `/text-on-image-checker` og ikke `#try-it`, fordi den
+         `cta-`-beacon nederst i filen kun måler klik på hele ruter — et
+         #-anker i denne side ville være umålbart. -->
+    <p style="margin-bottom:0">Your own hero image is the next step: <a href="/text-on-image-checker" style="color:var(--color-accent);">check it free in the browser &rarr;</a></p>
     <div class="problem-cards">
       <div class="card"><h3>The requirements</h3><p>SC 1.4.3: 4.5:1 for normal text, 3:1 for large text (approx. 24 px normal / 18.66 px bold). SC 1.4.11 requires 3:1 for meaningful UI parts and graphics.</p></div>
       <div class="card"><h3>The worst spot counts</h3><p>A gradient can pass under half the letters and fail under the rest. Always measure the worst case — that is exactly what a user with low vision hits.</p></div>
