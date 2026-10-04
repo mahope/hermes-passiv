@@ -342,8 +342,14 @@ def self_test() -> int:
             ("EN", rigtig, lambda h: fejl_mod(h, en, da)),
             ("DA", DA_INDEX.read_text(encoding="utf-8"),
              lambda h: fejl_mod_da(h, da, en))):
-        død = re.sub(r'<a href="#[^"]*" class="btn-primary">Browse (by topic|efter emne)',
-                     '<a href="#emne-der-ikke-findes" class="btn-primary">Browse', side)
+        # Mutationen rammer *ankeret i `.hero-cta`*, ikke etiketten: en
+        # sprogretning må ikke kunne låse porten (4/10 — den danske knap sagde
+        # «Browse efter emne», og da den blev «Se efter emne», døde portens egen
+        # kontrol fordi regexet greb på det engelske ord). Rammer mønsteret ikke,
+        # bliver mutationen lig siden, kontrollen kan ikke finde sit anker, og
+        # selvestesten siger rødt i stedet for at grønt uden at teste noget.
+        død = re.sub(r'(<div class="hero-cta">\s*<a href=")#[^"]*(" class="btn-primary">)[^<]*',
+                     r'\1#emne-der-ikke-findes\2Emne', side)
         fund_død = dom_fn(død)
         tjek(f"dødt foldanker i {label} er rødt",
              any("#emne-der-ikke-findes" in f for f in fund_død),
@@ -353,7 +359,7 @@ def self_test() -> int:
 
     # 6c. Samme fejlform som 6b, den anden vej: `.hero-cta` fjernet helt.
     uden_cta = re.sub(r'<div class="hero-cta">\s*<a href="#[^"]*" class="btn-primary">'
-                      r'Browse by topic</a>\s*</div>\n', '', rigtig)
+                      r'[^<]*</a>\s*</div>\n', '', rigtig)
     tjek("manglende foldhandling i EN er rød",
          any("hero-cta" in f for f in fejl_mod(uden_cta, en, da)))
 

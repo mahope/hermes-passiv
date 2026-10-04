@@ -1,52 +1,53 @@
 # STATUS
-- **171 sider med to-tre knapper over folden er nu 0.** `check_first_action.py`
-  målte dem sig selv, og de tre generatorer — `add_top_cta_495.py`,
-  `add_ai_cta.py`, `add_hero_cta.py` — skrev hver især en `btn-primary` ind i
-  CTA-bannerne: **330** knapper på **187** artikler. Porten har nu et dom for
-  **alle 189** sider med et banner, ikke kun de 29 ratchetede, så en ny artikel
-  arver reglen uden at nogen skal huske den ind. Porten var **RØD med 330 fund**
-  på den uændrede kode.
-- **Bannerne ligger stadig.** De taler bare kun en gang, som det sekundære de
-  er — forenligt med alle tre svar i ❓, så Mads' beslutning er ikke brugt op.
-  Bygget `dist/`: `btn-primary` i banner **315 → 0**.
+- **171 sider med to-tre knapper over folden er nu 0.** De tre generatorer
+  `add_top_cta_495.py`, `add_ai_cta.py` og `add_hero_cta.py` skrev hver især en
+  `btn-primary` ind i CTA-bannerne: **330** knapper på **187** artikler.
+  `check_first_action.py` har nu et dom for **alle 189** sider med et banner,
+  ikke kun de 29 ratchetede, så en ny artikel arver reglen uden at nogen skal
+  huske den ind. Porten var **RØD med 330 fund** på den uændrede kode.
+- **Bannerne ligger stadig**, de taler bare kun en gang som det sekundære de
+  er — forenligt med alle tre svar i ❓. Bygget `dist/`: banner **315 → 0**.
 - **Fem artikler havde ingen egen handling** — banneren var deres eneste
   primære. De har nu `#content`/`#indhold` som `hero-cta` (185 søskendesiders
   mønster, `id` på artiklens første sektion) og er ratchetede. Sider med nul
   primær: **6 → 11 → 6**. Playwright 390 + 1280 på de fem: **0 px** scroll.
   Selftest **20/20**, fuld gate **159 steps grøn**.
 - **De 6 tilbage er målt, ikke gættet:** `compliance-ai` ×2 (noindex,
-  assistanten er slukket — se ❓), `books/compliance-bundle` (`btn-free` lige
+  assistenten er slukket — se ❓), `books/compliance-bundle` (`btn-free` lige
   under folden), `downloads` (`pip install` er første `<section>` lige under),
   `books/index` (bundle-kortet under folden), `url-inspector` (`#url-input`
-  ligger 2 px under folden). **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:**
-  ingen remote-grene over 14 dage.
+  ligger 2 px under folden). Alle **6** er nu navngivet med grund i
+  `first_action.json`, så `_4oktober_hubs` afregner **11 af 11**. **PR-TJEK
+  4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
+- **Den danske knap på `/da/blog/` sagde «Browse efter emne»** — det eneste
+  engelske ord på den ellers danske indeksside, målt **live** før rettelsen. Nu
+  «**Se efter emne**», og portens selftest greber døde foldankere på
+  **ankeret** i stedet for på etiketten, så en sprogretning ikke låser porten:
+  **23/23** nu (var **22/23**), og et dødt anker giver stadig **RØD**.
+
+
 
 ## Verificér deploy
+
+`DEPLOY OK 4/10` for `ceo/banner-secondary` — målt på **indhold** 10:1x, ikke
+HTTP 200: de fem artikler har **1** `btn-primary` i `<header class="hero">`
+(`Start Reading` ×3, `Læs guiden` ×2), **0** i hvert
+`<div class="blog-tool-cta">`, og ankeret `#content`/`#indhold` forekommer
+**præcis 1** gang pr. side. Deploy sker ved push til `main`.
+
+`DEPLOY OK 4/10` for `ceo/hub-fold-handling` — målt på **indhold** 10:1x:
+`/free-tools`, `/da/free-tools`, `/blog/`, `/da/blog/` og `/free-downloads`
+har hver **1** `btn-primary` i folden, og ankerne er `#gdpr-heading` ×2,
+`#accessibility-eaa`, `#tilg-ngelighed-eaa` og `#tpl-heading` — hvert med
+**præcis 1** matchende `id`. `/da/blog/` leverede dog «Browse efter emne»,
+altså den halvoversatte etikette der er rettet i dette loop; den er derfor
+**stadig ikke live**, og kun den etikette mangler.
 
 `DEPLOY OK 4/10` for `ceo/pricing-i-footer` — målt på **indhold** 09:2x:
 `https://mahope.tools/` har **23** links i `<footer class="site-footer">` og
 præcis **1** `/pricing`; `https://mahope.tools/da/` har **23** og præcis **1**
 `/da/pricing`. Det er dom 6 i `tools/check_pricing_page.py`, som allerede læste
 samme adresse i den byggede footer. HTTP 200 blev ikke brugt som bevis.
-
-`VERIFICÉR DEPLOY: bannerne på alle 189 artikler er sekundære, og de fem
-artikler uden egen handling har fået en ceo/banner-secondary 4/10 09:5x` — mål
-på **indhold**, ikke HTTP 200: hent `https://mahope.tools/blog/developer-text-tools`,
-`/blog/free-website-compliance-checker`, `/blog/site-health-github-actions`,
-`/da/blog/gratis-compliance-tjek-hjemmeside` og
-`/da/blog/site-health-github-actions-stak`. Kriteriet er: **1** `btn-primary` i
-`<header class="hero">` pr. side (`Start Reading` ×3, `Læs guiden` ×2), **0**
-`btn-primary` i hvert `<div class="blog-tool-cta">`, og **1** matchende `id`
-(`content`/`indhold`) på hver side. Tæll også `dist/mahope.tools/blog/*.html`:
-summen af `btn-primary` i bannerne skal være **0**. Deploy sker ved push til
-`main`.
-
-`VERIFICÉR DEPLOY: /free-tools, /blog/ og /da/blog/ får én handling over folden
-ceo/hub-fold-handling 4/10 08:40` — mål på **indhold**: hent `/free-tools`,
-`/da/free-tools`, `/blog/`, `/da/blog/` og `/free-downloads` og tæl
-`btn-primary` i `<header class="hero">`. Kriteriet er **1** pr. side, og `href`
-skal være `#gdpr-heading` ×2, `#accessibility-eaa`, `#tilg-ngelighed-eaa` og
-`#tpl-heading`. Deploy sker ved push til `main`.
 
 `DEPLOY OK 4/10` for `ceo/vaerktoj-fold` — målt på indhold 07:0x: alle **otte**
 svarer 200 og har præcis **1** `btn-primary` i `<header class="hero">`, hver med
@@ -144,12 +145,22 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      præfiks-rute læst med kun den gamle liste). Ny liste med **1** grund:
      `clean-copy-tool.html`s dynamiske `'/api/license/' + endpoint`.
 11. ~~**Prislisten kunne ikke findes.**~~ **Færdig 4/10**, `ceo/pricing-i-footer`.
-    Hvorfor: `/pricing` er den eneste side med alle **12** varers priser, og den
-    hang i **1** af **224** kildesider og **0** af **270** footere — altså i
-    sitemap, målbar for Google og usynlig for mennesker. Accept: linket i hver
-    bygget footer på sit eget sprog, ratchetede af dom 6. **Målt:** grøn på ny
-    kode, **270** fund på gammel, selftest **13/13**, ingen vandret scroll ved
-    **360/390/1280**.
+     Hvorfor: `/pricing` er den eneste side med alle **12** varers priser, og den
+     hang i **1** af **224** kildesider og **0** af **270** footere — altså i
+     sitemap, målbar for Google og usynlig for mennesker. Accept: linket i hver
+     bygget footer på sit eget sprog, ratchetede af dom 6. **Målt:** grøn på ny
+     kode, **270** fund på gammel, selftest **13/13**, ingen vandret scroll ved
+     **360/390/1280**.
+12. ~~**Review-fund 4/10: to fund om noter der afregner for lidt.**~~
+     **Færdig 4/10**, `ceo/review-fund-oktober`. Den danske foldknap sagde
+     «Browse efter emne» på den ellers danske `/da/blog/` — **målt live** — og
+     `_4oktober_hubs` afregnede **9 af 11** sider. Rettet til «Se efter emne» i
+     generatoren og i den genererede side, og de **6** der blev ladt ligge er
+     nu navngivet med grund, så noten afregner **11 af 11**. Selftestens
+     mutation greber på **ankeret** i stedet for på etiketten, så en
+     sprogretning ikke kan låse porten: **23/23** med den nye sætning (var
+     **22/23** med den gamle regex), og et dødt foldanker giver stadig **RØD**.
+
 
 ## ❓ Til Mads
 
@@ -228,13 +239,14 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-1. **De 6 sider med nul handling over folden.** Hvem: læseren på
-   `books/index`, `books/compliance-bundle`, `downloads` og `url-inspector` —
-   de fire er målt enkeltvis i STATUS, og deres primære ligger 2 px under
-   folden eller i et kort. Tal: hvor mange læser folden og går videre.
-   Accept: ratchetede `hero-cta` på de fire + selftest rød på den gamle kode.
-   Datagrund: `/downloads` og `/books/*` er de eneste sider i familien hvor
-   læseren skal *finde* filen i stedet for at trykke på den.
+1. **De 4 af de 6 sider med nul handling over folden, der ikke er undtaget med
+   en grund.** Hvem: læseren på `books/index`, `downloads`,
+   `books/compliance-bundle` og `url-inspector`. Tal: hvor mange læser folden og
+   går videre. Accept: ratchetede `hero-cta` på de fire + selftest rød på den
+   gamle kode. Datagrund: `/downloads` og `/books/*` er de eneste sider i
+   familien hvor læseren skal *finde* filen i stedet for at trykke på den. De
+   øvrige **2** af de **6** er `compliance-ai` ×2, som noindexede og har
+   assistenten slukket (se ❓), så de er ikke dømt her — målt i STATUS.
 2. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
    Hvem: de 8 på `/blog/text-on-image-contrast-check` (100 % bounce, 28 d).
    Tal: hvor mange går fra artiklen til `/text-on-image-checker` og videre til

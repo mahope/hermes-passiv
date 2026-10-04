@@ -310,7 +310,7 @@ def dansk_index(da_posts, da_grouped, n_en):
     <h1>Alle danske guider</h1>
     <p class="subtitle">{n} guider p&aring; dansk om EU-compliance, tilg&aelig;ngelighed, arbejdsgange med tekst og tabeller, SEO-tjek og udviklerv&aelig;rkt&oslash;j. De {n_en} engelske guider ligger p&aring; <a href="/blog/">den engelske indeksside</a>.</p>
     <div class="hero-cta">
-      <a href="#{foerste}" class="btn-primary">Browse efter emne</a>
+      <a href="#{foerste}" class="btn-primary">Se efter emne</a>
     </div>
   </div>
 </header>
