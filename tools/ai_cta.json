@@ -1,5 +1,5 @@
 {
-  "note": "Sandheden om AI-banneren på bloggen. `available` skal være false, indtil OPENROUTER_API_KEY er sat på workeren: målt 1/10 svarer GET /api/compliance-ai available=false, og /compliance-ai siger da til den besøgende, at assistenten ikke er slået til. Banneren ligger på 188 sider, så et løfte der ikke kan holdes gentages 188 gange. `tools/check_ai_cta_honesty.py` dømmer hver side mod denne fil.",
+  "note": "Sandheden om AI-banneren på bloggen. `available` skal være false, indtil OPENROUTER_API_KEY er sat på workeren: målt 1/10 svarer GET /api/compliance-ai available=false, og /compliance-ai siger da til den besøgende, at assistenten ikke er slået til. Banneren ligger på hver AI-side og kun dér, så et løfte der ikke kan holdes gentages i N banner på tværs af de M sider i site/, porten skriver begge tal i hver kørsel («ai-cta: N banner(e) på M sider i site/» — M er alle sider i site/, ikke kun dem med banner). `tools/check_ai_cta_honesty.py` dømmer hver side mod denne fil.",
   "available": false,
   "target": {
     "en": "/compliance-ai",

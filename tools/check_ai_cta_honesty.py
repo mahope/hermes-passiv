@@ -4,8 +4,8 @@
 Baggrund (målt 1/10): `OPENROUTER_API_KEY` mangler på workeren, så
 `GET /api/compliance-ai` svarer `available: false`, og `/compliance-ai` siger
 til den besøgende, at assistenten ikke er slået til. Rettelsen 1/10 (`bda70e2`)
-gjorde *siden* ærlig og tog den ud af sitemap — men de 188 artikler beholdt
-banneren, der lovede «a practical answer in seconds». Hver eneste knap førte
+gjorde *siden* ærlig og tog den ud af sitemap — men banneren på hver AI-side
+beholdt sit løfte, «a practical answer in seconds». Hver eneste knap førte
 altså til en side, der siger, at løftet ikke kan holdes. Det er samme
 fejlform som fund 1 i review 1/10, kun en etage længere nede: en offentlig
 lovet handling, der altid fejler.
@@ -15,7 +15,7 @@ af den. Denne port dømmer hver side i `site/` mod den:
 
   1. Ingen side må love et svar, mens `available` er false.
   2. Hver AI-banner skal være tegnet af manifestet — samme label, samme
-     knap, samme mål. Ellers kan 188 sider glide fra hinanden igen.
+     knap, samme mål. Ellers kan banner-siderne glide fra hinanden igen.
   3. Bannerens mål skal være en side, der findes i `site/`, og som siger det
      ærligt, når assistenten er slukket (`aiUnavailable`).
 

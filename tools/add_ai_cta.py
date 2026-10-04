@@ -8,12 +8,13 @@ the existing cta-click listener? No — that listener only matches tool paths,
 so we also inject a tiny inline beacon for clicks on this link.
 
 The strip is `btn-secondary`, never `btn-primary`: it is a promo, and
-`tools/check_first_action.py` judges every one of the 189 banner pages on it
-(measured 4/10: this script and `add_top_cta_495.py` together made 330 banner
-buttons outrank the article's own action). Label and button come from
-`tools/ai_cta.json` so the generator cannot promise a working assistant while
-`available` is false — the strings below used to hardcode "practical answer in
-seconds" and 🤖, which `check_ai_cta_honesty.py` forbids on all 188 pages.
+`tools/check_first_action.py` judges every banner page on it (it counts them
+itself on each run: measured 4/10, this script and `add_top_cta_495.py`
+together made 330 banner buttons outrank the article's own action). Label and
+button come from `tools/ai_cta.json` so the generator cannot promise a working
+assistant while `available` is false — the strings below used to hardcode
+"practical answer in seconds" and 🤖, which `check_ai_cta_honesty.py` forbids on
+every page carrying the banner.
 
 Usage: python3 tools/add_ai_cta.py            # EN + DA blog dirs
 """

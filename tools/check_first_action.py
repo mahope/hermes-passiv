@@ -17,17 +17,25 @@ per *rute med forventet destination* og ikke per rute, så en ombytning af to
 `href` bliver rød — ellers ville porten være grøn fordi siden stadig har en
 primær handling, bare den forkert.
 
+**Tallene står ikke i denne tekst — de måles i hver kørsel.** Antallet af
+banner-sider, af bannerknapper og af sider med nul `btn-primary` står i portens
+egen afregning, fordi et tal skrevet her forældedes med næste artikel. En måling
+med dato («Målt 4/10») er derimod en *registreret* kendsgerning og bliver
+stående. Læs dem i den linje porten skriver til sidst — den kommer kun uden
+`--list`, der viser den ratchetede fil og dens grunde.
+
 **Hvad porten dømmer, og hvad den kun tæller.** Den dømmer to ting. (1) De
 sider, der står i `tools/first_action.json`: præcis én `btn-primary` i
 foldregionen, den skal være regionens første link, og den skal pege på den
-ratchetede rute. (2) **Alle 189 sider med et `blog-tool-cta`-banner**, uanset
+ratchetede rute. (2) **Alle sider med et `blog-tool-cta`-banner**, uanset
 om de står i ratchetfilen: et banner må aldrig være primært. Målt 4/10 var det
-330 knapper på 187 artikler, fordi `add_top_cta_495.py`, `add_ai_cta.py` og
-`add_hero_cta.py` alle skrev en `btn-primary` ind i bannerne. Bannerne bliver
-liggende — det er Mads' beslutning om promen (se ❓) — men de taler kun en gang,
-som det sekundære de er.
+**330 bannerknapper** der råbte lige så højt som sidens egen handling, fordelt
+over de banner-sider porten selv tæller, fordi `add_top_cta_495.py`,
+`add_ai_cta.py` og `add_hero_cta.py` alle skrev en `btn-primary` ind i
+bannerne. Bannerne bliver liggende — det er Mads' beslutning om promen (se ❓)
+— men de taler kun en gang, som det sekundære de er.
 
-De øvrige sider **tælles** og skrives ud i hver kørsel: de 6 med nul `btn-primary`
+De øvrige sider **tælles** og skrives ud i hver kørsel: de med nul `btn-primary`
 i folden er enten `noindex`-sider, en side der kræver en nøgle, eller en side
 hvor den primære ligger 2 px under folden. Hver af dem er målt enkeltvis i
 `IMPLEMENTATION_PLAN.md`.
@@ -94,8 +102,8 @@ def banner_fund(html: str) -> list[str]:
 
     Målt 4/10: `tools/add_top_cta_495.py`, `tools/add_ai_cta.py` og
     `tools/add_hero_cta.py` skrev hver især en `btn-primary` ind i bannerne, så
-    **330 bannerknapper på 187 artikler** råbte lige så højt som sidens egen
-    handling — og de tre generatorer skrev igen, så en retning i `site/` alene
+    **330 bannerknapper** råbte lige så højt som sidens egen handling — og de
+    tre generatorer skrev igen, så en retning i `site/` alene
     var holdbar til næste kørsel. Reglen er derfor ikke «banneret ligger for
     højt» (det er enpromo Mads skal have sagt ja til, se ❓) men **«en banner er
     aldrig primær»**: bannerne bliver liggende, de taler bare kun en gang, som
@@ -161,11 +169,11 @@ def ratchet() -> dict[str, str]:
 def dom_bannere(site: Path | None = None) -> list[str]:
     """Bannerreglen dømmer *alle* sider med et banner, ikke kun de ratchetede.
 
-    De 187 artikler med banner er ingen port holdt i en håndfærdet liste: de er
+Siderne med banner er ingen port holdt i en håndfærdet liste: de er
     fundet ved at læse `site/`, så en ny artikel arver reglen uden at nogen
-    skulle huske at føje den ind. Det er hele pointen — de tre generatorer gav
-    alle sammen 330 primære bannerknapper, og en port der kun dømmer 29 sider
-    ville have været grøn hele vejen.
+    skulle huske at føje den ind. Det er hele pointet — de tre generatorer gav
+    alle sammen 330 primære bannerknapper, og en port der kun dømmer de
+    ratchetede sider ville have været grøn hele vejen.
     """
     rod = (site or SITE).resolve()
     fund: list[str] = []
@@ -314,7 +322,7 @@ def self_test() -> int:
          all(k.startswith("site/") and (ROOT / k).exists() for k in dømt),
          str(sorted(dømt)))
     # 8. Målingen på den virkelige `site/` skal være grøn, ellers er 1-7 grønne
-    #    fordi porten intet ser. Bannerreglen dømmer alle 187 artikler, så den
+    #    fordi porten intet ser. Bannerreglen dømmer alle sider med banner, så den
     #    skal med her — ellers ville porten være grøn på dem alle.
     fund, _ = dom()
     fund += dom_bannere()
@@ -366,10 +374,10 @@ def self_test() -> int:
         (rod / "site" / "test.html").write_text(hero.format(a="/tool"), encoding="utf-8")
         tjek("rettet syntetisk side er grøn", dom_med_rod(rod)[0] == [])
 
-    # 11. Bannerreglen skal dømme de 187 artikler, ikke kun de 29 ratchetede. Derfor
-    #     skal den være målt på et *rigtigt* udtræk af `site/` med én banner skudt
-    #     tilbage til `btn-primary` — den mutation de tre generatorer gjorde 330
-    #     gange, og som porten skal kunne se.
+    # 11. Bannerreglen skal dømme alle sider med banner, ikke kun de ratchetede.
+    #     Derfor skal den være målt på et *rigtigt* udtræk af `site/` med én banner
+    #     skudt tilbage til `btn-primary` — den mutation de tre generatorer gjorde
+    #     330 gange målt 4/10, og som porten skal kunne se.
     with tempfile.TemporaryDirectory() as tmp:
         rod = Path(tmp) / "site"
         rod.mkdir(parents=True)
@@ -451,10 +459,16 @@ def main(argv: list[str] | None = None) -> int:
     for linje in fund:
         print(linje)
     dømt = len(ratchet())
-    banner_filer = sum(1 for fil in SITE.rglob("*.html")
-                       if BANNER_RE.search(fil.read_text(encoding="utf-8", errors="replace")))
+    banner_filer = banner_knapper = 0
+    for fil in SITE.rglob("*.html"):
+        src = fil.read_text(encoding="utf-8", errors="replace")
+        bannere = BANNER_RE.findall(src)
+        if bannere:
+            banner_filer += 1
+        for banner in bannere:
+            banner_knapper += len(handlinger(banner))
     print(f"\nfirst-action: {dømt} sider ratchetede + {banner_filer} sider med "
-          f"banner dømt, {len(fund)} problemer")
+          f"banner dømt ({banner_knapper} bannerknapper), {len(fund)} problemer")
     if flere or nul:
         print(f"  kun talt, ikke dømt: {flere} af {med_hero} sider med en hero har "
               f"mere end én btn-primary over folden ({nul} har nul)")

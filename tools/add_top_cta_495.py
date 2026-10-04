@@ -2,16 +2,17 @@
 
 Målt 4/10: bannerne er *sekundære*. `tools/add_top_cta_495.py` (dette script),
 `tools/add_ai_cta.py` og `tools/add_hero_cta.py` skrev alle tre en `btn-primary`
-ind i dem, så 330 bannerknapper på 187 artikler råbte lige så højt som sidens
-egen handling — og tre generatorer skrev det igen, så en retning i `site/` alene
+ind i dem, så 330 bannerknapper råbte lige så højt som sidens egen handling —
+og tre generatorer skrev det igen, så en retning i `site/` alene
 var holdbar til næste kørsel. `tools/check_first_action.py` dommer nu «en banner
-er aldrig primær» på alle 189 sider med banner, så klassen her skal være
+er aldrig primær» på hver side med banner (porten tæller dem selv og skriver
+antallet i hver kørsel), så klassen her skal være
 `btn-secondary` eller porten går rød med det samme.
 
 AI-bannerens tekst læses fra `tools/ai_cta.json`, fordi den skal være den
 **ærlige** variant mens assistenten er slukket (`available: false`): en generator
-med sit eget «practical answer in seconds» ville skrive et løfte, 187 artikler
-ikke kan holde, og `check_ai_cta_honesty.py` ville fange det bagefter.
+med sit eget «practical answer in seconds» ville skrive et løfte, banneret ikke
+kan holde, og `check_ai_cta_honesty.py` ville fange det bagefter.
 """
 import glob
 import json

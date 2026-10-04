@@ -1,46 +1,46 @@
 # STATUS
-- **171 sider med to-tre knapper over folden er nu 0.** De tre generatorer
-  `add_top_cta_495.py`, `add_ai_cta.py` og `add_hero_cta.py` skrev hver især en
-  `btn-primary` ind i CTA-bannerne: **330** knapper på **187** artikler.
-  `check_first_action.py` har nu et dom for **alle 189** sider med et banner,
-  ikke kun de 29 ratchetede, så en ny artikel arver reglen uden at nogen skal
-  huske den ind. Porten var **RØD med 330 fund** på den uændrede kode.
-- **Bannerne ligger stadig**, de taler bare kun en gang som det sekundære de
-  er — forenligt med alle tre svar i ❓. Bygget `dist/`: banner **315 → 0**.
-- **Fem artikler havde ingen egen handling** — banneren var deres eneste
-  primære. De har nu `#content`/`#indhold` som `hero-cta` (185 søskendesiders
-  mønster, `id` på artiklens første sektion) og er ratchetede. Sider med nul
-  primær: **6 → 11 → 6**. Playwright 390 + 1280 på de fem: **0 px** scroll.
-  Selftest **20/20**, fuld gate **159 steps grøn**.
-- **De 6 tilbage er målt, ikke gættet:** `compliance-ai` ×2 (noindex,
-  assistenten er slukket — se ❓), `books/compliance-bundle` (`btn-free` lige
-  under folden), `downloads` (`pip install` er første `<section>` lige under),
-  `books/index` (bundle-kortet under folden), `url-inspector` (`#url-input`
-  ligger 2 px under folden). Alle **6** er nu navngivet med grund i
-  `first_action.json`, så `_4oktober_hubs` afregner **11 af 11**. **PR-TJEK
-  4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
+- **171 sider med to-tre knapper over folden er nu 0.** De tre generatorer skrev
+  hver især en `btn-primary` ind i CTA-bannerne: **330** knapper på de **179**
+  banner-sider dengang. `check_first_action.py` dømmer nu *alle* sider med
+  banner, så en ny artikel arver reglen uden at nogen skal huske den ind. Porten
+  var **RØD med 330 fund** på den uændrede kode. Bannerne ligger stadig, de
+  taler bare kun en gang som det sekundære de er — forenligt med alle tre svar
+  i ❓.
+- **Sider med nul handling over folden: 6 → 11 → 5.** `/downloads` fik en
+  `hero-cta` ned til `#desktop-app`, fordi de tre rigtige downloads ligger på
+  siden selv. De **5** tilbage er `compliance-ai` ×2 (noindex, assistenten er
+  slukket — se ❓), `books/compliance-bundle`, `books/index` og `url-inspector`,
+  og alle **5** står med grund i `first_action.json`; de **3** uden grund er
+  Feature-kø punkt 1.
+- **Banner-teksten skrev fire forkerte optællinger.** Målt på `b1a1b77~1` med
+  portens egne regex'er: de **330** knapper lå på **179** sider (ikke 187),
+  **189** sider bar et banner, og **186** havde AI-banner (ikke 188). Der står
+  nu intet løbende side-tal i teksten — kun daterede målinger, ellers en
+  pegepning på portens egen afregning, som `check_first_action.py` nu udvider
+  med bannerknap-antallet, så pegepningen kan efterleves. **PR-TJEK 4/10:**
+  0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 - **Den danske knap på `/da/blog/` sagde «Browse efter emne»** — det eneste
   engelske ord på den ellers danske indeksside, målt **live** før rettelsen. Nu
   «**Se efter emne**», og portens selftest greber døde foldankere på
-  **ankeret** i stedet for på etiketten, så en sprogretning ikke låser porten:
-  **23/23** nu (var **22/23**), og et dødt anker giver stadig **RØD**.
+  **ankeret** i stedet for på etiketten: **23/23** nu (var **22/23**).
 
 
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: /downloads får en handling over folden ceo/downloads-fold
-4/10 10:3x` — mål på **indhold**, ikke HTTP 200: hent
-`https://mahope.tools/downloads` og tæl `btn-primary` i
-`<header class="hero">`. Kriteriet er præcis **1**, etiketten **«Get the desktop
-app»**, og `href="#desktop-app"` skal findes **præcis 1** gang på siden.
-Deploy sker ved push til `main`.
+`DEPLOY OK 4/10 11:2x` for `ceo/downloads-fold` — målt på **indhold**:
+`https://mahope.tools/downloads` har præcis **1** `btn-primary` i
+`<header class="hero">` med etiketten «Get the desktop app», og
+`href="#desktop-app"` + `id="desktop-app"` forekommer **1** gang hver. HTTP 200
+blev ikke brugt som bevis.
 
-`VERIFICÉR DEPLOY: den danske foldknap på /da/blog/ ceo/review-fund-oktober
-4/10 10:2x` — mål på **indhold**: hent `https://mahope.tools/da/blog/` og
-kræv **0** forekomster af `Browse efter emne` og **1** af `Se efter emne` i
-`<header class="hero">`, med `href="#tilg-ngelighed-eaa"` uændret. Noten er
-ikke skrevet i squash-committet, kun her, fordi den var en plan-rettelse.
+Ingen deploy-note for `ceo/taal-i-tekst`: den rører **0** filer i `site/`, kun
+`tools/*.py`, `tools/*.json` og planen, så intet serverside eller i klienten
+ændrer sig. Portene er målt lokalt i stedet.
+
+`DEPLOY OK 4/10 11:2x` for `ceo/review-fund-oktober` — målt på **indhold**:
+`https://mahope.tools/da/blog/` har **0** «Browse efter emne» og **1** «Se efter
+emne», og `href="#tilg-ngelighed-eaa"` står uændret **1** gang.
 
 `DEPLOY OK 4/10` for `ceo/banner-secondary` — målt på **indhold** 10:1x, ikke
 HTTP 200: de fem artikler har **1** `btn-primary` i `<header class="hero">`
@@ -119,14 +119,14 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
    Pages og fjernet af `UNMANAGED_DOMAINS`, eller fjernet fra `TRACKING_DOMAINS`.
    *(Beslutning — se ❓.)*
 5. ~~**171 sider har to-tre knapper over folden.**~~ **Færdig 4/10**,
-    `ceo/banner-secondary`. `add_top_cta_495.py`, `add_ai_cta.py` og
-    `add_hero_cta.py` skrev hver især en `btn-primary` ind i CTA-bannerne —
-    **330** knapper på **187** artikler. Nu er de `btn-secondary`, alle tre
-    generatorer er rettet i samme diff, og `check_first_action.py` dømmer
-    bannerreglen på **alle 189** sider med banner. Målt **171 → 0**. Fem
-    artikler der kun *havde* banneren som handling har fået deres egen. ❓ om
-    bannerens placering står uændret — reglen er skrevet, så den er forenlig
-    med alle tre svar.
+   `ceo/banner-secondary`. `add_top_cta_495.py`, `add_ai_cta.py` og
+   `add_hero_cta.py` skrev hver især en `btn-primary` ind i bannerne —
+   **330** knapper på de **179** banner-sider dengang. Nu er de
+   `btn-secondary`, alle tre generatorer er rettet i samme diff, og
+   `check_first_action.py` dømmer bannerreglen på alle sider med banner.
+   Målt **171 → 0**. Fem artikler der kun *havde* banneren som handling har
+   fået deres egen. ❓ om bannerens placering står uændret — reglen er
+   skrevet, så den er forenlig med alle tre svar.
 6. **Bogen har ingen DA-udgave, og læsevisningen gør det tydeligt.** Hvorfor: de
    seks bøger er på engelsk. Målt 2/10: der findes **ingen** `/da/books/*`-ruter,
    så bogsiders hreflang har intet dansk par. Accept: enten en DA-udgave af de to
@@ -178,6 +178,18 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      fold-CTA samme dag, havde badge, `<h1>` og tagline men intet at trykke på.
      Nu `#desktop-app`, sektionen med de tre rigtige downloads, og ratcheted.
      Målt: sider med nul primær **6 → 5**, porten **RØD** når `hero-cta` fjernes.
+14. ~~**Banner-teksten skrev fire forkerte optællinger.**~~ **Færdig 4/10**,
+     `ceo/taal-i-tekst`. Målt på `b1a1b77~1` med portens egne regex'er: de
+     **330** knapper lå på **179** sider (ikke 187 over tre steder), **189** sider
+     bar et banner (ikke 187), og **186** havde AI-banner (ikke 188 i to
+     steder). Rettelsen er ikke et nyt tal men en regel: et *dateret* målingstal
+     er en kendsgerning og bliver stående, et *løbende* side-tal er skrevet ud
+     og peger på portens egen afregning. Rørt 6 filer, heraf `_4oktober_hubs` der
+     stadig skrev at `downloads` var «ikke dømt endnu» — samme fejlform, samme
+     diff. Efter egen gennemgang af de nye tekster grebet de to påstande de selv
+     skabte: «eller kør `--list`» (porten returnerer *før* afregningen der) og
+     «banneren ligger på hver side» (M i portens linje er alle sider i `site/`,
+     ikke dem med banner).
 
 
 ## ❓ Til Mads
@@ -186,8 +198,9 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
   Sagen siger at assistenten er slukket og byder på scanner, erklæringsgenerator
   og de tre bøger, og begge ruter er ude af sitemap og `llms.txt`. **Når du sætter
   nøglen:** fjern `<meta name="robots" content="noindex,follow">` fra
-  `site/compliance-ai.html` + `site/da/compliance-ai.html`. **Banneren på de 187
-  artikler følger samme nøgle:** sæt `"available": true` i `tools/ai_cta.json`,
+  `site/compliance-ai.html` + `site/da/compliance-ai.html`. **Banneren på
+  AI-siderne følger samme nøgle** (så mange, `check_ai_cta_honesty.py` tæller
+  dem hver kørsel): sæt `"available": true` i `tools/ai_cta.json`,
   kør `python3 tools/check_ai_cta_honesty.py --apply`.
 - **🔴 `STATS_TOKEN` på workeren.** Én linje, én secret, og så kan konvertering
   måles i stedet for gættes. Uden den er `/api/stats` 401, og opgave 3 bygger på
