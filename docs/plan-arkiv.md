@@ -7206,3 +7206,20 @@ håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.
   `check_first_action.py` skrev «(19 har nul)» i hver kørsel hele tiden.
 - `Opgraderinger`: ingen nye; diffen rører ingen afhængighed, så
   `~/.local/oxloop/AFHAENGIGHEDER.md` er uændret.
+
+## 4/10 — `ceo/net-kaldere` (afsluttet opgave 9)
+
+- **Hvad:** `check_net_copies.py` fik en tredje dom: en fil i `site/` der kalder
+  en af vores egne worker-ruter med rå `fetch` skal gå gennem `NET.ask`.
+- **Hvorfor:** dom 1 og 2 ledte efter en *kopi* af reglen, så `book-lead.js` var
+  grøn med et blindt `res.json()` skrevet i egen hånd. Reglen manglede, og
+  porten kunne ikke se det.
+- **Målt:** 22 ruter læst i `_worker.js`s dispatch; **15 filer** kalder en rute
+  uden kernen, hver med sin rute og grund i listen. `<pre>` fjernes før søgningen,
+  ellers dømmer `/blog/html-to-markdown-api` + DA deres eget eksempel (2 falske
+  fund fundet ved mutation). Selvtest 9 → **19** kontroller.
+- **Rødt på gammel kode:** dom 3 findes ikke i `fec5ba6`; de 15 fund er den
+  gamle kodes sandhed, hver dømt mod `_worker.js` og ikke mod portens egen liste.
+- **Næste:** tøm listen — 6 `nis2-*` (waitlist), `compliance-ai` EN+DA 486/487,
+  `compliance-report.html`, `clean-copy-api.html`, `paid-templates` ×2,
+  `stats.html`, `thanks.html`, `bugbottle-demo.js`.

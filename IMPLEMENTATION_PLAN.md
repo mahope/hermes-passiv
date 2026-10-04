@@ -1,35 +1,23 @@
 # STATUS
-- **Fire værktøjssider på to sprog havde ingen handling over folden.** Målt med
-  `check_first_action.py`: 19 sider i `site/` har nul `btn-primary` i folden, og
-  otte af dem er `contrast-checker`, `color-blindness-simulator`,
-  `palette-generator` og `text-on-image-checker` (EN+DA). Værktøjet ligger på dem
-  lige under folden, så læseren læser hele taglinen og kan ikke gøre noget.
-  `/text-on-image-checker` er destinationen for `/blog/text-on-image-contrast-check`,
-  der alene er 8 af 21 besøgende på mahope.tools. Nu har hver fold ét anker ned
-  til værktøjets egen overskrift — samme rettelse som `ceo/deskuptime-en-kob` gjorde
-  på deskuptime.com. Tallet er 19 → **11**.
-- **Porten dømmer dem nu, og den er målt rød på den gamle kode.** De otte ruter
-  står i `tools/first_action.json` med deres destination; `git stash` på kun
-  `site/` giver **8 fund** med præcis `ingen btn-primary i foldregionen`, og den
-  er grøn på den nye kode. 24 sider dømt.
-- **Rettelsen rørte katalogens linjenumre, og porten fangede det.** De 18
-  `where`-henvisninger i `tools/stripe_catalog.json` på de otte filer er flyttet
-  +3 linjer; `check_catalog_where.py` blev rød med 12 fund *inden* skiftet, fordi
-  citaterne lå uden for deres interval. Samme fejlform som «en generator er selv
-  en ratchet».
-- **Den danske `contrast-checker` sagde `FREE TOOL` i badgen.** Rettet til
-  `GRATIS VÆRKTØJ` som på de tre andre DA-sider.
-- **Målt i `dist/`, ikke i kilden:** alle otte byggede sider har præcis **1**
-  `hero-cta` med **1** `btn-primary`, og målet (`#tool-heading`, `#checker-heading`,
-  `#sim-heading`, `#gen-heading`) findes på samme side. `html` har
-  `scroll-padding-top: calc(var(--header-h) + 1rem)`, så ankeret ikke lander bag
-  den sticky header.
-- **En 🔴 i planen var en fejlmåling.** ❓ «`_worker.js` er ikke hele workeren»
-  byggede på at live `/api/compliance-scan` svarede med **9** tjek mens `CSC_CHECKS`
-  «havde 7». Målt 4/10: `CSC_CHECKS` har **9** nøgler — de to manglende
-  (`security-headers`, `meta-tags`) er skrevet med **citattegn**, så den måling der
-  fandt «7» ignorerede dem. Live og repo er samme worker.
-- **Gaten grøn:** 159 steps. CI 37174453450 grøn. PR-TJEK 4/10: 0 PR'er.
+- **Deployen af de otte værktøjssider lå bag en rød gaten.** Målt 06:2x: live
+  `build-info.json` stod på `fec5ba6`, `/contrast-checker` havde 0 `hero-cta`, og
+  `check_live_sitemaps` meldte `artifact mismatch` på både `sitemap.xml` og
+  `build-info.json`. Kørsel `37176619481` døde i `plan-status`: STATUS var 31
+  linjer mod højst 25, og ét punkt havde intet tal. Gaten er grøn igen her.
+- **`ceo/developers-kvoter` er live og målt på indhold.** `/developers` har 1
+  `512 000 characters per page` og 0 `500 000`.
+- **Porten dømmer nu kalder, ikke kun kopier.** `check_net_copies.py` var grøn med
+  `book-lead.js`s blinde `res.json()`, fordi den ledte efter en *kopi* af reglen.
+  Dom 3 læser de 22 ruter i `_worker.js` og dømmer rå `fetch` på dem: **15 filer**
+  kalder en rute uden kernen, hver med sin grund i listen. `<pre>` er fjernet
+  før søgningen — ellers dømmer de 2 API-artikler deres eget eksempel.
+  Selvtest 19/19, de 10 nye kontroller kan fejle.
+- **Resten af CEO-kø punkt 0 er målt leveret.** `/api/url-inspect` svarer 200
+  live, `thanks.html` skelner 202 fra bekræftet, de 6 klienter viser `data.error`,
+  og `targetIsPublic()` afviser IPv4-mapped IPv6 på hvert redirect-hop. Sentry
+  sidder i workeren (`SENTRY_DSN_FALLBACK`, kun uventede fejl).
+- **Gaten grøn.** PR-TJEK 4/10: 0 PR'er. BRANCH-TJEK 4/10: ingen remote-grene
+  over 14 dage.
 
 ## Verificér deploy
 
@@ -58,12 +46,10 @@ og **0** `Network error`. **Målt afvigelse:** noten lovede «2 defer-tags» på
 side; live har **5** linjer med `defer`, fordi siden også indlæser `track.js`.
 Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
 
-`VERIFICÉR DEPLOY: kvotetabellen på /developers lover 512 000 tegn pr. side ceo/developers-kvoter 4/10`
-Graden deployer på push. Verificér på *indhold*: hent
-`https://mahope.tools/developers`, kræv **1** `512 000 characters per page` og
-**0** `500 000`, og at de fire rækker stadig siger `120 per hour`, `50 000
-characters per call`, `30 per hour, 5 sites and 12 pages per call`, `60 per hour`
-og `resets at midnight UTC`. Sidens `sitemap.xml` skal fortsat have routen.
+`DEPLOY OK 4/10` for `ceo/developers-kvoter` — målt på indhold 06:2x:
+`https://mahope.tools/developers` har **1** `512 000 characters per page` og **0**
+`500 000`. Kriteriet var rigtigt; resten af rækkerne er dømt af
+`tools/check_developers_page.py`, som læser dem fra `_worker.js`.
 
 `VERIFICÉR DEPLOY: folden på de otte farve- og tekstværktøjer ceo/vaerktoj-fold 4/10`
 Graden deployer på push. Verificér på *indhold*, én side pr. sprog: hent
@@ -116,16 +102,17 @@ otte ruter.
    dømmer kun de to ruter i `tools/unavailable_routes.json`. Accept: porten
    finder den, hvis den skrives i manifestet. *(Kun relevant når vi tilføjer flere
    sådanne sider — ikke en opgave i sig selv.)*
-9. **Porten dømmer kopier af reglen, ikke klienter der mangler den.** Hvorfor:
-   `check_net_copies.py` finder kun en inline `.transient`/`.limited`-linje, så
-   `book-lead.js` var grøn med et blindt `res.json()`. Målt 4/10 efter rettelsen:
-   de **otte** andre steder i `site/` der kalder vores egen worker — `nis2-check`
-   EN+DA, `nis2-gap-assessment` EN+DA, `nis2-incident-generator` EN+DA,
-   `clean-copy-api.html` (og `compliance-ai.html` + DA's `fetch` på linje
-   486/487, som ikke går gennem `NET.ask`). Accept: porten dømmer *kaldere* —
-   en fil i `site/` må ikke nå en worker-rute uden `NET.ask`/`NET.postJSON` —
-   med en navngiven undtagelsesliste for de, der endnu ikke er flyttet, så
-   gætningen ikke kan gemme sig.
+9. ~~**Porten dømmer kopier af reglen, ikke klienter der mangler den.**~~
+   **Færdig 4/10**, `ceo/net-kaldere`. Dom 3 læser de **22** ruter i
+   `_worker.js`s egen dispatch og dømmer rå `fetch` på dem. Målt: **15 filer**
+   kalder en rute uden kernen — de **6** `nis2-*` (waitlist), `compliance-ai` +
+   DA på linje 486/487, `compliance-report.html`, `clean-copy-api.html`,
+   `paid-templates.html` + DA, `stats.html`, `thanks.html` (202-polling),
+   `bugbottle-demo.js`. Hver står **navngivet med sin rute** i portens liste, så
+   en ny rute i en undtagelsesfil bliver rød. `<pre>` er fjernet før søgningen:
+   ellers dømmer `/blog/html-to-markdown-api` + DA deres eget eksempel.
+   **Næste:** tøm listen — de 6 `nis2-*` er én samlet opgave, `compliance-ai`
+   486/487 er to slettede linjer.
 
 ## ❓ Til Mads
 
