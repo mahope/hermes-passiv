@@ -1,30 +1,34 @@
 # STATUS
-- **Review-funde 4/10 er lukket i porten, ikke i klienten.** Fundet var at
-  `check_net_copies.py` læste 22 ruter med `path === '/api/…'` mens den 23. er
-  `path.startsWith('/api/download/')` (`site/_worker.js:286`) — så en
-  `fetch('/api/download/tok/x.pdf')` i en vilkårlig side var **GRØN**. Målt: porten
-  læser nu **23** ruter, og selvtesten er **30/30** med fire nye kontroller.
-- **Den nye dom er de to veje rundt om den afledte liste.** Et kald der *ikke*
-  findes i dispatchen er et fund (en relativ `/api/…` i vores egen side er
-  enten vores rute eller en 404), og en undtagelsesliste med en rute der er
-  væk er også et fund — det var en note. Målt ved mutation: fundets egen
-  `/api/download/`-indsats i `stats.html` → **RØD**; `fetch('/api/ukendte-rute')`
-  → **RØD**; en død undtagelse → **RØD**. Ny undtagelse: **1** fil
-  (`clean-copy-tool.html`, det dynamiske `'/api/license/' + endpoint`).
-- **Den røde gate efter `10babe5` var sandkassens, ikke sidens.** CI-kørsel
-  `37178999410` døde i `scan-clients` på begge `compliance-ai`: «en slukket
-  assistent fjerner chatten», `chatGone=false`. `10babe5` flyttede sondéringen til
-  `DOMContentLoaded` (korrekt: `/net.js` er `defer`, så `NET` findes ikke under
-  parsing), men sandkassen havde `document.addEventListener(){}` som no-op. Nu
-  fyres lytterne i browserens rækkefølge. Målt: **518/518**; mutationen «fyr
-  ikke DOMContentLoaded» giver 516/518 med præcis de to fejl.
-- **Resten af CEO-kø punkt 0 er målt leveret.** `/api/url-inspect` svarer 200
-  live, `thanks.html` skelner 202 fra bekræftet, de 6 klienter viser `data.error`,
-  og `targetIsPublic()` afviser IPv4-mapped IPv6 på hvert redirect-hop. Sentry
-  sidder i workeren (`SENTRY_DSN_FALLBACK`, kun uventede fejl).
+- **Prislisten lå i sitemap og ingen andre steder.** `/pricing` er den eneste
+  side med alle **12** varers priser og en gratis-mod-betalt-tabel pr. vare.
+  Målt: `href="/pricing"` stod i **1** af **224** kildesider (forsidens egen
+  hub) og i **0** af **270** byggede footere. Nu: **1** link i hver af de **270**.
+- **Ny dom 6 gør det permanent, målt på begge veje.** `check_pricing_page.py`s
+  dom 6 læser de byggede footere. Gammel kode → **RØD, 270 fund**; ny kode →
+  **GRØN**, selftest **13/13** (2 nye mutationer: manglende link, dansk side med
+  engelsk prisliste). Fuld gate: **159 steps grøn**.
+- **Sproget læses af `<html lang>`, ikke af ruten.** **14** af dist's **270**
+  sider er `-da` i **roden** (`/text-on-image-checker-da`), ikke under `/da/`. En
+  rutebaseret `startswith("da/")` krævede den engelske prisliste på 14 danske
+  sider — målt, fund var præcis disse **14**, rettet i samme iteration.
+- **Tallet i fejlteksten er udledt, ikke skrevet.** Katalogen har **13**
+  produkter og **12** står på `/pricing`, så «alle 13 varer» i mit eget første
+  udkast var løgn (tjekliste punkt 11). Porten siger nu `alle 12 varers priser`.
+- **Playwright ER i repoet** — `tools/shots.py` med Chromium **1.63.0**. Seks
+  review-iterationer har kaldt det fraværende. Målt ved **360/390/1280**:
+  `scrollWidth` **390** på en **374** px bred footer = ingen vandret scroll,
+  præcis **1** prislink pr. footer, `Priser` på DA og `Pricing` på EN.
 - **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: /pricing i footeren på alle 270 byggede sider ceo/pricing-i-footer 4/10 07:55` —
+mål på **indhold**, ikke HTTP 200: hent `https://mahope.tools/` og
+`https://mahope.tools/da/` og tæl i `<footer class="site-footer">`. Kriteriet er
+**1** link til `/pricing` (EN) hhv. `/da/pricing` (DA), præcis som
+`tools/check_pricing_page.py` dom 6 dømmer lokalt. Tjek også en DA-side i
+roden, fx `/text-on-image-checker-da`, for den har dansk footer. Deploy sker
+ved push til `main` for dette repo (ikke batch).
 
 `DEPLOY OK 4/10` for `ceo/vaerktoj-fold` — målt på indhold 07:0x: alle **otte**
 svarer 200 og har præcis **1** `btn-primary` i `<header class="hero">`, hver med
@@ -112,13 +116,20 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
    `ceo/net-waitlist-klienter` — portens liste er **7 filer**, og alle syv har en
    grund der *ikke* er «ikke flyttet endnu».
 10. ~~**Review-fund 4/10: porten dømmer 22 af 23 ruter, og den 23. er usynlig af
-    konstruktion.**~~ **Færdig 5/10**, `ceo/net-ruter`. `_worker.js:286`
-    dispatcher `/api/download/` med `startsWith`, som et `path ===`-mønster ikke
-    kan se — så fundets egen mutation var grøn. Målt: **23** ruter, selvtest
-    **30/30**, fire mutationer røde (fundets egen `/api/download/`-indsats i
-    `stats.html`, `fetch('/api/ukendte-rute')`, en død undtagelsesrute, og en
-    præfiks-rute læst med kun den gamle liste). Ny liste med **1** grund:
-    `clean-copy-tool.html`s dynamiske `'/api/license/' + endpoint`.
+     konstruktion.**~~ **Færdig 5/10**, `ceo/net-ruter`. `_worker.js:286`
+     dispatcher `/api/download/` med `startsWith`, som et `path ===`-mønster ikke
+     kan se — så fundets egen mutation var grøn. Målt: **23** ruter, selvtest
+     **30/30**, fire mutationer røde (fundets egen `/api/download/`-indsats i
+     `stats.html`, `fetch('/api/ukendte-rute')`, en død undtagelsesrute, og en
+     præfiks-rute læst med kun den gamle liste). Ny liste med **1** grund:
+     `clean-copy-tool.html`s dynamiske `'/api/license/' + endpoint`.
+11. ~~**Prislisten kunne ikke findes.**~~ **Færdig 4/10**, `ceo/pricing-i-footer`.
+    Hvorfor: `/pricing` er den eneste side med alle **12** varers priser, og den
+    hang i **1** af **224** kildesider og **0** af **270** footere — altså i
+    sitemap, målbar for Google og usynlig for mennesker. Accept: linket i hver
+    bygget footer på sit eget sprog, ratchetede af dom 6. **Målt:** grøn på ny
+    kode, **270** fund på gammel, selftest **13/13**, ingen vandret scroll ved
+    **360/390/1280**.
 
 ## ❓ Til Mads
 
@@ -253,3 +264,12 @@ i `docs/plan-arkiv.md`.
    `ingen btn-primary i foldregionen`. **Bemærk:** de otte byggede DA-ruter hedder
    `/palette-generator-da` osv., ikke `/da/palette-generator` — målt i
    `dist/mahope.tools/sitemap.xml`, ikke antaget.
+
+9. ~~**Gør prislisten findbar fra alle 270 sider.**~~ **Leveret 4/10.**
+   Hvem: enhver der bruger et gratis værktøj og så vil vide hvad Pro koster.
+   Tal: hvor mange der går fra et værktøj til `/pricing`. Accept: linket i hver
+   bygget footer på sit eget sprog, og en dom der dømmer det. Datagrund: den
+   eneste side med alle **12** priser lå i sitemap og **0** af **270** footere,
+   så spørgsmålet «hvad koster Pro?» havde intet svar at finde. **Målt:** grøn på
+   ny kode, **270** fund på gammel kode, selftest **13/13**; `site/track.js`s
+   `CTA_PATHS` indeholdt allerede `pricing`, så klikket kan tælles uden ny kode.

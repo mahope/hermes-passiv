@@ -7223,3 +7223,50 @@ håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.
 - **Næste:** tøm listen — 6 `nis2-*` (waitlist), `compliance-ai` EN+DA 486/487,
   `compliance-report.html`, `clean-copy-api.html`, `paid-templates` ×2,
   `stats.html`, `thanks.html`, `bugbottle-demo.js`.
+
+## 4/10 — `ceo/pricing-i-footer`: prislisten i footeren
+
+**Målingen der satte opgaven.** `/pricing` er den eneste side i familien der
+samler hver vares pris og en gratis-mod-betalt-tabel pr. vare. Den lå i
+`sitemap.xml`, altså målbar for Google. `grep -rl 'href="/pricing"' site/`
+gav **én** fil — `site/free-tools.html`, forsidens egen hub, der linker til den
+to gange — og **0** af dist's **270** byggede footere havde den, fordi footeren
+bygges af `nav` + `footer_extra` i `build_sites.py` og ingen af dem nævnte den.
+
+**Rettelsen.** To linjer i `footer_extra` for `mahope.tools`:
+`("Pricing", "/pricing")` og `("Priser", "/da/pricing")`. Samme mekanisme som
+`/developers` brugte, med samme begrundelse i kommentaren.
+
+**Dom 6 i `tools/check_pricing_page.py`.** Læser de **270** byggede footere og
+kræver præcis **1** link til sidens egen sprogudgave. Den læser `dist/`, ikke
+`site/`, fordi footeren skrives af `apply_shell` undervejs.
+
+**Målt på begge veje.**
+
+| | gammel kode (linket fjernet) | ny kode |
+|---|---|---|
+| `check_pricing_page.py` | **RØD, 270 fund** | **GRØN** |
+| `--self-test` | **RØD 11/13** | **OK 13/13** |
+| `quality_gate.py` | — | **GRØN, 159 steps** |
+
+**To fejl fundet undervejs, begge i min egen nye kode.**
+
+1. Sproget blev først detekteret på ruten (`rel_fil.startswith("da/")`). Målt:
+   **14** af dist's **270** sider er `-da` i **roden**
+   (`/text-on-image-checker-da`, `/nis2-check-da`, …), ikke under `/da/`. Den
+   krævede den engelske prisliste på 14 danske sider, og porten var rød med
+   præcis de 14 fund. Rettet til at læse sidens egen `<html lang>` — samme
+   detektion som `apply_shell` bruger.
+2. Fejlmeddelelsen sagde «alle 13 varer». Katalogen har **13** produkter, men
+   **12** af dem står på `/pricing` (den 13. har `pricing_page: false`). Tallet
+   er nu **udledt** af `på_liste` i stedet for skrevet i teksten.
+
+**Design.** Playwright *er* i repoet (`tools/shots.py`, Chromium 1.63.0) —
+reviewen har kaldt det fraværende i seks iterationer, og det er ikke længere
+sandt. Målt ved **360**, **390** og **1280** på `/`, `/da/`,
+`/text-on-image-checker-da` og `/pricing`: `document.documentElement.scrollWidth`
+= **390** på en **374** px bred footer (ingen vandret scroll), præcis **1**
+prislink pr. footer, `Priser` på dansk og `Pricing` på engelsk.
+
+**Målebarhed.** `site/track.js`s `CTA_PATHS` indeholdt allerede `pricing`, så
+klik på den nye footer-link tælles som `cta-pricing` uden at røre trackeren.

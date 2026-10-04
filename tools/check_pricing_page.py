@@ -34,12 +34,24 @@ oveni den er rød — men målt 2/10 af review skrev `tools/pricing_page.py` sel
 donationens pris i hånden («Any amount»), mens katalogen for præcis den vare
 siger «fra 10 kr.». Siden var grøn hele vejen, og den lovede noget Stripe
 afviser under. Dom 5 dømmer derfor **beløbene i den byggede celle mod den
-vares egen katalogpost**, så håndskriven prosa ikke kan overleve: et `$`-beløb
+vares egen katalogpost**, så håndskreven prosa ikke kan overleve: et `$`-beløb
 skal være `price_usd` eller `lifetime.price_usd` for den vare, og en donation
 skal vise katalogens `price_min` for sit sprog, ord til ord.
 
+Dom 6 er det spørgsmål dom 1–5 ikke stiller: **kan læseren overhovedet finde
+siden?** Målt 4/10 var den ubegribelig vanskelig at finde. `grep -rl
+'href="/pricing"'` over `site/` gav **én** fil — forsidens egen hub, der
+linker til den to gange — og ingen af de 270 byggede sider havde den i
+footeren, fordi footeren bygges af `nav` + `footer_extra` i `build_sites.py`.
+Så den lå i `sitemap.xml`, altså målbar for Google og usynlig for alle andre:
+en gratis-række og hver vares pris, en gratis-mod-betalt-tabel pr. vare, og ingen
+vej fra en værktøjsside hen til den. Det er samme fejlklasse som dom 4, set fra
+den anden side — dom 4 dømmer varen der mangler på listen, dom 6 dømmer listen
+der mangler i sidernes krom. Dom 6 læser de **byggede** footere, fordi footeren
+ikke findes i `site/`: den bliver skrevet af `apply_shell` undervejs.
+
     python3 tools/check_pricing_page.py             # dom
-    python3 tools/check_pricing_page.py --self-test # 9 mutationer
+    python3 tools/check_pricing_page.py --self-test # 10 mutationer
 """
 from __future__ import annotations
 
@@ -59,6 +71,12 @@ DIST = ROOT / "dist" / "mahope.tools"
 ROUTE_TIL_FIL = {"/pricing": "pricing.html", "/da/pricing": "da/pricing.html"}
 
 BELØB_RE = re.compile(r"\$\s?(\d+)")
+
+# Dom 6 læser footeren i det **byggede** site. Den skrives af `apply_shell` i
+# `build_sites.py` undervejs, så den findes ikke i `site/` — og en dom der læste
+# kilden ville være grøn uanset hvad skellet gjorde. Målt 4/10: 270 af 270
+# byggede sider har den, så kravet gælder alle og der er ingen undtagelse.
+RE_FOOTER = re.compile(r'<footer class="site-footer">(.*?)</footer>', re.S)
 
 
 def dom5_pris(produkt: dict, celle: str, lang: str) -> list[str]:
@@ -171,6 +189,57 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                     f"`pricing_page: false`. Sæt `pricing_page: false` med en "
                     f"begrundelse hvis den ikke skal sælges her — ellers er den "
                     f"en vare læseren ikke kan finde")
+
+    # Dom 6: hver bygget side har prislisten i sin footer, på sit eget sprog.
+    # Dømmer *antallet* og *sproget* — en dansk side der linker til `/pricing`
+    # sender læseren ud af sit sprog, og to links i samme footer er to valg der
+    # ligner hinanden. Se docstringen for hvorfor denne dom overhovedet er nødvendig.
+    #
+    # Sproget læses af sidens egen `<html lang>`, ikke af ruten, fordi de danske
+    # værktøjs-sider ligger som `/palette-generator-da` i **roden** og ikke under
+    # `/da/` (målt 4/10: 14 af dist's 270 sider er `-da` i roden). En rutebaseret
+    # `startswith("da/")` ville dømme dem som engelske og kræve den engelske
+    # prisliste på en dansk side. Samme detektion som `apply_shell` bruger.
+    # Målt 4/10: alle 270 sider har `lang` i de første 600 tegn (112 `da`,
+    # 158 `en`), så afsnittet kan ikke give en falsk *dansk*.
+    #
+    # Varernes antal **udledes** af katalogen, ikke skrevet i teksten: en hånd-
+    # skreven optælling i en fejlmeddelelse er en påstand, der bliver forkert
+    # stille næste gang katalogen vokser (målt 4/10: katalogen har 13 produkter,
+    # 12 af dem står på listen, så «alle 13 varer» ville være løgn).
+    antal_varer = len(på_liste)
+    for fil in sorted(dist.rglob("*.html")):
+        rel_fil = fil.relative_to(dist).as_posix()
+        tekst = fil.read_text(encoding="utf-8", errors="ignore")
+        dansk = bool(re.search(r'<html[^>]*\blang="da"', tekst[:600], re.I))
+        forvent = "/da/pricing" if dansk else "/pricing"
+        anden = "/pricing" if dansk else "/da/pricing"
+        m = RE_FOOTER.search(tekst)
+        if not m:
+            fund.append(f"dist/{rel_fil}: ingen site-footer. Skellet i "
+                        f"build_sites.py skriver den på alle 270 sider, så en "
+                        f"manglende footer er en bygget fejl — og den er også "
+                        f"sidens eneste vej til /pricing")
+            continue
+        hrefs = re.findall(r'href="([^"]+)"', m.group(1))
+        antal = hrefs.count(forvent)
+        # Hvor mange der peger på den *anden* sprogs prisliste. Uden denne tæller
+        # kunne porten ikke skelne «linket mangler» fra «linket peger på den
+        # engelske udgave på en dansk side» — og det er den fejl, mutationen
+        # `href="/da/pricing"` → `href="/pricing"` laver.
+        anden_antal = hrefs.count(anden)
+        hvis_anden = (f" — den peger i stedet på {anden}, som er den anden "
+                      f"sprogs udgave" if anden_antal else "")
+        if antal != 1:
+            fund.append(f"dist/{rel_fil}: footeren har {antal} linke til "
+                        f"{forvent}, og den skal have præcis 1{hvis_anden}. "
+                        f"/pricing er den eneste side i familien der samler "
+                        f"alle {antal_varer} varers priser, så uden den kan en "
+                        f"læser på ingen anden side finde ud af hvad Pro koster")
+        elif anden_antal:
+            fund.append(f"dist/{rel_fil}: footeren har både {forvent} og "
+                        f"{anden}{anden_antal} gange. To prislister i én footer "
+                        f"er to valg der ligner hinanden")
     return fund
 
 
@@ -322,6 +391,25 @@ def self_test() -> int:
     fund = med_filer([], kat_uden)
     tjek("donation uden price_min er rød",
          any("skal oplyse `price_min" in f for f in fund), "; ".join(fund[:1]))
+
+    # Dom 6: en bygget side hvor footeren ikke har prislisten. Det var hele
+    # målingen der gjorde dommen nødvendig: 1 fil i `site/`, 0 af 270 i `dist/`.
+    # Mutationen skal ramme en **bygget** fil, for dom 6 læser den footer
+    # `apply_shell` skrev undervejs — en kildefil har aldrig footeren, så en
+    # mutation dér ville være grøn af den forkerte grund.
+    fund = med_filer([("dist/index.html", ('href="/pricing"', 'href="/priser"'))])
+    tjek("manglende prisliste i footeren er rød",
+         any("skal have præcis 1" in f and "dist/index.html" in f for f in fund),
+         "; ".join(fund[:1]))
+
+    # Og den anden halvdel af dommen: den danske side skal pege på den danske
+    # prisliste. `/pricing` er engelsk, så linket ville sende læseren ud af sit
+    # sprog — og porten skal kunne se det, ellers er sprogdelen dekoration.
+    fund = med_filer([("dist/da/index.html", ('href="/da/pricing"', 'href="/pricing"'))])
+    tjek("dansk side med engelsk prisliste er rød",
+         any("dist/da/index.html" in f and "den anden sprogs udgave" in f
+             for f in fund),
+         "; ".join(fund[:1]))
 
     for linje in fejl:
         print(f"  FEJL  {linje}")

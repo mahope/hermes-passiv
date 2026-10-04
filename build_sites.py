@@ -181,9 +181,16 @@ SITES: dict[str, dict] = {
         # besøgende navigerer hen. Men footeren bygges af `nav`, så uden denne
         # linje står `/developers` i llms.txt og sitemap og ingen andre steder —
         # og så er den 21 kloninger værd på papiret og nul i praksis.
+        #
+        # `/pricing` har præcis samme fejl, målt 4/10: `grep -rl 'href="/pricing"'`
+        # over `site/` gav **1** fil (for sidens egen hub), og footeren havde den
+        # ikke. Den er den eneste side i familien der samler hver vares pris og
+        # siger hvad gratis giver mod betalt — den lå i sitemap, så Google kunne
+        # finde den, og ingen menneske kunne. `tools/check_pricing_page.py`s dom 6
+        # dømmer den, så den ikke kan forsvinde igen.
         "footer_extra": {
-            "en": [("Developers", "/developers")],
-            "da": [("Udviklere", "/developers")],
+            "en": [("Developers", "/developers"), ("Pricing", "/pricing")],
+            "da": [("Udviklere", "/developers"), ("Priser", "/da/pricing")],
         },
     },
 }
