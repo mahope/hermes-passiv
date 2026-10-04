@@ -24,10 +24,14 @@
   .scanbox { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
   .scanbox input { flex: 1; padding: 12px 14px; border: 1px solid #b9cdd8;
                    border-radius: 8px; font-size: 15px; }
-  .scanbox button { background: #0b6e8f; color: #fff; border: 0;
-                    padding: 12px 22px; border-radius: 8px; cursor: pointer;
-                    font-size: 15px; }
-  .scanbox button:hover { background: #095a77; }
+  /* Knappen bruger husets `btn-primary` og ikke en farve her. Den egne regel for
+     `.scanbox button` lå med højere specificitet (0,1,1) end `.btn-primary`
+     (0,1,0) og lagde derfor sin egen `#0b6e8f` oven i accentfarven — så scannerens
+     ene primære handling så anderledes ud end de otte andre værktøjssider, den er
+     bygget sammen med. Nu er der ingen regel at vinde over. */
+  .scanbox input:focus-visible, .scanbox button:focus-visible {
+    outline: 2px solid var(--color-text); outline-offset: 2px; }
+  @media (max-width: 460px) { .scanbox { flex-direction: column; } }
   #result { max-width: 720px; margin: 28px auto; font-size: 15px;
             line-height: 1.55; text-align: left; }
   .scorecard { text-align: center; padding: 18px; border-radius: 12px;
@@ -54,25 +58,25 @@
     <h1>Gratis EAA-tilgængelighedsscanner</h1>
     <p class="tagline">Øjeblikkeligt automatiseret tilgængelighedstjek — virker på
     <strong>enhver hjemmeside</strong>, alle platforme, ingen tilmelding.</p>
+    <!-- Formularen står i folden, ikke i et felt under den. Målt 5/10: `/scan`
+         er mål for 559 interne links på 228 sider, og `/api/results` læser 0
+         resultater i 28 dage — men det er ikke læsbarheden alene: folden var
+         badge + overskrift + tagline og så et tomt `required`-felt, altså det
+         samme som de otte værktøjssider der fik deres egen handling i opgave 6.
+         Samme mønster som på `/text-on-image-checker`, hvor dommen flyttede fra
+         1739 px til 601 px. -->
+    <form id="scanForm" class="scanbox">
+      <label for="url" class="sr-only">Sidens URL</label>
+      <input id="url" name="url" type="url" required
+             placeholder="https://din-hjemmeside.dk" inputmode="url">
+      <button type="submit" class="btn-primary">Scan nu</button>
+    </form>
   </div>
 </header>
 
 <main class="container">
 <section aria-labelledby="scan-heading">
-  <h2 id="scan-heading">Scan din side</h2>
-  <form id="scanForm" class="scanbox">
-    <label for="url" class="sr-only">Sidens URL</label>
-    <input id="url" name="url" type="url" required
-           placeholder="https://din-hjemmeside.dk" inputmode="url">
-    <!-- `class="btn"`: `style.css` har `button:not([class])`, og den har
-         samme specificitet som `.scanbox button` her, men stylesheetet kommer
-         *efter* denne <style> — så den fik hvid baggrund oven i hvid tekst,
-         og sidens primære handling var usynlig på den byggede side (målt i
-         Chromium på /scan og /scan-da, 390 og 1280 px). Med en klasse holder
-         `:not([class])` ikke længere, og `.scanbox button` (0,1,1) vinder
-         stadig over `.btn` (0,1,0), så knappen ser ud som oprindeligt. -->
-    <button type="submit" class="btn">Scan nu</button>
-  </form>
+  <h2 id="scan-heading">Dit resultat</h2>
   <div id="result" role="status" aria-live="polite"></div>
 </section>
 
@@ -313,6 +317,7 @@ function render(state,opts){
     '<p class="hint">Bemærk: automatiserede tjek fanger 30–40 % af tilgængelighedsproblemerne. Se vores <a href="/#products">EAA Compliance e-book</a> for hele den manuelle proces.</p>'+
     proCard()+
     '<p class="hint">Scanningen er gratis og kræver ingen konto. Hvis den sparede dig tid, holder en lille <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> den i gang.</p>';
+  revealResult(out);
   const box=document.getElementById('shareLink');
   if(box)box.value=location.origin+'/scan-da';
   // Udfaldet, ikke forsøget. `scan` siger at nogen trykkede Scan; uden denne
@@ -351,11 +356,23 @@ function proCard(){
   return html;
 }
 window.proCard=proCard;
+// `#result` ligger under folden, fordi et resultat er langt og ikke skal fylde
+// heroen. Men så lægger et klik i folden intet ud over det at blive trykket, og
+// det er værre end et felt længere nede: brugeren tror scanneren hang. Derfor
+// kalder alle tre skrivninger denne, som kun ruller hvis `#result` ikke allerede
+// kan ses — ellers ville et resultat der allerede er læst hoppe op ved skærm.
+function revealResult(out){
+  if(!out||!out.scrollIntoView)return;
+  const top=out.getBoundingClientRect().top;
+  if(top<0||top>window.innerHeight-80)out.scrollIntoView({block:'start'});
+}
+window.revealResult=revealResult;
 async function scan(url){
     if (window.trackEvent) window.trackEvent('scan');
   const out = document.getElementById('result');
   const label = document.querySelector('.sr-only') || out;
   out.innerHTML = '<p>Scanner <code>'+url.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</code> …</p>';
+  revealResult(out);
   let html = '';
   try {
     const r = await fetch('/scan-proxy?url='+encodeURIComponent(url));
@@ -371,6 +388,7 @@ async function scan(url){
       +'URL\u2019en er ugyldig, eller siden er for stor. Prøv '
       +'<a href="eaa-scanner-extension.zip" download>browserudvidelsen</a> '
       +'som kører direkte på den live side.</p>';
+    revealResult(out);
     return;
   }
   const doc = new DOMParser().parseFromString(html,'text/html');

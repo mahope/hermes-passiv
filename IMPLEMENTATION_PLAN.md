@@ -1,28 +1,38 @@
 # STATUS
-- **Første skærmbillede på `/text-on-image-checker` viser nu et målt tal.** 5/10:
-  `.ti-badge` lå **1739 px** nede på 390 px (EN) og **1690** (DA) — 2,6
-  skærmbilleder før det eneste tal værktøjet kan. Kernen skriver nu `#verdict`
-  (badge + forholdstal) fra **samme** `sample` som `#result`, og den står som
-  første element efter overskriften. Efter: **601 px** (EN) / **579** (DA) i en
-  **664 px** fold. Taglinen 330→**109** tegn (8 linjer/248 px → 3/83).
-  Ny port `check_verdict_first.py` (selftest **7/7**) hængt i gaten, **167 steps** grøn.
-- **Målt fejl i egen begrundelse:** 1 nyt sted i kernen kunne vise et andet
-  tal end `#result`. Det kan ikke: `renderVerdict()` må ikke selv kalde
-  `sampleContrast()`, og det dømmer porten.
-- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` →
+- **Scannerens eget felt ligger nu i folden.** 5/10: `/scan` er mål for **559**
+  interne links på **228** sider (optalt med `html.parser`, altså uden de 4 fund
+  i `dist/`), og den er toppen af den dyreste linje — EUComply Pro, **$79/år**.
+  Folden var badge + `<h1>` + tagline og så et tomt `required`-felt i `<main>`.
+  Formularen ligger nu i `<header class="hero">`, og knappen bruger husets
+  `btn-primary`: den egne regel `.scanbox button` (0,1,1) lå oven i
+  `.btn-primary` (0,1,0) og lagde sin egen `#0b6e8f` oven i accentfarven.
+- **Målt afvigelse i opgavens egen begrundelse:** `#result` kom under folden med
+  formularen, så et klik i folden intet gjorde synligt. Alle **3** skrivninger
+  kalder derfor `revealResult(out)`, som kun ruller når resultatet ikke allerede
+  kan ses — ellers ville et læst resultat hoppe op ved hvert skærmbillede.
+- **Rigtige tal fra `/api/results` og `/api/conversion` (28 dage):** **0**
+  resultater, **0** `pro-card-clicks`, **2** `buy-clicks**. Nul er det rigtige
+  svar på «er nogen ved at bruge scanneren lige nu», ikke en fejl.
+- **Tragten kan læses uden `STATS_TOKEN`** i **2** ruter — resultater (`/api/results`) og
+  købsforsøg (`/api/conversion`) er hver en udlæsning af de nøgler `/api/track`
+  allerede skriver, med egen navneliste. Salg og licenser ligger *kun* i
+  `/api/stats`.
+- **Scannerens købsvej er målt hel i 5 events, og kun én gang:** `scan()` →
   `scan-findings`/`scan-clean` → `pro-card-click`, plus `scan-failed`.
-- **Tragten kan læses uden `STATS_TOKEN`.** Resultater (`/api/results`) og
-  købsforsøg (`/api/conversion`) er begge udlæsninger af de nøgler `/api/track`
-  allerede skriver, hver med egen navneliste. Salg og licenser ligger *kun* i
-  `/api/stats`. Rigtige tal fra `/api/conversion`: **1** købsklik 29/9, **0**
-  resultater i 7 dage.
-- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De 3 er
-  `compliance-ai` ×2 (assistenten er slukket — se ❓) og `url-inspector`.
 - **Næste:** feature-kø 2 (`deskuptime.com` — 7 besøgende, 100 % bounce, 0 s) er
-  målt og kan ikke dømmes på 7 besøgende; næste brugbare er **`/scan`**, der
-  har 290 indgående links og kun **0** målte scanninger i 7 dage.
+  målt og kan ikke dømmes på 7 besøgende. `/scan` er nu rettet, så næste måling
+  er dens `scan`-events og `pro-card-clicks` — ikke dens markup.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: scannerens felt i folden 5/10 23:1x
+ceo/scan-form-i-folden` — måles på **indhold**: live
+`https://mahope.tools/scan` skal have præcis **1** `<form id="scanForm">`
+**inden i** `<header class="hero">` (altså før `</header>`) og **0** i `<main>`,
+knappen skal være `<button type="submit" class="btn-primary">`, og siden skal
+**ikke** definere `background` for `.scanbox button`. `#result` skal være **1**
+gang og **uden for** heroen, og alle **3** skrivninger til den skal kalde
+`revealResult(out);`. Samme dømning på `/scan-da`. HTTP 200 bruges ikke.
 
 `VERIFICÉR DEPLOY: dommen i folden 5/10 21:5x
 ceo/verdict-i-folden` — måles på **indhold**: live
@@ -519,3 +529,27 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    *under* dommen — de er ikke flyttet, kun kommet ud af det første
    skærmbillede, så pro-kortet `$79/år` stadig ikke står over selve værktøjet.
    Baseline: `/text-on-image-checker` **2** besøgende mod artiklens **8**.
+8. ~~**`/scan` beder om en URL i et felt under folden.**~~ **Færdig 5/10**,
+   `ceo/scan-form-i-folden`. Hvem: de 559 interne links' læsere. Tal: hvor mange
+   trykker Scan. Accept: feltet i heroen i husets knap, og et klik der fører til
+   et synligt resultat. Datagrund: `/api/results` læser **0** resultater i 28
+   dage på den side der fører 559 links. Målt: ny port `check_scan_fold.py` er
+   GRØN på ny kode og **RØD** med **8** fund på den gamle, selftest **5/5**
+   mutationer, fuld gate **169 steps** grøn.
+9. **`/scan` tager kun én URL, så en virksomed med 40 sider kan ikke se sin
+   egen tilstand.** Hvem: bureauer og webbureauer der leverer EAA-rapporter.
+   Tal: hvor mange af dem går fra én scanning til betalt helsitet. Accept: et
+   krav på flere URL'er der svarer på den samme rute, med den samme kvote-per-tid
+   og den samme 5xx/429-semantik. Datagrund: pro-kortet på `/scan` lover «It
+   crawls the whole site» for $79/år, men siden tager **1** side pr. kørsel, og
+   `/compliance-site-check` tager **5**. Forskellen mellem gratis og betalt er
+   altså lige nu to tal i en tekst, ikke i produktet.
+10. **`/scan` har ingen skærmbillede-resultat at dele uden et resultat.** Hvem:
+    alle der scanner. Tal: hvor mange resultater der deles videre (og kommer
+    tilbage som besøg). Accept: et statisk, ærligt eksempel-resultat i folden
+    der ikke sender en hændelse, så læseren ser produktet uden at købe en
+    kørsel. Datagrund: `#url=`-deling virker kun *efter* en kørsel, så en læser
+    der kommer fra en guide kan ikke se, hvad et resultat overhovedet er. Målt
+    afvigelse: et eksempel med et fast tal går stale, så det skal genereres
+    eller mærkes som et eksempel — ikke skrives som et målt resultat.
+

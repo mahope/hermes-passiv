@@ -1923,7 +1923,25 @@ STEPS: tuple[Step, ...] = (
                 "site/text-on-image-checker-da.html", "site/text-on-image-core.js",
                 "site/style.css"),
     ),
-    # Opgave: AI-banneren lovede et svar, der ikke kunne gives. Målt først:
+    # Opgave 5/10: scannerens felt lå under folden. `/scan` er mål for 559
+    # interne links på 228 sider og er toppen af den $79-linje, mens
+    # `/api/results` læser 0 resultater i 28 dage. Folden var badge + `<h1>` +
+    # tagline og så et tomt `required`-felt i `<main>`. Formularen ligger nu i
+    # `<header class="hero">` med husets `btn-primary` — den egne regel
+    # `.scanbox button` (0,1,1) lå oven i `.btn-primary` (0,1,0) — og alle tre
+    # skrivninger til `#result` ruller den frem, fordi `#result` ligger under
+    # folden og et klik ellers intet gjorde synligt.
+    Step(
+        id="scan-fold",
+        argv=("python3", "tools/check_scan_fold.py"),
+        inputs=("tools/check_scan_fold.py", "site/scan.html", "site/scan-da.html"),
+    ),
+    Step(
+        id="scan-fold-selftest",
+        argv=("python3", "tools/check_scan_fold.py", "--self-test"),
+        inputs=("tools/check_scan_fold.py", "site/scan.html", "site/scan-da.html"),
+    ),
+    # Opgave: AI-banneren lovede et svar, der ikke kunne Gives. Målt først:
     # hver AI-banner på bloggen sagde «a practical answer in seconds» og «Spørg
     # Compliance-AI'en», mens `GET /api/compliance-ai` svarede
     # `available: false` og målsiden siger, at assistenten ikke er slået til.
