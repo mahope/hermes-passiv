@@ -49,7 +49,41 @@ const REPORT_RATE_LIMIT = 120;
 // gange og dømmer 429 på det 31., 200 på de 30 første, og at
 // `/api/license/validate` stadig svarer 200 bagefter med sin egen tæller.
 const LICENSE_DEVICES_RATE_LIMIT = 30;
-const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
+// `/api/results` er en offentlig *udlæsning* af de resultat-begivenheder, der
+// allerede ligger i `VISITS`. Den har samme slags tæller som de andre ruter, for
+// den lister to præfixer pr. dag i vinduet, så et script der kører i en løkke
+// koster kvota for os alle. 30 i timen er mere end en overvågning bruger.
+const RESULTS_RATE_LIMIT = 30;
+// Nøglen pr. dag der listes i `/api/results`. `VISITS` har også 90 dages TTL på
+// trafiknøglerne, så en dag kan ikke blive ubegrænset stor — men et kunstigt
+// højt tal må gøre dagen *ukomplet*, ikke forkortet. Derfor måles grænsen her
+// og dagen meldes `unknown`/`partial` i stedet for at blive summeret for kort.
+const RESULTS_KEY_LIMIT = 2000;
+// Begivenheder der betyder «brugeren fik et resultat», altså hele definitionen
+// på hvad `/api/results` tæller. Det er en **navneliste**, ikke et mønster:
+// `trackEvent()` kaldes fra siderne med en streng, så et værktøj hvis
+// resultatbegivenhed mangler her bliver *usynligt* i rapporten — en synlig
+// mangel frem for et opdigtet tal. `tests/stripe-worker.test.mjs` dømmer at alle
+// strengene findes i `site/`, så en omdøbt begivenhed gør porten rød frem for at
+// tælle med i det stille.
+//
+// `scan-findings` og `scan-clean` er de to halvdele af *ét* resultat (5/10, så
+// de aldrig begge fyrer for samme kørsel), `finish` er NIS2-vurderingerne, og
+// `generate`/`generate-da` er de tre generatorer (DPA, privatliv, ro-pas).
+// `compliance-report` og `report-dl` er rapporten fra compliance-værktøjerne.
+// Bevidst **ikke** med: `buy-click` (det er et forsøg, ikke et resultat, og salget
+// står i Stripe), `scan`/`scan-failed` (et forsøg), `cta-*` (et klik på en
+// knap), `ai-unavailable` (en hjælpe, der ikke virker).
+const RESULT_EVENTS = Object.freeze([
+  'scan-findings', 'scan-clean', 'finish', 'generate', 'generate-da',
+  'compliance-report', 'report-dl',
+]);
+// En sti fra `normalizeTrackedPath()` er normaliseret, men den kommer fra en
+// `referer` header, som altid kan forfalskes. Derfor spejles emnerne ikke tilbage
+// uden denne dom: kun ASCII med snille tegn, og under 100 karakterer — samme
+// længde som normaliseringen selv. Alt andet tælles ikke og lander i `dropped`.
+const RESULT_PATH_RE = /^\/[A-Za-z0-9][A-Za-z0-9/._-]{0,99}$/;
+const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
 
@@ -379,6 +413,7 @@ export default {
     // === Route: cookieless visit tracking ===
     if (path === '/api/track') return handleTrack(request, url, env);
     if (path === '/api/stats') return handleStats(request, url, env);
+    if (path === '/api/results') return handleResults(request, url, env);
 
     // === Route: uventede JS-fejl fra besøgerens browser ===
     if (path === '/api/client-error') return handleClientError(request, url, env, ctx);
@@ -2314,6 +2349,138 @@ async function handleStats(request, url, env) {
     ai_asks: aiAsks,
     ai_limited_today: aiLimitedToday,
     scans,
+  });
+}
+
+/**
+ * Lister ét præfiks i `VISITS` med et hårdt loft, og siger *ulæseligt* i stedet
+ * for at kaste, når loftet nås.
+ *
+ * `listKvKeys()` kaster `Stats operation budget exceeded` i samme situation, og
+ * den undtagelse kan ikke skelnes fra en KV der er nede. Det er hele pointen med
+ * `status`: et kast skal give `unknown`, en for lang dag skal give `partial`, så
+ * de to aldrig fortæller samme historie. Derfor liste denne her selv, med
+ * Cloudflares egen sidegrænse på 1000 nøgler pr. kald.
+ */
+async function listResultKeys(kv, prefix) {
+  const keys = [];
+  let cursor = '';
+  do {
+    const page = await kv.list({ prefix, cursor, limit: 1000 });
+    for (const key of page.keys || []) keys.push(key);
+    if (keys.length > RESULTS_KEY_LIMIT) return null;
+    cursor = page.list_complete ? '' : (page.cursor || '');
+  } while (cursor);
+  return keys;
+}
+
+/**
+ * GET /api/results — hvor mange kørsler der faktisk endte i et resultat.
+ *
+ * Hvorfor den findes: hele tragten fra 5/10 er skrevet (`scan` → `scan-findings`
+ * / `scan-clean` → `pro-card-click`), men den kunne ikke læses. `/api/stats`
+ * svarer 401 uden `STATS_TOKEN`, og den nøgle mangler på workeren (❓ i planen),
+ * så hver prioritering af trafik var en antagelse. Denne rute er en **udlæsning
+ * af de samme nøgler** uden hemmelighed: kun resultatbegivenhederne, kun
+ * tællinger, og intet der identificerer en besøgende.
+ *
+ * Hvorfor den ikke bare er en mindre `/api/stats`: en offentlig rute må kun
+ * svare det den skal bruges til. Her er det pr. værktøj «hvor mange kørsler
+ * endte i et resultat, og hvor mange besøgendes dage de faldt på». Salg,
+ * købsforsøg, sidevisninger og ventelister ligger *kun* i `/api/stats`.
+ *
+ * Den tæller de nøgler `/api/track` allerede skriver — ingen ny tæller, ingen ny
+ * skrivning, så tallene kan ikke komme i strid med hinanden. `p:v3:`-nøglens
+ * værdi er altid `1`, så ét nøglenavn er ét resultat, og `u:v3:`-nøglen er pr.
+ * besøgende pr. døgn (derfor `visitor_days`, ikke `people`: samme person tre
+ * dage er tre, ikke én — samme ord som Cloudflares «unique visitor-days»).
+ *
+ * Fejler KV, siges det. `status` er `ok`, `partial` (en dag nåede
+ * `RESULTS_KEY_LIMIT`, så den dag er ukomplet og tælles ikke) eller `unknown`
+ * (opslaget kastede). Et tal uden sin `status` er ikke et tal.
+ */
+async function handleResults(request, url, env) {
+  if (request.method !== 'GET') return jsonResp({ ok: false, error: 'GET only' }, 405);
+  const limited = await rateLimitIp(request, env, 'results', RESULTS_RATE_LIMIT);
+  if (limited) {
+    return jsonResp({ ok: false, error: 'Too many result reads this hour. Try again later.' }, 429);
+  }
+  if (!env.VISITS) return jsonResp({ ok: false, error: 'Results are not configured' }, 503);
+  // Et `days` der ikke er et helt tal over nul er ikke et ønske om ét døgn, så
+  // det falder tilbage til standardvinduet. `-4` gav ellers 1, som læses som
+  // «denne kørsel så næsten intet».
+  const daysForespurgt = parseInt(url.searchParams.get('days') || '', 10);
+  const days = Math.min(Number.isInteger(daysForespurgt) && daysForespurgt > 0 ? daysForespurgt : 7, 28);
+  const window = Array.from({ length: days }, (_, index) =>
+    new Date(Date.now() - index * 86400000).toISOString().slice(0, 10));
+  const tools = new Map();
+  const byDay = {};
+  let status = 'ok';
+  let dropped = 0;
+
+  for (const day of window) {
+    byDay[day] = 0;
+    let visitKeys = null;
+    let uniqueKeys = null;
+    try {
+      visitKeys = await listResultKeys(env.VISITS, `p:v3:${day}:`);
+      uniqueKeys = await listResultKeys(env.VISITS, `u:v3:${day}:`);
+    } catch {
+      status = 'unknown';
+      break;
+    }
+    // En dag der rammer grænsen tælles **ikke** til en lavere sum. Et for kort
+    // tal er værre end ingen, fordi det ligner en måling.
+    if (visitKeys === null || uniqueKeys === null) {
+      status = status === 'ok' ? 'partial' : status;
+      byDay[day] = null;
+      continue;
+    }
+    for (const [keys, metric] of [[visitKeys, 'runs'], [uniqueKeys, 'visitor_days']]) {
+      for (const key of keys) {
+        const parsed = parseTrafficKey(key.name, metric === 'runs' ? 'p' : 'u');
+        if (!parsed || parsed.metric !== 'event') continue;
+        const at = parsed.subject.lastIndexOf('@');
+        if (at <= 0) continue;
+        const event = parsed.subject.slice(at + 1);
+        if (!RESULT_EVENTS.includes(event)) continue;
+        const path = parsed.subject.slice(0, at);
+        if (!RESULT_PATH_RE.test(path)) { dropped += 1; continue; }
+        const bucket = tools.get(path) || { runs: 0, visitor_days: 0 };
+        bucket[metric] += 1;
+        tools.set(path, bucket);
+        if (metric === 'runs') byDay[day] += 1;
+      }
+    }
+  }
+
+  const results = {};
+  const totals = { runs: 0, visitor_days: 0 };
+  for (const path of [...tools.keys()].sort()) {
+    const bucket = tools.get(path);
+    results[path] = bucket;
+    totals.runs += bucket.runs;
+    totals.visitor_days += bucket.visitor_days;
+  }
+  // `csc-count` er en livslang, server-side tæller for compliance-scans. Den
+  // kommer ikke fra klienten, så de to tal kan ikke begge være rigtige uden at
+  // det er målt: er `served_scans` større end `totals.runs` for `/scan`, så
+  // skriver klienten ikke alle sine resultater, og det er det tallene siger.
+  const servedScans = await readKvCounter(env, 'csc-count');
+
+  return jsonResp({
+    ok: true,
+    days,
+    window,
+    status,
+    results,
+    by_day: byDay,
+    totals,
+    dropped,
+    served_scans: servedScans,
+    note: 'runs = client events recorded by /api/track, one per finished run. '
+      + 'visitor_days = unique visitors per day, summed, so the same person on '
+      + 'three days counts three. Sales are not here; they are in Stripe.',
   });
 }
 

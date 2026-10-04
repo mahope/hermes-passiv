@@ -1905,5 +1905,199 @@ if (preSentryWorker) {
 
 globalThis.fetch = outerFetch;
 
+// 10. GET /api/results — resultat-tallet uden `STATS_TOKEN`.
+//
+// Hvorfor denne blok er den vigtigste i filen: hele tragten fra 5/10 var skrevet
+// men ulæselig, fordi `/api/stats` svarer 401 og nøglen mangler på workeren.
+// Uden en måling er enhver prioritering en antagelse — og den her repo har
+// allerede skrevet i planen at alle dens trafiktal er gæt. En offentlig rute er
+// derfor *også* en risikogrænse: den skal kun svare det den skal bruges til, så
+// kontrollerne nedenfor dømmer både at tallene er rigtige og at intet uden for
+// formålsgrænsen slipper ud.
+const RS = '/api/results';
+const resKv = new Map();
+const RES_VISITS = {
+  get: async (k) => (resKv.has(k) ? resKv.get(k) : null),
+  put: async (k, v) => { resKv.set(k, v); },
+  list: async ({ prefix = '' } = {}) => ({ keys: [...resKv.keys()].filter(k => k.startsWith(prefix)).sort().map(name => ({ name })), list_complete: true }),
+};
+const resEnv = { ...env, VISITS: RES_VISITS };
+const resCall = (path, init, e) => worker.fetch(new Request('https://mahope.tools' + path, init), e || resEnv, {});
+const isoDaysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+// Én trafiknøgle pr. begivenhed, som `recordTraffic()` skriver den: værdien er
+// altid '1', så nøglenavnet *er* optællingen.
+const seed = (kind, daysAgo, domain, path, event, identity) => {
+  const key = `${kind}:v3:${isoDaysAgo(daysAgo)}:${domain}:event:${encodeURIComponent(`${path}@${event}`)}:${identity}`;
+  resKv.set(key, '1');
+};
+// 1. Grundscenariet: tre kørsler på to dage, hvoraf den ene besøgende gav to
+//    resultater samme dag — det er præcis det `visitor_days` skal finde.
+seed('p', 0, 'mahope.tools', '/scan', 'scan-findings', 'u-1');
+seed('u', 0, 'mahope.tools', '/scan', 'scan-findings', 'v-1');
+seed('p', 0, 'mahope.tools', '/scan', 'scan-clean', 'u-2');
+seed('u', 0, 'mahope.tools', '/scan', 'scan-clean', 'v-2');
+seed('p', 2, 'mahope.tools', '/nis2-check', 'finish', 'u-3');
+seed('u', 2, 'mahope.tools', '/nis2-check', 'finish', 'v-3');
+//    Og en bunke ting der *ikke* er resultater. De ligger i samme nøgler og skal
+//    alle forblive ude, ellers er tallet ikke længere «resultater».
+seed('p', 0, 'mahope.tools', '/scan', 'scan-failed', 'u-9');
+seed('p', 0, 'mahope.tools', '/scan', 'scan', 'u-9');
+seed('p', 0, 'mahope.tools', '/scan', 'pro-card-click', 'u-9');
+//    Et købsklik sker på en værktøjsside, ikke på `/` — ellers ville den blive
+//    droppet af stidommet og en streng på navnelisten ville aldrig blive dømt.
+seed('p', 0, 'mahope.tools', '/scan', 'buy-click', 'u-9');
+seed('p', 0, 'mahope.tools', '/scan', 'cta-tool', 'u-9');
+seed('p', 0, 'mahope.tools', '/compliance-ai', 'ai-unavailable', 'u-9');
+//    Sidevisninger og downloads er `page`/`download`, ikke `event`, så de må ikke
+//    kunne læses som resultater selv om emnet ligner et.
+resKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:page:%2Fscan:u-7`, '1');
+resKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:download:%2Fscan@scan-findings:u-7`, '1');
+resKv.set('csc-count', '41');
+
+let rs = await resCall(`${RS}?days=7`);
+let rsBody = await rs.json();
+ok('resultat-ruten svarer 200 uden nogen hemmelighed', rs.status === 200 && rsBody.ok === true, rs.status);
+ok('tre kørsler i vinduet, fordelt på to værktøjer',
+  rsBody.totals.runs === 3 && rsBody.results['/scan'].runs === 2
+  && rsBody.results['/nis2-check'].runs === 1, JSON.stringify(rsBody.results));
+ok('besøgende-dage tælles hver for sig, ikke kørsler',
+  rsBody.totals.visitor_days === 3 && rsBody.results['/scan'].visitor_days === 2,
+  JSON.stringify(rsBody.results));
+ok('pr. dag: 2 i dag 0 og 1 to dage tilbage',
+  rsBody.by_day[isoDaysAgo(0)] === 2 && rsBody.by_day[isoDaysAgo(2)] === 1
+  && rsBody.by_day[isoDaysAgo(1)] === 0, JSON.stringify(rsBody.by_day));
+ok('hverken forsøg, købsklik, fejl eller CTA tælles som resultat',
+  rsBody.totals.runs === 3 && !/buy-click|scan-failed|pro-card-click|ai-unavailable/.test(JSON.stringify(rsBody.results)),
+  JSON.stringify(rsBody.results));
+ok('status er ok, fordi dagen var komplet', rsBody.status === 'ok', rsBody.status);
+ok('den server-side scancounter kommer med som et andet vidnesbyrd',
+  rsBody.served_scans === 41, String(rsBody.served_scans));
+
+// 2. En forfalsket `referer` er et emne, der kan skrives af enhver. Den må ikke
+//    spejles tilbage i et offentligt svar, og den må ikke tælle som et værktøj.
+resKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:event:${encodeURIComponent('/hemmeligt/<script>alert(1)</script>@scan-findings')}:u-6`, '1');
+resKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:event:${encodeURIComponent(`/${'x'.repeat(140)}@scan-findings`)}:u-6`, '1');
+rsBody = await (await resCall(`${RS}?days=7`)).json();
+ok('et resultat med en utilladelig sti hverken tælles eller spejles',
+  rsBody.totals.runs === 3 && rsBody.dropped === 2
+  && !/script|alert|xxxx/.test(JSON.stringify(rsBody)), JSON.stringify(rsBody.results) + ' dropped=' + rsBody.dropped);
+
+// 3. Kun de fire domæner vi måler, og kun gyldige nøgler. En nøgle med et
+//    domæne der ikke findes, eller en dag der ikke er en dato, ignoreres.
+resKv.set(`p:v3:${isoDaysAgo(0)}:evil.tld:event:%2Fscan%40scan-findings:u-5`, '1');
+resKv.set(`p:v3:ikke-en-dato:mahope.tools:event:%2Fscan%40scan-findings:u-5`, '1');
+resKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:event:ikke-kodet:u-5`, '1');
+rsBody = await (await resCall(`${RS}?days=7`)).json();
+ok('et fremmed domæne og en ugyldig nøgle tælles ikke med',
+  rsBody.totals.runs === 3, JSON.stringify(rsBody.results));
+
+// 4. Sandheden om sin egen fuldstændighed. En dag der rammer grænsen må ikke
+//    summeres til et for lille tal; den skal sige `partial` og den skal være
+//    ulæselig, fordi `null` og `0` er to forskellige påstande.
+const dayFlood = isoDaysAgo(0);
+resKv.clear();
+for (let i = 0; i < 2001; i += 1) seed('p', 0, 'mahope.tools', '/scan', 'scan-findings', `bulk-${i}`);
+resKv.set(`p:v3:${dayFlood}:mahope.tools:event:%2Fscan%40scan-findings:buk-unik`, '1');
+rsBody = await (await resCall(`${RS}?days=7`)).json();
+ok('en dag over nøglegrænsen melder partial og tælles ikke',
+  rsBody.status === 'partial' && rsBody.totals.runs === 0 && rsBody.by_day[dayFlood] === null,
+  rsBody.status + ' runs=' + rsBody.totals.runs + ' dag=' + rsBody.by_day[dayFlood]);
+//    Og med en nøgle *uden* grænsen er den samme dag 1, så dommen læser
+//    grænsen og ikke et tilfældigt resultat.
+resKv.delete(`p:v3:${dayFlood}:mahope.tools:event:%2Fscan%40scan-findings:buk-unik`);
+//    Præcis én nøgle væk: de 2002 nøgler (2001 + den unikke) var over grænsen på
+//    2000, så de 2000 der er tilbage lige på grænsen. Dommen skal læse grænsen
+//    og ikke et tilfældigt antal.
+resKv.delete(`p:v3:${dayFlood}:mahope.tools:event:${encodeURIComponent('/scan@scan-findings')}:bulk-2000`);
+rsBody = await (await resCall(`${RS}?days=7`)).json();
+ok('uden nøglen over grænsen er den samme dag komplet igen',
+  rsBody.status === 'ok' && rsBody.totals.runs === 2000, rsBody.status + ' runs=' + rsBody.totals.runs);
+
+// 5. En kvotefejl skal slå igennem, så en læsning aldrig bare ser ud som nul.
+const resBrokenKv = { ...RES_VISITS, list: async () => { throw new Error('kv nede'); } };
+rsBody = await (await resCall(`${RS}?days=7`, {}, { ...resEnv, VISITS: resBrokenKv })).json();
+ok('en KV der kaster giver status unknown og nul løfter på tallene',
+  rsBody.status === 'unknown' && rsBody.totals.runs === 0, rsBody.status + ' runs=' + rsBody.totals.runs);
+rs = await resCall(`${RS}?days=7`, {}, { ...resEnv, VISITS: null });
+ok('uden KV-binding svarer ruten 503, ikke 200 med nul', rs.status === 503, rs.status);
+
+// 6. Vinduet er dæmpet, fordi hvert døgn koster to opslag.
+rsBody = await (await resCall(`${RS}?days=9999`)).json();
+ok('days dæmpes til 28', rsBody.days === 28 && rsBody.window.length === 28, String(rsBody.days));
+rsBody = await (await resCall(`${RS}?days=-4`)).json();
+ok('et negativt days falder tilbage til standardvinduet',
+  rsBody.days === 7 && rsBody.window.length === 7, String(rsBody.days));
+rsBody = await (await resCall(`${RS}?days=abc`)).json();
+ok('et days der ikke er et tal giver standardvinduet',
+  rsBody.days === 7, String(rsBody.days));
+
+// 7. Metoder og kvota. GET må ikke ændre noget, så POST er 405.
+rs = await resCall(RS, { method: 'POST', body: '{}' });
+ok('POST giver 405', rs.status === 405, rs.status);
+//    Tælleren er pr. IP pr. time, så uret pinnes til timebøttens begyndelse —
+//    ellers måler testen klokken og ikke tælleren, som `clock_jump.mjs` viste.
+const resKv2 = new Map();
+const resEnv2 = { ...resEnv, VISITS: { ...RES_VISITS, get: async (k) => (resKv2.has(k) ? resKv2.get(k) : null), put: async (k, v) => { resKv2.set(k, v); } } };
+const stopTimeUr2 = (() => {
+  const forrige = Date.now;
+  const fast = Math.floor(forrige() / 3600000) * 3600000;
+  Date.now = () => fast;
+  return () => { Date.now = forrige; };
+})();
+let res429 = 0, res200 = 0;
+for (let i = 0; i < 32; i += 1) {
+  const s = (await resCall(`${RS}?days=7`, {}, resEnv2)).status;
+  if (s === 429) res429 += 1; else if (s === 200) res200 += 1;
+}
+stopTimeUr2();
+ok('kvoten pr. IP pr. time stopper læsningerne',
+  res200 === 30 && res429 === 2, '200=' + res200 + ' 429=' + res429);
+
+// 8. Listen skal ikke indeholde en streng der ikke findes i `site/` — en
+//    omdøbt begivenhed ville ellers tælle med i det stille, og en tastefejl
+//    ville få navnelisten til at se komplet ud uden at være det.
+const siteDir = new URL('../site/', import.meta.url);
+const siteFiles = execFileSync('find', [siteDir.pathname, '-name', '*.html', '-o', '-name', '*.js'], { encoding: 'utf8' })
+  .split('\n').filter(Boolean);
+const siteCode = siteFiles.map(f => readFileSync(f, 'utf8')).join('\n');
+const workerSrcRs = readFileSync(fileURLToPath(new URL('../site/_worker.js', import.meta.url)), 'utf8');
+const resultEvents = (workerSrcRs.match(/const RESULT_EVENTS = Object\.freeze\(\[([\s\S]*?)\]\)/) || ['', ''])[1]
+  .split(',').map(s => s.trim().replace(/^'|'$/g, '')).filter(Boolean);
+ok('resultatlisten er ikke tom', resultEvents.length >= 5, 'n=' + resultEvents.length);
+for (const event of resultEvents) {
+  ok(`«${event}» findes som trackEvent i site/`,
+    new RegExp(`trackEvent\\(\\s*'${event}'`).test(siteCode)
+    || new RegExp(`trackEvent\\(\\s*[a-zA-Z_$][\\w$]*\\s*\\?\\s*'${event}'`).test(siteCode)
+    || new RegExp(`trackEvent\\([^)]*'${event}'`).test(siteCode),
+    'begivenheden kaldes ikke fra nogen side');
+}
+
+// 9. Mutationen: den kode der var her *før* denne ændring kender ikke ruten.
+//    Uden denne kontrol er de kontroller ovenfor grønne af den grund at de ikke
+//    kan fejle — den samme fejlform de andre mutationer i denne fil er bygget til.
+const PRE_RESULTS_SHA = 'b66c8c3e';
+let preResultsWorker = null, preResultsNote = '';
+try {
+  const oldSrcResults = execFileSync('git', ['show', `${PRE_RESULTS_SHA}:site/_worker.js`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  ok('mutationen finder den gamle kode (ellers dommer den intet)', !/handleResults/.test(oldSrcResults));
+  const oldTmpResults = join(tmpdir(), `worker-pre-results-${process.pid}.mjs`);
+  writeFileSync(oldTmpResults, oldSrcResults);
+  preResultsWorker = (await import(pathToFileURL(oldTmpResults).href)).default;
+} catch (e) {
+  preResultsNote = 'git-historikken er ikke tilgængelig her: ' + (e.code || e.message);
+}
+if (preResultsWorker) {
+  resKv.clear();
+  seed('p', 0, 'mahope.tools', '/scan', 'scan-findings', 'u-1');
+  const oldResults = await preResultsWorker.fetch(new Request('https://mahope.tools' + RS), resEnv, {});
+  const oldResultsBody = await oldResults.json().catch(() => ({}));
+  ok('mutation: den gamle kode svarer 404 og ikke et resultattal',
+    oldResults.status === 404 && oldResultsBody.totals === undefined,
+    oldResults.status + ' totals=' + oldResultsBody.totals);
+} else {
+  console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + preResultsNote);
+}
+
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);

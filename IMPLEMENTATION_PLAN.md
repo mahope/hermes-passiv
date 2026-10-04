@@ -1,26 +1,32 @@
 # STATUS
-- **Artiklen har nu en handling i sin egen tekst.** 5/10: første afsnit af
-  `/blog/text-on-image-contrast-check` (+ den danske spejling) havde **0** links
-  til værktøjet; den eneste in-text sti lå i `#try-it`. Nu **1** pr. sprog i
-  første `<section>`, på **hele ruten** så `cta-`-beaconen tæller klikket.
-  **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret*
-  tjekker ikke skelne brug fra flugt — det står i feature-kø punkt 6.
-- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` sendte
-  `scan` både ved starten og igen efter svaret (**én scanning = to
-  begivenheder**), og intet kom ved resultatet eller pro-kortets knap. Nu `scan`,
-  `scan-findings`/`scan-clean`, `scan-failed`, `pro-card-click` på begge sprog;
-  porten **5 fund pr. sprog** på den gamle kode, selftest **18/18**.
+- **Resultat-tallet kan nu læses uden `STATS_TOKEN`.** 5/10: `GET /api/results`
+  er en udlæsning af de nøgler `/api/track` allerede skriver — kun
+  resultatbegivenhederne, kun tællinger, intet der identificerer en besøgende.
+  Salg, købsforsøg og sidevisninger ligger *kun* i `/api/stats`. 31 nye
+  kontroller, **431/431**; tre mutationer (navneliste, stidom, nøglegrænse) er
+  målt røde. Fulde gaten grøn.
+- **Deploy-noten for artiklen er afregnet på indhold, 5/10 19:5x.** Begge sprog:
+  **1** in-text handling i **første** `<section class="problem">` før
+  `problem-cards`, **1** `hero-cta` med `btn-primary` (`#try-it` /
+  `#prov-dit-billede`), **0** `btn-primary` i `.blog-tool-cta`. Bemærk målt:
+  noten skrev `<section class="problem">`, live er den `<section class="problem"
+  id="why">` — min egen regex var for stram, siden er rigtig.
+- **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret*
+  tjekker ikke skelne brug fra flugt. Det står i feature-kø punkt 5.
+- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()`, resultat,
+  `scan-failed` og `pro-card-click` på begge sprog; porten **5 fund pr. sprog**
+  på den gamle kode, selftest **18/18**.
 - **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect`
-  får `env` (`5693853`) og live `/api/url-inspect` svarer **200** med rigtig
-  redirect-kæde; SSRF lukket på **4** ruter; `net.js:42,47` gør 429 endelig; ét
-  502-kald koster højst ét ekstra betalt kald; `thanks.html:103` har egen
-  202-tekst. **PR-TJEK 5/10:** 0 PR'er. **BRANCH-TJEK 5/10:** ingen grene over
-  14 dage; fire lokale dubletter slettet (opgave 16).
+  får `env` og live `/api/url-inspect` svarer **200**; SSRF lukket på **4**
+  ruter; `net.js` gør 429 endelig; ét 502-kald koster højst ét ekstra betalt
+  kald; `thanks.html` har egen 202-tekst. **PR-TJEK 5/10:** 0 PR'er.
+  **BRANCH-TJEK 5/10:** ingen grene over 14 dage; kun `main` findes lokalt.
 - **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
   `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
   hvor handlingen er `<input>` + knap; alle **3** har grund i `first_action.json`.
-  Bannerne er demoteret, og porten dømmer *alle* sider med banner — den var
-  **RØD med 330 fund** på den uændrede kode.
+- **Næste:** konvertering kan stadig ikke læses (opgave 3) — `/api/results` er
+  bevidst uden købsforsøg, så næste opgave må enten finde en tokenfri
+  konverteringslæsning eller vente på `STATS_TOKEN`.
 
 ## Verificér deploy
 
@@ -48,15 +54,26 @@ meningsløse, så dommen er præciseret til at dømme payload-felterne.
 Chromium mod den byggede `dist/` i opgavens iteration; den udgivne fil er
 tegn for tegn lig den.
 
-`VERIFICÉR DEPLOY: artiklen får en handling i sin egen tekst 5/10
-ceo/tekstartens-egen-handling` — måles på **indhold**: live
-`https://mahope.tools/blog/text-on-image-contrast-check` skal have **1** `p` med
-«check it free in the browser» i **første** `<section class="problem">` (før
-`problem-cards`), med `href="/text-on-image-checker"`; live
-`/da/blog/tekst-paa-billede-kontrasttjek` skal have **1** «tjek det gratis i
-browseren» med `href="/text-on-image-checker-da"` på samme plads. Begge sider
-skal stadig have **1** `hero-cta` med `btn-primary` → `#try-it`/`#prov-dit-billede`,
-og `0` `btn-primary` i `.blog-tool-cta`.
+`DEPLOY OK 5/10 19:5x` for `ceo/tekstartens-egen-handling` — målt på **indhold**:
+live `/blog/text-on-image-contrast-check` (200) har præcis **1** `p` med «check
+it free in the browser» i **første** `<section class="problem" id="why">` før
+`problem-cards`, med `href="/text-on-image-checker"`; live
+`/da/blog/tekst-paa-billede-kontrasttjek` (200) har **1** «tjek det gratis i
+browseren» med `href="/text-on-image-checker-da"` på samme plads. Begge sider har
+**1** `hero-cta` med `btn-primary` (`#try-it` / `#prov-dit-billede`) og **0**
+`btn-primary` i `.blog-tool-cta`. **Målt afvigelse:** noten skrev
+`<section class="problem">` uden `id`; live er den `id="why"`. Dommen er rettet
+til at læse `problem-cards` som ankerpunkt, så den ikke igen er så stram at den
+måler sin egen fejl.
+
+`VERIFICÉR DEPLOY: resultat-tallet læses uden STATS_TOKEN 5/10
+ceo/resultat-uden-hemmelighed` — måles på **indhold**: live
+`https://mahope.tools/api/results?days=7` skal svare **200** med
+`"status":"ok"` og nøglen `totals` med `runs` og `visitor_days`, og svaret skal
+**ikke** indeholde `buy-click`, `scan-failed`, `waitlist`, `licenses_issued` eller
+`by_product`. `POST` skal svare **405**. Ruten lister trafiknøgler, så det første
+resultat kan være `runs: 0` — det er det rigtige svar på «hvor mange kørsler
+endte i et resultat i de sidste syv dage», ikke en fejl.
 
 `DEPLOY OK 4/10 13:1x` for `ceo/fold-pris` — målt på **indhold**:
 `https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]`, `id="price"`
@@ -154,7 +171,10 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401 siden uge 37, så næsten hver linje i enhver trafikrangering er vor
    egen links-tælling, ikke besøg. Accept: `GET /api/stats` med token svarer 200.
-   *(Blokeret på Mads — se ❓.)*
+   *(Blockeret på Mads — se ❓.)* **Målt 5/10:** resultat-siden af tragten er nu
+   læsbar uden token (`/api/results`, feature-kø 6), men `buy-click` og salget
+   ligger stadig bag tokenen — og det er dem, der svarer på «kommer der penge
+   ind», så opgaven står åben.
 4. **`bugbottle.dev` deployes ikke.** Hvorfor: `deploy-sites.yml`-matrixen
    deployer kun tre domæner. **2/10 er følgen målt og lukket:** de fire
    BugBottle-guider ligger på `mahope.tools`, så `/blog/` har ingen døde links;
@@ -432,12 +452,14 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    læser der bruger den bliver på ét sidevisning — Plausible tæller det som
    bounce, præcis som en læser der lukkede fanen. Bounce 100 % kan her altså
    ikke skelne brug fra flugt; det erfarede den næste opgave.
-6. **Ingen måling kan skelne «brugte værktøjet» fra «lukkede fanen».** Hvem:
-   alle brugere af de gratis værktøjer. Tal: hvor mange rent faktisk får et
-   resultat. Accept: ét resultat pr. kørsel tælles ét sted, der kan læses *uden*
-   `STATS_TOKEN`. Datagrund: Plausible sidder allerede på alle **270** sider
-   (`build_sites.py:add_plausible`), så `plausible('scan-result')` fra klienten
-   kræver **ingen** nøgle og ingen ny konto — kun at «custom events» er slået
-   til i Plausible-instrumentet (et dashboard-valg, jeg ikke kan lave).
-   `/api/track` skriver i dag, men `/api/stats` svarer **401**, så hele tragten
-   fra opgave 20 er skrevet, men ulæselig.
+6. ~~**Ingen måling kan skelne «brugte værktøjet» fra «lukkede fanen».**~~
+   **Færdig 5/10**, `ceo/resultat-uden-hemmelighed`. Hvem: alle brugere af de
+   gratis værktøjer. Tal: hvor mange rent faktisk får et resultat. Accept: ét
+   resultat pr. kørsel tælles ét sted, der kan læses *uden* `STATS_TOKEN` —
+   holdt: `GET /api/results` er en udlæsning af de nøgler `/api/track` allerede
+   skriver, så der er **én** tæller og ingen der kan komme i strid. Datagrund:
+   `/api/stats` svarer 401 siden uge 37, så hele tragten fra opgave 20 var
+   skrevet men ulæselig. Målt: **31** nye kontroller, **431/431** grøn, tre
+   mutationer røde (navnelisten, stidommen, nøglegrænsen), mutation mod den
+   gamle kode giver 404. Bevidst *uden* salg, købsforsøg og sidevisninger — de
+   er ikke resultater, og opgave 3 (konvertering) står derfor stadig åben.
