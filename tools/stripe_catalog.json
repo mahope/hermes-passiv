@@ -32,7 +32,7 @@
       "pro_features": [
         {
           "id": "batch",
-          "where": "site/clean-copy-tool.html:721-740 btn-batch -> CleanCopyCore.batchConvert(lines) — batch-konverteringen ligger i webværktøjet og kræver licensen, fordi #batch-details (enableBatch :715-717) kun vises når proActive() er sand",
+          "where": "site/clean-copy-tool.html:737-755 btn-batch -> CleanCopyCore.batchConvert(lines) — batch-konverteringen ligger i webværktøjet og kræver licensen, fordi #batch-details (enableBatch :730-732) kun vises når proActive() er sand",
           "labels": {
             "en": [
               "batch conversion"
@@ -58,7 +58,7 @@
       "free_features": [
         {
           "id": "all-conversion-modes",
-          "where": "extension-clean-copy/background.js:437-440 withProRules(result) — `if (!result || result.error || !proState.active || !result.content) return result;` sender resultatet UDEN at røre det, saa konverteringen er altid sket. proState styres kun af :385-392 (d.proLicense -> compiled rules) og bruges ellers alene i :438 og applyCompiled :380. Ingen licenskontrol findes paa nogen konverteringssti: rg for license/premium/pro_ i extension-clean-copy/ giver ingen gating i background.js. Webværktøjet er samme sag: site/clean-copy-tool.html:156-163 har ingen maxlength, og :253 siger selv at Pro kun tilføjer batch og egne rense regler",
+          "where": "extension-clean-copy/background.js:437-440 withProRules(result) — `if (!result || result.error || !proState.active || !result.content) return result;` sender resultatet UDEN at røre det, saa konverteringen er altid sket. proState styres kun af :385-392 (d.proLicense -> compiled rules) og bruges ellers alene i :438 og applyCompiled :380. Ingen licenskontrol findes paa nogen konverteringssti: rg for license/premium/pro_ i extension-clean-copy/ giver ingen gating i background.js. Webværktøjet er samme sag: site/clean-copy-tool.html:171-176 har ingen maxlength, og :265 siger selv at Pro kun tilføjer batch og egne rense regler",
           "labels": {
             "en": [
               "every conversion mode in the extension and on the web tool"
@@ -70,7 +70,7 @@
         },
         {
           "id": "no-paste-limit",
-          "where": "site/clean-copy-tool.html:156 `<textarea id=\"input-box\">` og :161 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :615 er Pro-nøglens validate/activate mod /api/license, og :442 + :739 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :243 (Free: no limit / Pro: no limit) og i :253-256 (no account, no expiry and no limit)",
+          "where": "site/clean-copy-tool.html:171 `<textarea id=\"input-box\">` og :176 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :680 er Pro-nøglens validate/activate mod /api/license, og :468 + :804 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :265 (Free: no limit / Pro: no limit) og i :274-276 (no account, no expiry and no limit)",
           "labels": {
             "en": [
               "no limit on how much text you paste"
@@ -1770,7 +1770,7 @@
       "free_features": [
         {
           "id": "modes",
-          "where": "site/clean-copy-tool.html:526-528 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
+          "where": "site/clean-copy-tool.html:532-537 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
           "labels": {
             "en": [
               "The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text"
@@ -1779,7 +1779,7 @@
         },
         {
           "id": "unlimited",
-          "where": "site/clean-copy-tool.html:156 input-box er en hel textarea; serveren læser den ikke, den sender ingen tekst nogen steder",
+          "where": "site/clean-copy-tool.html:171 input-box er en hel textarea; serveren læser den ikke, den sender ingen tekst nogen steder",
           "labels": {
             "en": [
               "No limit on how much text you paste"
@@ -1790,7 +1790,7 @@
       "pro_features": [
         {
           "id": "batch",
-          "where": "site/clean-copy-tool.html:282 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
+          "where": "site/clean-copy-tool.html:288 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
           "labels": {
             "en": [
               "Batch conversion — many snippets at once, one per line"
@@ -1799,7 +1799,7 @@
         },
         {
           "id": "rules",
-          "where": "site/clean-copy-tool.html:490 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
+          "where": "site/clean-copy-tool.html:505 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
           "labels": {
             "en": [
               "Custom cleanup rules you define once, in the browser extension"

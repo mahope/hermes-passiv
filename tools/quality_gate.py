@@ -647,6 +647,23 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_ui_constants.py", "--self-test"),
         inputs=("tools/check_ui_constants.py", "tools/stripe_catalog.json", "site/**"),
     ),
+    # Hero-notens skriftstørrelse (5/10, review-fund). Målt først i rigtig
+    # Chromium 390 og 1280 px: `.hero p` (0,1,1) vandt over `.hero-note` (0,1,0),
+    # så en note der var et `<p>` blev præcis så stor som brødteksten over den —
+    # **20,8 px** på de to cleancopy-sider og **18,4 px** på 179 blog- og
+    # guidesider. Rettelsen var `:not(.hero-note)` på begge `.hero p`-regler;
+    # porten dømmer kaskaden, så den kommer ikke tilbage næste gang en
+    # produktregel sætter font-size på hele heroen.
+    Step(
+        id="hero-note-scale",
+        argv=("python3", "tools/check_hero_note_scale.py"),
+        inputs=("tools/check_hero_note_scale.py", "site/style.css"),
+    ),
+    Step(
+        id="hero-note-scale-selftest",
+        argv=("python3", "tools/check_hero_note_scale.py", "--self-test"),
+        inputs=("tools/check_hero_note_scale.py", "site/style.css"),
+    ),
     # Dublet `<h2>` (30/9). Målt først: 63 af 190 blogfiler havde to afsnit med
     # samme navn, så indholdsfortegnelsen på 63 sider lister samme afsnit to
     # gange. Indholdet var forskelligt (median overlap mellem de to sektioners

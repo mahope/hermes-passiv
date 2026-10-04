@@ -54,26 +54,65 @@ PAGEPASS_PATH = ROOT / 'tools' / 'pagepass.py'
 _RULE_HEAD_RE = re.compile(r'([^{}]+)\{')
 _COMMENT_RE = re.compile(r'/\*.*?\*/', re.S)
 _ATTR_RE = re.compile(r'\[\s*([\w-]+)\s*=\s*["\']?([^\]"\'\s]+)["\']?\s*\]')
+# `:not(.foo)` i en erklæring — se `declared_selectors`.
+_NOT_RE = re.compile(r':not\(([^()]*)\)')
 
 
 def normalize(selector: str) -> str:
     """Én skriveform for det samme udtryk. Se docstringens tre punkter."""
     s = re.sub(r'\s+', ' ', selector.strip())
-    s = s.replace('"', '').replace("'", '')
+    s = s.replace('"', '')
+    s = s.replace("'", '')
     s = _ATTR_RE.sub(r'[\1=\2]', s)
     s = re.sub(r'\s*>\s*', ' > ', s)
     return s
 
 
+def _basis(selector: str) -> str:
+    """Selectoren uden sin `:not(…)`-refinement.
+
+    5/10: skallen erklærer `.hero p:not(.hero-note)`, fordi `.hero p` (0,1,1)
+    vandt over `.hero-note` (0,1,0) og gjorde enhver note der var et `<p>` lige så
+    stor som brødteksten. Kontrakten siger `.hero p`, fordi det stadig er den
+    regel skallen ejer — så `.hero p` skulle tælle som erklæret.
+    """
+    return normalize(_NOT_RE.sub('', selector))
+
+
 def declared_selectors(css: str) -> set:
-    """Alle selectors style.css erklærer, efter normalisering."""
+    """Alle selectors style.css erklærer, efter normalisering.
+
+    En `:not(…)`-refinement tæller som erklæring af sin **basis**, men kun når
+    den undtagne klasse selv er erklæret i samme fil. Det er præcist nok: en
+    skal kunne slette `.hero p` helt og få rødt, fordi `style.css` så erklærer
+    `.hero p:not(.hero-note)` for en klasse der ikke findes — og det kan ikke
+    ske, fordi `.hero-note` er erklæret. Uden den betingelse ville porten være
+    grøn på en skal hvor heroens brødtekst overhovedet ikke er stylet.
+    """
     bare = _COMMENT_RE.sub('', css)
-    out = set()
-    for m in _RULE_HEAD_RE.finditer(bare):
-        for part in m.group(1).split(','):
-            if part.strip():
-                out.add(normalize(part))
-    return out
+    rå = [normalize(part) for m in _RULE_HEAD_RE.finditer(bare)
+          for part in m.group(1).split(',') if part.strip()]
+    # To omgange, ikke én. `:not(.hero-note)` står på linje 435 og `.hero-note`
+    # på 438, så en enkelt gennemgang ville erklære basen *før* undtagelsens
+    # klasse var set — og porten ville være rød på den rigtige fil. Rækkefølgen
+    # i en CSS-fil er ikke en del af påstanden her.
+    erklæret: set = set()
+    for s in rå:
+        erklæret.add(s)
+    # En klasse er *erklæret* når den står i en erklærings **basis**. Samles den
+    # fra `:not(.findes-ikke)` selv, ville betingelsen altid være sand, og porten
+    # grøn på en skal hvor undtagelsen peger på en klasse der ingen steder styler.
+    erklæret_klasser = {c for e in erklæret
+                        for c in re.findall(r'\.([\w-]+)', _basis(e))}
+    for s in rå:
+        basis = _basis(s)
+        if basis == s or not basis:
+            continue
+        undtaget = [c for klamme in _NOT_RE.findall(s)
+                    for c in re.findall(r'\.([\w-]+)', klamme)]
+        if all(c in erklæret_klasser for c in undtaget):
+            erklæret.add(basis)
+    return erklæret
 
 
 def owned_selectors() -> list:
@@ -150,6 +189,20 @@ def _selftest() -> int:
     # 5. En regel i @media tæller — den er stadig en erklæring.
     check('en regel inde i @media tæller som erklæret',
           '.faq-item' in declared_selectors('@media (max-width: 600px) { .faq-item { padding: 0; } }'))
+
+    # 5b. 5/10: `.hero p:not(.hero-note)` er erklæringen for `.hero p`. Polariteten
+    #     er præcis: `.hero p` skal være dokumenteret af den, men **kun** fordi
+    #     `.hero-note` selv er erklæret. Uden den betingelse ville porten være
+    #     grøn på en skal hvor undtagelsen peger på en klasse der ikke findes —
+    #     altså hvor `.hero-note` slet ikke er stylet.
+    check('`.hero p:not(.hero-note)` dækker `.hero p`',
+          '.hero p' in declared_selectors('.hero p:not(.hero-note) { color: red; }'
+                                           '\n.hero-note { color: blue; }'))
+    check('`.hero p:not(.findes-ikke)` dækker IKKE `.hero p`',
+          '.hero p' not in declared_selectors('.hero p:not(.findes-ikke) { color: red; }'))
+    check('den rigtige fil dækker `.hero p` netop sådan',
+          normalize('.hero p') in declared_selectors(css),
+          'style.css har ikke længere nogen `.hero p`-erklæring')
 
     if fails:
         print(f"\ncheck_owned_selectors selvtest: {len(fails)} fejl af {ran} domme")

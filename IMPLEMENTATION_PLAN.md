@@ -3,41 +3,57 @@
   `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
   hvor handlingen er et `<input>` + `Inspect`-knap. Alle **3** har grund i
   `first_action.json`.
-- **Folden på de to mest besøgte forsider kan nu nå pristabellen.** Målt 4/10 i
-  Plausible 28 dage: `cleancopy.tools/` 11 af 13 besøgende (73 % bounce, 86 s)
-  og `deskuptime.com/` 7 (100 %, 0 s). Begge havde tabellen 4–11 tusind tegn
-  nede og ingen handling til den — kun brødtekst der nævner prisen. Ny dom 4 i
-  `check_first_action.py` dømmer det på de ratchetede sider hvor tabellen er
-  **synlig**; de fire værktøjssiders pro-kort er skjult til resultatet.
-- **CEO-kø punkt 0 er målt færdig, ikke åben.** Alle fem dele holder:
-  `handleUrlInspect` får `env` (`5693853`), og live `POST /api/url-inspect?url=`
-  svarer **200** med rigtig redirect-kæde; SSRF er lukket på fire ruter i samme
-  commit; `net.js:42,47` gør 429 endelig, og alle klienter går gennem kernen;
-  `ASK_MAX_TRIES = BOOK_MAX_TRIES = 2`, så ét 502-kald højst koster ét ekstra
-  betalt kald; `thanks.html:103` har egen `pendingOut`-sætning til 202.
+- **Alle fire Pro-forsider kan nå pristabellen fra folden**, målt på indhold 5/10:
+  `cleancopy.tools/` (11 af 13), `/clean-copy-tool` (2, 0 % bounce),
+  `deskuptime.com/` (7) og `/da/`. **38** ratchetede sider.
+- **CEO-kø punkt 0 er målt færdig, ikke åben.** Alle **5** dele holder:
+  `handleUrlInspect` får `env` (`5693853`) og live `/api/url-inspect` svarer
+  **200** med rigtig redirect-kæde; SSRF er lukket på **4** ruter; `net.js:42,47`
+  gør 429 endelig; ét 502-kald koster højst ét ekstra betalt kald
+  (`ASK_MAX_TRIES = BOOK_MAX_TRIES = 2`); `thanks.html:103` har egen 202-tekst.
 - **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
   **RØD med 330 fund** på den uændrede kode, så en ny artikel arver reglen uden at
-  nogen skal huske den ind. De ligger stadig; de taler bare kun en gang som det
-  sekundære de er. ❓ om deres placering står uændret.
-- **Ingen løbende side-tal i portenes tekst.** De 4 forkerte optællinger er
-  rettet til daterede målinger plus en pegepning på portens egen afregning, som
-  `check_first_action.py` nu udvider med bannerknap-antallet.
+  nogen skal huske den ind. ❓ om deres placering står uændret.
+- **Ingen løbende side-tal i portenes tekst.** De 4 forkerte optællinger er rettet
+  til daterede målinger plus portens egen afregning med bannerknap-antallet.
 - **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
+- **Review-fund 5/10 (MIDDEL) er lukket, og det var **179** sider, ikke to.**
+  Årsagen er kaskaden: `.hero p` (0,1,1) vandt over `.hero-note` (0,1,0), så
+  enhver note der var et `<p>` blev så stor som brødteksten. Målt i Chromium
+  390/1280 før rettelsen: **20,8 px** på cleancopy (mod **13,6**) og **18,4 px**
+  på **179** blog- og guidesider. Rettet med `:not(.hero-note)` på begge
+  `.hero p`-regler; efter: **13,6 / 13,6 / 13,6**. Ny port
+  `check_hero_note_scale.py` dømmer kaskaden og er rød på den gamle kode.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: folden kan nå pristabellen 4/10 ceo/fold-pris` — måles på
-**indhold** i næste iteration, HTTP 200 bruges ikke som bevis:
-`https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]` med teksten
-«See what Clean Copy Pro — $19/year adds, side by side», og `id="price"` findes
-**1** gang. `https://deskuptime.com/` og `/da/` har **1** `.hero-note
-a[href="#pro"]` hver, og `id="pro"` findes **1** gang på hver side. Danske
-forside peger på `#priser`, der findes **1** gang.
+`VERIFICÉR DEPLOY: webværktøjet fik en dømt fold 5/10 ceo/clean-copy-tool-fold` —
+måles på **indhold** i næste iteration: `https://cleancopy.tools/clean-copy-tool`
+har **1** `<header class="hero">` med præcis **1** `.hero-cta a[href="#input-box"]`
+med teksten «Paste your text», **1** `.hero-note a[href="#free-vs-pro"]`, og
+`id="input-box"` + `id="free-vs-pro"` findes **1** gang hver. HTTP 200 bruges
+ikke som bevis.
 
-`VERIFICÉR DEPLOY: bogsiderne fik fold-CTA 5/10 ceo/bogsfold-handling` — måles på
-**indhold** i næste iteration: `/books/` skal have **1** `btn-primary` i folden med
-`href="#books"`, `/books/compliance-bundle/` **1** med `href="#download"`, og
-hvert anker skal findes **1** gang på sin side. HTTP 200 bruges ikke som bevis.
+`VERIFICÉR DEPLOY: hero-noten er mindre end brødteksten igen 5/10
+ceo/clean-copy-tool-fold` — måles på **beregnet skriftstørrelse** i rigtig
+Chromium mod den hentede CSS, HTTP 200 bruges ikke som bevis: på
+`https://cleancopy.tools/` og `/da/` skal fold-noten med linket til `#price` /
+`#priser` være **0,85 rem = 13,6 px** og ikke **1,3 rem = 20,8 px**, og på en
+`/blog/`-side med `<p class="hero-note">` skal den være **13,6 px**, ikke
+18,4 px.
+
+`DEPLOY OK 4/10 13:1x` for `ceo/fold-pris` — målt på **indhold**:
+`https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]`, `id="price"`
+**1** gang. `https://deskuptime.com/` og `/da/` har **1** `.hero-note
+a[href="#pro"]` hver, `id="pro"` **1** gang hver. Den danske forside peger på
+`#priser`, **1** gang. HTTP 200 bruges ikke som bevis.
+
+`DEPLOY OK 4/10 13:1x` for `ceo/bogsfold-handling` — målt på **indhold**:
+`https://mahope.tools/books/` har præcis **1** `<a href="#books" class="btn-primary">`,
+og `/books/compliance-bundle` **1** `href="#download"` med `id="download"`
+**1** gang. **Målt afvigelse:** `/books/compliance-bundle/` med slutstreg svarer
+**308** til den uden streg — den nævnte adresse i noten var derfor den forkerte
+af de to; indholdet er det samme, og begge varianter er dømt ovenfor.
 
 `DEPLOY OK 4/10 11:2x` for `ceo/downloads-fold` — målt på **indhold**:
 `https://mahope.tools/downloads` har præcis **1** `btn-primary` i
@@ -215,6 +231,44 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
     den er gjort større forskel uden at skille sig fra dem.
 
 
+16. **Katalogens `where` har linjenumre, der ikke peger på det de siger.**
+    Hvorfor: `check_catalog_where.py` dommer kun de `«…»`-citat — de otte
+    pro-teksters egne linjesnit i `tools/stripe_catalog.json` er ukontrollerede,
+    og de fleste var **forkerte før** denne iteration. Målt 5/10 på
+    `clean-copy-tool.html`: gamle `:282` pegede på `</div>` (det rigtige var
+    `:273`), `:615` på `try {` (licenskaldet er `:665`), `:442` på en
+    `/* clean-copy-license */`-kommentar (sporingen er `:453`), `:526-528` på tre
+    afsluttende linjer i stedet for de fire konverteringsmoder, `:243`/`:253-256`
+    på tabel-kanterne. Syv er rettet til deres sande linjer i samme diff.
+    Accept: porten verificerer **hver** `fil:linje` i en `where` findes i den
+    fil, så en vilkårlig `:900`-henvisning bliver rød.
+    *(Fundet som følge af `ceo/clean-copy-tool-fold`.)*
+17. ~~**`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.**~~
+    **Færdig 5/10**, `ceo/clean-copy-tool-fold`. Målt 4/10: **2** besøgende,
+    **0 % bounce** — de eneste to af 19 der læste videre. Nu `<header
+    class="hero">` med `#input-box` som primær (siden *er* værktøjet) og
+    Pro-tilbuddet i `.hero-note` til `#free-vs-pro`. `pristabel()` læser nu det
+    nærmeste overskrifts-id på sider **uden** `<section>`, så tabellen dømmes i
+    stedet for at blive overset. Accept holdt: **38** ratchetede sider, selftest
+    **28/28**, porten **RØD** når `hero-cta` fjernes, **GRØN** når ankerets
+    *etikette* ændres. Chromium 390/1280: CTA i folden, ingen vandret scroll,
+    `.hero-note` **13,6 px**, `#0f7b6c`/hvid = **5,16:1**, 0 JS-fejl.
+18. ~~**Review-fund 5/10 (MIDDEL): hero-noten på de to cleancopy-sider var
+     20,8 px.**~~ **Færdig 5/10**, `ceo/clean-copy-tool-fold` — samme squash som
+     opgave 17, fordi de to rettelser deler portene. Fundet var rigtigt,
+     men **årsagen var bredere end de to filer**: `.hero p` (0,1,1) vandt over
+     `.hero-note` (0,1,0), så enhver `.hero-note` der var et `<p>` blev stor som
+     brødteksten. Målt i Chromium 390/1280 mod den byggede `dist/`: **20,8 px**
+     på `cleancopy.tools/` og `/da/` (mod **13,6**) og **18,4 px** på de **179**
+     blog- og guidesider med `<p class="hero-note">`. Rettet i årsagen med
+     `:not(.hero-note)` på begge `.hero p`-regler; efter: **13,6 / 13,6 / 13,6**
+     på cleancopy og **13,6** på bloggen ved begge bredder, `scrollWidth ==
+     innerWidth` overalt. Ny port `check_hero_note_scale.py` (10/10 selftest)
+     dømmer at ingen `.hero p`-regel må overrule noten; **GRØN** på den nye
+     kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
+     giver **RØD** når `:not()` fjernes fra enten den ene eller den anden.
+
+
 ## ❓ Til Mads
 
 - **🔴 `OPENROUTER_API_KEY` mangler på workeren — assistenten er stadig slukket.**
@@ -293,14 +347,8 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-1. **`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.** Hvem:
-   de 2 på `/clean-copy-tool` (0 % bounce) og alle der kommer fra artiklerne.
-   Tal: hvor mange køber $19/år. Accept: siden har en `<div class="hero">` med
-   præcis én `btn-primary` og en post i `first_action.json`.
-   Datagrund: `site/clean-copy-tool.html` har **ingen** `<div class="hero">` eller
-   `<header class="hero">`, så `fold_region()` giver **0 tegn** og porten dømmer
-   slet ikke siden — dens pristabel ligger 12 417 tegn nede i markup. Det er
-   det samme hul som `url-inspector` har med sin `<input>`.
+1. ~~**`/clean-copy-tool` er Pro-salgssiden, og dens fold kan ikke dømmes.**~~
+   **Færdig 5/10**, `ceo/clean-copy-tool-fold`. Se opgave 17.
 2. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en

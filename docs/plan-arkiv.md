@@ -7398,3 +7398,72 @@ købsvej, men vejen til den er den, læseren skal finde.
   («Buy EUComply Pro — $79/year») og **2** frie værktøjslinks.
 - **NEXT_TASK:** `/clean-copy-tool` har ingen `<div class="hero">`, så porten
   kan ikke dømme dens fold — den er nu feature-kø punkt 1.
+
+## 5/10 — `ceo/clean-copy-tool-fold`: webværktøjet fik en dømt fold
+
+**Hullet.** `site/clean-copy-tool.html` er den eneste Pro-salgsside i familien
+uden `.hero`. `fold_region()` søger på `<div class="hero">` eller
+`<header class="hero">`, gav **0 tegn**, og porten erklærede den grøn fordi den
+slet ikke kiggede — dens gratis-mod-Pro-tabel (`<h2 id="free-vs-pro">`, ca. 12 400
+tegn nede i markup) lå uden nogen vej fra folden. Samme fejlform som den
+`url-inspector` har med sit `<input>`, og samme grund som gjorde den til en
+*begrundelse* dér: her var den et hul.
+
+**Datagrund.** Plausible 28 dage til 4/10: **2** besøgende på cleancopy.tools
+`/clean-copy-tool`, **0 % bounce** — de eneste to af de 19 der læste videre.
+Altså netop dem et købstilbud skal møde, på den side hvor det mangler.
+
+**Valget.** Foldens primære er `#input-box` — **textarea'en**. Siden *er*
+værktøjet, så en købsknap i folden ville være den anden handling oven i en side,
+hvor læseren endnu ikke har lavet noget. Pro-tilbuddet ligger derfor i
+`.hero-note` som tekstlink til `#free-vs-pro`, nøjagtig som `/clean-copy` gjorde
+det 4/10. Der er ingen DA-udgave af siden.
+
+**Selve rettelsen i porten.** `pristabel()` løb før kun baglæns efter `<section>`
+og `continue`ede, når den ikke fandt en — altså «siden har ingen pristabel», og
+sagen var grøn fordi den ikke kiggede. Nu tages samme `hidden`-tjek på den
+nærmeste åbne tag før tabellen (`#cc-pro`-beholderen er en `<div>`), og ellers det
+nærmeste `<h1>`–`<h6 id>` før tabellen; er der ikke ét, returneres en tom streng, så
+folden ikke kan pege på den, og det dømmes. Tre nye selftesttilfælde: pristabel
+uden `<section>` finder sit overskrifts-id, samme side kræver et foldlink, og en
+skjult pristabel er stadig ikke i folden. **28/28**.
+
+**Mutationer.** `hero-cta`-ankeret væk → **RØD** med præcis «ingen btn-primary
+i foldregionen». Ankerets *etikette* ændret → **GRØN**, som den skal: en
+sprogretning må ikke låse porten (samme læring som `ceo/review-fund-oktober`).
+Begge gendannet, porten grøn igen, `git status` ren.
+
+**Målt i Chromium 390 og 1280 px** mod `python3 -m http.server` på
+`dist/cleancopy.tools` med CSS der svarer 200:
+
+| | 390 px | 1280 px |
+|---|---|---|
+| `.hero-cta a` top/bottom | 441 / 482 | 371 / 412 |
+| `header.hero` top/bottom | 229 / 574 | 201 / 482 |
+| `scrollWidth` / `innerWidth` | 390 / 390 | 1280 / 1280 |
+| `h1` | 33,6 px | 51,2 px |
+| `.hero-note` | **13,6 px** | 13,6 px |
+
+`#input-box` og `#free-vs-pro` findes **1** gang hver, **0** JS-fejl, knappen er
+`#0f7b6c` med hvid tekst = **5,16:1** (AA). `.hero-note` er 13,6 og ikke 20,8
+fordi den er et `<span>` — det er præcis den fejl revieweren fandt på de to
+clean-copy-sider samme dag, så den er undgået her fra starten.
+
+`.tool-wrap .hero { padding-top: 1.1rem; }` er den eneste nye regel. `.hero`s egne
+`padding: clamp(2rem, 5vw, 3.5rem) 0 2.25rem` (0,1,0) ville med sin 3,5 rem
+top-padding skubbe knappen ud af folden på mobil, fordi heroen her kommer efter
+to brødkrummer. Kun afstanden ændres — farve, radius og typografi er husets egne.
+
+**Sidefund: katalogens `where` havde linjenumre, der ikke pegede på det de
+sagde.** Dommen i `check_catalog_where.py` er de fire ting, hvoraf kun de tre
+første er maskinelle — det fjerde verificerer *citatet* i `«»`, ikke den
+omkringliggende forklaring med dens `fil:linje`. Diffen skubbede
+`clean-copy-tool.html` 15 linjer, og porten blev rød på `:490` → `:505`. Men da
+de otte pro-teksters øvrige henvisninger blev eftergået, viste de sig **allerede
+forkerte på den uændrede kode**: gamle `:282` pegede på `</div>` (det rigtige var
+`:273`), `:615` på `try {` (licenskallet er `:665`), `:442` på en
+`/* clean-copy-license */`-kommentar (den anonyme sporing er `:453`), `:526-528` på
+tre afslutende linjer i stedet for de fire konverteringsmoder, `:243`/`:253-256` på
+tabel-kanterne. Syv af otte er rettet til deres sande linjer og hver er læst efter
+i filen; den åttende (`proCard()`-citatet) var korrekt og flyttedes kun med
+forskydningen. Resten ligger som opgave 16.

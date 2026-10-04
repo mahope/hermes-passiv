@@ -164,6 +164,8 @@ def fejl_for(html: str, forventet: str) -> list[str]:
 PRO_TABEL_RE = re.compile(r'class="[^"]*\bpro-table\b')
 SCRIPT_RE = re.compile(r"<script\b.*?</script>", re.S)
 ID_RE = re.compile(r'id="([^"]*)"')
+TAG_RE = re.compile(r"<[a-zA-Z][^>]*>")
+HEADING_ID_RE = re.compile(r'<h[1-6]\b[^>]*\bid="([^"]*)"')
 
 
 def pristabel(html: str) -> str | None:
@@ -183,12 +185,25 @@ def pristabel(html: str) -> str | None:
 
     Ellers er svaret sektionens `id`, og en tom streng når tabellen ligger i
     en sektion uden id — så kan folden ikke pege på den.
+
+    **Sider uden `<section>`** (`/clean-copy-tool`) gav før 5/10 `None` herfra,
+    altså «siden har ingen pristabel» — porten var altså grøn fordi den slet
+    ikke kiggede, selv om tabellen står 12 400 tegn nede i markup. For dem er
+    svaret det nærmeste overskrifts-id før tabellen (`<h2 id="free-vs-pro">`),
+    og er der ikke ét, en tom streng: så kan folden ikke pege på den, og det
+    skal dømmes som det.
     """
     markup = SCRIPT_RE.sub("", html)
     for match in PRO_TABEL_RE.finditer(markup):
         sektion = markup.rfind("<section", 0, match.start())
         if sektion == -1:
-            continue
+            # Samme `hidden`-tjek som nedenfor, men på den nærmeste åbne
+            # tag før tabellen: `#cc-pro`-beholderen er en `<div>`.
+            beholder = TAG_RE.findall(markup, 0, match.start())
+            if beholder and "hidden" in beholder[-1]:
+                continue
+            mål = HEADING_ID_RE.findall(markup, 0, match.start())
+            return mål[-1] if mål else ""
         åbning = markup.find(">", sektion)
         if "hidden" in markup[åbning + 1:match.start()]:
             continue
@@ -383,6 +398,29 @@ def self_test() -> int:
          str(fejl_for(med_mål, "#tool-heading")))
     # 6. En side uden hero kan ikke dømmes, og porten skal sige det.
     tjek("manglende hero er rød", bool(fejl_for("<p>ingen hero</p>", "/tool")))
+    # 6b. Prisreglen skal dømme en side *uden* `<section>` foran tabellen.
+    #     5/10: `/clean-copy-tool` har sin gratis-mod-Pro-tabel under
+    #     `<h2 id="free-vs-pro">`, og `pristabel()` returnerede `None` for den —
+    #     så porten var grøn fordi den slet ikke kiggede, 12 400 tegn nede i
+    #     markup. Uden denne kontrol er den fejlform tilbage, hver gang der
+    #     fjernes en `<section>` fra en side.
+    værktøj = (hero.format(a="#input-box")
+               .replace('<a href="#how" class="btn-secondary">Se hvordan</a>',
+                        '<a href="#free-vs-pro">Se Pro</a>')
+               + '<h2 id="free-vs-pro">Free and Pro</h2>'
+                 '<table class="compare pro-table"><tr><td>$0</td></tr></table>')
+    tjek("pristabel uden <section> finder sit overskrifts-id",
+         pristabel(værktøj) == "free-vs-pro", repr(pristabel(værktøj)))
+    tjek("pristabel uden <section> kræver et foldlink",
+         not fejl_pris(værktøj, "værktøj")
+         and any("#free-vs-pro" in f for f in
+                 fejl_pris(værktøj.replace('<a href="#free-vs-pro">', ""),
+                           "værktøj")))
+    skjult = værktøj.replace('<table class="compare pro-table">',
+                            '<div hidden><table class="compare pro-table">') \
+        .replace("</table>", "</table></div>")
+    tjek("skjult pristabel er ikke i folden", pristabel(skjult) is None,
+         repr(pristabel(skjult)))
     # 7. Ratchetfilen skal dømme hver kildefil, der står i den, og ingen anden.
     dømt = ratchet()
     tjek("ratchetets nøgler er kildefiler",

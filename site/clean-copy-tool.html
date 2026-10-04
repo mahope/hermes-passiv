@@ -115,6 +115,10 @@
       padding: 1.2rem 1.4rem;
       margin: 1.5rem 0;
     }
+    /* 5/10: `.hero` har sin egen top-padding, og her kommer den efter to
+       brødkrummer. Uden denne regel skubber den knappen ud af folden på mobil.
+       Kun afstanden ændres — farve, radius og typografi er husets egne. */
+    .tool-wrap .hero { padding-top: 1.1rem; }
   </style>
 </head>
 <body>
@@ -123,9 +127,20 @@
       <a href="/">Home</a> · <a href="/clean-copy">Clean Copy extension</a> · <a href="/clean-copy-bookmarklet">Bookmarklet</a> · <span aria-current="page">Web tool</span>
     </nav>
 
-    <h1>Clean Copy Web</h1>
-    <p class="lead">Paste messy, over-formatted text — get clean Markdown or plain text back.
-    The same converter our browser extension uses, running here in your browser.</p>
+    <!-- 5/10: siden havde ingen `.hero`, så `fold_region()` gav 0 tegn og
+         `check_first_action.py` dømte slet ikke Pro-salgssiden. Værktøjet *er*
+         foldens handling, derfor peger den på `#input-box` — textarea'en —
+         og ikke på en købsknap, læseren ikke har bedt om endnu. -->
+    <header class="hero">
+      <h1>Clean Copy Web</h1>
+      <p class="lead">Paste messy, over-formatted text — get clean Markdown or plain text back.
+      The same converter our browser extension uses, running here in your browser.</p>
+      <div class="hero-cta">
+        <a href="#input-box" class="btn-primary">Paste your text</a>
+      </div>
+      <span class="hero-note">Free and complete, not a trial.
+      <a href="#free-vs-pro">See what Clean Copy Pro — $19/year adds, side by side</a>.</span>
+    </header>
 
     <div class="privacy-note" role="note">
       <span aria-hidden="true"></span>

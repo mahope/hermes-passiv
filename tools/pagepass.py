@@ -42,7 +42,7 @@ OWNED_SELECTORS = {
     "a:hover", "ul", "ol", "li", "code", "pre", "pre code", "kbd", "table", "th", "td", "tr", "img", "hr", "blockquote", "details",
     "summary", "label", "legend", "fieldset", "button", "input", "select", "textarea", "input[type=text]", "input[type=url]",
     ".container", ".card", ".card h3", ".card p", ".cards", ".btn", ".btn-primary", ".btn-primary:hover", ".btn-secondary",
-    ".btn-secondary:hover", ".btn-small", ".badge", ".hero", ".hero h1", ".hero p", ".subtitle", ".tagline", ".lead",
+    ".btn-secondary:hover", ".btn-small", ".badge", ".hero", ".hero h1", ".hero p", ".hero p:not(.hero-note)", ".subtitle", ".tagline", ".lead",
     ".hero-cta", ".hero-note", ".compare", ".compare th", ".compare td", ".compare tr", "pre.cmd", "pre.cmd code", ".cmd",
     ".breadcrumb", ".breadcrumb a", ".breadcrumb a:hover", ".breadcrumb span", ".book-header", ".book-header h1",
     ".book-header .tagline", ".chapter-list", ".chapter-list ul", ".chapter-list li", ".cta-section", ".cta-section h2",

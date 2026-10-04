@@ -121,13 +121,19 @@ class RefParser(HTMLParser):
         a = self._attrs(attrs)
         if tag == "script":
             self._script_depth += 1
+        # `id` på elementet *selv* er et gyldigt fragmentmål, også på en
+        # `<textarea>` eller `<pre>` — springet gælder indholdet, ikke
+        # attributterne. 5/10: `#input-box` på `/clean-copy-tool` var dødt for
+        # porten, fordi den så springe-kun'en over elementets egen id, og
+        # browseren fokuserer textarea'en fint. Kun id'er på dybde 0 tages med,
+        # så et id *inde i* et kodeeksempel stadig ikke regnes som levende.
+        if not self._skip_depth and a.get("id"):
+            self.ids.add(a["id"].strip())
         if tag in self.SKIP_CONTENT:
             self._skip_depth += 1
             return
         if self._skip_depth:
             return
-        if a.get("id"):
-            self.ids.add(a["id"].strip())
         if tag == "a" and a.get("name"):
             self.ids.add(a["name"].strip())
         for key in ("href", "src", "action", "poster", "data-href", "cite"):
