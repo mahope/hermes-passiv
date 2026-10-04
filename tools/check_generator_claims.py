@@ -60,6 +60,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 TOOLS = ROOT / "tools"
 
+# Den fil selvtesten muterer. Kun læst — mutationerne lægges over i
+# hukommelsen, så porten aldrig skriver i repoet. Se `source_for`.
+VICTIM = TOOLS / "iter465_tool_faqs.py"
+
 
 def _load_storage_claims():
     """`check_storage_claims` som et modul, så porten ikke dømmer to gange."""
@@ -160,11 +164,16 @@ def page_for_slug(slug: str) -> str | None:
     return name if (SITE / name).is_file() else None
 
 
-def generators() -> list[Path]:
-    """Alle `tools/*.py` med en FAQ-formet dict."""
+def generators(overrides: dict[str, str] | None = None) -> list[Path]:
+    """Alle `tools/*.py` med en FAQ-formet dict.
+
+    `overrides` erstatter en fils indhold *i hukommelsen*, uden at røre den.
+    Det er hele pointen med mutationerne i `self_test()`: se `source_for`.
+    """
+    overrides = overrides or {}
     found = []
     for path in sorted(TOOLS.glob("*.py")):
-        source = path.read_text(encoding="utf-8", errors="replace")
+        source = source_for(path, overrides)
         try:
             ast.parse(source)
         except SyntaxError:
@@ -174,11 +183,28 @@ def generators() -> list[Path]:
     return found
 
 
-def collect_problems(routes: dict[str, str], pages: dict[str, str]) -> list[str]:
+def source_for(path: Path, overrides: dict[str, str]) -> str:
+    """Kildefilen for `path`, eller mutationen der er lagt over den.
+
+    Selvtesten skriver aldrig en mutation til disk. Det er ikke en
+    optimering — det er den fejl, porten selv fik: den 30/9-gode mutation
+    skrev sit eget anonyme stub ind i `tools/iter465_tool_faqs.py`, og da
+    processen blev dræbt mellem skrivning og gendannelse (`finally`), lå
+    stubben i repoet og blev squaset ind i `6783c64`. Den holdt netop den
+    løgn, porten findes for at dømme, så CI gik rød på `main` to gange.
+    """
+    if path.name in overrides:
+        return overrides[path.name]
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def collect_problems(routes: dict[str, str], pages: dict[str, str],
+                     overrides: dict[str, str] | None = None) -> list[str]:
+    overrides = overrides or {}
     problems: list[str] = []
     judged = 0
-    for path in generators():
-        source = path.read_text(encoding="utf-8", errors="replace")
+    for path in generators(overrides):
+        source = source_for(path, overrides)
         for slug, pairs in faq_entries(source):
             page = page_for_slug(slug)
             if page is None:
@@ -213,18 +239,30 @@ def self_test() -> int:
     pages = csc.site_pages()
     failures = 0
 
-    def check(source: str, label: str) -> list[str]:
-        path = Path(TOOLS / "iter465_tool_faqs.py")
-        original = path.read_text(encoding="utf-8")
-        try:
-            path.write_text(source, encoding="utf-8")
-            problems = collect_problems(routes, pages)
-        finally:
-            path.write_text(original, encoding="utf-8")
-        print(f"{'ok  ' if problems else 'FAIL'} {label}: {problems or 'no problem found'}")
+    routes = csc.fetching_routes()
+    pages = csc.site_pages()
+    failures = 0
+
+    def check(source: str, label: str, expect_problems: bool = True) -> list[str]:
+        """Dommutationen *uden* at røre disken.
+
+        Før 4/10 skrev denne `tools/iter465_tool_faqs.py` og gendannede den i
+        en `finally`. Gaten kørte 66 selvtests, og en dræbt proces mellem
+        skrivning og gendannelse efterlod mutationen i repoet — som
+        `6783c64`. Den holdt netop den løgn, porten findes for at dømme,
+        så CI gik rød på `main` to gange.
+
+        `expect_problems=False` dømmer et *kontrol*-scenarie, der skal tie.
+        Uden flaget ville det skrive `FAIL` på en grøn linje, fordi
+        udskriftslogikken antager at fund er det gode.
+        """
+        problems = collect_problems(routes, pages, {VICTIM.name: source})
+        caught = bool(problems) if expect_problems else not problems
+        print(f"{'ok  ' if caught else 'FAIL'} {label}: "
+              f"{problems or 'no problem found'}")
         return problems
 
-    real = (TOOLS / "iter465_tool_faqs.py").read_text(encoding="utf-8")
+    real = VICTIM.read_text(encoding="utf-8")
 
     # 1. Uden mutation: de rigtige generatorer er grønne.
     baseline = collect_problems(routes, pages)
@@ -252,7 +290,8 @@ def self_test() -> int:
         mutated = real.replace(
             truthy,
             "'Nej. Intet sendes til en server.'", 1)
-        problems = check(mutated, "control: a client-side page keeps its denial")
+        problems = check(mutated, "control: a client-side page keeps its denial",
+                         expect_problems=False)
         failures += 1 if any("palette-generator-da" in p for p in problems) else 0
 
     # 4. En løgn i en generator uden navnet i porten skal stadig dømmes, så
@@ -263,16 +302,9 @@ def self_test() -> int:
                  " ('Er der en server?', 'Nej. Intet sendes til en server.'),\n"
                  "],\n"
                  "}\n")
-    path = TOOLS / "iter465_tool_faqs.py"
-    original = path.read_text(encoding="utf-8")
-    try:
-        path.write_text(anonymous, encoding="utf-8")
-        problems = collect_problems(routes, pages)
-    finally:
-        path.write_text(original, encoding="utf-8")
+    problems = check(anonymous,
+                     "mutation: a generator the port never names is judged anyway")
     caught = [p for p in problems if "url-to-markdown" in p]
-    print(f"{'ok  ' if caught else 'FAIL'} mutation: a generator the port never names is judged anyway: "
-          f"{caught or 'no problem found'}")
     failures += 0 if caught else 1
 
     print("self-test: " + ("grøn" if failures == 0 else f"{failures} fejl"))

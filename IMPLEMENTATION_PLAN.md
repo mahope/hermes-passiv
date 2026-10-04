@@ -1,30 +1,28 @@
 # STATUS
-- **Tilmeldingsformularen på de seks bogsider skyldte brugeren sin egen wifi.**
-  CEO-kø punkt 0 var målt lukket (alle fem fund rettet: `env` i
-  `handleUrlInspect` = `5693853`, tak-sidens 202 = `0d49ac9`/`1/10`, 429 er
-  endeligt i `/net.js`, `ASK_MAX_TRIES = 2`, SSRF på fire ruter). Så gik jeg
-  efter den samme fejlform i de klienter porten **ikke** dømmer: `book-lead.js`
-  gjorde `res.json()` på ethvert svar, så Cloudflares HTML-side for en krasjet
-  worker kastede i parsen og catch'en skrev *Network error. Please try again.*
-  — brugerens adresse var væk, og vi skyldte dem deres eget netværk for vores
-  driftstop. Samme port dømmer kun *kopier af reglen*, aldrig en klient der
-  mangler den; det er næste opgave.
-- **Den engelske artikel der uddeler den betalte app havde ingen købsvej.**
-  CEO-kø punkt 2 og 4 lukket samlet. Målt før rettelsen: 9 sider rørte
-  DeskUptime, 8 havde købsknappen, og den eneste undtagelse var
-  `blog/get-notified-when-website-goes-down` — den deler de to betalte
-  binære filer **to gange** og.sendte læseren i en blindgade, mens dens
-  danske tvilling havde både gratis-mod-Pro-tabel og knap. Den havde også
-  1 af 5 Pro-funktioner nævnt.
-- **Begge artikler løgnede om netværket.** «Nothing is uploaded anywhere,
-  ever» (EN) og «Intet uploades nogensinde» (DA) er falsk: appen aktiverer
-  licensen online. Rettet til den samme ordlyd produktsiderne bruger.
-- **Port `check_deskuptime_claims` (3 domme, selftest 7/7)** dømmer hver
-  side der linker til en udleveret binær: den skal kunne købes, må ikke love
-  at intet forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner.
-  Målt rød på den gamle kode med præcis de 4 fund jeg havde målt i hånden.
-  Kun synlig tekst dommes — porten er grøn med den samme streng i en kommentar.
-- **Gaten grøn:** 86 steps. PR-TJEK 4/10: 0 PR'er. BRANCH-TJEK 2/10. ❓ uændret.
+- **Gatens egen selvtest lagde sin egen mutation i repoet, og den blev
+  squaset ind som kode.** To røde CI-kørsel på `main` (`e860bad`, `6783c64`)
+  havde samme årsag: `6783c64` committede `tools/iter465_tool_faqs.py` som en
+  5-liners stub — **byte-identisk** med det anonyme mutationsobjekt i
+  `check_generator_claims.py:268-273`. Selvtesten skrev den mutation ind i den
+  **tracked** fil og gendannede den i en `finally`; en dræbt proces mellem
+  skrivning og gendannelse efterlod den, og næste iteration tog den med i
+  `git add -A`. Stubben rummer præcis den løgn porten findes for at dømme
+  («Nej. Intet sendes til en server» på `/url-to-markdown`, der henter
+  gennem `/scan-proxy`), så porten blev rød på sin egen fejlform.
+- **Målt, ikke antaget.** Deterministisk på den gamle kode: med `chmod 444` på
+  offerfilen dør den gamle selvtest med `PermissionError` — den *kræver*
+  skrivetilgang. Den nye kører grønt på samme read-only fil, fordi
+  mutationerne nu ligger i hukommelsen (`source_for` + `overrides`). Alle 4
+  scenarier er stadig grønne. Bevis for at ingen anden port har samme fejl:
+  sha256 over **alle** tracked filer før og efter hele gaten (159 steps,
+  14m20s) er **identisk**, så ingen port skriver i repoet mere.
+- **Den betalte ratchet målte 94 veje, siden mens siden har 95.** `e860bad`
+  lagde en købsknap på `/blog/get-notified-when-website-goes-down`, men
+  ratchetfilen blev ikke skrevet op. Portens `--write` lagde **1** linje til
+  og **0** fjernede — ingen tabt vej, kun en vundet.
+- **3 fund fra de to forrige iterationer er målt lukket og arkiveret** — se
+  `docs/plan-arkiv.md`. De to løgnede artikelsætninger er rettet.
+- **Gaten grøn:** 159 steps. PR-TJEK 4/10: 0 PR'er.
 
 ## Verificér deploy
 

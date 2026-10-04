@@ -7130,3 +7130,24 @@ håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.
   *kopier* af reglen, aldrig en klient der mangler den — så `book-lead.js` var
   grøn med sit blinde `res.json()`. Efter rettelsen er der otte andre klienter i
   samme klasse (se opgave 9 i planen). De bliver dømt, indtil det er sket.
+
+## 4/10 — Lukket i denne blok (se STATUS for målingerne)
+
+- **Bogsidens tilmelding skyldte brugeren sin egen wifi.** `book-lead.js` gjorde
+  `res.json()` på ethvert svar, så Cloudflares HTML-side for en krasjet worker
+  kastede i parsen, og catch'en skrev *Network error. Please try again.*, mens
+  brugerens adresse var kasseret. Rettet til `NET.ask(…, 2)`: ét genkald på 5xx
+  og ulæselig krop, 429 endeligt med serverens egen sætning, `err.transport`
+  skilt fra vores 5xx. Tællede `src="/net.js"` pr. vært først:
+  `build-your-first-chrome-extension.html` havde 1 tag, de andre 2.
+- **Den engelske artikel der uddeler den betalte app havde ingen købsvej.**
+  Målt før rettelsen: 9 sider rørte DeskUptime, 8 havde købsknappen, og den
+  eneste undtagelse var `blog/get-notified-when-website-goes-down` — den deler
+  de to betalte binære to gange og.sendte læseren i en blindgade, mens dens
+  danske tvilling havde både gratis-mod-Pro-tabel og knap. 1 af 5 Pro-funktioner.
+- **Begge artikler løgnede om netværket.** «Nothing is uploaded anywhere, ever»
+  (EN) og «Intet uploades nogensinde» (DA) er falsk: appen aktiverer licensen
+  online mod mahope.tools. Rettet til produktsidernes ordlyd.
+- **Port `check_deskuptime_claims`** (3 domme, selftest 7/7) dømmer hver side
+  der linker til en udleveret binær: den skal kunne købes, må ikke love at intet
+  forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner.
