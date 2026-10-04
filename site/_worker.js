@@ -678,9 +678,57 @@ function safeContentType(value) {
   return clean || 'an unknown content type';
 }
 
+// Hvor mange sider ét kald på `/scan-proxy` må hente. Fem er samme tal som
+// `/api/compliance-scan` tager, så de to ruter ikke kan sammenlignes på hvor
+// meget én besøger får pr. klik — det er den forskel pro-kortet på `/scan`
+// fortæller om, og den skal være sand i koden, ikke kun i teksten.
+const SCAN_PROXY_MAX_URLS = 5;
+// Ét kald må ikke hente fem sider hver med sin egen fulde timeout: runtime'en
+// dræber en arbejdsløs anmodning, og kunden ville få en 502 uden at vide hvor
+// langt den nåede. 25 s er rigeligt til fem sider der svarer normalt, og
+// `Math.min` med resten af budgettet gør den **sidste** side ikke stå med et
+// timeout runtime'en dræber under sig.
+const SCAN_PROXY_BATCH_MS = 25000;
+const SCAN_PROXY_ONE_MS = 10000;
+
+/**
+ * Læs én side. Samme fejlsvar som den gamle rute gav, pr. side, så et kald med
+ * én URL svarer præcis som før — det er hele grunden til at formen er delt.
+ */
+async function scanProxyReadPage(targetUrl, signal) {
+  const { response } = await followChecked(targetUrl.toString(), {
+    method: 'GET',
+    signal,
+    headers: {
+      'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://mahope.tools)',
+      'Accept': 'text/html,application/xhtml+xml,*/*',
+    },
+  });
+
+  const contentType = safeContentType(response.headers.get('content-type'));
+  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+    return { ok: false, status: 400,
+      error: `Target returned ${contentType} — not an HTML page. Only HTML pages can be scanned.` };
+  }
+
+  const text = await response.text();
+  const MAX_SIZE = 500 * 1024;
+  if (text.length > MAX_SIZE) {
+    return { ok: false, status: 413,
+      error: `Page is too large (${(text.length / 1024).toFixed(0)} KB). Maximum is 500 KB.` };
+  }
+
+  return { ok: true, html: text, url: targetUrl.toString(), size: text.length };
+}
+
 /**
  * Handle the scan-proxy endpoint.
  * Fetches a URL server-side and returns the HTML as JSON.
+ *
+ * `?url=` tager **én URL pr. linje**, op til SCAN_PROXY_MAX_URLS. Ét URL
+ * svarer i den gamle form, så GitHub Action'en, alt hvad der har kaldt ruten
+ * siden den blev skrevet, og enhver klient der læser `html` bliver ved med at
+ * virke. Flere URL'er svarer i `multi`-formen med én rapport pr. side.
  */
 async function handleScanProxy(request, url, env) {
   const targetUrlParam = url.searchParams.get('url');
@@ -697,16 +745,6 @@ async function handleScanProxy(request, url, env) {
     return new Response(null, { status: 204, headers });
   }
 
-  // Tælleren før selve hentningen: en rute der henter en URL for en kaller er
-  // en forstærker af vores kvote, så den skal være dækket inden arbejdet starter.
-  const limited = await rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT);
-  if (limited) {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'Too many scans this hour. Try again later.' }),
-      { status: 429, headers }
-    );
-  }
-
   // Validate URL parameter
   if (!targetUrlParam) {
     return new Response(
@@ -715,79 +753,137 @@ async function handleScanProxy(request, url, env) {
     );
   }
 
-  let targetUrl;
-  try {
-    targetUrl = new URL(targetUrlParam);
-    if (!['http:', 'https:'].includes(targetUrl.protocol)) {
-      throw new Error('Invalid protocol');
-    }
-  } catch {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https://' }),
-      { status: 400, headers }
-    );
+  // Én URL pr. linje. Gentagne linjer tælles én gang — samme side to gange er
+  // samme svar, og den må hverken spise budget to gange eller få to kort.
+  const rå = targetUrlParam.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
+  const settes = [];
+  for (const r of rå) {
+    const nøgle = cscNormalizeUrl(r);
+    if (nøgle && !settes.some(x => cscNormalizeUrl(x) === nøgle)) settes.push(r);
+  }
+  if (settes.length > SCAN_PROXY_MAX_URLS) {
+    return new Response(JSON.stringify({ ok: false,
+      error: 'Scan up to ' + SCAN_PROXY_MAX_URLS + ' pages at a time — you sent ' + settes.length + '. Run them in batches.' }),
+      { status: 400, headers });
   }
 
-  // Samme værn som på den betalte rapportrute. Uden det hentede denne åbne rute
-  // loopback, RFC1918, link-local og CGNAT og *gav body'en tilbage til kalderen*,
-  // altså en informationsudlæsning der ikke kræver en licens. Den skal også
-  // ligge her, fordi de to ruter ellers ville svare forskelligt på samme URL.
-  // Hop-værnet kommer herfra: følger vi kæden med redirect:'follow', ser
-  // runtime'en den, og et offentligt mål der 302er ind i 169.254.169.254 er
-  // det samme som at skrive den private adresse direkte.
-  if (!targetIsPublic(targetUrl)) {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'That host cannot be scanned. Only public websites can be scanned — local and private network addresses are not reachable from here.' }),
-      { status: 400, headers }
-    );
-  }
-
-  try {
-    const { response } = await followChecked(targetUrl.toString(), {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'HermesPassiv-Scanner/1.0 (compliance scanner; +https://mahope.tools)',
-        'Accept': 'text/html,application/xhtml+xml,*/*',
-      },
-    });
-
-    const contentType = safeContentType(response.headers.get('content-type'));
-    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+  // En ugyldig linje er et 400 med hele linjen, også når de andre er gyldige:
+  // en bureau der har indsat en tegnsfej ville ellers få to rapporter og en
+  // stille skuffelse for den tredje. Samme regel som `/api/compliance-scan`.
+  const targetUrls = [];
+  for (const raw of settes) {
+    let parsed;
+    try {
+      parsed = new URL(raw);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid protocol');
+    } catch {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: `Target returned ${contentType} — not an HTML page. Only HTML pages can be scanned.`,
-        }),
+        JSON.stringify({ ok: false, error: 'Invalid URL — must start with http:// or https:// (' + raw + ')' }),
         { status: 400, headers }
       );
     }
 
-    const text = await response.text();
-    const MAX_SIZE = 500 * 1024;
-    if (text.length > MAX_SIZE) {
+    // Samme værn som på den betalte rapportrute. Uden det hentede denne åbne rute
+    // loopback, RFC1918, link-local og CGNAT og *gav body'en tilbage til kalderen*,
+    // altså en informationsudlæsning der ikke kræver en licens. Den skal også
+    // ligge her, fordi de to ruter ellers ville svare forskelligt på samme URL.
+    // Hop-værnet kommer herfra: følger vi kæden med redirect:'follow', ser
+    // runtime'en den, og et offentligt mål der 302er ind i 169.254.169.254 er
+    // det samme som at skrive den private adresse direkte.
+    if (!targetIsPublic(parsed)) {
       return new Response(
-        JSON.stringify({
-          ok: false,
-          error: `Page is too large (${(text.length / 1024).toFixed(0)} KB). Maximum is 500 KB.`,
-        }),
-        { status: 413, headers }
+        JSON.stringify({ ok: false, error: 'That host cannot be scanned. Only public websites can be scanned — local and private network addresses are not reachable from here.' }),
+        { status: 400, headers }
       );
     }
+    targetUrls.push(parsed);
+  }
 
+  // Tælleren før selve hentningen: en rute der henter en URL for en kaller er
+  // en forstærker af vores kvote, så den skal være dækket inden arbejdet starter.
+  // **Én slot pr. side**, ikke ét pr. kald — ellers blev fem sider gratis, fordi de
+  // kom i samme kasse. Det er præcis den kvote-per-tid den gamle ene-URL-rute havde,
+  // så en læser der scanner én ad gangen har præcis samme budget. Tælles
+  // *efter* valideringen, så et kald med en ugyldig linje ikke brænder kvote.
+  for (let i = 0; i < targetUrls.length; i++) {
+    const flere = await rateLimitIp(request, env, 'scan-proxy', SCAN_PROXY_RATE_LIMIT);
+    if (flere) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Too many scans this hour. Try again later.' }),
+        { status: 429, headers }
+      );
+    }
+  }
+
+  // Ét abort for hele kaldet og ét pr. side. Uden det kunne den tredje af fem sider
+  // bruge hele sin egen timeout efter at de to første brugte hver sin, og
+  // runtime'en dræbte kaldet mens det stadig ventede på svar.
+  const batch = new AbortController();
+  const deadline = Date.now() + SCAN_PROXY_BATCH_MS;
+  const batchTimer = setTimeout(() => batch.abort(), SCAN_PROXY_BATCH_MS);
+  const sider = [];
+  try {
+    for (const target of targetUrls) {
+      const en = new AbortController();
+      const stop = setTimeout(
+        () => en.abort(),
+        Math.max(1, Math.min(SCAN_PROXY_ONE_MS, deadline - Date.now()))
+      );
+      const vedBatch = () => en.abort();
+      batch.signal.addEventListener('abort', vedBatch);
+      try {
+        const side = await scanProxyReadPage(target, en.signal);
+        side.url = target.toString();
+        sider.push(side);
+      } catch (err) {
+        sider.push({ ok: false, status: 502,
+          error: `Could not fetch the page: ${err.message || 'Unknown error'}`,
+          url: target.toString() });
+      } finally {
+        clearTimeout(stop);
+        batch.signal.removeEventListener('abort', vedBatch);
+      }
+    }
+  } finally {
+    clearTimeout(batchTimer);
+  }
+
+  // Ét URL svarer i den gamle form, med pr. sides egen status. GitHub Action'en,
+  // alt hvad der har kaldt ruten siden den blev skrevet, og enhver klient der
+  // læser `html`, skal blive ved med at virke — og en 413 på en for stor side
+  // må ikke blive en 200 med `failed: 1`.
+  if (sider.length === 1) {
+    const en = sider[0];
+    if (!en.ok) {
+      return new Response(JSON.stringify({ ok: false, error: en.error, url: en.url }),
+        { status: en.status || 502, headers });
+    }
     return new Response(
-      JSON.stringify({ ok: true, html: text, url: targetUrl.toString(), size: text.length }),
+      JSON.stringify({ ok: true, html: en.html, url: en.url, size: en.size }),
       { status: 200, headers }
     );
-  } catch (err) {
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        error: `Could not fetch the page: ${err.message || 'Unknown error'}`,
-        url: targetUrl.toString(),
-      }),
-      { status: 502, headers }
-    );
   }
+
+  const okSider = sider.filter(s => s.ok);
+  // Hvis ingen af dem kom igennem, er det et fejlsvar — ikke to rækker fejltekster,
+  // som om kunden havde fået sine sider læst.
+  if (okSider.length === 0) {
+    return new Response(JSON.stringify({ ok: false, error: sider[0].error }),
+      { status: 502, headers });
+  }
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      multi: true,
+      requested: targetUrls.length,
+      scanned: okSider.length,
+      failed: sider.length - okSider.length,
+      pages: sider,
+      version: '2.0',
+    }),
+    { status: 200, headers }
+  );
 }
 /**
  * Handle the page-profile endpoint.

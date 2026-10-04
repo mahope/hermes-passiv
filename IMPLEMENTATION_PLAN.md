@@ -1,30 +1,35 @@
 # STATUS
-- **Eksempel-resultat på `/scan` (EN + DA), 5/10.** wordpress.org målt
-  **66/100**, 2 fejl, 2 advarsler med `tools/scan_example.py` — sidens egne
-  scripts i headless Chromium mod lokal stub, så tallene er scannerens og
-  målingen ikke tæller i `/api/results` (**0** runs, **2** buy-clicks,
-  **0** pro-card-clicks). Datoen står på kortet, «scan det selv» er en
-  `#url=`-link.
+- **`/scan` læser 5 sider pr. kørsel (EN + DA), 5/10.** Ét kald på
+  `/scan-proxy`, én URL pr. linje, **en kvoteslot pr. side** så fem sider ikke er
+  gratis fordi de kom i samme kasse. Ét URL svarer i den **gamle** form
+  (`{ok,html,url,size}`), så alt der kaldte ruten før, virker uændret.
 - **Rød CI fundet 5/10 og rettet i samme commit:** `488728f1` fejlede i
-  `plan-status` — STATUS var **26** linjer mod højst 25 — så
-  livslang-tæller-rettelsen er **ikke** live (live `/api/health` har stadig
-  `scans: 50`). Deploy-forsøg #1 efter denne commit.
-- **Ingen livslang tæller kan læses som et vinduestal.** `csc-count`,
-  `wl-count` og `ai-ask-count` har `expirationTtl: 365 * 86400` og genoplades
-  ved hvert skriv, så de kan kun stige. De hed `scans`/`waitlist` i
-  **`/api/health`, som er offentlig**, ved siden af `recentVisits: 12`
-  (to dage). Målt: samme **50** i `/api/health` og `served_scans_lifetime`.
-  Alle **3** hedder nu `*_lifetime` i **7** ruter, og `weekly_report.py`
-  læser præfikset uden reserve.
-- **Målt fejl i porten, samme opgave:** en løs `/\*.*?\*/`-strip startede ved
-  `'/*', ` i `_worker.js:750` og slugte **3.200** linjer kode, så
-  `csc-count`s skrivning forsvandt. Kommentar-strippingen er forankret i
-  linjens start.
-- **Næste:** feature-kø 9 (`/scan` tager kun 1 URL mod pro-kortets «crawls the
-  whole site») er den næste pengeopgave; feature-kø 2 (`deskuptime.com` —
-  **7** besøgende, 100 % bounce, **0** s) kan ikke dømmes på 7 besøgende.
+  `plan-status` — STATUS var **26** linjer mod højst 25 — så livslang-
+  tæller-rettelsen er **ikke** live (live `/api/health` har stadig `scans: 50`).
+- **Ingen livslang tæller læses som et vinduestal.** `csc-count`, `wl-count` og
+  `ai-ask-count` hedder nu `*_lifetime` i **7** ruter; de var `scans`/`waitlist` i
+  **`/api/health`, som er offentlig**, ved siden af `recentVisits: 12` (to dage).
+  Ny port `check_lifetime_counters.py` dømmer klassen.
+- **Næste:** feature-kø 2 (`deskuptime.com` — **7** besøgende, 100 % bounce,
+  **0** s) kan ikke dømmes på 7 besøgende. Sentry er **ikke** sat op: der er
+  ingen `Sentry.init` i koden, så «ingen uløste fejl» kan bare betyde intet.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: /scan læser 5 sider pr. kørsel 5/10 00:5x
+ceo/scan-flere-sider` — måles på **indhold**: live
+`https://mahope.tools/scan` skal have `<textarea id="url"` (ikke `<input
+id="url" type="url">`) med **`rows="2"`**, en rigtig
+`<label class="scanbox-label">` der **ikke** er `sr-only`, og teksten
+«one per line, up to 5 pages». Samme på `/scan-da` med
+«én pr. linje, op til 5 sider». Et **JS-kald** med to URL'er
+(`/scan-proxy?url=a%0Ab`) skal svare `multi: true`, `requested: 2` og
+`pages` med to elementer — mens «**ét** URL» stadig skal svare
+`{ok,html,url,size}` uden `multi`. Et kald med **seks** URL'er skal give
+**400** med «Scan up to 5 pages». Sidens JS skal have præcis én
+`scan-failed`-henvendelse (`check_scan_events` dømmer det). HTTP 200 bruges
+ikke som bevis.
+
 
 `VERIFICÉR DEPLOY: eksempel-resultat paa /scan 5/10 00:3x
 ceo/scan-eksempel-resultat` — måles på **indhold**: live `https://mahope.tools/scan`
@@ -204,15 +209,7 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    («Check a site now» → `#check`) ligger i folden ved begge bredder. Folden
    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
 
-9. **`/scan` tager kun én URL, så en virksomed med 40 sider kan ikke se sin
-   egen tilstand.** Hvem: bureauer og webbureauer der leverer EAA-rapporter.
-   Tal: hvor mange af dem går fra én scanning til betalt helsitet. Accept: et
-   krav på flere URL'er der svarer på den samme rute, med den samme kvote-per-tid
-   og den samme 5xx/429-semantik. Datagrund: pro-kortet på `/scan` lover «It
-   crawls the whole site» for $79/år, men siden tager **1** side pr. kørsel, og
-   `/compliance-site-check` tager **5**. Forskellen mellem gratis og betalt er
-   altså lige nu to tal i en tekst, ikke i produktet.
-
+9. ~~**`/scan` tager kun 1 URL.**~~ **Leveret 5/10** — se arkivet.
 10. **`/scan` har ingen skærmbillede-resultat at dele uden et resultat.** Hvem:
     alle der scanner. Tal: hvor mange resultater der deles videre (og kommer
     tilbage som besøg). Accept: et statisk, ærligt eksempel-resultat i folden
@@ -221,3 +218,21 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     der kommer fra en guide kan ikke se, hvad et resultat overhovedet er. Målt
     afvigelse: et eksempel med et fast tal går stale, så det skal genereres
     eller mærkes som et eksempel — ikke skrives som et målt resultat.
+
+## Arkiv-tilføjelse 5/10
+- **Feature-kø 9 leveret:** `/scan` og `/scan-da` læser **5 sider pr. kørsel**.
+  Serveren: `scan-proxy` tager én URL pr. linje (`SCAN_PROXY_MAX_URLS = 5`),
+  **en kvoteslot pr. side** (før *efter* validering, så et 400 brænder ikke
+  kvote), og ét abort for hele kaldet (25 s) + ét pr. side (10 s, `Math.min` med
+  resten af budgettet). Én URL → gammel form; flere → `{multi,requested,scanned,
+  failed,pages}`. Alle fejltekster, statuser og SSRF-værnet er uændrede pr. side.
+  Klienten: `analyseDoc(doc)` udtaget så det samme DOM-tjek kører på hver
+  side; `visEn`/`visFlere` deler den ænige `scan()`-vej.
+  **Målt:** missionens gate grøn (`build_sites` 316 sider 0 findings,
+  `stripe-worker` **461/461**, `seo_check` 0, `check_inline_js` 0) og otte porte
+  grønne. `check_scan_events` fandt **en rigtig fejl** i første kørsel —
+  `scan-failed` blev sendt **to** gange i fejlvejen — rettet ved at lade
+  klientens egen forudsætning (tomt felt, for mange URL'er) **ikke** tælle som
+  fejl. Ingen test for den nye ruteform: `tests/stripe-worker.test.mjs` har 461
+  eksisterende checks og alle er urørte, men `multi`-formen er **ikke** dømt
+  af en test endnu — én opgave for næste iteration.

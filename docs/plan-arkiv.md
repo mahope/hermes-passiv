@@ -8051,3 +8051,8 @@ Det her flytter det kogede fra STATUS til arkivet:
 - **Begge åbne review-fund fra 6/10 er lukket** i `488728f1`: dobbelt `;;` i
   `CHECKOUT_SESSION_RE` (punkt 13 — `;;` er *gyldig* JavaScript, så ingen tsc,
   build eller port så den) og `scans` som vinduestal.
+
+## 5/10 — feature-kø 9: `/scan` læser 5 sider pr. kørsel
+Se `IMPLEMENTATION_PLAN.md` (deploy-note og STATUS). Kort: `scan-proxy` tager én
+URL pr. linje med én kvoteslot pr. side, ét URL svarer i den gamle form, og
+klienten kører det samme DOM-tjek på hver side.
