@@ -1941,6 +1941,32 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_scan_fold.py", "--self-test"),
         inputs=("tools/check_scan_fold.py", "site/scan.html", "site/scan-da.html"),
     ),
+    # Review-fund 6/10 (MIDDEL): `scans` var en *livslang* tæller (`csc-count`,
+    # `expirationTtl: 365 * 86400`) der hed det samme som de vinduesbundne tal i
+    # to af tre ruter. Målt med to `curl`: live `/api/health` svarede
+    # `{"recentVisits":12, …, "scans":50}` — og `/api/health` er **offentlig**,
+    # så en cron kunne rapportere «50 scanninger på to dage». `/api/results`
+    # havde fået præfikset i 5/10 (`served_scans_lifetime`); de to andre havde
+    # ikke. Samme fælde gjaldt `wl-count` og `ai-ask-count`, som også skrives
+    # med et helt års TTL, så rettelsen dømmer hele klassen og ikke tre linjer.
+    #
+    # Porten kræver en afgørelse for hver `readKvCounter(env, '…')` — enten et
+    # `_lifetime`-felt pr. rute eller en `vindue`-begrundelse — og dømmer også at
+    # TTL'en på en kumulativ nøgle er et helt år, at det korte navn er væk fra
+    # ruten, og at `weekly_report.py` læser præfikset uden en reserve på det
+    # gamle navn.
+    Step(
+        id="lifetime-counters",
+        argv=("python3", "tools/check_lifetime_counters.py"),
+        inputs=("tools/check_lifetime_counters.py", "site/_worker.js",
+                "tools/weekly_report.py"),
+    ),
+    Step(
+        id="lifetime-counters-selftest",
+        argv=("python3", "tools/check_lifetime_counters.py", "--self-test"),
+        inputs=("tools/check_lifetime_counters.py", "site/_worker.js",
+                "tools/weekly_report.py"),
+    ),
     # Opgave: AI-banneren lovede et svar, der ikke kunne Gives. Målt først:
     # hver AI-banner på bloggen sagde «a practical answer in seconds» og «Spørg
     # Compliance-AI'en», mens `GET /api/compliance-ai` svarede

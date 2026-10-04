@@ -488,12 +488,12 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   await env.VISITS.put('csc-count', '');
   let response = await statsFetch(env, 7);
   let data = await response.json();
-  ok('ugyldige counters rapporteres som ukendte', data.waitlist === null && data.scans === null, JSON.stringify(data));
+  ok('ugyldige counters rapporteres som ukendte', data.waitlist_lifetime === null && data.scans_lifetime === null, JSON.stringify(data));
   await env.VISITS.put('wl-count', '0');
   await env.VISITS.put('csc-count', '3');
   response = await statsFetch(env, 7);
   data = await response.json();
-  ok('eksplicit gemte counters kan være nul eller positive', data.waitlist === 0 && data.scans === 3, JSON.stringify(data));
+  ok('eksplicit gemte counters kan være nul eller positive', data.waitlist_lifetime === 0 && data.scans_lifetime === 3, JSON.stringify(data));
 }
 
 {
@@ -504,7 +504,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   ok('ukendt trafik rapporteres ikke som nul', data.traffic_status === 'unknown'
     && data.stats.recentVisits === null && data.stats.recentDownloads === null, JSON.stringify(data));
   ok('manglende counters rapporteres ikke som nul',
-    data.stats.waitlist === null && data.stats.scans === null, JSON.stringify(data.stats));
+    data.stats.waitlist_lifetime === null && data.stats.scans_lifetime === null, JSON.stringify(data.stats));
   ok('tavse domæner er navngivet, så en monitor ikke skal gætte',
     data.traffic_domains && Object.values(data.traffic_domains).every(state => state === 'unknown'),
     JSON.stringify(data.traffic_domains));
@@ -548,7 +548,7 @@ function putMetric(env, domain, metric, subject, visits, uniques, id = 'single')
   const data = await response.json();
   ok('degraderet health gør selvstændige counters ukendte', data.traffic_status === 'unknown'
     && data.stats.recentVisits === null && data.stats.recentDownloads === null
-    && data.stats.waitlist === null && data.stats.scans === null, JSON.stringify(data));
+    && data.stats.waitlist_lifetime === null && data.stats.scans_lifetime === null, JSON.stringify(data));
   ok('KV nede er degraded, ikke partial', data.status === 'degraded' && data.kv === false, data.status);
 }
 

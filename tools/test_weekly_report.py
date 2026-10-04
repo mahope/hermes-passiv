@@ -69,10 +69,10 @@ class ReportFixture:
                  for index, domain in enumerate(report.TRAFFIC_DOMAINS)}
             ),
             "sales": sales if sales_status == "ok" else None,
-            "waitlist": 0,
+            "waitlist_lifetime": 0,
             "licenses_issued": 0 if empty else 5,
-            "ai_asks": 0,
-            "scans": 0,
+            "ai_asks_lifetime": 0,
+            "scans_lifetime": 0,
         }
 
     def other_data(self, traffic: dict) -> dict:
@@ -228,12 +228,44 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
         self.assertTrue(all(result["domains"][domain]["status"] == "unknown" for domain in report.TRAFFIC_DOMAINS))
         self.assertTrue(all(result["download_domains"][domain]["status"] == "unknown" for domain in report.TRAFFIC_DOMAINS))
 
+    def test_cumulative_scan_counter_is_read_as_lifetime(self) -> None:
+        # 6/10: `csc-count` er kumulativ (`expirationTtl: 365 * 86400`) og hed
+        # `scans_lifetime` i både `/api/health` og `/api/stats`. Før hed den bare
+        # `scans`, og stod i samme objekt som `recentVisits: 12` — to dages
+        # vindue — så «50 scanninger» læst som «50 scanninger på to dage».
+        # Rækken siger «(total)», så tallet må kun komme fra det præfiks.
+        with patch.object(report, "http_json", return_value={
+            "status": "healthy", "kv": True, "traffic_status": "partial",
+            "stats": {"recentVisits": 12, "recentDownloads": 3,
+                      "waitlist_lifetime": 4, "scans_lifetime": 50},
+        }):
+            result = report.collect_health()
+        self.assertEqual(50, result["scans"])
+        self.assertEqual(4, result["waitlist"])
+        # Negativ kontrol: den gamle nøgle læses ikke, så et svar fra en worker
+        # der ikke er opdateret endnu giver `None` i stedet for et vinduestal.
+        with patch.object(report, "http_json", return_value={
+            "status": "healthy", "kv": True, "traffic_status": "partial",
+            "stats": {"recentVisits": 12, "recentDownloads": 3,
+                      "waitlist_lifetime": 4, "scans": 50},
+        }):
+            gammel = report.collect_health()
+        self.assertIsNone(gammel["scans"])
+        # Og i rapporten hedder rækken præcis «total», så tallet ikke læses
+        # som en uges scanninger.
+        data = self.other_data({})
+        data["health"] = {"status": "healthy", "kv": True, "visits_2d": 18,
+                          "downloads_2d": 6, "scans": 50}
+        _, notable, sections = report.build_report(data, None)
+        markdown = report.render_markdown(data, None, notable, sections)
+        self.assertIn("Compliance-scans (total)", markdown)
+
     def test_health_unknown_traffic_is_not_reported_as_zero(self) -> None:
         with patch.object(report, "http_json", return_value={
             "status": "healthy",
             "kv": True,
             "traffic_status": "unknown",
-            "stats": {"recentVisits": 0, "recentDownloads": 0, "waitlist": 0, "scans": 0},
+            "stats": {"recentVisits": 0, "recentDownloads": 0, "waitlist_lifetime": 0, "scans_lifetime": 0},
         }):
             result = report.collect_health()
         self.assertEqual("unknown", result["traffic_status"])
@@ -246,7 +278,7 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
             "status": "healthy",
             "kv": True,
             "traffic_status": "partial",
-            "stats": {"recentVisits": 12, "recentDownloads": 3, "waitlist": 0, "scans": 0},
+            "stats": {"recentVisits": 12, "recentDownloads": 3, "waitlist_lifetime": 0, "scans_lifetime": 0},
         }):
             result = report.collect_health()
         self.assertEqual("partial", result["traffic_status"])
@@ -286,10 +318,10 @@ class WeeklyReportTests(ReportFixture, unittest.TestCase):
 
     def test_invalid_counters_are_unknown(self) -> None:
         payload = self.payload()
-        payload["waitlist"] = "many"
+        payload["waitlist_lifetime"] = "many"
         payload["licenses_issued"] = []
-        payload["ai_asks"] = {}
-        payload["scans"] = "0"
+        payload["ai_asks_lifetime"] = {}
+        payload["scans_lifetime"] = "0"
         with patch.object(report, "http_json", return_value=payload):
             result = report.collect_stats(7)
         self.assertIsNone(result["waitlist"])

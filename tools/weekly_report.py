@@ -243,8 +243,15 @@ def collect_health() -> dict:
         "traffic_status": traffic_status,
         "visits_2d": st.get("recentVisits") if traffic_known else None,
         "downloads_2d": st.get("recentDownloads") if traffic_known else None,
-        "waitlist": known_counter(st.get("waitlist")),
-        "scans": known_counter(st.get("scans")),
+        "waitlist": known_counter(st.get("waitlist_lifetime")),
+        # De kumulative tællere hedder `_lifetime` i kilden siden 6/10 — se
+        # `collect_health` og `check_lifetime_counters.py`. `wl-count`,
+        # `ai-ask-count` og `csc-count` er alle skrevet med `expirationTtl: 365 *
+        # 86400`, så de tæller alle tider. Før hed de bare `waitlist`, `ai_asks`
+        # og `scans`, og `/api/health` læser to dages besøg i samme objekt.
+        # Rækkerne hedder «(total)», så tallet må kun komme fra præfikset; en
+        # ældre worker giver `None` i stedet for et vinduestal.
+        "scans": known_counter(st.get("scans_lifetime")),
     }
 
 
@@ -860,10 +867,12 @@ def collect_stats(days: int = 7, previous: dict | None = None) -> dict:
         # mens uge-rapporten sendte `available: false` uden trafik i fire uger.
         "top_downloads": [{"file": file_name, "hits": hits} for file_name, hits in top_downloads],
         "sales": sales,
-        "waitlist": known_counter(data.get("waitlist")),
+        "waitlist": known_counter(data.get("waitlist_lifetime")),
         "licenses_issued": known_counter(data.get("licenses_issued")) if sales.get("available") is True else None,
-        "ai_asks": known_counter(data.get("ai_asks")),
-        "scans": known_counter(data.get("scans")),
+        "ai_asks": known_counter(data.get("ai_asks_lifetime")),
+        # Se `collect_health`: `csc-count` er kumulativ og hedder
+        # `scans_lifetime` i `/api/stats` siden 6/10.
+        "scans": known_counter(data.get("scans_lifetime")),
         "checkout": checkout,
         "ranking": ranking,
     }

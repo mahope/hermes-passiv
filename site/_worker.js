@@ -116,7 +116,7 @@ const CONVERSION_KEY_LIMIT = 2000;
 const CONVERSION_EVENTS = Object.freeze([
   'buy-click', 'pro-card-click',
 ]);
-const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;;
+const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
 
@@ -2338,6 +2338,23 @@ async function collectSalesLedger(env) {
   }
 }
 
+/**
+ * GET /api/stats — det private tal, kun `STATS_TOKEN` åbner.
+ *
+ * **De kumulative tællere hedder `_lifetime`, og det er en del af svarets
+ * kontrakt.** `wl-count`, `ai-ask-count` og `csc-count` skrives alle med
+ * `expirationTtl: 365 * 86400` og genoplades ved hvert skriv, så de tæller
+ * scanninger, ventelistepladser og assistentespørgsmål *siden tælleren sidst
+ * blev nulstillet* — de kan kun stå stille eller stige. Alt andet i svaret er
+ * bundet af `days` (`collectTraffic(env, days)`), og `ai_limited_today` er et
+ * døgnsalt. Sammenlign derfor aldrig en `_lifetime`-tæller med `stats`.
+ *
+ * Målt 6/10: de tre hed `waitlist`, `ai_asks` og `scans`, og `/api/health` —
+ * som er **offentlig** og læser to dages besøg i samme objekt — kunne
+ * rapportere «50 scanninger på to dage». Samme regel som `/api/results`
+ * (`served_scans_lifetime`). `tools/check_lifetime_counters.py` dømmer det, og
+ * en ny `readKvCounter` uden en afgørelse gør porten rød.
+ */
 async function handleStats(request, url, env) {
   if (request.method !== 'GET') return privateJsonResp({ ok: false, error: 'GET only' }, 405);
   const expectedToken = await statsAuthToken(env);
@@ -2351,7 +2368,7 @@ async function handleStats(request, url, env) {
   const traffic = await collectTraffic(env, days);
   const salesLedger = await collectSalesLedger(env);
 
-  const [waitlist, aiAsks, aiLimitedToday, scans] = await Promise.all([
+  const [waitlistLifetime, aiAsksLifetime, aiLimitedToday, scansLifetime] = await Promise.all([
     readKvCounter(env, 'wl-count'),
     readKvCounter(env, 'ai-ask-count'),
     readKvCounter(env, `airl-hit:${dailySalt()}`),
@@ -2377,12 +2394,14 @@ async function handleStats(request, url, env) {
     events_by_domain: traffic.events_by_domain,
     sales_status: salesLedger.status,
     sales: salesLedger.sales,
-    waitlist,
+    waitlist_lifetime: waitlistLifetime,
     wl_sources,
     licenses_issued: salesLedger.licenses_issued,
-    ai_asks: aiAsks,
+    ai_asks_lifetime: aiAsksLifetime,
     ai_limited_today: aiLimitedToday,
-    scans,
+    // Kumulativ, ikke et tal for `days`. Se `handleStats` docblock og
+    // `tools/check_lifetime_counters.py`.
+    scans_lifetime: scansLifetime,
   });
 }
 
@@ -2719,7 +2738,7 @@ async function handleHealth(url, env) {
     }
   } catch {}
 
-  const [waitlist, scans] = await Promise.all([
+  const [waitlistLifetime, scansLifetime] = await Promise.all([
     readKvCounter(env, 'wl-count'),
     readKvCounter(env, 'csc-count'),
   ]);
@@ -2734,7 +2753,13 @@ async function handleHealth(url, env) {
     status: !kvOk ? 'degraded' : (trafficStatus === 'partial' ? 'partial' : 'healthy'),
     kv: kvOk,
     timestamp: new Date().toISOString(),
-    stats: { recentVisits, recentDownloads, recentEvents, recentBuyClicks, waitlist, scans },
+    // De fire `recent*` er **to dages** vinduer (`collectTraffic(env, 2)`), og
+    // `waitlist_lifetime` + `scans_lifetime` er kumulative — en livslang tæller
+    // kan kun stå stille eller stige, så et fald i `recentVisits` er ikke et
+    // signal om scanneren. Målt 6/10: felterne hed `waitlist` og `scans`, så en
+    // cron læste «50 scanninger» som «50 scanninger i to dage». Se
+    // `handleStats` docblock og `tools/check_lifetime_counters.py`.
+    stats: { recentVisits, recentDownloads, recentEvents, recentBuyClicks, waitlist_lifetime: waitlistLifetime, scans_lifetime: scansLifetime },
     traffic_status: trafficStatus,
     traffic_domains: trafficDomains,
     lastDeploy: lastDeploy,

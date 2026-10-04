@@ -2000,6 +2000,50 @@ rsBody = await (await resCall(`${RS}?days=7`)).json();
 ok('et fremmed domæne og en ugyldig nøgle tælles ikke med',
   rsBody.totals.runs === 3, JSON.stringify(rsBody.results));
 
+// 5. Den kumulative tæller skal hedde det samme i *alle tre* ruter. Målt 6/10:
+//    `/api/results` havde fået præfikset (`served_scans_lifetime`), men
+//    `/api/stats` og `/api/health` stod med `scans` — og `/api/health` er
+//    **offentlig** og læser `recentVisits: 12` fra et *to dages* vindue i samme
+//    objekt. En cron kunne derfor rapportere «50 scanninger på to dage».
+//    `csc-count` skrives med `expirationTtl: 365 * 86400` og genoplades ved hvert
+//    skriv, så tallet kan kun stå stille eller stige: et fald i `recentVisits`
+//    er derfor intet signal om scanneren, og præfikset er en del af svarets
+//    kontrakt — ikke en omdøbning man kan slå fra.
+//    Samme fælde gjaldt `wl-count` og `ai-ask-count`, som også skrives med et
+//    365 dages TTL og også hed bare `waitlist` / `ai_asks`. De dømmes med.
+kv.set('csc-count', '41');
+kv.set('wl-count', '7');
+kv.set('ai-ask-count', '12');
+const healthBody = await (await call('/api/health')).json();
+ok('/api/health er offentlig og svarer 200 uden nøgle', healthBody.ok === true, JSON.stringify(healthBody.status));
+ok('/api/health dømmer scancounteren som livslang, ikke som et vinduestal',
+  healthBody.stats.scans_lifetime === 41 && healthBody.stats.scans === undefined,
+  'stats=' + JSON.stringify(healthBody.stats));
+ok('/api/health gør det samme for ventelisten',
+  healthBody.stats.waitlist_lifetime === 7 && healthBody.stats.waitlist === undefined,
+  'stats=' + JSON.stringify(healthBody.stats));
+const statsBody = await (await statsCall()).json();
+ok('/api/stats dømmer scancounteren som livslang, ikke som et tal for days',
+  statsBody.scans_lifetime === 41 && statsBody.scans === undefined,
+  'days=' + statsBody.days + ' nøgler='
+  + JSON.stringify(Object.keys(statsBody).filter((k) => k.includes('scans'))));
+ok('/api/stats gør det samme for ventelisten og assistenten',
+  statsBody.waitlist_lifetime === 7 && statsBody.waitlist === undefined
+  && statsBody.ai_asks_lifetime === 12 && statsBody.ai_asks === undefined,
+  'nøgler=' + JSON.stringify(Object.keys(statsBody)
+    .filter((k) => /waitlist|ai_asks/.test(k))));
+// Et *vindues*tal beholder sit navn: `ai_limited_today` er et døgnsalt, så
+// præfikset skal ikke smitte over på den. Påstanden er om *navnet*, derfor
+// dømmer den at nøglen er til stede og at dens `_lifetime`-tvilling ikke er.
+ok('et døgnsalt beholder sit navn — porten skal kun dømme de kumulative',
+  'ai_limited_today' in statsBody && statsBody.ai_limited_today_lifetime === undefined,
+  JSON.stringify(Object.keys(statsBody).filter((k) => k.includes('ai_limited'))));
+// De tre ruter skal vælge det samme navn — ellers kan en læser ikke sammenligne
+// dem, og det er netop sammenligningen med vindues tallene der er fælden.
+ok('alle tre ruter bruger det samme feltnavn for den kumulative tæller',
+  rsBody.served_scans_lifetime === 41 && statsBody.scans_lifetime === 41
+  && healthBody.stats.scans_lifetime === 41);
+
 // 4. Sandheden om sin egen fuldstændighed. En dag der rammer grænsen må ikke
 //    summeres til et for lille tal; den skal sige `partial` og den skal være
 //    ulæselig, fordi `null` og `0` er to forskellige påstande.
