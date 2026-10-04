@@ -1,32 +1,27 @@
 # STATUS
-- **Resultat-tallet kan nu læses uden `STATS_TOKEN`.** 5/10: `GET /api/results`
-  er en udlæsning af de nøgler `/api/track` allerede skriver — kun
-  resultatbegivenhederne, kun tællinger, intet der identificerer en besøgende.
-  Salg, købsforsøg og sidevisninger ligger *kun* i `/api/stats`. 31 nye
-  kontroller, **431/431**; tre mutationer (navneliste, stidom, nøglegrænse) er
-  målt røde. Fulde gaten grøn.
-- **Deploy-noten for artiklen er afregnet på indhold, 5/10 19:5x.** Begge sprog:
-  **1** in-text handling i **første** `<section class="problem">` før
-  `problem-cards`, **1** `hero-cta` med `btn-primary` (`#try-it` /
-  `#prov-dit-billede`), **0** `btn-primary` i `.blog-tool-cta`. Bemærk målt:
-  noten skrev `<section class="problem">`, live er den `<section class="problem"
-  id="why">` — min egen regex var for stram, siden er rigtig.
-- **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret*
-  tjekker ikke skelne brug fra flugt. Det står i feature-kø punkt 5.
-- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()`, resultat,
-  `scan-failed` og `pro-card-click` på begge sprog; porten **5 fund pr. sprog**
-  på den gamle kode, selftest **18/18**.
-- **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect`
-  får `env` og live `/api/url-inspect` svarer **200**; SSRF lukket på **4**
-  ruter; `net.js` gør 429 endelig; ét 502-kald koster højst ét ekstra betalt
-  kald; `thanks.html` har egen 202-tekst. **PR-TJEK 5/10:** 0 PR'er.
-  **BRANCH-TJEK 5/10:** ingen grene over 14 dage; kun `main` findes lokalt.
-- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er
-  `compliance-ai` ×2 (noindex, assistenten er slukket — se ❓) og `url-inspector`,
-  hvor handlingen er `<input>` + knap; alle **3** har grund i `first_action.json`.
-- **Næste:** konvertering kan stadig ikke læses (opgave 3) — `/api/results` er
-  bevidst uden købsforsøg, så næste opgave må enten finde en tokenfri
-  konverteringslæsning eller vente på `STATS_TOKEN`.
+- **Tragten kan nu læses uden `STATS_TOKEN`.** 5/10: `GET /api/results` er en udlæsning af de
+  nøgler `/api/track` allerede skriver — kun resultatbegivenhederne, kun tællinger, intet der
+  identificerer en besøgende. 5/10 20:4x: `GET /api/conversion` er den anden udlæsning, kun
+  købsintents-klik (`buy-click` + `pro-card-click`) pr. side og pr. dag. Hver har sin egen
+  navneliste, så intet resultat kan læses som et køb. **22** nye kontroller, **453/453**. Salg og
+  licenser ligger *kun* i `/api/stats`.
+- **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret* tjekker ikke
+  skelne brug fra flugt. Det står i feature-kø punkt 5.
+- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()`, resultat, `scan-failed` og
+  `pro-card-click` på begge sprog; porten **5 fund pr. sprog** på den gamle kode, selftest
+  **18/18**.
+- **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect` får `env` og live
+  `/api/url-inspect` svarer **200**; SSRF lukket på **4** ruter; `net.js` gør 429 endelig; ét
+  502-kald koster højst ét ekstra betalt kald; `thanks.html` har egen 202-tekst. **PR-TJEK 5/10:**
+  0 PR'er. **BRANCH-TJEK 5/10:** ingen grene over 14 dage.
+- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er `compliance-ai` ×2
+  (noindex, assistenten er slukket — se ❓) og `url-inspector`, hvor handlingen er `<input>` +
+  knap; alle **3** har grund i `first_action.json`.
+- **Rød CI 5/10 17:36 var `plan-status`:** STATUS havde **28** linjer mod de **25** porten
+  tillader. Rettet i samme diff som dens egen årsag.
+- **Næste:** opgave 3 er delvist lukket — resultater og købsforsøg er begge læsbare uden token, så
+  kun *beløb og licenser* mangler, og det står i Stripe. Næste opgave må derfor være en feature:
+  `deskuptime.com` har **7** besøgende og **0 s** opholdt tid.
 
 ## Verificér deploy
 
@@ -66,14 +61,14 @@ browseren» med `href="/text-on-image-checker-da"` på samme plads. Begge sider 
 til at læse `problem-cards` som ankerpunkt, så den ikke igen er så stram at den
 måler sin egen fejl.
 
-`VERIFICÉR DEPLOY: resultat-tallet læses uden STATS_TOKEN 5/10
-ceo/resultat-uden-hemmelighed` — måles på **indhold**: live
-`https://mahope.tools/api/results?days=7` skal svare **200** med
-`"status":"ok"` og nøglen `totals` med `runs` og `visitor_days`, og svaret skal
-**ikke** indeholde `buy-click`, `scan-failed`, `waitlist`, `licenses_issued` eller
-`by_product`. `POST` skal svare **405**. Ruten lister trafiknøgler, så det første
-resultat kan være `runs: 0` — det er det rigtige svar på «hvor mange kørsler
-endte i et resultat i de sidste syv dage», ikke en fejl.
+`VERIFICÉR DEPLOY: konvertering læses uden STATS_TOKEN 5/10 20:5x
+ceo/tokenfri-konvertering` — måles på **indhold**: live
+`https://mahope.tools/api/conversion?days=7` skal svare **200** med
+`"status":"ok"` og `totals` med `buy_clicks`, `visitor_days` og `pro_card_clicks`,
+svaret skal **ikke** indeholde `@`, 32 hex-tegn eller `$` + tal, og `POST` skal
+svare **405**. `/api/results` skal stadig svare **200** og må **ikke** tælle
+`buy-click` — de to lister er hver sin. Nul købsklik er det rigtige svar på «er
+nogen ved at købe noget lige nu», ikke en fejl.
 
 `DEPLOY OK 4/10 13:1x` for `ceo/fold-pris` — målt på **indhold**:
 `https://cleancopy.tools/` har **1** `.hero-note a[href="#price"]`, `id="price"`
@@ -171,10 +166,12 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
 3. **Konvertering kan ikke måles uden `STATS_TOKEN`.** Hvorfor: `/api/stats`
    svarer 401 siden uge 37, så næsten hver linje i enhver trafikrangering er vor
    egen links-tælling, ikke besøg. Accept: `GET /api/stats` med token svarer 200.
-   *(Blockeret på Mads — se ❓.)* **Målt 5/10:** resultat-siden af tragten er nu
-   læsbar uden token (`/api/results`, feature-kø 6), men `buy-click` og salget
-   ligger stadig bag tokenen — og det er dem, der svarer på «kommer der penge
-   ind», så opgaven står åben.
+   *(Blockeret på Mads — se ❓.)* **Målt 5/10:** resultaterne (`/api/results`,
+   feature-kø 6) og købsforsøgene (`/api/conversion`) er nu *begge* læsbare uden
+   token, så de **22** nye kontroller dømmer at de to lister hver især er sig egen
+   — et resultat kan ikke læses som et køb. Kun **beløb og udleverede licenser**
+   mangler stadig, og de står i Stripe. Opgaven står derfor åben, men den er ikke
+   længere blokeringen for at prioritere.
 4. **`bugbottle.dev` deployes ikke.** Hvorfor: `deploy-sites.yml`-matrixen
    deployer kun tre domæner. **2/10 er følgen målt og lukket:** de fire
    BugBottle-guider ligger på `mahope.tools`, så `/blog/` har ingen døde links;
@@ -334,6 +331,17 @@ kode, **2 fund** på den gamle med præcis de to regler, og mutationsmodulet
     med dagens dato. Rettet som i den ældre worker-test: uret pinnes til
     minut/timets begyndelse i selve løkken, så det aldrig springer baglænes.
     Samme fælde som den 2/10, der gav to røde CI-kørsler.
+23. ~~**Rød CI på `main`, og konverteringen var ulæselig.**~~ **Færdig 5/10**,
+   `ceo/tokenfri-konvertering`. 5/10 17:36 faldt `deploy-sites` på `plan-status`
+   (STATUS **28** mod **25** linjer), så sidste deploys kørsel aldrig nåede
+   `/api/results`. Samme diff gør STATUS **23** og tilføjer `GET /api/conversion`:
+   kun købsintents-klik (`buy-click` + `pro-card-click`) pr. side og pr. dag, med
+   egen navneliste, egen `CONVERSION_KEY_LIMIT` og egen 30/t-tæller, så den ikke
+   kan gøre `/api/results` rød og ikke låner dennes nøglegrænse. Bevidst **ikke**
+   med `licenses_issued`, `waitlist`, `cta-*`, `ai-cta` eller `store-click`, og
+   svaret er dømt på at det hverken rummer `@`, 32 hex-tegn eller `$`+tal — en
+   offentlig rute må ikke afsløre hvem, hvor meget eller med hvilken nøgle.
+   **22** nye kontroller, **453/453**; mutation mod `97ef0b68` giver 404.
 
 
 ## ❓ Til Mads

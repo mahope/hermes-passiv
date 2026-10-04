@@ -2099,5 +2099,178 @@ if (preResultsWorker) {
   console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + preResultsNote);
 }
 
+// 11. GET /api/conversion — købsintents-klik uden `STATS_TOKEN`.
+//
+// samme begrundelse som blok 10, med en anden nåle: `/api/stats` svarer 401, så
+// «kommer der penge ind» var ulæseligt, og Plausible kan kun se toppen af
+// tragten. Denne rute tæller klik på købsknapper — ikke resultater, ikke salg —
+// og hun har derfor sin egen navneliste, sin egen nøglegrænse og sin egen kvota.
+// Kontrollerne dømmer både at tallene er rigtige og at intet uden for
+// formålsgrænsen slipper ud: en mailadresse, en licensnøgle eller et beløb i et
+// offentligt svar ville være en persondata- eller indkomstlækage.
+const CV = '/api/conversion';
+const cvKv = new Map();
+const CV_VISITS = {
+  get: async (k) => (cvKv.has(k) ? cvKv.get(k) : null),
+  put: async (k, v) => { cvKv.set(k, v); },
+  list: async ({ prefix = '' } = {}) => ({ keys: [...cvKv.keys()].filter(k => k.startsWith(prefix)).sort().map(name => ({ name })), list_complete: true }),
+};
+const cvEnv = { ...env, VISITS: CV_VISITS };
+const cvCall = (path, init, e) => worker.fetch(new Request('https://mahope.tools' + path, init), e || cvEnv, {});
+const cvSeed = (kind, daysAgo, path, event, identity) => {
+  cvKv.set(`${kind}:v3:${isoDaysAgo(daysAgo)}:mahope.tools:event:${encodeURIComponent(`${path}@${event}`)}:${identity}`, '1');
+};
+// Grundscenariet: fire købsklik på to sider og et pro-kort-klik, fordelt på to
+// dage, hvoraf ét klik gjorde den samme besøgende to gange.
+cvSeed('p', 0, '/compliance-report', 'buy-click', 'u-1');
+cvSeed('u', 0, '/compliance-report', 'buy-click', 'v-1');
+cvSeed('p', 0, '/compliance-report', 'buy-click', 'u-2');
+cvSeed('u', 0, '/compliance-report', 'buy-click', 'v-2');
+cvSeed('p', 0, '/scan', 'pro-card-click', 'u-3');
+cvSeed('u', 0, '/scan', 'pro-card-click', 'v-3');
+cvSeed('p', 2, '/clean-copy-tool', 'buy-click', 'u-4');
+cvSeed('u', 2, '/clean-copy-tool', 'buy-click', 'v-4');
+//    Og de ting der ikke er købsintents: resultater, forsøg, navigation,
+//    sidevisninger, ventelister og udleverede licenser. De ligger i de samme
+//    nøgler og skal alle blive ude, ellers er tallet ikke længere konvertering.
+cvSeed('p', 0, '/scan', 'scan-findings', 'u-9');
+cvSeed('p', 0, '/scan', 'scan-failed', 'u-9');
+cvSeed('p', 0, '/scan', 'cta-scan', 'u-9');
+cvSeed('p', 0, '/scan', 'ai-cta', 'u-9');
+cvSeed('p', 0, '/scan', 'store-click', 'u-9');
+cvSeed('p', 0, '/scan', 'licenses_issued', 'u-9');
+cvSeed('p', 0, '/scan', 'waitlist', 'u-9');
+cvKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:page:%2Fscan:u-7`, '1');
+cvKv.set(`u:v3:${isoDaysAgo(0)}:mahope.tools:event:${encodeURIComponent('/scan@waitlist')}:u-8`, '1');
+
+let cv = await cvCall(`${CV}?days=7`);
+let cvBody = await cv.json();
+ok('konverteringsruten svarer 200 uden nogen hemmelighed', cv.status === 200 && cvBody.ok === true, cv.status);
+ok('fire købsklik i vinduet, fordelt på to sider',
+  cvBody.totals.buy_clicks === 4 && cvBody.by_page['/compliance-report'].buy_clicks === 2
+  && cvBody.by_page['/clean-copy-tool'].buy_clicks === 1, JSON.stringify(cvBody.by_page));
+ok('pro-kort-klikket tælles i sit eget felt, men er også et købsintents-klik',
+  cvBody.totals.pro_card_clicks === 1 && cvBody.totals.buy_clicks === 4,
+  'pro=' + cvBody.totals.pro_card_clicks + ' buy=' + cvBody.totals.buy_clicks);
+ok('besøgende-dage tælles hver for sig, også når samme person kliker to gange',
+  cvBody.totals.visitor_days === 4, String(cvBody.totals.visitor_days));
+ok('pr. dag: 3 i dag 0 og 1 to dage tilbage',
+  cvBody.by_day[isoDaysAgo(0)] === 3 && cvBody.by_day[isoDaysAgo(2)] === 1
+  && cvBody.by_day[isoDaysAgo(1)] === 0, JSON.stringify(cvBody.by_day));
+ok('hverken resultater, forsøg, navigation, ventelister eller licenser tælles',
+  cvBody.totals.buy_clicks === 4 && !/scan-findings|scan-failed|waitlist|licenses_issued|cta-|ai-cta|store-click/.test(JSON.stringify(cvBody)),
+  JSON.stringify(cvBody.by_page));
+ok('status er ok, fordi dagen var komplet', cvBody.status === 'ok', cvBody.status);
+// Et offentligt svar skal ikke kunne afsløre hvem der købte, hvor meget eller
+// med hvilken nøgle. Dommen læser hele svaret, så en ny felt med en adresse eller
+// et beløb giver rødt uden at nogen skal vedligeholde en liste.
+const cvJson = JSON.stringify(cvBody);
+//    En adresse har et `@`, en licensnøgle er 32 hex-tegn, et beløb har et `$`
+//    foran et tal — og de tre felter vi aldrig må lægge ud hedder hver især så
+//    noget i svaret. Dommen læser hele svaret, så et nyt felt med en adresse
+//    eller et beløb giver rødt uden at nogen skal vedligeholde en liste.
+ok('svaret rummer hverken adresse, licensnøgle, beløb eller indkomst',
+  !cvJson.includes('@') && !/\b[0-9a-f]{32}\b/i.test(cvJson) && !/\$\s?\d/.test(cvJson)
+  && !/"(licenses_issued|waitlist|email|revenue|amount|cents|license_key)"\s*:/.test(cvJson),
+  cvJson.slice(0, 400));
+
+// 2. En forfalsket `referer` er et emne, enhver kan skrive. Den må hverken tælle
+//    som en side eller spejles tilbage i et offentligt svar.
+cvKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:event:${encodeURIComponent('/hemmeligt/<script>alert(1)</script>@buy-click')}:u-6`, '1');
+cvKv.set(`p:v3:${isoDaysAgo(0)}:mahope.tools:event:${encodeURIComponent(`/${'x'.repeat(140)}@buy-click`)}:u-6`, '1');
+cvKv.set(`p:v3:${isoDaysAgo(0)}:evil.tld:event:%2Fscan%40buy-click:u-5`, '1');
+cvBody = await (await cvCall(`${CV}?days=7`)).json();
+ok('en utilladelig sti tælles ikke og spejles ikke, et fremmed domæne heller ikke',
+  cvBody.totals.buy_clicks === 4 && cvBody.dropped === 2
+  && !/script|alert|xxxx/.test(JSON.stringify(cvBody)), JSON.stringify(cvBody.by_page) + ' dropped=' + cvBody.dropped);
+
+// 3. Sandheden om sin egen fuldstændighed: `null` og `0` er to forskellige
+//    påstande, så en dag over nøglegrænsen melder `partial` og tælles ikke.
+const cvFlood = isoDaysAgo(0);
+cvKv.clear();
+for (let i = 0; i < 2001; i += 1) cvSeed('p', 0, '/scan', 'buy-click', `bulk-${i}`);
+cvBody = await (await cvCall(`${CV}?days=7`)).json();
+ok('en dag over nøglegrænsen melder partial og tælles ikke',
+  cvBody.status === 'partial' && cvBody.totals.buy_clicks === 0 && cvBody.by_day[cvFlood] === null,
+  cvBody.status + ' buy=' + cvBody.totals.buy_clicks);
+
+// 4. En kvotefejl må aldrig bare se ud som nul.
+cvBody = await (await cvCall(`${CV}?days=7`, {}, { ...cvEnv, VISITS: { ...CV_VISITS, list: async () => { throw new Error('kv nede'); } } })).json();
+ok('en KV der kaster giver status unknown og nul løfter på tallene',
+  cvBody.status === 'unknown' && cvBody.totals.buy_clicks === 0, cvBody.status);
+cv = await cvCall(`${CV}?days=7`, {}, { ...cvEnv, VISITS: null });
+ok('uden KV-binding svarer ruten 503, ikke 200 med nul', cv.status === 503, cv.status);
+
+// 5. Vinduet er dæmpet og `days` skal være et helt tal over nul.
+cvBody = await (await cvCall(`${CV}?days=9999`)).json();
+ok('days dæmpes til 28', cvBody.days === 28 && cvBody.window.length === 28, String(cvBody.days));
+cvBody = await (await cvCall(`${CV}?days=-4`)).json();
+ok('et negativt days falder tilbage til standardvinduet',
+  cvBody.days === 7 && cvBody.window.length === 7, String(cvBody.days));
+
+// 6. GET må ikke ændre noget, så POST er 405 — og kvoten pr. IP pr. time holder.
+cv = await cvCall(CV, { method: 'POST', body: '{}' });
+ok('POST giver 405', cv.status === 405, cv.status);
+const cvKv2 = new Map();
+const cvEnv2 = { ...cvEnv, VISITS: { ...CV_VISITS, get: async (k) => (cvKv2.has(k) ? cvKv2.get(k) : null), put: async (k, v) => { cvKv2.set(k, v); } } };
+const stopTimeCv = (() => {
+  const forrige = Date.now;
+  const fast = Math.floor(forrige() / 3600000) * 3600000;
+  Date.now = () => fast;
+  return () => { Date.now = forrige; };
+})();
+let cv429 = 0, cv200 = 0;
+for (let i = 0; i < 32; i += 1) {
+  const s = (await cvCall(`${CV}?days=7`, {}, cvEnv2)).status;
+  if (s === 429) cv429 += 1; else if (s === 200) cv200 += 1;
+}
+stopTimeCv();
+ok('kvoten pr. IP pr. time stopper læsningerne', cv200 === 30 && cv429 === 2, '200=' + cv200 + ' 429=' + cv429);
+
+// 7. De to lister skal hver især være sig egen. Voksede de sammen, ville et
+//    resultat blive læst som et køb — det er præcis den fejl 5/10 undgik ved at
+//    holde dem ude af `/api/results`.
+const convEvents = (workerSrcRs.match(/const CONVERSION_EVENTS = Object\.freeze\(\[([\s\S]*?)\]\)/) || ['', ''])[1]
+  .split(',').map(s => s.trim().replace(/^'|'$/g, '')).filter(Boolean);
+ok('konverteringslisten er ikke tom', convEvents.length >= 2, 'n=' + convEvents.length);
+for (const event of convEvents) {
+  // `pro-card-click` kaldes fra en knap inde i en inline streng, så kaldet er
+  // `trackEvent(\'pro-card-click\')` med en backslash foran begge gåseøjne. Et
+  // mønster der kræver en ren `(` ville erklære en begivenhed ubrugt, der
+  // bliver kaldt hver gang scannerens pro-kort trykkes.
+  ok(`«${event}» findes som trackEvent i site/`,
+    new RegExp(`trackEvent\\(\\\\?'${event}\\b`).test(siteCode), 'begivenheden kaldes ikke fra nogen side');
+}
+ok('ingen konverteringsbegivenhed står på resultatlisten, og omvendt',
+  !convEvents.some(e => resultEvents.includes(e)) && !resultEvents.some(e => convEvents.includes(e)),
+  'resultat=' + resultEvents.join(',') + ' konvertering=' + convEvents.join(','));
+
+// 8. Mutationen: den kode der var her *før* denne ændring kender ikke ruten.
+//    Uden denne kontrol er kontrollerne ovenfor grønne af den grund at de ikke
+//    kan fejle.
+const PRE_CONV_SHA = '97ef0b68';
+let preConvWorker = null, preConvNote = '';
+try {
+  const oldSrcConv = execFileSync('git', ['show', `${PRE_CONV_SHA}:site/_worker.js`],
+    { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  ok('mutationen finder den gamle kode (ellers dommer den intet)', !/handleConversion/.test(oldSrcConv));
+  const oldTmpConv = join(tmpdir(), `worker-pre-conversion-${process.pid}.mjs`);
+  writeFileSync(oldTmpConv, oldSrcConv);
+  preConvWorker = (await import(pathToFileURL(oldTmpConv).href)).default;
+} catch (e) {
+  preConvNote = 'git-historikken er ikke tilgængelig her: ' + (e.code || e.message);
+}
+if (preConvWorker) {
+  cvKv.clear();
+  cvSeed('p', 0, '/compliance-report', 'buy-click', 'u-1');
+  const oldConv = await preConvWorker.fetch(new Request('https://mahope.tools' + CV), cvEnv, {});
+  const oldConvBody = await oldConv.json().catch(() => ({}));
+  ok('mutation: den gamle kode svarer 404 og ikke et købstal',
+    oldConv.status === 404 && oldConvBody.totals === undefined,
+    oldConv.status + ' totals=' + oldConvBody.totals);
+} else {
+  console.log('NOTE: mutationen mod den gamle kode er sprunget over — ' + preConvNote);
+}
+
 console.log(`${pass}/${pass + fail} ok`);
 process.exit(fail ? 1 : 0);

@@ -82,7 +82,40 @@ const RESULT_EVENTS = Object.freeze([
 // `referer` header, som altid kan forfalskes. Derfor spejles emnerne ikke tilbage
 // uden denne dom: kun ASCII med snille tegn, og under 100 karakterer — samme
 // længde som normaliseringen selv. Alt andet tælles ikke og lander i `dropped`.
-const RESULT_PATH_RE = /^\/[A-Za-z0-9][A-Za-z0-9/._-]{0,99}$/;
+// Den er fælles for de to offentlige udlæsninger (`/api/results` og
+// `/api/conversion`), fordi de dømmer præcis det samme og en divergerende
+// stidom ville give dem to forskellige sandheder om den samme nøgle.
+const TRACKED_PATH_RE = /^\/[A-Za-z0-9][A-Za-z0-9/._-]{0,99}$/;
+// `/api/conversion` er det andet offentlige *udlæsning* af `VISITS`, og den har
+// samme slags tæller som `/api/results` for den lister to præfixer pr. dag i
+// vinduet. Den deler tællerrum med `results` pr. rute, så et script der læser
+// begge i en løkke koster kvota for os alle — 30 i timen er mere end en
+// overvågning af begge bruger.
+const CONVERSION_RATE_LIMIT = 30;
+// Nøglen pr. dag der listes i `/api/conversion`. Samme begrundelse som
+// `RESULTS_KEY_LIMIT`: en kunstigt høj dag skal gøre dagen *ukomplet*, ikke
+// forkortet, så den meldes `partial` og tælles ikke i stedet for at blive
+// summeret for kort.
+const CONVERSION_KEY_LIMIT = 2000;
+// Begivenheder der betyder «denne bruger peger mod et køb». Det er **kun**
+// købsintents-klik, og det er derfor de står på en anden rute end resultaterne:
+// `/api/results` tæller det en værktøj *gjorde* (`RESULT_EVENTS` over), og denne
+// tæller det en læser *trykkede på* med vilje til at betale. Et klik er ikke et
+// salg, så intet her siger noget om indkomst — det står i Stripe.
+//
+// `buy-click` er den delegerede lytter i `site/track.js` på ethvert Stripe-
+// checkoutlink, og `pro-card-click` er pro-kortets egen knap i scannerens
+// resultat (5/10). Begge skrives af klienten med `trackEvent()`, så listen er en
+// **navneliste** og ikke et mønster: `tests/stripe-worker.test.mjs` dømmer at alle
+// strengene findes i `site/`, så en omdøbt begivenhed gør porten rød frem for at
+// tælle med i det stille.
+//
+// Bevidst **ikke** med: `licenses_issued`, `waitlist`, `checkout-start`,
+// `store-click`, `ai-cta` og `cta-*`. De to første er enten en udleveret nøgle
+// eller en mailadresse, og de sidste er hverken køb — de er navigation.
+const CONVERSION_EVENTS = Object.freeze([
+  'buy-click', 'pro-card-click',
+]);
 const CHECKOUT_SESSION_RE = /^cs_(?:live|test)_[A-Za-z0-9]{10,200}$/;;
 const FULFILLMENT_PENDING_TTL_SECONDS = 3600;
 const STATS_AUTH_CONTEXT = 'stats-auth-v1:';
@@ -414,6 +447,7 @@ export default {
     if (path === '/api/track') return handleTrack(request, url, env);
     if (path === '/api/stats') return handleStats(request, url, env);
     if (path === '/api/results') return handleResults(request, url, env);
+    if (path === '/api/conversion') return handleConversion(request, url, env);
 
     // === Route: uventede JS-fejl fra besøgerens browser ===
     if (path === '/api/client-error') return handleClientError(request, url, env, ctx);
@@ -2445,7 +2479,7 @@ async function handleResults(request, url, env) {
         const event = parsed.subject.slice(at + 1);
         if (!RESULT_EVENTS.includes(event)) continue;
         const path = parsed.subject.slice(0, at);
-        if (!RESULT_PATH_RE.test(path)) { dropped += 1; continue; }
+        if (!TRACKED_PATH_RE.test(path)) { dropped += 1; continue; }
         const bucket = tools.get(path) || { runs: 0, visitor_days: 0 };
         bucket[metric] += 1;
         tools.set(path, bucket);
@@ -2481,6 +2515,128 @@ async function handleResults(request, url, env) {
     note: 'runs = client events recorded by /api/track, one per finished run. '
       + 'visitor_days = unique visitors per day, summed, so the same person on '
       + 'three days counts three. Sales are not here; they are in Stripe.',
+  });
+}
+
+/**
+ * GET /api/conversion — hvor mange købsintents-klik der blev trykket, og på hvilken side.
+ *
+ * Hvorfor den findes som sin egen rute og ikke som flere felter i `/api/results`:
+ * 5/10 slog fast at resultater og købsforsøg er to forskellige spørgsmål, og at
+ * en offentlig rute kun må svare det den skal bruges til. `/api/results` svarer
+ * «hvad endte i et resultat»; den her svarer «hvor mange trykkede på noget der
+ * fører til betaling, og fra hvilken side». De har hver sin navneliste, hver sin
+ * nøglegrænse og hver sin port, så en fejl i den ene kan ikke gøre den anden
+ * rød. `RESULT_EVENTS` og `CONVERSION_EVENTS` må derfor aldrig vokse sammen.
+ *
+ * Hvorfor den er værd at have uden `STATS_TOKEN`: `/api/stats` svarer 401, fordi
+ * nøglen mangler på workeren (❓ i planen). Uden en læsning er «kommer der
+ * penge ind» en gæt, og hver prioritering i planen bygger på de 21, 13 og 7
+ * besøgende Plausible kan se — altså på den øverste del af tragten, alene.
+ * Købsklik er ** ikke** salg, så intet her afslører indkomst; det står i Stripe.
+ *
+ * Hvad den *ikke* svarer, og hvorfor: ingen mailadresser (`waitlist`), ingen
+ * licensnøgler eller udleverede licenser (`licenses_issued`), ingen beløb og
+ * ingen besøgende-identitet. Den tæller de nøgler `/api/track` allerede skriver
+ * — ingen ny tæller, ingen ny skrivning — så tallene kan ikke komme i strid med
+ * `/api/results` eller med `/api/stats`.
+ *
+ * Fejler KV, siges det. `status` er `ok`, `partial` (en dag nåede
+ * `CONVERSION_KEY_LIMIT`, så dagen er ukomplet og tælles ikke) eller `unknown`
+ * (opslaget kastede). Et tal uden sin `status` er ikke et tal.
+ */
+async function handleConversion(request, url, env) {
+  if (request.method !== 'GET') return jsonResp({ ok: false, error: 'GET only' }, 405);
+  const limited = await rateLimitIp(request, env, 'conversion', CONVERSION_RATE_LIMIT);
+  if (limited) {
+    return jsonResp({ ok: false, error: 'Too many conversion reads this hour. Try again later.' }, 429);
+  }
+  if (!env.VISITS) return jsonResp({ ok: false, error: 'Conversion is not configured' }, 503);
+  // Samme dæmpning som `/api/results`, af samme grund: hvert døgn koster to
+  // opslag, og et `days` der ikke er et helt tal over nul er ikke et ønske om
+  // ét døgn — uden dæmpningen ville `-4` give 1, som læses som «næsten intet».
+  const daysForespurgt = parseInt(url.searchParams.get('days') || '', 10);
+  const days = Math.min(Number.isInteger(daysForespurgt) && daysForespurgt > 0 ? daysForespurgt : 7, 28);
+  const window = Array.from({ length: days }, (_, index) =>
+    new Date(Date.now() - index * 86400000).toISOString().slice(0, 10));
+  const sider = new Map();
+  const byDay = {};
+  let status = 'ok';
+  let dropped = 0;
+  // Tælles i samme loop som resten og ikke i et ekstra opslag: `pro-card-click` er
+  // en `buy-click`-nøgle på en værktøjsside, så den ligger i den samme listering
+  // og skal læses der, hvor nøglen allerede er i hånden. Et separat opslag ville
+  // være dobbelt kvota for tallet, der så oven i koster en tæller der kan komme i
+  // strid med `by_day`.
+  let proCardClicks = 0;
+
+  for (const day of window) {
+    byDay[day] = 0;
+    let visitKeys = null;
+    let uniqueKeys = null;
+    try {
+      visitKeys = await listResultKeys(env.VISITS, `p:v3:${day}:`);
+      uniqueKeys = await listResultKeys(env.VISITS, `u:v3:${day}:`);
+    } catch {
+      status = 'unknown';
+      break;
+    }
+    // En dag der rammer grænsen tælles **ikke** til en lavere sum. Et for kort
+    // tal er værre end ingen, fordi det ligner en måling.
+    if (visitKeys === null || uniqueKeys === null) {
+      status = status === 'ok' ? 'partial' : status;
+      byDay[day] = null;
+      continue;
+    }
+    for (const [keys, metric] of [[visitKeys, 'buy_clicks'], [uniqueKeys, 'visitor_days']]) {
+      for (const key of keys) {
+        const parsed = parseTrafficKey(key.name, metric === 'buy_clicks' ? 'p' : 'u');
+        if (!parsed || parsed.metric !== 'event') continue;
+        const at = parsed.subject.lastIndexOf('@');
+        if (at <= 0) continue;
+        const event = parsed.subject.slice(at + 1);
+        if (!CONVERSION_EVENTS.includes(event)) continue;
+        const path = parsed.subject.slice(0, at);
+        if (!TRACKED_PATH_RE.test(path)) { dropped += 1; continue; }
+        const bucket = sider.get(path) || { buy_clicks: 0, visitor_days: 0 };
+        bucket[metric] += 1;
+        sider.set(path, bucket);
+        if (metric === 'buy_clicks') {
+          byDay[day] += 1;
+          if (event === 'pro-card-click') proCardClicks += 1;
+        }
+      }
+    }
+  }
+
+  const by_page = {};
+  const totals = { buy_clicks: 0, visitor_days: 0, pro_card_clicks: 0 };
+  for (const path of [...sider.keys()].sort()) {
+    const bucket = sider.get(path);
+    by_page[path] = bucket;
+    totals.buy_clicks += bucket.buy_clicks;
+    totals.visitor_days += bucket.visitor_days;
+  }
+  // `pro-card-click` er den anden slags købsintents-klik. Den er talt i
+  // `buy_clicks` og i `by_day` ovenfor — fordi den *er* et klik på en købsknap —
+  // men den skal kunne læses for sig, fordi den fortæller noget andet: at
+  // læseren nåede scannerens pro-kort. Derfor får den sit eget felt, talt i
+  // samme loop og altså uden et ekstra KV-opslag.
+  totals.pro_card_clicks = proCardClicks;
+
+  return jsonResp({
+    ok: true,
+    days,
+    window,
+    status,
+    by_page,
+    by_day: byDay,
+    totals,
+    dropped,
+    note: 'buy_clicks = client buy-click events recorded by /api/track, one per '
+      + 'click on a Stripe checkout link. pro_card_clicks = clicks on the Pro '
+      + 'card in a scanner result. A click is not a sale: revenue and licenses '
+      + 'are in Stripe, and no address, key or amount is in this response.',
   });
 }
 
