@@ -483,8 +483,13 @@
   //
   // The chat comes back on its own when the key is set: nothing here has to
   // change, and nothing has to remember that it was ever hidden.
-  fetch('/api/compliance-ai', { headers: { 'Accept': 'application/json' } })
-    .then(function(r) { return r.json(); })
+  //
+  // Asked for on DOMContentLoaded, not here: /net.js is a deferred script, and
+  // this block is inline, so `NET` does not exist yet at parse time. Calling it
+  // here threw before the send handler below was wired up — the probe took the
+  // chat down with it. Deferred scripts run first, so the probe is safe in here.
+  document.addEventListener('DOMContentLoaded', function() {
+  NET.getJSON('/api/compliance-ai')
     .then(function(d) {
       if (d && d.available) return;
       var area = document.getElementById('askArea');
@@ -495,6 +500,7 @@
       try { if (window.trackEvent) window.trackEvent('ai-unavailable'); } catch (e) {}
     })
     .catch(function() { /* Offline or the probe failed: leave the chat as it is. */ });
+  });
 
   // The retry rule itself lives in /net.js, next to the two other callers and
   // judged there by the sandbox. This only decides how many attempts we make

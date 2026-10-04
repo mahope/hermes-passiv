@@ -18,6 +18,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does the gap assessment check?","acceptedAnswer":{"@type":"Answer","text":"It walks through the ten minimum cybersecurity risk-management areas that Article 21 of Directive (EU) 2022/2555 requires: risk analysis and information-security policies, incident handling, business continuity and backup management, supply-chain security, security in network and information systems acquisition and development, and effectiveness testing. Each area is covered by two concrete checks."}},{"@type":"Question","name":"How is the readiness score calculated?","acceptedAnswer":{"@type":"Answer","text":"Each of the 20 checks scores 0 points if the measure is missing, 1 point if it is partial or informal, and 2 points if it is documented. The total is shown as a percentage from 0 to 100 with a grade from A to D, plus a prioritised list of what to fix first."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. It is a structured self-check based on the text of Directive (EU) 2022/2555. National implementing laws add details such as registration duties and sector-specific rules. Treat the result as a starting point for your compliance work, not a legal opinion."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The assessment runs entirely client-side. Nothing is sent to any server and nothing is stored. You print or download the finished report yourself."}},{"@type":"Question","name":"Who is this for?","acceptedAnswer":{"@type":"Answer","text":"Small and medium companies that are in scope of NIS2 as essential or important entities, and their IT providers. If you are unsure whether you are in scope at all, take the free scope self-assessment first."}}]}
 </script>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -327,11 +328,12 @@ function finish(){
       return;
     }
     status.innerHTML = '<span style="color:var(--color-text-muted)">Sending…</span>';
-    fetch('/api/waitlist', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email}),
-    }).then(function(r){return r.json();}).then(function(d){
+    // One helper for the family: /net.js decides what we retry, and a locked
+    // button means a second click cannot send the same address twice.
+    var send = document.querySelector('#leadForm button[type=submit]');
+    if(send.disabled) return;
+    send.disabled = true;
+    NET.ask('/api/waitlist', {email:email}, 2).then(function(d){
       if(d.ok){
         if(window.trackEvent)window.trackEvent('lead-nis2-gap-assessment');
 status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! Your printable report is opening now.</span>';
@@ -350,8 +352,9 @@ status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! Your print
       } else {
         status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Something went wrong.')+'</span>';
       }
-    }).catch(function(){
-      status.innerHTML = '<span style="color:var(--color-red)">Network error. Please try again.</span>';
+}).catch(function(e){
+      send.disabled = false;
+      status.innerHTML = '<span style="color:var(--color-red)">'+esc(e&&e.message?e.message:'Network error. Try again.')+'</span>';
     });
   });
 }

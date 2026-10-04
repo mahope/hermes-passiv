@@ -12,6 +12,13 @@
   live, `thanks.html` skelner 202 fra bekræftet, de 6 klienter viser `data.error`,
   og `targetIsPublic()` afviser IPv4-mapped IPv6 på hvert redirect-hop. Sentry
   sidder i workeren (`SENTRY_DSN_FALLBACK`, kun uventede fejl).
+- **Portens undtagelsesliste er 15 → 7 filer.** De seks `nis2-*` kalder nu
+  `NET.ask('/api/waitlist', …, 2)` med låst knap, så et dobbelttryk ikke kan sende
+  den samme adresse to gange, og `compliance-ai` spørger med `NET.getJSON`.
+  Målt: porten er **RØD med 8 fund** på den gamle `site/` og grøn på den nye;
+  selvtest **20/20** med et nyt krav om at en flyttet fil ikke får sit gamle rå
+  kald tilbage. Syv bliver, fordi de kræver et token i en header, poller på 202
+  eller viser kundens egen nøgle.
 - **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
@@ -100,14 +107,10 @@ otte ruter.
 9. ~~**Porten dømmer kopier af reglen, ikke klienter der mangler den.**~~
    **Færdig 4/10**, `ceo/net-kaldere`. Dom 3 læser de **22** ruter i
    `_worker.js`s egen dispatch og dømmer rå `fetch` på dem. Målt: **15 filer**
-   kalder en rute uden kernen — de **6** `nis2-*` (waitlist), `compliance-ai` +
-   DA på linje 486/487, `compliance-report.html`, `clean-copy-api.html`,
-   `paid-templates.html` + DA, `stats.html`, `thanks.html` (202-polling),
-   `bugbottle-demo.js`. Hver står **navngivet med sin rute** i portens liste, så
-   en ny rute i en undtagelsesfil bliver rød. `<pre>` er fjernet før søgningen:
-   ellers dømmer `/blog/html-to-markdown-api` + DA deres eget eksempel.
-   **Næste:** tøm listen — de 6 `nis2-*` er én samlet opgave, `compliance-ai`
-   486/487 er to slettede linjer.
+   kalder en rute uden kernen. `<pre>` er fjernet før søgningen. Selvtest 19/19.
+   **Næste:** ~~de 6 `nis2-*`~~ og ~~`compliance-ai` 486/487~~ er begge flyttet
+   4/10, `ceo/net-waitlist-klienter` — portens liste er nu **7 filer**, og alle
+   syv har en grund der *ikke* er «ikke flyttet endnu».
 
 ## ❓ Til Mads
 

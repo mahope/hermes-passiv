@@ -18,6 +18,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the NIS2 incident reporting deadlines?","acceptedAnswer":{"@type":"Answer","text":"Under Article 23 of Directive (EU) 2022/2555, essential and important entities must submit an early warning within 24 hours of becoming aware of a significant incident, an incident notification within 72 hours (updating the early warning), and a final report within one month."}},{"@type":"Question","name":"Who do I submit the notification to?","acceptedAnswer":{"@type":"Answer","text":"To the CSIRT or competent authority designated by your Member State — in Denmark, Center for Cybersikkerhed (CFCS). Most Member States run a dedicated reporting portal. The generator produces the document; you submit it through your national portal."}},{"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. The generator structures your information according to the Annex I requirements of Directive (EU) 2022/2555, but national implementing laws may require additional fields. Confirm with your national CSIRT's guidance."}},{"@type":"Question","name":"Does anything I enter leave my browser?","acceptedAnswer":{"@type":"Answer","text":"No. The generator runs entirely client-side. Nothing is sent to any server, nothing is stored, there are no cookies. You copy or download the finished report yourself."}}]}
 </script>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -358,11 +359,12 @@
             return;
           }
           status.innerHTML = '<span style="color:var(--color-text-muted)">Sending…</span>';
-          fetch('/api/waitlist', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }),
-          }).then(function (r) { return r.json(); }).then(function (d) {
+          // One helper for the family: /net.js decides what we retry, and a locked
+          // button means a second click cannot send the same address twice.
+          var send = document.querySelector('#leadForm button[type=submit]');
+          if (send.disabled) return;
+          send.disabled = true;
+          NET.ask('/api/waitlist', { email: email }, 2).then(function (d) {
             if (d.ok) {
               if(window.trackEvent)window.trackEvent('lead-nis2-incident-generator');
 status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be notified when paid NIS2 tools launch.</span>';
@@ -370,8 +372,9 @@ status.innerHTML = '<span style="color:var(--color-green)">✓ Saved! You\'ll be
             } else {
               status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Error') + '</span>';
             }
-          }).catch(function () {
-            status.innerHTML = '<span style="color:var(--color-red)">Network error. Try again.</span>';
+          }).catch(function (e) {
+            send.disabled = false;
+            status.innerHTML = '<span style="color:var(--color-red)">' + esc(e && e.message ? e.message : 'Network error. Try again.') + '</span>';
           });
         });
       }

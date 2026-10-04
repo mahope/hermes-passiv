@@ -18,6 +18,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad tjekker gap-analysen?","acceptedAnswer":{"@type":"Answer","text":"Den gennemgår de ti minimumsområder for risikostyring, som artikel 21 i Direktiv (EU) 2022/2555 kræver: risikoanalyse og informationssikkerhedspolitik, hændelseshåndtering, forretningskontinuitet og backup, leverandørsikkerhed, sikkerhed i anskaffelse og udvikling af systemer samt effektivitetstest. Hvert område dækkes af to konkrete tjek."}},{"@type":"Question","name":"Hvordan beregnes beredskabsscoren?","acceptedAnswer":{"@type":"Answer","text":"Hvert af de 20 tjek giver 0 point hvis foranstaltningen mangler, 1 point hvis den er delvis eller uformel, og 2 points hvis den er dokumenteret. Resultatet vises som en procentdel fra 0 til 100 med karakter fra A til D samt en prioriteret liste over hvad der skal rettes først."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Det er et struktureret selv-tjek baseret på direktivets tekst. Nationale implementeringslove tilføjer detaljer som registreringspligt og sektorspecifikke regler. Behandl resultatet som et udgangspunkt for jeres compliance-arbejde, ikke som en juridisk vurdering."}},{"@type":"Question","name":"Bliver det jeg indtaster sendt noget sted hen?","acceptedAnswer":{"@type":"Answer","text":"Nej. Analysen kører helt klient-side i din browser. Intet sendes til nogen server, intet gemmes. Du printer eller gemmer selv rapporten."}},{"@type":"Question","name":"Hvem er det til?","acceptedAnswer":{"@type":"Answer","text":"Små og mellemstore virksomheder der er omfattet af NIS2 som væsentlige eller vigtige enheder — og deres IT-leverandører. Er du i tvivl om I overhovedet er omfattet, så tag først det gratis scope-tjek."}}]}
 </script>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -327,11 +328,12 @@ function finish(){
       return;
     }
     status.innerHTML = '<span style="color:var(--color-text-muted)">Sender…</span>';
-    fetch('/api/waitlist', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email}),
-    }).then(function(r){return r.json();}).then(function(d){
+    // One helper for the family: /net.js decides what we retry, and a locked
+    // button means a second click cannot send the same address twice.
+    var send = document.querySelector('#leadForm button[type=submit]');
+    if(send.disabled) return;
+    send.disabled = true;
+    NET.ask('/api/waitlist', {email:email}, 2).then(function(d){
       if(d.ok){
         if(window.trackEvent)window.trackEvent('lead-nis2-gap-assessment-da');
 status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Din printbare rapport åbner nu.</span>';
@@ -347,8 +349,9 @@ status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Din printba
       } else {
         status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Noget gik galt.')+'</span>';
       }
-    }).catch(function(){
-      status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+    }).catch(function(e){
+      send.disabled = false;
+      status.innerHTML = '<span style="color:var(--color-red)">'+esc(e&&e.message?e.message:'Netværksfejl. Prøv igen.')+'</span>';
     });
   });
 }

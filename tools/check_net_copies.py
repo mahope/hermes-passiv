@@ -112,28 +112,16 @@ IKKE_ET_KLIENTKALD = {
 
 # Navngiven undtagelsesliste: fil → de ruter den må kalde uden kernen, med en
 # grund. Den er **per rute**, ikke per fil, så en undtagelsesfil der vokser en
-# ny kalds rute stadig bliver rød. Grunden er derfor ikke en undskyldning men
-# en regning: hver linje er en fil der endnu ikke er flyttet, og porten skriver
-# dem ud i sin egen grønne udskrift, så listen ikke kan vokse i stilhed.
+# ny kalds rute stadig bliver rød. Grundene er derfor ikke en undskyldning men
+# en regning: hver linje er et kald kernen endnu ikke kan tage, og porten
+# skriver dem ud i sin egen grønne udskrift, så listen ikke kan vokse i stilhed.
 #
-# Målt 4/10: 15 filer. Listen er derfor *ikke* længere end den skal være — den er
-# bare ikke tom, og det er fordi dommen så den i ansigtet i stedet for at lade
-# den ligge.
-_WAITLIST = "en tilmelding i en NIS2-vurdering — ikke flyttet endnu, og det er " \
-            "seks filer der skal laves på én gang"
+# Målt 4/10: 15 filer, heraf de **seks `nis2-*`** på `/api/waitlist` og de to
+# `compliance-ai`. 4/10 er de otte flyttet: `nis2-*` kalder nu `NET.ask` med to
+# forsøg, og `compliance-ai` spørger om nøglens tilstedeværelse med
+# `NET.getJSON`. Kun det der *ikke* kan gå gennem kernen står her — filer der
+# kræver et token i en header, poller på 202, eller viser kundens egen nøgle.
 UNDTAGELSER: dict[str, tuple[frozenset[str], str]] = {
-    "nis2-check.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "nis2-check-da.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "nis2-gap-assessment.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "nis2-gap-assessment-da.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "nis2-incident-generator.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "nis2-incident-generator-da.html": (frozenset({"/api/waitlist"}), _WAITLIST),
-    "compliance-ai.html": (frozenset({"/api/compliance-ai"}),
-                           "ruten kaldes to gange; den her (linje 486) er et "
-                           "ældre kald ved siden af NET.ask"),
-    "da/compliance-ai.html": (frozenset({"/api/compliance-ai"}),
-                              "ruten kaldes to gange; den her (linje 487) er et "
-                              "ældre kald ved siden af NET.ask"),
     "compliance-report.html": (frozenset({"/api/license/validate", "/api/report"}),
                                "licensetjek og rapport håndterer 429/5xx i egen "
                                "wrapper, fordi siden viser kundens egen nøgle"),
@@ -280,13 +268,22 @@ SELFTEST_KALD = [
     ("Strikes webhook er ikke et klientkald",
      "<script>fetch('/api/stripe-webhook', {method:'POST'});</script>",
      "selv.html", 0),
+# De to undtagelses-cases bruger `paid-templates.html`, fordi den stadig
+    # står i listen. De kørte før på `nis2-check.html`, som holdt sit kald uden
+    # kernen indtil 4/10 — en fil der *ikke* er undtagelse mere ville gøre dem
+    # grønne af den forkerte grund.
     ("en undtagelsesfil må kalde den rute den er navngivet for",
-     "<script>fetch('/api/waitlist', {method:'POST'});</script>",
-     "nis2-check.html", 0),
+     "<script>fetch('/api/paid-files');</script>",
+     "paid-templates.html", 0),
     ("en undtagelsesfil må ikke få en ny rute gratis",
-     "<script>fetch('/api/waitlist');fetch('/api/compliance-scan');</script>",
+     "<script>fetch('/api/paid-files');fetch('/api/compliance-scan');</script>",
+     "paid-templates.html", 1),
+    # Den anden halvdel af den samme flytning: en fil der har været undtagelse
+    # og nu går gennem kernen, må blive rød hvis sit gamle rå kald kommer tilbage.
+    ("en flyttet fil må ikke få sit gamle rå kald tilbage",
+     "<script>fetch('/api/waitlist', {method:'POST'});</script>",
      "nis2-check.html", 1),
-    ("kernen andetsteds i filen er ikke en brugsletning",
+    ("kernen andetstedes i filen er ikke en brugsletning",
      "<script>NET.ask('/api/waitlist', {email:e});"
      "fetch('/api/compliance-ai');</script>",
      "selv.html", 1),

@@ -484,8 +484,13 @@
   //
   // Chatten kommer tilbage af sig selv, når nøglen er sat: intet her skal
   // ændres, og intet skal huske, at den nogensinde har været skjult.
-  fetch('/api/compliance-ai', { headers: { 'Accept': 'application/json' } })
-    .then(function(r) { return r.json(); })
+  //
+  // Forespurgt på DOMContentLoaded, ikke her: /net.js er et defer-script, og
+  // denne blok er inline, så `NET` findes ikke endnu under parse. At kalde den
+  // her kastede, før send-handleren nedenfor blev koblet op — sonderingen tog
+  // chatten med ned. Deferred scripts kører først, så sonderingen er tryg her.
+  document.addEventListener('DOMContentLoaded', function() {
+  NET.getJSON('/api/compliance-ai')
     .then(function(d) {
       if (d && d.available) return;
       var omraade = document.getElementById('askArea');
@@ -496,6 +501,7 @@
       try { if (window.trackEvent) window.trackEvent('ai-unavailable'); } catch (e) {}
     })
     .catch(function() { /* Offline eller tjekket fejlede: lad chatten være som den er. */ });
+  });
 
   // The retry rule itself lives in /net.js, next to the two other callers and
   // judged there by the sandbox. This only decides how many attempts we make

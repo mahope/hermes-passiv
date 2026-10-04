@@ -53,6 +53,7 @@
            font-size:13px}
   @media print { .navbtns, #progress { display:none } }
 </style>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 </head>
 <body>
@@ -327,11 +328,12 @@ function finish(){
       return;
     }
     status.innerHTML = '<span style="color:var(--color-text-muted)">Gemmer…</span>';
-    fetch('/api/waitlist', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email}),
-    }).then(function(r){return r.json();}).then(function(d){
+    // One helper for the family: /net.js decides what we retry, and a locked
+    // button means a second click cannot send the same address twice.
+    var send = document.querySelector('#leadForm button[type=submit]');
+    if(send.disabled) return;
+    send.disabled = true;
+    NET.ask('/api/waitlist', {email:email}, 2).then(function(d){
       if(d.ok){
         if(window.trackEvent)window.trackEvent('lead-nis2-check-da');
 status.innerHTML = '';
@@ -339,8 +341,9 @@ status.innerHTML = '';
       } else {
         status.innerHTML = '<span style="color:var(--color-red)">'+esc(d.error||'Fejl')+'</span>';
       }
-    }).catch(function(){
-      status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+    }).catch(function(e){
+      send.disabled = false;
+      status.innerHTML = '<span style="color:var(--color-red)">'+esc(e&&e.message?e.message:'Netværksfejl. Prøv igen.')+'</span>';
     });
   });
 }

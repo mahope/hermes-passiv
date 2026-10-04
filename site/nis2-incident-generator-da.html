@@ -16,6 +16,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Hvad er fristerne for NIS2-hændelsesrapportering?","acceptedAnswer":{"@type":"Answer","text":"Efter artikel 23 i direktiv (EU) 2022/2555 skal væsentlige og vigtige enheder indsende en tidlig varsling inden for 24 timer efter at have konstateret en væsentlig hændelse, en hændelsesnotifikation inden for 72 timer samt en slutrapport inden for én måned."}},{"@type":"Question","name":"Hvem indsender jeg notifikationen til?","acceptedAnswer":{"@type":"Answer","text":"Til den CSIRT eller myndighed, der er udpeget af din medlemsstat — i Danmark Center for Cybersikkerhed (CFCS). De fleste lande har en dedikeret indberetningsportal. Generatoren laver dokumentet; du indsender det via den officielle portal."}},{"@type":"Question","name":"Er dette juridisk rådgivning?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren strukturerer dine oplysninger efter bilag I-kravene i direktivet, men national gennemførelseslovgivning kan kræve flere felter. Tjek altid din nationale CSIRT's vejledning."}},{"@type":"Question","name":"Forlader noget, jeg indtaster, min browser?","acceptedAnswer":{"@type":"Answer","text":"Nej. Generatoren kører udelukkende i browseren. Intet sendes til nogen server, intet gemmes, der er ingen cookies. Du kopierer eller downloader selv den færdige rapport."}}]}
 </script>
+<script defer src="/net.js"></script>
 <script defer src="/track.js"></script>
 <link rel="stylesheet" href="/style.css">
 <style>
@@ -352,11 +353,12 @@
             return;
           }
           status.innerHTML = '<span style="color:var(--color-text-muted)">Sender…</span>';
-          fetch('/api/waitlist', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }),
-          }).then(function (r) { return r.json(); }).then(function (d) {
+          // One helper for the family: /net.js decides what we retry, and a locked
+          // button means a second click cannot send the same address twice.
+          var send = document.querySelector('#leadForm button[type=submit]');
+          if (send.disabled) return;
+          send.disabled = true;
+          NET.ask('/api/waitlist', { email: email }, 2).then(function (d) {
             if (d.ok) {
               if(window.trackEvent)window.trackEvent('lead-nis2-incident-generator-da');
 status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får besked når betalte NIS2-værktøjer lanceres.</span>';
@@ -364,8 +366,9 @@ status.innerHTML = '<span style="color:var(--color-green)">✓ Gemt! Du får bes
             } else {
               status.innerHTML = '<span style="color:var(--color-red)">' + esc(d.error || 'Fejl') + '</span>';
             }
-          }).catch(function () {
-            status.innerHTML = '<span style="color:var(--color-red)">Netværksfejl. Prøv igen.</span>';
+          }).catch(function (e) {
+            send.disabled = false;
+            status.innerHTML = '<span style="color:var(--color-red)">' + esc(e && e.message ? e.message : 'Netværksfejl. Prøv igen.') + '</span>';
           });
         });
       }
