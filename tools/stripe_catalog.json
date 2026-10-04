@@ -1677,6 +1677,21 @@
       "requires_text": [
         "Køb DeskUptime Pro — 19 $ én gang"
       ]
+    },
+    {
+      "path": "site/blog/get-notified-when-website-goes-down.html",
+      "domain": "mahope.tools",
+      "route": "/blog/get-notified-when-website-goes-down",
+      "product": "deskuptime-pro",
+      "prices": [
+        "$10",
+        "$19",
+        "$348."
+      ],
+      "prices_note": "$10 er artiklens egen markedstal i 'What you pay' ($10-15/month pr. site). $348. er en pris i en relateret-artikel-linje nederst på siden ('a single Better Stack responder seat is $348') og er ikke en pris vi sælger til; PRICE_TOKEN i check_stripe_ctas.py er `\\$\\s?\\d[\\d.]*` og læser derfor '$348.' med sit punktum. Samme målemetode som bug-reports-in-ci-pipeline.",
+      "requires_text": [
+        "Buy DeskUptime Pro — $19 once"
+      ]
     }
   ],
   "built_offers": [

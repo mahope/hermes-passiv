@@ -1,47 +1,40 @@
 # STATUS
-- **Denne iteration gav de fire frie API'er en adresse.** De svarer alle 4 med
-  rigtigt JSON, men ingen side på mahope.tools nævnte dem, og MCP'en der kalder
-  præcis de fire lå som `/mcp` på cleancopy.tools og 404'ede på mahope.tools.
-  Ny side `/developers`, i footeren på alle 28 sprogvarianter, i sitemap og
-  llms.txt. Datagrund: `passiv-mcp` er det mest klonede repo (14 d: 21 unikke
-  kloninger, 2 visninger, 0 stjerner).
-- **Siden løgnede om sig selv, og den farligste løgn var den jeg ikke troede.**
-  3 påstande var forkerte mod `_worker.js`: den sendte `format:"text"` mens
-  handleren læser `mode:'plain'`, og den skrev `passed/failed/notChecked` som
-  tællere mens tællingerne hedder `passed`/`failed`/`not_checked`.
-- **Den 4. viste sig at være sand 3 steder og falsk i det 4.** Mod kilden har
-  `CSC_CHECKS` **7** nøgler, og det har den haft i *hvert* commit siden 25/8.
-  Mod live er der **9**: `security-headers` og `meta-tags` findes i ingen
-  commit, men live har også 2/10's `not_checked`/`pages_read`. Siden siger
-  **9**, målt med curl 4/10 — fordi det er den læseren kalder. Se ❓.
-- **Porten `check_developers_page` (5 domme, selftest 15/15) dømmer at hvert
-  felt siden beder læseren sende, læses af den handler ruten peger på.** Målt
-  rød på den gamle payload, grøn på den nye. Min egen krop-udtrækker brød
-  undervejs; grænsen er nu næste topniveau-deklaration.
-- **Review-fund 4/10 rettet (punkt 0):** noten i `first_action.json` sagde at
-  `/clean-copy-tool` «ligger stadig i hovednavnen». Målt 4/10: 0 `<nav>` og 0
-  forekomster i `<header>` på begge sprog — noteret de 4 rigtige steder.
-- **Gaten grøn:** 84 steps. PR-TJEK 3/10: 0 PR'er. BRANCH-TJEK 2/10. Sentry:
-  0 uløste fejl, SDK op. **Næste:** CEO-kø punkt 2 — DeskUptime lover «no
-  phone-home», men licensen aktiveres online mod mahope.tools. ❓ uændret.
+- **Den engelske artikel der uddeler den betalte app havde ingen købsvej.**
+  CEO-kø punkt 2 og 4 lukket samlet. Målt før rettelsen: 9 sider rørte
+  DeskUptime, 8 havde købsknappen, og den eneste undtagelse var
+  `blog/get-notified-when-website-goes-down` — den deler de to betalte
+  binære filer **to gange** og.sendte læseren i en blindgade, mens dens
+  danske tvilling havde både gratis-mod-Pro-tabel og knap. Den havde også
+  1 af 5 Pro-funktioner nævnt.
+- **Begge artikler løgnede om netværket.** «Nothing is uploaded anywhere,
+  ever» (EN) og «Intet uploades nogensinde» (DA) er falsk: appen aktiverer
+  licensen online. Rettet til den samme ordlyd produktsiderne bruger.
+- **Port `check_deskuptime_claims` (3 domme, selftest 7/7)** dømmer hver
+  side der linker til en udleveret binær: den skal kunne købes, må ikke love
+  at intet forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner.
+  Målt rød på den gamle kode med præcis de 4 fund jeg havde målt i hånden.
+  Kun synlig tekst dommes — porten er grøn med den samme streng i en kommentar.
+- **Gaten grøn:** 86 steps. PR-TJEK 4/10: 0 PR'er. BRANCH-TJEK 2/10. ❓ uændret.
 
 ## Verificér deploy
 
-`DEPLOY OK 4/10` for `ceo/cleancopy-koeb-handling` — hentet live: foldens
-primære er `href="#check"` med teksten «Convert a page», CI grøn på `main`.
+`DEPLOY OK 4/10` for `ceo/developers-side` — hentet på indhold: `/developers`
+200 med fire endpoint-blokke, clean-copy-kommandoen sender `{"mode":"markdown"}`,
+siden siger *nine* compliance-tjek, footeren på `mahope.tools/da/free-tools`
+har linket, `llms.txt` har linjen, og `cleancopy.tools/mcp` har 2 `npx
+@mahope/passiv-mcp` og 0 `npx github:`. **Målt afvigelse:** planen havde
+skrevet `mahope.tools/mcp`, som 404'er — `/mcp` er kun på cleancopy.tools,
+fordi den side ligger i det domænes kilde. Noten er rettet her.
 
-`VERIFICÉR DEPLOY: /developers + de tre løgnede påstande rettet ceo/developers-side 4/10 00:4x`
+`VERIFICÉR DEPLOY: artiklen om desktop-appen får købsvej og sand Privatlivstext ceo/deskuptime-en-kob 4/10`
 Graden deployer på push. Verificér på *indhold*: hent
-`https://mahope.tools/developers` og tæl. Skal være **fire** endpoint-blokke,
-og clean-copy-kommandoen skal sende `{"html":"…","mode":"markdown"}` — før
-stod der `"format":"markdown"`. Siden skal sige **ni** compliance-tjek, fordi
-det er dem live svarer (`checks` har 9 nøgler) — kilden siger syv, se ❓.
-Linket skal også stå i mahope.tools' footer på en af de andre 27
-sprogvarianter, `https://mahope.tools/llms.txt` skal have linjen, og
-`https://mahope.tools/mcp` skal have **0** `npx github:mahope/passiv-mcp` og
-**2** `npx @mahope/passiv-mcp` (den findes på npm: registry svarer 200,
-`dist-tags.latest` 1.2.1, målt 4/10).
-
+`https://mahope.tools/blog/get-notified-when-website-goes-down` og tæl —
+skal være **1** `buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01`, **0** forekomster
+af «uploaded anywhere, ever», og afsnittet «The notification only arrives
+while the app runs» skal stå med rækken `webhook` + `unlimited sites` +
+`client-ready report`. Samme forekomsttællinger skal give 1 / 0 / rækken på
+`https://mahope.tools/da/blog/faa-besked-naar-hjemmeside-er-nede`, hvor kun
+det absolutte løfte var ændret. Sidens `sitemap.xml` skal fortsat have ruten.
 
 
 ## Åbne opgaver
@@ -70,7 +63,14 @@ sprogvarianter, `https://mahope.tools/llms.txt` skal have linjen, og
    så bogsiders hreflang har intet dansk par. Accept: enten en DA-udgave af de to
    vigtigste som EPUB i `ebook/`, eller en synlig dansk note på bogside-ruterne.
    Kræver beslutning — se ❓.
-7. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor: porten
+7. ~~**CEO-kø punkt 2 og 4 — DeskUptimes løgnede privatlivstext og den
+   artikel uden købsvej.**~~ **Færdig 4/10**, `ceo/deskuptime-en-kob`.
+   CEO-kø punkt 1 (Lemon Squeezy-ruten) lå allerede væk: `grep -rn lemon
+   site/_worker.js` giver 0. Punkt 3 (sitemap/robots) er målt grøn af
+   `check_sitemaps.py` + `check_live_sitemaps.py`, og ❓ har
+   Search Console-linjen. Punkt 4 er målt af `check_stripe_ctas.py` (13
+   produkter, 73 købssider, 0 problemer) og nu af `check_deskuptime_claims.py`.
+8. **En sitemap-rute må ikke have en død eneste handling.** Hvorfor: porten
    dømmer kun de to ruter i `tools/unavailable_routes.json`. Accept: porten
    finder den, hvis den skrives i manifestet. *(Kun relevant når vi tilføjer flere
    sådanne sider — ikke en opgave i sig selv.)*

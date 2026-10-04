@@ -7068,3 +7068,31 @@ Målt: `check_contrast_sampling` GRØN — 176 løfter dømt på 4 sider, 2 i ke
 samme id'er, type og værdier som på de to værktøjssider, der var målt 3/10.
 - `ITERATION_ID`: `cleancopy-forside-handling-2026-10-03`
   - **To opgaver i én squash.** (1) Feature-kø 6: cleancopy.tools-forsidens `btn-primary` var `#install` (3 155 px nede) mens `#check` lå 715 px nede, og «Try it in the browser» pegede ud til `/clean-copy-tool`. Nu `#check`, målt i Chromium 153 ved 390/1280 px på begge sprog. (2) Rød CI fra `d294324`: `scan-clients` læste `git show HEAD:` som polaritetsreference — kun den af alle `git show` i filen der ikke stod på en fast sha.
+
+## 4/10 — CEO-kø punkt 2 og 4: DeskUptime (arkiveret fra planen)
+
+**Målt før rettelsen.** 9 sider i `site/` rørte DeskUptime. 8 havde en købsknap.
+Den eneste undtagelse var `site/blog/get-notified-when-website-goes-down.html`:
+den linker til de to **betalte** binære filer (`DeskUptime-macOS-aarch64…zip` og
+`DeskUptime_0.2.7_x64-setup.exe`) to gange, har **ingen** `buy.stripe.com`-link
+og nævner 1 af de 5 Pro-funktioner. Dens danske tvilling
+`da/blog/faa-besked-naar-hjemmeside-er-nede.html` har både en ni-rækkes
+gratis-mod-Pro-tabel og købsknappen. Samme måling på de to produktsider:
+begge har 1 knap.
+
+**Den anden fejl.** Begge artikler lovede at intet forlader maskinen —
+«Nothing is uploaded anywhere, ever» (EN, `blog/…:55`) og «Intet uploades
+nogensinde» (DA, `da/blog/…:55`). Det er falsk: desktop-appen aktiverer
+licensen online, og produktsiderne siger det ærligt (CEO-kø punkt 2).
+
+**Rettelsen.** EN fik hele `#pro`-afsnittet fra sin danske tvilling (ni-rækkes
+tabel, to afsnit, købsknap), og begge kort fik samme ærlige ordlyd som
+produktsiderne: URL-listen uploades ikke, men licensnøgle + device-id +
+`deskuptime-pro` sendes over HTTPS første gang nøglen indtastes.
+
+**Porten.** `tools/check_deskuptime_claims.py` dømmer hver side der linker til
+en udleveret binær på tre ting: den skal kunne købes, må ikke love at intet
+forlader maskinen, og skal nævne mindst 2 af de 5 Pro-funktioner. Kun synlig
+tekst (scripts, CSS og kommentarer er fjernet før dommen). Selftest 7/7 med
+mutationer; porten var målt rød på den gamle kode med præcis de 4 fund der var
+håndmålt. To steps i `quality_gate.py` (dom + selftest), så 86 steps.

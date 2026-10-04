@@ -976,6 +976,26 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_developers_page.py", "site/developers.html",
                 "site/_worker.js", "tools/route_inventory.json"),
     ),
+    # CEO-kø punkt 2 og 4 (4/10). Målt: 9 sider rørte DeskUptime, 8 havde
+    # købsknappen — undtagelsen var præcis den engelske artikel der udleverer
+    # de to betalte binære filer to gange, og den havde heller ingen
+    # gratis-mod-Pro-forklaring. Begge artikler lovede desuden «Nothing is
+    # uploaded anywhere, ever» / «Intet uploades nogensinde», hvilket er
+    # falsk: appen aktiverer licensen online. `check_stripe_ctas` dømmer at
+    # hvert produkt har sin købsside dokumenteret, og `check_buyable` tæller
+    # linkene — ingen af dem ser, om den side der *uddeler filen* har en
+    # købsvej eller om den lyver om sit netværk.
+    Step(
+        id="deskuptime-claims",
+        argv=("python3", "tools/check_deskuptime_claims.py"),
+        inputs=("tools/check_deskuptime_claims.py", "site/**",
+                "tools/stripe_catalog.json"),
+    ),
+    Step(
+        id="deskuptime-claims-selftest",
+        argv=("python3", "tools/check_deskuptime_claims.py", "--self-test"),
+        inputs=("tools/check_deskuptime_claims.py",),
+    ),
     # Sampleringen under teksten på et billede (30/9). Målt i Chromium mod den
     # live side: hvid tekst på et rent hvidt billede gav **1.47:1**, og tallet
     # flyttede sig næsten ikke mellem forskellige tilstande (1.42/1.46/1.47) —

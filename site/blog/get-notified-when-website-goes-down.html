@@ -52,7 +52,7 @@
     <div class="problem-cards">
       <div class="card"><h3>&#128276; Native OS notifications</h3><p>DeskUptime watches every URL you add and fires a real macOS/Windows notification when a site goes DOWN and again when it is back UP. No inbox, no missed emails.</p></div>
       <div class="card"><h3>&#9201;&#65039; Intervals from 1 minute</h3><p>Pick 1, 5, 10 or 30 minutes per watchlist. A built-in floor of 60 seconds keeps you polite to your own server.</p></div>
-      <div class="card"><h3>&#128190; Your data stays yours</h3><p>The URL list and history live in a local file on your machine. Nothing is uploaded anywhere, ever.</p></div>
+      <div class="card"><h3>&#128190; Your data stays yours</h3><p>The URL list and history live in a local file on your machine, and no monitoring service ever sees them. The app does send your licence key, a stable device ID and the product ID <code>deskuptime-pro</code> to a licence server over HTTPS the first time you enter the key &mdash; that is the one network call it makes beyond the sites you check.</p></div>
     </div>
     <p style="margin-top:16px;">Prefer the terminal? The same engine ships as a CLI: <code>deskuptime check</code> runs a round right now and exits non-zero if anything is down — easy to wire into scripts.</p>
 
@@ -77,6 +77,43 @@
         <tr><td><a href="/deskuptime/" style="color:var(--color-accent);">DeskUptime</a></td><td>$19 once</td><td>Notifications only while the app runs</td></tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<section class="products" id="pro">
+  <div class="container">
+    <h2>The notification only arrives while the app runs. Pro covers the other half.</h2>
+    <p>Everything above is free, and it stays free: the monitoring on your own machine,
+    <code>deskuptime check</code> from the terminal, and the three things the CLI does
+    without a key &mdash; one-off checks, SSL and content checks, and JSON output. No
+    account, no licence key, no trial.</p>
+    <p>Pro adds exactly five things, and all five are named limits in this article's own
+    text. The first is the one just mentioned: the notification channel disappears when
+    the computer is closed. <strong>Webhook alerts</strong> pass the outage on to Slack,
+    Teams or PagerDuty from a machine that stays on, so the failure reaches you while you
+    sleep. The second is the pace: this article recommends every 5 minutes, and the menu
+    stops at 1, 5, 10 and 30 minutes with a floor of 60 seconds. Pro brings it down to
+    <strong>30 seconds</strong>. The third is the count: <strong>unlimited sites</strong>
+    instead of the three watch mode covers today &mdash; for an agency that is your
+    clients' sites, not site number four. The fourth is what you attach when the client
+    asks: a <strong>client-ready report</strong> in Markdown and JSON. And the fifth is
+    the <strong>desktop app</strong> you already downloaded above &mdash; in version
+    0.2.7 it downloads without payment, but the Pro features inside it only unlock once
+    the licence is activated; they work in the CLI today.</p>
+    <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+      <tr><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">What you get</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">Free</th><th style="text-align:left;padding:8px;border-bottom:1px solid var(--color-border)">DeskUptime Pro &mdash; $19 once</th></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">This guide, the app above and <code>deskuptime check</code> from the terminal</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the whole page and the toolkit</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the same</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Checking any number of URLs, one at a time</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">one-off checks</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the same</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Certificate expiry and silent content changes</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">SSL and content checks</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the same checks</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Machine-readable output for scripts and notifications</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">JSON output</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">the same</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">Where you see the outage</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">in the notification, only while the machine runs</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">system tray and notifications in the desktop app</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">How the failure reaches you when the machine is closed</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">you see it first when you are at the desk</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">webhook alerts &mdash; Slack, Teams, PagerDuty</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">How often a site is checked</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">every 1st, 5th, 10th or 30th minute</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">every 30 seconds</td></tr>
+      <tr><td style="padding:8px;border-bottom:1px solid var(--color-border)">How many sites you watch</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">three URLs in watch mode</td><td style="padding:8px;border-bottom:1px solid var(--color-border)">unlimited sites</td></tr>
+      <tr><td style="padding:8px">What you attach when the client asks</td><td style="padding:8px">&mdash;</td><td style="padding:8px">client-ready report</td></tr>
+    </table>
+    <p style="font-size:0.95rem;color:var(--color-text-muted);max-width:44rem;">One price, three machines &mdash; the licence activates on the machine you run it on, not per site. If every 5 minutes and a notification you see yourself is plenty for your one site, you already have the whole answer.</p>
+    <p style="text-align:center;margin-top:1.2rem;"><a href="https://buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01" class="btn-primary" rel="nofollow noopener" data-track="cta:deskuptime-pro">Buy DeskUptime Pro &mdash; $19 once</a></p>
   </div>
 </section>
 
