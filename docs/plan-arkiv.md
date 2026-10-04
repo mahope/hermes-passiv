@@ -8056,3 +8056,40 @@ Det her flytter det kogede fra STATUS til arkivet:
 Se `IMPLEMENTATION_PLAN.md` (deploy-note og STATUS). Kort: `scan-proxy` tager én
 URL pr. linje med én kvoteslot pr. side, ét URL svarer i den gamle form, og
 klienten kører det samme DOM-tjek på hver side.
+
+- **Arkiv 5/10 (feature-kø 9, første levering).**
+  - **Feature-kø 9 leveret:** `/scan` og `/scan-da` læser **5 sider pr. kørsel**.
+    Serveren: `scan-proxy` tager én URL pr. linje (`SCAN_PROXY_MAX_URLS = 5`),
+    **en kvoteslot pr. side** (før *efter* validering, så et 400 brænder ikke
+    kvote), og ét abort for hele kaldet (25 s) + ét pr. side (10 s, `Math.min` med
+    resten af budgettet). Én URL → gammel form; flere → `{multi,requested,scanned,
+    failed,pages}`. Alle fejltekster, statuser og SSRF-værnet er uændrede pr. side.
+    Klienten: `analyseDoc(doc)` udtaget så det samme DOM-tjek kører på hver
+    side; `visEn`/`visFlere` deler den ænige `scan()`-vej.
+    **Målt:** missionens gate grøn (`build_sites` 316 sider 0 findings,
+    `stripe-worker` **461/461**, `seo_check` 0, `check_inline_js` 0) og otte porte
+    grønne. `check_scan_events` fandt **en rigtig fejl** i første kørsel —
+    `scan-failed` blev sendt **to** gange i fejlvejen — rettet ved at lade
+    klientens egen forudsætning (tomt felt, for mange URL'er) **ikke** tælle som
+    fejl. Ingen test for den nye ruteform: `tests/stripe-worker.test.mjs` har 461
+    eksisterende checks og alle er urørte, men `multi`-formen er **ikke** dømt
+    af en test endnu — én opgave for næste iteration.
+
+## 5/10 — feature-kø 9, første levering
+
+  - **Feature-kø 9 leveret:** `/scan` og `/scan-da` læser **5 sider pr. kørsel**.
+    Serveren: `scan-proxy` tager én URL pr. linje (`SCAN_PROXY_MAX_URLS = 5`),
+    **en kvoteslot pr. side** (før *efter* validering, så et 400 brænder ikke
+    kvote), og ét abort for hele kaldet (25 s) + ét pr. side (10 s, `Math.min` med
+    resten af budgettet). Én URL → gammel form; flere → `{multi,requested,scanned,
+    failed,pages}`. Alle fejltekster, statuser og SSRF-værnet er uændrede pr. side.
+    Klienten: `analyseDoc(doc)` udtaget så det samme DOM-tjek kører på hver
+    side; `visEn`/`visFlere` deler den ænige `scan()`-vej.
+    **Målt:** missionens gate grøn (`build_sites` 316 sider 0 findings,
+    `stripe-worker` **461/461**, `seo_check` 0, `check_inline_js` 0) og otte porte
+    grønne. `check_scan_events` fandt **en rigtig fejl** i første kørsel —
+    `scan-failed` blev sendt **to** gange i fejlvejen — rettet ved at lade
+    klientens egen forudsætning (tomt felt, for mange URL'er) **ikke** tælle som
+    fejl. Ingen test for den nye ruteform: `tests/stripe-worker.test.mjs` har 461
+    eksisterende checks og alle er urørte, men `multi`-formen er **ikke** dømt
+    af en test endnu — én opgave for næste iteration.

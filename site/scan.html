@@ -415,6 +415,106 @@ window.revealResult=revealResult;
 // Én URL pr. linje, samme dedupe som serveren: samme side to gange er samme
 // svar, og den må hverken tælle to gange i kvoten eller få to kort.
 const MAX_URLS = 5;
+// Fælles hale under «Scan failed»-teksten. Den lå tidligere indskrevet i
+// catch'en selv, og da `scan()` fik sin egen `fejl()`-vej, blev denne
+// reference hængende i luften: én kald der fejlede slog en `ReferenceError`
+// og efterlod et resultatfelt uden tekst. Én konstant, to brugere.
+const HINTTAIL='Cannot scan this page. Possible reasons: the site blocks automated fetchers, '
+  +'the URL is invalid, or the page is too large. Try the '
+  +'<a href="eaa-scanner-extension.zip" download>browser extension</a> '
+  +'which runs directly on the live page.</p>';
+// De femten tjek, som ét navn. Før læste `scan()` dem i sig selv, så den
+// anden vej ind (`visFlere`) kunne ikke finde dem; udtrækningen tabte selve
+// funktionen, og så døde hver eneste kørsel med `analyseDoc is not defined`.
+// Den her udgave afgrænser sig til **at finde fund og platform** — scoren
+// kommer fortsat fra `SCANSHARE.scoreOf`, så ingen formel får to hjem.
+function analyseDoc(doc){
+  const findings = [];
+  const add=(id,sev,n)=>{if(n>0)findings.push({id,sev,count:n})};
+  add('IMG_ALT','error',
+      [...doc.images].filter(i=>!i.hasAttribute('alt')||!i.alt.trim()).length);
+  add('FORM_LABEL','error',
+      [...doc.querySelectorAll('input,select,textarea')].filter(el=>{
+        const t=(el.type||'').toLowerCase();
+        if(['hidden','submit','button','reset','image'].includes(t))return false;
+        if(el.labels&&el.labels.length)return false;
+        return !(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||el.getAttribute('title'));
+      }).length);
+  add('LINK_TEXT','error',
+      [...doc.querySelectorAll('a[href]')].filter(a=>!(a.textContent.trim()||a.getAttribute('aria-label')||a.querySelector('img[alt]:not([alt=""])'))).length);
+  add('BUTTON_TEXT','error',
+      [...doc.querySelectorAll('button')].filter(b=>!(b.textContent.trim()||b.getAttribute('aria-label')||b.querySelector('img[alt]:not([alt=""])'))).length);
+  add('DUP_ID','error',
+      (()=>{const seen=new Set(),dups=new Set();
+        doc.querySelectorAll('[id]').forEach(el=>{const v=el.id;if(seen.has(v))dups.add(v);else seen.add(v)});
+        return dups.size;})());
+  add('TARGET_BLANK','warning',
+      [...doc.querySelectorAll('a[target="_blank"]')].filter(a=>{
+        const t=(a.textContent||'').toLowerCase();
+        return t && !t.includes('new window') && !t.includes('new tab');
+      }).length);
+  if(!doc.title||!doc.title.trim())add('DOC_TITLE','error',1);
+  if(!doc.documentElement.lang)add('HTML_LANG','error',1);
+  if(!doc.querySelector('meta[name="viewport"]'))add('VIEWPORT','warning',1);
+  if(!doc.querySelector('h1'))add('HEADING_H1','warning',1);
+  let skips=0,prev=0;
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h=>{const l=+h.tagName[1];if(prev&&l>prev+1)skips++;prev=l});
+  add('HEADING_SKIP','warning',skips);
+  add('IFRAME_TITLE','warning',doc.querySelectorAll('iframe:not([title])').length);
+  add('TABLE_HEADER','warning',[...doc.querySelectorAll('table')].filter(t=>!t.querySelector('th')).length);
+  add('ARIA_HIDDEN_FOCUS','error',
+      [...doc.querySelectorAll('[aria-hidden="true"]')].filter(el=>el.matches('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')).length);
+  add('CONTRAST','error',(()=>{
+    function parseCol(s){
+      s=(s||'').trim().toLowerCase();
+      if(!s||['transparent','inherit','currentcolor','initial'].includes(s))return null;
+      let m=s.match(/^#([0-9a-f]{3})$/);if(m)return m[1].split('').map(c=>parseInt(c+c,16));
+      m=s.match(/^#([0-9a-f]{6})/);if(m)return [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16));
+      m=s.match(/^rgba?\(([^)]+)\)/);
+      if(m){const p=m[1].split(',').map(x=>x.trim());
+        if(p.length>=4&&parseFloat(p[3])<0.9)return null;
+        try{return p.slice(0,3).map(x=>x.endsWith('%')?parseFloat(x)*2.55:parseFloat(x));}catch(e){return null;}}
+      const named={white:[255,255,255],black:[0,0,0],red:[255,0,0],green:[0,128,0],blue:[0,0,255],gray:[128,128,128],grey:[128,128,128],silver:[192,192,192],yellow:[255,255,0],orange:[255,165,0]};
+      return named[s]||null;}
+    function lum(rgb){return 0.2126*chan(rgb[0])+0.7152*chan(rgb[1])+0.0722*chan(rgb[2]);}
+    function chan(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    const seen=new Set();let low=0;
+    const root=doc.body||doc.documentElement;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let n;
+    while((n=walker.nextNode())){
+      if(!n.textContent.trim())continue;
+      let el=n.parentElement,fg=null,bg=null,node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(st){
+          if(fg===null){const m=st.match(/(?:^|;)\s*color\s*:\s*([^;!]+)/);if(m)fg=m[1].trim();}
+          if(bg===null){const m=st.match(/background(?:-color)?\s*:\s*([^;!]+)/);
+            if(m&&!/url\(|gradient\(/.test(m[1]))bg=m[1].trim();}
+        }
+        node=node.parentElement;}
+      if(fg===null||bg===null)continue;
+      let large=false;node=el;
+      while(node&&node.nodeType===1){
+        const st=(node.getAttribute&&node.getAttribute('style'))||'';
+        if(/font-size\s*:\s*(?:1[89]\d*|2\d+|[3-9]\d+)\s*px|font-size\s*:\s*(?:14|1[5-9]|[2-9]\d+(\.\d+)?)\s*pt|font-weight\s*:\s*(?:bold|[6-9]00)/.test(st)){large=true;break;}
+        node=node.parentElement;}
+      const f=parseCol(fg),b=parseCol(bg);
+      if(!f||!b)continue;
+      const lf=lum(f),lb=lum(b),hi=Math.max(lf,lb),lo=Math.min(lf,lb);
+      const ratio=(hi+0.05)/(lo+0.05),thr=large?3.0:4.5,key=fg+'|'+bg+'|'+large;
+      if(ratio<thr&&!seen.has(key)){seen.add(key);low++;}
+    }
+    return low;})());
+  // Platform-detektionen hører her, ikke i `platformBox()`: den skal kun slå
+  // platformen op i PLATFORM_GUIDES, og *navnet* kommer videre i del-linket, så
+  // modtageren får samme guide-boks som afsenderen.
+  const gen=((doc.querySelector('meta[name="generator"]')||{}).content||'');
+  let plat=null;
+  for(const p of Object.keys(PLATFORM_GUIDES)){
+    if(new RegExp(p,'i').test(gen)){plat=p;break;}}
+  return {findings:findings, platform:plat};
+}
 function splitUrls(raw){
   const settes=[];
   String(raw||'').split(/[\r\n]+/).forEach(function(l){
@@ -551,7 +651,11 @@ function visFlere(pages, urls){
     +'<p style="text-align:center;margin-top:18px"><button type="button" onclick="window.print()" class="btn btn-secondary">Print / save as PDF</button> '
     +'<button type="button" onclick="shareResult()" class="btn btn-secondary">Copy link to this result</button></p>'
     +'<p class="hint" id="shareStatus"></p>'
-    +(sider.length>1?'<p class="hint">' + (sider.length>1 && S['shareNoteN'] ? S['shareNoteN'].replace('%d',sider.length) : S['shareNoteN']) +'</p>':'')
+    // Samme felt som den ene side har, ellers siger statuslinjen «copy the link
+    // below» om et felt der ikke findes, og et tastatur kan ikke kopierer over
+    // en 300-tegns url.
+    +'<input type="text" id="shareLink" readonly hidden aria-label="Link to this result">'
+    +'<p class="hint">The link carries the %d findings above, so whoever opens it reads this list without running a scan of their own. It carries the totals, not the per-page breakdown — nothing about the pages is sent to us by opening it.</p>'.replace('%d',sider.length)
     +'<p class="hint">This scan is free and needs no account. If it saved you time, a small <a href="https://donate.stripe.com/7sYeVcbn50wieFM8gDbMQ0c" rel="nofollow noopener">donation</a> keeps it running.</p>'
     +proCard();
   revealResult(out);

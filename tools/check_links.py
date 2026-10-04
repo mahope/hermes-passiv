@@ -294,7 +294,8 @@ def page_anchors(path: Path) -> tuple[set[str], bool]:
 
 
 def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
-                   dist: Path, dists: dict[str, Path], own_ids: set[str]) -> str | None:
+                   dist: Path, dists: dict[str, Path], own_ids: set[str],
+                   own_reads_hash: bool = False) -> str | None:
     """Én fejltekst hvis fragmentet i ref ikke findes, ellers None."""
     kind, ref_domain, ref_path, frag = split_target(ref)
     if not frag or kind in ("skip", "external"):
@@ -303,7 +304,13 @@ def anchor_problem(domain: str, rel: str, line: int, ref: str, own: Path,
         # Samme fil: brug de id'er vi netop har parset. At læse filen igen
         # ville give en cache, der er forældet i selftesten, hvor probe.html
         # skrives om mellem hver kørsel.
-        ids, reads_hash = own_ids, False
+        #
+        # `reads_hash` kommer fra **samme** parser, der fandt `ids` — målt 5/10:
+        # den blev sat til False, fordi et hash-fragment er sjældent et anker i
+        # den fil det står i. Men eksempel-kortet på `/scan` (5/10) linker netop
+        # til `#url=…` i sin egen side, så porten råbte døde `#url=`-links
+        # som om siden ikke læste sin egen hash. Den gjorde — den gør.
+        ids, reads_hash = own_ids, own_reads_hash
         target = own
     elif kind == "rel":
         base = own.parent
@@ -460,7 +467,8 @@ def check_domain(domain: str, dist: Path, dists: dict[str, Path], check_download
             if page is not None:
                 flag_dup(page, dist)
         for ref, line in parser.anchors:
-            bad = anchor_problem(domain, rel, line, ref, path, dist, dists, parser.ids)
+            bad = anchor_problem(domain, rel, line, ref, path, dist, dists,
+                                 parser.ids, parser.reads_hash)
             if bad:
                 problems.append(bad)
     if check_downloads:
@@ -614,6 +622,13 @@ def self_test() -> int:
         expect("dødt krydsdomæne-fragment", '<a href="https://cleancopy.tools/findes#mangler">x</a>', "#mangler")
         expect("dødt relativt fragment", '<a href="findes2.html#mangler">x</a>', "#mangler")
         expect("død hash-parameter", '<a href="/findes2.html#url=x">x</a>', "læser ikke sin egen")
+        # 1b-2. Samme fejlform på **egen** side. Målt 5/10: eksempel-kortet på
+        #       `/scan` linker til `#url=…` i den side det står på, og porten
+        #       satte `reads_hash = False` for alle same-page-fragmenter, så den
+        #       råbte to døde links som om siden ikke læste sin egen hash. Den
+        #       gjorde — og uden disse to linjer ville portens rettelse være
+        #       ubevisst, fordi ingen mutation ville kunne se den.
+        expect("død hash-parameter på egen side", '<a href="#url=x">x</a>', "læser ikke sin egen")
 
         # 1c. Falsk-positive-kontroller. `#main` SKAL være grønt selv om
         #     <main> bærer to id'er: browseren bruger den første, så et
@@ -625,6 +640,8 @@ def self_test() -> int:
         expect_clean("levende krydsside-fragment", '<a href="/findes#her">x</a>')
         expect_clean("levende krydsdomæne-fragment", '<a href="https://cleancopy.tools/findes#her">x</a>')
         expect_clean("hash-parameter læst af siden", '<a href="/findes#url=https%3A%2F%2Fx.dk">x</a>')
+        expect_clean("hash-parameter på egen side læst af siden",
+                     '<script>var u = location.hash;</script><a href="#url=https%3A%2F%2Fx.dk">x</a>')
         expect_clean("tomt fragment", '<a href="/findes#">x</a>')
         expect_clean("fragment på deklareret rute", '<a href="/thanks#mangler">x</a>')
         expect_clean("prose er ikke et link", '<p>brug /#products i din tekst</p>')

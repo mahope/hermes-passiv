@@ -225,7 +225,12 @@ function render(data) {
   });
 
   // Raw data note
-  const raw = JSON.stringify({ days: data.days, traffic_status: data.traffic_status, unique_status: data.unique_status, domain_status: data.domain_status, events_by_domain: data.events_by_domain, sales_status: data.sales_status, sales: data.sales, waitlist: data.waitlist, licenses: data.licenses_issued, stats: days.slice(0, 7).reduce((o, d) => { o[d] = stats[d]; return o; }, {}) }, null, 2);
+  // `waitlist_lifetime` og ikke `waitlist`: `488728f1` omdøbte nøglen i
+  // `handleStats`, og dette felt læste det gamle navn. `JSON.stringify` springer
+  // `undefined`-nøgler over, så panelet viste et **komplet** råt svar uden
+  // ventelistens tal og uden en eneste fejl — lige præcis det tal committen
+  // skrev om. `tools/check_lifetime_counters.py` dømmer nu også denne fil.
+  const raw = JSON.stringify({ days: data.days, traffic_status: data.traffic_status, unique_status: data.unique_status, domain_status: data.domain_status, events_by_domain: data.events_by_domain, sales_status: data.sales_status, sales: data.sales, waitlist_lifetime: data.waitlist_lifetime, licenses: data.licenses_issued, stats: days.slice(0, 7).reduce((o, d) => { o[d] = stats[d]; return o; }, {}) }, null, 2);
   el.innerHTML += '<details style="margin-top:2rem;"><summary style="cursor:pointer;opacity:0.5;">Raw JSON (last 7 days)</summary><pre style="font-size:0.75rem;max-height:400px;overflow:auto;background:rgba(0,0,0,0.2);padding:1rem;border-radius:8px;">' + escapeHtml(raw) + '</pre></details>';
 }
 

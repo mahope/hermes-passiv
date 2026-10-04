@@ -116,6 +116,10 @@ RE_DISPATCH_BLOCK = re.compile(r"if \(path === '([^']+)'\) \{\s*return (\w+)\(")
 # topniveau-funktion. Præcis nok til at finde hvilken handler der kalder
 # `rateLimitIp` med et givent scope.
 RE_FUNCTION = re.compile(r"^async function (\w+)\(", re.M)
+# Et kald på en navngiven topniveau-funktion, som `naaet()` bruger til at følge
+# en rute ned gennem de hjælpefunktioner den kalder. Uden `[A-Za-z0-9_$]` bag
+# `\\w` ville `foo(` også matche `someObj.foo(`, som ikke er en lokal funktion.
+RE_KALD = re.compile(r"(?<![.\w$])([a-zA-Z_$][\w$]*)\s*\(")
 
 # Absolutte afvisninger. Målt fra de publicerede sider 30/9, ikke konstrueret:
 # hver mønstrene her stod i en udgivet FAQ, meta-tekst eller brødtekst.
@@ -262,7 +266,8 @@ def fetching_routes(text: str | None = None) -> dict[str, str]:
     dispatch.update(RE_DISPATCH_BLOCK.findall(text))
     routes: dict[str, str] = {}
     for path, handler in dispatch.items():
-        body = bodies.get(handler, "")
+        # Hele kæden, ikke kun handlerens egen krop — se `naaet()`.
+        body = naaet(bodies, handler)
         if RE_FETCH_CALL.search(body) and RE_URL_PARAM.search(body):
             routes[path] = handler
     return routes
@@ -292,6 +297,39 @@ def function_bodies(text: str) -> dict[str, str]:
         end = starts[index + 1][1] if index + 1 < len(starts) else len(text)
         bodies[name] = text[begin:end]
     return bodies
+
+
+def naaet(bodies: dict[str, str], handler: str, dybde: int = 3) -> str:
+    """Handlerens krop **plus** kroppen af de hjælpefunktioner den kalder.
+
+    Målt 5/10: `a4277574` trak hentningen ud af `handleScanProxy` og lagde den i
+    `scanProxyReadPage()`. `fetching_routes()` læste kun handlerens egen krop, så
+    `/scan-proxy` — den mest brugte hentende rute på sitet, seks sider kalder den
+    — holdt op med at være en hentende rute for porten. Samme fejl som den der
+    flytter en nøgle uden at flytte læserne med: kaldet flyttede sig, dommen blev
+    stående. Uden denne samles vurderingen om *hvad en rute gør* igen om hele
+    den kæde af funktioner den går igennem, så et navn der flytter sig én
+    funktion ned ikke kan gøre en rute usynlig.
+
+    `dybde` er et loft, ikke en håbning: en cyklus mellem to hjælpefunktioner
+    skal ikke slå porten ihjel.
+    """
+    sette: set[str] = set()
+    kø: list[tuple[str, int]] = [(handler, 0)]
+    dele: list[str] = []
+    while kø:
+        navn, d = kø.pop()
+        if navn in sette or d > dybde:
+            continue
+        sette.add(navn)
+        krop = bodies.get(navn)
+        if krop is None:
+            continue
+        dele.append(krop)
+        for kalder in sorted(set(RE_KALD.findall(krop))):
+            if kalder in bodies and kalder not in sette:
+                kø.append((kalder, d + 1))
+    return "\n".join(dele)
 
 
 def storing_routes(text: str | None = None) -> dict[str, str]:

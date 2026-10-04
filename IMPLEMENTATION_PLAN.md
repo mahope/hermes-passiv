@@ -1,20 +1,32 @@
 # STATUS
-- **`/scan` læser 5 sider pr. kørsel (EN + DA), 5/10.** Ét kald på
-  `/scan-proxy`, én URL pr. linje, **en kvoteslot pr. side** så fem sider ikke er
-  gratis fordi de kom i samme kasse. Ét URL svarer i den **gamle** form
-  (`{ok,html,url,size}`), så alt der kaldte ruten før, virker uændret.
-- **Rød CI fundet 5/10 og rettet i samme commit:** `488728f1` fejlede i
-  `plan-status` — STATUS var **26** linjer mod højst 25 — så livslang-
-  tæller-rettelsen er **ikke** live (live `/api/health` har stadig `scans: 50`).
-- **Ingen livslang tæller læses som et vinduestal.** `csc-count`, `wl-count` og
-  `ai-ask-count` hedder nu `*_lifetime` i **7** ruter; de var `scans`/`waitlist` i
-  **`/api/health`, som er offentlig**, ved siden af `recentVisits: 12` (to dage).
-  Ny port `check_lifetime_counters.py` dømmer klassen.
-- **Næste:** feature-kø 2 (`deskuptime.com` — **7** besøgende, 100 % bounce,
-  **0** s) kan ikke dømmes på 7 besøgende. Sentry er **ikke** sat op: der er
-  ingen `Sentry.init` i koden, så «ingen uløste fejl» kan bare betyde intet.
+- **`/scan` og `/scan-da` scanner igen, 6/10.** `a4277574` trak de 15 DOM-tjek
+  ud som et kald til `analyseDoc(doc)` og oprettede funktionen aldrig, så
+  **hver** kørsel på begge sider døde med `ReferenceError` og efterlod
+  «Scanning …». Målt: `scan-clients` **518/518** mod rød på `a4277574`.
+- **`site/stats.html` læste et nøglenavn ruten ikke har** (`waitlist` mod
+  `waitlist_lifetime`). `JSON.stringify` springer `undefined`-nøgler over, så
+  «Raw JSON» viste **0** af ventelistens tal uden en fejl. Porten dømmer nu
+  **2** konsumenter-kontroller i `site/`.
+- **Portene læste den nye kode forældet:** `check_links` kaldte **2** `#url=`-
+  links døde på egen side, og `check_scan_events`' mutation anchor var en
+  slettet linje, så selftesten skrev `ok` uden at teste noget.
+- **Rød CI på `main` siden 5/10 var denne fejl**, ikke en ny: `scan-clients`
+  kastede `analyseDoc is not defined` på `a4277574`.
+- **Næste:** opgaver 26–28 nederst — `_worker-proxy` kan svare 500 på
+  `?url=https://`, «Scan now» har ingen lås (et dobbeltklik brænder 10 slots),
+  og «fem er samme tal som `/api/compliance-scan` tager» er usandt (den tager 12).
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: /scan scanner igen 6/10 01:1x ceo/scan-analyse-doc` — måles
+på **indhold**: live `https://mahope.tools/scan` skal **indeholde**
+`function analyseDoc(doc){` og `const HINTTAIL=`, og `#result` skal efter en
+kørsel vise `<div class="scorecard">` med et tal og `Grade` — ikke «Scanning …».
+Live `/scan-da` skal have `function analyseDoc(doc){`. Live `/stats` skal have
+`data.waitlist_lifetime` og **ikke** `data.waitlist`. Selve kørslen måles med
+`curl --get --data-urlencode $'url=https://www.mahope.tools/\nhttps://www.mahope.tools/kontakt'
+https://mahope.tools/scan-proxy` → `multi:true` og to sider. HTTP 200 beviser intet.
+
 
 `VERIFICÉR DEPLOY: /scan læser 5 sider pr. kørsel 5/10 00:5x
 ceo/scan-flere-sider` — måles på **indhold**: live
@@ -122,6 +134,21 @@ HTTP 200 blev ikke brugt som bevis.
    tools/quality_gate.py | grep -i lint` er tom.)*
 
 
+26. **`/scan-proxy` kan svare 500 på `?url=https://`.** Hvorfor: dedup'en i
+   `handleScanProxy` dropper stille enhver linje hvis `cscNormalizeUrl` giver
+   tom streng (`https://`, `http://`, `///` …), så `sider` bliver tom og
+   `sider[0].error` er en `TypeError` på en åben rute. Accept: `?url=https://`
+   svarer **400** med hele linjen; to linjer hvor den ene er ugyldig svarer 400
+   med *den* linje; en test der kalder handleren direkte.
+27. **Punkt 3 på «Scan now»:** knappen har ingen lås, og et dobbeltklik brænder
+   **ti** kvoteslots (`rateLimitIp` tæller én pr. side). Accept: knappen
+   `disabled` mens et kald er i luften, og en mutation i
+   `tests/scan-clients.test.mjs` der gør det rødt.
+28. **«Fem er samme tal som `/api/compliance-scan` tager» er usandt** — den tager
+   12 (`CSC_MAX_PAGES = 12`, summen pr. kald). Accept: kommentaren i
+   `_worker.js:681` og pro-kortet på `/scan` siger 5 mod 12.
+
+
 ## ❓ Til Mads
 
 - **🔴 `OPENROUTER_API_KEY` mangler på workeren — assistenten er stadig slukket.**
@@ -219,20 +246,22 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     afvigelse: et eksempel med et fast tal går stale, så det skal genereres
     eller mærkes som et eksempel — ikke skrives som et målt resultat.
 
-## Arkiv-tilføjelse 5/10
-- **Feature-kø 9 leveret:** `/scan` og `/scan-da` læser **5 sider pr. kørsel**.
-  Serveren: `scan-proxy` tager én URL pr. linje (`SCAN_PROXY_MAX_URLS = 5`),
-  **en kvoteslot pr. side** (før *efter* validering, så et 400 brænder ikke
-  kvote), og ét abort for hele kaldet (25 s) + ét pr. side (10 s, `Math.min` med
-  resten af budgettet). Én URL → gammel form; flere → `{multi,requested,scanned,
-  failed,pages}`. Alle fejltekster, statuser og SSRF-værnet er uændrede pr. side.
-  Klienten: `analyseDoc(doc)` udtaget så det samme DOM-tjek kører på hver
-  side; `visEn`/`visFlere` deler den ænige `scan()`-vej.
-  **Målt:** missionens gate grøn (`build_sites` 316 sider 0 findings,
-  `stripe-worker` **461/461**, `seo_check` 0, `check_inline_js` 0) og otte porte
-  grønne. `check_scan_events` fandt **en rigtig fejl** i første kørsel —
-  `scan-failed` blev sendt **to** gange i fejlvejen — rettet ved at lade
-  klientens egen forudsætning (tomt felt, for mange URL'er) **ikke** tælle som
-  fejl. Ingen test for den nye ruteform: `tests/stripe-worker.test.mjs` har 461
-  eksisterende checks og alle er urørte, men `multi`-formen er **ikke** dømt
-  af en test endnu — én opgave for næste iteration.
+## Arkiv-tilføjelse 6/10
+- **Feature-kø 9 rettet:** `analyseDoc(doc)` findes nu i begge sprog som en
+  1:1-transskribering af de 15 tjek fra den gamle `visEn` (diff mod
+  `91e5da0a:site/scan.html`: kun kommentar og `return`-linje afviger).
+  `HINTTAIL` er den fejlhale der lå i catch'en, og `S['shareNoteN']` er
+  erstattet af literal tekst i begge sprog (den skrev bogstaveligt `undefined`).
+- **`tools/check_links.py`:** `reads_hash` kommer fra samme parser som `ids`
+  i stedet for altid `False`; ellers råbte porten eksempel-kortets to `#url=`-
+  links som døde. Selftest har nu en mutation for egen-side-formen.
+- **`tools/check_scan_events.py`:** mutationen kræver at ankret
+  `window.trackEvent('scan')` findes, ellers er selftesten rød. Før pegede den
+  på `html = data.html;`, som `a4277574` slettede, så `.replace()` var en no-op
+  og selftesten skrev `ok` uden at have testet noget.
+- **Målt:** `scan-clients` **518/518**, `stripe-worker` **461/461**,
+  `build_sites` 316 sider 0 findings, `seo_check` 0, `check_inline_js` 0,
+  `check_links` 0 + selftest OK, `check_catalog_where` GRØN + 11/11,
+  `check_scan_events` 18/18, `check_scan_fold` 5/5,
+  `check_lifetime_counters` 17/17, `check_storage_claims` 13 sider 0,
+  `check_pro_table` GRØN, `check_plan_status` GRØN.

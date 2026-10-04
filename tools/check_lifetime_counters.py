@@ -61,6 +61,13 @@ from pathlib import Path
 ROD = Path(__file__).resolve().parent.parent
 WORKER = ROD / "site/_worker.js"
 RAPPORT = ROD / "tools/weekly_report.py"
+# Klienter der læser `/api/stats`-svaret i browseren. Målt 6/10: `488728f1`
+# omdøbte `waitlist` → `waitlist_lifetime` i `handleStats`, og `site/stats.html`
+# læste det gamle navn. `JSON.stringify` springer `undefined`-nøgler over, så
+# panelets «Raw JSON» viste et komplet svar uden ventelistens tal og uden en
+# eneste fejl — det præcis tal committen skrev om. Dom 1-4 dømmer ruterne og
+# rapporten, altså ikke den konsument.
+KONSUMENTER = [ROD / "site/stats.html"]
 
 # Hver `readKvCounter(env, '…')` skal stå her. `felt` er det navn svaret SKAL
 # bruge pr. rute, `forbudt` de navne der ligner et vinduestal, og `vindue` er
@@ -194,11 +201,12 @@ def skrivninger(ren: str) -> dict[str, float]:
     return {k.lstrip("\x00"): v for k, v in variabler.items() if k.startswith("\x00")}
 
 
-def dom(kilde: str, rapport: str = "") -> list[str]:
+def dom(kilde: str, rapport: str = "", konsumenter: dict[str, str] | None = None) -> list[str]:
     """Alle fund i én workerkilde. `rapport` dømmes kun når den er læst med."""
     fund: list[str] = []
     renset = uden_kommentarer(kilde)
     fun = funktioner(kilde)
+    konsumenter = konsumenter or {}
 
     # 1. Hver læsning skal have en afgørelse. Uden en arver den fælden fra en nabo.
     laesninger = set(LAESNING_LITERAL.findall(renset)) | set(LAESNING_MAL.findall(renset))
@@ -291,7 +299,44 @@ def dom(kilde: str, rapport: str = "") -> list[str]:
                                     f"på `{navn}` — det gør en forældet worker "
                                     f"til et vinduestal i stedet for «ukendt»")
 
+    # 5. Konsumenterne i browseren skal læse det navn svaret faktisk har. Målt
+    #    6/10: `stats.html` læste `data.waitlist`, som `488728f1` havde omdøbt
+    #    til `waitlist_lifetime`. `JSON.stringify` springer `undefined`-nøgler
+    #    over, så «Raw JSON» viste et komplet svar med feltet væk og ingen fejl.
+    #    Ruterne kan ikke finde den slags fejl — de svarer rigtigt, det er
+    #    læseren der læser et navn der ikke findes.
+    for fil, tekst in sorted(konsumenter.items()):
+        renset_k = uden_kommentarer(tekst)
+        hvis_stat = "/api/stats" in tekst
+        for noegle, krav in sorted(AFGOJRELSE.items()):
+            if not hvis_stat:
+                break
+            # Ét fund pr. (navn, felt), ikke pr. rute: `wl-count` svarer med
+            # `waitlist_lifetime` i to ruter, og samme læsefejl skal ikke
+            # meldes to gange.
+            sette: set[str] = set()
+            for rute, felt in sorted(krav["ruter"].items()):
+                # Kun de navne ruten faktisk svarer med kan læses her — ellers
+                # ville porten kræve at enhver side læser hver tæller.
+                if felt not in renset or felt in sette:
+                    continue
+                sette.add(felt)
+                for kort in krav.get("forbudt", {}).get(rute, ()):
+                    for m in re.finditer(rf"data\s*\.\s*{re.escape(kort)}\b", renset_k):
+                        linje = renset_k[:m.start()].count("\n") + 1
+                        fund.append(
+                            f"{fil}:{linje} læser `data.{kort}` fra /api/stats, men "
+                            f"{rute} svarer med `{felt}` for den kumulative "
+                            f"{noegle!r}. `JSON.stringify` springer `undefined`-nøgler "
+                            f"over, så feltet forsvinder uden en eneste fejl.")
+
     return fund
+
+
+def _konsumenter() -> dict[str, str]:
+    """De klienter der læser `/api/stats`, som `rel-sti -> indhold`."""
+    return {str(f.relative_to(ROD)): f.read_text(encoding="utf-8")
+            for f in KONSUMENTER if f.is_file()}
 
 
 def _selftest() -> int:
@@ -377,6 +422,21 @@ def _selftest() -> int:
     tjek("mutation: en kommentar der nævner det gamle navn dømmes ikke",
          all("kommentar" not in f for f in fund), str([f for f in fund if "kommentar" in f][:2]))
 
+    # 9. Konsumenten der læser det gamle navn. Det var fundet 6/10:
+    #    `stats.html` læste `data.waitlist`, som ruten omdøbte — og
+    #    `JSON.stringify` springer `undefined`-nøgler over, så panelet viste
+    #    et komplet svar med ventelistens tal væk.
+    kons = _konsumenter()
+    gammel_k = {f: t.replace("data.waitlist_lifetime", "data.waitlist") for f, t in kons.items()}
+    fund = dom(den, rap, gammel_k)
+    tjek("mutation: stats.html der læser data.waitlist er rød",
+         any("data.waitlist" in f for f in fund), str(fund[:2]))
+
+    # 10. …og den der læser det rigtige navn skal være grøn, ellers dømmer
+    #     mutationen ovenfor intet.
+    fund = dom(den, rap, kons)
+    tjek("stats.html med det nye navn er grøn", not fund, str(fund[:2]))
+
     for linje in fejl:
         print(f"  FEJL {linje}")
     print(f"lifetime-counters-selftest: {'OK' if not fejl else 'RØD'} "
@@ -393,7 +453,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.self_test:
         return _selftest()
 
-    fund = dom(WORKER.read_text(encoding="utf-8"), RAPPORT.read_text(encoding="utf-8"))
+    fund = dom(WORKER.read_text(encoding="utf-8"), RAPPORT.read_text(encoding="utf-8"),
+               _konsumenter())
     for linje in fund:
         print(linje)
     if fund:

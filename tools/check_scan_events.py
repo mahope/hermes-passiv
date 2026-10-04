@@ -184,11 +184,22 @@ def _selftest() -> int:
 
     # 2. Mutation: den rå `event:'scan'`-fetch tilbage. Det var den
     #    dobbelte tælling, og den skal give rødt.
+    #
+    #    Målt 5/10: ankret var `    html = data.html;`, en linje `a4277574`
+    #    slettede da den lagde omkring svaret. `.replace()` på en streng der ikke
+    #    findes gør **intet**, så mutationen kørte på uændret kode, porten
+    #    fandt ingen fund — og selftesten skrev `ok`. En grøn selftest der ikke
+    #    længere tester noget. Derfor: mangler ankret, er selftesten rød.
     for sti in SIDER:
         rå = (ROD / sti).read_text(encoding="utf-8")
+        anker = "  if (window.trackEvent) window.trackEvent('scan');"
+        if anker not in rå:
+            tjek(f"{sti}: mutationsankeret findes stadig", False,
+                 f"{anker!r} er væk — selftesten ville teste uændret kode")
+            continue
         mut = rå.replace(
-            "    html = data.html;",
-            "    html = data.html;\n    try { fetch('/api/track',{method:'POST',"
+            anker,
+            anker + "\n    try { fetch('/api/track',{method:'POST',"
             "headers:{'Content-Type':'application/json'},\n      body:JSON.stringify("
             "{path:location.pathname,event:'scan'}),keepalive:true}).catch(function(){}); } catch(e) {}",
             1,
