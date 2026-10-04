@@ -1,32 +1,34 @@
 # STATUS
-- **171 sider med to-tre knapper over folden er nu 0.** De tre generatorer skrev
-  hver især en `btn-primary` ind i CTA-bannerne: **330** knapper på de **179**
-  banner-sider dengang. `check_first_action.py` dømmer nu *alle* sider med
-  banner, så en ny artikel arver reglen uden at nogen skal huske den ind. Porten
-  var **RØD med 330 fund** på den uændrede kode. Bannerne ligger stadig, de
-  taler bare kun en gang som det sekundære de er — forenligt med alle tre svar
-  i ❓.
-- **Sider med nul handling over folden: 6 → 11 → 5.** `/downloads` fik en
-  `hero-cta` ned til `#desktop-app`, fordi de tre rigtige downloads ligger på
-  siden selv. De **5** tilbage er `compliance-ai` ×2 (noindex, assistenten er
-  slukket — se ❓), `books/compliance-bundle`, `books/index` og `url-inspector`,
-  og alle **5** står med grund i `first_action.json`; de **3** uden grund er
-  Feature-kø punkt 1.
-- **Banner-teksten skrev fire forkerte optællinger.** Målt på `b1a1b77~1` med
-  portens egne regex'er: de **330** knapper lå på **179** sider (ikke 187),
-  **189** sider bar et banner, og **186** havde AI-banner (ikke 188). Der står
-  nu intet løbende side-tal i teksten — kun daterede målinger, ellers en
-  pegepning på portens egen afregning, som `check_first_action.py` nu udvider
-  med bannerknap-antallet, så pegepningen kan efterleves. **PR-TJEK 4/10:**
-  0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
-- **Den danske knap på `/da/blog/` sagde «Browse efter emne»** — det eneste
-  engelske ord på den ellers danske indeksside, målt **live** før rettelsen. Nu
-  «**Se efter emne**», og portens selftest greber døde foldankere på
-  **ankeret** i stedet for på etiketten: **23/23** nu (var **22/23**).
-
-
+- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** Bogsiderne fik deres
+  fold-CTA 5/10, fordi de er de eneste sider i familien hvor læseren skal
+  *finde* filen i stedet for at trykke på den: `books/index` peger på `#books`
+  (den `<nav>` med `Download EPUB`-links) og `books/compliance-bundle` på
+  `#download` (`.price-area` med den grønne `btn-free`) — samme mønster som
+  `/downloads` → `#desktop-app`. De **3** tilbage er `compliance-ai` ×2 (noindex,
+  assistenten er slukket — se ❓) og `url-inspector`, hvor handlingen er et
+  `<input>` + `Inspect`-knap, mens porten kun tæller `<a>`. Alle **3** har grund
+  i `first_action.json`.
+- **CEO-kø punkt 0 er målt færdig, ikke åben.** Alle fem dele holder:
+  `handleUrlInspect` får `env` (`5693853`), og live `POST /api/url-inspect?url=`
+  svarer **200** med rigtig redirect-kæde; SSRF er lukket på fire ruter i samme
+  commit; `net.js:42,47` gør 429 endelig, og alle klienter går gennem kernen;
+  `ASK_MAX_TRIES = BOOK_MAX_TRIES = 2`, så ét 502-kald højst koster ét ekstra
+  betalt kald; `thanks.html:103` har egen `pendingOut`-sætning til 202.
+- **Bannerne er demoteret, og porten dømmer *alle* sider med banner** — den var
+  **RØD med 330 fund** på den uændrede kode, så en ny artikel arver reglen uden at
+  nogen skal huske den ind. De ligger stadig; de taler bare kun en gang som det
+  sekundære de er. ❓ om deres placering står uændret.
+- **Ingen løbende side-tal i portenes tekst.** De 4 forkerte optællinger er
+  rettet til daterede målinger plus en pegepning på portens egen afregning, som
+  `check_first_action.py` nu udvider med bannerknap-antallet.
+- **PR-TJEK 4/10:** 0 PR'er. **BRANCH-TJEK 4/10:** ingen remote-grene over 14 dage.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: bogsiderne fik fold-CTA 5/10 ceo/bogsfold-handling` — måles på
+**indhold** i næste iteration: `/books/` skal have **1** `btn-primary` i folden med
+`href="#books"`, `/books/compliance-bundle/` **1** med `href="#download"`, og
+hvert anker skal findes **1** gang på sin side. HTTP 200 bruges ikke som bevis.
 
 `DEPLOY OK 4/10 11:2x` for `ceo/downloads-fold` — målt på **indhold**:
 `https://mahope.tools/downloads` har præcis **1** `btn-primary` i
@@ -179,17 +181,29 @@ Kriteriet der betød noget — `/net.js` før `book-lead.js` — holder.
      Nu `#desktop-app`, sektionen med de tre rigtige downloads, og ratcheted.
      Målt: sider med nul primær **6 → 5**, porten **RØD** når `hero-cta` fjernes.
 14. ~~**Banner-teksten skrev fire forkerte optællinger.**~~ **Færdig 4/10**,
-     `ceo/taal-i-tekst`. Målt på `b1a1b77~1` med portens egne regex'er: de
-     **330** knapper lå på **179** sider (ikke 187 over tre steder), **189** sider
-     bar et banner (ikke 187), og **186** havde AI-banner (ikke 188 i to
-     steder). Rettelsen er ikke et nyt tal men en regel: et *dateret* målingstal
-     er en kendsgerning og bliver stående, et *løbende* side-tal er skrevet ud
-     og peger på portens egen afregning. Rørt 6 filer, heraf `_4oktober_hubs` der
-     stadig skrev at `downloads` var «ikke dømt endnu» — samme fejlform, samme
-     diff. Efter egen gennemgang af de nye tekster grebet de to påstande de selv
-     skabte: «eller kør `--list`» (porten returnerer *før* afregningen der) og
-     «banneren ligger på hver side» (M i portens linje er alle sider i `site/`,
-     ikke dem med banner).
+    `ceo/taal-i-tekst`. Målt på `b1a1b77~1` med portens egne regex'er: de
+    **330** knapper lå på **179** sider (ikke 187 over tre steder), **189** sider
+    bar et banner (ikke 187), og **186** havde AI-banner (ikke 188 i to
+    steder). Rettelsen er ikke et nyt tal men en regel: et *dateret* målingstal
+    er en kendsgerning og bliver stående, et *løbende* side-tal er skrevet ud
+    og peger på portens egen afregning. Rørt 6 filer, heraf `_4oktober_hubs` der
+    stadig skrev at `downloads` var «ikke dømt endnu» — samme fejlform, samme
+    diff. Efter egen gennemgang af de nye tekster grebet de to påstande de selv
+    skabte: «eller kør `--list`» (porten returnerer *før* afregningen der) og
+    «banneren ligger på hver side» (M i portens linje er alle sider i `site/`,
+    ikke dem med banner).
+15. ~~**De 3 af de 5 sider med nul handling over folden, der ikke var undtaget
+    med en grund.**~~ **Færdig 5/10**, `ceo/bogsfold-handling`. `books/index`
+    fik `#books` og `books/compliance-bundle` `#download`; `url-inspector` er
+    skrevet ind som *begrundelse* (handling = `<input>` + knap, ikke et link),
+    ikke som udsættelse. Sider med nul primær **5 → 3**. Målt: porten **RØD**
+    når `hero-cta` fjernes fra `books/index`, og **RØD** «ankeret er dødt» når
+    `id="download"` fjernes; selftest **20/20**; fuld gate **159 steps** grøn.
+    Chromium ved **390/1280**: begge knapper i folden, `scrollWidth == viewport`,
+    blå #1a73e8 med hvid tekst (**4.51:1**, AA), og `#books`/`#download` findes
+    begge **1** gang. `books/index`' knap er **37 px** høj — sidens egen
+    `.btn-primary`-token, som de seks downloadknapper under den også bruger, så
+    den er gjort større forskel uden at skille sig fra dem.
 
 
 ## ❓ Til Mads
@@ -270,33 +284,25 @@ Prioriteret efter hvor tæt den er på penge. Baseline er målt på den **bygged
 side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 `docs/plan-arkiv.md`.
 
-1. **De 3 af de 5 sider med nul handling over folden, der ikke er undtaget med
-   en grund.** Hvem: læseren på `books/index`, `books/compliance-bundle` og
-   `url-inspector`. Tal: hvor mange læser folden og går videre. Accept:
-   ratchetede `hero-cta` på de tre + selftest rød på den gamle kode.
-   Datagrund: `/downloads` og `/books/*` er de eneste sider i familien hvor
-   læseren skal *finde* filen i stedet for at trykke på den. De øvrige **2** af
-   de **5** er `compliance-ai` ×2, som noindexede og har assistenten slukket
-   (se ❓), så de er ikke dømt her — målt i STATUS.
-2. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
+1. **Artiklen der 8 af 21 besøgende lander på har ingen købsknap i artiklen.**
    Hvem: de 8 på `/blog/text-on-image-contrast-check` (100 % bounce, 28 d).
    Tal: hvor mange går fra artiklen til `/text-on-image-checker` og videre til
    et køb. Accept: ét købslink i artiklen derhen, dømt af `check_stripe_ctas`.
    Datagrund: den er destinationen for 8 af 21 besøgende på mahope.tools, og
    `/pricing` ligger nu i footeren på alle 270 sider — vejen findes, men der er
    ingen grund til at gå den.
-3. **`cleancopy.tools` er 11 af 13 besøgende på én side.** Hvem: de 11 på `/`
+2. **`cleancopy.tools` er 11 af 13 besøgende på én side.** Hvem: de 11 på `/`
    (73 % bounce, 86 s). Tal: hvor mange bruger selve værktøjet i stedet for at
    læse om det. Accept: en ærlig forskel gratis/Pro i folden på 390 px.
    Datagrund: 85 % af sitets besøg er på forsiden, og `/clean-copy-tool` får
    2. Baseline efter `ceo/forsidens-handling`: forsideens primære peger på
    `#check`. Bounce på én side kan ikke bruges som dom.
-4. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
+3. **`deskuptime.com`: 7 besøgende, 100 % bounce, 0 s opholdt tid.** Hvem:
    alle 7 på `/`. Tal: hvor mange køber. Accept: en forside der sælger uden
    at kræve scroll. Datagrund: **0 s** er ikke en lang læsning, det er en
    besøger der gik med det samme — på den eneste udgivne side der kun er én.
    Skal måles i browseren før der skrives kode.
-5. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
+4. **Sentry.** Hvem: alle brugere. Tal: hvor mange fejl rammer en købsvej.
    Accept: SDK kun i produktion, `sendDefaultPii: false`,
    `tracesSampleRate` 0.1, ingen Replay, ingen auth-token, porten rød hvis
    nogen af det mangler. Datagrund: snapshottet siger «ingen uløste fejl», og
