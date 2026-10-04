@@ -671,7 +671,9 @@
       var res = $(i ? 'result2' : 'result');
       if (!res) return;
       var sample = sampleContrast(i);
-      if (!sample || sample.ratio === null) { res.hidden = true; return; }
+      // Uden måling skal begge steder forsvinde — ellers ville folden beholde
+      // det sidste tal fra et billede der ikke læses mere.
+      if (!sample || sample.ratio === null) { res.hidden = true; if (!i) renderVerdict(sample, false, 0); return; }
       var large = $('fontsize').value === 'large';
       var need = large ? 3 : 4.5;
       var aaaNeed = large ? 4.5 : 7;
@@ -689,6 +691,17 @@
       // Præfikset gælder kun id'erne — dem skal to forekomster på samme side
       // kunne have hver sin.
       res.className = 'ti-result ' + (passAA ? 'ti-pass' : 'ti-fail');
+      // Målingen i folden (5/10). Målt i Chromium mod den byggede `dist/`: på
+      // 390 px lå `.ti-badge` **1739 px** nede, så det første skærmbillede
+      // viste en tom fil-vælger og ikke ét tal — på den side Plausible måler
+      // flest læsere ind på (`/text-on-image-checker` 2 mod artiklens 8).
+      //
+      // Skrives her, i samme funktion og af de **samme** `sample`-værdier, så
+      // de to steder umuligt kan komme i strid: en række der kopierer tallet
+      // ville være to påstande om én måling, og de ville blive forskellige
+      // den første gang nogen trak i skyderen. `renderVerdict()` får derfor
+      // præcis de fire ting den skriver, ikke `#result` og ikke siden.
+      if (!i) renderVerdict(sample, passAA, r);
       // Før → nu. Kappen ovenfor siger hvad tallet *er*; dette siger hvad det
       // *var*, målt med den samme `sampleContrast()`. Det er det tal en læser
       // skal kunne tage med: uden det er «PASS 3,04:1» en påstand uden
@@ -1072,6 +1085,25 @@
       $('gfrom').addEventListener('input', vaerlGradient);
       $('gto').addEventListener('input', vaerlGradient);
       if ($('gang')) $('gang').addEventListener('input', vaerlGradient);
+    }
+
+    // Foldens dom. Skrives *kun* hvis siden har givet kernen et `#verdict`, så
+    // en artikelside der kun indlejrer billedet og resultatet er præcis som før.
+    // `hidden` står på elementet i markup'en, så den er tom indtil der er målt
+    // noget — en tom boks ville tage plads og sige ingenting.
+    function renderVerdict(sample, passAA, r) {
+      var v = $('verdict');
+      if (!v) return;
+      if (!sample || sample.ratio === null) { v.hidden = true; v.innerHTML = ''; return; }
+      v.hidden = false;
+      // Samme badge, samme forholdstal, samme krav — hentet fra de samme
+      // variabler som `#result` lige over. `s.*` er sidens egen tekst, altså
+      // aldrig noget en besøgende har skrevet, og `r` er et tal. Der er ingen
+      // markup der bygges af noget bruteren kan skrive.
+      v.innerHTML =
+        '<span class="ti-badge" style="background:' + (passAA ? '#16a34a' : '#dc2626') + '">'
+        + (passAA ? s.pass : s.fail) + '</span>&nbsp; <strong>' + fmt(r.toFixed(2)) + ':1</strong>'
+        + (demoBillede && s.verdictDemo ? '<br><span class="ti-verdict-note">' + s.verdictDemo + '</span>' : '');
     }
 
     // Synlig for testene i `tests/scan-clients.test.mjs`, der dømmer den her

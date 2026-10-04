@@ -1,30 +1,37 @@
 # STATUS
-- **Tragten kan nu læses uden `STATS_TOKEN`.** 5/10: `GET /api/results` er en udlæsning af de
-  nøgler `/api/track` allerede skriver — kun resultatbegivenhederne, kun tællinger, intet der
-  identificerer en besøgende. 5/10 20:4x: `GET /api/conversion` er den anden udlæsning, kun
-  købsintents-klik (`buy-click` + `pro-card-click`) pr. side og pr. dag. Hver har sin egen
-  navneliste, så intet resultat kan læses som et køb. **22** nye kontroller, **453/453**. Salg og
-  licenser ligger *kun* i `/api/stats`.
-- **Målt fejl i egen begrundelse:** 100 % bounce kan på en side med *indlejret* tjekker ikke
-  skelne brug fra flugt. Det står i feature-kø punkt 5.
-- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()`, resultat, `scan-failed` og
-  `pro-card-click` på begge sprog; porten **5 fund pr. sprog** på den gamle kode, selftest
-  **18/18**.
-- **CEO-kø punkt 0 er målt færdig.** Alle **5** dele holder: `handleUrlInspect` får `env` og live
-  `/api/url-inspect` svarer **200**; SSRF lukket på **4** ruter; `net.js` gør 429 endelig; ét
-  502-kald koster højst ét ekstra betalt kald; `thanks.html` har egen 202-tekst. **PR-TJEK 5/10:**
-  0 PR'er. **BRANCH-TJEK 5/10:** ingen grene over 14 dage.
-- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De **3** tilbage er `compliance-ai` ×2
-  (noindex, assistenten er slukket — se ❓) og `url-inspector`, hvor handlingen er `<input>` +
-  knap; alle **3** har grund i `first_action.json`.
-- **Rød CI 5/10 17:36 var `plan-status`:** STATUS havde **28** linjer mod de **25** porten
-  tillader. Rettet i samme diff som dens egen årsag.
-- **Næste:** opgave 3 er delvist lukket — resultater og købsforsøg er begge læsbare
-  uden token, så kun *beløb og licenser* mangler, og det står i Stripe. Næste
-  opgave er derfor feature-kø **7**: `/text-on-image-checker` beder om upload før
-  den viser noget, og det er vejen med **8** læsere forude.
+- **Første skærmbillede på `/text-on-image-checker` viser nu et målt tal.** 5/10:
+  `.ti-badge` lå **1739 px** nede på 390 px (EN) og **1690** (DA) — 2,6
+  skærmbilleder før det eneste tal værktøjet kan. Kernen skriver nu `#verdict`
+  (badge + forholdstal) fra **samme** `sample` som `#result`, og den står som
+  første element efter overskriften. Efter: **601 px** (EN) / **579** (DA) i en
+  **664 px** fold. Taglinen 330→**109** tegn (8 linjer/248 px → 3/83).
+  Ny port `check_verdict_first.py` (selftest **7/7**) hængt i gaten, **167 steps** grøn.
+- **Målt fejl i egen begrundelse:** 1 nyt sted i kernen kunne vise et andet
+  tal end `#result`. Det kan ikke: `renderVerdict()` må ikke selv kalde
+  `sampleContrast()`, og det dømmer porten.
+- **Scannerens købsvej er målt hel, og kun én gang.** 5/10: `scan()` →
+  `scan-findings`/`scan-clean` → `pro-card-click`, plus `scan-failed`.
+- **Tragten kan læses uden `STATS_TOKEN`.** Resultater (`/api/results`) og
+  købsforsøg (`/api/conversion`) er begge udlæsninger af de nøgler `/api/track`
+  allerede skriver, hver med egen navneliste. Salg og licenser ligger *kun* i
+  `/api/stats`. Rigtige tal fra `/api/conversion`: **1** købsklik 29/9, **0**
+  resultater i 7 dage.
+- **Sider med nul handling over folden: 6 → 11 → 5 → 3.** De 3 er
+  `compliance-ai` ×2 (assistenten er slukket — se ❓) og `url-inspector`.
+- **Næste:** feature-kø 2 (`deskuptime.com` — 7 besøgende, 100 % bounce, 0 s) er
+  målt og kan ikke dømmes på 7 besøgende; næste brugbare er **`/scan`**, der
+  har 290 indgående links og kun **0** målte scanninger i 7 dage.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: dommen i folden 5/10 21:5x
+ceo/verdict-i-folden` — måles på **indhold**: live
+`https://mahope.tools/text-on-image-checker` skal have præcis **1**
+`#verdict[data-ti-verdict]` som **første** element efter `<h2 id="tool-heading">`
+— altså før `.ti-canvas-wrap` og før `#result` — og dens tekst skal være
+«PASS 4.07:1» + «Measured on the example image.». Den danske side skal have
+«BESTÅET 4,43:1» + «Målt på eksempelbilledet.». `.hero p.tagline` skal være
+**under 120 tegn** på begge. HTTP 200 bruges ikke som bevis.
 
 `VERIFICÉR DEPLOY: resultat-koerende-taeller 5/10 21:0x
 ceo/resultat-koerende-taeller` — måles på **indhold**: live
@@ -498,17 +505,17 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    mutationer røde (navnelisten, stidommen, nøglegrænsen), mutation mod den
    gamle kode giver 404. Bevidst *uden* salg, købsforsøg og sidevisninger — de
    er ikke resultater, og opgave 3 (konvertering) står derfor stadig åben.
-7. **NÆSTE OPGAVE — `/text-on-image-checker` beder om upload, før den viser
-   noget.** Hvem: de 8 der læser artiklen, og de 2 der går videre. Tal: hvor
-   mange af dem får et resultat. Accept: det *første* skærmbillede på 390 px
-   viser et målt forholdstal, ikke en tom fil-vælger. Datagrund og måling 5/10
-   21:0x i Chromium mod den byggede `dist/`: **0** JS-fejl og `scrollWidth ==
-   innerWidth` ved **390** og **1280**, og resultatet renderer automatisk fra
-   demoen — men heroen siger «Upload an image», og felt 2 står «Choose File /
-   No file chosen». Betalingen **PASS 4.07:1** ligger 1,5 skærme under en
-   6-felts formular. Baseline: `/text-on-image-checker` **2** besøgende,
-   `/blog/text-on-image-contrast-check` **8**. **Målt afvigelse:** resultatet må
-   **ikke** flyttes *over* formularen — pro-kortet `$79/år` følger resultatet, så
-   en betalingsvæg ville stå over selve værktøjet. Retningen er den anden vej:
-   få de **6** nummererede felter ud af det første skærmbillede, og behold
-   dækningen på prøvebilledet.
+7. ~~**`/text-on-image-checker` beder om upload, før den viser noget.**~~
+   **Færdig 5/10**, `ceo/verdict-i-folden`. Se STATUS. Kernen skriver nu
+   `#verdict` — badge og forholdstal — fra den **samme** `sample` som `#result`,
+   som første element efter overskriften; målt i Chromium 390/1280 mod den
+   byggede `dist/`: `.ti-badge` **1739 → 601 px** (EN) og **1690 → 579** (DA) i
+   en 664 px fold, `scrollWidth == viewport` begge steder, 0 JS-fejl. Taglinen
+   gik fra 330 tegn/8 linjer til 109/3, fordi `.ti-verdict` (83 px) ikke kan
+   være i en 664 px fold ovenpå en hero på 378. Ny port
+   `check_verdict_first.py` dømmer rækkefølgen i markup'en og at kernen *ikke*
+   måler selv; **GRØN** på ny kode, **4 fund** på den gamle, selftest **7/7** med
+   fem mutationer. **Målt afvigelse:** de 6 nummererede felter ligger stadig
+   *under* dommen — de er ikke flyttet, kun kommet ud af det første
+   skærmbillede, så pro-kortet `$79/år` stadig ikke står over selve værktøjet.
+   Baseline: `/text-on-image-checker` **2** besøgende mod artiklens **8**.

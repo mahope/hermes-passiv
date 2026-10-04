@@ -30,11 +30,8 @@
   <div class="container">
     <div class="badge">FREE TOOL</div>
     <h1>Text on Image Contrast Checker</h1>
-    <p class="tagline">Text overlaid on photos is one of the most common accessibility
-    failures — and the hardest to eyeball. Upload an image, place your text where it
-    will actually sit, and this tool measures the <strong>real WCAG contrast ratio</strong>
-    against the exact pixels behind each letter. Everything runs in your browser;
-    your image is never uploaded.</p>
+    <p class="tagline">Text on a photo is where accessibility fails. Get the
+    real WCAG ratio behind your text — nothing is uploaded.</p>
     <div class="hero-cta">
       <a href="#tool-heading" class="btn-primary">Check an image now</a>
     </div>
@@ -45,6 +42,8 @@
 
 <section class="ti-card" aria-labelledby="tool-heading">
   <h2 id="tool-heading">Check your text placement</h2>
+
+  <div id="verdict" class="ti-verdict" data-ti-verdict hidden></div>
 
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
@@ -201,6 +200,9 @@
       fileStem: 'text-on-image-contrast',
       measured: 'Measured against the lightest and darkest image pixels under your letters.',
       demoNote: 'Example image, not yours — choose an image above to measure your own.',
+      // Kortformen til dommen i folden (5/10). Den lange `demoNote` er to
+      // linjer på en 390 px telefon, og folden har plads til én.
+      verdictDemo: 'Measured on the example image. Upload your own above.',
       errNotImage: 'Please choose an image file.',
       errUnreadable: 'Could not read that image file.',
       proCard: PRO_CARD,

@@ -7530,3 +7530,35 @@ linket til `#price` / `#priser` er **13,6 px** (0,85 rem) på
 blog- og guidesider blev dømt på **én** af dem (den første med `<p
 class="hero-note">` i rækkefølge); porten `check_hero_note_scale.py` dømmer
 resten på kilden.
+
+## 5/10 — `/text-on-image-checker`: dommen i folden (feature-kø 7)
+
+Målt først i rigtig Chromium mod den byggede `dist/` ved **390 px**: `.ti-badge`
+i resultatet lå på **1739 px** (EN) og **1690 px** (DA) — 2,6 skærmbilleder ned,
+fordi `#result` lå under syv nummererede felter og en `.hero p.tagline` på
+**8 linjer / 248 px**. Det første skærmbillede viste breadcrumb, badge, `<h1>`,
+tagline, fold-CTA og en tom fil-vælger. Plausible måler `/blog/
+text-on-image-contrast-check` på **8** besøgende mod værktøjets **2**, så det
+er det første skærmbillede der *er* indgangen.
+
+Rettelsen er to ting, ikke en ny komponent:
+
+- `#verdict` i begge sprog, som første element efter `<h2 id="tool-heading">`.
+  Kernen skriver den i `renderBlock()` fra de **samme** `sample`, `passAA` og `r`
+  som `#result` — så den ikke kan måle andet end resultatet. `renderVerdict()`
+  kalder derfor *ikke* `sampleContrast()`, og det er noget porten dømmer.
+- Taglinen 330→**109** tegn (EN) og 334→**107** (DA): 8 linjer/248 px → **3
+  linjer/83 px**. `.ti-verdict` er 83 px (14 px margin + badge-linje +
+  notelinje), og folden på den mindste telefon er **664 px**.
+
+Efter: `.ti-badge` i dommen på **601 px** (EN) og **579** (DA) — 63 og 85 px
+inde i folden. `scrollWidth == viewport` ved 390 og 1280, 0 JS-fejl, og de 6
+nummererede felter ligger stadig *under* dommen, så pro-kortet `$79/år` ikke
+kommer over selve værktøjet.
+
+Port `tools/check_verdict_first.py`: **GRØN** på den nye kode, **4 fund** på den
+gamle (ingen `#verdict`, tagline over loftet), selftest **7/7** med fem
+mutationer — `#verdict` flyttet efter canvas'en, `hidden` væk, en
+`sampleContrast()` i `renderVerdict()`, den gamle tagline, `.ti-verdict` væk fra
+`style.css`. Hængt på to steps i `tools/quality_gate.py` (dom + selftest).
+Katalogens `where` på de to sider er flyttet med linjerne (6 fund lukket).

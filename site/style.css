@@ -666,6 +666,14 @@ input[type="color"].ti-color { width: 52px; height: 44px; border: 1px solid var(
 .ti-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-2); color: var(--color-text); }
 select.ti-input { max-width: 180px; }
 .ti-note { margin-top: 18px; font-size: .88rem; color: var(--color-text-muted); }
+/* Dommen i folden (5/10). Den skal kunne ligge i det første skærmbillede på
+   en 390 px telefon, så den er én linje badge + forholdstal og én linje note —
+   ikke resultatboksen, der er hele værktøjet og har knapper, downloads og
+   pro-kort under sig. Derfor egne tokens og ikke `.ti-result`: den boks er
+   14 px padding og en ramme om *hele* svaret. */
+.ti-verdict { margin: 14px 0 4px; font-size: 1rem; line-height: 1.4; }
+.ti-verdict .ti-badge { vertical-align: baseline; }
+.ti-verdict-note { font-size: .82rem; color: var(--color-text-muted); }
 /* «Fix it»-knappen 3/10. 44 px er ikke en detalje: `.btn-secondary` har kun
    padding, så på en 390 px telefon blev den 42 px høj — under WCAG 2.5.8s
    minimum på 24×24 med trykflade, og under de 44 px resten af sitet bruger.

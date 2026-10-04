@@ -1904,6 +1904,25 @@ STEPS: tuple[Step, ...] = (
         inputs=("tools/check_scan_events.py", "site/scan.html", "site/scan-da.html",
                 "site/_worker.js"),
     ),
+    # `/text-on-image-checker` viste på 390 px sit eneste tal 1739 px nede
+    # (2,6 skærmbilleder), fordi `#result` lå under syv nummererede felter og en
+    # tagline på 8 linjer. Kernen skriver nu `#verdict` — badge og forholdstal —
+    # fra *samme* `sample` som `#result`, og den står som første element efter
+    # overskriften. Målt efter: 601 px (EN) / 579 px (DA) i en 664 px fold.
+    Step(
+        id="verdict-first",
+        argv=("python3", "tools/check_verdict_first.py"),
+        inputs=("tools/check_verdict_first.py", "site/text-on-image-checker.html",
+                "site/text-on-image-checker-da.html", "site/text-on-image-core.js",
+                "site/style.css"),
+    ),
+    Step(
+        id="verdict-first-selftest",
+        argv=("python3", "tools/check_verdict_first.py", "--self-test"),
+        inputs=("tools/check_verdict_first.py", "site/text-on-image-checker.html",
+                "site/text-on-image-checker-da.html", "site/text-on-image-core.js",
+                "site/style.css"),
+    ),
     # Opgave: AI-banneren lovede et svar, der ikke kunne gives. Målt først:
     # hver AI-banner på bloggen sagde «a practical answer in seconds» og «Spørg
     # Compliance-AI'en», mens `GET /api/compliance-ai` svarede

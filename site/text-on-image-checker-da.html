@@ -30,11 +30,8 @@
   <div class="container">
     <div class="badge">GRATIS VÆRKTØJ</div>
     <h1>Tekst-på-billede kontrasttjek</h1>
-    <p class="tagline">Tekst ovenpå fotos er en af de mest almindelige
-    tilgængelighedsfejl — og den sværeste at bedømme med øjnene. Upload et billede,
-    placér din tekst dér hvor den skal stå, og værktøjet måler den <strong>reelle
-    WCAG-kontrast</strong> mod de præcise pixels bag hvert bogstav. Alt kører i din
-    browser; billedet bliver aldrig sendt noget hen.</p>
+    <p class="tagline">Tekst ovenpå et foto er den almindeligste fejl. Mål det
+    reelle WCAG-forhold bag din tekst — intet uploades.</p>
     <div class="hero-cta">
       <a href="#tool-heading" class="btn-primary">Tjek et billede nu</a>
     </div>
@@ -45,6 +42,8 @@
 
 <section class="ti-card" aria-labelledby="tool-heading">
   <h2 id="tool-heading">Tjek din tekstplacering</h2>
+
+  <div id="verdict" class="ti-verdict" data-ti-verdict hidden></div>
 
   <div class="ti-row" style="margin-top:14px">
     <div class="ti-field">
@@ -203,6 +202,8 @@
       fileStem: 'tekst-paa-billede-kontrast',
       measured: 'Målt mod de lyseste og mørkeste billedpixels under dine bogstaver.',
       demoNote: 'Eksempelbillede, ikke dit — vælg et billede ovenfor for at måle dit eget.',
+      // Kortformen til dommen i folden (5/10) — samme regel som på engelsk.
+      verdictDemo: 'Målt på eksempelbilledet. Upload dit eget ovenfor.',
       errNotImage: 'Vælg venligst en billedfil.',
       errUnreadable: 'Kunne ikke læse den billedfil.',
       proCard: PRO_CARD,
