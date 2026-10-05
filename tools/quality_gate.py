@@ -1952,15 +1952,20 @@ STEPS: tuple[Step, ...] = (
     # tro på en pæstand.
     Step(
         id="scan-page-claims",
+        # `tools/stripe_catalog.json` er et input fra 6/10: dom 5 læser
+        # pro-kortene for `eucomply-pro` i katalogen, ikke i filerne. Uden den
+        # ville et skift i katalogen springe porten over i cache.
         argv=("python3", "tools/check_scan_page_claims.py"),
         inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
-                "site/scan.html", "site/scan-da.html"),
+                "site/scan.html", "site/scan-da.html",
+                "tools/stripe_catalog.json"),
     ),
     Step(
         id="scan-page-claims-selftest",
         argv=("python3", "tools/check_scan_page_claims.py", "--self-test"),
         inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
-                "site/scan.html", "site/scan-da.html"),
+                "site/scan.html", "site/scan-da.html",
+                "tools/stripe_catalog.json"),
     ),
     # Review-fund 6/10 (MIDDEL): `scans` var en *livslang* tæller (`csc-count`,
     # `expirationTtl: 365 * 86400`) der hed det samme som de vinduesbundne tal i

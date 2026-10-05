@@ -67,15 +67,35 @@ to steder og skal være ens:
      rød på en sand påstand, og så ville den blive slået fra.
 
 Målt på den kode, porten skal dømme — altså `origin/main` **før** denne
-commit: **6 fund**. Ikke to af dem tilfældige: kommentaren siger «samme tal»
-mellem to ruter, hvis tal er 5 og 12, og den peger på **intet** af dem; og
-pro-kortet på begge sprog lover «crawls the whole site» / «gennemgår hele
-sitet» om den rute, `handleReport` henter **én** side fra. De to sidste fund
-er den egentlige læring: de ville være fundet, **fordi de er usande** — ikke
-fordi en tekstform var forældet.
+     commit: **6 fund**. Ikke to af dem tilfældige: kommentaren siger «samme tal»
+     mellem to ruter, hvis tal er 5 og 12, og den peger på **intet** af dem; og
+     pro-kortet på begge sprog lover «crawls the whole site» / «gennemgår hele
+     sitet» om den rute, `handleReport` henter **én** side fra. De to sidste fund
+     er den egentlige læring: de ville være fundet, **fordi de er usande** — ikke
+     fordi en tekstform var forældet.
 
-    python3 tools/check_scan_page_claims.py             # dom
-    python3 tools/check_scan_page_claims.py --self-test # 9 mutationer
+**Dom 5 (6/10) — samme dom over *alle* kortene, ikke kun de to.** Dom 4 læste
+     `proCard()` på `/scan` og `/scan-da`, fordi det var de to sider med et
+     håndskrevet kort. Målt på den færdige fil: «It crawls the whole site» /
+     «Den gennemgår hele sitet» stod i **16** kort på **9** sider — dom 4 så to
+     af dem. De anden syv lå i `tools/stripe_catalog.json`, som er den fælles
+     sandhed for alle **21** pro-blokke (`pro_table.py` tegner dem derfra), så
+     dommen læser nu katalogen i stedet for filerne. Rettet på alle ni sider, og
+     hver fik **sin egen** ærlige sætning, fordi de frie værktøjer ikke er ens:
+     `/scan` og `contrast-checker` læser slet ingen side i browseren, så Pro
+     læser den fra serveren; `cookie-check` læser kilden, så Pro læser også
+     svarheaderne; `security-headers-check` læser kun headerne, så Pro læser
+     kilden; `compliance-site-check` følger de juridiske links, så Pro gør
+     **ikke** mere sider — den læser dybere.
+
+     Dom 5 er låst til samme måling som dom 4 (`kald == 1`), så en *ægte*
+     flersidet `handleReport` slår begge fra. Det er selvtest 12: med to
+     `cscFetch`-kald og den gamle løgnest i katalogen er porten grøn. Ellers
+     ville porten gøre det umuligt at bygge den rigtige krybning — og så bliver
+     den slået fra i stedet for at lyve.
+
+     python3 tools/check_scan_page_claims.py             # dom
+     python3 tools/check_scan_page_claims.py --self-test # 12 mutationer
 """
 from __future__ import annotations
 
@@ -137,11 +157,13 @@ def _naar_kun(ré: re.Pattern[str], src: str, hvad: str,
 
 
 def dom(worker: str = None, scan_en: str = None, scan_da: str = None,
-        root: Path = ROOT) -> list[str]:
+        root: Path = ROOT, katalog: dict = None) -> list[str]:
     fund: list[str] = []
     wsrc = worker if worker is not None else WORKER.read_text(encoding="utf-8")
     en = scan_en if scan_en is not None else SCAN_EN.read_text(encoding="utf-8")
     da = scan_da if scan_da is not None else SCAN_DA.read_text(encoding="utf-8")
+    kat = katalog if katalog is not None else json.loads(
+        (root / "tools" / "stripe_catalog.json").read_text(encoding="utf-8"))
 
     # Dom 1 — konstanterne skal findes og være tal.
     max_urls = _naar_kun(RE_MAX_URLS, wsrc, "worker", fund)
@@ -227,6 +249,40 @@ def dom(worker: str = None, scan_en: str = None, scan_da: str = None,
         elif kald == 0:
             fund.append("worker: handleReport kalder ikke cscFetch overhovedet "
                         "— dom 4 kan ikke dømme ruten")
+
+    # Dom 5 — **hver** pro-række for `eucomply-pro` i katalogen skal sige det
+    # samme. Dom 4 dømmer de to `/scan`-siders håndskrevede `proCard()`, og det
+    # var nok, fordi de var de eneste kort der løj. Målt 6/10: «It crawls the
+    # whole site» stod i **16** kort på **9** sider, og dom 4 så kun to af dem.
+    # Katalogen er den fælles sandhed — `pro_table.py` tegner alle otteogtyve
+    # blokke fra den, så dommen skal læse den, ikke filerne.
+    #
+    # Kun produkter hvis betalte rute er `handleReport`. `page-profile-pro`
+    # (`/api/profile`) er en anden rute med sit eget argument, og dens kort er
+    # dømt af `check_deskuptime_claims.py`/`check_pro_table.py`.
+    #
+    # Dømningen er låst til `kald == 1` — samme måling som dom 4. Det er point
+    # 2 i selvtesten: hvis nogen faktisk bygger flersided ind i `handleReport`,
+    # skal porten holde kravet op i stedet for at dømme en sand påstand som
+    # løgn. Ellers gør porten den ægte krybning umulig at bygge.
+    if kald != 1:
+        return fund
+    for side in kat.get("pro_table_pages", []):
+        if side.get("product") != "eucomply-pro":
+            continue
+        for feat in side.get("pro_features", []):
+            labels = feat.get("labels") or {}
+            for lang, tekst in labels.items():
+                for sætning in (tekst if isinstance(tekst, list) else [tekst]):
+                    if not isinstance(sætning, str):
+                        continue
+                    m = RE_KRYB.search(sætning)
+                    if m:
+                        fund.append(
+                            f"katalog: {side['path']} ({lang}) "
+                            f"pro_features «{feat['id']}» siger «{m.group(0)}», men "
+                            f"handleReport henter én side (ét cscFetch-kald) — "
+                            f"kortet skal sige hvad den rute faktisk gør")
     return fund
 
 
@@ -235,8 +291,10 @@ def _selftest() -> int:
     base_w = WORKER.read_text(encoding="utf-8")
     base_en = SCAN_EN.read_text(encoding="utf-8")
     base_da = SCAN_DA.read_text(encoding="utf-8")
+    base_k = json.loads(
+        (ROOT / "tools" / "stripe_catalog.json").read_text(encoding="utf-8"))
 
-    grøn = dom(base_w, base_en, base_da)
+    grøn = dom(base_w, base_en, base_da, katalog=base_k)
     # Kildens egen tekst skal være grøn nu — ellers må mutationerne ikke
     # bevise noget, for så ville de være grønne fordi porten intet dømmer.
     if grøn:
@@ -294,15 +352,58 @@ def _selftest() -> int:
              "const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);\n"
              "  const mere = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);")}),
     ]
+    # 10. Den oprindelige løgnest, genindsat i katalogen på en side dom 4
+    #     **aldrig** så. Mutationen rammer den første `eucomply-pro`-side med
+    #     et crawl-id i katalogen, altså `text-on-image-checker` — den ligger i
+    #     katalogens `pro_features`, ikke i nogen `proCard()`, så uden dom 5
+    #     ville mutationen være grøn og lyde som en fejlslået dom.
+    # 11. Samme løgnest på dansk — ellers kunne dommen bare læse engelsk.
+    # 12. En **fremtidig** flersidet `handleReport` skal slå dom 5 fra, ligesom
+    #     den slår dom 4 fra. Ellers gør porten det umuligt at bygge den ægte
+    #     krybning, og så bliver den slået fra i stedet for at lyve.
+    for num, (fejl_txt, rute_tekst) in enumerate((
+        ("crawl-claim på en side dom 4 ikke ser",
+         "It crawls the whole site — the same check on every page it finds"),
+        ("dansk crawl-claim i katalogen",
+         "Den gennemgår hele sitet — samme tjek på hver side den finder"),
+    ), start=10):
+        k = json.loads(json.dumps(base_k))
+        ramt = 0
+        for side in k["pro_table_pages"]:
+            if side.get("product") != "eucomply-pro":
+                continue
+            for f in side.get("pro_features", []):
+                if f["id"] in ("crawl", "whole-site") and ramt == 0:
+                    f["labels"]["en"] = [rute_tekst] if num == 10 else f["labels"]["en"]
+                    if num == 11:
+                        f["labels"]["da"] = [rute_tekst]
+                    ramt += 1
+        mutationer.append((fejl_txt, {"k": k}))
+
+    flersidet = base_w.replace(
+        "const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);",
+        "const page = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);\n"
+        "  const mere = await cscFetch(target.toString(), REPORT_FETCH_TIMEOUT_MS);")
+    k12 = json.loads(json.dumps(base_k))
+    for side in k12["pro_table_pages"]:
+        if side.get("product") != "eucomply-pro":
+            continue
+        for f in side.get("pro_features", []):
+            if f["id"] in ("crawl", "whole-site"):
+                f["labels"]["en"] = ["It crawls the whole site — the same check on every page it finds"]
+                f["labels"]["da"] = ["Den gennemgår hele sitet — samme tjek på hver side den finder"]
+    mutationer.append(("katalog-crawl-claim + flersidet handleReport (porten skal så tie)",
+                       {"w": flersidet, "k": k12}))
     fejl = 0
     for navn, ændringer in mutationer:
         w = ændringer.get("w", base_w)
         en = ændringer.get("en", base_en)
         da = ændringer.get("da", base_da)
-        fund = dom(w, en, da)
-        # Mutation 9 er den modsatte retning: den skal være **grøn**, fordi
-        # dommen kun dømmer det koden faktisk gør. Så den tælles separat.
-        hverket = (w, en, da) != (base_w, base_en, base_da)
+        k = ændringer.get("k", base_k)
+        fund = dom(w, en, da, katalog=k)
+        # Mutation 9 og 12 er den modsatte retning: de skal være **grønne**,
+        # fordi dommen kun dømmer det koden faktisk gør. Så de tælles separat.
+        hverket = (w, en, da, k) != (base_w, base_en, base_da, base_k)
         forventer_rød = "porten skal så tie" not in navn
         if fund and forventer_rød:
             print(f"  RØD  {navn}")
@@ -342,8 +443,8 @@ def main() -> int:
     print("scan-page-claims: GRØN — SCAN_PROXY_MAX_URLS=%s og CSC_MAX_PAGES=%s "
           "er to tal, kommentaren over det første peger på begge, "
           "felt-labelet på /scan og /scan-da siger det samme antal, og intet "
-          "pro-kort på de to sider lover en krybende rute som handleReport "
-          "ikke er"
+          "pro-kort for eucomply-pro i katalogen lover en krybende rute som "
+          "handleReport ikke er"
           % (RE_MAX_URLS.search(wsrc).group(1), RE_CSC_PAGES.search(wsrc).group(1)))
     return 0
 

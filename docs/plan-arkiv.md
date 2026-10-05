@@ -8217,3 +8217,73 @@ brudte links**, `seo_check` **316 sider, 0 fund**, `stripe-worker` **474/474**,
 `server-checks` fik nye `where`-pejlinger ind i de to sider.
 
 **Ikke lukket:** de otte øvrige sider har samme løgnest (opgave 29).
+
+---
+
+## 6/10 — opgave 29: pro-kortene fortæller hvad `/api/report` gør (`ceo/pro-kort-uden-krybning`)
+
+**Fundet.** «It crawls the whole site — the same check on every page it finds»
+stod i **16** pro-kort på **9** sider, plus **11** prosa-steder. Den rute en
+betalt licens låser op, `handleReport`, kalder `cscFetch` **præcis én gang**
+(målt ved at skrive kroppen ud og tælle kaldene), og dens 18 fund-typer er
+`CANONICAL, CHARSET, COOKIE_BANNER, COOKIE_SCRIPTS, FB_NO_CONSENT, FORM_COUNT,
+FORM_HTTP, GA_NO_CONSENT, JSONLD, META_CSP, NO_ANALYTICS, OG_DESC, OG_IMAGE,
+OG_TITLE, PRIVACY_LINK, SEC_CSP, SEC_HSTS, TWITTER_CARD` — ingen a11y, ingen
+kontrast, ingen krybning. Den læser én side og ser dens svarheadere.
+
+**Rettelsen.** Kortene fik **hver sin** sætning, fordi de frie værktøjer ikke er
+ens. Målt pr. side, hvilken kilde den frie rute læser:
+
+| Side | Fri rute læser | Pro-kortet siger nu |
+|---|---|---|
+| `/scan`, `/contrast-checker`, `/text-on-image-checker` (+DA) | ingen side (`rg -c 'scan-proxy\|api/header-check'` = 0) | «It reads the page from the server too — response headers included» |
+| `/cookie-check` (+DA) | kilden via `/scan-proxy` — kun html, ingen headere | «It reads the response headers as well — HSTS and CSP» |
+| `/security-headers-check` | kun headerne (`/api/header-check`) | «It reads the page source as well … which no response header shows» |
+| `/compliance-site-check` (+DA) | siden + de juridiske sider den peger på | «It reads the page you name from the server — …, not just whether a legal page exists» |
+
+Samme måling rettede **11** prosa-steder: `compliance-site-check` (EN+DA),
+`cookie-check` (EN+DA), `contrast-checker` (EN+DA), `text-on-image-checker`
+(EN+DA), `compliance-ai` og fem bogsider.
+
+**To huller fundet undervejs — de var værd mere end teksten.**
+
+1. **Porten så 2 af de 16 kort.** `check_scan_page_claims` dom 4 læste
+   `proCard()` på `/scan` og `/scan-da`. De anden syv lå i
+   `tools/stripe_catalog.json`, som er sandheden for alle **21** pro-blokke
+   (`pro_table.py` tegner dem derfra, `check_pro_table` dømmer dem mod den).
+   Ny **dom 5** læser katalogen for `eucomply-pro` og er låst til samme måling
+   som dom 4 (`kald == 1`) — så en *ægte* flersidet `handleReport` slår begge
+   fra. Selftest **12/12**: mutation 10 og 11 genindsætter løgnest i katalogen på
+   sider dom 4 aldrig så, mutation 12 har to `cscFetch`-kald **og** den gamle
+   løgnest og skal være grøn. `quality_gate.py`s `inputs` for de to steps fik
+   `tools/stripe_catalog.json` med, ellers ville cache springe porten over ved et
+   katalog-skift.
+2. **Testen holdt løgnen i live.** `tests/scan-clients.test.mjs` dom 4 krævede,
+   at «crawls the whole site — the same check on every page it finds» stod i
+   kortet i begge sprog — altså ville porten være rød på den *ærlige* tekst.
+   Dømmer nu intet krybende verb **i pro-kortet** (udsnit fra `pro-card`, fordi
+   `#result` også indeholder ærlige negationer som «not the whole site») plus den
+   positive sætning om serverlæsningen, så en side heller ikke kan slette løftet
+   og tie. Målt begge veje: **534/534** på den nye kode, **532/534** med
+   løgnest genindsat i den rigtige fil.
+
+**Verificeret.** `pro_table.py --apply` på 9 sider, `check_pro_table` grøn,
+`check_catalog_where` grøn efter at katalogens **27** `where`-citater blev
+peget på den nye prosa med nye linjeintervaller, `check_scan_page_claims` grøn med
+selftest 12/12, `scan-clients` 534/534, `git diff | grep -E '^\+.*(\$[0-9]|;;)'`
+= 0. Fuld gate: **GRØN — 173 steps**.
+
+**Ikke dømt her.** `url-inspector`s «The same checks across a whole site» gælder
+**Page Profile Pro**, hvis rute er `/api/profile` (ét `?url=`, målt) og hvis kode
+liger i et privat repo — ikke `handleReport`. Det er en anden påstand og blev
+ladt ligge frem for at rettes på et gæt.
+
+**Seks deploy-noter lukket samme dag.** Alle målt på indhold med `curl` (ikke på
+statuskoden): live `/scan` har `analyseDoc`, `HINTTAIL`, `scanILuft`-låsen,
+`It reads the page from the server too`, `up to five at a time` og
+`66/100 — Grade C`, og **ikke** `crawls the whole site`; live `/scan-da` har
+`Den læser siden fra serveren også`, `op til fem ad gangen` og `Scanner …`;
+live `/scan-proxy?url=https%3A%2F%2F` svarer **400** med hele linjen i fejlen; to
+URL'er giver `multi:true, requested:2, scanned:2`; live `/stats` læser
+`data.waitlist_lifetime`. Begge `/scan`-sider beholder den **ægte** desktop-påstand
+om 200 sider — den er et andet program med sin egen krybning.

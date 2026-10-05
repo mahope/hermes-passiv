@@ -196,9 +196,10 @@
   <p>This scan reads the page you submit and follows its links to the privacy, terms and
   imprint pages. It cannot tell you that page three has no privacy link, or that the
   checkout leaks a third-party embed.
-  <a href="/compliance-report">EUComply Pro</a> crawls the site and runs 33 checks — the 15
-  accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks — and
-  hands you the findings as a PDF you can send to a client.</p>
+  <a href="/compliance-report">EUComply Pro</a> runs 33 checks on the page you
+  name — the 15 accessibility rules plus 18 server-side GDPR, cookie, security and
+  metadata checks — and hands you the findings as a PDF you can send to a
+  client.</p>
 </div>
 
 <footer class="site-footer"><div class="container">
@@ -390,7 +391,7 @@ function scan() {
     // Målt 2/10: den nævnte ikke de ni tjek kaldet faktisk svarer på, og den
     // havde en egen fortælling for hvert antal URL'er. Tabellen fra katalogen
     // siger begge dele uden at siden skal holde dem i live.
-    html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>The 9 compliance checks on the page you submit</li><li>The privacy, terms and imprint pages it links to</li><li>A score and a grade for every site you paste</li></ul></td><td><ul><li>It crawls the whole site — the same check on every page it finds</li><li>18 server-side GDPR, cookie, security and metadata checks</li><li>The findings as a PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <!-- pro-table:end -->';
+    html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Free and EUComply Pro, side by side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Free</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">What you get</th><td><ul><li>The 9 compliance checks on the page you submit</li><li>The privacy, terms and imprint pages it links to</li><li>A score and a grade for every site you paste</li></ul></td><td><ul><li>It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists</li><li>18 server-side GDPR, cookie, security and metadata checks</li><li>The findings as a PDF report you can hand a client</li></ul></td></tr> <tr><th scope="row">Price</th><td><span class="pro-price">$0</span><span class="pro-note">no licence key needed</span></td><td><span class="pro-price">$79/year per website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 once per website — lifetime, first 100 purchases</p> <!-- pro-table:end -->';
     html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Buy EUComply Pro — $79/year per website</a>';
     html += '<p class="pro-card-note">One website per licence. <a href="/compliance-report">See what Pro adds before you buy</a>.</p>';
     html += '</div>';

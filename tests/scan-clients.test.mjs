@@ -1545,8 +1545,7 @@ function mutated(path, from, to) {
 //     1. Feltet tager linjeskift, og hver linje giver sit eget kald.
 //     2. Begge sites står i resultatet, hver med sin score.
 //     3. Seks linjer er en fejl med et tal — ikke en stille afskæring til 5.
-//     4. Pro-boksen siger ærligt, at Pro gør det samme for *hele* sitet, så
-//        den nye mulighed ikke får den gamme løfte-sætning til at se forkert ud.
+//     4. Pro-boksen lover ikke en krybning, route `/api/report` ikke har.
 // --------------------------------------------------------------------------
 {
   const OK_SCAN2 = { status: 200, body: { ok: true, url: 'https://example.org', score: 40, grade: 'D', passed: 4, total: 9, results: { passed: [], failed: [] } } };
@@ -1565,15 +1564,36 @@ function mutated(path, from, to) {
       fejl ? 'fejl=' + fejl : html.slice(0, 300));
     ok(`${lang}: ingen af linjerne blev afskåret tavst`,
       !/only the first|only scans the first/i.test(html), html.slice(0, 200));
-    // Dommen er den *konkrete* sætning, ikke et ord: «crawls the whole site —
-    // the same check on every page it finds». Den skal være der i begge sprog,
-    // ellers kunne en side sige hele løftet og så alligevel skjule, at den
-    // kun så den ene side.
-    const heleSitet = lang === 'EN'
-      ? /crawls the whole site[\s\S]{0,60}every page it finds/i
-      : /gennemgår hele sitet[\s\S]{0,60}hver side den finder/i;
-    ok(`${lang}: Pro-boksen siger at Pro gør det samme for hele sitet`,
-      heleSitet.test(html), 'ingen ærlig crawls-sætning');
+    // Dom 4. Her lå der en dom, der krævede den **modsatte** påstand:
+    // «crawls the whole site — the same check on every page it finds» skulle
+    // stå i kortet i begge sprog. Målt 6/10 er den usand — `handleReport`
+    // kalder `cscFetch` præcis én gang, så den læser én side og ser dens
+    // svarheadere. Testen holdt altså løgnen i live. Nu dømmer den det samme
+    // som `tools/check_scan_page_claims.py` dom 4: intet krybende verb **i
+    // pro-kortet**, og den positive sætning om at læse siden fra serveren
+    // skal være der — så en side kan heller ikke bare slette løftet og tie.
+    //
+    // Kun kortet måles. `#result` indeholder også ærlige **negationer** som
+    // «One page per site … — not the whole site»; en hel-fil-søgning ville
+    // være rød på en sand sætning. Det er præcis den afgrønsning dom 4 i
+    // `check_scan_page_claims.py` gør med sin `proCard()`-udsnit.
+    const kortStart = html.indexOf('pro-card');
+    const kort = kortStart >= 0 ? html.slice(kortStart) : '';
+    const kryb = lang === 'EN'
+      ? /crawl\w*|whole site/i
+      : /gennemgår|gennemløb|hele sitet/i;
+    // Formuleringerne er pr. side («It reads the page from the server too» på
+    // /scan, «It reads the page you name from the server» på
+    // compliance-site-check), så dommen læser kernen — siden læser fra
+    // serveren — og ikke hele sætningen.
+    const laeserFraServeren = lang === 'EN'
+      ? /reads the page[\s\S]{0,60}from the server/i
+      : /læser (?:den side|siden)[\s\S]{0,60}fra serveren/i;
+    ok(`${lang}: Pro-kortet ikke lover en krybning`,
+      kortStart >= 0 && !kryb.test(kort),
+      kortStart < 0 ? 'pro-card ikke fundet i #result' : kort.slice(0, 300));
+    ok(`${lang}: Pro-kortet siger at Pro læser siden fra serveren`,
+      laeserFraServeren.test(kort), kort.slice(0, 300));
     ok(`${lang}: købsknappen overleverede flere sites`,
       /buy\.stripe\.com/.test(html), 'knap mangler');
   }

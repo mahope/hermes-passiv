@@ -104,10 +104,10 @@
   <h2 id="pro-heading">Dette tjek er gratis. Resten af dit tracking er ikke.</h2>
   <p>Du har set på banneren på én side. Ingen har set på de andre sider, på de scripts de
   indlæser, eller på om samtykkesignalet faktisk gemmes.
-  <a href="/da/compliance-report">EUComply Pro</a> gennemgår sitet og tjekker GDPR-siden
-  lige så målrettet som tilgængeligheden: cookie-bannere, tracking scripts, samtykkesignaler,
-  links til privatlivspolitik og tredjeparts-embeds, sammen med i alt 33 tjek i en PDF du kan
-  give en kunde.</p>
+  <a href="/da/compliance-report">EUComply Pro</a> tjekker siden fra serveren og læser
+  derfor også svarheaderne: cookie-bannere, tracking scripts, samtykkesignaler, links til
+  privatlivspolitik og tredjeparts-embeds, sammen med i alt 33 tjek i en PDF du kan give en
+  kunde.</p>
 </section>
 </main>
 
@@ -171,7 +171,7 @@ function countMatches(re, html){ const m = html.match(new RegExp(re,'gi')); retu
 const PRO_CARD =
     '<div class="pro-card">'
   +'<h3>Her blev der set på én side. Et website er alle sider.</h3>'
-  +'<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Trackere fundet i sidekilden — 14 kendte tjenester</li><li>Samtykkegate: kendte samtykkeplatforme, Consent Mode v2 og blokerede scripts</li></ul></td><td><ul><li>Den gennemgår hele sitet — samme tjek på hver side den finder</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <!-- pro-table:end -->'
+  +'<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Trackere fundet i sidekilden — 14 kendte tjenester</li><li>Samtykkegate: kendte samtykkeplatforme, Consent Mode v2 og blokerede scripts</li></ul></td><td><ul><li>Den læser også svarheaderne — HSTS og CSP, som en kildoskanning aldrig ser</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <!-- pro-table:end -->'
   +'<p><a class="btn" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener">Køb EUComply Pro — $79/år pr. website</a></p>'
   +'<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>'
   +'</div>';

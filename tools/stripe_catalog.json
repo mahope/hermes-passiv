@@ -1900,19 +1900,19 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker.html:151-155 «Nothing on this page says whether the rest of the site passes — that takes a crawl of every page, and it is what EUComply Pro does»",
+          "where": "site/text-on-image-checker.html:151-155 «that needs the page read from the server, and it is what EUComply Pro does»",
           "labels": {
             "en": [
-              "Every image on every page of the site"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Alle billeder på alle sider af websitet"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
         {
           "id": "fifteen-checks",
-          "where": "site/text-on-image-checker.html:152-155 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:153-155 «EAA/WCAG, cookie consent and NIS2 findings in one report you can hand to a client»",
           "labels": {
             "en": [
               "The 15 accessibility rules around each image"
@@ -1924,7 +1924,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/text-on-image-checker.html:152-155 «in one report you can hand to a client»",
+          "where": "site/text-on-image-checker.html:153-155 «in one report you can hand to a client»",
           "labels": {
             "en": [
               "A PDF report you can hand a client"
@@ -1984,13 +1984,13 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/text-on-image-checker-da.html:152-156 «Intet på denne side fortæller, om resten af websitet består — det kræver et gennemløb af alle sider, og det er det EUComply Pro gør»",
+          "where": "site/text-on-image-checker-da.html:152-156 «det kræver at siden læses fra serveren, og det er det EUComply Pro gør»",
           "labels": {
             "en": [
-              "Every image on every page of the site"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Alle billeder på alle sider af websitet"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
@@ -2191,19 +2191,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/compliance-site-check.html:199-200 «crawls the site and runs 33 checks — the 15 accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks»",
+          "where": "site/compliance-site-check.html:199-202 «runs 33 checks on the page you name» — påstanden er målt mod `handleReport`, der kalder `cscFetch` præcis én gang; dommen er `tools/check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser den side du navngiver fra serveren — samtykkesignaler, privatlivslink og metadata, ikke kun om en juridisk side findes"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/compliance-site-check.html:199-200 «crawls the site and runs 33 checks — the 15 accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks»",
+          "where": "site/compliance-site-check.html:200-202 «the 15 accessibility rules plus 18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)`",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2215,7 +2215,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/compliance-site-check.html:201 «hands you the findings as a PDF you can send to a client»",
+          "where": "site/compliance-site-check.html:201-202 «hands you the findings as a PDF you can send to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2266,19 +2266,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/da/compliance-site-check.html:200-201 «gennemgår sitet og kører 33 tjek — de 15 tilgængelighedsregler plus 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata»",
+          "where": "site/da/compliance-site-check.html:200-203 «kører 33 tjek på den side du navngiver» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page you name from the server — consent signals, privacy link and metadata, not just whether a legal page exists"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser den side du navngiver fra serveren — samtykkesignaler, privatlivslink og metadata, ikke kun om en juridisk side findes"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/da/compliance-site-check.html:200-201 «gennemgår sitet og kører 33 tjek — de 15 tilgængelighedsregler plus 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata»",
+          "where": "site/da/compliance-site-check.html:201-203 «de 15 tilgængelighedsregler plus 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2290,7 +2290,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/da/compliance-site-check.html:200-202 «gennemgår sitet og kører 33 tjek» … «giver dig fundene som en PDF du kan sende til en kunde»",
+          "where": "site/da/compliance-site-check.html:200-203 «kører 33 tjek på den side du» … «giver dig fundene som en PDF du kan sende til en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2332,19 +2332,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/cookie-check.html:109-110 «crawls the site and checks the GDPR side the same way it checks accessibility»",
+          "where": "site/cookie-check.html:109-111 «checks the page from the server, so it also reads the response headers»",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the response headers as well — HSTS and CSP, which a page-source scan never sees"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser også svarheaderne — HSTS og CSP, som en kildoskanning aldrig ser"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/cookie-check.html:109-111 «cookie banners, tracking scripts, consent signals, privacy policy links and third-party embeds, alongside 33 checks in total»",
+          "where": "site/cookie-check.html:110-111 «cookie banners, tracking scripts, consent signals, privacy policy links and third-party embeds, alongside 33 checks in total»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2356,7 +2356,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/cookie-check.html:109-112 «33 checks in total in a PDF you can hand a client»",
+          "where": "site/cookie-check.html:111-112 «33 checks in total in a PDF you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2398,19 +2398,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/cookie-check-da.html:107-108 «gennemgår sitet og tjekker GDPR-siden lige så målrettet som tilgængeligheden»",
+          "where": "site/cookie-check-da.html:107-109 «tjekker siden fra serveren og læser derfor også svarheaderne»",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the response headers as well — HSTS and CSP, which a page-source scan never sees"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser også svarheaderne — HSTS og CSP, som en kildoskanning aldrig ser"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/cookie-check-da.html:107-110 «cookie-bannere, tracking scripts, samtykkesignaler, links til privatlivspolitik og tredjeparts-embeds, sammen med i alt 33 tjek»",
+          "where": "site/cookie-check-da.html:108-110 «cookie-bannere, tracking scripts, samtykkesignaler, links til privatlivspolitik og tredjeparts-embeds, sammen med i alt 33 tjek»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2422,7 +2422,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/cookie-check-da.html:107-111 «i alt 33 tjek i en PDF du kan give en kunde»",
+          "where": "site/cookie-check-da.html:109-110 «i alt 33 tjek i en PDF du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2473,19 +2473,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker.html:158-161 «This checker is free. Checking the whole site is not.» … «that needs a crawl of every page, and it is what EUComply Pro does»",
+          "where": "site/contrast-checker.html:159-163 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker.html:159-163 «contrast is one of the 15 accessibility checks it runs, and Pro adds 18 server-side GDPR, cookie, security and metadata checks on top»",
+          "where": "site/contrast-checker.html:161-163 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2497,7 +2497,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker.html:160-163 «33 in all, in a PDF report you can hand to a client»",
+          "where": "site/contrast-checker.html:162-163 «33 in all, in a PDF report you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2548,19 +2548,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker-da.html:159-162 «Dette tjek er gratis. At tjekke hele sitet er ikke.» … «det kræver en gennemgang af alle sider, og det er præcis det EUComply Pro gør»",
+          "where": "site/contrast-checker-da.html:160-164 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker-da.html:160-164 «kontrast er ét af de 15 tilgængelighedstjek, og Pro lægger 18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni»",
+          "where": "site/contrast-checker-da.html:161-164 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2572,7 +2572,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker-da.html:161-164 «i alt 33, i en PDF-rapport du kan give en kunde»",
+          "where": "site/contrast-checker-da.html:162-164 «i alt 33, i en PDF-rapport du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2623,19 +2623,16 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/security-headers-check.html:174-177 «EUComply Pro reads the same headers for the site you name and adds what this page cannot see»",
+          "where": "site/security-headers-check.html:174-178 «reads the same headers for the site you name and adds what this page cannot see»",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
-            ],
-            "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "It reads the page source as well — consent banner, trackers, privacy link and metadata, which no response header shows"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/security-headers-check.html:175-178 «HTTPS enforcement, mixed content and form submission security, next to 15 accessibility checks — 33 in all»",
+          "where": "site/security-headers-check.html:176-178 «adds what this page cannot see: HTTPS enforcement, mixed content and form submission security, next to 15 accessibility checks — 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2647,7 +2644,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/security-headers-check.html:176-178 «in a PDF report you can hand to a client or your compliance officer»",
+          "where": "site/security-headers-check.html:177-178 «in a PDF report you can hand to a client or your compliance officer»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"

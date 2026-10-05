@@ -1,109 +1,45 @@
 # STATUS
-- **Pro-kortet på `/scan` lovede en krybning, der ikke findes, 6/10.** «It
-  crawls the whole site» stod i **18** kort på **9** sider, men den rute en
-  betalt licens låser op (`/api/report`) kalder `cscFetch` **præcis én gang** —
-  målt ved at køre den rigtige worker med en gyldig nøgle i falsk KV: ét
-  ude-kald. Den læser siden igen og ser **svarheaderne**; den crawler ikke.
-  Rettet på `/scan` og `/scan-da`.
-- **Kommentaren over `SCAN_PROXY_MAX_URLS` løj om sit eget tal, 6/10.** Den
-  sagde «Fem er samme tal som `/api/compliance-scan` tager» — den tager
-  `CSC_MAX_PAGES = 12` pr. kald. `check_scan_page_claims` dømmer nu fire domme
-  om tal i kommentar, konstant, felt-label og pro-kort (**6 fund** på `63b65842`
-  mod grøn nu, selftest **9/9**).
-- **Fire scanner-fejl lukket 5.–6/10** (alle målt, detaljer i arkivet): 500 på
-  `?url=https://`, `ReferenceError: analyseDoc` på begge sprog, `stats.html`s
-  forældede nøglenavn, og en manglende lås på «Scan now». Gate: **173 steps**.
-- **`check_storage_claims` dømte 7 ruter som hentende, som ikke henter, 6/10.**
-  `function_bodies` afgrænsede hver krop ved næste funktions `end()`, altså
-  midt i dens signatur, så `RE_KALD` læste signaturlinjen som et kald og
-  `naaet()` fulgte den. Målt: **12** «hentende» ruter mod **5** efter
-  rettelsen, stabilt for `dybde` 1/2/3/5/10. Uden fixen ville porten have
-  gjort `clean-copy-api.html` rød for at lyve om hvor hentningen sker, hvis
-  siden havde sagt sandheden — den tager HTML'en i kroppen og laver den om i
-  CPU. To nye selftest-tilfælde (5d, 5e) dømmer nu selve grænsen.
-- **Næste:** opgave 29 — de otte øvrige sider har samme krybningsløgnest.
+- **«It crawls the whole site» lå i 16 pro-kort på 9 sider + 11 prosa-steder,
+  6/10.** Den rute en licens låser op (`/api/report`) kalder `cscFetch`
+  **præcis én gang** — målt på koden. Rettet på alle ni sider, og hver fik sin
+  **egen** ærlige sætning, fordi de frie værktøjer ikke er ens: `/scan`,
+  `contrast-checker` og `text-on-image-checker` læser slet ingen side i
+  browseren (0 kald efterfulgt af `rg -c 'scan-proxy|api/header-check'`), så
+  Pro læser den fra serveren; `cookie-check` læser kilden (`/scan-proxy` giver
+  html uden headers), så Pro læser **også** svarheaderne; `security-headers-check`
+  læser kun headerne, så Pro læser kilden; `compliance-site-check` følger de
+  juridiske links, så Pro gør **ikke** flere sider — den læser dybere.
+- **`check_scan_page_claims` så kun 2 af de 16 kort, 6/10.** Dom 4 læste
+  `proCard()` på `/scan` og `/scan-da`. De anden syv lå i
+  `tools/stripe_catalog.json`, som er sandheden for alle 21 pro-blokke. Ny
+  **dom 5** læser katalogen for `eucomply-pro`, låst til samme måling
+  (`kald == 1`), så en ægte flersidet `handleReport` slår den fra. Selftest
+  **12/12**.
+- **`tests/scan-clients.test.mjs` krævede den løgnest, 6/10.** Dom 4 i testen
+  ville have «crawls the whole site — the same check on every page it finds»
+  stå i kortet — altså holdt testen løgnen i live. Dømmer nu intet krybende
+  verb **i pro-kortet** plus den positive sætning om serverlæsningen.
+  Målt begge veje: **532/534** med løgnest genindsat, **534/534** med teksten.
+- **Seks `VERIFICÉR DEPLOY`-noter er verificeret og lukket, 6/10** (se nedenfor).
+- **Næste:** opgave 25 — `$1`-grebet efter en regex-indsættelse fanger ikke `;;`.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: pro-kortet på /scan lover den rute koden faktisk har 6/10
-03:1x ceo/scan-side-tal-og-sandt` — måles på **indhold**, ikke bare 200. Live
-`https://mahope.tools/scan` skal have `It reads the page from the server too`
-og `up to five at a time` og **ikke** `crawls the whole site` i pro-kortet —
-men **skal** have `whole-site crawl up to 200 pages` (det er desktop-appen, et
-andet program med sin egen ægte krybning). Live `/scan-da` skal have `Den
-læser siden fra serveren også` og `op til fem ad gangen` og **ikke**
-`gennemgår hele sitet`, men **skal** have `crawl hele sitet op til 200 sider`.
-Live `/api/compliance-scan?url=https%3A%2F%2Fmahope.tools` skal svare
-`requested:1` — den rutes tal er uændrede, så det bekræfter at kun kortets
-tekst er rettet.
-
-`VERIFICÉR DEPLOY: /scan laaser knappen under et kald 6/10 02:1x
-ceo/scan-dobbeltklink-laas` — måles på **indhold**, ikke bare 200: live
-`https://mahope.tools/scan` skal have `let scanILuft = null;`, `async function
-scanKør(raw){` **og** `if(scanILuft) return scanILuft;`, og knappen skal være
-`<button type="submit" class="btn-primary">` (uændret) — låsen skal altså være
-JS, ikke et nyt element. Live `/scan-da` skal have `Scanner …` i låseteksten og
-`Scan nu` i den oprindelige. Målingen kræver en browser: et `curl` kan se
-`scanILuft` og `knap.disabled = true`, men ikke at kaldet kun går én gang.
-
-`VERIFICÉR DEPLOY: scan-proxy svarer 400 paa tegnsfejl 6/10 01:5x
-ceo/scan-proxy-ugyldig-linje` — måles på **indhold og status**, ikke bare 200:
-`GET https://mahope.tools/scan-proxy?url=https%3A%2F%2F` skal svare **400** med
-kroppen `{"ok":false,"error":"Invalid URL — must start with http:// or
-https:// (https://)"}` — altså **hele linjen** i fejlen og ingen `multi`.
-Samme for `?url=%2F%2F%2F`. `?url=https%3A%2F%2Fwww.mahope.dk%2F%0Ahttps%3A%2F%2F`
-skal svare **400** med `(https://)` og **ikke** `multi`. Og
-`?url=https%3A%2F%2Fwww.mahope.dk%2F` skal stadig svare **200** med `ok:true` og
-`html`, og to linjer med samme side skal stadig give **én** side uden `multi`.
-
-`VERIFICÉR DEPLOY: /scan scanner igen 6/10 01:1x ceo/scan-analyse-doc` — måles
-på **indhold**: live `https://mahope.tools/scan` skal **indeholde**
-`function analyseDoc(doc){` og `const HINTTAIL=`, og `#result` skal efter en
-kørsel vise `<div class="scorecard">` med et tal og `Grade` — ikke «Scanning …».
-Live `/scan-da` skal have `function analyseDoc(doc){`. Live `/stats` skal have
-`data.waitlist_lifetime` og **ikke** `data.waitlist`. Selve kørslen måles med
-`curl --get --data-urlencode $'url=https://www.mahope.tools/\nhttps://www.mahope.tools/kontakt'
-https://mahope.tools/scan-proxy` → `multi:true` og to sider. HTTP 200 beviser intet.
-
-
-`VERIFICÉR DEPLOY: /scan læser 5 sider pr. kørsel 5/10 00:5x
-ceo/scan-flere-sider` — måles på **indhold**: live
-`https://mahope.tools/scan` skal have `<textarea id="url"` (ikke `<input
-id="url" type="url">`) med **`rows="2"`**, en rigtig
-`<label class="scanbox-label">` der **ikke** er `sr-only`, og teksten
-«one per line, up to 5 pages». Samme på `/scan-da` med
-«én pr. linje, op til 5 sider». Et **JS-kald** med to URL'er
-(`/scan-proxy?url=a%0Ab`) skal svare `multi: true`, `requested: 2` og
-`pages` med to elementer — mens «**ét** URL» stadig skal svare
-`{ok,html,url,size}` uden `multi`. Et kald med **seks** URL'er skal give
-**400** med «Scan up to 5 pages». Sidens JS skal have præcis én
-`scan-failed`-henvendelse (`check_scan_events` dømmer det). HTTP 200 bruges
-ikke som bevis.
-
-
-`VERIFICÉR DEPLOY: eksempel-resultat paa /scan 5/10 00:3x
-ceo/scan-eksempel-resultat` — måles på **indhold**: live `https://mahope.tools/scan`
-skal have `<h2 id="example-heading">Example result</h2>` **og** `<div
-class="scorecard">` med `66/100 — Grade C` **før** `<h2 id="scan-heading">`, og
-`/scan-da` skal have `Eksempel på et resultat` + `66/100 — Klasse C`. Begge sider
-skal have linken `href="#url=https%3A%2F%2Fwordpress.org%2F"`. HTTP 200 bruges
-ikke som bevis.
-
-`VERIFICÉR DEPLOY: kumulative taellere praefikses 4/10 23:3x
-ceo/livslangt-tal-navn` — måles på **indhold**: live `https://mahope.tools/api/health`
-(uden nøgle) skal have `stats.scans_lifetime` og `stats.waitlist_lifetime` og
-**ikke** `stats.scans` / `stats.waitlist`, og `stats.recentVisits` skal stadig
-findes ved siden af dem. Live `https://mahope.tools/api/results?days=7` skal
-stadig have `served_scans_lifetime` og `totals.runs`. Live
-`https://mahope.tools/`'s `track.js` skal være uændret. HTTP 200 bruges ikke.
-
-**Sådan måles det rigtigt, efter at den har fejlet én gang:** dommen skal finde
-`<header class="hero">` og *dets* `</header>`, ikke sideens første `</header>`.
-`/scan` har to headere (en skip-link foran heroen), så et `split('</header>')[0]`
-på hele siden erklærer en korrekt flyttet form for « stadig i `<main>` ». Samme
-fælde i det andet kriterium: `#verdict`s tal («PASS 4,07:1») **beregnes i
-browseren**, så et `curl` kan ikke se det — dom på `#verdict`s *plads* og på den
-statiske note-tekst.
+`VERIFICÉR DEPLOY: pro-kortene fortæller hvad /api/report gør 6/10 03:5x
+ceo/pro-kort-uden-krybning` — måles på **indhold**, ikke bare 200. Live
+`https://mahope.tools/compliance-site-check`, `/da/compliance-site-check`,
+`/cookie-check`, `/cookie-check-da`, `/contrast-checker`, `/contrast-checker-da`,
+`/security-headers-check`, `/text-on-image-checker` og
+`/text-on-image-checker-da` skal **alle** være fri for `crawls the whole site` og
+`gennemgår hele sitet`, og hver skal have sin egen sætning: «reads the page you
+name from the server» på compliance-site-check begge sprog, «reads the response
+headers as well — HSTS and CSP» på cookie-check begge sprog, «reads the page
+from the server too» på contrast- og text-on-image begge sprog, «reads the page
+source as well … which no response header shows» på security-headers-check. Live
+`/books`, de fire bogsider, `/compliance-ai` og `/da/compliance-ai` skal være fri
+for «crawls the site» / «crawls it». Live `/scan` og `/scan-da` skal stadig have
+den **ægte** desktop-påstand «whole-site crawl up to 200 pages» / «crawl hele
+sitet op til 200 sider» — den er et andet program med sin egen krybning.
 
 `DEPLOY OK 4/10 23:3x` for `ceo/scan-form-i-folden` — målt på indhold med to `curl`:
 live `/scan` har `<form id="scanForm" class="scanbox">` **inde i**
@@ -200,17 +136,21 @@ HTTP 200 blev ikke brugt som bevis.
     om den rute licensen låser. Målt: `check_scan_page_claims` **6 fund** på
     `63b65842` (hele vejen fra kommentar til pro-kort) mod **GRØN** nu, og
     `--self-test` **9/9**. Se opgave 29 for den større del.
-29. **«It crawls the whole site» står i 16 pro-kort på 8 sider, og er usandt.**
-    Hvorfor: samme måling som 28 — `/api/report` henter **én** side. Rettet på
-    `/scan` og `/scan-da`; de otte øvrige sider
-    (`compliance-site-check` EN+DA, `cookie-check` EN+DA, `contrast-checker`
-    EN+DA, `security-headers-check`) har den samme løgnest i deres `crawl`-række.
-    Accept: katalogens `crawl`-label på de otte sider fortæller hvad Pro
-    faktisk gør, `pro_table.py --apply` er kørt, og `check_pro_table` +
-    `check_catalog_where` er grønne. *(Målt 6/10: 18 kort har påstanden, 2 er
-    rettet her, 16 er tilbage. Bemærk at `/compliance-site-check` **fri** rute
-    faktisk følger links til de juridiske sider — det er den crawler, Pro ikke
-    er.)*
+29. ~~**«It crawls the whole site» står i 16 pro-kort på 8 sider, og er usandt.**~~
+     **LUKKET 6/10.** Målt: `handleReport` kalder `cscFetch` **én** gang, så
+     den læser én side og ser dens svarheadere. Alle **16** kort + **11**
+     prosa-steder på **9** sider rettet, hver med sin egen ærlige sætning —
+     målt pr. side hvilken kilde det frie værktøj læser. Ny **dom 5** i
+     `check_scan_page_claims` dømmer katalogen for `eucomply-pro`, låst til
+     målingen `kald == 1`; selftest **12/12** (mutation 10/11 genindsætter
+     løgnest på sider dom 4 aldrig så, mutation 12 beviser at porten **tie**,
+     når `handleReport` faktisk henter to sider). `scan-clients.test.mjs`
+     krævede den løgnest — nu **534/534**, målt rød (**532/534**) med løgnest
+     genindsat. `pro_table.py --apply` kørt på 9 sider, `check_pro_table` +
+     `check_catalog_where` grønne, katalogens 27 `where`-citater peger på den
+     nye tekst. Fuld gate: **GRØN — 173 steps**. *Bemærk: `url-inspector`s
+     «across a whole site» gælder Page Profile Pro, en anden rute i et privat
+     repo, så den er ikke dømt her.*
 30. ~~**Porten kunne tvinge en sand side til at lyve.**~~ **LUKKET 6/10.**
     Review-fund 29/9 (MIDDEL). `tools/check_storage_claims.py` læste *næste
     funktions signatur* som et kald, så 7 af 12 «hentende» ruter aldrig
