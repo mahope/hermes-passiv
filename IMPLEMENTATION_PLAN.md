@@ -14,14 +14,15 @@
   `check_frontpage_pricing` dømmer det — målt rød (**2 fund**) med den gamle
   sætning genindsat, selftest **7/7**. Portens «2 i listen, 11 via den» var
   håndholdt og uklædte; den er væk.
-- **`check_js_residue` var grøn på den form af resten den var bygget til at
-  fange, rettet 6/10.** `; ;` med mellemrum — den hyppigere, fordi `sed`/`perl`
-  indsætter med et mellemrum foran — gav **0 fund**. Se opgave 31.
+- **`check_js_residue` tabte præcis den form den var bygget til at fange,
+  rettet 6/10.** Rettelsen af `; ;` slettede de linjeskifter den matchede
+  over, så den maskerede tekst fik færre linjer end den rå — og porten tabte
+  et ægte fund og rapporterede linjetal **to for lave**. Se opgave 31.
 - **Én åben `VERIFICÉR DEPLOY`-note** (se nedenfor), alle tidligere lukket på
   målt indhold, ikke på HTTP 200.
-- **Næste:** mål de **2** `#url=`-delingskilder på `/scan`, så vi ved om deling
-  er værd at gøre synlig. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK`
-  ikke kørt (uge-tjek).
+- **Næste:** mål de **2** `#url=`-delingskinder på `/scan`, så vi ved om
+  deling er værd at gøre synlig. `PR-TJEK 6/10`: **0** åbne PR'er.
+  `BRANCH-TJEK` ikke kørt (uge-tjek).
 
 ## Verificér deploy
 
@@ -201,13 +202,43 @@ HTTP 200 blev ikke brugt som bevis.
     ene legitime form er den tomme betingelsesliste, og den kan stå midt i en
     fyldt peger (`for (let i = 0; ; i++)`), så `RE_LOOP_HEADER` sletter parret på
     hele pegeren — ikke kun mellem parenteser som den gamle `RE_EMPTY_HEADER`.
-    **Selftest 0 fejl, porten 0 fund i 2087 enheder** (site + dist), og alle ni
-    nye tilfælde er målt røde på den gamle kode (0 fund) mod korrekte på den
-    nye. Fuld gate **GRØN — 177 steps**. Der kom også en rå-bekræftelse på
-    dobbelt-reglen: maskeren gør to template-literals på én linje til mellemrum,
-    så `` `a` ; `b` ; `` lignede et fund; den er låst med et tilfælde.
-    *Ingen deploy-note:* kun `tools/` er rørt, ingen fil i `site/` eller `dist/`,
-    så intet på sitet ændrer sig.
+**Selftest 0 fejl, porten 0 fund i 2087 enheder** (site + dist), og syv af
+     de ti nye selftest-tilfælde er målt røde på den gamle kode (0 fund) mod
+     korrekte på den nye; de tre øvrige er nye vagter, fordi den gamle regel
+     slet ikke kendte `; ;`-formen. *(Et review-fund sagde «ni» — tallet er
+     syv, og det er rettet her, så det ikke bliver brugt som grundlag for at
+     droppe en port.)* Fuld gate **GRØN — 177 steps**. Der kom også en
+     rå-bekræftelse på dobbelt-reglen: maskeren gør to template-literals på én
+     linje til mellemrum, så `` `a` ; `b` ; `` lignede et fund; den er låst med
+     et tilfælde. *Ingen deploy-note:* kun `tools/` er rørt, ingen fil i
+     `site/` eller `dist/`, så intet på sitet ændrer sig.
+
+32. ~~**Rettelsen i opgave 31 slettende de linjeskifter den matchede over.**~~
+     **LUKKET 6/10.** Review-fund 6/10 (MIDDEL): `RE_EMPTY_CONDITION` er
+     `;[ \t\r\n]*;`, så den matcher *også på tværs af et linjeskift*, og
+     `out[i + k] = " "` skrev `" "` over hvert tegn i matchen —
+     **linjeskiftene inklusive**. Den maskerede tekst fik derfor færre linjer
+     end den rå, og `judge_js` tæller linjer i den maskerede tekst *og* slår
+     den rå linje op på samme indeks, så både tal og opslag kom ud af trit.
+     Docblocken sagde «positionerne bevares, så et fund stadig kan slås op på
+     den rigtige linje» — længden blev bevaret, **linjetallet ikke**.
+     *Målt* med portens egen `judge_js()` på samme input, `2ee5d77f` mod
+     `887d1c0f`: `for (let i = 0;\n;\ni++) {}\n;\n` gav **2 fund** (linje 2 +
+     4) på den gamle kode og **0** på den nye. Linje 3 (`;` alene) er den
+     **legitime** tomme betingelsesliste, linje 4 (`;` alene) er en **ægte
+     rest** efter pegeren — altså tabte den nye kode den sande. Og et fund på
+     rå linje 9 blev rapporteret på linje 7. Rettelse: `if out[i + k] not in
+     "\r\n"`. *Efter rettelsen* (målt i samme måling): **1 fund på linje 4**,
+     og den anden række **linje 9**. Den falske positive på den legitime
+     `;`-linje kommer ikke tilbage, fordi semikolonerne selv stadig blandes
+     ud, så den maskerede linje er `   `. Selftest **0 fejl** mod **3 fejl**
+     på den gamle kode — to nye rækker plus en ny `paa_linje`-kontrol der
+     dømmer linjetallet, fordi det er læsbarheden og ikke en bivirkning.
+     Porten **0 fund i 2087 enheder**, og kørt på de **35 egne `.js`-filer**
+     uden for portens dækning (den dækker `site/` og `dist/`): **0 fund**, så
+     den bredere regel har ikke lavet falske positive i `desktop/`- eller
+     extension-overfladen. Fuld gate **GRØN — 177 steps**. *Ingen
+     deploy-note:* kun `tools/` er rørt.
 
 ## ❓ Til Mads
 

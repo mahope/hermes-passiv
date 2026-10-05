@@ -242,8 +242,15 @@ def blank_empty_conditions(masked: str) -> str:
 
     Klammebalanceringen er sikker her, fordi den løber på den **maskerede**
     tekst: streng- og kommentarindhold er allerede mellemrum, så en `(` i en
-    streng kan ikke forskyde dybden. Positionerne bevares, så et fund stadig kan
-    slås op på den rigtige linje.
+    streng kan ikke forskyde dybden.
+
+    **Linjeskiftene bevares.** `RE_EMPTY_CONDITION` matcher på tværs af et
+    linjeskift (`;[ \\t\\r\\n]*;`), så en sletning der skrev `" "` over hele
+    matchet ville slette linjeskiftene med. Den maskerede tekst fik så færre
+    linjer end den rå, og `judge_js` tæller linjer i den maskerede tekst
+    *og* slår den rå linje op på samme indeks — både optællingen og
+    opslaget kom derfor ud af trit, og fundene efter en sådan peger fik et
+    for lavt linjetal. Se regressionen i `self_test`.
     """
     out = list(masked)
     n = len(masked)
@@ -262,7 +269,8 @@ def blank_empty_conditions(masked: str) -> str:
         header = "".join(out[i:j + 1])
         for mm in RE_EMPTY_CONDITION.finditer(header):
             for k in range(mm.start(), mm.end()):
-                out[i + k] = " "
+                if out[i + k] not in "\r\n":
+                    out[i + k] = " "
     return "".join(out)
 
 
@@ -352,6 +360,20 @@ def self_test() -> int:
             fails.append(f"{label}: forventede {want} fund, fik {len(got)}"
                          + (f" -> {got}" if got else ""))
 
+    def paa_linje(label: str, got: list[str], linje: int) -> None:
+        """Fundene skal ligge på præcis den linje — tallet er læsbarheden.
+
+        Portens hele begrundelse for at dømme denne klasse er docblockens «den
+        eneste måde at se den på er at læse linjen». Et fund på den rigtige
+        kode med et for lavt linjetal sender læseren to linjer forkert, så
+        linjetallet er en del af rettelsen og ikke en bivirkning af den.
+        """
+        faktisk = sorted(int(f.split(":", 1)[1].split(" ", 1)[0])
+                         for f in got)
+        if faktisk != [linje]:
+            fails.append(f"{label}: forventede fund på linje {linje}, "
+                         f"så {faktisk or 'ingen'} -> {got}")
+
     # 1. Syntetiske tilfælde. Rester er fund, kode og data er ikke.
     eq("rest midt i kode", judge_js("t", "f();;\ng();\n"), 1)
     eq("rest i statement-slutning", judge_js("t", "const r = /x/;;\n"), 1)
@@ -367,6 +389,30 @@ def self_test() -> int:
        judge_js("t", "for (let i = 0; ; i++) { f(); }\n"), 0)
     eq("tom betingelse paa egen linje",
        judge_js("t", "for (let i = 0;\n;\ni++) { f(); }\n"), 0)
+    # Regression fra review-fundet 6/10 (MIDDEL). `RE_EMPTY_CONDITION` er
+    # `;[ \t\r\n]*;`, så den matcher **også på tværs af et linjeskift**, og
+    # sletningen skrev `" "` over hvert tegn i matchen — linjeskiftene
+    # inklusive. Følgen var at den maskerede tekst fik færre linjer end den
+    # rå, så både optællingen og opslaget på rå linje (`raw_lines[idx - 1]`)
+    # kom ud af trit. Rækkerne her lå på 0 fund og på linje 7.
+    #
+    # Den første er hele fundet: linje 2 (`;` alene) er den **legitime**
+    # tomme betingelsesliste, linje 4 (`;` alene) er en **ægte rest** — den
+    # ligger *efter* pegeren, så den hører ikke til den. Den gamle kode
+    # (`2ee5d77f`) fandt begge, altså én sand + én falsk positiv; den nye
+    # kode fandt **ingen af dem**, altså tabte den sande. Den skal have præcis
+    # den ene, på den rigtige linje.
+    eq("rest under en flerlinjes peger",
+       judge_js("t", "for (let i = 0;\n;\ni++) {}\n;\n"), 1)
+    paa_linje("rest under en flerlinjes peger ligger paa sin egen linje",
+              judge_js("t", "for (let i = 0;\n;\ni++) {}\n;\n"), 4)
+    # Og den anden halvdel: et fund efter **to** flerlinjes pegere. Den
+    # maskerede tekst tabte to linjeskift, så `; ;` på rå linje 9 blev
+    # rapporteret som linje 7.
+    paa_linje("fund efter to flerlinjes pegere tæller rigtigt",
+              judge_js("t", "f();\nfor (let i = 0;\n;\ni++) { g(); }\n"
+                            "while (a;\n;\nb) { h(); }\nfor (;;) {}\n"
+                            "z(); ; w();\n"), 9)
     eq("streng er data", judge_js("t", 'const s = "a;;b";\n'), 0)
     eq("template er data", judge_js("t", "const s = `a;;b`;\n"), 0)
     eq("regex-literal er data", judge_js("t", "const r = /a;;b/;\n"), 0)
