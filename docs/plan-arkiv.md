@@ -8287,3 +8287,46 @@ live `/scan-proxy?url=https%3A%2F%2F` svarer **400** med hele linjen i fejlen; t
 URL'er giver `multi:true, requested:2, scanned:2`; live `/stats` læser
 `data.waitlist_lifetime`. Begge `/scan`-sider beholder den **ægte** desktop-påstand
 om 200 sider — den er et andet program med sin egen krybning.
+
+## 6/10 — `ceo/pricing-fra-forsiden`: prislisten fra begge forsider + rød CI rettet
+
+**Rød CI først.** `582cdb74` var **rød** på `plan-status`: STATUS var **38**
+linjer mod **25** tilladt. Porten skrev selv ud at dens egen gamle acceptkriterium
+var et awk-kommando med mønsteret `/^## STATUS/` på en overskrift der hedder
+`# STATUS` — det matcher aldrig, så awk skrev 0 linjer for enhver plan, og
+kriteriet var grønt før rettelsen og efter.
+
+**Målt, ikke antaget.** CEO-kø 0 (review-fund 29/9) er **helt** implementeret og
+testet, så den var ikke opgaven: `handleUrlInspect(request, url, env)` får `env`
+(`site/_worker.js:532` + `:4274`), `targetIsPublic()` afviser IPv4-mapped IPv6 ved
+at pakke hex-formen ud til IPv4 og kalde `ipv4IsPublic`, begge redirect-hop er
+vagt, `thanks.html` har egen `PENDING_OUT` til 202 (så den ikke ender i «your
+payment went through»), `net.js` gør 429 endeligt for de otte klienter, og AI-slot
+**gives tilbage** når OpenRouter fejler, så ét genkald ikke koster kvoten.
+`tests/stripe-worker.test.mjs` har **474** linjer om netop url-inspect, SSRF og
+mutationen på den gamle kode. Alt dette lå i `main` allerede.
+
+**Fundet.** Forsiden nævner **2** af katalogens **13** produkter, og **0** af
+sidens links pegede på `/pricing` — den eneste side der viser alle 13 med pris.
+`/free-tools` linkede til den to steder. Så en læser der landede på forsiden for
+at finde ud af, hvad Clean Copy Pro kostede, skulle ramme `/free-tools` eller gætte
+en URL. Intet var brudt og ingen død link, så `check_links` var grøn hele vejen.
+
+**Rettelse.** Én linje i `#products` på begge forsider, hver med `btn btn-small`
+som de to lister under sig bruger, og hver til sit eget sprog (`/pricing` /
+`/da/pricing`). Ny port `tools/check_frontpage_pricing.py` + 2 steps i gaten.
+
+**Målt på den gamle kode:** mutation 1 (EN peger på en anden rute) og 2 (DA peger
+på den engelske liste) er **røde** på de uændrede filer. Derudover blev krav 2
+(`listen findes`) målt ved at flytte `site/pricing.html` aside i selftestens
+`finally`-beskyttelse — et ændret href fanges af krav 1 først, så krav 2 var
+**uopnåeligt**, en regel uden en dom der kan fejle, præcis den fejlform
+`check_plan_status` selv blev skrevet for at lukke. Selftest **5/5**.
+
+**En fejl undervejs, målt fordi den kunne have ligget gemt.** Selftestens mutationer
+skrev de fulde `<a …>`-tagger. Da `btn btn-small` kom på markup'en, holdt
+mutationerne ikke længere, og selftesten faldt til **3/5** med en *grøn* port —
+altså porten ville have været grøn uden at krav 1 kunne fejle. Rettet ved at lade
+mutationerne ramme `href`-attributtet alene, som ikke ændrer sig med klassen.
+Det er samme fejl som `$1`-resten i `mahoje-dk`: et værktøj der tier, i stedet for
+et der røder.

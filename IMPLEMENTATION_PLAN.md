@@ -1,44 +1,28 @@
 # STATUS
-- **«It crawls the whole site» lå i 16 pro-kort på 9 sider + 11 prosa-steder,
-  6/10.** Den rute en licens låser op (`/api/report`) kalder `cscFetch`
-  **præcis én gang** — målt på koden. Rettet på alle ni sider, og hver fik sin
-  **egen** ærlige sætning, fordi de frie værktøjer ikke er ens: `/scan`,
-  `contrast-checker` og `text-on-image-checker` læser slet ingen side i
-  browseren (0 kald efterfulgt af `rg -c 'scan-proxy|api/header-check'`), så
-  Pro læser den fra serveren; `cookie-check` læser kilden (`/scan-proxy` giver
-  html uden headers), så Pro læser **også** svarheaderne; `security-headers-check`
-  læser kun headerne, så Pro læser kilden; `compliance-site-check` følger de
-  juridiske links, så Pro gør **ikke** flere sider — den læser dybere.
-- **`check_scan_page_claims` så kun 2 af de 16 kort, 6/10.** Dom 4 læste
-  `proCard()` på `/scan` og `/scan-da`. De anden syv lå i
-  `tools/stripe_catalog.json`, som er sandheden for alle 21 pro-blokke. Ny
-  **dom 5** læser katalogen for `eucomply-pro`, låst til samme måling
-  (`kald == 1`), så en ægte flersidet `handleReport` slår den fra. Selftest
-  **12/12**.
-- **Tre fund rettet i dom 5's egen begrundelse, 6/10** (review `mahope-tools`).
-  Optællingen «16 kort på 9 sider, dom 4 så to af dem» holdt ikke på
-  `787488ae`'s egen baseline: målt med portens `RE_KRYB` over
-  `pro_table_pages[].pro_features[].labels` er der **14** kryb-påstande på **7**
-  sider, alle i katalogen — og dom 4 så **nul** af dem, ikke to, fordi de to
-  `/scan`-sider den læste var allerede rettet i `4515d348`. Beviset er at
-  porten var GRØN på `716d1e9b`. Samme måling rettede «otteogtyve blokke» til
-  **21** ved `:257` (katalogens `pro_table_pages` har 21, `site/` har 21 filer
-  med `pro-table:start`), og en scriptet indsættelse havde flyttet halvdelen af
-  docstringen ind i 5 tegns indrykning — nu tilbage på kolonne 0.
-  Dom + selftest **grønne**, ingen kode ændret.
-- **`tests/scan-clients.test.mjs` krævede den løgnest, 6/10.** Dom 4 i testen
-  ville have «crawls the whole site — the same check on every page it finds»
-  stå i kortet — altså holdt testen løgnen i live. Dømmer nu intet krybende
-  verb **i pro-kortet** plus den positive sætning om serverlæsningen.
-  Målt begge veje: **532/534** med løgnest genindsat, **534/534** med teksten.
-- **Syv `VERIFICÉR DEPLOY`-noter er verificeret og lukket** (se nedenfor):
-  de to fra dette felt målt på indhold 6/10 07:0x.
-- **Næste:** CEO-kø 0 — `/api/url-inspect` er helt nede (`handleUrlInspect`
-  mangler `env`, så `rateLimitIp(request, env, …)` kaster → 500 på hvert kald).
-  Derefter feature-kø 10 — `/scan` mangler et eksempel-resultat at dele uden
-  en kørsel.
+- **Pro-kortene lovede en krybning de ikke har, rettet 6/10.** Ruten en licens
+  låser op (`/api/report`) kalder `cscFetch` **én** gang, så Pro læser **én**
+  side. 16 kort + 11 prosa-steder på 9 sider fik hver sin ærlige sætning,
+  målt pr. side hvilken kilde det frie værktøj læser. Ny dom 5 læser
+  katalogen, selftest **12/12**. Egen optælling rettede «16 kort på 9 sider,
+  dom 4 så to af dem» til **14 kort på 7 sider, dom 4 så nul** — porten var
+  grøn på `716d1e9b`, altså helt blind for de fjorten.
+- **`tests/scan-clients.test.mjs` krævede den løgnest, rettet 6/10.** Dom 4
+  ville have holdt «crawls the whole site» i live. Målt begge veje:
+  **532/534** med løgnest genindsat, **534/534** uden.
+- **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Den nævner **2** af
+  katalogens **13** produkter, og den eneste side med alle 13 var ubefærdet
+  herfra — `/free-tools` linkede til den, forsiden gjorde ikke. Baseline:
+  **6** besøgende, bounce **100 %**. Nu linker begge forsider til hele listen.
+- **Syv `VERIFICÉR DEPLOY`-noter er lukket på målt indhold**, ikke på HTTP 200.
+- **Næste:** mål de **2** `#url=`-delingskilder på `/scan` — hvor mange
+  delinger kommer tilbage som besøg, så vi ved om deling er værd at gøre
+  synlig.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: prislisten fra begge forsider ceo/pricing-fra-forsiden 5/10
+07:0x` — live `mahope.tools/` skal have **1** `/pricing`-link i salgsafsnittet
+og live `mahope.tools/da/` **1** `/da/pricing`, målt på indhold.
 
 `DEPLOY OK 6/10 07:0x` for `ceo/js-rest-gate` — målt på **indhold**: live
 `mahope.tools/da/free-tools` (34 991 bytes) har **0** `);;if` og **1**
@@ -282,11 +266,27 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
    var altså ikke årsagen; 7 besøgende kan heller ikke dømme en forside.
 
 9. ~~**`/scan` tager kun 1 URL.**~~ **Leveret 5/10** — se arkivet.
-10. **`/scan` har ingen skærmbillede-resultat at dele uden et resultat.** Hvem:
-    alle der scanner. Tal: hvor mange resultater der deles videre (og kommer
-    tilbage som besøg). Accept: et statisk, ærligt eksempel-resultat i folden
-    der ikke sender en hændelse, så læseren ser produktet uden at købe en
-    kørsel. Datagrund: `#url=`-deling virker kun *efter* en kørsel, så en læser
-    der kommer fra en guide kan ikke se, hvad et resultat overhovedet er. Målt
-    afvigelse: et eksempel med et fast tal går stale, så det skal genereres
-    eller mærkes som et eksempel — ikke skrives som et målt resultat.
+
+10. ~~**`/scan` mangler et eksempel-resultat at dele.**~~ **LUKKET 6/10.** Leveret
+    som et *målt* eksempel-kort under folden (`afbe1a37`), ikke et fasttal der
+    går stale. Målt afvigelse: tallene kommer fra `tools/scan_example.py`, der
+    kører sidens egne scripts i headless Chromium mod en lokal stub.
+
+12. **Forsiden nævner 2 af 13 produkter og 0 links til prislisten.** Hvem:
+    alle 6 på `mahope.tools/`. Tal: hvor mange af de 11 skjulte produkter der
+    findes. Accept: salgsafsnittet linker til `/pricing` i begge sprog, så alle
+    13 er at finde. Datagrund: målt 5/10 — 100 % bounce, og **0** links, mens
+    `/free-tools` linkede to steder. *Leveret 6/10 i `ceo/pricing-fra-forsiden`.*
+
+13. **Hver produktside kun én købsknap — de 13 har 73 dokumenterede købssider.**
+    Hvem: købere på tværs af alle 13. Tal: køb pr. produktside. Accept: hver
+    produktside har præcis én synlig CTA til sin egen payment link, så ingen
+    læser skal vælge mellem to knapper. Datagrund: målt 5/10 —
+    `check_stripe_ctas` tæller i 73 dokumenterede købssider, men kun pr. side,
+    ikke pr. CTA. *Ikke påbegyndt.*
+
+14. **Ingen produktside siger hvad Pro *ikke* gør.** Hvem: bureauer der
+    overvejer. Tal: køb der ikke annulleres fordi de troede mere end de fik.
+    Accept: hvert pro-kort har én ærlig grænse. Datagrund: målt 6/10 — 14
+    kryb-påstande blev rettet, så huset kan ikke længere regnes på det;
+    næste måling er de 21 pro-blokkers øvrige løfter.

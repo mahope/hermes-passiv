@@ -1870,6 +1870,26 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_plan_status.py", "--self-test"),
         inputs=("tools/check_plan_status.py", "IMPLEMENTATION_PLAN.md"),
     ),
+    # Købsvejen fra forsiden (5/10). Målt: `mahope.tools/` havde 6 besøgende og
+    # 100 % bounce, og `#products` nævnte 2 af katalogens 13 produkter med
+    # **0** links til `/pricing` — den eneste side der viser alle 13. Ingen
+    # fejl, intet brudt: en vej manglede, og `check_links` kan ikke se det fordi
+    # der ikke er nogen død link. Derfor dømmer porten vejen, og dens egen
+    # selftest flytter den rigtige prisfil aside så krav 2 kan fejle alene.
+    Step(
+        id="frontpage-pricing",
+        argv=("python3", "tools/check_frontpage_pricing.py"),
+        inputs=("tools/check_frontpage_pricing.py", "site/index.html",
+                "site/da/index.html", "site/pricing.html", "site/da/pricing.html",
+                "tools/stripe_catalog.json"),
+    ),
+    Step(
+        id="frontpage-pricing-selftest",
+        argv=("python3", "tools/check_frontpage_pricing.py", "--self-test"),
+        inputs=("tools/check_frontpage_pricing.py", "site/index.html",
+                "site/da/index.html", "site/pricing.html", "site/da/pricing.html",
+                "tools/stripe_catalog.json"),
+    ),
     # Workeren skal kunne sige "jeg er død" selv (1/10). Målt først: nul
     # forekomster af "sentry" i hele repoet, mens `/api/url-inspect` lå på
     # 500/1101 på hvert kald og `/api/compliance-ai` svarede 503 i dagevis —
