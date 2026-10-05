@@ -678,10 +678,12 @@ function safeContentType(value) {
   return clean || 'an unknown content type';
 }
 
-// Hvor mange sider ét kald på `/scan-proxy` må hente. Fem er samme tal som
-// `/api/compliance-scan` tager, så de to ruter ikke kan sammenlignes på hvor
-// meget én besøger får pr. klik — det er den forskel pro-kortet på `/scan`
-// fortæller om, og den skal være sand i koden, ikke kun i teksten.
+// Hvor mange sider ét kald på `/scan-proxy` må hente. De **to ruter er ulige**:
+// `/scan` læser præcis den side du skrev, uden at følge links, så hver linje
+// koster én hentning, og `SCAN_PROXY_MAX_URLS = 5` er fem sider pr. kørsel.
+// `/api/compliance-scan` følger derimod links til de juridiske sider, så dens
+// loft er `CSC_MAX_PAGES = 12` pr. kald. `tools/check_scan_page_claims.py`
+// dømmer at de to tal ikke kan glide fra hinanden — eller fra klientens tekst.
 const SCAN_PROXY_MAX_URLS = 5;
 // Ét kald må ikke hente fem sider hver med sin egen fulde timeout: runtime'en
 // dræber en arbejdsløs anmodning, og kunden ville få en 502 uden at vide hvor

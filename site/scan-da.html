@@ -83,7 +83,7 @@
              placeholder="https://din-hjemmeside.dk&#10;https://din-hjemmeside.dk/kontakt"
              inputmode="url" spellcheck="false"></textarea>
       <button type="submit" class="btn-primary">Scan nu</button>
-      <p class="scanbox-hint">Sæt en URL pr. linje for at se hvor et helt site står. Hver side får sin egen score, og du får de sider du navngiver — Pro tjekker alle sider den finder.</p>
+      <p class="scanbox-hint">Sæt en URL pr. linje for at se hvor et helt site står. Hver side får sin egen score, og du får de sider du navngiver — op til fem pr. kørsel. En licens læser siden igen på serveren, hvor den kan se de svarheadere din browser aldrig viser.</p>
     </form>
   </div>
 </header>
@@ -386,8 +386,8 @@ window.shareResult=shareResult;
 // juridiske sider. Forskellen står i overskriften.
 function proCard(){
   var html = '<div class="result-card pro-card">';
-  html += '<h3 style="margin:0 0 4px;font-size:16px">Den læste den ene side, du indsatte. Et website er alle sider.</h3>';
-  html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Tilgængelighedstjek på den side du indsætter — alt-tekst, mærkater, overskrifter, kontrast</li><li>Sides titel, sprogattribut, viewport og h1 tjekket med</li></ul></td><td><ul><li>Den gennemgår hele sitet — samme tjek på hver side den finder</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <!-- pro-table:end -->';
+  html += '<h3 style="margin:0 0 4px;font-size:16px">Den læste de sider, du indsatte. Et website er alle sider.</h3>';
+  html += '<!-- pro-table:start --> <div class="table-wrap"> <table class="compare pro-table"> <caption class="sr-only">Gratis og EUComply Pro, side mod side</caption> <thead> <tr><th scope="col"><span class="sr-only">Plan</span></th><th scope="col">Gratis</th><th scope="col">EUComply Pro</th></tr> </thead> <tbody> <tr><th scope="row">Hvad du får</th><td><ul><li>Tilgængelighedstjek på de sider du indsætter, op til fem ad gangen — alt-tekst, mærkater, overskrifter, kontrast</li><li>Sides titel, sprogattribut, viewport og h1 tjekket med</li></ul></td><td><ul><li>Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se</li><li>18 server-side GDPR-, cookie-, sikkerheds- og metatjek</li><li>Fundene som PDF-rapport, du kan give en kunde</li></ul></td></tr> <tr><th scope="row">Pris</th><td><span class="pro-price">$0</span><span class="pro-note">ingen licensnøgle nødvendig</span></td><td><span class="pro-price">$79/år pr. website</span></td></tr> </tbody> </table> </div> <p class="pro-note">$149 én gang pr. website — livstid, første 100 køb</p> <!-- pro-table:end -->';
   html += '<a class="btn" style="display:inline-block;padding:12px 24px;margin-top:8px;text-decoration:none" href="https://buy.stripe.com/eVq00i4YH6UG69g0ObbMQ03" rel="nofollow noopener" onclick="window.trackEvent&&window.trackEvent(\'pro-card-click\')">Køb EUComply Pro — $79/år pr. website</a>';
   html += '<p class="pro-card-note">Én licens pr. website. <a href="/da/compliance-report">Se hvad Pro tilføjer, før du køber</a>.</p>';
   html += '</div>';

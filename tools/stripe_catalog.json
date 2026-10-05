@@ -2033,7 +2033,7 @@
           "where": "site/scan.html:434-508 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "en": [
-              "The accessibility checks on the page you paste — alt text, labels, headings, contrast"
+              "The accessibility checks on the pages you paste, up to five at a time — alt text, labels, headings, contrast"
             ]
           }
         },
@@ -2050,19 +2050,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan.html:396 proCard() h3 «A site is every page» — hele løftet står i den linje og i site/scan.html:146-148 «The report itself is free and needs no licence. A EUComply Pro licence unlocks the PDF download»",
+          "where": "site/scan.html:397 «It reads the page from the server too» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/scan.html:396 proCard() h3 «A site is every page» og site/scan.html:146-148 «A EUComply Pro licence unlocks the PDF download»",
+          "where": "site/scan.html:397 «18 server-side GDPR, cookie, security and metadata checks» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2099,7 +2099,7 @@
           "where": "site/scan-da.html:427-501 — elleve add()-kald (IMG_ALT, FORM_LABEL, LINK_TEXT, BUTTON_TEXT, DUP_ID, TARGET_BLANK, HEADING_SKIP, IFRAME_TITLE, TABLE_HEADER, ARIA_HIDDEN_FOCUS, CONTRAST) læser den hentede sidekilde i browseren",
           "labels": {
             "da": [
-              "Tilgængelighedstjek på den side du indsætter — alt-tekst, mærkater, overskrifter, kontrast"
+              "Tilgængelighedstjek på de sider du indsætter, op til fem ad gangen — alt-tekst, mærkater, overskrifter, kontrast"
             ]
           }
         },
@@ -2116,19 +2116,19 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/scan-da.html:389 proCard() h3 «Et website er alle sider» — hele løftet står i den linje og i site/scan-da.html:143-145 «En licens til EUComply Pro låser PDF-download»",
+          "where": "site/scan-da.html:390 «Den læser siden fra serveren også» — påstanden står i kortet; om den er sand afgør `tools/check_scan_page_claims.py`, der tæller `cscFetch(`-kaldene i `handleReport`",
           "labels": {
             "en": [
-              "It crawls the whole site — the same check on every page it finds"
+              "It reads the page from the server too — response headers included, which a browser check cannot see"
             ],
             "da": [
-              "Den gennemgår hele sitet — samme tjek på hver side den finder"
+              "Den læser siden fra serveren også — svarheadere med, som et browsertjek ikke kan se"
             ]
           }
         },
         {
           "id": "server-checks",
-          "where": "site/scan-da.html:389 proCard() h3 «Et website er alle sider» og site/scan-da.html:143-145 «En licens til EUComply Pro låser PDF-download»",
+          "where": "site/scan-da.html:390 «18 server-side GDPR-, cookie-, sikkerheds- og metatjek» — de 18 fund-typer kommer fra `reportProFindings(page.html, page.headers)` i `_worker.js`, som ogsa ser svarheaderne",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"

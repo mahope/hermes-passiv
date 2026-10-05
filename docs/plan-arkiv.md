@@ -8167,3 +8167,53 @@ ikke dette fund, men det bør rettes i samme tur som næste `/scan-proxy`-rør.
   `check_scan_events` 18/18, `check_scan_fold` 5/5,
   `check_lifetime_counters` 17/17, `check_storage_claims` 13 sider 0,
   `check_pro_table` GRØN, `check_plan_status` GRØN.
+
+## Opgave 28 + review-fund 6/10 (MIDDEL) — løgnen om hvor mange sider Pro læser (6/10)
+
+**Fundet:** kommentaren over `SCAN_PROXY_MAX_URLS` sagde «Fem er samme tal som
+`/api/compliance-scan` tager, så de to ruter ikke kan sammenlignes på hvor
+meget én besøger får pr. klik». Begge halve var usande.
+
+**Målt, ikke læst:**
+
+| påstand | målt |
+|---|---|
+| `/api/compliance-scan` tager 5 | **12** — `CSC_MAX_PAGES = 12` (`_worker.js:3681`), summen pr. kald er præcis 12,fordi `cscBudgetAndele` fordeler den med `Math.floor(CSC_MAX_PAGES / antal)` |
+| de to ruter kan ikke sammenlignes på sidetallet | de er ulige på en anden måde: `/scan-proxy` kalder `scanProxyReadPage` én gang pr. linje og følger ingen links; `/api/compliance-scan` læser forsiden og følger de links, der peger på de juridiske sider |
+| «It crawls the whole site» i pro-kortene | **usandt.** Den rute en betalt licens låser op, `/api/report`, kalder `cscFetch` **præcis én gang** |
+
+**Den sidste måling:** den rigtige worker blev kørt med en gyldig
+`eucomply-pro`-nøgle i en falsk KV og en stub-fetch. Ét ude-kald, HTTP 200,
+13 fund på et rensesite; med en 301-kæde og et `strict-transport-security`-header
+gav den 18 fund-typer. Uden nøglen svarer den samme rute **402** og henter
+intet — så tællingen kan ikke forveksles med en fejlslået licenstjek.
+
+**Rettelsen:**
+
+- Kommentaren over `SCAN_PROXY_MAX_URLS` peger nu på **begge** tal.
+- `crawl`-rækken i pro-kortet på `/scan` og `/scan-da` siger «It reads the
+  page from the server too — response headers included, which a browser check
+  cannot see» / «Den læser siden fra serveren også — svarheadere med, som et
+  browsertjek ikke kan se».
+- Felt-hintet på begge sprog siger «up to five per run» og hvad en licens
+  faktisk tilføjer; overskriften siger «It read the **pages** you pasted».
+- `tools/check_scan_page_claims.py`: fire domme + selftest, lagt i gaten som
+  **4 steps** (dom + selftest) — porten tæller `cscFetch(`-kaldene i
+  `handleReport` i stedet for at tro på en påstand.
+
+**Porten dømmer kun pro-kortet, ikke hele siden** — en målt afgrønsning:
+`scan.html:169` og `scan-da.html:166` beskriver **desktop-appen**, der
+*skal* sige «crawl hele sitet op til 200 sider». Det er et andet program med
+sin egen krybning, og påstanden er sand for det. Bevaret og efterprøvet i den
+*færdige* side.
+
+**Resultat:** `check_scan_page_claims` **6 fund** på `63b65842` mod **GRØN** nu;
+`--self-test` **9/9**, hvoraf mutation 9 gør `handleReport` til at hente to
+sider og forventer **grøn** — porten skal holde op, hvis krybningen engang
+bygges. Fuld gate **173 steps** grøn (var 169). `build_sites` **338 filer, 0
+brudte links**, `seo_check` **316 sider, 0 fund**, `stripe-worker` **474/474**,
+`check_inline_js` **0**, `scan-clients` **532/532**. Katalogruterne
+`check_pro_table` og `check_catalog_where` grønne efter at `crawl` og
+`server-checks` fik nye `where`-pejlinger ind i de to sider.
+
+**Ikke lukket:** de otte øvrige sider har samme løgnest (opgave 29).

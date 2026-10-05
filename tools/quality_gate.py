@@ -1941,6 +1941,27 @@ STEPS: tuple[Step, ...] = (
         argv=("python3", "tools/check_scan_fold.py", "--self-test"),
         inputs=("tools/check_scan_fold.py", "site/scan.html", "site/scan-da.html"),
     ),
+    # Review-fund 6/10 (MIDDEL): kommentaren over `SCAN_PROXY_MAX_URLS` sagde
+    # «Fem er samme tal som `/api/compliance-scan` tager» — men den betalte rute
+    # tager `CSC_MAX_PAGES = 12` pr. kald (summen er præcis 12,fordi den
+    # fordeles med `Math.floor(CSC_MAX_PAGES / antal)`). Målt desuden på den
+    # **betalte** rute: `/api/report` kalder `cscFetch` præcis én gang, så
+    # «It crawls the whole site» i pro-kortene var en løgnest i 18 kort på 9
+    # sider. Ingen port dømmer et *antal* i en kommentar eller et pro-kort mod
+    # samme antal i koden — den her gør, og tæller kaldene i stedet for at
+    # tro på en pæstand.
+    Step(
+        id="scan-page-claims",
+        argv=("python3", "tools/check_scan_page_claims.py"),
+        inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
+                "site/scan.html", "site/scan-da.html"),
+    ),
+    Step(
+        id="scan-page-claims-selftest",
+        argv=("python3", "tools/check_scan_page_claims.py", "--self-test"),
+        inputs=("tools/check_scan_page_claims.py", "site/_worker.js",
+                "site/scan.html", "site/scan-da.html"),
+    ),
     # Review-fund 6/10 (MIDDEL): `scans` var en *livslang* tæller (`csc-count`,
     # `expirationTtl: 365 * 86400`) der hed det samme som de vinduesbundne tal i
     # to af tre ruter. Målt med to `curl`: live `/api/health` svarede

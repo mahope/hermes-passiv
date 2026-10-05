@@ -1,27 +1,33 @@
 # STATUS
-- **`/scan-proxy` svarede 500 på `?url=https://`.** Dedup'en droppede stille
-  enhver linje hvis `cscNormalizeUrl` gav tom streng, så `sider` blev tom og
-  `sider[0].error` kastede en `TypeError` på en **åben** rute. Rettet 6/10.
-- **Samme fejl gav 200 med én side og intet om den anden**, når den gyldige linje
-  stod først — præcis den stille skuffelse committen siger at den forhindrer.
-- **`/scan` og `/scan-da` scanner igen, 6/10.** `a4277574` trak de 15 DOM-tjek
-  ud som et kald til `analyseDoc(doc)` og oprettede funktionen aldrig, så
-  **hver** kørsel på begge sider døde med `ReferenceError`. Målt: `scan-clients`
-  **518/518** mod rød på `a4277574`.
-- **`site/stats.html` læste et nøglenavn ruten ikke har** (`waitlist` mod
-  `waitlist_lifetime`), så «Raw JSON» viste **0** af ventelistens tal uden en
-  fejl. Porten dømmer nu **2** konsumenter-kontroller i `site/`.
-- **«Scan now» har nu en lås, 6/10.** Et dobbeltklik brænder **10**
-  kvoteslots (én pr. side × fem sider), og `revealResult` skrev det andet
-  resultat oven i det første — læseren så ét svar og ingen fejl. Målt:
-  **532/532** i `scan-clients` (var 518) med to nye mutationer, og
-  `scan-share` **119/119** — den faldt først, fordi sandkassens knap-stub
-  mangler `querySelector`, så opslaget på knappen lå **null-sikkert**.
-- **Næste:** opgave 28 nederst — «fem er samme tal som `/api/compliance-scan`
-  tager» er usandt (den tager **12**), og Pro-tabellen på `/scan` siger endnu
-  «the page you paste», selv om værktøjet læser fem.
+- **Pro-kortet på `/scan` lovede en krybning, der ikke findes, 6/10.** «It
+  crawls the whole site» stod i **18** kort på **9** sider, men den rute en
+  betalt licens låser op (`/api/report`) kalder `cscFetch` **præcis én gang** —
+  målt ved at køre den rigtige worker med en gyldig nøgle i falsk KV: ét
+  ude-kald. Den læser siden igen og ser **svarheaderne**; den crawler ikke.
+  Rettet på `/scan` og `/scan-da`.
+- **Kommentaren over `SCAN_PROXY_MAX_URLS` løj om sit eget tal, 6/10.** Den
+  sagde «Fem er samme tal som `/api/compliance-scan` tager» — den tager
+  `CSC_MAX_PAGES = 12` pr. kald. `check_scan_page_claims` dømmer nu fire domme
+  om tal i kommentar, konstant, felt-label og pro-kort (**6 fund** på `63b65842`
+  mod grøn nu, selftest **9/9**).
+- **Fire scanner-fejl lukket 5.–6/10** (alle målt, detaljer i arkivet): 500 på
+  `?url=https://`, `ReferenceError: analyseDoc` på begge sprog, `stats.html`s
+  forældede nøglenavn, og en manglende lås på «Scan now». Gate: **173 steps**.
+- **Næste:** opgave 29 — de otte øvrige sider har samme krybningsløgnest.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: pro-kortet på /scan lover den rute koden faktisk har 6/10
+03:1x ceo/scan-side-tal-og-sandt` — måles på **indhold**, ikke bare 200. Live
+`https://mahope.tools/scan` skal have `It reads the page from the server too`
+og `up to five at a time` og **ikke** `crawls the whole site` i pro-kortet —
+men **skal** have `whole-site crawl up to 200 pages` (det er desktop-appen, et
+andet program med sin egen ægte krybning). Live `/scan-da` skal have `Den
+læser siden fra serveren også` og `op til fem ad gangen` og **ikke**
+`gennemgår hele sitet`, men **skal** have `crawl hele sitet op til 200 sider`.
+Live `/api/compliance-scan?url=https%3A%2F%2Fmahope.tools` skal svare
+`requested:1` — den rutes tal er uændrede, så det bekræfter at kun kortets
+tekst er rettet.
 
 `VERIFICÉR DEPLOY: /scan laaser knappen under et kald 6/10 02:1x
 ceo/scan-dobbeltklink-laas` — måles på **indhold**, ikke bare 200: live
@@ -180,9 +186,23 @@ HTTP 200 blev ikke brugt som bevis.
     rigtige fil, ikke en kopi. Knappen findes gennem `#scanForm`, fordi
     `scan-share`'s sandkasse kun har `querySelector: () => null` på *dokumentet*
     (den faldt rød på første kørsel).
-28. **«Fem er samme tal som `/api/compliance-scan` tager» er usandt** — den tager
-   12 (`CSC_MAX_PAGES = 12`, summen pr. kald). Accept: kommentaren i
-   `_worker.js:681` og pro-kortet på `/scan` siger 5 mod 12.
+28. ~~**«Fem er samme tal som `/api/compliance-scan` tager» er usandt.**~~
+    **LUKKET 6/10.** Den tager `CSC_MAX_PAGES = 12` pr. kald. Kommentaren
+    peger nu på begge tal, og pro-kortet på `/scan` + `/scan-da` siger sandheden
+    om den rute licensen låser. Målt: `check_scan_page_claims` **6 fund** på
+    `63b65842` (hele vejen fra kommentar til pro-kort) mod **GRØN** nu, og
+    `--self-test` **9/9**. Se opgave 29 for den større del.
+29. **«It crawls the whole site» står i 16 pro-kort på 8 sider, og er usandt.**
+    Hvorfor: samme måling som 28 — `/api/report` henter **én** side. Rettet på
+    `/scan` og `/scan-da`; de otte øvrige sider
+    (`compliance-site-check` EN+DA, `cookie-check` EN+DA, `contrast-checker`
+    EN+DA, `security-headers-check`) har den samme løgnest i deres `crawl`-række.
+    Accept: katalogens `crawl`-label på de otte sider fortæller hvad Pro
+    faktisk gør, `pro_table.py --apply` er kørt, og `check_pro_table` +
+    `check_catalog_where` er grønne. *(Målt 6/10: 18 kort har påstanden, 2 er
+    rettet her, 16 er tilbage. Bemærk at `/compliance-site-check` **fri** rute
+    faktisk følger links til de juridiske sider — det er den crawler, Pro ikke
+    er.)*
 
 
 ## ❓ Til Mads
