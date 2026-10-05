@@ -89,7 +89,7 @@
         "en": "Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none",
         "da": "Batch-konvertering findes kun i webværktøjet. Egne rense regler er i browserudvidelsen og Obsidian-pluginet — CLI-værktøjet og VS Code-pluginet har ingen"
       },
-      "pricing_link": "https://cleancopy.tools/"
+      "pricing_link": "https://cleancopy.tools/#price"
     },
     "deskuptime-pro": {
       "name": "DeskUptime Pro",
@@ -237,7 +237,7 @@
         "en": "Alerts are desktop notifications and webhooks — no SMS, email or phone",
         "da": "Alarmer er skrivebordsnotifikationer og webhooks — ingen SMS, mail eller telefon"
       },
-      "pricing_link": "https://deskuptime.com/"
+      "pricing_link": "https://deskuptime.com/#pro"
     },
     "transmute-desktop": {
       "name": "Transmute Desktop",
@@ -401,7 +401,7 @@
         "en": "Does not include DPA, NIS2 clauses, or other documents — sold separately",
         "da": "Inkluderer ikke DPA, NIS2-klausler eller andre dokumenter — sælges separat"
       },
-      "pricing_link": "/compliance-report"
+      "pricing_link": "/compliance-report#buy"
     },
     "page-profile-pro": {
       "name": "Page Profile Pro",
@@ -531,7 +531,7 @@
         "en": "No alerts or notifications — check manually",
         "da": "Ingen alarmer eller notifikationer — tjek manuelt"
       },
-      "pricing_link": "/page-profile"
+      "pricing_link": "/page-profile#pp-buy-live"
     },
     "eucomply-dpa": {
       "name": "GDPR DPA template",
@@ -540,7 +540,7 @@
       "price": "$59",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-dpa"
     },
     "eucomply-nis2-clauses": {
       "name": "NIS2 / DORA Vendor Clause Set",
@@ -549,7 +549,7 @@
       "price": "$49",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/4gM4gydvd92OapwgN9bMQ06",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-nis2-clauses"
     },
     "eucomply-nda-clauses": {
       "name": "Mutual NDA Clause Set",
@@ -558,7 +558,7 @@
       "price": "$29",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/aFafZg1Mv92OdBI8gDbMQ07",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-nda-clauses"
     },
     "eucomply-eaa-statement": {
       "name": "EAA Accessibility Statement",
@@ -567,7 +567,7 @@
       "price": "$39",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/3cI7sK2Qz3IugNUgN9bMQ08",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-eaa-statement"
     },
     "eucomply-report-kit": {
       "name": "Client Compliance Report Kit",
@@ -576,7 +576,7 @@
       "price": "$69",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/00wdR8bn5a6S0OWeF1bMQ09",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-report-kit"
     },
     "eucomply-template-bundle": {
       "name": "EUComply Complete Template Bundle",
@@ -585,7 +585,7 @@
       "price": "$149",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/eVqaEW0Iren855c68vbMQ0a",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eucomply-template-bundle"
     },
     "eu-compliance-ebook-bundle": {
       "name": "EU Compliance E-book Bundle",
@@ -594,7 +594,7 @@
       "price": "$29",
       "price_note": "one-time",
       "payment_link": "https://buy.stripe.com/fZu9AScr9a6SbtA68vbMQ0b",
-      "pricing_link": "/paid-templates"
+      "pricing_link": "/paid-templates#eu-compliance-ebook-bundle"
     },
     "support-mahope-oss": {
       "name": "Support for Mahope open source",

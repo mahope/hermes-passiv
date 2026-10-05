@@ -61,14 +61,27 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import pricing_page  # noqa: E402
 
 CATALOG = ROOT / "tools" / "stripe_catalog.json"
-DIST = ROOT / "dist" / "mahope.tools"
+DIST_ROOT = ROOT / "dist"
+DIST = DIST_ROOT / "mahope.tools"
 ROUTE_TIL_FIL = {"/pricing": "pricing.html", "/da/pricing": "da/pricing.html"}
+
+# Dom 7 læser de **krydsdomæne**-købssider i det samme byggede site, så et
+# `#anker` på en anden family er målbart på lige fod med et lokalt. Nøglen er
+# værtsnavnet i katalogens `pricing_link` — en bygget mappe pr. domæne. Uden
+# denne tabel ville dom 7 være tavs på præcis de to rækker hvor læseren skal
+# krydse et domæneskift, altså hvor jagten efter knappen er længst.
+# `dom()` tager `dist`-roden for at kunne læse søskendedomænerne i selftesten.
+DOMÆNE_DIST = {
+    "cleancopy.tools": "cleancopy.tools",
+    "deskuptime.com": "deskuptime.com",
+}
 
 BELØB_RE = re.compile(r"\$\s?(\d+)")
 
@@ -119,6 +132,83 @@ def dom5_pris(produkt: dict, celle: str, lang: str) -> list[str]:
     return fund
 
 
+def find_fil(rute: str, dist: Path) -> Path | None:
+    """Den **byggede** fil en købsrute lander i, eller `None`.
+
+    `rute` er `pricing_link` uden et eventuelt `#anker`. En rute med skråstreg
+    på sidst (`/x/`) peger på en mappe med `index.html`; ellers er den filen
+    selv. Samme to former som dom 2 bruger — de skal dele den, ellers dømmer
+    dom 2 en fil eksistere mens dom 7 siger den gør."""
+    ruten = rute.strip("/")
+    for kandidat in (dist / ruten / "index.html", dist / f"{ruten}.html"):
+        if kandidat.exists():
+            return kandidat
+    return None
+
+
+def dom7_anker(rel: str, nøgle: str, rute: str, dist_rod: Path,
+               pris_fil: Path) -> list[str]:
+    """Dom 7: et `#anker` på en købsrute skal findes i den side den peger på.
+
+    Baggrund (målt 6/10): dom 2 dømmer at *filen* findes, og det var nok så
+    længe købsruterne var hele sider. De er nu ankre, fordi det er den eneste
+    måde at få læseren fra prislisten **hen til den vares egen knap** uden at
+    sælge direkte på siden (dom 3): 6 af 7 dokumentrækker pegede på
+    `/paid-templates`, der sælger syv varer, så læseren landede i et gitter
+    og skulle selv finde den rigtige knap.
+
+    Uden denne dom er ankerne ubevogtede: et `id` der bliver omdøbt eller
+    slettet på destinationssiden efterlader en `/pricing`-række, der ser
+    troværdig ud og sender læseren *oven for* den knap, han lige har bedt om.
+    Det er præcis «Alt virker»-bruddet, dom 2 ikke kan se."""
+    del_anker, _, anker = rute.partition("#")
+    if not anker:
+        return []  # et link uden anker skal dømmes af dom 2, ikke her
+
+    if not del_anker:
+        # `href="#x"` er et anker på **prislisten selv**. Uden denne arm ville
+        # den falde til `mahope.tools/index.html` og dømme et id der slet ikke
+        # har med siden at gøre.
+        if re.search(rf'\bid=["\']{re.escape(anker)}["\']',
+                     pris_fil.read_text(encoding="utf-8", errors="ignore")):
+            return []
+        return [f"{rel}: {nøgle} sender læseren til #{anker}, men "
+                f"prislisten selv har ingen `id=\"{anker}\"`"]
+
+    dele = urlsplit(del_anker)
+    if dele.netloc:
+        vært = dele.netloc.lower()
+        if vært not in DOMÆNE_DIST:
+            # Bevidst **ikke** tavs: et nyt krydsdomæne uden en bygget mappe
+            # ville få dom 7 til at tie på præcis de rækker, hvor den er mest
+            # nødvendig. Skriv domænet i `DOMÆNE_DIST`, så kan den dømmes.
+            return [f"{rel}: {nøgle} peger på {vært}, som ikke står i "
+                    f"`DOMÆNE_DIST` — dom 7 kan ikke dømme et anker i en side "
+                    f"den ikke kan finde"]
+        rod = dist_rod / DOMÆNE_DIST[vært]
+        rute = dele.path or "/"
+    else:
+        rod = dist_rod / "mahope.tools"
+        rute = del_anker
+
+    fil = find_fil(rute, rod)
+    if fil is None:
+        # Dom 2 dømmer den døde fil i mahope.tools. Her skal sæsonders dømmes:
+        # et anker på en side vi ikke kan finde i det byggede site er ikke
+        # kontrolleret, og det er værre end et fund — det ligner et dødt anker
+        # uden at nogen siger det.
+        return [f"{rel}: {nøgle} har ankeret #{anker} på {rute}, men den side "
+                f"findes ikke i det byggede site ({rod.relative_to(ROOT) if rod.is_relative_to(ROOT) else rod})"]
+
+    tekst = fil.read_text(encoding="utf-8", errors="ignore")
+    if not re.search(rf'\bid=["\']{re.escape(anker)}["\']', tekst):
+        rel_fil = fil.relative_to(dist_rod).as_posix() if fil.is_relative_to(dist_rod) else fil.name
+        return [f"{rel}: {nøgle} sender læseren til #{anker}, men den side "
+                f"({rel_fil}) har ingen `id=\"{anker}\"`. Rækken ligner at "
+                f"finde knappen og lander oven for den"]
+    return []
+
+
 def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
     """Alle fund. Tom liste = grøn.
 
@@ -127,6 +217,10 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
     roden et argument frem for et konstant."""
     fund: list[str] = []
     rod = site or ROOT
+    # Dom 7 læser søskendedomænerne i det samme `dist/`, så roden er `dist`
+    # selv. `dist` er her mahope.tools' **egne** mappe — både fra `main` og fra
+    # selftesten, der lægger hele `dist/` ind i `rod/dist/<domæne>/`.
+    dist_rod = dist if dist.name != "mahope.tools" else dist.parent
     for sti, lang in pricing_page.sider(cat):
         kilde_fil = (rod / "site" / str(sti).split("site/", 1)[-1]) if site else sti
         rel = f"site/{str(sti).split('site/', 1)[-1]}"
@@ -149,7 +243,9 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                         f"produktets købsside, ikke tage imod betaling")
 
         # Dom 2: hver række skal pege på en side der findes. Ruten læses fra
-        # rækken, så en død rute er et fund og ikke en stille 404.
+        # rækken, så en død rute er et fund og ikke en stille 404. Ankeret
+        # skæres fra før filnavnet regnes — ellers ville `/x#y` læses som en
+        # fil der hedder `x#y`, og dom 2 ville være rød af den forkerte grund.
         for nøgle, rute in re.findall(
                 r'data-product="([^"]+)">\s*<th[^>]*>.*?</th>\s*<td>.*?</td>\s*'
                 r'<td[^>]*>.*?</td>\s*<td>.*?</td>\s*<td>\s*'
@@ -159,9 +255,7 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                 continue
             if rute.startswith(("http://", "https://")):
                 continue
-            fil = (dist / (rute.strip("/") + "/index.html")) if rute.endswith("/") \
-                else (dist / (rute.strip("/") + ".html"))
-            if not fil.exists() and not (dist / rute.strip("/") / "index.html").exists():
+            if find_fil(rute.partition("#")[0], dist) is None:
                 fund.append(f"{rel}: rækken {nøgle} linker til {rute}, som ikke "
                             f"findes i det byggede site")
 
@@ -175,6 +269,25 @@ def dom(cat: dict, dist: Path, site: Path | None = None) -> list[str]:
                 continue  # den syntetiske `free`-række: $0 er ikke en katalogvare
             fund.extend(f"{rel}: " + f for f in dom5_pris(
                 {**cat["products"][nøgle], "_nøgle": nøgle}, celle, lang))
+
+        # Dom 7: rækken skal lande på det sted hvor betalingen sker. Se
+        # `dom7_anker` — dom 2 dømmer filen, den her dømmer ankeret.
+        #
+        # Rækkerne læses **én ad gangen** frem for med ét mønster hen over hele
+        # filen. Det lyder som en detalje, men et `data-lifetime`-`data-`-mønster
+        # med `.*?` på tværs af cellerne kan løbe ind i den næste `<tr>` og
+        # tage *dens* navn med, hvis en række en dag mangler en celle — så et
+        # fund ville pege på den forkerte vare.
+        pris_fil = dist / ROUTE_TIL_FIL.get(f"/{'da/' if lang == 'da' else ''}pricing",
+                                            "pricing.html")
+        for række in re.finditer(r"<tr\b[^>]*>(.*?)</tr>", kilde, re.S):
+            krop = række.group(1)
+            nøgle_m = re.search(r'data-(?:product|lifetime)="([^"]+)"', række.group(0))
+            rute_m = re.search(r'<a class="pc-buy" href="([^"]*)"', krop)
+            if not (nøgle_m and rute_m):
+                continue
+            fund.extend(dom7_anker(rel, nøgle_m.group(1), rute_m.group(1),
+                                   dist_rod, pris_fil))
 
     # Dom 4: et produkt der er på vej frem, men ikke står på listen.
     på_liste = {nøgle for nøgle, _ in pricing_page.produkter(cat, "en")}
@@ -283,9 +396,14 @@ def self_test() -> int:
                 mål = rod / "site" / original.relative_to(ROOT / "site")
                 mål.parent.mkdir(parents=True, exist_ok=True)
                 mål.write_text(original.read_text(encoding="utf-8"), encoding="utf-8")
-            for original in DIST.rglob("*"):
+            # Dom 7 læser også de **krydsdomæne**-købssider, så hele `dist/`
+            # kopieres — ikke kun mahope.tools. Ellers ville dom 7 være rød
+            # på de to rækker der peger på cleancopy.tools og deskuptime.com
+            # i hver eneste selftestkørsel, og mutationerne ville dømme en
+            # port der aldrig har været grøn.
+            for original in DIST_ROOT.rglob("*"):
                 if original.is_file():
-                    mål = rod / "dist" / original.relative_to(DIST)
+                    mål = rod / "dist" / original.relative_to(DIST_ROOT)
                     mål.parent.mkdir(parents=True, exist_ok=True)
                     mål.write_bytes(original.read_bytes())
 
@@ -303,7 +421,11 @@ def self_test() -> int:
                 fil = rod / sti
                 fil.write_text(fil.read_text(encoding="utf-8").replace(*erstatning),
                                encoding="utf-8")
-            return dom(kat, rod / "dist", rod)
+            # Hele `dist/` kopieres ind i `rod/dist/…`, så mahope.tools'
+            # egen mappe ligger i `rod/dist/mahope.tools` — og det er den
+            # `dom` skal kende som sin egen rod. Dom 7 finder søskende-
+            # domænerne i `rod/dist/<navn>`.
+            return dom(kat, rod / "dist" / "mahope.tools", rod)
 
     # Dom 1: en pris skrevet i hånden oveni generatorens output.
     fund = med_filer([("site/pricing.html",
@@ -313,7 +435,7 @@ def self_test() -> int:
 
     # Dom 3: et Stripe-link på siden.
     fund = med_filer([("site/pricing.html",
-                       ('href="/paid-templates"',
+                       ('href="/paid-templates#eucomply-dpa"',
                         'href="https://buy.stripe.com/bJe7sK8aT4My7dk7czbMQ05"'))])
     tjek("direkte betaling er rød",
          any("sælger direkte" in f for f in fund), "; ".join(fund[:1]))
@@ -392,12 +514,36 @@ def self_test() -> int:
     tjek("donation uden price_min er rød",
          any("skal oplyse `price_min" in f for f in fund), "; ".join(fund[:1]))
 
+    # Dom 7: et anker der ikke findes i den side det peger på. Det er den
+    # mutation dom 7 er skrevet for: uden den er dommen en påstand, fordi
+    # intet i repoetVille ændre et `id` på destinationssiden.
+    fund = med_filer([("dist/mahope.tools/paid-templates.html",
+                       ('id="eucomply-dpa"', 'id="eucomply-dpa-v2"'))])
+    tjek("dødt anker er rødt",
+         any("har ingen `id=" in f and "eucomply-dpa" in f for f in fund),
+         "; ".join(fund[:1]))
+
+    # Samme dom, krydsdomænet: `cleancopy.tools/#price` dømmes i **sit eget**
+    # byggede site, ikke i mahope.tools'. Uden den mutation er det uafprøvet,
+    # om dommen overhovedet læser det andet domæne.
+    fund = med_filer([("dist/cleancopy.tools/index.html",
+                       ('id="price"', 'id="priser"'))])
+    tjek("dødt anker i et krydsdomæne er rødt",
+         any("har ingen `id=" in f and "clean-copy-pro" in f for f in fund),
+         "; ".join(fund[:1]))
+
+    # Og polariteten modsat: et korrekt anker skal være grønt, ellers er
+    # dommen bare en streng der altid er rød.
+    fund = med_filer([])
+    tjek("korrekt anker er grønt",
+         not any("har ingen `id=" in f for f in fund), "; ".join(fund[:1]))
+
     # Dom 6: en bygget side hvor footeren ikke har prislisten. Det var hele
     # målingen der gjorde dommen nødvendig: 1 fil i `site/`, 0 af 270 i `dist/`.
     # Mutationen skal ramme en **bygget** fil, for dom 6 læser den footer
     # `apply_shell` skrev undervejs — en kildefil har aldrig footeren, så en
     # mutation dér ville være grøn af den forkerte grund.
-    fund = med_filer([("dist/index.html", ('href="/pricing"', 'href="/priser"'))])
+    fund = med_filer([("dist/mahope.tools/index.html", ('href="/pricing"', 'href="/priser"'))])
     tjek("manglende prisliste i footeren er rød",
          any("skal have præcis 1" in f and "dist/index.html" in f for f in fund),
          "; ".join(fund[:1]))
@@ -405,7 +551,7 @@ def self_test() -> int:
     # Og den anden halvdel af dommen: den danske side skal pege på den danske
     # prisliste. `/pricing` er engelsk, så linket ville sende læseren ud af sit
     # sprog — og porten skal kunne se det, ellers er sprogdelen dekoration.
-    fund = med_filer([("dist/da/index.html", ('href="/da/pricing"', 'href="/pricing"'))])
+    fund = med_filer([("dist/mahope.tools/da/index.html", ('href="/da/pricing"', 'href="/pricing"'))])
     tjek("dansk side med engelsk prisliste er rød",
          any("dist/da/index.html" in f and "den anden sprogs udgave" in f
              for f in fund),

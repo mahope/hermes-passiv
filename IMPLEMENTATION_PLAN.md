@@ -1,23 +1,21 @@
 # STATUS
-- **`deskuptime.com/tools/` har nu én købsknap, ikke to, 6/10.** To knapper med
-  *samme* betalingslink gjorde at ét købsklik blev talt to gange i
-  `recentBuyClicks` — altså forvriderede den det tal vi prioriterer efter.
-  Kilden er `../auditedwp` og må ikke ændres, så `build_sites.py` reducerer den
-  under bygget. Målt rød på mutationen (2 knapper → 1 fund), grøn på den nye.
-  Se feature-kø 13.
-- **CEO-kø punkt 0 er helt lukket og målt live 6/10.** `/api/url-inspect` svarer
-  **200** med `finalUrl`; SSRF er lukket på mål *og* hvert redirect-hop, også
-  IPv4-mapped IPv6 (`::ffff:127.0.0.1` → **400** på både `/api/header-check` og
-  `/api/url-inspect`); `429` er endelig i `net.js` og dens otte læsere;
-  AI-genkald på 502 får refunderet sit kvoteslot.
-- **CI-kørslen for `d723dacb` blev *cancelled* af GitHub, ikke rød på en test.**
-  Målt 6/10: `gate` lå **kø 15 min** og blev afbrudt, `deploy` blev `skipped`.
-  Lokal gate er grøn og live er aktuelt (`v1.0.11`-arkivet svarer **200** med
-  12 871 bytes). En kø i køen er ikke en fejl — intet at rette i koden.
-- **Alle 16 betalingslink er målt mod kontrakten: 0 afvigelser.** 13 produkter +
-  3 lifetime + donation.
-- **Næste:** konvertering på `/pricing` (feature-kø 15). `PR-TJEK 6/10`:
-  **0** åbne PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+- **`/pricing` sender nu læseren hen til den enkelte købsknap, ikke til en side
+  hvor han skal lede.** 6/10: alle 12 `pc-buy`-rækker pegede på **hele**
+  købssider — 6 af dem på `/paid-templates`, der sælger **syv** varer i et
+  gitter. Nu har hver række et `#anker` på den vares egen knap. Ny **dom 7** i
+  `check_pricing_page` dømmer at ankeret findes i den **byggede** side, også
+  krydsdomænerne. Se feature-kø 15.
+- **Dom 7 fandt en rigtig fejl min egen rettelse ville have lavet:** den danske
+  prisliste sendte til `/da/compliance-report#pricingSection`, men den side
+  hedder `#pris`. Løst med et sprognøytrest `#buy` på begge sprog, så ÉN
+  `pricing_link` betjener begge — hvilket er hele pointen med dom 7.
+- **CI-kørslen for `8a62f9e6` lå i kø** da denne iteration startede (14 min i
+  `queued`). `37367449163` står som `failure`, men `gate: cancelled` og
+  `deploy: skipped` — GitHub afbrød den, ingen test var rød. Lokal gate er grøn
+  på 177 steps.
+- **Næste:** ❓ `ceo/den-prisliste-koer-pa-engelsk`. `PR-TJEK 6/10`: **0** åbne
+  PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+
 
 
 ## Åbne review-fund
@@ -41,6 +39,21 @@ Ingen. Alle tre er lukket 6/10:
 
 ## Verificér deploy
 
+`VERIFICÉR DEPLOY: hver «Where to buy»-række på /pricing skal pege på den
+vare, der sælger ceo/pricing-stripe-ankere 6/10 23:5x` — hent `mahope.tools/pricing`
+og `mahope.tools/da/pricing` og kræv på **indhold**: **12** `pc-buy`-ankere pr.
+sprog, **0** uden `#anker` (undtagen Donationen til `/support`), **7** af dem med
+`/paid-templates#eucomply-…` (én pr. dokument), og **0** med den gamle rute
+`href="/paid-templates"`. Derefter hent hvert mål og kræv at ankeret findes som
+et `id`: `mahope.tools/paid-templates` skal have **7** `id="eucomply-…"`
+(`eucomply-dpa`, `eucomply-nis2-clauses`, `eucomply-nda-clauses`,
+`eucomply-eaa-statement`, `eucomply-report-kit`, `eucomply-template-bundle`,
+`eu-compliance-ebook-bundle`), `cleancopy.tools/` **1** `id="price"`,
+`deskuptime.com/` **1** `id="pro"`, `mahope.tools/compliance-report` **1**
+`id="buy"` (og samme på `/da/compliance-report`), `mahope.tools/page-profile`
+**1** `id="pp-buy-live"`. *(HTTP 200 beviser intet her — en `/paid-templates` der
+svarer 200 uden kort-id'r ville se identisk ud.)*
+
 - **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
 
 `DEPLOY OK 6/10 20:2x` for `ceo/url-inspect-rettet` — målt på **indhold**, ikke
@@ -58,12 +71,15 @@ skal stå til ceo/one-buy-button-tools 6/10 20:4x` — hent
 Live har **2** knapper nu, så det er deploy-vinduet der afgør.
 
 
-`VERIFICÉR DEPLOY: skriv kun hvad Clean Copy Pro faktisk gør, og ret
-dommen der dømmer det ceo/pro-pastand 6/10 13:0x` — hent
-`cleancopy.tools/`, `/clean-copy` og `/downloads/` og kræv på **indhold**:
-grænselinjen skal sige at egne regler findes i udvidelsen **og**
-Obsidian-pluginet, og downloadlinket skal pege på `v1.0.11`. Live 1.0.10
-der stadig publiceres, betyder at arkivet ikke kom med ud.
+`DEPLOY OK 6/10 22:0x` for `ceo/pro-pastand` — målt på **indhold** med tre
+`curl`. Live `cleancopy.tools/` siger «Custom cleanup rules are in the browser
+extension and the Obsidian plugin — the CLI and the VS Code plugin have
+none», og live `cleancopy.tools/clean-copy-tool` har den samme linje i sit
+`pro-limit`. Downloadlinket ligger på **`mahope.tools/downloads`**, der er den
+ene rute der har arkiverne: **2** forekomster af
+`clean-copy-obsidian-v1.0.11.zip`. *(Noten krævede `cleancopy.tools/downloads`
+— den har **0** `.zip`-links. Samme 404-rute-fejl som opgave 35, og det er
+derfor den er lukket her.)*
 
 `DEPLOY OK 6/10 12:1x` for `ceo/pro-graense` — målt på **indhold** med fire
 `curl`. Noten krævede live `mahope.tools/clean-copy`, og den ruten er **404**:
@@ -316,12 +332,15 @@ HTTP 200 blev ikke brugt som bevis.
       positiv); på den nye **RØD** / **GRØN**. Selftest **10/10** med to nye
       mutationer, der dømmer begge retninger. Fuld gate **GRØN — 177 steps**.
       *Ingen deploy-note:* kun `tools/` er rørt.
-35. **`UNMANAGED_DOMAINS` har en 404-rute i en verificeret note.** Hvorfor:
-      noten for `ceo/pro-graense` krævede live `mahope.tools/clean-copy`, som
-      **404** — Clean Copy ligger på `cleancopy.tools`. Rettet i samme commit
-      som opgave 34, så en senere læser ikke leder efter indhold på en rute der
-      ikke findes. Accept: enhver `VERIFICÉR`-note i planen er målt på en rute
-      der svarer 200 **og** har den påstand den kræver.
+35. ~~**`UNMANAGED_DOMAINS` har en 404-rute i en verificeret note.**~~
+      **LUKKET 6/10.** Der var to af slagsen, og begge er dømt og rettet:
+      `ceo/pro-graense` krævede `mahope.tools/clean-copy` (**404** — Clean Copy
+      er `cleancopy.tools`), og `ceo/pro-pastand` krævede
+      `cleancopy.tools/downloads` (**0** `.zip`-links — arkiverne ligger på
+      `mahope.tools/downloads`). Begge nævner nu den rute der findes, målt med
+      `curl`. *Accept-kravet står ved magt:* en `VERIFICÉR`-note skal måles på
+      en rute der svarer 200 **og** har den påstand den kræver.
+
 36. ~~**CI var rød på `main` i to steps.**~~ **LUKKET 6/10.**
     `stripe-worker-ur`: `clock_jump.mjs` hopper én time pr. kald, og hver
     trafiksektion laver **11** kald, så de hopper **11** timer — og lander de hen
@@ -462,15 +481,38 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
 14. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **Leveret 6/10** —
     se opgave 33.
 
-15. **`/pricing` er den ene side med alle 13 produkter, og den køber intet.**
-    Hvem: en læser der har bestemt sig for at køb *noget* og lander på
-    prislisten — den højeste købsintention vi har. Tal: køb pr. klik fra
-    `/pricing`. Accept: hver række i «Where to buy» fører til det sted hvor
-    den betaling faktisk sker. Datagrund: målt 6/10 — **`/pricing` har 0
-    Stripe-links** på begge sprog; de **12** `pc-buy`-ankere peger på
-    produktsider (`/compliance-report`, `/page-profile`, `/paid-templates`) og
-    på **forsiderne** `https://cleancopy.tools/` og `https://deskuptime.com/`.
-    En læser der trykker «Buy Clean Copy Pro» bliver altså sendt til en
-    forside og må selv finde knappen. *Ikke påbegyndt — og bemærk at en
-    direkte Stripe-knap pr. række kolliderer med reglen om én CTA pr. side, så
-    det er en beslutning om købsveje, ikke en markup-ændring.*
+15. ~~**`/pricing` er den ene side med alle 13 produkter, og den køber intet.**~~
+      **LEVERET 6/10**, `ceo/pricing-stripe-ankere`.** Hver række i «Where to
+      buy» har nu et `#anker` på **den vares egen købsknap**. Målt 6/10 før
+      rettelsen: de 12 `pc-buy` gik alle til **hele købssider**, og **6** af
+      dem til `/paid-templates`, der sælger syv varer i et gitter — så en
+      læser der lige har valgt «Buy GDPR DPA template» landede i gitteret og
+      skulle selv finde knappen. Nu: de 7 dokumenter har hvert sit kort-id
+      (`id="eucomply-dpa"` …, begge sprog), `clean-copy-pro` →
+      `cleancopy.tools/#price`, `deskuptime-pro` → `deskuptime.com/#pro`,
+      `eucomply-pro` → `#buy`, `page-profile-pro` → `#pp-buy-live`. Ny **dom 7**
+      i `check_pricing_page` dømmer at hvert anker findes som et `id` i den
+      **byggede** side, også krydsdomænerne (`DOMÆNE_DIST` er påkrævet, så et
+      nyt tværdomæne ikke kan tie). Dom 7 er målt rød på den gamle kode på to
+      måder: `id` fjernet fra ét kort → **1 fund** med navn og fil;
+      `id="price"` → `id="priser"` i cleancopy.tools' eget byggede site → **1
+      fund** på `clean-copy-pro`. Selftest **10/10 → 16/16**. Dom 7 fandt
+      desuden **min egen fejl**: den danske prisliste sendte til
+      `#pricingSection`, som kun findes på den engelske side (den danske hedder
+      `#pris`) — løst med et sprognøytrest `#buy` på begge, så *én*
+      `pricing_link` kan betjene begge sprog. Fuld gate **GRØN — 177 steps**.
+      `pricing_page`-steppene har nu de ni destinationssider som inputs, så en
+      commit der sletter et `id` ikke springer porten over. *Ingen ny CTA:*
+      dom 3 (siden sælger ikke direkte) er urørt, og der er stadig præcis én
+      købsknap pr. side.
+
+16. **Den danske prisliste sender læseren til engelske købssider.** Hvem: en
+    dansk læser på `/da/pricing`. Tal: hvor mange betalinger der kommer fra
+    dansk trafik. Accept: `da`-rækkerne for `clean-copy-pro` og
+    `deskuptime-pro` peger på danske sider, og dom 7 dømmer dem. Datagrund:
+    målt 6/10 i det byggede site — `/da/pricing` har **2** rækker med
+    `https://cleancopy.tools/#price` og **1** med `https://deskuptime.com/#pro`,
+    selv om footeren i samme side er dansk (`https://cleancopy.tools/da/`).
+    Bygget lokaliserer altså domænelink, men ikke en **absolut** `pricing_link`.
+    Kræver et `pricing_link` pr. sprog i katalogen. *(Fundet under opgave 15,
+    ikke rettet dér — det er et sprogkrav i katalogen, ikke et anker.)*

@@ -8443,3 +8443,18 @@ Kørte desuden `check_pro_table`, `check_clean_copy_distribution`,
 `check_versions`, `check_catalog_where`, `check_rule_claims`,
 `check_product_copy`, `check_license_clients`, `check_net_copies`,
 `check_links`. `git status --porcelain` efter hver mutation.
+
+## Feature-kø 15 — lukket 6/10 (arkiveret fra planen)
+
+15. **`/pricing` er den ene side med alle 13 produkter, og den køber intet.**
+    Hvem: en læser der har bestemt sig for at køb *noget* og lander på
+    prislisten — den højeste købsintention vi har. Tal: køb pr. klik fra
+    `/pricing`. Accept: hver række i «Where to buy» fører til det sted hvor
+    den betaling faktisk sker. Datagrund: målt 6/10 — **`/pricing` har 0
+    Stripe-links** på begge sprog; de **12** `pc-buy`-ankere peger på
+    produktsider (`/compliance-report`, `/page-profile`, `/paid-templates`) og
+    på **forsiderne** `https://cleancopy.tools/` og `https://deskuptime.com/`.
+    En læser der trykker «Buy Clean Copy Pro» bliver altså sendt til en
+    forside og må selv finde knappen. *Ikke påbegyndt — og bemærk at en
+    direkte Stripe-knap pr. række kolliderer med reglen om én CTA pr. side, så
+    det er en beslutning om købsveje, ikke en markup-ændring.*
