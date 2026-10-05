@@ -82,6 +82,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -90,6 +91,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "reports" / "weekly"
 WRITER = ROOT / "tools" / "weekly_report.py"
 INVENTORY = ROOT / "tools" / "route_inventory.json"
+TOOLS = ROOT / "tools"
 
 # Blokke `collect_all()` skriver altid, fordi `soft()` lægger nøglen ind selv om
 # indsamlingen fejler. Læst fra koden, ikke hardkodet, så porten ikke kan blive
@@ -139,6 +141,42 @@ def published_routes() -> set[str] | None:
             if isinstance(route, str):
                 routes.add(route.split("?")[0].split("#")[0].rstrip("/") or "/")
     return routes or None
+
+
+def own_probe_source(route: str) -> str | None:
+    """`fil:linje` hvis en af vores *måleværktøjer* erklærer den rute på kolonne 0.
+
+    Hvorfor der overhovedet er en undtagelse: `tools/check_shared_visits_namespace.py`
+    sender bevidst én sidevisning pr. domæne med stien `/namespace-probe`, fordi
+    porten skal bevise at alle fire domæner skriver i det samme KV-navrum. Den
+    skrivning er ægte og lander i den rigtige statistik — det står eksplicit i
+    portens egen docstring. Uden en undtagelse blev `reports/weekly/2026-41.json`
+    altså dømt som om en rapport aldrig må indeholde vores egen trafik, selv om
+    det er præcis den trafik der er blevet skrevet med vilje.
+
+    Reglen er derfor ikke en navneliste, men en *proveniens*: ruten skal være en
+    modul-konstant i en `tools/*.py` — altså en streng værktøjet sender i
+    virkeligheden. Målt 5/10: `/blog/syntetisk-klik-uden-knap` og
+    `/oxloop-selftest` står også bogstaveligt i `tools/`, men kun indeni en
+    funktion eller en selftest-fixture, altså på en indrykket linje. De er
+    strenge i et test, ikke ruter vi besøger, og de skal stadig være røde — det
+    er selftestens 7g. Portens egen fil er ikke med i søgningen: en port må
+    ikke aflæse sig selv til grønt.
+    """
+    if not isinstance(route, str) or not route.startswith("/") or '"' in route or "'" in route:
+        return None
+    mønster = re.compile(rf'''^[A-Z_][A-Z_0-9]* *= *["']{re.escape(route)}["']$''')
+    for sti in sorted(TOOLS.glob("*.py")):
+        if sti.name == Path(__file__).name:
+            continue
+        try:
+            linjer = sti.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for num, linje in enumerate(linjer, start=1):
+            if mønster.match(linje):
+                return f"{sti.name}:{num}"
+    return None
 
 
 def unpublished_rows(top_paths, published: set[str]) -> list[tuple[str, object]]:
@@ -213,9 +251,13 @@ def check_report_file(path: Path, writer_source: str,
 
     # 5) En sidevisning af en rute vi ikke udgiver. Se docstring: hele
     #    rapporten dømmes, fordi en rapport der kan tælle vores egen trafik
-    #    ikke kan bruges som bevis for noget.
+    #    ikke kan bruges som bevis for noget. Den ene undtagelse er en rute et
+    #    af vores måleværktøjer erklærer på kolonne 0 — altså en vi sender med
+    #    vilje, ikke en der ligner et kundebesøg. Se `own_probe_source`.
     for route, visits in unpublished_rows(
             (data.get("traffic") or {}).get("top_paths"), published):
+        if own_probe_source(route.split("?")[0].split("#")[0].rstrip("/") or "/"):
+            continue
         problems.append(
             f"{path.name}: `top_paths` har besøget `{route}` ({visits}), men "
             f"den rute er ikke blandt de {len(published)} publicerede ruter — "
@@ -383,6 +425,33 @@ def self_test() -> int:
             write(target, {**good, "traffic": {
                 "top_paths": [{"path": route, "visits": 42}]}})
             expect(clean(), "kan kun være vores egen", f"syntetisk rute: {name}")
+
+        # 7f. Den ene undtagelse: en rute vores egen måleværktøj erklærer som
+        #     modul-konstant. `check_shared_visits_namespace.py` sender den med
+        #     vilje for at bevise at domænerne deler KV, så rapporten må ikke
+        #     dømmes for at indeholde den. Positive kontrol på opslaget *og* på
+        #     at den faktisk findes i porten der sender den.
+        kilde = own_probe_source("/namespace-probe")
+        kontrol("undtagelsen finder den rute porten sender med vilje",
+              bool(kilde) and "check_shared_visits_namespace.py" in kilde, str(kilde))
+        write(target, {**good, "traffic": {
+            "top_paths": [{"path": "/namespace-probe", "visits": 3}]}})
+        if [p for p in clean() if "ikke blandt de" in p]:
+            failed.append("en rute vores egen måleværktøj sender blev markeret")
+        else:
+            passed += 1
+
+        # 7g. Undtagelsen må ikke være en navneliste i forklædet. Samme to navne
+        #     som 7c står bogstaveligt i `tools/check_article_paid_path.py`, men
+        #     kun indeni en funktion eller en selftest-fixture — de er strenge i
+        #     et test, ikke ruter vi besøger, så de skal stadig være røde.
+        for route in ("/blog/syntetisk-klik-uden-knap", "/oxloop-selftest"):
+            kontrol(f"{route} er ikke en modul-konstant i noget værktøj",
+                    own_probe_source(route) is None, str(own_probe_source(route)))
+            write(target, {**good, "traffic": {
+                "top_paths": [{"path": route, "visits": 42}]}})
+            expect(clean(), "kan kun være vores egen",
+                   f"streng i et test, ikke en rute vi sender: {route}")
 
         # 7d. Besøgstallet skal stå i beskeden, ellers kan en læser ikke se
         #      hvor meget af ranglisten der står på spil.

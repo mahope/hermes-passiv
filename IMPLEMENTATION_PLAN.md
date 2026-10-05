@@ -1,4 +1,7 @@
 # STATUS
+- **CI var rød på `main` og er grøn igen 6/10.** To uafhængige røde steps, begge
+  målt og rettet i samme opgave: `stripe-worker-ur` (`by_day`-dommen dømte et
+  døgnskifte) og `weekly-history` (`/namespace-probe`). Se opgave 36.
 - **Alle tre review-fund er lukket 6/10.** Fund 1 (den usande påstand om at egne
   regler kun findes i udvidelsen) er rettet i katalog, Obsidian-manifest og
   blog; fund 2 (dom 4c på escapet `&`) er rettet og selftesten har nu to nye
@@ -12,13 +15,9 @@
   **100 %**. Nu linker begge forsider til hele listen.
 - **Forsidens port så `Page Profile` og EUComply-bundlen forkert, rettet 6/10.**
   Se opgave 34 — målt rød på den gamle kode med to mutationer, grøn på den nye.
-- **Deploy-noten for `ceo/pro-graense` er lukket på rigtig rute.** Den krævede
-  `/clean-copy` på `mahope.tools` — den er **404**, Clean Copy ligger på
-  `cleancopy.tools`. Se «Verificér deploy».
 - **Næste:** feature-kø. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
   kørt (uge-tjek).
 
-- **CEO-kø punkt 0: `/api/url-inspect` fungerer nu med env, SSRF-værn, 429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202 korrekt**
 - **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
 
 
@@ -307,6 +306,25 @@ HTTP 200 blev ikke brugt som bevis.
       som opgave 34, så en senere læser ikke leder efter indhold på en rute der
       ikke findes. Accept: enhver `VERIFICÉR`-note i planen er målt på en rute
       der svarer 200 **og** har den påstand den kræver.
+36. ~~**CI var rød på `main` i to steps.**~~ **LUKKET 6/10.**
+    `stripe-worker-ur`: `clock_jump.mjs` hopper én time pr. kald, og hver
+    trafiksektion laver **11** kald, så de hopper **11** timer — og lander de hen
+    over et døgnskifte, ser `isoDaysAgo(0)` og workerens `window[0]` to
+    datoer, så `by_day`-dommen dømmer et vindue der aldrig blev sået. Rødt i
+    CI-run `37340718217` 5/10 kl. 16:25 på `pr. dag: 2 i dag 0 og 1 to dage
+    tilbage`. Samme mønster som `stopTimeUr2` længere nede i filen: tælleren
+    skal måles, ikke klokken, så uret pinnes nu i begge sektioner med hver sin
+    timebøtte (så kvoten på 30/time ikke deles). Målt: gammel kode med base
+    16:00Z → **473/474** med CI's exacte by_day; ny kode med samme base →
+    **474/474**; ny kode grøn i **alle 24** timebaser, gammel rød i 2 af 8
+    målte. `weekly-history`: `check_shared_visits_namespace.py` sender med vilje
+    3 sidevisninger på `/namespace-probe` (det står i portens egen docstring), så
+    regel 5 dømte `reports/weekly/2026-41.json` for at tælle vores egen trafik.
+    Undtagelsen er en **proveniens**, ikke en navneliste: ruten skal være en
+    modul-konstant på kolonne 0 i en `tools/*.py`; portens egen fil er
+    udelukket. Selftest **27/27**, mutation (kræver blot en bogstavelig streng i
+    `tools/`) → **12 fejl**. Fuld gate **GRØN — 177 steps**. *Ingen
+    deploy-note:* kun `tests/` og `tools/` er rørt.
 
 ## ❓ Til Mads
 

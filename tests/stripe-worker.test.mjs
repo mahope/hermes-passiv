@@ -1969,6 +1969,24 @@ const RES_VISITS = {
 const resEnv = { ...env, VISITS: RES_VISITS };
 const resCall = (path, init, e) => worker.fetch(new Request('https://mahope.tools' + path, init), e || resEnv, {});
 const isoDaysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+// Dagsnøglen må ikke flytte sig, mens en trafiksektion kører. Uret i
+// `clock_jump.mjs` hopper én time pr. kald, og hver af de to sektioner nedenfor
+// laver elleve kald, så de hopper elleve timer — og lander de hen over et
+// døgnskifte, ser `isoDaysAgo(0)` og workerens `window[0]` to forskellige
+// datoer, og `by_day`-dommen dømmer et vindue, der aldrig blev sået. Det var ikke
+// en fejl i workeren: det var CI-run 37340718217 (5/10 kl. 16:25) rødt på
+// `pr. dag: 2 i dag 0 og 1 to dage tilbage`, fordi de otte timer pr. sektion
+// krydsede netop UTC-midnat. Samme grund som `stopTimeUr2` længere nede: tælleren
+// skal måles, ikke klokken. Derfor pinnes uret i hver sektion, og hver sektion får
+// sin egen timebøtte, så kvoten på 30 læsninger pr. time ikke deles med naboen.
+const pinUr = (() => {
+  const forrige = Date.now;
+  let fast = Math.floor(forrige() / 3600000) * 3600000;
+  return {
+    start() { fast += 3600000; Date.now = () => fast; },
+    stop() { Date.now = forrige; },
+  };
+})();
 // Én trafiknøgle pr. begivenhed, som `recordTraffic()` skriver den: værdien er
 // altid '1', så nøglenavnet *er* optællingen.
 const seed = (kind, daysAgo, domain, path, event, identity) => {
@@ -1977,6 +1995,7 @@ const seed = (kind, daysAgo, domain, path, event, identity) => {
 };
 // 1. Grundscenariet: tre kørsler på to dage, hvoraf den ene besøgende gav to
 //    resultater samme dag — det er præcis det `visitor_days` skal finde.
+pinUr.start();
 seed('p', 0, 'mahope.tools', '/scan', 'scan-findings', 'u-1');
 seed('u', 0, 'mahope.tools', '/scan', 'scan-findings', 'v-1');
 seed('p', 0, 'mahope.tools', '/scan', 'scan-clean', 'u-2');
@@ -2132,6 +2151,7 @@ ok('et days der ikke er et tal giver standardvinduet',
 // 7. Metoder og kvota. GET må ikke ændre noget, så POST er 405.
 rs = await resCall(RS, { method: 'POST', body: '{}' });
 ok('POST giver 405', rs.status === 405, rs.status);
+pinUr.stop();
 //    Tælleren er pr. IP pr. time, så uret pinnes til timebøttens begyndelse —
 //    ellers måler testen klokken og ikke tælleren, som `clock_jump.mjs` viste.
 const resKv2 = new Map();
@@ -2220,6 +2240,7 @@ const cvSeed = (kind, daysAgo, path, event, identity) => {
 };
 // Grundscenariet: fire købsklik på to sider og et pro-kort-klik, fordelt på to
 // dage, hvoraf ét klik gjorde den samme besøgende to gange.
+pinUr.start();
 cvSeed('p', 0, '/compliance-report', 'buy-click', 'u-1');
 cvSeed('u', 0, '/compliance-report', 'buy-click', 'v-1');
 cvSeed('p', 0, '/compliance-report', 'buy-click', 'u-2');
@@ -2309,6 +2330,7 @@ ok('et negativt days falder tilbage til standardvinduet',
 // 6. GET må ikke ændre noget, så POST er 405 — og kvoten pr. IP pr. time holder.
 cv = await cvCall(CV, { method: 'POST', body: '{}' });
 ok('POST giver 405', cv.status === 405, cv.status);
+pinUr.stop();
 const cvKv2 = new Map();
 const cvEnv2 = { ...cvEnv, VISITS: { ...CV_VISITS, get: async (k) => (cvKv2.has(k) ? cvKv2.get(k) : null), put: async (k, v) => { cvKv2.set(k, v); } } };
 const stopTimeCv = (() => {
