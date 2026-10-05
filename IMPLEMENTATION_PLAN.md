@@ -19,6 +19,8 @@
   kørt (uge-tjek).
 
 - **CEO-kø punkt 0: `/api/url-inspect` fungerer nu med env, SSRF-værn, 429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202 korrekt**
+- **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
+
 
 ## Åbne review-fund
 
