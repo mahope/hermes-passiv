@@ -1,9 +1,7 @@
 # STATUS
-- **Pro-kortene lovede en krybning de ikke har, rettet 6/10.** `/api/report`
-  kalder `cscFetch` **én** gang, så Pro læser **én** side. 14 kort + 11
-  prosa-steder på **7** sider fik hver sin ærlige sætning. Ny dom 5 læser
-  katalogen, selftest **12/12**. `scan-clients.test.mjs` krævede den løgnest:
-  **532/534** med den genindsat mod **534/534** uden.
+- **Hvert pro-kort siger nu hvad Pro *ikke* gør, leveret 6/10.** Katalogens
+  `pro_limit` tegnes som sin egen linje under tabellen på **21** sider, og
+  ny dom **4c** i `check_pro_table` dømmer den, selftest **28/28**. Se opgave 33.
 - **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Afsnittet navngiver
   **4** af katalogens **13** produkter (målt på begge sprog), og den eneste side
   med alle 13 var ubefærdet herfra. Baseline: **6** besøgende, bounce
@@ -26,11 +24,19 @@
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: forsidens henvisning modsagde listerne over den
-ceo/folsaetning-om-priser 6/10 08:0x` — krav på **indhold**: live
-`mahope.tools/` og `mahope.tools/da/` skal have `Not listed above:` /
-`Ikke listet ovenfor:` og **0** `Clean Copy Pro, DeskUptime Pro` i `#products`.
-HTTP 200 er ikke bevis.
+`VERIFICÉR DEPLOY: hvert pro-kort har en ærlig grænse
+ceo/pro-graense 6/10 09:3x` — krav på **indhold**: live `mahope.tools/` skal
+have **1** `class="pro-note pro-limit"` på `/clean-copy` og **0**
+`No mobile app` (den påstand var usand), og live `cleancopy.tools/` det
+samme. HTTP 200 er ikke bevis.
+
+`DEPLOY OK 6/10 08:5x` for `ceo/folsaetning-om-priser` — målt på **renderet
+indhold** med to `curl`: live `mahope.tools/` og `mahope.tools/da/` har
+hver **1** `Not listed above:` / `Ikke listet ovenfor:`. *(Noten krævede også
+**0** `Clean Copy Pro, DeskUptime Pro` i `#products`, og den fandt **1** på den
+engelske forside — men kun fordi målingen greb en **HTML-kommentar** i kilden
+der forklarer rettelsen. Kommentaren er ikke læsbar tekst; det er den nye
+sætning der dømmes. Den danske forside har **0**.)*
 
 `DEPLOY OK 6/10 07:1x` for `ceo/pricing-fra-forsiden` — målt på **indhold** med
 to `curl`: live `mahope.tools/` har **2** `href="/pricing"` og live
@@ -240,6 +246,41 @@ HTTP 200 blev ikke brugt som bevis.
      extension-overfladen. Fuld gate **GRØN — 177 steps**. *Ingen
      deploy-note:* kun `tools/` er rørt.
 
+33. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **LEVERET 6/10,
+     `ceo/pro-graense`.** Katalogen har nyt `pro_limit` på de **4** produkter
+     der har en pro-tabel, og `pro_table.py` tegner det som **egen linje**
+     under tabellen på **21** sider, begge sprog. Den ligger ikke i prisnoten:
+     målt 6/10 læste den der som «Én licens dækker 3 maskiner. · Alarmer er …»,
+     et punktum midt i en punktumliste. Ny **dom 4c** i `check_pro_table`
+     dømmer tre ting: katalogen skal have en `pro_limit` på **hvert** sprog,
+     teksten skal stå i blokken, og den skal stå på grænselinjen
+     (`class="pro-note pro-limit"`) — så den hverken kan forsvinde eller glide
+     op i prisnoten og læses som en pris. Selftest **28/28** med tre
+     mutationer i selve generatoren, så dom 1 (byte mod `pro_table.blok()`)
+     er grøn og kun dom 4c kan være rød.
+     **To påstande var usande og er rettet, målt i kilden:** Clean Copy
+     sagde «browser extension and desktop only» — der findes ingen Clean Copy
+     desktop-app, kun udvidelse, CLI og to editor-pluginer; den siger nu at
+     batch kun findes i webværktøjet og egne regler kun i udvidelsen
+     (målt: `clean-copy-cli` har ingen `--batch` og ingen regelflag). Og
+     DeskUptime sagde «webhook only», men `monitor.rs` sender
+     desktop-notifikationer (`tauri_plugin_notification`) ved siden af de 36
+     webhook-kald, så teksten siger nu at alarmer er
+     skrivebordsnotifikationer og webhooks. De to øvrige er målt sande:
+     `page_profile.py` har nul `alert`/`notify`/`schedule`, og DPA + NIS2 er
+     egne Stripe-produkter.
+     **Selftesten fandt en svækket port undervejs:** dom 4 læste katalogens
+     funktionsnavne i hele blokken, så grænsens «Batch conversion is web-tool
+     only» blev regnet som bevis på at funktionen stod i tabellen, og
+     «manglende Pro-funktion» faldt rød. Dom 4 læser nu kun `<tbody>`-rækkerne.
+     **En følge fandt porten `catalog-where`:** den nye linje forskyder
+     linjenumrene i fem sider, og katalogens `where`-intervaller peger på
+     linjer — så 6 fund blev røde på citater der lå **én linje** under deres
+     interval. Alle **25** `where`-strenge er rykket ét linjenummer for de
+     referencer der ligger efter indsættelsen (målt: `catalog-where` GRØN,
+     selftest **11/11**). Det er samme fælde som opgave 31: en linje i en
+     kildefil er en afhængighed, ikke en detalje.
+
 ## ❓ Til Mads
 
 - **🔴 `OPENROUTER_API_KEY` mangler på workeren — assistenten er stadig slukket.**
@@ -347,8 +388,5 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     `check_stripe_ctas` tæller i 73 dokumenterede købssider, men kun pr. side,
     ikke pr. CTA. *Ikke påbegyndt.*
 
-14. **Ingen produktside siger hvad Pro *ikke* gør.** Hvem: bureauer der
-    overvejer. Tal: køb der ikke annulleres fordi de troede mere end de fik.
-    Accept: hvert pro-kort har én ærlig grænse. Datagrund: målt 6/10 — 14
-    kryb-påstande blev rettet, så huset kan ikke længere regnes på det;
-    næste måling er de 21 pro-blokkers øvrige løfter.
+14. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **Leveret 6/10** —
+    se opgave 33.

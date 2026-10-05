@@ -32,7 +32,7 @@
       "pro_features": [
         {
           "id": "batch",
-          "where": "site/clean-copy-tool.html:737-755 btn-batch -> CleanCopyCore.batchConvert(lines) — batch-konverteringen ligger i webværktøjet og kræver licensen, fordi #batch-details (enableBatch :730-732) kun vises når proActive() er sand",
+          "where": "site/clean-copy-tool.html:738-756 btn-batch -> CleanCopyCore.batchConvert(lines) — batch-konverteringen ligger i webværktøjet og kræver licensen, fordi #batch-details (enableBatch :731-733) kun vises når proActive() er sand",
           "labels": {
             "en": [
               "batch conversion"
@@ -70,7 +70,7 @@
         },
         {
           "id": "no-paste-limit",
-          "where": "site/clean-copy-tool.html:171 `<textarea id=\"input-box\">` og :176 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :680 er Pro-nøglens validate/activate mod /api/license, og :468 + :804 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :265 (Free: no limit / Pro: no limit) og i :274-276 (no account, no expiry and no limit)",
+          "where": "site/clean-copy-tool.html:171 `<textarea id=\"input-box\">` og :176 output-boksen har ingen maxlength, og konverteringen selv kører i browseren paa den side af siden. Kun to andre kald forlader siden, og ingen af dem bærer teksten: :681 er Pro-nøglens validate/activate mod /api/license, og :469 + :805 er anonym trafiksporing af stien. Siden siger det samme to steder: i tabellen paa :265 (Free: no limit / Pro: no limit) og i :275-277 (no account, no expiry and no limit)",
           "labels": {
             "en": [
               "no limit on how much text you paste"
@@ -85,6 +85,10 @@
         "site/clean-copy.html",
         "site/da/clean-copy.html"
       ],
+      "pro_limit": {
+        "en": "Batch conversion is web-tool only and custom rules are extension-only — not in the CLI or editor plugins",
+        "da": "Batch-konvertering findes kun i webværktøjet og egne regler kun i udvidelsen — ikke i CLI eller editor-pluginerne"
+      },
       "pricing_link": "https://cleancopy.tools/"
     },
     "deskuptime-pro": {
@@ -229,6 +233,10 @@
         "site/deskuptime/index.html",
         "site/da/deskuptime/index.html"
       ],
+      "pro_limit": {
+        "en": "Alerts are desktop notifications and webhooks — no SMS, email or phone",
+        "da": "Alarmer er skrivebordsnotifikationer og webhooks — ingen SMS, mail eller telefon"
+      },
       "pricing_link": "https://deskuptime.com/"
     },
     "transmute-desktop": {
@@ -389,6 +397,10 @@
         "site/compliance-report.html",
         "site/da/compliance-report.html"
       ],
+      "pro_limit": {
+        "en": "Does not include DPA, NIS2 clauses, or other documents — sold separately",
+        "da": "Inkluderer ikke DPA, NIS2-klausler eller andre dokumenter — sælges separat"
+      },
       "pricing_link": "/compliance-report"
     },
     "page-profile-pro": {
@@ -515,6 +527,10 @@
         "site/page-profile.html",
         "site/da/page-profile.html"
       ],
+      "pro_limit": {
+        "en": "No alerts or notifications — check manually",
+        "da": "Ingen alarmer eller notifikationer — tjek manuelt"
+      },
       "pricing_link": "/page-profile"
     },
     "eucomply-dpa": {
@@ -1770,7 +1786,7 @@
       "free_features": [
         {
           "id": "modes",
-          "where": "site/clean-copy-tool.html:532-537 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
+          "where": "site/clean-copy-tool.html:533-538 CleanCopyCore.htmlToWikilinks/htmlToCsv/htmlToMarkdown og cleanText — de fire tilstande konverterer i browseren",
           "labels": {
             "en": [
               "The four conversion modes on this page — Markdown, WikiLinks, CSV, plain text"
@@ -1790,7 +1806,7 @@
       "pro_features": [
         {
           "id": "batch",
-          "where": "site/clean-copy-tool.html:288 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
+          "where": "site/clean-copy-tool.html:289 <details id=\"batch-details\" hidden> — én linje pr. snippet, gemt bag Pro",
           "labels": {
             "en": [
               "Batch conversion — many snippets at once, one per line"
@@ -1799,7 +1815,7 @@
         },
         {
           "id": "rules",
-          "where": "site/clean-copy-tool.html:505 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
+          "where": "site/clean-copy-tool.html:506 proCard() «In the browser extension: define your own rules once and reuse them on every site.»",
           "labels": {
             "en": [
               "Custom cleanup rules you define once, in the browser extension"
@@ -2444,7 +2460,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker.html:186-199 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker.html:187-200 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "en": [
               "The WCAG ratio for any pair of colors you type in"
@@ -2453,7 +2469,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker.html:201-214 dommen sættes ud fra forholdet, og :4 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker.html:202-215 dommen sættes ud fra forholdet, og :4 gør kortet synligt efter første beregning",
           "labels": {
             "en": [
               "AA and AAA verdict, large-text threshold included"
@@ -2462,7 +2478,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker.html:252-258 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker.html:253-259 swap-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "en": [
               "Runs entirely in your browser — nothing uploaded"
@@ -2473,7 +2489,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker.html:159-163 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker.html:160-164 «it reads the page from the server, runs the 15 accessibility checks» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2485,7 +2501,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker.html:161-163 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
+          "where": "site/contrast-checker.html:162-164 «18 server-side GDPR, cookie, security and metadata checks on top, 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2497,7 +2513,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker.html:162-163 «33 in all, in a PDF report you can hand to a client»",
+          "where": "site/contrast-checker.html:163-164 «33 in all, in a PDF report you can hand to a client»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2519,7 +2535,7 @@
       "free_features": [
         {
           "id": "ratio",
-          "where": "site/contrast-checker-da.html:187-200 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
+          "where": "site/contrast-checker-da.html:188-201 luminance() og ratio() beregner WCAG-forholdet for det indtastede par og skriver det i DOM'en",
           "labels": {
             "da": [
               "WCAG-forholdet for ethvert farvepar du indtaster"
@@ -2528,7 +2544,7 @@
         },
         {
           "id": "verdict",
-          "where": "site/contrast-checker-da.html:202-215 dommen sættes ud fra forholdet, og :5 gør kortet synligt efter første beregning",
+          "where": "site/contrast-checker-da.html:203-216 dommen sættes ud fra forholdet, og :5 gør kortet synligt efter første beregning",
           "labels": {
             "da": [
               "AA- og AAA-dom, tærskel for stor tekst med"
@@ -2537,7 +2553,7 @@
         },
         {
           "id": "local",
-          "where": "site/contrast-checker-da.html:253-259 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
+          "where": "site/contrast-checker-da.html:254-260 byt-knappen og farvefelterne er ren browserkode — siden henter ingen data, så intet uploades",
           "labels": {
             "da": [
               "Kører helt i din browser — intet uploades"
@@ -2548,7 +2564,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/contrast-checker-da.html:160-164 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
+          "where": "site/contrast-checker-da.html:161-165 «den læser siden fra serveren, kører de 15 tilgængelighedstjek» — målt mod `handleReport`s ene `cscFetch`-kald; dommen er `check_scan_page_claims.py` dom 5",
           "labels": {
             "en": [
               "It reads the page from the server too — response headers included, which a browser check cannot see"
@@ -2560,7 +2576,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/contrast-checker-da.html:161-164 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
+          "where": "site/contrast-checker-da.html:162-165 «18 serverside-tjek for GDPR, cookies, sikkerhed og metadata oveni, i alt 33»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2572,7 +2588,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/contrast-checker-da.html:162-164 «i alt 33, i en PDF-rapport du kan give en kunde»",
+          "where": "site/contrast-checker-da.html:163-165 «i alt 33, i en PDF-rapport du kan give en kunde»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2594,7 +2610,7 @@
       "free_features": [
         {
           "id": "critical",
-          "where": "site/security-headers-check.html:298 henter /api/header-check, og :368-372 viser kortet efter ét svar",
+          "where": "site/security-headers-check.html:299 henter /api/header-check, og :369-373 viser kortet efter ét svar",
           "labels": {
             "en": [
               "The critical security headers of one response, pass or fail"
@@ -2603,7 +2619,7 @@
         },
         {
           "id": "grade",
-          "where": "site/security-headers-check.html:230-268 bogstavkarakteren A–F beregnes ud fra de samme headers og skrives i DOM'en",
+          "where": "site/security-headers-check.html:231-269 bogstavkarakteren A–F beregnes ud fra de samme headers og skrives i DOM'en",
           "labels": {
             "en": [
               "A letter grade from A to F"
@@ -2612,7 +2628,7 @@
         },
         {
           "id": "all-headers",
-          "where": "site/security-headers-check.html:150-155 alle svarshovedere vises i en tabel ved siden af de kritiske",
+          "where": "site/security-headers-check.html:151-156 alle svarshovedere vises i en tabel ved siden af de kritiske",
           "labels": {
             "en": [
               "Every response header, plus the raw response"
@@ -2623,7 +2639,7 @@
       "pro_features": [
         {
           "id": "crawl",
-          "where": "site/security-headers-check.html:174-178 «reads the same headers for the site you name and adds what this page cannot see»",
+          "where": "site/security-headers-check.html:175-179 «reads the same headers for the site you name and adds what this page cannot see»",
           "labels": {
             "en": [
               "It reads the page source as well — consent banner, trackers, privacy link and metadata, which no response header shows"
@@ -2632,7 +2648,7 @@
         },
         {
           "id": "server-checks",
-          "where": "site/security-headers-check.html:176-178 «adds what this page cannot see: HTTPS enforcement, mixed content and form submission security, next to 15 accessibility checks — 33 in all»",
+          "where": "site/security-headers-check.html:177-179 «adds what this page cannot see: HTTPS enforcement, mixed content and form submission security, next to 15 accessibility checks — 33 in all»",
           "labels": {
             "en": [
               "18 server-side GDPR, cookie, security and metadata checks"
@@ -2644,7 +2660,7 @@
         },
         {
           "id": "pdf",
-          "where": "site/security-headers-check.html:177-178 «in a PDF report you can hand to a client or your compliance officer»",
+          "where": "site/security-headers-check.html:178-179 «in a PDF report you can hand to a client or your compliance officer»",
           "labels": {
             "en": [
               "The findings as a PDF report you can hand a client"
@@ -2686,7 +2702,7 @@
       "pro_features": [
         {
           "id": "whole-site",
-          "where": "site/url-inspector/index.html:196-197 «walks the same redirect chain and the same security headers across a whole site»",
+          "where": "site/url-inspector/index.html:197-198 «walks the same redirect chain and the same security headers across a whole site»",
           "labels": {
             "en": [
               "The same checks across a whole site, not one address"
@@ -2695,7 +2711,7 @@
         },
         {
           "id": "report",
-          "where": "site/url-inspector/index.html:181 pro-kort «A report you can send to a client. The same headers, redirects and SSL result written as one HTML file.»",
+          "where": "site/url-inspector/index.html:182 pro-kort «A report you can send to a client. The same headers, redirects and SSL result written as one HTML file.»",
           "labels": {
             "en": [
               "The same findings as an HTML report you can hand to a client"

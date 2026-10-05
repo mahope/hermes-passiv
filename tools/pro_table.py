@@ -160,8 +160,8 @@ def beløb(nøgle: str, produkt: dict, lang: str, perioder: dict) -> str:
 
 def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
            side_free: list | None = None,
-           side_pro: list | None = None) -> tuple[str, str, str, str, list]:
-    """`(gratis-funktioner, pro-funktioner, gratis-pris, pro-pris, noter)`.
+           side_pro: list | None = None) -> tuple[str, str, str, str, list, str]:
+    """`(gratis-funktioner, pro-funktioner, gratis-pris, pro-pris, noter, ærlig grænse)`.
 
     Kolonnerne er gratis og Pro, fordi det er den form `check_stripe_ctas.py`
     målte på otte købssider, og fordi den læses uden at læse en tekst.
@@ -220,13 +220,20 @@ def celler(nøgle: str, produkt: dict, lang: str, perioder: dict,
         if not ord_:
             ord_ = "devices" if lang == "en" else "enheder"
         noter.append(t["devices"].format(n=maskiner, word=ord_))
+    # `pro_limit` er en **anden slags** oplysning end en prisnote, så den får
+    # sin egen linje. Målt 6/10: lagt i samme note læste den
+    # «Én licens dækker 3 maskiner. · Alarmer er …» — et punktum midt i en
+    # punktumliste. Den linje er ærlig information, ikke en pris, og den skal
+    # kunne læses for sig selv.
+    grænse = produkt.get("pro_limit")
+    ærlig = str(grænse[lang]) if isinstance(grænse, dict) and grænse.get(lang) else ""
 
     return (f"<ul>{punkter('free_features', side_free)}</ul>",
             f"<ul>{punkter('pro_features', side_pro)}</ul>",
             f'<span class="pro-price">{t["free_price"]}</span>'
             f'<span class="pro-note">{h(t["free_note"])}</span>',
             f'<span class="pro-price">{h(beløb(nøgle, produkt, lang, perioder))}</span>',
-            noter)
+            noter, ærlig)
 
 
 def kompakt_blok(blok_tekst: str, rel: str) -> str:
@@ -268,7 +275,7 @@ def blok(nøgle: str, produkt: dict, lang: str, perioder: dict,
     """Den færdige blok. Determinisme er kravet: porten sammenligner bytes."""
     t = TEKST[lang]
     id_attr = f' id="{h(anker_id)}"' if anker_id else ""
-    gratis, pro, gratis_pris, pro_pris, noter = celler(
+    gratis, pro, gratis_pris, pro_pris, noter, ærlig = celler(
         nøgle, produkt, lang, perioder, side_free, side_pro)
     linjer = [
         START,
@@ -292,6 +299,14 @@ def blok(nøgle: str, produkt: dict, lang: str, perioder: dict,
     ]
     if noter:
         linjer.append(f'<p class="pro-note">{" · ".join(h(n) for n in noter)}</p>')
+    if ærlig:
+        # Samme klasse som prisnoten, så den ser ud som den del af kortet den
+        # er — og så den arver styling på de sider der ikke linker
+        # `/style.css` (`/cookie-check` og `/url-inspector` gør ikke det).
+        # Den ekstra klasse er portens krog: dom 4c i `check_pro_table.py`
+        # finder præcis denne linje, så en grænse der forsvinder fra
+        # noten stadig dømmes.
+        linjer.append(f'<p class="pro-note pro-limit">{h(ærlig)}</p>')
     linjer.append(END)
     return "\n".join(linjer)
 

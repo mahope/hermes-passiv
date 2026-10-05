@@ -31,7 +31,7 @@ Tabellen er derfor tegnet af katalogen, og denne port dommer den:
      det er det, der gjorde fire sider til fire svar.
 
     python3 tools/check_pro_table.py             # dom
-    python3 tools/check_pro_table.py --self-test # 24 kontroller
+    python3 tools/check_pro_table.py --self-test # 28 kontroller
 """
 from __future__ import annotations
 
@@ -271,7 +271,14 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
                     fund.append(f"{rel}: {nøgle} {feature.get('id')!r} har "
                                 f"ingen {lang}-labels i katalogen")
                     continue
-                if not any(v.lower() in blok.lower() for v in varianter):
+                # Slås op i **tabellen**, ikke i hele blokken. Målt 6/10: grænsen
+                # under tabellen for clean-copy siger «Batch conversion is
+                # web-tool only …», så dommen læste den som bevis på at
+                # funktionen stod i tabellen — og selftestens «manglende
+                # Pro-funktion» faldt rød, fordi porten så var svækket. En
+                # funktion skal stå i cellen den sælges i; en note under
+                # tabellen er ikke en celle.
+                if not any(v.lower() in "".join(krop).lower() for v in varianter):
                     fund.append(f"{rel}: tabellen nævner ikke "
                                 f"{nøgle_fil} {feature.get('id')!r} "
                         f"(første label: {varianter[0]!r})")
@@ -286,6 +293,28 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
                 if tegn in blok:
                     fund.append(f"{rel}: layout=inline, men blokken har en "
                                 f"{hvad} — den ville lukke JavaScript-strengen")
+
+        # 4c. Hvert pro-kort skal have én ærlig grænse — en ting Pro *ikke* gør,
+        #     som en kunde kunne forvente. Uden den køber nogen en licens for
+        #     noget de troede var inkluderet, og annulleringen kommer bagefter.
+        #     Dommen læser katalogens `pro_limit` og kræver at teksten står på
+        #     **grænselinjen** (`pro-limit`), så den hverken kan forsvinde
+        #     uden at blive dømt, eller flytte op i prisnoten hvor den så læses
+        #     som en pris. Teksten skal stå i hele blokken, så et site der
+        #     skriver den i markup uden klassen stadig er rødt på den anden
+        #     arm — ellers ville en klasseløs linje være nok.
+        grænse = produkt.get("pro_limit")
+        grænselinje = next((n for n in re.findall(r'<p class="pro-note pro-limit">(.*?)</p>',
+                                                 blok, re.S)), "")
+        if not isinstance(grænse, dict) or not grænse.get(lang):
+            fund.append(f"{rel}: katalogen har ingen pro_limit for {nøgle} "
+                        f"på {lang} — hvert pro-kort skal have én ærlig grænse")
+        elif str(grænse[lang]) not in blok:
+            fund.append(f"{rel}: pro_limit {str(grænse[lang])!r} står ikke "
+                        f"i blokken")
+        elif str(grænse[lang]) not in grænselinje:
+            fund.append(f"{rel}: pro_limit {str(grænse[lang])!r} står ikke "
+                        f"på grænselinjen (class=\"pro-note pro-limit\")")
 
         # 5. Ingen håndskrevet sammenligning ved siden af.
         udenfor = pro_table.EJER_RE.sub("", html)
@@ -546,6 +575,53 @@ def self_test() -> int:
         rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
         fund = dom(catalog, rod)
         tjek("genoptegnede sider er grønne", not fund, "; ".join(fund[:2]))
+
+# 15. Den ærlige grænse (dom 4c). Tre mutationer, fordi dommen har tre
+    #     arme, og hver af dem skal kunne stå alene:
+    #     (a) katalogen mister `pro_limit` — så er der ingen grænse at kræve,
+    #     (b) generatoren lader grænselinjen forsvinde — så dom 1 (byte mod
+    #         `pro_table.blok()`) er grøn, og kun dom 4c kan være rød. Ligesom
+    #         i mutation 14 skal mutationen ligge i **generatoren**, ellers
+    #         ville porten være rød af sig selv og testen intet bevise.
+    #     (c) generatoren flytter samme tekst op i prisnoten uden klassen — så
+    #         læses grænsen som en pris. Det er præcis den læsefejl dommen er
+    #         skrevet for, og uden den tredje arm ville den være grøn.
+    nøgle = "deskuptime-pro"
+    uden = {**catalog, "products": {**catalog["products"], nøgle: {
+        **catalog["products"][nøgle]}}}
+    del uden["products"][nøgle]["pro_limit"]
+    fund = dom(uden)
+    tjek("produkt uden pro_limit i katalogen er rød",
+         any("ingen pro_limit" in f for f in fund), str(fund[:2]))
+
+    ægte_blok = pro_table.blok  # mutationen skal kun ramme `blok`
+    for navn, mutation, forventet in (
+        ("grænselinjen forsvinder fra generatoren",
+         lambda b: re.sub(r'\n<p class="pro-note pro-limit">.*?</p>', "", b),
+         "står ikke i blokken"),
+        ("grænsen flyttes op i prisnoten uden klassen",
+         lambda b: re.sub(r'\n<p class="pro-note pro-limit">(.*?)</p>',
+                          lambda m: "", b).replace(
+             '<p class="pro-note">',
+             f'<p class="pro-note">{catalog["products"][nøgle]["pro_limit"]["en"]} · ', 1),
+         "grænselinjen"),
+    ):
+        try:
+            pro_table.blok = lambda *a, _m=mutation, **kw: _m(ægte_blok(*a, **kw))
+            with tempfile.TemporaryDirectory() as tmp:
+                rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
+                fund = dom(catalog, rod)
+                tjek(f"{navn} er rød",
+                     any(forventet in f for f in fund), str(fund[:2]))
+        finally:
+            pro_table.blok = ægte_blok
+
+    # Og med den rigtige generator er alt grønt igen — ellers har mutationerne
+    # bare gjort porten rød for alt.
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
+        fund = dom(catalog, rod)
+        tjek("genoptegnede sider med grænse er grønne", not fund, "; ".join(fund[:2]))
 
     for linje in fejl:
         print(f"  FEJL  {linje}")
