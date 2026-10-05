@@ -1,4 +1,7 @@
 # STATUS
+- **De tre åbne review-fund er fund 1, 2 og 3 — fund 3 er rettet nu.** Se
+  «Åbne review-fund» og opgave 34. Fund 1 er en **usand påstand live** på
+  Clean Copy-siden, fund 2 er en falsk rød dom i en deploy-gate.
 - **Hvert pro-kort siger nu hvad Pro *ikke* gør, leveret 6/10.** Katalogens
   `pro_limit` tegnes som sin egen linje under tabellen på **21** sider, og
   ny dom **4c** i `check_pro_table` dømmer den, selftest **28/28**. Se opgave 33.
@@ -6,29 +9,50 @@
   **4** af katalogens **13** produkter (målt på begge sprog), og den eneste side
   med alle 13 var ubefærdet herfra. Baseline: **6** besøgende, bounce
   **100 %**. Nu linker begge forsider til hele listen.
-- **Forsidens henvisning modsagde listerne over den, rettet 6/10.**
-  Review-fund LAV: den sagde Clean Copy Pro og DeskUptime Pro «ikke står
-  ovenfor», men de står der med prisen i teksten. Ny **dom 4** i
-  `check_frontpage_pricing` dømmer det — målt rød (**2 fund**) med den gamle
-  sætning genindsat, selftest **7/7**. Portens «2 i listen, 11 via den» var
-  håndholdt og uklædte; den er væk.
-- **`check_js_residue` tabte præcis den form den var bygget til at fange,
-  rettet 6/10.** Rettelsen af `; ;` slettede de linjeskifter den matchede
-  over, så den maskerede tekst fik færre linjer end den rå — og porten tabte
-  et ægte fund og rapporterede linjetal **to for lave**. Se opgave 31.
-- **Én åben `VERIFICÉR DEPLOY`-note** (se nedenfor), alle tidligere lukket på
-  målt indhold, ikke på HTTP 200.
-- **Næste:** mål de **2** `#url=`-delingskinder på `/scan`, så vi ved om
-  deling er værd at gøre synlig. `PR-TJEK 6/10`: **0** åbne PR'er.
-  `BRANCH-TJEK` ikke kørt (uge-tjek).
+- **Forsidens port så `Page Profile` og EUComply-bundlen forkert, rettet 6/10.**
+  Se opgave 34 — målt rød på den gamle kode med to mutationer, grøn på den nye.
+- **Deploy-noten for `ceo/pro-graense` er lukket på rigtig rute.** Den krævede
+  `/clean-copy` på `mahope.tools` — den er **404**, Clean Copy ligger på
+  `cleancopy.tools`. Se «Verificér deploy».
+- **Næste:** review-fund 1 (den usande påstand) og 2 (falsk rød dom).
+  `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+
+## Åbne review-fund
+
+1. **🔴 MIDDEL — Clean Copy-sidens `pro_limit` modsiger Obsidian-pluginens egen
+   kode, live.** `tools/stripe_catalog.json` siger «custom rules are
+   extension-only — **not in the CLI or editor plugins**», men Obsidian er et
+   editor-plugin med en fuld Pro-gated UI til egne regler: `obsidian-plugin/
+   main.js:711` (overskriften «Custom cleanup rules (Pro)»), `:793` (`convert()`
+   sender dem), `README.md:6` («custom find/replace cleanup rules») og
+   `manifest.json` («and batch cleaning with Clean Copy Pro»). Rigtig tekst:
+   batch findes kun i webværktøjet, CLI'en tager én fil ad gangen, og egne regler
+   er i Obsidian-pluginet (Pro) — VS Code og CLI har ingen. *Bemærk:* også
+   `manifest.json` lover «batch cleaning», som `batchConvert` ikke gør i
+   pluginen (alle tre kald bruger et 1-elements array), så pluginens egen
+   beskrivelse skal rettes. Accept: katalogtekst + plugin-README + manifest er
+   alle tre sande og `check_pro_table` er grøn på alle 21 sider.
+2. **MIDDEL — `check_pro_table` dom 4c bliver rød på en korrekt `--apply`.**
+   `tools/check_pro_table.py:307+315` sammenligner **rå** katalogtekst med
+   `h()`-escapet HTML, så en `pro_limit` med `&` er ikke findelig i markup'en.
+   Målt: `&mdash;` i `pro_limit` → `--apply` skriver korrekt `&amp;mdash;` og
+   dommen melder «står ikke i blokken». Rettelse: sammenlign
+   `h(str(grænse[lang]))`, eller læs linjen og `unescape` den. Selftest skal
+   have et tilfælde med `&`.
+3. ~~**LAV — `krav 4` i `check_frontpage_pricing` så `Page Profile` forbi og
+   EUComply-bundlen som varetitel.**~~ **LUKKET 6/10**, se opgave 34.
 
 ## Verificér deploy
 
-`VERIFICÉR DEPLOY: hvert pro-kort har en ærlig grænse
-ceo/pro-graense 6/10 09:3x` — krav på **indhold**: live `mahope.tools/` skal
-have **1** `class="pro-note pro-limit"` på `/clean-copy` og **0**
-`No mobile app` (den påstand var usand), og live `cleancopy.tools/` det
-samme. HTTP 200 er ikke bevis.
+`DEPLOY OK 6/10 12:1x` for `ceo/pro-graense` — målt på **indhold** med fire
+`curl`. Noten krævede live `mahope.tools/clean-copy`, og den ruten er **404**:
+Clean Copy ligger på `cleancopy.tools` (`build_sites.py:95` — `site/clean-copy.
+html` er cleancopy.tools' forside, `index_only`). Korrigeret rute: live
+`cleancopy.tools/clean-copy`, `/clean-copy-tool` og `/da/clean-copy` har hver
+**1** `class="pro-note pro-limit"` og **0** `No mobile app`. *(At noten pegede
+på en 404-rute er en fejl i noten, ikke et deploy-problem — HTTP 200 blev ikke
+brugt som bevis.)* **Indholdet på den grænselinje er dog en usand påstand:**
+se review-fund 1.
 
 `DEPLOY OK 6/10 08:5x` for `ceo/folsaetning-om-priser` — målt på **renderet
 indhold** med to `curl`: live `mahope.tools/` og `mahope.tools/da/` har
@@ -247,39 +271,36 @@ HTTP 200 blev ikke brugt som bevis.
      deploy-note:* kun `tools/` er rørt.
 
 33. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **LEVERET 6/10,
-     `ceo/pro-graense`.** Katalogen har nyt `pro_limit` på de **4** produkter
-     der har en pro-tabel, og `pro_table.py` tegner det som **egen linje**
-     under tabellen på **21** sider, begge sprog. Den ligger ikke i prisnoten:
-     målt 6/10 læste den der som «Én licens dækker 3 maskiner. · Alarmer er …»,
-     et punktum midt i en punktumliste. Ny **dom 4c** i `check_pro_table`
-     dømmer tre ting: katalogen skal have en `pro_limit` på **hvert** sprog,
-     teksten skal stå i blokken, og den skal stå på grænselinjen
-     (`class="pro-note pro-limit"`) — så den hverken kan forsvinde eller glide
-     op i prisnoten og læses som en pris. Selftest **28/28** med tre
-     mutationer i selve generatoren, så dom 1 (byte mod `pro_table.blok()`)
-     er grøn og kun dom 4c kan være rød.
-     **To påstande var usande og er rettet, målt i kilden:** Clean Copy
-     sagde «browser extension and desktop only» — der findes ingen Clean Copy
-     desktop-app, kun udvidelse, CLI og to editor-pluginer; den siger nu at
-     batch kun findes i webværktøjet og egne regler kun i udvidelsen
-     (målt: `clean-copy-cli` har ingen `--batch` og ingen regelflag). Og
-     DeskUptime sagde «webhook only», men `monitor.rs` sender
-     desktop-notifikationer (`tauri_plugin_notification`) ved siden af de 36
-     webhook-kald, så teksten siger nu at alarmer er
-     skrivebordsnotifikationer og webhooks. De to øvrige er målt sande:
-     `page_profile.py` har nul `alert`/`notify`/`schedule`, og DPA + NIS2 er
-     egne Stripe-produkter.
-     **Selftesten fandt en svækket port undervejs:** dom 4 læste katalogens
-     funktionsnavne i hele blokken, så grænsens «Batch conversion is web-tool
-     only» blev regnet som bevis på at funktionen stod i tabellen, og
-     «manglende Pro-funktion» faldt rød. Dom 4 læser nu kun `<tbody>`-rækkerne.
-     **En følge fandt porten `catalog-where`:** den nye linje forskyder
-     linjenumrene i fem sider, og katalogens `where`-intervaller peger på
-     linjer — så 6 fund blev røde på citater der lå **én linje** under deres
-     interval. Alle **25** `where`-strenge er rykket ét linjenummer for de
-     referencer der ligger efter indsættelsen (målt: `catalog-where` GRØN,
-     selftest **11/11**). Det er samme fælde som opgave 31: en linje i en
-     kildefil er en afhængighed, ikke en detalje.
+      `ceo/pro-graense`.** Katalogens `pro_limit` for fire produkter tegnes som
+      sin egen linje under tabellen på **21** sider, begge sprog. Ny **dom 4c** i
+      `check_pro_table` dømmer tre ting (katalog har `pro_limit` på hvert sprog,
+      teksten står i blokken, den står på grænselinjen), selftest **28/28** med
+      tre mutationer i selve generatoren. To usande påstande blev rettet i
+      kilden, og selftesten fandt en svækket port undervejs: dom 4 læste hele
+      blokken, så grænsens egen tekst blev regnet som bevis på at en funktion
+      stod i tabellen — den læser nu kun `<tbody>`-rækkerne. Se arkivet for de
+      **25** `where`-intervaller, der rykket ét linjenummer.
+34. ~~**`krav 4` så hverken `Page Profile` eller EUComply-bundlen rigtigt.**~~
+      **LUKKET 6/10**, `ceo/frontpage-navn-normalisering`. Review-fund LAV:
+      `katalognavne()` krævede et rent substring, så porten var blind for varer
+      der skrives som sit slug i listerne over henvisningen
+      (`<a href="/page-profile">`) — altså netop den fjerde af fire — og en
+      sætning der nævner `EUComply Complete Template Bundle` blev regnet som
+      også at nævne `EUComply`, som *ikke* står i listerne. Rettelse: begge
+      sider normaliseres (bindestreg/hvidrum → ét, casefold) og der kræves en
+      ordgrænse på begge sider, og de navne henvisningen nævner findes i **ét**
+      alternativ med **længste match først**. Målt på den gamle kode: «Not listed
+      above: Page Profile, …» → **fund: []** (skal være rød) og «… the EUComply
+      Complete Template Bundle and Transmute Desktop.» → **1 fund** (falsk
+      positiv); på den nye **RØD** / **GRØN**. Selftest **10/10** med to nye
+      mutationer, der dømmer begge retninger. Fuld gate **GRØN — 177 steps**.
+      *Ingen deploy-note:* kun `tools/` er rørt.
+35. **`UNMANAGED_DOMAINS` har en 404-rute i en verificeret note.** Hvorfor:
+      noten for `ceo/pro-graense` krævede live `mahope.tools/clean-copy`, som
+      **404** — Clean Copy ligger på `cleancopy.tools`. Rettet i samme commit
+      som opgave 34, så en senere læser ikke leder efter indhold på en rute der
+      ikke findes. Accept: enhver `VERIFICÉR`-note i planen er målt på en rute
+      der svarer 200 **og** har den påstand den kræver.
 
 ## ❓ Til Mads
 

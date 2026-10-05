@@ -8330,3 +8330,56 @@ altså porten ville have været grøn uden at krav 1 kunne fejle. Rettet ved at 
 mutationerne ramme `href`-attributtet alene, som ikke ændrer sig med klassen.
 Det er samme fejl som `$1`-resten i `mahoje-dk`: et værktøj der tier, i stedet for
 et der røder.
+
+## 6/10 — Opgave 34 + review-fund 3 (LAV) — `ceo/frontpage-navn-normalisering`
+
+**Fundet.** `tools/check_frontpage_pricing.py` krævede, at katalogens navne
+skulde stå som **hel** substring i både henvisningen og listerne over den. Det
+er to fejl ad gangen, begge målt på den gamle kode med to mutationer:
+
+```
+«Not listed above: Page Profile, Transmute Desktop, …»      → fund: []   (skal være RØD)
+«Not listed above: the EUComply Complete Template Bundle …»   → 1 fund      (falsk positiv)
+```
+
+Den første: listerne over henvisningen skriver varen som sit **slug**
+(`<a href="/page-profile">`), så `page-profile` ikke kan matche `Page Profile` i
+henvisningen — altså var porten blind for præcis den fjerde af de fire varer den
+skal dømme. Den anden: `EUComply` er en delstreng i `EUComply Complete
+Template Bundle`, som *ikke* står i listerne over henvisningen (kun
+`EUComply Pro`-linjen gør) — så en **sand** forside blev rødet med et
+produktnavn der ikke stod i sætningen. En port der røder på en korrekt side er
+en rød deploy-gate, og en port der tier på en forkert side er ingen port.
+
+**Rettelsen.** Begge sider gennemgår `normalisér()` (alle bindestregsorter og
+hvidrum → ét mellemrum, så slug og navn bliver samme form; `casefold`, så `Ø`
+og `ø` er ens), og et navn skal stå som **hele ord** — en ordgrænse på begge
+sider, med `æøå` i klassen, så `Clean Copy` hverken matcher ind i
+`RengørClean Copy` eller i `CopyClean`. De navne henvisningen nævner findes i
+**ét** alternativ sorteret **længste match først**, fordi `re` prøver
+alternativerne i rækkefølge: ellers ville enhver sætning der nævner *bundlen*
+tælle som en nævnelse af `EUComply`.
+
+**Selftest 7/7 → 10/10.** De tre nye kontroller dømmer hver sin retning: de to
+skrivemåder af `Page Profile` skal give **RØD** (mutation 7), og den sande
+henvisning til `EUComply Complete Template Bundle` skal give **GRØN**
+(mutation 8). Mutation 9 er den gamle «de rigtige filer er grønne».
+
+**Verificeret.** Porten GRØN, selftest **10/10**, `build_sites.py` (338 +
+33 filer, 0 brudte links), `seo_check` 316 sider 0 fund, `stripe-worker`
+**474/474**, `check_inline_js` 0 problemer, og `quality_gate.py` **GRØN —
+177 steps**. `git diff | grep -cE '^\+.*\$[0-9]'` → **0**.
+
+**Deploy-noten for `ceo/pro-graense` var rettet i samme commit.** Den krævede
+live `mahope.tools/clean-copy` med **1** `class="pro-note pro-limit"` — den
+ruten svarer **404**. Clean Copy ligger på `cleancopy.tools`
+(`build_sites.py:95`, `site/clean-copy.html` er `index_only` dér). Målt på de
+tre rigtige ruter (`cleancopy.tools/clean-copy`, `/clean-copy-tool`,
+`/da/clean-copy`): hver **1** grænselinje og **0** `No mobile app`. Noten krævede
+altså indhold, der var live — på en rute der ikke findes. HTTP 200 blev ikke
+brugt som bevis.
+
+**Nyt fund fra samme måling:** den grænselinje der er live, siger «custom rules
+are extension-only — not in the CLI or editor plugins», og det er **usand** for
+Obsidian-pluginet, som har en fuld Pro-gated UI til egne regler. Det står som
+review-fund 1 i planen.

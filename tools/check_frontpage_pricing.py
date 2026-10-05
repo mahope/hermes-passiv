@@ -35,6 +35,15 @@ er usynlig i en diff: intet var brudt, intet var forkert, en vej manglede.
    læseren kan ikke finde ud af hvad der menes, fordi de to lister overhovedet
    er dem hun lige har læst.
 
+   Sammenligningen **normaliserer begge sider** og matcher i **ét** alternativ,
+   længste navn først. Begge dele er målt, ikke antaget (review-fund 5/10):
+   listerne ovenfor skriver varen som sit slug (`<a href="/page-profile">`), så
+   et rent substring-krav kunne se `Clean Copy` og `DeskUptime` men **ikke**
+   `Page Profile` — præcis den fjerde vare. Og `EUComply` er en delstreng i
+   `EUComply Complete Template Bundle`, som *ikke* står i listerne ovenfor, så
+   uden længste-match-først rødede porten en **sand** forside med et produktnavn
+   der ikke stod i den.
+
 **Hvorfor ikke bare læse `$`-beløb.** `check_own_prices.py` dømmer beløb, og
 `check_pricing_page.py` dømmer at `/pricing` viser katalogens priser. Ingen af
 dem dømmer *vejen dertil* — det er præcis den mangel der lå her, og de to
@@ -114,6 +123,58 @@ def katalognavne() -> list[str]:
     return sorted(navne)
 
 
+# Bindestreg og hvidrum er den eneste forskel på de to overfladers skrivemåde:
+# listerne ovenfor skriver varen som sit slug (`<a href="/page-profile">`), og en
+# henvisning skriver produktets navn («Page Profile»). Uden normalisering var
+# krav 4 blind for præcis den vare — målt 5/10 (review-fund), se docstring.
+def normalisér(tekst: str) -> str:
+    """Én form at sammenligne på, uanset hvordan de to overflader skriver."""
+    return re.sub(r"[\s\-‐‑‒–—―]+", " ", tekst).casefold()
+
+
+# Ordgrænsen skal tælle æøå som bogstaver — ellers ville `Clean Copy` kunne
+# matche ind i `RengørClean Copy`. Den skal tælle dem på **begge** sider: de er
+# naboer i klassen, så kun den ene ville gøre `Clean Copy` matche i
+# `CopyClean`.
+_ORDGRÆNSE = r"0-9a-zæøå"
+
+
+def nævner(tekst: str, navn: str) -> bool:
+    """Står `navn` i `tekst` som hele ord, ikke som en del af et længere ord?
+
+    Adskillelsen er en **ordgrænse på begge sider**, ikke et simpelt
+    substring: `<li>Clean Copying</li>` nævner ikke Clean Copy. Dømmes på den
+    side af sætningen der *står i listerne ovenfor* — altså HTML'en med slugs og
+    overskrifter, hvor et navn der bare hænger i et længere ord er en
+    tilfældighed. Den anden side af kravet (hvilke navne henvisningen overhovedet
+    nævner) dømmes af `nævnte_navne`, fordi den skal slå den længste varetitel
+    sammen — se dér.
+    """
+    mønster = rf"(?<![{_ORDGRÆNSE}]){re.escape(normalisér(navn))}(?![{_ORDGRÆNSE}])"
+    return re.search(mønster, normalisér(tekst)) is not None
+
+
+def nævnte_navne(tekst: str) -> set[str]:
+    """Hvilke katalognavne `tekst` nævner — **længste match vinder**.
+
+    Ét alternativ i stedet for ét søgning pr. navn, fordi katalogen rummer navne
+    der er en del af hinanden: `EUComply` og `EUComply Complete Template Bundle`.
+    Uden længste-først ville enhver sætning der nævner *bundlen* også tælle som
+    en nævnelse af `EUComply` — og da `EUComply Pro` står i listerne ovenfor,
+    ville porten røde på en sætning der er **sand**: bundlen står netop *ikke*
+    i listerne. Målt 5/10, 1 falsk positiv.
+
+    `re` prøver alternativerne i rækkefølge, så sortering på længde — ikke bare
+    navne — er hele mekanismen. Slået slås op i `til_navn`, så fundet melder det
+    navn læseren kan se, ikke den normaliserede form.
+    """
+    til_navn = {normalisér(n): n for n in katalognavne()}
+    dele = "|".join(re.escape(n) for n in
+                     sorted(til_navn, key=len, reverse=True))
+    mønstre = re.compile(rf"(?<![{_ORDGRÆNSE}])(?:{dele})(?![{_ORDGRÆNSE}])")
+    return {til_navn[m.group(0)] for m in mønstre.finditer(normalisér(tekst))}
+
+
 def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
                  sprog: str) -> list[str]:
     fund: list[str] = []
@@ -152,6 +213,8 @@ def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
     # indeholder linket er fundet på sit indhold; alt andet i afsnittet er
     # «ovenfor». Et katalognavn der står i begge steder er en påstand der
     # modsiger sig selv — fundet 6/10 gjorde netop det med Clean Copy Pro.
+    # Begge sider gennemgås i `normalisér`-form, så en vare der står som sit slug
+    # i listerne (`page-profile`) kan ses i henvisningen som «Page Profile».
     henvisning = ""
     for afsnit_p in P_RE.findall(krop):
         if PRICING_RE.search(afsnit_p):
@@ -159,9 +222,8 @@ def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
             break
     if henvisning:
         ovenfor = krop.replace(henvisning, "")
-        laevet = ovenfor.lower()
-        for navn in katalognavne():
-            if navn.lower() in henvisning.lower() and navn.lower() in laevet:
+        for navn in sorted(nævnte_navne(henvisning)):
+            if nævner(ovenfor, navn):
                 fund.append(
                     f"  {sprog}: henvisningen siger at «{navn}» ikke står "
                     f"ovenfor, men den står i listerne over den. Skriv navnet "
@@ -289,12 +351,68 @@ def self_test() -> int:
         finally:
             sti.write_text(original, encoding="utf-8")
 
-    # Mutation 6: de rigtige filer skal være grønne — ellers lå porten i gaten
+    # Mutation 7: krav 4 skal se en vare hvis skrivemåde **afviger** mellem de
+    # to overflader. `Page Profile` står i listerne ovenfor som sit slug —
+    # `<a href="/page-profile">page-profile</a>` — så et rent substring-krav var
+    # blind for præcis den fjerde vare (målt 5/10, review-fund: fund [] på begge
+    # mutationer). Samme fejl som den 6/10 fandt, nu fordi *normaliseringen*
+    # manglede i stedet for dømmeteksten. Begge skrivemåder prøves, fordi en
+    # henvisning kan skrive varen på hver af dem.
+    for skrivemåde, forventet_navn in (("Page Profile", "Page Profile"),
+                                      ("page-profile", "Page Profile")):
+        sætning = ("<p style=\"margin-bottom:0\">Not listed above: "
+                   f"{skrivemåde}, the compliance templates. "
+                   "<a class=\"btn btn-small\" href=\"/pricing\">Every price "
+                   "in one list</a></p>")
+        mutation_sætning_en = ("<p style=\"margin-bottom:0\">Not listed above: "
+                               "Transmute Desktop, the compliance templates "
+                               "and the report kits.")
+        original = EN_INDEX.read_text(encoding="utf-8")
+        try:
+            EN_INDEX.write_text(
+                original.replace(mutation_sætning_en, sætning, 1),
+                encoding="utf-8")
+            fund = dom()
+            tjek(f"krav 4 ser «{forventet_navn}» skrevet som «{skrivemåde}»",
+                 any("men den står i listerne over den" in f
+                     and forventet_navn in f for f in fund),
+                 "; ".join(fund))
+        finally:
+            EN_INDEX.write_text(original, encoding="utf-8")
+
+    # Mutation 8: den modsvarende falske positive skal **ikke** komme tilbage.
+    # `EUComply Complete Template Bundle` er en katalognegen, og den *står ikke*
+    # i listerne ovenfor — kun `EUComply Pro`-linjen gør. Sætningen er derfor
+    # sand, og porten skal være grøn. Med et substring-krav var `EUComply` en
+    # delstreng i bundlen og fik sætningen til at røde med et produktnavn der
+    # ikke stod i den (målt 5/10: 1 fund). En port der røder på en korrekt
+    # forside er en rød deploy-gate, så den her mutation låser den anden side
+    # af den samme rettelse.
+    sand_sætning = ("<p style=\"margin-bottom:0\">Not listed above: the "
+                    "EUComply Complete Template Bundle and Transmute Desktop. "
+                    "<a class=\"btn btn-small\" href=\"/pricing\">Every price "
+                    "in one list</a></p>")
+    mutation_sætning_en = ("<p style=\"margin-bottom:0\">Not listed above: "
+                           "Transmute Desktop, the compliance templates and "
+                           "the report kits.")
+    original = EN_INDEX.read_text(encoding="utf-8")
+    try:
+        EN_INDEX.write_text(
+            original.replace(mutation_sætning_en, sand_sætning, 1),
+            encoding="utf-8")
+        fund = dom()
+        tjek("en sand henvisning til EUComply Complete Template Bundle er grøn",
+             not any("men den står i listerne over den" in f for f in fund),
+             "; ".join(fund))
+    finally:
+        EN_INDEX.write_text(original, encoding="utf-8")
+
+    # Mutation 9: de rigtige filer skal være grønne — ellers lå porten i gaten
     # og rødmede deploys for en fejl der ikke findes.
     fund = dom()
     tjek("de rigtige filer er grønne", not fund, "; ".join(fund[:3]))
 
-    antal_kontroller = 7
+    antal_kontroller = 10
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-frontpage-pricing-selftest: {'OK' if not fejl else 'RØD'} "
