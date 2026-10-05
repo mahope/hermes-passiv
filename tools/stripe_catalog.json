@@ -86,8 +86,8 @@
         "site/da/clean-copy.html"
       ],
       "pro_limit": {
-        "en": "Batch conversion is web-tool only and custom rules are extension-only — not in the CLI or editor plugins",
-        "da": "Batch-konvertering findes kun i webværktøjet og egne regler kun i udvidelsen — ikke i CLI eller editor-pluginerne"
+        "en": "Batch conversion is web-tool only. Custom cleanup rules are in the browser extension and the Obsidian plugin — the CLI and the VS Code plugin have none",
+        "da": "Batch-konvertering findes kun i webværktøjet. Egne rense regler er i browserudvidelsen og Obsidian-pluginet — CLI-værktøjet og VS Code-pluginet har ingen"
       },
       "pricing_link": "https://cleancopy.tools/"
     },

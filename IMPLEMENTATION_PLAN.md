@@ -1,10 +1,11 @@
 # STATUS
-- **De tre åbne review-fund er fund 1, 2 og 3 — fund 3 er rettet nu.** Se
-  «Åbne review-fund» og opgave 34. Fund 1 er en **usand påstand live** på
-  Clean Copy-siden, fund 2 er en falsk rød dom i en deploy-gate.
+- **Alle tre review-fund er lukket 6/10.** Fund 1 (den usande påstand om at egne
+  regler kun findes i udvidelsen) er rettet i katalog, Obsidian-manifest og
+  blog; fund 2 (dom 4c på escapet `&`) er rettet og selftesten har nu to nye
+  kontroller, selftest **30/30**. Se «Åbne review-fund».
 - **Hvert pro-kort siger nu hvad Pro *ikke* gør, leveret 6/10.** Katalogens
   `pro_limit` tegnes som sin egen linje under tabellen på **21** sider, og
-  ny dom **4c** i `check_pro_table` dømmer den, selftest **28/28**. Se opgave 33.
+  ny dom **4c** i `check_pro_table` dømmer den, selftest **30/30**. Se opgave 33.
 - **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Afsnittet navngiver
   **4** af katalogens **13** produkter (målt på begge sprog), og den eneste side
   med alle 13 var ubefærdet herfra. Baseline: **6** besøgende, bounce
@@ -14,35 +15,36 @@
 - **Deploy-noten for `ceo/pro-graense` er lukket på rigtig rute.** Den krævede
   `/clean-copy` på `mahope.tools` — den er **404**, Clean Copy ligger på
   `cleancopy.tools`. Se «Verificér deploy».
-- **Næste:** review-fund 1 (den usande påstand) og 2 (falsk rød dom).
-  `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
+- **Næste:** feature-kø. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
+  kørt (uge-tjek).
 
 ## Åbne review-fund
 
-1. **🔴 MIDDEL — Clean Copy-sidens `pro_limit` modsiger Obsidian-pluginens egen
-   kode, live.** `tools/stripe_catalog.json` siger «custom rules are
-   extension-only — **not in the CLI or editor plugins**», men Obsidian er et
-   editor-plugin med en fuld Pro-gated UI til egne regler: `obsidian-plugin/
-   main.js:711` (overskriften «Custom cleanup rules (Pro)»), `:793` (`convert()`
-   sender dem), `README.md:6` («custom find/replace cleanup rules») og
-   `manifest.json` («and batch cleaning with Clean Copy Pro»). Rigtig tekst:
-   batch findes kun i webværktøjet, CLI'en tager én fil ad gangen, og egne regler
-   er i Obsidian-pluginet (Pro) — VS Code og CLI har ingen. *Bemærk:* også
-   `manifest.json` lover «batch cleaning», som `batchConvert` ikke gør i
-   pluginen (alle tre kald bruger et 1-elements array), så pluginens egen
-   beskrivelse skal rettes. Accept: katalogtekst + plugin-README + manifest er
-   alle tre sande og `check_pro_table` er grøn på alle 21 sider.
-2. **MIDDEL — `check_pro_table` dom 4c bliver rød på en korrekt `--apply`.**
-   `tools/check_pro_table.py:307+315` sammenligner **rå** katalogtekst med
-   `h()`-escapet HTML, så en `pro_limit` med `&` er ikke findelig i markup'en.
-   Målt: `&mdash;` i `pro_limit` → `--apply` skriver korrekt `&amp;mdash;` og
-   dommen melder «står ikke i blokken». Rettelse: sammenlign
-   `h(str(grænse[lang]))`, eller læs linjen og `unescape` den. Selftest skal
-   have et tilfælde med `&`.
-3. ~~**LAV — `krav 4` i `check_frontpage_pricing` så `Page Profile` forbi og
-   EUComply-bundlen som varetitel.**~~ **LUKKET 6/10**, se opgave 34.
+Ingen. Alle tre er lukket 6/10:
+
+1. ~~**MIDDEL — Clean Copy-sidens `pro_limit` modsiger Obsidian-pluginens egen
+   kode.**~~ **LUKKET 6/10.** Katalogteksten siger nu kun hvad der er målt:
+   batch findes i webværktøjet, egne regler i browserudvidelsen **og**
+   Obsidian-pluginet, og CLI/VS Code har ingen. `manifest.json` lovede «batch
+   cleaning», som `batchConvert` ikke gør i pluginet — rettet, og Obsidian er
+   bumpet til **1.0.11** fordi et arkiv med en ny beskrivelse under gammelt
+   nummer er det samme som gammel kode til en kunde. Bloggen på begge sprog
+   fortæller hvad 1.0.11 er.
+2. ~~**MIDDEL — dom 4c blev rød på en korrekt `--apply` med `&`.~~ **LUKKET
+   6/10.** Dommen sammenligner nu på `html.unescape`, altså det læseren ser.
+   Selftest 28→30: en korrekt tegnet `pro_limit` med `&` er grøn, og en der
+   siger noget andet er stadig rød — målt begge veje mod den gamle kode.
+3. ~~**LAV — `krav 4` i `check_frontpage_pricing`.**~~ **LUKKET 6/10**,
+   se opgave 34.
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: skriv kun hvad Clean Copy Pro faktisk gør, og ret
+dommen der dømmer det ceo/pro-pastand 6/10 13:0x` — hent
+`cleancopy.tools/`, `/clean-copy` og `/downloads/` og kræv på **indhold**:
+grænselinjen skal sige at egne regler findes i udvidelsen **og**
+Obsidian-pluginet, og downloadlinket skal pege på `v1.0.11`. Live 1.0.10
+der stadig publiceres, betyder at arkivet ikke kom med ud.
 
 `DEPLOY OK 6/10 12:1x` for `ceo/pro-graense` — målt på **indhold** med fire
 `curl`. Noten krævede live `mahope.tools/clean-copy`, og den ruten er **404**:
@@ -274,7 +276,7 @@ HTTP 200 blev ikke brugt som bevis.
       `ceo/pro-graense`.** Katalogens `pro_limit` for fire produkter tegnes som
       sin egen linje under tabellen på **21** sider, begge sprog. Ny **dom 4c** i
       `check_pro_table` dømmer tre ting (katalog har `pro_limit` på hvert sprog,
-      teksten står i blokken, den står på grænselinjen), selftest **28/28** med
+      teksten står i blokken, den står på grænselinjen), selftest **28/28** da, **30/30**
       tre mutationer i selve generatoren. To usande påstande blev rettet i
       kilden, og selftesten fandt en svækket port undervejs: dom 4 læste hele
       blokken, så grænsens egen tekst blev regnet som bevis på at en funktion

@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import html as html_lib
 import io
 import re
 import shutil
@@ -303,16 +304,25 @@ def dom(catalog: dict, root: Path = ROOT) -> list[str]:
         #     som en pris. Teksten skal stå i hele blokken, så et site der
         #     skriver den i markup uden klassen stadig er rødt på den anden
         #     arm — ellers ville en klasseløs linje være nok.
+        #     Sammenligningen sker på **unescapet** tekst. Generatoren skriver
+        #     grænsen med `h()` (`tools/pro_table.py`), så en sætning med `&`,
+        #     `<` eller `>` står i markup'en som `&amp;` — den rå katalogtekst
+        #     findes da ikke, selv om siden er korrekt. Målt 6/10 med
+        #     `&mdash;` i `page-profile-pro`: `--apply` skrev den rigtige
+        #     `<p …>No alerts &amp;mdash; …</p>`, og dommen meldte «står ikke
+        #     i blokken». Det er en dom, der dømmer det læseren ser.
         grænse = produkt.get("pro_limit")
         grænselinje = next((n for n in re.findall(r'<p class="pro-note pro-limit">(.*?)</p>',
                                                  blok, re.S)), "")
+        laest_tekst = html_lib.unescape(grænselinje)
+        laest_blok = html_lib.unescape(blok)
         if not isinstance(grænse, dict) or not grænse.get(lang):
             fund.append(f"{rel}: katalogen har ingen pro_limit for {nøgle} "
                         f"på {lang} — hvert pro-kort skal have én ærlig grænse")
-        elif str(grænse[lang]) not in blok:
+        elif str(grænse[lang]) not in laest_blok:
             fund.append(f"{rel}: pro_limit {str(grænse[lang])!r} står ikke "
                         f"i blokken")
-        elif str(grænse[lang]) not in grænselinje:
+        elif str(grænse[lang]) not in laest_tekst:
             fund.append(f"{rel}: pro_limit {str(grænse[lang])!r} står ikke "
                         f"på grænselinjen (class=\"pro-note pro-limit\")")
 
@@ -622,6 +632,43 @@ def self_test() -> int:
         rod = _kopi(Path(tmp), lambda rod: _tegn(rod, catalog))
         fund = dom(catalog, rod)
         tjek("genoptegnede sider med grænse er grønne", not fund, "; ".join(fund[:2]))
+
+    # 15b. En `pro_limit` med `&`. To kontroller, fordi dommen skal dømme
+    #     **det læseren ser** og ikke den rå markup:
+    #     (a) korrekt tegnet med `h()` skal være grøn. Generatoren escaper
+    #         ampersanden til `&amp;`, så den rå katalogtekst findes ikke i
+    #         siden — før 6/10 var dommen rød på præcis den korrekte side
+    #         (målt med `&mdash;` i `page-profile-pro`).
+    #     (b) en Mutation der skriver en **anden** tekst i grænselinjen skal
+    #         stadig være rød. Uden den arm ville unescaping gøre dommen
+    #         blind: enhver tekst ville findes, fordi enhver tekst unescapes
+    #         til sig selv.
+    med_amp = {**catalog, "products": {**catalog["products"], nøgle: {
+        **catalog["products"][nøgle],
+        "pro_limit": {**catalog["products"][nøgle]["pro_limit"],
+                      "en": "No SMS &mdash; no email, check manually"}}}}
+    with tempfile.TemporaryDirectory() as tmp:
+        rod = _kopi(Path(tmp), lambda rod: _tegn(rod, med_amp))
+        fund = dom(med_amp, rod)
+        tjek("pro_limit med & er grøn når siden er tegnet korrekt",
+             not fund, "; ".join(fund[:2]))
+
+    forkert = pro_table.blok
+    try:
+        pro_table.blok = lambda *a, **kw: re.sub(
+            r'(<p class="pro-note pro-limit">)No SMS &amp;mdash; no email, check manually(</p>)',
+            r"\1No alerts at all\2",
+            forkert(*a, **kw).replace(
+                '<p class="pro-note">',
+                '<p class="pro-note">No SMS &amp;mdash; no email, '
+                'check manually · ', 1), 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            rod = _kopi(Path(tmp), lambda rod: _tegn(rod, med_amp))
+            fund = dom(med_amp, rod)
+            tjek("pro_limit med & er rød når grænselinjen siger noget andet",
+                 any("grænselinjen" in f for f in fund), str(fund[:2]))
+    finally:
+        pro_table.blok = forkert
 
     for linje in fejl:
         print(f"  FEJL  {linje}")

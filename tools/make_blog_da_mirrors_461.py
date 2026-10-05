@@ -435,8 +435,8 @@ PAGES = [
                 '<p>Virker også på Obsidian mobile — brug en filhåndtering '
                 'til at nå vault-mappen.</p>',
                 '<p><strong>3) Zip-bundle (ét klik)</strong></p>'
-                '<p><a href="/downloads/clean-copy-obsidian-v1.0.10.zip" '
-                'style="color:var(--color-accent);">Download v1.0.10 zip</a>, '
+                '<p><a href="/downloads/clean-copy-obsidian-v1.0.11.zip" '
+                'style="color:var(--color-accent);">Download v1.0.11 zip</a>, '
                 'pak ud i <code>&lt;vault&gt;/.obsidian/plugins/</code> og aktiver.</p>',
             ]),
             ('Første kørsel', [

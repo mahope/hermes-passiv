@@ -8383,3 +8383,63 @@ brugt som bevis.
 are extension-only — not in the CLI or editor plugins», og det er **usand** for
 Obsidian-pluginet, som har en fuld Pro-gated UI til egne regler. Det står som
 review-fund 1 i planen.
+
+## 6/10 — review-fund 1 og 2 (maoje-dk-projekts fællesplan, lukket)
+
+**Fund 1: den usande påstand.** `tools/stripe_catalog.json` skrev for
+`clean-copy-pro` «Batch conversion is web-tool only and custom rules are
+extension-only — not in the CLI or editor plugins». Anden halvdel er usand:
+`obsidian-plugin/main.js:711` har overskriften «Custom cleanup rules (Pro)»,
+`:712-714` «Requires an active Pro license.», `:716-737` liste med slet-knap og
+«Add rule» med felterne **Find** og **Replace**, og `convert()` i `:793` sender
+dem: `CleanCopyCore.batchConvert([htmlOrText], coreMode, this.settings.proActive
+? this.settings.rules : [])[0]`. `README.md:6` siger «custom find/replace
+cleanup rules».
+
+Målt i denne klon:
+- `batchConvert` kaldes med et 1-elements array i pluginen (`:793`), i CLI'en
+  (`clean-copy-1.4.3.tar.gz`, `index.js:213` og `clean-copy.js:251`) — VS
+  Code-pluginen kalder den slet ikke (`grep -c rule extension.js` → 0). Så
+  «batch is web-tool only» er sandt.
+- `extension-clean-copy-vscode/README.md:40-43` siger «Pro Features (coming) —
+  Custom find/replace rules», altså ikke leveret.
+- CLI'en har `compileRules`/`applyRules` i kernen, men ingen regel-UI eller
+  konfigurationsfil — intet kalder dem.
+
+Ny tekst i katalogen: «Batch conversion is web-tool only. Custom cleanup rules
+are in the browser extension and the Obsidian plugin — the CLI and the VS Code
+plugin have none» (og den danske modsvarende). Pro-sætningen på
+`site/clean-copy.html:177` og `site/da/clean-copy.html:177` siger nu også «in
+the browser extension **or in the Obsidian plugin**».
+
+**Obsidian-manifestet lovede «batch cleaning».** `manifest.json:6` sagde «Custom
+cleanup rules **and batch cleaning** with Clean Copy Pro.». Det er usandt for
+pluginen, så kun den del blev skrevet om. Det krævede en udgave: et arkiv med en
+ny beskrivelse under et gammelt versionsnummer er gammel kode til en kunde.
+`manifest.json` → **1.0.11**, `versions.json` fik `1.0.11`, de tre sider der
+linker på arkivet (`site/downloads.html`,
+`site/blog/install-obsidian-plugin-clean-copy.html`,
+`site/da/blog/installer-clean-copy-obsidian.html`) plus generatoren
+`tools/make_blog_da_mirrors_461.py` peger på 1.0.11, og
+`python3 tools/build_clean_copy_archives.py` skrev det nye arkiv og slettede
+det forældede. Blogteksten på begge sprog siger nu at 1.0.11 er en
+dokumentationsudgave uden kodeændring — det er præcis sandt.
+
+**Fund 2: dom 4c på escapet `&`.** `tools/check_pro_table.py` sammenlignede den
+**rå** `pro_limit` med markup'en, men generatoren skriver den med `h()`
+(`tools/pro_table.py`), der escaper `&`, `<` og `>`. Målt: sat
+`page-profile-pro`'s `en`-grænse til `No alerts or notifications &mdash; check
+manually`, kørte `--apply` (skrev korrekt `&amp;mdash;`) og fik to røde fund på
+korrekte sider. Dommen unescaper nu hele blokken og grænselinjen, så den dømmer
+det læreren ser. Selftesten fik to kontroller: (a) korrekt tegnet `pro_limit`
+med `&` er grøn, (b) en grænselinje der siger noget andet er stadig rød — så
+unescaping gør ikke dommen blind. Begge er målt røde mod den gamle dom (28/30)
+og grønne mod den nye (30/30). `check_pro_table` er grøn på alle 21 sider.
+
+**Porte kørt efter ændringen:** `build_sites.py` + `seo_check` (316 sider, 0
+fund) + `tests/stripe-worker.test.mjs` (474/474) + `check_inline_js` (0) —
+kontrakts gaten grøn — og `tools/quality_gate.py` **GRØN — 177 steps**.
+Kørte desuden `check_pro_table`, `check_clean_copy_distribution`,
+`check_versions`, `check_catalog_where`, `check_rule_claims`,
+`check_product_copy`, `check_license_clients`, `check_net_copies`,
+`check_links`. `git status --porcelain` efter hver mutation.
