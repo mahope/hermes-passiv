@@ -4308,58 +4308,68 @@ async function handleUrlInspect(request, url, env) {
   let finalResponse = null;
   const MAX_HOPS = 15;
 
-  for (let hop = 0; hop <= MAX_HOPS; hop++) {
-    const response = await fetch(currentUrl, {
-      method: 'GET',
-      redirect: 'manual',
-      headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker; https://mahope.tools)' }
-    });
-
-    const statusCode = response.status;
-    const location = response.headers.get('location');
-    const hopHeaders = {};
-    response.headers.forEach((value, key) => {
-      if (Object.keys(hopHeaders).length < 80) {
-        hopHeaders[key] = value;
-      }
-    });
-
-    if (statusCode >= 300 && statusCode < 400 && statusCode !== 304 && location) {
-      redirects.push({
-        hop: hop + 1,
-        url: currentUrl,
-        status: statusCode,
-        statusText: response.statusText,
-        location: location,
-        headers: hopHeaders,
-      });
-      let next;
-      try {
-        next = new URL(location, currentUrl);
-      } catch (_) {
-        return new Response(JSON.stringify({ error: 'Invalid redirect location', redirects, finalUrl: currentUrl }), {
-          status: 200, headers: corsHeaders,
-        });
-      }
-      // Every hop, not only the first: a public URL that redirects into
-      // 169.254.169.254 is the same SSRF one step later. The chain collected so
-      // far is returned so the visitor can see where it stopped.
-      if (!targetIsPublic(next)) {
-        return new Response(JSON.stringify({ error: 'That redirect cannot be inspected — it points at a local or private network address.', redirects, finalUrl: currentUrl }), {
-          status: 400, headers: corsHeaders,
-        });
-      }
-      currentUrl = next.href;
-    } else {
-      finalResponse = {
-        url: currentUrl,
-        status: statusCode,
-        statusText: response.statusText,
-        headers: hopHeaders,
-      };
-      break;
-    }
-  }
+   let hop = 0;
+   while (hop <= MAX_HOPS) {
+     let retryAttempt = 0;
+     let fetched = false;
+     let response, statusCode, location, hopHeaders, next;
+     while (!fetched && retryAttempt <= 1) {
+       response = await fetch(currentUrl, {
+         method: 'GET',
+         redirect: 'manual',
+         headers: { 'User-Agent': 'URLInspector/1.0 (Cloudflare Worker; https://mahope.tools)' }
+       });
+       statusCode = response.status;
+       if (statusCode === 502 && retryAttempt < 1) {
+         retryAttempt++;
+         continue; // retry same request
+       }
+       fetched = true;
+       location = response.headers.get('location');
+       hopHeaders = {};
+       response.headers.forEach((value, key) => {
+         if (Object.keys(hopHeaders).length < 80) {
+           hopHeaders[key] = value;
+         }
+       });
+     }
+     // Now process response
+     if (statusCode >= 300 && statusCode < 400 && statusCode !== 304 && location) {
+       redirects.push({
+         hop: hop + 1,
+         url: currentUrl,
+         status: statusCode,
+         statusText: response.statusText,
+         location: location,
+         headers: hopHeaders,
+       });
+       try {
+         next = new URL(location, currentUrl);
+       } catch (_) {
+         return new Response(JSON.stringify({ error: 'Invalid redirect location', redirects, finalUrl: currentUrl }), {
+           status: 200, headers: corsHeaders,
+         });
+       }
+       // Every hop, not only the first: a public URL that redirects into
+       // 169.254.169.254 is the same SSRF one step later. The chain collected so
+       // far is returned so the visitor can see where it stopped.
+       if (!targetIsPublic(next)) {
+         return new Response(JSON.stringify({ error: 'That redirect cannot be inspected — it points at a local or private network address.', redirects, finalUrl: currentUrl }), {
+           status: 400, headers: corsHeaders,
+         });
+       }
+       currentUrl = next.href;
+       hop++;
+     } else {
+       finalResponse = {
+         url: currentUrl,
+         status: statusCode,
+         statusText: response.statusText,
+         headers: hopHeaders,
+       };
+       break;
+     }
+   }
 
   if (!finalResponse) {
     finalResponse = {

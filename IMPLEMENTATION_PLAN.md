@@ -18,6 +18,8 @@
 - **Næste:** feature-kø. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
   kørt (uge-tjek).
 
+- **CEO-kø punkt 0: `/api/url-inspect` fungerer nu med env, SSRF-værn, 429 endelig, AI-retries ved 502 begrænset, og thanks.html skelner 202 korrekt**
+
 ## Åbne review-fund
 
 Ingen. Alle tre er lukket 6/10:

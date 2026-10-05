@@ -270,8 +270,9 @@
       // de nøgletal der bruges her. `429` er derimod **endeligt** og har sin
       // egen udgang nedenfor; den skal ikke lægges tilbage i denne kæde, for
       // hvert genkald tæller i den tæller der gav 429.
-      var MAX_TRIES = 12;
-      // Når budgettet er brugt, er svaret stadig ikke "ordren findes ikke".
+       var MAX_TRIES = 12;
+       var got202 = false;
+       // Når budgettet er brugt, er svaret stadig ikke "ordren findes ikke".
       // Kunden kommer fra Stripe lige efter en betaling, så betalingen er
       // gennemført, og det skal siden sige. Ellers ender de i en supportmail,
       // som er præcis den menneskelige indsats produkterne ikke må kræve.
@@ -374,19 +375,22 @@
           navigator.clipboard.writeText(d.license_key).then(function () { copy.textContent = T.copied; });
         });
       }
-      function poll() {
-        fetch('/api/stripe/fulfillment?session_id=' + encodeURIComponent(sid))
-          .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
-          .then(function (x) {
-            if (x.code === 200 && x.d.ok) return show(x.d);
-            if (x.code === 202) return again(T.confirming, 2500, true);
-            // 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
-            if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : T.tooMany) + LIMITED_OUT);
-            if (x.code >= 500) return again(T.trouble, 4000, false);
-            fail(x.d.error || T.notFound);
-          })
-          .catch(function () { again(T.network, 3000, false); });
-      }
+       function poll() {
+         fetch('/api/stripe/fulfillment?session_id=' + encodeURIComponent(sid))
+           .then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
+           .then(function (x) {
+             if (x.code === 200 && x.d.ok) return show(x.d);
+             if (x.code === 202) {
+               got202 = true;
+               return again(T.confirming, 2500, true);
+             }
+             // 429 før 5xx, og uden for `again()`: se LIMITED_OUT.
+             if (x.code === 429) return fail((x.d && x.d.error ? x.d.error : T.tooMany) + LIMITED_OUT);
+             if (x.code >= 500) return again(T.trouble, 4000, got202);
+             fail(x.d.error || T.notFound);
+           })
+           .catch(function () { again(T.network, 3000, got202); });
+       }
       poll();
     })();
   </script>
