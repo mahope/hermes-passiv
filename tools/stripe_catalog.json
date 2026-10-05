@@ -1716,9 +1716,8 @@
       "route": "/tools/",
       "product": "deskuptime-pro",
       "source": "../auditedwp/index.html — bygges ind i dist af build_sites.py:102, så kilden ligger i et sibling-repo og ikke her",
-      "ctas": 2,
-      "ctas_note": "Målt 27/9: to synlige købsknapper med samme link. Kilden er ../auditedwp, som jeg ikke må ændre, så jeg kan ikke reducere den til én her. Konsekvensen er målt, ikke antaget: track.js tæller hvert klik på et Stripe-link, så én købshensigt på denne side tælles 2 gange i recentBuyClicks. Reglen for `offers` er præcis 1, fordi et købsklik skal være én hendelse. Retten kræver enten en ændring i ../auditedwp eller at build_sites.py efterbehandler siden.",
-      "why": "Selvstændig Pro-side i vores egen nav ('Tools'/'Værktøjer') med egen canonical, i sitemap og med to synlige købsknapper. Målt 27/9 som den eneste publicerede købsside porten ikke kendte: den er grøn med 13 dokumenterede købssider, mens det byggede site har 16."
+      "ctas": 1,
+      "why": "Selvstændig Pro-side i vores egen nav ('Tools'/'Værktøjer') med egen canonical, i sitemap. Målt 27/9 som den eneste publicerede købsside porten ikke kendte: den er grøn med 13 dokumenterede købssider, mens det byggede site har 16. Den havde **to** synlige købsknapper med samme betalingslink — én i helten ved prisen, én længere nede efter featurelisten — så én købshensigt blev talt to gange i `recentBuyClicks`. Kilden er ../auditedwp, som jeg ikke må ændre, så `build_sites.py` reducerer den i `one_buy_button` under bygget: helten knappen bevares, den lavere forsvinder sammen med sin tomme `<p>`, og beroligelsen om Stripe og licensnøglen bliver stående."
     }
   ],
   "redirects": [

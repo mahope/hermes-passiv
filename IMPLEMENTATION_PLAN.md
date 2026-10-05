@@ -1,24 +1,23 @@
 # STATUS
-- **CI var rød på `main` og er grøn igen 6/10.** To uafhængige røde steps, begge
-  målt og rettet i samme opgave: `stripe-worker-ur` (`by_day`-dommen dømte et
-  døgnskifte) og `weekly-history` (`/namespace-probe`). Se opgave 36.
-- **Alle tre review-fund er lukket 6/10.** Fund 1 (den usande påstand om at egne
-  regler kun findes i udvidelsen) er rettet i katalog, Obsidian-manifest og
-  blog; fund 2 (dom 4c på escapet `&`) er rettet og selftesten har nu to nye
-  kontroller, selftest **30/30**. Se «Åbne review-fund».
-- **Hvert pro-kort siger nu hvad Pro *ikke* gør, leveret 6/10.** Katalogens
-  `pro_limit` tegnes som sin egen linje under tabellen på **21** sider, og
-  ny dom **4c** i `check_pro_table` dømmer den, selftest **30/30**. Se opgave 33.
-- **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Afsnittet navngiver
-  **4** af katalogens **13** produkter (målt på begge sprog), og den eneste side
-  med alle 13 var ubefærdet herfra. Baseline: **6** besøgende, bounce
-  **100 %**. Nu linker begge forsider til hele listen.
-- **Forsidens port så `Page Profile` og EUComply-bundlen forkert, rettet 6/10.**
-  Se opgave 34 — målt rød på den gamle kode med to mutationer, grøn på den nye.
-- **Næste:** feature-kø. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK` ikke
-  kørt (uge-tjek).
-
-- **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
+- **`deskuptime.com/tools/` har nu én købsknap, ikke to, 6/10.** To knapper med
+  *samme* betalingslink gjorde at ét købsklik blev talt to gange i
+  `recentBuyClicks` — altså forvriderede den det tal vi prioriterer efter.
+  Kilden er `../auditedwp` og må ikke ændres, så `build_sites.py` reducerer den
+  under bygget. Målt rød på mutationen (2 knapper → 1 fund), grøn på den nye.
+  Se feature-kø 13.
+- **CEO-kø punkt 0 er helt lukket og målt live 6/10.** `/api/url-inspect` svarer
+  **200** med `finalUrl`; SSRF er lukket på mål *og* hvert redirect-hop, også
+  IPv4-mapped IPv6 (`::ffff:127.0.0.1` → **400** på både `/api/header-check` og
+  `/api/url-inspect`); `429` er endelig i `net.js` og dens otte læsere;
+  AI-genkald på 502 får refunderet sit kvoteslot.
+- **CI-kørslen for `d723dacb` blev *cancelled* af GitHub, ikke rød på en test.**
+  Målt 6/10: `gate` lå **kø 15 min** og blev afbrudt, `deploy` blev `skipped`.
+  Lokal gate er grøn og live er aktuelt (`v1.0.11`-arkivet svarer **200** med
+  12 871 bytes). En kø i køen er ikke en fejl — intet at rette i koden.
+- **Alle 16 betalingslink er målt mod kontrakten: 0 afvigelser.** 13 produkter +
+  3 lifetime + donation.
+- **Næste:** konvertering på `/pricing` (feature-kø 15). `PR-TJEK 6/10`:
+  **0** åbne PR'er. `BRANCH-TJEK` ikke kørt (uge-tjek).
 
 
 ## Åbne review-fund
@@ -41,6 +40,23 @@ Ingen. Alle tre er lukket 6/10:
    se opgave 34.
 
 ## Verificér deploy
+
+- **VERIFICÉR DEPLOY:** https://mahope.tools/api/url-inspect?url=https://example.com skal returnere 200 med finalUrl (efter næste batch deploy)
+
+`DEPLOY OK 6/10 20:2x` for `ceo/url-inspect-rettet` — målt på **indhold**, ikke
+på HTTP 200: live `/api/url-inspect?url=https://example.com` svarer **200** med
+`finalUrl: "https://example.com"` i kroppen. SSRF er målt begge veje: `127.0.0.1`
+→ **400** på `/api/header-check` og `/api/url-inspect`, `[::ffff:127.0.0.1]` →
+**400**, og `169.254.169.254` → **400**. *(HTTP 200 alene ville ikke have
+beviset noget — endpointet svarede 200 med en tom krop før rettelsen.)*
+
+`VERIFICÉR DEPLOY: deskuptime.com/tools/ skal have præcis én synlig købsknap
+til deskuptime-pros betalingslink, og beroligelsen «Payment through Stripe»
+skal stå til ceo/one-buy-button-tools 6/10 20:4x` — hent
+`https://deskuptime.com/tools/` og kræv **1** forekomst af
+`buy.stripe.com/7sY9AS9eX3Iu418fJ5bMQ01` og **1** `Payment through Stripe`.
+Live har **2** knapper nu, så det er deploy-vinduet der afgør.
+
 
 `VERIFICÉR DEPLOY: skriv kun hvad Clean Copy Pro faktisk gør, og ret
 dommen der dømmer det ceo/pro-pastand 6/10 13:0x` — hent
@@ -426,12 +442,35 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     `deskuptime-pro`, `eucomply-pro`, `page-profile-pro`) — de to tal i den
     oprindelige optælling var solgte varelinjer, ikke produkter.
 
-13. **Hver produktside kun én købsknap — de 13 har 73 dokumenterede købssider.**
-    Hvem: købere på tværs af alle 13. Tal: køb pr. produktside. Accept: hver
-    produktside har præcis én synlig CTA til sin egen payment link, så ingen
-    læser skal vælge mellem to knapper. Datagrund: målt 5/10 —
-    `check_stripe_ctas` tæller i 73 dokumenterede købssider, men kun pr. side,
-    ikke pr. CTA. *Ikke påbegyndt.*
+13. ~~**Hver produktside kun én købsknap — de 13 har 73 dokumenterede købssider.**
+    **Leveret 6/10**, `ceo/one-buy-button-tools`.** Målt på det **byggede** site
+    med portens egen `built_buy_links`: **62** sider har en synlig købsknap, og
+    **16** af dem har to — men **15** af de 16 er abonnement + lifetime, altså
+    to *forskelige* betalingslinks til samme produkt, hvilket er tillladt og
+    erklæret med `lifetime: true`. Den **ene** ægte dublet var
+    `deskuptime.com/tools/`: to knapper med *samme* link. Kilden er
+    `../auditedwp` og må ikke ændres, så `build_sites.py` reducerer den under
+    bygget (`one_buy_button`) — helten knappen bevares, den lavere forsvinder
+    sammen med den tomme `<p>`, og «Payment through Stripe» bliver stående.
+    `built_offers` erklærer nu `ctas: 1`, så porten dømmer det. Målt begge
+    veje: manifest-reglen fjernet → 2 knapper og **1 fund** («har 2 synlige
+    CTA'er for deskuptime-pro, forventet præcis 1»); reglen på → 1 knap,
+    **0 fund**. Knap-funktionen er målt på 6 tilfælde, bl.a. at en knap med
+    søskende i sin `<p>` kun mister ankeret, og at **én** eller **nul** knapper
+    kaster — så en kildendring ikke kan slå reglen fra ved at tie.
 
 14. ~~**Ingen produktside siger hvad Pro *ikke* gør.**~~ **Leveret 6/10** —
     se opgave 33.
+
+15. **`/pricing` er den ene side med alle 13 produkter, og den køber intet.**
+    Hvem: en læser der har bestemt sig for at køb *noget* og lander på
+    prislisten — den højeste købsintention vi har. Tal: køb pr. klik fra
+    `/pricing`. Accept: hver række i «Where to buy» fører til det sted hvor
+    den betaling faktisk sker. Datagrund: målt 6/10 — **`/pricing` har 0
+    Stripe-links** på begge sprog; de **12** `pc-buy`-ankere peger på
+    produktsider (`/compliance-report`, `/page-profile`, `/paid-templates`) og
+    på **forsiderne** `https://cleancopy.tools/` og `https://deskuptime.com/`.
+    En læser der trykker «Buy Clean Copy Pro» bliver altså sendt til en
+    forside og må selv finde knappen. *Ikke påbegyndt — og bemærk at en
+    direkte Stripe-knap pr. række kolliderer med reglen om én CTA pr. side, så
+    det er en beslutning om købsveje, ikke en markup-ændring.*
