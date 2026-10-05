@@ -1,28 +1,35 @@
 # STATUS
-- **Pro-kortene lovede en krybning de ikke har, rettet 6/10.** Ruten en licens
-  låser op (`/api/report`) kalder `cscFetch` **én** gang, så Pro læser **én**
-  side. 16 kort + 11 prosa-steder på 9 sider fik hver sin ærlige sætning,
-  målt pr. side hvilken kilde det frie værktøj læser. Ny dom 5 læser
-  katalogen, selftest **12/12**. Egen optælling rettede «16 kort på 9 sider,
-  dom 4 så to af dem» til **14 kort på 7 sider, dom 4 så nul** — porten var
-  grøn på `716d1e9b`, altså helt blind for de fjorten.
-- **`tests/scan-clients.test.mjs` krævede den løgnest, rettet 6/10.** Dom 4
-  ville have holdt «crawls the whole site» i live. Målt begge veje:
-  **532/534** med løgnest genindsat, **534/534** uden.
-- **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Den nævner **2** af
-  katalogens **13** produkter, og den eneste side med alle 13 var ubefærdet
-  herfra — `/free-tools` linkede til den, forsiden gjorde ikke. Baseline:
-  **6** besøgende, bounce **100 %**. Nu linker begge forsider til hele listen.
-- **Der står ingen åben `VERIFICÉR DEPLOY`-note**, og alle lukkede er lukket på
-  målt indhold, ikke på HTTP 200.
+- **Pro-kortene lovede en krybning de ikke har, rettet 6/10.** `/api/report`
+  kalder `cscFetch` **én** gang, så Pro læser **én** side. 14 kort + 11
+  prosa-steder på **7** sider fik hver sin ærlige sætning. Ny dom 5 læser
+  katalogen, selftest **12/12**. `scan-clients.test.mjs` krævede den løgnest:
+  **532/534** med den genindsat mod **534/534** uden.
+- **Forsiden havde 0 links til `/pricing`, rettet 6/10.** Afsnittet navngiver
+  **4** af katalogens **13** produkter (målt på begge sprog), og den eneste side
+  med alle 13 var ubefærdet herfra. Baseline: **6** besøgende, bounce
+  **100 %**. Nu linker begge forsider til hele listen.
+- **Forsidens henvisning modsagde listerne over den, rettet 6/10.**
+  Review-fund LAV: den sagde Clean Copy Pro og DeskUptime Pro «ikke står
+  ovenfor», men de står der med prisen i teksten. Ny **dom 4** i
+  `check_frontpage_pricing` dømmer det — målt rød (**2 fund**) med den gamle
+  sætning genindsat, selftest **7/7**. Portens «2 i listen, 11 via den» var
+  håndholdt og uklædte; den er væk.
 - **`check_js_residue` var grøn på den form af resten den var bygget til at
   fange, rettet 6/10.** `; ;` med mellemrum — den hyppigere, fordi `sed`/`perl`
   indsætter med et mellemrum foran — gav **0 fund**. Se opgave 31.
-- **Næste:** mål de **2** `#url=`-delingskilder på `/scan` — hvor mange
-  delinger kommer tilbage som besøg, så vi ved om deling er værd at gøre
-  synlig.
+- **Én åben `VERIFICÉR DEPLOY`-note** (se nedenfor), alle tidligere lukket på
+  målt indhold, ikke på HTTP 200.
+- **Næste:** mål de **2** `#url=`-delingskilder på `/scan`, så vi ved om deling
+  er værd at gøre synlig. `PR-TJEK 6/10`: **0** åbne PR'er. `BRANCH-TJEK`
+  ikke kørt (uge-tjek).
 
 ## Verificér deploy
+
+`VERIFICÉR DEPLOY: forsidens henvisning modsagde listerne over den
+ceo/folsaetning-om-priser 6/10 08:0x` — krav på **indhold**: live
+`mahope.tools/` og `mahope.tools/da/` skal have `Not listed above:` /
+`Ikke listet ovenfor:` og **0** `Clean Copy Pro, DeskUptime Pro` i `#products`.
+HTTP 200 er ikke bevis.
 
 `DEPLOY OK 6/10 07:1x` for `ceo/pricing-fra-forsiden` — målt på **indhold** med
 to `curl`: live `mahope.tools/` har **2** `href="/pricing"` og live
@@ -296,11 +303,11 @@ side; tallene er ikke vores egen trafik. Alt det der er leveret (1–11) står i
     går stale. Målt afvigelse: tallene kommer fra `tools/scan_example.py`, der
     kører sidens egne scripts i headless Chromium mod en lokal stub.
 
-12. **Forsiden nævner 2 af 13 produkter og 0 links til prislisten.** Hvem:
-    alle 6 på `mahope.tools/`. Tal: hvor mange af de 11 skjulte produkter der
-    findes. Accept: salgsafsnittet linker til `/pricing` i begge sprog, så alle
-    13 er at finde. Datagrund: målt 5/10 — 100 % bounce, og **0** links, mens
-    `/free-tools` linkede to steder. *Leveret 6/10 i `ceo/pricing-fra-forsiden`.*
+12. ~~**Forsiden nævner 2 af 13 produkter og 0 links til prislisten.**~~
+    **Leveret 6/10.** Salgsafsnittet linker nu til `/pricing` i begge sprog.
+    Målt 6/10: afsnittet navngiver **4** af 13 (`clean-copy-pro`,
+    `deskuptime-pro`, `eucomply-pro`, `page-profile-pro`) — de to tal i den
+    oprindelige optælling var solgte varelinjer, ikke produkter.
 
 13. **Hver produktside kun én købsknap — de 13 har 73 dokumenterede købssider.**
     Hvem: købere på tværs af alle 13. Tal: køb pr. produktside. Accept: hver

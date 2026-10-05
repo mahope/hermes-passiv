@@ -26,6 +26,14 @@ er usynlig i en diff: intet var brudt, intet var forkert, en vej manglede.
    intet `id` (målt 5/10), så porten leder efter det på sin `<h2>`. Uden denne
    dom ville en forside hvor afsnittet er omdøbt være grøn, fordi resten af
    kravene så ingen sider at dømme.
+4. *Henvisningen modsiger ikke listerne over den* — sætningen der sender
+   læseren videre til prislisten må kun navngive varer der ikke allerede står i
+   listerne ovenfor. Findet 6/10 (review-fund, LAV): sætningen lød «The other
+   products — Clean Copy Pro, DeskUptime Pro, … — are not listed above», men
+   Clean Copy og DeskUptime står i «With their own sites» lige overfor med
+   deres pris i teksten. Det er punkt 11 flyttet fra et tal til en påstand, og
+   læseren kan ikke finde ud af hvad der menes, fordi de to lister overhovedet
+   er dem hun lige har læst.
 
 **Hvorfor ikke bare læse `$`-beløb.** `check_own_prices.py` dømmer beløb, og
 `check_pricing_page.py` dømmer at `/pricing` viser katalogens priser. Ingen af
@@ -65,20 +73,45 @@ SECTION_DA_RE = re.compile(
     r'<section[^>]*>\s*<div class="container wide">\s*<h2>Større værktøjer</h2>'
     r'.*?</section>', re.S)
 PRICING_RE = re.compile(r'href="(/(?:da/)?pricing/?)"')
+# Henvisningssætningen er den `<p>` der indeholder linket til prislisten. Den er
+# fundet ved sit indhold, ikke ved en klasse eller et id, fordi den på de to
+# forsider er skrevet forskelligt (EN: «Not listed above: …», DA: «Ikke listet
+# ovenfor: …»), og fordi den flytter sig, hvis en ny vare føjes til listerne.
+P_RE = re.compile(r'<p\b[^>]*>.*?</p>', re.S)
 # Tallet i en prosalinje er bevidst **ikke** en dom. Det ville tvinge «11» ned i
 # en sætning, der er skrevet for at læses, og et tal i prosa er i sig selv en
 # påstand der kan blive forældet. I stedet dømmer krav 3 det samme som det
-# gælder om: at katalogens produkter faktisk kan findes.
-
-# Hvad `#products` lister i dag, målt 5/10. Hvis en ny vare føjes til listen,
-# skal denne tal stå her — ellers dømmer krav 3 en forældet påstand i stedet
-# for en reel mangel. Det er derfor porten skriver tallet i sin egen fejltekst.
-NAVNTE_I_LISTEN = 2
+# gælder om: at katalogens produkter faktisk kan findes. Samme grundlag for
+# portens egen *melding*: den siger ikke længere «2 i listen, 11 via den».
+# Det tal blev håndholdt, og fundet 6/10 viste at ingen vidste hvilke to varer
+# det egentlig dækkede — den talte solgte varelinjer, mens afsnittet navngiver
+# fire katalogprodukter. En besked skal ikke have et tal hun ikke kan regne
+# sig frem til.
 
 
 def katalog_antal() -> int:
     produkter = json.loads(CATALOG.read_text(encoding="utf-8"))["products"]
     return len(produkter)
+
+
+def katalognavne() -> list[str]:
+    """Katalognavne uden «Pro»-suffixen, som en henvisning på en forside skriver.
+
+    Sætningen på forsiden skriver «Clean Copy Pro», fordi det er produktets
+    navn i katalogen. Men det er **værktøjet** (Clean Copy) der står i listerne
+    ovenfor, og det er det en læser kan se. Derfor dømmes der på navnet uden
+    suffixen — ellers ville den fejl, fundet fandt, være usynlig for porten.
+
+    Korte navne springes over: et navn på under seks tegn kan være et almindeligt
+    ord i en prosasætning og give en rød port på en sand side.
+    """
+    produkter = json.loads(CATALOG.read_text(encoding="utf-8"))["products"]
+    navne = set()
+    for produkt in produkter.values():
+        navn = str(produkt.get("name", "")).removesuffix(" Pro").strip()
+        if len(navn) >= 6:
+            navne.add(navn)
+    return sorted(navne)
 
 
 def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
@@ -95,8 +128,8 @@ def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
     if not priser:
         fund.append(
             f"  {sprog}: salgsafsnittet har 0 link til prislisten — de "
-            f"{katalog_antal() - NAVNTE_I_LISTEN} produkter der ikke står i "
-            f"listen er så ubefærdelige fra forsiden. Tilføj `{exp_pricing}`.")
+            f"katalogprodukter der ikke står i listerne er så ubefærdelige fra "
+            f"forsiden. Tilføj `{exp_pricing}`.")
     elif priser[0] != exp_pricing:
         fund.append(
             f"  {sprog}: salgsafsnittet peger på `{priser[0]}`, ikke "
@@ -114,6 +147,26 @@ def fejl_forside(html: str, *, section_re: re.Pattern, exp_pricing: str,
                 f"  {sprog}: `{priser[0]}` findes ikke i `site/` — hverken "
                 f"{flad.relative_to(ROOT)} eller {mappe.relative_to(ROOT)} "
                 f"findes. Linket er en 404 der ligner en købsvej.")
+
+    # Krav 4: henvisningen må ikke modsige listerne over den. Den `<p>` der
+    # indeholder linket er fundet på sit indhold; alt andet i afsnittet er
+    # «ovenfor». Et katalognavn der står i begge steder er en påstand der
+    # modsiger sig selv — fundet 6/10 gjorde netop det med Clean Copy Pro.
+    henvisning = ""
+    for afsnit_p in P_RE.findall(krop):
+        if PRICING_RE.search(afsnit_p):
+            henvisning = afsnit_p
+            break
+    if henvisning:
+        ovenfor = krop.replace(henvisning, "")
+        laevet = ovenfor.lower()
+        for navn in katalognavne():
+            if navn.lower() in henvisning.lower() and navn.lower() in laevet:
+                fund.append(
+                    f"  {sprog}: henvisningen siger at «{navn}» ikke står "
+                    f"ovenfor, men den står i listerne over den. Skriv navnet "
+                    f"væk, eller skriv «resten af katalogen» uden "
+                    f"opremsning.")
     return fund
 
 
@@ -194,15 +247,58 @@ def self_test() -> int:
     finally:
         DA_INDEX.write_text(da0, encoding="utf-8")
 
-    # Mutation 5: de rigtige filer skal være grønne — ellers lå porten i gaten
+    # Mutation 5: krav 4 skal kunne fejle *alene*. Mutation 1–3 rører `href` og
+    # mutation 4 fjerner hele afsnittet, så ingen af dem kan nå krav 4. Den
+    # genindsætter derfor præcis den sætning fundet 6/10 fandt — Clean Copy Pro
+    # og DeskUptime Pro nævnt som værende «ikke listet ovenfor» — og lader
+    # `href` være korrekt. Uden denne mutation ville krav 4 være en regel uden
+    # en dom der kan fejle, præcis den fejlform docstringen advarer om.
+    ny_saetning_en = ("<p style=\"margin-bottom:0\">Not listed above: "
+                      "Transmute Desktop, the compliance templates and the "
+                      "report kits.")
+    gammel_saetning_en = ("<p style=\"margin-bottom:0\">The other products "
+                          "— Clean Copy Pro, DeskUptime Pro, Transmute "
+                          "Desktop, the compliance templates and the report "
+                          "kits — are not listed above.")
+    ny_saetning_da = ("<p style=\"margin-bottom:0\">Ikke listet ovenfor: "
+                      "Transmute Desktop, compliance-skabelonerne og "
+                      "rapportpakkerne.")
+    gammel_saetning_da = ("<p style=\"margin-bottom:0\">De øvrige produkter "
+                          "— Clean Copy Pro, DeskUptime Pro, Transmute "
+                          "Desktop, compliance-skabelonerne og "
+                          "rapportpakkerne — står ikke ovenfor.")
+    # Mutationen læser den rigtige fil, kun på den del af sætningen der står
+    # *før* knappen — så den holder hvis klassen eller teksten på knappen ændrer
+    # sig, hvilket skete i mutation 1 (se kommentaren der).
+    for sti, ny, gammel, sprog in (
+        (EN_INDEX, ny_saetning_en, gammel_saetning_en, "EN"),
+        (DA_INDEX, ny_saetning_da, gammel_saetning_da, "DA"),
+    ):
+        original = sti.read_text(encoding="utf-8")
+        if ny not in original:
+            fejl.append(f"{sprog}: mutation 5 kan ikke genindsætte den gamle "
+                        f"sætning — den nuværende tekst er ikke den porten "
+                        f"blev skrevet imod")
+            continue
+        try:
+            sti.write_text(original.replace(ny, gammel, 1), encoding="utf-8")
+            fund = dom()
+            tjek(f"{sprog} med en modsigende henvisning er rød",
+                 any("men den står i listerne over den" in f for f in fund),
+                 "; ".join(fund))
+        finally:
+            sti.write_text(original, encoding="utf-8")
+
+    # Mutation 6: de rigtige filer skal være grønne — ellers lå porten i gaten
     # og rødmede deploys for en fejl der ikke findes.
     fund = dom()
     tjek("de rigtige filer er grønne", not fund, "; ".join(fund[:3]))
 
+    antal_kontroller = 7
     for linje in fejl:
         print(f"  FEJL  {linje}")
     print(f"check-frontpage-pricing-selftest: {'OK' if not fejl else 'RØD'} "
-          f"({5 - len(fejl)}/5 kontroller)")
+          f"({antal_kontroller - len(fejl)}/{antal_kontroller} kontroller)")
     return 1 if fejl else 0
 
 
@@ -221,8 +317,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     antal = katalog_antal()
     print(f"frontpage-pricing: GRØN — begge forsider linker til prislisten, "
-          f"så alle {antal} katalogprodukter er at finde fra forsiden "
-          f"({NAVNTE_I_LISTEN} i listen, {antal - NAVNTE_I_LISTEN} via den)")
+          f"så alle {antal} katalogprodukter er at finde fra forsiden")
     return 0
 
 
